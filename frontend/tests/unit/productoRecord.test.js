@@ -13,6 +13,7 @@ vi.mock('frappe-ui', async (importOriginal) => ({
 
 import Producto from '@/pages/Producto.vue'
 import { productosBoot } from '@/composables/useProductos'
+import { shellBoot } from '@/composables/muelleShell'
 
 let record
 const service = () => ({
@@ -124,6 +125,11 @@ async function mountAt(path) {
         name: 'CompraNueva',
         component: { render: () => null },
       },
+      {
+        path: '/documentos/cotizaciones/nuevo',
+        name: 'CotizacionNueva',
+        component: { render: () => null },
+      },
     ],
   })
   router.push(path)
@@ -161,6 +167,7 @@ beforeEach(() => {
   )
 })
 afterEach(() => {
+  shellBoot.value = null
   app?.unmount()
   root?.remove()
   vi.unstubAllGlobals()
@@ -246,6 +253,44 @@ describe('Producto', () => {
     } finally {
       setWidth(width)
     }
+  })
+
+  it('«Cotizar» opens a new cotización with the product, only for who may create one', async () => {
+    const quoteButton = () =>
+      [...root.querySelectorAll('button')].find(
+        (b) => b.textContent.trim() === 'Quote',
+      )
+    // No Quotation in the boot's create list: no «Cotizar».
+    shellBoot.value = {
+      modules: {
+        documentos: {
+          enabled: true,
+          capabilities: { doctypes: ['Quotation'], create: [] },
+        },
+      },
+    }
+    let router = await mountAt('/productos/ABIBMEX000130')
+    expect(quoteButton()).toBeUndefined()
+    app.unmount()
+    root.remove()
+
+    shellBoot.value.modules.documentos.capabilities.create = ['Quotation']
+    router = await mountAt('/productos/ABIBMEX000130')
+    quoteButton().click()
+    await flush()
+    expect(router.currentRoute.value.path).toBe(
+      '/documentos/cotizaciones/nuevo',
+    )
+    expect(router.currentRoute.value.query).toEqual({
+      articulo: 'ABIBMEX000130',
+    })
+    app.unmount()
+    root.remove()
+
+    // Not for sale: nothing to quote.
+    record.item.is_sales_item = 0
+    await mountAt('/productos/ABIBMEX000130')
+    expect(quoteButton()).toBeUndefined()
   })
 
   it('movements name who moved them and «See all» opens the kardex', async () => {

@@ -1446,6 +1446,7 @@ import { formatDate, formatDateTime, unitLabel } from '@/utils/display'
 import { isMobile as isPhone } from '@/composables/breakpoint'
 import { priceListLabel } from '@/utils/priceList'
 import { createReadGate, hoyLive } from '@/composables/useHoy'
+import { shellBoot } from '@/composables/muelleShell'
 import { useLiveWatch } from '@/vendor/muelle-shell/live-sync/vue'
 import {
   backTarget,
@@ -1708,11 +1709,37 @@ const PILL =
   'flex min-w-0 flex-[1_1_64px] flex-col items-center gap-1.5 rounded-lg text-center text-xs leading-tight text-ink-gray-8 [text-wrap:balance] focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link'
 const PILL_ICON =
   'flex h-11 w-full items-center justify-center rounded-full bg-surface-gray-2 text-ink-gray-9 active:bg-surface-gray-3'
+// «Cotizar» (D2 Ventas): a new cotización with this product as its first row
+// (documentos/README.md «Opening /nuevo from elsewhere»), for whoever may create
+// a Quotation; never on a template, a disabled product or one not for sale.
+const canQuote = computed(() => {
+  const item = product.value
+  if (!item || isTemplate.value || item.disabled || !item.is_sales_item)
+    return false
+  const modules = shellBoot.value?.modules
+  return ['documentos', 'inventario'].some((key) =>
+    (modules?.[key]?.capabilities?.create || []).includes('Quotation'),
+  )
+})
+function quoteRoute(itemCode) {
+  return {
+    path: '/documentos/cotizaciones/nuevo',
+    query: { articulo: itemCode },
+  }
+}
 const heroActions = computed(() => {
   const list = orderedActions.value.map((entry) => ({
     ...entry,
     icon: ACTION_ICONS[entry.key] || 'circle',
   }))
+  if (canQuote.value)
+    list.push({
+      key: 'quote',
+      label: __('Quote', null, 'Productos'),
+      enabled: true,
+      icon: 'file-text',
+      title: __('A new quotation with this product', null, 'Productos'),
+    })
   const labels = data.value?.links?.labels
   if (labels && !isTemplate.value)
     list.push({
@@ -1928,6 +1955,10 @@ function run(entry) {
     }
     return
   }
+  if (entry.key === 'quote')
+    return router.push(
+      quoteRoute(product.value.item_code || product.value.name),
+    )
   if (entry.key === 'price') {
     focusList.value = ''
     priceOpen.value = true

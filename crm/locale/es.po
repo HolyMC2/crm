@@ -17770,6 +17770,16 @@ msgstr "{0}: {1}"
 
 #: frontend/src/pages/Producto.vue
 msgctxt "Productos"
+msgid "Quote"
+msgstr "Cotizar"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "A new quotation with this product"
+msgstr "Una cotización nueva con este producto"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
 msgid "All products"
 msgstr "Todos"
 

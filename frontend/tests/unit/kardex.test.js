@@ -188,6 +188,14 @@ async function mountAt(path) {
   return router
 }
 
+// The page names the days («Hoy», «Ayer») by the browser's clock and the
+// fixtures are dated 2026-10-18: pin the clock, CI runs in UTC.
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ['Date'] })
+  vi.setSystemTime(new Date(2026, 9, 18, 13))
+})
+afterEach(() => vi.useRealTimers())
+
 beforeEach(() => {
   calls = []
   answers = {
