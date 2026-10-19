@@ -49,10 +49,11 @@ const props = defineProps({
   active: { type: String, default: '' },
 })
 defineEmits(['more'])
-// Five tabs at 305 px leave ~61 px each: «Documentos» and «Pendientes» touch
-// their neighbours at the default tracking. Tighter tracking keeps whole words;
-// an ellipsis inside the tab is the last resort, never an overlap.
-const LABEL = 'block max-w-full truncate px-0.5 tracking-tight'
+// Five tabs below 360 px leave ~61 px each: «Documentos» at 11 px (~58 px)
+// touches its neighbours. 10 px and tighter tracking keep whole words with air
+// between tabs (measured at 305: «Documentos» 52 px); the ellipsis inside the
+// tab is only a last resort, never an overlap.
+const LABEL = 'block max-w-full truncate tracking-tight max-[359px]:text-[10px]'
 
 const moreLit = computed(
   () => !!props.active && !props.slots.some((m) => m.key === props.active),
