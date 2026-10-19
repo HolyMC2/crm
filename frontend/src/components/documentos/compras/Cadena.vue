@@ -45,8 +45,15 @@
                  without a stray «·» (305 px, 2026-10-18). -->
             <span class="seps text-sm text-ink-gray-7">
               <span class="flex flex-wrap">
+                <!-- A short party keeps its own width (an 8ch floor would pad
+                     «Perfeccel» with blank space); a long one shrinks to 8ch. -->
                 <span
-                  class="lead min-w-[calc(8ch+1em)] max-w-max flex-1 basis-0 truncate"
+                  class="lead"
+                  :class="
+                    (step.lineTitle || '').length > 10
+                      ? 'min-w-[calc(8ch+1em)] max-w-max flex-1 basis-0 truncate'
+                      : 'flex-none whitespace-nowrap'
+                  "
                   >{{ step.lineTitle }}</span
                 >
                 <span v-if="step.lineMeta" class="flex-none whitespace-nowrap"
