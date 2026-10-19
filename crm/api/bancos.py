@@ -43,6 +43,10 @@ MATCHABLE = ("Payment Entry", "Journal Entry")
 OPEN_INVOICE = {"deposit": "Sales Invoice", "withdrawal": "Purchase Invoice"}
 PERIODOS = ("mes", "mes-pasado", "anio", "todo")
 ROOT_ORDER = {"Asset": 0, "Liability": 1, "Equity": 2, "Income": 3, "Expense": 4}
+# Ways out of a refusal that the phone knows how to offer. Contador names more
+# (go_close, compare, history, search_month…); those belong to its own desk, so the
+# sheet passes through only what it can actually do here.
+KNOWN_ACTIONS = ("request_authorization", "request_review")
 
 
 # ---------------------------------------------------------------- gates and helpers
@@ -881,8 +885,14 @@ def movimiento(bank_transaction: str, scope: str = "near") -> dict:
 				}
 				for row in detail.get("candidates") or []
 			]
+			# «actions» is Contador's way out of a refusal (request_authorization,
+			# request_review, …). Dropping it left the read-only worker at a dead end.
 			blocked = [
-				{"code": row.get("code"), "message": row.get("message")}
+				{
+					"code": row.get("code"),
+					"message": row.get("message"),
+					"actions": [a for a in (row.get("actions") or []) if a in KNOWN_ACTIONS],
+				}
 				for row in detail.get("blocked") or []
 			]
 			flags = detail.get("can") or {}

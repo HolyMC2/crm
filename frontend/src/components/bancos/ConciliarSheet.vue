@@ -101,14 +101,25 @@
         </section>
 
         <!-- What stops the worker, in their words (closed month, read-only). -->
-        <p
+        <div
           v-for="block in shownBlocks"
           :key="block.code"
           class="rounded-lg bg-surface-amber-1 p-3 text-sm text-ink-amber-8"
           data-bancos-blocked
         >
-          {{ block.message }}
-        </p>
+          <p>{{ block.message }}</p>
+          <!-- Contador's way out: whoever cannot reconcile can still ask for it. -->
+          <Button
+            v-if="askLabel(block)"
+            class="mt-3 min-h-11 w-full"
+            :label="askLabel(block)"
+            data-bancos-pedir
+            @click="ask(block)"
+          />
+          <p v-if="asked[block.code]" role="status" class="mt-2 break-words">
+            {{ asked[block.code] }}
+          </p>
+        </div>
 
         <!-- The suggestion, one tap. -->
         <section
@@ -313,6 +324,46 @@ const shownBlocks = computed(() =>
     (b) => b.code !== 'no_candidates' || !detail.value.invoices.length,
   ),
 )
+
+// A refusal with no way out is a dead end: when the server says the worker may
+// ask (Contador's «actions»), the sheet writes the request for them. There is no
+// endpoint for it — the shell copies the words, like «Pedir acceso» does.
+const asked = ref({})
+const ASK = {
+  request_authorization: 'Pedir autorización',
+  request_review: 'Pedir revisión',
+}
+function askLabel(block) {
+  return (block.actions || []).map((a) => ASK[a]).find(Boolean) || ''
+}
+async function ask(block) {
+  const row = m.value || {}
+  const what = (block.actions || []).includes('request_authorization')
+    ? 'autorices conciliar'
+    : 'revises'
+  const text =
+    `Hola: te pido que ${what} este movimiento de Bancos. ` +
+    [
+      row.title || row.description,
+      row.date ? formatDate(row.date) : '',
+      row.account_label,
+      signedMoney(row.amount, row.currency),
+      row.reference ? `Ref. ${row.reference}` : '',
+      row.name,
+    ]
+      .filter(Boolean)
+      .join(' · ') +
+    '. Lo dejo pendiente; no cambié nada.'
+  try {
+    await navigator.clipboard.writeText(text)
+    asked.value = {
+      ...asked.value,
+      [block.code]: 'Copiado. Mándaselo a quien lleva la contabilidad.',
+    }
+  } catch {
+    asked.value = { ...asked.value, [block.code]: text }
+  }
+}
 
 // One line per candidate: who, what and when, and the amount it applies.
 const CandidateLine = defineComponent({

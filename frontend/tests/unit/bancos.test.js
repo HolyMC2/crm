@@ -279,6 +279,57 @@ describe('ConciliarSheet', () => {
     expect(host.querySelector('[data-bancos-conciliar-btn]')).toBeNull()
   })
 
+  it('a read-only worker can ask for authorization instead of hitting a dead end', async () => {
+    const written = []
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText: async (text) => written.push(text) },
+    })
+    state.call.mockResolvedValue(
+      detail({
+        can: { conciliar: false, deshacer: false, gasto: false },
+        blocked: [
+          {
+            code: 'read_only',
+            message: 'Puedes ver este movimiento, pero no conciliarlo.',
+            actions: ['request_authorization'],
+          },
+        ],
+      }),
+    )
+    mount()
+    await flush()
+    const ask = host.querySelector('[data-bancos-pedir]')
+    expect(ask.textContent).toBe('Pedir autorización')
+    ask.click()
+    await flush()
+    expect(written).toHaveLength(1)
+    // the request carries what the responsable needs to find the movement
+    expect(written[0]).toContain('autorices conciliar')
+    expect(written[0]).toContain('ACC-BTN-2026-00024')
+    expect(written[0]).toContain('Ref. 0118220827')
+    expect(written[0]).toContain('+$190.00')
+    expect(host.querySelector('[data-bancos-blocked]').textContent).toContain(
+      'Copiado.',
+    )
+    // asking changes nothing on the server
+    expect(
+      state.call.mock.calls.filter(([m]) => !m.endsWith('.movimiento')),
+    ).toEqual([])
+  })
+
+  it('a refusal with no way out shows no button', async () => {
+    state.call.mockResolvedValue(
+      detail({
+        can: { conciliar: false, deshacer: false, gasto: false },
+        blocked: [{ code: 'period_closed', message: 'Este mes está cerrado.' }],
+      }),
+    )
+    mount()
+    await flush()
+    expect(host.querySelector('[data-bancos-pedir]')).toBeNull()
+  })
+
   it('offers the open invoice when nothing matches', async () => {
     state.call.mockImplementation(async (method) => {
       if (method.endsWith('.movimiento'))
