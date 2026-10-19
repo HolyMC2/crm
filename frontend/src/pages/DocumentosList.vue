@@ -205,6 +205,8 @@ import {
   StatusChip,
 } from '@/components/ui'
 import { isMobile } from '@/composables/breakpoint'
+// «Nueva orden», «Nuevo pago» (D3)
+import { feminineNoun } from '@/utils/display'
 import { shellBoot } from '@/composables/muelleShell'
 import { useListKeys } from '@/composables/pageKeys'
 import { docApi, errorText } from '@/documentos/api'
@@ -220,7 +222,7 @@ import {
 } from '@/documentos/listState'
 import { loadProfile } from '@/documentos/profiles'
 import { documentRoute, floorRoute, profileBySlug } from '@/documentos/registry'
-import { feminineNoun, kindLabel } from '@/utils/display'
+import { kindLabel } from '@/utils/display'
 
 const props = defineProps({
   // Left pane of the desktop split: rows keep the list's query, the open one is lit.
