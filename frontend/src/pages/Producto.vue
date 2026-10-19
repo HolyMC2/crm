@@ -971,6 +971,16 @@
               </template>
             </section>
 
+            <!-- Who follows up on this product, by when (Shell D8). -->
+            <RecordPendientes
+              v-if="!isTemplate && product.name"
+              class="rounded-xl border border-outline-gray-2 bg-surface-base p-4"
+              reference-type="Item"
+              :reference-name="product.name"
+              :reference-label="product.item_name || product.name"
+              :return-label="__('Product', null, 'Productos')"
+            />
+
             <section
               id="historial"
               class="scroll-mt-4 rounded-xl border border-outline-gray-2 bg-surface-base"
@@ -1584,6 +1594,11 @@ import {
   visibleRows,
   withoutDone,
 } from '@/composables/useProductos'
+
+// The product's pendientes (Shell D8), loaded only when the page shows them.
+const RecordPendientes = defineAsyncComponent(
+  () => import('@/components/pendientes/RecordPendientes.vue'),
+)
 
 const props = defineProps({ item: { type: String, required: true } })
 const route = useRoute()

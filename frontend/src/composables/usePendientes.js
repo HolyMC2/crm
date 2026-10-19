@@ -3,9 +3,9 @@ import { sourceSlugs } from '@/utils/shellRoutes'
 export { legacyTasksRoute } from '@/composables/usePendientesRoutes'
 
 // English source strings; the es-MX catalog (crm/locale/es.po) translates them.
-const t = (text, replace) =>
+const t = (text, replace, context) =>
   globalThis.window?.__
-    ? globalThis.window.__(text, replace)
+    ? globalThis.window.__(text, replace, context)
     : replace
       ? text.replace(/{(\d+)}/g, (match, index) => replace[index] ?? match)
       : text
@@ -21,6 +21,7 @@ export const SEGMENTS = Object.freeze([
   'today',
   'upcoming',
   'undated',
+  'delegated',
   'team',
   'done',
 ])
@@ -38,7 +39,8 @@ export function segmentLabel(segment) {
     today: t('Today'),
     upcoming: t('Upcoming'),
     undated: t('No date'),
-    team: t('Sales team'),
+    delegated: t('Assigned by me'),
+    team: t('From the team'),
     done: t('Completed work'),
   }[segment]
 }
@@ -46,6 +48,7 @@ export function segmentLabel(segment) {
 /** The lists this worker has: «Por aprobar» only for possible deciders (server capability). */
 export function segmentEntries({
   team = false,
+  delegated = true,
   approve = false,
   waiting = false,
 } = {}) {
@@ -57,10 +60,11 @@ export function segmentEntries({
     today: 'sun',
     upcoming: 'calendar',
     undated: 'inbox',
+    delegated: 'send',
     team: 'users',
     done: 'check',
   }
-  const shown = { team, approve, waiting }
+  const shown = { team, delegated, approve, waiting }
   return SEGMENTS.filter((segment) => shown[segment] ?? true).map(
     (segment) => ({
       value: segment,
@@ -96,6 +100,10 @@ export function parseQuery(query = {}) {
     from: DAY.test(query.from || '') ? query.from : '',
     to: DAY.test(query.to || '') ? query.to : '',
     ...(kind ? { kind } : {}),
+    // Desktop: the list (default) or the board by state; never on approvals.
+    ...(query.view === 'board' && !isApprovalSegment(segment)
+      ? { view: 'board' }
+      : {}),
   }
 }
 
@@ -108,7 +116,35 @@ export function toQuery(state) {
   if (state.priority) query.priority = state.priority
   if (state.from) query.from = state.from
   if (state.to) query.to = state.to
+  if (state.view === 'board' && !isApprovalSegment(state.segment))
+    query.view = 'board'
   return query
+}
+
+/** Desktop list + detail: `?sel=<slug>:<name>` names the open pendiente. */
+export function selectionKey(row) {
+  return row ? `${SOURCE_SLUGS[row.doctype]}:${row.name}` : ''
+}
+export function parseSelection(value) {
+  const text = typeof value === 'string' ? value : ''
+  const at = text.indexOf(':')
+  const doctype = at > 0 ? sourceFromSlug(text.slice(0, at)) : ''
+  const name = at > 0 ? text.slice(at + 1) : ''
+  return doctype && name ? { doctype, name } : null
+}
+
+/** Board columns by state (someday folds into «Por hacer»; cancelled stays off). */
+export const BOARD_COLUMNS = Object.freeze([
+  'open',
+  'in_progress',
+  'blocked',
+  'done',
+])
+export function boardColumn(row) {
+  if (row?.cancelled || row?.state === 'cancelled') return ''
+  if (row?.state === 'backlog') return 'open'
+  if (BOARD_COLUMNS.includes(row?.state)) return row.state
+  return row?.status === 'Closed' ? 'done' : 'open'
 }
 
 export function queueArgs(state, start = 0) {
@@ -181,6 +217,8 @@ export function referenceTarget(row) {
     }
   if (doctype === 'CRM Deal')
     return { to: { name: 'Deal 360', params: { dealId: String(name) } } }
+  if (doctype === 'Item')
+    return { to: { name: 'Producto', params: { item: String(name) } } }
   // An employee's expense (a correction or reimburse ask) comes back to Pendientes.
   if (doctype === 'Expense Claim')
     return {
@@ -221,7 +259,15 @@ export function datePresets(today) {
   ]
 }
 
+/** «Hoy · 16:30»: the due chip carries the time when the task has one. */
 export function dueText(row, today) {
+  const text = dueDay(row, today)
+  return row.time && row.status !== 'Closed' && row.date
+    ? `${text} · ${row.time}`
+    : text
+}
+
+function dueDay(row, today) {
   if (row.cancelled) return t('Cancelled')
   if (row.status === 'Closed') return t('Completed')
   const day = String(row.date || '').slice(0, 10)
@@ -247,6 +293,115 @@ export function countText(count) {
 
 export function priorityLabel(priority) {
   return { High: t('High'), Medium: t('Medium'), Low: t('Low') }[priority] || ''
+}
+
+// One task model (Shell D8): the states a source has, in worker words.
+export const STATE_LABELS = Object.freeze({
+  backlog: 'Someday',
+  open: 'To do',
+  in_progress: 'In progress',
+  blocked: 'Blocked',
+  done: 'Done',
+  cancelled: 'Cancelled',
+})
+
+export function stateLabel(state) {
+  // «Por hacer / En curso / Bloqueada / Hecha»: a pendiente's words, not CRM's.
+  return STATE_LABELS[state] ? t(STATE_LABELS[state], null, 'Pendiente') : ''
+}
+
+/** Only the in-between states earn a chip on a row (open is the default). */
+export function stateChip(row) {
+  return ['in_progress', 'blocked', 'backlog'].includes(row?.state)
+    ? {
+        label: stateLabel(row.state),
+        tone: row.state === 'blocked' ? 'red' : 'blue',
+      }
+    : null
+}
+
+export const REPEATS = Object.freeze([
+  'Daily',
+  'Weekdays',
+  'Weekly',
+  'Monthly',
+  'Yearly',
+])
+
+export function repeatLabel(repeat) {
+  return (
+    {
+      Daily: t('Every day'),
+      Weekdays: t('Monday to Friday'),
+      Weekly: t('Every week'),
+      Monthly: t('Every month'),
+      Yearly: t('Every year'),
+    }[repeat] || t('Does not repeat')
+  )
+}
+
+const pad = (value) => String(value).padStart(2, '0')
+
+function shiftMinutes(day, clock, minutes) {
+  const [year, month, date] = day.split('-').map(Number)
+  const [hour, minute] = clock.split(':').map(Number)
+  const moment = new Date(
+    Date.UTC(year, month - 1, date, hour, minute) + minutes * 60000,
+  )
+  return `${moment.getUTCFullYear()}-${pad(moment.getUTCMonth() + 1)}-${pad(moment.getUTCDate())} ${pad(moment.getUTCHours())}:${pad(moment.getUTCMinutes())}:00`
+}
+
+/**
+ * «Recordarme» choices from the due day and time, as civil site times
+ * («2026-10-20 16:20:00»); the server sends the aviso to whoever does it.
+ */
+export function reminderOptions(date, time) {
+  if (!DAY.test(date || '')) return []
+  if (!time)
+    return [
+      { value: shiftMinutes(date, '09:00', 0), label: t('That day at 9:00') },
+      {
+        value: shiftMinutes(date, '09:00', -1440),
+        label: t('The day before at 9:00'),
+      },
+    ]
+  return [
+    { value: shiftMinutes(date, time, 0), label: t('At the time') },
+    { value: shiftMinutes(date, time, -10), label: t('10 minutes before') },
+    { value: shiftMinutes(date, time, -60), label: t('1 hour before') },
+    { value: shiftMinutes(date, time, -1440), label: t('1 day before') },
+  ]
+}
+
+/** «20 oct, 16:20» for a stored reminder. */
+export function reminderText(value) {
+  const match = String(value || '').match(
+    /^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2})/,
+  )
+  if (!match) return ''
+  const [, day, clock] = match
+  const months = [
+    'ene',
+    'feb',
+    'mar',
+    'abr',
+    'may',
+    'jun',
+    'jul',
+    'ago',
+    'sep',
+    'oct',
+    'nov',
+    'dic',
+  ]
+  const [, month, date] = day.split('-').map(Number)
+  return `${date} ${months[month - 1]}, ${clock}`
+}
+
+/** Checklist progress «2/5» for a row or record. */
+export function checklistText(items) {
+  if (!items?.length) return ''
+  return `${items.filter((item) => item.checked).length}/${items.length}`
 }
 
 export function sourceLabel(row) {

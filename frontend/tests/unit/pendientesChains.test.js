@@ -113,8 +113,8 @@ function item(name, values = {}) {
     date: '2026-10-05',
     modified: '2026-10-05 10:00:00',
     mine: true,
-    can_write: true,
-    can_edit: true,
+    // Frappe's word on this person and this pendiente (assignee or who asked).
+    can_change: true,
     cancelled: false,
     next: [],
     ...values,
@@ -250,7 +250,6 @@ describe('Pendiente record', () => {
           status: 'Closed',
           source_status: status,
           cancelled: true,
-          can_edit: false,
         }),
       )
       mount(Pendiente, { source, name: 'X' })
@@ -271,26 +270,37 @@ describe('Pendiente record', () => {
     app = null
   })
 
-  it("shows an unlinked task's instructions and edits someone else's task natively", async () => {
+  it("shows someone else's notes, read-only unless I may change it, and edits in the one task editor", async () => {
     state.api.mockResolvedValueOnce(
       item('73', {
         mine: false,
-        can_write: false,
-        can_edit: true,
+        can_change: false,
         assigned_to: 'ana@example.test',
-        body: 'Llamar al 55 1234 5678 y pedir folio',
+        assigned_to_name: 'Ana Ruiz',
+        notes: 'Llamar al 55 1234 5678 y pedir folio',
         blocked_reason: 'Solo quien lo tiene asignado puede completarlo.',
       }),
     )
     mount(Pendiente, { source: 'crm-task', name: '73' })
     await flush()
-    expect(root.textContent).toContain('Instructions')
     expect(root.textContent).toContain('55 1234 5678')
+    expect(root.textContent).toContain('Ana Ruiz')
+    expect(root.textContent).toContain('Solo quien lo tiene asignado')
     expect(button(root, 'Mark done')).toBeUndefined()
-    button(root, 'Edit task').click()
-    expect(state.showModal).toHaveBeenCalledWith(
-      expect.objectContaining({ doctype: 'CRM Task', name: '73' }),
+    expect(button(root, 'Edit')).toBeUndefined()
+    app.unmount()
+    root.remove()
+    // Who asked for it may change it: Edit opens the shared editor, never CRM's modal.
+    state.api.mockResolvedValueOnce(
+      item('74', { mine: false, assigned_to: 'ana@example.test' }),
     )
+    mount(Pendiente, { source: 'crm-task', name: '74' })
+    await flush()
+    expect(root.querySelector('[data-create]')).toBeNull()
+    button(root, 'Edit').click()
+    await flush()
+    expect(root.querySelector('[data-create]')).not.toBeNull()
+    expect(state.showModal).not.toHaveBeenCalled()
   })
 })
 

@@ -166,6 +166,19 @@ class TestAvisosResolve(IntegrationTestCase):
 			}
 		).insert(ignore_permissions=True)
 
+	def test_a_pendiente_reads_as_its_first_line_never_markup_or_hash(self):
+		todo = frappe.get_doc(
+			{
+				"doctype": "ToDo",
+				"description": '<div class="ql-editor read-mode"><p>Llamar &amp; confirmar</p><p>- [ ] cable</p></div>',
+				"allocated_to": "Administrator",
+			}
+		).insert(ignore_permissions=True)
+		self.assertEqual(resolve.record_label("ToDo", todo.name), "Llamar & confirmar")
+		todo.db_set("description", "Solo texto")
+		self.assertEqual(resolve.record_label("ToDo", todo.name), "Solo texto")
+		todo.delete(ignore_permissions=True)
+
 	def test_a_removed_assignment_reads_in_the_readers_words_and_never_asks_for_action(self):
 		if not frappe.db.table_exists("CRM Notification"):
 			self.skipTest("CRM Notification is not installed")

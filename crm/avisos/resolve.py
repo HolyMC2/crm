@@ -227,6 +227,12 @@ def record_label(doctype, name):
 	from crm.permissions.whatsapp_read import readable_field
 
 	try:
+		if doctype == "ToDo":
+			# A pendiente's title is the first line of its HTML description (Shell D8),
+			# never the hash name nor the markup.
+			if readable_field("ToDo", "description"):
+				return _first_line(frappe.db.get_value("ToDo", name, "description")) or name
+			return name
 		meta = frappe.get_meta(doctype)
 		field = meta.get_title_field()
 		if (not field or field == "name") and meta.has_field("title"):
@@ -236,6 +242,16 @@ def record_label(doctype, name):
 	except Exception:
 		frappe.clear_last_message()
 	return name
+
+
+def _first_line(value):
+	import html
+	import re
+
+	text = re.sub(r"(?i)<br\s*/?>|</(p|div|li|h[1-6])>", "\n", str(value or ""))
+	text = html.unescape(re.sub(r"<[^>]+>", "", text))
+	line = next((part.strip() for part in text.splitlines() if part.strip()), "")
+	return line[:140]
 
 
 def _open_in(where):

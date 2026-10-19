@@ -112,7 +112,7 @@
           "
           variant="solid"
           icon-left="check-circle"
-          @click="editFollowup(nextTask)"
+          @click="nextTask ? editFollowup(nextTask) : addFollowup()"
         />
         <!-- Llamar · Mensaje · Correo · Agendar always sit in the same place;
              one without data greys out instead of disappearing. -->
@@ -391,7 +391,7 @@
               label="Añadir"
               icon-left="plus"
               variant="ghost"
-              @click="editFollowup()"
+              @click="addFollowup()"
             />
           </div>
           <RecoveryMessage
@@ -470,6 +470,17 @@
               </article>
             </template>
           </div>
+          <!-- What I handed to others on this record, until they finish it
+               (Shell D8); mine are the list above. -->
+          <RecordPendientes
+            ref="othersPendientes"
+            :reference-type="followupParent.doctype"
+            :reference-name="followupParent.name"
+            :reference-label="followupParent.title || ''"
+            title="Encargados a otros"
+            others-only
+            bare
+          />
         </section>
         <section
           class="c-record-section c-notes-section"
@@ -787,6 +798,19 @@
         :address="selectedAddress"
         @saved="reload"
       />
+      <!-- A new follow-up is a pendiente like any other: «Para», hora,
+           recordatorio and repetir (Shell D8, the shared task editor). -->
+      <CreateDialog
+        v-if="createFollowupLoaded"
+        v-model="createFollowupOpen"
+        :today="boot?.today || ''"
+        :reference="{
+          reference_type: followupParent.doctype,
+          reference_name: followupParent.name,
+          reference_label: followupParent.title || '',
+        }"
+        @created="followupCreated"
+      />
       <FollowupEditor
         v-if="followupOpen"
         v-model="followupOpen"
@@ -872,6 +896,7 @@ import ContactosLayout from '@/components/contactos/ContactosLayout.vue'
 import IdentityEditor from '@/components/contactos/IdentityEditor.vue'
 import AddressEditor from '@/components/contactos/AddressEditor.vue'
 import FollowupEditor from '@/components/contactos/FollowupEditor.vue'
+import RecordPendientes from '@/components/pendientes/RecordPendientes.vue'
 import RelationEditor from '@/components/contactos/RelationEditor.vue'
 import TagEditor from '@/components/contactos/TagEditor.vue'
 import RecoveryMessage from '@/components/contactos/RecoveryMessage.vue'
@@ -915,6 +940,10 @@ const VentasDelCliente = defineAsyncComponent(
 )
 const ChannelComposer = defineAsyncComponent(
   () => import('@/components/doco/channel/ChannelComposer.vue'),
+)
+// The task editor loads on the first «Añadir», not with the contact.
+const CreateDialog = defineAsyncComponent(
+  () => import('@/components/pendientes/CreateDialog.vue'),
 )
 const route = useRoute(),
   router = useRouter()
@@ -1365,6 +1394,25 @@ async function refreshFollowups() {
 function editFollowup(task = null) {
   selectedFollowup.value = task
   followupOpen.value = true
+}
+const createFollowupLoaded = ref(false),
+  createFollowupOpen = ref(false),
+  othersPendientes = ref(null)
+const followupParent = computed(() => {
+  const parent = selectedSource.value || record.value || {}
+  return {
+    doctype: parent.doctype || '',
+    name: parent.name || '',
+    title: parent.title || '',
+  }
+})
+function addFollowup() {
+  createFollowupLoaded.value = true
+  createFollowupOpen.value = true
+}
+function followupCreated() {
+  refreshFollowups()
+  othersPendientes.value?.reload()
 }
 const addressGuardNote = ref('')
 // Protected address links: the server's guard offers a new address (when

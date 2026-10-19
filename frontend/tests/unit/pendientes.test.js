@@ -42,6 +42,13 @@ describe('Pendientes URL state', () => {
       to: '2026-10-07',
     })
     expect(toQuery(parseQuery({}))).toEqual({})
+    // The desktop board is part of the list state; approvals have none.
+    expect(
+      toQuery(parseQuery({ segment: 'delegated', view: 'board' })),
+    ).toEqual({ segment: 'delegated', view: 'board' })
+    expect(parseQuery({ segment: 'approve', view: 'board' }).view).toBe(
+      undefined,
+    )
   })
   it('rejects unknown segments, sources and malformed dates', () => {
     expect(

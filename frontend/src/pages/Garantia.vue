@@ -350,6 +350,15 @@
             </p>
           </section>
 
+          <!-- The claim's pendientes (Shell D8): who follows up, by when. -->
+          <RecordPendientes
+            class="rounded-lg border border-outline-gray-2 p-4 sm:col-span-2"
+            reference-type="Warranty Claim"
+            :reference-name="claim.name"
+            :reference-label="`${claim.name} · ${claim.customer_name || ''}`"
+            :return-label="__('Warranty', null, 'Garantías')"
+          />
+
           <section
             v-if="showSupplier"
             class="rounded-lg border border-outline-gray-2 p-4 sm:col-span-2"
@@ -741,6 +750,7 @@ import { appleKeys, registerPageShortcuts } from '@/composables/shellKeyboard'
 import { hoyLive } from '@/composables/useHoy'
 import { isTypingTarget } from '@/vendor/muelle-shell/contracts'
 import { useLiveWatch } from '@/vendor/muelle-shell/live-sync/vue'
+import RecordPendientes from '@/components/pendientes/RecordPendientes.vue'
 import { keyAction } from '@/utils/powerList'
 import {
   LIVE_DOCTYPES,

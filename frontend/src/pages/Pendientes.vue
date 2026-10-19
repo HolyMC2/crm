@@ -56,9 +56,20 @@
           </p>
         </div>
         <template v-if="!approvals">
+          <Segmented
+            v-if="!phone"
+            :label="__('View', null, 'Pendientes')"
+            :model-value="state.view || 'list'"
+            :options="viewOptions"
+            @update:model-value="
+              (value) => update({ view: value === 'board' ? 'board' : '' })
+            "
+          />
+          <!-- The one task editor creates sales tasks too (on a lead or deal);
+               CRM's own form is only for sellers without pendientes. -->
           <Button
-            v-if="boot?.capabilities?.create_crm"
-            :variant="boot?.capabilities?.create ? 'subtle' : 'solid'"
+            v-if="boot?.capabilities?.create_crm && !boot?.capabilities?.create"
+            variant="solid"
             icon-left="briefcase"
             :label="__('New sales task')"
             class="min-h-11 sm:min-h-8"
@@ -118,45 +129,36 @@
       </FilterChips>
       <div
         v-else-if="!phone"
-        class="flex flex-wrap items-center gap-2 px-4 pb-3 sm:px-6"
+        class="flex flex-wrap items-center gap-x-2 gap-y-1 px-4 pb-2 sm:px-6"
       >
         <FormControl
           v-model="search"
           data-list-search
-          class="min-w-0 flex-1 sm:max-w-xs [&_input]:min-h-11 sm:[&_input]:min-h-0"
+          class="w-full min-w-0 sm:w-64"
           type="search"
           :placeholder="__('Search pendientes')"
           :aria-label="__('Search pendientes')"
         />
-        <FormControl
-          v-if="
-            boot?.sources?.['CRM Task'] &&
-            state.segment !== 'team' &&
-            !approvals
-          "
-          class="h-11 sm:h-auto"
-          type="select"
-          :aria-label="__('Task source')"
-          :model-value="state.source"
-          :options="[
-            { label: __('All sources'), value: 'all' },
-            { label: __('Pendientes'), value: 'ToDo' },
-            { label: __('Sales tasks'), value: 'CRM Task' },
-          ]"
-          @update:model-value="(value) => update({ source: value })"
+        <FilterChips
+          v-if="!approvals && sourceChips.length"
+          class="[&>div]:px-0"
+          :label="__('Task source')"
+          :model-value="state.source === 'all' ? '' : state.source"
+          :chips="sourceChips"
+          @update:model-value="(value) => update({ source: value || 'all' })"
         />
-        <FormControl
+        <FilterChips
           v-if="!approvals"
-          class="h-11 sm:h-auto"
-          type="select"
-          :aria-label="__('Priority')"
+          class="[&>div]:px-0"
+          :label="__('Priority')"
           :model-value="state.priority"
-          :options="priorityOptions"
-          @update:model-value="(value) => update({ priority: value })"
+          :chips="priorityChips"
+          @update:model-value="(value) => update({ priority: value || '' })"
         />
         <button
           v-if="state.from || state.to"
-          class="flex min-h-11 items-center gap-1 rounded-full bg-surface-gray-2 px-3 text-sm sm:min-h-8"
+          type="button"
+          class="flex min-h-8 items-center gap-1 rounded-full bg-surface-gray-2 px-3 text-sm"
           @click="update({ from: '', to: '' })"
         >
           {{ rangeLabel }} <span aria-hidden="true">×</span
@@ -171,173 +173,233 @@
         <strong>{{ problem.title }}.</strong> {{ problem.detail }}
         <Button class="ml-2" :label="__('Retry')" @click="load()" />
       </div>
-      <div
-        ref="scroller"
-        class="min-h-0 flex-1 overflow-y-auto pb-24 sm:pb-6"
-        @scroll.passive="rememberScroll"
-      >
-        <!-- «Por aprobar» / «Esperando respuesta»: the owners' rows (useAprobaciones). -->
-        <ApprovalList
-          v-if="approvals"
-          :state="state"
-          :restore="restoreScroll"
-          @loaded="approvalLoaded"
-          @segment="selectSegment"
-        />
+      <PendientesBoard
+        v-if="board"
+        :rows="boardRows"
+        :today="today"
+        :query="returnQuery"
+        :show-assignee="assigneeShown"
+        :movable-all="state.segment === 'delegated'"
+        :busy="busy"
+        @move="moveTo"
+      />
+      <div v-else class="flex min-h-0 flex-1">
         <div
-          v-else-if="loading && !loaded"
-          role="status"
-          class="px-6 py-8 text-sm text-ink-gray-6"
+          ref="scroller"
+          class="min-h-0 overflow-y-auto pb-24 sm:pb-6"
+          :class="
+            split
+              ? 'w-[26rem] flex-none border-r border-outline-gray-1 xl:w-[30rem]'
+              : 'flex-1'
+          "
+          @scroll.passive="rememberScroll"
         >
-          {{ __('Loading pendientes…') }}
-        </div>
-        <template v-else-if="state.segment === 'mine'">
+          <!-- «Por aprobar» / «Esperando respuesta»: the owners' rows (useAprobaciones). -->
+          <ApprovalList
+            v-if="approvals"
+            :state="state"
+            :restore="restoreScroll"
+            @loaded="approvalLoaded"
+            @segment="selectSegment"
+          />
           <div
-            v-if="allClear"
-            class="mx-auto max-w-md px-6 py-10 text-center text-ink-gray-7"
+            v-else-if="loading && !loaded"
+            role="status"
+            class="px-6 py-8 text-sm text-ink-gray-6"
           >
-            <p class="text-lg font-semibold">{{ __('You are up to date') }}</p>
-            <p class="mt-1 text-sm">
-              {{
-                __(
-                  'Nothing is due. Plan the next follow-up so it does not slip.',
-                )
-              }}
-            </p>
-            <Button
-              v-if="boot?.capabilities?.create && !phone"
-              class="mt-4"
-              :label="__('New pendiente')"
-              @click="openCreate()"
-            />
-            <Button
-              v-else-if="boot?.capabilities?.create_crm && !phone"
-              class="mt-4"
-              :label="__('New sales task')"
-              @click="newSalesTask"
-            />
+            {{ __('Loading pendientes…') }}
           </div>
-          <section
-            v-for="group in shownGroups"
-            v-else
-            :key="group"
-            :aria-labelledby="`pendientes-${group}`"
-            :class="
-              phone
-                ? 'mx-3 mt-3 overflow-hidden rounded-2xl bg-surface-gray-1'
-                : ''
-            "
-          >
-            <h2
-              :id="`pendientes-${group}`"
-              class="sticky top-0 z-10 flex items-center gap-2 border-b border-outline-gray-1 px-4 py-2 text-sm font-semibold sm:px-6"
-              :class="[
-                phone ? 'bg-surface-gray-1 py-3 text-base' : 'bg-surface-base',
-              ]"
+          <template v-else-if="state.segment === 'mine'">
+            <div
+              v-if="allClear"
+              class="mx-auto max-w-md px-6 py-10 text-center text-ink-gray-7"
             >
-              {{ segmentLabel(group) }}
-              <span
-                v-if="countText(sections[group]?.count)"
-                class="rounded-full bg-surface-gray-2 px-2 text-xs text-ink-gray-7"
-                >{{ countText(sections[group]?.count) }}</span
+              <p class="text-lg font-semibold">
+                {{ __('You are up to date') }}
+              </p>
+              <p class="mt-1 text-sm">
+                {{
+                  __(
+                    'Nothing is due. Plan the next follow-up so it does not slip.',
+                  )
+                }}
+              </p>
+              <Button
+                v-if="boot?.capabilities?.create && !phone"
+                class="mt-4"
+                :label="__('New pendiente')"
+                @click="openCreate()"
+              />
+              <Button
+                v-else-if="boot?.capabilities?.create_crm && !phone"
+                class="mt-4"
+                :label="__('New sales task')"
+                @click="newSalesTask"
+              />
+            </div>
+            <section
+              v-for="group in shownGroups"
+              v-else
+              :key="group"
+              :aria-labelledby="`pendientes-${group}`"
+              :class="
+                phone
+                  ? 'mx-3 mt-3 overflow-hidden rounded-2xl bg-surface-gray-1'
+                  : ''
+              "
+            >
+              <h2
+                :id="`pendientes-${group}`"
+                class="sticky top-0 z-10 flex items-center gap-2 border-b border-outline-gray-1 px-4 py-2 text-sm font-semibold sm:px-6"
+                :class="[
+                  phone
+                    ? 'bg-surface-gray-1 py-3 text-base'
+                    : 'bg-surface-base',
+                ]"
               >
-            </h2>
-            <p
-              v-if="!sections[group]?.rows?.length"
-              class="px-4 py-2 text-sm text-ink-gray-5 sm:px-6"
+                {{ segmentLabel(group) }}
+                <span
+                  v-if="countText(sections[group]?.count)"
+                  class="rounded-full bg-surface-gray-2 px-2 text-xs text-ink-gray-7"
+                  >{{ countText(sections[group]?.count) }}</span
+                >
+              </h2>
+              <p
+                v-if="!sections[group]?.rows?.length"
+                class="px-4 py-2 text-sm text-ink-gray-5 sm:px-6"
+              >
+                {{ emptyText(group) }}
+              </p>
+              <PendienteRow
+                v-for="row in sections[group]?.rows || []"
+                :key="row.doctype + row.name"
+                :data-scroll-key="row.doctype + row.name"
+                :row="row"
+                :today="today"
+                :query="returnQuery"
+                :link="split ? selectLink(row) : null"
+                :selected="isSelected(row)"
+                :busy="busy.has(row.doctype + row.name)"
+                @complete="quickComplete"
+                @complete-next="openComplete"
+                @reschedule="reschedule"
+              />
+              <div v-if="sections[group]?.has_more" class="px-4 py-2 sm:px-6">
+                <Button :label="__('See all')" @click="selectSegment(group)" />
+              </div>
+            </section>
+            <!-- Done work folds into one collapsed card under the open groups
+               (Google Tasks «Completed (n)»); it is not a list of its own. -->
+            <section
+              v-if="doneCount"
+              class="mt-3"
+              :class="
+                phone
+                  ? 'mx-3 overflow-hidden rounded-2xl bg-surface-gray-1'
+                  : 'border-t border-outline-gray-1'
+              "
             >
-              {{ emptyText(group) }}
+              <button
+                type="button"
+                class="flex min-h-14 w-full items-center justify-between gap-3 px-4 text-left text-base font-semibold text-ink-gray-8 sm:px-6"
+                :aria-expanded="String(doneOpen)"
+                aria-controls="pendientes-done"
+                @click="toggleDone"
+              >
+                {{ __('Completed ({0})', [doneCount]) }}
+                <span
+                  class="lucide-chevron-down size-5 transition-transform"
+                  :class="doneOpen ? 'rotate-180' : ''"
+                  aria-hidden="true"
+                />
+              </button>
+              <div v-if="doneOpen" id="pendientes-done">
+                <PendienteRow
+                  v-for="row in doneRows"
+                  :key="row.doctype + row.name"
+                  :row="row"
+                  :today="today"
+                  :query="returnQuery"
+                  :link="split ? selectLink(row) : null"
+                  :selected="isSelected(row)"
+                  :busy="busy.has(row.doctype + row.name)"
+                  @complete="undo"
+                />
+                <div class="px-4 py-2 sm:px-6">
+                  <Button
+                    variant="ghost"
+                    class="min-h-11 sm:min-h-8"
+                    :label="__('See all')"
+                    @click="selectSegment('done')"
+                  />
+                </div>
+              </div>
+            </section>
+          </template>
+          <template v-else>
+            <p
+              v-if="!rows.length"
+              class="mx-auto max-w-md px-6 py-10 text-center text-sm text-ink-gray-6"
+            >
+              {{ emptyText(state.segment) }}
             </p>
             <PendienteRow
-              v-for="row in sections[group]?.rows || []"
+              v-for="row in rows"
               :key="row.doctype + row.name"
               :data-scroll-key="row.doctype + row.name"
               :row="row"
               :today="today"
               :query="returnQuery"
+              :show-assignee="assigneeShown"
+              :link="split ? selectLink(row) : null"
+              :selected="isSelected(row)"
               :busy="busy.has(row.doctype + row.name)"
               @complete="quickComplete"
               @complete-next="openComplete"
               @reschedule="reschedule"
             />
-            <div v-if="sections[group]?.has_more" class="px-4 py-2 sm:px-6">
-              <Button :label="__('See all')" @click="selectSegment(group)" />
-            </div>
-          </section>
-          <!-- Done work folds into one collapsed card under the open groups
-               (Google Tasks «Completed (n)»); it is not a list of its own. -->
-          <section
-            v-if="doneCount"
-            class="mt-3"
-            :class="
-              phone
-                ? 'mx-3 overflow-hidden rounded-2xl bg-surface-gray-1'
-                : 'border-t border-outline-gray-1'
-            "
-          >
-            <button
-              type="button"
-              class="flex min-h-14 w-full items-center justify-between gap-3 px-4 text-left text-base font-semibold text-ink-gray-8 sm:px-6"
-              :aria-expanded="String(doneOpen)"
-              aria-controls="pendientes-done"
-              @click="toggleDone"
-            >
-              {{ __('Completed ({0})', [doneCount]) }}
-              <span
-                class="lucide-chevron-down size-5 transition-transform"
-                :class="doneOpen ? 'rotate-180' : ''"
-                aria-hidden="true"
+            <div v-if="hasMore" class="px-4 py-3 sm:px-6">
+              <Button
+                :label="__('Load more')"
+                :loading="loading"
+                @click="load(rows.length)"
               />
-            </button>
-            <div v-if="doneOpen" id="pendientes-done">
-              <PendienteRow
-                v-for="row in doneRows"
-                :key="row.doctype + row.name"
-                :row="row"
-                :today="today"
-                :query="returnQuery"
-                :busy="busy.has(row.doctype + row.name)"
-                @complete="undo"
-              />
-              <div class="px-4 py-2 sm:px-6">
-                <Button
-                  variant="ghost"
-                  class="min-h-11 sm:min-h-8"
-                  :label="__('See all')"
-                  @click="selectSegment('done')"
-                />
-              </div>
             </div>
-          </section>
-        </template>
-        <template v-else>
-          <p
-            v-if="!rows.length"
-            class="mx-auto max-w-md px-6 py-10 text-center text-sm text-ink-gray-6"
+          </template>
+        </div>
+        <!-- Desktop ≥1024: the chosen pendiente beside the list (?sel=). -->
+        <section
+          v-if="split"
+          class="min-h-0 min-w-0 flex-1 overflow-y-auto px-6 pb-10 pt-2"
+          :aria-label="__('Pendiente details')"
+        >
+          <PendienteDetail
+            v-if="selection"
+            :key="selection.doctype + selection.name"
+            :doctype="selection.doctype"
+            :name="selection.name"
+            :wide="false"
+            @changed="detailChanged"
+            @redirect="(target) => router.replace(selectLink(target))"
           >
-            {{ emptyText(state.segment) }}
-          </p>
-          <PendienteRow
-            v-for="row in rows"
-            :key="row.doctype + row.name"
-            :data-scroll-key="row.doctype + row.name"
-            :row="row"
-            :today="today"
-            :query="returnQuery"
-            :show-assignee="state.segment === 'team'"
-            :busy="busy.has(row.doctype + row.name)"
-            @complete="quickComplete"
-            @complete-next="openComplete"
-            @reschedule="reschedule"
-          />
-          <div v-if="hasMore" class="px-4 py-3 sm:px-6">
-            <Button
-              :label="__('Load more')"
-              :loading="loading"
-              @click="load(rows.length)"
+            <template #leave>
+              <Button :label="__('Close')" @click="closeDetail" />
+            </template>
+          </PendienteDetail>
+          <div
+            v-else
+            class="mx-auto mt-16 max-w-sm text-center text-sm text-ink-gray-6"
+          >
+            <FeatherIcon
+              name="sidebar"
+              class="mx-auto mb-3 block size-8 text-ink-gray-4"
+              aria-hidden="true"
             />
+            {{
+              __('Choose a pendiente to see its details, notes and activity.')
+            }}
           </div>
-        </template>
+        </section>
       </div>
       <Fab
         v-if="phone && !approvals && canCreate"
@@ -376,9 +438,10 @@ import {
   watch,
 } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
-import { Button, FormControl, toast } from 'frappe-ui'
+import { Button, FeatherIcon, FormControl, toast } from 'frappe-ui'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
-import { AppBar, Fab, FilterChips } from '@/components/ui'
+import { AppBar, Fab, FilterChips, Segmented } from '@/components/ui'
+import { useMediaQuery } from '@vueuse/core'
 import { isMobile as phone } from '@/composables/breakpoint'
 import { useListKeys } from '@/composables/pageKeys'
 import PendienteRow from '@/components/pendientes/PendienteRow.vue'
@@ -407,6 +470,7 @@ import {
   countText,
   isApprovalSegment,
   parseQuery,
+  parseSelection,
   pendienteError,
   pendienteRoute,
   pendientesApi,
@@ -414,9 +478,18 @@ import {
   requestId,
   segmentEntries,
   segmentLabel,
+  selectionKey,
+  stateLabel,
   toQuery,
 } from '@/composables/usePendientes'
 
+// Desktop only (the detail beside the list, the board): loaded when shown.
+const PendienteDetail = defineAsyncComponent(
+  () => import('@/components/pendientes/PendienteDetail.vue'),
+)
+const PendientesBoard = defineAsyncComponent(
+  () => import('@/components/pendientes/PendientesBoard.vue'),
+)
 // CRM's own wired CRM Task editor, loaded only for workers who create sales tasks.
 const DoctypeModals = defineAsyncComponent(
   () => import('@/components/Modals/DoctypeModals.vue'),
@@ -431,6 +504,7 @@ const approvalCounts = ref(null)
 const entries = computed(() =>
   segmentEntries({
     team: Boolean(boot.value?.capabilities?.team),
+    delegated: Boolean(boot.value?.capabilities?.delegated),
     // A link to either list always opens it; the pills follow the capability.
     approve:
       Boolean(boot.value?.capabilities?.approve) ||
@@ -467,6 +541,27 @@ const sourceChips = computed(() =>
         { value: 'CRM Task', label: __('Sales tasks') },
       ]
     : [],
+)
+const priorityChips = computed(() => [
+  { value: 'High', label: __('High') },
+  { value: 'Medium', label: __('Medium') },
+  { value: 'Low', label: __('Low') },
+])
+const viewOptions = computed(() => [
+  { value: 'list', label: __('List') },
+  { value: 'board', label: __('Board') },
+])
+// Desktop ≥1024: list + detail side by side; the board is its own view.
+const wide = useMediaQuery('(min-width: 1024px)')
+const board = computed(
+  () => !phone.value && !approvals.value && state.value.view === 'board',
+)
+const split = computed(() => wide.value && !approvals.value && !board.value)
+const selection = computed(() =>
+  split.value ? parseSelection(route.query.sel) : null,
+)
+const assigneeShown = computed(() =>
+  ['team', 'delegated'].includes(state.value.segment),
 )
 const canCreate = computed(() =>
   Boolean(
@@ -528,7 +623,8 @@ const allClear = computed(
 const subtitle = computed(
   () =>
     ({
-      team: __('Open sales tasks of everyone you can see'),
+      team: __('Open work of your team that you can see'),
+      delegated: __('What you handed to others, until they finish it'),
       done: __('Closed and cancelled work, newest first'),
       approve: __('Everything waiting for your OK, oldest first'),
       waiting: __('What you asked for and is still waiting for an answer'),
@@ -548,17 +644,42 @@ function emptyText(group) {
       today: __('Nothing else due today.'),
       upcoming: __('Nothing planned yet.'),
       undated: __('Everything has a date.'),
-      team: __('The sales team has no open tasks you can see.'),
+      team: __('Your team has no open work you can see.'),
+      delegated: __('Nothing you handed to others is open.'),
       done: __('Nothing completed yet.'),
     }[group] || __('No pendientes with these filters.')
   )
 }
 
 function update(patch) {
+  // Filters keep the open pendiente beside the list; a new list does not.
+  const sel = typeof route.query.sel === 'string' ? route.query.sel : ''
   router.replace({
     name: 'Pendientes',
-    query: toQuery({ ...state.value, ...patch }),
+    query: {
+      ...toQuery({ ...state.value, ...patch }),
+      ...(sel ? { sel } : {}),
+    },
   })
+}
+function selectLink(row) {
+  return {
+    name: 'Pendientes',
+    query: { ...toQuery(state.value), sel: selectionKey(row) },
+  }
+}
+function isSelected(row) {
+  const open = selection.value
+  return Boolean(
+    open && open.doctype === row.doctype && open.name === String(row.name),
+  )
+}
+function closeDetail() {
+  router.replace({ name: 'Pendientes', query: toQuery(state.value) })
+}
+function detailChanged(row) {
+  if (row) replaceRow(row)
+  load()
 }
 function selectSegment(segment) {
   router.push({
@@ -585,7 +706,7 @@ async function load(start = 0) {
     if (response.sections) {
       for (const group of GROUPS) sections[group] = response.sections[group]
       doneCount.value = response.done?.value || 0
-      if (doneOpen.value) loadDone()
+      if (doneOpen.value || board.value) loadDone()
     } else {
       rows.value = start ? [...rows.value, ...response.rows] : response.rows
       hasMore.value = response.has_more
@@ -731,6 +852,36 @@ async function reschedule(row, date) {
     busy.delete(key)
   }
 }
+// The board shows the list's rows; «Mis pendientes» adds the recent done ones.
+const boardRows = computed(() =>
+  state.value.segment === 'mine'
+    ? [
+        ...GROUPS.flatMap((group) => sections[group]?.rows || []),
+        ...doneRows.value,
+      ]
+    : rows.value,
+)
+async function moveTo(row, next) {
+  const key = row.doctype + row.name
+  if (busy.has(key)) return
+  busy.add(key)
+  try {
+    await pendientesApi('update', {
+      doctype: row.doctype,
+      name: String(row.name),
+      modified: row.modified,
+      values: { state: next },
+      request_id: requestId(),
+    })
+    toast.success(__('Moved to {0}', [stateLabel(next)]))
+  } catch (error) {
+    const reason = pendienteError(error)
+    toast.error(`${reason.title}. ${reason.detail}`)
+  } finally {
+    busy.delete(key)
+  }
+  load()
+}
 async function loadDone() {
   try {
     const response = await pendientesApi(
@@ -801,7 +952,12 @@ function afterCreate(row) {
   toast.success(__('Pendiente saved'), {
     action: {
       label: __('Open'),
-      onClick: () => router.push(pendienteRoute(row, returnQuery.value)),
+      onClick: () =>
+        router.push(
+          split.value
+            ? selectLink(row)
+            : pendienteRoute(row, returnQuery.value),
+        ),
     },
   })
   if (route.query.create) update({})
@@ -900,6 +1056,9 @@ watch(
   },
 )
 // Another approval list (segment, kind, search): its rows are not on screen yet.
+watch(board, (on) => {
+  if (on && state.value.segment === 'mine') loadDone()
+})
 watch(
   () => [state.value.segment, state.value.kind, state.value.q],
   () => (approvalReady.value = false),

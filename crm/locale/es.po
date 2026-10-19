@@ -27967,3 +27967,212 @@ msgstr "Tu usuario no puede cambiar este correo."
 #: frontend/src/pages/Producto.vue
 msgid "All settings"
 msgstr "Todos los ajustes"
+# Shell D8 (2026-10-18): Pendientes as strong as sales tasks.
+#: frontend/src/pages/Pendientes.vue
+msgid "Pendiente details"
+msgstr "Detalle del pendiente"
+
+#: frontend/src/pages/Pendientes.vue
+msgid "Choose a pendiente to see its details, notes and activity."
+msgstr "Elige un pendiente para ver sus detalles, notas y actividad."
+
+#: frontend/src/pages/Pendientes.vue
+msgid "Open work of your team that you can see"
+msgstr "Trabajo abierto del equipo que puedes ver"
+
+#: frontend/src/pages/Pendientes.vue
+msgid "What you handed to others, until they finish it"
+msgstr "Lo que encargaste a otros, hasta que lo terminen"
+
+#: frontend/src/pages/Pendientes.vue
+msgid "Your team has no open work you can see."
+msgstr "Tu equipo no tiene trabajo abierto que puedas ver."
+
+#: frontend/src/pages/Pendientes.vue
+msgid "Nothing you handed to others is open."
+msgstr "No hay nada abierto de lo que encargaste."
+
+#: frontend/src/pages/Pendientes.vue
+msgctxt "Pendientes"
+msgid "View"
+msgstr "Vista"
+
+#: frontend/src/components/pendientes/CreateDialog.vue
+msgid "Edit pendiente"
+msgstr "Editar pendiente"
+
+#: frontend/src/components/pendientes/CreateDialog.vue
+msgid "Saved as a sales task: the record keeps its owner."
+msgstr "Se guarda como tarea de Ventas: el registro conserva a su responsable."
+
+#: frontend/src/components/pendientes/CreateDialog.vue
+msgid "Add details"
+msgstr "Agregar detalles"
+
+#: frontend/src/components/pendientes/CreateDialog.vue
+msgid "A line that starts with «- [ ]» becomes a checklist item."
+msgstr "Una línea que empieza con «- [ ]» se vuelve un punto de la lista."
+
+#: frontend/src/components/pendientes/CreateDialog.vue
+msgid "Search a coworker"
+msgstr "Busca a un compañero"
+
+#: frontend/src/components/pendientes/CreateDialog.vue
+msgid "Me ({0})"
+msgstr "Yo ({0})"
+
+#: frontend/src/components/pendientes/CreateDialog.vue
+msgid "Pick a day first; the reminder goes to whoever does it."
+msgstr "Elige primero el día; el recordatorio le llega a quien lo hace."
+
+#: frontend/src/components/pendientes/CreateDialog.vue
+msgid "Kind of record"
+msgstr "Tipo de registro"
+
+#: frontend/src/components/pendientes/CreateDialog.vue
+msgid "Name or number"
+msgstr "Nombre o número"
+
+#: frontend/src/components/pendientes/CreateDialog.vue
+msgid "Remove link"
+msgstr "Quitar vínculo"
+
+#: frontend/src/components/pendientes/CreateDialog.vue
+msgid "For me"
+msgstr "Para mí"
+
+#: frontend/src/components/pendientes/CreateDialog.vue
+msgid "Priority: {0}"
+msgstr "Prioridad: {0}"
+
+#: frontend/src/components/pendientes/CreateDialog.vue
+msgid "Remind me"
+msgstr "Recordarme"
+
+#: frontend/src/components/pendientes/CreateDialog.vue
+msgid "Link to a record"
+msgstr "Vincular a un registro"
+
+#: frontend/src/components/pendientes/PendienteDetail.vue
+msgid "Checklist"
+msgstr "Lista"
+
+#: frontend/src/components/pendientes/PendienteDetail.vue
+msgctxt "Pendiente"
+msgid "Asked by"
+msgstr "Lo pidió"
+
+#: frontend/src/components/pendientes/PendienteDetail.vue
+#: frontend/src/components/pendientes/CreateDialog.vue
+msgctxt "Pendiente"
+msgid "For"
+msgstr "Para"
+
+#: frontend/src/components/pendientes/PendienteDetail.vue
+msgid "Repeats"
+msgstr "Se repite"
+
+#: frontend/src/components/pendientes/PendienteDetail.vue
+msgid "Comments and activity"
+msgstr "Comentarios y actividad"
+
+#: frontend/src/components/pendientes/PendienteDetail.vue
+msgid "Write a comment"
+msgstr "Escribe un comentario"
+
+#: frontend/src/components/pendientes/PendienteDetail.vue
+msgid "Me"
+msgstr "Yo"
+
+#: frontend/src/components/pendientes/PendienteDetail.vue
+msgid "Cancel pendiente"
+msgstr "Cancelar pendiente"
+
+#: frontend/src/components/pendientes/PendienteDetail.vue
+msgid "Mark as: {0}"
+msgstr "Marcar como: {0}"
+
+#: frontend/src/components/pendientes/PendienteDetail.vue
+msgid "Pendiente cancelled"
+msgstr "Pendiente cancelado"
+
+#: frontend/src/components/pendientes/PendienteDetail.vue
+msgid "The file could not be attached. Try again."
+msgstr "No se pudo adjuntar el archivo. Inténtalo de nuevo."
+
+#: frontend/src/components/pendientes/PendienteDetail.vue
+msgid "File attached"
+msgstr "Archivo adjunto"
+
+#: frontend/src/components/pendientes/PendientesBoard.vue
+msgid "Move {0} to…"
+msgstr "Mover «{0}» a…"
+
+#: frontend/src/components/pendientes/PendientesBoard.vue
+msgid "Move to {0}"
+msgstr "Mover a {0}"
+
+#: frontend/src/composables/usePendientes.js
+msgid "Assigned by me"
+msgstr "Asignadas por mí"
+
+#: frontend/src/composables/usePendientes.js
+msgid "From the team"
+msgstr "Del equipo"
+
+#: frontend/src/composables/usePendientes.js
+msgid "Monday to Friday"
+msgstr "De lunes a viernes"
+
+#: frontend/src/composables/usePendientes.js
+msgid "That day at 9:00"
+msgstr "Ese día a las 9:00"
+
+#: frontend/src/composables/usePendientes.js
+msgid "The day before at 9:00"
+msgstr "Un día antes a las 9:00"
+
+#: frontend/src/composables/usePendientes.js
+msgid "At the time"
+msgstr "A la hora"
+
+#: frontend/src/composables/usePendientes.js
+msgctxt "Pendiente"
+msgid "Someday"
+msgstr "Algún día"
+
+#: frontend/src/composables/usePendientes.js
+msgctxt "Pendiente"
+msgid "To do"
+msgstr "Por hacer"
+
+#: frontend/src/composables/usePendientes.js
+msgctxt "Pendiente"
+msgid "In progress"
+msgstr "En curso"
+
+#: frontend/src/composables/usePendientes.js
+msgctxt "Pendiente"
+msgid "Blocked"
+msgstr "Bloqueada"
+
+#: frontend/src/composables/usePendientes.js
+msgctxt "Pendiente"
+msgid "Done"
+msgstr "Hecha"
+
+#: frontend/src/composables/usePendientes.js
+msgctxt "Pendiente"
+msgid "Cancelled"
+msgstr "Cancelada"
+#: frontend/src/components/pendientes/RecordPendientes.vue
+msgid "No open pendientes on this record."
+msgstr "Este registro no tiene pendientes abiertos."
+
+#: frontend/src/components/pendientes/RecordPendientes.vue
+msgid "Done by {0}"
+msgstr "Lo terminó {0}"
+
+#: frontend/src/components/pendientes/PendienteDetail.vue
+msgid "Add a subtask"
+msgstr "Agregar subtarea"

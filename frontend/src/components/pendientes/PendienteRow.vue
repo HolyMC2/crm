@@ -2,6 +2,7 @@
   <article
     data-key-row
     class="group flex min-h-14 items-start gap-3 border-b border-outline-gray-1 px-4 py-2.5 sm:px-6"
+    :class="selected ? 'bg-surface-gray-2' : ''"
   >
     <button
       v-if="actionable"
@@ -36,6 +37,7 @@
     <span v-else class="h-6 w-6 shrink-0" aria-hidden="true" />
     <RouterLink
       :to="to"
+      :aria-current="selected ? 'true' : undefined"
       data-row-link
       data-row-focus
       class="-my-2.5 min-w-0 flex-1 rounded-lg py-2.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
@@ -55,6 +57,19 @@
           class="truncate"
           >{{ row.reference_label || row.reference_name }}</span
         >
+        <span
+          v-if="stateChip(row)"
+          class="rounded px-1.5 text-xs font-medium"
+          :class="
+            stateChip(row).tone === 'red'
+              ? 'bg-surface-red-1 text-ink-red-7'
+              : 'bg-surface-blue-1 text-ink-blue-7'
+          "
+          >{{ stateChip(row).label }}</span
+        >
+        <span v-if="row.repeat" role="img" :aria-label="__('Repeats')"
+          ><FeatherIcon name="repeat" class="size-3.5" aria-hidden="true"
+        /></span>
         <span
           v-if="row.priority === 'High'"
           class="rounded bg-surface-amber-1 px-1.5 text-xs font-medium text-ink-amber-9"
@@ -96,6 +111,7 @@ import {
   pendienteRoute,
   priorityLabel,
   sourceLabel,
+  stateChip,
 } from '@/composables/usePendientes'
 
 const props = defineProps({
@@ -104,9 +120,12 @@ const props = defineProps({
   query: { type: Object, default: () => ({}) },
   showAssignee: { type: Boolean, default: false },
   busy: { type: Boolean, default: false },
+  /** Desktop list + detail: the row opens beside the list, not on its own page. */
+  link: { type: [Object, String], default: null },
+  selected: { type: Boolean, default: false },
 })
 const emit = defineEmits(['complete', 'completeNext', 'reschedule'])
-const to = computed(() => pendienteRoute(props.row, props.query))
+const to = computed(() => props.link || pendienteRoute(props.row, props.query))
 // The person, never the login («jeydici01@gmail.com»).
 const assignee = computed(
   () => props.row.assigned_to_name || personName(props.row.assigned_to),
