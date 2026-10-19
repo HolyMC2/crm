@@ -154,6 +154,7 @@ const HOSTED = [
   'compras',
   'gastos',
   'resultados',
+  'bancos',
   'productos',
   'garantias',
   'encuestas',

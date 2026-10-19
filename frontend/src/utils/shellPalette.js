@@ -357,6 +357,21 @@ export function createShellProviders({ boot, modules }) {
             icon: 'lucide-chart-column',
             href: query ? `/resultados?${query}` : '/resultados',
           })
+      // Bancos (Shell D11): its places besides the module itself.
+      if (moduleEnabled(boot.value, 'bancos'))
+        for (const [path, label, keywords] of [
+          ['/bancos', 'Cuentas', 'banco saldo conciliar movimientos tarjeta'],
+          ['/bancos/catalogo', 'Catálogo de cuentas', 'contabilidad sat mayor'],
+          ['/bancos/balanza', 'Balanza', 'balanza comprobacion saldos'],
+        ])
+          items.push({
+            id: `bancos.${path}`,
+            group: 'ir_a',
+            title: `Bancos › ${label}`,
+            keywords,
+            icon: 'lucide-wallet',
+            href: path,
+          })
       if (moduleEnabled(boot.value, 'garantias'))
         for (const [segment, label] of GARANTIAS_PLACES)
           items.push({

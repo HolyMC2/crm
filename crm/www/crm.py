@@ -30,6 +30,7 @@ def _gate(path):
 	from crm.api.agenda import check_agenda_permission
 	from crm.api.archivos import check_archivos_permission
 	from crm.api.avisos import check_avisos_permission
+	from crm.api.bancos import check_bancos_permission
 	from crm.api.cobranza import check_cobranza_permission
 	from crm.api.compras import check_compras_permission
 	from crm.api.contactos import check_contactos_permission, is_contactos_path
@@ -46,6 +47,7 @@ def _gate(path):
 	from crm.api.shell import first_module
 	from crm.archivos_routes import is_archivos_path
 	from crm.avisos_routes import is_avisos_path
+	from crm.bancos_routes import is_bancos_path
 	from crm.cobranza_routes import is_cobranza_path
 	from crm.compras_routes import is_compras_path
 	from crm.contactos_routes import is_contactos_recovery_path
@@ -77,6 +79,7 @@ def _gate(path):
 	archivos = is_archivos_path(path)
 	documentos = is_documentos_path(path)
 	inventario = is_inventario_path(path)
+	bancos = is_bancos_path(path)
 	neutral = (
 		recovery
 		or hoy
@@ -95,6 +98,7 @@ def _gate(path):
 		or archivos
 		or documentos
 		or inventario
+		or bancos
 		or is_contactos_path(path)
 	)
 	if frappe.session.user == "Guest":
@@ -202,6 +206,13 @@ def _gate(path):
 			check_inventario_permission()
 			or frappe.get_cached_value("User", frappe.session.user, "user_type") == "System User"
 		)
+	elif bancos:
+		# A work account without Bancos still gets its guard page (reason, Pedir acceso,
+		# Reintentar) from the shell; the boot carries no account or balance.
+		allowed = (
+			check_bancos_permission()
+			or frappe.get_cached_value("User", frappe.session.user, "user_type") == "System User"
+		)
 	else:
 		allowed = check_contactos_permission() if neutral else check_app_permission()
 	if not recovery and not allowed:
@@ -238,6 +249,7 @@ def _gate(path):
 		("archivos", archivos),
 		("documentos", documentos),
 		("inventario", inventario),
+		("bancos", bancos),
 	):
 		if matched:
 			return neutral, key
@@ -261,6 +273,7 @@ def get_shell_context_for_dev(path: str = "/crm"):
 	from crm.api.contactos import check_contactos_permission, is_contactos_path
 	from crm.archivos_routes import is_archivos_path
 	from crm.avisos_routes import is_avisos_path
+	from crm.bancos_routes import is_bancos_path
 	from crm.cobranza_routes import is_cobranza_path
 	from crm.compras_routes import is_compras_path
 	from crm.contactos_routes import is_contactos_recovery_path
@@ -313,6 +326,8 @@ def get_shell_context_for_dev(path: str = "/crm"):
 		return get_boot(neutral=True, module="documentos")
 	if is_inventario_path(path):
 		return get_boot(neutral=True, module="inventario")
+	if is_bancos_path(path):
+		return get_boot(neutral=True, module="bancos")
 	if is_avisos_path(path):
 		from crm.api.avisos import check_avisos_permission
 

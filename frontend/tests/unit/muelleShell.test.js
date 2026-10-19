@@ -262,6 +262,7 @@ describe('module registry', () => {
       'compras',
       'gastos',
       'resultados',
+      'bancos',
       'productos',
       'garantias',
       'encuestas',

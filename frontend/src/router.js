@@ -356,6 +356,64 @@ const routes = [
       listParent: 'ResultadosDocumentos',
     },
   },
+  // Bancos y catálogo de cuentas (Shell SPEC §6 DD19, contracts 0.13.0
+  // module «bancos»). Cards and the
+  // account share Bancos.vue (≥1024 side by side, stableKey keeps one
+  // instance); the tree and an account's Mayor share CatalogoCuentas.vue.
+  {
+    path: '/bancos',
+    name: 'Bancos',
+    component: () => import('@/pages/Bancos.vue'),
+    meta: {
+      app: 'bancos',
+      title: 'Bancos',
+      ownPhoneHeader: true,
+      stableKey: true,
+    },
+  },
+  {
+    path: '/bancos/cuenta/:cuenta',
+    name: 'BancoCuenta',
+    component: () => import('@/pages/Bancos.vue'),
+    meta: {
+      app: 'bancos',
+      title: 'Bancos',
+      ownPhoneHeader: true,
+      stableKey: true,
+    },
+  },
+  {
+    path: '/bancos/catalogo',
+    name: 'CatalogoCuentas',
+    component: () => import('@/pages/CatalogoCuentas.vue'),
+    meta: {
+      app: 'bancos',
+      title: 'Catálogo de cuentas',
+      ownPhoneHeader: true,
+      stableKey: true,
+    },
+  },
+  {
+    path: '/bancos/catalogo/:cuenta',
+    name: 'CatalogoCuenta',
+    component: () => import('@/pages/CatalogoCuentas.vue'),
+    meta: {
+      app: 'bancos',
+      title: 'Catálogo de cuentas',
+      ownPhoneHeader: true,
+      stableKey: true,
+    },
+  },
+  {
+    path: '/bancos/balanza',
+    name: 'Balanza',
+    component: () => import('@/pages/Balanza.vue'),
+    meta: {
+      app: 'bancos',
+      title: 'Balanza de comprobación',
+      ownPhoneHeader: true,
+    },
+  },
   {
     path: '/garantias',
     name: 'Garantias',

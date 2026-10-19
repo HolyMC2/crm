@@ -24,6 +24,7 @@ MODULE_KEYS = (
 	"compras",
 	"gastos",
 	"resultados",
+	"bancos",
 	"productos",
 	"garantias",
 	"encuestas",
@@ -359,6 +360,21 @@ def _inventario():
 	return _documents_module("inventario")
 
 
+def _bancos():
+	# Bancos y catálogo de cuentas (Shell D11, DD19): neutral like Documentos, on for who reads
+	# Bank Account or the ledger; every crm.api.bancos call re-checks Frappe permissions.
+	from crm.api.bancos import get_capabilities
+
+	answer = get_capabilities()
+	enabled = bool(answer.get("enabled"))
+	return {
+		"key": "bancos",
+		"enabled": enabled,
+		"reason": None if enabled else answer.get("reason"),
+		"capabilities": (answer.get("capabilities") or {}) if enabled else {},
+	}
+
+
 def _avisos():
 	# Staff accounts only, independent of Contactos and Ventas; every endpoint re-checks.
 	from crm.api.avisos import get_capabilities
@@ -498,6 +514,7 @@ def _hosted():
 		"gastos": _gastos,
 		"productos": _productos,
 		"resultados": _resultados,
+		"bancos": _bancos,
 		"garantias": _garantias,
 		"encuestas": _encuestas,
 		"equipo": _equipo,
@@ -538,6 +555,7 @@ def _providers():
 		_gastos,
 		_productos,
 		_resultados,
+		_bancos,
 		_garantias,
 		_encuestas,
 		_equipo,

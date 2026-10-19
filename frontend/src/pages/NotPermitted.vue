@@ -94,6 +94,14 @@ const COPY = {
     missing:
       'Todavía falta acceso a Resultados. Comparte la solicitud y reintenta después del ajuste.',
   },
+  bancos: {
+    reason:
+      'Bancos muestra los saldos y los movimientos de las cuentas de la empresa a quien lleva la contabilidad (dueño, encargado de contabilidad o contador). Pide al dueño que revise tu usuario; después toca Reintentar permisos.',
+    request:
+      'Necesito ver Bancos en Muelle: permiso de lectura de las cuentas bancarias o del libro mayor de mi empresa. Quiero retomar la cuenta que intentaba abrir.',
+    missing:
+      'Todavía falta acceso a Bancos. Comparte la solicitud y reintenta después del ajuste.',
+  },
   contactos: {
     reason:
       'Para abrir Contactos necesitas permiso de lectura de un origen nativo y acceso a su módulo. Pide al encargado que revise tu usuario.',
