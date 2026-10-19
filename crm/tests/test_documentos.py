@@ -53,6 +53,16 @@ ROLE = "Documentos Test Reader"
 
 
 @skipIf(not HAS_FRAPPE, "Frappe integration dependency is not installed")
+@skipIf(not HAS_FRAPPE, "Frappe is not installed")
+class TestDocumentosWords(TestCase):
+	def test_a_yes_no_select_reads_si_or_no_never_n(self):
+		df = frappe._dict(fieldtype="Select", options="N\nY")
+		self.assertEqual(documentos._yes_no(df, "N"), frappe._("No"))
+		self.assertEqual(documentos._yes_no(df, "Y"), frappe._("Yes"))
+		self.assertIsNone(documentos._yes_no(frappe._dict(options="Draft\nPaid"), "Paid"))
+		self.assertIsNone(documentos._yes_no(frappe._dict(options="No\nYes\nMaybe"), "No"))
+
+
 class TestDocumentosAccess(IntegrationTestCase):
 	"""A non-manager reads only what Frappe grants; blocked modules close their doctypes."""
 

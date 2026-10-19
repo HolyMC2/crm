@@ -888,13 +888,24 @@ def _data_fields(doc, skip=()):
 			row["link_doctype"] = doc.get(df.options)
 			row["title"] = _link_title(doc.get(df.options), value)
 		elif df.fieldtype == "Select" and isinstance(value, str):
-			row["title"] = _(value)
+			row["title"] = _yes_no(df, value) or _(value)
 		elif df.fieldtype in ("Text Editor", "Text", "Small Text", "Long Text"):
 			row["value"] = strip_html(cstr(value))[:600]
 		out.append(row)
 		if len(out) >= 60:
 			break
 	return out
+
+
+_YES_NO = {"Y": True, "N": False, "Yes": True, "No": False}
+
+
+def _yes_no(df, value):
+	"""A Select that is a switch in disguise (options Y/N or Yes/No) reads Sí/No, never «N»."""
+	options = {o.strip() for o in cstr(df.options).split("\n") if o.strip()}
+	if options and options <= set(_YES_NO) and value in _YES_NO:
+		return _("Yes") if _YES_NO[value] else _("No")
+	return None
 
 
 def _header_fields(display):
