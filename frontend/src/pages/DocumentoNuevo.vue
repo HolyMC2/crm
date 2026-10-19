@@ -118,9 +118,12 @@ const openMore = ref(false)
 const defaults = computed(() =>
   source.value ? {} : { ...(profile.value?.defaults || {}) },
 )
+// The profile's defaults win over ERPNext's blank draft (party_type null,
+// payment_type «Receive»): the form reads party_type to search the right
+// party (Proveedor on a pago, Cliente on a cobro). Empty with a source.
 const startDoc = computed(() => ({
-  ...defaults.value,
   ...(draft.value?.doc || {}),
+  ...defaults.value,
 }))
 const moreFields = computed(() => profile.value?.moreFields || [])
 
