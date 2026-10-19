@@ -11,7 +11,9 @@
     <AppBar
       :back="pane ? false : backTo"
       :back-label="backLabel"
-      :context="view ? `${view.kind} · ${view.number}` : ''"
+      :context="
+        view ? [view.kind, view.number].filter(Boolean).join(' · ') : ''
+      "
       :title="view?.title || entry?.label || 'Documento'"
       :bell="phone"
       :loading="(loading || busy) && !!record"
@@ -394,7 +396,9 @@ const scopeTitle = computed(() =>
   view.value ? `${view.value.kind} de ${view.value.title}` : '',
 )
 const pdfTitle = computed(() =>
-  view.value ? `${view.value.kind} ${view.value.number}` : name.value,
+  view.value
+    ? [view.value.kind, view.value.number].filter(Boolean).join(' ')
+    : name.value,
 )
 const link = computed(() => shellUrl(route.path))
 

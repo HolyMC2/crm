@@ -222,6 +222,23 @@ const HANDOFF = {
   'Contrato de Arrendamiento': inmobiliaria('contrato'),
   'Solicitud de Mantenimiento': inmobiliaria('mantenimiento'),
 }
+// Pendientes (Shell D8) owns tasks: a ToDo never opens on the generic floor.
+const TASKS = {
+  ToDo: (name) => ({ path: `/pendientes/todo/${encodeURIComponent(name)}` }),
+  'CRM Task': (name) => ({
+    path: `/pendientes/crm-task/${encodeURIComponent(name)}`,
+  }),
+}
+const ownerOf = (doctype) => HANDOFF[doctype] || TASKS[doctype]
+
+/**
+ * The richer shell page that owns a doctype's records (Producto, Pendientes,
+ * Inmobiliaria), or null. The router sends the generic floor's record there.
+ */
+export function handoffRoute(doctype, name) {
+  if (!doctype || !name || name === 'nuevo') return null
+  return ownerOf(doctype)?.(name) || null
+}
 
 /**
  * Where a document opens in the shell: its profile's record (or the richer page
@@ -235,7 +252,7 @@ export function documentRoute(
   { boot = null, hint = null } = {},
 ) {
   if (!doctype || !name) return null
-  if (HANDOFF[doctype]) return HANDOFF[doctype](name)
+  if (ownerOf(doctype)) return ownerOf(doctype)(name)
   const readable = readableDoctypes(boot)
   const entry = profileFor(doctype, hint)
   if (entry) {

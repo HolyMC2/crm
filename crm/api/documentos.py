@@ -978,6 +978,12 @@ def _taxes(doc):
 	]
 
 
+def _random_name(meta) -> bool:
+	"""True when the doctype names its records at random (ToDo's «t68pjubv9e»)."""
+	rule = (meta.autoname or "").strip().lower()
+	return rule in ("hash", "uuid") or meta.get("naming_rule") == "Random"
+
+
 def _header(doc, display):
 	row = _row(doc, display)
 	party = None
@@ -994,6 +1000,8 @@ def _header(doc, display):
 	return {
 		"title": row["title"],
 		"number": doc.name,
+		# A hash or UUID name is no document number: the app bar leaves it out.
+		"random_name": _random_name(doc.meta),
 		"status": row["status"],
 		"docstatus": row["docstatus"],
 		"amount": row["amount"],

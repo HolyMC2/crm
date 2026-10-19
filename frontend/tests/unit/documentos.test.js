@@ -3,6 +3,7 @@ import {
   PROFILES,
   documentRoute,
   floorRoute,
+  handoffRoute,
   listRoute,
   moduleOf,
   profileBySlug,
@@ -95,7 +96,7 @@ describe('documentos registry', () => {
       '/documentos/cotizaciones/Q',
     )
     expect(
-      documentRoute('ToDo', 'abc', {
+      documentRoute('Note', 'abc', {
         boot: { modules: { documentos: { enabled: false } } },
       }),
     ).toBeNull()
@@ -492,5 +493,37 @@ describe('documentos palette', () => {
     expect(titles).toContain('Documentos › Facturas')
     expect(titles).toContain('Inventario › Entradas y traspasos')
     expect(titles).not.toContain('Documentos › Cotizaciones')
+  })
+})
+
+describe('records another page owns and random names', () => {
+  it('a ToDo or CRM Task opens in Pendientes, never on the floor', () => {
+    expect(documentRoute('ToDo', 't68pjubv9e')).toEqual({
+      path: '/pendientes/todo/t68pjubv9e',
+    })
+    expect(documentRoute('CRM Task', 'TASK 1')).toEqual({
+      path: '/pendientes/crm-task/TASK%201',
+    })
+    expect(handoffRoute('ToDo', 't68pjubv9e')).toEqual({
+      path: '/pendientes/todo/t68pjubv9e',
+    })
+    expect(handoffRoute('ToDo', 'nuevo')).toBeNull()
+    expect(handoffRoute('Sales Invoice', 'ACC-SINV-1')).toBeNull()
+  })
+
+  it('the generic header leaves a random name out of the app bar', () => {
+    const base = { doctype: 'Note', label: 'Nota', name: 'ab12cd34ef' }
+    const random = genericProfile.header({
+      ...base,
+      header: { title: 'Llamar a Ana', random_name: true },
+    })
+    expect(random.number).toBe('')
+    expect(random.title).toBe('Llamar a Ana')
+    const numbered = genericProfile.header({
+      ...base,
+      name: 'NOTE-0001',
+      header: { title: 'Llamar a Ana' },
+    })
+    expect(numbered.number).toBe('NOTE-0001')
   })
 })

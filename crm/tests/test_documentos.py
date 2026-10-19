@@ -63,6 +63,18 @@ class TestDocumentosWords(TestCase):
 		self.assertIsNone(documentos._yes_no(frappe._dict(options="No\nYes\nMaybe"), "No"))
 
 
+@skipIf(not HAS_FRAPPE, "Frappe integration dependency is not installed")
+class TestDocumentosRandomNames(TestCase):
+	def test_hash_uuid_and_random_rule_are_random_names_and_series_are_not(self):
+		meta = frappe._dict
+		self.assertTrue(documentos._random_name(meta(autoname="hash")))
+		self.assertTrue(documentos._random_name(meta(autoname="UUID")))
+		self.assertTrue(documentos._random_name(meta(autoname="", naming_rule="Random")))
+		self.assertFalse(documentos._random_name(meta(autoname="naming_series:")))
+		self.assertFalse(documentos._random_name(meta(autoname="field:title")))
+		self.assertFalse(documentos._random_name(meta(autoname=None)))
+
+
 class TestDocumentosAccess(IntegrationTestCase):
 	"""A non-manager reads only what Frappe grants; blocked modules close their doctypes."""
 
@@ -152,6 +164,8 @@ class TestDocumentosAccess(IntegrationTestCase):
 		self.assertEqual(row["title"], "Pedido especial de Ana")
 		bundle = documentos.record("Note", note.name)
 		self.assertEqual(bundle["header"]["title"], "Pedido especial de Ana")
+		# Note names by hash: the header says so and the app bar leaves the name out.
+		self.assertTrue(bundle["header"]["random_name"])
 		self.assertIn("comment", bundle["actions"])
 		comments = [e for e in bundle["activity"]["events"] if e["kind"] == "comment"]
 		self.assertEqual(comments[0]["who"], "Lectora Documentos")

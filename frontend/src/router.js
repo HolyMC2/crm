@@ -92,6 +92,16 @@ function documentosRoutes(path, kind, app) {
       name: record,
       component: split,
       meta: { ...meta, splitKey: documentosSplitKey },
+      // An old or typed floor link to a record another page owns (a ToDo →
+      // Pendientes) goes to that page.
+      ...(kind === 'Tipo' && {
+        // The registry loads with the floor (not in the entry chunk).
+        beforeEnter: async (to) =>
+          (await import('@/documentos/registry')).handoffRoute(
+            to.params.doctype,
+            to.params.name,
+          ) || true,
+      }),
     },
   ]
 }

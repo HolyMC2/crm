@@ -136,7 +136,8 @@ export const genericProfile = {
     return {
       title: titleOf({ title: h.title, name: record.name }, record.doctype),
       kind: kindLabel(record.doctype) || record.label,
-      number: record.name,
+      // A random name («t68pjubv9e») is no number a person reads or says.
+      number: h.random_name ? '' : record.name,
       status,
       tone: statusTone(status),
       amount:
