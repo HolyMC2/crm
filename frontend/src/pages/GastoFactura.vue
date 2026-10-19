@@ -74,7 +74,10 @@
               >{{ money(doc.total, doc.currency) }}</span
             >
             <span
-              v-if="Number(doc.docstatus) === 1"
+              v-if="
+                Number(doc.docstatus) === 1 &&
+                Number(doc.outstanding_amount || 0) > 0
+              "
               class="text-sm"
               :class="doc.overdue ? 'text-ink-red-7' : 'text-ink-gray-6'"
               >{{ dueLabel(doc.due_date, boot?.today) }}</span

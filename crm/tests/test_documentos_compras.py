@@ -139,3 +139,8 @@ class TestCadenaERPNext(IntegrationTestCase):
 		old.append("items", {"item_code": "X"})
 		documentos._header_dates(old, "2020-01-01")
 		self.assertEqual(getdate(old.schedule_date), getdate(nowdate()))
+
+	def test_paying_a_supplier_is_for_accounts_managers(self):
+		self.assertTrue(documentos._may_make("Purchase Invoice", "payment", "Payment Entry"))  # Administrator
+		frappe.set_user("Guest")
+		self.assertFalse(documentos._may_make("Purchase Invoice", "payment", "Payment Entry"))

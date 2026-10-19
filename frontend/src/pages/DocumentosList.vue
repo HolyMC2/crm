@@ -220,7 +220,7 @@ import {
 } from '@/documentos/listState'
 import { loadProfile } from '@/documentos/profiles'
 import { documentRoute, floorRoute, profileBySlug } from '@/documentos/registry'
-import { kindLabel } from '@/utils/display'
+import { feminineNoun, kindLabel } from '@/utils/display'
 
 const props = defineProps({
   // Left pane of the desktop split: rows keep the list's query, the open one is lit.
@@ -342,7 +342,7 @@ const createTo = computed(() => {
 })
 const newLabel = computed(() => {
   const word = (kindLabel(doctype.value) || 'documento').toLowerCase()
-  return `${/(a|ón|d)$/.test(word.split(' ')[0]) ? 'Nueva' : 'Nuevo'} ${word}`
+  return `${feminineNoun(word) ? 'Nueva' : 'Nuevo'} ${word}`
 })
 
 useListKeys({

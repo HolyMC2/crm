@@ -27460,6 +27460,10 @@ msgid "Your user does not have this permission."
 msgstr "Tu usuario no tiene este permiso."
 
 #: crm/api/documentos.py
+msgid "Payments are made by an accounts manager; ask them to pay it."
+msgstr "Los pagos los hace un administrador de cuentas. Pide que la paguen."
+
+#: crm/api/documentos.py
 msgid "Only a draft can be edited."
 msgstr "Solo se puede editar un borrador."
 

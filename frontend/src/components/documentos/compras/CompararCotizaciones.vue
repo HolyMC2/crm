@@ -40,7 +40,7 @@
         </p>
         <p
           v-if="s.cheapest_items"
-          class="text-sm text-ink-green-3"
+          class="text-sm text-ink-green-7"
           data-testid="compras-comparar-best"
         >
           {{ bestLine(s) }}

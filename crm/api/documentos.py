@@ -735,7 +735,13 @@ def _actions(doc):
 	# The mappers this document offers («Pedir», «Facturar»): a next step needs create on its target.
 	for (source, key), (_path, target) in MAKERS.items():
 		if source == doc.doctype and docstatus == 1:
-			put(f"make_{key}", frappe.has_permission(target, "create"), no_perm)
+			put(
+				f"make_{key}",
+				_may_make(source, key, target),
+				_("Payments are made by an accounts manager; ask them to pay it.")
+				if key == "payment" and source in PAYS_OUT
+				else no_perm,
+			)
 	return out
 
 
@@ -1411,12 +1417,25 @@ def _maker(doctype, key):
 	return spec
 
 
+# Paying a supplier is for Accounts Managers (Marco 2026-10-06), as in Gastos
+# (doco.workspaces.payables.PAYER_ROLES): the engine's «Pagar» follows the same rule.
+PAYS_OUT = {"Purchase Invoice", "Purchase Order"}
+PAYER_ROLES = {"Accounts Manager"}
+
+
+def _may_make(source, key, target):
+	"""Whether this worker may start `target` from a `source` document with mapper `key`."""
+	if key == "payment" and source in PAYS_OUT and not PAYER_ROLES & set(frappe.get_roles()):
+		return False
+	return bool(frappe.has_permission(target, "create"))
+
+
 def _mapped(doctype, name, key):
 	path, target = _maker(doctype, key)
 	_require(doctype)
 	source = frappe.get_doc(doctype, name)
 	source.check_permission("read")
-	if not readable(target) or not frappe.has_permission(target, "create"):
+	if not readable(target) or not _may_make(doctype, key, target):
 		_no_perm()
 	fn = frappe.get_attr(path)
 	return fn(doctype, name) if path == _PE else fn(name)
