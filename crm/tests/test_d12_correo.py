@@ -33,6 +33,12 @@ def _row(i, subject, sender=None, kind="Communication", received=True, seen=0):
 class TestCorreoPuro(TestCase):
 	"""No database: the rules the queue and the compose sheet are made of."""
 
+	def test_money_reads_as_es_mx(self):
+		self.assertEqual(correo.dinero(420, "$"), "$420.00")
+		self.assertEqual(correo.dinero(1250.5, "$"), "$1,250.50")
+		self.assertEqual(correo.dinero(10, "USD"), "USD 10.00")
+		self.assertEqual(correo.dinero(10), "10.00")
+
 	def test_alerts_fold_into_one_system_row_and_people_stay_rows(self):
 		rows = [_row(i, f"⚠️ Saldo TAECEL bajo en {1 + i % 3} bolsa(s)", received=False) for i in range(424)]
 		rows += [

@@ -539,12 +539,28 @@ def _empresa(doc):
 	return company
 
 
+def dinero(amount, symbol=""):
+	"""«$420.00» as es-MX writes it: a one-character symbol sticks to the number, a code
+	(«USD») keeps its space. Frappe's fmt_money always puts a space after the symbol."""
+	from frappe.utils import fmt_money
+
+	number = fmt_money(flt(amount))
+	symbol = cstr(symbol).strip()
+	if not symbol:
+		return number
+	return f"{symbol}{number}" if len(symbol) == 1 else f"{symbol} {number}"
+
+
 def _monto(doc):
 	for field in ("grand_total", "rounded_total", "paid_amount", "total"):
 		if doc.meta.has_field(field) and flt(doc.get(field)):
-			from frappe.utils import fmt_money
-
-			return fmt_money(flt(doc.get(field)), currency=doc.get("currency") or None)
+			currency = doc.get("currency")
+			symbol = (
+				(frappe.db.get_value("Currency", currency, "symbol", cache=True) or currency)
+				if currency
+				else ""
+			)
+			return dinero(doc.get(field), symbol)
 	return ""
 
 
