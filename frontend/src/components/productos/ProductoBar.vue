@@ -22,7 +22,11 @@
         :data-action="entry.key"
         @click="emit('run', entry)"
       >
-        <FeatherIcon :name="entry.icon" class="h-4 w-4 shrink-0" />
+        <!-- Below 360px the three words need the whole button. -->
+        <FeatherIcon
+          :name="entry.icon"
+          class="h-4 w-4 shrink-0 max-[359px]:hidden"
+        />
         <span class="truncate">{{ entry.label }}</span>
       </button>
     </div>
