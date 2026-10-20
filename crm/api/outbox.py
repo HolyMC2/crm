@@ -954,6 +954,61 @@ def _repair_history():
 				frappe.db.rollback()
 
 
+def release_dead_reservations():
+	"""Bounded release of the bot budget held by intents that can never be sent.
+
+	Reserved rows count against the monthly cap until settled. A Bot intent
+	refused before Submitting keeps its row; only a Cancelled transition releases
+	it. Blocked is final once the reply expired or used every attempt: retry
+	refuses both, and neither ever moves back. A NULL submitted_at proves nothing
+	reached the provider. Only the reservation is settled; the intent is never written.
+	"""
+	if "doco" not in frappe.get_installed_apps():
+		return 0
+	from doco.docoutils.assistant import bot_budget
+
+	rows = frappe.db.sql(
+		"""SELECT i.name FROM `tabCRM Outbound Intent` i
+        JOIN `tabBot Budget Reservation` r ON r.effect_key=CONCAT('CRM Outbound Intent:', i.name)
+        WHERE r.state='Reserved' AND i.origin='Bot' AND i.submitted_at IS NULL
+          AND (i.state='Cancelled' OR (i.state='Blocked' AND (i.expires_at<=%s OR i.attempts>=%s)))
+        ORDER BY i.modified,i.name LIMIT 100""",
+		(now_datetime(), MAX_ATTEMPTS),
+	)
+	released = 0
+	for (name,) in rows:
+		try:
+			# The row lock the claim takes; the candidate row itself is never trusted.
+			reservation = _dead_reservation(_load(name))
+			if reservation:
+				bot_budget.settle(reservation, release=True)
+			frappe.db.commit()  # nosemgrep: frappe-manual-commit -- one commit per intent
+		except Exception:
+			frappe.db.rollback()
+			frappe.log_error(title="CRM outbox reservation release failed", message=frappe.get_traceback())
+		else:
+			released += bool(reservation)
+	return released
+
+
+def _dead_reservation(doc):
+	"""The Reserved budget row of a Bot intent that no path can queue again, else None."""
+	if doc.origin != "Bot" or doc.submitted_at:
+		return None
+	expired = bool(doc.expires_at) and get_datetime(doc.expires_at) <= now_datetime()
+	if doc.state != "Cancelled" and not (
+		doc.state == "Blocked" and (expired or doc.attempts >= MAX_ATTEMPTS)
+	):
+		return None
+	row = frappe.db.get_value(
+		"Bot Budget Reservation",
+		{"effect_key": DOCTYPE + ":" + doc.name},
+		["name", "state"],
+		as_dict=True,
+	)
+	return row.name if row and row.state == "Reserved" else None
+
+
 @frappe.whitelist(methods=["POST"])
 def cancel_intent(name: str):
 	conversation = frappe.db.get_value(DOCTYPE, _name(name), "conversation")
@@ -1013,6 +1068,11 @@ def recover_intents():
 		(now_datetime(), now_datetime()),
 	)
 	_enqueue(tuple(row[0] for row in names))
+	try:
+		release_dead_reservations()
+	except Exception:
+		frappe.db.rollback()
+		frappe.log_error(title="CRM outbox reservation release failed", message=frappe.get_traceback())
 	try:
 		_repair_history()
 	except Exception:
