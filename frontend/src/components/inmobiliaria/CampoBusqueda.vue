@@ -34,8 +34,24 @@
         class="min-h-11 w-full rounded-lg border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9 focus:border-outline-gray-4 focus:outline-none"
         :data-testid="`inmo-buscar-${tipo}`"
       />
+      <!-- A search that failed is not «nobody»: say why and offer it again. -->
+      <div
+        v-if="searchProblem"
+        class="flex flex-col gap-2"
+        role="alert"
+        data-testid="inmo-buscar-problema"
+      >
+        <p class="text-sm text-ink-red-7">{{ searchProblem }}</p>
+        <button
+          type="button"
+          class="inline-flex min-h-11 items-center gap-2 self-start rounded-full bg-surface-gray-2 px-4 text-base font-medium text-ink-gray-8"
+          @click="retrySearch"
+        >
+          Buscar de nuevo
+        </button>
+      </div>
       <ul
-        v-if="options.length"
+        v-else-if="options.length"
         class="divide-y divide-outline-gray-1 rounded-lg border border-outline-gray-1"
         role="listbox"
       >
@@ -102,28 +118,42 @@ const text = ref('')
 const options = ref([])
 const chosen = ref(null)
 const loading = ref(false)
+const searchProblem = ref('')
 let timer = null
 let seq = 0
 
+async function search(q) {
+  const mine = ++seq
+  loading.value = true
+  searchProblem.value = ''
+  try {
+    const rows = await inmobiliariaApi('opciones', { tipo: props.tipo, q })
+    if (mine === seq) options.value = rows || []
+  } catch (e) {
+    if (mine === seq) {
+      options.value = []
+      searchProblem.value = problemText(e)
+    }
+  } finally {
+    if (mine === seq) loading.value = false
+  }
+}
+function retrySearch() {
+  const q = text.value.trim()
+  if (q.length >= 2) search(q)
+}
+
 watch(text, (value) => {
   clearTimeout(timer)
+  searchProblem.value = ''
   const q = value.trim()
   if (q.length < 2) {
+    seq++ // an answer still on its way is for older text
     options.value = []
+    loading.value = false
     return
   }
-  timer = setTimeout(async () => {
-    const mine = ++seq
-    loading.value = true
-    try {
-      const rows = await inmobiliariaApi('opciones', { tipo: props.tipo, q })
-      if (mine === seq) options.value = rows || []
-    } catch {
-      if (mine === seq) options.value = []
-    } finally {
-      if (mine === seq) loading.value = false
-    }
-  }, 250)
+  timer = setTimeout(() => search(q), 250)
 })
 
 watch(
@@ -147,6 +177,7 @@ const canAdd = computed(
     props.tipo === 'proveedor' &&
     text.value.trim().length >= 2 &&
     !loading.value &&
+    !searchProblem.value &&
     !options.value.length,
 )
 async function add() {

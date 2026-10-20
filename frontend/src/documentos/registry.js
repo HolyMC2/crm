@@ -2,6 +2,7 @@
 // Tiny and free of profile code on purpose: Avisos, the kardex and the palette resolve
 // links through `documentRoute` without loading any profile (budgets, DD12). The
 // profile code itself loads lazily from ./profiles (see README.md).
+import { TIPOS as INMOBILIARIA, fichaPath } from '@/utils/inmobiliariaTipos'
 
 /**
  * One entry per list. `slug` is the Spanish URL segment; `base` the module path
@@ -209,18 +210,16 @@ export function floorRoute(doctype, name) {
 }
 
 // Records that already have a richer shell page of their own.
-const inmobiliaria = (tipo) => (name) => ({
-  path: `/inmobiliaria/${tipo}/${encodeURIComponent(name)}`,
-})
 const HANDOFF = {
   Item: (name) => ({ path: `/productos/${encodeURIComponent(name)}` }),
-  // INMO-SH: the real-estate app's records open its own shell screens.
-  'Unidad Inmobiliaria': inmobiliaria('unidad'),
-  'Apartado de Unidad': inmobiliaria('apartado'),
-  'Venta Inmobiliaria': inmobiliaria('venta'),
-  'Expediente de Cliente': inmobiliaria('expediente'),
-  'Contrato de Arrendamiento': inmobiliaria('contrato'),
-  'Solicitud de Mantenimiento': inmobiliaria('mantenimiento'),
+  // INMO-SH: every record the real-estate app serves opens its own shell
+  // screen (the same list the router's ficha route spells).
+  ...Object.fromEntries(
+    Object.entries(INMOBILIARIA).map(([tipo, { doctype }]) => [
+      doctype,
+      (name) => ({ path: fichaPath(tipo, name) }),
+    ]),
+  ),
 }
 // Pendientes (Shell D8) owns tasks: a ToDo never opens on the generic floor.
 const TASKS = {

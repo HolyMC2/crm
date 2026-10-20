@@ -28,6 +28,7 @@ import stockEntry from '@/documentos/profiles/stock_entry'
 import stockReconciliation from '@/documentos/profiles/stock_reconciliation'
 import { loadProfile } from '@/documentos/profiles'
 import { documentItem, documentosPlaces } from '@/documentos/palette'
+import { TIPOS } from '@/utils/inmobiliariaTipos'
 
 const boot = (doctypes, extra = {}) => ({
   modules: {
@@ -74,6 +75,14 @@ describe('documentos registry', () => {
     })
     expect(documentRoute('', 'x')).toBeNull()
     expect(documentRoute('Sales Invoice', '')).toBeNull()
+  })
+
+  it('hands every Inmobiliaria record to its screen in the shell', () => {
+    expect(Object.keys(TIPOS)).toHaveLength(17)
+    for (const [tipo, { doctype }] of Object.entries(TIPOS))
+      expect(documentRoute(doctype, 'A/1 B')).toEqual({
+        path: `/inmobiliaria/${tipo}/A%2F1%20B`,
+      })
   })
 
   it('picks cobros or pagos for a Payment Entry by its type', () => {

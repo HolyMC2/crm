@@ -15,21 +15,31 @@
         :message="problem"
         action="Reintentar"
         @action="load"
-      />
+      >
+        <Button
+          v-if="salida"
+          variant="subtle"
+          class="min-h-11"
+          :label="`Ir a ${salida.label}`"
+          data-testid="inmo-salida"
+          @click="router.push(salida.to)"
+        />
+      </EmptyState>
       <EmptyState v-else-if="!data" state="loading" title="Abriendo…" />
       <template v-else>
-        <div class="flex flex-col gap-2 px-4 pt-2">
-          <RouterLink
-            v-for="a in data.accesos"
+        <div v-if="accesos.length" class="flex flex-col gap-2 px-4 pt-2">
+          <component
+            :is="a.link.to ? RouterLink : 'a'"
+            v-for="a in accesos"
             :key="a.key"
-            :to="linkOf(a.url).to || '/inmobiliaria'"
+            v-bind="a.link"
             class="flex min-h-14 items-center gap-3 rounded-2xl bg-surface-gray-2 px-4 text-base font-medium text-ink-gray-9"
             :data-acceso="a.key"
           >
             <span :class="[a.icono, 'size-5']" aria-hidden="true" />
             <span class="flex-1">{{ a.etiqueta }}</span>
             <span class="lucide-chevron-right size-5" aria-hidden="true" />
-          </RouterLink>
+          </component>
         </div>
 
         <EmptyState
@@ -37,7 +47,15 @@
           state="empty"
           title="Sin listas de trabajo"
           message="Tu negocio todavía no usa estas listas. Pide a un administrador que revise tu perfil."
-        />
+        >
+          <Button
+            v-if="salida"
+            variant="subtle"
+            class="min-h-11"
+            :label="`Ir a ${salida.label}`"
+            @click="router.push(salida.to)"
+          />
+        </EmptyState>
         <template v-else-if="!desktop">
           <div class="px-4 pt-4">
             <FilterChips
@@ -112,8 +130,10 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { Button } from 'frappe-ui'
 import { useWindowSize } from '@vueuse/core'
 import { AppBar, EmptyState, FilterChips, ListRow } from '@/components/ui'
+import { firstModuleRoute, shellBoot } from '@/composables/muelleShell'
 import {
   inmobiliariaApi,
   linkOf,
@@ -128,24 +148,34 @@ const data = ref(null)
 const loading = ref(false)
 const problem = ref('')
 
-// The chosen home lives in the URL (?inicio=), so «back» from a queue lands on it.
+// When Inmobiliaria cannot open, the worker goes on in another module.
+const salida = computed(() => firstModuleRoute(shellBoot.value, 'inmobiliaria'))
+// Shortcuts (Disponibilidad) that lead somewhere: a shell screen or a page of
+// its own; one without an address is left out rather than linking here.
+const accesos = computed(() =>
+  (data.value?.accesos || [])
+    .map((a) => ({ ...a, link: linkOf(a.url) }))
+    .filter((a) => a.link.to || a.link.href),
+)
+
+const isHome = (key) =>
+  typeof key === 'string' &&
+  (data.value?.inicios || []).some((i) => i.key === key)
+// The chosen home lives in the URL (?inicio=), so «back» from a queue lands on
+// it; a home the worker no longer has falls back to the default one.
 const current = computed({
   get: () =>
-    (typeof route.query.inicio === 'string' && route.query.inicio) ||
-    defaultHome.value,
+    isHome(route.query.inicio) ? route.query.inicio : defaultHome.value,
   set: (key) =>
     router.replace({ query: { ...route.query, inicio: key || undefined } }),
 })
-const defaultHome = computed(() => {
-  const inicios = data.value?.inicios || []
-  // Administrators start on their own home; everyone else on the first.
-  return (
-    (data.value?.admin &&
-      inicios.find((i) => i.key === 'administración')?.key) ||
-    inicios[0]?.key ||
-    ''
-  )
-})
+// The server orders the homes (everyone's first, administration last) and may
+// name the one to start on; the shell never picks one by its name.
+const defaultHome = computed(() =>
+  isHome(data.value?.predeterminado)
+    ? data.value.predeterminado
+    : data.value?.inicios?.[0]?.key || '',
+)
 const chips = computed(() =>
   (data.value?.inicios || []).map((i) => ({
     value: i.key,

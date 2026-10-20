@@ -577,7 +577,9 @@ const routes = [
     },
   },
   {
-    path: '/inmobiliaria/:tipo(unidad|apartado|venta|expediente|contrato|mantenimiento)/:name',
+    // Every record screen the app serves: the tipos of the server's TIPOS
+    // (inmobiliaria/shell.py), the same keys as utils/inmobiliariaTipos.js.
+    path: '/inmobiliaria/:tipo(unidad|apartado|venta|expediente|contrato|mantenimiento|aviso|liquidacion|comision|entrega|garantia|etapa|captacion|oferta|ajuste|solicitud|propiedad)/:name',
     name: 'InmobiliariaFicha',
     component: () => import('@/pages/InmobiliariaFicha.vue'),
     props: true,

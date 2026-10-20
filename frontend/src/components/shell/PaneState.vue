@@ -1,7 +1,8 @@
 <template>
   <!-- One pane-level state (CRM S5.4): loading, empty, denied or error, each
        with words and, where it helps, the action that moves the worker on.
-       Never a blank pane. -->
+       Never a blank pane. The default slot adds further ways out (a way back
+       next to «Retry»). -->
   <div
     class="flex min-h-[12rem] flex-1 flex-col items-center justify-center gap-2 px-6 py-10 text-center"
     :role="state === 'error' || state === 'denied' ? 'alert' : 'status'"
@@ -15,8 +16,20 @@
     />
     <p class="text-base font-medium text-ink-gray-8">{{ heading }}</p>
     <p v-if="detail" class="max-w-sm text-sm text-ink-gray-6">{{ detail }}</p>
-    <div v-if="actionLabel" class="mt-2">
-      <Button :label="actionLabel" class="min-h-11" @click="act" />
+    <div
+      v-if="actionLabel || $slots.default"
+      class="mt-2"
+      :class="
+        $slots.default && 'flex flex-wrap items-center justify-center gap-2'
+      "
+    >
+      <Button
+        v-if="actionLabel"
+        :label="actionLabel"
+        class="min-h-11"
+        @click="act"
+      />
+      <slot />
     </div>
   </div>
 </template>

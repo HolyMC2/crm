@@ -158,6 +158,7 @@ import { Button } from 'frappe-ui'
 import { BottomSheet } from '@/components/ui'
 import CampoBusqueda from '@/components/inmobiliaria/CampoBusqueda.vue'
 import {
+  SIN_METODO,
   inmobiliariaApi,
   problemText,
   uploadFile,
@@ -246,6 +247,12 @@ function close() {
 async function submit() {
   const accion = props.accion
   if (!accion || busy.value) return
+  // An outdated screen may hold an action without its method: say what to do
+  // instead of failing with a programming error.
+  if (!accion.metodo) {
+    error.value = SIN_METODO
+    return
+  }
   const missing = (accion.campos || []).find(
     (c) => c.reqd && (values[c.fieldname] ?? '') === '',
   )

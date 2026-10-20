@@ -6,6 +6,7 @@ import {
   can,
   bootScope,
   safeReturn,
+  DESK_PREFIXES,
 } from '@/vendor/muelle-shell/contracts'
 import { shellT } from '@/composables/shellKeyboard'
 import { ventasSection } from '@/composables/ventasSections'
@@ -23,6 +24,12 @@ import { createManualProvider } from '@/utils/manualPalette'
 // «Pregúntale a Muelle»: a question gets «Preguntar a Muelle» first (SHELL-S2).
 import { createAssistantProvider } from '@/components/assistant/assistantPalette'
 import { formatMoney, kindLabel, statusLabel } from '@/utils/display'
+import {
+  TIPOS,
+  deskTipo,
+  fichaFromDesk,
+  parseFicha,
+} from '@/utils/inmobiliariaTipos'
 
 // ¿…, …? or an interrogative first word (PM rule, SHELL-S1.2). Narrower than
 // the assistant's looksLikeQuestion, which also counts any 5+ word query.
@@ -140,7 +147,7 @@ const PLACE_ICONS = {
   inbox: 'lucide-messages-square',
   dashboard: 'lucide-layout-dashboard',
   calls: 'lucide-phone',
-  reports: 'lucide-bar-chart-3',
+  reports: 'lucide-chart-column',
 }
 // The 4th field marks a desk-only place (Dashboard, Shell D3): the palette
 // leaves it out below 768px, where its route says «Ábrelo en una computadora».
@@ -540,19 +547,17 @@ export function inmobiliariaInstalled(
   return Array.isArray(apps) && apps.includes('inmobiliaria')
 }
 
-// The icons Inmobiliaria may ask for, spelled out so their lucide classes are built.
-const INMOBILIARIA_ICONS = Object.freeze([
-  'lucide-building-2',
-  'lucide-handshake',
-  'lucide-bookmark',
-  'lucide-folder-open',
-  'lucide-key-round',
-])
+// The icons Inmobiliaria may ask for: one per record screen, spelled out in
+// TIPOS so their lucide classes are built.
+const INMOBILIARIA_ICONS = Object.freeze(
+  Object.values(TIPOS).map((t) => t.icono),
+)
 
 /**
  * Inmobiliaria's palette rows. A record with a shell screen (`/crm/inmobiliaria/…`,
- * INMO-SH) opens there and comes back; an older inmobiliaria that still answers
- * with Desk forms (/desk/…) keeps opening them in this tab.
+ * INMO-SH) opens there and comes back, also when the server answers with its
+ * Desk form (/desk/unidad-inmobiliaria/…): a doctype with a record screen is
+ * never a Desk row. Only a record without one keeps opening Desk in this tab.
  */
 export function inmobiliariaItems(result) {
   return (result?.items || [])
@@ -560,19 +565,23 @@ export function inmobiliariaItems(result) {
       if (!item || typeof item.id !== 'string' || typeof item.href !== 'string')
         return null
       const shell = item.href.startsWith('/crm/inmobiliaria/')
-        ? safeReturn(item.href, ['/crm/inmobiliaria/'])
-        : null
-      const desk = shell ? null : safeReturn(item.href, ['/desk/'])
+        ? safeReturn(item.href, ['/crm/inmobiliaria/'])?.slice('/crm'.length)
+        : fichaFromDesk(safeReturn(item.href, DESK_PREFIXES))
+      // A Desk address of a doctype with a screen that is not a record (a
+      // list, a new form) is no row at all.
+      const desk =
+        shell || deskTipo(item.href) ? null : safeReturn(item.href, ['/desk/'])
       if (!shell && !desk) return null
       return {
         id: `inmobiliaria:${item.id}`,
         group: 'registros',
         title: String(item.title || ''),
         subtitle: String(item.subtitle || ''),
+        // Another icon (or none) shows the record screen's own.
         icon: INMOBILIARIA_ICONS.includes(item.icon)
           ? item.icon
-          : 'lucide-building-2',
-        ...(shell ? { href: shell.slice('/crm'.length) } : { desk: item.href }),
+          : TIPOS[parseFicha(shell)?.tipo]?.icono || 'lucide-building-2',
+        ...(shell ? { href: shell } : { desk }),
       }
     })
     .filter(Boolean)

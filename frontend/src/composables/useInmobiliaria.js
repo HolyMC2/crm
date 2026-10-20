@@ -4,6 +4,10 @@
 import { h } from 'vue'
 import { call } from 'frappe-ui'
 import { formatDate, formatMoney } from '@/utils/display'
+import { fichaFromDesk } from '@/utils/inmobiliariaTipos'
+
+/** The record screens the app has: /inmobiliaria/<tipo>/:name, tipo → { doctype, etiqueta }. */
+export { TIPOS } from '@/utils/inmobiliariaTipos'
 
 const API = 'inmobiliaria.api.shell'
 
@@ -19,23 +23,31 @@ NativeButton.inheritAttrs = false
 export const inmobiliariaApi = (method, args = {}) =>
   call(method.includes('.') ? method : `${API}.${method}`, args)
 
-/** The record screens the app has: /inmobiliaria/<tipo>/:name. */
-export const TIPOS = Object.freeze([
-  'unidad',
-  'apartado',
-  'venta',
-  'expediente',
-  'contrato',
-  'mantenimiento',
-])
-
-/** A server URL as a shell target: { to } for /crm/… (the router base is /crm), { href } otherwise. */
+/**
+ * A server URL as a shell target: { to } for /crm/… (the router base is /crm),
+ * { href } otherwise. A Desk form of a record the shell opens becomes its
+ * record screen: routine work never leaves for Desk (the «Abrir en
+ * escritorio» escape is a plain link, not this).
+ */
 export function linkOf(url) {
   if (!url || typeof url !== 'string') return {}
   if (url === '/crm' || url.startsWith('/crm/'))
     return { to: url.slice('/crm'.length) || '/' }
+  const ficha = fichaFromDesk(url)
+  if (ficha) return { to: ficha }
   if (url.startsWith('/') && !url.startsWith('//')) return { href: url }
   return {}
+}
+
+/**
+ * An action the app marks `external` (the SAT portal) as a link out of the
+ * shell: a new tab with no opener and no referrer. Only an https address
+ * qualifies; anything else answers {} and the action keeps linkOf.
+ */
+export function externalLinkOf(accion) {
+  const url = accion?.external === true ? accion.url : ''
+  if (typeof url !== 'string' || !url.startsWith('https://')) return {}
+  return { href: url, target: '_blank', rel: 'noopener noreferrer' }
 }
 
 /** «$1,250,000.00», «15 de octubre», «80 %» or the text, from a typed value of the app. */
@@ -48,6 +60,25 @@ export function valueText(value) {
     return `${Math.round(Number(value.value) || 0)} %`
   return String(value.value)
 }
+
+/**
+ * Go to a named place («Volver al inicio», «Volver a Hoy»): a page of this app
+ * (`/crm/…`) through the router, stepping back when it is the screen just
+ * before (no pile of entries); another app's page through the browser.
+ */
+export function volverA(router, url) {
+  if (!url || typeof url !== 'string') return
+  if (url === '/crm' || url.startsWith('/crm/')) {
+    const to = url.slice('/crm'.length) || '/'
+    if (window.history.state?.back === to) return router.back()
+    return router.push(to)
+  }
+  window.location.assign(url)
+}
+
+/** An action that arrived without its method (an outdated screen): what to do. */
+export const SIN_METODO =
+  'Esta acción no está disponible ahora. Actualiza la ficha para ver qué sigue.'
 
 /** The worker's words for a failed call: the app's own message when it sent one. */
 export function problemText(error) {

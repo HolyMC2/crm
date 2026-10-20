@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick, ref } from 'vue'
-import { createMemoryHistory, createRouter } from 'vue-router'
-import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { RouterView, createMemoryHistory, createRouter } from 'vue-router'
+import { existsSync, readFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
+import { dirname, resolve } from 'node:path'
 
 const state = vi.hoisted(() => ({ call: vi.fn(), mobile: null, toasts: [] }))
 vi.mock('frappe-ui', async () => {
@@ -64,16 +65,31 @@ import {
   isNeutralModule,
   moduleKeyFor,
   navSlots,
+  resetShellForTests,
   shellBoot,
 } from '@/composables/muelleShell'
 import {
   createShellProviders,
   dealItem,
+  inmobiliariaItems,
   loadRecent,
   orderPaletteSections,
   resolveRecent,
   toRecentRef,
 } from '@/utils/shellPalette'
+import { linkOf } from '@/composables/useInmobiliaria'
+import {
+  TIPOS,
+  deskTipo,
+  fichaFromDesk,
+  parseFicha,
+} from '@/utils/inmobiliariaTipos'
+import { recoveryModule } from '@/utils/shellRoutes'
+import Inmobiliaria from '@/pages/Inmobiliaria.vue'
+import InmobiliariaCola from '@/pages/InmobiliariaCola.vue'
+import InmobiliariaDisponibilidad from '@/pages/InmobiliariaDisponibilidad.vue'
+import InmobiliariaFicha from '@/pages/InmobiliariaFicha.vue'
+import NotPermitted from '@/pages/NotPermitted.vue'
 import { showSettings } from '@/composables/settings'
 import {
   RAIL_SAVE_DELAY_MS,
@@ -671,7 +687,7 @@ describe('one frame for every route', () => {
     )
     const pages = block
       .split('\n  {\n')
-      .filter((route) => /\n    component:/.test(route))
+      .filter((route) => /\n {4}component:/.test(route))
     expect(pages.length).toBeGreaterThan(30)
     const untitled = pages
       .filter((route) => !/\btitle: '/.test(route))
@@ -1054,6 +1070,14 @@ describe('Inmobiliaria in the shell palette', () => {
     href: '/crm/inmobiliaria/unidad/GRB-A-102',
     desk: '/desk/unidad-inmobiliaria/GRB-A-102',
   }
+  // A record without a screen in the shell (no tipo): its Desk form.
+  const DESARROLLO = {
+    id: 'desarrollo:GARIBALDI',
+    title: 'Desarrollo Garibaldi',
+    subtitle: 'Desarrollo · DEMO Garibaldi · 3 torres',
+    icon: 'lucide-building-2',
+    href: '/desk/desarrollo-inmobiliario/GARIBALDI',
+  }
   const inmobiliaria = () =>
     createShellProviders({
       boot: ref(boot()),
@@ -1061,7 +1085,7 @@ describe('Inmobiliaria in the shell palette', () => {
     }).find((p) => p.key === 'inmobiliaria')
   afterEach(() => delete window.installed_apps)
 
-  it('asks Inmobiliaria for its records: shell screens open in the shell, an older app keeps its Desk forms', async () => {
+  it('asks Inmobiliaria for its records: a record with a screen opens in the shell, also from its Desk form; only other records keep Desk', async () => {
     window.installed_apps = ['frappe', 'crm', 'inmobiliaria']
     state.call.mockImplementation(async (method, args) => {
       expect(method).toBe('inmobiliaria.busqueda.palette')
@@ -1084,6 +1108,14 @@ describe('Inmobiliaria in the shell palette', () => {
             icon: 'lucide-skull',
             href: '/desk/apartado-de-unidad/APT-1',
           },
+          DESARROLLO,
+          // A list or a new form of a doctype with a screen is no record.
+          {
+            id: 'nueva',
+            title: 'x',
+            href: '/desk/unidad-inmobiliaria/new-unidad-inmobiliaria-1',
+          },
+          { id: 'lista', title: 'x', href: '/desk/aviso-pld?estado=Borrador' },
           { id: 'evil', title: 'x', href: 'https://evil.invalid/desk/x' },
           { id: 'up', title: 'x', href: '/desk/../crm/hoy' },
           { id: 'up2', title: 'x', href: '/crm/inmobiliaria/../hoy' },
@@ -1103,12 +1135,13 @@ describe('Inmobiliaria in the shell palette', () => {
         '/inmobiliaria/unidad/GRB-A-102',
         undefined,
       ],
+      // its Desk form, answered by the server: the unit's screen all the same
       [
         'inmobiliaria:unidad:GRB-A-101',
         'registros',
         'lucide-building-2',
+        '/inmobiliaria/unidad/GRB-A-101',
         undefined,
-        '/desk/unidad-inmobiliaria/GRB-A-101',
       ],
       [
         'inmobiliaria:venta:VTA-2026-00001',
@@ -1117,13 +1150,20 @@ describe('Inmobiliaria in the shell palette', () => {
         '/inmobiliaria/venta/VTA-2026-00001',
         undefined,
       ],
-      // an icon outside the known set falls back to the building
+      // an icon outside the known set falls back to the record screen's own
       [
         'inmobiliaria:apartado:APT-1',
         'registros',
+        'lucide-bookmark',
+        '/inmobiliaria/apartado/APT-1',
+        undefined,
+      ],
+      [
+        'inmobiliaria:desarrollo:GARIBALDI',
+        'registros',
         'lucide-building-2',
         undefined,
-        '/desk/apartado-de-unidad/APT-1',
+        '/desk/desarrollo-inmobiliario/GARIBALDI',
       ],
     ])
     expect(items[1].subtitle).toBe(UNIT.subtitle)
@@ -1151,11 +1191,12 @@ describe('Inmobiliaria in the shell palette', () => {
     ).toEqual([])
   })
 
-  it('choosing an Inmobiliaria record opens its Desk form in this tab, without a return parameter', async () => {
+  it('choosing an Inmobiliaria record without a shell screen opens its Desk form in this tab, without a return parameter', async () => {
     window.installed_apps = ['frappe', 'crm', 'inmobiliaria']
     state.call.mockImplementation(async (method) => {
       if (method === 'crm.api.shell.boot') return boot()
-      if (method === 'inmobiliaria.busqueda.palette') return { items: [UNIT] }
+      if (method === 'inmobiliaria.busqueda.palette')
+        return { items: [DESARROLLO] }
       throw new Error(`unexpected ${method}`)
     })
     const assign = vi.fn()
@@ -1175,14 +1216,16 @@ describe('Inmobiliaria in the shell palette', () => {
       input.dispatchEvent(new Event('input'))
       const option = await until(() =>
         [...document.querySelectorAll('[role="option"]')].find((o) =>
-          o.textContent.includes('GRB-A-101'),
+          o.textContent.includes('Desarrollo Garibaldi'),
         ),
       )
-      expect(option.textContent).toContain('DEMO Garibaldi')
+      expect(option.textContent).toContain('3 torres')
       option.click()
       await nextTick()
       expect(assign).toHaveBeenCalledTimes(1)
-      expect(assign).toHaveBeenCalledWith('/desk/unidad-inmobiliaria/GRB-A-101')
+      expect(assign).toHaveBeenCalledWith(
+        '/desk/desarrollo-inmobiliario/GARIBALDI',
+      )
     } finally {
       window.location = location
     }
@@ -1228,6 +1271,86 @@ describe('Inmobiliaria in the shell palette', () => {
     } finally {
       window.location = location
     }
+  })
+
+  it('every record screen is a shell row, from its shell address or its Desk form; never a Desk row', () => {
+    // Desk's form address of a doctype, spelled here on its own (frappe.router.slug).
+    const slug = (doctype) => doctype.toLowerCase().replace(/ /g, '-')
+    const items = inmobiliariaItems({
+      items: Object.entries(TIPOS).flatMap(([tipo, { doctype }]) => [
+        {
+          id: `${tipo}:S-1`,
+          title: doctype,
+          href: `/crm/inmobiliaria/${tipo}/S-1`,
+        },
+        {
+          id: `${tipo}:D 2`,
+          title: doctype,
+          href: `/desk/${slug(doctype)}/D%202`,
+        },
+        {
+          id: `${tipo}:A-3`,
+          title: doctype,
+          href: `/app/${slug(doctype)}/A-3`,
+        },
+        {
+          id: `${tipo}:new`,
+          title: doctype,
+          href: `/desk/${slug(doctype)}/new`,
+        },
+        { id: `${tipo}:list`, title: doctype, href: `/desk/${slug(doctype)}` },
+      ]),
+    })
+    expect(items.filter((item) => item.desk || !item.href)).toEqual([])
+    expect(items.map((item) => item.href)).toEqual(
+      Object.keys(TIPOS).flatMap((tipo) => [
+        `/inmobiliaria/${tipo}/S-1`,
+        `/inmobiliaria/${tipo}/D%202`,
+        `/inmobiliaria/${tipo}/A-3`,
+      ]),
+    )
+    // The server sent no icon: each row shows its record screen's own.
+    expect(items.map((item) => item.icon)).toEqual(
+      Object.values(TIPOS).flatMap(({ icono }) => [icono, icono, icono]),
+    )
+  })
+
+  it('gives every record screen its own lucide icon; an unknown one falls back to it', () => {
+    const lucide = resolve(
+      dirname(
+        createRequire(import.meta.url).resolve('lucide-static/package.json'),
+      ),
+      'icons',
+    )
+    const iconos = Object.values(TIPOS).map((t) => t.icono)
+    expect(new Set(iconos).size).toBe(iconos.length)
+    for (const icono of iconos)
+      expect(
+        existsSync(resolve(lucide, `${icono.replace(/^lucide-/, '')}.svg`)),
+        icono,
+      ).toBe(true)
+    const rows = inmobiliariaItems({
+      items: [
+        {
+          id: 'aviso:AV-1',
+          title: 'AV-1',
+          href: '/crm/inmobiliaria/aviso/AV-1',
+          icon: 'lucide-skull',
+        },
+        {
+          id: 'liquidacion:LIQ-1',
+          title: 'LIQ-1',
+          href: '/desk/liquidacion-a-propietarios/LIQ-1',
+          icon: 'lucide-wallet',
+        },
+        DESARROLLO,
+      ],
+    })
+    expect(rows.map((row) => row.icon)).toEqual([
+      'lucide-shield-alert',
+      'lucide-wallet',
+      'lucide-building-2',
+    ])
   })
 })
 
@@ -2744,5 +2867,623 @@ describe('shell-level keys: c creates in this module, Esc closes the page layer'
     expect(create).toHaveBeenCalledTimes(1)
     dialog.remove()
     remove()
+  })
+})
+
+describe('Inmobiliaria in the shell: every record screen opens, every state leads on', () => {
+  // The record screens the app serves (INMO-SH). The route, TIPOS and the
+  // documents hand-off hold exactly these.
+  const CONTRACT_TIPOS = [
+    'unidad',
+    'apartado',
+    'venta',
+    'expediente',
+    'contrato',
+    'mantenimiento',
+    'aviso',
+    'liquidacion',
+    'comision',
+    'entrega',
+    'garantia',
+    'etapa',
+    'captacion',
+    'oferta',
+    'ajuste',
+    'solicitud',
+    'propiedad',
+  ]
+  const ROUTER_SOURCE = readFileSync(
+    resolve(__dirname, '../../src/router.js'),
+    'utf8',
+  )
+  const FICHA_PATH = /path: '(\/inmobiliaria\/:tipo\([a-z|]+\)\/:name)'/.exec(
+    ROUTER_SOURCE,
+  )?.[1]
+  const FICHA = (args) => ({
+    tipo_label: TIPOS[args.tipo]?.etiqueta || '',
+    titulo: `Ficha ${args.name}`,
+    doctype: TIPOS[args.tipo]?.doctype || '',
+    name: args.name,
+    acciones: [],
+    secciones: [],
+  })
+  const inmoBoot = (capabilities = { read: true }) => ({
+    user: { name: 'ana@example.test', full_name: 'Ana López' },
+    modules: {
+      contactos: {
+        key: 'contactos',
+        enabled: true,
+        capabilities: { read: true },
+      },
+      inmobiliaria: { key: 'inmobiliaria', enabled: true, capabilities },
+    },
+  })
+  const COLA_SIN_RENGLONES = {
+    key: 'propiedades_sin_captacion',
+    etiqueta: 'Propiedades sin captación',
+    count: 3,
+    filas: [],
+    mas: false,
+    desk: '/desk/propiedad-administrada?captacion=0',
+  }
+  const COLA_POR_PAGAR = {
+    key: 'por_pagar',
+    etiqueta: 'Por pagar',
+    count: 2,
+    mas: false,
+    filas: [
+      {
+        name: 'AV-1',
+        title: 'Aviso de Laura',
+        url: '/crm/inmobiliaria/aviso/AV-1',
+      },
+      // The server may still answer a row with its Desk form.
+      {
+        name: 'LIQ-1',
+        title: 'Liquidación de octubre',
+        url: '/desk/liquidacion-a-propietarios/LIQ-1',
+      },
+    ],
+  }
+
+  let width
+  beforeEach(() => {
+    width = window.innerWidth
+    window.history.replaceState(null, '')
+    localStorage.clear()
+    resetShellForTests()
+  })
+  afterEach(() => {
+    unmountPage()
+    setWidth(width)
+  })
+
+  function setWidth(value) {
+    Object.defineProperty(window, 'innerWidth', {
+      configurable: true,
+      writable: true,
+      value,
+    })
+    window.dispatchEvent(new Event('resize'))
+  }
+  // The server's answers by method: a value, or a function of the call's arguments.
+  function answer(methods) {
+    state.call.mockImplementation(async (method, args) => {
+      if (!(method in methods)) throw new Error(`unexpected ${method}`)
+      const reply = methods[method]
+      return typeof reply === 'function' ? reply(args) : reply
+    })
+  }
+  // A refusal as frappe-ui's call() rejects it: the server's own words.
+  const refusal = (text) => () => {
+    throw Object.assign(new Error('PermissionError'), {
+      exc_type: 'PermissionError',
+      messages: [text],
+    })
+  }
+  // The real pages on a memory router; the places they lead to are stubs.
+  async function mountPage(path, { phone = false } = {}) {
+    setWidth(phone ? 390 : 1280)
+    const stub = (text) => ({ render: () => h('p', text) })
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        { path: '/hoy', component: stub('Hoy page') },
+        { path: '/contactos', component: stub('Contactos page') },
+        { path: '/inmobiliaria', component: Inmobiliaria },
+        {
+          path: '/inmobiliaria/cola/:cola',
+          component: InmobiliariaCola,
+          props: true,
+        },
+        {
+          path: '/inmobiliaria/disponibilidad',
+          component: InmobiliariaDisponibilidad,
+        },
+        { path: FICHA_PATH, component: InmobiliariaFicha, props: true },
+        { path: '/not-permitted', component: NotPermitted },
+        { path: '/:rest(.*)*', component: stub('Other page') },
+      ],
+    })
+    await router.push(path)
+    await router.isReady()
+    root = document.createElement('div')
+    document.body.append(root)
+    app = createApp({ render: () => h(RouterView) })
+    app.config.globalProperties.__ = (text) => text
+    app.use(router)
+    app.mount(root)
+  }
+  function unmountPage() {
+    app?.unmount()
+    root?.remove()
+    app = root = null
+  }
+  const text = () => root.textContent.replace(/\s+/g, ' ')
+  const labels = (node) =>
+    [...node.querySelectorAll('button')].map((b) => b.textContent.trim())
+  const at = (path) => until(() => router.currentRoute.value.path === path)
+
+  it('the route opens the 17 record screens TIPOS names, each with its es-MX name, and nothing else', () => {
+    expect(FICHA_PATH).toBeTruthy()
+    const routed = /:tipo\(([a-z|]+)\)/.exec(FICHA_PATH)[1].split('|')
+    expect([...routed].sort()).toEqual([...CONTRACT_TIPOS].sort())
+    expect(Object.keys(TIPOS).sort()).toEqual([...CONTRACT_TIPOS].sort())
+    const doctypes = Object.values(TIPOS).map((t) => t.doctype)
+    expect(new Set(doctypes).size).toBe(CONTRACT_TIPOS.length)
+    for (const { etiqueta } of Object.values(TIPOS))
+      expect(etiqueta).toMatch(/^\p{Lu}[\p{L} ]+$/u)
+    // vue-router takes every tipo, a name with a slash, and no other segment.
+    const probe = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        { path: FICHA_PATH, name: 'ficha', component: { render: () => null } },
+        {
+          path: '/:rest(.*)*',
+          name: 'otra',
+          component: { render: () => null },
+        },
+      ],
+    })
+    for (const tipo of CONTRACT_TIPOS) {
+      const to = probe.resolve(`/inmobiliaria/${tipo}/X%2F1`)
+      expect([to.name, to.params.tipo, to.params.name]).toEqual([
+        'ficha',
+        tipo,
+        'X/1',
+      ])
+    }
+    expect(probe.resolve('/inmobiliaria/desarrollo/D-1').name).toBe('otra')
+    expect(probe.resolve('/inmobiliaria/cola/x').name).toBe('otra')
+    // Every Inmobiliaria route names itself for the phone header, literally.
+    const blocks = ROUTER_SOURCE.split('\n  {\n').filter((route) =>
+      /(?:^|\n) +path: '\/inmobiliaria/.test(route),
+    )
+    expect(blocks).toHaveLength(4)
+    for (const route of blocks) expect(route).toMatch(/\btitle: '[^']+'/)
+  })
+
+  it('a Desk form of a record with a screen becomes that screen; lists, new forms and other doctypes do not', () => {
+    expect(fichaFromDesk('/desk/aviso-pld/AV-1')).toBe(
+      '/inmobiliaria/aviso/AV-1',
+    )
+    expect(
+      fichaFromDesk('/app/liquidacion-a-propietarios/LIQ%2F10?tab=pagos'),
+    ).toBe('/inmobiliaria/liquidacion/LIQ%2F10')
+    for (const url of [
+      '/desk/aviso-pld',
+      '/desk/aviso-pld/new',
+      '/desk/aviso-pld/new-aviso-pld-1',
+      '/desk/aviso-pld/view/list',
+      '/desk/crm-deal/CRM-DEAL-1',
+      '/crm/inmobiliaria/aviso/AV-1',
+      '',
+      null,
+    ])
+      expect(fichaFromDesk(url)).toBe('')
+    expect(deskTipo('/desk/aviso-pld?estado=Borrador')).toBe('aviso')
+    expect(deskTipo('/desk/crm-deal/CRM-DEAL-1')).toBe('')
+    expect(parseFicha('/inmobiliaria/oferta/OF%201?ver=x')).toEqual({
+      tipo: 'oferta',
+      name: 'OF 1',
+    })
+    expect(parseFicha('/inmobiliaria/cola/ofertas')).toBeNull()
+    expect(linkOf('/desk/solicitud-de-arrendamiento/SOL-1')).toEqual({
+      to: '/inmobiliaria/solicitud/SOL-1',
+    })
+    expect(linkOf('/desk/desarrollo-inmobiliario/GARIBALDI')).toEqual({
+      href: '/desk/desarrollo-inmobiliario/GARIBALDI',
+    })
+  })
+
+  it('a list that counts records it cannot show one by one says how many and leads on, never «nada pendiente»', async () => {
+    shellBoot.value = inmoBoot()
+    answer({ 'inmobiliaria.api.shell.cola': COLA_SIN_RENGLONES })
+    await mountPage(
+      '/inmobiliaria/cola/propiedades_sin_captacion?inicio=administracion',
+      { phone: true },
+    )
+    const pane = await until(() =>
+      root.querySelector('[data-testid="inmo-cola-sin-renglones"]'),
+    )
+    expect(pane.textContent).toContain('3 pendientes en esta lista')
+    expect(text()).not.toMatch(/nada pendiente/i)
+    // Not an administrator: no Desk list; the words say who can help.
+    expect(root.querySelector('[data-testid="inmo-cola-desk"]')).toBeNull()
+    expect(pane.textContent).toContain('Avisa a un administrador')
+    const salida = pane.querySelector('[data-testid="inmo-cola-salida"]')
+    expect(salida.textContent).toBe('Volver al inicio')
+    salida.click()
+    await at('/inmobiliaria')
+    expect(router.currentRoute.value.fullPath).toBe(
+      '/inmobiliaria?inicio=administracion',
+    )
+  })
+
+  it('an administrator also gets that list in the desk, named as such; desktop gives the state the whole width', async () => {
+    shellBoot.value = inmoBoot({ read: true, admin: true })
+    answer({ 'inmobiliaria.api.shell.cola': COLA_SIN_RENGLONES })
+    await mountPage('/inmobiliaria/cola/propiedades_sin_captacion')
+    const link = await until(() =>
+      root.querySelector('[data-testid="inmo-cola-desk"]'),
+    )
+    expect(link.textContent.trim()).toBe('Abrir la lista en el escritorio')
+    expect(link.getAttribute('href')).toBe(
+      '/desk/propiedad-administrada?captacion=0',
+    )
+    expect(text()).toContain('3 pendientes en esta lista')
+    expect(text()).toContain('Ábrelos en el escritorio')
+    // No row to choose: no «Elige un renglón» pane beside it.
+    expect(root.querySelector('[data-testid="inmo-cola-detalle"]')).toBeNull()
+  })
+
+  it('a list that fails to open shows the server’s words, «Reintentar» and the way back to whoever opened it', async () => {
+    let calls = 0
+    const refuse = refusal('No tienes acceso a <b>esta lista</b>.')
+    answer({
+      'inmobiliaria.api.shell.cola': () => {
+        calls++
+        return refuse()
+      },
+    })
+    await mountPage(
+      '/inmobiliaria/cola/apartados_por_vencer?return_to=/crm/hoy&return_label=Hoy',
+      { phone: true },
+    )
+    const alert = await until(() => root.querySelector('[role="alert"]'))
+    expect(alert.textContent).toContain('No tienes acceso a esta lista.')
+    expect(labels(alert)).toEqual(['Reintentar', 'Volver a Hoy'])
+    alert.querySelector('button').click()
+    await until(() => calls === 2)
+    const salida = await until(() =>
+      root.querySelector('[data-testid="inmo-cola-salida"]'),
+    )
+    salida.click()
+    await at('/hoy')
+    expect(router.currentRoute.value.path).toBe('/hoy')
+  })
+
+  it('the bar’s arrow on a list opened from a link goes up to whoever opened it, else to its home', async () => {
+    answer({
+      'inmobiliaria.api.shell.cola': {
+        key: 'apartados_por_vencer',
+        etiqueta: 'Apartados por vencer',
+        count: 0,
+        filas: [],
+        mas: false,
+      },
+    })
+    await mountPage(
+      '/inmobiliaria/cola/apartados_por_vencer?return_to=/crm/hoy&return_label=Hoy',
+      { phone: true },
+    )
+    await until(() => text().includes('Nada pendiente aquí'))
+    expect(
+      root.querySelector('[data-testid="inmo-cola-salida"]').textContent,
+    ).toBe('Volver a Hoy')
+    root.querySelector('[data-appbar-back]').click()
+    await at('/hoy')
+    expect(router.currentRoute.value.path).toBe('/hoy')
+    unmountPage()
+    await mountPage('/inmobiliaria/cola/apartados_por_vencer?inicio=ventas', {
+      phone: true,
+    })
+    await until(() => text().includes('Nada pendiente aquí'))
+    root.querySelector('[data-appbar-back]').click()
+    await at('/inmobiliaria')
+    expect(router.currentRoute.value.fullPath).toBe(
+      '/inmobiliaria?inicio=ventas',
+    )
+  })
+
+  it('desktop: each row opens its record beside the list, also one the server sent as a Desk form; no row leads to Desk', async () => {
+    const fichas = []
+    answer({
+      'inmobiliaria.api.shell.cola': COLA_POR_PAGAR,
+      'inmobiliaria.api.shell.ficha': (args) => {
+        fichas.push(args)
+        return FICHA(args)
+      },
+    })
+    await mountPage('/inmobiliaria/cola/por_pagar')
+    const rows = await until(() => {
+      const found = [...root.querySelectorAll('[data-fila]')]
+      return found.length === 2 && found
+    })
+    for (const row of rows)
+      expect(row.getAttribute('href')).toMatch(
+        /^\/inmobiliaria\/cola\/por_pagar\?ver=/,
+      )
+    root.querySelector('[data-fila="LIQ-1"]').click()
+    const titulo = await until(() =>
+      root.querySelector(
+        '[data-testid="inmo-cola-detalle"] [data-testid="inmo-ficha-titulo"]',
+      ),
+    )
+    expect(titulo.textContent.trim()).toBe('Ficha LIQ-1')
+    expect(fichas).toEqual([{ tipo: 'liquidacion', name: 'LIQ-1' }])
+    // The record opens in place: «back» still leaves the list.
+    expect(router.currentRoute.value.path).toBe('/inmobiliaria/cola/por_pagar')
+    root.querySelector('[data-fila="AV-1"]').click()
+    await until(() => fichas.length === 2)
+    expect(fichas[1]).toEqual({ tipo: 'aviso', name: 'AV-1' })
+  })
+
+  it('phone: a row opens its record screen, a Desk-form row too, carrying the way back to the list', async () => {
+    answer({ 'inmobiliaria.api.shell.cola': COLA_POR_PAGAR })
+    await mountPage('/inmobiliaria/cola/por_pagar?inicio=administracion', {
+      phone: true,
+    })
+    const row = await until(() => root.querySelector('[data-fila="LIQ-1"]'))
+    const to = router.resolve(row.getAttribute('href'))
+    expect(to.path).toBe('/inmobiliaria/liquidacion/LIQ-1')
+    expect(to.query).toEqual({
+      return_to: '/crm/inmobiliaria/cola/por_pagar?inicio=administracion',
+      return_label: 'Por pagar',
+    })
+    expect(root.querySelector('[data-testid="inmo-cola-detalle"]')).toBeNull()
+  })
+
+  it('the home starts on the one the server names, else on its first; the URL’s home wins while the worker has it', async () => {
+    const source = readFileSync(
+      resolve(__dirname, '../../src/pages/Inmobiliaria.vue'),
+      'utf8',
+    )
+    expect(source).not.toMatch(/administraci[oó]n/i)
+    const INICIO = {
+      admin: true,
+      inicios: [
+        {
+          key: 'ventas',
+          nombre: 'Ventas',
+          titulo: 'Lo de ventas',
+          pendientes: 2,
+          colas: [
+            {
+              key: 'apartados_por_vencer',
+              etiqueta: 'Apartados por vencer',
+              count: 2,
+              url: '/crm/inmobiliaria/cola/apartados_por_vencer',
+            },
+          ],
+        },
+        {
+          key: 'administracion',
+          nombre: 'Administración',
+          titulo: 'Lo de administración',
+          pendientes: 1,
+          colas: [
+            { key: 'por_pagar', etiqueta: 'Liquidaciones por pagar', count: 1 },
+          ],
+        },
+      ],
+      accesos: [
+        {
+          key: 'disponibilidad',
+          etiqueta: 'Disponibilidad',
+          icono: 'lucide-layout-grid',
+          url: '/crm/inmobiliaria/disponibilidad',
+        },
+        // Without an address a shortcut is left out, never a link to here.
+        {
+          key: 'sin-direccion',
+          etiqueta: 'Sin dirección',
+          icono: 'x',
+          url: '',
+        },
+      ],
+    }
+    const titulo = () => root.querySelector('section > h2')?.textContent.trim()
+    answer({ 'inmobiliaria.api.shell.inicio': INICIO })
+    await mountPage('/inmobiliaria', { phone: true })
+    // An administrator too starts on the first home the server lists.
+    expect(await until(titulo)).toBe('Lo de ventas')
+    expect(
+      root
+        .querySelector('[data-cola="apartados_por_vencer"]')
+        .getAttribute('href'),
+    ).toBe('/inmobiliaria/cola/apartados_por_vencer?inicio=ventas')
+    expect(
+      [...root.querySelectorAll('[data-acceso]')].map((a) => [
+        a.getAttribute('data-acceso'),
+        a.getAttribute('href'),
+      ]),
+    ).toEqual([['disponibilidad', '/inmobiliaria/disponibilidad']])
+    unmountPage()
+    answer({
+      'inmobiliaria.api.shell.inicio': {
+        ...INICIO,
+        predeterminado: 'administracion',
+      },
+    })
+    await mountPage('/inmobiliaria', { phone: true })
+    expect(await until(titulo)).toBe('Lo de administración')
+    unmountPage()
+    await mountPage('/inmobiliaria?inicio=ventas', { phone: true })
+    expect(await until(titulo)).toBe('Lo de ventas')
+    unmountPage()
+    await mountPage('/inmobiliaria?inicio=obra', { phone: true })
+    expect(await until(titulo)).toBe('Lo de administración')
+  })
+
+  it('a home that fails to open shows the server’s words, «Reintentar» and the way on to another module', async () => {
+    shellBoot.value = inmoBoot()
+    answer({
+      'inmobiliaria.api.shell.inicio': refusal(
+        'No tienes acceso a <strong>Inmobiliaria</strong>.',
+      ),
+    })
+    await mountPage('/inmobiliaria', { phone: true })
+    const alert = await until(() => root.querySelector('[role="alert"]'))
+    expect(alert.textContent).toContain('No tienes acceso a Inmobiliaria.')
+    expect(labels(alert)).toEqual(['Reintentar', 'Ir a Contactos'])
+    alert.querySelector('[data-testid="inmo-salida"]').click()
+    await at('/contactos')
+    expect(router.currentRoute.value.path).toBe('/contactos')
+  })
+
+  it('a record that fails to open offers «Reintentar» and the way back; a failed action keeps the record on screen with its reason', async () => {
+    let missing = true
+    const toasts = state.toasts.length
+    answer({
+      'inmobiliaria.api.shell.ficha': (args) => {
+        if (missing) return refusal('No se encontró el aviso AV-1.')()
+        return {
+          ...FICHA(args),
+          acciones: [
+            {
+              id: 'presentar',
+              etiqueta: 'Presentar aviso',
+              tipo: 'primary',
+              habilitada: true,
+              metodo: 'inmobiliaria.api.acciones.presentar_aviso',
+              args: { aviso: args.name },
+            },
+          ],
+        }
+      },
+      'inmobiliaria.api.acciones.presentar_aviso': refusal(
+        'El aviso necesita el RFC del cliente.',
+      ),
+    })
+    await mountPage(
+      '/inmobiliaria/aviso/AV-1?return_to=/crm/hoy&return_label=Hoy',
+      { phone: true },
+    )
+    const alert = await until(() => root.querySelector('[role="alert"]'))
+    expect(alert.textContent).toContain('No se encontró el aviso AV-1.')
+    expect(labels(alert)).toEqual(['Reintentar', 'Volver a Hoy'])
+    missing = false
+    alert.querySelector('button').click()
+    const accion = await until(() =>
+      root.querySelector('[data-testid="inmo-siguiente-paso"]'),
+    )
+    accion.click()
+    const problema = await until(() =>
+      root.querySelector('[data-testid="inmo-accion-problema"]'),
+    )
+    expect(problema.textContent).toContain('Presentar aviso:')
+    expect(problema.textContent).toContain(
+      'El aviso necesita el RFC del cliente.',
+    )
+    expect(labels(problema)).toEqual(['Reintentar', 'Entendido'])
+    expect(
+      root
+        .querySelector('[data-testid="inmo-ficha-titulo"]')
+        .textContent.trim(),
+    ).toBe('Ficha AV-1')
+    expect(router.currentRoute.value.path).toBe('/inmobiliaria/aviso/AV-1')
+    expect(state.toasts.length).toBe(toasts)
+  })
+
+  it('NotPermitted: an Inmobiliaria address is Inmobiliaria’s, and once the shell opens it the worker goes straight on', async () => {
+    expect(recoveryModule('/inmobiliaria/venta/VTA-1')).toBe('inmobiliaria')
+    expect(recoveryModule('/inmobiliaria?inicio=ventas')).toBe('inmobiliaria')
+    answer({
+      'crm.api.shell.boot': inmoBoot(),
+      'inmobiliaria.api.shell.ficha': FICHA,
+    })
+    const intended =
+      '/inmobiliaria/venta/VTA-1?return_to=/crm/hoy&return_label=Hoy'
+    await mountPage(`/not-permitted?intended=${encodeURIComponent(intended)}`, {
+      phone: true,
+    })
+    await at('/inmobiliaria/venta/VTA-1')
+    expect(router.currentRoute.value.path).toBe('/inmobiliaria/venta/VTA-1')
+    expect(router.currentRoute.value.query).toEqual({
+      return_to: '/crm/hoy',
+      return_label: 'Hoy',
+    })
+    expect(
+      await until(() =>
+        root.querySelector('[data-testid="inmo-ficha-titulo"]'),
+      ),
+    ).toBeTruthy()
+  })
+
+  it('NotPermitted: without Inmobiliaria it explains Inmobiliaria, not Ventas, and leads on to a module the worker has', async () => {
+    answer({
+      'crm.api.shell.boot': {
+        ...inmoBoot(),
+        modules: {
+          ...inmoBoot().modules,
+          inmobiliaria: {
+            key: 'inmobiliaria',
+            enabled: false,
+            capabilities: {},
+          },
+        },
+      },
+    })
+    await mountPage('/not-permitted?intended=/inmobiliaria/venta/VTA-1', {
+      phone: true,
+    })
+    const ir = await until(() =>
+      [...root.querySelectorAll('button')].find(
+        (b) => b.textContent === 'Ir a Contactos',
+      ),
+    )
+    expect(text()).toContain('Para abrir Inmobiliaria necesitas')
+    expect(text()).not.toContain('prospectos de ventas')
+    expect(router.currentRoute.value.path).toBe('/not-permitted')
+    ir.click()
+    await at('/contactos')
+    expect(router.currentRoute.value.path).toBe('/contactos')
+  })
+
+  it('a board without developments says who registers the first one and leads back to the home, never to the escritorio', async () => {
+    let puedeCrear = false
+    answer({
+      'inmobiliaria.api.shell.tablero': () => ({
+        vacio: true,
+        deal: null,
+        puede_crear: puedeCrear,
+        puede_demo: false,
+        desarrollos: [],
+      }),
+      'inmobiliaria.api.shell.inicio': { inicios: [], accesos: [] },
+    })
+    await mountPage('/inmobiliaria/disponibilidad', { phone: true })
+    const vacio = await until(() =>
+      root.querySelector('[data-testid="inmo-tablero-vacio"]'),
+    )
+    expect(vacio.textContent).toContain('Todavía no hay desarrollos')
+    expect(vacio.textContent).toContain(
+      'en cuanto un administrador dé de alta el primero',
+    )
+    expect(labels(vacio)).toEqual(['Volver al inicio'])
+    expect(text()).not.toMatch(/escritorio/i)
+    unmountPage()
+
+    puedeCrear = true
+    await mountPage('/inmobiliaria/disponibilidad', { phone: true })
+    const propio = await until(() =>
+      root.querySelector('[data-testid="inmo-tablero-vacio"]'),
+    )
+    expect(propio.textContent).toContain('en cuanto des de alta el primero')
+    expect(text()).not.toMatch(/escritorio/i)
+    propio.querySelector('[data-testid="inmo-tablero-salida"]').click()
+    await at('/inmobiliaria')
+    expect(router.currentRoute.value.path).toBe('/inmobiliaria')
   })
 })

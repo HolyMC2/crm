@@ -71,7 +71,7 @@
           "
           v-bind="
             primary.url && primary.habilitada
-              ? linkProps(primary.url)
+              ? actionProps(primary)
               : { type: 'button' }
           "
           :class="[FILLED, !primary.habilitada && DISABLED]"
@@ -88,7 +88,7 @@
           :is="a.url && a.habilitada ? linkTag(a.url) : NativeButton"
           v-for="a in secondary"
           :key="a.id"
-          v-bind="a.url && a.habilitada ? linkProps(a.url) : { type: 'button' }"
+          v-bind="a.url && a.habilitada ? actionProps(a) : { type: 'button' }"
           :class="[
             TONAL,
             a.tipo === 'danger' && 'text-ink-red-7',
@@ -107,13 +107,41 @@
           {{ a.etiqueta }}
         </component>
       </div>
-      <p
-        v-for="a in secondary.filter((x) => !x.habilitada && x.motivo)"
+      <Blocked
+        v-for="a in secondary.filter((x) => !x.habilitada)"
         :key="`m-${a.id}`"
-        class="text-sm text-ink-gray-6"
+        :accion="a"
+        secundaria
+      />
+      <!-- An action that failed: the worker stays here, reads why, and tries
+           again or carries on with the record. -->
+      <div
+        v-if="actionProblem"
+        class="flex flex-col gap-2 rounded-lg bg-surface-red-1 px-3 py-2 text-base text-ink-red-7"
+        role="alert"
+        data-testid="inmo-accion-problema"
       >
-        {{ a.etiqueta }}: {{ a.motivo }}
-      </p>
+        <p>
+          <span class="font-medium">{{ actionProblem.etiqueta }}:</span>
+          {{ actionProblem.texto }}
+        </p>
+        <div class="flex flex-wrap gap-2">
+          <button
+            v-if="actionProblem.reintentar"
+            type="button"
+            :class="TONAL"
+            @click="act(actionProblem.accion)"
+          >
+            Reintentar
+          </button>
+          <button v-else type="button" :class="TONAL" @click="refreshFicha">
+            Actualizar la ficha
+          </button>
+          <button type="button" :class="TONAL" @click="actionProblem = null">
+            Entendido
+          </button>
+        </div>
+      </div>
     </section>
 
     <section
@@ -270,13 +298,15 @@
 </template>
 
 <script setup>
-import { computed, h, ref } from 'vue'
+import { computed, h, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { toast } from 'frappe-ui'
 import { ListRow, StatusChip } from '@/components/ui'
 import AccionSheet from '@/components/inmobiliaria/AccionSheet.vue'
 import {
   NativeButton,
+  SIN_METODO,
+  externalLinkOf,
   inmobiliariaApi,
   linkOf,
   problemText,
@@ -323,42 +353,61 @@ const secondary = computed(() =>
     .sort((a, b) => (a.tipo === 'danger') - (b.tipo === 'danger')),
 )
 
-// A disabled next step says why, and offers the way forward when there is one.
+// A blocked action says why (`motivo`) and what to do next (`solucion`). When
+// the way forward is a screen (`abrir`, a path) the next step is its link. An
+// older app sends `solucion` as `{ etiqueta, url }`.
+function wayForward(a) {
+  const s = a.solucion
+  if (s && typeof s === 'object')
+    return {
+      texto: String(s.etiqueta || ''),
+      url: typeof s.url === 'string' ? s.url : '',
+    }
+  const abrir =
+    typeof a.abrir === 'string' &&
+    a.abrir.startsWith('/') &&
+    !a.abrir.startsWith('//')
+      ? a.abrir
+      : ''
+  return { texto: typeof s === 'string' ? s : '', url: abrir }
+}
+const LINK = 'font-medium underline underline-offset-4'
+function linkNode(url, text) {
+  const link = linkOf(url)
+  if (link.to)
+    return h(RouterLink, { to: withCarry(link.to), class: LINK }, () => text)
+  if (link.href) return h('a', { href: link.href, class: LINK }, text)
+  return h('span', text)
+}
 const Blocked = (p) => {
   const a = p.accion
-  if (a.habilitada || !a.motivo) return null
-  const children = [h('span', a.motivo)]
-  if (a.solucion?.url) {
-    const link = linkOf(a.solucion.url)
-    children.push(
-      ' ',
-      link.to
-        ? h(
-            RouterLink,
-            { to: link.to, class: 'font-medium underline underline-offset-4' },
-            () => a.solucion.etiqueta,
-          )
-        : h(
-            'a',
-            {
-              href: link.href,
-              class: 'font-medium underline underline-offset-4',
-            },
-            a.solucion.etiqueta,
-          ),
-    )
-  }
+  if (a.habilitada) return null
+  const salida = wayForward(a)
+  if (!a.motivo && !salida.texto && !salida.url) return null
+  const children = []
+  // Beside the other actions the note names the one it explains.
+  if (p.secundaria)
+    children.push(h('span', { class: 'font-medium' }, `${a.etiqueta}: `))
+  if (a.motivo) children.push(h('span', a.motivo))
+  if (salida.url)
+    children.push(' ', linkNode(salida.url, salida.texto || 'Resolver'))
+  else if (salida.texto) children.push(' ', h('span', salida.texto))
   return h(
     'p',
     {
-      class:
-        'rounded-lg bg-surface-amber-1 px-3 py-2 text-base text-ink-gray-8',
+      class: p.secundaria
+        ? 'text-sm text-ink-gray-7'
+        : 'rounded-lg bg-surface-amber-1 px-3 py-2 text-base text-ink-gray-8',
       role: 'note',
+      'data-bloqueo': a.id,
     },
     children,
   )
 }
-Blocked.props = ['accion']
+Blocked.props = {
+  accion: { type: Object, required: true },
+  secundaria: { type: Boolean, default: false },
+}
 
 // «Identificación oficial» → «identificación oficial», but «CURP» stays CURP.
 function enFrase(texto) {
@@ -391,13 +440,30 @@ function linkProps(url, kind) {
   if (kind === 'row') return link.to ? { to: withCarry(link.to) } : link
   return link.to ? { to: withCarry(link.to) } : { href: link.href }
 }
+// An action's link. One the app marks `external` (the SAT portal) opens in a
+// new tab and the record stays here; any other keeps linkProps.
+function actionProps(a) {
+  const external = externalLinkOf(a)
+  return external.href ? external : linkProps(a.url)
+}
 
 const sheetOpen = ref(false)
 const sheetAccion = ref(null)
 const running = ref('')
+// The last action that failed here: { accion, etiqueta, texto, reintentar }.
+const actionProblem = ref(null)
+watch(
+  () => props.ficha,
+  () => (actionProblem.value = null),
+)
 function openSheet(accion) {
+  actionProblem.value = null
   sheetAccion.value = accion
   sheetOpen.value = true
+}
+function refreshFicha() {
+  actionProblem.value = null
+  emit('changed')
 }
 
 async function act(accion, event) {
@@ -407,13 +473,28 @@ async function act(accion, event) {
   }
   if (accion.url) return // a link: the router or the browser follows it
   if (accion.campos?.length || accion.confirmar) return openSheet(accion)
-  if (!accion.metodo || running.value) return
+  if (running.value) return
+  actionProblem.value = null
+  if (!accion.metodo) {
+    actionProblem.value = {
+      accion,
+      etiqueta: accion.etiqueta,
+      texto: SIN_METODO,
+      reintentar: false,
+    }
+    return
+  }
   running.value = accion.id
   try {
     const answer = await inmobiliariaApi(accion.metodo, accion.args || {})
     done({ accion, answer })
   } catch (e) {
-    toast.error(problemText(e))
+    actionProblem.value = {
+      accion,
+      etiqueta: accion.etiqueta,
+      texto: problemText(e),
+      reintentar: true,
+    }
   } finally {
     running.value = ''
   }
@@ -422,16 +503,40 @@ async function act(accion, event) {
 function done({ accion, answer }) {
   if (accion.externo && answer?.[accion.externo]) {
     window.open(answer[accion.externo], '_blank', 'noopener')
-    return
+    advise(answer, { externo: true })
+    // Back from the other tab, the worker finds the record as it is now.
+    return refreshFicha()
   }
   const next = accion.abrir && answer?.[accion.abrir]
   if (accion.exito) toast.success(accion.exito)
+  advise(answer)
   if (next) {
     const link = linkOf(next)
     if (link.to) return router.push(withCarry(link.to))
     if (link.href) return window.location.assign(link.href)
   }
   emit('changed')
+}
+
+// What the app warns about in an action's answer, all of it and in its own
+// words: each line of `avisos` (what a batch left out), the `advertencia` of a
+// late correction, the `aviso_correo` of an email that did not go out. One
+// notice with a line each, after «exito», that waits for the worker to close
+// it (Desk shows them in a dialog). An outside step's `avisos` is no warning:
+// the SAT file lists there the notices it carries.
+function advise(answer, { externo = false } = {}) {
+  const avisos = !externo && Array.isArray(answer?.avisos) ? answer.avisos : []
+  const lines = [...avisos, answer?.advertencia, answer?.aviso_correo].filter(
+    (t) => typeof t === 'string' && t.trim(),
+  )
+  if (!lines.length) return
+  const notice = () =>
+    h(
+      'div',
+      { class: 'flex flex-col gap-1' },
+      lines.map((t) => h('p', t)),
+    )
+  toast.warning(notice, { duration: Infinity })
 }
 
 function subirDocumento(d) {

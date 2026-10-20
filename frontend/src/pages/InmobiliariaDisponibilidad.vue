@@ -26,15 +26,49 @@
         :message="problem"
         action="Reintentar"
         @action="load"
-      />
+      >
+        <Button
+          variant="subtle"
+          class="min-h-11"
+          label="Volver al inicio"
+          data-testid="inmo-tablero-salida"
+          @click="volverA(router, '/crm/inmobiliaria')"
+        />
+      </EmptyState>
       <EmptyState v-else-if="!data" state="loading" title="Abriendo…" />
+      <!-- Nothing to show yet: say who registers the first development and
+           lead back to the worker's lists, never to Desk. -->
       <EmptyState
         v-else-if="data.vacio"
         state="empty"
         title="Todavía no hay desarrollos"
-        message="Da de alta tu primer desarrollo en el escritorio para ver aquí sus unidades."
-      />
+        :message="
+          data.puede_crear
+            ? 'Aquí verás las unidades de cada desarrollo en cuanto des de alta el primero. Mientras, sigue con las listas de tu inicio.'
+            : 'Aquí verás las unidades de cada desarrollo en cuanto un administrador dé de alta el primero. Mientras, sigue con las listas de tu inicio.'
+        "
+        data-testid="inmo-tablero-vacio"
+      >
+        <Button
+          variant="solid"
+          class="min-h-11"
+          label="Volver al inicio"
+          data-testid="inmo-tablero-salida"
+          @click="volverA(router, '/crm/inmobiliaria')"
+        />
+      </EmptyState>
       <template v-else>
+        <!-- Another development or status that failed to load keeps the
+             board on screen and says why. -->
+        <div
+          v-if="problem"
+          class="mx-4 mt-2 flex flex-wrap items-center gap-2 rounded-lg bg-surface-red-1 px-3 py-2 text-base text-ink-red-7"
+          role="alert"
+          data-testid="inmo-tablero-problema"
+        >
+          <span class="flex-1">{{ problem }}</span>
+          <Button variant="subtle" label="Reintentar" @click="load" />
+        </div>
         <div class="px-4 pt-2">
           <p
             class="text-base text-ink-gray-7"
@@ -147,6 +181,7 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { Button } from 'frappe-ui'
 import { useWindowSize } from '@vueuse/core'
 import {
   AppBar,
@@ -155,7 +190,11 @@ import {
   ListRow,
   StatusChip,
 } from '@/components/ui'
-import { inmobiliariaApi, problemText } from '@/composables/useInmobiliaria'
+import {
+  inmobiliariaApi,
+  problemText,
+  volverA,
+} from '@/composables/useInmobiliaria'
 import { formatDate, formatMoneyCompact } from '@/utils/display'
 
 const route = useRoute()

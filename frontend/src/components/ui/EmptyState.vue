@@ -1,6 +1,7 @@
 <template>
   <!-- The one empty state (Shell SPEC §2.2.5): PaneState with the action that
-       moves the worker on. `state` also takes loading, denied and error. -->
+       moves the worker on. `state` also takes loading, denied and error. The
+       default slot holds further ways out, next to the action. -->
   <PaneState
     :state="state"
     :title="title"
@@ -8,7 +9,9 @@
     :action="action"
     :reload="reload"
     @retry="$emit('action')"
-  />
+  >
+    <template v-if="$slots.default" #default><slot /></template>
+  </PaneState>
 </template>
 <script setup>
 import PaneState from '@/components/shell/PaneState.vue'

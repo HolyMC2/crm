@@ -25,6 +25,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { Button } from 'frappe-ui'
 import {
   firstModuleRoute,
+  hostedModules,
   loadShell,
   shellBoot,
 } from '@/composables/muelleShell'
@@ -158,6 +159,14 @@ const COPY = {
     missing:
       'Todavía falta acceso a Inventario. Comparte la solicitud y reintenta después del ajuste.',
   },
+  inmobiliaria: {
+    reason:
+      'Para abrir Inmobiliaria necesitas permiso de lectura de unidades o de alguna de sus listas de trabajo. Pide a un administrador que revise tu usuario; después toca Reintentar permisos.',
+    request:
+      'Necesito acceso a Inmobiliaria en Muelle (lectura de unidades o de mis listas de trabajo); quiero retomar lo que intentaba abrir.',
+    missing:
+      'Todavía falta acceso a Inmobiliaria. Comparte la solicitud y reintenta después del ajuste.',
+  },
   hoy: {
     reason:
       'Hoy es la página de inicio de las cuentas del equipo. Tu usuario todavía no es una cuenta del equipo activa.',
@@ -193,8 +202,27 @@ const COPY = {
 }
 const module = computed(() => recoveryModule(route.query.intended))
 const copy = computed(() => COPY[module.value])
-// Where this worker can keep working now: another module they do have.
-const landing = computed(() => firstModuleRoute(shellBoot.value, module.value))
+// The module asked for, when the shell already opens it to this worker: a
+// page gate refused what the shell allows (the server answers an
+// Inmobiliaria address with the Ventas check), so the way on is the screen
+// they asked for, else that module's home. Never for Ventas, whose refusal
+// the router itself decides.
+const reopen = computed(() => {
+  if (module.value === 'ventas') return null
+  if (!recoveryReady(module.value, shellBoot.value)) return null
+  const home = hostedModules.find((m) => m.key === module.value)
+  if (!home) return null
+  const to = safeIntendedRoute(
+    '/crm' + (route.query.intended || '/'),
+    '/crm' + home.to,
+  )
+  return { key: home.key, label: home.label, to: to.slice(4) || home.to }
+})
+// Where this worker can keep working now: the module they asked for when it
+// is open to them, else another module they do have.
+const landing = computed(
+  () => reopen.value || firstModuleRoute(shellBoot.value, module.value),
+)
 async function requestAccess() {
   const text = copy.value.request
   try {
@@ -224,5 +252,9 @@ async function retry() {
     loading.value = false
   }
 }
-onMounted(() => loadShell().catch(() => null))
+onMounted(async () => {
+  await loadShell().catch(() => null)
+  // The boot opens what the worker asked for: go on, no detour.
+  if (reopen.value) router.replace(reopen.value.to)
+})
 </script>

@@ -77,6 +77,8 @@ const RECOVERY_MODULES = {
   encuestas: 'encuestas',
   equipo: 'equipo',
   manual: 'manual',
+  // A refused Inmobiliaria screen recovers into Inmobiliaria, never Ventas.
+  inmobiliaria: 'inmobiliaria',
   contactos: 'contactos',
   contacts: 'contactos',
   organizations: 'contactos',
