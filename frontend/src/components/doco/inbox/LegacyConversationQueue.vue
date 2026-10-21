@@ -96,7 +96,9 @@
           </button>
         </div>
       </div>
-      <div class="mb-3 flex items-center gap-1">
+      <!-- one row for the in-list search, «Filtros» and (phone) ⋯: with the
+           channel chips the phone header is about 120 px in the default view -->
+      <div class="mb-2 flex items-center gap-1 sm:mb-3">
         <div
           class="flex min-w-0 flex-1 items-center gap-2 px-2.5 focus-within:ring-1 focus-within:ring-outline-gray-3"
           :class="
@@ -128,6 +130,10 @@
             <LucideX class="h-3 w-3" />
           </button>
         </div>
+        <!-- record filters: estado del trato / lead / reparación + rango de
+             fechas. Only on the conversation-list tabs — Vencidos, Comentarios
+             and Por aprobar are separate surfaces with their own queries. -->
+        <QueueFilters v-if="filterableTab" />
         <button
           v-if="isMobile"
           type="button"
@@ -137,8 +143,11 @@
           @click="moreOpen = true"
         >
           <LucideEllipsisVertical class="size-5" />
+          <!-- lit only while the Sin asignar group is on the list: the same rule
+               the list obeys, so the dot never points at something a filter or
+               tag hides. The sheet keeps the full «sin atender» count. -->
           <span
-            v-if="unattendedTotal"
+            v-if="shownUnassigned.length"
             class="absolute right-2 top-2 size-2 rounded-full bg-surface-amber-7"
             aria-hidden="true"
           />
@@ -196,10 +205,9 @@
           __('Most overdue first')
         }}</span>
       </div>
-      <!-- record filters: estado del trato / lead / reparación + rango de fechas.
-           Only on the conversation-list tabs — Vencidos, Comentarios and Por
-           aprobar are separate surfaces with their own queries. -->
-      <QueueFilters v-if="filterableTab" class="mt-2" />
+      <!-- what narrows the list beyond the default view, and «Limpiar»; renders
+           nothing in the default view -->
+      <QueueFilters v-if="filterableTab" summary class="mt-3 sm:mt-2" />
       <!-- 🏷 etiqueta filter (spec 2.2) — one-line scrollable, tap toggles -->
       <div
         v-if="(conversationTags.data || []).length"

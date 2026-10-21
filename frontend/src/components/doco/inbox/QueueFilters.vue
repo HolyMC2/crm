@@ -17,42 +17,25 @@
   Picking an explicit status clears the coarse state and vice versa (composables/
   inbox.setQueueFilters): both answer the same question, and showing "Abiertos"
   while the list obeys a hand-picked status is a lie.
+
+  Two mounts share this file (2026-10-20, phone queue header ≤ 120 px): the
+  «Filtros» button sits on the search row and opens the panel; the `summary`
+  mount is one line under the channel chips with what narrows the list beyond
+  the default view («Abiertos», every channel, no date, tag or search) and
+  «Limpiar» to go back to it. The default view itself shows no chip and no count.
 -->
 <template>
-  <div class="relative">
-    <div class="flex items-center gap-1.5">
-      <button
-        class="inline-flex min-h-11 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold sm:min-h-0"
-        :class="
-          queueFilterCount
-            ? 'bg-surface-green-2 text-ink-green-8'
-            : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'
-        "
-        :aria-expanded="open"
-        :title="__('Filtrar por estado, reparación o fecha')"
-        @click="open = !open"
-      >
-        <LucideSlidersHorizontal class="h-3 w-3" />
-        {{ __('Filtros') }}
-        <span v-if="queueFilterCount" class="text-[10px] opacity-80">{{
-          queueFilterCount
-        }}</span>
-      </button>
-      <button
-        v-if="queueFilterCount"
-        class="min-h-11 px-1 text-[10.5px] text-ink-gray-5 underline hover:text-ink-gray-8 sm:min-h-0 sm:px-0"
-        @click="clearQueueFilters"
-      >
-        {{ __('Limpiar') }}
-      </button>
-    </div>
-
-    <!-- active filters, so a narrowed queue can never look like an empty inbox -->
-    <div v-if="chips.length" class="mt-3 flex flex-wrap gap-1 sm:mt-1.5">
+  <!-- active filters, so a narrowed queue can never look like an empty inbox -->
+  <div v-if="summary && narrowCount" class="flex items-center gap-1">
+    <!-- one line: the chips scroll sideways inside a padded box, so each × keeps
+         its 44 px hit area without growing the line -->
+    <div
+      class="-my-3 flex min-w-0 flex-1 gap-1 overflow-x-auto py-3 sm:my-0 sm:flex-wrap sm:overflow-visible sm:py-0"
+    >
       <span
         v-for="c in chips"
         :key="c.key"
-        class="inline-flex items-center gap-1 rounded-full bg-surface-gray-2 px-2 py-[3px] text-[10px] font-medium text-ink-gray-7"
+        class="inline-flex flex-none items-center gap-1 whitespace-nowrap rounded-full bg-surface-gray-2 px-2 py-[3px] text-[10px] font-medium text-ink-gray-7"
       >
         {{ c.label }}
         <button
@@ -64,11 +47,40 @@
         </button>
       </span>
     </div>
+    <button
+      class="-my-3 min-h-11 flex-none px-2 text-[10.5px] text-ink-gray-5 underline hover:text-ink-gray-8 sm:my-0 sm:min-h-0 sm:px-0"
+      @click="clearQueueFilters"
+    >
+      {{ __('Limpiar') }}
+    </button>
+  </div>
+
+  <div v-else-if="!summary" class="relative flex-none">
+    <button
+      class="inline-flex min-h-11 items-center gap-1.5 rounded-full px-3 text-[12px] font-semibold sm:min-h-0 sm:gap-1 sm:px-2.5 sm:py-1 sm:text-[11px]"
+      :class="
+        narrowCount
+          ? 'bg-surface-green-2 text-ink-green-8'
+          : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'
+      "
+      :aria-expanded="open"
+      :title="__('Filtrar por estado, reparación o fecha')"
+      @click="open = !open"
+    >
+      <LucideSlidersHorizontal class="size-4 sm:size-3" />
+      {{ __('Filtros') }}
+      <span
+        v-if="narrowCount"
+        class="min-w-4 rounded-full bg-surface-green-7 px-1 text-center text-[10px] font-bold leading-4 text-white"
+        >{{ narrowCount }}</span
+      >
+    </button>
 
     <template v-if="open">
       <div class="fixed inset-0 z-[90]" @click="open = false" />
+      <!-- anchored right: the button ends the search row -->
       <div
-        class="absolute left-0 z-[100] mt-1.5 w-[268px] overflow-hidden rounded-[10px] border border-outline-gray-2 bg-surface-base"
+        class="absolute right-0 z-[100] mt-1.5 w-[268px] overflow-hidden rounded-[10px] border border-outline-gray-2 bg-surface-base"
         style="box-shadow: 0 4px 24px rgba(0, 0, 0, 0.14)"
       >
         <div class="scb max-h-[64vh] overflow-y-auto">
@@ -227,7 +239,6 @@ import { computed, ref } from 'vue'
 import LucideSlidersHorizontal from '~icons/lucide/sliders-horizontal'
 import {
   queueFilterOptions,
-  queueFilterCount,
   queueDealStatus,
   queueLeadStatus,
   queueRepairStatus,
@@ -235,10 +246,18 @@ import {
   queueLeadState,
   queueDateFrom,
   queueDateTo,
+  queueTag,
+  queueSearch,
+  queueChannel,
   setQueueFilters,
   clearQueueFilters,
 } from '@/composables/inbox'
 import { DEAL_STATUS, LEAD_STATUS, stageLabel } from '@/utils/stageLabel'
+
+defineProps({
+  // the one-line summary under the channel chips, not the «Filtros» button
+  summary: { type: Boolean, default: false },
+})
 
 const open = ref(false)
 const expanded = ref('') // which drill-down section is open (one at a time)
@@ -405,38 +424,50 @@ function toggleIn(list, v) {
 }
 
 // ── chips ────────────────────────────────────────────────────────────────────
+// Only what differs from the default view: «Abiertos» on both sides, nothing
+// hand-picked, no date (composables/inbox.clearQueueFilters). The default gets
+// no chip, and a chip's × steps back toward it. A side with hand-picked
+// statuses is described by them, not by its cleared coarse state.
 const chips = computed(() => {
   const out = []
-  if (queueDealState.value)
-    out.push({
-      key: 'ds',
-      label: queueDealState.value === 'open' ? __('Abiertos') : __('Cerrados'),
-      remove: () => setState(''),
-    })
-  // deal_state and lead_state move as one ("Abiertos") — chip them once, unless a
-  // caller set only the lead side.
-  if (queueLeadState.value && queueLeadState.value !== queueDealState.value)
-    out.push({
-      key: 'ls',
-      label:
-        queueLeadState.value === 'open'
-          ? __('Prospectos abiertos')
-          : __('Leads cerrados'),
-      remove: () => setQueueFilters({ lead_state: '' }),
-    })
+  const ds = queueDealState.value
+  const ls = queueLeadState.value
+  const dealPicked = queueDealStatus.value.length > 0
+  const leadPicked = queueLeadStatus.value.length > 0
+  if (!dealPicked && !leadPicked && ds === ls) {
+    // deal_state and lead_state move as one ("Abiertos") — chip them once
+    if (ds !== 'open')
+      out.push({
+        key: 'st',
+        label: ds === 'closed' ? __('Cerrados') : __('Todos los estados'),
+        remove: () => setState('open'),
+      })
+  } else {
+    if (!dealPicked && ds !== 'open')
+      out.push({
+        key: 'ds',
+        label: ds === 'closed' ? __('Tratos cerrados') : __('Todos los tratos'),
+        remove: () => setQueueFilters({ deal_state: 'open' }),
+      })
+    if (!leadPicked && ls !== 'open')
+      out.push({
+        key: 'ls',
+        label:
+          ls === 'closed' ? __('Leads cerrados') : __('Todos los prospectos'),
+        remove: () => setQueueFilters({ lead_state: 'open' }),
+      })
+  }
   for (const v of queueDealStatus.value)
     out.push({
       key: `d:${v}`,
       label: stageLabel(v, DEAL_STATUS),
-      remove: () =>
-        setQueueFilters({ deal_status: toggleIn(queueDealStatus.value, v) }),
+      remove: () => dropStatus('deal', v),
     })
   for (const v of queueLeadStatus.value)
     out.push({
       key: `l:${v}`,
       label: stageLabel(v, LEAD_STATUS),
-      remove: () =>
-        setQueueFilters({ lead_status: toggleIn(queueLeadStatus.value, v) }),
+      remove: () => dropStatus('lead', v),
     })
   // A repair quick-filter is many statuses at once — chip it as ONE named chip
   // instead of five, which is what it means to the operator.
@@ -470,4 +501,26 @@ const chips = computed(() => {
     })
   return out
 })
+// × on the last hand-picked status hands that side back the other side's state,
+// so «Abiertos» → Completado → × lands on «Abiertos» again, not on every deal.
+function dropStatus(side, v) {
+  const list = side === 'deal' ? queueDealStatus.value : queueLeadStatus.value
+  const rest = toggleIn(list, v)
+  const other = side === 'deal' ? queueLeadState.value : queueDealState.value
+  setQueueFilters({
+    [`${side}_status`]: rest,
+    ...(rest.length ? {} : { [`${side}_state`]: other }),
+  })
+}
+
+// Everything «Limpiar» resets, as the operator sees it: one per chip, plus the
+// 🏷 tag, the in-list search and a channel tab. So the badge and «Limpiar» show
+// together, and the default view counts 0.
+const narrowCount = computed(
+  () =>
+    chips.value.length +
+    (queueTag.value ? 1 : 0) +
+    (queueSearch.value.trim() ? 1 : 0) +
+    (queueChannel.value ? 1 : 0),
+)
 </script>

@@ -292,12 +292,11 @@ export function restoreQueueFilters() {
     )
     // First run on this device: open the inbox on ABIERTOS. A finished deal has
     // nothing left to answer, so parking hundreds of them in the queue is noise —
-    // the same reasoning as the close-out auto-discard (Marco 2026-08-13). It is a
-    // visible chip, not a hidden mode: one tap on «Abiertos» (or Limpiar) drops it,
-    // and the choice then persists.
+    // the same reasoning as the close-out auto-discard (Marco 2026-08-13). It is
+    // the default view, so it shows no chip: the panel's «Abiertos» toggle turns
+    // it off (that choice then persists) and «Limpiar» comes back to it.
     if (!s) {
-      queueDealState.value = 'open'
-      queueLeadState.value = 'open'
+      applyDefaultRecordFilters()
       persistQueueFilters()
       return true
     }
@@ -306,11 +305,11 @@ export function restoreQueueFilters() {
     queueRepairStatus.value = s.repair_status || []
     queueDealState.value = s.deal_state || ''
     queueLeadState.value = s.lead_state || ''
-    // A saved DATE range is deliberately not restored: "del 1 al 5 de agosto"
-    // is a question you asked once, not a standing preference — and a stale one
-    // silently empties the inbox on the next login.
-    queueDateFrom.value = ''
-    queueDateTo.value = ''
+    // The saved date range comes back too (2026-10-20): dropping it changed
+    // what «Filtros» counted after a reload. A stale range no longer empties the
+    // inbox silently — it stays a chip beside «Limpiar» until cleared.
+    queueDateFrom.value = s.date_from || ''
+    queueDateTo.value = s.date_to || ''
     return !!queueFilterCount.value
   } catch (e) {
     return false
@@ -334,16 +333,29 @@ export function setQueueFilters(patch = {}) {
   persistQueueFilters()
   reloadQueue()
 }
-export function clearQueueFilters() {
+// The default record filter: «Abiertos» on both sides, nothing hand-picked, no
+// date. A first run starts here and «Limpiar» comes back here.
+function applyDefaultRecordFilters() {
   queueDealStatus.value = []
   queueLeadStatus.value = []
   queueRepairStatus.value = []
-  queueDealState.value = ''
-  queueLeadState.value = ''
+  queueDealState.value = 'open'
+  queueLeadState.value = 'open'
   queueDateFrom.value = ''
   queueDateTo.value = ''
+}
+// «Limpiar» and the panel's «Limpiar todo»: back to the default view, not just
+// the record filters — a channel tab, a 🏷 tag or an in-list search narrows the
+// list as much as a status does. One reload, whatever was narrowed.
+export function clearQueueFilters() {
+  applyDefaultRecordFilters()
+  queueTag.value = null
+  clearTimeout(_searchTimer) // a pending keystroke must not bring the search back
+  queueSearch.value = ''
   persistQueueFilters()
-  reloadQueue()
+  // back to Todos: setInboxTab reloads the queue itself (setQueueChannel)
+  if (queueChannel.value) setInboxTab('all')
+  else reloadQueue()
 }
 
 // ── composer draft handoff ─────────────────────────────────────────────────────

@@ -285,3 +285,74 @@ describe('snooze/tag params', () => {
     expect(queue.lastParams.tag).toBe('garantía')
   })
 })
+
+describe('filters: Limpiar and the saved range', () => {
+  it('Limpiar goes back to the default view in one reload', async () => {
+    const { inbox, queue } = await freshInbox()
+    inbox.setQueueFilters({
+      deal_status: ['Completado'],
+      date_from: '2026-08-01',
+      date_to: '2026-08-05',
+    })
+    inbox.setQueueChannel('whatsapp')
+    inbox.queueTag.value = 'garantía'
+    inbox.queueSearch.value = 'maria'
+    inbox.reloadQueue()
+    expect(queue.lastParams).toMatchObject({
+      channel: 'whatsapp',
+      tag: 'garantía',
+      search: 'maria',
+      date_from: '2026-08-01',
+    })
+    const reloads = queue.submit.mock.calls.length
+
+    inbox.clearQueueFilters()
+
+    expect(queue.submit.mock.calls.length - reloads).toBe(1)
+    expect(inbox.inboxTab.value).toBe('all')
+    expect(inbox.queueDealStatus.value).toEqual([])
+    expect(queue.lastParams).toMatchObject({
+      deal_state: 'open',
+      lead_state: 'open',
+    })
+    expect(queue.lastParams.channel).toBeUndefined()
+    expect(queue.lastParams.tag).toBeUndefined()
+    expect(queue.lastParams.search).toBeUndefined()
+    expect(queue.lastParams.date_from).toBeUndefined()
+  })
+
+  it('Limpiar without a channel still clears the tag and the search', async () => {
+    const { inbox, queue } = await freshInbox()
+    inbox.queueTag.value = 'garantía'
+    inbox.queueSearch.value = 'maria'
+    inbox.reloadQueue()
+    expect(queue.lastParams).toMatchObject({ tag: 'garantía', search: 'maria' })
+    const reloads = queue.submit.mock.calls.length
+
+    inbox.clearQueueFilters()
+
+    expect(queue.submit.mock.calls.length - reloads).toBe(1)
+    expect(queue.lastParams.tag).toBeUndefined()
+    expect(queue.lastParams.search).toBeUndefined()
+    expect(inbox.queueSearch.value).toBe('')
+  })
+
+  it('a saved date range comes back on reload', async () => {
+    const { inbox } = await freshInbox()
+    inbox.setQueueFilters({ date_from: '2026-08-01', date_to: '2026-08-05' })
+    // a second import is a page reload: the module starts fresh, localStorage does not
+    vi.resetModules()
+    const reloaded = await import('@/composables/inbox')
+    reloaded.restoreQueueFilters()
+    expect(reloaded.queueDateFrom.value).toBe('2026-08-01')
+    expect(reloaded.queueDateTo.value).toBe('2026-08-05')
+  })
+
+  it('a device with no saved filters opens on Abiertos', async () => {
+    const { inbox } = await freshInbox()
+    expect(inbox.restoreQueueFilters()).toBe(true)
+    expect(inbox.queueDealState.value).toBe('open')
+    expect(inbox.queueLeadState.value).toBe('open')
+    expect(inbox.queueDateFrom.value).toBe('')
+  })
+})
