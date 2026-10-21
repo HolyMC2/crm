@@ -9,6 +9,8 @@ from frappe.integrations.frappe_providers.frappecloud_billing import is_fc_site
 from frappe.translate import get_messages_for_boot, get_translated_doctypes
 from frappe.utils import cint, get_system_timezone
 from frappe.utils.telemetry import capture
+from werkzeug.http import generate_etag
+from werkzeug.wrappers import Response
 
 no_cache = 1
 
@@ -359,7 +361,6 @@ def get_boot(neutral=False, module="contactos"):
 			"demo_data_created": False if neutral else frappe.db.get_default("crm_demo_data_created") == "1",
 			"is_fc_site": is_fc_site(),
 			"translated_doctypes": get_translated_doctypes(),
-			"translated_messages": get_messages_for_boot(),
 			"timezone": {
 				"system": get_system_timezone(),
 				"user": frappe.db.get_value("User", frappe.session.user, "time_zone")
@@ -369,6 +370,21 @@ def get_boot(neutral=False, module="contactos"):
 			"shell_scope": _shell_scope(),
 		}
 	)
+
+
+@frappe.whitelist(methods=["GET"])
+def translations():
+	"""The language dictionary as a classic script that sets window.translated_messages.
+
+	Kept out of the shell HTML so every /crm load stops re-downloading ~1 MB of it; the script
+	revalidates with If-None-Match and answers 304 while the dictionary is unchanged.
+	"""
+	messages = frappe.as_json(get_messages_for_boot(), indent=None, separators=(",", ":"), ensure_ascii=False)
+	payload = f"window.translated_messages = {messages};".encode()
+	response = Response(payload, mimetype="application/javascript")
+	response.set_etag(generate_etag(payload))
+	response.headers["Cache-Control"] = "private, no-cache"
+	return response.make_conditional(frappe.request)
 
 
 def _shell_scope() -> str:
