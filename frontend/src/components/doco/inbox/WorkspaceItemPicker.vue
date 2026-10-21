@@ -40,7 +40,7 @@
       <h4 class="px-3 pt-2 text-xs font-medium text-ink-gray-6">
         {{ __('Seleccionados') }} ({{ selected.length }})
       </h4>
-      <ul class="max-h-36 divide-y divide-outline-gray-1 overflow-y-auto">
+      <ul class="max-h-32 divide-y divide-outline-gray-1 overflow-y-auto">
         <li
           v-for="line in selected"
           :key="line.item_code"
