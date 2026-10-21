@@ -27646,6 +27646,22 @@ msgstr "Descripción u orden (opcional)"
 msgid "For example: what you bought, or the purchase order"
 msgstr "Por ejemplo: qué compraste, o la orden de compra"
 
+#: frontend/src/pages/CapturaRevision.vue
+msgid "Not one of these? Create a new item"
+msgstr "¿Ninguno de estos? Crea un artículo nuevo"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "Was it already paid?"
+msgstr "¿Ya se pagó?"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "Was it already paid? {0}"
+msgstr "¿Ya se pagó? {0}"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "This company has no active bank account to pay from."
+msgstr "Esta empresa no tiene una cuenta bancaria activa desde la que pagar."
+
 #: frontend/src/components/captura/CameraSheet.vue
 msgid "Your user cannot record any of these documents. Ask whoever manages Muelle for access."
 msgstr "Tu usuario no puede registrar ninguno de estos documentos. Pide acceso a quien administra Muelle."

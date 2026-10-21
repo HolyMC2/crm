@@ -419,9 +419,18 @@
                     />
                   </div>
                   <div
-                    v-if="line.state === 'new' && review.can?.create_item"
+                    v-if="
+                      (line.state === 'ask' || line.state === 'new') &&
+                      review.can?.create_item
+                    "
                     class="flex flex-wrap items-end gap-2"
                   >
+                    <span
+                      v-if="line.candidates?.length"
+                      class="w-full text-sm text-ink-gray-6"
+                    >
+                      {{ __('Not one of these? Create a new item') }}
+                    </span>
                     <FormControl
                       v-model="newNames[line.idx]"
                       class="min-w-0 flex-1"
@@ -481,9 +490,9 @@
             </ul>
           </section>
 
-          <!-- Warehouse, when stock items need one. -->
+          <!-- Warehouse, when stock items need one or the warehouse question is open. -->
           <section
-            v-if="review.warehouse?.required"
+            v-if="review.warehouse?.required || review.warehouse?.reason"
             class="mb-4 space-y-2 rounded-xl border border-outline-gray-2 p-4"
           >
             <FormControl
@@ -585,15 +594,65 @@
           </section>
           <section
             v-if="review.questions?.length"
-            class="mb-4 space-y-1 rounded-xl border border-outline-gray-2 p-4 text-sm"
+            class="mb-4 space-y-3 rounded-xl border border-outline-gray-2 p-4 text-sm"
             :aria-label="__('Questions')"
           >
             <h2 class="font-semibold text-ink-gray-9">{{ __('Questions') }}</h2>
-            <ul class="list-disc space-y-1 pl-5 text-ink-gray-8">
-              <li v-for="q in review.questions" :key="q.n ?? q.text">
-                {{ q.text }}
-              </li>
-            </ul>
+            <div
+              v-for="q in review.questions"
+              :key="q.n ?? q.text"
+              class="space-y-2"
+            >
+              <!-- «¿Ya se pagó?» is answered with taps; the other questions are answered in the chat. -->
+              <template v-if="q.options?.length && canEdit">
+                <p class="text-ink-gray-9">
+                  {{
+                    q.amount === undefined
+                      ? __('Was it already paid?')
+                      : __('Was it already paid? {0}', [
+                          money(q.amount, totals.currency),
+                        ])
+                  }}
+                </p>
+                <template v-for="option in q.options" :key="option.value">
+                  <FormControl
+                    v-if="option.value === 'other'"
+                    type="select"
+                    :label="option.label"
+                    :model-value="''"
+                    :disabled="Boolean(busy)"
+                    :options="[
+                      { label: __('Choose an account'), value: '' },
+                      ...(q.accounts || []).map((a) => ({
+                        label: a.label,
+                        value: a.name,
+                      })),
+                    ]"
+                    @update:model-value="
+                      (value) =>
+                        value &&
+                        act('answer_payment', {
+                          choice: 'other',
+                          account: value,
+                        })
+                    "
+                  />
+                  <Button
+                    v-else
+                    class="min-h-11 sm:min-h-8"
+                    :label="option.label"
+                    :disabled="Boolean(busy)"
+                    @click="act('answer_payment', { choice: option.value })"
+                  />
+                </template>
+                <p v-if="!q.accounts?.length" class="text-sm text-ink-gray-6">
+                  {{
+                    __('This company has no active bank account to pay from.')
+                  }}
+                </p>
+              </template>
+              <p v-else class="text-ink-gray-8">{{ q.text }}</p>
+            </div>
           </section>
 
           <!-- The one next action. -->

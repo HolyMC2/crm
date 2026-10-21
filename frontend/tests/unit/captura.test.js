@@ -369,3 +369,25 @@ describe('entry points', () => {
     )
   })
 })
+
+describe('review answers before the draft', () => {
+  it('offers a new item for a line that already has candidates', () => {
+    const page = source('pages/CapturaRevision.vue')
+    expect(page).toMatch(
+      /v-if="\s*\(line\.state === 'ask' \|\| line\.state === 'new'\) &&\s*review\.can\?\.create_item\s*"/,
+    )
+  })
+  it('shows the destination warehouse while its question is open', () => {
+    const page = source('pages/CapturaRevision.vue')
+    expect(page).toContain(
+      'v-if="review.warehouse?.required || review.warehouse?.reason"',
+    )
+  })
+  it('answers «¿Ya se pagó?» with taps as well as in the chat', () => {
+    const page = source('pages/CapturaRevision.vue')
+    expect(page).toContain("act('answer_payment', { choice: option.value })")
+    expect(page).toMatch(
+      /act\('answer_payment', \{\s*choice: 'other',\s*account: value,?\s*\}\)/,
+    )
+  })
+})
