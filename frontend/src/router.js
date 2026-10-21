@@ -311,6 +311,13 @@ const routes = [
     redirect: (to) => ({ name: 'InventarioMovimientos', query: to.query }),
   },
   {
+    // «Nuevo producto». Listed before `:item`, which would also match «nuevo».
+    path: '/productos/nuevo',
+    name: 'ProductoNuevo',
+    component: () => import('@/pages/ProductoNuevo.vue'),
+    meta: { app: 'productos', title: 'Productos', listParent: 'Productos' },
+  },
+  {
     path: '/productos/:item',
     name: 'Producto',
     component: () => import('@/pages/Producto.vue'),

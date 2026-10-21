@@ -2344,6 +2344,24 @@ function handleDone() {
   }
   router.replace(withoutDone(route.fullPath))
 }
+// Just created from «Nuevo producto» (`creado=1`): say so, offer the next one
+// in the same group, and drop the flag so a reload stays quiet.
+function handleCreated() {
+  if (route.query.creado !== '1') return
+  const grupo = product.value?.item_group || ''
+  notice.value = {
+    text: __(
+      'Product created. Next, add its photo, labels or stock.',
+      null,
+      'Productos',
+    ),
+    to: { name: 'ProductoNuevo', query: grupo ? { grupo } : {} },
+    link: __('Create another', null, 'Productos'),
+  }
+  const query = { ...route.query }
+  delete query.creado
+  router.replace({ name: 'Producto', params: route.params, query })
+}
 
 watch(
   () => props.item,
@@ -2392,6 +2410,7 @@ onMounted(async () => {
   }
   handleDone()
   await load()
+  handleCreated()
   openRequested()
 })
 </script>

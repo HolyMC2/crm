@@ -23625,6 +23625,112 @@ msgstr "Armar pack"
 
 #: frontend/src/pages/Productos.vue
 msgctxt "Productos"
+msgid "New product"
+msgstr "Nuevo producto"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Product created. Next, add its photo, labels or stock."
+msgstr "Producto creado. Ahora agrega su foto, etiquetas o existencias."
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Create another"
+msgstr "Crear otro"
+
+#: frontend/src/pages/ProductoNuevo.vue
+msgctxt "Productos"
+msgid "Only what you need to sell it: name, group and price. Photos, labels and stock come next, on the product."
+msgstr "Solo lo necesario para venderlo: nombre, grupo y precio. Las fotos, etiquetas y existencias van después, en la ficha del producto."
+
+#: frontend/src/pages/ProductoNuevo.vue
+msgctxt "Productos"
+msgid "You cannot add products here"
+msgstr "No puedes agregar productos aquí"
+
+#: frontend/src/pages/ProductoNuevo.vue
+msgctxt "Productos"
+msgid "Ask your manager for permission to add products."
+msgstr "Pide al encargado permiso para agregar productos."
+
+#: frontend/src/pages/ProductoNuevo.vue
+msgctxt "Productos"
+msgid "Copy request"
+msgstr "Copiar solicitud"
+
+#: frontend/src/pages/ProductoNuevo.vue
+msgctxt "Productos"
+msgid "For example: pink silicone case"
+msgstr "Por ejemplo: funda de silicón rosa"
+
+#: frontend/src/pages/ProductoNuevo.vue
+msgctxt "Productos"
+msgid "Selling price (MXN)"
+msgstr "Precio de venta (MXN)"
+
+#: frontend/src/pages/ProductoNuevo.vue
+msgctxt "Productos"
+msgid "Barcode (optional)"
+msgstr "Código de barras (opcional)"
+
+#: frontend/src/pages/ProductoNuevo.vue
+msgctxt "Productos"
+msgid "If it is printed on the package."
+msgstr "Si viene impreso en el empaque."
+
+#: frontend/src/pages/ProductoNuevo.vue
+msgctxt "Productos"
+msgid "Products like this already exist. Check them before you add one."
+msgstr "Ya hay productos parecidos. Revísalos antes de agregar uno."
+
+#: frontend/src/pages/ProductoNuevo.vue
+msgctxt "Productos"
+msgid "Hide details"
+msgstr "Ocultar detalles"
+
+#: frontend/src/pages/ProductoNuevo.vue
+msgctxt "Productos"
+msgid "More details (optional)"
+msgstr "Más detalles (opcional)"
+
+#: frontend/src/pages/ProductoNuevo.vue
+msgctxt "Productos"
+msgid "Save product"
+msgstr "Guardar producto"
+
+#: frontend/src/pages/ProductoNuevo.vue
+msgctxt "Productos"
+msgid "Sells at {0}"
+msgstr "Se vende a {0}"
+
+#: frontend/src/pages/ProductoNuevo.vue
+msgctxt "Productos"
+msgid "I need permission to add products in Productos."
+msgstr "Necesito permiso para agregar productos en Productos."
+
+#: frontend/src/pages/ProductoNuevo.vue
+msgctxt "Productos"
+msgid "Request copied."
+msgstr "Solicitud copiada."
+
+#: frontend/src/composables/useProductos.js
+msgid "Write the product name."
+msgstr "Escribe el nombre del producto."
+
+#: frontend/src/composables/useProductos.js
+msgid "Choose the group."
+msgstr "Elige el grupo."
+
+#: frontend/src/composables/useProductos.js
+msgid "Write the selling price in pesos."
+msgstr "Escribe el precio de venta en pesos."
+
+#: frontend/src/composables/useProductos.js
+msgid "The barcode has only letters and numbers."
+msgstr "El código de barras solo tiene letras y números."
+
+#: frontend/src/pages/Productos.vue
+msgctxt "Productos"
 msgid "Images, PDF or a price message of this list, to send"
 msgstr "Imágenes, PDF o mensaje de precios de esta lista, para enviar"
 

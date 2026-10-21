@@ -16,6 +16,7 @@ for (const m of po.matchAll(
 const FILES = [
   'pages/Productos.vue',
   'pages/Producto.vue',
+  'pages/ProductoNuevo.vue',
   'components/productos/CatalogFilters.vue',
   'components/productos/CatalogItem.vue',
   'components/productos/ProductThumb.vue',

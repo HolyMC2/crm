@@ -425,6 +425,84 @@ export function recordPath(item) {
   return `/crm/productos/${encodeURIComponent(item)}`
 }
 
+// ── alta: Nuevo producto (`/productos/nuevo`) ────────────────────────────
+// The minimum to sell a product: name, group and price. Photo, labels and
+// stock come next, on the record; Doco assigns the code.
+const RATE_MAX = 10000000
+const CREATE_LIMITS = Object.freeze({
+  barcode: 40,
+  brand: 140,
+  description: 1000,
+})
+
+/** A form or URL value as text: trimmed and bounded, anything else ''. */
+function trimmed(value, max = 140) {
+  return typeof value === 'string' ? value.trim().slice(0, max) : ''
+}
+
+/** The form's first values. `nombre` is the search that found nothing (all
+ *  digits make it a code, not a name); `codigo` is a barcode from Escáner;
+ *  `grupo` keeps the group of the product just created. */
+export function newItemDraft(query = {}) {
+  const search = trimmed(query.nombre)
+  const code = /^\d{6,}$/.test(search)
+  return {
+    item_name: code ? '' : search,
+    item_group: trimmed(query.grupo),
+    rate: '',
+    barcode: code ? search : trimmed(query.codigo, CREATE_LIMITS.barcode),
+    brand: '',
+    description: '',
+  }
+}
+
+/** Typed money, es-MX or en-US: «1250», «1250,50», «1,250.50», «1.250,5».
+ *  The last separator is the decimal point when one or two digits follow it;
+ *  otherwise every separator is a thousands mark. null when it is not a number. */
+export function parseRate(value) {
+  const text = String(value ?? '').replace(/\s/g, '')
+  if (!/^\d+([.,]\d+)*$/.test(text)) return null
+  const last = Math.max(text.lastIndexOf('.'), text.lastIndexOf(','))
+  const decimals = last < 0 ? 0 : text.length - last - 1
+  const number =
+    decimals > 0 && decimals <= 2
+      ? Number(
+          `${text.slice(0, last).replace(/[.,]/g, '')}.${text.slice(last + 1)}`,
+        )
+      : Number(text.replace(/[.,]/g, ''))
+  return Number.isFinite(number) ? number : null
+}
+
+/** What stops the product from being saved, by field. Empty when it is ready. */
+export function newItemProblems(form) {
+  const problems = {}
+  if (!trimmed(form.item_name))
+    problems.item_name = tr('Write the product name.')
+  if (!trimmed(form.item_group)) problems.item_group = tr('Choose the group.')
+  const rate = parseRate(form.rate)
+  if (rate === null || rate <= 0 || rate > RATE_MAX)
+    problems.rate = tr('Write the selling price in pesos.')
+  const barcode = trimmed(form.barcode, CREATE_LIMITS.barcode)
+  if (barcode && !/^[\w.-]{3,40}$/.test(barcode))
+    problems.barcode = tr('The barcode has only letters and numbers.')
+  return problems
+}
+
+/** The `create_item` call: the trimmed form, the price as a number, and the
+ *  request id a retry sends again, so a second send creates nothing. */
+export function newItemPayload(form, requestId) {
+  const data = {
+    item_name: trimmed(form.item_name),
+    item_group: trimmed(form.item_group),
+    rate: parseRate(form.rate),
+  }
+  for (const [field, max] of Object.entries(CREATE_LIMITS)) {
+    const value = trimmed(form[field], max)
+    if (value) data[field] = value
+  }
+  return { request_id: requestId, data }
+}
+
 /** «Pedir»: a new purchase in Compras with this product, store and quantity,
  *  and the way back to this product. */
 export function purchaseRoute(item, { warehouse, qty: amount } = {}) {
