@@ -38,7 +38,7 @@
           <span
             class="truncate text-base-bold text-ink-gray-9"
             data-testid="deal-header-name"
-            >{{ name || '—' }}</span
+            >{{ name || activeDeal || '—' }}</span
           >
           <ScoreExplainPopover
             v-if="grade"

@@ -25,7 +25,7 @@
       <div class="flex-none border-b border-outline-gray-1 px-4 pb-3 pt-3.5">
         <div class="mb-2.5 flex items-center justify-between">
           <div class="text-[14px] font-bold text-ink-gray-9">
-            🔍 {{ __('Buscar mensajes') }}
+            {{ __('Buscar mensajes') }}
           </div>
           <button
             class="press flex h-7 w-7 items-center justify-center rounded-full text-ink-gray-5 hover:bg-surface-gray-3 hover:text-ink-gray-9"
@@ -36,7 +36,7 @@
           </button>
         </div>
         <div
-          class="flex items-center gap-2 rounded-[9px] border border-outline-gray-2 px-2.5 py-[7px] focus-within:border-outline-gray-4 focus-within:ring-1 focus-within:ring-outline-gray-3"
+          class="flex min-h-11 items-center gap-2 rounded-full bg-surface-gray-2 px-4 focus-within:ring-1 focus-within:ring-outline-gray-3"
         >
           <LucideSearch class="h-3.5 w-3.5 flex-none text-ink-gray-4" />
           <input
@@ -46,11 +46,11 @@
             @input="onInput($event.target.value)"
             @keydown.esc="close"
             :placeholder="__('Buscar en las conversaciones…')"
-            class="w-full border-0 bg-transparent text-[13px] text-ink-gray-8 placeholder:text-ink-gray-4 focus:outline-none focus:ring-0"
+            class="min-w-0 w-full border-0 bg-transparent text-[13px] text-ink-gray-8 placeholder:text-ink-gray-4 focus:outline-none focus:ring-0"
           />
           <button
             v-if="query"
-            class="flex h-4 w-4 flex-none items-center justify-center rounded-full text-ink-gray-4 hover:bg-surface-gray-3 hover:text-ink-gray-7"
+            class="-mr-3 flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-4 hover:text-ink-gray-7"
             :aria-label="__('Limpiar')"
             @click="clear"
           >
