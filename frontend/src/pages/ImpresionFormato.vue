@@ -5,16 +5,19 @@
          Phone: the preview and the fields (tap copies a field); no editing. -->
     <AppBar
       v-if="isPhone"
-      :back="{ name: 'Impresion' }"
+      :back="true"
       back-label="Formatos de impresión"
       :context="
         data
           ? groupTitle({ doctype: data.doc_type, label: data.doctype_label })
-          : ''
+          : listed
+            ? groupTitle(listed.group)
+            : ''
       "
-      :title="data?.label || 'Formato'"
+      :title="data?.label || listed?.format.label || 'Formato'"
       :stack="false"
-      :loading="loading"
+      :loading="loading && !!data"
+      @back="goBack"
     />
     <div
       class="mx-auto w-full space-y-4 px-4 pb-24 pt-3"
@@ -402,10 +405,11 @@ import { isMobile as isPhone, isWide } from '@/composables/breakpoint'
 import { errorText } from '@/documentos/api'
 import { BTN, copyText } from '@/documentos/tools'
 import { formatDateTime } from '@/utils/display'
-import { impresionApi, isDenied } from '@/components/impresion/api'
+import { impresionApi, isDenied, lastGroups } from '@/components/impresion/api'
 import {
   copyName,
   fieldSnippet,
+  findFormat,
   groupTitle,
   kindText,
   previewDocument,
@@ -446,6 +450,8 @@ const versions = ref([])
 const versionsLoading = ref(false)
 
 const name = computed(() => String(route.params.formato || ''))
+// From the list the worker came from: the header has its name before the code arrives.
+const listed = computed(() => findFormat(lastGroups.value, name.value))
 const editorShown = computed(() => isWide.value && data.value?.kind === 'jinja')
 const dirty = computed(
   () =>
@@ -610,6 +616,15 @@ async function loadVersions() {
 function openVersions() {
   showVersions.value = true
   loadVersions()
+}
+
+// The arrow returns to the list it came from. Opened from a link or a reload there is
+// no list behind it, so the list replaces this entry and no copy of it stays in history.
+const LIST = router.resolve({ name: 'Impresion' }).fullPath
+function goBack(event) {
+  event?.preventDefault?.()
+  if (window.history.state?.back === LIST) return router.back()
+  router.replace({ name: 'Impresion' })
 }
 
 // Unsaved code is never lost silently.

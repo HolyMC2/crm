@@ -68,6 +68,15 @@ export function filterGroups(groups, query) {
   return out
 }
 
+/** The section and the format a name belongs to in the owner's list (null when it is not there). */
+export function findFormat(groups, name) {
+  for (const group of groups || []) {
+    const format = group.formats.find((f) => f.name === name)
+    if (format) return { group, format }
+  }
+  return null
+}
+
 // ── preview scale and zoom ────────────────────────────────────────────────
 
 /** The scale that fits a page `pageWidth` px wide in `width` px (with a margin), never above 1. */

@@ -202,7 +202,7 @@ import {
 import { isMobile as isPhone } from '@/composables/breakpoint'
 import { errorText } from '@/documentos/api'
 import { BTN } from '@/documentos/tools'
-import { impresionApi, isDenied } from '@/components/impresion/api'
+import { impresionApi, isDenied, lastGroups } from '@/components/impresion/api'
 import {
   filterGroups,
   formatSubtitle,
@@ -224,7 +224,8 @@ const pillOf = (format) =>
 const loading = ref(false)
 const error = ref('')
 const denied = ref(false)
-const groups = ref([])
+// Back from a format the list is already there: it paints at once, then refreshes.
+const groups = ref(lastGroups.value || [])
 const query = ref('')
 const searchOpen = ref(false)
 const acting = ref(null)
@@ -250,7 +251,9 @@ async function load() {
   loading.value = true
   error.value = ''
   try {
-    groups.value = (await impresionApi('formatos'))?.groups || []
+    const out = (await impresionApi('formatos'))?.groups || []
+    groups.value = out
+    lastGroups.value = out
     denied.value = false
   } catch (e) {
     denied.value = isDenied(e)

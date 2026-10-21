@@ -194,8 +194,10 @@ const AvisosBell = defineAsyncComponent(
   () => import('@/components/avisos/AvisosBell.vue'),
 )
 
+// The hover fill is for a pointer only: a tap leaves :hover on the button it landed on,
+// and the next page's arrow would show as pressed. A finger sees the fill while it presses.
 const ICON_BUTTON =
-  'flex size-12 flex-none items-center justify-center rounded-full text-ink-gray-7 hover:bg-surface-gray-2'
+  'flex size-12 flex-none items-center justify-center rounded-full text-ink-gray-7 active:bg-surface-gray-2 [@media(hover:hover)]:hover:bg-surface-gray-2'
 
 const props = defineProps({
   title: { type: String, default: '' },

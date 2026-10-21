@@ -8,6 +8,7 @@ import {
   fieldSnippet,
   filterFields,
   filterGroups,
+  findFormat,
   fitScale,
   formatChips,
   formatSubtitle,
@@ -85,6 +86,21 @@ describe('kinds and rows in the owner’s words', () => {
     expect(found).toHaveLength(1)
     expect(found[0].formats.map((f) => f.label)).toEqual(['Ticket de enganche'])
     expect(filterGroups(groups, '')).toBe(groups)
+  })
+
+  it('finds a format and its section in the list the page last loaded', () => {
+    const groups = [
+      {
+        doctype: 'Sales Invoice',
+        label: 'Factura de venta',
+        formats: [{ name: 'Factura CFDI' }, { name: 'Ticket 80mm' }],
+      },
+    ]
+    const found = findFormat(groups, 'Ticket 80mm')
+    expect(found.group.doctype).toBe('Sales Invoice')
+    expect(found.format.name).toBe('Ticket 80mm')
+    expect(findFormat(groups, 'Nope')).toBeNull()
+    expect(findFormat(null, 'Ticket 80mm')).toBeNull()
   })
 })
 

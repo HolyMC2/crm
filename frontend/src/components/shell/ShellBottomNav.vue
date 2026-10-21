@@ -37,7 +37,7 @@
       >
         <span class="lucide-menu size-5" />
       </span>
-      <span :class="LABEL">{{ __('More') }}</span>
+      <span :class="LABEL">Más</span>
     </button>
   </nav>
 </template>
