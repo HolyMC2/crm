@@ -307,6 +307,7 @@
               />
             </div>
             <template v-else-if="timeZone">
+              <!-- a day-number tap moves the date and keeps the span: week, 3 and 4 days stay (Marco, 2026-10-21) -->
               <AgendaTimeGrid
                 v-if="gridView"
                 :dates="gridDates"
@@ -331,7 +332,7 @@
                 @move="(event, times) => doMove(event, times)"
                 @resize="(event, times) => doMove(event, times)"
                 @move-days="moveDays"
-                @open-day="(date) => setState({ date, view: 'day' })"
+                @open-day="(date) => setState({ date })"
               />
               <template v-else-if="state.view === 'month'">
                 <AgendaMonthGrid
