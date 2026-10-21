@@ -138,7 +138,7 @@
             :disabled="!canSelect(item.item_code)"
             :aria-invalid="!isValidQty(quantities[item.item_code])"
             :aria-label="__('Cantidad') + ' ' + item.item_name"
-            class="h-11 w-14 border-x-0 border-y bg-surface-base px-1 text-center text-lg tabular-nums [appearance:textfield] disabled:opacity-40 sm:text-sm [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            class="quantity-input h-11 w-14 border-x-0 border-y bg-surface-base px-1 text-center text-lg tabular-nums disabled:opacity-40 sm:text-sm"
             :class="
               isValidQty(quantities[item.item_code])
                 ? 'border-outline-gray-2'
@@ -298,3 +298,16 @@ watch(open, (value) => {
 })
 onBeforeUnmount(() => request++)
 </script>
+
+<style scoped>
+/* Native spinners would repeat the stepper buttons. Scoped, not utilities: this
+   picker loads lazily, so its CSS stays out of the entry stylesheet that the
+   bundle budget measures (scripts/verify-bundle-budget.mjs). */
+.quantity-input {
+  appearance: textfield;
+}
+.quantity-input::-webkit-inner-spin-button,
+.quantity-input::-webkit-outer-spin-button {
+  appearance: none;
+}
+</style>
