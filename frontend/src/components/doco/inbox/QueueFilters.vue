@@ -27,11 +27,9 @@
 <template>
   <!-- active filters, so a narrowed queue can never look like an empty inbox -->
   <div v-if="summary && narrowCount" class="flex items-center gap-1">
-    <!-- one line: the chips scroll sideways inside a padded box, so each × keeps
-         its 44 px hit area without growing the line -->
-    <div
-      class="-my-3 flex min-w-0 flex-1 gap-1 overflow-x-auto py-3 sm:my-0 sm:flex-wrap sm:overflow-visible sm:py-0"
-    >
+    <!-- the chips wrap inside a padded box: each × keeps its 44 px hit area, and
+         no chip hides off screen (Marco, 2026-10-21) -->
+    <div class="-my-3 flex min-w-0 flex-1 flex-wrap gap-1 py-3 sm:my-0 sm:py-0">
       <span
         v-for="c in chips"
         :key="c.key"

@@ -64,12 +64,17 @@ marcaría 0.
 | **WhatsApp** | siempre | conversaciones de WA |
 | **Messenger** | sólo si el canal está habilitado (`Marketing Settings.enable_messenger`) | conversaciones de Messenger |
 | **"Comentarios"** | siempre | comentarios nuevos en publicaciones |
-| **"Vencidos"** | siempre | conversaciones que pasaron el umbral de SLA |
+| **"Por responder"** | siempre | conversaciones que aún deben respuesta, las más vencidas primero; el punto es rojo si hay una vencida |
 | 💤 **"Pospuestas"** | sólo si hay >0 | conversaciones dormidas esperando su hora |
 | **"Por aprobar"** | sólo si alguna vez se redactó algo | acuses automáticos esperando visto bueno humano |
 
 Las dos últimas se ocultan en cero a propósito: un tenant limpio no debe ver
 pestañas muertas.
+
+En el teléfono, las pestañas de canal, las etiquetas y los filtros activos
+**saltan a otra línea** en vez de deslizarse de lado: una fila que se desliza
+escondía pestañas fuera de la pantalla (2026-10-21). Cada pestaña de canal mide
+44 px de alto para tocarla bien.
 
 Dentro de **"Comentarios"** hay un sub-filtro: **"Nuevos"** / **"Respondidos"**
 / **"Todos"**, más su propia búsqueda (*"Buscar comentario o usuario…"*).
@@ -134,12 +139,13 @@ Endurecimiento importante para soporte:
   guarda lo mínimo para pintar, no la conversación.
 - La llave vieja `doco-inbox-queue-v1` se borra al arrancar.
 
-### 2.6.1 La pestaña "Vencidos" no usa la cola
+### 2.6.1 La pestaña "Por responder" no usa la cola
 
-Vale la pena saberlo porque se comporta distinto: **"Vencidos"** no pinta
-`queueRows` en absoluto. Cambia a la lista de `get_overdue_conversations`,
-**ordenada por el servidor** de más a menos tiempo esperando, y **no pagina** —
-la paginación sólo aplica a *Todos*, *WhatsApp* y *Messenger*.
+Vale la pena saberlo porque se comporta distinto: **"Por responder"** no pinta
+`queueRows` en absoluto. Cambia a `get_reply_queue`, **ordenada por el servidor**:
+primero las más vencidas, luego las de vencimiento más cercano, sobre todas las
+conversaciones. La lista muestra sólo las N más urgentes y avisa debajo cuando hay
+más.
 
 Igual, **"Por aprobar"** reemplaza la lista entera por el panel de revisión de
 acuses.
@@ -398,7 +404,7 @@ este repo. La SPA es la capa de presentación.
 | Hilo | `…inbox.get_communications` |
 | Enviar | `…inbox.send_message` |
 | Huérfanos | `…inbox.get_unassigned_conversations`, `get_unassigned_thread`, `assign_unassigned`, `archive_orphan`, `unarchive_orphan`, `send_unassigned_messenger`, `suggest_link_targets`, `search_link_targets` |
-| Contadores | `…inbox.get_channel_counts`, `get_overdue_conversations`, `get_snoozed_count` |
+| Contadores | `…inbox.get_channel_counts`, `get_snoozed_count`; «Por responder» y su punto: `get_reply_queue` |
 | Estado / lectura | `…inbox.set_status`, `mark_read`, `clear_responder` |
 | Snooze | `…inbox.snooze_conversation`, `unsnooze_conversation` |
 | Etiquetas | `…inbox.get_conversation_tags`, `tag_conversation`, `untag_conversation` |

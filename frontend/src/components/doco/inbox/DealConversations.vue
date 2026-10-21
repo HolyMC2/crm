@@ -1,10 +1,11 @@
 <template>
-  <!-- compact: one line above the deal's thread; the thread is the primary surface,
-       so it stays out of the way while loading, empty or failed -->
+  <!-- compact: a line above the deal's thread (it wraps when a deal has several
+       conversations); the thread is the primary surface, so it stays out of the
+       way while loading, empty or failed -->
   <nav
     v-if="compact"
     v-show="items.length"
-    class="flex flex-none items-center gap-2 overflow-x-auto border-b border-outline-gray-1 px-4 py-1.5 text-xs"
+    class="flex flex-none flex-wrap items-center gap-2 border-b border-outline-gray-1 px-4 py-1.5 text-xs"
     :aria-label="__('Conversaciones vinculadas')"
   >
     <span class="hidden flex-none text-ink-gray-5 sm:inline"

@@ -96,8 +96,9 @@
           </button>
         </div>
       </div>
-      <!-- one row for the in-list search, «Filtros» and (phone) ⋯: with the
-           channel chips the phone header is about 120 px in the default view -->
+      <!-- one row for the in-list search, «Filtros» and (phone) ⋯. The channel
+           chips below wrap onto more rows instead of scrolling sideways, so the
+           phone header grows by about 50 px for each row they add -->
       <div class="mb-2 flex items-center gap-1 sm:mb-3">
         <div
           class="flex min-w-0 flex-1 items-center gap-2 px-2.5 focus-within:ring-1 focus-within:ring-outline-gray-3"
@@ -131,7 +132,7 @@
           </button>
         </div>
         <!-- record filters: estado del trato / lead / reparación + rango de
-             fechas. Only on the conversation-list tabs — Vencidos, Comentarios
+             fechas. Only on the conversation-list tabs — Por responder, Comentarios
              and Por aprobar are separate surfaces with their own queries. -->
         <QueueFilters v-if="filterableTab" />
         <button
@@ -153,11 +154,10 @@
           />
         </button>
       </div>
-      <!-- omnichannel tabs (Meta-style): Todos | WhatsApp | Messenger | Comentarios.
-           Phone: one sideways row of 44 px chips, so the header does not grow. -->
-      <div
-        class="flex gap-1.5 overflow-x-auto sm:flex-wrap sm:overflow-visible"
-      >
+      <!-- omnichannel tabs (Meta-style): Todos | WhatsApp | Messenger | Comentarios | …
+           They wrap and never scroll sideways: a sideways row hid the tabs off screen
+           (Marco, 2026-10-21). Phone chips stay 44 px tall. -->
+      <div class="flex flex-wrap gap-1.5">
         <button
           v-for="t in inboxTabs"
           :key="t.id"
@@ -208,10 +208,10 @@
       <!-- what narrows the list beyond the default view, and «Limpiar»; renders
            nothing in the default view -->
       <QueueFilters v-if="filterableTab" summary class="mt-3 sm:mt-2" />
-      <!-- 🏷 etiqueta filter (spec 2.2) — one-line scrollable, tap toggles -->
+      <!-- 🏷 etiqueta filter (spec 2.2) — wraps, tap toggles -->
       <div
         v-if="(conversationTags.data || []).length"
-        class="mt-2 flex gap-1.5 overflow-x-auto"
+        class="mt-2 flex flex-wrap gap-1.5"
       >
         <button
           v-for="tg in conversationTags.data"
