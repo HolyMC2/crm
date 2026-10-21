@@ -503,6 +503,229 @@ export function newItemPayload(form, requestId) {
   return { request_id: requestId, data }
 }
 
+// ── Mínimos por tienda (Shell SPEC §6 DD9) ───────────────────────────────
+// ERPNext's reorder level and reorder quantity per store (the Item's Item
+// Reorder rows): the minimum that «Avísame cuando baje» follows, and how much
+// to order when a store is short. Doco reads them into the record's
+// `reorder` block, one entry per store the worker sees, with the store's
+// state, the quantity it suggests ordering and the worker's own watch; it
+// saves them with `save_reorder`. Doco computes the suggestion; the page only
+// shows it.
+
+/** A value from the server as a number of at most 3 decimals; none is 0. */
+function reorderValue(value) {
+  const number = Number(value)
+  return Number.isFinite(number) ? Math.round(number * 1000) / 1000 : 0
+}
+
+// Doco refuses a minimum or a quantity above this.
+const REORDER_MAX = 1e9
+
+/** A typed minimum or quantity: '' is 0; 0 or more with up to 3 decimals;
+ *  null when it is not one (a sign, letters, a 4th decimal, too big). The
+ *  page shows quantities es-MX style, so «1,000» and «1,000.5» group
+ *  thousands; any other comma is the decimal point («2,5» is 2.5). */
+export function reorderNumber(value) {
+  let text = String(value ?? '').replace(/\s/g, '')
+  if (!text) return 0
+  if (/^\d{1,3}(,\d{3})+(\.\d{0,3})?$/.test(text)) text = text.replace(/,/g, '')
+  else text = text.replace(',', '.')
+  if (!/^(\d+(\.\d{0,3})?|\.\d{1,3})$/.test(text)) return null
+  const number = Number(text)
+  return number > REORDER_MAX ? null : number
+}
+
+/** The input's first text for a server value: empty for none. */
+export function reorderText(value) {
+  const number = reorderValue(value)
+  return number > 0 ? String(number) : ''
+}
+
+// The store's state and the worker's watch, in words (colour only adds to
+// them). Badge themes; red and orange when the store needs stock.
+const MINIMUM_STATES = {
+  sin_minimo: { label: 'No minimum', theme: 'gray' },
+  faltan: { label: 'Without stock', theme: 'red' },
+  bajo: { label: 'Below minimum', theme: 'orange' },
+  ok: { label: 'In order', theme: 'gray' },
+}
+const WATCH_STATES = {
+  activo: { label: 'Alert on', theme: 'blue' },
+  disparado: { label: 'Alert sent', theme: 'blue' },
+  pausado: { label: 'Alert paused', theme: 'orange' },
+}
+
+/** The store's state chip ({ key, label, theme }), or null for a state the
+ *  page does not know. */
+export function minimumState(store) {
+  const chip = MINIMUM_STATES[store?.state]
+  if (!chip) return null
+  return {
+    key: store.state,
+    label: tr(chip.label, null, CTX),
+    theme: chip.theme,
+  }
+}
+
+/** The chip of the worker's own watch on the store, or null without one. */
+export function watchChip(watch) {
+  const chip = watch ? WATCH_STATES[watch.status] : null
+  if (!chip) return null
+  return {
+    key: watch.status,
+    label: tr(chip.label, null, CTX),
+    theme: chip.theme,
+  }
+}
+
+/** How much «Pedir» stands for: Doco's suggestion while the store is short,
+ *  else the quantity set to order (0 when there is none). */
+export function minimumOrder(store) {
+  const suggested = reorderValue(store?.suggested_qty)
+  return suggested > 0 ? suggested : reorderValue(store?.reorder_qty)
+}
+
+/** «Hay 4 · Mínimo 10 · Pedir 6», or «Hay 4 · Sin mínimo». */
+export function minimumLine(store) {
+  const parts = []
+  if (store?.actual_qty !== null && store?.actual_qty !== undefined)
+    parts.push(tr('On hand {0}', [qty(store.actual_qty)], CTX))
+  const level = reorderValue(store?.reorder_level)
+  if (level > 0) {
+    parts.push(tr('Minimum {0}', [qty(level)]))
+    const order = minimumOrder(store)
+    if (order > 0) parts.push(tr('Order {0}', [qty(order)], CTX))
+  } else parts.push(tr('No minimum', null, CTX))
+  return parts.join(' · ')
+}
+
+/** «Quedan 6 contando lo reservado y lo que viene en camino.»: the projected
+ *  quantity (on hand + on order − reserved, what ERPNext compares with the
+ *  minimum) when it is not what is on hand; '' when they are the same or a
+ *  number is missing (a store the worker's stock read does not reach). */
+export function projectionLine(store) {
+  const projected = store?.projected_qty
+  const actual = store?.actual_qty
+  if (projected === null || projected === undefined) return ''
+  if (actual === null || actual === undefined) return ''
+  if (reorderValue(projected) === reorderValue(actual)) return ''
+  return tr(
+    '{0} left counting what is reserved and what is on its way.',
+    [qty(projected)],
+    CTX,
+  )
+}
+
+// ERPNext's request types of an Item Reorder row, in words; any other type
+// shows as it comes.
+const REQUEST_TYPES = {
+  Purchase: () => tr('Purchase', null, CTX),
+  Transfer: () => tr('Transfer', null, CTX),
+  'Material Issue': () => tr('Material Issue', null, CTX),
+  Manufacture: () => tr('Manufacture', null, CTX),
+}
+function requestTypeLabel(type) {
+  const label = Object.hasOwn(REQUEST_TYPES, type) ? REQUEST_TYPES[type] : null
+  return label ? label() : String(type || '')
+}
+
+/** «Traslado (mín. 3, pedir 6), …»: the store's other ERPNext reorder rules
+ *  (`other_rows`, another request type ERPNext also runs), read only; '' with
+ *  none. */
+export function otherRules(store) {
+  return (store?.other_rows || [])
+    .map((row) => {
+      const type = requestTypeLabel(row?.request_type)
+      const level = qty(reorderValue(row?.reorder_level))
+      const order = qty(reorderValue(row?.reorder_qty))
+      return tr('{0} (min. {1}, order {2})', [type, level, order], CTX)
+    })
+    .join(', ')
+}
+
+/** «Esta tienda también tiene otras reglas: Traslado (mín. 3, pedir 6).», or ''
+ *  when the store has no other rule. */
+export function otherRulesLine(store) {
+  const rules = otherRules(store)
+  return rules ? tr('This store also has other rules: {0}.', [rules], CTX) : ''
+}
+
+/** What a store's row offers about its minimum, in this order: «Reordenar»
+ *  (short, with a suggestion, for who may buy), «Avísame» or «Quitar aviso»
+ *  (the worker's own watch), «Poner mínimo» (none yet, for who keeps the
+ *  catalog). */
+export function minimumActions(
+  store,
+  { canEdit = false, canPurchase = false } = {},
+) {
+  const level = reorderValue(store?.reorder_level)
+  const actions = []
+  if (
+    canPurchase &&
+    ['faltan', 'bajo'].includes(store?.state) &&
+    reorderValue(store?.suggested_qty) > 0
+  )
+    actions.push('reorder')
+  if (store?.watch) actions.push('unwatch')
+  else if (level > 0) actions.push('watch')
+  if (level <= 0 && canEdit) actions.push('set')
+  return actions
+}
+
+/** What stops a store's typed minimum from being saved ({ level?, qty? }),
+ *  in the words Doco refuses it with: numbers of 0 or more, an amount to
+ *  order needs a minimum, and a minimum needs its amount to order (ERPNext
+ *  keeps no reorder level without one), said with the store's name. */
+export function minimumProblems({ level, qty: amount } = {}, store = null) {
+  const problems = {}
+  const minimum = reorderNumber(level)
+  const order = reorderNumber(amount)
+  const bad = tr('Write a number of 0 or more.', null, CTX)
+  const where = store?.label || store?.warehouse || ''
+  if (minimum === null) problems.level = bad
+  if (order === null) problems.qty = bad
+  else if (order > 0 && minimum === 0)
+    problems.qty = tr('Set the minimum to be able to order.', null, CTX)
+  else if (order === 0 && minimum > 0)
+    problems.qty = tr(
+      'Also set the amount to order in {0}: without it the minimum is not saved.',
+      [where],
+      CTX,
+    )
+  return problems
+}
+
+/** The one row `save_reorder` gets for a store ({ warehouse, level, qty }),
+ *  or null while nothing changed or a value is not valid. A minimum goes
+ *  with its amount to order; level 0 with qty 0 clears it. */
+export function minimumChange(store, { level, qty: amount } = {}) {
+  if (
+    !store?.warehouse ||
+    Object.keys(minimumProblems({ level, qty: amount }, store)).length
+  )
+    return null
+  const minimum = reorderNumber(level)
+  const order = reorderNumber(amount)
+  if (
+    minimum === reorderValue(store.reorder_level) &&
+    order === reorderValue(store.reorder_qty)
+  )
+    return null
+  return { warehouse: store.warehouse, level: minimum, qty: order }
+}
+
+/** The `save_reorder` call: the changed rows as a JSON string, the item's
+ *  `modified` they were read at (a stale one is refused), and the request id
+ *  a retry sends again, so a second send changes nothing more. */
+export function reorderPayload({ item, modified, rows, requestId }) {
+  return {
+    request_id: requestId,
+    item,
+    modified: modified || null,
+    rows: JSON.stringify(rows || []),
+  }
+}
+
 /** «Pedir»: a new purchase in Compras with this product, store and quantity,
  *  and the way back to this product. */
 export function purchaseRoute(item, { warehouse, qty: amount } = {}) {

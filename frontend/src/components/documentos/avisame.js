@@ -25,12 +25,10 @@ export const avisameOptions = (doctype, name) =>
   call(`${API}.avisame_options`, { doctype, name })
 export const avisame = (doctype, name, key, untilDate = null) =>
   call(`${API}.avisame`, { doctype, name, key, until_date: untilDate })
-export const avisameStock = (itemCode, warehouse, threshold) =>
-  call(`${API}.avisame_stock`, {
-    item_code: itemCode,
-    warehouse,
-    threshold,
-  })
+// The line is the store's minimum in ERPNext (its reorder level): the server
+// reads it, and refuses a store without one, in words the sheet shows.
+export const avisameStock = (itemCode, warehouse) =>
+  call(`${API}.avisame_stock`, { item_code: itemCode, warehouse })
 export const misAvisos = (doctype = null, name = null) =>
   call(`${API}.mis_avisos`, { doctype, name })
 export const quitarAviso = (name) => call(`${API}.quitar`, { name })
@@ -68,11 +66,17 @@ export function todayIso(now = new Date()) {
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
 }
 
-/** A threshold the user may save: a positive number, at most 2 decimals. */
-export function cleanThreshold(value) {
-  const number = Number(String(value ?? '').replace(',', '.'))
-  if (!Number.isFinite(number) || number <= 0) return null
-  return Math.round(number * 100) / 100
+/** A store's minimum (its ERPNext reorder level); 0 when it has none. */
+export function storeMinimum(row) {
+  const level = Number(row?.reorder_level)
+  return Number.isFinite(level) && level > 0 ? level : 0
+}
+
+/** An aviso's condition inside a sentence («Te aviso: cuando baje de 4 en
+ *  Norte»): only its first letter lowered, so a store keeps its capitals. */
+export function conditionInSentence(condition) {
+  const text = String(condition || '')
+  return text.charAt(0).toLowerCase() + text.slice(1)
 }
 
 /** Who gets a team recipe, as short chips: groups, the seller, people. */

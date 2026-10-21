@@ -115,6 +115,11 @@ async function mountAt(path) {
         component: { render: () => null },
       },
       {
+        path: '/productos/nuevo',
+        name: 'ProductoNuevo',
+        component: { render: () => null },
+      },
+      {
         path: '/productos/:item',
         name: 'Producto',
         component: Producto,
@@ -373,7 +378,7 @@ describe('Producto', () => {
     )
   })
 
-  it('«How it sells»: velocity, last sale, days of stock and «Reorder»', async () => {
+  it('«How it sells»: velocity, last sale, days of stock and «Reorder» for what the store «Reordenar» buys', async () => {
     record.item.is_stock_item = 1
     record.item.is_purchase_item = 1
     record.stock = {
@@ -392,12 +397,13 @@ describe('Producto', () => {
           cajones: [],
         },
         {
+          // An older minimum saved without its amount to order.
           warehouse: 'Bodega - D',
           label: 'Bodega',
           actual_qty: 0,
           projected_qty: 0,
           reorder_level: 10,
-          reorder_qty: 24,
+          reorder_qty: 0,
           state: 'faltan',
           cajones: [],
         },
@@ -409,8 +415,35 @@ describe('Producto', () => {
       enabled: true,
       primary: true,
       warehouse: 'Bodega - D',
-      qty: 24,
+      qty: null,
     })
+    // Doco suggests what is missing there: 10.
+    record.reorder = {
+      modified: '2026-10-08 10:00:00',
+      can_edit: false,
+      stores: [
+        {
+          warehouse: 'Centro - D',
+          label: 'Centro',
+          actual_qty: 11,
+          reorder_level: 0,
+          reorder_qty: 0,
+          suggested_qty: 0,
+          state: 'sin_minimo',
+          watch: null,
+        },
+        {
+          warehouse: 'Bodega - D',
+          label: 'Bodega',
+          actual_qty: 0,
+          reorder_level: 10,
+          reorder_qty: 0,
+          suggested_qty: 10,
+          state: 'faltan',
+          watch: null,
+        },
+      ],
+    }
     record.insights = {
       readable: true,
       uom: 'Nos',
@@ -463,7 +496,19 @@ describe('Producto', () => {
     expect(router.currentRoute.value.name).toBe('CompraNueva')
     expect(router.currentRoute.value.query).toMatchObject({
       warehouse: 'Bodega - D',
-      qty: '24',
+      qty: '10',
+    })
+    // The store's «Reordenar» in «Mínimos por tienda» buys the same.
+    await router.push('/productos/ABIBMEX000130')
+    await flush()
+    root
+      .querySelector('[data-minimos-store="Bodega - D"] [data-minimos-reorder]')
+      .click()
+    await flush()
+    expect(router.currentRoute.value.name).toBe('CompraNueva')
+    expect(router.currentRoute.value.query).toMatchObject({
+      warehouse: 'Bodega - D',
+      qty: '10',
     })
   })
 
@@ -590,5 +635,641 @@ describe('Producto', () => {
     expect(link.getAttribute('href')).toBe(
       '/crm/productos/ABIBMEX000130/ajustes',
     )
+  })
+})
+
+// «Mínimos por tienda» (Shell SPEC §6 DD9): the stock section holds each
+// store's minimum from the record's `reorder` block, with «Reordenar»,
+// «Avísame» / «Quitar aviso» and «Poner mínimo» per store; a tap opens that
+// store's minimum (MinimoSheet, see reorderLevels.test.js).
+describe('Mínimos por tienda', () => {
+  const MODIFIED = '2026-10-08 10:00:00'
+  const stores = () => [
+    {
+      warehouse: 'Centro - D',
+      label: 'Centro',
+      actual_qty: 2,
+      reorder_level: 5,
+      reorder_qty: 10,
+      suggested_qty: 10,
+      state: 'bajo',
+      watch: { name: 'AV-1', status: 'activo' },
+    },
+    {
+      warehouse: 'Bodega - D',
+      label: 'Bodega',
+      actual_qty: 0,
+      reorder_level: 0,
+      reorder_qty: 0,
+      suggested_qty: 0,
+      state: 'sin_minimo',
+      watch: null,
+    },
+    {
+      warehouse: 'Norte - D',
+      label: 'Norte',
+      actual_qty: 0,
+      reorder_level: 4,
+      reorder_qty: 6,
+      suggested_qty: 6,
+      state: 'faltan',
+      watch: null,
+    },
+  ]
+  function stocked({ canEdit = true, list = stores() } = {}) {
+    record.item.is_stock_item = 1
+    record.item.is_purchase_item = 1
+    record.stock = {
+      readable: true,
+      hidden: 0,
+      total: 2,
+      service: false,
+      rows: [
+        {
+          warehouse: 'Centro - D',
+          label: 'Centro',
+          actual_qty: 2,
+          reserved_qty: 0,
+          projected_qty: 2,
+          reorder_level: 5,
+          reorder_qty: 10,
+          state: 'bajo',
+          cajones: [],
+          last_counted: null,
+          counts_pending: [],
+          can_request_count: true,
+          negative: false,
+        },
+      ],
+    }
+    record.actions.push({
+      key: 'purchase',
+      label: 'Pedir',
+      enabled: true,
+      primary: true,
+    })
+    record.reorder = { modified: MODIFIED, can_edit: canEdit, stores: list }
+  }
+  // Every call through fetch: the record, then what each test answers.
+  function serve(replies = {}) {
+    const calls = []
+    fetch.mockImplementation(async (url, init) => {
+      const method = String(url).split('.').pop()
+      const body = init?.body ? JSON.parse(init.body) : {}
+      calls.push([method, body])
+      const reply =
+        method === 'record'
+          ? record
+          : typeof replies[method] === 'function'
+            ? replies[method](body)
+            : replies[method]
+      const ok = reply !== undefined
+      // Over the wire: a fresh copy each time, as the browser parses it.
+      const payload = JSON.stringify({ message: ok ? reply : null })
+      return {
+        ok,
+        status: ok ? 200 : 404,
+        json: async () => JSON.parse(payload),
+        text: async () => payload,
+      }
+    })
+    return calls
+  }
+  const row = (warehouse) =>
+    root.querySelector(`[data-minimos-store="${warehouse}"]`)
+  const words = (el) => el?.textContent.replace(/\s+/g, ' ').trim()
+  const sheet = () => document.querySelector('[data-minimo-sheet]')
+
+  it('one row per store with its minimum, state and watch; «Reordenar» buys what Doco suggests', async () => {
+    stocked()
+    serve()
+    const router = await mountAt('/productos/ABIBMEX000130')
+    const section = root.querySelector('#existencias')
+    expect(words(section.querySelector('h2'))).toBe('Minimums by store')
+    expect(words(section.querySelector('[data-minimos-story]'))).toBe(
+      'How much each store should have. If it drops, I let you know once and take you to order.',
+    )
+    // The stores with stock first, then those that hold none yet.
+    expect(
+      [...section.querySelectorAll('[data-minimos-store]')].map(
+        (el) => el.dataset.minimosStore,
+      ),
+    ).toEqual(['Centro - D', 'Bodega - D', 'Norte - D'])
+
+    const centro = row('Centro - D')
+    expect(words(centro.querySelector('[data-minimos-line]'))).toBe(
+      'On hand 2 · Minimum 5 · Order 10',
+    )
+    // The minimum is said once, in its line.
+    expect(centro.textContent).toContain('Reserved 0 · Projected 2')
+    expect(centro.textContent).not.toContain('Projected 2 · Minimum 5')
+    expect(words(centro.querySelector('[data-minimos-state]'))).toBe(
+      'Below minimum',
+    )
+    expect(words(centro.querySelector('[data-minimos-watch]'))).toBe('Alert on')
+    expect(centro.querySelector('[data-minimos-watch-off]')).not.toBeNull()
+    expect(centro.querySelector('[data-minimos-watch-on]')).toBeNull()
+    expect(centro.querySelector('[data-minimos-set]')).toBeNull()
+
+    const bodega = row('Bodega - D')
+    expect(words(bodega.querySelector('[data-minimos-line]'))).toBe(
+      'On hand 0 · No minimum',
+    )
+    expect(words(bodega.querySelector('[data-minimos-state]'))).toBe(
+      'No minimum',
+    )
+    expect(bodega.querySelector('[data-minimos-reorder]')).toBeNull()
+    expect(bodega.querySelector('[data-minimos-watch-on]')).toBeNull()
+    const set = bodega.querySelector('[data-minimos-set]')
+    expect(words(set)).toBe('Set minimum')
+    expect(set.getAttribute('aria-label')).toBe('Set minimum · Bodega')
+    // A store with no stock of it shows no stock tools.
+    expect(bodega.textContent).not.toContain('Count now')
+
+    const norte = row('Norte - D')
+    expect(words(norte.querySelector('[data-minimos-state]'))).toBe(
+      'Without stock',
+    )
+    expect(norte.querySelector('[data-minimos-watch-on]')).not.toBeNull()
+    const reorder = norte.querySelector('[data-minimos-reorder]')
+    expect(reorder.getAttribute('aria-label')).toBe('Reorder · Norte')
+    reorder.click()
+    await flush()
+    expect(router.currentRoute.value.name).toBe('CompraNueva')
+    expect(router.currentRoute.value.query).toMatchObject({
+      item: 'ABIBMEX000130',
+      warehouse: 'Norte - D',
+      qty: '6',
+    })
+  })
+
+  it('«Avísame» and «Quitar aviso» on a row, then the record is read again', async () => {
+    const { toast } = await import('frappe-ui')
+    toast.success.mockClear()
+    stocked()
+    const calls = serve({
+      avisame_stock: {
+        name: 'AV-2',
+        condition: 'Cuando baje de 4 en Norte',
+        status: 'Activo',
+        note: '',
+      },
+      quitar: { ok: true },
+    })
+    await mountAt('/productos/ABIBMEX000130')
+    const reads = () => calls.filter(([method]) => method === 'record').length
+    const before = reads()
+    row('Norte - D').querySelector('[data-minimos-watch-on]').click()
+    await flush()
+    expect(calls.find(([method]) => method === 'avisame_stock')[1]).toEqual({
+      item_code: 'ABIBMEX000130',
+      warehouse: 'Norte - D',
+    })
+    expect(toast.success).toHaveBeenCalledWith(
+      'Done. I will let you know: cuando baje de 4 en Norte.',
+    )
+    expect(reads()).toBe(before + 1)
+    row('Centro - D').querySelector('[data-minimos-watch-off]').click()
+    await flush()
+    expect(calls.find(([method]) => method === 'quitar')[1]).toEqual({
+      name: 'AV-1',
+    })
+    expect(toast.success).toHaveBeenCalledWith('Alert removed.')
+    expect(reads()).toBe(before + 2)
+  })
+
+  it('a tap on a store opens its minimum; «Guardar» sends that row with the modified', async () => {
+    stocked()
+    const calls = serve({
+      // Doco saves it: the record read next brings the new minimum.
+      save_reorder: (body) => {
+        record.reorder = {
+          ...record.reorder,
+          modified: '2026-10-08 10:05:00',
+          stores: stores().map((store) =>
+            store.warehouse === 'Centro - D'
+              ? { ...store, reorder_level: 8 }
+              : store,
+          ),
+        }
+        return {
+          item: body.item,
+          modified: '2026-10-08 10:05:00',
+          reorder: record.reorder,
+        }
+      },
+    })
+    await mountAt('/productos/ABIBMEX000130')
+    const open = row('Centro - D').querySelector('[data-minimos-open]')
+    expect(open.getAttribute('aria-haspopup')).toBe('dialog')
+    open.click()
+    await vi.waitFor(() => expect(sheet()).not.toBeNull())
+    expect(sheet().dataset.minimoMode).toBe('edit')
+    const level = document.querySelector('input[data-minimo-level]')
+    expect(level.value).toBe('5')
+    // «Quitar mínimo» asks first, with the safe answer focused.
+    document.querySelector('[data-minimo-clear]').click()
+    await flush()
+    expect(document.activeElement).toBe(
+      document.querySelector('[data-minimo-cancel]'),
+    )
+    document.querySelector('[data-minimo-cancel]').click()
+    await flush()
+    const input = document.querySelector('input[data-minimo-level]')
+    input.value = '8'
+    input.dispatchEvent(new Event('input'))
+    await flush()
+    document.querySelector('[data-minimo-save]').click()
+    await flush()
+    const saved = calls.filter(([method]) => method === 'save_reorder')
+    expect(saved).toHaveLength(1)
+    expect(saved[0][1]).toMatchObject({
+      item: 'ABIBMEX000130',
+      modified: MODIFIED,
+      rows: '[{"warehouse":"Centro - D","level":8,"qty":10}]',
+    })
+    expect(words(row('Centro - D').querySelector('[data-minimos-line]'))).toBe(
+      'On hand 2 · Minimum 8 · Order 10',
+    )
+  })
+
+  it('who does not keep the catalog reads who sets it, and may ask for the change', async () => {
+    stocked({ canEdit: false })
+    record.actions = record.actions.map((entry) =>
+      entry.key === 'edit'
+        ? {
+            key: 'edit',
+            label: 'Pedir cambio',
+            enabled: false,
+            reason: 'Los datos los cambia quien mantiene el catálogo.',
+            resolve: { kind: 'request', request: 'data' },
+          }
+        : entry,
+    )
+    serve({ request_options: { candidates: [] } })
+    await mountAt('/productos/ABIBMEX000130')
+    // Nothing to set; the store still opens to read.
+    expect(row('Bodega - D').querySelector('[data-minimos-set]')).toBeNull()
+    row('Bodega - D').querySelector('[data-minimos-open]').click()
+    await vi.waitFor(() => expect(sheet()).not.toBeNull())
+    expect(sheet().dataset.minimoMode).toBe('read')
+    expect(document.querySelector('input[data-minimo-level]')).toBeNull()
+    expect(words(document.querySelector('[data-minimo-readonly]'))).toBe(
+      'The minimum is set by whoever keeps the catalog.',
+    )
+    const ask = document.querySelector('[data-minimo-request]')
+    expect(words(ask)).toBe('Pedir cambio')
+    ask.click()
+    // The catalog request opens with the store written in the note.
+    await vi.waitFor(
+      () =>
+        expect(
+          [...document.querySelectorAll('textarea')].map((area) => area.value),
+        ).toContain('Minimum for Bodega:'),
+      { timeout: 3000 },
+    )
+    expect(document.body.textContent).toContain(
+      'The minimum is set by whoever keeps the catalog.',
+    )
+  })
+
+  it('says so when no store is in sight', async () => {
+    stocked({ list: [] })
+    record.stock.rows = []
+    serve()
+    await mountAt('/productos/ABIBMEX000130')
+    expect(words(root.querySelector('[data-minimos-empty]'))).toBe(
+      'No stores in sight for this item.',
+    )
+  })
+
+  it('just created: «Poner mínimo» comes first; one store opens it, several lead to them', async () => {
+    stocked({ list: [stores()[1]] })
+    record.stock.rows = []
+    serve()
+    await mountAt('/productos/ABIBMEX000130?creado=1')
+    const next = root.querySelector('[data-notice-action]')
+    expect(words(next)).toBe('Set minimum')
+    next.click()
+    await vi.waitFor(() => expect(sheet()).not.toBeNull())
+    expect(document.querySelector('[data-ui-sheet]').textContent).toContain(
+      'Bodega',
+    )
+    app.unmount()
+    root.remove()
+    document.body.innerHTML = ''
+
+    const scrolled = []
+    Element.prototype.scrollIntoView = function () {
+      scrolled.push(this.id)
+    }
+    stocked()
+    serve()
+    await mountAt('/productos/ABIBMEX000130?creado=1')
+    root.querySelector('[data-notice-action]').click()
+    await flush()
+    expect(scrolled).toContain('existencias')
+    expect(sheet()).toBeNull()
+    delete Element.prototype.scrollIntoView
+    app.unmount()
+    root.remove()
+
+    // Who does not keep the catalog is not offered it.
+    stocked({ canEdit: false })
+    serve()
+    await mountAt('/productos/ABIBMEX000130?creado=1')
+    expect(root.querySelector('[data-notice-action]')).toBeNull()
+  })
+
+  it('without the stock read, the stores still list under the sentence: a minimum can be changed or cleared', async () => {
+    // No Bin read: Doco sends no stock, state or suggestion for the stores.
+    const unread = () =>
+      stores().map((store) => ({
+        ...store,
+        actual_qty: null,
+        projected_qty: null,
+        suggested_qty: null,
+        state: null,
+      }))
+    stocked({ list: unread() })
+    record.stock = { readable: false, rows: [], hidden: 0 }
+    serve()
+    await mountAt('/productos/ABIBMEX000130')
+    let section = root.querySelector('#existencias')
+    const said = section.querySelector('[data-stock-unreadable]')
+    expect(words(said)).toBe(
+      'You cannot see stock. Ask your manager for access.',
+    )
+    expect(
+      [...section.querySelectorAll('[data-minimos-store]')].map(
+        (el) => el.dataset.minimosStore,
+      ),
+    ).toEqual(['Centro - D', 'Bodega - D', 'Norte - D'])
+    // The sentence first, then the stores.
+    expect(
+      said.compareDocumentPosition(row('Centro - D')) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+    expect(words(row('Centro - D').querySelector('[data-minimos-line]'))).toBe(
+      'Minimum 5 · Order 10',
+    )
+    expect(
+      row('Centro - D').querySelector('[data-minimos-projection]'),
+    ).toBeNull()
+    expect(row('Norte - D').querySelector('[data-minimos-reorder]')).toBeNull()
+    expect(row('Bodega - D').querySelector('[data-minimos-set]')).not.toBeNull()
+    expect(section.querySelector('[data-minimos-empty]')).toBeNull()
+    // Who keeps the catalog opens the store to change or clear its minimum.
+    row('Centro - D').querySelector('[data-minimos-open]').click()
+    await vi.waitFor(() => expect(sheet()).not.toBeNull())
+    expect(sheet().dataset.minimoMode).toBe('edit')
+    expect(document.querySelector('[data-minimo-clear]')).not.toBeNull()
+    app.unmount()
+    root.remove()
+    document.body.innerHTML = ''
+
+    // No store assigned: the same, under its own sentence.
+    stocked({ list: unread() })
+    record.stock = {
+      readable: true,
+      unassigned: true,
+      rows: [],
+      hidden: 0,
+      total: 0,
+      service: false,
+    }
+    serve()
+    await mountAt('/productos/ABIBMEX000130')
+    section = root.querySelector('#existencias')
+    expect(words(section.querySelector('[data-stock-unassigned]'))).toBe(
+      'You have no store assigned, so you do not see its stock. Ask your manager to assign you one.',
+    )
+    expect(section.querySelectorAll('[data-minimos-store]')).toHaveLength(3)
+    expect(section.querySelector('[data-minimos-empty]')).toBeNull()
+  })
+
+  it('a row says what its minimum is compared with, and the store’s other ERPNext rules', async () => {
+    const list = stores()
+    // 4 on their way to Centro: the minimum is compared with 6.
+    list[0].projected_qty = 6
+    list[0].request_type = 'Purchase'
+    list[0].other_rows = [
+      { request_type: 'Transfer', reorder_level: 3, reorder_qty: 6 },
+    ]
+    list[2].projected_qty = 0
+    list[2].other_rows = []
+    stocked({ list })
+    serve()
+    await mountAt('/productos/ABIBMEX000130')
+    const centro = row('Centro - D')
+    // The main line stays as it is.
+    expect(words(centro.querySelector('[data-minimos-line]'))).toBe(
+      'On hand 2 · Minimum 5 · Order 10',
+    )
+    expect(words(centro.querySelector('[data-minimos-projection]'))).toBe(
+      '6 left counting what is reserved and what is on its way.',
+    )
+    expect(words(centro.querySelector('[data-minimos-other-rules]'))).toBe(
+      'This store also has other rules: Transfer (min. 3, order 6).',
+    )
+    // The same number, or none sent: nothing more.
+    const norte = row('Norte - D')
+    expect(norte.querySelector('[data-minimos-projection]')).toBeNull()
+    expect(norte.querySelector('[data-minimos-other-rules]')).toBeNull()
+    expect(
+      row('Bodega - D').querySelector('[data-minimos-projection]'),
+    ).toBeNull()
+  })
+
+  it('«How it sells» offers «Reorder» where the section does, with the same number and state', async () => {
+    const outside = (warehouse, label, state) => ({
+      warehouse,
+      label,
+      actual_qty: 1,
+      reserved_qty: 0,
+      projected_qty: 1,
+      reorder_level: 5,
+      reorder_qty: 5,
+      state,
+      cajones: [],
+      last_counted: null,
+      counts_pending: [],
+      can_request_count: true,
+      negative: false,
+    })
+    stocked({
+      list: [
+        // Short, with Doco's suggestion: «Reordenar» for 10.
+        stores()[0],
+        // Short with nothing suggested: none.
+        { ...stores()[2], suggested_qty: 0 },
+        // In order for Doco, whatever its stock row says.
+        {
+          warehouse: 'Sur - D',
+          label: 'Sur',
+          actual_qty: 1,
+          projected_qty: 9,
+          reorder_level: 5,
+          reorder_qty: 5,
+          suggested_qty: 0,
+          state: 'ok',
+          watch: null,
+        },
+      ],
+    })
+    // The stock rows' own states decide nothing; Oeste is not in the block.
+    record.stock.rows = [
+      { ...record.stock.rows[0], state: 'ok' },
+      outside('Sur - D', 'Sur', 'bajo'),
+      outside('Oeste - D', 'Oeste', 'faltan'),
+    ]
+    record.insights = {
+      readable: true,
+      uom: 'Nos',
+      sold_30: 3,
+      sold_90: 9,
+      per_day: 0.1,
+      last_sale: null,
+      last_purchase: null,
+      cover: [
+        { warehouse: 'Centro - D', label: 'Centro', days: 20, per_day: 0.1 },
+        { warehouse: 'Norte - D', label: 'Norte', days: 0, per_day: 0.1 },
+        { warehouse: 'Sur - D', label: 'Sur', days: 10, per_day: 0.1 },
+        { warehouse: 'Oeste - D', label: 'Oeste', days: 30, per_day: 0.1 },
+      ],
+      channels: [],
+    }
+    serve()
+    const router = await mountAt('/productos/ABIBMEX000130')
+    const cover = [
+      ...root.querySelectorAll(
+        '[data-producto-insights] [data-insights-cover] li',
+      ),
+    ]
+    expect(
+      cover.map((li) => Boolean(li.querySelector('[data-insights-reorder]'))),
+    ).toEqual([true, false, false, false])
+    expect(
+      [...root.querySelectorAll('#existencias [data-minimos-reorder]')].map(
+        (button) => button.closest('[data-minimos-store]').dataset.minimosStore,
+      ),
+    ).toEqual(['Centro - D'])
+    // The same states: Centro short, Sur in order as its chip says.
+    const shortLine = (li) =>
+      li.querySelector('.text-sm').className.includes('text-ink-red-7')
+    expect(shortLine(cover[0])).toBe(true)
+    expect(shortLine(cover[2])).toBe(false)
+    expect(words(row('Sur - D').querySelector('[data-minimos-state]'))).toBe(
+      'In order',
+    )
+    expect(cover[2].textContent).toContain('minimum 5')
+    cover[0].querySelector('[data-insights-reorder]').click()
+    await flush()
+    expect(router.currentRoute.value.name).toBe('CompraNueva')
+    expect(router.currentRoute.value.query).toMatchObject({
+      warehouse: 'Centro - D',
+      qty: '10',
+    })
+    app.unmount()
+    root.remove()
+
+    // Who may not buy gets «Reorder» in neither.
+    record.actions = record.actions.map((entry) =>
+      entry.key === 'purchase' ? { ...entry, enabled: false } : entry,
+    )
+    await mountAt('/productos/ABIBMEX000130')
+    expect(root.querySelector('[data-insights-reorder]')).toBeNull()
+    expect(root.querySelector('[data-minimos-reorder]')).toBeNull()
+  })
+
+  it('«Poner mínimo» in «Avísame…» opens that store’s minimum, and «Avísame…» comes back on it once saved', async () => {
+    stocked()
+    const calls = serve({
+      mis_avisos: [],
+      // Doco saves it: Bodega now has its minimum.
+      save_reorder: (body) => {
+        record.reorder = {
+          ...record.reorder,
+          modified: '2026-10-08 10:05:00',
+          stores: stores().map((store) =>
+            store.warehouse === 'Bodega - D'
+              ? { ...store, reorder_level: 3, reorder_qty: 6, state: 'faltan' }
+              : store,
+          ),
+        }
+        return {
+          item: body.item,
+          modified: '2026-10-08 10:05:00',
+          reorder: record.reorder,
+        }
+      },
+    })
+    await mountAt('/productos/ABIBMEX000130')
+    ;[...root.querySelectorAll('button')]
+      .find((b) => b.textContent.includes('Avísame cuando baje'))
+      .click()
+    await vi.waitFor(() =>
+      expect(document.querySelectorAll('[role="radio"]').length).toBe(3),
+    )
+    ;[...document.querySelectorAll('[role="radio"]')]
+      .find((el) => el.textContent.includes('Bodega'))
+      .click()
+    await flush()
+    document.querySelector('[data-avisame-set-minimum]').click()
+    await vi.waitFor(() => expect(sheet()).not.toBeNull(), { timeout: 3000 })
+    expect(sheet().dataset.minimoMode).toBe('edit')
+    expect(document.querySelector('input[data-minimo-level]').value).toBe('')
+    expect(document.querySelector('[data-avisame-set-minimum]')).toBeNull()
+    for (const [selector, value] of [
+      ['input[data-minimo-level]', '3'],
+      ['input[data-minimo-qty]', '6'],
+    ]) {
+      const input = document.querySelector(selector)
+      input.value = value
+      input.dispatchEvent(new Event('input'))
+    }
+    await flush()
+    document.querySelector('[data-minimo-save]').click()
+    // Back in «Avísame…», on Bodega, with its new minimum to follow.
+    await vi.waitFor(
+      () =>
+        expect(document.querySelector('[data-avisame-minimum]')).not.toBeNull(),
+      { timeout: 3000 },
+    )
+    expect(sheet()).toBeNull()
+    expect(
+      calls.filter(([method]) => method === 'save_reorder')[0][1],
+    ).toMatchObject({ rows: '[{"warehouse":"Bodega - D","level":3,"qty":6}]' })
+    const chosen = [...document.querySelectorAll('[role="radio"]')].find(
+      (el) => el.getAttribute('aria-checked') === 'true',
+    )
+    expect(chosen.textContent).toContain('Bodega')
+    expect(words(document.querySelector('[data-avisame-minimum]'))).toBe(
+      'Te aviso una vez cada vez que baje de 3 en Bodega. El mínimo se cambia en «Mínimos por tienda».',
+    )
+    const avisame = [...document.querySelectorAll('button')].find(
+      (b) => b.textContent.trim() === 'Avísame',
+    )
+    expect(avisame.disabled).toBe(false)
+  })
+
+  it('in «Avísame…», who does not keep the catalog is told who sets a minimum', async () => {
+    stocked({ canEdit: false })
+    serve({ mis_avisos: [] })
+    await mountAt('/productos/ABIBMEX000130')
+    ;[...root.querySelectorAll('button')]
+      .find((b) => b.textContent.includes('Avísame cuando baje'))
+      .click()
+    await vi.waitFor(() =>
+      expect(document.querySelectorAll('[role="radio"]').length).toBe(3),
+    )
+    ;[...document.querySelectorAll('[role="radio"]')]
+      .find((el) => el.textContent.includes('Bodega'))
+      .click()
+    await flush()
+    expect(words(document.querySelector('[data-avisame-no-minimum]'))).toBe(
+      'Esta tienda no tiene mínimo. Pide a quien mantiene el catálogo que lo ponga.',
+    )
+    expect(document.querySelector('[data-avisame-set-minimum]')).toBeNull()
   })
 })

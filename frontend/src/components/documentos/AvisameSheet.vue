@@ -1,7 +1,8 @@
 <template>
   <!-- «Avísame…» (Shell SPEC §6 DD8): M3 list items (56px) — the conditions
-       of a record as radio rows, or a store and a quantity for an item —
-       then the avisos already asked, each with «Quitar». -->
+       of a record as radio rows, or a store for an item (the aviso follows
+       that store's minimum) — then the avisos already asked, each with
+       «Quitar». -->
   <BottomSheet
     v-model:open="open"
     title="Avísame…"
@@ -69,7 +70,8 @@
         </div>
       </section>
 
-      <!-- An item: a store and a quantity. -->
+      <!-- An item: a store, nothing to type. The aviso follows the store's
+           minimum (ERPNext's reorder level), set in «Mínimos por tienda». -->
       <section v-else aria-labelledby="avisame-store">
         <h3
           id="avisame-store"
@@ -87,7 +89,7 @@
               role="radio"
               :aria-checked="warehouse === row.warehouse ? 'true' : 'false'"
               :title="row.label"
-              :subtitle="`Hay ${formatQty(row.qty)}`"
+              :subtitle="storeLine(row)"
               :selected="warehouse === row.warehouse"
               @click="warehouse = row.warehouse"
             >
@@ -100,50 +102,42 @@
         <ListRow
           v-else-if="warehouses.length === 1"
           :title="warehouses[0].label"
-          :subtitle="`Hay ${formatQty(warehouses[0].qty)}`"
+          :subtitle="storeLine(warehouses[0])"
           data-avisame-store
         />
         <p v-else class="px-4 py-2 text-base text-ink-gray-6">
           Este artículo no tiene existencias en ninguna tienda todavía.
         </p>
-        <div v-if="warehouses.length" class="space-y-1 px-4 pt-3">
-          <label :for="qtyId" class="block text-sm text-ink-gray-7"
-            >Cuando baje de</label
-          >
-          <div class="flex items-center gap-2">
-            <button
-              type="button"
-              class="flex size-12 flex-none items-center justify-center rounded-full bg-surface-gray-2"
-              aria-label="Menos"
-              @click="step(-1)"
-            >
-              <span class="lucide-minus size-4" aria-hidden="true" />
-            </button>
-            <input
-              :id="qtyId"
-              v-model="threshold"
-              type="number"
-              inputmode="decimal"
-              min="0"
-              placeholder="Cantidad"
-              class="min-h-12 w-full min-w-0 rounded-lg border border-outline-gray-2 bg-surface-white px-3 text-center text-lg"
-            />
-            <button
-              type="button"
-              class="flex size-12 flex-none items-center justify-center rounded-full bg-surface-gray-2"
-              aria-label="Más"
-              @click="step(1)"
-            >
-              <span class="lucide-plus size-4" aria-hidden="true" />
-            </button>
-          </div>
-          <p class="text-sm text-ink-gray-6">
-            Te aviso una vez cada vez que baje de esa cantidad<template
-              v-if="selectedStore && warehouses.length > 1"
-            >
-              en {{ selectedStore.label }}</template
-            >.
+        <p
+          v-if="selectedStore && minimum > 0"
+          class="px-4 pt-3 text-sm text-ink-gray-6"
+          data-avisame-minimum
+        >
+          Te aviso una vez cada vez que baje de {{ formatQty(minimum) }} en
+          {{ selectedStore.label }}. El mínimo se cambia en «Mínimos por
+          tienda».
+        </p>
+        <!-- No minimum yet: who keeps the catalog sets it from here; anyone
+             else is told who does. -->
+        <div
+          v-else-if="selectedStore"
+          class="space-y-2 px-4 pt-3"
+          data-avisame-no-minimum
+        >
+          <p v-if="canSetMinimum" class="text-sm text-ink-gray-7">
+            Esta tienda no tiene mínimo. Ponlo primero.
           </p>
+          <p v-else class="text-sm text-ink-gray-7" data-avisame-ask-minimum>
+            Esta tienda no tiene mínimo. Pide a quien mantiene el catálogo que
+            lo ponga.
+          </p>
+          <Button
+            v-if="canSetMinimum"
+            class="min-h-11 sm:min-h-7"
+            label="Poner mínimo"
+            data-avisame-set-minimum
+            @click="setMinimum"
+          />
         </div>
       </section>
 
@@ -152,11 +146,15 @@
           id="avisame-mine"
           class="px-4 pb-1 pt-3 text-sm font-medium text-ink-gray-7"
         >
-          Ya me avisas
+          Tus avisos
         </h3>
         <ul>
           <li v-for="row in active" :key="row.name">
-            <ListRow icon="lucide-bell-ring" :title="row.condition">
+            <ListRow
+              icon="lucide-bell-ring"
+              :title="row.condition"
+              :subtitle="avisoStatus(row)"
+            >
               <template #trailing>
                 <Button
                   variant="ghost"
@@ -199,10 +197,11 @@ import {
   avisame,
   avisameOptions,
   avisameStock,
-  cleanThreshold,
+  conditionInSentence,
   errorText,
   misAvisos,
   quitarAviso,
+  storeMinimum,
   todayIso,
 } from './avisame'
 
@@ -212,12 +211,23 @@ const props = defineProps({
   name: { type: String, required: true },
   // The record's display name (party or item), shown under the title.
   title: { type: String, default: '' },
-  // Item only: [{ warehouse, label, qty, reorder_level? }] the user may watch.
+  // Item only: [{ warehouse, label, qty, reorder_level, watch }] the user may
+  // watch. reorder_level is the store's minimum in ERPNext, the aviso's line
+  // (qty is null where the user's stock read does not reach); watch is the
+  // user's own there, { name, status: activo | disparado | pausado }, or null.
   warehouses: { type: Array, default: () => [] },
+  // Item only: the store to select on opening (the page brings the sheet
+  // back on the store whose minimum was just set); else the first store that
+  // can take a new aviso.
+  store: { type: String, default: '' },
+  // Item only: the user keeps the catalog, so a store without a minimum
+  // offers «Poner mínimo»; anyone else is told who sets it.
+  canSetMinimum: { type: Boolean, default: false },
 })
-const emit = defineEmits(['changed'])
+// set-minimum (warehouse): «Poner mínimo» closed the sheet; the page shows
+// that store's «Mínimo».
+const emit = defineEmits(['changed', 'set-minimum'])
 
-const qtyId = `avisame-qty-${Math.random().toString(36).slice(2, 8)}`
 const today = todayIso()
 const isItem = computed(() => props.doctype === 'Item')
 const loading = ref(false)
@@ -233,34 +243,58 @@ const active = ref([])
 const choice = ref('')
 const untilDate = ref('')
 const warehouse = ref('')
-const threshold = ref('')
 
 const chosen = computed(() => options.value.find((o) => o.key === choice.value))
 const selectedStore = computed(() =>
   props.warehouses.find((row) => row.warehouse === warehouse.value),
 )
+const minimum = computed(() => storeMinimum(selectedStore.value))
 function optionHint(option) {
   if (option.active) return 'Ya lo pediste'
   return option.needs_date ? 'Eliges la fecha límite' : 'Un aviso, cuando pase'
 }
+function storeLine(row) {
+  const level = storeMinimum(row)
+  const parts = []
+  if (row.qty !== null && row.qty !== undefined)
+    parts.push(`Hay ${formatQty(row.qty)}`)
+  parts.push(level > 0 ? `Mínimo ${formatQty(level)}` : 'Sin mínimo')
+  return parts.join(' · ')
+}
+// «Ya te avisé»: a stock watch that already warned says so. A paused one
+// already says it in its own line (Doco's «Pausado: … no tiene mínimo…»)
+// and an active one needs no word.
+const watchStatus = computed(
+  () =>
+    new Map(
+      props.warehouses
+        .filter((row) => row.watch?.name)
+        .map((row) => [row.watch.name, row.watch.status]),
+    ),
+)
+function avisoStatus(row) {
+  const status = watchStatus.value.get(row.name)
+  if (status === 'disparado') return 'Ya te avisé'
+  return ''
+}
+// The store the page asked for, else the first that can take a new aviso:
+// one with a minimum and no aviso of the user yet, else one with a minimum,
+// else the first.
+function firstStore() {
+  const rows = props.warehouses
+  const found =
+    rows.find((row) => props.store && row.warehouse === props.store) ||
+    rows.find((row) => storeMinimum(row) > 0 && !row.watch) ||
+    rows.find((row) => storeMinimum(row) > 0) ||
+    rows[0]
+  return found?.warehouse || ''
+}
+// An item's aviso needs the store's minimum: without one there is nothing
+// to cross, and «Poner mínimo» leads to where it is set.
 const ready = computed(() => {
-  if (isItem.value)
-    return Boolean(warehouse.value) && cleanThreshold(threshold.value) !== null
+  if (isItem.value) return Boolean(selectedStore.value) && minimum.value > 0
   if (!chosen.value || chosen.value.active) return false
   return !chosen.value.needs_date || Boolean(untilDate.value)
-})
-
-// One tap should work: the store's reorder level, else one under what it
-// has now (at least 1).
-function suggested(row) {
-  if (!row) return ''
-  const level = Number(row.reorder_level) || 0
-  if (level > 0) return String(level)
-  return String(Math.max(Math.floor(Number(row.qty) || 0) - 1, 1))
-}
-watch(warehouse, (value, previous) => {
-  if (previous && value !== previous)
-    threshold.value = suggested(selectedStore.value)
 })
 
 // Immediate: a host that mounts the sheet on first tap (Producto) mounts it
@@ -273,7 +307,7 @@ watch(
   { immediate: true },
 )
 
-async function load() {
+async function load({ keep = false } = {}) {
   loading.value = true
   error.value = ''
   note.value = ''
@@ -282,8 +316,8 @@ async function load() {
   untilDate.value = ''
   try {
     if (isItem.value) {
-      warehouse.value = props.warehouses[0]?.warehouse || ''
-      threshold.value = suggested(props.warehouses[0])
+      // A reload after a save keeps the store the user is looking at.
+      if (!keep || !selectedStore.value) warehouse.value = firstStore()
       active.value = await misAvisos('Item', props.name)
     } else {
       const data = await avisameOptions(props.doctype, props.name)
@@ -299,9 +333,12 @@ async function load() {
   }
 }
 
-function step(delta) {
-  const current = cleanThreshold(threshold.value) || 0
-  threshold.value = String(Math.max(current + delta, 1))
+// «Poner mínimo»: the minimum is set on the product («Mínimos por tienda»),
+// not here; the sheet closes and the page takes the worker to that store.
+function setMinimum() {
+  const store = warehouse.value
+  open.value = false
+  emit('set-minimum', store)
 }
 
 async function save() {
@@ -310,11 +347,7 @@ async function save() {
   error.value = ''
   try {
     const row = isItem.value
-      ? await avisameStock(
-          props.name,
-          warehouse.value,
-          cleanThreshold(threshold.value),
-        )
+      ? await avisameStock(props.name, warehouse.value)
       : await avisame(
           props.doctype,
           props.name,
@@ -324,14 +357,14 @@ async function save() {
     emit('changed')
     if (row?.note) {
       note.value = row.note
-      await load()
+      await load({ keep: true })
       note.value = row.note
       return
     }
     toast.success(
       row?.status === 'Cumplido'
         ? 'Ya pasó: te llegó el aviso.'
-        : `Listo. Te aviso: ${(row?.condition || '').toLowerCase()}.`,
+        : `Listo. Te aviso: ${conditionInSentence(row?.condition)}.`,
     )
     open.value = false
   } catch (failure) {

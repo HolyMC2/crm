@@ -153,13 +153,20 @@ import { computed } from 'vue'
 import { Button } from 'frappe-ui'
 import { ListRow } from '@/components/ui'
 import { voucherLink } from '@/components/inventario/kardex'
+import { minimumActions } from '@/composables/useProductos'
 import { formatDate, formatMoney, formatQty } from '@/utils/display'
 
 const CTX = 'Productos'
 const props = defineProps({
   insights: { type: Object, required: true },
-  /** Stock rows of the record: state and reorder quantity per store. */
+  /** Stock rows of the record: state and minimum per store, for a store the
+   *  `reorder` block does not bring. */
   stock: { type: Array, default: () => [] },
+  /** The record's `reorder.stores` («Mínimos por tienda»): each store's
+   *  state, minimum and Doco's suggestion (suggested_qty). «Reordenar» shows
+   *  where that section shows it, with the same number; a store outside it
+   *  gets none. */
+  reorder: { type: Array, default: () => [] },
   /** The purchase action (enabled or not) from the server. */
   purchase: { type: Object, default: null },
   currency: { type: String, default: 'MXN' },
@@ -247,28 +254,36 @@ const events = computed(() => {
 const stockBy = computed(
   () => new Map(props.stock.map((row) => [row.warehouse, row])),
 )
+const reorderBy = computed(
+  () => new Map(props.reorder.map((store) => [store.warehouse, store])),
+)
 const coverRows = computed(() =>
   (props.insights.cover || []).map((row) => {
-    const stock = stockBy.value.get(row.warehouse) || {}
-    const short = ['faltan', 'bajo'].includes(stock.state)
+    // The store's state and minimum as «Mínimos por tienda» shows them: the
+    // block's, else the stock row's (a store the block does not bring).
+    const store = reorderBy.value.get(row.warehouse) || null
+    const source = store || stockBy.value.get(row.warehouse) || {}
+    const short = ['faltan', 'bajo'].includes(source.state)
     let text
     if (row.days === 0) text = __('Out of stock', null, CTX)
     else if (row.days === null || row.days === undefined)
       text = __('No sales here in 90 days', null, CTX)
     else if (row.days > 365) text = __('More than a year', null, CTX)
     else text = __('About {0} days', [row.days], CTX)
-    if (stock.reorder_level)
-      text = `${text} · ${__('minimum {0}', [formatQty(stock.reorder_level, uom.value)], CTX)}`
+    if (Number(source.reorder_level) > 0)
+      text = `${text} · ${__('minimum {0}', [formatQty(source.reorder_level, uom.value)], CTX)}`
     return {
       ...row,
       text,
       short: short || row.days === 0,
+      // The section's own test and number (Doco's suggestion), so both
+      // «Reordenar» buy the same.
       reorder:
-        short && props.purchase?.enabled
-          ? {
-              warehouse: row.warehouse,
-              qty: stock.reorder_qty || null,
-            }
+        store &&
+        minimumActions(store, {
+          canPurchase: Boolean(props.purchase?.enabled),
+        }).includes('reorder')
+          ? { warehouse: row.warehouse, qty: store.suggested_qty }
           : null,
     }
   }),

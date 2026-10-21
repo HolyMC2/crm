@@ -446,6 +446,13 @@
           class="mt-4 rounded-lg bg-surface-green-1 p-3 text-sm text-ink-green-8"
         >
           {{ notice.text }}
+          <Button
+            v-if="notice.action"
+            class="ml-1"
+            :label="notice.action.label"
+            data-notice-action
+            @click="notice.action.run()"
+          />
           <RouterLink v-if="notice.to" :to="notice.to" class="ml-1 underline">{{
             notice.link
           }}</RouterLink>
@@ -558,12 +565,33 @@
               id="existencias"
               class="scroll-mt-4 rounded-xl border border-outline-gray-2 bg-surface-base"
             >
+              <!-- «Mínimos por tienda» (Shell SPEC §6 DD9) when the record
+                   brings them: each store's row also holds its minimum. -->
               <header
-                class="flex flex-wrap items-center gap-2 border-b border-outline-gray-1 px-4 py-3"
+                class="flex flex-wrap items-start gap-2 border-b border-outline-gray-1 px-4 py-3"
               >
-                <h2 class="flex-1 text-base font-semibold text-ink-gray-9">
-                  {{ __('Stock by store') }}
-                </h2>
+                <div class="min-w-0 flex-1">
+                  <h2 class="text-base font-semibold text-ink-gray-9">
+                    {{
+                      minimos
+                        ? __('Minimums by store', null, 'Productos')
+                        : __('Stock by store')
+                    }}
+                  </h2>
+                  <p
+                    v-if="minimos"
+                    class="mt-0.5 text-sm text-ink-gray-6"
+                    data-minimos-story
+                  >
+                    {{
+                      __(
+                        'How much each store should have. If it drops, I let you know once and take you to order.',
+                        null,
+                        'Productos',
+                      )
+                    }}
+                  </p>
+                </div>
                 <span
                   v-if="
                     data.stock.readable &&
@@ -594,15 +622,20 @@
                   )
                 }}</span>
               </div>
+              <!-- Without the stock read, the sentence says why; the
+                   minimums still list below it, so who keeps the catalog
+                   can change or clear one. -->
               <p
                 v-else-if="!data.stock.readable"
                 class="px-4 py-4 text-sm text-ink-gray-6"
+                data-stock-unreadable
               >
                 {{ __('You cannot see stock. Ask your manager for access.') }}
               </p>
               <p
                 v-else-if="data.stock.unassigned"
                 class="px-4 py-4 text-sm text-ink-gray-6"
+                data-stock-unassigned
               >
                 {{
                   __(
@@ -611,14 +644,22 @@
                 }}
               </p>
               <div
-                v-else-if="!data.stock.rows.length"
+                v-if="stockSeen && !storeRows.length"
                 class="m-4 flex flex-wrap items-center gap-3 rounded-lg border border-dashed border-outline-gray-3 p-3 text-sm text-ink-gray-7"
               >
                 <span
                   class="lucide-package-open h-5 w-5 shrink-0 text-ink-gray-5"
                   aria-hidden="true"
                 />
-                <span class="min-w-0 flex-1">{{
+                <span
+                  v-if="minimos"
+                  class="min-w-0 flex-1"
+                  data-minimos-empty
+                  >{{
+                    __('No stores in sight for this item.', null, 'Productos')
+                  }}</span
+                >
+                <span v-else class="min-w-0 flex-1">{{
                   __(
                     'None in your stores yet. It appears here when it is received, counted or moved in.',
                   )
@@ -630,152 +671,250 @@
                   @click="run(action('purchase'))"
                 />
               </div>
-              <ul v-else class="divide-y divide-outline-gray-1">
+              <ul
+                v-else-if="storeRows.length && (stockSeen || minimos)"
+                class="divide-y divide-outline-gray-1"
+              >
                 <li
-                  v-for="row in data.stock.rows"
+                  v-for="row in storeRows"
                   :key="row.warehouse"
                   class="flex flex-wrap items-start gap-3 px-4 py-3"
+                  :data-minimos-store="row.minimum ? row.warehouse : undefined"
                 >
                   <span
                     class="lucide-store mt-0.5 h-4 w-4 shrink-0 text-ink-gray-5"
                     aria-hidden="true"
                   />
                   <span class="min-w-0 flex-1">
-                    <span class="block font-medium text-ink-gray-9">{{
+                    <!-- The store and its minimum open that store's minimum:
+                         to change it, or to read who sets it. -->
+                    <button
+                      v-if="row.minimum"
+                      type="button"
+                      class="-mx-1 block min-h-11 w-[calc(100%+0.5rem)] rounded-md px-1 text-left hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-0"
+                      aria-haspopup="dialog"
+                      data-minimos-open
+                      @click="openMinimum(row.warehouse)"
+                    >
+                      <span class="block font-medium text-ink-gray-9">{{
+                        row.label
+                      }}</span>
+                      <span
+                        class="block text-sm tabular-nums text-ink-gray-7"
+                        data-minimos-line
+                        >{{ minimumLine(row.minimum) }}</span
+                      >
+                    </button>
+                    <span v-else class="block font-medium text-ink-gray-9">{{
                       row.label
                     }}</span>
-                    <span class="block text-sm text-ink-gray-6">
-                      {{
-                        [
-                          __('Reserved {0}', [qty(row.reserved_qty)]),
-                          __('Projected {0}', [qty(row.projected_qty)]),
-                          row.reorder_level !== null &&
-                            __('Minimum {0}', [qty(row.reorder_level)]),
-                        ]
-                          .filter(Boolean)
-                          .join(' · ')
-                      }}
-                    </span>
-                    <span
-                      v-if="row.cajones.length"
-                      class="mt-1 flex flex-wrap gap-1"
-                    >
-                      <component
-                        :is="data.inventory?.scanner ? 'a' : 'span'"
-                        v-for="cajon in row.cajones"
-                        :key="cajon.ubicacion"
-                        :href="
-                          data.inventory?.scanner
-                            ? binUrl(cajon.ubicacion)
-                            : undefined
-                        "
-                        :title="
-                          cajon.qty === null || cajon.qty === undefined
-                            ? __('Not counted in this bin', null, 'Productos')
-                            : __(
-                                '{0} in this bin',
-                                [qty(cajon.qty)],
-                                'Productos',
-                              )
-                        "
-                        class="inline-flex h-6 items-center gap-1 rounded-md bg-surface-gray-2 px-2 text-xs text-ink-gray-8"
-                        :class="
-                          data.inventory?.scanner
-                            ? 'hover:bg-surface-gray-3'
-                            : ''
-                        "
-                        ><span
-                          class="lucide-inbox h-3.5 w-3.5"
-                          aria-hidden="true"
-                        />{{ cajon.label || cajon.ubicacion
-                        }}<span class="ml-1 tabular-nums text-ink-gray-6"
-                          >·
-                          {{
-                            cajon.qty === null || cajon.qty === undefined
-                              ? __('not counted', null, 'Productos')
-                              : qty(cajon.qty)
-                          }}</span
-                        ></component
+                    <template v-if="row.minimum">
+                      <!-- What the minimum is compared with, when it is not
+                           what is on hand. -->
+                      <span
+                        v-if="row.projection"
+                        class="block text-xs tabular-nums text-ink-gray-6"
+                        data-minimos-projection
+                        >{{ row.projection }}</span
                       >
-                    </span>
+                      <!-- The store's other ERPNext rules, read only. -->
+                      <span
+                        v-if="row.otherRules"
+                        class="block text-sm text-ink-gray-6"
+                        data-minimos-other-rules
+                        >{{ row.otherRules }}</span
+                      >
+                    </template>
+                    <!-- A store with no stock of it yet shows only its minimum. -->
+                    <template v-if="row.stocked">
+                      <span class="block text-sm text-ink-gray-6">
+                        {{
+                          [
+                            __('Reserved {0}', [qty(row.reserved_qty)]),
+                            __('Projected {0}', [qty(row.projected_qty)]),
+                            !row.minimum &&
+                              row.reorder_level !== null &&
+                              __('Minimum {0}', [qty(row.reorder_level)]),
+                          ]
+                            .filter(Boolean)
+                            .join(' · ')
+                        }}
+                      </span>
+                      <span
+                        v-if="row.cajones.length"
+                        class="mt-1 flex flex-wrap gap-1"
+                      >
+                        <component
+                          :is="data.inventory?.scanner ? 'a' : 'span'"
+                          v-for="cajon in row.cajones"
+                          :key="cajon.ubicacion"
+                          :href="
+                            data.inventory?.scanner
+                              ? binUrl(cajon.ubicacion)
+                              : undefined
+                          "
+                          :title="
+                            cajon.qty === null || cajon.qty === undefined
+                              ? __('Not counted in this bin', null, 'Productos')
+                              : __(
+                                  '{0} in this bin',
+                                  [qty(cajon.qty)],
+                                  'Productos',
+                                )
+                          "
+                          class="inline-flex h-6 items-center gap-1 rounded-md bg-surface-gray-2 px-2 text-xs text-ink-gray-8"
+                          :class="
+                            data.inventory?.scanner
+                              ? 'hover:bg-surface-gray-3'
+                              : ''
+                          "
+                          ><span
+                            class="lucide-inbox h-3.5 w-3.5"
+                            aria-hidden="true"
+                          />{{ cajon.label || cajon.ubicacion
+                          }}<span class="ml-1 tabular-nums text-ink-gray-6"
+                            >·
+                            {{
+                              cajon.qty === null || cajon.qty === undefined
+                                ? __('not counted', null, 'Productos')
+                                : qty(cajon.qty)
+                            }}</span
+                          ></component
+                        >
+                      </span>
+                      <span
+                        v-else-if="data.inventory?.scanner"
+                        class="block text-sm text-ink-amber-7"
+                        >{{ __('Not filed in a bin here') }}</span
+                      >
+                      <span
+                        class="block text-sm"
+                        :class="
+                          row.last_counted
+                            ? 'text-ink-gray-6'
+                            : 'text-ink-amber-7'
+                        "
+                        >{{
+                          lastCountedLabel(row.last_counted, boot?.today)
+                        }}</span
+                      >
+                      <span
+                        v-for="pending in row.counts_pending"
+                        :key="pending.task"
+                        class="block text-sm text-ink-blue-7"
+                        >{{
+                          pending.assigned_date
+                            ? __('Count asked of {0} · {1}', [
+                                pending.assigned_to,
+                                pending.assigned_date,
+                              ])
+                            : __('Count asked of {0}', [pending.assigned_to])
+                        }}</span
+                      >
+                    </template>
+                    <!-- One row of actions: the minimum's, then the stock's. -->
                     <span
-                      v-else-if="data.inventory?.scanner"
-                      class="block text-sm text-ink-amber-7"
-                      >{{ __('Not filed in a bin here') }}</span
-                    >
-                    <span
-                      class="block text-sm"
-                      :class="
-                        row.last_counted
-                          ? 'text-ink-gray-6'
-                          : 'text-ink-amber-7'
-                      "
-                      >{{
-                        lastCountedLabel(row.last_counted, boot?.today)
-                      }}</span
-                    >
-                    <span
-                      v-for="pending in row.counts_pending"
-                      :key="pending.task"
-                      class="block text-sm text-ink-blue-7"
-                      >{{
-                        pending.assigned_date
-                          ? __('Count asked of {0} · {1}', [
-                              pending.assigned_to,
-                              pending.assigned_date,
-                            ])
-                          : __('Count asked of {0}', [pending.assigned_to])
-                      }}</span
-                    >
-                    <span
-                      v-if="
-                        (data.inventory?.scanner ||
-                          data.inventory?.stock_adjust) &&
-                        row.warehouse
-                      "
+                      v-if="row.actions.length || stockActions(row)"
                       class="mt-2 flex flex-wrap gap-2"
                     >
-                      <template
-                        v-if="
-                          data.inventory.scanner && data.inventory.scanner_user
-                        "
+                      <Button
+                        v-if="row.actions.includes('reorder')"
+                        class="min-h-11 sm:min-h-7"
+                        :aria-label="`${__('Reorder', null, 'Productos')} · ${row.label}`"
+                        data-minimos-reorder
+                        @click="reorderStore(row.minimum)"
                       >
-                        <a
-                          :href="countNowUrl(row)"
-                          class="inline-flex min-h-11 items-center rounded-md bg-surface-gray-2 px-3 text-sm text-ink-gray-8 hover:bg-surface-gray-3 sm:min-h-7"
-                          >{{ __('Count now') }}</a
-                        >
-                        <a
-                          v-if="row.cajones.length"
-                          :href="moveUrl(row)"
-                          class="inline-flex min-h-11 items-center rounded-md bg-surface-gray-2 px-3 text-sm text-ink-gray-8 hover:bg-surface-gray-3 sm:min-h-7"
-                          >{{ __('Move to another bin') }}</a
-                        >
-                        <a
-                          v-else
-                          :href="assignUrl(row)"
-                          class="inline-flex min-h-11 items-center rounded-md bg-surface-gray-2 px-3 text-sm text-ink-gray-8 hover:bg-surface-gray-3 sm:min-h-7"
-                          >{{ __('Assign bin') }}</a
-                        >
-                      </template>
+                        <template #prefix>
+                          <span
+                            class="lucide-shopping-cart size-4"
+                            aria-hidden="true"
+                          />
+                        </template>
+                        {{ __('Reorder', null, 'Productos') }}
+                      </Button>
                       <Button
-                        v-if="data.inventory.scanner"
+                        v-if="row.actions.includes('watch')"
                         class="min-h-11 sm:min-h-7"
-                        :label="
-                          row.can_request_count
-                            ? __('Ask for a count')
-                            : __('Ask the manager for a count')
+                        :aria-label="`${__('Alert me', null, 'Productos')} · ${row.label}`"
+                        :loading="watchBusy === row.warehouse"
+                        :disabled="
+                          Boolean(watchBusy) && watchBusy !== row.warehouse
                         "
-                        @click="askCount(row)"
-                      />
-                      <!-- «Ajustar existencia» (D4): a draft Ajuste for this store. -->
+                        data-minimos-watch-on
+                        @click="watchStore(row.minimum)"
+                      >
+                        <template #prefix>
+                          <span class="lucide-bell size-4" aria-hidden="true" />
+                        </template>
+                        {{ __('Alert me', null, 'Productos') }}
+                      </Button>
                       <Button
-                        v-if="data.inventory.stock_adjust"
+                        v-if="row.actions.includes('unwatch')"
                         class="min-h-11 sm:min-h-7"
-                        label="Ajustar"
-                        data-producto-ajustar
-                        @click="askAdjust(row)"
-                      />
+                        :aria-label="`${__('Remove alert', null, 'Productos')} · ${row.label}`"
+                        :loading="watchBusy === row.warehouse"
+                        :disabled="
+                          Boolean(watchBusy) && watchBusy !== row.warehouse
+                        "
+                        data-minimos-watch-off
+                        @click="unwatchStore(row.minimum)"
+                      >
+                        {{ __('Remove alert', null, 'Productos') }}
+                      </Button>
+                      <Button
+                        v-if="row.actions.includes('set')"
+                        class="min-h-11 sm:min-h-7"
+                        :aria-label="`${__('Set minimum', null, 'Productos')} · ${row.label}`"
+                        aria-haspopup="dialog"
+                        data-minimos-set
+                        @click="openMinimum(row.warehouse)"
+                      >
+                        {{ __('Set minimum', null, 'Productos') }}
+                      </Button>
+                      <template v-if="stockActions(row)">
+                        <template
+                          v-if="
+                            data.inventory.scanner &&
+                            data.inventory.scanner_user
+                          "
+                        >
+                          <a
+                            :href="countNowUrl(row)"
+                            class="inline-flex min-h-11 items-center rounded-md bg-surface-gray-2 px-3 text-sm text-ink-gray-8 hover:bg-surface-gray-3 sm:min-h-7"
+                            >{{ __('Count now') }}</a
+                          >
+                          <a
+                            v-if="row.cajones.length"
+                            :href="moveUrl(row)"
+                            class="inline-flex min-h-11 items-center rounded-md bg-surface-gray-2 px-3 text-sm text-ink-gray-8 hover:bg-surface-gray-3 sm:min-h-7"
+                            >{{ __('Move to another bin') }}</a
+                          >
+                          <a
+                            v-else
+                            :href="assignUrl(row)"
+                            class="inline-flex min-h-11 items-center rounded-md bg-surface-gray-2 px-3 text-sm text-ink-gray-8 hover:bg-surface-gray-3 sm:min-h-7"
+                            >{{ __('Assign bin') }}</a
+                          >
+                        </template>
+                        <Button
+                          v-if="data.inventory.scanner"
+                          class="min-h-11 sm:min-h-7"
+                          :label="
+                            row.can_request_count
+                              ? __('Ask for a count')
+                              : __('Ask the manager for a count')
+                          "
+                          @click="askCount(row)"
+                        />
+                        <!-- «Ajustar existencia» (D4): a draft Ajuste for this store. -->
+                        <Button
+                          v-if="data.inventory.stock_adjust"
+                          class="min-h-11 sm:min-h-7"
+                          label="Ajustar"
+                          data-producto-ajustar
+                          @click="askAdjust(row)"
+                        />
+                      </template>
                     </span>
                     <span
                       v-if="row.negative"
@@ -848,6 +987,7 @@
                   </span>
                   <span class="flex flex-col items-end gap-1">
                     <span
+                      v-if="row.stocked"
                       class="text-right text-lg font-semibold tabular-nums"
                       :class="
                         row.actual_qty > 0
@@ -860,16 +1000,34 @@
                         unitName(product.stock_uom)
                       }}</span>
                     </span>
-                    <Badge
-                      v-if="row.state === 'faltan'"
-                      theme="red"
-                      :label="__('Out of stock', null, 'Productos')"
-                    />
-                    <Badge
-                      v-else-if="row.state === 'bajo'"
-                      theme="orange"
-                      :label="__('Below minimum', null, 'Productos')"
-                    />
+                    <!-- The store against its minimum, and the worker's own
+                         watch there: words, colour only adds to them. -->
+                    <template v-if="row.minimum">
+                      <Badge
+                        v-if="row.chip"
+                        :theme="row.chip.theme"
+                        :label="row.chip.label"
+                        :data-minimos-state="row.chip.key"
+                      />
+                      <Badge
+                        v-if="row.watchChip"
+                        :theme="row.watchChip.theme"
+                        :label="row.watchChip.label"
+                        :data-minimos-watch="row.watchChip.key"
+                      />
+                    </template>
+                    <template v-else>
+                      <Badge
+                        v-if="row.state === 'faltan'"
+                        theme="red"
+                        :label="__('Out of stock', null, 'Productos')"
+                      />
+                      <Badge
+                        v-else-if="row.state === 'bajo'"
+                        theme="orange"
+                        :label="__('Below minimum', null, 'Productos')"
+                      />
+                    </template>
                   </span>
                 </li>
               </ul>
@@ -909,6 +1067,7 @@
               v-if="!isTemplate && data.insights?.readable"
               :insights="data.insights"
               :stock="data.stock.rows || []"
+              :reorder="minimos ? reorderStores : []"
               :purchase="action('purchase')"
               :currency="defaultPrice?.currency || 'MXN'"
               @reorder="reorder"
@@ -1532,7 +1691,8 @@
       :row="ajustarRow"
       @saved="adjusted"
     />
-    <!-- «Avísame cuando baje de N» (Shell D5, DD8): loaded on first open. -->
+    <!-- «Avísame cuando baje» (Shell D5, DD8): the store's minimum, from
+         «Mínimos por tienda»; loaded on first open. -->
     <AvisameSheet
       v-if="data && avisameMounted"
       v-model:open="avisameOpen"
@@ -1540,6 +1700,25 @@
       :name="product.name"
       :title="product.item_name || product.name"
       :warehouses="avisameStores"
+      :store="avisameStore"
+      :can-set-minimum="minimos && Boolean(reorderInfo?.can_edit)"
+      @changed="load()"
+      @set-minimum="setMinimum"
+    />
+    <!-- One store's minimum («Mínimos por tienda», Shell SPEC §6 DD9): the
+         editor for who keeps the catalog, else who sets it; loaded on first
+         open. -->
+    <MinimoSheet
+      v-if="data && minimo.mounted && minimoStore"
+      v-model:open="minimo.open"
+      :item="product.name"
+      :store="minimoStore"
+      :modified="reorderInfo?.modified || product.modified || ''"
+      :can-edit="Boolean(reorderInfo?.can_edit)"
+      :request-label="minimumRequestLabel"
+      @saved="minimumSaved"
+      @refresh="load()"
+      @request="askMinimum"
     />
   </div>
 </template>
@@ -1570,6 +1749,9 @@ const AjustarSheet = defineAsyncComponent(
 const AvisameSheet = defineAsyncComponent(
   () => import('@/components/documentos/AvisameSheet.vue'),
 )
+const MinimoSheet = defineAsyncComponent(
+  () => import('@/components/productos/MinimoSheet.vue'),
+)
 // Phone: Etiqueta · Conteo · Precios at the thumb (Shell D4e), its own chunk.
 const ProductoBar = defineAsyncComponent(
   () => import('@/components/productos/ProductoBar.vue'),
@@ -1577,6 +1759,12 @@ const ProductoBar = defineAsyncComponent(
 import MovementRow from '@/components/inventario/MovementRow.vue'
 import ProductInsights from '@/components/productos/ProductInsights.vue'
 import ProductPrices from '@/components/productos/ProductPrices.vue'
+import {
+  avisameStock,
+  conditionInSentence,
+  errorText,
+  quitarAviso,
+} from '@/components/documentos/avisame'
 import { formatDate, formatDateTime, unitLabel } from '@/utils/display'
 import { isMobile as isPhone } from '@/composables/breakpoint'
 import { priceListLabel } from '@/utils/priceList'
@@ -1591,13 +1779,18 @@ import {
   isRootGroup,
   lastCountedLabel,
   loadProductosBoot,
+  minimumActions,
+  minimumLine,
+  minimumState,
   money,
   notifyPriceOpener,
+  otherRulesLine,
   parseDone,
   plain,
   priceUnit,
   problemOf,
   productKind,
+  projectionLine,
   productosApi,
   productosBoot,
   purchaseRoute,
@@ -1611,6 +1804,7 @@ import {
   shellPath,
   variantsLabel,
   visibleRows,
+  watchChip,
   withoutDone,
 } from '@/composables/useProductos'
 
@@ -1633,6 +1827,18 @@ const editOpen = ref(false)
 const countOpen = ref(false)
 const avisameOpen = ref(false)
 const avisameMounted = ref(false)
+// The store «Avísame…» opens on: the one whose minimum was just set from it.
+const avisameStore = ref('')
+// «Mínimos por tienda»: the store whose minimum sheet is open (mounted on
+// first open; `avisame` when «Poner mínimo» in «Avísame…» opened it), and the
+// store whose «Avísame» or «Quitar aviso» is on its way.
+const minimo = reactive({
+  open: false,
+  mounted: false,
+  warehouse: '',
+  avisame: false,
+})
+const watchBusy = ref('')
 const countStore = ref('')
 const focusList = ref('')
 const request = reactive({
@@ -1905,7 +2111,7 @@ const heroActions = computed(() => {
       icon: ACTION_ICONS.labels,
       title: __('Print here, in the size you choose', null, 'Productos'),
     })
-  // «Avísame cuando baje de N» in one of its stores (Shell D5): the person's
+  // «Avísame cuando baje» of a store's minimum (Shell D5, DD8): the person's
   // own aviso, so it needs only read access to the item.
   if (!isTemplate.value && avisameStores.value.length)
     list.push({
@@ -1913,7 +2119,7 @@ const heroActions = computed(() => {
       label: 'Avísame cuando baje',
       enabled: true,
       icon: ACTION_ICONS.avisame,
-      title: 'Te aviso cuando baje de la cantidad que elijas en una tienda',
+      title: 'Te aviso cuando una tienda baje de su mínimo',
     })
   return list
 })
@@ -1954,17 +2160,208 @@ function runBar(entry) {
     .getElementById('precios')
     ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
-const avisameStores = computed(() =>
-  (data.value?.stock?.rows || []).map((row) => ({
+// «Mínimos por tienda» (Shell SPEC §6 DD9): the record's `reorder` block,
+// every store the worker reads with ERPNext's minimum there, its state, what
+// Doco suggests ordering and the worker's own watch.
+const reorderInfo = computed(() => data.value?.reorder || null)
+const minimos = computed(
+  () =>
+    Boolean(reorderInfo.value) &&
+    !data.value?.stock?.service &&
+    !isTemplate.value,
+)
+const reorderStores = computed(() => reorderInfo.value?.stores || [])
+// The worker reads this product's stock (a stocked item, the Bin read, a
+// store assigned). Without it the section says why; «Mínimos por tienda»
+// still lists its stores.
+const stockSeen = computed(() => {
+  const stock = data.value?.stock
+  return Boolean(stock?.readable && !stock.unassigned && !stock.service)
+})
+function stockActions(row) {
+  const inventory = data.value?.inventory
+  return Boolean(
+    row.stocked &&
+      row.warehouse &&
+      (inventory?.scanner || inventory?.stock_adjust),
+  )
+}
+// The section's rows: the stores with stock (each with its minimum), then
+// the stores the worker reads that hold none yet, where a minimum may still
+// be set. Without the block, the stock rows as before.
+const storeRows = computed(() => {
+  const rows = data.value?.stock?.rows || []
+  if (!minimos.value)
+    return rows.map((row) => ({
+      ...row,
+      stocked: true,
+      minimum: null,
+      actions: [],
+    }))
+  const byStore = new Map(
+    reorderStores.value.map((store) => [store.warehouse, store]),
+  )
+  const options = {
+    canEdit: Boolean(reorderInfo.value?.can_edit),
+    canPurchase: Boolean(action('purchase')?.enabled),
+  }
+  const shape = (row, minimum) => ({
+    ...row,
+    minimum,
+    chip: minimumState(minimum),
+    watchChip: watchChip(minimum?.watch),
+    actions: minimum ? minimumActions(minimum, options) : [],
+    projection: minimum ? projectionLine(minimum) : '',
+    otherRules: minimum ? otherRulesLine(minimum) : '',
+  })
+  const out = rows.map((row) =>
+    shape({ ...row, stocked: true }, byStore.get(row.warehouse) || null),
+  )
+  const shown = new Set(rows.map((row) => row.warehouse))
+  for (const store of reorderStores.value)
+    if (!shown.has(store.warehouse))
+      out.push(
+        shape(
+          {
+            warehouse: store.warehouse,
+            label: store.label || store.warehouse,
+            stocked: false,
+          },
+          store,
+        ),
+      )
+  return out
+})
+const minimoStore = computed(
+  () =>
+    reorderStores.value.find((store) => store.warehouse === minimo.warehouse) ||
+    null,
+)
+// Read-only «Mínimo»: «Pedir cambio» when the edit action offers that request.
+const minimumRequestLabel = computed(() => {
+  const edit = action('edit')
+  return !edit?.enabled && edit?.resolve?.request === 'data' ? edit.label : ''
+})
+const avisameStores = computed(() => {
+  if (minimos.value)
+    return reorderStores.value.map((store) => ({
+      warehouse: store.warehouse,
+      label: store.label || store.warehouse,
+      qty: store.actual_qty,
+      reorder_level: store.reorder_level,
+      watch: store.watch || null,
+    }))
+  return (data.value?.stock?.rows || []).map((row) => ({
     warehouse: row.warehouse,
     label: row.label || row.warehouse,
     qty: row.actual_qty,
     reorder_level: row.reorder_level,
-  })),
-)
+  }))
+})
 // «Reordenar» on a short store: the purchase flow for that store and quantity.
 function reorder({ warehouse, qty: amount }) {
   router.push(purchaseRoute(product.value.name, { warehouse, qty: amount }))
+}
+// The quantity is Doco's suggestion for the store.
+function reorderStore(store) {
+  reorder({ warehouse: store.warehouse, qty: store.suggested_qty })
+}
+function scrollToStores() {
+  document
+    .getElementById('existencias')
+    ?.scrollIntoView?.({ behavior: 'smooth', block: 'start' })
+}
+/** That store's minimum: the editor for who keeps the catalog, else who sets
+ *  it. A store the block does not bring leads to the section. `avisame`:
+ *  «Poner mínimo» in «Avísame…» asked for it. */
+function openMinimum(warehouse, { avisame = false } = {}) {
+  if (!reorderStores.value.some((store) => store.warehouse === warehouse))
+    return scrollToStores()
+  minimo.warehouse = warehouse
+  minimo.avisame = avisame
+  minimo.mounted = true
+  minimo.open = true
+}
+// A BottomSheet that closes hands the focus back to what opened it as it
+// leaves the page (reka-ui): the next sheet opens once no sheet is left.
+function afterSheets(next, frames = 60) {
+  if (frames > 0 && document.querySelector('[data-ui-sheet]'))
+    return requestAnimationFrame(() => afterSheets(next, frames - 1))
+  setTimeout(next, 0)
+}
+// «Poner mínimo» in «Avísame…»: that store's minimum, once the sheet is gone.
+function setMinimum(warehouse) {
+  afterSheets(() => openMinimum(warehouse, { avisame: true }))
+}
+// «Avísame…», on that store, or on the first that can take a new aviso.
+function openAvisame(warehouse = '') {
+  avisameStore.value = warehouse
+  avisameMounted.value = true
+  avisameOpen.value = true
+}
+// «Pedir cambio» from a read-only minimum: the catalog request, with the
+// store already written in the note.
+function askMinimum(store) {
+  afterSheets(() =>
+    ask(
+      'data',
+      __('The minimum is set by whoever keeps the catalog.', null, 'Productos'),
+      {
+        note: __(
+          'Minimum for {0}:',
+          [store?.label || store?.warehouse || ''],
+          'Productos',
+        ),
+      },
+    ),
+  )
+}
+// A minimum set from «Avísame…» brings that sheet back on the store, for the
+// watch the worker came for.
+async function minimumSaved(result) {
+  if (result?.reorder && data.value) data.value.reorder = result.reorder
+  const back = minimo.avisame ? minimo.warehouse : ''
+  minimo.avisame = false
+  if (back) afterSheets(() => openAvisame(back))
+  await load()
+}
+// «Avísame» on a store with a minimum: the worker's own watch, which follows
+// that minimum; Doco warns at once when the store is already under it.
+async function watchStore(store) {
+  if (watchBusy.value) return
+  watchBusy.value = store.warehouse
+  try {
+    const row = await avisameStock(product.value.name, store.warehouse)
+    const condition = String(row?.condition || '')
+    toast.success(
+      row?.note ||
+        (condition
+          ? __(
+              'Done. I will let you know: {0}.',
+              [conditionInSentence(condition)],
+              'Productos',
+            )
+          : __('Alert on', null, 'Productos')),
+    )
+  } catch (failure) {
+    toast.error(errorText(failure))
+  } finally {
+    watchBusy.value = ''
+  }
+  await load()
+}
+async function unwatchStore(store) {
+  if (watchBusy.value || !store.watch?.name) return
+  watchBusy.value = store.warehouse
+  try {
+    await quitarAviso(store.watch.name)
+    toast.success(__('Alert removed.', null, 'Productos'))
+  } catch (failure) {
+    toast.error(errorText(failure, 'No se pudo quitar el aviso.'))
+  } finally {
+    watchBusy.value = ''
+  }
+  await load()
 }
 function change(row) {
   if (!row.old_rate || row.new_rate === null || row.new_rate === undefined)
@@ -2213,10 +2610,8 @@ function run(entry) {
     countStore.value = ''
     countOpen.value = true
   } else if (entry.key === 'labels') labelOpen.value = true
-  else if (entry.key === 'avisame') {
-    avisameMounted.value = true
-    avisameOpen.value = true
-  } else if (entry.key === 'variants')
+  else if (entry.key === 'avisame') openAvisame()
+  else if (entry.key === 'variants')
     document
       .getElementById('variantes')
       ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -2344,17 +2739,30 @@ function handleDone() {
   }
   router.replace(withoutDone(route.fullPath))
 }
-// Just created from «Nuevo producto» (`creado=1`): say so, offer the next one
-// in the same group, and drop the flag so a reload stays quiet.
+// Just created from «Nuevo producto» (`creado=1`): say so, offer its minimum
+// first (who keeps the catalog: one store opens it, several lead to them),
+// then the next product in the same group, and drop the flag so a reload
+// stays quiet.
 function handleCreated() {
   if (route.query.creado !== '1') return
   const grupo = product.value?.item_group || ''
+  const stores =
+    minimos.value && reorderInfo.value?.can_edit ? reorderStores.value : []
   notice.value = {
     text: __(
       'Product created. Next, add its photo, labels or stock.',
       null,
       'Productos',
     ),
+    action: stores.length
+      ? {
+          label: __('Set minimum', null, 'Productos'),
+          run: () =>
+            stores.length === 1
+              ? openMinimum(stores[0].warehouse)
+              : scrollToStores(),
+        }
+      : null,
     to: { name: 'ProductoNuevo', query: grupo ? { grupo } : {} },
     link: __('Create another', null, 'Productos'),
   }
@@ -2368,6 +2776,10 @@ watch(
   async () => {
     data.value = null
     notice.value = null
+    minimo.open = false
+    minimo.warehouse = ''
+    minimo.avisame = false
+    avisameStore.value = ''
     photoBroken.value = false
     salesAll.value = false
     unitsAll.value = false
@@ -2375,7 +2787,7 @@ watch(
   },
 )
 // A price, a sale or an edit by someone else shows up without a reload;
-// never under the worker's hands (an open dialog keeps its input).
+// never under the worker's hands (an open dialog or sheet keeps its input).
 const socket = getCurrentInstance()?.appContext.config.globalProperties.$socket
 useLiveWatch(
   hoyLive(socket),
@@ -2389,6 +2801,7 @@ useLiveWatch(
       countOpen.value ||
       ajustarOpen.value ||
       avisameOpen.value ||
+      minimo.open ||
       request.open
     )
       return

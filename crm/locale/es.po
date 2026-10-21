@@ -23729,6 +23729,224 @@ msgstr "Escribe el precio de venta en pesos."
 msgid "The barcode has only letters and numbers."
 msgstr "El código de barras solo tiene letras y números."
 
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Minimums by store"
+msgstr "Mínimos por tienda"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "How much each store should have. If it drops, I let you know once and take you to order."
+msgstr "Cuánto debe haber en cada tienda. Si baja, te aviso una vez y te llevo a pedir."
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "No stores in sight for this item."
+msgstr "No hay tiendas a la vista para este artículo."
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Alert me"
+msgstr "Avísame"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Remove alert"
+msgstr "Quitar aviso"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Set minimum"
+msgstr "Poner mínimo"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Done. I will let you know: {0}."
+msgstr "Listo. Te aviso: {0}."
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Alert removed."
+msgstr "Aviso quitado."
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Minimum for {0}:"
+msgstr "Mínimo para {0}:"
+
+#: frontend/src/pages/Producto.vue
+#: frontend/src/components/productos/MinimoSheet.vue
+msgctxt "Productos"
+msgid "The minimum is set by whoever keeps the catalog."
+msgstr "El mínimo lo pone quien mantiene el catálogo."
+
+#: frontend/src/composables/useProductos.js
+msgctxt "Productos"
+msgid "On hand {0}"
+msgstr "Hay {0}"
+
+#: frontend/src/composables/useProductos.js
+msgctxt "Productos"
+msgid "Order {0}"
+msgstr "Pedir {0}"
+
+#: frontend/src/composables/useProductos.js
+#: frontend/src/components/productos/MinimoSheet.vue
+msgctxt "Productos"
+msgid "No minimum"
+msgstr "Sin mínimo"
+
+#: frontend/src/composables/useProductos.js
+msgctxt "Productos"
+msgid "Without stock"
+msgstr "Sin existencias"
+
+#: frontend/src/composables/useProductos.js
+msgctxt "Productos"
+msgid "In order"
+msgstr "En orden"
+
+#: frontend/src/composables/useProductos.js
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Alert on"
+msgstr "Te aviso"
+
+#: frontend/src/composables/useProductos.js
+msgctxt "Productos"
+msgid "Alert sent"
+msgstr "Ya te avisé"
+
+#: frontend/src/composables/useProductos.js
+msgctxt "Productos"
+msgid "Alert paused"
+msgstr "Aviso en pausa"
+
+#: frontend/src/composables/useProductos.js
+msgctxt "Productos"
+msgid "Write a number of 0 or more."
+msgstr "Pon un número de 0 o más."
+
+#: frontend/src/composables/useProductos.js
+msgctxt "Productos"
+msgid "Set the minimum to be able to order."
+msgstr "Pon el mínimo para poder pedir."
+
+#: frontend/src/composables/useProductos.js
+msgctxt "Productos"
+msgid "Also set the amount to order in {0}: without it the minimum is not saved."
+msgstr "Pon también la cantidad a pedir en {0}: sin ella el mínimo no se guarda."
+
+#: frontend/src/components/productos/MinimoSheet.vue
+msgctxt "Productos"
+msgid "Minimum"
+msgstr "Mínimo"
+
+#: frontend/src/components/productos/MinimoSheet.vue
+msgctxt "Productos"
+msgid "Order"
+msgstr "Pedir"
+
+#: frontend/src/components/productos/MinimoSheet.vue
+msgctxt "Productos"
+msgid "What you put in Order is the least each order is for; if more is missing to reach the minimum, what is missing gets ordered."
+msgstr "Lo que pongas en «Pedir» es la cantidad mínima de cada pedido; si falta más para llegar al mínimo, se pide lo que falte."
+
+#: frontend/src/components/productos/MinimoSheet.vue
+msgctxt "Productos"
+msgid "at least {0}"
+msgstr "al menos {0}"
+
+#: frontend/src/components/productos/MinimoSheet.vue
+msgctxt "Productos"
+msgid "When there are fewer than {0} in {1}, I let you know once and suggest ordering {2}."
+msgstr "Cuando haya menos de {0} en {1}, te aviso una vez y te sugiero pedir {2}."
+
+#: frontend/src/components/productos/MinimoSheet.vue
+msgctxt "Productos"
+msgid "what you put in Order"
+msgstr "lo que pongas en «Pedir»"
+
+#: frontend/src/components/productos/MinimoSheet.vue
+msgctxt "Productos"
+msgid "Set a minimum so I can let you know and suggest ordering here."
+msgstr "Pon un mínimo para que te avise y te sugiera pedir aquí."
+
+#: frontend/src/components/productos/MinimoSheet.vue
+msgctxt "Productos"
+msgid "Your alert for this store follows this minimum on its own."
+msgstr "Tu aviso de esta tienda se ajusta solo a este mínimo."
+
+#: frontend/src/components/productos/MinimoSheet.vue
+msgctxt "Productos"
+msgid "Remove minimum"
+msgstr "Quitar mínimo"
+
+#: frontend/src/components/productos/MinimoSheet.vue
+msgctxt "Productos"
+msgid "Remove the minimum of {0}? I stop suggesting orders there."
+msgstr "¿Quitar el mínimo de {0}? Dejo de sugerir pedidos ahí."
+
+#: frontend/src/components/productos/MinimoSheet.vue
+msgctxt "Productos"
+msgid "Your alert for this store is paused until you set a minimum."
+msgstr "Tu aviso de esta tienda queda en pausa hasta que pongas un mínimo."
+
+#: frontend/src/components/productos/MinimoSheet.vue
+msgctxt "Productos"
+msgid "Done: the minimum of {0} is {1}."
+msgstr "Listo: el mínimo de {0} es {1}."
+
+#: frontend/src/components/productos/MinimoSheet.vue
+msgctxt "Productos"
+msgid "Removed the minimum of {0}."
+msgstr "Quitado el mínimo de {0}."
+
+#: frontend/src/components/productos/MinimoSheet.vue
+msgctxt "Productos"
+msgid "When there are fewer than {0} in {1}, I suggest ordering {2}. To get an alert, turn on «Alert me» in this store."
+msgstr "Cuando haya menos de {0} en {1}, sugiero pedir {2}. Para que te avise, pon «Avísame» en esta tienda."
+
+#: frontend/src/components/productos/MinimoSheet.vue
+msgctxt "Productos"
+msgid "Remove the minimum of {0}? These go too: {1}. I stop suggesting orders there."
+msgstr "¿Quitar el mínimo de {0}? También se quitan: {1}. Dejo de sugerir pedidos ahí."
+
+#: frontend/src/composables/useProductos.js
+msgctxt "Productos"
+msgid "{0} left counting what is reserved and what is on its way."
+msgstr "Quedan {0} contando lo reservado y lo que viene en camino."
+
+#: frontend/src/composables/useProductos.js
+msgctxt "Productos"
+msgid "This store also has other rules: {0}."
+msgstr "Esta tienda también tiene otras reglas: {0}."
+
+#: frontend/src/composables/useProductos.js
+msgctxt "Productos"
+msgid "{0} (min. {1}, order {2})"
+msgstr "{0} (mín. {1}, pedir {2})"
+
+#: frontend/src/composables/useProductos.js
+msgctxt "Productos"
+msgid "Purchase"
+msgstr "Compra"
+
+#: frontend/src/composables/useProductos.js
+msgctxt "Productos"
+msgid "Transfer"
+msgstr "Traslado"
+
+#: frontend/src/composables/useProductos.js
+msgctxt "Productos"
+msgid "Material Issue"
+msgstr "Salida de material"
+
+#: frontend/src/composables/useProductos.js
+msgctxt "Productos"
+msgid "Manufacture"
+msgstr "Fabricación"
+
 #: frontend/src/pages/Productos.vue
 msgctxt "Productos"
 msgid "Images, PDF or a price message of this list, to send"
