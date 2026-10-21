@@ -175,6 +175,26 @@ describe('AppBar', () => {
     expect(events.map((e) => e[0])).toContain('back')
     expect(router.currentRoute.value.path).toBe('/')
   })
+  it('back: true with no router entry goes back to the page it came from', async () => {
+    Object.defineProperty(document, 'referrer', {
+      value: `${location.origin}/desk`,
+      configurable: true,
+    })
+    Object.defineProperty(window.history, 'length', {
+      value: 3,
+      configurable: true,
+    })
+    const back = vi.spyOn(window.history, 'back').mockImplementation(() => {})
+    await mount(AppBar, { title: 'Impresión', back: true })
+    const push = vi.spyOn(router, 'push')
+    root.querySelector('[data-appbar-back]').click()
+    await flush()
+    expect(back).toHaveBeenCalledOnce()
+    expect(push).not.toHaveBeenCalled()
+    back.mockRestore()
+    delete document.referrer
+    delete window.history.length
+  })
   it('a title with scopes opens the list sheet and switches list', async () => {
     const { events, bound } = await mount(AppBar, {
       title: 'Vencido',

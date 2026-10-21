@@ -345,6 +345,7 @@ elementos tocables.
 | Punto de quiebre | `composables/breakpoint.js` | `isMobile` |
 | Pila de paneles | `composables/backNav.js` | cada entrada al detalle es una entrada del historial; atrás la saca |
 | Swipe desde el borde | `composables/swipeBack.js` | mismo `history.back()` que las flechas ← |
+| Flecha ← de la barra | `components/ui/AppBar.vue` (`onBack`), `utils/historyBack.js` | `back: true`: `router.back()` si la página se abrió dentro de la app; si no, `history.back()` a la página que la abrió (`document.referrer`, mismo origen, no `/login`); si no hay, al inicio. Una página con su propio `@back` decide sola. |
 | Barra inferior | `Mobile/MobileTabBar.vue` | 5 destinos |
 | Cajón | `Mobile/MobileSidebar.vue` | reskin, tema, apps, ajustes |
 | Tiras de estado | `Layouts/MobileLayout.vue` | tira ámbar *"Sin conexión — mostrando lo último guardado"* (`v-if="!online"`), encima de la del outbox; install nudge; **y el par `min-w-0` / `overflow-x-hidden` (`:9` y `:57`) que corta el scroll lateral — NO se puede perder** (arreglo del desbordamiento de 382 px a 360, 07-25) |

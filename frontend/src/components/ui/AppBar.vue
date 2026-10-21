@@ -184,6 +184,7 @@ import {
 import { RouterLink, useRouter } from 'vue-router'
 import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
 import { shellBoot } from '@/composables/muelleShell'
+import { canReturnToReferrer } from '@/utils/historyBack'
 import UiTag from './UiTag'
 
 // The scope sheet loads on its first open: the shell header renders this bar
@@ -270,7 +271,17 @@ function onBack(event) {
   emit('back', event)
   if (backTarget.value || event.defaultPrevented) return
   if (window.history.state?.back) router.back()
+  else if (returnsToReferrer()) window.history.back()
   else router.push('/')
+}
+// A page opened from another page of this origin (the Desk, another app) has no router entry
+// behind it, so the arrow would send it home. Its previous browser entry is that page.
+function returnsToReferrer() {
+  return canReturnToReferrer({
+    referrer: document.referrer,
+    origin: window.location.origin,
+    historyLength: window.history.length,
+  })
 }
 function choose(value) {
   scopeSheet.value = false
