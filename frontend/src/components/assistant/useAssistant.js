@@ -20,6 +20,7 @@ import {
   normalizeRow,
 } from './assistantText'
 import { assistantOn, assistantWanted } from './assistantDoor'
+import { isImageFile } from './assistantFiles'
 
 export const ASSISTANT_API = 'doco.docoutils.assistant.shell_api'
 // A turn that stays silent this long gets an honest line and a history check.
@@ -33,6 +34,8 @@ export const assistant = reactive({
   progress: '',
   error: '',
   draft: '',
+  /** The file waiting in the composer: { blob, name, size, type, previewUrl, url }. */
+  attachment: null,
   focus: 0,
   /** The screen the sheet is about; null when the worker removed the chip. */
   context: null,
@@ -139,11 +142,93 @@ function armWatchdog() {
   }, SILENCE_MS)
 }
 
-export async function send(text, { context = undefined } = {}) {
+/** A file in the composer or in a sent message; `url` is set once it is uploaded. */
+function sentFile(file) {
+  return {
+    blob: file.blob,
+    name: file.name,
+    size: file.size,
+    type: file.type,
+    previewUrl: file.previewUrl || '',
+    url: file.url || '',
+  }
+}
+
+function objectUrl(blob) {
+  return typeof URL.createObjectURL === 'function'
+    ? URL.createObjectURL(blob)
+    : ''
+}
+
+/** Puts a picked file in the composer until it goes with the next message. */
+export function attachFile(blob) {
+  clearAttachment()
+  assistant.attachment = {
+    blob,
+    name: blob.name || __('File'),
+    size: blob.size,
+    type: blob.type || '',
+    previewUrl: isImageFile(blob) ? objectUrl(blob) : '',
+    url: '',
+  }
+}
+
+export function clearAttachment() {
+  const previous = assistant.attachment
+  assistant.attachment = null
+  if (previous?.previewUrl) URL.revokeObjectURL(previous.previewUrl)
+}
+
+/** The composer hands its file to the message it goes with; the bubble keeps the preview. */
+export function takeAttachment() {
+  const file = assistant.attachment
+  assistant.attachment = null
+  return file
+}
+
+/** Uploads a picked file as private, as the Desk's clip does; resolves to its file_url. */
+export async function uploadAssistantFile(blob) {
+  const form = new FormData()
+  form.append('file', blob)
+  form.append('is_private', '1')
+  try {
+    const response = await fetch('/api/method/upload_file', {
+      method: 'POST',
+      body: form,
+      credentials: 'same-origin',
+      headers: { 'X-Frappe-CSRF-Token': window.csrf_token || '' },
+    })
+    const url = response.ok ? (await response.json())?.message?.file_url : ''
+    if (url) return url
+  } catch {
+    // a dropped connection fails the same way a refused file does, below
+  }
+  throw new Error(
+    __(
+      'The file did not upload. Your message is still here: try again, or send a smaller file.',
+    ),
+  )
+}
+
+/** The file's url; uploads it first only when this message has not yet. */
+async function uploadedUrl(id, file) {
+  if (file.url) return file.url
+  const url = await uploadAssistantFile(file.blob)
+  patchMessage(id, { file: { ...file, url } })
+  return url
+}
+
+export async function send(text, { context = undefined, file = null } = {}) {
   const value = String(text || '').trim()
-  if (!value) return
+  if (!value && !file) return
   const clientId = newClientId()
-  const message = { id: clientId, role: 'user', text: value, pending: true }
+  const message = {
+    id: clientId,
+    role: 'user',
+    text: value,
+    pending: true,
+    file: file ? sentFile(file) : null,
+  }
   assistant.messages = [...assistant.messages, message]
   assistant.error = ''
   assistant.thinking = true
@@ -155,10 +240,14 @@ export async function send(text, { context = undefined } = {}) {
         ? assistant.context
         : { route: assistant.context?.route || '' }
   try {
+    const fileUrl = message.file
+      ? await uploadedUrl(clientId, message.file)
+      : ''
     await call(`${ASSISTANT_API}.say`, {
       text: value,
       context: JSON.stringify(ctx || {}),
       client_id: clientId,
+      file_url: fileUrl || undefined,
     })
     patchMessage(clientId, { pending: false })
   } catch (error) {
@@ -171,7 +260,7 @@ export async function send(text, { context = undefined } = {}) {
 
 export function retry(message) {
   assistant.messages = assistant.messages.filter((m) => m.id !== message.id)
-  return send(message.text)
+  return send(message.text, { file: message.file || null })
 }
 
 /** «Reintentar» on a reply that failed: ask the question before it again. */
@@ -183,7 +272,7 @@ export function retryAnswer(message) {
     .find((m) => m.role === 'user')
   if (!question) return
   assistant.messages = assistant.messages.filter((m) => m.id !== message.id)
-  return send(question.text)
+  return send(question.text, { file: question.file || null })
 }
 
 function patchMessage(id, patch) {
@@ -332,6 +421,7 @@ export function _resetAssistant() {
     progress: '',
     error: '',
     draft: '',
+    attachment: null,
     focus: 0,
     context: null,
     contextOn: true,

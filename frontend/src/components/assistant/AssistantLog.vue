@@ -37,7 +37,28 @@
         :class="{ 'opacity-60': message.pending }"
         data-role="user"
       >
-        <p class="whitespace-pre-line break-words">{{ message.text }}</p>
+        <div
+          v-if="message.file"
+          class="mb-1 flex items-center gap-2 text-sm"
+          data-testid="assistant-sent-file"
+        >
+          <img
+            v-if="message.file.previewUrl"
+            :src="message.file.previewUrl"
+            :alt="message.file.name"
+            class="max-h-48 max-w-full rounded-lg object-cover"
+          />
+          <template v-else>
+            <span
+              class="lucide-file-text size-4 flex-none text-ink-gray-7"
+              aria-hidden="true"
+            />
+            <span class="min-w-0 truncate">{{ message.file.name }}</span>
+          </template>
+        </div>
+        <p v-if="message.text" class="whitespace-pre-line break-words">
+          {{ message.text }}
+        </p>
         <p
           v-if="message.failed"
           class="mt-1 flex items-center gap-2 text-sm text-ink-red-7"

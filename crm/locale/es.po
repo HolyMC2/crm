@@ -26330,6 +26330,22 @@ msgid "Not sent."
 msgstr "No se envió."
 
 #: frontend/src/components/assistant
+msgid "Attach a file"
+msgstr "Adjuntar archivo"
+
+#: frontend/src/components/assistant
+msgid "Remove file"
+msgstr "Quitar archivo"
+
+#: frontend/src/components/assistant
+msgid "Only the owner can send files to Muelle. Type what the file says, or ask the owner to send it."
+msgstr "Solo el dueño puede enviar archivos a Muelle. Escribe lo que dice el archivo o pide al dueño que lo envíe."
+
+#: frontend/src/components/assistant
+msgid "The file did not upload. Your message is still here: try again, or send a smaller file."
+msgstr "El archivo no se subió. Tu mensaje sigue aquí: intenta de nuevo o envía un archivo más pequeño."
+
+#: frontend/src/components/assistant
 msgid "Proposed action"
 msgstr "Acción propuesta"
 
