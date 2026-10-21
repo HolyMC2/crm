@@ -79,6 +79,13 @@ html {
 :root[data-theme='dark'] [data-sonner-toast] {
   --ink-blue-link: var(--dark-blue-800);
 }
+/* The root colour shows wherever the page has not painted yet, such as the
+   frame while the on-screen keyboard resizes the viewport (resizes-content).
+   Keep it on the active theme's surface so dark mode never flashes white. */
+html,
+body {
+  background-color: var(--muelle-surface-base);
+}
 body {
   overscroll-behavior-y: none;
 }
