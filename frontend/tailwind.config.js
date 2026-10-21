@@ -46,6 +46,10 @@ export default {
     ),
     '!text-ink-gray-9',
   ],
+  // frappe-ui's editor names prose-xl and prose-2xl in a comment, so Tailwind
+  // generates their CSS (766 B gzip) though no crm view applies either class.
+  // Remove a name from this list if a view starts using it.
+  blocklist: ['prose-xl', 'prose-2xl'],
   theme: {
     extend: {},
   },

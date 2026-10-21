@@ -8,7 +8,7 @@ import plugin from 'tailwindcss/plugin'
 // verbatim — license comment, class attribute, every character
 // percent-encoded — twice per rule (-webkit-mask-image and mask-image), which
 // made the icons 300 KB of the 640 KB global stylesheet every phone parses
-// before the first paint (and ~13 KB of its 60 KB gzip budget). Here each rule
+// before the first paint (and ~13 KB of its 61 KB gzip budget). Here each rule
 // carries one minimal data URI in a custom property that both mask
 // declarations read. The rendering is the same: a 24×24 viewBox, stroke 1.5,
 // round caps and joins, painted through the mask in currentColor.

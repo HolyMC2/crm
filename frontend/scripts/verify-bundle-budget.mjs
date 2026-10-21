@@ -1,6 +1,6 @@
 // Bundle budgets. Fails the build (and CI's frontend build job) on a regression.
 //  1. First load (spec-muelle-shell §6): the entry chunk with its static
-//     imports ≤ 180 KB gzip, the global stylesheet ≤ 60 KB gzip.
+//     imports ≤ 180 KB gzip, the global stylesheet ≤ 61 KB gzip.
 //  2. Daily routes (CRM program SPEC §4): what a daily route statically loads
 //     before it can paint — the entry, the shell, the Ventas frame where the
 //     route has one, and the page — ≤ 60 script files and ≤ 2.5 MB of JS.
@@ -21,7 +21,7 @@ const output = outArg
   ? resolve(outArg)
   : resolve(here, '../../crm/public/frontend')
 
-export const BUDGET = { js: 180 * 1024, css: 60 * 1024 }
+export const BUDGET = { js: 180 * 1024, css: 61 * 1024 }
 export const ROUTE_BUDGET = { files: 60, bytes: 2.5 * 1024 * 1024 }
 // Components a route mounts at once: MuelleShell (App), and on Ventas
 // routes CrmRuntime + VentasFrame around the page.

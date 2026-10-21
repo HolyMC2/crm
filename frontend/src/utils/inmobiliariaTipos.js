@@ -9,7 +9,7 @@
  * tipo (the route segment) → the doctype it serves, its es-MX name and its
  * icon. The icons are spelled out here so their lucide classes are built; the
  * first five are the ones the server's search sends (busqueda.py). Each icon
- * adds its SVG to the global stylesheet (60 KB gzip budget), so where one fits
+ * adds its SVG to the global stylesheet (61 KB gzip budget), so where one fits
  * the others reuse an icon the shell already draws (`lucide-home`, the old
  * name of `house`).
  */
