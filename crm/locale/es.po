@@ -24981,6 +24981,10 @@ msgid "Check now"
 msgstr "Revisar ahora"
 
 #: frontend/src/components/archivos/conectores/ConnectorCard.vue
+msgid "Resume connection"
+msgstr "Reanudar conexión"
+
+#: frontend/src/components/archivos/conectores/ConnectorCard.vue
 msgid "Resume the connection first"
 msgstr "Primero reanuda la conexión"
 
@@ -25527,6 +25531,10 @@ msgstr "hace {0} min"
 #: frontend/src/utils/archivosConectores.js
 msgid "{0} h ago"
 msgstr "hace {0} h"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "about 1 day ago"
+msgstr "hace 1 día"
 
 #: frontend/src/utils/archivosConectores.js
 msgid "about {0} days ago"

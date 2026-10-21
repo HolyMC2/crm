@@ -74,7 +74,9 @@ export function agoLabel(seconds) {
   // read inside a sentence («Última revisión hace 5 min»).
   if (s < 3600) return tr('{0} min ago', [Math.floor(s / 60)])
   if (s < 86400) return tr('{0} h ago', [Math.floor(s / 3600)])
-  return tr('about {0} days ago', [Math.floor(s / 86400)])
+  const days = Math.floor(s / 86400)
+  // Singular on its own msgid: «hace 1 días» came from one plural string.
+  return days === 1 ? tr('about 1 day ago') : tr('about {0} days ago', [days])
 }
 
 /** A span without «ago»: «5 min», «3 h», «2 days». */

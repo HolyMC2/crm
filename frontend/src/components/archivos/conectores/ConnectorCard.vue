@@ -5,7 +5,8 @@
   >
     <div class="space-y-3 p-4">
       <!-- Who and how it is doing -->
-      <div class="flex items-start gap-3">
+      <!-- On a narrow screen the badge wraps under the title, not beside it -->
+      <div class="flex flex-wrap items-start gap-x-3 gap-y-2">
         <span
           class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-surface-gray-2"
           :title="typeLabel(connector.connector_type)"
@@ -15,26 +16,27 @@
             class="h-5 w-5 text-ink-gray-7"
           />
         </span>
-        <div class="min-w-0 flex-1">
+        <div class="min-w-[11rem] flex-1">
           <h2
             :id="`conn-${connector.name}`"
             class="break-words text-lg font-semibold text-ink-gray-9"
           >
             {{ connector.title || typeLabel(connector.connector_type) }}
           </h2>
-          <p class="break-all text-sm text-ink-gray-6">
+          <p class="break-words text-sm text-ink-gray-6">
             {{ addressLine }}
           </p>
         </div>
         <Badge
-          class="shrink-0"
+          class="max-w-full pl-[3.25rem] sm:pl-0"
           size="lg"
           :theme="healthTheme(health.status)"
           :label="healthLabel(health.status)"
         />
       </div>
+      <!-- Locked by the site or the plan: the page says it once; the card stays quiet -->
       <p
-        v-if="health.hint"
+        v-if="health.hint && !blocked"
         class="rounded-lg p-3 text-base"
         :class="hintClass"
         :role="health.status === 'error' ? 'alert' : undefined"
@@ -42,7 +44,7 @@
         {{ health.hint }}
       </p>
 
-      <ul class="space-y-1 text-sm text-ink-gray-7">
+      <ul v-if="!blocked" class="space-y-1 text-sm text-ink-gray-7">
         <li v-if="times.length" class="flex flex-wrap gap-x-3 gap-y-1">
           <span v-for="t in times" :key="t.key" :title="t.title">{{
             t.label
@@ -67,11 +69,11 @@
       </p>
 
       <!-- What a manager can do now -->
-      <div v-else class="flex flex-wrap gap-2">
+      <div v-else-if="!blocked" class="flex flex-wrap gap-2">
         <Button
           class="min-h-11 sm:min-h-0"
           :icon-left="connector.enabled ? 'pause' : 'play'"
-          :label="connector.enabled ? __('Pause') : __('Resume')"
+          :label="connector.enabled ? __('Pause') : __('Resume connection')"
           :loading="busy === 'enabled'"
           :disabled="blocked && !connector.enabled"
           @click="toggleEnabled"
@@ -108,7 +110,10 @@
       </p>
 
       <!-- Failed work never stays a dead end: retry it or open its document -->
-      <div v-if="connector.can_manage && health.failed" class="space-y-2">
+      <div
+        v-if="connector.can_manage && !blocked && health.failed"
+        class="space-y-2"
+      >
         <Button
           v-if="!problems.length"
           variant="ghost"

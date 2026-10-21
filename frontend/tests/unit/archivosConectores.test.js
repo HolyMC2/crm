@@ -56,6 +56,7 @@ describe('health and time', () => {
     expect(agoLabel(5 * 60 + 3)).toBe('5 min ago')
     expect(agoLabel(3 * 3600)).toBe('3 h ago')
     expect(agoLabel(2 * 86400 + 5)).toBe('about 2 days ago')
+    expect(agoLabel(86400 + 5)).toBe('about 1 day ago')
     expect(agoLabel(null)).toBe('')
     expect(relativeTime('2026-10-15 11:55:00', NOW)).toBe('5 min ago')
     expect(relativeTime('', NOW)).toBe('')
@@ -607,6 +608,32 @@ describe('the connections page', () => {
     expect(text).toContain('Only an administrator can set up connections')
     expect(text).toContain('Copy request for an administrator')
     expect(text).not.toContain('New connection')
+  })
+  it('says the plan once and leaves the cards without dead buttons', async () => {
+    await mountPage({
+      ...overview,
+      automation_enabled: false,
+      connectors: [
+        {
+          ...overview.connectors[0],
+          health: {
+            status: 'unlicensed',
+            hint: 'Activa Documentos en tu plan.',
+            pending: 0,
+            failed: 0,
+            poll_minutes: 10,
+            webhook: false,
+          },
+        },
+      ],
+    })
+    const text = root.textContent
+    expect(text.split('Activate Documents in your plan').length - 1).toBe(1)
+    expect(text).not.toContain('Activa Documentos en tu plan.')
+    expect(text).not.toContain('Test connection')
+    expect(text).not.toContain('Check now')
+    expect(text).toContain('Not in your plan')
+    expect(root.querySelectorAll('button').length).toBeLessThan(3)
   })
   it('offers both types when nothing is connected yet', async () => {
     await mountPage({ ...overview, connectors: [] })
