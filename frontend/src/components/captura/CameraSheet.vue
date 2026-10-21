@@ -399,6 +399,17 @@
                 }}
               </p>
 
+              <!-- a capture: the description or order travels with the document -->
+              <FormControl
+                v-if="chosen?.target"
+                v-model="note"
+                type="textarea"
+                :label="__('Description or order (optional)')"
+                :placeholder="
+                  __('For example: what you bought, or the purchase order')
+                "
+                data-testid="quees-note"
+              />
               <FormControl
                 v-if="companies.length > 1 && chosen?.target"
                 v-model="company"
@@ -668,6 +679,7 @@ const problem = ref('')
 const scan = ref(null)
 const kind = ref('')
 const invoice = ref('')
+const note = ref('')
 const company = ref('')
 const record = ref(null)
 const recordQuery = ref('')
@@ -1038,6 +1050,7 @@ async function send() {
       preset: Boolean(options.value.targets?.length || fixedInvoice.value),
     })
     invoice.value = fixedInvoice.value || scan.value.invoices?.[0]?.name || ''
+    note.value = ''
     record.value = null
     recordQuery.value = ''
     recordRows.value = []
@@ -1092,6 +1105,7 @@ async function confirm() {
         company: company.value,
         invoice: option.kind === 'transferencia' ? invoice.value : '',
         supplier: options.value.supplier || '',
+        note: note.value.trim(),
         ...returnArgs(),
       })
       scan.value = null
@@ -1140,6 +1154,7 @@ function reset() {
   problem.value = ''
   scan.value = null
   kind.value = ''
+  note.value = ''
   step.value = 'camera'
 }
 

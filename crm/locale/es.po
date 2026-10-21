@@ -27639,6 +27639,14 @@ msgid "What is it?"
 msgstr "¿Qué es?"
 
 #: frontend/src/components/captura/CameraSheet.vue
+msgid "Description or order (optional)"
+msgstr "Descripción u orden (opcional)"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "For example: what you bought, or the purchase order"
+msgstr "Por ejemplo: qué compraste, o la orden de compra"
+
+#: frontend/src/components/captura/CameraSheet.vue
 msgid "Your user cannot record any of these documents. Ask whoever manages Muelle for access."
 msgstr "Tu usuario no puede registrar ninguno de estos documentos. Pide acceso a quien administra Muelle."
 

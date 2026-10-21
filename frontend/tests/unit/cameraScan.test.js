@@ -177,6 +177,14 @@ describe('«¿Qué es?» choices', () => {
   })
 })
 
+describe('«¿Qué es?» description', () => {
+  it('sends the description with the capture, only on capture kinds', () => {
+    const sheet = source('components/captura/CameraSheet.vue')
+    expect(sheet).toMatch(/captureScan\(\{[^}]*note: note\.value\.trim\(\)/)
+    expect(sheet).toMatch(/v-if="chosen\?\.target"\s+v-model="note"/)
+  })
+})
+
 describe('camera door', () => {
   it('opens once and settles with the result or null', async () => {
     const first = openCamera({ targets: ['Purchase Invoice'] })
