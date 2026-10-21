@@ -492,7 +492,7 @@ import AvisosList from '@/components/avisos/AvisosList.vue'
 import CompleteDialog from '@/components/pendientes/CompleteDialog.vue'
 import { isMobile } from '@/composables/breakpoint'
 import { BottomSheet, ListRow } from '@/components/ui'
-import { shellBoot } from '@/composables/muelleShell'
+import { currentScope, shellBoot } from '@/composables/muelleShell'
 import {
   HOY_HOME,
   LIVE_DOCTYPES,
@@ -528,6 +528,7 @@ import {
   requestId,
 } from '@/composables/usePendientes'
 import { formatDay } from '@/utils/contactos'
+import { readCachedHoy, writeCachedHoy } from '@/utils/hoyCache'
 import { useLiveWatch } from '@/vendor/muelle-shell/live-sync/vue'
 
 const route = useRoute()
@@ -696,11 +697,23 @@ const avisosCollapsed = computed(() => {
 
 let sequence = 0
 const gate = createReadGate()
+function showAnswer(answer) {
+  data.value = answer
+  problem.value = ''
+  drafts.value = scanDrafts(undefined, {
+    user: answer?.user || shellBoot.value?.user?.name || '',
+  })
+}
 async function refresh({ quiet = false, fresh = true } = {}) {
   const request = ++sequence
   gate.start()
   loading.value = true
   if (!quiet) problem.value = ''
+  // A return visit paints its last answer at once; the read below replaces it.
+  if (!data.value && !fresh) {
+    const saved = readCachedHoy(currentScope())
+    if (saved) showAnswer(saved)
+  }
   const skeletonTimer = setTimeout(() => {
     if (request === sequence && !data.value) skeleton.value = true
   }, 150)
@@ -710,11 +723,8 @@ async function refresh({ quiet = false, fresh = true } = {}) {
   try {
     const answer = await loadHoy({ fresh })
     if (request !== sequence) return
-    data.value = answer
-    problem.value = ''
-    drafts.value = scanDrafts(undefined, {
-      user: answer?.user || shellBoot.value?.user?.name || '',
-    })
+    writeCachedHoy(currentScope(), answer)
+    showAnswer(answer)
   } catch (error) {
     if (request !== sequence) return
     const reason =

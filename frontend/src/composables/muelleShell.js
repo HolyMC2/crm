@@ -74,7 +74,7 @@ export function refused(error) {
   )
 }
 
-function currentScope() {
+export function currentScope() {
   const cookieUser =
     document.cookie
       .split('; ')
