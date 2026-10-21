@@ -39,9 +39,26 @@
         @keydown.enter.exact.prevent="save"
       />
       <!-- es-MX date and 24 h time (D1's DateField), never the browser's
-           mm/dd/yyyy; «Quitar» under Vence is «sin fecha». -->
+           mm/dd/yyyy; «Quitar» under Vence is «sin fecha». The day presets
+           come first, the same ones the row and Hoy offer: one tap for the usual day. -->
       <div class="space-y-1.5">
         <span class="block text-xs text-ink-gray-5">{{ __('Due') }}</span>
+        <div
+          v-if="presets.length"
+          class="flex flex-wrap gap-2"
+          role="group"
+          :aria-label="__('Due')"
+        >
+          <Button
+            v-for="preset in presets"
+            :key="preset.value"
+            class="min-h-11 sm:min-h-8"
+            :variant="form.date === preset.value ? 'subtle' : 'ghost'"
+            :aria-pressed="form.date === preset.value"
+            :label="preset.label"
+            @click="form.date = preset.value"
+          />
+        </div>
         <DateField v-model="form.date" mode="date" :label="__('Due')" />
       </div>
       <div v-if="form.date" class="flex flex-wrap items-end gap-3">
@@ -297,6 +314,7 @@ import { initials, kindLabel } from '@/utils/display'
 import { shellBoot } from '@/composables/muelleShell'
 import {
   REPEATS,
+  datePresets,
   pendienteError,
   pendientesApi,
   priorityLabel,
@@ -361,6 +379,7 @@ const priorities = computed(() =>
     label: priorityLabel(value),
   })),
 )
+const presets = computed(() => datePresets(props.today))
 const reminders = computed(() => {
   const options = reminderOptions(form.date, form.time)
   // A stored reminder that is none of the presets stays choosable.

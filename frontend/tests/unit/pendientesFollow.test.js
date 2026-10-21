@@ -213,6 +213,30 @@ describe('CreateDialog Vence/Hora', () => {
     })
   })
 
+  it('offers the day presets from the server today; one tap moves Vence and is what gets saved', async () => {
+    state.api.mockResolvedValue({ row: { name: 'new' } })
+    mount(CreateDialog, { modelValue: true, today: '2026-10-18' })
+    await flush()
+    const preset = (label) =>
+      [...root.querySelectorAll('button')].find(
+        (b) => b.textContent.trim() === label,
+      )
+    expect(preset('Today').getAttribute('aria-pressed')).toBe('true')
+    preset('Tomorrow').click()
+    await nextTick()
+    expect(preset('Tomorrow').getAttribute('aria-pressed')).toBe('true')
+    expect(preset('Today').getAttribute('aria-pressed')).toBe('false')
+    type(root.querySelector('textarea'), 'Llamar a Ana')
+    root.querySelector('form').dispatchEvent(new Event('submit'))
+    await flush()
+    const [method, args] = state.api.mock.calls.at(-1)
+    expect(method).toBe('create')
+    expect(args).toMatchObject({
+      description: 'Llamar a Ana',
+      date: '2026-10-19',
+    })
+  })
+
   it('shows a stored «HH:MM» as «HH:MM:SS» and «No time» (Sin hora) clears only the time', async () => {
     mount(CreateDialog, {
       modelValue: true,
