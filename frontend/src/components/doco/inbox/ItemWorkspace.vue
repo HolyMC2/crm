@@ -47,7 +47,7 @@
             :disabled="!data?.can_write || busy"
             variant="solid"
             icon-left="plus"
-            @click="pickerOpen = true"
+            @click="openPicker"
             >{{ __('Agregar artículos') }}</Button
           >
         </div>
@@ -461,6 +461,7 @@
       v-model="pickerOpen"
       :busy="busy"
       :save-error="error"
+      :quote-codes="quoteCodes"
       @add="addItems"
     />
     <Dialog
@@ -674,6 +675,10 @@ const editable = computed(
     detail.value?.doctype === 'Quotation' &&
     detail.value?.docstatus === 0,
 )
+// The open draft's item codes: the picker counts its lines against the quote cap.
+const quoteCodes = computed(() =>
+  editable.value ? detail.value.lines.map((line) => line.item_code) : [],
+)
 const documentTypes = computed(() => [
   ...new Set(data.value?.documents.map((d) => d.doctype) || []),
 ])
@@ -750,6 +755,12 @@ async function mutate(action, success) {
   } finally {
     if (alive) busy.value = false
   }
+}
+// The picker shows only its own save errors: an error left by another action
+// (a line edit, a failed load) must not stay on the sheet when it opens.
+function openPicker() {
+  error.value = ''
+  pickerOpen.value = true
 }
 function addItems(items) {
   return mutate(

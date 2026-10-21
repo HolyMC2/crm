@@ -10,6 +10,13 @@ a large out-of-stock prefix.
 - Add catalog items with quantities, including optional out-of-stock results.
   Save into the deal's latest draft quotation, creating one if needed. Search
   selections survive subsequent searches. ERP pricing and validation remain authoritative.
+- A draft holds at most 30 lines (`deal_quotes._MAX_LINES`). The picker counts the
+  lines of the open draft against that cap, and a pick of an item the draft already
+  has only raises that line's quantity. The server applies the same cap to the newest
+  draft and refuses a save that would exceed it, with nothing changed. When the open
+  draft is not the newest one, the server's refusal is what stops the save.
+- On a phone the picker is a bottom sheet. With an unsaved selection it closes only
+  through «Cancelar», so a stray swipe cannot drop the picks.
 - Select a quotation, order, invoice or POS invoice to see its item table.
   Draft quotation quantities can be changed and lines removed.
 - Create a sales order after an explicit confirmation that submits the quotation.
@@ -38,7 +45,11 @@ The tenant's sales-document feature flag and existing sales-role gates apply.
 
 ## Implementation and rollout
 
-- CRM: `ItemWorkspace.vue`, `WorkspaceItemPicker.vue`, shared `DealWorkspace.vue`.
+- CRM: `ItemWorkspace.vue`, `WorkspaceItemPicker.vue` (a `BottomSheet`; its cap rule
+  is `utils/itemPicker.js`), shared `DealWorkspace.vue`.
+- Known gap: the catalog search sends stock as a whole number
+  (`doco_marketing/services/catalog.py`, `int(...)`), so a stock between 0 and 1
+  reads «Sin existencias (0)».
 - Marketing: `api/item_workspace.py`; existing quotation API remains authoritative.
 - Doco: `docoutils/customers.py` resolves valid tenant sales defaults without
   assuming English names or selecting an ambiguous classification.
@@ -51,7 +62,7 @@ Settings defaults using its existing Individual group and Mexico territory.
 Production rollout requires all three app changes plus checking these prerequisites
 on each target tenant. Do not enable the parallel native ERPNext CRM bridge.
 
-Validation: `frontend/tests/unit/itemWorkspace.test.js`,
+Validation: `frontend/tests/unit/itemPicker.test.js`, `frontend/tests/unit/itemWorkspace.test.js`,
 `doco_marketing.tests.test_item_workspace`, and
 `doco.docoutils.test_customer_tree_defaults`. Backend workflow tests use synthetic
 non-stock items and roll back all documents; they do not submit invoices or send messages.
