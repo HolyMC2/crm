@@ -84,7 +84,7 @@ import PaneState from '@/components/shell/PaneState.vue'
 import { Segmented } from '@/components/ui'
 const phoneSpaces = [
   { value: 'conversations', label: __('Chats') },
-  { value: 'activity', label: __('Tratos') },
+  { value: 'activity', label: __('Actividad') },
   { value: 'review', label: __('Por aprobar') },
 ]
 // «Negocios y actividad» is its own chunk: say it is loading (after 200 ms)
