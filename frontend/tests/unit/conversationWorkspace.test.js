@@ -264,6 +264,21 @@ describe('read-only customer presentation', () => {
     await nextTick()
     expect(retried).toHaveBeenCalledOnce()
   })
+  it('explains control only while a change is pending or no action is allowed', () => {
+    const hint = 'El control determina quién puede responder'
+    const ready = mount(ConversationControls, { conversation: doc() })
+    expect(ready.textContent).not.toContain(hint)
+    expect(ready.textContent).toContain('Atención humana · Sin responsable')
+    const pending = mount(ConversationControls, {
+      conversation: doc(),
+      pending: { command_id: 'same' },
+    })
+    expect(pending.textContent).toContain(hint)
+    const none = mount(ConversationControls, {
+      conversation: doc({ allowed_actions: [] }),
+    })
+    expect(none.textContent).toContain(hint)
+  })
 })
 
 describe('provider ownership verification', () => {

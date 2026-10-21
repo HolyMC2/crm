@@ -155,9 +155,28 @@ describe('catalog context and conversation authority', () => {
     expect(el.textContent).toContain('Carritos recibidos')
     expect(el.textContent).toContain('cart-1 · 2 líneas')
     expect(el.textContent).toContain(
-      'Facebook Shop y Marketplace tienen capacidades independientes',
+      'Solo usa el catálogo de WhatsApp, no Facebook Shop ni Marketplace',
     )
     expect(calls('get_cart')).toHaveLength(0)
+  })
+  it('starts collapsed with one summary line and collapses again on a conversation switch', async () => {
+    api.call.mockResolvedValue(context())
+    const { el, props } = await mount(Commerce, {
+      conversation: conversation(),
+      actor,
+    })
+    const details = el.querySelector('details')
+    expect(details.open).toBe(false)
+    expect(el.querySelector('summary').textContent).toBe(
+      'Catálogo y pedidos · Sin carritos recibidos',
+    )
+    el.querySelector('summary').click()
+    await flush()
+    expect(details.open).toBe(true)
+    props.conversation = { ...conversation(), name: 'conv-2' }
+    await flush()
+    expect(details.open).toBe(false)
+    expect(calls('get_context')).toHaveLength(2)
   })
   it('ignores a late context response after switching conversation', async () => {
     let old

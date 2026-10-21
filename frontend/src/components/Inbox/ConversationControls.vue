@@ -7,9 +7,14 @@
       {{ labels[conversation.control_state] || conversation.control_state }} ·
       {{ conversation.human_owner || 'Sin responsable' }}
     </p>
-    <p class="mt-1 text-xs text-ink-gray-5">
-      El control determina quién puede responder. Un envío ya iniciado puede
-      seguir en curso.
+    <!-- Explain control only when the operator cannot act right away; on a
+         phone those two lines come out of the message thread. -->
+    <p v-if="pending || !actions.length" class="mt-1 text-xs text-ink-gray-5">
+      {{
+        __(
+          'El control determina quién puede responder. Un envío ya iniciado puede seguir en curso.',
+        )
+      }}
     </p>
     <div v-if="canVerifyProvider" class="mt-2 text-xs">
       <button
@@ -55,20 +60,31 @@
       class="mt-3 flex min-w-0 flex-wrap items-end gap-2"
       @submit.prevent="submit"
     >
-      <label class="min-w-0 flex-1 text-xs"
-        >Acción
-        <select
-          v-model="action"
-          :disabled="busy"
-          class="mt-1 block w-full rounded border border-outline-gray-2 bg-surface-base p-2 text-sm text-ink-gray-8"
-          @change="changed"
+      <!-- Action and submit share one row, also on a phone; the fields an
+           action needs follow below it. -->
+      <div class="flex w-full min-w-0 items-end gap-2">
+        <label class="min-w-0 flex-1 text-xs"
+          >{{ __('Acción') }}
+          <select
+            v-model="action"
+            :disabled="busy"
+            class="mt-1 block min-h-11 w-full rounded border border-outline-gray-2 bg-surface-base p-2 text-sm text-ink-gray-8"
+            @change="changed"
+          >
+            <option value="" disabled>{{ __('Seleccionar acción') }}</option>
+            <option v-for="value in actions" :key="value" :value="value">
+              {{ actionLabels[value] }}
+            </option>
+          </select>
+        </label>
+        <button
+          type="submit"
+          class="min-h-11 shrink-0 rounded bg-surface-gray-10 px-3 py-2 text-sm text-ink-base"
+          :disabled="busy || !action"
         >
-          <option value="" disabled>Seleccionar acción</option>
-          <option v-for="value in actions" :key="value" :value="value">
-            {{ actionLabels[value] }}
-          </option>
-        </select>
-      </label>
+          {{ busy ? __('Aplicando…') : __('Aplicar cambio') }}
+        </button>
+      </div>
       <label v-if="action === 'transfer'" class="w-full text-xs"
         >Nuevo responsable
         <input
@@ -104,13 +120,6 @@
           class="mt-1 block w-full rounded border border-outline-gray-2 bg-surface-base p-2 text-sm text-ink-gray-8"
         />
       </label>
-      <button
-        type="submit"
-        class="rounded bg-surface-gray-10 px-3 py-2 text-sm text-ink-base"
-        :disabled="busy || !action"
-      >
-        {{ busy ? 'Aplicando…' : 'Aplicar cambio' }}
-      </button>
     </form>
     <p v-else class="mt-2 text-xs text-ink-gray-5">
       No hay acciones de control disponibles para tu acceso actual.

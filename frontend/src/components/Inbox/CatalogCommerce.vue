@@ -1,19 +1,21 @@
 <template>
-  <section
-    class="max-h-[55vh] min-w-0 shrink-0 overflow-y-auto border-t border-outline-gray-1 p-3 text-sm [overflow-wrap:anywhere]"
+  <!-- Collapsed by default like Envíos, so the thread keeps the height on a
+       phone. Closed content stays mounted: drafts and the load on mount are
+       unchanged. -->
+  <details
+    class="max-h-[55vh] min-h-0 min-w-0 overflow-y-auto border-t border-outline-gray-1 px-3 text-sm [overflow-wrap:anywhere]"
     aria-label="Catálogo y pedidos de WhatsApp"
+    :open="expanded || pending"
+    @toggle="expanded = $event.target.open"
   >
-    <div class="flex flex-wrap items-center justify-between gap-2">
-      <h3 class="font-semibold">{{ __('Catálogo y pedidos') }}</h3>
-      <button
-        type="button"
-        class="min-h-11 rounded px-3 text-xs underline focus-visible:ring-2"
-        :disabled="loading || pending || blocked"
-        @click="loadContext"
+    <summary
+      class="min-h-11 cursor-pointer truncate py-3 focus-visible:ring-2 focus-visible:ring-inset"
+    >
+      <h3 class="inline font-semibold">{{ __('Catálogo y pedidos') }}</h3>
+      <span v-if="summary" class="text-xs text-ink-gray-5">
+        · {{ summary }}</span
       >
-        {{ loading ? __('Cargando…') : __('Actualizar catálogo y carritos') }}
-      </button>
-    </div>
+    </summary>
     <p v-if="error" class="my-2" role="alert">{{ error }}</p>
     <template v-if="context">
       <p v-if="!context.available" class="py-2 text-xs text-ink-gray-5">
@@ -21,6 +23,13 @@
       </p>
       <template v-else>
         <p class="text-xs text-ink-gray-5">
+          {{
+            __(
+              'Solo usa el catálogo de WhatsApp, no Facebook Shop ni Marketplace.',
+            )
+          }}
+        </p>
+        <p class="mt-1 text-xs text-ink-gray-5">
           {{ __('Catálogo de WhatsApp') }} · {{ context.account_name }}
         </p>
         <p class="mt-1 text-xs text-ink-gray-5" role="status">
@@ -28,13 +37,6 @@
           <span v-if="context.connection?.checked_at">
             · {{ __('Consulta: {0}', [context.connection.checked_at]) }}
           </span>
-        </p>
-        <p class="mt-1 text-xs text-ink-gray-5">
-          {{
-            __(
-              'Facebook Shop y Marketplace tienen capacidades independientes; esta acción solo usa el catálogo de WhatsApp.',
-            )
-          }}
         </p>
         <button
           v-if="canOfferProducts"
@@ -52,9 +54,7 @@
         </button>
         <p v-if="!eligible" class="my-2 text-xs text-ink-gray-5">
           {{
-            __(
-              'Para enviar necesitas el control humano vigente y un canal disponible. Puedes consultar los carritos recibidos.',
-            )
+            __('Para enviar necesitas el control humano y un canal disponible.')
           }}
         </p>
         <CatalogProductPicker
@@ -114,7 +114,15 @@
         @created="loadContext"
       />
     </template>
-  </section>
+    <button
+      type="button"
+      class="min-h-11 rounded text-xs underline focus-visible:ring-2"
+      :disabled="loading || pending || blocked"
+      @click="loadContext"
+    >
+      {{ loading ? __('Cargando…') : __('Actualizar catálogo y carritos') }}
+    </button>
+  </details>
 </template>
 
 <script setup>
@@ -132,12 +140,26 @@ const emit = defineEmits(['pending', 'queued', 'refresh'])
 const context = ref(null),
   loading = ref(false),
   error = ref('')
-const showProducts = ref(false),
+const expanded = ref(false),
+  showProducts = ref(false),
   productOpened = ref(false),
   selectedCart = ref('')
 const productPending = ref(false),
   cartPending = ref(false)
 const pending = computed(() => productPending.value || cartPending.value)
+// The collapsed header keeps one line: what needs attention first, then the
+// received carts.
+const summary = computed(() => {
+  if (pending.value) return __('Acción pendiente')
+  if (error.value) return __('No se pudo consultar el catálogo')
+  if (!context.value) return loading.value ? __('Cargando…') : ''
+  const count = context.value.carts?.length || 0
+  if (count === 1) return __('1 carrito recibido')
+  if (count) return __('{0} carritos recibidos', [count])
+  return context.value.available
+    ? __('Sin carritos recibidos')
+    : __('No disponible')
+})
 let epoch = 0
 const eligible = computed(
   () =>
@@ -167,7 +189,7 @@ const connectionText = computed(() => {
       'La comprobación de la conexión venció. Un administrador puede actualizar el diagnóstico del catálogo.',
     )
   return __(
-    'El catálogo está configurado aquí; Meta todavía no ha confirmado su vínculo mediante la API. Revisa WhatsApp Manager si rechaza el envío.',
+    'Meta aún no confirma el vínculo del catálogo por API; si rechaza el envío, revisa WhatsApp Manager.',
   )
 })
 function reasonText(code) {
@@ -235,6 +257,7 @@ watch(
     context.value = null
     error.value = ''
     loading.value = false
+    expanded.value = false
     showProducts.value = false
     productOpened.value = false
     selectedCart.value = ''

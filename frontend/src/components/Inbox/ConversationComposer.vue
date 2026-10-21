@@ -1,6 +1,6 @@
 <template>
   <section
-    class="min-w-0 shrink-0 border-t border-outline-gray-1 p-3 pb-16 text-sm [overflow-wrap:anywhere]"
+    class="min-w-0 shrink-0 border-t border-outline-gray-1 p-3 text-sm [overflow-wrap:anywhere]"
     aria-label="Responder al cliente"
   >
     <p v-if="error" role="alert" class="mb-2">{{ error }}</p>
