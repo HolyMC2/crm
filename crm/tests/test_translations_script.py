@@ -16,7 +16,9 @@ def _request(headers: dict | None = None) -> Request:
 
 class TestTranslationsScript(FrappeTestCase):
 	def test_boot_no_longer_inlines_the_dictionary(self):
-		self.assertNotIn("translated_messages", get_boot())
+		# get_boot asks for a CSRF token, which needs a request session that a unit test does not have.
+		with patch("frappe.sessions.get_csrf_token", return_value="token"):
+			self.assertNotIn("translated_messages", get_boot())
 
 	def test_script_sets_the_dictionary_as_javascript(self):
 		with (
