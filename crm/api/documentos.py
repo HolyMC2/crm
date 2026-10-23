@@ -129,6 +129,9 @@ DISPLAY = {
 		"title": ("purpose",),
 		"stock": ("purpose", "set_warehouse"),
 		"lines": "items",
+		# The hero amount is what the count moved (Stock Reconciliation Item's
+		# amount_difference), not the value it counted: «Diferencia · -$300.00».
+		"amount": "difference_amount",
 		"date": "posting_date",
 	},
 	"Stock Ledger Entry": {"title": ("item_code",), "date": "posting_date"},
@@ -169,6 +172,12 @@ _ITEM_FIELDS = (
 	"billed_amt",
 	"ordered_qty",
 )
+# What an Ajuste's own rows say that no other document's rows do: the quantity found on
+# hand and how far the count moved it (Stock Reconciliation Item). `_items()` adds them
+# for a Stock Reconciliation only; the form and editor paths keep `_ITEM_FIELDS` as is.
+_ITEM_EXTRAS = {
+	"Stock Reconciliation": ("current_qty", "quantity_difference", "amount_difference"),
+}
 _TOTAL_FIELDS = (
 	"total_qty",
 	"net_total",
@@ -958,13 +967,15 @@ def _items(doc):
 		"POS Invoice": {"delivered_qty"},
 		"Delivery Note": {"received_qty"},
 	}.get(doc.doctype, set())
+	# A stock count says what it changed: «antes 10 · ahora 7 · diferencia -3».
+	fields = (*_ITEM_FIELDS, *_ITEM_EXTRAS.get(doc.doctype, ()))
 	rows = []
 	for row in doc.get(table.fieldname) or []:
 		rows.append(
 			{
 				"name": row.name,
 				"_idx": cint(row.idx),
-				**{f: row.get(f) for f in _ITEM_FIELDS if f not in skip and row.get(f) not in (None, "")},
+				**{f: row.get(f) for f in fields if f not in skip and row.get(f) not in (None, "")},
 			}
 		)
 	return {"fieldname": table.fieldname, "label": _(table.label or "Items"), "rows": rows}

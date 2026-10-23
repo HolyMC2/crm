@@ -231,6 +231,30 @@ class TestDocumentosStock(IntegrationTestCase):
 			"Stock Reconciliation", filters=[["name", "=", count.name]], fields=["_items"]
 		)["rows"][0]
 		self.assertEqual(ajuste["items"]["target"], self.centro)
+		# An Ajuste's rows say what the count found and moved; another document's do not.
+		self.assertNotIn(
+			"current_qty", documentos._items(frappe.get_doc("Stock Entry", entry.name))["rows"][0]
+		)
+
+	def test_a_count_row_says_the_quantity_on_hand_and_what_it_moved(self):
+		count = self._reconciliation([(self.item_a, 7)])
+		frappe.set_user(self._stock_manager())
+		items = documentos.record("Stock Reconciliation", count.name)["items"]
+		self.assertEqual(items["fieldname"], "items")
+		row = items["rows"][0]
+		# The row carries the before, the after and the difference, not only the count.
+		self.assertEqual(row["warehouse"], self.centro)
+		self.assertEqual(float(row["current_qty"]), 0.0)
+		self.assertEqual(float(row["qty"]), 7.0)
+		self.assertEqual(float(row["quantity_difference"]), 7.0)
+		self.assertEqual(float(row["amount_difference"]), 70.0)  # _reconciliation values at 10
+
+	def test_a_count_header_reads_the_amount_it_moved(self):
+		count = self._reconciliation([(self.item_a, 7)])
+		frappe.set_user(self._stock_manager())
+		header = documentos.record("Stock Reconciliation", count.name)["header"]
+		# The hero amount is the movement, not the value the count left behind.
+		self.assertEqual(float(header["amount"]), 70.0)
 
 	def test_reconciliation_rows_say_the_store_and_count_only_their_own_rows(self):
 		two = self._reconciliation([(self.item_a, 5), (self.item_b, 3)])
