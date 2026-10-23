@@ -16,7 +16,7 @@
       :aria-expanded="String(open)"
       aria-haspopup="listbox"
       :data-field="field"
-      @click="open = !open"
+      @click="toggle"
     >
       <span
         class="min-w-0 flex-1 truncate"
@@ -36,6 +36,7 @@
     </button>
     <ul
       v-if="open"
+      ref="listEl"
       role="listbox"
       :aria-label="label"
       class="mt-2 max-h-72 overflow-y-auto rounded-lg border border-outline-gray-2 bg-surface-base p-1 shadow-sm"
@@ -71,7 +72,7 @@
   </div>
 </template>
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 
 // The choices come from the server (the ready expense types, the people who may
 // decide); this control only shows them and hands the picked value back.
@@ -87,12 +88,20 @@ const props = defineProps({
 })
 const emit = defineEmits(['update:modelValue'])
 const open = ref(false)
+const listEl = ref(null)
 const selected = computed(() =>
   props.options.find((option) => option.value === props.modelValue),
 )
 const showLabel = computed(() =>
   selected.value ? `${props.label}: ${selected.value.label}` : props.label,
 )
+async function toggle() {
+  open.value = !open.value
+  if (!open.value) return
+  // The sheet scrolls: bring the choices into sight, never half under the actions.
+  await nextTick()
+  listEl.value?.scrollIntoView?.({ block: 'nearest' })
+}
 function choose(value) {
   emit('update:modelValue', value)
   open.value = false
