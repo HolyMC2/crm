@@ -1161,6 +1161,14 @@ _ROW_DIFF_SKIP = frozenset(
 		"expense_account",
 		"cost_center",
 		"project",
+		# Tax and payment rows only mirror the header totals a save recalculates
+		# («tax_amount», «total», «payment_amount», «outstanding»): the header diff
+		# already tells that money moved, so they do not make a row event of their own.
+		"tax_amount",
+		"tax_amount_after_discount_amount",
+		"total",
+		"payment_amount",
+		"outstanding",
 	}
 )
 # What a worker changed in a row first: the item, then how much, then the rest.
