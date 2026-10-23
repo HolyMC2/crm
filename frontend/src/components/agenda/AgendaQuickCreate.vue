@@ -97,6 +97,101 @@
         </div>
       </div>
 
+      <template v-if="kind === 'task'">
+        <!-- «Para», priority and details reach the native pendiente: the task keeps
+             being one task in Pendientes, ERPNext and the CRM, not a grid copy. -->
+        <div class="ag-qc__row">
+          <span class="lucide-user h-5 w-5" aria-hidden="true" />
+          <button
+            type="button"
+            class="ag-qc__input ag-qc__person"
+            :aria-expanded="String(peopleOpen)"
+            :aria-label="__('For', null, 'Pendiente')"
+            @click="togglePerson"
+          >
+            <span class="truncate">{{
+              assignee ? assignee.name : __('Me')
+            }}</span>
+            <span class="lucide-chevron-down h-4 w-4" aria-hidden="true" />
+          </button>
+        </div>
+        <div
+          v-if="peopleOpen"
+          class="ag-qc__people"
+          role="group"
+          :aria-label="__('For', null, 'Pendiente')"
+        >
+          <input
+            v-model="peopleQuery"
+            type="search"
+            class="ag-qc__input ag-qc__search"
+            :placeholder="__('Search a coworker')"
+            :aria-label="__('Search a coworker')"
+            autocomplete="off"
+          />
+          <ul role="listbox" :aria-label="__('For', null, 'Pendiente')">
+            <li>
+              <button
+                type="button"
+                role="option"
+                class="ag-qc__option"
+                :aria-selected="String(!assignee)"
+                @click="pickPerson(null)"
+              >
+                <span class="truncate">{{ __('Me') }}</span>
+                <span
+                  v-if="!assignee"
+                  class="lucide-check h-4 w-4"
+                  aria-hidden="true"
+                />
+              </button>
+            </li>
+            <li v-for="person in people" :key="person.user">
+              <button
+                type="button"
+                role="option"
+                class="ag-qc__option"
+                :aria-selected="String(assignee?.user === person.user)"
+                @click="pickPerson(person)"
+              >
+                <span class="truncate">{{ person.name }}</span>
+                <span
+                  v-if="assignee?.user === person.user"
+                  class="lucide-check h-4 w-4"
+                  aria-hidden="true"
+                />
+              </button>
+            </li>
+          </ul>
+        </div>
+        <div class="ag-qc__row">
+          <span class="lucide-flag h-5 w-5" aria-hidden="true" />
+          <div class="ag-qc__chips" role="group" :aria-label="__('Priority')">
+            <button
+              v-for="option in priorities"
+              :key="option.value"
+              type="button"
+              class="ag-qc__chip"
+              :aria-pressed="String(form.priority === option.value)"
+              @click="form.priority = option.value"
+            >
+              {{ option.label }}
+            </button>
+          </div>
+        </div>
+        <div class="ag-qc__row ag-qc__row--top">
+          <span class="lucide-align-left h-5 w-5" aria-hidden="true" />
+          <textarea
+            v-model="form.notes"
+            class="ag-qc__input ag-qc__notes"
+            rows="2"
+            maxlength="8000"
+            :placeholder="__('Add details')"
+            :aria-label="__('Notes')"
+          />
+        </div>
+      </template>
+
       <template v-if="kind === 'event'">
         <div class="ag-qc__row">
           <span class="lucide-map-pin h-5 w-5" aria-hidden="true" />
@@ -181,12 +276,7 @@
       />
     </div>
     <div class="ag-qc__foot">
-      <Button
-        v-if="kind === 'event'"
-        variant="ghost"
-        :label="__('More options')"
-        @click="more"
-      />
+      <Button variant="ghost" :label="__('More options')" @click="more" />
       <Button
         variant="solid"
         type="submit"
@@ -201,7 +291,11 @@ import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { Button } from 'frappe-ui'
 import AgendaGuard from '@/components/agenda/AgendaGuard.vue'
 import { PALETTE, textOn } from '@/components/agenda/agendaColors'
-import { instantToWall, wallToInstant } from '@/composables/useAgenda'
+import {
+  instantToWall,
+  taskPeople,
+  wallToInstant,
+} from '@/composables/useAgenda'
 
 const props = defineProps({
   draft: { type: Object, required: true }, // { start, end, allDay, kind }
@@ -228,6 +322,38 @@ const tabs = [
 const kind = ref(props.draft.kind || 'event')
 const titleInput = ref(null)
 const error = ref('')
+const priorities = [
+  { value: 'Low', label: __('Low') },
+  { value: 'Medium', label: __('Medium') },
+  { value: 'High', label: __('High') },
+]
+// «Para»: the quick card starts on «Me»; coworkers load only when the row is opened.
+const assignee = ref(null)
+const people = ref([])
+const peopleOpen = ref(false)
+const peopleQuery = ref('')
+let peopleTimer = 0
+async function loadPeople() {
+  try {
+    const response = await taskPeople(peopleQuery.value.trim())
+    people.value = (response?.rows || []).filter((person) => !person.me)
+  } catch {
+    people.value = []
+  }
+}
+watch(peopleQuery, () => {
+  clearTimeout(peopleTimer)
+  peopleTimer = setTimeout(loadPeople, 200)
+})
+function togglePerson() {
+  peopleOpen.value = !peopleOpen.value
+  if (peopleOpen.value) loadPeople()
+}
+function pickPerson(person) {
+  assignee.value = person ? { user: person.user, name: person.name } : null
+  peopleOpen.value = false
+  peopleQuery.value = ''
+}
 
 function lastDay(endInstant) {
   const end = instantToWall(endInstant, props.timeZone)
@@ -247,6 +373,8 @@ const form = reactive({
   allDay: Boolean(props.draft.allDay),
   location: '',
   color: '',
+  priority: 'Medium',
+  notes: '',
 })
 
 function times() {
@@ -323,6 +451,10 @@ function payload() {
     allDay: form.allDay,
     location: form.location.trim(),
     color: form.color,
+    priority: form.priority,
+    notes: form.notes.trim(),
+    assignedTo: assignee.value?.user || '',
+    assignedName: assignee.value?.name || '',
   }
 }
 function save() {
@@ -463,6 +595,86 @@ onMounted(async () => {
 .ag-qc__plain:hover,
 .ag-qc__plain:focus {
   background: var(--surface-gray-2);
+}
+/* Phone-sized: a 36 px row to tap, and the people list scrolls instead of the card. */
+.ag-qc__person {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+  height: 36px;
+  text-align: left;
+}
+.ag-qc__person:hover {
+  background: var(--surface-gray-3);
+}
+.ag-qc__people {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 208px;
+  margin-left: 36px;
+  overflow-y: auto;
+}
+.ag-qc__search {
+  flex: none;
+  width: 100%;
+  height: 36px;
+  background: var(--surface-gray-1);
+}
+.ag-qc__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-height: 36px;
+  padding: 0 8px;
+  border-radius: 6px;
+  color: var(--ink-gray-8);
+  font-size: 14px;
+  text-align: left;
+}
+.ag-qc__option:hover {
+  background: var(--surface-gray-1);
+}
+.ag-qc__option[aria-selected='true'] {
+  background: var(--surface-gray-2);
+  color: var(--ink-gray-9);
+}
+.ag-qc__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.ag-qc__chip {
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--surface-gray-2);
+  color: var(--ink-gray-7);
+  font-size: 13px;
+  font-weight: 500;
+}
+.ag-qc__chip:hover {
+  background: var(--surface-gray-3);
+}
+.ag-qc__chip[aria-pressed='true'] {
+  background: var(--ag-select-strong);
+  color: var(--ag-accent-ink);
+}
+.ag-qc__row--top {
+  align-items: flex-start;
+}
+.ag-qc__notes {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: auto;
+  padding: 7px 8px;
+  line-height: 1.35;
+  resize: none;
 }
 .ag-qc__swatch {
   display: grid;

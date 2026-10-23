@@ -587,6 +587,15 @@
       </div>
     </BottomSheet>
 
+    <!-- «Más opciones» on a task: the shared pendiente sheet, prefilled from the card -->
+    <CreateDialog
+      :model-value="Boolean(taskSheet)"
+      :today="state.date"
+      :prefill="taskSheet"
+      @update:model-value="(value) => !value && (taskSheet = null)"
+      @created="afterTaskSheet"
+    />
+
     <!-- event details: a card beside the chip (desktop), a sheet (phone) -->
     <AgendaPopover
       v-if="selectedEvent && !phone"
@@ -795,6 +804,7 @@ import AgendaSearch from '@/components/agenda/AgendaSearch.vue'
 import AgendaSettings from '@/components/agenda/AgendaSettings.vue'
 import AgendaSidebar from '@/components/agenda/AgendaSidebar.vue'
 import AgendaTimeGrid from '@/components/agenda/AgendaTimeGrid.vue'
+import CreateDialog from '@/components/pendientes/CreateDialog.vue'
 import {
   defaultCalendarColor,
   eventColor,
@@ -911,6 +921,8 @@ const detailError = ref('')
 const panelConstraints = ref([])
 const form = ref(null)
 const quick = ref(null)
+// «Más opciones» on a task: the shared pendiente sheet, prefilled from the card.
+const taskSheet = ref(null)
 const calendarRoot = ref(null)
 const anchorRect = ref(null)
 const drawer = ref(false)
@@ -1635,7 +1647,8 @@ const panelHandlers = {
   'task-done': () => taskStatus(selectedEvent.value, 'complete'),
   'task-reopen': () => taskStatus(selectedEvent.value, 'reopen'),
   'open-task': () =>
-    selectedEvent.value && router.push(taskRoute(selectedEvent.value)),
+    selectedEvent.value &&
+    router.push(taskRoute(selectedEvent.value, agendaPath())),
   'open-native': () => commonAction('open_native', selectedEvent.value),
   reassign: (id) => reassign(selectedEvent.value, id),
   'cita-action': (id) => runCitaAction(id),
@@ -2169,15 +2182,26 @@ async function saveQuick(payload, confirm = 0) {
   busy.value = true
   try {
     if (payload.kind === 'task') {
-      await createTask({
+      const result = await createTask({
         title: payload.title,
         date: payload.date,
         reference: current.context?.reference,
+        assignedTo: payload.assignedTo,
+        priority: payload.priority,
+        notes: payload.notes,
       })
       quick.value = null
       invalidate()
       await load({ quiet: true })
-      toast.success(__('Task saved'))
+      toast.success(__('Task saved'), {
+        action: {
+          label: __('Open task'),
+          onClick: () =>
+            result?.row &&
+            router.push(taskRoute({ task: result.row }, agendaPath())),
+        },
+        duration: 6000,
+      })
       return
     }
     const result = await createEvent('Event', {
@@ -2225,6 +2249,21 @@ function quickGuardAction(id) {
 function quickMore(payload) {
   const current = quick.value
   quick.value = null
+  if (payload.kind === 'task') {
+    // The full sheet every other source uses, carrying what the card already knows.
+    taskSheet.value = {
+      title: payload.title,
+      date: payload.date,
+      priority: payload.priority,
+      notes: payload.notes,
+      assigned_to: payload.assignedTo || '',
+      assigned_name: payload.assignedName || '',
+      reference_type: current?.context?.reference?.doctype || '',
+      reference_name: current?.context?.reference?.name || '',
+      reference_label: current?.context?.reference?.label || '',
+    }
+    return
+  }
   openCreate({
     title: payload.title,
     start: payload.start,
@@ -2233,6 +2272,20 @@ function quickMore(payload) {
     location: payload.location,
     color: payload.color,
     ...(current?.context || {}),
+  })
+}
+// A pendiente saved from the full sheet: the grid refreshes with the same task
+// (or none, when it went to a coworker), and its native record is one tap away.
+function afterTaskSheet(row) {
+  taskSheet.value = null
+  invalidate()
+  load({ quiet: true })
+  toast.success(__('Task saved'), {
+    action: {
+      label: __('Open task'),
+      onClick: () => row && router.push(taskRoute({ task: row }, agendaPath())),
+    },
+    duration: 6000,
   })
 }
 

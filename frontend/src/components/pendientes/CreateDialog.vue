@@ -316,6 +316,8 @@ const props = defineProps({
   row: { type: Object, default: null },
   /** Open on one detail (the record's «Para» or «Recordarme»). */
   focus: { type: String, default: '' },
+  /** Prefilled values for a new pendiente (the Agenda's «Más opciones»). */
+  prefill: { type: Object, default: null },
   // Kept for callers that still pass it; sales tasks are created here now.
   salesTask: { type: Boolean, default: false },
 })
@@ -443,9 +445,14 @@ watch(
     if (!isOpen) return
     problem.value = null
     if (editing.value) fill(props.row)
+    else if (props.prefill)
+      Object.assign(form, blank(), { date: props.today }, props.prefill)
     else if (!form.title && !dirty.value)
       Object.assign(form, blank(), { date: props.today })
-    if (!editing.value) initial = { ...blank(), date: props.today }
+    if (!editing.value)
+      initial = props.prefill
+        ? { ...blank(), date: props.today, ...props.prefill }
+        : { ...blank(), date: props.today }
     open.value = props.focus || ''
     await nextTick()
     if (!props.focus)

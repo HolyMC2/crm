@@ -659,9 +659,21 @@ export function taskToEvent(row, timeZone) {
   }
 }
 
-export function taskRoute(event) {
+/**
+ * The pendiente behind a task chip (a native ToDo or CRM Task).
+ * `back` is the Agenda URL to return to («Volver a Agenda»), with its view, day and
+ * open event; only a same-shell path is accepted, as everywhere in the shell.
+ */
+export function taskRoute(event, back = '') {
   const row = event.task || {}
-  return `/pendientes/${TASK_SLUGS[row.doctype] || 'todo'}/${encodeURIComponent(String(row.name))}`
+  const path = `/pendientes/${TASK_SLUGS[row.doctype] || 'todo'}/${encodeURIComponent(String(row.name))}`
+  const returnTo = safeReturn(back)
+  if (!returnTo) return path
+  const query = new URLSearchParams({
+    return_to: returnTo,
+    return_label: 'Agenda',
+  })
+  return `${path}?${query.toString()}`
 }
 
 const PENDIENTES = 'doco.pendientes.api'
@@ -725,15 +737,31 @@ export const rescheduleTask = (event, date) =>
     date,
     request_id: requestId(),
   })
-export const createTask = ({ title, date, reference }) =>
+// A task is one native task, through the same writer «Nuevo pendiente» and the
+// record pages use (doco.pendientes.api.create): on a Lead/Deal a CRM Task linked
+// to the record, anywhere else an ERPNext ToDo. Agenda never keeps its own copy.
+export const createTask = ({
+  title,
+  date,
+  reference,
+  assignedTo = '',
+  priority = 'Medium',
+  notes = '',
+}) =>
   call(`${PENDIENTES}.create`, {
     description: title,
     date,
     request_id: requestId(),
-    priority: 'Medium',
+    priority,
+    notes,
+    assigned_to: assignedTo,
     reference_type: reference?.doctype || null,
     reference_name: reference?.name || null,
   })
+
+/** «Para»: the coworkers a task can go to; picked lazily by the quick card. */
+export const taskPeople = (search = '') =>
+  call(`${PENDIENTES}.people`, { search })
 
 // --- sync: Google Calendar and the subscription link ---------------------------------------
 const SYNC = 'doco.agenda.sync'
