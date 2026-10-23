@@ -1535,6 +1535,14 @@ useLiveWatch(
 // --- selection and panel --------------------------------------------------------------
 const selectedEvent = ref(null)
 const panelOpen = computed(() => Boolean(selectedEvent.value))
+// Sources with a panel projection (`doco.agenda.api.sources().canDetail`): Event always has
+// one; a source from another app adds the fields and the way back to its record.
+function canDetail(source) {
+  if (source === 'Event') return true
+  return Boolean(
+    caps.value?.sources?.find((row) => row.key === source)?.canDetail,
+  )
+}
 function select(event, rect = null) {
   closeQuick()
   anchorRect.value = rect
@@ -1563,10 +1571,12 @@ async function syncSelection() {
     (selectedEvent.value && eventKey(selectedEvent.value) === key
       ? selectedEvent.value
       : null)
-  if (!parsed || parsed.source !== 'Event') {
+  if (!parsed || !canDetail(parsed.source)) {
     detail.value = null
     return
   }
+  // Never render one source's detail under another source's event while it loads.
+  detail.value = null
   const request = ++detailRequest
   detailLoading.value = true
   detailError.value = ''

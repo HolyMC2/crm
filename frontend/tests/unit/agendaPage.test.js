@@ -274,6 +274,145 @@ describe('Agenda page', () => {
     ).not.toBeNull()
   })
 
+  // A source from another app (Taller: Repair Order promises) carries a goal panel: the
+  // fields its provider projects and one way into the order, with the way back to Agenda.
+  function externalAgenda({ detail }) {
+    return (method, args) => {
+      if (method === 'crm.api.agenda.get_capabilities')
+        return {
+          enabled: true,
+          user_time_zone: TZ,
+          sources: [
+            {
+              key: 'Event',
+              enabled: true,
+              timeZone: TZ,
+              canCreate: true,
+              canDetail: true,
+            },
+            {
+              key: 'Taller',
+              enabled: true,
+              timeZone: TZ,
+              label: 'Taller',
+              canDetail: true,
+            },
+          ],
+        }
+      if (method.endsWith('.query')) {
+        if (args.source === 'Taller')
+          return {
+            timeZone: TZ,
+            resources: [{ id: 'tec@example.test', title: 'Andrés' }],
+            events: [
+              event('RO-9', '2026-10-07T17:00:00Z', '2026-10-07T17:30:00Z', {
+                source: 'Taller',
+                title: 'RO-9 · Moto G53 · Luis',
+                kind: 'taller',
+                resourceIds: ['tec@example.test'],
+                status: 'En Trabajo',
+                referenceDoctype: 'Repair Order',
+                referenceName: 'RO-9',
+              }),
+            ],
+          }
+        return {
+          timeZone: TZ,
+          resources: [],
+          events: [
+            event('EV-1', '2026-10-07T16:00:00Z', '2026-10-07T17:00:00Z'),
+          ],
+        }
+      }
+      if (method.endsWith('.detail')) return detail(args)
+      return {}
+    }
+  }
+
+  it('shows another app’s record fields and one way into it, with the way back', async () => {
+    handler = externalAgenda({
+      detail: () => ({
+        id: 'RO-9',
+        reference: { doctype: 'Repair Order', name: 'RO-9', label: 'RO-9' },
+        url: '/taller/orders/RO-9',
+        fields: [
+          { label: 'Estado', value: 'En Trabajo' },
+          { label: 'Técnico', value: 'Andrés' },
+        ],
+      }),
+    })
+    await mountAt('/agenda?view=week&date=2026-10-07')
+    root.querySelector('[data-event-id="RO-9"]').click()
+    await flush()
+    expect(last('detail')).toEqual({ source: 'Taller', name: 'RO-9' })
+    const fields = document.body.querySelector('[data-testid="source-fields"]')
+    expect(fields.textContent).toContain('En Trabajo')
+    expect(fields.textContent).toContain('Andrés')
+    const link = document.body.querySelector(
+      '[data-testid="open-source-record"]',
+    )
+    expect(link.textContent).toContain('Go to record')
+    const href = new URL(link.getAttribute('href'), 'https://crm.invalid')
+    expect(href.pathname).toBe('/taller/orders/RO-9')
+    const back = new URL(
+      href.searchParams.get('return_to'),
+      'https://crm.invalid',
+    )
+    expect(back.pathname).toBe('/crm/agenda')
+    expect(back.searchParams.get('date')).toBe('2026-10-07')
+    expect(back.searchParams.get('event')).toBe('Taller:RO-9')
+    expect(href.searchParams.get('return_label')).toBe('Agenda')
+    // Event-only actions never operate another app's record.
+    const buttons = [...document.body.querySelectorAll('button')].map((b) =>
+      b.textContent.trim(),
+    )
+    expect(buttons).not.toContain('Reopen')
+    expect(buttons).not.toContain('Mark as done')
+    expect(buttons).not.toContain('Reschedule')
+  })
+
+  it('still opens the record when the source only names it on the event', async () => {
+    // An older provider returns its flat detail (no generic panel): the event's own
+    // referenceDoctype/referenceName already say where the record lives.
+    handler = externalAgenda({
+      detail: () => ({ id: 'RO-9', orderUrl: '/taller/orders/RO-9' }),
+    })
+    await mountAt('/agenda?view=week&date=2026-10-07')
+    root.querySelector('[data-event-id="RO-9"]').click()
+    await flush()
+    expect(
+      document.body.querySelector('[data-testid="source-fields"]'),
+    ).toBeNull()
+    const link = document.body.querySelector(
+      '[data-testid="open-source-record"]',
+    )
+    expect(
+      new URL(link.getAttribute('href'), 'https://crm.invalid').pathname,
+    ).toBe('/taller/orders/RO-9')
+  })
+
+  it('an unreadable source record leaks neither fields nor a link', async () => {
+    handler = externalAgenda({
+      detail: () => ({
+        constraints: [
+          { code: 'permission', message: 'No tienes acceso a esta orden.' },
+        ],
+      }),
+    })
+    await mountAt('/agenda?view=week&date=2026-10-07')
+    root.querySelector('[data-event-id="RO-9"]').click()
+    await flush()
+    expect(
+      document.body.querySelector('[data-testid="source-fields"]'),
+    ).toBeNull()
+    expect(
+      document.body.querySelector('[data-testid="open-source-record"]'),
+    ).toBeNull()
+    expect(document.body.textContent).toContain(
+      'No tienes acceso a esta orden.',
+    )
+  })
+
   it('drags to a slot, offers «Schedule anyway» on a warning and resends with confirm', async () => {
     await mountAt('/agenda?view=week&date=2026-10-07')
     let moves = 0

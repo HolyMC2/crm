@@ -28552,3 +28552,7 @@ msgstr "Agregar subtarea"
 #: frontend/src/components/pendientes/CreateDialog.vue
 msgid "No time"
 msgstr "Sin hora"
+
+#: frontend/src/components/agenda/AgendaEventPanel.vue
+msgid "Go to record"
+msgstr "Ir al registro"

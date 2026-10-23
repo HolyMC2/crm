@@ -2,7 +2,13 @@
   <article class="flex flex-col gap-4" :aria-label="event.title">
     <div class="-mr-2 flex items-center justify-end gap-0.5">
       <button
-        v-if="event.canEdit && event.status === 'Scheduled' && !shift && !task"
+        v-if="
+          event.canEdit &&
+          event.status === 'Scheduled' &&
+          !shift &&
+          !task &&
+          event.source === 'Event'
+        "
         type="button"
         class="ag-tool"
         :aria-label="__('Edit')"
@@ -12,7 +18,13 @@
         <span class="lucide-pencil h-4 w-4" aria-hidden="true" />
       </button>
       <button
-        v-if="event.canEdit && event.status === 'Scheduled' && !shift && !task"
+        v-if="
+          event.canEdit &&
+          event.status === 'Scheduled' &&
+          !shift &&
+          !task &&
+          event.source === 'Event'
+        "
         type="button"
         class="ag-tool"
         :aria-label="event.seriesId ? __('Cancel series') : __('Cancel event')"
@@ -239,7 +251,17 @@
         @message="(purpose) => emit('cita-message', purpose)"
       />
       <dl
-        v-else-if="detail"
+        v-else-if="panelFields.length"
+        class="grid grid-cols-[7rem_1fr] gap-x-3 gap-y-2 text-base"
+        data-testid="source-fields"
+      >
+        <template v-for="field in panelFields" :key="field.label">
+          <dt class="text-ink-gray-6">{{ field.label }}</dt>
+          <dd class="text-ink-gray-9">{{ field.value }}</dd>
+        </template>
+      </dl>
+      <dl
+        v-else-if="detail && event.source === 'Event'"
         class="grid grid-cols-[7rem_1fr] gap-x-3 gap-y-2 text-base"
       >
         <template v-if="detail.location">
@@ -303,7 +325,7 @@
       </dl>
 
       <div
-        v-if="event.kind !== 'cita'"
+        v-if="event.kind !== 'cita' && event.source === 'Event'"
         class="sticky bottom-0 flex flex-wrap gap-2 bg-surface-elevation-2 pb-[env(safe-area-inset-bottom)] pt-2"
       >
         <template v-if="event.canEdit">
@@ -341,6 +363,23 @@
             @click="emit('request-change')"
           />
         </template>
+      </div>
+      <div
+        v-else-if="sourceOpen"
+        class="sticky bottom-0 flex flex-wrap gap-2 bg-surface-elevation-2 pb-[env(safe-area-inset-bottom)] pt-2"
+      >
+        <!-- another app's record: one way into it, keeping the way back to this agenda view -->
+        <component
+          :is="sourceOpen.to ? RouterLink : 'a'"
+          v-bind="
+            sourceOpen.to ? { to: sourceOpen.to } : { href: sourceOpen.href }
+          "
+          data-testid="open-source-record"
+          class="inline-flex min-h-11 items-center justify-center gap-2 rounded-4 bg-surface-gray-10 px-3 text-base font-medium text-ink-base transition-colors hover:bg-surface-gray-9"
+        >
+          <span class="lucide-external-link h-4 w-4" aria-hidden="true" />
+          {{ __('Go to record') }}
+        </component>
       </div>
       <div
         v-if="confirmCancel"
@@ -500,11 +539,47 @@ const clinicLink = computed(() =>
       )
     : '',
 )
-const referenceLink = computed(() =>
-  props.detail?.reference
-    ? recordLink(props.detail.reference.doctype, props.detail.reference.name)
-    : {},
+// The fields a source from another app projects for its panel (doco.agenda.contract).
+const panelFields = computed(() =>
+  (props.detail?.fields || []).filter((row) => row?.label && row?.value),
 )
+// A source record in another app: the panel shows its fields and one way into it, with the
+// way back to this agenda view (the shell's return protocol).
+const sourceOpen = computed(() => {
+  if (
+    props.event.source === 'Event' ||
+    props.event.kind === 'cita' ||
+    shift.value ||
+    task.value
+  )
+    return null
+  // The provider's panel wins; a source that only returned its own detail still names
+  // its record on the event itself (Taller sends referenceDoctype/referenceName).
+  const reference =
+    props.detail?.reference ||
+    (props.detail && props.event.referenceDoctype && props.event.referenceName
+      ? {
+          doctype: props.event.referenceDoctype,
+          name: props.event.referenceName,
+        }
+      : null)
+  const link = props.detail?.url
+    ? { href: props.detail.url }
+    : reference
+      ? recordLink(reference.doctype, reference.name)
+      : null
+  if (!link) return null
+  return link.to
+    ? { to: link.to }
+    : { href: withAgendaReturn(link.href, props.returnTo) }
+})
+const referenceLink = computed(() => {
+  const link = props.detail?.reference
+    ? recordLink(props.detail.reference.doctype, props.detail.reference.name)
+    : null
+  if (!link) return {}
+  return link.to ? link : { href: withAgendaReturn(link.href, props.returnTo) }
+})
 const reminderText = computed(() =>
   (props.detail?.reminders || [])
     .map((row) => {
