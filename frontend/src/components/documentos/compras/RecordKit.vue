@@ -15,7 +15,12 @@
         :connections="kit.record.value.connections || []"
         :scope-label="kit.scopeLabel.value"
       />
-      <Actividad :activity="eventsOnly" :noun="kit.noun" :can-attach="false" />
+      <Actividad
+        :activity="eventsOnly"
+        :noun="kit.noun"
+        :currency="kit.record.value.header?.currency || 'MXN'"
+        :can-attach="false"
+      />
     </template>
     <input
       :ref="setFileInput"

@@ -204,6 +204,7 @@
             v-if="sections.includes('actividad')"
             :activity="record.activity"
             :noun="noun"
+            :currency="record.header.currency || 'MXN'"
             :can-attach="!!record.actions?.attach?.allowed"
             @attach="pickFile"
           />

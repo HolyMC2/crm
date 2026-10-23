@@ -1095,6 +1095,297 @@ def _field_doctype(doctype, fieldname):
 	return doctype
 
 
+# ── Actividad: the diff of each edit (attribution ledger) ─────────────────────
+# A Version row keeps what was saved, and Frappe's get_diff already formatted the values
+# for the worker's locale. Actividad reads the change itself, not only a field count:
+# «Monto: $2,000.00 → $2,500.00», «+1 Funda iPhone», «Cantidad 1 → 2». The payload stays
+# small (it feeds a phone) and private: only fields this user may read.
+MAX_DIFF_FIELDS = 6
+MAX_DIFF_TEXT = 80
+MAX_DIFF_ROWS = 6
+MAX_ROW_CHANGES = 3
+# Bookkeeping, printed addresses and fields that duplicate another one: a worker never
+# reads them as «what changed». Totals and status do stay (that is the whole point).
+_DIFF_SKIP = frozenset(_STANDARD) | {
+	"naming_series",
+	"title",
+	"language",
+	"letter_head",
+	"select_print_heading",
+	"posting_time",
+	"transaction_time",
+	"scan_barcode",
+	"amended_from",
+	"amendment_date",
+	"conversion_rate",
+	"plc_conversion_rate",
+	"price_list_currency",
+	"party_account_currency",
+	"company_address",
+	"company_address_display",
+	"address_display",
+	"shipping_address",
+	"shipping_address_display",
+	"billing_address",
+	"billing_address_display",
+	"dispatch_address",
+	"dispatch_address_display",
+	"other_charges_calculation",
+	"auto_repeat",
+	"tc_name",
+	"terms",
+	"terms_and_conditions",
+	"rounding_adjustment",
+	"base_rounding_adjustment",
+}
+_TEXT_TYPES = ("Text", "Small Text", "Long Text", "Text Editor", "Markdown Editor")
+_NUMBERS = re.compile(r"-?\d[\d,\s]*(?:\.\d+)?")
+_ROW_TITLES = ("item_name", "item_code", "description", "payment_term", "mode_of_payment")
+
+
+def _diff_field(value, limit=MAX_DIFF_TEXT):
+	"""One line of text: whitespace collapsed and cut, never an HTML dump."""
+	text = " ".join(cstr(value).split())
+	return text if len(text) <= limit else text[: limit - 1].rstrip() + "…"
+
+
+def _as_number(value):
+	"""The number behind a Version value (it may already be formatted: «$ 1,290.00»)."""
+	if isinstance(value, bool):
+		return None
+	if isinstance(value, int | float):
+		return float(value)
+	match = _NUMBERS.search(cstr(value))
+	if not match:
+		return None
+	try:
+		return float(match.group(0).replace(",", "").replace(" ", ""))
+	except ValueError:
+		return None
+
+
+def _diff_side(df, value):
+	"""`(type, value)` for one side of a change, as the ledger shows it.
+
+	`type` tells the phone how to render the value: money and percent take the record's
+	currency/precision, number is a plain quantity, text is already written in es-MX.
+	"""
+	if value is None or value == "":
+		return "text", ""
+	if df.fieldtype == "Check":
+		return "text", _("Yes") if cint(value) else _("No")
+	if df.fieldtype in ("Currency", "Float", "Int", "Percent"):
+		number = _as_number(value)
+		if number is not None:
+			return {"Currency": "money", "Percent": "percent"}.get(df.fieldtype, "number"), number
+	if df.fieldtype == "Select":
+		return "text", _diff_field(_(cstr(value)))
+	if df.fieldtype in _TEXT_TYPES:
+		return "text", _diff_field(strip_html(cstr(value)))
+	return "text", _diff_field(value)
+
+
+def _diff_fields(doc):
+	"""Field metadata this worker may read: permlevel, mask, hidden and password rules."""
+	meta = doc.meta
+	allowed = set(meta.get_permlevel_access("read") or [])
+	masked = {df.fieldname for df in meta.get_masked_fields() or []}
+	out = {}
+	for df in meta.fields:
+		if not df.fieldname or df.fieldname in masked or df.hidden:
+			continue
+		if df.fieldtype in _HIDDEN_TYPES:
+			continue
+		if df.permlevel and df.permlevel not in allowed:
+			continue
+		out[df.fieldname] = df
+	return out
+
+
+def _skip_diff_field(field, df):
+	"""True for a field whose value is bookkeeping, a duplicate or not in the doctype."""
+	if not df or not df.label or df.fieldname in _DIFF_SKIP:
+		return True
+	return cstr(field).startswith(_DATOS_PREFIXES)
+
+
+def _reset_noise(old, new):
+	"""Frappe re-saves inherited or optional columns as empty → null on every save
+	(«tax_code»: "" → null, «discount»: 0 → null): not something the worker changed."""
+	return new is None and (old is None or old == "" or old == 0)
+
+
+def _changed_diff(fields, changed):
+	"""The changed fields with their old → new values, capped for a phone."""
+	out = []
+	more = 0
+	for entry in changed:
+		if not isinstance(entry, list | tuple) or len(entry) < 3:
+			continue
+		field, old, new = entry[0], entry[1], entry[2]
+		df = fields.get(cstr(field))
+		if _skip_diff_field(field, df):
+			continue
+		kind, old_value = _diff_side(df, old)
+		_, new_value = _diff_side(df, new)
+		if old_value == new_value:
+			continue
+		if len(out) >= MAX_DIFF_FIELDS:
+			more += 1
+			continue
+		out.append({"label": _(df.label), "type": kind, "from": old_value, "to": new_value})
+	return out, more
+
+
+def _row_meta(doc, table):
+	"""The child table's meta with this worker's readable permlevels and masked fields."""
+	table_df = doc.meta.get_field(cstr(table))
+	if not table_df or not table_df.options:
+		return None, set(), set()
+	try:
+		child = frappe.get_meta(table_df.options)
+	except Exception:
+		return None, set(), set()
+	allowed = set(doc.meta.get_permlevel_access("read") or [])
+	masked = {df.fieldname for df in child.get_masked_fields(parenttype=doc.doctype) or []}
+	return child, allowed, masked
+
+
+def _is_item_table(doc, fieldname, child=None):
+	"""True when `fieldname` is the document's item table (rows carry an item_code)."""
+	if child is not None:
+		return child.has_field("item_code")
+	df = doc.meta.get_field(cstr(fieldname))
+	if not df or df.fieldtype not in ("Table", "Table MultiSelect") or not df.options:
+		return False
+	try:
+		return frappe.get_meta(df.options).has_field("item_code")
+	except Exception:
+		return False
+
+
+def _row_title(row, child=None, allowed=(), masked=()):
+	"""The row as a worker names it: the item, else a short description (readable fields)."""
+	if not row:
+		return ""
+	for key in _ROW_TITLES:
+		value = row.get(key)
+		if not value:
+			continue
+		if child is not None:
+			df = child.get_field(key)
+			if not df or df.hidden or df.fieldtype in _HIDDEN_TYPES:
+				continue
+			if df.fieldname in masked or (df.permlevel and df.permlevel not in allowed):
+				continue
+		return _diff_field(strip_html(cstr(value)), 40)
+	return ""
+
+
+def _find_row(doc, table, name):
+	for row in doc.get(cstr(table)) or []:
+		if cstr(row.name) == cstr(name):
+			return row
+	return None
+
+
+def _child_changes(doc, table, diffs, child=None, allowed=None, masked=None):
+	"""A changed row's own fields, without the reset-to-default noise, private fields out."""
+	if child is None:
+		child, allowed, masked = _row_meta(doc, table)
+	if child is None:
+		return []
+	out = []
+	for entry in diffs or []:
+		if not isinstance(entry, list | tuple) or len(entry) < 3:
+			continue
+		field, old, new = entry[0], entry[1], entry[2]
+		df = child.get_field(cstr(field))
+		if _skip_diff_field(field, df) or df.hidden or df.fieldtype in _HIDDEN_TYPES:
+			continue
+		if df.fieldname in masked or (df.permlevel and df.permlevel not in allowed):
+			continue
+		if _reset_noise(old, new):
+			continue
+		kind, old_value = _diff_side(df, old)
+		_, new_value = _diff_side(df, new)
+		if old_value == new_value:
+			continue
+		out.append({"label": _(df.label), "type": kind, "from": old_value, "to": new_value})
+		if len(out) >= MAX_ROW_CHANGES:
+			break
+	return out
+
+
+def _row_diff(doc, fields, data):
+	"""Rows added, removed and changed: which item and how much, plus a count per table.
+
+	Returns `(rows, tables, items)`: `rows` is the number of meaningful row changes (the
+	old «rows» count, now without the bookkeeping noise), `tables` names the tables that
+	changed («Artículos») and `items` carries the item-level detail.
+	"""
+	added = data.get("added") or []
+	removed = data.get("removed") or []
+	changed = data.get("row_changed") or []
+	tables = {}
+	meta_cache = {}
+	items = {"added": [], "removed": [], "changed": []}
+
+	def label_for(fieldname):
+		df = fields.get(cstr(fieldname)) or doc.meta.get_field(cstr(fieldname))
+		return _(df.label) if df is not None and df.label else _diff_field(fieldname)
+
+	def bump(fieldname):
+		entry = tables.setdefault(cstr(fieldname), {"label": label_for(fieldname), "count": 0})
+		entry["count"] += 1
+
+	def row_meta(fieldname):
+		key = cstr(fieldname)
+		if key not in meta_cache:
+			meta_cache[key] = _row_meta(doc, key)
+		return meta_cache[key]
+
+	def detail(rows, brief):
+		for entry in rows:
+			if not isinstance(entry, list | tuple) or len(entry) < 2:
+				continue
+			bump(entry[0])
+			row = entry[1]
+			child, allowed, masked = row_meta(entry[0])
+			# A table without item rows (`payment_schedule`) only adds to the count.
+			if not isinstance(row, dict) or not _is_item_table(doc, entry[0], child):
+				continue
+			if len(items[brief]) < MAX_DIFF_ROWS:
+				items[brief].append(
+					{
+						"label": _row_title(row, child, allowed, masked),
+						"qty": _as_number(row.get("qty")),
+						"amount": _as_number(row.get("amount")),
+					}
+				)
+
+	def changed_rows(rows):
+		for entry in rows:
+			if not isinstance(entry, list | tuple) or len(entry) < 4:
+				continue
+			table, name, diffs = entry[0], entry[2], entry[3]
+			child, allowed, masked = row_meta(table)
+			meaningful = _child_changes(doc, table, diffs, child, allowed, masked)
+			if not meaningful:
+				continue
+			bump(table)
+			if _is_item_table(doc, table, child) and len(items["changed"]) < MAX_DIFF_ROWS:
+				row = _find_row(doc, table, name)
+				items["changed"].append(
+					{"label": _row_title(row, child, allowed, masked), "changes": meaningful}
+				)
+
+	detail(added, "added")
+	detail(removed, "removed")
+	changed_rows(changed)
+	return sum(table["count"] for table in tables.values()), list(tables.values()), items
+
+
 def _version_event(doc, row):
 	try:
 		data = json.loads(row.data or "{}")
@@ -1106,15 +1397,30 @@ def _version_event(doc, row):
 			kind = {(0, 1): "submit", (1, 2): "cancel"}.get((cint(old), cint(new)))
 			if kind:
 				return {"kind": kind}
+	fields = _diff_fields(doc)
 	labels = []
 	for field, _old, _new in changed:
-		df = doc.meta.get_field(field)
-		if df and df.label and not df.hidden and not df.read_only and df.fieldname not in _DATOS_SKIP:
-			labels.append(_(df.label))
-	rows = len(data.get("added") or []) + len(data.get("removed") or []) + len(data.get("row_changed") or [])
-	if not labels and not rows:
+		df = fields.get(cstr(field))
+		if not df or not df.label or df.hidden or df.read_only or df.fieldname in _DATOS_SKIP:
+			continue
+		labels.append(_(df.label))
+	changes, changes_more = _changed_diff(fields, changed)
+	rows, tables, items = _row_diff(doc, fields, data)
+	if not labels and not rows and not changes:
 		return None
-	return {"kind": "edit", "fields": labels[:3], "more": max(0, len(labels) - 3), "rows": rows}
+	event = {
+		"kind": "edit",
+		"fields": labels[:3],
+		"more": max(0, len(labels) - 3),
+		"rows": rows,
+		"changes": changes,
+		"tables": tables,
+	}
+	if any(items.values()):
+		event["items"] = items
+	if changes_more:
+		event["changes_more"] = changes_more
+	return event
 
 
 def _timeline(doc):

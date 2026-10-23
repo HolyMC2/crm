@@ -25,6 +25,22 @@
           <span class="break-words text-base leading-snug text-ink-gray-9">{{
             sentence(event)
           }}</span>
+          <!-- The attribution ledger: what this person actually changed, one short line
+               per field and per item row («Monto: $2,000.00 → $2,500.00»). -->
+          <ul
+            v-if="diffLines(event).length"
+            class="flex flex-col gap-0.5"
+            data-testid="documentos-diff"
+          >
+            <li
+              v-for="(line, j) in diffLines(event)"
+              :key="j"
+              class="break-words text-sm leading-snug text-ink-gray-8"
+              data-testid="documentos-diff-line"
+            >
+              {{ line }}
+            </li>
+          </ul>
           <span
             v-if="event.kind === 'comment' && event.text"
             class="whitespace-pre-line break-words text-base text-ink-gray-8"
@@ -88,7 +104,12 @@
 </template>
 <script setup>
 import { computed, ref } from 'vue'
-import { formatDateTime, statusEntry } from '@/utils/display'
+import {
+  formatDateTime,
+  formatMoney,
+  formatQty,
+  statusEntry,
+} from '@/utils/display'
 
 const LIMIT = 8
 const ICONS = {
@@ -109,6 +130,8 @@ const props = defineProps({
   activity: { type: Object, default: null },
   // «la factura», «la cotización»: the record in a sentence.
   noun: { type: String, default: 'el documento' },
+  // Money in the diff lines («$2,500.00») keeps the record's currency.
+  currency: { type: String, default: 'MXN' },
   // Show «Adjuntar» (the record allows attaching).
   canAttach: { type: Boolean, default: false },
 })
@@ -136,13 +159,17 @@ function sentence(event) {
     case 'cancel':
       return `${who} canceló ${props.noun}`
     case 'edit': {
+      // A newer server sends the diff itself (`changes`, `items`): the lines under the
+      // sentence say WHAT changed, so the sentence only names the record.
+      if (hasDiff(event)) return `${who} cambió ${props.noun}`
       const parts = []
       if (event.fields?.length)
         parts.push(
           list(event.fields.map((f) => f.toLowerCase())) +
             (event.more ? ` y ${event.more} más` : ''),
         )
-      if (event.rows) parts.push('los artículos')
+      if (event.rows) parts.push(tableLabels(event) || 'los artículos')
+      if (!parts.length) return `${who} cambió ${props.noun}`
       return `${who} cambió ${list(parts)}`
     }
     case 'comment':
@@ -164,6 +191,76 @@ function sentence(event) {
 
 function statusWord(text) {
   return statusEntry(text.trim())?.[0] || text.trim()
+}
+
+// ── The diff of one edit (attribution ledger) ────────────────────────────────
+
+function hasDiff(event) {
+  return !!(event.changes?.length || event.items)
+}
+
+// «Artículos»: the tables whose rows moved, as the server labelled them.
+function tableLabels(event) {
+  const labels = (event.tables || [])
+    .filter((table) => table.label)
+    .map((table) => table.label.toLowerCase())
+  return list(labels)
+}
+
+function shownValue(value, type) {
+  if (value === null || value === undefined || value === '') return '—'
+  if (type === 'money') return formatMoney(value, props.currency)
+  if (type === 'number') return formatQty(value)
+  if (type === 'percent') return `${formatQty(value)}%`
+  return String(value)
+}
+
+function changeLine(change, { colon = true } = {}) {
+  const from = shownValue(change.from, change.type)
+  const to = shownValue(change.to, change.type)
+  return colon
+    ? `${change.label}: ${from} → ${to}`
+    : `${change.label} ${from} → ${to}`
+}
+
+function itemLine(row) {
+  const parts = [row.label || 'Artículo']
+  if (row.qty !== null && row.qty !== undefined) parts.push(formatQty(row.qty))
+  if (row.amount !== null && row.amount !== undefined)
+    parts.push(formatMoney(row.amount, props.currency))
+  return parts.join(' · ')
+}
+
+function diffLines(event) {
+  if (event.kind !== 'edit') return []
+  const lines = (event.changes || []).map(changeLine)
+  if (event.changes_more)
+    lines.push(
+      `y ${event.changes_more} ${event.changes_more === 1 ? 'campo más' : 'campos más'}`,
+    )
+  const items = event.items || {}
+  for (const row of items.added || []) lines.push(`+ ${itemLine(row)}`)
+  for (const row of items.removed || []) lines.push(`− ${itemLine(row)}`)
+  for (const row of items.changed || []) {
+    // «Funda iPhone: Cantidad 1 → 2»: the row names the item, the field keeps its word.
+    const parts = (row.changes || []).map((change) =>
+      changeLine(change, { colon: false }),
+    )
+    if (parts.length)
+      lines.push(`${row.label || 'Artículo'}: ${parts.join('; ')}`)
+  }
+  // Item rows the payload did not detail (a long table): say how many moved.
+  const detailed =
+    (items.added?.length || 0) +
+    (items.removed?.length || 0) +
+    (items.changed?.length || 0)
+  // Only when the server detailed some rows: an older payload has no item detail at all.
+  const hidden = event.items ? Math.max(0, (event.rows || 0) - detailed) : 0
+  if (hidden)
+    lines.push(
+      `y ${hidden} ${hidden === 1 ? 'cambio más' : 'cambios más'} en las filas`,
+    )
+  return lines
 }
 
 function when(at) {

@@ -76,3 +76,136 @@ describe('Actividad status notes', () => {
     expect(b).toBe('Ana')
   })
 })
+
+// ── The attribution ledger: what each person changed, not only that they changed it ──
+
+async function ledger(events, props = {}) {
+  const el = document.createElement('div')
+  const app = createApp({
+    render: () =>
+      h(Actividad, {
+        activity: { events },
+        noun: 'la factura',
+        ...props,
+      }),
+  })
+  app.mount(el)
+  await nextTick()
+  const sentences = [
+    ...el.querySelectorAll('[data-testid="documentos-event"]'),
+  ].map((li) => li.querySelector('span.text-base').textContent.trim())
+  const lines = [
+    ...el.querySelectorAll('[data-testid="documentos-diff-line"]'),
+  ].map((li) => li.textContent.trim())
+  app.unmount()
+  return { sentences, lines }
+}
+
+const edit = (extra) => ({
+  kind: 'edit',
+  who: 'Contabot',
+  at: '2026-10-18 12:00:00',
+  ...extra,
+})
+
+describe('Actividad edit diff', () => {
+  it('shows a money field as old → new in the record currency', async () => {
+    const { sentences, lines } = await ledger([
+      edit({
+        changes: [{ label: 'Monto', type: 'money', from: 2000, to: 2500 }],
+      }),
+    ])
+    expect(sentences[0]).toBe('Contabot cambió la factura')
+    expect(lines).toEqual(['Monto: $2,000.00 → $2,500.00'])
+  })
+
+  it('keeps another currency in its code', async () => {
+    const { lines } = await ledger(
+      [
+        edit({
+          changes: [{ label: 'Monto', type: 'money', from: 12, to: 15 }],
+        }),
+      ],
+      { currency: 'USD' },
+    )
+    expect(lines).toEqual(['Monto: USD 12.00 → USD 15.00'])
+  })
+
+  it('says an emptied field as «—» and a percentage with its sign', async () => {
+    const { lines } = await ledger([
+      edit({
+        changes: [
+          { label: 'Nota', type: 'text', from: 'Pagar el lunes', to: '' },
+          { label: 'IVA', type: 'percent', from: 16, to: 8 },
+        ],
+      }),
+    ])
+    expect(lines).toEqual(['Nota: Pagar el lunes → —', 'IVA: 16% → 8%'])
+  })
+
+  it('names the items that came, went or changed', async () => {
+    const { lines } = await ledger([
+      edit({
+        rows: 3,
+        tables: [{ label: 'Artículos', count: 3 }],
+        items: {
+          added: [{ label: 'Funda iPhone', qty: 2, amount: 250 }],
+          removed: [{ label: 'Mica templada', qty: 1, amount: null }],
+          changed: [
+            {
+              label: 'Funda iPhone',
+              changes: [{ label: 'Cantidad', type: 'number', from: 1, to: 2 }],
+            },
+          ],
+        },
+      }),
+    ])
+    expect(lines).toEqual([
+      '+ Funda iPhone · 2 · $250.00',
+      '− Mica templada · 1',
+      'Funda iPhone: Cantidad 1 → 2',
+    ])
+  })
+
+  it('counts the rows it did not detail and the fields it trimmed', async () => {
+    const { lines } = await ledger([
+      edit({
+        rows: 5,
+        changes: [{ label: 'Monto', type: 'money', from: 1, to: 2 }],
+        changes_more: 2,
+        items: { added: [{ label: 'Funda iPhone', qty: 1, amount: 10 }] },
+      }),
+    ])
+    expect(lines).toContain('y 2 campos más')
+    expect(lines).toContain('y 4 cambios más en las filas')
+  })
+
+  it('keeps the older sentence when the server sends only labels and a row count', async () => {
+    const { sentences, lines } = await ledger([
+      edit({ fields: ['Monto'], more: 1, rows: 2 }),
+    ])
+    expect(sentences[0]).toBe('Contabot cambió monto y 1 más y los artículos')
+    expect(lines).toEqual([])
+  })
+
+  it('names the table that moved when there are no item details', async () => {
+    const { sentences, lines } = await ledger([
+      edit({ rows: 1, tables: [{ label: 'Pagos', count: 1 }] }),
+    ])
+    expect(sentences[0]).toBe('Contabot cambió pagos')
+    expect(lines).toEqual([])
+  })
+
+  it('shows no diff lines under a comment or a submit', async () => {
+    const { lines } = await ledger([
+      {
+        kind: 'comment',
+        who: 'Ana',
+        text: 'Revisado',
+        at: '2026-10-18 11:00:00',
+      },
+      { kind: 'submit', who: 'Marco', at: '2026-10-18 10:00:00' },
+    ])
+    expect(lines).toEqual([])
+  })
+})
