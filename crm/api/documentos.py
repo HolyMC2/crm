@@ -1140,6 +1140,31 @@ _DIFF_SKIP = frozenset(_STANDARD) | {
 }
 _TEXT_TYPES = ("Text", "Small Text", "Long Text", "Text Editor", "Markdown Editor")
 _TABLE_TYPES = ("Table", "Table MultiSelect")
+# Child columns a save derives from another one («stock_qty» from «qty», «base_amount»
+# from «amount», net/valuation rates): the ledger keeps the worker's own entry.
+_ROW_DIFF_SKIP = frozenset(
+	{
+		"stock_qty",
+		"received_qty",
+		"conversion_factor",
+		"stock_uom",
+		"uom",
+		"net_rate",
+		"net_amount",
+		"valuation_rate",
+		"base_rate",
+		"base_amount",
+		"base_net_rate",
+		"base_net_amount",
+		"billed_amt",
+		"available_stock_qty",
+		"expense_account",
+		"cost_center",
+		"project",
+	}
+)
+# What a worker changed in a row first: the item, then how much, then the rest.
+_ROW_CHANGE_ORDER = {"item_code": 0, "item_name": 0, "qty": 1, "rate": 2, "amount": 2, "warehouse": 3}
 _NUMBERS = re.compile(r"-?\d[\d,\s]*(?:\.\d+)?")
 _ROW_TITLES = ("item_name", "item_code", "description", "payment_term", "mode_of_payment")
 
@@ -1220,8 +1245,7 @@ def _reset_noise(old, new):
 
 def _changed_diff(fields, changed):
 	"""The changed fields with their old → new values, capped for a phone."""
-	out = []
-	more = 0
+	candidates = []
 	for entry in changed:
 		if not isinstance(entry, list | tuple) or len(entry) < 3:
 			continue
@@ -1233,12 +1257,21 @@ def _changed_diff(fields, changed):
 		new_kind, new_value = _diff_side(df, new)
 		if old_value == new_value:
 			continue
-		if len(out) >= MAX_DIFF_FIELDS:
-			more += 1
-			continue
 		kind = new_kind if new_value != "" else old_kind
-		out.append({"label": _(df.label), "type": kind, "from": old_value, "to": new_value})
-	return out, more
+		candidates.append({"label": _(df.label), "type": kind, "from": old_value, "to": new_value})
+	# One save writes the same amount under several labels («Total» and «Grand Total»):
+	# keep the last the meta lists (the record's own number) and drop its twins.
+	seen = set()
+	out = []
+	for change in reversed(candidates):
+		if change["type"] in ("money", "number", "percent"):
+			key = (change["type"], cstr(change["from"]), cstr(change["to"]))
+			if key in seen:
+				continue
+			seen.add(key)
+		out.append(change)
+	out.reverse()
+	return out[:MAX_DIFF_FIELDS], max(0, len(out) - MAX_DIFF_FIELDS)
 
 
 def _row_meta(doc, table):
@@ -1307,7 +1340,9 @@ def _child_changes(doc, table, diffs, child=None, allowed=None, masked=None):
 		df = child.get_field(cstr(field))
 		if _skip_diff_field(field, df) or df.hidden or df.fieldtype in _HIDDEN_TYPES:
 			continue
-		if df.fieldname in masked or (df.permlevel and df.permlevel not in allowed):
+		if df.fieldname in masked or df.fieldname in _ROW_DIFF_SKIP:
+			continue
+		if df.permlevel and df.permlevel not in allowed:
 			continue
 		if _reset_noise(old, new):
 			continue
@@ -1316,10 +1351,15 @@ def _child_changes(doc, table, diffs, child=None, allowed=None, masked=None):
 		if old_value == new_value:
 			continue
 		kind = new_kind if new_value != "" else old_kind
-		out.append({"label": _(df.label), "type": kind, "from": old_value, "to": new_value})
-		if len(out) >= MAX_ROW_CHANGES:
-			break
-	return out
+		out.append(
+			(
+				_ROW_CHANGE_ORDER.get(df.fieldname, 4),
+				len(out),
+				{"label": _(df.label), "type": kind, "from": old_value, "to": new_value},
+			)
+		)
+	out.sort(key=lambda item: (item[0], item[1]))
+	return [change for _, _, change in out[:MAX_ROW_CHANGES]]
 
 
 def _row_diff(doc, fields, data):

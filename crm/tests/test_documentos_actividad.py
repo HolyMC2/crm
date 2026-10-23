@@ -133,14 +133,16 @@ class TestDocumentosActividadDiff(TestCase):
 		table = _field("items", "Items", fieldtype="Table", options="Fake Item")
 		quantity = _field("qty", "Quantity", fieldtype="Float")
 		amount = _field("amount", "Amount", fieldtype="Currency")
-		tax_code = _field("tax_code", "Tax Code")
 		child = _FakeChildMeta(
 			[
 				_field("item_code", "Item Code"),
 				_field("item_name", "Item Name"),
 				quantity,
 				amount,
-				tax_code,
+				# Derived columns a save writes from qty/amount: not the worker's change.
+				_field("stock_qty", "Quantity in Stock UOM", fieldtype="Float"),
+				_field("base_amount", "Amount (Company Currency)", fieldtype="Currency"),
+				_field("tax_code", "Tax Code"),
 			],
 		)
 		row = frappe._dict(name="row-1", item_name="Funda iPhone", qty=2, amount=250.0)
@@ -154,8 +156,11 @@ class TestDocumentosActividadDiff(TestCase):
 					0,
 					"row-1",
 					[
-						["qty", 1, 2],
 						["tax_code", "", None],
+						["qty", 1, 2],
+						["stock_qty", 1, 2],
+						["amount", "$ 250.00", "$ 500.00"],
+						["base_amount", "$ 250.00", "$ 500.00"],
 					],
 				]
 			],
@@ -178,7 +183,10 @@ class TestDocumentosActividadDiff(TestCase):
 			[
 				{
 					"label": "Funda iPhone",
-					"changes": [{"label": "Quantity", "type": "number", "from": 1.0, "to": 2.0}],
+					"changes": [
+						{"label": "Quantity", "type": "number", "from": 1.0, "to": 2.0},
+						{"label": "Amount", "type": "money", "from": 250.0, "to": 500.0},
+					],
 				}
 			],
 		)
@@ -190,6 +198,20 @@ class TestDocumentosActividadDiff(TestCase):
 		data = {"row_changed": [["items", 0, "row-9", [["tax_code", "", None]]]]}
 		with patch("crm.api.documentos.frappe.get_meta", return_value=child):
 			self.assertIsNone(_event(doc, data))
+
+	def test_the_same_amount_under_two_labels_reads_once(self):
+		total = _field("total", "Total", fieldtype="Currency")
+		grand_total = _field("grand_total", "Grand Total", fieldtype="Currency")
+		doc = _FakeDoc([total, grand_total])
+		event = _event(
+			doc,
+			{"changed": [["total", "$ 100.00", 120.0], ["grand_total", "$ 100.00", 120.0]]},
+		)
+		# «Grand Total» is the label the record reads; the twin «Total» would repeat it.
+		self.assertEqual(
+			event["changes"],
+			[{"label": "Grand Total", "type": "money", "from": 100.0, "to": 120.0}],
+		)
 
 	def test_a_select_reads_its_translated_option_and_a_check_reads_si(self):
 		doc = _FakeDoc(
