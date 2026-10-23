@@ -15,6 +15,7 @@ import { itemFromQuery, relabel, wantedFields } from '@/documentos/form'
 import { curateFormats } from '@/documentos/tools'
 import {
   attributionRows,
+  chainViews,
   stepView,
   whoLine,
 } from '@/components/documentos/ventas/origen.js'
@@ -358,6 +359,58 @@ describe('«Creado desde» and «¿De dónde vino?»', () => {
     })
     expect(cobroDoc.to).toEqual({ path: '/documentos/cobros/ACC-PAY-1' })
     expect(cobroDoc.line).toMatch(/^En borrador/)
+  })
+
+  it('a sale paid at the invoice ends in «Cobrado», with no payment document', () => {
+    const invoice = (over = {}) =>
+      doc('ACC-SINV-1', { outstanding: 0, ...over })
+    const paid = chainViews([
+      {
+        key: 'factura',
+        doctype: 'Sales Invoice',
+        label: 'Factura',
+        state: 'done',
+        current: true,
+        docs: [invoice()],
+      },
+      {
+        key: 'cobro',
+        doctype: 'Payment Entry',
+        label: 'Cobro',
+        state: 'none',
+        docs: [],
+      },
+    ])
+    expect(paid.at(-1)).toMatchObject({
+      line: 'Cobrado',
+      state: 'done',
+      to: null,
+    })
+    // Still owed, or not yet submitted: the chain keeps asking for the cobro.
+    expect(
+      chainViews([
+        { key: 'factura', docs: [invoice({ outstanding: 725 })] },
+        { key: 'cobro', state: 'none', docs: [] },
+      ]).at(-1).line,
+    ).toBe('Falta cobrar')
+    expect(
+      chainViews([
+        { key: 'factura', docs: [invoice({ docstatus: 0 })] },
+        { key: 'cobro', state: 'none', docs: [] },
+      ]).at(-1).line,
+    ).toBe('Falta cobrar')
+    // A real payment keeps its own line and its link.
+    const withPayment = chainViews([
+      { key: 'factura', docs: [invoice()] },
+      {
+        key: 'cobro',
+        doctype: 'Payment Entry',
+        state: 'done',
+        docs: [doc('ACC-PAY-1', { fields: { payment_type: 'Receive' } })],
+      },
+    ])
+    expect(withPayment.at(-1).line).toMatch(/^Cobrado · /)
+    expect(withPayment.at(-1).to.path).toBe('/documentos/cobros/ACC-PAY-1')
   })
 
   it('reads the channel, campaign and seller as icon rows', () => {

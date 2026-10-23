@@ -78,7 +78,7 @@ import { computed, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { shellBoot } from '@/composables/muelleShell'
 import { kindLabel } from '@/utils/display'
-import { loadOrigen, stepView } from './origen'
+import { chainViews, loadOrigen } from './origen'
 
 const props = defineProps({
   record: { type: Object, required: true },
@@ -95,9 +95,10 @@ const scopeLabel = computed(() => {
   return title ? `la cadena de ${kind} de ${title}` : ''
 })
 const steps = computed(() =>
-  (data.value?.steps || []).map((s) =>
-    stepView(s, { boot: shellBoot.value, scopeLabel: scopeLabel.value }),
-  ),
+  chainViews(data.value?.steps || [], {
+    boot: shellBoot.value,
+    scopeLabel: scopeLabel.value,
+  }),
 )
 
 watch(

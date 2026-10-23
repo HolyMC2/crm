@@ -104,6 +104,33 @@ export function stepView(step, { boot = null, scopeLabel = '' } = {}) {
   }
 }
 
+/**
+ * True when every submitted invoice of the chain is paid. A sale paid at the invoice
+ * itself (a POS sale) has no Payment Entry: the chain would say «Falta cobrar» while
+ * the record's own stage says «Pagada». The same holds for a write-off or a journal.
+ */
+export function invoicesSettled(steps = []) {
+  const invoices = (
+    steps.find((step) => step.key === 'factura')?.docs || []
+  ).filter((doc) => doc.docstatus === 1)
+  return (
+    invoices.length > 0 &&
+    invoices.every((doc) => Number(doc.outstanding || 0) <= 0)
+  )
+}
+
+/** The «Creado desde» steps as the record shows them: a paid sale ends in «Cobrado», with or
+ *  without a payment document. */
+export function chainViews(steps = [], options = {}) {
+  const settled = invoicesSettled(steps)
+  return steps.map((step) => {
+    const view = stepView(step, options)
+    if (step.key === 'cobro' && step.state === 'none' && settled)
+      return { ...view, state: 'done', line: DONE.cobro }
+    return view
+  })
+}
+
 /** «Capturó Ana López · confirmó Karla Ruiz hoy 12:30» for one document of the chain. */
 export function whoLine(entry) {
   const when = entry.confirmed_at ? formatDateTime(entry.confirmed_at) : ''
