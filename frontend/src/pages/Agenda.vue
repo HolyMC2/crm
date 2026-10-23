@@ -1691,10 +1691,13 @@ function agendaPath() {
   const { done: _done, ...query } = route.query
   return `/crm${router.resolve({ path: route.path, query }).fullPath}`
 }
+// A pointer outside, Escape or a swipe-down closes the dialog through the same
+// close path as its Cancel button: a pristine form closes, a draft asks first.
+// While the form is saving (`busy`) a stray click must not throw the request away.
 function sheetProps(title) {
   return phone.value
-    ? { open: true, dismissible: false, title: '' }
-    : { open: true, title, size: 'xl', dismissible: false }
+    ? { open: true, dismissible: !busy.value, title: '' }
+    : { open: true, title, size: 'xl', dismissible: !busy.value }
 }
 function openCitaForm(initial = {}) {
   citaForm.value = reactive({
@@ -2328,8 +2331,13 @@ const formSlot = computed(() => (phone.value ? 'default' : 'body-content'))
 const eventFormRef = ref(null)
 const formContainerProps = computed(() =>
   phone.value
-    ? { open: true, dismissible: false, title: '' }
-    : { open: true, title: formTitle.value, size: 'xl', dismissible: false },
+    ? { open: true, dismissible: !busy.value, title: '' }
+    : {
+        open: true,
+        title: formTitle.value,
+        size: 'xl',
+        dismissible: !busy.value,
+      },
 )
 function closeForm(dirty) {
   if (dirty && form.value) form.value.confirmDiscard = true

@@ -197,6 +197,44 @@ describe('Agenda page', () => {
     expect(router.currentRoute.value.query.create).toBeUndefined()
   })
 
+  it('closes the event form from a click outside it, and keeps a draft until confirmed', async () => {
+    await mountAt('/agenda?view=week&date=2026-10-07', { shell: true })
+    const title = () =>
+      document.body.querySelector('input[placeholder="Call, visit, delivery…"]')
+    const openForm = async () => {
+      document.body.dispatchEvent(
+        new KeyboardEvent('keydown', {
+          key: 'c',
+          bubbles: true,
+          cancelable: true,
+        }),
+      )
+      await flush()
+    }
+    await openForm()
+    expect(title()).not.toBeNull()
+    // A pointer on the page behind the dialog dismisses a pristine form.
+    pointer('pointerdown', 20, 20, document.body)
+    await flush()
+    expect(title()).toBeNull()
+
+    // A draft is kept: the same pointer asks before throwing it away.
+    await openForm()
+    title().value = 'Visita Ana'
+    title().dispatchEvent(new Event('input', { bubbles: true }))
+    await flush()
+    pointer('pointerdown', 20, 20, document.body)
+    await flush()
+    expect(title()).not.toBeNull()
+    const discard = [...document.body.querySelectorAll('button')].find(
+      (button) => button.textContent.trim() === 'Discard',
+    )
+    expect(discard).toBeTruthy()
+    discard.click()
+    await flush()
+    expect(title()).toBeNull()
+  })
+
   it('names the business time zone in words when the worker is in another zone', async () => {
     const business = handler
     handler = (method, args) => {
