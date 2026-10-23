@@ -106,11 +106,11 @@ class TestDocumentosActividadDiff(TestCase):
 			self.assertNotIn(leaked, shown)
 
 	def test_a_permlevel_the_worker_can_read_does_show(self):
-		private = _field("salary", "Salary", permlevel=1)
+		private = _field("salary", "Salary", fieldtype="Int", permlevel=1)
 		doc = _FakeDoc([private], read_permlevels=(0, 1))
 		event = _event(doc, {"changed": [["salary", 1000, 2000]]})
-		self.assertEqual(event["changes"][0]["from"], 1000)
-		self.assertEqual(event["changes"][0]["to"], 2000)
+		self.assertEqual(event["changes"][0]["from"], 1000.0)
+		self.assertEqual(event["changes"][0]["to"], 2000.0)
 
 	def test_bookkeeping_only_edit_is_no_event(self):
 		# Every save re-stamps the posting time and re-saves inherited columns.
@@ -231,18 +231,32 @@ class TestDocumentosActividadDiff(TestCase):
 
 @skipIf(not HAS_FRAPPE, "Frappe integration dependency is not installed")
 class TestDocumentosActividadEndToEnd(IntegrationTestCase):
-	def test_a_saved_edit_shows_its_field_diff_in_actividad(self):
+	def test_a_stored_version_shows_its_field_diff_in_actividad(self):
+		# Frappe writes this row on a save that tracks changes; the site's Note may not
+		# track them, so the stored row is what this test needs (Actividad reads Versions).
 		frappe.set_user("Administrator")
-		note = frappe.get_doc(
+		note = frappe.get_doc({"doctype": "Note", "title": "Nota del turno", "public": 1}).insert()
+		frappe.get_doc(
 			{
-				"doctype": "Note",
-				"title": "Nota del turno",
-				"public": 1,
-				"content": "<p>Llamar al proveedor</p>",
+				"doctype": "Version",
+				"ref_doctype": "Note",
+				"docname": note.name,
+				"data": json.dumps(
+					{
+						"added": [],
+						"changed": [
+							[
+								"content",
+								"<p>Llamar al proveedor</p>",
+								"<p>Llamar al proveedor el lunes</p>",
+							]
+						],
+						"removed": [],
+						"row_changed": [],
+					}
+				),
 			}
-		).insert()
-		note.content = "<p>Llamar al proveedor el lunes</p>"
-		note.save()
+		).insert(ignore_permissions=True)
 		events = documentos.timeline("Note", note.name)["events"]
 		edit = next(event for event in events if event["kind"] == "edit")
 		label = frappe._(frappe.get_meta("Note").get_field("content").label)
