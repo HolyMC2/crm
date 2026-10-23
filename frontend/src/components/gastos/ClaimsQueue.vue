@@ -1,269 +1,188 @@
 <template>
-  <div ref="root" class="pb-6" data-testid="claims-queue">
-    <header
-      class="flex flex-wrap items-center gap-3 px-4 pb-2 pt-4 sm:px-6 sm:pt-6"
+  <div
+    ref="root"
+    class="relative flex min-h-0 min-w-0 flex-1 flex-col"
+    data-testid="claims-queue"
+  >
+    <!-- One scroller, the header inside it (Shell C5). On a phone the title is
+         the shell's AppBar and create is the FAB (MOBILE_REFERENCES). -->
+    <div
+      ref="scrollerEl"
+      class="min-h-0 flex-1 overflow-y-auto"
+      :class="claims.file && isPhone ? 'pb-24' : 'pb-6'"
+      data-claims-scroller
+      @scroll.passive="rememberScroll"
     >
-      <div class="min-w-0 flex-1">
-        <h1 class="truncate text-xl font-semibold text-ink-gray-9">
-          {{ __('From employees', null, 'Gastos') }}
-        </h1>
-        <p class="text-sm text-ink-gray-6">{{ subtitle }}</p>
-      </div>
-      <Button
-        v-if="claims.file"
-        variant="solid"
-        icon-left="lucide-camera"
-        class="min-h-11 sm:min-h-8"
-        data-testid="claim-new"
-        :label="__('New expense')"
-        @click="update({ nuevo: '1' })"
-      />
-    </header>
-
-    <div v-if="!claims.enabled" class="mx-4 mb-3 sm:mx-6">
-      <ClaimGuard
-        :guard="{
-          code: claims.code,
-          message: claims.reason,
-          actions: claims.actions,
-        }"
-        @action="onGuardAction"
-      />
-    </div>
-    <template v-else>
-      <!-- A deliberate horizontal chip row: the only sideways scroller. -->
-      <div
-        role="group"
-        :aria-label="__('Lists of employee expenses')"
-        class="flex gap-1 overflow-x-auto px-4 pb-2 sm:flex-wrap sm:px-6"
+      <PageHeader
+        v-if="!isPhone"
+        :title="__('From employees', null, 'Gastos')"
+        :subtitle="subtitle"
+        :level="1"
       >
-        <Button
-          v-for="c in chips"
-          :key="c.value"
-          class="min-h-11 shrink-0 sm:min-h-8"
-          :variant="chip === c.value ? 'solid' : 'subtle'"
-          :aria-pressed="chip === c.value"
-          :label="chipText(c)"
-          @click="update({ chip: c.value, scope: '' })"
+        <template v-if="claims.file" #actions>
+          <Button
+            variant="solid"
+            icon-left="lucide-camera"
+            class="min-h-8"
+            data-testid="claim-new"
+            :label="__('New expense')"
+            @click="update({ nuevo: '1' })"
+          />
+        </template>
+      </PageHeader>
+
+      <div v-if="!claims.enabled" class="mx-4 mb-3 sm:mx-6">
+        <ClaimGuard
+          :guard="{
+            code: claims.code,
+            message: claims.reason,
+            actions: claims.actions,
+          }"
+          @action="onGuardAction"
         />
       </div>
-      <div class="flex flex-wrap items-center gap-2 px-4 pb-3 sm:px-6">
-        <div
+      <template v-else>
+        <!-- The lists, and for approvals whose they are: one chip row each. -->
+        <FilterChips
+          v-if="chipChoices.length"
+          :model-value="chip"
+          :chips="chipChoices"
+          :deselectable="false"
+          :label="__('Lists of employee expenses')"
+          @update:model-value="(value) => update({ chip: value, scope: '' })"
+        />
+        <FilterChips
           v-if="chip === 'por-aprobar'"
-          role="group"
-          :aria-label="__('Whose approvals')"
-          class="flex gap-1"
+          :model-value="scope"
+          :chips="scopeChoices"
+          :deselectable="false"
+          :label="__('Whose approvals')"
+          @update:model-value="(value) => update({ scope: value })"
+        />
+        <div class="flex flex-wrap items-center gap-2 px-4 pb-3 pt-2 sm:px-6">
+          <TextInput
+            v-model="search"
+            class="w-full min-w-0 sm:max-w-xs"
+            type="search"
+            data-list-search
+            :placeholder="__('Search person or expense')"
+            :aria-label="__('Search person or expense')"
+          />
+          <span
+            v-if="employee"
+            class="inline-flex min-h-11 items-center gap-2 rounded-full bg-surface-gray-2 px-3 text-sm sm:min-h-8"
+          >
+            {{ __('Only {0}', [employeeName || employee]) }}
+            <button
+              type="button"
+              class="min-h-11 text-ink-blue-link underline sm:min-h-0"
+              @click="update({ employee: '' })"
+            >
+              {{ __('See everyone') }}
+            </button>
+          </span>
+        </div>
+        <div
+          v-if="problem"
+          role="alert"
+          class="mx-4 mb-3 rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7 sm:mx-6"
         >
+          <strong>{{ problem.title }}.</strong> {{ problem.detail }}
           <Button
-            v-for="s in SCOPES"
-            :key="s.value"
-            class="min-h-11 sm:min-h-8"
-            :variant="scope === s.value ? 'solid' : 'subtle'"
-            :aria-pressed="scope === s.value"
-            :label="scopeText(s)"
-            @click="update({ scope: s.value })"
+            class="ml-2"
+            :label="__('Retry', null, 'Gastos')"
+            @click="load()"
           />
         </div>
-        <FormControl
-          v-model="search"
-          class="min-w-0 flex-1 sm:max-w-xs"
-          type="search"
-          :placeholder="__('Search person or expense')"
-          :aria-label="__('Search person or expense')"
-        />
-        <span
-          v-if="employee"
-          class="inline-flex min-h-11 items-center gap-2 rounded-full bg-surface-gray-2 px-3 text-sm sm:min-h-8"
-        >
-          {{ __('Only {0}', [employeeName || employee]) }}
-          <button
-            type="button"
-            class="text-ink-blue-link underline"
-            @click="update({ employee: '' })"
-          >
-            {{ __('See everyone') }}
-          </button>
-        </span>
-      </div>
-      <div
-        v-if="problem"
-        role="alert"
-        class="mx-4 mb-3 rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7 sm:mx-6"
-      >
-        <strong>{{ problem.title }}.</strong> {{ problem.detail }}
-        <Button
-          class="ml-2"
-          :label="__('Retry', null, 'Gastos')"
-          @click="load()"
-        />
-      </div>
-      <div v-if="guard" class="mx-4 mb-3 sm:mx-6">
-        <ClaimGuard :guard="guard" />
-      </div>
+        <div v-if="guard" class="mx-4 mb-3 sm:mx-6">
+          <ClaimGuard :guard="guard" />
+        </div>
 
-      <div
-        v-if="loading && !rows.length"
-        role="status"
-        class="px-6 py-8 text-sm text-ink-gray-6"
-      >
-        {{ __('Loading expenses…') }}
-      </div>
-      <div
-        v-else-if="!rows.length && !guard"
-        class="mx-auto max-w-md px-6 py-10 text-center text-ink-gray-7"
-      >
-        <p class="text-lg font-semibold">{{ emptyTitle }}</p>
-        <p class="mt-1 text-sm">{{ emptyBody }}</p>
-        <Button
-          v-if="chip === 'mios' && claims.file"
-          class="mt-4 min-h-11"
-          variant="solid"
-          icon-left="lucide-camera"
-          :label="__('New expense')"
-          @click="update({ nuevo: '1' })"
+        <EmptyState
+          v-if="(loading && !rows.length) || (!rows.length && !guard)"
+          :state="loading && !rows.length ? 'loading' : 'empty'"
+          :title="
+            loading && !rows.length ? __('Loading expenses…') : emptyTitle
+          "
+          :message="loading && !rows.length ? '' : emptyBody"
+          :action="
+            !isPhone && chip === 'mios' && claims.file ? __('New expense') : ''
+          "
+          @action="update({ nuevo: '1' })"
         />
-      </div>
-      <ul v-else class="divide-y divide-outline-gray-1">
-        <li v-for="row in rows" :key="`${row.doctype}:${row.name}`">
-          <!-- An expense claim: its record. -->
-          <RouterLink
-            v-if="row.doctype === CLAIM"
-            :to="{
-              name: 'GastoEmpleado',
-              params: { name: row.name },
-              query: { list: listPath },
-            }"
-            class="flex min-h-14 items-start gap-3 px-4 py-3 hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:px-6"
-            @click="rememberScroll"
-          >
-            <FeatherIcon
-              name="file-text"
-              class="mt-0.5 h-4 w-4 shrink-0 text-ink-gray-5"
-            />
-            <span class="min-w-0 flex-1">
-              <span class="block truncate font-medium text-ink-gray-9">
-                {{
-                  row.mine
-                    ? row.type_label || row.name
-                    : row.employee_name || row.name
-                }}
-              </span>
-              <span class="block truncate text-sm text-ink-gray-6">
-                {{
-                  [row.mine ? '' : row.type_label, row.note, row.date]
-                    .filter(Boolean)
-                    .join(' · ')
-                }}
-              </span>
-              <span class="mt-0.5 block text-sm text-ink-gray-8">{{
-                stateLabel(row)
-              }}</span>
-            </span>
-            <span
-              class="shrink-0 text-right text-sm font-medium tabular-nums text-ink-gray-9"
-              >{{ money(rowAmount(row), row.currency) }}</span
+        <ul v-else class="divide-y divide-outline-gray-1">
+          <li v-for="row in rows" :key="`${row.doctype}:${row.name}`">
+            <!-- An expense claim: its record. -->
+            <ListRow
+              v-if="row.doctype === CLAIM"
+              :to="{
+                name: 'GastoEmpleado',
+                params: { name: row.name },
+                query: { list: listPath },
+              }"
+              :avatar="row.employee_name || ''"
+              :title="claimTitle(row)"
+              :subtitle="claimSubtitle(row)"
+              :subtitle-lines="2"
+              :meta="money(rowAmount(row), row.currency)"
+              @click="rememberScroll"
             >
-          </RouterLink>
-          <!-- An open advance: what is left and the claims that discount it. -->
-          <div
-            v-else-if="row.doctype === 'Employee Advance'"
-            class="flex items-start gap-3 px-4 py-3 sm:px-6"
-          >
-            <FeatherIcon
-              name="briefcase"
-              class="mt-0.5 h-4 w-4 shrink-0 text-ink-gray-5"
-            />
-            <span class="min-w-0 flex-1">
-              <span class="block truncate font-medium text-ink-gray-9">{{
-                row.employee_name
-              }}</span>
-              <span class="block truncate text-sm text-ink-gray-6">
-                {{
-                  [
-                    __('Advance of {0}', [money(row.paid, row.currency)]),
-                    row.date,
-                    row.purpose,
-                  ]
-                    .filter(Boolean)
-                    .join(' · ')
-                }}
-              </span>
-              <span class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-sm">
-                <RouterLink
-                  v-for="c in row.claims"
-                  :key="c.name"
-                  class="inline-flex min-h-11 items-center text-ink-blue-link underline sm:min-h-0"
-                  :to="{
-                    name: 'GastoEmpleado',
-                    params: { name: c.name },
-                    query: { list: listPath },
-                  }"
-                  >{{
-                    c.pending
-                      ? __('{0}: {1} to discount', [
-                          c.name,
-                          money(c.allocated, row.currency),
-                        ])
-                      : __('{0}: {1} discounted', [
-                          c.name,
-                          money(c.allocated, row.currency),
-                        ])
-                  }}</RouterLink
-                >
-              </span>
-            </span>
-            <span
-              class="shrink-0 text-right text-sm font-medium tabular-nums text-ink-gray-9"
-              >{{ __('{0} left', [money(row.remaining, row.currency)]) }}</span
+              <template #trailing>
+                <StatusChip
+                  :label="stateLabel(row)"
+                  :tone="stateChipTone(row)"
+                />
+              </template>
+            </ListRow>
+            <!-- An open advance: what is left and the claims that discount it. -->
+            <ListRow
+              v-else-if="row.doctype === 'Employee Advance'"
+              icon="lucide-wallet"
+              :title="row.employee_name"
+              :subtitle="advanceLine(row)"
+              :meta="__('{0} left', [money(row.remaining, row.currency)])"
             >
-          </div>
-          <!-- What the cash register gave this week: a read-only view. -->
-          <details v-else class="group px-4 py-3 sm:px-6">
-            <summary
-              class="flex min-h-11 cursor-pointer list-none items-start gap-3"
-            >
-              <FeatherIcon
-                :name="row.kind === 'advance' ? 'briefcase' : 'shopping-bag'"
-                class="mt-0.5 h-4 w-4 shrink-0 text-ink-gray-5"
-              />
-              <span class="min-w-0 flex-1">
-                <span class="block truncate font-medium text-ink-gray-9">
-                  {{
-                    row.kind === 'advance'
-                      ? __('Advance to {0}', [row.employee_name || '—'])
-                      : __('Expense from the register')
-                  }}
+              <template #subtitle>
+                <span class="block truncate">{{ advanceLine(row) }}</span>
+                <span class="mt-1 flex flex-wrap gap-x-3 gap-y-1">
+                  <RouterLink
+                    v-for="c in row.claims"
+                    :key="c.name"
+                    class="inline-flex min-h-11 items-center text-ink-blue-link underline sm:min-h-0"
+                    :to="{
+                      name: 'GastoEmpleado',
+                      params: { name: c.name },
+                      query: { list: listPath },
+                    }"
+                    >{{
+                      c.pending
+                        ? __('{0}: {1} to discount', [
+                            c.name,
+                            money(c.allocated, row.currency),
+                          ])
+                        : __('{0}: {1} discounted', [
+                            c.name,
+                            money(c.allocated, row.currency),
+                          ])
+                    }}</RouterLink
+                  >
                 </span>
-                <span class="block truncate text-sm text-ink-gray-6">{{
-                  [row.date, row.register].filter(Boolean).join(' · ')
-                }}</span>
-              </span>
-              <span
-                class="shrink-0 text-right text-sm font-medium tabular-nums text-ink-gray-9"
-                >{{ money(row.amount, row.currency) }}</span
-              >
-            </summary>
-            <dl class="mt-2 grid grid-cols-1 gap-1 pl-7 text-sm sm:grid-cols-2">
-              <div v-if="row.remarks">
-                <dt class="text-ink-gray-6">{{ __('Note') }}</dt>
-                <dd class="text-ink-gray-8">{{ row.remarks }}</dd>
-              </div>
-              <div v-if="row.cashier">
-                <dt class="text-ink-gray-6">
-                  {{ __('Cashier', null, 'Gastos') }}
-                </dt>
-                <dd class="text-ink-gray-8">{{ row.cashier }}</dd>
-              </div>
-              <div v-if="row.advance">
-                <dt class="text-ink-gray-6">
-                  {{ __('Advance', null, 'Gastos') }}
-                </dt>
-                <dd class="text-ink-gray-8">{{ row.advance }}</dd>
-              </div>
-            </dl>
-          </details>
-        </li>
-      </ul>
+              </template>
+            </ListRow>
+            <!-- What the cash register gave: a read-only movement. -->
+            <ListRow
+              v-else
+              :icon="
+                row.kind === 'advance' ? 'lucide-wallet' : 'lucide-shopping-bag'
+              "
+              :title="movementTitle(row)"
+              :subtitle="movementSubtitle(row)"
+              :subtitle-lines="2"
+              :meta="money(row.amount, row.currency)"
+            />
+          </li>
+        </ul>
+      </template>
       <div v-if="hasMore" class="px-4 py-4 sm:px-6">
         <Button
           :label="__('Load more', null, 'Gastos')"
@@ -272,17 +191,31 @@
           @click="load(true)"
         />
       </div>
-    </template>
-
+    </div>
     <ClaimSheet v-model="sheetOpen" @sent="sent" @saved="saved" />
+    <Fab
+      v-if="isPhone && claims.file"
+      :label="__('New expense')"
+      icon="lucide-camera"
+      @click="update({ nuevo: '1' })"
+    />
   </div>
 </template>
 <script setup>
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Button, FeatherIcon, FormControl, toast } from 'frappe-ui'
+import { Button, TextInput, toast } from 'frappe-ui'
+import {
+  EmptyState,
+  Fab,
+  FilterChips,
+  ListRow,
+  PageHeader,
+  StatusChip,
+} from '@/components/ui'
 import ClaimGuard from '@/components/gastos/ClaimGuard.vue'
 import ClaimSheet from '@/components/gastos/ClaimSheet.vue'
+import { isMobile as isPhone } from '@/composables/breakpoint'
 import {
   CLAIM,
   SCOPES,
@@ -294,6 +227,7 @@ import {
   normalizeClaimChip,
   normalizeScope,
   rowAmount,
+  stateChipTone,
   stateLabel,
 } from '@/composables/useGastosEmpleados'
 
@@ -305,6 +239,7 @@ const emit = defineEmits(['segment'])
 const route = useRoute()
 const router = useRouter()
 const root = ref(null)
+const scrollerEl = ref(null)
 const rows = ref([])
 const counts = ref(null)
 const answeredChip = ref('')
@@ -319,6 +254,13 @@ const sheetOpen = ref(route.query.nuevo === '1')
 let ticket = 0
 let searchTimer = 0
 
+const CHIP_ICONS = {
+  mios: 'lucide-receipt',
+  'por-aprobar': 'lucide-check',
+  'por-reembolsar': 'lucide-banknote',
+  adelantos: 'lucide-wallet',
+  caja: 'lucide-shopping-bag',
+}
 const claims = computed(() => props.boot.claims || {})
 const chips = computed(() => claimChips(claims.value))
 const askedChip = computed(() =>
@@ -347,19 +289,25 @@ const listPath = computed(() => {
 })
 
 const capped = (n) => (counts.value?.capped && n >= 500 ? '500+' : String(n))
-function chipText(c) {
-  const label = chipLabel(c.value)
-  const n = counts.value?.[c.value]
-  return n ? `${label} · ${capped(n)}` : label
+function countOf(value) {
+  const n = counts.value?.[value]
+  return n ? capped(n) : undefined
 }
-function scopeText(s) {
-  const label = __(s.label, null, 'Gastos')
-  const n =
-    s.value === 'mine'
-      ? counts.value?.['por-aprobar-mine']
-      : counts.value?.['por-aprobar']
-  return n ? `${label} · ${capped(n)}` : label
-}
+const chipChoices = computed(() =>
+  chips.value.map((c) => ({
+    value: c.value,
+    label: chipLabel(c.value),
+    icon: CHIP_ICONS[c.value],
+    count: countOf(c.value),
+  })),
+)
+const scopeChoices = computed(() =>
+  SCOPES.map((s) => ({
+    value: s.value,
+    label: __(s.label, null, 'Gastos'),
+    count: countOf(s.value === 'mine' ? 'por-aprobar-mine' : 'por-aprobar'),
+  })),
+)
 
 const subtitle = computed(() => {
   if (!claims.value.enabled) return ''
@@ -419,6 +367,29 @@ const emptyBody = computed(() => {
   )
 })
 
+/** The row's first line: who or what, the one fact that tells claims apart. */
+function claimTitle(row) {
+  if (row.mine) return row.type_label || row.name
+  return row.employee_name || row.name
+}
+/** Its one useful second line: the type of another's claim, the note, the day. */
+function claimSubtitle(row) {
+  return [row.mine ? '' : row.type_label, row.note, row.date]
+    .filter(Boolean)
+    .join(' · ')
+}
+function advanceLine(row) {
+  return [row.date, row.purpose].filter(Boolean).join(' · ')
+}
+function movementTitle(row) {
+  if (row.kind === 'advance')
+    return __('Advance to {0}', [row.employee_name || '—'])
+  return row.remarks || __('Expense from the register')
+}
+function movementSubtitle(row) {
+  return [row.cashier, row.date, row.register].filter(Boolean).join(' · ')
+}
+
 async function load(more = false) {
   const mine = ++ticket
   loading.value = true
@@ -458,15 +429,9 @@ function onGuardAction(action) {
   if (action.key === 'bills') emit('segment', 'por-pagar')
 }
 
-// The page scroller is the layout's column: remember where the list was.
+// The page scroller here is the list's own: remember where it was.
 function scroller() {
-  let node = root.value?.parentElement
-  while (node && node !== document.body) {
-    const style = getComputedStyle(node)
-    if (/(auto|scroll)/.test(style.overflowY)) return node
-    node = node.parentElement
-  }
-  return null
+  return scrollerEl.value
 }
 const scrollKey = () => `muelle:gastos:claims:scroll:${listPath.value}`
 function rememberScroll() {

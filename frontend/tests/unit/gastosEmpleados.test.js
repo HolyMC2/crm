@@ -18,11 +18,16 @@ import {
 } from '@/composables/useGastos'
 import {
   advanceText,
+  claimApproverOptions,
   claimBack,
   claimChips,
   claimMissing,
+  claimRows,
+  claimTypeOptions,
+  claimTypesToSetUp,
   claimsSegmentShown,
   defaultSegment,
+  isAutomationAccount,
   nextClaim,
   normalizeClaimChip,
   normalizeScope,
@@ -31,6 +36,7 @@ import {
   rowAmount,
   runOnce,
   sameDecision,
+  stateChipTone,
   stateLabel,
 } from '@/composables/useGastosEmpleados'
 import { referenceTarget } from '@/composables/usePendientes'
@@ -286,6 +292,66 @@ describe('what blocks a step', () => {
   })
 })
 
+describe('the new-expense choices', () => {
+  it('offers only the types with their account, never a «needs setup» option', () => {
+    const types = [
+      { value: 'Taxi', label: 'Taxi', ready: true, reason: null },
+      { value: 'Food', label: 'Food', ready: false, reason: 'no account' },
+    ]
+    expect(claimTypeOptions(types)).toEqual([
+      { value: 'Taxi', label: 'Taxi', meta: '' },
+    ])
+    expect(claimTypesToSetUp(types).map((t) => t.value)).toEqual(['Food'])
+    expect(claimTypeOptions(undefined)).toEqual([])
+    expect(claimTypesToSetUp(undefined)).toEqual([])
+  })
+
+  it('never lists a bot among the approvers and keeps the people', () => {
+    const options = claimApproverOptions([
+      {
+        user: 'playwright-bot@docomexico.com',
+        full_name: 'Bot Playwright',
+      },
+      { user: 'ana@example.test', full_name: 'Ana', puesto: 'Encargada' },
+    ])
+    expect(options).toEqual([
+      { value: 'ana@example.test', label: 'Ana', meta: 'Encargada' },
+    ])
+    expect(isAutomationAccount('playwright-bot@docomexico.com')).toBe(true)
+    expect(
+      isAutomationAccount({ user: 'contabot@x.test', full_name: 'Contabot' }),
+    ).toBe(false)
+    expect(
+      isAutomationAccount({ user: 'marco@x.test', full_name: 'Marco' }),
+    ).toBe(false)
+  })
+
+  it('builds the payload save_claim takes', () => {
+    expect(
+      claimRows({
+        expense_type: 'Taxi',
+        amount: '300.50',
+        expense_date: '2026-10-13',
+        description: '  Al banco ',
+      }),
+    ).toEqual([
+      {
+        expense_type: 'Taxi',
+        amount: 300.5,
+        expense_date: '2026-10-13',
+        description: 'Al banco',
+      },
+    ])
+  })
+
+  it('gives each claim state its StatusChip tone', () => {
+    expect(stateChipTone(claim({ state: 'to_approve' }))).toBe('info')
+    expect(stateChipTone(claim({ state: 'rejected' }))).toBe('danger')
+    expect(stateChipTone(claim({ state: 'paid' }))).toBe('success')
+    expect(stateChipTone(claim({ state: 'draft' }))).toBe('warning')
+  })
+})
+
 // ── pages ────────────────────────────────────────────────────────────────
 
 const calls = []
@@ -346,6 +412,40 @@ const record = (doc = {}, actions = []) => ({
   history: [],
   assignments: [],
   actions,
+})
+
+const formOptions = (extra = {}) => ({
+  guard: null,
+  employee: { name: 'HR-EMP-1', employee_name: 'Juana Pérez', company: 'Doco' },
+  currency: 'MXN',
+  today: '2026-10-13',
+  types: [
+    { value: 'Taxi', label: 'Taxi', ready: true, reason: null },
+    {
+      value: 'Food',
+      label: 'Food',
+      ready: false,
+      reason: 'Food has no account in Doco yet.',
+    },
+  ],
+  types_guard: null,
+  approvers: [
+    {
+      user: 'playwright-bot@docomexico.com',
+      full_name: 'Bot Playwright',
+      puesto: null,
+      native: true,
+    },
+    {
+      user: 'ana@example.test',
+      full_name: 'Ana',
+      puesto: 'Encargada',
+      native: false,
+    },
+  ],
+  approver: 'playwright-bot@docomexico.com',
+  advance: null,
+  ...extra,
 })
 
 let app, root
@@ -460,6 +560,83 @@ describe('De empleados queue', () => {
       expect.arrayContaining(['Ask to turn it on', 'Continue with bills']),
     )
     expect(calls.some(([m]) => m === 'queue')).toBe(false)
+  })
+
+  it('the new-expense sheet offers only usable types and never a bot', async () => {
+    answers.queue = {
+      chip: 'mios',
+      scope: null,
+      rows: [],
+      has_more: false,
+      counts: { mios: 0, capped: false, totals: [] },
+      guard: null,
+    }
+    answers.form_options = formOptions()
+    await mountAt('/gastos?segment=empleados&nuevo=1')
+    const dialog = document.querySelector('[role="dialog"]')
+    expect(dialog).not.toBeNull()
+    expect(dialog.textContent).toContain('New expense')
+    expect(dialog.textContent).toContain('Take the receipt photo')
+    // The type choices: the one usable type, never the «needs setup» one.
+    expect(dialog.textContent).not.toContain('Food')
+    expect(dialog.textContent).not.toContain('needs setup')
+    dialog.querySelector('button[data-field="expense_type"]').click()
+    await flush()
+    expect(dialog.textContent).toContain('Taxi')
+    expect(dialog.textContent).not.toContain('Food')
+    ;[...dialog.querySelectorAll('[role="option"]')]
+      .find((b) => b.textContent.trim() === 'Taxi')
+      .click()
+    await flush()
+    expect(
+      dialog.querySelector('button[data-field="expense_type"]').textContent,
+    ).toContain('Taxi')
+    // The approver choices: the person, never the bot the old answer carried.
+    dialog.querySelector('button[data-field="approver"]').click()
+    await flush()
+    expect(dialog.textContent).toContain('Ana')
+    expect(dialog.textContent).not.toContain('Bot')
+    expect(
+      dialog.querySelector('button[data-field="approver"]').textContent,
+    ).toContain('Choose a person')
+  })
+
+  it('with no expense type set up the sheet says who fixes it and cannot send', async () => {
+    answers.queue = {
+      chip: 'mios',
+      scope: null,
+      rows: [],
+      has_more: false,
+      counts: { mios: 0, capped: false, totals: [] },
+      guard: null,
+    }
+    answers.form_options = formOptions({
+      types: [{ value: 'Food', label: 'Food', ready: false, reason: 'x' }],
+      types_guard: {
+        code: 'types_setup',
+        message: 'None of the expense types has an account in Doco yet.',
+        actions: [
+          {
+            key: 'open_types',
+            label: 'Open expense types',
+            href: '/app/expense-claim-type',
+          },
+          {
+            key: 'request_setup',
+            what: 'types',
+            label: 'Ask for it to be set up',
+          },
+        ],
+      },
+    })
+    await mountAt('/gastos?segment=empleados&nuevo=1')
+    const dialog = document.querySelector('[role="dialog"]')
+    expect(dialog.textContent).toContain(
+      'None of the expense types has an account in Doco yet.',
+    )
+    expect(document.querySelector('[data-testid="claim-send"]')).toBeNull()
+    expect(document.body.textContent).toContain('Open expense types')
+    expect(buttons()).toContain('Ask for it to be set up')
   })
 })
 

@@ -136,6 +136,23 @@ export function stateTheme(row) {
   )
 }
 
+/** The same state as a StatusChip tone (utils/display tones). */
+export function stateChipTone(row) {
+  return (
+    {
+      draft: 'warning',
+      to_fix: 'warning',
+      to_approve: 'info',
+      to_reimburse: 'info',
+      partly_reimbursed: 'info',
+      paid: 'success',
+      by_advance: 'success',
+      rejected: 'danger',
+      cancelled: 'neutral',
+    }[row?.state] || 'neutral'
+  )
+}
+
 /** The amount a queue row shows: what is still owed once approved, else the claim. */
 export function rowAmount(row) {
   if (['to_reimburse', 'partly_reimbursed'].includes(row?.state))
@@ -217,6 +234,60 @@ export function claimMissing(form, { photos = 0, sending = false } = {}) {
   if (sending && !form.approver) missing.push('approver')
   if (sending && !photos && !form.photo) missing.push('photo')
   return missing
+}
+
+/** The picker's choices for «Tipo de gasto»: only the types with their account in
+ *  this company, never a dead end labelled «needs setup». */
+export function claimTypeOptions(types) {
+  return (types || [])
+    .filter((type) => type?.ready)
+    .map((type) => ({
+      value: type.value,
+      label: type.label,
+      meta: type.description || '',
+    }))
+}
+
+/** The types still missing their account: the sheet asks for them to be set up. */
+export function claimTypesToSetUp(types) {
+  return (types || []).filter((type) => type && !type.ready)
+}
+
+// The service never offers a bot as approver; the screen keeps the same names out
+// as a last line of defense (a stale cached answer from before the filter).
+const AUTOMATION =
+  /(?:^|[\s._@-])(bot|bots|robot|automation|playwright|e2e|noreply|no-reply)(?:$|[\s._@-])/i
+
+/** Whether an account is the workspace's automation, never a person to ask. */
+export function isAutomationAccount(person) {
+  const info = typeof person === 'string' ? { user: person } : person || {}
+  return AUTOMATION.test(
+    `${info.label || info.full_name || ''} ${info.user || ''}`,
+  )
+}
+
+/** The picker's choices for «Quién lo aprueba»: the people the server offers; a
+ *  bot or an account that cannot open the claim is never listed. */
+export function claimApproverOptions(approvers) {
+  return (approvers || [])
+    .filter((person) => person && !isAutomationAccount(person))
+    .map((person) => ({
+      value: person.user,
+      label: person.full_name || person.user,
+      meta: person.puesto || '',
+    }))
+}
+
+/** One expense line as `save_claim` takes it: the numbers the sheet typed. */
+export function claimRows(form) {
+  return [
+    {
+      expense_type: form.expense_type,
+      amount: Number(form.amount),
+      expense_date: form.expense_date,
+      description: String(form.description || '').trim(),
+    },
+  ]
 }
 
 /** «Reembolsar»: what still blocks it. Bank transfers need their reference. */

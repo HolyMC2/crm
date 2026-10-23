@@ -28556,3 +28556,34 @@ msgstr "Sin hora"
 #: frontend/src/components/agenda/AgendaEventPanel.vue
 msgid "Go to record"
 msgstr "Ir al registro"
+#: frontend/src/components/gastos/ClaimSheet.vue
+msgid "Replace the photo"
+msgstr "Cambiar la foto"
+
+#: frontend/src/components/gastos/ClaimSheet.vue
+msgid "Choose a file"
+msgstr "Elegir archivo"
+
+#: frontend/src/components/gastos/ClaimSheet.vue
+msgid "The expense"
+msgstr "El gasto"
+
+#: frontend/src/components/gastos/ClaimSheet.vue
+msgid "Save as draft"
+msgstr "Guardar borrador"
+
+#: frontend/src/components/gastos/ClaimSheet.vue
+msgid "It goes with the expense and stays private."
+msgstr "Va con el gasto y es privado."
+
+#: frontend/src/components/gastos/ClaimSheet.vue
+msgid "When your accountant sets up the expense types, this screen fills in as usual."
+msgstr "Cuando tu contador configure los tipos de gasto, esta pantalla se llena como siempre."
+
+#: frontend/src/components/gastos/ClaimSheet.vue
+msgid "{0} expense types still have no account in {1}: they cannot be used until someone sets them up."
+msgstr "{0} tipos de gasto todavía no tienen cuenta en {1}: no se pueden usar hasta que alguien los configure."
+
+#: frontend/src/components/gastos/ClaimSheet.vue
+msgid "Only {0} can approve your expenses."
+msgstr "Solo {0} puede aprobar tus gastos."
