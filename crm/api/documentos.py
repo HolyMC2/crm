@@ -1139,6 +1139,7 @@ _DIFF_SKIP = frozenset(_STANDARD) | {
 	"base_rounding_adjustment",
 }
 _TEXT_TYPES = ("Text", "Small Text", "Long Text", "Text Editor", "Markdown Editor")
+_TABLE_TYPES = ("Table", "Table MultiSelect")
 _NUMBERS = re.compile(r"-?\d[\d,\s]*(?:\.\d+)?")
 _ROW_TITLES = ("item_name", "item_code", "description", "payment_term", "mode_of_payment")
 
@@ -1194,7 +1195,9 @@ def _diff_fields(doc):
 	for df in meta.fields:
 		if not df.fieldname or df.fieldname in masked or df.hidden:
 			continue
-		if df.fieldtype in _HIDDEN_TYPES:
+		# A table field stays in the map: its label names the rows and without it the
+		# worker cannot read the rows at all.
+		if df.fieldtype in _HIDDEN_TYPES and df.fieldtype not in _TABLE_TYPES:
 			continue
 		if df.permlevel and df.permlevel not in allowed:
 			continue
@@ -1226,13 +1229,14 @@ def _changed_diff(fields, changed):
 		df = fields.get(cstr(field))
 		if _skip_diff_field(field, df):
 			continue
-		kind, old_value = _diff_side(df, old)
-		_, new_value = _diff_side(df, new)
+		old_kind, old_value = _diff_side(df, old)
+		new_kind, new_value = _diff_side(df, new)
 		if old_value == new_value:
 			continue
 		if len(out) >= MAX_DIFF_FIELDS:
 			more += 1
 			continue
+		kind = new_kind if new_value != "" else old_kind
 		out.append({"label": _(df.label), "type": kind, "from": old_value, "to": new_value})
 	return out, more
 
@@ -1256,7 +1260,7 @@ def _is_item_table(doc, fieldname, child=None):
 	if child is not None:
 		return child.has_field("item_code")
 	df = doc.meta.get_field(cstr(fieldname))
-	if not df or df.fieldtype not in ("Table", "Table MultiSelect") or not df.options:
+	if not df or df.fieldtype not in _TABLE_TYPES or not df.options:
 		return False
 	try:
 		return frappe.get_meta(df.options).has_field("item_code")
@@ -1307,10 +1311,11 @@ def _child_changes(doc, table, diffs, child=None, allowed=None, masked=None):
 			continue
 		if _reset_noise(old, new):
 			continue
-		kind, old_value = _diff_side(df, old)
-		_, new_value = _diff_side(df, new)
+		old_kind, old_value = _diff_side(df, old)
+		new_kind, new_value = _diff_side(df, new)
 		if old_value == new_value:
 			continue
+		kind = new_kind if new_value != "" else old_kind
 		out.append({"label": _(df.label), "type": kind, "from": old_value, "to": new_value})
 		if len(out) >= MAX_ROW_CHANGES:
 			break
@@ -1332,7 +1337,7 @@ def _row_diff(doc, fields, data):
 	items = {"added": [], "removed": [], "changed": []}
 
 	def label_for(fieldname):
-		df = fields.get(cstr(fieldname)) or doc.meta.get_field(cstr(fieldname))
+		df = fields.get(cstr(fieldname))
 		return _(df.label) if df is not None and df.label else _diff_field(fieldname)
 
 	def bump(fieldname):
@@ -1345,9 +1350,14 @@ def _row_diff(doc, fields, data):
 			meta_cache[key] = _row_meta(doc, key)
 		return meta_cache[key]
 
+	def readable_table(fieldname):
+		return cstr(fieldname) in fields
+
 	def detail(rows, brief):
 		for entry in rows:
 			if not isinstance(entry, list | tuple) or len(entry) < 2:
+				continue
+			if not readable_table(entry[0]):
 				continue
 			bump(entry[0])
 			row = entry[1]
@@ -1369,6 +1379,8 @@ def _row_diff(doc, fields, data):
 			if not isinstance(entry, list | tuple) or len(entry) < 4:
 				continue
 			table, name, diffs = entry[0], entry[2], entry[3]
+			if not readable_table(table):
+				continue
 			child, allowed, masked = row_meta(table)
 			meaningful = _child_changes(doc, table, diffs, child, allowed, masked)
 			if not meaningful:

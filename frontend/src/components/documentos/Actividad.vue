@@ -233,11 +233,9 @@ function itemLine(row) {
 
 function diffLines(event) {
   if (event.kind !== 'edit') return []
-  const lines = (event.changes || []).map(changeLine)
-  if (event.changes_more)
-    lines.push(
-      `y ${event.changes_more} ${event.changes_more === 1 ? 'campo más' : 'campos más'}`,
-    )
+  const lines = []
+  // The rows first: «+2 Funda iPhone» is what a worker changed on a Gastos bill; the
+  // totals that moved because of it follow.
   const items = event.items || {}
   for (const row of items.added || []) lines.push(`+ ${itemLine(row)}`)
   for (const row of items.removed || []) lines.push(`− ${itemLine(row)}`)
@@ -259,6 +257,11 @@ function diffLines(event) {
   if (hidden)
     lines.push(
       `y ${hidden} ${hidden === 1 ? 'cambio más' : 'cambios más'} en las filas`,
+    )
+  for (const change of event.changes || []) lines.push(changeLine(change))
+  if (event.changes_more)
+    lines.push(
+      `y ${event.changes_more} ${event.changes_more === 1 ? 'campo más' : 'campos más'}`,
     )
   return lines
 }
