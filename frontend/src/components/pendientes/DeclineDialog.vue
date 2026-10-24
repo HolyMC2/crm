@@ -1,10 +1,10 @@
 <template>
   <Dialog
     :model-value="modelValue"
-    :options="{ title: __(`Don't approve`) }"
+    :title="__(`Don't approve`)"
     @update:model-value="close"
   >
-    <template #body-content>
+    <template #default>
       <div class="space-y-3">
         <p v-if="title" class="text-base text-ink-gray-8">{{ title }}</p>
         <FormControl

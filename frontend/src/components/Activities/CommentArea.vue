@@ -23,7 +23,7 @@
         <Dropdown
           v-if="isOwner && !editing"
           :options="menuOptions"
-          placement="right"
+          align="end"
           @click="confirmingDelete = false"
         >
           <Button

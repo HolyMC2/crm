@@ -136,7 +136,7 @@ async function mount(redirect = { name: 'Deal' }) {
     setup:
       (props, { slots }) =>
       () =>
-        props.open ? h('div', slots.body?.()) : null,
+        props.open ? h('div', slots.default?.()) : null,
   })
   app.component('ErrorMessage', {
     props: { message: { type: String, default: '' } },

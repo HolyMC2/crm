@@ -28,7 +28,7 @@
       aria-hidden="true"
     />
     <Tooltip class="min-w-0 flex-1">
-      <template #body>
+      <template #content>
         <div v-if="isImage" class="overflow-hidden rounded shadow-xl">
           <img
             :src="value"

@@ -18,8 +18,8 @@
   see is a hole the operator fills.
 -->
 <template>
-  <Dialog v-model="show" :options="{ title: __('Enviar mensaje'), size: 'xl' }">
-    <template #body-content>
+  <Dialog v-model="show" :title="__('Enviar mensaje')" size="xl">
+    <template #default>
       <div class="space-y-4">
         <div class="flex flex-wrap items-center gap-2">
           <button

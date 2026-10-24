@@ -41,7 +41,7 @@
       />
       <Dropdown
         v-if="dropdownOptions.length"
-        placement="right"
+        align="end"
         :options="dropdownOptions"
       >
         <Button

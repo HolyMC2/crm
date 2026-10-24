@@ -18,11 +18,7 @@ vi.mock('frappe-ui', () => ({
   Dialog: defineComponent({
     setup(_, { slots }) {
       return () =>
-        h('div', [
-          slots['body-header']?.(),
-          slots.default?.(),
-          slots.actions?.(),
-        ])
+        h('div', [slots.title?.(), slots.default?.(), slots.actions?.()])
     },
   }),
   Switch: defineComponent({

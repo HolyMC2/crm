@@ -1,12 +1,10 @@
 <template>
   <Dialog
     v-model="open"
-    :options="{
-      title: address?.name ? 'Editar dirección' : 'Añadir dirección',
-      size: 'xl',
-    }"
+    :title="address?.name ? 'Editar dirección' : 'Añadir dirección'"
+    size="xl"
   >
-    <template #body-content
+    <template #default
       ><div class="c-editor">
         <RecoveryMessage
           :error="conflict ? null : error"

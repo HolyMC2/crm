@@ -16,7 +16,7 @@
       v-if="showDropdown"
       :options="parsedOptions"
       size="sm"
-      placement="right"
+      align="end"
       :button="{
         icon: LucideChevronDown,
         variant: $attrs.variant,

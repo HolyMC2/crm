@@ -2,22 +2,25 @@ import { createApp, h } from 'vue'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import DashboardItem from '@/components/Dashboard/DashboardItem.vue'
 
-const chart = {
-  render() {
-    return h('span', { 'data-chart': '' })
-  },
-}
-vi.mock('frappe-ui/charts', () => ({
-  NumberCard: {
-    props: ['value'],
+vi.mock('frappe-ui/charts', async () => {
+  const { h } = await import('vue')
+  const chart = {
     render() {
-      return h('span', { 'data-chart': '' }, String(this.value))
+      return h('span', { 'data-chart': '' })
     },
-  },
-  BarChart: chart,
-  LineChart: chart,
-  DonutChart: chart,
-}))
+  }
+  return {
+    NumberCard: {
+      props: ['value'],
+      render() {
+        return h('span', { 'data-chart': '' }, String(this.value))
+      },
+    },
+    BarChart: chart,
+    LineChart: chart,
+    DonutChart: chart,
+  }
+})
 vi.mock('frappe-ui', () => ({
   Tooltip: {
     render() {

@@ -1,9 +1,6 @@
 <template>
-  <Dialog
-    v-model="show"
-    :options="{ title: __('Test submission'), size: 'lg' }"
-  >
-    <template #body-content>
+  <Dialog v-model="show" :title="__('Test submission')" size="lg">
+    <template #default>
       <div v-if="report && !report.ok" class="flex flex-col gap-3">
         <div
           class="flex items-start gap-2 rounded-md bg-surface-red-2 p-3 text-p-base text-ink-red-7"

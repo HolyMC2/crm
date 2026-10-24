@@ -1,8 +1,6 @@
 <template>
-  <Dialog
-    v-model="open"
-    :options="{ title: 'Revisar y vincular registros', size: 'lg' }"
-    ><template #body-content
+  <Dialog v-model="open" title="Revisar y vincular registros" size="lg"
+    ><template #default
       ><div class="c-editor">
         <p>
           Confirma el tipo de relación. Representar a una empresa o pagar por

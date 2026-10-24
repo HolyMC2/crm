@@ -543,8 +543,8 @@
       </template>
     </div>
 
-    <Dialog v-model="repairing" :options="{ title: __('Repair in Taller') }">
-      <template #body-content>
+    <Dialog v-model="repairing" :title="__('Repair in Taller')">
+      <template #default>
         <div class="space-y-4">
           <FormControl
             v-model="repairForm.kind"
@@ -604,9 +604,9 @@
 
     <Dialog
       v-model="transitioning"
-      :options="{ title: pending ? actionLabel(pending.action) : '' }"
+      :title="pending ? actionLabel(pending.action) : ''"
     >
-      <template #body-content>
+      <template #default>
         <div class="space-y-4">
           <p class="text-sm text-ink-gray-7">{{ transitionHint }}</p>
           <ComprasPicker
@@ -651,8 +651,8 @@
       </template>
     </Dialog>
 
-    <Dialog v-model="outcomeLinking" :options="{ title: __('Link outcome') }">
-      <template #body-content>
+    <Dialog v-model="outcomeLinking" :title="__('Link outcome')">
+      <template #default>
         <div class="space-y-4">
           <p class="text-sm text-ink-gray-7">
             {{

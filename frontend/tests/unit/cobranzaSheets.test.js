@@ -23,14 +23,14 @@ vi.mock('frappe-ui', async () => {
     },
     // The desktop container renders its slots so the form can be driven.
     Dialog: {
-      props: ['modelValue', 'options'],
+      props: ['modelValue', 'title'],
       setup:
         (props, { slots }) =>
         () =>
           props.modelValue
             ? h('div', { role: 'dialog' }, [
-                h('h2', props.options?.title),
-                slots['body-content']?.(),
+                h('h2', props.title),
+                slots.default?.(),
                 slots.actions?.(),
               ])
             : null,

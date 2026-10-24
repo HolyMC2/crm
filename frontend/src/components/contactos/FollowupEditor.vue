@@ -1,11 +1,9 @@
 <template>
   <Dialog
     v-model="open"
-    :options="{
-      title: followup ? 'Reprogramar seguimiento' : 'Añadir seguimiento',
-    }"
+    :title="followup ? 'Reprogramar seguimiento' : 'Añadir seguimiento'"
   >
-    <template #body-content
+    <template #default
       ><div class="c-editor">
         <p class="c-muted">
           Se guarda en tu tarea nativa y aparece en Pendientes.

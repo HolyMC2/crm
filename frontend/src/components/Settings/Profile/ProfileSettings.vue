@@ -19,8 +19,8 @@
                   :label="fullName"
                 />
                 <Tooltip
-                  :hoverDelay="0"
-                  placement="bottom"
+                  :hover-delay="0"
+                  side="bottom"
                   :text="profileTooltipText"
                 >
                   <div

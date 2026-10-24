@@ -270,11 +270,8 @@
       </template>
     </div>
 
-    <Dialog
-      v-model="closing"
-      :options="{ title: __('Close follow-up'), size: 'md' }"
-    >
-      <template #body-content>
+    <Dialog v-model="closing" :title="__('Close follow-up')" size="md">
+      <template #default>
         <FormControl
           v-model="whatWeDid"
           type="textarea"

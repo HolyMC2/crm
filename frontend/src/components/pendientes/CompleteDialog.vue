@@ -1,12 +1,10 @@
 <template>
   <Dialog
     :model-value="modelValue"
-    :options="{
-      title: scheduleNext ? __('Done and schedule next') : __('Mark done'),
-    }"
+    :title="scheduleNext ? __('Done and schedule next') : __('Mark done')"
     @update:model-value="$emit('update:modelValue', $event)"
   >
-    <template #body-content>
+    <template #default>
       <form class="space-y-4" @submit.prevent="save">
         <p class="text-base text-ink-gray-8">{{ row?.description }}</p>
         <p v-if="row?.reference_label" class="text-sm text-ink-gray-6">

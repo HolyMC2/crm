@@ -19,9 +19,7 @@ vi.mock('frappe-ui', () => ({
     setup:
       (p, { slots }) =>
       () =>
-        p.modelValue
-          ? h('div', { role: 'dialog' }, slots['body-content']?.())
-          : null,
+        p.modelValue ? h('div', { role: 'dialog' }, slots.default?.()) : null,
   }),
 }))
 vi.mock('@/composables/salesDocs', () => ({ reloadSalesSummary: vi.fn() }))

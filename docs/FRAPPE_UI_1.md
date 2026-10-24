@@ -207,11 +207,45 @@ mask class costs 0.15–0.3 KB gzip, so string names were not converted to class
   step 7b; feather-icons (88 KB minified) left the entry, `@vueuse/core` (22 KB) entered it
   through the composables that already imported it from the hoisted copy.
 
+### Step 7b: the slots and props that 1.0.2 dropped without a build error
+
+beta.29 carried a compatibility layer (`warnDeprecated` in dev) for the beta-era API; 1.0.2
+removed it, so the content behind the old slot names simply stopped rendering: every dialog body
+(`#body-content` 53 sites, `#body` 14), every popover (`#target` 16, `#body` 10, `#body-main` 4),
+every `:options="{ title, size }"` title (54). The full vitest run after the bump showed it (25 failed
+tests in 11 files, all dialogs and selectors). `scripts/codemods/legacy-slots.mjs` does the
+mechanical part and `check-frappe-ui-exports.mjs` cannot see any of it (it checks import names):
+
+- Dialog: `#body-content` → `#default`; `#body` → `#default` on a `bare` dialog;
+  `#body-header` (EventModal, ConvertToDealModal) → `#title` with `:show-close-button="false"`,
+  since those headers draw their own close button; `:options="{…}"` → `title`/`size` props;
+  `:disableOutsideClickToClose="x"` → `:dismissible="!(x)"`. Agenda's dynamic `#[formSlot]`
+  (`'body-content'` for the dialog, `'default'` for the phone sheet) is `#default` for both.
+- Popover: `#target` → `#trigger`, `#body` → `#default` + `bare`, `#body-main` → `#default`,
+  `placement="side-align"` → `side` + `align`, `v-model:show` → `v-model:open`,
+  `transition="default"` dropped. The slot props changed from `{ togglePopover, isOpen, open() }`
+  to `{ open, close, setOpen }`, and reka's `PopoverTrigger` now wires the click itself, so the
+  trigger buttons lost their `@click="togglePopover"` (a second toggle would close what reka
+  opened) and the bodies call `close()`. Where the trigger must decide (FormBuilder publishes or
+  opens the checklist; HierarchyRow's trigger sits inside a Tooltip; IconPicker and crm's
+  Autocomplete expose `togglePopover` to their callers) the popover is `trigger="manual"` and the
+  site calls `setOpen`. The three `trigger="hover"` info popovers (old SLA / assignment
+  conditions) are `HoverCard` (`hover-delay` 250 ms).
+- Tooltip: `#body` → `#content`, `placement` → `side`, `hoverDelay` seconds → ms (`:hover-delay`
+  values under 10 were seconds; `1500` on the sidebar was already ms). Dropdown
+  `placement="right"` → `align="end"` (beta.29's alias table). DatePicker/TimePicker
+  `placement` → `side`.
+- crm's `Autocomplete.vue` keeps its `#target` slot API (`open`, `togglePopover`, `isOpen`,
+  `targetAttrs`) for `Link` and its six callers by owning those functions over `showOptions`; its
+  `placement` prop splits into the popover's `side`/`align`.
+- Test doubles that stubbed `Dialog` with `slots.body`/`slots['body-content']`/`options.title`
+  render `slots.default`/`title` (17 files, 14 of them Dialog stubs).
+
 ## 5. Input list for `FUI1-behavior` (silent breaks)
 
 Filled at step 8 from the lab walk. Known from the sources before the walk:
 
-- Dialogs (step 7b): the body is the default slot; the 13 full-override bodies are `bare`
+- Dialogs (step 7b): the body is the default slot; the 14 full-override bodies are `bare`
   dialogs, so they draw their own padding and close affordance exactly as before, but the size
   and title props are now flat (`title`/`size`); `.close()` on dialog refs is unverified.
 - Popovers (step 7b): reka-ui opens on pointerdown/click and keyboard through `PopoverTrigger`;

@@ -57,7 +57,7 @@ vi.mock('@/components/doco/inbox/CatalogPicker.vue', () => ({
 const cleanups = []
 afterEach(() => cleanups.splice(0).forEach((cleanup) => cleanup()))
 
-const DialogBody = (_, { slots }) => h('section', slots.body?.())
+const DialogBody = (_, { slots }) => h('section', slots.default?.())
 DialogBody.props = { open: Boolean, size: String }
 
 function mount(component, props = {}) {

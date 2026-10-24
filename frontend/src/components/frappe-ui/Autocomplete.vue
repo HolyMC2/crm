@@ -1,52 +1,60 @@
 <template>
   <Combobox v-model="selectedValue" :disabled="disabled" nullable>
-    <Popover v-model:show="showOptions" class="w-full" :placement="placement">
-      <template #target="{ open: openPopover, togglePopover }">
-        <slot
-          name="target"
-          v-bind="{
-            open: openPopover,
-            togglePopover,
-            isOpen: showOptions,
-            selectedValue,
-            displayValue,
-            targetAttrs,
-          }"
-        >
-          <div class="w-full">
-            <button
-              v-bind="targetAttrs"
-              :aria-describedby="selectedValue ? valueId : undefined"
-              class="relative flex h-7 w-full items-center justify-between gap-2 rounded px-2 py-1 transition-colors pr-7"
-              :class="inputClasses"
-              @click="() => !disabled && togglePopover()"
-            >
-              <div
-                v-if="selectedValue"
-                class="flex text-base leading-5 items-center truncate"
+    <Popover
+      v-model:open="showOptions"
+      bare
+      trigger="manual"
+      :side="side"
+      :align="align"
+    >
+      <template #trigger>
+        <div class="flex w-full">
+          <slot
+            name="target"
+            v-bind="{
+              open: openPopover,
+              togglePopover,
+              isOpen: showOptions,
+              selectedValue,
+              displayValue,
+              targetAttrs,
+            }"
+          >
+            <div class="w-full">
+              <button
+                v-bind="targetAttrs"
+                :aria-describedby="selectedValue ? valueId : undefined"
+                class="relative flex h-7 w-full items-center justify-between gap-2 rounded px-2 py-1 transition-colors pr-7"
+                :class="inputClasses"
+                @click="() => !disabled && togglePopover()"
               >
-                <slot name="prefix" />
-                <span :id="valueId" class="truncate">
-                  {{ displayValue(selectedValue) }}
-                </span>
-              </div>
-              <div
-                v-else
-                class="absolute text-ink-gray-4 text-left truncate w-full pr-7"
-              >
-                {{ placeholder || '' }}
-              </div>
-              <span
-                v-if="!disabled"
-                class="lucide-chevron-down absolute h-4 w-4 text-ink-gray-5 right-2"
-                aria-hidden="true"
-              />
-            </button>
-          </div>
-        </slot>
+                <div
+                  v-if="selectedValue"
+                  class="flex text-base leading-5 items-center truncate"
+                >
+                  <slot name="prefix" />
+                  <span :id="valueId" class="truncate">
+                    {{ displayValue(selectedValue) }}
+                  </span>
+                </div>
+                <div
+                  v-else
+                  class="absolute text-ink-gray-4 text-left truncate w-full pr-7"
+                >
+                  {{ placeholder || '' }}
+                </div>
+                <span
+                  v-if="!disabled"
+                  class="lucide-chevron-down absolute h-4 w-4 text-ink-gray-5 right-2"
+                  aria-hidden="true"
+                />
+              </button>
+            </div>
+          </slot>
+        </div>
       </template>
-      <template #body="{ isOpen }">
-        <div v-show="isOpen">
+      <template #default="{ open }">
+        <div v-show="open">
           <div
             class="relative mt-1 rounded-lg bg-surface-elevation-2 text-base shadow-2xl max-w-[350px]"
           >
@@ -236,6 +244,20 @@ const selectedValue = computed({
 function close() {
   showOptions.value = false
 }
+
+function openPopover() {
+  showOptions.value = true
+}
+
+function togglePopover(flag) {
+  if (flag instanceof Event) flag = undefined
+  showOptions.value = flag == null ? !showOptions.value : Boolean(flag)
+}
+
+// `placement` ("bottom-start", "top-end"…) is this component's prop; frappe-ui
+// 1.0's Popover takes the two halves.
+const side = computed(() => props.placement.split('-')[0])
+const align = computed(() => props.placement.split('-')[1] || 'start')
 
 const groups = computed(() => {
   if (!props.options || props.options.length == 0) return []

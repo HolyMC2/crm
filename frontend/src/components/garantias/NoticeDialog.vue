@@ -1,6 +1,6 @@
 <template>
-  <Dialog v-model="open" :options="{ title: __('Notify the customer') }">
-    <template #body-content>
+  <Dialog v-model="open" :title="__('Notify the customer')">
+    <template #default>
       <div class="space-y-4">
         <p v-if="loading" role="status" class="text-sm text-ink-gray-6">
           {{ __('Checking how to reach the customer…') }}

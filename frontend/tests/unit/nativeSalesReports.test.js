@@ -4,13 +4,23 @@ import { createMemoryHistory, createRouter, RouterView } from 'vue-router'
 const api = vi.hoisted(() => ({ call: vi.fn() }))
 vi.mock('frappe-ui', () => ({
   call: (...args) => api.call(...args),
-  AxisChart: {
-    props: ['config', 'events'],
-    setup: (props) => () =>
-      h('button', {
-        'data-chart': 'axis',
-        onClick: () => props.events?.click({ dataIndex: 0 }),
-      }),
+}))
+vi.mock('frappe-ui/charts', () => ({
+  BarChart: {
+    props: ['data'],
+    emits: ['select'],
+    setup:
+      (props, { emit }) =>
+      () =>
+        h('button', {
+          'data-chart': 'axis',
+          onClick: () =>
+            emit('select', {
+              name: 'value',
+              value: props.data[0]?.value,
+              row: props.data[0],
+            }),
+        }),
   },
 }))
 vi.mock('@/utils/crmCapabilities', () => ({ addonAvailable: ref(false) }))

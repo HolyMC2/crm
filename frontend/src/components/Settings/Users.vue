@@ -31,7 +31,7 @@
             iconLeft: LucidePlus,
             variant: 'solid',
           }"
-          placement="right"
+          align="end"
         />
       </div>
     </div>
@@ -116,7 +116,7 @@
                     confirmRemove = false
                   },
                 }"
-                placement="right"
+                align="end"
               />
               <Tooltip
                 v-if="isManager() && user.role == 'System Manager'"
@@ -137,7 +137,7 @@
                         ? LucideBriefcase
                         : LucideUserCheck,
                 }"
-                placement="right"
+                align="end"
               />
             </div>
           </li>

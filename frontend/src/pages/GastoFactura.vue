@@ -384,11 +384,8 @@
     </div>
 
     <!-- «Revisar y registrar»: the bill's own submit. -->
-    <Dialog
-      v-model="reviewOpen"
-      :options="{ title: __('Register this bill?') }"
-    >
-      <template #body-content>
+    <Dialog v-model="reviewOpen" :title="__('Register this bill?')">
+      <template #default>
         <p class="text-base text-ink-gray-7">
           {{
             __(

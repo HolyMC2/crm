@@ -1,6 +1,6 @@
 <template>
-  <Dialog v-model="open" :options="{ title: __('Edit product details') }">
-    <template #body-content>
+  <Dialog v-model="open" :title="__('Edit product details')">
+    <template #default>
       <div class="space-y-4">
         <FormControl
           v-model="form.item_name"

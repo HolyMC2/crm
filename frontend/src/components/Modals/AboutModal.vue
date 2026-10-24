@@ -1,6 +1,6 @@
 <template>
-  <Dialog v-model:open="show" :size="'sm'">
-    <template #body>
+  <Dialog bare v-model:open="show" :size="'sm'">
+    <template #default>
       <div class="p-4 pt-5">
         <div class="flex justify-center">
           <div class="flex flex-col items-center">

@@ -1,6 +1,6 @@
 <template>
   <Tooltip v-if="!disabled">
-    <template #body>
+    <template #content>
       <div
         class="rounded bg-surface-gray-10 py-1.5 px-2 text-xs text-ink-base shadow-xl"
       >

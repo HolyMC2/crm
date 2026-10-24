@@ -1,7 +1,7 @@
 <template>
-  <Dialog v-model:open="show" :size="'xl'">
-    <template #body-header>
-      <div class="mb-6 flex items-center justify-between">
+  <Dialog v-model:open="show" :size="'xl'" :show-close-button="false">
+    <template #title>
+      <div class="flex items-center justify-between">
         <div class="flex items-center space-x-2">
           <h3 class="text-3xl-semibold leading-6 text-ink-gray-9">
             {{
@@ -110,7 +110,7 @@
               :modelValue="_event.toTime"
               :options="toOptions"
               :placeholder="__('End Time')"
-              placement="bottom-end"
+              side="bottom"
               @update:modelValue="(time) => updateTime(time)"
             />
           </div>

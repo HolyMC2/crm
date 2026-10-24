@@ -464,10 +464,8 @@
       :quote-codes="quoteCodes"
       @add="addItems"
     />
-    <Dialog
-      v-model="orderConfirm"
-      :options="{ title: __('Crear orden de venta'), size: 'sm' }"
-      ><template #body-content
+    <Dialog v-model="orderConfirm" :title="__('Crear orden de venta')" size="sm"
+      ><template #default
         ><p class="text-sm text-ink-gray-7">
           {{
             __(
@@ -490,8 +488,9 @@
     >
     <Dialog
       v-model="linkOpen"
-      :options="{ title: __('Vincular documento existente'), size: '2xl' }"
-      ><template #body-content
+      :title="__('Vincular documento existente')"
+      size="2xl"
+      ><template #default
         ><p class="mb-3 text-sm text-ink-gray-6">
           {{
             __(

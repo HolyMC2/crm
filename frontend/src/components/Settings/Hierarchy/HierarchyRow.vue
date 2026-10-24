@@ -58,18 +58,24 @@
         "
         @click.stop
       >
-        <Popover placement="bottom-end" @update:show="popoverOpen = $event">
-          <template #target="{ togglePopover }">
+        <Popover
+          bare
+          trigger="manual"
+          side="bottom"
+          align="end"
+          @update:open="popoverOpen = $event"
+        >
+          <template #trigger="{ open, setOpen }">
             <Tooltip :text="__('Add direct reports')">
               <Button
                 variant="ghost"
                 size="sm"
                 icon="lucide-plus"
-                @click="togglePopover()"
+                @click="setOpen(!open)"
               />
             </Tooltip>
           </template>
-          <template #body="{ togglePopover }">
+          <template #default="{ close }">
             <div
               class="mt-1 rounded-lg bg-surface-base shadow-2xl w-72 border border-outline-gray-2"
             >
@@ -83,13 +89,13 @@
                   variant="solid"
                   :disabled="!selected.length"
                   :label="__('Add ({0})', [selected.length])"
-                  @click="commit(togglePopover)"
+                  @click="commit(close)"
                 />
               </div>
             </div>
           </template>
         </Popover>
-        <Dropdown :options="moreOptions" placement="right">
+        <Dropdown :options="moreOptions" align="end">
           <template #default="{ open }">
             <Button
               variant="ghost"
@@ -141,11 +147,11 @@ watch(popoverOpen, (open) => {
   if (!open) selected.value = []
 })
 
-function commit(togglePopover) {
+function commit(close) {
   if (!selected.value.length) return
   emit('bulk-add', { parent: props.node, userIds: selected.value })
   selected.value = []
-  togglePopover()
+  close()
 }
 
 const moreOptions = computed(() => {

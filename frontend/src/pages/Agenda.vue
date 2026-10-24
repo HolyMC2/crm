@@ -630,7 +630,7 @@
       v-bind="formContainerProps"
       @update:open="(open) => !open && closeForm(eventFormRef?.dirty)"
     >
-      <template #[formSlot]>
+      <template #default>
         <div :class="phone ? 'px-5 pb-4' : ''">
           <h2 v-if="phone" class="pb-3 text-xl font-semibold">
             {{ formTitle }}
@@ -734,7 +734,7 @@
       v-bind="sheetProps(__('New appointment'))"
       @update:open="(open) => !open && (citaForm = null)"
     >
-      <template #[formSlot]>
+      <template #default>
         <div :class="phone ? 'px-5 pb-4' : ''">
           <h2 v-if="phone" class="pb-3 text-xl font-semibold">
             {{ __('New appointment') }}
@@ -761,7 +761,7 @@
       v-bind="sheetProps(__('Online appointments'))"
       @update:open="(open) => !open && (citaSettingsOpen = false)"
     >
-      <template #[formSlot]>
+      <template #default>
         <div :class="phone ? 'px-5 pb-4' : ''">
           <h2 v-if="phone" class="pb-3 text-xl font-semibold">
             {{ __('Online appointments') }}
@@ -2420,7 +2420,6 @@ const formTitle = computed(() =>
       ? __('Propose another time')
       : __('New event'),
 )
-const formSlot = computed(() => (phone.value ? 'default' : 'body-content'))
 // The dialog header's X emits update:open(false); each container wires it to
 // the same close path as its in-form Close/Cancel button.
 const eventFormRef = ref(null)

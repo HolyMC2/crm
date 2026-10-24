@@ -1,10 +1,10 @@
 <template>
   <Dialog
     :model-value="nextStepDialog.open"
-    :options="{ title: heading }"
+    :title="heading"
     @update:model-value="(open) => !open && close()"
   >
-    <template #body-content>
+    <template #default>
       <p
         v-if="nextStepDialog.loading"
         role="status"

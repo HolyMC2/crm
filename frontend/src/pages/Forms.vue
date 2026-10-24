@@ -215,7 +215,7 @@
               >
                 <template #prefix><LucideQrCode class="size-4" /></template>
               </Button>
-              <Dropdown placement="right" :options="rowMenu(f)">
+              <Dropdown align="end" :options="rowMenu(f)">
                 <Button
                   size="sm"
                   variant="ghost"

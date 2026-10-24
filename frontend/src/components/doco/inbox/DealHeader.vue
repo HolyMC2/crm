@@ -241,7 +241,7 @@
         >
           <LucidePhone class="h-4 w-4" />
         </button>
-        <Dropdown v-if="isMobile" :options="mobileMenu" placement="right">
+        <Dropdown v-if="isMobile" :options="mobileMenu" align="end">
           <button
             class="press flex size-11 items-center justify-center rounded-lg text-ink-gray-7 hover:bg-surface-gray-2"
             :class="
@@ -280,8 +280,8 @@
     </div>
 
     <!-- 🏷 etiquetas manager -->
-    <Dialog v-model="showTagsDialog" :options="{ title: __('Etiquetas') }">
-      <template #body-content>
+    <Dialog v-model="showTagsDialog" :title="__('Etiquetas')">
+      <template #default>
         <div v-if="localTags.length" class="mb-3 flex flex-wrap gap-1.5">
           <span
             v-for="tg in localTags"
@@ -337,11 +337,8 @@
     </Dialog>
 
     <!-- custom snooze datetime -->
-    <Dialog
-      v-model="showSnoozeDialog"
-      :options="{ title: __('Posponer hasta') }"
-    >
-      <template #body-content>
+    <Dialog v-model="showSnoozeDialog" :title="__('Posponer hasta')">
+      <template #default>
         <input
           v-model="snoozeCustom"
           type="datetime-local"

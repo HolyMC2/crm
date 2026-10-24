@@ -24,10 +24,11 @@
   <Dialog
     v-else
     :model-value="modelValue"
-    :options="{ title, size }"
+    :title="title"
+    :size="size"
     @update:model-value="(value) => $emit('update:modelValue', value)"
   >
-    <template #body-content>
+    <template #default>
       <div class="space-y-3 text-base" :data-power-sheet="kind">
         <p v-if="subtitle" class="text-sm text-ink-gray-6">{{ subtitle }}</p>
         <slot />

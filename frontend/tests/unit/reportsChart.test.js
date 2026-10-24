@@ -4,7 +4,15 @@ import { createApp, h } from 'vue'
 const captured = vi.hoisted(() => ({ props: null, emit: null }))
 vi.mock('frappe-ui/charts', () => ({
   BarChart: {
-    props: ['data', 'x', 'y', 'horizontal', 'xAxis', 'yAxis', 'seriesConfig'],
+    props: {
+      data: Array,
+      x: String,
+      y: [String, Array],
+      horizontal: Boolean,
+      xAxis: Object,
+      yAxis: Object,
+      seriesConfig: Object,
+    },
     emits: ['select'],
     setup(props, { emit }) {
       captured.props = props

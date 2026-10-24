@@ -1,9 +1,10 @@
 <template>
   <Dialog
     v-model="show"
-    :options="{ title: step === 1 ? __('New form') : chosenLabel, size: '2xl' }"
+    :title="step === 1 ? __('New form') : chosenLabel"
+    size="2xl"
   >
-    <template #body-content>
+    <template #default>
       <!-- step 1: start from something that already works -->
       <div v-if="step === 1" class="flex flex-col gap-3">
         <p class="text-p-base text-ink-gray-6">

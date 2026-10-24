@@ -830,13 +830,13 @@
       />
       <Dialog
         :model-value="!!unlinkTarget"
-        :options="{ title: 'Revisar desvinculación' }"
+        title="Revisar desvinculación"
         @update:model-value="
           (v) => {
             if (!v) unlinkTarget = null
           }
         "
-        ><template #body-content
+        ><template #default
           ><div class="c-editor">
             <p>
               {{

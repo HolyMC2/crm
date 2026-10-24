@@ -30,8 +30,8 @@
       <LucideCalendarClock class="h-4 w-4" />
     </button>
 
-    <Dialog v-model="show" :options="{ title: __('Cadencia de seguimiento') }">
-      <template #body-content>
+    <Dialog v-model="show" :title="__('Cadencia de seguimiento')">
+      <template #default>
         <!-- active enrollment: summary + stop -->
         <div v-if="active" class="flex flex-col gap-3">
           <div

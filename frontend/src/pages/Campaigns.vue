@@ -171,8 +171,8 @@
     </div>
 
     <!-- new campaign dialog -->
-    <Dialog v-model="showNew" :options="{ title: __('Nueva campaña') }">
-      <template #body-content>
+    <Dialog v-model="showNew" :title="__('Nueva campaña')">
+      <template #default>
         <div class="flex flex-col gap-3">
           <FormControl
             v-model="form.title"

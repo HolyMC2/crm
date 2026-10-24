@@ -5,7 +5,7 @@ const h = vi.hoisted(() => ({ manual: { value: false } }))
 vi.mock('frappe-ui', () => ({
   call: vi.fn(),
   toast: { error: vi.fn(), success: vi.fn() },
-  Dialog: { template: '<div><slot name="body-content" /></div>' },
+  Dialog: { template: '<div><slot /></div>' },
   Button: {
     props: ['label'],
     emits: ['click'],

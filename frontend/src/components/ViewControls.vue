@@ -110,7 +110,7 @@
             />
           </template>
           <template #item-label="{ item }">
-            <Tooltip :text="item.value" :hover-delay="1">
+            <Tooltip :text="item.value" :hover-delay="1000">
               <div class="flex-1 truncate text-ink-gray-7">
                 {{ item.label }}
               </div>
@@ -193,7 +193,7 @@
         />
         <Dropdown
           v-if="route.params.viewType !== 'kanban' || isManager()"
-          placement="right"
+          align="end"
           :options="[
             {
               group: __('Options'),

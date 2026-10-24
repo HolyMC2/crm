@@ -1,12 +1,10 @@
 <template>
   <Dialog
     v-model="open"
-    :options="{
-      title: source?.name ? 'Editar datos' : 'Nuevo contacto',
-      size: 'xl',
-    }"
+    :title="source?.name ? 'Editar datos' : 'Nuevo contacto'"
+    size="xl"
   >
-    <template #body-content>
+    <template #default>
       <div class="c-editor">
         <p class="c-muted">
           {{

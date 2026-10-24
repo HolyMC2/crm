@@ -1,6 +1,7 @@
 // Manual de la tienda, review fix round 1: the editor's leave guard after a new
 // article's first save (F1) and the sheets' panel and history copy (UX-1, F6, HIST-1),
 // mounted with a mocked doco.manual transport.
+import { semanticColors } from 'frappe-ui/tailwind/tokens'
 import fs from 'node:fs'
 import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -150,19 +151,7 @@ describe('editor leave guard (F1)', () => {
 
 describe('history sheet (UX-1, F6, HIST-1)', () => {
   // The surface tokens frappe-ui's Tailwind preset actually generates.
-  const surfaces = new Set(
-    Object.keys(
-      JSON.parse(
-        fs.readFileSync(
-          path.resolve(
-            __dirname,
-            '../../node_modules/frappe-ui/tailwind/generated/colors.json',
-          ),
-          'utf8',
-        ),
-      ).themedVariables.light.surface,
-    ),
-  )
+  const surfaces = new Set(Object.keys(semanticColors.light.surface))
 
   async function mountSheet(history) {
     root = document.createElement('div')

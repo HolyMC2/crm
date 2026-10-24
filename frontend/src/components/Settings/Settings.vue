@@ -1,12 +1,11 @@
 <template>
   <Dialog
+    bare
     v-model:open="showSettings"
     size="5xl"
-    :disableOutsideClickToClose="
-      disableSettingModalOutsideClick || session.pending.value
-    "
+    :dismissible="!(disableSettingModalOutsideClick || session.pending.value)"
   >
-    <template #body>
+    <template #default>
       <div
         class="flex h-[min(48rem,calc(100dvh_-_8rem))] min-w-0 flex-col bg-surface-gray-1 text-ink-gray-8"
       >

@@ -366,11 +366,8 @@
   </div>
 
   <!-- quick replies editor -->
-  <Dialog
-    v-model="showEditor"
-    :options="{ title: __('Quick replies'), size: 'lg' }"
-  >
-    <template #body-content>
+  <Dialog v-model="showEditor" :title="__('Quick replies')" size="lg">
+    <template #default>
       <p class="mb-3 text-sm text-ink-gray-5">
         {{
           __(

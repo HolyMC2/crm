@@ -1,6 +1,6 @@
 <template>
-  <Dialog v-model="open" :options="{ title: __('Assign review') }">
-    <template #body-content>
+  <Dialog v-model="open" :title="__('Assign review')">
+    <template #default>
       <p class="mb-3 text-sm text-ink-gray-7">
         {{
           __(

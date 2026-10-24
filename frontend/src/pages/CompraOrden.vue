@@ -650,8 +650,8 @@
     </div>
 
     <!-- Review before confirming: total, currency, destination, date, rows. -->
-    <Dialog v-model="reviewOpen" :options="{ title: __('Review and confirm') }">
-      <template #body-content>
+    <Dialog v-model="reviewOpen" :title="__('Review and confirm')">
+      <template #default>
         <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
           <dt class="text-ink-gray-5">{{ __('Supplier', null, 'Compras') }}</dt>
           <dd>{{ doc.party }}</dd>

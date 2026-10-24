@@ -7,11 +7,8 @@
   Ctrl/⌘+Enter sends. Emits `sent` so the parent reloads its thread.
 -->
 <template>
-  <Dialog
-    v-model="show"
-    :options="{ title: __('Enviar documento'), size: '2xl' }"
-  >
-    <template #body-content>
+  <Dialog v-model="show" :title="__('Enviar documento')" size="2xl">
+    <template #default>
       <div
         class="space-y-4"
         @keydown.ctrl.enter.prevent.stop="submit"

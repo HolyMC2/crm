@@ -87,7 +87,7 @@
       v-if="actionable && row.status === 'Open'"
       class="-my-2 -mr-2 flex shrink-0 sm:my-0 sm:mr-0"
     >
-      <Dropdown :options="menu" placement="right">
+      <Dropdown :options="menu" align="end">
         <Button
           variant="ghost"
           class="min-h-11 min-w-11 sm:min-h-7 sm:min-w-7"

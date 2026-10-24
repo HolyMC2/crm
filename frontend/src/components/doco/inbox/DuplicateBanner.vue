@@ -61,8 +61,8 @@
   </div>
 
   <!-- Confirm: states what moves and that the OTHER record (the duplicate) closes. -->
-  <Dialog v-model="confirmOpen" :options="{ title: __('Fusionar duplicado') }">
-    <template #body-content>
+  <Dialog v-model="confirmOpen" :title="__('Fusionar duplicado')">
+    <template #default>
       <div class="flex flex-col gap-3 text-p-base text-ink-gray-7">
         <p>
           {{

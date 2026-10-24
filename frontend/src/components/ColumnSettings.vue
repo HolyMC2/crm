@@ -1,7 +1,7 @@
 <template>
-  <Popover placement="bottom-end">
-    <template #target="{ togglePopover }">
-      <Button :label="__('Columns')" @click="togglePopover">
+  <Popover bare side="bottom" align="end">
+    <template #trigger>
+      <Button :label="__('Columns')">
         <template v-if="hideLabel" #icon>
           <ColumnsIcon class="h-4" />
         </template>
@@ -10,7 +10,7 @@
         </template>
       </Button>
     </template>
-    <template #body="{ close }">
+    <template #default="{ close }">
       <div
         class="my-2 p-1.5 min-w-40 rounded-lg bg-surface-elevation-2 shadow-2xl ring-1 ring-black ring-opacity-5 focus:outline-none"
       >

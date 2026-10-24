@@ -64,7 +64,7 @@
         >
       </p>
     </RouterLink>
-    <Dropdown v-if="row.status === 'Open'" :options="menu" placement="right">
+    <Dropdown v-if="row.status === 'Open'" :options="menu" align="end">
       <Button
         variant="ghost"
         class="min-h-11 min-w-11 shrink-0 sm:min-h-8 sm:min-w-0"

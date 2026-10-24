@@ -7,16 +7,12 @@ vi.mock('frappe-ui', async () => {
   return {
     call: (...args) => state.call(...args),
     Dialog: {
-      props: ['modelValue', 'options'],
+      props: ['modelValue', 'title'],
       setup:
         (props, { slots }) =>
         () =>
           props.modelValue
-            ? h(
-                'div',
-                { 'data-dialog': props.options?.title },
-                slots['body-content']?.(),
-              )
+            ? h('div', { 'data-dialog': props.title }, slots.default?.())
             : null,
     },
     Button: {

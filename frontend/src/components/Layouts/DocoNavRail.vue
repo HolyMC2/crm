@@ -37,7 +37,7 @@
       v-for="item in visibleNavItems"
       :key="item.key"
       :text="isExpanded ? '' : __(item.label)"
-      placement="right"
+      side="right"
     >
       <button
         class="relative flex h-[38px] items-center rounded-[9px] transition-colors"
@@ -79,7 +79,7 @@
       v-for="item in visibleNavItemsBottom"
       :key="item.key"
       :text="isExpanded ? '' : __(item.label)"
-      placement="right"
+      side="right"
     >
       <button
         class="relative flex h-[38px] items-center rounded-[9px] transition-colors"
@@ -101,7 +101,7 @@
     </Tooltip>
 
     <!-- notifications bell (panel mounted below; toggled via notificationsStore) -->
-    <Tooltip :text="isExpanded ? '' : __('Notifications')" placement="right">
+    <Tooltip :text="isExpanded ? '' : __('Notifications')" side="right">
       <button
         class="relative mt-auto flex h-[38px] items-center rounded-[9px] text-ink-gray-4 transition-colors hover:bg-surface-gray-2"
         :class="
@@ -158,7 +158,7 @@
     </button>
 
     <!-- collapse / expand toggle -->
-    <Tooltip :text="isExpanded ? '' : __('Expand')" placement="right">
+    <Tooltip :text="isExpanded ? '' : __('Expand')" side="right">
       <button
         class="mt-1 flex h-[34px] items-center rounded-[9px] text-ink-gray-4 transition-colors hover:bg-surface-gray-2"
         :class="

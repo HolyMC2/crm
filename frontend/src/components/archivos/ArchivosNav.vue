@@ -133,7 +133,7 @@
           <Dropdown
             v-if="folder.can_manage"
             :options="folderMenu(folder)"
-            placement="right"
+            align="end"
           >
             <button
               type="button"

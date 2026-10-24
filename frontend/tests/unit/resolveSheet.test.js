@@ -34,13 +34,13 @@ vi.mock('frappe-ui', async () => {
           ),
     },
     Dialog: {
-      props: ['modelValue', 'options'],
+      props: ['modelValue', 'title'],
       setup:
         (props, { slots }) =>
         () =>
           props.modelValue
             ? h('div', { role: 'dialog' }, [
-                slots['body-content']?.(),
+                slots.default?.(),
                 slots.actions?.(),
               ])
             : null,

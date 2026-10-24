@@ -1,6 +1,6 @@
 <template>
-  <Dialog v-model="open" :options="{ title: __('Print labels', null, CTX) }">
-    <template #body-content>
+  <Dialog v-model="open" :title="__('Print labels', null, CTX)">
+    <template #default>
       <div class="space-y-4">
         <div class="flex flex-wrap items-end gap-3">
           <label class="flex flex-col gap-1 text-xs text-ink-gray-6">

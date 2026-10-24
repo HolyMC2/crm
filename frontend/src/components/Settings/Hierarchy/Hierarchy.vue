@@ -176,8 +176,8 @@
         />
       </template>
     </Dialog>
-    <Dialog v-model:open="showRemoveDialog" :size="'md'">
-      <template #body>
+    <Dialog bare v-model:open="showRemoveDialog" :size="'md'">
+      <template #default>
         <div class="bg-surface-elevation-2 px-4 pb-6 pt-5 sm:px-6">
           <div class="mb-4 flex items-center justify-between">
             <h3 class="text-3xl-semibold leading-6 text-ink-gray-9">

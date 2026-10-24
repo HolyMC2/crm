@@ -461,8 +461,8 @@
       :defaults="createDefaults"
       @saved="created"
     />
-    <Dialog v-model="segmentOpen" :options="{ title: 'Guardar segmento' }"
-      ><template #body-content
+    <Dialog v-model="segmentOpen" title="Guardar segmento"
+      ><template #default
         ><div class="c-editor">
           <FormControl v-model="segmentTitle" label="Nombre *" /><FormControl
             v-model="segmentVisibility"
@@ -488,10 +488,8 @@
             @click="saveSegment"
           /></div></template
     ></Dialog>
-    <Dialog
-      v-model="customize"
-      :options="{ title: 'Personalizar Contactos', size: 'lg' }"
-      ><template #body-content
+    <Dialog v-model="customize" title="Personalizar Contactos" size="lg"
+      ><template #default
         ><div class="c-editor">
           <h3>Tus preferencias</h3>
           <FormControl

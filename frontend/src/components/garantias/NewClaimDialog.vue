@@ -1,6 +1,6 @@
 <template>
-  <Dialog v-model="open" :options="{ title: __('New case') }">
-    <template #body-content>
+  <Dialog v-model="open" :title="__('New case')">
+    <template #default>
       <form class="space-y-4" @submit.prevent="submit()">
         <FormControl
           v-model="form.claim_kind"

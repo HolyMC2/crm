@@ -5,8 +5,8 @@
   Opened from the deal header; read-only, for context + reporting.
 -->
 <template>
-  <Dialog v-model="ledgerOpen" :options="{ size: '2xl' }">
-    <template #body>
+  <Dialog bare v-model="ledgerOpen" size="2xl">
+    <template #default>
       <div class="px-4 py-4 sm:px-6">
         <div class="mb-3 flex items-center justify-between">
           <h3 class="text-[15px] font-bold text-ink-gray-9">

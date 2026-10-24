@@ -5,11 +5,8 @@
   at the caret; the backend fills them when the template is used.
 -->
 <template>
-  <Dialog
-    v-model="show"
-    :options="{ title: __('Guardar como plantilla'), size: 'xl' }"
-  >
-    <template #body-content>
+  <Dialog v-model="show" :title="__('Guardar como plantilla')" size="xl">
+    <template #default>
       <div
         class="space-y-3"
         @keydown.ctrl.enter.prevent.stop="submit"

@@ -135,7 +135,7 @@
             </div>
           </div>
           <div class="flex justify-end">
-            <Dropdown placement="right" :options="dropdownOptions(row)">
+            <Dropdown align="end" :options="dropdownOptions(row)">
               <Button
                 icon="lucide-more-horizontal"
                 variant="ghost"

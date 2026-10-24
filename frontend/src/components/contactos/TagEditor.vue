@@ -1,6 +1,6 @@
 <template>
-  <Dialog v-model="open" :options="{ title: 'Etiquetas' }"
-    ><template #body-content
+  <Dialog v-model="open" title="Etiquetas"
+    ><template #default
       ><div class="c-editor">
         <p>
           Estas etiquetas pertenecen a {{ source.title || source.name }}. No se

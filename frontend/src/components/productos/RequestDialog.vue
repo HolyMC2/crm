@@ -1,6 +1,6 @@
 <template>
-  <Dialog v-model="open" :options="{ title: title }">
-    <template #body-content>
+  <Dialog v-model="open" :title="title">
+    <template #default>
       <div class="space-y-4">
         <p class="text-base text-ink-gray-7">{{ plain(reason) }}</p>
         <p v-if="loading" role="status" class="text-sm text-ink-gray-6">

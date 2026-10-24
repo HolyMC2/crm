@@ -5,7 +5,7 @@
     size="2xl"
     @update:open="(open) => !open && emit('close')"
   >
-    <template #body-content>
+    <template #default>
       <div class="flex flex-col gap-5 sm:flex-row">
         <nav
           class="flex shrink-0 gap-1 overflow-x-auto sm:w-44 sm:flex-col"

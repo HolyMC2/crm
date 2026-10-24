@@ -7,12 +7,8 @@
   so CRM Deal.validate_lost_reason passes instead of silently rejecting the change.
 -->
 <template>
-  <Dialog
-    v-model="open"
-    :options="{ title: __('Motivo de cancelación') }"
-    @close="onCancel"
-  >
-    <template #body-content>
+  <Dialog v-model="open" :title="__('Motivo de cancelación')" @close="onCancel">
+    <template #default>
       <div class="-mt-3 mb-4 text-p-base text-ink-gray-7">
         {{ __('Indica el motivo para marcar este trato como perdido.') }}
       </div>

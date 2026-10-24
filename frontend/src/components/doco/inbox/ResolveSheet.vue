@@ -3,11 +3,8 @@
      approves the WhatsApp first) or why not, with the way out: answer first, register
      the customer, set the question up, or copy a request for the owner. -->
 <template>
-  <Dialog
-    v-model="open"
-    :options="{ title: __('Is it resolved?'), size: 'md' }"
-  >
-    <template #body-content>
+  <Dialog v-model="open" :title="__('Is it resolved?')" size="md">
+    <template #default>
       <div class="space-y-3" data-testid="resolve-sheet">
         <p v-if="loading" role="status" class="text-p-base text-ink-gray-6">
           {{ __('Checking…') }}

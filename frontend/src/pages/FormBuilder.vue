@@ -61,9 +61,11 @@
         </Dropdown>
         <Popover
           v-else-if="!b.incompatible.value.length"
-          placement="bottom-end"
+          trigger="manual"
+          side="bottom"
+          align="end"
         >
-          <template #target="{ togglePopover }">
+          <template #trigger="{ open, setOpen }">
             <button
               class="flex items-center gap-1.5 rounded-lg px-3.5 py-[7px] text-[12.5px] font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-gray-4"
               style="background: var(--brand)"
@@ -71,7 +73,7 @@
               @click="
                 b.publishable.value && !b.incompatible.value.length
                   ? publish()
-                  : togglePopover()
+                  : setOpen(!open)
               "
             >
               <LucideLoaderCircle
@@ -86,7 +88,7 @@
               >
             </button>
           </template>
-          <template #body-main>
+          <template #default>
             <div class="w-72 p-3">
               <div class="mb-2 text-sm font-semibold text-ink-gray-9">
                 {{ __('Before it goes live') }}
@@ -264,8 +266,8 @@
     </div>
 
     <!-- narrow screens: the preview opens as a sheet (button in the toolbar) -->
-    <Dialog v-model="showSheet" :options="{ title: __('Preview'), size: 'xl' }">
-      <template #body-content>
+    <Dialog v-model="showSheet" :title="__('Preview')" size="xl">
+      <template #default>
         <div class="h-[70vh]">
           <FormPreview
             :form="b.form"

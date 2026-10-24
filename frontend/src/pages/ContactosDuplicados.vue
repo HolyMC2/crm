@@ -143,11 +143,8 @@
       </div>
     </div>
 
-    <Dialog
-      v-model="compareOpen"
-      :options="{ title: 'Comparar y fusionar', size: '4xl' }"
-    >
-      <template #body-content>
+    <Dialog v-model="compareOpen" title="Comparar y fusionar" size="4xl">
+      <template #default>
         <div v-if="previewLoading" role="status">Cargando ambos registros…</div>
         <RecoveryMessage
           :error="previewError"

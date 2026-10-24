@@ -18,8 +18,8 @@
     />
   </button>
 
-  <Dialog v-model="open" :options="{ title: __('Mensajes en cola') }">
-    <template #body-content>
+  <Dialog v-model="open" :title="__('Mensajes en cola')">
+    <template #default>
       <div
         v-if="!outbox.length"
         class="py-4 text-center text-[12px] text-ink-gray-5"

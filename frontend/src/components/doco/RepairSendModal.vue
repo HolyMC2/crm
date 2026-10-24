@@ -6,11 +6,8 @@
   from the conversation; email uses the contact's address.
 -->
 <template>
-  <Dialog
-    v-model="show"
-    :options="{ title: __('Revisar y enviar al cliente'), size: '2xl' }"
-  >
-    <template #body-content>
+  <Dialog v-model="show" :title="__('Revisar y enviar al cliente')" size="2xl">
+    <template #default>
       <div v-if="ro" class="space-y-4">
         <!-- channel -->
         <div class="flex items-center gap-2">

@@ -1,6 +1,6 @@
 <template>
-  <Dialog v-model="open" :options="{ title: __('Change price') }">
-    <template #body-content>
+  <Dialog v-model="open" :title="__('Change price')">
+    <template #default>
       <div class="space-y-4">
         <p class="text-sm text-ink-gray-7">
           {{

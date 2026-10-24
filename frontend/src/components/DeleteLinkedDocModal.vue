@@ -1,6 +1,6 @@
 <template>
-  <Dialog v-model:open="show" :size="'xl'">
-    <template #body>
+  <Dialog bare v-model:open="show" :size="'xl'">
+    <template #default>
       <div
         v-if="!confirmDeleteInfo.show"
         class="bg-surface-elevation-2 px-4 pb-6 pt-5 sm:px-6"

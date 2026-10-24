@@ -10,7 +10,7 @@ vi.mock('frappe-ui', () => ({
   Dialog: {
     props: ['open'],
     setup(props, { slots }) {
-      return () => (props.open ? slots.body?.() : null)
+      return () => (props.open ? slots.default?.() : null)
     },
   },
   Avatar: {

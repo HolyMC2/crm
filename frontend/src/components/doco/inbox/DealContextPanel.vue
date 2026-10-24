@@ -90,7 +90,7 @@
         <div class="mt-3 flex flex-col gap-2 text-[12px]">
           <div class="flex items-center justify-between gap-2">
             <span class="flex-none text-ink-gray-5">{{ __('Estado') }}</span>
-            <Dropdown :options="statusOpts" placement="right">
+            <Dropdown :options="statusOpts" align="end">
               <button
                 class="flex items-center gap-1 rounded bg-surface-gray-2 px-2 py-1 text-[11.5px] font-semibold text-ink-gray-8 hover:bg-surface-gray-3"
               >
@@ -121,7 +121,7 @@
                   ×
                 </button>
               </span>
-              <Dropdown :options="userOpts" placement="right">
+              <Dropdown :options="userOpts" align="end">
                 <button
                   class="rounded bg-surface-gray-2 px-1.5 py-1 text-[11px] text-ink-gray-5 hover:bg-surface-gray-3"
                   :aria-label="__('Asignar usuario')"

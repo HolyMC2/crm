@@ -11,7 +11,7 @@
       :class="isCollapsed ? 'ml-[3px] p-1' : 'px-2 py-[7px]'"
     >
       <div class="flex items-center truncate">
-        <Tooltip :text="label" placement="right" :disabled="!isCollapsed">
+        <Tooltip :text="label" side="right" :disabled="!isCollapsed">
           <slot name="icon">
             <Icon
               :icon="icon"
@@ -21,9 +21,9 @@
         </Tooltip>
         <Tooltip
           :text="label"
-          placement="right"
+          side="right"
           :disabled="isCollapsed"
-          :hoverDelay="1.5"
+          :hover-delay="1500"
         >
           <span
             class="flex-1 flex-shrink-0 truncate text-sm duration-300 ease-in-out"

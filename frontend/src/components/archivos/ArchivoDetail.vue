@@ -610,11 +610,8 @@
       />
     </div>
 
-    <Dialog
-      v-model="confirmOpen"
-      :options="{ title: __('Link this document?') }"
-    >
-      <template #body-content>
+    <Dialog v-model="confirmOpen" :title="__('Link this document?')">
+      <template #default>
         <p v-if="pending" class="text-base text-ink-gray-8">
           {{
             __(

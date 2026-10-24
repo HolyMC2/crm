@@ -1,6 +1,6 @@
 <template>
-  <Dialog v-model="open" :options="{ title }"
-    ><template #body-content
+  <Dialog v-model="open" :title="title"
+    ><template #default
       ><div class="c-sheet" data-sheet="extra-field">
         <ExtraFieldForm
           :initial-mode="mode"

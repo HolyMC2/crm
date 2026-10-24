@@ -11,7 +11,7 @@ vi.mock('frappe-ui', async () => {
       setup:
         (props, { slots }) =>
         () =>
-          props.modelValue ? h('div', slots['body-content']?.()) : null,
+          props.modelValue ? h('div', slots.default?.()) : null,
     },
     Button: {
       props: ['label', 'disabled', 'loading', 'variant', 'icon'],

@@ -324,8 +324,8 @@
     </template>
 
     <!-- in-app document viewer (sandboxed print fragment; no scripts) -->
-    <Dialog v-model="viewer.open" :options="{ size: '4xl' }">
-      <template #body>
+    <Dialog bare v-model="viewer.open" size="4xl">
+      <template #default>
         <div
           class="flex items-center justify-between gap-2 border-b border-outline-gray-1 px-4 py-3"
         >

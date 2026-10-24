@@ -1,14 +1,14 @@
 <template>
   <Dialog
     v-model="open"
-    :options="{
-      title: service
+    :title="
+      service
         ? __('Ask how we did after resolving a conversation')
-        : __('Ask customers after they buy'),
-      size: 'lg',
-    }"
+        : __('Ask customers after they buy')
+    "
+    size="lg"
   >
-    <template #body-content>
+    <template #default>
       <div class="space-y-4" :data-testid="`encuestas-setup-${kind}`">
         <p class="text-sm text-ink-gray-7">
           {{
