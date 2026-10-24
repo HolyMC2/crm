@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, defineComponent, h, nextTick } from 'vue'
 import { RouterView, createMemoryHistory, createRouter } from 'vue-router'
 
-vi.mock('frappe-ui', async (importOriginal) => ({
+vi.mock('frappe-ui/experimental', async (importOriginal) => ({
   ...(await importOriginal()),
   // The rich editor is not under test: a plain textarea stands in for it.
   TextEditor: defineComponent({

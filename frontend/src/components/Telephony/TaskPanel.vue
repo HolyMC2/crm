@@ -86,7 +86,8 @@ import UserAvatar from '@/components/UserAvatar.vue'
 import Link from '@/components/Controls/Link.vue'
 import { usersStore } from '@/stores/users'
 import { taskStatusOptions, taskPriorityOptions, getFormat } from '@/utils'
-import { TextEditor, Dropdown, Tooltip, DateTimePicker } from 'frappe-ui'
+import { Dropdown, Tooltip, DateTimePicker } from 'frappe-ui'
+import { TextEditor } from 'frappe-ui/experimental'
 import { reactive } from 'vue'
 
 const props = defineProps({

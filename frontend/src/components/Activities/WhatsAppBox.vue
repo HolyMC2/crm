@@ -380,7 +380,7 @@
       </p>
       <div class="flex flex-col gap-2">
         <div v-for="(row, i) in draft" :key="i" class="flex items-start gap-2">
-          <Input
+          <TextInput
             v-model="row.label"
             type="text"
             class="w-40 shrink-0"
@@ -459,14 +459,14 @@ import {
   createResource,
   call,
   Textarea,
-  TextEditor,
-  Input,
+  TextInput,
   Dialog,
   FileUploader,
   Dropdown,
   Button,
   toast,
 } from 'frappe-ui'
+import { TextEditor } from 'frappe-ui/experimental'
 import { usersStore } from '@/stores/users'
 import { isMobile } from '@/composables/breakpoint'
 import { notifyTyping, aiEnabled, composerDraft } from '@/composables/inbox'

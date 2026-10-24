@@ -61,7 +61,8 @@ import {
   formatDateTime,
   formatTimestampFull,
 } from '@/utils'
-import { Tooltip, Dropdown, TextEditor, call, toast } from 'frappe-ui'
+import { Tooltip, Dropdown, call, toast } from 'frappe-ui'
+import { TextEditor } from 'frappe-ui/experimental'
 import { usersStore } from '@/stores/users'
 import LucideTrash2 from '~icons/lucide/trash-2'
 

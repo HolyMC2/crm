@@ -125,7 +125,8 @@
 <script setup>
 import { useSettingsDraft } from '@/composables/settingsSession'
 import { useBroadcast } from '@/composables/useBroadcast'
-import { TextEditor, FormControl, Switch, toast } from 'frappe-ui'
+import { FormControl, Switch, toast } from 'frappe-ui'
+import { TextEditor } from 'frappe-ui/experimental'
 import { inject, onMounted, ref } from 'vue'
 
 const props = defineProps({

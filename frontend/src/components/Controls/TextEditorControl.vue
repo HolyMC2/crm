@@ -13,7 +13,7 @@
 </template>
 
 <script setup>
-import { TextEditor } from 'frappe-ui'
+import { TextEditor } from 'frappe-ui/experimental'
 import { computed, ref } from 'vue'
 
 const props = defineProps({

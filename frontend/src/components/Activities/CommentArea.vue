@@ -75,7 +75,8 @@
 <script setup>
 import UserAvatar from '@/components/UserAvatar.vue'
 import AttachmentItem from '@/components/AttachmentItem.vue'
-import { Tooltip, Dropdown, Button, TextEditor, call, toast } from 'frappe-ui'
+import { Tooltip, Dropdown, Button, call, toast } from 'frappe-ui'
+import { TextEditor } from 'frappe-ui/experimental'
 import {
   timeAgo,
   formatDate,

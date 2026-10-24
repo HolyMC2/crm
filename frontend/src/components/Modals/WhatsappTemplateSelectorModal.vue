@@ -68,7 +68,8 @@
 </template>
 
 <script setup>
-import { TextEditor, createListResource } from 'frappe-ui'
+import { createListResource } from 'frappe-ui'
+import { TextEditor } from 'frappe-ui/experimental'
 import { ref, computed, nextTick, watch, onMounted } from 'vue'
 
 const props = defineProps({

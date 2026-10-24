@@ -232,7 +232,6 @@ import EventNotifications from '@/components/Calendar/EventNotifications.vue'
 import Attendee from '@/components/Calendar/Attendee.vue'
 import {
   Switch,
-  TextEditor,
   ErrorMessage,
   Dialog,
   DatePicker,
@@ -240,6 +239,10 @@ import {
   dayjs,
   Dropdown,
 } from 'frappe-ui'
+import {
+  TextEditor,
+  CalendarColorMap as colorMap,
+} from 'frappe-ui/experimental'
 import { globalStore } from '@/stores/global'
 import { validateEmail } from '@/utils'
 import {
@@ -249,7 +252,6 @@ import {
   computeAutoToTime,
   validateTimeRange,
 } from '@/composables/event'
-import { CalendarColorMap as colorMap } from 'frappe-ui'
 import { onMounted, ref, computed, h } from 'vue'
 
 const props = defineProps({

@@ -274,7 +274,8 @@ import {
   watch,
 } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
-import { Button, FormControl, TextEditor } from 'frappe-ui'
+import { Button, FormControl } from 'frappe-ui'
+import { TextEditor } from 'frappe-ui/experimental'
 import AudienceChips from '@/components/manual/AudienceChips.vue'
 import PlacePicker from '@/components/manual/PlacePicker.vue'
 import { uploadFile } from '@/components/editor/config'

@@ -123,13 +123,8 @@
 </template>
 <script setup>
 import { useSettingsDraft } from '@/composables/settingsSession'
-import {
-  TextEditor,
-  FormControl,
-  Switch,
-  toast,
-  createResource,
-} from 'frappe-ui'
+import { FormControl, Switch, toast, createResource } from 'frappe-ui'
+import { TextEditor } from 'frappe-ui/experimental'
 import { computed, inject, onMounted, ref } from 'vue'
 
 const props = defineProps({

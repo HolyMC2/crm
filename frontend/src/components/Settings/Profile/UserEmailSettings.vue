@@ -123,14 +123,8 @@ import {
   useSettingsDraft,
 } from '@/composables/settingsSession'
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
-import {
-  Badge,
-  Button,
-  Combobox,
-  createListResource,
-  TextEditor,
-  toast,
-} from 'frappe-ui'
+import { Badge, Button, Combobox, createListResource, toast } from 'frappe-ui'
+import { TextEditor } from 'frappe-ui/experimental'
 import { computed, inject } from 'vue'
 import LucidePlus from '~icons/lucide/plus'
 

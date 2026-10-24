@@ -43,9 +43,9 @@ import {
   FormControl,
   call,
   createResource,
-  TextEditor,
   DatePicker,
 } from 'frappe-ui'
+import { TextEditor } from 'frappe-ui/experimental'
 import { ref, computed, onMounted, h } from 'vue'
 
 const typeCheck = ['Check']
