@@ -199,15 +199,10 @@ import {
 } from '@/utils'
 import {
   Avatar,
-  ListView,
-  ListHeader,
-  ListHeaderItem,
-  ListSelectBanner,
-  ListRowItem,
-  ListFooter,
   Dropdown,
   Tooltip,
 } from 'frappe-ui'
+import { ListView, ListHeader, ListHeaderItem, ListSelectBanner, ListRowItem, ListFooter } from 'frappe-ui/experimental'
 import { sessionStore } from '@/stores/session'
 import { ref, computed, watch } from 'vue'
 
