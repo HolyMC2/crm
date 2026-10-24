@@ -162,6 +162,11 @@ functions, a server test checks it) and, for a new key, its target in `form.js` 
   (`?party_name=` for a cotización, `?customer=` for a pedido); `?articulo=<item_code>&cantidad=n`
   adds the first item (Producto «Cotizar»); `?origen=<doctype>&desde=<name>&con=<mapper>` runs an
   allowlisted ERPNext mapper (`MAKE_TARGETS`).
+- **Opening `/nuevo` from a queue** (`?return_to=/crm/…&return_label=…`, the shell's return
+  protocol, validated by `ownerReturn`): the arrow reads «Volver a {label}» and goes there, and the
+  saved draft replaces the form with that queue plus `done=<doctype>:<name>` instead of opening the
+  record. Gastos «Por registrar» opens `/documentos/facturas-proveedor/nuevo` this way
+  (`useGastos.js` `createTo`, shown only when `capabilities.create` is on: Purchase Invoice create).
 
 ## Complete example: Facturas (`profiles/sales_invoice.js`)
 
