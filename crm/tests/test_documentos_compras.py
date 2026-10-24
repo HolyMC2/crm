@@ -114,9 +114,8 @@ class TestWho(TestCase):
 			self.addCleanup(p.stop)
 
 	def doc(self, owner, docstatus=1):
-		return frappe._dict(
-			doctype="Purchase Invoice", name="ACC-PINV-1", owner=owner, creation="2026-10-01 10:00", docstatus=docstatus
-		)
+		"""A chain row as `cadena` reads it (`get_list`): no `doctype` attribute on it."""
+		return frappe._dict(name="ACC-PINV-1", owner=owner, creation="2026-10-01 10:00", docstatus=docstatus)
 
 	def with_capture(self, requested_by, agent="contabot@x.mx"):
 		"""doco's side: the agent user, and the capture that created the record."""
@@ -149,7 +148,11 @@ class TestWho(TestCase):
 			for i in range(1, 41)
 		]
 		rows.append(
-			_version("marco@x.mx", "2026-10-02 09:00", {"changed": [["docstatus", 0, 1], ["status", "Draft", "Unpaid"]]})
+			_version(
+				"marco@x.mx",
+				"2026-10-02 09:00",
+				{"changed": [["docstatus", 0, 1], ["status", "Draft", "Unpaid"]]},
+			)
 		)
 		rows.append(_version("ernesto@x.mx", "2026-10-02 09:30", {"changed": [["remarks", "x", "y"]]}))
 		self.with_capture(None)
@@ -182,13 +185,20 @@ class TestWho(TestCase):
 		self.with_capture("marco@x.mx")
 		with patch.object(frappe.db, "get_value", side_effect=AssertionError("asked for a capture")):
 			people = documentos_compras._who("Purchase Invoice", self.doc("ernesto@x.mx", docstatus=0))
-		self.assertEqual(people, [{"verb": "Capturó", "name": "Ernesto Encargado", "when": "2026-10-01 10:00"}])
+		self.assertEqual(
+			people, [{"verb": "Capturó", "name": "Ernesto Encargado", "when": "2026-10-01 10:00"}]
+		)
 
 	def test_actividad_create_event_carries_the_same_attribution(self):
 		self.with_capture("ernesto@x.mx")
-		self.assertEqual(documentos._made_by(self.doc("contabot@x.mx")), ("Ernesto Encargado", "Contabot"))
+		self.assertEqual(
+			documentos._made_by("Purchase Invoice", self.doc("contabot@x.mx")),
+			("Ernesto Encargado", "Contabot"),
+		)
 		self.with_capture(None)
-		self.assertEqual(documentos._made_by(self.doc("ernesto@x.mx")), ("Ernesto Encargado", None))
+		self.assertEqual(
+			documentos._made_by("Purchase Invoice", self.doc("ernesto@x.mx")), ("Ernesto Encargado", None)
+		)
 
 
 @skipIf(not HAS_FRAPPE, "Frappe integration dependency is not installed")

@@ -189,7 +189,7 @@ def _who(doctype, doc):
 	"""`[{verb, name, when, via?}]`: who captured and who confirmed. `via` names the assistant
 	when it built the record for the person («Capturó Ernesto · con Contabot»)."""
 	made, confirmed = WHO.get(doctype, ("Capturó", "Confirmó"))
-	who, via = _made_by(doc)
+	who, via = _made_by(doctype, doc)
 	people = [{"verb": made, "name": who, "when": cstr(doc.creation), **({"via": via} if via else {})}]
 	if cint(doc.docstatus) == 1:
 		user, when = confirmed_by(submit_versions(doctype, doc.name))
