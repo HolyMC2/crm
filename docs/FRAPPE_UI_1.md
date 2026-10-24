@@ -184,6 +184,12 @@ mask class costs 0.15–0.3 KB gzip, so string names were not converted to class
   `vite.config.js` no longer looks for `../frappe-ui/vite` in dev (`isDev` with it), it imports
   `frappe-ui/vite` like the build did. `patch-package` and `postinstall-postinstall` left with the
   last patch in step 2; `yarn.lock` was regenerated and `yarn install --frozen-lockfile` is green.
+- The root `package.json` `build` script (what `bench build --app crm` runs) is
+  `cd frontend && yarn install --frozen-lockfile && yarn build`, as posawesome's already was. The
+  lab's `dev-refresh.sh` builds the tree it is given and installs nothing, so the first lab
+  rebuild after the bump failed with «Missing "./charts" specifier in "frappe-ui"»: the lab tree's
+  `node_modules` still held beta.29. With the install in the build command a dependency change
+  deploys itself; `--frozen-lockfile` keeps the lab on the lockfile.
 - Plugin: `app.use(FrappeUI)`. The `socketio: false` option no longer exists (1.0.2 opens no
   socket and `$socket` is the one `main.js` creates); the `resources` option API crm never used is
   off by default.
