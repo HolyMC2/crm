@@ -19,10 +19,15 @@ import {
   newClientId,
   normalizeRow,
 } from './assistantText'
-import { assistantOn, assistantWanted } from './assistantDoor'
+import {
+  ASSISTANT_API,
+  _resetAssistantDoor,
+  assistantWanted,
+  loadAssistantStatus,
+} from './assistantDoor'
 import { isImageFile } from './assistantFiles'
 
-export const ASSISTANT_API = 'doco.docoutils.assistant.shell_api'
+export { ASSISTANT_API }
 // A turn that stays silent this long gets an honest line and a history check.
 export const SILENCE_MS = 120000
 
@@ -90,17 +95,10 @@ export function screenContext(route, fallbackTitle = '') {
 
 // --- server ---------------------------------------------------------------------
 
-let statusPromise = null
-export function loadStatus({ refresh = false } = {}) {
-  if (statusPromise && !refresh) return statusPromise
-  statusPromise = call(`${ASSISTANT_API}.status`)
-    .then((status) => (assistant.status = status || { enabled: false }))
-    .catch(() => (assistant.status = { enabled: false }))
-    .then((status) => {
-      assistantOn.value = Boolean(status.enabled)
-      return status
-    })
-  return statusPromise
+export function loadStatus(options) {
+  return loadAssistantStatus(options).then(
+    (status) => (assistant.status = status),
+  )
 }
 
 export async function loadHistory() {
@@ -429,9 +427,7 @@ export function _resetAssistant() {
     awaitingReceipt: null,
     loaded: false,
   })
-  statusPromise = null
-  assistantWanted.value = false
-  assistantOn.value = null
+  _resetAssistantDoor()
   boundSocket = null
   pageContexts.value = []
   clearTimeout(silence)

@@ -13,6 +13,7 @@
       :active="activeKey"
       :ventas="ventasEnabled"
       @palette="openPalette('all')"
+      @assistant="askMuelle"
     />
     <div class="flex min-h-0 min-w-0 flex-1 flex-col">
       <!-- One compact row on phone. It slides away while the worker scrolls
@@ -88,6 +89,19 @@
             @click="openPalette('all')"
           >
             <span class="lucide-search size-6" aria-hidden="true" />
+          </button>
+          <!-- «Pregúntale a Muelle» (E7): the phone's door beside search, only
+               once shell_api.status said yes. -->
+          <button
+            v-if="assistantOn"
+            type="button"
+            class="flex size-12 flex-none items-center justify-center rounded-full text-ink-gray-7 hover:bg-surface-gray-2"
+            :aria-label="__('Ask Muelle')"
+            :title="__('Ask Muelle')"
+            data-testid="shell-assistant"
+            @click="askMuelle"
+          >
+            <span class="lucide-sparkles size-6" aria-hidden="true" />
           </button>
         </template>
       </AppBar>
@@ -209,6 +223,7 @@ import {
   assistantOn,
   assistantWanted,
   loadAssistant,
+  loadAssistantStatus,
 } from '@/components/assistant/assistantDoor'
 import { moduleEnabled, moduleMeta } from '@/vendor/muelle-shell/contracts'
 import {
@@ -427,15 +442,26 @@ useShellKeyboard({
   router,
   toggleSidebar,
 })
-// ⌘J is the first door to «Pregúntale a Muelle»: nothing of the assistant
-// loads or calls the server at boot (S1d, SPEC §4 route budget). The key loads
-// useAssistant, whose openAssistant asks shell_api.status; a worker without
-// the assistant loses the key (and its Alt+H line) after that answer.
+// «Pregúntale a Muelle» doors (E7): the boot asks shell_api.status once, so
+// the rail item, the AppBar icon and ⌘J show or act only for a worker who has
+// the assistant; nothing else of it loads until a door opens it (SPEC §4
+// route budget). The key checks that answer before it closes any layer.
+watch(
+  shellBoot,
+  (booted) => {
+    if (booted) loadAssistantStatus()
+  },
+  { immediate: true },
+)
+function askMuelle() {
+  loadAssistant().then((module) => module.openAssistant())
+}
 let assistantModule = null
 const assistantKey = {
   get listed() {
     return assistantOn.value === true
   },
+  ready: () => loadAssistantStatus().then((status) => Boolean(status?.enabled)),
   isOpen: () => Boolean(assistantModule?.assistant.open),
   toggle: () =>
     loadAssistant()

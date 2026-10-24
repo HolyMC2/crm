@@ -10,7 +10,7 @@
           {{ __('Compras', null, 'Compras') }}
         </button>
         <Button
-          v-if="ready"
+          v-if="ready && assistantOn"
           icon-left="message-circle"
           class="min-h-11 sm:min-h-8"
           :label="__('Ask Muelle', null, 'Surtido')"
@@ -987,7 +987,10 @@ import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Badge, Button, FeatherIcon, FormControl, toast } from 'frappe-ui'
 import ComprasPicker from '@/components/compras/ComprasPicker.vue'
-import { loadAssistant } from '@/components/assistant/assistantDoor'
+import {
+  assistantOn,
+  loadAssistant,
+} from '@/components/assistant/assistantDoor'
 import { comprasApi, money, problemOf, qty } from '@/composables/useCompras'
 import {
   buildChanges,

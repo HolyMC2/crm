@@ -465,13 +465,18 @@ export function useShellKeyboard({
     })
     const modals = [...document.querySelectorAll('[aria-modal="true"]')]
     // ⌘J: the assistant from anywhere, also over another sheet (that sheet
-    // closes first, so one layer stays) and while typing.
+    // closes first, so one layer stays) and while typing. The status answer
+    // (asked at boot) comes first: a worker without the assistant keeps the
+    // layer they have open.
     if (hit?.id === 'assistant') {
       const assistant = shellAssistant.value
       if (!assistant) return
       event.preventDefault()
-      if (!assistant.isOpen()) closeLayersFor(modals)
-      assistant.toggle()
+      Promise.resolve(assistant.ready ? assistant.ready() : true).then((on) => {
+        if (!on) return
+        if (!assistant.isOpen()) closeLayersFor(modals)
+        assistant.toggle()
+      })
       return
     }
     if (modals.length) {

@@ -138,6 +138,7 @@ function boot(overrides = {}) {
 }
 
 let app, root, router
+const API = 'doco.docoutils.assistant.shell_api'
 async function mount(path) {
   router = createRouter({
     history: createMemoryHistory(),
@@ -2012,7 +2013,7 @@ describe('Ventas navigation on every screen', () => {
     },
   )
 
-  it('boot loads nothing of the assistant: no status call, no sheet; ⌘J is the first door (S1d budget)', async () => {
+  it('boot asks shell_api.status once and nothing else of the assistant; ⌘J reuses the answer (E7)', async () => {
     const { assistant, _resetAssistant } = await import(
       '@/components/assistant/useAssistant'
     )
@@ -2028,9 +2029,8 @@ describe('Ventas navigation on every screen', () => {
     })
     await mount('/contactos')
     await new Promise((resolve) => setTimeout(resolve, 0))
-    const asked = () =>
-      state.call.mock.calls.filter(([m]) => m.endsWith('shell_api.status'))
-    expect(asked()).toHaveLength(0)
+    const asked = () => state.call.mock.calls.filter(([m]) => m.startsWith(API))
+    expect(asked().map(([m]) => m)).toEqual([`${API}.status`])
     expect(assistantWanted.value).toBe(false)
     document.body.dispatchEvent(
       new KeyboardEvent('keydown', {
@@ -2041,8 +2041,104 @@ describe('Ventas navigation on every screen', () => {
       }),
     )
     await until(() => assistant.open)
-    expect(asked()).toHaveLength(1)
+    expect(asked().filter(([m]) => m.endsWith('.status'))).toHaveLength(1)
     expect(assistantWanted.value).toBe(true)
+    _resetAssistant()
+  })
+
+  it.each([true, false])(
+    'desktop rail: «Pregúntale a Muelle» is one item after the modules only when the status says yes (%s); it opens the sheet',
+    async (enabled) => {
+      const { assistant, _resetAssistant } = await import(
+        '@/components/assistant/useAssistant'
+      )
+      _resetAssistant()
+      state.mobile.value = false
+      state.call.mockImplementation(async (method) => {
+        if (method === 'crm.api.shell.boot') return boot()
+        if (method.endsWith('shell_api.status')) return { enabled }
+        if (method.endsWith('shell_api.history')) return { messages: [] }
+        return null
+      })
+      await mount('/contactos')
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      await nextTick()
+      const door = root.querySelector('[data-testid="rail-assistant"]')
+      if (!enabled) {
+        expect(door).toBeNull()
+        return
+      }
+      expect(door.getAttribute('aria-label')).toBe('Ask Muelle')
+      expect(door.getAttribute('aria-keyshortcuts')).toBe('Control+J')
+      const rail = root.querySelector('nav[aria-label="Apps"]')
+      const order = [...rail.querySelectorAll('[data-testid]')].map(
+        (el) => el.dataset.testid,
+      )
+      expect(order.indexOf('rail-assistant')).toBeGreaterThan(
+        order.indexOf('rail-search'),
+      )
+      expect(order.indexOf('rail-assistant')).toBeLessThan(
+        order.indexOf('rail-toggle'),
+      )
+      expect(
+        document.querySelectorAll('[data-testid="rail-assistant"]'),
+      ).toHaveLength(1)
+      door.click()
+      await until(() => assistant.open)
+      expect(assistant.open).toBe(true)
+      _resetAssistant()
+    },
+  )
+
+  it('phone AppBar: the sparkle beside search only when the status says yes', async () => {
+    const { _resetAssistant } = await import(
+      '@/components/assistant/useAssistant'
+    )
+    _resetAssistant()
+    state.mobile.value = true
+    state.call.mockImplementation(async (method) => {
+      if (method === 'crm.api.shell.boot') return boot()
+      if (method.endsWith('shell_api.status')) return { enabled: true }
+      return null
+    })
+    await mount('/contactos')
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    await nextTick()
+    const door = root.querySelector('[data-testid="shell-assistant"]')
+    expect(door.getAttribute('aria-label')).toBe('Ask Muelle')
+    expect(root.querySelector('[data-testid="rail-assistant"]')).toBeNull()
+    _resetAssistant()
+  })
+
+  it('⌘J with a dialog open and the status off closes nothing', async () => {
+    const { assistant, _resetAssistant } = await import(
+      '@/components/assistant/useAssistant'
+    )
+    _resetAssistant()
+    state.mobile.value = false
+    state.call.mockImplementation(async (method) => {
+      if (method === 'crm.api.shell.boot') return boot()
+      if (method.endsWith('shell_api.status')) return { enabled: false }
+      return null
+    })
+    await mount('/contactos')
+    const palette = await openPalette()
+    expect(palette.getAttribute('aria-modal')).toBe('true')
+    document.body.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'j',
+        ctrlKey: true,
+        bubbles: true,
+        cancelable: true,
+      }),
+    )
+    for (let i = 0; i < 5; i++) await new Promise((r) => setTimeout(r, 10))
+    await nextTick()
+    expect(
+      document.querySelector('[aria-label="Command palette"]'),
+    ).not.toBeNull()
+    expect(assistant.open).toBe(false)
+    expect(document.querySelector('[data-shell-layer="assistant"]')).toBeNull()
     _resetAssistant()
   })
 })

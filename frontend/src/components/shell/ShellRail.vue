@@ -152,6 +152,30 @@
         </div>
       </template>
     </div>
+    <!-- «Pregúntale a Muelle» (E7): the desktop door, one item, only once
+         shell_api.status said yes. No bubble (design/ASSISTANT.md). -->
+    <button
+      v-if="assistantOn"
+      class="flex flex-none items-center rounded-lg text-ink-gray-6 hover:bg-surface-gray-2 hover:text-ink-gray-8"
+      :class="ROW[expanded ? 'wide' : 'icon']"
+      :aria-label="__('Ask Muelle')"
+      :title="`${__('Ask Muelle')} (${assistantKey})`"
+      :aria-keyshortcuts="assistantKeys"
+      data-testid="rail-assistant"
+      @click="$emit('assistant')"
+    >
+      <span class="lucide-sparkles size-[18px] flex-none" aria-hidden="true" />
+      <template v-if="expanded">
+        <span class="flex-1 truncate text-left" aria-hidden="true">{{
+          __('Ask Muelle')
+        }}</span>
+        <kbd
+          class="rounded border border-outline-gray-2 px-1 font-sans text-xs text-ink-gray-5"
+          aria-hidden="true"
+          >{{ assistantKey }}</kbd
+        >
+      </template>
+    </button>
     <button
       class="flex flex-none items-center rounded-lg text-ink-gray-6 hover:bg-surface-gray-2 hover:text-ink-gray-8"
       :class="ROW[expanded ? 'wide' : 'icon']"
@@ -195,10 +219,12 @@
 import { computed, defineAsyncComponent, nextTick, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import {
+  ariaKeys,
   keyLabel,
   searchEntryHint,
   useShellLayer,
 } from '@/composables/shellKeyboard'
+import { assistantOn } from '@/components/assistant/assistantDoor'
 import {
   installedSiblings,
   railExpanded,
@@ -215,7 +241,7 @@ const props = defineProps({
   active: { type: String, default: '' },
   ventas: Boolean,
 })
-defineEmits(['palette'])
+defineEmits(['palette', 'assistant'])
 
 // One row shape per width: an icon tile, or a full-width row with the name
 // (32 px rows keep every module and the other apps on a 900 px screen).
@@ -226,6 +252,8 @@ const ROW = Object.freeze({
 // «Buscar o ir a… (Ctrl+K) · Buscar registros (Ctrl+G)», ⌘ on Apple.
 const { label: searchHint, aria: searchKeys } = searchEntryHint()
 const paletteKey = keyLabel('mod+k')
+const assistantKey = keyLabel('mod+j')
+const assistantKeys = ariaKeys('mod+j')
 const sidebarKey = keyLabel('[')
 const AvisosBell = defineAsyncComponent(
   () => import('@/components/avisos/AvisosBell.vue'),
