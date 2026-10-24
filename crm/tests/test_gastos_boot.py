@@ -74,6 +74,10 @@ class TestGastosPaths(TestCase):
 	def test_create_is_the_purchase_invoice_permission_of_a_bill_reader(self):
 		if "doco" not in frappe.get_installed_apps():
 			self.skipTest("Gastos (doco) is not installed")
+		try:
+			import doco.workspaces.payables  # the patch target must be loaded
+		except ImportError:
+			self.skipTest("This doco has no Gastos service")
 		reader = {"enabled": True, "capabilities": {"read": True, "submit": False, "pay": False}}
 		with (
 			patch("doco.workspaces.payables.bootstrap", return_value=dict(reader)),
