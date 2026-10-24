@@ -28650,3 +28650,6 @@ msgstr "Guardar servicios"
 #: frontend/src/components/agenda/AgendaCitasSettings.vue
 msgid "Services saved"
 msgstr "Servicios guardados"
+
+msgid "Choose a service"
+msgstr "Elige un servicio"

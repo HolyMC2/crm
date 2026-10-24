@@ -91,6 +91,22 @@ describe('the «Nueva cita» gate', () => {
     expect(buttons()).toEqual(['Try again'])
   })
 
+  it('asks to choose a service once services are published', async () => {
+    call.mockResolvedValue({
+      problems: [],
+      fixers: [],
+      services: [{ id: 'SVC-1', label: 'Corte' }],
+      days: [],
+    })
+    mount(AgendaCitaForm, { timeZone: 'America/Mexico_City' })
+    await flush()
+    await nextTick()
+    const options = [...root.querySelectorAll('select option')].map((o) =>
+      o.textContent.trim(),
+    )
+    expect(options).toEqual(['Choose a service', 'Corte'])
+    expect(root.textContent).not.toContain('No service yet')
+  })
   it('shows a failed load with a way to retry', async () => {
     call.mockRejectedValue(new Error('offline'))
     mount(AgendaCitaForm, { timeZone: 'America/Mexico_City' })

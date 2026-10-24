@@ -103,7 +103,7 @@
           v-model="service"
           class="mt-1 min-h-11 w-full rounded border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9"
         >
-          <option value="">{{ __('No service yet') }}</option>
+          <option value="">{{ __('Choose a service') }}</option>
           <option v-for="row in services" :key="row.id" :value="row.id">
             {{ row.label }}
           </option>
