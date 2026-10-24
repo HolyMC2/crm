@@ -860,3 +860,143 @@ def resolve_documents(records: str | list):
 		row["doctype"] = doctype
 		rows.append(row)
 	return rows
+
+
+# ── E7: the palette reaches what Desk reaches (reports, workspaces) ─────────────
+
+DESK_REACH_TTL = 300
+DESK_REACH_LIMIT = {"reports": 20, "workspaces": 40}
+
+
+def _desk_term(search):
+	from unidecode import unidecode
+
+	return unidecode(frappe.utils.cstr(search).strip().lower())[:80]
+
+
+def _desk_matches(term, *values):
+	from unidecode import unidecode
+
+	return not term or any(term in unidecode(str(value).lower()) for value in values if value)
+
+
+def _desk_slug(name):
+	# Desk's router.slug: lower case, spaces to hyphens.
+	return str(name).lower().replace(" ", "-")
+
+
+def _desk_blocked():
+	user = frappe.session.user
+	if user == "Administrator":
+		return set()
+	return set(frappe.get_cached_doc("User", user).get_blocked_modules())
+
+
+def _desk_cached(kind, build):
+	"""Per user, five minutes, re-keyed by scope_hash so a role or permission change shows at once."""
+	user = frappe.session.user
+	key = f"crm:shell:{kind}:{scope_hash(user)}"
+	cached = frappe.cache.get_value(key, user=user)
+	if cached:
+		return json.loads(cached)
+	rows = build()
+	frappe.cache.set_value(key, json.dumps(rows, default=str), user=user, expires_in_sec=DESK_REACH_TTL)
+	return rows
+
+
+def forget_desk_reach(user=None):
+	"""Tests and fixtures: drop this user's cached reports and workspaces."""
+	user = user or frappe.session.user
+	for kind in DESK_REACH_LIMIT:
+		frappe.cache.delete_value(f"crm:shell:{kind}:{scope_hash(user)}", user=user)
+
+
+def _report_href(name, info):
+	from urllib.parse import quote
+
+	# The awesomebar's routes: a Report Builder report is a view of its list; the rest run as query reports.
+	if info.get("report_type") == "Report Builder" and info.get("ref_doctype"):
+		return f"/app/{_desk_slug(info['ref_doctype'])}/view/report/{quote(name)}"
+	return f"/app/query-report/{quote(name)}"
+
+
+def _allowed_reports():
+	from unidecode import unidecode
+
+	# Desk's own set (roles, Custom Role, disabled = 0, Report read permission), as frappe.boot.user.all_reports.
+	allowed = frappe.get_user().get_all_reports() or {}
+	if not allowed:
+		return []
+	blocked = _desk_blocked()
+	modules = dict(
+		frappe.get_all("Report", filters={"name": ("in", list(allowed))}, fields=["name", "module"], as_list=True)
+	)
+	rows = []
+	for name, info in allowed.items():
+		if modules.get(name) in blocked:
+			continue
+		ref = info.get("ref_doctype")
+		if ref and not frappe.has_permission(ref, "read"):
+			continue
+		rows.append(
+			{
+				"name": name,
+				"title": _(name),
+				"report_type": info.get("report_type"),
+				"ref_doctype": ref,
+				"ref_label": _(ref) if ref else "",
+				"href": _report_href(name, info),
+			}
+		)
+	rows.sort(key=lambda row: unidecode(row["title"].lower()))
+	return rows
+
+
+@frappe.whitelist()
+def reports(search: str | None = None):
+	"""Palette «Reportes»: the reports this worker may run, as Desk lists them, by Spanish title or
+	English name, each with the Desk URL that runs it."""
+	if frappe.session.user == "Guest":
+		frappe.throw(_("Sign in to open Muelle."), frappe.AuthenticationError)
+	term = _desk_term(search)
+	rows = _desk_cached("reports", _allowed_reports)
+	return [row for row in rows if _desk_matches(term, row["title"], row["name"], row["ref_label"])][
+		: DESK_REACH_LIMIT["reports"]
+	]
+
+
+def _allowed_workspaces():
+	from frappe.desk.desktop import get_workspaces
+
+	blocked = _desk_blocked()
+	rows = []
+	# Desk's own sidebar set: public pages this user's roles reach plus their private pages.
+	for page in get_workspaces().get("pages") or []:
+		if page.get("is_hidden") or page.get("type") in ("Link", "URL"):
+			continue
+		if page.get("module") in blocked or page.get("title") == "Welcome Workspace":
+			continue
+		name = page.get("name")
+		slug = _desk_slug(name)
+		rows.append(
+			{
+				"name": name,
+				"title": page.get("title") or name,
+				"label": page.get("label") or _(name),
+				"public": bool(page.get("public")),
+				"href": f"/app/{slug}" if page.get("public") else f"/app/private/{slug}",
+			}
+		)
+	return rows
+
+
+@frappe.whitelist()
+def workspaces(search: str | None = None):
+	"""Palette «Desk»: the Desk workspaces this worker sees, by label, as Desk links."""
+	if frappe.session.user == "Guest":
+		frappe.throw(_("Sign in to open Muelle."), frappe.AuthenticationError)
+	term = _desk_term(search)
+	rows = _desk_cached("workspaces", _allowed_workspaces)
+	return [row for row in rows if _desk_matches(term, row["label"], row["title"], row["name"])][
+		: DESK_REACH_LIMIT["workspaces"]
+	]

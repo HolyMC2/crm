@@ -27,6 +27,8 @@ import {
 import { createManualProvider } from '@/utils/manualPalette'
 // «Pregúntale a Muelle»: a question gets «Preguntar a Muelle» first (SHELL-S2).
 import { createAssistantProvider } from '@/components/assistant/assistantPalette'
+// Reportes and Desk workspaces, as Desk lists them for this worker (E7).
+import { createDeskProviders } from '@/utils/deskPalette'
 import { formatMoney, kindLabel, statusLabel } from '@/utils/display'
 import {
   TIPOS,
@@ -542,6 +544,7 @@ export function createShellProviders({ boot, modules }) {
     clinica,
     inmobiliaria,
     manual,
+    ...createDeskProviders({ modules }),
     createAssistantProvider(),
   ]
 }
