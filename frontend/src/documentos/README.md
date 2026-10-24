@@ -24,7 +24,8 @@ Who did what (DD7, E3): `timeline` is the one Actividad for every record; `Docum
 it from its bundle and `pages/Contacto.vue` fetches it after paint through
 `components/documentos/timeline.js` (shared per record version). Each edit carries its own lines;
 child rows name themselves through `_ROW_TITLES` in `documentos.py` (an item, a payment line, a
-contact's email, phone or linked record), and a row with no name only counts. A record the
+contact's email, phone or linked record), and a row with no name only counts. Contact's edits exist
+because doco turns `track_changes` on for it (`doco.contactos.schema.ensure_tracking`). A record the
 assistant built for a person names the person: `documentos._made_by` reads the `Captura
 Contable.requested_by` of the capture that created it when doco's `is_agent` owns the record, so
 the create event and the cadena's `people` rows carry `via` («Ernesto Encargado creó la factura ·
