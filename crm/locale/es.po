@@ -28653,3 +28653,6 @@ msgstr "Servicios guardados"
 
 msgid "Choose a service"
 msgstr "Elige un servicio"
+#: frontend/src/documentos/palette.js
+msgid "Create {0}"
+msgstr "Crear {0}"
