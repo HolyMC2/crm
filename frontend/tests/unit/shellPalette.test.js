@@ -22,6 +22,8 @@ vi.mock('@/composables/breakpoint', async () => {
 })
 
 import {
+  federatedSearch,
+  groupPaletteItems,
   parsePaletteQuery,
   providersFor,
 } from '@/vendor/muelle-shell/contracts'
@@ -480,5 +482,149 @@ describe('Recientes remember any stable row', () => {
     )
     expect(rows).toEqual([])
     expect(state.call).not.toHaveBeenCalled()
+  })
+})
+
+describe('rank (E7b): a shell place matching the term outranks generic fan-out', () => {
+  // What the server returns for a term: any substring of the unaccented label or the name.
+  const catalog = [
+    ['CRM Sales Hierarchy', 'Jerarquía de ventas CRM', 'CRM', true],
+    [
+      'Sales Taxes and Charges Template',
+      'Plantilla de impuestos (ventas)',
+      'Cuentas',
+      true,
+    ],
+    ['Postventa', 'Postventas', 'Ventas', true],
+    ['Sales Forecast', 'Pronóstico de ventas', 'Ventas', true],
+    ['Sales Partner', 'Socio de ventas', 'Ventas', true],
+    ['Sales Person Type', 'Tipo de socio de ventas', 'Ventas', true],
+    ['Warehouse', 'Almacén', 'Inventario', true],
+    ['Stock Ledger Entry', 'Registro del kárdex', 'Inventario', false],
+  ].map(([doctype, label, module, create]) => ({
+    doctype,
+    label,
+    module,
+    create,
+  }))
+  const fold = (value) =>
+    String(value).toLowerCase().normalize('NFD').replace(/\p{M}/gu, '')
+  const rail = [
+    ...modules,
+    { key: 'ventas', label: 'Ventas', icon: 'lucide-handshake', to: '/ventas' },
+    {
+      key: 'inventario',
+      label: 'Inventario',
+      icon: 'lucide-package-open',
+      to: '/inventario',
+    },
+  ]
+
+  beforeEach(() => {
+    const base = state.call.getMockImplementation()
+    state.call.mockImplementation(async (method, args) => {
+      if (method === 'crm.api.documentos.doctypes') {
+        const term = fold(args.search)
+        return catalog.filter(
+          (row) =>
+            fold(row.label).includes(term) || fold(row.doctype).includes(term),
+        )
+      }
+      if (
+        method === 'crm.api.palette.search_deals' ||
+        method === 'crm.api.documentos.search'
+      )
+        return []
+      return base(method, args)
+    })
+  })
+  afterEach(() => {
+    delete window.installed_apps
+  })
+
+  // Every row the palette shows for the term, in order, as «group/title».
+  async function rows(raw) {
+    const providers = createShellProviders({
+      boot: ref(
+        boot({
+          inventario: { key: 'inventario', enabled: true, capabilities: {} },
+        }),
+      ),
+      modules: ref(rail),
+    })
+    const q = query(raw)
+    const states = await federatedSearch(providersFor(providers, q), q, {
+      signal: new AbortController().signal,
+      onUpdate() {},
+    })
+    return orderPaletteSections(groupPaletteItems(states)).flatMap((section) =>
+      section.items.map((item) => `${section.group}/${item.title}`),
+    )
+  }
+  const firstOf = (list, group) =>
+    list.findIndex((row) => row.startsWith(`${group}/`))
+
+  it('«ventas»: the Ventas places lead, then at most three «Crear» rows that start a word', async () => {
+    const list = await rows('ventas')
+    expect(list[0]).toBe('ir_a/Ventas')
+    const places = list.slice(0, firstOf(list, 'acciones'))
+    expect(places).toEqual(places.filter((row) => row.startsWith('ir_a/')))
+    expect(places).toEqual(
+      expect.arrayContaining([
+        'ir_a/Ventas › Deals',
+        'ir_a/Ventas › Prospectos',
+      ]),
+    )
+    const acciones = list.filter((row) => row.startsWith('acciones/'))
+    expect(acciones).toEqual([
+      'acciones/New contact «ventas»',
+      'acciones/Create Jerarquía de ventas CRM',
+      'acciones/Create Plantilla de impuestos (ventas)',
+      'acciones/Create Pronóstico de ventas',
+    ])
+    expect(firstOf(list, 'listas')).toBeGreaterThan(firstOf(list, 'acciones'))
+    // «Postventas» is still a list (the server matched it); only its «Crear» row needs a word start.
+    expect(list).toContain('listas/Postventas')
+  })
+
+  it('«stock ledger»: Inventario › Movimientos sits above the free-text actions, Listas and Reportes after', async () => {
+    window.installed_apps = ['scanner_kit']
+    const list = await rows('stock ledger')
+    expect(list[0]).toBe('ir_a/Inventario › Movimientos')
+    expect(list.slice(1, 3)).toEqual([
+      'acciones/New contact «stock ledger»',
+      'acciones/Find «stock ledger» in Escáner',
+    ])
+    expect(list).toContain('listas/Registro del kárdex')
+    expect(firstOf(list, 'listas')).toBeGreaterThan(firstOf(list, 'acciones'))
+    expect(firstOf(list, 'reportes')).toBeGreaterThan(firstOf(list, 'listas'))
+  })
+
+  it("«almac»: the Inventario hub leads and a DocType's «Crear Almacén» follows it", async () => {
+    const list = await rows('almac')
+    expect(list.slice(0, 3)).toEqual([
+      'ir_a/Inventario',
+      'acciones/New contact «almac»',
+      'acciones/Create Almacén',
+    ])
+    expect(list).toContain('listas/Almacén')
+  })
+
+  it("«kardex»: the shell's Movimientos page is the first row, before any Desk report", async () => {
+    const list = await rows('kardex')
+    expect(list[0]).toBe('ir_a/Inventario › Movimientos')
+    expect(list).toContain('listas/Registro del kárdex')
+    expect(list.some((row) => row.startsWith('acciones/Create'))).toBe(false)
+    expect(firstOf(list, 'reportes')).toBeGreaterThan(0)
+  })
+
+  it('a hand-written action specific to the term («New Deal») keeps its place above Ir a', async () => {
+    const list = await rows('deal')
+    expect(list).toContain('ir_a/Ventas › Deals')
+    expect(firstOf(list, 'acciones')).toBeLessThan(firstOf(list, 'ir_a'))
+    expect(list.filter((row) => row.startsWith('acciones/'))).toEqual([
+      'acciones/New contact «deal»',
+      'acciones/New Deal',
+    ])
   })
 })
