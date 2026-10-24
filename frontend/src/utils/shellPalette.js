@@ -56,6 +56,14 @@ const match = (text, ...values) =>
       .includes(text.toLowerCase()),
   )
 
+/**
+ * Row rank (Shell E7b): a shell place or record matching the term is 0 (the
+ * default), a hand-written action specific to it 1, generic fan-out 2 («Nuevo
+ * contacto «term»», «Buscar «term» en Escáner», a readable DocType's «Crear X»).
+ * A group whose best row is generic renders after Ir a (orderPaletteSections).
+ */
+export const PALETTE_RANK = Object.freeze({ place: 0, specific: 1, generic: 2 })
+
 const CONTACTOS_PLACES = [
   ['people', 'Personas'],
   ['companies', 'Empresas'],
@@ -201,6 +209,11 @@ export function createShellProviders({ boot, modules }) {
           icon: target.icon,
           href: target.href,
           shortcut: 'c',
+          // «Nuevo contacto «term»» files whatever was typed: generic.
+          rank:
+            target.id === 'contactos.create' && query.text
+              ? PALETTE_RANK.generic
+              : PALETTE_RANK.specific,
         })
       }
       // Ventas creates in its list's deal dialog; «c» stays the list's own.
@@ -212,6 +225,7 @@ export function createShellProviders({ boot, modules }) {
           keywords: 'nuevo trato venta oportunidad negocio new deal',
           icon: 'lucide-handshake',
           href: '/deals?create=1',
+          rank: PALETTE_RANK.specific,
         })
       // «Escanear documento» (Shell D7): first when the words say «ticket»,
       // «factura», «foto»… (cameraDoor.looksLikeDocument).
@@ -223,6 +237,7 @@ export function createShellProviders({ boot, modules }) {
           'escanear documento foto camara ticket factura recibo comprobante transferencia spei cotizacion orden de compra ine identificacion domicilio capturar ocr scan document',
         icon: 'lucide-camera',
         action: 'camera',
+        rank: PALETTE_RANK.specific,
       }
       if (looksLikeDocument(query.text)) items.unshift(cameraItem)
       else items.push(cameraItem)
@@ -234,6 +249,7 @@ export function createShellProviders({ boot, modules }) {
           keywords: 'escanear codigo barras camara scan barcode articulo',
           icon: 'lucide-scan-barcode',
           scanPick: true,
+          rank: PALETTE_RANK.specific,
         })
       if (
         query.text &&
@@ -247,6 +263,7 @@ export function createShellProviders({ boot, modules }) {
           keywords: `${query.text} escaner existencia cajon stock`,
           icon: 'lucide-scan-barcode',
           external: `/scan/items?q=${encodeURIComponent(query.text)}`,
+          rank: PALETTE_RANK.generic,
         })
       items.push(
         {
@@ -258,6 +275,7 @@ export function createShellProviders({ boot, modules }) {
           icon: 'lucide-keyboard',
           action: 'shortcuts',
           shortcut: 'alt+h',
+          rank: PALETTE_RANK.specific,
         },
         {
           id: 'theme.light',
@@ -266,6 +284,7 @@ export function createShellProviders({ boot, modules }) {
           icon: 'lucide-sun',
           action: 'theme',
           args: { theme: 'light' },
+          rank: PALETTE_RANK.specific,
         },
         {
           id: 'theme.dark',
@@ -274,6 +293,7 @@ export function createShellProviders({ boot, modules }) {
           icon: 'lucide-moon',
           action: 'theme',
           args: { theme: 'dark' },
+          rank: PALETTE_RANK.specific,
         },
       )
       return query.kind === 'empty'
@@ -633,35 +653,45 @@ const SECTION_ORDER = {
   ],
 }
 
+const bestRank = (items) =>
+  Math.min(...items.map((item) => item.rank ?? PALETTE_RANK.place))
+
 /**
  * The palette's sections (from groupPaletteItems) in display order. A question
  * still gets «Preguntar a Muelle» first (SHELL-S2): that row leads in its own
- * headerless section (`lead`), then the records, then the other actions.
+ * headerless section (`lead`), then the records, then the other actions. A
+ * section whose best row is generic (PALETTE_RANK) renders after Ir a, so a
+ * shell place matching the term outranks «Nuevo contacto «term»» and a
+ * DocType's «Crear X» (E7b).
  */
 export function orderPaletteSections(grouped, { empty = false } = {}) {
   const order = SECTION_ORDER[empty ? 'empty' : 'typed']
-  const rank = (group) => {
-    const index = order.indexOf(group)
-    return index < 0 ? order.length : index
-  }
-  const sorted = [...grouped].sort((a, b) => rank(a.group) - rank(b.group))
-  if (empty) return sorted
   // The question row (Acciones) leads; the door «Pregúntale a Muelle» (Ir a) stays put.
   const asks = (section, item) =>
-    section.group === 'acciones' && item.action === 'assistant'
-  const ask = sorted.flatMap((section) =>
+    !empty && section.group === 'acciones' && item.action === 'assistant'
+  const ask = grouped.flatMap((section) =>
     section.items.filter((item) => asks(section, item)),
   )
-  if (!ask.length) return sorted
-  return [
-    { group: 'acciones', items: ask, lead: true },
-    ...sorted
-      .map((section) => ({
-        ...section,
-        items: section.items.filter((item) => !asks(section, item)),
-      }))
-      .filter((section) => section.items.length),
-  ]
+  const rest = grouped
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) => !asks(section, item)),
+    }))
+    .filter((section) => section.items.length)
+  const afterPlaces = order.indexOf('ir_a') + 0.5
+  const position = (section) => {
+    const index = order.indexOf(section.group)
+    if (index < 0) return order.length
+    return !empty &&
+      index < afterPlaces &&
+      bestRank(section.items) === PALETTE_RANK.generic
+      ? afterPlaces
+      : index
+  }
+  const sorted = [...rest].sort((a, b) => position(a) - position(b))
+  return ask.length
+    ? [{ group: 'acciones', items: ask, lead: true }, ...sorted]
+    : sorted
 }
 
 /**

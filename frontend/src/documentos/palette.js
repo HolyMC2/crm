@@ -115,10 +115,29 @@ export function documentosPlaces(boot) {
   return items
 }
 
+// Case- and accent-insensitive words, space-bounded («Pronóstico de ventas» → ' pronostico de ventas').
+const words = (value) =>
+  ` ${String(value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .trim()}`
+/** The term starts a word of a value («ventas» in «Socio de ventas», not «venta» in «Preventa»). */
+const startsAWord = (term, ...values) =>
+  values.some((value) => words(value).includes(words(term)))
+
+// «Crear X» rows per query (E7b): generic fan-out, so a few at most.
+const CREATE_CAP = 3
+
 /**
  * «Listas» (Shell E7, DE9): every DocType this worker reads, by its Spanish
  * label or English name, on the generic floor; «Crear <label>» where the
- * worker may create one. The curated lists are already places (above).
+ * worker may create one, at most CREATE_CAP of them and only where the term
+ * starts a word of the label or the name (the server matches any substring).
+ * Those rows are generic fan-out (rank 2, utils/shellPalette PALETTE_RANK): a
+ * shell place matching the term renders above them. The curated lists are
+ * already places (above).
  */
 export function createTiposProvider({ boot }) {
   return {
@@ -133,6 +152,7 @@ export function createTiposProvider({ boot }) {
       const rows = await docApi('doctypes', { search: text.slice(0, 80) })
       if (signal?.aborted) return []
       const items = []
+      let creates = 0
       for (const row of rows || []) {
         if (profileFor(row.doctype)) continue
         const floor = floorRoute(row.doctype).path
@@ -145,7 +165,12 @@ export function createTiposProvider({ boot }) {
           icon: 'lucide-list',
           href: floor,
         })
-        if (row.create)
+        if (
+          row.create &&
+          creates < CREATE_CAP &&
+          startsAWord(text, row.label, row.doctype)
+        ) {
+          creates += 1
           items.push({
             id: `tipos:${row.doctype}:nuevo`,
             group: 'acciones',
@@ -153,7 +178,9 @@ export function createTiposProvider({ boot }) {
             keywords: row.doctype,
             icon: 'lucide-plus',
             href: `${floor}/nuevo`,
+            rank: 2,
           })
+        }
       }
       return items
     },
