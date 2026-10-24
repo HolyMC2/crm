@@ -265,14 +265,15 @@ import {
   nextStepValue,
 } from '@/utils/dealsListSummary'
 import { reloadQueue } from '@/composables/inbox'
+import { Avatar, Dropdown, Tooltip, dayjs, getConfig } from 'frappe-ui'
 import {
-  Avatar,
-  Dropdown,
-  Tooltip,
-  dayjs,
-  getConfig,
-} from 'frappe-ui'
-import { ListView, ListHeader, ListHeaderItem, ListRowItem, ListSelectBanner, ListFooter } from 'frappe-ui/experimental'
+  ListView,
+  ListHeader,
+  ListHeaderItem,
+  ListRowItem,
+  ListSelectBanner,
+  ListFooter,
+} from 'frappe-ui/experimental'
 import { sessionStore } from '@/stores/session'
 import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'

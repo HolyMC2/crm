@@ -17,7 +17,7 @@
       </Button>
     </template>
   </Combobox>
-  <Popover bare v-else side="bottom" align="end">
+  <Popover v-else bare side="bottom" align="end">
     <template #trigger="{ open }">
       <Button
         v-if="sortValues.size > 1"
