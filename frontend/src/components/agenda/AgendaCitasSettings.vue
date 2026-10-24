@@ -17,6 +17,7 @@
     </p>
     <form
       v-else-if="form"
+      ref="root"
       class="flex flex-col gap-5"
       novalidate
       @submit.prevent="save"
@@ -29,14 +30,25 @@
         <p class="text-base font-medium text-ink-gray-9">
           {{ __('To take appointments online:') }}
         </p>
-        <ul class="mt-1 list-disc pl-5 text-sm text-ink-gray-7">
-          <li v-for="row in settings.problems" :key="row.code">
-            {{ row.message }}
+        <ul class="mt-1 space-y-2">
+          <li
+            v-for="row in settings.problems"
+            :key="row.code"
+            class="flex flex-wrap items-center justify-between gap-2 text-sm text-ink-gray-7"
+          >
+            <span class="flex-1 basis-48">{{ row.message }}</span>
+            <Button
+              v-if="SETUP_SECTIONS[row.code]"
+              class="min-h-11"
+              variant="subtle"
+              :label="__(SETUP_SECTIONS[row.code].label)"
+              @click="focusSection(SETUP_SECTIONS[row.code].section)"
+            />
           </li>
         </ul>
       </section>
 
-      <fieldset>
+      <fieldset data-section="hours scheduling">
         <legend class="text-base font-semibold text-ink-gray-9">
           {{ __('Days and hours') }}
         </legend>
@@ -144,7 +156,7 @@
         </div>
       </fieldset>
 
-      <label class="text-sm text-ink-gray-7">
+      <label class="text-sm text-ink-gray-7" data-section="rest_days">
         {{ __('Rest days and holidays') }}
         <select
           v-model="form.holidayList"
@@ -197,6 +209,76 @@
         <p v-if="settings.bookingUrl" class="mt-1 text-sm text-ink-gray-6">
           {{ __('Your booking link: {0}', [settings.bookingUrl]) }}
         </p>
+      </fieldset>
+
+      <fieldset v-if="services" data-section="services">
+        <legend class="text-base font-semibold text-ink-gray-9">
+          {{ __('Services') }}
+        </legend>
+        <p v-if="services.profile" class="mt-1 text-sm text-ink-gray-6">
+          {{ __('Your online shop: {0}', [services.profile.label]) }}
+          <span v-if="!services.profile.on">
+            {{ __('«Book» is off there; turn it on above.') }}
+          </span>
+        </p>
+        <p v-else class="mt-1 text-sm text-ink-gray-6">
+          {{
+            __(
+              'This site has no online shop yet, so there is nowhere to publish services.',
+            )
+          }}
+        </p>
+        <label class="mt-2 block text-sm text-ink-gray-7">
+          {{ __('Group that holds your services') }}
+          <select
+            v-model="servicesForm.group"
+            class="mt-1 min-h-11 w-full rounded border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9"
+            :disabled="!services.can_fix || !services.profile"
+            @change="loadServices(servicesForm.group)"
+          >
+            <option value="">{{ __('Choose a group') }}</option>
+            <option
+              v-for="row in services.groups"
+              :key="row.name"
+              :value="row.name"
+            >
+              {{ row.label }}
+            </option>
+          </select>
+        </label>
+        <p
+          v-if="servicesForm.group && !services.items.length"
+          class="mt-1 text-sm text-ink-gray-6"
+        >
+          {{ __('No services in this group yet.') }}
+        </p>
+        <label
+          v-for="row in services.items"
+          :key="row.id"
+          class="flex min-h-11 items-center gap-2.5 text-base text-ink-gray-8"
+        >
+          <input
+            v-model="servicesForm.published"
+            type="checkbox"
+            class="h-4 w-4 rounded"
+            :value="row.id"
+            :disabled="!services.can_fix"
+          />{{ row.label }}
+        </label>
+        <ClaimGuard
+          v-if="!services.can_fix"
+          class="mt-2"
+          :guard="setupGuard(settings.fixers)"
+        />
+        <Button
+          v-else-if="services.profile"
+          class="mt-2 min-h-11"
+          variant="subtle"
+          :label="__('Save services')"
+          :loading="busy"
+          :disabled="!servicesForm.group"
+          @click="saveServices"
+        />
       </fieldset>
 
       <fieldset>
@@ -286,7 +368,7 @@
         v-if="constraints.length"
         :constraints="constraints"
         :busy="busy"
-        @action="load"
+        @action="guardAction"
         @dismiss="constraints = []"
       />
       <div class="flex flex-wrap gap-2">
@@ -312,17 +394,26 @@
   </div>
 </template>
 <script setup>
-import { ref } from 'vue'
+import { nextTick, reactive, ref } from 'vue'
 import { Button, toast } from 'frappe-ui'
 import AgendaGuard from '@/components/agenda/AgendaGuard.vue'
+import ClaimGuard from '@/components/gastos/ClaimGuard.vue'
 import {
+  SETUP_SECTIONS,
   WEEKDAYS,
+  citaServices,
   citaSettings,
   createCitaFlow,
+  saveCitaServices,
   saveCitaSettings,
+  setupGuard,
   validHours,
 } from '@/composables/useCitas'
 
+const props = defineProps({
+  // The fieldset to scroll to and focus on open (a SETUP_SECTIONS section).
+  section: { type: String, default: '' },
+})
 const emit = defineEmits(['close', 'saved'])
 const loading = ref(true)
 const loadError = ref('')
@@ -330,6 +421,9 @@ const busy = ref(false)
 const settings = ref(null)
 const form = ref(null)
 const constraints = ref([])
+const root = ref(null)
+const services = ref(null)
+const servicesForm = reactive({ group: '', published: [] })
 
 function fill(data) {
   settings.value = data
@@ -348,19 +442,52 @@ function fill(data) {
     })),
   }
 }
+function fillServices(data) {
+  services.value = data
+  servicesForm.group = data.group || ''
+  servicesForm.published = data.items
+    .filter((row) => row.published)
+    .map((row) => row.id)
+}
+async function loadServices(group = '') {
+  try {
+    fillServices(await citaServices(group))
+  } catch (error) {
+    services.value = null
+    toast.error(error?.messages?.[0] || error?.message || String(error))
+  }
+}
 async function load() {
   loading.value = true
   loadError.value = ''
   constraints.value = []
   try {
-    fill(await citaSettings())
+    const [data] = await Promise.all([citaSettings(), loadServices()])
+    fill(data)
   } catch (error) {
     loadError.value = error?.messages?.[0] || error?.message || String(error)
   } finally {
     loading.value = false
   }
+  await nextTick()
+  focusSection(props.section)
 }
 load()
+
+// `data-section` lists the problem sections a fieldset fixes («hours scheduling»).
+function focusSection(section) {
+  if (!section) return
+  const target = root.value?.querySelector(`[data-section~="${section}"]`)
+  if (!target) return
+  target.scrollIntoView({ block: 'start' })
+  target.querySelector('select, input, button')?.focus({ preventScroll: true })
+}
+function guardAction(id) {
+  if (id !== 'set_up') return load()
+  const row = constraints.value.find((item) => SETUP_SECTIONS[item.code])
+  constraints.value = []
+  focusSection(SETUP_SECTIONS[row?.code]?.section)
+}
 
 function addRow() {
   const last = form.value.hours[form.value.hours.length - 1]
@@ -391,6 +518,31 @@ async function save() {
     fill(result)
     toast.success(__('Appointment settings saved'))
     emit('saved', result)
+  } catch (error) {
+    constraints.value = [
+      {
+        code: 'unavailable',
+        message: error?.messages?.[0] || error?.message || String(error),
+        severity: 'block',
+      },
+    ]
+  } finally {
+    busy.value = false
+  }
+}
+async function saveServices() {
+  busy.value = true
+  try {
+    const result = await saveCitaServices({
+      group: servicesForm.group,
+      published: servicesForm.published,
+    })
+    if (result?.constraints) return (constraints.value = result.constraints)
+    fillServices(result)
+    const data = await citaSettings()
+    fill(data)
+    toast.success(__('Services saved'))
+    emit('saved', data)
   } catch (error) {
     constraints.value = [
       {
