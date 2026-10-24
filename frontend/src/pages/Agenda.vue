@@ -750,7 +750,7 @@
             @save="saveCita"
             @close="citaForm = null"
             @dismiss-guard="citaForm.constraints = []"
-            @open-settings="(citaForm = null), (citaSettingsOpen = true)"
+            @open-settings="openCitaSettings($event, true)"
           />
         </div>
       </template>
@@ -767,8 +767,9 @@
             {{ __('Online appointments') }}
           </h2>
           <AgendaCitasSettings
+            :section="citaSettingsSection"
             @close="citaSettingsOpen = false"
-            @saved="refreshCitas"
+            @saved="savedCitaSettings"
           />
         </div>
       </template>
@@ -880,6 +881,7 @@ import {
 // The «Citas» calendar itself is mainline's (useAgenda's CITAS key and calendarKey);
 // this lane only adds the booking, the panel actions and the owner's settings.
 import {
+  SETUP_SECTIONS,
   bookCita,
   citaAction,
   citaMessageLink,
@@ -1708,6 +1710,27 @@ async function reassign(event, id) {
 // --- citas (doco.citas) ---------------------------------------------------------------
 const citaForm = ref(null)
 const citaSettingsOpen = ref(false)
+const citaSettingsSection = ref('')
+// Opened from the «Nueva cita» gate: once booking is possible, back to the form.
+const citaSettingsReturn = ref(false)
+watch(citaSettingsOpen, (open) => {
+  if (open) return
+  citaSettingsSection.value = ''
+  citaSettingsReturn.value = false
+})
+function openCitaSettings(section = '', fromGate = false) {
+  citaForm.value = null
+  citaSettingsSection.value = section
+  citaSettingsReturn.value = fromGate
+  citaSettingsOpen.value = true
+}
+async function savedCitaSettings(result) {
+  const back = citaSettingsReturn.value && !result?.problems?.length
+  await refreshCitas()
+  if (!back) return
+  citaSettingsOpen.value = false
+  openCitaForm()
+}
 let citaFormKey = 0
 // Where Taller sends the worker back after «Recibir equipo» (this view, this cita).
 function agendaPath() {
@@ -1811,10 +1834,19 @@ async function refreshCitas() {
   await load()
 }
 // Context from other screens: ?new_cita=1&contact=&contact_label=&conversation=,
-// ?cita=<Appointment> (the Desk list/form) and Taller's return ?done=Appointment:<name>.
+// ?cita=<Appointment> (the Desk list/form), Taller's return ?done=Appointment:<name>
+// and ?settings=citas[&section=<SETUP_SECTIONS section>] (Taller's «Configurar citas»).
 async function openCitaFromQuery() {
   const query = route.query
   const rest = { ...query }
+  if (query.settings === 'citas') {
+    const section = Object.values(SETUP_SECTIONS).find(
+      (row) => row.section === query.section,
+    )
+    openCitaSettings(section?.section || '')
+    delete rest.settings
+    delete rest.section
+  }
   if (query.new_cita === '1' && !citas.value.canBook) {
     delete rest.new_cita
     toast.error(

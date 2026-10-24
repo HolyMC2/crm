@@ -16,7 +16,36 @@ export const WEEKDAYS = [
   'Sunday',
 ]
 
+// Setup problems (doco.citas.service.PROBLEMS) → the gate's button and the settings
+// fieldset it opens. A code outside this map (not_installed) has nothing to open.
+export const SETUP_SECTIONS = Object.freeze({
+  hours: { label: 'Set your hours', section: 'hours' },
+  rest_days: { label: 'Choose your rest days', section: 'rest_days' },
+  scheduling: { label: 'Turn on online appointments', section: 'scheduling' },
+  services: { label: 'Publish services', section: 'services' },
+})
+// «Pedir configuración»: the claims setup request, so the administrators get one ToDo.
+export const SETUP_REQUEST = Object.freeze({
+  key: 'request_setup',
+  what: 'citas',
+  label: 'Ask for it to be set up',
+})
+export function setupGuard(fixers) {
+  const names = (fixers || []).filter(Boolean)
+  return {
+    code: 'setup',
+    message: names.length
+      ? __('{0} can set this up.', [names.join(', ')])
+      : __('An administrator can set this up.'),
+    actions: [{ ...SETUP_REQUEST, label: __(SETUP_REQUEST.label) }],
+  }
+}
+
 export const citaOptions = () => call(`${CITAS_API}.options`)
+export const citaServices = (group = '') =>
+  call(`${CITAS_API}.services_get`, group ? { group } : {})
+export const saveCitaServices = (payload) =>
+  call(`${CITAS_API}.services_save`, { payload: JSON.stringify(payload) })
 export const bookCita = (payload) =>
   call(`${CITAS_API}.book`, { payload: JSON.stringify(payload) })
 export const getCita = (name) => call(`${CITAS_API}.get`, { name })

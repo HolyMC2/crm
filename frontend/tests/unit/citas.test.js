@@ -6,6 +6,7 @@ import { call } from 'frappe-ui'
 import { constraintActions } from '@/composables/useAgenda'
 import {
   CITAS_CALENDAR,
+  SETUP_SECTIONS,
   citaAction,
   doneCita,
   querySourceKeys,
@@ -93,6 +94,30 @@ describe('cita actions', () => {
     expect(constraintActions({ code: 'slot_taken' })).toEqual(['pick_time'])
     expect(constraintActions({ code: 'native' })).toEqual(['pick_time'])
     expect(constraintActions({ code: 'closed' })).toEqual(['refresh'])
+  })
+})
+
+describe('setup problems', () => {
+  it('map every fixable code to a button and the fieldset that fixes it', () => {
+    expect(Object.keys(SETUP_SECTIONS)).toEqual([
+      'hours',
+      'rest_days',
+      'scheduling',
+      'services',
+    ])
+    expect(SETUP_SECTIONS.services).toEqual({
+      label: 'Publish services',
+      section: 'services',
+    })
+    for (const row of Object.values(SETUP_SECTIONS))
+      expect(row.label && row.section).toBeTruthy()
+    expect(SETUP_SECTIONS.not_installed).toBeUndefined()
+  })
+
+  it('offer «set up» for a fixable refusal and only a retry when nothing fixes it', () => {
+    for (const code of Object.keys(SETUP_SECTIONS))
+      expect(constraintActions({ code })).toEqual(['set_up'])
+    expect(constraintActions({ code: 'not_installed' })).toEqual(['retry'])
   })
 })
 

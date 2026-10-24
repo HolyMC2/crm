@@ -109,7 +109,10 @@
           {{ dayLabel(row.date) }}
         </option>
       </select>
-      <p v-if="!days.length" class="mt-2 text-sm text-ink-gray-7">
+      <p v-if="slotsError" role="alert" class="mt-2 text-sm text-ink-red-4">
+        {{ slotsError }}
+      </p>
+      <p v-else-if="!days.length" class="mt-2 text-sm text-ink-gray-7">
         {{
           loadingSlots
             ? __('Loading free times…')
@@ -231,6 +234,7 @@ const emit = defineEmits(['action', 'move', 'message'])
 const confirmCancel = ref(false)
 const rescheduling = ref(false)
 const loadingSlots = ref(false)
+const slotsError = ref('')
 const days = ref([])
 const day = ref('')
 const dayId = `cita-day-${Math.random().toString(36).slice(2, 8)}`
@@ -256,10 +260,15 @@ const partyLink = computed(() =>
 async function startReschedule() {
   rescheduling.value = true
   loadingSlots.value = true
+  slotsError.value = ''
   try {
     const data = await citaOptions()
     days.value = data.days || []
     day.value = days.value[0]?.date || ''
+    if (data.problems?.length)
+      slotsError.value = data.problems.map((row) => row.message).join(' ')
+  } catch (error) {
+    slotsError.value = error?.messages?.[0] || error?.message || String(error)
   } finally {
     loadingSlots.value = false
   }

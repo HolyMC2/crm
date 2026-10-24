@@ -278,6 +278,12 @@ export function constraintActions(constraint) {
     native: ['pick_time'],
     cita: ['refresh'],
     closed: ['refresh'],
+    // Setup problems (service.PROBLEMS): «set_up» opens the settings at the section.
+    not_installed: ['retry'],
+    hours: ['set_up'],
+    rest_days: ['set_up'],
+    scheduling: ['set_up'],
+    services: ['set_up'],
   }
   return byCode[constraint?.code] || ['retry']
 }

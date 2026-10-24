@@ -73,5 +73,6 @@ const labels = {
   request_access: __('Request access'),
   refresh: __('Refresh agenda'),
   shorter_range: __('View one day'),
+  set_up: __('Go to the field'),
 }
 </script>

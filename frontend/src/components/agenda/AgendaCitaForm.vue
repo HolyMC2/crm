@@ -12,25 +12,34 @@
       <p class="text-base font-medium text-ink-gray-9">
         {{ __('Online appointments need a little setup first.') }}
       </p>
-      <ul class="mt-1 list-disc pl-5 text-sm text-ink-gray-7">
-        <li v-if="loadError">{{ loadError }}</li>
-        <li v-for="row in problems" :key="row.code">{{ row.message }}</li>
+      <p v-if="loadError" class="mt-1 text-sm text-ink-gray-7">
+        {{ loadError }}
+      </p>
+      <ul class="mt-1 space-y-2">
+        <li
+          v-for="row in problems"
+          :key="row.code"
+          class="flex flex-wrap items-center justify-between gap-2 text-sm text-ink-gray-7"
+          :data-code="row.code"
+        >
+          <span class="flex-1 basis-48">{{ row.message }}</span>
+          <Button
+            v-if="row.can_fix && SETUP_SECTIONS[row.code]"
+            class="min-h-11"
+            variant="solid"
+            :label="__(SETUP_SECTIONS[row.code].label)"
+            @click="emit('open-settings', SETUP_SECTIONS[row.code].section)"
+          />
+        </li>
       </ul>
-      <div class="mt-2 flex flex-wrap gap-2">
-        <Button
-          v-if="canSetUp"
-          class="min-h-11"
-          variant="solid"
-          :label="__('Set up appointments')"
-          @click="emit('open-settings')"
-        />
-        <Button
-          class="min-h-11"
-          variant="subtle"
-          :label="__('Try again')"
-          @click="load"
-        />
-      </div>
+      <ClaimGuard v-if="needsHelp" class="mt-2" :guard="setupGuard(fixers)" />
+      <Button
+        v-if="retryable"
+        class="mt-2 min-h-11"
+        variant="subtle"
+        :label="__('Try again')"
+        @click="load"
+      />
     </div>
     <template v-else>
       <div>
@@ -180,8 +189,14 @@
 import { computed, onMounted, ref } from 'vue'
 import { Button } from 'frappe-ui'
 import AgendaGuard from '@/components/agenda/AgendaGuard.vue'
+import ClaimGuard from '@/components/gastos/ClaimGuard.vue'
 import { searchPeople } from '@/composables/useAgenda'
-import { citaOptions, slotsOn } from '@/composables/useCitas'
+import {
+  SETUP_SECTIONS,
+  citaOptions,
+  setupGuard,
+  slotsOn,
+} from '@/composables/useCitas'
 
 const props = defineProps({
   initial: { type: Object, default: () => ({}) },
@@ -203,7 +218,7 @@ const ids = {
 const loading = ref(true)
 const loadError = ref('')
 const problems = ref([])
-const canSetUp = ref(false)
+const fixers = ref([])
 const services = ref([])
 const days = ref([])
 const person = ref(props.initial.contact || null)
@@ -218,6 +233,16 @@ const notes = ref(props.initial.notes || '')
 const dirty = computed(() =>
   Boolean(start.value || notes.value || service.value),
 )
+// A problem this user cannot fix: name who can and offer «Pedir configuración».
+const needsHelp = computed(() =>
+  problems.value.some((row) => SETUP_SECTIONS[row.code] && !row.can_fix),
+)
+// Only a failed load or a problem nothing in the shell fixes is worth retrying.
+const retryable = computed(
+  () =>
+    Boolean(loadError.value) ||
+    problems.value.some((row) => !SETUP_SECTIONS[row.code]),
+)
 const missing = computed(() => {
   if (!person.value) return __('Choose the customer.')
   if (!start.value) return __('Choose a free time.')
@@ -230,7 +255,7 @@ async function load() {
   try {
     const data = await citaOptions()
     problems.value = data.problems || []
-    canSetUp.value = Boolean(data.canSetUp)
+    fixers.value = data.fixers || []
     services.value = data.services || []
     days.value = data.days || []
     day.value = days.value[0]?.date || ''
