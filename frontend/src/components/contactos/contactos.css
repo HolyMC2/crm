@@ -484,6 +484,10 @@
   padding-bottom: 20px;
   min-width: 0;
 }
+/* Actividad brings its own gutter (it also sits on documentos); the record already has one. */
+.c-activity-section > section {
+  padding-inline: 0;
+}
 .c-values {
   display: grid;
   grid-template-columns: minmax(100px, 0.8fr) minmax(0, 1.2fr);

@@ -760,6 +760,7 @@ const sectionLabels = {
   notes: 'Notas',
   addresses: 'Direcciones',
   relations: 'Relaciones',
+  activity: 'Actividad',
   overview: 'Resumen',
   documents: 'Documentos',
   repairs: 'Reparaciones',

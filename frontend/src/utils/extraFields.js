@@ -149,6 +149,7 @@ const DEFAULT_SECTION_ORDER = [
   'notes',
   'addresses',
   'relations',
+  'activity',
 ]
 
 /**

@@ -191,6 +191,50 @@ class TestDocumentosActividadDiff(TestCase):
 			],
 		)
 
+	def test_a_contacts_rows_read_by_their_address_phone_or_linked_record(self):
+		"""Contacto's Actividad (E3): a contact has no items; its email, phone and link rows
+		name themselves, and a toggled «principal» reads under the phone it belongs to."""
+		emails = _field("email_ids", "Email IDs", fieldtype="Table", options="Contact Email")
+		phones = _field("phone_nos", "Contact Numbers", fieldtype="Table", options="Contact Phone")
+		links = _field("links", "Links", fieldtype="Table", options="Dynamic Link")
+		children = {
+			"Contact Email": _FakeChildMeta([_field("email_id", "Email ID"), _field("is_primary", "Is Primary", fieldtype="Check")]),
+			"Contact Phone": _FakeChildMeta(
+				[_field("phone", "Number"), _field("is_primary_mobile_no", "Is Primary Mobile", fieldtype="Check")]
+			),
+			"Dynamic Link": _FakeChildMeta(
+				[_field("link_doctype", "Link Document Type"), _field("link_name", "Link Name"), _field("link_title", "Link Title")]
+			),
+		}
+		phone_row = frappe._dict(name="ph-1", phone="55 1234 5678")
+		doc = _FakeDoc([emails, phones, links], rows={"phone_nos": [phone_row]})
+		data = {
+			"added": [
+				["email_ids", {"email_id": "ana@x.mx", "is_primary": 1}],
+				["links", {"link_doctype": "Customer", "link_name": "CUST-1", "link_title": "Cliente prueba"}],
+			],
+			"removed": [["email_ids", {"email_id": "vieja@x.mx"}]],
+			"row_changed": [["phone_nos", 0, "ph-1", [["is_primary_mobile_no", 0, 1]]]],
+		}
+		with patch("crm.api.documentos.frappe.get_meta", side_effect=lambda name: children[name]):
+			event = _event(doc, data)
+		self.assertEqual(
+			[row["label"] for row in event["items"]["added"]], ["ana@x.mx", "Cliente prueba"]
+		)
+		self.assertEqual([row["label"] for row in event["items"]["removed"]], ["vieja@x.mx"])
+		self.assertEqual(event["items"]["changed"][0]["label"], "55 1234 5678")
+		self.assertEqual(event["items"]["changed"][0]["changes"][0]["label"], "Is Primary Mobile")
+		self.assertEqual(event["rows"], 4)
+
+	def test_a_row_without_a_name_only_counts(self):
+		schedule = _field("payment_schedule", "Payment Schedule", fieldtype="Table", options="Payment Schedule")
+		child = _FakeChildMeta([_field("due_date", "Due Date", fieldtype="Date"), _field("payment_amount", "Payment Amount", fieldtype="Currency")])
+		doc = _FakeDoc([schedule], rows={"payment_schedule": []})
+		data = {"added": [["payment_schedule", {"due_date": "2026-11-01", "payment_amount": 100}]]}
+		with patch("crm.api.documentos.frappe.get_meta", return_value=child):
+			event = _event(doc, data)
+		self.assertEqual((event["rows"], event.get("items")), (1, None))
+
 	def test_a_row_with_only_noise_leaves_no_item_detail(self):
 		table = _field("items", "Items", fieldtype="Table", options="Fake Item")
 		child = _FakeChildMeta([_field("item_code", "Item Code"), _field("tax_code", "Tax Code")])

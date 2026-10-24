@@ -35,6 +35,38 @@ describe('Actividad attribution', () => {
   })
 })
 
+describe('Actividad contact rows', () => {
+  it('reads an address, a phone and a toggled principal without quantities', async () => {
+    const { sentences, lines } = await ledger([
+      edit({
+        rows: 3,
+        tables: [
+          { label: 'Correos', count: 2 },
+          { label: 'Teléfonos', count: 1 },
+        ],
+        items: {
+          added: [{ label: 'ana@x.mx', qty: null, amount: null }],
+          removed: [{ label: 'vieja@x.mx', qty: null, amount: null }],
+          changed: [
+            {
+              label: '55 1234 5678',
+              changes: [
+                { label: 'Es principal', type: 'check', from: 'No', to: 'Sí' },
+              ],
+            },
+          ],
+        },
+      }),
+    ])
+    expect(sentences).toEqual(['Contabot cambió la factura'])
+    expect(lines).toEqual([
+      '+ ana@x.mx',
+      '− vieja@x.mx',
+      '55 1234 5678: Es principal No → Sí',
+    ])
+  })
+})
+
 describe('Actividad status notes', () => {
   it('says a status note in either language as a change', async () => {
     const [en, es, none] = await sentences([

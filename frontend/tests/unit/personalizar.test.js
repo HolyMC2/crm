@@ -322,6 +322,7 @@ describe('extra field helpers', () => {
       'notes',
       'addresses',
       'relations',
+      'activity',
     ])
     // The saved order is never changed in place.
     const saved = { section_order: ['identity'] }

@@ -692,6 +692,15 @@
             :title="salesCustomers.length > 1 ? c.title : ''"
           />
         </section>
+        <!-- E3: the one Actividad every record has, with each edit's own lines
+             («+ ana@x.mx», «55 1234: Es principal No → Sí»). -->
+        <section
+          v-if="actividad"
+          class="c-record-section c-activity-section"
+          :style="sectionStyle('activity')"
+        >
+          <Actividad :activity="actividad" noun="el contacto" />
+        </section>
       </div>
       <ArchivosRegistroPanel
         v-if="archivosDoctype && nativeRoute.name"
@@ -881,6 +890,7 @@
 </template>
 <script setup>
 import { computed, defineAsyncComponent, ref, watch } from 'vue'
+import { loadTimeline } from '@/components/documentos/timeline'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import {
   AppBar,
@@ -944,6 +954,9 @@ const ChannelComposer = defineAsyncComponent(
 // The task editor loads on the first «Añadir», not with the contact.
 const CreateDialog = defineAsyncComponent(
   () => import('@/components/pendientes/CreateDialog.vue'),
+)
+const Actividad = defineAsyncComponent(
+  () => import('@/components/documentos/Actividad.vue'),
 )
 const route = useRoute(),
   router = useRouter()
@@ -1279,6 +1292,23 @@ const customerExtraLink = computed(() =>
     (boot.value?.extra_fields || []).length,
   ),
 )
+// Actividad after the record painted (SPEC §6.4 A2): the timeline never holds up the
+// contact, and a save (new `modified`) fetches it again. A record whose history this
+// worker cannot read keeps the section away.
+const actividad = ref(null)
+watch(record, (value) => {
+  actividad.value = null
+  const doctype = SOURCE_TYPES[nativeRoute.value.source]
+  if (!value?.name || !doctype) return
+  const later = globalThis.requestIdleCallback || ((fn) => setTimeout(fn, 200))
+  later(() => {
+    loadTimeline(doctype, value.name, value.modified)
+      .then((result) => {
+        if (record.value === value) actividad.value = result
+      })
+      .catch(() => {})
+  })
+})
 /** A save from «Más datos» updates the record in place (no reload, same scroll). */
 function applySaved(result) {
   if (!result?.name || result.name !== record.value?.name) return reload()

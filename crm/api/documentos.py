@@ -1203,7 +1203,19 @@ _ROW_DIFF_SKIP = frozenset(
 # What a worker changed in a row first: the item, then how much, then the rest.
 _ROW_CHANGE_ORDER = {"item_code": 0, "item_name": 0, "qty": 1, "rate": 2, "amount": 2, "warehouse": 3}
 _NUMBERS = re.compile(r"-?\d[\d,\s]*(?:\.\d+)?")
-_ROW_TITLES = ("item_name", "item_code", "description", "payment_term", "mode_of_payment")
+# How a child row names itself in the ledger: the item, a description, a payment line, a
+# contact's address, phone or linked record. A row with none of these only counts.
+_ROW_TITLES = (
+	"item_name",
+	"item_code",
+	"description",
+	"payment_term",
+	"mode_of_payment",
+	"email_id",
+	"phone",
+	"link_title",
+	"link_name",
+)
 
 
 def _diff_field(value, limit=MAX_DIFF_TEXT):
@@ -1439,13 +1451,17 @@ def _row_diff(doc, fields, data):
 			bump(entry[0])
 			row = entry[1]
 			child, allowed, masked = row_meta(entry[0])
-			# A table without item rows (`payment_schedule`) only adds to the count.
-			if not isinstance(row, dict) or not _is_item_table(doc, entry[0], child):
+			if not isinstance(row, dict):
+				continue
+			title = _row_title(row, child, allowed, masked)
+			# A row that cannot name itself (a payment schedule line) only adds to the count;
+			# an item row is detailed even untitled («Artículo»).
+			if not title and not _is_item_table(doc, entry[0], child):
 				continue
 			if len(items[brief]) < MAX_DIFF_ROWS:
 				items[brief].append(
 					{
-						"label": _row_title(row, child, allowed, masked),
+						"label": title,
 						"qty": _as_number(row.get("qty")),
 						"amount": _as_number(row.get("amount")),
 					}
@@ -1463,11 +1479,11 @@ def _row_diff(doc, fields, data):
 			if not meaningful:
 				continue
 			bump(table)
-			if _is_item_table(doc, table, child) and len(items["changed"]) < MAX_DIFF_ROWS:
-				row = _find_row(doc, table, name)
-				items["changed"].append(
-					{"label": _row_title(row, child, allowed, masked), "changes": meaningful}
-				)
+			if len(items["changed"]) >= MAX_DIFF_ROWS:
+				continue
+			title = _row_title(_find_row(doc, table, name), child, allowed, masked)
+			if title or _is_item_table(doc, table, child):
+				items["changed"].append({"label": title, "changes": meaningful})
 
 	detail(added, "added")
 	detail(removed, "removed")
