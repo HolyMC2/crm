@@ -178,12 +178,48 @@ mask class costs 0.15–0.3 KB gzip, so string names were not converted to class
 - The `move-imports` codemod inserted the new statement inside a multi-line import when the
   touched statement kept other names; fixed in this lane, the outputs repaired.
 
+### Step 7 (B7): the bump
+
+- `frappe-ui` is `1.0.2` from npm. The `frappe-ui` git submodule and `.gitmodules` are gone;
+  `vite.config.js` no longer looks for `../frappe-ui/vite` in dev (`isDev` with it), it imports
+  `frappe-ui/vite` like the build did. `patch-package` and `postinstall-postinstall` left with the
+  last patch in step 2; `yarn.lock` was regenerated and `yarn install --frozen-lockfile` is green.
+- Plugin: `app.use(FrappeUI)`. The `socketio: false` option no longer exists (1.0.2 opens no
+  socket and `$socket` is the one `main.js` creates); the `resources` option API crm never used is
+  off by default.
+- Direct dependencies that 1.0.2 stopped hoisting: `@headlessui/vue ^1.7.23` (crm's own
+  `components/frappe-ui/Autocomplete.vue` and `AssigneeSearch.vue` keep it; frappe-ui is on
+  reka-ui), `grid-layout-plus ^1.1.1` (the vendored GridLayout), `lucide-static ^1.31.0` (the
+  sprite and `~icons/lucide/*`), `@vueuse/core ^14.1.0` (five crm composables import it);
+  `@vueuse/integrations` ^10 → ^14 to match. `dayjs` and `idb-keyval` stay transitive.
+- Tailwind: the `frappe/` content globs are gone with the submodule. 1.0.2's preset dropped the
+  named radius aliases (ADR-0006); `@apply rounded` in 26 scoped style blocks made the build fail,
+  so `tailwind.config.js` keeps `rounded`, `rounded-sm/md/lg/xl/2xl` at beta.29's values on the
+  preset's own variables (`--radius-1/4/5/6/7/8`, the same table `tailwind/migrate-tokens-v2.js`
+  applies). A deviation from the plan: B9 renames the sites and deletes the block.
+- Entry budget: `FrappeUIProvider` renders `<Dialogs/>`, whose `dialog.confirm`/`prompt` module
+  imports `FormControl` and with it every reka-ui form control (DatePicker 30 KB minified,
+  Combobox, MultiSelect, TimePicker, Select, dayjs…). Through the provider that was 220.9 KB gzip
+  of entry JS against a 180 KB budget (base 178.7). `App.vue` now renders `ToastProvider` itself
+  and mounts the imperative dialog host as an async component
+  (`frappe-ui-components/Dialogs.vue`); the two Settings views that call `dialog.confirm` get it
+  on the first render after the chunk loads. Entry JS 167.9 KB, CSS 58.7 KB (base 59.4) after
+  step 7b; feather-icons (88 KB minified) left the entry, `@vueuse/core` (22 KB) entered it
+  through the composables that already imported it from the hoisted copy.
+
 ## 5. Input list for `FUI1-behavior` (silent breaks)
 
 Filled at step 8 from the lab walk. Known from the sources before the walk:
 
-- `Dialog :options` 25 files; `disableOutsideClickToClose` → `dismissible`; `.close()` on refs.
-- `Tooltip`/`Popover` `placement` → `side`, delays in ms.
+- Dialogs (step 7b): the body is the default slot; the 13 full-override bodies are `bare`
+  dialogs, so they draw their own padding and close affordance exactly as before, but the size
+  and title props are now flat (`title`/`size`); `.close()` on dialog refs is unverified.
+- Popovers (step 7b): reka-ui opens on pointerdown/click and keyboard through `PopoverTrigger`;
+  the trigger element gets `aria-expanded`/`data-state`. Sites on `trigger="manual"` (Autocomplete
+  and every `Link`, IconPicker, FormBuilder publish, HierarchyRow) keep their own click handling
+  and their own aria attributes. `HoverCard` replaces the hover popovers (delay 250 ms, leaves
+  after 300 ms). Dropdown `align="end"` is what `placement="right"` resolved to.
+- Tooltip delays are ms now; `:hover-delay="1"`/`"0.35"` were seconds and became 1000/350.
 - `Button` string `icon`/`iconLeft`/`iconRight` props: 1.0.2 accepts `lucide-*` strings or
   components; any other string renders nothing and warns in dev.
 - Glyphs that changed with the lucide renames (step 3): `edit` → `square-pen`, `edit-2` → `pen`,
@@ -211,6 +247,9 @@ Filled at step 8 from the lab walk. Known from the sources before the walk:
 - Tailwind preset renames (`bg-surface-white`, named radius aliases, `text-base font-medium`,
   `--focus-*`, line-height 1.35), `dark:` redundancy, hover on touch.
 - `call()` honours `requestBaseUrl`/`requestHeaders`/`serverMessagesHandler` (184 files).
-- `@vueuse/integrations` is ^10 while 1.0.2 hoists `@vueuse/core` 14.4.0; the peer mismatch is
-  a warning, to be settled with the deps step.
+- `@vueuse/core` and `@vueuse/integrations` are direct ^14 dependencies (step 7); the
+  composables that used the hoisted ^10 copy (`breakpoint`, `settings`, `onboarding`,
+  `ShortcutSheet`) run on 14.4.0.
+- `FormControl :placement` (TelephonySettings, 3 sites) was always an unknown attribute on the
+  input; still is.
 - The vendored `@muelle/tokens` (`src/vendor/muelle-shell/tokens/`) is generated from beta.29.

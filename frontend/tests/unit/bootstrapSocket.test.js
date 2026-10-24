@@ -131,11 +131,8 @@ function expectCanonicalSocket() {
   const root = fixture.roots[0]
   expect(root.proxy.$socket).toBe(socket)
   expect(fixture.mountedSockets).toEqual([socket])
-  expect(root.proxy.$call).toBeTypeOf('function')
-  expect(fixture.resources.install).toHaveBeenCalledWith(
-    root.appContext.app,
-    true,
-  )
+  // 1.0: no $call global and no v1 `resources` option API unless asked for.
+  expect(fixture.resources.install).not.toHaveBeenCalled()
   expect(root.proxy.$dialog).toBe(fixture.dialog)
   expect(Object.keys(root.appContext.components)).toEqual([
     'Button',

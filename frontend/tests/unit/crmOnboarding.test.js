@@ -26,6 +26,9 @@ const fixture = vi.hoisted(() => ({
   capture: vi.fn(),
   send: vi.fn(),
 }))
+vi.mock('frappe-ui-components/Dialogs.vue', () => ({
+  default: { render: () => null },
+}))
 vi.mock('frappe-ui', async () => {
   // The vendored onboarding imports `call` from 'frappe-ui'; the native POST
   // must still reach the fetch stub `writes()` counts.
@@ -57,12 +60,7 @@ vi.mock('frappe-ui', async () => {
     Dialog,
     toast: { error: vi.fn() },
     Button,
-    FrappeUIProvider: {
-      setup:
-        (_, { slots }) =>
-        () =>
-          slots.default?.(),
-    },
+    ToastProvider: { render: () => null },
     useColorScheme: () => ({ setColorScheme() {} }),
   }
 })
@@ -302,7 +300,7 @@ async function mountShell(mobile = false, { own = true, plain = false } = {}) {
     setup:
       (_, { slots }) =>
       () =>
-        h('section', { role: 'dialog' }, slots.body?.()),
+        h('section', { role: 'dialog' }, slots.default?.()),
   })
   app.component('ErrorMessage', {
     props: { message: { type: String, default: '' } },

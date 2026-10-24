@@ -1,6 +1,7 @@
 # CRM CI
 
-The frontend carries no patch on the pinned `frappe-ui` dependency. The pieces of
+The frontend depends on `frappe-ui` from npm (1.0.2), with no git submodule and no
+patch on it (`docs/FRAPPE_UI_1.md` records the migration). The pieces of
 frappe's `@framework/ui` package that crm uses (telemetry, onboarding, the signup
 and trial banners) are vendored under `frontend/src/framework-ui/`; its
 `SOURCE.json` records the upstream commit and every local change, and

@@ -49,8 +49,9 @@ let pinia = createPinia()
 
 let app = createApp(App)
 
-// CRM initializes its boot-aware socket below before mounting consumers.
-app.use(FrappeUI, { socketio: false })
+// frappe-ui 1.0 opens no socket and installs no v1 `resources` option API
+// (crm uses neither); the boot-aware socket is created below and set as $socket.
+app.use(FrappeUI)
 app.use(pinia)
 app.use(router)
 app.use(translationPlugin)
