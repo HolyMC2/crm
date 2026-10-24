@@ -53,7 +53,7 @@
             :options="[
               {
                 label: __('Delete'),
-                icon: 'trash-2',
+                icon: LucideTrash2,
                 onClick: () => {
                   $dialog({
                     title: __('Delete Task'),
@@ -100,6 +100,7 @@ import { formatDate, taskStatusOptions } from '@/utils'
 import { usersStore } from '@/stores/users'
 import { globalStore } from '@/stores/global'
 import { Tooltip, Dropdown } from 'frappe-ui'
+import LucideTrash2 from '~icons/lucide/trash-2'
 
 defineProps({
   tasks: { type: Array, default: () => [] },

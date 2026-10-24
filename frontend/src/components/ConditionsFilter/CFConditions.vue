@@ -25,7 +25,7 @@
           :disabled="props.disableAddCondition"
           :label="__('Add Condition')"
           icon-left="lucide-plus"
-          :icon-right="open ? 'chevron-up' : 'chevron-down'"
+          :icon-right="open ? LucideChevronUp : LucideChevronDown"
         />
       </Dropdown>
     </div>
@@ -37,6 +37,8 @@ import CFCondition from './CFCondition.vue'
 import { filterableFields } from './filterableFields'
 import { Button, Dropdown } from 'frappe-ui'
 import { computed, reactive, watch } from 'vue'
+import LucideChevronUp from '~icons/lucide/chevron-up'
+import LucideChevronDown from '~icons/lucide/chevron-down'
 
 const props = defineProps({
   conditions: { type: Array, required: true },

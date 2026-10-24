@@ -11,7 +11,7 @@
           data-testid="claim-back"
           class="inline-flex min-h-11 items-center gap-1 text-sm text-ink-gray-7 hover:text-ink-gray-9"
         >
-          <FeatherIcon name="arrow-left" class="h-4 w-4" />
+          <LucideArrowLeft class="h-4 w-4" />
           {{
             back.label === 'Gastos'
               ? __('Gastos', null, 'Gastos')
@@ -418,7 +418,7 @@
           :aria-label="__('Close', null, 'Gastos')"
           @click.stop="zoom = null"
         >
-          <FeatherIcon name="x" class="h-5 w-5" />
+          <LucideX class="h-5 w-5" />
         </button>
       </div>
     </Teleport>
@@ -459,7 +459,7 @@
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Badge, Button, FeatherIcon, toast } from 'frappe-ui'
+import { Badge, Button, toast } from 'frappe-ui'
 import ApprovalDialog from '@/components/gastos/ApprovalDialog.vue'
 import ClaimGuard from '@/components/gastos/ClaimGuard.vue'
 import ClaimSheet from '@/components/gastos/ClaimSheet.vue'
@@ -483,6 +483,8 @@ import {
   stateLabel,
   stateTheme,
 } from '@/composables/useGastosEmpleados'
+import LucideArrowLeft from '~icons/lucide/arrow-left'
+import LucideX from '~icons/lucide/x'
 
 const props = defineProps({ name: { type: String, required: true } })
 const route = useRoute()

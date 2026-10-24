@@ -113,7 +113,7 @@
           :label="
             view.flow ? __('Update from the form') : __('Build WhatsApp Flow')
           "
-          icon-left="refresh-cw"
+          :icon-left="LucideRefreshCw"
           :loading="c.busy.value === 'build'"
           :disabled="b.dirty.value"
           @click="c.buildFlow"
@@ -129,7 +129,7 @@
         <Button
           v-if="view.flow?.on_meta"
           :label="__('Check status')"
-          icon-left="activity"
+          :icon-left="LucideActivity"
           :loading="c.busy.value === 'check'"
           @click="c.checkFlow"
         />
@@ -141,7 +141,7 @@
         >
           <Button
             :label="__('Preview in WhatsApp')"
-            icon-left="external-link"
+            :icon-left="LucideExternalLink"
           />
         </a>
       </div>
@@ -157,6 +157,9 @@ import { computed, inject } from 'vue'
 import { FORM_BUILDER } from '../useFormBuilder'
 import { FORM_CHANNELS } from './useFormChannels'
 import { flowView } from './channelModel'
+import LucideRefreshCw from '~icons/lucide/refresh-cw'
+import LucideActivity from '~icons/lucide/activity'
+import LucideExternalLink from '~icons/lucide/external-link'
 
 const b = inject(FORM_BUILDER)
 const c = inject(FORM_CHANNELS)

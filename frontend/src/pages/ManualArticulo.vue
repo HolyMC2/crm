@@ -11,7 +11,7 @@
           data-testid="manual-article-back"
           @click="goBack"
         >
-          <FeatherIcon name="arrow-left" class="h-4 w-4" />
+          <LucideArrowLeft class="h-4 w-4" />
           {{ backLabel }}
         </button>
       </nav>
@@ -83,7 +83,7 @@
           data-testid="manual-article-actions"
         >
           <Button
-            icon-left="edit-2"
+            :icon-left="LucidePen"
             :label="__('Edit', null, CTX)"
             class="min-h-11 sm:min-h-8"
             @click="
@@ -119,7 +119,7 @@
             @click="transition('republish')"
           />
           <Button
-            icon-left="clock"
+            :icon-left="LucideClock"
             :label="__('History', null, CTX)"
             class="min-h-11 sm:min-h-8"
             data-testid="manual-history"
@@ -265,7 +265,7 @@
 <script setup>
 import { computed, defineAsyncComponent, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Badge, Button, FeatherIcon } from 'frappe-ui'
+import { Badge, Button } from 'frappe-ui'
 import { shellBoot } from '@/composables/muelleShell'
 import { isMobile as isPhone } from '@/composables/breakpoint'
 import {
@@ -284,6 +284,9 @@ import {
   updatedLine,
 } from '@/composables/useManual'
 import { articleHtml } from '@/utils/manualHtml'
+import LucideArrowLeft from '~icons/lucide/arrow-left'
+import LucidePen from '~icons/lucide/pen'
+import LucideClock from '~icons/lucide/clock'
 
 const HistorySheet = defineAsyncComponent(
   () => import('@/components/manual/HistorySheet.vue'),

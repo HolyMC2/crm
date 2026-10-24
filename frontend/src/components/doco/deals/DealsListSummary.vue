@@ -97,7 +97,7 @@
         size="sm"
         :variant="funnel ? 'solid' : 'subtle'"
         :label="__('Funnel')"
-        iconLeft="filter"
+        :iconLeft="LucideFunnel"
         :aria-pressed="funnel"
         @click="emit('update:funnel', !funnel)"
       />
@@ -110,6 +110,7 @@ import { computed } from 'vue'
 import { FormControl } from 'frappe-ui'
 import { money } from '@/utils/numberFormat'
 import { pipelineLabel } from '@/utils/stageLabel'
+import LucideFunnel from '~icons/lucide/funnel'
 
 const props = defineProps({
   summary: { type: Object, required: true },

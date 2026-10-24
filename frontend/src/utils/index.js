@@ -3,9 +3,9 @@ import TaskStatusIcon from '@/components/Icons/TaskStatusIcon.vue'
 import TaskPriorityIcon from '@/components/Icons/TaskPriorityIcon.vue'
 import { usersStore } from '@/stores/users'
 import { getMeta } from '@/stores/meta'
-import { gemoji } from 'gemoji'
 import DOMPurify from 'dompurify'
-import { toast, dayjsLocal, dayjs, getConfig, FeatherIcon } from 'frappe-ui'
+import { toast, dayjsLocal, dayjs, getConfig } from 'frappe-ui'
+import Icon from '@/components/Icon.vue'
 import { h } from 'vue'
 
 export function formatTime(seconds) {
@@ -473,10 +473,7 @@ export function parseColor(color) {
   return textColor
 }
 
-export function isEmoji(str) {
-  const emojiList = gemoji.map((emoji) => emoji.emoji)
-  return emojiList.includes(str)
-}
+export { isEmoji } from '@/utils/emoji'
 
 export function isTouchScreenDevice() {
   return 'ontouchstart' in document.documentElement
@@ -566,8 +563,8 @@ export function DropdownOption({ option, icon, selected, onClick }) {
     [
       h('div', { class: 'flex gap-2' }, [
         icon
-          ? h(FeatherIcon, {
-              name: icon,
+          ? h(Icon, {
+              icon,
               class: ['h-4 w-4 shrink-0'],
               'aria-hidden': true,
             })
@@ -819,8 +816,8 @@ export function TemplateOption({ active, option, variant, icon, onClick }) {
     },
     [
       icon
-        ? h(FeatherIcon, {
-            name: icon,
+        ? h(Icon, {
+            icon,
             class: ['h-4 w-4 shrink-0'],
             'aria-hidden': true,
           })

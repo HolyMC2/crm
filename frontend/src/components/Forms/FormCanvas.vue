@@ -80,7 +80,7 @@
               <Dropdown :options="sectionMenu(sec)">
                 <Button
                   variant="ghost"
-                  icon="more-horizontal"
+                  :icon="LucideEllipsis"
                   :aria-label="__('Section options')"
                 />
               </Dropdown>
@@ -134,7 +134,7 @@
                       class="!h-8 w-full !bg-surface-elevation-2"
                       variant="outline"
                       :label="__('Add a question')"
-                      icon-left="plus"
+                      :icon-left="LucidePlus"
                       @click="
                         !pickerOpen && (b.expanded.value = null),
                           setOpen(!pickerOpen)
@@ -152,7 +152,7 @@
         class="!h-8 w-full"
         variant="subtle"
         :label="__('Add a section')"
-        icon-left="plus"
+        :icon-left="LucidePlus"
         @click="b.addSection()"
       />
     </div>
@@ -223,6 +223,11 @@ import FieldCard from './FieldCard.vue'
 import { fieldTypeIcon } from './fieldTypeIcon'
 import { FORM_BUILDER, MAX_COLUMNS } from './useFormBuilder'
 import { computed, inject, onMounted, ref, watch } from 'vue'
+import LucideSquarePen from '~icons/lucide/square-pen'
+import LucideTrash2 from '~icons/lucide/trash-2'
+import LucideColumns2 from '~icons/lucide/columns-2'
+import LucideEllipsis from '~icons/lucide/ellipsis'
+import LucidePlus from '~icons/lucide/plus'
 
 // the builder model, shared with the page and the other panels
 const b = inject(FORM_BUILDER)
@@ -266,12 +271,12 @@ function sectionMenu(sec) {
       items: [
         {
           label: __('Rename'),
-          icon: 'edit',
+          icon: LucideSquarePen,
           onClick: () => (sec.editingLabel = true),
         },
         {
           label: __('Remove section'),
-          icon: 'trash-2',
+          icon: LucideTrash2,
           onClick: () => b.removeBreak(sec.secField),
         },
       ],
@@ -281,13 +286,13 @@ function sectionMenu(sec) {
       items: [
         {
           label: __('Add a column'),
-          icon: 'columns',
+          icon: LucideColumns2,
           onClick: () => b.addColumn(cols),
           condition: () => cols.length < MAX_COLUMNS,
         },
         {
           label: __('Remove last column'),
-          icon: 'trash-2',
+          icon: LucideTrash2,
           onClick: () => b.removeLastColumn(cols),
           condition: () => cols.length > 1,
         },

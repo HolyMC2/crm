@@ -54,7 +54,7 @@
                   class="flex size-11 flex-none items-center justify-center rounded-full bg-surface-gray-2 text-ink-gray-7"
                   aria-hidden="true"
                 >
-                  <FeatherIcon name="camera" class="h-5 w-5" />
+                  <LucideCamera class="h-5 w-5" />
                 </span>
                 <div class="min-w-0 flex-1">
                   <p class="text-sm font-semibold text-ink-gray-9">
@@ -75,7 +75,7 @@
                 <label
                   class="relative inline-flex min-h-11 flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg bg-surface-gray-7 px-3 text-base font-medium text-ink-base focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-outline-gray-4"
                 >
-                  <FeatherIcon name="camera" class="h-4 w-4" />{{
+                  <LucideCamera class="h-4 w-4" />{{
                     form.photo || photos
                       ? __('Replace the photo')
                       : __('Take the receipt photo')
@@ -92,9 +92,7 @@
                 <label
                   class="relative inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-lg border border-outline-gray-2 px-3 text-base text-ink-gray-8 focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-outline-gray-4"
                 >
-                  <FeatherIcon name="upload" class="h-4 w-4" />{{
-                    __('Choose a file')
-                  }}
+                  <LucideUpload class="h-4 w-4" />{{ __('Choose a file') }}
                   <input
                     type="file"
                     accept="image/*,application/pdf"
@@ -180,10 +178,7 @@
               v-if="options.advance"
               class="flex items-start gap-2 rounded-lg bg-surface-gray-2 p-3 text-sm text-ink-gray-8"
             >
-              <FeatherIcon
-                name="wallet"
-                class="mt-0.5 h-4 w-4 flex-none text-ink-gray-6"
-              />
+              <LucideWallet class="mt-0.5 h-4 w-4 flex-none text-ink-gray-6" />
               <span>
                 {{
                   __(
@@ -243,7 +238,7 @@
 </template>
 <script setup>
 import { computed, nextTick, reactive, ref, watch } from 'vue'
-import { Button, FeatherIcon, FormControl } from 'frappe-ui'
+import { Button, FormControl } from 'frappe-ui'
 import { BottomSheet } from '@/components/ui'
 import ClaimGuard from '@/components/gastos/ClaimGuard.vue'
 import ClaimPicker from '@/components/gastos/ClaimPicker.vue'
@@ -261,6 +256,9 @@ import {
   pendingOperation,
   runOnce,
 } from '@/composables/useGastosEmpleados'
+import LucideCamera from '~icons/lucide/camera'
+import LucideUpload from '~icons/lucide/upload'
+import LucideWallet from '~icons/lucide/wallet'
 
 // «Nuevo gasto» / «Enviar a aprobar»: save → photo → send, each replay-safe.
 // A failed step keeps the draft and what was typed, and names what is missing.

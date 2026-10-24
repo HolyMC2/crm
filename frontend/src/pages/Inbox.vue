@@ -12,7 +12,7 @@
         data-testid="inbox-return"
         @click="goToReturn(router, returnTo)"
       >
-        <FeatherIcon name="arrow-left" class="h-4 w-4" />
+        <LucideArrowLeft class="h-4 w-4" />
         {{ __('Back to {0}', [returnLabel]) }}
       </button>
     </div>
@@ -73,7 +73,6 @@
 <script setup>
 import { computed, defineAsyncComponent, h, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { FeatherIcon } from 'frappe-ui'
 import { addonAvailable } from '@/utils/crmCapabilities'
 import { isMobile } from '@/composables/breakpoint'
 import { mobileView } from '@/composables/mobileView'
@@ -82,6 +81,7 @@ import { goToReturn } from '@/utils/atencion'
 import { inboxSpace, inboxSpaceQuery } from '@/utils/inboxSpaces'
 import PaneState from '@/components/shell/PaneState.vue'
 import { Segmented } from '@/components/ui'
+import LucideArrowLeft from '~icons/lucide/arrow-left'
 const phoneSpaces = [
   { value: 'conversations', label: __('Chats') },
   { value: 'activity', label: __('Actividad') },

@@ -29,14 +29,14 @@
       <div class="mt-2 flex flex-wrap gap-2">
         <Button
           size="sm"
-          icon-left="copy"
+          :icon-left="LucideCopy"
           :label="__('Copy message')"
           :disabled="!share(ch.key)?.text"
           @click="copyToClipboard(share(ch.key).text)"
         />
         <Button
           size="sm"
-          icon-left="message-square"
+          :icon-left="LucideMessageSquare"
           :label="__('Save as quick reply')"
           :loading="c.busy.value === `reply-${ch.key}`"
           :disabled="!share(ch.key)?.text"
@@ -54,6 +54,8 @@ import LucideMessageCircle from '~icons/lucide/message-circle'
 import { copyToClipboard } from '@/utils'
 import { inject } from 'vue'
 import { FORM_CHANNELS } from './useFormChannels'
+import LucideCopy from '~icons/lucide/copy'
+import LucideMessageSquare from '~icons/lucide/message-square'
 
 const c = inject(FORM_CHANNELS)
 const chats = [

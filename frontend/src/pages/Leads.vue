@@ -11,7 +11,7 @@
       <Button
         variant="solid"
         :label="__('Create')"
-        iconLeft="plus"
+        :iconLeft="LucidePlus"
         @click="showLeadModal = true"
       />
     </template>
@@ -298,6 +298,7 @@ import { useTelemetry } from '@framework/ui'
 import { Avatar, Tooltip, Dropdown } from 'frappe-ui'
 import { useRoute } from 'vue-router'
 import { ref, computed, reactive, h } from 'vue'
+import LucidePlus from '~icons/lucide/plus'
 
 const { getFormattedPercent, getFormattedFloat, getFormattedCurrency } =
   getMeta('CRM Lead')

@@ -205,7 +205,7 @@
             <Button
               class="w-full mt-2.5 mb-1 mr-5"
               :label="__('Add Column')"
-              iconLeft="plus"
+              :iconLeft="LucidePlus"
               @click="setOpen(!open)"
             />
           </template>
@@ -231,6 +231,8 @@ import Draggable from 'vuedraggable'
 import { Combobox, Dropdown, Popover } from 'frappe-ui'
 import { useEventListener } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
+import LucideTrash2 from '~icons/lucide/trash-2'
+import LucidePlus from '~icons/lucide/plus'
 
 defineProps({
   options: {
@@ -388,7 +390,7 @@ function actions(column) {
       items: [
         {
           label: __('Delete'),
-          icon: 'trash-2',
+          icon: LucideTrash2,
           onClick: () => {
             column.column['delete'] = true
             updateColumn()

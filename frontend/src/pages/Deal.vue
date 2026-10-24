@@ -27,7 +27,7 @@
           <Button
             v-if="doc.status"
             :label="statusLabel(doc.status)"
-            :iconRight="open ? 'chevron-up' : 'chevron-down'"
+            :iconRight="open ? LucideChevronUp : LucideChevronDown"
           >
             <template #prefix>
               <IndicatorIcon :class="getDealStatus(doc.status).color" />
@@ -447,6 +447,9 @@ import {
 } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useActiveTabManager } from '@/composables/useActiveTabManager'
+import LucideTrash2 from '~icons/lucide/trash-2'
+import LucideChevronUp from '~icons/lucide/chevron-up'
+import LucideChevronDown from '~icons/lucide/chevron-down'
 
 const { on } = useBroadcast()
 const { brand } = getSettings()
@@ -736,7 +739,7 @@ function contactOptions(contact) {
   let options = [
     {
       label: __('Remove'),
-      icon: 'trash-2',
+      icon: LucideTrash2,
       onClick: () => removeContact(contact.name),
     },
   ]

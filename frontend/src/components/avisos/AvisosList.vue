@@ -10,8 +10,8 @@
           :class="group.unread ? 'bg-surface-blue-3' : 'bg-transparent'"
           :aria-label="group.unread ? __('Unread') : undefined"
         />
-        <FeatherIcon
-          :name="categoryMeta(group.category).icon"
+        <Icon
+          :icon="categoryMeta(group.category).icon"
           class="size-4 shrink-0 text-ink-gray-6"
           aria-hidden="true"
         />
@@ -52,7 +52,7 @@
         <Dropdown v-if="menu(group).length" :options="menu(group)">
           <Button
             variant="ghost"
-            icon="more-vertical"
+            :icon="LucideEllipsisVertical"
             class="min-h-11 min-w-11 flex-none"
             :aria-label="__('More actions: {0}', [group.title])"
           />
@@ -84,8 +84,13 @@
 </template>
 <script setup>
 import { onBeforeUnmount, ref } from 'vue'
-import { Dropdown, FeatherIcon } from 'frappe-ui'
+import { Dropdown } from 'frappe-ui'
 import { actionLabel, categoryMeta, metaLine } from '@/composables/useAvisos'
+import Icon from '@/components/Icon.vue'
+import LucideCheck from '~icons/lucide/check'
+import LucideBell from '~icons/lucide/bell'
+import LucideBellOff from '~icons/lucide/bell-off'
+import LucideEllipsisVertical from '~icons/lucide/ellipsis-vertical'
 
 const props = defineProps({
   groups: { type: Array, default: () => [] },
@@ -148,7 +153,7 @@ function menu(group) {
   if (group.unread)
     items.push({
       label: __('Mark as read'),
-      icon: 'check',
+      icon: LucideCheck,
       onClick: () => emit('read', group),
     })
   if (group.muted || group.mutable)
@@ -156,12 +161,12 @@ function menu(group) {
       group.muted
         ? {
             label: __('Unmute this kind'),
-            icon: 'bell',
+            icon: LucideBell,
             onClick: () => emit('mute', group, false),
           }
         : {
             label: __('Mute this kind'),
-            icon: 'bell-off',
+            icon: LucideBellOff,
             onClick: () => emit('mute', group, true),
           },
     )

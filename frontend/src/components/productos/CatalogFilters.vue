@@ -55,8 +55,8 @@
         :aria-pressed="state.photo === option.value"
         @click="emit('update', { foto: option.value })"
       >
-        <FeatherIcon
-          :name="option.icon"
+        <Icon
+          :icon="option.icon"
           class="h-4 w-4 shrink-0 text-ink-gray-5"
           aria-hidden="true"
         />
@@ -142,8 +142,8 @@
 </template>
 <script setup>
 import { computed, ref } from 'vue'
-import { FeatherIcon } from 'frappe-ui'
 import { groupFacets } from '@/composables/useProductos'
+import Icon from '@/components/Icon.vue'
 
 // «Todos» as a catalogue: what is on hand, what has a photo and which group,
 // each choice with how many products it leaves (the other filters applied).

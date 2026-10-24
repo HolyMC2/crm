@@ -23,10 +23,7 @@
               "
               @click="picked = ''"
             >
-              <FeatherIcon
-                name="inbox"
-                class="h-4 w-4 shrink-0 text-ink-gray-5"
-              />
+              <LucideInbox class="h-4 w-4 shrink-0 text-ink-gray-5" />
               {{ __('No folder') }}
             </button>
           </li>
@@ -43,8 +40,8 @@
               @click="picked = folder.name"
             >
               <span :style="{ width: folder.depth * 14 + 'px' }" />
-              <FeatherIcon
-                :name="folder.visibility === 'Company' ? 'folder' : 'lock'"
+              <Icon
+                :icon="folder.visibility === 'Company' ? 'folder' : 'lock'"
                 class="h-4 w-4 shrink-0 text-ink-gray-5"
               />
               <span class="truncate">{{ folder.title }}</span>
@@ -74,8 +71,10 @@
 </template>
 <script setup>
 import { computed, ref, watch } from 'vue'
-import { Button, Dialog, FeatherIcon } from 'frappe-ui'
+import { Button, Dialog } from 'frappe-ui'
 import { flattenFolders, folderTree } from '@/composables/useArchivos'
+import Icon from '@/components/Icon.vue'
+import LucideInbox from '~icons/lucide/inbox'
 
 // The folder picker shared by «Mover a…», the bulk bar and the preview pane.
 // `blocked` keeps a folder from being moved inside itself.

@@ -7,7 +7,7 @@
           class="flex min-h-11 items-center gap-1 text-sm text-ink-gray-7 hover:text-ink-gray-9"
           @click="goBack"
         >
-          <FeatherIcon name="arrow-left" class="h-4 w-4" />
+          <LucideArrowLeft class="h-4 w-4" />
           {{ backLabel }}
         </button>
       </nav>
@@ -71,7 +71,7 @@
             rel="noopener"
             class="flex min-h-11 items-center gap-1 text-sm text-ink-blue-link underline sm:min-h-0"
           >
-            <FeatherIcon name="external-link" class="h-4 w-4" />
+            <LucideExternalLink class="h-4 w-4" />
             {{ __('Open original') }}
           </a>
         </header>
@@ -120,7 +120,7 @@
         >
           <template v-if="!timedOut">
             <p class="flex items-center gap-2 text-base text-ink-gray-9">
-              <FeatherIcon name="loader" class="h-5 w-5 animate-spin" />
+              <LucideLoader class="h-5 w-5 animate-spin" />
               {{ __('Reading the document…') }}
             </p>
             <p class="text-sm text-ink-gray-6">
@@ -379,7 +379,7 @@
                   v-if="line.state === 'mapped' && !changing[line.idx]"
                   class="flex flex-wrap items-center gap-2 text-sm"
                 >
-                  <FeatherIcon name="package" class="h-4 w-4 text-ink-gray-6" />
+                  <LucidePackage class="h-4 w-4 text-ink-gray-6" />
                   <span class="min-w-0 flex-1 text-ink-gray-9">
                     {{ line.item_name || line.item_code }}
                     <span
@@ -440,7 +440,7 @@
                     />
                     <Button
                       class="min-h-11 sm:min-h-8"
-                      icon-left="plus"
+                      :icon-left="LucidePlus"
                       :label="__('Create item')"
                       :loading="busy === `create_item:${line.idx}`"
                       :disabled="Boolean(busy) || !newName(line)"
@@ -471,7 +471,7 @@
                     v-if="line.state === 'dropped'"
                     class="min-h-11 sm:min-h-8"
                     variant="ghost"
-                    icon-left="rotate-ccw"
+                    :icon-left="LucideRotateCcw"
                     :label="__('Restore')"
                     :disabled="Boolean(busy)"
                     @click="act('drop_line', { idx: line.idx, dropped: 0 })"
@@ -480,7 +480,7 @@
                     v-else
                     class="min-h-11 sm:min-h-8"
                     variant="ghost"
-                    icon-left="x"
+                    :icon-left="LucideX"
                     :label="__('Leave out')"
                     :disabled="Boolean(busy)"
                     @click="act('drop_line', { idx: line.idx, dropped: 1 })"
@@ -670,8 +670,7 @@
                 :key="i"
                 class="flex gap-2"
               >
-                <FeatherIcon
-                  name="alert-circle"
+                <LucideCircleAlert
                   class="mt-0.5 h-4 w-4 shrink-0 text-ink-amber-9"
                 />
                 {{ blocker }}
@@ -727,7 +726,7 @@
 <script setup>
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Badge, Button, FeatherIcon, FormControl, toast } from 'frappe-ui'
+import { Badge, Button, FormControl, toast } from 'frappe-ui'
 import ComprasPicker from '@/components/compras/ComprasPicker.vue'
 import { money, qty as qtyText } from '@/composables/useCompras'
 import {
@@ -744,6 +743,14 @@ import {
   totalsSummary,
 } from '@/composables/useCaptura'
 import { shellRoute } from '@/components/captura/scanApi'
+import LucideArrowLeft from '~icons/lucide/arrow-left'
+import LucideExternalLink from '~icons/lucide/external-link'
+import LucideLoader from '~icons/lucide/loader'
+import LucidePackage from '~icons/lucide/package'
+import LucidePlus from '~icons/lucide/plus'
+import LucideRotateCcw from '~icons/lucide/rotate-ccw'
+import LucideX from '~icons/lucide/x'
+import LucideCircleAlert from '~icons/lucide/circle-alert'
 
 // «Capturar documento» review: what the books pipeline read from the paper,
 // fixed by the worker, then one draft record (never submitted).

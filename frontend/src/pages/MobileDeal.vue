@@ -25,7 +25,7 @@
             <Button
               v-if="doc.status"
               :label="statusLabel(doc.status)"
-              :iconRight="open ? 'chevron-up' : 'chevron-down'"
+              :iconRight="open ? LucideChevronUp : LucideChevronDown"
             >
               <template #prefix>
                 <IndicatorIcon :class="getDealStatus(doc.status).color" />
@@ -349,6 +349,9 @@ import {
 } from 'frappe-ui'
 import { ref, computed, h, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import LucideTrash2 from '~icons/lucide/trash-2'
+import LucideChevronUp from '~icons/lucide/chevron-up'
+import LucideChevronDown from '~icons/lucide/chevron-down'
 
 const { brand } = getSettings()
 const { $dialog, $socket } = globalStore()
@@ -571,7 +574,7 @@ function contactOptions(contact) {
   let options = [
     {
       label: __('Delete'),
-      icon: 'trash-2',
+      icon: LucideTrash2,
       onClick: () => removeContact(contact),
     },
   ]

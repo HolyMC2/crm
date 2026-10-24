@@ -105,7 +105,7 @@
               class="whitespace-nowrap mr-2"
               variant="ghost"
               :label="__('Add Filter')"
-              iconLeft="plus"
+              :iconLeft="LucidePlus"
               @click="setOpen(!open)"
             />
           </template>
@@ -345,15 +345,18 @@ import {
   Dropdown,
   toast,
   call,
-  FeatherIcon,
   usePageMeta,
 } from 'frappe-ui'
 import { computed, ref, watch, h, markRaw } from 'vue'
+import LucideLock from '~icons/lucide/lock'
+import LucideLockOpen from '~icons/lucide/lock-open'
+import LucideTrash2 from '~icons/lucide/trash-2'
 import { useRouter, useRoute } from 'vue-router'
 import { isMobileView } from '@/composables/settings'
 import Draggable from 'vuedraggable'
 import _ from 'lodash'
 import ImportIcon from '~icons/lucide/import'
+import LucidePlus from '~icons/lucide/plus'
 
 const props = defineProps({
   doctype: { type: String, required: true },
@@ -800,7 +803,7 @@ const viewsDropdownOptions = computed(() => {
     items: [
       {
         label: __('Create View'),
-        icon: 'plus',
+        icon: LucidePlus,
         onClick: () => createView(),
       },
     ],
@@ -1249,8 +1252,7 @@ const viewActions = (view, close) => {
       actions[0].items.push({
         label: _view.public ? __('Make Private') : __('Make Public'),
         icon: () =>
-          h(FeatherIcon, {
-            name: _view.public ? 'lock' : 'unlock',
+          h(_view.public ? LucideLock : LucideLockOpen, {
             class: 'h-4 w-4',
           }),
         onClick: () => publicView(_view),
@@ -1263,7 +1265,7 @@ const viewActions = (view, close) => {
       items: [
         {
           label: __('Delete'),
-          icon: 'trash-2',
+          icon: LucideTrash2,
           onClick: () =>
             $dialog({
               title: __('Delete View'),

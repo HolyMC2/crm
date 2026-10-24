@@ -6,7 +6,7 @@
           class="flex min-h-11 items-center gap-1 text-sm text-ink-gray-7 hover:text-ink-gray-9"
           @click="goBack"
         >
-          <FeatherIcon name="arrow-left" class="h-4 w-4" />
+          <LucideArrowLeft class="h-4 w-4" />
           {{ __('Back to Equipo') }}
         </button>
       </nav>
@@ -55,7 +55,7 @@
             </p>
           </div>
           <Button
-            icon-left="key"
+            :icon-left="LucideKey"
             :label="__('Access and puesto')"
             class="min-h-11 sm:min-h-8"
             @click="openPersonSheet"
@@ -317,7 +317,7 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Avatar, Badge, Button, FeatherIcon, FormControl } from 'frappe-ui'
+import { Avatar, Badge, Button, FormControl } from 'frappe-ui'
 import {
   AUSENCIAS,
   PERSON,
@@ -337,6 +337,8 @@ import {
   weekLabel,
   weekTheme,
 } from '@/composables/useEquipo'
+import LucideArrowLeft from '~icons/lucide/arrow-left'
+import LucideKey from '~icons/lucide/key'
 
 const props = defineProps({ employee: { type: String, required: true } })
 const route = useRoute()

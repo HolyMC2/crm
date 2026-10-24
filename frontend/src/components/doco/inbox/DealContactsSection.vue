@@ -17,7 +17,7 @@
         <template #target="{ togglePopover }">
           <Button
             variant="ghost"
-            icon="plus"
+            :icon="LucidePlus"
             class="!h-6 !w-6"
             :tooltip="__('Agregar contacto')"
             @click="togglePopover()"
@@ -59,7 +59,7 @@
         </div>
         <Button
           variant="ghost"
-          icon="external-link"
+          :icon="LucideExternalLink"
           class="!h-6 !w-6"
           :tooltip="__('Ver contacto')"
           @click="
@@ -67,7 +67,7 @@
           "
         />
         <Dropdown :options="contactOptions(c)">
-          <Button variant="ghost" icon="more-horizontal" class="!h-6 !w-6" />
+          <Button variant="ghost" :icon="LucideEllipsis" class="!h-6 !w-6" />
         </Dropdown>
       </div>
       <div class="mt-1.5 flex flex-col gap-1 pl-1 text-[12px] text-ink-gray-7">
@@ -104,6 +104,10 @@ import Link from '@/components/Controls/Link.vue'
 import Email2Icon from '@/components/Icons/Email2Icon.vue'
 import PhoneIcon from '@/components/Icons/PhoneIcon.vue'
 import SuccessIcon from '@/components/Icons/SuccessIcon.vue'
+import LucideTrash2 from '~icons/lucide/trash-2'
+import LucidePlus from '~icons/lucide/plus'
+import LucideExternalLink from '~icons/lucide/external-link'
+import LucideEllipsis from '~icons/lucide/ellipsis'
 
 const props = defineProps({
   deal: { type: String, required: true },
@@ -137,7 +141,7 @@ function contactOptions(c) {
     },
     {
       label: __('Quitar'),
-      icon: 'trash-2',
+      icon: LucideTrash2,
       onClick: () => removeContact(c.name),
     },
   ]

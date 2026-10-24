@@ -9,7 +9,7 @@
       <Button
         variant="ghost"
         class="min-h-11 shrink-0 sm:min-h-0"
-        icon-left="arrow-left"
+        :icon-left="LucideArrowLeft"
         :label="__('Back')"
         @click="$emit('close')"
       />
@@ -116,8 +116,8 @@
           >
         </div>
         <div v-else class="flex flex-col items-center gap-3 py-10">
-          <FeatherIcon
-            :name="previewIcon(item.preview, item.kind)"
+          <Icon
+            :icon="previewIcon(item.preview, item.kind)"
             class="h-12 w-12 text-ink-gray-4"
           />
           <p class="text-sm text-ink-gray-6">
@@ -136,57 +136,53 @@
           class="inline-flex min-h-11 items-center gap-1.5 rounded bg-surface-gray-10 px-3 text-sm font-medium text-ink-base sm:min-h-8"
           :href="item.file_url"
           download
-          ><FeatherIcon name="download" class="h-4 w-4" />{{
-            __('Download')
-          }}</a
+          ><LucideDownload class="h-4 w-4" />{{ __('Download') }}</a
         >
         <a
           v-if="recordLink"
           class="inline-flex min-h-11 items-center gap-1.5 rounded border border-outline-gray-2 px-3 text-sm text-ink-gray-8 sm:min-h-8"
           :href="recordLink.href"
-          ><FeatherIcon name="external-link" class="h-4 w-4" />{{
-            __('Open record')
-          }}</a
+          ><LucideExternalLink class="h-4 w-4" />{{ __('Open record') }}</a
         >
         <Button
           v-if="canManageItem(item)"
           class="min-h-11 sm:min-h-0"
-          icon-left="edit-2"
+          :icon-left="LucidePen"
           :label="__('Rename')"
           @click="startRename"
         />
         <Button
           v-if="canManageItem(item)"
           class="min-h-11 sm:min-h-0"
-          icon-left="corner-up-right"
+          :icon-left="LucideCornerUpRight"
           :label="__('Move')"
           @click="$emit('move', item)"
         />
         <Button
           v-if="canManageItem(item) && item.visibility === 'Private'"
           class="min-h-11 sm:min-h-0"
-          icon-left="users"
+          :icon-left="LucideUsers"
           :label="__('Share with the company')"
           :loading="busy === 'share'"
           @click="share"
         />
         <Button
           class="min-h-11 sm:min-h-0"
-          icon-left="link"
+          :icon-left="LucideLink"
           :label="__('Copy link')"
           @click="copyLink"
         />
         <Button
           v-if="isDocumentItem(item)"
           class="min-h-11 sm:min-h-0"
-          icon-left="layers"
+          :icon-left="LucideLayers"
           :label="__('Versions')"
           @click="toggleVersions"
         />
         <Button
           v-if="canManageItem(item) && !item.trashed_on"
           class="min-h-11 sm:min-h-0"
-          icon-left="trash-2"
+          :icon-left="LucideTrash2"
           :label="__('Send to trash')"
           :loading="busy === 'trash'"
           @click="trash"
@@ -194,7 +190,7 @@
         <Button
           v-if="canManageItem(item) && item.trashed_on"
           class="min-h-11 sm:min-h-0"
-          icon-left="rotate-ccw"
+          :icon-left="LucideRotateCcw"
           :label="__('Restore')"
           :loading="busy === 'restore'"
           @click="restore"
@@ -202,7 +198,7 @@
         <Button
           v-if="isDocumentItem(item)"
           class="min-h-11 sm:min-h-0"
-          icon-left="inbox"
+          :icon-left="LucideInbox"
           :label="__('Classify in the inbox')"
           @click="$emit('classify', item.name)"
         />
@@ -210,7 +206,7 @@
           v-if="item.can_promote"
           variant="solid"
           class="min-h-11 sm:min-h-0"
-          icon-left="save"
+          :icon-left="LucideSave"
           :label="__('Save to Archivos')"
           :loading="busy === 'promote'"
           @click="promote"
@@ -259,9 +255,7 @@
             v-if="canManageItem(item)"
             class="ml-auto inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded border border-outline-gray-2 px-3 text-sm text-ink-gray-8"
           >
-            <FeatherIcon name="upload" class="h-3.5 w-3.5" />{{
-              __('Upload a new version')
-            }}
+            <LucideUpload class="h-3.5 w-3.5" />{{ __('Upload a new version') }}
             <input
               type="file"
               :accept="ACCEPT"
@@ -334,7 +328,7 @@
             <a
               class="inline-flex min-h-9 items-center gap-1.5 rounded border border-outline-gray-2 px-2.5 text-sm text-ink-gray-8 hover:bg-surface-gray-1"
               :href="recordHref(link.doctype, link.name)"
-              ><FeatherIcon name="link-2" class="h-3.5 w-3.5" />{{
+              ><LucideLink2 class="h-3.5 w-3.5" />{{
                 link.title || link.name
               }}</a
             >
@@ -346,7 +340,7 @@
 </template>
 <script setup>
 import { computed, ref, watch } from 'vue'
-import { Badge, Button, FeatherIcon, FormControl, toast } from 'frappe-ui'
+import { Badge, Button, FormControl, toast } from 'frappe-ui'
 import ArchivoGuard from '@/components/archivos/ArchivoGuard.vue'
 import CfdiCard from '@/components/archivos/CfdiCard.vue'
 import {
@@ -374,6 +368,21 @@ import {
   uploadProblem,
   whereLabel,
 } from '@/composables/useArchivos'
+import Icon from '@/components/Icon.vue'
+import LucideArrowLeft from '~icons/lucide/arrow-left'
+import LucideDownload from '~icons/lucide/download'
+import LucideExternalLink from '~icons/lucide/external-link'
+import LucidePen from '~icons/lucide/pen'
+import LucideCornerUpRight from '~icons/lucide/corner-up-right'
+import LucideUsers from '~icons/lucide/users'
+import LucideLink from '~icons/lucide/link'
+import LucideLayers from '~icons/lucide/layers'
+import LucideTrash2 from '~icons/lucide/trash-2'
+import LucideRotateCcw from '~icons/lucide/rotate-ccw'
+import LucideInbox from '~icons/lucide/inbox'
+import LucideSave from '~icons/lucide/save'
+import LucideUpload from '~icons/lucide/upload'
+import LucideLink2 from '~icons/lucide/link-2'
 
 // One file, up close: what it looks like, what it is and what I can do with it.
 const props = defineProps({

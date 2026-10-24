@@ -7,7 +7,7 @@
       @click="action.onClick(close)"
     >
       <template v-if="action.icon" #prefix>
-        <FeatherIcon :name="action.icon" class="h-4 w-4" />
+        <Icon :icon="action.icon" class="h-4 w-4" />
       </template>
     </Button>
   </template>
@@ -19,7 +19,7 @@
       <Dropdown v-slot="{ open }" :options="g.action">
         <Button
           :label="g.label"
-          :iconRight="open ? 'chevron-up' : 'chevron-down'"
+          :iconRight="open ? LucideChevronUp : LucideChevronDown"
         />
       </Dropdown>
     </div>
@@ -30,6 +30,9 @@
 import { computed } from 'vue'
 import { Dropdown } from 'frappe-ui'
 import { isMobileView } from '@/composables/settings'
+import Icon from '@/components/Icon.vue'
+import LucideChevronUp from '~icons/lucide/chevron-up'
+import LucideChevronDown from '~icons/lucide/chevron-down'
 
 const props = defineProps({
   actions: { type: [Object, Array, undefined], default: () => [] },

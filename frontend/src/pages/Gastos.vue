@@ -127,7 +127,7 @@
           <Button
             v-if="door"
             variant="solid"
-            icon-left="plus"
+            :icon-left="LucidePlus"
             class="min-h-11 sm:min-h-8"
             :label="__('New bill')"
             data-testid="gastos-new"
@@ -173,7 +173,7 @@
           />
           <Button
             v-if="state.segment === 'por-registrar' && !state.po"
-            icon-left="upload"
+            :icon-left="LucideUpload"
             class="min-h-11 sm:min-h-8"
             :label="__('Upload supplier CFDI (XML)')"
             @click="openCfdiImport"
@@ -223,7 +223,7 @@
             <Button
               v-if="door && !state.q && !list.phone.value"
               variant="solid"
-              icon-left="plus"
+              :icon-left="LucidePlus"
               class="mt-3 min-h-11 sm:min-h-8"
               :label="__('New bill')"
               @click="router.push(door)"
@@ -285,8 +285,8 @@
                   "
                   @click="list.onRowClick($event, row)"
                 >
-                  <FeatherIcon
-                    :name="
+                  <Icon
+                    :icon="
                       Number(row.docstatus) === 0 ? 'file-text' : 'credit-card'
                     "
                     class="mt-0.5 h-4 w-4 shrink-0 text-ink-gray-5"
@@ -357,7 +357,7 @@
                   @click="runVerb(action.key, row)"
                 >
                   <template #prefix>
-                    <FeatherIcon :name="action.icon" class="h-4 w-4" />
+                    <Icon :icon="action.icon" class="h-4 w-4" />
                   </template>
                 </Button>
               </div>
@@ -385,9 +385,7 @@
             :label="__('Pay', null, 'Gastos')"
             @click="bulkOpen = true"
           >
-            <template #prefix
-              ><FeatherIcon name="dollar-sign" class="h-4 w-4"
-            /></template>
+            <template #prefix><LucideDollarSign class="h-4 w-4" /></template>
           </Button>
           <template v-else>
             <p class="w-full text-sm text-ink-gray-7 sm:w-auto">
@@ -448,7 +446,7 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Button, FeatherIcon, FormControl, toast } from 'frappe-ui'
+import { Button, FormControl, toast } from 'frappe-ui'
 import { Fab, FilterChips } from '@/components/ui'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import ApprovalDialog from '@/components/gastos/ApprovalDialog.vue'
@@ -486,6 +484,10 @@ import {
   statusLabel,
   visibleSegments,
 } from '@/composables/useGastos'
+import Icon from '@/components/Icon.vue'
+import LucidePlus from '~icons/lucide/plus'
+import LucideUpload from '~icons/lucide/upload'
+import LucideDollarSign from '~icons/lucide/dollar-sign'
 
 const route = useRoute()
 const router = useRouter()

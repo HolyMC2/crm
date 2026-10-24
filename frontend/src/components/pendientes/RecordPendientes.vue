@@ -20,7 +20,7 @@
       <Button
         v-if="canCreate"
         variant="ghost"
-        icon-left="plus"
+        :icon-left="LucidePlus"
         class="min-h-11 sm:min-h-8"
         :label="__('Add')"
         @click="createOpen = true"
@@ -133,6 +133,7 @@ import {
   pendientesApi,
   stateChip,
 } from '@/composables/usePendientes'
+import LucidePlus from '~icons/lucide/plus'
 
 // The editor (sheet, date field) loads on the first «Add», not with the record.
 const CreateDialog = defineAsyncComponent(

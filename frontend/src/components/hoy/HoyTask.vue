@@ -89,6 +89,8 @@ import {
   priorityLabel,
 } from '@/composables/usePendientes'
 import { HOY_HOME } from '@/composables/useHoy'
+import LucideCalendar from '~icons/lucide/calendar'
+import LucideCircleCheckBig from '~icons/lucide/circle-check-big'
 
 // One «Para ahora» row: Hecho and Reprogramar inline, through the same
 // Pendientes endpoints the queue uses; the title opens the pendiente.
@@ -106,12 +108,12 @@ const menu = computed(() => [
     .filter((preset) => preset.value !== props.row.date)
     .map((preset) => ({
       label: preset.label,
-      icon: 'calendar',
+      icon: LucideCalendar,
       onClick: () => emit('reschedule', props.row, preset.value),
     })),
   {
     label: __('Done and schedule next'),
-    icon: 'check-circle',
+    icon: LucideCircleCheckBig,
     onClick: () => emit('completeNext', props.row),
   },
 ])

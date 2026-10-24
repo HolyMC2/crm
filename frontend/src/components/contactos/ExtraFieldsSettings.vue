@@ -126,7 +126,7 @@
     <Button
       v-else
       :label="__('Add field')"
-      icon-left="plus"
+      :icon-left="LucidePlus"
       data-act="add-field"
       :disabled="
         (capabilities.used ?? fields.length) >= (capabilities.limit ?? 15)
@@ -141,6 +141,7 @@ import { personalizarApi } from '@/composables/useContactos'
 import { kindLabel } from '@/utils/extraFields'
 import ExtraFieldForm from './ExtraFieldForm.vue'
 import RecoveryMessage from './RecoveryMessage.vue'
+import LucidePlus from '~icons/lucide/plus'
 
 // Personalizar › «Campos de clientes» (the owner): rename, add an option, retire
 // (the data stays) and reactivate. Nothing here deletes a field.

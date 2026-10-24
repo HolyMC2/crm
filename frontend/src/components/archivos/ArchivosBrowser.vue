@@ -14,7 +14,7 @@
           {{ viewLabel(view) }}
         </button>
         <template v-for="crumb in crumbs" :key="crumb.view + crumb.key">
-          <FeatherIcon name="chevron-right" class="h-3 w-3 text-ink-gray-4" />
+          <LucideChevronRight class="h-3 w-3 text-ink-gray-4" />
           <button
             type="button"
             class="truncate rounded px-1.5 py-0.5 text-ink-gray-7 hover:bg-surface-gray-2"
@@ -35,14 +35,14 @@
         <Button
           v-if="view === 'carpeta'"
           class="min-h-11 shrink-0 sm:min-h-0"
-          icon-left="folder-plus"
+          :icon-left="LucideFolderPlus"
           :label="__('New folder')"
           @click="$emit('new-folder', currentKey)"
         />
         <Button
           variant="solid"
           class="min-h-11 shrink-0 sm:min-h-0"
-          icon-left="upload"
+          :icon-left="LucideUpload"
           :label="__('Receive')"
           @click="$emit('upload')"
         />
@@ -63,7 +63,7 @@
         <Dropdown :options="kindOptions">
           <Button
             class="min-h-11 sm:min-h-0"
-            icon-right="chevron-down"
+            :icon-right="LucideChevronDown"
             :label="kind ? browseKindLabel(kind) : __('Type')"
             :variant="kind ? 'subtle' : 'ghost'"
           />
@@ -71,7 +71,7 @@
         <Dropdown :options="channelOptions">
           <Button
             class="min-h-11 sm:min-h-0"
-            icon-right="chevron-down"
+            :icon-right="LucideChevronDown"
             :label="channel ? channelLabel(channel) : __('Channel')"
             :variant="channel ? 'subtle' : 'ghost'"
           />
@@ -79,7 +79,7 @@
         <Dropdown :options="monthOptions">
           <Button
             class="min-h-11 sm:min-h-0"
-            icon-right="chevron-down"
+            :icon-right="LucideChevronDown"
             :label="month ? monthLabel(month, locale) : __('Month')"
             :variant="month ? 'subtle' : 'ghost'"
           />
@@ -88,7 +88,7 @@
           <Button
             class="min-h-11 sm:min-h-0"
             variant="ghost"
-            icon-left="bar-chart-2"
+            :icon-left="LucideChartNoAxesColumn"
             :label="sortLabel(sort)"
           />
         </Dropdown>
@@ -103,8 +103,8 @@
             :aria-label="mode === 'list' ? __('List') : __('Grid')"
             @click="setLayout(mode)"
           >
-            <FeatherIcon
-              :name="mode === 'list' ? 'list' : 'grid'"
+            <Icon
+              :icon="mode === 'list' ? 'list' : 'grid-3x3'"
               class="h-4 w-4"
             />
           </button>
@@ -122,7 +122,7 @@
           @click="$emit('patch', { [chip.kind]: '' })"
         >
           {{ chip.label }}
-          <FeatherIcon name="x" class="h-3 w-3" />
+          <LucideX class="h-3 w-3" />
         </button>
         <button
           type="button"
@@ -170,8 +170,8 @@
               <span
                 class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-gray-2"
               >
-                <FeatherIcon
-                  :name="groupIcon(group)"
+                <Icon
+                  :icon="groupIcon(group)"
                   class="h-4 w-4 text-ink-gray-6"
                 />
               </span>
@@ -179,10 +179,7 @@
                 groupLabel(view, group, locale)
               }}</span>
               <Badge theme="gray" :label="String(group.count)" />
-              <FeatherIcon
-                name="chevron-right"
-                class="h-4 w-4 shrink-0 text-ink-gray-4"
-              />
+              <LucideChevronRight class="h-4 w-4 shrink-0 text-ink-gray-4" />
             </button>
           </li>
         </ul>
@@ -215,7 +212,7 @@
                 <span
                   class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-gray-2"
                 >
-                  <FeatherIcon name="folder" class="h-4 w-4 text-ink-gray-6" />
+                  <LucideFolder class="h-4 w-4 text-ink-gray-6" />
                 </span>
                 <span class="min-w-0 flex-1">
                   <span class="flex items-center gap-1.5">
@@ -223,9 +220,8 @@
                       class="truncate text-base font-medium text-ink-gray-9"
                       >{{ folder.title }}</span
                     >
-                    <FeatherIcon
+                    <LucideLock
                       v-if="folder.visibility !== 'Company'"
-                      name="lock"
                       class="h-3 w-3 shrink-0 text-ink-gray-5"
                       :aria-label="__('Not everyone sees it')"
                     />
@@ -245,7 +241,7 @@
                   class="flex h-9 w-9 shrink-0 items-center justify-center rounded text-ink-gray-5 hover:bg-surface-gray-3"
                   :aria-label="__('Folder actions')"
                 >
-                  <FeatherIcon name="more-horizontal" class="h-4 w-4" />
+                  <LucideEllipsis class="h-4 w-4" />
                 </button>
               </Dropdown>
             </div>
@@ -256,10 +252,7 @@
           v-if="!rows.length && !groups.length && !folders.length"
           class="px-6 py-12 text-center"
         >
-          <FeatherIcon
-            :name="empty.icon"
-            class="mx-auto h-10 w-10 text-ink-gray-4"
-          />
+          <Icon :icon="empty.icon" class="mx-auto h-10 w-10 text-ink-gray-4" />
           <p class="mt-3 text-base font-medium text-ink-gray-8">
             {{ empty.title }}
           </p>
@@ -339,9 +332,9 @@
                     :src="item.file_url"
                     :alt="item.title"
                   />
-                  <FeatherIcon
+                  <Icon
                     v-else
-                    :name="previewIcon(item.preview, item.kind)"
+                    :icon="previewIcon(item.preview, item.kind)"
                     class="h-4 w-4 text-ink-gray-6"
                   />
                 </span>
@@ -352,12 +345,11 @@
                       :title="item.title"
                       >{{ displayTitle(item) }}</span
                     >
-                    <FeatherIcon
+                    <LucideLock
                       v-if="
                         item.visibility === 'Private' ||
                         (item.source === 'attachment' && item.is_private)
                       "
-                      name="lock"
                       class="h-3 w-3 shrink-0 text-ink-gray-5"
                       :aria-label="__('Only you can see it')"
                     />
@@ -432,9 +424,9 @@
                     :src="item.file_url"
                     :alt="item.title"
                   />
-                  <FeatherIcon
+                  <Icon
                     v-else
-                    :name="previewIcon(item.preview, item.kind)"
+                    :icon="previewIcon(item.preview, item.kind)"
                     class="h-8 w-8 text-ink-gray-5"
                   />
                 </span>
@@ -477,27 +469,27 @@
       <Button
         v-if="movable.length"
         class="min-h-11 sm:min-h-0"
-        icon-left="corner-up-right"
+        :icon-left="LucideCornerUpRight"
         :label="__('Move to…')"
         @click="$emit('move', movable)"
       />
       <Button
         v-if="view === 'papelera' && movable.length"
         class="min-h-11 sm:min-h-0"
-        icon-left="rotate-ccw"
+        :icon-left="LucideRotateCcw"
         :label="__('Restore')"
         @click="$emit('restore', movable)"
       />
       <Button
         v-else-if="movable.length"
         class="min-h-11 sm:min-h-0"
-        icon-left="trash-2"
+        :icon-left="LucideTrash2"
         :label="__('Send to trash')"
         @click="$emit('trash', movable)"
       />
       <Button
         class="min-h-11 sm:min-h-0"
-        icon-left="download"
+        :icon-left="LucideDownload"
         :label="__('Download')"
         @click="$emit('download', selectedItems)"
       />
@@ -513,7 +505,7 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
-import { Badge, Button, Dropdown, FeatherIcon, FormControl } from 'frappe-ui'
+import { Badge, Button, Dropdown, FormControl } from 'frappe-ui'
 import ArchivoGuard from '@/components/archivos/ArchivoGuard.vue'
 import {
   BROWSE_CHANNELS,
@@ -537,6 +529,22 @@ import {
   viewLabel,
   whereLabel,
 } from '@/composables/useArchivos'
+import Icon from '@/components/Icon.vue'
+import LucidePen from '~icons/lucide/pen'
+import LucideCornerUpRight from '~icons/lucide/corner-up-right'
+import LucideEye from '~icons/lucide/eye'
+import LucideChevronRight from '~icons/lucide/chevron-right'
+import LucideFolderPlus from '~icons/lucide/folder-plus'
+import LucideUpload from '~icons/lucide/upload'
+import LucideChevronDown from '~icons/lucide/chevron-down'
+import LucideChartNoAxesColumn from '~icons/lucide/chart-no-axes-column'
+import LucideX from '~icons/lucide/x'
+import LucideFolder from '~icons/lucide/folder'
+import LucideLock from '~icons/lucide/lock'
+import LucideEllipsis from '~icons/lucide/ellipsis'
+import LucideRotateCcw from '~icons/lucide/rotate-ccw'
+import LucideTrash2 from '~icons/lucide/trash-2'
+import LucideDownload from '~icons/lucide/download'
 
 // The browse pane: breadcrumbs, filters, list or grid, selection and the bulk
 // bar. It never decides who sees what; it shows exactly what the server sent.
@@ -818,17 +826,17 @@ function folderMenu(folder) {
   return [
     {
       label: __('Rename'),
-      icon: 'edit-2',
+      icon: LucidePen,
       onClick: () => emit('folder-action', { action: 'rename', folder }),
     },
     {
       label: __('Move'),
-      icon: 'corner-up-right',
+      icon: LucideCornerUpRight,
       onClick: () => emit('folder-action', { action: 'move', folder }),
     },
     {
       label: __('Who sees it'),
-      icon: 'eye',
+      icon: LucideEye,
       onClick: () => emit('folder-action', { action: 'visibility', folder }),
     },
     {

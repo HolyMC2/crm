@@ -7,7 +7,7 @@
       <Button
         variant="solid"
         :label="__('Create')"
-        iconLeft="plus"
+        :iconLeft="LucidePlus"
         @click="createNote"
       />
     </template>
@@ -42,7 +42,7 @@
             :options="[
               {
                 label: __('Delete'),
-                icon: 'trash-2',
+                icon: LucideTrash2,
                 onClick: () => deleteNote(note.name),
               },
             ]"
@@ -105,6 +105,8 @@ import { timeAgo, formatDate } from '@/utils'
 import { useTelemetry } from '@framework/ui'
 import { TextEditor, call, Dropdown, Tooltip, ListFooter } from 'frappe-ui'
 import { ref, watch } from 'vue'
+import LucideTrash2 from '~icons/lucide/trash-2'
+import LucidePlus from '~icons/lucide/plus'
 
 const { getUser } = usersStore()
 const { updateOnboardingStep } = useCrmOnboarding()

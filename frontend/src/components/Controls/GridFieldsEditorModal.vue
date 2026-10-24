@@ -59,7 +59,7 @@
             <Button
               class="w-full mt-2"
               :label="__('Add Field')"
-              iconLeft="plus"
+              :iconLeft="LucidePlus"
               @click="setOpen(!open)"
             />
           </template>
@@ -101,6 +101,7 @@ import { getMeta } from '@/stores/meta'
 import Draggable from 'vuedraggable'
 import { Combobox, Dialog, ErrorMessage } from 'frappe-ui'
 import { ref, computed } from 'vue'
+import LucidePlus from '~icons/lucide/plus'
 
 const props = defineProps({
   doctype: { type: String, default: '' },

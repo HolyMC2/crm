@@ -22,7 +22,7 @@
             {{ title }}
           </h2>
           <Button
-            icon="x"
+            :icon="LucideX"
             variant="ghost"
             :aria-label="__('Close', null, 'Manual')"
             class="min-h-11 min-w-11 sm:min-h-8 sm:min-w-8"
@@ -37,6 +37,7 @@
 <script setup>
 import { nextTick, onMounted, ref } from 'vue'
 import { Button } from 'frappe-ui'
+import LucideX from '~icons/lucide/x'
 
 defineProps({ title: { type: String, required: true } })
 const emit = defineEmits(['close'])

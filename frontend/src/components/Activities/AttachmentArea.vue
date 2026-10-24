@@ -44,8 +44,8 @@
               "
             >
               <template #icon>
-                <FeatherIcon
-                  :name="attachment.is_private ? 'lock' : 'unlock'"
+                <Icon
+                  :icon="attachment.is_private ? 'lock' : 'lock-open'"
                   class="size-3 text-ink-gray-7"
                 />
               </template>
@@ -80,6 +80,7 @@ import { globalStore } from '@/stores/global'
 import { call } from 'frappe-ui'
 import TimelineTimestamp from '@/components/Activities/TimelineTimestamp.vue'
 import { convertSize, isImage } from '@/utils'
+import Icon from '@/components/Icon.vue'
 
 defineProps({
   attachments: { type: Array, default: () => [] },

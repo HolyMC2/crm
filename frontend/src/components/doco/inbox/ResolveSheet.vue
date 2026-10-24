@@ -22,8 +22,8 @@
             "
             data-testid="resolve-notice"
           >
-            <FeatherIcon
-              :name="preview?.ask ? 'message-circle' : 'info'"
+            <Icon
+              :icon="preview?.ask ? 'message-circle' : 'info'"
               class="mt-0.5 h-4 w-4 shrink-0"
             />
             <span>{{ notice.message }}</span>
@@ -86,7 +86,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { Button, Dialog, FeatherIcon, call } from 'frappe-ui'
+import { Button, Dialog, call } from 'frappe-ui'
 import { requestId } from '@/composables/useCompras'
 import { resolvePreview, resolveConversation } from '@/composables/inbox'
 import {
@@ -95,6 +95,7 @@ import {
   resolveRefused,
   resolveReturn,
 } from '@/utils/atencion'
+import Icon from '@/components/Icon.vue'
 
 const open = defineModel({ type: Boolean, default: false })
 const props = defineProps({

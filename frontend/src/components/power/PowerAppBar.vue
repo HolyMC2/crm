@@ -42,10 +42,7 @@
             >({{ count }})</span
           ></span
         >
-        <FeatherIcon
-          name="chevron-down"
-          class="h-5 w-5 shrink-0 text-ink-gray-6"
-        />
+        <LucideChevronDown class="h-5 w-5 shrink-0 text-ink-gray-6" />
       </button>
     </template>
     <template #actions>
@@ -79,9 +76,9 @@
         :aria-current="active === entry.value ? 'page' : undefined"
         @click="choose(entry.value)"
       >
-        <FeatherIcon
+        <Icon
           v-if="entry.icon"
-          :name="entry.icon"
+          :icon="entry.icon"
           class="h-5 w-5 text-ink-gray-6"
         />
         <span class="flex-1">{{ entry.title || entry.label }}</span>
@@ -95,8 +92,10 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { BottomSheet, FeatherIcon } from 'frappe-ui'
+import { BottomSheet } from 'frappe-ui'
 import { AppBar } from '@/components/ui'
+import Icon from '@/components/Icon.vue'
+import LucideChevronDown from '~icons/lucide/chevron-down'
 
 const props = defineProps({
   title: { type: String, default: '' },

@@ -10,7 +10,7 @@
         :options="[
           {
             label: __('Delete'),
-            icon: 'trash-2',
+            icon: LucideTrash2,
             onClick: () => deleteNote(note.name),
           },
         ]"
@@ -63,6 +63,7 @@ import {
 } from '@/utils'
 import { Tooltip, Dropdown, TextEditor, call, toast } from 'frappe-ui'
 import { usersStore } from '@/stores/users'
+import LucideTrash2 from '~icons/lucide/trash-2'
 
 defineProps({
   note: { type: Object, default: () => ({}) },

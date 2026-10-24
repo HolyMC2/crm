@@ -14,14 +14,14 @@
       v-if="title == 'Emails'"
       variant="solid"
       :label="__('New Email')"
-      iconLeft="plus"
+      :iconLeft="LucidePlus"
       @click="emailBox.show = true"
     />
     <Button
       v-else-if="title == 'Comments'"
       variant="solid"
       :label="__('New Comment')"
-      iconLeft="plus"
+      :iconLeft="LucidePlus"
       @click="emailBox.showComment = true"
     />
     <MultiActionButton
@@ -43,21 +43,21 @@
       v-else-if="title == 'Notes'"
       variant="solid"
       :label="__('New Note')"
-      iconLeft="plus"
+      :iconLeft="LucidePlus"
       @click="modalRef.showNote()"
     />
     <Button
       v-else-if="title == 'Tasks'"
       variant="solid"
       :label="__('New Task')"
-      iconLeft="plus"
+      :iconLeft="LucidePlus"
       @click="modalRef.showTask()"
     />
     <Button
       v-else-if="title == 'Attachments'"
       variant="solid"
       :label="__('Upload Attachment')"
-      iconLeft="plus"
+      :iconLeft="LucidePlus"
       @click="showFilesUploader = true"
     />
     <!-- manual mode: templates live in the manual composer below; no API send here -->
@@ -83,8 +83,8 @@
           variant="solid"
           class="flex items-center gap-1"
           :label="__('New')"
-          iconLeft="plus"
-          :iconRight="open ? 'chevron-up' : 'chevron-down'"
+          :iconLeft="LucidePlus"
+          :iconRight="open ? LucideChevronUp : LucideChevronDown"
         />
       </template>
     </Dropdown>
@@ -105,6 +105,9 @@ import { whatsappManual, whatsappTabEnabled } from '@/composables/whatsapp'
 import { callEnabled } from '@/composables/telephony'
 import { Dropdown } from 'frappe-ui'
 import { computed, h } from 'vue'
+import LucidePlus from '~icons/lucide/plus'
+import LucideChevronUp from '~icons/lucide/chevron-up'
+import LucideChevronDown from '~icons/lucide/chevron-down'
 
 const props = defineProps({
   tabs: { type: Array, default: () => [] },
@@ -188,7 +191,7 @@ const callActions = computed(() => {
   let actions = [
     {
       label: __('Log a Call'),
-      icon: 'plus',
+      icon: LucidePlus,
       onClick: () => props.modalRef.createCallLog(),
     },
     {

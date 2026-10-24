@@ -11,8 +11,8 @@
           class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-surface-gray-2"
           :title="typeLabel(connector.connector_type)"
         >
-          <FeatherIcon
-            :name="typeIcon(connector.connector_type)"
+          <Icon
+            :icon="typeIcon(connector.connector_type)"
             class="h-5 w-5 text-ink-gray-7"
           />
         </span>
@@ -72,7 +72,7 @@
       <div v-else-if="!blocked" class="flex flex-wrap gap-2">
         <Button
           class="min-h-11 sm:min-h-0"
-          :icon-left="connector.enabled ? 'pause' : 'play'"
+          :icon-left="connector.enabled ? LucidePause : LucidePlay"
           :label="connector.enabled ? __('Pause') : __('Resume connection')"
           :loading="busy === 'enabled'"
           :disabled="blocked && !connector.enabled"
@@ -80,7 +80,7 @@
         />
         <Button
           class="min-h-11 sm:min-h-0"
-          icon-left="zap"
+          :icon-left="LucideZap"
           :label="__('Test connection')"
           :loading="busy === 'probe'"
           :disabled="blocked"
@@ -88,7 +88,7 @@
         />
         <Button
           class="min-h-11 sm:min-h-0"
-          icon-left="refresh-cw"
+          :icon-left="LucideRefreshCw"
           :label="__('Check now')"
           :loading="busy === 'sync'"
           :disabled="blocked || !connector.enabled"
@@ -118,7 +118,7 @@
           v-if="!problems.length"
           variant="ghost"
           class="min-h-11 sm:min-h-0"
-          icon-left="alert-triangle"
+          :icon-left="LucideTriangleAlert"
           :label="__('See what failed')"
           :loading="detailLoading"
           @click="refresh"
@@ -175,7 +175,7 @@
         :aria-expanded="panel === tab.value ? 'true' : 'false'"
         @click="openPanel(tab.value)"
       >
-        <FeatherIcon :name="tab.icon" class="h-4 w-4" />{{ tab.label }}
+        <Icon :icon="tab.icon" class="h-4 w-4" />{{ tab.label }}
       </button>
     </div>
     <div v-if="panel && !blocked" class="border-t border-outline-gray-1 p-4">
@@ -228,7 +228,7 @@
 </template>
 <script setup>
 import { computed, ref } from 'vue'
-import { Badge, Button, FeatherIcon, toast } from 'frappe-ui'
+import { Badge, Button, toast } from 'frappe-ui'
 import ArchivoGuard from '../ArchivoGuard.vue'
 import BackfillPanel from './BackfillPanel.vue'
 import ConnectorForm from './ConnectorForm.vue'
@@ -247,6 +247,12 @@ import {
   typeLabel,
   versionLabel,
 } from '@/utils/archivosConectores'
+import Icon from '@/components/Icon.vue'
+import LucidePause from '~icons/lucide/pause'
+import LucidePlay from '~icons/lucide/play'
+import LucideZap from '~icons/lucide/zap'
+import LucideRefreshCw from '~icons/lucide/refresh-cw'
+import LucideTriangleAlert from '~icons/lucide/triangle-alert'
 
 const props = defineProps({
   connector: { type: Object, required: true },

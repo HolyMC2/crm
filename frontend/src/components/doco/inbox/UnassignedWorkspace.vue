@@ -184,8 +184,7 @@
                 <template #default="{ openFileSelector }">
                   <div class="flex items-center space-x-2">
                     <Dropdown :options="msgrUploadOptions(openFileSelector)">
-                      <FeatherIcon
-                        name="plus"
+                      <LucidePlus
                         class="size-4.5 cursor-pointer text-ink-gray-5"
                         :aria-label="__('Adjuntar')"
                       />
@@ -472,7 +471,7 @@
             v-if="searching"
             class="mt-1.5 flex items-center gap-1.5 text-[11px] text-ink-gray-4"
           >
-            <FeatherIcon name="loader" class="h-3 w-3 animate-spin" />
+            <LucideLoader class="h-3 w-3 animate-spin" />
             {{ __('Buscando…') }}
           </div>
           <div
@@ -520,7 +519,7 @@
 
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
-import { toast, call, FileUploader, Dropdown, FeatherIcon } from 'frappe-ui'
+import { toast, call, FileUploader, Dropdown } from 'frappe-ui'
 import LucideMessageCircleQuestion from '~icons/lucide/message-circle-question'
 import LucideChevronLeft from '~icons/lucide/chevron-left'
 import LucideArchive from '~icons/lucide/archive'
@@ -549,6 +548,11 @@ import {
   catalogOpen,
   openCatalog,
 } from '@/composables/inbox'
+import LucideImage from '~icons/lucide/image'
+import LucideVideo from '~icons/lucide/video'
+import LucideFile from '~icons/lucide/file'
+import LucidePlus from '~icons/lucide/plus'
+import LucideLoader from '~icons/lucide/loader'
 
 const isMessenger = computed(
   () => activeUnassignedChannel.value === 'messenger',
@@ -632,15 +636,19 @@ function msgrUploadOptions(openFileSelector) {
   return [
     {
       label: __('Imagen'),
-      icon: 'image',
+      icon: LucideImage,
       onClick: () => openFileSelector('image/*'),
     },
     {
       label: __('Video'),
-      icon: 'video',
+      icon: LucideVideo,
       onClick: () => openFileSelector('video/*'),
     },
-    { label: __('Documento'), icon: 'file', onClick: () => openFileSelector() },
+    {
+      label: __('Documento'),
+      icon: LucideFile,
+      onClick: () => openFileSelector(),
+    },
   ]
 }
 async function onMsgrFile(file) {

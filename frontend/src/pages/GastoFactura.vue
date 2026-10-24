@@ -8,7 +8,7 @@
           class="flex min-h-11 items-center gap-1 text-sm text-ink-gray-7 hover:text-ink-gray-9"
           @click="goBack()"
         >
-          <FeatherIcon name="arrow-left" class="h-4 w-4" />
+          <LucideArrowLeft class="h-4 w-4" />
           {{
             back
               ? __('Back to {0}', [back.label])
@@ -449,7 +449,7 @@ import {
   watch,
 } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Badge, Button, Dialog, FeatherIcon, toast } from 'frappe-ui'
+import { Badge, Button, Dialog, toast } from 'frappe-ui'
 import { ArchivosRegistroPanel } from '@/components/archivos'
 import ApprovalDialog from '@/components/gastos/ApprovalDialog.vue'
 import PayDialog from '@/components/gastos/PayDialog.vue'
@@ -489,6 +489,7 @@ import { modeOfPaymentLabel } from '@/utils/modeOfPayment'
 import { keyAction } from '@/utils/powerList'
 import { formatDay } from '@/utils/contactos'
 import { displayName, formatQty } from '@/utils/display'
+import LucideArrowLeft from '~icons/lucide/arrow-left'
 
 const props = defineProps({ name: { type: String, required: true } })
 const route = useRoute()

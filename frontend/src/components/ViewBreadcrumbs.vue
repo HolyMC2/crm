@@ -27,7 +27,7 @@
           variant="ghost"
           class="text-lg-medium text-nowrap"
           :label="__(viewControls.currentView?.label)"
-          :iconRight="open ? 'chevron-up' : 'chevron-down'"
+          :iconRight="open ? LucideChevronUp : LucideChevronDown"
         >
           <template #prefix>
             <Icon :icon="viewControls.currentView?.icon" class="h-4" />
@@ -63,6 +63,8 @@
 <script setup>
 import Icon from '@/components/Icon.vue'
 import { Dropdown } from 'frappe-ui'
+import LucideChevronUp from '~icons/lucide/chevron-up'
+import LucideChevronDown from '~icons/lucide/chevron-down'
 
 defineProps({
   routeName: { type: String, required: true },

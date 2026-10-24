@@ -11,7 +11,7 @@
           class="flex min-h-11 items-center gap-1 rounded-md pr-2 text-sm text-ink-gray-7 hover:text-ink-gray-9 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
           @click="goBack"
         >
-          <FeatherIcon name="arrow-left" class="h-4 w-4" />
+          <LucideArrowLeft class="h-4 w-4" />
           {{ backLabel }}
         </button>
       </nav>
@@ -68,11 +68,7 @@
               v-else
               class="flex h-36 w-36 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-outline-gray-3 bg-surface-gray-1 text-center sm:h-40 sm:w-40"
             >
-              <FeatherIcon
-                name="image"
-                class="h-7 w-7 text-ink-gray-4"
-                aria-hidden="true"
-              />
+              <LucideImage class="h-7 w-7 text-ink-gray-4" aria-hidden="true" />
               <span class="px-2 text-xs text-ink-gray-6">{{
                 __('No photo yet')
               }}</span>
@@ -105,11 +101,7 @@
                     @click="openFileSelector"
                   >
                     <template #prefix>
-                      <FeatherIcon
-                        name="camera"
-                        class="h-4 w-4"
-                        aria-hidden="true"
-                      />
+                      <LucideCamera class="h-4 w-4" aria-hidden="true" />
                     </template>
                   </Button>
                 </template>
@@ -125,11 +117,7 @@
                 @click="takePhoto"
               >
                 <template #prefix>
-                  <FeatherIcon
-                    name="aperture"
-                    class="h-4 w-4"
-                    aria-hidden="true"
-                  />
+                  <LucideAperture class="h-4 w-4" aria-hidden="true" />
                 </template>
               </Button>
             </div>
@@ -172,8 +160,8 @@
                     : 'bg-surface-blue-2 text-ink-blue-8'
                 "
               >
-                <FeatherIcon
-                  :name="kind.kind === 'service' ? 'briefcase' : 'package'"
+                <Icon
+                  :icon="kind.kind === 'service' ? 'briefcase' : 'package'"
                   class="h-3.5 w-3.5"
                   aria-hidden="true"
                 />
@@ -184,11 +172,7 @@
                 href="#variantes"
                 class="inline-flex h-6 items-center gap-1.5 rounded-full bg-surface-blue-2 px-2.5 text-xs font-medium text-ink-blue-8 hover:underline"
               >
-                <FeatherIcon
-                  name="layers"
-                  class="h-3.5 w-3.5"
-                  aria-hidden="true"
-                />
+                <LucideLayers class="h-3.5 w-3.5" aria-hidden="true" />
                 {{ variantsLabel({ count: data.variants.count }) }}
               </a>
               <Badge
@@ -247,7 +231,7 @@
                   :data-action="entry.key"
                 >
                   <span :class="PILL_ICON" aria-hidden="true">
-                    <FeatherIcon :name="entry.icon" class="h-5 w-5" />
+                    <Icon :icon="entry.icon" class="h-5 w-5" />
                   </span>
                   {{ entry.label }}
                 </a>
@@ -260,7 +244,7 @@
                   @click="run(entry)"
                 >
                   <span :class="PILL_ICON" aria-hidden="true">
-                    <FeatherIcon :name="entry.icon" class="h-5 w-5" />
+                    <Icon :icon="entry.icon" class="h-5 w-5" />
                   </span>
                   {{ entry.label }}
                 </button>
@@ -274,8 +258,8 @@
                   class="inline-flex min-h-11 items-center gap-1.5 rounded-md bg-surface-gray-2 px-3 text-base text-ink-gray-8 hover:bg-surface-gray-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-8"
                   :title="entry.title || undefined"
                 >
-                  <FeatherIcon
-                    :name="entry.icon"
+                  <Icon
+                    :icon="entry.icon"
                     class="h-4 w-4"
                     aria-hidden="true"
                   />{{ entry.label }}</a
@@ -289,8 +273,8 @@
                   @click="run(entry)"
                 >
                   <template #prefix>
-                    <FeatherIcon
-                      :name="entry.icon"
+                    <Icon
+                      :icon="entry.icon"
                       class="h-4 w-4"
                       aria-hidden="true"
                     />
@@ -539,11 +523,7 @@
                 v-else-if="!data.prices.rows.length"
                 class="flex flex-wrap items-center gap-3 px-4 py-4 text-sm text-ink-gray-6"
               >
-                <FeatherIcon
-                  name="tag"
-                  class="h-5 w-5 text-ink-gray-4"
-                  aria-hidden="true"
-                />
+                <LucideTag class="h-5 w-5 text-ink-gray-4" aria-hidden="true" />
                 <span class="flex-1">{{
                   __('No price list sells this product yet.')
                 }}</span>
@@ -611,8 +591,7 @@
                 v-if="data.stock.service"
                 class="m-4 flex items-start gap-3 rounded-lg border border-outline-gray-2 bg-surface-gray-1 p-3 text-sm text-ink-gray-7"
               >
-                <FeatherIcon
-                  name="briefcase"
+                <LucideBriefcase
                   class="mt-0.5 h-5 w-5 shrink-0 text-ink-gray-5"
                   aria-hidden="true"
                 />
@@ -1089,8 +1068,7 @@
                 v-if="!data.ledger.rows.length"
                 class="flex items-start gap-3 px-4 py-4 text-sm text-ink-gray-6"
               >
-                <FeatherIcon
-                  name="repeat"
+                <LucideRepeat
                   class="mt-0.5 h-4 w-4 shrink-0 text-ink-gray-4"
                   aria-hidden="true"
                 />
@@ -1356,8 +1334,7 @@
                   :key="code.barcode"
                   class="flex items-center gap-2 px-4 py-2 text-sm"
                 >
-                  <FeatherIcon
-                    name="hash"
+                  <LucideHash
                     class="h-4 w-4 text-ink-gray-5"
                     aria-hidden="true"
                   />
@@ -1734,7 +1711,7 @@ import {
   watch,
 } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Badge, Button, FeatherIcon, FileUploader, toast } from 'frappe-ui'
+import { Badge, Button, FileUploader, toast } from 'frappe-ui'
 import { loadCameraSheet, openCamera } from '@/components/captura/cameraDoor'
 import PriceDialog from '@/components/productos/PriceDialog.vue'
 import EditDialog from '@/components/productos/EditDialog.vue'
@@ -1807,6 +1784,16 @@ import {
   watchChip,
   withoutDone,
 } from '@/composables/useProductos'
+import Icon from '@/components/Icon.vue'
+import LucideArrowLeft from '~icons/lucide/arrow-left'
+import LucideImage from '~icons/lucide/image'
+import LucideCamera from '~icons/lucide/camera'
+import LucideAperture from '~icons/lucide/aperture'
+import LucideLayers from '~icons/lucide/layers'
+import LucideTag from '~icons/lucide/tag'
+import LucideBriefcase from '~icons/lucide/briefcase'
+import LucideRepeat from '~icons/lucide/repeat'
+import LucideHash from '~icons/lucide/hash'
 
 // The product's pendientes (Shell D8), loaded only when the page shows them.
 const RecordPendientes = defineAsyncComponent(

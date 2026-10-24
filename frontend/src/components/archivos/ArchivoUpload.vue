@@ -22,7 +22,7 @@
     <label
       class="inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded bg-surface-gray-10 px-4 text-base font-medium text-ink-base focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-outline-gray-4 sm:hidden"
     >
-      <FeatherIcon name="camera" class="h-4 w-4" />{{ __('Take photo') }}
+      <LucideCamera class="h-4 w-4" />{{ __('Take photo') }}
       <input
         type="file"
         accept="image/*"
@@ -46,8 +46,8 @@
       @dragleave.prevent="dragging = false"
       @drop.prevent="onDrop"
     >
-      <FeatherIcon
-        :name="file ? 'file-text' : 'upload-cloud'"
+      <Icon
+        :icon="file ? 'file-text' : 'cloud-upload'"
         class="h-6 w-6 text-ink-gray-5"
       />
       <span v-if="file" class="max-w-full truncate text-base text-ink-gray-9">
@@ -108,7 +108,7 @@
       <a
         href="/desk/documentos?clasico=1"
         class="ml-auto inline-flex min-h-11 items-center gap-1 rounded px-2 text-sm text-ink-gray-6 hover:text-ink-gray-9 sm:min-h-8"
-        ><FeatherIcon name="paperclip" class="h-3.5 w-3.5" />{{
+        ><LucidePaperclip class="h-3.5 w-3.5" />{{
           __('From an ERP or mail attachment')
         }}</a
       >
@@ -117,7 +117,7 @@
 </template>
 <script setup>
 import { computed, ref, watch } from 'vue'
-import { Button, FeatherIcon } from 'frappe-ui'
+import { Button } from 'frappe-ui'
 import {
   ACCEPT,
   MANAGE,
@@ -128,6 +128,9 @@ import {
   uploadName,
   uploadProblem,
 } from '@/composables/useArchivos'
+import Icon from '@/components/Icon.vue'
+import LucideCamera from '~icons/lucide/camera'
+import LucidePaperclip from '~icons/lucide/paperclip'
 
 const props = defineProps({
   company: { type: String, required: true },

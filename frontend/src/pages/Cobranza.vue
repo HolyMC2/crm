@@ -111,8 +111,8 @@
         data-auto-card
         @click="autoAction"
       >
-        <FeatherIcon
-          :name="auto.paused ? 'pause-circle' : 'send'"
+        <Icon
+          :icon="auto.paused ? 'circle-pause' : 'send'"
           class="h-5 w-5 shrink-0 text-ink-gray-6"
         />
         <span class="min-w-0 flex-1">
@@ -124,10 +124,7 @@
             autoCard.short || autoCard.button
           }}</span>
         </span>
-        <FeatherIcon
-          name="chevron-right"
-          class="h-5 w-5 shrink-0 text-ink-gray-5"
-        />
+        <LucideChevronRight class="h-5 w-5 shrink-0 text-ink-gray-5" />
       </button>
       <section
         v-else-if="auto"
@@ -135,8 +132,8 @@
         :aria-label="__('Automatic payment reminders')"
         data-auto-card
       >
-        <FeatherIcon
-          :name="auto.paused ? 'pause-circle' : 'send'"
+        <Icon
+          :icon="auto.paused ? 'circle-pause' : 'send'"
           class="h-4 w-4 shrink-0 text-ink-gray-6"
         />
         <div class="min-w-0 flex-1">
@@ -443,7 +440,7 @@
                 @click="runRow(action.key, row)"
               >
                 <template #prefix>
-                  <FeatherIcon :name="action.icon" class="h-4 w-4" />
+                  <Icon :icon="action.icon" class="h-4 w-4" />
                 </template>
               </Button>
             </div>
@@ -536,9 +533,7 @@
           :label="__('Send reminder')"
           @click="bulkOpen = true"
         >
-          <template #prefix
-            ><FeatherIcon name="send" class="h-4 w-4"
-          /></template>
+          <template #prefix><LucideSend class="h-4 w-4" /></template>
         </Button>
         <Button
           v-else
@@ -618,7 +613,7 @@ import {
   watch,
 } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Badge, Button, FeatherIcon, FormControl, toast } from 'frappe-ui'
+import { Badge, Button, FormControl, toast } from 'frappe-ui'
 import { FilterChips } from '@/components/ui'
 import PowerAppBar from '@/components/power/PowerAppBar.vue'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
@@ -682,6 +677,9 @@ import { useCobranzaUndo } from '@/composables/useCobranzaActions'
 import { posCollectHref } from '@/utils/posHandoff'
 import { isTypingTarget } from '@/vendor/muelle-shell/contracts'
 import { useLiveWatch } from '@/vendor/muelle-shell/live-sync/vue'
+import Icon from '@/components/Icon.vue'
+import LucideChevronRight from '~icons/lucide/chevron-right'
+import LucideSend from '~icons/lucide/send'
 
 const PAGE = 30
 // The server's page limit: a list restored after a visit reloads at most this many.

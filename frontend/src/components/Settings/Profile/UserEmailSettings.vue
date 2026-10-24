@@ -98,7 +98,7 @@
                 class="!bg-surface-elevation-2"
                 variant="outline"
                 :label="__('Add Email')"
-                iconLeft="plus"
+                :iconLeft="LucidePlus"
                 @click="setOpen(!open)"
               />
             </template>
@@ -132,6 +132,7 @@ import {
   toast,
 } from 'frappe-ui'
 import { computed, inject } from 'vue'
+import LucidePlus from '~icons/lucide/plus'
 
 const emit = defineEmits(['updateStep'])
 

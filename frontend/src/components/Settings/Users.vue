@@ -28,7 +28,7 @@
           ]"
           :button="{
             label: __('New'),
-            iconLeft: 'plus',
+            iconLeft: LucidePlus,
             variant: 'solid',
           }"
           placement="right"
@@ -110,7 +110,7 @@
               <Dropdown
                 :options="getMoreOptions(user)"
                 :button="{
-                  icon: 'more-horizontal',
+                  icon: LucideEllipsis,
                   onblur: (e) => {
                     e.stopPropagation()
                     confirmRemove = false
@@ -129,13 +129,13 @@
                 :options="getDropdownOptions(user)"
                 :button="{
                   label: roleMap[user.role],
-                  iconRight: 'chevron-down',
+                  iconRight: LucideChevronDown,
                   iconLeft:
                     user.role === 'System Manager'
-                      ? 'shield'
+                      ? LucideShield
                       : user.role === 'Sales Manager'
-                        ? 'briefcase'
-                        : 'user-check',
+                        ? LucideBriefcase
+                        : LucideUserCheck,
                 }"
                 placement="right"
               />
@@ -181,6 +181,12 @@ import {
 } from 'frappe-ui'
 import { ref, computed, onMounted } from 'vue'
 import { ConfirmDelete } from '../../utils'
+import LucidePlus from '~icons/lucide/plus'
+import LucideEllipsis from '~icons/lucide/ellipsis'
+import LucideChevronDown from '~icons/lucide/chevron-down'
+import LucideShield from '~icons/lucide/shield'
+import LucideBriefcase from '~icons/lucide/briefcase'
+import LucideUserCheck from '~icons/lucide/user-check'
 
 const { users, isAdmin, isManager } = usersStore()
 

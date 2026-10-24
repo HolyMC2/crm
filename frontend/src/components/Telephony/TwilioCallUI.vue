@@ -43,7 +43,7 @@
         </div>
         <div v-if="onCall" class="flex gap-2">
           <Button
-            :icon="muted ? 'mic-off' : 'mic'"
+            :icon="muted ? LucideMicOff : LucideMic"
             class="rounded-full"
             @click="toggleMute"
           />
@@ -183,6 +183,8 @@ import { useTelemetry } from '@framework/ui'
 import { Avatar, call, createResource } from 'frappe-ui'
 import { registerCallSwapBlocker } from '@/utils/callSwapBlocker'
 import { onBeforeUnmount, ref, watch } from 'vue'
+import LucideMicOff from '~icons/lucide/mic-off'
+import LucideMic from '~icons/lucide/mic'
 
 const { capture } = useTelemetry()
 const { updateOnboardingStep } = useCrmOnboarding()

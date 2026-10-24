@@ -41,14 +41,14 @@
               :aria-label="__('Barcode {0}', [index + 1])"
             />
             <Button
-              icon="x"
+              :icon="LucideX"
               :aria-label="__('Remove barcode {0}', [row.barcode])"
               class="min-h-11 min-w-11 sm:min-h-8 sm:min-w-8"
               @click="form.barcodes.splice(index, 1)"
             />
           </div>
           <Button
-            icon-left="plus"
+            :icon-left="LucidePlus"
             :label="__('Add barcode')"
             @click="form.barcodes.push({ barcode: '', barcode_type: '' })"
           />
@@ -168,6 +168,8 @@ import {
   rebaseEdit,
   requestId,
 } from '@/composables/useProductos'
+import LucideX from '~icons/lucide/x'
+import LucidePlus from '~icons/lucide/plus'
 
 // «Editar datos»: the native Item save as this worker. Over a newer version
 // only the worker's own edits are re-applied; everyone else's stay.

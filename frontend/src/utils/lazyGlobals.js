@@ -13,7 +13,6 @@ const loaders = {
   Dialog: () => import('frappe-ui-components/Dialog/Dialog.vue'),
   Alert: () => import('frappe-ui-components/Alert/Alert.vue'),
   Badge: () => import('frappe-ui-components/Badge/Badge.vue'),
-  FeatherIcon: () => import('frappe-ui-components/FeatherIcon.vue'),
 }
 
 export const lazyGlobalComponents = Object.fromEntries(

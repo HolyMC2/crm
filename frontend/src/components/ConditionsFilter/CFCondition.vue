@@ -127,6 +127,7 @@ import {
 } from 'frappe-ui'
 import { filterableFields } from './filterableFields'
 import { reactive, computed, h, ref } from 'vue'
+import LucideTrash2 from '~icons/lucide/trash-2'
 
 const show = ref(false)
 const emit = defineEmits([
@@ -174,7 +175,7 @@ const dropdownOptions = computed(() => {
 
   options.push({
     label: __('Remove'),
-    icon: 'trash-2',
+    icon: LucideTrash2,
     variant: 'red',
     onClick: () => emit('remove'),
     condition: () => !props.isGroup,
@@ -182,7 +183,7 @@ const dropdownOptions = computed(() => {
 
   options.push({
     label: __('Remove Group'),
-    icon: 'trash-2',
+    icon: LucideTrash2,
     variant: 'red',
     onClick: () => emit('remove'),
     condition: () => props.isGroup,

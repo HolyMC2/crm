@@ -102,10 +102,7 @@
           v-if="waBannerState === 'no'"
           class="mx-3 mb-2 flex items-start gap-2 rounded-md border border-red-200 bg-surface-red-1 px-3 py-2 dark:border-red-900/40 sm:mx-10"
         >
-          <FeatherIcon
-            name="slash"
-            class="mt-0.5 size-4 shrink-0 text-ink-red-7"
-          />
+          <LucideSlash class="mt-0.5 size-4 shrink-0 text-ink-red-7" />
           <div
             class="text-xs leading-snug text-ink-gray-7 dark:text-ink-gray-6"
           >
@@ -119,8 +116,7 @@
           v-else-if="waBannerState === 'unknown'"
           class="mx-3 mb-2 flex items-start gap-2 rounded-md border border-amber-200 bg-surface-amber-1 px-3 py-2 dark:border-amber-900/40 sm:mx-10"
         >
-          <FeatherIcon
-            name="alert-triangle"
+          <LucideTriangleAlert
             class="mt-0.5 size-4 shrink-0 text-ink-amber-9"
           />
           <div
@@ -747,6 +743,8 @@ import {
   onBeforeUnmount,
 } from 'vue'
 import { useRoute } from 'vue-router'
+import LucideSlash from '~icons/lucide/slash'
+import LucideTriangleAlert from '~icons/lucide/triangle-alert'
 
 const { $socket } = globalStore()
 const { getUser } = usersStore()

@@ -81,7 +81,7 @@
               />
               <Button
                 :aria-label="`Quitar teléfono ${index + 1}`"
-                icon="x"
+                :icon="LucideX"
                 variant="ghost"
                 :disabled="!phoneWritable"
                 @click="draft.phones.splice(index, 1)"
@@ -116,7 +116,7 @@
               />
               <Button
                 :aria-label="`Quitar correo ${index + 1}`"
-                icon="x"
+                :icon="LucideX"
                 variant="ghost"
                 :disabled="!emailWritable"
                 @click="draft.emails.splice(index, 1)"
@@ -234,6 +234,7 @@ import { coreFields } from '@/utils/extraFields'
 import ConflictPanel from './ConflictPanel.vue'
 import MetaFields from './MetaFields.vue'
 import RecoveryMessage from './RecoveryMessage.vue'
+import LucideX from '~icons/lucide/x'
 import './contactos.css'
 const props = defineProps({
   modelValue: Boolean,

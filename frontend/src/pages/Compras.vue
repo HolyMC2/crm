@@ -57,7 +57,7 @@
               return-label="Compras"
             />
             <Button
-              icon="layers"
+              :icon="LucideLayers"
               variant="ghost"
               class="min-h-11 min-w-11"
               :aria-label="__('Restock from a list', null, 'Surtido')"
@@ -106,7 +106,7 @@
             return-label="Compras"
           />
           <Button
-            icon-left="layers"
+            :icon-left="LucideLayers"
             :label="__('Restock from a list', null, 'Surtido')"
             class="min-h-11 sm:min-h-8"
             @click="router.push({ name: 'CompraSurtido' })"
@@ -114,7 +114,7 @@
           <Button
             v-if="boot?.capabilities?.create"
             variant="solid"
-            icon-left="plus"
+            :icon-left="LucidePlus"
             :label="__('New purchase')"
             class="min-h-11 sm:min-h-8"
             @click="newPurchase"
@@ -240,8 +240,8 @@
                   "
                   @click="list.onRowClick($event, row)"
                 >
-                  <FeatherIcon
-                    :name="
+                  <Icon
+                    :icon="
                       row.kind === 'solicitud' ? 'clipboard' : 'shopping-cart'
                     "
                     class="mt-0.5 h-4 w-4 shrink-0 text-ink-gray-5"
@@ -326,7 +326,7 @@
                   @click="runVerb(action.key, row)"
                 >
                   <template #prefix>
-                    <FeatherIcon :name="action.icon" class="h-4 w-4" />
+                    <Icon :icon="action.icon" class="h-4 w-4" />
                   </template>
                 </Button>
               </div>
@@ -376,9 +376,7 @@
             :label="__('Confirm', null, 'Compras')"
             @click="bulkOpen = true"
           >
-            <template #prefix
-              ><FeatherIcon name="check" class="h-4 w-4"
-            /></template>
+            <template #prefix><LucideCheck class="h-4 w-4" /></template>
           </Button>
           <template v-else>
             <p class="w-full text-sm text-ink-gray-7 sm:w-auto">
@@ -428,7 +426,7 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Badge, Button, FeatherIcon, FormControl, toast } from 'frappe-ui'
+import { Badge, Button, FormControl, toast } from 'frappe-ui'
 import { formatDay } from '@/utils/contactos'
 import { dayDiff, parseServerDate } from '@/utils/display'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
@@ -468,6 +466,10 @@ import {
   segmentLabel,
   statusLabel,
 } from '@/composables/useCompras'
+import Icon from '@/components/Icon.vue'
+import LucideLayers from '~icons/lucide/layers'
+import LucidePlus from '~icons/lucide/plus'
+import LucideCheck from '~icons/lucide/check'
 
 const route = useRoute()
 const router = useRouter()

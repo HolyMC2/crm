@@ -11,7 +11,7 @@
       <Button
         variant="solid"
         :label="__('Create')"
-        iconLeft="plus"
+        :iconLeft="LucidePlus"
         @click="createCallLog"
       />
     </template>
@@ -73,6 +73,7 @@ import { getCallLogDetail } from '@/utils/callLog'
 import { useTelemetry } from '@framework/ui'
 import { createResource } from 'frappe-ui'
 import { computed, ref, onMounted } from 'vue'
+import LucidePlus from '~icons/lucide/plus'
 
 const callLogsListView = ref(null)
 

@@ -8,7 +8,7 @@
           class="flex min-h-11 items-center gap-1 text-sm text-ink-gray-7 hover:text-ink-gray-9"
           @click="goBack"
         >
-          <FeatherIcon name="arrow-left" class="h-4 w-4" />
+          <LucideArrowLeft class="h-4 w-4" />
           {{ backLabel }}
         </button>
       </nav>
@@ -428,7 +428,7 @@
                 />
                 <Button
                   class="min-h-11"
-                  icon="trash-2"
+                  :icon="LucideTrash2"
                   :aria-label="
                     __('Remove {0}', [row.item_label || row.item_code])
                   "
@@ -729,14 +729,7 @@ import {
   watch,
 } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import {
-  Badge,
-  Button,
-  Dialog,
-  FeatherIcon,
-  FormControl,
-  toast,
-} from 'frappe-ui'
+import { Badge, Button, Dialog, FormControl, toast } from 'frappe-ui'
 import { ArchivosRegistroPanel } from '@/components/archivos'
 import ComprasPicker from '@/components/compras/ComprasPicker.vue'
 import HandoffDialog from '@/components/compras/HandoffDialog.vue'
@@ -788,6 +781,8 @@ import {
   scannerReceiptUrl,
   statusLabel,
 } from '@/composables/useCompras'
+import LucideArrowLeft from '~icons/lucide/arrow-left'
+import LucideTrash2 from '~icons/lucide/trash-2'
 
 const props = defineProps({ name: { type: String, default: '' } })
 const route = useRoute()

@@ -31,18 +31,18 @@
             :options="[
               {
                 label: __('Survey settings'),
-                icon: 'settings',
+                icon: LucideSettings,
                 onClick: () => (setupOpen = true),
               },
               {
                 label: __('“How did we do?” settings'),
-                icon: 'message-circle',
+                icon: LucideMessageCircle,
                 onClick: () => (serviceSetupOpen = true),
               },
             ]"
           >
             <Button
-              icon-left="settings"
+              :icon-left="LucideSettings"
               :label="__('Settings', null, 'Encuestas')"
               class="min-h-11 sm:min-h-8"
               data-testid="encuestas-settings"
@@ -426,6 +426,8 @@ import {
   serviceAskNotice,
   viewLabel,
 } from '@/composables/useEncuestas'
+import LucideSettings from '~icons/lucide/settings'
+import LucideMessageCircle from '~icons/lucide/message-circle'
 
 // Score chip colors from the shared palette (tokens only).
 const SCORE_CLASS = {

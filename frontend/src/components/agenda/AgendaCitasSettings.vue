@@ -81,7 +81,7 @@
           <Button
             class="min-h-11 min-w-11"
             variant="ghost"
-            icon="x"
+            :icon="LucideX"
             :aria-label="__('Remove')"
             @click="form.hours.splice(index, 1)"
           />
@@ -90,7 +90,7 @@
           <Button
             class="min-h-11"
             variant="subtle"
-            icon-left="plus"
+            :icon-left="LucidePlus"
             :label="__('Add hours')"
             @click="addRow"
           />
@@ -409,6 +409,8 @@ import {
   setupGuard,
   validHours,
 } from '@/composables/useCitas'
+import LucideX from '~icons/lucide/x'
+import LucidePlus from '~icons/lucide/plus'
 
 const props = defineProps({
   // The fieldset to scroll to and focus on open (a SETUP_SECTIONS section).

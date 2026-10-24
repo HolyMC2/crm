@@ -187,7 +187,9 @@ import { isMobileView } from '@/composables/settings'
 import { useDoctypeModal } from '@/composables/doctypeModal'
 import { useDocument } from '@/data/document'
 import { useTelemetry } from '@framework/ui'
-import { FeatherIcon, Dropdown, Avatar, Tooltip, call, toast } from 'frappe-ui'
+import { Dropdown, Avatar, Tooltip, call, toast } from 'frappe-ui'
+import Icon from '@/components/Icon.vue'
+import LucideCirclePlay from '~icons/lucide/circle-play'
 import { ref, computed, h, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -271,8 +273,8 @@ const detailFields = computed(() => {
   }
   let details = [
     {
-      icon: h(FeatherIcon, {
-        name: data.type.icon,
+      icon: h(Icon, {
+        icon: data.type.icon,
         class: 'h-3.5 w-3.5',
       }),
       name: 'type',
@@ -323,8 +325,7 @@ const detailFields = computed(() => {
       color: data.status.color,
     },
     {
-      icon: h(FeatherIcon, {
-        name: 'play-circle',
+      icon: h(LucideCirclePlay, {
         class: 'h-4 w-4 mt-2',
       }),
       name: 'recording_url_path',

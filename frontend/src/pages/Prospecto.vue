@@ -48,7 +48,7 @@
             size="lg"
             class="w-full"
             label="Convertir en trato"
-            icon-left="briefcase"
+            :icon-left="LucideBriefcase"
             data-testid="prospecto-convert"
             @click="convertOpen = true"
           />
@@ -136,6 +136,7 @@ import { AppBar, EmptyState } from '@/components/ui'
 import { formatDate, formatDue, initials, statusLabel } from '@/utils/display'
 import { formatPhone } from '@/composables/crmFormat'
 import { prospectName, sourceText } from '@/utils/prospects'
+import LucideBriefcase from '~icons/lucide/briefcase'
 
 const ConvertToDealModal = defineAsyncComponent(
   () => import('@/components/Modals/ConvertToDealModal.vue'),

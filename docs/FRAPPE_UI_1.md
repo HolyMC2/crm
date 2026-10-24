@@ -113,6 +113,36 @@ lane is built. The new composition-based `frappe-ui/list` family is a later, sep
   `frappe-ui/charts` (`AxisChart` → `BarChart`/`LineChart` by type, `NumberChart` → `NumberCard`,
   `select` emits).
 
+### Step 3 (B2 icons): how crm renders icons after 1.0.2
+
+`FeatherIcon` is gone and frappe-ui components render only `lucide-*` class strings, emoji or
+components in their icon props. The lane keeps the 61 KB CSS gate in mind: each new `lucide-*`
+mask class costs 0.15–0.3 KB gzip, so string names were not converted to classes.
+
+- Static names become components: `<FeatherIcon name="x">` → `<LucideX>` and `icon-left="x"` →
+  `:icon-left="LucideX"` with an explicit `import LucideX from '~icons/lucide/<canonical>'`
+  (`scripts/codemods/icons-to-lucide.mjs`; 157 files). Object literals feeding frappe-ui
+  `Dropdown` options and `:button` objects were rewritten at the 93 sites the reader classed as
+  frappe-ui sinks.
+- Dynamic names stay strings and render through crm's sprite `Icon` (`src/components/Icon.vue`):
+  `<FeatherIcon :name="expr">` → `<Icon :icon="expr">`. The sprite carries canonical ids only, so
+  `src/utils/lucideNames.js` maps the 24 feather-era aliases crm used (`edit`→`square-pen`,
+  `check-circle`→`circle-check-big`, `grid`→`grid-3x3`, `tool`→`wrench`…), derived from
+  lucide-static by drawing. crm's own data lists (composables' view entries, page actions,
+  `Settings.vue` tabs, `EmptyState`) keep their strings for the same reason.
+- `utils/index.js` `DropdownOption`/`TemplateOption` and `CallLogDetailModal` render through
+  `Icon`; `isEmoji` moved to `src/utils/emoji.js` so `Icon.vue` does not pull the utils barrel
+  (its stores import the router, which the component tests mock partially).
+- `lucide-*` strings already on `Button`/`Dropdown` props (about 40) stay: 1.0.2 renders them as
+  mask classes. `Input icon-left="search"` (SlaPolicyList) waits for the `Input` replacement in
+  step 6.
+- Pre-existing bug fixed on the way: `Controls/ButtonControl.vue` passed `:icon-left="lucide - icon"`
+  (a subtraction, `NaN`), so the button icons of `Grid.vue`, `FieldLayout/Field.vue` and
+  `SidePanelLayout.vue` never rendered. It now renders the field's icon through `Icon` in the
+  button's `#prefix` slot.
+- The lazy global `FeatherIcon` registration (`utils/lazyGlobals.js`) is gone; ten files that used
+  the global tag now import their icons.
+
 ## 5. Input list for `FUI1-behavior` (silent breaks)
 
 Filled at step 8 from the lab walk. Known from the sources before the walk:
@@ -121,6 +151,13 @@ Filled at step 8 from the lab walk. Known from the sources before the walk:
 - `Tooltip`/`Popover` `placement` → `side`, delays in ms.
 - `Button` string `icon`/`iconLeft`/`iconRight` props: 1.0.2 accepts `lucide-*` strings or
   components; any other string renders nothing and warns in dev.
+- Glyphs that changed with the lucide renames (step 3): `edit` → `square-pen`, `edit-2` → `pen`,
+  `check-circle` → `circle-check-big`, `check-square` → `square-check-big`, `grid` → `grid-3x3`,
+  `bar-chart-2` → `chart-no-axes-column`, `align-left` → `text-align-start`, `tool` → `wrench`.
+  Lucide components carry `width`/`height` 24 attributes that the size classes override; where a
+  FeatherIcon had no size class the icon may now draw at 24px.
+- Icons bound through the sprite `Icon` appear after the sprite loads (idle after first paint);
+  static icons are inline components and paint with the view.
 - Tailwind preset renames (`bg-surface-white`, named radius aliases, `text-base font-medium`,
   `--focus-*`, line-height 1.35), `dark:` redundancy, hover on touch.
 - `call()` honours `requestBaseUrl`/`requestHeaders`/`serverMessagesHandler` (184 files).

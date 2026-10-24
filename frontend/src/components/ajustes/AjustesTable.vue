@@ -97,7 +97,7 @@
       <Button
         v-if="field.can_write"
         class="mt-3 min-h-11"
-        icon-left="plus"
+        :icon-left="LucidePlus"
         :label="__('Agregar fila')"
         @click="openRow(null)"
       />
@@ -116,6 +116,7 @@ import { computed, reactive, ref, useId } from 'vue'
 import { Button } from 'frappe-ui'
 import AjustesControl from './AjustesControl.vue'
 import { NativeButton, pendingDisplay } from './ajustes'
+import LucidePlus from '~icons/lucide/plus'
 
 const props = defineProps({
   field: { type: Object, required: true },

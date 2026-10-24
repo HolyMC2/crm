@@ -44,10 +44,7 @@
           :key="note.name"
           class="flex items-start gap-2 rounded-md border border-amber-200 bg-surface-amber-1 px-3 py-1.5 dark:border-amber-900/40 sm:py-2"
         >
-          <FeatherIcon
-            name="bookmark"
-            class="mt-0.5 size-4 shrink-0 text-ink-amber-9"
-          />
+          <LucideBookmark class="mt-0.5 size-4 shrink-0 text-ink-amber-9" />
           <div
             class="min-w-0 flex-1 cursor-pointer"
             @click="emit('openNote', note)"
@@ -80,7 +77,7 @@
             :title="__('Unpin')"
             @click.stop="emit('unpinNote', note)"
           >
-            <FeatherIcon name="x" class="size-4" />
+            <LucideX class="size-4" />
           </button>
         </div>
         <button
@@ -357,11 +354,10 @@
                       v-else-if="['sent', 'Success'].includes(whatsapp.status)"
                       class="size-4"
                     />
-                    <FeatherIcon
+                    <LucideClock
                       v-else-if="
                         !['failed', 'unknown'].includes(whatsapp.status)
                       "
-                      name="clock"
                       class="size-3 text-ink-gray-4"
                     />
                   </span>
@@ -453,6 +449,9 @@ import {
   isWhatsappAttachment,
   collectFileUrls,
 } from '@/composables/useConversationArchivos'
+import LucideBookmark from '~icons/lucide/bookmark'
+import LucideX from '~icons/lucide/x'
+import LucideClock from '~icons/lucide/clock'
 
 const { getUser } = usersStore()
 

@@ -6,7 +6,7 @@
           class="flex min-h-11 items-center gap-1 text-sm text-ink-gray-7 hover:text-ink-gray-9"
           @click="goBack()"
         >
-          <FeatherIcon name="arrow-left" class="h-4 w-4" />
+          <LucideArrowLeft class="h-4 w-4" />
           {{ backLabel }}
         </button>
       </nav>
@@ -199,7 +199,7 @@
                     ></span
                   >
                 </span>
-                <FeatherIcon name="chevron-right" class="h-4 w-4" />
+                <LucideChevronRight class="h-4 w-4" />
               </RouterLink>
             </li>
           </ul>
@@ -228,7 +228,7 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Button, FeatherIcon, toast } from 'frappe-ui'
+import { Button, toast } from 'frappe-ui'
 import ComprasPicker from '@/components/compras/ComprasPicker.vue'
 import HandoffDialog from '@/components/compras/HandoffDialog.vue'
 import {
@@ -251,6 +251,8 @@ import { useRecordKit } from '@/components/documentos/compras/recordKit'
 import { requestTitle } from '@/components/documentos/compras/words'
 import { formatDate } from '@/utils/display'
 import { useRecordPower } from '@/composables/useRecordPower'
+import LucideArrowLeft from '~icons/lucide/arrow-left'
+import LucideChevronRight from '~icons/lucide/chevron-right'
 
 const props = defineProps({ name: { type: String, required: true } })
 const route = useRoute()

@@ -25,7 +25,7 @@
             <Button
               v-if="doc.status"
               :label="statusLabel(doc.status)"
-              :iconRight="open ? 'chevron-up' : 'chevron-down'"
+              :iconRight="open ? LucideChevronUp : LucideChevronDown"
             >
               <template #prefix>
                 <IndicatorIcon :class="getLeadStatus(doc.status).color" />
@@ -167,6 +167,8 @@ import {
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import ConvertToDealModal from '@/components/Modals/ConvertToDealModal.vue'
+import LucideChevronUp from '~icons/lucide/chevron-up'
+import LucideChevronDown from '~icons/lucide/chevron-down'
 
 const { brand } = getSettings()
 const { $dialog, $socket } = globalStore()

@@ -173,7 +173,7 @@
           v-if="event.status !== 'Done'"
           class="min-h-11"
           variant="solid"
-          icon-left="check"
+          :icon-left="LucideCheck"
           :loading="busy"
           :label="__('Mark as done')"
           @click="emit('task-done')"
@@ -218,7 +218,7 @@
       <Button
         class="min-h-11 self-start"
         variant="subtle"
-        icon-left="external-link"
+        :icon-left="LucideExternalLink"
         :label="__('Open Turnos')"
         @click="emit('open-turnos')"
       />
@@ -421,6 +421,8 @@ import AgendaCitaPanel from '@/components/agenda/AgendaCitaPanel.vue'
 import AgendaGuard from '@/components/agenda/AgendaGuard.vue'
 import { PALETTE, textOn } from '@/components/agenda/agendaColors'
 import { recordLink, withAgendaReturn } from '@/composables/useAgenda'
+import LucideCheck from '~icons/lucide/check'
+import LucideExternalLink from '~icons/lucide/external-link'
 
 const props = defineProps({
   event: { type: Object, required: true },

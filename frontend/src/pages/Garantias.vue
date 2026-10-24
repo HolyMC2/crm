@@ -56,7 +56,7 @@
             :aria-label="__('New case')"
             @click="openCreate()"
           >
-            <FeatherIcon name="plus" class="h-6 w-6" />
+            <LucidePlus class="h-6 w-6" />
           </button>
         </template>
         <!-- No counts strip: the chip row under the bar carries the counts. -->
@@ -86,7 +86,7 @@
         <Button
           v-if="boot?.capabilities?.create"
           variant="solid"
-          icon-left="plus"
+          :icon-left="LucidePlus"
           :label="__('New case')"
           class="min-h-11 sm:min-h-8"
           @click="openCreate()"
@@ -257,10 +257,7 @@
                 "
                 @click="list.onRowClick($event, row)"
               >
-                <FeatherIcon
-                  name="shield"
-                  class="mt-0.5 h-4 w-4 shrink-0 text-ink-gray-5"
-                />
+                <LucideShield class="mt-0.5 h-4 w-4 shrink-0 text-ink-gray-5" />
                 <span class="min-w-0 flex-1">
                   <span class="block truncate font-medium text-ink-gray-9">
                     {{ row.customer_name }}
@@ -348,7 +345,7 @@
                 @click="runVerb(action.key, row)"
               >
                 <template #prefix>
-                  <FeatherIcon :name="action.icon" class="h-4 w-4" />
+                  <Icon :icon="action.icon" class="h-4 w-4" />
                 </template>
               </Button>
             </div>
@@ -375,9 +372,7 @@
           :label="__('Assign', null, 'Garantías')"
           @click="bulkOpen = true"
         >
-          <template #prefix
-            ><FeatherIcon name="user-plus" class="h-4 w-4"
-          /></template>
+          <template #prefix><LucideUserPlus class="h-4 w-4" /></template>
         </Button>
       </PowerBulkBar>
     </div>
@@ -404,7 +399,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Badge, Button, FeatherIcon, FormControl, toast } from 'frappe-ui'
+import { Badge, Button, FormControl, toast } from 'frappe-ui'
 import { FilterChips, ListRow } from '@/components/ui'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import AssignDialog from '@/components/garantias/AssignDialog.vue'
@@ -446,6 +441,10 @@ import {
   stateLabel,
   stateTheme,
 } from '@/composables/useGarantias'
+import Icon from '@/components/Icon.vue'
+import LucidePlus from '~icons/lucide/plus'
+import LucideShield from '~icons/lucide/shield'
+import LucideUserPlus from '~icons/lucide/user-plus'
 
 const route = useRoute()
 const router = useRouter()

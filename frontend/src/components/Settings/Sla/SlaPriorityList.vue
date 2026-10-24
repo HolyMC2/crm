@@ -125,6 +125,7 @@ import { computed, inject, provide, reactive, ref } from 'vue'
 import EditResponseResolutionModal from './EditResponseResolutionModal.vue'
 import DurationInput from '../../Controls/DurationInput.vue'
 import { watchDebounced } from '@vueuse/core'
+import LucideSquarePen from '~icons/lucide/square-pen'
 
 const step = inject('step')
 const isConfirmingDelete = ref(false)
@@ -187,7 +188,7 @@ const dropdownOptions = (priority) => [
   {
     label: __('Edit'),
     onClick: () => editItem(priority),
-    icon: 'edit',
+    icon: LucideSquarePen,
   },
   ...ConfirmDelete({
     onConfirmDelete: () => deleteItem(priority),

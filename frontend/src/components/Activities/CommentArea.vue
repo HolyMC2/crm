@@ -87,6 +87,7 @@ import {
 import { sessionStore } from '@/stores/session'
 import { computed, ref } from 'vue'
 import { useEditSwapBlocker } from '@/utils/editSwapBlocker'
+import LucidePen from '~icons/lucide/pen'
 
 const props = defineProps({
   activity: { type: Object, default: () => ({}) },
@@ -111,7 +112,7 @@ useEditSwapBlocker(
 const menuOptions = computed(() => [
   {
     label: __('Edit'),
-    icon: 'edit-2',
+    icon: LucidePen,
     onClick: startEdit,
   },
   ...ConfirmDelete({

@@ -3,11 +3,14 @@
     :label="__(label)"
     :theme="theme"
     :variant="variant"
-    :icon-left="lucide - icon"
     :disabled="disabled"
     v-bind="$attrs"
     @click.stop="emit('click', $event)"
-  />
+  >
+    <template v-if="icon" #prefix>
+      <Icon :icon="icon" class="size-4 shrink-0" />
+    </template>
+  </Button>
 </template>
 <script>
 export function getButtonTheme(buttonColor) {
@@ -35,6 +38,7 @@ export function getButtonVariant(buttonColor) {
 
 <script setup>
 import { Button } from 'frappe-ui'
+import Icon from '@/components/Icon.vue'
 
 defineProps({
   label: { type: String, required: true },

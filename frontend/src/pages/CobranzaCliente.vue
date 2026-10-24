@@ -76,7 +76,7 @@
           :aria-keyshortcuts="'Escape'"
           @click="goBack"
         >
-          <FeatherIcon name="arrow-left" class="h-4 w-4" />
+          <LucideArrowLeft class="h-4 w-4" />
           {{ backLabel }}
         </button>
         <span class="flex-1" />
@@ -88,9 +88,7 @@
           :aria-keyshortcuts="'N'"
           @click="goNext"
         >
-          <template #suffix
-            ><FeatherIcon name="arrow-right" class="h-4 w-4"
-          /></template>
+          <template #suffix><LucideArrowRight class="h-4 w-4" /></template>
         </Button>
       </nav>
 
@@ -246,7 +244,7 @@
             :href="`tel:${data.phones[0].display.replace(/[^\d+]/g, '')}`"
           >
             <!-- «Llamar» dials; the thumb bar's «Llamada» logs one. -->
-            <FeatherIcon name="phone-outgoing" class="h-5 w-5" />
+            <LucidePhoneOutgoing class="h-5 w-5" />
             {{ __('Make a Call') }}
           </a>
           <button
@@ -255,7 +253,7 @@
             class="flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl bg-surface-gray-2 px-1 text-center text-xs font-medium text-ink-gray-8"
             @click="openFollowup('followup')"
           >
-            <FeatherIcon name="user-check" class="h-5 w-5" />
+            <LucideUserCheck class="h-5 w-5" />
             {{ __('Follow-up', null, CTX) }}
           </button>
           <button
@@ -264,7 +262,7 @@
             class="flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl bg-surface-gray-2 px-1 text-center text-xs font-medium text-ink-gray-8"
             @click="statementOpen = true"
           >
-            <FeatherIcon name="file-text" class="h-5 w-5" />
+            <LucideFileText class="h-5 w-5" />
             {{ __('Statement', null, CTX) }}
           </button>
         </div>
@@ -277,9 +275,7 @@
             :aria-keyshortcuts="'$'"
             @click="openPayment('')"
           >
-            <template #prefix
-              ><FeatherIcon name="dollar-sign" class="h-4 w-4"
-            /></template>
+            <template #prefix><LucideDollarSign class="h-4 w-4" /></template>
           </Button>
           <Button
             v-if="caps.assign"
@@ -290,9 +286,7 @@
             :aria-keyshortcuts="'S'"
             @click="openFollowup('followup')"
           >
-            <template #prefix
-              ><FeatherIcon name="user-check" class="h-4 w-4"
-            /></template>
+            <template #prefix><LucideUserCheck class="h-4 w-4" /></template>
           </Button>
           <Button
             v-if="caps.statement"
@@ -300,9 +294,7 @@
             :label="__('Statement of account')"
             @click="statementOpen = true"
           >
-            <template #prefix
-              ><FeatherIcon name="file-text" class="h-4 w-4"
-            /></template>
+            <template #prefix><LucideFileText class="h-4 w-4" /></template>
           </Button>
         </div>
 
@@ -312,7 +304,7 @@
           class="mb-4 flex flex-wrap items-center gap-2 rounded-lg bg-surface-gray-1 p-3 text-sm text-ink-gray-8"
           data-auto-line
         >
-          <FeatherIcon name="send" class="h-4 w-4 shrink-0 text-ink-gray-6" />
+          <LucideSend class="h-4 w-4 shrink-0 text-ink-gray-6" />
           <p class="min-w-0 flex-1">{{ autoLine(data.auto, data.today) }}</p>
           <template v-if="data.auto.state === 'replied'">
             <Button
@@ -497,8 +489,8 @@
               :key="`${event.doctype}:${event.name}`"
               class="flex gap-2"
             >
-              <FeatherIcon
-                :name="EVENT_ICONS[event.kind]"
+              <Icon
+                :icon="EVENT_ICONS[event.kind]"
                 class="mt-0.5 h-4 w-4 shrink-0 text-ink-gray-5"
               />
               <span class="min-w-0 flex-1">
@@ -554,7 +546,7 @@
           :data-primary="action.primary ? 'true' : undefined"
           @click="run(focused, action)"
         >
-          <FeatherIcon :name="action.icon" class="h-5 w-5" />
+          <Icon :icon="action.icon" class="h-5 w-5" />
           <span class="truncate">{{ action.short }}</span>
         </button>
       </div>
@@ -620,7 +612,7 @@ import {
   watch,
 } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Badge, Button, FeatherIcon, FormControl, toast } from 'frappe-ui'
+import { Badge, Button, FormControl, toast } from 'frappe-ui'
 import { AppBar } from '@/components/ui'
 import { ArchivosRegistroPanel } from '@/components/archivos'
 import CallSheet from '@/components/cobranza/CallSheet.vue'
@@ -675,6 +667,14 @@ import {
   sanitizeReturnLabel,
 } from '@/vendor/muelle-shell/contracts'
 import { useLiveWatch } from '@/vendor/muelle-shell/live-sync/vue'
+import Icon from '@/components/Icon.vue'
+import LucideArrowLeft from '~icons/lucide/arrow-left'
+import LucideArrowRight from '~icons/lucide/arrow-right'
+import LucidePhoneOutgoing from '~icons/lucide/phone-outgoing'
+import LucideUserCheck from '~icons/lucide/user-check'
+import LucideFileText from '~icons/lucide/file-text'
+import LucideDollarSign from '~icons/lucide/dollar-sign'
+import LucideSend from '~icons/lucide/send'
 
 const LIVE_DOCTYPES = [
   'Sales Invoice',

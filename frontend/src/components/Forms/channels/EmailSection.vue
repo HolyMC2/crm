@@ -33,7 +33,7 @@
       </p>
       <Button
         :label="__('Connect email')"
-        icon-left="mail"
+        :icon-left="LucideMail"
         @click="openEmailSettings"
       />
     </div>
@@ -91,6 +91,7 @@ import { showSettings, activeSettingsPage } from '@/composables/settings'
 import { computed, inject } from 'vue'
 import { FORM_CHANNELS } from './useFormChannels'
 import { mailView } from './channelModel'
+import LucideMail from '~icons/lucide/mail'
 
 const c = inject(FORM_CHANNELS)
 const view = computed(() => mailView(c.channels.data?.mail))

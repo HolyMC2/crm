@@ -76,7 +76,7 @@
               'Connect your Paperless archive and your invoice mailbox, check that they work and run the initial import.',
             )
           "
-          ><FeatherIcon name="settings" class="h-4 w-4 shrink-0" />{{
+          ><LucideSettings class="h-4 w-4 shrink-0" />{{
             __('Archive settings')
           }}</router-link
         >
@@ -98,7 +98,7 @@
         <div
           class="pointer-events-none flex flex-col items-center gap-2 rounded-xl border-2 border-dashed border-outline-gray-5 px-10 py-12 text-center"
         >
-          <FeatherIcon name="upload-cloud" class="h-8 w-8 text-ink-gray-7" />
+          <LucideCloudUpload class="h-8 w-8 text-ink-gray-7" />
           <p class="text-lg font-semibold text-ink-gray-9">
             {{
               targetCtx?.supported
@@ -119,7 +119,7 @@
         v-if="returnTo"
         :href="returnTo"
         class="flex min-h-11 shrink-0 items-center gap-2 border-b border-outline-gray-2 px-4 text-sm text-ink-gray-7 hover:bg-surface-gray-1"
-        ><FeatherIcon name="arrow-left" class="h-4 w-4" />{{
+        ><LucideArrowLeft class="h-4 w-4" />{{
           __('Back to {0}', [returnLabel || __('the previous record')])
         }}</a
       >
@@ -222,7 +222,7 @@
             v-else
             class="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 p-6 text-center"
           >
-            <FeatherIcon name="folder" class="h-10 w-10 text-ink-gray-4" />
+            <LucideFolder class="h-10 w-10 text-ink-gray-4" />
             <p class="text-base text-ink-gray-7">
               {{ __('Pick a file to see it here.') }}
             </p>
@@ -250,7 +250,7 @@
               <Button
                 variant="solid"
                 class="min-h-11 shrink-0 sm:min-h-0"
-                :icon-left="uploadOpen ? 'x' : 'upload'"
+                :icon-left="uploadOpen ? LucideX : LucideUpload"
                 :label="uploadOpen ? __('Close') : __('Receive')"
                 :aria-expanded="uploadOpen ? 'true' : 'false'"
                 @click="toggleUpload"
@@ -338,8 +338,8 @@
               <ArchivoGuard :state="listProblem" @action="loadList()" />
             </div>
             <div v-else-if="!rows.length" class="px-6 py-10 text-center">
-              <FeatherIcon
-                :name="emptyState.icon"
+              <Icon
+                :icon="emptyState.icon"
                 class="mx-auto h-10 w-10 text-ink-gray-4"
               />
               <p class="mt-3 text-base font-medium text-ink-gray-8">
@@ -404,8 +404,8 @@
                     class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-gray-2"
                     :title="kindLabel(row.document_kind)"
                   >
-                    <FeatherIcon
-                      :name="kindIcon(row.document_kind)"
+                    <Icon
+                      :icon="kindIcon(row.document_kind)"
                       class="h-4 w-4 text-ink-gray-6"
                     />
                   </span>
@@ -416,9 +416,8 @@
                         :title="row.title"
                         >{{ displayTitle(row) }}</span
                       >
-                      <FeatherIcon
+                      <LucideLock
                         v-if="row.visibility === 'Private'"
-                        name="lock"
                         class="h-3 w-3 shrink-0 text-ink-gray-5"
                         :aria-label="__('Only you can see it')"
                       />
@@ -534,14 +533,7 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useDebounceFn } from '@vueuse/core'
-import {
-  Badge,
-  Button,
-  Dialog,
-  FeatherIcon,
-  FormControl,
-  toast,
-} from 'frappe-ui'
+import { Badge, Button, Dialog, FormControl, toast } from 'frappe-ui'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import { useListKeys } from '@/composables/pageKeys'
 import ArchivoDetail from '@/components/archivos/ArchivoDetail.vue'
@@ -583,6 +575,14 @@ import {
   viewLabel,
   withDone,
 } from '@/composables/useArchivos'
+import Icon from '@/components/Icon.vue'
+import LucideSettings from '~icons/lucide/settings'
+import LucideCloudUpload from '~icons/lucide/cloud-upload'
+import LucideArrowLeft from '~icons/lucide/arrow-left'
+import LucideFolder from '~icons/lucide/folder'
+import LucideX from '~icons/lucide/x'
+import LucideUpload from '~icons/lucide/upload'
+import LucideLock from '~icons/lucide/lock'
 
 const route = useRoute(),
   router = useRouter()

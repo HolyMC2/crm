@@ -53,7 +53,7 @@
             />
           </div>
           <div v-else-if="['type', 'duration'].includes(column.key)">
-            <FeatherIcon :name="item.icon" class="h-3 w-3" />
+            <Icon :icon="item.icon" class="h-3 w-3" />
           </div>
         </template>
         <template #default="{ label }">
@@ -201,6 +201,7 @@ import {
 } from 'frappe-ui'
 import { sessionStore } from '@/stores/session'
 import { ref, computed, watch } from 'vue'
+import Icon from '@/components/Icon.vue'
 
 defineProps({
   rows: { type: Array, required: true },

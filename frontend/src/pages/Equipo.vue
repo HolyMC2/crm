@@ -38,7 +38,7 @@
           <template v-if="caps.configure || caps.hire" #actions>
             <Button
               v-if="caps.configure"
-              icon-left="calendar"
+              :icon-left="LucideCalendar"
               :label="__('Statutory vacations')"
               class="min-h-11 sm:min-h-8"
               @click="router.push({ name: 'EquipoVacaciones' })"
@@ -46,7 +46,7 @@
             <Button
               v-if="caps.hire && !isPhone"
               variant="solid"
-              icon-left="user-plus"
+              :icon-left="LucideUserPlus"
               :label="__('Add a person', null, 'Equipo')"
               class="min-h-11 sm:min-h-8"
               @click="openAlta"
@@ -277,6 +277,8 @@ import {
   todayLabel,
   todayTheme,
 } from '@/composables/useEquipo'
+import LucideCalendar from '~icons/lucide/calendar'
+import LucideUserPlus from '~icons/lucide/user-plus'
 
 const route = useRoute()
 const router = useRouter()

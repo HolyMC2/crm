@@ -43,10 +43,7 @@
           <template #default="{ openFileSelector }">
             <div class="flex items-center space-x-2">
               <Dropdown :options="uploadOptions(openFileSelector)">
-                <FeatherIcon
-                  name="plus"
-                  class="size-4.5 cursor-pointer text-ink-gray-5"
-                />
+                <LucidePlus class="size-4.5 cursor-pointer text-ink-gray-5" />
               </Dropdown>
             </div>
           </template>
@@ -143,7 +140,7 @@
 
 <script setup>
 import { ref, watch, nextTick } from 'vue'
-import { call, toast, FileUploader, Dropdown, FeatherIcon } from 'frappe-ui'
+import { call, toast, FileUploader, Dropdown } from 'frappe-ui'
 import IconPicker from '@/components/IconPicker.vue'
 import SmileIcon from '@/components/Icons/SmileIcon.vue'
 import CannedReplyPicker from '@/components/doco/inbox/CannedReplyPicker.vue'
@@ -156,6 +153,10 @@ import {
   useComposerCommands,
   renderTemplate,
 } from '@/composables/composerCommands'
+import LucideImage from '~icons/lucide/image'
+import LucideVideo from '~icons/lucide/video'
+import LucideFile from '~icons/lucide/file'
+import LucidePlus from '~icons/lucide/plus'
 
 const props = defineProps({
   doctype: { type: String, required: true },
@@ -303,7 +304,7 @@ function uploadOptions(openFileSelector) {
   return [
     {
       label: __('Imagen'),
-      icon: 'image',
+      icon: LucideImage,
       onClick: () => {
         fileType.value = 'image'
         openFileSelector('image/*')
@@ -311,7 +312,7 @@ function uploadOptions(openFileSelector) {
     },
     {
       label: __('Video'),
-      icon: 'video',
+      icon: LucideVideo,
       onClick: () => {
         fileType.value = 'video'
         openFileSelector('video/*')
@@ -319,7 +320,7 @@ function uploadOptions(openFileSelector) {
     },
     {
       label: __('Documento'),
-      icon: 'file',
+      icon: LucideFile,
       onClick: () => {
         fileType.value = 'document'
         openFileSelector()

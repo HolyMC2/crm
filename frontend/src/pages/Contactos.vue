@@ -8,7 +8,7 @@
       ><Button
         class="c-customize"
         label="Personalizar"
-        icon-left="sliders"
+        :icon-left="LucideSlidersVertical"
         variant="ghost"
         @click="customize = true"
     /></template>
@@ -16,7 +16,7 @@
     <Button
       v-if="isPhone && returnTo"
       :label="`Volver a ${returnLabel}`"
-      icon-left="arrow-left"
+      :icon-left="LucideArrowLeft"
       variant="ghost"
       data-testid="contactos-return"
       @click="goToReturn(router, returnTo)"
@@ -30,7 +30,7 @@
       <Button
         v-if="returnTo"
         :label="`Volver a ${returnLabel}`"
-        icon-left="arrow-left"
+        :icon-left="LucideArrowLeft"
         variant="ghost"
         data-testid="contactos-return"
         @click="goToReturn(router, returnTo)"
@@ -38,7 +38,7 @@
       <Button
         v-if="capabilities.create"
         label="Nuevo"
-        icon-left="plus"
+        :icon-left="LucidePlus"
         variant="solid"
         class="c-new"
         @click="newIdentity = true"
@@ -60,14 +60,14 @@
       <Button
         v-if="state.segment !== 'followups' && !isPhone"
         label="Filtros"
-        icon-left="filter"
+        :icon-left="LucideFunnel"
         @click="filtersOpen = !filtersOpen"
       />
       <Button
         v-if="state.segment !== 'followups'"
         label="Guardar segmento"
         class="c-save-segment"
-        icon-left="bookmark"
+        :icon-left="LucideBookmark"
         @click="segmentOpen = true"
       />
     </div>
@@ -75,11 +75,11 @@
       <Button
         v-if="state.segment !== 'followups'"
         label="Guardar segmento"
-        icon-left="bookmark"
+        :icon-left="LucideBookmark"
         @click="openFromMobileMenu('segment')"
       /><Button
         label="Personalizar"
-        icon-left="sliders"
+        :icon-left="LucideSlidersVertical"
         @click="openFromMobileMenu('customize')"
       />
     </div>
@@ -96,7 +96,7 @@
       <Button
         v-if="state.segment !== 'followups'"
         variant="ghost"
-        icon="filter"
+        :icon="LucideFunnel"
         aria-label="Filtros"
         :aria-expanded="filtersOpen"
         @click="filtersOpen = !filtersOpen"
@@ -104,7 +104,7 @@
       <Button
         class="c-mobile-actions-toggle"
         variant="ghost"
-        icon="more-vertical"
+        :icon="LucideEllipsisVertical"
         aria-label="Más acciones de Contactos"
         :aria-expanded="mobileActions"
         @click="mobileActions = !mobileActions"
@@ -358,8 +358,8 @@
         >
           <span class="c-row-identity"
             ><span class="c-avatar" :class="{ company: row.kind === 'company' }"
-              ><FeatherIcon
-                :name="
+              ><Icon
+                :icon="
                   row.source === 'address'
                     ? 'map-pin'
                     : row.kind === 'company'
@@ -402,7 +402,7 @@
         </button>
       </template>
       <div v-if="!loading && !rows.length && !error" class="c-empty">
-        <FeatherIcon name="users" class="h-8 w-8" />
+        <LucideUsers class="h-8 w-8" />
         <h2>
           {{
             state.q || activeFilters.length
@@ -533,12 +533,12 @@
             >
               <span>{{ sectionLabels[section] || section }}</span
               ><Button
-                icon="arrow-up"
+                :icon="LucideArrowUp"
                 :aria-label="`Subir ${sectionLabels[section] || section}`"
                 :disabled="index === 0"
                 @click="moveSection(index, -1)"
               /><Button
-                icon="arrow-down"
+                :icon="LucideArrowDown"
                 :aria-label="`Bajar ${sectionLabels[section] || section}`"
                 :disabled="index === sectionOrder.length - 1"
                 @click="moveSection(index, 1)"
@@ -635,6 +635,16 @@ import {
 } from '@/utils/contactos'
 import { safeReturn } from '@/composables/useCompras'
 import { goToReturn } from '@/utils/atencion'
+import Icon from '@/components/Icon.vue'
+import LucideSlidersVertical from '~icons/lucide/sliders-vertical'
+import LucideArrowLeft from '~icons/lucide/arrow-left'
+import LucidePlus from '~icons/lucide/plus'
+import LucideFunnel from '~icons/lucide/funnel'
+import LucideBookmark from '~icons/lucide/bookmark'
+import LucideEllipsisVertical from '~icons/lucide/ellipsis-vertical'
+import LucideUsers from '~icons/lucide/users'
+import LucideArrowUp from '~icons/lucide/arrow-up'
+import LucideArrowDown from '~icons/lucide/arrow-down'
 const route = useRoute(),
   router = useRouter(),
   scope = contactScope()

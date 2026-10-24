@@ -18,7 +18,7 @@
       size="sm"
       placement="right"
       :button="{
-        icon: 'chevron-down',
+        icon: LucideChevronDown,
         variant: $attrs.variant,
         size: $attrs.size,
         class:
@@ -31,6 +31,7 @@
 import { DropdownOption } from '@/utils'
 import { Button, Dropdown } from 'frappe-ui'
 import { computed, ref } from 'vue'
+import LucideChevronDown from '~icons/lucide/chevron-down'
 
 const props = defineProps({
   options: { type: Array, default: () => [] },

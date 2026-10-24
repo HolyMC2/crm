@@ -19,8 +19,8 @@
         :disabled="busy"
         :aria-label="__('Files actions')"
       >
-        <FeatherIcon
-          :name="busy ? 'loader' : 'folder'"
+        <Icon
+          :icon="busy ? 'loader' : 'folder'"
           class="size-3.5"
           :class="{ 'animate-spin': busy }"
         />
@@ -30,8 +30,11 @@
 </template>
 <script setup>
 import { computed } from 'vue'
-import { Dropdown, FeatherIcon } from 'frappe-ui'
+import { Dropdown } from 'frappe-ui'
 import { archivosHref } from '@/composables/useArchivos'
+import Icon from '@/components/Icon.vue'
+import LucideFolderPlus from '~icons/lucide/folder-plus'
+import LucideLink from '~icons/lucide/link'
 
 const props = defineProps({
   // Doco Document name once saved, or '' while not saved yet.
@@ -51,12 +54,12 @@ const savedHref = computed(() =>
 const options = computed(() => [
   {
     label: __('Save to Files'),
-    icon: 'folder-plus',
+    icon: LucideFolderPlus,
     onClick: () => emit('save'),
   },
   {
     label: __('Link to…'),
-    icon: 'link',
+    icon: LucideLink,
     onClick: () => emit('link'),
   },
 ])

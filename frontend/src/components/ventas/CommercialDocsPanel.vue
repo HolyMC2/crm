@@ -21,7 +21,7 @@
       </h3>
       <Button
         variant="ghost"
-        icon="refresh-cw"
+        :icon="LucideRefreshCw"
         class="min-h-11 min-w-11 sm:min-h-7 sm:min-w-7"
         :aria-label="__('Refresh documents')"
         :loading="loading"
@@ -341,7 +341,7 @@
             />
             <Button
               variant="ghost"
-              icon="x"
+              :icon="LucideX"
               class="min-h-11 min-w-11 sm:min-h-7 sm:min-w-7"
               :aria-label="__('Close')"
               @click="viewer.open = false"
@@ -395,6 +395,8 @@ import {
   statusLabel,
   statusTheme,
 } from '@/utils/ventasDocs'
+import LucideRefreshCw from '~icons/lucide/refresh-cw'
+import LucideX from '~icons/lucide/x'
 
 const props = defineProps({
   scope: { type: String, required: true }, // 'deal' | 'contact'

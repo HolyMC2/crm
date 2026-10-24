@@ -44,8 +44,8 @@
           :data-bulk-state="item.state"
         >
           <p class="flex flex-wrap items-baseline gap-x-2">
-            <FeatherIcon
-              :name="ICONS[item.state] || 'info'"
+            <Icon
+              :icon="ICONS[item.state] || 'info'"
               class="h-4 w-4 shrink-0 self-center"
               :class="TONES[item.state]"
             />
@@ -108,7 +108,7 @@
 </template>
 <script setup>
 import { computed, ref, watch } from 'vue'
-import { Button, FeatherIcon } from 'frappe-ui'
+import { Button } from 'frappe-ui'
 import PowerSheet from '@/components/power/PowerSheet.vue'
 import {
   ACTIONS,
@@ -118,6 +118,7 @@ import {
   problemOf,
 } from '@/composables/useCobranza'
 import { createRequests } from '@/composables/useCobranzaActions'
+import Icon from '@/components/Icon.vue'
 
 // «Enviar recordatorio» to the selected customers: the same letter writer and
 // send service as one at a time, a result per invoice, and a way to resolve

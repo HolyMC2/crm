@@ -70,7 +70,7 @@
           <Button
             v-if="boot?.capabilities?.create_crm && !boot?.capabilities?.create"
             variant="solid"
-            icon-left="briefcase"
+            :icon-left="LucideBriefcase"
             :label="__('New sales task')"
             class="min-h-11 sm:min-h-8"
             @click="newSalesTask"
@@ -78,7 +78,7 @@
           <Button
             v-if="boot?.capabilities?.create"
             variant="solid"
-            icon-left="plus"
+            :icon-left="LucidePlus"
             :label="__('New pendiente')"
             class="min-h-11 sm:min-h-8"
             @click="openCreate()"
@@ -390,8 +390,7 @@
             v-else
             class="mx-auto mt-16 max-w-sm text-center text-sm text-ink-gray-6"
           >
-            <FeatherIcon
-              name="sidebar"
+            <LucidePanelLeft
               class="mx-auto mb-3 block size-8 text-ink-gray-4"
               aria-hidden="true"
             />
@@ -438,7 +437,7 @@ import {
   watch,
 } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
-import { Button, FeatherIcon, FormControl, toast } from 'frappe-ui'
+import { Button, FormControl, toast } from 'frappe-ui'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import { AppBar, Fab, FilterChips, Segmented } from '@/components/ui'
 import { useMediaQuery } from '@vueuse/core'
@@ -482,6 +481,9 @@ import {
   stateLabel,
   toQuery,
 } from '@/composables/usePendientes'
+import LucideBriefcase from '~icons/lucide/briefcase'
+import LucidePlus from '~icons/lucide/plus'
+import LucidePanelLeft from '~icons/lucide/panel-left'
 
 // Desktop only (the detail beside the list, the board): loaded when shown.
 const PendienteDetail = defineAsyncComponent(

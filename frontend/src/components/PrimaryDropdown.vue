@@ -11,8 +11,8 @@
           {{ placeholder }}
         </div>
         <template #suffix>
-          <FeatherIcon
-            :name="isOpen ? 'chevron-up' : 'chevron-down'"
+          <Icon
+            :icon="isOpen ? 'chevron-up' : 'chevron-down'"
             class="h-4 text-ink-gray-5"
           />
         </template>
@@ -47,7 +47,7 @@
             variant="ghost"
             class="w-full !justify-start"
             :label="__('Create New')"
-            iconLeft="plus"
+            :iconLeft="LucidePlus"
             @click="addDraft"
           />
         </div>
@@ -60,6 +60,8 @@
 import PrimaryDropdownItem from '@/components/PrimaryDropdownItem.vue'
 import { Popover } from 'frappe-ui'
 import { ref } from 'vue'
+import Icon from '@/components/Icon.vue'
+import LucidePlus from '~icons/lucide/plus'
 
 const props = defineProps({
   value: { type: [String, Number], default: '' },

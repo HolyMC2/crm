@@ -50,13 +50,13 @@
       <div class="flex items-center gap-2">
         <Button
           label="Registrar consulta"
-          icon-left="message-square"
+          :icon-left="LucideMessageSquare"
           @click="router.push({ path: '/inquiries', query: { capture: '1' } })"
         />
         <Button
           variant="solid"
           label="Nuevo prospecto"
-          icon-left="plus"
+          :icon-left="LucidePlus"
           @click="showLeadModal = true"
         />
       </div>
@@ -254,6 +254,8 @@ import {
   sourceTheme,
   waitingLabel,
 } from '@/utils/prospects'
+import LucideMessageSquare from '~icons/lucide/message-square'
+import LucidePlus from '~icons/lucide/plus'
 
 const PAGE = 30
 // Initials only for a real name: «PN» for «Prospecto sin nombre», or digits

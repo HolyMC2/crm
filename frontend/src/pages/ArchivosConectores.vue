@@ -8,7 +8,7 @@
           :to="archivosLink"
           class="inline-flex min-h-11 items-center gap-1 text-sm text-ink-gray-7 hover:text-ink-gray-9"
         >
-          <FeatherIcon name="arrow-left" class="h-4 w-4" />
+          <LucideArrowLeft class="h-4 w-4" />
           {{ __('Back to Archivos') }}
         </router-link>
       </nav>
@@ -31,7 +31,7 @@
             v-if="canCreate && data?.connectors?.length"
             variant="solid"
             class="min-h-11 shrink-0 sm:min-h-0"
-            :icon-left="creating ? 'x' : 'plus'"
+            :icon-left="creating ? LucideX : LucidePlus"
             :label="creating ? __('Close') : __('New connection')"
             :aria-expanded="creating ? 'true' : 'false'"
             @click="toggleCreate"
@@ -122,8 +122,8 @@
                 class="flex min-h-16 items-start gap-3 rounded-lg border border-outline-gray-2 p-3 text-left hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-outline-gray-4"
                 @click="newType = option.value"
               >
-                <FeatherIcon
-                  :name="typeIcon(option.value)"
+                <Icon
+                  :icon="typeIcon(option.value)"
                   class="mt-0.5 h-5 w-5 shrink-0 text-ink-gray-7"
                 />
                 <span>
@@ -139,10 +139,7 @@
           </template>
           <template v-else>
             <div class="flex items-center gap-2">
-              <FeatherIcon
-                :name="typeIcon(newType)"
-                class="h-5 w-5 text-ink-gray-7"
-              />
+              <Icon :icon="typeIcon(newType)" class="h-5 w-5 text-ink-gray-7" />
               <h2 class="flex-1 text-lg font-semibold text-ink-gray-9">
                 {{ __('New: {0}', [typeLabel(newType)]) }}
               </h2>
@@ -178,7 +175,7 @@
             :to="archivosLink"
             class="inline-flex min-h-11 items-center gap-2 rounded border border-outline-gray-2 px-4 text-base text-ink-gray-8 hover:bg-surface-gray-1 sm:min-h-9"
           >
-            <FeatherIcon name="inbox" class="h-4 w-4" />
+            <LucideInbox class="h-4 w-4" />
             {{ __('See what came in, in Archivos') }}
           </router-link>
         </div>
@@ -189,7 +186,7 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Button, FeatherIcon, FormControl, toast } from 'frappe-ui'
+import { Button, FormControl, toast } from 'frappe-ui'
 import ArchivoGuard from '@/components/archivos/ArchivoGuard.vue'
 import ConnectorCard from '@/components/archivos/conectores/ConnectorCard.vue'
 import ConnectorForm from '@/components/archivos/conectores/ConnectorForm.vue'
@@ -200,6 +197,11 @@ import {
   typeIcon,
   typeLabel,
 } from '@/utils/archivosConectores'
+import Icon from '@/components/Icon.vue'
+import LucideArrowLeft from '~icons/lucide/arrow-left'
+import LucideX from '~icons/lucide/x'
+import LucidePlus from '~icons/lucide/plus'
+import LucideInbox from '~icons/lucide/inbox'
 
 const route = useRoute(),
   router = useRouter()

@@ -32,7 +32,7 @@
       <span
         class="flex h-11 w-11 items-center justify-center rounded-full bg-surface-gray-2"
       >
-        <FeatherIcon name="upload-cloud" class="h-5 w-5 text-ink-gray-7" />
+        <LucideCloudUpload class="h-5 w-5 text-ink-gray-7" />
       </span>
       <span class="text-base font-medium text-ink-gray-9">
         {{ __('Drop a file here or') }}
@@ -62,7 +62,7 @@
         class="flex flex-col gap-2 rounded-lg border border-outline-gray-2 p-4"
       >
         <div class="flex items-center gap-2">
-          <FeatherIcon :name="part.icon" class="h-4 w-4 text-ink-gray-6" />
+          <Icon :icon="part.icon" class="h-4 w-4 text-ink-gray-6" />
           <h3 class="text-base font-semibold text-ink-gray-9">
             {{ part.title }}
           </h3>
@@ -74,7 +74,7 @@
           @click="$emit('view', part.view)"
         >
           {{ part.action }}
-          <FeatherIcon name="arrow-right" class="h-3.5 w-3.5" />
+          <LucideArrowRight class="h-3.5 w-3.5" />
         </button>
       </li>
     </ul>
@@ -85,10 +85,7 @@
       class="flex flex-wrap items-center gap-3 rounded-lg border border-outline-amber-2 bg-surface-amber-1 p-4"
       role="status"
     >
-      <FeatherIcon
-        name="alert-triangle"
-        class="h-5 w-5 shrink-0 text-ink-amber-7"
-      />
+      <LucideTriangleAlert class="h-5 w-5 shrink-0 text-ink-amber-7" />
       <div class="min-w-0 flex-1">
         <p class="text-base font-medium text-ink-gray-9">
           {{
@@ -110,7 +107,7 @@
 
     <ul class="space-y-2 text-sm text-ink-gray-6">
       <li class="flex gap-2">
-        <FeatherIcon name="message-circle" class="mt-0.5 h-4 w-4 shrink-0" />
+        <LucideMessageCircle class="mt-0.5 h-4 w-4 shrink-0" />
         <span>{{
           __(
             'Ask the assistant: «find me the invoice from…», «send it to me» (to your own chat) or «file it in the purchase…».',
@@ -118,7 +115,7 @@
         }}</span>
       </li>
       <li class="flex gap-2">
-        <FeatherIcon name="info" class="mt-0.5 h-4 w-4 shrink-0" />
+        <LucideInfo class="mt-0.5 h-4 w-4 shrink-0" />
         <span>{{
           __(
             'Tip: customers, suppliers and expenses show «Files on this record». Adding a file there brings you here with the record already chosen, and returns you when it is linked.',
@@ -126,7 +123,7 @@
         }}</span>
       </li>
       <li class="flex gap-2">
-        <FeatherIcon name="book-open" class="mt-0.5 h-4 w-4 shrink-0" />
+        <LucideBookOpen class="mt-0.5 h-4 w-4 shrink-0" />
         <a
           :href="MANUAL_HREF"
           class="inline-flex min-h-11 items-center font-medium text-ink-gray-8 underline hover:text-ink-gray-9 sm:min-h-0"
@@ -139,8 +136,15 @@
 </template>
 <script setup>
 import { computed, getCurrentInstance, ref } from 'vue'
-import { Button, FeatherIcon } from 'frappe-ui'
+import { Button } from 'frappe-ui'
 import { ACCEPT } from '@/composables/useArchivos'
+import Icon from '@/components/Icon.vue'
+import LucideCloudUpload from '~icons/lucide/cloud-upload'
+import LucideArrowRight from '~icons/lucide/arrow-right'
+import LucideTriangleAlert from '~icons/lucide/triangle-alert'
+import LucideMessageCircle from '~icons/lucide/message-circle'
+import LucideInfo from '~icons/lucide/info'
+import LucideBookOpen from '~icons/lucide/book-open'
 
 const props = defineProps({
   company: { type: String, default: '' },

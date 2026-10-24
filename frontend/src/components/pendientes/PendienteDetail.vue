@@ -195,7 +195,7 @@
           />
           <Button
             class="min-h-11 sm:min-h-8"
-            icon-left="edit-2"
+            :icon-left="LucidePen"
             :label="__('Edit')"
             :disabled="busy"
             @click="edit()"
@@ -203,7 +203,7 @@
           <Dropdown :options="moreOptions">
             <Button
               class="min-h-11 min-w-11 sm:min-h-8 sm:min-w-8"
-              icon="more-horizontal"
+              :icon="LucideEllipsis"
               :aria-label="__('More actions')"
               :disabled="busy"
             />
@@ -336,7 +336,7 @@
         <Button
           v-if="canCreateOn(row, boot)"
           class="mt-3 min-h-11 sm:min-h-8"
-          icon-left="plus"
+          :icon-left="LucidePlus"
           :label="__('Add next pendiente')"
           @click="createOpen = true"
         />
@@ -353,7 +353,7 @@
           <template v-if="row.can_comment">
             <Button
               class="min-h-11 sm:min-h-8"
-              icon-left="camera"
+              :icon-left="LucideCamera"
               :label="__('Take photo')"
               :loading="uploading === 'camera'"
               :disabled="Boolean(uploading)"
@@ -361,7 +361,7 @@
             />
             <Button
               class="min-h-11 sm:min-h-8"
-              icon-left="paperclip"
+              :icon-left="LucidePaperclip"
               :label="__('Attach')"
               :loading="uploading === 'file'"
               :disabled="Boolean(uploading)"
@@ -540,6 +540,13 @@ import {
   sourceSlug,
   stateLabel,
 } from '@/composables/usePendientes'
+import LucideCircleCheckBig from '~icons/lucide/circle-check-big'
+import LucideCalendar from '~icons/lucide/calendar'
+import LucidePen from '~icons/lucide/pen'
+import LucideEllipsis from '~icons/lucide/ellipsis'
+import LucidePlus from '~icons/lucide/plus'
+import LucideCamera from '~icons/lucide/camera'
+import LucidePaperclip from '~icons/lucide/paperclip'
 
 const props = defineProps({
   doctype: { type: String, default: '' },
@@ -623,14 +630,14 @@ const moreOptions = computed(() => {
   return [
     {
       label: __('Done and schedule next'),
-      icon: 'check-circle',
+      icon: LucideCircleCheckBig,
       onClick: () => (completeOpen.value = true),
     },
     ...datePresets(today.value)
       .filter((preset) => preset.value !== value?.date)
       .map((preset) => ({
         label: __('Reschedule: {0}', [preset.label]),
-        icon: 'calendar',
+        icon: LucideCalendar,
         onClick: () => reschedule(preset.value),
       })),
     ...states,

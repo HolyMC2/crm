@@ -16,7 +16,7 @@
       <template #target="{ open }">
         <Button
           class="text-sm"
-          :icon-right="open ? 'chevron-up' : 'chevron-down'"
+          :icon-right="open ? LucideChevronUp : LucideChevronDown"
           :label="slaData.holiday_list || __('Select Holiday List')"
         />
       </template>
@@ -182,6 +182,9 @@ import { ConfirmDelete, getGridTemplateColumnsForTable } from '../../../utils'
 import { slaData, slaDataErrors } from './utils'
 import { ref } from 'vue'
 import WorkDayModal from './WorkDayModal.vue'
+import LucideSquarePen from '~icons/lucide/square-pen'
+import LucideChevronUp from '~icons/lucide/chevron-up'
+import LucideChevronDown from '~icons/lucide/chevron-down'
 
 const dialog = ref({
   show: false,
@@ -201,7 +204,7 @@ const dropdownOptions = (workDay) => [
   {
     label: __('Edit'),
     onClick: () => editWorkDay(workDay),
-    icon: 'edit',
+    icon: LucideSquarePen,
   },
   ...ConfirmDelete({
     onConfirmDelete: () => deleteWorkDay(workDay),

@@ -192,7 +192,7 @@
                 <template v-if="google.connected && google.authorized">
                   <Button
                     variant="solid"
-                    icon-left="refresh-cw"
+                    :icon-left="LucideRefreshCw"
                     :loading="busy === 'sync'"
                     :label="__('Sync now')"
                     @click="emit('google', 'sync')"
@@ -226,7 +226,7 @@
               <template v-else-if="google?.canConfigure">
                 <Button
                   variant="subtle"
-                  icon-left="external-link"
+                  :icon-left="LucideExternalLink"
                   :label="__('Set up Google for this business')"
                   @click="openGoogleSettings"
                 />
@@ -256,7 +256,7 @@
                 />
                 <Button
                   variant="subtle"
-                  icon-left="copy"
+                  :icon-left="LucideCopy"
                   :label="__('Copy')"
                   @click="copy(ics.url)"
                 />
@@ -312,6 +312,9 @@ import { computed, ref } from 'vue'
 import { Button, Dialog, FormControl } from 'frappe-ui'
 import { PALETTE, textOn } from '@/components/agenda/agendaColors'
 import { DENSITIES, useAgendaPrefs } from '@/composables/useAgendaPrefs'
+import LucideRefreshCw from '~icons/lucide/refresh-cw'
+import LucideExternalLink from '~icons/lucide/external-link'
+import LucideCopy from '~icons/lucide/copy'
 
 const props = defineProps({
   calendars: { type: Array, default: () => [] },

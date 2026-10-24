@@ -127,8 +127,7 @@
               {{ __('Tax regime: {0}', [card.emisor.regimen_fiscal_label]) }}
             </p>
           </div>
-          <FeatherIcon
-            name="arrow-right"
+          <LucideArrowRight
             class="mx-auto hidden h-4 w-4 text-ink-gray-5 sm:block"
             aria-hidden="true"
           />
@@ -152,7 +151,7 @@
           v-if="data.party"
           :href="recordHref(data.party.doctype, data.party.name)"
           class="inline-flex min-h-11 items-center gap-2 text-sm text-ink-gray-8 underline sm:min-h-0"
-          ><FeatherIcon name="user" class="h-4 w-4" aria-hidden="true" />{{
+          ><LucideUser class="h-4 w-4" aria-hidden="true" />{{
             data.party.doctype === 'Customer'
               ? __('Customer: {0}', [data.party.title || data.party.name])
               : __('Supplier: {0}', [data.party.title || data.party.name])
@@ -420,11 +419,9 @@
           target="_blank"
           rel="noopener"
           class="inline-flex min-h-11 items-center gap-2 text-sm text-ink-gray-8 underline sm:min-h-0"
-          ><FeatherIcon
-            name="external-link"
-            class="h-4 w-4"
-            aria-hidden="true"
-          />{{ __('Verify at the SAT') }}</a
+          ><LucideExternalLink class="h-4 w-4" aria-hidden="true" />{{
+            __('Verify at the SAT')
+          }}</a
         >
       </section>
 
@@ -451,7 +448,7 @@
         target="_blank"
         rel="noopener"
         class="inline-flex min-h-11 items-center gap-2 text-sm text-ink-gray-8 underline sm:min-h-0"
-        ><FeatherIcon name="file" class="h-4 w-4" aria-hidden="true" />{{
+        ><LucideFile class="h-4 w-4" aria-hidden="true" />{{
           __('PDF: {0}', [data.rendition.file_name || __('printed version')])
         }}</a
       >
@@ -658,7 +655,7 @@
         :href="data.xml_url"
         class="inline-flex min-h-11 items-center gap-1 text-sm text-ink-gray-8 underline sm:min-h-0"
       >
-        <FeatherIcon name="download" class="h-4 w-4" aria-hidden="true" />
+        <LucideDownload class="h-4 w-4" aria-hidden="true" />
         {{ __('Download the CFDI XML') }}
       </a>
     </template>
@@ -666,7 +663,7 @@
 </template>
 <script setup>
 import { computed, ref, useId, watch } from 'vue'
-import { Badge, Button, FeatherIcon } from 'frappe-ui'
+import { Badge, Button } from 'frappe-ui'
 import ArchivoGuard from './ArchivoGuard.vue'
 import {
   archivosApi,
@@ -684,6 +681,11 @@ import {
   serieFolio,
   taxRate,
 } from './fiscalFormat'
+import LucideArrowRight from '~icons/lucide/arrow-right'
+import LucideUser from '~icons/lucide/user'
+import LucideExternalLink from '~icons/lucide/external-link'
+import LucideFile from '~icons/lucide/file'
+import LucideDownload from '~icons/lucide/download'
 
 // The human reading of a CFDI (who, what, how much, taxes, fiscal folio, SAT
 // status) and its continuations: the records with the same folio, undo of an

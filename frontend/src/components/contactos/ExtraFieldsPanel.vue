@@ -5,7 +5,7 @@
       <Button
         v-if="canAdd"
         :label="__('Add field')"
-        icon-left="plus"
+        :icon-left="LucidePlus"
         variant="ghost"
         data-act="add-field"
         @click="
@@ -137,6 +137,7 @@ import {
 import ExtraFieldsEditor from './ExtraFieldsEditor.vue'
 import MetaFields from './MetaFields.vue'
 import RecoveryMessage from './RecoveryMessage.vue'
+import LucidePlus from '~icons/lucide/plus'
 
 // «Más datos» on a cliente: the shop's extra fields, filled in place through
 // Contactos' one writer (save_record); the owner adds fields from here.

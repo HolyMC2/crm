@@ -18,10 +18,10 @@
           :aria-current="activeKey === entry.value ? 'page' : undefined"
           @click="$emit('select', entry.value)"
         >
-          <FeatherIcon
-            :name="entry.icon || 'list'"
-            class="h-4 w-4 shrink-0"
-          /><span class="truncate">{{ entry.label }}</span>
+          <Icon :icon="entry.icon || 'list'" class="h-4 w-4 shrink-0" /><span
+            class="truncate"
+            >{{ entry.label }}</span
+          >
         </button>
       </nav>
       <template v-if="savedEntries.length">
@@ -41,8 +41,8 @@
             :aria-current="activeKey === entry.value ? 'page' : undefined"
             @click="$emit('select', entry.value)"
           >
-            <FeatherIcon
-              :name="entry.icon || 'bookmark'"
+            <Icon
+              :icon="entry.icon || 'bookmark'"
               class="h-4 w-4 shrink-0"
             /><span class="truncate">{{ entry.label }}</span>
           </button>
@@ -56,7 +56,8 @@
   </div>
 </template>
 <script setup>
-import { FeatherIcon } from 'frappe-ui'
+import Icon from '@/components/Icon.vue'
+
 defineProps({
   title: { type: String, required: true },
   entries: { type: Array, default: () => [] },

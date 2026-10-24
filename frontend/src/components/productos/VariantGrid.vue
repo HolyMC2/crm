@@ -14,8 +14,7 @@
     <p
       class="m-4 flex items-start gap-3 rounded-lg border border-outline-gray-2 bg-surface-gray-1 p-3 text-sm text-ink-gray-7"
     >
-      <FeatherIcon
-        name="layers"
+      <LucideLayers
         class="mt-0.5 h-4 w-4 shrink-0 text-ink-gray-5"
         aria-hidden="true"
       />
@@ -133,7 +132,7 @@
 </template>
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
-import { Button, FeatherIcon } from 'frappe-ui'
+import { Button } from 'frappe-ui'
 import CatalogItem from '@/components/productos/CatalogItem.vue'
 import { isMobile as isPhone } from '@/composables/breakpoint'
 import {
@@ -142,6 +141,7 @@ import {
   productosApi,
   variantsLabel,
 } from '@/composables/useProductos'
+import LucideLayers from '~icons/lucide/layers'
 
 // A template's variants: filter by attribute and search, open one. The
 // rows are list rows (photo, price, stock in the worker's stores), so a

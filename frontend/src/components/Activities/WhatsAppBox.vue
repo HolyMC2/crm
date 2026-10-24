@@ -142,7 +142,7 @@
         :title="__('Edit quick replies')"
         @click="openEditor"
       >
-        <FeatherIcon name="edit-2" class="size-3.5" />
+        <LucidePen class="size-3.5" />
       </button>
       <button
         v-if="isMobile"
@@ -394,14 +394,14 @@
           />
           <Button
             variant="ghost"
-            icon="trash-2"
+            :icon="LucideTrash2"
             class="mt-1 shrink-0"
             @click="draft.splice(i, 1)"
           />
         </div>
         <Button
           variant="subtle"
-          icon-left="plus"
+          :icon-left="LucidePlus"
           :label="__('Add quick reply')"
           class="self-start"
           @click="draft.push({ label: '', text: '' })"
@@ -473,6 +473,13 @@ import { notifyTyping, aiEnabled, composerDraft } from '@/composables/inbox'
 import { addonAvailable } from '@/utils/crmCapabilities'
 import { enqueueOutbox } from '@/composables/outbox'
 import { ref, nextTick, watch, computed, onBeforeUnmount } from 'vue'
+import LucideFile from '~icons/lucide/file'
+import LucideImage from '~icons/lucide/image'
+import LucideCamera from '~icons/lucide/camera'
+import LucideVideo from '~icons/lucide/video'
+import LucidePen from '~icons/lucide/pen'
+import LucideTrash2 from '~icons/lucide/trash-2'
+import LucidePlus from '~icons/lucide/plus'
 
 const props = defineProps({
   doctype: { type: String, default: '' },
@@ -1120,7 +1127,7 @@ function uploadOptions(openFileSelector) {
   return [
     {
       label: __('Upload Document'),
-      icon: 'file',
+      icon: LucideFile,
       onClick: () => {
         fileType.value = 'document'
         openFileSelector()
@@ -1128,7 +1135,7 @@ function uploadOptions(openFileSelector) {
     },
     {
       label: __('Upload Image'),
-      icon: 'image',
+      icon: LucideImage,
       onClick: () => {
         fileType.value = 'image'
         openFileSelector('image/*')
@@ -1136,12 +1143,12 @@ function uploadOptions(openFileSelector) {
     },
     {
       label: __('Tomar foto'),
-      icon: 'camera',
+      icon: LucideCamera,
       onClick: () => cameraInput.value?.click(),
     },
     {
       label: __('Upload Video'),
-      icon: 'video',
+      icon: LucideVideo,
       onClick: () => {
         fileType.value = 'video'
         openFileSelector('video/*')

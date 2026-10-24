@@ -161,6 +161,7 @@ import {
 import { ConfirmDelete } from '@/utils'
 import { resetSlaData } from './utils'
 import { inject, ref, watch } from 'vue'
+import LucideCopy from '~icons/lucide/copy'
 
 const slaPolicyListResource = inject('slaPolicyListResource')
 const updateStep = inject('updateStep')
@@ -187,7 +188,7 @@ const dropdownOptions = (sla) => [
         name: sla.name + ' (Copy)',
       }
     },
-    icon: 'copy',
+    icon: LucideCopy,
   },
   ...ConfirmDelete({
     onConfirmDelete: () => deleteSla(sla),

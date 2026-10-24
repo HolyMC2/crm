@@ -141,7 +141,7 @@
         <Button
           class="w-fit"
           :label="__('Add Notification')"
-          iconLeft="plus"
+          :iconLeft="LucidePlus"
           @click="
             notifications.push({
               type: 'Notification',
@@ -241,7 +241,7 @@
         <Button
           class="w-fit"
           :label="__('Add Notification')"
-          iconLeft="plus"
+          :iconLeft="LucidePlus"
           @click="
             allDayNotifications.push({
               type: 'Notification',
@@ -264,6 +264,7 @@ import { getSettings } from '@/stores/settings'
 import { min, max, handleIntervalChange } from '@/components/Calendar/utils'
 import { FormControl, TimePicker } from 'frappe-ui'
 import { computed } from 'vue'
+import LucidePlus from '~icons/lucide/plus'
 
 const { _settings: settings } = getSettings()
 

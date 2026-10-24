@@ -8,8 +8,8 @@
       class="z-10 size-5 shrink-0 flex items-center justify-center rounded-full border border-outline-elevation-2 bg-surface-base text-ink-gray-1 cursor-pointer hover:bg-surface-gray-2"
       @click.stop="emit('toggle', $event)"
     >
-      <FeatherIcon
-        :name="isCollapsed ? 'chevron-right' : 'chevron-down'"
+      <Icon
+        :icon="isCollapsed ? 'chevron-right' : 'chevron-down'"
         class="size-3 stroke-2 stroke-ink-gray-5"
       />
     </div>
@@ -106,16 +106,11 @@
 
 <script setup>
 import UserMultiSelect from './UserMultiSelect.vue'
-import {
-  Avatar,
-  Badge,
-  Button,
-  Dropdown,
-  FeatherIcon,
-  Popover,
-  Tooltip,
-} from 'frappe-ui'
+import { Avatar, Badge, Button, Dropdown, Popover, Tooltip } from 'frappe-ui'
 import { computed, ref, watch } from 'vue'
+import Icon from '@/components/Icon.vue'
+import LucideCornerUpLeft from '~icons/lucide/corner-up-left'
+import LucideTrash2 from '~icons/lucide/trash-2'
 
 const props = defineProps({
   node: { type: Object, required: true },
@@ -158,13 +153,13 @@ const moreOptions = computed(() => {
   if (props.node.reports_to) {
     opts.push({
       label: __('Move to top level'),
-      icon: 'corner-up-left',
+      icon: LucideCornerUpLeft,
       onClick: () => emit('move-to-root', props.node),
     })
   }
   opts.push({
     label: __('Delete'),
-    icon: 'trash-2',
+    icon: LucideTrash2,
     onClick: () => emit('remove', props.node),
   })
   return opts

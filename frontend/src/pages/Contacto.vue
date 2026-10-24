@@ -26,7 +26,7 @@
     <header v-else class="c-record-heading">
       <Button
         :label="backLabel"
-        icon-left="arrow-left"
+        :icon-left="LucideArrowLeft"
         variant="ghost"
         @click="back"
       /><span v-if="record" class="c-origin">{{
@@ -39,7 +39,7 @@
         :label="
           record.source === 'address' ? 'Editar dirección' : 'Editar datos'
         "
-        icon="edit-2"
+        :icon="LucidePen"
         variant="ghost"
         @click="editIdentity"
       />
@@ -65,9 +65,9 @@
             class="text-xl font-semibold"
             >{{ recordInitials }}</span
           >
-          <FeatherIcon
+          <Icon
             v-else
-            :name="record.source === 'address' ? 'map-pin' : 'user'"
+            :icon="record.source === 'address' ? 'map-pin' : 'user'"
             class="h-6 w-6"
           />
         </div>
@@ -86,7 +86,7 @@
           :label="
             record.source === 'address' ? 'Editar dirección' : 'Editar datos'
           "
-          icon-left="edit-2"
+          :icon-left="LucidePen"
           @click="editIdentity"
         />
       </div>
@@ -111,7 +111,7 @@
               : 'Añadir seguimiento'
           "
           variant="solid"
-          icon-left="check-circle"
+          :icon-left="LucideCircleCheckBig"
           @click="nextTask ? editFollowup(nextTask) : addFollowup()"
         />
         <!-- Llamar · Mensaje · Correo · Agendar always sit in the same place;
@@ -124,8 +124,7 @@
           :aria-disabled="!phone || undefined"
           :title="phone ? undefined : 'Sin teléfono registrado'"
           data-action="call"
-          ><span class="c-action-icon"
-            ><FeatherIcon name="phone" class="h-4 w-4" /></span
+          ><span class="c-action-icon"><LucidePhone class="h-4 w-4" /></span
           >Llamar</component
         >
         <button
@@ -138,7 +137,7 @@
           @click="openComposer"
         >
           <span class="c-action-icon"
-            ><FeatherIcon name="message-circle" class="h-4 w-4" /></span
+            ><LucideMessageCircle class="h-4 w-4" /></span
           >Mensaje
         </button>
         <component
@@ -149,8 +148,7 @@
           :aria-disabled="!email || undefined"
           :title="email ? undefined : 'Sin correo registrado'"
           data-action="email"
-          ><span class="c-action-icon"
-            ><FeatherIcon name="mail" class="h-4 w-4" /></span
+          ><span class="c-action-icon"><LucideMail class="h-4 w-4" /></span
           >Correo</component
         >
         <button
@@ -164,8 +162,7 @@
           data-action="schedule"
           @click="openSchedule"
         >
-          <span class="c-action-icon"
-            ><FeatherIcon name="calendar" class="h-4 w-4" /></span
+          <span class="c-action-icon"><LucideCalendar class="h-4 w-4" /></span
           >Agendar
         </button>
         <!-- A supplier's quote or invoice becomes a draft order or bill. -->
@@ -225,14 +222,14 @@
         class="c-chooser-single flex min-h-11 items-center gap-2 rounded-lg hover:bg-surface-gray-2"
         data-testid="contacto-account-link"
       >
-        <FeatherIcon name="briefcase" class="h-4 w-4" />
+        <LucideBriefcase class="h-4 w-4" />
         <span v-if="sameName(customers[0])"
           >Cuenta de cliente con el mismo nombre</span
         ><span v-else
           >Cuenta de cliente
           <strong>{{ customers[0].title || customers[0].name }}</strong></span
         >
-        <FeatherIcon name="chevron-right" class="ml-auto h-4 w-4" />
+        <LucideChevronRight class="ml-auto h-4 w-4" />
       </RouterLink>
       <div v-else-if="customers.length > 1" class="c-source-chooser">
         <FormControl
@@ -343,7 +340,7 @@
             v-else-if="record.capabilities?.write"
             class="c-inline-action"
             label="Añadir etiqueta"
-            icon-left="tag"
+            :icon-left="LucideTag"
             variant="ghost"
             @click="tagsOpen = true"
           />
@@ -355,7 +352,7 @@
             "
             class="c-inline-action"
             label="Hacer cliente o proveedor"
-            icon-left="plus"
+            :icon-left="LucidePlus"
             variant="ghost"
             @click="roleOpen = true"
           />
@@ -364,7 +361,7 @@
             :to="customerExtraLink"
             class="c-action-link c-extra-account-link"
             data-act="open-account-extra"
-            ><FeatherIcon name="list" class="h-4 w-4" />{{
+            ><LucideList class="h-4 w-4" />{{
               __('Extra details are on the client account · Open')
             }}</RouterLink
           >
@@ -389,7 +386,7 @@
             <Button
               v-if="canFollowup"
               label="Añadir"
-              icon-left="plus"
+              :icon-left="LucidePlus"
               variant="ghost"
               @click="addFollowup()"
             />
@@ -443,8 +440,8 @@
               data-testid="followups-done-toggle"
               @click="doneOpen = !doneOpen"
             >
-              <FeatherIcon
-                :name="doneOpen ? 'chevron-down' : 'chevron-right'"
+              <Icon
+                :icon="doneOpen ? 'chevron-down' : 'chevron-right'"
                 class="h-4 w-4"
               />
               Completados ({{ doneTasks.length }}{{ doneMore ? '+' : '' }})
@@ -501,7 +498,7 @@
             v-if="capabilities.notes?.create"
             class="c-inline-action"
             label="Añadir nota"
-            icon-left="plus"
+            :icon-left="LucidePlus"
             variant="ghost"
             data-testid="contacto-add-note"
             @click="noteOpen = true"
@@ -556,7 +553,7 @@
             <Button
               v-if="capabilities.sources?.address?.create"
               label="Añadir"
-              icon-left="plus"
+              :icon-left="LucidePlus"
               variant="ghost"
               @click="editAddress()"
             />
@@ -618,7 +615,7 @@
             <Button
               v-if="record.capabilities?.write"
               label="Vincular"
-              icon-left="link"
+              :icon-left="LucideLink"
               variant="ghost"
               @click="relationOpen = true"
             />
@@ -653,10 +650,7 @@
                     .join(' · ')
                 }}</small>
               </span>
-              <FeatherIcon
-                name="chevron-right"
-                class="h-4 w-4 flex-none text-ink-gray-5"
-              />
+              <LucideChevronRight class="h-4 w-4 flex-none text-ink-gray-5" />
             </button>
             <template v-else>
               <span class="c-type">{{
@@ -945,6 +939,20 @@ import {
   extraFields,
   sectionPosition,
 } from '@/utils/extraFields'
+import Icon from '@/components/Icon.vue'
+import LucideArrowLeft from '~icons/lucide/arrow-left'
+import LucidePen from '~icons/lucide/pen'
+import LucideCircleCheckBig from '~icons/lucide/circle-check-big'
+import LucidePhone from '~icons/lucide/phone'
+import LucideMessageCircle from '~icons/lucide/message-circle'
+import LucideMail from '~icons/lucide/mail'
+import LucideCalendar from '~icons/lucide/calendar'
+import LucideBriefcase from '~icons/lucide/briefcase'
+import LucideChevronRight from '~icons/lucide/chevron-right'
+import LucideTag from '~icons/lucide/tag'
+import LucidePlus from '~icons/lucide/plus'
+import LucideList from '~icons/lucide/list'
+import LucideLink from '~icons/lucide/link'
 const VentasDelCliente = defineAsyncComponent(
   () => import('@/components/documentos/ventas/VentasDelCliente.vue'),
 )

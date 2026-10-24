@@ -107,6 +107,7 @@ import {
   useSettingsDraft,
   settingsErrorMessage,
 } from '@/composables/settingsSession'
+import LucideCopy from '~icons/lucide/copy'
 
 const { capture } = useTelemetry()
 
@@ -180,7 +181,7 @@ const dropdownOptions = computed(() => [
     ? [
         {
           label: __('Duplicate'),
-          icon: 'copy',
+          icon: LucideCopy,
           onClick: () => {
             duplicateDialog.value = {
               show: true,

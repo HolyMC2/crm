@@ -18,7 +18,7 @@
         :to="backTarget"
         class="inline-flex min-h-11 items-center gap-1 rounded-lg text-sm text-ink-gray-6 hover:text-ink-gray-9 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-8"
       >
-        <FeatherIcon name="arrow-left" class="h-4 w-4" />{{ backLabel }}
+        <LucideArrowLeft class="h-4 w-4" />{{ backLabel }}
       </RouterLink>
       <PendienteDetail
         :doctype="doctype || ''"
@@ -39,12 +39,13 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Button, FeatherIcon } from 'frappe-ui'
+import { Button } from 'frappe-ui'
 import { AppBar } from '@/components/ui'
 import { isMobile as phone } from '@/composables/breakpoint'
 import PendienteDetail from '@/components/pendientes/PendienteDetail.vue'
 import { safeIntendedRoute } from '@/utils/shellRoutes'
 import { pendienteRoute, sourceFromSlug } from '@/composables/usePendientes'
+import LucideArrowLeft from '~icons/lucide/arrow-left'
 
 const props = defineProps({
   source: { type: String, required: true },

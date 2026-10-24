@@ -59,7 +59,7 @@
             variant="ghost"
             class="w-full !justify-start"
             :label="__('Create New')"
-            iconLeft="plus"
+            :iconLeft="LucidePlus"
             @click="() => attrs.onCreate(v, close)"
           />
         </div>
@@ -68,7 +68,7 @@
             variant="ghost"
             class="w-full !justify-start"
             :label="__('Clear')"
-            iconLeft="x"
+            :iconLeft="LucideX"
             @click="() => clearValue(close)"
           />
         </div>
@@ -83,6 +83,8 @@ import { isTranslatable } from '@/utils'
 import { watchDebounced } from '@vueuse/core'
 import { createResource } from 'frappe-ui'
 import { useAttrs, useId, computed, ref } from 'vue'
+import LucidePlus from '~icons/lucide/plus'
+import LucideX from '~icons/lucide/x'
 
 const props = defineProps({
   id: { type: String, default: undefined },

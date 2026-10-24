@@ -53,7 +53,7 @@
           @click="save"
         />
         <Dropdown v-if="b.savedPublished.value" :options="liveMenu">
-          <Button :label="__('Published')" icon-right="chevron-down">
+          <Button :label="__('Published')" :icon-right="LucideChevronDown">
             <template #prefix>
               <span class="size-2 rounded-full bg-surface-green-3" />
             </template>
@@ -177,7 +177,7 @@
             <Button
               class="self-start"
               variant="solid"
-              icon-left="copy"
+              :icon-left="LucideCopy"
               :label="__('Duplicate as a clean form')"
               :loading="duplicating"
               @click="duplicateClean"
@@ -332,6 +332,9 @@ import {
   watch,
 } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
+import LucideExternalLink from '~icons/lucide/external-link'
+import LucideEyeOff from '~icons/lucide/eye-off'
+import LucideCopy from '~icons/lucide/copy'
 
 const props = defineProps({ formId: { type: String, required: true } })
 const route = useRoute()
@@ -418,14 +421,14 @@ async function publish() {
 const liveMenu = computed(() => [
   {
     label: __('Open public page'),
-    icon: 'external-link',
+    icon: LucideExternalLink,
     onClick: () =>
       window.open(publicUrl(window.location.origin, b.form.route), '_blank'),
   },
-  { label: __('Share'), icon: 'share-2', onClick: () => setTab('share') },
+  { label: __('Share'), icon: LucideShare2, onClick: () => setTab('share') },
   {
     label: __('Unpublish'),
-    icon: 'eye-off',
+    icon: LucideEyeOff,
     onClick: () =>
       $dialog({
         title: __('Unpublish this form?'),

@@ -6,7 +6,7 @@
           class="flex min-h-11 items-center gap-1 text-sm text-ink-gray-7 hover:text-ink-gray-9"
           @click="goBack"
         >
-          <FeatherIcon name="arrow-left" class="h-4 w-4" />
+          <LucideArrowLeft class="h-4 w-4" />
           {{ backLabel }}
         </button>
       </nav>
@@ -103,7 +103,7 @@
           <Button
             v-if="primary?.kind === 'repair'"
             variant="solid"
-            icon-left="tool"
+            :icon-left="LucideWrench"
             :label="__('Repair in Taller')"
             class="min-h-11 sm:min-h-8"
             @click="openRepair"
@@ -111,7 +111,7 @@
           <Button
             v-else-if="primary?.kind === 'open_repair'"
             variant="solid"
-            icon-left="external-link"
+            :icon-left="LucideExternalLink"
             :label="__('Open repair order {0}', [claim.repair.open])"
             class="min-h-11 sm:min-h-8"
             @click="openTaller(claim.repair.open)"
@@ -119,7 +119,7 @@
           <Button
             v-else-if="primary?.kind === 'pick_source'"
             variant="solid"
-            icon-left="shopping-bag"
+            :icon-left="LucideShoppingBag"
             :label="__('Choose purchase')"
             class="min-h-11 sm:min-h-8"
             @click="picking = true"
@@ -129,7 +129,7 @@
             v-for="ret in claim.remedies?.refund?.returns || []"
             :key="ret.name"
             :variant="primary?.kind === 'link_return' ? 'solid' : 'subtle'"
-            icon-left="link"
+            :icon-left="LucideLink"
             :label="__('Link return {0}', [ret.name])"
             class="min-h-11 sm:min-h-8"
             :loading="busy"
@@ -140,7 +140,7 @@
               claim.remedies?.refund?.available &&
               !claim.remedies.refund.returns.length
             "
-            icon-left="corner-up-left"
+            :icon-left="LucideCornerUpLeft"
             :label="__('Refund at the register')"
             class="min-h-11 sm:min-h-8"
             :loading="busy"
@@ -156,13 +156,13 @@
           />
           <Button
             v-if="claim.can_write"
-            icon-left="user-plus"
+            :icon-left="LucideUserPlus"
             :label="__('Assign', null, 'Garantías')"
             class="min-h-11 sm:min-h-8"
             @click="assigning = true"
           />
           <Button
-            icon-left="message-circle"
+            :icon-left="LucideMessageCircle"
             :label="__('Notify the customer')"
             class="min-h-11 sm:min-h-8"
             @click="notifying = true"
@@ -404,7 +404,7 @@
                 class="mt-2 flex flex-wrap items-center gap-2"
               >
                 <Button
-                  icon-left="truck"
+                  :icon-left="LucideTruck"
                   :label="__('Move to RMA')"
                   :loading="busy"
                   @click="moveToRma"
@@ -472,7 +472,7 @@
                   "
                 />
                 <Button
-                  icon-left="check"
+                  :icon-left="LucideCheck"
                   :label="__('Supplier credited it')"
                   :disabled="!purchaseReceipt"
                   :loading="busy"
@@ -731,15 +731,7 @@ import {
   watch,
 } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import {
-  Badge,
-  Button,
-  Dialog,
-  FeatherIcon,
-  FormControl,
-  call,
-  toast,
-} from 'frappe-ui'
+import { Badge, Button, Dialog, FormControl, call, toast } from 'frappe-ui'
 import AssignDialog from '@/components/garantias/AssignDialog.vue'
 import NoticeDialog from '@/components/garantias/NoticeDialog.vue'
 import SourceDialog from '@/components/garantias/SourceDialog.vue'
@@ -775,6 +767,16 @@ import {
   tallerIntakeUrl,
   tallerOrderUrl,
 } from '@/composables/useGarantias'
+import LucideArrowLeft from '~icons/lucide/arrow-left'
+import LucideWrench from '~icons/lucide/wrench'
+import LucideExternalLink from '~icons/lucide/external-link'
+import LucideShoppingBag from '~icons/lucide/shopping-bag'
+import LucideLink from '~icons/lucide/link'
+import LucideCornerUpLeft from '~icons/lucide/corner-up-left'
+import LucideUserPlus from '~icons/lucide/user-plus'
+import LucideMessageCircle from '~icons/lucide/message-circle'
+import LucideTruck from '~icons/lucide/truck'
+import LucideCheck from '~icons/lucide/check'
 
 const props = defineProps({ name: { type: String, required: true } })
 const route = useRoute()

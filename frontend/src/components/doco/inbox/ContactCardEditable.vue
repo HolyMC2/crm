@@ -34,14 +34,14 @@
         >
       </div>
       <Button
-        icon="edit-2"
+        :icon="LucidePen"
         aria-label="Editar datos en Contactos"
         variant="ghost"
         @click="editIdentity"
       />
       <Button
         v-if="identity"
-        icon="external-link"
+        :icon="LucideExternalLink"
         aria-label="Abrir ficha de Contactos"
         variant="ghost"
         @click="openIdentity"
@@ -97,6 +97,8 @@ import {
   reloadQueue,
   hasTaller,
 } from '@/composables/inbox'
+import LucidePen from '~icons/lucide/pen'
+import LucideExternalLink from '~icons/lucide/external-link'
 const card = computed(() => contactCard.data)
 const identity = computed(() => {
   const ref = card.value?.contact

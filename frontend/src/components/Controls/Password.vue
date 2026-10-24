@@ -28,9 +28,9 @@
           </div>
         </template>
         <div>
-          <FeatherIcon
+          <Icon
             v-show="showEye"
-            :name="show ? 'eye-off' : 'eye'"
+            :icon="show ? 'eye-off' : 'eye'"
             class="h-3 cursor-pointer mr-1"
             @click="show = !show"
           />
@@ -43,6 +43,7 @@
 import KeyboardShortcut from '@/components/KeyboardShortcut.vue'
 import { FormControl, Tooltip } from 'frappe-ui'
 import { ref, computed } from 'vue'
+import Icon from '@/components/Icon.vue'
 
 const props = defineProps({
   modelValue: { type: [String, Number], default: '' },

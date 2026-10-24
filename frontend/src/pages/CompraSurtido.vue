@@ -6,12 +6,12 @@
           class="flex min-h-11 items-center gap-1 text-sm text-ink-gray-7 hover:text-ink-gray-9"
           @click="goBack()"
         >
-          <FeatherIcon name="arrow-left" class="h-4 w-4" />
+          <LucideArrowLeft class="h-4 w-4" />
           {{ __('Compras', null, 'Compras') }}
         </button>
         <Button
           v-if="ready && assistantOn"
-          icon-left="message-circle"
+          :icon-left="LucideMessageCircle"
           class="min-h-11 sm:min-h-8"
           :label="__('Ask Muelle', null, 'Surtido')"
           @click="askMuelle"
@@ -87,7 +87,7 @@
             </h2>
             <Button
               :label="__('Refresh', null, 'Surtido')"
-              icon-left="refresh-cw"
+              :icon-left="LucideRefreshCw"
               @click="loadBoot"
             />
           </div>
@@ -240,7 +240,7 @@
                     :theme="pedidoTheme(p.status)"
                     :label="pedidoStatus(p.status)"
                   />
-                  <FeatherIcon name="chevron-right" class="h-4 w-4" />
+                  <LucideChevronRight class="h-4 w-4" />
                 </button>
               </li>
             </ul>
@@ -451,7 +451,7 @@
                   }}</span>
                   <Button
                     v-if="boot.owner"
-                    :icon="edits[line.line]?.remove ? 'rotate-ccw' : 'x'"
+                    :icon="edits[line.line]?.remove ? LucideRotateCcw : LucideX"
                     :aria-label="
                       edits[line.line]?.remove
                         ? __('Keep {0}', [line.name], 'Surtido')
@@ -461,7 +461,7 @@
                   />
                   <Button
                     v-if="boot.owner && line.colour"
-                    icon="droplet"
+                    :icon="LucideDroplet"
                     :aria-label="
                       __('Change colour of {0}', [line.name], 'Surtido')
                     "
@@ -876,7 +876,7 @@
                       @change="updateQty(line, Number($event.target.value))"
                     />
                     <Button
-                      icon="x"
+                      :icon="LucideX"
                       :aria-label="
                         __('Remove {0}', [line.name || line.code], 'Surtido')
                       "
@@ -985,7 +985,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Badge, Button, FeatherIcon, FormControl, toast } from 'frappe-ui'
+import { Badge, Button, FormControl, toast } from 'frappe-ui'
 import ComprasPicker from '@/components/compras/ComprasPicker.vue'
 import {
   assistantOn,
@@ -1000,6 +1000,13 @@ import {
   pedidoTone,
   readyRows,
 } from '@/utils/surtido'
+import LucideArrowLeft from '~icons/lucide/arrow-left'
+import LucideMessageCircle from '~icons/lucide/message-circle'
+import LucideRefreshCw from '~icons/lucide/refresh-cw'
+import LucideChevronRight from '~icons/lucide/chevron-right'
+import LucideRotateCcw from '~icons/lucide/rotate-ccw'
+import LucideX from '~icons/lucide/x'
+import LucideDroplet from '~icons/lucide/droplet'
 
 const API = 'doco.workspaces.sourcing.'
 const call = (method, args = {}) => comprasApi(API + method, args)

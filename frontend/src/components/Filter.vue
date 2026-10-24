@@ -139,7 +139,7 @@
                   class="!text-ink-gray-5"
                   variant="ghost"
                   :label="__('Add Filter')"
-                  iconLeft="plus"
+                  :iconLeft="LucidePlus"
                   @click="setOpen(!open)"
                 />
               </template>
@@ -174,6 +174,7 @@ import {
 import { h, computed, onMounted } from 'vue'
 import { isMobileView } from '@/composables/settings'
 import { withoutVirtual } from '@/utils/listColumns'
+import LucidePlus from '~icons/lucide/plus'
 
 const typeCheck = ['Check']
 const typeLink = ['Link', 'Dynamic Link']

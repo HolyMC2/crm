@@ -91,6 +91,7 @@ import PlaybackSpeedIcon from '@/components/Icons/PlaybackSpeedIcon.vue'
 import PlaybackSpeedOption from '@/components/Activities/PlaybackSpeedOption.vue'
 import { Dropdown } from 'frappe-ui'
 import { computed, h, ref } from 'vue'
+import LucideDownload from '~icons/lucide/download'
 
 const props = defineProps({
   src: { type: String, default: '' },
@@ -162,7 +163,7 @@ const options = computed(() => {
   })
   let _options = [
     {
-      icon: 'download',
+      icon: LucideDownload,
       label: __('Download'),
       onClick: () => {
         const a = document.createElement('a')

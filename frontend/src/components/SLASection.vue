@@ -26,7 +26,7 @@
             <Button
               class="form-control bg-surface-base hover:bg-surface-base"
               :label="s.value"
-              :iconRight="open ? 'chevron-up' : 'chevron-down'"
+              :iconRight="open ? LucideChevronUp : LucideChevronDown"
             />
           </template>
         </Dropdown>
@@ -40,6 +40,8 @@ import { timeAgo, formatDate, formatTime } from '@/utils'
 import { statusesStore } from '@/stores/statuses'
 import { useTelemetry } from '@framework/ui'
 import { computed } from 'vue'
+import LucideChevronUp from '~icons/lucide/chevron-up'
+import LucideChevronDown from '~icons/lucide/chevron-down'
 
 const data = defineModel({ type: Object, default: () => ({}) })
 const emit = defineEmits(['updateField'])

@@ -22,11 +22,7 @@
             "
             @click="pick(choice.value)"
           >
-            <FeatherIcon
-              :name="choice.icon"
-              class="h-4 w-4"
-              aria-hidden="true"
-            />
+            <Icon :icon="choice.icon" class="h-4 w-4" aria-hidden="true" />
             {{ choice.label }}
           </button>
         </div>
@@ -84,7 +80,7 @@
             rel="noopener"
             class="inline-flex min-h-11 items-center gap-1.5 rounded-md bg-surface-gray-2 px-3 text-base text-ink-gray-8 hover:bg-surface-gray-3 sm:min-h-8"
           >
-            <FeatherIcon name="file-text" class="h-4 w-4" aria-hidden="true" />
+            <LucideFileText class="h-4 w-4" aria-hidden="true" />
             {{ __('Open the PDF', null, CTX) }}
           </a>
           <textarea
@@ -126,8 +122,10 @@
 </template>
 <script setup>
 import { computed, ref, watch } from 'vue'
-import { Button, Dialog, FeatherIcon, toast } from 'frappe-ui'
+import { Button, Dialog, toast } from 'frappe-ui'
 import { CTX, problemOf, productosApi } from '@/composables/useProductos'
+import Icon from '@/components/Icon.vue'
+import LucideFileText from '~icons/lucide/file-text'
 
 // «Armar pack»: the filtered list (or the selected products) as Mercado's
 // collage images, a PDF catalogue or a price message, ready to send. Mercado

@@ -23,7 +23,7 @@
               filesUploaderArea?.showWebLink || filesUploaderArea?.showCamera
             "
             :label="isMobileView ? __('Back') : __('Back to File Upload')"
-            iconLeft="arrow-left"
+            :iconLeft="LucideArrowLeft"
             @click="
               () => {
                 filesUploaderArea.showWebLink = false
@@ -97,6 +97,7 @@ import FilesUploadHandler from './filesUploaderHandler'
 import { isMobileView } from '@/composables/settings'
 import { toast } from 'frappe-ui'
 import { ref, computed } from 'vue'
+import LucideArrowLeft from '~icons/lucide/arrow-left'
 
 const props = defineProps({
   doctype: { type: String, required: true },

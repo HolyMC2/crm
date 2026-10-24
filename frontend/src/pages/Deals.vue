@@ -12,7 +12,7 @@
       <Button
         variant="solid"
         :label="__('Create')"
-        iconLeft="plus"
+        :iconLeft="LucidePlus"
         @click="showDealModal = true"
       />
     </template>
@@ -28,7 +28,7 @@
     <Button
       variant="ghost"
       size="sm"
-      iconLeft="arrow-left"
+      :iconLeft="LucideArrowLeft"
       :label="__('Back to {0}', [__(drill.source.label)])"
       @click="backToDrillSource"
     />
@@ -364,6 +364,8 @@ import {
   onMounted,
 } from 'vue'
 import { pipelineLabel } from '@/utils/stageLabel'
+import LucidePlus from '~icons/lucide/plus'
+import LucideArrowLeft from '~icons/lucide/arrow-left'
 
 const { getFormattedPercent, getFormattedFloat, getFormattedCurrency } =
   getMeta('CRM Deal')

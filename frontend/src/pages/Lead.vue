@@ -26,7 +26,7 @@
           <Button
             v-if="doc.status"
             :label="statusLabel(doc.status)"
-            :iconRight="open ? 'chevron-up' : 'chevron-down'"
+            :iconRight="open ? LucideChevronUp : LucideChevronDown"
           >
             <template #prefix>
               <IndicatorIcon :class="getLeadStatus(doc.status).color" />
@@ -88,14 +88,14 @@
                     ? {
                         options: [
                           {
-                            icon: 'upload',
+                            icon: LucideUpload,
                             label: doc.image
                               ? __('Change Image')
                               : __('Upload Image'),
                             onClick: openFileSelector,
                           },
                           {
-                            icon: 'trash-2',
+                            icon: LucideTrash2,
                             label: __('Remove Image'),
                             onClick: () => updateField('image', ''),
                           },
@@ -293,6 +293,10 @@ import {
 import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useActiveTabManager } from '@/composables/useActiveTabManager'
+import LucideUpload from '~icons/lucide/upload'
+import LucideTrash2 from '~icons/lucide/trash-2'
+import LucideChevronUp from '~icons/lucide/chevron-up'
+import LucideChevronDown from '~icons/lucide/chevron-down'
 
 const { brand } = getSettings()
 const { $dialog, $socket, makeCall } = globalStore()

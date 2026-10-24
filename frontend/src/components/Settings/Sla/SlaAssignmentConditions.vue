@@ -22,7 +22,7 @@
     >
       <Button
         :disabled="slaDataErrors.condition != ''"
-        :icon-right="open ? 'chevron-up' : 'chevron-down'"
+        :icon-right="open ? LucideChevronUp : LucideChevronDown"
         :label="__('Add Condition')"
       />
     </Dropdown>
@@ -37,6 +37,8 @@ import { slaData, slaDataErrors, validateSlaData } from './utils'
 import { watchDebounced } from '@vueuse/core'
 import { validateConditions } from '../../../utils'
 import { computed, reactive } from 'vue'
+import LucideChevronUp from '~icons/lucide/chevron-up'
+import LucideChevronDown from '~icons/lucide/chevron-down'
 
 const props = defineProps({
   conditions: { type: Array, required: true },

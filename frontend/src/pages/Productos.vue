@@ -91,7 +91,7 @@
               @click="packOpen = true"
             >
               <template #prefix>
-                <FeatherIcon name="layers" class="h-4 w-4" aria-hidden="true" />
+                <LucideLayers class="h-4 w-4" aria-hidden="true" />
               </template>
             </Button>
             <Button
@@ -347,11 +347,7 @@
               :title="option.label"
               @click="setLayout(option.value)"
             >
-              <FeatherIcon
-                :name="option.icon"
-                class="h-4 w-4"
-                aria-hidden="true"
-              />
+              <Icon :icon="option.icon" class="h-4 w-4" aria-hidden="true" />
               <span class="hidden md:inline">{{ option.label }}</span>
             </button>
           </div>
@@ -774,7 +770,7 @@ import {
   watch,
 } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Button, FeatherIcon, FormControl, toast } from 'frappe-ui'
+import { Button, FormControl, toast } from 'frappe-ui'
 import { Fab, FilterChips, ListRow, PageHeader } from '@/components/ui'
 import { isMobile as isPhone } from '@/composables/breakpoint'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
@@ -826,6 +822,8 @@ import {
   viewLabel,
   withoutDone,
 } from '@/composables/useProductos'
+import Icon from '@/components/Icon.vue'
+import LucideLayers from '~icons/lucide/layers'
 
 const PAGE = 30
 // Changes that move these queues; Bin itself is written without events, so

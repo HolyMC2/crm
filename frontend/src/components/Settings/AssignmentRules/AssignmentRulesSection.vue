@@ -24,7 +24,7 @@
       <Dropdown v-slot="{ open }" :options="dropdownOptions">
         <Button
           :disabled="props.errors !== ''"
-          :icon-right="open ? 'chevron-up' : 'chevron-down'"
+          :icon-right="open ? LucideChevronUp : LucideChevronDown"
           :label="__('Add Condition')"
         />
       </Dropdown>
@@ -39,6 +39,8 @@ import { watchDebounced } from '@vueuse/core'
 import { validateConditions } from '@/utils'
 import CFConditions from '../../ConditionsFilter/CFConditions.vue'
 import { inject, reactive } from 'vue'
+import LucideChevronUp from '~icons/lucide/chevron-up'
+import LucideChevronDown from '~icons/lucide/chevron-down'
 
 const props = defineProps({
   conditions: { type: Array, default: () => [] },

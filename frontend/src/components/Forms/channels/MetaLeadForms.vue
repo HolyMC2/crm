@@ -71,7 +71,7 @@
           v-if="f.kind === 'facebook_lead_form'"
           size="sm"
           variant="ghost"
-          icon-left="settings"
+          :icon-left="LucideSettings"
           :label="__('Lead syncing')"
           @click="openLeadSyncing"
         />
@@ -109,6 +109,7 @@ import LucideMessageCircle from '~icons/lucide/message-circle'
 import { showSettings, activeSettingsPage } from '@/composables/settings'
 import { timeAgo } from '@/utils'
 import { ref } from 'vue'
+import LucideSettings from '~icons/lucide/settings'
 
 // meta_lead_forms from doco_marketing.api.form_channels.lead_sources (the page
 // loads it once and also uses its per-channel submission counts)

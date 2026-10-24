@@ -9,7 +9,7 @@
           class="flex min-h-11 items-center gap-1 text-sm text-ink-gray-7 hover:text-ink-gray-9"
           @click="leave"
         >
-          <FeatherIcon name="arrow-left" class="h-4 w-4" />
+          <LucideArrowLeft class="h-4 w-4" />
           {{ currentName ? __('Back to the article') : TITLE }}
         </button>
       </nav>
@@ -274,7 +274,7 @@ import {
   watch,
 } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
-import { Button, FeatherIcon, FormControl, TextEditor } from 'frappe-ui'
+import { Button, FormControl, TextEditor } from 'frappe-ui'
 import AudienceChips from '@/components/manual/AudienceChips.vue'
 import PlacePicker from '@/components/manual/PlacePicker.vue'
 import { uploadFile } from '@/components/editor/config'
@@ -302,6 +302,7 @@ import {
   saveLabel,
   savedNotice,
 } from '@/composables/useManual'
+import LucideArrowLeft from '~icons/lucide/arrow-left'
 
 const HistorySheet = defineAsyncComponent(
   () => import('@/components/manual/HistorySheet.vue'),

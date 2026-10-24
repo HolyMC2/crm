@@ -103,7 +103,7 @@
       <Button
         v-if="progress.state === 'Running' || progress.state === 'Capacity'"
         class="min-h-11 sm:min-h-0"
-        icon-left="pause"
+        :icon-left="LucidePause"
         :label="__('Pause import')"
         :loading="busy === 'pause'"
         @click="run('pause')"
@@ -302,6 +302,7 @@ import {
   viaLabel,
   viaTheme,
 } from '@/utils/archivosConectores'
+import LucidePause from '~icons/lucide/pause'
 
 const props = defineProps({
   connector: { type: Object, required: true },

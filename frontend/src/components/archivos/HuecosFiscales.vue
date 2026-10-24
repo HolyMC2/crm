@@ -50,11 +50,7 @@
         role="note"
         class="flex items-start gap-2 rounded bg-surface-gray-1 p-3 text-sm text-ink-gray-7"
       >
-        <FeatherIcon
-          name="info"
-          class="mt-0.5 h-4 w-4 shrink-0"
-          aria-hidden="true"
-        />{{
+        <LucideInfo class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />{{
           data.sat_reason ||
           __(
             'The checks against the SAT are not available for this company, so cancelled CFDI and the 69-B list do not show here.',
@@ -87,8 +83,7 @@
         </p>
       </div>
       <div v-else-if="data && !rows.length" class="px-6 py-10 text-center">
-        <FeatherIcon
-          name="check-circle"
+        <LucideCircleCheckBig
           class="mx-auto h-10 w-10 text-ink-gray-4"
           aria-hidden="true"
         />
@@ -159,10 +154,12 @@
 </template>
 <script setup>
 import { computed, ref, useId, watch } from 'vue'
-import { Button, FeatherIcon } from 'frappe-ui'
+import { Button } from 'frappe-ui'
 import ArchivoGuard from './ArchivoGuard.vue'
 import { archivosApi, problem, safeReturn } from '@/composables/useArchivos'
 import { fiscalDate, money } from './fiscalFormat'
+import LucideInfo from '~icons/lucide/info'
+import LucideCircleCheckBig from '~icons/lucide/circle-check-big'
 
 // «Huecos fiscales»: purchases without their CFDI, CFDI without a purchase,
 // cancellations, 69-B issuers and PDFs without their XML, each with the step

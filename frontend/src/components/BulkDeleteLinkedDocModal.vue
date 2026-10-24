@@ -73,7 +73,9 @@
             :label="
               confirmDeleteInfo.delete ? __('Delete') : __('Unlink & Delete')
             "
-            :icon-left="confirmDeleteInfo.delete ? 'trash-2' : 'unlock'"
+            :icon-left="
+              confirmDeleteInfo.delete ? LucideTrash2 : LucideLockOpen
+            "
             variant="solid"
             theme="red"
             @click="deleteDocs()"
@@ -92,6 +94,8 @@
 <script setup>
 import { call } from 'frappe-ui'
 import { ref } from 'vue'
+import LucideTrash2 from '~icons/lucide/trash-2'
+import LucideLockOpen from '~icons/lucide/lock-open'
 
 const show = defineModel({ type: Boolean })
 const props = defineProps({

@@ -197,7 +197,7 @@
               <Button
                 size="sm"
                 variant="ghost"
-                icon-left="link"
+                :icon-left="LucideLink"
                 :label="__('Copy link')"
                 @click="copyLink(f)"
               />
@@ -219,7 +219,7 @@
                 <Button
                   size="sm"
                   variant="ghost"
-                  icon="more-horizontal"
+                  :icon="LucideEllipsis"
                   :aria-label="__('More actions for {0}', [f.title])"
                   @click="isConfirmingDelete = false"
                 />
@@ -282,7 +282,7 @@
         <Button
           size="md"
           :label="__('Descargar PNG')"
-          icon-left="download"
+          :icon-left="LucideDownload"
           :disabled="!qrSvg"
           @click="downloadQrPng"
         />
@@ -324,6 +324,13 @@ import Fab from '@/components/ui/Fab.vue'
 import ListRow from '@/components/ui/ListRow.vue'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import LucidePen from '~icons/lucide/pen'
+import LucideInbox from '~icons/lucide/inbox'
+import LucideExternalLink from '~icons/lucide/external-link'
+import LucideCopy from '~icons/lucide/copy'
+import LucideLink from '~icons/lucide/link'
+import LucideEllipsis from '~icons/lucide/ellipsis'
+import LucideDownload from '~icons/lucide/download'
 
 const router = useRouter()
 const { capture } = useTelemetry()
@@ -532,12 +539,12 @@ function rowMenu(f) {
   return [
     {
       label: __('Edit'),
-      icon: 'edit-2',
+      icon: LucidePen,
       onClick: () => router.push({ name: 'Form', params: { formId: f.name } }),
     },
     {
       label: __('Submissions'),
-      icon: 'inbox',
+      icon: LucideInbox,
       onClick: () =>
         router.push({
           name: 'Form',
@@ -547,7 +554,7 @@ function rowMenu(f) {
     },
     {
       label: __('Open public page'),
-      icon: 'external-link',
+      icon: LucideExternalLink,
       onClick: () =>
         window.open(publicUrl(window.location.origin, f.route), '_blank'),
     },
@@ -560,7 +567,7 @@ function rowMenu(f) {
       label: f.incompatible_fields
         ? __('Duplicate as a clean form')
         : __('Duplicate'),
-      icon: 'copy',
+      icon: LucideCopy,
       onClick: () => duplicate(f),
     },
     ...ConfirmDelete({

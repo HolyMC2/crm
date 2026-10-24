@@ -37,7 +37,7 @@
           <Dropdown :options="pageMenu">
             <Button
               variant="ghost"
-              icon="more-vertical"
+              :icon="LucideEllipsisVertical"
               class="min-h-12 min-w-12"
               :aria-label="__('More actions')"
             />
@@ -58,14 +58,14 @@
         <div class="flex flex-wrap gap-2">
           <Button
             v-if="state.view === 'inbox' && data?.groups?.length"
-            icon-left="check-circle"
+            :icon-left="LucideCircleCheckBig"
             :label="__('Mark all as read')"
             class="min-h-11 sm:min-h-8"
             :disabled="actions.busy.value"
             @click="actions.readAll(state.category, 'inbox')"
           />
           <Button
-            icon-left="sliders"
+            :icon-left="LucideSlidersVertical"
             :label="__('Preferences')"
             class="min-h-11 sm:min-h-8"
             @click="prefsOpen = true"
@@ -124,8 +124,8 @@
             :key="kind.kind"
             class="flex min-h-14 items-center gap-3 px-4"
           >
-            <FeatherIcon
-              :name="categoryMeta(kind.category).icon"
+            <Icon
+              :icon="categoryMeta(kind.category).icon"
               class="size-4 text-ink-gray-6"
               aria-hidden="true"
             />
@@ -165,10 +165,7 @@
         </div>
       </template>
       <div v-else class="mx-auto max-w-md space-y-2 p-8 text-center">
-        <FeatherIcon
-          name="check-circle"
-          class="mx-auto size-10 text-ink-gray-4"
-        />
+        <LucideCircleCheckBig class="mx-auto size-10 text-ink-gray-4" />
         <p class="text-lg font-medium">{{ empty.title }}</p>
         <p class="text-sm text-ink-gray-6">{{ empty.text }}</p>
         <Button
@@ -185,7 +182,7 @@
 <script setup>
 import { computed, getCurrentInstance, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Dropdown, FeatherIcon } from 'frappe-ui'
+import { Dropdown } from 'frappe-ui'
 import { useDebounceFn } from '@vueuse/core'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import { AppBar } from '@/components/ui'
@@ -207,6 +204,10 @@ import {
   useAvisosActions,
 } from '@/composables/useAvisos'
 import { errorKind } from '@/utils/contactos'
+import Icon from '@/components/Icon.vue'
+import LucideCircleCheckBig from '~icons/lucide/circle-check-big'
+import LucideSlidersVertical from '~icons/lucide/sliders-vertical'
+import LucideEllipsisVertical from '~icons/lucide/ellipsis-vertical'
 
 const route = useRoute()
 const router = useRouter()
@@ -237,12 +238,12 @@ const pageMenu = computed(() => {
   if (state.value.view === 'inbox' && data.value?.groups?.length)
     items.push({
       label: __('Mark all as read'),
-      icon: 'check-circle',
+      icon: LucideCircleCheckBig,
       onClick: () => actions.readAll(state.value.category, 'inbox'),
     })
   items.push({
     label: __('Preferences'),
-    icon: 'sliders',
+    icon: LucideSlidersVertical,
     onClick: () => (prefsOpen.value = true),
   })
   return items

@@ -2,9 +2,9 @@
   <div v-if="isEmoji(icon)" v-bind="$attrs">
     {{ icon }}
   </div>
-  <!-- lucide icon from the sprite the IconPicker reads (lucide is a superset of
-       feather, so legacy names still resolve). No width/height attrs so size
-       classes like `h-4` control it, matching the old FeatherIcon behaviour. -->
+  <!-- lucide icon from the sprite the IconPicker reads; feather-era names map
+       to their lucide ids. No width/height attrs so size classes like `h-4`
+       control it, matching the old FeatherIcon behaviour. -->
   <svg
     v-else-if="typeof icon == 'string'"
     viewBox="0 0 24 24"
@@ -16,13 +16,14 @@
     class="shrink-0"
     v-bind="$attrs"
   >
-    <use :href="`#${icon.replace(/^lucide-/, '')}`" />
+    <use :href="`#${toLucideName(icon)}`" />
   </svg>
   <component :is="icon" v-else v-bind="$attrs" />
 </template>
 <script setup>
-import { isEmoji } from '@/utils'
+import { isEmoji } from '@/utils/emoji'
 import { ensureLucideSprite } from '@/utils/lucideSprite'
+import { toLucideName } from '@/utils/lucideNames'
 
 const props = defineProps({ icon: { type: [String, Object], required: true } })
 if (typeof props.icon === 'string' && !isEmoji(props.icon)) ensureLucideSprite()

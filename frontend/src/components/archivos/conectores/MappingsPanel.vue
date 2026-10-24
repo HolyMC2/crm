@@ -15,7 +15,7 @@
     <div class="flex flex-wrap gap-2">
       <Button
         class="min-h-11 sm:min-h-0"
-        icon-left="download"
+        :icon-left="LucideDownload"
         :label="__('Bring all from Paperless')"
         :loading="catalogLoading"
         @click="emit('load-catalog')"
@@ -167,6 +167,7 @@ import {
   viaLabel,
   viaTheme,
 } from '@/utils/archivosConectores'
+import LucideDownload from '~icons/lucide/download'
 
 const props = defineProps({
   name: { type: String, required: true },

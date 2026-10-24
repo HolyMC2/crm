@@ -29,7 +29,7 @@
           :aria-label="__('Take out {0}', [nameOf(id)])"
           @click="toggle(id)"
         >
-          <FeatherIcon name="x" class="h-3.5 w-3.5" />
+          <LucideX class="h-3.5 w-3.5" />
         </button>
       </li>
     </ul>
@@ -93,7 +93,8 @@
 </template>
 <script setup>
 import { computed, ref } from 'vue'
-import { Button, FeatherIcon, FormControl } from 'frappe-ui'
+import { Button, FormControl } from 'frappe-ui'
+import LucideX from '~icons/lucide/x'
 
 // A multi-select over a Paperless catalog (document types, correspondents).
 // The catalog loads on demand: the host fetches it when `load` fires.

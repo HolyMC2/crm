@@ -21,10 +21,7 @@
             ? 'border-outline-green-4 bg-surface-green-7 text-white'
             : 'border-outline-gray-4 group-hover:border-outline-gray-5'
         "
-        ><FeatherIcon
-          v-if="row.status === 'Closed'"
-          name="check"
-          class="h-3.5 w-3.5"
+        ><LucideCheck v-if="row.status === 'Closed'" class="h-3.5 w-3.5"
       /></span>
     </button>
     <!-- Someone else's work: their initials where the check would be. -->
@@ -68,7 +65,7 @@
           >{{ stateChip(row).label }}</span
         >
         <span v-if="row.repeat" role="img" :aria-label="__('Repeats')"
-          ><FeatherIcon name="repeat" class="size-3.5" aria-hidden="true"
+          ><LucideRepeat class="size-3.5" aria-hidden="true"
         /></span>
         <span
           v-if="row.priority === 'High'"
@@ -94,7 +91,7 @@
         <Button
           variant="ghost"
           class="min-h-11 min-w-11 sm:min-h-7 sm:min-w-7"
-          icon="more-horizontal"
+          :icon="LucideEllipsis"
           :aria-label="__('More actions for {0}', [row.description])"
         />
       </Dropdown>
@@ -103,7 +100,7 @@
 </template>
 <script setup>
 import { computed } from 'vue'
-import { Button, Dropdown, FeatherIcon } from 'frappe-ui'
+import { Button, Dropdown } from 'frappe-ui'
 import { personName } from '@/utils/display'
 import {
   datePresets,
@@ -113,6 +110,11 @@ import {
   sourceLabel,
   stateChip,
 } from '@/composables/usePendientes'
+import LucideCircleCheckBig from '~icons/lucide/circle-check-big'
+import LucideCalendar from '~icons/lucide/calendar'
+import LucideCheck from '~icons/lucide/check'
+import LucideRepeat from '~icons/lucide/repeat'
+import LucideEllipsis from '~icons/lucide/ellipsis'
 
 const props = defineProps({
   row: { type: Object, required: true },
@@ -150,14 +152,14 @@ const dueClass = computed(() =>
 const menu = computed(() => [
   {
     label: __('Done and schedule next'),
-    icon: 'check-circle',
+    icon: LucideCircleCheckBig,
     onClick: () => emit('completeNext', props.row),
   },
   ...datePresets(props.today)
     .filter((preset) => preset.value !== props.row.date)
     .map((preset) => ({
       label: __('Reschedule: {0}', [preset.label]),
-      icon: 'calendar',
+      icon: LucideCalendar,
       onClick: () => emit('reschedule', props.row, preset.value),
     })),
 ])

@@ -12,8 +12,8 @@
         class="flex items-start gap-2 py-2 text-sm"
         :data-result="entry.status"
       >
-        <FeatherIcon
-          :name="ICONS[entry.status] || 'circle'"
+        <Icon
+          :icon="ICONS[entry.status] || 'circle'"
           class="mt-0.5 h-4 w-4 shrink-0"
           :class="TONES[entry.status] || 'text-ink-gray-6'"
         />
@@ -40,8 +40,9 @@
 </template>
 <script setup>
 import { computed } from 'vue'
-import { Button, FeatherIcon } from 'frappe-ui'
+import { Button } from 'frappe-ui'
 import { bulkCounts } from '@/utils/powerList'
+import Icon from '@/components/Icon.vue'
 
 const props = defineProps({
   results: { type: Array, default: () => [] },

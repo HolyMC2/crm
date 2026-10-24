@@ -20,7 +20,7 @@
         @click="story"
       >
         <template #prefix>
-          <FeatherIcon name="share-2" class="h-4 w-4" aria-hidden="true" />
+          <LucideShare2 class="h-4 w-4" aria-hidden="true" />
         </template>
       </Button>
       <FileUploader
@@ -42,7 +42,7 @@
             @click="openFileSelector"
           >
             <template #prefix>
-              <FeatherIcon name="plus" class="h-4 w-4" aria-hidden="true" />
+              <LucidePlus class="h-4 w-4" aria-hidden="true" />
             </template>
           </Button>
         </template>
@@ -118,7 +118,7 @@
             :title="__('Turn right', null, CTX)"
             @click="turn(photo)"
           >
-            <FeatherIcon name="rotate-cw" class="h-4 w-4" aria-hidden="true" />
+            <LucideRotateCw class="h-4 w-4" aria-hidden="true" />
           </Button>
           <Button
             v-if="data.can_manage"
@@ -129,7 +129,7 @@
             :title="__('Delete photo', null, CTX)"
             @click="remove(photo)"
           >
-            <FeatherIcon name="trash-2" class="h-4 w-4" aria-hidden="true" />
+            <LucideTrash2 class="h-4 w-4" aria-hidden="true" />
           </Button>
         </span>
       </li>
@@ -138,13 +138,17 @@
 </template>
 <script setup>
 import { onMounted, ref, watch } from 'vue'
-import { Button, FeatherIcon, FileUploader, toast } from 'frappe-ui'
+import { Button, FileUploader, toast } from 'frappe-ui'
 import {
   CTX,
   problemOf,
   productosApi,
   requestId,
 } from '@/composables/useProductos'
+import LucideShare2 from '~icons/lucide/share-2'
+import LucidePlus from '~icons/lucide/plus'
+import LucideRotateCw from '~icons/lucide/rotate-cw'
+import LucideTrash2 from '~icons/lucide/trash-2'
 
 // A product's photos: the main one first, then the rest. Whoever keeps the
 // catalogue adds, chooses the main one and deletes; turning and the story

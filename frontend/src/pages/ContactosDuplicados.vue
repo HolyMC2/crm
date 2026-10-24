@@ -21,7 +21,7 @@
         </div>
         <Button
           label="Actualizar"
-          icon-left="refresh-cw"
+          :icon-left="LucideRefreshCw"
           :loading="loading"
           @click="load(0)"
         />
@@ -287,6 +287,7 @@ import {
   mergePayload,
   reasonLabel,
 } from '@/utils/duplicateReview'
+import LucideRefreshCw from '~icons/lucide/refresh-cw'
 
 const PAGE = 20
 const router = useRouter()

@@ -47,7 +47,6 @@ vi.mock('frappe-ui', async () => {
     Dialog: component,
     Alert: component,
     Badge: component,
-    FeatherIcon: component,
     setConfig: fixture.setConfig,
     frappeRequest: fixture.request,
     getCachedResource: fixture.cachedResource,
@@ -148,7 +147,6 @@ function expectCanonicalSocket() {
     'Dialog',
     'Alert',
     'Badge',
-    'FeatherIcon',
   ])
   expect(fixture.setConfig).toHaveBeenCalledWith(
     'resourceFetcher',

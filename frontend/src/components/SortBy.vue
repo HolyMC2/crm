@@ -56,7 +56,7 @@
           class="shrink-0 [&_svg]:text-ink-gray-5"
           :iconLeft="!hideLabel && !sortValues?.size && SortIcon"
           :iconRight="
-            sortValues?.size && (isOpen ? 'chevron-up' : 'chevron-down')
+            sortValues?.size && (isOpen ? LucideChevronUp : LucideChevronDown)
           "
           :class="sortValues.size ? 'rounded-l-none' : ''"
           @click.stop="togglePopover"
@@ -107,7 +107,7 @@
                       class="flex w-full items-center justify-between rounded-l-none !text-ink-gray-5"
                       size="md"
                       :label="displayValue"
-                      :iconRight="open ? 'chevron-down' : 'chevron-up'"
+                      :iconRight="open ? LucideChevronDown : LucideChevronUp"
                       @click="setOpen(!open)"
                     />
                   </template>
@@ -134,7 +134,7 @@
                   class="!text-ink-gray-5"
                   :label="__('Add Sort')"
                   variant="ghost"
-                  iconLeft="plus"
+                  :iconLeft="LucidePlus"
                   @click="setOpen(!open)"
                 />
               </template>
@@ -162,6 +162,9 @@ import { useSortable } from '@vueuse/integrations/useSortable'
 import { Combobox, createResource, Popover } from 'frappe-ui'
 import { computed, nextTick, onMounted } from 'vue'
 import { withoutVirtual } from '@/utils/listColumns'
+import LucideChevronUp from '~icons/lucide/chevron-up'
+import LucideChevronDown from '~icons/lucide/chevron-down'
+import LucidePlus from '~icons/lucide/plus'
 
 const props = defineProps({
   doctype: { type: String, required: true },

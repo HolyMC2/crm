@@ -81,11 +81,7 @@
           @click="open = open === chip.key ? '' : chip.key"
         >
           <!-- Feather icons live in this chunk; lucide classes cost global CSS. -->
-          <FeatherIcon
-            :name="chip.icon"
-            class="size-4 shrink-0"
-            aria-hidden="true"
-          />
+          <Icon :icon="chip.icon" class="size-4 shrink-0" aria-hidden="true" />
           <span class="truncate">{{ chip.label }}</span>
         </button>
       </div>
@@ -289,7 +285,7 @@
 </template>
 <script setup>
 import { computed, nextTick, reactive, ref, watch } from 'vue'
-import { Button, FeatherIcon, FormControl, call } from 'frappe-ui'
+import { Button, FormControl, call } from 'frappe-ui'
 import { BottomSheet } from '@/components/ui'
 import DateField from '@/components/ui/DateField.vue'
 import { stableRequest } from '@/utils/contactos'
@@ -306,6 +302,7 @@ import {
   savesAsSalesTask,
   stateLabel,
 } from '@/composables/usePendientes'
+import Icon from '@/components/Icon.vue'
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },

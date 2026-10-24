@@ -31,7 +31,7 @@
           <Button
             variant="ghost"
             class="min-h-11 sm:min-h-0"
-            icon-left="trash-2"
+            :icon-left="LucideTrash2"
             :label="__('Remove')"
             :aria-label="__('Remove rule {0}', [index + 1])"
             @click="remove(index)"
@@ -93,7 +93,7 @@
     <Button
       v-if="modelValue.length < 20"
       class="min-h-11 sm:min-h-0"
-      icon-left="plus"
+      :icon-left="LucidePlus"
       :label="__('Add rule')"
       @click="add"
     />
@@ -109,6 +109,8 @@ import {
   ruleTypes,
   senderProblem,
 } from '@/utils/archivosConectores'
+import LucideTrash2 from '~icons/lucide/trash-2'
+import LucidePlus from '~icons/lucide/plus'
 
 const props = defineProps({
   modelValue: { type: Array, default: () => [] },

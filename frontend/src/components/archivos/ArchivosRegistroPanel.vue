@@ -14,7 +14,7 @@
         v-if="data?.supported && uploadHref"
         :href="uploadHref"
         class="inline-flex min-h-11 items-center gap-2 rounded border border-outline-gray-2 px-3 text-sm text-ink-gray-8 hover:bg-surface-gray-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-outline-gray-4 sm:min-h-8"
-        ><FeatherIcon name="upload" class="h-4 w-4" />{{ __('Add file') }}</a
+        ><LucideUpload class="h-4 w-4" />{{ __('Add file') }}</a
       >
     </header>
     <div v-if="loading && !data" class="space-y-2 px-4 pb-4" aria-busy="true">
@@ -44,10 +44,7 @@
             "
             class="flex min-h-14 items-center gap-3 px-4 py-2 hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-outline-gray-4"
           >
-            <FeatherIcon
-              name="file-text"
-              class="h-4 w-4 shrink-0 text-ink-gray-5"
-            />
+            <LucideFileText class="h-4 w-4 shrink-0 text-ink-gray-5" />
             <span class="min-w-0 flex-1">
               <span class="block truncate text-base text-ink-gray-9">{{
                 doc.title
@@ -70,10 +67,7 @@
             rel="noopener"
             class="flex min-h-14 items-center gap-3 px-4 py-2 hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-outline-gray-4"
           >
-            <FeatherIcon
-              name="paperclip"
-              class="h-4 w-4 shrink-0 text-ink-gray-5"
-            />
+            <LucidePaperclip class="h-4 w-4 shrink-0 text-ink-gray-5" />
             <span class="min-w-0 flex-1">
               <span class="block truncate text-base text-ink-gray-9">{{
                 file.file_name
@@ -122,7 +116,7 @@
 </template>
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
-import { Badge, FeatherIcon } from 'frappe-ui'
+import { Badge } from 'frappe-ui'
 import ArchivoGuard from './ArchivoGuard.vue'
 import CfdiCard from './CfdiCard.vue'
 import {
@@ -135,6 +129,9 @@ import {
   statusLabel,
   statusTheme,
 } from '@/composables/useArchivos'
+import LucideUpload from '~icons/lucide/upload'
+import LucideFileText from '~icons/lucide/file-text'
+import LucidePaperclip from '~icons/lucide/paperclip'
 
 // «Archivos de este registro»: one panel any record page can mount. Linked
 // evidence and native attachments appear once each; adding a file opens the

@@ -77,7 +77,7 @@
             <Dropdown v-if="movable(row)" :options="moveOptions(row)">
               <Button
                 variant="ghost"
-                icon="more-horizontal"
+                :icon="LucideEllipsis"
                 class="-mr-1 -mt-1 min-h-7 min-w-7"
                 :aria-label="__('Move {0} to…', [row.description])"
               />
@@ -106,6 +106,7 @@ import {
   priorityLabel,
   stateLabel,
 } from '@/composables/usePendientes'
+import LucideEllipsis from '~icons/lucide/ellipsis'
 
 const props = defineProps({
   rows: { type: Array, default: () => [] },

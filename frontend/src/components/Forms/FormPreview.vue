@@ -185,7 +185,7 @@
       </p>
       <Button
         :label="__('Send a test')"
-        icon-left="send"
+        :icon-left="LucideSend"
         :loading="testing"
         @click="sendTest"
       />
@@ -202,6 +202,7 @@ import LucideMonitor from '~icons/lucide/monitor'
 import { evaluateDependsOnValue } from '@/utils/expressions'
 import { computed, reactive, ref } from 'vue'
 import { fillBusiness, layoutFromFields, inputFields } from './formModel'
+import LucideSend from '~icons/lucide/send'
 
 const props = defineProps({
   form: { type: Object, required: true },

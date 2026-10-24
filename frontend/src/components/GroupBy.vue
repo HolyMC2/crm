@@ -12,7 +12,7 @@
             : __('Group By: ') + groupByValue?.label
         "
         :iconLeft="DetailsIcon"
-        :iconRight="open ? 'chevron-up' : 'chevron-down'"
+        :iconRight="open ? LucideChevronUp : LucideChevronDown"
         @click="setOpen(!open)"
       />
     </template>
@@ -23,6 +23,8 @@ import DetailsIcon from '@/components/Icons/DetailsIcon.vue'
 import { Combobox, createResource } from 'frappe-ui'
 import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { withoutVirtual } from '@/utils/listColumns'
+import LucideChevronUp from '~icons/lucide/chevron-up'
+import LucideChevronDown from '~icons/lucide/chevron-down'
 
 const props = defineProps({
   doctype: { type: String, required: true },

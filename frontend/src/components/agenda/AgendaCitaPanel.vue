@@ -60,14 +60,14 @@
       <Button
         class="min-h-11"
         variant="ghost"
-        icon-left="message-circle"
+        :icon-left="LucideMessageCircle"
         :label="__('Confirm on WhatsApp')"
         @click="emit('message', 'confirmation')"
       />
       <Button
         class="min-h-11"
         variant="ghost"
-        icon-left="bell"
+        :icon-left="LucideBell"
         :label="__('Remind on WhatsApp')"
         @click="emit('message', 'reminder')"
       />
@@ -220,6 +220,8 @@ import {
   slotsOn,
   telHref,
 } from '@/composables/useCitas'
+import LucideMessageCircle from '~icons/lucide/message-circle'
+import LucideBell from '~icons/lucide/bell'
 
 const props = defineProps({
   cita: { type: Object, required: true },

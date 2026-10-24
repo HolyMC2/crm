@@ -6,7 +6,7 @@
           v-if="!working"
           :variant="status.has_text ? 'subtle' : 'solid'"
           class="min-h-11 sm:min-h-0"
-          icon-left="type"
+          :icon-left="LucideType"
           :label="
             step?.tone === 'error'
               ? __('Try again')
@@ -30,11 +30,7 @@
           :role="step.tone === 'error' ? 'alert' : 'status'"
         >
           <LoadingIndicator v-if="step.tone === 'busy'" class="h-4 w-4" />
-          <FeatherIcon
-            v-else-if="step.tone === 'done'"
-            name="check"
-            class="h-4 w-4"
-          />
+          <LucideCheck v-else-if="step.tone === 'done'" class="h-4 w-4" />
           {{ step.label }}
         </span>
       </div>
@@ -65,7 +61,7 @@
 </template>
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { Button, FeatherIcon, LoadingIndicator } from 'frappe-ui'
+import { Button, LoadingIndicator } from 'frappe-ui'
 import { archivosApi, problem } from '@/composables/useArchivos'
 import {
   OCR_POLL_LIMIT_MS,
@@ -74,6 +70,8 @@ import {
   ocrReadable,
   ocrStep,
 } from '@/utils/archivosConectores'
+import LucideType from '~icons/lucide/type'
+import LucideCheck from '~icons/lucide/check'
 
 // «Read text (OCR)»: sends the original to the company's Paperless and brings
 // its text back into the document. The lead places it in ArchivoDetail.

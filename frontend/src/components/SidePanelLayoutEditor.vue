@@ -95,7 +95,7 @@
                   class="w-full h-8 mt-1.5 !bg-surface-gray-1"
                   variant="outline"
                   :label="__('Add Field')"
-                  iconLeft="plus"
+                  :iconLeft="LucidePlus"
                   @click="setOpen(!open)"
                 />
               </template>
@@ -125,7 +125,7 @@
         class="w-full h-8"
         variant="subtle"
         :label="__('Add Section')"
-        iconLeft="plus"
+        :iconLeft="LucidePlus"
         @click="
           sections.push({
             label: __('New Section'),
@@ -146,6 +146,7 @@ import { getMeta } from '@/stores/meta'
 import Draggable from 'vuedraggable'
 import { Combobox, Input } from 'frappe-ui'
 import { computed } from 'vue'
+import LucidePlus from '~icons/lucide/plus'
 
 const props = defineProps({
   doctype: { type: String, default: 'CRM Lead' },

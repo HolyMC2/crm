@@ -22,7 +22,7 @@
           class="flex min-h-11 items-center gap-1 rounded-lg pr-2 text-sm text-ink-gray-7 hover:text-ink-gray-9 sm:min-h-8"
           @click="goBack"
         >
-          <FeatherIcon name="arrow-left" class="h-4 w-4" />
+          <LucideArrowLeft class="h-4 w-4" />
           {{ __('Back to {0}', [back.label]) }}
         </button>
         <span
@@ -111,12 +111,13 @@
 
 <script setup>
 import WhatsAppReviewCard from '@/components/doco/WhatsAppReviewCard.vue'
-import { createResource, FeatherIcon } from 'frappe-ui'
+import { createResource } from 'frappe-ui'
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { completeTo, goTo, ownerReturn } from '@/composables/useAprobaciones'
 import { FilterChips } from '@/components/ui'
 import { isMobile } from '@/composables/breakpoint'
+import LucideArrowLeft from '~icons/lucide/arrow-left'
 
 const filters = [
   { label: 'Pendiente', value: 'Pendiente' },

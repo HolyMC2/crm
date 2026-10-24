@@ -41,7 +41,7 @@
             class="inline-flex items-center gap-1 rounded bg-surface-gray-2 px-1.5 py-0.5 text-2xs text-ink-gray-7 hover:bg-surface-gray-3"
             :title="__('Abrir la orden')"
           >
-            <FeatherIcon name="tool" class="size-3" />
+            <LucideWrench class="size-3" />
             {{ __('Reparación')
             }}<span v-if="ctx.repair_status"> · {{ ctx.repair_status }}</span>
           </a>
@@ -62,7 +62,7 @@
             class="inline-flex items-center gap-1 rounded px-1 py-0.5 text-2xs text-ink-gray-5"
             :title="__('Responsable')"
           >
-            <FeatherIcon name="user" class="size-3" />{{ ctx.owner_name }}
+            <LucideUser class="size-3" />{{ ctx.owner_name }}
           </span>
         </div>
       </div>
@@ -88,7 +88,7 @@
         class="flex items-center justify-between gap-2 border-b border-outline-gray-1 px-2.5 py-1.5 text-2xs text-ink-gray-5"
       >
         <span class="flex min-w-0 items-center gap-1.5">
-          <FeatherIcon name="message-square" class="size-3 shrink-0" />
+          <LucideMessageSquare class="size-3 shrink-0" />
           <span class="truncate">{{ templateLabel }}</span>
           <span v-if="provenance" class="shrink-0" :title="provenance.tip"
             >· {{ provenance.icon }} {{ provenance.label }}</span
@@ -203,7 +203,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { RouterLink } from 'vue-router'
-import { Avatar, FeatherIcon, call as frappeCall, toast } from 'frappe-ui'
+import { Avatar, call as frappeCall, toast } from 'frappe-ui'
 import { usersStore } from '@/stores/users'
 import {
   aboutLine,
@@ -213,6 +213,9 @@ import {
 } from '@/utils/reviewCardFormat'
 import { tallerOrderHref } from '@/utils/repairOrders'
 import { looksLikeId, relativeTime } from '@/utils/display'
+import LucideWrench from '~icons/lucide/wrench'
+import LucideUser from '~icons/lucide/user'
+import LucideMessageSquare from '~icons/lucide/message-square'
 
 const props = defineProps({
   row: { type: Object, required: true },

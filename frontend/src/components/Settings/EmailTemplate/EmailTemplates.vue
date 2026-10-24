@@ -115,7 +115,7 @@
                 :options="getDropdownOptions(template)"
                 placement="right"
                 :button="{
-                  icon: 'more-horizontal',
+                  icon: LucideEllipsis,
                   variant: 'ghost',
                   onblur: (e) => {
                     e.stopPropagation()
@@ -155,6 +155,8 @@ import { useBroadcast } from '@/composables/useBroadcast'
 import { TextInput, Select, Switch, Dropdown, toast } from 'frappe-ui'
 import { ref, computed, inject } from 'vue'
 import { ConfirmDelete } from '../../../utils'
+import LucideEllipsis from '~icons/lucide/ellipsis'
+import LucideCopy from '~icons/lucide/copy'
 
 const emit = defineEmits(['updateStep'])
 
@@ -223,7 +225,7 @@ function getDropdownOptions(template) {
   let options = [
     {
       label: __('Duplicate'),
-      icon: 'copy',
+      icon: LucideCopy,
       onClick: () => emit('updateStep', 'new-template', { ...template }),
     },
     ...ConfirmDelete({

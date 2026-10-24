@@ -35,7 +35,7 @@
         <div class="flex flex-wrap gap-2">
           <Button
             :disabled="busy || loading"
-            icon="refresh-cw"
+            :icon="LucideRefreshCw"
             :aria-label="__('Actualizar ventas')"
             @click="refresh"
           /><a
@@ -46,7 +46,7 @@
           ><Button
             :disabled="!data?.can_write || busy"
             variant="solid"
-            icon-left="plus"
+            :icon-left="LucidePlus"
             @click="openPicker"
             >{{ __('Agregar artículos') }}</Button
           >
@@ -265,7 +265,7 @@
                     </td>
                     <td v-if="editable" class="px-2">
                       <Button
-                        icon="x"
+                        :icon="LucideX"
                         :disabled="busy"
                         :aria-label="__('Quitar') + ' ' + line.item_name"
                         @click="removeLine(line)"
@@ -343,7 +343,7 @@
             </h3>
             <Button
               :disabled="!data.can_write || busy"
-              icon-left="link"
+              :icon-left="LucideLink"
               @click="openLink"
               >{{ __('Vincular documento') }}</Button
             >
@@ -561,6 +561,10 @@ import { useReloadOnReturn } from '@/composables/reloadOnReturn'
 import { tallerIntakeHref, tallerOrderHref } from '@/utils/repairOrders'
 import { useRoute } from 'vue-router'
 import WorkspaceItemPicker from './WorkspaceItemPicker.vue'
+import LucideRefreshCw from '~icons/lucide/refresh-cw'
+import LucidePlus from '~icons/lucide/plus'
+import LucideX from '~icons/lucide/x'
+import LucideLink from '~icons/lucide/link'
 
 const props = defineProps({
   deal: String,

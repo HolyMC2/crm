@@ -23,10 +23,7 @@
         @click="emit('run', entry)"
       >
         <!-- Below 360px the three words need the whole button. -->
-        <FeatherIcon
-          :name="entry.icon"
-          class="h-4 w-4 shrink-0 max-[359px]:hidden"
-        />
+        <Icon :icon="entry.icon" class="h-4 w-4 shrink-0 max-[359px]:hidden" />
         <span class="truncate">{{ entry.label }}</span>
       </button>
     </div>
@@ -34,7 +31,7 @@
 </template>
 
 <script setup>
-import { FeatherIcon } from 'frappe-ui'
+import Icon from '@/components/Icon.vue'
 
 defineProps({ actions: { type: Array, required: true } })
 const emit = defineEmits(['run'])

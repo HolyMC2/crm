@@ -5,7 +5,7 @@
     >
       <Button
         class="min-h-11 min-w-11 lg:hidden"
-        icon="arrow-left"
+        :icon="LucideArrowLeft"
         variant="ghost"
         :aria-label="__('Back to the list')"
         @click="$emit('close')"
@@ -42,11 +42,7 @@
         class="flex shrink-0 items-center gap-2"
         :aria-current="step.state === 'current' ? 'step' : undefined"
       >
-        <FeatherIcon
-          v-if="index"
-          name="chevron-right"
-          class="h-3.5 w-3.5 text-ink-gray-4"
-        />
+        <LucideChevronRight v-if="index" class="h-3.5 w-3.5 text-ink-gray-4" />
         <span
           class="flex h-5 w-5 items-center justify-center rounded-full text-xs font-semibold"
           :class="
@@ -59,16 +55,8 @@
                 : 'bg-surface-gray-2 text-ink-gray-5'
           "
         >
-          <FeatherIcon
-            v-if="step.state === 'done'"
-            name="check"
-            class="h-3 w-3"
-          />
-          <FeatherIcon
-            v-else-if="step.problem"
-            name="alert-triangle"
-            class="h-3 w-3"
-          />
+          <LucideCheck v-if="step.state === 'done'" class="h-3 w-3" />
+          <LucideTriangleAlert v-else-if="step.problem" class="h-3 w-3" />
           <template v-else>{{ index + 1 }}</template>
         </span>
         <span
@@ -136,9 +124,7 @@
             target="_blank"
             rel="noopener"
             class="inline-flex min-h-11 items-center gap-2 text-sm text-ink-gray-7 underline sm:min-h-0"
-            ><FeatherIcon name="external-link" class="h-4 w-4" />{{
-              __('Open original')
-            }}</a
+            ><LucideExternalLink class="h-4 w-4" />{{ __('Open original') }}</a
           >
           <p v-if="extractionFacts" class="text-sm text-ink-gray-6">
             {{ extractionFacts }}
@@ -244,7 +230,7 @@
                 class="flex min-h-11 cursor-pointer list-none items-center gap-2 text-sm font-medium text-ink-gray-8"
                 @click.prevent="manualOpen = !manualOpen"
               >
-                <FeatherIcon name="search" class="h-4 w-4" />{{
+                <LucideSearch class="h-4 w-4" />{{
                   __('Search another record')
                 }}
               </summary>
@@ -328,7 +314,7 @@
                 <a
                   :href="recordHref(row.reference_doctype, row.reference_name)"
                   class="flex min-h-11 items-center gap-2 rounded px-2 text-base text-ink-gray-9 hover:bg-surface-gray-1"
-                  ><FeatherIcon name="link" class="h-4 w-4 text-ink-gray-5" />{{
+                  ><LucideLink class="h-4 w-4 text-ink-gray-5" />{{
                     doctypeLabel(row.reference_doctype)
                   }}
                   · {{ row.reference_name }}</a
@@ -472,7 +458,7 @@
                     ? __('Reassign review')
                     : __('Assign review')
                 "
-                icon-left="user-check"
+                :icon-left="LucideUserCheck"
                 @click="assignOpen = true"
               />
               <Button
@@ -671,7 +657,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
-import { Badge, Button, Dialog, FeatherIcon, FormControl } from 'frappe-ui'
+import { Badge, Button, Dialog, FormControl } from 'frappe-ui'
 import ArchivoGuard from './ArchivoGuard.vue'
 import ArchivoOcrAction from './ArchivoOcrAction.vue'
 import AssignReviewDialog from './AssignReviewDialog.vue'
@@ -690,6 +676,14 @@ import {
   statusTheme,
 } from '@/composables/useArchivos'
 import { errorKind } from '@/utils/contactos'
+import LucideArrowLeft from '~icons/lucide/arrow-left'
+import LucideChevronRight from '~icons/lucide/chevron-right'
+import LucideCheck from '~icons/lucide/check'
+import LucideTriangleAlert from '~icons/lucide/triangle-alert'
+import LucideExternalLink from '~icons/lucide/external-link'
+import LucideSearch from '~icons/lucide/search'
+import LucideLink from '~icons/lucide/link'
+import LucideUserCheck from '~icons/lucide/user-check'
 
 const props = defineProps({
   name: { type: String, required: true },

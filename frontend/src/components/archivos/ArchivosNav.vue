@@ -49,7 +49,7 @@
       :aria-current="view === entry.value ? 'page' : undefined"
       @click="$emit('select', { view: entry.value, key: '' })"
     >
-      <FeatherIcon :name="entry.icon" class="h-4 w-4 shrink-0" />
+      <Icon :icon="entry.icon" class="h-4 w-4 shrink-0" />
       <span class="truncate">{{ entry.label }}</span>
     </button>
 
@@ -72,7 +72,7 @@
         @dragleave="entry.value === 'carpeta' && (dropTarget = null)"
         @drop="entry.value === 'carpeta' && drop($event, '')"
       >
-        <FeatherIcon :name="entry.icon" class="h-4 w-4 shrink-0" />
+        <Icon :icon="entry.icon" class="h-4 w-4 shrink-0" />
         <span class="truncate">{{ entry.label }}</span>
         <span
           v-if="entryCount(entry.value) !== ''"
@@ -106,8 +106,8 @@
             :aria-expanded="expanded.has(folder.name) ? 'true' : 'false'"
             @click.stop="toggle(folder.name)"
           >
-            <FeatherIcon
-              :name="
+            <Icon
+              :icon="
                 expanded.has(folder.name) ? 'chevron-down' : 'chevron-right'
               "
               class="h-3.5 w-3.5"
@@ -119,8 +119,8 @@
             class="flex min-w-0 flex-1 items-center gap-1.5 py-1 text-left"
             @click="$emit('select', { view: 'carpeta', key: folder.name })"
           >
-            <FeatherIcon
-              :name="folder.visibility === 'Company' ? 'folder' : 'lock'"
+            <Icon
+              :icon="folder.visibility === 'Company' ? 'folder' : 'lock'"
               class="h-3.5 w-3.5 shrink-0 text-ink-gray-5"
             />
             <span class="truncate">{{ folder.title }}</span>
@@ -140,7 +140,7 @@
               class="flex h-7 w-7 shrink-0 items-center justify-center rounded text-ink-gray-5 opacity-0 hover:bg-surface-gray-3 focus:opacity-100 group-hover:opacity-100"
               :aria-label="__('Folder actions')"
             >
-              <FeatherIcon name="more-horizontal" class="h-4 w-4" />
+              <LucideEllipsis class="h-4 w-4" />
             </button>
           </Dropdown>
         </div>
@@ -149,7 +149,7 @@
           class="flex min-h-9 items-center gap-2 rounded-lg px-3 text-left text-sm text-ink-gray-6 hover:bg-surface-gray-2 hover:text-ink-gray-8"
           @click="$emit('new-folder', currentFolderParent)"
         >
-          <FeatherIcon name="folder-plus" class="h-3.5 w-3.5 shrink-0" />
+          <LucideFolderPlus class="h-3.5 w-3.5 shrink-0" />
           {{ __('New folder') }}
         </button>
       </div>
@@ -158,7 +158,7 @@
 </template>
 <script setup>
 import { computed, ref, watch } from 'vue'
-import { Dropdown, FeatherIcon } from 'frappe-ui'
+import { Dropdown } from 'frappe-ui'
 import {
   BANDEJA_VIEWS,
   BROWSE_VIEWS,
@@ -168,6 +168,14 @@ import {
   viewCountLabel,
   viewLabel,
 } from '@/composables/useArchivos'
+import Icon from '@/components/Icon.vue'
+import LucidePen from '~icons/lucide/pen'
+import LucideCornerUpRight from '~icons/lucide/corner-up-right'
+import LucideEye from '~icons/lucide/eye'
+import LucideFolderPlus from '~icons/lucide/folder-plus'
+import LucideRotateCcw from '~icons/lucide/rotate-ccw'
+import LucideTrash2 from '~icons/lucide/trash-2'
+import LucideEllipsis from '~icons/lucide/ellipsis'
 
 // The whole left navigation: «Bandeja» (the intake queues) and «Explorar»
 // (the file manager), with the folder tree as a drop target.
@@ -248,27 +256,27 @@ function folderMenu(folder) {
   return [
     {
       label: __('Rename'),
-      icon: 'edit-2',
+      icon: LucidePen,
       onClick: () => emit('folder-action', { action: 'rename', folder }),
     },
     {
       label: __('Move'),
-      icon: 'corner-up-right',
+      icon: LucideCornerUpRight,
       onClick: () => emit('folder-action', { action: 'move', folder }),
     },
     {
       label: __('Who sees it'),
-      icon: 'eye',
+      icon: LucideEye,
       onClick: () => emit('folder-action', { action: 'visibility', folder }),
     },
     {
       label: __('New folder inside'),
-      icon: 'folder-plus',
+      icon: LucideFolderPlus,
       onClick: () => emit('new-folder', folder.name),
     },
     {
       label: folder.trashed_on ? __('Restore') : __('Send to trash'),
-      icon: folder.trashed_on ? 'rotate-ccw' : 'trash-2',
+      icon: folder.trashed_on ? LucideRotateCcw : LucideTrash2,
       onClick: () =>
         emit('folder-action', {
           action: folder.trashed_on ? 'restore' : 'trash',

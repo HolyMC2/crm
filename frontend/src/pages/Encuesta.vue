@@ -6,7 +6,7 @@
           class="flex min-h-11 items-center gap-1 text-sm text-ink-gray-7 hover:text-ink-gray-9"
           @click="goBack"
         >
-          <FeatherIcon name="arrow-left" class="h-4 w-4" />
+          <LucideArrowLeft class="h-4 w-4" />
           {{ backLabel }}
         </button>
       </nav>
@@ -122,7 +122,7 @@
             :variant="
               answer.follow_up_status === 'Completed' ? 'subtle' : 'solid'
             "
-            icon-left="user-check"
+            :icon-left="LucideUserCheck"
             :label="takeLabel"
             :loading="busy === 'take'"
             class="min-h-11 sm:min-h-8"
@@ -131,7 +131,7 @@
           <Button
             v-if="answer.actions?.close"
             :variant="answer.actions?.take ? 'subtle' : 'solid'"
-            icon-left="check"
+            :icon-left="LucideCheck"
             :label="__('Close follow-up')"
             class="min-h-11 sm:min-h-8"
             @click="closing = true"
@@ -143,7 +143,7 @@
             rel="noopener"
             class="inline-flex min-h-11 items-center gap-1 rounded bg-surface-gray-2 px-3 text-sm font-medium text-ink-gray-8 hover:bg-surface-gray-3 sm:min-h-8"
           >
-            <FeatherIcon name="message-circle" class="h-4 w-4" />
+            <LucideMessageCircle class="h-4 w-4" />
             {{ __('Message on WhatsApp') }}
           </a>
           <a
@@ -151,7 +151,7 @@
             :href="`tel:${answer.phone}`"
             class="inline-flex min-h-11 items-center gap-1 rounded bg-surface-gray-2 px-3 text-sm font-medium text-ink-gray-8 hover:bg-surface-gray-3 sm:min-h-8"
           >
-            <FeatherIcon name="phone" class="h-4 w-4" />
+            <LucidePhone class="h-4 w-4" />
             {{ __('Call', null, 'Encuestas') }}
           </a>
           <RouterLink
@@ -159,7 +159,7 @@
             :to="garantiaLink"
             class="inline-flex min-h-11 items-center gap-1 rounded bg-surface-gray-2 px-3 text-sm font-medium text-ink-gray-8 hover:bg-surface-gray-3 sm:min-h-8"
           >
-            <FeatherIcon name="shield" class="h-4 w-4" />
+            <LucideShield class="h-4 w-4" />
             {{ __('Open a warranty case') }}
           </RouterLink>
           <!-- «¿Cómo te atendimos?»: the conversation it was about, back here after -->
@@ -169,7 +169,7 @@
             class="inline-flex min-h-11 items-center gap-1 rounded bg-surface-gray-2 px-3 text-sm font-medium text-ink-gray-8 hover:bg-surface-gray-3 sm:min-h-8"
             data-testid="encuesta-open-conversation"
           >
-            <FeatherIcon name="message-square" class="h-4 w-4" />
+            <LucideMessageSquare class="h-4 w-4" />
             {{ __('Open the conversation') }}
           </RouterLink>
         </section>
@@ -314,7 +314,7 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Badge, Button, Dialog, FeatherIcon, FormControl } from 'frappe-ui'
+import { Badge, Button, Dialog, FormControl } from 'frappe-ui'
 import { whatsappMode } from '@/composables/whatsapp'
 import {
   bucketLabel,
@@ -337,6 +337,13 @@ import {
 } from '@/composables/useEncuestas'
 import { shellBoot } from '@/composables/muelleShell'
 import { can, moduleEnabled } from '@/vendor/muelle-shell/contracts'
+import LucideArrowLeft from '~icons/lucide/arrow-left'
+import LucideUserCheck from '~icons/lucide/user-check'
+import LucideCheck from '~icons/lucide/check'
+import LucideMessageCircle from '~icons/lucide/message-circle'
+import LucidePhone from '~icons/lucide/phone'
+import LucideShield from '~icons/lucide/shield'
+import LucideMessageSquare from '~icons/lucide/message-square'
 
 const SCORE_CLASS = {
   detractor: 'bg-surface-red-2 text-ink-red-8',

@@ -7,7 +7,7 @@
           class="flex min-h-11 items-center gap-1 text-sm text-ink-gray-7 hover:text-ink-gray-9"
           @click="goBack"
         >
-          <FeatherIcon name="arrow-left" class="h-4 w-4" />
+          <LucideArrowLeft class="h-4 w-4" />
           {{ __('Back to Equipo') }}
         </button>
       </nav>
@@ -202,7 +202,7 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Badge, Button, FeatherIcon, FormControl } from 'frappe-ui'
+import { Badge, Button, FormControl } from 'frappe-ui'
 import { isMobile as isPhone } from '@/composables/breakpoint'
 import {
   AUSENCIAS,
@@ -216,6 +216,7 @@ import {
   requestId,
   vacationCompanies,
 } from '@/composables/useEquipo'
+import LucideArrowLeft from '~icons/lucide/arrow-left'
 
 const route = useRoute()
 const router = useRouter()

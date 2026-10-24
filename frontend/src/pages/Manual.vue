@@ -91,7 +91,7 @@
             #actions
           >
             <Button
-              icon-left="layers"
+              :icon-left="LucideLayers"
               :label="__('Start with templates')"
               class="min-h-11 sm:min-h-8"
               data-testid="manual-templates"
@@ -99,7 +99,7 @@
             />
             <Button
               variant="solid"
-              icon-left="plus"
+              :icon-left="LucidePlus"
               :label="__('Write an article')"
               class="min-h-11 sm:min-h-8"
               data-testid="manual-new"
@@ -423,6 +423,8 @@ import {
   vistaLabel,
   vistasFor,
 } from '@/composables/useManual'
+import LucideLayers from '~icons/lucide/layers'
+import LucidePlus from '~icons/lucide/plus'
 
 const TemplatesSheet = defineAsyncComponent(
   () => import('@/components/manual/TemplatesSheet.vue'),

@@ -41,11 +41,11 @@
         <div class="flex flex-wrap gap-2">
           <Button
             :label="__('Copy link')"
-            icon-left="copy"
+            :icon-left="LucideCopy"
             @click="copy(qrTarget.url, 'link')"
           />
           <a :href="qrTarget.url" target="_blank" rel="noopener">
-            <Button :label="__('Open link')" icon-left="external-link" />
+            <Button :label="__('Open link')" :icon-left="LucideExternalLink" />
           </a>
           <a
             :href="whatsappShareUrl(shareText, qrTarget.url)"
@@ -59,7 +59,7 @@
           <Button
             v-if="canNativeShare"
             :label="__('Share…')"
-            icon-left="share-2"
+            :icon-left="LucideShare2"
             @click="nativeShare"
           />
         </div>
@@ -86,14 +86,14 @@
           <Button
             size="sm"
             :label="__('PNG')"
-            icon-left="download"
+            :icon-left="LucideDownload"
             :disabled="!qrSvg"
             @click="downloadPng"
           />
           <Button
             size="sm"
             :label="__('SVG')"
-            icon-left="download"
+            :icon-left="LucideDownload"
             :disabled="!qrSvg"
             @click="downloadSvg"
           />
@@ -136,7 +136,7 @@
           <Button
             size="sm"
             variant="ghost"
-            icon="copy"
+            :icon="LucideCopy"
             :aria-label="__('Copy {0} link', [c.label])"
             @click="copy(c.url, c.key)"
           />
@@ -235,6 +235,9 @@ import {
   publicUrl,
   whatsappShareUrl,
 } from './formModel'
+import LucideExternalLink from '~icons/lucide/external-link'
+import LucideShare2 from '~icons/lucide/share-2'
+import LucideDownload from '~icons/lucide/download'
 
 // the builder model, shared with the page and the other panels
 const b = inject(FORM_BUILDER)

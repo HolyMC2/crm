@@ -7,15 +7,16 @@
     class="w-64 max-sm:w-full"
   >
     <template #prefix>
-      <FeatherIcon name="search" class="h-4 w-4 text-ink-gray-5" />
+      <LucideSearch class="h-4 w-4 text-ink-gray-5" />
     </template>
   </FormControl>
 </template>
 
 <script setup>
 import { ref, inject } from 'vue'
-import { FormControl, FeatherIcon, call } from 'frappe-ui'
+import { FormControl, call } from 'frappe-ui'
 import { useDebounceFn } from '@vueuse/core'
+import LucideSearch from '~icons/lucide/search'
 
 // Deal-native fields the search ORs across via crm.api.doc.get_data's
 // or_filters parameter (added doco-side for free-text search).

@@ -20,7 +20,7 @@
           <Button
             v-if="data?.groups?.length"
             variant="ghost"
-            icon="check-circle"
+            :icon="LucideCircleCheckBig"
             class="min-h-11 min-w-11 sm:min-h-8 sm:min-w-8"
             :tooltip="__('Mark all as read')"
             :aria-label="__('Mark all as read')"
@@ -29,7 +29,7 @@
           />
           <Button
             variant="ghost"
-            icon="maximize-2"
+            :icon="LucideMaximize2"
             class="min-h-11 min-w-11 sm:min-h-8 sm:min-w-8"
             :tooltip="__('See all avisos')"
             :aria-label="__('See all avisos')"
@@ -37,7 +37,7 @@
           />
           <Button
             variant="ghost"
-            icon="x"
+            :icon="LucideX"
             class="min-h-11 min-w-11 sm:min-h-8 sm:min-w-8"
             :aria-label="__('Close')"
             @click="close"
@@ -102,10 +102,7 @@
               @mute="actions.mute"
             />
             <div v-else class="space-y-2 p-6 text-center">
-              <FeatherIcon
-                name="check-circle"
-                class="mx-auto size-8 text-ink-gray-4"
-              />
+              <LucideCircleCheckBig class="mx-auto size-8 text-ink-gray-4" />
               <p class="text-base font-medium">
                 {{ __("You're all caught up") }}
               </p>
@@ -129,7 +126,7 @@
         <footer class="border-t border-outline-gray-1 px-4 py-2">
           <Button
             variant="ghost"
-            icon-left="sliders"
+            :icon-left="LucideSlidersVertical"
             :label="__('Preferences')"
             @click="seeAll({ prefs: 1 })"
           />
@@ -141,7 +138,6 @@
 <script setup>
 import { computed, defineAsyncComponent, nextTick, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { FeatherIcon } from 'frappe-ui'
 import {
   avisosVersion,
   categoryMeta,
@@ -150,6 +146,10 @@ import {
   useAvisosActions,
 } from '@/composables/useAvisos'
 import { useShellLayer } from '@/composables/shellKeyboard'
+import LucideCircleCheckBig from '~icons/lucide/circle-check-big'
+import LucideMaximize2 from '~icons/lucide/maximize-2'
+import LucideX from '~icons/lucide/x'
+import LucideSlidersVertical from '~icons/lucide/sliders-vertical'
 
 // The list renders only while the panel is open (bundle budget, SPEC §4).
 const AvisosList = defineAsyncComponent(

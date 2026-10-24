@@ -29,7 +29,7 @@
       </div>
       <Button
         variant="ghost"
-        icon="x"
+        :icon="LucideX"
         :tooltip="__('Cancelar')"
         @click="emit('cancel')"
       />
@@ -142,6 +142,7 @@ import {
   Badge,
   Button,
 } from 'frappe-ui'
+import LucideX from '~icons/lucide/x'
 
 const props = defineProps({
   doctype: { type: String, required: true },

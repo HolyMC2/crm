@@ -71,7 +71,7 @@
             "
             theme="red"
             variant="solid"
-            icon-left="trash-2"
+            :icon-left="LucideTrash2"
             @click="confirmDelete()"
           />
           <Button
@@ -83,7 +83,7 @@
             "
             variant="subtle"
             theme="gray"
-            icon-left="unlock"
+            :icon-left="LucideLockOpen"
             @click="confirmUnlink()"
           />
           <Button
@@ -134,6 +134,8 @@
 import { createResource, call } from 'frappe-ui'
 import { useRouter } from 'vue-router'
 import { computed, ref } from 'vue'
+import LucideTrash2 from '~icons/lucide/trash-2'
+import LucideLockOpen from '~icons/lucide/lock-open'
 
 const show = defineModel({ type: Boolean })
 const router = useRouter()

@@ -32,8 +32,8 @@
           data-testid="camera-close"
           @click="back"
         >
-          <FeatherIcon
-            :name="step === 'camera' ? 'x' : 'arrow-left'"
+          <Icon
+            :icon="step === 'camera' ? 'x' : 'arrow-left'"
             class="size-6"
             aria-hidden="true"
           />
@@ -52,8 +52,8 @@
           data-testid="camera-torch"
           @click="toggleTorch"
         >
-          <FeatherIcon
-            :name="torch ? 'zap' : 'zap-off'"
+          <Icon
+            :icon="torch ? 'zap' : 'zap-off'"
             class="size-6"
             aria-hidden="true"
           />
@@ -93,11 +93,7 @@
             role="status"
           >
             <template v-if="problemKind">
-              <FeatherIcon
-                name="camera"
-                class="size-10 text-white/80"
-                aria-hidden="true"
-              />
+              <LucideCamera class="size-10 text-white/80" aria-hidden="true" />
               <p class="max-w-sm text-base font-medium">
                 {{ problemText.title }}
               </p>
@@ -111,11 +107,7 @@
                   data-testid="camera-native"
                   @click="nativeInput?.click()"
                 >
-                  <FeatherIcon
-                    name="camera"
-                    class="size-5"
-                    aria-hidden="true"
-                  />
+                  <LucideCamera class="size-5" aria-hidden="true" />
                   {{ __('Take the photo with the phone camera') }}
                 </button>
                 <button
@@ -161,7 +153,7 @@
             data-testid="camera-pick"
             @click="pickOpen = true"
           >
-            <FeatherIcon name="image" class="size-6" aria-hidden="true" />
+            <LucideImage class="size-6" aria-hidden="true" />
           </button>
           <button
             type="button"
@@ -206,11 +198,7 @@
             v-if="single"
             class="flex items-center gap-3 rounded-xl bg-surface-gray-1 p-4 text-base"
           >
-            <FeatherIcon
-              name="file-text"
-              class="size-6 flex-none"
-              aria-hidden="true"
-            />
+            <LucideFileText class="size-6 flex-none" aria-hidden="true" />
             <span class="min-w-0 break-words">{{ single.name }}</span>
           </p>
           <ol
@@ -244,11 +232,7 @@
                   :aria-label="__('Move page {0} earlier', [index + 1])"
                   @click="move(index, index - 1)"
                 >
-                  <FeatherIcon
-                    name="arrow-left"
-                    class="size-5"
-                    aria-hidden="true"
-                  />
+                  <LucideArrowLeft class="size-5" aria-hidden="true" />
                 </button>
                 <button
                   type="button"
@@ -256,11 +240,7 @@
                   :aria-label="__('Retake page {0}', [index + 1])"
                   @click="retake(index)"
                 >
-                  <FeatherIcon
-                    name="rotate-ccw"
-                    class="size-5"
-                    aria-hidden="true"
-                  />
+                  <LucideRotateCcw class="size-5" aria-hidden="true" />
                 </button>
                 <button
                   type="button"
@@ -268,11 +248,7 @@
                   :aria-label="__('Remove page {0}', [index + 1])"
                   @click="remove(index)"
                 >
-                  <FeatherIcon
-                    name="trash-2"
-                    class="size-5"
-                    aria-hidden="true"
-                  />
+                  <LucideTrash2 class="size-5" aria-hidden="true" />
                 </button>
                 <button
                   type="button"
@@ -281,11 +257,7 @@
                   :aria-label="__('Move page {0} later', [index + 1])"
                   @click="move(index, index + 1)"
                 >
-                  <FeatherIcon
-                    name="arrow-right"
-                    class="size-5"
-                    aria-hidden="true"
-                  />
+                  <LucideArrowRight class="size-5" aria-hidden="true" />
                 </button>
               </div>
             </li>
@@ -300,7 +272,7 @@
           <Button
             v-if="!single && pages.length < maxPages"
             class="min-h-11"
-            icon-left="plus"
+            :icon-left="LucidePlus"
             :label="__('Add page')"
             :disabled="busy"
             @click="addPage"
@@ -588,7 +560,7 @@
             aria-hidden="true"
           />
           <button type="button" :class="ROW" @click="choose(galleryInput)">
-            <FeatherIcon name="image" class="size-5" aria-hidden="true" />{{
+            <LucideImage class="size-5" aria-hidden="true" />{{
               __('Photos from the gallery')
             }}
           </button>
@@ -598,12 +570,12 @@
             :class="ROW"
             @click="choose(fileInput)"
           >
-            <FeatherIcon name="upload" class="size-5" aria-hidden="true" />{{
+            <LucideUpload class="size-5" aria-hidden="true" />{{
               __('A PDF or an XML invoice')
             }}
           </button>
           <button type="button" :class="ROW" @click="choose(nativeInput)">
-            <FeatherIcon name="camera" class="size-5" aria-hidden="true" />{{
+            <LucideCamera class="size-5" aria-hidden="true" />{{
               __('The phone camera')
             }}
           </button>
@@ -616,7 +588,7 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, ref, useId, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Button, FeatherIcon, FormControl, toast } from 'frappe-ui'
+import { Button, FormControl, toast } from 'frappe-ui'
 import { camera, settleCamera } from './cameraDoor'
 import {
   MAX_PAGES,
@@ -643,6 +615,16 @@ import {
   capturaMessage,
   loadCapturaBoot,
 } from '@/composables/useCaptura'
+import Icon from '@/components/Icon.vue'
+import LucideCamera from '~icons/lucide/camera'
+import LucideImage from '~icons/lucide/image'
+import LucideFileText from '~icons/lucide/file-text'
+import LucideArrowLeft from '~icons/lucide/arrow-left'
+import LucideRotateCcw from '~icons/lucide/rotate-ccw'
+import LucideTrash2 from '~icons/lucide/trash-2'
+import LucideArrowRight from '~icons/lucide/arrow-right'
+import LucidePlus from '~icons/lucide/plus'
+import LucideUpload from '~icons/lucide/upload'
 
 const ICON =
   'flex size-12 flex-none items-center justify-center rounded-full disabled:opacity-30 hover:bg-black/10'

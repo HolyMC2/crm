@@ -11,12 +11,12 @@
         data-capturar-documento
         @click="show"
       >
-        <FeatherIcon name="file-plus" class="h-6 w-6" />
+        <LucideFilePlus class="h-6 w-6" />
       </button>
       <Button
         v-else
         :variant="variant"
-        icon-left="file-plus"
+        :icon-left="LucideFilePlus"
         :label="buttonLabel"
         class="min-h-11 sm:min-h-8"
         v-bind="$attrs"
@@ -28,13 +28,14 @@
 </template>
 <script setup>
 import { computed, onMounted, watch } from 'vue'
-import { Button, FeatherIcon } from 'frappe-ui'
+import { Button } from 'frappe-ui'
 import {
   allowedTargets,
   capturaBoot,
   loadCapturaBoot,
 } from '@/composables/useCaptura'
 import { loadCameraSheet, openCamera } from './cameraDoor'
+import LucideFilePlus from '~icons/lucide/file-plus'
 
 // «Capturar documento»: a door of the shell's document camera (Shell D7,
 // SPEC DD14) with this page's intent preset: the targets it offers, the
