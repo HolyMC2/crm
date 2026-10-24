@@ -472,11 +472,14 @@ export function useShellKeyboard({
       const assistant = shellAssistant.value
       if (!assistant) return
       event.preventDefault()
-      Promise.resolve(assistant.ready ? assistant.ready() : true).then((on) => {
+      const act = (on) => {
         if (!on) return
         if (!assistant.isOpen()) closeLayersFor(modals)
         assistant.toggle()
-      })
+      }
+      const on = assistant.ready ? assistant.ready() : true
+      if (typeof on?.then === 'function') on.then(act)
+      else act(on)
       return
     }
     if (modals.length) {
