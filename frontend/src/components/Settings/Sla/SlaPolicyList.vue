@@ -15,25 +15,26 @@
       v-if="slaPolicyListResource.data?.length > 9 || slaSearchQuery.length"
       #header-bottom
     >
-      <div class="relative">
-        <Input
-          :model-value="slaSearchQuery"
-          :placeholder="__('Search')"
-          type="text"
-          class="bg-surface-gray-2 hover:bg-surface-gray-2 focus:ring-0 border-outline-gray-2 rounded"
-          icon-left="search"
-          debounce="300"
-          inputClass="p-4 pr-12"
-          @input="slaSearchQuery = $event"
-        />
-        <Button
-          v-if="slaSearchQuery"
-          icon="lucide-x"
-          variant="ghost"
-          class="absolute right-1 top-1/2 -translate-y-1/2"
-          @click="slaSearchQuery = ''"
-        />
-      </div>
+      <TextInput
+        :model-value="slaSearchQuery"
+        :placeholder="__('Search')"
+        type="text"
+        size="md"
+        :debounce="300"
+        @update:model-value="slaSearchQuery = $event"
+      >
+        <template #prefix>
+          <LucideSearch class="size-4 text-ink-gray-5" />
+        </template>
+        <template v-if="slaSearchQuery" #suffix>
+          <Button
+            icon="lucide-x"
+            variant="ghost"
+            :aria-label="__('Clear search')"
+            @click="slaSearchQuery = ''"
+          />
+        </template>
+      </TextInput>
     </template>
     <template #content>
       <div
@@ -156,12 +157,14 @@ import {
   FormControl,
   LoadingIndicator,
   Switch,
+  TextInput,
   toast,
 } from 'frappe-ui'
 import { ConfirmDelete } from '@/utils'
 import { resetSlaData } from './utils'
 import { inject, ref, watch } from 'vue'
 import LucideCopy from '~icons/lucide/copy'
+import LucideSearch from '~icons/lucide/search'
 
 const slaPolicyListResource = inject('slaPolicyListResource')
 const updateStep = inject('updateStep')

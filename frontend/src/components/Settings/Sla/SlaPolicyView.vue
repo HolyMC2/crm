@@ -234,13 +234,6 @@
       </div>
     </template>
   </SettingsLayoutBase>
-  <ConfirmDialog
-    v-model="showConfirmDialog.show"
-    :title="showConfirmDialog.title"
-    :message="showConfirmDialog.message"
-    :onConfirm="showConfirmDialog.onConfirm"
-    :onCancel="() => (showConfirmDialog.show = false)"
-  />
 </template>
 
 <script setup>
@@ -249,7 +242,6 @@ import {
   Badge,
   Button,
   Checkbox,
-  ConfirmDialog,
   createResource,
   DatePicker,
   ErrorMessage,
@@ -260,6 +252,7 @@ import {
   Select,
   Switch,
   toast,
+  dialog,
 } from 'frappe-ui'
 import { inject, onMounted, onUnmounted, ref, watch } from 'vue'
 import SettingsLayoutBase from '../../Layouts/SettingsLayoutBase.vue'
@@ -279,12 +272,6 @@ const isDirty = ref(false)
 const initialData = ref(null)
 const useNewUI = ref(true)
 const isOldSla = ref(false)
-const showConfirmDialog = ref({
-  show: false,
-  title: '',
-  message: '',
-  onConfirm: () => {},
-})
 
 const slaPolicyListResource = inject('slaPolicyListResource')
 const step = inject('step')
@@ -341,23 +328,7 @@ if (step.value.data && step.value.fetchData) {
   disableSettingModalOutsideClick.value = true
 }
 
-const goBack = () => {
-  const confirmDialogInfo = {
-    show: true,
-    title: __('Unsaved Changes'),
-    message: __(
-      'Are you sure you want to go back? Unsaved changes will be lost.',
-    ),
-    onConfirm: goBack,
-  }
-  if (isDirty.value && !showConfirmDialog.value.show) {
-    showConfirmDialog.value = confirmDialogInfo
-    return
-  }
-  if (!step.value.data && !showConfirmDialog.value.show) {
-    showConfirmDialog.value = confirmDialogInfo
-    return
-  }
+const leave = () => {
   // Workaround fix for settings modal not closing after going back
   setTimeout(() => {
     step.value = {
@@ -366,7 +337,20 @@ const goBack = () => {
       fetchData: true,
     }
   }, 250)
-  showConfirmDialog.value.show = false
+}
+
+const goBack = () => {
+  if (isDirty.value || !step.value.data) {
+    dialog.confirm({
+      title: __('Unsaved Changes'),
+      message: __(
+        'Are you sure you want to go back? Unsaved changes will be lost.',
+      ),
+      onConfirm: () => leave(),
+    })
+    return
+  }
+  leave()
 }
 
 const toggleEnabled = () => {
@@ -396,17 +380,13 @@ const saveSla = () => {
 
   if (step.value.data) {
     if (isOldSla.value && useNewUI.value) {
-      showConfirmDialog.value = {
-        show: true,
+      dialog.confirm({
         title: __('Confirm Overwrite'),
         message: __(
           'Your old conditions will be overwritten. Are you sure you want to save?',
         ),
-        onConfirm: () => {
-          updateSla()
-          showConfirmDialog.value.show = false
-        },
-      }
+        onConfirm: () => updateSla(),
+      })
       return
     }
     updateSla()

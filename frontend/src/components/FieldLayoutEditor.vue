@@ -32,7 +32,7 @@
                 {{ __(tab.label) || __('Untitled') }}
               </div>
               <div v-else class="flex gap-1 items-center">
-                <Input
+                <TextInput
                   v-model="tab.label"
                   @keydown.enter="tab.editingLabel = false"
                   @blur="tab.editingLabel = false"
@@ -128,7 +128,7 @@
                     />
                   </div>
                   <div v-else class="flex gap-2 items-center">
-                    <Input
+                    <TextInput
                       v-model="section.label"
                       @keydown.enter="section.editingLabel = false"
                       @blur="section.editingLabel = false"
@@ -277,7 +277,7 @@ import Draggable from 'vuedraggable'
 import { getRandom } from '@/utils'
 import { getMeta } from '@/stores/meta'
 import { globalStore } from '@/stores/global'
-import { Combobox, Dropdown } from 'frappe-ui'
+import { Combobox, Dropdown, TextInput } from 'frappe-ui'
 import { ref, computed, watch, nextTick } from 'vue'
 import LucideSquarePen from '~icons/lucide/square-pen'
 import LucideTrash2 from '~icons/lucide/trash-2'

@@ -13,15 +13,14 @@ describe('lucide sprite loader', () => {
       ),
     )
     await expect(ensureLucideSprite(failing)).resolves.toBeUndefined()
-    const install = vi.fn(() => {
-      const el = document.createElement('div')
-      el.id = 'lucide-sprite'
-      document.body.append(el)
-    })
-    const working = vi.fn(async () => ({ spritePlugin: { install } }))
+    const working = vi.fn(async () => ({
+      default: '<svg><symbol id="check" /></svg>',
+    }))
     await ensureLucideSprite(working)
     expect(working).toHaveBeenCalledTimes(1)
-    expect(install).toHaveBeenCalledTimes(1)
-    expect(document.getElementById('lucide-sprite')).not.toBeNull()
+    expect(document.querySelector('#lucide-sprite symbol#check')).not.toBeNull()
+    // Already in the document: the module is not fetched again.
+    await ensureLucideSprite(working)
+    expect(working).toHaveBeenCalledTimes(1)
   })
 })

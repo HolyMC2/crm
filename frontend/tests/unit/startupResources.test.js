@@ -31,7 +31,6 @@ vi.mock('frappe-ui', async () => {
     ...resources,
     FrappeUI: { install() {} },
     Button: component,
-    Input: component,
     TextInput: component,
     FormControl: component,
     ErrorMessage: component,
@@ -42,7 +41,7 @@ vi.mock('frappe-ui', async () => {
   }
 })
 vi.mock('@/utils/silentUpdate', () => ({ installSilentUpdate: () => null }))
-vi.mock('frappe-ui/icons', () => ({ spritePlugin: { install() {} } }))
+vi.mock('lucide-static/sprite.svg?raw', () => ({ default: '<svg></svg>' }))
 vi.mock('@/socket', () => ({ initSocket: () => ({}) }))
 vi.mock('@/router', () => ({ default: { install() {} } }))
 vi.mock('@/translation', () => ({ default: { install() {} } }))

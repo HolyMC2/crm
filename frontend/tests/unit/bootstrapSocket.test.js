@@ -12,7 +12,7 @@ const fixture = vi.hoisted(() => ({
   dialog: vi.fn(),
   router: { install: vi.fn() },
   translation: { install: vi.fn() },
-  sprite: { install: vi.fn() },
+  sprite: '<svg></svg>',
   startupTelemetry: vi.fn(),
   resources: { install: vi.fn() },
 }))
@@ -40,7 +40,6 @@ vi.mock('frappe-ui', async () => {
   return {
     FrappeUI,
     Button: component,
-    Input: component,
     TextInput: component,
     FormControl: component,
     ErrorMessage: component,
@@ -57,7 +56,7 @@ vi.mock('@/utils/startupTelemetry', () => ({
   installTelemetry: fixture.startupTelemetry,
 }))
 vi.mock('@/utils/silentUpdate', () => ({ installSilentUpdate: () => null }))
-vi.mock('frappe-ui/icons', () => ({ spritePlugin: fixture.sprite }))
+vi.mock('lucide-static/sprite.svg?raw', () => ({ default: fixture.sprite }))
 vi.mock('@/router', () => ({ default: fixture.router }))
 vi.mock('@/translation', () => ({ default: fixture.translation }))
 vi.mock('@/utils/dialogs', () => ({ createDialog: fixture.dialog }))
@@ -141,7 +140,6 @@ function expectCanonicalSocket() {
   expect(Object.keys(root.appContext.components)).toEqual([
     'Button',
     'TextInput',
-    'Input',
     'FormControl',
     'ErrorMessage',
     'Dialog',
@@ -158,7 +156,7 @@ function expectCanonicalSocket() {
     expect(plugin.install).toHaveBeenCalledOnce()
   }
   // The lucide sprite is deferred to idle / first Icon.vue use (first-load budget).
-  expect(fixture.sprite.install).not.toHaveBeenCalled()
+  expect(document.getElementById('lucide-sprite')).toBeNull()
   return socket
 }
 

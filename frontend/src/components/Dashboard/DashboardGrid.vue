@@ -52,7 +52,7 @@
   </div>
 </template>
 <script setup>
-import { GridLayout } from 'frappe-ui'
+import GridLayout from './GridLayout.vue'
 
 defineProps({
   editing: { type: Boolean, default: false },

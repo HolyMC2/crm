@@ -131,12 +131,8 @@ import FileTextIcon from '@/components/Icons/FileTextIcon.vue'
 import FileAudioIcon from '@/components/Icons/FileAudioIcon.vue'
 import FileVideoIcon from '@/components/Icons/FileVideoIcon.vue'
 import { formatDate, convertSize } from '@/utils'
-import {
-  FormControl,
-  CircularProgressBar,
-  createResource,
-  toast,
-} from 'frappe-ui'
+import { FormControl, createResource, toast } from 'frappe-ui'
+import CircularProgressBar from './CircularProgressBar.vue'
 import { ref, onMounted, watch, onUnmounted } from 'vue'
 
 const props = defineProps({

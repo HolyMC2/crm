@@ -1,13 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h } from 'vue'
-import axisOptions from '../../node_modules/frappe-ui/src/components/Charts/axisChartOptions'
 
-const captured = vi.hoisted(() => ({ config: null }))
-vi.mock('frappe-ui', () => ({
-  AxisChart: {
-    props: ['config'],
-    setup(props) {
-      captured.config = props.config
+const captured = vi.hoisted(() => ({ props: null, emit: null }))
+vi.mock('frappe-ui/charts', () => ({
+  BarChart: {
+    props: ['data', 'x', 'y', 'horizontal', 'xAxis', 'yAxis', 'seriesConfig'],
+    emits: ['select'],
+    setup(props, { emit }) {
+      captured.props = props
+      captured.emit = emit
       return () => h('div')
     },
   },
@@ -20,11 +21,17 @@ afterEach(() => {
   element?.remove()
 })
 
-describe('report chart compatibility with installed frappe-ui', () => {
-  it('bounds horizontal category labels and keeps the count axis rooted at zero', () => {
-    element = document.createElement('div')
-    document.body.append(element)
-    app = createApp(ReportChart, {
+const mount = (props) => {
+  element = document.createElement('div')
+  document.body.append(element)
+  app = createApp(ReportChart, props)
+  app.config.globalProperties.__ = globalThis.__
+  app.mount(element)
+}
+
+describe('report chart on frappe-ui/charts', () => {
+  it('draws horizontal bars with bounded category labels and a count axis rooted at zero', () => {
+    mount({
       title: 'Source wins',
       rows: [
         {
@@ -33,18 +40,46 @@ describe('report chart compatibility with installed frappe-ui', () => {
         },
       ],
     })
-    app.config.globalProperties.__ = globalThis.__
-    app.mount(element)
-
-    // Use the installed chart adapter: a top-level yAxis object is ignored when
-    // its generated axes are arrays. Test the resulting options, not our config.
-    const options = axisOptions(captured.config)
-    expect(options.yAxis[0].axisLabel).toMatchObject({
+    expect(captured.props.horizontal).toBe(true)
+    expect(captured.props.x).toBe('label')
+    expect(captured.props.y).toBe('value')
+    expect(captured.props.xAxis.echartOptions.axisLabel).toMatchObject({
       width: 108,
       overflow: 'truncate',
-      color: 'var(--ink-gray-7)',
     })
-    expect(options.xAxis.min).toBe(0)
-    expect(options.series[0].data[0][0]).toBe(4)
+    expect(captured.props.yAxis.min).toBe(0)
+    expect(captured.props.data[0]).toMatchObject({ index: 0, value: 4 })
+    expect(captured.props.data[0].label).toMatch(/^1\. A very long/)
+  })
+
+  it("a selected bar emits the caller's row", () => {
+    const onSelect = vi.fn()
+    const rows = [
+      { label: 'Web', value: 2, name: 'web' },
+      { label: 'Phone', value: 1, name: 'phone' },
+    ]
+    mount({ title: 'Sources', rows, onSelect })
+    captured.emit('select', {
+      name: 'value',
+      value: 1,
+      row: captured.props.data[1],
+    })
+    expect(onSelect).toHaveBeenCalledWith(rows[1])
+  })
+
+  it('does not emit when not selectable', () => {
+    const onSelect = vi.fn()
+    mount({
+      title: 'Sources',
+      rows: [{ label: 'Web', value: 2 }],
+      onSelect,
+      selectable: false,
+    })
+    captured.emit('select', {
+      name: 'value',
+      value: 2,
+      row: captured.props.data[0],
+    })
+    expect(onSelect).not.toHaveBeenCalled()
   })
 })

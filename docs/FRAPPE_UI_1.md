@@ -143,6 +143,41 @@ mask class costs 0.15–0.3 KB gzip, so string names were not converted to class
 - The lazy global `FeatherIcon` registration (`utils/lazyGlobals.js`) is gone; ten files that used
   the global tag now import their icons.
 
+### Steps 4–6: shell, lists, editor, charts and the removed components
+
+- Shell (B3): `useTheme` → `useColorScheme` (`colorScheme`, `setColorScheme`; same `theme`
+  storage key and `data-theme` attribute, and the composable now restores the saved value on its
+  first call), Sidebar `:disable-collapse="mobile"` → `:collapsible="!mobile"`, SidebarItem
+  `:to` → `:route`. crm's `useShellTheme` facade keeps `theme`/`setTheme` for UserMenu, MoreSheet
+  and the palette.
+- Lists (B5): the ListView family imports from `frappe-ui/experimental` (10 files), API unchanged.
+  `frappe-ui/list` is a later migration.
+- Editor and calendar (B6): `TextEditor` (15 files) and `CalendarColorMap` import from
+  `frappe-ui/experimental`, API unchanged; crm's Agenda is its own calendar, the frappe-ui
+  `Calendar` component was never used. `IconPicker` moves from `frappe-ui/icons` to
+  `frappe-ui/experimental`; the sprite it reads comes from crm's own loader
+  (`src/utils/lucideSprite.js` injects `lucide-static/sprite.svg?raw` under `#lucide-sprite`,
+  the id frappe-ui's sprite `Icon`/`IconPicker` look up).
+- Charts (B6): `DashboardItem.vue` and `ReportChart.vue` render `frappe-ui/charts`
+  (`BarChart`/`LineChart` by series type, `NumberCard`, `DonutChart`). The dashboard API keeps
+  answering in the v1 `config` shape; `src/components/Dashboard/chartProps.js` maps it to the new
+  props (`xAxis.key` → `x`, `series[].name` → `y`/`y2` by `axis`, `series[].echartOptions.name`
+  → `seriesConfig[name].label`, `swapXY` → `horizontal`, `categoryColumn/valueColumn` →
+  `category/value`). `ReportChart` listens to `select` (`{ name, value, row }`) instead of the
+  v1 `events.click({ dataIndex })` and drops its CSS-variable colors and echarts tooltip
+  override: the new family themes axes and tooltips from tokens itself.
+- Removed components (B6): `GridLayout` is vendored from beta.29 as
+  `src/components/Dashboard/GridLayout.vue` (the `grid-layout-plus` wrapper; crm now depends on
+  `grid-layout-plus` directly) and `CircularProgressBar` as
+  `src/components/FilesUploader/CircularProgressBar.vue`, props unchanged. `Input` → `TextInput`
+  at the five sites (`SlaPolicyList`'s search gets the icon through `#prefix`, the clear button
+  through `#suffix`, and listens to `update:modelValue`); the lazy `Input` global is gone.
+  `NestedPopover` (SlaHolidays) → `Popover bare` with `#trigger`/`#default`. `ConfirmDialog` →
+  `dialog.confirm({ title, message, onConfirm })` in `AssignmentRuleView` and `SlaPolicyView`,
+  the `showConfirmDialog` state with it.
+- The `move-imports` codemod inserted the new statement inside a multi-line import when the
+  touched statement kept other names; fixed in this lane, the outputs repaired.
+
 ## 5. Input list for `FUI1-behavior` (silent breaks)
 
 Filled at step 8 from the lab walk. Known from the sources before the walk:
@@ -158,6 +193,21 @@ Filled at step 8 from the lab walk. Known from the sources before the walk:
   FeatherIcon had no size class the icon may now draw at 24px.
 - Icons bound through the sprite `Icon` appear after the sprite loads (idle after first paint);
   static icons are inline components and paint with the view.
+- Charts (step 6): the dashboard and report charts are the new `frappe-ui/charts` family. Axis
+  colors, legend, tooltip layout and the empty/loading states are frappe-ui's, not crm's
+  overrides; the Lead-conversion bar chart's `colorBy: data` goes through `echartOptions` and
+  may color differently; `NumberCard` lays out title/value/delta differently from `NumberChart`
+  (crm passes `card: false` and keeps its own container). Check the Hoy dashboard and the
+  Reports page in both schemes.
+- `dialog.confirm` (step 6): Esc, overlay click and the close button now run the cancel path;
+  the confirm button shows a loading state while `onConfirm` is pending. The v1 `ConfirmDialog`
+  had no close button.
+- `TextInput` for the SLA policy search (step 6): frappe-ui's subtle variant instead of the
+  custom gray classes; the clear button sits inside the field.
+- `Popover` (step 6): the holiday-list picker opens through reka-ui (portal, collision
+  handling, Esc to close) instead of the v1 NestedPopover's popper.
+- `useColorScheme` (step 4): the first call restores the saved preference itself; a stored
+  value other than light/dark/system now resolves to `system` where v1 read it as light.
 - Tailwind preset renames (`bg-surface-white`, named radius aliases, `text-base font-medium`,
   `--focus-*`, line-height 1.35), `dark:` redundancy, hover on touch.
 - `call()` honours `requestBaseUrl`/`requestHeaders`/`serverMessagesHandler` (184 files).

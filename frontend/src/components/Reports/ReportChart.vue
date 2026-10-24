@@ -10,7 +10,18 @@
     "
     @retry="$emit('retry')"
   >
-    <AxisChart :config="config" :events="events" class="h-44 w-full min-w-0" />
+    <BarChart
+      class="h-44 w-full min-w-0"
+      :data="data"
+      x="label"
+      y="value"
+      horizontal
+      :x-axis="xAxis"
+      :y-axis="yAxis"
+      :series-config="seriesConfig"
+      :echart-options="echartOptions"
+      @select="onSelect"
+    />
     <details class="mt-2 text-sm">
       <summary class="cursor-pointer py-2 text-ink-gray-6">
         {{ selectable ? __('View records by group') : __('View chart values') }}
@@ -33,7 +44,7 @@
 </template>
 <script setup>
 import { computed } from 'vue'
-import { AxisChart } from 'frappe-ui'
+import { BarChart } from 'frappe-ui/charts'
 import ReportBlock from './ReportBlock.vue'
 const props = defineProps({
   title: { type: String, required: true },
@@ -45,64 +56,36 @@ const props = defineProps({
   selectable: { type: Boolean, default: true },
 })
 const emit = defineEmits(['select', 'retry'])
-const events = {
-  click: ({ dataIndex }) => {
-    if (props.selectable && props.rows[dataIndex])
-      emit('select', props.rows[dataIndex])
-  },
-}
-const config = computed(() => ({
-  title: '',
-  data: props.rows.map((row, index) => ({
+// `index` rides along in each row so a selected bar maps back to the caller's
+// row whatever the chart did to the label.
+const data = computed(() =>
+  props.rows.map((row, index) => ({
+    index,
     label: `${index + 1}. ${row.label}`,
     value: row.value,
   })),
-  xAxis: {
-    key: 'label',
-    type: 'category',
-    echartOptions: {
-      inverse: true,
-      axisLine: { show: false },
-      axisLabel: {
-        width: 108,
-        overflow: 'truncate',
-        color: 'var(--ink-gray-7)',
-      },
-    },
-  },
-  yAxis: {
-    yMin: 0,
-    echartOptions: {
-      min: 0,
-      axisLabel: { color: 'var(--ink-gray-6)' },
-      splitLine: { lineStyle: { color: 'var(--outline-gray-2)' } },
-    },
-  },
-  swapXY: true,
-  series: [
-    {
-      name: 'value',
-      type: 'bar',
-      color: 'var(--ink-gray-5)',
-      echartOptions: { barMaxWidth: 18 },
-    },
-  ],
+)
+const onSelect = ({ row }) => {
+  const selected = props.rows[row?.index]
+  if (props.selectable && selected) emit('select', selected)
+}
+const xAxis = {
+  type: 'category',
   echartOptions: {
-    animation: false,
-    grid: { top: 8, bottom: 8, left: 0, right: 12, containLabel: true },
-    tooltip: {
-      renderMode: 'richText',
-      backgroundColor: 'var(--surface-gray-2)',
-      borderColor: 'var(--outline-gray-2)',
-      textStyle: { color: 'var(--ink-gray-8)' },
-      formatter: (points) => {
-        const point = Array.isArray(points) ? points[0] : points
-        const row = props.rows[point?.dataIndex]
-        return row
-          ? `${row.label}\n${props.valueLabel || __('Records')}: ${row.value}`
-          : ''
-      },
-    },
+    inverse: true,
+    axisLine: { show: false },
+    axisLabel: { width: 108, overflow: 'truncate' },
+  },
+}
+const yAxis = { min: 0 }
+const seriesConfig = computed(() => ({
+  value: {
+    label: props.valueLabel || __('Records'),
+    echartOptions: { barMaxWidth: 18 },
   },
 }))
+const echartOptions = {
+  animation: false,
+  grid: { top: 8, bottom: 8, left: 0, right: 12, containLabel: true },
+}
 </script>

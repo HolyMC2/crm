@@ -6,7 +6,6 @@ import { defineAsyncComponent } from 'vue'
 // out of the entry chunk.
 const loaders = {
   TextInput: () => import('frappe-ui-components/TextInput/TextInput.vue'),
-  Input: () => import('frappe-ui-components/Input.vue'),
   FormControl: () => import('frappe-ui-components/FormControl/FormControl.vue'),
   ErrorMessage: () =>
     import('frappe-ui-components/ErrorMessage/ErrorMessage.vue'),
