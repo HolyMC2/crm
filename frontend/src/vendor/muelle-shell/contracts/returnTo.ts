@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/shell-contracts@0.13.0 (016566f50369). DO NOT EDIT:
+// Vendored from muelle/workspace/packages/shell-contracts@0.14.0 (ca0886b770b5). DO NOT EDIT:
 // change the package, then run its scripts/vendor.mjs against this directory.
 // Cross-app return protocol (spec-muelle-shell §8.3).
 //

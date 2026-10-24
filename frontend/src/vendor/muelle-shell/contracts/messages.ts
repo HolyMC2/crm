@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/shell-contracts@0.13.0 (016566f50369). DO NOT EDIT:
+// Vendored from muelle/workspace/packages/shell-contracts@0.14.0 (ca0886b770b5). DO NOT EDIT:
 // change the package, then run its scripts/vendor.mjs against this directory.
 // Source strings are English (spec §4.8); workers see the reviewed es-MX
 // catalog. Apps pass their own `__` so their catalogs stay authoritative, and
@@ -31,6 +31,9 @@ export const SHELL_MESSAGES_ES_MX: Readonly<Record<string, string>> = Object.fre
   Actions: 'Acciones',
   Records: 'Registros',
   'Go to': 'Ir a',
+  Lists: 'Listas',
+  Reports: 'Reportes',
+  Desk: 'Desk',
   Recent: 'Recientes',
   'Searching…': 'Buscando…',
   'See all in {0}': 'Ver todos en {0}',

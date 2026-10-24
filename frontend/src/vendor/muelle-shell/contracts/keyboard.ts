@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/shell-contracts@0.13.0 (016566f50369). DO NOT EDIT:
+// Vendored from muelle/workspace/packages/shell-contracts@0.14.0 (ca0886b770b5). DO NOT EDIT:
 // change the package, then run its scripts/vendor.mjs against this directory.
 // One keyboard map for every Muelle surface (spec §3.3, §8.2, and the Muelle
 // keyboard standard of 2026-10-10, see README «Keyboard standard»): the same key

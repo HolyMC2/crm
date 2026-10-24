@@ -1,20 +1,35 @@
-// Vendored from muelle/workspace/packages/shell-contracts@0.13.0 (016566f50369). DO NOT EDIT:
+// Vendored from muelle/workspace/packages/shell-contracts@0.14.0 (ca0886b770b5). DO NOT EDIT:
 // change the package, then run its scripts/vendor.mjs against this directory.
 // Command palette contract (spec §1.4). Providers search independently; one
 // slow or failing provider never blocks another. Clínica and Taller implement
 // the same provider shape so their palettes can federate later.
 import type { IdentityRef } from './identity'
 
-export type PaletteGroup = 'acciones' | 'registros' | 'ir_a' | 'recientes'
+export type PaletteGroup = 'acciones' | 'registros' | 'ir_a' | 'listas' | 'reportes' | 'desk' | 'recientes'
 
-/** Display order of groups. */
-export const PALETTE_GROUPS: readonly PaletteGroup[] = Object.freeze(['acciones', 'registros', 'ir_a', 'recientes'])
+/**
+ * Display order of groups. Listas (every readable DocType list), Reportes and
+ * Desk (workspaces) reach what the Desk awesomebar reaches (0.14.0); they sit
+ * after the shell's own places and leave the shell only where it has no page.
+ */
+export const PALETTE_GROUPS: readonly PaletteGroup[] = Object.freeze([
+  'acciones',
+  'registros',
+  'ir_a',
+  'listas',
+  'reportes',
+  'desk',
+  'recientes',
+])
 
-/** English source labels for `__()`; es-MX: Acciones, Registros, Ir a, Recientes. */
+/** English source labels for `__()`; es-MX: Acciones, Registros, Ir a, Listas, Reportes, Desk, Recientes. */
 export const PALETTE_GROUP_LABELS: Readonly<Record<PaletteGroup, string>> = Object.freeze({
   acciones: 'Actions',
   registros: 'Records',
   ir_a: 'Go to',
+  listas: 'Lists',
+  reportes: 'Reports',
+  desk: 'Desk',
   recientes: 'Recent',
 })
 
@@ -27,6 +42,10 @@ export interface PaletteItem {
   icon?: `lucide-${string}`
   /** Local path to open (validated by the shell before navigating). */
   href?: string
+  /** A Desk URL (`/app/…`) the shell opens in this tab when it has no page of its own. */
+  desk?: string
+  /** Extra words the title does not say, matched like the title. */
+  keywords?: string
   /** Named action the shell or module dispatches (e.g. `contactos.create`). */
   action?: string
   /** Arguments for `action`, e.g. the typed text to prefill. */
@@ -98,7 +117,8 @@ export const PALETTE_RECENT_LIMIT = 8
  * `>` actions, `@` people and companies, `#` documents by number, `%` Taller
  * refacciones, `?` a question for the assistant (0.8.0). `?` is free as a
  * prefix: the cheat-sheet key only fires outside text fields, so inside the
- * palette input it is plain text.
+ * palette input it is plain text. Like any prefix, `?` reaches only providers
+ * that declare `scopes: ['assistant']` (0.14.0).
  */
 export const PALETTE_PREFIXES: Readonly<Record<string, PaletteScope>> = Object.freeze({
   '>': 'actions',
