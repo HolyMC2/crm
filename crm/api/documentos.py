@@ -688,15 +688,24 @@ def doctypes(search: str | None = None):
 
 	term = unidecode(cstr(search).strip().lower())[:MAX_SEARCH]
 	blocked = _blocked_modules()
+	user = frappe.get_user()
+	can_create = set(user.can_create)
 	out = []
-	for doctype in sorted(set(frappe.get_user().can_read)):
+	for doctype in sorted(set(user.can_read)):
 		meta = frappe.get_meta(doctype)
 		if meta.istable or meta.issingle or meta.is_virtual or meta.module in blocked:
 			continue
 		label = _(doctype)
 		if term and term not in unidecode(label.lower()) and term not in doctype.lower():
 			continue
-		out.append({"doctype": doctype, "label": label, "module": _(meta.module)})
+		out.append(
+			{
+				"doctype": doctype,
+				"label": label,
+				"module": _(meta.module),
+				"create": doctype in can_create,
+			}
+		)
 	out.sort(key=lambda row: unidecode(row["label"].lower()))
 	return out[:60]
 

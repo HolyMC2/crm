@@ -170,6 +170,7 @@ import {
   parsePaletteQuery,
   providersFor,
   SHELL_MODULES,
+  DESK_PREFIXES,
   pushRecent,
   safeReturn,
 } from '@/vendor/muelle-shell/contracts'
@@ -349,8 +350,9 @@ function choose(item) {
         moduleLabelFor(router.currentRoute.value),
       )
     : item.external && siblingTarget(item.external)
-  // A Desk form (Inmobiliaria's records) opens in this tab; Desk takes no way back.
-  const desk = item.desk && safeReturn(item.desk, ['/desk/'])
+  // A Desk page (Inmobiliaria's records, a report, a workspace) opens in this
+  // tab; Desk takes no way back.
+  const desk = item.desk && safeReturn(item.desk, DESK_PREFIXES)
   close()
   // The sheet returns the focus to whatever had it before the palette opened.
   if (item.action === 'shortcuts') openShortcutSheet(previousFocus)

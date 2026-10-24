@@ -2,7 +2,9 @@ import { contactosApi } from '@/composables/useContactos'
 import { identityTypeLabel } from '@/utils/contactos'
 import { call } from 'frappe-ui'
 import {
+  SHELL_MODULES,
   moduleEnabled,
+  moduleForPath,
   can,
   bootScope,
   safeReturn,
@@ -17,6 +19,8 @@ import { looksLikeDocument } from '@/components/captura/cameraDoor'
 import { recordActions } from '@/composables/recordActions'
 import {
   createDocumentosProvider,
+  createTiposProvider,
+  documentItem,
   documentosPlaces,
 } from '@/documentos/palette'
 // Manual de la tienda: one self-contained provider (articles, categories, «Nuevo artículo»).
@@ -288,6 +292,7 @@ export function createShellProviders({ boot, modules }) {
         icon: module.icon,
         href: module.to,
         shortcut: module.go ? `g ${module.go}` : undefined,
+        keywords: module.key === 'resultados' ? 'reportes informes' : undefined,
       }))
       // An empty palette opens on Recientes plus the modules (S1.2).
       if (query.kind === 'empty') return items
@@ -525,14 +530,15 @@ export function createShellProviders({ boot, modules }) {
     },
   }
   const manual = createManualProvider({ boot })
-  // The assistant answers questions only; its row lands in Acciones, above
-  // every record, so a question still gets «Preguntar a Muelle» first.
+  // The assistant's question row lands in Acciones, above every record, so a
+  // question still gets «Preguntar a Muelle» first; its place row is in Ir a.
   return [
     actions,
     contactos,
     places,
     ventas,
     createDocumentosProvider({ boot }),
+    createTiposProvider({ boot }),
     clinica,
     inmobiliaria,
     manual,
@@ -610,9 +616,18 @@ export function clinicaItems(result) {
 // An empty input opens on Recientes, then the actions for the record on
 // screen (and «Nuevo contacto»), then the modules to go to; a typed query
 // ranks the records (a deal, a customer) above «Nuevo …».
+// Listas, Reportes and Desk (E7) follow the shell's own places, never lead them.
 const SECTION_ORDER = {
   empty: ['recientes', 'acciones', 'ir_a', 'registros'],
-  typed: ['registros', 'acciones', 'ir_a', 'recientes'],
+  typed: [
+    'registros',
+    'acciones',
+    'ir_a',
+    'listas',
+    'reportes',
+    'desk',
+    'recientes',
+  ],
 }
 
 /**
@@ -628,16 +643,19 @@ export function orderPaletteSections(grouped, { empty = false } = {}) {
   }
   const sorted = [...grouped].sort((a, b) => rank(a.group) - rank(b.group))
   if (empty) return sorted
-  const ask = sorted
-    .flatMap((section) => section.items)
-    .filter((item) => item.action === 'assistant')
+  // The question row (Acciones) leads; the door «Pregúntale a Muelle» (Ir a) stays put.
+  const asks = (section, item) =>
+    section.group === 'acciones' && item.action === 'assistant'
+  const ask = sorted.flatMap((section) =>
+    section.items.filter((item) => asks(section, item)),
+  )
   if (!ask.length) return sorted
   return [
     { group: 'acciones', items: ask, lead: true },
     ...sorted
       .map((section) => ({
         ...section,
-        items: section.items.filter((item) => item.action !== 'assistant'),
+        items: section.items.filter((item) => !asks(section, item)),
       }))
       .filter((section) => section.items.length),
   ]
@@ -679,7 +697,10 @@ function recentKey() {
   return `muelle:palette-recent:${bootScope(window.site_name || location.host, user)}`
 }
 // Recents hold references only. Names, phones and emails are fetched again
-// through a permission check each time, so revoked access shows nothing.
+// through a permission check each time, so revoked access shows nothing. A
+// place, list, report or workspace row carries only its label, so it is kept
+// as chosen (E7); an action row is never a recent.
+const STABLE_GROUPS = new Set(['ir_a', 'listas', 'reportes', 'desk'])
 function recordFromHref(href) {
   // Older builds stored no `record`; their href is /contactos/<source>/<name>.
   const match = /^\/contactos\/([a-z-]+)\/([^/?#]+)$/.exec(String(href || ''))
@@ -691,12 +712,31 @@ function recordFromHref(href) {
   }
 }
 export function toRecentRef(item) {
-  const { source, name } = item?.record || recordFromHref(item?.href)
-  if (typeof source !== 'string' || typeof name !== 'string') return null
+  if (!item || item.action || item.external || item.scanPick) return null
+  const record = item.record || recordFromHref(item.href)
+  const { source, name, doctype } = record
+  if (typeof name === 'string' && typeof source === 'string')
+    return {
+      id: String(item.id),
+      href: String(item.href),
+      record: { source, name },
+    }
+  if (typeof name === 'string' && typeof doctype === 'string')
+    return {
+      id: String(item.id),
+      href: String(item.href),
+      record: { doctype, name },
+    }
+  if (!STABLE_GROUPS.has(item.group) || !item.title) return null
+  if (typeof item.href !== 'string' && typeof item.desk !== 'string')
+    return null
   return {
     id: String(item.id),
-    href: String(item.href),
-    record: { source, name },
+    group: item.group,
+    title: String(item.title),
+    ...(item.subtitle ? { subtitle: String(item.subtitle) } : {}),
+    ...(typeof item.href === 'string' ? { href: item.href } : {}),
+    ...(typeof item.desk === 'string' ? { desk: item.desk } : {}),
   }
 }
 export function loadRecent() {
@@ -708,32 +748,66 @@ export function loadRecent() {
     return []
   }
 }
-// Deals belong to Ventas; every other source is a Contactos record.
-const recentModule = (ref) =>
-  ref.record.source === 'deal' ? 'ventas' : 'contactos'
+// Deals belong to Ventas; every other source is a Contactos record. A
+// documentos record is resolved by its own endpoint; a place or list by the
+// module its path belongs to; a report or workspace stays (Desk refuses it).
+const recentModule = (ref) => {
+  if (ref.record)
+    return ref.record.source
+      ? ref.record.source === 'deal'
+        ? 'ventas'
+        : 'contactos'
+      : 'documentos'
+  if (ref.href) return moduleForPath(ref.href, SHELL_MODULES)?.key || null
+  return null
+}
+const recentKeyOf = (record) =>
+  record.source
+    ? `${record.source}:${record.name}`
+    : `${record.doctype}:${record.name}`
 export async function resolveRecent(refs, boot) {
-  refs = refs.filter((ref) => moduleEnabled(boot, recentModule(ref)))
+  refs = refs.filter((ref) => {
+    const key = recentModule(ref)
+    return !key || moduleEnabled(boot, key)
+  })
   if (!refs.length) return []
-  let rows
+  const sources = refs.filter((ref) => ref.record?.source)
+  const documents = refs.filter((ref) => ref.record?.doctype)
+  let rows = []
   try {
-    rows = await call('crm.api.shell.resolve_recent', {
-      records: refs.map((ref) => ref.record),
-    })
+    const [found, docs] = await Promise.all([
+      sources.length
+        ? call('crm.api.shell.resolve_recent', {
+            records: sources.map((ref) => ref.record),
+          })
+        : [],
+      documents.length
+        ? call('crm.api.shell.resolve_documents', {
+            records: documents.map((ref) => ref.record),
+          })
+        : [],
+    ])
+    rows = [...(found || []), ...(docs || [])]
   } catch {
     return null // unknown (offline, server error): show nothing, keep refs
   }
-  const allowed = new Map(
-    (rows || []).map((row) => [`${row.source}:${row.name}`, row]),
-  )
+  const allowed = new Map(rows.map((row) => [recentKeyOf(row), row]))
   return refs
-    .map((ref) => [ref, allowed.get(`${ref.record.source}:${ref.record.name}`)])
-    .filter(([, row]) => row)
-    .map(([ref, row]) => ({
-      ...ref,
-      group: 'recientes',
-      title: row.title || row.name,
-      icon: 'lucide-history',
-    }))
+    .map((ref) => {
+      if (!ref.record)
+        return { ...ref, group: 'recientes', icon: 'lucide-history' }
+      const row = allowed.get(recentKeyOf(ref.record))
+      if (!row) return null
+      const item = row.doctype ? documentItem(row, boot) : {}
+      return {
+        ...ref,
+        group: 'recientes',
+        title: item.title || row.title || row.name,
+        ...(item.subtitle ? { subtitle: item.subtitle } : {}),
+        icon: 'lucide-history',
+      }
+    })
+    .filter(Boolean)
 }
 export function saveRecent(items) {
   try {

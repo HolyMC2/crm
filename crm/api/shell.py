@@ -827,3 +827,36 @@ def _recent_deal(name):
 
 	# Same title as the palette's deal search (CRM-S3.3), so a recent reads like the hit.
 	return {"source": "deal", "name": name, "title": deal_title(doc)}
+
+
+@frappe.whitelist(methods=["POST"])
+def resolve_documents(records: str | list):
+	"""Titles for the palette's recent Documentos records the user may still read (E7).
+
+	Same contract as resolve_recent: the browser keeps only {doctype, name}; anything no
+	longer readable (module blocked, permission or record gone) is left out.
+	"""
+	if frappe.session.user == "Guest":
+		frappe.throw(_("Sign in to open Muelle."), frappe.AuthenticationError)
+	if isinstance(records, str):
+		records = json.loads(records or "[]")
+	if not isinstance(records, list):
+		return []
+	from crm.api import documentos
+
+	blocked = documentos._blocked_modules()
+	rows = []
+	for record in records[:RECENT_LIMIT]:
+		doctype = record.get("doctype") if isinstance(record, dict) else None
+		name = record.get("name") if isinstance(record, dict) else None
+		if not isinstance(doctype, str) or not isinstance(name, str):
+			continue
+		if not documentos.readable(doctype, blocked) or not frappe.db.exists(doctype, name):
+			continue
+		doc = frappe.get_doc(doctype, name)
+		if not doc.has_permission("read"):
+			continue
+		row = documentos._row(doc, documentos._display(doc.meta))
+		row["doctype"] = doctype
+		rows.append(row)
+	return rows

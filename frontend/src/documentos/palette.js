@@ -13,9 +13,12 @@ import {
 import {
   PROFILES,
   documentRoute,
+  floorRoute,
   listRoute,
+  profileFor,
   readableDoctypes,
 } from './registry'
+import { docApi } from './api'
 
 /** One palette row for a found document: party first, kind · number · date as the line. */
 export function documentItem(row, boot) {
@@ -93,7 +96,7 @@ export function documentosPlaces(boot) {
       id: `documentos.${entry.slug}`,
       group: 'ir_a',
       title: `${module} › ${entry.label}`,
-      keywords: [kindLabel(entry.doctype), entry.hint]
+      keywords: [kindLabel(entry.doctype), entry.doctype, entry.hint]
         .filter(Boolean)
         .join(' '),
       icon: entry.icon,
@@ -101,4 +104,49 @@ export function documentosPlaces(boot) {
     })
   }
   return items
+}
+
+/**
+ * «Listas» (Shell E7, DE9): every DocType this worker reads, by its Spanish
+ * label or English name, on the generic floor; «Crear <label>» where the
+ * worker may create one. The curated lists are already places (above).
+ */
+export function createTiposProvider({ boot }) {
+  return {
+    key: 'tipos',
+    label: 'Lists',
+    scopes: ['documents'],
+    async search(query, signal) {
+      if (query.kind === 'empty' || !moduleEnabled(boot.value, 'documentos'))
+        return []
+      const text = String(query.text || '').trim()
+      if (text.length < 2) return []
+      const rows = await docApi('doctypes', { search: text.slice(0, 80) })
+      if (signal?.aborted) return []
+      const items = []
+      for (const row of rows || []) {
+        if (profileFor(row.doctype)) continue
+        const floor = floorRoute(row.doctype).path
+        items.push({
+          id: `tipos:${row.doctype}`,
+          group: 'listas',
+          title: row.label,
+          subtitle: row.module,
+          keywords: row.doctype,
+          icon: 'lucide-list',
+          href: floor,
+        })
+        if (row.create)
+          items.push({
+            id: `tipos:${row.doctype}:nuevo`,
+            group: 'acciones',
+            title: __('Create {0}', [row.label]),
+            keywords: row.doctype,
+            icon: 'lucide-plus',
+            href: `${floor}/nuevo`,
+          })
+      }
+      return items
+    },
+  }
 }
