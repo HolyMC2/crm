@@ -960,9 +960,13 @@ def reports(search: str | None = None):
 		frappe.throw(_("Sign in to open Muelle."), frappe.AuthenticationError)
 	term = _desk_term(search)
 	rows = _desk_cached("reports", _allowed_reports)
-	return [row for row in rows if _desk_matches(term, row["title"], row["name"], row["ref_label"])][
-		: DESK_REACH_LIMIT["reports"]
+	# The palette shows a few rows per group: a report named by the term («Kárdex de inventario»
+	# for «kardex») comes before the many that only report on that DocType.
+	named = [row for row in rows if _desk_matches(term, row["title"], row["name"])]
+	about = [
+		row for row in rows if row not in named and term and _desk_matches(term, row["ref_label"])
 	]
+	return (named + about)[: DESK_REACH_LIMIT["reports"]]
 
 
 def _allowed_workspaces():

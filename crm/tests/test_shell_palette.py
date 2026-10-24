@@ -6,8 +6,9 @@ from unittest import TestCase, skipIf
 
 try:
 	import frappe
+	from unidecode import unidecode
 
-	from crm.api import shell
+	from crm.api import documentos, shell
 
 	HAS_FRAPPE = True
 except ImportError:
@@ -50,6 +51,22 @@ class TestDeskReach(TestCase):
 		self.assertEqual(row["ref_doctype"], "Stock Ledger Entry")
 		self.assertTrue(row["title"] and row["ref_label"])
 		self.assertEqual(shell.reports("zzz-no-such-report"), [])
+		# Reports named by the term come before the ones that only report on its DocType.
+		named = [
+			"stock ledger" in (r["name"] + " " + unidecode(r["title"])).lower() for r in rows
+		]
+		self.assertEqual(named, sorted(named, reverse=True))
+		self.assertTrue(named[0])
+
+	def test_doctypes_lists_what_the_worker_reads_once_permissions_are_built(self):
+		if not frappe.db.exists("DocType", "Warehouse"):
+			self.skipTest("ERPNext's Warehouse is not installed")
+		rows = documentos.doctypes("ware")
+		self.assertIn("Warehouse", [r["doctype"] for r in rows])
+		self.assertTrue(next(r for r in rows if r["doctype"] == "Warehouse")["create"])
+		frappe.set_user(self.seller)
+		frappe.local.user_perms = None
+		self.assertIn("Customer", [r["doctype"] for r in documentos.doctypes("customer")])
 
 	def test_a_report_builder_report_opens_as_a_view_of_its_list(self):
 		frappe.get_doc(

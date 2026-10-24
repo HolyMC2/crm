@@ -689,9 +689,11 @@ def doctypes(search: str | None = None):
 	term = unidecode(cstr(search).strip().lower())[:MAX_SEARCH]
 	blocked = _blocked_modules()
 	user = frappe.get_user()
+	# UserPermissions fills can_read/can_create lazily: ask through the getter.
+	readable = set(user.get_can_read())
 	can_create = set(user.can_create)
 	out = []
-	for doctype in sorted(set(user.can_read)):
+	for doctype in sorted(readable):
 		meta = frappe.get_meta(doctype)
 		if meta.istable or meta.issingle or meta.is_virtual or meta.module in blocked:
 			continue
