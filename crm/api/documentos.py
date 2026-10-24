@@ -1503,6 +1503,8 @@ def _version_event(doc, row):
 			kind = {(0, 1): "submit", (1, 2): "cancel"}.get((cint(old), cint(new)))
 			if kind:
 				return {"kind": kind}
+	# A save that writes null over 0.00 («Importe reclamado: $0.00 → —») changed nothing.
+	changed = [c for c in changed if not (len(c) >= 3 and _reset_noise(c[1], c[2]))]
 	fields = _diff_fields(doc)
 	labels = []
 	for field, _old, _new in changed:
