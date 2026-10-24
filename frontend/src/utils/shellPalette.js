@@ -783,7 +783,7 @@ export async function resolveRecent(refs, boot) {
   if (!refs.length) return []
   const sources = refs.filter((ref) => ref.record?.source)
   const documents = refs.filter((ref) => ref.record?.doctype)
-  let rows = []
+  let rows
   try {
     const [found, docs] = await Promise.all([
       sources.length
