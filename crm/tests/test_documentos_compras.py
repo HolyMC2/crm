@@ -70,6 +70,127 @@ class TestConfirmedBy(TestCase):
 			self.assertIn(key, documentos.MAKERS)
 
 
+NAMES = {
+	"ernesto@x.mx": "Ernesto Encargado",
+	"marco@x.mx": "Marco Dueño",
+	"contabot@x.mx": "Contabot",
+}
+
+
+def _version(owner, when, data):
+	return frappe._dict(owner=owner, creation=when, data=json.dumps(data, separators=(",", ":")))
+
+
+def _store(rows):
+	"""frappe.get_all over a fixture of Version rows: honours the `data like` filter, the
+	order and the limit, so the read is exercised the way the database answers it."""
+
+	def get_all(doctype, filters=None, fields=None, order_by="", limit=None, **_kw):
+		assert doctype == "Version"
+		out = list(rows)
+		like = (filters or {}).get("data")
+		if like:
+			needle = like[1].strip("%")
+			out = [r for r in out if needle in r.data]
+		out.sort(key=lambda r: r.creation, reverse="desc" in order_by)
+		return out[:limit] if limit else out
+
+	return get_all
+
+
+@skipIf(not HAS_FRAPPE, "Frappe is not installed")
+class TestWho(TestCase):
+	"""`_who` with a fixture of Versions and captures: no site."""
+
+	def setUp(self):
+		from unittest.mock import patch
+
+		for p in (
+			patch.object(documentos, "_person", side_effect=lambda u: NAMES.get(u, u)),
+			patch.object(documentos_compras, "_person", side_effect=lambda u: NAMES.get(u, u)),
+			patch.object(frappe, "get_installed_apps", return_value=["frappe", "erpnext", "crm", "doco"]),
+		):
+			p.start()
+			self.addCleanup(p.stop)
+
+	def doc(self, owner, docstatus=1):
+		return frappe._dict(
+			doctype="Purchase Invoice", name="ACC-PINV-1", owner=owner, creation="2026-10-01 10:00", docstatus=docstatus
+		)
+
+	def with_capture(self, requested_by, agent="contabot@x.mx"):
+		"""doco's side: the agent user, and the capture that created the record."""
+		import sys
+		import types
+		from unittest.mock import patch
+
+		actors = types.ModuleType("doco.docoutils.books.actors")
+		actors.is_agent = lambda user: user == agent
+		for p in (
+			patch.dict(sys.modules, {"doco.docoutils.books.actors": actors}),
+			patch.object(frappe.db, "get_value", return_value=requested_by),
+		):
+			p.start()
+			self.addCleanup(p.stop)
+
+	def test_a_draft_edited_forty_times_then_submitted_names_its_submitter(self):
+		from unittest.mock import patch
+
+		rows = [
+			# Edits that add item rows carry a child «docstatus» too: the filter cannot tell
+			# them from the submit; only the order and the content do.
+			_version(
+				"ernesto@x.mx",
+				f"2026-10-01 10:{i:02d}",
+				{"added": [["items", {"item_code": f"A{i}", "docstatus": 0}]]}
+				if i % 4 == 0
+				else {"changed": [["remarks", f"v{i}", f"v{i + 1}"]]},
+			)
+			for i in range(1, 41)
+		]
+		rows.append(
+			_version("marco@x.mx", "2026-10-02 09:00", {"changed": [["docstatus", 0, 1], ["status", "Draft", "Unpaid"]]})
+		)
+		rows.append(_version("ernesto@x.mx", "2026-10-02 09:30", {"changed": [["remarks", "x", "y"]]}))
+		self.with_capture(None)
+		with patch.object(frappe, "get_all", side_effect=_store(rows)):
+			people = documentos_compras._who("Purchase Invoice", self.doc("ernesto@x.mx"))
+		self.assertEqual(
+			people,
+			[
+				{"verb": "Capturó", "name": "Ernesto Encargado", "when": "2026-10-01 10:00"},
+				{"verb": "Registró", "name": "Marco Dueño", "when": "2026-10-02 09:00"},
+			],
+		)
+
+	def test_a_record_the_bot_built_for_a_person_names_the_person_with_the_bot(self):
+		self.with_capture("ernesto@x.mx")
+		people = documentos_compras._who("Purchase Invoice", self.doc("contabot@x.mx", docstatus=0))
+		self.assertEqual(
+			people,
+			[{"verb": "Capturó", "name": "Ernesto Encargado", "when": "2026-10-01 10:00", "via": "Contabot"}],
+		)
+
+	def test_a_bot_record_nobody_asked_for_stays_the_bots(self):
+		self.with_capture(None)
+		people = documentos_compras._who("Purchase Invoice", self.doc("contabot@x.mx", docstatus=0))
+		self.assertEqual(people, [{"verb": "Capturó", "name": "Contabot", "when": "2026-10-01 10:00"}])
+
+	def test_a_persons_own_record_never_asks_for_a_capture(self):
+		from unittest.mock import patch
+
+		self.with_capture("marco@x.mx")
+		with patch.object(frappe.db, "get_value", side_effect=AssertionError("asked for a capture")):
+			people = documentos_compras._who("Purchase Invoice", self.doc("ernesto@x.mx", docstatus=0))
+		self.assertEqual(people, [{"verb": "Capturó", "name": "Ernesto Encargado", "when": "2026-10-01 10:00"}])
+
+	def test_actividad_create_event_carries_the_same_attribution(self):
+		self.with_capture("ernesto@x.mx")
+		self.assertEqual(documentos._made_by(self.doc("contabot@x.mx")), ("Ernesto Encargado", "Contabot"))
+		self.with_capture(None)
+		self.assertEqual(documentos._made_by(self.doc("ernesto@x.mx")), ("Ernesto Encargado", None))
+
+
 @skipIf(not HAS_FRAPPE, "Frappe integration dependency is not installed")
 class TestCadenaERPNext(IntegrationTestCase):
 	def setUp(self):

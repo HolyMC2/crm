@@ -69,6 +69,9 @@
             >
               <span class="flex flex-wrap"
                 ><span class="lead min-w-0 break-words">{{ who.name }}</span
+                ><span v-if="who.via" class="flex-none whitespace-nowrap"
+                  ><span class="sep" aria-hidden="true">·</span
+                  >{{ who.via }}</span
                 ><span v-if="who.when" class="flex-none whitespace-nowrap"
                   ><span class="sep" aria-hidden="true">·</span
                   >{{ who.when }}</span
@@ -147,6 +150,8 @@ const steps = computed(() =>
       .join(' · '),
     people: (step.people || []).map((p) => ({
       name: `${p.verb} ${p.name}`,
+      // The assistant built it for the person: «Capturó Ernesto · con Contabot».
+      via: p.via ? `con ${p.via}` : '',
       when: p.when ? formatDate(p.when) : '',
     })),
     amount:

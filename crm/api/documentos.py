@@ -715,6 +715,35 @@ def _person(user):
 	return name
 
 
+def _behind(doc):
+	"""The person the assistant wrote this record for: `Captura Contable.requested_by` of
+	the capture that created it, when the bot (doco's agent user) owns the record. None for
+	a record a person wrote themselves."""
+	if "doco" not in frappe.get_installed_apps():
+		return None
+	from doco.docoutils.books.actors import is_agent
+
+	if not is_agent(doc.owner):
+		return None
+	return (
+		frappe.db.get_value(
+			"Captura Contable",
+			{"created_doc_type": doc.doctype, "created_doc": doc.name, "requested_by": ("is", "set")},
+			"requested_by",
+		)
+		or None
+	)
+
+
+def _made_by(doc):
+	"""Who made the record, and through whom: `(person, None)` for a person's own record,
+	`(person, agent)` when the assistant built it for them («Ernesto · con Contabot»)."""
+	behind = _behind(doc)
+	if behind:
+		return _person(behind), _person(doc.owner)
+	return _person(doc.owner), None
+
+
 def _actions(doc):
 	meta = doc.meta
 	docstatus = cint(doc.docstatus)
@@ -1489,7 +1518,8 @@ def _timeline(doc):
 
 	info = frappe._dict()
 	add_comments(doc, info)
-	events = [{"kind": "create", "at": cstr(doc.creation), "who": _person(doc.owner)}]
+	who, via = _made_by(doc)
+	events = [{"kind": "create", "at": cstr(doc.creation), "who": who, **({"via": via} if via else {})}]
 	for row in get_versions(doc):
 		event = _version_event(doc, frappe._dict(row))
 		if event:

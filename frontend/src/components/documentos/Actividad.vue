@@ -153,7 +153,10 @@ function sentence(event) {
   const who = event.who || 'Alguien'
   switch (event.kind) {
     case 'create':
-      return `${who} creó ${props.noun}`
+      // The assistant built it for the person: «Ernesto creó la factura · con Contabot».
+      return event.via
+        ? `${who} creó ${props.noun} · con ${event.via}`
+        : `${who} creó ${props.noun}`
     case 'submit':
       return `${who} confirmó ${props.noun}`
     case 'cancel':

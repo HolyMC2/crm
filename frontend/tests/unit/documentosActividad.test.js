@@ -19,6 +19,22 @@ async function sentences(events) {
   return out
 }
 
+describe('Actividad attribution', () => {
+  it('names the person the assistant built the record for, with the assistant', async () => {
+    const [bot, own] = await sentences([
+      {
+        kind: 'create',
+        who: 'Ernesto Encargado',
+        via: 'Contabot',
+        at: '2026-10-18 12:00:00',
+      },
+      { kind: 'create', who: 'Marco', at: '2026-10-18 12:00:00' },
+    ])
+    expect(bot).toBe('Ernesto Encargado creó la orden · con Contabot')
+    expect(own).toBe('Marco creó la orden')
+  })
+})
+
 describe('Actividad status notes', () => {
   it('says a status note in either language as a change', async () => {
     const [en, es, none] = await sentences([

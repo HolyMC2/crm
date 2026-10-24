@@ -17,7 +17,7 @@ import frappe
 from frappe import _
 from frappe.utils import cint, cstr
 
-from crm.api.documentos import _person, readable
+from crm.api.documentos import _made_by, _person, readable
 
 MAX_NODES = 40
 
@@ -154,8 +154,21 @@ def _walk(start, step):
 	return seen
 
 
+def submit_versions(doctype, name):
+	"""The Version rows that can hold the docstatus 0 → 1 change, newest first: a draft
+	edited forty times before its submit still names its submitter, and the saves after a
+	submit are few. The row's content decides (`confirmed_by`); this only narrows the read."""
+	return frappe.get_all(
+		"Version",
+		filters={"ref_doctype": doctype, "docname": name, "data": ("like", '%"docstatus"%')},
+		fields=["owner", "creation", "data"],
+		order_by="creation desc",
+		limit=5,
+	)
+
+
 def confirmed_by(versions):
-	"""The user whose save moved docstatus 0 → 1, from a document's Version rows (oldest first)."""
+	"""The user whose save moved docstatus 0 → 1, from a document's Version rows."""
 	for row in versions or ():
 		try:
 			data = json.loads(row.get("data") or "{}")
@@ -173,17 +186,13 @@ def confirmed_by(versions):
 
 
 def _who(doctype, doc):
+	"""`[{verb, name, when, via?}]`: who captured and who confirmed. `via` names the assistant
+	when it built the record for the person («Capturó Ernesto · con Contabot»)."""
 	made, confirmed = WHO.get(doctype, ("Capturó", "Confirmó"))
-	people = [{"verb": made, "name": _person(doc.owner), "when": cstr(doc.creation)}]
+	who, via = _made_by(doc)
+	people = [{"verb": made, "name": who, "when": cstr(doc.creation), **({"via": via} if via else {})}]
 	if cint(doc.docstatus) == 1:
-		versions = frappe.get_all(
-			"Version",
-			filters={"ref_doctype": doctype, "docname": doc.name},
-			fields=["owner", "creation", "data"],
-			order_by="creation asc",
-			limit=30,
-		)
-		user, when = confirmed_by(versions)
+		user, when = confirmed_by(submit_versions(doctype, doc.name))
 		if not user:  # submitted on insert (no 0 → 1 change logged)
 			user, when = doc.owner, doc.creation
 		if user:
