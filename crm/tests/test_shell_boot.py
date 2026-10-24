@@ -255,8 +255,8 @@ class TestShellBoot(TestCase):
 		self.assertTrue(gastos["enabled"])
 		self.assertIsNone(gastos["reason"])
 		self.assertEqual(
-			{key: gastos["capabilities"][key] for key in ("read", "submit", "pay")},
-			{"read": True, "submit": True, "pay": True},
+			{key: gastos["capabilities"][key] for key in ("read", "create", "submit", "pay")},
+			{"read": True, "create": True, "submit": True, "pay": True},
 		)
 
 	def test_gastos_refusal_carries_its_own_reason_and_leaves_others(self):
@@ -275,11 +275,33 @@ class TestShellBoot(TestCase):
 		answer = {"enabled": True, "capabilities": {"read": True, "submit": True, "pay": False}}
 		with patch("doco.workspaces.payables.bootstrap", return_value=answer):
 			gastos = shell.boot()["modules"]["gastos"]
-		self.assertEqual(gastos["capabilities"], self._gastos_caps(read=True, submit=True))
+		self.assertEqual(gastos["capabilities"], self._gastos_caps(read=True, create=True, submit=True))
+
+	def test_gastos_create_is_the_bill_permission_for_bill_readers_only(self):
+		self._skip_without_payables()
+		bills = {"enabled": True, "capabilities": {"read": True, "submit": True, "pay": True}}
+		with (
+			patch("doco.workspaces.payables.bootstrap", return_value=bills),
+			patch("crm.api.gastos.can_create_bill", return_value=False),
+		):
+			gastos = shell.boot()["modules"]["gastos"]
+		self.assertEqual(gastos["capabilities"], self._gastos_caps(read=True, submit=True, pay=True))
+		# Whoever reads no bills has no «Por registrar» queue, so no door either.
+		claim_only = {
+			"enabled": True,
+			"capabilities": {"read": False},
+			"claims": {"enabled": True, "file": True},
+		}
+		with (
+			patch("doco.workspaces.payables.bootstrap", return_value=claim_only),
+			patch("crm.api.gastos.can_create_bill", return_value=True),
+		):
+			gastos = shell.boot()["modules"]["gastos"]
+		self.assertEqual(gastos["capabilities"], self._gastos_caps(claims=True, claim=True))
 
 	@staticmethod
 	def _gastos_caps(**on):
-		keys = ("read", "submit", "pay", "claims", "claim", "decide", "reimburse")
+		keys = ("read", "create", "submit", "pay", "claims", "claim", "decide", "reimburse")
 		return {key: bool(on.get(key)) for key in keys}
 
 	def test_gastos_opens_for_an_employee_who_only_files_expenses(self):
@@ -306,7 +328,9 @@ class TestShellBoot(TestCase):
 		with patch("doco.workspaces.payables.bootstrap", return_value=bills):
 			gastos = shell.boot()["modules"]["gastos"]
 		self.assertTrue(gastos["enabled"])
-		self.assertEqual(gastos["capabilities"], self._gastos_caps(read=True, submit=True, pay=True))
+		self.assertEqual(
+			gastos["capabilities"], self._gastos_caps(read=True, create=True, submit=True, pay=True)
+		)
 		claim_only = {
 			"enabled": False,
 			"reason": reason,

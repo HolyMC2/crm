@@ -146,6 +146,8 @@ def _gastos():
 			"capabilities": {},
 		}
 
+	from crm.api.gastos import can_create_bill
+
 	answer = bootstrap() or {}
 	capabilities = answer.get("capabilities") or {}
 	# Employees' expenses («De empleados»): a claim-only employee opens Gastos too.
@@ -161,6 +163,7 @@ def _gastos():
 		else answer.get("reason") or _("Ask your manager for permission to read supplier bills, then retry."),
 		"capabilities": {
 			"read": bills,
+			"create": bills and can_create_bill(),
 			"submit": bills and bool(capabilities.get("submit")),
 			"pay": bills and bool(capabilities.get("pay")),
 			"claims": expenses,

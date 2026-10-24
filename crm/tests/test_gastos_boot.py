@@ -9,7 +9,7 @@ from crm.gastos_routes import is_gastos_path
 try:
 	import frappe
 
-	from crm.api.gastos import check_gastos_permission, get_capabilities
+	from crm.api.gastos import can_create_bill, check_gastos_permission, get_capabilities
 
 	HAS_FRAPPE = True
 except ImportError:
@@ -69,6 +69,37 @@ class TestGastosPaths(TestCase):
 			answer = get_capabilities()
 		self.assertFalse(answer["enabled"])
 		self.assertTrue(answer["reason"])
+
+	@skipIf(not HAS_FRAPPE, "Frappe integration dependency is not installed")
+	def test_create_is_the_purchase_invoice_permission_of_a_bill_reader(self):
+		if "doco" not in frappe.get_installed_apps():
+			self.skipTest("Gastos (doco) is not installed")
+		reader = {"enabled": True, "capabilities": {"read": True, "submit": False, "pay": False}}
+		with (
+			patch("doco.workspaces.payables.bootstrap", return_value=dict(reader)),
+			patch("crm.api.gastos.can_create_bill", return_value=True),
+		):
+			self.assertTrue(get_capabilities()["capabilities"]["create"])
+		with (
+			patch("doco.workspaces.payables.bootstrap", return_value=dict(reader)),
+			patch("crm.api.gastos.can_create_bill", return_value=False),
+		):
+			self.assertFalse(get_capabilities()["capabilities"]["create"])
+		blind = {"enabled": True, "capabilities": {"read": False}, "claims": {"enabled": True, "file": True}}
+		with (
+			patch("doco.workspaces.payables.bootstrap", return_value=blind),
+			patch("crm.api.gastos.can_create_bill", return_value=True),
+		):
+			self.assertFalse(get_capabilities()["capabilities"]["create"])
+		refused = {"enabled": False, "reason": "no"}
+		with patch("doco.workspaces.payables.bootstrap", return_value=refused):
+			self.assertNotIn("capabilities", get_capabilities())
+
+	@skipIf(not HAS_FRAPPE, "Frappe integration dependency is not installed")
+	def test_can_create_bill_asks_frappe_for_purchase_invoice_create(self):
+		with patch.object(frappe, "has_permission", return_value=True) as has_permission:
+			self.assertTrue(can_create_bill())
+		has_permission.assert_called_once_with("Purchase Invoice", "create")
 
 	@skipIf(not HAS_FRAPPE, "Frappe integration dependency is not installed")
 	def test_older_doco_without_payables_denies(self):
