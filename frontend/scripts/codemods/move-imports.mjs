@@ -96,7 +96,9 @@ export function moveNames(text) {
     const at = [first, firstKept].filter((i) => i >= 0).sort((a, b) => a - b)[0]
     if (first === at) out = out.replace('\u0000REMOVED\u0000', line)
     else {
-      const end = out.indexOf('\n', at)
+      // After the whole statement: a multi-line clause ends on its `} from` line.
+      const stmt = out.slice(at).match(new RegExp(`^import\\s+(?:type\\s+)?\\{[^}]*\\}\\s+from\\s+${SPEC}[^\\n]*`))
+      const end = at + stmt[0].length
       out = out.slice(0, end + 1) + line + '\n' + out.slice(end + 1)
     }
     out = out.replace(/\n?\u0000REMOVED\u0000/g, '')
