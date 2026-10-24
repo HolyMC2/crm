@@ -29,7 +29,18 @@ vi.mock('vue-router', async () => {
     }),
     back: vi.fn(),
   }
-  return { useRoute: () => state.route, useRouter: () => state.router }
+  const RouterLink = {
+    props: ['to'],
+    setup:
+      (props, { slots }) =>
+      () =>
+        h('a', { href: props.to?.path || props.to }, slots.default?.()),
+  }
+  return {
+    useRoute: () => state.route,
+    useRouter: () => state.router,
+    RouterLink,
+  }
 })
 vi.mock('@/composables/breakpoint', async () => {
   const { ref } = await import('vue')
@@ -109,7 +120,7 @@ vi.mock('@/composables/useGastos', async (importOriginal) => {
   }
 })
 
-import { listMemoryKey } from '@/composables/useGastos'
+import { gastosBoot, listMemoryKey } from '@/composables/useGastos'
 import { pageShortcuts } from '@/composables/shellKeyboard'
 import Gastos from '@/pages/Gastos.vue'
 
@@ -317,6 +328,43 @@ describe('Gastos list as a power app', () => {
     expect(root.querySelector('[data-row-key="PI-1"]').className).toContain(
       'bg-surface-gray-2',
     )
+  })
+
+  it('Por registrar offers «Nueva factura» to whom may create a bill: a FAB on the phone, a header button on desktop', async () => {
+    state.route.query = { segment: 'por-registrar' }
+    mount()
+    await flush()
+    const door = () => root.querySelector('[data-testid="gastos-new"]')
+    expect(door()).toBeNull()
+    gastosBoot.value.capabilities = {
+      ...gastosBoot.value.capabilities,
+      create: true,
+    }
+    await flush()
+    expect(door().tagName).toBe('BUTTON')
+    expect(door().textContent).toBe('New bill')
+    door().click()
+    expect(state.router.push).toHaveBeenCalledWith({
+      path: '/documentos/facturas-proveedor/nuevo',
+      query: {
+        return_to: '/crm/gastos?segment=por-registrar',
+        return_label: 'Gastos',
+      },
+    })
+    state.mobile.value = true
+    await flush()
+    expect(door().tagName).toBe('A')
+    expect(door().getAttribute('href')).toBe(
+      '/documentos/facturas-proveedor/nuevo',
+    )
+    expect(root.querySelector('[data-ui-fab]')).toBe(door())
+    // Por pagar keeps no door, on either surface.
+    state.route.query = {}
+    await flush()
+    expect(door()).toBeNull()
+    state.mobile.value = false
+    await flush()
+    expect(door()).toBeNull()
   })
 
   it('lists its keys in the Alt+H sheet', async () => {

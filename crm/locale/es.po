@@ -28587,3 +28587,7 @@ msgstr "{0} tipos de gasto todavía no tienen cuenta en {1}: no se pueden usar h
 #: frontend/src/components/gastos/ClaimSheet.vue
 msgid "Only {0} can approve your expenses."
 msgstr "Solo {0} puede aprobar tus gastos."
+
+#: frontend/src/pages/Gastos.vue
+msgid "New bill"
+msgstr "Nueva factura"

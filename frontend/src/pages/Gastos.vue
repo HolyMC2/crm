@@ -41,344 +41,376 @@
       />
       <ClaimsQueue :boot="boot" @segment="selectSegment" />
     </template>
-    <div
-      v-else
-      :ref="(el) => (list.scroller.value = el)"
-      class="flex min-h-0 flex-1 flex-col overflow-y-auto"
-      data-gastos-scroller
-      @scroll.passive="list.rememberScroll"
-    >
-      <PowerAppBar
-        v-if="list.phone.value"
-        v-model:search="list.search.value"
-        v-model:search-open="list.searchOpen.value"
-        :title="
-          state.po
-            ? __('Bills of order {0}', [state.po])
-            : segmentLabel(state.segment)
-        "
-        :count="state.po ? undefined : countLabel(state.segment)"
-        :loading="list.loading.value && rows.length > 0"
-        :entries="phoneEntries"
-        :active="state.segment"
-        :search-label="__('Search supplier, bill or invoice number')"
-        :selectable="rows.length > 0 && canSelect"
-        :select-label="__('Select bills')"
-        :selecting="list.selecting.value"
-        :selected-count="list.selected.value.size"
-        @select="selectSegment"
-        @start-select="list.selecting.value = true"
-        @select-all="list.selectAll"
-        @clear-selection="list.clearSelection"
+    <!-- relative: the phone's «Nueva factura» FAB sits at its bottom end. -->
+    <div v-else class="relative flex min-h-0 flex-1 flex-col">
+      <div
+        :ref="(el) => (list.scroller.value = el)"
+        class="flex min-h-0 flex-1 flex-col overflow-y-auto"
+        data-gastos-scroller
+        @scroll.passive="list.rememberScroll"
       >
-        <template #actions>
+        <PowerAppBar
+          v-if="list.phone.value"
+          v-model:search="list.search.value"
+          v-model:search-open="list.searchOpen.value"
+          :title="
+            state.po
+              ? __('Bills of order {0}', [state.po])
+              : segmentLabel(state.segment)
+          "
+          :count="state.po ? undefined : countLabel(state.segment)"
+          :loading="list.loading.value && rows.length > 0"
+          :entries="phoneEntries"
+          :active="state.segment"
+          :search-label="__('Search supplier, bill or invoice number')"
+          :selectable="rows.length > 0 && canSelect"
+          :select-label="__('Select bills')"
+          :selecting="list.selecting.value"
+          :selected-count="list.selected.value.size"
+          @select="selectSegment"
+          @start-select="list.selecting.value = true"
+          @select-all="list.selectAll"
+          @clear-selection="list.clearSelection"
+        >
+          <template #actions>
+            <CapturarDocumentoButton
+              variant="appbar"
+              :targets="['Purchase Invoice']"
+              return-label="Gastos"
+            />
+          </template>
+          <template v-if="owed.length" #summary>
+            <span v-for="total in owed" :key="total.currency"
+              >{{ __('Owed', null, 'Gastos') }}
+              <strong class="tabular-nums">{{
+                money(total.amount, total.currency)
+              }}</strong></span
+            >
+            <span v-if="counts?.vencidas"
+              >{{ __('Overdue', null, 'Gastos') }}
+              <strong class="tabular-nums text-ink-red-7">{{
+                countText(counts.vencidas)
+              }}</strong></span
+            >
+          </template>
+        </PowerAppBar>
+        <header
+          v-else
+          class="flex flex-wrap items-center gap-3 px-4 pb-2 pt-4 sm:px-6 sm:pt-6"
+        >
+          <div class="min-w-0 flex-1">
+            <h1 class="truncate text-xl font-semibold text-ink-gray-9">
+              {{
+                state.po
+                  ? __('Bills of order {0}', [state.po])
+                  : segmentLabel(state.segment)
+              }}
+            </h1>
+            <p class="text-sm text-ink-gray-6">{{ subtitle }}</p>
+          </div>
+          <button
+            type="button"
+            class="text-sm text-ink-gray-6 hover:text-ink-gray-8"
+            :aria-keyshortcuts="'Alt+H'"
+            @click="openShortcutSheet()"
+          >
+            <kbd
+              class="rounded border border-outline-gray-2 px-1.5 py-0.5 text-xs"
+              >?</kbd
+            >
+            {{ __('Keyboard shortcuts') }}
+          </button>
           <CapturarDocumentoButton
-            variant="appbar"
             :targets="['Purchase Invoice']"
             return-label="Gastos"
           />
-        </template>
-        <template v-if="owed.length" #summary>
-          <span v-for="total in owed" :key="total.currency"
-            >{{ __('Owed', null, 'Gastos') }}
-            <strong class="tabular-nums">{{
-              money(total.amount, total.currency)
-            }}</strong></span
-          >
-          <span v-if="counts?.vencidas"
-            >{{ __('Overdue', null, 'Gastos') }}
-            <strong class="tabular-nums text-ink-red-7">{{
-              countText(counts.vencidas)
-            }}</strong></span
-          >
-        </template>
-      </PowerAppBar>
-      <header
-        v-else
-        class="flex flex-wrap items-center gap-3 px-4 pb-2 pt-4 sm:px-6 sm:pt-6"
-      >
-        <div class="min-w-0 flex-1">
-          <h1 class="truncate text-xl font-semibold text-ink-gray-9">
-            {{
-              state.po
-                ? __('Bills of order {0}', [state.po])
-                : segmentLabel(state.segment)
-            }}
-          </h1>
-          <p class="text-sm text-ink-gray-6">{{ subtitle }}</p>
-        </div>
-        <button
-          type="button"
-          class="text-sm text-ink-gray-6 hover:text-ink-gray-8"
-          :aria-keyshortcuts="'Alt+H'"
-          @click="openShortcutSheet()"
-        >
-          <kbd
-            class="rounded border border-outline-gray-2 px-1.5 py-0.5 text-xs"
-            >?</kbd
-          >
-          {{ __('Keyboard shortcuts') }}
-        </button>
-        <CapturarDocumentoButton
-          :targets="['Purchase Invoice']"
-          return-label="Gastos"
-        />
-      </header>
-      <div
-        v-if="state.po"
-        class="mx-4 my-3 flex flex-wrap items-center gap-2 rounded-lg bg-surface-gray-2 p-3 text-sm sm:mx-6 sm:mt-0"
-      >
-        <span class="min-w-0 flex-1">{{
-          __('Showing only the bills of this purchase order.')
-        }}</span>
-        <RouterLink
-          class="min-h-11 py-2 text-ink-blue-link underline"
-          :to="{ name: 'CompraOrden', params: { name: state.po } }"
-          >{{ __('Back to the order') }}</RouterLink
-        >
-        <Button :label="__('See all bills')" @click="clearOrder" />
-      </div>
-      <!-- One chip row (S1 FilterChips), as Cobranza's: tap again for all. -->
-      <FilterChips
-        v-if="state.segment === 'por-pagar' && !state.po"
-        class="pt-2 sm:pt-0"
-        data-gastos-chips
-        :model-value="state.chip"
-        :chips="dueChips"
-        :label="__('Filter by due date')"
-        @update:model-value="(value) => list.navigate({ chip: value })"
-      />
-      <div
-        class="flex flex-wrap items-center gap-2 px-4 pb-3 pt-2 empty:hidden sm:px-6 sm:pt-0"
-      >
-        <FormControl
-          v-if="!list.phone.value"
-          v-model="list.search.value"
-          class="w-full min-w-0 sm:w-auto sm:max-w-xs sm:flex-1"
-          type="search"
-          :placeholder="__('Search supplier, bill or invoice number')"
-          :aria-label="__('Search supplier, bill or invoice number')"
-          :aria-keyshortcuts="'/'"
-          data-power-search
-        />
-        <Button
-          v-if="state.segment === 'por-registrar' && !state.po"
-          icon-left="upload"
-          class="min-h-11 sm:min-h-8"
-          :label="__('Upload supplier CFDI (XML)')"
-          @click="openCfdiImport"
-        />
-      </div>
-      <div
-        v-if="problem"
-        role="alert"
-        class="mx-4 mb-3 rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7 sm:mx-6"
-      >
-        <strong>{{ problem.title }}.</strong> {{ problem.detail }}
-        <Button
-          v-if="problem.row"
-          class="ml-2"
-          :label="__('Open bill')"
-          @click="list.openRow(problem.row)"
-        />
-        <Button
-          class="ml-2"
-          :label="__('Retry', null, 'Gastos')"
-          @click="retry"
-        />
-      </div>
-      <div class="flex-1 pb-6">
-        <div
-          v-if="list.loading.value && !rows.length"
-          role="status"
-          class="px-6 py-8 text-sm text-ink-gray-6"
-        >
-          {{ __('Loading bills…') }}
-        </div>
-        <div
-          v-else-if="!rows.length"
-          class="mx-auto max-w-md px-6 py-10 text-center text-ink-gray-7"
-        >
-          <p class="text-lg font-semibold">{{ emptyTitle }}</p>
-          <p class="mt-1 text-sm">{{ emptyBody }}</p>
           <Button
-            v-if="state.chip"
-            class="mt-3 min-h-11 sm:min-h-8"
-            :label="__('Show every bill')"
-            @click="list.navigate({ chip: '' })"
+            v-if="door"
+            variant="solid"
+            icon-left="plus"
+            class="min-h-11 sm:min-h-8"
+            :label="__('New bill')"
+            data-testid="gastos-new"
+            @click="router.push(door)"
           />
-          <a
-            v-if="state.po && boot?.capabilities?.desk"
-            class="mt-4 inline-block min-h-11 py-2 text-ink-blue-link underline"
-            :href="`/app/purchase-order/${encodeURIComponent(state.po)}`"
-            >{{ __('Open the full order form to bill it') }}</a
-          >
-        </div>
-        <ul
-          v-else
-          :ref="(el) => (list.listbox.value = el)"
-          tabindex="0"
-          class="divide-y divide-outline-gray-1 focus:outline-none"
-          role="listbox"
-          :aria-label="segmentLabel(state.segment)"
-          :aria-multiselectable="true"
-          :aria-activedescendant="
-            list.focusKey.value ? list.domId(list.focusKey.value) : undefined
-          "
+        </header>
+        <div
+          v-if="state.po"
+          class="mx-4 my-3 flex flex-wrap items-center gap-2 rounded-lg bg-surface-gray-2 p-3 text-sm sm:mx-6 sm:mt-0"
         >
-          <li
-            v-for="row in rows"
-            :id="list.domId(row.name)"
-            :key="row.name"
-            role="option"
-            :aria-selected="list.selected.value.has(row.name)"
-            :data-row-key="row.name"
-            class="group relative"
-            :class="[
-              list.focusKey.value === row.name ? 'bg-surface-gray-2' : '',
-              list.selected.value.has(row.name) ? 'bg-surface-blue-1' : '',
-            ]"
+          <span class="min-w-0 flex-1">{{
+            __('Showing only the bills of this purchase order.')
+          }}</span>
+          <RouterLink
+            class="min-h-11 py-2 text-ink-blue-link underline"
+            :to="{ name: 'CompraOrden', params: { name: state.po } }"
+            >{{ __('Back to the order') }}</RouterLink
           >
-            <div class="flex items-start">
-              <label
-                v-if="canSelect && (!list.phone.value || list.selecting.value)"
-                class="flex min-h-14 shrink-0 cursor-pointer items-center pl-5"
-                :aria-label="__('Select {0}', [row.bill_no || row.name])"
-              >
-                <input
-                  type="checkbox"
-                  class="h-5 w-5 rounded"
-                  :checked="list.selected.value.has(row.name)"
-                  @change="list.toggleRow(row)"
-                />
-              </label>
-              <a
-                :href="recordHref(row)"
-                class="flex min-h-14 min-w-0 flex-1 items-start gap-3 px-4 py-3 hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:px-6"
-                :class="
-                  canSelect && (!list.phone.value || list.selecting.value)
-                    ? 'pl-2 sm:pl-2'
-                    : ''
-                "
-                @click="list.onRowClick($event, row)"
-              >
-                <FeatherIcon
-                  :name="
-                    Number(row.docstatus) === 0 ? 'file-text' : 'credit-card'
+          <Button :label="__('See all bills')" @click="clearOrder" />
+        </div>
+        <!-- One chip row (S1 FilterChips), as Cobranza's: tap again for all. -->
+        <FilterChips
+          v-if="state.segment === 'por-pagar' && !state.po"
+          class="pt-2 sm:pt-0"
+          data-gastos-chips
+          :model-value="state.chip"
+          :chips="dueChips"
+          :label="__('Filter by due date')"
+          @update:model-value="(value) => list.navigate({ chip: value })"
+        />
+        <div
+          class="flex flex-wrap items-center gap-2 px-4 pb-3 pt-2 empty:hidden sm:px-6 sm:pt-0"
+        >
+          <FormControl
+            v-if="!list.phone.value"
+            v-model="list.search.value"
+            class="w-full min-w-0 sm:w-auto sm:max-w-xs sm:flex-1"
+            type="search"
+            :placeholder="__('Search supplier, bill or invoice number')"
+            :aria-label="__('Search supplier, bill or invoice number')"
+            :aria-keyshortcuts="'/'"
+            data-power-search
+          />
+          <Button
+            v-if="state.segment === 'por-registrar' && !state.po"
+            icon-left="upload"
+            class="min-h-11 sm:min-h-8"
+            :label="__('Upload supplier CFDI (XML)')"
+            @click="openCfdiImport"
+          />
+        </div>
+        <div
+          v-if="problem"
+          role="alert"
+          class="mx-4 mb-3 rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7 sm:mx-6"
+        >
+          <strong>{{ problem.title }}.</strong> {{ problem.detail }}
+          <Button
+            v-if="problem.row"
+            class="ml-2"
+            :label="__('Open bill')"
+            @click="list.openRow(problem.row)"
+          />
+          <Button
+            class="ml-2"
+            :label="__('Retry', null, 'Gastos')"
+            @click="retry"
+          />
+        </div>
+        <div
+          class="flex-1"
+          :class="door && list.phone.value ? 'pb-24' : 'pb-6'"
+        >
+          <div
+            v-if="list.loading.value && !rows.length"
+            role="status"
+            class="px-6 py-8 text-sm text-ink-gray-6"
+          >
+            {{ __('Loading bills…') }}
+          </div>
+          <div
+            v-else-if="!rows.length"
+            class="mx-auto max-w-md px-6 py-10 text-center text-ink-gray-7"
+          >
+            <p class="text-lg font-semibold">{{ emptyTitle }}</p>
+            <p class="mt-1 text-sm">{{ emptyBody }}</p>
+            <Button
+              v-if="state.chip"
+              class="mt-3 min-h-11 sm:min-h-8"
+              :label="__('Show every bill')"
+              @click="list.navigate({ chip: '' })"
+            />
+            <Button
+              v-if="door && !state.q && !list.phone.value"
+              variant="solid"
+              icon-left="plus"
+              class="mt-3 min-h-11 sm:min-h-8"
+              :label="__('New bill')"
+              @click="router.push(door)"
+            />
+            <a
+              v-if="state.po && boot?.capabilities?.desk"
+              class="mt-4 inline-block min-h-11 py-2 text-ink-blue-link underline"
+              :href="`/app/purchase-order/${encodeURIComponent(state.po)}`"
+              >{{ __('Open the full order form to bill it') }}</a
+            >
+          </div>
+          <ul
+            v-else
+            :ref="(el) => (list.listbox.value = el)"
+            tabindex="0"
+            class="divide-y divide-outline-gray-1 focus:outline-none"
+            role="listbox"
+            :aria-label="segmentLabel(state.segment)"
+            :aria-multiselectable="true"
+            :aria-activedescendant="
+              list.focusKey.value ? list.domId(list.focusKey.value) : undefined
+            "
+          >
+            <li
+              v-for="row in rows"
+              :id="list.domId(row.name)"
+              :key="row.name"
+              role="option"
+              :aria-selected="list.selected.value.has(row.name)"
+              :data-row-key="row.name"
+              class="group relative"
+              :class="[
+                list.focusKey.value === row.name ? 'bg-surface-gray-2' : '',
+                list.selected.value.has(row.name) ? 'bg-surface-blue-1' : '',
+              ]"
+            >
+              <div class="flex items-start">
+                <label
+                  v-if="
+                    canSelect && (!list.phone.value || list.selecting.value)
                   "
-                  class="mt-0.5 h-4 w-4 shrink-0 text-ink-gray-5"
-                />
-                <span class="min-w-0 flex-1">
-                  <span class="block truncate font-medium text-ink-gray-9">
-                    {{ row.party || __('Supplier not visible') }}
-                  </span>
-                  <span class="block truncate text-sm text-ink-gray-6">
-                    {{
-                      [
-                        row.bill_no,
-                        // The due line already says «Vencida hace …».
-                        row.overdue && Number(row.docstatus) === 1
-                          ? ''
-                          : statusLabel(row),
-                        multiCompany ? row.company : '',
-                      ]
-                        .filter(Boolean)
-                        .join(' · ')
-                    }}
-                  </span>
-                  <!-- Only the due words turn red; «Pagado X de Y» shows only
+                  class="flex min-h-14 shrink-0 cursor-pointer items-center pl-5"
+                  :aria-label="__('Select {0}', [row.bill_no || row.name])"
+                >
+                  <input
+                    type="checkbox"
+                    class="h-5 w-5 rounded"
+                    :checked="list.selected.value.has(row.name)"
+                    @change="list.toggleRow(row)"
+                  />
+                </label>
+                <a
+                  :href="recordHref(row)"
+                  class="flex min-h-14 min-w-0 flex-1 items-start gap-3 px-4 py-3 hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:px-6"
+                  :class="
+                    canSelect && (!list.phone.value || list.selecting.value)
+                      ? 'pl-2 sm:pl-2'
+                      : ''
+                  "
+                  @click="list.onRowClick($event, row)"
+                >
+                  <FeatherIcon
+                    :name="
+                      Number(row.docstatus) === 0 ? 'file-text' : 'credit-card'
+                    "
+                    class="mt-0.5 h-4 w-4 shrink-0 text-ink-gray-5"
+                  />
+                  <span class="min-w-0 flex-1">
+                    <span class="block truncate font-medium text-ink-gray-9">
+                      {{ row.party || __('Supplier not visible') }}
+                    </span>
+                    <span class="block truncate text-sm text-ink-gray-6">
+                      {{
+                        [
+                          row.bill_no,
+                          // The due line already says «Vencida hace …».
+                          row.overdue && Number(row.docstatus) === 1
+                            ? ''
+                            : statusLabel(row),
+                          multiCompany ? row.company : '',
+                        ]
+                          .filter(Boolean)
+                          .join(' · ')
+                      }}
+                    </span>
+                    <!-- Only the due words turn red; «Pagado X de Y» shows only
                        when part is paid (the amount column already says
                        what is owed). -->
+                    <span
+                      v-if="Number(row.docstatus) === 1"
+                      class="mt-0.5 block text-sm text-ink-gray-7"
+                      data-testid="gasto-due"
+                      ><span
+                        :class="
+                          row.overdue ? 'text-ink-red-7' : 'text-ink-gray-8'
+                        "
+                        >{{ dueLabel(row.due_date, boot?.today) }}</span
+                      ><template v-if="partlyPaid(row)">
+                        · {{ paidLabel(row) }}</template
+                      ></span
+                    >
+                  </span>
                   <span
-                    v-if="Number(row.docstatus) === 1"
-                    class="mt-0.5 block text-sm text-ink-gray-7"
-                    data-testid="gasto-due"
-                    ><span
-                      :class="
-                        row.overdue ? 'text-ink-red-7' : 'text-ink-gray-8'
-                      "
-                      >{{ dueLabel(row.due_date, boot?.today) }}</span
-                    ><template v-if="partlyPaid(row)">
-                      · {{ paidLabel(row) }}</template
-                    ></span
+                    class="shrink-0 text-right text-sm font-medium tabular-nums text-ink-gray-9"
+                    >{{
+                      money(
+                        Number(row.docstatus) === 1
+                          ? row.outstanding_amount
+                          : row.total,
+                        Number(row.docstatus) === 1
+                          ? row.owed_currency || row.currency
+                          : row.currency,
+                      )
+                    }}</span
                   >
-                </span>
-                <span
-                  class="shrink-0 text-right text-sm font-medium tabular-nums text-ink-gray-9"
-                  >{{
-                    money(
-                      Number(row.docstatus) === 1
-                        ? row.outstanding_amount
-                        : row.total,
-                      Number(row.docstatus) === 1
-                        ? row.owed_currency || row.currency
-                        : row.currency,
-                    )
-                  }}</span
-                >
-              </a>
-            </div>
-            <!-- The focused row's actions, each with its key (desktop; a phone opens the bill). -->
-            <div
-              v-if="!list.phone.value && list.focusKey.value === row.name"
-              class="flex flex-wrap justify-end gap-1 px-4 pb-2"
-              data-row-actions
-            >
-              <Button
-                v-for="action in rowActions(row)"
-                :key="action.key"
-                size="sm"
-                variant="ghost"
-                :label="`${action.label} · ${action.hint}`"
-                :aria-keyshortcuts="action.hint"
-                @click="runVerb(action.key, row)"
+                </a>
+              </div>
+              <!-- The focused row's actions, each with its key (desktop; a phone opens the bill). -->
+              <div
+                v-if="!list.phone.value && list.focusKey.value === row.name"
+                class="flex flex-wrap justify-end gap-1 px-4 pb-2"
+                data-row-actions
               >
-                <template #prefix>
-                  <FeatherIcon :name="action.icon" class="h-4 w-4" />
-                </template>
-              </Button>
-            </div>
-          </li>
-        </ul>
-        <div v-if="list.hasMore.value" class="px-4 py-4 sm:px-6">
-          <Button
-            :label="__('Load more', null, 'Gastos')"
-            :loading="list.loading.value"
-            class="min-h-11 w-full sm:w-auto"
-            @click="list.load({ more: true })"
-          />
+                <Button
+                  v-for="action in rowActions(row)"
+                  :key="action.key"
+                  size="sm"
+                  variant="ghost"
+                  :label="`${action.label} · ${action.hint}`"
+                  :aria-keyshortcuts="action.hint"
+                  @click="runVerb(action.key, row)"
+                >
+                  <template #prefix>
+                    <FeatherIcon :name="action.icon" class="h-4 w-4" />
+                  </template>
+                </Button>
+              </div>
+            </li>
+          </ul>
+          <div v-if="list.hasMore.value" class="px-4 py-4 sm:px-6">
+            <Button
+              :label="__('Load more', null, 'Gastos')"
+              :loading="list.loading.value"
+              class="min-h-11 w-full sm:w-auto"
+              @click="list.load({ more: true })"
+            />
+          </div>
         </div>
-      </div>
 
-      <PowerBulkBar
-        v-if="list.selected.value.size"
-        :count="list.selected.value.size"
-        :label="__('Selected bills')"
-      >
-        <Button
-          v-if="caps.pay"
-          variant="solid"
-          class="min-h-12 sm:min-h-8"
-          :label="__('Pay', null, 'Gastos')"
-          @click="bulkOpen = true"
+        <PowerBulkBar
+          v-if="list.selected.value.size"
+          :count="list.selected.value.size"
+          :label="__('Selected bills')"
         >
-          <template #prefix
-            ><FeatherIcon name="dollar-sign" class="h-4 w-4"
-          /></template>
-        </Button>
-        <template v-else>
-          <p class="w-full text-sm text-ink-gray-7 sm:w-auto">
-            {{
-              __('Payments are made by an accounts manager. Ask one to pay it.')
-            }}
-          </p>
           <Button
+            v-if="caps.pay"
+            variant="solid"
             class="min-h-12 sm:min-h-8"
-            :label="__('Copy request')"
-            @click="copyPayRequest"
-          />
-        </template>
-      </PowerBulkBar>
+            :label="__('Pay', null, 'Gastos')"
+            @click="bulkOpen = true"
+          >
+            <template #prefix
+              ><FeatherIcon name="dollar-sign" class="h-4 w-4"
+            /></template>
+          </Button>
+          <template v-else>
+            <p class="w-full text-sm text-ink-gray-7 sm:w-auto">
+              {{
+                __(
+                  'Payments are made by an accounts manager. Ask one to pay it.',
+                )
+              }}
+            </p>
+            <Button
+              class="min-h-12 sm:min-h-8"
+              :label="__('Copy request')"
+              @click="copyPayRequest"
+            />
+          </template>
+        </PowerBulkBar>
+      </div>
+      <Fab
+        v-if="list.phone.value && door && !list.selecting.value"
+        :label="__('New bill')"
+        :to="door"
+        data-testid="gastos-new"
+      />
     </div>
 
     <PayDialog
@@ -417,7 +449,7 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Button, FeatherIcon, FormControl, toast } from 'frappe-ui'
-import { FilterChips } from '@/components/ui'
+import { Fab, FilterChips } from '@/components/ui'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import ApprovalDialog from '@/components/gastos/ApprovalDialog.vue'
 import BulkPaySheet from '@/components/gastos/BulkPaySheet.vue'
@@ -435,6 +467,7 @@ import {
   LIVE_DOCTYPES,
   QUEUE_KEYS,
   cancelPayment,
+  createTo,
   dueLabel,
   gastosApi,
   gastosBoot,
@@ -467,6 +500,10 @@ const approval = reactive({ open: false, name: '', action: '', reason: '' })
 const state = computed(() => queueState(route.query, boot.value))
 const caps = computed(() => boot.value?.capabilities || {})
 const billSegment = computed(() => state.value.segment !== 'empleados')
+// An order's bills are their own view: no door there (its bill comes from the order).
+const door = computed(() =>
+  createTo(state.value.po ? '' : state.value.segment, caps.value),
+)
 const canSelect = computed(
   () => state.value.segment === 'por-pagar' || Boolean(state.value.po),
 )

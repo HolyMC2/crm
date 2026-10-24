@@ -3,8 +3,9 @@ import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
-// The words the new «Nuevo gasto» sheet adds: each one has its es-MX entry in
-// the CRM catalogue (Spanish first: nobody on the shop floor reads English).
+// The words the «Nuevo gasto» sheet and the «Nueva factura» door add: each one
+// has its es-MX entry in the CRM catalogue (Spanish first: nobody on the shop
+// floor reads English).
 const here = dirname(fileURLToPath(import.meta.url))
 const po = readFileSync(resolve(here, '../../../crm/locale/es.po'), 'utf8')
 function entry(msgid) {
@@ -34,6 +35,8 @@ describe('the expense sheet reads in Spanish', () => {
       'Only {0} can approve your expenses.',
       'Solo {0} puede aprobar tus gastos.',
     ],
+    ['New bill', 'Nueva factura'],
+    ['Back to {0}', 'Volver a {0}'],
   ])('«%s»', (msgid, spanish) => {
     expect(entry(msgid)).toBe(spanish)
   })

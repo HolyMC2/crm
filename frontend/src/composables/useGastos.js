@@ -82,6 +82,19 @@ export function normalizeChip(segment, value) {
     : ''
 }
 
+/** Por registrar's one create door, for whom may create a bill: the engine's
+ *  supplier-invoice form, with the way back to this queue. Null elsewhere. */
+export function createTo(segment, capabilities) {
+  if (segment !== 'por-registrar' || !capabilities?.create) return null
+  return {
+    path: '/documentos/facturas-proveedor/nuevo',
+    query: {
+      return_to: '/crm/gastos?segment=por-registrar',
+      return_label: 'Gastos',
+    },
+  }
+}
+
 /** The query that reopens a queue exactly as it was (segment, chip, search, order). */
 export function queueQuery({ segment, chip, q, po } = {}) {
   const query = {}

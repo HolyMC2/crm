@@ -3,6 +3,7 @@ import { recoveryModule } from '../../src/utils/shellRoutes.js'
 import {
   bankSide,
   bankUrl,
+  createTo,
   dueLabel,
   needsRate,
   needsReference,
@@ -19,6 +20,20 @@ import {
 } from '../../src/composables/useGastos.js'
 
 describe('Gastos queues', () => {
+  it('offers «Nueva factura» on Por registrar only, to whom may create a bill, with the way back', () => {
+    const caps = { read: true, create: true }
+    expect(createTo('por-registrar', caps)).toEqual({
+      path: '/documentos/facturas-proveedor/nuevo',
+      query: {
+        return_to: '/crm/gastos?segment=por-registrar',
+        return_label: 'Gastos',
+      },
+    })
+    expect(createTo('por-pagar', caps)).toBeNull()
+    expect(createTo('empleados', caps)).toBeNull()
+    expect(createTo('por-registrar', { read: true })).toBeNull()
+    expect(createTo('por-registrar', undefined)).toBeNull()
+  })
   it('keeps unknown segments on Por pagar and chips on Por pagar only', () => {
     expect(normalizeSegment('por-registrar')).toBe('por-registrar')
     expect(normalizeSegment('x')).toBe('por-pagar')
