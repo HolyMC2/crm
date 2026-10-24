@@ -21,6 +21,18 @@ reaches»).
 Shell places always sort above Listas, Reportes and Desk. A Desk row (`desk`, an `/app/…` URL)
 exists only where the shell has no page: never a Desk link for a module or a curated list.
 
+## Rank (E7b)
+
+Every row carries a rank (`PALETTE_RANK` in `shellPalette.js`): a shell place or a record matching
+the term is 0 (the default), a hand-written action specific to it («Nuevo trato», «Escanear
+documento», a theme) 1, generic fan-out 2 («Nuevo contacto «term»», «Buscar «term» en Escáner»,
+a readable DocType's «Crear X»). `orderPaletteSections` keeps the group order above and the order
+inside a group, and moves a group whose best row is generic after Ir a: «ventas» lists Ventas,
+Ventas › Tratos and Ventas › Prospectos before «Crear Pronóstico de ventas», and «stock ledger»
+lists Inventario › Movimientos before «Nuevo contacto «stock ledger»». The Listas provider offers
+at most three «Crear X» rows per query and only where the term starts a word of the label or the
+DocType name (the server matches any substring, so the list row still shows).
+
 ## Prefixes (scopes)
 
 `>` actions · `@` people and companies · `#` documents and lists · `%` Taller refacciones ·
