@@ -249,7 +249,16 @@ mechanical part and `check-frappe-ui-exports.mjs` cannot see any of it (it check
 
 ## 5. Input list for `FUI1-behavior` (silent breaks)
 
-Filled at step 8 from the lab walk. Known from the sources before the walk:
+Lab walk at step 8 (doco-mirror gen 1859, bundle from a8afd5bc7; owner and lab bot; 1440,
+412 and 305 wide; dark and light; 118 shots in `shell-program/evidence/FUI1/`, every one viewed
+against the E1/E7/E7b/S6/D2 baselines): no silent break visible. Every dialog (Nuevo evento,
+the Nueva cita gate, Servicios), dropdown (Crear, Fase/Origen/Propietario, the phone title
+menus), palette group and the assistant dock render with their content; zero page errors and
+zero console errors on all six runs. The only differences from the baselines are not
+frappe-ui's: the assistant sheet's snap height on the phone (animation timing), the services
+dialog top cut (already in E1 04) and the «pruebas»/«Alta» pill clipping on Hoy at 412/305
+(already in E7). What remains for `FUI1-behavior` is therefore the list below, known from the
+sources and not visible in a static walk (timings, aria, focus and keyboard paths):
 
 - Dialogs (step 7b): the body is the default slot; the 14 full-override bodies are `bare`
   dialogs, so they draw their own padding and close affordance exactly as before, but the size
