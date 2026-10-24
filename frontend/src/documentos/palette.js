@@ -89,6 +89,15 @@ export function documentosPlaces(boot) {
       href: `/${key}`,
     })
   }
+  if (moduleEnabled(boot, 'inventario'))
+    items.push({
+      id: 'inventario.movimientos',
+      group: 'ir_a',
+      title: 'Inventario › Movimientos',
+      keywords: 'kardex movimientos existencias stock ledger',
+      icon: 'lucide-history',
+      href: '/inventario/movimientos',
+    })
   for (const entry of PROFILES) {
     if (!readable.has(entry.doctype)) continue
     const module = entry.base === '/inventario' ? 'Inventario' : 'Documentos'

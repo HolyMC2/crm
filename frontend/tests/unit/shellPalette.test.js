@@ -178,6 +178,24 @@ describe('Listas: every readable DocType through the generic floor', () => {
     expect(place.keywords).toContain('Sales Invoice')
   })
 
+  it("the kardex is the shell's own Movimientos place, under Inventario", () => {
+    const on = boot({
+      inventario: { key: 'inventario', enabled: true, capabilities: {} },
+    })
+    const place = documentosPlaces(on).find(
+      (i) => i.id === 'inventario.movimientos',
+    )
+    expect(place).toMatchObject({
+      group: 'ir_a',
+      title: 'Inventario › Movimientos',
+      href: '/inventario/movimientos',
+    })
+    expect(place.keywords).toContain('kardex')
+    expect(
+      documentosPlaces(boot()).some((i) => i.id === 'inventario.movimientos'),
+    ).toBe(false)
+  })
+
   it('answers nothing on an empty or one-letter query, nor without the Documentos module', async () => {
     const tipos = createTiposProvider({ boot: ref(boot()) })
     expect(await tipos.search(query(''))).toEqual([])
