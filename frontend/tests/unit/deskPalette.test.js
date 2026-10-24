@@ -7,7 +7,10 @@ const state = vi.hoisted(() => ({ call: vi.fn(), status: { enabled: true } }))
 vi.mock('frappe-ui', () => ({
   call: (...args) => state.call(...args),
   toast: { success: vi.fn(), error: vi.fn() },
-  useTheme: () => ({ currentTheme: ref('light'), setTheme: vi.fn() }),
+  useColorScheme: () => ({
+    colorScheme: ref('light'),
+    setColorScheme: vi.fn(),
+  }),
   createResource: () => ({ data: null, fetch: vi.fn() }),
 }))
 vi.mock('@/composables/breakpoint', async () => {

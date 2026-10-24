@@ -14,7 +14,10 @@ vi.mock('frappe-ui', async () => {
       success: (text) => state.toasts.push(['success', text]),
       error: (text) => state.toasts.push(['error', text]),
     },
-    useTheme: () => ({ currentTheme: ref('light'), setTheme: vi.fn() }),
+    useColorScheme: () => ({
+      colorScheme: ref('light'),
+      setColorScheme: vi.fn(),
+    }),
     Button: {
       props: ['label'],
       setup: (props) => () => h('button', props.label),

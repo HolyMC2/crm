@@ -9,7 +9,7 @@
 <script setup>
 import { computed, defineAsyncComponent, provide } from 'vue'
 import { useRoute } from 'vue-router'
-import { FrappeUIProvider, setConfig, useTheme } from 'frappe-ui'
+import { FrappeUIProvider, setConfig, useColorScheme } from 'frappe-ui'
 import { sessionStore } from '@/stores/session'
 import { Dialogs } from '@/utils/dialogs'
 import { isNeutralModule } from '@/composables/muelleShell'
@@ -28,8 +28,8 @@ const neutral = computed(
     isNeutralModule(route.meta.app) ||
     (!route.matched.length && isNeutralModule(window.muelle_module)),
 )
-const { setTheme } = useTheme()
-setTheme(localStorage.getItem('theme') || 'light')
+const { setColorScheme } = useColorScheme()
+setColorScheme(localStorage.getItem('theme') || 'light')
 setConfig('systemTimezone', window.timezone?.system || null)
 setConfig('localTimezone', window.timezone?.user || null)
 setConfig('translatedMessages', window.translated_messages || {})

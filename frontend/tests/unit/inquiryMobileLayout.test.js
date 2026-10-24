@@ -15,7 +15,7 @@ vi.mock('frappe-ui', async () => {
     dayjsLocal: dates.dayjsLocal,
     getConfig: config.getConfig,
     setConfig: config.setConfig,
-    useTheme: () => ({ setTheme: () => {} }),
+    useColorScheme: () => ({ setColorScheme: () => {} }),
     FrappeUIProvider: defineComponent({
       setup(_, { slots }) {
         return () => slots.default?.()

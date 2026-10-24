@@ -52,7 +52,7 @@ function routeKey(route) {
 }
 import { Dialogs } from '@/utils/dialogs'
 import { sessionStore } from '@/stores/session'
-import { setConfig, useTheme } from 'frappe-ui'
+import { setConfig, useColorScheme } from 'frappe-ui'
 import {
   computed,
   defineAsyncComponent,
@@ -128,10 +128,10 @@ watch(
   { flush: 'post' },
 )
 
-// Apply the persisted theme at boot (useTheme's ref starts at 'light' and nothing
+// Apply the persisted theme at boot (useColorScheme's ref starts at 'light' and nothing
 // else re-applies a stored 'dark'/'system' choice — the mobile toggle needs this).
-const { setTheme } = useTheme()
-setTheme(localStorage.getItem('theme') || 'light')
+const { setColorScheme } = useColorScheme()
+setColorScheme(localStorage.getItem('theme') || 'light')
 
 // The Muelle shell owns the rail / phone nav; Ventas adds its sidebar and
 // page header (DocoNavRail, MobileTabBar and the drawer are retired).

@@ -63,7 +63,7 @@ vi.mock('frappe-ui', async () => {
         () =>
           slots.default?.(),
     },
-    useTheme: () => ({ setTheme() {} }),
+    useColorScheme: () => ({ setColorScheme() {} }),
   }
 })
 vi.mock('@framework/ui', () => ({
