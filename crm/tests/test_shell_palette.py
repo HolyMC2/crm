@@ -52,9 +52,7 @@ class TestDeskReach(TestCase):
 		self.assertTrue(row["title"] and row["ref_label"])
 		self.assertEqual(shell.reports("zzz-no-such-report"), [])
 		# Reports named by the term come before the ones that only report on its DocType.
-		named = [
-			"stock ledger" in (r["name"] + " " + unidecode(r["title"])).lower() for r in rows
-		]
+		named = ["stock ledger" in (r["name"] + " " + unidecode(r["title"])).lower() for r in rows]
 		self.assertEqual(named, sorted(named, reverse=True))
 		self.assertTrue(named[0])
 
@@ -80,7 +78,9 @@ class TestDeskReach(TestCase):
 		).insert(ignore_permissions=True)
 		shell.forget_desk_reach("Administrator")
 		row = next(r for r in shell.reports("e7 facturas") if r["name"] == "E7 Facturas por cliente")
-		self.assertRegex(row["href"], r"^/app/(sales-invoice|todo)/view/report/E7%20Facturas%20por%20cliente$")
+		self.assertRegex(
+			row["href"], r"^/app/(sales-invoice|todo)/view/report/E7%20Facturas%20por%20cliente$"
+		)
 
 	def test_a_user_without_roles_sees_no_report_rows(self):
 		frappe.set_user(self.nobody)
