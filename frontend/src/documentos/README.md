@@ -20,6 +20,17 @@ Server: `crm/api/documentos.py`: reads `rows`, `counts`, `hub`, `search`, `docty
 `comment`, `assign`, `people`, `print_formats`; mappers on the `MAKERS` allowlist. Frappe permissions only, plus `User.block_modules`; the module is on in the
 boot when the worker reads at least one of its doctypes (`get_capabilities`).
 
+Who did what (DD7, E3): `timeline` is the one Actividad for every record; `DocumentoRecord` renders
+it from its bundle and `pages/Contacto.vue` fetches it after paint through
+`components/documentos/timeline.js` (shared per record version). Each edit carries its own lines;
+child rows name themselves through `_ROW_TITLES` in `documentos.py` (an item, a payment line, a
+contact's email, phone or linked record), and a row with no name only counts. A record the
+assistant built for a person names the person: `documentos._made_by` reads the `Captura
+Contable.requested_by` of the capture that created it when doco's `is_agent` owns the record, so
+the create event and the cadena's `people` rows carry `via` («Ernesto Encargado creó la factura ·
+con Contabot», «Capturó Ernesto Encargado · con Contabot»). «Registró» on the cadena reads the
+Version whose `data` holds the docstatus change, newest first, never a fixed window.
+
 Budgets (DD12): nothing here is imported statically from the router, `main.js` or `MuelleShell`.
 `registry.js` is the one small module others may import lazily (Avisos, the kardex, the palette) to
 resolve a link with `documentRoute`; it carries no profile code. Profiles load lazily.
@@ -59,6 +70,7 @@ from the shell (§1.5); the only Desk door is «Abrir en escritorio» in the too
    | `recordRoute(name)`     | optional: hand the record to a richer existing page (`{ path }`)                                                                   |
 
    Two rules around `recordRoute`:
+
    - `documentRoute(doctype, 'nuevo')` ignores it: a new draft always opens the engine form at
      `/documentos/<slug>/nuevo`, even for Purchase Order or Purchase Invoice.
    - When `DocumentosList` opens a record on a richer page (one outside `/documentos` and
@@ -92,7 +104,7 @@ from the shell (§1.5); the only Desk door is «Abrir en escritorio» in the too
 | `header(record)`        | → `{ title, kind, number, status, tone, amount, date, due }`                            | the record's app bar and hero                                                                                                                                                                 |
 | `nextStep(record)`      | → `null` or a step (below)                                                              | the one filled «siguiente paso» (DD4)                                                                                                                                                         |
 | `stages(record)`        | → `null` or `[{ label, done, current }]` (`stagesAt(labels, at, finished)`)             | the stepper under the amount (Borrador · Por cobrar · Pagada)                                                                                                                                 |
-| `kind`                  | `string`                                                                                | the singular word when one doctype has several lists (Payment Entry: «Cobro»): «Nuevo cobro», the app bar                                                                                    |
+| `kind`                  | `string`                                                                                | the singular word when one doctype has several lists (Payment Entry: «Cobro»): «Nuevo cobro», the app bar                                                                                     |
 | `fieldLabels`           | `{ [fieldname]: string \| { label, reqd } }`                                            | the worker's words in the form; `reqd` marks a field ERPNext requires in its controller (a pedido's `delivery_date`)                                                                          |
 | `moreFields`            | `string[]`                                                                              | fields behind «Más datos» in the form (opened by itself when one of them is missing)                                                                                                          |
 | `defaults`              | `{ [fieldname]: value }`                                                                | values a blank `/nuevo` saves with (cobros: `payment_type: Receive`, `party_type: Customer`); not used on a mapper's draft                                                                    |
