@@ -722,7 +722,10 @@ def _behind(doctype, doc):
 	so the doctype travels beside it."""
 	if "doco" not in frappe.get_installed_apps():
 		return None
-	from doco.docoutils.books.actors import is_agent
+	try:
+		from doco.docoutils.books.actors import is_agent
+	except ImportError:  # a doco older than the helper: the record is the owner's
+		return None
 
 	if not is_agent(doc.owner):
 		return None

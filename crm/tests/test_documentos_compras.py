@@ -189,6 +189,16 @@ class TestWho(TestCase):
 			people, [{"verb": "Capturó", "name": "Ernesto Encargado", "when": "2026-10-01 10:00"}]
 		)
 
+	def test_a_doco_without_the_helper_leaves_the_record_to_its_owner(self):
+		import sys
+		from unittest.mock import patch
+
+		# None in sys.modules makes the import raise ImportError (an older doco image).
+		with patch.dict(sys.modules, {"doco.docoutils.books.actors": None}):
+			self.assertEqual(
+				documentos._made_by("Purchase Invoice", self.doc("contabot@x.mx")), ("Contabot", None)
+			)
+
 	def test_actividad_create_event_carries_the_same_attribution(self):
 		self.with_capture("ernesto@x.mx")
 		self.assertEqual(
