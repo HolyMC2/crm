@@ -703,7 +703,14 @@ function recentKey() {
 // through a permission check each time, so revoked access shows nothing. A
 // place, list, report or workspace row carries only its label, so it is kept
 // as chosen (E7); an action row is never a recent.
-const STABLE_GROUPS = new Set(['ir_a', 'listas', 'reportes', 'desk'])
+// A chosen row comes back from pushRecent already regrouped as «recientes».
+const STABLE_GROUPS = new Set([
+  'ir_a',
+  'listas',
+  'reportes',
+  'desk',
+  'recientes',
+])
 function recordFromHref(href) {
   // Older builds stored no `record`; their href is /contactos/<source>/<name>.
   const match = /^\/contactos\/([a-z-]+)\/([^/?#]+)$/.exec(String(href || ''))

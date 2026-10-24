@@ -32,6 +32,7 @@ import {
   toRecentRef,
 } from '@/utils/shellPalette'
 import { createTiposProvider, documentosPlaces } from '@/documentos/palette'
+import { pushRecent } from '@/vendor/muelle-shell/contracts/palette'
 import { _resetAssistant } from '@/components/assistant/useAssistant'
 
 const boot = (overrides = {}) => ({
@@ -314,6 +315,24 @@ describe('the assistant is a place and owns the ? scope', () => {
 })
 
 describe('Recientes remember any stable row', () => {
+  it('survives the choose() round trip: pushRecent regroups the row as recientes', () => {
+    const list = {
+      id: 'tipos:Warehouse',
+      group: 'listas',
+      title: 'Almacén',
+      href: '/documentos/tipo/Warehouse',
+    }
+    const refs = pushRecent([], toRecentRef(list)).map(toRecentRef)
+    expect(refs).toEqual([
+      {
+        id: 'tipos:Warehouse',
+        group: 'recientes',
+        title: 'Almacén',
+        href: '/documentos/tipo/Warehouse',
+      },
+    ])
+  })
+
   it('keeps a place, a list, a report and a workspace by label; never an action or a sibling app', () => {
     expect(
       toRecentRef({
