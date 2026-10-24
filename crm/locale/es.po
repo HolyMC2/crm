@@ -14289,7 +14289,7 @@ msgid "Next"
 msgstr "Siguiente"
 
 msgid "New event"
-msgstr "Nueva cita"
+msgstr "Nuevo evento"
 
 msgid "We could not open the Agenda"
 msgstr "No pudimos abrir la Agenda"
@@ -28591,3 +28591,62 @@ msgstr "Solo {0} puede aprobar tus gastos."
 #: frontend/src/pages/Gastos.vue
 msgid "New bill"
 msgstr "Nueva factura"
+#: frontend/src/composables/useCitas.js
+msgid "Set your hours"
+msgstr "Poner horario"
+
+#: frontend/src/composables/useCitas.js
+msgid "Turn on online appointments"
+msgstr "Prender citas en línea"
+
+#: frontend/src/composables/useCitas.js
+msgid "Publish services"
+msgstr "Publicar servicios"
+
+#: frontend/src/composables/useCitas.js
+msgid "{0} can set this up."
+msgstr "{0} puede configurarlo."
+
+#: frontend/src/composables/useCitas.js
+msgid "An administrator can set this up."
+msgstr "Un administrador puede configurarlo."
+
+#: frontend/src/components/agenda/AgendaGuard.vue
+msgid "Go to the field"
+msgstr "Ir al campo"
+
+#: frontend/src/components/agenda/AgendaCitasSettings.vue
+msgid "Services"
+msgstr "Servicios"
+
+#: frontend/src/components/agenda/AgendaCitasSettings.vue
+msgid "Your online shop: {0}"
+msgstr "Tu tienda en línea: {0}"
+
+#: frontend/src/components/agenda/AgendaCitasSettings.vue
+msgid "«Book» is off there; turn it on above."
+msgstr "Ahí «Agendar» está apagado; préndelo arriba."
+
+#: frontend/src/components/agenda/AgendaCitasSettings.vue
+msgid "This site has no online shop yet, so there is nowhere to publish services."
+msgstr "Este sitio todavía no tiene tienda en línea, así que no hay dónde publicar servicios."
+
+#: frontend/src/components/agenda/AgendaCitasSettings.vue
+msgid "Group that holds your services"
+msgstr "Grupo donde están tus servicios"
+
+#: frontend/src/components/agenda/AgendaCitasSettings.vue
+msgid "Choose a group"
+msgstr "Elige un grupo"
+
+#: frontend/src/components/agenda/AgendaCitasSettings.vue
+msgid "No services in this group yet."
+msgstr "Este grupo todavía no tiene servicios."
+
+#: frontend/src/components/agenda/AgendaCitasSettings.vue
+msgid "Save services"
+msgstr "Guardar servicios"
+
+#: frontend/src/components/agenda/AgendaCitasSettings.vue
+msgid "Services saved"
+msgstr "Servicios guardados"
