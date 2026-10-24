@@ -6,10 +6,11 @@
   <div class="relative flex h-full min-w-0 flex-1 flex-col overflow-hidden">
     <AppBar
       :back="backTo"
-      back-label="Volver"
+      :back-label="back ? __('Back to {0}', [back.label]) : 'Volver'"
       :context="context"
       :title="title"
       :bell="false"
+      @back="onBack"
     />
     <div class="min-h-0 flex-1 overflow-y-auto">
       <div class="mx-auto w-full max-w-2xl px-4 pb-28 pt-4">
@@ -86,6 +87,7 @@ import {
   profileBySlug,
 } from '@/documentos/registry'
 import { BTN } from '@/documentos/tools'
+import { completeTo, goTo, ownerReturn } from '@/composables/useAprobaciones'
 import { feminineNoun, kindLabel } from '@/utils/display'
 
 const route = useRoute()
@@ -146,13 +148,21 @@ const party = computed(() =>
     ? `Para ${draft.value.title}`
     : '',
 )
+// Opened from a queue with the shell's return protocol (Gastos «Nueva
+// factura»): the arrow and the saved draft both go back to that queue.
+const back = computed(() => ownerReturn(route.query))
 const backTo = computed(() =>
-  typeof window !== 'undefined' && window.history.state?.back
+  back.value || (typeof window !== 'undefined' && window.history.state?.back)
     ? true
     : entry.value
       ? listRoute(entry.value)
       : floorRoute(doctype.value),
 )
+function onBack(event) {
+  if (!back.value) return
+  event.preventDefault()
+  goTo(router, back.value.to)
+}
 
 let seq = 0
 async function load() {
@@ -225,6 +235,12 @@ async function save() {
       values,
       source: source.value || undefined,
     })
+    if (back.value)
+      return goTo(
+        router,
+        completeTo(back.value.to, saved.doctype, saved.name),
+        { replace: true },
+      )
     const to =
       documentRoute(saved.doctype, saved.name, { hint: saved.slug_hint }) ||
       floorRoute(saved.doctype, saved.name)

@@ -161,11 +161,12 @@ export function ownerReturn(query = {}) {
   }
 }
 
-/** Go to a /crm/ path inside the SPA (router), anything else as a page load. */
-export function goTo(router, path) {
+/** Go to a /crm/ path inside the SPA (router), anything else as a page load.
+ *  `replace`: the current screen leaves history (a saved form is not a page to go back to). */
+export function goTo(router, path, { replace = false } = {}) {
   if (!path) return null
   return path.startsWith('/crm/')
-    ? router.push(path.slice(4))
+    ? router[replace ? 'replace' : 'push'](path.slice(4))
     : window.location.assign(path)
 }
 
