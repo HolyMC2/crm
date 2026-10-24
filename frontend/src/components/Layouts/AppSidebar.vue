@@ -219,7 +219,7 @@ import {
   showHelpModal,
   minimize,
   useTelemetry,
-} from 'frappe-ui/frappe'
+} from '@framework/ui'
 import { useStorage } from '@vueuse/core'
 import { useDemoData } from '@/composables/demoData'
 import { ref, computed, watch } from 'vue'

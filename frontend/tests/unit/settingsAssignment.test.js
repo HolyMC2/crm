@@ -47,7 +47,7 @@ vi.mock('frappe-ui', () => ({
   },
   toast: { success: vi.fn(), error: vi.fn() },
 }))
-vi.mock('frappe-ui/frappe', () => ({
+vi.mock('@framework/ui', () => ({
   useTelemetry: () => ({ capture: vi.fn() }),
 }))
 vi.mock('@/utils', () => ({ ConfirmDelete: () => [{ label: 'Delete' }] }))

@@ -5,11 +5,11 @@
 // `OnboardingSteps`, `HelpCenter` and `showHelpCenter` stay internal —
 // `frappe-ui/frappe` exported them, but no app imports them and they are only
 // ever rendered by `HelpModal`.
-export { default as GettingStartedBanner } from "./GettingStartedBanner.vue";
-export { default as HelpModal } from "./HelpModal.vue";
-export { default as IntermediateStepModal } from "./IntermediateStepModal.vue";
-export { useOnboarding } from "./onboarding";
-export { minimize, showHelpModal } from "./help";
+export { default as GettingStartedBanner } from './GettingStartedBanner.vue'
+export { default as HelpModal } from './HelpModal.vue'
+export { default as IntermediateStepModal } from './IntermediateStepModal.vue'
+export { useOnboarding } from './onboarding'
+export { minimize, showHelpModal } from './help'
 export type {
   GettingStartedBannerProps,
   HelpArticle,
@@ -21,4 +21,4 @@ export type {
   OnboardingStep,
   OnboardingStepCallback,
   UseOnboarding,
-} from "./types";
+} from './types'

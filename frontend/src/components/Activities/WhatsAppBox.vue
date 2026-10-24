@@ -454,7 +454,7 @@ import {
   renderTemplate,
 } from '@/composables/composerCommands'
 import { sanitizeHTML } from '@/utils'
-import { useTelemetry } from 'frappe-ui/frappe'
+import { useTelemetry } from '@framework/ui'
 import {
   createResource,
   call,

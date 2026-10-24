@@ -1,2 +1,2 @@
-export { default as SignupBanner } from "./SignupBanner.vue";
-export type { SignupBannerProps } from "./types";
+export { default as SignupBanner } from './SignupBanner.vue'
+export type { SignupBannerProps } from './types'

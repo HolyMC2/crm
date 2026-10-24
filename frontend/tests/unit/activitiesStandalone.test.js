@@ -43,7 +43,7 @@ vi.mock('@/data/document', () => ({
   useDocument: () => ({ document: { doc: {}, reload: () => {} } }),
 }))
 vi.mock('vue-router', () => ({ useRoute: () => ({ hash: '' }) }))
-vi.mock('frappe-ui/frappe', () => ({
+vi.mock('@framework/ui', () => ({
   useTelemetry: () => ({ capture: () => {} }),
 }))
 vi.mock('frappe-ui', async () => {

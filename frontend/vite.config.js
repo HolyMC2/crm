@@ -148,6 +148,8 @@ export default defineConfig(async ({ mode }) => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, 'src'),
+        // frappe's `ui/` package, vendored (src/framework-ui/SOURCE.json).
+        '@framework/ui': path.resolve(__dirname, 'src/framework-ui'),
         // Single-component entry points, so form/dialog widgets that the
         // first screen does not need can load lazily (src/utils/lazyGlobals.js).
         'frappe-ui-components': path.resolve(

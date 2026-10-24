@@ -362,7 +362,7 @@ import {
   toast,
   ConfirmDialog,
 } from 'frappe-ui'
-import { useTelemetry } from 'frappe-ui/frappe'
+import { useTelemetry } from '@framework/ui'
 import {
   onMounted,
   onUnmounted,

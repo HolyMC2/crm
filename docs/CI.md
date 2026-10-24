@@ -1,9 +1,12 @@
 # CRM CI
 
-Frontend installs apply a version-specific import lifecycle patch to the pinned
-`frappe-ui` dependency. Frozen installs must run lifecycle scripts; build and test
-commands verify the patched source fingerprints before execution. See the
-[patch contract](../frontend/patches/README.md) for clean-install and upgrade checks.
+The frontend carries no patch on the pinned `frappe-ui` dependency. The pieces of
+frappe's `@framework/ui` package that crm uses (telemetry, onboarding, the signup
+and trial banners) are vendored under `frontend/src/framework-ui/`; its
+`SOURCE.json` records the upstream commit and every local change, and
+`frontend/tests/unit/crmOnboarding.test.js` covers the ported onboarding
+behaviour. A frappe-ui bump therefore needs no lifecycle script; the build runs
+`scripts/verify-vendor.mjs` for the byte-checked `src/vendor/` packages only.
 
 This fork ships inside `ghcr.io/holymc2/doco-bench`, published by Muelle's
 source-locked image pipeline. Its active `pyproject.toml` Bench constraint is

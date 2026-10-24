@@ -293,7 +293,7 @@ import {
   call,
   toast,
 } from 'frappe-ui'
-import { useTelemetry } from 'frappe-ui/frappe'
+import { useTelemetry } from '@framework/ui'
 import { globalStore } from '@/stores/global'
 import LucideChevronLeft from '~icons/lucide/chevron-left'
 import LucideChevronDown from '~icons/lucide/chevron-down'

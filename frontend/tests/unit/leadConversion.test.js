@@ -38,7 +38,7 @@ vi.mock('frappe-ui', () => ({
     },
   }),
 }))
-vi.mock('frappe-ui/frappe', () => ({
+vi.mock('@framework/ui', () => ({
   useTelemetry: () => ({ capture() {} }),
 }))
 // Completion is covered with the real native helper in crmOnboarding.test.js.

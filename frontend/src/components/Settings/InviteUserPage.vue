@@ -99,7 +99,7 @@ import { useCrmOnboarding } from '@/composables/onboarding'
 import { useSettingsDraft } from '@/composables/settingsSession'
 import { validateEmail, convertArrayToString } from '@/utils'
 import { usersStore } from '@/stores/users'
-import { useTelemetry } from 'frappe-ui/frappe'
+import { useTelemetry } from '@framework/ui'
 import {
   toast,
   createListResource,

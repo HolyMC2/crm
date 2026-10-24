@@ -5,7 +5,7 @@
 // after every structural change.
 import { call, createResource, toast } from 'frappe-ui'
 import { globalStore } from '@/stores/global'
-import { useTelemetry } from 'frappe-ui/frappe'
+import { useTelemetry } from '@framework/ui'
 import { reactive, ref, computed } from 'vue'
 import { BREAK_TYPES, readiness, isPublishable } from './formModel'
 

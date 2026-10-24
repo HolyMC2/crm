@@ -1,143 +1,149 @@
-import type { Component, ComputedRef, Ref } from "vue";
+import type { Component, ComputedRef, Ref } from 'vue'
 
 /** One item in an app's getting-started checklist. */
 export interface OnboardingStep {
   /** Stable id, stored on the server and used by `skip` / `reset`. */
-  name: string;
+  name: string
   /** Whether the user has finished (or skipped) this step. */
-  completed: boolean;
+  completed: boolean
   /** Text shown in the list. */
-  title?: string;
+  title?: string
   /** Icon component rendered before the title. */
-  icon?: Component;
+  icon?: Component
   /** `name` of a step that has to be completed before this one unlocks. */
-  dependsOn?: string;
+  dependsOn?: string
   /** Run when the user clicks the row. */
-  onClick?: () => void;
-  [key: string]: any;
+  onClick?: () => void
+  [key: string]: any
 }
 
 /** Called after a step's state changes on the server. */
-export type OnboardingStepCallback = (step: string, skipped: boolean) => void;
+export type OnboardingStepCallback = (step: string, skipped: boolean) => void
 
 /** Called after every step's state changes at once. */
-export type OnboardingBulkCallback = (value: boolean) => void;
+export type OnboardingBulkCallback = (value: boolean) => void
 
 /** What `useOnboarding` hands back for one app. */
 export interface UseOnboarding {
   /** The steps registered by `setUp`, in order. */
-  steps: OnboardingStep[] | undefined;
+  steps: OnboardingStep[] | undefined
   /** How many steps are completed. */
-  stepsCompleted: ComputedRef<number>;
+  stepsCompleted: ComputedRef<number>
   /** How many steps there are. */
-  totalSteps: ComputedRef<number>;
+  totalSteps: ComputedRef<number>
   /** Completed share, rounded down, 0–100. */
-  completedPercentage: ComputedRef<number>;
+  completedPercentage: ComputedRef<number>
   /** True once every step is done. Persisted in localStorage. */
-  isOnboardingStepsCompleted: Ref<boolean>;
+  isOnboardingStepsCompleted: Ref<boolean>
   /** Mark one step completed (or not) and sync it to the server. */
   updateOnboardingStep: (
     step: string,
     value?: boolean,
     skipped?: boolean,
-    callback?: OnboardingStepCallback | null
-  ) => void;
+    callback?: OnboardingStepCallback | null,
+  ) => Promise<void>
   /** Mark one step completed without the user doing it. */
-  skip: (step: string, callback?: OnboardingStepCallback | null) => void;
+  skip: (
+    step: string,
+    callback?: OnboardingStepCallback | null,
+  ) => Promise<void>
   /** Mark every step completed. */
-  skipAll: (callback?: OnboardingBulkCallback | null) => void;
+  skipAll: (callback?: OnboardingBulkCallback | null) => Promise<void>
   /** Mark one step not completed. */
-  reset: (step: string, callback?: OnboardingStepCallback | null) => void;
+  reset: (
+    step: string,
+    callback?: OnboardingStepCallback | null,
+  ) => Promise<void>
   /** Mark every step not completed. */
-  resetAll: (callback?: OnboardingBulkCallback | null) => void;
+  resetAll: (callback?: OnboardingBulkCallback | null) => Promise<void>
   /** Register this app's steps. Call once, before rendering the banner or modal. */
-  setUp: (steps: OnboardingStep[]) => void;
+  setUp: (steps: OnboardingStep[]) => void
   /** Re-read the stored status into the registered steps. */
-  syncStatus: () => void;
+  syncStatus: () => void
 }
 
 /** Props for `<GettingStartedBanner>`. */
 export interface GettingStartedBannerProps {
   /** Render the collapsed, icon-only form used by a collapsed sidebar. */
-  isSidebarCollapsed?: boolean;
+  isSidebarCollapsed?: boolean
   /** App the onboarding status belongs to, e.g. `"frappecrm"`. */
-  appName?: string;
+  appName?: string
 }
 
 /** One slide in an `<IntermediateStepModal>`. */
 export interface IntermediateStep {
   /** Dialog title. */
-  title?: string;
+  title?: string
   /** Body copy. */
-  message?: string;
+  message?: string
   /** MP4 shown under the message. */
-  videoURL?: string;
+  videoURL?: string
   /** Label of the single action button. */
-  buttonLabel?: string;
+  buttonLabel?: string
   /** Run when the action button is clicked. */
-  onClick?: () => void;
+  onClick?: () => void
 }
 
 /** Props for `<IntermediateStepModal>`. */
 export interface IntermediateStepModalProps {
   /** The step being shown. */
-  currentStep?: IntermediateStep;
+  currentStep?: IntermediateStep
   /** Overrides the `title`/`size`/`actions` derived from `currentStep`. */
-  dialogOptions?: Record<string, any>;
+  dialogOptions?: Record<string, any>
 }
 
 /** Slots for `<IntermediateStepModal>`. */
 export interface IntermediateStepModalSlots {
   /** Replaces the message + video body. */
-  default?: () => any;
+  default?: () => any
   /** Extra content above the body. */
-  "body-header"?: () => any;
+  'body-header'?: () => any
   /** Replaces the dialog's action row. */
-  actions?: () => any;
+  actions?: () => any
 }
 
 /** One article group in the help centre list. */
 export interface HelpArticle {
   /** Group heading. */
-  title: string;
+  title: string
   /** Pages inside the group. */
-  subArticles: { name: string; title: string }[];
+  subArticles: { name: string; title: string }[]
   /** Whether the group is expanded. */
-  opened?: boolean;
+  opened?: boolean
 }
 
 /** Props for `<HelpModal>`. */
 export interface HelpModalProps {
   /** App the onboarding status belongs to, e.g. `"frappecrm"`. */
-  appName?: string;
+  appName?: string
   /** Product name shown in the "Welcome to …" heading. */
-  title?: string;
+  title?: string
   /** Logo component shown above the heading. */
-  logo: Component;
+  logo: Component
   /** Run after a single step is skipped. */
-  afterSkip?: OnboardingStepCallback;
+  afterSkip?: OnboardingStepCallback
   /** Run after every step is skipped. */
-  afterSkipAll?: OnboardingBulkCallback;
+  afterSkipAll?: OnboardingBulkCallback
   /** Run after a single step is reset. */
-  afterReset?: OnboardingStepCallback;
+  afterReset?: OnboardingStepCallback
   /** Run after every step is reset. */
-  afterResetAll?: OnboardingBulkCallback;
+  afterResetAll?: OnboardingBulkCallback
   /** Base URL articles open against. */
-  docsLink?: string;
+  docsLink?: string
 }
 
 /** Props for `<OnboardingSteps>` — internal to `<HelpModal>`. */
 export interface OnboardingStepsProps {
-  appName?: string;
-  title?: string;
-  logo: Component;
-  afterSkip?: OnboardingStepCallback;
-  afterSkipAll?: OnboardingBulkCallback;
-  afterReset?: OnboardingStepCallback;
-  afterResetAll?: OnboardingBulkCallback;
+  appName?: string
+  title?: string
+  logo: Component
+  afterSkip?: OnboardingStepCallback
+  afterSkipAll?: OnboardingBulkCallback
+  afterReset?: OnboardingStepCallback
+  afterResetAll?: OnboardingBulkCallback
 }
 
 /** Props for `<HelpCenter>` — internal to `<HelpModal>`. */
 export interface HelpCenterProps {
-  docsLink?: string;
+  docsLink?: string
 }

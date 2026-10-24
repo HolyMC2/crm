@@ -42,7 +42,7 @@ vi.mock('@/utils/repairOrders', async (importOriginal) => ({
   ...(await importOriginal()),
   goToTallerIntake: (href) => api.assign(href),
 }))
-vi.mock('frappe-ui/frappe', () => ({
+vi.mock('@framework/ui', () => ({
   useTelemetry: () => ({ capture: vi.fn() }),
 }))
 vi.mock('@/stores/users', () => ({

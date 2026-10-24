@@ -439,7 +439,7 @@ import {
   formatTimestampFull,
   sanitizeHTML,
 } from '@/utils'
-import { useTelemetry } from 'frappe-ui/frappe'
+import { useTelemetry } from '@framework/ui'
 import { Tooltip, Dropdown, call, createResource, toast } from 'frappe-ui'
 import { ref, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'

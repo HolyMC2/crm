@@ -220,7 +220,7 @@ import {
   call,
   toast,
 } from 'frappe-ui'
-import { useTelemetry } from 'frappe-ui/frappe'
+import { useTelemetry } from '@framework/ui'
 import WhatsAppIcon from '@/components/Icons/WhatsAppIcon.vue'
 import LucideCopy from '~icons/lucide/copy'
 import LucideQrCode from '~icons/lucide/qr-code'

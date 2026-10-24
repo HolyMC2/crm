@@ -89,7 +89,7 @@ const Settings = defineAsyncComponent(
 // loads it itself); the popup mounts when a reminder is stored
 // (data/notifications.js keeps them in localStorage).
 const IntermediateStepModal = defineAsyncComponent(() =>
-  import('frappe-ui/frappe').then((m) => m.IntermediateStepModal),
+  import('@framework/ui').then((m) => m.IntermediateStepModal),
 )
 const EventNotificationPopup = defineAsyncComponent(() =>
   import('@/components/EventNotificationPopup.vue').then((m) => m.default),

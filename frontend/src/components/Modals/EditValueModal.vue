@@ -37,7 +37,7 @@
 
 <script setup>
 import Link from '@/components/Controls/Link.vue'
-import { useTelemetry } from 'frappe-ui/frappe'
+import { useTelemetry } from '@framework/ui'
 import {
   Combobox,
   FormControl,

@@ -12,7 +12,7 @@ import { useCrmOnboarding } from '@/composables/onboarding'
 import EventModal from '@/components/Modals/EventModal.vue'
 import { showEventModal, activeEvent } from '@/composables/event'
 import { useDoctypeModal } from '@/composables/doctypeModal'
-import { useTelemetry } from 'frappe-ui/frappe'
+import { useTelemetry } from '@framework/ui'
 import { call } from 'frappe-ui'
 import { useRoute, useRouter } from 'vue-router'
 

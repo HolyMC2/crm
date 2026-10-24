@@ -1,5 +1,5 @@
 import { call } from 'frappe-ui'
-import { telemetryPlugin } from 'frappe-ui/frappe'
+import { telemetryPlugin } from '@framework/ui'
 
 export async function installTelemetry(app) {
   try {

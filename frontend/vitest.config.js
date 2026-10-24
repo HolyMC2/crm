@@ -44,6 +44,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
+      // frappe's `ui/` package, vendored (src/framework-ui/SOURCE.json).
+      '@framework/ui': path.resolve(__dirname, 'src/framework-ui'),
       'frappe-ui-components': path.resolve(
         __dirname,
         'node_modules/frappe-ui/src/components',

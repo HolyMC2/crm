@@ -300,7 +300,7 @@ import {
   createResource,
   toast,
 } from 'frappe-ui'
-import { useTelemetry } from 'frappe-ui/frappe'
+import { useTelemetry } from '@framework/ui'
 import LucidePlus from '~icons/lucide/plus'
 import LucideQrCode from '~icons/lucide/qr-code'
 import LucideUser from '~icons/lucide/user'

@@ -94,7 +94,7 @@ import {
   call,
   createResource,
 } from 'frappe-ui'
-import { useTelemetry } from 'frappe-ui/frappe'
+import { useTelemetry } from '@framework/ui'
 import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import TemplateGrid from './TemplateGrid.vue'

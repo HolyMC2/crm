@@ -1,0 +1,37 @@
+{
+  "package": "@framework/ui",
+  "repository": "https://github.com/frappe/frappe",
+  "branch": "version-16",
+  "commit": "e8d41dd0061a32ee781caefe5d0b0d2bb7c15362",
+  "commit_date": "2026-10-22T16:59:36Z",
+  "version": "16.53.0",
+  "paths": [
+    "ui/src/telemetry/index.ts",
+    "ui/src/telemetry/telemetry.ts",
+    "ui/src/telemetry/pulse.ts",
+    "ui/src/components/Onboarding/",
+    "ui/src/components/SignupBanner/",
+    "ui/src/components/TrialBanner/",
+    "ui/src/utils/session.ts"
+  ],
+  "omitted": [
+    "*.test.ts, README.md",
+    "ui/src/components/DataImport (crm renders no DataImport; see docs/FRAPPE_UI_1.md \u00a74)"
+  ],
+  "formatting": "prettier 3.2.5 with frontend/.prettierrc.json (semi: false, singleQuote), so a diff against upstream shows style plus the changes below",
+  "local_changes": {
+    "components/Onboarding/onboarding.ts": [
+      "1. steps are registered per (appName, user) and the status resource is cached per user, so a second user on the same tab does not read the first user's steps",
+      "2. updateOnboardingStep, updateAll, skip, skipAll, reset and resetAll return the native persistence promise; local completion and callbacks publish only after the status POST succeeds, and a rejection reaches the caller (CRM retains the failed action and offers Retry)",
+      "3. saved steps are matched by name, keeping historical hidden steps and adding newly eligible ones; a new eligible step reopens a completed onboarding; setUp re-registers and replaces callbacks"
+    ],
+    "components/Onboarding/types.ts": [
+      "the six write methods return Promise<void>"
+    ],
+    "index.ts": ["crm-authored root barrel limited to the vendored pieces"],
+    "lint": [
+      "crm eslint errors fixed in place: HelpModal.vue footer v-for :key and headingTitle returns '' when neither heading applies; pulse.ts empty catch blocks carry a comment; session.ts let -> const"
+    ]
+  },
+  "tests": "frontend/tests/unit/crmOnboarding.test.js and startupTelemetry.test.js exercise the vendored files through the alias"
+}

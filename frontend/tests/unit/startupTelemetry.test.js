@@ -9,17 +9,18 @@ const transport = vi.hoisted(() => ({
 }))
 vi.mock('frappe-ui', () => ({ call: transport.call }))
 // Exercise the unchanged plugin, replacing only its native/CDN transport seam.
-vi.mock('../../node_modules/frappe-ui/frappe/telemetry/pulse.ts', () => ({
+vi.mock('@framework/ui/telemetry/pulse', () => ({
   fetchBootConfig: transport.fetchBootConfig,
   loadPulseClient: transport.loadPulseClient,
 }))
-vi.mock('frappe-ui/frappe', async () => {
-  const actual = await import(
-    '../../node_modules/frappe-ui/frappe/telemetry/index.ts'
-  )
-  return { telemetryPlugin: actual.default, useTelemetry: actual.useTelemetry }
+vi.mock('@framework/ui', async () => {
+  const actual = await import('@framework/ui/telemetry')
+  return {
+    telemetryPlugin: actual.telemetryPlugin,
+    useTelemetry: actual.useTelemetry,
+  }
 })
-import { telemetryPlugin, useTelemetry } from 'frappe-ui/frappe'
+import { telemetryPlugin, useTelemetry } from '@framework/ui'
 import { installTelemetry } from '@/utils/startupTelemetry'
 
 const enabled = {

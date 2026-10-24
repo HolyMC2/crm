@@ -3,7 +3,7 @@
 import { computed, reactive, ref, markRaw, nextTick } from 'vue'
 import { useStorage } from '@vueuse/core'
 import { call, createResource, getCachedResource } from 'frappe-ui'
-import { useOnboarding, useTelemetry, minimize } from 'frappe-ui/frappe'
+import { useOnboarding, useTelemetry, minimize } from '@framework/ui'
 import { usersStore } from '@/stores/users'
 import { sessionStore } from '@/stores/session'
 import { useBroadcast } from '@/composables/useBroadcast'

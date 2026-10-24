@@ -81,6 +81,9 @@ initSocket()` from `src/socket.js` (socket.io-client direct). 14 sites read
 
 ## 4. Where the spike departs from the plan and the brief
 
+Decisions, accepted by the PM on 2026-10-24 after the spike: (1) and (2) below are how this
+lane is built. The new composition-based `frappe-ui/list` family is a later, separate migration.
+
 - **Counts are smaller than the plan's.** FeatherIcon 66 files (plan 78), TextEditor 15 (17),
   ListView family 10 files (plan: 59), charts 2 files (8), `Rail`/`RailItem` 0 (2+2),
   `ThemeSwitcher` 0 (2), `KeyboardShortcutsModal` 0. The plan counted occurrences over a wider

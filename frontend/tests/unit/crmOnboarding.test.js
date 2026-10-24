@@ -27,6 +27,15 @@ const fixture = vi.hoisted(() => ({
   send: vi.fn(),
 }))
 vi.mock('frappe-ui', async () => {
+  // The vendored onboarding imports `call` from 'frappe-ui'; the native POST
+  // must still reach the fetch stub `writes()` counts.
+  const { default: call } = await import(
+    '../../node_modules/frappe-ui/src/utils/call'
+  )
+  // The vendored IntermediateStepModal renders the real Dialog.
+  const { default: Dialog } = await import(
+    '../../node_modules/frappe-ui/src/components/Dialog/Dialog.vue'
+  )
   const Button = {
     props: ['label'],
     emits: ['click'],
@@ -44,7 +53,8 @@ vi.mock('frappe-ui', async () => {
     getCachedResource: (...args) =>
       fixture.resources.getCachedResource(...args),
     setConfig: (...args) => fixture.config.setConfig(...args),
-    call: vi.fn(),
+    call,
+    Dialog,
     toast: { error: vi.fn() },
     Button,
     FrappeUIProvider: {
@@ -56,7 +66,7 @@ vi.mock('frappe-ui', async () => {
     useTheme: () => ({ setTheme() {} }),
   }
 })
-vi.mock('frappe-ui/frappe', () => ({
+vi.mock('@framework/ui', () => ({
   useOnboarding: (...args) => fixture.native.useOnboarding(...args),
   get IntermediateStepModal() {
     return fixture.intermediate
@@ -207,14 +217,12 @@ async function prepareNativeFixture() {
     '../../node_modules/frappe-ui/src/utils/config.ts'
   )
   fixture.native = await import(
-    '../../node_modules/frappe-ui/frappe/Onboarding/onboarding.js'
+    '@framework/ui/components/Onboarding/onboarding'
   )
-  fixture.help = await import(
-    '../../node_modules/frappe-ui/frappe/Help/help.js'
-  )
+  fixture.help = await import('@framework/ui/components/Onboarding/help')
   fixture.intermediate = (
     await import(
-      '../../node_modules/frappe-ui/frappe/Onboarding/IntermediateStepModal.vue'
+      '@framework/ui/components/Onboarding/IntermediateStepModal.vue'
     )
   ).default
   ui = await import('frappe-ui')

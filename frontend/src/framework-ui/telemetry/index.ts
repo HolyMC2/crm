@@ -5,8 +5,8 @@
 // `telemetryPlugin` was frappe-ui's *default* export from `telemetry/index.ts`,
 // but consumers only ever saw the re-exported name, so it is a plain named
 // export here.
-export { telemetryPlugin, useTelemetry } from "./telemetry";
-export type { TelemetryPluginOptions } from "./telemetry";
+export { telemetryPlugin, useTelemetry } from './telemetry'
+export type { TelemetryPluginOptions } from './telemetry'
 // Referenced by `TelemetryPluginOptions.getContext` / `.anonymousMode`, so a
 // consumer cannot write those options without them.
-export type { PulseAnonymousMode, PulseContext } from "./pulse";
+export type { PulseAnonymousMode, PulseContext } from './pulse'

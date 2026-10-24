@@ -733,7 +733,7 @@ import { whatsappEnabled, whatsappManual } from '@/composables/whatsapp'
 import { addonAvailable } from '@/utils/crmCapabilities'
 import { THREAD_RELOAD } from '@/utils/atencion'
 import { useDocument } from '@/data/document'
-import { useTelemetry } from 'frappe-ui/frappe'
+import { useTelemetry } from '@framework/ui'
 import { Button, Tooltip, createResource, toast } from 'frappe-ui'
 import { useElementVisibility, useStorage } from '@vueuse/core'
 import {

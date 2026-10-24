@@ -11,11 +11,7 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "postinstall": "patch-package --error-on-fail && node scripts/verify-frappe-ui-patch.mjs",
-    "prebuild": "node scripts/verify-frappe-ui-patch.mjs && node scripts/verify-vendor.mjs",
-    "pretest": "node scripts/verify-frappe-ui-patch.mjs",
-    "pretest:run": "node scripts/verify-frappe-ui-patch.mjs",
-    "pretest:coverage": "node scripts/verify-frappe-ui-patch.mjs"
+    "prebuild": "node scripts/verify-vendor.mjs"
   },
   "dependencies": {
     "@tiptap/core": "^3.26.0",
