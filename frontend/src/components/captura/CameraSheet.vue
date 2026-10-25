@@ -94,7 +94,7 @@
           >
             <template v-if="problemKind">
               <LucideCamera class="size-10 text-white/80" aria-hidden="true" />
-              <p class="max-w-sm text-base font-medium">
+              <p class="max-w-sm text-base-medium">
                 {{ problemText.title }}
               </p>
               <p class="max-w-sm text-sm text-white/80">
@@ -172,7 +172,7 @@
           <button
             v-if="pages.length"
             type="button"
-            class="flex min-h-12 items-center gap-1 justify-self-end rounded-full bg-white px-4 text-base font-medium text-black"
+            class="flex min-h-12 items-center gap-1 justify-self-end rounded-full bg-white px-4 text-base-medium text-black"
             data-testid="camera-done"
             @click="step = 'pages'"
           >
@@ -631,7 +631,7 @@ const ICON =
 const LIGHT_ICON =
   'flex size-12 items-center justify-center rounded-full bg-white/15 text-white'
 const LIGHT_BUTTON =
-  'flex min-h-12 items-center justify-center gap-2 rounded-full bg-white px-5 text-base font-medium text-black'
+  'flex min-h-12 items-center justify-center gap-2 rounded-full bg-white px-5 text-base-medium text-black'
 const GHOST_BUTTON =
   'flex min-h-12 items-center justify-center rounded-full px-5 text-base text-white underline'
 const ROW =

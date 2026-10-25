@@ -24,7 +24,7 @@
               :checked="Boolean(Number(rule.enabled))"
               @change="set(index, 'enabled', $event.target.checked ? 1 : 0)"
             />
-            <span class="text-base font-medium text-ink-gray-8">{{
+            <span class="text-base-medium text-ink-gray-8">{{
               __('Rule {0}', [index + 1])
             }}</span>
           </label>

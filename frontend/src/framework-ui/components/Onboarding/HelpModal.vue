@@ -6,7 +6,7 @@
     @click.stop
   >
     <div class="flex items-center justify-between px-2 py-1.5">
-      <div class="text-base font-medium">
+      <div class="text-base-medium">
         {{ headingTitle }}
       </div>
       <div class="flex gap-1">

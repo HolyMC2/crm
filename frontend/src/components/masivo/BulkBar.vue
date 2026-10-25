@@ -161,7 +161,7 @@
             <span class="lucide-arrow-left size-5" aria-hidden="true" />
             Otro campo
           </button>
-          <p class="pb-2 text-base font-medium text-ink-gray-9">
+          <p class="pb-2 text-base-medium text-ink-gray-9">
             {{ field.label }}
           </p>
           <AjustesControl id="masivo-value" v-model="value" :field="field" />

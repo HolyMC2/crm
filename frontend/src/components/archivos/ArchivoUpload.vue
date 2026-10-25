@@ -20,7 +20,7 @@
       </div>
     </div>
     <label
-      class="inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded bg-surface-gray-10 px-4 text-base font-medium text-ink-base focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-outline-gray-4 sm:hidden"
+      class="inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded bg-surface-gray-10 px-4 text-base-medium text-ink-base focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-outline-gray-4 sm:hidden"
     >
       <LucideCamera class="h-4 w-4" />{{ __('Take photo') }}
       <input

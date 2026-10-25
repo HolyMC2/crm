@@ -6,7 +6,7 @@
     data-approval-ask
   >
     <div v-for="ask in asks" :key="ask.todo" class="min-w-0">
-      <p class="text-base font-medium text-ink-gray-9">
+      <p class="text-base-medium text-ink-gray-9">
         {{ __('{0} asked you: {1}', [ask.requested_by_name, ask.text]) }}
       </p>
       <p v-if="ask.note" class="mt-0.5 text-sm text-ink-gray-8">

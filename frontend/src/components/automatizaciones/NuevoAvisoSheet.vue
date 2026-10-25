@@ -523,7 +523,7 @@ const PreviewCard = defineComponent({
           ),
           h(
             'p',
-            { class: 'break-words text-base font-medium text-ink-gray-9' },
+            { class: 'break-words text-base-medium text-ink-gray-9' },
             p.asunto,
           ),
           p.mensaje

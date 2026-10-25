@@ -11,7 +11,7 @@
       data-price-row
     >
       <span class="min-w-0 flex-1">
-        <span class="block break-words text-base font-medium text-ink-gray-9">{{
+        <span class="block break-words text-base-medium text-ink-gray-9">{{
           priceListLabel(row.price_list)
         }}</span>
         <span class="block text-sm text-ink-gray-6">{{ facts(row) }}</span>

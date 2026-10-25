@@ -107,7 +107,7 @@
 
         <RouterLink
           :to="{ name: 'Lead', params: { leadId } }"
-          class="mt-4 flex min-h-12 items-center gap-2 text-base font-medium text-ink-gray-8"
+          class="mt-4 flex min-h-12 items-center gap-2 text-base-medium text-ink-gray-8"
           data-testid="prospecto-history"
         >
           <span class="lucide-history size-5" aria-hidden="true" />

@@ -44,7 +44,7 @@
         <p class="text-sm text-ink-red-7">{{ searchProblem }}</p>
         <button
           type="button"
-          class="inline-flex min-h-11 items-center gap-2 self-start rounded-full bg-surface-gray-2 px-4 text-base font-medium text-ink-gray-8"
+          class="inline-flex min-h-11 items-center gap-2 self-start rounded-full bg-surface-gray-2 px-4 text-base-medium text-ink-gray-8"
           @click="retrySearch"
         >
           Buscar de nuevo
@@ -80,7 +80,7 @@
       <button
         v-if="canAdd"
         type="button"
-        class="inline-flex min-h-11 items-center gap-2 self-start rounded-full bg-surface-gray-2 px-4 text-base font-medium text-ink-gray-8"
+        class="inline-flex min-h-11 items-center gap-2 self-start rounded-full bg-surface-gray-2 px-4 text-base-medium text-ink-gray-8"
         :disabled="adding"
         data-testid="inmo-buscar-agregar"
         @click="add"

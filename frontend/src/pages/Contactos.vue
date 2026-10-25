@@ -322,7 +322,7 @@
         <button
           v-if="hasMore && rows.length"
           type="button"
-          class="flex min-h-12 w-full items-center justify-center text-base font-medium text-ink-gray-8"
+          class="flex min-h-12 w-full items-center justify-center text-base-medium text-ink-gray-8"
           :disabled="loadingMore"
           data-testid="contactos-load-more"
           @click="loadMore"

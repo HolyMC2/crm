@@ -178,7 +178,7 @@
               <template v-if="vacation">
                 <p
                   v-if="vacationLine"
-                  class="text-base font-medium text-ink-gray-9"
+                  class="text-base-medium text-ink-gray-9"
                 >
                   {{ vacationLine }}
                 </p>

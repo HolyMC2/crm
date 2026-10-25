@@ -83,7 +83,7 @@
       </p>
       <a
         v-if="whatsapp.url"
-        class="mt-2 inline-flex min-h-11 items-center rounded-md bg-surface-gray-2 px-3 text-base font-medium text-ink-gray-9 hover:bg-surface-gray-3"
+        class="mt-2 inline-flex min-h-11 items-center rounded-md bg-surface-gray-2 px-3 text-base-medium text-ink-gray-9 hover:bg-surface-gray-3"
         :href="whatsapp.url"
         target="_blank"
         rel="noopener"
@@ -144,7 +144,7 @@
     >
       <a
         v-if="actionIds.includes('receive')"
-        class="inline-flex min-h-11 flex-1 items-center justify-center rounded-md bg-surface-gray-10 px-4 text-base font-medium text-ink-base hover:bg-surface-gray-9 sm:flex-none"
+        class="inline-flex min-h-11 flex-1 items-center justify-center rounded-md bg-surface-gray-10 px-4 text-base-medium text-ink-base hover:bg-surface-gray-9 sm:flex-none"
         :href="receiveUrl(cita, returnTo)"
         >{{ __('Receive device') }}</a
       >

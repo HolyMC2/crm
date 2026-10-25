@@ -35,7 +35,7 @@
     <details
       class="rounded-xl border border-outline-gray-2 bg-surface-base p-4"
     >
-      <summary class="cursor-pointer text-base font-medium text-ink-gray-9">
+      <summary class="cursor-pointer text-base-medium text-ink-gray-9">
         {{ __('Detalle de canales y atribución') }}
       </summary>
       <div class="mt-4 space-y-4">
@@ -138,7 +138,7 @@
     <details
       class="rounded-xl border border-outline-gray-2 bg-surface-base p-4"
     >
-      <summary class="cursor-pointer text-base font-medium text-ink-gray-9">
+      <summary class="cursor-pointer text-base-medium text-ink-gray-9">
         {{ __('Conversión y calidad de prospectos') }}
       </summary>
       <div class="mt-4 grid gap-4 xl:grid-cols-2">
@@ -182,7 +182,7 @@
     <details
       class="rounded-xl border border-outline-gray-2 bg-surface-base p-4"
     >
-      <summary class="cursor-pointer text-base font-medium text-ink-gray-9">
+      <summary class="cursor-pointer text-base-medium text-ink-gray-9">
         {{ __('Reactivación de contactos') }}
       </summary>
       <div class="mt-4"><MarketingReactivation /></div>

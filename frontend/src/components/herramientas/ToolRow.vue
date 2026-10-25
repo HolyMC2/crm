@@ -14,7 +14,7 @@
       <span class="min-w-0 flex-1">
         <span class="flex flex-wrap items-center gap-x-2 gap-y-1">
           <span
-            class="break-words text-base font-medium"
+            class="break-words text-base-medium"
             :class="row.habilitada ? 'text-ink-gray-9' : 'text-ink-gray-6'"
             >{{ row.titulo }}</span
           >

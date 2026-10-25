@@ -12,7 +12,7 @@
   >
     <div class="space-y-5 pt-2" data-ajustar-sheet>
       <section class="flex flex-col items-center gap-2">
-        <h3 :id="qtyId" class="text-base font-medium text-ink-gray-8">
+        <h3 :id="qtyId" class="text-base-medium text-ink-gray-8">
           En existencia
         </h3>
         <div class="flex items-center gap-4">

@@ -294,7 +294,7 @@
       </div>
       <div>
         <dt class="text-sm text-ink-gray-6">Asunto</dt>
-        <dd class="break-words text-base font-medium text-ink-gray-9">
+        <dd class="break-words text-base-medium text-ink-gray-9">
           {{ review.asunto }}
         </dd>
       </div>

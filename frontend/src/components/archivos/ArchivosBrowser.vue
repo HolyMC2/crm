@@ -217,7 +217,7 @@
                 <span class="min-w-0 flex-1">
                   <span class="flex items-center gap-1.5">
                     <span
-                      class="truncate text-base font-medium text-ink-gray-9"
+                      class="truncate text-base-medium text-ink-gray-9"
                       >{{ folder.title }}</span
                     >
                     <LucideLock
@@ -253,7 +253,7 @@
           class="px-6 py-12 text-center"
         >
           <Icon :icon="empty.icon" class="mx-auto h-10 w-10 text-ink-gray-4" />
-          <p class="mt-3 text-base font-medium text-ink-gray-8">
+          <p class="mt-3 text-base-medium text-ink-gray-8">
             {{ empty.title }}
           </p>
           <p class="mt-1 text-sm text-ink-gray-6">{{ empty.body }}</p>
@@ -341,7 +341,7 @@
                 <span class="min-w-0 flex-1">
                   <span class="flex items-center gap-1.5">
                     <span
-                      class="truncate text-base font-medium text-ink-gray-9"
+                      class="truncate text-base-medium text-ink-gray-9"
                       :title="item.title"
                       >{{ displayTitle(item) }}</span
                     >

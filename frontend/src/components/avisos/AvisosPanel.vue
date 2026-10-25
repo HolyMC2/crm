@@ -103,7 +103,7 @@
             />
             <div v-else class="space-y-2 p-6 text-center">
               <LucideCircleCheckBig class="mx-auto size-8 text-ink-gray-4" />
-              <p class="text-base font-medium">
+              <p class="text-base-medium">
                 {{ __("You're all caught up") }}
               </p>
               <p class="text-sm text-ink-gray-6">

@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col justify-center items-center gap-1 mt-4 mb-7">
     <component :is="logo" class="size-10 shrink-0 rounded-4 mb-4" />
-    <div class="text-base font-medium">
+    <div class="text-base-medium">
       {{ 'Welcome to ' + title }}
     </div>
     <div class="text-p-base font-normal">

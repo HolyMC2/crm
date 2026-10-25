@@ -118,7 +118,7 @@
             </p>
           </template>
           <template v-else>
-            <p class="text-base font-medium">{{ action.reason }}</p>
+            <p class="text-base-medium">{{ action.reason }}</p>
             <!-- Drafts and transfer/manufacture requests continue on their own form. -->
             <Button
               v-if="action.resolve?.kind === 'desk'"

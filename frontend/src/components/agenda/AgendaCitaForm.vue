@@ -9,7 +9,7 @@
       role="alert"
       class="rounded-lg border border-outline-gray-2 p-3"
     >
-      <p class="text-base font-medium text-ink-gray-9">
+      <p class="text-base-medium text-ink-gray-9">
         {{ __('Online appointments need a little setup first.') }}
       </p>
       <p v-if="loadError" class="mt-1 text-sm text-ink-gray-7">

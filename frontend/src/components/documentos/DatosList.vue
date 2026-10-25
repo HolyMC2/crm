@@ -28,7 +28,7 @@
     <button
       v-if="rows.length > LIMIT && !all"
       type="button"
-      class="min-h-11 text-base font-medium text-ink-gray-8"
+      class="min-h-11 text-base-medium text-ink-gray-8"
       @click="all = true"
     >
       Mostrar {{ rows.length - LIMIT }} datos más

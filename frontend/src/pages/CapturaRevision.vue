@@ -162,7 +162,7 @@
           role="alert"
           class="mb-4 space-y-3 rounded-xl bg-surface-red-1 p-4 text-ink-red-7"
         >
-          <p class="text-base font-medium">
+          <p class="text-base-medium">
             {{ __('We could not read this document.') }}
           </p>
           <p class="text-sm">{{ review.error }}</p>

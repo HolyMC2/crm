@@ -39,7 +39,7 @@
             />
           </div>
           <div class="min-w-0 pt-1">
-            <div class="text-base font-medium text-ink-gray-9">
+            <div class="text-base-medium text-ink-gray-9">
               {{ step.title }}
             </div>
             <div

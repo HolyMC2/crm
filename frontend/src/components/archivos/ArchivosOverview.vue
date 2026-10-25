@@ -34,7 +34,7 @@
       >
         <LucideCloudUpload class="h-5 w-5 text-ink-gray-7" />
       </span>
-      <span class="text-base font-medium text-ink-gray-9">
+      <span class="text-base-medium text-ink-gray-9">
         {{ __('Drop a file here or') }}
         <span class="underline">{{ __('choose one') }}</span>
       </span>
@@ -87,7 +87,7 @@
     >
       <LucideTriangleAlert class="h-5 w-5 shrink-0 text-ink-amber-7" />
       <div class="min-w-0 flex-1">
-        <p class="text-base font-medium text-ink-gray-9">
+        <p class="text-base-medium text-ink-gray-9">
           {{
             attention === 1
               ? __('1 file needs attention')

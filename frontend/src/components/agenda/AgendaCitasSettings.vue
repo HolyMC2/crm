@@ -27,7 +27,7 @@
         role="status"
         class="rounded-lg border border-outline-gray-2 p-3"
       >
-        <p class="text-base font-medium text-ink-gray-9">
+        <p class="text-base-medium text-ink-gray-9">
           {{ __('To take appointments online:') }}
         </p>
         <ul class="mt-1 space-y-2">

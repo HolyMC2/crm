@@ -82,7 +82,7 @@
           data-testid="claim-next"
         >
           <template v-if="done">
-            <p role="status" class="text-base font-medium text-ink-green-8">
+            <p role="status" class="text-base-medium text-ink-green-8">
               {{ done.message }}
             </p>
             <p v-if="done.empty" class="mt-1 text-sm text-ink-gray-7">

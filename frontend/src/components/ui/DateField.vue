@@ -69,7 +69,7 @@
         >
           <span class="lucide-chevron-left size-5" aria-hidden="true" />
         </button>
-        <span class="text-base font-medium text-ink-gray-9"
+        <span class="text-base-medium text-ink-gray-9"
           >{{ monthName }} {{ view.y }}</span
         >
         <button

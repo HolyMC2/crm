@@ -16,7 +16,7 @@
       <button
         v-if="canSend"
         type="button"
-        class="inline-flex min-h-11 items-center gap-2 rounded-full px-3 text-base font-medium text-ink-gray-8 hover:bg-surface-gray-2"
+        class="inline-flex min-h-11 items-center gap-2 rounded-full px-3 text-base-medium text-ink-gray-8 hover:bg-surface-gray-2"
         data-testid="correo-hilo-enviar"
         @click="emit('compose')"
       >
@@ -53,7 +53,7 @@
     <button
       v-if="correos.length > LIMIT && !all"
       type="button"
-      class="min-h-11 text-base font-medium text-ink-gray-8"
+      class="min-h-11 text-base-medium text-ink-gray-8"
       @click="all = true"
     >
       Ver todos los correos ({{ correos.length }})

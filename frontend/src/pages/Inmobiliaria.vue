@@ -33,7 +33,7 @@
             v-for="a in accesos"
             :key="a.key"
             v-bind="a.link"
-            class="flex min-h-14 items-center gap-3 rounded-2xl bg-surface-gray-2 px-4 text-base font-medium text-ink-gray-9"
+            class="flex min-h-14 items-center gap-3 rounded-2xl bg-surface-gray-2 px-4 text-base-medium text-ink-gray-9"
             :data-acceso="a.key"
           >
             <span :class="[a.icono, 'size-5']" aria-hidden="true" />

@@ -55,7 +55,7 @@
         >
           <div class="flex flex-wrap items-center gap-2">
             <span
-              class="min-w-0 flex-1 truncate text-base font-medium text-ink-gray-9"
+              class="min-w-0 flex-1 truncate text-base-medium text-ink-gray-9"
               >{{ row.remote_name || `#${row.remote_id}` }}</span
             >
             <Badge

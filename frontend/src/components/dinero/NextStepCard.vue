@@ -11,7 +11,7 @@
   >
     <p
       v-if="reason"
-      class="break-words text-base font-medium text-ink-gray-9"
+      class="break-words text-base-medium text-ink-gray-9"
       data-next-step-reason
     >
       {{ reason }}

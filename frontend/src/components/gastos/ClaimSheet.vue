@@ -73,7 +73,7 @@
               />
               <div class="mt-3 flex flex-wrap gap-2">
                 <label
-                  class="relative inline-flex min-h-11 flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg bg-surface-gray-7 px-3 text-base font-medium text-ink-base focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-outline-gray-4"
+                  class="relative inline-flex min-h-11 flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg bg-surface-gray-7 px-3 text-base-medium text-ink-base focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-outline-gray-4"
                 >
                   <LucideCamera class="h-4 w-4" />{{
                     form.photo || photos

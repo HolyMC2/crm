@@ -31,7 +31,7 @@
           :aria-pressed="b.form.document_type === opt.value"
           @click="b.requestDoctypeChange(opt.value)"
         >
-          <div class="text-base font-medium text-ink-gray-9">
+          <div class="text-base-medium text-ink-gray-9">
             {{ opt.label }}
           </div>
           <div class="text-p-sm text-ink-gray-6">

@@ -70,11 +70,11 @@
         <RouterLink
           v-if="link && link(row)"
           :to="link(row)"
-          class="block break-words text-base font-medium text-ink-gray-9 underline decoration-outline-gray-3 underline-offset-4 focus-visible:outline focus-visible:outline-2"
+          class="block break-words text-base-medium text-ink-gray-9 underline decoration-outline-gray-3 underline-offset-4 focus-visible:outline focus-visible:outline-2"
         >
           {{ row[labelKey] || __('Sin nombre') }}
         </RouterLink>
-        <h4 v-else class="break-words text-base font-medium text-ink-gray-9">
+        <h4 v-else class="break-words text-base-medium text-ink-gray-9">
           {{ row[labelKey] || __('Sin nombre') }}
         </h4>
         <dl class="mt-3 grid grid-cols-2 gap-x-3 gap-y-3 text-sm">

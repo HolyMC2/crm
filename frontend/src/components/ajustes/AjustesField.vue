@@ -16,7 +16,7 @@
       @click="tappable && emit('edit', field)"
     >
       <span class="flex flex-wrap items-baseline gap-x-2">
-        <span class="break-words text-base font-medium text-ink-gray-9">{{
+        <span class="break-words text-base-medium text-ink-gray-9">{{
           field.label
         }}</span>
         <span

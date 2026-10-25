@@ -177,7 +177,7 @@ const emit = defineEmits(['update:open', 'done'])
 const INPUT =
   'min-h-11 w-full rounded-lg border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9 focus:border-outline-gray-4 focus:outline-none'
 const PILL =
-  'flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl bg-surface-gray-2 px-3 text-base font-medium text-ink-gray-8 focus-within:ring-2 focus-within:ring-outline-gray-4'
+  'flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl bg-surface-gray-2 px-3 text-base-medium text-ink-gray-8 focus-within:ring-2 focus-within:ring-outline-gray-4'
 
 const values = reactive({})
 const uploading = reactive({})

@@ -326,9 +326,9 @@ const { width } = useWindowSize()
 const desktop = computed(() => width.value >= 1024)
 
 const FILLED =
-  'flex min-h-12 w-full items-center justify-center rounded-full bg-surface-gray-10 px-5 text-base font-medium text-ink-base hover:bg-surface-gray-9 active:bg-surface-gray-8'
+  'flex min-h-12 w-full items-center justify-center rounded-full bg-surface-gray-10 px-5 text-base-medium text-ink-base hover:bg-surface-gray-9 active:bg-surface-gray-8'
 const TONAL =
-  'inline-flex min-h-11 items-center gap-2 rounded-full bg-surface-gray-2 px-4 text-base font-medium text-ink-gray-8'
+  'inline-flex min-h-11 items-center gap-2 rounded-full bg-surface-gray-2 px-4 text-base-medium text-ink-gray-8'
 const DISABLED = 'cursor-not-allowed opacity-50'
 const TONE_TEXT = {
   danger: 'text-ink-red-7',

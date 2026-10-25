@@ -36,7 +36,7 @@
       <button
         v-if="assistantEnabled"
         type="button"
-        class="flex min-h-12 w-full items-center gap-3 rounded-xl bg-surface-gray-2 px-4 text-left text-base font-medium"
+        class="flex min-h-12 w-full items-center gap-3 rounded-xl bg-surface-gray-2 px-4 text-left text-base-medium"
         data-testid="more-assistant"
         @click="askMuelle"
       >
@@ -46,7 +46,7 @@
       <!-- «Escanear documento» (Shell D7): the camera into the capture engine. -->
       <button
         type="button"
-        class="flex min-h-12 w-full items-center gap-3 rounded-xl bg-surface-gray-2 px-4 text-left text-base font-medium"
+        class="flex min-h-12 w-full items-center gap-3 rounded-xl bg-surface-gray-2 px-4 text-left text-base-medium"
         data-testid="more-camera"
         @pointerenter="loadCameraSheet"
         @click="scanDocument"

@@ -33,7 +33,7 @@
         :aria-labelledby="confirmId"
         data-minimo-confirm
       >
-        <p :id="confirmId" class="text-base font-medium text-ink-gray-9">
+        <p :id="confirmId" class="text-base-medium text-ink-gray-9">
           {{ confirmLine }}
         </p>
         <p

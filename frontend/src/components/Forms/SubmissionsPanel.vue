@@ -21,7 +21,7 @@
       class="flex flex-col items-center gap-3 rounded-lg border border-dashed border-outline-gray-2 px-4 py-10 text-center"
     >
       <LucideInbox class="size-7 text-ink-gray-4" />
-      <div class="text-base font-medium text-ink-gray-8">
+      <div class="text-base-medium text-ink-gray-8">
         {{ __('No submissions yet') }}
       </div>
       <p class="max-w-sm text-p-sm text-ink-gray-6">
@@ -49,7 +49,7 @@
         class="flex items-center gap-3 px-3 py-2.5 hover:bg-surface-gray-1 focus-visible:bg-surface-gray-1 focus-visible:outline-none"
       >
         <div class="min-w-0 flex-1">
-          <div class="truncate text-base font-medium text-ink-gray-9">
+          <div class="truncate text-base-medium text-ink-gray-9">
             {{ r.title }}
           </div>
           <div class="truncate text-p-sm text-ink-gray-5">

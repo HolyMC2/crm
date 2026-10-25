@@ -30,7 +30,7 @@
       <button
         v-if="later.length"
         type="button"
-        class="flex min-h-11 items-center gap-2 self-start text-base font-medium text-ink-gray-8"
+        class="flex min-h-11 items-center gap-2 self-start text-base-medium text-ink-gray-8"
         :aria-expanded="String(moreOpen)"
         data-testid="documentos-more-fields"
         @click="moreOpen = !moreOpen"

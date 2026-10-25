@@ -4,7 +4,7 @@
     class="rounded-lg border border-outline-gray-2 bg-surface-gray-1 p-4"
     :role="state.code === 'network' ? 'status' : 'alert'"
   >
-    <p class="text-base font-medium text-ink-gray-9">{{ state.message }}</p>
+    <p class="text-base-medium text-ink-gray-9">{{ state.message }}</p>
     <p v-if="hint" class="mt-1 text-sm text-ink-gray-6">{{ hint }}</p>
     <div v-if="state.actions?.length" class="mt-3 flex flex-wrap gap-2">
       <Button

@@ -26,7 +26,7 @@
         <div class="flex items-start justify-between gap-3">
           <RouterLink
             :to="quoteRoute(s)"
-            class="min-w-0 break-words text-base font-medium text-ink-gray-9 hover:underline"
+            class="min-w-0 break-words text-base-medium text-ink-gray-9 hover:underline"
             >{{ s.supplier_name || s.supplier }}</RouterLink
           >
           <span

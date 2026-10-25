@@ -127,7 +127,7 @@
                   class="mt-0.5 h-5 w-5 shrink-0 text-ink-gray-7"
                 />
                 <span>
-                  <span class="block text-base font-medium text-ink-gray-9">{{
+                  <span class="block text-base-medium text-ink-gray-9">{{
                     typeLabel(option.value)
                   }}</span>
                   <span class="block text-sm text-ink-gray-6">{{

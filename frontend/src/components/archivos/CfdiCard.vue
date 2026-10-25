@@ -514,7 +514,7 @@
         <a
           v-if="data.purchase.existing"
           :href="purchaseHref(data.purchase.existing)"
-          class="inline-flex min-h-11 items-center rounded bg-surface-gray-10 px-4 text-base font-medium text-ink-base sm:min-h-8"
+          class="inline-flex min-h-11 items-center rounded bg-surface-gray-10 px-4 text-base-medium text-ink-base sm:min-h-8"
           >{{ __('Open purchase {0}', [data.purchase.existing]) }}</a
         >
         <template v-else>

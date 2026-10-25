@@ -113,7 +113,7 @@
         class="flex flex-col items-start gap-3 rounded-lg border border-outline-gray-1 px-5 py-8"
         data-testid="funnel-empty"
       >
-        <div class="text-base font-medium text-ink-gray-8">
+        <div class="text-base-medium text-ink-gray-8">
           {{ __('No hay tratos creados en este período') }}
         </div>
         <p class="text-sm text-ink-gray-6">

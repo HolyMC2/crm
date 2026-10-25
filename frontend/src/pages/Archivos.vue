@@ -342,7 +342,7 @@
                 :icon="emptyState.icon"
                 class="mx-auto h-10 w-10 text-ink-gray-4"
               />
-              <p class="mt-3 text-base font-medium text-ink-gray-8">
+              <p class="mt-3 text-base-medium text-ink-gray-8">
                 {{ emptyState.title }}
               </p>
               <p class="mt-1 text-sm text-ink-gray-6">{{ emptyState.body }}</p>
@@ -412,7 +412,7 @@
                   <span class="min-w-0 flex-1">
                     <span class="flex items-center gap-1.5">
                       <span
-                        class="truncate text-base font-medium text-ink-gray-9"
+                        class="truncate text-base-medium text-ink-gray-9"
                         :title="row.title"
                         >{{ displayTitle(row) }}</span
                       >

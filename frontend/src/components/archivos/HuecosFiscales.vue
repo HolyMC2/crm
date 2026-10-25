@@ -87,7 +87,7 @@
           class="mx-auto h-10 w-10 text-ink-gray-4"
           aria-hidden="true"
         />
-        <p class="mt-3 text-base font-medium text-ink-gray-8">
+        <p class="mt-3 text-base-medium text-ink-gray-8">
           {{ emptyText }}
         </p>
       </div>
@@ -99,7 +99,7 @@
         <li v-for="row in rows" :key="row.key" class="space-y-2 px-4 py-3">
           <div class="flex items-start gap-3">
             <div class="min-w-0 flex-1">
-              <p class="truncate text-base font-medium text-ink-gray-9">
+              <p class="truncate text-base-medium text-ink-gray-9">
                 {{ row.title || row.name }}
               </p>
               <p

@@ -375,7 +375,7 @@
             sourceOpen.to ? { to: sourceOpen.to } : { href: sourceOpen.href }
           "
           data-testid="open-source-record"
-          class="inline-flex min-h-11 items-center justify-center gap-2 rounded-4 bg-surface-gray-10 px-3 text-base font-medium text-ink-base transition-colors hover:bg-surface-gray-9"
+          class="inline-flex min-h-11 items-center justify-center gap-2 rounded-4 bg-surface-gray-10 px-3 text-base-medium text-ink-base transition-colors hover:bg-surface-gray-9"
         >
           <span class="lucide-external-link h-4 w-4" aria-hidden="true" />
           {{ __('Go to record') }}

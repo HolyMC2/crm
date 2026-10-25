@@ -32,7 +32,7 @@
         >
           <div class="flex flex-wrap items-center gap-2">
             <span
-              class="min-w-0 flex-1 break-words text-base font-medium text-ink-gray-9"
+              class="min-w-0 flex-1 break-words text-base-medium text-ink-gray-9"
               >{{ stepTitle(step) }}</span
             >
             <Badge

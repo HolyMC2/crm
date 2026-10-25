@@ -14,7 +14,7 @@
           :key="cat"
           class="flex flex-col gap-2 sm:flex-row sm:items-center"
         >
-          <span class="flex-1 text-base font-medium">{{
+          <span class="flex-1 text-base-medium">{{
             categoryMeta(cat).label
           }}</span>
           <FormControl

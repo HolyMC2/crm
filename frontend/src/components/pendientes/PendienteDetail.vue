@@ -13,7 +13,7 @@
       role="status"
       class="mt-4 space-y-3 rounded-lg bg-surface-gray-1 p-4"
     >
-      <p class="text-base font-medium text-ink-gray-9">
+      <p class="text-base-medium text-ink-gray-9">
         {{ __('This is decided in {0}.', [approval.where]) }}
       </p>
       <p class="text-sm text-ink-gray-7">

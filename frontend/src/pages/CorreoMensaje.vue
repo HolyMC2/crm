@@ -73,7 +73,7 @@
             />
             <span
               v-if="m.documento.total"
-              class="text-base font-medium tabular-nums text-ink-gray-9"
+              class="text-base-medium tabular-nums text-ink-gray-9"
               >{{
                 formatMoney(m.documento.total, m.documento.moneda || 'MXN')
               }}</span
@@ -81,7 +81,7 @@
           </span>
           <span
             v-if="docTo"
-            class="mt-3 inline-flex min-h-11 items-center rounded-full bg-surface-gray-3 px-4 text-base font-medium text-ink-gray-9"
+            class="mt-3 inline-flex min-h-11 items-center rounded-full bg-surface-gray-3 px-4 text-base-medium text-ink-gray-9"
             >Abrir {{ m.documento.etiqueta.toLowerCase() }}</span
           >
         </component>
@@ -363,7 +363,7 @@ const props = defineProps({
 const emit = defineEmits(['changed', 'close'])
 
 const PILL =
-  'inline-flex min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-full border border-outline-gray-2 px-4 text-base font-medium text-ink-gray-8 hover:bg-surface-gray-1'
+  'inline-flex min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-full border border-outline-gray-2 px-4 text-base-medium text-ink-gray-8 hover:bg-surface-gray-1'
 
 const route = useRoute()
 const id = computed(() => props.name || String(route.params.name || ''))
