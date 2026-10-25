@@ -71,6 +71,35 @@
           module.label
         }}</span>
       </RouterLink>
+      <!-- A module whose builder failed on the server keeps its place: the
+           tile says why, and its page offers the retry. -->
+      <RouterLink
+        v-for="module in unavailable"
+        :key="module.key"
+        :to="module.to"
+        :title="module.reason"
+        :aria-label="`${module.label}: ${module.reason}`"
+        :aria-current="module.key === active ? 'page' : undefined"
+        :data-module="module.key"
+        data-state="unavailable"
+        class="flex flex-none items-center rounded-6 text-ink-gray-5 hover:bg-surface-gray-2 hover:text-ink-gray-7"
+        :class="ROW[expanded ? 'wide' : 'icon']"
+      >
+        <span class="relative flex-none" aria-hidden="true">
+          <span :class="[module.icon, 'block size-[18px]']" />
+          <span
+            class="lucide-circle-alert absolute -right-1.5 -top-1.5 size-3 text-ink-amber-8"
+          />
+        </span>
+        <template v-if="expanded">
+          <span class="min-w-0 flex-1 truncate" aria-hidden="true">{{
+            module.label
+          }}</span>
+          <span class="flex-none text-xs text-ink-amber-8" aria-hidden="true">{{
+            __('Not available')
+          }}</span>
+        </template>
+      </RouterLink>
       <template v-if="siblings.length && expanded">
         <div
           class="flex-none px-2.5 pb-0.5 pt-3 text-xs font-medium text-ink-gray-5"
@@ -238,6 +267,7 @@ import { installLinkPrefetch } from '@/utils/speculate'
 
 const props = defineProps({
   modules: { type: Array, default: () => [] },
+  unavailable: { type: Array, default: () => [] },
   active: { type: String, default: '' },
   ventas: Boolean,
 })

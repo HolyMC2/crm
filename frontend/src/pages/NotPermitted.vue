@@ -1,17 +1,31 @@
 <template>
   <section class="mx-auto w-full max-w-lg space-y-4 p-6">
     <h1 class="text-xl font-semibold">
-      No tienes permiso para abrir esta sección
+      {{
+        failed && !asksAccess
+          ? 'No se pudo abrir esta sección'
+          : 'No tienes permiso para abrir esta sección'
+      }}
     </h1>
-    <p class="text-sm text-ink-gray-7">{{ copy.reason }}</p>
+    <p class="text-sm text-ink-gray-7">
+      {{ failed?.reason_text || copy.reason }}
+    </p>
+    <p v-if="failed?.detail" class="text-xs text-ink-gray-5">
+      Detalle: {{ failed.detail }}
+    </p>
     <div class="flex flex-wrap gap-2">
       <Button
         v-if="landing"
         :label="`Ir a ${landing.label}`"
         variant="solid"
         @click="router.push(landing.to)"
-      /><Button label="Pedir acceso" @click="requestAccess" /><Button
-        label="Reintentar permisos"
+      /><Button
+        v-if="asksAccess"
+        label="Pedir acceso"
+        @click="requestAccess"
+      /><Button
+        v-if="!failed || failed.retry"
+        :label="asksAccess ? 'Reintentar permisos' : 'Reintentar'"
         :loading="loading"
         @click="retry"
       />
@@ -202,6 +216,15 @@ const COPY = {
 }
 const module = computed(() => recoveryModule(route.query.intended))
 const copy = computed(() => COPY[module.value])
+// The module's builder failed on the server: the reason is the server's, and
+// asking for access only makes sense when it says it was a permission.
+const failed = computed(() => {
+  const entry = shellBoot.value?.modules?.[module.value]
+  return entry?.state === 'unavailable' ? entry : null
+})
+const asksAccess = computed(
+  () => !failed.value || failed.value.reason_code === 'permission',
+)
 // The module asked for, when the shell already opens it to this worker: a
 // page gate refused what the shell allows (the server answers an
 // Inmobiliaria address with the Ventas check), so the way on is the screen

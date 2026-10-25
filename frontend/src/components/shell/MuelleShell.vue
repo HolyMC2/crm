@@ -10,6 +10,7 @@
     <ShellRail
       v-if="!phone"
       :modules="shellModules"
+      :unavailable="unavailableModules"
       :active="activeKey"
       :ventas="ventasEnabled"
       @palette="openPalette('all')"
@@ -134,9 +135,25 @@
         <p class="text-sm text-ink-gray-7">
           {{ blocked.reason || blockedFallback }}
         </p>
+        <p v-if="blocked.detail" class="text-xs text-ink-gray-5">
+          {{ __('Detail') }}: {{ blocked.detail }}
+        </p>
         <div class="flex flex-wrap gap-2">
-          <Button :label="__('Retry permissions')" @click="reload" />
-          <Button :label="__('Ask for access')" @click="copyRequest" />
+          <Button
+            v-if="blocked.retry"
+            :label="blockedAsksAccess ? __('Retry permissions') : __('Retry')"
+            @click="reload"
+          />
+          <Button
+            v-if="blocked.resolve"
+            :label="blocked.resolve.label"
+            @click="router.push(blocked.resolve.route)"
+          />
+          <Button
+            v-if="blockedAsksAccess"
+            :label="__('Ask for access')"
+            @click="copyRequest"
+          />
           <Button
             v-if="landing"
             :label="__('Go to {0}', [landing.label])"
@@ -205,6 +222,7 @@ import {
   shellError,
   shellLoading,
   shellModules,
+  unavailableModules,
 } from '@/composables/muelleShell'
 import {
   openShortcutSheet,
@@ -278,6 +296,11 @@ const backTo = computed(() => {
     return list
   return activeModule.value?.to || true
 })
+// A module that failed to load is not a permission matter, unless the server
+// says it was: then asking for access and «Retry permissions» still apply.
+const blockedAsksAccess = computed(
+  () => !blocked.value?.code || blocked.value.code === 'permission',
+)
 const blockedLabel = computed(() => moduleMeta(activeKey.value)?.label || '')
 const blockedFallback = computed(() =>
   __(
