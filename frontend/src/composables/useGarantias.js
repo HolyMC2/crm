@@ -49,6 +49,27 @@ export function loadGarantiasBoot({ refresh = false } = {}) {
   return bootPending
 }
 
+// «Manual de la tienda» for this screen: shown once the manual has an article
+// for the «garantias» place (doco.manual.places), with the way back here.
+export const MANUAL_HREF = withReturn('/crm/manual?lugar=garantias', {
+  to: '/crm/garantias',
+  label: 'Garantías',
+})
+export const manualPlace = ref(null)
+let manualPending
+/** Articles for this screen, counted once per page load; a refusal counts as none. */
+export function loadManualPlace() {
+  if (manualPlace.value) return Promise.resolve(manualPlace.value)
+  if (manualPending) return manualPending
+  manualPending = garantiasApi('doco.manual.api.for_place', {
+    place: 'garantias',
+  })
+    .then((data) => (manualPlace.value = { count: Number(data?.count) || 0 }))
+    .catch(() => (manualPlace.value = { count: 0 }))
+    .finally(() => (manualPending = null))
+  return manualPending
+}
+
 export const SEGMENTS = Object.freeze([
   // Every open case assigned to me, whatever its state (Helpdesk «My tickets»).
   { value: 'mis-casos', label: 'My cases', icon: 'user' },

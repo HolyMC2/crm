@@ -49,8 +49,21 @@
         @select-all="list.selectAll"
         @clear-selection="list.clearSelection"
       >
-        <template v-if="boot?.capabilities?.create" #actions>
+        <template
+          v-if="boot?.capabilities?.create || manualPlace?.count"
+          #actions
+        >
+          <a
+            v-if="manualPlace?.count"
+            :href="MANUAL_HREF"
+            class="flex size-12 items-center justify-center rounded-full text-ink-gray-7"
+            :aria-label="__('Shop manual')"
+            @click="openManual"
+          >
+            <LucideBookOpen class="h-6 w-6" />
+          </a>
           <button
+            v-if="boot?.capabilities?.create"
             type="button"
             class="flex size-12 items-center justify-center rounded-full text-ink-gray-7"
             :aria-label="__('New case')"
@@ -71,6 +84,15 @@
           </h1>
           <p class="text-sm text-ink-gray-6">{{ subtitle }}</p>
         </div>
+        <a
+          v-if="manualPlace?.count"
+          :href="MANUAL_HREF"
+          class="inline-flex items-center gap-1 text-sm text-ink-gray-6 hover:text-ink-gray-8"
+          @click="openManual"
+        >
+          <LucideBookOpen class="h-4 w-4" />
+          {{ __('Shop manual') }}
+        </a>
         <button
           type="button"
           class="text-sm text-ink-gray-6 hover:text-ink-gray-8"
@@ -417,6 +439,7 @@ import {
   HANDOFF_KEYS,
   KINDS,
   LIVE_DOCTYPES,
+  MANUAL_HREF,
   QUEUE_KEYS,
   SEGMENTS,
   ageLabel,
@@ -432,6 +455,8 @@ import {
   listHref,
   listMemoryKey,
   loadGarantiasBoot,
+  loadManualPlace,
+  manualPlace,
   nextStepLabel,
   normalizeSegment,
   problemOf,
@@ -443,6 +468,7 @@ import {
   stateTheme,
 } from '@/composables/useGarantias'
 import Icon from '@/components/Icon.vue'
+import LucideBookOpen from '~icons/lucide/book-open'
 import LucidePlus from '~icons/lucide/plus'
 import LucideShield from '~icons/lucide/shield'
 import LucideUserPlus from '~icons/lucide/user-plus'
@@ -749,6 +775,12 @@ function selectSegment(value) {
   })
 }
 
+/** The manual's Garantías chapter inside the shell; a modified click keeps the browser's own open. */
+function openManual(event) {
+  if (event.metaKey || event.ctrlKey || event.shiftKey) return
+  event.preventDefault()
+  router.push(MANUAL_HREF.slice('/crm'.length))
+}
 /** «Nuevo caso», or a hand-off from Taller/Ventas with the document prefilled. */
 function openCreate(values = {}) {
   prefill.value = values
@@ -800,6 +832,7 @@ async function copyRequest() {
 onMounted(async () => {
   await loadGarantiasBoot()
   if (!boot.value?.enabled) return
+  loadManualPlace()
   createFromQuery()
   list.load({ restore: true })
 })

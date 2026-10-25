@@ -15703,6 +15703,10 @@ msgid "New case"
 msgstr "Nuevo caso"
 
 #: frontend/src/pages/Garantias.vue
+msgid "Shop manual"
+msgstr "Manual de la tienda"
+
+#: frontend/src/pages/Garantias.vue
 msgctxt "Garantías"
 msgid "List"
 msgstr "Lista"
