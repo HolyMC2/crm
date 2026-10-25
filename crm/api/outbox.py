@@ -62,13 +62,13 @@ PUBLIC = (
 	"next_attempt_at",
 )
 TRANSITIONS = {
-	"Queued": {"Claimed", "Cancelled", "Blocked"},
+	"Queued": {"Claimed", "Deferred", "Cancelled", "Blocked"},
 	"Claimed": {"Claimed", "Submitting", "Blocked", "Cancelled", "Failed"},
 	"Submitting": {"Accepted", "Failed", "Blocked", "Unknown"},
 	"Accepted": {"Delivered", "Read", "Failed"},
 	"Delivered": {"Read"},
 	"Read": set(),
-	"Deferred": {"Queued", "Claimed", "Cancelled", "Blocked"},
+	"Deferred": {"Queued", "Claimed", "Deferred", "Cancelled", "Blocked"},
 	"Blocked": {"Queued", "Cancelled"},
 	"Failed": {"Queued", "Cancelled", "Delivered", "Read"},
 	"Cancelled": set(),
@@ -637,6 +637,25 @@ def _transcript_guard(doc):
 	return None
 
 
+def _transcript_defer(doc, now):
+	"""When a transcript's producing app wants the send to wait (e.g. Cobranza's
+	reminder hours): the latest instant any defer hook names, if still ahead.
+	A failing hook defers nothing; the guard after the claim still fails closed."""
+	if not doc.get("transcript_message"):
+		return None
+	until = []
+	for path in frappe.get_hooks("crm_transcript_dispatch_defer") or []:
+		try:
+			value = frappe.get_attr(path)(doc)
+		except Exception:
+			frappe.log_error(title="CRM transcript dispatch defer failed", message=frappe.get_traceback())
+			continue
+		if value:
+			until.append(get_datetime(value))
+	latest = max(until, default=None)
+	return latest if latest and latest > now else None
+
+
 def _base_eligibility(doc):
 	from crm.api.outbox_policy import automation_reason, manual_reply_reason
 
@@ -803,6 +822,14 @@ def dispatch_intent(intent_name):
 		if doc.state == "Claimed" and doc.lease_until and get_datetime(doc.lease_until) > now:
 			return
 		if doc.next_attempt_at and get_datetime(doc.next_attempt_at) > now:
+			return
+		until = _transcript_defer(doc, now) if doc.state != "Claimed" else None
+		if until:
+			if doc.expires_at and until >= get_datetime(doc.expires_at):
+				_transition(doc, "Blocked", "reply_expired")
+			else:
+				_transition(doc, "Deferred", "producer_window_closed", next_attempt_at=until)
+			frappe.db.commit()
 			return
 		if doc.attempts >= MAX_ATTEMPTS:
 			_transition(doc, "Blocked", "attempts_exhausted")
