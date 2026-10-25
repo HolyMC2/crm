@@ -28676,3 +28676,19 @@ msgstr "Elige un servicio"
 #: frontend/src/documentos/palette.js
 msgid "Create {0}"
 msgstr "Crear {0}"
+
+#: frontend/src/utils/bulkEdit.js
+msgid "Updating {0} records in the background. Reload the list in a moment to see the changes."
+msgstr "Se están actualizando {0} registros en segundo plano. Recarga la lista en un momento para ver los cambios."
+
+#: frontend/src/utils/bulkEdit.js
+msgid "{0} of {1} records were not updated: {2}"
+msgstr "No se actualizaron {0} de {1} registros: {2}"
+
+#: frontend/src/utils/bulkEdit.js
+msgid "{0} of {1} records were not updated."
+msgstr "No se actualizaron {0} de {1} registros."
+
+#: frontend/src/components/Modals/EditValueModal.vue
+msgid "The records were not updated."
+msgstr "No se actualizaron los registros."
