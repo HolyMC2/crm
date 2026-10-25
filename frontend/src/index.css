@@ -191,9 +191,11 @@ input:where([type='checkbox'], [type='radio']) {
 input:where([type='checkbox'], [type='radio']):focus {
   --tw-ring-offset-color: var(--surface-base);
 }
-/* `rounded-4` is 8px in the espresso radius scale, which turns a 16-20px
-   checkbox into a circle that reads as a radio button. */
-input[type='checkbox'].rounded {
+/* `rounded-4` (the numbered name of the old bare `rounded`) is 8px in the
+   espresso radius scale, which turns a 16-20px checkbox into a circle that
+   reads as a radio button. The selector names the numbered class: the radius
+   codemod renamed the 30 checkbox sites but not this guard (FUI1-behavior). */
+input[type='checkbox'].rounded-4 {
   border-radius: var(--radius-1);
 }
 
