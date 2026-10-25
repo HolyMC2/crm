@@ -2,6 +2,21 @@
 
 Module providers report native capabilities; they never grant anything. Each
 module route and API still checks its own permissions on every request.
+
+Each ``modules[key]`` entry is a tagged union on ``state``:
+
+  ready        the builder says this worker can open it (``enabled`` True)
+  off          the builder says not here or not for this worker; ``reason`` says why
+  unavailable  the builder raised. The module degrades to a tile with the reason and
+               a way out; every other module still loads
+
+and always carries ``key``, ``state``, ``enabled`` (``state == "ready"``, what the
+pages read today), ``reason_code`` (``permission``, ``missing_app``, ``error`` or the
+builder's own), ``reason_text`` (worker words; ``reason`` is its alias for the pages
+that read it), ``resolve`` (``{label, route}`` or None), ``retry`` (a new boot may fix
+it) and ``capabilities``. An unavailable entry also carries ``detail`` (the error,
+admins only) and the error is logged as «shell boot <key>». Only the builders are
+isolated (``_entry``); an error in the boot endpoint's own code still raises.
 """
 
 import hashlib
@@ -49,6 +64,29 @@ ROLE_NAV_ROLES = (
 	("Purchase User", "compras"),
 	("Stock User", "almacen"),
 )
+# Module names as the worker reads them, for the reason of a module that could not load.
+MODULE_LABELS = {
+	"hoy": "Hoy",
+	"pendientes": "Pendientes",
+	"agenda": "Agenda",
+	"contactos": "Contactos",
+	"ventas": "Ventas",
+	"cobranza": "Cobranza",
+	"compras": "Compras",
+	"gastos": "Gastos",
+	"resultados": "Resultados",
+	"bancos": "Bancos",
+	"productos": "Productos",
+	"garantias": "Garantías",
+	"encuestas": "Encuestas",
+	"equipo": "Equipo",
+	"archivos": "Archivos",
+	"manual": "Manual",
+	"documentos": "Documentos",
+	"inventario": "Inventario",
+	"inmobiliaria": "Inmobiliaria",
+	"avisos": "Avisos",
+}
 
 
 def _hoy():
@@ -505,13 +543,14 @@ def _inmobiliaria():
 	}
 
 
-def _hosted():
-	"""Providers of the modules whose screens live in this SPA under /crm/<key>, besides Ventas."""
+def _builtin_providers():
+	"""Built-in providers by module key, in boot order. Built per call so a test can patch one."""
 	return {
 		"hoy": _hoy,
+		"contactos": _contactos,
+		"ventas": _ventas,
 		"pendientes": _pendientes,
 		"agenda": _agenda,
-		"contactos": _contactos,
 		"cobranza": _cobranza,
 		"compras": _compras,
 		"gastos": _gastos,
@@ -521,13 +560,111 @@ def _hosted():
 		"garantias": _garantias,
 		"encuestas": _encuestas,
 		"equipo": _equipo,
+		"avisos": _avisos,
 		"archivos": _archivos,
 		"manual": _manual,
 		"documentos": _documentos,
 		"inventario": _inventario,
 		"inmobiliaria": _inmobiliaria,
-		"avisos": _avisos,
 	}
+
+
+def _hosted():
+	"""Providers of the modules whose screens live in this SPA under /crm/<key>, besides Ventas."""
+	return {key: provider for key, provider in _builtin_providers().items() if key != "ventas"}
+
+
+def _providers():
+	"""Built-in providers plus `muelle_shell_modules` hooks from other apps, as (key, provider)
+	pairs in boot order. A provider's entry is keyed by the `key` it answers; the pair's key
+	is the tile name only when the provider raises before it can say its own, or answers
+	without one, so two hooks whose functions share a name (`doco.taller.shell._shell`,
+	`mercado.shell._shell`) both boot."""
+	providers = list(_builtin_providers().items())
+	for path in frappe.get_hooks("muelle_shell_modules") or []:
+		providers.append((path.rsplit(".", 1)[-1].lstrip("_"), frappe.get_attr(path)))
+	return providers
+
+
+def _unavailable_rules():
+	"""What a raising builder means to the worker: (error class, reason code, a new boot may
+	fix it, the reason in worker words). First match wins, so the catch-all stays last.
+	A function, not a module global: the semgrep multitenancy rule refuses `frappe.*` at
+	module scope."""
+	return (
+		(
+			frappe.PermissionError,
+			"permission",
+			True,
+			lambda label: _("You do not have access to {0}. Ask {1} for access and try again.").format(
+				label, _owner_name() or _("your manager")
+			),
+		),
+		(
+			ImportError,
+			"missing_app",
+			False,
+			lambda label: _("This shop does not have {0} yet. Ask support to update the app.").format(label),
+		),
+		(
+			Exception,
+			"error",
+			True,
+			lambda label: _("{0} could not load. Try again; if it keeps failing, tell support.").format(
+				label
+			),
+		),
+	)
+
+
+def _owner_name():
+	"""The shop owner's name (puesto Dueño), the person a worker asks for access, or None."""
+	if not frappe.get_meta("User").has_field("muelle_puesto"):
+		return None
+	return frappe.db.get_value("User", {"muelle_puesto": "Dueño", "enabled": 1}, "full_name")
+
+
+def _unavailable(key, exc):
+	"""The entry of a module whose builder raised: logged, off for this boot, with the reason."""
+	frappe.log_error(title=f"shell boot {key}")
+	code, retry, text = next(
+		(code, retry, text) for cls, code, retry, text in _unavailable_rules() if isinstance(exc, cls)
+	)
+	reason = text(MODULE_LABELS.get(key, key))
+	entry = {
+		"key": key,
+		"state": "unavailable",
+		"enabled": False,
+		"reason_code": code,
+		"reason": reason,
+		"reason_text": reason,
+		"resolve": None,
+		"retry": retry,
+		"capabilities": {},
+	}
+	if "System Manager" in frappe.get_roles():
+		entry["detail"] = f"{type(exc).__name__}: {exc}"[:300]
+	return entry
+
+
+def _entry(key, provider):
+	"""One module's boot entry. A builder that raises degrades to «unavailable» for its key
+	alone, so the other modules still load; a builder that answers None has no entry; one
+	that answers without naming itself is the module the table names (`first_module` and
+	`resolve_recent` key the built-ins this way)."""
+	try:
+		dto = provider()
+	except Exception as exc:
+		return _unavailable(key, exc)
+	if not dto:
+		return None
+	dto.setdefault("key", key)
+	dto.setdefault("state", "ready" if dto.get("enabled") else "off")
+	dto.setdefault("reason_code", None)
+	dto.setdefault("reason_text", dto.get("reason"))
+	dto.setdefault("resolve", None)
+	dto.setdefault("retry", False)
+	return dto
 
 
 def first_module():
@@ -535,43 +672,9 @@ def first_module():
 	hosted = _hosted()
 	for key in MODULE_KEYS:
 		provider = hosted.get(key)
-		if not provider:
-			continue
-		try:
-			if (provider() or {}).get("enabled"):
-				return key
-		except frappe.PermissionError:
-			continue
+		if provider and (_entry(key, provider) or {}).get("enabled"):
+			return key
 	return None
-
-
-def _providers():
-	"""Built-in providers plus `muelle_shell_modules` hooks from other apps."""
-	providers = [
-		_hoy,
-		_contactos,
-		_ventas,
-		_pendientes,
-		_agenda,
-		_cobranza,
-		_compras,
-		_gastos,
-		_productos,
-		_resultados,
-		_bancos,
-		_garantias,
-		_encuestas,
-		_equipo,
-		_avisos,
-		_archivos,
-		_manual,
-		_documentos,
-		_inventario,
-		_inmobiliaria,
-	]
-	for path in frappe.get_hooks("muelle_shell_modules") or []:
-		providers.append(frappe.get_attr(path))
-	return providers
 
 
 def _puesto():
@@ -687,14 +790,16 @@ def boot():
 	if frappe.session.user == "Guest":
 		frappe.throw(_("Sign in to open Muelle."), frappe.AuthenticationError)
 	modules = {}
-	for provider in _providers():
-		try:
-			dto = provider()
-		except frappe.PermissionError:
-			continue
-		if dto and dto.get("key"):
+	for key, provider in _providers():
+		dto = _entry(key, provider)
+		if dto:
 			modules[dto["key"]] = dto
 	if not any(dto.get("enabled") for dto in modules.values()):
+		# Nothing opens. When a module failed to load, that is the reason (and a retry
+		# may fix it); a refusal only when every module refused.
+		unavailable = [dto["reason_text"] for dto in modules.values() if dto["state"] == "unavailable"]
+		if unavailable:
+			frappe.throw(" ".join(unavailable), title=_("Muelle could not open"))
 		frappe.throw(
 			_("You do not have permission to open this app. Ask your manager for access."),
 			frappe.PermissionError,
@@ -781,16 +886,14 @@ def resolve_recent(records: str | list):
 		records = json.loads(records or "[]")
 	if not isinstance(records, list):
 		return []
-	enabled = {}
-	for provider in (_contactos, _ventas):
-		try:
-			enabled[provider.__name__] = provider()["enabled"]
-		except frappe.PermissionError:
-			enabled[provider.__name__] = False
+	enabled = {
+		key: bool((_entry(key, provider) or {}).get("enabled"))
+		for key, provider in (("contactos", _contactos), ("ventas", _ventas))
+	}
 	if not any(enabled.values()):
 		return []
 	access = None
-	if enabled["_contactos"]:
+	if enabled["contactos"]:
 		from doco.contactos import access
 
 	rows = []
@@ -800,7 +903,7 @@ def resolve_recent(records: str | list):
 		if not isinstance(source, str) or not isinstance(name, str):
 			continue
 		if source == "deal":
-			if enabled["_ventas"]:
+			if enabled["ventas"]:
 				row = _recent_deal(name)
 				if row:
 					rows.append(row)

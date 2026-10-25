@@ -179,6 +179,20 @@ export const shellModules = computed(() =>
 )
 
 /**
+ * Hosted modules whose builder failed on the server (boot entry state
+ * «unavailable»): the rail keeps a tile that says why, and the module's page
+ * answers with the reason and a retry.
+ */
+export const unavailableModules = computed(() =>
+  hostedModules.flatMap((meta) => {
+    const entry = shellBoot.value?.modules?.[meta.key]
+    return entry?.state === 'unavailable'
+      ? [{ ...meta, reason: entry.reason_text || '', retry: !!entry.retry }]
+      : []
+  }),
+)
+
+/**
  * Shell modules other than Ventas boot without the CRM runtime (sales stores,
  * Ventas chrome): their routes carry meta.app, a hard refresh window.muelle_module.
  */

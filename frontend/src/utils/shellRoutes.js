@@ -99,7 +99,21 @@ export function recoveryReady(module, boot) {
  */
 export function moduleRefusal(route, key, { boot, error }) {
   if (route?.meta?.recovery || key === 'ventas') return null
-  if (error) return { reason: error }
+  if (error) return refusal(error)
   if (!boot || moduleEnabled(boot, key)) return null
-  return { reason: boot.modules?.[key]?.reason || '' }
+  const entry = boot.modules?.[key] || {}
+  if (entry.state !== 'unavailable') return refusal(entry.reason || '')
+  // The builder raised on the server: the reason is about the module, not the
+  // worker's permissions, unless the server says it was a permission.
+  return {
+    reason: entry.reason_text || entry.reason || '',
+    code: entry.reason_code || 'error',
+    retry: !!entry.retry,
+    resolve: entry.resolve || null,
+    detail: entry.detail || '',
+  }
+}
+
+function refusal(reason) {
+  return { reason, code: null, retry: true, resolve: null, detail: '' }
 }

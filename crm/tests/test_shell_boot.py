@@ -39,9 +39,12 @@ class TestShellBoot(TestCase):
 	def test_older_doco_without_contactos_turns_the_module_off_not_the_shell(self):
 		with patch.dict(sys.modules, {"doco.contactos.api": None}):
 			data = shell.boot()
+			landing = shell.first_module()
 		self.assertFalse(data["modules"]["contactos"]["enabled"])
+		self.assertEqual(data["modules"]["contactos"]["state"], "off")
 		self.assertTrue(data["modules"]["contactos"]["reason"])
 		self.assertTrue(data["modules"]["ventas"]["enabled"])
+		self.assertNotEqual(landing, "contactos")
 
 	def _contactos_on(self):
 		return {"key": "contactos", "enabled": True, "reason": None, "capabilities": {"read": True}}
@@ -49,7 +52,18 @@ class TestShellBoot(TestCase):
 	def test_ventas_enabled_for_a_crm_user(self):
 		ventas = shell.boot()["modules"]["ventas"]
 		self.assertEqual(
-			ventas, {"key": "ventas", "enabled": True, "reason": None, "capabilities": {"read": True}}
+			ventas,
+			{
+				"key": "ventas",
+				"state": "ready",
+				"enabled": True,
+				"reason": None,
+				"reason_code": None,
+				"reason_text": None,
+				"resolve": None,
+				"retry": False,
+				"capabilities": {"read": True},
+			},
 		)
 
 	def test_ventas_refused_keeps_its_own_reason_and_the_other_modules(self):
@@ -64,13 +78,17 @@ class TestShellBoot(TestCase):
 		self.assertFalse(data["sales_access"])
 		self.assertTrue(data["modules"]["contactos"]["enabled"])
 
-	def test_ventas_absent_when_its_provider_refuses(self):
+	def test_ventas_unavailable_with_the_reason_when_its_provider_refuses(self):
 		with (
 			patch("crm.api.check_app_permission", side_effect=frappe.PermissionError),
 			patch.object(shell, "_contactos", self._contactos_on),
 		):
 			data = shell.boot()
-		self.assertNotIn("ventas", data["modules"])
+		ventas = data["modules"]["ventas"]
+		self.assertEqual(ventas["state"], "unavailable")
+		self.assertFalse(ventas["enabled"])
+		self.assertEqual(ventas["reason_code"], "permission")
+		self.assertTrue(ventas["reason_text"])
 		self.assertFalse(data["sales_access"])
 
 	def test_saved_bar_keeps_known_modules_once_and_at_most_four(self):
@@ -227,10 +245,13 @@ class TestShellBoot(TestCase):
 		self.assertIsNone(avisos["badge"])
 		self.assertTrue(data["modules"]["ventas"]["enabled"])
 
-	def test_avisos_provider_permission_error_leaves_the_module_absent(self):
+	def test_avisos_provider_permission_error_leaves_the_module_unavailable_with_the_reason(self):
 		with patch("crm.api.avisos.get_capabilities", side_effect=frappe.PermissionError):
 			data = shell.boot()
-		self.assertNotIn("avisos", data["modules"])
+		avisos = data["modules"]["avisos"]
+		self.assertEqual(avisos["state"], "unavailable")
+		self.assertFalse(avisos["enabled"])
+		self.assertEqual(avisos["reason_code"], "permission")
 		self.assertTrue(data["modules"]["ventas"]["enabled"])
 
 	def _skip_without_bandeja(self):

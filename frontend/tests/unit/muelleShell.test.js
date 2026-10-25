@@ -370,6 +370,108 @@ describe('module registry', () => {
     expect(document.body.textContent).not.toContain('Archivos page')
   })
 
+  function unavailable(key, overrides = {}) {
+    return {
+      key,
+      state: 'unavailable',
+      enabled: false,
+      reason_code: 'error',
+      reason:
+        'No se pudo cargar Contactos. Vuelve a intentar; si sigue igual, avisa a soporte.',
+      reason_text:
+        'No se pudo cargar Contactos. Vuelve a intentar; si sigue igual, avisa a soporte.',
+      resolve: null,
+      retry: true,
+      capabilities: {},
+      ...overrides,
+    }
+  }
+
+  it('Contactos unavailable: the rail keeps its tile with the reason, the page offers a retry that boots again', async () => {
+    state.call.mockImplementation(async () =>
+      boot({
+        modules: { ...boot().modules, contactos: unavailable('contactos') },
+      }),
+    )
+    await mount('/contactos')
+    const tile = await until(() =>
+      document.querySelector(
+        '[data-module="contactos"][data-state="unavailable"]',
+      ),
+    )
+    expect(tile.getAttribute('title')).toContain('No se pudo cargar Contactos')
+    expect(tile.getAttribute('aria-label')).toContain('Contactos')
+    expect(document.querySelector('[data-module="ventas"]')).toBeTruthy()
+    const alert = await until(() => document.querySelector('[role="alert"]'))
+    expect(alert.textContent).toContain('We could not open Contactos')
+    expect(alert.textContent).toContain('No se pudo cargar Contactos')
+    expect(document.body.textContent).not.toContain('Contactos page')
+    const labels = [...alert.querySelectorAll('button')].map(
+      (b) => b.textContent,
+    )
+    expect(labels).toContain('Retry')
+    expect(labels).not.toContain('Retry permissions')
+    expect(labels).not.toContain('Ask for access')
+    const boots = () =>
+      state.call.mock.calls.filter(
+        ([method]) => method === 'crm.api.shell.boot',
+      )
+    expect(boots()).toHaveLength(1)
+    ;[...alert.querySelectorAll('button')]
+      .find((b) => b.textContent === 'Retry')
+      .click()
+    await until(() => boots().length === 2)
+    expect(boots()).toHaveLength(2)
+  })
+
+  it('Contactos unavailable for a permission: the page still asks for access, and a module that cannot be retried hides Retry', async () => {
+    state.call.mockImplementation(async () =>
+      boot({
+        modules: {
+          ...boot().modules,
+          contactos: unavailable('contactos', {
+            reason_code: 'permission',
+            reason_text:
+              'No tienes acceso a Contactos. Pídele acceso a Marco Pérez y vuelve a intentar.',
+            detail: 'PermissionError: Contactos Settings',
+          }),
+        },
+      }),
+    )
+    await mount('/contactos')
+    let alert = await until(() => document.querySelector('[role="alert"]'))
+    expect(alert.textContent).toContain('Pídele acceso a Marco Pérez')
+    expect(alert.textContent).toContain(
+      'Detail: PermissionError: Contactos Settings',
+    )
+    let labels = [...alert.querySelectorAll('button')].map((b) => b.textContent)
+    expect(labels).toContain('Retry permissions')
+    expect(labels).toContain('Ask for access')
+    app.unmount()
+    root.remove()
+
+    state.call.mockImplementation(async () =>
+      boot({
+        modules: {
+          ...boot().modules,
+          contactos: unavailable('contactos', {
+            reason_code: 'missing_app',
+            reason_text:
+              'Esta tienda aún no tiene Contactos. Pide a soporte que actualice la aplicación.',
+            retry: false,
+          }),
+        },
+      }),
+    )
+    await mount('/contactos')
+    alert = await until(() => document.querySelector('[role="alert"]'))
+    expect(alert.textContent).toContain('Esta tienda aún no tiene Contactos')
+    labels = [...alert.querySelectorAll('button')].map((b) => b.textContent)
+    expect(labels).not.toContain('Retry')
+    expect(labels).not.toContain('Retry permissions')
+    expect(labels).not.toContain('Ask for access')
+  })
+
   it('Archivos enabled: its page renders and its rail entry shows', async () => {
     state.call.mockImplementation(async () =>
       boot({

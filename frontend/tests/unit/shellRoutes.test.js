@@ -91,6 +91,51 @@ describe('Permission recovery follows the module the worker meant to open', () =
     expect(recoveryReady('avisos', { modules: {} })).toBe(false)
     expect(recoveryReady('avisos', null)).toBe(false)
   })
+  it('a module whose builder failed carries the server reason, its code, retry and resolve', () => {
+    const boot = {
+      modules: {
+        contactos: {
+          enabled: false,
+          state: 'unavailable',
+          reason_code: 'error',
+          reason: 'No se pudo cargar Contactos.',
+          reason_text: 'No se pudo cargar Contactos.',
+          resolve: null,
+          retry: true,
+          detail: 'RuntimeError: x',
+        },
+        agenda: {
+          enabled: false,
+          state: 'unavailable',
+          reason_code: 'missing_app',
+          reason_text: 'Esta tienda aún no tiene Agenda.',
+          resolve: { label: 'Ver Hoy', route: '/hoy' },
+          retry: false,
+        },
+      },
+    }
+    expect(
+      moduleRefusal({ meta: { app: 'contactos' } }, 'contactos', {
+        boot,
+        error: '',
+      }),
+    ).toEqual({
+      reason: 'No se pudo cargar Contactos.',
+      code: 'error',
+      retry: true,
+      resolve: null,
+      detail: 'RuntimeError: x',
+    })
+    expect(
+      moduleRefusal({ meta: { app: 'agenda' } }, 'agenda', { boot, error: '' }),
+    ).toEqual({
+      reason: 'Esta tienda aún no tiene Agenda.',
+      code: 'missing_app',
+      retry: false,
+      resolve: { label: 'Ver Hoy', route: '/hoy' },
+      detail: '',
+    })
+  })
   it('refuses only the module the route belongs to, never over the recovery screen', () => {
     const boot = {
       modules: {
@@ -108,9 +153,16 @@ describe('Permission recovery follows the module the worker meant to open', () =
       }),
     ).toBe(null)
     const contactos = { meta: { app: 'contactos' } }
-    expect(moduleRefusal(contactos, 'contactos', { boot, error: '' })).toEqual({
-      reason: 'Sin Contactos',
+    const refusal = (reason) => ({
+      reason,
+      code: null,
+      retry: true,
+      resolve: null,
+      detail: '',
     })
+    expect(moduleRefusal(contactos, 'contactos', { boot, error: '' })).toEqual(
+      refusal('Sin Contactos'),
+    )
     const avisos = { meta: { app: 'avisos' } }
     expect(moduleRefusal(avisos, 'avisos', { boot, error: '' })).toBe(null)
     expect(
@@ -118,10 +170,10 @@ describe('Permission recovery follows the module the worker meant to open', () =
         boot: { modules: { avisos: { enabled: false } } },
         error: '',
       }),
-    ).toEqual({ reason: '' })
+    ).toEqual(refusal(''))
     expect(
       moduleRefusal(avisos, 'avisos', { boot: { modules: {} }, error: '' }),
-    ).toEqual({ reason: '' })
+    ).toEqual(refusal(''))
     expect(moduleRefusal(avisos, 'avisos', { boot: null, error: '' })).toBe(
       null,
     )
