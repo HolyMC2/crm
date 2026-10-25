@@ -2,6 +2,15 @@
   <Dialog bare v-model:open="show" :size="'sm'">
     <template #default>
       <div class="p-4 pt-5">
+        <div class="-mr-2 -mt-2 flex justify-end">
+          <Button
+            variant="ghost"
+            class="w-7"
+            icon="lucide-x"
+            :aria-label="__('Close')"
+            @click="show = false"
+          />
+        </div>
         <div class="flex justify-center">
           <div class="flex flex-col items-center">
             <CRMLogo class="mb-3 size-12" />

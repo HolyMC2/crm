@@ -97,11 +97,11 @@
               :clearable="false"
               @update:modelValue="(date) => updateDate(date, true)"
             >
-              <template #suffix="{ togglePopover }">
+              <template #suffix="{ open, setOpen }">
                 <span
                   class="lucide-chevron-down h-4 w-4 cursor-pointer"
                   aria-hidden="true"
-                  @click="togglePopover"
+                  @click="setOpen(!open)"
                 />
               </template>
             </DatePicker>
