@@ -1,6 +1,6 @@
-/* Vendored from muelle/workspace/packages/tokens@0.1.0 (b144ac6b7530). DO NOT EDIT:
+/* Vendored from muelle/workspace/packages/tokens@0.1.0 (754e8801108e). DO NOT EDIT:
    change the package, then run its scripts/vendor.mjs against this directory. */
-/* @muelle/tokens — generated from frappe-ui 1.0.0-beta.29 and the #171717 palette. DO NOT EDIT: run `pnpm run build:css`. */
+/* @muelle/tokens — generated from frappe-ui 1.0.2 and the #171717 palette. DO NOT EDIT: run `pnpm run build:css`. */
 :root {
   color-scheme: light;
   --muelle-surface-base: #ffffff;
@@ -27,9 +27,9 @@
   --muelle-status-orange-bg: #fff4d3;
   --muelle-status-orange-ink: #91400d;
   --muelle-status-red-bg: #ffe7e7;
-  --muelle-status-red-ink: #b41d1d;
+  --muelle-status-red-ink: #941f1f;
   --muelle-status-green-bg: #e4faeb;
-  --muelle-status-green-ink: #14804d;
+  --muelle-status-green-ink: #085e35;
   --muelle-accent: #171717;
   --muelle-accent-ink: #ffffff;
   --muelle-accent-soft: #e8e8e8;
@@ -87,13 +87,13 @@
   --muelle-status-gray-bg: #292929;
   --muelle-status-gray-ink: #999999;
   --muelle-status-blue-bg: #0a2e5c;
-  --muelle-status-blue-ink: #76bef9;
+  --muelle-status-blue-ink: #add2f5;
   --muelle-status-orange-bg: #452608;
-  --muelle-status-orange-ink: #e9a144;
+  --muelle-status-orange-ink: #f4c25f;
   --muelle-status-red-bg: #592222;
-  --muelle-status-red-ink: #ff7575;
+  --muelle-status-red-ink: #ffc1c1;
   --muelle-status-green-bg: #0e3521;
-  --muelle-status-green-ink: #7dc5a2;
+  --muelle-status-green-ink: #9be6c1;
   --muelle-accent: #ededed;
   --muelle-accent-ink: #16222a;
   --muelle-accent-soft: #3e3e3e;

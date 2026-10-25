@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/tokens@0.1.0 (b144ac6b7530). DO NOT EDIT:
+// Vendored from muelle/workspace/packages/tokens@0.1.0 (754e8801108e). DO NOT EDIT:
 // change the package, then run its scripts/vendor.mjs against this directory.
 // Named palettes, mirrored from Doco `erp_experience/appearance.py` PRESETS:
 // accent = frappe-ui lightMode <hue>/700, lift = darkMode <hue>/300. Red, amber

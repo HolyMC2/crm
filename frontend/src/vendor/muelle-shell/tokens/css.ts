@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/tokens@0.1.0 (b144ac6b7530). DO NOT EDIT:
+// Vendored from muelle/workspace/packages/tokens@0.1.0 (754e8801108e). DO NOT EDIT:
 // change the package, then run its scripts/vendor.mjs against this directory.
 // CSS custom properties. `tokens.css` (committed) is `renderTokensCss()` for
 // the default Gris palette; at boot each SPA injects `accentCss(palette)` so
