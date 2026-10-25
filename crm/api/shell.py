@@ -585,30 +585,35 @@ def _providers():
 	return providers
 
 
-# What a raising builder means to the worker: (error class, reason code, a new boot may fix it,
-# the reason in worker words). First match wins, so the catch-all stays last.
-UNAVAILABLE = (
-	(
-		frappe.PermissionError,
-		"permission",
-		True,
-		lambda label: _("You do not have access to {0}. Ask {1} for access and try again.").format(
-			label, _owner_name() or _("your manager")
+def _unavailable_rules():
+	"""What a raising builder means to the worker: (error class, reason code, a new boot may
+	fix it, the reason in worker words). First match wins, so the catch-all stays last.
+	A function, not a module global: the semgrep multitenancy rule refuses `frappe.*` at
+	module scope."""
+	return (
+		(
+			frappe.PermissionError,
+			"permission",
+			True,
+			lambda label: _("You do not have access to {0}. Ask {1} for access and try again.").format(
+				label, _owner_name() or _("your manager")
+			),
 		),
-	),
-	(
-		ImportError,
-		"missing_app",
-		False,
-		lambda label: _("This shop does not have {0} yet. Ask support to update the app.").format(label),
-	),
-	(
-		Exception,
-		"error",
-		True,
-		lambda label: _("{0} could not load. Try again; if it keeps failing, tell support.").format(label),
-	),
-)
+		(
+			ImportError,
+			"missing_app",
+			False,
+			lambda label: _("This shop does not have {0} yet. Ask support to update the app.").format(label),
+		),
+		(
+			Exception,
+			"error",
+			True,
+			lambda label: _("{0} could not load. Try again; if it keeps failing, tell support.").format(
+				label
+			),
+		),
+	)
 
 
 def _owner_name():
@@ -622,7 +627,7 @@ def _unavailable(key, exc):
 	"""The entry of a module whose builder raised: logged, off for this boot, with the reason."""
 	frappe.log_error(title=f"shell boot {key}")
 	code, retry, text = next(
-		(code, retry, text) for cls, code, retry, text in UNAVAILABLE if isinstance(exc, cls)
+		(code, retry, text) for cls, code, retry, text in _unavailable_rules() if isinstance(exc, cls)
 	)
 	reason = text(MODULE_LABELS.get(key, key))
 	entry = {
