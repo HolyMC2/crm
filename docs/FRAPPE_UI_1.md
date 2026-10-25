@@ -426,7 +426,7 @@ and frappe-ui's `call()` returns only `message`. Desktop bulk edit (`ListBulkAct
 `frappe/desk/doctype/bulk_update/bulk_update.py:62-77` saves fewer than 20 documents in the request
 and returns the names that failed (`_bulk_action`, `:80-142`, catches each document's exception and
 rolls it back), enqueues 20 to 500 on the `short` queue and returns nothing, and throws above 500.
-So the modal says «No se actualizaron 2 de 5 registros: <first caught reason>» (an error toast when
+So the modal says «No se actualizaron 2 de 5 registros: <the first reason Frappe printed>» (a thrown error first, else a plain message such as a missing mandatory field; an error toast when
 none saved, the count alone when Frappe recorded no reason, as for a cancelled document), or «Se están
 actualizando 25 registros en segundo plano…» for an enqueued batch, whose per-document failures
 Frappe only writes to the Error Log; `tests/unit/bulkEdit.test.js`. Still silent on a 200, by the

@@ -63,6 +63,24 @@ describe('bulk edit outcome', () => {
     })
   })
 
+  it('names a missing mandatory field, which Frappe prints without raising', async () => {
+    answer({
+      message: ['CRM-LEAD-1'],
+      _server_messages: JSON.stringify([
+        JSON.stringify({ message: 'Saved', alert: 1, indicator: 'green' }),
+        JSON.stringify({
+          message: 'Error: Value missing for Lead: First Name',
+          title: 'Message',
+        }),
+      ]),
+    })
+    expect(await edit(['CRM-LEAD-1', 'CRM-LEAD-2'])).toEqual({
+      type: 'warning',
+      message:
+        '1 of 2 records were not updated: Error: Value missing for Lead: First Name',
+    })
+  })
+
   it('says the edit went to the background when Frappe enqueued it', async () => {
     answer({
       _server_messages: JSON.stringify([

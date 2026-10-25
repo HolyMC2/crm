@@ -3,7 +3,7 @@ import { callError } from '@/utils/contactos'
 // Desk's bulk edit (Frappe 16.35 `frappe/desk/doctype/bulk_update/bulk_update.py`
 // `submit_cancel_or_update_docs`): under 20 names it saves each document and
 // returns the names that failed; a document's `frappe.throw` is caught there
-// and its message rides `_server_messages` with `raise_exception` on a 200.
+// and its message rides `_server_messages` on a 200.
 // From 20 to 500 it enqueues the work and returns nothing; over 500 it throws.
 // `serverMessages.js` keeps caught throws out of the global toast, and
 // frappe-ui's `call()` hands only `message` back, so this posts like
@@ -11,28 +11,28 @@ import { callError } from '@/utils/contactos'
 const METHOD =
   'frappe.desk.doctype.bulk_update.bulk_update.submit_cancel_or_update_docs'
 
-function firstCaughtReason(rawMessages) {
+const plainText = (html) =>
+  new DOMParser()
+    .parseFromString(String(html), 'text/html')
+    .body.textContent.replace(/\s+/g, ' ')
+    .trim()
+
+// A thrown error carries `raise_exception`; a missing mandatory field is a
+// plain `msgprint` before `MandatoryError` (Frappe 16.35 `document.py`
+// `_validate_mandatory`), so fall back to the first message that is not an alert.
+function firstReason(rawMessages) {
   let entries
   try {
-    entries = JSON.parse(rawMessages || '[]')
+    entries = JSON.parse(rawMessages || '[]').map((raw) =>
+      typeof raw === 'string' ? JSON.parse(raw) : raw,
+    )
   } catch {
     return ''
   }
-  for (const raw of entries) {
-    let m
-    try {
-      m = typeof raw === 'string' ? JSON.parse(raw) : raw
-    } catch {
-      continue
-    }
-    if (!m?.raise_exception || !m.message) continue
-    const text = new DOMParser()
-      .parseFromString(String(m.message), 'text/html')
-      .body.textContent.replace(/\s+/g, ' ')
-      .trim()
-    if (text) return text
-  }
-  return ''
+  const said = entries.filter((m) => m?.message && plainText(m.message))
+  const reason =
+    said.find((m) => m.raise_exception) || said.find((m) => !m.alert)
+  return reason ? plainText(reason.message) : ''
 }
 
 /**
@@ -65,7 +65,7 @@ export async function bulkUpdate(doctype, docnames, data) {
   return {
     state: 'failed',
     failed: body.message.length,
-    reason: firstCaughtReason(body._server_messages),
+    reason: firstReason(body._server_messages),
   }
 }
 
