@@ -89,9 +89,7 @@ describe('statusDot / pillarChip', () => {
     expect(statusDot('???')).toBe('bg-gray-300 dark:bg-gray-600')
   })
   it('pillarChip maps each post_kind, unclassified → neutral default', () => {
-    expect(pillarChip('Producto')).toBe(
-      'bg-surface-blue-2 text-ink-blue-9 dark:text-ink-blue-8',
-    )
+    expect(pillarChip('Producto')).toBe('bg-surface-blue-2 text-ink-blue-9')
     expect(pillarChip('Temporada')).toBe(
       'bg-surface-amber-2 text-ink-amber-9 dark:bg-amber-300/20 dark:text-amber-200',
     )

@@ -365,7 +365,7 @@ describe('entry points', () => {
   it('a payment review shows no lines totals card', () => {
     const page = source('pages/CapturaRevision.vue')
     expect(page).toMatch(
-      /v-if="review\.doc_type !== 'Payment Entry'"\s*class="mb-4 space-y-2 rounded-xl border border-outline-gray-2 p-4"\s*:aria-label="__\('Totals'\)"/,
+      /v-if="review\.doc_type !== 'Payment Entry'"\s*class="mb-4 space-y-2 rounded-7 border border-outline-gray-2 p-4"\s*:aria-label="__\('Totals'\)"/,
     )
   })
 })
