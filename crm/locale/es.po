@@ -10767,6 +10767,26 @@ msgstr "Contactos no está instalado. Pide al encargado que revise la aplicació
 msgid "You do not have permission to see Contactos. Ask your manager for access and try again."
 msgstr "No tienes permiso para ver Contactos. Pide acceso al encargado y reintenta."
 
+#: crm/api/shell.py
+msgid "You do not have access to {0}. Ask {1} for access and try again."
+msgstr "No tienes acceso a {0}. Pídele acceso a {1} y vuelve a intentar."
+
+#: crm/api/shell.py
+msgid "your manager"
+msgstr "la persona encargada"
+
+#: crm/api/shell.py
+msgid "This shop does not have {0} yet. Ask support to update the app."
+msgstr "Esta tienda aún no tiene {0}. Pide a soporte que actualice la aplicación."
+
+#: crm/api/shell.py
+msgid "{0} could not load. Try again; if it keeps failing, tell support."
+msgstr "No se pudo cargar {0}. Vuelve a intentar; si sigue igual, avisa a soporte."
+
+#: crm/api/shell.py
+msgid "Muelle could not open"
+msgstr "Muelle no pudo abrir"
+
 #: crm/api/contactos.py
 msgid "Ask for access to Contactos to recover this view."
 msgstr "Pide acceso a Contactos para recuperar esta vista."

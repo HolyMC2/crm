@@ -49,7 +49,17 @@ class TestHoyBoot(TestCase):
 		data = shell.boot()
 		self.assertEqual(
 			data["modules"]["hoy"],
-			{"key": "hoy", "enabled": True, "reason": None, "capabilities": {"read": True}},
+			{
+				"key": "hoy",
+				"state": "ready",
+				"enabled": True,
+				"reason": None,
+				"reason_code": None,
+				"reason_text": None,
+				"resolve": None,
+				"retry": False,
+				"capabilities": {"read": True},
+			},
 		)
 		self.assertEqual(shell.first_module(), "hoy")
 
