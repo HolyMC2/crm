@@ -163,8 +163,8 @@ for the native suite.
   (2026-10-18) the image only, with no token: bump `SHELL_CI_IMAGE` to the newest
   `doco-bench` release digest after each release.
 - **The Shell APIs job gates.** Since roll-20261020 (`SHELL_CI_IMAGE` on the
-  `vall-lanes-20261020-edc87cea3b4a` digest) the image carries HRMS and doco
-  `6e8b250`, so the 55 `Employee.leave_approver` errors of all-lanes-20261014
+  `vall-lanes-20261020-edc87cea3b4a` digest) the image carries doco `6e8b250`,
+  so the 55 `Employee.leave_approver` errors of all-lanes-20261014
   (run 39166087010) are gone. A red job fails the Server gate like Server does.
   Until then it ran with `continue-on-error`, which reports `needs.shell.result`
   as `success`, so the gate never saw a red job. `gate.py` still accepts
