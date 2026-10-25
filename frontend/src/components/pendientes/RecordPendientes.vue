@@ -201,15 +201,17 @@ async function reload() {
   problem.value = ''
   refused.value = false
   try {
-    all.value = await pendientesApi('on_record', {
+    const answer = await pendientesApi('on_record', {
       reference_type: props.referenceType,
       reference_name: props.referenceName,
     })
+    // A record that can't hold pendientes (a Note, a Desk record) hides the card.
+    refused.value = answer.linkable === false
+    all.value = answer
   } catch (error) {
     // A record I may not read has no pendientes for me; anything else says why.
     const reason = pendienteError(error)
     problem.value = reason.kind === 'permission' ? '' : reason.detail
-    // A record that can't hold pendientes (a Note, a Desk record) hides the card.
     refused.value = reason.kind === 'permission'
     all.value = { rows: [], done: [], has_more: false }
   } finally {

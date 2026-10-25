@@ -131,19 +131,31 @@ afterEach(() => {
 })
 
 describe('RecordPendientes', () => {
-  it('hides the whole card when the record cannot hold pendientes (403)', async () => {
-    state.api.mockRejectedValue(
-      Object.assign(new Error('No permission'), {
-        exc_type: 'PermissionError',
-        status: 403,
-      }),
-    )
+  it('hides the whole card when the server says the record cannot hold pendientes', async () => {
+    state.api.mockResolvedValue({
+      linkable: false,
+      rows: [],
+      done: [],
+      has_more: false,
+    })
     mount(RecordPendientes, { referenceType: 'Note', referenceName: 'n-1' })
     await flush()
     expect(state.api).toHaveBeenCalledWith('on_record', {
       reference_type: 'Note',
       reference_name: 'n-1',
     })
+    expect(root.querySelector('[data-record-pendientes]')).toBeNull()
+  })
+
+  it('hides the whole card when I may not read the record (403)', async () => {
+    state.api.mockRejectedValue(
+      Object.assign(new Error('No permission'), {
+        exc_type: 'PermissionError',
+        status: 403,
+      }),
+    )
+    mount(RecordPendientes, { referenceType: 'Contact', referenceName: 'ana' })
+    await flush()
     expect(root.querySelector('[data-record-pendientes]')).toBeNull()
   })
 
