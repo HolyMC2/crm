@@ -302,3 +302,131 @@ sources and not visible in a static walk (timings, aria, focus and keyboard path
 - `FormControl :placement` (TelephonySettings, 3 sites) was always an unknown attribute on the
   input; still is.
 - The vendored `@muelle/tokens` (`src/vendor/muelle-shell/tokens/`) is generated from beta.29.
+
+## 6. Behavior, verified (`FUI1-behavior`)
+
+Lane `crm-fui1-behavior` (crm, from doco-dev `7bf0f41ec`) with `muelle-fui1-tokens` (muelle) as one
+train. Walk script `shell-program/scripts/walk-fui1-behavior.mjs` (owner d1-dueno and the lab bot, 1440
+and 412, dark and light; shots and `walk-log.txt` in `shell-program/evidence/FUI1-behavior/`), the
+styling re-walk with `walk-fui1.mjs` in `evidence/FUI1-behavior/after-styling/`. Each §5 bullet ends
+here as **verified** (frappe-ui's own behavior, acceptable, with the step that proved it) or **fixed**
+(a crm change in this lane).
+
+### 6.1 What the walk proved (per run, same assertions at 1440/412 × dark/light)
+
+| Step | Assertion | Result | Shot |
+|---|---|---|---|
+| Theme | `localStorage.theme` = dark / light is restored on reload (`data-theme`); a stored `bogus` is repaired to `system` by `useColorScheme` (1.0.2 `ensureInitialized`) | verified | `01-tema-restaurado` |
+| Nuevo evento (1440: «Crear › Evento»; 412: FAB) | opens; Escape closes; overlay click closes; close control closes | verified | `02`, `03` |
+| Nueva cita gate | same four | verified | `04`, `05` |
+| Servicios («Publicar servicios») | opens; Escape; close control | verified | `06`, `07` |
+| Bare dialog (DealModal «Crear trato») | opens; Escape; overlay; close control | **fixed** (6.2 a) | `08`, `09` |
+| Tab order | 14 Tabs stay inside the dialog; Link (combobox), Autocomplete and the date control are reached in order | verified | `10` |
+| `trigger="manual"` (Link) | click opens the listbox, `aria-expanded=true`; Escape closes the list and keeps the dialog | verified | `11` |
+| Tooltip (Button `:tooltip`, default 500 ms) | no bubble at 150 ms, one at 850 ms after hover; with a tooltip open, Escape closes the tooltip first and the dialog stays; the next Escape closes the dialog | verified (reka layering) | `12` |
+| Dropdown (deal page, reka DropdownMenu) | click opens: `aria-expanded=true`, `data-state=open`, one menu; ArrowDown highlights; Escape closes and returns focus; Enter on the focused trigger opens | verified | `13` |
+| Popover «Filtrar» (notes list, `align="end"`) | click opens (`aria-expanded`, `data-state`), content right edge = trigger right edge; Escape closes; Enter opens | verified | `14` |
+| Tooltip `hover-delay` 1000 → ms | 0 at 150 ms, 2 at 950 ms on the list view's column tooltips | verified | `15` |
+| Reports empty state | three «No hay grupos para esta métrica…» blocks for a period without data | verified | `17` |
+| Settings (`dismissible` = not pending) | Escape closes, overlay closes, «Return to work» closes while nothing is pending | verified (6.2 d) | `18` |
+| `dialog.confirm` (SLA policy «Unsaved Changes») | opens on back; Escape, overlay click, the X and «Cancelar» each cancel and keep the editor's text; «Confirmar» leaves | verified | `20`, `21` |
+| `dialog.confirm` with a pending `onConfirm` | no crm site is async; `tests/unit/dialogConfirmPending.test.js` proves 1.0.2 holds the dialog, disables Cancel and ignores Escape until the promise settles, and a rejection shows inline and re-enables Cancel | verified (unit) | — |
+| HoverCard («Condición antigua», assignment rules) | not reachable on the lab data (no old-style rule); `hover-delay` 250 ms is the source value | not walked | — |
+| Hoy dashboard charts (bot, 1440) | 9 chart plots (SVG renderer, `data-slot="chart-plot"`); hover shows a `chart-tooltip`; legends present | verified | `22` |
+| Reports charts (bot) | 3 plots with bars; hover tooltip; a bar click emits `select` → `drill_kind` query | **fixed** (6.2 b) | `23`, `24` |
+| AboutModal | only `UserDropdown` (AppSidebar) opens it and the shell rail replaced that; unit test | **fixed** (6.2 c) | — |
+
+Phone (412): the dashboard is desktop-only (its numbers live in Resultados); «Nueva cita» sits in the
+drawer behind booking setup; everything else is the same list.
+
+### 6.2 Fixed in crm
+
+a. **Quick-entry dialogs opened with a tooltip showing and ate the first Escape.** 1.0.2's Dialog
+   focuses the first tabbable on open; in `DealModal`, `LeadModal`, `CreateDocumentModal`,
+   `DoctypeModal` and `GridRowModal` that is the edit-layout `Button :tooltip`, whose reka
+   `TooltipTrigger` opens on focus (`data-state="instant-open"`); the first Escape then only dismissed
+   the tooltip. An `autofocus` marker on the form wrapper (1.0.2 Dialog honours `[autofocus]` and
+   walks into it) hands the initial focus to the first field. Shot `08` before/after: no tooltip on
+   open, Escape closes.
+b. **Report charts rendered 12 px high, nothing drawn.** `BarChart`'s root (`ChartContainer`) is
+   `h-full`, which wins over the `h-44` `ReportChart` passed as a class; `useChart` waits for a
+   `clientHeight` and never initialised. The height now sits on a wrapper box. (`reportsChart.test.js`
+   asserts the props crm hands BarChart — that is crm's contract with the chart; the rendered ECharts
+   option is frappe-ui's and is covered by the walk's tooltip/select steps, not by a unit test.)
+c. **`AboutModal` is `bare` and had no close control** → its own labelled X (`aria-label="Close"`),
+   `tests/unit/aboutModal.test.js`.
+d. **`Settings.vue` `:dismissible="!(disableSettingModalOutsideClick || session.pending)"`**: in 1.0.2
+   `dismissible=false` blocks Escape as well as the outside click. Kept: the flag is set while an
+   assignment rule is dirty or a save is pending, and losing an unsaved rule to a stray Escape is the
+   same loss as to a stray click; the header's «Return to work» still closes. Walked while not pending
+   (`18`).
+e. **`EventModal` DatePicker `#suffix="{ togglePopover }"`** was dead (1.0.2 passes
+   `{ open, disabled, setOpen, close, displayLabel, inputValue }`) → `{ open, setOpen }`,
+   `setOpen(!open)`. Its three icon-only buttons (delete, duplicate, close) now carry `aria-label`s.
+f. **Leftover scanner.** `frontend/scripts/codemods/check-legacy-overlays.mjs` lists the beta.29
+   overlay surfaces 1.0.2 drops without a compile error (Dialog `:options`,
+   `disableOutsideClickToClose`, `#body*` slots, a template ref driven with `.close()`/`.open()`;
+   Popover `placement`, `v-model:show`, `transition`, `#target`/`#body*`; Tooltip and HoverCard
+   `placement` and seconds delays; Dropdown `placement`; picker slots reading `togglePopover`/`isOpen`).
+   `tests/unit/legacyOverlays.test.js` asserts `src/` has none and that a fixture still trips every
+   rule. Inventory at the lane base: Dialog ref `.close()` 0, `disableOutsideClickToClose` 0,
+   `placement` on Tooltip/Popover 0 (the four `FormControl :placement` in TelephonySettings and
+   DashboardSettings are an unknown attribute on an input and crm's own `Autocomplete`/`Link` prop is
+   theirs), delays below 10: none (`:hover-delay="0"` twice is intentional), `trigger="manual"` 4,
+   HoverCard 3 (250 ms), Dropdown `align="end"` 23, bare dialogs 14 static + 3 dynamic.
+g. **Stale beta.29 references**: `frontend/patches/` (only a `.gitattributes`; patch-package is
+   gone) removed; root `package.json` `upgrade-frappeui` (`yarn add frappe-ui@latest`) removed, the
+   pin is `frontend/package.json`; `vite.config.js` `server.fs.allow` comment no longer claims a
+   linked frappe-ui checkout; `README.md` names 1.0.2 and this file; `MERGE_NOTES_trackb.md` carries
+   a «historical» note.
+
+### 6.3 B7: `call()` and `serverMessagesHandler`
+
+beta.29's `call()` was its own fetch and never read `serverMessagesHandler`; 1.0.2's `call()` is
+`frappeRequest`, which on a **successful** response hands `_server_messages` to
+`getConfig('serverMessagesHandler')` (or drops them when none is set), and on a failure puts them on
+the rejection as `e.messages`, which the 228 crm catch sites already toast. crm set no handler, so
+nothing double-toasted and the success-path `frappe.msgprint`s stayed silent, as before. Decision:
+`src/utils/resourceConfig.js` registers `handleServerMessages` (`src/utils/serverMessages.js`): one
+toast per distinct message, indicator → type (red error, orange/amber warning, green success, else
+info), title as description; `tests/unit/serverMessages.test.js`. Exposure is small: one `msgprint`
+in crm's own api (`crm/api/user.py:158`, user removed from CRM roles) and none in doco's contactos,
+compras or gastos endpoints; the three flows the brief names (Compras › nueva, Gastos › registrar,
+Contacto save with a validation error) go through crm's own fetch wrappers (`comprasApi`,
+`gastosApi`, `contactosApi`), not frappe-ui `call`, so they are unchanged by B7 and were not
+re-walked here. `requestBaseUrl`/`requestHeaders` stay unset (same-origin, cookie session).
+
+### 6.4 B9: the preset renames, measured
+
+Measured on the lab's built stylesheet (`index-*.css`, 1.0.2): `.bg-surface-white` 0 rules and no
+`--surface-white` (the 33 crm sites painted nothing), `.rounded-md`/`.rounded-lg` present only
+through crm's alias block, `.text-base-medium` generated, `dark:` variants compile to
+`[data-theme=dark]` selectors (62 rules), `--focus-*` unused by crm, `text-base` is 14px / 1.35 /
+weight 420 in 1.0.2. Codemods (`frontend/scripts/codemods/preset-renames.mjs`, one commit per
+rename, the codemod committed first):
+
+| Rename | Sites | Visual effect |
+|---|---|---|
+| `bg-surface-white` → `bg-surface-base` | 33 / 17 files | intended: those surfaces get their background back |
+| named radius → numbered (`frappe-ui/tailwind/migrate-tokens-v2.js --radius-only`): `rounded`→4, sm→1, md→5, lg→6, xl→7, 2xl→8 and directional forms; alias block in `tailwind.config.js` removed | 1755 / 436 files | none by construction (the aliases mapped to the same variables) |
+| `text-base font-medium` → `text-base-medium` | 88 / 66 files | none visible (14px, 1.35, 500; the utility adds its tracking) |
+| redundant `dark:` ink overrides (`text-ink-gray-8 dark:text-ink-gray-7` and identical pairs) | 16 / 7 files | dark inks one step brighter where the override dimmed them; the 18 `bg-surface-base dark:bg-surface-gray-1` elevation pairs are kept as design intent, and `dark:` on raw palette colours stays |
+| `--focus-*` | 0 | — |
+| `--brand*` | 76 `var(--brand)` + 12 other in 43 files | unchanged: `index.css` aliases `--brand*` to `--muelle-accent*` (the tokens README's «during migration» state); `stores/settings.js` still overrides `--brand*` from `FCRM Settings.brand_color`. Deleting the alias means routing that tenant colour through `applyShellAppearance` (a whole-shell accent, with the AA re-check) — a product decision, left for Marco |
+| line-height 1.35 | preset | `text-base` lines are 1.35 (1.15 in v1 per the plan); compared shot by shot in the re-walk |
+| hover on touch | preset `future.hoverOnlyWhenSupported: true` | `hover:` rules apply only where a hover-capable pointer exists; nothing to rename |
+
+CSS budget: `scripts/verify-bundle-budget.mjs` keeps 61 KB gzip (`docs/PRODUCTOS_RESULTADOS_HANDOFF_2026-10-15.md`
+said 60; now 61). Numbers before/after in the lane report.
+
+### 6.5 Tokens, deps and docs
+
+- `@muelle/tokens` regenerated from 1.0.2 (`workspace/packages/tokens/scripts/generate.mjs` now
+  reads `tailwind/tokens/{colors,typography,radius}.js`, oklch → sRGB hex; radii keep the shell's
+  `DEFAULT/lg/xl` names on steps 4/6/7). Status inks moved with the palette; every pair passes AA on
+  its first ink. The vendored copy in `src/vendor/muelle-shell/tokens/` is `vendor.mjs` output and
+  `--check` is green.
+- `frontend/package.json` against 1.0.2's peers: `vue`, `vue-router`, `tailwindcss` in range;
+  `@vueuse/core`/`integrations` ^14 direct; `echarts` 6 is frappe-ui's own dependency (crm imports
+  `frappe-ui/charts` only); the `@codemirror/lang-*` peers are optional and crm renders none of
+  frappe-ui's `CodeEditor` (`ImpresionFormato` uses crm's own editor), so none is added.
