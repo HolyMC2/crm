@@ -104,7 +104,7 @@
         >
           <LucideSlash class="mt-0.5 size-4 shrink-0 text-ink-red-7" />
           <div
-            class="text-xs leading-snug text-ink-gray-7 dark:text-ink-gray-6"
+            class="text-xs leading-snug text-ink-gray-7"
           >
             <span class="font-semibold text-ink-red-7">{{
               __('Este número no tiene WhatsApp.')
@@ -120,9 +120,9 @@
             class="mt-0.5 size-4 shrink-0 text-ink-amber-9"
           />
           <div
-            class="text-xs leading-snug text-ink-gray-7 dark:text-ink-gray-6"
+            class="text-xs leading-snug text-ink-gray-7"
           >
-            <span class="font-semibold text-ink-gray-8 dark:text-ink-gray-7">{{
+            <span class="font-semibold text-ink-gray-8">{{
               __('Sin WhatsApp para este número.')
             }}</span>
             {{

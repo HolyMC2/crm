@@ -144,7 +144,7 @@
           <input
             v-model="v.value"
             type="text"
-            class="min-w-0 flex-1 rounded border border-outline-gray-2 bg-surface-base px-1.5 py-0.5 text-[11.5px] text-ink-gray-8 focus:outline-none dark:bg-surface-gray-1 dark:text-ink-gray-7"
+            class="min-w-0 flex-1 rounded border border-outline-gray-2 bg-surface-base px-1.5 py-0.5 text-[11.5px] text-ink-gray-8 focus:outline-none dark:bg-surface-gray-1"
           />
         </div>
       </div>

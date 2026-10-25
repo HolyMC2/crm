@@ -148,7 +148,7 @@
             :class="
               r.points >= 0
                 ? 'text-ink-green-8 bg-surface-green-2'
-                : 'text-ink-red-7 dark:text-ink-red-8 bg-surface-red-1'
+                : 'text-ink-red-7 bg-surface-red-1'
             "
           >
             {{ r.points >= 0 ? '+' : '' }}{{ r.points }}

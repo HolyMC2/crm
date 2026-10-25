@@ -48,7 +48,7 @@ export const PILLARS = [
   {
     kind: 'Producto',
     emoji: '🛒',
-    chip: 'bg-surface-blue-2 text-ink-blue-9 dark:text-ink-blue-8',
+    chip: 'bg-surface-blue-2 text-ink-blue-9',
   },
   {
     kind: 'Servicio',
@@ -63,7 +63,7 @@ export const PILLARS = [
   {
     kind: 'Noticia',
     emoji: '📣',
-    chip: 'bg-surface-red-2 text-ink-red-7 dark:text-ink-red-8',
+    chip: 'bg-surface-red-2 text-ink-red-7',
   },
   {
     kind: 'Testimonio',

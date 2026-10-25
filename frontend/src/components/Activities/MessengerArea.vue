@@ -12,7 +12,7 @@
   >
     <div
       v-if="!messages.length"
-      class="py-10 text-center text-[13px] text-ink-gray-4 dark:text-ink-gray-5"
+      class="py-10 text-center text-[13px] text-ink-gray-4"
     >
       {{ __('Sin mensajes todavía.') }}
     </div>
@@ -41,7 +41,7 @@
         :class="[
           m.direction === 'out'
             ? 'bg-[#0084ff] text-white'
-            : 'bg-surface-gray-2 text-ink-gray-8 dark:bg-surface-gray-3 dark:text-ink-gray-8',
+            : 'bg-surface-gray-2 text-ink-gray-8 dark:bg-surface-gray-3',
           m._optimistic ? 'opacity-60' : '',
         ]"
       >

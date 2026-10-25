@@ -77,7 +77,7 @@
             ? __('Escribe un mensaje… (/ para comandos)')
             : __('Escribe un mensaje…')
         "
-        class="min-h-[38px] flex-1 resize-none rounded-lg border border-outline-gray-2 px-3 py-2 text-[13px] text-ink-gray-8 dark:bg-surface-gray-2 dark:text-ink-gray-8"
+        class="min-h-[38px] flex-1 resize-none rounded-lg border border-outline-gray-2 px-3 py-2 text-[13px] text-ink-gray-8 dark:bg-surface-gray-2"
         @input="(e) => syncSlash(e.target)"
         @click="(e) => syncSlash(e.target)"
         @blur="slash.close()"
@@ -94,7 +94,7 @@
     </div>
     <p
       v-if="window24h && window24h.open"
-      class="mt-1 text-[10px] font-medium text-ink-green-7 dark:text-ink-green-6"
+      class="mt-1 text-[10px] font-medium text-ink-green-7"
     >
       {{
         __('Ventana de 24 h abierta · respuesta gratis ({0} h restantes)', [
@@ -104,7 +104,7 @@
     </p>
     <p
       v-else-if="window24h && !window24h.open"
-      class="mt-1 text-[10px] font-medium text-ink-amber-9 dark:text-ink-amber-6"
+      class="mt-1 text-[10px] font-medium text-ink-amber-9"
     >
       {{
         __(
@@ -112,7 +112,7 @@
         )
       }}
     </p>
-    <p v-else class="mt-1 text-[10px] text-ink-gray-4 dark:text-ink-gray-5">
+    <p v-else class="mt-1 text-[10px] text-ink-gray-4">
       {{
         __(
           'Fuera de la ventana de 24 h, Meta solo permite mensajes con etiqueta de agente humano.',
