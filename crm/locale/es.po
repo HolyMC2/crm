@@ -28712,3 +28712,43 @@ msgstr "Abrir la orden de reparación"
 #: frontend/src/pages/Garantia.vue
 msgid "Repair order {0}"
 msgstr "Orden de reparación {0}"
+#: frontend/src (Manual de la tienda)
+msgid "Ask the team to read it"
+msgstr "Pedir que lo lean"
+
+#: frontend/src (Manual de la tienda)
+msgid "You were asked to read this article. Tap «Read» when you finish."
+msgstr "Te pidieron leer este artículo. Toca «Leído» al terminar."
+
+#: frontend/src (Manual de la tienda)
+msgctxt "Manual"
+msgid "Read"
+msgstr "Leído"
+
+#: frontend/src (Manual de la tienda)
+msgid "Restore this version"
+msgstr "Restaurar esta versión"
+
+#: frontend/src (Manual de la tienda)
+msgid "Read by {0} of {1}"
+msgstr "Lo leyeron {0} de {1}"
+
+#: frontend/src (Manual de la tienda)
+msgid "Waiting: {0}"
+msgstr "Faltan: {0}"
+
+#: frontend/src (Manual de la tienda)
+msgid "Asked {0} people to read it. Each one has it in Pendientes."
+msgstr "Se pidió a {0} personas que lo lean. Cada una lo tiene en Pendientes."
+
+#: frontend/src (Manual de la tienda)
+msgid "Everyone who reads it was already asked."
+msgstr "Ya se les pidió a todos los que lo leen."
+
+#: frontend/src (Manual de la tienda)
+msgid "Marked as read. Thank you."
+msgstr "Marcado como leído. Gracias."
+
+#: frontend/src (Manual de la tienda)
+msgid "Restored. The history keeps this change too."
+msgstr "Restaurado. El historial también guarda este cambio."
