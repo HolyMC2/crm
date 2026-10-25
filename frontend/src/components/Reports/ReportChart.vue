@@ -10,18 +10,21 @@
     "
     @retry="$emit('retry')"
   >
-    <BarChart
-      class="h-44 w-full min-w-0"
-      :data="data"
-      x="label"
-      y="value"
-      horizontal
-      :x-axis="xAxis"
-      :y-axis="yAxis"
-      :series-config="seriesConfig"
-      :echart-options="echartOptions"
-      @select="onSelect"
-    />
+    <!-- The chart fills its parent (its root is `h-full`), so the height
+         lives on this box: a class on BarChart itself loses to `h-full`. -->
+    <div class="h-44 w-full min-w-0">
+      <BarChart
+        :data="data"
+        x="label"
+        y="value"
+        horizontal
+        :x-axis="xAxis"
+        :y-axis="yAxis"
+        :series-config="seriesConfig"
+        :echart-options="echartOptions"
+        @select="onSelect"
+      />
+    </div>
     <details class="mt-2 text-sm">
       <summary class="cursor-pointer py-2 text-ink-gray-6">
         {{ selectable ? __('View records by group') : __('View chart values') }}

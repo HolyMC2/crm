@@ -25,7 +25,7 @@
             />
           </div>
         </div>
-        <div>
+        <div autofocus>
           <div
             v-if="hasOrganizationSections || hasContactSections"
             class="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-3"

@@ -35,7 +35,7 @@
             />
           </div>
         </div>
-        <div>
+        <div autofocus>
           <FieldLayout
             v-if="layout.data"
             :tabs="layout.data"
