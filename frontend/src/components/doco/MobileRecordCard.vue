@@ -16,7 +16,7 @@
     tabindex="0"
     class="press flex w-full items-start gap-2.5 border-b border-outline-gray-1 px-3.5 py-2.5 active:bg-surface-gray-2"
     @click="$emit('open')"
-    @keydown.enter="$emit('open')"
+    @keydown.enter.self="$emit('open')"
   >
     <span
       class="mt-0.5 flex h-9 w-9 flex-none items-center justify-center rounded-full text-[12.5px] font-semibold"
