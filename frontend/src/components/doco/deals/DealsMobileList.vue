@@ -25,14 +25,14 @@
       <template #chips>
         <span
           v-if="r.status"
-          class="inline-flex items-center gap-1 rounded-md bg-surface-gray-2 px-1.5 py-[2px] text-xs font-medium text-ink-gray-7"
+          class="inline-flex items-center gap-1 rounded-5 bg-surface-gray-2 px-1.5 py-[2px] text-xs font-medium text-ink-gray-7"
         >
           <IndicatorIcon :class="statusColor(r.status)" />
           {{ stageLabel(r.status) }}
         </span>
         <span
           v-if="resolveChip(r._v_repair_status)"
-          class="rounded-md px-1.5 py-[2px] text-xs font-medium"
+          class="rounded-5 px-1.5 py-[2px] text-xs font-medium"
           :class="resolveChip(r._v_repair_status).class"
         >
           {{ resolveChip(r._v_repair_status).label }}

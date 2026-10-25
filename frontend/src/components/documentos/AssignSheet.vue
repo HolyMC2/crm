@@ -15,7 +15,7 @@
         v-model="search"
         type="search"
         enterkeyhint="search"
-        class="h-11 w-full rounded-lg border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9"
+        class="h-11 w-full rounded-6 border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9"
         placeholder="Buscar persona"
         autocomplete="off"
       />

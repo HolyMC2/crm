@@ -10,7 +10,7 @@
         <div
           v-if="options.refusal"
           role="alert"
-          class="space-y-2 rounded-lg bg-surface-amber-1 p-3 text-sm"
+          class="space-y-2 rounded-6 bg-surface-amber-1 p-3 text-sm"
         >
           <p>{{ options.refusal.reason }}</p>
           <Button
@@ -27,7 +27,7 @@
         <div
           v-else-if="options.needs_setup"
           role="alert"
-          class="space-y-2 rounded-lg bg-surface-amber-1 p-3 text-sm"
+          class="space-y-2 rounded-6 bg-surface-amber-1 p-3 text-sm"
         >
           <p>
             {{
@@ -51,7 +51,7 @@
           </p>
           <p
             v-if="options.fixed_by && account"
-            class="rounded-lg bg-surface-gray-2 p-3 text-sm text-ink-gray-8"
+            class="rounded-6 bg-surface-gray-2 p-3 text-sm text-ink-gray-8"
           >
             {{
               __(

@@ -33,12 +33,12 @@
     <div
       v-if="loadError"
       role="alert"
-      class="rounded border border-outline-gray-2 p-3"
+      class="rounded-4 border border-outline-gray-2 p-3"
     >
       <p>{{ settingsErrorMessage(loadError) }}</p>
       <button
         type="button"
-        class="mt-3 min-h-11 rounded border px-3 focus-visible:ring-2"
+        class="mt-3 min-h-11 rounded-4 border px-3 focus-visible:ring-2"
         :disabled="assignmentRulesListData.loading || access.loading"
         @click="retry"
       >

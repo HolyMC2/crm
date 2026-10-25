@@ -191,7 +191,7 @@ input:where([type='checkbox'], [type='radio']) {
 input:where([type='checkbox'], [type='radio']):focus {
   --tw-ring-offset-color: var(--surface-base);
 }
-/* `rounded` is 8px in the espresso radius scale, which turns a 16-20px
+/* `rounded-4` is 8px in the espresso radius scale, which turns a 16-20px
    checkbox into a circle that reads as a radio button. */
 input[type='checkbox'].rounded {
   border-radius: var(--radius-1);
@@ -261,7 +261,7 @@ input[type='checkbox'].rounded {
 			prose-code:break-all
 			prose-code:whitespace-pre-wrap
 			prose-img:border
-			prose-img:rounded-lg
+			prose-img:rounded-6
 			prose-sm
 			prose-table:table-fixed
 			prose-td:border

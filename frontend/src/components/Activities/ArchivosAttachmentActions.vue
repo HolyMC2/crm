@@ -8,14 +8,14 @@
     <a
       v-if="savedDocument"
       :href="savedHref"
-      class="inline-flex items-center gap-1 rounded bg-surface-green-1 px-1.5 py-0.5 text-2xs font-medium text-ink-green-9 hover:underline"
+      class="inline-flex items-center gap-1 rounded-4 bg-surface-green-1 px-1.5 py-0.5 text-2xs font-medium text-ink-green-9 hover:underline"
     >
       {{ __('In Files') }}
     </a>
     <Dropdown v-else :options="options">
       <button
         type="button"
-        class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-2xs text-ink-gray-6 hover:bg-surface-gray-2 disabled:opacity-60"
+        class="inline-flex items-center gap-1 rounded-4 px-1.5 py-0.5 text-2xs text-ink-gray-6 hover:bg-surface-gray-2 disabled:opacity-60"
         :disabled="busy"
         :aria-label="__('Files actions')"
       >

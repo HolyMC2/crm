@@ -32,7 +32,7 @@
     <p
       v-if="notice"
       role="status"
-      class="rounded-lg border border-outline-gray-2 p-3 text-sm text-ink-gray-7"
+      class="rounded-6 border border-outline-gray-2 p-3 text-sm text-ink-gray-7"
     >
       {{ notice }}
     </p>
@@ -46,7 +46,7 @@
     <div
       v-else-if="error && !model"
       role="alert"
-      class="rounded-lg border border-outline-red-2 p-3 text-sm text-ink-red-7"
+      class="rounded-6 border border-outline-red-2 p-3 text-sm text-ink-red-7"
     >
       <p>{{ error }}</p>
       <Button
@@ -63,7 +63,7 @@
           v-for="c in model.counters"
           :key="c.key"
           type="button"
-          class="flex min-h-11 flex-col items-start rounded-lg px-2.5 py-1.5 text-left hover:bg-surface-gray-3"
+          class="flex min-h-11 flex-col items-start rounded-6 px-2.5 py-1.5 text-left hover:bg-surface-gray-3"
           :class="
             c.key === 'outstanding' && c.amount > 0
               ? 'bg-surface-red-1'
@@ -135,7 +135,7 @@
           </span>
         </div>
         <ul
-          class="divide-y divide-outline-gray-1 overflow-hidden rounded-lg border border-outline-gray-2"
+          class="divide-y divide-outline-gray-1 overflow-hidden rounded-6 border border-outline-gray-2"
         >
           <li
             v-for="row in g.rows"
@@ -152,7 +152,7 @@
                   }}</span>
                   <span
                     v-if="row.doctype === 'POS Invoice'"
-                    class="rounded bg-surface-gray-3 px-1 text-xs text-ink-gray-6"
+                    class="rounded-4 bg-surface-gray-3 px-1 text-xs text-ink-gray-6"
                     >{{ __('POS') }}</span
                   >
                 </div>
@@ -232,7 +232,7 @@
             <div
               v-if="assisting === rowKey(row)"
               role="status"
-              class="rounded-md border border-outline-gray-2 p-2 text-xs text-ink-gray-7"
+              class="rounded-5 border border-outline-gray-2 p-2 text-xs text-ink-gray-7"
             >
               <p>{{ actionsFor(row).primary?.assist }}</p>
               <div class="mt-1.5 flex flex-wrap gap-1.5">
@@ -254,7 +254,7 @@
             <!-- an action that records why (resume an order) asks first -->
             <form
               v-if="asking.key === rowKey(row)"
-              class="flex flex-col gap-1.5 rounded-md border border-outline-gray-2 p-2"
+              class="flex flex-col gap-1.5 rounded-5 border border-outline-gray-2 p-2"
               @submit.prevent="confirmAsked(row)"
             >
               <label
@@ -270,7 +270,7 @@
                 v-model="asking.text"
                 data-testid="action-reason"
                 maxlength="500"
-                class="min-h-11 rounded border border-outline-gray-2 bg-surface-base px-2 text-sm sm:min-h-7"
+                class="min-h-11 rounded-4 border border-outline-gray-2 bg-surface-base px-2 text-sm sm:min-h-7"
               />
               <div class="flex flex-wrap gap-1.5">
                 <Button
@@ -292,7 +292,7 @@
             <div
               v-if="rowErrors[rowKey(row)]"
               role="alert"
-              class="rounded-md border border-outline-red-2 p-2 text-xs text-ink-red-7"
+              class="rounded-5 border border-outline-red-2 p-2 text-xs text-ink-red-7"
             >
               <p class="font-medium">{{ rowErrors[rowKey(row)].title }}</p>
               <p v-if="rowErrors[rowKey(row)].detail" class="mt-0.5">

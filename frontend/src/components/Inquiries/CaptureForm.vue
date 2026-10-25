@@ -1,7 +1,7 @@
 <template>
   <form
     data-testid="inquiry-capture"
-    class="space-y-4 rounded-xl border border-outline-gray-2 bg-surface-base p-4"
+    class="space-y-4 rounded-7 border border-outline-gray-2 bg-surface-base p-4"
     @submit.prevent="submit"
   >
     <div class="flex items-center justify-between gap-3">
@@ -72,7 +72,7 @@
       <div
         v-for="(person, index) in draft.people"
         :key="index"
-        class="space-y-3 rounded-lg border border-outline-gray-2 p-3"
+        class="space-y-3 rounded-6 border border-outline-gray-2 p-3"
       >
         <div class="flex items-center justify-between gap-3">
           <h3 class="font-medium text-ink-gray-8">

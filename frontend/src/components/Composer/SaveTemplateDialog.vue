@@ -91,7 +91,7 @@
               v-for="v in VARIABLES"
               :key="v"
               type="button"
-              class="rounded bg-surface-gray-2 px-1.5 py-0.5 font-mono text-[11px] text-ink-gray-7 hover:bg-surface-gray-3"
+              class="rounded-4 bg-surface-gray-2 px-1.5 py-0.5 font-mono text-[11px] text-ink-gray-7 hover:bg-surface-gray-3"
               :title="__('Insertar variable')"
               @click="insertVariable(v)"
             >
@@ -145,7 +145,7 @@ const emit = defineEmits(['saved'])
 const show = defineModel({ type: Boolean, default: false })
 
 const inputClass =
-  'w-full rounded border border-outline-gray-2 bg-surface-gray-2 px-2 py-1.5 text-sm text-ink-gray-8 placeholder-ink-gray-4 focus:border-outline-gray-4 focus:bg-surface-base focus:outline-none focus:ring-0'
+  'w-full rounded-4 border border-outline-gray-2 bg-surface-gray-2 px-2 py-1.5 text-sm text-ink-gray-8 placeholder-ink-gray-4 focus:border-outline-gray-4 focus:bg-surface-base focus:outline-none focus:ring-0'
 
 const channelOptions = [
   { value: 'Any', label: __('Cualquiera') },

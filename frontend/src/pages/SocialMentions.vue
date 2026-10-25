@@ -26,7 +26,7 @@
         <select
           v-if="isManager || shopOptions.length > 1"
           v-model="shop"
-          class="rounded-lg border border-outline-gray-2 bg-surface-base px-2 py-1 text-[12px] font-semibold text-ink-gray-7"
+          class="rounded-6 border border-outline-gray-2 bg-surface-base px-2 py-1 text-[12px] font-semibold text-ink-gray-7"
           :title="__('Filtrar por sucursal')"
           @change="reloadAll"
         >
@@ -85,7 +85,7 @@
     <div class="flex-1 p-4">
       <div
         v-if="mentionsRes.error"
-        class="mx-auto mb-4 max-w-[820px] space-y-2 rounded-lg border border-outline-gray-2 bg-surface-base p-4"
+        class="mx-auto mb-4 max-w-[820px] space-y-2 rounded-6 border border-outline-gray-2 bg-surface-base p-4"
       >
         <p role="alert" class="text-sm text-ink-red-7">
           {{
@@ -113,7 +113,7 @@
       <!-- empty -->
       <div
         v-else-if="!rows.length"
-        class="mx-auto mt-10 max-w-[520px] rounded-2xl border border-dashed border-outline-gray-2 bg-surface-base px-6 py-10 text-center"
+        class="mx-auto mt-10 max-w-[520px] rounded-8 border border-dashed border-outline-gray-2 bg-surface-base px-6 py-10 text-center"
       >
         <div class="text-[34px]">💬</div>
         <div class="mt-2 text-[15px] font-bold text-ink-gray-8">
@@ -141,7 +141,7 @@
           v-for="(row, i) in rows"
           :key="row.name"
           :data-testid="`mention-card-${i}`"
-          class="rounded-xl border border-outline-gray-2 bg-surface-base px-4 py-3"
+          class="rounded-7 border border-outline-gray-2 bg-surface-base px-4 py-3"
         >
           <!-- head: type + author + time -->
           <div class="flex flex-wrap items-center gap-2">
@@ -182,13 +182,13 @@
             :href="previews[row.name].permalink || row.permalink || undefined"
             target="_blank"
             rel="noopener"
-            class="mt-2 flex items-center gap-2.5 rounded-lg border border-outline-gray-1 bg-surface-gray-1 p-2 hover:bg-surface-gray-2"
+            class="mt-2 flex items-center gap-2.5 rounded-6 border border-outline-gray-1 bg-surface-gray-1 p-2 hover:bg-surface-gray-2"
           >
             <img
               v-if="previews[row.name].image"
               :src="previews[row.name].image"
               :alt="__('Vista previa de la publicación')"
-              class="h-12 w-12 flex-none rounded-md border border-outline-gray-1 object-cover"
+              class="h-12 w-12 flex-none rounded-5 border border-outline-gray-1 object-cover"
               loading="lazy"
             />
             <div class="min-w-0 flex-1">
@@ -223,7 +223,7 @@
             v-if="row.media_preview"
             :src="row.media_preview"
             :alt="__('Vista previa de la historia')"
-            class="mt-2 max-h-[220px] rounded-lg border border-outline-gray-1 object-cover"
+            class="mt-2 max-h-[220px] rounded-6 border border-outline-gray-1 object-cover"
           />
 
           <div class="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -260,7 +260,7 @@
               v-else
               type="button"
               :data-testid="`mention-capture-${i}`"
-              class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2 disabled:opacity-40"
+              class="rounded-6 border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2 disabled:opacity-40"
               :disabled="!!captureBusy || !!busy"
               @click="onCapture(row)"
             >
@@ -282,7 +282,7 @@
           <!-- already-sent reply (read-only) -->
           <div
             v-if="row.status === 'Atendido' && row.suggested_reply"
-            class="mt-2 rounded-lg bg-surface-green-1 px-3 py-2 text-[12.5px] text-ink-gray-8"
+            class="mt-2 rounded-6 bg-surface-green-1 px-3 py-2 text-[12.5px] text-ink-gray-8"
           >
             {{ row.suggested_reply }}
           </div>
@@ -297,7 +297,7 @@
               :data-testid="`mention-reply-${i}`"
               rows="3"
               :placeholder="__('Escribe una respuesta pública…')"
-              class="w-full rounded-lg border border-outline-gray-2 bg-surface-base px-3 py-2 text-[13px] text-ink-gray-8 focus:border-outline-gray-3 focus:outline-none"
+              class="w-full rounded-6 border border-outline-gray-2 bg-surface-base px-3 py-2 text-[13px] text-ink-gray-8 focus:border-outline-gray-3 focus:outline-none"
             />
           </div>
 
@@ -308,7 +308,7 @@
           >
             <button
               :data-testid="`mention-suggest-${i}`"
-              class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2 disabled:opacity-40"
+              class="rounded-6 border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2 disabled:opacity-40"
               :disabled="busy === row.name"
               :title="__('Generar una respuesta sugerida')"
               @click="onSuggest(row)"
@@ -321,7 +321,7 @@
             </button>
             <button
               :data-testid="`mention-send-${i}`"
-              class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-40"
+              class="rounded-6 px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-40"
               style="background: var(--brand)"
               :disabled="busy === row.name"
               :title="__('Publicar la respuesta como comentario público')"
@@ -331,7 +331,7 @@
             </button>
             <button
               :data-testid="`mention-dismiss-${i}`"
-              class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2 disabled:opacity-40"
+              class="rounded-6 border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2 disabled:opacity-40"
               :disabled="busy === row.name"
               :title="__('Descartar esta mención')"
               @click="onDismiss(row)"
@@ -345,7 +345,7 @@
             <button
               v-if="!row.testimonial_post"
               :data-testid="`mention-testimonial-${i}`"
-              class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2 disabled:opacity-40"
+              class="rounded-6 border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2 disabled:opacity-40"
               :disabled="busy === row.name"
               :title="
                 __(
@@ -370,7 +370,7 @@
           <div v-if="row.status === 'Descartado'" class="mt-2.5">
             <button
               :data-testid="`mention-reactivate-${i}`"
-              class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2 disabled:opacity-40"
+              class="rounded-6 border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2 disabled:opacity-40"
               :disabled="busy === row.name"
               @click="onReactivate(row)"
             >
@@ -402,7 +402,7 @@
             )
           }}
           <div
-            class="mt-2 rounded-lg bg-surface-gray-2 px-3 py-2 text-[12.5px] text-ink-gray-8"
+            class="mt-2 rounded-6 bg-surface-gray-2 px-3 py-2 text-[12.5px] text-ink-gray-8"
           >
             {{ replyText }}
           </div>
@@ -411,14 +411,14 @@
           class="flex items-center justify-end gap-2 border-t border-outline-gray-1 px-4 py-3"
         >
           <button
-            class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2"
+            class="rounded-6 border border-outline-gray-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2"
             @click="confirmSend = null"
           >
             {{ __('Cancelar') }}
           </button>
           <button
             data-testid="mention-send-confirm"
-            class="rounded-lg px-3 py-1.5 text-[12.5px] font-semibold text-white disabled:opacity-50"
+            class="rounded-6 px-3 py-1.5 text-[12.5px] font-semibold text-white disabled:opacity-50"
             style="background: var(--brand)"
             :disabled="busy === confirmSend.name"
             @click="doSend"

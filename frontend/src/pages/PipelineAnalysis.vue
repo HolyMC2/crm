@@ -30,7 +30,7 @@
         >
           {{ __('Embudo de ventas') }}
           <select
-            class="h-11 min-w-0 max-w-full rounded border sm:h-8 border-outline-gray-2 bg-surface-base px-2 text-sm text-ink-gray-8"
+            class="h-11 min-w-0 max-w-full rounded-4 border sm:h-8 border-outline-gray-2 bg-surface-base px-2 text-sm text-ink-gray-8"
             :value="pipeline"
             data-testid="pipeline-select"
             @change="navigate({ pipeline: $event.target.value })"
@@ -71,7 +71,7 @@
       <div
         v-if="error"
         role="alert"
-        class="flex flex-wrap items-center gap-2 rounded-lg border border-outline-red-2 bg-surface-red-1 px-4 py-3 text-sm text-ink-red-7"
+        class="flex flex-wrap items-center gap-2 rounded-6 border border-outline-red-2 bg-surface-red-1 px-4 py-3 text-sm text-ink-red-7"
       >
         {{
           __(
@@ -95,11 +95,11 @@
           <div
             v-for="n in 4"
             :key="n"
-            class="h-20 rounded-lg bg-surface-gray-2"
+            class="h-20 rounded-6 bg-surface-gray-2"
           />
         </div>
         <div v-for="n in 4" :key="'s' + n" class="flex flex-col gap-2 px-3">
-          <div class="h-3 w-32 rounded bg-surface-gray-2" />
+          <div class="h-3 w-32 rounded-4 bg-surface-gray-2" />
           <div
             class="h-2.5 rounded-full bg-surface-gray-2"
             :class="skeletonWidth(n)"
@@ -110,7 +110,7 @@
       <!-- empty -->
       <div
         v-else-if="!current.total"
-        class="flex flex-col items-start gap-3 rounded-lg border border-outline-gray-1 px-5 py-8"
+        class="flex flex-col items-start gap-3 rounded-6 border border-outline-gray-1 px-5 py-8"
         data-testid="funnel-empty"
       >
         <div class="text-base-medium text-ink-gray-8">
@@ -127,14 +127,14 @@
           <button
             v-if="state.period !== 'year'"
             type="button"
-            class="rounded bg-surface-gray-2 px-3 py-1.5 text-sm text-ink-gray-8 hover:bg-surface-gray-3"
+            class="rounded-4 bg-surface-gray-2 px-3 py-1.5 text-sm text-ink-gray-8 hover:bg-surface-gray-3"
             @click="navigate({ period: 'year', from: '', to: '' })"
           >
             {{ __('Ver este año') }}
           </button>
           <button
             type="button"
-            class="rounded px-3 py-1.5 text-sm text-ink-gray-7 hover:bg-surface-gray-1"
+            class="rounded-4 px-3 py-1.5 text-sm text-ink-gray-7 hover:bg-surface-gray-1"
             @click="drill()"
           >
             {{ __('Abrir tratos del embudo') }}
@@ -153,7 +153,7 @@
             <div
               v-for="tile in tiles"
               :key="tile.key"
-              class="min-w-0 rounded-lg border border-outline-gray-1 px-4 py-3"
+              class="min-w-0 rounded-6 border border-outline-gray-1 px-4 py-3"
             >
               <div class="truncate text-xs text-ink-gray-5">
                 {{ tile.label }}
@@ -179,7 +179,7 @@
 
           <p
             v-if="stuck"
-            class="rounded-lg bg-surface-gray-1 px-4 py-3 text-sm text-ink-gray-7"
+            class="rounded-6 bg-surface-gray-1 px-4 py-3 text-sm text-ink-gray-7"
             data-testid="funnel-headline"
           >
             {{

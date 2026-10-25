@@ -1,6 +1,6 @@
 <template>
   <article
-    class="space-y-3 rounded-lg border border-outline-gray-2 bg-surface-base p-4"
+    class="space-y-3 rounded-6 border border-outline-gray-2 bg-surface-base p-4"
     :aria-labelledby="`receta-${recipe.key}`"
   >
     <div class="flex items-start gap-3">
@@ -68,7 +68,7 @@
       <div class="flex items-center gap-2">
         <button
           type="button"
-          class="flex size-11 flex-none items-center justify-center rounded-lg bg-surface-gray-2 disabled:opacity-50"
+          class="flex size-11 flex-none items-center justify-center rounded-6 bg-surface-gray-2 disabled:opacity-50"
           aria-label="Un día menos"
           :disabled="!canEdit || busy || days <= 0"
           @click="setDays(days - 1)"
@@ -83,12 +83,12 @@
           max="90"
           :value="days"
           :disabled="!canEdit || busy"
-          class="min-h-11 w-20 rounded-lg border border-outline-gray-2 bg-surface-base px-2 text-center text-base"
+          class="min-h-11 w-20 rounded-6 border border-outline-gray-2 bg-surface-base px-2 text-center text-base"
           @change="setDays(Number($event.target.value))"
         />
         <button
           type="button"
-          class="flex size-11 flex-none items-center justify-center rounded-lg bg-surface-gray-2 disabled:opacity-50"
+          class="flex size-11 flex-none items-center justify-center rounded-6 bg-surface-gray-2 disabled:opacity-50"
           aria-label="Un día más"
           :disabled="!canEdit || busy || days >= 90"
           @click="setDays(days + 1)"

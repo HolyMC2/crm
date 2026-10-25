@@ -90,7 +90,7 @@
           )
         }}
       </p>
-      <fieldset class="rounded-lg border p-3">
+      <fieldset class="rounded-6 border p-3">
         <legend class="px-1 text-sm font-medium">
           {{ __('Permitted roles — empty allows all CRM sales roles') }}
         </legend>
@@ -111,7 +111,7 @@
       <div
         v-for="(stage, index) in draft.stages"
         :key="index"
-        class="rounded-lg border p-4 space-y-3"
+        class="rounded-6 border p-4 space-y-3"
       >
         <div class="flex flex-wrap items-center justify-between gap-2">
           <h3 class="font-medium">
@@ -172,7 +172,7 @@
               >{{ __('Required fields') }}
               <select
                 multiple
-                class="mt-2 block w-full rounded border bg-surface-base p-2"
+                class="mt-2 block w-full rounded-4 border bg-surface-base p-2"
                 :value="splitFields(stage.required_fields)"
                 @change="stage.required_fields = values($event).join(', ')"
               >
@@ -189,7 +189,7 @@
               >{{ __('Allowed previous stages (empty allows all)') }}
               <select
                 multiple
-                class="mt-2 block w-full rounded border bg-surface-base p-2"
+                class="mt-2 block w-full rounded-4 border bg-surface-base p-2"
                 :value="splitLines(stage.allowed_from)"
                 @change="stage.allowed_from = values($event).join('\n')"
               >
@@ -208,7 +208,7 @@
               }}
               <select
                 multiple
-                class="mt-2 block w-full rounded border bg-surface-base p-2"
+                class="mt-2 block w-full rounded-4 border bg-surface-base p-2"
                 :value="splitLines(stage.transition_roles)"
                 @change="stage.transition_roles = values($event).join('\n')"
               >

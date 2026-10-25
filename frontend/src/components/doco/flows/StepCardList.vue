@@ -14,7 +14,7 @@
       </div>
       <button
         v-if="!frozen"
-        class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-white"
+        class="rounded-6 px-3 py-1.5 text-[12px] font-semibold text-white"
         style="background: var(--brand)"
         @click="addStep"
       >
@@ -51,7 +51,7 @@
               <GripIcon class="h-4 w-4" />
             </span>
             <span
-              class="flex h-7 w-7 flex-none items-center justify-center rounded-lg bg-surface-gray-2 text-[14px]"
+              class="flex h-7 w-7 flex-none items-center justify-center rounded-6 bg-surface-gray-2 text-[14px]"
             >
               {{ glyph(s) }}
             </span>
@@ -338,7 +338,7 @@
                 >
                   <span
                     v-if="k % 2 === 1"
-                    class="mx-[1px] rounded bg-surface-amber-1 px-1 font-mono text-[11px] font-semibold text-ink-amber-9"
+                    class="mx-[1px] rounded-4 bg-surface-amber-1 px-1 font-mono text-[11px] font-semibold text-ink-amber-9"
                     >{{ part }}</span
                   >
                   <span v-else>{{ part }}</span>
@@ -359,7 +359,7 @@
                 v-if="
                   previewTpl(s).status && previewTpl(s).status !== 'APPROVED'
                 "
-                class="rounded bg-surface-amber-1 px-1.5 py-[1px] font-semibold text-ink-amber-9"
+                class="rounded-4 bg-surface-amber-1 px-1.5 py-[1px] font-semibold text-ink-amber-9"
               >
                 {{ previewTpl(s).status }}
               </span>
@@ -577,7 +577,7 @@ const PreviewToggle = (p, { emit }) =>
     'button',
     {
       class:
-        'flex-none rounded-md border border-outline-gray-2 px-2 py-1 text-[11px] font-medium text-ink-gray-6 hover:bg-surface-gray-2',
+        'flex-none rounded-5 border border-outline-gray-2 px-2 py-1 text-[11px] font-medium text-ink-gray-6 hover:bg-surface-gray-2',
       onClick: () => emit('toggle'),
     },
     (p.open ? '▴ ' : '▾ ') + __('Vista previa'),

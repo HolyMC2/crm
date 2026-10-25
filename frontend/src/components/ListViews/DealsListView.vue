@@ -107,7 +107,7 @@
           <template v-else-if="column.key === '_v_repair_status'">
             <span
               v-if="resolveChip(item)"
-              class="truncate rounded-md px-1.5 py-0.5 text-sm font-medium"
+              class="truncate rounded-5 px-1.5 py-0.5 text-sm font-medium"
               :class="resolveChip(item).class"
             >
               {{ resolveChip(item).label }}

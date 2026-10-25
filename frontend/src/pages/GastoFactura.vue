@@ -116,14 +116,14 @@
         <div
           v-if="notice"
           role="status"
-          class="mb-4 rounded-lg bg-surface-green-1 p-3 text-sm text-ink-green-8"
+          class="mb-4 rounded-6 bg-surface-green-1 p-3 text-sm text-ink-green-8"
         >
           {{ notice }}
         </div>
         <div
           v-if="problem"
           role="alert"
-          class="mb-4 space-y-2 rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7"
+          class="mb-4 space-y-2 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
         >
           <p>
             <strong>{{ problem.title }}.</strong> {{ problem.detail }}
@@ -233,7 +233,7 @@
 
         <div class="grid min-w-0 gap-4 sm:grid-cols-2">
           <!-- Payments and their bank side (matched in Contador). -->
-          <section class="min-w-0 rounded-xl border border-outline-gray-2 p-4">
+          <section class="min-w-0 rounded-7 border border-outline-gray-2 p-4">
             <h2 class="mb-2 text-base font-semibold">
               {{ __('Payments', null, 'Gastos') }}
             </h2>
@@ -288,7 +288,7 @@
           </section>
 
           <!-- Due dates, CFDI and where it came from. -->
-          <section class="min-w-0 rounded-xl border border-outline-gray-2 p-4">
+          <section class="min-w-0 rounded-7 border border-outline-gray-2 p-4">
             <h2 class="mb-2 text-base font-semibold">
               {{ __('Bill details') }}
             </h2>

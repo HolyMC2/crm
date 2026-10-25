@@ -1,7 +1,7 @@
 <template>
   <section
     v-if="asks.length"
-    class="mb-4 rounded-xl border border-outline-amber-2 bg-surface-amber-1 p-3 sm:p-4"
+    class="mb-4 rounded-7 border border-outline-amber-2 bg-surface-amber-1 p-3 sm:p-4"
     :aria-label="__('Asked of you')"
     data-approval-ask
   >

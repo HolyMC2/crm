@@ -12,7 +12,7 @@
   >
     <div class="absolute inset-0 bg-black/30" @click="close" />
     <div
-      class="kbd-card relative flex flex-col overflow-hidden rounded-xl bg-surface-base text-ink-gray-9 shadow-2xl"
+      class="kbd-card relative flex flex-col overflow-hidden rounded-7 bg-surface-base text-ink-gray-9 shadow-2xl"
     >
       <div
         class="flex items-center gap-2 border-b border-outline-gray-1 py-2 pl-5 pr-2"
@@ -21,7 +21,7 @@
           {{ shellT('Keyboard shortcuts') }}
         </h2>
         <button
-          class="flex size-11 flex-none items-center justify-center rounded-lg text-sm text-ink-gray-6 hover:bg-surface-gray-2"
+          class="flex size-11 flex-none items-center justify-center rounded-6 text-sm text-ink-gray-6 hover:bg-surface-gray-2"
           :aria-label="__('Close')"
           @click="close"
         >

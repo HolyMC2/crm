@@ -33,7 +33,7 @@
         <template v-else>
           <p
             v-if="context.reference"
-            class="break-words rounded border border-outline-gray-2 p-3"
+            class="break-words rounded-4 border border-outline-gray-2 p-3"
           >
             {{ __('Source') }}: {{ context.reference.doctype }} ·
             {{ context.reference.name }}
@@ -125,6 +125,6 @@ onUnmounted(() => {
 </script>
 <style scoped>
 .automation-action {
-  @apply inline-flex min-h-11 items-center rounded border border-outline-gray-2 px-4 py-2 text-sm font-medium focus-visible:ring-2;
+  @apply inline-flex min-h-11 items-center rounded-4 border border-outline-gray-2 px-4 py-2 text-sm font-medium focus-visible:ring-2;
 }
 </style>

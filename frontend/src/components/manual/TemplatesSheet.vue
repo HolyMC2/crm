@@ -28,7 +28,7 @@
     <ul class="space-y-2" data-testid="manual-templates-list">
       <li v-for="template in templates" :key="template.key">
         <label
-          class="flex min-h-11 cursor-pointer items-start gap-3 rounded-lg border border-outline-gray-2 p-3"
+          class="flex min-h-11 cursor-pointer items-start gap-3 rounded-6 border border-outline-gray-2 p-3"
         >
           <input
             v-model="chosen"

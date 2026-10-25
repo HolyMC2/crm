@@ -1,5 +1,5 @@
 <template>
-  <details class="rounded-xl border border-outline-gray-2 bg-surface-base p-4">
+  <details class="rounded-7 border border-outline-gray-2 bg-surface-base p-4">
     <summary class="cursor-pointer text-base-medium text-ink-gray-9">
       {{ __('Envíos, automatizaciones y pendientes') }}
     </summary>
@@ -225,6 +225,6 @@ const hygieneColumns = [
 
 <style scoped>
 .report-drill {
-  @apply min-h-11 rounded px-1 text-left tabular-nums underline underline-offset-4 hover:bg-surface-gray-2 focus-visible:outline focus-visible:outline-2;
+  @apply min-h-11 rounded-4 px-1 text-left tabular-nums underline underline-offset-4 hover:bg-surface-gray-2 focus-visible:outline focus-visible:outline-2;
 }
 </style>

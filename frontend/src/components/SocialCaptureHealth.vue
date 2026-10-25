@@ -43,7 +43,7 @@
             v-if="canVerify"
             type="button"
             :disabled="!!checking"
-            class="rounded border border-outline-gray-2 px-2 py-1 text-ink-gray-8 disabled:opacity-50"
+            class="rounded-4 border border-outline-gray-2 px-2 py-1 text-ink-gray-8 disabled:opacity-50"
             @click="verify(connection.page_id)"
           >
             {{

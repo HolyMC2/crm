@@ -14,13 +14,13 @@
     </div>
     <p
       v-if="!connector.enabled"
-      class="rounded-lg bg-surface-gray-1 p-3 text-sm text-ink-gray-7"
+      class="rounded-6 bg-surface-gray-1 p-3 text-sm text-ink-gray-7"
     >
       {{ __('Resume the connection to see or create its notices.') }}
     </p>
     <div v-else-if="loading && !plan" class="space-y-2" aria-busy="true">
-      <div class="h-14 animate-pulse rounded bg-surface-gray-2" />
-      <div class="h-14 animate-pulse rounded bg-surface-gray-2" />
+      <div class="h-14 animate-pulse rounded-4 bg-surface-gray-2" />
+      <div class="h-14 animate-pulse rounded-4 bg-surface-gray-2" />
     </div>
     <ArchivoGuard v-else-if="loadProblem" :state="loadProblem" @action="load" />
     <template v-else-if="plan">
@@ -28,7 +28,7 @@
         <li
           v-for="step in plan.steps"
           :key="step.what"
-          class="space-y-1 rounded-lg border border-outline-gray-2 p-3"
+          class="space-y-1 rounded-6 border border-outline-gray-2 p-3"
         >
           <div class="flex flex-wrap items-center gap-2">
             <span
@@ -51,7 +51,7 @@
       </ol>
       <p
         v-if="!plan.writes_allowed"
-        class="rounded-lg border border-outline-amber-2 bg-surface-amber-1 p-3 text-sm text-ink-gray-8"
+        class="rounded-6 border border-outline-amber-2 bg-surface-amber-1 p-3 text-sm text-ink-gray-8"
       >
         {{ plan.guard }}
       </p>
@@ -88,7 +88,7 @@
       <p
         v-if="applyError"
         role="alert"
-        class="rounded-lg border border-outline-red-2 bg-surface-red-1 p-3 text-base text-ink-red-4"
+        class="rounded-6 border border-outline-red-2 bg-surface-red-1 p-3 text-base text-ink-red-4"
       >
         {{ applyError }}
       </p>

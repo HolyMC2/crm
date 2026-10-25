@@ -16,7 +16,7 @@
           <label
             v-for="option in options"
             :key="option.key"
-            class="flex min-h-11 cursor-pointer items-start gap-2 rounded-md px-2 py-1 hover:bg-surface-gray-1"
+            class="flex min-h-11 cursor-pointer items-start gap-2 rounded-5 px-2 py-1 hover:bg-surface-gray-1"
           >
             <input
               type="radio"

@@ -39,7 +39,7 @@
           v-for="ch in availableChannels"
           :key="ch.id"
           type="button"
-          class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border px-3 py-1.5 text-xs font-semibold"
+          class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-5 border px-3 py-1.5 text-xs font-semibold"
           :class="
             activeChannelTab === ch.id
               ? 'border-transparent text-white'
@@ -72,7 +72,7 @@
             v-for="(c, i) in whatsappContacts.data"
             :key="c.phone"
             type="button"
-            class="whitespace-nowrap rounded-md border px-3 py-1.5 text-xs font-medium"
+            class="whitespace-nowrap rounded-5 border px-3 py-1.5 text-xs font-medium"
             :class="
               activeWhatsappContactIdx === i
                 ? 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-200'
@@ -100,7 +100,7 @@
              contact list is still loading. -->
         <div
           v-if="waBannerState === 'no'"
-          class="mx-3 mb-2 flex items-start gap-2 rounded-md border border-red-200 bg-surface-red-1 px-3 py-2 dark:border-red-900/40 sm:mx-10"
+          class="mx-3 mb-2 flex items-start gap-2 rounded-5 border border-red-200 bg-surface-red-1 px-3 py-2 dark:border-red-900/40 sm:mx-10"
         >
           <LucideSlash class="mt-0.5 size-4 shrink-0 text-ink-red-7" />
           <div
@@ -114,7 +114,7 @@
         </div>
         <div
           v-else-if="waBannerState === 'unknown'"
-          class="mx-3 mb-2 flex items-start gap-2 rounded-md border border-amber-200 bg-surface-amber-1 px-3 py-2 dark:border-amber-900/40 sm:mx-10"
+          class="mx-3 mb-2 flex items-start gap-2 rounded-5 border border-amber-200 bg-surface-amber-1 px-3 py-2 dark:border-amber-900/40 sm:mx-10"
         >
           <LucideTriangleAlert
             class="mt-0.5 size-4 shrink-0 text-ink-amber-9"

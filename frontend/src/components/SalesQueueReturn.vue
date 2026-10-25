@@ -6,7 +6,7 @@
   >
     <RouterLink
       :to="target"
-      class="inline-flex min-h-11 items-center rounded px-2 text-sm underline focus-visible:ring-2"
+      class="inline-flex min-h-11 items-center rounded-4 px-2 text-sm underline focus-visible:ring-2"
       >← {{ queueReturnLabel(target) }}</RouterLink
     >
   </nav>

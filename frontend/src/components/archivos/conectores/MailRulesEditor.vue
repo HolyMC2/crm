@@ -14,13 +14,13 @@
       <li
         v-for="(rule, index) in modelValue"
         :key="index"
-        class="space-y-3 rounded-lg border border-outline-gray-2 p-3"
+        class="space-y-3 rounded-6 border border-outline-gray-2 p-3"
       >
         <div class="flex items-center gap-2">
           <label class="flex min-h-11 flex-1 cursor-pointer items-center gap-3">
             <input
               type="checkbox"
-              class="h-5 w-5 rounded"
+              class="h-5 w-5 rounded-4"
               :checked="Boolean(Number(rule.enabled))"
               @change="set(index, 'enabled', $event.target.checked ? 1 : 0)"
             />
@@ -71,7 +71,7 @@
             >
               <input
                 type="checkbox"
-                class="h-5 w-5 rounded"
+                class="h-5 w-5 rounded-4"
                 :checked="ruleTypes(rule).includes(type)"
                 @change="toggleType(index, type)"
               />

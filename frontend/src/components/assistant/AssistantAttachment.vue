@@ -2,18 +2,18 @@
   <!-- The file that goes with the next message: a photo's thumbnail, or a
        PDF's or XML's name and size, and a way to take it off before sending. -->
   <div
-    class="mx-2 mt-2 flex items-center gap-2 rounded-xl bg-surface-base p-1.5 shadow-sm"
+    class="mx-2 mt-2 flex items-center gap-2 rounded-7 bg-surface-base p-1.5 shadow-sm"
     data-testid="assistant-attachment"
   >
     <img
       v-if="file.previewUrl"
       :src="file.previewUrl"
       :alt="file.name"
-      class="size-11 flex-none rounded-lg object-cover"
+      class="size-11 flex-none rounded-6 object-cover"
     />
     <span
       v-else
-      class="flex size-11 flex-none items-center justify-center rounded-lg bg-surface-gray-2"
+      class="flex size-11 flex-none items-center justify-center rounded-6 bg-surface-gray-2"
       aria-hidden="true"
     >
       <span class="lucide-file-text size-5 text-ink-gray-7" />

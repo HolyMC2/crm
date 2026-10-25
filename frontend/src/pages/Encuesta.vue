@@ -78,7 +78,7 @@
         <div
           v-if="notice"
           role="status"
-          class="mb-4 rounded-lg bg-surface-green-1 p-3 text-sm text-ink-green-8"
+          class="mb-4 rounded-6 bg-surface-green-1 p-3 text-sm text-ink-green-8"
         >
           {{ notice }}
           <RouterLink
@@ -91,7 +91,7 @@
         <div
           v-if="problem"
           role="alert"
-          class="mb-4 rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7"
+          class="mb-4 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
         >
           <strong>{{ problem.title }}.</strong> {{ problem.detail }}
           <Button
@@ -101,7 +101,7 @@
           />
         </div>
 
-        <section class="mb-4 rounded-lg border border-outline-gray-2 p-4">
+        <section class="mb-4 rounded-6 border border-outline-gray-2 p-4">
           <h2 class="mb-1 text-sm font-medium text-ink-gray-6">
             {{ __('What they said') }}
           </h2>
@@ -141,7 +141,7 @@
             :href="waHref"
             target="_blank"
             rel="noopener"
-            class="inline-flex min-h-11 items-center gap-1 rounded bg-surface-gray-2 px-3 text-sm font-medium text-ink-gray-8 hover:bg-surface-gray-3 sm:min-h-8"
+            class="inline-flex min-h-11 items-center gap-1 rounded-4 bg-surface-gray-2 px-3 text-sm font-medium text-ink-gray-8 hover:bg-surface-gray-3 sm:min-h-8"
           >
             <LucideMessageCircle class="h-4 w-4" />
             {{ __('Message on WhatsApp') }}
@@ -149,7 +149,7 @@
           <a
             v-if="answer.phone"
             :href="`tel:${answer.phone}`"
-            class="inline-flex min-h-11 items-center gap-1 rounded bg-surface-gray-2 px-3 text-sm font-medium text-ink-gray-8 hover:bg-surface-gray-3 sm:min-h-8"
+            class="inline-flex min-h-11 items-center gap-1 rounded-4 bg-surface-gray-2 px-3 text-sm font-medium text-ink-gray-8 hover:bg-surface-gray-3 sm:min-h-8"
           >
             <LucidePhone class="h-4 w-4" />
             {{ __('Call', null, 'Encuestas') }}
@@ -157,7 +157,7 @@
           <RouterLink
             v-if="garantiaLink"
             :to="garantiaLink"
-            class="inline-flex min-h-11 items-center gap-1 rounded bg-surface-gray-2 px-3 text-sm font-medium text-ink-gray-8 hover:bg-surface-gray-3 sm:min-h-8"
+            class="inline-flex min-h-11 items-center gap-1 rounded-4 bg-surface-gray-2 px-3 text-sm font-medium text-ink-gray-8 hover:bg-surface-gray-3 sm:min-h-8"
           >
             <LucideShield class="h-4 w-4" />
             {{ __('Open a warranty case') }}
@@ -166,7 +166,7 @@
           <RouterLink
             v-if="conversationLink"
             :to="conversationLink"
-            class="inline-flex min-h-11 items-center gap-1 rounded bg-surface-gray-2 px-3 text-sm font-medium text-ink-gray-8 hover:bg-surface-gray-3 sm:min-h-8"
+            class="inline-flex min-h-11 items-center gap-1 rounded-4 bg-surface-gray-2 px-3 text-sm font-medium text-ink-gray-8 hover:bg-surface-gray-3 sm:min-h-8"
             data-testid="encuesta-open-conversation"
           >
             <LucideMessageSquare class="h-4 w-4" />
@@ -191,7 +191,7 @@
           {{ __('The phone looks incomplete; call or open the customer.') }}
         </p>
 
-        <section class="mb-4 rounded-lg border border-outline-gray-2 p-4">
+        <section class="mb-4 rounded-6 border border-outline-gray-2 p-4">
           <h2 class="mb-2 text-sm font-medium text-ink-gray-6">
             {{ __('Customer and sale') }}
           </h2>
@@ -239,7 +239,7 @@
 
         <section
           v-if="steps.length"
-          class="rounded-lg border border-outline-gray-2 p-4"
+          class="rounded-6 border border-outline-gray-2 p-4"
         >
           <h2 class="mb-2 text-sm font-medium text-ink-gray-6">
             {{ __('Follow-up') }}
@@ -284,7 +284,7 @@
         <p
           v-if="closeProblem"
           role="alert"
-          class="mt-3 rounded-md bg-surface-red-1 p-3 text-sm text-ink-red-7"
+          class="mt-3 rounded-5 bg-surface-red-1 p-3 text-sm text-ink-red-7"
         >
           <strong>{{ closeProblem.title }}.</strong> {{ closeProblem.detail }}
         </p>

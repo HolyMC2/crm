@@ -65,7 +65,7 @@
       <article
         v-for="(row, index) in rows"
         :key="row.name || row.campaign || index"
-        class="min-w-0 rounded-lg border border-outline-gray-2 p-3"
+        class="min-w-0 rounded-6 border border-outline-gray-2 p-3"
       >
         <RouterLink
           v-if="link && link(row)"
@@ -146,6 +146,6 @@ function openDrill(row, column) {
 
 <style scoped>
 .report-drill {
-  @apply min-h-11 rounded px-1 tabular-nums text-ink-gray-9 underline underline-offset-4 hover:bg-surface-gray-2 focus-visible:outline focus-visible:outline-2;
+  @apply min-h-11 rounded-4 px-1 tabular-nums text-ink-gray-9 underline underline-offset-4 hover:bg-surface-gray-2 focus-visible:outline focus-visible:outline-2;
 }
 </style>

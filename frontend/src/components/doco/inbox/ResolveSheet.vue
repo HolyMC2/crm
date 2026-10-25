@@ -11,7 +11,7 @@
         </p>
         <template v-else-if="notice">
           <p
-            class="flex items-start gap-2 rounded-lg px-3 py-2 text-p-base"
+            class="flex items-start gap-2 rounded-6 px-3 py-2 text-p-base"
             :class="
               preview?.ask
                 ? 'bg-surface-green-2 text-ink-green-8'
@@ -52,7 +52,7 @@
         <p
           v-if="problem"
           role="alert"
-          class="rounded-lg bg-surface-red-1 px-3 py-2 text-p-sm text-ink-red-7"
+          class="rounded-6 bg-surface-red-1 px-3 py-2 text-p-sm text-ink-red-7"
         >
           {{ problem }}
         </p>

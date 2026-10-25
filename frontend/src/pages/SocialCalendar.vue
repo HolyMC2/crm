@@ -20,7 +20,7 @@
           __('Social')
         }}</span>
         <div
-          class="flex overflow-hidden rounded-lg border border-outline-gray-2 text-[11.5px] font-semibold"
+          class="flex overflow-hidden rounded-6 border border-outline-gray-2 text-[11.5px] font-semibold"
         >
           <button
             class="px-2.5 py-1"
@@ -48,7 +48,7 @@
         <select
           v-if="isManager || shopOptions.length > 1"
           v-model="shop"
-          class="fld rounded-lg border border-outline-gray-2 px-2 py-1 text-[12px] font-semibold"
+          class="fld rounded-6 border border-outline-gray-2 px-2 py-1 text-[12px] font-semibold"
           :title="__('Filtrar por sucursal')"
           @change="onShopChange"
         >
@@ -61,7 +61,7 @@
         </select>
         <template v-if="view === 'calendar'">
           <div
-            class="flex overflow-hidden rounded-lg border border-outline-gray-2 text-[11px] font-semibold"
+            class="flex overflow-hidden rounded-6 border border-outline-gray-2 text-[11px] font-semibold"
           >
             <button
               v-for="cv in CAL_VIEWS"
@@ -79,7 +79,7 @@
           </div>
           <div class="flex items-center gap-1">
             <button
-              class="rounded-md px-1.5 py-1 text-ink-gray-6 hover:bg-surface-gray-2"
+              class="rounded-5 px-1.5 py-1 text-ink-gray-6 hover:bg-surface-gray-2"
               @click="shift(-1)"
             >
               ‹
@@ -89,7 +89,7 @@
               >{{ rangeLabel }}</span
             >
             <button
-              class="rounded-md px-1.5 py-1 text-ink-gray-6 hover:bg-surface-gray-2"
+              class="rounded-5 px-1.5 py-1 text-ink-gray-6 hover:bg-surface-gray-2"
               @click="shift(1)"
             >
               ›
@@ -100,21 +100,21 @@
       <div class="flex flex-wrap items-center gap-2">
         <router-link
           to="/social/evergreen"
-          class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2"
+          class="rounded-6 border border-outline-gray-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2"
           :title="__('Publicaciones evergreen reutilizables')"
         >
           🌲 {{ __('Biblioteca') }}
         </router-link>
         <router-link
           to="/social/mentions"
-          class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2"
+          class="rounded-6 border border-outline-gray-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2"
           :title="__('Menciones entrantes de clientes')"
         >
           💬 {{ __('Menciones') }}
         </router-link>
         <button
           v-if="isManager"
-          class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2"
+          class="rounded-6 border border-outline-gray-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2"
           :title="__('Asignar empleados a sucursales')"
           @click="openShops"
         >
@@ -122,7 +122,7 @@
         </button>
         <button
           v-if="isManager"
-          class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-gray-7 disabled:opacity-50"
+          class="rounded-6 border border-outline-gray-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-gray-7 disabled:opacity-50"
           :disabled="bulkBusy"
           :title="__('Un borrador IA por cada sucursal, desde su inventario')"
           @click="bulkDraft"
@@ -130,7 +130,7 @@
           {{ bulkBusy ? __('✨ generando…') : __('✨ IA · todas') }}
         </button>
         <button
-          class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-gray-7 disabled:opacity-50"
+          class="rounded-6 border border-outline-gray-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-gray-7 disabled:opacity-50"
           :disabled="composeBusy"
           :title="__('Compositor IA: tipo, temporada, brief y ejemplo')"
           @click="openAiComposer"
@@ -138,7 +138,7 @@
           {{ composeBusy ? __('✨ generando…') : __('✨ Borrador IA') }}
         </button>
         <button
-          class="rounded-lg px-3 py-1.5 text-[12.5px] font-semibold text-white"
+          class="rounded-6 px-3 py-1.5 text-[12.5px] font-semibold text-white"
           style="background: var(--brand)"
           @click="openNewPost()"
         >
@@ -159,7 +159,7 @@
       <button
         v-for="p in pendingPosts.slice(0, 6)"
         :key="p.name"
-        class="press max-w-[180px] truncate rounded-md bg-surface-base px-2 py-0.5 text-[11px] font-medium text-ink-gray-8"
+        class="press max-w-[180px] truncate rounded-5 bg-surface-base px-2 py-0.5 text-[11px] font-medium text-ink-gray-8"
         @click="openEditPost(p)"
       >
         {{ p.title || p.name }}
@@ -245,7 +245,7 @@
     >
       <span>⚠ {{ __('No se pudo cargar el calendario.') }}</span>
       <button
-        class="rounded-md border border-outline-gray-2 bg-surface-base px-2 py-0.5 text-[11px] font-semibold text-ink-gray-7"
+        class="rounded-5 border border-outline-gray-2 bg-surface-base px-2 py-0.5 text-[11px] font-semibold text-ink-gray-7"
         @click="cal.reload()"
       >
         {{ __('Reintentar') }}
@@ -287,7 +287,7 @@
         :class="
           isMobile
             ? 'h-full min-h-0'
-            : 'max-h-[86vh] overflow-hidden rounded-xl'
+            : 'max-h-[86vh] overflow-hidden rounded-7'
         "
       >
         <div
@@ -323,7 +323,7 @@
           <!-- pillar -->
           <div class="flex gap-2">
             <button
-              class="rounded-lg border px-3 py-2 text-sm"
+              class="rounded-6 border px-3 py-2 text-sm"
               :class="
                 composeMode === 'editorial'
                   ? 'border-blue-500'
@@ -334,7 +334,7 @@
               {{ __('Publicación editorial') }}
             </button>
             <button
-              class="rounded-lg border px-3 py-2 text-sm"
+              class="rounded-6 border px-3 py-2 text-sm"
               :class="
                 composeMode === 'catalog'
                   ? 'border-blue-500'
@@ -400,7 +400,7 @@
                 </button>
                 <select
                   v-model="composeForm.season"
-                  class="fld rounded-lg border border-outline-gray-2 px-2 py-1 text-[12.5px]"
+                  class="fld rounded-6 border border-outline-gray-2 px-2 py-1 text-[12.5px]"
                 >
                   <option :value="null">{{ __('Sin temporada') }}</option>
                   <option
@@ -425,7 +425,7 @@
               >
               <select
                 v-model="composeForm.collection"
-                class="fld w-full rounded-lg border border-outline-gray-2 px-2 py-1.5 text-[12.5px]"
+                class="fld w-full rounded-6 border border-outline-gray-2 px-2 py-1.5 text-[12.5px]"
               >
                 <option :value="null">
                   {{ __('Elegir un tema coherente del catálogo') }}
@@ -463,7 +463,7 @@
               <textarea
                 v-model="composeForm.brief"
                 rows="3"
-                class="fld w-full rounded-lg border border-outline-gray-2 px-2.5 py-1.5 text-[13px]"
+                class="fld w-full rounded-6 border border-outline-gray-2 px-2.5 py-1.5 text-[13px]"
                 :placeholder="briefPlaceholder"
               />
             </div>
@@ -482,7 +482,7 @@
                   v-for="p in composeOpts.recent_posts"
                   :key="p.name"
                   type="button"
-                  class="w-[104px] flex-none overflow-hidden rounded-lg border text-left"
+                  class="w-[104px] flex-none overflow-hidden rounded-6 border text-left"
                   :class="
                     composeForm.reference_post === p.name
                       ? 'border-blue-500 dark:border-blue-400 ring-1 ring-blue-500 dark:ring-blue-400'
@@ -565,14 +565,14 @@
           class="flex items-center justify-end gap-2 border-t border-outline-gray-1 px-4 py-3"
         >
           <button
-            class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-gray-7"
+            class="rounded-6 border border-outline-gray-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-gray-7"
             @click="showAiComposer = false"
           >
             {{ __('Cancelar') }}
           </button>
           <button
             v-if="composeMode === 'editorial'"
-            class="rounded-lg px-4 py-1.5 text-[12.5px] font-semibold text-white disabled:opacity-50"
+            class="rounded-6 px-4 py-1.5 text-[12.5px] font-semibold text-white disabled:opacity-50"
             style="background: var(--brand)"
             :disabled="
               composeBusy ||
@@ -607,7 +607,7 @@
         :class="
           isMobile
             ? 'flex h-full min-h-0 flex-col bg-surface-base'
-            : 'overflow-hidden rounded-xl bg-surface-base'
+            : 'overflow-hidden rounded-7 bg-surface-base'
         "
       >
         <div
@@ -632,7 +632,7 @@
           }}</label>
           <select
             v-model="onbShop"
-            class="fld mb-4 w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[13px]"
+            class="fld mb-4 w-full rounded-5 border border-outline-gray-2 px-2 py-1.5 text-[13px]"
             @change="onOnbShopChange"
           >
             <option v-for="s in shopOptions" :key="s.name" :value="s.name">
@@ -656,7 +656,7 @@
           <div
             v-for="u in employeesRes.data || []"
             :key="u"
-            class="mb-1.5 flex items-center justify-between rounded-md bg-surface-gray-1 px-2.5 py-1.5"
+            class="mb-1.5 flex items-center justify-between rounded-5 bg-surface-gray-1 px-2.5 py-1.5"
           >
             <span class="text-[12.5px] text-ink-gray-8">{{ u }}</span>
             <button
@@ -675,7 +675,7 @@
           <div class="flex items-center gap-2">
             <select
               v-model="newEmp"
-              class="fld flex-1 rounded-md border border-outline-gray-2 px-2 py-1.5 text-[13px]"
+              class="fld flex-1 rounded-5 border border-outline-gray-2 px-2 py-1.5 text-[13px]"
             >
               <option value="">{{ __('Elegir Marketing User…') }}</option>
               <option v-for="u in availableToAssign" :key="u" :value="u">
@@ -683,7 +683,7 @@
               </option>
             </select>
             <button
-              class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-50"
+              class="rounded-6 px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-50"
               style="background: var(--brand)"
               :disabled="onbBusy || !newEmp"
               @click="assignEmp"

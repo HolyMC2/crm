@@ -16,12 +16,12 @@
         <nav
           v-if="addonAvailable"
           :aria-label="__('Report area')"
-          class="flex rounded-lg bg-surface-gray-2 p-1"
+          class="flex rounded-6 bg-surface-gray-2 p-1"
         >
           <button
             v-for="tab in tabs"
             :key="tab.key"
-            class="min-h-11 rounded-md px-4 text-sm font-medium"
+            class="min-h-11 rounded-5 px-4 text-sm font-medium"
             :class="
               marketing === (tab.key === 'marketing')
                 ? 'bg-surface-base text-ink-gray-9'
@@ -35,7 +35,7 @@
         </nav>
       </header>
       <form
-        class="grid min-w-0 gap-3 rounded-lg border border-outline-gray-2 bg-surface-base p-3 sm:grid-cols-2 lg:grid-cols-4"
+        class="grid min-w-0 gap-3 rounded-6 border border-outline-gray-2 bg-surface-base p-3 sm:grid-cols-2 lg:grid-cols-4"
         @submit.prevent
       >
         <label class="min-w-0 text-sm text-ink-gray-6"
@@ -260,7 +260,7 @@ onBeforeUnmount(() => clearTimeout(timer))
 </script>
 <style scoped>
 .report-control {
-  @apply block min-h-11 w-full min-w-0 max-w-full rounded-md border border-outline-gray-2 bg-surface-gray-1 px-3 py-2 text-base text-ink-gray-8;
+  @apply block min-h-11 w-full min-w-0 max-w-full rounded-5 border border-outline-gray-2 bg-surface-gray-1 px-3 py-2 text-base text-ink-gray-8;
 }
 .reports-page :deep(input),
 .reports-page :deep([role='combobox']) {

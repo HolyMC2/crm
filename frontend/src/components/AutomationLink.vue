@@ -9,7 +9,7 @@
         return_to: `/crm${route.fullPath}`,
       },
     }"
-    class="inline-flex min-h-11 items-center rounded px-2 text-sm text-ink-gray-7 underline focus-visible:ring-2"
+    class="inline-flex min-h-11 items-center rounded-4 px-2 text-sm text-ink-gray-7 underline focus-visible:ring-2"
     >{{ __('Automations') }}</RouterLink
   >
 </template>

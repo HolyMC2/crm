@@ -36,7 +36,7 @@
         <!-- outcome + quality -->
         <div class="mb-4 flex items-center gap-3">
           <span
-            class="rounded-md px-2 py-[3px] text-[11.5px] font-semibold"
+            class="rounded-5 px-2 py-[3px] text-[11.5px] font-semibold"
             :class="outcomeChip(d.status)"
             >{{ d.status || '—' }}</span
           >
@@ -109,7 +109,7 @@
         </div>
         <button
           v-else
-          class="mb-4 rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-medium text-ink-gray-7 disabled:opacity-50"
+          class="mb-4 rounded-6 border border-outline-gray-2 px-3 py-1.5 text-[12px] font-medium text-ink-gray-7 disabled:opacity-50"
           :disabled="transcribing || !d.transcript"
           @click="transcribe"
         >
@@ -166,14 +166,14 @@
         />
         <div class="mt-2 flex gap-2">
           <button
-            class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-medium text-ink-gray-7"
+            class="rounded-6 border border-outline-gray-2 px-3 py-1.5 text-[12px] font-medium text-ink-gray-7"
             :disabled="saving"
             @click="saveNote"
           >
             {{ __('Guardar nota') }}
           </button>
           <button
-            class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-50"
+            class="rounded-6 px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-50"
             style="background: var(--brand)"
             :disabled="saving"
             @click="saveAndTask"

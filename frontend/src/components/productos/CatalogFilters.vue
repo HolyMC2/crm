@@ -8,7 +8,7 @@
       <button
         v-if="active"
         type="button"
-        class="rounded px-1.5 text-xs text-ink-gray-6 hover:text-ink-gray-9 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
+        class="rounded-4 px-1.5 text-xs text-ink-gray-6 hover:text-ink-gray-9 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
         :class="touch ? 'min-h-11' : 'min-h-7'"
         @click="emit('update', { grupo: '', existencias: '', foto: '' })"
       >
@@ -80,7 +80,7 @@
         v-if="groups.length > SHOWN"
         v-model="groupSearch"
         type="search"
-        class="mb-1 w-full rounded-md border border-outline-gray-2 bg-surface-base px-2 text-sm text-ink-gray-8 placeholder:text-ink-gray-4 focus:border-outline-gray-4 focus:ring-0"
+        class="mb-1 w-full rounded-5 border border-outline-gray-2 bg-surface-base px-2 text-sm text-ink-gray-8 placeholder:text-ink-gray-4 focus:border-outline-gray-4 focus:ring-0"
         :class="touch ? 'h-11' : 'h-8'"
         :placeholder="__('Search group')"
         :aria-label="__('Search group')"
@@ -122,7 +122,7 @@
       <button
         v-if="hiddenCount > 0"
         type="button"
-        class="mt-1 w-full rounded-md px-2 text-left text-sm font-medium text-ink-gray-8 hover:bg-surface-gray-2"
+        class="mt-1 w-full rounded-5 px-2 text-left text-sm font-medium text-ink-gray-8 hover:bg-surface-gray-2"
         :class="touch ? 'min-h-11' : 'min-h-8'"
         @click="showAll = true"
       >
@@ -131,7 +131,7 @@
       <button
         v-else-if="showAll && !groupSearch && groups.length > SHOWN"
         type="button"
-        class="mt-1 w-full rounded-md px-2 text-left text-sm text-ink-gray-6 hover:bg-surface-gray-2"
+        class="mt-1 w-full rounded-5 px-2 text-left text-sm text-ink-gray-6 hover:bg-surface-gray-2"
         :class="touch ? 'min-h-11' : 'min-h-8'"
         @click="showAll = false"
       >
@@ -232,7 +232,7 @@ const hiddenCount = computed(() =>
 )
 function optionClass(on) {
   return [
-    'flex w-full items-center gap-2 rounded-md px-2 text-left text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link',
+    'flex w-full items-center gap-2 rounded-5 px-2 text-left text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link',
     props.touch ? 'min-h-11' : 'min-h-8',
     on
       ? 'bg-surface-gray-3 font-medium text-ink-gray-9'

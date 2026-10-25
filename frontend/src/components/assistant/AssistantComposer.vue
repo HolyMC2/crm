@@ -10,7 +10,7 @@
     @submit.prevent="submit"
   >
     <div
-      class="rounded-2xl border border-outline-gray-2 bg-surface-gray-1 focus-within:ring-2 focus-within:ring-outline-gray-3"
+      class="rounded-8 border border-outline-gray-2 bg-surface-gray-1 focus-within:ring-2 focus-within:ring-outline-gray-3"
     >
       <AssistantAttachment
         v-if="assistant.attachment"

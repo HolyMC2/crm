@@ -19,7 +19,7 @@
     <div
       v-for="day in agendaDays"
       :key="day.key"
-      class="mb-2 rounded-lg border border-outline-gray-2 bg-surface-base p-2"
+      class="mb-2 rounded-6 border border-outline-gray-2 bg-surface-base p-2"
     >
       <div class="mb-1 flex items-center justify-between">
         <span
@@ -39,7 +39,7 @@
       <button
         v-for="p in postsByDay[day.key] || []"
         :key="p.name"
-        class="press mb-0.5 block w-full truncate rounded px-2 py-1 text-left text-[11.5px] font-medium"
+        class="press mb-0.5 block w-full truncate rounded-4 px-2 py-1 text-left text-[11.5px] font-medium"
         :class="[
           pillarChip(p.post_kind),
           p.status === 'Cancelado' ? 'line-through opacity-60' : '',
@@ -86,7 +86,7 @@
       <div
         v-for="day in days"
         :key="day.key"
-        class="min-h-[92px] cursor-pointer rounded-lg border p-1 text-left"
+        class="min-h-[92px] cursor-pointer rounded-6 border p-1 text-left"
         :class="[
           isBlackout(day)
             ? 'border-outline-gray-2 bg-surface-gray-3 opacity-60'
@@ -113,7 +113,7 @@
         <div
           v-for="rib in seasonByDay[day.key] || []"
           :key="rib.name"
-          class="mb-0.5 truncate rounded-sm bg-surface-amber-1 px-1 text-[8.5px] font-semibold leading-tight text-ink-amber-9 dark:bg-amber-300/15 dark:text-amber-200"
+          class="mb-0.5 truncate rounded-1 bg-surface-amber-1 px-1 text-[8.5px] font-semibold leading-tight text-ink-amber-9 dark:bg-amber-300/15 dark:text-amber-200"
           :title="rib.label"
         >
           {{ rib.isStart ? rib.label : rib.emoji }}
@@ -136,7 +136,7 @@
             v-for="p in cellPosts(day)"
             :key="p.name"
             draggable="true"
-            class="truncate rounded px-1 py-0.5 text-left text-[10.5px] font-medium"
+            class="truncate rounded-4 px-1 py-0.5 text-left text-[10.5px] font-medium"
             :class="[
               pillarChip(p.post_kind),
               p.status === 'Cancelado' ? 'line-through opacity-60' : '',
@@ -181,7 +181,7 @@
           </button>
           <button
             v-if="hiddenCount(day)"
-            class="rounded px-1 py-0.5 text-left text-[10px] font-semibold text-ink-gray-5 hover:bg-surface-gray-2 hover:text-ink-gray-8"
+            class="rounded-4 px-1 py-0.5 text-left text-[10px] font-semibold text-ink-gray-5 hover:bg-surface-gray-2 hover:text-ink-gray-8"
             @click.stop="expand(day)"
           >
             +{{ hiddenCount(day) }} {{ __('más') }}
@@ -196,7 +196,7 @@
       <span
         v-for="pl in PILLARS"
         :key="pl.kind"
-        class="rounded px-1.5 py-0.5 font-medium"
+        class="rounded-4 px-1.5 py-0.5 font-medium"
         :class="pl.chip"
         >{{ pl.emoji }} {{ pl.kind }}</span
       >
@@ -229,7 +229,7 @@
           v-for="p in drafts"
           :key="p.name"
           draggable="true"
-          class="rounded-md px-2 py-1 text-[11.5px] font-medium"
+          class="rounded-5 px-2 py-1 text-[11.5px] font-medium"
           :class="[
             pillarChip(p.post_kind),
             p.status === 'Cancelado' ? 'line-through opacity-60' : '',

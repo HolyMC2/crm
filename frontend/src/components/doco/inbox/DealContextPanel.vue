@@ -69,7 +69,7 @@
         </button>
       </div>
       <button
-        class="w-full rounded-lg px-2.5 py-1.5 text-[11.5px] font-semibold text-white"
+        class="w-full rounded-6 px-2.5 py-1.5 text-[11.5px] font-semibold text-white"
         style="background: var(--brand)"
         @click="call"
       >
@@ -92,7 +92,7 @@
             <span class="flex-none text-ink-gray-5">{{ __('Estado') }}</span>
             <Dropdown :options="statusOpts" align="end">
               <button
-                class="flex items-center gap-1 rounded bg-surface-gray-2 px-2 py-1 text-[11.5px] font-semibold text-ink-gray-8 hover:bg-surface-gray-3"
+                class="flex items-center gap-1 rounded-4 bg-surface-gray-2 px-2 py-1 text-[11.5px] font-semibold text-ink-gray-8 hover:bg-surface-gray-3"
               >
                 {{ stageLabel(row.status) || '—' }} ⌄
               </button>
@@ -123,7 +123,7 @@
               </span>
               <Dropdown :options="userOpts" align="end">
                 <button
-                  class="rounded bg-surface-gray-2 px-1.5 py-1 text-[11px] text-ink-gray-5 hover:bg-surface-gray-3"
+                  class="rounded-4 bg-surface-gray-2 px-1.5 py-1 text-[11px] text-ink-gray-5 hover:bg-surface-gray-3"
                   :aria-label="__('Asignar usuario')"
                 >
                   +
@@ -139,7 +139,7 @@
               <span
                 v-for="t in tags"
                 :key="t"
-                class="inline-flex items-center gap-0.5 rounded bg-surface-blue-1 px-1.5 py-px text-[10.5px] font-medium text-ink-blue-9"
+                class="inline-flex items-center gap-0.5 rounded-4 bg-surface-blue-1 px-1.5 py-px text-[10.5px] font-medium text-ink-blue-9"
               >
                 {{ t
                 }}<button
@@ -154,14 +154,14 @@
                 v-if="addingTag"
                 ref="tagInput"
                 v-model="newTag"
-                class="w-20 rounded border border-outline-gray-2 bg-surface-gray-2 px-1.5 py-px text-[10.5px] text-ink-gray-8 focus:bg-surface-base focus:outline-none focus:ring-0"
+                class="w-20 rounded-4 border border-outline-gray-2 bg-surface-gray-2 px-1.5 py-px text-[10.5px] text-ink-gray-8 focus:bg-surface-base focus:outline-none focus:ring-0"
                 :placeholder="__('etiqueta')"
                 @keyup.enter="addTag"
                 @blur="addTag"
               />
               <button
                 v-else
-                class="rounded bg-surface-gray-2 px-1.5 py-px text-[10.5px] text-ink-gray-5 hover:bg-surface-gray-3"
+                class="rounded-4 bg-surface-gray-2 px-1.5 py-px text-[10.5px] text-ink-gray-5 hover:bg-surface-gray-3"
                 :aria-label="__('Añadir etiqueta')"
                 @click="startAddTag"
               >
@@ -180,19 +180,19 @@
           </div>
           <div class="flex flex-col gap-1">
             <button
-              class="rounded-md px-2 py-1.5 text-left text-[11.5px] font-medium text-ink-green-8 hover:bg-surface-green-2"
+              class="rounded-5 px-2 py-1.5 text-left text-[11.5px] font-medium text-ink-green-8 hover:bg-surface-green-2"
               @click="macroListo"
             >
               → {{ __('Listo para entregar') }}
             </button>
             <button
-              class="rounded-md px-2 py-1.5 text-left text-[11.5px] font-medium text-ink-gray-7 hover:bg-surface-gray-2"
+              class="rounded-5 px-2 py-1.5 text-left text-[11.5px] font-medium text-ink-gray-7 hover:bg-surface-gray-2"
               @click="macroCompletado"
             >
               → {{ __('Marcar completado') }}
             </button>
             <button
-              class="rounded-md px-2 py-1.5 text-left text-[11.5px] font-medium text-ink-amber-9 hover:bg-surface-amber-1"
+              class="rounded-5 px-2 py-1.5 text-left text-[11.5px] font-medium text-ink-amber-9 hover:bg-surface-amber-1"
               @click="macroPago"
             >
               → {{ __('Recordatorio de pago')
@@ -225,7 +225,7 @@
         <div class="flex items-center justify-between gap-2">
           <span class="flex-none text-ink-gray-5">{{ __('Estado') }}</span>
           <span
-            class="rounded bg-surface-gray-2 px-1.5 py-px text-[10.5px] font-semibold text-ink-gray-7"
+            class="rounded-4 bg-surface-gray-2 px-1.5 py-px text-[10.5px] font-semibold text-ink-gray-7"
             >{{ stageLabel(dealSummary.status) || '—' }}</span
           >
         </div>
@@ -372,7 +372,7 @@
               >{{ grade }}</span
             >
             <span
-              class="rounded px-1.5 py-px text-[10px] font-semibold text-ink-green-8 bg-surface-green-2"
+              class="rounded-4 px-1.5 py-px text-[10px] font-semibold text-ink-green-8 bg-surface-green-2"
               >{{ gradeWord }}</span
             >
           </div>

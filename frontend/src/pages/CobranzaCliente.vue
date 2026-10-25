@@ -120,7 +120,7 @@
         <div
           v-if="doneNotice"
           role="status"
-          class="mb-4 space-y-2 rounded-lg bg-surface-green-1 p-3 text-sm text-ink-green-8"
+          class="mb-4 space-y-2 rounded-6 bg-surface-green-1 p-3 text-sm text-ink-green-8"
         >
           <p>{{ doneNotice }}</p>
           <div v-if="data.outstanding <= 0" class="flex flex-wrap gap-2">
@@ -240,7 +240,7 @@
         >
           <a
             v-if="data.phones.length"
-            class="flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl bg-surface-gray-2 px-1 text-center text-xs font-medium text-ink-gray-8"
+            class="flex min-h-16 flex-col items-center justify-center gap-1 rounded-7 bg-surface-gray-2 px-1 text-center text-xs font-medium text-ink-gray-8"
             :href="`tel:${data.phones[0].display.replace(/[^\d+]/g, '')}`"
           >
             <!-- «Llamar» dials; the thumb bar's «Llamada» logs one. -->
@@ -250,7 +250,7 @@
           <button
             v-if="caps.assign"
             type="button"
-            class="flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl bg-surface-gray-2 px-1 text-center text-xs font-medium text-ink-gray-8"
+            class="flex min-h-16 flex-col items-center justify-center gap-1 rounded-7 bg-surface-gray-2 px-1 text-center text-xs font-medium text-ink-gray-8"
             @click="openFollowup('followup')"
           >
             <LucideUserCheck class="h-5 w-5" />
@@ -259,7 +259,7 @@
           <button
             v-if="caps.statement"
             type="button"
-            class="flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl bg-surface-gray-2 px-1 text-center text-xs font-medium text-ink-gray-8"
+            class="flex min-h-16 flex-col items-center justify-center gap-1 rounded-7 bg-surface-gray-2 px-1 text-center text-xs font-medium text-ink-gray-8"
             @click="statementOpen = true"
           >
             <LucideFileText class="h-5 w-5" />
@@ -301,7 +301,7 @@
         <!-- Recordatorios automáticos: what happens next, and the way to resume. -->
         <div
           v-if="autoLine(data.auto, data.today)"
-          class="mb-4 flex flex-wrap items-center gap-2 rounded-lg bg-surface-gray-1 p-3 text-sm text-ink-gray-8"
+          class="mb-4 flex flex-wrap items-center gap-2 rounded-6 bg-surface-gray-1 p-3 text-sm text-ink-gray-8"
           data-auto-line
         >
           <LucideSend class="h-4 w-4 shrink-0 text-ink-gray-6" />
@@ -354,7 +354,7 @@
         <div
           v-if="problem"
           role="alert"
-          class="mb-3 rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7"
+          class="mb-3 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
         >
           <strong>{{ problem.title }}.</strong> {{ problem.detail }}
           <Button class="ml-2" :label="__('Retry', null, CTX)" @click="load" />
@@ -362,7 +362,7 @@
 
         <p
           v-if="!invoices.length"
-          class="rounded-lg bg-surface-gray-1 p-4 text-sm text-ink-gray-7"
+          class="rounded-6 bg-surface-gray-1 p-4 text-sm text-ink-gray-7"
         >
           {{ __('This customer owes nothing right now.') }}
         </p>
@@ -371,7 +371,7 @@
           <li
             v-for="inv in invoices"
             :key="inv.name"
-            class="rounded-lg border p-3"
+            class="rounded-6 border p-3"
             :class="
               focusName === inv.name
                 ? 'border-outline-gray-4 ring-1 ring-outline-gray-4'
@@ -448,7 +448,7 @@
 
             <div
               v-if="actionsOf(inv).primary.blocked"
-              class="mt-3 rounded-lg bg-surface-amber-1 p-2 text-sm"
+              class="mt-3 rounded-6 bg-surface-amber-1 p-2 text-sm"
             >
               <p>{{ actionsOf(inv).primary.blocked }}</p>
               <Button
@@ -537,7 +537,7 @@
           v-for="action in phoneActions"
           :key="action.key"
           type="button"
-          class="flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-xl text-xs font-medium"
+          class="flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-7 text-xs font-medium"
           :class="
             action.primary
               ? 'bg-surface-gray-10 text-ink-base'

@@ -49,7 +49,7 @@
         @end="onSortEnd"
       >
         <template #item="{ element: sec }">
-          <div class="flex flex-col gap-1.5 rounded-lg bg-surface-gray-2 p-2.5">
+          <div class="flex flex-col gap-1.5 rounded-6 bg-surface-gray-2 p-2.5">
             <div class="flex h-7 items-center justify-between">
               <div
                 class="flex min-w-0 items-center gap-2 text-base-medium text-ink-gray-9"
@@ -89,7 +89,7 @@
               <div
                 v-for="col in sec.columns"
                 :key="columnKey(col)"
-                class="flex min-w-0 flex-1 flex-col gap-1.5 rounded-md border border-dashed border-outline-gray-2 bg-surface-elevation-2 p-2"
+                class="flex min-w-0 flex-1 flex-col gap-1.5 rounded-5 border border-dashed border-outline-gray-2 bg-surface-elevation-2 p-2"
               >
                 <Draggable
                   :list="col.items"
@@ -165,7 +165,7 @@
         <LucideEyeOff class="size-3.5 text-ink-gray-5" />
         {{ __('Filled in automatically') }}
       </div>
-      <div class="rounded-lg bg-surface-gray-2 p-2.5">
+      <div class="rounded-6 bg-surface-gray-2 p-2.5">
         <p class="mb-2.5 text-p-sm text-ink-gray-6">
           {{
             __(
@@ -177,7 +177,7 @@
           <div
             v-for="h in b.hiddenFields.value"
             :key="h.fieldname"
-            class="flex flex-wrap items-center gap-2.5 rounded-md border border-outline-gray-2 bg-surface-elevation-2 px-2.5 py-2"
+            class="flex flex-wrap items-center gap-2.5 rounded-5 border border-outline-gray-2 bg-surface-elevation-2 px-2.5 py-2"
           >
             <component
               :is="fieldTypeIcon(h)"

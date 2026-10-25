@@ -1,8 +1,8 @@
 <template>
   <div v-if="!boot" class="space-y-3 p-6" aria-busy="true">
-    <div class="h-6 w-40 animate-pulse rounded bg-surface-gray-2" />
-    <div class="h-14 animate-pulse rounded bg-surface-gray-2" />
-    <div class="h-14 animate-pulse rounded bg-surface-gray-2" />
+    <div class="h-6 w-40 animate-pulse rounded-4 bg-surface-gray-2" />
+    <div class="h-14 animate-pulse rounded-4 bg-surface-gray-2" />
+    <div class="h-14 animate-pulse rounded-4 bg-surface-gray-2" />
   </div>
   <section
     v-else-if="!boot.enabled"
@@ -96,7 +96,7 @@
         @drop.prevent="onPageDrop"
       >
         <div
-          class="pointer-events-none flex flex-col items-center gap-2 rounded-xl border-2 border-dashed border-outline-gray-5 px-10 py-12 text-center"
+          class="pointer-events-none flex flex-col items-center gap-2 rounded-7 border-2 border-dashed border-outline-gray-5 px-10 py-12 text-center"
         >
           <LucideCloudUpload class="h-8 w-8 text-ink-gray-7" />
           <p class="text-lg font-semibold text-ink-gray-9">
@@ -258,7 +258,7 @@
             </div>
             <div
               v-if="target"
-              class="space-y-2 rounded-lg border border-outline-gray-2 bg-surface-gray-1 p-3"
+              class="space-y-2 rounded-6 border border-outline-gray-2 bg-surface-gray-1 p-3"
             >
               <div class="flex items-center gap-2">
                 <p class="min-w-0 flex-1 text-sm text-ink-gray-8">
@@ -331,7 +331,7 @@
               <div
                 v-for="n in 6"
                 :key="n"
-                class="h-14 animate-pulse rounded bg-surface-gray-2"
+                class="h-14 animate-pulse rounded-4 bg-surface-gray-2"
               />
             </div>
             <div v-else-if="listProblem" class="px-4">
@@ -366,7 +366,7 @@
                     withDone(returnTo, lastDone.doctype, lastDone.reference) ||
                     returnTo
                   "
-                  class="inline-flex min-h-11 items-center rounded border border-outline-gray-2 px-4 text-base text-ink-gray-8 sm:min-h-8"
+                  class="inline-flex min-h-11 items-center rounded-4 border border-outline-gray-2 px-4 text-base text-ink-gray-8 sm:min-h-8"
                   >{{
                     __('Back to {0}', [
                       returnLabel || __('the previous record'),
@@ -401,7 +401,7 @@
                   @click="open(row.name)"
                 >
                   <span
-                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-gray-2"
+                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-6 bg-surface-gray-2"
                     :title="kindLabel(row.document_kind)"
                   >
                     <Icon

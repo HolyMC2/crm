@@ -8,12 +8,12 @@
       type="search"
       placeholder="Buscar campo"
       aria-label="Buscar campo"
-      class="min-h-11 w-full rounded-lg border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9"
+      class="min-h-11 w-full rounded-6 border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9"
     />
     <p v-if="!shown.length" class="px-1 py-3 text-base text-ink-gray-6">
       Ningún campo con ese nombre.
     </p>
-    <ul class="overflow-hidden rounded-lg border border-outline-gray-1">
+    <ul class="overflow-hidden rounded-6 border border-outline-gray-1">
       <li v-for="field in shown" :key="field.fieldname">
         <ListRow
           :icon="field.table ? 'lucide-file-text' : ''"

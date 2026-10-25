@@ -15,7 +15,7 @@
     <article
       v-for="f in rows"
       :key="`${f.kind}-${f.id}`"
-      class="rounded-xl border border-outline-gray-2 bg-surface-base"
+      class="rounded-7 border border-outline-gray-2 bg-surface-base"
     >
       <div class="flex flex-wrap items-center gap-3 p-4">
         <component

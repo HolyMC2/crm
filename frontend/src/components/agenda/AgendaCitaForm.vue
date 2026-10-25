@@ -2,12 +2,12 @@
   <form class="flex flex-col gap-4" novalidate @submit.prevent="submit">
     <div v-if="loading" class="space-y-2" aria-busy="true" role="status">
       <p class="text-base text-ink-gray-7">{{ __('Loading free times…') }}</p>
-      <div class="h-9 animate-pulse rounded bg-surface-gray-2" />
+      <div class="h-9 animate-pulse rounded-4 bg-surface-gray-2" />
     </div>
     <div
       v-else-if="loadError || problems.length"
       role="alert"
-      class="rounded-lg border border-outline-gray-2 p-3"
+      class="rounded-6 border border-outline-gray-2 p-3"
     >
       <p class="text-base-medium text-ink-gray-9">
         {{ __('Online appointments need a little setup first.') }}
@@ -64,13 +64,13 @@
             v-model="query"
             type="search"
             autocomplete="off"
-            class="mt-1 min-h-11 w-full rounded border border-outline-gray-2 bg-surface-base px-3 text-base"
+            class="mt-1 min-h-11 w-full rounded-4 border border-outline-gray-2 bg-surface-base px-3 text-base"
             :placeholder="__('Search by name or phone')"
             @input="search"
           />
           <ul
             v-if="matches.length"
-            class="mt-1 rounded border border-outline-gray-2"
+            class="mt-1 rounded-4 border border-outline-gray-2"
           >
             <li v-for="row in matches" :key="row.name">
               <button
@@ -101,7 +101,7 @@
         <select
           :id="ids.service"
           v-model="service"
-          class="mt-1 min-h-11 w-full rounded border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9"
+          class="mt-1 min-h-11 w-full rounded-4 border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9"
         >
           <option value="">{{ __('Choose a service') }}</option>
           <option v-for="row in services" :key="row.id" :value="row.id">
@@ -116,7 +116,7 @@
         <select
           :id="ids.day"
           v-model="day"
-          class="mt-1 min-h-11 w-full rounded border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9"
+          class="mt-1 min-h-11 w-full rounded-4 border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9"
         >
           <option v-for="row in days" :key="row.date" :value="row.date">
             {{ dayLabel(row.date) }}
@@ -133,7 +133,7 @@
             v-for="slot in slotsOn(days, day)"
             :key="slot.start"
             type="button"
-            class="min-h-11 rounded-md border px-3 text-base"
+            class="min-h-11 rounded-5 border px-3 text-base"
             :class="
               start === slot.start
                 ? 'border-outline-gray-5 bg-surface-gray-3 font-semibold text-ink-gray-9'
@@ -155,7 +155,7 @@
           v-model="notes"
           rows="3"
           maxlength="600"
-          class="mt-1 w-full rounded border border-outline-gray-2 bg-surface-base px-3 py-2 text-base"
+          class="mt-1 w-full rounded-4 border border-outline-gray-2 bg-surface-base px-3 py-2 text-base"
         />
       </div>
       <AgendaGuard

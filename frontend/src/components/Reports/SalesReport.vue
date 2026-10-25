@@ -92,7 +92,7 @@
     <p
       v-if="report?.groups_truncated && !loading && !error"
       role="status"
-      class="rounded-lg border border-outline-gray-2 bg-surface-base p-3 text-sm text-ink-gray-6"
+      class="rounded-6 border border-outline-gray-2 bg-surface-base p-3 text-sm text-ink-gray-6"
     >
       {{
         __(
@@ -681,10 +681,10 @@ onBeforeUnmount(() => {
 </script>
 <style scoped>
 .report-button {
-  @apply min-h-11 max-w-full rounded-lg border border-outline-gray-2 bg-surface-base px-3 py-2 text-sm text-ink-gray-9 hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50;
+  @apply min-h-11 max-w-full rounded-6 border border-outline-gray-2 bg-surface-base px-3 py-2 text-sm text-ink-gray-9 hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50;
 }
 .report-stat {
-  @apply flex min-h-11 min-w-0 flex-col gap-2 rounded-lg border border-outline-gray-2 bg-surface-base p-4 text-left hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2;
+  @apply flex min-h-11 min-w-0 flex-col gap-2 rounded-6 border border-outline-gray-2 bg-surface-base p-4 text-left hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2;
 }
 .report-stat strong {
   @apply break-words text-xl tabular-nums;
@@ -693,7 +693,7 @@ onBeforeUnmount(() => {
   @apply text-xs text-ink-gray-6;
 }
 .report-section {
-  @apply min-w-0 space-y-3 rounded-lg border border-outline-gray-2 bg-surface-base p-4;
+  @apply min-w-0 space-y-3 rounded-6 border border-outline-gray-2 bg-surface-base p-4;
 }
 .report-row {
   @apply flex flex-col gap-3 border-t border-outline-gray-2 py-3;

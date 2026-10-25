@@ -11,7 +11,7 @@
   <p
     v-if="unavailable"
     role="status"
-    class="my-4 rounded-lg border border-outline-gray-2 p-3 text-sm text-ink-gray-6"
+    class="my-4 rounded-6 border border-outline-gray-2 p-3 text-sm text-ink-gray-6"
   >
     Una conexión de este espacio necesita una revisión de configuración. Puedes
     continuar trabajando en CRM y solicitar apoyo a la administración.

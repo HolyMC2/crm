@@ -22,7 +22,7 @@
          deal is somewhere else — show where it actually is. -->
     <span
       v-if="model.unknown"
-      class="flex-none rounded-md border border-dashed border-outline-gray-3 px-2 py-[5px] text-[11.5px] font-medium text-ink-gray-5"
+      class="flex-none rounded-5 border border-dashed border-outline-gray-3 px-2 py-[5px] text-[11.5px] font-medium text-ink-gray-5"
       :title="__('Etapa fuera del embudo activo')"
     >
       {{ stageLabel(current) }}
@@ -30,7 +30,7 @@
 
     <div
       v-if="model.steps.length"
-      class="flex flex-none items-center overflow-hidden rounded-lg border border-outline-gray-2"
+      class="flex flex-none items-center overflow-hidden rounded-6 border border-outline-gray-2"
     >
       <Tooltip v-for="s in model.steps" :key="s.name" :text="stageHint(s)">
         <button

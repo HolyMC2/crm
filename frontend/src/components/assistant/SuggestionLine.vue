@@ -5,7 +5,7 @@
        screen, dismissable, never animated (ASSISTANT.md). -->
   <div
     v-if="visible"
-    class="flex min-h-12 items-center gap-1 rounded-xl border border-outline-gray-2 bg-surface-base pl-3"
+    class="flex min-h-12 items-center gap-1 rounded-7 border border-outline-gray-2 bg-surface-base pl-3"
     data-testid="assistant-suggestion"
   >
     <button
@@ -22,7 +22,7 @@
     </button>
     <button
       type="button"
-      class="flex size-11 flex-none items-center justify-center rounded-lg text-ink-gray-6 hover:bg-surface-gray-2"
+      class="flex size-11 flex-none items-center justify-center rounded-6 text-ink-gray-6 hover:bg-surface-gray-2"
       :aria-label="__('Dismiss suggestion')"
       :title="__('Dismiss suggestion')"
       data-testid="assistant-suggestion-dismiss"

@@ -49,7 +49,7 @@
       <p
         v-if="problem"
         role="alert"
-        class="rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7"
+        class="rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
       >
         {{ problem }}
       </p>

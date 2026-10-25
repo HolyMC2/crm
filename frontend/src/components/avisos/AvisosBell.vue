@@ -12,7 +12,7 @@
       <AvisosPanel v-else v-model:open="avisosPanelOpen" />
     </div>
     <button
-      class="relative flex flex-none items-center rounded-lg hover:bg-surface-gray-2"
+      class="relative flex flex-none items-center rounded-6 hover:bg-surface-gray-2"
       :class="
         rail && expanded
           ? 'h-9 w-full gap-3 px-2.5 text-sm text-ink-gray-7'

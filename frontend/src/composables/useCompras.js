@@ -230,7 +230,7 @@ export function prefillLine(option, stockQty) {
       uoms,
       note: exact
         ? tr('{0} {1} = {2} {3}', [qty(amount), stock, qty(units), purchase])
-        : tr('{0} {1}, rounded up to {2} {3} ({4} {5})', [
+        : tr('{0} {1}, rounded-4 up to {2} {3} ({4} {5})', [
             qty(amount),
             stock,
             qty(units),

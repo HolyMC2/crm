@@ -1,6 +1,6 @@
 <template>
   <section
-    class="min-w-0 rounded-lg border border-outline-gray-2 bg-surface-base p-4"
+    class="min-w-0 rounded-6 border border-outline-gray-2 bg-surface-base p-4"
     :aria-label="title"
     :aria-busy="loading"
   >
@@ -13,7 +13,7 @@
       <div
         v-for="width in ['w-3/4', 'w-full', 'w-1/2']"
         :key="width"
-        class="h-8 rounded bg-surface-gray-2 motion-safe:animate-pulse"
+        class="h-8 rounded-4 bg-surface-gray-2 motion-safe:animate-pulse"
         :class="width"
       />
     </div>
@@ -24,7 +24,7 @@
     >
       <p>{{ error }}</p>
       <button
-        class="min-h-11 rounded border border-outline-gray-2 px-3 hover:bg-surface-gray-2"
+        class="min-h-11 rounded-4 border border-outline-gray-2 px-3 hover:bg-surface-gray-2"
         @click="$emit('retry')"
       >
         {{ __('Retry report') }}

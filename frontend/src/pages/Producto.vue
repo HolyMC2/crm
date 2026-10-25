@@ -8,7 +8,7 @@
       <!-- On a phone the shell's app bar has the back arrow (meta.listParent). -->
       <nav v-if="!isPhone" class="mb-2 flex flex-wrap items-center gap-2">
         <button
-          class="flex min-h-11 items-center gap-1 rounded-md pr-2 text-sm text-ink-gray-7 hover:text-ink-gray-9 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
+          class="flex min-h-11 items-center gap-1 rounded-5 pr-2 text-sm text-ink-gray-7 hover:text-ink-gray-9 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
           @click="goBack"
         >
           <LucideArrowLeft class="h-4 w-4" />
@@ -19,7 +19,7 @@
       <section
         v-if="guard"
         role="alert"
-        class="mx-auto max-w-xl space-y-4 rounded-xl border border-outline-gray-2 bg-surface-base p-6"
+        class="mx-auto max-w-xl space-y-4 rounded-7 border border-outline-gray-2 bg-surface-base p-6"
       >
         <h1 class="text-xl font-semibold">{{ guard.title }}</h1>
         <p class="text-base text-ink-gray-7">{{ guard.detail }}</p>
@@ -36,37 +36,37 @@
         class="space-y-4"
       >
         <div
-          class="flex gap-5 rounded-xl border border-outline-gray-2 bg-surface-base p-5"
+          class="flex gap-5 rounded-7 border border-outline-gray-2 bg-surface-base p-5"
         >
-          <div class="h-32 w-32 animate-pulse rounded-xl bg-surface-gray-2" />
+          <div class="h-32 w-32 animate-pulse rounded-7 bg-surface-gray-2" />
           <div class="flex-1 space-y-3 pt-2">
-            <div class="h-3 w-40 animate-pulse rounded bg-surface-gray-2" />
-            <div class="h-6 w-72 animate-pulse rounded bg-surface-gray-2" />
-            <div class="h-3 w-56 animate-pulse rounded bg-surface-gray-2" />
+            <div class="h-3 w-40 animate-pulse rounded-4 bg-surface-gray-2" />
+            <div class="h-6 w-72 animate-pulse rounded-4 bg-surface-gray-2" />
+            <div class="h-3 w-56 animate-pulse rounded-4 bg-surface-gray-2" />
           </div>
         </div>
         <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
-          <div class="h-48 animate-pulse rounded-xl bg-surface-gray-2" />
-          <div class="h-48 animate-pulse rounded-xl bg-surface-gray-2" />
+          <div class="h-48 animate-pulse rounded-7 bg-surface-gray-2" />
+          <div class="h-48 animate-pulse rounded-7 bg-surface-gray-2" />
         </div>
       </div>
 
       <template v-else-if="data">
         <!-- Hero: photo, where it lives, what it is, what to do next. -->
         <header
-          class="grid gap-4 rounded-xl border border-outline-gray-2 bg-surface-base p-4 sm:grid-cols-[auto_minmax(0,1fr)] sm:gap-5 sm:p-5 xl:grid-cols-[auto_minmax(0,1fr)_auto]"
+          class="grid gap-4 rounded-7 border border-outline-gray-2 bg-surface-base p-4 sm:grid-cols-[auto_minmax(0,1fr)] sm:gap-5 sm:p-5 xl:grid-cols-[auto_minmax(0,1fr)_auto]"
         >
           <div class="flex flex-col items-center gap-2 sm:items-start">
             <img
               v-if="product.image && !photoBroken"
               :src="product.image"
               :alt="product.item_name || product.name"
-              class="h-36 w-36 rounded-xl object-cover ring-1 ring-outline-gray-2 sm:h-40 sm:w-40"
+              class="h-36 w-36 rounded-7 object-cover ring-1 ring-outline-gray-2 sm:h-40 sm:w-40"
               @error="photoBroken = true"
             />
             <div
               v-else
-              class="flex h-36 w-36 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-outline-gray-3 bg-surface-gray-1 text-center sm:h-40 sm:w-40"
+              class="flex h-36 w-36 flex-col items-center justify-center gap-1 rounded-7 border border-dashed border-outline-gray-3 bg-surface-gray-1 text-center sm:h-40 sm:w-40"
             >
               <LucideImage class="h-7 w-7 text-ink-gray-4" aria-hidden="true" />
               <span class="px-2 text-xs text-ink-gray-6">{{
@@ -141,7 +141,7 @@
                 <span v-if="index" class="shrink-0" aria-hidden="true">›</span>
                 <RouterLink
                   :to="groupRoute(group)"
-                  class="min-w-0 truncate rounded hover:text-ink-gray-8 hover:underline"
+                  class="min-w-0 truncate rounded-4 hover:text-ink-gray-8 hover:underline"
                   :class="
                     index === groupPath.length - 1 ? 'shrink-0 max-w-full' : ''
                   "
@@ -255,7 +255,7 @@
                 <a
                   v-if="entry.href"
                   :href="entry.href"
-                  class="inline-flex min-h-11 items-center gap-1.5 rounded-md bg-surface-gray-2 px-3 text-base text-ink-gray-8 hover:bg-surface-gray-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-8"
+                  class="inline-flex min-h-11 items-center gap-1.5 rounded-5 bg-surface-gray-2 px-3 text-base text-ink-gray-8 hover:bg-surface-gray-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-8"
                   :title="entry.title || undefined"
                 >
                   <Icon
@@ -290,7 +290,7 @@
           >
             <a
               href="#precios"
-              class="rounded-lg bg-surface-gray-1 px-4 py-3 ring-1 ring-outline-gray-1 hover:bg-surface-gray-2"
+              class="rounded-6 bg-surface-gray-1 px-4 py-3 ring-1 ring-outline-gray-1 hover:bg-surface-gray-2"
             >
               <dt class="text-xs text-ink-gray-6">
                 {{
@@ -334,7 +334,7 @@
             <a
               v-if="isTemplate"
               href="#variantes"
-              class="rounded-lg bg-surface-gray-1 px-4 py-3 ring-1 ring-outline-gray-1 hover:bg-surface-gray-2"
+              class="rounded-6 bg-surface-gray-1 px-4 py-3 ring-1 ring-outline-gray-1 hover:bg-surface-gray-2"
             >
               <dt class="text-xs text-ink-gray-6">
                 {{ __('Variants', null, 'Productos') }}
@@ -351,7 +351,7 @@
             <a
               v-else
               href="#existencias"
-              class="rounded-lg bg-surface-gray-1 px-4 py-3 ring-1 ring-outline-gray-1 hover:bg-surface-gray-2"
+              class="rounded-6 bg-surface-gray-1 px-4 py-3 ring-1 ring-outline-gray-1 hover:bg-surface-gray-2"
             >
               <dt class="text-xs text-ink-gray-6">
                 {{ __('On hand', null, 'Productos') }}
@@ -402,7 +402,7 @@
         <div
           v-if="unit.mismatch"
           role="status"
-          class="mt-4 rounded-lg bg-surface-amber-1 p-3 text-sm text-ink-amber-7"
+          class="mt-4 rounded-6 bg-surface-amber-1 p-3 text-sm text-ink-amber-7"
         >
           {{
             __(
@@ -427,7 +427,7 @@
         <div
           v-if="notice"
           role="status"
-          class="mt-4 rounded-lg bg-surface-green-1 p-3 text-sm text-ink-green-8"
+          class="mt-4 rounded-6 bg-surface-green-1 p-3 text-sm text-ink-green-8"
         >
           {{ notice.text }}
           <Button
@@ -450,7 +450,7 @@
         <div
           v-if="problem"
           role="alert"
-          class="mt-4 rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7"
+          class="mt-4 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
         >
           <strong>{{ problem.title }}.</strong> {{ problem.detail }}
           <Button
@@ -476,7 +476,7 @@
             />
             <section
               id="precios"
-              class="scroll-mt-4 rounded-xl border border-outline-gray-2 bg-surface-base"
+              class="scroll-mt-4 rounded-7 border border-outline-gray-2 bg-surface-base"
             >
               <header
                 class="flex flex-wrap items-center gap-2 border-b border-outline-gray-1 px-4 py-3"
@@ -503,7 +503,7 @@
               </header>
               <p
                 v-if="data.prices.setup"
-                class="mx-4 mt-3 rounded-lg bg-surface-amber-1 p-3 text-sm text-ink-amber-7"
+                class="mx-4 mt-3 rounded-6 bg-surface-amber-1 p-3 text-sm text-ink-amber-7"
               >
                 {{ data.prices.setup.reason }}
               </p>
@@ -543,7 +543,7 @@
             <section
               v-if="!isTemplate"
               id="existencias"
-              class="scroll-mt-4 rounded-xl border border-outline-gray-2 bg-surface-base"
+              class="scroll-mt-4 rounded-7 border border-outline-gray-2 bg-surface-base"
             >
               <!-- «Mínimos por tienda» (Shell SPEC §6 DD9) when the record
                    brings them: each store's row also holds its minimum. -->
@@ -589,7 +589,7 @@
               </header>
               <div
                 v-if="data.stock.service"
-                class="m-4 flex items-start gap-3 rounded-lg border border-outline-gray-2 bg-surface-gray-1 p-3 text-sm text-ink-gray-7"
+                class="m-4 flex items-start gap-3 rounded-6 border border-outline-gray-2 bg-surface-gray-1 p-3 text-sm text-ink-gray-7"
               >
                 <LucideBriefcase
                   class="mt-0.5 h-5 w-5 shrink-0 text-ink-gray-5"
@@ -624,7 +624,7 @@
               </p>
               <div
                 v-if="stockSeen && !storeRows.length"
-                class="m-4 flex flex-wrap items-center gap-3 rounded-lg border border-dashed border-outline-gray-3 p-3 text-sm text-ink-gray-7"
+                class="m-4 flex flex-wrap items-center gap-3 rounded-6 border border-dashed border-outline-gray-3 p-3 text-sm text-ink-gray-7"
               >
                 <span
                   class="lucide-package-open h-5 w-5 shrink-0 text-ink-gray-5"
@@ -670,7 +670,7 @@
                     <button
                       v-if="row.minimum"
                       type="button"
-                      class="-mx-1 block min-h-11 w-[calc(100%+0.5rem)] rounded-md px-1 text-left hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-0"
+                      class="-mx-1 block min-h-11 w-[calc(100%+0.5rem)] rounded-5 px-1 text-left hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-0"
                       aria-haspopup="dialog"
                       data-minimos-open
                       @click="openMinimum(row.warehouse)"
@@ -741,7 +741,7 @@
                                   'Productos',
                                 )
                           "
-                          class="inline-flex h-6 items-center gap-1 rounded-md bg-surface-gray-2 px-2 text-xs text-ink-gray-8"
+                          class="inline-flex h-6 items-center gap-1 rounded-5 bg-surface-gray-2 px-2 text-xs text-ink-gray-8"
                           :class="
                             data.inventory?.scanner
                               ? 'hover:bg-surface-gray-3'
@@ -859,19 +859,19 @@
                         >
                           <a
                             :href="countNowUrl(row)"
-                            class="inline-flex min-h-11 items-center rounded-md bg-surface-gray-2 px-3 text-sm text-ink-gray-8 hover:bg-surface-gray-3 sm:min-h-7"
+                            class="inline-flex min-h-11 items-center rounded-5 bg-surface-gray-2 px-3 text-sm text-ink-gray-8 hover:bg-surface-gray-3 sm:min-h-7"
                             >{{ __('Count now') }}</a
                           >
                           <a
                             v-if="row.cajones.length"
                             :href="moveUrl(row)"
-                            class="inline-flex min-h-11 items-center rounded-md bg-surface-gray-2 px-3 text-sm text-ink-gray-8 hover:bg-surface-gray-3 sm:min-h-7"
+                            class="inline-flex min-h-11 items-center rounded-5 bg-surface-gray-2 px-3 text-sm text-ink-gray-8 hover:bg-surface-gray-3 sm:min-h-7"
                             >{{ __('Move to another bin') }}</a
                           >
                           <a
                             v-else
                             :href="assignUrl(row)"
-                            class="inline-flex min-h-11 items-center rounded-md bg-surface-gray-2 px-3 text-sm text-ink-gray-8 hover:bg-surface-gray-3 sm:min-h-7"
+                            class="inline-flex min-h-11 items-center rounded-5 bg-surface-gray-2 px-3 text-sm text-ink-gray-8 hover:bg-surface-gray-3 sm:min-h-7"
                             >{{ __('Assign bin') }}</a
                           >
                         </template>
@@ -898,7 +898,7 @@
                     <span
                       v-if="row.negative"
                       role="note"
-                      class="mt-2 block space-y-1 rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-8"
+                      class="mt-2 block space-y-1 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-8"
                     >
                       <span class="block font-medium">{{
                         __(
@@ -1055,7 +1055,7 @@
             <section
               v-if="!isTemplate"
               id="movimientos"
-              class="scroll-mt-4 rounded-xl border border-outline-gray-2 bg-surface-base"
+              class="scroll-mt-4 rounded-7 border border-outline-gray-2 bg-surface-base"
             >
               <header
                 class="flex items-center gap-2 border-b border-outline-gray-1 px-4 py-3"
@@ -1120,7 +1120,7 @@
             <!-- Who follows up on this product, by when (Shell D8). -->
             <RecordPendientes
               v-if="!isTemplate && product.name"
-              class="rounded-xl border border-outline-gray-2 bg-surface-base p-4"
+              class="rounded-7 border border-outline-gray-2 bg-surface-base p-4"
               reference-type="Item"
               :reference-name="product.name"
               :reference-label="product.item_name || product.name"
@@ -1129,7 +1129,7 @@
 
             <section
               id="historial"
-              class="scroll-mt-4 rounded-xl border border-outline-gray-2 bg-surface-base"
+              class="scroll-mt-4 rounded-7 border border-outline-gray-2 bg-surface-base"
             >
               <header
                 class="flex items-center gap-2 border-b border-outline-gray-1 px-4 py-3"
@@ -1232,7 +1232,7 @@
           <aside class="min-w-0 space-y-4 lg:space-y-5">
             <section
               v-if="data.cost"
-              class="rounded-xl border border-outline-gray-2 bg-surface-base"
+              class="rounded-7 border border-outline-gray-2 bg-surface-base"
               :aria-label="__('Cost and margin')"
             >
               <header
@@ -1268,7 +1268,7 @@
             </section>
 
             <section
-              class="rounded-xl border border-outline-gray-2 bg-surface-base"
+              class="rounded-7 border border-outline-gray-2 bg-surface-base"
             >
               <header
                 class="flex items-center gap-2 border-b border-outline-gray-1 px-4 py-3"
@@ -1304,7 +1304,7 @@
             </section>
 
             <section
-              class="rounded-xl border border-outline-gray-2 bg-surface-base"
+              class="rounded-7 border border-outline-gray-2 bg-surface-base"
             >
               <header
                 class="flex items-center gap-2 border-b border-outline-gray-1 px-4 py-3"
@@ -1361,7 +1361,7 @@
             </section>
 
             <section
-              class="rounded-xl border border-outline-gray-2 bg-surface-base"
+              class="rounded-7 border border-outline-gray-2 bg-surface-base"
             >
               <header class="border-b border-outline-gray-1 px-4 py-3">
                 <h2 class="text-base font-semibold text-ink-gray-9">
@@ -1403,7 +1403,7 @@
             <section
               v-if="data.units"
               id="unidades"
-              class="scroll-mt-4 rounded-xl border border-outline-gray-2 bg-surface-base"
+              class="scroll-mt-4 rounded-7 border border-outline-gray-2 bg-surface-base"
             >
               <header
                 class="flex items-center gap-2 border-b border-outline-gray-1 px-4 py-3"
@@ -1487,7 +1487,7 @@
 
             <section
               id="compras"
-              class="scroll-mt-4 rounded-xl border border-outline-gray-2 bg-surface-base"
+              class="scroll-mt-4 rounded-7 border border-outline-gray-2 bg-surface-base"
             >
               <header
                 class="flex items-center gap-2 border-b border-outline-gray-1 px-4 py-3"
@@ -1547,7 +1547,7 @@
 
             <section
               id="ventas"
-              class="scroll-mt-4 rounded-xl border border-outline-gray-2 bg-surface-base"
+              class="scroll-mt-4 rounded-7 border border-outline-gray-2 bg-surface-base"
             >
               <header
                 class="flex items-center gap-2 border-b border-outline-gray-1 px-4 py-3"
@@ -2055,7 +2055,7 @@ const ACTION_ICONS = {
 // The record's actions, primary first, and «Imprimir etiqueta» in Mercado.
 // Phone quick actions (Records 3): equal tonal pills, the label under each.
 const PILL =
-  'flex min-w-0 flex-[1_1_64px] flex-col items-center gap-1.5 rounded-lg text-center text-xs leading-tight text-ink-gray-8 [text-wrap:balance] focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link'
+  'flex min-w-0 flex-[1_1_64px] flex-col items-center gap-1.5 rounded-6 text-center text-xs leading-tight text-ink-gray-8 [text-wrap:balance] focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link'
 const PILL_ICON =
   'flex h-11 w-full items-center justify-center rounded-full bg-surface-gray-2 text-ink-gray-9 active:bg-surface-gray-3'
 // «Cotizar» (D2 Ventas): a new cotización with this product as its first row

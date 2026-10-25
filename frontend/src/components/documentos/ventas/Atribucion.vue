@@ -38,7 +38,7 @@
       <li v-if="dealTo">
         <RouterLink
           :to="dealTo"
-          class="flex min-h-12 items-center gap-3 rounded-lg py-2 hover:bg-surface-gray-1"
+          class="flex min-h-12 items-center gap-3 rounded-6 py-2 hover:bg-surface-gray-1"
           data-testid="ventas-atribucion-trato"
         >
           <span

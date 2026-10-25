@@ -41,14 +41,14 @@
             </span>
             <div class="flex flex-none items-center gap-1.5">
               <button
-                class="press rounded-md border border-outline-amber-4 bg-surface-base px-2 py-0.5 text-[11.5px] font-semibold text-ink-amber-9 hover:bg-surface-amber-2"
+                class="press rounded-5 border border-outline-amber-4 bg-surface-base px-2 py-0.5 text-[11.5px] font-semibold text-ink-amber-9 hover:bg-surface-amber-2"
                 @click="$emit('open', d.doctype, d.name)"
               >
                 {{ __('Ver') }}
               </button>
               <button
                 v-if="canMerge"
-                class="press rounded-md border border-outline-amber-4 bg-surface-base px-2 py-0.5 text-[11.5px] font-semibold text-ink-amber-9 hover:bg-surface-amber-2"
+                class="press rounded-5 border border-outline-amber-4 bg-surface-base px-2 py-0.5 text-[11.5px] font-semibold text-ink-amber-9 hover:bg-surface-amber-2"
                 @click="askMerge(d)"
               >
                 {{ __('Fusionar…') }}

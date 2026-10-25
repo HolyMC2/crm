@@ -19,7 +19,7 @@
   >
     <div class="absolute inset-0 bg-black/30" @click="close" />
     <div
-      class="relative flex h-full w-full flex-col overflow-hidden bg-surface-base dark:bg-surface-gray-1 sm:h-auto sm:max-h-[80vh] sm:w-[560px] sm:rounded-2xl sm:shadow-xl"
+      class="relative flex h-full w-full flex-col overflow-hidden bg-surface-base dark:bg-surface-gray-1 sm:h-auto sm:max-h-[80vh] sm:w-[560px] sm:rounded-8 sm:shadow-xl"
     >
       <!-- header + search -->
       <div class="flex-none border-b border-outline-gray-1 px-4 pb-3 pt-3.5">

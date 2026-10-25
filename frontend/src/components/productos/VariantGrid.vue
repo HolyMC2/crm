@@ -1,7 +1,7 @@
 <template>
   <section
     id="variantes"
-    class="scroll-mt-4 rounded-xl border border-outline-gray-2 bg-surface-base"
+    class="scroll-mt-4 rounded-7 border border-outline-gray-2 bg-surface-base"
   >
     <header
       class="flex flex-wrap items-center gap-2 border-b border-outline-gray-1 px-4 py-3"
@@ -12,7 +12,7 @@
       <span class="text-sm tabular-nums text-ink-gray-6">{{ countLabel }}</span>
     </header>
     <p
-      class="m-4 flex items-start gap-3 rounded-lg border border-outline-gray-2 bg-surface-gray-1 p-3 text-sm text-ink-gray-7"
+      class="m-4 flex items-start gap-3 rounded-6 border border-outline-gray-2 bg-surface-gray-1 p-3 text-sm text-ink-gray-7"
     >
       <LucideLayers
         class="mt-0.5 h-4 w-4 shrink-0 text-ink-gray-5"
@@ -34,7 +34,7 @@
         <input
           v-model="search"
           type="search"
-          class="h-11 rounded-md border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9 sm:h-8 sm:text-sm"
+          class="h-11 rounded-5 border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9 sm:h-8 sm:text-sm"
           :placeholder="__('Name, code or barcode', null, 'Productos')"
         />
       </label>
@@ -46,7 +46,7 @@
         <span class="text-ink-gray-6">{{ facet.attribute }}</span>
         <select
           :value="chosen[facet.attribute] || ''"
-          class="h-11 rounded-md border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9 sm:h-8 sm:text-sm"
+          class="h-11 rounded-5 border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9 sm:h-8 sm:text-sm"
           @change="choose(facet.attribute, $event.target.value)"
         >
           <option value="">{{ __('All', null, 'Productos') }}</option>
@@ -69,7 +69,7 @@
     <p
       v-if="problem"
       role="alert"
-      class="mx-4 mb-3 rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7"
+      class="mx-4 mb-3 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
     >
       {{ problem }}
       <Button

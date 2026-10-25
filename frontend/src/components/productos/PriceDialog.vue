@@ -14,7 +14,7 @@
             requestedUnit && rows.some((row) => unitOf(row) !== requestedUnit)
           "
           role="status"
-          class="rounded-lg bg-surface-amber-1 p-3 text-sm text-ink-amber-7"
+          class="rounded-6 bg-surface-amber-1 p-3 text-sm text-ink-amber-7"
         >
           {{
             __(
@@ -26,7 +26,7 @@
         <div
           v-for="row in rows"
           :key="row.price_list"
-          class="space-y-2 rounded-lg border border-outline-gray-2 p-3"
+          class="space-y-2 rounded-6 border border-outline-gray-2 p-3"
         >
           <div class="flex flex-wrap items-baseline justify-between gap-2">
             <span class="font-medium text-ink-gray-9">{{
@@ -107,7 +107,7 @@
         <div
           v-if="problem"
           role="alert"
-          class="rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7"
+          class="rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
         >
           <strong>{{ problem.title }}.</strong> {{ problem.detail }}
           <div class="mt-2 flex flex-wrap gap-2">

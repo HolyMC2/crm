@@ -20,7 +20,7 @@
     :href="permalink || undefined"
     :target="permalink ? '_blank' : undefined"
     rel="noopener"
-    class="block overflow-hidden rounded-xl border border-outline-gray-2 bg-surface-base shadow-sm"
+    class="block overflow-hidden rounded-7 border border-outline-gray-2 bg-surface-base shadow-sm"
   >
     <!-- header -->
     <div class="flex items-center gap-2.5 px-3 pt-3">
@@ -92,7 +92,7 @@
         cta.label
       }}</span>
       <span
-        class="flex-none rounded-md bg-surface-gray-3 px-3 py-1 text-[12px] font-semibold text-ink-gray-8"
+        class="flex-none rounded-5 bg-surface-gray-3 px-3 py-1 text-[12px] font-semibold text-ink-gray-8"
         >{{ cta.button || __('Más info') }}</span
       >
     </div>

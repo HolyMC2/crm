@@ -7,7 +7,7 @@
 <template>
   <div
     v-if="rows.length"
-    class="mx-3 mb-2 rounded-lg border border-outline-amber-4 bg-surface-amber-1 px-3 py-2.5 sm:mx-10"
+    class="mx-3 mb-2 rounded-6 border border-outline-amber-4 bg-surface-amber-1 px-3 py-2.5 sm:mx-10"
   >
     <div
       class="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-ink-amber-9"
@@ -18,19 +18,19 @@
       <textarea
         v-model="drafts[r.name]"
         rows="2"
-        class="scb mb-1.5 w-full resize-none rounded-md border border-outline-amber-4 bg-surface-base px-2 py-1.5 text-[12.5px] text-ink-gray-8 focus:outline-none dark:bg-surface-gray-2"
+        class="scb mb-1.5 w-full resize-none rounded-5 border border-outline-amber-4 bg-surface-base px-2 py-1.5 text-[12.5px] text-ink-gray-8 focus:outline-none dark:bg-surface-gray-2"
       />
       <!-- Manager-eyes policy: only managers act (server enforces _APPROVER_ROLES) -->
       <div v-if="canAct" class="flex items-center justify-end gap-1.5">
         <button
-          class="rounded-md px-2 py-1 text-[11px] font-semibold text-ink-gray-6 hover:bg-surface-amber-2 disabled:opacity-50"
+          class="rounded-5 px-2 py-1 text-[11px] font-semibold text-ink-gray-6 hover:bg-surface-amber-2 disabled:opacity-50"
           :disabled="busy[r.name]"
           @click="onDiscard(r)"
         >
           {{ __('Descartar') }}
         </button>
         <button
-          class="rounded-md px-2.5 py-1 text-[11px] font-semibold text-white disabled:opacity-50"
+          class="rounded-5 px-2.5 py-1 text-[11px] font-semibold text-white disabled:opacity-50"
           style="background: var(--brand)"
           :disabled="busy[r.name] || !(drafts[r.name] || '').trim()"
           @click="onApprove(r)"

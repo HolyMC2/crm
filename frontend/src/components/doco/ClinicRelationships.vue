@@ -16,7 +16,7 @@
     <p
       v-if="errorCode"
       role="alert"
-      class="rounded-lg bg-surface-amber-1 p-3 text-sm text-ink-gray-8"
+      class="rounded-6 bg-surface-amber-1 p-3 text-sm text-ink-gray-8"
     >
       {{ clinicMessage(errorCode) }}
     </p>
@@ -28,7 +28,7 @@
         <li
           v-for="link in context.links"
           :key="link.id"
-          class="rounded-lg border border-outline-gray-2 p-3"
+          class="rounded-6 border border-outline-gray-2 p-3"
         >
           <div class="flex flex-wrap items-start justify-between gap-3">
             <div class="min-w-0">
@@ -120,7 +120,7 @@
           type="button"
           :disabled="busy"
           :aria-pressed="mode === 'link'"
-          class="rounded border border-outline-gray-3 px-3 py-2 text-sm hover:bg-surface-gray-2"
+          class="rounded-4 border border-outline-gray-3 px-3 py-2 text-sm hover:bg-surface-gray-2"
           @click="mode = 'link'"
         >
           Vincular paciente existente
@@ -130,7 +130,7 @@
           type="button"
           :disabled="busy"
           :aria-pressed="mode === 'register'"
-          class="rounded border border-outline-gray-3 px-3 py-2 text-sm hover:bg-surface-gray-2"
+          class="rounded-4 border border-outline-gray-3 px-3 py-2 text-sm hover:bg-surface-gray-2"
           @click="openRegistration"
         >
           Registrar paciente
@@ -139,7 +139,7 @@
 
       <form
         v-if="mode === 'link' && can('link_patient')"
-        class="space-y-3 rounded-lg bg-surface-gray-1 p-3"
+        class="space-y-3 rounded-6 bg-surface-gray-1 p-3"
         autocomplete="off"
         @submit.prevent="searchPatients"
       >
@@ -158,7 +158,7 @@
         </label>
         <button
           type="submit"
-          class="rounded border border-outline-gray-3 px-3 py-2 text-sm"
+          class="rounded-4 border border-outline-gray-3 px-3 py-2 text-sm"
           :disabled="busy || searching || query.trim().length < 2"
         >
           {{ searching ? 'Buscando…' : 'Buscar paciente' }}
@@ -170,7 +170,7 @@
                 type="button"
                 :disabled="busy"
                 :aria-pressed="selected?.name === patient.name"
-                class="w-full rounded border border-outline-gray-2 bg-surface-gray-1 p-2 text-left text-sm focus:ring-2 focus:ring-outline-gray-3"
+                class="w-full rounded-4 border border-outline-gray-2 bg-surface-gray-1 p-2 text-left text-sm focus:ring-2 focus:ring-outline-gray-3"
                 @click="selected = patient"
               >
                 {{ patient.patient_name }}
@@ -201,7 +201,7 @@
           </label>
           <button
             type="button"
-            class="rounded bg-gray-800 px-3 py-2 text-sm text-white"
+            class="rounded-4 bg-gray-800 px-3 py-2 text-sm text-white"
             :disabled="busy"
             @click="linkPatient"
           >
@@ -220,7 +220,7 @@
 
       <form
         v-if="mode === 'register' && can('register_patient')"
-        class="space-y-3 rounded-lg bg-surface-gray-1 p-3"
+        class="space-y-3 rounded-6 bg-surface-gray-1 p-3"
         autocomplete="off"
         @submit.prevent="registerPatient"
       >
@@ -303,7 +303,7 @@
         <div class="flex gap-3">
           <button
             type="submit"
-            class="rounded bg-gray-800 px-3 py-2 text-sm text-white"
+            class="rounded-4 bg-gray-800 px-3 py-2 text-sm text-white"
             :disabled="busy || !options"
           >
             {{ busy ? 'Guardando…' : 'Registrar y vincular' }}
@@ -427,6 +427,6 @@ async function unlink(link) {
 
 <style scoped>
 .clinic-input {
-  @apply mt-1 block w-full rounded border border-outline-gray-3 bg-surface-gray-1 px-3 py-2 text-sm text-ink-gray-9;
+  @apply mt-1 block w-full rounded-4 border border-outline-gray-3 bg-surface-gray-1 px-3 py-2 text-sm text-ink-gray-9;
 }
 </style>

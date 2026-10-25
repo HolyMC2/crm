@@ -26,7 +26,7 @@
         </span>
       </div>
       <button
-        class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-gray-7"
+        class="rounded-6 border border-outline-gray-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-gray-7"
         :disabled="syncing"
         @click="sync"
       >

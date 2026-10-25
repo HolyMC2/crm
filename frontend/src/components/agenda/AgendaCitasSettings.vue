@@ -4,7 +4,7 @@
       <p class="text-base text-ink-gray-7">
         {{ __('Loading your settings…') }}
       </p>
-      <div class="h-9 animate-pulse rounded bg-surface-gray-2" />
+      <div class="h-9 animate-pulse rounded-4 bg-surface-gray-2" />
     </div>
     <p v-else-if="loadError" role="alert" class="text-base text-ink-red-4">
       {{ loadError }}
@@ -25,7 +25,7 @@
       <section
         v-if="settings.problems.length"
         role="status"
-        class="rounded-lg border border-outline-gray-2 p-3"
+        class="rounded-6 border border-outline-gray-2 p-3"
       >
         <p class="text-base-medium text-ink-gray-9">
           {{ __('To take appointments online:') }}
@@ -59,7 +59,7 @@
         >
           <select
             v-model="row.day"
-            class="min-h-11 rounded border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9"
+            class="min-h-11 rounded-4 border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9"
             :aria-label="__('Day')"
           >
             <option v-for="day in WEEKDAYS" :key="day" :value="day">
@@ -69,13 +69,13 @@
           <input
             v-model="row.from"
             type="time"
-            class="min-h-11 rounded border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9"
+            class="min-h-11 rounded-4 border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9"
             :aria-label="__('Opens')"
           />
           <input
             v-model="row.to"
             type="time"
-            class="min-h-11 rounded border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9"
+            class="min-h-11 rounded-4 border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9"
             :aria-label="__('Closes')"
           />
           <Button
@@ -113,7 +113,7 @@
             min="10"
             max="480"
             step="5"
-            class="mt-1 min-h-11 w-full rounded border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9"
+            class="mt-1 min-h-11 w-full rounded-4 border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9"
           />
         </label>
         <label class="text-sm text-ink-gray-7">
@@ -123,7 +123,7 @@
             type="number"
             min="1"
             max="90"
-            class="mt-1 min-h-11 w-full rounded border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9"
+            class="mt-1 min-h-11 w-full rounded-4 border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9"
           />
         </label>
       </div>
@@ -149,7 +149,7 @@
             <input
               v-model="form.agents"
               type="checkbox"
-              class="h-4 w-4 rounded"
+              class="h-4 w-4 rounded-4"
               :value="row.user"
             />{{ row.name }}
           </label>
@@ -160,7 +160,7 @@
         {{ __('Rest days and holidays') }}
         <select
           v-model="form.holidayList"
-          class="mt-1 min-h-11 w-full rounded border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9"
+          class="mt-1 min-h-11 w-full rounded-4 border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9"
         >
           <option value="">{{ __('Choose your rest days') }}</option>
           <option
@@ -203,7 +203,7 @@
           :key="row.name"
           class="mt-2 flex min-h-11 items-center gap-2.5 text-base text-ink-gray-8"
         >
-          <input v-model="row.on" type="checkbox" class="h-4 w-4 rounded" />
+          <input v-model="row.on" type="checkbox" class="h-4 w-4 rounded-4" />
           {{ __('Show «Book» on {0}', [row.label]) }}
         </label>
         <p v-if="settings.bookingUrl" class="mt-1 text-sm text-ink-gray-6">
@@ -232,7 +232,7 @@
           {{ __('Group that holds your services') }}
           <select
             v-model="servicesForm.group"
-            class="mt-1 min-h-11 w-full rounded border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9"
+            class="mt-1 min-h-11 w-full rounded-4 border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9"
             :disabled="!services.can_fix || !services.profile"
             @change="loadServices(servicesForm.group)"
           >
@@ -260,7 +260,7 @@
           <input
             v-model="servicesForm.published"
             type="checkbox"
-            class="h-4 w-4 rounded"
+            class="h-4 w-4 rounded-4"
             :value="row.id"
             :disabled="!services.can_fix"
           />{{ row.label }}
@@ -294,7 +294,7 @@
           <input
             v-model="form.autoMessages"
             type="checkbox"
-            class="mt-1 h-4 w-4 rounded"
+            class="mt-1 h-4 w-4 rounded-4"
             :disabled="settings.channel.mode !== 'api'"
           />
           <span>
@@ -316,7 +316,7 @@
           </li>
         </ul>
         <div
-          class="mt-2 rounded-lg border border-outline-gray-2 p-3 text-sm text-ink-gray-7"
+          class="mt-2 rounded-6 border border-outline-gray-2 p-3 text-sm text-ink-gray-7"
         >
           <p class="text-base text-ink-gray-9">
             {{ __('Booking form inside WhatsApp') }}

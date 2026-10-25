@@ -59,7 +59,7 @@
         <div
           v-if="draftBanner"
           role="status"
-          class="flex flex-wrap items-center gap-2 rounded-md bg-surface-amber-1 px-3 py-2 text-sm text-ink-amber-8"
+          class="flex flex-wrap items-center gap-2 rounded-5 bg-surface-amber-1 px-3 py-2 text-sm text-ink-amber-8"
           data-testid="manual-draft-banner"
         >
           <span class="min-w-0 flex-1">{{ draftBanner }}</span>
@@ -79,7 +79,7 @@
         <div
           v-if="conflict"
           role="alert"
-          class="space-y-2 rounded-md bg-surface-amber-1 p-3 text-sm text-ink-amber-8"
+          class="space-y-2 rounded-5 bg-surface-amber-1 p-3 text-sm text-ink-amber-8"
           data-testid="manual-conflict"
         >
           <p class="font-semibold">
@@ -127,7 +127,7 @@
             list="manual-categories"
             maxlength="60"
             :placeholder="__('Caja, Taller, Garantías…')"
-            class="form-input min-h-11 w-full rounded border-outline-gray-2 bg-surface-gray-2 text-base text-ink-gray-8 sm:min-h-7 sm:text-sm"
+            class="form-input min-h-11 w-full rounded-4 border-outline-gray-2 bg-surface-gray-2 text-base text-ink-gray-8 sm:min-h-7 sm:text-sm"
             data-testid="manual-category"
           />
           <datalist id="manual-categories">
@@ -165,7 +165,7 @@
         <div>
           <p class="mb-1.5 text-xs text-ink-gray-5">{{ __('Article') }}</p>
           <div
-            class="rounded-lg border border-outline-gray-2"
+            class="rounded-6 border border-outline-gray-2"
             data-testid="manual-body"
           >
             <TextEditor

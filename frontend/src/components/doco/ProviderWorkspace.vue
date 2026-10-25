@@ -1,5 +1,5 @@
 <template>
-  <section class="mt-6 rounded-lg border p-4">
+  <section class="mt-6 rounded-6 border p-4">
     <div class="flex items-center justify-between gap-3">
       <span class="text-base-semibold text-ink-gray-8">{{
         provider.label

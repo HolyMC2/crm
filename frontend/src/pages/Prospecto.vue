@@ -54,7 +54,7 @@
           />
           <p
             v-else
-            class="rounded-lg bg-surface-gray-2 px-3 py-2 text-base text-ink-gray-7"
+            class="rounded-6 bg-surface-gray-2 px-3 py-2 text-base text-ink-gray-7"
           >
             Este prospecto ya es un trato.
           </p>
@@ -145,7 +145,7 @@ const props = defineProps({ leadId: { type: String, required: true } })
 const router = useRouter()
 
 const PILL =
-  'flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl bg-surface-gray-2 text-sm font-medium text-ink-gray-8'
+  'flex min-h-12 flex-col items-center justify-center gap-1 rounded-7 bg-surface-gray-2 text-sm font-medium text-ink-gray-8'
 const GREYED = 'opacity-40 cursor-not-allowed'
 
 const lead = createResource({

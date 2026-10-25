@@ -20,7 +20,7 @@
         <button
           data-row-link
           data-row-focus
-          class="flex min-w-0 flex-1 flex-col rounded py-1 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
+          class="flex min-w-0 flex-1 flex-col rounded-4 py-1 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
           :aria-expanded="
             expanded === group.key || needsReason(group) ? 'true' : undefined
           "
@@ -61,7 +61,7 @@
       <div
         v-if="expanded === group.key"
         role="status"
-        class="mx-4 mb-3 ml-12 space-y-2 rounded-lg bg-surface-gray-1 p-3 text-sm text-ink-gray-7"
+        class="mx-4 mb-3 ml-12 space-y-2 rounded-6 bg-surface-gray-1 p-3 text-sm text-ink-gray-7"
       >
         <p>{{ group.target?.reason }}</p>
         <div class="flex flex-wrap gap-2">

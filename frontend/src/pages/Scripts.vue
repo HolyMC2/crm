@@ -33,7 +33,7 @@
           v-model="search"
           type="search"
           enterkeyhint="search"
-          class="h-11 min-w-0 flex-1 rounded-lg border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9"
+          class="h-11 min-w-0 flex-1 rounded-6 border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9"
           :placeholder="
             tipo === 'campos'
               ? 'Buscar por campo o documento'
@@ -46,7 +46,7 @@
       <p
         v-if="data?.nota"
         role="note"
-        class="rounded-lg border border-outline-amber-2 bg-surface-amber-1 px-4 py-3 text-base text-ink-amber-7"
+        class="rounded-6 border border-outline-amber-2 bg-surface-amber-1 px-4 py-3 text-base text-ink-amber-7"
         data-testid="scripts-engine-off"
       >
         {{ data.nota }}
@@ -173,7 +173,7 @@
             v-model="createForm.nombre"
             type="text"
             maxlength="80"
-            class="h-11 w-full rounded-lg border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9"
+            class="h-11 w-full rounded-6 border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9"
             autocomplete="off"
           />
         </div>

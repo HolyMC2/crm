@@ -16,7 +16,7 @@
   }}</span>
   <span
     v-else
-    class="inline-flex min-w-0 max-w-full items-center gap-1 rounded-md px-1.5 py-[2px] text-[11px] font-semibold"
+    class="inline-flex min-w-0 max-w-full items-center gap-1 rounded-5 px-1.5 py-[2px] text-[11px] font-semibold"
     :class="TONE[state]"
     :title="tooltip"
   >

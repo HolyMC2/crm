@@ -1,7 +1,7 @@
 <template>
   <section
     :role="warning ? 'status' : 'alert'"
-    class="rounded-lg border p-3 text-base"
+    class="rounded-6 border p-3 text-base"
     :class="
       warning
         ? 'border-outline-amber-1 bg-surface-amber-1 text-ink-amber-3'

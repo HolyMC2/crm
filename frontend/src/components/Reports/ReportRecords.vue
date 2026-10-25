@@ -1,6 +1,6 @@
 <template>
   <section
-    class="min-w-0 rounded-lg border border-outline-gray-2 bg-surface-base p-4 space-y-3"
+    class="min-w-0 rounded-6 border border-outline-gray-2 bg-surface-base p-4 space-y-3"
     aria-labelledby="report-records-heading"
   >
     <div class="flex flex-wrap items-center justify-between gap-2">
@@ -28,7 +28,7 @@
       <div
         v-for="n in 3"
         :key="n"
-        class="h-20 rounded bg-surface-gray-2 motion-safe:animate-pulse"
+        class="h-20 rounded-4 bg-surface-gray-2 motion-safe:animate-pulse"
       />
     </div>
     <div v-if="error" role="alert">
@@ -68,7 +68,7 @@
       <li
         v-for="row in items"
         :key="row.name"
-        class="min-w-0 rounded border border-outline-gray-2 p-3"
+        class="min-w-0 rounded-4 border border-outline-gray-2 p-3"
       >
         <component
           :is="genericLink(row).to ? RouterLink : 'a'"
@@ -299,6 +299,6 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .report-button {
-  @apply min-h-11 max-w-full rounded-md border border-outline-gray-2 bg-surface-gray-1 px-3 py-2 text-sm text-ink-gray-8 hover:bg-surface-gray-2 disabled:opacity-50;
+  @apply min-h-11 max-w-full rounded-5 border border-outline-gray-2 bg-surface-gray-1 px-3 py-2 text-sm text-ink-gray-8 hover:bg-surface-gray-2 disabled:opacity-50;
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <details class="rounded-xl border border-outline-gray-2 bg-surface-base p-4">
+  <details class="rounded-7 border border-outline-gray-2 bg-surface-base p-4">
     <summary class="cursor-pointer text-base-medium text-ink-gray-9">
       {{ __('Desempeño del equipo y sucursales') }}
     </summary>

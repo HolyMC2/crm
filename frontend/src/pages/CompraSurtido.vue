@@ -50,7 +50,7 @@
           <li v-for="(s, i) in steps" :key="s.key">
             <button
               type="button"
-              class="flex min-h-11 w-full items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm"
+              class="flex min-h-11 w-full items-center gap-2 rounded-6 border px-3 py-2 text-left text-sm"
               :class="
                 step === s.key
                   ? 'border-outline-gray-4 bg-surface-gray-2 font-semibold text-ink-gray-9'
@@ -74,7 +74,7 @@
         <div
           v-if="problem"
           role="alert"
-          class="mb-4 rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7"
+          class="mb-4 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
         >
           <strong>{{ problem.title }}.</strong> {{ problem.detail }}
         </div>
@@ -102,7 +102,7 @@
           </p>
           <ul
             v-else
-            class="divide-y divide-outline-gray-1 rounded-lg border border-outline-gray-2"
+            class="divide-y divide-outline-gray-1 rounded-6 border border-outline-gray-2"
           >
             <li
               v-for="c in boot.catalogs"
@@ -153,7 +153,7 @@
 
           <div
             v-if="uploadUrl"
-            class="mt-3 rounded-lg border border-outline-gray-2 bg-surface-gray-1 p-3 text-sm"
+            class="mt-3 rounded-6 border border-outline-gray-2 bg-surface-gray-1 p-3 text-sm"
           >
             <p class="mb-2">
               {{
@@ -175,7 +175,7 @@
 
           <details
             v-if="boot.owner"
-            class="mt-4 rounded-lg border border-outline-gray-2 p-3"
+            class="mt-4 rounded-6 border border-outline-gray-2 p-3"
           >
             <summary class="cursor-pointer text-sm font-medium">
               {{ __('New supplier list', null, 'Surtido') }}
@@ -214,7 +214,7 @@
               {{ __('Recent orders to suppliers', null, 'Surtido') }}
             </h2>
             <ul
-              class="divide-y divide-outline-gray-1 rounded-lg border border-outline-gray-2"
+              class="divide-y divide-outline-gray-1 rounded-6 border border-outline-gray-2"
             >
               <li v-for="p in boot.pedidos" :key="p.name">
                 <button
@@ -260,7 +260,7 @@
         <!-- 2 · the buy plan ------------------------------------------------------ -->
         <section v-else-if="step === 'plan'" :aria-label="steps[1].label">
           <form
-            class="mb-4 grid grid-cols-2 gap-3 rounded-xl border border-outline-gray-2 p-4 sm:grid-cols-4"
+            class="mb-4 grid grid-cols-2 gap-3 rounded-7 border border-outline-gray-2 p-4 sm:grid-cols-4"
             @submit.prevent="makePlan"
           >
             <FormControl
@@ -321,7 +321,7 @@
           </form>
 
           <template v-if="plan">
-            <div class="mb-4 rounded-xl border border-outline-gray-2 p-4">
+            <div class="mb-4 rounded-7 border border-outline-gray-2 p-4">
               <div class="flex flex-wrap items-baseline justify-between gap-2">
                 <p class="text-base">
                   <strong class="tabular-nums">{{ money(plan.total) }}</strong>
@@ -374,7 +374,7 @@
 
             <div
               v-if="plan.diff"
-              class="mb-4 rounded-lg bg-surface-gray-1 p-3 text-sm"
+              class="mb-4 rounded-6 bg-surface-gray-1 p-3 text-sm"
               role="status"
             >
               <p class="font-medium">
@@ -402,7 +402,7 @@
             </div>
 
             <ul
-              class="divide-y divide-outline-gray-1 rounded-lg border border-outline-gray-2"
+              class="divide-y divide-outline-gray-1 rounded-6 border border-outline-gray-2"
               :aria-label="__('Plan lines', null, 'Surtido')"
             >
               <li
@@ -431,7 +431,7 @@
                     <span
                       v-for="r in line.reasons"
                       :key="r"
-                      class="rounded bg-surface-gray-2 px-1.5 py-0.5 text-xs text-ink-gray-7"
+                      class="rounded-4 bg-surface-gray-2 px-1.5 py-0.5 text-xs text-ink-gray-7"
                       >{{ r }}</span
                     >
                   </p>
@@ -440,7 +440,7 @@
                   <input
                     type="number"
                     min="1"
-                    class="h-9 w-20 rounded border border-outline-gray-2 px-2 text-right tabular-nums"
+                    class="h-9 w-20 rounded-4 border border-outline-gray-2 px-2 text-right tabular-nums"
                     :aria-label="__('Pieces of {0}', [line.name], 'Surtido')"
                     :value="edits[line.line]?.qty ?? line.qty"
                     :disabled="!boot.owner || edits[line.line]?.remove"
@@ -473,7 +473,7 @@
 
             <details
               v-if="plan.left_out?.length"
-              class="mt-3 rounded-lg border border-outline-gray-2 p-3"
+              class="mt-3 rounded-6 border border-outline-gray-2 p-3"
             >
               <summary class="cursor-pointer text-sm font-medium">
                 {{
@@ -562,7 +562,7 @@
             }}
           </div>
           <template v-else>
-            <div class="mb-4 rounded-xl border border-outline-gray-2 p-4">
+            <div class="mb-4 rounded-7 border border-outline-gray-2 p-4">
               <div class="flex flex-wrap items-center gap-2">
                 <h2 class="min-w-0 flex-1 truncate text-lg font-semibold">
                   {{ pedido.supplier }} · {{ pedido.pedido }}
@@ -604,7 +604,7 @@
             <!-- send to the supplier -->
             <div
               v-if="pedido.owner && pedido.status === 'Borrador'"
-              class="mb-4 flex flex-wrap items-center gap-2 rounded-lg bg-surface-gray-1 p-3"
+              class="mb-4 flex flex-wrap items-center gap-2 rounded-6 bg-surface-gray-1 p-3"
             >
               <p class="min-w-0 flex-1 text-sm">
                 {{
@@ -641,7 +641,7 @@
               v-if="
                 pedido.owner && ['Enviado', 'Cotizado'].includes(pedido.status)
               "
-              class="mb-4 rounded-lg border border-dashed border-outline-gray-3 p-4"
+              class="mb-4 rounded-6 border border-dashed border-outline-gray-3 p-4"
               :class="dragging ? 'bg-surface-gray-2' : ''"
               @dragover.prevent="dragging = true"
               @dragleave="dragging = false"
@@ -669,7 +669,7 @@
               </p>
               <div class="mt-2 flex flex-wrap items-center gap-2">
                 <label
-                  class="inline-flex min-h-9 cursor-pointer items-center rounded bg-surface-gray-2 px-3 text-sm hover:bg-surface-gray-3"
+                  class="inline-flex min-h-9 cursor-pointer items-center rounded-4 bg-surface-gray-2 px-3 text-sm hover:bg-surface-gray-3"
                 >
                   {{ __('Choose file', null, 'Surtido') }}
                   <input
@@ -690,7 +690,7 @@
               <textarea
                 v-model="replyText"
                 rows="3"
-                class="mt-2 w-full rounded border border-outline-gray-2 p-2 text-sm"
+                class="mt-2 w-full rounded-4 border border-outline-gray-2 p-2 text-sm"
                 :aria-label="__('Paste the reply', null, 'Surtido')"
                 :placeholder="
                   __('Or paste what the supplier wrote…', null, 'Surtido')
@@ -726,7 +726,7 @@
                 }}
               </p>
               <ul
-                class="divide-y divide-outline-gray-1 rounded-lg border border-outline-gray-2"
+                class="divide-y divide-outline-gray-1 rounded-6 border border-outline-gray-2"
               >
                 <li
                   v-for="row in pedido.pending_rows"
@@ -764,7 +764,7 @@
                     {{ __('Batches', null, 'Surtido') }}
                     <select
                       :value="rowBatch[row.index] ?? ''"
-                      class="h-8 rounded border border-outline-gray-2 text-sm"
+                      class="h-8 rounded-4 border border-outline-gray-2 text-sm"
                       @change="
                         rowBatch = {
                           ...rowBatch,
@@ -783,7 +783,7 @@
                     {{ __('Serials', null, 'Surtido') }}
                     <select
                       :value="rowSerial[row.index] ?? ''"
-                      class="h-8 rounded border border-outline-gray-2 text-sm"
+                      class="h-8 rounded-4 border border-outline-gray-2 text-sm"
                       @change="
                         rowSerial = {
                           ...rowSerial,
@@ -838,7 +838,7 @@
                 {{ __('Order lines ({0})', [pedido.lines.length], 'Surtido') }}
               </h3>
               <ul
-                class="divide-y divide-outline-gray-1 rounded-lg border border-outline-gray-2"
+                class="divide-y divide-outline-gray-1 rounded-6 border border-outline-gray-2"
               >
                 <li
                   v-for="line in pedido.lines"
@@ -868,7 +868,7 @@
                     <input
                       type="number"
                       min="1"
-                      class="h-9 w-20 rounded border border-outline-gray-2 px-2 text-right tabular-nums"
+                      class="h-9 w-20 rounded-4 border border-outline-gray-2 px-2 text-right tabular-nums"
                       :aria-label="
                         __('Pieces of {0}', [line.name || line.code], 'Surtido')
                       "
@@ -914,7 +914,7 @@
                 }}
               </h3>
               <ul
-                class="divide-y divide-outline-gray-1 rounded-lg border border-outline-gray-2"
+                class="divide-y divide-outline-gray-1 rounded-6 border border-outline-gray-2"
               >
                 <li
                   v-for="m in pedido.missing"

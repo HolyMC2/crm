@@ -29,7 +29,7 @@
         <component
           :is="step.to && !step.current ? RouterLink : 'div'"
           :to="step.to && !step.current ? step.to : undefined"
-          class="flex min-h-12 items-center gap-3 rounded-lg py-1.5 pr-1"
+          class="flex min-h-12 items-center gap-3 rounded-6 py-1.5 pr-1"
           :class="step.to && !step.current ? 'hover:bg-surface-gray-1' : ''"
         >
           <span

@@ -33,7 +33,7 @@
             v-for="a in accesos"
             :key="a.key"
             v-bind="a.link"
-            class="flex min-h-14 items-center gap-3 rounded-2xl bg-surface-gray-2 px-4 text-base-medium text-ink-gray-9"
+            class="flex min-h-14 items-center gap-3 rounded-8 bg-surface-gray-2 px-4 text-base-medium text-ink-gray-9"
             :data-acceso="a.key"
           >
             <span :class="[a.icono, 'size-5']" aria-hidden="true" />
@@ -100,7 +100,7 @@
           <section
             v-for="i in data.inicios"
             :key="i.key"
-            class="rounded-2xl border border-outline-gray-1 py-3"
+            class="rounded-8 border border-outline-gray-1 py-3"
           >
             <h2 class="px-4 pb-1 text-lg font-semibold text-ink-gray-9">
               {{ i.titulo }}

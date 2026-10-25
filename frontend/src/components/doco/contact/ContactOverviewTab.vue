@@ -54,7 +54,7 @@
 
       <div class="mt-5 grid gap-3 lg:grid-cols-2">
         <div
-          class="rounded-xl border border-outline-gray-2 bg-surface-gray-1 p-4"
+          class="rounded-7 border border-outline-gray-2 bg-surface-gray-1 p-4"
         >
           <h3 class="text-sm font-semibold text-ink-gray-9">
             {{ __('Actividad') }}
@@ -75,7 +75,7 @@
           </dl>
         </div>
         <div
-          class="hidden rounded-xl border border-outline-gray-2 bg-surface-gray-1 p-4 lg:block"
+          class="hidden rounded-7 border border-outline-gray-2 bg-surface-gray-1 p-4 lg:block"
         >
           <h3 class="text-sm font-semibold text-ink-gray-9">
             {{ __('Persona y clientes') }}

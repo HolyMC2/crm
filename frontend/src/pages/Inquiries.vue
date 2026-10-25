@@ -36,7 +36,7 @@
       <p
         v-if="notice"
         role="status"
-        class="rounded-lg bg-surface-green-2 p-3 text-sm text-ink-green-8"
+        class="rounded-6 bg-surface-green-2 p-3 text-sm text-ink-green-8"
       >
         {{ __(notice) }}
       </p>
@@ -44,7 +44,7 @@
         class="grid items-start gap-4 lg:grid-cols-[minmax(260px,340px)_minmax(0,1fr)]"
       >
         <section
-          class="space-y-3 rounded-xl border border-outline-gray-2 bg-surface-base p-4"
+          class="space-y-3 rounded-7 border border-outline-gray-2 bg-surface-base p-4"
           :aria-busy="listBusy"
         >
           <h2 class="font-semibold text-ink-gray-9">
@@ -123,7 +123,7 @@
               <router-link
                 :to="{ name: 'Inquiries', query: { name: item.name } }"
                 :aria-current="selectedName === item.name ? 'page' : undefined"
-                class="block space-y-1 rounded-lg border p-3"
+                class="block space-y-1 rounded-6 border p-3"
                 :class="
                   selectedName === item.name
                     ? 'border-outline-gray-3 bg-surface-gray-2'
@@ -186,14 +186,14 @@
           <p
             v-if="transferNotice"
             role="status"
-            class="rounded-lg bg-surface-green-2 p-3 text-sm text-ink-green-8"
+            class="rounded-6 bg-surface-green-2 p-3 text-sm text-ink-green-8"
           >
             {{ __(transferNotice) }}
           </p>
           <div
             v-if="detailUpdateAvailable"
             role="status"
-            class="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-outline-gray-2 bg-surface-base p-3 text-sm text-ink-gray-7"
+            class="flex flex-wrap items-center justify-between gap-2 rounded-6 border border-outline-gray-2 bg-surface-base p-3 text-sm text-ink-gray-7"
           >
             <span>{{
               __(
@@ -214,7 +214,7 @@
           </p>
           <div
             v-if="detailError"
-            class="space-y-2 rounded-lg border border-outline-gray-2 bg-surface-base p-4"
+            class="space-y-2 rounded-6 border border-outline-gray-2 bg-surface-base p-4"
           >
             <p role="alert" class="text-sm text-ink-red-7">
               {{ __(detailError.message) }}
@@ -240,7 +240,7 @@
           />
           <div
             v-else-if="!selectedName"
-            class="rounded-xl border border-dashed border-outline-gray-2 p-8 text-center text-sm text-ink-gray-6"
+            class="rounded-7 border border-dashed border-outline-gray-2 p-8 text-center text-sm text-ink-gray-6"
           >
             {{
               __(
@@ -332,10 +332,10 @@ function created(value) {
 
 <style>
 .inquiry-workspace .inquiry-input {
-  @apply block w-full rounded-lg border border-outline-gray-2 bg-surface-base px-3 py-2 text-sm text-ink-gray-9 focus:border-outline-gray-3;
+  @apply block w-full rounded-6 border border-outline-gray-2 bg-surface-base px-3 py-2 text-sm text-ink-gray-9 focus:border-outline-gray-3;
 }
 .inquiry-workspace .inquiry-button {
-  @apply rounded-lg border border-outline-gray-2 bg-surface-base px-3 py-2 text-sm font-medium text-ink-gray-8 hover:bg-surface-gray-2 disabled:cursor-not-allowed disabled:opacity-50;
+  @apply rounded-6 border border-outline-gray-2 bg-surface-base px-3 py-2 text-sm font-medium text-ink-gray-8 hover:bg-surface-gray-2 disabled:cursor-not-allowed disabled:opacity-50;
 }
 .inquiry-workspace .inquiry-primary {
   @apply border-transparent bg-surface-gray-10 text-ink-base hover:bg-surface-gray-8;

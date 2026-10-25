@@ -88,7 +88,7 @@
       <p
         v-if="actions.status.value"
         role="status"
-        class="mx-4 mb-3 flex items-center gap-2 rounded-lg px-3 py-2 text-sm sm:mx-6"
+        class="mx-4 mb-3 flex items-center gap-2 rounded-6 px-3 py-2 text-sm sm:mx-6"
         :class="
           actions.status.value.error
             ? 'bg-surface-red-1 text-ink-red-4'
@@ -112,7 +112,7 @@
       </p>
       <section
         v-if="state.view === 'muted' && data?.muted_kinds?.length"
-        class="mx-4 mb-4 rounded-lg border border-outline-gray-2 sm:mx-6"
+        class="mx-4 mb-4 rounded-6 border border-outline-gray-2 sm:mx-6"
         :aria-label="__('Muted kinds')"
       >
         <h2 class="px-4 pt-3 text-base font-semibold">

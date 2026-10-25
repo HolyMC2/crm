@@ -39,7 +39,7 @@
         <!-- 24h-window guard: free-form WhatsApp won't deliver outside Meta's window -->
         <div
           v-if="waBlocked"
-          class="rounded-md border border-outline-amber-4 bg-surface-amber-1 p-2.5 text-[12px] leading-snug text-ink-amber-9"
+          class="rounded-5 border border-outline-amber-4 bg-surface-amber-1 p-2.5 text-[12px] leading-snug text-ink-amber-9"
         >
           ⚠
           <span class="font-semibold">{{
@@ -73,7 +73,7 @@
         <!-- template-with-photo path: the only way to deliver a photo when closed -->
         <div
           v-if="waBlocked"
-          class="space-y-2 rounded-md border border-outline-gray-2 p-2.5"
+          class="space-y-2 rounded-5 border border-outline-gray-2 p-2.5"
         >
           <div
             class="text-[11px] font-semibold uppercase tracking-wide text-ink-gray-5"
@@ -83,7 +83,7 @@
           <template v-if="hasImageTemplates">
             <select
               v-model="chosenTemplate"
-              class="w-full rounded-md border border-outline-gray-2 bg-surface-gray-2 px-2 py-1.5 text-sm text-ink-gray-8 focus:border-outline-gray-4 focus:bg-surface-base focus:outline-none focus:ring-0"
+              class="w-full rounded-5 border border-outline-gray-2 bg-surface-gray-2 px-2 py-1.5 text-sm text-ink-gray-8 focus:border-outline-gray-4 focus:bg-surface-base focus:outline-none focus:ring-0"
             >
               <option value="">
                 {{ __('Elige una plantilla aprobada…') }}
@@ -138,7 +138,7 @@
             <button
               v-for="ph in ro.photos"
               :key="ph.name"
-              class="relative h-16 w-16 overflow-hidden rounded-lg border-2 transition"
+              class="relative h-16 w-16 overflow-hidden rounded-6 border-2 transition"
               :class="
                 photoSel[ph.name]
                   ? 'border-outline-green-4 ring-1 ring-outline-green-4'
@@ -172,7 +172,7 @@
             <label
               v-for="(e, i) in ro.repair_log"
               :key="e.name || i"
-              class="flex cursor-pointer items-start gap-2 rounded-md border p-2 text-[12px]"
+              class="flex cursor-pointer items-start gap-2 rounded-5 border p-2 text-[12px]"
               :class="
                 logSel[logKey(e, i)]
                   ? 'border-outline-green-4 bg-surface-green-1'
@@ -205,14 +205,14 @@
           <textarea
             v-model="note"
             rows="3"
-            class="w-full rounded-md border border-outline-gray-2 bg-surface-gray-2 p-2 text-sm text-ink-gray-8 hover:bg-surface-gray-3 focus:bg-surface-base focus:border-outline-gray-4 focus:outline-none focus:ring-0"
+            class="w-full rounded-5 border border-outline-gray-2 bg-surface-gray-2 p-2 text-sm text-ink-gray-8 hover:bg-surface-gray-3 focus:bg-surface-base focus:border-outline-gray-4 focus:outline-none focus:ring-0"
             :placeholder="__('Mensaje para el cliente…')"
           />
         </div>
 
         <!-- review line -->
         <div
-          class="rounded-md bg-surface-gray-1 p-2 text-[12px] text-ink-gray-6"
+          class="rounded-5 bg-surface-gray-1 p-2 text-[12px] text-ink-gray-6"
         >
           {{ __('Se enviará') }}:
           <span class="font-semibold text-ink-gray-8">{{

@@ -135,12 +135,12 @@
       </FilterChips>
       <div
         v-else
-        class="mt-4 flex flex-col gap-3 rounded-xl border border-outline-gray-2 bg-surface-gray-1 p-2 lg:flex-row lg:items-center"
+        class="mt-4 flex flex-col gap-3 rounded-7 border border-outline-gray-2 bg-surface-gray-1 p-2 lg:flex-row lg:items-center"
       >
         <div
           role="radiogroup"
           :aria-label="__('Period')"
-          class="flex gap-0.5 overflow-x-auto rounded-lg bg-surface-gray-2 p-0.5"
+          class="flex gap-0.5 overflow-x-auto rounded-6 bg-surface-gray-2 p-0.5"
         >
           <button
             v-for="p in PERIODS"
@@ -148,7 +148,7 @@
             role="radio"
             :aria-checked="periodPicked === p.value"
             :data-testid="`periodo-${p.value}`"
-            class="inline-flex min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md px-3 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
+            class="inline-flex min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-5 px-3 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
             :class="
               periodPicked === p.value
                 ? 'bg-surface-base text-ink-gray-9 shadow-sm'
@@ -166,7 +166,7 @@
         <div
           role="radiogroup"
           :aria-label="__('Compare with')"
-          class="flex gap-0.5 overflow-x-auto rounded-lg bg-surface-gray-2 p-0.5"
+          class="flex gap-0.5 overflow-x-auto rounded-6 bg-surface-gray-2 p-0.5"
           data-testid="compara"
         >
           <button
@@ -175,7 +175,7 @@
             role="radio"
             :aria-checked="state.compara === c.value"
             :data-testid="`compara-${c.value}`"
-            class="min-h-11 shrink-0 whitespace-nowrap rounded-md px-3 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
+            class="min-h-11 shrink-0 whitespace-nowrap rounded-5 px-3 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
             :class="
               state.compara === c.value
                 ? 'bg-surface-base text-ink-gray-9 shadow-sm'
@@ -220,7 +220,7 @@
 
       <div
         v-if="customizing"
-        class="mt-2 rounded-xl border border-outline-gray-2 p-3"
+        class="mt-2 rounded-7 border border-outline-gray-2 p-3"
         data-testid="customize-panel"
       >
         <div class="flex flex-wrap items-center gap-2">
@@ -250,7 +250,7 @@
         <div
           v-if="saveProblem"
           role="alert"
-          class="mt-2 flex flex-wrap items-center gap-2 rounded-lg bg-surface-amber-1 p-2 text-sm text-ink-amber-8"
+          class="mt-2 flex flex-wrap items-center gap-2 rounded-6 bg-surface-amber-1 p-2 text-sm text-ink-amber-8"
           data-testid="hidden-save-problem"
         >
           <span class="min-w-0 flex-1">
@@ -272,7 +272,7 @@
           <label
             v-for="key in order"
             :key="key"
-            class="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border px-3 text-sm"
+            class="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-6 border px-3 text-sm"
             :class="
               hidden.includes(key)
                 ? 'border-outline-gray-2 text-ink-gray-5'
@@ -281,7 +281,7 @@
           >
             <input
               type="checkbox"
-              class="rounded"
+              class="rounded-4"
               :checked="!hidden.includes(key)"
               @change="toggleCard(key)"
             />
@@ -292,7 +292,7 @@
 
       <form
         v-if="rangeOpen"
-        class="mt-2 flex flex-wrap items-end gap-2 rounded-xl border border-outline-gray-2 p-3"
+        class="mt-2 flex flex-wrap items-end gap-2 rounded-7 border border-outline-gray-2 p-3"
         data-testid="rango"
         @submit.prevent="applyRange"
       >
@@ -337,7 +337,7 @@
         <span class="lucide-store size-4" aria-hidden="true" />
         {{ __('Only {0}', [shopName]) }}
         <button
-          class="inline-flex min-h-11 items-center gap-1 rounded-md px-2 font-medium text-ink-gray-8 hover:bg-surface-gray-2"
+          class="inline-flex min-h-11 items-center gap-1 rounded-5 px-2 font-medium text-ink-gray-8 hover:bg-surface-gray-2"
           @click="update({ tienda: '' })"
         >
           <span class="lucide-x size-4" aria-hidden="true" />{{
@@ -349,7 +349,7 @@
       <div
         v-if="problem"
         role="alert"
-        class="mt-4 rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7"
+        class="mt-4 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
       >
         <strong>{{ problem.title }}.</strong> {{ problem.detail }}
         <Button class="ml-2" :label="__('Retry', null, CTX)" @click="load()" />

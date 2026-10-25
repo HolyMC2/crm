@@ -67,7 +67,7 @@
         <p
           v-if="actions.status.value"
           role="status"
-          class="mx-4 mb-2 flex items-center gap-2 rounded-lg px-3 py-2 text-sm"
+          class="mx-4 mb-2 flex items-center gap-2 rounded-6 px-3 py-2 text-sm"
           :class="
             actions.status.value.error
               ? 'bg-surface-red-1 text-ink-red-4'

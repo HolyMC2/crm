@@ -42,7 +42,7 @@
     </p>
     <div
       v-if="pending"
-      class="mt-3 rounded bg-surface-gray-2 p-2 text-sm"
+      class="mt-3 rounded-4 bg-surface-gray-2 p-2 text-sm"
       role="status"
     >
       Cambio pendiente de confirmar. Se conservará la misma solicitud.
@@ -68,7 +68,7 @@
           <select
             v-model="action"
             :disabled="busy"
-            class="mt-1 block min-h-11 w-full rounded border border-outline-gray-2 bg-surface-base p-2 text-sm text-ink-gray-8"
+            class="mt-1 block min-h-11 w-full rounded-4 border border-outline-gray-2 bg-surface-base p-2 text-sm text-ink-gray-8"
             @change="changed"
           >
             <option value="" disabled>{{ __('Seleccionar acción') }}</option>
@@ -79,7 +79,7 @@
         </label>
         <button
           type="submit"
-          class="min-h-11 shrink-0 rounded bg-surface-gray-10 px-3 py-2 text-sm text-ink-base"
+          class="min-h-11 shrink-0 rounded-4 bg-surface-gray-10 px-3 py-2 text-sm text-ink-base"
           :disabled="busy || !action"
         >
           {{ busy ? __('Aplicando…') : __('Aplicar cambio') }}
@@ -90,7 +90,7 @@
         <input
           v-model="query"
           placeholder="Buscar operador"
-          class="mt-1 block w-full rounded border border-outline-gray-2 bg-surface-base p-2 text-sm text-ink-gray-8"
+          class="mt-1 block w-full rounded-4 border border-outline-gray-2 bg-surface-base p-2 text-sm text-ink-gray-8"
           :disabled="busy"
           @input="$emit('operators', query)"
         />
@@ -98,7 +98,7 @@
           v-model="owner"
           required
           :disabled="busy"
-          class="mt-1 block w-full rounded border border-outline-gray-2 bg-surface-base p-2 text-sm text-ink-gray-8"
+          class="mt-1 block w-full rounded-4 border border-outline-gray-2 bg-surface-base p-2 text-sm text-ink-gray-8"
         >
           <option value="" disabled>Seleccionar operador autorizado</option>
           <option
@@ -117,7 +117,7 @@
           maxlength="500"
           :required="reasonRequired"
           :disabled="busy"
-          class="mt-1 block w-full rounded border border-outline-gray-2 bg-surface-base p-2 text-sm text-ink-gray-8"
+          class="mt-1 block w-full rounded-4 border border-outline-gray-2 bg-surface-base p-2 text-sm text-ink-gray-8"
         />
       </label>
     </form>

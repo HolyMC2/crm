@@ -114,7 +114,7 @@
       :class="isPhone ? 'pb-24' : 'px-5 py-3'"
       data-testid="prospects-list"
     >
-      <div v-if="error" class="rounded border p-3 text-sm" role="alert">
+      <div v-if="error" class="rounded-4 border p-3 text-sm" role="alert">
         <strong>No se pudo cargar la lista.</strong>
         <p class="text-ink-gray-6">{{ errorText }}</p>
         <Button class="mt-2" label="Reintentar" @click="load(start)" />

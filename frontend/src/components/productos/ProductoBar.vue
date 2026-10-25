@@ -11,7 +11,7 @@
         v-for="entry in actions"
         :key="entry.key"
         type="button"
-        class="flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-lg border px-2 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
+        class="flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-6 border px-2 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
         :class="[
           entry.primary
             ? 'border-transparent bg-surface-gray-10 text-ink-base'

@@ -40,7 +40,7 @@
     <div
       v-if="loadError"
       role="alert"
-      class="rounded border border-outline-gray-2 p-4"
+      class="rounded-4 border border-outline-gray-2 p-4"
     >
       <p>{{ settingsErrorMessage(loadError) }}</p>
       <Button

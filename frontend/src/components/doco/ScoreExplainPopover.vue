@@ -40,8 +40,8 @@
         class="flex max-h-[82vh] flex-col overflow-hidden border border-outline-gray-2 bg-surface-base shadow-lg"
         :class="
           isMobile
-            ? 'sheet-in fixed inset-x-0 bottom-0 z-50 rounded-t-2xl pb-[calc(env(safe-area-inset-bottom)+10px)]'
-            : 'fixed z-50 w-[300px] rounded-xl'
+            ? 'sheet-in fixed inset-x-0 bottom-0 z-50 rounded-t-8 pb-[calc(env(safe-area-inset-bottom)+10px)]'
+            : 'fixed z-50 w-[300px] rounded-7'
         "
         :style="isMobile ? '' : `top:${pos.top}px;left:${pos.left}px`"
         @click.stop
@@ -55,7 +55,7 @@
         <div class="flex items-center justify-between gap-2 px-3.5 pb-2 pt-3">
           <div class="flex items-center gap-2">
             <span
-              class="flex-none rounded px-[7px] py-px text-[11px] font-bold text-white"
+              class="flex-none rounded-4 px-[7px] py-px text-[11px] font-bold text-white"
               :style="`background:${bg}`"
               >{{ grade }}</span
             >
@@ -65,7 +65,7 @@
           </div>
           <button
             v-if="isMobile"
-            class="press flex size-7 flex-none items-center justify-center rounded-lg text-ink-gray-5 hover:bg-surface-gray-2"
+            class="press flex size-7 flex-none items-center justify-center rounded-6 text-ink-gray-5 hover:bg-surface-gray-2"
             :aria-label="__('Cerrar')"
             @click="close"
           >
@@ -93,7 +93,7 @@
           <template v-else>
             <p
               v-if="decayed"
-              class="mb-2 rounded-lg bg-surface-amber-1 px-2.5 py-1.5 text-[11.5px] text-ink-amber-9"
+              class="mb-2 rounded-6 bg-surface-amber-1 px-2.5 py-1.5 text-[11.5px] text-ink-amber-9"
             >
               {{
                 __('Incluye ajuste por inactividad (las reglas suman {0}).', [
@@ -106,7 +106,7 @@
               <li
                 v-for="(c, i) in contributions"
                 :key="c.rule + ':' + i"
-                class="flex items-start justify-between gap-2 rounded-lg border border-outline-gray-1 bg-surface-gray-1 px-2.5 py-1.5"
+                class="flex items-start justify-between gap-2 rounded-6 border border-outline-gray-1 bg-surface-gray-1 px-2.5 py-1.5"
               >
                 <div class="min-w-0 flex-1">
                   <div
@@ -119,7 +119,7 @@
                   </div>
                 </div>
                 <span
-                  class="flex-none rounded px-1.5 py-0.5 text-[11px] font-bold tabular-nums"
+                  class="flex-none rounded-4 px-1.5 py-0.5 text-[11px] font-bold tabular-nums"
                   :class="
                     c.points >= 0
                       ? 'bg-surface-green-2 text-ink-green-8'
@@ -218,8 +218,8 @@ const triggerText = computed(() =>
 const triggerClass = computed(
   () =>
     ({
-      header: 'flex-none rounded px-[7px] py-px text-[11px] font-bold',
-      card: 'flex-none rounded px-[5px] py-px text-[9px] font-bold',
+      header: 'flex-none rounded-4 px-[7px] py-px text-[11px] font-bold',
+      card: 'flex-none rounded-4 px-[5px] py-px text-[9px] font-bold',
       chip: 'rounded-[3px] px-[5px] py-px text-[9px] font-bold',
     })[props.variant] || 'rounded-[3px] px-[5px] py-px text-[9px] font-bold',
 )

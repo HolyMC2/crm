@@ -17,7 +17,7 @@
     <div
       v-if="open"
       ref="pop"
-      class="absolute bottom-7 left-0 z-30 max-h-72 w-72 overflow-y-auto rounded-xl border border-outline-gray-2 bg-surface-base p-1 shadow-lg"
+      class="absolute bottom-7 left-0 z-30 max-h-72 w-72 overflow-y-auto rounded-7 border border-outline-gray-2 bg-surface-base p-1 shadow-lg"
     >
       <div
         v-if="res.loading"
@@ -35,7 +35,7 @@
         v-for="r in replies"
         :key="r.name"
         type="button"
-        class="block w-full rounded-lg px-2.5 py-1.5 text-left hover:bg-surface-gray-2"
+        class="block w-full rounded-6 px-2.5 py-1.5 text-left hover:bg-surface-gray-2"
         @click="pick(r)"
       >
         <div class="truncate text-[12.5px] font-semibold text-ink-gray-8">

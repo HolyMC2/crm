@@ -58,7 +58,7 @@
 
       <p
         v-if="detail.nota"
-        class="rounded-lg border border-outline-amber-2 bg-surface-amber-1 px-4 py-3 text-base text-ink-amber-7"
+        class="rounded-6 border border-outline-amber-2 bg-surface-amber-1 px-4 py-3 text-base text-ink-amber-7"
         role="note"
       >
         {{ detail.nota }}
@@ -74,7 +74,7 @@
             spellcheck="false"
             autocapitalize="off"
             autocomplete="off"
-            class="block w-full rounded-lg border border-outline-gray-2 bg-surface-base px-3 py-2 font-mono text-sm leading-5 text-ink-gray-9"
+            class="block w-full rounded-6 border border-outline-gray-2 bg-surface-base px-3 py-2 font-mono text-sm leading-5 text-ink-gray-9"
             data-testid="scripts-editor"
             @keydown.tab.prevent="indent"
           />
@@ -110,7 +110,7 @@
 
       <dl
         v-if="detail.propiedades?.length"
-        class="divide-y divide-outline-gray-1 rounded-lg border border-outline-gray-2"
+        class="divide-y divide-outline-gray-1 rounded-6 border border-outline-gray-2"
       >
         <div
           v-for="prop in detail.propiedades"
@@ -148,7 +148,7 @@
             />
             <pre
               v-if="open.has(index)"
-              class="mx-4 mb-2 overflow-x-auto rounded-lg bg-surface-gray-1 px-3 py-2 font-mono text-sm leading-5"
+              class="mx-4 mb-2 overflow-x-auto rounded-6 bg-surface-gray-1 px-3 py-2 font-mono text-sm leading-5"
             ><code><span
                 v-for="(line, i) in version.diff"
                 :key="i"

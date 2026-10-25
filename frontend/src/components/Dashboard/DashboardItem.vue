@@ -2,7 +2,7 @@
   <div class="flex h-full w-full flex-col">
     <div
       v-if="item.data?.unavailable"
-      class="flex h-full w-full flex-col justify-center gap-2 rounded bg-surface-base p-4 text-ink-gray-7"
+      class="flex h-full w-full flex-col justify-center gap-2 rounded-4 bg-surface-base p-4 text-ink-gray-7"
       role="status"
     >
       <strong>{{ item.data.title || __('Metric unavailable') }}</strong>
@@ -10,7 +10,7 @@
     </div>
     <div
       v-else-if="item.type == 'number_chart'"
-      class="flex min-h-0 w-full flex-1 rounded shadow overflow-hidden cursor-pointer"
+      class="flex min-h-0 w-full flex-1 rounded-4 shadow overflow-hidden cursor-pointer"
     >
       <Tooltip :text="__(item.data?.tooltip || '')" class="w-full">
         <NumberCard
@@ -24,14 +24,14 @@
     </div>
     <div
       v-else-if="item.type == 'spacer'"
-      class="rounded bg-surface-base h-full overflow-hidden text-ink-gray-5 flex items-center justify-center"
+      class="rounded-4 bg-surface-base h-full overflow-hidden text-ink-gray-5 flex items-center justify-center"
       :class="editing ? 'border border-dashed border-outline-gray-2' : ''"
     >
       {{ editing ? __('Spacer') : '' }}
     </div>
     <div
       v-else-if="item.type == 'axis_chart'"
-      class="min-h-0 w-full flex-1 rounded-md bg-surface-base shadow"
+      class="min-h-0 w-full flex-1 rounded-5 bg-surface-base shadow"
     >
       <component
         :is="axisChartComponent(item.data)"
@@ -41,7 +41,7 @@
     </div>
     <div
       v-else-if="item.type == 'donut_chart'"
-      class="min-h-0 w-full flex-1 rounded-md bg-surface-base shadow overflow-hidden"
+      class="min-h-0 w-full flex-1 rounded-5 bg-surface-base shadow overflow-hidden"
     >
       <DonutChart v-if="item.data" v-bind="donutChartProps(item.data)" />
     </div>

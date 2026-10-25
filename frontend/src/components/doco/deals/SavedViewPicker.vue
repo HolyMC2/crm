@@ -15,7 +15,7 @@
 <template>
   <div class="relative inline-block">
     <button
-      class="flex items-center gap-1 rounded-lg border px-3 py-[7px] text-[12px] font-medium"
+      class="flex items-center gap-1 rounded-6 border px-3 py-[7px] text-[12px] font-medium"
       :class="
         selectedView
           ? 'border-outline-green-3 bg-surface-green-2 text-ink-green-8'
@@ -91,7 +91,7 @@
                 {{ v.label }}
                 <span
                   v-if="v.public"
-                  class="ml-1 rounded bg-surface-gray-3 px-1 py-px text-[10px] font-semibold text-ink-gray-6"
+                  class="ml-1 rounded-4 bg-surface-gray-3 px-1 py-px text-[10px] font-semibold text-ink-gray-6"
                   >{{ __('Pública') }}</span
                 >
                 <span
@@ -189,7 +189,7 @@
 
         <div class="flex flex-col gap-1 px-3 py-2">
           <button
-            class="rounded-lg bg-surface-gray-10 px-3 py-1.5 text-[12px] font-semibold text-ink-base disabled:opacity-60"
+            class="rounded-6 bg-surface-gray-10 px-3 py-1.5 text-[12px] font-semibold text-ink-base disabled:opacity-60"
             :disabled="busy"
             @click="saveAsNew"
           >
@@ -197,7 +197,7 @@
           </button>
           <button
             v-if="selectedView"
-            class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-medium text-ink-gray-7 disabled:opacity-60"
+            class="rounded-6 border border-outline-gray-2 px-3 py-1.5 text-[12px] font-medium text-ink-gray-7 disabled:opacity-60"
             :disabled="busy"
             @click="updateSelected"
           >

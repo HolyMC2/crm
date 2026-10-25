@@ -160,7 +160,7 @@
             <li
               v-for="stage in sections.pipeline.items"
               :key="stage.status"
-              class="break-words rounded border border-outline-gray-2 p-2"
+              class="break-words rounded-4 border border-outline-gray-2 p-2"
             >
               {{ stageLabel(stage.status) }} · {{ __(stage.type) }} ·
               {{ stage.probability }}%
@@ -363,7 +363,7 @@
         <details
           v-for="rule in sections.slas.items || []"
           :key="rule.name"
-          class="rounded border border-outline-gray-2 p-3"
+          class="rounded-4 border border-outline-gray-2 p-3"
         >
           <summary
             class="min-h-11 cursor-pointer break-words py-2 font-medium focus-visible:ring-2"
@@ -466,7 +466,7 @@
         <div
           v-for="rule in sections.assignment.items || []"
           :key="rule.name"
-          class="space-y-2 rounded border border-outline-gray-2 p-3 text-sm"
+          class="space-y-2 rounded-4 border border-outline-gray-2 p-3 text-sm"
         >
           <h4 class="break-words font-medium">
             {{ rule.name }} · {{ __(rule.document_type) }} ·
@@ -594,7 +594,7 @@ const SourceLinks = defineComponent({
                     {
                       type: 'button',
                       class:
-                        'min-h-11 rounded border border-outline-gray-2 px-3 focus-visible:ring-2',
+                        'min-h-11 rounded-4 border border-outline-gray-2 px-3 focus-visible:ring-2',
                       onClick: () => emit('editor', props.source.editor),
                     },
                     __('Open {0}', [__(props.source.editor)]),
@@ -661,13 +661,13 @@ load()
 </script>
 <style scoped>
 .effective-button {
-  @apply min-h-11 rounded border border-outline-gray-2 bg-surface-base px-3 py-2 text-sm focus-visible:ring-2 disabled:opacity-50;
+  @apply min-h-11 rounded-4 border border-outline-gray-2 bg-surface-base px-3 py-2 text-sm focus-visible:ring-2 disabled:opacity-50;
 }
 .effective-input {
-  @apply block min-h-11 w-full min-w-0 rounded border border-outline-gray-2 bg-surface-base px-3 text-sm focus-visible:ring-2 disabled:opacity-50;
+  @apply block min-h-11 w-full min-w-0 rounded-4 border border-outline-gray-2 bg-surface-base px-3 text-sm focus-visible:ring-2 disabled:opacity-50;
 }
 .effective-section {
-  @apply min-w-0 space-y-3 rounded border border-outline-gray-2 p-3;
+  @apply min-w-0 space-y-3 rounded-4 border border-outline-gray-2 p-3;
 }
 dt {
   @apply text-ink-gray-6;

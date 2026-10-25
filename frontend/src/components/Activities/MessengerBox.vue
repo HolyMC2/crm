@@ -54,14 +54,14 @@
           @update:modelValue="onEmoji"
         >
           <SmileIcon
-            class="flex size-4.5 cursor-pointer rounded-sm text-2xl leading-none text-ink-gray-4"
+            class="flex size-4.5 cursor-pointer rounded-1 text-2xl leading-none text-ink-gray-4"
             @click="togglePopover"
           />
         </IconPicker>
         <CannedReplyPicker channel="Messenger" @pick="onCanned" />
         <button
           type="button"
-          class="rounded-md bg-surface-green-2 px-1.5 py-0.5 text-[12px] font-semibold text-ink-green-8 hover:bg-surface-green-7"
+          class="rounded-5 bg-surface-green-2 px-1.5 py-0.5 text-[12px] font-semibold text-ink-green-8 hover:bg-surface-green-7"
           :title="__('Catálogo (o escribe /cat)')"
           @click="emit('catalog', '')"
         >
@@ -77,14 +77,14 @@
             ? __('Escribe un mensaje… (/ para comandos)')
             : __('Escribe un mensaje…')
         "
-        class="min-h-[38px] flex-1 resize-none rounded-lg border border-outline-gray-2 px-3 py-2 text-[13px] text-ink-gray-8 dark:bg-surface-gray-2"
+        class="min-h-[38px] flex-1 resize-none rounded-6 border border-outline-gray-2 px-3 py-2 text-[13px] text-ink-gray-8 dark:bg-surface-gray-2"
         @input="(e) => syncSlash(e.target)"
         @click="(e) => syncSlash(e.target)"
         @blur="slash.close()"
         @keydown="onKeydown"
       />
       <button
-        class="flex-none rounded-lg px-4 py-2 text-[13px] font-semibold text-white disabled:opacity-50"
+        class="flex-none rounded-6 px-4 py-2 text-[13px] font-semibold text-white disabled:opacity-50"
         style="background: #0084ff"
         :disabled="busy || !text.trim()"
         @click="send"

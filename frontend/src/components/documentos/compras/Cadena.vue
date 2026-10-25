@@ -26,7 +26,7 @@
         <component
           :is="step.to ? RouterLink : 'div'"
           :to="step.to || undefined"
-          class="flex min-h-12 min-w-0 flex-1 items-start justify-between gap-3 rounded-lg py-1.5"
+          class="flex min-h-12 min-w-0 flex-1 items-start justify-between gap-3 rounded-6 py-1.5"
           :class="step.to ? 'hover:bg-surface-gray-1' : ''"
           :aria-current="step.here ? 'page' : undefined"
         >

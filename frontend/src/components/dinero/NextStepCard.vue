@@ -5,7 +5,7 @@
        width (thumb reach); on a desk they sit in a row. Used by CompraOrden,
        GastoFactura and CobranzaCliente so the three look and read alike. -->
   <section
-    class="rounded-xl border border-outline-gray-2 p-4"
+    class="rounded-7 border border-outline-gray-2 p-4"
     :aria-label="label || __('Next step', null, 'Dinero')"
     data-next-step
   >

@@ -65,14 +65,14 @@
         <div
           v-if="notice"
           role="status"
-          class="mb-4 rounded-lg bg-surface-green-1 p-3 text-sm text-ink-green-8"
+          class="mb-4 rounded-6 bg-surface-green-1 p-3 text-sm text-ink-green-8"
         >
           {{ notice }}
         </div>
         <div
           v-if="problem"
           role="alert"
-          class="mb-4 space-y-2 rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7"
+          class="mb-4 space-y-2 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
         >
           <p>{{ problem.message }}</p>
           <div class="flex flex-wrap gap-2">
@@ -88,7 +88,7 @@
         <section
           v-if="!person.hr"
           role="status"
-          class="mb-4 space-y-2 rounded-lg border border-outline-gray-2 p-4 text-sm"
+          class="mb-4 space-y-2 rounded-6 border border-outline-gray-2 p-4 text-sm"
         >
           <p class="text-ink-gray-8">{{ person.hr_reason }}</p>
           <div class="flex flex-wrap gap-2">
@@ -106,7 +106,7 @@
           <!-- The request this page was opened for, with its one decision. -->
           <section
             v-if="current"
-            class="mb-4 rounded-lg border border-outline-blue-2 bg-surface-blue-1 p-4"
+            class="mb-4 rounded-6 border border-outline-blue-2 bg-surface-blue-1 p-4"
           >
             <h2 class="text-base font-semibold text-ink-gray-9">
               {{ __('Vacation request: {0}', [current.label]) }}
@@ -171,7 +171,7 @@
           </section>
 
           <div class="grid gap-4 sm:grid-cols-2">
-            <section class="rounded-lg border border-outline-gray-2 p-4">
+            <section class="rounded-6 border border-outline-gray-2 p-4">
               <h2 class="mb-2 text-sm font-semibold text-ink-gray-8">
                 {{ __('Vacations', null, 'Equipo') }}
               </h2>
@@ -245,7 +245,7 @@
               </template>
             </section>
 
-            <section class="rounded-lg border border-outline-gray-2 p-4">
+            <section class="rounded-6 border border-outline-gray-2 p-4">
               <h2 class="mb-2 text-sm font-semibold text-ink-gray-8">
                 {{ __('This week', null, 'Equipo') }}
               </h2>
@@ -280,7 +280,7 @@
             </section>
 
             <section
-              class="rounded-lg border border-outline-gray-2 p-4 sm:col-span-2"
+              class="rounded-6 border border-outline-gray-2 p-4 sm:col-span-2"
             >
               <h2 class="mb-2 text-sm font-semibold text-ink-gray-8">
                 {{ __('Vacation requests') }}

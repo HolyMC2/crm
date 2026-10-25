@@ -1,6 +1,6 @@
 <template>
   <section
-    class="min-w-0 space-y-4 rounded border border-outline-gray-2 p-3 text-sm"
+    class="min-w-0 space-y-4 rounded-4 border border-outline-gray-2 p-3 text-sm"
     :aria-label="__('Continue sales order')"
     :aria-busy="state.loading || state.busy"
   >
@@ -31,7 +31,7 @@
     <div
       v-if="state.pending"
       role="alert"
-      class="space-y-2 rounded border border-outline-gray-3 p-3"
+      class="space-y-2 rounded-4 border border-outline-gray-3 p-3"
     >
       <p>
         {{
@@ -119,7 +119,7 @@
       </section>
       <section
         v-if="handoff"
-        class="space-y-2 rounded border border-outline-gray-2 p-3"
+        class="space-y-2 rounded-4 border border-outline-gray-2 p-3"
         :aria-label="__('Register handoff')"
       >
         <h4 class="font-semibold">
@@ -157,7 +157,7 @@
           <li
             v-for="payment in order.payments"
             :key="payment.name"
-            class="space-y-2 rounded border border-outline-gray-2 p-3"
+            class="space-y-2 rounded-4 border border-outline-gray-2 p-3"
           >
             <p class="break-all font-medium">
               {{ payment.name }} · {{ __(payment.state) }}
@@ -332,7 +332,7 @@
       </div>
       <section
         v-if="state.review"
-        class="space-y-3 rounded border border-outline-gray-3 p-3"
+        class="space-y-3 rounded-4 border border-outline-gray-3 p-3"
         :aria-label="__('Review order action')"
       >
         <h4 class="font-semibold">
@@ -784,10 +784,10 @@ onUnmounted(() => {
 </script>
 <style scoped>
 .commerce-button {
-  @apply min-h-11 rounded border border-outline-gray-2 bg-surface-base px-3 py-2 text-left text-sm text-ink-gray-8 focus-visible:ring-2 disabled:opacity-50;
+  @apply min-h-11 rounded-4 border border-outline-gray-2 bg-surface-base px-3 py-2 text-left text-sm text-ink-gray-8 focus-visible:ring-2 disabled:opacity-50;
 }
 .commerce-input {
-  @apply min-h-11 w-full min-w-0 rounded border border-outline-gray-2 bg-surface-base px-3 text-sm text-ink-gray-8 focus-visible:ring-2 disabled:opacity-50;
+  @apply min-h-11 w-full min-w-0 rounded-4 border border-outline-gray-2 bg-surface-base px-3 text-sm text-ink-gray-8 focus-visible:ring-2 disabled:opacity-50;
 }
 .commerce-link {
   @apply inline-flex min-h-11 items-center break-all px-1 underline focus-visible:ring-2;

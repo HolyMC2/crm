@@ -56,7 +56,7 @@
             />
             <p
               v-if="options.held_by_pos?.length"
-              class="rounded-lg bg-surface-gray-2 p-3 text-sm text-ink-gray-8"
+              class="rounded-6 bg-surface-gray-2 p-3 text-sm text-ink-gray-8"
               data-testid="held-accounts"
             >
               {{ options.held_reason }}

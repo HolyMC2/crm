@@ -86,7 +86,7 @@
           </template>
           <span
             v-if="waWindow"
-            class="flex-none whitespace-nowrap rounded px-1.5 py-px text-[10.5px] font-semibold"
+            class="flex-none whitespace-nowrap rounded-4 px-1.5 py-px text-[10.5px] font-semibold"
             :class="
               waWindow.open
                 ? 'bg-surface-amber-1 text-ink-amber-9'
@@ -102,7 +102,7 @@
           </span>
           <span
             v-if="saldoChip"
-            class="flex-none whitespace-nowrap rounded bg-surface-red-1 px-1.5 py-px text-[10.5px] font-semibold text-ink-red-8"
+            class="flex-none whitespace-nowrap rounded-4 bg-surface-red-1 px-1.5 py-px text-[10.5px] font-semibold text-ink-red-8"
             :title="__('Saldo pendiente en facturas del trato')"
           >
             💰 {{ __('Saldo') }} {{ saldoChip }}
@@ -111,7 +111,7 @@
                meta row, so the header's action cluster never squeezes the name -->
           <span
             v-if="due"
-            class="order-first flex-none whitespace-nowrap rounded px-1.5 py-px text-[10.5px] font-semibold sm:order-none"
+            class="order-first flex-none whitespace-nowrap rounded-4 px-1.5 py-px text-[10.5px] font-semibold sm:order-none"
             :class="CHIP_CLASS[due.tone]"
             data-testid="header-due-chip"
           >
@@ -145,7 +145,7 @@
              in the sheet's confirm button. -->
         <button
           v-if="canResolve && !isMobile"
-          class="press flex h-[34px] flex-none items-center gap-1.5 whitespace-nowrap rounded-lg px-3 text-[12.5px] font-semibold"
+          class="press flex h-[34px] flex-none items-center gap-1.5 whitespace-nowrap rounded-6 px-3 text-[12.5px] font-semibold"
           :class="
             due
               ? 'border border-outline-gray-2 bg-surface-gray-2 text-ink-gray-8 hover:bg-surface-gray-3'
@@ -172,7 +172,7 @@
              unchanged. Mobile is untouched: neither control renders there. -->
         <Dropdown v-if="!isMobile && !isDeal" :options="stageOptions">
           <button
-            class="flex items-center gap-1.5 rounded-lg border border-outline-gray-2 bg-surface-gray-2 px-[11px] py-[7px] text-[12.5px] font-semibold text-ink-gray-8"
+            class="flex items-center gap-1.5 rounded-6 border border-outline-gray-2 bg-surface-gray-2 px-[11px] py-[7px] text-[12.5px] font-semibold text-ink-gray-8"
           >
             <span
               class="h-2 w-2 rounded-full"
@@ -184,7 +184,7 @@
         <!-- 🏷 etiquetas (spec 2.2) -->
         <button
           v-if="!isMobile"
-          class="press flex h-[34px] w-[34px] items-center justify-center rounded-lg border border-outline-gray-2"
+          class="press flex h-[34px] w-[34px] items-center justify-center rounded-6 border border-outline-gray-2"
           :class="
             (row.tags || []).length
               ? 'bg-surface-violet-2 text-ink-violet-8'
@@ -199,7 +199,7 @@
         <!-- 💤 snooze/recordar (spec 2.1) -->
         <Dropdown v-if="!isMobile" :options="snoozeOptions">
           <button
-            class="press flex h-[34px] w-[34px] items-center justify-center rounded-lg border border-outline-gray-2"
+            class="press flex h-[34px] w-[34px] items-center justify-center rounded-6 border border-outline-gray-2"
             :class="
               isSnoozed
                 ? 'bg-surface-violet-2 text-ink-violet-8'
@@ -225,7 +225,7 @@
         />
         <button
           v-if="!isMobile"
-          class="press flex h-[34px] w-[34px] items-center justify-center rounded-lg border border-outline-gray-2 bg-surface-gray-2 text-ink-gray-7 hover:bg-surface-gray-3"
+          class="press flex h-[34px] w-[34px] items-center justify-center rounded-6 border border-outline-gray-2 bg-surface-gray-2 text-ink-gray-7 hover:bg-surface-gray-3"
           :title="__('Bitácora — historial en todos los canales')"
           :aria-label="__('Bitácora')"
           @click="openLedger"
@@ -233,7 +233,7 @@
           <LucideScrollText class="h-4 w-4" />
         </button>
         <button
-          class="press flex size-11 items-center justify-center rounded-lg text-[15px] text-white sm:size-[34px]"
+          class="press flex size-11 items-center justify-center rounded-6 text-[15px] text-white sm:size-[34px]"
           style="background: var(--brand)"
           :title="__('Llamar')"
           :aria-label="__('Llamar')"
@@ -243,7 +243,7 @@
         </button>
         <Dropdown v-if="isMobile" :options="mobileMenu" align="end">
           <button
-            class="press flex size-11 items-center justify-center rounded-lg text-ink-gray-7 hover:bg-surface-gray-2"
+            class="press flex size-11 items-center justify-center rounded-6 text-ink-gray-7 hover:bg-surface-gray-2"
             :class="
               isSnoozed || (row.tags || []).length ? 'text-ink-violet-8' : ''
             "
@@ -321,7 +321,7 @@
         <div class="flex gap-2">
           <input
             v-model="newTag"
-            class="w-full rounded-lg border border-outline-gray-2 bg-surface-base px-3 py-2 text-base text-ink-gray-9"
+            class="w-full rounded-6 border border-outline-gray-2 bg-surface-base px-3 py-2 text-base text-ink-gray-9"
             :aria-label="__('Nueva etiqueta')"
             :placeholder="__('Nueva etiqueta… (urgente, garantía, mayoreo)')"
             @keydown.enter.prevent="addTag(newTag)"
@@ -343,7 +343,7 @@
           v-model="snoozeCustom"
           type="datetime-local"
           :min="minLocal"
-          class="w-full rounded-lg border border-outline-gray-2 bg-surface-base px-3 py-2 text-base text-ink-gray-9"
+          class="w-full rounded-6 border border-outline-gray-2 bg-surface-base px-3 py-2 text-base text-ink-gray-9"
           :aria-label="__('Posponer hasta')"
         />
       </template>

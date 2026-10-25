@@ -35,7 +35,7 @@
     <div
       v-if="state.error"
       role="alert"
-      class="my-3 rounded border border-outline-gray-2 p-3 space-y-2"
+      class="my-3 rounded-4 border border-outline-gray-2 p-3 space-y-2"
     >
       <p>{{ state.error }}</p>
       <button
@@ -273,7 +273,7 @@
             <li
               v-for="(row, index) in state.selected.products"
               :key="index"
-              class="rounded border border-outline-gray-2 p-3 break-words"
+              class="rounded-4 border border-outline-gray-2 p-3 break-words"
             >
               {{ row.product_name || row.product_code }} · {{ row.qty }} ×
               {{ amount(row.rate, state.selected.currency)
@@ -291,7 +291,7 @@
         </div>
         <form
           v-if="state.decision"
-          class="rounded border border-outline-gray-2 p-3 space-y-3"
+          class="rounded-4 border border-outline-gray-2 p-3 space-y-3"
           @submit.prevent="recordDecision"
         >
           <fieldset :disabled="locked" class="min-w-0 space-y-3">
@@ -355,7 +355,7 @@
         </form>
         <section
           v-if="state.erp"
-          class="rounded border border-outline-gray-2 p-3 space-y-3"
+          class="rounded-4 border border-outline-gray-2 p-3 space-y-3"
           :aria-label="__('ERP quotation review')"
         >
           <h4 class="font-semibold">{{ __('Review draft ERP quotation') }}</h4>
@@ -443,7 +443,7 @@
             :srcdoc="state.preview"
             sandbox="allow-same-origin allow-modals"
             :title="__('Offer preview')"
-            class="h-[65vh] w-full rounded border border-outline-gray-2 bg-white"
+            class="h-[65vh] w-full rounded-4 border border-outline-gray-2 bg-white"
           />
         </section>
       </div>
@@ -754,10 +754,10 @@ watch(
 </script>
 <style scoped>
 .offers :deep(.offer-button) {
-  @apply min-h-11 max-w-full rounded border border-outline-gray-2 bg-surface-base px-3 py-2 text-sm text-ink-gray-9 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50;
+  @apply min-h-11 max-w-full rounded-4 border border-outline-gray-2 bg-surface-base px-3 py-2 text-sm text-ink-gray-9 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50;
 }
 .offers :deep(.offer-input) {
-  @apply block min-h-11 w-full min-w-0 rounded border border-outline-gray-2 bg-surface-base px-3 py-2 text-base text-ink-gray-9;
+  @apply block min-h-11 w-full min-w-0 rounded-4 border border-outline-gray-2 bg-surface-base px-3 py-2 text-base text-ink-gray-9;
 }
 .offers :deep(input),
 .offers :deep([role='combobox']) {

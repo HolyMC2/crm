@@ -16,7 +16,7 @@
       <RouterLink
         v-if="!phone"
         :to="backTarget"
-        class="inline-flex min-h-11 items-center gap-1 rounded-lg text-sm text-ink-gray-6 hover:text-ink-gray-9 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-8"
+        class="inline-flex min-h-11 items-center gap-1 rounded-6 text-sm text-ink-gray-6 hover:text-ink-gray-9 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-8"
       >
         <LucideArrowLeft class="h-4 w-4" />{{ backLabel }}
       </RouterLink>

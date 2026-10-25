@@ -18,7 +18,7 @@
 
     <!-- Drop anywhere in the box or choose a file -->
     <label
-      class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-6 py-8 text-center transition-colors focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-outline-gray-4"
+      class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-7 border-2 border-dashed px-6 py-8 text-center transition-colors focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-outline-gray-4"
       :class="
         dragging
           ? 'border-outline-gray-5 bg-surface-gray-2'
@@ -59,7 +59,7 @@
       <li
         v-for="part in parts"
         :key="part.key"
-        class="flex flex-col gap-2 rounded-lg border border-outline-gray-2 p-4"
+        class="flex flex-col gap-2 rounded-6 border border-outline-gray-2 p-4"
       >
         <div class="flex items-center gap-2">
           <Icon :icon="part.icon" class="h-4 w-4 text-ink-gray-6" />
@@ -70,7 +70,7 @@
         <p class="flex-1 text-sm text-ink-gray-7">{{ part.body }}</p>
         <button
           type="button"
-          class="inline-flex min-h-11 items-center gap-1 self-start rounded text-sm font-medium text-ink-gray-8 hover:text-ink-gray-9 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-outline-gray-4 sm:min-h-0"
+          class="inline-flex min-h-11 items-center gap-1 self-start rounded-4 text-sm font-medium text-ink-gray-8 hover:text-ink-gray-9 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-outline-gray-4 sm:min-h-0"
           @click="$emit('view', part.view)"
         >
           {{ part.action }}
@@ -82,7 +82,7 @@
     <!-- Problems never hide: they lead to the list that explains each one -->
     <div
       v-if="attention"
-      class="flex flex-wrap items-center gap-3 rounded-lg border border-outline-amber-2 bg-surface-amber-1 p-4"
+      class="flex flex-wrap items-center gap-3 rounded-6 border border-outline-amber-2 bg-surface-amber-1 p-4"
       role="status"
     >
       <LucideTriangleAlert class="h-5 w-5 shrink-0 text-ink-amber-7" />

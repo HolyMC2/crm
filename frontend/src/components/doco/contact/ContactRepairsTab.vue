@@ -36,13 +36,13 @@
         </h3>
         <div
           v-if="!data.repairs.length"
-          class="rounded-xl border border-outline-gray-2 p-8 text-center text-sm text-ink-gray-6"
+          class="rounded-7 border border-outline-gray-2 p-8 text-center text-sm text-ink-gray-6"
         >
           {{ __('Sin reparaciones registradas.') }}
         </div>
         <div
           v-else
-          class="hidden overflow-x-auto rounded-xl border border-outline-gray-2 md:block"
+          class="hidden overflow-x-auto rounded-7 border border-outline-gray-2 md:block"
         >
           <div class="min-w-[920px]">
             <div
@@ -89,7 +89,7 @@
           </div>
         </div>
         <div
-          class="overflow-hidden rounded-xl border border-outline-gray-2 md:hidden"
+          class="overflow-hidden rounded-7 border border-outline-gray-2 md:hidden"
         >
           <MobileRecordCard
             v-for="row in data.repairs"
@@ -125,7 +125,7 @@
             v-for="warranty in data.warranties"
             :key="warranty.repair_order"
             :href="orderHref(warranty.repair_order)"
-            class="rounded-xl border border-outline-gray-2 bg-surface-gray-1 p-3"
+            class="rounded-7 border border-outline-gray-2 bg-surface-gray-1 p-3"
           >
             <div class="flex items-center justify-between gap-2">
               <span class="truncate text-sm font-semibold text-ink-gray-9">{{
@@ -156,7 +156,7 @@
           <div
             v-for="(device, index) in data.devices"
             :key="`${device.device_model}-${index}`"
-            class="rounded-xl border border-outline-gray-2 p-3"
+            class="rounded-7 border border-outline-gray-2 p-3"
           >
             <div class="text-sm font-semibold text-ink-gray-9">
               {{ device.device_model }}
@@ -168,7 +168,7 @@
               <code
                 v-for="serial in device.serial_numbers"
                 :key="serial.serial_no"
-                class="rounded bg-surface-gray-2 px-2 py-1 text-xs text-ink-gray-7"
+                class="rounded-4 bg-surface-gray-2 px-2 py-1 text-xs text-ink-gray-7"
                 >{{ serial.type }}: {{ serial.serial_no }}</code
               >
             </div>
@@ -215,8 +215,8 @@ const Metric = defineComponent({
         {
           class:
             p.tone === 'green'
-              ? 'rounded-xl bg-surface-green-2 p-3 text-ink-green-8'
-              : 'rounded-xl bg-surface-gray-1 p-3 text-ink-gray-9',
+              ? 'rounded-7 bg-surface-green-2 p-3 text-ink-green-8'
+              : 'rounded-7 bg-surface-gray-1 p-3 text-ink-gray-9',
         },
         [
           h(

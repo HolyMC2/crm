@@ -14,7 +14,7 @@
             type="button"
             role="radio"
             :aria-checked="mode === choice.value ? 'true' : 'false'"
-            class="flex min-h-11 flex-col items-center justify-center gap-1 rounded-lg border px-2 py-2 text-sm"
+            class="flex min-h-11 flex-col items-center justify-center gap-1 rounded-6 border px-2 py-2 text-sm"
             :class="
               mode === choice.value
                 ? 'border-outline-gray-4 bg-surface-gray-2 font-medium text-ink-gray-9'
@@ -34,7 +34,7 @@
             {{ __('Products per image', null, CTX) }}
             <select
               v-model.number="perPage"
-              class="h-11 rounded-md border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9 sm:h-8 sm:text-sm"
+              class="h-11 rounded-5 border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9 sm:h-8 sm:text-sm"
             >
               <option v-for="n in PER_PAGE" :key="n" :value="n">{{ n }}</option>
             </select>
@@ -43,7 +43,7 @@
             v-if="mode !== 'message'"
             class="flex min-h-11 items-center gap-2 text-sm text-ink-gray-8 sm:min-h-8"
           >
-            <input v-model="withPrices" type="checkbox" class="rounded" />
+            <input v-model="withPrices" type="checkbox" class="rounded-4" />
             {{ __('With prices', null, CTX) }}
           </label>
         </div>
@@ -61,7 +61,7 @@
                 :href="page.file_url"
                 target="_blank"
                 rel="noopener"
-                class="block overflow-hidden rounded-lg ring-1 ring-outline-gray-2 hover:ring-outline-gray-4"
+                class="block overflow-hidden rounded-6 ring-1 ring-outline-gray-2 hover:ring-outline-gray-4"
                 :title="__('Open image {0}', [index + 1], CTX)"
               >
                 <img
@@ -78,7 +78,7 @@
             :href="result.file_url"
             target="_blank"
             rel="noopener"
-            class="inline-flex min-h-11 items-center gap-1.5 rounded-md bg-surface-gray-2 px-3 text-base text-ink-gray-8 hover:bg-surface-gray-3 sm:min-h-8"
+            class="inline-flex min-h-11 items-center gap-1.5 rounded-5 bg-surface-gray-2 px-3 text-base text-ink-gray-8 hover:bg-surface-gray-3 sm:min-h-8"
           >
             <LucideFileText class="h-4 w-4" aria-hidden="true" />
             {{ __('Open the PDF', null, CTX) }}
@@ -88,7 +88,7 @@
             readonly
             :value="result.text"
             rows="8"
-            class="w-full rounded-md border border-outline-gray-2 p-2 text-sm"
+            class="w-full rounded-5 border border-outline-gray-2 p-2 text-sm"
             :aria-label="__('Price message', null, CTX)"
           />
         </div>

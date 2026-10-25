@@ -34,7 +34,7 @@
             <p
               v-if="resumed"
               role="status"
-              class="rounded-lg bg-surface-gray-2 p-3 text-sm text-ink-gray-8"
+              class="rounded-6 bg-surface-gray-2 p-3 text-sm text-ink-gray-8"
             >
               {{
                 __(
@@ -45,7 +45,7 @@
 
             <!-- The receipt: the camera on a phone, a file on a computer. -->
             <section
-              class="rounded-xl border border-outline-gray-2 p-3"
+              class="rounded-7 border border-outline-gray-2 p-3"
               :aria-label="__('Receipt photo')"
               data-field="photo"
             >
@@ -69,11 +69,11 @@
                 v-if="preview"
                 :src="preview"
                 :alt="__('Receipt photo')"
-                class="mt-3 h-40 w-full rounded-lg border border-outline-gray-2 object-cover"
+                class="mt-3 h-40 w-full rounded-6 border border-outline-gray-2 object-cover"
               />
               <div class="mt-3 flex flex-wrap gap-2">
                 <label
-                  class="relative inline-flex min-h-11 flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg bg-surface-gray-7 px-3 text-base-medium text-ink-base focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-outline-gray-4"
+                  class="relative inline-flex min-h-11 flex-1 cursor-pointer items-center justify-center gap-2 rounded-6 bg-surface-gray-7 px-3 text-base-medium text-ink-base focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-outline-gray-4"
                 >
                   <LucideCamera class="h-4 w-4" />{{
                     form.photo || photos
@@ -90,7 +90,7 @@
                   />
                 </label>
                 <label
-                  class="relative inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-lg border border-outline-gray-2 px-3 text-base text-ink-gray-8 focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-outline-gray-4"
+                  class="relative inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-6 border border-outline-gray-2 px-3 text-base text-ink-gray-8 focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-outline-gray-4"
                 >
                   <LucideUpload class="h-4 w-4" />{{ __('Choose a file') }}
                   <input
@@ -176,7 +176,7 @@
 
             <p
               v-if="options.advance"
-              class="flex items-start gap-2 rounded-lg bg-surface-gray-2 p-3 text-sm text-ink-gray-8"
+              class="flex items-start gap-2 rounded-6 bg-surface-gray-2 p-3 text-sm text-ink-gray-8"
             >
               <LucideWallet class="mt-0.5 h-4 w-4 flex-none text-ink-gray-6" />
               <span>
@@ -206,7 +206,7 @@
         <div
           v-if="problem"
           role="alert"
-          class="rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7"
+          class="rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
         >
           <strong>{{ problem.title }}.</strong> {{ problem.detail }}
         </div>

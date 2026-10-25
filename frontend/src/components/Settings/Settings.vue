@@ -15,7 +15,7 @@
           <button
             v-if="isMobileView && !categories"
             type="button"
-            class="min-h-11 rounded px-3 focus-visible:ring-2"
+            class="min-h-11 rounded-4 px-3 focus-visible:ring-2"
             @click="categories = true"
           >
             {{ __('Back to settings') }}
@@ -29,7 +29,7 @@
           >
           <button
             type="button"
-            class="min-h-11 rounded border border-outline-gray-2 px-3 focus-visible:ring-2"
+            class="min-h-11 rounded-4 border border-outline-gray-2 px-3 focus-visible:ring-2"
             @click="showSettings = false"
           >
             {{ __('Return to work') }}
@@ -53,7 +53,7 @@
                 v-for="item in group.items"
                 :key="item.label"
                 type="button"
-                class="flex min-h-11 w-full items-center gap-2 rounded px-3 py-2 text-left text-sm focus-visible:ring-2"
+                class="flex min-h-11 w-full items-center gap-2 rounded-4 px-3 py-2 text-left text-sm focus-visible:ring-2"
                 :class="
                   activeTab?.label === item.label
                     ? 'bg-surface-gray-3'
@@ -71,7 +71,7 @@
             </template>
             <div
               v-if="isAdmin() && marketingState !== 'present'"
-              class="mt-4 rounded border border-outline-gray-2 p-3 text-sm"
+              class="mt-4 rounded-4 border border-outline-gray-2 p-3 text-sm"
               role="status"
             >
               <p v-if="marketingState === 'missing'">
@@ -94,7 +94,7 @@
                 </p>
                 <button
                   type="button"
-                  class="mt-2 min-h-11 rounded border px-3 focus-visible:ring-2"
+                  class="mt-2 min-h-11 rounded-4 border px-3 focus-visible:ring-2"
                   @click="loadCapabilities"
                 >
                   {{ __('Retry') }}

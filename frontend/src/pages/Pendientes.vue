@@ -168,7 +168,7 @@
       <div
         v-if="problem"
         role="alert"
-        class="mx-4 mb-3 rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7 sm:mx-6"
+        class="mx-4 mb-3 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7 sm:mx-6"
       >
         <strong>{{ problem.title }}.</strong> {{ problem.detail }}
         <Button class="ml-2" :label="__('Retry')" @click="load()" />
@@ -244,7 +244,7 @@
               :aria-labelledby="`pendientes-${group}`"
               :class="
                 phone
-                  ? 'mx-3 mt-3 overflow-hidden rounded-2xl bg-surface-gray-1'
+                  ? 'mx-3 mt-3 overflow-hidden rounded-8 bg-surface-gray-1'
                   : ''
               "
             >
@@ -295,7 +295,7 @@
               class="mt-3"
               :class="
                 phone
-                  ? 'mx-3 overflow-hidden rounded-2xl bg-surface-gray-1'
+                  ? 'mx-3 overflow-hidden rounded-8 bg-surface-gray-1'
                   : 'border-t border-outline-gray-1'
               "
             >

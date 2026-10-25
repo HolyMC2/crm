@@ -13,7 +13,7 @@
   <template v-if="isDeal">
     <button
       v-if="!hideTrigger"
-      class="press flex h-[34px] w-[34px] items-center justify-center rounded-lg border border-outline-gray-2"
+      class="press flex h-[34px] w-[34px] items-center justify-center rounded-6 border border-outline-gray-2"
       :class="
         active
           ? 'bg-surface-violet-2 text-ink-violet-8'
@@ -35,7 +35,7 @@
         <!-- active enrollment: summary + stop -->
         <div v-if="active" class="flex flex-col gap-3">
           <div
-            class="rounded-xl border border-outline-violet-1 bg-surface-violet-2 p-3"
+            class="rounded-7 border border-outline-violet-1 bg-surface-violet-2 p-3"
           >
             <div
               class="flex items-center gap-1.5 text-[13px] font-semibold text-ink-violet-8"
@@ -82,7 +82,7 @@
             v-for="c in cadences"
             v-else
             :key="c.name"
-            class="press flex items-center justify-between gap-3 rounded-lg border border-outline-gray-2 bg-surface-base p-3 text-left hover:bg-surface-gray-1 disabled:opacity-50"
+            class="press flex items-center justify-between gap-3 rounded-6 border border-outline-gray-2 bg-surface-base p-3 text-left hover:bg-surface-gray-1 disabled:opacity-50"
             :disabled="busy"
             @click="start(c.name)"
           >

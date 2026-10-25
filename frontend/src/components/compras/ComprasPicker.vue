@@ -14,7 +14,7 @@
       :aria-invalid="invalid || undefined"
       :disabled="disabled"
       :placeholder="placeholder"
-      class="form-input block min-h-11 w-full rounded-lg text-base sm:min-h-8 sm:text-sm"
+      class="form-input block min-h-11 w-full rounded-6 text-base sm:min-h-8 sm:text-sm"
       :class="invalid ? 'border-outline-red-3' : ''"
       @focus="show"
       @keydown.down.prevent="move(1)"
@@ -28,7 +28,7 @@
       :id="listId"
       role="listbox"
       :aria-label="label"
-      class="absolute z-30 mt-1 max-h-72 w-full overflow-y-auto rounded-lg border border-outline-gray-2 bg-surface-elevation-2 p-1 shadow-lg"
+      class="absolute z-30 mt-1 max-h-72 w-full overflow-y-auto rounded-6 border border-outline-gray-2 bg-surface-elevation-2 p-1 shadow-lg"
     >
       <p v-if="loading" role="status" class="px-3 py-2 text-sm text-ink-gray-6">
         {{ __('Searching…', null, 'Compras') }}
@@ -39,7 +39,7 @@
         type="button"
         role="option"
         :aria-selected="option.value === modelValue"
-        class="flex min-h-11 w-full flex-col items-start justify-center rounded-md px-3 py-1 text-left text-sm hover:bg-surface-gray-2"
+        class="flex min-h-11 w-full flex-col items-start justify-center rounded-5 px-3 py-1 text-left text-sm hover:bg-surface-gray-2"
         :class="index === active ? 'bg-surface-gray-2' : ''"
         @mousedown.prevent="pick(option)"
       >

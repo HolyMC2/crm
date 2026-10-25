@@ -26,7 +26,7 @@
         </div>
         <template v-else>
           <label class="flex min-h-11 items-center gap-2 text-base">
-            <input v-model="form.enabled" type="checkbox" class="rounded" />
+            <input v-model="form.enabled" type="checkbox" class="rounded-4" />
             {{
               service
                 ? __('Ask after resolving a conversation')
@@ -43,7 +43,7 @@
           <div
             v-if="!templates.length"
             role="status"
-            class="space-y-2 rounded-md bg-surface-amber-1 px-3 py-2 text-sm text-ink-amber-8"
+            class="space-y-2 rounded-5 bg-surface-amber-1 px-3 py-2 text-sm text-ink-amber-8"
           >
             <p v-if="service">
               {{
@@ -61,7 +61,7 @@
             </p>
             <p
               v-if="service"
-              class="rounded bg-surface-base px-2 py-1 font-mono text-xs text-ink-gray-8"
+              class="rounded-4 bg-surface-base px-2 py-1 font-mono text-xs text-ink-gray-8"
             >
               {{ SUGGESTED_TEXT }}
             </p>
@@ -114,7 +114,7 @@
           <p
             v-if="problem"
             role="alert"
-            class="rounded-md bg-surface-red-1 p-3 text-sm text-ink-red-7"
+            class="rounded-5 bg-surface-red-1 p-3 text-sm text-ink-red-7"
           >
             <strong>{{ problem.title }}.</strong> {{ problem.detail }}
           </p>

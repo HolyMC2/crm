@@ -13,7 +13,7 @@
       <header v-if="!isPhone" class="flex flex-wrap items-center gap-3">
         <RouterLink
           to="/disparadores"
-          class="inline-flex min-h-11 items-center rounded-lg px-2 text-base text-ink-gray-7 hover:bg-surface-gray-2"
+          class="inline-flex min-h-11 items-center rounded-6 px-2 text-base text-ink-gray-7 hover:bg-surface-gray-2"
           >Disparadores</RouterLink
         >
         <h1 class="flex-1 text-xl font-semibold text-ink-gray-9">
@@ -62,7 +62,7 @@
       <ul v-if="rows.length" class="grid gap-3">
         <li v-for="row in rows" :key="row.name">
           <article
-            class="flex items-start gap-3 rounded-lg border border-outline-gray-2 bg-surface-base p-4"
+            class="flex items-start gap-3 rounded-6 border border-outline-gray-2 bg-surface-base p-4"
             :data-regla="row.name"
           >
             <div class="min-w-0 flex-1 space-y-1">

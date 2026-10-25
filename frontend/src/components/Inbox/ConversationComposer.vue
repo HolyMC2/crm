@@ -12,7 +12,7 @@
           v-model="body"
           rows="3"
           required
-          class="mt-2 block w-full min-w-0 resize-y rounded border border-outline-gray-2 bg-surface-base p-2 text-sm"
+          class="mt-2 block w-full min-w-0 resize-y rounded-4 border border-outline-gray-2 bg-surface-base p-2 text-sm"
           :disabled="busy || !!pending || blocked"
           :aria-invalid="!pending && !!problem"
           :aria-describedby="`${id}-rules`"
@@ -38,7 +38,7 @@
         >
         <button
           type="submit"
-          class="rounded bg-surface-gray-10 px-3 py-2 text-ink-base"
+          class="rounded-4 bg-surface-gray-10 px-3 py-2 text-ink-base"
           :disabled="
             busy || blocked || (!pending && (!body.trim() || !!problem))
           "

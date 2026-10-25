@@ -22,7 +22,7 @@
         </div>
         <div
           v-else-if="!cat"
-          class="rounded-md bg-surface-amber-1 p-3 text-sm text-ink-amber-9"
+          class="rounded-5 bg-surface-amber-1 p-3 text-sm text-ink-amber-9"
         >
           {{
             __(
@@ -58,7 +58,7 @@
           <!-- documents, newest first -->
           <div
             v-if="!docs.length"
-            class="rounded-md bg-surface-gray-1 p-3 text-sm text-ink-gray-5"
+            class="rounded-5 bg-surface-gray-1 p-3 text-sm text-ink-gray-5"
           >
             {{
               currentReason || __('No hay documentos de este tipo en el trato.')
@@ -73,7 +73,7 @@
             <label
               v-for="d in docs"
               :key="d.name"
-              class="flex cursor-pointer items-start gap-2 rounded-md border p-2 text-sm"
+              class="flex cursor-pointer items-start gap-2 rounded-5 border p-2 text-sm"
               :class="
                 docname === d.name
                   ? 'border-outline-gray-4 bg-surface-gray-1'
@@ -202,7 +202,7 @@
               :id="captionId"
               v-model="caption"
               rows="5"
-              class="w-full rounded border border-outline-gray-2 bg-surface-gray-2 px-2 py-1.5 text-sm text-ink-gray-8 placeholder-ink-gray-4 focus:border-outline-gray-4 focus:bg-surface-base focus:outline-none focus:ring-0"
+              class="w-full rounded-4 border border-outline-gray-2 bg-surface-gray-2 px-2 py-1.5 text-sm text-ink-gray-8 placeholder-ink-gray-4 focus:border-outline-gray-4 focus:bg-surface-base focus:outline-none focus:ring-0"
               :placeholder="__('Mensaje que acompaña al documento')"
               @input="captionDirty = true"
             />
@@ -228,7 +228,7 @@
           <!-- warnings -->
           <div
             v-if="windowClosed"
-            class="rounded-md border border-outline-amber-4 bg-surface-amber-1 p-2.5 text-[12px] leading-snug text-ink-amber-9"
+            class="rounded-5 border border-outline-amber-4 bg-surface-amber-1 p-2.5 text-[12px] leading-snug text-ink-amber-9"
           >
             ⚠
             <span class="font-semibold">{{

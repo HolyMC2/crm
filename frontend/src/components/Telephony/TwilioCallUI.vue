@@ -2,7 +2,7 @@
   <div v-show="showCallPopup" v-bind="$attrs">
     <div
       ref="callPopup"
-      class="fixed z-20 flex w-60 cursor-move select-none flex-col rounded-lg bg-surface-gray-10 p-4 text-ink-gray-2 shadow-2xl"
+      class="fixed z-20 flex w-60 cursor-move select-none flex-col rounded-6 bg-surface-gray-10 p-4 text-ink-gray-2 shadow-2xl"
       :style="style"
     >
       <div class="flex flex-row-reverse items-center gap-1">
@@ -73,7 +73,7 @@
             variant="solid"
             theme="red"
             :label="__('Cancel')"
-            class="rounded-lg"
+            class="rounded-6"
             :disabled="callStatus == 'initiating'"
             @click="cancelCall"
           >
@@ -88,7 +88,7 @@
             variant="solid"
             theme="green"
             :label="__('Accept')"
-            class="rounded-lg"
+            class="rounded-6"
             :iconLeft="PhoneIcon"
             @click="acceptIncomingCall"
           />
@@ -97,7 +97,7 @@
             variant="solid"
             theme="red"
             :label="__('Reject')"
-            class="rounded-lg"
+            class="rounded-6"
             @click="rejectIncomingCall"
           >
             <template #prefix>
@@ -110,7 +110,7 @@
   </div>
   <div
     v-show="showSmallCallWindow"
-    class="ml-2 flex cursor-pointer select-none items-center justify-between gap-3 rounded-lg bg-surface-gray-10 px-2 py-[7px] text-base text-ink-gray-2"
+    class="ml-2 flex cursor-pointer select-none items-center justify-between gap-3 rounded-6 bg-surface-gray-10 px-2 py-[7px] text-base text-ink-gray-2"
     v-bind="$attrs"
     @click="toggleCallWindow"
   >

@@ -82,7 +82,7 @@
           />
           <div
             v-else-if="postPreview.loading"
-            class="mb-4 h-40 animate-pulse rounded-xl bg-surface-gray-2"
+            class="mb-4 h-40 animate-pulse rounded-7 bg-surface-gray-2"
           />
 
           <!-- thread controls: sort + search -->
@@ -143,7 +143,7 @@
           <div
             v-for="cm in threadComments"
             :key="cm.name"
-            class="mb-3 rounded-xl border border-outline-gray-1 bg-surface-base p-3"
+            class="mb-3 rounded-7 border border-outline-gray-1 bg-surface-base p-3"
           >
             <div class="mb-1 flex items-center gap-2">
               <span
@@ -151,7 +151,7 @@
                 >{{ cm.from_name || __('Usuario de Facebook') }}</span
               >
               <span
-                class="flex-none rounded px-1.5 py-px text-[9.5px] font-semibold"
+                class="flex-none rounded-4 px-1.5 py-px text-[9.5px] font-semibold"
                 :style="statusChip(cm.status)"
                 >{{ statusLabel(cm.status) }}</span
               >
@@ -165,7 +165,7 @@
 
             <div
               v-if="cm.reply_text"
-              class="mt-2 rounded-lg border border-outline-blue-3 bg-surface-blue-1 px-2.5 py-1.5 text-[12px] text-ink-gray-8"
+              class="mt-2 rounded-6 border border-outline-blue-3 bg-surface-blue-1 px-2.5 py-1.5 text-[12px] text-ink-gray-8"
             >
               <div class="mb-0.5 text-[10px] font-semibold text-ink-blue-9">
                 {{ cm.reply_by || __('Tú')
@@ -260,14 +260,14 @@
                       ? __('Responder por DM…')
                       : __('Responder en el comentario…')
                   "
-                  class="scb flex-1 resize-none rounded-lg border border-outline-gray-2 px-2.5 py-2 text-[13px] text-ink-gray-8 placeholder:text-ink-gray-4 focus:outline-none focus:ring-1 focus:ring-outline-blue-4"
+                  class="scb flex-1 resize-none rounded-6 border border-outline-gray-2 px-2.5 py-2 text-[13px] text-ink-gray-8 placeholder:text-ink-gray-4 focus:outline-none focus:ring-1 focus:ring-outline-blue-4"
                   @keydown.enter.exact.prevent="onReply(cm)"
                 />
                 <div class="flex h-8 items-center">
                   <CannedReplyPicker channel="Comentarios" @pick="onCanned" />
                 </div>
                 <button
-                  class="rounded-lg px-3 py-2 text-[13px] font-semibold text-white disabled:opacity-50"
+                  class="rounded-6 px-3 py-2 text-[13px] font-semibold text-white disabled:opacity-50"
                   :style="
                     cm.channel === 'IG'
                       ? 'background: #E4405F'
@@ -284,7 +284,7 @@
 
           <button
             v-if="hasMore"
-            class="mb-2 w-full rounded-lg border border-outline-gray-2 py-2 text-[12px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2 disabled:opacity-50"
+            class="mb-2 w-full rounded-6 border border-outline-gray-2 py-2 text-[12px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2 disabled:opacity-50"
             :disabled="loading"
             @click="loadMore"
           >

@@ -21,7 +21,7 @@
         <div class="flex-1" />
         <Dropdown :options="mobileMenu">
           <button
-            class="press flex size-11 items-center justify-center rounded-lg text-[16px] text-ink-gray-5"
+            class="press flex size-11 items-center justify-center rounded-6 text-[16px] text-ink-gray-5"
             :aria-label="__('Más opciones')"
           >
             ⋯
@@ -118,7 +118,7 @@
       <select
         id="deal-pipeline"
         v-model="pipelineF"
-        class="min-h-11 max-w-full rounded border border-outline-gray-2 bg-surface-base px-3 text-sm"
+        class="min-h-11 max-w-full rounded-4 border border-outline-gray-2 bg-surface-base px-3 text-sm"
       >
         <option value="">{{ __('All pipelines') }}</option>
         <option
@@ -154,7 +154,7 @@
         </span>
         <div class="mx-1 h-[18px] w-px bg-outline-gray-2" />
         <div
-          class="flex overflow-hidden rounded-lg border border-outline-gray-2"
+          class="flex overflow-hidden rounded-6 border border-outline-gray-2"
         >
           <button
             v-for="(v, i) in views"
@@ -194,7 +194,7 @@
       </div>
       <div class="flex items-center gap-2">
         <div
-          class="flex items-center gap-1.5 rounded-lg border border-outline-gray-2 px-2.5 py-1.5 focus-within:border-outline-gray-4 focus-within:ring-1 focus-within:ring-outline-gray-3"
+          class="flex items-center gap-1.5 rounded-6 border border-outline-gray-2 px-2.5 py-1.5 focus-within:border-outline-gray-4 focus-within:ring-1 focus-within:ring-outline-gray-3"
         >
           <LucideSearch class="h-3.5 w-3.5 text-ink-gray-4" />
           <input
@@ -208,7 +208,7 @@
         </div>
         <Dropdown v-if="view === 'list'" :options="groupByMenu">
           <button
-            class="rounded-lg border px-3 py-[7px] text-[12px] font-medium"
+            class="rounded-6 border px-3 py-[7px] text-[12px] font-medium"
             :class="
               grouped
                 ? 'border-outline-green-3 bg-surface-green-2 text-ink-green-8'
@@ -236,14 +236,14 @@
           @reset="resetCols"
         />
         <button
-          class="rounded-lg border border-outline-gray-2 px-3 py-[7px] text-[12px] font-medium text-ink-gray-7"
+          class="rounded-6 border border-outline-gray-2 px-3 py-[7px] text-[12px] font-medium text-ink-gray-7"
           :title="__('Exportar a Excel')"
           @click="exportDeals"
         >
           ⭳ {{ __('Export') }}
         </button>
         <button
-          class="rounded-lg px-3.5 py-[7px] text-[12.5px] font-semibold text-white"
+          class="rounded-6 px-3.5 py-[7px] text-[12.5px] font-semibold text-white"
           style="background: var(--brand)"
           @click="showDealModal = true"
         >
@@ -251,7 +251,7 @@
         </button>
         <Dropdown :options="viewMenu">
           <button
-            class="rounded-lg border border-outline-gray-2 px-2 py-[7px] text-[12px] text-ink-gray-6"
+            class="rounded-6 border border-outline-gray-2 px-2 py-[7px] text-[12px] text-ink-gray-6"
             :aria-label="__('Más opciones')"
           >
             ⋯
@@ -269,7 +269,7 @@
           v-for="q in followUpQueues"
           :key="q.key"
           :aria-pressed="followUp === q.key"
-          class="min-h-11 flex-none whitespace-nowrap rounded-lg border px-3 py-2 text-xs font-medium sm:min-h-0"
+          class="min-h-11 flex-none whitespace-nowrap rounded-6 border px-3 py-2 text-xs font-medium sm:min-h-0"
           :class="
             followUp === q.key
               ? 'border-outline-green-3 bg-surface-green-2 text-ink-green-9'
@@ -343,7 +343,7 @@
         >{{ selectedRows.length }} {{ __('seleccionados') }}</span
       >
       <button
-        class="rounded-md bg-surface-gray-10 px-2.5 py-1 text-[12px] font-semibold text-ink-base hover:bg-surface-gray-9"
+        class="rounded-5 bg-surface-gray-10 px-2.5 py-1 text-[12px] font-semibold text-ink-base hover:bg-surface-gray-9"
         :aria-keyshortcuts="'n'"
         @click="bulkSchedule"
       >
@@ -351,7 +351,7 @@
         <kbd class="ml-1 opacity-70">N</kbd>
       </button>
       <button
-        class="rounded-md px-2.5 py-1 text-[12px] font-medium text-ink-red-8 hover:bg-surface-red-1"
+        class="rounded-5 px-2.5 py-1 text-[12px] font-medium text-ink-red-8 hover:bg-surface-red-1"
         @click="bulkDelete"
       >
         {{ __('Eliminar') }}
@@ -393,14 +393,14 @@
         <template #chips>
           <span
             v-if="r.status"
-            class="rounded-md px-1.5 py-[2px] text-[11px] font-semibold"
+            class="rounded-5 px-1.5 py-[2px] text-[11px] font-semibold"
             :style="statusChip(r.status)"
           >
             {{ stageLabel(r.status) }}
           </span>
           <span
             v-if="extra(r).repair_status"
-            class="rounded-md px-1.5 py-[2px] text-[11px] font-semibold"
+            class="rounded-5 px-1.5 py-[2px] text-[11px] font-semibold"
             :style="repairChip(extra(r).repair_status)"
           >
             🔧 {{ sentenceCase(extra(r).repair_status) }}
@@ -613,7 +613,7 @@
                   >
                   <span
                     v-if="extra(r).repair_status"
-                    class="flex-none rounded px-1.5 py-px text-[10.5px] font-semibold"
+                    class="flex-none rounded-4 px-1.5 py-px text-[10.5px] font-semibold"
                     :style="repairChip(extra(r).repair_status)"
                   >
                     {{ extra(r).repair_status }}
@@ -667,7 +667,7 @@
               <div v-if="col('stage')">
                 <span
                   v-if="r.status"
-                  class="rounded-md px-2 py-[3px] text-[11.5px] font-semibold"
+                  class="rounded-5 px-2 py-[3px] text-[11.5px] font-semibold"
                   :style="statusChip(r.status)"
                 >
                   {{ stageLabel(r.status) }}
@@ -713,7 +713,7 @@
 
           <div v-if="deals.hasNextPage" class="py-3 text-center">
             <button
-              class="rounded-lg border border-outline-gray-2 px-4 py-1.5 text-[12px] font-medium text-ink-gray-7"
+              class="rounded-6 border border-outline-gray-2 px-4 py-1.5 text-[12px] font-medium text-ink-gray-7"
               @click="deals.next()"
             >
               {{ __('Cargar más') }}
@@ -810,7 +810,7 @@
             <span
               v-for="t in tagsOf(row)"
               :key="t"
-              class="max-w-[110px] truncate rounded px-1 py-px text-[10px] font-medium text-ink-gray-6"
+              class="max-w-[110px] truncate rounded-4 px-1 py-px text-[10px] font-medium text-ink-gray-6"
               style="background: var(--surface-gray-2)"
             >
               {{ t }}

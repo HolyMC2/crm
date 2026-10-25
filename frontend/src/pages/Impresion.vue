@@ -24,7 +24,7 @@
           type="search"
           placeholder="Buscar formato o documento"
           aria-label="Buscar formato o documento"
-          class="min-h-11 w-72 rounded-lg border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9"
+          class="min-h-11 w-72 rounded-6 border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9"
         />
       </header>
       <p v-if="!denied" class="text-base text-ink-gray-7">
@@ -60,7 +60,7 @@
       <section
         v-for="group in shown"
         :key="group.doctype"
-        class="overflow-hidden rounded-2xl border border-outline-gray-1"
+        class="overflow-hidden rounded-8 border border-outline-gray-1"
         :data-testid="`impresion-tipo-${group.doctype}`"
       >
         <h2

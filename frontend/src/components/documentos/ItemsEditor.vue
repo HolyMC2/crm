@@ -14,7 +14,7 @@
       <li
         v-for="(row, i) in rows"
         :key="row._key"
-        class="rounded-xl border border-outline-gray-1 bg-surface-gray-1 p-3"
+        class="rounded-7 border border-outline-gray-1 bg-surface-gray-1 p-3"
         data-testid="documentos-item-edit"
       >
         <div class="flex items-start gap-2">
@@ -73,7 +73,7 @@
               :value="row.rate ?? ''"
               type="text"
               inputmode="decimal"
-              class="h-11 w-full min-w-0 rounded-lg border border-outline-gray-2 bg-surface-base px-3 text-right text-base tabular-nums text-ink-gray-9"
+              class="h-11 w-full min-w-0 rounded-6 border border-outline-gray-2 bg-surface-base px-3 text-right text-base tabular-nums text-ink-gray-9"
               style="max-width: 8rem"
               :placeholder="row.rate == null ? 'De lista' : ''"
               @change="setRate(i, $event.target.value)"
@@ -91,7 +91,7 @@
           type="search"
           enterkeyhint="search"
           autocomplete="off"
-          class="h-12 min-w-0 flex-1 rounded-lg border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9"
+          class="h-12 min-w-0 flex-1 rounded-6 border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9"
           placeholder="Agregar: nombre, clave o código de barras"
           data-testid="documentos-item-search"
           @keydown.enter.prevent="onEnter"
@@ -111,7 +111,7 @@
       </p>
       <ul
         v-if="results.length"
-        class="mt-1 overflow-hidden rounded-xl border border-outline-gray-2 bg-surface-modal shadow"
+        class="mt-1 overflow-hidden rounded-7 border border-outline-gray-2 bg-surface-modal shadow"
       >
         <li v-for="r in results" :key="r.value">
           <ListRow

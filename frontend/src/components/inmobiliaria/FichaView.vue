@@ -16,7 +16,7 @@
         :href="foto.url"
         target="_blank"
         rel="noopener"
-        class="relative w-[85%] max-w-md shrink-0 snap-start overflow-hidden rounded-2xl bg-surface-gray-2 sm:w-80"
+        class="relative w-[85%] max-w-md shrink-0 snap-start overflow-hidden rounded-8 bg-surface-gray-2 sm:w-80"
       >
         <img
           :src="foto.url"
@@ -117,7 +117,7 @@
            again or carries on with the record. -->
       <div
         v-if="actionProblem"
-        class="flex flex-col gap-2 rounded-lg bg-surface-red-1 px-3 py-2 text-base text-ink-red-7"
+        class="flex flex-col gap-2 rounded-6 bg-surface-red-1 px-3 py-2 text-base text-ink-red-7"
         role="alert"
         data-testid="inmo-accion-problema"
       >
@@ -397,7 +397,7 @@ const Blocked = (p) => {
     {
       class: p.secundaria
         ? 'text-sm text-ink-gray-7'
-        : 'rounded-lg bg-surface-amber-1 px-3 py-2 text-base text-ink-gray-8',
+        : 'rounded-6 bg-surface-amber-1 px-3 py-2 text-base text-ink-gray-8',
       role: 'note',
       'data-bloqueo': a.id,
     },

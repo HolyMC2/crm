@@ -17,7 +17,7 @@
       {{ __('Periodo de tratos por agente') }}
       <select
         v-model="period"
-        class="rounded-lg border border-outline-gray-2 bg-surface-base px-3 py-2 text-ink-gray-9"
+        class="rounded-6 border border-outline-gray-2 bg-surface-base px-3 py-2 text-ink-gray-9"
       >
         <option value="week">{{ __('Esta semana') }}</option>
         <option value="month">{{ __('Este mes') }}</option>
@@ -33,7 +33,7 @@
       {{ __('Ordenar por') }}
       <select
         v-model="sortKey"
-        class="min-w-0 rounded-lg border border-outline-gray-2 bg-surface-base px-3 py-2 text-ink-gray-9"
+        class="min-w-0 rounded-6 border border-outline-gray-2 bg-surface-base px-3 py-2 text-ink-gray-9"
       >
         <option v-for="column in columns" :key="column.key" :value="column.key">
           {{ column.label }}
@@ -41,7 +41,7 @@
       </select>
       <button
         type="button"
-        class="rounded-lg border border-outline-gray-2 px-3 py-2 text-ink-gray-9 focus-visible:outline focus-visible:outline-2"
+        class="rounded-6 border border-outline-gray-2 px-3 py-2 text-ink-gray-9 focus-visible:outline focus-visible:outline-2"
         @click="direction = direction === 'desc' ? 'asc' : 'desc'"
       >
         {{ direction === 'desc' ? __('Descendente') : __('Ascendente') }}

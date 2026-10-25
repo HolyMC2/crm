@@ -23,7 +23,7 @@
       :class="
         inline
           ? 'relative flex min-h-0 flex-1 flex-col overflow-hidden bg-surface-base'
-          : 'relative flex max-h-[88vh] w-full flex-col overflow-hidden rounded-t-2xl bg-surface-base shadow-xl dark:bg-surface-gray-1 sm:max-h-[80vh] sm:w-[560px] sm:rounded-2xl'
+          : 'relative flex max-h-[88vh] w-full flex-col overflow-hidden rounded-t-8 bg-surface-base shadow-xl dark:bg-surface-gray-1 sm:max-h-[80vh] sm:w-[560px] sm:rounded-8'
       "
     >
       <!-- header + search -->
@@ -92,7 +92,7 @@
             type="button"
             :aria-pressed="selected.has(r.item_code)"
             :aria-label="r.item_name"
-            class="group relative flex flex-col overflow-hidden rounded-xl border bg-surface-base text-left transition dark:bg-surface-gray-2"
+            class="group relative flex flex-col overflow-hidden rounded-7 border bg-surface-base text-left transition dark:bg-surface-gray-2"
             :class="
               selected.has(r.item_code)
                 ? 'border-outline-green-4 ring-2 ring-outline-green-4'
@@ -124,7 +124,7 @@
                 >✓</span
               >
               <span
-                class="absolute bottom-1.5 left-1.5 rounded px-1.5 py-0.5 text-[9.5px] font-semibold"
+                class="absolute bottom-1.5 left-1.5 rounded-4 px-1.5 py-0.5 text-[9.5px] font-semibold"
                 :class="
                   r.stock > 0
                     ? 'text-ink-green-8 bg-surface-green-2'
@@ -163,7 +163,7 @@
           <!-- single pick → draft into the composer for edit-before-send (Marco 07-25) -->
           <button
             v-if="selected.size === 1"
-            class="rounded-lg border border-outline-gray-2 bg-surface-gray-2 px-3 py-2 text-[13px] font-semibold text-ink-gray-8"
+            class="rounded-6 border border-outline-gray-2 bg-surface-gray-2 px-3 py-2 text-[13px] font-semibold text-ink-gray-8"
             :title="__('Poner en el mensaje para editar antes de enviar')"
             @click="editSend"
           >
@@ -171,7 +171,7 @@
           </button>
           <button
             v-if="canQuote"
-            class="rounded-lg border border-outline-gray-2 bg-surface-gray-2 px-3 py-2 text-[13px] font-semibold text-ink-gray-8 disabled:opacity-50"
+            class="rounded-6 border border-outline-gray-2 bg-surface-gray-2 px-3 py-2 text-[13px] font-semibold text-ink-gray-8 disabled:opacity-50"
             :disabled="busy || !selected.size"
             :title="__('Agregar a la cotización del trato')"
             @click="quote"
@@ -179,7 +179,7 @@
             🧾 {{ __('Cotizar') }}
           </button>
           <button
-            class="rounded-lg px-4 py-2 text-[13px] font-semibold text-white disabled:opacity-50"
+            class="rounded-6 px-4 py-2 text-[13px] font-semibold text-white disabled:opacity-50"
             style="background: var(--brand)"
             :disabled="busy || !selected.size"
             @click="send"

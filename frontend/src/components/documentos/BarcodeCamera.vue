@@ -27,7 +27,7 @@
         muted
       />
       <div
-        class="pointer-events-none absolute inset-x-0 top-1/2 h-40 -translate-y-1/2 rounded-2xl border-2 border-white"
+        class="pointer-events-none absolute inset-x-0 top-1/2 h-40 -translate-y-1/2 rounded-8 border-2 border-white"
         style="margin-inline: 2rem"
         aria-hidden="true"
       />

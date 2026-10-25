@@ -58,14 +58,14 @@
       <div class="flex items-center gap-2">
         <button
           v-if="mode === 'campaigns'"
-          class="rounded-lg border border-outline-gray-2 px-3 py-[7px] text-[12.5px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2"
+          class="rounded-6 border border-outline-gray-2 px-3 py-[7px] text-[12.5px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2"
           @click="$router.push('/chatflows')"
         >
           🤖 {{ __('Flujos de bot') }}
         </button>
         <button
           v-if="mode === 'campaigns'"
-          class="rounded-lg px-3.5 py-[7px] text-[12.5px] font-semibold text-white"
+          class="rounded-6 px-3.5 py-[7px] text-[12.5px] font-semibold text-white"
           style="background: var(--brand)"
           @click="showNew = true"
         >
@@ -73,7 +73,7 @@
         </button>
         <button
           v-else
-          class="rounded-lg px-3.5 py-[7px] text-[12.5px] font-semibold text-white disabled:opacity-50"
+          class="rounded-6 px-3.5 py-[7px] text-[12.5px] font-semibold text-white disabled:opacity-50"
           style="background: var(--brand)"
           :disabled="creatingCadence"
           @click="createCadence"
@@ -136,14 +136,14 @@
         </div>
         <div v-if="!isMobile">
           <span
-            class="rounded-md px-2 py-[3px] text-[11px] font-semibold"
+            class="rounded-5 px-2 py-[3px] text-[11px] font-semibold"
             :class="typeChip(c.type)"
             >{{ typeLabel(c.type) }}</span
           >
         </div>
         <div>
           <span
-            class="rounded-md px-2 py-[3px] text-[11px] font-semibold"
+            class="rounded-5 px-2 py-[3px] text-[11px] font-semibold"
             :class="statusChip(c.status)"
             >{{ c.status }}</span
           >
@@ -316,10 +316,10 @@ const Bar = (props) =>
   h('div', { class: 'flex items-center gap-1.5' }, [
     h(
       'div',
-      { class: 'h-1.5 rounded-sm bg-surface-gray-3', style: 'width:54px' },
+      { class: 'h-1.5 rounded-1 bg-surface-gray-3', style: 'width:54px' },
       [
         h('div', {
-          class: 'h-full rounded-sm',
+          class: 'h-full rounded-1',
           style: `width:${Math.min(100, props.pct || 0)}%;background:${props.color}`,
         }),
       ],

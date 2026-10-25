@@ -46,7 +46,7 @@
       <li v-for="row in rows" :key="row.doctype + row.name">
         <RouterLink
           :to="open(row)"
-          class="flex min-h-12 items-start gap-3 rounded-lg py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
+          class="flex min-h-12 items-start gap-3 rounded-6 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
         >
           <span
             class="mt-0.5 size-5 flex-none rounded-full border-2 border-outline-gray-4"
@@ -91,7 +91,7 @@
         <li v-for="row in done" :key="row.doctype + row.name">
           <RouterLink
             :to="open(row)"
-            class="flex min-h-11 items-start gap-3 rounded-lg py-2 text-ink-gray-6 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
+            class="flex min-h-11 items-start gap-3 rounded-6 py-2 text-ink-gray-6 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
           >
             <span
               class="mt-0.5 flex size-5 flex-none items-center justify-center rounded-full bg-surface-green-7 text-white"

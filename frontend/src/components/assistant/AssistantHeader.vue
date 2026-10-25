@@ -59,7 +59,7 @@
         v-for="chip in chips"
         :key="chip.label"
         type="button"
-        class="min-h-11 flex-none whitespace-nowrap rounded-lg border border-outline-gray-2 px-3 text-sm text-ink-gray-8 hover:bg-surface-gray-2 disabled:opacity-50"
+        class="min-h-11 flex-none whitespace-nowrap rounded-6 border border-outline-gray-2 px-3 text-sm text-ink-gray-8 hover:bg-surface-gray-2 disabled:opacity-50"
         :disabled="assistant.thinking"
         @click="useChip(chip)"
       >

@@ -36,7 +36,7 @@
       <div
         v-for="(row, index) in draft.products"
         :key="index"
-        class="rounded border border-outline-gray-2 p-3 space-y-3"
+        class="rounded-4 border border-outline-gray-2 p-3 space-y-3"
       >
         <div class="flex items-center justify-between gap-2">
           <strong>{{ __('Line {0}', [index + 1]) }}</strong

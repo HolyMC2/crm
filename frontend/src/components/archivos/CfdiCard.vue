@@ -5,9 +5,9 @@
     :aria-label="__('Fiscal invoice')"
   >
     <div v-if="loading && !data" class="space-y-3" aria-hidden="true">
-      <div class="h-24 animate-pulse rounded-lg bg-surface-gray-2" />
-      <div class="h-16 animate-pulse rounded bg-surface-gray-2" />
-      <div class="h-32 animate-pulse rounded bg-surface-gray-2" />
+      <div class="h-24 animate-pulse rounded-6 bg-surface-gray-2" />
+      <div class="h-16 animate-pulse rounded-4 bg-surface-gray-2" />
+      <div class="h-32 animate-pulse rounded-4 bg-surface-gray-2" />
     </div>
     <ArchivoGuard
       v-else-if="loadProblem"
@@ -26,7 +26,7 @@
     <!-- PDF of a CFDI: what its text says, until the XML arrives. -->
     <div
       v-else-if="data && data.source === 'pdf'"
-      class="space-y-2 rounded-lg border border-outline-gray-2 p-4"
+      class="space-y-2 rounded-6 border border-outline-gray-2 p-4"
     >
       <h3 class="text-base font-semibold text-ink-gray-9">
         {{ __('PDF of a fiscal invoice') }}
@@ -60,7 +60,7 @@
 
     <!-- CFDI XML: the human card -->
     <template v-else-if="card">
-      <header class="space-y-2 rounded-lg border border-outline-gray-2 p-4">
+      <header class="space-y-2 rounded-6 border border-outline-gray-2 p-4">
         <div
           class="flex flex-col gap-x-3 gap-y-1 sm:flex-row sm:flex-wrap sm:items-start"
         >
@@ -112,7 +112,7 @@
           {{ __('Who') }}
         </h4>
         <div class="grid gap-2 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
-          <div class="rounded border border-outline-gray-1 p-3">
+          <div class="rounded-4 border border-outline-gray-1 p-3">
             <p class="text-xs text-ink-gray-6">{{ __('Issuer') }}</p>
             <p class="break-words text-base text-ink-gray-9">
               {{ card.emisor?.nombre || card.emisor?.rfc }}
@@ -131,7 +131,7 @@
             class="mx-auto hidden h-4 w-4 text-ink-gray-5 sm:block"
             aria-hidden="true"
           />
-          <div class="rounded border border-outline-gray-1 p-3">
+          <div class="rounded-4 border border-outline-gray-1 p-3">
             <p class="text-xs text-ink-gray-6">{{ __('Receiver') }}</p>
             <p class="break-words text-base text-ink-gray-9">
               {{ card.receptor?.nombre || card.receptor?.rfc }}
@@ -159,7 +159,7 @@
         >
         <div
           v-else-if="data.party_missing"
-          class="space-y-2 rounded bg-surface-gray-1 p-3"
+          class="space-y-2 rounded-4 bg-surface-gray-1 p-3"
         >
           <p class="text-sm text-ink-gray-8">
             {{ __('You do not have this supplier yet') }}
@@ -316,7 +316,7 @@
         <div
           v-for="(pago, index) in card.pagos.pagos"
           :key="index"
-          class="space-y-2 rounded border border-outline-gray-1 p-3 text-sm"
+          class="space-y-2 rounded-4 border border-outline-gray-1 p-3 text-sm"
         >
           <p class="text-ink-gray-9">
             <strong class="tabular-nums">{{
@@ -334,7 +334,7 @@
             <li
               v-for="related in pago.documentos || []"
               :key="related.uuid + related.num_parcialidad"
-              class="rounded bg-surface-gray-1 px-2 py-1"
+              class="rounded-4 bg-surface-gray-1 px-2 py-1"
             >
               <span class="block break-all text-ink-gray-8">{{
                 __('Fiscal folio {0}', [related.uuid])
@@ -428,7 +428,7 @@
       <ul
         v-if="card.warnings?.length"
         role="status"
-        class="space-y-1 rounded border border-outline-amber-3 bg-surface-amber-1 p-3 text-sm text-ink-amber-8"
+        class="space-y-1 rounded-4 border border-outline-amber-3 bg-surface-amber-1 p-3 text-sm text-ink-amber-8"
       >
         <li v-for="(warning, index) in card.warnings" :key="index">
           {{ warning }}
@@ -466,7 +466,7 @@
           <li
             v-for="row in data.records"
             :key="row.doctype + row.name"
-            class="flex flex-wrap items-center gap-2 rounded border border-outline-gray-1 px-3 py-2"
+            class="flex flex-wrap items-center gap-2 rounded-4 border border-outline-gray-1 px-3 py-2"
           >
             <a
               :href="recordLink(row.doctype, row.name)"
@@ -505,7 +505,7 @@
       <!-- Purchase hand-off to Compras -->
       <section
         v-if="showPurchase"
-        class="space-y-2 rounded-lg border border-outline-gray-2 p-4"
+        class="space-y-2 rounded-6 border border-outline-gray-2 p-4"
         :aria-labelledby="ids.purchase"
       >
         <h4 :id="ids.purchase" class="text-sm font-medium text-ink-gray-8">
@@ -514,7 +514,7 @@
         <a
           v-if="data.purchase.existing"
           :href="purchaseHref(data.purchase.existing)"
-          class="inline-flex min-h-11 items-center rounded bg-surface-gray-10 px-4 text-base-medium text-ink-base sm:min-h-8"
+          class="inline-flex min-h-11 items-center rounded-4 bg-surface-gray-10 px-4 text-base-medium text-ink-base sm:min-h-8"
           >{{ __('Open purchase {0}', [data.purchase.existing]) }}</a
         >
         <template v-else>
@@ -537,7 +537,7 @@
         <!-- The supplier is new: add them, then the purchase continues -->
         <div
           v-if="step?.status === 'needs_supplier'"
-          class="space-y-2 rounded bg-surface-gray-1 p-3"
+          class="space-y-2 rounded-4 bg-surface-gray-1 p-3"
           role="status"
         >
           <p class="text-sm text-ink-gray-8">
@@ -566,7 +566,7 @@
         <!-- Lines without an item: say which item each one is -->
         <div
           v-if="step?.status === 'needs_items'"
-          class="space-y-3 rounded bg-surface-gray-1 p-3"
+          class="space-y-3 rounded-4 bg-surface-gray-1 p-3"
           role="status"
         >
           <p class="text-sm text-ink-gray-8">
@@ -579,7 +579,7 @@
           <div
             v-for="line in step.to_create || []"
             :key="line.line"
-            class="space-y-1 rounded border border-outline-gray-2 bg-surface-base p-3"
+            class="space-y-1 rounded-4 border border-outline-gray-2 bg-surface-base p-3"
           >
             <p class="break-words text-sm font-medium text-ink-gray-9">
               {{ line.descripcion }}
@@ -645,7 +645,7 @@
         />
         <pre
           v-if="xmlOpen"
-          class="mt-2 max-h-[60vh] overflow-auto whitespace-pre-wrap break-all rounded border border-outline-gray-2 bg-surface-gray-1 p-3 text-xs text-ink-gray-8"
+          class="mt-2 max-h-[60vh] overflow-auto whitespace-pre-wrap break-all rounded-4 border border-outline-gray-2 bg-surface-gray-1 p-3 text-xs text-ink-gray-8"
           v-text="rawText"
         />
       </div>

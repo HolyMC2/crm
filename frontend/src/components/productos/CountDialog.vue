@@ -49,7 +49,7 @@
           {{ __('Looking for who can count…') }}
         </p>
         <template v-else-if="options && options.mode === 'ask'">
-          <p class="rounded-lg bg-surface-amber-1 p-3 text-sm text-ink-amber-7">
+          <p class="rounded-6 bg-surface-amber-1 p-3 text-sm text-ink-amber-7">
             {{ options.reason }}
           </p>
           <FormControl
@@ -65,7 +65,7 @@
               })),
             ]"
           />
-          <p v-else class="rounded-lg bg-surface-gray-2 p-3 text-sm">
+          <p v-else class="rounded-6 bg-surface-gray-2 p-3 text-sm">
             {{
               __(
                 'Nobody manages counts in this store yet: the request goes to the administrators.',
@@ -95,7 +95,7 @@
                 })),
             ]"
           />
-          <p v-else class="rounded-lg bg-surface-gray-2 p-3 text-sm">
+          <p v-else class="rounded-6 bg-surface-gray-2 p-3 text-sm">
             {{
               __(
                 'Nobody can count in this store yet. Ask your manager to give a counter access to it in Escáner.',

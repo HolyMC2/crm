@@ -52,7 +52,7 @@
           :is="docTo ? RouterLink : 'div'"
           v-if="m.documento"
           v-bind="docTo ? { to: docTo } : {}"
-          class="block rounded-2xl border border-outline-gray-2 bg-surface-gray-1 p-4"
+          class="block rounded-8 border border-outline-gray-2 bg-surface-gray-1 p-4"
           :class="docTo ? 'hover:bg-surface-gray-2' : ''"
           data-testid="correo-tarjeta"
         >
@@ -100,7 +100,7 @@
         <!-- The message: HTML in a sandboxed sheet of paper, text as text -->
         <div
           v-if="m.html"
-          class="overflow-hidden rounded-xl border border-outline-gray-2"
+          class="overflow-hidden rounded-7 border border-outline-gray-2"
         >
           <iframe
             ref="frame"

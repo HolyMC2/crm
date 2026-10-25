@@ -20,7 +20,7 @@
     <div
       v-if="loadError"
       role="alert"
-      class="mx-4 my-3 space-y-3 rounded-lg bg-surface-red-1 p-4 text-sm text-ink-red-7"
+      class="mx-4 my-3 space-y-3 rounded-6 bg-surface-red-1 p-4 text-sm text-ink-red-7"
     >
       <p>{{ loadError }}</p>
       <Button label="Reintentar" @click="load()" />
@@ -31,17 +31,17 @@
       aria-label="Cargando cuentas…"
       class="space-y-3 px-4 py-4"
     >
-      <div class="h-28 animate-pulse rounded-xl bg-surface-gray-2" />
+      <div class="h-28 animate-pulse rounded-7 bg-surface-gray-2" />
       <div
         v-for="n in 4"
         :key="n"
-        class="h-20 animate-pulse rounded-xl bg-surface-gray-2"
+        class="h-20 animate-pulse rounded-7 bg-surface-gray-2"
       />
     </div>
     <template v-else>
       <!-- Hero: the money across accounts, as of today (Xero «Overall cash balance»). -->
       <section
-        class="mx-4 mt-2 rounded-2xl bg-surface-gray-1 p-4"
+        class="mx-4 mt-2 rounded-8 bg-surface-gray-1 p-4"
         aria-label="Dinero en tus cuentas"
         data-bancos-total
       >

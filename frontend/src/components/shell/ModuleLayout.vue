@@ -9,7 +9,7 @@
         <button
           v-for="entry in entries"
           :key="entry.value"
-          class="flex min-h-11 items-center gap-2.5 rounded-lg px-3 text-left text-sm hover:bg-surface-gray-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
+          class="flex min-h-11 items-center gap-2.5 rounded-6 px-3 text-left text-sm hover:bg-surface-gray-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
           :class="
             activeKey === entry.value
               ? 'bg-surface-gray-2 font-semibold text-ink-gray-9'
@@ -32,7 +32,7 @@
           <button
             v-for="entry in savedEntries"
             :key="entry.value"
-            class="flex min-h-11 items-center gap-2.5 rounded-lg px-3 text-left text-sm hover:bg-surface-gray-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
+            class="flex min-h-11 items-center gap-2.5 rounded-6 px-3 text-left text-sm hover:bg-surface-gray-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
             :class="
               activeKey === entry.value
                 ? 'bg-surface-gray-2 font-semibold text-ink-gray-9'

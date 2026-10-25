@@ -10,7 +10,7 @@
       v-for="column in columns"
       :key="column.state"
       :aria-labelledby="`board-${column.state}`"
-      class="flex min-h-0 w-72 flex-none flex-col rounded-xl bg-surface-gray-1 xl:w-0 xl:min-w-56 xl:flex-1"
+      class="flex min-h-0 w-72 flex-none flex-col rounded-7 bg-surface-gray-1 xl:w-0 xl:min-w-56 xl:flex-1"
       :class="over === column.state ? 'ring-2 ring-outline-gray-4' : ''"
       :data-board-column="column.state"
       @dragover.prevent="over = column.state"
@@ -32,7 +32,7 @@
           v-for="row in column.rows"
           :key="row.doctype + row.name"
           :draggable="movable(row) ? 'true' : 'false'"
-          class="rounded-lg border border-outline-gray-1 bg-surface-base p-3 shadow-sm"
+          class="rounded-6 border border-outline-gray-1 bg-surface-base p-3 shadow-sm"
           :class="[
             busy.has(row.doctype + row.name) ? 'opacity-60' : '',
             movable(row) ? 'cursor-grab active:cursor-grabbing' : '',
@@ -44,7 +44,7 @@
           <div class="flex items-start gap-1">
             <RouterLink
               :to="pendienteRoute(row, query)"
-              class="min-w-0 flex-1 rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
+              class="min-w-0 flex-1 rounded-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
             >
               <p
                 class="line-clamp-3 text-sm text-ink-gray-9"
@@ -63,7 +63,7 @@
                 >
                 <span
                   v-if="row.priority === 'High'"
-                  class="rounded bg-surface-amber-1 px-1.5 font-medium text-ink-amber-9"
+                  class="rounded-4 bg-surface-amber-1 px-1.5 font-medium text-ink-amber-9"
                   >{{ priorityLabel(row.priority) }}</span
                 >
               </p>

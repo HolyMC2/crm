@@ -1,6 +1,6 @@
 <template>
   <div
-    class="flex p-3 items-center justify-between cursor-pointer hover:bg-surface-sidebar rounded"
+    class="flex p-3 items-center justify-between cursor-pointer hover:bg-surface-sidebar rounded-4"
   >
     <button
       type="button"
@@ -18,7 +18,7 @@
     <div class="w-3/12">
       <select
         v-model="localData.priority"
-        class="w-full min-h-11 text-base hover:bg-surface-gray-3 rounded-md p-0 pl-2 pr-5 bg-transparent -ml-2 border-0 text-ink-gray-8 focus-visible:!ring-0 bg-none truncate"
+        class="w-full min-h-11 text-base hover:bg-surface-gray-3 rounded-5 p-0 pl-2 pr-5 bg-transparent -ml-2 border-0 text-ink-gray-8 focus-visible:!ring-0 bg-none truncate"
         :disabled="pending || !data.can_write"
         :aria-label="__('Assignment priority')"
         @change="onPriorityChange"

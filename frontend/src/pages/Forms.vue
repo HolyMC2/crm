@@ -22,7 +22,7 @@
         >
       </div>
       <button
-        class="flex items-center gap-1.5 rounded-lg px-3.5 py-[7px] text-[12.5px] font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-gray-4"
+        class="flex items-center gap-1.5 rounded-6 px-3.5 py-[7px] text-[12.5px] font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-gray-4"
         style="background: var(--brand)"
         @click="openNew(null)"
       >
@@ -72,12 +72,12 @@
         <article
           v-for="f in rows"
           :key="f.name"
-          class="rounded-xl border border-outline-gray-2 bg-surface-base transition-colors hover:border-outline-gray-3"
+          class="rounded-7 border border-outline-gray-2 bg-surface-base transition-colors hover:border-outline-gray-3"
         >
           <div class="flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
             <RouterLink
               :to="{ name: 'Form', params: { formId: f.name } }"
-              class="min-w-0 flex-1 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-gray-4"
+              class="min-w-0 flex-1 rounded-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-gray-4"
             >
               <div class="flex items-center gap-2">
                 <span
@@ -124,7 +124,7 @@
                 <span
                   v-for="c in chips(f)"
                   :key="c.key"
-                  class="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs"
+                  class="inline-flex items-center gap-1 rounded-5 px-1.5 py-0.5 text-xs"
                   :class="
                     c.warn
                       ? 'bg-surface-amber-2 text-ink-amber-9'
@@ -268,7 +268,7 @@
       <div class="flex flex-col items-center gap-3 pb-2">
         <p class="text-center text-p-sm text-ink-gray-6">{{ qrFor?.title }}</p>
         <div
-          class="flex size-56 items-center justify-center rounded-lg border border-outline-gray-2 bg-white p-2"
+          class="flex size-56 items-center justify-center rounded-6 border border-outline-gray-2 bg-white p-2"
         >
           <img
             v-if="qrSrc"

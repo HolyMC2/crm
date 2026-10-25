@@ -49,8 +49,8 @@
       </header>
 
       <div v-if="loading && !data" class="space-y-3" aria-busy="true">
-        <div class="h-28 animate-pulse rounded-xl bg-surface-gray-2" />
-        <div class="h-28 animate-pulse rounded-xl bg-surface-gray-2" />
+        <div class="h-28 animate-pulse rounded-7 bg-surface-gray-2" />
+        <div class="h-28 animate-pulse rounded-7 bg-surface-gray-2" />
       </div>
       <ArchivoGuard
         v-else-if="loadProblem"
@@ -69,7 +69,7 @@
         />
         <div
           v-if="cap"
-          class="space-y-2 rounded-lg border p-4"
+          class="space-y-2 rounded-6 border p-4"
           :class="
             cap.full
               ? 'border-outline-amber-2 bg-surface-amber-1'
@@ -103,7 +103,7 @@
         <!-- New connection: first the type, then its form -->
         <section
           v-if="canCreate && (creating || !data.connectors.length)"
-          class="space-y-3 rounded-xl border border-outline-gray-2 p-4"
+          class="space-y-3 rounded-7 border border-outline-gray-2 p-4"
           :aria-label="__('New connection')"
         >
           <template v-if="!newType">
@@ -119,7 +119,7 @@
                 v-for="option in typeOptions"
                 :key="option.value"
                 type="button"
-                class="flex min-h-16 items-start gap-3 rounded-lg border border-outline-gray-2 p-3 text-left hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-outline-gray-4"
+                class="flex min-h-16 items-start gap-3 rounded-6 border border-outline-gray-2 p-3 text-left hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-outline-gray-4"
                 @click="newType = option.value"
               >
                 <Icon
@@ -156,7 +156,7 @@
 
         <p
           v-if="!data.connectors.length && !canCreate && data.can_configure"
-          class="rounded-lg bg-surface-gray-1 p-4 text-base text-ink-gray-7"
+          class="rounded-6 bg-surface-gray-1 p-4 text-base text-ink-gray-7"
         >
           {{ __('No connections for {0}.', [data.company]) }}
         </p>
@@ -173,7 +173,7 @@
         <div v-if="data.connectors.length" class="pt-2">
           <router-link
             :to="archivosLink"
-            class="inline-flex min-h-11 items-center gap-2 rounded border border-outline-gray-2 px-4 text-base text-ink-gray-8 hover:bg-surface-gray-1 sm:min-h-9"
+            class="inline-flex min-h-11 items-center gap-2 rounded-4 border border-outline-gray-2 px-4 text-base text-ink-gray-8 hover:bg-surface-gray-1 sm:min-h-9"
           >
             <LucideInbox class="h-4 w-4" />
             {{ __('See what came in, in Archivos') }}

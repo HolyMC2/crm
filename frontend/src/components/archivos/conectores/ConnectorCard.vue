@@ -1,6 +1,6 @@
 <template>
   <article
-    class="rounded-xl border border-outline-gray-2 bg-surface-base"
+    class="rounded-7 border border-outline-gray-2 bg-surface-base"
     :aria-labelledby="`conn-${connector.name}`"
   >
     <div class="space-y-3 p-4">
@@ -8,7 +8,7 @@
       <!-- On a narrow screen the badge wraps under the title, not beside it -->
       <div class="flex flex-wrap items-start gap-x-3 gap-y-2">
         <span
-          class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-surface-gray-2"
+          class="flex h-10 w-10 shrink-0 items-center justify-center rounded-6 bg-surface-gray-2"
           :title="typeLabel(connector.connector_type)"
         >
           <Icon
@@ -37,7 +37,7 @@
       <!-- Locked by the site or the plan: the page says it once; the card stays quiet -->
       <p
         v-if="health.hint && !blocked"
-        class="rounded-lg p-3 text-base"
+        class="rounded-6 p-3 text-base"
         :class="hintClass"
         :role="health.status === 'error' ? 'alert' : undefined"
       >
@@ -59,7 +59,7 @@
 
       <p
         v-if="!connector.can_manage"
-        class="rounded-lg bg-surface-gray-1 p-3 text-sm text-ink-gray-7"
+        class="rounded-6 bg-surface-gray-1 p-3 text-sm text-ink-gray-7"
       >
         {{
           __(
@@ -101,7 +101,7 @@
       <p
         v-if="actionError"
         role="alert"
-        class="rounded-lg border border-outline-red-2 bg-surface-red-1 p-3 text-base text-ink-red-4"
+        class="rounded-6 border border-outline-red-2 bg-surface-red-1 p-3 text-base text-ink-red-4"
       >
         {{ actionError }}
       </p>
@@ -127,7 +127,7 @@
           <li
             v-for="task in problems"
             :key="task.name"
-            class="flex flex-wrap items-center gap-2 rounded-lg bg-surface-gray-1 p-3 text-sm"
+            class="flex flex-wrap items-center gap-2 rounded-6 bg-surface-gray-1 p-3 text-sm"
           >
             <span class="min-w-0 flex-1 text-ink-gray-8">
               {{ taskLabel(task) }}
@@ -145,7 +145,7 @@
             <a
               v-else-if="task.document"
               :href="archivosHref({ document: task.document })"
-              class="inline-flex min-h-11 items-center rounded px-3 text-ink-gray-8 hover:bg-surface-gray-2 sm:min-h-8"
+              class="inline-flex min-h-11 items-center rounded-4 px-3 text-ink-gray-8 hover:bg-surface-gray-2 sm:min-h-8"
               >{{ __('Verify in the document') }}</a
             >
           </li>
@@ -166,7 +166,7 @@
         v-for="tab in tabs"
         :key="tab.value"
         type="button"
-        class="flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm sm:min-h-9"
+        class="flex min-h-11 items-center gap-2 rounded-6 px-3 text-sm sm:min-h-9"
         :class="
           panel === tab.value
             ? 'bg-surface-gray-3 font-medium text-ink-gray-9'
@@ -198,8 +198,8 @@
       />
       <template v-else-if="panel === 'maps'">
         <div v-if="!detail && detailLoading" class="space-y-2" aria-busy="true">
-          <div class="h-12 animate-pulse rounded bg-surface-gray-2" />
-          <div class="h-12 animate-pulse rounded bg-surface-gray-2" />
+          <div class="h-12 animate-pulse rounded-4 bg-surface-gray-2" />
+          <div class="h-12 animate-pulse rounded-4 bg-surface-gray-2" />
         </div>
         <ArchivoGuard
           v-else-if="detailProblem"

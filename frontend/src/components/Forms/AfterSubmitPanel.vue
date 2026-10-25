@@ -22,7 +22,7 @@
         <button
           v-for="opt in targetOptions()"
           :key="opt.value"
-          class="rounded-lg border px-3 py-2.5 text-left transition-colors"
+          class="rounded-6 border px-3 py-2.5 text-left transition-colors"
           :class="
             b.form.document_type === opt.value
               ? 'border-outline-gray-4 bg-surface-gray-2'
@@ -63,7 +63,7 @@
         <label
           v-for="mode in assignModes"
           :key="mode.value"
-          class="flex cursor-pointer items-start gap-2.5 rounded-lg border px-3 py-2.5 focus-within:ring-2 focus-within:ring-outline-gray-4"
+          class="flex cursor-pointer items-start gap-2.5 rounded-6 border px-3 py-2.5 focus-within:ring-2 focus-within:ring-outline-gray-4"
           :class="
             b.settings.assign_mode === mode.value
               ? 'border-outline-gray-4 bg-surface-gray-2'
@@ -175,7 +175,7 @@
         >
         <p
           v-if="opts.auto_campaigns?.length"
-          class="flex items-start gap-1.5 rounded-md bg-surface-gray-2 p-2.5 text-p-sm text-ink-gray-7"
+          class="flex items-start gap-1.5 rounded-5 bg-surface-gray-2 p-2.5 text-p-sm text-ink-gray-7"
         >
           <LucideInfo class="mt-0.5 size-3.5 shrink-0" />
           {{

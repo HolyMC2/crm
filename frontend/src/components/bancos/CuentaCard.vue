@@ -3,7 +3,7 @@
        Xero «30 to match · Balance in Xero / Statement balance»). -->
   <RouterLink
     :to="{ name: 'BancoCuenta', params: { cuenta: card.cuenta }, query }"
-    class="flex min-h-16 items-start gap-3 rounded-xl border p-3 hover:bg-surface-gray-1 focus-visible:bg-surface-gray-2"
+    class="flex min-h-16 items-start gap-3 rounded-7 border p-3 hover:bg-surface-gray-1 focus-visible:bg-surface-gray-2"
     :class="
       selected
         ? 'border-outline-gray-4 bg-surface-gray-1'

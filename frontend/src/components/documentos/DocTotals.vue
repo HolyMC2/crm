@@ -2,7 +2,7 @@
   <!-- Totals: subtotal, discount, each tax, the total, and what is still owed. -->
   <section v-if="lines.length" aria-label="Totales" class="px-4">
     <dl
-      class="divide-y divide-outline-gray-1 rounded-xl border border-outline-gray-1"
+      class="divide-y divide-outline-gray-1 rounded-7 border border-outline-gray-1"
     >
       <div
         v-for="line in lines"

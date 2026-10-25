@@ -27,7 +27,7 @@
     <!-- expanded card -->
     <div
       v-else
-      class="rounded-xl border border-outline-gray-2 bg-surface-gray-1 p-3"
+      class="rounded-7 border border-outline-gray-2 bg-surface-gray-1 p-3"
     >
       <div class="mb-1.5 flex items-center justify-between gap-2">
         <div
@@ -38,7 +38,7 @@
         <div class="flex items-center gap-1">
           <button
             type="button"
-            class="press flex size-6 items-center justify-center rounded-md text-ink-gray-5 hover:bg-surface-gray-2 hover:text-ink-gray-8 disabled:opacity-40"
+            class="press flex size-6 items-center justify-center rounded-5 text-ink-gray-5 hover:bg-surface-gray-2 hover:text-ink-gray-8 disabled:opacity-40"
             :disabled="loading"
             :title="__('Actualizar')"
             :aria-label="__('Actualizar')"
@@ -51,7 +51,7 @@
           </button>
           <button
             type="button"
-            class="press flex size-6 items-center justify-center rounded-md text-ink-gray-5 hover:bg-surface-gray-2 hover:text-ink-gray-8"
+            class="press flex size-6 items-center justify-center rounded-5 text-ink-gray-5 hover:bg-surface-gray-2 hover:text-ink-gray-8"
             :title="__('Ocultar')"
             :aria-label="__('Ocultar')"
             @click="toggle"

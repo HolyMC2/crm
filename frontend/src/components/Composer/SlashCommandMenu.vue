@@ -7,7 +7,7 @@
 -->
 <template>
   <div
-    class="absolute inset-x-2 bottom-full z-40 mb-1 flex max-h-[60vh] flex-col overflow-hidden rounded-xl border border-outline-gray-2 bg-surface-base shadow-xl sm:left-10 sm:right-auto sm:w-[44rem] sm:max-w-[calc(100%-5rem)] sm:flex-row"
+    class="absolute inset-x-2 bottom-full z-40 mb-1 flex max-h-[60vh] flex-col overflow-hidden rounded-7 border border-outline-gray-2 bg-surface-base shadow-xl sm:left-10 sm:right-auto sm:w-[44rem] sm:max-w-[calc(100%-5rem)] sm:flex-row"
     @mousedown.prevent
   >
     <div class="flex min-h-0 min-w-0 flex-col sm:w-1/2">
@@ -59,7 +59,7 @@
           role="option"
           :aria-selected="i === activeIndex"
           :aria-disabled="!item.available || undefined"
-          class="flex cursor-pointer items-start gap-2 rounded-lg px-2.5 py-1.5"
+          class="flex cursor-pointer items-start gap-2 rounded-6 px-2.5 py-1.5"
           :class="[
             i === activeIndex ? 'bg-surface-gray-2' : 'hover:bg-surface-gray-1',
             item.available ? '' : 'opacity-50',
@@ -79,7 +79,7 @@
               }}</span>
               <span
                 v-if="item.shortcut"
-                class="flex-none rounded bg-surface-gray-2 px-1 font-mono text-[11px] text-ink-gray-6"
+                class="flex-none rounded-4 bg-surface-gray-2 px-1 font-mono text-[11px] text-ink-gray-6"
                 >/{{ item.shortcut }}</span
               >
             </span>
@@ -111,7 +111,7 @@
       </div>
       <p
         v-if="!active.available"
-        class="rounded-md bg-surface-amber-1 p-2 text-xs text-ink-amber-9"
+        class="rounded-5 bg-surface-amber-1 p-2 text-xs text-ink-amber-9"
       >
         {{ active.reason || __('No disponible en esta conversación.') }}
       </p>
@@ -145,7 +145,7 @@
         </div>
         <div
           v-else-if="docPreview?.caption"
-          class="mt-2 whitespace-pre-wrap rounded-lg bg-surface-base p-2 text-xs text-ink-gray-7"
+          class="mt-2 whitespace-pre-wrap rounded-6 bg-surface-base p-2 text-xs text-ink-gray-7"
         >
           {{ docPreview.caption }}
         </div>

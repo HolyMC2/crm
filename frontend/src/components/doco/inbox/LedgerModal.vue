@@ -46,7 +46,7 @@
         <!-- consent (manager-gated endpoint: reps get 403 → section self-hides) -->
         <div
           v-if="consentRows.length"
-          class="mb-3 rounded-lg border border-outline-gray-1 bg-surface-gray-1 px-3 py-2"
+          class="mb-3 rounded-6 border border-outline-gray-1 bg-surface-gray-1 px-3 py-2"
         >
           <div class="mb-1.5 flex items-center justify-between">
             <div
@@ -64,7 +64,7 @@
           </div>
           <div
             v-if="consentTampered"
-            class="mb-1.5 rounded bg-surface-red-1 px-2 py-1 text-[11px] font-semibold text-ink-red-8"
+            class="mb-1.5 rounded-4 bg-surface-red-1 px-2 py-1 text-[11px] font-semibold text-ink-red-8"
           >
             ⚠
             {{
@@ -93,7 +93,7 @@
         <!-- linked identities -->
         <div
           v-if="identities.length"
-          class="mb-3 rounded-lg border border-outline-gray-1 bg-surface-gray-1 px-3 py-2"
+          class="mb-3 rounded-6 border border-outline-gray-1 bg-surface-gray-1 px-3 py-2"
         >
           <div
             class="mb-1 text-[10px] font-bold uppercase tracking-wide text-ink-gray-5"

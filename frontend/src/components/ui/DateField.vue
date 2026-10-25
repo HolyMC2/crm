@@ -10,7 +10,7 @@
         inputmode="numeric"
         autocomplete="off"
         placeholder="dd/mm/aaaa"
-        class="h-11 min-w-0 flex-1 rounded-lg border border-outline-gray-2 bg-surface-base px-3 text-base tabular-nums text-ink-gray-9"
+        class="h-11 min-w-0 flex-1 rounded-6 border border-outline-gray-2 bg-surface-base px-3 text-base tabular-nums text-ink-gray-9"
         :aria-label="label"
         :aria-invalid="bad ? 'true' : undefined"
         @input="typed = $event.target.value"
@@ -19,7 +19,7 @@
       />
       <button
         type="button"
-        class="flex size-11 flex-none items-center justify-center rounded-lg border border-outline-gray-2 text-ink-gray-7 hover:bg-surface-gray-2"
+        class="flex size-11 flex-none items-center justify-center rounded-6 border border-outline-gray-2 text-ink-gray-7 hover:bg-surface-gray-2"
         :aria-label="open ? 'Cerrar calendario' : 'Abrir calendario'"
         :aria-expanded="open"
         @click="toggle"
@@ -56,7 +56,7 @@
 
     <div
       v-if="open && mode !== 'time'"
-      class="date-month rounded-xl border border-outline-gray-1 p-2"
+      class="date-month rounded-7 border border-outline-gray-1 p-2"
       role="group"
       :aria-label="`${monthName} de ${view.y}`"
     >
@@ -113,7 +113,7 @@
         inputmode="numeric"
         autocomplete="off"
         placeholder="hh:mm"
-        class="h-11 w-28 rounded-lg border border-outline-gray-2 bg-surface-base px-3 text-base tabular-nums text-ink-gray-9"
+        class="h-11 w-28 rounded-6 border border-outline-gray-2 bg-surface-base px-3 text-base tabular-nums text-ink-gray-9"
         :aria-label="mode === 'time' ? label : `${label}: hora`"
         :aria-invalid="badTime ? 'true' : undefined"
         @input="typedTime = $event.target.value"

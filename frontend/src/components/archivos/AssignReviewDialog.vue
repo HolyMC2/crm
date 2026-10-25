@@ -34,7 +34,7 @@
             type="button"
             role="option"
             :aria-selected="chosen === person.user"
-            class="flex min-h-11 w-full items-center rounded px-3 text-left text-base hover:bg-surface-gray-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-outline-gray-4"
+            class="flex min-h-11 w-full items-center rounded-4 px-3 text-left text-base hover:bg-surface-gray-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-outline-gray-4"
             :class="
               chosen === person.user ? 'bg-surface-gray-2 font-medium' : ''
             "

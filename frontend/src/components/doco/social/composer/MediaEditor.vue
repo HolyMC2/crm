@@ -15,7 +15,7 @@
       <div
         v-for="(m, i) in media"
         :key="m.media_file + ':' + i"
-        class="group relative size-16 overflow-hidden rounded-md border"
+        class="group relative size-16 overflow-hidden rounded-5 border"
         :class="
           mediaOver === i && mediaDrag !== i
             ? 'border-green-500 dark:border-green-400 ring-2 ring-green-300 dark:ring-green-500'
@@ -32,7 +32,7 @@
         <img :src="m.media_file" class="size-full object-cover" alt="" />
         <span
           v-if="media.length > 1"
-          class="absolute bottom-0 left-0 rounded-tr bg-black/50 px-1 text-[9px] font-bold text-white"
+          class="absolute bottom-0 left-0 rounded-tr-4 bg-black/50 px-1 text-[9px] font-bold text-white"
           >{{ i + 1 }}</span
         >
         <button
@@ -48,7 +48,7 @@
       <button
         v-if="canCancel && media.length < 10"
         type="button"
-        class="flex size-16 flex-col items-center justify-center gap-0.5 rounded-md border border-dashed border-outline-gray-3 text-ink-gray-5 hover:border-green-500 dark:hover:border-green-400 hover:text-ink-green-7 disabled:opacity-50"
+        class="flex size-16 flex-col items-center justify-center gap-0.5 rounded-5 border border-dashed border-outline-gray-3 text-ink-gray-5 hover:border-green-500 dark:hover:border-green-400 hover:text-ink-green-7 disabled:opacity-50"
         :disabled="uploadBusy > 0"
         :title="__('Agregar fotos')"
         @click="pickMedia"
@@ -93,7 +93,7 @@
       >
         <img
           :src="m.media_file"
-          class="size-8 flex-none rounded object-cover"
+          class="size-8 flex-none rounded-4 object-cover"
           alt=""
         />
         <input
@@ -102,7 +102,7 @@
           type="text"
           :disabled="!canCancel"
           :data-testid="`alt-text-input-${i}`"
-          class="fld w-full rounded-md border border-outline-gray-2 px-2 py-1 text-[12px] disabled:opacity-60"
+          class="fld w-full rounded-5 border border-outline-gray-2 px-2 py-1 text-[12px] disabled:opacity-60"
           :placeholder="
             __('Foto') + ' ' + (i + 1) + ' — ' + __('describe la imagen…')
           "

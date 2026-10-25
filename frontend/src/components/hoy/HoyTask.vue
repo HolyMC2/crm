@@ -9,12 +9,12 @@
       role="checkbox"
       :aria-checked="row.status === 'Closed'"
       :aria-label="__('Mark done: {0}', [row.description])"
-      class="-ml-2.5 flex size-11 shrink-0 items-center justify-center rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
+      class="-ml-2.5 flex size-11 shrink-0 items-center justify-center rounded-6 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
       :disabled="busy || row.status === 'Closed'"
       @click="$emit('complete', row)"
     >
       <span
-        class="flex size-5 items-center justify-center rounded-md border-[1.5px]"
+        class="flex size-5 items-center justify-center rounded-5 border-[1.5px]"
         :class="
           row.status === 'Closed'
             ? 'border-outline-green-4 bg-surface-green-7 text-white'
@@ -32,7 +32,7 @@
       data-row-link
       data-row-focus
       :to="to"
-      class="flex min-w-0 flex-1 flex-col justify-center self-stretch rounded-lg py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
+      class="flex min-w-0 flex-1 flex-col justify-center self-stretch rounded-6 py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
     >
       <p
         class="text-base text-ink-gray-9 [text-wrap:balance]"
@@ -59,7 +59,7 @@
         >
         <span
           v-if="row.priority === 'High'"
-          class="shrink-0 rounded bg-surface-amber-1 px-1.5 text-xs font-medium text-ink-amber-9"
+          class="shrink-0 rounded-4 bg-surface-amber-1 px-1.5 text-xs font-medium text-ink-amber-9"
           >{{ priorityLabel(row.priority) }}</span
         >
       </p>

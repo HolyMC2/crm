@@ -1,6 +1,6 @@
 <template>
   <section
-    class="rounded border border-outline-gray-2 p-3 space-y-3"
+    class="rounded-4 border border-outline-gray-2 p-3 space-y-3"
     :aria-label="__('Customer link')"
   >
     <div class="flex flex-wrap items-center justify-between gap-2">
@@ -105,7 +105,7 @@
       <div
         v-for="(message, index) in share.messages"
         :key="index"
-        class="rounded border border-outline-gray-2 p-2 text-sm break-words whitespace-pre-wrap"
+        class="rounded-4 border border-outline-gray-2 p-2 text-sm break-words whitespace-pre-wrap"
         :class="message.from_customer ? '' : 'ml-6 bg-surface-gray-1'"
       >
         <span class="block text-xs text-ink-gray-6"

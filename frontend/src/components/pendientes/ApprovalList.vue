@@ -32,7 +32,7 @@
       v-for="kind in failed"
       :key="kind.key"
       role="alert"
-      class="mx-4 mb-2 flex flex-wrap items-center gap-2 rounded-lg bg-surface-amber-1 p-3 text-sm text-ink-amber-9 sm:mx-6"
+      class="mx-4 mb-2 flex flex-wrap items-center gap-2 rounded-6 bg-surface-amber-1 p-3 text-sm text-ink-amber-9 sm:mx-6"
     >
       <span class="min-w-0 flex-1">{{
         __('We could not check {0}. The rest of the list is up to date.', [
@@ -48,14 +48,14 @@
     <div
       v-if="notice"
       role="status"
-      class="mx-4 mb-2 rounded-lg bg-surface-green-1 p-3 text-sm text-ink-green-8 sm:mx-6"
+      class="mx-4 mb-2 rounded-6 bg-surface-green-1 p-3 text-sm text-ink-green-8 sm:mx-6"
     >
       {{ notice }}
     </div>
     <div
       v-if="problem"
       role="alert"
-      class="mx-4 mb-3 rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7 sm:mx-6"
+      class="mx-4 mb-3 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7 sm:mx-6"
     >
       <strong>{{ problem.title }}.</strong> {{ problem.detail }}
       <Button class="ml-2" :label="__('Retry')" @click="load()" />
@@ -94,17 +94,17 @@
         <component
           :is="linkOf(row).is"
           v-bind="linkOf(row).attrs"
-          class="block min-w-0 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
+          class="block min-w-0 rounded-6 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
           @click="remember(row)"
         >
           <p class="flex flex-wrap items-center gap-2 text-xs">
             <span
-              class="rounded bg-surface-gray-2 px-1.5 py-0.5 font-medium text-ink-gray-7"
+              class="rounded-4 bg-surface-gray-2 px-1.5 py-0.5 font-medium text-ink-gray-7"
               >{{ row.kind_label }}</span
             >
             <span
               v-if="row.state === 'resolved'"
-              class="rounded bg-surface-green-1 px-1.5 py-0.5 font-medium text-ink-green-8"
+              class="rounded-4 bg-surface-green-1 px-1.5 py-0.5 font-medium text-ink-green-8"
               >{{ __('Already settled') }}</span
             >
           </p>
@@ -123,7 +123,7 @@
         </component>
         <div
           v-if="row.guard"
-          class="mt-2 flex flex-wrap items-center gap-2 rounded-lg p-2 text-sm"
+          class="mt-2 flex flex-wrap items-center gap-2 rounded-6 p-2 text-sm"
           :class="
             row.state === 'resolved'
               ? 'bg-surface-gray-2 text-ink-gray-8'

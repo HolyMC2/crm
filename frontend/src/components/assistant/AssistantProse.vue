@@ -23,7 +23,7 @@
       </div>
       <div
         v-else-if="block.type === 'table'"
-        class="overflow-x-auto rounded-lg border border-outline-gray-2"
+        class="overflow-x-auto rounded-6 border border-outline-gray-2"
         data-testid="assistant-table"
       >
         <table class="w-full text-left text-sm">

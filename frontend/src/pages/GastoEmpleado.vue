@@ -77,7 +77,7 @@
 
         <!-- The next step: it changes in place, the page is never rebuilt. -->
         <section
-          class="mb-4 rounded-xl border border-outline-gray-2 p-4"
+          class="mb-4 rounded-7 border border-outline-gray-2 p-4"
           :aria-label="__('Next step')"
           data-testid="claim-next"
         >
@@ -159,7 +159,7 @@
                 >
                   <!-- A decision sent without an answer: it is checked, never replaced by another. -->
                   <div
-                    class="w-full space-y-2 rounded-lg bg-surface-gray-2 p-3 text-sm text-ink-gray-8"
+                    class="w-full space-y-2 rounded-6 bg-surface-gray-2 p-3 text-sm text-ink-gray-8"
                     role="status"
                     data-testid="claim-pending-decision"
                   >
@@ -257,7 +257,7 @@
           <div
             v-if="problem"
             role="alert"
-            class="mt-3 space-y-2 rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7"
+            class="mt-3 space-y-2 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
           >
             <p>
               <strong>{{ problem.title }}.</strong> {{ problem.detail }}
@@ -271,7 +271,7 @@
         </section>
 
         <div class="grid gap-4 sm:grid-cols-2">
-          <section class="rounded-xl border border-outline-gray-2 p-4">
+          <section class="rounded-7 border border-outline-gray-2 p-4">
             <h2 class="mb-2 text-base font-semibold">
               {{ __('Receipt photos') }}
             </h2>
@@ -283,7 +283,7 @@
                 <button
                   v-if="photo.is_image"
                   type="button"
-                  class="block w-full overflow-hidden rounded-lg border border-outline-gray-2"
+                  class="block w-full overflow-hidden rounded-6 border border-outline-gray-2"
                   :aria-label="__('Zoom {0}', [photo.file_name])"
                   @click="zoom = photo"
                 >
@@ -299,14 +299,14 @@
                   :href="photo.file_url"
                   target="_blank"
                   rel="noopener"
-                  class="flex aspect-square items-center justify-center rounded-lg border border-outline-gray-2 p-2 text-center text-xs text-ink-blue-link underline"
+                  class="flex aspect-square items-center justify-center rounded-6 border border-outline-gray-2 p-2 text-center text-xs text-ink-blue-link underline"
                   >{{ photo.file_name }}</a
                 >
               </li>
             </ul>
           </section>
 
-          <section class="rounded-xl border border-outline-gray-2 p-4">
+          <section class="rounded-7 border border-outline-gray-2 p-4">
             <h2 class="mb-2 text-base font-semibold">
               {{ __('What was spent') }}
             </h2>
@@ -344,7 +344,7 @@
 
           <section
             v-if="data.payments?.length || doc.reimbursed"
-            class="rounded-xl border border-outline-gray-2 p-4"
+            class="rounded-7 border border-outline-gray-2 p-4"
           >
             <h2 class="mb-2 text-base font-semibold">
               {{ __('Reimbursements', null, 'Gastos') }}
@@ -369,7 +369,7 @@
             </ul>
           </section>
 
-          <section class="rounded-xl border border-outline-gray-2 p-4">
+          <section class="rounded-7 border border-outline-gray-2 p-4">
             <h2 class="mb-2 text-base font-semibold">{{ __('History') }}</h2>
             <ul class="space-y-2 text-sm">
               <li v-for="(entry, i) in data.history" :key="i">
@@ -410,7 +410,7 @@
         <img
           :src="zoom.file_url"
           :alt="zoom.file_name"
-          class="max-h-full max-w-full rounded-lg object-contain"
+          class="max-h-full max-w-full rounded-6 object-contain"
         />
         <button
           type="button"

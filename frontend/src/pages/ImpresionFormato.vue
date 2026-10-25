@@ -196,7 +196,7 @@
             <div
               v-if="renderError"
               role="alert"
-              class="flex items-start gap-2 rounded-lg bg-surface-red-1 px-3 py-2 text-base text-ink-red-7"
+              class="flex items-start gap-2 rounded-6 bg-surface-red-1 px-3 py-2 text-base text-ink-red-7"
               data-testid="impresion-error"
             >
               <span
@@ -268,7 +268,7 @@
             <PreviewFrame
               v-if="srcdoc"
               v-model:zoom="zoom"
-              class="rounded-lg"
+              class="rounded-6"
               :srcdoc="srcdoc"
               :loading="rendering"
               :title="`Vista previa de ${data.label}`"
@@ -333,7 +333,7 @@
         id="impresion-copia"
         v-model="copyTitle"
         type="text"
-        class="mt-1 min-h-11 w-full rounded-lg border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9"
+        class="mt-1 min-h-11 w-full rounded-6 border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9"
         @keydown.enter="duplicate"
       />
       <p v-if="dirty" class="pt-2 text-sm text-ink-gray-6">

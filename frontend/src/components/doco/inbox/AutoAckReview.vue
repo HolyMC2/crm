@@ -46,7 +46,7 @@
     >
       <div class="mb-1 flex items-center gap-2">
         <span
-          class="inline-flex flex-none items-center rounded px-1.5 py-0.5 text-[10px] font-semibold text-white"
+          class="inline-flex flex-none items-center rounded-4 px-1.5 py-0.5 text-[10px] font-semibold text-white"
           :style="`background:${chColor(r.channel)}`"
         >
           {{ chLabel(r.channel) }}
@@ -75,7 +75,7 @@
             <span class="truncate">{{ formatPhone(r.mobile_no || r.to) }}</span>
             <span
               v-if="r.status"
-              class="flex-none rounded px-1 py-px text-[9.5px] font-semibold"
+              class="flex-none rounded-4 px-1 py-px text-[9.5px] font-semibold"
               :style="statusChip(r)"
             >
               {{ recordStageLabel(r.status, r.reference_doctype) }}
@@ -94,21 +94,21 @@
       <textarea
         v-model="drafts[r.name]"
         rows="2"
-        class="scb mb-1.5 w-full resize-none rounded-md border border-outline-gray-2 bg-surface-gray-1 px-2 py-1.5 text-[12px] text-ink-gray-8 focus:outline-none focus:ring-1 focus:ring-outline-gray-3 dark:bg-surface-gray-2"
+        class="scb mb-1.5 w-full resize-none rounded-5 border border-outline-gray-2 bg-surface-gray-1 px-2 py-1.5 text-[12px] text-ink-gray-8 focus:outline-none focus:ring-1 focus:ring-outline-gray-3 dark:bg-surface-gray-2"
         :placeholder="__('Mensaje del acuse…')"
       />
 
       <!-- Manager-eyes policy: only managers act (server enforces _APPROVER_ROLES) -->
       <div v-if="canAct" class="flex items-center justify-end gap-1.5">
         <button
-          class="rounded-md px-2 py-1 text-[11px] font-semibold text-ink-gray-6 hover:bg-surface-gray-2 disabled:opacity-50"
+          class="rounded-5 px-2 py-1 text-[11px] font-semibold text-ink-gray-6 hover:bg-surface-gray-2 disabled:opacity-50"
           :disabled="busy[r.name]"
           @click="onDiscard(r)"
         >
           {{ __('Descartar') }}
         </button>
         <button
-          class="rounded-md px-2.5 py-1 text-[11px] font-semibold text-white disabled:opacity-50"
+          class="rounded-5 px-2.5 py-1 text-[11px] font-semibold text-white disabled:opacity-50"
           style="background: var(--brand)"
           :disabled="busy[r.name] || !(drafts[r.name] || '').trim()"
           @click="onApprove(r)"

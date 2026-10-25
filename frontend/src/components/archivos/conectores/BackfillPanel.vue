@@ -18,7 +18,7 @@
     </p>
     <p
       v-if="!connector.enabled"
-      class="rounded-lg bg-surface-gray-1 p-3 text-sm text-ink-gray-7"
+      class="rounded-6 bg-surface-gray-1 p-3 text-sm text-ink-gray-7"
     >
       {{ __('Resume the connection to try or run the import.') }}
     </p>
@@ -62,7 +62,7 @@
       </p>
       <p
         v-if="progress.state === 'Capacity'"
-        class="rounded-lg border border-outline-amber-2 bg-surface-amber-1 p-3 text-sm text-ink-gray-8"
+        class="rounded-6 border border-outline-amber-2 bg-surface-amber-1 p-3 text-sm text-ink-gray-8"
       >
         {{
           __(
@@ -73,7 +73,7 @@
     </div>
     <p
       v-if="progress.state === 'Complete'"
-      class="rounded-lg border border-outline-gray-2 bg-surface-green-1 p-3 text-base text-ink-gray-8"
+      class="rounded-6 border border-outline-gray-2 bg-surface-green-1 p-3 text-base text-ink-gray-8"
     >
       {{
         progress.finished_at
@@ -88,7 +88,7 @@
     <p
       v-if="progress.state === 'Failed'"
       role="alert"
-      class="rounded-lg border border-outline-red-2 bg-surface-red-1 p-3 text-base text-ink-gray-8"
+      class="rounded-6 border border-outline-red-2 bg-surface-red-1 p-3 text-base text-ink-gray-8"
     >
       {{
         connector.error_message ||
@@ -151,7 +151,7 @@
     <p
       v-if="actionError"
       role="alert"
-      class="rounded-lg border border-outline-red-2 bg-surface-red-1 p-3 text-base text-ink-red-4"
+      class="rounded-6 border border-outline-red-2 bg-surface-red-1 p-3 text-base text-ink-red-4"
     >
       {{ actionError }}
     </p>
@@ -165,7 +165,7 @@
         <div
           v-for="tile in tiles"
           :key="tile.label"
-          class="rounded-lg bg-surface-gray-1 p-3"
+          class="rounded-6 bg-surface-gray-1 p-3"
         >
           <dt class="text-sm text-ink-gray-6">{{ tile.label }}</dt>
           <dd class="text-xl font-semibold text-ink-gray-9">

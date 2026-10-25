@@ -41,7 +41,7 @@
           /><a
             v-if="intakeHref"
             :href="intakeHref"
-            class="inline-flex h-7 items-center rounded bg-surface-gray-2 px-2 text-base text-ink-gray-8 hover:bg-surface-gray-3"
+            class="inline-flex h-7 items-center rounded-4 bg-surface-gray-2 px-2 text-base text-ink-gray-8 hover:bg-surface-gray-3"
             >{{ __('Nueva reparación') }}</a
           ><Button
             :disabled="!data?.can_write || busy"
@@ -55,14 +55,14 @@
       <div
         v-if="error"
         role="alert"
-        class="mx-5 mt-4 rounded border border-outline-red-2 p-3 text-sm text-ink-red-7"
+        class="mx-5 mt-4 rounded-4 border border-outline-red-2 p-3 text-sm text-ink-red-7"
       >
         {{ error }}
       </div>
       <div
         v-if="notice"
         role="status"
-        class="mx-5 mt-4 rounded border border-outline-gray-2 p-3 text-sm text-ink-gray-7"
+        class="mx-5 mt-4 rounded-4 border border-outline-gray-2 p-3 text-sm text-ink-gray-7"
       >
         {{ notice }}
       </div>
@@ -79,7 +79,7 @@
             <select
               v-model="scope"
               aria-label="Alcance de estadísticas"
-              class="rounded border border-outline-gray-2 bg-surface-base py-1 pl-2 pr-7 text-xs"
+              class="rounded-4 border border-outline-gray-2 bg-surface-base py-1 pl-2 pr-7 text-xs"
             >
               <option value="deal">{{ __('Este trato') }}</option>
               <option value="customer" :disabled="!data.customers.length">
@@ -166,7 +166,7 @@
               v-if="salesDocuments.length"
               v-model="selectedKey"
               aria-label="Documento de artículos"
-              class="max-w-full rounded border border-outline-gray-2 bg-surface-base py-1.5 pl-2 pr-7 text-xs"
+              class="max-w-full rounded-4 border border-outline-gray-2 bg-surface-base py-1.5 pl-2 pr-7 text-xs"
             >
               <option
                 v-for="doc in salesDocuments"
@@ -179,7 +179,7 @@
           </div>
           <p
             v-if="!salesDocuments.length"
-            class="rounded border border-dashed border-outline-gray-2 p-6 text-center text-sm text-ink-gray-5"
+            class="rounded-4 border border-dashed border-outline-gray-2 p-6 text-center text-sm text-ink-gray-5"
           >
             {{
               __(
@@ -189,7 +189,7 @@
           </p>
           <div
             v-else
-            class="overflow-x-auto rounded border border-outline-gray-2"
+            class="overflow-x-auto rounded-4 border border-outline-gray-2"
           >
             <table class="w-full text-left text-sm">
               <thead class="bg-surface-gray-1 text-xs text-ink-gray-6">
@@ -246,7 +246,7 @@
                         step="any"
                         :disabled="busy"
                         :aria-label="__('Cantidad') + ' ' + line.item_name"
-                        class="w-20 rounded border border-outline-gray-2 bg-surface-base p-1.5 text-right text-sm"
+                        class="w-20 rounded-4 border border-outline-gray-2 bg-surface-base p-1.5 text-right text-sm"
                         @change="updateQuantity(line, $event)"
                       /><span v-else>{{ line.qty }}</span>
                       <div class="mt-1 text-xs text-ink-gray-5">
@@ -359,7 +359,7 @@
             <select
               v-model="typeFilter"
               aria-label="Tipo de documento"
-              class="min-w-0 flex-1 rounded border border-outline-gray-2 bg-surface-base py-1.5 pl-2 pr-7 text-xs"
+              class="min-w-0 flex-1 rounded-4 border border-outline-gray-2 bg-surface-base py-1.5 pl-2 pr-7 text-xs"
             >
               <option value="">{{ __('Todos los documentos') }}</option>
               <option v-for="dt in documentTypes" :key="dt" :value="dt">
@@ -431,7 +431,7 @@
                 </div>
               </div>
               <span
-                class="rounded bg-surface-gray-2 px-2 py-1 text-xs text-ink-gray-6"
+                class="rounded-4 bg-surface-gray-2 px-2 py-1 text-xs text-ink-gray-6"
                 >{{ status(doc) }}</span
               ><span
                 v-if="doc.currency"
@@ -502,7 +502,7 @@
           <select
             v-model="linkType"
             aria-label="Tipo a vincular"
-            class="rounded border border-outline-gray-2 bg-surface-base text-sm"
+            class="rounded-4 border border-outline-gray-2 bg-surface-base text-sm"
             @change="searchLinks"
           >
             <option value="Sales Order">{{ __('Orden de venta') }}</option>
@@ -511,7 +511,7 @@
             v-model="linkQuery"
             aria-label="Número de documento"
             :placeholder="__('Número de documento')"
-            class="min-w-0 flex-1 rounded border border-outline-gray-2 bg-surface-base text-sm"
+            class="min-w-0 flex-1 rounded-4 border border-outline-gray-2 bg-surface-base text-sm"
           /><Button type="submit" :loading="linkLoading">{{
             __('Buscar')
           }}</Button>

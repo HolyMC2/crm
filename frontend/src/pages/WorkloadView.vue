@@ -76,7 +76,7 @@
         <div
           v-for="n in 5"
           :key="n"
-          class="h-16 animate-pulse rounded-lg bg-surface-gray-2"
+          class="h-16 animate-pulse rounded-6 bg-surface-gray-2"
         />
       </div>
       <WorkloadPeople class="mb-6" loading />
@@ -84,7 +84,7 @@
         <div
           v-for="n in 5"
           :key="n"
-          class="h-11 animate-pulse rounded-md bg-surface-gray-2"
+          class="h-11 animate-pulse rounded-5 bg-surface-gray-2"
         />
       </div>
     </template>
@@ -104,7 +104,7 @@
     <template v-else>
       <p
         v-if="selfView"
-        class="mb-4 rounded-lg border border-outline-gray-2 bg-surface-gray-1 p-3 text-sm text-ink-gray-7"
+        class="mb-4 rounded-6 border border-outline-gray-2 bg-surface-gray-1 p-3 text-sm text-ink-gray-7"
         data-testid="self-view-note"
       >
         {{
@@ -121,7 +121,7 @@
           v-for="metric in shownMetrics"
           :key="metric.key"
           type="button"
-          class="flex min-h-16 flex-col items-start justify-between rounded-lg border px-3 py-2 text-left hover:bg-surface-gray-2 disabled:opacity-60"
+          class="flex min-h-16 flex-col items-start justify-between rounded-6 border px-3 py-2 text-left hover:bg-surface-gray-2 disabled:opacity-60"
           :class="
             metric.active
               ? 'border-outline-gray-4 bg-surface-gray-2'
@@ -170,7 +170,7 @@
             <button
               v-if="state.owner !== null && !selfView"
               type="button"
-              class="rounded px-1.5 text-xs font-normal text-ink-gray-6 hover:bg-surface-gray-2"
+              class="rounded-4 px-1.5 text-xs font-normal text-ink-gray-6 hover:bg-surface-gray-2"
               :disabled="moving"
               @click="openQueue(null, state.bucket, 'keep')"
             >
@@ -184,7 +184,7 @@
 
         <div class="mb-3 flex flex-wrap gap-2">
           <div
-            class="inline-flex rounded-md border border-outline-gray-2 p-0.5"
+            class="inline-flex rounded-5 border border-outline-gray-2 p-0.5"
             role="group"
             :aria-label="__('Registros')"
           >
@@ -208,7 +208,7 @@
             </button>
           </div>
           <div
-            class="inline-flex rounded-md border border-outline-gray-2 p-0.5"
+            class="inline-flex rounded-5 border border-outline-gray-2 p-0.5"
             role="group"
             :aria-label="__('Vencimiento')"
           >
@@ -229,7 +229,7 @@
 
         <div
           v-if="moveError || results.length"
-          class="mb-3 rounded-lg border p-3 text-sm"
+          class="mb-3 rounded-6 border p-3 text-sm"
           :class="
             moveError || failed.length
               ? 'border-outline-amber-2 bg-surface-amber-1 text-ink-amber-8'
@@ -857,18 +857,18 @@ load().then(async () => {
 </script>
 <style scoped>
 .wl-btn {
-  @apply min-h-9 rounded-md border border-outline-gray-2 bg-surface-base px-3 text-sm text-ink-gray-8 hover:bg-surface-gray-2 disabled:opacity-50;
+  @apply min-h-9 rounded-5 border border-outline-gray-2 bg-surface-base px-3 text-sm text-ink-gray-8 hover:bg-surface-gray-2 disabled:opacity-50;
 }
 .wl-control {
-  @apply mt-1 block min-h-9 w-full max-w-full rounded-md border border-outline-gray-2 bg-surface-base px-2 text-sm text-ink-gray-8 sm:w-48;
+  @apply mt-1 block min-h-9 w-full max-w-full rounded-5 border border-outline-gray-2 bg-surface-base px-2 text-sm text-ink-gray-8 sm:w-48;
 }
 .wl-seg {
-  @apply min-h-8 rounded px-2.5 text-sm text-ink-gray-6 hover:text-ink-gray-8 disabled:opacity-50;
+  @apply min-h-8 rounded-4 px-2.5 text-sm text-ink-gray-6 hover:text-ink-gray-8 disabled:opacity-50;
 }
 .wl-seg-on {
   @apply bg-surface-gray-3 font-medium text-ink-gray-9;
 }
 .wl-notice {
-  @apply rounded-lg border border-outline-amber-2 bg-surface-amber-1 p-3 text-sm text-ink-amber-8;
+  @apply rounded-6 border border-outline-amber-2 bg-surface-amber-1 p-3 text-sm text-ink-amber-8;
 }
 </style>

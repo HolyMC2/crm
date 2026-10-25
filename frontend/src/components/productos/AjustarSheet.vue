@@ -63,7 +63,7 @@
         </p>
       </section>
 
-      <section class="overflow-hidden rounded-xl border border-outline-gray-1">
+      <section class="overflow-hidden rounded-7 border border-outline-gray-1">
         <button
           type="button"
           class="flex min-h-14 w-full items-center gap-3 px-4 text-left hover:bg-surface-gray-1"
@@ -120,7 +120,7 @@
       </section>
 
       <dl
-        class="divide-y divide-outline-gray-1 rounded-xl border border-outline-gray-1 text-base"
+        class="divide-y divide-outline-gray-1 rounded-7 border border-outline-gray-1 text-base"
         data-ajustar-resumen
       >
         <div class="flex items-center justify-between px-4 py-3">

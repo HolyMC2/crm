@@ -28,7 +28,7 @@
         </span>
       </div>
       <button
-        class="rounded-lg px-3.5 py-[7px] text-[12.5px] font-semibold text-white"
+        class="rounded-6 px-3.5 py-[7px] text-[12.5px] font-semibold text-white"
         style="background: var(--brand)"
         :disabled="saving || flowLoading || forbidden"
         @click="newFlow"
@@ -89,7 +89,7 @@
             }}
           </p>
           <button
-            class="rounded border border-outline-gray-2 px-3"
+            class="rounded-4 border border-outline-gray-2 px-3"
             @click="flows.reload()"
           >
             {{ __('Reintentar') }}
@@ -124,7 +124,7 @@
             >
             <span
               v-if="f.auto_send"
-              class="flex-none rounded bg-surface-amber-1 px-1.5 py-[1px] text-[10px] font-semibold text-ink-amber-9"
+              class="flex-none rounded-4 bg-surface-amber-1 px-1.5 py-[1px] text-[10px] font-semibold text-ink-amber-9"
               >AUTO</span
             >
           </div>
@@ -137,7 +137,7 @@
             <span>· {{ f.steps_count }} {{ __('pasos') }}</span>
             <span
               v-if="f.active_runs"
-              class="rounded bg-surface-blue-1 px-1.5 py-[1px] font-semibold text-ink-blue-9"
+              class="rounded-4 bg-surface-blue-1 px-1.5 py-[1px] font-semibold text-ink-blue-9"
             >
               {{ f.active_runs }} {{ __('en curso') }}
             </span>
@@ -156,7 +156,7 @@
         <fieldset v-else class="min-w-0" :disabled="saving || flowLoading">
           <button
             type="button"
-            class="mb-3 rounded border border-outline-gray-2 px-3 md:hidden"
+            class="mb-3 rounded-4 border border-outline-gray-2 px-3 md:hidden"
             @click="closeEditor"
           >
             {{ __('Volver a flujos') }}
@@ -173,7 +173,7 @@
               form.flow_name
             }}</span>
             <span
-              class="rounded-md px-2 py-[3px] text-[11px] font-semibold"
+              class="rounded-5 px-2 py-[3px] text-[11px] font-semibold"
               :class="
                 form.enabled
                   ? 'bg-surface-green-2 text-ink-green-8'
@@ -185,7 +185,7 @@
             <div class="flex-1" />
             <button
               v-if="dirty || saving"
-              class="rounded-lg px-3 py-1.5 text-[12.5px] font-semibold text-white disabled:opacity-50"
+              class="rounded-6 px-3 py-1.5 text-[12.5px] font-semibold text-white disabled:opacity-50"
               style="background: var(--brand)"
               :disabled="saving"
               @click="save"
@@ -194,7 +194,7 @@
             </button>
             <button
               v-if="!isNew"
-              class="rounded-lg border px-3 py-1.5 text-[12.5px] font-semibold"
+              class="rounded-6 border px-3 py-1.5 text-[12.5px] font-semibold"
               :class="
                 form.enabled
                   ? 'border-outline-amber-4 bg-surface-amber-1 text-ink-amber-9'
@@ -222,7 +222,7 @@
               }}
             </span>
             <button
-              class="flex-none rounded-md border border-outline-gray-2 bg-surface-base px-2.5 py-1 text-[11.5px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2"
+              class="flex-none rounded-5 border border-outline-gray-2 bg-surface-base px-2.5 py-1 text-[11.5px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2"
               @click="cancelRuns"
             >
               {{ __('Cancelar conversaciones') }}

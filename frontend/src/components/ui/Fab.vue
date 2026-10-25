@@ -7,7 +7,7 @@
     :as="to ? RouterLink : 'button'"
     :to="to || undefined"
     :type="to ? undefined : 'button'"
-    class="press absolute bottom-4 z-10 flex h-14 items-center justify-center gap-2 rounded-2xl bg-surface-gray-10 text-base font-semibold text-ink-base shadow-lg"
+    class="press absolute bottom-4 z-10 flex h-14 items-center justify-center gap-2 rounded-8 bg-surface-gray-10 text-base font-semibold text-ink-base shadow-lg"
     :class="[
       position === 'center' ? 'left-1/2 -translate-x-1/2' : 'right-4',
       extended ? 'px-5' : 'w-14',

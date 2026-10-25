@@ -117,6 +117,6 @@ onUnmounted(() => {
 </script>
 <style scoped>
 .commerce-button {
-  @apply min-h-11 rounded border border-outline-gray-2 bg-surface-base px-3 py-2 text-left text-sm text-ink-gray-8 focus-visible:ring-2 disabled:opacity-50;
+  @apply min-h-11 rounded-4 border border-outline-gray-2 bg-surface-base px-3 py-2 text-left text-sm text-ink-gray-8 focus-visible:ring-2 disabled:opacity-50;
 }
 </style>

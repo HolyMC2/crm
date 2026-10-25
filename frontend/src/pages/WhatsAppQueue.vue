@@ -19,7 +19,7 @@
       <div class="flex min-w-0 items-center gap-2">
         <button
           v-if="back"
-          class="flex min-h-11 items-center gap-1 rounded-lg pr-2 text-sm text-ink-gray-7 hover:text-ink-gray-9 sm:min-h-8"
+          class="flex min-h-11 items-center gap-1 rounded-6 pr-2 text-sm text-ink-gray-7 hover:text-ink-gray-9 sm:min-h-8"
           @click="goBack"
         >
           <LucideArrowLeft class="h-4 w-4" />
@@ -38,7 +38,7 @@
       </div>
       <button
         v-if="!isMobile"
-        class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-gray-7"
+        class="rounded-6 border border-outline-gray-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-gray-7"
         :disabled="queue.loading"
         @click="queue.reload()"
       >

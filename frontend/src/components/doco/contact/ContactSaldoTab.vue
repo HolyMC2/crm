@@ -62,7 +62,7 @@
           <div
             v-for="row in data.numbers"
             :key="row.referencia"
-            class="rounded-xl border border-outline-gray-2 p-3"
+            class="rounded-7 border border-outline-gray-2 p-3"
           >
             <div class="flex items-center justify-between gap-2">
               <span class="truncate text-sm font-semibold text-ink-gray-9">{{
@@ -93,14 +93,14 @@
         </h3>
         <div
           v-if="!data.recargas.length"
-          class="rounded-xl border border-outline-gray-2 p-8 text-center text-sm text-ink-gray-6"
+          class="rounded-7 border border-outline-gray-2 p-8 text-center text-sm text-ink-gray-6"
         >
           {{ __('Sin recargas registradas.') }}
         </div>
 
         <div
           v-else
-          class="hidden overflow-x-auto rounded-xl border border-outline-gray-2 md:block"
+          class="hidden overflow-x-auto rounded-7 border border-outline-gray-2 md:block"
         >
           <div class="min-w-[860px]">
             <div
@@ -165,7 +165,7 @@
 
         <div
           v-if="data.recargas.length"
-          class="overflow-hidden rounded-xl border border-outline-gray-2 md:hidden"
+          class="overflow-hidden rounded-7 border border-outline-gray-2 md:hidden"
         >
           <MobileRecordCard
             v-for="row in data.recargas"
@@ -267,8 +267,8 @@ const Metric = defineComponent({
   },
   setup(p) {
     const tones = {
-      gray: 'rounded-xl bg-surface-gray-1 p-3 text-ink-gray-9',
-      green: 'rounded-xl bg-surface-green-2 p-3 text-ink-green-8',
+      gray: 'rounded-7 bg-surface-gray-1 p-3 text-ink-gray-9',
+      green: 'rounded-7 bg-surface-green-2 p-3 text-ink-green-8',
     }
     return () =>
       h('div', { class: tones[p.tone] || tones.gray }, [

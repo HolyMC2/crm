@@ -118,7 +118,7 @@
           <section
             v-if="similar.length"
             role="status"
-            class="rounded-lg bg-surface-amber-1 p-3 text-sm text-ink-amber-7"
+            class="rounded-6 bg-surface-amber-1 p-3 text-sm text-ink-amber-7"
             data-nuevo-parecidos
           >
             <p class="font-medium">
@@ -171,7 +171,7 @@
           <div
             v-if="problem"
             role="alert"
-            class="rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7"
+            class="rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
             data-nuevo-error
           >
             <p class="font-medium">{{ problem.title }}</p>

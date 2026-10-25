@@ -16,7 +16,7 @@
           >{{ __('Segmento') }}
           <select
             v-model="segment"
-            class="mt-1 block min-h-11 w-full rounded-lg border border-outline-gray-2 bg-surface-base px-3 text-ink-gray-9"
+            class="mt-1 block min-h-11 w-full rounded-6 border border-outline-gray-2 bg-surface-base px-3 text-ink-gray-9"
           >
             <option value="cold_leads">
               {{ __('Cold leads (no activity)') }}
@@ -37,14 +37,14 @@
             type="number"
             min="7"
             step="1"
-            class="mt-1 block min-h-11 w-full rounded-lg border border-outline-gray-2 bg-surface-base px-3 text-ink-gray-9"
+            class="mt-1 block min-h-11 w-full rounded-6 border border-outline-gray-2 bg-surface-base px-3 text-ink-gray-9"
           />
         </label>
         <label class="min-w-0 text-sm text-ink-gray-7 sm:col-span-2"
           >{{ __('Plantilla aprobada') }}
           <select
             v-model="template"
-            class="mt-1 block min-h-11 w-full rounded-lg border border-outline-gray-2 bg-surface-base px-3 text-ink-gray-9"
+            class="mt-1 block min-h-11 w-full rounded-6 border border-outline-gray-2 bg-surface-base px-3 text-ink-gray-9"
           >
             <option value="">{{ __('Selecciona una plantilla') }}</option>
             <option
@@ -64,14 +64,14 @@
         <button
           type="submit"
           :disabled="busy || !validDays"
-          class="min-h-11 rounded-lg border border-outline-gray-2 px-3 text-sm text-ink-gray-9 hover:bg-surface-gray-2 disabled:opacity-50"
+          class="min-h-11 rounded-6 border border-outline-gray-2 px-3 text-sm text-ink-gray-9 hover:bg-surface-gray-2 disabled:opacity-50"
         >
           {{ busy ? __('Procesando…') : __('Previsualizar audiencia') }}
         </button>
         <button
           type="button"
           :disabled="busy || !template || !preview?.staged || !validDays"
-          class="min-h-11 rounded-lg bg-surface-gray-10 px-3 text-sm text-ink-base disabled:opacity-50"
+          class="min-h-11 rounded-6 bg-surface-gray-10 px-3 text-sm text-ink-base disabled:opacity-50"
           @click="stageAudience"
         >
           {{ __('Enviar {0} a revisión', [preview?.staged || 0]) }}

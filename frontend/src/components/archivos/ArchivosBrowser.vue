@@ -8,7 +8,7 @@
       >
         <button
           type="button"
-          class="rounded px-1.5 py-0.5 font-medium text-ink-gray-8 hover:bg-surface-gray-2"
+          class="rounded-4 px-1.5 py-0.5 font-medium text-ink-gray-8 hover:bg-surface-gray-2"
           @click="$emit('navigate', { view, key: '' })"
         >
           {{ viewLabel(view) }}
@@ -17,7 +17,7 @@
           <LucideChevronRight class="h-3 w-3 text-ink-gray-4" />
           <button
             type="button"
-            class="truncate rounded px-1.5 py-0.5 text-ink-gray-7 hover:bg-surface-gray-2"
+            class="truncate rounded-4 px-1.5 py-0.5 text-ink-gray-7 hover:bg-surface-gray-2"
             @click="$emit('navigate', { view: crumb.view, key: crumb.key })"
           >
             {{ crumb.label }}
@@ -92,7 +92,7 @@
             :label="sortLabel(sort)"
           />
         </Dropdown>
-        <div class="flex shrink-0 rounded border border-outline-gray-2">
+        <div class="flex shrink-0 rounded-4 border border-outline-gray-2">
           <button
             v-for="mode in ['list', 'grid']"
             :key="mode"
@@ -148,7 +148,7 @@
         <div
           v-for="n in 6"
           :key="n"
-          class="h-14 animate-pulse rounded bg-surface-gray-2"
+          class="h-14 animate-pulse rounded-4 bg-surface-gray-2"
         />
       </div>
       <div v-else-if="problemState" class="p-4">
@@ -168,7 +168,7 @@
               @click="$emit('navigate', { view: group.view, key: group.key })"
             >
               <span
-                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-gray-2"
+                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-6 bg-surface-gray-2"
               >
                 <Icon
                   :icon="groupIcon(group)"
@@ -210,7 +210,7 @@
                 "
               >
                 <span
-                  class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-gray-2"
+                  class="flex h-9 w-9 shrink-0 items-center justify-center rounded-6 bg-surface-gray-2"
                 >
                   <LucideFolder class="h-4 w-4 text-ink-gray-6" />
                 </span>
@@ -238,7 +238,7 @@
               >
                 <button
                   type="button"
-                  class="flex h-9 w-9 shrink-0 items-center justify-center rounded text-ink-gray-5 hover:bg-surface-gray-3"
+                  class="flex h-9 w-9 shrink-0 items-center justify-center rounded-4 text-ink-gray-5 hover:bg-surface-gray-3"
                   :aria-label="__('Folder actions')"
                 >
                   <LucideEllipsis class="h-4 w-4" />
@@ -308,7 +308,7 @@
               <input
                 type="checkbox"
                 data-row-check
-                class="h-5 w-5 shrink-0 rounded border-outline-gray-3"
+                class="h-5 w-5 shrink-0 rounded-4 border-outline-gray-3"
                 :checked="selected.has(item.id)"
                 :aria-label="__('Select {0}', [item.title])"
                 @click.prevent.stop="onCheck($event, item, index)"
@@ -323,7 +323,7 @@
                 @click="onOpen(item, index)"
               >
                 <span
-                  class="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-gray-2"
+                  class="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-6 bg-surface-gray-2"
                 >
                   <img
                     v-if="item.preview === 'image' && item.file_url"
@@ -389,7 +389,7 @@
               data-key-row
               :data-index="index"
               :data-row-current="item.id === activeId || undefined"
-              class="relative flex h-full flex-col overflow-hidden rounded-lg border bg-surface-base"
+              class="relative flex h-full flex-col overflow-hidden rounded-6 border bg-surface-base"
               :class="
                 selected.has(item.id) || item.id === activeId
                   ? 'border-outline-gray-4'
@@ -401,7 +401,7 @@
               <input
                 type="checkbox"
                 data-row-check
-                class="absolute left-2 top-2 z-10 h-5 w-5 rounded border-outline-gray-3 bg-surface-base"
+                class="absolute left-2 top-2 z-10 h-5 w-5 rounded-4 border-outline-gray-3 bg-surface-base"
                 :checked="selected.has(item.id)"
                 :aria-label="__('Select {0}', [item.title])"
                 @click.prevent.stop="onCheck($event, item, index)"

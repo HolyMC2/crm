@@ -30,7 +30,7 @@
     <template v-else>
       <p
         v-if="view.step === 'unavailable'"
-        class="rounded-md bg-surface-gray-2 p-2.5 text-p-sm text-ink-gray-7"
+        class="rounded-5 bg-surface-gray-2 p-2.5 text-p-sm text-ink-gray-7"
       >
         {{
           view.mode === 'off'
@@ -70,7 +70,7 @@
 
       <div
         v-if="view.unsupported.length"
-        class="rounded-md border border-outline-gray-2 p-2.5 text-p-sm"
+        class="rounded-5 border border-outline-gray-2 p-2.5 text-p-sm"
       >
         <div class="font-medium text-ink-gray-8">
           {{ __("Questions WhatsApp can't ask") }}
@@ -94,7 +94,7 @@
 
       <ul
         v-if="c.metaErrors.value.length"
-        class="rounded-md bg-surface-red-2 p-2.5 text-p-sm text-ink-red-7"
+        class="rounded-5 bg-surface-red-2 p-2.5 text-p-sm text-ink-red-7"
       >
         <li v-for="(e, i) in c.metaErrors.value" :key="i">
           {{ e.message || e.error }}

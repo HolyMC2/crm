@@ -1,6 +1,6 @@
 <template>
   <section
-    class="space-y-3 rounded-lg border border-outline-gray-2 bg-surface-base p-4"
+    class="space-y-3 rounded-6 border border-outline-gray-2 bg-surface-base p-4"
     :aria-label="__('Receive a file')"
   >
     <div class="flex items-start gap-2">
@@ -20,7 +20,7 @@
       </div>
     </div>
     <label
-      class="inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded bg-surface-gray-10 px-4 text-base-medium text-ink-base focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-outline-gray-4 sm:hidden"
+      class="inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-4 bg-surface-gray-10 px-4 text-base-medium text-ink-base focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-outline-gray-4 sm:hidden"
     >
       <LucideCamera class="h-4 w-4" />{{ __('Take photo') }}
       <input
@@ -33,7 +33,7 @@
     </label>
     <!-- Drop or choose: the whole box takes the file -->
     <label
-      class="flex cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed px-4 py-5 text-center transition-colors focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-outline-gray-4"
+      class="flex cursor-pointer flex-col items-center justify-center gap-1 rounded-6 border-2 border-dashed px-4 py-5 text-center transition-colors focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-outline-gray-4"
       :class="
         dragging
           ? 'border-outline-gray-5 bg-surface-gray-2'
@@ -107,7 +107,7 @@
       />
       <a
         href="/desk/documentos?clasico=1"
-        class="ml-auto inline-flex min-h-11 items-center gap-1 rounded px-2 text-sm text-ink-gray-6 hover:text-ink-gray-9 sm:min-h-8"
+        class="ml-auto inline-flex min-h-11 items-center gap-1 rounded-4 px-2 text-sm text-ink-gray-6 hover:text-ink-gray-9 sm:min-h-8"
         ><LucidePaperclip class="h-3.5 w-3.5" />{{
           __('From an ERP or mail attachment')
         }}</a

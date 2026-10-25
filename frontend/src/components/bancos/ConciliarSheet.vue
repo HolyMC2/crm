@@ -36,13 +36,13 @@
         aria-label="Buscando su pago…"
         class="space-y-3"
       >
-        <div class="h-24 animate-pulse rounded-xl bg-surface-gray-2" />
-        <div class="h-12 animate-pulse rounded-xl bg-surface-gray-2" />
+        <div class="h-24 animate-pulse rounded-7 bg-surface-gray-2" />
+        <div class="h-12 animate-pulse rounded-7 bg-surface-gray-2" />
       </div>
       <p
         v-if="problem"
         role="alert"
-        class="rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7"
+        class="rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
         data-bancos-problem
       >
         {{ problem }}
@@ -52,7 +52,7 @@
         <!-- Already linked: what it was matched with, and «Deshacer». -->
         <section
           v-if="detail.matches.length"
-          class="rounded-xl bg-surface-green-2 p-4 text-ink-green-8"
+          class="rounded-7 bg-surface-green-2 p-4 text-ink-green-8"
           aria-label="Conciliado"
           data-bancos-matched
         >
@@ -104,7 +104,7 @@
         <div
           v-for="block in shownBlocks"
           :key="block.code"
-          class="rounded-lg bg-surface-amber-1 p-3 text-sm text-ink-amber-8"
+          class="rounded-6 bg-surface-amber-1 p-3 text-sm text-ink-amber-8"
           data-bancos-blocked
         >
           <p>{{ block.message }}</p>
@@ -124,7 +124,7 @@
         <!-- The suggestion, one tap. -->
         <section
           v-if="suggested"
-          class="rounded-xl bg-surface-green-1 p-4"
+          class="rounded-7 bg-surface-green-1 p-4"
           aria-label="Coincide con"
           data-bancos-suggested
         >
@@ -188,7 +188,7 @@
           <div
             v-for="draft in detail.drafts"
             :key="draft.name"
-            class="rounded-xl border border-outline-gray-2 p-3"
+            class="rounded-7 border border-outline-gray-2 p-3"
             data-bancos-draft
           >
             <p class="text-sm text-ink-gray-6">{{ draft.word }} en borrador</p>
@@ -221,7 +221,7 @@
           <div
             v-for="invoice in detail.invoices"
             :key="invoice.name"
-            class="flex items-center justify-between gap-3 rounded-xl border border-outline-gray-2 p-3"
+            class="flex items-center justify-between gap-3 rounded-7 border border-outline-gray-2 p-3"
             data-bancos-invoice
           >
             <span class="min-w-0">

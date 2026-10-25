@@ -13,7 +13,7 @@
   >
     <div class="absolute inset-0 bg-black/30" @click="close" />
     <div
-      class="relative flex h-full w-full flex-col bg-surface-base sm:h-auto sm:max-h-[70vh] sm:w-[640px] sm:rounded-xl sm:shadow-2xl"
+      class="relative flex h-full w-full flex-col bg-surface-base sm:h-auto sm:max-h-[70vh] sm:w-[640px] sm:rounded-7 sm:shadow-2xl"
     >
       <div
         class="flex items-center gap-1.5 px-3 pt-[calc(env(safe-area-inset-top)+0.5rem)] sm:pt-2"
@@ -37,7 +37,7 @@
         >
           {{ chip.label }}
           <kbd
-            class="hidden rounded border border-outline-gray-2 px-1 font-sans text-xs font-normal text-ink-gray-6 sm:inline"
+            class="hidden rounded-4 border border-outline-gray-2 px-1 font-sans text-xs font-normal text-ink-gray-6 sm:inline"
             >{{ chip.key }}</kbd
           >
         </button>
@@ -65,7 +65,7 @@
           "
         />
         <button
-          class="flex size-11 flex-none items-center justify-center rounded-lg text-sm text-ink-gray-6"
+          class="flex size-11 flex-none items-center justify-center rounded-6 text-sm text-ink-gray-6"
           :aria-label="__('Close')"
           @click="close"
         >
@@ -119,7 +119,7 @@
             </span>
             <kbd
               v-if="keyShown(item)"
-              class="hidden flex-none rounded border border-outline-gray-2 px-1.5 font-sans text-xs text-ink-gray-6 sm:inline"
+              class="hidden flex-none rounded-4 border border-outline-gray-2 px-1.5 font-sans text-xs text-ink-gray-6 sm:inline"
               >{{ keyLabel(item.shortcut) }}</kbd
             >
             <span

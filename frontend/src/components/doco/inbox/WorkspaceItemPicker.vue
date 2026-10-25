@@ -14,7 +14,7 @@
           v-model="query"
           type="search"
           enterkeyhint="search"
-          class="min-h-11 min-w-0 flex-1 rounded border border-outline-gray-2 bg-surface-base px-3 py-2 text-lg sm:min-h-0 sm:text-sm"
+          class="min-h-11 min-w-0 flex-1 rounded-4 border border-outline-gray-2 bg-surface-base px-3 py-2 text-lg sm:min-h-0 sm:text-sm"
           :aria-label="__('Nombre o código del artículo')"
           :placeholder="__('Buscar por nombre o código…')"
         />
@@ -35,7 +35,7 @@
     <!-- Picks from earlier searches stay listed here. -->
     <section
       v-if="selected.length"
-      class="mb-3 rounded border border-outline-gray-2"
+      class="mb-3 rounded-4 border border-outline-gray-2"
     >
       <h4 class="px-3 pt-2 text-xs font-medium text-ink-gray-6">
         {{ __('Seleccionados') }} ({{ selected.length }})
@@ -61,7 +61,7 @@
           >
           <button
             type="button"
-            class="min-h-11 shrink-0 rounded px-2 text-sm text-ink-gray-7 hover:bg-surface-gray-2"
+            class="min-h-11 shrink-0 rounded-4 px-2 text-sm text-ink-gray-7 hover:bg-surface-gray-2"
             :aria-label="
               __('Quitar') + ' ' + (names[line.item_code] || line.item_code)
             "
@@ -74,7 +74,7 @@
     </section>
     <ul
       v-if="items.length"
-      class="divide-y divide-outline-gray-1 rounded border border-outline-gray-2"
+      class="divide-y divide-outline-gray-1 rounded-4 border border-outline-gray-2"
     >
       <!-- Thumbnail and text never part; the stepper sits on their right
            when the row has room and wraps under it on a phone. -->
@@ -88,7 +88,7 @@
             v-if="item.image_url"
             :src="item.image_url"
             alt=""
-            class="h-9 w-9 shrink-0 rounded object-contain"
+            class="h-9 w-9 shrink-0 rounded-4 object-contain"
           />
           <div class="min-w-0 flex-1">
             <p
@@ -120,7 +120,7 @@
         >
           <button
             type="button"
-            class="flex h-11 w-11 items-center justify-center rounded-l border border-outline-gray-2 text-lg text-ink-gray-8 hover:bg-surface-gray-2 disabled:opacity-40"
+            class="flex h-11 w-11 items-center justify-center rounded-l-4 border border-outline-gray-2 text-lg text-ink-gray-8 hover:bg-surface-gray-2 disabled:opacity-40"
             :aria-label="__('Disminuir cantidad')"
             :disabled="!isSelected(item.item_code)"
             @click="step(item.item_code, -1)"
@@ -147,7 +147,7 @@
           />
           <button
             type="button"
-            class="flex h-11 w-11 items-center justify-center rounded-r border border-outline-gray-2 text-lg text-ink-gray-8 hover:bg-surface-gray-2 disabled:opacity-40"
+            class="flex h-11 w-11 items-center justify-center rounded-r-4 border border-outline-gray-2 text-lg text-ink-gray-8 hover:bg-surface-gray-2 disabled:opacity-40"
             :aria-label="__('Aumentar cantidad')"
             :disabled="
               !canSelect(item.item_code) ||
@@ -163,7 +163,7 @@
     <!-- A failed search shows only its alert above. -->
     <p
       v-else-if="loading || !error"
-      class="rounded border border-outline-gray-2 p-6 text-center text-sm text-ink-gray-5"
+      class="rounded-4 border border-outline-gray-2 p-6 text-center text-sm text-ink-gray-5"
     >
       {{
         loading

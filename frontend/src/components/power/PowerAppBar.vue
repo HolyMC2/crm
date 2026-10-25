@@ -27,7 +27,7 @@
     <template #title>
       <button
         type="button"
-        class="flex min-h-12 min-w-0 flex-1 items-center gap-1 rounded-lg px-3 text-left"
+        class="flex min-h-12 min-w-0 flex-1 items-center gap-1 rounded-6 px-3 text-left"
         :aria-label="__('Choose a list')"
         :aria-expanded="listSheet"
         data-power-title
@@ -67,7 +67,7 @@
         v-for="entry in entries"
         :key="entry.value"
         type="button"
-        class="flex min-h-14 w-full items-center gap-3 rounded-xl px-4 text-left text-base"
+        class="flex min-h-14 w-full items-center gap-3 rounded-7 px-4 text-left text-base"
         :class="
           active === entry.value
             ? 'bg-surface-gray-2 font-semibold'

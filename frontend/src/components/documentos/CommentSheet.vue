@@ -13,7 +13,7 @@
       v-model="text"
       rows="4"
       maxlength="4000"
-      class="w-full rounded-lg border border-outline-gray-2 bg-surface-base px-3 py-2 text-base text-ink-gray-9"
+      class="w-full rounded-6 border border-outline-gray-2 bg-surface-base px-3 py-2 text-base text-ink-gray-9"
       placeholder="Escribe para tu equipo…"
       data-testid="documentos-comment-text"
     />

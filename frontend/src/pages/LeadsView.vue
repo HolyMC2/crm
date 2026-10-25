@@ -94,7 +94,7 @@
         </span>
         <div class="mx-1 h-[18px] w-px bg-outline-gray-2" />
         <div
-          class="flex overflow-hidden rounded-lg border border-outline-gray-2"
+          class="flex overflow-hidden rounded-6 border border-outline-gray-2"
         >
           <button
             v-for="(v, i) in views"
@@ -134,7 +134,7 @@
       </div>
       <div class="flex items-center gap-2">
         <div
-          class="flex items-center gap-1.5 rounded-lg border border-outline-gray-2 px-2.5 py-1.5 focus-within:border-outline-gray-4 focus-within:ring-1 focus-within:ring-outline-gray-3"
+          class="flex items-center gap-1.5 rounded-6 border border-outline-gray-2 px-2.5 py-1.5 focus-within:border-outline-gray-4 focus-within:ring-1 focus-within:ring-outline-gray-3"
         >
           <LucideSearch class="h-3.5 w-3.5 text-ink-gray-4" />
           <input
@@ -147,7 +147,7 @@
         </div>
         <Dropdown :options="viewMenu">
           <button
-            class="rounded-lg border border-outline-gray-2 px-3 py-[7px] text-[12px] font-medium text-ink-gray-7"
+            class="rounded-6 border border-outline-gray-2 px-3 py-[7px] text-[12px] font-medium text-ink-gray-7"
           >
             {{ __('Vistas') }} ⌄
           </button>
@@ -160,14 +160,14 @@
           @reset="resetCols"
         />
         <button
-          class="rounded-lg border border-outline-gray-2 px-3 py-[7px] text-[12px] font-medium text-ink-gray-7"
+          class="rounded-6 border border-outline-gray-2 px-3 py-[7px] text-[12px] font-medium text-ink-gray-7"
           :title="__('Exportar a Excel')"
           @click="exportLeads"
         >
           ⭳ {{ __('Export') }}
         </button>
         <button
-          class="rounded-lg px-3.5 py-[7px] text-[12.5px] font-semibold text-white"
+          class="rounded-6 px-3.5 py-[7px] text-[12.5px] font-semibold text-white"
           style="background: var(--brand)"
           @click="showLeadModal = true"
         >
@@ -209,13 +209,13 @@
         >{{ selectedRows.length }} {{ __('seleccionados') }}</span
       >
       <button
-        class="rounded-md px-2.5 py-1 text-[12px] font-medium text-ink-blue-link hover:bg-surface-gray-2"
+        class="rounded-5 px-2.5 py-1 text-[12px] font-medium text-ink-blue-link hover:bg-surface-gray-2"
         @click="bulkConvert"
       >
         {{ __('Convertir a tratos') }}
       </button>
       <button
-        class="rounded-md px-2.5 py-1 text-[12px] font-medium text-ink-red-8 hover:bg-surface-red-1"
+        class="rounded-5 px-2.5 py-1 text-[12px] font-medium text-ink-red-8 hover:bg-surface-red-1"
         @click="bulkDelete"
       >
         {{ __('Eliminar') }}
@@ -255,14 +255,14 @@
         <template #chips>
           <span
             v-if="r.status"
-            class="rounded-md px-1.5 py-[2px] text-[11px] font-semibold"
+            class="rounded-5 px-1.5 py-[2px] text-[11px] font-semibold"
             :style="statusChip(r.status)"
           >
             {{ stageLabel(r.status, LEAD_STATUS) }}
           </span>
           <span
             v-if="r.score_grade === 'A'"
-            class="rounded-md px-1.5 py-[2px] text-[11px] font-bold"
+            class="rounded-5 px-1.5 py-[2px] text-[11px] font-bold"
             :style="`color:${gradeColor(r.score_grade)};background:${gradeColor(r.score_grade)}1a`"
           >
             {{ __('Caliente') }}
@@ -412,9 +412,9 @@
                 variant="chip"
               />
             </div>
-            <div class="h-1 rounded-sm bg-surface-gray-3" style="width: 62px">
+            <div class="h-1 rounded-1 bg-surface-gray-3" style="width: 62px">
               <div
-                class="h-full rounded-sm"
+                class="h-full rounded-1"
                 :style="`width:${Math.min(100, r.lead_score || 0)}%;background:${gradeColor(r.score_grade)}`"
               />
             </div>
@@ -430,7 +430,7 @@
           <div v-if="col('stage')">
             <span
               v-if="r.status"
-              class="rounded-md px-2 py-[3px] text-[11.5px] font-semibold"
+              class="rounded-5 px-2 py-[3px] text-[11.5px] font-semibold"
               :style="statusChip(r.status)"
             >
               {{ stageLabel(r.status, LEAD_STATUS) }}
@@ -473,7 +473,7 @@
 
         <div v-if="leads.hasNextPage" class="py-3 text-center">
           <button
-            class="rounded-lg border border-outline-gray-2 px-4 py-1.5 text-[12px] font-medium text-ink-gray-7"
+            class="rounded-6 border border-outline-gray-2 px-4 py-1.5 text-[12px] font-medium text-ink-gray-7"
             @click="leads.next()"
           >
             {{ __('Cargar más') }}
@@ -582,7 +582,7 @@
           <button
             v-if="!row.deal"
             type="button"
-            class="min-h-11 rounded border border-outline-gray-2 px-3"
+            class="min-h-11 rounded-4 border border-outline-gray-2 px-3"
             :disabled="conversionPending"
             @click="reviewConversion(row.name)"
           >

@@ -19,7 +19,7 @@
         :class="
           device === 'phone'
             ? 'max-w-[380px] rounded-[28px] border-[6px] border-outline-gray-3 bg-surface-gray-2 p-3 shadow-sm'
-            : 'max-w-[620px] rounded-xl border border-outline-gray-2 bg-surface-gray-2 p-5'
+            : 'max-w-[620px] rounded-7 border border-outline-gray-2 bg-surface-gray-2 p-5'
         "
       >
         <div
@@ -148,7 +148,7 @@
               </div>
               <div
                 v-if="!layout.length"
-                class="rounded-md border border-dashed border-outline-gray-2 p-4 text-center text-sm text-ink-gray-5"
+                class="rounded-5 border border-dashed border-outline-gray-2 p-4 text-center text-sm text-ink-gray-5"
               >
                 {{ __('Add a question and it shows up here.') }}
               </div>
@@ -174,7 +174,7 @@
     </div>
 
     <div
-      class="mt-3 flex flex-none items-center justify-between gap-3 rounded-lg bg-surface-gray-2 px-3 py-2.5"
+      class="mt-3 flex flex-none items-center justify-between gap-3 rounded-6 bg-surface-gray-2 px-3 py-2.5"
     >
       <p class="text-p-sm text-ink-gray-6">
         {{

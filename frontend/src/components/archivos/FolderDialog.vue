@@ -74,7 +74,7 @@
             </p>
             <div
               v-else
-              class="max-h-48 space-y-1 overflow-y-auto rounded border border-outline-gray-2 p-2"
+              class="max-h-48 space-y-1 overflow-y-auto rounded-4 border border-outline-gray-2 p-2"
             >
               <label
                 v-for="role in roleOptions"

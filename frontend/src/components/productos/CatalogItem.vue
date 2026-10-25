@@ -3,7 +3,7 @@
   <RouterLink
     v-if="layout === 'tarjetas'"
     :to="to"
-    class="group flex h-full flex-col gap-3 rounded-xl border bg-surface-base p-3 transition-shadow hover:border-outline-gray-3 hover:shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
+    class="group flex h-full flex-col gap-3 rounded-7 border bg-surface-base p-3 transition-shadow hover:border-outline-gray-3 hover:shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
     :class="
       focused
         ? 'border-outline-gray-4 ring-1 ring-outline-gray-4'
@@ -233,7 +233,7 @@ function PriceFigure(_, { attrs }) {
     'span',
     {
       class:
-        'inline-flex h-6 items-center whitespace-nowrap rounded-md border border-dashed border-outline-gray-3 px-2 text-xs text-ink-gray-6',
+        'inline-flex h-6 items-center whitespace-nowrap rounded-5 border border-dashed border-outline-gray-3 px-2 text-xs text-ink-gray-6',
     },
     __('No price', null, 'Productos'),
   )

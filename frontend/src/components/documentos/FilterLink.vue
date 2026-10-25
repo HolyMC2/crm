@@ -18,7 +18,7 @@
         autocomplete="off"
         :aria-label="`Buscar ${label.toLowerCase()}`"
         :placeholder="`Buscar ${label.toLowerCase()}`"
-        class="h-11 w-full rounded-lg border border-outline-gray-2 bg-surface-base px-3 text-base"
+        class="h-11 w-full rounded-6 border border-outline-gray-2 bg-surface-base px-3 text-base"
         @input="changeQuery($event.target.value)"
         @focus="search"
       />

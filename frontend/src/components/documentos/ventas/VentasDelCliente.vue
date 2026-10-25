@@ -15,7 +15,7 @@
         v-for="chip in chips"
         :key="chip.doctype"
         :to="chip.to"
-        class="inline-flex min-h-11 items-center gap-2 rounded-lg border border-outline-gray-2 px-3 text-base text-ink-gray-8 hover:bg-surface-gray-1"
+        class="inline-flex min-h-11 items-center gap-2 rounded-6 border border-outline-gray-2 px-3 text-base text-ink-gray-8 hover:bg-surface-gray-1"
         :data-doctype="chip.doctype"
       >
         <span>{{ chip.label }}</span>

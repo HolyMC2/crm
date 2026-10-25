@@ -79,14 +79,14 @@
         <p
           v-if="duplicate"
           role="status"
-          class="mb-4 rounded-lg bg-surface-gray-2 p-3 text-sm text-ink-gray-8"
+          class="mb-4 rounded-6 bg-surface-gray-2 p-3 text-sm text-ink-gray-8"
         >
           {{ __('You already captured this document; this is that capture.') }}
         </p>
         <p
           v-if="problem"
           role="alert"
-          class="mb-4 rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7"
+          class="mb-4 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
         >
           {{ problem }}
         </p>
@@ -94,7 +94,7 @@
         <!-- Already turned into a draft: open it. -->
         <section
           v-if="review.created"
-          class="mb-4 flex flex-wrap items-center gap-3 rounded-xl bg-surface-green-1 p-4"
+          class="mb-4 flex flex-wrap items-center gap-3 rounded-7 bg-surface-green-1 p-4"
         >
           <p class="min-w-0 flex-1 text-base text-ink-green-8">
             {{
@@ -116,7 +116,7 @@
         <section
           v-else-if="review.processing"
           role="status"
-          class="mb-4 space-y-3 rounded-xl border border-outline-gray-2 p-4"
+          class="mb-4 space-y-3 rounded-7 border border-outline-gray-2 p-4"
         >
           <template v-if="!timedOut">
             <p class="flex items-center gap-2 text-base text-ink-gray-9">
@@ -160,7 +160,7 @@
         <section
           v-else-if="review.error"
           role="alert"
-          class="mb-4 space-y-3 rounded-xl bg-surface-red-1 p-4 text-ink-red-7"
+          class="mb-4 space-y-3 rounded-7 bg-surface-red-1 p-4 text-ink-red-7"
         >
           <p class="text-base-medium">
             {{ __('We could not read this document.') }}
@@ -186,7 +186,7 @@
           <!-- Supplier (orders and bills). -->
           <section
             v-if="isPurchase"
-            class="mb-4 space-y-2 rounded-xl border border-outline-gray-2 p-4"
+            class="mb-4 space-y-2 rounded-7 border border-outline-gray-2 p-4"
             :aria-label="__('Supplier', null, 'Compras')"
           >
             <h2 class="text-base font-semibold text-ink-gray-9">
@@ -219,7 +219,7 @@
           <!-- Payment (a transfer receipt against a bill). -->
           <section
             v-if="review.payment"
-            class="mb-4 space-y-3 rounded-xl border border-outline-gray-2 p-4"
+            class="mb-4 space-y-3 rounded-7 border border-outline-gray-2 p-4"
             :aria-label="__('Payment', null, 'Gastos')"
           >
             <h2 class="text-base font-semibold text-ink-gray-9">
@@ -227,7 +227,7 @@
             </h2>
             <div
               v-if="review.payment.invoice"
-              class="rounded-lg bg-surface-gray-2 p-3 text-sm text-ink-gray-8"
+              class="rounded-6 bg-surface-gray-2 p-3 text-sm text-ink-gray-8"
             >
               <p class="font-medium text-ink-gray-9">
                 {{
@@ -347,7 +347,7 @@
               <li
                 v-for="line in review.lines"
                 :key="line.idx"
-                class="space-y-2 rounded-xl border border-outline-gray-2 p-3"
+                class="space-y-2 rounded-7 border border-outline-gray-2 p-3"
                 :class="line.state === 'dropped' ? 'bg-surface-gray-1' : ''"
               >
                 <div class="flex flex-wrap items-start gap-2">
@@ -493,7 +493,7 @@
           <!-- Warehouse, when stock items need one or the warehouse question is open. -->
           <section
             v-if="review.warehouse?.required || review.warehouse?.reason"
-            class="mb-4 space-y-2 rounded-xl border border-outline-gray-2 p-4"
+            class="mb-4 space-y-2 rounded-7 border border-outline-gray-2 p-4"
           >
             <FormControl
               v-if="canEdit"
@@ -524,7 +524,7 @@
                has no lines: its panel shows the amount against the invoice. -->
           <section
             v-if="review.doc_type !== 'Payment Entry'"
-            class="mb-4 space-y-2 rounded-xl border border-outline-gray-2 p-4"
+            class="mb-4 space-y-2 rounded-7 border border-outline-gray-2 p-4"
             :aria-label="__('Totals')"
           >
             <div class="flex items-center gap-2">
@@ -584,7 +584,7 @@
 
           <section
             v-if="review.checks?.length"
-            class="mb-4 space-y-1 rounded-xl bg-surface-amber-1 p-4 text-sm text-ink-amber-9"
+            class="mb-4 space-y-1 rounded-7 bg-surface-amber-1 p-4 text-sm text-ink-amber-9"
             :aria-label="__('To check')"
           >
             <h2 class="font-semibold">{{ __('To check') }}</h2>
@@ -594,7 +594,7 @@
           </section>
           <section
             v-if="review.questions?.length"
-            class="mb-4 space-y-3 rounded-xl border border-outline-gray-2 p-4 text-sm"
+            class="mb-4 space-y-3 rounded-7 border border-outline-gray-2 p-4 text-sm"
             :aria-label="__('Questions')"
           >
             <h2 class="font-semibold text-ink-gray-9">{{ __('Questions') }}</h2>

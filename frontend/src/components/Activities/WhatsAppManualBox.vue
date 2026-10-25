@@ -8,7 +8,7 @@
 -->
 <template>
   <div
-    class="mx-3 mb-3 mt-1 rounded-lg border border-outline-gray-2 bg-surface-gray-1 p-3 dark:bg-surface-gray-2 sm:mx-10"
+    class="mx-3 mb-3 mt-1 rounded-6 border border-outline-gray-2 bg-surface-gray-1 p-3 dark:bg-surface-gray-2 sm:mx-10"
   >
     <p class="mb-2 text-xs text-ink-gray-6">
       <template v-if="shopNumber">
@@ -57,7 +57,7 @@
     <textarea
       v-model="text"
       rows="4"
-      class="w-full resize-y rounded-md border border-outline-gray-2 bg-surface-base px-2.5 py-2 text-base text-ink-gray-8 focus:border-outline-gray-4 focus:outline-none focus:ring-0"
+      class="w-full resize-y rounded-5 border border-outline-gray-2 bg-surface-base px-2.5 py-2 text-base text-ink-gray-8 focus:border-outline-gray-4 focus:outline-none focus:ring-0"
       :placeholder="__('Escribe el mensaje o elige una plantilla')"
     />
     <p v-if="missing.length" class="mt-1 text-xs text-ink-amber-3">
@@ -92,7 +92,7 @@
         :href="url"
         target="_blank"
         rel="noopener noreferrer"
-        class="inline-flex items-center gap-1.5 rounded bg-surface-gray-10 px-3 py-1.5 text-sm font-medium text-ink-base hover:bg-surface-gray-9"
+        class="inline-flex items-center gap-1.5 rounded-4 bg-surface-gray-10 px-3 py-1.5 text-sm font-medium text-ink-base hover:bg-surface-gray-9"
         data-testid="wa-manual-open"
         @click="logOpen"
       >

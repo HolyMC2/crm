@@ -25,7 +25,7 @@
       <label
         v-for="option in field.options"
         :key="option.value"
-        class="flex min-h-11 items-center gap-3 rounded-lg px-2 hover:bg-surface-gray-2"
+        class="flex min-h-11 items-center gap-3 rounded-6 px-2 hover:bg-surface-gray-2"
       >
         <input
           type="radio"
@@ -54,7 +54,7 @@
       :id="id"
       :value="plainText"
       rows="4"
-      class="w-full rounded-lg border border-outline-gray-2 bg-surface-base px-3 py-2 text-base"
+      class="w-full rounded-6 border border-outline-gray-2 bg-surface-base px-3 py-2 text-base"
       :aria-label="field.label"
       @input="emit('update:modelValue', $event.target.value)"
     />
@@ -74,7 +74,7 @@
       :type="inputType"
       :inputmode="inputMode"
       :step="step"
-      class="h-11 w-full rounded-lg border border-outline-gray-2 bg-surface-base px-3 text-base"
+      class="h-11 w-full rounded-6 border border-outline-gray-2 bg-surface-base px-3 text-base"
       :aria-label="field.label"
       @input="onInput($event.target.value)"
     />

@@ -11,7 +11,7 @@
       <label class="flex min-w-0 flex-1 basis-56 items-center gap-2 text-sm">
         <span class="shrink-0 text-ink-gray-6">{{ __('Reasignar a…') }}</span>
         <select
-          class="min-h-9 w-full min-w-0 rounded-md border border-outline-gray-2 bg-surface-base px-2 text-sm text-ink-gray-8"
+          class="min-h-9 w-full min-w-0 rounded-5 border border-outline-gray-2 bg-surface-base px-2 text-sm text-ink-gray-8"
           :value="modelValue"
           :disabled="moving"
           @change="$emit('update:modelValue', $event.target.value)"
@@ -29,7 +29,7 @@
       <div class="flex gap-2">
         <button
           type="button"
-          class="min-h-9 rounded-md bg-surface-gray-3 px-3 text-sm font-medium text-ink-gray-9 hover:bg-surface-gray-4 disabled:opacity-50"
+          class="min-h-9 rounded-5 bg-surface-gray-3 px-3 text-sm font-medium text-ink-gray-9 hover:bg-surface-gray-4 disabled:opacity-50"
           :disabled="moving || !count || !modelValue"
           @click="$emit('move')"
         >
@@ -37,7 +37,7 @@
         </button>
         <button
           type="button"
-          class="min-h-9 rounded-md border border-outline-gray-2 px-3 text-sm text-ink-gray-8 disabled:opacity-50"
+          class="min-h-9 rounded-5 border border-outline-gray-2 px-3 text-sm text-ink-gray-8 disabled:opacity-50"
           :disabled="moving"
           @click="$emit('clear')"
         >

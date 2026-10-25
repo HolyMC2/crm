@@ -15,7 +15,7 @@
     >
       <p
         v-if="accion.confirmar"
-        class="rounded-lg bg-surface-gray-2 px-3 py-2 text-base text-ink-gray-8"
+        class="rounded-6 bg-surface-gray-2 px-3 py-2 text-base text-ink-gray-8"
       >
         {{ accion.confirmar }}
       </p>
@@ -132,7 +132,7 @@
       </div>
       <p
         v-if="error"
-        class="rounded-lg bg-surface-red-1 px-3 py-2 text-base text-ink-red-7"
+        class="rounded-6 bg-surface-red-1 px-3 py-2 text-base text-ink-red-7"
         role="alert"
       >
         {{ error }}
@@ -175,9 +175,9 @@ const props = defineProps({
 const emit = defineEmits(['update:open', 'done'])
 
 const INPUT =
-  'min-h-11 w-full rounded-lg border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9 focus:border-outline-gray-4 focus:outline-none'
+  'min-h-11 w-full rounded-6 border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9 focus:border-outline-gray-4 focus:outline-none'
 const PILL =
-  'flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl bg-surface-gray-2 px-3 text-base-medium text-ink-gray-8 focus-within:ring-2 focus-within:ring-outline-gray-4'
+  'flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-7 bg-surface-gray-2 px-3 text-base-medium text-ink-gray-8 focus-within:ring-2 focus-within:ring-outline-gray-4'
 
 const values = reactive({})
 const uploading = reactive({})

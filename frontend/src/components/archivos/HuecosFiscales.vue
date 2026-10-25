@@ -48,7 +48,7 @@
       <p
         v-if="data && data.sat_enabled === false"
         role="note"
-        class="flex items-start gap-2 rounded bg-surface-gray-1 p-3 text-sm text-ink-gray-7"
+        class="flex items-start gap-2 rounded-4 bg-surface-gray-1 p-3 text-sm text-ink-gray-7"
       >
         <LucideInfo class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />{{
           data.sat_reason ||
@@ -71,7 +71,7 @@
         <div
           v-for="n in 5"
           :key="n"
-          class="h-16 animate-pulse rounded bg-surface-gray-2"
+          class="h-16 animate-pulse rounded-4 bg-surface-gray-2"
         />
       </div>
       <div v-else-if="loadProblem" class="px-4">

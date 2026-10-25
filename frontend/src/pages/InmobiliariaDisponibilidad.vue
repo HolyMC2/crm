@@ -62,7 +62,7 @@
              board on screen and says why. -->
         <div
           v-if="problem"
-          class="mx-4 mt-2 flex flex-wrap items-center gap-2 rounded-lg bg-surface-red-1 px-3 py-2 text-base text-ink-red-7"
+          class="mx-4 mt-2 flex flex-wrap items-center gap-2 rounded-6 bg-surface-red-1 px-3 py-2 text-base text-ink-red-7"
           role="alert"
           data-testid="inmo-tablero-problema"
         >
@@ -151,7 +151,7 @@
                   :key="u.name"
                   :to="unitTo(u)"
                   :class="[
-                    'flex min-h-16 flex-col justify-center rounded-xl px-3 py-2',
+                    'flex min-h-16 flex-col justify-center rounded-7 px-3 py-2',
                     CELL[TONE[u.estatus]] || CELL.neutral,
                   ]"
                   :title="`${unitTitle(u)} · ${u.estatus}`"

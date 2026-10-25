@@ -10,7 +10,7 @@
     >
     <button
       type="button"
-      class="flex min-h-12 w-full items-center gap-3 rounded-lg border bg-surface-base px-3 text-left text-base focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-outline-gray-4"
+      class="flex min-h-12 w-full items-center gap-3 rounded-6 border bg-surface-base px-3 text-left text-base focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-outline-gray-4"
       :class="open ? 'border-outline-gray-4' : 'border-outline-gray-2'"
       :aria-label="showLabel"
       :aria-expanded="String(open)"
@@ -39,14 +39,14 @@
       ref="listEl"
       role="listbox"
       :aria-label="label"
-      class="mt-2 max-h-72 overflow-y-auto rounded-lg border border-outline-gray-2 bg-surface-base p-1 shadow-sm"
+      class="mt-2 max-h-72 overflow-y-auto rounded-6 border border-outline-gray-2 bg-surface-base p-1 shadow-sm"
     >
       <li v-for="option in options" :key="option.value" role="none">
         <button
           type="button"
           role="option"
           :aria-selected="String(option.value === modelValue)"
-          class="flex min-h-11 w-full items-center gap-3 rounded-md px-2 text-left text-base hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
+          class="flex min-h-11 w-full items-center gap-3 rounded-5 px-2 text-left text-base hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
           :class="
             option.value === modelValue
               ? 'bg-surface-gray-2 font-medium'

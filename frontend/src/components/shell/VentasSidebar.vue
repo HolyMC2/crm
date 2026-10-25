@@ -24,7 +24,7 @@
       >
         <button
           type="button"
-          class="flex min-h-9 w-full items-center justify-center gap-2 rounded-lg px-2.5 text-left text-sm text-ink-gray-6 hover:bg-surface-gray-2 lg:justify-start"
+          class="flex min-h-9 w-full items-center justify-center gap-2 rounded-6 px-2.5 text-left text-sm text-ink-gray-6 hover:bg-surface-gray-2 lg:justify-start"
           :title="__(section.label)"
           :aria-expanded="isOpen(section.key, route.path)"
           :aria-controls="`ventas-${section.key}`"
@@ -116,7 +116,7 @@ const SidebarEntry = defineComponent({
         // Icons only below lg: the name is the tooltip and stays for readers.
         title: __(props.item.label),
         class: [
-          'relative flex min-h-9 items-center justify-center gap-2.5 rounded-lg px-2.5 text-sm lg:justify-start',
+          'relative flex min-h-9 items-center justify-center gap-2.5 rounded-6 px-2.5 text-sm lg:justify-start',
           props.active
             ? 'bg-surface-gray-3 font-semibold text-ink-gray-9'
             : 'text-ink-gray-7 hover:bg-surface-gray-2',

@@ -15,7 +15,7 @@
     <div
       v-for="ch in chats"
       :key="ch.key"
-      class="rounded-lg border border-outline-gray-2 p-3"
+      class="rounded-6 border border-outline-gray-2 p-3"
     >
       <div
         class="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-ink-gray-8"

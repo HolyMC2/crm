@@ -11,7 +11,7 @@
     <section
       v-else-if="approval"
       role="status"
-      class="mt-4 space-y-3 rounded-lg bg-surface-gray-1 p-4"
+      class="mt-4 space-y-3 rounded-6 bg-surface-gray-1 p-4"
     >
       <p class="text-base-medium text-ink-gray-9">
         {{ __('This is decided in {0}.', [approval.where]) }}
@@ -45,7 +45,7 @@
     <section
       v-else-if="problem && !row"
       role="alert"
-      class="mt-4 space-y-3 rounded-lg bg-surface-red-1 p-4 text-ink-red-7"
+      class="mt-4 space-y-3 rounded-6 bg-surface-red-1 p-4 text-ink-red-7"
     >
       <p>
         <strong>{{ problem.title }}.</strong> {{ problem.detail }}
@@ -109,12 +109,12 @@
               type="button"
               role="checkbox"
               :aria-checked="item.checked"
-              class="flex min-h-11 w-full items-center gap-3 rounded-lg text-left text-base disabled:cursor-default"
+              class="flex min-h-11 w-full items-center gap-3 rounded-6 text-left text-base disabled:cursor-default"
               :disabled="busy || !row.can_change"
               @click="tick(item)"
             >
               <span
-                class="flex size-5 shrink-0 items-center justify-center rounded border-2"
+                class="flex size-5 shrink-0 items-center justify-center rounded-4 border-2"
                 :class="
                   item.checked
                     ? 'border-outline-green-4 bg-surface-green-7 text-white'
@@ -161,7 +161,7 @@
       <div
         v-if="problem"
         role="alert"
-        class="mt-4 rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7"
+        class="mt-4 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
       >
         <strong>{{ problem.title }}.</strong> {{ problem.detail }}
         <Button
@@ -389,13 +389,13 @@
               :href="file.url"
               target="_blank"
               rel="noopener"
-              class="flex min-h-11 max-w-60 items-center gap-2 rounded-lg bg-surface-gray-1 p-1 pr-3 text-sm text-ink-gray-8"
+              class="flex min-h-11 max-w-60 items-center gap-2 rounded-6 bg-surface-gray-1 p-1 pr-3 text-sm text-ink-gray-8"
             >
               <img
                 v-if="file.is_image"
                 :src="file.url"
                 alt=""
-                class="size-10 shrink-0 rounded object-cover"
+                class="size-10 shrink-0 rounded-4 object-cover"
                 loading="lazy"
               />
               <span

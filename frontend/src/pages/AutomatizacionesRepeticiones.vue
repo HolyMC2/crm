@@ -15,7 +15,7 @@
       <header v-if="!isPhone" class="flex flex-wrap items-center gap-3 px-4">
         <RouterLink
           to="/disparadores"
-          class="inline-flex min-h-11 items-center rounded-lg px-2 text-base text-ink-gray-7 hover:bg-surface-gray-2"
+          class="inline-flex min-h-11 items-center rounded-6 px-2 text-base text-ink-gray-7 hover:bg-surface-gray-2"
           >Disparadores</RouterLink
         >
         <h1 class="flex-1 text-xl font-semibold text-ink-gray-9">

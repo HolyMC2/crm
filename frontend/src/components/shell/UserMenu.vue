@@ -5,7 +5,7 @@
       class="mt-1 flex items-center"
       :class="
         expanded
-          ? 'h-11 w-full gap-2.5 rounded-lg px-1.5 text-left hover:bg-surface-gray-2'
+          ? 'h-11 w-full gap-2.5 rounded-6 px-1.5 text-left hover:bg-surface-gray-2'
           : 'size-10 justify-center rounded-full'
       "
       :aria-label="__('Account menu')"
@@ -41,7 +41,7 @@
       <div
         ref="menu"
         role="menu"
-        class="fixed bottom-3 z-50 w-64 rounded-xl border border-outline-gray-2 bg-surface-base py-1.5 shadow-xl"
+        class="fixed bottom-3 z-50 w-64 rounded-7 border border-outline-gray-2 bg-surface-base py-1.5 shadow-xl"
         :style="{ left: `${railWidth + 4}px` }"
       >
         <div class="border-b border-outline-gray-1 px-3.5 pb-2.5 pt-1.5">
@@ -65,7 +65,7 @@
             :key="choice.value"
             role="menuitemradio"
             :aria-checked="theme === choice.value"
-            class="flex flex-1 flex-col items-center gap-1 rounded-lg py-1.5 text-xs"
+            class="flex flex-1 flex-col items-center gap-1 rounded-6 py-1.5 text-xs"
             :class="
               theme === choice.value
                 ? 'bg-surface-gray-3 font-semibold text-ink-gray-9'
@@ -91,7 +91,7 @@
             />
             <span class="flex-1">{{ shellT('Keyboard shortcuts') }}</span>
             <kbd
-              class="rounded border border-outline-gray-2 px-1 font-sans text-xs text-ink-gray-6"
+              class="rounded-4 border border-outline-gray-2 px-1 font-sans text-xs text-ink-gray-6"
               >{{ keyLabel('alt+h') }}</kbd
             >
           </button>

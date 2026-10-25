@@ -136,7 +136,7 @@
                 type="date"
                 :value="queueDateFrom"
                 :aria-label="__('Desde')"
-                class="w-full rounded-md border border-outline-gray-2 bg-surface-base px-1.5 py-1 text-[11px] text-ink-gray-8 focus:outline-none focus:ring-1 focus:ring-outline-gray-3"
+                class="w-full rounded-5 border border-outline-gray-2 bg-surface-base px-1.5 py-1 text-[11px] text-ink-gray-8 focus:outline-none focus:ring-1 focus:ring-outline-gray-3"
                 @change="setQueueFilters({ date_from: $event.target.value })"
               />
               <span class="flex-none text-[10px] text-ink-gray-4">→</span>
@@ -144,7 +144,7 @@
                 type="date"
                 :value="queueDateTo"
                 :aria-label="__('Hasta')"
-                class="w-full rounded-md border border-outline-gray-2 bg-surface-base px-1.5 py-1 text-[11px] text-ink-gray-8 focus:outline-none focus:ring-1 focus:ring-outline-gray-3"
+                class="w-full rounded-5 border border-outline-gray-2 bg-surface-base px-1.5 py-1 text-[11px] text-ink-gray-8 focus:outline-none focus:ring-1 focus:ring-outline-gray-3"
                 @change="setQueueFilters({ date_to: $event.target.value })"
               />
             </div>

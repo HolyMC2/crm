@@ -10,7 +10,7 @@
       role="checkbox"
       :aria-checked="row.status === 'Closed'"
       :aria-label="__('Mark done: {0}', [row.description])"
-      class="-m-2.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
+      class="-m-2.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-6 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
       :disabled="busy"
       @click="$emit('complete', row)"
     >
@@ -37,7 +37,7 @@
       :aria-current="selected ? 'true' : undefined"
       data-row-link
       data-row-focus
-      class="-my-2.5 min-w-0 flex-1 rounded-lg py-2.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
+      class="-my-2.5 min-w-0 flex-1 rounded-6 py-2.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
     >
       <p
         class="line-clamp-2 text-base text-ink-gray-9"
@@ -56,7 +56,7 @@
         >
         <span
           v-if="stateChip(row)"
-          class="rounded px-1.5 text-xs font-medium"
+          class="rounded-4 px-1.5 text-xs font-medium"
           :class="
             stateChip(row).tone === 'red'
               ? 'bg-surface-red-1 text-ink-red-7'
@@ -69,13 +69,13 @@
         /></span>
         <span
           v-if="row.priority === 'High'"
-          class="rounded bg-surface-amber-1 px-1.5 text-xs font-medium text-ink-amber-9"
+          class="rounded-4 bg-surface-amber-1 px-1.5 text-xs font-medium text-ink-amber-9"
           >{{ priorityLabel(row.priority) }}</span
         >
         <!-- The source only matters where sources mix (not in the team list). -->
         <span
           v-if="row.doctype === 'CRM Task' && !showAssignee"
-          class="rounded bg-surface-gray-2 px-1.5 text-xs text-ink-gray-7"
+          class="rounded-4 bg-surface-gray-2 px-1.5 text-xs text-ink-gray-7"
           >{{ sourceLabel(row) }}</span
         >
         <span v-if="showAssignee && !row.mine && assignee" class="truncate">

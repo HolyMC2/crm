@@ -1,7 +1,7 @@
 <template>
   <section
     id="fotos"
-    class="scroll-mt-4 rounded-xl border border-outline-gray-2 bg-surface-base"
+    class="scroll-mt-4 rounded-7 border border-outline-gray-2 bg-surface-base"
   >
     <header
       class="flex flex-wrap items-center gap-2 border-b border-outline-gray-1 px-4 py-3"
@@ -51,7 +51,7 @@
     <p
       v-if="problem"
       role="alert"
-      class="m-4 rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7"
+      class="m-4 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
     >
       {{ problem }}
     </p>
@@ -80,7 +80,7 @@
           :href="photo.file_url"
           target="_blank"
           rel="noopener"
-          class="relative block overflow-hidden rounded-lg ring-1"
+          class="relative block overflow-hidden rounded-6 ring-1"
           :class="
             photo.principal
               ? 'ring-2 ring-outline-gray-4'

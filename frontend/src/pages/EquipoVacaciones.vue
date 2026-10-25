@@ -52,14 +52,14 @@
         <div
           v-if="notice"
           role="status"
-          class="mb-4 rounded-lg bg-surface-green-1 p-3 text-sm text-ink-green-8"
+          class="mb-4 rounded-6 bg-surface-green-1 p-3 text-sm text-ink-green-8"
         >
           {{ notice }}
         </div>
         <div
           v-if="problem"
           role="alert"
-          class="mb-4 rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7"
+          class="mb-4 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
         >
           {{ problem }}
         </div>
@@ -67,7 +67,7 @@
         <p
           v-if="config.limit"
           role="status"
-          class="mb-4 rounded-lg bg-surface-amber-1 p-3 text-sm text-ink-amber-8"
+          class="mb-4 rounded-6 bg-surface-amber-1 p-3 text-sm text-ink-amber-8"
         >
           {{ config.limit.message }}
           <RouterLink class="underline" to="/equipo">{{
@@ -77,7 +77,7 @@
         <!-- Setup that must exist first: which leave type is vacation. -->
         <section
           v-if="config.guard"
-          class="mb-4 space-y-3 rounded-lg border border-outline-amber-2 bg-surface-amber-1 p-4 text-sm"
+          class="mb-4 space-y-3 rounded-6 border border-outline-amber-2 bg-surface-amber-1 p-4 text-sm"
         >
           <p class="text-ink-amber-8">{{ config.guard.message }}</p>
           <template
@@ -103,12 +103,12 @@
 
         <template v-else>
           <section
-            class="mb-4 space-y-3 rounded-lg border border-outline-gray-2 p-4"
+            class="mb-4 space-y-3 rounded-6 border border-outline-gray-2 p-4"
           >
             <label
               class="flex min-h-11 items-center gap-2 text-sm text-ink-gray-8"
             >
-              <input v-model="enabled" type="checkbox" class="rounded" />
+              <input v-model="enabled" type="checkbox" class="rounded-4" />
               {{ __('Assign the new days automatically on each anniversary') }}
             </label>
             <FormControl
@@ -136,7 +136,7 @@
             />
           </section>
 
-          <section class="rounded-lg border border-outline-gray-2">
+          <section class="rounded-6 border border-outline-gray-2">
             <header
               class="flex flex-wrap items-center gap-2 border-b border-outline-gray-1 p-4"
             >
@@ -165,7 +165,7 @@
               >
                 <input
                   type="checkbox"
-                  class="mt-1 rounded"
+                  class="mt-1 rounded-4"
                   :aria-label="row.employee_name"
                   :disabled="row.status !== 'ready'"
                   :checked="selected.includes(row.employee)"

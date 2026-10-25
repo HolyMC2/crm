@@ -11,7 +11,7 @@
       {{ __('Producto o modelo') }}
       <input
         v-model="query"
-        class="mt-1 w-full rounded-lg border border-outline-gray-2 px-3 py-2"
+        class="mt-1 w-full rounded-6 border border-outline-gray-2 px-3 py-2"
         :placeholder="__('Ej: fundas iPhone 14, batas, conjuntos')"
       />
     </label>
@@ -22,7 +22,7 @@
     >
     <select
       v-model="collection"
-      class="w-full rounded-lg border border-outline-gray-2 px-3 py-2 text-sm"
+      class="w-full rounded-6 border border-outline-gray-2 px-3 py-2 text-sm"
     >
       <option value="">{{ __('Todas las colecciones') }}</option>
       <option
@@ -48,7 +48,7 @@
     <select
       v-if="showPrice"
       v-model="priceList"
-      class="w-full rounded-lg border border-outline-gray-2 px-3 py-2 text-sm"
+      class="w-full rounded-6 border border-outline-gray-2 px-3 py-2 text-sm"
     >
       <option value="">{{ __('Selecciona una lista de venta') }}</option>
       <option
@@ -67,7 +67,7 @@
       }}
     </p>
     <button
-      class="rounded-lg border border-outline-gray-3 px-3 py-2 text-sm disabled:opacity-50"
+      class="rounded-6 border border-outline-gray-3 px-3 py-2 text-sm disabled:opacity-50"
       :disabled="
         busy || (!query.trim() && !collection) || (showPrice && !priceList)
       "
@@ -105,7 +105,7 @@
         <label
           v-for="item in result.items"
           :key="item.name"
-          class="relative cursor-pointer rounded-lg border p-2"
+          class="relative cursor-pointer rounded-6 border p-2"
           :class="
             selected.includes(item.name)
               ? 'border-blue-500'
@@ -146,7 +146,7 @@
         }}
       </p>
       <button
-        class="w-full rounded-lg px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
+        class="w-full rounded-6 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
         style="background: var(--brand)"
         :disabled="creating || !selected.length"
         @click="generate"

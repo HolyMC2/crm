@@ -117,7 +117,7 @@
         <div
           v-if="doneNotice"
           role="status"
-          class="mb-4 flex flex-wrap items-center gap-2 rounded-lg bg-surface-green-1 p-3 text-sm text-ink-green-8"
+          class="mb-4 flex flex-wrap items-center gap-2 rounded-6 bg-surface-green-1 p-3 text-sm text-ink-green-8"
         >
           <span class="min-w-0 flex-1">{{ doneNotice }}</span>
           <RouterLink
@@ -131,7 +131,7 @@
         <div
           v-if="draftNotice"
           role="status"
-          class="mb-4 flex flex-wrap items-center gap-2 rounded-lg bg-surface-amber-1 p-3 text-sm text-ink-amber-8"
+          class="mb-4 flex flex-wrap items-center gap-2 rounded-6 bg-surface-amber-1 p-3 text-sm text-ink-amber-8"
         >
           <span class="flex-1">{{ draftNotice }}</span>
           <Button
@@ -147,7 +147,7 @@
         <div
           v-if="problem"
           role="alert"
-          class="mb-4 rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7"
+          class="mb-4 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
         >
           <p>
             <strong>{{ problem.title }}.</strong> {{ problem.detail }}
@@ -176,7 +176,7 @@
         <!-- Conflict: your version beside the current one; input is kept. -->
         <section
           v-if="conflict"
-          class="mb-4 rounded-lg border border-outline-amber-2 p-3 text-sm"
+          class="mb-4 rounded-6 border border-outline-amber-2 p-3 text-sm"
           :aria-label="__('Compare versions')"
         >
           <p class="mb-2 font-semibold">
@@ -269,7 +269,7 @@
         </NextStepCard>
         <p
           v-else-if="!editing && !isNew && Number(doc.docstatus) === 1"
-          class="mb-5 rounded-xl bg-surface-gray-1 p-4 text-base"
+          class="mb-5 rounded-7 bg-surface-gray-1 p-4 text-base"
         >
           {{ summaryLine || __('Nothing left to receive on this purchase.') }}
           <RouterLink
@@ -356,7 +356,7 @@
               {{ __('Items ({0})', [form.items.length]) }}
             </h2>
             <ul
-              class="divide-y divide-outline-gray-1 rounded-lg border border-outline-gray-2"
+              class="divide-y divide-outline-gray-1 rounded-6 border border-outline-gray-2"
             >
               <li
                 v-for="(row, index) in form.items"
@@ -479,7 +479,7 @@
             {{ __('Items ({0})', [data.rows_scope?.total || rows.length]) }}
           </h2>
           <ul
-            class="divide-y divide-outline-gray-1 rounded-lg border border-outline-gray-2"
+            class="divide-y divide-outline-gray-1 rounded-6 border border-outline-gray-2"
           >
             <li v-for="row in rows" :key="row.name" class="flex gap-3 p-3">
               <div class="min-w-0 flex-1">
@@ -538,7 +538,7 @@
           class="grid gap-4 sm:grid-cols-2"
           :aria-label="__('Linked records', null, 'Compras')"
         >
-          <div class="rounded-xl border border-outline-gray-2 p-4">
+          <div class="rounded-7 border border-outline-gray-2 p-4">
             <h2 class="mb-2 text-base font-semibold">
               {{ __('Receipts', null, 'Compras') }}
             </h2>
@@ -565,7 +565,7 @@
               </li>
             </ul>
           </div>
-          <div class="rounded-xl border border-outline-gray-2 p-4">
+          <div class="rounded-7 border border-outline-gray-2 p-4">
             <h2 class="mb-2 text-base font-semibold">
               {{ __('Billing', null, 'Compras') }}
             </h2>
@@ -624,7 +624,7 @@
           </div>
           <div
             v-if="data.followups?.rows?.length"
-            class="rounded-xl border border-outline-gray-2 p-4 sm:col-span-2"
+            class="rounded-7 border border-outline-gray-2 p-4 sm:col-span-2"
           >
             <h2 class="mb-2 text-base font-semibold">
               {{ __('Assigned', null, 'Compras') }}

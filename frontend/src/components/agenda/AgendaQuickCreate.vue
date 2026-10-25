@@ -91,7 +91,7 @@
             <input
               v-model="form.allDay"
               type="checkbox"
-              class="h-4 w-4 rounded"
+              class="h-4 w-4 rounded-4"
             />{{ __('All day') }}
           </label>
         </div>

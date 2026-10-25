@@ -41,7 +41,7 @@
           />
           <p
             v-else-if="view.template"
-            class="rounded-lg bg-surface-gray-2 p-3 text-sm text-ink-gray-8"
+            class="rounded-6 bg-surface-gray-2 p-3 text-sm text-ink-gray-8"
           >
             {{ view.template.text }}
           </p>
@@ -49,7 +49,7 @@
             <li
               v-for="blocker in view.blockers"
               :key="blocker.code"
-              class="rounded-lg bg-surface-amber-1 p-3 text-sm text-ink-amber-8"
+              class="rounded-6 bg-surface-amber-1 p-3 text-sm text-ink-amber-8"
             >
               <p>{{ blocker.message }}</p>
               <div class="mt-2 flex flex-wrap gap-2">
@@ -88,7 +88,7 @@
           <p
             v-if="sent"
             role="status"
-            class="rounded-lg bg-surface-green-1 p-3 text-sm text-ink-green-8"
+            class="rounded-6 bg-surface-green-1 p-3 text-sm text-ink-green-8"
           >
             {{ __('Sent to the queue: {0}.', [sent.label]) }}
           </p>

@@ -20,7 +20,7 @@
         <button
           v-for="category in ['', ...categories]"
           :key="category || 'all'"
-          class="flex min-h-11 items-center rounded-lg px-3 text-left text-sm hover:bg-surface-gray-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
+          class="flex min-h-11 items-center rounded-6 px-3 text-left text-sm hover:bg-surface-gray-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
           :class="
             state.categoria === category
               ? 'bg-surface-gray-2 font-semibold text-ink-gray-9'
@@ -119,7 +119,7 @@
             type="search"
             enterkeyhint="search"
             :placeholder="__('Search the shop manual')"
-            class="form-input min-h-11 w-full rounded-lg border-outline-gray-2 bg-surface-gray-1 text-base text-ink-gray-9 sm:min-h-8 sm:text-sm"
+            class="form-input min-h-11 w-full rounded-6 border-outline-gray-2 bg-surface-gray-1 text-base text-ink-gray-9 sm:min-h-8 sm:text-sm"
             data-testid="manual-search"
           />
         </div>
@@ -159,7 +159,7 @@
         <div
           v-if="lugarInfo.unknown"
           role="status"
-          class="mx-4 mb-3 flex flex-wrap items-center gap-2 rounded-md bg-surface-gray-2 px-3 py-2 text-sm text-ink-gray-8 sm:mx-6"
+          class="mx-4 mb-3 flex flex-wrap items-center gap-2 rounded-5 bg-surface-gray-2 px-3 py-2 text-sm text-ink-gray-8 sm:mx-6"
           data-testid="manual-lugar-unknown"
         >
           <span class="min-w-0 flex-1">{{
@@ -175,7 +175,7 @@
         <div
           v-else-if="lugarPlace"
           role="status"
-          class="mx-4 mb-3 flex flex-wrap items-center gap-2 rounded-md bg-surface-gray-2 px-3 py-2 text-sm text-ink-gray-8 sm:mx-6"
+          class="mx-4 mb-3 flex flex-wrap items-center gap-2 rounded-5 bg-surface-gray-2 px-3 py-2 text-sm text-ink-gray-8 sm:mx-6"
           data-testid="manual-lugar"
         >
           <span class="min-w-0 flex-1">
@@ -218,7 +218,7 @@
         <div
           v-if="notice"
           role="status"
-          class="mx-4 mb-3 rounded-md bg-surface-green-1 px-3 py-2 text-sm text-ink-green-8 sm:mx-6"
+          class="mx-4 mb-3 rounded-5 bg-surface-green-1 px-3 py-2 text-sm text-ink-green-8 sm:mx-6"
         >
           {{ notice }}
         </div>
@@ -232,7 +232,7 @@
         <div
           v-if="problem"
           role="alert"
-          class="mx-4 mb-3 flex flex-wrap items-center gap-2 rounded-md bg-surface-red-1 px-3 py-2 text-sm text-ink-red-7 sm:mx-6"
+          class="mx-4 mb-3 flex flex-wrap items-center gap-2 rounded-5 bg-surface-red-1 px-3 py-2 text-sm text-ink-red-7 sm:mx-6"
         >
           <span class="min-w-0 flex-1"
             ><strong>{{ problem.title }}.</strong> {{ problem.detail }}</span

@@ -18,7 +18,7 @@
     <button
       ref="trigger"
       type="button"
-      class="flex w-full min-w-0 items-center rounded-md px-1 py-1 text-left hover:bg-surface-gray-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-gray-3"
+      class="flex w-full min-w-0 items-center rounded-5 px-1 py-1 text-left hover:bg-surface-gray-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-gray-3"
       :aria-expanded="open"
       aria-haspopup="dialog"
       :aria-label="triggerLabel"
@@ -47,7 +47,7 @@
           ref="panel"
           role="dialog"
           :aria-label="__('Próximo paso')"
-          class="fixed z-[310] w-[300px] rounded-xl border border-outline-gray-2 bg-surface-base p-3 text-ink-gray-8 shadow-2xl"
+          class="fixed z-[310] w-[300px] rounded-7 border border-outline-gray-2 bg-surface-base p-3 text-ink-gray-8 shadow-2xl"
           :style="panelStyle"
           @click.stop
           @keydown.esc.stop.prevent="close"
@@ -82,7 +82,7 @@
             ref="titleInput"
             v-model="draft.title"
             type="text"
-            class="mb-2 mt-1 h-8 w-full rounded-lg border border-outline-gray-2 bg-surface-base px-2 text-[13px] text-ink-gray-9 placeholder:text-ink-gray-4 focus:border-outline-gray-4 focus:ring-0"
+            class="mb-2 mt-1 h-8 w-full rounded-6 border border-outline-gray-2 bg-surface-base px-2 text-[13px] text-ink-gray-9 placeholder:text-ink-gray-4 focus:border-outline-gray-4 focus:ring-0"
             :placeholder="__('Ej. Confirmar entrega')"
             @keydown.enter.prevent="submit"
           />
@@ -98,7 +98,7 @@
                 :id="`fu-date-${uid}`"
                 v-model="draft.date"
                 type="date"
-                class="mt-1 h-8 w-full rounded-lg border border-outline-gray-2 bg-surface-base px-2 text-[13px] text-ink-gray-9 focus:border-outline-gray-4 focus:ring-0 dark:[color-scheme:dark]"
+                class="mt-1 h-8 w-full rounded-6 border border-outline-gray-2 bg-surface-base px-2 text-[13px] text-ink-gray-9 focus:border-outline-gray-4 focus:ring-0 dark:[color-scheme:dark]"
               />
             </div>
             <div class="w-[104px] flex-none">
@@ -111,7 +111,7 @@
                 :id="`fu-time-${uid}`"
                 v-model="draft.time"
                 type="time"
-                class="mt-1 h-8 w-full rounded-lg border border-outline-gray-2 bg-surface-base px-2 text-[13px] text-ink-gray-9 focus:border-outline-gray-4 focus:ring-0 dark:[color-scheme:dark]"
+                class="mt-1 h-8 w-full rounded-6 border border-outline-gray-2 bg-surface-base px-2 text-[13px] text-ink-gray-9 focus:border-outline-gray-4 focus:ring-0 dark:[color-scheme:dark]"
               />
             </div>
           </div>
@@ -143,7 +143,7 @@
                 v-for="t in activityTypes"
                 :key="t.value"
                 type="button"
-                class="rounded-md border px-2 py-[3px] text-[11px] font-medium"
+                class="rounded-5 border px-2 py-[3px] text-[11px] font-medium"
                 :class="
                   draft.type === t.value
                     ? 'border-outline-gray-4 bg-surface-gray-3 text-ink-gray-9'
@@ -169,7 +169,7 @@
             <button
               v-if="row.next_activity_task"
               type="button"
-              class="mr-auto rounded-lg bg-surface-green-2 px-2.5 py-1.5 text-[12px] font-semibold text-ink-green-8 hover:bg-surface-green-3 disabled:opacity-60"
+              class="mr-auto rounded-6 bg-surface-green-2 px-2.5 py-1.5 text-[12px] font-semibold text-ink-green-8 hover:bg-surface-green-3 disabled:opacity-60"
               :disabled="saving"
               @click="complete"
             >
@@ -177,14 +177,14 @@
             </button>
             <button
               type="button"
-              class="rounded-lg px-2.5 py-1.5 text-[12px] text-ink-gray-6 hover:bg-surface-gray-2"
+              class="rounded-6 px-2.5 py-1.5 text-[12px] text-ink-gray-6 hover:bg-surface-gray-2"
               @click="close"
             >
               {{ __('Cancelar') }}
             </button>
             <button
               type="button"
-              class="rounded-lg bg-surface-gray-10 px-3 py-1.5 text-[12px] font-semibold text-ink-base disabled:opacity-60"
+              class="rounded-6 bg-surface-gray-10 px-3 py-1.5 text-[12px] font-semibold text-ink-base disabled:opacity-60"
               :disabled="saving"
               @click="submit"
             >

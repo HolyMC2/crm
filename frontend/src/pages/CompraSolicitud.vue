@@ -71,7 +71,7 @@
         <div
           v-if="problem"
           role="alert"
-          class="mb-4 rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7"
+          class="mb-4 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
         >
           <strong>{{ problem.title }}.</strong> {{ problem.detail }}
           <Button
@@ -84,7 +84,7 @@
 
         <section
           v-if="action"
-          class="mb-5 rounded-xl border border-outline-gray-2 p-4"
+          class="mb-5 rounded-7 border border-outline-gray-2 p-4"
           :aria-label="__('Next step', null, 'Compras')"
         >
           <template v-if="action.allowed">
@@ -142,7 +142,7 @@
             {{ __('Items ({0})', [data.rows_scope?.total || 0]) }}
           </h2>
           <ul
-            class="divide-y divide-outline-gray-1 rounded-lg border border-outline-gray-2"
+            class="divide-y divide-outline-gray-1 rounded-6 border border-outline-gray-2"
           >
             <li v-for="row in data.rows" :key="row.name" class="flex gap-3 p-3">
               <div class="min-w-0 flex-1">
@@ -181,7 +181,7 @@
           </p>
           <ul
             v-else
-            class="divide-y divide-outline-gray-1 rounded-lg border border-outline-gray-2"
+            class="divide-y divide-outline-gray-1 rounded-6 border border-outline-gray-2"
           >
             <li v-for="row in data.orders" :key="row.name">
               <RouterLink

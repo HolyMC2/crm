@@ -3,7 +3,7 @@
     <template #default>
       <div v-if="report && !report.ok" class="flex flex-col gap-3">
         <div
-          class="flex items-start gap-2 rounded-md bg-surface-red-2 p-3 text-p-base text-ink-red-7"
+          class="flex items-start gap-2 rounded-5 bg-surface-red-2 p-3 text-p-base text-ink-red-7"
         >
           <LucideCircleAlert class="mt-0.5 size-4 shrink-0" />
           <span>{{ report.error }}</span>

@@ -145,7 +145,7 @@
             <template #suffix>
               <kbd
                 v-if="!isCollapsed"
-                class="mr-2 rounded border border-outline-gray-2 px-1 font-sans text-xs text-ink-gray-6"
+                class="mr-2 rounded-4 border border-outline-gray-2 px-1 font-sans text-xs text-ink-gray-6"
                 >{{ keyLabel('alt+h') }}</kbd
               >
             </template>

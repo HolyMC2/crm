@@ -111,7 +111,7 @@
           <div
             v-if="receipt"
             role="status"
-            class="mb-4 rounded-xl bg-surface-green-1 p-4 text-ink-green-8"
+            class="mb-4 rounded-7 bg-surface-green-1 p-4 text-ink-green-8"
             data-ajustes-receipt
           >
             <p class="text-base font-semibold">
@@ -141,7 +141,7 @@
 
           <p
             v-if="!guide.can_write"
-            class="mb-4 flex items-start gap-2 rounded-xl bg-surface-gray-2 p-3 text-sm text-ink-gray-7"
+            class="mb-4 flex items-start gap-2 rounded-7 bg-surface-gray-2 p-3 text-sm text-ink-gray-7"
           >
             <span
               class="lucide-lock mt-0.5 size-4 flex-none"
@@ -179,7 +179,7 @@
                 <li v-for="section in visible" :key="section.key">
                   <button
                     type="button"
-                    class="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-base"
+                    class="flex min-h-11 w-full items-center gap-2 rounded-6 px-3 py-2 text-left text-base"
                     :class="
                       section.key === shownKey
                         ? 'bg-surface-gray-3 font-semibold text-ink-gray-9'
@@ -235,7 +235,7 @@
             <section
               v-for="section in visible"
               :key="section.key"
-              class="rounded-xl border border-outline-gray-1"
+              class="rounded-7 border border-outline-gray-1"
               :data-section="section.key"
             >
               <h2>

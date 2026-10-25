@@ -1,6 +1,6 @@
 <template>
   <section
-    class="mt-3 space-y-3 rounded border border-outline-gray-2 p-3"
+    class="mt-3 space-y-3 rounded-4 border border-outline-gray-2 p-3"
     aria-label="Revisar carrito recibido"
   >
     <h4 class="font-semibold">{{ __('Revisar carrito') }} · {{ name }}</h4>
@@ -30,7 +30,7 @@
         <li
           v-for="(line, position) in cart.lines"
           :key="`${line.index}:${position}`"
-          class="rounded border border-outline-gray-2 p-2"
+          class="rounded-4 border border-outline-gray-2 p-2"
         >
           <p class="font-medium">
             {{ __('Línea {0}', [position + 1]) }} ·
@@ -83,7 +83,7 @@
       </p>
       <div
         v-if="linkedOrder"
-        class="rounded border border-outline-gray-2 bg-surface-gray-2 p-3"
+        class="rounded-4 border border-outline-gray-2 bg-surface-gray-2 p-3"
         role="status"
       >
         <p>
@@ -151,7 +151,7 @@
         </div>
         <button
           type="button"
-          class="min-h-11 rounded border border-outline-gray-2 px-3 focus-visible:ring-2 disabled:opacity-50"
+          class="min-h-11 rounded-4 border border-outline-gray-2 px-3 focus-visible:ring-2 disabled:opacity-50"
           :disabled="locked || !scopeReady || !completeCart"
           @click="reviewCart"
         >
@@ -201,7 +201,7 @@
         <button
           v-if="review || pending"
           type="button"
-          class="min-h-11 rounded bg-surface-gray-10 px-4 py-2 text-ink-base focus-visible:ring-2 disabled:opacity-50"
+          class="min-h-11 rounded-4 bg-surface-gray-10 px-4 py-2 text-ink-base focus-visible:ring-2 disabled:opacity-50"
           :disabled="
             creating || reviewing || blocked || (!pending && !canCreate)
           "

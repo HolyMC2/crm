@@ -30,7 +30,7 @@
             {{ __('Web address') }}
           </div>
           <div
-            class="flex h-7 cursor-text items-center rounded border border-transparent bg-surface-gray-2 px-2.5 text-base hover:bg-surface-gray-3 focus-within:border-outline-gray-4 focus-within:bg-surface-base"
+            class="flex h-7 cursor-text items-center rounded-4 border border-transparent bg-surface-gray-2 px-2.5 text-base hover:bg-surface-gray-3 focus-within:border-outline-gray-4 focus-within:bg-surface-base"
           >
             <span class="shrink-0 truncate text-ink-gray-5"
               >{{ origin }}/crm-form/</span

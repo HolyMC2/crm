@@ -66,7 +66,7 @@
             v-model="peopleSearch"
             type="search"
             enterkeyhint="search"
-            class="h-11 w-full rounded-lg border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9"
+            class="h-11 w-full rounded-6 border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9"
             placeholder="Buscar persona"
             autocomplete="off"
           />
@@ -99,7 +99,7 @@
             type="text"
             maxlength="40"
             enterkeyhint="done"
-            class="h-11 min-w-0 flex-1 rounded-lg border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9"
+            class="h-11 min-w-0 flex-1 rounded-6 border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9"
             placeholder="Por ejemplo: revisar"
             autocomplete="off"
             @keydown.enter.prevent="addTag(tagDraft)"

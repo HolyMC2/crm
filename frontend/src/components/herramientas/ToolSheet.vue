@@ -11,7 +11,7 @@
       </p>
       <p
         v-if="row.categoria"
-        class="rounded-lg bg-surface-amber-1 px-3 py-2 text-sm text-ink-gray-8"
+        class="rounded-6 bg-surface-amber-1 px-3 py-2 text-sm text-ink-gray-8"
       >
         {{ row.categoria_label }}: viene apagada. Encendida, el asistente
         prepara la acción y siempre la muestra antes de hacerla.
@@ -79,7 +79,7 @@
             type="number"
             inputmode="numeric"
             min="0"
-            class="min-h-11 w-24 rounded-lg border border-outline-gray-2 bg-surface-base px-3 text-right text-base text-ink-gray-9"
+            class="min-h-11 w-24 rounded-6 border border-outline-gray-2 bg-surface-base px-3 text-right text-base text-ink-gray-9"
             :disabled="saving"
             @change="saveLimit"
           />
@@ -95,12 +95,12 @@
           <span
             v-for="role in row.roles"
             :key="role"
-            class="inline-flex min-h-8 items-center gap-1 rounded-lg border border-outline-gray-2 pl-3 text-sm text-ink-gray-8"
+            class="inline-flex min-h-8 items-center gap-1 rounded-6 border border-outline-gray-2 pl-3 text-sm text-ink-gray-8"
           >
             {{ role }}
             <button
               type="button"
-              class="flex size-8 items-center justify-center rounded-lg hover:bg-surface-gray-2"
+              class="flex size-8 items-center justify-center rounded-6 hover:bg-surface-gray-2"
               :aria-label="`Quitar ${role}`"
               :disabled="saving"
               @click="removeRole(role)"
@@ -111,7 +111,7 @@
           <label class="relative">
             <span class="sr-only">Agregar puesto o rol</span>
             <select
-              class="min-h-11 rounded-lg border border-outline-gray-2 bg-surface-base pl-3 pr-9 text-base text-ink-gray-8"
+              class="min-h-11 rounded-6 border border-outline-gray-2 bg-surface-base pl-3 pr-9 text-base text-ink-gray-8"
               :disabled="saving || !available.length"
               @change="addRole($event)"
             >

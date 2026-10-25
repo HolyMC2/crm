@@ -15,7 +15,7 @@
 
     <div
       v-if="!view.ready"
-      class="flex flex-col items-start gap-2 rounded-lg border border-dashed border-outline-gray-3 p-3"
+      class="flex flex-col items-start gap-2 rounded-6 border border-dashed border-outline-gray-3 p-3"
     >
       <div
         class="flex items-center gap-1.5 text-sm font-medium text-ink-gray-8"

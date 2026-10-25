@@ -56,7 +56,7 @@
         <section
           v-if="!caps.hr && !hrDismissed"
           role="status"
-          class="mx-4 mb-3 space-y-2 rounded-lg bg-surface-amber-1 p-3 text-sm text-ink-amber-8 sm:mx-6"
+          class="mx-4 mb-3 space-y-2 rounded-6 bg-surface-amber-1 p-3 text-sm text-ink-amber-8 sm:mx-6"
         >
           <p>
             {{
@@ -83,7 +83,7 @@
         <section
           v-if="noAccess"
           role="status"
-          class="mx-4 mb-3 rounded-lg bg-surface-amber-1 p-3 text-sm text-ink-amber-8 sm:mx-6"
+          class="mx-4 mb-3 rounded-6 bg-surface-amber-1 p-3 text-sm text-ink-amber-8 sm:mx-6"
         >
           <p>
             {{
@@ -98,7 +98,7 @@
         <section
           v-if="limit"
           role="status"
-          class="mx-4 mb-3 space-y-2 rounded-lg bg-surface-amber-1 p-3 text-sm text-ink-amber-8 sm:mx-6"
+          class="mx-4 mb-3 space-y-2 rounded-6 bg-surface-amber-1 p-3 text-sm text-ink-amber-8 sm:mx-6"
         >
           <p>{{ limit.message }}</p>
           <div v-if="limit.actions?.length" class="flex flex-wrap gap-2">
@@ -141,14 +141,14 @@
         <div
           v-if="notice"
           role="status"
-          class="mx-4 mb-3 rounded-lg bg-surface-green-1 p-3 text-sm text-ink-green-8 sm:mx-6"
+          class="mx-4 mb-3 rounded-6 bg-surface-green-1 p-3 text-sm text-ink-green-8 sm:mx-6"
         >
           {{ notice }}
         </div>
         <div
           v-if="problem"
           role="alert"
-          class="mx-4 mb-3 rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7 sm:mx-6"
+          class="mx-4 mb-3 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7 sm:mx-6"
         >
           <strong>{{ problem.title }}.</strong> {{ problem.detail }}
           <Button

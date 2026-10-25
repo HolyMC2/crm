@@ -33,7 +33,7 @@
     <template v-for="message in shown" :key="message.id">
       <div
         v-if="message.role === 'user'"
-        class="ml-auto w-fit max-w-[85%] rounded-2xl bg-surface-gray-2 px-3 py-2 text-base text-ink-gray-9"
+        class="ml-auto w-fit max-w-[85%] rounded-8 bg-surface-gray-2 px-3 py-2 text-base text-ink-gray-9"
         :class="{ 'opacity-60': message.pending }"
         data-role="user"
       >
@@ -46,7 +46,7 @@
             v-if="message.file.previewUrl"
             :src="message.file.previewUrl"
             :alt="message.file.name"
-            class="max-h-48 max-w-full rounded-lg object-cover"
+            class="max-h-48 max-w-full rounded-6 object-cover"
           />
           <template v-else>
             <span
@@ -76,7 +76,7 @@
       <div
         v-else-if="message.down"
         role="alert"
-        class="flex items-center gap-2 rounded-xl bg-surface-gray-1 py-1 pl-3 pr-1 text-sm text-ink-gray-8"
+        class="flex items-center gap-2 rounded-7 bg-surface-gray-1 py-1 pl-3 pr-1 text-sm text-ink-gray-8"
         data-role="bot"
         data-down
       >

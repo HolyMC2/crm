@@ -47,7 +47,7 @@
 
       <p
         v-if="data.summary.mixed_currency"
-        class="mb-4 rounded-lg bg-surface-amber-1 px-3 py-2 text-xs text-ink-amber-9"
+        class="mb-4 rounded-6 bg-surface-amber-1 px-3 py-2 text-xs text-ink-amber-9"
       >
         {{
           __(
@@ -74,14 +74,14 @@
 
         <div
           v-if="!data.orders.length"
-          class="rounded-xl border border-outline-gray-2 p-8 text-center text-sm text-ink-gray-6"
+          class="rounded-7 border border-outline-gray-2 p-8 text-center text-sm text-ink-gray-6"
         >
           {{ __('Sin pedidos en la tienda en línea.') }}
         </div>
 
         <div
           v-else
-          class="hidden overflow-x-auto rounded-xl border border-outline-gray-2 md:block"
+          class="hidden overflow-x-auto rounded-7 border border-outline-gray-2 md:block"
         >
           <div class="min-w-[900px]">
             <div
@@ -135,7 +135,7 @@
 
         <div
           v-if="data.orders.length"
-          class="overflow-hidden rounded-xl border border-outline-gray-2 md:hidden"
+          class="overflow-hidden rounded-7 border border-outline-gray-2 md:hidden"
         >
           <MobileRecordCard
             v-for="row in data.orders"
@@ -186,7 +186,7 @@
           <div
             v-for="row in data.returns"
             :key="row.name"
-            class="rounded-xl border border-outline-gray-2 p-3"
+            class="rounded-7 border border-outline-gray-2 p-3"
           >
             <div class="flex items-center justify-between gap-2">
               <span class="truncate text-sm font-semibold text-ink-gray-9">{{
@@ -325,8 +325,8 @@ const Metric = defineComponent({
   },
   setup(p) {
     const tones = {
-      gray: 'rounded-xl bg-surface-gray-1 p-3 text-ink-gray-9',
-      orange: 'rounded-xl bg-surface-amber-1 p-3 text-ink-amber-9',
+      gray: 'rounded-7 bg-surface-gray-1 p-3 text-ink-gray-9',
+      orange: 'rounded-7 bg-surface-amber-1 p-3 text-ink-amber-9',
     }
     return () =>
       h('div', { class: tones[p.tone] || tones.gray }, [

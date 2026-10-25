@@ -7,7 +7,7 @@
       <li
         v-for="(row, index) in history"
         :key="index"
-        class="rounded-lg border border-outline-gray-2 p-3 text-sm"
+        class="rounded-6 border border-outline-gray-2 p-3 text-sm"
       >
         <p class="font-medium text-ink-gray-9">
           {{ row.who }} · {{ when(row.when) }}

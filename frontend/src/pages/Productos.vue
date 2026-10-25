@@ -59,7 +59,7 @@
             <a
               v-if="scanHref"
               :href="scanHref"
-              class="hidden min-h-11 items-center gap-1.5 rounded-md sm:inline-flex bg-surface-gray-2 px-3 text-base text-ink-gray-8 hover:bg-surface-gray-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-8"
+              class="hidden min-h-11 items-center gap-1.5 rounded-5 sm:inline-flex bg-surface-gray-2 px-3 text-base text-ink-gray-8 hover:bg-surface-gray-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-8"
               :title="
                 __('Scan a code and open its product (S)', null, 'Productos')
               "
@@ -154,7 +154,7 @@
               <span
                 v-for="week in summary.trend"
                 :key="week.week"
-                class="w-2 rounded-sm bg-surface-gray-5"
+                class="w-2 rounded-1 bg-surface-gray-5"
                 :class="week.week === 0 ? 'bg-surface-gray-7' : ''"
                 :style="{ height: `${trendHeight(week.counted)}px` }"
               />
@@ -166,7 +166,7 @@
         <div
           v-if="boot?.unassigned"
           role="status"
-          class="mx-4 mb-3 rounded-lg bg-surface-amber-1 p-3 text-sm text-ink-amber-7 sm:mx-6"
+          class="mx-4 mb-3 rounded-6 bg-surface-amber-1 p-3 text-sm text-ink-amber-7 sm:mx-6"
           data-productos-sin-tienda
         >
           No tienes una tienda asignada: no ves sus existencias ni sus precios.
@@ -177,7 +177,7 @@
             boot?.price_setup && ['sin-precio', 'precio-revisar'].includes(view)
           "
           role="status"
-          class="mx-4 mb-3 rounded-lg bg-surface-amber-1 p-3 text-sm text-ink-amber-7 sm:mx-6"
+          class="mx-4 mb-3 rounded-6 bg-surface-amber-1 p-3 text-sm text-ink-amber-7 sm:mx-6"
         >
           {{ boot.price_setup.reason }}
         </div>
@@ -230,7 +230,7 @@
                     __('Store', null, 'Productos')
                   }}</span>
                   <select
-                    class="h-11 w-full rounded-lg border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9"
+                    class="h-11 w-full rounded-6 border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9"
                     :value="store"
                     data-productos-store
                     @change="selectStore($event.target.value)"
@@ -313,7 +313,7 @@
               ref="searchBox"
               v-model="search"
               type="search"
-              class="h-11 w-full rounded-lg border border-outline-gray-2 bg-surface-base pl-9 pr-3 text-base text-ink-gray-9 placeholder:text-ink-gray-4 focus:border-outline-gray-4 focus:ring-0 sm:h-10 sm:text-sm"
+              class="h-11 w-full rounded-6 border border-outline-gray-2 bg-surface-base pl-9 pr-3 text-base text-ink-gray-9 placeholder:text-ink-gray-4 focus:border-outline-gray-4 focus:ring-0 sm:h-10 sm:text-sm"
               :placeholder="__('Search name, code or barcode')"
               :aria-label="__('Search name, code or barcode')"
             />
@@ -329,7 +329,7 @@
           />
           <div
             v-if="!inventory"
-            class="flex h-11 shrink-0 items-center rounded-lg bg-surface-gray-2 p-0.5 sm:h-10"
+            class="flex h-11 shrink-0 items-center rounded-6 bg-surface-gray-2 p-0.5 sm:h-10"
             role="group"
             :aria-label="__('View', null, 'Productos')"
           >
@@ -337,7 +337,7 @@
               v-for="option in layoutOptions"
               :key="option.value"
               type="button"
-              class="flex h-full items-center gap-1.5 rounded-md px-3 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
+              class="flex h-full items-center gap-1.5 rounded-5 px-3 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
               :class="
                 layout === option.value
                   ? 'bg-surface-base font-medium text-ink-gray-9 shadow-sm'
@@ -455,7 +455,7 @@
         <div
           v-if="notice"
           role="status"
-          class="mx-4 mb-3 flex flex-wrap items-center gap-2 rounded-lg bg-surface-green-1 p-3 text-sm text-ink-green-8 sm:mx-6"
+          class="mx-4 mb-3 flex flex-wrap items-center gap-2 rounded-6 bg-surface-green-1 p-3 text-sm text-ink-green-8 sm:mx-6"
         >
           <span class="min-w-0 flex-1">{{ notice }}</span>
           <Button
@@ -466,7 +466,7 @@
         <div
           v-if="problem"
           role="alert"
-          class="mx-4 mb-3 rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7 sm:mx-6"
+          class="mx-4 mb-3 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7 sm:mx-6"
         >
           <strong>{{ problem.title }}.</strong> {{ problem.detail }}
           <Button
@@ -586,7 +586,7 @@
                 >
                   <input
                     type="checkbox"
-                    class="h-4 w-4 rounded"
+                    class="h-4 w-4 rounded-4"
                     :checked="selected.has(row.key)"
                     :aria-label="__('Select {0}', [row.title])"
                     @change="toggle(row)"
@@ -596,7 +596,7 @@
                   <RouterLink
                     v-if="['stock', 'conteo'].includes(row.kind)"
                     :to="productRoute(row, rowListPath(row))"
-                    class="block rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
+                    class="block rounded-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
                     @click="leaveFor(row)"
                   >
                     <span class="block truncate font-medium text-ink-gray-9">{{
@@ -652,7 +652,7 @@
                       :href="action.href"
                       :target="action.external ? '_blank' : undefined"
                       :rel="action.external ? 'noopener' : undefined"
-                      class="inline-flex min-h-11 items-center rounded-md bg-surface-gray-2 px-3 text-sm text-ink-gray-8 hover:bg-surface-gray-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-7"
+                      class="inline-flex min-h-11 items-center rounded-5 bg-surface-gray-2 px-3 text-sm text-ink-gray-8 hover:bg-surface-gray-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-7"
                       @click="leaveFor(row)"
                       >{{ action.label }}</a
                     >

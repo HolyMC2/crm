@@ -10,7 +10,7 @@
       <!-- WhatsApp-style conversation header: avatar + name + phone -->
       <div
         v-if="contact?.phone || contact?.name"
-        class="wa-contact-header mx-3 mb-3 flex items-center gap-3 rounded-md border bg-surface-base px-3 py-2 shadow-sm dark:bg-surface-gray-2 sm:mx-10"
+        class="wa-contact-header mx-3 mb-3 flex items-center gap-3 rounded-5 border bg-surface-base px-3 py-2 shadow-sm dark:bg-surface-gray-2 sm:mx-10"
       >
         <div
           class="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-gray-3 text-sm font-semibold text-ink-gray-7"
@@ -42,7 +42,7 @@
         <div
           v-for="note in pinnedNotes"
           :key="note.name"
-          class="flex items-start gap-2 rounded-md border border-amber-200 bg-surface-amber-1 px-3 py-1.5 dark:border-amber-900/40 sm:py-2"
+          class="flex items-start gap-2 rounded-5 border border-amber-200 bg-surface-amber-1 px-3 py-1.5 dark:border-amber-900/40 sm:py-2"
         >
           <LucideBookmark class="mt-0.5 size-4 shrink-0 text-ink-amber-9" />
           <div
@@ -98,11 +98,11 @@
         class="my-3 flex justify-center px-3 sm:px-10"
       >
         <div
-          class="max-w-[88%] rounded-lg border border-blue-200 bg-surface-blue-1 px-3 py-2 dark:border-blue-900/40"
+          class="max-w-[88%] rounded-6 border border-blue-200 bg-surface-blue-1 px-3 py-2 dark:border-blue-900/40"
         >
           <div class="mb-1 flex flex-wrap items-center gap-2">
             <span
-              class="rounded bg-surface-blue-2 px-1.5 py-0.5 text-2xs font-semibold uppercase text-ink-blue-9"
+              class="rounded-4 bg-surface-blue-2 px-1.5 py-0.5 text-2xs font-semibold uppercase text-ink-blue-9"
             >
               {{ __('Internal') }}
             </span>
@@ -134,7 +134,7 @@
       >
         <div
           :id="whatsapp.name"
-          class="group/message relative max-w-[85%] min-w-0 sm:max-w-[34rem] [overflow-wrap:anywhere] [&_a]:[overflow-wrap:anywhere] rounded-md bg-surface-gray-1 text-ink-gray-9 p-1.5 pl-2 text-base shadow-sm"
+          class="group/message relative max-w-[85%] min-w-0 sm:max-w-[34rem] [overflow-wrap:anywhere] [&_a]:[overflow-wrap:anywhere] rounded-5 bg-surface-gray-1 text-ink-gray-9 p-1.5 pl-2 text-base shadow-sm"
           :class="{ 'opacity-60': whatsapp._optimistic }"
         >
           <!-- hover explains WHY Meta rejected it (e.g. 131047 = outside the 24h
@@ -164,14 +164,14 @@
           <!-- unified-thread: which other deal/RO this bubble belongs to -->
           <div
             v-if="whatsapp._ref_label && !whatsapp._is_active_ref"
-            class="mb-1 inline-flex items-center gap-1 rounded bg-surface-gray-3 px-1.5 py-px text-[9.5px] font-semibold text-ink-gray-6"
+            class="mb-1 inline-flex items-center gap-1 rounded-4 bg-surface-gray-3 px-1.5 py-px text-[9.5px] font-semibold text-ink-gray-6"
             :title="__('De otro trato del mismo cliente')"
           >
             🔗 {{ whatsapp._ref_label }}
           </div>
           <div
             v-if="whatsapp.is_reply"
-            class="mb-1 cursor-pointer rounded border-0 border-l-4 bg-surface-gray-3 p-2 text-ink-gray-5"
+            class="mb-1 cursor-pointer rounded-4 border-0 border-l-4 bg-surface-gray-3 p-2 text-ink-gray-5"
             :class="
               whatsapp.reply_to_type == 'Incoming'
                 ? 'border-green-500'
@@ -258,7 +258,7 @@
                 :src="whatsapp.attach"
                 loading="lazy"
                 decoding="async"
-                class="h-auto w-60 max-w-[60vw] cursor-pointer rounded-md sm:max-w-[15rem]"
+                class="h-auto w-60 max-w-[60vw] cursor-pointer rounded-5 sm:max-w-[15rem]"
                 @click="() => openFileInAnotherTab(whatsapp.attach)"
               />
               <!-- message is null on media-only rows; guard before .startsWith or
@@ -276,7 +276,7 @@
               class="flex items-center gap-2"
             >
               <DocumentIcon
-                class="size-10 cursor-pointer rounded-md text-ink-gray-4"
+                class="size-10 cursor-pointer rounded-5 text-ink-gray-4"
                 @click="() => openFileInAnotherTab(whatsapp.attach)"
               />
               <div class="text-ink-gray-5">Document</div>
@@ -300,7 +300,7 @@
                 :src="whatsapp.attach"
                 controls
                 preload="metadata"
-                class="h-auto w-60 max-w-[60vw] cursor-pointer rounded-md sm:max-w-[15rem]"
+                class="h-auto w-60 max-w-[60vw] cursor-pointer rounded-5 sm:max-w-[15rem]"
               />
               <!-- same null guard as the image branch -->
               <div
@@ -314,7 +314,7 @@
             <a
               v-if="archivosEnabled && savedArchivo(whatsapp)"
               :href="archivosHref({ document: savedArchivo(whatsapp) })"
-              class="inline-flex w-fit items-center gap-1 rounded bg-surface-green-1 px-1.5 py-0.5 text-2xs font-medium text-ink-green-9 hover:underline"
+              class="inline-flex w-fit items-center gap-1 rounded-4 bg-surface-green-1 px-1.5 py-0.5 text-2xs font-medium text-ink-green-9 hover:underline"
             >
               {{ __('In Files') }}
             </a>
@@ -331,7 +331,7 @@
                 :text="provenanceBadge(whatsapp).tip"
               >
                 <span
-                  class="rounded bg-surface-gray-3 px-1 text-2xs text-ink-gray-6"
+                  class="rounded-4 bg-surface-gray-3 px-1 text-2xs text-ink-gray-6"
                 >
                   {{ provenanceBadge(whatsapp).icon }}
                   {{ provenanceBadge(whatsapp).label }}

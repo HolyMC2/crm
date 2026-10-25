@@ -145,7 +145,7 @@
           v-for="entry in scopes"
           :key="entry.value"
           type="button"
-          class="flex min-h-12 w-full items-center gap-3 rounded-xl px-4 text-left text-base"
+          class="flex min-h-12 w-full items-center gap-3 rounded-7 px-4 text-left text-base"
           :class="
             scope === entry.value
               ? 'bg-surface-gray-2 font-semibold'
@@ -386,7 +386,7 @@ const AppBarTitle = (attrs, { emit: emitTitle }) => {
     {
       type: 'button',
       class:
-        'flex min-h-12 min-w-0 items-center gap-1 rounded-xl px-3 text-left hover:bg-surface-gray-1',
+        'flex min-h-12 min-w-0 items-center gap-1 rounded-7 px-3 text-left hover:bg-surface-gray-1',
       'aria-haspopup': 'dialog',
       'aria-expanded': String(!!attrs.open),
       title: attrs.pickLabel,

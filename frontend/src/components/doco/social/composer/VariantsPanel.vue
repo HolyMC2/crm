@@ -8,7 +8,7 @@
   Social Post record; with no name yet we nudge the user to save the draft first.
 -->
 <template>
-  <div class="rounded-md border border-outline-gray-2 bg-surface-gray-1 p-2">
+  <div class="rounded-5 border border-outline-gray-2 bg-surface-gray-1 p-2">
     <button
       type="button"
       data-testid="variants-open"
@@ -33,7 +33,7 @@
               v-for="t in TONES"
               :key="t.v"
               type="button"
-              class="rounded-md border px-2 py-0.5 text-[11px] font-medium"
+              class="rounded-5 border px-2 py-0.5 text-[11px] font-medium"
               :class="
                 tone === t.v
                   ? 'border-green-500 dark:border-green-400 bg-surface-green-2 text-ink-green-8'
@@ -56,7 +56,7 @@
               v-for="l in LENGTHS"
               :key="l.v"
               type="button"
-              class="rounded-md border px-2 py-0.5 text-[11px] font-medium"
+              class="rounded-5 border px-2 py-0.5 text-[11px] font-medium"
               :class="
                 length === l.v
                   ? 'border-green-500 dark:border-green-400 bg-surface-green-2 text-ink-green-8'
@@ -72,7 +72,7 @@
 
       <button
         type="button"
-        class="w-full rounded-lg border border-outline-gray-2 bg-surface-base px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 disabled:opacity-50"
+        class="w-full rounded-6 border border-outline-gray-2 bg-surface-base px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 disabled:opacity-50"
         :disabled="!postName || loading"
         @click="generate"
       >
@@ -94,7 +94,7 @@
         v-for="(v, i) in variants"
         :key="v.name || i"
         :data-testid="`variant-card-${i}`"
-        class="mt-2 rounded-md border border-outline-gray-2 bg-surface-base p-2"
+        class="mt-2 rounded-5 border border-outline-gray-2 bg-surface-base p-2"
       >
         <div
           class="max-h-24 overflow-y-auto whitespace-pre-wrap break-words text-[12px] text-ink-gray-8"
@@ -113,7 +113,7 @@
           <button
             type="button"
             :data-testid="`variant-pick-${i}`"
-            class="ml-auto rounded-md bg-surface-green-2 px-2.5 py-1 text-[11px] font-semibold text-ink-green-8 hover:brightness-95 disabled:opacity-50"
+            class="ml-auto rounded-5 bg-surface-green-2 px-2.5 py-1 text-[11px] font-semibold text-ink-green-8 hover:brightness-95 disabled:opacity-50"
             :disabled="picking >= 0"
             @click="pick(v, i)"
           >

@@ -100,7 +100,7 @@
     <div
       v-if="loadError"
       role="alert"
-      class="mx-4 my-3 space-y-3 rounded-lg bg-surface-red-1 p-4 text-sm text-ink-red-7 sm:mx-6"
+      class="mx-4 my-3 space-y-3 rounded-6 bg-surface-red-1 p-4 text-sm text-ink-red-7 sm:mx-6"
     >
       <p>{{ loadError }}</p>
       <Button :label="__('Retry', null, CTX)" @click="load()" />
@@ -114,7 +114,7 @@
       <div
         v-for="n in 6"
         :key="n"
-        class="h-14 animate-pulse rounded-lg bg-surface-gray-2"
+        class="h-14 animate-pulse rounded-6 bg-surface-gray-2"
       />
     </div>
     <EmptyState

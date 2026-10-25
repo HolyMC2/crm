@@ -71,9 +71,9 @@
     </ol>
 
     <div v-if="loading && !doc" class="space-y-3 p-4" aria-hidden="true">
-      <div class="h-48 animate-pulse rounded-lg bg-surface-gray-2" />
-      <div class="h-10 animate-pulse rounded bg-surface-gray-2" />
-      <div class="h-10 animate-pulse rounded bg-surface-gray-2" />
+      <div class="h-48 animate-pulse rounded-6 bg-surface-gray-2" />
+      <div class="h-10 animate-pulse rounded-4 bg-surface-gray-2" />
+      <div class="h-10 animate-pulse rounded-4 bg-surface-gray-2" />
     </div>
     <div v-else-if="loadProblem" class="p-4">
       <ArchivoGuard :state="loadProblem" @action="onGuardAction" />
@@ -85,7 +85,7 @@
         <section :aria-label="__('Original')" class="min-w-0 space-y-2">
           <div
             v-if="showPreview"
-            class="overflow-hidden rounded-lg border border-outline-gray-2 bg-surface-gray-1"
+            class="overflow-hidden rounded-6 border border-outline-gray-2 bg-surface-gray-1"
           >
             <img
               v-if="preview === 'image'"
@@ -143,7 +143,7 @@
           <!-- Next step -->
           <section
             v-if="doc.can_edit"
-            class="space-y-3 rounded-lg border border-outline-gray-2 p-4"
+            class="space-y-3 rounded-6 border border-outline-gray-2 p-4"
             :aria-label="__('Next step')"
           >
             <h3 class="text-base font-semibold text-ink-gray-9">
@@ -153,7 +153,7 @@
 
             <div
               v-if="targetPending"
-              class="flex flex-wrap items-center gap-2 rounded bg-surface-gray-1 p-3"
+              class="flex flex-wrap items-center gap-2 rounded-4 bg-surface-gray-1 p-3"
             >
               <span class="min-w-0 flex-1 text-sm text-ink-gray-8"
                 >{{ doctypeLabel(target.doctype) }} ·
@@ -171,7 +171,7 @@
               <a
                 v-if="boot.banking_enabled"
                 :href="bankUrl"
-                class="inline-flex min-h-11 items-center gap-2 rounded bg-surface-gray-10 px-4 text-base-medium text-ink-base sm:min-h-8"
+                class="inline-flex min-h-11 items-center gap-2 rounded-4 bg-surface-gray-10 px-4 text-base-medium text-ink-base sm:min-h-8"
                 >{{
                   hasBankImport ? __('View in Bancos') : __('Import in Bancos')
                 }}</a
@@ -196,7 +196,7 @@
                 <li
                   v-for="item in suggestions"
                   :key="item.doctype + item.name"
-                  class="flex flex-wrap items-center gap-2 rounded border border-outline-gray-1 px-3 py-2"
+                  class="flex flex-wrap items-center gap-2 rounded-4 border border-outline-gray-1 px-3 py-2"
                 >
                   <span class="min-w-0 flex-1">
                     <span class="block truncate text-base text-ink-gray-9"
@@ -254,7 +254,7 @@
                 <li
                   v-for="item in manual.results"
                   :key="item.doctype + item.name"
-                  class="flex flex-wrap items-center gap-2 rounded border border-outline-gray-1 px-3 py-2"
+                  class="flex flex-wrap items-center gap-2 rounded-4 border border-outline-gray-1 px-3 py-2"
                 >
                   <span class="min-w-0 flex-1">
                     <span class="block truncate text-base text-ink-gray-9">{{
@@ -313,7 +313,7 @@
               >
                 <a
                   :href="recordHref(row.reference_doctype, row.reference_name)"
-                  class="flex min-h-11 items-center gap-2 rounded px-2 text-base text-ink-gray-9 hover:bg-surface-gray-1"
+                  class="flex min-h-11 items-center gap-2 rounded-4 px-2 text-base text-ink-gray-9 hover:bg-surface-gray-1"
                   ><LucideLink class="h-4 w-4 text-ink-gray-5" />{{
                     doctypeLabel(row.reference_doctype)
                   }}
@@ -325,7 +325,7 @@
 
           <!-- Metadata -->
           <section
-            class="space-y-3 rounded-lg border border-outline-gray-2 p-4"
+            class="space-y-3 rounded-6 border border-outline-gray-2 p-4"
             :aria-label="__('Details')"
           >
             <div class="flex items-center gap-2">
@@ -389,7 +389,7 @@
             />
             <div
               v-if="conflict"
-              class="rounded border border-outline-amber-3 bg-surface-amber-1 p-3 text-sm"
+              class="rounded-4 border border-outline-amber-3 bg-surface-amber-1 p-3 text-sm"
             >
               <p class="font-medium text-ink-amber-8">
                 {{ __('Current version') }}
@@ -487,7 +487,7 @@
             <div
               v-for="task in failedTasks"
               :key="task.name"
-              class="flex flex-wrap items-center gap-2 rounded border border-outline-gray-2 p-3"
+              class="flex flex-wrap items-center gap-2 rounded-4 border border-outline-gray-2 p-3"
             >
               <span class="min-w-0 flex-1 text-sm text-ink-gray-8">{{
                 task.state === 'Failed'
@@ -521,7 +521,7 @@
                     inputmode="numeric"
                     pattern="[0-9]+"
                     required
-                    class="min-h-11 rounded border border-outline-gray-2 px-2 text-base sm:min-h-8"
+                    class="min-h-11 rounded-4 border border-outline-gray-2 px-2 text-base sm:min-h-8"
                   />
                 </label>
                 <Button
@@ -589,7 +589,7 @@
             <a
               v-if="doc.can_prepare_purchase"
               :href="classicHref"
-              class="inline-flex min-h-11 items-center gap-2 rounded px-3 text-sm text-ink-gray-8 hover:bg-surface-gray-2 sm:min-h-8"
+              class="inline-flex min-h-11 items-center gap-2 rounded-4 px-3 text-sm text-ink-gray-8 hover:bg-surface-gray-2 sm:min-h-8"
               >{{ __('Prepare purchase draft') }}</a
             >
           </div>

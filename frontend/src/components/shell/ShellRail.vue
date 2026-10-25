@@ -11,7 +11,7 @@
       :class="expanded ? 'px-0.5' : 'justify-center'"
     >
       <span
-        class="flex size-9 flex-none items-center justify-center rounded-lg bg-[var(--muelle-accent)] text-sm font-bold text-[var(--muelle-accent-ink)]"
+        class="flex size-9 flex-none items-center justify-center rounded-6 bg-[var(--muelle-accent)] text-sm font-bold text-[var(--muelle-accent-ink)]"
         aria-hidden="true"
         >M</span
       >
@@ -23,7 +23,7 @@
       >
     </div>
     <button
-      class="flex flex-none items-center rounded-lg text-ink-gray-6 hover:bg-surface-gray-2"
+      class="flex flex-none items-center rounded-6 text-ink-gray-6 hover:bg-surface-gray-2"
       :class="ROW[expanded ? 'wide' : 'icon']"
       :aria-label="__('Search')"
       :title="searchHint"
@@ -37,7 +37,7 @@
           __('Search')
         }}</span>
         <kbd
-          class="rounded border border-outline-gray-2 px-1 font-sans text-xs text-ink-gray-5"
+          class="rounded-4 border border-outline-gray-2 px-1 font-sans text-xs text-ink-gray-5"
           aria-hidden="true"
           >{{ paletteKey }}</kbd
         >
@@ -55,7 +55,7 @@
         :aria-label="module.label"
         :aria-current="module.key === active ? 'page' : undefined"
         :data-module="module.key"
-        class="flex flex-none items-center rounded-lg"
+        class="flex flex-none items-center rounded-6"
         :class="[
           ROW[expanded ? 'wide' : 'icon'],
           module.key === active
@@ -83,7 +83,7 @@
           :href="siblingLinks[app.key]"
           :aria-label="app.label"
           :data-sibling="app.key"
-          class="flex flex-none items-center rounded-lg text-ink-gray-6 hover:bg-surface-gray-2 hover:text-ink-gray-8"
+          class="flex flex-none items-center rounded-6 text-ink-gray-6 hover:bg-surface-gray-2 hover:text-ink-gray-8"
           :class="ROW.wide"
         >
           <span
@@ -104,7 +104,7 @@
     <div v-if="siblings.length && !expanded" class="flex-none">
       <button
         ref="appsButton"
-        class="flex items-center justify-center rounded-lg"
+        class="flex items-center justify-center rounded-6"
         :class="[
           ROW.icon,
           appsOpen
@@ -125,7 +125,7 @@
         <div
           ref="appsMenu"
           role="menu"
-          class="fixed z-50 w-56 rounded-xl border border-outline-gray-2 bg-surface-base py-1.5 shadow-xl"
+          class="fixed z-50 w-56 rounded-7 border border-outline-gray-2 bg-surface-base py-1.5 shadow-xl"
           :style="appsMenuStyle"
         >
           <div class="px-3.5 pb-1 pt-1.5 text-xs font-medium text-ink-gray-5">
@@ -156,7 +156,7 @@
          shell_api.status said yes. No bubble (design/ASSISTANT.md). -->
     <button
       v-if="assistantOn"
-      class="flex flex-none items-center rounded-lg text-ink-gray-6 hover:bg-surface-gray-2 hover:text-ink-gray-8"
+      class="flex flex-none items-center rounded-6 text-ink-gray-6 hover:bg-surface-gray-2 hover:text-ink-gray-8"
       :class="ROW[expanded ? 'wide' : 'icon']"
       :aria-label="__('Ask Muelle')"
       :title="`${__('Ask Muelle')} (${assistantKey})`"
@@ -170,14 +170,14 @@
           __('Ask Muelle')
         }}</span>
         <kbd
-          class="rounded border border-outline-gray-2 px-1 font-sans text-xs text-ink-gray-5"
+          class="rounded-4 border border-outline-gray-2 px-1 font-sans text-xs text-ink-gray-5"
           aria-hidden="true"
           >{{ assistantKey }}</kbd
         >
       </template>
     </button>
     <button
-      class="flex flex-none items-center rounded-lg text-ink-gray-6 hover:bg-surface-gray-2 hover:text-ink-gray-8"
+      class="flex flex-none items-center rounded-6 text-ink-gray-6 hover:bg-surface-gray-2 hover:text-ink-gray-8"
       :class="ROW[expanded ? 'wide' : 'icon']"
       :aria-label="toggleLabel"
       :aria-expanded="expanded"
@@ -198,7 +198,7 @@
           __('Icons only')
         }}</span>
         <kbd
-          class="rounded border border-outline-gray-2 px-1 font-sans text-xs text-ink-gray-5"
+          class="rounded-4 border border-outline-gray-2 px-1 font-sans text-xs text-ink-gray-5"
           aria-hidden="true"
           >{{ sidebarKey }}</kbd
         >

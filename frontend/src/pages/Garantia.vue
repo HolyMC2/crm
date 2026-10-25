@@ -72,14 +72,14 @@
         <div
           v-if="notice"
           role="status"
-          class="mb-4 rounded-lg bg-surface-green-1 p-3 text-sm text-ink-green-8"
+          class="mb-4 rounded-6 bg-surface-green-1 p-3 text-sm text-ink-green-8"
         >
           {{ notice }}
         </div>
         <div
           v-if="problem"
           role="alert"
-          class="mb-4 space-y-2 rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7"
+          class="mb-4 space-y-2 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
         >
           <p>
             <strong>{{ problem.title }}.</strong> {{ problem.detail }}
@@ -204,7 +204,7 @@
 
         <div class="grid gap-4 sm:grid-cols-2">
           <section
-            class="rounded-lg border border-outline-gray-2 p-4 sm:col-span-2"
+            class="rounded-6 border border-outline-gray-2 p-4 sm:col-span-2"
           >
             <h2 class="mb-1 text-sm font-semibold text-ink-gray-8">
               {{ __('What the customer reports') }}
@@ -214,7 +214,7 @@
             </p>
           </section>
 
-          <section class="rounded-lg border border-outline-gray-2 p-4">
+          <section class="rounded-6 border border-outline-gray-2 p-4">
             <h2 class="mb-1 text-sm font-semibold text-ink-gray-8">
               {{ __('Proof of purchase') }}
             </h2>
@@ -274,7 +274,7 @@
             </div>
           </section>
 
-          <section class="rounded-lg border border-outline-gray-2 p-4">
+          <section class="rounded-6 border border-outline-gray-2 p-4">
             <h2 class="mb-1 text-sm font-semibold text-ink-gray-8">
               {{ __('Warranty', null, 'Garantías') }}
             </h2>
@@ -297,7 +297,7 @@
 
           <section
             v-if="claim.outcome || claim.resolution_details"
-            class="rounded-lg border border-outline-gray-2 p-4"
+            class="rounded-6 border border-outline-gray-2 p-4"
           >
             <h2 class="mb-1 text-sm font-semibold text-ink-gray-8">
               {{ __('Outcome', null, 'Garantías') }}
@@ -335,7 +335,7 @@
             </p>
           </section>
 
-          <section class="rounded-lg border border-outline-gray-2 p-4">
+          <section class="rounded-6 border border-outline-gray-2 p-4">
             <h2 class="mb-1 text-sm font-semibold text-ink-gray-8">
               {{ __('Assigned to', null, 'Garantías') }}
             </h2>
@@ -352,7 +352,7 @@
 
           <!-- The claim's pendientes (Shell D8): who follows up, by when. -->
           <RecordPendientes
-            class="rounded-lg border border-outline-gray-2 p-4 sm:col-span-2"
+            class="rounded-6 border border-outline-gray-2 p-4 sm:col-span-2"
             reference-type="Warranty Claim"
             :reference-name="claim.name"
             :reference-label="`${claim.name} · ${claim.customer_name || ''}`"
@@ -361,7 +361,7 @@
 
           <section
             v-if="showSupplier"
-            class="rounded-lg border border-outline-gray-2 p-4 sm:col-span-2"
+            class="rounded-6 border border-outline-gray-2 p-4 sm:col-span-2"
           >
             <h2 class="mb-1 text-sm font-semibold text-ink-gray-8">
               {{ __('Supplier', null, 'Garantías') }}
@@ -500,7 +500,7 @@
           </section>
 
           <section
-            class="rounded-lg border border-outline-gray-2 p-4 sm:col-span-2"
+            class="rounded-6 border border-outline-gray-2 p-4 sm:col-span-2"
           >
             <h2 class="mb-2 text-sm font-semibold text-ink-gray-8">
               {{ __('History', null, 'Garantías') }}

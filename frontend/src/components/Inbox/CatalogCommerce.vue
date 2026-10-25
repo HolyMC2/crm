@@ -41,7 +41,7 @@
         <button
           v-if="canOfferProducts"
           type="button"
-          class="my-2 min-h-11 rounded border border-outline-gray-2 px-3 font-medium focus-visible:ring-2"
+          class="my-2 min-h-11 rounded-4 border border-outline-gray-2 px-3 font-medium focus-visible:ring-2"
           :aria-expanded="showProducts"
           :disabled="blocked || pending"
           @click="showProducts = !showProducts"
@@ -75,7 +75,7 @@
           <li v-for="cart in context.carts" :key="cart.name">
             <button
               type="button"
-              class="flex min-h-11 w-full flex-wrap items-center justify-between gap-2 rounded border border-outline-gray-2 px-3 py-2 text-left focus-visible:ring-2"
+              class="flex min-h-11 w-full flex-wrap items-center justify-between gap-2 rounded-4 border border-outline-gray-2 px-3 py-2 text-left focus-visible:ring-2"
               :class="
                 selectedCart === cart.name
                   ? 'bg-surface-gray-2'
@@ -116,7 +116,7 @@
     </template>
     <button
       type="button"
-      class="min-h-11 rounded text-xs underline focus-visible:ring-2"
+      class="min-h-11 rounded-4 text-xs underline focus-visible:ring-2"
       :disabled="loading || pending || blocked"
       @click="loadContext"
     >

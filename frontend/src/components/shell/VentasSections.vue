@@ -23,7 +23,7 @@
           v-for="item in section.items"
           :key="item.key"
           :to="item.to"
-          class="flex min-h-11 items-center gap-2.5 rounded-lg px-2.5 text-sm"
+          class="flex min-h-11 items-center gap-2.5 rounded-6 px-2.5 text-sm"
           :class="
             groupOf(route.path) === item.group
               ? 'bg-surface-gray-3 font-semibold'
@@ -60,7 +60,7 @@
         addonAvailable &&
         !['unsupported', 'unconfigured'].includes(pushState)
       "
-      class="mt-2 flex min-h-11 w-full items-center gap-2.5 rounded-lg px-2.5 text-left text-sm"
+      class="mt-2 flex min-h-11 w-full items-center gap-2.5 rounded-6 px-2.5 text-left text-sm"
       role="switch"
       :aria-checked="pushState === 'on'"
       :disabled="pushBusy || pushState === 'denied'"

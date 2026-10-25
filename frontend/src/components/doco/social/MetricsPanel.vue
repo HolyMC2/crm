@@ -25,7 +25,7 @@
         >{{ __('Por sucursal') }}</span
       >
       <button
-        class="rounded-md border border-outline-gray-2 px-2 py-1 text-[11px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2"
+        class="rounded-5 border border-outline-gray-2 px-2 py-1 text-[11px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2"
         @click="exportLeaderboard"
       >
         {{ __('Exportar CSV') }}

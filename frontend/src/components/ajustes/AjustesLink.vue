@@ -14,7 +14,7 @@
         expanded && active >= 0 ? `${listId}-${active}` : undefined
       "
       :aria-label="label"
-      class="h-11 w-full rounded-lg border border-outline-gray-2 bg-surface-base px-3 text-base"
+      class="h-11 w-full rounded-6 border border-outline-gray-2 bg-surface-base px-3 text-base"
       :placeholder="__('Escribe para buscar')"
       @input="changeQuery($event.target.value)"
       @focus="search"
@@ -25,7 +25,7 @@
       :id="listId"
       role="listbox"
       :aria-label="label"
-      class="mt-1 max-h-64 overflow-y-auto rounded-lg border border-outline-gray-1"
+      class="mt-1 max-h-64 overflow-y-auto rounded-6 border border-outline-gray-1"
     >
       <p v-if="loading" role="status" class="px-3 py-2 text-sm text-ink-gray-6">
         {{ __('Buscando…') }}

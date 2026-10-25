@@ -25,20 +25,20 @@
           :placeholder="__('Nombre de la campaña')"
         />
         <span
-          class="rounded-md px-2 py-[3px] text-[11px] font-semibold"
+          class="rounded-5 px-2 py-[3px] text-[11px] font-semibold"
           :class="statusChip(form.status)"
           >{{ form.status }}</span
         >
         <span
           v-if="isCadence"
-          class="flex-none rounded-md bg-surface-violet-2 px-2 py-[3px] text-[11px] font-semibold text-ink-violet-8"
+          class="flex-none rounded-5 bg-surface-violet-2 px-2 py-[3px] text-[11px] font-semibold text-ink-violet-8"
           >{{ __('Cadencia 1:1') }}</span
         >
       </div>
       <div class="flex items-center gap-2">
         <button
           v-if="dirty || saving"
-          class="rounded-lg px-3 py-1.5 text-[12.5px] font-semibold text-white disabled:opacity-50"
+          class="rounded-6 px-3 py-1.5 text-[12.5px] font-semibold text-white disabled:opacity-50"
           style="background: var(--brand)"
           :disabled="saving"
           @click="save"
@@ -47,21 +47,21 @@
         </button>
         <button
           v-if="form.status === 'Active'"
-          class="rounded-lg border border-outline-amber-4 bg-surface-amber-1 px-3 py-1.5 text-[12.5px] font-semibold text-ink-amber-9"
+          class="rounded-6 border border-outline-amber-4 bg-surface-amber-1 px-3 py-1.5 text-[12.5px] font-semibold text-ink-amber-9"
           @click="changeStatus('Paused')"
         >
           ⏸ {{ __('Pausar') }}
         </button>
         <button
           v-else-if="form.status === 'Paused'"
-          class="rounded-lg border border-outline-green-4 bg-surface-green-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-green-8"
+          class="rounded-6 border border-outline-green-4 bg-surface-green-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-green-8"
           @click="changeStatus('Active')"
         >
           ▶ {{ __('Reanudar') }}
         </button>
         <button
           v-else-if="form.status === 'Draft'"
-          class="rounded-lg px-3 py-1.5 text-[12.5px] font-semibold text-white"
+          class="rounded-6 px-3 py-1.5 text-[12.5px] font-semibold text-white"
           style="background: var(--brand)"
           @click="activate"
         >
@@ -156,7 +156,7 @@
           </select>
         </Field>
         <button
-          class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-medium text-ink-gray-7 disabled:opacity-50"
+          class="rounded-6 border border-outline-gray-2 px-3 py-1.5 text-[12px] font-medium text-ink-gray-7 disabled:opacity-50"
           :disabled="!form.audience || enrolling"
           @click="doEnroll"
         >
@@ -242,7 +242,7 @@
             </div>
           </div>
           <span
-            class="flex-none rounded px-2 py-[2px] text-[10.5px] font-semibold"
+            class="flex-none rounded-4 px-2 py-[2px] text-[10.5px] font-semibold"
             :class="enrStatusChip(e.status)"
             >{{ e.status }}</span
           >

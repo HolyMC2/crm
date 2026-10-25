@@ -45,7 +45,7 @@
 
         <p
           v-if="config?.sender_hint"
-          class="rounded-md bg-surface-blue-1 px-2.5 py-2 text-[12px] text-ink-blue-3"
+          class="rounded-5 bg-surface-blue-1 px-2.5 py-2 text-[12px] text-ink-blue-3"
         >
           {{
             __(
@@ -56,7 +56,7 @@
         </p>
         <p
           v-else-if="config && !config.can_auto_send"
-          class="rounded-md bg-surface-gray-2 px-2.5 py-2 text-[12px] text-ink-gray-6"
+          class="rounded-5 bg-surface-gray-2 px-2.5 py-2 text-[12px] text-ink-gray-6"
         >
           {{
             __(
@@ -66,7 +66,7 @@
         </p>
         <p
           v-else-if="config?.can_auto_send"
-          class="rounded-md bg-surface-gray-2 px-2.5 py-2 text-[12px] text-ink-gray-6"
+          class="rounded-5 bg-surface-gray-2 px-2.5 py-2 text-[12px] text-ink-gray-6"
         >
           {{
             __(
@@ -83,7 +83,7 @@
           </label>
           <select
             v-model="template"
-            class="w-full rounded-md border border-outline-gray-2 bg-surface-base px-2 py-1.5 text-[13px] text-ink-gray-8"
+            class="w-full rounded-5 border border-outline-gray-2 bg-surface-base px-2 py-1.5 text-[13px] text-ink-gray-8"
             @change="loadTemplate"
           >
             <option value="">{{ __('Mensaje libre (sin plantilla)') }}</option>
@@ -97,7 +97,7 @@
                example for that position, which is exactly what a placeholder is for. -->
           <div
             v-if="openHoles.length"
-            class="mt-2 space-y-1.5 rounded-xl border border-outline-amber-2 bg-surface-amber-1 p-2.5"
+            class="mt-2 space-y-1.5 rounded-7 border border-outline-amber-2 bg-surface-amber-1 p-2.5"
           >
             <div
               class="text-[11px] font-semibold uppercase tracking-wide text-ink-amber-9"
@@ -116,7 +116,7 @@
               <input
                 v-model="manual[String(hole.index)]"
                 type="text"
-                class="w-full rounded-md border border-outline-gray-2 bg-surface-base px-2 py-1 text-[13px] text-ink-gray-8"
+                class="w-full rounded-5 border border-outline-gray-2 bg-surface-base px-2 py-1 text-[13px] text-ink-gray-8"
                 :placeholder="hole.sample || __('Escribe el valor')"
                 @change="loadTemplate"
               />
@@ -133,7 +133,7 @@
           <textarea
             v-model="text"
             rows="6"
-            class="mt-2 w-full rounded-md border border-outline-gray-2 bg-surface-base px-2.5 py-2 text-[13px] leading-relaxed text-ink-gray-8"
+            class="mt-2 w-full rounded-5 border border-outline-gray-2 bg-surface-base px-2.5 py-2 text-[13px] leading-relaxed text-ink-gray-8"
             :placeholder="__('Escribe el mensaje…')"
           />
           <div
@@ -149,7 +149,7 @@
         </div>
         <p
           v-else
-          class="rounded-md bg-surface-gray-2 px-2.5 py-2 text-[12px] text-ink-gray-6"
+          class="rounded-5 bg-surface-gray-2 px-2.5 py-2 text-[12px] text-ink-gray-6"
         >
           {{
             __(
@@ -176,7 +176,7 @@
              answer actually arrives. -->
         <div
           v-if="intents.length"
-          class="rounded-xl border border-outline-gray-2 p-3"
+          class="rounded-7 border border-outline-gray-2 p-3"
         >
           <div
             class="text-[11px] font-semibold uppercase tracking-wide text-ink-gray-5"

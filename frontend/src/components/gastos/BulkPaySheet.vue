@@ -19,7 +19,7 @@
       <div
         v-if="plan.mixed"
         role="alert"
-        class="space-y-2 rounded-lg bg-surface-amber-1 p-3 text-sm"
+        class="space-y-2 rounded-6 bg-surface-amber-1 p-3 text-sm"
         data-bulk-mixed
       >
         <p>
@@ -78,7 +78,7 @@
         <div
           v-else-if="!accounts.length"
           role="alert"
-          class="space-y-2 rounded-lg bg-surface-amber-1 p-3 text-sm"
+          class="space-y-2 rounded-6 bg-surface-amber-1 p-3 text-sm"
         >
           <p>{{ noAccount }}</p>
         </div>

@@ -14,7 +14,7 @@
       <div
         v-if="problem"
         role="alert"
-        class="rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7"
+        class="rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
       >
         <strong>{{ problem.title }}.</strong> {{ problem.detail }}
         <Button class="ml-2" :label="__('Retry', null, CTX)" @click="load" />
@@ -22,7 +22,7 @@
 
       <template v-if="setup">
         <p
-          class="rounded-lg p-3 text-sm"
+          class="rounded-6 p-3 text-sm"
           :class="
             setup.paused
               ? 'bg-surface-amber-1 text-ink-gray-8'
@@ -43,7 +43,7 @@
             <li
               v-for="level in setup.ladder"
               :key="level.level"
-              class="rounded-lg border border-outline-gray-2 p-3"
+              class="rounded-6 border border-outline-gray-2 p-3"
             >
               <p class="text-sm font-medium text-ink-gray-9">
                 {{ __('Day {0} overdue · {1}', [level.days, level.title]) }}
@@ -65,7 +65,7 @@
 
         <p
           v-if="setup.mode === 'manual'"
-          class="rounded-lg bg-surface-gray-1 p-3 text-sm text-ink-gray-8"
+          class="rounded-6 bg-surface-gray-1 p-3 text-sm text-ink-gray-8"
         >
           {{
             __(
@@ -97,7 +97,7 @@
               chosenTemplate?.problem && blocker?.action !== 'choose_template'
             "
             role="status"
-            class="rounded-md bg-surface-amber-1 px-3 py-2 text-sm text-ink-gray-8"
+            class="rounded-5 bg-surface-amber-1 px-3 py-2 text-sm text-ink-gray-8"
           >
             {{ chosenTemplate.reason }} {{ __('Choose another template.') }}
           </p>
@@ -150,7 +150,7 @@
         <div
           v-if="blocker"
           role="alert"
-          class="space-y-2 rounded-lg bg-surface-amber-1 p-3 text-sm text-ink-gray-8"
+          class="space-y-2 rounded-6 bg-surface-amber-1 p-3 text-sm text-ink-gray-8"
         >
           <p>{{ blocker.text }}</p>
           <div class="flex flex-wrap gap-2">

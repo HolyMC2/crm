@@ -1,6 +1,6 @@
 <template>
   <section
-    class="rounded-lg border border-outline-gray-2 bg-surface-base"
+    class="rounded-6 border border-outline-gray-2 bg-surface-base"
     :aria-label="__('Files on this record')"
   >
     <header class="flex flex-wrap items-center gap-2 px-4 py-3">
@@ -13,13 +13,13 @@
       <a
         v-if="data?.supported && uploadHref"
         :href="uploadHref"
-        class="inline-flex min-h-11 items-center gap-2 rounded border border-outline-gray-2 px-3 text-sm text-ink-gray-8 hover:bg-surface-gray-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-outline-gray-4 sm:min-h-8"
+        class="inline-flex min-h-11 items-center gap-2 rounded-4 border border-outline-gray-2 px-3 text-sm text-ink-gray-8 hover:bg-surface-gray-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-outline-gray-4 sm:min-h-8"
         ><LucideUpload class="h-4 w-4" />{{ __('Add file') }}</a
       >
     </header>
     <div v-if="loading && !data" class="space-y-2 px-4 pb-4" aria-busy="true">
-      <div class="h-10 animate-pulse rounded bg-surface-gray-2" />
-      <div class="h-10 animate-pulse rounded bg-surface-gray-2" />
+      <div class="h-10 animate-pulse rounded-4 bg-surface-gray-2" />
+      <div class="h-10 animate-pulse rounded-4 bg-surface-gray-2" />
     </div>
     <div v-else-if="failure" class="px-4 pb-4">
       <ArchivoGuard :state="failure" @action="load" />

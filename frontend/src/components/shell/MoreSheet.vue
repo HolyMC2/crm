@@ -36,7 +36,7 @@
       <button
         v-if="assistantEnabled"
         type="button"
-        class="flex min-h-12 w-full items-center gap-3 rounded-xl bg-surface-gray-2 px-4 text-left text-base-medium"
+        class="flex min-h-12 w-full items-center gap-3 rounded-7 bg-surface-gray-2 px-4 text-left text-base-medium"
         data-testid="more-assistant"
         @click="askMuelle"
       >
@@ -46,7 +46,7 @@
       <!-- «Escanear documento» (Shell D7): the camera into the capture engine. -->
       <button
         type="button"
-        class="flex min-h-12 w-full items-center gap-3 rounded-xl bg-surface-gray-2 px-4 text-left text-base-medium"
+        class="flex min-h-12 w-full items-center gap-3 rounded-7 bg-surface-gray-2 px-4 text-left text-base-medium"
         data-testid="more-camera"
         @pointerenter="loadCameraSheet"
         @click="scanDocument"
@@ -146,12 +146,12 @@
           <div
             v-for="(key, index) in order"
             :key="key"
-            class="flex min-h-11 items-center gap-2 rounded-lg bg-surface-gray-1 px-3"
+            class="flex min-h-11 items-center gap-2 rounded-6 bg-surface-gray-1 px-3"
           >
             <span class="flex-1">{{ labelOf(key) }}</span>
             <button
               type="button"
-              class="flex size-11 items-center justify-center rounded-lg"
+              class="flex size-11 items-center justify-center rounded-6"
               :aria-label="__('Move up {0}', [labelOf(key)])"
               :disabled="index === 0"
               @click="move(index, -1)"
@@ -160,7 +160,7 @@
             </button>
             <button
               type="button"
-              class="flex size-11 items-center justify-center rounded-lg"
+              class="flex size-11 items-center justify-center rounded-6"
               :aria-label="__('Move down {0}', [labelOf(key)])"
               :disabled="index === order.length - 1"
               @click="move(index, 1)"
@@ -190,7 +190,7 @@
               v-for="choice in THEME_CHOICES"
               :key="choice.value"
               type="button"
-              class="flex size-11 items-center justify-center rounded-lg"
+              class="flex size-11 items-center justify-center rounded-6"
               :class="theme === choice.value ? 'bg-surface-gray-3' : ''"
               :aria-label="__(choice.label)"
               :aria-pressed="theme === choice.value"
@@ -214,7 +214,7 @@
           }}</label>
           <select
             id="more-landing"
-            class="h-11 w-full basis-full rounded-lg border-0 bg-surface-gray-2 pl-3 pr-8 text-sm"
+            class="h-11 w-full basis-full rounded-6 border-0 bg-surface-gray-2 pl-3 pr-8 text-sm"
             :value="landing"
             data-testid="more-landing"
             @change="chooseLanding($event.target.value)"
@@ -507,7 +507,7 @@ function openSettings() {
 
 // One tile style for modules and apps; one row style for settings.
 const TILE =
-  'flex min-h-[72px] flex-col items-center justify-center gap-1.5 rounded-xl bg-surface-gray-1 px-1 text-center text-sm leading-tight'
+  'flex min-h-[72px] flex-col items-center justify-center gap-1.5 rounded-7 bg-surface-gray-1 px-1 text-center text-sm leading-tight'
 const ROW =
-  'flex min-h-11 w-full items-center gap-2.5 rounded-lg px-1 text-left text-sm'
+  'flex min-h-11 w-full items-center gap-2.5 rounded-6 px-1 text-left text-sm'
 </script>

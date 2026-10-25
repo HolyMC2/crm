@@ -3,7 +3,7 @@
        composer, moves this strip and loses the click (seen on the lab). -->
   <div
     v-if="view"
-    class="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md px-2.5 py-1.5 text-xs"
+    class="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-5 px-2.5 py-1.5 text-xs"
     :class="toneClass"
     role="status"
     :aria-label="__('Control de la conversación')"
@@ -12,7 +12,7 @@
     <template v-if="reasonFor">
       <input
         v-model="reason"
-        class="min-w-0 flex-1 rounded border border-outline-gray-2 bg-surface-base px-2 py-0.5 text-xs text-ink-gray-8"
+        class="min-w-0 flex-1 rounded-4 border border-outline-gray-2 bg-surface-base px-2 py-0.5 text-xs text-ink-gray-8"
         :placeholder="__('Motivo')"
         :aria-label="__('Motivo')"
         @keydown.enter.prevent="apply(reasonFor, reason)"

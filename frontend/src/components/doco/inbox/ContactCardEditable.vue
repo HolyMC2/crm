@@ -60,7 +60,7 @@
       >Empresa del prospecto u oportunidad<input
         v-model="organization"
         :disabled="!card.can_write"
-        class="mt-1 w-full rounded border border-outline-gray-2 bg-surface-base p-2 text-sm"
+        class="mt-1 w-full rounded-4 border border-outline-gray-2 bg-surface-base p-2 text-sm"
         @change="saveQualification('organization', organization)"
     /></label>
     <label
@@ -69,7 +69,7 @@
       >Dispositivo<input
         v-model="device"
         :disabled="!card.can_write"
-        class="mt-1 w-full rounded border border-outline-gray-2 bg-surface-base p-2 text-sm"
+        class="mt-1 w-full rounded-4 border border-outline-gray-2 bg-surface-base p-2 text-sm"
         @change="saveDevice"
     /></label>
     <p v-if="error" role="alert" class="mt-2 text-xs text-ink-red-7">

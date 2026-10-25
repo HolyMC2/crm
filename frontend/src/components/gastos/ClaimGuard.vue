@@ -1,7 +1,7 @@
 <template>
   <div
     role="alert"
-    class="space-y-2 rounded-lg bg-surface-amber-1 p-3 text-sm text-ink-gray-8"
+    class="space-y-2 rounded-6 bg-surface-amber-1 p-3 text-sm text-ink-gray-8"
     :data-code="guard.code || undefined"
   >
     <p>{{ guard.message }}</p>

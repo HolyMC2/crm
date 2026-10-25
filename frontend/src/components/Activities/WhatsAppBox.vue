@@ -6,7 +6,7 @@
     class="flex items-center justify-around gap-2 px-3 pt-2 sm:px-10"
   >
     <div
-      class="mb-1 ml-13 flex-1 cursor-pointer rounded border-0 border-l-4 border-green-500 bg-surface-gray-2 p-2 text-base text-ink-gray-5"
+      class="mb-1 ml-13 flex-1 cursor-pointer rounded-4 border-0 border-l-4 border-green-500 bg-surface-gray-2 p-2 text-base text-ink-gray-5"
       :class="reply.type == 'Incoming' ? 'border-green-500' : 'border-blue-400'"
     >
       <div
@@ -86,7 +86,7 @@
       <button
         v-if="addonAvailable"
         type="button"
-        class="press rounded-md bg-surface-green-2 px-2 py-1 text-xs-semibold text-ink-green-8 hover:bg-surface-green-7"
+        class="press rounded-5 bg-surface-green-2 px-2 py-1 text-xs-semibold text-ink-green-8 hover:bg-surface-green-7"
         :title="__('Buscar y enviar artículos del catálogo (o escribe /cat)')"
         @click="emit('catalog', '')"
       >
@@ -98,7 +98,7 @@
           aiEnabled && !replyOnly && ['CRM Deal', 'CRM Lead'].includes(doctype)
         "
         type="button"
-        class="press rounded-md bg-surface-violet-2 px-2 py-1 text-xs-semibold text-ink-violet-8 hover:opacity-80 disabled:opacity-50"
+        class="press rounded-5 bg-surface-violet-2 px-2 py-1 text-xs-semibold text-ink-violet-8 hover:opacity-80 disabled:opacity-50"
         :disabled="suggestLoading"
         :title="__('Sugerir respuestas con IA (local)')"
         @click="fetchSuggestions"
@@ -110,7 +110,7 @@
       <button
         v-if="isMobile && !replyOnly"
         type="button"
-        class="press rounded-md border border-outline-gray-2 px-2 py-1 text-xs-semibold text-ink-gray-7 hover:bg-surface-gray-2"
+        class="press rounded-5 border border-outline-gray-2 px-2 py-1 text-xs-semibold text-ink-gray-7 hover:bg-surface-gray-2"
         :title="__('Enviar plantilla de WhatsApp')"
         @click="emit('openTemplates')"
       >
@@ -120,7 +120,7 @@
         v-for="(qr, i) in quickReplies.data || []"
         :key="`qr-${i}`"
         type="button"
-        class="rounded-md bg-surface-gray-2 px-2 py-1 text-xs-medium text-ink-gray-7 hover:bg-surface-gray-3"
+        class="rounded-5 bg-surface-gray-2 px-2 py-1 text-xs-medium text-ink-gray-7 hover:bg-surface-gray-3"
         :title="qr.text"
         @click="insertQuickReply(qr)"
       >
@@ -130,7 +130,7 @@
         v-for="t in replyOnly ? [] : quickTemplates.data || []"
         :key="`tpl-${t.name}`"
         type="button"
-        class="rounded-md border border-outline-gray-2 px-2 py-1 text-xs-medium text-ink-gray-7 hover:bg-surface-gray-2"
+        class="rounded-5 border border-outline-gray-2 px-2 py-1 text-xs-medium text-ink-gray-7 hover:bg-surface-gray-2"
         :title="t.template"
         @click="emit('pickTemplate', t.name)"
       >
@@ -138,7 +138,7 @@
       </button>
       <button
         type="button"
-        class="rounded-md px-1.5 py-1 text-xs text-ink-gray-5 hover:bg-surface-gray-2"
+        class="rounded-5 px-1.5 py-1 text-xs text-ink-gray-5 hover:bg-surface-gray-2"
         :title="__('Edit quick replies')"
         @click="openEditor"
       >
@@ -185,7 +185,7 @@
       v-for="(sg, i) in suggestions"
       :key="'sg' + i"
       type="button"
-      class="press max-w-full truncate rounded-lg border border-outline-gray-2 bg-surface-base px-2.5 py-1.5 text-left text-xs text-ink-gray-8 hover:bg-surface-gray-2"
+      class="press max-w-full truncate rounded-6 border border-outline-gray-2 bg-surface-base px-2.5 py-1.5 text-left text-xs text-ink-gray-8 hover:bg-surface-gray-2"
       :title="sg"
       @click="useSuggestion(sg)"
     >
@@ -267,7 +267,7 @@
         "
       >
         <SmileIcon
-          class="flex size-4.5 cursor-pointer rounded-sm text-2xl leading-none text-ink-gray-4"
+          class="flex size-4.5 cursor-pointer rounded-1 text-2xl leading-none text-ink-gray-4"
           @click="togglePopover"
         />
       </IconPicker>
@@ -287,7 +287,7 @@
     <!-- recording bar replaces the textarea while capturing -->
     <div
       v-if="mode === 'reply' && recording"
-      class="flex h-10 w-full items-center gap-3 rounded-lg border border-outline-red-4 bg-surface-red-1 px-3"
+      class="flex h-10 w-full items-center gap-3 rounded-6 border border-outline-red-4 bg-surface-red-1 px-3"
     >
       <span
         class="h-2.5 w-2.5 flex-none animate-pulse rounded-full"
@@ -305,14 +305,14 @@
       }}</span>
       <button
         type="button"
-        class="press flex-none rounded-md px-2.5 py-1 text-[12px] font-medium text-ink-gray-7 hover:bg-surface-gray-2"
+        class="press flex-none rounded-5 px-2.5 py-1 text-[12px] font-medium text-ink-gray-7 hover:bg-surface-gray-2"
         @click="cancelRecording"
       >
         {{ __('Cancelar') }}
       </button>
       <button
         type="button"
-        class="press flex-none rounded-md px-3 py-1 text-[12px] font-bold text-white"
+        class="press flex-none rounded-5 px-3 py-1 text-[12px] font-bold text-white"
         style="background: var(--brand)"
         :disabled="recUploading"
         @click="sendRecording"
@@ -341,7 +341,7 @@
          Capture phase so we intercept before tiptap's own Enter handling. -->
     <div
       v-else
-      class="w-full rounded border border-outline-gray-2 bg-surface-base px-2 py-1 dark:bg-surface-gray-2"
+      class="w-full rounded-4 border border-outline-gray-2 bg-surface-base px-2 py-1 dark:bg-surface-gray-2"
       @keydown.ctrl.enter.capture.prevent.stop="dispatchSend()"
       @keydown.meta.enter.capture.prevent.stop="dispatchSend()"
     >

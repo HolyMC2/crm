@@ -95,7 +95,7 @@
         />
         <ul
           v-if="peopleResults.length"
-          class="mt-1 max-h-56 overflow-y-auto rounded-lg border border-outline-gray-2"
+          class="mt-1 max-h-56 overflow-y-auto rounded-6 border border-outline-gray-2"
           :aria-label="__('People found')"
         >
           <li
@@ -180,7 +180,7 @@
 
       <div
         v-if="form.reference"
-        class="flex min-h-11 items-center justify-between gap-2 rounded-lg bg-surface-gray-1 px-3 text-sm"
+        class="flex min-h-11 items-center justify-between gap-2 rounded-6 bg-surface-gray-1 px-3 text-sm"
       >
         <span class="truncate"
           >{{ __('Linked to') }}

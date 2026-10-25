@@ -557,7 +557,7 @@ export function DropdownOption({ option, icon, selected, onClick }) {
     'button',
     {
       class:
-        'group flex w-full text-ink-gray-8 justify-between items-center rounded-md px-2 py-2 text-sm hover:bg-surface-gray-2',
+        'group flex w-full text-ink-gray-8 justify-between items-center rounded-5 px-2 py-2 text-sm hover:bg-surface-gray-2',
       onClick,
     },
     [
@@ -809,7 +809,7 @@ export function TemplateOption({ active, option, variant, icon, onClick }) {
     {
       class: [
         active ? 'bg-surface-gray-2' : 'text-ink-gray-7',
-        'group flex w-full gap-2 items-center rounded-md px-2 py-2 text-base hover:bg-surface-gray-3',
+        'group flex w-full gap-2 items-center rounded-5 px-2 py-2 text-base hover:bg-surface-gray-3',
         variant == 'danger' ? 'text-ink-red-7 hover:bg-ink-red-1' : '',
       ],
       onClick: onClick,

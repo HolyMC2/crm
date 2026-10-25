@@ -8,7 +8,7 @@
     <button
       v-if="canSend"
       type="button"
-      class="min-h-11 rounded bg-surface-gray-2 px-3 hover:bg-surface-gray-3 disabled:opacity-60"
+      class="min-h-11 rounded-4 bg-surface-gray-2 px-3 hover:bg-surface-gray-3 disabled:opacity-60"
       :disabled="busy || blocked"
       @click="send"
     >
@@ -22,7 +22,7 @@
     </button>
     <RouterLink
       v-if="context.canBook"
-      class="inline-flex min-h-11 items-center rounded px-3 underline"
+      class="inline-flex min-h-11 items-center rounded-4 px-3 underline"
       :to="bookRoute"
       >{{ __('Book appointment') }}</RouterLink
     >

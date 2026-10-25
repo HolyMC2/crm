@@ -33,7 +33,7 @@
         <input
           v-model="draftFrom"
           type="date"
-          class="h-8 rounded border border-outline-gray-2 bg-surface-base px-2 text-sm text-ink-gray-8"
+          class="h-8 rounded-4 border border-outline-gray-2 bg-surface-base px-2 text-sm text-ink-gray-8"
           :max="draftTo || undefined"
           required
         />
@@ -43,14 +43,14 @@
         <input
           v-model="draftTo"
           type="date"
-          class="h-8 rounded border border-outline-gray-2 bg-surface-base px-2 text-sm text-ink-gray-8"
+          class="h-8 rounded-4 border border-outline-gray-2 bg-surface-base px-2 text-sm text-ink-gray-8"
           :min="draftFrom || undefined"
           required
         />
       </label>
       <button
         type="submit"
-        class="h-8 rounded bg-surface-gray-3 px-3 text-sm font-medium text-ink-gray-8 hover:bg-surface-gray-4 disabled:opacity-50"
+        class="h-8 rounded-4 bg-surface-gray-3 px-3 text-sm font-medium text-ink-gray-8 hover:bg-surface-gray-4 disabled:opacity-50"
         :disabled="!valid"
       >
         {{ __('Aplicar') }}

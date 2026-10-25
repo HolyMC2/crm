@@ -89,9 +89,9 @@
             :style="`color:${gradeColor(row.grade)}`"
             >{{ row.grade }}</span
           >
-          <div class="h-2.5 min-w-0 flex-1 rounded-sm bg-surface-gray-2">
+          <div class="h-2.5 min-w-0 flex-1 rounded-1 bg-surface-gray-2">
             <div
-              class="h-full rounded-sm"
+              class="h-full rounded-1"
               :style="`width:${barPct(row.win_rate)}%;background:${gradeColor(row.grade)}`"
             />
           </div>
@@ -142,9 +142,9 @@
             <span class="w-16 flex-none truncate text-[11px] text-ink-gray-6">{{
               monthLabel(c.cohort)
             }}</span>
-            <div class="h-1.5 min-w-0 flex-1 rounded-sm bg-surface-gray-2">
+            <div class="h-1.5 min-w-0 flex-1 rounded-1 bg-surface-gray-2">
               <div
-                class="h-full rounded-sm bg-surface-gray-8"
+                class="h-full rounded-1 bg-surface-gray-8"
                 :style="`width:${barPct(c.win_rate)}%`"
               />
             </div>

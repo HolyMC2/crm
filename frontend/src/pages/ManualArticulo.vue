@@ -131,7 +131,7 @@
           v-if="confirmRetire"
           role="alertdialog"
           aria-labelledby="manual-retire-q"
-          class="mb-4 space-y-2 rounded-lg bg-surface-amber-1 p-3 text-sm text-ink-amber-8"
+          class="mb-4 space-y-2 rounded-6 bg-surface-amber-1 p-3 text-sm text-ink-amber-8"
         >
           <p id="manual-retire-q">
             {{
@@ -160,7 +160,7 @@
         <div
           v-if="notice"
           role="status"
-          class="mb-4 flex flex-wrap items-center gap-2 rounded-md bg-surface-green-1 px-3 py-2 text-sm text-ink-green-8"
+          class="mb-4 flex flex-wrap items-center gap-2 rounded-5 bg-surface-green-1 px-3 py-2 text-sm text-ink-green-8"
           data-testid="manual-article-notice"
         >
           <span class="min-w-0 flex-1">{{ notice.text }}</span>
@@ -175,7 +175,7 @@
         <div
           v-if="problem"
           role="alert"
-          class="mb-4 flex flex-wrap items-center gap-2 rounded-md bg-surface-red-1 px-3 py-2 text-sm text-ink-red-7"
+          class="mb-4 flex flex-wrap items-center gap-2 rounded-5 bg-surface-red-1 px-3 py-2 text-sm text-ink-red-7"
         >
           <span class="min-w-0 flex-1"
             ><strong>{{ problem.title }}.</strong> {{ problem.detail }}</span

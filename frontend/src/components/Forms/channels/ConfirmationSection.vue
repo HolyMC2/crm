@@ -24,7 +24,7 @@
       />
       <p
         v-if="selected?.template"
-        class="whitespace-pre-wrap rounded-md bg-surface-gray-2 p-2.5 text-p-sm text-ink-gray-7"
+        class="whitespace-pre-wrap rounded-5 bg-surface-gray-2 p-2.5 text-p-sm text-ink-gray-7"
       >
         {{ selected.template }}
       </p>

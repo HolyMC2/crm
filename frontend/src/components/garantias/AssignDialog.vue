@@ -5,7 +5,7 @@
         <li
           v-for="person in assignees"
           :key="person.user"
-          class="flex min-h-11 items-center justify-between gap-2 rounded-lg bg-surface-gray-1 px-3"
+          class="flex min-h-11 items-center justify-between gap-2 rounded-6 bg-surface-gray-1 px-3"
         >
           <span class="truncate text-sm">{{ person.full_name }}</span>
           <Button

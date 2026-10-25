@@ -28,7 +28,7 @@
         <select
           v-if="isManager || shopOptions.length > 1"
           v-model="shop"
-          class="rounded-lg border border-outline-gray-2 bg-surface-base px-2 py-1 text-[12px] font-semibold text-ink-gray-7"
+          class="rounded-6 border border-outline-gray-2 bg-surface-base px-2 py-1 text-[12px] font-semibold text-ink-gray-7"
           :title="__('Filtrar por sucursal')"
           @change="onShopChange"
         >
@@ -74,7 +74,7 @@
       <!-- empty -->
       <div
         v-else-if="!rows.length"
-        class="mx-auto mt-10 max-w-[520px] rounded-2xl border border-dashed border-outline-gray-2 bg-surface-base px-6 py-10 text-center"
+        class="mx-auto mt-10 max-w-[520px] rounded-8 border border-dashed border-outline-gray-2 bg-surface-base px-6 py-10 text-center"
       >
         <div class="text-[34px]">🌲</div>
         <div class="mt-2 text-[15px] font-bold text-ink-gray-8">
@@ -91,7 +91,7 @@
         </p>
         <router-link
           to="/social"
-          class="mt-4 inline-block rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2"
+          class="mt-4 inline-block rounded-6 border border-outline-gray-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2"
         >
           {{ __('Ir al calendario') }}
         </router-link>
@@ -103,7 +103,7 @@
           v-for="(row, i) in rows"
           :key="row.name"
           :data-testid="`evergreen-row-${i}`"
-          class="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl border border-outline-gray-2 bg-surface-base px-4 py-3"
+          class="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-7 border border-outline-gray-2 bg-surface-base px-4 py-3"
         >
           <!-- title + meta -->
           <div class="min-w-[180px] flex-1">
@@ -157,7 +157,7 @@
           <div v-if="isManager" class="flex items-center gap-2">
             <button
               :data-testid="`evergreen-recycle-${i}`"
-              class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-40"
+              class="rounded-6 px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-40"
               style="background: var(--brand)"
               :disabled="!available(row) || busy === row.name"
               :title="
@@ -171,7 +171,7 @@
             </button>
             <button
               :data-testid="`evergreen-toggle-${i}`"
-              class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2 disabled:opacity-40"
+              class="rounded-6 border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2 disabled:opacity-40"
               :disabled="busy === row.name"
               :title="__('Sacar de la rotación evergreen')"
               @click="askRemove(row)"

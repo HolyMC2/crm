@@ -3,7 +3,7 @@
     <svg
       ref="svg"
       :viewBox="`0 0 ${SIZE} ${SIZE}`"
-      class="touch-none cursor-pointer rounded-md border bg-surface-base"
+      class="touch-none cursor-pointer rounded-5 border bg-surface-base"
       :style="{ width: '180px', height: '180px' }"
       @pointerdown="onPointerDown"
       @pointermove="onPointerMove"

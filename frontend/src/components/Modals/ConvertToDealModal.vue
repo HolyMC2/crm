@@ -63,7 +63,7 @@
             v-for="contact in review.contacts"
             :key="contact.name"
             type="button"
-            class="block min-h-11 rounded border border-outline-gray-2 px-3"
+            class="block min-h-11 rounded-4 border border-outline-gray-2 px-3"
             @click="selectExistingContact(contact.name)"
           >
             {{ contact.full_name || contact.name }}
@@ -75,7 +75,7 @@
             v-for="organization in review.organizations"
             :key="organization.name"
             type="button"
-            class="block min-h-11 rounded border border-outline-gray-2 px-3"
+            class="block min-h-11 rounded-4 border border-outline-gray-2 px-3"
             @click="selectExistingOrganization(organization.name)"
           >
             {{ organization.organization_name || organization.name }}

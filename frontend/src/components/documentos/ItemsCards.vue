@@ -12,7 +12,7 @@
         <UiTag
           :as="row.item_code ? RouterLink : 'div'"
           :to="row.item_code ? productRoute(row.item_code) : undefined"
-          class="flex min-h-14 w-full items-start gap-3 rounded-xl border border-outline-gray-1 bg-surface-base px-3 py-2.5"
+          class="flex min-h-14 w-full items-start gap-3 rounded-7 border border-outline-gray-1 bg-surface-base px-3 py-2.5"
           :class="row.item_code ? 'hover:bg-surface-gray-1' : ''"
           data-testid="documentos-item"
         >
@@ -20,12 +20,12 @@
             v-if="row.image"
             :src="row.image"
             alt=""
-            class="size-12 flex-none rounded-lg object-cover"
+            class="size-12 flex-none rounded-6 object-cover"
             loading="lazy"
           />
           <span
             v-else
-            class="flex size-12 flex-none items-center justify-center rounded-lg bg-surface-gray-2 text-ink-gray-6"
+            class="flex size-12 flex-none items-center justify-center rounded-6 bg-surface-gray-2 text-ink-gray-6"
             aria-hidden="true"
           >
             <span class="lucide-package size-5" />

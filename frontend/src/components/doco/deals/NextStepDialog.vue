@@ -15,7 +15,7 @@
       <div
         v-else-if="!state"
         role="alert"
-        class="space-y-3 rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7"
+        class="space-y-3 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
       >
         <p>{{ nextStepDialog.error || __('This deal could not load.') }}</p>
         <Button :label="__('Retry')" @click="reload" />
@@ -122,7 +122,7 @@
         <div
           v-if="problem"
           role="alert"
-          class="space-y-2 rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7"
+          class="space-y-2 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
         >
           <p>{{ problem }}</p>
           <Button

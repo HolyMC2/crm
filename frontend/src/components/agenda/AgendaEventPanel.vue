@@ -74,7 +74,7 @@
     <header class="flex items-start gap-4">
       <span
         class="mt-2 h-3.5 w-3.5 shrink-0"
-        :class="task ? 'rounded-full border-2' : 'rounded'"
+        :class="task ? 'rounded-full border-2' : 'rounded-4'"
         :style="task ? { borderColor: color } : { background: color }"
         aria-hidden="true"
       />
@@ -139,7 +139,7 @@
     >
       <span class="shrink-0">{{ __('Assigned to') }}</span>
       <select
-        class="ag-panel__people min-h-9 min-w-0 flex-1 rounded border border-outline-gray-2 bg-surface-base px-2 text-sm text-ink-gray-9"
+        class="ag-panel__people min-h-9 min-w-0 flex-1 rounded-4 border border-outline-gray-2 bg-surface-base px-2 text-sm text-ink-gray-9"
         :value="assignee"
         :disabled="busy"
         :aria-label="__('Assigned to')"
@@ -226,8 +226,8 @@
 
     <template v-else-if="!task">
       <div v-if="loading" class="space-y-2" aria-busy="true">
-        <div class="h-4 w-2/3 animate-pulse rounded bg-surface-gray-2" />
-        <div class="h-4 w-1/2 animate-pulse rounded bg-surface-gray-2" />
+        <div class="h-4 w-2/3 animate-pulse rounded-4 bg-surface-gray-2" />
+        <div class="h-4 w-1/2 animate-pulse rounded-4 bg-surface-gray-2" />
       </div>
       <p v-else-if="error" role="alert" class="text-base text-ink-red-4">
         {{ error }}
@@ -385,7 +385,7 @@
         v-if="confirmCancel"
         role="alertdialog"
         :aria-label="__('Cancel event')"
-        class="rounded-lg border border-outline-gray-2 p-3"
+        class="rounded-6 border border-outline-gray-2 p-3"
       >
         <p class="text-base text-ink-gray-9">
           {{

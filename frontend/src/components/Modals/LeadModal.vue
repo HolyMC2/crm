@@ -37,7 +37,7 @@
               type="checkbox"
               :true-value="1"
               :false-value="0"
-              class="h-4 w-4 rounded border-outline-gray-3 text-green-600 focus:ring-0"
+              class="h-4 w-4 rounded-4 border-outline-gray-3 text-green-600 focus:ring-0"
             />
             {{ __('El teléfono tiene WhatsApp') }}
           </label>

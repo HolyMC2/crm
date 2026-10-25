@@ -11,7 +11,7 @@
     <component
       :is="tappable ? NativeButton : 'div'"
       class="min-w-0 flex-1 text-left"
-      :class="tappable ? 'min-h-11 rounded-lg focus-visible:outline-2' : ''"
+      :class="tappable ? 'min-h-11 rounded-6 focus-visible:outline-2' : ''"
       :aria-label="tappable ? __('Cambiar {0}', [field.label]) : undefined"
       @click="tappable && emit('edit', field)"
     >

@@ -49,7 +49,7 @@
       <div
         v-if="problem && !data"
         role="alert"
-        class="mb-4 space-y-3 rounded-xl bg-surface-red-1 p-4 text-ink-red-7"
+        class="mb-4 space-y-3 rounded-7 bg-surface-red-1 p-4 text-ink-red-7"
       >
         <p>
           <strong>{{ __('We could not load your day.') }}</strong>
@@ -60,7 +60,7 @@
       <p
         v-else-if="slow"
         role="status"
-        class="mb-4 flex flex-wrap items-center gap-2 rounded-lg bg-surface-gray-2 px-3 py-2 text-sm text-ink-gray-7"
+        class="mb-4 flex flex-wrap items-center gap-2 rounded-6 bg-surface-gray-2 px-3 py-2 text-sm text-ink-gray-7"
       >
         {{ __('This is taking longer than usual.') }}
         <Button variant="ghost" :label="__('Retry')" @click="refresh()" />
@@ -70,7 +70,7 @@
       <p
         v-if="allClear"
         role="status"
-        class="mb-4 flex items-center gap-2 rounded-xl border border-outline-gray-2 bg-surface-base px-4 py-3 text-base text-ink-gray-8"
+        class="mb-4 flex items-center gap-2 rounded-7 border border-outline-gray-2 bg-surface-base px-4 py-3 text-base text-ink-gray-8"
       >
         <span
           class="lucide-circle-check size-5 shrink-0 text-ink-green-8"
@@ -371,7 +371,7 @@
               <li v-for="choice in assignChoices" :key="choice.value">
                 <button
                   type="button"
-                  class="flex min-h-12 w-full items-center rounded-xl px-4 text-left text-base hover:bg-surface-gray-1"
+                  class="flex min-h-12 w-full items-center rounded-7 px-4 text-left text-base hover:bg-surface-gray-1"
                   @click="pickAssign(choice.value)"
                 >
                   {{ choice.label || choice.value }}
@@ -446,7 +446,7 @@
               v-for="item in shortcuts"
               :key="item.key"
               :to="item.to"
-              class="flex min-h-12 items-center gap-2 rounded-lg border border-outline-gray-2 px-3 text-sm font-medium text-ink-gray-8 hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
+              class="flex min-h-12 items-center gap-2 rounded-6 border border-outline-gray-2 px-3 text-sm font-medium text-ink-gray-8 hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
             >
               <span
                 :class="item.icon"
@@ -893,7 +893,7 @@ function choicesFor(card, row) {
 const REPAIR_SOURCE = 'taller.unassigned_repairs'
 // The same «Ver todos ›» as HoySection's header link.
 const MORE_LINK =
-  'ml-auto flex min-h-11 shrink-0 items-center rounded-lg px-2 text-sm font-medium text-ink-gray-7 hover:bg-surface-gray-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-8'
+  'ml-auto flex min-h-11 shrink-0 items-center rounded-6 px-2 text-sm font-medium text-ink-gray-7 hover:bg-surface-gray-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-8'
 function rowReference(card, row) {
   return card.key === REPAIR_SOURCE && row.name ? String(row.name) : ''
 }

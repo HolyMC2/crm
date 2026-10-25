@@ -55,7 +55,7 @@
     </p>
     <div
       v-if="open && options"
-      class="space-y-2 rounded-lg border border-outline-gray-2 p-2"
+      class="space-y-2 rounded-6 border border-outline-gray-2 p-2"
     >
       <FormControl
         v-if="options.length > 8"
@@ -71,11 +71,11 @@
       <ul class="max-h-72 overflow-y-auto">
         <li v-for="option in visible" :key="option.id">
           <label
-            class="flex min-h-11 cursor-pointer items-center gap-3 rounded px-2 hover:bg-surface-gray-1"
+            class="flex min-h-11 cursor-pointer items-center gap-3 rounded-4 px-2 hover:bg-surface-gray-1"
           >
             <input
               type="checkbox"
-              class="h-5 w-5 shrink-0 rounded"
+              class="h-5 w-5 shrink-0 rounded-4"
               :checked="modelValue.includes(option.id)"
               @change="toggle(option.id)"
             />

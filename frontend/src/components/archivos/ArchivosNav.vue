@@ -2,7 +2,7 @@
   <!-- Phones have no sidebar: one control that still shows both groups. -->
   <div v-if="mobile" class="grid gap-2">
     <select
-      class="h-11 w-full rounded border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9"
+      class="h-11 w-full rounded-4 border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9"
       :aria-label="__('List')"
       :value="currentValue"
       @change="pickMobile($event.target.value)"
@@ -44,7 +44,7 @@
       v-for="entry in bandejaEntries"
       :key="entry.value"
       type="button"
-      class="flex min-h-11 items-center gap-2.5 rounded-lg px-3 text-left text-sm hover:bg-surface-gray-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
+      class="flex min-h-11 items-center gap-2.5 rounded-6 px-3 text-left text-sm hover:bg-surface-gray-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
       :class="rowClass(view === entry.value && !currentKey)"
       :aria-current="view === entry.value ? 'page' : undefined"
       @click="$emit('select', { view: entry.value, key: '' })"
@@ -59,7 +59,7 @@
     <template v-for="entry in browseEntries" :key="entry.value">
       <button
         type="button"
-        class="flex min-h-11 items-center gap-2.5 rounded-lg px-3 text-left text-sm hover:bg-surface-gray-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
+        class="flex min-h-11 items-center gap-2.5 rounded-6 px-3 text-left text-sm hover:bg-surface-gray-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
         :class="[
           rowClass(view === entry.value && !currentKey),
           entry.value === 'carpeta' && dropTarget === ''
@@ -84,7 +84,7 @@
         <div
           v-for="folder in folderRows"
           :key="folder.name"
-          class="group flex min-h-9 items-center rounded-lg pr-1 text-sm hover:bg-surface-gray-2"
+          class="group flex min-h-9 items-center rounded-6 pr-1 text-sm hover:bg-surface-gray-2"
           :class="[
             view === 'carpeta' && currentKey === folder.name
               ? 'bg-surface-gray-2 font-semibold text-ink-gray-9'
@@ -137,7 +137,7 @@
           >
             <button
               type="button"
-              class="flex h-7 w-7 shrink-0 items-center justify-center rounded text-ink-gray-5 opacity-0 hover:bg-surface-gray-3 focus:opacity-100 group-hover:opacity-100"
+              class="flex h-7 w-7 shrink-0 items-center justify-center rounded-4 text-ink-gray-5 opacity-0 hover:bg-surface-gray-3 focus:opacity-100 group-hover:opacity-100"
               :aria-label="__('Folder actions')"
             >
               <LucideEllipsis class="h-4 w-4" />
@@ -146,7 +146,7 @@
         </div>
         <button
           type="button"
-          class="flex min-h-9 items-center gap-2 rounded-lg px-3 text-left text-sm text-ink-gray-6 hover:bg-surface-gray-2 hover:text-ink-gray-8"
+          class="flex min-h-9 items-center gap-2 rounded-6 px-3 text-left text-sm text-ink-gray-6 hover:bg-surface-gray-2 hover:text-ink-gray-8"
           @click="$emit('new-folder', currentFolderParent)"
         >
           <LucideFolderPlus class="h-3.5 w-3.5 shrink-0" />

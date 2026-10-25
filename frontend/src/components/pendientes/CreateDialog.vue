@@ -15,7 +15,7 @@
     >
       <p
         v-if="fixedReference"
-        class="rounded-lg bg-surface-gray-2 px-3 py-2 text-sm text-ink-gray-7"
+        class="rounded-6 bg-surface-gray-2 px-3 py-2 text-sm text-ink-gray-7"
       >
         {{
           __('On {0}', [
@@ -258,7 +258,7 @@
       <div
         v-if="problem"
         role="alert"
-        class="rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7"
+        class="rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
       >
         <strong>{{ problem.title }}.</strong> {{ problem.detail }}
       </div>

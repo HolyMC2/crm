@@ -32,7 +32,7 @@
       v-if="showList"
       :id="listId"
       role="listbox"
-      class="absolute left-0 right-0 top-full z-50 mt-1 max-h-56 overflow-y-auto rounded-lg border border-outline-gray-2 bg-surface-base p-1 shadow-lg"
+      class="absolute left-0 right-0 top-full z-50 mt-1 max-h-56 overflow-y-auto rounded-6 border border-outline-gray-2 bg-surface-base p-1 shadow-lg"
       @mousedown.prevent
     >
       <li
@@ -41,7 +41,7 @@
         :key="s.value"
         role="option"
         :aria-selected="i === active"
-        class="flex cursor-pointer items-center gap-2 truncate rounded-md px-2 py-1 text-sm text-ink-gray-8"
+        class="flex cursor-pointer items-center gap-2 truncate rounded-5 px-2 py-1 text-sm text-ink-gray-8"
         :class="i === active ? 'bg-surface-gray-2' : 'hover:bg-surface-gray-1'"
         @mouseenter="active = i"
         @click="choose(s.value)"
@@ -75,7 +75,7 @@ const props = defineProps({
   inputClass: {
     type: [String, Array, Object],
     default:
-      'w-full rounded border border-outline-gray-2 bg-surface-gray-2 px-2 py-1.5 text-sm text-ink-gray-8 placeholder-ink-gray-4 focus:border-outline-gray-4 focus:bg-surface-base focus:outline-none focus:ring-0',
+      'w-full rounded-4 border border-outline-gray-2 bg-surface-gray-2 px-2 py-1.5 text-sm text-ink-gray-8 placeholder-ink-gray-4 focus:border-outline-gray-4 focus:bg-surface-base focus:outline-none focus:ring-0',
   },
 })
 const emit = defineEmits(['update:modelValue', 'pick', 'enter'])

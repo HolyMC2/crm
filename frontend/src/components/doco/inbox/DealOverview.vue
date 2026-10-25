@@ -14,7 +14,7 @@
           </p>
         </div>
         <button
-          class="min-h-11 rounded-lg border border-outline-gray-2 bg-surface-base px-3 py-2 text-sm hover:bg-surface-gray-2 sm:min-h-0"
+          class="min-h-11 rounded-6 border border-outline-gray-2 bg-surface-base px-3 py-2 text-sm hover:bg-surface-gray-2 sm:min-h-0"
           :disabled="record.loading"
           @click="refresh"
         >
@@ -31,7 +31,7 @@
       </p>
       <template v-else-if="record.data">
         <section
-          class="rounded-xl border border-outline-gray-2 bg-surface-base p-4 sm:p-5"
+          class="rounded-7 border border-outline-gray-2 bg-surface-base p-4 sm:p-5"
           aria-label="Próximo seguimiento"
         >
           <div
@@ -70,7 +70,7 @@
             <div class="flex flex-wrap gap-2">
               <button
                 v-if="doc.next_activity_task"
-                class="min-h-11 rounded-lg bg-surface-green-3 px-3 py-2 text-sm font-semibold text-ink-green-9 hover:bg-surface-green-2 disabled:opacity-50 sm:min-h-0"
+                class="min-h-11 rounded-6 bg-surface-green-3 px-3 py-2 text-sm font-semibold text-ink-green-9 hover:bg-surface-green-2 disabled:opacity-50 sm:min-h-0"
                 :disabled="finishing"
                 :aria-keyshortcuts="'h'"
                 @click="completeTask"
@@ -80,7 +80,7 @@
               </button>
               <button
                 v-if="!closed"
-                class="min-h-11 rounded-lg bg-surface-gray-2 px-3 py-2 text-sm font-semibold text-ink-gray-8 hover:bg-surface-gray-3 disabled:opacity-50 sm:min-h-0"
+                class="min-h-11 rounded-6 bg-surface-gray-2 px-3 py-2 text-sm font-semibold text-ink-gray-8 hover:bg-surface-gray-3 disabled:opacity-50 sm:min-h-0"
                 :disabled="finishing"
                 :aria-keyshortcuts="'p'"
                 @click="snooze"
@@ -89,7 +89,7 @@
                 <kbd class="ml-1 hidden text-xs opacity-70 md:inline">P</kbd>
               </button>
               <button
-                class="min-h-11 rounded-lg bg-surface-gray-10 px-3 py-2 text-sm font-semibold text-ink-base hover:bg-surface-gray-9 sm:min-h-0"
+                class="min-h-11 rounded-6 bg-surface-gray-10 px-3 py-2 text-sm font-semibold text-ink-base hover:bg-surface-gray-9 sm:min-h-0"
                 :disabled="finishing"
                 :aria-keyshortcuts="'n'"
                 @click="schedule"
@@ -204,7 +204,7 @@
             </p>
             <ul
               v-else-if="repairs.data?.length"
-              class="divide-y divide-outline-gray-2 rounded-lg border border-outline-gray-2 bg-surface-base px-4"
+              class="divide-y divide-outline-gray-2 rounded-6 border border-outline-gray-2 bg-surface-base px-4"
             >
               <li v-for="ro in repairs.data" :key="ro.name" class="py-3">
                 <div class="flex flex-wrap items-center justify-between gap-2">
@@ -213,7 +213,7 @@
                     class="font-semibold text-ink-green-8 underline"
                     >{{ ro.device_model || ro.name }}</a
                   ><span
-                    class="rounded bg-surface-gray-2 px-2 py-1 text-xs font-medium"
+                    class="rounded-4 bg-surface-gray-2 px-2 py-1 text-xs font-medium"
                     >{{ ro.status }}</span
                   >
                 </div>
@@ -235,7 +235,7 @@
             </ul>
             <p
               v-else
-              class="rounded-lg border border-dashed border-outline-gray-3 p-4 text-sm text-ink-gray-5"
+              class="rounded-6 border border-dashed border-outline-gray-3 p-4 text-sm text-ink-gray-5"
             >
               {{
                 __(
@@ -258,7 +258,7 @@
             </div>
             <div
               v-if="salesDocsEnabled"
-              class="rounded-lg border border-outline-gray-2 bg-surface-base"
+              class="rounded-6 border border-outline-gray-2 bg-surface-base"
             >
               <DealCommercialDocs :deal="name" payment-link />
             </div>
@@ -271,7 +271,7 @@
             </p>
           </section>
         </div>
-        <div class="rounded-lg border border-outline-gray-2 bg-surface-base">
+        <div class="rounded-6 border border-outline-gray-2 bg-surface-base">
           <DealConversations :doctype="'CRM Deal'" :name="name" />
         </div>
       </template>

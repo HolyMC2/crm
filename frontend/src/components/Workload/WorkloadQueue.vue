@@ -16,13 +16,13 @@
       <div
         v-for="n in 5"
         :key="n"
-        class="h-11 animate-pulse rounded-md bg-surface-gray-2"
+        class="h-11 animate-pulse rounded-5 bg-surface-gray-2"
       />
     </div>
 
     <p
       v-else-if="!items.length"
-      class="rounded-lg border border-dashed border-outline-gray-2 p-4 text-sm text-ink-gray-6"
+      class="rounded-6 border border-dashed border-outline-gray-2 p-4 text-sm text-ink-gray-6"
     >
       {{ emptyText }}
     </p>
@@ -30,7 +30,7 @@
     <div
       v-else
       ref="listEl"
-      class="overflow-hidden rounded-lg border border-outline-gray-2"
+      class="overflow-hidden rounded-6 border border-outline-gray-2"
     >
       <div
         class="hidden gap-3 border-b border-outline-gray-2 bg-surface-gray-1 px-3 py-2 text-xs font-medium text-ink-gray-6 md:grid"
@@ -42,7 +42,7 @@
           type="button"
           role="checkbox"
           data-select-page
-          class="flex size-5 items-center justify-center rounded border border-outline-gray-3 text-ink-gray-7"
+          class="flex size-5 items-center justify-center rounded-4 border border-outline-gray-3 text-ink-gray-7"
           :aria-checked="allState"
           :aria-label="__('Seleccionar todos los de esta página')"
           :disabled="busy"
@@ -260,9 +260,9 @@ useListKeys({
 
 <style scoped>
 .wl-btn {
-  @apply min-h-9 rounded-md border border-outline-gray-2 bg-surface-base px-3 text-sm text-ink-gray-8 hover:bg-surface-gray-2 disabled:opacity-50;
+  @apply min-h-9 rounded-5 border border-outline-gray-2 bg-surface-base px-3 text-sm text-ink-gray-8 hover:bg-surface-gray-2 disabled:opacity-50;
 }
 .wl-notice {
-  @apply rounded-lg border border-outline-amber-2 bg-surface-amber-1 p-3 text-sm text-ink-amber-8;
+  @apply rounded-6 border border-outline-amber-2 bg-surface-amber-1 p-3 text-sm text-ink-amber-8;
 }
 </style>

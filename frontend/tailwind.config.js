@@ -57,14 +57,6 @@ export default {
       // frappe-ui's tailwind/migrate-tokens-v2.js applies: sm→1, bare→4,
       // md→5, lg→6, xl→7, 2xl→8). The B9 lane renames the sites and deletes
       // this block.
-      borderRadius: {
-        sm: 'var(--radius-1)',
-        DEFAULT: 'var(--radius-4)',
-        md: 'var(--radius-5)',
-        lg: 'var(--radius-6)',
-        xl: 'var(--radius-7)',
-        '2xl': 'var(--radius-8)',
-      },
     },
   },
   plugins: [],

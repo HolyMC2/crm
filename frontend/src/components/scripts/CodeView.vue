@@ -2,7 +2,7 @@
   <!-- Read-only code with line numbers: monospace, scrolls sideways inside
        its own box (never the page). -->
   <div
-    class="max-h-[60vh] overflow-auto rounded-lg border border-outline-gray-2 bg-surface-gray-1"
+    class="max-h-[60vh] overflow-auto rounded-6 border border-outline-gray-2 bg-surface-gray-1"
     data-testid="scripts-code"
   >
     <p v-if="!lines.length" class="px-4 py-3 text-base text-ink-gray-6">

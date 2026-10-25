@@ -26,13 +26,13 @@
       <div
         v-for="n in 4"
         :key="n"
-        class="h-14 animate-pulse rounded-lg bg-surface-gray-2"
+        class="h-14 animate-pulse rounded-6 bg-surface-gray-2"
       />
     </div>
 
     <p
       v-else-if="!rows.length"
-      class="rounded-lg border border-dashed border-outline-gray-2 p-4 text-sm text-ink-gray-6"
+      class="rounded-6 border border-dashed border-outline-gray-2 p-4 text-sm text-ink-gray-6"
     >
       {{ __('Nadie en la rotación') }}
     </p>
@@ -58,7 +58,7 @@
       </li>
     </ul>
 
-    <div v-else class="overflow-hidden rounded-lg border border-outline-gray-2">
+    <div v-else class="overflow-hidden rounded-6 border border-outline-gray-2">
       <div
         class="hidden gap-3 border-b border-outline-gray-2 bg-surface-gray-1 px-3 py-2 text-xs font-medium text-ink-gray-6 md:grid"
         :class="gridClass"
@@ -95,7 +95,7 @@
             <div class="flex flex-wrap items-center gap-x-2 text-xs">
               <span
                 v-if="riskText(row.risk)"
-                class="rounded px-1.5 py-0.5"
+                class="rounded-4 px-1.5 py-0.5"
                 :class="riskClass(row.risk)"
                 >{{ riskText(row.risk) }}</span
               >
@@ -114,7 +114,7 @@
             v-for="stat in stats(row)"
             :key="stat.key"
             type="button"
-            class="order-3 flex min-h-11 flex-col items-start rounded-md px-2 py-1 text-left hover:bg-surface-gray-2 disabled:opacity-60 md:order-none md:min-h-9 md:items-end md:text-right"
+            class="order-3 flex min-h-11 flex-col items-start rounded-5 px-2 py-1 text-left hover:bg-surface-gray-2 disabled:opacity-60 md:order-none md:min-h-9 md:items-end md:text-right"
             :class="
               activeOwner === row.user && activeBucket === stat.bucket
                 ? 'ring-1 ring-outline-gray-3'
@@ -352,6 +352,6 @@ function shiftLabel(value) {
 
 <style scoped>
 .wl-btn {
-  @apply min-h-9 rounded-md border border-outline-gray-2 bg-surface-base px-3 text-sm text-ink-gray-8 hover:bg-surface-gray-2 disabled:opacity-50;
+  @apply min-h-9 rounded-5 border border-outline-gray-2 bg-surface-base px-3 text-sm text-ink-gray-8 hover:bg-surface-gray-2 disabled:opacity-50;
 }
 </style>

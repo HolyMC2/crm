@@ -16,7 +16,7 @@
 
       <!-- Already repeating -->
       <template v-else-if="info?.actual">
-        <div class="space-y-1 rounded-lg bg-surface-gray-1 p-3">
+        <div class="space-y-1 rounded-6 bg-surface-gray-1 p-3">
           <p class="text-base-medium text-ink-gray-9">
             Se repite {{ (info.actual.frecuencia_texto || '').toLowerCase() }}
           </p>
@@ -119,7 +119,7 @@
 
         <p
           v-if="resumen"
-          class="rounded-lg bg-surface-gray-1 p-3 text-base text-ink-gray-9"
+          class="rounded-6 bg-surface-gray-1 p-3 text-base text-ink-gray-9"
           data-repetir-resumen
         >
           {{ resumen }}

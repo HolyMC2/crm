@@ -20,7 +20,7 @@
             })),
           ]"
         />
-        <p v-else class="rounded-lg bg-surface-gray-2 p-3 text-sm">
+        <p v-else class="rounded-6 bg-surface-gray-2 p-3 text-sm">
           {{
             claim
               ? __(

@@ -78,7 +78,7 @@
           @click="openShortcutSheet()"
         >
           <kbd
-            class="rounded border border-outline-gray-2 px-1.5 py-0.5 text-xs"
+            class="rounded-4 border border-outline-gray-2 px-1.5 py-0.5 text-xs"
             >?</kbd
           >
           {{ __('Keyboard shortcuts') }}
@@ -95,7 +95,7 @@
       <p
         v-if="boot?.setup_note"
         role="status"
-        class="mx-4 my-3 rounded-md bg-surface-amber-1 px-3 py-2 text-sm text-ink-amber-8 sm:mx-6 sm:mt-0"
+        class="mx-4 my-3 rounded-5 bg-surface-amber-1 px-3 py-2 text-sm text-ink-amber-8 sm:mx-6 sm:mt-0"
       >
         {{ boot.setup_note }}
       </p>
@@ -164,7 +164,7 @@
       <div
         v-if="problem"
         role="alert"
-        class="mx-4 mb-3 rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7 sm:mx-6"
+        class="mx-4 mb-3 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7 sm:mx-6"
       >
         <strong>{{ problem.title }}.</strong> {{ problem.detail }}
         <Button
@@ -242,7 +242,7 @@
               >
                 <input
                   type="checkbox"
-                  class="h-5 w-5 rounded"
+                  class="h-5 w-5 rounded-4"
                   :checked="list.selected.value.has(row.name)"
                   @change="list.toggleRow(row)"
                 />

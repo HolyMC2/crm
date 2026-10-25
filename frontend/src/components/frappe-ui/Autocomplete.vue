@@ -24,7 +24,7 @@
               <button
                 v-bind="targetAttrs"
                 :aria-describedby="selectedValue ? valueId : undefined"
-                class="relative flex h-7 w-full items-center justify-between gap-2 rounded px-2 py-1 transition-colors pr-7"
+                class="relative flex h-7 w-full items-center justify-between gap-2 rounded-4 px-2 py-1 transition-colors pr-7"
                 :class="inputClasses"
                 @click="() => !disabled && togglePopover()"
               >
@@ -56,7 +56,7 @@
       <template #default="{ open }">
         <div v-show="open">
           <div
-            class="relative mt-1 rounded-lg bg-surface-elevation-2 text-base shadow-2xl max-w-[350px]"
+            class="relative mt-1 rounded-6 bg-surface-elevation-2 text-base shadow-2xl max-w-[350px]"
           >
             <div class="relative px-1.5 pt-1.5">
               <ComboboxInput
@@ -108,7 +108,7 @@
                 >
                   <li
                     :class="[
-                      'flex cursor-pointer items-center rounded px-2.5 py-1.5 text-base',
+                      'flex cursor-pointer items-center rounded-4 px-2.5 py-1.5 text-base',
                       { 'bg-surface-gray-3': active },
                     ]"
                   >
@@ -129,7 +129,7 @@
               </div>
               <li
                 v-if="groups.length == 0"
-                class="my-1.5 rounded-md px-2.5 py-1.5 text-base text-ink-gray-5"
+                class="my-1.5 rounded-5 px-2.5 py-1.5 text-base text-ink-gray-5"
               >
                 {{ __('No results found') }}
               </li>
@@ -317,10 +317,10 @@ const textColor = computed(() => {
 
 const inputClasses = computed(() => {
   let sizeClasses = {
-    sm: 'text-base rounded h-7',
-    md: 'text-base rounded h-8',
-    lg: 'text-lg rounded-md h-10',
-    xl: 'text-2xl rounded-md h-10',
+    sm: 'text-base rounded-4 h-7',
+    md: 'text-base rounded-4 h-8',
+    lg: 'text-lg rounded-5 h-10',
+    xl: 'text-2xl rounded-5 h-10',
   }[props.size]
 
   let paddingClasses = {

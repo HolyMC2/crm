@@ -16,7 +16,7 @@
       type="search"
       autocomplete="off"
       :placeholder="modelValue ? modelValue.title : 'Busca un documento'"
-      class="mt-1 min-h-11 w-full rounded-lg border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9"
+      class="mt-1 min-h-11 w-full rounded-6 border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9"
       data-testid="impresion-registro"
       @focus="open = true"
       @keydown.esc="open = false"
@@ -24,7 +24,7 @@
 
     <ul
       v-if="open && (results.length || searching || message)"
-      class="absolute inset-x-0 z-10 mt-1 overflow-hidden rounded-lg border border-outline-gray-2 bg-surface-base shadow-xl"
+      class="absolute inset-x-0 z-10 mt-1 overflow-hidden rounded-6 border border-outline-gray-2 bg-surface-base shadow-xl"
     >
       <li
         v-if="searching && !results.length"

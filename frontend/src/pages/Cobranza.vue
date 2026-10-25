@@ -94,7 +94,7 @@
           @click="openShortcutSheet()"
         >
           <kbd
-            class="rounded border border-outline-gray-2 px-1.5 py-0.5 text-xs"
+            class="rounded-4 border border-outline-gray-2 px-1.5 py-0.5 text-xs"
             >?</kbd
           >
           {{ __('Keyboard shortcuts') }}
@@ -128,7 +128,7 @@
       </button>
       <section
         v-else-if="auto"
-        class="mx-4 my-3 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-outline-gray-2 p-3 sm:mx-6 sm:mt-0 sm:max-w-3xl"
+        class="mx-4 my-3 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-6 border border-outline-gray-2 p-3 sm:mx-6 sm:mt-0 sm:max-w-3xl"
         :aria-label="__('Automatic payment reminders')"
         data-auto-card
       >
@@ -174,7 +174,7 @@
         <div
           v-for="card in statCards"
           :key="card.key"
-          class="rounded-lg bg-surface-gray-1 p-2"
+          class="rounded-6 bg-surface-gray-1 p-2"
         >
           <dt class="text-xs text-ink-gray-6">{{ card.label }}</dt>
           <dd
@@ -278,7 +278,7 @@
       <div
         v-if="problem"
         role="alert"
-        class="mx-4 mb-3 rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7 sm:mx-6"
+        class="mx-4 mb-3 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7 sm:mx-6"
       >
         <strong>{{ problem.title }}.</strong> {{ problem.detail }}
         <Button
@@ -339,7 +339,7 @@
               >
                 <input
                   type="checkbox"
-                  class="h-5 w-5 rounded"
+                  class="h-5 w-5 rounded-4"
                   :checked="selected.has(rowKey(row))"
                   @change="toggleRow(row)"
                 />

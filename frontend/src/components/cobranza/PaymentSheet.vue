@@ -13,7 +13,7 @@
     <div
       v-if="loadError"
       role="alert"
-      class="rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7"
+      class="rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
     >
       <strong>{{ loadError.title }}.</strong> {{ loadError.detail }}
       <Button class="ml-2" :label="__('Retry', null, CTX)" @click="load" />
@@ -24,7 +24,7 @@
       <div
         v-if="!ctx.can_pay"
         role="alert"
-        class="space-y-2 rounded-lg bg-surface-amber-1 p-3 text-sm"
+        class="space-y-2 rounded-6 bg-surface-amber-1 p-3 text-sm"
         data-payment-refused
       >
         <p>{{ ctx.problem }}</p>
@@ -49,7 +49,7 @@
             {{ __('Invoices this payment settles') }}
           </legend>
           <ul
-            class="divide-y divide-outline-gray-1 rounded-lg border border-outline-gray-2"
+            class="divide-y divide-outline-gray-1 rounded-6 border border-outline-gray-2"
           >
             <li v-for="inv in ctx.invoices" :key="inv.name">
               <label
@@ -57,7 +57,7 @@
               >
                 <input
                   type="checkbox"
-                  class="h-5 w-5 shrink-0 rounded"
+                  class="h-5 w-5 shrink-0 rounded-4"
                   :checked="form.invoices.includes(inv.name)"
                   @change="toggle(inv.name)"
                 />
@@ -151,7 +151,7 @@
         <div
           v-if="problem"
           role="status"
-          class="space-y-2 rounded-lg bg-surface-amber-1 p-3 text-sm"
+          class="space-y-2 rounded-6 bg-surface-amber-1 p-3 text-sm"
           data-payment-problem
         >
           <p>{{ problem.text }}</p>
@@ -175,7 +175,7 @@
         <div
           v-if="saveError"
           role="alert"
-          class="rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7"
+          class="rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
         >
           <strong>{{ saveError.title }}.</strong> {{ saveError.detail }}
           <!-- Refused by the server: the draft stays; ask for access or collect at the register. -->

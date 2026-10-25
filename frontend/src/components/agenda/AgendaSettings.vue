@@ -15,7 +15,7 @@
             v-for="entry in sections"
             :key="entry.value"
             type="button"
-            class="flex min-h-10 items-center gap-2 rounded-lg px-3 text-left text-sm"
+            class="flex min-h-10 items-center gap-2 rounded-6 px-3 text-left text-sm"
             :class="
               section === entry.value
                 ? 'bg-surface-gray-2 font-semibold text-ink-gray-9'
@@ -127,7 +127,7 @@
             <label class="flex items-center gap-3 text-sm text-ink-gray-9">
               <input
                 type="checkbox"
-                class="h-4 w-4 rounded"
+                class="h-4 w-4 rounded-4"
                 :checked="calendar.visible"
                 :disabled="calendar.blocked"
                 @change="emit('toggle', calendar.key)"
@@ -173,7 +173,7 @@
 
         <!-- Sync -->
         <div v-else class="flex min-w-0 flex-1 flex-col gap-5">
-          <section class="rounded-xl border border-outline-gray-2 p-4">
+          <section class="rounded-7 border border-outline-gray-2 p-4">
             <div class="flex items-start gap-3">
               <span
                 class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-surface-gray-2 text-lg font-bold text-ink-gray-8"
@@ -234,7 +234,7 @@
             </div>
           </section>
 
-          <section class="rounded-xl border border-outline-gray-2 p-4">
+          <section class="rounded-7 border border-outline-gray-2 p-4">
             <h3 class="text-base font-semibold text-ink-gray-9">
               {{ __('Subscribe from Outlook, Apple or any calendar') }}
             </h3>
@@ -250,7 +250,7 @@
                 <input
                   :value="ics.url"
                   readonly
-                  class="min-w-0 flex-1 rounded-md bg-surface-gray-2 px-2 py-1.5 font-mono text-xs text-ink-gray-8"
+                  class="min-w-0 flex-1 rounded-5 bg-surface-gray-2 px-2 py-1.5 font-mono text-xs text-ink-gray-8"
                   :aria-label="__('Subscription link')"
                   @focus="$event.target.select()"
                 />

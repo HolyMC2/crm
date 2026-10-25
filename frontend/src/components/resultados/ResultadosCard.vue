@@ -3,13 +3,13 @@
     :id="`card-${cardKey}`"
     :data-testid="`resultados-card-${cardKey}`"
     :data-state="state"
-    class="flex min-w-0 flex-col gap-3 rounded-xl border border-outline-gray-2 bg-surface-base p-4 sm:p-5"
+    class="flex min-w-0 flex-col gap-3 rounded-7 border border-outline-gray-2 bg-surface-base p-4 sm:p-5"
     :class="[span, state === 'ready' || state === 'loading' ? 'min-h-44' : '']"
     :aria-busy="state === 'loading' ? 'true' : undefined"
   >
     <header class="flex items-center gap-2.5">
       <span
-        class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-surface-gray-2 text-ink-gray-7"
+        class="flex size-8 shrink-0 items-center justify-center rounded-6 bg-surface-gray-2 text-ink-gray-7"
         aria-hidden="true"
       >
         <span :class="icon" class="size-4" />
@@ -44,10 +44,10 @@
     </header>
 
     <template v-if="state === 'loading'">
-      <div class="h-8 w-32 animate-pulse rounded bg-surface-gray-2" />
-      <div class="h-4 w-48 animate-pulse rounded bg-surface-gray-2" />
+      <div class="h-8 w-32 animate-pulse rounded-4 bg-surface-gray-2" />
+      <div class="h-4 w-48 animate-pulse rounded-4 bg-surface-gray-2" />
       <div
-        class="mt-auto animate-pulse rounded-lg bg-surface-gray-2"
+        class="mt-auto animate-pulse rounded-6 bg-surface-gray-2"
         :class="size ? 'h-32' : 'h-8'"
       />
     </template>
@@ -175,7 +175,7 @@
           v-if="attentionHref"
           :href="attentionHref"
           data-testid="attention"
-          class="flex min-h-11 items-center gap-2 rounded-lg bg-surface-amber-1 px-3 text-sm font-medium text-ink-amber-8 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
+          class="flex min-h-11 items-center gap-2 rounded-6 bg-surface-amber-1 px-3 text-sm font-medium text-ink-amber-8 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
           @click="follow($event, attentionHref)"
         >
           <span

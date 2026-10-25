@@ -75,7 +75,7 @@
 
     <div
       v-if="cita.state === 'missed' && whatsapp"
-      class="rounded-lg border border-outline-gray-2 p-3"
+      class="rounded-6 border border-outline-gray-2 p-3"
       role="status"
     >
       <p class="text-base text-ink-gray-9">
@@ -83,7 +83,7 @@
       </p>
       <a
         v-if="whatsapp.url"
-        class="mt-2 inline-flex min-h-11 items-center rounded-md bg-surface-gray-2 px-3 text-base-medium text-ink-gray-9 hover:bg-surface-gray-3"
+        class="mt-2 inline-flex min-h-11 items-center rounded-5 bg-surface-gray-2 px-3 text-base-medium text-ink-gray-9 hover:bg-surface-gray-3"
         :href="whatsapp.url"
         target="_blank"
         rel="noopener"
@@ -94,7 +94,7 @@
 
     <div
       v-if="rescheduling"
-      class="rounded-lg border border-outline-gray-2 p-3"
+      class="rounded-6 border border-outline-gray-2 p-3"
       :aria-label="__('Choose a new time')"
     >
       <label class="block text-sm text-ink-gray-7" :for="dayId">{{
@@ -103,7 +103,7 @@
       <select
         :id="dayId"
         v-model="day"
-        class="mt-1 min-h-11 w-full rounded border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9"
+        class="mt-1 min-h-11 w-full rounded-4 border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9"
       >
         <option v-for="row in days" :key="row.date" :value="row.date">
           {{ dayLabel(row.date) }}
@@ -144,7 +144,7 @@
     >
       <a
         v-if="actionIds.includes('receive')"
-        class="inline-flex min-h-11 flex-1 items-center justify-center rounded-md bg-surface-gray-10 px-4 text-base-medium text-ink-base hover:bg-surface-gray-9 sm:flex-none"
+        class="inline-flex min-h-11 flex-1 items-center justify-center rounded-5 bg-surface-gray-10 px-4 text-base-medium text-ink-base hover:bg-surface-gray-9 sm:flex-none"
         :href="receiveUrl(cita, returnTo)"
         >{{ __('Receive device') }}</a
       >
@@ -187,7 +187,7 @@
       v-if="confirmCancel"
       role="alertdialog"
       :aria-label="__('Cancel appointment')"
-      class="rounded-lg border border-outline-gray-2 p-3"
+      class="rounded-6 border border-outline-gray-2 p-3"
     >
       <p class="text-base text-ink-gray-9">
         {{ __('Cancel the appointment of {0}?', [cita.customer]) }}

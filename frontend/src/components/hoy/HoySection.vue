@@ -1,7 +1,7 @@
 <template>
   <section
     :aria-labelledby="headingId"
-    class="rounded-xl border border-outline-gray-2 bg-surface-base"
+    class="rounded-7 border border-outline-gray-2 bg-surface-base"
     :aria-busy="skeleton || undefined"
   >
     <!-- The title keeps its row; «Ver todos ›» drops below it (right) when both do not fit. -->
@@ -27,7 +27,7 @@
       <RouterLink
         v-if="more && more.to"
         :to="more.to"
-        class="ml-auto flex min-h-11 shrink-0 items-center rounded-lg px-2 text-sm font-medium text-ink-gray-7 hover:bg-surface-gray-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-8"
+        class="ml-auto flex min-h-11 shrink-0 items-center rounded-6 px-2 text-sm font-medium text-ink-gray-7 hover:bg-surface-gray-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-8"
         >{{ more.label }}
         <span class="lucide-chevron-right ml-0.5 size-4" aria-hidden="true"
       /></RouterLink>
@@ -36,7 +36,7 @@
       <div
         v-for="n in skeletonRows"
         :key="n"
-        class="h-11 animate-pulse rounded-lg bg-surface-gray-2"
+        class="h-11 animate-pulse rounded-6 bg-surface-gray-2"
       />
     </div>
     <p
@@ -48,7 +48,7 @@
       <button
         v-if="failed"
         type="button"
-        class="ml-1 min-h-11 rounded font-medium text-ink-gray-8 underline underline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-0"
+        class="ml-1 min-h-11 rounded-4 font-medium text-ink-gray-8 underline underline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-0"
         @click="$emit('retry')"
       >
         {{ __('Retry') }}

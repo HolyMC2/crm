@@ -18,7 +18,7 @@
         <div
           v-if="problem"
           role="alert"
-          class="rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7"
+          class="rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
         >
           <strong>{{ problem.title }}.</strong> {{ problem.detail }}
           <Button class="ml-2" :label="__('Retry', null, CTX)" @click="load" />
@@ -46,7 +46,7 @@
               <dd>
                 <select
                   v-model="selection.recipient"
-                  class="min-h-9 w-full rounded border border-outline-gray-2 bg-surface-base px-2 text-sm"
+                  class="min-h-9 w-full rounded-4 border border-outline-gray-2 bg-surface-base px-2 text-sm"
                   :aria-label="__('Customer number')"
                   @change="load"
                 >
@@ -65,7 +65,7 @@
               <dd>
                 <select
                   v-model="selection.account"
-                  class="min-h-9 w-full rounded border border-outline-gray-2 bg-surface-base px-2 text-sm"
+                  class="min-h-9 w-full rounded-4 border border-outline-gray-2 bg-surface-base px-2 text-sm"
                   :aria-label="__('WhatsApp account')"
                   @change="load"
                 >
@@ -90,7 +90,7 @@
           />
           <div
             v-else-if="context.template"
-            class="rounded-lg bg-surface-gray-1 p-3 text-sm"
+            class="rounded-6 bg-surface-gray-1 p-3 text-sm"
           >
             <p class="mb-1 text-ink-gray-6">
               {{
@@ -106,14 +106,14 @@
           <div
             v-if="blocker"
             role="alert"
-            class="space-y-2 rounded-lg bg-surface-amber-1 p-3 text-sm text-ink-gray-8"
+            class="space-y-2 rounded-6 bg-surface-amber-1 p-3 text-sm text-ink-gray-8"
           >
             <p>{{ blocker.message }}</p>
             <div class="flex flex-wrap items-center gap-2">
               <template v-for="action in blocker.actions" :key="action">
                 <a
                   v-if="action === 'download'"
-                  class="inline-flex min-h-9 items-center rounded px-2 text-ink-blue-link underline"
+                  class="inline-flex min-h-9 items-center rounded-4 px-2 text-ink-blue-link underline"
                   :href="downloadUrl(doctype, name, context.account)"
                   target="_blank"
                   rel="noopener"
@@ -121,7 +121,7 @@
                 >
                 <a
                   v-else-if="action === 'device_share' && context.share"
-                  class="inline-flex min-h-9 items-center rounded px-2 text-ink-blue-link underline"
+                  class="inline-flex min-h-9 items-center rounded-4 px-2 text-ink-blue-link underline"
                   :href="waLink(context.share.wa_digits, context.share.text)"
                   target="_blank"
                   rel="noopener"
@@ -129,7 +129,7 @@
                 >
                 <a
                   v-else-if="action === 'configure'"
-                  class="inline-flex min-h-9 items-center rounded px-2 text-ink-blue-link underline"
+                  class="inline-flex min-h-9 items-center rounded-4 px-2 text-ink-blue-link underline"
                   href="/app/whatsapp-document-settings"
                   >{{ __(SEND_ACTION_LABELS.configure) }}</a
                 >
@@ -141,7 +141,7 @@
                       'reopen_conversation',
                     ].includes(action)
                   "
-                  class="inline-flex min-h-9 items-center rounded px-2 text-ink-blue-link underline"
+                  class="inline-flex min-h-9 items-center rounded-4 px-2 text-ink-blue-link underline"
                   href="/crm/inbox"
                   >{{ __(SEND_ACTION_LABELS[action]) }}</a
                 >
@@ -186,7 +186,7 @@
           <p
             v-if="state"
             role="status"
-            class="rounded-lg bg-surface-gray-1 p-3 text-sm"
+            class="rounded-6 bg-surface-gray-1 p-3 text-sm"
           >
             {{ __('WhatsApp: {0}', [state.label]) }}
             <span v-if="state.reason"> — {{ state.reason }}</span>

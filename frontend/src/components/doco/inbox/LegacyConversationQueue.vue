@@ -78,7 +78,7 @@
             {{ unattendedTotal }}
           </span>
           <button
-            class="min-h-11 rounded-lg px-2.5 py-1 text-[12px] font-semibold text-white sm:min-h-0"
+            class="min-h-11 rounded-6 px-2.5 py-1 text-[12px] font-semibold text-white sm:min-h-0"
             style="background: var(--brand)"
             :aria-label="__('New Deal')"
             @click="newDeal"
@@ -366,7 +366,7 @@
         class="mb-1.5"
       >
         <button
-          class="flex w-full items-center gap-1.5 rounded-md px-1.5 py-1 text-[10px] font-bold uppercase tracking-wide text-ink-gray-5 hover:bg-surface-gray-2"
+          class="flex w-full items-center gap-1.5 rounded-5 px-1.5 py-1 text-[10px] font-bold uppercase tracking-wide text-ink-gray-5 hover:bg-surface-gray-2"
           :aria-expanded="showCleared"
           @click="toggleCleared"
         >
@@ -446,7 +446,7 @@
         class="mb-1.5"
       >
         <button
-          class="flex w-full items-center gap-1.5 rounded-md px-1.5 py-1 text-[10px] font-bold uppercase tracking-wide text-ink-gray-5 hover:bg-surface-gray-2"
+          class="flex w-full items-center gap-1.5 rounded-5 px-1.5 py-1 text-[10px] font-bold uppercase tracking-wide text-ink-gray-5 hover:bg-surface-gray-2"
           :aria-expanded="showArchived"
           @click="toggleArchived"
         >
@@ -691,7 +691,7 @@
             <span class="truncate">{{ g.message || '—' }}</span>
             <span
               v-if="g.lead"
-              class="flex-none rounded px-1 text-[9px] font-semibold text-ink-violet-8 bg-surface-violet-2"
+              class="flex-none rounded-4 px-1 text-[9px] font-semibold text-ink-violet-8 bg-surface-violet-2"
               >{{ __('Lead') }}</span
             >
           </div>
@@ -718,15 +718,15 @@
             <span class="skel h-[30px] w-[30px] flex-none rounded-full" />
             <div class="min-w-0 flex-1">
               <div
-                class="skel mb-1.5 h-3 rounded"
+                class="skel mb-1.5 h-3 rounded-4"
                 :style="`width:${55 + ((i * 13) % 35)}%`"
               />
               <div
-                class="skel h-2.5 rounded"
+                class="skel h-2.5 rounded-4"
                 :style="`width:${68 - ((i * 9) % 30)}%`"
               />
             </div>
-            <span class="skel h-2.5 w-8 flex-none rounded" />
+            <span class="skel h-2.5 w-8 flex-none rounded-4" />
           </div>
         </div>
         <div
@@ -871,7 +871,7 @@
               <!-- Lead vs Trato (Deal) — leads now share the queue -->
               <span
                 v-if="r.ref_doctype === 'CRM Lead'"
-                class="rounded px-1.5 py-px text-[9.5px] font-semibold text-ink-violet-8 bg-surface-violet-2"
+                class="rounded-4 px-1.5 py-px text-[9.5px] font-semibold text-ink-violet-8 bg-surface-violet-2"
               >
                 {{ __('Lead') }}
               </span>
@@ -881,7 +881,7 @@
             not on open — it is not a read receipt. The × resolves it without asking. -->
               <span
                 v-if="dueChip(r)"
-                class="inline-flex items-center gap-0.5 rounded py-px pl-1.5 pr-0.5 text-[9.5px] font-semibold"
+                class="inline-flex items-center gap-0.5 rounded-4 py-px pl-1.5 pr-0.5 text-[9.5px] font-semibold"
                 :class="CHIP_CLASS[dueChip(r).tone]"
                 :title="
                   __(
@@ -904,7 +904,7 @@
               </span>
               <span
                 v-if="r.snoozed_until"
-                class="rounded bg-surface-violet-2 px-1.5 py-px text-[9.5px] font-semibold text-ink-violet-8"
+                class="rounded-4 bg-surface-violet-2 px-1.5 py-px text-[9.5px] font-semibold text-ink-violet-8"
                 :title="__('Pospuesta — reaparece sola')"
               >
                 💤 {{ fmtSnooze(r.snoozed_until) }}
@@ -914,7 +914,7 @@
                row also floats to the top at wake time. Clears when you open it. -->
               <span
                 v-else-if="r.reactivated"
-                class="rounded bg-surface-violet-2 px-1.5 py-px text-[9.5px] font-semibold text-ink-violet-8"
+                class="rounded-4 bg-surface-violet-2 px-1.5 py-px text-[9.5px] font-semibold text-ink-violet-8"
                 :title="
                   __(
                     'Pospuesta vencida: volvió a la bandeja y nadie la ha abierto — desaparece al abrirla',
@@ -926,13 +926,13 @@
               <span
                 v-for="tg in (r.tags || []).slice(0, 2)"
                 :key="tg"
-                class="rounded bg-surface-gray-2 px-1.5 py-px text-[9.5px] font-semibold text-ink-gray-6"
+                class="rounded-4 bg-surface-gray-2 px-1.5 py-px text-[9.5px] font-semibold text-ink-gray-6"
               >
                 🏷 {{ tg }}
               </span>
               <span
                 v-if="r.status"
-                class="inline-flex items-center gap-1 rounded bg-surface-gray-2 px-1.5 py-px text-[9.5px] font-semibold text-ink-gray-7"
+                class="inline-flex items-center gap-1 rounded-4 bg-surface-gray-2 px-1.5 py-px text-[9.5px] font-semibold text-ink-gray-7"
               >
                 <span
                   class="h-1.5 w-1.5 flex-none rounded-full"
@@ -945,7 +945,7 @@
                Tratos list shows as separate columns. Absent without taller. -->
               <span
                 v-if="r.repair_order"
-                class="inline-flex items-center gap-1 rounded bg-surface-blue-1 px-1.5 py-px text-[9.5px] font-semibold text-ink-blue-8"
+                class="inline-flex items-center gap-1 rounded-4 bg-surface-blue-1 px-1.5 py-px text-[9.5px] font-semibold text-ink-blue-8"
                 :title="__('Orden de reparación más reciente de este trato')"
               >
                 🔧 {{ __('Reparación') }}
@@ -960,7 +960,7 @@
                the sales-docs flag is on and the deal owes something) -->
               <span
                 v-if="r.saldo"
-                class="rounded px-1.5 py-px text-[9.5px] font-semibold text-ink-amber-9 bg-surface-amber-1"
+                class="rounded-4 px-1.5 py-px text-[9.5px] font-semibold text-ink-amber-9 bg-surface-amber-1"
                 :title="__('Saldo pendiente en facturas del trato')"
               >
                 💰 {{ formatMoney(r.saldo) }}

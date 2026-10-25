@@ -34,7 +34,7 @@
           <component
             :is="selectable ? 'button' : 'div'"
             class="flex min-h-11 w-full min-w-0 items-center justify-between gap-3 py-2 text-left text-ink-gray-8"
-            :class="selectable && 'rounded hover:bg-surface-gray-2'"
+            :class="selectable && 'rounded-4 hover:bg-surface-gray-2'"
             @click="selectable && $emit('select', row)"
           >
             <span class="min-w-0 break-words">{{ row.label }}</span

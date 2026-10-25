@@ -19,7 +19,7 @@
     <p
       v-if="error"
       role="alert"
-      class="mx-4 my-3 rounded-lg bg-surface-red-1 p-4 text-sm text-ink-red-7"
+      class="mx-4 my-3 rounded-6 bg-surface-red-1 p-4 text-sm text-ink-red-7"
     >
       {{ error }}
     </p>
@@ -70,7 +70,7 @@
     <!-- The Mayor's four numbers for the period. -->
     <dl
       v-if="data?.mayor"
-      class="mx-4 grid flex-none grid-cols-2 gap-px overflow-hidden rounded-xl border border-outline-gray-2 bg-surface-gray-2"
+      class="mx-4 grid flex-none grid-cols-2 gap-px overflow-hidden rounded-7 border border-outline-gray-2 bg-surface-gray-2"
       data-bancos-mayor-resumen
     >
       <div v-for="cell in cells" :key="cell.label" class="bg-surface-base p-3">
@@ -92,7 +92,7 @@
       <div
         v-for="n in 5"
         :key="n"
-        class="h-14 animate-pulse rounded-lg bg-surface-gray-2"
+        class="h-14 animate-pulse rounded-6 bg-surface-gray-2"
       />
     </div>
     <EmptyState

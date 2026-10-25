@@ -66,7 +66,7 @@
           }"
         />
         <div
-          class="pointer-events-none absolute top-0 z-10 min-w-36 rounded-lg border border-outline-gray-2 bg-surface-base px-3 py-2 text-xs shadow-lg"
+          class="pointer-events-none absolute top-0 z-10 min-w-36 rounded-6 border border-outline-gray-2 bg-surface-base px-3 py-2 text-xs shadow-lg"
           :style="tooltipStyle"
           role="status"
         >
@@ -162,7 +162,7 @@
       <component
         :is="rowTag(row)"
         v-bind="rowAttrs(row)"
-        class="group flex w-full flex-col gap-1.5 rounded-lg px-2 py-2 text-left"
+        class="group flex w-full flex-col gap-1.5 rounded-6 px-2 py-2 text-left"
         :class="rowTag(row) !== 'div' ? 'hover:bg-surface-gray-1' : ''"
         @click="rowClick($event, row)"
       >
@@ -269,7 +269,7 @@
           >{{ compactValue(row.value, chart.format, currency) }}</span
         >
         <span
-          class="block w-full rounded-t-md transition-opacity group-hover:opacity-100"
+          class="block w-full rounded-t-5 transition-opacity group-hover:opacity-100"
           :style="{
             height: `${Math.max(row.value > 0 ? 3 : 1, (row.value / (columnMax || 1)) * 100)}%`,
             background: row.value > 0 ? 'var(--brand)' : undefined,
@@ -323,7 +323,7 @@
           <td
             v-for="(value, i) in row"
             :key="i"
-            class="h-7 rounded"
+            class="h-7 rounded-4"
             :class="value > 0 ? '' : 'bg-surface-gray-2'"
             :style="value > 0 ? heatStyle(value) : undefined"
             :title="`${axisLabel('weekday', day, true)} ${axisLabel('hour', chart.hours[i])} · ${formatValue(value, chart.format, currency)}`"

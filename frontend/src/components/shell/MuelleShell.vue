@@ -4,7 +4,7 @@
   >
     <a
       href="#muelle-content"
-      class="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-surface-base focus:p-3"
+      class="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-50 focus:rounded-4 focus:bg-surface-base focus:p-3"
       >{{ __('Skip to content') }}</a
     >
     <ShellRail

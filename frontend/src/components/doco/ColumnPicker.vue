@@ -7,7 +7,7 @@
 <template>
   <div class="relative inline-block">
     <button
-      class="flex items-center gap-1 rounded-lg border border-outline-gray-2 px-3 py-[7px] text-[12px] font-medium text-ink-gray-7"
+      class="flex items-center gap-1 rounded-6 border border-outline-gray-2 px-3 py-[7px] text-[12px] font-medium text-ink-gray-7"
       :title="__('Columnas')"
       @click="open = !open"
     >

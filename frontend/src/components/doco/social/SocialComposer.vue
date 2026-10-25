@@ -20,7 +20,7 @@
       :class="
         isMobile
           ? 'flex h-full min-h-0 flex-col bg-surface-base'
-          : 'overflow-hidden rounded-xl bg-surface-base'
+          : 'overflow-hidden rounded-7 bg-surface-base'
       "
     >
       <div
@@ -55,7 +55,7 @@
           :href="c.permalink"
           target="_blank"
           rel="noopener"
-          class="flex items-center gap-2 rounded-md bg-surface-green-2 px-2.5 py-1.5 text-[12px] font-semibold text-ink-green-8 hover:brightness-95"
+          class="flex items-center gap-2 rounded-5 bg-surface-green-2 px-2.5 py-1.5 text-[12px] font-semibold text-ink-green-8 hover:brightness-95"
         >
           <span>{{ c.channel.startsWith('IG') ? '🟪' : '🟦' }}</span>
           <span>{{ __('Publicado') }} · {{ c.channel }}</span>
@@ -64,7 +64,7 @@
         <div
           v-for="c in scheduledMeta"
           :key="'sch-' + c.channel"
-          class="flex items-center gap-2 rounded-md bg-surface-blue-2 px-2.5 py-1.5 text-[12px] font-semibold text-ink-blue-9"
+          class="flex items-center gap-2 rounded-5 bg-surface-blue-2 px-2.5 py-1.5 text-[12px] font-semibold text-ink-blue-9"
         >
           <span>{{ c.channel.startsWith('IG') ? '🟪' : '🟦' }}</span>
           <span>{{ __('Programado en Meta') }} · {{ c.channel }}</span>
@@ -75,7 +75,7 @@
         <div
           v-for="c in failedChannels"
           :key="'fail-' + c.channel"
-          class="rounded-md bg-surface-red-1 px-2.5 py-1.5 text-[11.5px] text-ink-red-8"
+          class="rounded-5 bg-surface-red-1 px-2.5 py-1.5 text-[11.5px] text-ink-red-8"
         >
           <span class="font-semibold"
             >{{ c.channel }} · {{ __('Falló') }}:</span
@@ -92,7 +92,7 @@
         <!-- approval hint: an AI/pending draft only publishes once approved; unapproved → auto-cancel at slot -->
         <div
           v-if="isPending"
-          class="mb-3 flex items-start gap-2 rounded-md bg-surface-amber-1 px-2.5 py-2 text-[11.5px] text-ink-amber-9 dark:bg-amber-300/10 dark:text-amber-200"
+          class="mb-3 flex items-start gap-2 rounded-5 bg-surface-amber-1 px-2.5 py-2 text-[11.5px] text-ink-amber-9 dark:bg-amber-300/10 dark:text-amber-200"
         >
           <span class="flex-none">⏳</span>
           <span>{{
@@ -109,7 +109,7 @@
           v-model="form.title"
           type="text"
           :disabled="!canCancel"
-          class="fld mb-3 w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[13px] disabled:opacity-60"
+          class="fld mb-3 w-full rounded-5 border border-outline-gray-2 px-2 py-1.5 text-[13px] disabled:opacity-60"
           :placeholder="__('Interno')"
         />
 
@@ -120,7 +120,7 @@
           v-if="isManager"
           v-model="form.shop"
           :disabled="!!form.name"
-          class="fld mb-3 w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[13px] disabled:opacity-60"
+          class="fld mb-3 w-full rounded-5 border border-outline-gray-2 px-2 py-1.5 text-[13px] disabled:opacity-60"
         >
           <option v-for="s in shopOptions" :key="s.name" :value="s.name">
             {{ s.shop_name }}
@@ -128,7 +128,7 @@
         </select>
         <div
           v-else
-          class="mb-3 rounded-md bg-surface-gray-1 px-2 py-1.5 text-[12.5px] text-ink-gray-7"
+          class="mb-3 rounded-5 bg-surface-gray-1 px-2 py-1.5 text-[12.5px] text-ink-gray-7"
         >
           {{ shopLabel(form.shop) || '—' }}
         </div>
@@ -142,7 +142,7 @@
             :key="c"
             type="button"
             :disabled="!canCancel"
-            class="rounded-md border px-2.5 py-1 text-[12px] font-medium disabled:opacity-60"
+            class="rounded-5 border px-2.5 py-1 text-[12px] font-medium disabled:opacity-60"
             :class="
               form.channels.includes(c)
                 ? 'border-green-500 dark:border-green-400 bg-surface-green-2 text-ink-green-8'
@@ -156,7 +156,7 @@
         <!-- IG publishing rides Meta's App Review; those channels Skip harmlessly until it clears -->
         <p
           v-if="hasIg"
-          class="mb-3 flex items-start gap-1.5 rounded-md bg-surface-amber-1 px-2 py-1.5 text-[10.5px] text-ink-amber-9 dark:bg-amber-300/10 dark:text-amber-200"
+          class="mb-3 flex items-start gap-1.5 rounded-5 bg-surface-amber-1 px-2 py-1.5 text-[10.5px] text-ink-amber-9 dark:bg-amber-300/10 dark:text-amber-200"
         >
           <span class="flex-none">ℹ️</span>
           <span>{{
@@ -181,7 +181,7 @@
             v-model="form.captions[c]"
             rows="2"
             :disabled="!canCancel"
-            class="fld w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[13px] disabled:opacity-60"
+            class="fld w-full rounded-5 border border-outline-gray-2 px-2 py-1.5 text-[13px] disabled:opacity-60"
             :placeholder="__('Caption…')"
           />
           <p v-if="c === 'IG Story'" class="mt-0.5 text-[10px] text-ink-gray-4">
@@ -207,7 +207,7 @@
 
         <div
           v-if="form.selected_products?.length"
-          class="mb-3 rounded-md bg-surface-gray-1 p-2 text-[11px] text-ink-gray-7"
+          class="mb-3 rounded-5 bg-surface-gray-1 p-2 text-[11px] text-ink-gray-7"
         >
           <div class="mb-1 font-semibold">
             {{ __('Productos seleccionados') }}
@@ -221,7 +221,7 @@
         <MediaEditor v-model:media="form.media" :can-cancel="canCancel" />
         <p
           v-if="form.source === 'AI Auto' && !form.media.length"
-          class="mb-3 rounded-md bg-surface-amber-1 px-2 py-1.5 text-[11px] text-ink-amber-9"
+          class="mb-3 rounded-5 bg-surface-amber-1 px-2 py-1.5 text-[11px] text-ink-amber-9"
         >
           {{
             __(
@@ -233,7 +233,7 @@
         <!-- owner feedback → AI rewrites the caption (same items/voice/facts) -->
         <div
           v-if="form.name && canCancel"
-          class="mb-3 rounded-md border border-outline-gray-2 bg-surface-gray-1 p-2"
+          class="mb-3 rounded-5 border border-outline-gray-2 bg-surface-gray-1 p-2"
         >
           <label class="mb-1 block text-[11px] font-semibold text-ink-gray-6">{{
             __('Feedback para la IA')
@@ -242,7 +242,7 @@
             <textarea
               v-model="aiFeedback"
               rows="2"
-              class="fld w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12.5px]"
+              class="fld w-full rounded-5 border border-outline-gray-2 px-2 py-1.5 text-[12.5px]"
               :placeholder="
                 __(
                   'Ej: más corto, enfocado en baterías para iPhone, sin emojis…',
@@ -250,7 +250,7 @@
               "
             />
             <button
-              class="shrink-0 rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 disabled:opacity-50"
+              class="shrink-0 rounded-6 border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 disabled:opacity-50"
               :disabled="busy || !aiFeedback.trim()"
               @click="regeneratePost"
             >
@@ -278,7 +278,7 @@
               v-model="form.scheduled_time"
               type="datetime-local"
               :disabled="!canCancel"
-              class="fld w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12.5px] disabled:opacity-60"
+              class="fld w-full rounded-5 border border-outline-gray-2 px-2 py-1.5 text-[12.5px] disabled:opacity-60"
             />
           </div>
           <div>
@@ -289,7 +289,7 @@
             <select
               v-model="form.cta_type"
               :disabled="!canCancel"
-              class="fld w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12.5px] disabled:opacity-60"
+              class="fld w-full rounded-5 border border-outline-gray-2 px-2 py-1.5 text-[12.5px] disabled:opacity-60"
             >
               <option value="WhatsApp">WhatsApp</option>
               <option value="Webshop">Webshop</option>
@@ -302,7 +302,7 @@
           v-model="form.cta_link"
           type="text"
           :disabled="!canCancel"
-          class="fld mb-2 w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12.5px] disabled:opacity-60"
+          class="fld mb-2 w-full rounded-5 border border-outline-gray-2 px-2 py-1.5 text-[12.5px] disabled:opacity-60"
           :placeholder="__('Enlace CTA (wa.me / storefront)')"
         />
         <p class="mb-3 text-[11px] text-ink-gray-4">
@@ -322,7 +322,7 @@
           rows="2"
           data-testid="first-comment-input"
           :disabled="!canCancel"
-          class="fld w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12.5px] disabled:opacity-60"
+          class="fld w-full rounded-5 border border-outline-gray-2 px-2 py-1.5 text-[12.5px] disabled:opacity-60"
           :placeholder="
             __(
               'Hashtags y enlaces van aquí — se publica como primer comentario, sin ensuciar el texto principal.',
@@ -375,7 +375,7 @@
         >
         <button
           type="button"
-          class="rounded-md border px-2.5 py-1 text-[11.5px] font-medium disabled:opacity-50"
+          class="rounded-5 border px-2.5 py-1 text-[11.5px] font-medium disabled:opacity-50"
           :class="
             form.evergreen
               ? 'border-green-500 dark:border-green-400 bg-surface-green-2 text-ink-green-8'
@@ -394,7 +394,7 @@
           v-if="isLive"
           type="button"
           data-testid="reuse-now"
-          class="rounded-md border border-outline-gray-2 px-2.5 py-1 text-[11.5px] font-semibold text-ink-gray-7 disabled:opacity-50"
+          class="rounded-5 border border-outline-gray-2 px-2.5 py-1 text-[11.5px] font-semibold text-ink-gray-7 disabled:opacity-50"
           :disabled="busy"
           @click="reuseNow"
         >
@@ -411,7 +411,7 @@
       >
         <button
           v-if="form.name && canCancel"
-          class="mr-auto rounded-lg px-3 py-1.5 text-[12px] font-semibold text-ink-red-8 hover:bg-surface-red-1"
+          class="mr-auto rounded-6 px-3 py-1.5 text-[12px] font-semibold text-ink-red-8 hover:bg-surface-red-1"
           :disabled="busy"
           @click="cancelPost"
         >
@@ -419,7 +419,7 @@
         </button>
         <button
           v-if="isPending"
-          class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-white"
+          class="rounded-6 px-3 py-1.5 text-[12px] font-semibold text-white"
           style="background: #2563eb"
           :disabled="busy"
           @click="approvePost"
@@ -428,7 +428,7 @@
         </button>
         <button
           v-if="isPending"
-          class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-red-7"
+          class="rounded-6 border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-red-7"
           :disabled="busy"
           @click="rejectPost"
         >
@@ -437,28 +437,28 @@
         <!-- a locked post gets no dead disabled trio — just a way out -->
         <button
           v-if="!canCancel"
-          class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7"
+          class="rounded-6 border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7"
           @click="showComposer = false"
         >
           {{ __('Cerrar') }}
         </button>
         <template v-else>
           <button
-            class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 disabled:opacity-50"
+            class="rounded-6 border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 disabled:opacity-50"
             :disabled="busy"
             @click="save('Draft')"
           >
             {{ __('Guardar borrador') }}
           </button>
           <button
-            class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 disabled:opacity-50"
+            class="rounded-6 border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 disabled:opacity-50"
             :disabled="busy"
             @click="save('Scheduled')"
           >
             {{ __('Programar') }}
           </button>
           <button
-            class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-50"
+            class="rounded-6 px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-50"
             style="background: var(--brand)"
             :disabled="busy"
             @click="publishNow"

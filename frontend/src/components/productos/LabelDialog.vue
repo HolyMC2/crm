@@ -7,7 +7,7 @@
             {{ __('Size', null, CTX) }}
             <select
               v-model="size"
-              class="h-11 rounded-md border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9 sm:h-8 sm:text-sm"
+              class="h-11 rounded-5 border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9 sm:h-8 sm:text-sm"
             >
               <option v-for="entry in SIZES" :key="entry.id" :value="entry.id">
                 {{ entry.label }}
@@ -25,7 +25,7 @@
               min="1"
               max="200"
               inputmode="numeric"
-              class="h-11 w-24 rounded-md border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9 sm:h-8 sm:text-sm"
+              class="h-11 w-24 rounded-5 border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9 sm:h-8 sm:text-sm"
             />
           </label>
         </div>
@@ -47,13 +47,13 @@
           </p>
           <p
             v-if="!unitRows.length"
-            class="rounded-lg bg-surface-gray-2 p-3 text-sm text-ink-gray-7"
+            class="rounded-6 bg-surface-gray-2 p-3 text-sm text-ink-gray-7"
           >
             {{ __('Nothing on hand to label in your stores.', null, CTX) }}
           </p>
           <ul
             v-else
-            class="max-h-64 divide-y divide-outline-gray-1 overflow-y-auto rounded-lg border border-outline-gray-2"
+            class="max-h-64 divide-y divide-outline-gray-1 overflow-y-auto rounded-6 border border-outline-gray-2"
           >
             <li v-for="(row, index) in unitRows" :key="index">
               <label

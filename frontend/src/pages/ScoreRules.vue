@@ -24,7 +24,7 @@
         }}</span>
       </div>
       <button
-        class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-gray-7"
+        class="rounded-6 border border-outline-gray-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-gray-7"
         @click="runPreview"
       >
         {{ __('Vista previa') }}
@@ -41,7 +41,7 @@
         class="flex items-center gap-1.5 text-[11.5px] font-medium text-ink-gray-6"
       >
         <span
-          class="rounded px-1.5 py-px text-[10px] font-bold text-white"
+          class="rounded-4 px-1.5 py-px text-[10px] font-bold text-white"
           :style="`background:${g.color}`"
           >{{ g.grade }}</span
         >
@@ -61,7 +61,7 @@
             {{ __('Reglas') }}
           </div>
           <button
-            class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-white"
+            class="rounded-6 px-3 py-1.5 text-[12px] font-semibold text-white"
             style="background: var(--brand)"
             @click="showAdd = !showAdd"
           >
@@ -77,32 +77,32 @@
           <input
             v-model="form.rule_name"
             :placeholder="__('Nombre')"
-            class="fld rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12px] focus:outline-none"
+            class="fld rounded-5 border border-outline-gray-2 px-2 py-1.5 text-[12px] focus:outline-none"
           />
           <input
             v-model="form.field"
             :placeholder="__('Campo (p.ej. source)')"
-            class="fld rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12px] focus:outline-none"
+            class="fld rounded-5 border border-outline-gray-2 px-2 py-1.5 text-[12px] focus:outline-none"
           />
           <select
             v-model="form.operator"
-            class="fld rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12px]"
+            class="fld rounded-5 border border-outline-gray-2 px-2 py-1.5 text-[12px]"
           >
             <option v-for="o in operators" :key="o" :value="o">{{ o }}</option>
           </select>
           <input
             v-model="form.value"
             :placeholder="__('Valor')"
-            class="fld rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12px] focus:outline-none"
+            class="fld rounded-5 border border-outline-gray-2 px-2 py-1.5 text-[12px] focus:outline-none"
           />
           <input
             v-model.number="form.points"
             type="number"
             :placeholder="__('Pts')"
-            class="fld rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12px] focus:outline-none"
+            class="fld rounded-5 border border-outline-gray-2 px-2 py-1.5 text-[12px] focus:outline-none"
           />
           <button
-            class="rounded-md px-2.5 py-1.5 text-[12px] font-semibold text-white disabled:opacity-50"
+            class="rounded-5 px-2.5 py-1.5 text-[12px] font-semibold text-white disabled:opacity-50"
             style="background: var(--brand)"
             :disabled="!form.rule_name.trim() || !form.field.trim()"
             @click="addRule"
@@ -144,7 +144,7 @@
             </div>
           </div>
           <span
-            class="flex-none rounded-md px-2 py-[3px] text-[12px] font-bold"
+            class="flex-none rounded-5 px-2 py-[3px] text-[12px] font-bold"
             :class="
               r.points >= 0
                 ? 'text-ink-green-8 bg-surface-green-2'
@@ -181,9 +181,9 @@
             :style="`color:${g.color}`"
             >{{ g.grade }}</span
           >
-          <div class="h-2 flex-1 rounded-sm bg-surface-gray-2">
+          <div class="h-2 flex-1 rounded-1 bg-surface-gray-2">
             <div
-              class="h-full rounded-sm"
+              class="h-full rounded-1"
               :style="`width:${distPct(g.grade)}%;background:${g.color}`"
             />
           </div>
@@ -204,7 +204,7 @@
           <div
             v-for="p in preview"
             :key="p.lead"
-            class="mb-1.5 flex items-center gap-2 rounded-md border border-outline-gray-1 px-2.5 py-1.5 text-[12px]"
+            class="mb-1.5 flex items-center gap-2 rounded-5 border border-outline-gray-1 px-2.5 py-1.5 text-[12px]"
           >
             <span class="min-w-0 flex-1 truncate text-ink-gray-8">{{
               p.lead_name || p.lead
@@ -217,7 +217,7 @@
               >{{ p.new_score }}</span
             >
             <span
-              class="rounded px-1 text-[9.5px] font-bold text-white"
+              class="rounded-4 px-1 text-[9.5px] font-bold text-white"
               :style="`background:${gradeColor(p.new_grade)}`"
               >{{ p.new_grade }}</span
             >

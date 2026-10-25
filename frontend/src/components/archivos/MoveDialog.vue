@@ -9,7 +9,7 @@
       <div class="space-y-3">
         <p class="text-sm text-ink-gray-6">{{ __('Pick where it goes.') }}</p>
         <ul
-          class="max-h-72 overflow-y-auto rounded-lg border border-outline-gray-2"
+          class="max-h-72 overflow-y-auto rounded-6 border border-outline-gray-2"
           :aria-label="__('Folders')"
         >
           <li>

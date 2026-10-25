@@ -38,7 +38,7 @@
             :href="repairHref"
             target="_blank"
             rel="noopener"
-            class="inline-flex items-center gap-1 rounded bg-surface-gray-2 px-1.5 py-0.5 text-2xs text-ink-gray-7 hover:bg-surface-gray-3"
+            class="inline-flex items-center gap-1 rounded-4 bg-surface-gray-2 px-1.5 py-0.5 text-2xs text-ink-gray-7 hover:bg-surface-gray-3"
             :title="__('Abrir la orden')"
           >
             <LucideWrench class="size-3" />
@@ -49,7 +49,7 @@
             :is="refLink ? RouterLink : 'span'"
             v-if="row.reference_name && ctx.kind !== 'Repair Order'"
             :to="refLink || undefined"
-            class="inline-flex items-center gap-1 rounded bg-surface-gray-2 px-1.5 py-0.5 text-2xs text-ink-gray-7"
+            class="inline-flex items-center gap-1 rounded-4 bg-surface-gray-2 px-1.5 py-0.5 text-2xs text-ink-gray-7"
             :class="refLink ? 'hover:bg-surface-gray-3' : ''"
           >
             {{ kindLabel
@@ -59,7 +59,7 @@
           </component>
           <span
             v-if="ctx.owner_name"
-            class="inline-flex items-center gap-1 rounded px-1 py-0.5 text-2xs text-ink-gray-5"
+            class="inline-flex items-center gap-1 rounded-4 px-1 py-0.5 text-2xs text-ink-gray-5"
             :title="__('Responsable')"
           >
             <LucideUser class="size-3" />{{ ctx.owner_name }}
@@ -81,7 +81,7 @@
 
     <!-- the message: template + provenance, rendered preview, variable editor -->
     <div
-      class="rounded-md bg-surface-gray-1"
+      class="rounded-5 bg-surface-gray-1"
       :class="showContext ? 'mx-3 mt-2.5' : 'm-2'"
     >
       <div
@@ -133,7 +133,7 @@
           }}</span>
           <select
             v-model="v.field"
-            class="w-1/3 shrink-0 rounded border border-outline-gray-2 bg-surface-base px-1 py-0.5 text-[11px] text-ink-gray-7 focus:outline-none dark:bg-surface-gray-1"
+            class="w-1/3 shrink-0 rounded-4 border border-outline-gray-2 bg-surface-base px-1 py-0.5 text-[11px] text-ink-gray-7 focus:outline-none dark:bg-surface-gray-1"
             @change="onFieldChange(v)"
           >
             <option value="">{{ __('(libre)') }}</option>
@@ -144,7 +144,7 @@
           <input
             v-model="v.value"
             type="text"
-            class="min-w-0 flex-1 rounded border border-outline-gray-2 bg-surface-base px-1.5 py-0.5 text-[11.5px] text-ink-gray-8 focus:outline-none dark:bg-surface-gray-1"
+            class="min-w-0 flex-1 rounded-4 border border-outline-gray-2 bg-surface-base px-1.5 py-0.5 text-[11.5px] text-ink-gray-8 focus:outline-none dark:bg-surface-gray-1"
           />
         </div>
       </div>
@@ -153,7 +153,7 @@
     <!-- failure reason -->
     <div
       v-if="row.status === 'Fallido' && row.error"
-      class="mx-3 mt-2 rounded-md bg-surface-red-1 px-2.5 py-1.5 text-2xs text-ink-red-8"
+      class="mx-3 mt-2 rounded-5 bg-surface-red-1 px-2.5 py-1.5 text-2xs text-ink-red-8"
     >
       {{ shortError }}
       <span v-if="row.attempts" class="opacity-70"
@@ -166,7 +166,7 @@
       <div v-if="canAct" class="flex items-center gap-2">
         <button
           v-if="row.status === 'Pendiente'"
-          class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-50"
+          class="rounded-6 px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-50"
           style="background: var(--brand)"
           :disabled="!!busy"
           @click="act('approve')"
@@ -175,14 +175,14 @@
         </button>
         <button
           v-if="row.status === 'Fallido'"
-          class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-8 disabled:opacity-50"
+          class="rounded-6 border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-8 disabled:opacity-50"
           :disabled="!!busy"
           @click="act('retry')"
         >
           {{ busy === 'retry' ? __('Reintentando…') : __('Reintentar') }}
         </button>
         <button
-          class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-ink-red-8 hover:bg-surface-red-1 disabled:opacity-50"
+          class="rounded-6 px-3 py-1.5 text-[12px] font-semibold text-ink-red-8 hover:bg-surface-red-1 disabled:opacity-50"
           :disabled="!!busy"
           @click="act('reject')"
         >

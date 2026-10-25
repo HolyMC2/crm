@@ -2,7 +2,7 @@
   <section
     v-if="evidence?.version === 1"
     data-testid="inquiry-source-evidence"
-    class="source-evidence space-y-3 rounded-lg border border-outline-gray-2 p-3 text-sm"
+    class="source-evidence space-y-3 rounded-6 border border-outline-gray-2 p-3 text-sm"
   >
     <h4 class="font-semibold text-ink-gray-9">
       {{ __('Evidencia de origen') }}
@@ -17,7 +17,7 @@
     </dl>
     <div
       v-if="evidence.purpose_statement || evidence.original_respondent"
-      class="space-y-3 rounded-lg bg-surface-gray-1 p-3"
+      class="space-y-3 rounded-6 bg-surface-gray-1 p-3"
     >
       <div v-if="evidence.purpose_statement" data-testid="inquiry-form-purpose">
         <h5 class="font-medium text-ink-gray-9">

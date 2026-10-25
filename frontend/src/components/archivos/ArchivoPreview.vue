@@ -27,8 +27,8 @@
     </header>
 
     <div v-if="loading" class="space-y-3 p-4" aria-hidden="true">
-      <div class="h-56 animate-pulse rounded bg-surface-gray-2" />
-      <div class="h-6 w-40 animate-pulse rounded bg-surface-gray-2" />
+      <div class="h-56 animate-pulse rounded-4 bg-surface-gray-2" />
+      <div class="h-6 w-40 animate-pulse rounded-4 bg-surface-gray-2" />
     </div>
     <div v-else-if="problemState" class="p-4">
       <ArchivoGuard :state="problemState" @action="onGuard" />
@@ -41,7 +41,7 @@
           class="flex justify-center"
         >
           <img
-            class="cursor-zoom-in rounded"
+            class="cursor-zoom-in rounded-4"
             :class="
               zoomed ? 'max-w-none' : 'max-h-[60vh] w-auto object-contain'
             "
@@ -52,7 +52,7 @@
         </div>
         <iframe
           v-else-if="item.preview === 'pdf' && item.file_url"
-          class="h-[60vh] w-full rounded border border-outline-gray-2 bg-surface-base"
+          class="h-[60vh] w-full rounded-4 border border-outline-gray-2 bg-surface-base"
           :title="item.title"
           :src="item.file_url"
         />
@@ -73,7 +73,7 @@
             </p>
             <pre
               v-else
-              class="max-h-[60vh] overflow-auto rounded border border-outline-gray-2 bg-surface-base p-3 text-xs text-ink-gray-8"
+              class="max-h-[60vh] overflow-auto rounded-4 border border-outline-gray-2 bg-surface-base p-3 text-xs text-ink-gray-8"
               >{{ prettyXml(text) }}</pre
             >
           </template>
@@ -84,7 +84,7 @@
           </p>
           <div
             v-else-if="isCsv"
-            class="max-h-[60vh] overflow-auto rounded border border-outline-gray-2 bg-surface-base"
+            class="max-h-[60vh] overflow-auto rounded-4 border border-outline-gray-2 bg-surface-base"
           >
             <table class="w-full border-collapse text-xs">
               <tbody>
@@ -111,7 +111,7 @@
           </div>
           <pre
             v-else
-            class="max-h-[60vh] overflow-auto rounded border border-outline-gray-2 bg-surface-base p-3 text-xs text-ink-gray-8"
+            class="max-h-[60vh] overflow-auto rounded-4 border border-outline-gray-2 bg-surface-base p-3 text-xs text-ink-gray-8"
             >{{ text }}</pre
           >
         </div>
@@ -133,14 +133,14 @@
       <div class="flex flex-wrap gap-2 border-b border-outline-gray-2 p-3">
         <a
           v-if="item.file_url"
-          class="inline-flex min-h-11 items-center gap-1.5 rounded bg-surface-gray-10 px-3 text-sm font-medium text-ink-base sm:min-h-8"
+          class="inline-flex min-h-11 items-center gap-1.5 rounded-4 bg-surface-gray-10 px-3 text-sm font-medium text-ink-base sm:min-h-8"
           :href="item.file_url"
           download
           ><LucideDownload class="h-4 w-4" />{{ __('Download') }}</a
         >
         <a
           v-if="recordLink"
-          class="inline-flex min-h-11 items-center gap-1.5 rounded border border-outline-gray-2 px-3 text-sm text-ink-gray-8 sm:min-h-8"
+          class="inline-flex min-h-11 items-center gap-1.5 rounded-4 border border-outline-gray-2 px-3 text-sm text-ink-gray-8 sm:min-h-8"
           :href="recordLink.href"
           ><LucideExternalLink class="h-4 w-4" />{{ __('Open record') }}</a
         >
@@ -253,7 +253,7 @@
           </h3>
           <label
             v-if="canManageItem(item)"
-            class="ml-auto inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded border border-outline-gray-2 px-3 text-sm text-ink-gray-8"
+            class="ml-auto inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-4 border border-outline-gray-2 px-3 text-sm text-ink-gray-8"
           >
             <LucideUpload class="h-3.5 w-3.5" />{{ __('Upload a new version') }}
             <input
@@ -326,7 +326,7 @@
         <ul class="flex flex-wrap gap-2">
           <li v-for="link in item.links" :key="link.doctype + link.name">
             <a
-              class="inline-flex min-h-9 items-center gap-1.5 rounded border border-outline-gray-2 px-2.5 text-sm text-ink-gray-8 hover:bg-surface-gray-1"
+              class="inline-flex min-h-9 items-center gap-1.5 rounded-4 border border-outline-gray-2 px-2.5 text-sm text-ink-gray-8 hover:bg-surface-gray-1"
               :href="recordHref(link.doctype, link.name)"
               ><LucideLink2 class="h-3.5 w-3.5" />{{
                 link.title || link.name

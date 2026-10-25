@@ -1,7 +1,7 @@
 <template>
   <article
     data-testid="inquiry-detail"
-    class="space-y-5 rounded-xl border border-outline-gray-2 bg-surface-base p-4 sm:p-5"
+    class="space-y-5 rounded-7 border border-outline-gray-2 bg-surface-base p-4 sm:p-5"
     :aria-busy="!!pending"
   >
     <header class="flex flex-wrap items-start justify-between gap-3">
@@ -177,7 +177,7 @@
         v-for="person in inquiry.people"
         :key="person.person_key"
         :data-person="person.person_key"
-        class="space-y-2 rounded-lg border border-outline-gray-2 p-3"
+        class="space-y-2 rounded-6 border border-outline-gray-2 p-3"
       >
         <div class="flex flex-wrap items-center justify-between gap-2">
           <h4 class="font-medium text-ink-gray-9">{{ person.display_name }}</h4>
@@ -233,7 +233,7 @@
             inquiry.can_write &&
             canConvertPerson(person, inquiry.status)
           "
-          class="space-y-3 rounded-lg bg-surface-gray-1 p-3"
+          class="space-y-3 rounded-6 bg-surface-gray-1 p-3"
           @submit.prevent="convert(person)"
         >
           <fieldset :disabled="!!pending" class="space-y-3">
@@ -301,7 +301,7 @@
       <form
         v-else-if="inquiry.can_write"
         data-testid="detail-add-person"
-        class="space-y-3 rounded-lg bg-surface-gray-1 p-3"
+        class="space-y-3 rounded-6 bg-surface-gray-1 p-3"
         @submit.prevent="addPerson"
       >
         <h4 class="font-medium text-ink-gray-9">

@@ -6,7 +6,7 @@
   <UiTag
     :as="to ? RouterLink : 'div'"
     :to="to || undefined"
-    class="flex min-h-[5.5rem] min-w-0 flex-col gap-1 rounded-xl border border-outline-gray-1 bg-surface-base px-4 py-3"
+    class="flex min-h-[5.5rem] min-w-0 flex-col gap-1 rounded-7 border border-outline-gray-1 bg-surface-base px-4 py-3"
     :class="to ? 'hover:bg-surface-gray-1' : ''"
     data-ui-kpi
   >

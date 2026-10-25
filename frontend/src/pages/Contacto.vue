@@ -219,7 +219,7 @@
       <RouterLink
         v-if="customers.length === 1"
         :to="contactoRoute(customers[0])"
-        class="c-chooser-single flex min-h-11 items-center gap-2 rounded-lg hover:bg-surface-gray-2"
+        class="c-chooser-single flex min-h-11 items-center gap-2 rounded-6 hover:bg-surface-gray-2"
         data-testid="contacto-account-link"
       >
         <LucideBriefcase class="h-4 w-4" />

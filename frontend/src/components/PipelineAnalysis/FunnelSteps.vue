@@ -7,7 +7,7 @@
         <li>
           <button
             type="button"
-            class="w-full rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-surface-gray-1 focus-visible:bg-surface-gray-1"
+            class="w-full rounded-6 px-3 py-2.5 text-left transition-colors hover:bg-surface-gray-1 focus-visible:bg-surface-gray-1"
             data-drill="stage"
             :data-status="step.status"
             :title="__('Ver los tratos en {0}', [step.stage])"
@@ -63,7 +63,7 @@
         <li class="pl-3 sm:pl-6">
           <button
             type="button"
-            class="my-0.5 flex max-w-full flex-wrap items-center gap-x-2 gap-y-0.5 rounded-md px-3 py-1.5 text-left text-xs transition-colors"
+            class="my-0.5 flex max-w-full flex-wrap items-center gap-x-2 gap-y-0.5 rounded-5 px-3 py-1.5 text-left text-xs transition-colors"
             :class="
               step.biggestDrop
                 ? 'bg-surface-amber-1 text-ink-amber-8 hover:bg-surface-amber-2'
@@ -104,7 +104,7 @@
       <div
         v-for="row in outcomes"
         :key="row.key"
-        class="rounded-lg border border-outline-gray-1 px-3 py-2.5"
+        class="rounded-6 border border-outline-gray-1 px-3 py-2.5"
         :data-outcome="row.key"
       >
         <div class="flex items-baseline justify-between gap-2">
@@ -152,7 +152,7 @@
 
     <details
       v-if="model.others.length"
-      class="rounded-lg border border-outline-gray-1 px-3 py-2"
+      class="rounded-6 border border-outline-gray-1 px-3 py-2"
     >
       <summary class="cursor-pointer text-sm text-ink-gray-7">
         {{ __('Otras etapas: {0} tratos fuera de la secuencia', [otherCount]) }}

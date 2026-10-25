@@ -28,7 +28,7 @@
           <div
             v-for="group in data.linked_docs"
             :key="group.doctype"
-            class="overflow-hidden rounded-xl border border-outline-gray-2"
+            class="overflow-hidden rounded-7 border border-outline-gray-2"
           >
             <div
               class="flex items-center justify-between bg-surface-gray-1 px-3 py-2"
@@ -238,7 +238,7 @@ const Panel = defineComponent({
         'div',
         {
           class:
-            'rounded-xl border border-outline-gray-2 bg-surface-gray-1 p-3 text-sm',
+            'rounded-7 border border-outline-gray-2 bg-surface-gray-1 p-3 text-sm',
         },
         [
           h(

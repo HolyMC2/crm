@@ -3,7 +3,7 @@
        (filled) or «Cambiar» (text). Nothing changes until the worker
        confirms; after that the card is a receipt with «Abrir». -->
   <article
-    class="rounded-xl border border-outline-gray-2 bg-surface-base p-3"
+    class="rounded-7 border border-outline-gray-2 bg-surface-base p-3"
     :aria-label="__('Proposed action')"
     data-testid="assistant-card"
   >
@@ -26,7 +26,7 @@
       <RouterLink
         v-if="receipt?.to"
         :to="receipt.to"
-        class="ml-auto flex min-h-11 items-center rounded-lg px-3 text-sm font-medium text-ink-blue-link"
+        class="ml-auto flex min-h-11 items-center rounded-6 px-3 text-sm font-medium text-ink-blue-link"
         data-testid="assistant-card-open"
         @click="$emit('navigate')"
       >

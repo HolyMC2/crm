@@ -37,7 +37,7 @@
         >
       </div>
       <div
-        class="relative max-w-[78%] rounded-2xl px-3 py-2 text-[13px] leading-snug"
+        class="relative max-w-[78%] rounded-8 px-3 py-2 text-[13px] leading-snug"
         :class="[
           m.direction === 'out'
             ? 'bg-[#0084ff] text-white'
@@ -55,7 +55,7 @@
         >
           <img
             :src="m.attach"
-            class="mb-1 max-h-60 rounded-lg"
+            class="mb-1 max-h-60 rounded-6"
             :alt="__('imagen')"
           />
         </a>
@@ -83,14 +83,14 @@
           <a
             v-if="saved[m.attach]"
             :href="archivosHref({ document: saved[m.attach] })"
-            class="mt-1 inline-flex items-center gap-1 rounded bg-surface-green-1 px-1.5 py-0.5 text-2xs font-medium text-ink-green-9 hover:underline"
+            class="mt-1 inline-flex items-center gap-1 rounded-4 bg-surface-green-1 px-1.5 py-0.5 text-2xs font-medium text-ink-green-9 hover:underline"
           >
             {{ __('In Files') }}
           </a>
           <Dropdown v-else :options="attachmentOptions(m)">
             <button
               type="button"
-              class="mt-1 inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-2xs underline opacity-80 hover:opacity-100 disabled:opacity-60"
+              class="mt-1 inline-flex items-center gap-1 rounded-4 px-1.5 py-0.5 text-2xs underline opacity-80 hover:opacity-100 disabled:opacity-60"
               :disabled="isBusy(m.attach)"
             >
               {{ isBusy(m.attach) ? __('Saving…') : __('Files…') }}

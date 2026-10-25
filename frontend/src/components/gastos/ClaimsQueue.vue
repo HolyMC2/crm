@@ -85,7 +85,7 @@
         <div
           v-if="problem"
           role="alert"
-          class="mx-4 mb-3 rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7 sm:mx-6"
+          class="mx-4 mb-3 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7 sm:mx-6"
         >
           <strong>{{ problem.title }}.</strong> {{ problem.detail }}
           <Button

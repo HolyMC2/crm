@@ -109,7 +109,7 @@
         <input
           v-model="form.download_archived"
           type="checkbox"
-          class="mt-0.5 h-5 w-5 shrink-0 rounded"
+          class="mt-0.5 h-5 w-5 shrink-0 rounded-4"
         />
         <span>
           <span class="block text-base text-ink-gray-8">{{
@@ -126,7 +126,7 @@
         <input
           v-model="form.write_back"
           type="checkbox"
-          class="mt-0.5 h-5 w-5 shrink-0 rounded"
+          class="mt-0.5 h-5 w-5 shrink-0 rounded-4"
         />
         <span>
           <span class="block text-base text-ink-gray-8">{{
@@ -148,7 +148,7 @@
           >
         </span>
       </label>
-      <details class="rounded-lg border border-outline-gray-2 px-3">
+      <details class="rounded-6 border border-outline-gray-2 px-3">
         <summary
           class="flex min-h-11 cursor-pointer items-center text-sm font-medium text-ink-gray-8"
         >
@@ -247,7 +247,7 @@
       <input
         v-model="form.enable"
         type="checkbox"
-        class="mt-0.5 h-5 w-5 shrink-0 rounded"
+        class="mt-0.5 h-5 w-5 shrink-0 rounded-4"
       />
       <span>
         <span class="block text-base text-ink-gray-8">{{
@@ -262,7 +262,7 @@
     <div
       v-if="saveError"
       role="alert"
-      class="rounded-lg border border-outline-red-2 bg-surface-red-1 p-3 text-base text-ink-red-4"
+      class="rounded-6 border border-outline-red-2 bg-surface-red-1 p-3 text-base text-ink-red-4"
     >
       {{ saveError }}
     </div>

@@ -1,6 +1,6 @@
 <template>
   <form
-    class="space-y-3 rounded border border-outline-gray-2 p-3"
+    class="space-y-3 rounded-4 border border-outline-gray-2 p-3"
     aria-label="Compartir catálogo de WhatsApp"
     @submit.prevent="send"
   >
@@ -13,7 +13,7 @@
       <select
         :id="messageFormatId"
         v-model="kind"
-        class="mt-1 min-h-11 w-full rounded border border-outline-gray-2 bg-surface-base px-2"
+        class="mt-1 min-h-11 w-full rounded-4 border border-outline-gray-2 bg-surface-base px-2"
         :disabled="locked"
       >
         <option
@@ -31,7 +31,7 @@
         <input
           v-model="query"
           type="search"
-          class="mt-1 min-h-11 w-full rounded border border-outline-gray-2 bg-surface-base px-2"
+          class="mt-1 min-h-11 w-full rounded-4 border border-outline-gray-2 bg-surface-base px-2"
           :disabled="locked"
           @input="scheduleSearch"
         />
@@ -59,7 +59,7 @@
       <ul class="max-h-64 space-y-1 overflow-y-auto">
         <li v-for="item in items" :key="item.item_code">
           <label
-            class="flex min-h-11 cursor-pointer items-start gap-2 rounded border border-outline-gray-2 p-2"
+            class="flex min-h-11 cursor-pointer items-start gap-2 rounded-4 border border-outline-gray-2 p-2"
           >
             <input
               type="checkbox"
@@ -77,7 +77,7 @@
               v-if="item.image_url && !failedImages.has(item.item_code)"
               :src="item.image_url"
               alt=""
-              class="h-11 w-11 shrink-0 rounded object-contain"
+              class="h-11 w-11 shrink-0 rounded-4 object-contain"
               @error="failedImages.add(item.item_code)"
             />
             <span class="min-w-0 flex-1">
@@ -110,7 +110,7 @@
           <li v-for="item in [...selected.values()]" :key="item.item_code">
             <button
               type="button"
-              class="min-h-11 rounded border border-outline-gray-2 px-2"
+              class="min-h-11 rounded-4 border border-outline-gray-2 px-2"
               :disabled="locked"
               :aria-label="__('Quitar {0}', [item.item_name || item.item_code])"
               @click="selected.delete(item.item_code)"
@@ -125,7 +125,7 @@
       {{ __('Título de la lista') }}
       <input
         v-model="header"
-        class="mt-1 min-h-11 w-full rounded border border-outline-gray-2 bg-surface-base px-2"
+        class="mt-1 min-h-11 w-full rounded-4 border border-outline-gray-2 bg-surface-base px-2"
         :disabled="locked"
       />
     </label>
@@ -134,7 +134,7 @@
       <textarea
         v-model="body"
         rows="2"
-        class="mt-1 w-full rounded border border-outline-gray-2 bg-surface-base p-2"
+        class="mt-1 w-full rounded-4 border border-outline-gray-2 bg-surface-base p-2"
         :disabled="locked"
       />
     </label>
@@ -142,7 +142,7 @@
       {{ __('Pie de mensaje (opcional)') }}
       <input
         v-model="footer"
-        class="mt-1 min-h-11 w-full rounded border border-outline-gray-2 bg-surface-base px-2"
+        class="mt-1 min-h-11 w-full rounded-4 border border-outline-gray-2 bg-surface-base px-2"
         :disabled="locked"
       />
     </label>
@@ -162,7 +162,7 @@
     </p>
     <button
       type="submit"
-      class="min-h-11 rounded bg-surface-gray-10 px-4 py-2 text-ink-base focus-visible:ring-2 disabled:opacity-50"
+      class="min-h-11 rounded-4 bg-surface-gray-10 px-4 py-2 text-ink-base focus-visible:ring-2 disabled:opacity-50"
       :disabled="busy || blocked || (!pending && !canSend)"
     >
       {{

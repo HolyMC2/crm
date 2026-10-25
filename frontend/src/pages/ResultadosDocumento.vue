@@ -11,13 +11,13 @@
         }}</a
       >
       <div v-if="loading && !doc" role="status" class="mt-4 space-y-3">
-        <div class="h-8 w-60 animate-pulse rounded bg-surface-gray-2" />
-        <div class="h-24 animate-pulse rounded bg-surface-gray-2" />
+        <div class="h-8 w-60 animate-pulse rounded-4 bg-surface-gray-2" />
+        <div class="h-24 animate-pulse rounded-4 bg-surface-gray-2" />
       </div>
       <div
         v-else-if="problem"
         role="alert"
-        class="mt-4 rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7"
+        class="mt-4 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
       >
         <strong>{{ problem.title }}.</strong> {{ problem.detail }}
         <div class="mt-2 flex flex-wrap gap-2">
@@ -70,7 +70,7 @@
         </div>
         <p
           v-if="doc.header.is_return"
-          class="mt-3 rounded-lg bg-surface-amber-1 p-2 text-sm text-ink-amber-8"
+          class="mt-3 rounded-6 bg-surface-amber-1 p-2 text-sm text-ink-amber-8"
         >
           {{
             __('This is a return of {0}.', [doc.header.return_against || ''])

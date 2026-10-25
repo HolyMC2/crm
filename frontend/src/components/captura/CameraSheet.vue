@@ -10,7 +10,7 @@
       role="dialog"
       aria-modal="true"
       :aria-label="title"
-      class="relative flex h-full w-full flex-col overflow-hidden lg:h-[min(90vh,860px)] lg:max-w-3xl lg:rounded-2xl"
+      class="relative flex h-full w-full flex-col overflow-hidden lg:h-[min(90vh,860px)] lg:max-w-3xl lg:rounded-8"
       :class="
         step === 'camera' || step === 'quees'
           ? 'bg-black text-white'
@@ -74,7 +74,7 @@
           />
           <div
             v-if="streaming && !photoMode"
-            class="pointer-events-none absolute inset-6 rounded-xl border-2 border-white/60"
+            class="pointer-events-none absolute inset-6 rounded-7 border-2 border-white/60"
             aria-hidden="true"
           />
           <p
@@ -134,13 +134,13 @@
             v-for="(page, index) in pages"
             :key="page.url"
             type="button"
-            class="relative h-16 w-12 flex-none overflow-hidden rounded-md border border-white/40"
+            class="relative h-16 w-12 flex-none overflow-hidden rounded-5 border border-white/40"
             :aria-label="__('Page {0}', [index + 1])"
             @click="step = 'pages'"
           >
             <img :src="page.url" alt="" class="size-full object-cover" />
             <span
-              class="absolute bottom-0 right-0 rounded-tl bg-black/70 px-1 text-xs"
+              class="absolute bottom-0 right-0 rounded-tl-4 bg-black/70 px-1 text-xs"
               >{{ index + 1 }}</span
             >
           </button>
@@ -196,7 +196,7 @@
         <div class="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
           <p
             v-if="single"
-            class="flex items-center gap-3 rounded-xl bg-surface-gray-1 p-4 text-base"
+            class="flex items-center gap-3 rounded-7 bg-surface-gray-1 p-4 text-base"
           >
             <LucideFileText class="size-6 flex-none" aria-hidden="true" />
             <span class="min-w-0 break-words">{{ single.name }}</span>
@@ -212,7 +212,7 @@
               class="space-y-1"
             >
               <div
-                class="relative overflow-hidden rounded-xl border border-outline-gray-2 bg-surface-gray-1"
+                class="relative overflow-hidden rounded-7 border border-outline-gray-2 bg-surface-gray-1"
               >
                 <img
                   :src="page.url"
@@ -309,7 +309,7 @@
             />
             <div class="min-h-0 flex-1 space-y-5 overflow-y-auto px-4 pb-4">
               <div
-                class="space-y-3 rounded-2xl border border-outline-gray-2 p-4"
+                class="space-y-3 rounded-8 border border-outline-gray-2 p-4"
                 data-testid="quees-guess"
               >
                 <div>
@@ -345,7 +345,7 @@
                 <label
                   v-for="option in offered"
                   :key="option.kind"
-                  class="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl px-3"
+                  class="flex min-h-12 cursor-pointer items-center gap-3 rounded-7 px-3"
                   :class="kind === option.kind ? 'bg-surface-gray-2' : ''"
                 >
                   <input
@@ -401,7 +401,7 @@
                 <label
                   v-for="inv in scan?.invoices || []"
                   :key="inv.name"
-                  class="flex min-h-12 items-center gap-3 rounded-xl px-3"
+                  class="flex min-h-12 items-center gap-3 rounded-7 px-3"
                   :class="invoice === inv.name ? 'bg-surface-gray-2' : ''"
                 >
                   <input
@@ -425,7 +425,7 @@
                   </span>
                 </label>
                 <label
-                  class="flex min-h-12 items-center gap-3 rounded-xl px-3"
+                  class="flex min-h-12 items-center gap-3 rounded-7 px-3"
                   :class="invoice === '' ? 'bg-surface-gray-2' : ''"
                 >
                   <input
@@ -459,7 +459,7 @@
                   :id="searchId"
                   v-model="recordQuery"
                   type="search"
-                  class="min-h-11 w-full rounded-lg border border-outline-gray-2 bg-surface-base px-3 text-base"
+                  class="min-h-11 w-full rounded-6 border border-outline-gray-2 bg-surface-base px-3 text-base"
                   :placeholder="
                     chosen.file === 'Customer'
                       ? __('Search a customer')
@@ -471,7 +471,7 @@
                 <ul class="space-y-1">
                   <li v-for="row in recordRows" :key="row.value">
                     <label
-                      class="flex min-h-12 items-center gap-3 rounded-xl px-3"
+                      class="flex min-h-12 items-center gap-3 rounded-7 px-3"
                       :class="
                         record?.value === row.value ? 'bg-surface-gray-2' : ''
                       "
@@ -553,7 +553,7 @@
           role="dialog"
           aria-modal="true"
           :aria-label="__('Choose from the gallery or a file')"
-          class="w-full space-y-1 rounded-t-2xl bg-surface-base p-4 pb-6 text-ink-gray-9"
+          class="w-full space-y-1 rounded-t-8 bg-surface-base p-4 pb-6 text-ink-gray-9"
         >
           <span
             class="mx-auto mb-2 block h-1 w-8 rounded-full bg-surface-gray-4"
@@ -635,7 +635,7 @@ const LIGHT_BUTTON =
 const GHOST_BUTTON =
   'flex min-h-12 items-center justify-center rounded-full px-5 text-base text-white underline'
 const ROW =
-  'flex min-h-12 w-full items-center gap-3 rounded-lg px-2 text-left text-base'
+  'flex min-h-12 w-full items-center gap-3 rounded-6 px-2 text-left text-base'
 
 const route = useRoute()
 const router = useRouter()

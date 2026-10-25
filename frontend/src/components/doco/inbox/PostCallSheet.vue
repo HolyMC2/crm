@@ -23,7 +23,7 @@
       aria-modal="true"
       :aria-label="__('Llamada terminada')"
       tabindex="-1"
-      class="sheet-in fixed inset-x-0 bottom-0 z-50 flex max-h-[85vh] flex-col overflow-y-auto rounded-t-2xl bg-surface-base px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+16px)] shadow-[0_-8px_32px_rgba(0,0,0,.18)] sm:inset-x-auto sm:right-6 sm:bottom-6 sm:w-[380px] sm:rounded-2xl sm:pb-4"
+      class="sheet-in fixed inset-x-0 bottom-0 z-50 flex max-h-[85vh] flex-col overflow-y-auto rounded-t-8 bg-surface-base px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+16px)] shadow-[0_-8px_32px_rgba(0,0,0,.18)] sm:inset-x-auto sm:right-6 sm:bottom-6 sm:w-[380px] sm:rounded-8 sm:pb-4"
       @keydown.esc="skip"
     >
       <div
@@ -43,7 +43,7 @@
         </div>
         <button
           type="button"
-          class="press flex size-7 flex-none items-center justify-center rounded-lg text-ink-gray-5 hover:bg-surface-gray-2"
+          class="press flex size-7 flex-none items-center justify-center rounded-6 text-ink-gray-5 hover:bg-surface-gray-2"
           :aria-label="__('Omitir')"
           @click="skip"
         >
@@ -85,7 +85,7 @@
         <textarea
           v-model="note"
           rows="2"
-          class="mt-1 w-full resize-none rounded-lg border border-outline-gray-2 bg-surface-base px-2.5 py-1.5 text-[13px] text-ink-gray-8 placeholder:text-ink-gray-4 focus:border-outline-gray-3 focus:outline-none"
+          class="mt-1 w-full resize-none rounded-6 border border-outline-gray-2 bg-surface-base px-2.5 py-1.5 text-[13px] text-ink-gray-8 placeholder:text-ink-gray-4 focus:border-outline-gray-3 focus:outline-none"
           :placeholder="__('¿Qué pasó en la llamada?')"
         />
       </label>
@@ -93,7 +93,7 @@
       <!-- follow-up task toggle -->
       <button
         type="button"
-        class="press mt-2.5 flex w-full items-center justify-between rounded-xl border px-3 py-2.5 text-[12.5px] font-medium"
+        class="press mt-2.5 flex w-full items-center justify-between rounded-7 border px-3 py-2.5 text-[12.5px] font-medium"
         :class="
           createTask
             ? 'border-outline-blue-4 bg-surface-blue-2 text-ink-blue-9'
@@ -113,14 +113,14 @@
       <div class="mt-3.5 flex gap-2">
         <button
           type="button"
-          class="press flex-1 rounded-xl border border-outline-gray-2 bg-surface-base py-2 text-[13px] font-semibold text-ink-gray-6 hover:bg-surface-gray-2"
+          class="press flex-1 rounded-7 border border-outline-gray-2 bg-surface-base py-2 text-[13px] font-semibold text-ink-gray-6 hover:bg-surface-gray-2"
           @click="skip"
         >
           {{ __('Omitir') }}
         </button>
         <button
           type="button"
-          class="press flex-1 rounded-xl bg-surface-gray-10 py-2 text-[13px] font-semibold text-ink-base disabled:opacity-40"
+          class="press flex-1 rounded-7 bg-surface-gray-10 py-2 text-[13px] font-semibold text-ink-base disabled:opacity-40"
           :disabled="!outcome || saving"
           @click="save"
         >

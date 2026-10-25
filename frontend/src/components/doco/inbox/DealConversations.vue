@@ -21,7 +21,7 @@
           : { type: 'button', disabled: opening === itemKey(item) }
       "
       :title="`${item.provider} · ${__('Cuenta')} ${item.account_id}`"
-      class="flex-none whitespace-nowrap rounded border border-outline-gray-2 px-2 py-0.5 text-xs text-ink-gray-7 hover:bg-surface-gray-2 disabled:opacity-60"
+      class="flex-none whitespace-nowrap rounded-4 border border-outline-gray-2 px-2 py-0.5 text-xs text-ink-gray-7 hover:bg-surface-gray-2 disabled:opacity-60"
       @click="item.name ? null : open(item)"
     >
       {{ item.provider }} · {{ item.display_name || item.peer_id }}
@@ -61,7 +61,7 @@
               ? { to: conversationRoute(item.name) }
               : { type: 'button', disabled: opening === itemKey(item) }
           "
-          class="flex w-full items-center justify-between gap-3 rounded-lg border border-outline-gray-2 p-3 text-left hover:bg-surface-gray-2 disabled:opacity-60"
+          class="flex w-full items-center justify-between gap-3 rounded-6 border border-outline-gray-2 p-3 text-left hover:bg-surface-gray-2 disabled:opacity-60"
           @click="item.name ? null : open(item)"
         >
           <span class="min-w-0">

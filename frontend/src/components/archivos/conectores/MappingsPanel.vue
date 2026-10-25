@@ -34,7 +34,7 @@
     </p>
     <p
       v-if="!rows.length"
-      class="rounded-lg bg-surface-gray-1 p-3 text-sm text-ink-gray-7"
+      class="rounded-6 bg-surface-gray-1 p-3 text-sm text-ink-gray-7"
     >
       {{
         __(
@@ -130,7 +130,7 @@
     <div
       v-if="saveError"
       role="alert"
-      class="rounded-lg border border-outline-red-2 bg-surface-red-1 p-3 text-base text-ink-red-4"
+      class="rounded-6 border border-outline-red-2 bg-surface-red-1 p-3 text-base text-ink-red-4"
     >
       {{ saveError }}
     </div>

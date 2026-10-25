@@ -11,7 +11,7 @@
       <div class="flex min-w-0 items-center gap-2">
         <RouterLink
           :to="{ name: 'Forms' }"
-          class="flex items-center gap-1 rounded px-1 text-[13px] text-ink-gray-6 hover:text-ink-gray-9 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-gray-4"
+          class="flex items-center gap-1 rounded-4 px-1 text-[13px] text-ink-gray-6 hover:text-ink-gray-9 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-gray-4"
         >
           <LucideChevronLeft class="size-4" />
           {{ __('Forms') }}
@@ -67,7 +67,7 @@
         >
           <template #trigger="{ open, setOpen }">
             <button
-              class="flex items-center gap-1.5 rounded-lg px-3.5 py-[7px] text-[12.5px] font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-gray-4"
+              class="flex items-center gap-1.5 rounded-6 px-3.5 py-[7px] text-[12.5px] font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-gray-4"
               style="background: var(--brand)"
               :aria-label="__('Publish')"
               @click="
@@ -159,7 +159,7 @@
         <div class="mx-auto flex max-w-2xl flex-col gap-5 p-4 sm:p-6">
           <div
             v-if="b.incompatible.value.length"
-            class="flex flex-col gap-2 rounded-lg border border-outline-amber-4 bg-surface-amber-1 p-3"
+            class="flex flex-col gap-2 rounded-6 border border-outline-amber-4 bg-surface-amber-1 p-3"
             role="status"
           >
             <div
@@ -191,7 +191,7 @@
               tab !== 'submissions' &&
               !b.incompatible.value.length
             "
-            class="rounded-lg border border-outline-gray-2 p-3"
+            class="rounded-6 border border-outline-gray-2 p-3"
           >
             <button
               class="flex w-full items-center justify-between gap-2 text-left"

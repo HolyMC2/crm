@@ -60,7 +60,7 @@
         <div
           v-if="compare.length"
           role="status"
-          class="rounded-lg bg-surface-amber-1 p-3 text-sm text-ink-amber-7"
+          class="rounded-6 bg-surface-amber-1 p-3 text-sm text-ink-amber-7"
         >
           <p class="font-medium">
             {{
@@ -112,7 +112,7 @@
         <div
           v-if="problem"
           role="alert"
-          class="rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7"
+          class="rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
         >
           <strong>{{ problem.title }}.</strong> {{ problem.detail }}
           <div class="mt-2 flex flex-wrap gap-2">

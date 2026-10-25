@@ -16,7 +16,7 @@
       </h2>
       <ul
         v-if="group.events.length"
-        class="divide-y divide-outline-gray-1 overflow-hidden rounded-lg border border-outline-gray-2"
+        class="divide-y divide-outline-gray-1 overflow-hidden rounded-6 border border-outline-gray-2"
       >
         <li v-for="event in group.events" :key="key(event)">
           <button
@@ -78,7 +78,7 @@
       </ul>
       <div
         v-else
-        class="flex min-h-14 items-center justify-between gap-3 rounded-lg border border-dashed border-outline-gray-2 px-3 text-sm text-ink-gray-6"
+        class="flex min-h-14 items-center justify-between gap-3 rounded-6 border border-dashed border-outline-gray-2 px-3 text-sm text-ink-gray-6"
       >
         <span>{{ __('Nothing scheduled') }}</span>
         <Button

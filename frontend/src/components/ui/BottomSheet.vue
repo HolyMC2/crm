@@ -17,7 +17,7 @@
                 'ui-sheet fixed inset-x-0 bottom-0 mx-auto w-full max-w-2xl transform-gpu rounded-t-3xl',
                 expanded ? 'h-[96dvh]' : 'max-h-[60dvh]',
               ]
-            : 'ui-dialog fixed left-1/2 top-1/2 max-h-[85dvh] w-[min(32rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-2xl',
+            : 'ui-dialog fixed left-1/2 top-1/2 max-h-[85dvh] w-[min(32rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-8',
         ]"
         :style="phone ? dragStyle : undefined"
         v-bind="subtitle ? {} : { 'aria-describedby': undefined }"

@@ -6,7 +6,7 @@
        cost, and the channels the product is offered on. -->
   <section
     id="ventas-ritmo"
-    class="scroll-mt-4 rounded-xl border border-outline-gray-2 bg-surface-base"
+    class="scroll-mt-4 rounded-7 border border-outline-gray-2 bg-surface-base"
     data-producto-insights
   >
     <header
@@ -108,7 +108,7 @@
             month.pct
           }}</span>
           <span
-            class="w-full max-w-10 rounded-t bg-surface-gray-3"
+            class="w-full max-w-10 rounded-t-4 bg-surface-gray-3"
             :class="month.bar"
             :style="{ height: `${month.height}px` }"
             aria-hidden="true"

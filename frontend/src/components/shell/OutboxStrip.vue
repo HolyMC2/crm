@@ -30,7 +30,7 @@
         <div
           v-for="(m, i) in outbox"
           :key="m._ts + ':' + i"
-          class="flex items-start gap-2 rounded-lg border border-outline-gray-2 p-2.5"
+          class="flex items-start gap-2 rounded-6 border border-outline-gray-2 p-2.5"
         >
           <div class="min-w-0 flex-1">
             <div class="text-[11px] font-semibold text-ink-gray-5">
@@ -43,7 +43,7 @@
             </div>
           </div>
           <button
-            class="press flex-none rounded-md px-2 py-1 text-[11.5px] font-medium text-ink-red-8 hover:bg-surface-red-1"
+            class="press flex-none rounded-5 px-2 py-1 text-[11.5px] font-medium text-ink-red-8 hover:bg-surface-red-1"
             @click="discardOutbox(i)"
           >
             {{ __('Descartar') }}

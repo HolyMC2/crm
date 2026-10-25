@@ -10,7 +10,7 @@
 -->
 <template>
   <div
-    class="mx-3 mb-2 mt-1 rounded-lg border border-outline-gray-2 bg-surface-gray-1 p-3 dark:bg-surface-gray-2 sm:mx-10"
+    class="mx-3 mb-2 mt-1 rounded-6 border border-outline-gray-2 bg-surface-gray-1 p-3 dark:bg-surface-gray-2 sm:mx-10"
   >
     <div class="mb-2 flex items-center justify-between gap-2">
       <div class="flex min-w-0 items-center gap-2">
@@ -51,7 +51,7 @@
     <template v-else-if="preview.data">
       <!-- live preview bubble -->
       <div
-        class="rounded-md border border-outline-gray-1 bg-surface-base p-2.5 text-base text-ink-gray-8 shadow-sm dark:bg-surface-gray-1"
+        class="rounded-5 border border-outline-gray-1 bg-surface-base p-2.5 text-base text-ink-gray-8 shadow-sm dark:bg-surface-gray-1"
       >
         <div class="whitespace-pre-wrap break-words">{{ renderedBody }}</div>
         <div v-if="preview.data.footer" class="mt-1.5 text-xs text-ink-gray-4">
@@ -86,7 +86,7 @@
           <div class="flex gap-1.5">
             <select
               v-model="v.field"
-              class="w-2/5 shrink-0 rounded-md border border-outline-gray-2 bg-surface-base px-1.5 py-1 text-[11.5px] text-ink-gray-7 focus:border-green-500 focus:outline-none dark:bg-surface-gray-1"
+              class="w-2/5 shrink-0 rounded-5 border border-outline-gray-2 bg-surface-base px-1.5 py-1 text-[11.5px] text-ink-gray-7 focus:border-green-500 focus:outline-none dark:bg-surface-gray-1"
               @change="onFieldChange(v)"
             >
               <option value="">{{ __('(libre)') }}</option>
@@ -97,7 +97,7 @@
             <input
               v-model="v.value"
               type="text"
-              class="flex-1 rounded-md border border-outline-gray-2 bg-surface-base px-2 py-1 text-[12.5px] text-ink-gray-8 focus:border-green-500 focus:outline-none focus:ring-0 dark:bg-surface-gray-1"
+              class="flex-1 rounded-5 border border-outline-gray-2 bg-surface-base px-2 py-1 text-[12.5px] text-ink-gray-8 focus:border-green-500 focus:outline-none focus:ring-0 dark:bg-surface-gray-1"
               :placeholder="v.label"
             />
           </div>

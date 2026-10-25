@@ -16,11 +16,11 @@
     >
       <RouterLink
         :to="back.to"
-        class="rounded px-1 py-1 font-medium text-ink-gray-6 hover:text-ink-gray-9"
+        class="rounded-4 px-1 py-1 font-medium text-ink-gray-6 hover:text-ink-gray-9"
         >← {{ back.label }}</RouterLink
       >
       <button
-        class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-ink-gray-7 hover:bg-surface-gray-2"
+        class="rounded-6 border border-outline-gray-2 px-3 py-1.5 text-ink-gray-7 hover:bg-surface-gray-2"
         :aria-expanded="isMobile ? mobileView === 'context' : showContext"
         @click="isMobile ? openContext() : (showContext = !showContext)"
       >

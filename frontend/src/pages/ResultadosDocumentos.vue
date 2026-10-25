@@ -59,7 +59,7 @@
     <div
       v-if="problem"
       role="alert"
-      class="mx-4 mb-3 rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7 sm:mx-6"
+      class="mx-4 mb-3 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7 sm:mx-6"
     >
       <strong>{{ problem.title }}.</strong> {{ problem.detail }}
       <div class="mt-2 flex flex-wrap gap-2">
@@ -81,7 +81,7 @@
         <div
           v-for="n in 6"
           :key="n"
-          class="h-12 animate-pulse rounded bg-surface-gray-2"
+          class="h-12 animate-pulse rounded-4 bg-surface-gray-2"
         />
       </div>
       <div
@@ -130,7 +130,7 @@
                 @click="open($event, row)"
               >
                 <span
-                  class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-surface-gray-2 text-ink-gray-7"
+                  class="flex size-9 shrink-0 items-center justify-center rounded-6 bg-surface-gray-2 text-ink-gray-7"
                   aria-hidden="true"
                 >
                   <span :class="rowIcon" class="size-4" />

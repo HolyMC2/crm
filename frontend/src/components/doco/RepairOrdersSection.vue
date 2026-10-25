@@ -15,7 +15,7 @@
       <a
         v-if="intakeHref"
         :href="intakeHref"
-        class="inline-flex h-7 items-center rounded bg-surface-gray-2 px-2 text-base text-ink-gray-8 hover:bg-surface-gray-3"
+        class="inline-flex h-7 items-center rounded-4 bg-surface-gray-2 px-2 text-base text-ink-gray-8 hover:bg-surface-gray-3"
         >{{ __('Nueva reparación') }}</a
       >
     </div>
@@ -59,7 +59,7 @@
       <div
         v-for="ro in state.context.orders"
         :key="ro.name"
-        class="overflow-hidden rounded-xl border bg-surface-base shadow-sm"
+        class="overflow-hidden rounded-7 border bg-surface-base shadow-sm"
       >
         <!-- Card header -->
         <div
@@ -76,7 +76,7 @@
             <!-- Purchase-side ETA (ERP spec P3): what «Esperando Pieza» is waiting ON -->
             <span
               v-if="waitingPo(ro)"
-              class="break-all rounded bg-surface-amber-1 px-1.5 py-px text-[10.5px] font-semibold text-ink-amber-9"
+              class="break-all rounded-4 bg-surface-amber-1 px-1.5 py-px text-[10.5px] font-semibold text-ink-amber-9"
               :title="__('Pieza en camino — Purchase Order vinculado')"
             >
               🧩 {{ waitingPo(ro).purchase_order
@@ -88,13 +88,13 @@
             <Badge :label="__(ro.status)" :theme="statusTheme(ro.status)" />
             <a
               :href="orderHref(ro.name)"
-              class="rounded border px-2 py-1 text-xs text-ink-blue-9 hover:underline"
+              class="rounded-4 border px-2 py-1 text-xs text-ink-blue-9 hover:underline"
               >{{ __('Abrir en Taller') }}</a
             >
             <button
               v-if="ro.capabilities?.can_print"
               :title="__('Print Ticket')"
-              class="rounded p-1 text-ink-gray-5 hover:bg-surface-gray-3 hover:text-ink-gray-8"
+              class="rounded-4 p-1 text-ink-gray-5 hover:bg-surface-gray-3 hover:text-ink-gray-8"
               @click="printTicket(ro.name)"
             >
               <svg
@@ -130,7 +130,7 @@
               <button
                 v-for="ph in ro.photos"
                 :key="ph.name"
-                class="relative h-16 w-16 flex-none overflow-hidden rounded-lg border bg-surface-gray-2 hover:ring-2 hover:ring-outline-gray-3"
+                class="relative h-16 w-16 flex-none overflow-hidden rounded-6 border bg-surface-gray-2 hover:ring-2 hover:ring-outline-gray-3"
                 :title="ph.photo_type || __('Foto')"
                 @click="openPhoto(ph)"
               >
@@ -141,7 +141,7 @@
                 />
                 <span
                   v-if="ph.show_on_tracker"
-                  class="absolute right-0.5 top-0.5 rounded bg-surface-green-7 px-1 text-[8px] font-bold text-ink-green-1"
+                  class="absolute right-0.5 top-0.5 rounded-4 bg-surface-green-7 px-1 text-[8px] font-bold text-ink-green-1"
                   :title="__('Visible en el tracker del cliente')"
                   >T</span
                 >
@@ -256,14 +256,14 @@
               <span v-if="ro.phone_pin">
                 <span class="text-ink-gray-5">{{ __('PIN') }}:</span>
                 <code
-                  class="ml-1 rounded bg-surface-gray-2 px-1.5 py-0.5 text-ink-gray-8"
+                  class="ml-1 rounded-4 bg-surface-gray-2 px-1.5 py-0.5 text-ink-gray-8"
                   >{{ ro.phone_pin }}</code
                 >
               </span>
               <span v-if="ro.phone_pattern">
                 <span class="text-ink-gray-5">{{ __('Pattern') }}:</span>
                 <code
-                  class="ml-1 rounded bg-surface-gray-2 px-1.5 py-0.5 text-ink-gray-8"
+                  class="ml-1 rounded-4 bg-surface-gray-2 px-1.5 py-0.5 text-ink-gray-8"
                   >{{ ro.phone_pattern }}</code
                 >
               </span>
@@ -279,7 +279,7 @@
               <code
                 v-for="sn in ro.serial_numbers"
                 :key="sn.serial_no"
-                class="rounded bg-surface-gray-2 px-1.5 py-0.5 font-mono text-xs text-ink-gray-7"
+                class="rounded-4 bg-surface-gray-2 px-1.5 py-0.5 font-mono text-xs text-ink-gray-7"
               >
                 {{ sn.identifier_type }}: {{ sn.serial_no }}
               </code>
@@ -330,7 +330,7 @@
               <div
                 v-for="(p, i) in ro.parts"
                 :key="`${ro.name}-part-${i}`"
-                class="flex items-center justify-between rounded border bg-surface-base px-2 py-1.5 text-xs"
+                class="flex items-center justify-between rounded-4 border bg-surface-base px-2 py-1.5 text-xs"
               >
                 <div class="min-w-0 truncate">
                   <span class="font-medium text-ink-gray-8">{{
@@ -341,7 +341,7 @@
                   >
                   <span
                     v-if="p.purchase_order && p.po_status"
-                    class="ml-1.5 rounded bg-surface-amber-1 px-1 py-px text-[10px] font-semibold text-ink-amber-9"
+                    class="ml-1.5 rounded-4 bg-surface-amber-1 px-1 py-px text-[10px] font-semibold text-ink-amber-9"
                     :title="`${p.purchase_order} · ${p.po_status}`"
                   >
                     🧩
@@ -380,7 +380,7 @@
               <div
                 v-for="e in ro.repair_log"
                 :key="e.name"
-                class="rounded border bg-surface-base px-2 py-1.5"
+                class="rounded-4 border bg-surface-base px-2 py-1.5"
               >
                 <div class="flex items-center justify-between gap-2 text-xs">
                   <div class="flex items-center gap-1.5">

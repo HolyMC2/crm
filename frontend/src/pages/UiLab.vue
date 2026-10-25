@@ -106,7 +106,7 @@
                   v-model="owners"
                   type="checkbox"
                   :value="person"
-                  class="size-5 rounded"
+                  class="size-5 rounded-4"
                 />
                 {{ person }}
               </label>
@@ -120,7 +120,7 @@
                   v-model="branchesOn"
                   type="checkbox"
                   :value="branch"
-                  class="size-5 rounded"
+                  class="size-5 rounded-4"
                 />
                 {{ branch }}
               </label>
@@ -235,7 +235,7 @@
         <label class="block space-y-1">
           <span class="text-sm text-ink-gray-6">Monto</span>
           <input
-            class="h-11 w-full rounded-lg border-0 bg-surface-gray-2 px-3 text-base"
+            class="h-11 w-full rounded-6 border-0 bg-surface-gray-2 px-3 text-base"
             inputmode="decimal"
             value="1,500.00"
           />
@@ -243,7 +243,7 @@
         <label class="block space-y-1">
           <span class="text-sm text-ink-gray-6">Forma de pago</span>
           <select
-            class="h-11 w-full rounded-lg border-0 bg-surface-gray-2 px-3 text-base"
+            class="h-11 w-full rounded-6 border-0 bg-surface-gray-2 px-3 text-base"
           >
             <option>Transferencia</option>
             <option>Efectivo</option>

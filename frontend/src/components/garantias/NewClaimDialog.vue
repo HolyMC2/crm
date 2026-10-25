@@ -12,7 +12,7 @@
         />
         <div
           v-if="fixedSource"
-          class="flex flex-wrap items-center gap-2 rounded-lg bg-surface-gray-2 p-3 text-sm text-ink-gray-8"
+          class="flex flex-wrap items-center gap-2 rounded-6 bg-surface-gray-2 p-3 text-sm text-ink-gray-8"
         >
           <span class="min-w-0 flex-1">{{
             __('About {0} {1}. The customer comes from it.', [
@@ -52,7 +52,7 @@
             <label
               v-for="option in options"
               :key="option.key"
-              class="flex min-h-11 cursor-pointer items-start gap-2 rounded-md px-2 py-1 hover:bg-surface-gray-1"
+              class="flex min-h-11 cursor-pointer items-start gap-2 rounded-5 px-2 py-1 hover:bg-surface-gray-1"
             >
               <input
                 type="radio"
@@ -80,7 +80,7 @@
             </label>
             <label
               v-if="!fixedSource"
-              class="flex min-h-11 cursor-pointer items-center gap-2 rounded-md px-2 py-1 hover:bg-surface-gray-1"
+              class="flex min-h-11 cursor-pointer items-center gap-2 rounded-5 px-2 py-1 hover:bg-surface-gray-1"
             >
               <input
                 type="radio"
@@ -138,7 +138,7 @@
         <div
           v-if="openClaim"
           role="status"
-          class="space-y-2 rounded-lg bg-surface-amber-1 p-3 text-sm text-ink-amber-8"
+          class="space-y-2 rounded-6 bg-surface-amber-1 p-3 text-sm text-ink-amber-8"
         >
           <p>
             {{

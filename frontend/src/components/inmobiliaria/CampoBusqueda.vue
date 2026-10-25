@@ -4,7 +4,7 @@
   <div class="flex flex-col gap-2">
     <div
       v-if="chosen"
-      class="flex min-h-11 items-center gap-2 rounded-lg border border-outline-gray-2 px-3"
+      class="flex min-h-11 items-center gap-2 rounded-6 border border-outline-gray-2 px-3"
     >
       <span class="min-w-0 flex-1">
         <span class="block break-words text-base text-ink-gray-9">{{
@@ -31,7 +31,7 @@
         autocomplete="off"
         :required="required"
         :placeholder="PLACEHOLDER[tipo] || 'Buscar por nombre'"
-        class="min-h-11 w-full rounded-lg border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9 focus:border-outline-gray-4 focus:outline-none"
+        class="min-h-11 w-full rounded-6 border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9 focus:border-outline-gray-4 focus:outline-none"
         :data-testid="`inmo-buscar-${tipo}`"
       />
       <!-- A search that failed is not «nobody»: say why and offer it again. -->
@@ -52,7 +52,7 @@
       </div>
       <ul
         v-else-if="options.length"
-        class="divide-y divide-outline-gray-1 rounded-lg border border-outline-gray-1"
+        class="divide-y divide-outline-gray-1 rounded-6 border border-outline-gray-1"
         role="listbox"
       >
         <li v-for="o in options" :key="o.value">

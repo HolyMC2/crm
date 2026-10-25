@@ -11,7 +11,7 @@
     <label
       v-for="list in choices"
       :key="list"
-      class="flex min-h-11 items-center gap-2 rounded-md px-1 text-sm text-ink-gray-8 hover:bg-surface-gray-2 sm:min-h-8"
+      class="flex min-h-11 items-center gap-2 rounded-5 px-1 text-sm text-ink-gray-8 hover:bg-surface-gray-2 sm:min-h-8"
     >
       <input
         type="checkbox"

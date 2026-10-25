@@ -56,7 +56,7 @@
           </span>
           <span
             v-if="boundContact"
-            class="flex-none rounded px-1.5 py-0.5 text-[9.5px] font-semibold"
+            class="flex-none rounded-4 px-1.5 py-0.5 text-[9.5px] font-semibold"
             style="color: #5b21b6; background: #ede9fe"
             >{{ __('Contacto') }}</span
           >
@@ -87,7 +87,7 @@
            stays here in Archivados and a nuevo mensaje la reaparece sola. -->
       <button
         v-if="!isArchived"
-        class="ml-auto flex flex-none items-center gap-1 rounded-md border border-outline-gray-2 px-2 py-1.5 text-[11.5px] font-semibold text-ink-gray-6 hover:bg-surface-gray-2 disabled:opacity-50"
+        class="ml-auto flex flex-none items-center gap-1 rounded-5 border border-outline-gray-2 px-2 py-1.5 text-[11.5px] font-semibold text-ink-gray-6 hover:bg-surface-gray-2 disabled:opacity-50"
         :disabled="busy"
         :aria-label="__('Archivar')"
         :title="__('Archivar sin crear prospecto/trato — seguirá disponible')"
@@ -98,7 +98,7 @@
       </button>
       <button
         v-else
-        class="ml-auto flex flex-none items-center gap-1 rounded-md border border-outline-blue-4 bg-surface-blue-1 px-2 py-1.5 text-[11.5px] font-semibold text-ink-blue-9 hover:bg-surface-blue-2 disabled:opacity-50"
+        class="ml-auto flex flex-none items-center gap-1 rounded-5 border border-outline-blue-4 bg-surface-blue-1 px-2 py-1.5 text-[11.5px] font-semibold text-ink-blue-9 hover:bg-surface-blue-2 disabled:opacity-50"
         :disabled="busy"
         :aria-label="__('Desarchivar')"
         @click="onUnarchive"
@@ -198,7 +198,7 @@
                 @update:modelValue="onMsgrEmoji"
               >
                 <SmileIcon
-                  class="flex size-4.5 cursor-pointer rounded-sm text-2xl leading-none text-ink-gray-4"
+                  class="flex size-4.5 cursor-pointer rounded-1 text-2xl leading-none text-ink-gray-4"
                   :aria-label="__('Emojis')"
                   @click="togglePopover"
                 />
@@ -211,11 +211,11 @@
               rows="1"
               :aria-label="__('Responder por Messenger')"
               :placeholder="__('Responder por Messenger…')"
-              class="scb max-h-28 flex-1 resize-none rounded-lg border border-outline-gray-2 px-2.5 py-2 text-[13px] text-ink-gray-8 placeholder:text-ink-gray-4 focus:outline-none focus:ring-1 focus:ring-outline-blue-4"
+              class="scb max-h-28 flex-1 resize-none rounded-6 border border-outline-gray-2 px-2.5 py-2 text-[13px] text-ink-gray-8 placeholder:text-ink-gray-4 focus:outline-none focus:ring-1 focus:ring-outline-blue-4"
               @keydown.enter.exact.prevent="sendMsgr"
             />
             <button
-              class="rounded-lg px-3 py-2 text-[13px] font-semibold text-white disabled:opacity-50"
+              class="rounded-6 px-3 py-2 text-[13px] font-semibold text-white disabled:opacity-50"
               style="background: #0084ff"
               :disabled="busy || !msgrReply.trim()"
               @click="sendMsgr"
@@ -259,7 +259,7 @@
         class="scb flex flex-col overflow-y-auto bg-surface-base px-3.5 py-3.5"
         :class="
           isMobile
-            ? 'sheet-in fixed inset-x-0 bottom-0 z-50 max-h-[82vh] rounded-t-2xl pb-[calc(env(safe-area-inset-bottom)+14px)] shadow-[0_-8px_32px_rgba(0,0,0,.18)]'
+            ? 'sheet-in fixed inset-x-0 bottom-0 z-50 max-h-[82vh] rounded-t-8 pb-[calc(env(safe-area-inset-bottom)+14px)] shadow-[0_-8px_32px_rgba(0,0,0,.18)]'
             : 'w-[300px] flex-none'
         "
         @keydown.esc="captureOpen = false"
@@ -277,7 +277,7 @@
           </div>
           <button
             v-if="isMobile"
-            class="press flex h-7 w-7 items-center justify-center rounded-lg text-ink-gray-5"
+            class="press flex h-7 w-7 items-center justify-center rounded-6 text-ink-gray-5"
             :aria-label="__('Cerrar')"
             @click="captureOpen = false"
           >
@@ -325,7 +325,7 @@
              expected value + closure date, else "Crear Trato" fails server-side. -->
         <div
           v-if="forecastingEnabled"
-          class="mt-2 grid grid-cols-2 gap-2 rounded-lg border border-outline-blue-4 bg-surface-blue-1 p-2"
+          class="mt-2 grid grid-cols-2 gap-2 rounded-6 border border-outline-blue-4 bg-surface-blue-1 p-2"
         >
           <label class="block"
             ><span class="text-[10px] font-medium text-ink-gray-6"
@@ -394,7 +394,7 @@
 
         <div class="mt-4 flex flex-col gap-2">
           <button
-            class="rounded-lg px-3 py-2 text-[12.5px] font-semibold text-white disabled:opacity-50"
+            class="rounded-6 px-3 py-2 text-[12.5px] font-semibold text-white disabled:opacity-50"
             style="background: var(--brand)"
             :disabled="busy"
             @click="convert('CRM Deal')"
@@ -403,7 +403,7 @@
           </button>
           <div class="grid grid-cols-2 gap-2">
             <button
-              class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2 disabled:opacity-50"
+              class="rounded-6 border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2 disabled:opacity-50"
               :disabled="busy"
               @click="convert('CRM Lead')"
             >
@@ -411,7 +411,7 @@
             </button>
             <button
               v-if="!isMessenger"
-              class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2 disabled:opacity-50"
+              class="rounded-6 border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2 disabled:opacity-50"
               :disabled="busy"
               @click="convert('Customer')"
             >
@@ -437,7 +437,7 @@
               <button
                 v-for="t in suggestionRows"
                 :key="'s:' + t.doctype + ':' + t.name"
-                class="flex items-center justify-between gap-2 rounded-md border border-outline-blue-4 bg-surface-blue-1 px-2.5 py-1.5 text-left text-[12px] hover:bg-surface-blue-2 disabled:opacity-50"
+                class="flex items-center justify-between gap-2 rounded-5 border border-outline-blue-4 bg-surface-blue-1 px-2.5 py-1.5 text-left text-[12px] hover:bg-surface-blue-2 disabled:opacity-50"
                 :disabled="busy"
                 @click="linkTo(t)"
               >
@@ -453,7 +453,7 @@
                   >
                 </span>
                 <span
-                  class="flex-none rounded px-1.5 py-0.5 text-[10px] font-semibold"
+                  class="flex-none rounded-4 px-1.5 py-0.5 text-[10px] font-semibold"
                   :class="docBadge(t.doctype)"
                   >{{ docLabel(t.doctype) }}</span
                 >
@@ -484,7 +484,7 @@
             <button
               v-for="t in linkResults"
               :key="t.doctype + ':' + t.name"
-              class="flex items-center justify-between gap-2 rounded-md border border-outline-gray-2 px-2.5 py-1.5 text-left text-[12px] hover:bg-surface-gray-2 disabled:opacity-50"
+              class="flex items-center justify-between gap-2 rounded-5 border border-outline-gray-2 px-2.5 py-1.5 text-left text-[12px] hover:bg-surface-gray-2 disabled:opacity-50"
               :disabled="busy"
               @click="linkTo(t)"
             >
@@ -499,7 +499,7 @@
                 >
               </span>
               <span
-                class="flex-none rounded px-1.5 py-0.5 text-[10px] font-semibold"
+                class="flex-none rounded-4 px-1.5 py-0.5 text-[10px] font-semibold"
                 :class="docBadge(t.doctype)"
                 >{{ docLabel(t.doctype) }}</span
               >
@@ -746,7 +746,7 @@ const waModel = reactive({
 const waList = ref({ reload: () => unassignedThread.reload() })
 
 const inputCls =
-  'w-full rounded-md border border-outline-gray-2 bg-surface-gray-2 px-2 py-1 text-[12.5px] text-ink-gray-8 hover:bg-surface-gray-3 focus:bg-surface-base focus:border-outline-gray-4 focus:outline-none focus:ring-0 disabled:opacity-60'
+  'w-full rounded-5 border border-outline-gray-2 bg-surface-gray-2 px-2 py-1 text-[12.5px] text-ink-gray-8 hover:bg-surface-gray-3 focus:bg-surface-base focus:border-outline-gray-4 focus:outline-none focus:ring-0 disabled:opacity-60'
 
 const busy = ref(false)
 // mobile capture bottom sheet — closed by default, reset when switching orphans

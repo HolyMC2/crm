@@ -111,7 +111,7 @@
           </button>
         </div>
         <button
-          class="rounded-lg px-3.5 py-[7px] text-[12.5px] font-semibold text-white"
+          class="rounded-6 px-3.5 py-[7px] text-[12.5px] font-semibold text-white"
           style="background: var(--brand)"
           @click="logCall"
         >
@@ -158,7 +158,7 @@
         >
           <div>
             <span
-              class="inline-flex items-center gap-1 rounded-md px-1.5 py-[2px] text-[10.5px] font-semibold"
+              class="inline-flex items-center gap-1 rounded-5 px-1.5 py-[2px] text-[10.5px] font-semibold"
               :class="dirChip(r)"
             >
               {{

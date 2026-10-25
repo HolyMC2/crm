@@ -4,7 +4,7 @@
       <div
         v-for="s in summary"
         :key="s.key"
-        class="rounded-lg border border-outline-gray-2 px-3 py-2.5"
+        class="rounded-6 border border-outline-gray-2 px-3 py-2.5"
       >
         <div class="text-2xl font-semibold tabular-nums text-ink-gray-9">
           {{ s.value }}
@@ -18,7 +18,7 @@
     </div>
     <div
       v-else-if="!rows.length"
-      class="flex flex-col items-center gap-3 rounded-lg border border-dashed border-outline-gray-2 px-4 py-10 text-center"
+      class="flex flex-col items-center gap-3 rounded-6 border border-dashed border-outline-gray-2 px-4 py-10 text-center"
     >
       <LucideInbox class="size-7 text-ink-gray-4" />
       <div class="text-base-medium text-ink-gray-8">
@@ -40,7 +40,7 @@
     </div>
     <div
       v-else
-      class="divide-y divide-outline-gray-1 rounded-lg border border-outline-gray-2"
+      class="divide-y divide-outline-gray-1 rounded-6 border border-outline-gray-2"
     >
       <RouterLink
         v-for="r in rows"

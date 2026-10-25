@@ -29,7 +29,7 @@
     >
       <p
         v-if="!data.customers?.length"
-        class="rounded-xl border border-outline-gray-2 p-6 text-center text-sm text-ink-gray-6"
+        class="rounded-7 border border-outline-gray-2 p-6 text-center text-sm text-ink-gray-6"
       >
         {{
           __(
@@ -79,7 +79,7 @@
         <!-- Blocked: another company's programme. Say whose and where to change it. -->
         <div
           v-if="row.blocked"
-          class="space-y-2 rounded-xl border border-outline-amber-2 bg-surface-amber-1 p-3 text-sm text-ink-gray-8"
+          class="space-y-2 rounded-7 border border-outline-amber-2 bg-surface-amber-1 p-3 text-sm text-ink-gray-8"
           data-testid="loyalty-blocked"
         >
           <p>{{ row.blocked.reason }}</p>
@@ -93,7 +93,7 @@
         <!-- No programme in this company: the refusal names who can create it, and creates it here. -->
         <div
           v-else-if="row.state === 'no_program'"
-          class="space-y-3 rounded-xl border border-outline-gray-2 p-3 text-sm"
+          class="space-y-3 rounded-7 border border-outline-gray-2 p-3 text-sm"
         >
           <p class="text-ink-gray-8">
             {{ __('There is no points program in {0}.', [row.company]) }}
@@ -114,7 +114,7 @@
                 {{ __('Expense account for redeemed points') }}
                 <select
                   v-model="setup.expense_account"
-                  class="mt-1 block w-full rounded border border-outline-gray-2 bg-surface-base p-2 text-sm"
+                  class="mt-1 block w-full rounded-4 border border-outline-gray-2 bg-surface-base p-2 text-sm"
                 >
                   <option
                     v-for="acc in setup.expense_accounts"
@@ -149,7 +149,7 @@
         <!-- Not a member yet. -->
         <div
           v-else-if="row.state === 'not_member'"
-          class="flex flex-wrap items-center gap-3 rounded-xl border border-outline-gray-2 p-3 text-sm"
+          class="flex flex-wrap items-center gap-3 rounded-7 border border-outline-gray-2 p-3 text-sm"
         >
           <span class="text-ink-gray-8">
             {{ __('Not enrolled in {0}.', [row.program?.label]) }}
@@ -201,14 +201,14 @@
           <a
             v-if="row.actions?.sell"
             :href="saleHref(row, 'sale')"
-            class="inline-flex min-h-[36px] items-center rounded bg-surface-gray-10 px-3 text-sm font-semibold text-ink-base"
+            class="inline-flex min-h-[36px] items-center rounded-4 bg-surface-gray-10 px-3 text-sm font-semibold text-ink-base"
             data-testid="loyalty-sell"
             >{{ __('Sell at the register') }}</a
           >
           <a
             v-if="row.actions?.deposit"
             :href="saleHref(row, 'deposit')"
-            class="inline-flex min-h-[36px] items-center rounded border border-outline-gray-3 px-3 text-sm font-semibold text-ink-gray-8"
+            class="inline-flex min-h-[36px] items-center rounded-4 border border-outline-gray-3 px-3 text-sm font-semibold text-ink-gray-8"
             data-testid="loyalty-deposit"
             >{{ __('Add to monedero') }}</a
           >
@@ -222,7 +222,7 @@
 
         <form
           v-if="adjusting === row.customer"
-          class="space-y-2 rounded-xl border border-outline-gray-2 p-3"
+          class="space-y-2 rounded-7 border border-outline-gray-2 p-3"
           data-testid="loyalty-adjust-form"
           @submit.prevent="adjust(row)"
         >
@@ -232,7 +232,7 @@
               v-model.number="adjustForm.points"
               type="number"
               step="1"
-              class="mt-1 block w-full rounded border border-outline-gray-2 bg-surface-base p-2 text-sm"
+              class="mt-1 block w-full rounded-4 border border-outline-gray-2 bg-surface-base p-2 text-sm"
             />
           </label>
           <label class="block text-xs font-semibold text-ink-gray-7">
@@ -240,7 +240,7 @@
             <input
               v-model="adjustForm.reason"
               maxlength="140"
-              class="mt-1 block w-full rounded border border-outline-gray-2 bg-surface-base p-2 text-sm"
+              class="mt-1 block w-full rounded-4 border border-outline-gray-2 bg-surface-base p-2 text-sm"
             />
           </label>
           <div class="flex flex-wrap gap-2">
@@ -260,7 +260,7 @@
             {{ __('Movements') }}
           </h4>
           <ul
-            class="divide-y divide-outline-gray-1 rounded-xl border border-outline-gray-2"
+            class="divide-y divide-outline-gray-1 rounded-7 border border-outline-gray-2"
           >
             <li
               v-for="(move, index) in row.movements"
@@ -486,8 +486,8 @@ const Metric = defineComponent({
   },
   setup(p) {
     const tones = {
-      gray: 'rounded-xl bg-surface-gray-1 p-3 text-ink-gray-9',
-      green: 'rounded-xl bg-surface-green-2 p-3 text-ink-green-8',
+      gray: 'rounded-7 bg-surface-gray-1 p-3 text-ink-gray-9',
+      green: 'rounded-7 bg-surface-green-2 p-3 text-ink-green-8',
     }
     return () =>
       h('div', { class: tones[p.tone] || tones.gray }, [

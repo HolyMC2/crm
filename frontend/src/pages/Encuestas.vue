@@ -52,7 +52,7 @@
       </PageHeader>
       <div
         v-if="backTo"
-        class="mx-4 mb-3 flex flex-wrap items-center gap-2 rounded-md bg-surface-green-2 px-3 py-2 text-sm text-ink-green-8 sm:mx-6"
+        class="mx-4 mb-3 flex flex-wrap items-center gap-2 rounded-5 bg-surface-green-2 px-3 py-2 text-sm text-ink-green-8 sm:mx-6"
         role="status"
       >
         <span class="min-w-0 flex-1">{{ __('Saved.') }}</span>
@@ -67,7 +67,7 @@
       <div
         v-if="bothOff"
         role="status"
-        class="mx-4 mb-3 flex flex-wrap items-center gap-2 rounded-md bg-surface-amber-1 px-3 py-2 text-sm text-ink-amber-8 sm:mx-6"
+        class="mx-4 mb-3 flex flex-wrap items-center gap-2 rounded-5 bg-surface-amber-1 px-3 py-2 text-sm text-ink-amber-8 sm:mx-6"
         data-testid="encuestas-both-off"
       >
         <span class="w-full">{{
@@ -92,7 +92,7 @@
       <div
         v-if="notice && !bothOff"
         role="status"
-        class="mx-4 mb-3 flex flex-wrap items-center gap-2 rounded-md bg-surface-amber-1 px-3 py-2 text-sm text-ink-amber-8 sm:mx-6"
+        class="mx-4 mb-3 flex flex-wrap items-center gap-2 rounded-5 bg-surface-amber-1 px-3 py-2 text-sm text-ink-amber-8 sm:mx-6"
       >
         <span class="w-full sm:w-auto sm:min-w-0 sm:flex-1">{{
           notice.reason
@@ -114,7 +114,7 @@
       <div
         v-if="serviceNotice && !bothOff"
         role="status"
-        class="mx-4 mb-3 flex flex-wrap items-center gap-2 rounded-md bg-surface-gray-2 px-3 py-2 text-sm text-ink-gray-8 sm:mx-6"
+        class="mx-4 mb-3 flex flex-wrap items-center gap-2 rounded-5 bg-surface-gray-2 px-3 py-2 text-sm text-ink-gray-8 sm:mx-6"
         data-testid="encuestas-service-notice"
       >
         <span class="w-full sm:w-auto sm:min-w-0 sm:flex-1">{{
@@ -156,7 +156,7 @@
         :aria-label="__('Would they recommend you?')"
       >
         <div
-          class="col-span-3 rounded-lg border border-outline-gray-2 p-3 sm:col-span-1"
+          class="col-span-3 rounded-6 border border-outline-gray-2 p-3 sm:col-span-1"
         >
           <p class="text-sm text-ink-gray-6">{{ __('Recommendation') }}</p>
           <p
@@ -175,7 +175,7 @@
         </div>
         <!-- «¿Cómo te atendimos?»: the share of 4–5 answers after a resolved conversation -->
         <div
-          class="col-span-3 rounded-lg border border-outline-gray-2 p-3 sm:col-span-1"
+          class="col-span-3 rounded-6 border border-outline-gray-2 p-3 sm:col-span-1"
         >
           <p class="text-sm text-ink-gray-6">{{ __('Satisfaction') }}</p>
           <p
@@ -196,7 +196,7 @@
           v-for="b in BUCKETS"
           :key="b.value"
           type="button"
-          class="min-h-11 rounded-lg border border-outline-gray-2 p-3 text-left hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
+          class="min-h-11 rounded-6 border border-outline-gray-2 p-3 text-left hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
           :data-testid="`encuestas-card-${b.value}`"
           @click="update(cardQuery(b.value))"
         >
@@ -274,7 +274,7 @@
         >
           <input
             type="checkbox"
-            class="rounded"
+            class="rounded-4"
             :checked="mine"
             @change="update({ mine: $event.target.checked ? '1' : '' })"
           />
@@ -284,7 +284,7 @@
       <div
         v-if="problem"
         role="alert"
-        class="mx-4 mb-3 rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7 sm:mx-6"
+        class="mx-4 mb-3 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7 sm:mx-6"
       >
         <strong>{{ problem.title }}.</strong> {{ problem.detail }}
         <Button

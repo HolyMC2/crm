@@ -2,7 +2,7 @@
   <div class="flex flex-col gap-6">
     <div
       v-if="!b.savedPublished.value"
-      class="flex items-start gap-2 rounded-md bg-surface-amber-2 p-3 text-p-sm text-ink-gray-8"
+      class="flex items-start gap-2 rounded-5 bg-surface-amber-2 p-3 text-p-sm text-ink-gray-8"
     >
       <LucideTriangleAlert class="mt-0.5 size-4 shrink-0 text-ink-amber-6" />
       {{
@@ -72,7 +72,7 @@
       </div>
       <div class="flex flex-col items-center gap-2">
         <div
-          class="flex size-44 items-center justify-center rounded-lg border border-outline-gray-2 bg-white p-2"
+          class="flex size-44 items-center justify-center rounded-6 border border-outline-gray-2 bg-white p-2"
         >
           <img
             v-if="qrSrc"
@@ -122,7 +122,7 @@
         </div>
       </div>
       <div
-        class="divide-y divide-outline-gray-1 rounded-lg border border-outline-gray-2"
+        class="divide-y divide-outline-gray-1 rounded-6 border border-outline-gray-2"
       >
         <div
           v-for="c in channels"
@@ -168,7 +168,7 @@
           readonly
           rows="3"
           :aria-label="__('Embed code')"
-          class="w-full resize-none rounded-md border border-outline-gray-2 bg-surface-gray-1 py-2 pl-3 pr-10 font-mono text-xs text-ink-gray-7 focus:border-outline-gray-4 focus:outline-none focus:ring-0"
+          class="w-full resize-none rounded-5 border border-outline-gray-2 bg-surface-gray-1 py-2 pl-3 pr-10 font-mono text-xs text-ink-gray-7 focus:border-outline-gray-4 focus:outline-none focus:ring-0"
           :value="snippet"
         />
         <button

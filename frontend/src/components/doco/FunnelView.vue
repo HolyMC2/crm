@@ -18,9 +18,9 @@
           />
           {{ g.label }}
         </div>
-        <div class="h-7 flex-1 overflow-hidden rounded-md bg-surface-gray-1">
+        <div class="h-7 flex-1 overflow-hidden rounded-5 bg-surface-gray-1">
           <div
-            class="flex h-full min-w-[34px] items-center justify-end rounded-md px-2 text-[11px] font-semibold text-ink-gray-8 transition-all"
+            class="flex h-full min-w-[34px] items-center justify-end rounded-5 px-2 text-[11px] font-semibold text-ink-gray-8 transition-all"
             :class="funnelColorClasses(g.color).bar"
             :style="{ width: `${pct(g.value)}%` }"
           >

@@ -40,7 +40,7 @@
       <p
         v-if="!data.puede_enviar"
         role="alert"
-        class="rounded-lg bg-surface-amber-2 px-3 py-2 text-base text-ink-amber-9"
+        class="rounded-6 bg-surface-amber-2 px-3 py-2 text-base text-ink-amber-9"
       >
         {{ data.motivo }}
       </p>
@@ -86,7 +86,7 @@
           inputmode="email"
           autocomplete="email"
           enterkeyhint="done"
-          class="mt-2 h-11 w-full rounded-lg border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9"
+          class="mt-2 h-11 w-full rounded-6 border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9"
           :placeholder="
             para.length
               ? 'Agregar otro correo'
@@ -110,7 +110,7 @@
 
       <button
         type="button"
-        class="flex min-h-14 w-full items-center gap-3 rounded-lg border border-outline-gray-2 px-3 py-2 text-left hover:bg-surface-gray-1"
+        class="flex min-h-14 w-full items-center gap-3 rounded-6 border border-outline-gray-2 px-3 py-2 text-left hover:bg-surface-gray-1"
         data-testid="correo-plantilla"
         @click="step = 'plantillas'"
       >
@@ -136,7 +136,7 @@
           v-model="asunto"
           type="text"
           maxlength="240"
-          class="h-11 w-full rounded-lg border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9"
+          class="h-11 w-full rounded-6 border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9"
           data-testid="correo-asunto"
         />
       </div>
@@ -150,7 +150,7 @@
           v-model="cuerpo"
           rows="5"
           maxlength="20000"
-          class="w-full resize-none rounded-lg border border-outline-gray-2 bg-surface-base px-3 py-2 text-base text-ink-gray-9"
+          class="w-full resize-none rounded-6 border border-outline-gray-2 bg-surface-base px-3 py-2 text-base text-ink-gray-9"
           data-testid="correo-cuerpo"
           @input="grow"
         />
@@ -158,7 +158,7 @@
 
       <div
         v-if="canPdf"
-        class="flex min-h-14 items-center gap-3 rounded-lg border border-outline-gray-2 py-1 pl-3"
+        class="flex min-h-14 items-center gap-3 rounded-6 border border-outline-gray-2 py-1 pl-3"
       >
         <span class="flex min-w-0 flex-1 flex-col items-start gap-1">
           <span class="text-base text-ink-gray-9">Adjuntar PDF</span>
@@ -301,7 +301,7 @@
       <div>
         <dt class="text-sm text-ink-gray-6">Mensaje</dt>
         <dd
-          class="whitespace-pre-line break-words rounded-lg bg-surface-gray-1 px-3 py-2 text-base text-ink-gray-9"
+          class="whitespace-pre-line break-words rounded-6 bg-surface-gray-1 px-3 py-2 text-base text-ink-gray-9"
         >
           {{ review.cuerpo }}
         </dd>

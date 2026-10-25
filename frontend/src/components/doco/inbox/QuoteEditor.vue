@@ -5,13 +5,13 @@
   draft, and «Enviar por WhatsApp» (PDF document into the conversation).
 -->
 <template>
-  <div class="rounded-lg border border-outline-gray-2 bg-surface-gray-1 p-2">
+  <div class="rounded-6 border border-outline-gray-2 bg-surface-gray-1 p-2">
     <div class="mb-1.5 flex items-center justify-between">
       <span class="text-[11px] font-bold text-ink-gray-8">
         {{ quotation }}
         <span
           v-if="detail && detail.docstatus === 0"
-          class="ml-1 rounded bg-surface-gray-3 px-1 py-px text-[9.5px] font-semibold text-ink-gray-6"
+          class="ml-1 rounded-4 bg-surface-gray-3 px-1 py-px text-[9.5px] font-semibold text-ink-gray-6"
           >{{ __('Borrador') }}</span
         >
       </span>
@@ -36,7 +36,7 @@
         <div
           v-for="l in detail.lines"
           :key="l.name"
-          class="rounded-md bg-surface-base px-2 py-1.5 text-[11.5px] shadow-sm"
+          class="rounded-5 bg-surface-base px-2 py-1.5 text-[11.5px] shadow-sm"
         >
           <div class="flex items-center justify-between gap-2">
             <span
@@ -57,7 +57,7 @@
                 min="1"
                 max="999"
                 step="1"
-                class="w-14 rounded border border-outline-gray-2 bg-surface-base px-1 py-0.5 text-[11px]"
+                class="w-14 rounded-4 border border-outline-gray-2 bg-surface-base px-1 py-0.5 text-[11px]"
                 :value="l.qty"
                 :disabled="busy"
                 @change="patchLine(l, { qty: $event.target.value })"
@@ -70,7 +70,7 @@
                 min="0"
                 max="100"
                 step="1"
-                class="w-14 rounded border border-outline-gray-2 bg-surface-base px-1 py-0.5 text-[11px]"
+                class="w-14 rounded-4 border border-outline-gray-2 bg-surface-base px-1 py-0.5 text-[11px]"
                 :value="l.discount_percentage"
                 :disabled="busy"
                 @change="
@@ -111,7 +111,7 @@
 
       <div class="mt-2 flex flex-wrap gap-1.5">
         <button
-          class="rounded-lg px-2.5 py-1.5 text-[11.5px] font-semibold text-white disabled:opacity-50"
+          class="rounded-6 px-2.5 py-1.5 text-[11.5px] font-semibold text-white disabled:opacity-50"
           style="background: var(--brand)"
           :disabled="busy || !detail.lines.length"
           :title="
@@ -122,7 +122,7 @@
           📤 {{ __('Enviar por WhatsApp') }}
         </button>
         <button
-          class="rounded-lg border border-outline-gray-2 bg-surface-base px-2.5 py-1.5 text-[11.5px] font-semibold text-ink-gray-8 disabled:opacity-50"
+          class="rounded-6 border border-outline-gray-2 bg-surface-base px-2.5 py-1.5 text-[11.5px] font-semibold text-ink-gray-8 disabled:opacity-50"
           :disabled="busy || !detail.lines.length"
           :title="__('Crea la orden de venta (borrador)')"
           @click="accept"
@@ -131,7 +131,7 @@
         </button>
         <button
           v-if="editable"
-          class="rounded-lg border border-outline-gray-2 bg-surface-base px-2.5 py-1.5 text-[11.5px] text-ink-gray-7 disabled:opacity-50"
+          class="rounded-6 border border-outline-gray-2 bg-surface-base px-2.5 py-1.5 text-[11.5px] text-ink-gray-7 disabled:opacity-50"
           :disabled="busy || !detail.lines.length"
           :title="__('Emitir la cotización (ya no será editable aquí)')"
           @click="submit"

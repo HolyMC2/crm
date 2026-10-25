@@ -20,7 +20,7 @@
               })),
             ]"
           />
-          <p v-else class="rounded-lg bg-surface-gray-2 p-3 text-sm">
+          <p v-else class="rounded-6 bg-surface-gray-2 p-3 text-sm">
             {{
               __(
                 'Nobody here can do it yet. The request goes to the administrators with this purchase attached.',
