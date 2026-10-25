@@ -39,9 +39,12 @@ class TestShellBoot(TestCase):
 	def test_older_doco_without_contactos_turns_the_module_off_not_the_shell(self):
 		with patch.dict(sys.modules, {"doco.contactos.api": None}):
 			data = shell.boot()
+			landing = shell.first_module()
 		self.assertFalse(data["modules"]["contactos"]["enabled"])
+		self.assertEqual(data["modules"]["contactos"]["state"], "off")
 		self.assertTrue(data["modules"]["contactos"]["reason"])
 		self.assertTrue(data["modules"]["ventas"]["enabled"])
+		self.assertNotEqual(landing, "contactos")
 
 	def _contactos_on(self):
 		return {"key": "contactos", "enabled": True, "reason": None, "capabilities": {"read": True}}

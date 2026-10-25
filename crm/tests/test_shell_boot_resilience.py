@@ -57,8 +57,10 @@ class TestShellBootResilience(TestCase):
 		self.assertIn("tienda setting has no column", logs[0]["error"])
 
 	def test_contactos_settings_read_error_leaves_contactos_unavailable_not_the_shell(self):
-		if "doco" not in frappe.get_installed_apps():
-			self.skipTest("Contactos (doco) is not installed")
+		try:
+			import doco.contactos.api
+		except ImportError:
+			self.skipTest("This doco has no Contactos service")
 		with patch(
 			"doco.contactos.api.bootstrap", side_effect=Exception("Contactos Settings: unknown column")
 		):
