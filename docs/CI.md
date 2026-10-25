@@ -162,12 +162,13 @@ for the native suite.
   token, and the self-hosted runner never serves public repositories. Marco chose
   (2026-10-18) the image only, with no token: bump `SHELL_CI_IMAGE` to the newest
   `doco-bench` release digest after each release.
-- **The Shell APIs job is advisory for now.** On the all-lanes-20261014 image its
-  doco reads `Employee.leave_approver` without HRMS, and 55 of the 72 shell tests
-  error on it (run 39166087010); doco fixed it afterwards (6e8b250). Until a release
-  image carries that fix, the job has `continue-on-error` and the Server gate passes
-  `shell=…:advisory` (reported, never failing). To make it gate: bump the digest, see
-  the job green, then drop both.
+- **The Shell APIs job gates.** Since roll-20261020 (`SHELL_CI_IMAGE` on the
+  `vall-lanes-20261020-edc87cea3b4a` digest) the image carries HRMS and doco
+  `6e8b250`, so the 55 `Employee.leave_approver` errors of all-lanes-20261014
+  (run 39166087010) are gone. A red job fails the Server gate like Server does.
+  Until then it ran with `continue-on-error`, which reports `needs.shell.result`
+  as `success`, so the gate never saw a red job. `gate.py` still accepts
+  `:advisory` for a job that needs that mode.
 
 ## Gates
 
