@@ -162,8 +162,9 @@ jobs:
         runs-on: ubuntu-24.04
         timeout-minutes: 45
         env:
-            # all-lanes-20261014 release image (tag vall-lanes-20261014-c6dbecc87552).
-            SHELL_CI_IMAGE: ghcr.io/holymc2/doco-bench@sha256:d26b30030326db1cb1c93d04fa2ec8dd887f699ac48f6147d5d0d3883bcdcf2a
+            # roll-20261020 production image (tag vall-lanes-20261020-edc87cea3b4a): doco be67762 with
+            # hrms, so absences resolve Employee.leave_approver (~/muelle-releases/roll-20261020).
+            SHELL_CI_IMAGE: ghcr.io/holymc2/doco-bench@sha256:6bedaf579cd71064741eb5796fcd57f9f55161e30b7c88e93c535cef232a3092
         steps:
             - uses: actions/checkout@v4
               with:
