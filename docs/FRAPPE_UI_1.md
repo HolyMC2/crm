@@ -324,7 +324,7 @@ here as **verified** (frappe-ui's own behavior, acceptable, with the step that p
 | Tab order | 14 Tabs stay inside the dialog; Link (combobox), Autocomplete and the date control are reached in order | verified | `10` |
 | `trigger="manual"` (Link) | click opens the listbox, `aria-expanded=true`; Escape closes the list and keeps the dialog | verified | `11` |
 | Tooltip (Button `:tooltip`, default 500 ms) | no bubble at 150 ms, one at 850 ms after hover; with a tooltip open, Escape closes the tooltip first and the dialog stays; the next Escape closes the dialog | verified at 1440 (the phone quick-entry dialog has no edit-layout button, so no tooltip trigger to test) | `12` |
-| Dropdown (reka DropdownMenu) | click opens: `aria-expanded=true`, `data-state=open`, one menu with items; ArrowDown highlights; Escape closes and returns focus; Enter on the focused trigger opens | verified at 1440 on the deal page; at 412 the deal header's first menu is the call button, whose Dropdown renders «No options» (a menu with no items, skipped), and the next menu with items is a deals-list row «Más acciones», where Enter navigated instead of opening: **fixed** (6.2 i) | `13` |
+| Dropdown (reka DropdownMenu) | click opens: `aria-expanded=true`, `data-state=open`, one menu with items; ArrowDown highlights; Escape closes and returns focus; Enter on the focused trigger opens | verified at 1440 on the deal page; at 412 the deal header's first menu is the call button, whose Dropdown renders «No options» (a menu with no items, skipped), and the next menu with items is a deals-list row «Más acciones» (the phone list renders `MobileRecordCard`), where Enter navigated instead of opening: **fixed** (6.2 i) | `13` |
 | Popover «Filtrar» (notes list, `align="end"`) | click opens (`aria-expanded`, `data-state`), content right edge = trigger right edge; Escape closes; Enter opens | verified; at 412 the 288 px content does not fit under a trigger whose right edge is at 91 px, so reka's `avoidCollisions` shifts it to span 10–298 inside the viewport (frappe-ui's own behaviour, asserted as such) | `14` |
 | Tooltip `hover-delay` 1000 → ms | 0 at 150 ms, 2 at 950 ms on the list view's column tooltips | verified | `15` |
 | Reports empty state | three «No hay grupos para esta métrica…» blocks for a period without data | verified | `17` |
@@ -388,7 +388,13 @@ h. **Checkboxes turned into circles after the radius codemod.** `src/index.css` 
 i. **Enter on a list row's «Más acciones» opened the record, not the menu.** The deals and leads rows
    answer `@keydown.enter` with `openDeal`/`openLead`; the row's Dropdown trigger sits inside the
    row, so Enter on the focused trigger bubbled up and navigated while reka opened the menu (the 412
-   walk's dropdown step). `.self` on the handler, as `onRowKey` already had.
+   walk's dropdown step). `.self` on the handler, as `onRowKey` already had. The desktop grid rows
+   were patched first; the 412 walk still failed because the phone lists render `MobileRecordCard`,
+   whose root `@keydown.enter` wraps the «···» Dropdown, so the card got the same `.self` (one place
+   for every phone list), and so did the campaigns list row. `tests/unit/dropdownEnterGuard.test.js`
+   parses every template with `@vue/compiler-sfc` and fails when an Enter handler without `.self`
+   wraps a `<Dropdown>`; it found no other site among 807 templates (DealHeader's menus are siblings
+   of its Enter block, not children).
 
 ### 6.3 B7: `call()` and `serverMessagesHandler`
 
