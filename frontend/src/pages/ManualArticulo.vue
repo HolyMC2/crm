@@ -150,7 +150,9 @@
           data-testid="manual-read-ask"
         >
           <span class="min-w-0 flex-1">{{
-            __('You were asked to read this article. Tap «Read» when you finish.')
+            __(
+              'You were asked to read this article. Tap «Read» when you finish.',
+            )
           }}</span>
           <Button
             variant="solid"
@@ -426,11 +428,15 @@ async function askToRead() {
     })
     article.value = next
     notice.value = {
-      text: asked
-        ? __('Asked {0} people to read it. Each one has it in Pendientes.', [
-            asked,
-          ])
-        : __('Everyone who reads it was already asked.'),
+      text:
+        asked === 1
+          ? __('Asked 1 person to read it. It is in their Pendientes.')
+          : asked
+            ? __(
+                'Asked {0} people to read it. Each one has it in Pendientes.',
+                [asked],
+              )
+            : __('Everyone who reads it was already asked.'),
     }
   } catch (error) {
     problem.value = problemOf(error)

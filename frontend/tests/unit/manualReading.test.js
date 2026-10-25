@@ -88,13 +88,16 @@ async function mountArticle() {
   await flush()
 }
 const find = (id) => document.querySelector(`[data-testid="${id}"]`)
-const posted = (name) => calls.filter((c) => c.method === `doco.manual.api.${name}`)
+const posted = (name) =>
+  calls.filter((c) => c.method === `doco.manual.api.${name}`)
 
 describe('«Pedir que lo lean» (D5)', () => {
   it('an editor asks the team to read a published article and is told how many were asked', async () => {
     await mountArticle()
     answers['doco.manual.api.ask_to_read'] = {
-      ...article({ readers: { asked: 3, read: 0, waiting: ['Ana', 'Beto', 'Caro'] } }),
+      ...article({
+        readers: { asked: 3, read: 0, waiting: ['Ana', 'Beto', 'Caro'] },
+      }),
       asked_now: 3,
     }
     find('manual-ask-read').click()

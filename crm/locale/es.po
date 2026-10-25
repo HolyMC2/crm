@@ -28752,3 +28752,7 @@ msgstr "Marcado como leído. Gracias."
 #: frontend/src (Manual de la tienda)
 msgid "Restored. The history keeps this change too."
 msgstr "Restaurado. El historial también guarda este cambio."
+
+#: frontend/src (Manual de la tienda)
+msgid "Asked 1 person to read it. It is in their Pendientes."
+msgstr "Se pidió a 1 persona que lo lea. Lo tiene en Pendientes."
