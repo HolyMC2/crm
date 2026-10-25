@@ -126,7 +126,11 @@
                   :src="logo"
                   class="size-5 object-cover"
                 />
-                <component :is="logo" v-else class="size-5 shrink-0 rounded-4" />
+                <component
+                  :is="logo"
+                  v-else
+                  class="size-5 shrink-0 rounded-4"
+                />
                 <div>{{ __(name) }}</div>
               </div>
             </div>
@@ -150,7 +154,11 @@
                   :src="logo"
                   class="size-5 object-cover"
                 />
-                <component :is="logo" v-else class="size-5 shrink-0 rounded-4" />
+                <component
+                  :is="logo"
+                  v-else
+                  class="size-5 shrink-0 rounded-4"
+                />
                 <div>{{ __(name) }}</div>
               </div>
             </div>

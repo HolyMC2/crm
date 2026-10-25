@@ -32,9 +32,7 @@
         @retry="attribution.reload"
       />
     </div>
-    <details
-      class="rounded-7 border border-outline-gray-2 bg-surface-base p-4"
-    >
+    <details class="rounded-7 border border-outline-gray-2 bg-surface-base p-4">
       <summary class="cursor-pointer text-base-medium text-ink-gray-9">
         {{ __('Detalle de canales y atribución') }}
       </summary>
@@ -135,9 +133,7 @@
         </ReportBlock>
       </div>
     </details>
-    <details
-      class="rounded-7 border border-outline-gray-2 bg-surface-base p-4"
-    >
+    <details class="rounded-7 border border-outline-gray-2 bg-surface-base p-4">
       <summary class="cursor-pointer text-base-medium text-ink-gray-9">
         {{ __('Conversión y calidad de prospectos') }}
       </summary>
@@ -179,9 +175,7 @@
     </details>
     <MarketingScorecards :filters="filters" @drill="forward" />
     <MarketingOperations :filters="filters" @drill="forward" />
-    <details
-      class="rounded-7 border border-outline-gray-2 bg-surface-base p-4"
-    >
+    <details class="rounded-7 border border-outline-gray-2 bg-surface-base p-4">
       <summary class="cursor-pointer text-base-medium text-ink-gray-9">
         {{ __('Reactivación de contactos') }}
       </summary>

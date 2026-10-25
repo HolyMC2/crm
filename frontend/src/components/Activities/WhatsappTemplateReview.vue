@@ -15,9 +15,7 @@
     <div class="mb-2 flex items-center justify-between gap-2">
       <div class="flex min-w-0 items-center gap-2">
         <span class="text-xs">📄</span>
-        <span
-          class="truncate text-sm-semibold text-ink-gray-8"
-        >
+        <span class="truncate text-sm-semibold text-ink-gray-8">
           {{ __('Revisar plantilla') }}: {{ template }}
         </span>
         <Badge

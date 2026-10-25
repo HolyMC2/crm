@@ -101,7 +101,9 @@ function slotTemplates(src, tag) {
     out.push({
       slot: m[1],
       props: m[2] || '',
-      line: tag.line + (src.slice(tag.end, tag.end + m.index).split('\n').length - 1),
+      line:
+        tag.line +
+        (src.slice(tag.end, tag.end + m.index).split('\n').length - 1),
     })
   }
   return out
@@ -144,25 +146,35 @@ export function scanFile(file) {
         (PICKERS.has(name) || name === 'Popover') &&
         /\b(togglePopover|isOpen)\b/.test(t.props)
       )
-        hit(t.line, `${name} #${t.slot} reads { ${t.props.match(/togglePopover|isOpen/)[0]} } (1.0.2 passes { open, close, setOpen })`)
+        hit(
+          t.line,
+          `${name} #${t.slot} reads { ${t.props.match(/togglePopover|isOpen/)[0]} } (1.0.2 passes { open, close, setOpen })`,
+        )
     }
   }
   for (const ref of dialogRefs) {
     const re = new RegExp(`\\b${ref}(?:\\.value)?\\.(close|open)\\(`, 'g')
     let m
     while ((m = re.exec(src)))
-      hit(src.slice(0, m.index).split('\n').length, `Dialog ref ${ref}.${m[1]}() (1.0.2 exposes nothing; drive v-model:open)`)
+      hit(
+        src.slice(0, m.index).split('\n').length,
+        `Dialog ref ${ref}.${m[1]}() (1.0.2 exposes nothing; drive v-model:open)`,
+      )
   }
   return found
 }
 
 export function scan(roots) {
   const found = []
-  for (const root of roots) for (const f of walk(root)) found.push(...scanFile(f))
+  for (const root of roots)
+    for (const f of walk(root)) found.push(...scanFile(f))
   return found
 }
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
+if (
+  process.argv[1] &&
+  fileURLToPath(import.meta.url) === path.resolve(process.argv[1])
+) {
   const args = process.argv.slice(2)
   const asJson = args.includes('--json')
   const roots = args.filter((a) => !a.startsWith('--'))
@@ -171,7 +183,11 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.a
   if (asJson) console.log(JSON.stringify(found, null, 2))
   else {
     for (const f of found) console.log(`${f.file}:${f.line}: ${f.what}`)
-    console.log(found.length ? `${found.length} legacy overlay site(s)` : 'no legacy overlay sites')
+    console.log(
+      found.length
+        ? `${found.length} legacy overlay site(s)`
+        : 'no legacy overlay sites',
+    )
   }
   process.exit(found.length ? 1 : 0)
 }

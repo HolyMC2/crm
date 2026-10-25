@@ -176,10 +176,7 @@
                 {{ __('Vacations', null, 'Equipo') }}
               </h2>
               <template v-if="vacation">
-                <p
-                  v-if="vacationLine"
-                  class="text-base-medium text-ink-gray-9"
-                >
+                <p v-if="vacationLine" class="text-base-medium text-ink-gray-9">
                   {{ vacationLine }}
                 </p>
                 <p v-else class="text-base text-ink-gray-8">

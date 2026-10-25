@@ -216,10 +216,9 @@
                 </span>
                 <span class="min-w-0 flex-1">
                   <span class="flex items-center gap-1.5">
-                    <span
-                      class="truncate text-base-medium text-ink-gray-9"
-                      >{{ folder.title }}</span
-                    >
+                    <span class="truncate text-base-medium text-ink-gray-9">{{
+                      folder.title
+                    }}</span>
                     <LucideLock
                       v-if="folder.visibility !== 'Company'"
                       class="h-3 w-3 shrink-0 text-ink-gray-5"

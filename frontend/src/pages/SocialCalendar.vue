@@ -285,9 +285,7 @@
       <div
         class="flex flex-col bg-surface-base"
         :class="
-          isMobile
-            ? 'h-full min-h-0'
-            : 'max-h-[86vh] overflow-hidden rounded-7'
+          isMobile ? 'h-full min-h-0' : 'max-h-[86vh] overflow-hidden rounded-7'
         "
       >
         <div

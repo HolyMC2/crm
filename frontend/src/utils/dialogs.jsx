@@ -80,7 +80,14 @@ export function createDialog(dialogOptions) {
 // confirms; Cancel just closes. Destructive actions default to a red confirm button.
 // onCancel fires when the dialog closes any way EXCEPT confirm (X, backdrop, Esc) —
 // callers awaiting an outcome need the "no" as much as the "yes".
-export function confirmDialog({ title, message, confirmLabel, theme = 'red', onConfirm, onCancel }) {
+export function confirmDialog({
+  title,
+  message,
+  confirmLabel,
+  theme = 'red',
+  onConfirm,
+  onCancel,
+}) {
   let confirmed = false
   createDialog({
     title: title || message,

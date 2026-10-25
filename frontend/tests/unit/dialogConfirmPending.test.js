@@ -14,7 +14,9 @@ async function settle() {
     await nextTick()
   }
 }
-const buttons = () => [...document.body.querySelectorAll('[role="dialog"] button')]
+const buttons = () => [
+  ...document.body.querySelectorAll('[role="dialog"] button'),
+]
 const byText = (text) => buttons().find((b) => b.textContent.trim() === text)
 afterEach(() => {
   app?.unmount()
@@ -46,7 +48,9 @@ describe('dialog.confirm with a pending onConfirm', () => {
     // Escape / overlay / X all end in update:open=false
     document.body
       .querySelector('[role="dialog"]')
-      .dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+      .dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }),
+      )
     await settle()
     expect(document.body.querySelector('[role="dialog"]')).toBeTruthy()
     expect(cancelled).toBe(0)

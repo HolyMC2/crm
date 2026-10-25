@@ -30,10 +30,14 @@ import path from 'node:path'
 
 const args = process.argv.slice(2)
 const dry = args.includes('--dry')
-const mode = args.find((a) => /^--(surface-white|text-base-medium|dark-redundant)$/.test(a))
+const mode = args.find((a) =>
+  /^--(surface-white|text-base-medium|dark-redundant)$/.test(a),
+)
 const roots = args.filter((a) => !a.startsWith('--'))
 if (!mode) {
-  console.error('pick one: --surface-white | --text-base-medium | --dark-redundant')
+  console.error(
+    'pick one: --surface-white | --text-base-medium | --dark-redundant',
+  )
   process.exit(2)
 }
 if (!roots.length) roots.push('src')
@@ -46,7 +50,8 @@ function* walk(dir) {
   }
 }
 
-const SEMANTIC = /^(bg|text|border|ring|divide|placeholder|outline)-(surface|ink|outline)-[a-z0-9-]+(\/\d+)?$/
+const SEMANTIC =
+  /^(bg|text|border|ring|divide|placeholder|outline)-(surface|ink|outline)-[a-z0-9-]+(\/\d+)?$/
 const PROPERTY = (cls) => cls.replace(/^([a-z]+)-.*$/, '$1')
 
 // Rewrites one class list (the inside of class="…" or an @apply). Returns the
@@ -60,10 +65,13 @@ function rewriteClassList(list) {
       return 'bg-surface-base'
     })
   } else if (mode === '--text-base-medium') {
-    out = out.replace(/\btext-base font-medium\b|\bfont-medium text-base\b/g, () => {
-      changes.push('text-base font-medium → text-base-medium')
-      return 'text-base-medium'
-    })
+    out = out.replace(
+      /\btext-base font-medium\b|\bfont-medium text-base\b/g,
+      () => {
+        changes.push('text-base font-medium → text-base-medium')
+        return 'text-base-medium'
+      },
+    )
   } else if (mode === '--dark-redundant') {
     const classes = out.split(/(\s+)/)
     const plain = classes.filter((c) => c.trim() && !c.includes(':'))
@@ -72,7 +80,9 @@ function rewriteClassList(list) {
     const kept = []
     for (let i = 0; i < classes.length; i++) {
       const c = classes[i]
-      const m = c.match(/^dark:([a-z]+-(?:surface|ink|outline)-[a-z0-9-]+(?:\/\d+)?)$/)
+      const m = c.match(
+        /^dark:([a-z]+-(?:surface|ink|outline)-[a-z0-9-]+(?:\/\d+)?)$/,
+      )
       const light = m && byProperty.get(PROPERTY(m[1]))
       if (light && (light === m[1] || PROPERTY(m[1]) === 'text')) {
         changes.push(`${c} (light: ${byProperty.get(PROPERTY(m[1]))})`)
@@ -105,7 +115,8 @@ for (const root of roots) {
     const fileChanges = []
     for (const re of CONTEXTS) {
       next = next.replace(re, (whole, open, body, close) => {
-        if (!/\b(surface-white|text-base|font-medium|dark:)/.test(body)) return whole
+        if (!/\b(surface-white|text-base|font-medium|dark:)/.test(body))
+          return whole
         const { out, changes } = rewriteClassList(body)
         if (!changes.length) return whole
         fileChanges.push(...changes)
@@ -121,4 +132,6 @@ for (const root of roots) {
     }
   }
 }
-console.log(`${dry ? 'would rewrite' : 'rewrote'} ${total} site(s) in ${touched.length} file(s)`)
+console.log(
+  `${dry ? 'would rewrite' : 'rewrote'} ${total} site(s) in ${touched.length} file(s)`,
+)

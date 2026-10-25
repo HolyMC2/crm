@@ -103,9 +103,7 @@
           class="mx-3 mb-2 flex items-start gap-2 rounded-5 border border-red-200 bg-surface-red-1 px-3 py-2 dark:border-red-900/40 sm:mx-10"
         >
           <LucideSlash class="mt-0.5 size-4 shrink-0 text-ink-red-7" />
-          <div
-            class="text-xs leading-snug text-ink-gray-7"
-          >
+          <div class="text-xs leading-snug text-ink-gray-7">
             <span class="font-semibold text-ink-red-7">{{
               __('Este número no tiene WhatsApp.')
             }}</span>
@@ -119,9 +117,7 @@
           <LucideTriangleAlert
             class="mt-0.5 size-4 shrink-0 text-ink-amber-9"
           />
-          <div
-            class="text-xs leading-snug text-ink-gray-7"
-          >
+          <div class="text-xs leading-snug text-ink-gray-7">
             <span class="font-semibold text-ink-gray-8">{{
               __('Sin WhatsApp para este número.')
             }}</span>

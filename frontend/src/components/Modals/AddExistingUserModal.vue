@@ -20,7 +20,9 @@
         {{ __('Users') }}
       </label>
 
-      <div class="p-2 group bg-surface-gray-2 hover:bg-surface-gray-3 rounded-4">
+      <div
+        class="p-2 group bg-surface-gray-2 hover:bg-surface-gray-3 rounded-4"
+      >
         <EmailMultiSelect
           v-if="users?.data?.crmUsers?.length"
           v-model="newUsers"
