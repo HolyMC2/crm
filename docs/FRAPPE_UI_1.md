@@ -323,15 +323,15 @@ here as **verified** (frappe-ui's own behavior, acceptable, with the step that p
 | Bare dialog (DealModal «Crear trato») | opens; Escape; overlay; close control | **fixed** (6.2 a) | `08`, `09` |
 | Tab order | 14 Tabs stay inside the dialog; Link (combobox), Autocomplete and the date control are reached in order | verified | `10` |
 | `trigger="manual"` (Link) | click opens the listbox, `aria-expanded=true`; Escape closes the list and keeps the dialog | verified | `11` |
-| Tooltip (Button `:tooltip`, default 500 ms) | no bubble at 150 ms, one at 850 ms after hover; with a tooltip open, Escape closes the tooltip first and the dialog stays; the next Escape closes the dialog | verified (reka layering) | `12` |
-| Dropdown (deal page, reka DropdownMenu) | click opens: `aria-expanded=true`, `data-state=open`, one menu; ArrowDown highlights; Escape closes and returns focus; Enter on the focused trigger opens | verified | `13` |
-| Popover «Filtrar» (notes list, `align="end"`) | click opens (`aria-expanded`, `data-state`), content right edge = trigger right edge; Escape closes; Enter opens | verified | `14` |
+| Tooltip (Button `:tooltip`, default 500 ms) | no bubble at 150 ms, one at 850 ms after hover; with a tooltip open, Escape closes the tooltip first and the dialog stays; the next Escape closes the dialog | verified at 1440 (the phone quick-entry dialog has no edit-layout button, so no tooltip trigger to test) | `12` |
+| Dropdown (reka DropdownMenu) | click opens: `aria-expanded=true`, `data-state=open`, one menu with items; ArrowDown highlights; Escape closes and returns focus; Enter on the focused trigger opens | verified at 1440 on the deal page; at 412 the deal header's first menu is the call button, whose Dropdown renders «No options» (a menu with no items, skipped), and the next menu with items is a deals-list row «Más acciones», where Enter navigated instead of opening: **fixed** (6.2 i) | `13` |
+| Popover «Filtrar» (notes list, `align="end"`) | click opens (`aria-expanded`, `data-state`), content right edge = trigger right edge; Escape closes; Enter opens | verified; at 412 the 288 px content does not fit under a trigger whose right edge is at 91 px, so reka's `avoidCollisions` shifts it to span 10–298 inside the viewport (frappe-ui's own behaviour, asserted as such) | `14` |
 | Tooltip `hover-delay` 1000 → ms | 0 at 150 ms, 2 at 950 ms on the list view's column tooltips | verified | `15` |
 | Reports empty state | three «No hay grupos para esta métrica…» blocks for a period without data | verified | `17` |
 | Settings (`dismissible` = not pending) | Escape closes, overlay closes, «Return to work» closes while nothing is pending | verified (6.2 d) | `18` |
 | `dialog.confirm` (SLA policy «Unsaved Changes») | opens on back; Escape, overlay click, the X and «Cancelar» each cancel and keep the editor's text; «Confirmar» leaves | verified | `20`, `21` |
 | `dialog.confirm` with a pending `onConfirm` | no crm site is async; `tests/unit/dialogConfirmPending.test.js` proves 1.0.2 holds the dialog, disables Cancel and ignores Escape until the promise settles, and a rejection shows inline and re-enables Cancel | verified (unit) | — |
-| HoverCard («Condición antigua», assignment rules) | not reachable on the lab data (no old-style rule); `hover-delay` 250 ms is the source value | not walked | — |
+| HoverCard («Condición antigua», assignment rules) | not reachable on the lab data (no old-style rule); `hover-delay` 250 ms is the source value; the phone settings layout hides the sidebar entry, so the check is desktop-only | not walked | — |
 | Hoy dashboard charts (bot, 1440) | 9 chart plots (SVG renderer, `data-slot="chart-plot"`); hover shows a `chart-tooltip`; legends present | verified | `22` |
 | Reports charts (bot) | 3 plots with bars; hover tooltip; a bar click emits `select` → `drill_kind` query | **fixed** (6.2 b) | `23`, `24` |
 | AboutModal | only `UserDropdown` (AppSidebar) opens it and the shell rail replaced that; unit test | **fixed** (6.2 c) | — |
@@ -379,6 +379,16 @@ g. **Stale beta.29 references**: `frontend/patches/` (only a `.gitattributes`; p
    pin is `frontend/package.json`; `vite.config.js` `server.fs.allow` comment no longer claims a
    linked frappe-ui checkout; `README.md` names 1.0.2 and this file; `MERGE_NOTES_trackb.md` carries
    a «historical» note.
+h. **Checkboxes turned into circles after the radius codemod.** `src/index.css` pins
+   `input[type='checkbox']` to `--radius-1` because `rounded-4` (8 px) makes a 16-20 px box read as
+   a radio button; the guard named the old bare `.rounded` class, the codemod renamed the 30 checkbox
+   sites to `.rounded-4` and only edited the guard's comment. The styling re-walk's `08-compras`
+   diff caught it. The guard names `.rounded-4`; `tests/unit/checkboxRadiusGuard.test.js` scans the
+   `<input type="checkbox">` sites for their numbered radius and asserts a guard for each.
+i. **Enter on a list row's «Más acciones» opened the record, not the menu.** The deals and leads rows
+   answer `@keydown.enter` with `openDeal`/`openLead`; the row's Dropdown trigger sits inside the
+   row, so Enter on the focused trigger bubbled up and navigated while reka opened the menu (the 412
+   walk's dropdown step). `.self` on the handler, as `onRowKey` already had.
 
 ### 6.3 B7: `call()` and `serverMessagesHandler`
 
@@ -408,13 +418,22 @@ rename, the codemod committed first):
 | Rename | Sites | Visual effect |
 |---|---|---|
 | `bg-surface-white` → `bg-surface-base` | 33 / 17 files | intended: those surfaces get their background back |
-| named radius → numbered (`frappe-ui/tailwind/migrate-tokens-v2.js --radius-only`): `rounded`→4, sm→1, md→5, lg→6, xl→7, 2xl→8 and directional forms; alias block in `tailwind.config.js` removed | 1755 / 436 files | none by construction (the aliases mapped to the same variables). The codemod also rewrote one prose string (`useCompras.js` «rounded up to» → «rounded-4 up to», caught by the Spanish catalog test); reverted by hand, nothing else outside class lists matched |
+| named radius → numbered (`frappe-ui/tailwind/migrate-tokens-v2.js --radius-only`): `rounded`→4, sm→1, md→5, lg→6, xl→7, 2xl→8 and directional forms; alias block in `tailwind.config.js` removed | 1755 / 436 files | none by construction (the aliases mapped to the same variables), except the checkbox guard in `index.css` that still named `.rounded` (6.2 h). The codemod also rewrote one prose string (`useCompras.js` «rounded up to» → «rounded-4 up to», caught by the Spanish catalog test); reverted by hand, nothing else outside class lists matched |
 | `text-base font-medium` → `text-base-medium` | 88 / 66 files | none visible (14px, 1.35, 500; the utility adds its tracking) |
 | redundant `dark:` ink overrides (`text-ink-gray-8 dark:text-ink-gray-7` and identical pairs) | 16 / 7 files | dark inks one step brighter where the override dimmed them; the 18 `bg-surface-base dark:bg-surface-gray-1` elevation pairs are kept as design intent, and `dark:` on raw palette colours stays |
 | `--focus-*` | 0 | — |
 | `--brand*` | 76 `var(--brand)` + 12 other in 43 files | unchanged: `index.css` aliases `--brand*` to `--muelle-accent*` (the tokens README's «during migration» state); `stores/settings.js` still overrides `--brand*` from `FCRM Settings.brand_color`. Deleting the alias means routing that tenant colour through `applyShellAppearance` (a whole-shell accent, with the AA re-check) — a product decision, left for Marco |
 | line-height 1.35 | preset | `text-base` lines are 1.35 (1.15 in v1 per the plan); compared shot by shot in the re-walk |
 | hover on touch | preset `future.hoverOnlyWhenSupported: true` | `hover:` rules apply only where a hover-capable pointer exists; nothing to rename |
+
+Re-walk: the FUI1 walk (`shell-program/scripts/walk-fui1.mjs`) re-taken on the lane at 1440/412/305 ×
+dark/light (118 shots, `shell-program/evidence/FUI1-behavior/after-styling/`) and compared pixel by
+pixel against `evidence/FUI1` (`shell-program/scripts/diff-fui1-styling.py`, a pixel counts when its
+RGB distance exceeds 24/765): no pair changed more than 0.16 % of its pixels, and the three places
+that changed at all are the checkbox circles in «Compras › Por comprar» at 1440 (6.2 h, re-taken
+after the fix), the tighter `text-base-medium` tracking on the «Nueva cita» gate title, and the
+time-of-day defaults in «Nuevo evento». Line-height, the dark inks one step brighter and the
+`surface-base` backgrounds are not visible at this tolerance on these views.
 
 CSS budget: `scripts/verify-bundle-budget.mjs` keeps 61 KB gzip (`docs/PRODUCTOS_RESULTADOS_HANDOFF_2026-10-15.md`
 said 60; now 61). Lane build (`vite build` + the script): entry JS 168.1 KB, CSS 58.5 KB gzip; the
