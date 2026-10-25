@@ -173,6 +173,18 @@ class TestDocumentosAccess(IntegrationTestCase):
 		for event in bundle["activity"]["events"]:
 			self.assertNotIn("@", event["who"])
 
+	def test_a_reader_opens_a_record_without_a_message_for_each_action_it_lacks(self):
+		# Asking which actions are allowed is a question, not a refusal: no «no tiene acceso» toast.
+		self._grant("Note")
+		frappe.set_user("Administrator")
+		note = frappe.get_doc({"doctype": "Note", "title": "Solo lectura", "public": 1}).insert()
+		frappe.set_user(self.email)
+		frappe.clear_messages()
+		actions = documentos.record("Note", note.name)["actions"]
+		self.assertFalse(actions["edit"]["allowed"])
+		self.assertFalse(actions["delete"]["allowed"])
+		self.assertEqual(frappe.local.message_log, [])
+
 	def test_a_status_label_is_a_status_event_and_other_info_stays_info(self):
 		self._grant("Note")
 		frappe.set_user("Administrator")

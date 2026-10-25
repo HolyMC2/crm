@@ -762,7 +762,8 @@ def _made_by(doctype, doc):
 def _actions(doc):
 	meta = doc.meta
 	docstatus = cint(doc.docstatus)
-	has = lambda ptype: bool(doc.has_permission(ptype))  # noqa: E731
+	# frappe.has_permission does not msgprint a denial; Document.has_permission does, once per ptype.
+	has = lambda ptype: bool(frappe.has_permission(doc.doctype, ptype, doc=doc))  # noqa: E731
 	can_create = False
 	if frappe.has_permission(doc.doctype, "create"):
 		can_create = True

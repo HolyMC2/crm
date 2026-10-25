@@ -23,12 +23,14 @@
           class="size-5 shrink-0 text-ink-gray-6"
         />
         <div class="min-w-0 flex-1">
-          <div class="flex items-center gap-2">
-            <h3 class="truncate text-base font-semibold text-ink-gray-9">
+          <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <h3
+              class="line-clamp-2 min-w-0 break-words text-base font-semibold text-ink-gray-9"
+            >
               {{ f.name }}
             </h3>
             <span
-              class="shrink-0 rounded-full px-2 py-0.5 text-xs font-medium"
+              class="min-w-0 max-w-full truncate rounded-full px-2 py-0.5 text-xs font-medium"
               :class="
                 f.enabled
                   ? 'bg-surface-green-2 text-ink-green-7'

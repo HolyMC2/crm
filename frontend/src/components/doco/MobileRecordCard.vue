@@ -29,7 +29,7 @@
     <div class="min-w-0 flex-1">
       <div class="flex items-baseline gap-2">
         <span
-          class="min-w-0 flex-1 truncate text-[14px] font-semibold text-ink-gray-9"
+          class="line-clamp-2 min-w-0 flex-1 break-words text-[14px] font-semibold text-ink-gray-9"
           >{{ title || '—' }}</span
         >
         <span v-if="time" class="flex-none text-[11px] text-ink-gray-5">{{

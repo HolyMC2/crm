@@ -404,13 +404,38 @@ beta.29's `call()` was its own fetch and never read `serverMessagesHandler`; 1.0
 the rejection as `e.messages`, which the 228 crm catch sites already toast. crm set no handler, so
 nothing double-toasted and the success-path `frappe.msgprint`s stayed silent, as before. Decision:
 `src/utils/resourceConfig.js` registers `handleServerMessages` (`src/utils/serverMessages.js`): one
-toast per distinct message, indicator → type (red error, orange/amber warning, green success, else
-info), title as description; `tests/unit/serverMessages.test.js`. Exposure is small: one `msgprint`
+toast per distinct message, indicator → type (red error, orange/yellow warning, green success, any
+other indicator info); `tests/unit/serverMessages.test.js`. F6 (shell wave F, F16-3/4) narrowed it:
+only a message the server styled for the user (one with an `indicator`) toasts, with no Desk title
+line («Mensaje» added nothing). A message without an indicator is a log, such as the permission
+denial Frappe prints from a linked-doc read (`workload.py`) or `Document.has_permission`, and one
+with `raise_exception` is a throw the server caught on a 200 response (the encargado's boot reads);
+both stay out of the toast and the page shows its own muted state. The root cause on record pages,
+`crm/api/documentos.py` `_actions` probing each action with `doc.has_permission`, now uses
+`frappe.has_permission(doc.doctype, ptype, doc=doc)`, which does not print. Exposure is small: one `msgprint`
 in crm's own api (`crm/api/user.py:158`, user removed from CRM roles) and none in doco's contactos,
 compras or gastos endpoints; the three flows the brief names (Compras › nueva, Gastos › registrar,
 Contacto save with a validation error) go through crm's own fetch wrappers (`comprasApi`,
 `gastosApi`, `contactosApi`), not frappe-ui `call`, so they are unchanged by B7 and were not
 re-walked here. `requestBaseUrl`/`requestHeaders` stay unset (same-origin, cookie session).
+
+A caller that needs what the server said on a 200 reads it itself, because the handler is global
+and frappe-ui's `call()` returns only `message`. Desktop bulk edit (`ListBulkActions` →
+`Modals/EditValueModal.vue` → `src/utils/bulkEdit.js`) posts to Frappe's
+`submit_cancel_or_update_docs` like `useContactos.postMethod` does. Frappe 16.35
+`frappe/desk/doctype/bulk_update/bulk_update.py:62-77` saves fewer than 20 documents in the request
+and returns the names that failed (`_bulk_action`, `:80-142`, catches each document's exception and
+rolls it back), enqueues 20 to 500 on the `short` queue and returns nothing, and throws above 500.
+So the modal says «No se actualizaron 2 de 5 registros: <the first reason Frappe printed>» (a thrown error first, else a plain message such as a missing mandatory field; an error toast when
+none saved, the count alone when Frappe recorded no reason, as for a cancelled document), or «Se están
+actualizando 25 registros en segundo plano…» for an enqueued batch, whose per-document failures
+Frappe only writes to the Error Log; `tests/unit/bulkEdit.test.js`. Still silent on a 200, by the
+rule above: a plain `frappe.msgprint` without an indicator from a document's save hooks (Frappe,
+ERPNext or app `validate`/`on_update`) reached through `frappe.client.*` or another `call()`, and any
+`frappe.throw` such an endpoint catches without re-raising. A flow that needs one of those reads the
+response itself, as bulk edit does. The record page's own probe in `crm/api/automatizaciones.py`
+`motivo_repetir` (the «Repetir cada…» tool) also uses `frappe.has_permission(..., doc=doc)` now, so
+it no longer prints a denial for a reader without write.
 
 ### 6.4 B9: the preset renames, measured
 

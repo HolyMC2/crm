@@ -238,7 +238,11 @@ def record_label(doctype, name):
 		if (not field or field == "name") and meta.has_field("title"):
 			field = "title"
 		if field and field != "name" and readable_field(doctype, field):
-			return frappe.db.get_value(doctype, name, field) or name
+			value = frappe.db.get_value(doctype, name, field)
+			if value and meta.get_field(field).fieldtype == "Select":
+				# A Select stores its option key (Scan Task «count»); people read its label («Conteo»).
+				return _(value)
+			return value or name
 	except Exception:
 		frappe.clear_last_message()
 	return name

@@ -41,10 +41,11 @@ import { useTelemetry } from '@framework/ui'
 import {
   Combobox,
   FormControl,
-  call,
   createResource,
   DatePicker,
+  toast,
 } from 'frappe-ui'
+import { bulkUpdate, bulkUpdateNotice } from '@/utils/bulkEdit'
 import { TextEditor } from 'frappe-ui/experimental'
 import { ref, computed, onMounted, h } from 'vue'
 
@@ -98,35 +99,36 @@ const field = ref({
 const newValue = ref('')
 const loading = ref(false)
 
-function updateValues() {
+async function updateValues() {
   let fieldVal = newValue.value
   if (field.value.fieldtype == 'Check') {
     fieldVal = fieldVal == 'Yes' ? 1 : 0
   }
+  const docnames = Array.from(props.selectedValues)
   loading.value = true
-  call(
-    'frappe.desk.doctype.bulk_update.bulk_update.submit_cancel_or_update_docs',
-    {
-      doctype: props.doctype,
-      docnames: Array.from(props.selectedValues),
-      action: 'update',
-      data: {
-        [field.value.fieldname]: fieldVal || null,
-      },
-    },
-  ).then(() => {
-    field.value = {
-      label: '',
-      fieldtype: '',
-      fieldname: '',
-      options: '',
-    }
-    newValue.value = ''
+  let outcome
+  try {
+    outcome = await bulkUpdate(props.doctype, docnames, {
+      [field.value.fieldname]: fieldVal || null,
+    })
+  } catch (error) {
+    toast.error(error.messages?.[0] || __('The records were not updated.'))
+    return
+  } finally {
     loading.value = false
-    show.value = false
-    capture('bulk_update', { doctype: props.doctype })
-    emit('reload')
-  })
+  }
+  const notice = bulkUpdateNotice(outcome, docnames.length)
+  if (notice) toast[notice.type](notice.message)
+  field.value = {
+    label: '',
+    fieldtype: '',
+    fieldname: '',
+    options: '',
+  }
+  newValue.value = ''
+  show.value = false
+  capture('bulk_update', { doctype: props.doctype })
+  emit('reload')
 }
 
 function changeField(f) {

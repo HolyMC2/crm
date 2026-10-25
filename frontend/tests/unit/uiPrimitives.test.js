@@ -142,18 +142,22 @@ describe('AppBar', () => {
     expect(back.getAttribute('href')).toBe('/compras')
     expect(back.getAttribute('aria-label')).toBe('Back')
   })
+  // F16-2: a drill-down record (stack false) keeps arrow and title on one row
+  // while the title has room, and takes the title's own row before it would
+  // collapse to «Ga…» beside four icons (SPEC §1.2).
   it.each([
-    [true, false],
-    [false, true],
+    [true, 144, false],
+    [false, 144, false],
+    [false, 48, true],
   ])(
-    'at 305px a long title takes its own row (stack %s → beside the arrow: %s)',
-    async (stack, beside) => {
+    'at 305px (stack %s, icons %ipx) the title stays beside the arrow: %s',
+    async (stack, icons, beside) => {
       const width = vi
         .spyOn(HTMLElement.prototype, 'clientWidth', 'get')
         .mockReturnValue(305)
       const offset = vi
         .spyOn(HTMLElement.prototype, 'offsetWidth', 'get')
-        .mockReturnValue(144)
+        .mockReturnValue(icons)
       await mount(AppBar, {
         title: 'Samsung Galaxy A54 de prueba',
         back: '/productos',
