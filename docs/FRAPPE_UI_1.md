@@ -419,6 +419,24 @@ Contacto save with a validation error) go through crm's own fetch wrappers (`com
 `gastosApi`, `contactosApi`), not frappe-ui `call`, so they are unchanged by B7 and were not
 re-walked here. `requestBaseUrl`/`requestHeaders` stay unset (same-origin, cookie session).
 
+A caller that needs what the server said on a 200 reads it itself, because the handler is global
+and frappe-ui's `call()` returns only `message`. Desktop bulk edit (`ListBulkActions` →
+`Modals/EditValueModal.vue` → `src/utils/bulkEdit.js`) posts to Frappe's
+`submit_cancel_or_update_docs` like `useContactos.postMethod` does. Frappe 16.35
+`frappe/desk/doctype/bulk_update/bulk_update.py:62-77` saves fewer than 20 documents in the request
+and returns the names that failed (`_bulk_action`, `:80-142`, catches each document's exception and
+rolls it back), enqueues 20 to 500 on the `short` queue and returns nothing, and throws above 500.
+So the modal says «No se actualizaron 2 de 5 registros: <first caught reason>» (an error toast when
+none saved, the count alone when Frappe recorded no reason, as for a cancelled document), or «Se están
+actualizando 25 registros en segundo plano…» for an enqueued batch, whose per-document failures
+Frappe only writes to the Error Log; `tests/unit/bulkEdit.test.js`. Still silent on a 200, by the
+rule above: a plain `frappe.msgprint` without an indicator from a document's save hooks (Frappe,
+ERPNext or app `validate`/`on_update`) reached through `frappe.client.*` or another `call()`, and any
+`frappe.throw` such an endpoint catches without re-raising. A flow that needs one of those reads the
+response itself, as bulk edit does. The record page's own probe in `crm/api/automatizaciones.py`
+`motivo_repetir` (the «Repetir cada…» tool) also uses `frappe.has_permission(..., doc=doc)` now, so
+it no longer prints a denial for a reader without write.
+
 ### 6.4 B9: the preset renames, measured
 
 Measured on the lab's built stylesheet (`index-*.css`, 1.0.2): `.bg-surface-white` 0 rules and no
