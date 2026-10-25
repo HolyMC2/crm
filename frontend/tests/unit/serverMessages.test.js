@@ -26,7 +26,11 @@ describe('serverMessages', () => {
     expect(
       parseServerMessages([
         JSON.stringify({ message: 'User x removed.', indicator: 'green' }),
-        JSON.stringify({ message: 'Careful', indicator: 'orange', title: 'Stock' }),
+        JSON.stringify({
+          message: 'Careful',
+          indicator: 'orange',
+          title: 'Stock',
+        }),
         JSON.stringify({ message: 'Careful', indicator: 'orange' }),
         JSON.stringify({ message: '  ' }),
         'plain text',
