@@ -370,6 +370,14 @@ export function historyLine(row = {}) {
   return row.created ? tr('Created the article') : tr('Saved')
 }
 
+// «Pedir que lo lean»: what the editor sees under the actions (D5).
+export function readersLine(readers) {
+  if (!readers?.asked) return ''
+  const line = tr('Read by {0} of {1}', [readers.read, readers.asked])
+  if (!readers.waiting?.length) return line
+  return `${line} · ${tr('Waiting: {0}', [readers.waiting.join(', ')])}`
+}
+
 export const AUDIENCE = Object.freeze([
   { value: 'Cajero', label: 'Cashiers' },
   { value: 'Técnico', label: 'Technicians' },

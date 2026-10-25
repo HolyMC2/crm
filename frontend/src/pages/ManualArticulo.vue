@@ -119,11 +119,46 @@
             @click="transition('republish')"
           />
           <Button
+            v-if="article.status === 'Publicado'"
+            :icon-left="LucideBookOpenCheck"
+            :label="__('Ask the team to read it')"
+            :loading="busy === 'ask'"
+            class="min-h-11 sm:min-h-8"
+            data-testid="manual-ask-read"
+            @click="askToRead"
+          />
+          <Button
             :icon-left="LucideClock"
             :label="__('History', null, CTX)"
             class="min-h-11 sm:min-h-8"
             data-testid="manual-history"
             @click="historyOpen = true"
+          />
+        </div>
+        <p
+          v-if="readers"
+          class="-mt-2 mb-4 text-sm text-ink-gray-6"
+          data-testid="manual-readers"
+        >
+          {{ readers }}
+        </p>
+
+        <div
+          v-if="article.reading?.asked"
+          role="status"
+          class="mb-4 flex flex-wrap items-center gap-2 rounded-5 bg-surface-blue-1 px-3 py-2 text-sm text-ink-blue-8"
+          data-testid="manual-read-ask"
+        >
+          <span class="min-w-0 flex-1">{{
+            __('You were asked to read this article. Tap «Read» when you finish.')
+          }}</span>
+          <Button
+            variant="solid"
+            :label="__('Read', null, CTX)"
+            :loading="busy === 'read'"
+            class="min-h-11 sm:min-h-8"
+            data-testid="manual-mark-read"
+            @click="markRead"
           />
         </div>
 
@@ -258,7 +293,10 @@
       v-if="historyOpen && article"
       :history="article.history || []"
       :title="article.title"
+      :can-restore="article.can_edit"
+      :restoring="restoring"
       @close="historyOpen = false"
+      @restore="restore"
     />
   </div>
 </template>
@@ -279,6 +317,8 @@ import {
   placeActionUrl,
   placeAvailability,
   problemOf,
+  readersLine,
+  requestId,
   requestText,
   statusBadge,
   updatedLine,
@@ -287,6 +327,7 @@ import { articleHtml } from '@/utils/manualHtml'
 import LucideArrowLeft from '~icons/lucide/arrow-left'
 import LucidePen from '~icons/lucide/pen'
 import LucideClock from '~icons/lucide/clock'
+import LucideBookOpenCheck from '~icons/lucide/book-open-check'
 
 const HistorySheet = defineAsyncComponent(
   () => import('@/components/manual/HistorySheet.vue'),
@@ -304,10 +345,14 @@ const copied = ref('')
 const busy = ref('')
 const confirmRetire = ref(false)
 const historyOpen = ref(false)
+const restoring = ref('')
 
 const back = computed(() => backTarget(route.query))
 const backLabel = computed(() =>
   back.value ? __('Back to {0}', [back.value.label], CTX) : TITLE,
+)
+const readers = computed(() =>
+  article.value?.can_edit ? readersLine(article.value.readers) : '',
 )
 const body = computed(() => articleHtml(article.value?.body))
 const badge = computed(() =>
@@ -369,6 +414,63 @@ async function transition(action) {
     problem.value = problemOf(error)
   } finally {
     busy.value = ''
+  }
+}
+
+async function askToRead() {
+  busy.value = 'ask'
+  problem.value = null
+  try {
+    const { asked_now: asked, ...next } = await manualApi('ask_to_read', {
+      name: article.value.name,
+    })
+    article.value = next
+    notice.value = {
+      text: asked
+        ? __('Asked {0} people to read it. Each one has it in Pendientes.', [
+            asked,
+          ])
+        : __('Everyone who reads it was already asked.'),
+    }
+  } catch (error) {
+    problem.value = problemOf(error)
+  } finally {
+    busy.value = ''
+  }
+}
+
+async function markRead() {
+  busy.value = 'read'
+  problem.value = null
+  try {
+    article.value = await manualApi('mark_read', { name: article.value.name })
+    notice.value = { text: __('Marked as read. Thank you.') }
+  } catch (error) {
+    problem.value = problemOf(error)
+  } finally {
+    busy.value = ''
+  }
+}
+
+async function restore(version) {
+  restoring.value = version
+  problem.value = null
+  try {
+    article.value = await manualApi('restore_version', {
+      request_id: requestId(),
+      name: article.value.name,
+      version,
+      modified: article.value.modified,
+    })
+    historyOpen.value = false
+    notice.value = {
+      text: __('Restored. The history keeps this change too.'),
+    }
+  } catch (error) {
+    historyOpen.value = false
+    problem.value = problemOf(error)
+  } finally {
+    restoring.value = ''
   }
 }
 

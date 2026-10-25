@@ -13,6 +13,15 @@
           {{ row.who }} · {{ when(row.when) }}
         </p>
         <p class="text-ink-gray-7">{{ historyLine(row) }}</p>
+        <Button
+          v-if="canRestore && index > 0 && row.name"
+          :label="__('Restore this version')"
+          :loading="restoring === row.name"
+          :disabled="Boolean(restoring)"
+          class="mt-2 min-h-11 sm:min-h-8"
+          data-testid="manual-restore"
+          @click="emit('restore', row.name)"
+        />
       </li>
     </ol>
     <!-- Frappe keeps every Version row; the form reads the newest 10 (review F6). -->
@@ -26,14 +35,17 @@
   </ManualSheet>
 </template>
 <script setup>
+import { Button } from 'frappe-ui'
 import ManualSheet from '@/components/manual/ManualSheet.vue'
 import { historyLine, locale } from '@/composables/useManual'
 
 defineProps({
   history: { type: Array, default: () => [] },
   title: { type: String, default: '' },
+  canRestore: { type: Boolean, default: false },
+  restoring: { type: String, default: '' },
 })
-const emit = defineEmits(['close'])
+const emit = defineEmits(['close', 'restore'])
 function when(value) {
   const at = Date.parse(
     String(value || '')
