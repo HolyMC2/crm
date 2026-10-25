@@ -1088,7 +1088,8 @@ def motivo_repetir(doc):
 		return (
 			_("Confirma {0} antes de repetirla.") if femenino else _("Confirma {0} antes de repetirlo.")
 		).format(con_articulo(doc.doctype, False))
-	if not doc.has_permission("write"):
+	# frappe.has_permission does not msgprint a denial; Document.has_permission does.
+	if not frappe.has_permission(doc.doctype, "write", doc=doc):
 		return _("Tu usuario no puede cambiar este documento.")
 	return None
 

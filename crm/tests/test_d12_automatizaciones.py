@@ -250,6 +250,29 @@ class TestAutomatizaciones(IntegrationTestCase):
 		with self.assertRaises(frappe.PermissionError):
 			auto.repetir("Note", note.name, "Monthly")
 
+	def test_a_reader_without_write_is_told_why_without_a_permission_message(self):
+		# The record page asks motivo_repetir on every open; a «no tiene acceso» toast is not an answer.
+		from copy import copy
+		from unittest.mock import PropertyMock, patch
+
+		from frappe.permissions import add_permission, update_permission_property
+
+		for doctype in ("Note", "Auto Repeat"):
+			add_permission(doctype, ROLE, 0)
+			frappe.clear_cache(doctype=doctype)
+		update_permission_property("Auto Repeat", ROLE, 0, "create", 1)
+		frappe.clear_cache(doctype="Auto Repeat")
+		note = frappe.get_doc({"doctype": "Note", "title": "D12 repetir sin escribir", "public": 1}).insert()
+		repeatable = copy(frappe.get_meta("Note"))
+		repeatable.allow_auto_repeat = 1
+		frappe.set_user(EMAIL)
+		doc = frappe.get_doc("Note", note.name)
+		with patch.object(type(doc), "meta", new_callable=PropertyMock, return_value=repeatable):
+			frappe.clear_messages()
+			reason = auto.motivo_repetir(doc)
+		self.assertEqual(reason, "Tu usuario no puede cambiar este documento.")
+		self.assertEqual(frappe.local.message_log, [])
+
 	def test_records_without_a_workflow_have_no_actions(self):
 		note = frappe.get_doc({"doctype": "Note", "title": "D12 prueba flujo"}).insert()
 		self.assertEqual(auto.transiciones("Note", note.name)["acciones"], [])
