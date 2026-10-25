@@ -225,8 +225,9 @@ const props = defineProps({
   bell: { type: Boolean, default: true },
   /** The bell's «you are here» state, on the Avisos page itself. */
   bellActive: { type: Boolean, default: false },
-  /** false: the title never takes its own row; it truncates beside the back
-   *  arrow (a drill-down record keeps arrow and name on one line, M3 small bar). */
+  /** false: the title stays beside the back arrow and truncates (a drill-down
+   *  record keeps arrow and name on one line, M3 small bar) until the icons
+   *  leave it less than TITLE_MIN; then it takes its own row like any title. */
   stack: { type: Boolean, default: true },
   /** Extra attributes for the search field (a page's own hook, e.g. data-power-search). */
   searchInputAttrs: { type: Object, default: () => ({}) },
@@ -309,10 +310,6 @@ const TITLE_MIN = 96
 const CHAR_PX = 9.5 // text-lg semibold, Inter
 let observer = null
 function measure() {
-  if (!props.stack) {
-    stacked.value = false
-    return
-  }
   const width = bar.value?.clientWidth || 0
   if (!width || !icons.value) return
   const used =
@@ -323,7 +320,7 @@ function measure() {
   const room = width - used
   const text = `${props.title} ${props.count ?? ''}`.trim()
   const needed = text.length * CHAR_PX + (props.scopes.length ? 24 : 0)
-  stacked.value = room < TITLE_MIN || needed > room * 2 * 0.9
+  stacked.value = room < TITLE_MIN || (props.stack && needed > room * 2 * 0.9)
 }
 // The icons mount only in the normal mode (not while selecting or
 // searching): observe them whenever they (re)appear.
