@@ -156,8 +156,7 @@ jobs:
         runs-on: ubuntu-24.04
         timeout-minutes: 45
         env:
-            # roll-20261020 production image (tag vall-lanes-20261020-edc87cea3b4a): doco be67762 with
-            # hrms, so absences resolve Employee.leave_approver (~/muelle-releases/roll-20261020).
+            # roll-20261020 release image (tag vall-lanes-20261020-edc87cea3b4a), the first with hrms.
             SHELL_CI_IMAGE: ghcr.io/holymc2/doco-bench@sha256:6bedaf579cd71064741eb5796fcd57f9f55161e30b7c88e93c535cef232a3092
         steps:
             - uses: actions/checkout@v4
