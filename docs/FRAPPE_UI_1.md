@@ -404,8 +404,15 @@ beta.29's `call()` was its own fetch and never read `serverMessagesHandler`; 1.0
 the rejection as `e.messages`, which the 228 crm catch sites already toast. crm set no handler, so
 nothing double-toasted and the success-path `frappe.msgprint`s stayed silent, as before. Decision:
 `src/utils/resourceConfig.js` registers `handleServerMessages` (`src/utils/serverMessages.js`): one
-toast per distinct message, indicator → type (red error, orange/amber warning, green success, else
-info), title as description; `tests/unit/serverMessages.test.js`. Exposure is small: one `msgprint`
+toast per distinct message, indicator → type (red error, orange/yellow warning, green success, any
+other indicator info); `tests/unit/serverMessages.test.js`. F6 (shell wave F, F16-3/4) narrowed it:
+only a message the server styled for the user (one with an `indicator`) toasts, with no Desk title
+line («Mensaje» added nothing). A message without an indicator is a log, such as the permission
+denial Frappe prints from a linked-doc read (`workload.py`) or `Document.has_permission`, and one
+with `raise_exception` is a throw the server caught on a 200 response (the encargado's boot reads);
+both stay out of the toast and the page shows its own muted state. The root cause on record pages,
+`crm/api/documentos.py` `_actions` probing each action with `doc.has_permission`, now uses
+`frappe.has_permission(doc.doctype, ptype, doc=doc)`, which does not print. Exposure is small: one `msgprint`
 in crm's own api (`crm/api/user.py:158`, user removed from CRM roles) and none in doco's contactos,
 compras or gastos endpoints; the three flows the brief names (Compras › nueva, Gastos › registrar,
 Contacto save with a validation error) go through crm's own fetch wrappers (`comprasApi`,
