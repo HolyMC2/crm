@@ -122,7 +122,7 @@
         class="grid cursor-pointer items-center border-b border-outline-gray-1 px-5 hover:bg-surface-gray-2"
         :style="`grid-template-columns:${GRID};min-height:54px`"
         @click="$router.push(`/campaigns/${c.name}`)"
-        @keydown.enter="$router.push(`/campaigns/${c.name}`)"
+        @keydown.enter.self="$router.push(`/campaigns/${c.name}`)"
       >
         <div class="min-w-0">
           <div class="truncate text-[13px] font-semibold text-ink-gray-9">
