@@ -7,6 +7,7 @@ import {
 import {
   createPrefill,
   dueLabel,
+  handoffQuery,
   dueTheme,
   kindLabel,
   liveOutcome,
@@ -34,6 +35,19 @@ describe('Garantías boot', () => {
   it('a refused case link recovers into Garantías, not Ventas', () => {
     expect(recoveryModule('/garantias/SER-WRN-2026-00001')).toBe('garantias')
     expect(recoveryModule('/garantias?segment=cerradas')).toBe('garantias')
+  })
+})
+
+describe('hand-off way back', () => {
+  it('is the safe return_to with its label cut to 40 characters, or nothing', () => {
+    expect(handoffQuery({ return_to: '/posapp/returns/1' })).toEqual({
+      return_to: '/posapp/returns/1',
+    })
+    expect(
+      handoffQuery({ return_to: '/taller/orders/1', return_label: 'x'.repeat(50) }),
+    ).toEqual({ return_to: '/taller/orders/1', return_label: 'x'.repeat(40) })
+    expect(handoffQuery({ return_to: 'https://evil.example/' })).toBeNull()
+    expect(handoffQuery({})).toBeNull()
   })
 })
 

@@ -13,6 +13,7 @@ const state = vi.hoisted(() => ({
   mobile: null,
   hub: null,
   toast: null,
+  newDialog: null,
 }))
 vi.mock('vue-router', async () => {
   const { reactive } = await import('vue')
@@ -102,7 +103,17 @@ vi.mock('@/components/garantias/AssignDialog.vue', () => ({
         : null,
   },
 }))
-vi.mock('@/components/garantias/NewClaimDialog.vue', () => sheet('new'))
+vi.mock('@/components/garantias/NewClaimDialog.vue', () => ({
+  default: {
+    props: ['modelValue', 'prefill'],
+    emits: ['created', 'update:modelValue'],
+    setup: (props, { emit }) => {
+      state.newDialog = { emit }
+      return () =>
+        props.modelValue ? h('div', { 'data-sheet': 'new' }) : null
+    },
+  },
+}))
 vi.mock('@/composables/useGarantias', async (importOriginal) => {
   const actual = await importOriginal()
   return {
@@ -410,6 +421,62 @@ describe('Garantías list as a power app', () => {
     state.route.query = { ...state.router.push.mock.calls.at(-1)[0].query }
     await flush()
     expect(state.route.query.kind).toBeTruthy()
+  })
+})
+
+describe('a hand-off brings its way back', () => {
+  const back = '/posapp/returns/SINV-1'
+  const saved = () => {
+    state.newDialog.emit('update:modelValue', false)
+    state.newDialog.emit('created', 'GAR-9')
+  }
+  it('keeps return_to in the URL while the case is written, and the saved case carries it', async () => {
+    state.route.query = {
+      create: '1',
+      serial_no: 'SN-1',
+      return_to: back,
+      return_label: 'Caja',
+    }
+    mount()
+    await flush()
+    expect(root.querySelector('[data-sheet="new"]')).not.toBeNull()
+    expect(state.route.query).toEqual({ return_to: back, return_label: 'Caja' })
+    saved()
+    await flush()
+    expect(state.router.push).toHaveBeenCalledWith({
+      name: 'Garantia',
+      params: { name: 'GAR-9' },
+      query: { return_to: back, return_label: 'Caja' },
+    })
+    expect(state.router.replace).toHaveBeenCalledTimes(1)
+  })
+  it('a reload between opening the dialog and saving still returns to the register', async () => {
+    state.route.query = { return_to: back }
+    mount()
+    await flush()
+    expect(root.querySelector('[data-sheet="new"]')).toBeNull()
+    const button = [...root.querySelectorAll('button')].find(
+      (b) => b.textContent === 'New case',
+    )
+    button.click()
+    await flush()
+    expect(root.querySelector('[data-sheet="new"]')).not.toBeNull()
+    saved()
+    await flush()
+    expect(state.router.push).toHaveBeenCalledWith({
+      name: 'Garantia',
+      params: { name: 'GAR-9' },
+      query: { return_to: back },
+    })
+  })
+  it('closing the dialog without a case drops the way back', async () => {
+    state.route.query = { create: '1', return_to: back, return_label: 'Caja' }
+    mount()
+    await flush()
+    state.newDialog.emit('update:modelValue', false)
+    await flush()
+    expect(state.route.query).toEqual({})
+    expect(state.router.push).not.toHaveBeenCalled()
   })
 })
 
