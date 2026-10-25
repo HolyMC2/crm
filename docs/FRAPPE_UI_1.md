@@ -408,7 +408,7 @@ rename, the codemod committed first):
 | Rename | Sites | Visual effect |
 |---|---|---|
 | `bg-surface-white` → `bg-surface-base` | 33 / 17 files | intended: those surfaces get their background back |
-| named radius → numbered (`frappe-ui/tailwind/migrate-tokens-v2.js --radius-only`): `rounded`→4, sm→1, md→5, lg→6, xl→7, 2xl→8 and directional forms; alias block in `tailwind.config.js` removed | 1755 / 436 files | none by construction (the aliases mapped to the same variables) |
+| named radius → numbered (`frappe-ui/tailwind/migrate-tokens-v2.js --radius-only`): `rounded`→4, sm→1, md→5, lg→6, xl→7, 2xl→8 and directional forms; alias block in `tailwind.config.js` removed | 1755 / 436 files | none by construction (the aliases mapped to the same variables). The codemod also rewrote one prose string (`useCompras.js` «rounded up to» → «rounded-4 up to», caught by the Spanish catalog test); reverted by hand, nothing else outside class lists matched |
 | `text-base font-medium` → `text-base-medium` | 88 / 66 files | none visible (14px, 1.35, 500; the utility adds its tracking) |
 | redundant `dark:` ink overrides (`text-ink-gray-8 dark:text-ink-gray-7` and identical pairs) | 16 / 7 files | dark inks one step brighter where the override dimmed them; the 18 `bg-surface-base dark:bg-surface-gray-1` elevation pairs are kept as design intent, and `dark:` on raw palette colours stays |
 | `--focus-*` | 0 | — |
@@ -417,7 +417,10 @@ rename, the codemod committed first):
 | hover on touch | preset `future.hoverOnlyWhenSupported: true` | `hover:` rules apply only where a hover-capable pointer exists; nothing to rename |
 
 CSS budget: `scripts/verify-bundle-budget.mjs` keeps 61 KB gzip (`docs/PRODUCTOS_RESULTADOS_HANDOFF_2026-10-15.md`
-said 60; now 61). Numbers before/after in the lane report.
+said 60; now 61). Lane build (`vite build` + the script): entry JS 168.1 KB, CSS 58.5 KB gzip; the
+FUI1 lane measured 167.9 KB / 58.7 KB at its end (§5). The 0.2 KB of JS is the server-messages
+handler and the `autofocus` wrappers; the CSS drops with the 16 `dark:` overrides and the 88 merged
+`text-base-medium` sites.
 
 ### 6.5 Tokens, deps and docs
 
