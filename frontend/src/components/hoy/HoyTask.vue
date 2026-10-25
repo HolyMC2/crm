@@ -44,7 +44,7 @@
         class="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-1.5 text-sm text-ink-gray-6"
       >
         <span
-          class="shrink-0"
+          class="min-w-0"
           :class="
             row.group === 'overdue'
               ? 'font-medium text-ink-red-7'
