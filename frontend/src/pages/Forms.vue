@@ -87,7 +87,9 @@
                   "
                   aria-hidden="true"
                 />
-                <h2 class="truncate text-base font-semibold text-ink-gray-9">
+                <h2
+                  class="line-clamp-2 min-w-0 break-words text-base font-semibold text-ink-gray-9"
+                >
                   {{ f.title }}
                 </h2>
                 <span

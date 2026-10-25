@@ -3,16 +3,6 @@
     <div
       class="mx-auto w-full max-w-3xl space-y-4 px-4 pb-28 pt-4 sm:px-6 sm:pb-10"
     >
-      <nav>
-        <router-link
-          :to="archivosLink"
-          class="inline-flex min-h-11 items-center gap-1 text-sm text-ink-gray-7 hover:text-ink-gray-9"
-        >
-          <LucideArrowLeft class="h-4 w-4" />
-          {{ __('Back to Archivos') }}
-        </router-link>
-      </nav>
-
       <header class="space-y-3">
         <div class="flex flex-wrap items-start gap-3">
           <div class="min-w-0 flex-1">
@@ -198,7 +188,6 @@ import {
   typeLabel,
 } from '@/utils/archivosConectores'
 import Icon from '@/components/Icon.vue'
-import LucideArrowLeft from '~icons/lucide/arrow-left'
 import LucideX from '~icons/lucide/x'
 import LucidePlus from '~icons/lucide/plus'
 import LucideInbox from '~icons/lucide/inbox'

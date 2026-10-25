@@ -351,7 +351,9 @@
                 @click="onRowClick($event, row)"
               >
                 <span class="min-w-0 flex-1">
-                  <span class="block truncate font-medium text-ink-gray-9">
+                  <span
+                    class="line-clamp-2 break-words font-medium text-ink-gray-9"
+                  >
                     {{ row.customer_name }}
                   </span>
                   <span class="block truncate text-sm text-ink-gray-6">
