@@ -181,7 +181,7 @@ Check each one's permission model before calling it from crm (shop scope, roles)
   in each worktree.
 - **Builds:** symlink `ln -s ~/muelle-host/crm/frontend/node_modules frontend/node_modules`, then
   `heavy -- npm run build`. crm build output is untracked; the build enforces the budget
-  (`scripts/verify-bundle-budget.mjs`, entry JS ≤180 KB gz, CSS ≤60 KB gz).
+  (`scripts/verify-bundle-budget.mjs`, entry JS ≤180 KB gz, CSS ≤61 KB gz).
   - Current figures: JS 172.8 KB, CSS **56.4 KB**. There is little CSS room left: reuse existing
     utilities, prefer `FeatherIcon` or already-used `lucide-*` classes, and use inline styles
     for one-off sizes.
