@@ -24,7 +24,7 @@
           type="search"
           placeholder="Buscar formato o documento"
           aria-label="Buscar formato o documento"
-          class="min-h-11 w-72 rounded-lg border border-outline-gray-2 bg-surface-white px-3 text-base text-ink-gray-9"
+          class="min-h-11 w-72 rounded-lg border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9"
         />
       </header>
       <p v-if="!denied" class="text-base text-ink-gray-7">

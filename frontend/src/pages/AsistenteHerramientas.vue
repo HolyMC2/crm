@@ -29,7 +29,7 @@
             v-model="query"
             type="search"
             placeholder="Buscar herramienta"
-            class="min-h-11 w-full rounded-lg border border-outline-gray-2 bg-surface-white pl-9 pr-3 text-base text-ink-gray-9 placeholder:text-ink-gray-5"
+            class="min-h-11 w-full rounded-lg border border-outline-gray-2 bg-surface-base pl-9 pr-3 text-base text-ink-gray-9 placeholder:text-ink-gray-5"
           />
         </label>
       </header>
@@ -86,7 +86,7 @@
           {{ block.group }} · {{ block.items.length }}
         </h2>
         <ul
-          class="divide-y divide-outline-gray-1 overflow-hidden rounded-lg border border-outline-gray-2 bg-surface-white"
+          class="divide-y divide-outline-gray-1 overflow-hidden rounded-lg border border-outline-gray-2 bg-surface-base"
         >
           <ToolRow
             v-for="row in block.items"

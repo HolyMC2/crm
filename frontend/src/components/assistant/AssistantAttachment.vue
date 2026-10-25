@@ -2,7 +2,7 @@
   <!-- The file that goes with the next message: a photo's thumbnail, or a
        PDF's or XML's name and size, and a way to take it off before sending. -->
   <div
-    class="mx-2 mt-2 flex items-center gap-2 rounded-xl bg-surface-white p-1.5 shadow-sm"
+    class="mx-2 mt-2 flex items-center gap-2 rounded-xl bg-surface-base p-1.5 shadow-sm"
     data-testid="assistant-attachment"
   >
     <img

@@ -1,6 +1,6 @@
 <template>
   <article
-    class="space-y-3 rounded-lg border border-outline-gray-2 bg-surface-white p-4"
+    class="space-y-3 rounded-lg border border-outline-gray-2 bg-surface-base p-4"
     :aria-labelledby="`receta-${recipe.key}`"
   >
     <div class="flex items-start gap-3">
@@ -83,7 +83,7 @@
           max="90"
           :value="days"
           :disabled="!canEdit || busy"
-          class="min-h-11 w-20 rounded-lg border border-outline-gray-2 bg-surface-white px-2 text-center text-base"
+          class="min-h-11 w-20 rounded-lg border border-outline-gray-2 bg-surface-base px-2 text-center text-base"
           @change="setDays(Number($event.target.value))"
         />
         <button

@@ -62,7 +62,7 @@
       <ul v-if="rows.length" class="grid gap-3">
         <li v-for="row in rows" :key="row.name">
           <article
-            class="flex items-start gap-3 rounded-lg border border-outline-gray-2 bg-surface-white p-4"
+            class="flex items-start gap-3 rounded-lg border border-outline-gray-2 bg-surface-base p-4"
             :data-regla="row.name"
           >
             <div class="min-w-0 flex-1 space-y-1">

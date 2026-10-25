@@ -3,7 +3,7 @@
        number gutter that follows the scroll, Tab / Shift+Tab indent, the
        failing line marked in red. -->
   <div
-    class="flex overflow-hidden rounded-lg border border-outline-gray-2 bg-surface-white font-mono text-sm"
+    class="flex overflow-hidden rounded-lg border border-outline-gray-2 bg-surface-base font-mono text-sm"
     :style="{ height }"
   >
     <div

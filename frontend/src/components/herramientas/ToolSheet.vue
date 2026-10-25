@@ -79,7 +79,7 @@
             type="number"
             inputmode="numeric"
             min="0"
-            class="min-h-11 w-24 rounded-lg border border-outline-gray-2 bg-surface-white px-3 text-right text-base text-ink-gray-9"
+            class="min-h-11 w-24 rounded-lg border border-outline-gray-2 bg-surface-base px-3 text-right text-base text-ink-gray-9"
             :disabled="saving"
             @change="saveLimit"
           />
@@ -111,7 +111,7 @@
           <label class="relative">
             <span class="sr-only">Agregar puesto o rol</span>
             <select
-              class="min-h-11 rounded-lg border border-outline-gray-2 bg-surface-white pl-3 pr-9 text-base text-ink-gray-8"
+              class="min-h-11 rounded-lg border border-outline-gray-2 bg-surface-base pl-3 pr-9 text-base text-ink-gray-8"
               :disabled="saving || !available.length"
               @change="addRole($event)"
             >

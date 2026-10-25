@@ -401,7 +401,7 @@
               <input
                 type="checkbox"
                 data-row-check
-                class="absolute left-2 top-2 z-10 h-5 w-5 rounded border-outline-gray-3 bg-surface-white"
+                class="absolute left-2 top-2 z-10 h-5 w-5 rounded border-outline-gray-3 bg-surface-base"
                 :checked="selected.has(item.id)"
                 :aria-label="__('Select {0}', [item.title])"
                 @click.prevent.stop="onCheck($event, item, index)"

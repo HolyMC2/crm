@@ -2,7 +2,7 @@
   <!-- Phones have no sidebar: one control that still shows both groups. -->
   <div v-if="mobile" class="grid gap-2">
     <select
-      class="h-11 w-full rounded border border-outline-gray-2 bg-surface-white px-3 text-base text-ink-gray-9"
+      class="h-11 w-full rounded border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9"
       :aria-label="__('List')"
       :value="currentValue"
       @change="pickMobile($event.target.value)"

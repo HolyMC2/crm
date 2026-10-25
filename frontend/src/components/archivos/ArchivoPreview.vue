@@ -52,7 +52,7 @@
         </div>
         <iframe
           v-else-if="item.preview === 'pdf' && item.file_url"
-          class="h-[60vh] w-full rounded border border-outline-gray-2 bg-surface-white"
+          class="h-[60vh] w-full rounded border border-outline-gray-2 bg-surface-base"
           :title="item.title"
           :src="item.file_url"
         />
@@ -73,7 +73,7 @@
             </p>
             <pre
               v-else
-              class="max-h-[60vh] overflow-auto rounded border border-outline-gray-2 bg-surface-white p-3 text-xs text-ink-gray-8"
+              class="max-h-[60vh] overflow-auto rounded border border-outline-gray-2 bg-surface-base p-3 text-xs text-ink-gray-8"
               >{{ prettyXml(text) }}</pre
             >
           </template>
@@ -84,7 +84,7 @@
           </p>
           <div
             v-else-if="isCsv"
-            class="max-h-[60vh] overflow-auto rounded border border-outline-gray-2 bg-surface-white"
+            class="max-h-[60vh] overflow-auto rounded border border-outline-gray-2 bg-surface-base"
           >
             <table class="w-full border-collapse text-xs">
               <tbody>
@@ -111,7 +111,7 @@
           </div>
           <pre
             v-else
-            class="max-h-[60vh] overflow-auto rounded border border-outline-gray-2 bg-surface-white p-3 text-xs text-ink-gray-8"
+            class="max-h-[60vh] overflow-auto rounded border border-outline-gray-2 bg-surface-base p-3 text-xs text-ink-gray-8"
             >{{ text }}</pre
           >
         </div>

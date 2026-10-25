@@ -187,7 +187,7 @@
         </div>
       </div>
       <footer
-        class="flex shrink-0 items-center justify-between gap-2 border-t border-outline-gray-2 bg-surface-white px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 sm:px-6"
+        class="flex shrink-0 items-center justify-between gap-2 border-t border-outline-gray-2 bg-surface-base px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 sm:px-6"
       >
         <Button
           class="min-h-11 sm:min-h-8"

@@ -43,7 +43,7 @@
     <ul v-if="rows.length" class="grid gap-3 lg:grid-cols-2">
       <li v-for="row in rows" :key="row.name">
         <article
-          class="space-y-3 rounded-lg border border-outline-gray-2 bg-surface-white p-4"
+          class="space-y-3 rounded-lg border border-outline-gray-2 bg-surface-base p-4"
           :aria-label="row.titulo"
           :data-aviso="row.name"
         >

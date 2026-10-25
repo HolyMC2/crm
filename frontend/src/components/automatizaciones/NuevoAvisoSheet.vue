@@ -75,7 +75,7 @@
             }}</span>
             <select
               v-model="state.campo"
-              class="min-h-12 w-full rounded-lg border border-outline-gray-2 bg-surface-white px-3 text-base text-ink-gray-9"
+              class="min-h-12 w-full rounded-lg border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9"
             >
               <option value="" disabled>Elige…</option>
               <option
@@ -104,7 +104,7 @@
               min="0"
               max="90"
               aria-label="Días"
-              class="min-h-11 w-20 rounded-lg border border-outline-gray-2 bg-surface-white px-2 text-center text-base"
+              class="min-h-11 w-20 rounded-lg border border-outline-gray-2 bg-surface-base px-2 text-center text-base"
             />
             <button
               type="button"
@@ -162,7 +162,7 @@
             <span class="block text-sm font-medium text-ink-gray-7">Campo</span>
             <select
               :value="state.condicion.campo?.fieldname || ''"
-              class="min-h-12 w-full rounded-lg border border-outline-gray-2 bg-surface-white px-3 text-base text-ink-gray-9"
+              class="min-h-12 w-full rounded-lg border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9"
               @change="elegirCampoCondicion($event.target.value)"
             >
               <option value="" disabled>Elige…</option>
@@ -206,7 +206,7 @@
               <span class="block text-sm font-medium text-ink-gray-7">Es</span>
               <select
                 v-model="state.condicion.valor"
-                class="min-h-12 w-full rounded-lg border border-outline-gray-2 bg-surface-white px-3 text-base text-ink-gray-9"
+                class="min-h-12 w-full rounded-lg border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9"
               >
                 <option value="" disabled>Elige…</option>
                 <option
@@ -224,7 +224,7 @@
                 v-model.trim="state.condicion.valor"
                 type="text"
                 maxlength="140"
-                class="min-h-12 w-full rounded-lg border border-outline-gray-2 bg-surface-white px-3 text-base text-ink-gray-9"
+                class="min-h-12 w-full rounded-lg border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9"
               />
             </label>
           </template>
@@ -341,7 +341,7 @@
               type="text"
               maxlength="140"
               :placeholder="`Ejemplo: ${opciones.label} de [${primerDato}]`"
-              class="min-h-12 w-full rounded-lg border border-outline-gray-2 bg-surface-white px-3 text-base text-ink-gray-9"
+              class="min-h-12 w-full rounded-lg border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9"
               @focus="foco = 'asunto'"
             />
           </label>
