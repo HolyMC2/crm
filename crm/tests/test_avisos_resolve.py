@@ -184,19 +184,18 @@ class TestAvisosResolve(IntegrationTestCase):
 		frappe.local.lang = "es-MX"
 		self.addCleanup(setattr, frappe.local, "lang", lang)
 
-	def test_a_select_title_reads_as_its_translated_option_never_the_stored_key(self):
-		# Comment titles itself by the Select `comment_type`, as Scan Task does by `task_type`.
+	def translate(self, source, text):
+		"""A site Translation for es-MX, so the label does not hang on how fresh a bench's compiled catalogue is."""
 		translation = frappe.get_doc(
-			{
-				"doctype": "Translation",
-				"language": "es-MX",
-				"source_text": "Info",
-				"translated_text": "Aviso F6",
-			}
+			{"doctype": "Translation", "language": "es-MX", "source_text": source, "translated_text": text}
 		).insert(ignore_permissions=True)
 		self.addCleanup(
 			frappe.delete_doc, "Translation", translation.name, ignore_permissions=True, force=True
 		)
+
+	def test_a_select_title_reads_as_its_translated_option_never_the_stored_key(self):
+		# Comment titles itself by the Select `comment_type`, as Scan Task does by `task_type`.
+		self.translate("Info", "Aviso F6")
 		todo = frappe.get_doc({"doctype": "ToDo", "description": "Con nota"}).insert(ignore_permissions=True)
 		comment = todo.add_comment("Info", "Pedí precios")
 		self.in_spanish()
@@ -205,6 +204,8 @@ class TestAvisosResolve(IntegrationTestCase):
 	def test_a_scan_task_assignment_names_the_task_kind_in_spanish(self):
 		if not frappe.db.exists("DocType", "Scan Task"):
 			self.skipTest("scanner_kit is not installed")
+		# doco's es_MX catalogue says «count» → «Conteo»; a test bench may carry an older compiled one.
+		self.translate("count", "Conteo")
 		task = frappe.new_doc("Scan Task")
 		task.update({"name": "SCT-F6-LABEL", "task_type": "count", "status": "Open"})
 		task.db_insert()
