@@ -397,7 +397,7 @@
   </ModuleLayout>
 </template>
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Badge, Button, FormControl, toast } from 'frappe-ui'
 import { FilterChips, ListRow } from '@/components/ui'
@@ -414,6 +414,7 @@ import {
   CHIPS,
   CREATE_KEYS,
   CTX,
+  HANDOFF_KEYS,
   KINDS,
   LIVE_DOCTYPES,
   QUEUE_KEYS,
@@ -426,6 +427,7 @@ import {
   dueTheme,
   garantiasApi,
   garantiasBoot,
+  handoffQuery,
   kindLabel,
   listHref,
   listMemoryKey,
@@ -436,7 +438,6 @@ import {
   queueShortcuts,
   queueState,
   recordRoute,
-  safeReturn,
   segmentLabel,
   stateLabel,
   stateTheme,
@@ -753,31 +754,32 @@ function openCreate(values = {}) {
   prefill.value = values
   creating.value = true
 }
-// A hand-off (Taller order, POS sale) brings its way back; the new case keeps it.
-let handoffReturn = null
+// A hand-off (Taller order, POS sale) brings its way back in the URL; the new case keeps it.
+let handedOff = false
 function onCreated(name) {
-  const query = handoffReturn ? { ...handoffReturn } : { list: route.fullPath }
-  handoffReturn = null
+  handedOff = true
+  const query = handoffQuery(route.query) || { list: route.fullPath }
   router.push({ ...recordRoute(name), query })
 }
 function createFromQuery() {
   if (route.query.create !== '1' || !boot.value?.capabilities?.create) return
   const values = createPrefill(route.query)
-  const back = safeReturn(route.query.return_to)
-  handoffReturn = back
-    ? {
-        return_to: back,
-        ...(typeof route.query.return_label === 'string'
-          ? { return_label: route.query.return_label.slice(0, 40) }
-          : {}),
-      }
-    : null
   const query = { ...route.query }
-  for (const key of ['create', 'return_to', 'return_label', ...CREATE_KEYS])
-    delete query[key]
+  for (const key of ['create', ...CREATE_KEYS]) delete query[key]
   router.replace({ query })
   openCreate(values)
 }
+// Closing the dialog without a case drops the way back; a saved case took it along.
+watch(creating, (open) => {
+  if (open) {
+    handedOff = false
+    return
+  }
+  if (handedOff || !handoffQuery(route.query)) return
+  const query = { ...route.query }
+  for (const key of HANDOFF_KEYS) delete query[key]
+  router.replace({ query })
+})
 
 async function retryBoot() {
   await loadGarantiasBoot({ refresh: true })

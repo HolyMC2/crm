@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-import { comprasApi } from '@/composables/useCompras'
+import { comprasApi, safeReturn } from '@/composables/useCompras'
 import { withReturn } from '@/vendor/muelle-shell/contracts'
 import { listKeys, pathWithQuery, textParam } from '@/utils/powerList'
 
@@ -228,6 +228,16 @@ export const CREATE_KEYS = Object.freeze([
   'claim_kind',
   'serial_no',
 ])
+// A hand-off (Taller order, POS sale) brings its way back; it rides the URL
+// until the case is saved, so a reload in between keeps it.
+export const HANDOFF_KEYS = Object.freeze(['return_to', 'return_label'])
+export function handoffQuery(query) {
+  const back = safeReturn(query?.return_to)
+  if (!back) return null
+  const label =
+    typeof query?.return_label === 'string' ? query.return_label.slice(0, 40) : ''
+  return label ? { return_to: back, return_label: label } : { return_to: back }
+}
 export function createPrefill(query) {
   const values = {}
   for (const key of CREATE_KEYS)
