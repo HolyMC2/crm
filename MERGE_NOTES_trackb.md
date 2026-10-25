@@ -2,6 +2,10 @@
 
 Branch `trackb/merge`. Single merge commit. Nothing pushed.
 
+> Historical. The frontend has been on frappe-ui **1.0.2** since FUI1-core (doco-dev `7bf0f41ec`,
+> 2026-10-24); the beta.29 pin, the patch-package patch and the frappe-ui submodule/local-link
+> mentioned below are gone. Current state: `docs/FRAPPE_UI_1.md`.
+
 Goal of this commit: **the tree builds.** Render correctness is explicitly out of scope —
 114 of our frontend files import frappe-ui and merged clean while being semantically
 untouched by the espresso v2 token rewrite. Those are inventoried, not fixed, in

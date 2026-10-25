@@ -1,2 +1,0 @@
-# Patch context must preserve the dependency's original whitespace verbatim.
-*.patch -whitespace

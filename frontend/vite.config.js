@@ -196,8 +196,8 @@ export default defineConfig(async () => {
     },
     server: {
       fs: {
-        // allow the bench `apps/` dir so Vite can serve a linked local frappe-ui
-        // checkout when one exists in a sibling app repo
+        // allow the bench `apps/` dir: sibling apps are served from there in dev.
+        // frappe-ui itself comes from node_modules (1.0.2, no local link).
         allow: [path.resolve(__dirname, '../..')],
       },
     },

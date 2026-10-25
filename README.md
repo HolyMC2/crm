@@ -84,7 +84,7 @@ The motivation behind building Frappe CRM stems from the need for a simple, cust
 ### Under the Hood
 
 - [Frappe Framework](https://github.com/frappe/frappe): A full-stack web application framework.
-- [Frappe UI](https://github.com/frappe/frappe-ui): A Vue-based UI library, to provide a modern user interface.
+- [Frappe UI](https://github.com/frappe/frappe-ui) 1.0.2 (pinned in `frontend/package.json`; migration notes in `docs/FRAPPE_UI_1.md`): A Vue-based UI library, to provide a modern user interface.
 
 ### Compatibility
 This app is compatible with the following versions of Frappe and ERPNext:
