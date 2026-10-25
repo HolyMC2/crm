@@ -14,6 +14,7 @@ const state = vi.hoisted(() => ({
   hub: null,
   toast: null,
   newDialog: null,
+  actual: null,
 }))
 vi.mock('vue-router', async () => {
   const { reactive } = await import('vue')
@@ -69,6 +70,10 @@ vi.mock('frappe-ui', async () => {
     toast: state.toast,
   }
 })
+vi.mock('@/composables/useCompras', async (importOriginal) => {
+  const actual = await importOriginal()
+  return { ...actual, comprasApi: (...args) => state.api(...args) }
+})
 vi.mock('@/components/shell/ModuleLayout.vue', () => ({
   default: {
     setup:
@@ -116,6 +121,7 @@ vi.mock('@/components/garantias/NewClaimDialog.vue', () => ({
 }))
 vi.mock('@/composables/useGarantias', async (importOriginal) => {
   const actual = await importOriginal()
+  state.actual = actual
   return {
     ...actual,
     garantiasApi: (...args) => state.api(...args),
@@ -218,6 +224,7 @@ beforeEach(() => {
   state.api.mockImplementation(async (method) =>
     method === 'queue' ? QUEUE : {},
   )
+  if (state.actual.manualPlace) state.actual.manualPlace.value = null
   state.router.push.mockReset()
   state.router.replace.mockClear()
   state.route.name = 'Garantias'
@@ -477,6 +484,56 @@ describe('a hand-off brings its way back', () => {
     await flush()
     expect(state.route.query).toEqual({})
     expect(state.router.push).not.toHaveBeenCalled()
+  })
+})
+
+describe('the shop manual for this screen', () => {
+  const manual = () => root.querySelector('a[href^="/crm/manual"]')
+  const withArticles = (count) =>
+    state.api.mockImplementation(async (method) => {
+      if (method === 'queue') return QUEUE
+      if (method === 'doco.manual.api.for_place') return { count }
+      return {}
+    })
+  it('links «Shop manual» with the way back once the manual has an article for Garantías', async () => {
+    withArticles(2)
+    mount()
+    await flush()
+    const link = manual()
+    expect(link.textContent).toContain('Shop manual')
+    const url = new URL(link.getAttribute('href'), 'http://shop')
+    expect(url.pathname).toBe('/crm/manual')
+    expect(url.searchParams.get('lugar')).toBe('garantias')
+    expect(url.searchParams.get('return_to')).toBe('/crm/garantias')
+    expect(url.searchParams.get('return_label')).toBe('Garantías')
+    expect(calls('doco.manual.api.for_place')).toEqual([{ place: 'garantias' }])
+    link.click()
+    expect(state.router.push).toHaveBeenCalledWith(
+      expect.stringMatching(/^\/manual\?lugar=garantias&/),
+    )
+  })
+  it('shows nothing without an article, and nothing when the manual refuses the reader', async () => {
+    withArticles(0)
+    mount()
+    await flush()
+    expect(manual()).toBeNull()
+    app.unmount()
+    root.remove()
+    state.actual.manualPlace.value = null
+    state.api.mockImplementation(async (method) => {
+      if (method === 'queue') return QUEUE
+      throw new Error('refused')
+    })
+    mount()
+    await flush()
+    expect(manual()).toBeNull()
+  })
+  it('on a phone the app bar carries it as an icon named for the reader', async () => {
+    state.mobile.value = true
+    withArticles(1)
+    mount()
+    await flush()
+    expect(manual().getAttribute('aria-label')).toBe('Shop manual')
   })
 })
 
