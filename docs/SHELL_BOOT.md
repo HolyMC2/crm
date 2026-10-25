@@ -32,6 +32,9 @@ A hook provider of another app (`muelle_shell_modules`) is keyed by the `key` it
 the built-ins. When it raises before it can say its key, the tile is named after its function
 (`doco.taller.shell._taller` → `taller`). That name is a fallback, not an identity: two hooks
 whose functions share a name (`doco.taller.shell._shell`, `mercado.shell._shell`) both boot.
+A builder that answers without a `key` is the module the provider table names, so
+`first_module` and `resolve_recent` still see a built-in whose answer carries only `enabled`
+(the Pendientes gate tests patch `_pendientes` that way).
 
 ## Why a builder never takes the shell down
 

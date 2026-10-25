@@ -577,8 +577,9 @@ def _hosted():
 def _providers():
 	"""Built-in providers plus `muelle_shell_modules` hooks from other apps, as (key, provider)
 	pairs in boot order. A provider's entry is keyed by the `key` it answers; the pair's key
-	is only the tile name when the provider raises before it can say its own, so two hooks
-	whose functions share a name (`doco.taller.shell._shell`, `mercado.shell._shell`) both boot."""
+	is the tile name only when the provider raises before it can say its own, or answers
+	without one, so two hooks whose functions share a name (`doco.taller.shell._shell`,
+	`mercado.shell._shell`) both boot."""
 	providers = list(_builtin_providers().items())
 	for path in frappe.get_hooks("muelle_shell_modules") or []:
 		providers.append((path.rsplit(".", 1)[-1].lstrip("_"), frappe.get_attr(path)))
@@ -648,13 +649,16 @@ def _unavailable(key, exc):
 
 def _entry(key, provider):
 	"""One module's boot entry. A builder that raises degrades to «unavailable» for its key
-	alone, so the other modules still load; a builder that answers None has no entry."""
+	alone, so the other modules still load; a builder that answers None has no entry; one
+	that answers without naming itself is the module the table names (`first_module` and
+	`resolve_recent` key the built-ins this way)."""
 	try:
 		dto = provider()
 	except Exception as exc:
 		return _unavailable(key, exc)
-	if not dto or not dto.get("key"):
+	if not dto:
 		return None
+	dto.setdefault("key", key)
 	dto.setdefault("state", "ready" if dto.get("enabled") else "off")
 	dto.setdefault("reason_code", None)
 	dto.setdefault("reason_text", dto.get("reason"))
