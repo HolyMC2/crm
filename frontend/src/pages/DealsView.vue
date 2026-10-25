@@ -544,7 +544,7 @@
               :data-deal="r.name"
               :aria-keyshortcuts="'n p r h'"
               @click="openDeal(r.name)"
-              @keydown.enter="openDeal(r.name)"
+              @keydown.enter.self="openDeal(r.name)"
               @keydown="onRowKey($event, r)"
             >
               <input

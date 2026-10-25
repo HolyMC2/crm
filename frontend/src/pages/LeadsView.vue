@@ -367,7 +367,7 @@
           class="grid cursor-pointer items-center border-b border-outline-gray-1 px-5 hover:bg-surface-gray-2"
           :style="`grid-template-columns:${GRID};min-height:50px`"
           @click="openLead(r.name)"
-          @keydown.enter="openLead(r.name)"
+          @keydown.enter.self="openLead(r.name)"
         >
           <input
             v-if="!isMobile"
