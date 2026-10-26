@@ -55,10 +55,11 @@ def _answers(value, promoter, passive, detractor):
 	}
 
 
+RANGE = {"user": "dueno@example.test", "periodo": "rango", "desde": "2026-10-01", "hasta": "2026-10-17"}
+
+
 @skipIf(not HAS_FRAPPE, "needs frappe")
 class TestEncuestasCard(TestCase):
-	ctx = {"user": "dueno@example.test", "periodo": "rango", "desde": "2026-10-01", "hasta": "2026-10-17"}
-
 	def service(self, windows, readable=True):
 		asked = []
 
@@ -71,7 +72,7 @@ class TestEncuestasCard(TestCase):
 
 	def card(self, fake, **ctx):
 		with patch.object(resultados_cards, "_encuestas_service", return_value=fake):
-			return resultados_cards.encuestas({**self.ctx, **ctx})
+			return resultados_cards.encuestas({**RANGE, **ctx})
 
 	def test_the_number_and_its_three_groups_come_from_encuestas(self):
 		fake, asked = self.service(
@@ -81,8 +82,12 @@ class TestEncuestasCard(TestCase):
 			}
 		)
 		card = self.card(fake)
-		self.assertEqual(asked, [(date(2026, 10, 1), date(2026, 10, 17)), (date(2026, 9, 14), date(2026, 9, 30))])
-		self.assertEqual((card["key"], card["format"], card["value"], card["prev"]), ("encuestas", "signed", 40, 20))
+		self.assertEqual(
+			asked, [(date(2026, 10, 1), date(2026, 10, 17)), (date(2026, 9, 14), date(2026, 9, 30))]
+		)
+		self.assertEqual(
+			(card["key"], card["format"], card["value"], card["prev"]), ("encuestas", "signed", 40, 20)
+		)
 		self.assertEqual((card["delta_pct"], card["delta_unit"]), (20, "pp"))
 		self.assertEqual([fact["value"] for fact in card["facts"]], [6, 2, 2])
 		self.assertTrue(all(fact["format"] == "count" for fact in card["facts"]))
