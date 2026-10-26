@@ -7,6 +7,8 @@ Only identity existence is read; no transcript, private settings or resolver cal
 
 import frappe
 
+from crm.utils.doctypes import doctype_exists
+
 
 def assert_customer_peer(provider, peer_id):
 	from crm.api import conversations as control
@@ -15,7 +17,7 @@ def assert_customer_peer(provider, peer_id):
 		return
 	if not isinstance(peer_id, str) or not peer_id:
 		frappe.throw("Invalid customer conversation identity.", frappe.PermissionError)
-	if frappe.db.exists("DocType", "Asistente Canal"):
+	if doctype_exists("Asistente Canal"):
 		channel = frappe.qb.DocType("Asistente Canal")
 		query = (
 			frappe.qb.from_(channel)
@@ -32,7 +34,7 @@ def assert_customer_peer(provider, peer_id):
 		if private:
 			_deny()
 	for doctype in ("Books Assistant Chat", "Books Chat Log"):
-		if frappe.db.exists("DocType", doctype) and frappe.db.get_value(
+		if doctype_exists(doctype) and frappe.db.get_value(
 			doctype, {"chat_id": "wa:" + peer_id}, "name", for_update=control._locked()
 		):
 			_deny()
@@ -54,7 +56,7 @@ def customer_peer_condition(peer):
 	from pypika.terms import Criterion, ExistsCriterion
 
 	conditions = []
-	if frappe.db.exists("DocType", "Asistente Canal"):
+	if doctype_exists("Asistente Canal"):
 		channel = frappe.qb.DocType("Asistente Canal")
 		conditions.append(
 			~ExistsCriterion(
@@ -71,7 +73,7 @@ def customer_peer_condition(peer):
 			)
 		)
 	for doctype in ("Books Assistant Chat", "Books Chat Log"):
-		if frappe.db.exists("DocType", doctype):
+		if doctype_exists(doctype):
 			table = frappe.qb.DocType(doctype)
 			conditions.append(
 				~ExistsCriterion(

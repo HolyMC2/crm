@@ -26,6 +26,8 @@ import frappe
 from frappe import _
 from frappe.utils import cint, cstr, get_fullname, getdate, strip_html, today
 
+from crm.utils.doctypes import doctype_exists
+
 MANAGER = "System Manager"
 _FIELDNAME = re.compile(r"^[a-z_][a-z0-9_]{0,139}$")
 _MACHINE_ID = re.compile(r"^(?=.*\d)[A-Za-z0-9]+[-_.][A-Za-z0-9_.-]{6,}$")
@@ -128,7 +130,7 @@ FORMATTED = {"Date", "Datetime", "Currency", "Float", "Percent"}
 
 
 def _exists(doctype):
-	return bool(doctype) and isinstance(doctype, str) and bool(frappe.db.exists("DocType", doctype))
+	return bool(doctype) and isinstance(doctype, str) and doctype_exists(doctype)
 
 
 def etiqueta(doctype):

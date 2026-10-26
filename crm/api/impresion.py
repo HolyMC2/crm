@@ -25,6 +25,8 @@ import frappe
 from frappe import _
 from frappe.utils import cint, cstr, get_fullname
 
+from crm.utils.doctypes import doctype_exists
+
 MANAGER = "System Manager"
 STANDARD = "Standard"
 # The name an unsaved template renders under in `probar`; never saved.
@@ -115,7 +117,7 @@ def _require_manager():
 
 
 def _doctype_exists(doctype):
-	return isinstance(doctype, str) and bool(doctype) and bool(frappe.db.exists("DocType", doctype))
+	return isinstance(doctype, str) and bool(doctype) and doctype_exists(doctype)
 
 
 def _get_format(name):
