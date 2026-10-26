@@ -1,7 +1,9 @@
 <template>
   <div class="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
     <div class="mx-auto w-full max-w-3xl px-4 pb-28 pt-4 sm:px-6 sm:pb-10">
-      <nav class="mb-3">
+      <!-- On a phone the shell's app bar has the back arrow (meta.listParent);
+           an answer opened from another app keeps its way back to that app. -->
+      <nav v-if="!isPhone || returnTo" class="mb-3">
         <button
           class="flex min-h-11 items-center gap-1 text-sm text-ink-gray-7 hover:text-ink-gray-9"
           @click="goBack"
@@ -57,7 +59,9 @@
               />
               <span>{{ when(answer.creation) }}</span>
             </p>
-            <h1 class="truncate text-2xl font-semibold text-ink-gray-9">
+            <h1
+              class="line-clamp-2 break-words text-2xl font-semibold text-ink-gray-9"
+            >
               {{ answer.customer_name }}
             </h1>
             <p class="mt-1 text-sm text-ink-gray-6">
@@ -333,6 +337,7 @@ import {
   whatsappHref,
 } from '@/composables/useEncuestas'
 import { shellBoot } from '@/composables/muelleShell'
+import { isMobile as isPhone } from '@/composables/breakpoint'
 import { can, moduleEnabled } from '@/vendor/muelle-shell/contracts'
 import LucideArrowLeft from '~icons/lucide/arrow-left'
 import LucideUserCheck from '~icons/lucide/user-check'

@@ -1,7 +1,8 @@
 <template>
   <div class="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
     <div class="mx-auto w-full max-w-4xl px-4 pb-28 pt-4 sm:px-6 sm:pb-10">
-      <nav class="mb-3">
+      <!-- On a phone the shell's app bar has the back arrow (meta.listParent). -->
+      <nav v-if="!isPhone" class="mb-3">
         <button
           class="flex min-h-11 items-center gap-1 text-sm text-ink-gray-7 hover:text-ink-gray-9"
           @click="goBack"
@@ -32,7 +33,9 @@
         <header class="mb-4 flex flex-wrap items-start gap-3">
           <Avatar :label="person.full_name" size="3xl" />
           <div class="min-w-0 flex-1">
-            <h1 class="truncate text-2xl font-semibold text-ink-gray-9">
+            <h1
+              class="line-clamp-2 break-words text-2xl font-semibold text-ink-gray-9"
+            >
               {{ person.full_name }}
             </h1>
             <p
@@ -54,12 +57,15 @@
               }}
             </p>
           </div>
-          <Button
-            :icon-left="LucideKey"
-            :label="__('Access and puesto')"
-            class="min-h-11 sm:min-h-8"
-            @click="openPersonSheet"
-          />
+          <!-- A phone gives the name the whole row; the button goes below. -->
+          <div class="basis-full sm:basis-auto">
+            <Button
+              :icon-left="LucideKey"
+              :label="__('Access and puesto')"
+              class="min-h-11 sm:min-h-8"
+              @click="openPersonSheet"
+            />
+          </div>
         </header>
 
         <div
@@ -170,7 +176,7 @@
             </div>
           </section>
 
-          <div class="grid gap-4 sm:grid-cols-2">
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <section class="rounded-6 border border-outline-gray-2 p-4">
               <h2 class="mb-2 text-sm font-semibold text-ink-gray-8">
                 {{ __('Vacations', null, 'Equipo') }}
@@ -250,7 +256,7 @@
                 <li
                   v-for="day in person.week || []"
                   :key="day.date"
-                  class="flex min-h-9 items-center gap-2 text-sm"
+                  class="flex min-h-9 flex-wrap items-center gap-x-2 gap-y-1 text-sm"
                 >
                   <span class="w-24 shrink-0 text-ink-gray-7">{{
                     day.label
@@ -259,7 +265,7 @@
                     :theme="weekTheme(day.status)"
                     :label="weekLabel(day.status)"
                   />
-                  <span class="min-w-0 flex-1 truncate text-ink-gray-8">
+                  <span class="min-w-0 grow basis-36 text-ink-gray-8">
                     {{
                       [day.shift_type, day.hours, day.holiday]
                         .filter(Boolean)
@@ -334,6 +340,7 @@ import {
   weekLabel,
   weekTheme,
 } from '@/composables/useEquipo'
+import { isMobile as isPhone } from '@/composables/breakpoint'
 import LucideArrowLeft from '~icons/lucide/arrow-left'
 import LucideKey from '~icons/lucide/key'
 

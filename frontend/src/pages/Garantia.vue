@@ -1,7 +1,9 @@
 <template>
   <div class="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
     <div class="mx-auto w-full max-w-4xl px-4 pb-28 pt-4 sm:px-6 sm:pb-10">
-      <nav class="mb-3">
+      <!-- On a phone the shell's app bar has the back arrow (meta.listParent);
+           a case opened from another app keeps its way back to that app. -->
+      <nav v-if="!isPhone || returnTo" class="mb-3">
         <button
           class="flex min-h-11 items-center gap-1 text-sm text-ink-gray-7 hover:text-ink-gray-9"
           @click="goBack"
@@ -51,7 +53,9 @@
                 :label="dueLabel(claim.sla.due)"
               />
             </p>
-            <h1 class="truncate text-2xl font-semibold text-ink-gray-9">
+            <h1
+              class="line-clamp-2 break-words text-2xl font-semibold text-ink-gray-9"
+            >
               {{ claim.customer_name }}
             </h1>
             <p class="mt-1 text-sm text-ink-gray-6">
@@ -60,7 +64,7 @@
                   claim.item_name || claim.item_code,
                   claim.serial_no,
                   claim.company,
-                  claim.complaint_date,
+                  formatDay(claim.complaint_date),
                 ]
                   .filter(Boolean)
                   .join(' · ')
@@ -108,14 +112,22 @@
             class="min-h-11 sm:min-h-8"
             @click="openRepair"
           />
-          <Button
-            v-else-if="primary?.kind === 'open_repair'"
-            variant="solid"
-            :icon-left="LucideExternalLink"
-            :label="__('Open repair order {0}', [claim.repair.open])"
-            class="min-h-11 sm:min-h-8"
-            @click="openTaller(claim.repair.open)"
-          />
+          <template v-else-if="primary?.kind === 'open_repair'">
+            <Button
+              variant="solid"
+              :icon-left="LucideExternalLink"
+              :label="__('Open repair order')"
+              class="min-h-11 sm:min-h-8"
+              :aria-describedby="`garantia-repair-${claim.repair.open}`"
+              @click="openTaller(claim.repair.open)"
+            />
+            <p
+              :id="`garantia-repair-${claim.repair.open}`"
+              class="basis-full break-words text-sm text-ink-gray-6"
+            >
+              {{ __('Repair order {0}', [claim.repair.open]) }}
+            </p>
+          </template>
           <Button
             v-else-if="primary?.kind === 'pick_source'"
             variant="solid"
@@ -125,16 +137,34 @@
             @click="picking = true"
           />
           <!-- Sales shape: a refund already made is linked, else the POS «Devolver venta» does it. -->
-          <Button
+          <template
             v-for="ret in claim.remedies?.refund?.returns || []"
             :key="ret.name"
-            :variant="primary?.kind === 'link_return' ? 'solid' : 'subtle'"
-            :icon-left="LucideLink"
-            :label="__('Link return {0}', [ret.name])"
-            class="min-h-11 sm:min-h-8"
-            :loading="busy"
-            @click="linkOutcome(ret.doctype, ret.name)"
-          />
+          >
+            <Button
+              :variant="primary?.kind === 'link_return' ? 'solid' : 'subtle'"
+              :icon-left="LucideLink"
+              :label="__('Link return')"
+              class="min-h-11 sm:min-h-8"
+              :loading="busy"
+              :aria-describedby="`garantia-return-${ret.name}`"
+              @click="linkOutcome(ret.doctype, ret.name)"
+            />
+            <p
+              :id="`garantia-return-${ret.name}`"
+              class="basis-full break-words text-sm text-ink-gray-6"
+            >
+              {{
+                [
+                  __('Return {0}', [ret.name]),
+                  ret.total !== undefined &&
+                    money(Math.abs(Number(ret.total)), ret.currency),
+                ]
+                  .filter(Boolean)
+                  .join(' · ')
+              }}
+            </p>
+          </template>
           <Button
             v-if="
               claim.remedies?.refund?.available &&
@@ -226,7 +256,7 @@
                 {{
                   [
                     claim.against.title,
-                    claim.against.date,
+                    formatDay(claim.against.date),
                     claim.against.status,
                     claim.against.total !== undefined &&
                       money(claim.against.total, claim.against.currency),
@@ -737,6 +767,8 @@ import NoticeDialog from '@/components/garantias/NoticeDialog.vue'
 import SourceDialog from '@/components/garantias/SourceDialog.vue'
 import ComprasPicker from '@/components/compras/ComprasPicker.vue'
 import { money } from '@/composables/useCompras'
+import { isMobile as isPhone } from '@/composables/breakpoint'
+import { formatDay } from '@/utils/contactos'
 import { offerUndo, runUndo } from '@/composables/powerUndo'
 import { appleKeys, registerPageShortcuts } from '@/composables/shellKeyboard'
 import { hoyLive } from '@/composables/useHoy'
