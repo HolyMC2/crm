@@ -19,6 +19,8 @@ from frappe import _
 from frappe.model.workflow import get_workflow_name
 from frappe.utils import cint, cstr, flt, get_fullname, getdate, nowdate, strip_html
 
+from crm.utils.doctypes import doctype_exists
+
 # The module each curated doctype lights in the shell (SPEC §6 DD3). Order is the hub order.
 DOCUMENTOS_DOCTYPES = (
 	"Quotation",
@@ -216,7 +218,7 @@ def _blocked_modules():
 
 
 def _exists(doctype):
-	return bool(doctype) and bool(frappe.db.exists("DocType", doctype))
+	return bool(doctype) and doctype_exists(doctype)
 
 
 def readable(doctype, blocked=None):

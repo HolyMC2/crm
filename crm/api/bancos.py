@@ -36,6 +36,7 @@ from crm.bancos_words import (
 	root_word,
 	voucher_word,
 )
+from crm.utils.doctypes import doctype_exists
 
 CONTADOR = "erpnext_mexico_compliance"
 PAGE = 50
@@ -53,7 +54,7 @@ KNOWN_ACTIONS = ("request_authorization", "request_review")
 
 
 def _erpnext():
-	return "erpnext" in frappe.get_installed_apps() and bool(frappe.db.exists("DocType", "Bank Account"))
+	return "erpnext" in frappe.get_installed_apps() and doctype_exists("Bank Account")
 
 
 def _blocked():
@@ -246,7 +247,7 @@ def _bank_side_balances(names):
 	if (
 		not names
 		or "syncfy_connector" not in frappe.get_installed_apps()
-		or not frappe.db.exists("DocType", "Syncfy Account")
+		or not doctype_exists("Syncfy Account")
 		or not frappe.has_permission("Syncfy Account", "read")
 	):
 		return {}
@@ -1149,7 +1150,7 @@ def _account_fields():
 def _agrupador_words(codes):
 	"""{code: description} from Contador's SAT catalogue, when installed."""
 	codes = [code for code in codes if code]
-	if not codes or not frappe.db.exists("DocType", "SAT Codigo Agrupador"):
+	if not codes or not doctype_exists("SAT Codigo Agrupador"):
 		return {}
 	rows = frappe.get_all(
 		"SAT Codigo Agrupador",

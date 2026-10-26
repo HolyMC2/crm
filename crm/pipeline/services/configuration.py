@@ -4,6 +4,8 @@ import frappe
 from frappe import _
 from frappe.utils import cint, flt
 
+from crm.utils.doctypes import doctype_exists
+
 LEGACY_PIPELINE = "legacy-sales"
 # The name the pipeline migration gives that pipeline. It is data a manager may
 # rename; this exact name is drawn through the catalog (crm/pipeline/labels.py).
@@ -46,7 +48,7 @@ def deny_shared_documents(user, doctype, names):
 
 
 def installed():
-	return frappe.db.exists("DocType", "CRM Pipeline") and frappe.db.has_column("CRM Deal", "pipeline")
+	return doctype_exists("CRM Pipeline") and frappe.db.has_column("CRM Deal", "pipeline")
 
 
 def lines(value):
@@ -64,16 +66,32 @@ def _user_scopes(user):
 	return {key: {row.doc for row in permissions.get(key, [])} for key in ("CRM Pipeline", "Company")}
 
 
+def _rows_once(doctype, fields):
+	"""`frappe.get_all(doctype, fields)`, read once per transaction.
+
+	Permission hooks ask for the pipeline scope on every deal and lead of a
+	list (94 reads for one Inbox page, F18). The rows live in Frappe's value
+	cache under «CRM Pipeline», which Frappe drops on every commit, rollback and
+	savepoint rollback, and on any save or delete of a pipeline (its role rows
+	are saved with it), so a change is seen by the next read. The tuple key
+	cannot collide with the docname keys `get_value(..., cache=True)` stores."""
+	bucket = frappe.db.value_cache["CRM Pipeline"]
+	key = (__name__, doctype, fields)
+	if key not in bucket:
+		bucket[key] = frappe.get_all(doctype, fields=list(fields))
+	return bucket[key]
+
+
 def allowed_pipeline_names(user=None):
 	"""Bounded reads; no per-deal permission query or optional app import."""
 	user = user or frappe.session.user
-	rows = frappe.get_all("CRM Pipeline", fields=["name", "sales_company"])
+	rows = _rows_once("CRM Pipeline", ("name", "sales_company"))
 	if user == "Administrator" or "System Manager" in frappe.get_roles(user):
 		return [row.name for row in rows]
 	roles = set(frappe.get_roles(user))
 	scopes = _user_scopes(user)
 	restricted = {}
-	for row in frappe.get_all("CRM Pipeline Role", fields=["parent", "role"]):
+	for row in _rows_once("CRM Pipeline Role", ("parent", "role")):
 		restricted.setdefault(row.parent, set()).add(row.role)
 	return [
 		row.name
@@ -118,7 +136,7 @@ def record_query(doctype, user=None, field="pipeline"):
 	allowed = ", ".join(frappe.db.escape(name) for name in names) or "NULL"
 	# Access to every pipeline restricts nothing (Link validation keeps values
 	# existing), so native lists keep their empty condition for such users.
-	every_pipeline = set(names) == set(frappe.get_all("CRM Pipeline", pluck="name"))
+	every_pipeline = set(names) == {row.name for row in _rows_once("CRM Pipeline", ("name", "sales_company"))}
 	conditions = [] if every_pipeline else [f"({column} IS NULL OR {column} = '' OR {column} IN ({allowed}))"]
 	user = user or frappe.session.user
 	if (
@@ -137,7 +155,7 @@ def record_query(doctype, user=None, field="pipeline"):
 
 
 def validate_company(company):
-	if company and frappe.db.exists("DocType", "Company"):
+	if company and doctype_exists("Company"):
 		if not frappe.db.exists("Company", company):
 			frappe.throw(_("Company {0} does not exist.").format(company))
 		frappe.get_doc("Company", company).check_permission("read")
