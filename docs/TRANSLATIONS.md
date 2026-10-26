@@ -20,8 +20,10 @@ is cached by the browser for a year.
    the strings that reach `__()` only at runtime:
 
    - every DocType name;
-   - the labels, descriptions and Select options of the DocTypes the build names, and of their
-     child tables (FieldLayout labels, status values the server sends);
+   - the labels, descriptions and Select options of the DocTypes the build names, and of the
+     DocTypes their Link, Table and Table MultiSelect fields point to, one level deep (child
+     tables, FieldLayout labels, status values the server sends, and the fields of a "create new"
+     dialog for a linked record such as a Territory);
    - record names of translated DocTypes, and of non-child DocTypes the build names that have at
      most 500 records (stages, lead sources);
    - string literals in crm's own Python, which sends some English for the client to translate
@@ -41,18 +43,27 @@ is cached by the browser for a year.
   `<lang>|<sha1 of translation-keys.json>|<fingerprint of the user's Translation records>`.
   - Saving a Translation changes the fingerprint.
   - A new build changes the digest.
-  - `bench migrate` clears the cache.
+  - `bench migrate` clears the cache (`after_migrate` also calls `shell_dictionary.clear`).
+  - Saving or deleting a DocType, Custom Field or Property Setter clears it, so a renamed label or a
+    new field is in the set on the next page load.
   - The hash expires a day after its first field, so a new record name joins the set within a day.
 - Building the key set reads DocType meta and the app's Python, which takes 2 to 5 s cold. So it runs
   as a background job (`shell_dictionary.build`, queue `short`) and never inside a page request.
   Until the job finishes, the page links `?v=` and gets the whole dictionary, as it did before this
   change.
+- A queued build sets a marker that expires after 300 s (`QUEUED_SECONDS`), and the marker is
+  removed when the job ends or `frappe.enqueue` raises. A lost job or a down queue delays the
+  reduced set by five minutes at most, never by hours.
 
 ## Fallbacks
 
 - A key outside the set: `translate()` returns the English source string. It never crashes.
 - No `translation-keys.json` (the vite dev server, an unbuilt tree): the whole dictionary is served.
-- `get_all_translations` fails: an empty dictionary is served, and the error is logged.
+  Outside developer mode this is logged once per worker as a warning, since a deployed site should
+  always have the file.
+- `get_all_translations` fails: the page request serves an empty dictionary and logs the error. The
+  background build stores nothing in that case, so no empty payload is cached or hashed, the next
+  page load gets the whole dictionary and queues the build again.
 - The version cannot be computed: the page links `?v=` and still renders.
 
 Design, measurements and the live key capture are in muelle-host `shell-program/evidence/F20/`.
