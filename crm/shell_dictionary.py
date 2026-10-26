@@ -67,7 +67,8 @@ def build_literals() -> tuple[str, frozenset[str] | None]:
 	cached = _listing.get(path)
 	if cached and cached[0] == mtime:
 		return cached[1], cached[2]
-	with open(path, "rb") as f:
+	# The path is the app's own build output under get_app_path, never request input.
+	with open(path, "rb") as f:  # nosemgrep: frappe-security-file-traversal
 		raw = f.read()
 	entry = (mtime, hashlib.sha1(raw).hexdigest()[:16], frozenset(json.loads(raw)["literals"]))
 	_listing[path] = entry
@@ -119,6 +120,8 @@ def build(lang: str, field: str) -> None:
 
 def _queue_build(field: str) -> None:
 	marker = _queued_key(field)
+	# The marker is already site-prefixed by make_key; set_value has no nx, which the dedupe needs.
+	# nosemgrep: frappe-cache-breaks-multitenancy
 	if not frappe.cache.set(marker, 1, nx=True, ex=QUEUED_SECONDS):
 		return
 	try:
@@ -240,7 +243,8 @@ def python_literals(app: str) -> frozenset[str]:
 def _file_literals(path: str) -> set[str]:
 	literals = set()
 	try:
-		with open(path, encoding="utf-8") as f:
+		# The path is a .py file the walk found under the app's own directory, never request input.
+		with open(path, encoding="utf-8") as f:  # nosemgrep: frappe-security-file-traversal
 			tokens = list(tokenize.generate_tokens(io.StringIO(f.read()).readline))
 	except (OSError, SyntaxError, tokenize.TokenError, UnicodeDecodeError):
 		return literals
