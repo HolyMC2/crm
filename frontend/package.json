@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "NODE_OPTIONS=\"--max-old-space-size=${CRM_BUILD_HEAP_MB:-4096} ${NODE_OPTIONS:-}\" vite build --base=/assets/crm/frontend/ && cp ../crm/public/frontend/index.html ../crm/www/crm.html && node scripts/verify-pwa-build.mjs && node scripts/verify-bundle-budget.mjs",
+    "build": "NODE_OPTIONS=\"--max-old-space-size=${CRM_BUILD_HEAP_MB:-4096} ${NODE_OPTIONS:-}\" vite build --base=/assets/crm/frontend/ && cp ../crm/public/frontend/index.html ../crm/www/crm.html && node scripts/verify-pwa-build.mjs && node scripts/verify-bundle-budget.mjs && node scripts/verify-translation-keys.mjs",
     "copy-html-entry": "cp ../crm/public/frontend/index.html ../crm/www/crm.html",
     "serve": "vite preview",
     "test": "vitest",
@@ -55,6 +55,7 @@
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.62.0",
     "@vitest/coverage-v8": "^4.1.4",
+    "acorn": "^8.16.0",
     "autoprefixer": "^10.4.14",
     "eslint": "^10.0.2",
     "eslint-config-prettier": "^10.1.8",

@@ -5,9 +5,10 @@ import { resolve } from 'node:path'
 const html = readFileSync(resolve(__dirname, '../../index.html'), 'utf8')
 
 describe('the language dictionary is its own script, ahead of the app', () => {
-  it('a classic deferred script fetches it from the whitelisted endpoint', () => {
+  it('a classic deferred script fetches it from the whitelisted endpoint, versioned', () => {
+    // ?v= is the payload hash (crm/shell_dictionary.py): that URL is immutable.
     expect(html).toMatch(
-      /<script defer src="\/api\/method\/crm\.www\.crm\.translations"><\/script>/,
+      /<script\s+defer\s+src="\/api\/method\/crm\.www\.crm\.translations\?v=\{\{ translations_version \}\}"\s*><\/script>/,
     )
   })
 

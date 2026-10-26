@@ -6,7 +6,7 @@ from urllib.parse import quote
 import frappe
 from frappe import _, get_installed_apps
 from frappe.integrations.frappe_providers.frappecloud_billing import is_fc_site
-from frappe.translate import get_messages_for_boot, get_translated_doctypes
+from frappe.translate import get_translated_doctypes
 from frappe.utils import cint, get_system_timezone
 from frappe.utils.telemetry import capture
 from werkzeug.http import generate_etag
@@ -20,6 +20,7 @@ def get_context():
 	neutral, module = _gate(path)
 	context = frappe._dict()
 	context.boot = get_boot(neutral=neutral, module=module)
+	context.translations_version = _translations_version()
 	if frappe.session.user != "Guest" and not neutral:
 		capture("active_site", "crm")
 	return context
@@ -373,18 +374,36 @@ def get_boot(neutral=False, module="contactos"):
 
 
 @frappe.whitelist(methods=["GET"])
-def translations():
-	"""The language dictionary as a classic script that sets window.translated_messages.
+def translations(v: str | None = None):
+	"""The translations this build uses (crm.shell_dictionary) as a classic script that sets
+	window.translated_messages.
 
-	Kept out of the shell HTML so every /crm load stops re-downloading ~1 MB of it; the script
-	revalidates with If-None-Match and answers 304 while the dictionary is unchanged.
+	The page links it as ?v=<version>; that URL never changes content, so the browser keeps it
+	for a year and warm loads make no request. Any other v (a tab opened before a deploy or a
+	Translation edit, or "" while the dictionary is still being built) revalidates with
+	If-None-Match instead, so it cannot pin old content.
 	"""
-	messages = frappe.as_json(get_messages_for_boot(), indent=None, separators=(",", ":"), ensure_ascii=False)
-	payload = f"window.translated_messages = {messages};".encode()
+	from crm import shell_dictionary
+
+	current, payload = shell_dictionary.script()
 	response = Response(payload, mimetype="application/javascript")
+	if current and v == current:
+		response.headers["Cache-Control"] = "private, max-age=31536000, immutable"
+		return response
 	response.set_etag(generate_etag(payload))
 	response.headers["Cache-Control"] = "private, no-cache"
 	return response.make_conditional(frappe.request)
+
+
+def _translations_version() -> str:
+	# An empty version only costs the page the revalidating URL; the page itself still renders.
+	from crm import shell_dictionary
+
+	try:
+		return shell_dictionary.version()
+	except Exception:
+		frappe.log_error("crm translations version")
+		return ""
 
 
 def _shell_scope() -> str:
