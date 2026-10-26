@@ -35,7 +35,14 @@
           :subtitle="subtitle"
           :level="1"
         >
-          <template v-if="caps.configure || caps.hire" #actions>
+          <template v-if="caps.hr || caps.configure || caps.hire" #actions>
+            <Button
+              v-if="caps.hr"
+              :icon-left="LucideWallet"
+              :label="__('Pre-payroll')"
+              class="min-h-11 sm:min-h-8"
+              @click="router.push({ name: 'EquipoPrenomina' })"
+            />
             <Button
               v-if="caps.configure"
               :icon-left="LucideCalendar"
@@ -279,6 +286,7 @@ import {
 } from '@/composables/useEquipo'
 import LucideCalendar from '~icons/lucide/calendar'
 import LucideUserPlus from '~icons/lucide/user-plus'
+import LucideWallet from '~icons/lucide/wallet'
 
 const route = useRoute()
 const router = useRouter()

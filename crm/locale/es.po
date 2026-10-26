@@ -28764,3 +28764,52 @@ msgstr "Formularios y encuestas"
 #: crm/resultados_cards.py
 msgid "See the answers"
 msgstr "Ver las respuestas"
+
+#: frontend/src/pages/Equipo.vue
+#: frontend/src/pages/EquipoPrenomina.vue
+msgid "Pre-payroll"
+msgstr "Pre-nómina"
+
+#: frontend/src/pages/EquipoPrenomina.vue
+msgid "Days worked, vacations and open advances per person, before paying. Nothing here changes payroll."
+msgstr "Días trabajados, vacaciones y adelantos abiertos por persona, antes de pagar. Aquí nada cambia la nómina."
+
+#: frontend/src/pages/EquipoPrenomina.vue
+msgid "Pay period"
+msgstr "Periodo de pago"
+
+#: frontend/src/pages/EquipoPrenomina.vue
+msgid "Days present"
+msgstr "Días trabajados"
+
+#: frontend/src/pages/EquipoPrenomina.vue
+msgid "Absent days"
+msgstr "Faltas"
+
+#: frontend/src/pages/EquipoPrenomina.vue
+msgid "Vacation days"
+msgstr "Días de vacaciones"
+
+#: frontend/src/pages/EquipoPrenomina.vue
+msgid "Open advances"
+msgstr "Adelantos abiertos"
+
+#: frontend/src/pages/EquipoPrenomina.vue
+msgid "Missing to pay"
+msgstr "Falta para pagar"
+
+#: frontend/src/pages/EquipoPrenomina.vue
+msgid "{0} from check-ins"
+msgstr "{0} por checada"
+
+#: frontend/src/pages/EquipoPrenomina.vue
+msgid "Nothing missing"
+msgstr "Nada pendiente"
+
+#: frontend/src/pages/EquipoPrenomina.vue
+msgid "No active people to show."
+msgstr "No hay personas activas para mostrar."
+
+#: frontend/src/pages/EquipoPrenomina.vue
+msgid "{0} of {1} people with something missing"
+msgstr "{0} de {1} personas con algo pendiente"

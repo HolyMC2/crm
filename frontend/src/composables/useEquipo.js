@@ -1,5 +1,6 @@
 import { ref } from 'vue'
 import { comprasApi } from '@/composables/useCompras'
+import { money } from '@/utils/numberFormat'
 
 // Equipo: the owner's and managers' team — who works today, vacation requests
 // to decide, people without a turno, everyone. Native Employee, Leave
@@ -175,6 +176,46 @@ export function decisions(request) {
 export function liftAction(answer) {
   const action = (answer?.actions || []).find((a) => a.id === 'lift_own_limit')
   return action ? { label: action.label, employee: answer.employee } : null
+}
+
+export const PRENOMINA = 'doco.erp_experience.prenomina.get_period'
+// The pay periods doco's prenomina.PERIODS knows, by their Spanish address word.
+const PERIOD_WORDS = Object.freeze({ week: 'semana', fortnight: 'quincena' })
+const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/
+
+/** The period and first day a pre-nómina address asks for; the week by default. */
+export function periodFromQuery(query = {}) {
+  const period =
+    Object.keys(PERIOD_WORDS).find((k) => PERIOD_WORDS[k] === query.periodo) ||
+    'week'
+  const start = ISO_DAY.test(query.desde || '') ? query.desde : null
+  return { period, start }
+}
+
+/** The address query for a period, without the default week. */
+export function periodQuery(period, start) {
+  const query = period === 'week' ? {} : { periodo: PERIOD_WORDS[period] }
+  return start ? { ...query, desde: start } : query
+}
+
+/** «19 oct 2026 – 25 oct 2026» for a period from the server. */
+export function periodRange(period) {
+  if (!period?.start) return ''
+  return `${dayLabel(period.start)} – ${dayLabel(period.end)}`
+}
+
+/** A day count, or a dash when the reader cannot see its source. */
+export function daysText(days) {
+  return days === null || days === undefined ? '—' : String(Number(days))
+}
+
+/** Open advances per currency with their count; a dash when unreadable. */
+export function advancesText(advances, format = money) {
+  if (!advances) return '—'
+  if (!advances.length) return '0'
+  return advances
+    .map((a) => `${format(a.pending, a.currency)} (${a.count})`)
+    .join(' · ')
 }
 
 // One load of Doco's shared Equipo sheet (alta, puesto, one-day turno) per page.

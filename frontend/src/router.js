@@ -492,6 +492,12 @@ const routes = [
     meta: { app: 'equipo', title: 'Equipo', listParent: 'Equipo' },
   },
   {
+    path: '/equipo/prenomina',
+    name: 'EquipoPrenomina',
+    component: () => import('@/pages/EquipoPrenomina.vue'),
+    meta: { app: 'equipo', title: 'Equipo', listParent: 'Equipo' },
+  },
+  {
     path: '/manual',
     name: 'Manual',
     component: () => import('@/pages/Manual.vue'),
