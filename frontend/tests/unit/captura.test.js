@@ -379,7 +379,9 @@ describe('review answers before the draft', () => {
   })
   it('offers a new item when changing a wrong match, previewed first', () => {
     const page = source('pages/CapturaRevision.vue')
-    expect(page).toContain("capturaApi('item_preview', { name: props.name, idx })")
+    expect(page).toContain(
+      "capturaApi('item_preview', { name: props.name, idx })",
+    )
     expect(page).toContain("if (line.state === 'mapped') args.replace = 1")
     expect(page).toContain('@click="startChange(line)"')
   })
