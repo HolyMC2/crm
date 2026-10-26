@@ -17,8 +17,9 @@ globalThis.__ = (text, args = []) =>
 
 const { booksFields, defaultMode, payBill, payMissing, bulkPayMissing } =
   await import('@/composables/useGastos')
-const { default: PaymentDates } =
-  await import('@/components/gastos/PaymentDates.vue')
+const { default: PaymentDates } = await import(
+  '@/components/gastos/PaymentDates.vue'
+)
 
 describe('Gastos payment dates and mode', () => {
   it('sends the books date and mode only when set', async () => {
