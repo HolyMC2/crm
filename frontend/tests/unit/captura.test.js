@@ -374,8 +374,14 @@ describe('review answers before the draft', () => {
   it('offers a new item for a line that already has candidates', () => {
     const page = source('pages/CapturaRevision.vue')
     expect(page).toMatch(
-      /v-if="\s*\(line\.state === 'ask' \|\| line\.state === 'new'\) &&\s*review\.can\?\.create_item\s*"/,
+      /v-if="\s*\(line\.state === 'ask' \|\|\s*line\.state === 'new' \|\|\s*changing\[line\.idx\]\) &&\s*review\.can\?\.create_item\s*"/,
     )
+  })
+  it('offers a new item when changing a wrong match, previewed first', () => {
+    const page = source('pages/CapturaRevision.vue')
+    expect(page).toContain("capturaApi('item_preview', { name: props.name, idx })")
+    expect(page).toContain("if (line.state === 'mapped') args.replace = 1")
+    expect(page).toContain('@click="startChange(line)"')
   })
   it('shows the destination warehouse while its question is open', () => {
     const page = source('pages/CapturaRevision.vue')
