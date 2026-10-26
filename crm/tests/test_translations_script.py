@@ -56,10 +56,11 @@ class TestTranslationsScript(FrappeTestCase):
 		response = self.serve({"Ventas": "Sales", "Año": "Year"})
 		self.assertEqual(response.mimetype, "application/javascript")
 		self.assertEqual(response.headers["Cache-Control"], "private, no-cache")
-		# Compact JSON, with the non-ASCII characters kept as UTF-8 rather than \u escapes.
+		# Compact JSON with sorted keys (the same dictionary always hashes to the same version),
+		# non-ASCII characters kept as UTF-8 rather than \u escapes.
 		self.assertEqual(
 			response.get_data(as_text=True),
-			'window.translated_messages = {"Ventas":"Sales","Año":"Year"};',
+			'window.translated_messages = {"Año":"Year","Ventas":"Sales"};',
 		)
 
 	def test_only_the_keys_the_build_uses_are_served_with_their_values_unchanged(self):
@@ -78,8 +79,8 @@ class TestTranslationsScript(FrappeTestCase):
 			response = self.serve(dictionary, listing=listing)
 		self.assertEqual(
 			response.get_data(as_text=True),
-			'window.translated_messages = {"Save":"Guardar","Open":"Abrir","Compras":"Compras",'
-			'"Open:Compras":"Abrir pedido"};',
+			'window.translated_messages = {"Compras":"Compras","Open":"Abrir",'
+			'"Open:Compras":"Abrir pedido","Save":"Guardar"};',
 		)
 
 	def test_runtime_keys_cover_doctypes_records_and_server_strings(self):

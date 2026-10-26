@@ -9,14 +9,16 @@ is cached by the browser for a year.
 
 1. **Build.** `frontend/scripts/translation-keys.mjs` is a Vite plugin. It emits
    `crm/public/frontend/translation-keys.json`, which holds every string literal of every module in
-   the build, including compiled templates, frappe-ui and vendored packages. Only strings that are
-   already public in the bundle go into this file.
+   the build, including compiled templates, frappe-ui and vendored packages. It reads them with the
+   bundler's own parser (`this.parse`), so it adds no dependency. Only strings that are already
+   public in the bundle go into this file.
 2. **Check.** `yarn build` then runs `frontend/scripts/verify-translation-keys.mjs`. It reads every
    `__()` call in the sources of the modules the build contains. The build fails if a literal
    message or context is missing from the file. The check uses its own extractor, separate from the
-   plugin. Tests: `frontend/tests/unit/translationKeys.test.js`.
+   plugin: a scanner finds where each call ends and vite's `parseAst` reads its arguments. Tests: `frontend/tests/unit/translationKeys.test.js`.
 3. **Server.** `crm/shell_dictionary.py` keeps the dictionary keys that are in that list and adds
    the strings that reach `__()` only at runtime:
+
    - every DocType name;
    - the labels, descriptions and Select options of the DocTypes the build names, and of their
      child tables (FieldLayout labels, status values the server sends);

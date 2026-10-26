@@ -7,7 +7,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { parseExpressionAt, tokenizer, tokTypes } from 'acorn'
+import { parseAst } from 'vite'
 import { KEYS_FILE } from './translation-keys.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
@@ -18,6 +18,7 @@ const CALL = /(?<![\w$])__\(/g
 // Comments that mention __('…') are not calls. Blanked to spaces so offsets stay put.
 const COMMENT = /<!--[\s\S]*?-->|(?<=^|\s)\/\*[\s\S]*?\*\/|(?<=^|\s)\/\/[^\n]*/g
 const blank = (text) => text.replace(/[^\n]/g, ' ')
+const CLOSER = { '(': ')', '[': ']', '{': '}' }
 
 function stringValue(node) {
   if (node?.type === 'Literal' && typeof node.value === 'string')
@@ -28,15 +29,68 @@ function stringValue(node) {
   return null
 }
 
-// TypeScript or template syntax acorn cannot parse as a whole call: the
-// message is still the first token.
-function firstToken(rest) {
+function parseExpression(text) {
   try {
-    const token = tokenizer(rest, { ecmaVersion: 'latest' }).getToken()
-    return token.type === tokTypes.string ? token.value : null
+    const statement = parseAst(`(${text})`).body[0]
+    return statement?.type === 'ExpressionStatement'
+      ? statement.expression
+      : null
   } catch {
     return null
   }
+}
+
+function quoteEnd(text, i) {
+  const quote = text[i]
+  for (let j = i + 1; j < text.length; j++) {
+    if (text[j] === '\\') j++
+    else if (text[j] === quote) return j + 1
+    else if (text[j] === '\n' && quote !== '`') return -1
+  }
+  return -1
+}
+
+// The index just past the ")" that closes the call opening at `open`, skipping
+// strings, template literals and their ${} parts; -1 when it does not close.
+// A regex literal holding a bracket can mislead it; the call then falls back to
+// its first token below, so the message is still checked.
+export function callEnd(text, open) {
+  const stack = []
+  for (let i = open; i < text.length; i++) {
+    const c = text[i]
+    if (stack.at(-1) === '`') {
+      if (c === '\\') i++
+      else if (c === '`') stack.pop()
+      else if (c === '$' && text[i + 1] === '{') {
+        stack.push('}')
+        i++
+      }
+      continue
+    }
+    if (c === "'" || c === '"') {
+      const end = quoteEnd(text, i)
+      if (end < 0) return -1
+      i = end - 1
+    } else if (c === '`') stack.push('`')
+    else if (CLOSER[c]) stack.push(CLOSER[c])
+    else if (c === ')' || c === ']' || c === '}') {
+      if (stack.pop() !== c) return -1
+      if (!stack.length) return i + 1
+    }
+  }
+  return -1
+}
+
+// TypeScript or template syntax the parser cannot read as a whole call: the
+// message is still the first token when it is a plain string literal.
+function firstToken(text, i) {
+  while (/\s/.test(text[i] || '')) i++
+  if (!'\'"`'.includes(text[i] || 'x')) return null
+  const end = quoteEnd(text, i)
+  if (end < 0) return null
+  const literal = text.slice(i, end)
+  if (literal[0] === '`' && literal.includes('${')) return null
+  return stringValue(parseExpression(literal))
 }
 
 // `__('Save')`, `__("Save")`, `` __(`Save`) ``, and `__('Open', null, 'Compras')`
@@ -47,16 +101,16 @@ export function translationCalls(text) {
   const keys = []
   let unparsed = 0
   for (const match of source.matchAll(CALL)) {
-    let call
-    try {
-      call = parseExpressionAt(source, match.index, { ecmaVersion: 'latest' })
-    } catch {
-      const first = firstToken(source.slice(match.index + 3))
+    const open = match.index + match[0].length - 1
+    const end = callEnd(source, open)
+    const call =
+      end > 0 ? parseExpression(source.slice(match.index, end)) : null
+    if (call?.type !== 'CallExpression') {
+      const first = firstToken(source, open + 1)
       if (first) keys.push({ message: first })
       else unparsed++
       continue
     }
-    if (call.type !== 'CallExpression') continue
     const message = stringValue(call.arguments[0])
     // '' is never looked up: translate('') is ''.
     if (!message) continue

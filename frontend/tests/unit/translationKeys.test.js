@@ -2,28 +2,39 @@
 // the verifier fails the build when a __() key in the sources is not listed
 // (scripts/verify-translation-keys.mjs). These pin both halves.
 import { describe, expect, it } from 'vitest'
-import { jsStringLiterals } from '../../scripts/translation-keys.mjs'
+import { parseAst } from 'vite'
+import { stringLiterals } from '../../scripts/translation-keys.mjs'
 import {
+  callEnd,
   missingKeys,
   translationCalls,
 } from '../../scripts/verify-translation-keys.mjs'
 
 const messages = (source) => translationCalls(source).keys.map((k) => k.message)
 
-describe('jsStringLiterals', () => {
+describe('stringLiterals', () => {
   it('collects quoted and expression-free template strings, compiled templates included', () => {
     const code =
       'const a = "Hoy"; const b = \'Pendientes\'; const c = `Avisos`; const d = `${x} días`;' +
       ' function render(){ return _toDisplayString(_ctx.__("Guardar")) }'
-    const literals = jsStringLiterals(code)
+    const literals = stringLiterals(parseAst(code))
     for (const key of ['Hoy', 'Pendientes', 'Avisos', ' días', 'Guardar']) {
       expect(literals.has(key)).toBe(true)
     }
     expect(literals.has('')).toBe(false)
   })
 
-  it('throws on code it cannot tokenize, so the plugin can report the module', () => {
-    expect(() => jsStringLiterals('const a = "unterminated')).toThrow()
+  it('reads every part of a template literal and nested strings', () => {
+    const literals = stringLiterals(
+      parseAst('f(`Total ${n} de ${g("Ventas")} hoy`, { label: "Cobrar" })'),
+    )
+    for (const key of ['Total ', ' de ', ' hoy', 'Ventas', 'Cobrar']) {
+      expect(literals.has(key)).toBe(true)
+    }
+  })
+
+  it('throws on code it cannot parse, so the plugin can report the module', () => {
+    expect(() => stringLiterals(parseAst('const a = "unterminated'))).toThrow()
   })
 })
 
@@ -54,6 +65,22 @@ describe('translationCalls', () => {
       "const url = 'https://x'; __('After url')",
     ].join('\n')
     expect(messages(source)).toEqual(['After glob', 'After url'])
+  })
+
+  it('finds the end of a call past brackets and strings in its arguments', () => {
+    const source = "__('Open', { a: [1, ')'], b: `}${f('(')}` }, 'Ctx') + x"
+    expect(callEnd(source, 2)).toBe(source.length - 4)
+    expect(translationCalls(source).keys).toEqual([
+      { message: 'Open', context: 'Ctx' },
+    ])
+    expect(callEnd("__('never closed'", 2)).toBe(-1)
+  })
+
+  it('reads a call split over lines, as templates write them', () => {
+    const { keys } = translationCalls(
+      "{{\n  __(\n    'Pagar',\n    null,\n    'Cobranza',\n  )\n}}",
+    )
+    expect(keys).toEqual([{ message: 'Pagar', context: 'Cobranza' }])
   })
 
   it('falls back to the first token when the call is not plain JavaScript', () => {

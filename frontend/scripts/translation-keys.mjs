@@ -5,18 +5,29 @@
 // included. The server keeps the dictionary keys among them and adds what only
 // arrives at runtime: DocType strings, record names, its own Python literals.
 import { relative } from 'node:path'
-import { tokenizer, tokTypes } from 'acorn'
 
 export const KEYS_FILE = 'translation-keys.json'
 
-export function jsStringLiterals(code, into = new Set()) {
-  for (const token of tokenizer(code, {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    allowHashBang: true,
-  })) {
-    if (token.type === tokTypes.string || token.type === tokTypes.template) {
-      if (token.value) into.add(token.value)
+const POSITION = new Set(['type', 'start', 'end', 'loc', 'range'])
+
+// Every non-empty string literal and template-literal part of an ESTree
+// program: `this.parse` in a plugin hook, or `parseAst` from vite.
+export function stringLiterals(ast, into = new Set()) {
+  const stack = [ast]
+  while (stack.length) {
+    const node = stack.pop()
+    if (node.type === 'Literal' && typeof node.value === 'string') {
+      if (node.value) into.add(node.value)
+    } else if (node.type === 'TemplateElement') {
+      if (node.value.cooked) into.add(node.value.cooked)
+    }
+    for (const key in node) {
+      if (POSITION.has(key)) continue
+      const value = node[key]
+      if (Array.isArray(value)) {
+        for (const child of value)
+          if (child && typeof child === 'object') stack.push(child)
+      } else if (value && typeof value === 'object') stack.push(value)
     }
   }
   return into
@@ -43,7 +54,8 @@ export function translationKeys() {
         // Listed even when it does not tokenize, so the verifier still checks its calls.
         if (!id.startsWith('\0')) modules.add(relative(root, id.split('?')[0]))
         try {
-          jsStringLiterals(info.code, literals)
+          // The bundler's own parser: no dependency of ours to install.
+          stringLiterals(this.parse(info.code), literals)
         } catch {
           skipped.push(id)
         }
