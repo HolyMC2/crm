@@ -1,6 +1,8 @@
 """Pipeline scope reads (F19): permission hooks ask for the allowed pipelines on
 every deal and lead of a list; the pipeline and role rows are read once per
-transaction, the answer is unchanged, and a pipeline save is seen at once."""
+transaction, the answer is unchanged, and a pipeline save is seen at once. The
+DocType checks keep their answer per transaction and see an install or a
+removal at the next call."""
 
 from contextlib import contextmanager
 
@@ -45,6 +47,22 @@ def allowed_one_read_at_a_time(user):
 		and (not scopes["CRM Pipeline"] or row.name in scopes["CRM Pipeline"])
 		and (not row.sales_company or not scopes["Company"] or row.sales_company in scopes["Company"])
 	]
+
+
+def install_probe(name):
+	"""A custom Single DocType has no table of its own, so its insert runs no DDL
+	and does not commit."""
+	return frappe.get_doc(
+		{
+			"doctype": "DocType",
+			"name": name,
+			"module": "Custom",
+			"custom": 1,
+			"issingle": 1,
+			"fields": [{"fieldname": "note", "fieldtype": "Data", "label": "Note"}],
+			"permissions": [{"role": "System Manager", "read": 1, "write": 1}],
+		}
+	).insert(ignore_permissions=True)
 
 
 class TestPipelineScopeReads(IntegrationTestCase):
@@ -137,3 +155,39 @@ class TestDoctypeExists(IntegrationTestCase):
 		with reads("DocType") as seen:
 			self.assertTrue(doctype_exists("CRM Deal"))
 		self.assertEqual(len(seen), 1)
+
+
+class TestDoctypeInstallRemove(IntegrationTestCase):
+	def setUp(self):
+		super().setUp()
+		frappe.db.rollback()
+		self.name = "F19 Exists Probe " + frappe.generate_hash(length=8)
+
+	def tearDown(self):
+		frappe.db.rollback()
+		if frappe.db.exists("DocType", self.name):
+			frappe.delete_doc("DocType", self.name, ignore_permissions=True, force=True)
+			frappe.db.commit()  # nosemgrep: frappe-manual-commit -- only after the probe leaked a commit
+		super().tearDown()
+
+	def test_an_install_is_seen_in_the_same_transaction(self):
+		self.assertFalse(doctype_exists(self.name))
+		with reads("DocType") as seen:
+			self.assertFalse(doctype_exists(self.name))
+		self.assertEqual(seen, [], "the absent answer is cached")
+		install_probe(self.name)
+		self.assertTrue(doctype_exists(self.name))
+		frappe.db.rollback()
+		self.assertFalse(frappe.db.exists("DocType", self.name), "the install did not commit")
+		self.assertFalse(doctype_exists(self.name))
+
+	def test_a_removal_is_seen_in_the_same_transaction(self):
+		install_probe(self.name)
+		self.assertTrue(doctype_exists(self.name))
+		with reads("DocType") as seen:
+			self.assertTrue(doctype_exists(self.name))
+		self.assertEqual(seen, [], "the installed answer is cached")
+		frappe.delete_doc("DocType", self.name, ignore_permissions=True)
+		self.assertFalse(doctype_exists(self.name))
+		frappe.db.rollback()
+		self.assertFalse(frappe.db.exists("DocType", self.name), "the removal did not commit")
