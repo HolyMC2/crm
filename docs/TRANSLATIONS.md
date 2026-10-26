@@ -2,8 +2,9 @@
 
 `/crm` used to load every installed app's dictionary (39,388 keys, 3.2 MB raw, 969 KB gzip for
 es-MX on doco-mirror) on every page load, and revalidated it each time. It now loads the keys the
-build can ask for: 13,269 keys, 787 KB raw, 243 KB gzip on the same site. Each version of that file
-is cached by the browser for a year.
+build can ask for: 14,445 keys, 871 KB raw, 269 KB gzip on the same site (2026-10-25, including
+the DocTypes that named DocTypes link to). Each version of that file is cached by the browser for a
+year.
 
 ## How the key set is chosen
 
