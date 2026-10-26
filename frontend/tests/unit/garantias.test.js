@@ -44,7 +44,10 @@ describe('hand-off way back', () => {
       return_to: '/posapp/returns/1',
     })
     expect(
-      handoffQuery({ return_to: '/taller/orders/1', return_label: 'x'.repeat(50) }),
+      handoffQuery({
+        return_to: '/taller/orders/1',
+        return_label: 'x'.repeat(50),
+      }),
     ).toEqual({ return_to: '/taller/orders/1', return_label: 'x'.repeat(40) })
     expect(handoffQuery({ return_to: 'https://evil.example/' })).toBeNull()
     expect(handoffQuery({})).toBeNull()

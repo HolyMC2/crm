@@ -256,7 +256,9 @@ export function handoffQuery(query) {
   const back = safeReturn(query?.return_to)
   if (!back) return null
   const label =
-    typeof query?.return_label === 'string' ? query.return_label.slice(0, 40) : ''
+    typeof query?.return_label === 'string'
+      ? query.return_label.slice(0, 40)
+      : ''
   return label ? { return_to: back, return_label: label } : { return_to: back }
 }
 export function createPrefill(query) {

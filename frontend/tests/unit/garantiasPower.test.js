@@ -114,8 +114,7 @@ vi.mock('@/components/garantias/NewClaimDialog.vue', () => ({
     emits: ['created', 'update:modelValue'],
     setup: (props, { emit }) => {
       state.newDialog = { emit }
-      return () =>
-        props.modelValue ? h('div', { 'data-sheet': 'new' }) : null
+      return () => (props.modelValue ? h('div', { 'data-sheet': 'new' }) : null)
     },
   },
 }))
