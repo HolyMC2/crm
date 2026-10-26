@@ -4,6 +4,7 @@ import vueJsx from '@vitejs/plugin-vue-jsx'
 import path from 'path'
 import { VitePWA } from 'vite-plugin-pwa'
 import { retainPreviousBuilds } from './scripts/retain-builds.mjs'
+import { translationKeys } from './scripts/translation-keys.mjs'
 
 // https://vitejs.dev/config/
 export default defineConfig(async () => {
@@ -17,6 +18,8 @@ export default defineConfig(async () => {
       vue(),
       vueJsx(),
       retain,
+      // translation-keys.json: the strings the server ships translations for.
+      translationKeys(),
       {
         name: 'emit-version-json',
         apply: 'build',

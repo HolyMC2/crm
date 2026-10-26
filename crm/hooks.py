@@ -206,6 +206,10 @@ whatsapp_template_context = {
 }
 
 doc_events = {
+	# The shipped translations hold DocType names, labels and Select options (crm.shell_dictionary).
+	"DocType": {"on_update": "crm.shell_dictionary.clear", "on_trash": "crm.shell_dictionary.clear"},
+	"Custom Field": {"on_update": "crm.shell_dictionary.clear", "on_trash": "crm.shell_dictionary.clear"},
+	"Property Setter": {"on_update": "crm.shell_dictionary.clear", "on_trash": "crm.shell_dictionary.clear"},
 	"CRM Deal Status": {"after_insert": "crm.pipeline.services.configuration.add_legacy_status"},
 	"Contact": {
 		"validate": ["crm.api.contact.validate"],
@@ -402,6 +406,7 @@ after_migrate = [
 	"crm.install.add_default_scripts",
 	"crm.install.add_web_form_custom_fields",
 	"crm.api.deal_queues.ensure_default_queues",
+	"crm.shell_dictionary.clear",
 ]
 
 # Virtual list columns: {doctype: [provider modules]}; any app may add its own.
