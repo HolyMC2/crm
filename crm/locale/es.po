@@ -28840,3 +28840,59 @@ msgstr "fecha en el banco o recibo"
 
 msgid "posting date"
 msgstr "fecha contable"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "No item fits? Create a new one"
+msgstr "¿Ninguno sirve? Crea uno nuevo"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "Preparing the new item…"
+msgstr "Preparando el artículo nuevo…"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "Item group"
+msgstr "Grupo de artículo"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "No group matches."
+msgstr "Ningún grupo coincide."
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "Search unit"
+msgstr "Buscar unidad"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "No unit matches."
+msgstr "Ninguna unidad coincide."
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "{0} (next free code)"
+msgstr "{0} (siguiente código libre)"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "Given by the item naming series"
+msgstr "Lo asigna la serie de artículos"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "Tracking"
+msgstr "Control"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "Default warehouse"
+msgstr "Almacén predeterminado"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "Price on this document"
+msgstr "Precio en este documento"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "Stock item, bought and sold"
+msgstr "Artículo de inventario, se compra y se vende"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "batches"
+msgstr "lotes"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "serial numbers"
+msgstr "números de serie"

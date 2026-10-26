@@ -393,7 +393,7 @@
                     class="min-h-11 sm:min-h-8"
                     :label="__('Change', null, 'Captura')"
                     :disabled="Boolean(busy)"
-                    @click="changing[line.idx] = true"
+                    @click="startChange(line)"
                   />
                 </div>
 
@@ -418,34 +418,117 @@
                       @click="mapLine(line, c.item_code)"
                     />
                   </div>
+                  <!-- Create: the Item it would make, before making it. -->
                   <div
                     v-if="
-                      (line.state === 'ask' || line.state === 'new') &&
+                      (line.state === 'ask' ||
+                        line.state === 'new' ||
+                        changing[line.idx]) &&
                       review.can?.create_item
                     "
-                    class="flex flex-wrap items-end gap-2"
+                    class="space-y-2 rounded-7 bg-surface-gray-1 p-3"
                   >
                     <span
-                      v-if="line.candidates?.length"
-                      class="w-full text-sm text-ink-gray-6"
+                      v-if="line.candidates?.length || changing[line.idx]"
+                      class="block text-sm text-ink-gray-6"
                     >
-                      {{ __('Not one of these? Create a new item') }}
+                      {{
+                        line.candidates?.length
+                          ? __('Not one of these? Create a new item')
+                          : __('No item fits? Create a new one')
+                      }}
                     </span>
-                    <FormControl
-                      v-model="newNames[line.idx]"
-                      class="min-w-0 flex-1"
-                      type="text"
-                      :label="__('New item name')"
-                      :maxlength="140"
-                    />
-                    <Button
-                      class="min-h-11 sm:min-h-8"
-                      :icon-left="LucidePlus"
-                      :label="__('Create item')"
-                      :loading="busy === `create_item:${line.idx}`"
-                      :disabled="Boolean(busy) || !newName(line)"
-                      @click="createItem(line)"
-                    />
+                    <p
+                      v-if="!previews[line.idx] || !drafts[line.idx]"
+                      class="flex items-center gap-2 text-sm text-ink-gray-6"
+                    >
+                      <LucideLoader class="h-4 w-4 animate-spin" />
+                      {{ __('Preparing the new item…') }}
+                    </p>
+                    <template v-else>
+                      <FormControl
+                        v-model="drafts[line.idx].item_name"
+                        type="text"
+                        :label="__('New item name')"
+                        :maxlength="140"
+                      />
+                      <div class="grid gap-2 sm:grid-cols-2">
+                        <ComprasPicker
+                          v-model="drafts[line.idx].item_group"
+                          :label="__('Item group')"
+                          :placeholder="__('Search group')"
+                          :empty-text="__('No group matches.')"
+                          :disabled="Boolean(busy)"
+                          :load="(q) => searchFor('item_group', q)"
+                        />
+                        <ComprasPicker
+                          v-model="drafts[line.idx].stock_uom"
+                          :label="__('Unit')"
+                          :placeholder="__('Search unit')"
+                          :empty-text="__('No unit matches.')"
+                          :disabled="Boolean(busy)"
+                          :load="(q) => searchFor('uom', q)"
+                        />
+                      </div>
+                      <dl
+                        class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm"
+                      >
+                        <dt class="text-ink-gray-6">{{ __('Code') }}</dt>
+                        <dd class="text-ink-gray-9">
+                          {{
+                            previews[line.idx].item_code
+                              ? __('{0} (next free code)', [
+                                  previews[line.idx].item_code,
+                                ])
+                              : __('Given by the item naming series')
+                          }}
+                        </dd>
+                        <template v-if="previews[line.idx].description">
+                          <dt class="text-ink-gray-6">
+                            {{ __('Description') }}
+                          </dt>
+                          <dd
+                            class="whitespace-pre-line break-words text-ink-gray-9"
+                          >
+                            {{ previews[line.idx].description }}
+                          </dd>
+                        </template>
+                        <dt class="text-ink-gray-6">{{ __('Tracking') }}</dt>
+                        <dd class="text-ink-gray-9">
+                          {{ itemTracking(previews[line.idx]) }}
+                        </dd>
+                        <template v-if="previews[line.idx].warehouse">
+                          <dt class="text-ink-gray-6">
+                            {{ __('Default warehouse') }}
+                          </dt>
+                          <dd class="text-ink-gray-9">
+                            {{ previews[line.idx].warehouse }}
+                          </dd>
+                        </template>
+                        <dt class="text-ink-gray-6">
+                          {{ __('Price on this document') }}
+                        </dt>
+                        <dd class="tabular-nums text-ink-gray-9">
+                          {{ money(line.rate, totals.currency) }}
+                          {{
+                            __('per {0}', [
+                              drafts[line.idx].stock_uom ||
+                                previews[line.idx].stock_uom,
+                            ])
+                          }}
+                        </dd>
+                      </dl>
+                      <div class="flex justify-end">
+                        <Button
+                          class="min-h-11 sm:min-h-8"
+                          :icon-left="LucidePlus"
+                          :label="__('Create item')"
+                          :loading="busy === `create_item:${line.idx}`"
+                          :disabled="Boolean(busy) || !newName(line)"
+                          @click="createItem(line)"
+                        />
+                      </div>
+                    </template>
                   </div>
                   <ComprasPicker
                     model-value=""
@@ -765,7 +848,9 @@ const busy = ref('')
 const timedOut = ref(false)
 const confirmDiscard = ref(false)
 const changing = reactive({})
-const newNames = reactive({})
+// «Create item»: what the server says the new Item would be, and the worker's edits.
+const previews = reactive({})
+const drafts = reactive({})
 const payForm = reactive({
   bank_account: '',
   amount: '',
@@ -809,7 +894,22 @@ function searchFor(kind, txt) {
 }
 
 function newName(line) {
-  return String(newNames[line.idx] ?? '').trim()
+  return String(drafts[line.idx]?.item_name ?? '').trim()
+}
+
+function draftFrom(spec) {
+  return {
+    item_name: spec.item_name || '',
+    item_group: spec.item_group || '',
+    stock_uom: spec.stock_uom || '',
+  }
+}
+
+function itemTracking(spec) {
+  const parts = [__('Stock item, bought and sold')]
+  if (spec.has_batch) parts.push(__('batches'))
+  if (spec.has_serial) parts.push(__('serial numbers'))
+  return parts.join(' · ')
 }
 
 // The payment form follows the server unless the worker is typing in it.
@@ -840,8 +940,10 @@ function apply(data) {
   for (const line of data.lines || []) {
     if (line.state !== 'mapped') delete changing[line.idx]
     else if (changing[line.idx] === undefined) changing[line.idx] = false
-    if (newNames[line.idx] === undefined)
-      newNames[line.idx] = String(line.description || '').slice(0, 140)
+    if (line.new_item) {
+      previews[line.idx] = line.new_item
+      if (!drafts[line.idx]) drafts[line.idx] = draftFrom(line.new_item)
+    }
   }
   schedule()
 }
@@ -910,20 +1012,45 @@ async function act(method, args = {}, key = method) {
   }
 }
 
+// A mapped line being changed has no staged proposal: ask what a new item
+// would be, so «Create item» is there when no existing item fits.
+async function startChange(line) {
+  const idx = line.idx
+  changing[idx] = true
+  delete previews[idx]
+  delete drafts[idx]
+  if (!review.value?.can?.create_item) return
+  const mine = ticket
+  try {
+    const spec = await capturaApi('item_preview', { name: props.name, idx })
+    if (mine !== ticket || !changing[idx]) return
+    previews[idx] = spec
+    drafts[idx] = draftFrom(spec)
+  } catch (error) {
+    if (mine === ticket) problem.value = capturaMessage(error)
+  }
+}
+
 async function mapLine(line, itemCode) {
   if (!itemCode) return
   const data = await act('map_line', { idx: line.idx, item_code: itemCode })
   if (data) changing[line.idx] = false
 }
 
-function createItem(line) {
+async function createItem(line) {
   const name = newName(line)
   if (!name) return
-  return act(
-    'create_item',
-    { idx: line.idx, item_name: name },
-    `create_item:${line.idx}`,
-  )
+  const spec = previews[line.idx] || {}
+  const draft = drafts[line.idx] || {}
+  const args = { idx: line.idx, item_name: name }
+  // Only a changed group or unit is sent: the server keeps its own default.
+  if (draft.item_group && draft.item_group !== spec.item_group)
+    args.item_group = draft.item_group
+  if (draft.stock_uom && draft.stock_uom !== spec.stock_uom)
+    args.stock_uom = draft.stock_uom
+  if (line.state === 'mapped') args.replace = 1
+  const data = await act('create_item', args, `create_item:${line.idx}`)
+  if (data) changing[line.idx] = false
 }
 
 function paymentArgs() {
@@ -1006,7 +1133,8 @@ watch(
     confirmDiscard.value = false
     paySeen = ''
     for (const key of Object.keys(changing)) delete changing[key]
-    for (const key of Object.keys(newNames)) delete newNames[key]
+    for (const key of Object.keys(previews)) delete previews[key]
+    for (const key of Object.keys(drafts)) delete drafts[key]
     load()
   },
   { immediate: true },
