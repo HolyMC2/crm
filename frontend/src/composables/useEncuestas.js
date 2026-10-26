@@ -292,3 +292,38 @@ export function greeting(record) {
         CTX,
       )
 }
+
+// One front for Formularios and Encuestas (Shell SPEC §8.2, Q7 = B): the two
+// keep their engines and pages; a tab strip on both moves between them. `value`
+// is the route name, so the page's own route picks its tab.
+const FRONT = Object.freeze([
+  { value: 'Forms', label: 'Forms', path: '/forms', gate: 'forms' },
+  {
+    value: 'Encuestas',
+    label: 'Encuestas',
+    path: '/encuestas',
+    gate: 'encuestas',
+  },
+])
+
+/** The tabs this worker may open: Formularios for managers (its route and API
+ * gate), Encuestas when the module is on. */
+export function frontTabs(allowed) {
+  return FRONT.filter((tab) => allowed[tab.gate]).map(
+    ({ value, label, path }) => ({
+      value,
+      label: tr(label),
+      path,
+    }),
+  )
+}
+
+// Where the worker last was on each tab, so coming back keeps the view and period.
+const frontLast = {}
+export function rememberFront(route) {
+  if (FRONT.some((tab) => tab.value === route.name))
+    frontLast[route.name] = route.fullPath
+}
+export function frontTarget(tab) {
+  return frontLast[tab.value] || tab.path
+}

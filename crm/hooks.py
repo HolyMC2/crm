@@ -392,8 +392,9 @@ filter_link_titles = {
 # "crm.auth.validate"
 # ]
 
-# Resultados (Shell S5.3): the Dashboard's deal numbers as a card on a phone.
-muelle_resultados_cards = ["crm.resultados_cards.tratos"]
+# Resultados (Shell S5.3): the Dashboard's deal numbers as a card on a phone, and
+# Encuestas' recommendation number (B3).
+muelle_resultados_cards = ["crm.resultados_cards.tratos", "crm.resultados_cards.encuestas"]
 
 # Aprobaciones (Shell D12): open Frappe Workflow Actions in Pendientes «Por aprobar»
 # (contract: doco.pendientes.aprobaciones). Warranty Claim stays with doco Garantías.

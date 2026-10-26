@@ -253,6 +253,7 @@ const ICONS = {
   clientes: 'lucide-users',
   por_cobrar: 'lucide-hand-coins',
   reparaciones: 'lucide-wrench',
+  encuestas: 'lucide-smile',
   tiendas: 'lucide-store',
   mix_grupos: 'lucide-layers',
   top_articulos: 'lucide-package',

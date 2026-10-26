@@ -1,10 +1,13 @@
-"""CRM's card for Resultados (the `muelle_resultados_cards` hook).
+"""CRM's cards for Resultados (the `muelle_resultados_cards` hook).
 
 On a phone the legacy Dashboard is desktop-only (Shell SPEC D3); its sales
 numbers fold into Resultados here, as one «Tratos ganados» card that opens the
 Embudo. The numbers are the Dashboard's own (crm.api.dashboard), so the two
 screens never disagree: won deals by closing date, the average won amount and
 the deals still open, with the caller's record permissions.
+
+«Recomendación» is Encuestas' number for the board's period: doco counts it
+(doco.encuestas.service), so Resultados and Encuestas never disagree either.
 """
 
 from __future__ import annotations
@@ -15,6 +18,7 @@ from frappe.utils import add_days, add_months, add_years, get_first_day, get_las
 
 MANAGER_ROLES = {"Sales Manager", "System Manager"}
 EMBUDO = "/crm/pipeline-analysis"
+ENCUESTAS = "/crm/encuestas"
 
 
 def window(periodo: str, today=None, desde: str | None = None, hasta: str | None = None):
@@ -60,6 +64,16 @@ def _pct(value, prev):
 	return round((value - prev) / prev * 100, 1)
 
 
+def _period(ctx: dict, start, end, other) -> dict:
+	return {
+		"from": str(start),
+		"to": str(end),
+		"compare": ctx.get("compara") or "anterior",
+		"compare_from": str(other[0]) if other else None,
+		"compare_to": str(other[1]) if other else None,
+	}
+
+
 def tratos(ctx: dict) -> dict | None:
 	from crm.api import dashboard
 
@@ -91,14 +105,56 @@ def tratos(ctx: dict) -> dict | None:
 		"value": value,
 		"prev": prev,
 		"delta_pct": _pct(value, prev),
-		"period": {
-			"from": str(start),
-			"to": str(end),
-			"compare": ctx.get("compara") or "anterior",
-			"compare_from": str(other[0]) if other else None,
-			"compare_to": str(other[1]) if other else None,
-		},
+		"period": _period(ctx, start, end, other),
 		"facts": facts,
 		"note": _("By closing date; the amount is what was agreed, not what was invoiced."),
 		"drill": {"label": _("Open the funnel"), "path": EMBUDO, "query": {}},
+	}
+
+
+def _encuestas_service():
+	"""doco's Encuestas service, or None on a site without doco or with a doco too old to count by dates."""
+	if "doco" not in frappe.get_installed_apps():
+		return None
+	try:
+		from doco.encuestas import service
+	except ImportError:
+		return None
+	return service if hasattr(service, "recommendation_between") else None
+
+
+def encuestas(ctx: dict) -> dict | None:
+	service = _encuestas_service()
+	if service is None or not service.may_read():
+		return None
+	if ctx.get("check"):
+		return {"key": "encuestas"}
+	start, end = window(ctx.get("periodo") or "mes", None, ctx.get("desde"), ctx.get("hasta"))
+	now = service.recommendation_between(start, end)
+	other = compare_window(ctx.get("compara") or "anterior", start, end)
+	prev = service.recommendation_between(*other)["value"] if other else None
+	value = now["value"]
+	if value is None:
+		note = _("No answers yet in this period.")
+	elif now["few"]:
+		note = _("Still few answers")
+	else:
+		note = _("% happy minus % unhappy")
+	return {
+		"key": "encuestas",
+		"label": _("Recommendation"),
+		"format": "signed",
+		"value": value,
+		"prev": prev,
+		# Points, not a percentage: the number already is one (-100..100).
+		"delta_pct": value - prev if value is not None and prev is not None else None,
+		"delta_unit": "pp",
+		"period": _period(ctx, start, end, other),
+		"facts": [
+			{"label": _("Happy (9–10)", context="Encuestas"), "value": now["promoter"], "format": "count"},
+			{"label": _("Neutral (7–8)", context="Encuestas"), "value": now["passive"], "format": "count"},
+			{"label": _("Unhappy (0–6)", context="Encuestas"), "value": now["detractor"], "format": "count"},
+		],
+		"note": note,
+		"drill": {"label": _("See the answers"), "path": ENCUESTAS, "query": {"view": "todas"}},
 	}

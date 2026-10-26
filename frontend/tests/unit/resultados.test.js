@@ -648,8 +648,15 @@ describe('Recomendación (Encuestas) on the board', () => {
     expect(root.querySelector('[data-testid="delta"]').textContent).toContain(
       '+20 pp',
     )
-    for (const fact of ['Contentos (9–10) 6', 'Neutrales (7–8) 2', 'Inconformes (0–6) 2'])
-      expect(text).toContain(fact)
+    const facts = [...root.querySelectorAll('dl > div')].map((row) => [
+      row.querySelector('dt').textContent.trim(),
+      row.querySelector('dd').textContent.trim(),
+    ])
+    expect(facts).toEqual([
+      ['Contentos (9–10)', '6'],
+      ['Neutrales (7–8)', '2'],
+      ['Inconformes (0–6)', '2'],
+    ])
     const url = new URL(
       root.querySelector('[data-testid="drill"]').getAttribute('href'),
       'https://x.invalid',

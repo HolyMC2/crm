@@ -212,6 +212,8 @@ export function formatValue(value, format, currency) {
   if (format === 'money') return money(n, currency)
   if (format === 'signed_money')
     return n > 0 ? `+${money(n, currency)}` : money(n, currency)
+  // Encuestas' recommendation number (-100..100), written as its page writes it.
+  if (format === 'signed') return n > 0 ? `+${n}` : String(n)
   if (format === 'percent')
     return `${n.toLocaleString('es-MX', { maximumFractionDigits: 1 })} %`
   if (format === 'hours')
@@ -273,6 +275,7 @@ const TITLES = {
   clientes: 'Customers',
   por_cobrar: 'To collect',
   reparaciones: 'Repairs',
+  encuestas: 'Recommendation',
   tiendas: 'Sales by shop',
   mix_grupos: 'Sales by group',
   top_articulos: 'Top products',

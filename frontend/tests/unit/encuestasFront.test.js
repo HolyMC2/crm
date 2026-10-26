@@ -57,7 +57,11 @@ describe('FormsEncuestasTabs', () => {
       history: createMemoryHistory('/crm'),
       routes: [
         { path: '/forms', name: 'Forms', component: FormsEncuestasTabs },
-        { path: '/encuestas', name: 'Encuestas', component: FormsEncuestasTabs },
+        {
+          path: '/encuestas',
+          name: 'Encuestas',
+          component: FormsEncuestasTabs,
+        },
       ],
     })
     await router.push(path)
@@ -124,9 +128,12 @@ describe('both pages carry the shared front', () => {
   const page = (name) =>
     readFileSync(resolve(__dirname, `../../src/pages/${name}.vue`), 'utf8')
 
-  it.each(['Forms', 'Encuestas'])('%s.vue renders <FormsEncuestasTabs>', (name) => {
-    expect(page(name)).toMatch(/<FormsEncuestasTabs\b/)
-  })
+  it.each(['Forms', 'Encuestas'])(
+    '%s.vue renders <FormsEncuestasTabs>',
+    (name) => {
+      expect(page(name)).toMatch(/<FormsEncuestasTabs\b/)
+    },
+  )
 })
 
 describe('es.po', () => {

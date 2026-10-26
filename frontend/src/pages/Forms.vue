@@ -6,6 +6,7 @@
 -->
 <template>
   <div class="relative flex min-h-0 w-full flex-1 flex-col bg-surface-base">
+    <FormsEncuestasTabs />
     <!-- a phone has the title in the shell bar and «Nuevo formulario» as the FAB -->
     <div
       v-if="!isMobile"
@@ -311,6 +312,7 @@ import LucideBell from '~icons/lucide/bell'
 import LucideShieldCheck from '~icons/lucide/shield-check'
 import LucideTriangleAlert from '~icons/lucide/triangle-alert'
 import TemplateGrid from '@/components/Forms/TemplateGrid.vue'
+import FormsEncuestasTabs from '@/components/encuestas/FormsEncuestasTabs.vue'
 import MetaLeadForms from '@/components/Forms/channels/MetaLeadForms.vue'
 import WhatsAppIcon from '@/components/Icons/WhatsAppIcon.vue'
 import { addonAvailable } from '@/utils/crmCapabilities'

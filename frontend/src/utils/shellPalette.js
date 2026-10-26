@@ -415,7 +415,7 @@ export function createShellProviders({ boot, modules }) {
             icon: 'lucide-shield-check',
             href: `/garantias?segment=${segment}`,
           })
-      if (moduleEnabled(boot.value, 'encuestas'))
+      if (moduleEnabled(boot.value, 'encuestas')) {
         for (const [view, label] of ENCUESTAS_PLACES)
           items.push({
             id: `encuestas.${view}`,
@@ -424,6 +424,17 @@ export function createShellProviders({ boot, modules }) {
             icon: 'lucide-smile',
             href: `/encuestas?view=${view}`,
           })
+        // Formularios shares Encuestas' front (Q7 = B). Encuestas readers are
+        // Sales and System Managers (encuestas D2), the roles /forms admits.
+        items.push({
+          id: 'encuestas.formularios',
+          group: 'ir_a',
+          title: 'Encuestas › Formularios',
+          keywords: 'forms captacion prospectos',
+          icon: 'lucide-clipboard-list',
+          href: '/forms',
+        })
+      }
       if (moduleEnabled(boot.value, 'equipo'))
         for (const [segment, label] of EQUIPO_PLACES)
           if (segment === 'todos' || can(boot.value, 'equipo', 'hr'))

@@ -28756,3 +28756,11 @@ msgstr "Restaurado. El historial también guarda este cambio."
 #: frontend/src (Manual de la tienda)
 msgid "Asked 1 person to read it. It is in their Pendientes."
 msgstr "Se pidió a 1 persona que lo lea. Lo tiene en Pendientes."
+
+#: frontend/src/components/encuestas/FormsEncuestasTabs.vue
+msgid "Forms and surveys"
+msgstr "Formularios y encuestas"
+
+#: crm/resultados_cards.py
+msgid "See the answers"
+msgstr "Ver las respuestas"

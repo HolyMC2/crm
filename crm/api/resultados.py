@@ -40,6 +40,8 @@ CARD_ORDER = (
 	"clientes",
 	"por_cobrar",
 	"reparaciones",
+	# What customers say: Encuestas' recommendation number.
+	"encuestas",
 	# What sold, who sold it and how it was paid.
 	"mix_grupos",
 	"top_articulos",

@@ -24,6 +24,7 @@
       </p>
     </section>
     <template v-else>
+      <FormsEncuestasTabs />
       <PageHeader :title="viewLabel(view)" :subtitle="subtitle" :level="1">
         <template v-if="boot?.capabilities?.setup" #actions>
           <!-- One way into settings: a menu with both surveys. -->
@@ -395,6 +396,7 @@ import { Badge, Button, Dropdown, FormControl } from 'frappe-ui'
 import { PageHeader } from '@/components/ui'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import SetupDialog from '@/components/encuestas/SetupDialog.vue'
+import FormsEncuestasTabs from '@/components/encuestas/FormsEncuestasTabs.vue'
 import {
   BUCKETS,
   KINDS,
