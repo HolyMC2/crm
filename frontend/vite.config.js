@@ -42,27 +42,19 @@ export default defineConfig(async () => {
         devOptions: {
           enabled: true,
         },
+        // No precache (F22): the worker's scope is /assets/crm/frontend/, so it
+        // never controls a /crm page and a precache only downloaded every
+        // build (465 files, 3.04 MB gzip) on each first visit and deploy. The
+        // HTTP cache serves the hashed assets. The worker carries the push
+        // handlers; scripts/verify-pwa-build.mjs keeps the precache to the
+        // web manifest the plugin always adds.
+        includeManifestIcons: false,
         workbox: {
           // Web Push handlers (spec 1.1) — public/push-sw.js sits next to the
           // generated sw.js, so a bare relative import resolves in production.
           importScripts: ['push-sw.js'],
-          // Activities (6.27 MB) and index.css (5.63 MB) must remain available
-          // offline. The post-build verifier rejects missing precache entries.
-          maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
-          // The output keeps previous builds' chunks for open tabs; precache
-          // only this build's.
-          manifestTransforms: [
-            async (entries) => {
-              const current = new Set(retain.files())
-              return {
-                manifest: entries.filter(
-                  (entry) =>
-                    !entry.url.startsWith('assets/') || current.has(entry.url),
-                ),
-                warnings: [],
-              }
-            },
-          ],
+          globPatterns: [],
+          navigateFallback: null,
         },
         manifest: {
           display: 'standalone',

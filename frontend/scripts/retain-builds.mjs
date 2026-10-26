@@ -101,8 +101,8 @@ function readHistory(outDir) {
 }
 
 /**
- * Vite plugin. Use with `build.emptyOutDir: false`. `files()` returns this
- * build's files, so the service worker precaches only them.
+ * Vite plugin. Use with `build.emptyOutDir: false`. Writes build-files.json,
+ * this build's files.
  */
 export function retainPreviousBuilds({ keepMs = DAY_MS } = {}) {
   let outDir = ''
@@ -150,6 +150,5 @@ export function retainPreviousBuilds({ keepMs = DAY_MS } = {}) {
         `[crm-retain] kept ${builds} previous build(s); pruned ${remove.length} file(s)`,
       )
     },
-    files: () => current,
   }
 }

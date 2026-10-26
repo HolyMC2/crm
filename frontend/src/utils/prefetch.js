@@ -1,7 +1,7 @@
 // Idle prefetch of hot route chunks (spec 3.2). First tap into Inbox/Deal360
 // used to pay the dynamic-import latency; after the landing page paints we pull
 // the heavy chunks during browser idle time, one per idle slot so the prefetch
-// never competes with user interaction or the SW precache burst (429 history).
+// never competes with user interaction (429 history).
 // Import specifiers MUST match router.js exactly — same specifier = same chunk.
 
 const HOT_CHUNKS = [
@@ -11,6 +11,35 @@ const HOT_CHUNKS = [
   () => import('@/pages/DealsView.vue'),
   () => import('@/components/Activities/Activities.vue'),
 ]
+
+// On a phone or a slow line only the view a tap on the current list opens is
+// warmed: the deal from Deals, the conversation's deal panel from Inbox
+// (ConversationLegacyWorkspace imports it with this specifier). The full set
+// is about 60 files, 400-475 KB, competing with that tap (F22).
+const NEXT_VIEW = {
+  Deals: () => import('@/pages/Deal360.vue'),
+  Inbox: () => import('@/components/doco/inbox/DealContextPanel.vue'),
+}
+
+const SLOW_LINES = new Set(['slow-2g', '2g', '3g'])
+// The shell's phone breakpoint (composables/breakpoint.js isMobile, < 640px),
+// read without importing it: this module is in the entry chunk.
+const PHONE = '(max-width: 639.98px)'
+
+/**
+ * A phone or a slow line: data saver on, a connection Chrome rates below 4g,
+ * or the phone layout. Warm-ups there wait for the tap that needs them.
+ */
+export function constrainedLine({
+  connection = globalThis.navigator?.connection,
+  matchMedia = globalThis.matchMedia,
+} = {}) {
+  return Boolean(
+    connection?.saveData ||
+      SLOW_LINES.has(connection?.effectiveType) ||
+      matchMedia?.(PHONE).matches,
+  )
+}
 
 const idle =
   typeof requestIdleCallback === 'function'
@@ -42,15 +71,32 @@ export function afterFirstRoute(
   setTimeout(start, maxWait)
 }
 
-export function prefetchHotChunks({ delay = PREFETCH_DELAY_MS } = {}) {
+/** afterFirstRoute, skipped on a constrained line: the work loads on first use. */
+export function warmAfterFirstRoute(router, work, options) {
+  if (constrainedLine()) return
+  afterFirstRoute(router, work, options)
+}
+
+export function prefetchHotChunks(router, { delay = PREFETCH_DELAY_MS } = {}) {
+  let chunks = HOT_CHUNKS
   let i = 0
   const next = () => {
-    if (i >= HOT_CHUNKS.length) return
-    const load = HOT_CHUNKS[i++]
+    if (i >= chunks.length) return
+    const load = chunks[i++]
     // failures are irrelevant — the router will import for real on navigation
     load()
       .catch(() => {})
       .finally(() => idle(next))
   }
-  setTimeout(() => idle(next), delay)
+  setTimeout(
+    () =>
+      idle(() => {
+        if (constrainedLine()) {
+          const view = NEXT_VIEW[router?.currentRoute?.value?.name]
+          chunks = view ? [view] : []
+        }
+        next()
+      }),
+    delay,
+  )
 }

@@ -153,7 +153,7 @@ Fork-owned or fork-extended modules under `crm/tests/`:
 | Proxy serves a stale upstream IP | 502 / old assets after `docker compose up -d` | Use `muelle-restart.sh proxy --reason "stale upstream"`; never restart services directly |
 | `bench build` inside the prod container | Broke prod on 2026-05-25 | Never build in prod — ship a pre-built bundle |
 | Service worker caches the old app | Users keep seeing the fixed bug | The build-id staleness guard + SW update check in `main.js` (see `08-frontend-rediseno.md`) |
-| Cold-load 429 | First load fails some asset requests | Known: the proxy `api_zone` rate limit vs the SW precache burst. Item 3.5 in the excellence spec. **TODO-VERIFY** whether the proxy template carve-out has landed — it is infra-side, not in this repo |
+| Cold-load 429 | First load fails some asset requests | The SW precache burst is gone (F22, 2026-10-26: no precache, `08-frontend-rediseno.md` §3.1). The proxy `api_zone` limit can still bite a cold load with many chunks; **TODO-VERIFY** whether the proxy template carve-out has landed — it is infra-side, not in this repo |
 
 ---
 

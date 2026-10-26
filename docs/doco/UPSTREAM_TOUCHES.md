@@ -43,7 +43,7 @@ LIGHT files usually auto-merge — verify the doco lines survived, nothing more.
 | frontend/src/main.js | +71 −0 | Build-id staleness guard + SW update (scope-explicit) + draft-safe reload |
 | crm/permissions/org_hierarchy.py | +62 −15 | Shop scoping / row-level perms / call-log scoping |
 | frontend/src/components/ViewControls.vue | +60 −6 | Column config hooks |
-| frontend/vite.config.js | +55 −2 | PWA manifest/workbox importScripts, build-id emit, precache cap |
+| frontend/vite.config.js | +55 −2 | PWA manifest/workbox importScripts (push only, no precache), build-id emit |
 | crm/api/dashboard.py | +53 −56 | Reports backend reuse (manager gating) |
 | crm/tests/test_integrations.py | +51 −0 | Telephony/SIP + E.164 normalization tests |
 | frontend/src/components/Telephony/TwilioCallUI.vue | +39 −1 | SIP tweaks, gesture-deferred Device init, missing-token guard |

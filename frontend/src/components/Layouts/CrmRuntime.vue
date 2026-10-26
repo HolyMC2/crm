@@ -63,7 +63,7 @@ import {
   watch,
 } from 'vue'
 import { useStorage } from '@vueuse/core'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { syncBrandFavicon } from '@/stores/settings'
 import { prefetchHotChunks } from '@/utils/prefetch'
 import { initTelemetry } from '@/composables/telemetry'
@@ -122,6 +122,7 @@ for (const type of FIRST_USE)
 onBeforeUnmount(stopListening)
 
 const route = useRoute()
+const router = useRouter()
 watch(
   () => route.fullPath,
   () => nextTick(syncBrandFavicon),
@@ -143,10 +144,11 @@ setConfig('systemTimezone', window.timezone?.system || null)
 setConfig('localTimezone', window.timezone?.user || null)
 setConfig('translatedMessages', window.translated_messages || {})
 
-// spec 3.2: warm the hot route chunks during idle time after the landing paint;
+// spec 3.2: warm the hot route chunks during idle time after the landing paint
+// (a phone warms only the view its list opens, utils/prefetch.js);
 // spec 3.6: arm the error-telemetry listeners (un-crashable by design)
 onMounted(() => {
-  prefetchHotChunks()
+  prefetchHotChunks(router)
   initTelemetry()
 })
 </script>

@@ -48,7 +48,7 @@ import { globalStore } from '@/stores/global'
 import { FormControl, call, toast } from 'frappe-ui'
 import { computed, defineAsyncComponent, nextTick, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { afterFirstRoute } from '@/utils/prefetch'
+import { afterFirstRoute, constrainedLine } from '@/utils/prefetch'
 
 // Each calling medium (the Twilio SDK, Exotel's panel with its text editor)
 // loads only when it is enabled, not with every Ventas page (bundle budget).
@@ -82,9 +82,13 @@ const isDefaultMedium = ref(false)
 
 const show = ref(false)
 // The calling SDKs (Twilio is ~185 KB) start once the first page is up, a few
-// seconds after load, never during it (SPEC §4 first-route budget).
+// seconds after load, never during it (SPEC §4 first-route budget). A phone or
+// a slow line starts them on its first call instead (F22): the SDK, its token
+// and the onboarding status it reads (about 55 KB, 2 calls) no longer compete
+// with the first tap, and that tab rings for incoming calls only after it.
+const onDemand = constrainedLine()
 const mediaReady = ref(false)
-afterFirstRoute(useRouter(), () => (mediaReady.value = true))
+if (!onDemand) afterFirstRoute(useRouter(), () => (mediaReady.value = true))
 const mobileNumber = ref('')
 
 const enabledIntegrations = computed(() =>
@@ -136,18 +140,34 @@ async function setDefaultCallingMedium() {
   )
 }
 
+// Twilio's setup fetches the token and creates the device the call needs.
+let mediaOnDemand = null
+function makeCallOnDemand(number) {
+  mediaReady.value = true
+  mediaOnDemand ??= Promise.all(
+    enabledIntegrations.value.map(async ({ ref: integrationRef }) =>
+      (await loaded(integrationRef)).setup(),
+    ),
+  )
+  return mediaOnDemand.then(() => makeCall(number))
+}
+
 watch(
   isAnyEnabled,
   () =>
     nextTick(async () => {
-      for (const { label, ref: integrationRef } of enabledIntegrations.value) {
-        ;(await loaded(integrationRef)).setup()
-        callMedium.value = label
-      }
+      if (!onDemand)
+        for (const {
+          label,
+          ref: integrationRef,
+        } of enabledIntegrations.value) {
+          ;(await loaded(integrationRef)).setup()
+          callMedium.value = label
+        }
 
       if (isAnyEnabled.value) {
         callMedium.value = enabledIntegrations.value[0]?.label ?? 'Twilio'
-        setMakeCall(makeCall)
+        setMakeCall(onDemand ? makeCallOnDemand : makeCall)
       }
     }),
   { immediate: true },

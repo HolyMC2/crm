@@ -115,25 +115,32 @@ Se construye con `vite-plugin-pwa` (estrategia generateSW de workbox más
 | `theme_color` | `#16a34a` | **limitación**: el manifiesto es por build, así que el color del ícono no puede ser por tenant |
 | `shortcuts` | Inbox, Leads | long-press del ícono |
 | `workbox.importScripts` | `['push-sw.js']` | los handlers de push viven en `public/push-sw.js`, junto al `sw.js` generado, para que un import relativo resuelva en producción |
-| `maximumFileSizeToCacheInBytes` | **5 MiB** | el chunk de Activities y `index.css` pasaron el default de 2 MiB de workbox, que **falla el build duro** (no es un warning). Revisar si los chunks siguen creciendo |
+| `workbox.globPatterns` | `[]` | **sin precache** (F22, 2026-10-26): ver §3.1 |
+| `workbox.navigateFallback` | `null` | el worker no sirve navegaciones; `/crm` nunca está en su alcance |
 
-### 3.1 La PWA sí precachea recursos (corregido 2026-08-03)
+### 3.1 La PWA no precachea (F22, 2026-10-26)
 
-Histórico: el `sw.js` construido precacheaba **exactamente una entrada**
-(`manifest.webmanifest`) de los 309 archivos de `assets/`. La causa NO era el
-glob de workbox contra `--base`: era un pin global en `package.json` —
-`"resolutions": { "brace-expansion": "2.1.0" }` — que forzaba el rango
-`^5.0.5` de `minimatch@10` (dependencia de `glob@11`, que usa
-`workbox-build@7.4`) a la 2.1.0, sin el export nombrado `expand`. El glob de
-workbox tronaba con `(0, brace_expansion_1.expand) is not a function`
-(un *warning* del build, fácil de no ver) y precacheaba cero archivos.
+El worker se registra con alcance `/assets/crm/frontend/` y **nunca controla
+`/crm`** (§4), así que su precache no servía ninguna carga: era pura descarga.
+Medido en phone-perf (lab, perfil teléfono 9 Mbps / 150 ms): **468 archivos,
+2.3-2.4 MB** bajados por el worker en la primera visita a Deals o Inbox, y otra
+vez en cada despliegue; el build listaba 465 entradas, **3.04 MB gzip**. Los
+assets llevan hash en el nombre y la caché HTTP del navegador ya los sirve en
+la segunda visita.
 
-Se quitó el pin (los consumidores `^2` resuelven 2.1.0 solitos) y el build pasó
-a precachear **163 entradas (~10.4 MiB)** — js/css/html, sin sourcemaps. El
-tope `maximumFileSizeToCacheInBytes` de 5 MiB por fin protege algo real.
+Alcanzar `/crm` exigiría registrar el worker en `/crm/` con la cabecera
+`Service-Worker-Allowed` (proxy, fuera de este repo) y la ganancia sobre la
+caché HTTP sería casi nula. Por eso se quitó el precache: `globPatterns: []`,
+`navigateFallback: null`, `includeManifestIcons: false`. El worker se queda
+sólo para push (`push-sw.js`). El `sw.js` conserva una sola entrada, el
+`manifest.webmanifest` (~1 KB) que `vite-plugin-pwa` agrega siempre.
+`scripts/verify-pwa-build.mjs` (dentro de `yarn build`) **falla si el `sw.js`
+vuelve a precachear cualquier otra cosa**.
 
-Moraleja doble: (1) un `resolutions` global puede violar semver en silencio;
-(2) los warnings del bloque `PWA vX` del build importan — ahí salió el error.
+Histórico: el 2026-08-03 un pin global de `brace-expansion` en `resolutions`
+rompía el glob de workbox (precacheaba sólo el manifiesto); la moraleja sigue
+vigente: un `resolutions` global puede violar semver en silencio, y los
+warnings del bloque `PWA vX` del build importan.
 
 El outbox (§6) y la caché de la cola siguen viviendo en `localStorage`,
 independientes del service worker.
@@ -379,9 +386,23 @@ Es la razón de que `qz-tray` esté en las dependencias de `package.json`.
 
 ## 12. Rendimiento
 
-- **Prefetch en reposo** (`utils/prefetch.js`, montado desde `App.vue`):
-  `requestIdleCallback` → import dinámico de los chunks calientes tras pintar el
-  aterrizaje. También pacea parte de la ráfaga de arranque en frío.
+- **Prefetch en reposo** (`utils/prefetch.js`, montado desde `CrmRuntime.vue`):
+  4 s después de la primera ruta y en `requestIdleCallback`, import dinámico de
+  los chunks calientes (Inbox, Deal360, Leads, Deals, Activities), uno por
+  hueco libre.
+- **Teléfono o línea lenta** (`constrainedLine()` en `utils/prefetch.js`, F22):
+  `saveData`, `effectiveType` 2g/3g o un viewport de menos de 640 px (el mismo
+  corte que `isMobile` del shell). En el lab dispara el viewport: Chrome reporta
+  `4g` con el perfil de 9 Mbps. Con esa señal:
+  - el prefetch baja **sólo la vista que abre la lista actual** (Deals →
+    `Deal360`, Inbox → `DealContextPanel`) y nada en otras rutas;
+  - el sprite de íconos y los widgets globales (`prefetchGlobals`) cargan en
+    su primer uso (`warmAfterFirstRoute` en `main.js`);
+  - la telefonía (Twilio/Exotel, unos 55 KB y 2 llamadas) arranca en la
+    primera llamada saliente (`CallUI.vue`). Compromiso: esa pestaña recibe
+    llamadas entrantes sólo después de esa primera llamada.
+  - El runtime de impresión **no** se difiere: son 9 KB y una llamada, y una
+    terminal habilitada es una estación de impresión deliberada.
 - **Actualizaciones optimistas**: cambio de etapa y tarea completada se aplican
   localmente y se reconcilian; con error, toast y reversión.
 - **Caché de cola en frío**: ver `01-inbox-conversaciones.md` §2.6.

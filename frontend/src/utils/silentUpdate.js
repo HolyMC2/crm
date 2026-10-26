@@ -90,7 +90,7 @@ export function installSilentUpdate(router, runningEntry) {
     setTimeout(() => recoverChunk(watcher, currentHref()), 0)
   })
   // The SW's scope is /assets/crm/frontend/ and never controls /crm: ask for
-  // that scope explicitly so its precache stays current.
+  // that scope explicitly so its push handler stays current.
   navigator.serviceWorker
     ?.getRegistration('/assets/crm/frontend/')
     .then((registration) => registration?.update())
