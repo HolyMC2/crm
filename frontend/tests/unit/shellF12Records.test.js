@@ -1,17 +1,20 @@
 // Record pages on a phone (shell wave F, F12): Equipo persona's cards stay
 // inside the screen and the name is never cut to «Br…», Garantía's primary
-// says what it does without a document id and shows dates as «25 oct», and
-// the app bar's back arrow is the only «back» on a phone.
+// says what it does without a document id and shows dates the way the rest
+// of the shell does («dom 25 de oct»), and the app bar's back arrow is the
+// only «back» on a phone.
 // happy-dom has no layout engine: these pin the rendered DOM that the phase A
 // probe (shell-program/evidence/F12/probe-records.mjs) measures on the lab.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick } from 'vue'
+import { formatDay } from '@/utils/contactos'
 
 const state = vi.hoisted(() => ({
   route: null,
   mobile: null,
   person: null,
   claim: null,
+  answer: null,
 }))
 
 vi.mock('vue-router', async () => {
@@ -59,10 +62,15 @@ vi.mock('@/composables/useGarantias', async (importOriginal) => {
     garantiasApi: async () => state.claim,
   }
 })
-vi.mock('@/composables/useEncuestas', async (importOriginal) => ({
-  ...(await importOriginal()),
-  loadEncuestasBoot: () => new Promise(() => {}),
-}))
+vi.mock('@/composables/useEncuestas', async (importOriginal) => {
+  const { ref } = await import('vue')
+  return {
+    ...(await importOriginal()),
+    encuestasBoot: ref({ enabled: true }),
+    loadEncuestasBoot: async () => {},
+    encuestasApi: async () => state.answer,
+  }
+})
 vi.mock('@/composables/whatsapp', async () => {
   const { ref } = await import('vue')
   return { whatsappMode: ref('off') }
@@ -97,6 +105,9 @@ async function mount(component, props) {
 const buttons = (root) => [...root.querySelectorAll('button')]
 const byText = (root, text) =>
   buttons(root).find((b) => b.textContent.trim().includes(text))
+const describedBy = (button) =>
+  document.getElementById(button.getAttribute('aria-describedby'))
+const LONG_NAME = 'Refacciones Ficticias del Norte SA de C.V. Sucursal Centro'
 
 beforeEach(async () => {
   await import('vue-router')
@@ -119,6 +130,18 @@ beforeEach(async () => {
       },
     ],
     requests: [],
+  }
+  state.answer = {
+    name: 'QA-FB-12273',
+    score: 9,
+    scale: 10,
+    bucket: 'promoter',
+    kind: 'sale',
+    follow_up_status: 'Open',
+    customer_name: 'General',
+    sale: 'ACC-SINV-2026-03512',
+    company: 'Grupo Doco',
+    creation: '2026-10-25 15:51:00',
   }
   state.claim = {
     name: 'SER-WRN-2026-00001',
@@ -218,23 +241,88 @@ describe('Garantía record (F12-3, F12-4)', () => {
     const link = byText(root, 'Link return')
     expect(link.textContent.trim()).toBe('Link return')
     expect(link.textContent).not.toContain('ACC-SINV')
-    const detail = [...root.querySelectorAll('p')].find((p) =>
-      p.textContent.includes('ACC-SINV-2026-03513'),
-    )
+    const detail = describedBy(link)
     expect(detail?.textContent).toContain('Return ACC-SINV-2026-03513')
+    // A refund reads as the amount given back, as the server's timeline does.
+    const amount = detail.textContent.split(' · ').at(-1)
+    expect(amount).toContain('349.00')
+    expect(amount).not.toContain('-')
   })
 
-  it('shows the complaint and purchase dates as «25 oct», never ISO', async () => {
-    vi.useFakeTimers({ toFake: ['Date'] })
-    vi.setSystemTime(new Date('2026-10-25T12:00:00'))
+  it('ties each «Link return» to its own return', async () => {
+    state.claim.remedies.refund.returns.push({
+      doctype: 'Sales Invoice',
+      name: 'ACC-SINV-2026-03520',
+      total: -120,
+      currency: 'MXN',
+    })
     const root = await mount((await page()).default, {
       name: 'SER-WRN-2026-00001',
     })
-    const text = root.textContent
-    expect(text).not.toMatch(/\d{4}-\d{2}-\d{2}/)
-    expect(text).toContain('Grupo Doco · 25 oct')
-    expect(text).toContain('13 oct')
+    const links = buttons(root).filter(
+      (b) => b.textContent.trim() === 'Link return',
+    )
+    expect(links.map((b) => describedBy(b)?.textContent.trim())).toEqual([
+      expect.stringContaining('ACC-SINV-2026-03513'),
+      expect.stringContaining('ACC-SINV-2026-03520'),
+    ])
   })
+
+  it('the primary says «Open repair order»; the order id is secondary text', async () => {
+    state.claim.repair = { open: 'MAT-RO-2026-00042' }
+    const root = await mount((await page()).default, {
+      name: 'SER-WRN-2026-00001',
+    })
+    const open = byText(root, 'Open repair order')
+    expect(open.textContent.trim()).toBe('Open repair order')
+    expect(describedBy(open)?.textContent.trim()).toBe(
+      'Repair order MAT-RO-2026-00042',
+    )
+  })
+
+  it('shows the complaint and purchase dates as the shell does, never ISO', async () => {
+    const lang = window.lang
+    window.lang = 'es-MX'
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2026-10-25T12:00:00'))
+    try {
+      const root = await mount((await page()).default, {
+        name: 'SER-WRN-2026-00001',
+      })
+      const text = root.textContent
+      expect(text).not.toMatch(/\d{4}-\d{2}-\d{2}/)
+      expect(text).toContain(`Grupo Doco · ${formatDay('2026-10-25')}`)
+      expect(text).toContain(formatDay('2026-10-13'))
+    } finally {
+      window.lang = lang
+    }
+  })
+})
+
+describe('customer name on a record (F12 fix round)', () => {
+  const pages = {
+    Garantia: [
+      () => import('@/pages/Garantia.vue'),
+      { name: 'SER-WRN-2026-00001' },
+      () => (state.claim.customer_name = LONG_NAME),
+    ],
+    Encuesta: [
+      () => import('@/pages/Encuesta.vue'),
+      { name: 'QA-FB-12273' },
+      () => (state.answer.customer_name = LONG_NAME),
+    ],
+  }
+  for (const [name, [page, props, longName]] of Object.entries(pages)) {
+    it(`${name}: a long name wraps to two lines instead of «Refacciones…»`, async () => {
+      longName()
+      const root = await mount((await page()).default, props)
+      const h1 = root.querySelector('h1')
+      expect(h1.textContent.trim()).toBe(LONG_NAME)
+      expect(h1.className).not.toMatch(/\btruncate\b/)
+      expect(h1.classList).toContain('line-clamp-2')
+      expect(h1.classList).toContain('break-words')
+    })
+  }
 })
 
 describe('one back on a phone: the app bar arrow (F12 P2)', () => {
@@ -273,6 +361,17 @@ describe('one back on a phone: the app bar arrow (F12 P2)', () => {
     }
     const root = await mount((await import('@/pages/Garantia.vue')).default, {
       name: 'SER-WRN-2026-00001',
+    })
+    expect(byText(root, 'Back to Taller')).toBeTruthy()
+  })
+
+  it('Encuesta opened from another app keeps its way back on a phone', async () => {
+    state.route.query = {
+      return_to: '/taller/orders/RO-0001',
+      return_label: 'Taller',
+    }
+    const root = await mount((await import('@/pages/Encuesta.vue')).default, {
+      name: 'QA-FB-12273',
     })
     expect(byText(root, 'Back to Taller')).toBeTruthy()
   })

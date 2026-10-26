@@ -28700,3 +28700,11 @@ msgstr "Enlazar devolución"
 #: frontend/src/pages/Garantia.vue
 msgid "Return {0}"
 msgstr "Devolución {0}"
+
+#: frontend/src/pages/Garantia.vue
+msgid "Open repair order"
+msgstr "Abrir la orden de reparación"
+
+#: frontend/src/pages/Garantia.vue
+msgid "Repair order {0}"
+msgstr "Orden de reparación {0}"

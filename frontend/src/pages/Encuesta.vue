@@ -59,7 +59,9 @@
               />
               <span>{{ when(answer.creation) }}</span>
             </p>
-            <h1 class="truncate text-2xl font-semibold text-ink-gray-9">
+            <h1
+              class="line-clamp-2 break-words text-2xl font-semibold text-ink-gray-9"
+            >
               {{ answer.customer_name }}
             </h1>
             <p class="mt-1 text-sm text-ink-gray-6">

@@ -53,7 +53,9 @@
                 :label="dueLabel(claim.sla.due)"
               />
             </p>
-            <h1 class="truncate text-2xl font-semibold text-ink-gray-9">
+            <h1
+              class="line-clamp-2 break-words text-2xl font-semibold text-ink-gray-9"
+            >
               {{ claim.customer_name }}
             </h1>
             <p class="mt-1 text-sm text-ink-gray-6">
@@ -62,7 +64,7 @@
                   claim.item_name || claim.item_code,
                   claim.serial_no,
                   claim.company,
-                  formatDate(claim.complaint_date, { relative: false }),
+                  formatDay(claim.complaint_date),
                 ]
                   .filter(Boolean)
                   .join(' · ')
@@ -110,14 +112,22 @@
             class="min-h-11 sm:min-h-8"
             @click="openRepair"
           />
-          <Button
-            v-else-if="primary?.kind === 'open_repair'"
-            variant="solid"
-            :icon-left="LucideExternalLink"
-            :label="__('Open repair order {0}', [claim.repair.open])"
-            class="min-h-11 sm:min-h-8"
-            @click="openTaller(claim.repair.open)"
-          />
+          <template v-else-if="primary?.kind === 'open_repair'">
+            <Button
+              variant="solid"
+              :icon-left="LucideExternalLink"
+              :label="__('Open repair order')"
+              class="min-h-11 sm:min-h-8"
+              :aria-describedby="`garantia-repair-${claim.repair.open}`"
+              @click="openTaller(claim.repair.open)"
+            />
+            <p
+              :id="`garantia-repair-${claim.repair.open}`"
+              class="basis-full break-words text-sm text-ink-gray-6"
+            >
+              {{ __('Repair order {0}', [claim.repair.open]) }}
+            </p>
+          </template>
           <Button
             v-else-if="primary?.kind === 'pick_source'"
             variant="solid"
@@ -137,13 +147,18 @@
               :label="__('Link return')"
               class="min-h-11 sm:min-h-8"
               :loading="busy"
+              :aria-describedby="`garantia-return-${ret.name}`"
               @click="linkOutcome(ret.doctype, ret.name)"
             />
-            <p class="basis-full break-words text-sm text-ink-gray-6">
+            <p
+              :id="`garantia-return-${ret.name}`"
+              class="basis-full break-words text-sm text-ink-gray-6"
+            >
               {{
                 [
                   __('Return {0}', [ret.name]),
-                  ret.total !== undefined && money(ret.total, ret.currency),
+                  ret.total !== undefined &&
+                    money(Math.abs(Number(ret.total)), ret.currency),
                 ]
                   .filter(Boolean)
                   .join(' · ')
@@ -241,7 +256,7 @@
                 {{
                   [
                     claim.against.title,
-                    formatDate(claim.against.date, { relative: false }),
+                    formatDay(claim.against.date),
                     claim.against.status,
                     claim.against.total !== undefined &&
                       money(claim.against.total, claim.against.currency),
@@ -753,7 +768,7 @@ import SourceDialog from '@/components/garantias/SourceDialog.vue'
 import ComprasPicker from '@/components/compras/ComprasPicker.vue'
 import { money } from '@/composables/useCompras'
 import { isMobile as isPhone } from '@/composables/breakpoint'
-import { formatDate } from '@/utils/display'
+import { formatDay } from '@/utils/contactos'
 import { offerUndo, runUndo } from '@/composables/powerUndo'
 import { appleKeys, registerPageShortcuts } from '@/composables/shellKeyboard'
 import { hoyLive } from '@/composables/useHoy'
