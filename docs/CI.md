@@ -147,6 +147,13 @@ for the native suite.
   Semgrep), Frontend (ESLint, Oxlint, production build with
   `verify-pwa-build.mjs` and the `verify-bundle-budget.mjs` CSS/route budgets, unit
   tests), `Undefined names (ruff)`, both gates, and devflow's local jargon guard.
+- **Format locally the way CI does.** `pre-commit run --files <paths>` from the repo
+  root runs the exact pinned hooks (Prettier 3.2.5, ESLint, Oxlint, ruff). In
+  `frontend/`, `yarn format` / `yarn format:check` use the same Prettier, which
+  `package.json` pins exactly. `tests/unit/toolPins.test.js` fails when that pin and
+  the hook's drift apart, and `.prettierignore` skips `src/vendor/` like the hook.
+  Never `npx prettier` in a checkout without `node_modules`: npx fetches the newest
+  Prettier, whose layout CI rejects.
 - **Shell APIs (ERPNext + doco image).** A third Server job, in parallel with the
   native suite, runs when the diff touches `crm/api/shell*`, `crm/api/documentos*`,
   `crm/tests/test_shell*`, `crm/tests/test_documentos*`, the shell contracts registry,

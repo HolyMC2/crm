@@ -1,0 +1,2 @@
+# Same skips as the pre-commit prettier hook (../.pre-commit-config.yaml).
+src/vendor/
