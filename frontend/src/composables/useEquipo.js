@@ -171,6 +171,12 @@ export function decisions(request) {
   return ['approve', 'reject'].filter((a) => actions.includes(a))
 }
 
+/** The lift a refusal offers to someone limited to their own employee record, or null. */
+export function liftAction(answer) {
+  const action = (answer?.actions || []).find((a) => a.id === 'lift_own_limit')
+  return action ? { label: action.label, employee: answer.employee } : null
+}
+
 // One load of Doco's shared Equipo sheet (alta, puesto, one-day turno) per page.
 let sheetPending = null
 export function loadSheet() {

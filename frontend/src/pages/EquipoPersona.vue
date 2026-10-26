@@ -81,6 +81,33 @@
           class="mb-4 space-y-2 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
         >
           <p>{{ problem.message }}</p>
+          <div v-if="problem.lift" class="flex flex-wrap gap-2">
+            <Button
+              v-if="!confirmingLift"
+              variant="solid"
+              :label="problem.lift.label"
+              @click="confirmingLift = true"
+            />
+            <template v-else>
+              <p class="w-full">
+                {{
+                  __(
+                    'Your user permission limited to your own employee record will be removed. Continue?',
+                  )
+                }}
+              </p>
+              <Button
+                variant="solid"
+                :label="__('Yes, remove the limit')"
+                :loading="lifting"
+                @click="liftLimit"
+              />
+              <Button
+                :label="__('Cancel', null, 'Equipo')"
+                @click="confirmingLift = false"
+              />
+            </template>
+          </div>
           <div class="flex flex-wrap gap-2">
             <Button :label="__('Refresh', null, 'Equipo')" @click="load" />
             <Button
@@ -331,6 +358,7 @@ import {
   equipoBoot,
   lftLabel,
   lftTheme,
+  liftAction,
   loadEquipoBoot,
   loadSheet,
   nextRequest,
@@ -358,6 +386,8 @@ const revision = ref(null)
 const deciding = ref('')
 const rejecting = ref(false)
 const note = ref('')
+const confirmingLift = ref(false)
+const lifting = ref(false)
 // One key per decision the worker makes; a retry of the same click reuses it.
 let decisionKey = null
 
@@ -412,7 +442,11 @@ async function decide(decision) {
       note: decision === 'reject' ? note.value.trim() : '',
     })
     if (!answer?.ok) {
-      problem.value = { message: answer?.message, request: current.value.name }
+      problem.value = {
+        message: answer?.message,
+        request: current.value.name,
+        lift: liftAction(answer),
+      }
       if (answer?.request) current.value = answer.request
       return
     }
@@ -427,6 +461,23 @@ async function decide(decision) {
     }
   } finally {
     deciding.value = ''
+  }
+}
+
+async function liftLimit() {
+  lifting.value = true
+  try {
+    const answer = await equipoApi('lift_own_limit', {
+      employee: problem.value.lift.employee,
+    })
+    problem.value = null
+    confirmingLift.value = false
+    notice.value = answer.message
+    await loadRequest()
+  } catch (error) {
+    problem.value = { message: problemOf(error).detail }
+  } finally {
+    lifting.value = false
   }
 }
 
