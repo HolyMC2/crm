@@ -1,7 +1,7 @@
 # Copyright (c) 2026, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import frappe
 from frappe.tests.utils import FrappeTestCase
@@ -25,7 +25,8 @@ def _build_now(method, **kwargs):
 
 class TestTranslationsScript(FrappeTestCase):
 	def setUp(self):
-		frappe.cache.delete_value(shell_dictionary.CACHE_KEY)
+		# The hash and the queued-build markers next to it.
+		frappe.cache.delete_keys(shell_dictionary.CACHE_KEY)
 		frappe.local.cache.pop(frappe.cache.make_key(shell_dictionary.CACHE_KEY), None)
 
 	def patched(self, messages, listing=FULL, user_translations=None, enqueue=_build_now):
@@ -132,3 +133,98 @@ class TestTranslationsScript(FrappeTestCase):
 	def test_the_page_still_renders_when_the_version_fails(self):
 		with patch("crm.shell_dictionary.version", side_effect=RuntimeError("redis down")):
 			self.assertEqual(_translations_version(), "")
+
+	def test_a_failed_dictionary_load_is_not_cached_and_the_next_page_load_retries(self):
+		queued = []
+
+		def build_now(method, **kwargs):
+			queued.append(kwargs)
+			_build_now(method, **kwargs)
+
+		listing = ("abc", frozenset({"Ventas"}))
+		with (
+			patch("crm.shell_dictionary.get_all_translations", side_effect=RuntimeError("redis blip")),
+			patch("crm.shell_dictionary.build_literals", return_value=listing),
+			patch("crm.shell_dictionary.get_user_translations", return_value={}),
+			patch("frappe.enqueue", side_effect=build_now),
+			patch("frappe.log_error"),
+		):
+			self.assertEqual(_translations_version(), "")
+			field = shell_dictionary._field()
+			self.assertIsNone(frappe.cache.hget(shell_dictionary.CACHE_KEY, "v|" + field))
+			self.assertIsNone(frappe.cache.hget(shell_dictionary.CACHE_KEY, "p|" + field))
+			self.assertEqual(_translations_version(), "")
+		self.assertEqual(len(queued), 2)
+		# Once the dictionary loads again, the next build ships it.
+		self.page_version({"Ventas": "Sales"}, listing=listing)
+		self.assertEqual(len(self.page_version({"Ventas": "Sales"}, listing=listing)), 16)
+
+	def test_the_queued_marker_expires_and_a_failed_enqueue_clears_it(self):
+		queued = []
+		messages = {"Ventas": "Sales"}
+		self.page_version(messages, enqueue=lambda method, **kw: queued.append(kw))
+		marker = shell_dictionary._queued_key(queued[0]["field"])
+		self.assertTrue(0 < frappe.cache.ttl(marker) <= shell_dictionary.QUEUED_SECONDS)
+		self.page_version(messages, enqueue=lambda method, **kw: queued.append(kw))
+		self.assertEqual(len(queued), 1)
+		# A job that never ran (the worker was killed): the marker lapses and the build is queued again.
+		frappe.cache.delete(marker)
+		self.page_version(messages, enqueue=lambda method, **kw: queued.append(kw))
+		self.assertEqual(len(queued), 2)
+
+		frappe.cache.delete(marker)
+		with patch("frappe.log_error") as log_error:
+			self.assertEqual(self.page_version(messages, enqueue=RuntimeError("rq redis down")), "")
+		log_error.assert_called_once()
+		self.assertFalse(frappe.cache.exists(marker))
+		self.page_version(messages, enqueue=lambda method, **kw: queued.append(kw))
+		self.assertEqual(len(queued), 3)
+
+	def test_runtime_keys_cover_the_doctypes_a_named_doctype_links_to(self):
+		# CRM Deal.territory links to CRM Territory, which the build does not name; its labels open
+		# in the "create new" dialog (CreateDocumentModal renders __(field.label)).
+		self.assertIn("CRM Territory", {f.options for f in frappe.get_meta("CRM Deal").fields})
+		keys = shell_dictionary.runtime_keys(frozenset({"CRM Deal"}))
+		self.assertIn(frappe.get_meta("CRM Territory").get_field("territory_manager").label, keys)
+
+	def test_migrate_and_meta_changes_drop_the_cached_set(self):
+		self.assertIn("crm.shell_dictionary.clear", frappe.get_hooks("after_migrate"))
+		messages = {"Ventas": "Sales"}
+		self.page_version(messages)
+		self.assertTrue(self.page_version(messages))
+		frappe.make_property_setter(
+			{
+				"doctype": "CRM Deal",
+				"fieldname": "territory",
+				"property": "label",
+				"value": "Zona",
+				"property_type": "Data",
+			}
+		)
+		self.assertIsNone(frappe.cache.hget(shell_dictionary.CACHE_KEY, "v|" + self._field(messages)))
+		self.page_version(messages)
+		self.assertTrue(self.page_version(messages))
+		shell_dictionary.clear()
+		self.assertIsNone(frappe.cache.hget(shell_dictionary.CACHE_KEY, "v|" + self._field(messages)))
+
+	def _field(self, messages):
+		a, b, c, d = self.patched(messages)
+		with a, b, c, d:
+			return shell_dictionary._field()
+
+	def test_a_missing_keys_file_is_logged_once_outside_developer_mode(self):
+		shell_dictionary._warned_missing.clear()
+		logger = MagicMock()
+		with (
+			patch("frappe.get_app_path", return_value="/nonexistent/translation-keys.json"),
+			patch("frappe.logger", return_value=logger),
+			patch.dict(frappe.conf, {"developer_mode": 1}),
+		):
+			self.assertEqual(shell_dictionary.build_literals(), FULL)
+			logger.warning.assert_not_called()
+			frappe.conf.developer_mode = 0
+			self.assertEqual(shell_dictionary.build_literals(), FULL)
+			self.assertEqual(shell_dictionary.build_literals(), FULL)
+		logger.warning.assert_called_once()
+		self.assertIn("translation-keys.json", logger.warning.call_args[0][0])
+		shell_dictionary._warned_missing.clear()

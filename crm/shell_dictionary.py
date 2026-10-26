@@ -9,8 +9,9 @@ dictionary restricted to the keys the UI can ask for:
 
 - the build's literals, and `message:context` keys whose parts both are keys;
 - every DocType name, and the labels, descriptions and Select options of the
-  DocTypes the build names and of their child tables (labels the UI reads from
-  DocType meta, status values the server sends);
+  DocTypes the build names, of their child tables and of the DocTypes they link
+  to (labels the UI reads from DocType meta, status values the server sends, the
+  fields of a "create new" dialog);
 - the record names of translated DocTypes and of small DocTypes the build names
   (stages, lead sources);
 - string literals in this app's Python, which sends some English the client
@@ -45,9 +46,14 @@ KEYS_FILE = ("public", "frontend", "translation-keys.json")
 # CRM Lead Source); larger ones hold data, not vocabulary.
 RECORD_LIMIT = 500
 CACHE_SECONDS = 24 * 3600
+# A queued build that never ran (the worker was killed, the job lost) is queued again after this.
+QUEUED_SECONDS = 300
+# The DocTypes a named DocType links to, whose labels open in "create new" dialogs.
+TARGET_FIELDTYPES = ("Link", "Table", "Table MultiSelect")
 SKIP_DIRS = ("public", "node_modules", "__pycache__", "tests", "patches")
 
 _listing: dict[str, tuple[int, str, frozenset[str]]] = {}
+_warned_missing: set[str] = set()
 
 
 def build_literals() -> tuple[str, frozenset[str] | None]:
@@ -56,6 +62,7 @@ def build_literals() -> tuple[str, frozenset[str] | None]:
 	try:
 		mtime = os.stat(path).st_mtime_ns
 	except OSError:
+		_warn_missing(path)
 		return "full", None
 	cached = _listing.get(path)
 	if cached and cached[0] == mtime:
@@ -95,7 +102,9 @@ def build(lang: str, field: str) -> None:
 	"""Background job: the key set reads DocType meta and the app's Python, seconds cold, so it
 	never runs in a page request."""
 	try:
-		payload = _payload(shipped_messages(_dictionary(lang), build_literals()[1]))
+		# A failed load raises here, so it is never cached: pages keep the whole dictionary
+		# and the next page load queues the build again.
+		payload = _payload(shipped_messages(_dictionary(lang, strict=True), build_literals()[1]))
 		current = hashlib.sha256(payload).hexdigest()[:16]
 		frappe.cache.hset(CACHE_KEY, "p|" + field, (current, payload))
 		frappe.cache.hset(CACHE_KEY, "v|" + field, current)
@@ -105,21 +114,44 @@ def build(lang: str, field: str) -> None:
 		if frappe.cache.ttl(frappe.cache.make_key(CACHE_KEY)) < 0:
 			frappe.cache.expire_key(CACHE_KEY, CACHE_SECONDS)
 	finally:
-		frappe.cache.hdel(CACHE_KEY, "q|" + field)
+		frappe.cache.delete(_queued_key(field))
 
 
 def _queue_build(field: str) -> None:
-	if frappe.cache.hget(CACHE_KEY, "q|" + field):
+	marker = _queued_key(field)
+	if not frappe.cache.set(marker, 1, nx=True, ex=QUEUED_SECONDS):
 		return
-	frappe.cache.hset(CACHE_KEY, "q|" + field, 1)
-	frappe.enqueue(
-		f"{__name__}.build",
-		queue="short",
-		job_id=f"{CACHE_KEY}|{field}",
-		deduplicate=True,
-		lang=frappe.local.lang,
-		field=field,
-	)
+	try:
+		frappe.enqueue(
+			f"{__name__}.build",
+			queue="short",
+			job_id=f"{CACHE_KEY}|{field}",
+			deduplicate=True,
+			lang=frappe.local.lang,
+			field=field,
+		)
+	except Exception:
+		frappe.cache.delete(marker)
+		frappe.log_error("crm shell dictionary queue")
+
+
+def _queued_key(field: str) -> str:
+	return frappe.cache.make_key(f"{CACHE_KEY}|q|{field}")
+
+
+def clear(*_args) -> None:
+	"""after_migrate, and a DocType, Custom Field or Property Setter change: labels, options and
+	DocType names may have moved, so the next page load builds the set again."""
+	frappe.cache.delete_value(CACHE_KEY)
+
+
+def _warn_missing(path: str) -> None:
+	# Without the build's key list every page ships the whole dictionary; fine for vite dev, a
+	# broken build anywhere else.
+	if path in _warned_missing or frappe.conf.developer_mode:
+		return
+	_warned_missing.add(path)
+	frappe.logger("crm").warning(f"{path} is missing: the whole translation dictionary is shipped")
 
 
 def _field() -> str:
@@ -151,15 +183,10 @@ def runtime_keys(literals: frozenset[str]) -> set[str]:
 		for row in frappe.get_all("DocType", fields=["name", "istable", "issingle", "is_virtual"])
 	}
 	named = {name for name in doctypes if name in literals}
-	children = set(
-		frappe.get_all(
-			"DocField",
-			filters={"parent": ["in", list(named)], "fieldtype": ["in", ["Table", "Table MultiSelect"]]},
-			pluck="options",
-		)
-	)
+	# One level deep: child tables and Link targets, not what those link to.
+	targets = {target for doctype in named for target in _targets(doctype) if target in doctypes}
 	keys = set(doctypes)
-	for doctype in named | children:
+	for doctype in named | targets:
 		keys |= _doctype_strings(doctype)
 	translated = set(get_translated_doctypes())
 	small = {name for name in named if not (doctypes[name].istable or doctypes[name].issingle)}
@@ -172,6 +199,14 @@ def runtime_keys(literals: frozenset[str]) -> set[str]:
 			keys.update(names)
 	keys |= python_literals(APP)
 	return keys
+
+
+def _targets(doctype: str) -> set[str]:
+	try:
+		meta = frappe.get_meta(doctype)
+	except Exception:
+		return set()
+	return {field.options for field in meta.fields if field.fieldtype in TARGET_FIELDTYPES and field.options}
 
 
 def _doctype_strings(doctype: str) -> set[str]:
@@ -221,10 +256,12 @@ def _file_literals(path: str) -> set[str]:
 	return literals
 
 
-def _dictionary(lang: str) -> dict[str, str]:
+def _dictionary(lang: str, strict: bool = False) -> dict[str, str]:
 	try:
 		return get_all_translations(lang)
 	except Exception:
+		if strict:
+			raise
 		frappe.log_error("crm shell dictionary")
 		return {}
 
