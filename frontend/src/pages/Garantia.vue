@@ -1,7 +1,9 @@
 <template>
   <div class="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
     <div class="mx-auto w-full max-w-4xl px-4 pb-28 pt-4 sm:px-6 sm:pb-10">
-      <nav class="mb-3">
+      <!-- On a phone the shell's app bar has the back arrow (meta.listParent);
+           a case opened from another app keeps its way back to that app. -->
+      <nav v-if="!isPhone || returnTo" class="mb-3">
         <button
           class="flex min-h-11 items-center gap-1 text-sm text-ink-gray-7 hover:text-ink-gray-9"
           @click="goBack"
@@ -60,7 +62,7 @@
                   claim.item_name || claim.item_code,
                   claim.serial_no,
                   claim.company,
-                  claim.complaint_date,
+                  formatDate(claim.complaint_date, { relative: false }),
                 ]
                   .filter(Boolean)
                   .join(' · ')
@@ -125,16 +127,29 @@
             @click="picking = true"
           />
           <!-- Sales shape: a refund already made is linked, else the POS «Devolver venta» does it. -->
-          <Button
+          <template
             v-for="ret in claim.remedies?.refund?.returns || []"
             :key="ret.name"
-            :variant="primary?.kind === 'link_return' ? 'solid' : 'subtle'"
-            :icon-left="LucideLink"
-            :label="__('Link return {0}', [ret.name])"
-            class="min-h-11 sm:min-h-8"
-            :loading="busy"
-            @click="linkOutcome(ret.doctype, ret.name)"
-          />
+          >
+            <Button
+              :variant="primary?.kind === 'link_return' ? 'solid' : 'subtle'"
+              :icon-left="LucideLink"
+              :label="__('Link return')"
+              class="min-h-11 sm:min-h-8"
+              :loading="busy"
+              @click="linkOutcome(ret.doctype, ret.name)"
+            />
+            <p class="basis-full break-words text-sm text-ink-gray-6">
+              {{
+                [
+                  __('Return {0}', [ret.name]),
+                  ret.total !== undefined && money(ret.total, ret.currency),
+                ]
+                  .filter(Boolean)
+                  .join(' · ')
+              }}
+            </p>
+          </template>
           <Button
             v-if="
               claim.remedies?.refund?.available &&
@@ -226,7 +241,7 @@
                 {{
                   [
                     claim.against.title,
-                    claim.against.date,
+                    formatDate(claim.against.date, { relative: false }),
                     claim.against.status,
                     claim.against.total !== undefined &&
                       money(claim.against.total, claim.against.currency),
@@ -737,6 +752,8 @@ import NoticeDialog from '@/components/garantias/NoticeDialog.vue'
 import SourceDialog from '@/components/garantias/SourceDialog.vue'
 import ComprasPicker from '@/components/compras/ComprasPicker.vue'
 import { money } from '@/composables/useCompras'
+import { isMobile as isPhone } from '@/composables/breakpoint'
+import { formatDate } from '@/utils/display'
 import { offerUndo, runUndo } from '@/composables/powerUndo'
 import { appleKeys, registerPageShortcuts } from '@/composables/shellKeyboard'
 import { hoyLive } from '@/composables/useHoy'
