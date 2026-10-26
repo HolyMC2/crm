@@ -631,3 +631,50 @@ describe('rank (E7b): a shell place matching the term outranks generic fan-out',
     ])
   })
 })
+
+describe('Formularios and Encuestas are one place in the palette (Q7 = B)', () => {
+  const encuestas = (enabled) => ({
+    encuestas: { key: 'encuestas', enabled, capabilities: { read: enabled } },
+  })
+  async function places(raw, overrides) {
+    const providers = createShellProviders({
+      boot: ref(boot(overrides)),
+      modules: ref(modules),
+    })
+    const q = query(raw)
+    const states = await federatedSearch(providersFor(providers, q), q, {
+      signal: new AbortController().signal,
+      onUpdate() {},
+    })
+    return groupPaletteItems(states)
+      .flatMap((section) => section.items)
+      .filter((item) => item.group === 'ir_a')
+      .map((item) => [item.title, item.href])
+  }
+
+  it('«formularios» finds Formularios under Encuestas', async () => {
+    expect(await places('formularios', encuestas(true))).toContainEqual([
+      'Encuestas › Formularios',
+      '/forms',
+    ])
+  })
+
+  it('«encuestas» lists the survey views and Formularios together', async () => {
+    const titles = (await places('encuestas', encuestas(true))).map(
+      ([title]) => title,
+    )
+    expect(titles).toEqual(
+      expect.arrayContaining([
+        'Encuestas › Por atender',
+        'Encuestas › Formularios',
+      ]),
+    )
+  })
+
+  it('without Encuestas there is no shared place', async () => {
+    const titles = (await places('formularios', encuestas(false))).map(
+      ([title]) => title,
+    )
+    expect(titles).not.toContain('Encuestas › Formularios')
+  })
+})

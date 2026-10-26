@@ -22,6 +22,7 @@ import {
   boardHref,
   cardSpan,
   cardState,
+  cardTitle,
   deltaChip,
   drillHref,
   formatValue,
@@ -588,5 +589,72 @@ describe('Resultados: the walk-in customer and es-MX numbers', () => {
       label: '−84.6 %',
       tone: 'down',
     })
+  })
+})
+
+describe('Recomendación (Encuestas) on the board', () => {
+  let app
+  afterEach(() => app?.unmount())
+
+  it('reads like the Encuestas page: a signed number, no unit', () => {
+    expect(formatValue(40, 'signed')).toBe('+40')
+    expect(formatValue(-25, 'signed')).toBe('-25')
+    expect(formatValue(0, 'signed')).toBe('0')
+    expect(formatValue(null, 'signed')).toBe('—')
+    expect(cardTitle('encuestas')).toBe('Recommendation')
+  })
+
+  it('shows the number, the three groups and opens Encuestas', async () => {
+    const router = createRouter({
+      history: createMemoryHistory('/crm'),
+      routes: [{ path: '/:any(.*)*', component: { render: () => null } }],
+    })
+    const root = document.createElement('div')
+    document.body.appendChild(root)
+    app = createApp({
+      render: () =>
+        h(ResultadosCard, {
+          cardKey: 'encuestas',
+          back: '/crm/resultados',
+          card: {
+            key: 'encuestas',
+            label: 'Recomendación',
+            format: 'signed',
+            value: 40,
+            prev: 20,
+            delta_pct: 20,
+            delta_unit: 'pp',
+            facts: [
+              { label: 'Contentos (9–10)', value: 6, format: 'count' },
+              { label: 'Neutrales (7–8)', value: 2, format: 'count' },
+              { label: 'Inconformes (0–6)', value: 2, format: 'count' },
+            ],
+            note: '% contentos menos % inconformes',
+            drill: {
+              label: 'Ver respuestas',
+              path: '/crm/encuestas',
+              query: { view: 'todas' },
+            },
+          },
+        }),
+    })
+    app.config.globalProperties.__ = globalThis.__
+    app.use(router)
+    app.mount(root)
+    await nextTick()
+    const text = root.textContent.replace(/\s+/g, ' ')
+    expect(text).toContain('+40')
+    expect(text).toContain('before +20')
+    expect(root.querySelector('[data-testid="delta"]').textContent).toContain(
+      '+20 pp',
+    )
+    for (const fact of ['Contentos (9–10) 6', 'Neutrales (7–8) 2', 'Inconformes (0–6) 2'])
+      expect(text).toContain(fact)
+    const url = new URL(
+      root.querySelector('[data-testid="drill"]').getAttribute('href'),
+      'https://x.invalid',
+    )
+    expect(url.pathname).toBe('/crm/encuestas')
+    expect(url.searchParams.get('view')).toBe('todas')
   })
 })
