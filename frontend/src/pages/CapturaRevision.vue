@@ -402,6 +402,29 @@
                   v-else-if="line.state !== 'dropped' && canEdit"
                   class="space-y-2"
                 >
+                  <!-- What the web said about a line the bot was unsure of. -->
+                  <div
+                    v-if="line.research?.note"
+                    class="rounded-7 bg-surface-gray-1 p-3 text-sm text-ink-gray-7"
+                  >
+                    <span class="block text-ink-gray-6">{{
+                      __('Found on the web')
+                    }}</span>
+                    <p class="mt-1">{{ line.research.note }}</p>
+                    <div class="mt-1 flex flex-wrap gap-x-3 gap-y-1">
+                      <a
+                        v-for="url in line.research.sources"
+                        :key="url"
+                        :href="url"
+                        target="_blank"
+                        rel="noopener noreferrer nofollow"
+                        class="inline-flex min-h-11 items-center gap-1 text-ink-gray-6 underline sm:min-h-0"
+                      >
+                        {{ hostOf(url) }}
+                        <LucideExternalLink class="h-3 w-3" />
+                      </a>
+                    </div>
+                  </div>
                   <div
                     v-if="line.candidates?.length"
                     class="flex flex-wrap gap-2"
@@ -889,6 +912,14 @@ const payDirty = computed(() => {
 })
 
 // Pickers search with the requester's own read permissions (capture search).
+function hostOf(url) {
+  try {
+    return new URL(url).hostname.replace(/^www\./, '')
+  } catch {
+    return url
+  }
+}
+
 function searchFor(kind, txt) {
   return capturaApi('search', { name: props.name, kind, txt })
 }

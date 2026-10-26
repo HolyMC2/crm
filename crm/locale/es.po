@@ -13266,6 +13266,10 @@ msgid "Is it one of these?"
 msgstr "¿Es alguno de estos?"
 
 #: frontend/src/pages/CapturaRevision.vue
+msgid "Found on the web"
+msgstr "Encontrado en la web"
+
+#: frontend/src/pages/CapturaRevision.vue
 msgid "New item name"
 msgstr "Nombre del artículo nuevo"
 
