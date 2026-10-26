@@ -238,19 +238,29 @@ describe('what blocks a step', () => {
     }
     expect(
       reimburseMissing(
-        { account: 'Banco', amount: 100, reference_date: 'x' },
+        {
+          account: 'Banco',
+          amount: 100,
+          reference_date: 'x',
+          posting_date: 'x',
+        },
         options,
       ),
     ).toEqual(['reference_no'])
     expect(
       reimburseMissing(
-        { account: 'Caja chica', amount: 100, reference_date: 'x' },
+        {
+          account: 'Caja chica',
+          amount: 100,
+          reference_date: 'x',
+          posting_date: 'x',
+        },
         options,
       ),
     ).toEqual([])
     expect(
       reimburseMissing({ account: 'Cajón', amount: 100 }, options),
-    ).toEqual(['account', 'reference_date'])
+    ).toEqual(['account', 'reference_date', 'posting_date'])
   })
 
   it('an unknown outcome keeps the request id; any answer ends it', async () => {

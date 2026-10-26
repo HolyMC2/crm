@@ -254,7 +254,13 @@
                 </span>
                 <span class="block break-words text-ink-gray-6">
                   {{
-                    [p.reference_no, modeOfPaymentLabel(p.mode_of_payment)]
+                    [
+                      p.reference_no,
+                      p.reference_date && p.reference_date !== p.posting_date
+                        ? __('bank date {0}', [formatDay(p.reference_date)])
+                        : '',
+                      modeOfPaymentLabel(p.mode_of_payment),
+                    ]
                       .filter(Boolean)
                       .join(' · ')
                   }}

@@ -79,10 +79,12 @@
                   : __('Reference (optional)')
               "
             />
-            <FormControl
-              v-model="form.reference_date"
-              type="date"
-              :label="__('Payment date')"
+            <PaymentDates
+              v-model:reference-date="form.reference_date"
+              v-model:posting-date="form.posting_date"
+              v-model:mode="form.mode_of_payment"
+              :options="options"
+              :account="form.account"
             />
             <p
               v-if="tried && missing.length"
@@ -133,6 +135,8 @@
 import { computed, reactive, ref, watch } from 'vue'
 import { Button, Dialog, FormControl } from 'frappe-ui'
 import ClaimGuard from '@/components/gastos/ClaimGuard.vue'
+import PaymentDates from '@/components/gastos/PaymentDates.vue'
+import { booksFields } from '@/composables/useGastos'
 import {
   claimProblem,
   claimsApi,
@@ -164,6 +168,8 @@ const form = reactive({
   amount: '',
   reference_no: '',
   reference_date: '',
+  posting_date: '',
+  mode_of_payment: '',
 })
 
 const key = computed(() => `reimburse:${props.name}`)
@@ -188,7 +194,8 @@ const LABELS = {
   account: 'account',
   amount: 'amount',
   reference_no: 'transfer or check number',
-  reference_date: 'payment date',
+  reference_date: 'date on the bank or receipt',
+  posting_date: 'posting date',
 }
 const missingText = computed(() =>
   missing.value.map((k) => __(LABELS[k])).join(', '),
@@ -209,6 +216,7 @@ watch(open, async (value) => {
       options.value.accounts[0]
     Object.assign(
       form,
+      { posting_date: options.value.today, mode_of_payment: '' },
       pending?.data ||
         kept || {
           account: preferred?.account || '',
@@ -237,6 +245,7 @@ async function reimburse() {
       amount: Number(form.amount),
       reference_no: String(form.reference_no || '').trim(),
       reference_date: form.reference_date,
+      ...booksFields(form),
     })
     resumed.value = false
     kept = null

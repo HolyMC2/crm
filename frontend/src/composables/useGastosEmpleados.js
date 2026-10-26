@@ -299,6 +299,7 @@ export function reimburseMissing(form, options) {
   if (account?.type === 'Bank' && !String(form.reference_no || '').trim())
     missing.push('reference_no')
   if (!form.reference_date) missing.push('reference_date')
+  if (!form.posting_date) missing.push('posting_date')
   return missing
 }
 

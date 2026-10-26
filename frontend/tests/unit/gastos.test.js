@@ -125,12 +125,13 @@ describe('Pagar form', () => {
       amount: 400,
       reference_no: '',
       reference_date: '2026-10-06',
+      posting_date: '2026-10-06',
     }
     expect(payMissing(form, options)).toEqual(['reference_no'])
     expect(payMissing({ ...form, account: 'Caja - X' }, options)).toEqual([])
     expect(
       payMissing({ account: 'Otra', amount: 0, reference_date: '' }, options),
-    ).toEqual(['account', 'amount', 'reference_date'])
+    ).toEqual(['account', 'amount', 'reference_date', 'posting_date'])
   })
   it('a bill owed in dollars paid from a peso account needs the rate and shows the bank side', () => {
     const foreign = {
@@ -147,6 +148,7 @@ describe('Pagar form', () => {
       amount: '100',
       reference_no: 'TRF-1',
       reference_date: '2026-10-06',
+      posting_date: '2026-10-06',
       exchange_rate: '',
     }
     expect(needsRate(foreign.accounts[0], foreign)).toBe(true)

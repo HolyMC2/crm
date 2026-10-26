@@ -104,10 +104,12 @@
                 : __('Reference (optional)')
             "
           />
-          <FormControl
-            v-model="form.reference_date"
-            type="date"
-            :label="__('Payment date')"
+          <PaymentDates
+            v-model:reference-date="form.reference_date"
+            v-model:posting-date="form.posting_date"
+            v-model:mode="form.mode_of_payment"
+            :options="options"
+            :account="form.account"
           />
         </template>
       </template>
@@ -165,6 +167,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import { Button, FormControl } from 'frappe-ui'
 import PowerResults from '@/components/power/PowerResults.vue'
 import PowerSheet from '@/components/power/PowerSheet.vue'
+import PaymentDates from '@/components/gastos/PaymentDates.vue'
 import {
   bulkAccounts,
   bulkPayMissing,
@@ -189,7 +192,13 @@ const running = ref(false)
 const tried = ref(false)
 const problem = ref('')
 const results = ref([])
-const form = reactive({ account: '', reference_no: '', reference_date: '' })
+const form = reactive({
+  account: '',
+  reference_no: '',
+  reference_date: '',
+  posting_date: '',
+  mode_of_payment: '',
+})
 
 const plan = computed(() => bulkPayPlan(props.rows))
 const accounts = computed(() =>
@@ -202,7 +211,8 @@ const missing = computed(() => bulkPayMissing(form, accounts.value))
 const LABELS = {
   account: 'account',
   reference_no: 'transfer or check number',
-  reference_date: 'payment date',
+  reference_date: 'date on the bank or receipt',
+  posting_date: 'posting date',
 }
 const missingText = computed(() =>
   missing.value.map((key) => __(LABELS[key])).join(', '),
@@ -255,6 +265,8 @@ watch(
         account: preferred?.account || '',
         reference_no: '',
         reference_date: options.value.today,
+        posting_date: options.value.today,
+        mode_of_payment: '',
       })
     } catch (error) {
       problem.value = problemOf(error).detail
@@ -284,6 +296,8 @@ async function run() {
         amount: row.outstanding_amount,
         reference_no: form.reference_no,
         reference_date: form.reference_date,
+        posting_date: form.posting_date,
+        mode_of_payment: form.mode_of_payment,
         exchange_rate: 0,
       })
       return {

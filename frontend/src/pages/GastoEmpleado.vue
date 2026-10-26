@@ -363,7 +363,16 @@
                   {{ money(p.amount, p.currency) }} · {{ p.posting_date }}
                 </span>
                 <span class="block text-ink-gray-6">{{
-                  [p.reference_no, p.name].filter(Boolean).join(' · ')
+                  [
+                    p.reference_no,
+                    p.reference_date && p.reference_date !== p.posting_date
+                      ? __('bank date {0}', [p.reference_date])
+                      : '',
+                    p.mode_of_payment,
+                    p.name,
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')
                 }}</span>
               </li>
             </ul>

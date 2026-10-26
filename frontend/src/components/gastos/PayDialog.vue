@@ -140,10 +140,13 @@
                 : __('Reference (optional)')
             "
           />
-          <FormControl
-            v-model="form.reference_date"
-            type="date"
-            :label="__('Payment date')"
+          <PaymentDates
+            v-model:reference-date="form.reference_date"
+            v-model:posting-date="form.posting_date"
+            v-model:mode="form.mode_of_payment"
+            :options="options"
+            :account="form.account"
+            :fixed="options.fixed_by || ''"
           />
           <p
             v-if="tried && missing.length"
@@ -210,6 +213,7 @@ import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { Button, FormControl } from 'frappe-ui'
 import CapturarDocumentoButton from '@/components/captura/CapturarDocumentoButton.vue'
 import PowerSheet from '@/components/power/PowerSheet.vue'
+import PaymentDates from '@/components/gastos/PaymentDates.vue'
 import { allowedTargets, capturaBoot } from '@/composables/useCaptura'
 import {
   bankSide,
@@ -226,7 +230,8 @@ import {
 } from '@/composables/useGastos'
 
 // «Pagar»: ERPNext maps the payment from the bill on the server; this form
-// only picks the account, amount and the bank reference.
+// only picks the account, amount, the bank reference, the books date and the
+// mode of payment.
 const props = defineProps({
   name: { type: String, required: true },
   party: { type: String, default: '' },
@@ -245,6 +250,8 @@ const form = reactive({
   amount: '',
   reference_no: '',
   reference_date: '',
+  posting_date: '',
+  mode_of_payment: '',
   exchange_rate: '',
 })
 
@@ -270,7 +277,8 @@ const LABELS = {
   account: 'account',
   amount: 'amount',
   reference_no: 'transfer or check number',
-  reference_date: 'payment date',
+  reference_date: 'date on the bank or receipt',
+  posting_date: 'posting date',
   exchange_rate: 'exchange rate',
 }
 const missingText = computed(() =>
@@ -292,6 +300,7 @@ watch(open, async (value) => {
     // A refused payment keeps what the worker typed for the next try.
     Object.assign(
       form,
+      { posting_date: options.value.today, mode_of_payment: '' },
       pending?.data ||
         kept || {
           account: preferred?.account || '',

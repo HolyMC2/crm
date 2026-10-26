@@ -216,6 +216,7 @@ export function payMissing(form, options) {
   if (needsReference(account) && !String(form.reference_no || '').trim())
     missing.push('reference_no')
   if (!form.reference_date) missing.push('reference_date')
+  if (!form.posting_date) missing.push('posting_date')
   return missing
 }
 
@@ -277,6 +278,22 @@ export function forgetPayment(bill) {
   }
 }
 
+/** The books date and how it was paid, sent only when set: an old pending
+ *  payment replays with exactly what it first sent. */
+export function booksFields(form) {
+  const out = {}
+  if (form.posting_date) out.posting_date = form.posting_date
+  if (form.mode_of_payment) out.mode_of_payment = form.mode_of_payment
+  return out
+}
+
+/** A mode of payment for an account: the bill's own, else the account's only one. */
+export function defaultMode(options, account, fixed) {
+  if (fixed) return fixed
+  const modes = options?.modes?.[account] || []
+  return modes.length === 1 ? modes[0] : ''
+}
+
 /** «Pagar»: one operation per payment until the server answers; an unknown
  *  outcome keeps the request id so the retry replays instead of paying again. */
 export async function payBill(api, bill, form) {
@@ -289,6 +306,7 @@ export async function payBill(api, bill, form) {
       reference_no: String(form.reference_no || '').trim(),
       reference_date: form.reference_date,
       exchange_rate: Number(form.exchange_rate) || 0,
+      ...booksFields(form),
     },
   }
   rememberPayment(bill, operation)
@@ -455,6 +473,7 @@ export function bulkPayMissing(form, accounts) {
   if (needsReference(account) && !String(form.reference_no || '').trim())
     missing.push('reference_no')
   if (!form.reference_date) missing.push('reference_date')
+  if (!form.posting_date) missing.push('posting_date')
   return missing
 }
 

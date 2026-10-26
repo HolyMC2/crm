@@ -28813,3 +28813,30 @@ msgstr "No hay personas activas para mostrar."
 #: frontend/src/pages/EquipoPrenomina.vue
 msgid "{0} of {1} people with something missing"
 msgstr "{0} de {1} personas con algo pendiente"
+
+msgid "Date on the bank or receipt"
+msgstr "Fecha en el banco o recibo"
+
+msgid "Posting date (in the books)"
+msgstr "Fecha contable (en libros)"
+
+msgid "This payment counts in the books on {0}, not today. Use the day the money left the account."
+msgstr "Este pago cuenta en libros el {0}, no hoy. Usa el día en que salió el dinero de la cuenta."
+
+msgid "Counts in the books today. For an old payment recorded late, use the day the money left the account."
+msgstr "Cuenta en libros hoy. Para un pago viejo que registras tarde, usa el día en que salió el dinero de la cuenta."
+
+msgid "Mode of payment"
+msgstr "Forma de pago"
+
+msgid "Not set"
+msgstr "Sin definir"
+
+msgid "bank date {0}"
+msgstr "fecha en banco {0}"
+
+msgid "date on the bank or receipt"
+msgstr "fecha en el banco o recibo"
+
+msgid "posting date"
+msgstr "fecha contable"
