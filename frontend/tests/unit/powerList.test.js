@@ -174,7 +174,12 @@ describe('Gastos power list rules', () => {
     expect(accounts.map((a) => a.account)).toEqual(['Banco'])
     expect(
       bulkPayMissing(
-        { account: 'Banco', reference_no: '', reference_date: '2026-10-14' },
+        {
+          account: 'Banco',
+          reference_no: '',
+          reference_date: '2026-10-14',
+          posting_date: '2026-10-14',
+        },
         accounts,
       ),
     ).toEqual(['reference_no'])
