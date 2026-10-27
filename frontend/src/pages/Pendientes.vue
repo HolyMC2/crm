@@ -481,6 +481,7 @@ import {
   stateLabel,
   toQuery,
 } from '@/composables/usePendientes'
+import { createListCache } from '@/utils/listCache'
 import LucideBriefcase from '~icons/lucide/briefcase'
 import LucidePlus from '~icons/lucide/plus'
 import LucidePanelLeft from '~icons/lucide/panel-left'
@@ -695,26 +696,53 @@ watch(search, (value) => {
   searchTimer = setTimeout(() => update({ q: value.trim() }), 200)
 })
 
+// The list's last answer paints at once on a visit or a filter change; a
+// search is not kept, and approval lists load their own rows.
+const listCache = createListCache('pendientes', () =>
+  state.value.q || approvals.value
+    ? null
+    : [
+        state.value.segment,
+        state.value.source,
+        state.value.priority,
+        state.value.from,
+        state.value.to,
+      ],
+)
+function showQueue(response, start = 0) {
+  if (response.sections) {
+    for (const group of GROUPS) sections[group] = response.sections[group]
+    doneCount.value = response.done?.value || 0
+  } else {
+    rows.value = start ? [...rows.value, ...response.rows] : response.rows
+    hasMore.value = response.has_more
+  }
+  loaded.value = true
+}
+function paintCached() {
+  listCache.paint((response) => {
+    showQueue(response)
+    restoreScroll()
+  })
+}
+
 let generation = 0
 async function load(start = 0) {
   // Approval lists load their own rows (ApprovalList).
   if (guard.value || approvals.value) return
   const current = ++generation
+  const listAt = start ? null : listCache.key()
+  // The painted copy already holds the remembered place; the read keeps it.
+  const fromCache = !start && listCache.showing()
   loading.value = true
   problem.value = null
   try {
     const response = await pendientesApi('queue', queueArgs(state.value, start))
     if (current !== generation) return
-    if (response.sections) {
-      for (const group of GROUPS) sections[group] = response.sections[group]
-      doneCount.value = response.done?.value || 0
-      if (doneOpen.value || board.value) loadDone()
-    } else {
-      rows.value = start ? [...rows.value, ...response.rows] : response.rows
-      hasMore.value = response.has_more
-    }
-    loaded.value = true
-    if (!start) restoreScroll()
+    showQueue(response, start)
+    if (response.sections && (doneOpen.value || board.value)) loadDone()
+    if (!start) listCache.save(listAt, response)
+    if (!start && !fromCache) restoreScroll()
   } catch (error) {
     if (current === generation) problem.value = pendienteError(error)
   } finally {
@@ -993,6 +1021,8 @@ async function handoffs() {
 
 async function start() {
   guard.value = ''
+  // The last answer shows before the boot and the read even start.
+  paintCached()
   try {
     const shell = await loadShell()
     if (!shell?.modules?.pendientes?.enabled) {
@@ -1054,7 +1084,10 @@ watch(
     if (search.value.trim() !== state.value.q) search.value = state.value.q
     loaded.value = false
     rows.value = []
-    if (boot.value?.enabled) load()
+    if (boot.value?.enabled) {
+      paintCached()
+      load()
+    }
   },
 )
 // Another approval list (segment, kind, search): its rows are not on screen yet.

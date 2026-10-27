@@ -633,6 +633,7 @@ import {
   registerPageKeys,
 } from '@/composables/shellKeyboard'
 import { hoyLive } from '@/composables/useHoy'
+import { createListCache } from '@/utils/listCache'
 import { powerListPageKeys } from '@/utils/powerList'
 import {
   AGING,
@@ -714,6 +715,12 @@ const copied = ref('')
 const today = ref('')
 // The URL is the state: list, search, company, aging chip and focused customer.
 const state = computed(() => queueState(route.query))
+// The list's last answer paints at once on a visit; a search is not kept.
+const listCache = createListCache('cobranza', () =>
+  state.value.q.trim()
+    ? null
+    : [state.value.segment, state.value.company, state.value.edad],
+)
 const companies = computed(() => boot.value?.companies || [])
 // A row names its company only when the list mixes companies.
 const mixedCompanies = computed(
@@ -1119,6 +1126,10 @@ function rememberScroll() {
  */
 async function load({ more = false, quiet = false, restore = false } = {}) {
   const mine = ++ticket
+  const listAt = more ? null : listCache.key()
+  // A visit or a filter change shows the list's last answer while it reads;
+  // that copy already has the remembered scroll, and the read keeps it.
+  const fromCache = restore && paintCached()
   const remembered = restore ? memory() : null
   const length = more
     ? PAGE
@@ -1143,22 +1154,37 @@ async function load({ more = false, quiet = false, restore = false } = {}) {
     })
     if (mine !== ticket) return
     rows.value = more ? [...rows.value, ...page.rows] : page.rows
-    hasMore.value = page.has_more
-    counts.value = page.counts || {}
-    agingCounts.value = page.aging_counts || {}
-    stats.value = page.stats
-    capped.value = page.capped
-    today.value = page.today
+    showPage(page)
+    if (!more) listCache.save(listAt, page)
     problem.value = null
     syncFocus()
     pruneSelection()
-    if (remembered) restoreScroll(remembered.top)
+    if (remembered && !fromCache) restoreScroll(remembered.top)
     else if (!quiet && !more && restore) revealFocus()
   } catch (error) {
     if (mine === ticket) problem.value = problemOf(error)
   } finally {
     if (mine === ticket) loading.value = false
   }
+}
+
+function showPage(page) {
+  hasMore.value = page.has_more
+  counts.value = page.counts || {}
+  agingCounts.value = page.aging_counts || {}
+  stats.value = page.stats
+  capped.value = page.capped
+  today.value = page.today
+}
+
+/** Shows the list's last answer; true while a copy of it is on screen. */
+function paintCached() {
+  return listCache.paint((page) => {
+    rows.value = page.rows || []
+    showPage(page)
+    syncFocus()
+    restoreScroll(memory()?.top)
+  })
 }
 
 function restoreScroll(top) {
@@ -1494,6 +1520,8 @@ watch(
 )
 onMounted(async () => {
   window.addEventListener('keydown', onKey)
+  // The last answer shows before the boot and the read even start.
+  paintCached()
   await loadCobranzaBoot()
   if (boot.value?.enabled) {
     load({ restore: true })

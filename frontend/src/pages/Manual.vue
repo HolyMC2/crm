@@ -425,6 +425,7 @@ import {
 } from '@/composables/useManual'
 import LucideLayers from '~icons/lucide/layers'
 import LucidePlus from '~icons/lucide/plus'
+import { createListCache } from '@/utils/listCache'
 
 const TemplatesSheet = defineAsyncComponent(
   () => import('@/components/manual/TemplatesSheet.vue'),
@@ -521,8 +522,31 @@ function articleRoute(row) {
   return { name: 'ManualArticulo', params: { name: row.name }, query }
 }
 
+// The list's last answer paints at once on a visit or a filter change. The
+// URL names it (the normalized state waits for the boot); a search, and a
+// place's help (it may open an article), are not kept.
+const listCache = createListCache('manual', () =>
+  route.query.q || route.query.lugar
+    ? null
+    : [String(route.query.categoria || ''), String(route.query.vista || '')],
+)
+function showPage(page) {
+  hasMore.value = Boolean(page.has_more)
+  categories.value = page.categories || []
+  counts.value = page.counts || {}
+  if (!Number.isNaN(parse(page.now))) now.value = parse(page.now)
+  ready.value = true
+}
+function paintCached() {
+  listCache.paint((page) => {
+    rows.value = page.rows || []
+    showPage(page)
+  })
+}
+
 async function load({ more = false } = {}) {
   const current = ++ticket
+  const listAt = more ? null : listCache.key()
   loading.value = true
   problem.value = null
   try {
@@ -548,11 +572,8 @@ async function load({ more = false } = {}) {
     }
     // Rows patch in place: the list keeps its scroll when only the page grows.
     rows.value = more ? rows.value.concat(page.rows || []) : page.rows || []
-    hasMore.value = Boolean(page.has_more)
-    categories.value = page.categories || []
-    counts.value = page.counts || {}
-    if (!Number.isNaN(parse(page.now))) now.value = parse(page.now)
-    ready.value = true
+    showPage(page)
+    if (!more) listCache.save(listAt, page)
   } catch (error) {
     if (current === ticket) problem.value = problemOf(error)
   } finally {
@@ -625,10 +646,13 @@ watch(
   () => {
     if (route.name !== 'Manual' || !boot.value?.enabled) return
     if (typeof route.query.q !== 'string' && search.value) search.value = ''
+    paintCached()
     load()
   },
 )
 onMounted(async () => {
+  // The last answer shows before the boot and the read even start.
+  paintCached()
   await loadManualBoot()
   if (boot.value?.enabled) load()
 })

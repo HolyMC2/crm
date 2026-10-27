@@ -607,6 +607,7 @@ import {
   useContactosBootstrap,
   useContactosDraft,
 } from '@/composables/useContactos'
+import { listKey, readCachedList, writeCachedList } from '@/utils/listCache'
 import {
   clauseLabel,
   extraClauses,
@@ -935,17 +936,22 @@ async function fetchRows(restore = false) {
   error.value = null
   const [method, args] = listRequest()
   const key = contactosReadKey(method, args)
-  const hit = contactosReads.get(key)
-  // A page seen before (back from a record, segment switch) renders at once;
-  // the server answer then replaces its rows without moving the scroll.
+  // The first page of a list without a search is kept across visits.
+  const kept =
+    args.q || args.cursor ? null : listKey('contactos', [method, args])
+  // A page seen before (back from a record, segment switch, the last visit)
+  // renders at once; the server answer then replaces its rows without moving
+  // the scroll.
+  const hit = contactosReads.get(key)?.value || (kept && readCachedList(kept))
   loading.value = !hit
   try {
-    if (hit) await showRows(hit.value, restore)
+    if (hit) await showRows(hit, restore)
     const result = await contactosReads.load(key, () =>
       contactosApi(method, args),
     )
     if (own !== generation) return
     await showRows(result, restore && !hit, !!hit)
+    if (kept) writeCachedList(kept, result)
   } catch (e) {
     if (own === generation) {
       rows.value = []

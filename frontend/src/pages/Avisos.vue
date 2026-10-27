@@ -203,6 +203,7 @@ import {
   startAvisosLive,
   useAvisosActions,
 } from '@/composables/useAvisos'
+import { createListCache } from '@/utils/listCache'
 import { errorKind } from '@/utils/contactos'
 import Icon from '@/components/Icon.vue'
 import LucideCircleCheckBig from '~icons/lucide/circle-check-big'
@@ -281,9 +282,22 @@ const empty = computed(() =>
         },
 )
 
+// The stream's last answer paints at once on a visit or a filter change; a
+// search is not kept.
+const listCache = createListCache('avisos', () =>
+  state.value.q ? null : [state.value.view, state.value.category],
+)
+function paintCached() {
+  listCache.paint((result) => {
+    data.value = result
+    groups.value = result.groups || []
+  })
+}
+
 let sequence = 0
 async function load(start = 0) {
   const mine = ++sequence
+  const listAt = start ? null : listCache.key()
   loading.value = true
   loadError.value = ''
   try {
@@ -292,6 +306,7 @@ async function load(start = 0) {
     guard.value = ''
     data.value = result
     groups.value = start ? [...groups.value, ...result.groups] : result.groups
+    if (!start) listCache.save(listAt, result)
   } catch (error) {
     if (mine !== sequence) return
     if (errorKind(error) === 'permission') guard.value = errorText(error)
@@ -312,7 +327,10 @@ watch(search, (q) => pushSearch(q.trim()))
 
 watch(
   () => [state.value.view, state.value.category, state.value.q],
-  () => load(),
+  () => {
+    paintCached()
+    load()
+  },
 )
 watch(avisosVersion, () => load())
 
@@ -327,6 +345,7 @@ onMounted(() => {
     delete query.prefs
     router.replace({ query })
   }
+  paintCached()
   load()
 })
 </script>

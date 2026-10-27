@@ -145,6 +145,7 @@ import { Button } from 'frappe-ui'
 import { AppBar, EmptyState, ListRow } from '@/components/ui'
 import CuentaCard from './CuentaCard.vue'
 import { bancosApi, errorText, money } from './bancos'
+import { createListCache } from '@/utils/listCache'
 
 const props = defineProps({
   /** Left column of the desktop split: a compact bar, no bell. */
@@ -199,15 +200,24 @@ function pickCompany(value) {
   router.replace({ query: { ...route.query, empresa: value } })
 }
 
+// The accounts' last answer paints at once on a visit; the read replaces it.
+const listCache = createListCache('bancos', () => [
+  String(route.query.empresa || ''),
+])
+
 let sequence = 0
 async function load() {
   const mine = ++sequence
+  const listAt = listCache.key()
+  listCache.paint((result) => (data.value = result))
   loadError.value = ''
   try {
     const result = await bancosApi('cuentas', {
       company: route.query.empresa || '',
     })
-    if (mine === sequence) data.value = result
+    if (mine !== sequence) return
+    data.value = result
+    listCache.save(listAt, result)
   } catch (error) {
     if (mine === sequence) loadError.value = errorText(error)
   }

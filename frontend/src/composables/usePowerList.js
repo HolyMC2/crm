@@ -11,6 +11,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { isMobile } from '@/composables/breakpoint'
 import { appleKeys, registerPageKeys } from '@/composables/shellKeyboard'
 import { hoyLive } from '@/composables/useHoy'
+import { createListCache } from '@/utils/listCache'
 import { isTypingTarget } from '@/vendor/muelle-shell/contracts'
 import { useLiveWatch } from '@/vendor/muelle-shell/live-sync/vue'
 import {
@@ -38,7 +39,9 @@ import {
 //   in the Alt+H sheet;
 // * live: a change to the watched doctypes reloads the rows already shown in
 //   place, no more often than the floor;
-// * selection for one bulk action.
+// * selection for one bulk action;
+// * the list's last answer paints at once on a visit (utils/listCache), and
+//   the read replaces it in place; searches are not kept.
 //
 // The page renders the rows and owns its sheets; this owns the list's state.
 
@@ -63,6 +66,7 @@ const MAX_PAGE = 100
  * @param {() => boolean} [options.paused]   keys off (guard, another view)
  * @param {() => boolean} [options.selectable]  this list has a bulk action
  * @param {{doctypes: string[], minIntervalMs?: number}} [options.live]
+ * @param {boolean} [options.cache]  paint the list's last answer (default on)
  */
 export function usePowerList(options) {
   const route = useRoute()
@@ -102,6 +106,12 @@ export function usePowerList(options) {
   const focusValue = computed(() => textParam(route.query[focusParam]))
   let ticket = 0
   let searchTimer = 0
+  // A search is not kept.
+  const cache = createListCache(options.name, () =>
+    options.cache === false || textParam(route.query.q)
+      ? null
+      : options.filters(route.query),
+  )
 
   // ── loading, scroll memory ───────────────────────────────────────────────
 
@@ -121,6 +131,12 @@ export function usePowerList(options) {
    */
   async function load({ more = false, quiet = false, restore = false } = {}) {
     const mine = ++ticket
+    const listAt = more ? null : cache.key()
+    // A visit, or a filter change, shows the list's last answer while it
+    // reads; that copy already has the remembered scroll, and the read keeps it.
+    const fromCache = restore && paintCached()
+    // The copy on screen was another list's (a default the boot changed).
+    if (restore && !fromCache && cache.stale()) rows.value = []
     const remembered = restore ? readMemory(memoryKey()) : null
     const length = loadLength({
       more,
@@ -146,13 +162,27 @@ export function usePowerList(options) {
       problem.value = null
       syncFocus()
       pruneSelection()
-      if (remembered) restoreScroll(remembered.top)
+      if (!more) cache.save(listAt, page)
+      if (remembered && !fromCache) restoreScroll(remembered.top)
       else if (restore) revealFocus()
     } catch (error) {
       if (mine === ticket) problem.value = options.problemOf?.(error) || error
     } finally {
       if (mine === ticket) loading.value = false
     }
+  }
+
+  /** Shows the list's last answer; true while a copy of it is on screen. */
+  function paintCached() {
+    return cache.paint((page) => {
+      rows.value = Array.isArray(page.rows) ? page.rows : []
+      hasMore.value = Boolean(page.has_more)
+      options.onPage?.(page, { more: false, quiet: false, cached: true })
+      problem.value = null
+      syncFocus()
+      pruneSelection()
+      restoreScroll(readMemory(memoryKey())?.top)
+    })
   }
 
   function restoreScroll(top) {
@@ -362,7 +392,11 @@ export function usePowerList(options) {
   )
   watch(focusValue, () => syncFocus())
 
-  onMounted(() => window.addEventListener('keydown', onKey))
+  onMounted(() => {
+    // The last answer shows before the page's boot and read even start.
+    paintCached()
+    window.addEventListener('keydown', onKey)
+  })
   onBeforeUnmount(() => {
     window.removeEventListener('keydown', onKey)
     window.clearTimeout(searchTimer)

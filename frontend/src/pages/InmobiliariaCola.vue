@@ -197,6 +197,7 @@ import {
   volverA,
 } from '@/composables/useInmobiliaria'
 import { parseFicha } from '@/utils/inmobiliariaTipos'
+import { createListCache } from '@/utils/listCache'
 
 const props = defineProps({ cola: { type: String, required: true } })
 const route = useRoute()
@@ -285,7 +286,14 @@ function salir() {
   volverA(router, destino.value)
 }
 
+// The queue's last answer paints at once on a visit; the read replaces it.
+const listCache = createListCache('inmobiliaria', () => [props.cola])
+function paintCached() {
+  listCache.paint((page) => (data.value = page))
+}
+
 async function load({ more = false } = {}) {
+  const listAt = more ? null : listCache.key()
   loading.value = true
   problem.value = ''
   try {
@@ -297,6 +305,7 @@ async function load({ more = false } = {}) {
       more && data.value
         ? { ...page, filas: [...data.value.filas, ...page.filas] }
         : page
+    if (!more) listCache.save(listAt, page)
   } catch (e) {
     problem.value = problemText(e)
     problemMore.value = more
@@ -333,10 +342,14 @@ function refresh() {
 
 watch(
   () => props.cola,
-  () => load(),
+  () => {
+    paintCached()
+    load()
+  },
 )
 watch([selected, desktop], loadFicha)
 onMounted(() => {
+  paintCached()
   load()
   loadFicha()
 })

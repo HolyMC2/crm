@@ -414,6 +414,7 @@ import ResultadosCard from '@/components/resultados/ResultadosCard.vue'
 import { problemOf } from '@/composables/useCobranza'
 import { shellBoot } from '@/composables/muelleShell'
 import { usePullRefresh } from '@/composables/usePullRefresh'
+import { createListCache } from '@/utils/listCache'
 import {
   COMPARES,
   CTX,
@@ -564,24 +565,35 @@ function applyRange() {
   update({ periodo: 'rango', desde, hasta })
 }
 
+// The board's last answer paints at once on a visit or a period change, with
+// the time it was read; the read replaces it.
+const boardCache = createListCache('resultados', () => state.value)
+function showBoard(out, at) {
+  for (const key of Object.keys(cards)) delete cards[key]
+  for (const card of out.cards || []) cards[card.key] = card
+  order.value = (out.cards || []).map((card) => card.key)
+  scope.value = out.scope || { companies: [], shops: [] }
+  period.value = out.period
+  generatedAt.value = at
+  loaded.value = true
+}
+
 async function load({ refresh = false } = {}) {
   const mine = ++ticket
+  const boardAt = boardCache.key()
+  if (!refresh) boardCache.paint((saved) => showBoard(saved.out, saved.at))
   loading.value = !refresh || !loaded.value
   problem.value = null
   try {
     const out = await resultadosApi('board', state.value)
     if (mine !== ticket) return
-    for (const key of Object.keys(cards)) delete cards[key]
-    for (const card of out.cards || []) cards[card.key] = card
-    order.value = (out.cards || []).map((card) => card.key)
-    scope.value = out.scope || { companies: [], shops: [] }
-    adoptSaved(out.hidden)
-    period.value = out.period
-    generatedAt.value = new Date().toLocaleTimeString(undefined, {
+    const at = new Date().toLocaleTimeString(undefined, {
       hour: '2-digit',
       minute: '2-digit',
     })
-    loaded.value = true
+    showBoard(out, at)
+    adoptSaved(out.hidden)
+    boardCache.save(boardAt, { out, at })
   } catch (error) {
     if (mine === ticket) problem.value = problemOf(error)
   } finally {

@@ -282,6 +282,7 @@ import {
   writeListQuery,
 } from '@/documentos/listState'
 import { loadProfile } from '@/documentos/profiles'
+import { createListCache } from '@/utils/listCache'
 import { documentRoute, floorRoute, profileBySlug } from '@/documentos/registry'
 import { kindLabel, statusLabel } from '@/utils/display'
 import { toast } from 'frappe-ui'
@@ -450,10 +451,31 @@ useListKeys({
   when: { create: () => !!createTo.value },
 })
 
+// The list's last answer paints at once on a visit or a filter change; a
+// search is not kept.
+const listCache = createListCache('documentos', () =>
+  state.value.search
+    ? null
+    : [
+        doctype.value,
+        route.params.slug || '',
+        state.value.chip,
+        state.value.sort,
+        state.value.filters,
+        state.value.scope,
+      ],
+)
+function showPage(page) {
+  rows.value = page.rows || []
+  hasMore.value = !!page.has_more
+  serverLabel.value = page.label || ''
+}
+
 let seq = 0
 async function load({ append = false, count = 0 } = {}) {
   if (!profile.value) return
   const mine = ++seq
+  const listAt = append ? null : listCache.key()
   loading.value = true
   error.value = ''
   try {
@@ -467,9 +489,14 @@ async function load({ append = false, count = 0 } = {}) {
       fields: profile.value.fields,
     })
     if (mine !== seq) return
-    rows.value = append ? [...rows.value, ...page.rows] : page.rows
-    hasMore.value = !!page.has_more
-    serverLabel.value = page.label || ''
+    if (append) {
+      rows.value = [...rows.value, ...page.rows]
+      hasMore.value = !!page.has_more
+      serverLabel.value = page.label || ''
+    } else {
+      showPage(page)
+      listCache.save(listAt, page)
+    }
     denied.value = false
   } catch (e) {
     if (mine !== seq) return
@@ -503,6 +530,7 @@ function apply({ counts: withCounts = true } = {}) {
   })
   router.replace({ query })
   scroller.value?.scrollTo?.({ top: 0 })
+  listCache.paint(showPage)
   load()
   if (withCounts) loadCounts()
 }
@@ -582,12 +610,16 @@ async function open() {
     entry: entry.value,
   })
   const saved = recallScroll(route.fullPath)
-  await load({ count: saved?.count || 0 })
+  // The last answer shows while the read runs, already at the saved place.
+  const painted = listCache.paint(showPage)
+  if (painted && saved) restoreScroll(saved.top)
   loadCounts()
-  if (saved) {
-    await nextTick()
-    if (scroller.value) scroller.value.scrollTop = saved.top
-  }
+  await load({ count: saved?.count || 0 })
+  if (saved && !painted) restoreScroll(saved.top)
+}
+async function restoreScroll(top) {
+  await nextTick()
+  if (scroller.value) scroller.value.scrollTop = top
 }
 
 watch(

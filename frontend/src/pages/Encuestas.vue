@@ -430,6 +430,7 @@ import {
 } from '@/composables/useEncuestas'
 import LucideSettings from '~icons/lucide/settings'
 import LucideMessageCircle from '~icons/lucide/message-circle'
+import { createListCache } from '@/utils/listCache'
 
 // Score chip colors from the shared palette (tokens only).
 const SCORE_CLASS = {
@@ -547,8 +548,33 @@ function when(value) {
   }).format(date)
 }
 
+// The list's and the tiles' last answers paint at once on a visit or a filter
+// change; a search is not kept.
+const listCache = createListCache('encuestas', () =>
+  search.value.trim()
+    ? null
+    : [view.value, bucket.value, kind.value, mine.value],
+)
+const summaryCache = createListCache('encuestas-resumen', () => [period.value])
+function showPage(page) {
+  hasMore.value = page.more
+  counts.value = page.counts || {}
+  countCap.value = page.count_cap || 100
+}
+function paintCached() {
+  listCache.paint((page) => {
+    rows.value = page.rows || []
+    showPage(page)
+    restoreScroll()
+  })
+  summaryCache.paint((answer) => (summary.value = answer.summary))
+}
+
 async function load(more = false) {
   const current = ++ticket
+  const listAt = more ? null : listCache.key()
+  // The painted copy already holds the scroll; the read keeps it.
+  const fromCache = !more && listCache.showing()
   loading.value = true
   problem.value = null
   try {
@@ -563,10 +589,9 @@ async function load(more = false) {
     })
     if (current !== ticket) return
     rows.value = more ? [...rows.value, ...page.rows] : page.rows
-    hasMore.value = page.more
-    counts.value = page.counts || {}
-    countCap.value = page.count_cap || 100
-    if (!more) restoreScroll()
+    showPage(page)
+    if (!more) listCache.save(listAt, page)
+    if (!more && !fromCache) restoreScroll()
   } catch (error) {
     if (current === ticket) problem.value = problemOf(error)
   } finally {
@@ -574,8 +599,10 @@ async function load(more = false) {
   }
 }
 async function loadSummary() {
+  const listAt = summaryCache.key()
   try {
     summary.value = await encuestasApi('summary', { days: period.value })
+    summaryCache.save(listAt, { summary: summary.value })
   } catch {
     summary.value = null
   }
@@ -696,7 +723,9 @@ watch(
     route.query.kind,
   ],
   () => {
-    if (route.name === 'Encuestas' && boot.value?.enabled) load()
+    if (route.name !== 'Encuestas' || !boot.value?.enabled) return
+    paintCached()
+    load()
   },
 )
 watch(
@@ -706,6 +735,8 @@ watch(
   },
 )
 onMounted(async () => {
+  // The last answers show before the boot and the reads even start.
+  paintCached()
   await loadEncuestasBoot()
   if (!boot.value?.enabled) return
   load()

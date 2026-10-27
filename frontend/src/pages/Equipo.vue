@@ -287,6 +287,7 @@ import {
 import LucideCalendar from '~icons/lucide/calendar'
 import LucideUserPlus from '~icons/lucide/user-plus'
 import LucideWallet from '~icons/lucide/wallet'
+import { createListCache } from '@/utils/listCache'
 
 const route = useRoute()
 const router = useRouter()
@@ -388,19 +389,33 @@ function rowQuery(row) {
   return query
 }
 
+// The list's last answer paints at once on a visit or a segment change. The
+// URL's segment names it: the normalized one waits for the boot.
+const listCache = createListCache('equipo', () => [
+  String(route.query.segment || ''),
+])
+function showPage(page) {
+  rows.value = page.rows || []
+  counts.value = page.counts || {}
+  // No access to employee records: the backend guard is an English role name
+  // and admin copy. The page says it in worker words instead (see noAccess).
+  noAccess.value = page.guard?.code === 'no_employee_access'
+  limit.value = noAccess.value ? null : page.guard || null
+}
+function paintCached() {
+  listCache.paint(showPage)
+}
+
 async function load() {
   const current = ++ticket
+  const listAt = listCache.key()
   loading.value = true
   problem.value = null
   try {
     const page = await equipoApi('list_people', { segment: segment.value })
     if (current !== ticket) return
-    rows.value = page.rows || []
-    counts.value = page.counts || {}
-    // No access to employee records: the backend guard is an English role name
-    // and admin copy. The page says it in worker words instead (see noAccess).
-    noAccess.value = page.guard?.code === 'no_employee_access'
-    limit.value = noAccess.value ? null : page.guard || null
+    showPage(page)
+    listCache.save(listAt, page)
   } catch (error) {
     if (current === ticket) problem.value = problemOf(error)
   } finally {
@@ -483,10 +498,14 @@ async function retryBoot() {
 watch(
   () => route.query.segment,
   () => {
-    if (route.name === 'Equipo' && boot.value?.enabled) load()
+    if (route.name !== 'Equipo' || !boot.value?.enabled) return
+    paintCached()
+    load()
   },
 )
 onMounted(async () => {
+  // The last answer shows before the boot and the read even start.
+  paintCached()
   await loadEquipoBoot()
   if (!boot.value?.enabled) return
   if (typeof route.query.notice === 'string') {

@@ -216,6 +216,7 @@ import {
 import ClaimGuard from '@/components/gastos/ClaimGuard.vue'
 import ClaimSheet from '@/components/gastos/ClaimSheet.vue'
 import { isMobile as isPhone } from '@/composables/breakpoint'
+import { createListCache } from '@/utils/listCache'
 import {
   CLAIM,
   SCOPES,
@@ -390,8 +391,34 @@ function movementSubtitle(row) {
   return [row.cashier, row.date, row.register].filter(Boolean).join(' · ')
 }
 
+// The queue's last answer paints at once on a visit or a filter change; a
+// search is not kept.
+const listCache = createListCache('gastos-empleados', () =>
+  search.value.trim()
+    ? null
+    : [askedChip.value, String(route.query.scope || ''), employee.value],
+)
+function showPage(page) {
+  counts.value = page.counts
+  answeredChip.value = page.chip
+  answeredScope.value = page.scope || ''
+  employeeName.value = page.employee_name || ''
+  guard.value = page.guard
+  hasMore.value = page.has_more
+}
+function paintCached() {
+  listCache.paint((page) => {
+    rows.value = page.rows || []
+    showPage(page)
+    restoreScroll()
+  })
+}
+
 async function load(more = false) {
   const mine = ++ticket
+  const listAt = more ? null : listCache.key()
+  // The painted copy already holds the scroll; the read keeps it.
+  const fromCache = !more && listCache.showing()
   loading.value = true
   problem.value = null
   try {
@@ -405,13 +432,9 @@ async function load(more = false) {
     })
     if (mine !== ticket) return
     rows.value = more ? [...rows.value, ...page.rows] : page.rows
-    counts.value = page.counts
-    answeredChip.value = page.chip
-    answeredScope.value = page.scope || ''
-    employeeName.value = page.employee_name || ''
-    guard.value = page.guard
-    hasMore.value = page.has_more
-    if (!more) restoreScroll()
+    showPage(page)
+    if (!more) listCache.save(listAt, page)
+    if (!more && !fromCache) restoreScroll()
   } catch (error) {
     if (mine === ticket) problem.value = claimProblem(error)
   } finally {
@@ -489,11 +512,16 @@ watch(
     route.query.q,
   ],
   () => {
-    if (route.name === 'Gastos' && claims.value.enabled) load()
+    if (route.name !== 'Gastos' || !claims.value.enabled) return
+    paintCached()
+    load()
   },
 )
 onMounted(() => {
-  if (claims.value.enabled) load()
+  if (claims.value.enabled) {
+    paintCached()
+    load()
+  }
   sheetOpen.value = route.query.nuevo === '1' && Boolean(claims.value.file)
 })
 </script>

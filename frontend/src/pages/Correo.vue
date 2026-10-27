@@ -238,6 +238,7 @@ import {
 } from '@/components/ui'
 import { isMobile as isPhone, isWide } from '@/composables/breakpoint'
 import { BTN } from '@/documentos/tools'
+import { createListCache } from '@/utils/listCache'
 import {
   bandeja,
   categoryLabel,
@@ -333,23 +334,41 @@ function args(inicio = 0) {
   }
 }
 
+// The tray's last answer paints at once on a visit or a filter change; a
+// search is not kept.
+const listCache = createListCache('correo', () =>
+  state.value.buscar
+    ? null
+    : [state.value.vista, state.value.cuenta, state.value.categoria],
+)
+function showTray(out) {
+  rows.value = out.filas || []
+  categorias.value = out.categorias || []
+  if (out.cuentas) cuentas.value = out.cuentas
+  conteos.value = out.conteos || {}
+  next.value = out.siguiente ?? null
+  total.value = out.total || 0
+  recortado.value = Boolean(out.recortado)
+  categoriaTitulo.value = out.categoria_titulo || ''
+}
+
 let ticket = 0
 async function load() {
   const mine = ++ticket
+  const listAt = listCache.key()
+  // The painted copy starts at the top; the read then keeps the worker's place.
+  const fromCache = listCache.paint((out) => {
+    showTray(out)
+    listPane.value?.scrollTo?.({ top: 0 })
+  })
   loading.value = true
   error.value = ''
   try {
     const out = (await bandeja(args(0))) || {}
     if (mine !== ticket) return
-    rows.value = out.filas || []
-    categorias.value = out.categorias || []
-    if (out.cuentas) cuentas.value = out.cuentas
-    conteos.value = out.conteos || {}
-    next.value = out.siguiente ?? null
-    total.value = out.total || 0
-    recortado.value = Boolean(out.recortado)
-    categoriaTitulo.value = out.categoria_titulo || ''
-    listPane.value?.scrollTo?.({ top: 0 })
+    showTray(out)
+    listCache.save(listAt, out)
+    if (!fromCache) listPane.value?.scrollTo?.({ top: 0 })
   } catch (e) {
     if (mine === ticket) error.value = errorText(e)
   } finally {

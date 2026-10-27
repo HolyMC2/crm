@@ -782,6 +782,7 @@ import PriceListsToggle from '@/components/productos/PriceListsToggle.vue'
 import { scanPickHref } from '@/composables/shellRail'
 import { registerPageShortcuts } from '@/composables/shellKeyboard'
 import { hoyLive } from '@/composables/useHoy'
+import { createListCache } from '@/utils/listCache'
 import { useLiveWatch } from '@/vendor/muelle-shell/live-sync/vue'
 import {
   DAY_CHOICES,
@@ -1335,15 +1336,32 @@ function filterArgs() {
       }
     : {}
 }
+// The list's last answer paints at once on a visit or a filter change; a
+// search is not kept.
+const listCache = createListCache('productos', () =>
+  search.value.trim() ? null : [view.value, store.value, filterArgs()],
+)
+function paintCached() {
+  listCache.paint((page) => {
+    reason.value = page.reason || ''
+    rows.value = page.rows || []
+    for (const row of rows.value) if (row.key) known.set(row.key, row)
+    hasMore.value = page.has_more
+    total.value = typeof page.total === 'number' ? page.total : null
+    restorePosition()
+  })
+}
 let restorePending = false
 async function load({ more = false, quiet = false } = {}) {
   // A quiet refresh (live sync, after a dialog) never cancels a load the
   // worker is waiting for; that load brings fresh rows anyway.
   if (quiet && loading.value) return
   const mine = ++ticket
+  const listAt = more ? null : listCache.key()
   if (!quiet) loading.value = true
   if (!quiet) problem.value = null
-  if (!more && !quiet) restorePending = true
+  // The painted copy already holds the list position; the read keeps it.
+  if (!more && !quiet) restorePending = !listCache.showing()
   try {
     const page = await productosApi('queue', {
       view: view.value,
@@ -1365,6 +1383,7 @@ async function load({ more = false, quiet = false } = {}) {
     for (const row of page.rows) if (row.key) known.set(row.key, row)
     hasMore.value = page.has_more
     if (!more) total.value = typeof page.total === 'number' ? page.total : null
+    if (!more) listCache.save(listAt, page)
     // The list position (focused row or scroll) comes back once per list load.
     if (!more && restorePending) {
       restorePending = false
@@ -1658,6 +1677,7 @@ watch(
   (now, before) => {
     if (route.name !== 'Productos' || !boot.value?.enabled) return
     if (typeof route.query.q !== 'string' && search.value) search.value = ''
+    paintCached()
     load()
     if (catalog.value) loadFacets()
     const filtersChanged =
@@ -1715,6 +1735,8 @@ async function start() {
 }
 onMounted(async () => {
   window.addEventListener('keydown', onKey)
+  // The last answer shows before the boot and the read even start.
+  paintCached()
   await loadProductosBoot()
   if (boot.value?.enabled) start()
 })
