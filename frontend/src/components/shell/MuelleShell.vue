@@ -241,6 +241,7 @@ import {
   assistantOn,
   assistantWanted,
   loadAssistant,
+  bootAssistantStatus,
   loadAssistantStatus,
 } from '@/components/assistant/assistantDoor'
 import { moduleEnabled, moduleMeta } from '@/vendor/muelle-shell/contracts'
@@ -468,11 +469,12 @@ useShellKeyboard({
 // «Pregúntale a Muelle» doors (E7): the boot asks shell_api.status once, so
 // the rail item, the AppBar icon and ⌘J show or act only for a worker who has
 // the assistant; nothing else of it loads until a door opens it (SPEC §4
-// route budget). The key checks that answer before it closes any layer.
+// route budget). The last answer shows them at once and the check waits for
+// the first screen. The key checks that answer before it closes any layer.
 watch(
   shellBoot,
   (booted) => {
-    if (booted) loadAssistantStatus()
+    if (booted) bootAssistantStatus(router)
   },
   { immediate: true },
 )
