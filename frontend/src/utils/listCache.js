@@ -29,15 +29,22 @@ function readIndex() {
   }
 }
 
-/** The list's saved answer, or null when there is none worth painting. */
-export function readCachedList(list, scope = currentScope()) {
+/**
+ * The list's saved answer, or null when there is none worth painting (or
+ * none younger than `maxAge`).
+ */
+export function readCachedList(
+  list,
+  scope = currentScope(),
+  maxAge = LIST_CACHE_MAX_AGE_MS,
+) {
   if (!list) return null
   try {
     const saved = JSON.parse(localStorage.getItem(keyOf(scope, list)))
     if (
       saved?.answer &&
       typeof saved.at === 'number' &&
-      Date.now() - saved.at < LIST_CACHE_MAX_AGE_MS
+      Date.now() - saved.at < Math.min(maxAge, LIST_CACHE_MAX_AGE_MS)
     )
       return saved.answer
   } catch {

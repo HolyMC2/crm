@@ -245,6 +245,7 @@ import {
   loadAssistantStatus,
 } from '@/components/assistant/assistantDoor'
 import { moduleEnabled, moduleMeta } from '@/vendor/muelle-shell/contracts'
+import { warmListsAfterFirstRoute } from '@/utils/listWarmup'
 import {
   camera,
   loadCameraSheet,
@@ -475,6 +476,20 @@ watch(
   shellBoot,
   (booted) => {
     if (booted) bootAssistantStatus(router)
+  },
+  { immediate: true },
+)
+// The worker's main lists are read once in idle time after the first route,
+// so their first open this session paints at once (utils/listWarmup.js).
+watch(
+  shellBoot,
+  (booted) => {
+    if (booted)
+      warmListsAfterFirstRoute(
+        router,
+        () => navSlots.value,
+        () => activeKey.value,
+      )
   },
   { immediate: true },
 )
