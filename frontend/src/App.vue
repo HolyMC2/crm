@@ -5,6 +5,7 @@
   /></MuelleShell>
   <Dialogs v-if="neutral" />
   <FrappeDialogs />
+  <RegistrationTray v-if="session.isLoggedIn && hasRegistrations" />
 </template>
 <script setup>
 import { computed, defineAsyncComponent, provide } from 'vue'
@@ -13,6 +14,7 @@ import { ToastProvider, setConfig, useColorScheme } from 'frappe-ui'
 import { sessionStore } from '@/stores/session'
 import { Dialogs } from '@/utils/dialogs'
 import { isNeutralModule } from '@/composables/muelleShell'
+import { hasRegistrations } from '@/composables/gastosRegistrations'
 // What FrappeUIProvider renders, with frappe-ui's dialog host loaded after the
 // entry: its `dialog.confirm`/`prompt` module statically imports FormControl
 // and with it every reka-ui form control (DatePicker, Combobox, MultiSelect…),
@@ -28,6 +30,10 @@ const MuelleShell = defineAsyncComponent(
 )
 const CrmRuntime = defineAsyncComponent(
   () => import('@/components/Layouts/CrmRuntime.vue'),
+)
+// Gastos bills registering in the background: the tray loads only when one is.
+const RegistrationTray = defineAsyncComponent(
+  () => import('@/components/gastos/RegistrationTray.vue'),
 )
 const session = sessionStore()
 provide('session', session)

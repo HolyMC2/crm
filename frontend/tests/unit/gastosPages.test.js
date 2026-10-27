@@ -12,6 +12,17 @@ vi.mock('frappe-ui', async (importOriginal) => ({
 import Gastos from '@/pages/Gastos.vue'
 import GastoFactura from '@/pages/GastoFactura.vue'
 import { gastosBoot } from '@/composables/useGastos'
+import { toast } from 'frappe-ui'
+import {
+  registrationOf,
+  registrations,
+  upsertRegistration,
+} from '@/composables/gastosRegistrations'
+import {
+  REGISTRATION_CHANGED,
+  REGISTRATION_EVENT,
+  watchRegistrations,
+} from '@/composables/useBillRegistrations'
 
 const calls = []
 let answers
@@ -72,6 +83,8 @@ async function mountAt(path) {
 beforeEach(() => {
   calls.length = 0
   gastosBoot.value = null
+  registrations.value = []
+  vi.clearAllMocks()
   window.__ = (text, values) =>
     String(text).replace(/{(\d+)}/g, (match, i) => values?.[i] ?? match)
   answers = {
@@ -98,6 +111,8 @@ beforeEach(() => {
   )
 })
 afterEach(() => {
+  // A pending registration keeps polling; emptied, the poll stops itself.
+  registrations.value = []
   app?.unmount()
   root?.remove()
   vi.unstubAllGlobals()
@@ -321,5 +336,109 @@ describe('Gastos bill record', () => {
     await mountAt('/gastos/factura/PI-1')
     expect(root.textContent).toContain('Review and register')
     expect(root.textContent).toContain('Draft')
+  })
+
+  const draft = (extra = {}) => ({
+    document: bill({ docstatus: 0, paid: 0, outstanding_amount: 0 }),
+    schedule: [],
+    orders: [],
+    payments: [],
+    assignments: [],
+    actions: [{ key: 'submit', allowed: true }],
+    ...extra,
+  })
+  const press = async (label) => {
+    const button = [...document.body.querySelectorAll('button')].find(
+      (b) => b.textContent.trim() === label,
+    )
+    button.click()
+    await flush()
+  }
+
+  it('«Register» queues in the background and frees the page at once', async () => {
+    answers.invoice = draft()
+    answers.submit_bill = { name: 'PI-1', docstatus: 0, queued: true }
+    await mountAt('/gastos/factura/PI-1')
+    await press('Review and register')
+    expect(document.body.textContent).toContain(
+      'It registers in the background',
+    )
+    await press('Register')
+    const sent = calls.find(([m]) => m === 'submit_bill')[1]
+    expect(sent).toMatchObject({ name: 'PI-1', background: 1 })
+    expect(sent.request_id).toBeTruthy()
+    expect(registrationOf('PI-1')).toMatchObject({
+      state: 'queued',
+      party: 'Renta Local',
+      total: 1000,
+    })
+    expect(root.textContent).toContain('Registering…')
+    expect(root.textContent).toContain('Back to Gastos')
+    expect(root.textContent).not.toContain('Review and register')
+    expect(document.body.querySelector('[role="dialog"]')).toBeNull()
+  })
+
+  it('a refused background registration says why and offers the ways on', async () => {
+    answers.invoice = draft({
+      registration: {
+        state: 'failed',
+        message: 'Supplier Renta Local is disabled',
+      },
+    })
+    await mountAt('/gastos/factura/PI-1')
+    expect(root.textContent).toContain('It could not be registered')
+    expect(root.textContent).toContain('Supplier Renta Local is disabled')
+    expect(root.textContent).toContain('Try again')
+    expect(root.textContent).toContain('Ask for a review')
+  })
+})
+
+describe('background registrations', () => {
+  it('the realtime outcome settles the bill and says so, once', async () => {
+    const handlers = {}
+    const socket = { on: (event, fn) => (handlers[event] = fn) }
+    upsertRegistration({
+      name: 'PI-9',
+      party: 'Renta Local',
+      total: 500,
+      currency: 'MXN',
+      state: 'queued',
+      startedAt: Date.now(),
+    })
+    answers.registration = { name: 'PI-9', state: 'queued' }
+    watchRegistrations({ socket })
+    await flush()
+    const changed = vi.fn()
+    window.addEventListener(REGISTRATION_CHANGED, changed)
+    handlers[REGISTRATION_EVENT]({ name: 'PI-9', state: 'done' })
+    handlers[REGISTRATION_EVENT]({ name: 'PI-9', state: 'done' })
+    window.removeEventListener(REGISTRATION_CHANGED, changed)
+    expect(registrationOf('PI-9').state).toBe('done')
+    expect(changed).toHaveBeenCalledTimes(1)
+    expect(toast.success).toHaveBeenCalledTimes(1)
+    expect(toast.success.mock.calls[0][0]).toContain('Renta Local')
+  })
+
+  it('a refusal stays until dismissed, with the server sentence', async () => {
+    upsertRegistration({
+      name: 'PI-8',
+      party: 'Renta Local',
+      state: 'queued',
+      startedAt: Date.now(),
+    })
+    answers.registration = {
+      name: 'PI-8',
+      state: 'failed',
+      message: 'Accounting Period is closed',
+    }
+    watchRegistrations({})
+    await flush()
+    expect(registrationOf('PI-8')).toMatchObject({
+      state: 'failed',
+      message: 'Accounting Period is closed',
+    })
+    expect(toast.error.mock.calls[0][0]).toContain(
+      'Accounting Period is closed',
+    )
   })
 })

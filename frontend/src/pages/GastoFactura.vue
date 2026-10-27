@@ -51,7 +51,10 @@
               <span v-if="doc.bill_no" class="break-words">{{
                 doc.bill_no
               }}</span>
-              <Badge :theme="statusTheme" :label="statusLabel(doc)" />
+              <Badge
+                :theme="statusTheme"
+                :label="registering ? __('Registering…') : statusLabel(doc)"
+              />
             </p>
             <h1
               class="break-words text-2xl font-semibold leading-tight text-ink-gray-9"
@@ -150,13 +153,27 @@
           :detail="
             Number(doc.docstatus) === 1
               ? ''
-              : Number(doc.docstatus) === 0
+              : registering
                 ? __(
-                    'Draft: review supplier, amounts and taxes, then register it so it can be paid.',
+                    'Registering in the background. You can keep working; you will be told when it is done.',
                   )
-                : __('This bill is cancelled.')
+                : Number(doc.docstatus) === 0
+                  ? __(
+                      'Draft: review supplier, amounts and taxes, then register it so it can be paid.',
+                    )
+                  : __('This bill is cancelled.')
           "
         >
+          <!-- The background registration was refused: ERPNext's sentence and
+               the ways on (fix it in the full form, try again, ask). -->
+          <div
+            v-if="registrationFailed"
+            role="alert"
+            class="mt-2 space-y-1 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
+          >
+            <p class="font-medium">{{ __('It could not be registered') }}</p>
+            <p class="text-ink-red-8">{{ registrationFailed.message }}</p>
+          </div>
           <p
             v-for="action in actions.filter((a) => a.fallback)"
             :key="action.key"
@@ -176,11 +193,33 @@
           </p>
           <template #actions>
             <template v-for="action in actions" :key="action.key">
+              <template v-if="action.key === 'submit' && registering">
+                <span
+                  role="status"
+                  class="inline-flex min-h-11 items-center gap-2 rounded-7 bg-surface-blue-1 px-3 text-sm font-medium text-ink-blue-9 sm:min-h-8"
+                >
+                  <LucideLoaderCircle class="h-4 w-4 animate-spin" />
+                  {{ __('Registering…') }}
+                </span>
+                <Button
+                  class="min-h-11 sm:min-h-8"
+                  :label="
+                    back
+                      ? __('Back to {0}', [back.label])
+                      : __('Back to Gastos')
+                  "
+                  @click="goBack()"
+                />
+              </template>
               <Button
-                v-if="action.key === 'submit' && action.allowed"
+                v-else-if="action.key === 'submit' && action.allowed"
                 variant="solid"
                 class="min-h-11 sm:min-h-8"
-                :label="__('Review and register')"
+                :label="
+                  registrationFailed
+                    ? __('Try again')
+                    : __('Review and register')
+                "
                 @click="reviewOpen = true"
               />
               <Button
@@ -211,6 +250,12 @@
                   @click="ask(action.fallback, action.reason)"
                 />
               </template>
+              <Button
+                v-if="action.key === 'submit' && registrationFailed"
+                class="min-h-11 sm:min-h-8"
+                :label="__('Ask for a review')"
+                @click="ask('review', registrationFailed.message)"
+              />
             </template>
             <CapturarDocumentoButton
               v-if="
@@ -400,6 +445,13 @@
             )
           }}
         </p>
+        <p class="mt-2 text-sm text-ink-gray-6">
+          {{
+            __(
+              'It registers in the background: you can keep working and you will be told when it is done.',
+            )
+          }}
+        </p>
       </template>
       <template #actions>
         <div class="flex flex-wrap justify-end gap-2">
@@ -468,6 +520,11 @@ import RecordKit from '@/components/documentos/compras/RecordKit.vue'
 import RecordKitTools from '@/components/documentos/compras/RecordKitTools.vue'
 import { useRecordKit } from '@/components/documentos/compras/recordKit'
 import { hoyLive } from '@/composables/useHoy'
+import { registrationOf } from '@/composables/gastosRegistrations'
+import {
+  REGISTRATION_CHANGED,
+  registerInBackground,
+} from '@/composables/useBillRegistrations'
 import {
   LIVE_DOCTYPES,
   RECORD_KEYS,
@@ -493,6 +550,7 @@ import { keyAction } from '@/utils/powerList'
 import { formatDay } from '@/utils/contactos'
 import { displayName, formatQty } from '@/utils/display'
 import LucideArrowLeft from '~icons/lucide/arrow-left'
+import LucideLoaderCircle from '~icons/lucide/loader-circle'
 
 const props = defineProps({ name: { type: String, required: true } })
 const route = useRoute()
@@ -512,7 +570,6 @@ const notice = ref('')
 const reviewOpen = ref(false)
 const payOpen = ref(false)
 const approval = reactive({ open: false, action: '', reason: '' })
-let submitRequest = null
 let releaseRequest = null
 
 const doc = computed(() => data.value.document || {})
@@ -524,6 +581,17 @@ const kit = useRecordKit('Purchase Invoice', {
   changed: () => load(),
 })
 const actions = computed(() => data.value.actions || [])
+// A background registration: this tab's (tray) first, else what the server
+// knows (another tab, a reload, a colleague's).
+const registration = computed(() =>
+  Number(doc.value.docstatus) === 0
+    ? registrationOf(props.name) || data.value.registration || null
+    : null,
+)
+const registering = computed(() => registration.value?.state === 'queued')
+const registrationFailed = computed(() =>
+  registration.value?.state === 'failed' ? registration.value : null,
+)
 const bankAllowed = computed(() =>
   actions.value.some((a) => a.key === 'bank' && a.allowed),
 )
@@ -535,6 +603,7 @@ const cfdiUrl = computed(() => {
   return `/contador/cfdis?${query}`
 })
 const statusTheme = computed(() => {
+  if (registering.value) return 'blue'
   if (Number(doc.value.docstatus) === 0) return 'orange'
   if (Number(doc.value.docstatus) === 2) return 'red'
   if (Number(doc.value.outstanding_amount || 0) <= 0) return 'green'
@@ -560,7 +629,7 @@ const primaryAction = computed(() => {
       label: __('Pay', null, 'Gastos'),
       run: () => (payOpen.value = true),
     }
-  if (allowed('submit'))
+  if (allowed('submit') && !registering.value)
     return {
       label: __('Review and register'),
       run: () => (reviewOpen.value = true),
@@ -593,29 +662,26 @@ function ask(action, reason) {
   approval.open = true
 }
 
+// «Registrar»: the quick checks answer here, the posting runs in the
+// background (the tray says when it is done) and the worker moves on.
 async function submitBill() {
   busy.value = true
   problem.value = null
-  // Same id on a retry after an unknown outcome: one submit, never two.
-  submitRequest ||= requestId()
   try {
-    await gastosApi('submit_bill', {
-      request_id: submitRequest,
-      name: props.name,
-      modified: doc.value.modified,
-    })
-    submitRequest = null
+    await registerInBackground({ ...doc.value, name: props.name })
     reviewOpen.value = false
-    toast.success(__('Bill registered. It is now in To pay.'))
-    if (back.value) return decided()
-    await load()
+    // From a queue (Pendientes, Hoy): back to it, the next item is waiting.
+    if (back.value) return goBack()
   } catch (error) {
-    if (!outcomeUnknown(error)) submitRequest = null
     reviewOpen.value = false
     problem.value = problemOf(error)
   } finally {
     busy.value = false
   }
+}
+// The outcome of this bill's registration: show the bill as it now stands.
+function onRegistration(event) {
+  if (event.detail?.name === props.name) load()
 }
 
 // «Liberar retención»: the bill's own hold release; then «Pagar» is offered.
@@ -748,7 +814,9 @@ function onKey(event) {
     },
     register: () => {
       const submit = allowed('submit')
-      if (submit?.allowed) reviewOpen.value = true
+      if (registering.value)
+        toast.success(__('This bill is registering in the background.'))
+      else if (submit?.allowed) reviewOpen.value = true
       else if (submit) ask('submit', submit.reason)
       else toast.success(__('This bill is already registered.'))
     },
@@ -781,9 +849,13 @@ watch(
 )
 onMounted(async () => {
   window.addEventListener('keydown', onKey)
+  window.addEventListener(REGISTRATION_CHANGED, onRegistration)
   await loadGastosBoot()
   await load()
   openFromList()
 })
-onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKey)
+  window.removeEventListener(REGISTRATION_CHANGED, onRegistration)
+})
 </script>

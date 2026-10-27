@@ -28900,3 +28900,60 @@ msgstr "lotes"
 #: frontend/src/pages/CapturaRevision.vue
 msgid "serial numbers"
 msgstr "números de serie"
+
+msgid "Registering…"
+msgstr "Registrando…"
+
+msgid "Registering in the background. You can keep working; you will be told when it is done."
+msgstr "Se está registrando en segundo plano. Puedes seguir trabajando; te avisamos cuando termine."
+
+msgid "It could not be registered"
+msgstr "No se pudo registrar"
+
+msgid "It registers in the background: you can keep working and you will be told when it is done."
+msgstr "Se registra en segundo plano: puedes seguir trabajando y te avisamos cuando termine."
+
+msgid "This bill is registering in the background."
+msgstr "Esta factura se está registrando en segundo plano."
+
+msgid "The registration did not run. Try again."
+msgstr "El registro no se ejecutó. Inténtalo de nuevo."
+
+msgid "Bill registered: {0}. It is now in To pay."
+msgstr "Factura registrada: {0}. Ya está en Por pagar."
+
+msgid "Could not register {0}: {1}"
+msgstr "No se pudo registrar {0}: {1}"
+
+msgid "Bills registering"
+msgstr "Facturas registrándose"
+
+msgid "You can keep working"
+msgstr "Puedes seguir trabajando"
+
+msgid "Review the bill"
+msgstr "Revisar la factura"
+
+msgid "Registering 1 bill…"
+msgstr "Registrando 1 factura…"
+
+msgid "Registering {0} bills…"
+msgstr "Registrando {0} facturas…"
+
+msgid "1 bill could not be registered"
+msgstr "1 factura no se pudo registrar"
+
+msgid "{0} bills could not be registered"
+msgstr "{0} facturas no se pudieron registrar"
+
+msgid "Bill registered"
+msgstr "Factura registrada"
+
+msgid "{0} bills registered"
+msgstr "{0} facturas registradas"
+
+msgid "Posting to the books…"
+msgstr "Asentando en la contabilidad…"
+
+msgid "Registered. It is now in To pay."
+msgstr "Registrada. Ya está en Por pagar."

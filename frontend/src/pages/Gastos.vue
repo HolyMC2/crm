@@ -302,7 +302,9 @@
                           // The due line already says «Vencida hace …».
                           row.overdue && Number(row.docstatus) === 1
                             ? ''
-                            : statusLabel(row),
+                            : registeringHere(row)
+                              ? __('Registering…')
+                              : statusLabel(row),
                           multiCompany ? row.company : '',
                         ]
                           .filter(Boolean)
@@ -489,6 +491,11 @@ import Icon from '@/components/Icon.vue'
 import LucidePlus from '~icons/lucide/plus'
 import LucideUpload from '~icons/lucide/upload'
 import LucideDollarSign from '~icons/lucide/dollar-sign'
+import { registrationOf } from '@/composables/gastosRegistrations'
+
+// A draft this tab sent to register in the background (the tray follows it).
+const registeringHere = (row) =>
+  Number(row.docstatus) === 0 && registrationOf(row.name)?.state === 'queued'
 
 const route = useRoute()
 const router = useRouter()
