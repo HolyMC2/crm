@@ -1,4 +1,3 @@
-import { ref } from 'vue'
 import { comprasApi } from '@/composables/useCompras'
 import { withReturn } from '@/vendor/muelle-shell/contracts'
 
@@ -15,6 +14,7 @@ export {
   requestId,
   safeReturn,
 } from '@/composables/useCompras'
+import { createModuleBoot } from '@/utils/moduleBoot'
 
 function tr(message, replace, context = null) {
   if (typeof window !== 'undefined' && typeof window.__ === 'function')
@@ -36,19 +36,12 @@ export function encuestasApi(method, args = {}) {
   )
 }
 
-export const encuestasBoot = ref(null)
-let bootPending
-/** Encuestas capability, cached per page load; refresh re-reads permissions. */
-export function loadEncuestasBoot({ refresh = false } = {}) {
-  if (encuestasBoot.value && !refresh)
-    return Promise.resolve(encuestasBoot.value)
-  if (bootPending) return bootPending
-  bootPending = encuestasApi('crm.api.encuestas.get_capabilities')
-    .then((data) => (encuestasBoot.value = data || { enabled: false }))
-    .catch(() => (encuestasBoot.value = { enabled: false, failed: true }))
-    .finally(() => (bootPending = null))
-  return bootPending
-}
+const encuestasBootCache = createModuleBoot('encuestas', () =>
+  encuestasApi('crm.api.encuestas.get_capabilities'),
+)
+export const encuestasBoot = encuestasBootCache.boot
+/** Encuestas capability, kept like the shell boot (utils/moduleBoot.js). */
+export const loadEncuestasBoot = encuestasBootCache.load
 
 export const VIEWS = Object.freeze([
   { value: 'atender', label: 'To follow up', icon: 'frown' },

@@ -86,6 +86,20 @@ export function writeCachedList(list, answer, scope = currentScope()) {
   }
 }
 
+/** Forgets the list's saved answer (the server refused it). */
+export function dropCachedList(list, scope = currentScope()) {
+  if (!list) return
+  const key = keyOf(scope, list)
+  try {
+    localStorage.removeItem(key)
+    const index = readIndex()
+    delete index[key]
+    localStorage.setItem(INDEX_KEY, JSON.stringify(index))
+  } catch {
+    // Nothing to drop.
+  }
+}
+
 /** A list key from its module and filters (order and types kept). */
 export function listKey(module, filters) {
   return module + ':' + JSON.stringify(filters ?? null)

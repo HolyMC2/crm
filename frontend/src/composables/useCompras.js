@@ -1,10 +1,10 @@
-import { ref } from 'vue'
 import { callError, errorKind } from '@/utils/contactos'
 import { listKeys, pathWithQuery, textParam } from '@/utils/powerList'
 import {
   RETURN_PREFIXES as SHELL_RETURN_PREFIXES,
   completeReturn,
 } from '@/vendor/muelle-shell/contracts'
+import { createModuleBoot } from '@/utils/moduleBoot'
 
 // Compras: prepare a purchase, receive what arrived (Escáner), come back to
 // the same order. Native Material Request / Purchase Order / Purchase Receipt
@@ -60,18 +60,12 @@ export async function comprasApi(method, args = {}) {
   throw callError(path, response.status, data)
 }
 
-export const comprasBoot = ref(null)
-let bootPending
-/** Compras capability, cached per page load; refresh re-reads permissions. */
-export function loadComprasBoot({ refresh = false } = {}) {
-  if (comprasBoot.value && !refresh) return Promise.resolve(comprasBoot.value)
-  if (bootPending) return bootPending
-  bootPending = comprasApi('crm.api.compras.get_capabilities')
-    .then((data) => (comprasBoot.value = data || { enabled: false }))
-    .catch(() => (comprasBoot.value = { enabled: false, failed: true }))
-    .finally(() => (bootPending = null))
-  return bootPending
-}
+const comprasBootCache = createModuleBoot('compras', () =>
+  comprasApi('crm.api.compras.get_capabilities'),
+)
+export const comprasBoot = comprasBootCache.boot
+/** Compras capability, kept like the shell boot (utils/moduleBoot.js). */
+export const loadComprasBoot = comprasBootCache.load
 
 export const SEGMENTS = Object.freeze([
   { value: 'por-comprar', label: 'To buy', icon: 'shopping-cart' },

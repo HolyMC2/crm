@@ -1,4 +1,3 @@
-import { ref } from 'vue'
 import { callError, errorKind, formatDay } from '@/utils/contactos'
 import {
   comprasApi,
@@ -7,6 +6,7 @@ import {
   requestId,
 } from '@/composables/useCompras'
 import { normalizeCombo } from '@/vendor/muelle-shell/contracts'
+import { createModuleBoot } from '@/utils/moduleBoot'
 
 // Cobranza: what each customer owes us → their record → one next action
 // (reminder letter, promise, call, collect at the register) → paid → next
@@ -130,18 +130,12 @@ export function waLink(digits, text) {
   return `https://wa.me/${clean}${text ? `?text=${encodeURIComponent(text)}` : ''}`
 }
 
-export const cobranzaBoot = ref(null)
-let bootPending
-/** Cobranza capability, cached per page load; refresh re-reads permissions. */
-export function loadCobranzaBoot({ refresh = false } = {}) {
-  if (cobranzaBoot.value && !refresh) return Promise.resolve(cobranzaBoot.value)
-  if (bootPending) return bootPending
-  bootPending = cobranzaApi('crm.api.cobranza.get_capabilities')
-    .then((data) => (cobranzaBoot.value = data || { enabled: false }))
-    .catch(() => (cobranzaBoot.value = { enabled: false, failed: true }))
-    .finally(() => (bootPending = null))
-  return bootPending
-}
+const cobranzaBootCache = createModuleBoot('cobranza', () =>
+  cobranzaApi('crm.api.cobranza.get_capabilities'),
+)
+export const cobranzaBoot = cobranzaBootCache.boot
+/** Cobranza capability, kept like the shell boot (utils/moduleBoot.js). */
+export const loadCobranzaBoot = cobranzaBootCache.load
 
 export const SEGMENTS = Object.freeze([
   { value: 'vencidas', label: 'Overdue', icon: 'alert-circle' },
@@ -330,8 +324,8 @@ export function withDueSoon(invoices, today, days = 7) {
     ...inv,
     due_soon: Boolean(
       inv.next_due &&
-        Number(inv.overdue_days || 0) === 0 &&
-        inv.next_due <= edge,
+      Number(inv.overdue_days || 0) === 0 &&
+      inv.next_due <= edge,
     ),
   }))
 }

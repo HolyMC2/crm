@@ -1,10 +1,10 @@
-import { ref } from 'vue'
 import { callError } from '@/utils/contactos'
 import {
   defaultReturnLabel,
   safeReturn,
   sanitizeReturnLabel,
 } from '@/vendor/muelle-shell/contracts'
+import { createModuleBoot } from '@/utils/moduleBoot'
 
 // «Capturar documento» (ARC-S2.6): a worker drops a quote, invoice, ticket or
 // transfer receipt; the books capture pipeline reads it and the shell review
@@ -80,23 +80,16 @@ export function capturaMessage(error) {
   return text || tr('We could not finish. Try again in a moment.')
 }
 
-export const capturaBoot = ref(null)
-let bootPending
+const capturaBootCache = createModuleBoot('captura', () => capturaApi('boot'), {
+  empty: { targets: {} },
+  failed: () => ({ targets: {}, companies: [], failed: true }),
+})
+export const capturaBoot = capturaBootCache.boot
 /**
  * Companies, default company, the targets this user may create (D9), labels
- * and upload limits. Cached per page load; refresh re-reads permissions.
+ * and upload limits, kept like the shell boot (utils/moduleBoot.js).
  */
-export function loadCapturaBoot({ refresh = false } = {}) {
-  if (capturaBoot.value && !refresh) return Promise.resolve(capturaBoot.value)
-  if (bootPending) return bootPending
-  bootPending = capturaApi('boot')
-    .then((data) => (capturaBoot.value = data || { targets: {} }))
-    .catch(
-      () => (capturaBoot.value = { targets: {}, companies: [], failed: true }),
-    )
-    .finally(() => (bootPending = null))
-  return bootPending
-}
+export const loadCapturaBoot = capturaBootCache.load
 
 /** The caller's targets (preference order) that this user may create. */
 export function allowedTargets(boot, targets = []) {

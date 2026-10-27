@@ -1,5 +1,4 @@
 import { documentRoute } from '@/documentos/registry'
-import { ref } from 'vue'
 import { errorKind } from '@/utils/contactos'
 import {
   RETURN_PREFIXES,
@@ -16,6 +15,7 @@ import {
   qty,
   requestId,
 } from '@/composables/useCompras'
+import { createModuleBoot } from '@/utils/moduleBoot'
 
 // Productos: a product's price and stock. Native Item, Item Price, Bin and
 // Stock Ledger Entry stay the records; Doco's products service owns every
@@ -51,26 +51,20 @@ export function safeReturn(value) {
   return contractReturn(value, RETURN_ALLOWED)
 }
 
-export const productosBoot = ref(null)
-let bootPending
-/** Productos capability, cached per page load; refresh re-reads permissions. */
-export function loadProductosBoot({ refresh = false } = {}) {
-  if (productosBoot.value && !refresh)
-    return Promise.resolve(productosBoot.value)
-  if (bootPending) return bootPending
-  bootPending = productosApi('bootstrap')
-    .then((data) => (productosBoot.value = data || { enabled: false }))
-    .catch((error) => {
-      productosBoot.value = {
-        enabled: false,
-        failed: true,
-        reason: error?.messages?.join(' ') || '',
-      }
-      return productosBoot.value
-    })
-    .finally(() => (bootPending = null))
-  return bootPending
-}
+const productosBootCache = createModuleBoot(
+  'productos',
+  () => productosApi('bootstrap'),
+  {
+    failed: (error) => ({
+      enabled: false,
+      failed: true,
+      reason: error?.messages?.join(' ') || '',
+    }),
+  },
+)
+export const productosBoot = productosBootCache.boot
+/** Productos capability, kept like the shell boot (utils/moduleBoot.js). */
+export const loadProductosBoot = productosBootCache.load
 
 export const VIEWS = Object.freeze([
   { value: 'todos', label: 'All products', icon: 'package' },

@@ -1,4 +1,3 @@
-import { ref } from 'vue'
 import { comprasApi } from '@/composables/useCompras'
 import { shellBoot } from '@/composables/muelleShell'
 import {
@@ -9,6 +8,7 @@ import {
   safeReturn,
   withReturn,
 } from '@/vendor/muelle-shell/contracts'
+import { createModuleBoot } from '@/utils/moduleBoot'
 
 // Manual de la tienda: the shop's own procedures, read on the phone or at the
 // counter, with the button to do the step right there. «Shop Manual Article»
@@ -39,18 +39,12 @@ export function manualApi(method, args = {}) {
   )
 }
 
-export const manualBoot = ref(null)
-let bootPending
-/** The manual's capability and setup data, cached per page load. */
-export function loadManualBoot({ refresh = false } = {}) {
-  if (manualBoot.value && !refresh) return Promise.resolve(manualBoot.value)
-  if (bootPending) return bootPending
-  bootPending = manualApi('crm.api.manual.get_capabilities')
-    .then((data) => (manualBoot.value = data || { enabled: false }))
-    .catch(() => (manualBoot.value = { enabled: false, failed: true }))
-    .finally(() => (bootPending = null))
-  return bootPending
-}
+const manualBootCache = createModuleBoot('manual', () =>
+  manualApi('crm.api.manual.get_capabilities'),
+)
+export const manualBoot = manualBootCache.boot
+/** The manual's capability and setup data (utils/moduleBoot.js). */
+export const loadManualBoot = manualBootCache.load
 
 // ── list state ──────────────────────────────────────────────────────────────
 
@@ -292,7 +286,7 @@ const comparable = (form) =>
     FIELDS.map((field) =>
       field === 'audience'
         ? [...(form?.[field] || [])].sort()
-        : form?.[field] ?? '',
+        : (form?.[field] ?? ''),
     ),
   )
 export function isDirty(form, base) {

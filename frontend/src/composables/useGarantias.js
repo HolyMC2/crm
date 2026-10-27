@@ -14,6 +14,7 @@ export {
   requestId,
   safeReturn,
 } from '@/composables/useCompras'
+import { createModuleBoot } from '@/utils/moduleBoot'
 
 function tr(message, replace, context = null) {
   if (typeof window !== 'undefined' && typeof window.__ === 'function')
@@ -35,19 +36,12 @@ export function garantiasApi(method, args = {}) {
   )
 }
 
-export const garantiasBoot = ref(null)
-let bootPending
-/** Garantías capability, cached per page load; refresh re-reads permissions. */
-export function loadGarantiasBoot({ refresh = false } = {}) {
-  if (garantiasBoot.value && !refresh)
-    return Promise.resolve(garantiasBoot.value)
-  if (bootPending) return bootPending
-  bootPending = garantiasApi('crm.api.garantias.get_capabilities')
-    .then((data) => (garantiasBoot.value = data || { enabled: false }))
-    .catch(() => (garantiasBoot.value = { enabled: false, failed: true }))
-    .finally(() => (bootPending = null))
-  return bootPending
-}
+const garantiasBootCache = createModuleBoot('garantias', () =>
+  garantiasApi('crm.api.garantias.get_capabilities'),
+)
+export const garantiasBoot = garantiasBootCache.boot
+/** Garantías capability, kept like the shell boot (utils/moduleBoot.js). */
+export const loadGarantiasBoot = garantiasBootCache.load
 
 // «Manual de la tienda» for this screen: shown once the manual has an article
 // for the «garantias» place (doco.manual.places), with the way back here.

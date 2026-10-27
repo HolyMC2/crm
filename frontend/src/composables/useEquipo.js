@@ -1,6 +1,6 @@
-import { ref } from 'vue'
 import { comprasApi } from '@/composables/useCompras'
 import { money } from '@/utils/numberFormat'
+import { createModuleBoot } from '@/utils/moduleBoot'
 
 // Equipo: the owner's and managers' team — who works today, vacation requests
 // to decide, people without a turno, everyone. Native Employee, Leave
@@ -30,18 +30,12 @@ export function equipoApi(method, args = {}) {
   return comprasApi(method.includes('.') ? method : `${TEAM}.${method}`, args)
 }
 
-export const equipoBoot = ref(null)
-let bootPending
-/** Equipo capability, cached per page load; refresh re-reads permissions. */
-export function loadEquipoBoot({ refresh = false } = {}) {
-  if (equipoBoot.value && !refresh) return Promise.resolve(equipoBoot.value)
-  if (bootPending) return bootPending
-  bootPending = equipoApi('crm.api.equipo.get_capabilities')
-    .then((data) => (equipoBoot.value = data || { enabled: false }))
-    .catch(() => (equipoBoot.value = { enabled: false, failed: true }))
-    .finally(() => (bootPending = null))
-  return bootPending
-}
+const equipoBootCache = createModuleBoot('equipo', () =>
+  equipoApi('crm.api.equipo.get_capabilities'),
+)
+export const equipoBoot = equipoBootCache.boot
+/** Equipo capability, kept like the shell boot (utils/moduleBoot.js). */
+export const loadEquipoBoot = equipoBootCache.load
 
 export const SEGMENTS = Object.freeze([
   { value: 'hoy', label: 'Working today', icon: 'sun', hr: true },

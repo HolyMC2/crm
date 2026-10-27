@@ -1,8 +1,8 @@
-import { ref } from 'vue'
 import { comprasApi, money, outcomeUnknown, requestId } from './useCompras'
 import { claimsSegmentShown, defaultSegment } from './useGastosEmpleados'
 import { errorKind } from '@/utils/contactos'
 import { listKeys, pathWithQuery, textParam } from '@/utils/powerList'
+import { createModuleBoot } from '@/utils/moduleBoot'
 
 // Gastos: what the shop owes its suppliers, registered and paid from the bank.
 // The native Purchase Invoice is the bill and the native Payment Entry the
@@ -31,18 +31,12 @@ export function gastosApi(method, args = {}) {
   )
 }
 
-export const gastosBoot = ref(null)
-let bootPending
-/** Gastos capability, cached per page load; refresh re-reads permissions. */
-export function loadGastosBoot({ refresh = false } = {}) {
-  if (gastosBoot.value && !refresh) return Promise.resolve(gastosBoot.value)
-  if (bootPending) return bootPending
-  bootPending = gastosApi('crm.api.gastos.get_capabilities')
-    .then((data) => (gastosBoot.value = data || { enabled: false }))
-    .catch(() => (gastosBoot.value = { enabled: false, failed: true }))
-    .finally(() => (bootPending = null))
-  return bootPending
-}
+const gastosBootCache = createModuleBoot('gastos', () =>
+  gastosApi('crm.api.gastos.get_capabilities'),
+)
+export const gastosBoot = gastosBootCache.boot
+/** Gastos capability, kept like the shell boot (utils/moduleBoot.js). */
+export const loadGastosBoot = gastosBootCache.load
 
 export const SEGMENTS = Object.freeze([
   { value: 'por-pagar', label: 'To pay', icon: 'credit-card' },
