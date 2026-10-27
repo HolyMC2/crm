@@ -16,8 +16,9 @@ const SLOW_LINES = new Set(['slow-2g', '2g'])
 /** Each module's default list: its key and its read (null: nothing to warm). */
 export const WARMERS = {
   async pendientes() {
-    const { parseQuery, pendientesApi, queueArgs } =
-      await import('@/composables/usePendientes')
+    const { parseQuery, pendientesApi, queueArgs } = await import(
+      '@/composables/usePendientes'
+    )
     const s = parseQuery({})
     return {
       list: listKey('pendientes', [
@@ -31,8 +32,9 @@ export const WARMERS = {
     }
   },
   async compras() {
-    const { comprasApi, loadComprasBoot, queueState } =
-      await import('@/composables/useCompras')
+    const { comprasApi, loadComprasBoot, queueState } = await import(
+      '@/composables/useCompras'
+    )
     if (!(await loadComprasBoot())?.enabled) return null
     const s = queueState({})
     return {
