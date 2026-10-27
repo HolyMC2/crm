@@ -487,7 +487,7 @@ watch(
     if (booted)
       warmListsAfterFirstRoute(
         router,
-        () => navSlots.value,
+        () => navSlots.value.map((slot) => slot.key),
         () => activeKey.value,
       )
   },

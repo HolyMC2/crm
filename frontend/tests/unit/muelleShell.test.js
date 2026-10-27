@@ -60,6 +60,12 @@ vi.mock('@/components/Notifications.vue', () => ({
   __esModule: true,
   default: { render: () => null },
 }))
+// The list warm-up (utils/listWarmup.js) is recorded, not run.
+const warmUp = vi.hoisted(() => ({ calls: [] }))
+vi.mock('@/utils/listWarmup', () => ({
+  warmListsAfterFirstRoute: (router, modules, current) =>
+    warmUp.calls.push({ modules, current }),
+}))
 
 import MuelleShell from '@/components/shell/MuelleShell.vue'
 import { mobileView } from '@/composables/mobileView'
@@ -2117,6 +2123,17 @@ describe('Ventas navigation on every screen', () => {
       expect(document.querySelector('[data-shell-layer="more"]')).toBeNull()
     },
   )
+
+  it("the warm-up gets the phone bar's module keys and the module on screen", async () => {
+    warmUp.calls.length = 0
+    await mount('/contactos')
+    expect(warmUp.calls.length).toBeGreaterThan(0)
+    const { modules, current } = warmUp.calls.at(-1)
+    expect(modules()).toEqual(navSlots.value.map((slot) => slot.key))
+    expect(modules().every((key) => typeof key === 'string')).toBe(true)
+    expect(modules()).toContain('contactos')
+    expect(current()).toBe('contactos')
+  })
 
   it('boot asks shell_api.status once and nothing else of the assistant; ⌘J reuses the answer (E7)', async () => {
     const { assistant, _resetAssistant } = await import(

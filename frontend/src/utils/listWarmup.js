@@ -116,7 +116,8 @@ export async function warmLists(
 let scheduled = false
 /**
  * Once per page load: after the first route and an idle slot, warms the lists
- * of `modules()` except the one `current()` names (read at that moment).
+ * of the module keys `modules()` returns, except the one `current()` names
+ * (both read at that moment).
  */
 export function warmListsAfterFirstRoute(router, modules, current) {
   if (scheduled) return
