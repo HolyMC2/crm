@@ -107,6 +107,8 @@ export function usePowerList(options) {
   )
   const focusValue = computed(() => textParam(route.query[focusParam]))
   let ticket = 0
+  // A live refresh that arrived while a read was in flight; it runs after it.
+  let liveDue = false
   let searchTimer = 0
   // A search is not kept.
   const cache = createListCache(options.name, () =>
@@ -170,8 +172,23 @@ export function usePowerList(options) {
     } catch (error) {
       if (mine === ticket) problem.value = options.problemOf?.(error) || error
     } finally {
-      if (mine === ticket) loading.value = false
+      if (mine === ticket) {
+        loading.value = false
+        if (liveDue) liveRefresh()
+      }
     }
+  }
+
+  /**
+   * A live event (or the socket's first connect): reload in place. A read in
+   * flight is not cancelled, so its rows paint; the refresh follows it, since
+   * the event may postdate that read.
+   */
+  function liveRefresh() {
+    liveDue = false
+    if (!enabled() || paused() || route.name !== options.routeName) return
+    if (loading.value) liveDue = true
+    else load({ quiet: true })
   }
 
   /** Shows the list's last answer; true while a copy of it is on screen. */
@@ -363,15 +380,9 @@ export function usePowerList(options) {
   // ── live: someone (or another tab) changed a record of this list ──────────
 
   if (options.live?.doctypes?.length)
-    useLiveWatch(
-      hoyLive(socket),
-      options.live.doctypes,
-      () => {
-        if (enabled() && !paused() && route.name === options.routeName)
-          load({ quiet: true })
-      },
-      { minIntervalMs: options.live.minIntervalMs ?? 5000 },
-    )
+    useLiveWatch(hoyLive(socket), options.live.doctypes, liveRefresh, {
+      minIntervalMs: options.live.minIntervalMs ?? 5000,
+    })
 
   watch(search, (value) => {
     window.clearTimeout(searchTimer)

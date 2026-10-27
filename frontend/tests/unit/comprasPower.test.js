@@ -375,6 +375,30 @@ describe('Compras list as a power app', () => {
     expect(calls('queue')).toHaveLength(2)
   })
 
+  it('a live refresh during the first read lets that read paint, then follows it', async () => {
+    // The first queue read waits for `answer`; later reads answer at once.
+    let answer = null
+    const base = state.api.getMockImplementation()
+    state.api.mockImplementation((method, args) =>
+      method === 'queue' && !answer
+        ? new Promise((resolve) => (answer = resolve))
+        : base(method, args),
+    )
+    mount()
+    await flush()
+    expect(calls('queue')).toHaveLength(1)
+    // The socket's first connect resyncs while the read is in flight.
+    state.hub.watches.at(-1).refetch({ full: true, reason: 'resync' })
+    await flush()
+    expect(calls('queue')).toHaveLength(1)
+    answer(QUEUE)
+    await flush()
+    expect(
+      root.querySelector('[data-row-key="Purchase Order:PO-1"]'),
+    ).not.toBeNull()
+    expect(calls('queue')).toHaveLength(2)
+  })
+
   it('lists its keys in the Alt+H sheet; a phone gets its app bar with the queues in sight', async () => {
     state.mobile.value = true
     mount()
