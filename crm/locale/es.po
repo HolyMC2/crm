@@ -28957,3 +28957,15 @@ msgstr "Asentando en la contabilidad…"
 
 msgid "Registered. It is now in To pay."
 msgstr "Registrada. Ya está en Por pagar."
+#: frontend/src/components/captura/CapturasPendientes.vue
+msgid "Captures to finish"
+msgstr "Capturas por terminar"
+
+#: frontend/src/components/captura/CapturasPendientes.vue
+msgid "Captures to finish ({0})"
+msgstr "Capturas por terminar ({0})"
+
+#: frontend/src/composables/useCaptura.js
+msgctxt "Captura"
+msgid "To finish"
+msgstr "Por terminar"

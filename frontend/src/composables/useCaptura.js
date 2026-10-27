@@ -252,6 +252,22 @@ export function totalsSummary(totals) {
   }
 }
 
+/**
+ * This worker's captures with no draft yet (newest first), for the pages
+ * whose records they draft: leaving a review must not strand its capture.
+ */
+export async function loadPendingCaptures(targets) {
+  const rows = await capturaApi('pending', { targets })
+  return Array.isArray(rows) ? rows : []
+}
+
+/** A pending capture's badge: still reading, could not read, or to finish. */
+export function pendingCaptureStatus(row) {
+  if (row?.processing) return { label: tr('Reading'), theme: 'blue' }
+  if (row?.failed) return { label: tr('Needs attention'), theme: 'red' }
+  return { label: tr('To finish', null, 'Captura'), theme: 'orange' }
+}
+
 /** Lines still waiting for an item (the blockers count them too). */
 export function pendingLines(lines) {
   return (lines || []).filter((l) => l.state === 'ask' || l.state === 'new')

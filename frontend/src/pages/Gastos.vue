@@ -134,6 +134,11 @@
             @click="router.push(door)"
           />
         </header>
+        <CapturasPendientes
+          v-if="!state.po"
+          :targets="['Purchase Invoice', 'Payment Entry', 'Journal Entry']"
+          return-label="Gastos"
+        />
         <div
           v-if="state.po"
           class="mx-4 my-3 flex flex-wrap items-center gap-2 rounded-6 bg-surface-gray-2 p-3 text-sm sm:mx-6 sm:mt-0"
@@ -454,6 +459,7 @@ import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import ApprovalDialog from '@/components/gastos/ApprovalDialog.vue'
 import BulkPaySheet from '@/components/gastos/BulkPaySheet.vue'
 import CapturarDocumentoButton from '@/components/captura/CapturarDocumentoButton.vue'
+import CapturasPendientes from '@/components/captura/CapturasPendientes.vue'
 import ClaimsQueue from '@/components/gastos/ClaimsQueue.vue'
 import PayDialog from '@/components/gastos/PayDialog.vue'
 import PowerAppBar from '@/components/power/PowerAppBar.vue'

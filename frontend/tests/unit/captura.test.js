@@ -16,6 +16,8 @@ import {
   lineStateLabel,
   lineStateTheme,
   loadCapturaBoot,
+  loadPendingCaptures,
+  pendingCaptureStatus,
   pendingLines,
   targetLabel,
   totalsSummary,
@@ -285,6 +287,46 @@ describe('capturaApi', () => {
     const boot = await loadCapturaBoot({ refresh: true })
     expect(boot.failed).toBe(true)
     expect(allowedTargets(boot, ['Purchase Order'])).toEqual([])
+  })
+})
+
+describe('pending captures', () => {
+  afterEach(() => vi.unstubAllGlobals())
+  it("asks the service for this page's targets", async () => {
+    const fetch = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({ message: [{ name: 'CAP-9' }] }),
+    }))
+    vi.stubGlobal('fetch', fetch)
+    await expect(loadPendingCaptures(['Purchase Order'])).resolves.toEqual([
+      { name: 'CAP-9' },
+    ])
+    const [url, init] = fetch.mock.calls[0]
+    expect(url).toBe('/api/method/doco.docoutils.books.shell_capture.pending')
+    expect(JSON.parse(init.body)).toEqual({ targets: ['Purchase Order'] })
+  })
+  it('reads a blank answer as none', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({ ok: true, json: async () => ({}) })),
+    )
+    await expect(loadPendingCaptures(['Purchase Invoice'])).resolves.toEqual([])
+  })
+  it('says whether it is reading, failed or waits for the worker', () => {
+    expect(pendingCaptureStatus({ processing: true }).theme).toBe('blue')
+    expect(pendingCaptureStatus({ failed: true }).theme).toBe('red')
+    expect(pendingCaptureStatus({ status: 'Mapeado' })).toEqual({
+      label: 'To finish',
+      theme: 'orange',
+    })
+  })
+  it('Compras and Gastos list the captures they draft', () => {
+    expect(source('pages/Compras.vue')).toMatch(
+      /<CapturasPendientes\s+:targets="\['Purchase Order', 'Purchase Invoice'\]"\s+return-label="Compras"/,
+    )
+    expect(source('pages/Gastos.vue')).toMatch(
+      /<CapturasPendientes\s+v-if="!state.po"\s+:targets="\['Purchase Invoice', 'Payment Entry', 'Journal Entry'\]"\s+return-label="Gastos"/,
+    )
   })
 })
 

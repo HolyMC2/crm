@@ -120,6 +120,10 @@
             @click="newPurchase"
           />
         </header>
+        <CapturasPendientes
+          :targets="['Purchase Order', 'Purchase Invoice']"
+          return-label="Compras"
+        />
         <div
           v-if="!list.phone.value"
           class="flex flex-wrap items-center gap-2 px-4 pb-3 sm:px-6"
@@ -433,6 +437,7 @@ import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import { Fab } from '@/components/ui'
 import BulkConfirmSheet from '@/components/compras/BulkConfirmSheet.vue'
 import CapturarDocumentoButton from '@/components/captura/CapturarDocumentoButton.vue'
+import CapturasPendientes from '@/components/captura/CapturasPendientes.vue'
 import HandoffDialog from '@/components/compras/HandoffDialog.vue'
 import PowerAppBar from '@/components/power/PowerAppBar.vue'
 import PowerBulkBar from '@/components/power/PowerBulkBar.vue'
