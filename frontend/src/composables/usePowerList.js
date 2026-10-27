@@ -67,6 +67,8 @@ const MAX_PAGE = 100
  * @param {() => boolean} [options.selectable]  this list has a bulk action
  * @param {{doctypes: string[], minIntervalMs?: number}} [options.live]
  * @param {boolean} [options.cache]  paint the list's last answer (default on)
+ * @param {(query) => any[]} [options.cacheKey]  the URL values that name the
+ *   saved list, when `filters` needs the boot (default `filters`)
  */
 export function usePowerList(options) {
   const route = useRoute()
@@ -110,7 +112,7 @@ export function usePowerList(options) {
   const cache = createListCache(options.name, () =>
     options.cache === false || textParam(route.query.q)
       ? null
-      : options.filters(route.query),
+      : (options.cacheKey || options.filters)(route.query),
   )
 
   // ── loading, scroll memory ───────────────────────────────────────────────

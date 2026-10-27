@@ -459,6 +459,7 @@ import PowerBulkBar from '@/components/power/PowerBulkBar.vue'
 import { openShortcutSheet } from '@/composables/shellKeyboard'
 import { offerUndo, runUndo } from '@/composables/powerUndo'
 import { usePowerList } from '@/composables/usePowerList'
+import { textParam } from '@/utils/powerList'
 import {
   CHIPS,
   CTX,
@@ -517,6 +518,8 @@ const list = usePowerList({
     const s = queueState(query, boot.value)
     return [s.segment, s.chip, s.po, s.q]
   },
+  // The default segment waits for the boot; the URL names the saved list.
+  cacheKey: (query) => [query.segment, query.chip, query.po].map(textParam),
   memoryKey: listMemoryKey,
   fetch: ({ start, page_length }) =>
     gastosApi('queue', {

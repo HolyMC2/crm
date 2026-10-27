@@ -176,3 +176,22 @@ describe('a page paints its list’s last answer once, then the read replaces it
     expect(p.cache.showing()).toBe(false)
   })
 })
+
+describe('Gastos names its saved list from the URL, not the boot', () => {
+  it('passes a cacheKey that reads only URL values', () => {
+    const gastos = readFileSync(
+      resolve(__dirname, '../../src/pages/Gastos.vue'),
+      'utf8',
+    )
+    expect(gastos).toMatch(
+      /cacheKey: \(query\) => \[query\.segment, query\.chip, query\.po\]\.map\(textParam\)/,
+    )
+    const power = readFileSync(
+      resolve(__dirname, '../../src/composables/usePowerList.js'),
+      'utf8',
+    )
+    expect(power).toContain(
+      '(options.cacheKey || options.filters)(route.query)',
+    )
+  })
+})
