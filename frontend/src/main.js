@@ -58,7 +58,8 @@ app.use(translationPlugin)
 for (let key in globalComponents) {
   app.component(key, globalComponents[key])
 }
-void installTelemetry(app)
+// Optional telemetry asks boot_config: after the first route, not during it.
+afterFirstRoute(router, () => installTelemetry(app))
 
 app.config.globalProperties.$dialog = createDialog
 

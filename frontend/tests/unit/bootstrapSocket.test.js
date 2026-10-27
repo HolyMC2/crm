@@ -148,7 +148,8 @@ function expectCanonicalSocket() {
     fixture.request,
   )
   expect(fixture.pushNavigation).toHaveBeenCalledWith(fixture.router)
-  expect(fixture.startupTelemetry).toHaveBeenCalledWith(root.appContext.app)
+  // Telemetry asks boot_config after the first route, not during its load.
+  expect(fixture.startupTelemetry).not.toHaveBeenCalled()
   for (const plugin of [fixture.router, fixture.translation]) {
     expect(plugin.install).toHaveBeenCalledOnce()
   }
@@ -267,6 +268,22 @@ describe('CRM socket bootstrap ownership', () => {
     vi.useRealTimers()
     expect(printingScripts()).toHaveLength(1)
     expect(printingScripts()[0].getAttribute('src')).toBe(printRuntimeUrl)
+  })
+
+  it('installs telemetry once the first route is up', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'requestIdleCallback'] })
+    vi.stubEnv('DEV', false)
+    window.site_name = 'crm-roadmap.localhost'
+    window.socketio_port = 18060
+    window.installed_apps = ['frappe', 'crm']
+    await import('@/main')
+    const root = fixture.roots[0]
+    expect(fixture.startupTelemetry).not.toHaveBeenCalled()
+    await vi.advanceTimersByTimeAsync(20000)
+    vi.useRealTimers()
+    expect(fixture.startupTelemetry).toHaveBeenCalledExactlyOnceWith(
+      root.appContext.app,
+    )
   })
 
   it.each(['relative', 'absolute'])(
