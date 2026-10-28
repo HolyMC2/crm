@@ -79,12 +79,20 @@ const current = () =>
 const tabStop = (value, index) =>
   value === props.modelValue || (current() < 0 && index === 0)
 
-// A scrolling track keeps the chosen segment in sight.
+// A scrolling track keeps the chosen segment in sight. Only the track moves:
+// scrollIntoView would also scroll the page to a Segmented below the fold.
 function reveal() {
   if (props.fit !== 'content') return
-  root.value
-    ?.querySelector('[aria-checked="true"]')
-    ?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' })
+  const track = root.value
+  const chosen = track?.querySelector('[aria-checked="true"]')
+  if (!track || !chosen) return
+  const box = chosen.getBoundingClientRect()
+  const left =
+    box.left - track.getBoundingClientRect().left + track.scrollLeft
+  const right = left + box.width
+  if (left < track.scrollLeft) track.scrollLeft = left
+  else if (right > track.scrollLeft + track.clientWidth)
+    track.scrollLeft = right - track.clientWidth
 }
 onMounted(reveal)
 // Counts that arrive later widen the segments: look again.
