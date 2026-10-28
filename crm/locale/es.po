@@ -29212,3 +29212,18 @@ msgstr "Solo un encargado puede guardar una vista para todo el equipo. Guárdala
 #: frontend/src/components/shell/ShellRail.vue
 msgid "Help and report a problem"
 msgstr "Ayuda y reportar un problema"
+#: frontend/src/components/agenda/AgendaEventPanel.vue
+msgid "Call {0}"
+msgstr "Llamar a {0}"
+#: frontend/src/components/agenda/AgendaEventPanel.vue
+msgid "WhatsApp {0}"
+msgstr "WhatsApp a {0}"
+#: frontend/src/components/agenda/AgendaEventPanel.vue
+msgid "Hi {0}, I confirm «{1}» on {2}."
+msgstr "Hola {0}, te confirmo «{1}» el {2}."
+#: frontend/src/components/agenda/AgendaEventPanel.vue
+msgid "Hello, I confirm «{0}» on {1}."
+msgstr "Hola, te confirmo «{0}» el {1}."
+#: frontend/src/pages/Agenda.vue
+msgid "Follow-up: {0}"
+msgstr "Seguimiento: {0}"
