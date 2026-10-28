@@ -268,7 +268,7 @@ function sectionMenu(sec) {
   return [
     {
       group: __('Section'),
-      items: [
+      options: [
         {
           label: __('Rename'),
           icon: LucideSquarePen,
@@ -283,7 +283,7 @@ function sectionMenu(sec) {
     },
     {
       group: __('Columns'),
-      items: [
+      options: [
         {
           label: __('Add a column'),
           icon: LucideColumns2,

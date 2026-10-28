@@ -968,7 +968,7 @@ const mobileMenu = computed(() => [
     ? [
         {
           group: __('Conversation'),
-          items: [
+          options: [
             {
               label: headerResolveLabel(nextMode.value),
               onClick: () => (resolveOpen.value = true),
@@ -979,7 +979,7 @@ const mobileMenu = computed(() => [
     : []),
   {
     group: __('Trato'),
-    items: [
+    options: [
       { label: __('Datos y contacto'), onClick: openContext },
       {
         label: (row.value.tags || []).length
@@ -998,7 +998,7 @@ const mobileMenu = computed(() => [
     group: isSnoozed.value
       ? __('Pospuesta — reaparece sola')
       : __('Posponer conversación'),
-    items: snoozeOptions.value,
+    options: snoozeOptions.value,
   },
 ])
 

@@ -386,7 +386,7 @@ function actions(column) {
     {
       group: __('Options'),
       hideLabel: true,
-      items: [
+      options: [
         {
           label: __('Delete'),
           icon: LucideTrash2,
