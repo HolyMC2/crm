@@ -20,8 +20,12 @@
           @click="$emit('select', entry.value)"
         >
           <Icon :icon="entry.icon || 'list'" class="h-4 w-4 shrink-0" /><span
-            class="truncate"
+            class="min-w-0 flex-1 truncate"
             >{{ entry.label }}</span
+          ><span
+            v-if="entry.count"
+            class="num shrink-0 text-ink-gray-5"
+            >{{ entry.count }}</span
           >
         </button>
       </nav>
@@ -61,6 +65,7 @@ import Icon from '@/components/Icon.vue'
 
 defineProps({
   title: { type: String, required: true },
+  /** [{ value, label, icon?, count? }]: a count shows as a figure at the end. */
   entries: { type: Array, default: () => [] },
   activeKey: { type: String, default: '' },
   savedEntries: { type: Array, default: () => [] },
