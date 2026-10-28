@@ -58,7 +58,7 @@
   </div>
 </template>
 <script setup>
-import { ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 
 const props = defineProps({
   modelValue: { type: [String, Number], default: '' },
@@ -78,6 +78,16 @@ const current = () =>
 // One tab stop: the chosen segment, or the first when none is.
 const tabStop = (value, index) =>
   value === props.modelValue || (current() < 0 && index === 0)
+
+// A scrolling track keeps the chosen segment in sight.
+function reveal() {
+  if (props.fit !== 'content') return
+  root.value
+    ?.querySelector('[aria-checked="true"]')
+    ?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' })
+}
+onMounted(reveal)
+watch(() => props.modelValue, reveal, { flush: 'post' })
 
 function select(value) {
   if (value !== props.modelValue) emit('update:modelValue', value)
