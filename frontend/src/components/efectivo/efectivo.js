@@ -14,7 +14,9 @@ export const bagRead = (name) => call(`${READ}.bag`, { name })
 export function newRequestId() {
   const bytes = new Uint8Array(12)
   globalThis.crypto?.getRandomValues?.(bytes)
-  const tail = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')
+  const tail = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join(
+    '',
+  )
   return `shell-${Date.now().toString(36)}-${tail}`
 }
 
@@ -47,7 +49,12 @@ export function oneInstruction() {
 }
 
 function answered(error) {
-  return Boolean(error?.messages?.length || error?.exc_type || error?.status < 500)
+  const status = Number(error?.status) || 0
+  return Boolean(
+    error?.messages?.length ||
+      error?.exc_type ||
+      (status >= 400 && status < 500),
+  )
 }
 
 /** The safe a custody command names: a store safe by name, a register's own safe by its profile. */
@@ -176,7 +183,7 @@ export function money(amount, currency = 'MXN') {
 
 /** «$500» for a face, «50¢» under a peso. */
 export function faceLabel(face) {
-  return face >= 100 ? `$${face / 100}` : `${face}¢`
+  return face >= 100 ? `$${(face / 100).toLocaleString('es-MX')}` : `${face}¢`
 }
 
 // Words ------------------------------------------------------------------
@@ -208,9 +215,7 @@ export function holderText(bag, people = {}) {
   const name = who(h.user, people)
   switch (h.kind) {
     case 'safe':
-      return name
-        ? `En la caja fuerte · responde ${name}`
-        : 'En la caja fuerte'
+      return name ? `En la caja fuerte · responde ${name}` : 'En la caja fuerte'
     case 'carrier':
       return name ? `La lleva ${name} al banco` : 'Rumbo al banco'
     case 'bank':
@@ -222,7 +227,9 @@ export function holderText(bag, people = {}) {
     case 'loose':
       return 'Suelta en la caja fuerte'
     case 'offsite':
-      return name ? `Fuera de la tienda · la envió ${name}` : 'Fuera de la tienda'
+      return name
+        ? `Fuera de la tienda · la envió ${name}`
+        : 'Fuera de la tienda'
     default:
       return ''
   }
@@ -252,7 +259,8 @@ export function bagStep(bag, safe, me) {
       if (can.confirm_bank)
         return { action: 'confirm_bank', label: 'Registrar el depósito' }
       return {
-        reason: 'El depósito lo registra quien revisa las cuentas, con la ficha del banco.',
+        reason:
+          'El depósito lo registra quien revisa las cuentas, con la ficha del banco.',
       }
     case 'Disputed':
       if (!can.review)

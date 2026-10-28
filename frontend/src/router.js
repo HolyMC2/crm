@@ -453,7 +453,12 @@ const routes = [
     name: 'EfectivoBolsa',
     component: () => import('@/pages/EfectivoBolsa.vue'),
     props: true,
-    meta: { app: 'efectivo', title: 'Efectivo', ownPhoneHeader: true, listParent: 'Efectivo' },
+    meta: {
+      app: 'efectivo',
+      title: 'Efectivo',
+      ownPhoneHeader: true,
+      listParent: 'Efectivo',
+    },
   },
   {
     path: '/garantias',

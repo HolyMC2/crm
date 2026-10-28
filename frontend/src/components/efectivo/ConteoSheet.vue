@@ -30,19 +30,26 @@
         ]"
       />
 
-      <ul class="divide-y divide-outline-gray-1" aria-label="Conteo por denominación">
+      <ul
+        class="divide-y divide-outline-gray-1"
+        aria-label="Conteo por denominación"
+      >
         <li
           v-for="face in faces"
           :key="face"
           class="flex min-h-12 items-center gap-3"
           :data-face="face"
         >
-          <span class="num w-16 flex-none text-base font-semibold text-ink-gray-9">{{
-            faceLabel(face)
-          }}</span>
-          <span class="num min-w-0 flex-1 truncate text-right text-sm text-ink-gray-5">{{
-            rows[face] ? money(fromMinor(face * rows[face]), currency) : ''
-          }}</span>
+          <span
+            class="num w-16 flex-none text-base font-semibold text-ink-gray-9"
+            >{{ faceLabel(face) }}</span
+          >
+          <span
+            class="num min-w-0 flex-1 truncate text-right text-sm text-ink-gray-5"
+            >{{
+              rows[face] ? money(fromMinor(face * rows[face]), currency) : ''
+            }}</span
+          >
           <div class="flex flex-none items-center gap-1">
             <button
               type="button"
@@ -76,14 +83,21 @@
         </li>
       </ul>
 
-      <div class="flex items-baseline justify-between gap-3 border-t border-outline-gray-2 pt-3">
+      <div
+        class="flex items-baseline justify-between gap-3 border-t border-outline-gray-2 pt-3"
+      >
         <span class="text-sm font-medium text-ink-gray-7">Total contado</span>
-        <span class="num text-2xl font-semibold text-ink-gray-9" data-efectivo-total>{{
-          money(fromMinor(total), currency)
-        }}</span>
+        <span
+          class="num text-2xl font-semibold text-ink-gray-9"
+          data-efectivo-total
+          >{{ money(fromMinor(total), currency) }}</span
+        >
       </div>
 
-      <label v-if="mode === 'prepare' || mode === 'transfer'" class="block space-y-1">
+      <label
+        v-if="mode === 'prepare' || mode === 'transfer'"
+        class="block space-y-1"
+      >
         <span class="text-sm font-medium text-ink-gray-7">Número de sello</span>
         <input
           v-model.trim="seal"
@@ -128,17 +142,27 @@
           class="size-11 rounded-4 object-cover"
         />
       </div>
-
-      <p v-if="error" role="alert" class="rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7">
-        {{ error }}
-      </p>
     </div>
     <template #actions>
+      <p
+        v-if="error"
+        role="alert"
+        class="mb-2 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
+        data-efectivo-error
+      >
+        {{ error }}
+      </p>
       <Button
         variant="solid"
         size="lg"
         class="w-full"
-        :label="busy ? 'Guardando…' : confirmLabel"
+        :label="
+          busy
+            ? 'Guardando…'
+            : total > 0
+              ? `${confirmLabel} · ${money(fromMinor(total), currency)}`
+              : confirmLabel
+        "
         :disabled="busy || total <= 0"
         data-efectivo-confirm
         @click="confirm"
@@ -188,7 +212,9 @@ const error = ref('')
 const total = computed(() => totalMinor(rows.value))
 const photoAllowed = computed(() => ['prepare', 'verify'].includes(props.mode))
 const noteLabel = computed(() =>
-  props.mode === 'prepare' ? 'Nota (opcional)' : 'Si no cuadra, explica por qué',
+  props.mode === 'prepare'
+    ? 'Nota (opcional)'
+    : 'Si no cuadra, explica por qué',
 )
 const notePlaceholder = computed(() =>
   props.mode === 'prepare'

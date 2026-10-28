@@ -32,9 +32,18 @@
         <p>{{ loadError }}</p>
         <Button label="Reintentar" @click="load()" />
       </div>
-      <div v-else-if="!data" role="status" aria-label="Cargando efectivo…" class="space-y-3 px-4 py-4">
+      <div
+        v-else-if="!data"
+        role="status"
+        aria-label="Cargando efectivo…"
+        class="space-y-3 px-4 py-4"
+      >
         <div class="h-28 animate-pulse rounded-7 bg-surface-gray-2" />
-        <div v-for="n in 4" :key="n" class="h-16 animate-pulse rounded-7 bg-surface-gray-2" />
+        <div
+          v-for="n in 4"
+          :key="n"
+          class="h-16 animate-pulse rounded-7 bg-surface-gray-2"
+        />
       </div>
       <template v-else>
         <EmptyState
@@ -53,21 +62,29 @@
           data-efectivo-hero
         >
           <p class="text-sm text-ink-gray-6">{{ hero.label }}</p>
-          <p class="num mt-1 break-words text-3xl font-semibold text-ink-gray-9">
+          <p
+            class="num mt-1 break-words text-3xl font-semibold text-ink-gray-9"
+          >
             {{ money(hero.balance, hero.currency) }}
           </p>
           <dl class="mt-3 grid grid-cols-3 gap-2 text-sm">
             <div>
               <dt class="text-ink-gray-6">Suelto</dt>
-              <dd class="num font-medium text-ink-gray-9">{{ money(hero.loose, hero.currency) }}</dd>
+              <dd class="num font-medium text-ink-gray-9">
+                {{ money(hero.loose, hero.currency) }}
+              </dd>
             </div>
             <div>
               <dt class="text-ink-gray-6">En bolsas</dt>
-              <dd class="num font-medium text-ink-gray-9">{{ money(hero.bagged, hero.currency) }}</dd>
+              <dd class="num font-medium text-ink-gray-9">
+                {{ money(hero.bagged, hero.currency) }}
+              </dd>
             </div>
             <div>
               <dt class="text-ink-gray-6">Rumbo al banco</dt>
-              <dd class="num font-medium text-ink-gray-9">{{ money(hero.transit, hero.currency) }}</dd>
+              <dd class="num font-medium text-ink-gray-9">
+                {{ money(hero.transit, hero.currency) }}
+              </dd>
             </div>
           </dl>
         </section>
@@ -75,16 +92,30 @@
           v-else-if="safes.length"
           class="mx-4 mt-2 rounded-8 bg-surface-gray-1 p-4 text-sm text-ink-gray-7"
         >
-          Los saldos de la caja fuerte los ve quien la cuida. Aquí ves tus bolsas y quién las tiene.
+          Los saldos de la caja fuerte los ve quien la cuida. Aquí ves tus
+          bolsas y quién las tiene.
         </p>
 
         <!-- Te toca: this worker's next steps, oldest first. -->
-        <section v-if="waitingRows.length" class="mt-5" aria-label="Te toca" data-efectivo-waiting>
-          <h2 class="flex items-baseline gap-2 px-4 pb-1 text-sm font-semibold text-ink-gray-8">
-            <span class="num text-ink-gray-9">{{ waitingRows.length }}</span> Te toca
+        <section
+          v-if="waitingRows.length"
+          class="mt-5"
+          aria-label="Te toca"
+          data-efectivo-waiting
+        >
+          <h2
+            class="flex items-baseline gap-2 px-4 pb-1 text-sm font-semibold text-ink-gray-8"
+          >
+            <span class="num text-ink-gray-9">{{ waitingRows.length }}</span> Te
+            toca
           </h2>
           <ul class="divide-y divide-outline-gray-1">
-            <li v-for="row in shownWaiting" :key="row.key" class="flex items-center" :data-waiting="row.action">
+            <li
+              v-for="row in shownWaiting"
+              :key="row.key"
+              class="flex items-center"
+              :data-waiting="row.action"
+            >
               <ListRow
                 class="min-w-0 flex-1"
                 :title="row.title"
@@ -95,7 +126,9 @@
                 @click="row.open && row.open()"
               >
                 <template #trailing>
-                  <span class="num text-base font-semibold text-ink-gray-9">{{ row.amount }}</span>
+                  <span class="num text-base font-semibold text-ink-gray-9">{{
+                    row.amount
+                  }}</span>
                 </template>
               </ListRow>
               <button
@@ -123,8 +156,17 @@
         </section>
 
         <!-- The safes: balance and the island of what the safe itself needs. -->
-        <section v-if="visibleSafes.length > 1 || (visibleSafes[0] && visibleSafes[0].can.count_safe)" class="mt-5" aria-label="Cajas fuertes">
-          <h2 class="px-4 pb-1 text-sm font-semibold text-ink-gray-8">Cajas fuertes</h2>
+        <section
+          v-if="
+            visibleSafes.length > 1 ||
+            (visibleSafes[0] && visibleSafes[0].can.count_safe)
+          "
+          class="mt-5"
+          aria-label="Cajas fuertes"
+        >
+          <h2 class="px-4 pb-1 text-sm font-semibold text-ink-gray-8">
+            Cajas fuertes
+          </h2>
           <ul class="space-y-2 px-4">
             <li
               v-for="safe in visibleSafes"
@@ -132,15 +174,27 @@
               class="flex items-center gap-3 rounded-7 border border-outline-gray-1 px-4 py-3"
               :data-safe="safe.safe"
             >
-              <span class="lucide-vault size-6 flex-none text-ink-gray-6" aria-hidden="true" />
+              <span
+                class="lucide-vault size-6 flex-none text-ink-gray-6"
+                aria-hidden="true"
+              />
               <div class="min-w-0 flex-1">
-                <p class="truncate text-base font-medium text-ink-gray-9">{{ safe.title }}</p>
-                <p class="truncate text-sm text-ink-gray-6">{{ safeLine(safe) }}</p>
+                <p class="truncate text-base font-medium text-ink-gray-9">
+                  {{ safe.title }}
+                </p>
+                <p class="truncate text-sm text-ink-gray-6">
+                  {{ safeLine(safe) }}
+                </p>
               </div>
-              <span v-if="safe.balance !== null" class="num text-base font-semibold text-ink-gray-9">{{
-                money(safe.balance, safe.currency)
-              }}</span>
-              <div v-if="safe.can.count_safe" class="flex flex-none rounded-full bg-surface-gray-1 p-0.5">
+              <span
+                v-if="safe.balance !== null"
+                class="num text-base font-semibold text-ink-gray-9"
+                >{{ money(safe.balance, safe.currency) }}</span
+              >
+              <div
+                v-if="safe.can.count_safe"
+                class="flex flex-none rounded-full bg-surface-gray-1 p-0.5"
+              >
                 <button
                   type="button"
                   class="press grid size-10 place-items-center rounded-full text-ink-gray-7"
@@ -156,10 +210,22 @@
         </section>
 
         <!-- Bags by state. -->
-        <section v-if="allBags.length" class="mt-5" aria-label="Bolsas" data-efectivo-bags>
-          <h2 class="px-4 pb-2 text-sm font-semibold text-ink-gray-8">Bolsas</h2>
+        <section
+          v-if="allBags.length"
+          class="mt-5"
+          aria-label="Bolsas"
+          data-efectivo-bags
+        >
+          <h2 class="px-4 pb-2 text-sm font-semibold text-ink-gray-8">
+            Bolsas
+          </h2>
           <div class="px-4 pb-2">
-            <Segmented v-model="bagView" label="Bolsas" fit="content" :options="bagViews" />
+            <Segmented
+              v-model="bagView"
+              label="Bolsas"
+              fit="content"
+              :options="bagViews"
+            />
           </div>
           <ul v-if="shownBags.length" class="divide-y divide-outline-gray-1">
             <li v-for="bag in shownBags" :key="bag.name" :data-bag="bag.name">
@@ -172,21 +238,40 @@
               >
                 <template #trailing>
                   <div class="flex flex-col items-end gap-1">
-                    <span class="num text-base font-semibold text-ink-gray-9">{{ money(bag.amount, bag.currency) }}</span>
-                    <StatusChip v-if="bag.state === 'Unverified'" label="Falta verificar" tone="warning" />
-                    <StatusChip v-else-if="bagView === 'done'" :label="bagState(bag.state).label" tone="neutral" />
+                    <span class="num text-base font-semibold text-ink-gray-9">{{
+                      money(bag.amount, bag.currency)
+                    }}</span>
+                    <StatusChip
+                      v-if="bag.state === 'Unverified'"
+                      label="Falta verificar"
+                      tone="warning"
+                    />
+                    <StatusChip
+                      v-else-if="bagView === 'done'"
+                      :label="bagState(bag.state).label"
+                      tone="neutral"
+                    />
                   </div>
                 </template>
               </ListRow>
             </li>
           </ul>
-          <p v-else class="px-4 py-3 text-sm text-ink-gray-6">{{ emptyBags }}</p>
+          <p v-else class="px-4 py-3 text-sm text-ink-gray-6">
+            {{ emptyBags }}
+          </p>
         </section>
 
         <!-- Traslados between the safe and the cajas. -->
-        <section v-if="liveTransfers.length" class="mt-5" aria-label="Traslados">
-          <h2 class="flex items-baseline gap-2 px-4 pb-1 text-sm font-semibold text-ink-gray-8">
-            <span class="num text-ink-gray-9">{{ liveTransfers.length }}</span> Traslados
+        <section
+          v-if="liveTransfers.length"
+          class="mt-5"
+          aria-label="Traslados"
+        >
+          <h2
+            class="flex items-baseline gap-2 px-4 pb-1 text-sm font-semibold text-ink-gray-8"
+          >
+            <span class="num text-ink-gray-9">{{ liveTransfers.length }}</span>
+            Traslados
           </h2>
           <ul class="divide-y divide-outline-gray-1">
             <li v-for="t in liveTransfers" :key="t.name">
@@ -198,7 +283,16 @@
               >
                 <template #trailing>
                   <span class="num text-base font-semibold text-ink-gray-9">{{
-                    t.amounts_hidden ? '' : money(fromMinor(t.dispatched_minor !== '0' ? t.dispatched_minor : t.declared_minor), t.currency)
+                    t.amounts_hidden
+                      ? ''
+                      : money(
+                          fromMinor(
+                            t.dispatched_minor !== '0'
+                              ? t.dispatched_minor
+                              : t.declared_minor,
+                          ),
+                          t.currency,
+                        )
                   }}</span>
                 </template>
               </ListRow>
@@ -208,7 +302,9 @@
 
         <!-- Arqueos: recent safe counts and every count still waiting for review. -->
         <section v-if="arqueos.length" class="mt-5" aria-label="Arqueos">
-          <h2 class="px-4 pb-1 text-sm font-semibold text-ink-gray-8">Arqueos</h2>
+          <h2 class="px-4 pb-1 text-sm font-semibold text-ink-gray-8">
+            Arqueos
+          </h2>
           <ul class="divide-y divide-outline-gray-1">
             <li v-for="c in arqueos" :key="c.name">
               <ListRow
@@ -216,15 +312,28 @@
                 :subtitle="`${who(c.counted_by, people)} · ${formatDateTime(c.modified)}`"
                 :subtitle-tone="c.state === 'Exception' ? 'danger' : ''"
                 icon="lucide-calculator"
-                :to="c.bag ? { name: 'EfectivoBolsa', params: { name: c.bag } } : null"
-                @click="!c.bag && c.state === 'Exception' && c._safe.can.review && open(reviewCount(c, c._safe, people))"
+                :to="
+                  c.bag
+                    ? { name: 'EfectivoBolsa', params: { name: c.bag } }
+                    : null
+                "
+                @click="
+                  !c.bag &&
+                    c.state === 'Exception' &&
+                    c._safe.can.review &&
+                    open(reviewCount(c, c._safe, people))
+                "
               >
                 <template #trailing>
                   <div class="flex flex-col items-end">
-                    <span class="num text-base font-semibold text-ink-gray-9">{{ money(c.amount, c._safe.currency) }}</span>
-                    <span v-if="c.state === 'Exception' && c.difference" class="num text-sm text-ink-red-7">{{
-                      signed(c.difference, c._safe.currency)
+                    <span class="num text-base font-semibold text-ink-gray-9">{{
+                      money(c.amount, c._safe.currency)
                     }}</span>
+                    <span
+                      v-if="c.state === 'Exception' && c.difference"
+                      class="num text-sm text-ink-red-7"
+                      >{{ signed(c.difference, c._safe.currency) }}</span
+                    >
                   </div>
                 </template>
               </ListRow>
@@ -235,14 +344,27 @@
       </template>
     </div>
 
-    <Fab v-if="sealable.length" label="Sellar bolsa" icon="lucide-package-plus" @click="startSeal" />
+    <Fab
+      v-if="sealable.length"
+      label="Sellar bolsa"
+      icon="lucide-package-plus"
+      @click="startSeal"
+    />
 
-    <BottomSheet v-model:open="choosing" title="¿De qué caja fuerte sale?" flush>
+    <BottomSheet
+      v-model:open="choosing"
+      title="¿De qué caja fuerte sale?"
+      flush
+    >
       <ul class="divide-y divide-outline-gray-1">
         <li v-for="safe in sealable" :key="safe.safe">
           <ListRow
             :title="safe.title"
-            :subtitle="safe.loose_balance === null ? '' : `Suelto ${money(safe.loose_balance, safe.currency)}`"
+            :subtitle="
+              safe.loose_balance === null
+                ? ''
+                : `Suelto ${money(safe.loose_balance, safe.currency)}`
+            "
             icon="lucide-vault"
             @click="(choosing = false), open(sealBag(safe, me))"
           />
@@ -256,7 +378,15 @@
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Button } from 'frappe-ui'
-import { AppBar, BottomSheet, EmptyState, Fab, ListRow, Segmented, StatusChip } from '@/components/ui'
+import {
+  AppBar,
+  BottomSheet,
+  EmptyState,
+  Fab,
+  ListRow,
+  Segmented,
+  StatusChip,
+} from '@/components/ui'
 import StepHost from '@/components/efectivo/StepHost.vue'
 import {
   WAITING_LABELS,
@@ -298,7 +428,10 @@ const safes = computed(() => data.value?.safes || [])
 const scope = computed(() => String(route.query.caja || ''))
 const safeScopes = computed(() =>
   safes.value.length > 1
-    ? [{ value: '', label: 'Todas las cajas fuertes' }, ...safes.value.map((s) => ({ value: s.safe, label: s.title }))]
+    ? [
+        { value: '', label: 'Todas las cajas fuertes' },
+        ...safes.value.map((s) => ({ value: s.safe, label: s.title })),
+      ]
     : [],
 )
 const visibleSafes = computed(() =>
@@ -309,7 +442,9 @@ function pickScope(value) {
 }
 
 const hero = computed(() => {
-  const shown = visibleSafes.value.filter((s) => s.balance !== null && s.balance !== undefined)
+  const shown = visibleSafes.value.filter(
+    (s) => s.balance !== null && s.balance !== undefined,
+  )
   if (!shown.length) return null
   const currency = shown[0].currency
   if (shown.some((s) => s.currency !== currency)) return null
@@ -325,7 +460,9 @@ const hero = computed(() => {
 })
 
 function safeLine(safe) {
-  const open = safe.bags.filter((b) => ['Unverified', 'Available', 'Disputed'].includes(b.state)).length
+  const open = safe.bags.filter((b) =>
+    ['Unverified', 'Available', 'Disputed'].includes(b.state),
+  ).length
   const transit = safe.bags.filter((b) => b.state === 'In Transit').length
   const parts = []
   parts.push(open === 1 ? '1 bolsa sellada' : `${open} bolsas selladas`)
@@ -334,12 +471,24 @@ function safeLine(safe) {
 }
 
 const tagged = (key) =>
-  visibleSafes.value.flatMap((safe) => (safe[key] || []).map((row) => ({ ...row, currency: safe.currency, _safe: safe })))
+  visibleSafes.value.flatMap((safe) =>
+    (safe[key] || []).map((row) => ({
+      ...row,
+      currency: safe.currency,
+      _safe: safe,
+    })),
+  )
 const allBags = computed(() => tagged('bags'))
 const matches = (bag) =>
   !search.value.trim() ||
   matchTokens(
-    [bag.seal, who(bag.prepared_by, people.value), who(bag.holder?.user, people.value), String(bag.amount), bagState(bag.state).label].join(' '),
+    [
+      bag.seal,
+      who(bag.prepared_by, people.value),
+      who(bag.holder?.user, people.value),
+      String(bag.amount),
+      bagState(bag.state).label,
+    ].join(' '),
     search.value,
   )
 const VIEWS = {
@@ -349,7 +498,8 @@ const VIEWS = {
   done: ['Deposited', 'Issued', 'Unpacked', 'Transferred'],
 }
 const bagViews = computed(() => {
-  const count = (v) => allBags.value.filter((b) => VIEWS[v].includes(b.state)).length
+  const count = (v) =>
+    allBags.value.filter((b) => VIEWS[v].includes(b.state)).length
   return [
     { value: 'sealed', label: 'Selladas', count: count('sealed') },
     { value: 'transit', label: 'En camino', count: count('transit') },
@@ -358,7 +508,9 @@ const bagViews = computed(() => {
   ]
 })
 const shownBags = computed(() =>
-  allBags.value.filter((b) => VIEWS[bagView.value].includes(b.state) && matches(b)),
+  allBags.value.filter(
+    (b) => VIEWS[bagView.value].includes(b.state) && matches(b),
+  ),
 )
 const emptyBags = computed(
   () =>
@@ -373,16 +525,28 @@ const emptyBags = computed(
 function bagLine(bag) {
   const fund = bag.purpose === 'Float' ? 'Fondo · ' : ''
   const h = bag.holder || {}
-  if (h.kind === 'safe') return `${fund}${fund ? 'responde' : 'Responde'} ${who(h.user, people.value)}`
+  if (h.kind === 'safe')
+    return `${fund}${fund ? 'responde' : 'Responde'} ${who(h.user, people.value)}`
   return fund + holderText(bag, people.value)
 }
 
 const liveTransfers = computed(() =>
-  tagged('transfers').filter((t) => !['Completed', 'Cancelled', 'Returned', 'Received'].includes(t.state)),
+  tagged('transfers').filter(
+    (t) =>
+      !['Completed', 'Cancelled', 'Returned', 'Received'].includes(t.state),
+  ),
 )
-const TRANSFER_KIND = { Float: 'Fondo', Change: 'Cambio', Drop: 'Retiro', SafeHandoff: 'Entrega' }
+const TRANSFER_KIND = {
+  Float: 'Fondo',
+  Change: 'Cambio',
+  Drop: 'Retiro',
+  SafeHandoff: 'Entrega',
+}
 function transferTitle(t) {
-  const to = t.destination_kind === 'Safe' ? 'la caja fuerte' : t.destination_label || 'una caja'
+  const to =
+    t.destination_kind === 'Safe'
+      ? 'la caja fuerte'
+      : t.destination_label || 'una caja'
   return `${TRANSFER_KIND[t.kind] || 'Traslado'} para ${to}`
 }
 function transferLine(t) {
@@ -398,7 +562,11 @@ function transferLine(t) {
 }
 function transferStep(t) {
   const safe = t._safe
-  if (t.source_kind === 'Safe' && ['Draft', 'Prepared'].includes(t.state) && safe.can.prepare)
+  if (
+    t.source_kind === 'Safe' &&
+    ['Draft', 'Prepared'].includes(t.state) &&
+    safe.can.prepare
+  )
     open(handTransfer(t, safe))
 }
 
@@ -408,7 +576,13 @@ const arqueos = computed(() =>
     .slice(0, 8),
 )
 function countTitle(c) {
-  const what = { Safe: 'Arqueo de la caja fuerte', Bag: 'Conteo de bolsa', Drawer: 'Corte de caja', Fund: 'Ingreso a la caja fuerte' }[c.scope] || 'Conteo'
+  const what =
+    {
+      Safe: 'Arqueo de la caja fuerte',
+      Bag: 'Conteo de bolsa',
+      Drawer: 'Corte de caja',
+      Fund: 'Ingreso a la caja fuerte',
+    }[c.scope] || 'Conteo'
   return c.state === 'Exception' ? `${what}: no cuadró` : what
 }
 function signed(n, currency) {
@@ -419,7 +593,10 @@ function signed(n, currency) {
 function waitingLine(action, bag) {
   const name = (u) => who(u, people.value)
   if (action === 'verify') return `la selló ${name(bag.prepared_by)}`
-  if (action === 'dispatch') return bag.verified_by ? `la verificó ${name(bag.verified_by)}` : 'verificada'
+  if (action === 'dispatch')
+    return bag.verified_by
+      ? `la verificó ${name(bag.verified_by)}`
+      : 'verificada'
   return holderText(bag, people.value)
 }
 
@@ -476,7 +653,9 @@ const waitingRows = computed(() => {
           title: transferTitle(t),
           subtitle: transferLine(t),
           icon: 'lucide-arrow-left-right',
-          amount: t.amounts_hidden ? '' : money(fromMinor(t.declared_minor), safe.currency),
+          amount: t.amounts_hidden
+            ? ''
+            : money(fromMinor(t.declared_minor), safe.currency),
           open: () => transferStep({ ...t, _safe: safe }),
         })
       }
@@ -486,12 +665,19 @@ const waitingRows = computed(() => {
     rows.push({
       key: `a:${a.name}`,
       action: 'authorize',
-      title: a.event === 'cancel' ? 'Autorizar una cancelación' : 'Autorizar un registro',
+      title:
+        a.event === 'cancel'
+          ? 'Autorizar una cancelación'
+          : 'Autorizar un registro',
       subtitle: `${a.title || a.document_name} · lo pide ${who(a.requested_by, people.value)}`,
       urgent: true,
       icon: 'lucide-signature',
-      amount: money(fromMinor(a.amount_minor), safes.value[0]?.currency || 'MXN'),
-      open: () => open(authorize(a, people.value, safes.value[0]?.currency || 'MXN')),
+      amount: money(
+        fromMinor(a.amount_minor),
+        safes.value[0]?.currency || 'MXN',
+      ),
+      open: () =>
+        open(authorize(a, people.value, safes.value[0]?.currency || 'MXN')),
     })
   }
   return rows
@@ -500,7 +686,9 @@ const waitingRows = computed(() => {
 const allWaiting = ref(false)
 const WAITING_SHOWN = 5
 const shownWaiting = computed(() =>
-  allWaiting.value || search.value.trim() ? waitingRows.value : waitingRows.value.slice(0, WAITING_SHOWN),
+  allWaiting.value || search.value.trim()
+    ? waitingRows.value
+    : waitingRows.value.slice(0, WAITING_SHOWN),
 )
 
 const sealable = computed(() => visibleSafes.value.filter((s) => s.can.prepare))
@@ -534,6 +722,14 @@ function afterStep() {
 watch(scope, () => (bagView.value = 'sealed'))
 load()
 // A cajero's drop, a teammate's verification or the bank run land without a reload.
-useLiveList(['POS Cash Bag', 'POS Cash Count', 'POS Cash Transfer', 'POS Cash Change Request'], load)
+useLiveList(
+  [
+    'POS Cash Bag',
+    'POS Cash Count',
+    'POS Cash Transfer',
+    'POS Cash Change Request',
+  ],
+  load,
+)
 defineExpose({ reload: load })
 </script>

@@ -2,7 +2,10 @@
   <!-- One cash bag (Shell-S14): its amount, who holds it now, the chain of
        hands it went through, its counts and photos, and the next step as one
        filled button, or the sentence that says who takes it. -->
-  <div class="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto" data-efectivo-bolsa>
+  <div
+    class="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto"
+    data-efectivo-bolsa
+  >
     <AppBar
       :title="bag ? bag.seal : 'Bolsa'"
       :back="{ name: 'Efectivo' }"
@@ -10,7 +13,10 @@
       :stack="false"
     >
       <template v-if="bag" #actions>
-        <div v-if="secondary.length" class="flex rounded-full bg-surface-gray-1 p-0.5">
+        <div
+          v-if="secondary.length"
+          class="flex rounded-full bg-surface-gray-1 p-0.5"
+        >
           <button
             v-for="item in secondary"
             :key="item.label"
@@ -27,27 +33,52 @@
     </AppBar>
 
     <div class="mx-auto w-full max-w-3xl flex-1">
-      <div v-if="loadError" role="alert" class="mx-4 my-3 space-y-3 rounded-6 bg-surface-red-1 p-4 text-sm text-ink-red-7">
+      <div
+        v-if="loadError"
+        role="alert"
+        class="mx-4 my-3 space-y-3 rounded-6 bg-surface-red-1 p-4 text-sm text-ink-red-7"
+      >
         <p>{{ loadError }}</p>
         <Button label="Reintentar" @click="load()" />
       </div>
-      <div v-else-if="!bag" role="status" aria-label="Cargando bolsa…" class="space-y-3 px-4 py-4">
+      <div
+        v-else-if="!bag"
+        role="status"
+        aria-label="Cargando bolsa…"
+        class="space-y-3 px-4 py-4"
+      >
         <div class="h-36 animate-pulse rounded-7 bg-surface-gray-2" />
-        <div v-for="n in 3" :key="n" class="h-12 animate-pulse rounded-7 bg-surface-gray-2" />
+        <div
+          v-for="n in 3"
+          :key="n"
+          class="h-12 animate-pulse rounded-7 bg-surface-gray-2"
+        />
       </div>
       <template v-else>
-        <section class="mx-4 mt-2 rounded-8 bg-surface-gray-1 p-4" data-efectivo-bolsa-hero>
+        <section
+          class="mx-4 mt-2 rounded-8 bg-surface-gray-1 p-4"
+          data-efectivo-bolsa-hero
+        >
           <div class="flex items-start justify-between gap-3">
             <p class="num break-words text-3xl font-semibold text-ink-gray-9">
               {{ money(bag.amount, safe.currency) }}
             </p>
-            <StatusChip :label="bagState(bag.state).label" :tone="bagState(bag.state).tone" />
+            <StatusChip
+              :label="bagState(bag.state).label"
+              :tone="bagState(bag.state).tone"
+            />
           </div>
           <p class="mt-1 text-sm text-ink-gray-6">
             {{ PURPOSE[bag.purpose] || '' }} · {{ safe.title }}
           </p>
-          <p class="mt-3 flex items-center gap-2 text-base font-medium text-ink-gray-9" data-efectivo-holder>
-            <span class="lucide-hand size-5 flex-none text-ink-gray-6" aria-hidden="true" />
+          <p
+            class="mt-3 flex items-center gap-2 text-base font-medium text-ink-gray-9"
+            data-efectivo-holder
+          >
+            <span
+              class="lucide-hand size-5 flex-none text-ink-gray-6"
+              aria-hidden="true"
+            />
             {{ holderText(bag, people) }}
           </p>
           <div class="mt-4">
@@ -60,24 +91,35 @@
               data-efectivo-next
               @click="run(next.action)"
             />
-            <p v-else-if="next?.reason" class="text-sm text-ink-gray-7" data-efectivo-guard>
+            <p
+              v-else-if="next?.reason"
+              class="text-sm text-ink-gray-7"
+              data-efectivo-guard
+            >
               {{ next.reason }}
               <a
                 v-if="next.pos"
                 class="font-medium text-ink-gray-9 underline"
                 href="/posapp/cash-custody"
-              >Abrir el POS</a>
+                >Abrir el POS</a
+              >
             </p>
           </div>
         </section>
 
         <section class="mt-5" aria-label="Por qué manos pasó">
-          <h2 class="px-4 pb-1 text-sm font-semibold text-ink-gray-8">Por qué manos pasó</h2>
+          <h2 class="px-4 pb-1 text-sm font-semibold text-ink-gray-8">
+            Por qué manos pasó
+          </h2>
           <ol class="px-4">
             <li v-for="(item, i) in chain" :key="i" class="flex gap-3 pb-3">
               <span
                 class="mt-1.5 size-2.5 flex-none rounded-full"
-                :class="i === chain.length - 1 ? 'bg-ink-gray-9' : 'bg-outline-gray-3'"
+                :class="
+                  i === chain.length - 1
+                    ? 'bg-surface-gray-9'
+                    : 'bg-surface-gray-4'
+                "
                 aria-hidden="true"
               />
               <div class="min-w-0">
@@ -89,22 +131,41 @@
         </section>
 
         <section v-if="counts.length" class="mt-3" aria-label="Conteos">
-          <h2 class="px-4 pb-1 text-sm font-semibold text-ink-gray-8">Conteos</h2>
+          <h2 class="px-4 pb-1 text-sm font-semibold text-ink-gray-8">
+            Conteos
+          </h2>
           <ul class="divide-y divide-outline-gray-1">
-            <li v-for="c in counts" :key="c.name" class="flex items-center gap-3 px-4 py-2.5">
+            <li
+              v-for="c in counts"
+              :key="c.name"
+              class="flex items-center gap-3 px-4 py-2.5"
+            >
               <div class="min-w-0 flex-1">
-                <p class="text-base text-ink-gray-9">{{ who(c.counted_by, people) }}</p>
-                <p class="truncate text-sm" :class="c.state === 'Exception' ? 'text-ink-red-7' : 'text-ink-gray-6'">
+                <p class="text-base text-ink-gray-9">
+                  {{ who(c.counted_by, people) }}
+                </p>
+                <p
+                  class="truncate text-sm"
+                  :class="
+                    c.state === 'Exception'
+                      ? 'text-ink-red-7'
+                      : 'text-ink-gray-6'
+                  "
+                >
                   {{ countLine(c) }}
                 </p>
               </div>
-              <span class="num text-base font-semibold text-ink-gray-9">{{ money(c.amount, safe.currency) }}</span>
+              <span class="num text-base font-semibold text-ink-gray-9">{{
+                money(c.amount, safe.currency)
+              }}</span>
             </li>
           </ul>
         </section>
 
         <section class="mt-3" aria-label="Fotos">
-          <h2 class="flex items-center justify-between px-4 pb-1 text-sm font-semibold text-ink-gray-8">
+          <h2
+            class="flex items-center justify-between px-4 pb-1 text-sm font-semibold text-ink-gray-8"
+          >
             <span>Fotos</span>
             <label
               v-if="photos.can_upload"
@@ -112,17 +173,42 @@
             >
               <span class="lucide-camera size-5" aria-hidden="true" />
               {{ uploading ? 'Subiendo…' : 'Agregar foto' }}
-              <input type="file" accept="image/*" capture="environment" class="sr-only" :disabled="uploading" @change="addPhoto" />
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                class="sr-only"
+                :disabled="uploading"
+                @change="addPhoto"
+              />
             </label>
           </h2>
-          <p v-if="photoError" role="alert" class="mx-4 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7">{{ photoError }}</p>
+          <p
+            v-if="photoError"
+            role="alert"
+            class="mx-4 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
+          >
+            {{ photoError }}
+          </p>
           <div v-if="photos.photos.length" class="grid grid-cols-3 gap-2 px-4">
-            <a v-for="p in photos.photos" :key="p.name" :href="p.file_url" target="_blank" rel="noopener">
-              <img :src="p.file_url" alt="Foto de la bolsa" class="aspect-square w-full rounded-6 object-cover" loading="lazy" />
+            <a
+              v-for="p in photos.photos"
+              :key="p.name"
+              :href="p.file_url"
+              target="_blank"
+              rel="noopener"
+            >
+              <img
+                :src="p.file_url"
+                alt="Foto de la bolsa"
+                class="aspect-square w-full rounded-6 object-cover"
+                loading="lazy"
+              />
             </a>
           </div>
           <p v-else class="px-4 text-sm text-ink-gray-6">
-            Sin fotos. Una foto del sello y del número ayuda si alguien duda de la bolsa.
+            Sin fotos. Una foto del sello y del número ayuda si alguien duda de
+            la bolsa.
           </p>
         </section>
         <div class="h-28 flex-none lg:h-12" aria-hidden="true" />
@@ -174,7 +260,11 @@ const counts = computed(() => data.value?.counts || [])
 
 const next = computed(() => {
   const found = bagStep(bag.value, safe.value, data.value?.me)
-  if (found?.reason && bag.value?.purpose === 'Float' && bag.value?.state === 'Available')
+  if (
+    found?.reason &&
+    bag.value?.purpose === 'Float' &&
+    bag.value?.state === 'Available'
+  )
     return { ...found, pos: true }
   return found
 })
@@ -184,9 +274,17 @@ const secondary = computed(() => {
   const can = safe.value.can || {}
   const out = []
   if (b?.state === 'In Transit' && (can.dispatch || can.confirm_bank))
-    out.push({ label: 'Regresó sin depositar', icon: 'lucide-undo-2', run: () => run('return_bank') })
+    out.push({
+      label: 'Regresó sin depositar',
+      icon: 'lucide-undo-2',
+      run: () => run('return_bank'),
+    })
   if (b?.state === 'Available' && can.unpack)
-    out.push({ label: 'Abrir la bolsa', icon: 'lucide-package-open', run: () => run('unpack') })
+    out.push({
+      label: 'Abrir la bolsa',
+      icon: 'lucide-package-open',
+      run: () => run('unpack'),
+    })
   return out
 })
 
@@ -210,16 +308,20 @@ const chain = computed(() => {
     }[e.action]
     if (text) out.push({ text, when: formatDateTime(e.creation) })
   }
-  if (!out.length) out.push({ text: `La selló ${name(b.prepared_by)}`, when: '' })
+  if (!out.length)
+    out.push({ text: `La selló ${name(b.prepared_by)}`, when: '' })
   return out
 })
 
 function countLine(c) {
   if (c.state === 'Exception') {
     const d = Number(c.difference) || 0
-    return d ? `No cuadró: ${d < 0 ? 'faltan' : 'sobran'} ${money(Math.abs(d), safe.value.currency)}` : 'No cuadró'
+    return d
+      ? `No cuadró: ${d < 0 ? 'faltan' : 'sobran'} ${money(Math.abs(d), safe.value.currency)}`
+      : 'No cuadró'
   }
-  if (c.state === 'Reviewed') return `Diferencia resuelta por ${who(c.reviewed_by, people.value)}`
+  if (c.state === 'Reviewed')
+    return `Diferencia resuelta por ${who(c.reviewed_by, people.value)}`
   return `Cuadró · ${formatDateTime(c.creation)}`
 }
 
@@ -234,7 +336,9 @@ function run(action) {
     return_bank: () => returnFromBank(b, s, p),
     unpack: () => unpackBag(b, s),
     review: () => {
-      const open = [...counts.value].reverse().find((c) => c.state === 'Exception')
+      const open = [...counts.value]
+        .reverse()
+        .find((c) => c.state === 'Exception')
       return open ? reviewCount(open, s, p) : null
     },
   }

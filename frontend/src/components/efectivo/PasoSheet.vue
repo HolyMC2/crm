@@ -28,7 +28,9 @@
       </p>
       <p v-if="message" class="text-sm text-ink-gray-7">{{ message }}</p>
       <label v-for="field in fields" :key="field.key" class="block space-y-1">
-        <span class="text-sm font-medium text-ink-gray-7">{{ field.label }}</span>
+        <span class="text-sm font-medium text-ink-gray-7">{{
+          field.label
+        }}</span>
         <textarea
           v-if="field.kind === 'reason'"
           v-model="values[field.key]"
@@ -48,13 +50,20 @@
           :disabled="busy"
           :data-field="field.key"
         />
-        <span v-if="field.hint" class="block text-xs text-ink-gray-6">{{ field.hint }}</span>
+        <span v-if="field.hint" class="block text-xs text-ink-gray-6">{{
+          field.hint
+        }}</span>
       </label>
-      <p v-if="error" role="alert" class="rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7">
-        {{ error }}
-      </p>
     </div>
     <template #actions>
+      <p
+        v-if="error"
+        role="alert"
+        class="mb-2 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
+        data-efectivo-error
+      >
+        {{ error }}
+      </p>
       <Button
         :variant="danger ? 'subtle' : 'solid'"
         :theme="danger ? 'red' : 'gray'"
@@ -65,7 +74,10 @@
         data-efectivo-confirm
         @click="confirm"
       />
-      <p v-if="!ready && missing" class="mt-2 text-center text-sm text-ink-gray-6">
+      <p
+        v-if="!ready && missing"
+        class="mt-2 text-center text-sm text-ink-gray-6"
+      >
         {{ missing }}
       </p>
     </template>
@@ -109,14 +121,17 @@ watch(
 
 const short = computed(() =>
   props.fields.find(
-    (f) => String(values[f.key] || '').trim().length < (f.min ?? (f.kind === 'reason' ? 8 : 1)),
+    (f) =>
+      String(values[f.key] || '').trim().length <
+      (f.min ?? (f.kind === 'reason' ? 8 : 1)),
   ),
 )
 const ready = computed(() => !short.value)
 const missing = computed(() => {
   const field = short.value
   if (!field) return ''
-  if (field.kind === 'reason') return 'Escribe el motivo, con ocho letras o más.'
+  if (field.kind === 'reason')
+    return 'Escribe el motivo, con ocho letras o más.'
   if (field.kind === 'password') return 'Escribe tu contraseña para firmar.'
   return `Falta: ${field.label.toLowerCase()}.`
 })
@@ -126,7 +141,8 @@ async function confirm() {
   error.value = ''
   try {
     const out = {}
-    for (const field of props.fields) out[field.key] = String(values[field.key] || '').trim()
+    for (const field of props.fields)
+      out[field.key] = String(values[field.key] || '').trim()
     const result = await props.submit(out)
     emit('done', result)
     emit('update:open', false)
@@ -134,7 +150,8 @@ async function confirm() {
     error.value = e?.message || String(e)
   } finally {
     busy.value = false
-    for (const field of props.fields) if (field.kind === 'password') values[field.key] = ''
+    for (const field of props.fields)
+      if (field.kind === 'password') values[field.key] = ''
   }
 }
 </script>
