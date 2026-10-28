@@ -11,6 +11,10 @@ Reparaciones. This module composes them: one try/except per card (a failing
 card shows its own retry, never takes the board down) and a per-user cache
 keyed by the query and a generation counter that a submitted or cancelled
 sale, cash closing or repair order moves after commit.
+
+Hoy reads the Ventas card for today through `board` (crm.api.hoy._sales_today:
+value, prev, facts, attention, drill), so a change to that card's shape is a
+change to Hoy too.
 """
 
 import json
