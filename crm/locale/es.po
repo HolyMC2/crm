@@ -28973,8 +28973,8 @@ msgstr "Por terminar"
 msgid "New bill date"
 msgstr "Nueva fecha de la factura"
 
-msgid "What ERPNext said:"
-msgstr "Lo que dijo ERPNext:"
+msgid "The reason given:"
+msgstr "El motivo:"
 
 msgid "Fix it in the full form"
 msgstr "Corregir en el formulario completo"
@@ -28982,8 +28982,8 @@ msgstr "Corregir en el formulario completo"
 msgid "The supplier {0} is deactivated"
 msgstr "El proveedor {0} está desactivado"
 
-msgid "ERPNext does not register bills from a deactivated supplier. Activate it and this bill registers right away."
-msgstr "ERPNext no registra facturas de un proveedor desactivado. Actívalo y esta factura se registra enseguida."
+msgid "A deactivated supplier takes no new bills. Activate it and this bill registers right away."
+msgstr "Un proveedor desactivado no acepta facturas nuevas. Actívalo y esta factura se registra enseguida."
 
 msgid "Activate supplier and register"
 msgstr "Activar proveedor y registrar"
@@ -29027,8 +29027,8 @@ msgstr "Pedir a contabilidad que lo reabra"
 msgid "Bill dated {0} is in a closed accounting period: {1}"
 msgstr "La factura con fecha {0} está en un periodo contable cerrado: {1}"
 
-msgid "ERPNext did not register it"
-msgstr "ERPNext no la registró"
+msgid "The bill could not be registered"
+msgstr "La factura no se pudo registrar"
 
 msgid "Something on the bill needs a correction first. Fix it, then try again."
 msgstr "Algo en la factura necesita corregirse primero. Corrígelo y vuelve a intentar."

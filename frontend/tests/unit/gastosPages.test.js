@@ -439,7 +439,7 @@ describe('Gastos bill record', () => {
   it('anything else: ERPNext’s sentence, «Try again» and the review ask', async () => {
     answers.invoice = refused({ kind: 'other' }, 'Expense account is mandatory')
     await mountAt('/gastos/factura/PI-1')
-    expect(root.textContent).toContain('ERPNext did not register it')
+    expect(root.textContent).toContain('The bill could not be registered')
     expect(root.textContent).toContain('Expense account is mandatory')
     expect(root.textContent).toContain('Try again')
     expect(root.textContent).toContain('Ask for a review')

@@ -32,7 +32,7 @@
 
       <p v-if="kind === 'other' || !canFix" class="text-sm text-ink-gray-6">
         <span class="font-medium text-ink-gray-7">{{
-          __('What ERPNext said:')
+          __('The reason given:')
         }}</span>
         {{ registration.message }}
       </p>
@@ -119,7 +119,7 @@ const copy = computed(() => {
     return {
       title: __('The supplier {0} is deactivated', [supplier]),
       body: __(
-        'ERPNext does not register bills from a deactivated supplier. Activate it and this bill registers right away.',
+        'A deactivated supplier takes no new bills. Activate it and this bill registers right away.',
       ),
       fix: __('Activate supplier and register'),
       whoCan: __('Activating a supplier is for whoever manages suppliers.'),
@@ -158,7 +158,7 @@ const copy = computed(() => {
       ]),
     }
   return {
-    title: __('ERPNext did not register it'),
+    title: __('The bill could not be registered'),
     body: __(
       'Something on the bill needs a correction first. Fix it, then try again.',
     ),
