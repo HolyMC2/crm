@@ -4,9 +4,13 @@
        Phone: one chip per home, its queues as rows. Desktop: every home as a
        card. Every row opens the queue in the shell. -->
   <div
-    class="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-surface-base"
+    class="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-surface-base"
   >
-    <AppBar title="Inmobiliaria" :loading="loading" data-testid="inmo-appbar" />
+    <AppBar
+      title="Inmobiliaria"
+      :loading="loading && !!data"
+      data-testid="inmo-appbar"
+    />
     <div class="flex-1 overflow-y-auto pb-24">
       <EmptyState
         v-if="problem && !data"
@@ -25,7 +29,24 @@
           @click="router.push(salida.to)"
         />
       </EmptyState>
-      <EmptyState v-else-if="!data" state="loading" title="Abriendo…" />
+      <!-- Opening: the home's rows in grey, so nothing jumps when they land. -->
+      <ul
+        v-else-if="!data"
+        class="animate-pulse px-4 pt-4 motion-reduce:animate-none"
+        role="status"
+        aria-label="Abriendo…"
+        data-testid="inmo-esqueleto"
+      >
+        <li class="mb-4 h-14 rounded-8 bg-surface-gray-1" />
+        <li
+          v-for="n in 5"
+          :key="n"
+          class="flex min-h-12 items-center justify-between gap-3"
+        >
+          <span class="h-3.5 w-1/2 rounded-full bg-surface-gray-2" />
+          <span class="h-3.5 w-6 rounded-full bg-surface-gray-2" />
+        </li>
+      </ul>
       <template v-else>
         <div v-if="accesos.length" class="flex flex-col gap-2 px-4 pt-2">
           <component
@@ -33,7 +54,7 @@
             v-for="a in accesos"
             :key="a.key"
             v-bind="a.link"
-            class="flex min-h-14 items-center gap-3 rounded-8 bg-surface-gray-2 px-4 text-base-medium text-ink-gray-9"
+            class="press flex min-h-14 items-center gap-3 rounded-8 bg-surface-gray-2 px-4 text-base-medium text-ink-gray-9 hover:bg-surface-gray-3"
             :data-acceso="a.key"
           >
             <span :class="[a.icono, 'size-5']" aria-hidden="true" />
@@ -66,7 +87,9 @@
             />
           </div>
           <section v-if="home" class="pt-2">
-            <h2 class="px-4 pb-1 text-lg font-semibold text-ink-gray-9">
+            <h2
+              class="title-face px-4 pb-1 text-lg font-semibold text-ink-gray-9"
+            >
               {{ home.titulo }}
             </h2>
             <ListRow
@@ -77,10 +100,11 @@
               icon="lucide-list-checks"
               :strong="c.count > 0"
               :data-cola="c.key"
+              :data-fresh="live.fresh.value.has(c.key) ? '' : undefined"
             >
               <template #trailing>
                 <span
-                  class="min-w-8 rounded-full px-2 py-0.5 text-center text-base font-semibold tabular-nums"
+                  class="num min-w-8 rounded-full px-2 py-0.5 text-center text-base font-semibold"
                   :class="
                     c.count
                       ? 'bg-surface-gray-3 text-ink-gray-9'
@@ -102,7 +126,9 @@
             :key="i.key"
             class="rounded-8 border border-outline-gray-1 py-3"
           >
-            <h2 class="px-4 pb-1 text-lg font-semibold text-ink-gray-9">
+            <h2
+              class="title-face px-4 pb-1 text-lg font-semibold text-ink-gray-9"
+            >
               {{ i.titulo }}
             </h2>
             <ListRow
@@ -111,10 +137,11 @@
               :title="c.etiqueta"
               :to="queueTo(c, i.key)"
               :strong="c.count > 0"
+              :data-fresh="live.fresh.value.has(c.key) ? '' : undefined"
             >
               <template #trailing>
                 <span
-                  class="text-base font-semibold tabular-nums"
+                  class="num text-base font-semibold"
                   :class="c.count ? 'text-ink-gray-9' : 'text-ink-gray-5'"
                   >{{ c.count }}</span
                 >
@@ -124,6 +151,15 @@
         </div>
       </template>
     </div>
+    <!-- The page's one create action, at the thumb: hold a unit, starting
+         from the ones still available. -->
+    <Fab
+      v-if="apartarTo"
+      label="Apartar una unidad"
+      icon="lucide-bookmark"
+      :to="apartarTo"
+      data-testid="inmo-apartar"
+    />
   </div>
 </template>
 
@@ -132,8 +168,10 @@ import { computed, onMounted, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { Button } from 'frappe-ui'
 import { useWindowSize } from '@vueuse/core'
-import { AppBar, EmptyState, FilterChips, ListRow } from '@/components/ui'
+import { AppBar, EmptyState, Fab, FilterChips, ListRow } from '@/components/ui'
 import { firstModuleRoute, shellBoot } from '@/composables/muelleShell'
+import { can } from '@/vendor/muelle-shell/contracts'
+import { useLiveList } from '@/composables/liveList'
 import {
   inmobiliariaApi,
   linkOf,
@@ -194,6 +232,43 @@ function queueTo(cola, inicio = current.value) {
   const to = linkOf(cola.url).to || `/inmobiliaria/cola/${cola.key}`
   return { path: to, query: { inicio } }
 }
+
+// «Apartar» needs the board and the right to hold; it opens the available units.
+const apartarTo = computed(() =>
+  data.value &&
+  can(shellBoot.value, 'inmobiliaria', 'apartar') &&
+  (data.value.accesos || []).some((a) => a.key === 'disponibilidad')
+    ? { path: '/inmobiliaria/disponibilidad', query: { estatus: 'Disponible' } }
+    : null,
+)
+
+// The counts stay current: a save to any record a queue lists refreshes the
+// home, and a queue whose count changed glows for a moment.
+const counts = () =>
+  Object.fromEntries(
+    (data.value?.inicios || []).flatMap((i) =>
+      i.colas.map((c) => [c.key, c.count]),
+    ),
+  )
+const live = useLiveList(
+  () => [
+    ...new Set(
+      (data.value?.inicios || []).flatMap((i) =>
+        i.colas.map((c) => c.doctype).filter(Boolean),
+      ),
+    ),
+  ],
+  async () => {
+    const was = counts()
+    await load()
+    const now = counts()
+    const keys = Object.keys(now)
+    live.mark(
+      keys.filter((k) => was[k] === now[k]),
+      keys,
+    )
+  },
+)
 
 async function load() {
   loading.value = true
