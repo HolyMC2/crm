@@ -1107,4 +1107,183 @@ describe('Agenda page', () => {
       event: 'Event:EV-9',
     })
   })
+
+  // --- Shell-S7 polish 2026-10-28: the chain from an event to its next step --------
+
+  it('a phone «+» opens the quick sheet on the viewed day, past what is busy', async () => {
+    window.innerWidth = 390
+    window.dispatchEvent(new Event('resize'))
+    await mountAt('/agenda?view=day&date=2026-10-07')
+    // EV-1 takes 10:00–11:00 (Mexico City); 9:00 on another day would clash at
+    // 9:30 with a 60-minute default, so the guess moves to 11:00.
+    handler = ((base) => (method, args) =>
+      method.endsWith('.query')
+        ? {
+            timeZone: TZ,
+            resources: [],
+            events: [
+              event('EV-1', '2026-10-07T15:30:00Z', '2026-10-07T17:00:00Z'),
+            ],
+          }
+        : base(method, args))(handler)
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k' }))
+    await flush()
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'j' }))
+    await flush()
+    document.body.querySelector('.ag-fab').click()
+    await flush()
+    // The quick card, not the full form.
+    expect(document.body.querySelector('.ag-qc.is-phone')).not.toBeNull()
+    expect(
+      document.body.querySelector(
+        'input[placeholder="Call, visit, delivery…"]',
+      ),
+    ).toBeNull()
+    const times = [
+      ...document.body.querySelectorAll('.ag-qc input[type="time"]'),
+    ].map((input) => input.value)
+    expect(times).toEqual(['11:00', '12:00'])
+    expect(document.body.querySelector('.ag-qc input[type="date"]').value).toBe(
+      '2026-10-07',
+    )
+  })
+
+  it('draws a quick-saved event at once and reopens the card when it is refused', async () => {
+    let answer
+    const base = handler
+    handler = (method, args) =>
+      method.endsWith('.create')
+        ? new Promise((resolve) => (answer = resolve))
+        : base(method, args)
+    grid()
+    await mountAt('/agenda?view=week&date=2026-10-07')
+    const column = root.querySelector('.ag-tg__col[data-date="2026-10-08"]')
+    pointer('pointerdown', 150, 480, column)
+    pointer('pointerup', 150, 480)
+    await flush()
+    const title = document.body.querySelector('.ag-qc__title')
+    title.value = 'Visita a Rosa'
+    title.dispatchEvent(new Event('input'))
+    document.body.querySelector('.ag-qc').requestSubmit()
+    await flush()
+    // Closed and drawn before the server answers.
+    expect(document.body.querySelector('.ag-qc')).toBeNull()
+    const drawn = [...root.querySelectorAll('.ag-event.is-pending')]
+    expect(drawn.map((row) => row.textContent)).toEqual([
+      expect.stringContaining('Visita a Rosa'),
+    ])
+    answer({
+      constraints: [
+        {
+          code: 'overlap',
+          message: 'Ya tienes algo a esa hora.',
+          severity: 'warn',
+        },
+      ],
+    })
+    await flush()
+    expect(root.querySelector('.ag-event.is-pending')).toBeNull()
+    expect(document.body.querySelector('.ag-qc__title').value).toBe(
+      'Visita a Rosa',
+    )
+    expect(document.body.textContent).toContain('Ya tienes algo a esa hora.')
+  })
+
+  it('reaches the guest from the card and offers a follow-up once it is done', async () => {
+    const base = handler
+    let release
+    handler = (method, args) => {
+      if (method.endsWith('.detail'))
+        return {
+          ...base(method, args),
+          attendees: [
+            {
+              doctype: 'Contact',
+              name: 'CT-1',
+              label: 'Rosa Pérez',
+              email: '',
+            },
+          ],
+          reference: { doctype: 'CRM Deal', name: 'D-1', label: 'Minisplit' },
+        }
+      if (method === 'frappe.client.get_value')
+        return args.doctype === 'Contact'
+          ? { mobile_no: '+52 669 123 4567', full_name: 'Rosa Pérez' }
+          : {}
+      if (method.endsWith('.set_status'))
+        return new Promise((resolve) => (release = resolve))
+      const value = base(method, args)
+      // Once the server took it, the agenda reads it back as done.
+      if (finished && method.endsWith('.query'))
+        return {
+          ...value,
+          events: value.events.map((row) => ({ ...row, status: 'Done' })),
+        }
+      if (finished && method.endsWith('.detail'))
+        return { ...value, status: 'Done' }
+      return value
+    }
+    let finished = false
+    await mountAt('/agenda?view=week&date=2026-10-07&event=Event:EV-1')
+    await flush()
+    const card = document.body
+    expect(
+      card.querySelector('[data-testid="event-record"]').textContent,
+    ).toContain('Minisplit')
+    expect(card.querySelector('[data-reach="call"]').getAttribute('href')).toBe(
+      'tel:+526691234567',
+    )
+    expect(
+      card.querySelector('[data-reach="whatsapp"]').getAttribute('href'),
+    ).toMatch(/^https:\/\/wa\.me\/526691234567/)
+    // Mark it done (first or second button, whether it already ended or not).
+    const done = [...card.querySelectorAll('button')].find(
+      (button) => button.textContent.trim() === 'Mark as done',
+    )
+    done.click()
+    await flush()
+    // Optimistic: done before the server answers, with the follow-up ready.
+    expect(card.querySelector('[data-testid="event-follow-up"]')).not.toBeNull()
+    finished = true
+    release({
+      ...event('EV-1', '2026-10-07T16:00:00Z', '2026-10-07T17:00:00Z'),
+      status: 'Done',
+    })
+    await flush()
+    card.querySelector('[data-testid="event-follow-up"]').click()
+    await flush()
+    // A week later, same time, same person and record.
+    expect(document.body.querySelector('.ag-qc__title').value).toBe(
+      'Follow-up: Cita EV-1',
+    )
+    expect(document.body.querySelector('.ag-qc input[type="date"]').value).toBe(
+      '2026-10-14',
+    )
+    expect(
+      document.body.querySelector('[data-testid="quick-guests"]').textContent,
+    ).toContain('Rosa Pérez')
+  })
+
+  it('puts the card back when marking it done is refused', async () => {
+    const base = handler
+    handler = (method, args) =>
+      method.endsWith('.set_status')
+        ? {
+            constraints: [
+              { code: 'stale_version', message: 'Cambió.', severity: 'block' },
+            ],
+          }
+        : base(method, args)
+    await mountAt('/agenda?view=week&date=2026-10-07&event=Event:EV-1')
+    await flush()
+    const done = [...document.body.querySelectorAll('button')].find(
+      (button) => button.textContent.trim() === 'Mark as done',
+    )
+    done.click()
+    await flush()
+    expect(
+      root.querySelector('.ag-event[data-event-id="EV-1"]').className,
+    ).not.toContain('is-done')
+    expect(document.body.textContent).toContain('Cambió.')
+  })
 })

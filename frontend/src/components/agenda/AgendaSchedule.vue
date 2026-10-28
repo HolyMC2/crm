@@ -295,6 +295,7 @@ const pillClasses = (event) => ({
   'is-past': isPast(event),
   'is-done': event.status === 'Done' || event.status === 'Cancelled',
   'is-selected': props.selected === key(event),
+  'is-pending': Boolean(event.pending),
 })
 
 // Reaching the end asks for more days (the page grows the range up to its limit).
@@ -413,6 +414,11 @@ onBeforeUnmount(() => observer?.disconnect())
 .ag-sch__pill.is-done .ag-sch__title > .truncate {
   text-decoration: line-through;
   text-decoration-color: color-mix(in srgb, currentColor 55%, transparent);
+}
+.ag-sch__pill.is-pending {
+  /* Saved on this screen, on its way to the server: drawn at once, opened once it lands. */
+  pointer-events: none;
+  opacity: 0.72;
 }
 .ag-sch__pill.is-selected {
   box-shadow: 0 0 0 2px var(--ag-accent);

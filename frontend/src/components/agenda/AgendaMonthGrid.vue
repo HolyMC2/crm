@@ -173,7 +173,7 @@
           <button
             type="button"
             class="ag-month__cardnum"
-            @click="(emit('open-day', more.date), (more = null))"
+            @click="emit('open-day', more.date), (more = null)"
           >
             {{ Number(more.date.slice(8)) }}
           </button>
@@ -197,12 +197,8 @@
           :style="isBar(event) ? paint(event) : {}"
           :data-event-id="event.id"
           @click="
-            (emit(
-              'select',
-              event,
-              $event.currentTarget.getBoundingClientRect(),
-            ),
-            (more = null))
+            emit('select', event, $event.currentTarget.getBoundingClientRect()),
+              (more = null)
           "
         >
           <template v-if="isBar(event)">
@@ -464,6 +460,7 @@ function itemClasses(item) {
     'is-before': item.before,
     'is-after': item.after,
     'is-draggable': Boolean(item.event.draggable),
+    'is-pending': Boolean(item.event.pending),
   }
 }
 
@@ -844,6 +841,11 @@ onBeforeUnmount(() => {
 .ag-month__item.is-selected {
   box-shadow: 0 4px 12px -4px rgba(0, 0, 0, 0.45);
   z-index: 5;
+}
+.ag-month__item.is-pending {
+  /* Saved on this screen, on its way to the server: drawn at once, opened once it lands. */
+  pointer-events: none;
+  opacity: 0.72;
 }
 .ag-month__dot {
   flex: none;

@@ -1,12 +1,13 @@
 <template>
   <form
     class="ag-qc"
+    :class="{ 'is-phone': phone }"
     novalidate
     @submit.prevent="save"
     @keydown.meta.enter.prevent="save"
     @keydown.ctrl.enter.prevent="save"
   >
-    <div class="ag-qc__bar">
+    <div v-if="!phone" class="ag-qc__bar">
       <span
         class="lucide-grip-horizontal h-4 w-4 text-ink-gray-5"
         aria-hidden="true"
@@ -210,6 +211,13 @@
           }}</span>
         </button>
       </template>
+      <div v-if="guests.length" class="ag-qc__row" data-testid="quick-guests">
+        <span class="lucide-user-round h-5 w-5" aria-hidden="true" />
+        <span class="truncate text-sm"
+          >{{ __('With') }}
+          <strong>{{ guests.map((row) => row.label).join(', ') }}</strong></span
+        >
+      </div>
       <div v-if="context?.reference" class="ag-qc__row">
         <span class="lucide-link h-5 w-5" aria-hidden="true" />
         <span class="truncate text-sm"
@@ -305,7 +313,12 @@ const props = defineProps({
   context: { type: Object, default: null }, // { reference, attendees, title }
   busy: { type: Boolean, default: false },
   constraints: { type: Array, default: () => [] },
+  // In the phone sheet: 44 px controls, the sheet's own handle instead of the bar.
+  phone: { type: Boolean, default: false },
 })
+const guests = computed(() =>
+  (props.context?.attendees || []).filter((row) => row?.label || row?.name),
+)
 const emit = defineEmits([
   'save',
   'more',
@@ -371,8 +384,8 @@ const form = reactive({
   startTime: props.draft.allDay ? '09:00' : start.time,
   endTime: props.draft.allDay ? '10:00' : end.time,
   allDay: Boolean(props.draft.allDay),
-  location: '',
-  color: '',
+  location: props.draft.location || props.context?.location || '',
+  color: props.draft.color || '',
   priority: 'Medium',
   notes: '',
 })
@@ -694,5 +707,30 @@ onMounted(async () => {
   justify-content: flex-end;
   gap: 8px;
   padding: 8px 16px 16px;
+}
+.ag-qc.is-phone .ag-qc__body {
+  padding: 0 0 8px;
+}
+.ag-qc.is-phone .ag-qc__input,
+.ag-qc.is-phone .ag-qc__plain,
+.ag-qc.is-phone .ag-qc__tab,
+.ag-qc.is-phone .ag-qc__chip,
+.ag-qc.is-phone .ag-qc__person {
+  min-height: 44px;
+  font-size: 16px;
+}
+.ag-qc.is-phone .ag-qc__title {
+  margin-left: 0;
+  width: 100%;
+}
+.ag-qc.is-phone .ag-qc__tabs {
+  margin-left: 0;
+}
+.ag-qc.is-phone .ag-qc__foot {
+  padding: 8px 0 0;
+}
+.ag-qc.is-phone .ag-qc__foot :deep(button) {
+  min-height: 44px;
+  padding: 0 18px;
 }
 </style>

@@ -437,6 +437,7 @@ function eventClasses(item) {
     'is-cancelled': event.status === 'Cancelled',
     'is-selected': props.selectedKey === key(event),
     'is-draggable': Boolean(event.draggable),
+    'is-pending': Boolean(event.pending),
     'is-before': item.before,
     'is-after': item.after,
   }
@@ -1154,6 +1155,11 @@ defineExpose({ scrollToStart, rectOf })
   text-overflow: ellipsis;
   white-space: nowrap;
   opacity: 0.92;
+}
+.ag-event.is-pending {
+  /* Saved on this screen, on its way to the server: drawn at once, opened once it lands. */
+  pointer-events: none;
+  opacity: 0.72;
 }
 .ag-event__icon {
   display: inline-block;

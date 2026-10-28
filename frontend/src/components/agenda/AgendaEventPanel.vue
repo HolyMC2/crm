@@ -87,7 +87,14 @@
         >
           {{ event.title }}
         </h2>
-        <p class="mt-1 text-sm text-ink-gray-7">{{ when }}</p>
+        <p class="mt-1 text-sm text-ink-gray-7">
+          {{ when.day
+          }}<span
+            v-if="when.time"
+            class="num block text-base text-ink-gray-8"
+            >{{ when.time }}</span
+          >
+        </p>
         <p v-if="event.recurrenceLabel" class="text-sm text-ink-gray-6">
           {{ event.recurrenceLabel }}
         </p>
@@ -225,6 +232,71 @@
     </template>
 
     <template v-else-if="!task">
+      <div
+        v-if="
+          detail && event.source === 'Event' && detail.reference && !detail.cita
+        "
+        class="flex items-center gap-2"
+      >
+        <component
+          :is="referenceLink.to ? RouterLink : 'a'"
+          v-bind="
+            referenceLink.to
+              ? { to: referenceLink.to }
+              : {
+                  href: referenceLink.href,
+                  target: '_blank',
+                  rel: 'noopener',
+                }
+          "
+          class="ag-rec press"
+          data-testid="event-record"
+        >
+          <span
+            :class="recordIcon"
+            class="h-5 w-5 shrink-0 text-ink-gray-6"
+            aria-hidden="true"
+          />
+          <span class="min-w-0 flex-1">
+            <span v-if="recordKind" class="block text-xs text-ink-gray-6">{{
+              recordKind
+            }}</span>
+            <span
+              class="block truncate text-base font-medium text-ink-gray-9"
+              >{{ detail.reference.label || detail.reference.name }}</span
+            >
+          </span>
+          <span
+            class="lucide-chevron-right h-4 w-4 shrink-0 text-ink-gray-5"
+            aria-hidden="true"
+          />
+        </component>
+        <span
+          v-if="reach && reach.doctype === detail.reference.doctype"
+          class="ag-reach"
+          role="group"
+          :aria-label="__('Contact')"
+        >
+          <a
+            :href="`tel:${reach.phone}`"
+            class="ag-reach__btn press"
+            data-reach="call"
+            :aria-label="__('Call {0}', [reach.who || recordKind])"
+            :title="__('Call {0}', [reach.who || recordKind])"
+            ><span class="lucide-phone h-4 w-4" aria-hidden="true"
+          /></a>
+          <a
+            :href="whatsappHref"
+            target="_blank"
+            rel="noopener"
+            class="ag-reach__btn press"
+            data-reach="whatsapp"
+            :aria-label="__('WhatsApp {0}', [reach.who || recordKind])"
+            :title="__('WhatsApp {0}', [reach.who || recordKind])"
+            ><WhatsAppIcon class="h-4 w-4" aria-hidden="true"
+          /></a>
+        </span>
+      </div>
       <div v-if="loading" class="space-y-2" aria-busy="true">
         <div class="h-4 w-2/3 animate-pulse rounded-4 bg-surface-gray-2" />
         <div class="h-4 w-1/2 animate-pulse rounded-4 bg-surface-gray-2" />
@@ -273,22 +345,57 @@
           {{ detail.organizer.me ? __('You') : detail.organizer.name }}
         </dd>
         <template v-if="detail.attendees.length">
-          <dt class="text-ink-gray-6">{{ __('With') }}</dt>
+          <dt class="flex min-h-9 items-center text-ink-gray-6">
+            {{ __('With') }}
+          </dt>
           <dd class="text-ink-gray-9">
             <ul>
               <li
                 v-for="person in detail.attendees"
                 :key="`${person.doctype}:${person.name}`"
               >
-                <RouterLink
-                  v-if="person.doctype === 'Contact'"
-                  class="underline-offset-2 hover:underline"
-                  :to="`/contactos/contact/${encodeURIComponent(person.name)}`"
-                  >{{ person.label || person.name }}</RouterLink
-                >
-                <span v-else>{{
-                  person.label || person.email || person.name
-                }}</span>
+                <span class="flex min-h-9 items-center gap-2">
+                  <RouterLink
+                    v-if="person.doctype === 'Contact'"
+                    class="min-w-0 truncate underline-offset-2 hover:underline"
+                    :to="`/contactos/contact/${encodeURIComponent(person.name)}`"
+                    >{{ person.label || person.name }}</RouterLink
+                  >
+                  <span v-else class="min-w-0 truncate">{{
+                    person.label || person.email || person.name
+                  }}</span>
+                  <span
+                    v-if="
+                      reach &&
+                      reach.doctype === person.doctype &&
+                      reach.name === person.name
+                    "
+                    class="ag-reach"
+                    role="group"
+                    :aria-label="__('Contact')"
+                  >
+                    <a
+                      :href="`tel:${reach.phone}`"
+                      class="ag-reach__btn press"
+                      data-reach="call"
+                      :aria-label="__('Call {0}', [reach.who || person.label])"
+                      :title="__('Call {0}', [reach.who || person.label])"
+                      ><span class="lucide-phone h-4 w-4" aria-hidden="true"
+                    /></a>
+                    <a
+                      :href="whatsappHref"
+                      target="_blank"
+                      rel="noopener"
+                      class="ag-reach__btn press"
+                      data-reach="whatsapp"
+                      :aria-label="
+                        __('WhatsApp {0}', [reach.who || person.label])
+                      "
+                      :title="__('WhatsApp {0}', [reach.who || person.label])"
+                      ><WhatsAppIcon class="h-4 w-4" aria-hidden="true"
+                    /></a>
+                  </span>
+                </span>
               </li>
             </ul>
           </dd>
@@ -296,25 +403,6 @@
         <template v-if="detail.reminders.length">
           <dt class="text-ink-gray-6">{{ __('Reminder') }}</dt>
           <dd class="text-ink-gray-9">{{ reminderText }}</dd>
-        </template>
-        <template v-if="detail.reference">
-          <dt class="text-ink-gray-6">{{ __('Linked to') }}</dt>
-          <dd>
-            <RouterLink
-              v-if="referenceLink.to"
-              class="font-medium text-ink-gray-9 underline-offset-2 hover:underline"
-              :to="referenceLink.to"
-              >{{ detail.reference.label || detail.reference.name }}</RouterLink
-            >
-            <a
-              v-else
-              class="font-medium text-ink-gray-9 underline-offset-2 hover:underline"
-              :href="referenceLink.href"
-              target="_blank"
-              rel="noopener"
-              >{{ detail.reference.label || detail.reference.name }}</a
-            >
-          </dd>
         </template>
         <template v-if="detail.description">
           <dt class="text-ink-gray-6">{{ __('Notes') }}</dt>
@@ -329,7 +417,24 @@
         class="sticky bottom-0 flex flex-wrap gap-2 bg-surface-elevation-2 pb-[env(safe-area-inset-bottom)] pt-2"
       >
         <template v-if="event.canEdit">
-          <template v-if="event.status === 'Scheduled'">
+          <!-- The next step first: an event that already ended is marked done;
+               a coming one is moved. -->
+          <template v-if="event.status === 'Scheduled' && ended">
+            <Button
+              class="min-h-11 flex-1 sm:flex-none"
+              variant="solid"
+              :icon-left="LucideCheck"
+              :label="__('Mark as done')"
+              @click="emit('status', 'complete')"
+            />
+            <Button
+              class="min-h-11"
+              variant="subtle"
+              :label="__('Reschedule')"
+              @click="emit('reschedule')"
+            />
+          </template>
+          <template v-else-if="event.status === 'Scheduled'">
             <Button
               class="min-h-11 flex-1 sm:flex-none"
               variant="solid"
@@ -340,17 +445,26 @@
               class="min-h-11"
               variant="subtle"
               :label="__('Mark as done')"
-              :loading="busy"
               @click="emit('status', 'complete')"
             />
           </template>
-          <Button
-            v-else
-            class="min-h-11"
-            variant="subtle"
-            :label="__('Reopen')"
-            @click="emit('status', 'reopen')"
-          />
+          <template v-else>
+            <!-- Done: the next visit or call with the same person and record. -->
+            <Button
+              v-if="event.status === 'Done'"
+              class="min-h-11 flex-1 sm:flex-none"
+              variant="solid"
+              :label="__('Schedule follow-up')"
+              data-testid="event-follow-up"
+              @click="emit('follow-up')"
+            />
+            <Button
+              class="min-h-11"
+              variant="subtle"
+              :label="__('Reopen')"
+              @click="emit('status', 'reopen')"
+            />
+          </template>
         </template>
         <template v-else>
           <p class="w-full text-sm text-ink-gray-6">
@@ -419,7 +533,11 @@ import { RouterLink } from 'vue-router'
 import { Badge, Button } from 'frappe-ui'
 import AgendaCitaPanel from '@/components/agenda/AgendaCitaPanel.vue'
 import AgendaGuard from '@/components/agenda/AgendaGuard.vue'
+import WhatsAppIcon from '@/components/Icons/WhatsAppIcon.vue'
 import { PALETTE, textOn } from '@/components/agenda/agendaColors'
+import { timeAt, timeSpan } from '@/components/agenda/agendaCard'
+import { reachFor, whatsappLink } from '@/components/agenda/agendaReach'
+import { kindLabel } from '@/utils/display'
 import { recordLink, withAgendaReturn } from '@/composables/useAgenda'
 import LucideCheck from '~icons/lucide/check'
 import LucideExternalLink from '~icons/lucide/external-link'
@@ -460,6 +578,7 @@ const emit = defineEmits([
   'cita-action',
   'cita-move',
   'cita-message',
+  'follow-up',
 ])
 const confirmCancel = ref(false)
 const assignee = computed(
@@ -491,6 +610,7 @@ watch(
 const shift = computed(
   () => props.event.kind === 'shift' || props.event.kind === 'my_shift',
 )
+// The day on one line, the time under it in figures («9:00–9:30 a.m.»).
 const when = computed(() => {
   const start = new Date(props.event.start)
   const end = new Date(props.event.end)
@@ -500,21 +620,29 @@ const when = computed(() => {
     day: 'numeric',
     month: 'long',
   })
-  if (task.value) return `${day.format(start)} · ${__('Task')}`
+  const capital = (text) => text.charAt(0).toUpperCase() + text.slice(1)
+  if (task.value) return { day: capital(day.format(start)), time: __('Task') }
   if (props.event.allDay) {
     const last = new Date(end.getTime() - 1)
     const lastText = day.format(last)
     return lastText === day.format(start)
-      ? `${day.format(start)} · ${__('All day')}`
-      : `${day.format(start)} – ${lastText}`
+      ? { day: capital(day.format(start)), time: __('All day') }
+      : { day: capital(`${day.format(start)} – ${lastText}`), time: '' }
   }
-  const time = new Intl.DateTimeFormat(props.locale, {
+  const clock = {
+    locale: props.locale,
     timeZone: props.timeZone,
-    hour: 'numeric',
-    minute: '2-digit',
     hour12: props.hour12,
-  })
-  return `${day.format(start)} · ${time.format(start)} – ${time.format(end)}`
+  }
+  if (day.format(start) !== day.format(end))
+    return {
+      day: capital(`${day.format(start)} ${timeAt(start, clock)}`),
+      time: `${__('Until')} ${day.format(end)} ${timeAt(end, clock)}`,
+    }
+  return {
+    day: capital(day.format(start)),
+    time: timeSpan(start, end, clock),
+  }
 })
 const badge = computed(() => {
   if (shift.value)
@@ -582,6 +710,55 @@ const referenceLink = computed(() => {
   if (!link) return {}
   return link.to ? link : { href: withAgendaReturn(link.href, props.returnTo) }
 })
+// Who the event is with and their number: a contact guest, else the linked deal or lead.
+const reach = ref(null)
+let reachRequest = 0
+watch(
+  () => props.detail,
+  async (detail) => {
+    const request = ++reachRequest
+    reach.value = null
+    if (!detail || props.event.source !== 'Event') return
+    const found = await reachFor(detail)
+    if (request === reachRequest) reach.value = found
+  },
+  { immediate: true },
+)
+const ended = computed(() => Date.parse(props.event.end) < Date.now())
+// A coming event: WhatsApp opens with a short confirmation the worker can edit.
+const whatsappHref = computed(() => {
+  if (!reach.value) return ''
+  if (ended.value) return whatsappLink(reach.value.phone)
+  const first = String(reach.value.who || '').split(' ')[0]
+  const day = new Intl.DateTimeFormat(props.locale, {
+    timeZone: props.timeZone,
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    ...(props.event.allDay
+      ? {}
+      : { hour: 'numeric', minute: '2-digit', hour12: props.hour12 }),
+  }).format(new Date(props.event.start))
+  return whatsappLink(
+    reach.value.phone,
+    first
+      ? __('Hi {0}, I confirm «{1}» on {2}.', [first, props.event.title, day])
+      : __('Hello, I confirm «{0}» on {1}.', [props.event.title, day]),
+  )
+})
+const RECORD_ICONS = {
+  'CRM Deal': 'lucide-handshake',
+  'CRM Lead': 'lucide-user-round',
+  Contact: 'lucide-user-round',
+  Customer: 'lucide-user-round',
+  'Repair Order': 'lucide-wrench',
+}
+const recordIcon = computed(
+  () => RECORD_ICONS[props.detail?.reference?.doctype] || 'lucide-link',
+)
+const recordKind = computed(() =>
+  kindLabel(props.detail?.reference?.doctype || ''),
+)
 const reminderText = computed(() =>
   (props.detail?.reminders || [])
     .map((row) => {
@@ -607,5 +784,41 @@ const reminderText = computed(() =>
 }
 .ag-tool:hover {
   background: var(--surface-gray-2);
+}
+/* The linked record: one row that opens it, its kind above its name. */
+.ag-rec {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  min-height: 52px;
+  padding: 6px 12px;
+  border-radius: 12px;
+  background: var(--surface-gray-1);
+}
+.ag-rec:hover {
+  background: var(--surface-gray-2);
+}
+/* Ways to reach the person, as on a record's bar: one island beside them. */
+.ag-reach {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  padding: 2px;
+  border-radius: 999px;
+  background: var(--surface-gray-1);
+}
+.ag-reach__btn {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  color: var(--ink-gray-7);
+}
+.ag-reach__btn:active,
+.ag-reach__btn:hover {
+  background: var(--surface-gray-3);
 }
 </style>

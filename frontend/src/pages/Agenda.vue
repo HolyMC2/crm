@@ -572,7 +572,7 @@
       </div>
     </AgendaPopover>
 
-    <!-- phone: quick create (a task) in a sheet -->
+    <!-- phone: quick create in a sheet at the thumb -->
     <BottomSheet
       v-if="phone"
       :open="Boolean(quick)"
@@ -582,6 +582,7 @@
       <div v-if="quick" class="ag-vars px-5 pb-6">
         <AgendaQuickCreate
           :key="quick.key"
+          phone
           :draft="quick.draft"
           :time-zone="timeZone"
           :calendar-color="calendarColors.Event"
@@ -1496,7 +1497,7 @@ async function refresh() {
 }
 // Phone «+»: straight to a new event, or a small menu when tasks can be created too.
 function fabPress() {
-  if (!tasksEnabled.value) return openCreate()
+  if (!tasksEnabled.value) return sidebarHandlers.create('event')
   fabOpen.value = !fabOpen.value
 }
 function fabCreate(kind) {
@@ -1669,6 +1670,7 @@ const panelHandlers = {
   'cita-action': (id) => runCitaAction(id),
   'cita-move': (slot) => doMove(selectedEvent.value, slot),
   'cita-message': (purpose) => openCitaMessage(purpose),
+  'follow-up': () => followUp(selectedEvent.value),
 }
 // Who an event can go to: the other doctors of the clinic, or (for a workshop manager,
 // who also sees «Sin asignar») the other technicians. The server still decides.
@@ -2146,11 +2148,33 @@ async function copyAccessRequest() {
 }
 
 // --- status ---------------------------------------------------------------------------
+// Optimistic: the card turns done (or reopens) at once; a refusal puts it back.
+const STATUS_AFTER = {
+  complete: 'Done',
+  cancel: 'Cancelled',
+  reopen: 'Scheduled',
+}
 async function changeStatus(event, action) {
+  const before = event.status
+  patchLocal(event, { status: STATUS_AFTER[action] || before })
+  if (selectedEvent.value && eventKey(selectedEvent.value) === eventKey(event))
+    selectedEvent.value = {
+      ...selectedEvent.value,
+      status: STATUS_AFTER[action] || before,
+    }
+  const revert = () => {
+    patchLocal(event, { status: before })
+    if (
+      selectedEvent.value &&
+      eventKey(selectedEvent.value) === eventKey(event)
+    )
+      selectedEvent.value = { ...selectedEvent.value, status: before }
+  }
   busy.value = true
   try {
     const result = await setStatus(event, action)
     if (result?.constraints) {
+      revert()
       panelConstraints.value = result.constraints
       return
     }
@@ -2176,12 +2200,38 @@ async function changeStatus(event, action) {
       duration: 8000,
     })
   } catch (error) {
+    revert()
     panelConstraints.value = [
       { code: 'unavailable', message: errorText(error), severity: 'block' },
     ]
   } finally {
     busy.value = false
   }
+}
+// After a visit or a call: the next one, a week later at the same time, with the same
+// person and record.
+function followUp(event) {
+  if (!event || !canCreate.value) return
+  const week = 7 * 24 * 3600 * 1000
+  const start = new Date(Date.parse(event.start) + week).toISOString()
+  const end = new Date(Date.parse(event.end) + week).toISOString()
+  const base = detail.value && eventKey(detail.value) === eventKey(event)
+  const context = {
+    title: __('Follow-up: {0}', [event.title]).slice(0, 140),
+    reference: base ? detail.value.reference || null : null,
+    attendees: base
+      ? (detail.value.attendees || [])
+          .filter((row) => ['Contact', 'User'].includes(row.doctype))
+          .map((row) => ({
+            doctype: row.doctype,
+            name: row.name,
+            label: row.label || row.name,
+          }))
+      : [],
+    location: event.location || '',
+  }
+  closePanel()
+  openQuick({ start, end, allDay: Boolean(event.allDay) }, context)
 }
 
 // --- quick create (desktop): the dragged range stays drawn while the card is open -------
@@ -2190,32 +2240,64 @@ const draftShown = computed(() => quick.value?.draft || null)
 function startCreate(slot) {
   if (!canCreate.value) return
   closePanel()
-  if (phone.value)
-    return openCreate({ start: slot.start, end: slot.end, allDay: slot.allDay })
+  openQuick(slot)
+}
+// The quick card (a popover beside the slot on a desk, a sheet at the thumb on a
+// phone): what was pressed sets the time, the screen it came from sets who and what.
+function openQuick(slot, context = null, kind = 'event') {
+  if (!canCreate.value && kind === 'event') return
   quick.value = reactive({
     key: ++quickKey,
-    rect: slot.rect,
+    rect: phone.value ? null : slot.rect || null,
     draft: {
       start: slot.start,
       end: slot.end,
-      allDay: slot.allDay,
-      kind: 'event',
+      allDay: Boolean(slot.allDay),
+      kind,
+      title: context?.title || '',
+      location: context?.location || '',
     },
-    context: null,
+    context,
     constraints: [],
     requestId: requestId(),
     last: null,
   })
 }
-function createOnDay(date, rect = null) {
-  const start =
+// A sensible start on a day: the next half hour today, 9:00 on another day, moved past
+// whatever already takes that time.
+function guessStart(date) {
+  const duration = prefs.defaultDuration * 60000
+  let start = Date.parse(
     date === todayDate.value
       ? nextHalfHour()
-      : wallToInstant(date, '09:00', timeZone.value)
-  const end = new Date(
-    Date.parse(start) + prefs.defaultDuration * 60000,
-  ).toISOString()
-  startCreate({ start, end, allDay: false, rect })
+      : wallToInstant(date, '09:00', timeZone.value),
+  )
+  const busyRows = visibleEvents.value.filter(
+    (row) =>
+      row.kind !== 'task' &&
+      !['shift', 'my_shift'].includes(row.kind) &&
+      !row.allDay &&
+      row.status !== 'Cancelled',
+  )
+  const dayEnd = Date.parse(wallToInstant(date, '21:00', timeZone.value))
+  for (let step = 0; step < 24; step++) {
+    const clash = busyRows.find(
+      (row) =>
+        Date.parse(row.start) < start + duration && Date.parse(row.end) > start,
+    )
+    if (!clash) break
+    const quarter = 15 * 60000
+    const next = Math.ceil(Date.parse(clash.end) / quarter) * quarter
+    if (next + duration > dayEnd) break
+    start = next
+  }
+  return {
+    start: new Date(start).toISOString(),
+    end: new Date(start + duration).toISOString(),
+  }
+}
+function createOnDay(date, rect = null) {
+  startCreate({ ...guessStart(date), allDay: false, rect })
 }
 function closeQuick() {
   quick.value = null
@@ -2249,28 +2331,74 @@ async function saveQuick(payload, confirm = 0) {
       })
       return
     }
-    const result = await createEvent('Event', {
+    // Optimistic: the card closes and the event is drawn at once; a refusal reopens
+    // the card with what was typed and the reason.
+    const pending = {
+      id: `pending-${current.requestId}`,
+      source: 'Event',
+      kind: 'event',
       title: payload.title,
       start: payload.start,
       end: payload.end,
       allDay: payload.allDay,
       location: payload.location,
-      attendees: [],
-      reminders: [{ type: 'Notification', before: 10, interval: 'minutes' }],
-      ...(payload.color ? { color: payload.color } : {}),
-      ...(sync.value?.google?.connected && !prefs.syncGoogle
-        ? { syncGoogle: false }
-        : {}),
-      requestId: current.requestId,
-      confirm,
-    })
-    if (result?.constraints) {
-      current.constraints = result.constraints
-      return
+      color: payload.color || undefined,
+      status: 'Scheduled',
+      timeZone: timeZone.value,
+      resourceIds: [],
+      draggable: false,
+      canEdit: false,
+      pending: true,
+    }
+    current.draft = {
+      ...current.draft,
+      title: payload.title,
+      location: payload.location,
+      color: payload.color,
+      start: payload.start,
+      end: payload.end,
+      allDay: payload.allDay,
+    }
+    const drop = () =>
+      (events.value = events.value.filter((row) => row.id !== pending.id))
+    const reopen = (constraints) => {
+      drop()
+      current.constraints = constraints
+      current.key = ++quickKey
+      quick.value = current
     }
     quick.value = null
+    events.value = [...events.value, pending]
+    let result
+    try {
+      result = await createEvent('Event', {
+        title: payload.title,
+        start: payload.start,
+        end: payload.end,
+        allDay: payload.allDay,
+        location: payload.location,
+        attendees: current.context?.attendees || [],
+        ...(current.context?.reference
+          ? { reference: current.context.reference }
+          : {}),
+        reminders: [{ type: 'Notification', before: 10, interval: 'minutes' }],
+        ...(payload.color ? { color: payload.color } : {}),
+        ...(sync.value?.google?.connected && !prefs.syncGoogle
+          ? { syncGoogle: false }
+          : {}),
+        requestId: current.requestId,
+        confirm,
+      })
+    } catch (error) {
+      return reopen([
+        { code: 'unavailable', message: errorText(error), severity: 'block' },
+      ])
+    }
+    if (result?.constraints) return reopen(result.constraints)
+    if (current.context?.fromRecord && returnTo.value) return returnDone(result)
     invalidate()
     await load({ quiet: true })
+    drop()
     toast.success(__('Event saved'), {
       action: { label: __('Open'), onClick: () => select(result) },
       duration: 6000,
@@ -2451,6 +2579,15 @@ function closeForm(dirty) {
   else form.value = null
 }
 
+// Created from another screen (?return_to=): back there, telling it what was made.
+function returnDone(result) {
+  const done = `Event:${(result.seriesId || result.id).split('@')[0]}`
+  const url = new URL(returnTo.value, window.location.origin)
+  url.searchParams.set('done', done)
+  const target = `${url.pathname}${url.search}${url.hash}`
+  if (target.startsWith('/crm/')) router.push(target.slice(4))
+  else window.location.assign(target)
+}
 async function saveForm(payload, confirm = 0) {
   const current = form.value
   if (!current) return
@@ -2487,15 +2624,7 @@ async function saveForm(payload, confirm = 0) {
     form.value = null
     invalidate()
     await load({ quiet: true })
-    const done = `Event:${(result.seriesId || result.id).split('@')[0]}`
-    if (current.mode === 'create' && returnTo.value) {
-      const url = new URL(returnTo.value, window.location.origin)
-      url.searchParams.set('done', done)
-      const target = `${url.pathname}${url.search}${url.hash}`
-      if (target.startsWith('/crm/')) router.push(target.slice(4))
-      else window.location.assign(target)
-      return
-    }
+    if (current.mode === 'create' && returnTo.value) return returnDone(result)
     anchorRect.value = null
     setState({ event: eventKey(result) })
     toast.success(
@@ -2560,11 +2689,18 @@ function openFromQuery() {
           },
         ]
       : []
-  openCreate({
+  const context = {
     title: typeof query.title === 'string' ? query.title.slice(0, 140) : '',
     reference,
     attendees,
-  })
+  }
+  // On a phone the quick sheet: the time guessed, the person and record carried over.
+  if (phone.value)
+    openQuick(
+      { ...guessStart(state.value.date), allDay: false },
+      { ...context, fromRecord: true },
+    )
+  else openCreate(context)
   const rest = { ...query }
   for (const key of [
     'create',
@@ -2683,24 +2819,19 @@ const sidebarProps = computed(() => ({
 const sidebarHandlers = {
   create: (kind) => {
     drawer.value = false
-    if (kind === 'task') {
-      const date = state.value.date
-      quick.value = reactive({
-        key: ++quickKey,
-        rect: null,
-        draft: {
+    const date = state.value.date
+    if (kind === 'task')
+      return openQuick(
+        {
           start: wallInstant(date, 0, timeZone.value),
           end: wallInstant(date, 1440, timeZone.value),
           allDay: true,
-          kind: 'task',
         },
-        context: null,
-        constraints: [],
-        requestId: requestId(),
-        last: null,
-      })
-      return
-    }
+        null,
+        'task',
+      )
+    // The phone gets the quick sheet at the thumb, on the day it is looking at.
+    if (phone.value) return openQuick({ ...guessStart(date), allDay: false })
     openCreate()
   },
   pick: (date) => {
