@@ -3,6 +3,54 @@
    [data-theme='dark']; the site palette overrides the accent at boot. */
 @import './vendor/muelle-shell/tokens/tokens.css';
 
+/* ── Shell typeface: Archivo (Omnibus-Type, OFL; fonts/archivo/OFL.txt) ─────
+   One variable family whose width axis carries the roles: body at 100 %,
+   titles at 92 %, figures (money, counts, days) at 84 % with tabular digits,
+   so a column of amounts reads like price tags. The file is cut to Latin and
+   Spanish, weights 300–800 and widths 80–100 %: 56 KB, against 264 KB for the
+   Inter that frappe-ui loads otherwise (Inter is never requested now: nothing
+   names it). */
+@font-face {
+  font-family: 'Muelle Archivo';
+  src: url('./fonts/archivo/archivo-var.woff2') format('woff2');
+  font-weight: 300 800;
+  font-stretch: 80% 100%;
+  font-style: normal;
+  font-display: swap;
+}
+:root {
+  --muelle-font: 'Muelle Archivo', ui-sans-serif, system-ui, -apple-system,
+    'Segoe UI', Roboto, sans-serif;
+}
+/* frappe-ui's base names InterVar first on <html>; the shell's face wins. */
+html {
+  font-family: var(--muelle-font);
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+/* Figures: amounts, counts, ages, KPIs. Condensed, tabular, lining. */
+.num {
+  font-stretch: 84%;
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings:
+    'tnum' 1,
+    'lnum' 1;
+  letter-spacing: 0;
+}
+/* Titles: page, sheet and section heads. */
+.title-face {
+  font-stretch: 92%;
+  letter-spacing: -0.012em;
+}
+:is(h1, h2, h3, [data-testid='shell-title']) {
+  font-stretch: 92%;
+}
+/* Every tabular-nums site (amounts in lists, tables, tiles) gets the figure face. */
+.tabular-nums {
+  font-stretch: 84%;
+}
+
 /* ── mobile touch feel ─────────────────────────────────────────────────────
    Kill the half-second gray tap flash + the double-tap-zoom click delay, and
    the rubber-band overscroll that makes the SPA feel like a web page. */
@@ -291,4 +339,24 @@ input[type='checkbox'].rounded-4 {
 [data-key-row] [data-row-focus]:focus-visible {
   outline: 2px solid var(--outline-gray-5, #7c7c7c);
   outline-offset: -2px;
+}
+
+/* AppBar summary (ui/AppBar #summary): what matters in a list, as figures.
+   A small label over a large condensed amount; a page's own colour class on
+   the figure (overdue red) still wins, since :where() adds no specificity. */
+:where([data-appbar-summary]) > * > span,
+:where([data-appbar-summary]) > span {
+  display: flex;
+  flex-direction: column;
+}
+:where([data-appbar-summary]) strong {
+  display: block;
+  margin-top: 1px;
+  color: var(--ink-gray-9);
+  font-size: 22px;
+  line-height: 1.1;
+  font-weight: 640;
+  font-stretch: 84%;
+  font-variant-numeric: tabular-nums lining-nums;
+  letter-spacing: -0.01em;
 }

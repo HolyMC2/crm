@@ -14,7 +14,7 @@
       label
     }}</span>
     <span
-      class="break-words text-2xl font-semibold leading-tight tabular-nums"
+      class="num break-words text-4xl font-semibold leading-none"
       :class="TONE[tone] || TONE.neutral"
       >{{ value }}</span
     >

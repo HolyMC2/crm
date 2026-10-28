@@ -22,7 +22,7 @@
         <div class="min-w-0 flex-1">
           <component
             :is="phone ? 'p' : 'h1'"
-            class="text-xl font-semibold text-ink-gray-9 [text-wrap:balance] sm:text-2xl"
+            class="title-face text-3xl font-semibold text-ink-gray-9 [text-wrap:balance] sm:text-5xl"
           >
             {{ hello }}
           </component>
@@ -79,10 +79,10 @@
         {{ __('All clear: nothing overdue, due today or on your agenda.') }}
       </p>
       <div
-        class="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:grid-rows-[auto_auto_auto_1fr] lg:items-start"
+        class="grid grid-cols-[minmax(0,1fr)] gap-x-8 gap-y-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:grid-rows-[auto_auto_auto_1fr] lg:items-start"
       >
         <!-- 1 · Para ahora, and the seller's deals without a next step -->
-        <div class="flex min-w-0 flex-col gap-4 lg:col-start-1 lg:row-start-1">
+        <div class="flex min-w-0 flex-col gap-2 lg:col-start-1 lg:row-start-1">
           <HoySection
             v-if="!allClear"
             id="ahora"

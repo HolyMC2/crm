@@ -126,8 +126,8 @@ function chipClass(on) {
   return [
     'flex h-8 items-center gap-1.5 rounded-full border px-3 text-sm font-medium',
     on
-      ? 'border-transparent bg-surface-gray-3 text-ink-gray-9'
-      : 'border-outline-gray-2 text-ink-gray-7',
+      ? 'border-transparent bg-[var(--muelle-accent)] text-[var(--muelle-accent-ink)]'
+      : 'border-outline-gray-2 text-ink-gray-8',
   ]
 }
 function isOn(value) {

@@ -304,7 +304,7 @@
                     v-if="
                       row.grand_total !== undefined && row.grand_total !== null
                     "
-                    class="shrink-0 text-right text-sm font-medium tabular-nums text-ink-gray-9"
+                    class="shrink-0 text-right text-lg font-semibold tabular-nums text-ink-gray-9"
                     >{{ money(row.grand_total, row.currency) }}</span
                   >
                 </a>

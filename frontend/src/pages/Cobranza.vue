@@ -397,7 +397,7 @@
                 </span>
                 <span class="shrink-0 text-right">
                   <span
-                    class="block text-sm font-medium tabular-nums text-ink-gray-9"
+                    class="block text-lg font-semibold tabular-nums text-ink-gray-9"
                     >{{ money(row.outstanding, row.currency) }}</span
                   >
                   <span

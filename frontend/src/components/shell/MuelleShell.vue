@@ -45,7 +45,7 @@
           />
           <h1
             data-testid="shell-title"
-            class="min-w-0 flex-1 self-center text-lg font-semibold leading-snug [#app-header:has(*)+&]:hidden"
+            class="title-face min-w-0 flex-1 self-center text-xl font-semibold leading-tight [#app-header:has(*)+&]:hidden"
             :class="
               backTo ? 'truncate pl-1 pr-2' : 'line-clamp-2 break-words px-3'
             "
@@ -53,58 +53,9 @@
             {{ headerTitle }}
           </h1>
         </template>
-        <template #actions>
-          <!-- «Escanear documento» (Shell D7): the camera reads a paper into the
-               books capture engine; the sheet is a lazy chunk (cameraDoor.js).
-               Under 360px the bar keeps its title: the door is in Más and the palette. -->
-          <button
-            v-if="!backTo && shellBoot"
-            type="button"
-            class="flex size-12 flex-none items-center justify-center rounded-full text-ink-gray-7 hover:bg-surface-gray-2 max-[359px]:hidden"
-            :aria-label="__('Scan document')"
-            :title="__('Scan document')"
-            data-testid="shell-camera"
-            @pointerenter="loadCameraSheet"
-            @focus="loadCameraSheet"
-            @click="openCamera()"
-          >
-            <span class="lucide-camera size-6" aria-hidden="true" />
-          </button>
-          <!-- Escáner is the shell's scanner: scan a code, land on its artículo. -->
-          <a
-            v-if="scanHref"
-            :href="scanHref"
-            class="flex size-12 flex-none items-center justify-center rounded-full text-ink-gray-7 hover:bg-surface-gray-2"
-            :aria-label="__('Scan a code')"
-            :title="__('Scan a code')"
-            data-testid="shell-scan"
-          >
-            <span class="lucide-scan-barcode size-6" aria-hidden="true" />
-          </a>
-          <button
-            type="button"
-            class="flex size-12 flex-none items-center justify-center rounded-full text-ink-gray-7 hover:bg-surface-gray-2"
-            :aria-label="__('Search')"
-            :title="searchHint"
-            :aria-keyshortcuts="searchKeys"
-            @click="openPalette('all')"
-          >
-            <span class="lucide-search size-6" aria-hidden="true" />
-          </button>
-          <!-- «Pregúntale a Muelle» (E7): the phone's door beside search, only
-               once shell_api.status said yes. -->
-          <button
-            v-if="assistantOn"
-            type="button"
-            class="flex size-12 flex-none items-center justify-center rounded-full text-ink-gray-7 hover:bg-surface-gray-2"
-            :aria-label="__('Ask Muelle')"
-            :title="__('Ask Muelle')"
-            data-testid="shell-assistant"
-            @click="askMuelle"
-          >
-            <span class="lucide-sparkles size-6" aria-hidden="true" />
-          </button>
-        </template>
+        <!-- The top bar only names the place (and holds the bell): search,
+             scan, the camera and the page's create action sit in the command
+             bar above the bottom nav, where the thumb is. -->
       </AppBar>
       <div
         v-if="!online"
@@ -171,6 +122,81 @@
       >
         <slot />
       </main>
+      <!-- Phone command bar, the thumb's row: search or ask, scan a code, scan
+           a paper, and the page's one create action (ui/Fab teleports into
+           #shell-primary-action while this bar is mounted, so it never floats
+           over the last rows of a list). It hides with the nav (keyboard,
+           drill-down panes, records with their own bottom bar) but stays
+           mounted, so the teleport target never goes away under a page. -->
+      <div
+        v-if="phone"
+        v-show="navVisible"
+        class="flex shrink-0 items-center gap-1 border-t border-outline-gray-1 bg-surface-base py-1.5 pl-2 pr-1.5"
+        data-testid="shell-command-bar"
+      >
+        <div
+          class="flex h-11 min-w-0 flex-1 items-center rounded-full bg-surface-gray-2"
+        >
+          <button
+            type="button"
+            class="flex h-full min-w-0 flex-1 items-center gap-2.5 rounded-full pl-4 pr-2 text-left text-base text-ink-gray-6"
+            :aria-label="__('Search')"
+            :title="searchHint"
+            :aria-keyshortcuts="searchKeys"
+            data-testid="shell-search"
+            @click="openPalette('all')"
+          >
+            <span
+              class="lucide-search size-5 flex-none text-ink-gray-8"
+              aria-hidden="true"
+            />
+            <span class="min-w-0 truncate">{{
+              assistantOn ? __('Search or ask') : __('Search')
+            }}</span>
+          </button>
+          <!-- «Pregúntale a Muelle» (E7): inside the search pill, only once
+               shell_api.status said yes. -->
+          <button
+            v-if="assistantOn"
+            type="button"
+            class="mr-0.5 flex size-10 flex-none items-center justify-center rounded-full text-ink-gray-8 active:bg-surface-gray-3"
+            :aria-label="__('Ask Muelle')"
+            :title="__('Ask Muelle')"
+            data-testid="shell-assistant"
+            @click="askMuelle"
+          >
+            <span class="lucide-sparkles size-5" aria-hidden="true" />
+          </button>
+        </div>
+        <!-- Escáner is the shell's scanner: scan a code, land on its artículo. -->
+        <a
+          v-if="scanHref && !backTo"
+          :href="scanHref"
+          :class="COMMAND_ICON"
+          :aria-label="__('Scan a code')"
+          :title="__('Scan a code')"
+          data-testid="shell-scan"
+        >
+          <span class="lucide-scan-barcode size-6" aria-hidden="true" />
+        </a>
+        <!-- «Escanear documento» (Shell D7): the camera reads a paper into the
+             books capture engine; the sheet is a lazy chunk (cameraDoor.js).
+             Under 360px the door is in Más and the palette. -->
+        <button
+          v-if="!backTo && shellBoot"
+          type="button"
+          :class="[COMMAND_ICON, 'max-[359px]:hidden']"
+          :aria-label="__('Scan document')"
+          :title="__('Scan document')"
+          data-testid="shell-camera"
+          @pointerenter="loadCameraSheet"
+          @focus="loadCameraSheet"
+          @click="openCamera()"
+        >
+          <span class="lucide-camera size-6" aria-hidden="true" />
+        </button>
+        <div id="shell-primary-action" class="flex flex-none empty:hidden" />
+      </div>
       <ShellBottomNav
         v-if="phone && navVisible"
         :slots="navSlots"
@@ -251,6 +277,7 @@ import {
   loadCameraSheet,
   openCamera,
 } from '@/components/captura/cameraDoor'
+import { primaryDock } from '@/components/ui/primaryDock'
 import AppBar from '@/components/ui/AppBar.vue'
 import ShellRail from './ShellRail.vue'
 import ShellBottomNav from './ShellBottomNav.vue'
@@ -269,6 +296,13 @@ const route = useRoute(),
   router = useRouter()
 const online = useOnline()
 const phone = isMobile
+const COMMAND_ICON =
+  'flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-8 active:bg-surface-gray-2 [@media(hover:hover)]:hover:bg-surface-gray-2'
+// ui/Fab docks into the command bar while the phone shell shows one.
+watch(phone, (value) => (primaryDock.value = Boolean(value)), {
+  immediate: true,
+})
+onBeforeUnmount(() => (primaryDock.value = false))
 const paletteOpen = ref(false),
   paletteMode = ref('all'),
   paletteFocus = ref(0),

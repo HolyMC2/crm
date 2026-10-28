@@ -334,7 +334,7 @@
                     >
                   </span>
                   <span
-                    class="shrink-0 text-right text-sm font-medium tabular-nums text-ink-gray-9"
+                    class="shrink-0 text-right text-lg font-semibold tabular-nums text-ink-gray-9"
                     >{{
                       money(
                         Number(row.docstatus) === 1

@@ -10955,6 +10955,10 @@ msgstr "Solo íconos"
 msgid "Scan a code"
 msgstr "Escanear un código"
 
+#: frontend/src/components/shell/MuelleShell.vue
+msgid "Search or ask"
+msgstr "Busca o pregunta"
+
 #: frontend/src/components/shell/ShellRail.vue
 msgid "Show app names"
 msgstr "Mostrar nombres"

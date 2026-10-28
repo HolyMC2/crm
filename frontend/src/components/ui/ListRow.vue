@@ -20,8 +20,7 @@
     <slot name="leading">
       <span
         v-if="avatar !== undefined && avatar !== null"
-        class="flex size-10 flex-none items-center justify-center rounded-full text-base font-semibold"
-        :class="avatarTone"
+        class="flex size-9 flex-none items-center justify-center rounded-full bg-surface-gray-2 text-sm font-semibold text-ink-gray-7"
         aria-hidden="true"
       >
         <span v-if="avatarText">{{ avatarText }}</span>
@@ -29,7 +28,7 @@
       </span>
       <span
         v-else-if="icon"
-        class="flex size-10 flex-none items-center justify-center rounded-full bg-surface-gray-2 text-ink-gray-7"
+        class="flex size-9 flex-none items-center justify-center rounded-full bg-surface-gray-2 text-ink-gray-7"
         aria-hidden="true"
       >
         <span :class="[icon, 'size-5']" />
@@ -37,8 +36,8 @@
     </slot>
     <span class="flex min-w-0 flex-1 flex-col">
       <span
-        class="line-clamp-2 break-words text-base leading-snug text-ink-gray-9"
-        :class="strong ? 'font-semibold' : ''"
+        class="line-clamp-2 break-words text-md leading-snug text-ink-gray-9"
+        :class="strong ? 'font-semibold' : 'font-medium'"
         data-ui-list-row-title
         >{{ title }}<slot name="title"
       /></span>
@@ -58,8 +57,8 @@
     >
       <span
         v-if="meta"
-        class="whitespace-nowrap text-sm tabular-nums"
-        :class="metaTone === 'danger' ? 'text-ink-red-7' : 'text-ink-gray-6'"
+        class="num whitespace-nowrap text-md"
+        :class="metaTone === 'danger' ? 'text-ink-red-7' : 'text-ink-gray-7'"
         >{{ meta }}</span
       >
       <slot name="trailing" />
@@ -108,19 +107,4 @@ const linkAttrs = computed(() =>
 )
 
 const avatarText = computed(() => initials(props.avatar || ''))
-// A stable colour per name, from the shell's tonal tokens.
-const TONES = [
-  'bg-surface-blue-2 text-ink-blue-9',
-  'bg-surface-green-2 text-ink-green-8',
-  'bg-surface-amber-2 text-ink-amber-9',
-  'bg-surface-red-2 text-ink-red-8',
-  'bg-surface-gray-3 text-ink-gray-8',
-]
-const avatarTone = computed(() => {
-  const name = props.avatar || ''
-  if (!name) return 'bg-surface-gray-3 text-ink-gray-7'
-  let hash = 0
-  for (const char of name) hash = (hash * 31 + char.codePointAt(0)) >>> 0
-  return TONES[hash % TONES.length]
-})
 </script>

@@ -128,7 +128,7 @@
     <!-- What matters in this list, in sight while it scrolls. -->
     <div
       v-if="$slots.summary"
-      class="flex flex-wrap gap-x-4 gap-y-1 border-t border-outline-gray-1 px-4 py-2 text-sm"
+      class="flex flex-wrap gap-x-6 gap-y-1 border-t border-outline-gray-1 px-4 pb-2.5 pt-2 text-xs text-ink-gray-6"
       data-appbar-summary
     >
       <slot name="summary" />
@@ -307,7 +307,7 @@ watch(
 // The title gets its own row (M3 medium bar) when it would not fit in two
 // lines beside the icons, or when the icons leave it less than 6rem.
 const TITLE_MIN = 96
-const CHAR_PX = 9.5 // text-lg semibold, Inter
+const CHAR_PX = 9 // text-xl semibold, Archivo at the title width (92 %)
 let observer = null
 function measure() {
   const width = bar.value?.clientWidth || 0
@@ -353,7 +353,7 @@ const AppBarTitle = (attrs, { emit: emitTitle }) => {
     attrs.count !== undefined && attrs.count !== null && attrs.count !== ''
       ? h(
           'span',
-          { class: 'ml-1 font-normal text-ink-gray-6' },
+          { class: 'num ml-1 font-normal text-ink-gray-6' },
           `(${attrs.count})`,
         )
       : null
@@ -361,7 +361,7 @@ const AppBarTitle = (attrs, { emit: emitTitle }) => {
     'span',
     {
       class:
-        'line-clamp-2 break-words text-lg font-semibold leading-snug [text-wrap:balance]',
+        'title-face line-clamp-2 break-words text-xl font-semibold leading-tight [text-wrap:balance]',
       'data-appbar-title': '',
     },
     [attrs.title, count],
