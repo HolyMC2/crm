@@ -165,6 +165,16 @@ describe('Into the owner screen and back', () => {
       keys({ ask: 'T1', state: 'pending', guard: { code: 'no_access' } }),
     ).toEqual([])
     expect(keys({ ask: 'T1', state: 'pending' }, 'waiting')).toEqual([])
+    // A row its owner decides: approve there, or say no here with a reason.
+    const bill = {
+      ask: 'T1',
+      state: 'pending',
+      url: '/crm/gastos/x',
+      where: 'Gastos',
+    }
+    expect(keys(bill)).toEqual(['open', 'decline'])
+    expect(rowActions(bill, 'approve')[0].label).toBe('Approve in Gastos')
+    expect(keys({ ...bill, guard: { code: 'busy' } })).toEqual(['decline'])
   })
 })
 

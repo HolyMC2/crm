@@ -29340,3 +29340,7 @@ msgstr "Completar"
 msgctxt "Pendiente handed by"
 msgid "From {0}"
 msgstr "De {0}"
+
+#: frontend/src/composables/useAprobaciones.js
+msgid "Approve in {0}"
+msgstr "Aprobar en {0}"

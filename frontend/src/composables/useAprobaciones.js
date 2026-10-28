@@ -123,6 +123,13 @@ export function rowActions(row, segment) {
   if (segment !== 'approve' || !row) return []
   const out = []
   const guard = row.guard
+  // The way to approve is the screen that decides it, one filled button away
+  // («Aprobar en Gastos»); «No aprobar» asks for the reason here.
+  if (row.url && row.state === 'pending' && !guard && !row.settle)
+    out.push({
+      key: 'open',
+      label: t('Approve in {0}', [row.where || row.kind_label || '']),
+    })
   if (row.ask && row.state === 'pending' && guard?.code !== 'no_access') {
     if (row.settle) out.push({ key: 'settle', label: t('Done') })
     out.push({ key: 'decline', label: t("Don't approve") })

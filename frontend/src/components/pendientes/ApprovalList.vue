@@ -149,7 +149,9 @@
             v-for="action in rowActions(row, state.segment)"
             :key="action.key"
             class="min-h-11 sm:min-h-8"
-            :variant="action.key === 'settle' ? 'solid' : 'subtle'"
+            :variant="
+              ['settle', 'open'].includes(action.key) ? 'solid' : 'subtle'
+            "
             :label="action.label"
             :loading="busy.has(rowKey(row)) && action.key === 'settle'"
             @click="act(row, action.key)"
@@ -420,6 +422,13 @@ async function runGuard(row, action) {
 }
 
 async function act(row, key) {
+  if (key === 'open') {
+    const target = approvalTarget(row, props.state)
+    remember(row)
+    if (target?.to) return router.push(target.to)
+    if (target?.href) return window.location.assign(target.href)
+    return
+  }
   if (key === 'decline') {
     declining.value = row
     return
