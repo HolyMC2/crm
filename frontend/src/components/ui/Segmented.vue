@@ -7,7 +7,12 @@
     ref="root"
     role="radiogroup"
     :aria-label="label"
-    class="flex w-full overflow-hidden rounded-full border border-outline-gray-2"
+    class="flex w-full rounded-full border border-outline-gray-2"
+    :class="
+      fit === 'content'
+        ? 'overflow-x-auto overscroll-x-contain [scrollbar-width:none]'
+        : 'overflow-hidden'
+    "
     data-ui-segmented
     @keydown="onKey"
   >
@@ -19,8 +24,11 @@
       :aria-checked="String(option.value === modelValue)"
       :tabindex="tabStop(option.value, index) ? 0 : -1"
       :data-index="index"
-      class="flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1.5 px-2 py-1 text-sm font-medium leading-tight"
+      class="flex min-h-11 items-center justify-center gap-1.5 px-2 py-1 text-sm font-medium leading-tight"
       :class="[
+        fit === 'content'
+          ? 'flex-auto whitespace-nowrap px-3'
+          : 'min-w-0 flex-1',
         index ? 'border-l border-outline-gray-2' : '',
         option.value === modelValue
           ? 'bg-surface-gray-3 text-ink-gray-9'
@@ -58,6 +66,9 @@ const props = defineProps({
   options: { type: Array, required: true },
   /** What the segments choose, for screen readers («Vista»). */
   label: { type: String, default: '' },
+  /** 'equal' segments (default), or 'content': each at least as wide as its
+   *  words (never hyphenated at 305 px or large text), the track scrolls. */
+  fit: { type: String, default: 'equal' },
 })
 const emit = defineEmits(['update:modelValue'])
 const root = ref(null)
