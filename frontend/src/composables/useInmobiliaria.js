@@ -76,6 +76,65 @@ export function volverA(router, url) {
   window.location.assign(url)
 }
 
+/** The words under a blocked action: why, then the way forward. */
+export function blockedText(accion) {
+  const s = accion?.solucion
+  const salida =
+    s && typeof s === 'object' ? String(s.etiqueta || '') : String(s || '')
+  return [accion?.motivo, salida].filter(Boolean).join(' ')
+}
+
+// The bolt's icon for an action the app sends without one: what it does,
+// from its id and kind. Only icons the shell already draws (each new lucide
+// class adds to the stylesheet).
+function accionIcon(a) {
+  const id = String(a.id || '')
+  if (id === 'whatsapp') return 'lucide-message-circle'
+  if (/expediente/.test(id)) return 'lucide-folder-open'
+  if (/^volver/.test(id)) return 'lucide-arrow-left'
+  if (a.tipo === 'danger') return 'lucide-x'
+  if (a.tipo === 'primary') return 'lucide-check'
+  return a.url ? 'lucide-chevron-right' : 'lucide-list-checks'
+}
+
+/**
+ * The record's bolt (components/documentos/AccionesMenu): every action the
+ * app offers now, the next step first; the ones that undo or cancel in their
+ * own group last. A blocked action keeps its place and says why. Each picks
+ * as `accion:<id>`.
+ */
+export function boltGroupsOf(ficha) {
+  const acciones = ficha?.acciones || []
+  const item = (a) => ({
+    key: `accion:${a.id}`,
+    label: a.etiqueta,
+    icon: accionIcon(a),
+    hint: '',
+    allowed: !!a.habilitada,
+    reason: a.habilitada ? '' : blockedText(a) || 'No disponible ahora.',
+  })
+  const ordered = [...acciones].sort(
+    (a, b) => (b.tipo === 'primary') - (a.tipo === 'primary'),
+  )
+  const pasos = ordered.filter((a) => a.tipo !== 'danger').map(item)
+  const otras = ordered.filter((a) => a.tipo === 'danger').map(item)
+  return [
+    pasos.length && { key: 'pasos', title: 'Siguiente paso', items: pasos },
+    otras.length && {
+      key: 'otras',
+      title: 'Cancelar o deshacer',
+      items: otras,
+    },
+  ].filter(Boolean)
+}
+
+/** The action a bolt pick names (`accion:<id>`), or null. */
+export function accionOf(ficha, key) {
+  if (typeof key !== 'string' || !key.startsWith('accion:')) return null
+  const id = key.slice('accion:'.length)
+  return (ficha?.acciones || []).find((a) => a.id === id) || null
+}
+
 /** An action that arrived without its method (an outdated screen): what to do. */
 export const SIN_METODO =
   'Esta acción no está disponible ahora. Actualiza la ficha para ver qué sigue.'

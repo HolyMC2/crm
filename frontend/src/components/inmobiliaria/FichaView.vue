@@ -1,12 +1,22 @@
 <template>
-  <!-- One inmobiliaria record (INMO-SH, shell SPEC §6 DD4): name as the title,
-       status and the amount as the hero, one filled «siguiente paso», the other
-       actions tonal, then the sections and the connections. Everything here is
-       what inmobiliaria.api.shell.ficha decided. -->
-  <article class="flex flex-col gap-5" data-testid="inmo-ficha">
+  <!-- One inmobiliaria record (INMO-SH, shell SPEC §6 DD4): the figure as the
+       hero with one filled «siguiente paso» under it, the steps that move it on
+       beside it, every action behind the bolt, then the sections as label and
+       value and the connections (beside the record on a desktop page).
+       Everything here is what inmobiliaria.api.shell.ficha decided. -->
+  <article
+    class="gap-6"
+    :class="
+      wide
+        ? 'grid grid-cols-[minmax(0,1fr)_18rem] items-start gap-x-10'
+        : 'flex flex-col'
+    "
+    data-testid="inmo-ficha"
+  >
     <div
       v-if="ficha.fotos?.length"
       class="-mx-4 flex snap-x snap-mandatory gap-2 overflow-x-auto px-4 pb-1"
+      :class="wide && 'col-span-2'"
       aria-label="Fotos"
       data-testid="inmo-fotos"
     >
@@ -32,240 +42,292 @@
       </a>
     </div>
 
-    <header class="flex flex-col gap-1">
-      <p class="text-sm text-ink-gray-6">{{ ficha.tipo_label }}</p>
-      <h1
-        class="break-words text-2xl font-semibold text-ink-gray-9"
-        data-testid="inmo-ficha-titulo"
-      >
-        {{ ficha.titulo }}
-      </h1>
-      <p v-if="ficha.subtitulo" class="break-words text-base text-ink-gray-7">
-        {{ ficha.subtitulo }}
-      </p>
-      <div class="mt-1 flex flex-wrap items-center gap-2">
-        <StatusChip
-          v-if="ficha.estatus"
-          :label="ficha.estatus.label"
-          :tone="ficha.estatus.tone"
+    <div class="flex min-w-0 flex-col gap-6">
+      <!-- In a pane (the queue's split) the record names itself, WhatsApp-style:
+         the name with its state and kind under it, the island on the right.
+         On its own page the shell's bar carries all of that (InmobiliariaFicha). -->
+      <header v-if="header" class="flex items-start gap-2">
+        <div class="flex min-w-0 flex-1 flex-col gap-1">
+          <h1
+            class="title-face break-words text-2xl font-semibold leading-tight text-ink-gray-9 [text-wrap:balance]"
+            data-testid="inmo-ficha-titulo"
+          >
+            {{ ficha.titulo }}
+          </h1>
+          <p class="flex min-w-0 items-center gap-2">
+            <StatusChip
+              v-if="ficha.estatus"
+              :label="ficha.estatus.label"
+              :tone="ficha.estatus.tone"
+            />
+            <span class="truncate text-sm text-ink-gray-6">{{
+              ficha.tipo_label
+            }}</span>
+          </p>
+        </div>
+        <RecordIsland
+          :reach="ficha.reach || {}"
+          :who="ficha.reach?.who || ficha.titulo"
+          :mail="ficha.reach?.email ? { allowed: true, reason: '' } : null"
+          :groups="boltGroups"
+          :subtitle="ficha.titulo"
+          @mail="writeMail"
+          @pick="onBolt"
+          @tools="toolsOpen = true"
         />
-      </div>
-      <div v-if="ficha.hero" class="mt-3">
-        <p class="text-sm text-ink-gray-6">{{ ficha.hero.label }}</p>
+      </header>
+
+      <!-- The hero: what the record is about, its figure, and the one next step. -->
+      <section class="flex flex-col gap-3" data-testid="inmo-ficha-hero-block">
         <p
-          class="text-3xl font-semibold tabular-nums text-ink-gray-9"
-          data-testid="inmo-ficha-hero"
+          v-if="ficha.subtitulo"
+          class="break-words text-base leading-snug text-ink-gray-7"
         >
-          {{ valueText(ficha.hero) }}
+          {{ ficha.subtitulo }}
         </p>
-      </div>
-    </header>
-
-    <section v-if="acciones.length" class="flex flex-col gap-3">
-      <template v-if="primary">
-        <component
-          :is="
-            primary.url && primary.habilitada
-              ? linkTag(primary.url)
-              : NativeButton
-          "
-          v-bind="
-            primary.url && primary.habilitada
-              ? actionProps(primary)
-              : { type: 'button' }
-          "
-          :class="[FILLED, !primary.habilitada && DISABLED]"
-          :aria-disabled="!primary.habilitada || undefined"
-          data-testid="inmo-siguiente-paso"
-          @click="(e) => act(primary, e)"
-        >
-          {{ primary.etiqueta }}
-        </component>
-        <Blocked :accion="primary" />
-      </template>
-      <div v-if="secondary.length" class="flex flex-wrap gap-2">
-        <component
-          :is="a.url && a.habilitada ? linkTag(a.url) : NativeButton"
-          v-for="a in secondary"
-          :key="a.id"
-          v-bind="a.url && a.habilitada ? actionProps(a) : { type: 'button' }"
-          :class="[
-            TONAL,
-            a.tipo === 'danger' && 'text-ink-red-7',
-            !a.habilitada && DISABLED,
-          ]"
-          :aria-disabled="!a.habilitada || undefined"
-          :title="a.habilitada ? undefined : a.motivo"
-          :data-accion="a.id"
-          @click="(e) => act(a, e)"
-        >
-          <span
-            v-if="a.id === 'whatsapp'"
-            class="lucide-message-circle size-5"
-            aria-hidden="true"
-          />
-          {{ a.etiqueta }}
-        </component>
-      </div>
-      <Blocked
-        v-for="a in secondary.filter((x) => !x.habilitada)"
-        :key="`m-${a.id}`"
-        :accion="a"
-        secundaria
-      />
-      <!-- An action that failed: the worker stays here, reads why, and tries
-           again or carries on with the record. -->
-      <div
-        v-if="actionProblem"
-        class="flex flex-col gap-2 rounded-6 bg-surface-red-1 px-3 py-2 text-base text-ink-red-7"
-        role="alert"
-        data-testid="inmo-accion-problema"
-      >
-        <p>
-          <span class="font-medium">{{ actionProblem.etiqueta }}:</span>
-          {{ actionProblem.texto }}
-        </p>
-        <div class="flex flex-wrap gap-2">
-          <button
-            v-if="actionProblem.reintentar"
-            type="button"
-            :class="TONAL"
-            @click="act(actionProblem.accion)"
+        <div v-if="ficha.hero" class="flex flex-col gap-0.5">
+          <p class="text-sm text-ink-gray-6">{{ ficha.hero.label }}</p>
+          <p
+            class="num text-4xl font-semibold leading-none text-ink-gray-9"
+            data-testid="inmo-ficha-hero"
           >
-            Reintentar
-          </button>
-          <button v-else type="button" :class="TONAL" @click="refreshFicha">
-            Actualizar la ficha
-          </button>
-          <button type="button" :class="TONAL" @click="actionProblem = null">
-            Entendido
-          </button>
+            {{ valueText(ficha.hero) }}
+          </p>
         </div>
-      </div>
-    </section>
-
-    <section
-      v-for="seccion in ficha.secciones"
-      :key="seccion.titulo"
-      class="flex flex-col"
-    >
-      <h2 class="mb-1 text-lg font-semibold text-ink-gray-9">
-        {{ seccion.titulo }}
-      </h2>
-      <dl v-if="seccion.filas" class="divide-y divide-outline-gray-1">
-        <div
-          v-for="fila in seccion.filas"
-          :key="fila.label"
-          class="flex min-h-12 flex-col justify-center py-2"
-        >
-          <dt class="text-sm text-ink-gray-6">{{ fila.label }}</dt>
-          <dd
-            class="break-words text-base text-ink-gray-9"
-            :class="TONE_TEXT[fila.tone]"
+        <template v-if="primary">
+          <component
+            :is="
+              primary.url && primary.habilitada
+                ? linkTag(primary.url)
+                : NativeButton
+            "
+            v-bind="
+              primary.url && primary.habilitada
+                ? actionProps(primary)
+                : { type: 'button' }
+            "
+            :class="[FILLED, !primary.habilitada && DISABLED]"
+            :aria-disabled="!primary.habilitada || undefined"
+            :aria-busy="running === primary.id || undefined"
+            data-testid="inmo-siguiente-paso"
+            @click="(e) => act(primary, e)"
           >
-            <component
-              :is="linkTag(fila.url)"
-              v-if="fila.url"
-              v-bind="linkProps(fila.url)"
-              class="underline decoration-outline-gray-3 underline-offset-4"
-              >{{ valueText(fila) }}</component
-            >
-            <template v-else>{{ valueText(fila) }}</template>
-          </dd>
-        </div>
-      </dl>
-      <div v-else-if="seccion.lista" class="-mx-4 flex flex-col">
-        <ListRow
-          v-for="(item, i) in seccion.lista"
-          :key="i"
-          :title="item.title?.tipo ? valueText(item.title) : item.title"
-          :subtitle="item.detail || ''"
-          :subtitle-tone="item.tone === 'danger' ? 'danger' : undefined"
-          :meta="item.meta ? valueText(item.meta) : ''"
-          v-bind="item.url ? linkProps(item.url, 'row') : {}"
-        >
-          <template v-if="item.estatus" #trailing>
-            <StatusChip :label="item.estatus.label" :tone="item.estatus.tone" />
-          </template>
-        </ListRow>
-      </div>
-      <ul
-        v-else-if="seccion.documentos"
-        class="flex flex-col divide-y divide-outline-gray-1"
-        data-testid="inmo-documentos"
-      >
-        <li
-          v-for="d in seccion.documentos"
-          :key="d.name"
-          class="flex flex-col gap-2 py-3"
-        >
-          <div class="flex items-start gap-3">
             <span
-              :class="[
-                DOC_ICON[d.estatus?.tone] || 'lucide-circle',
-                'mt-0.5 size-5 shrink-0',
-                TONE_TEXT[d.estatus?.tone],
-              ]"
+              v-if="running === primary.id"
+              class="lucide-loader-circle size-5 animate-spin"
               aria-hidden="true"
             />
-            <div class="min-w-0 flex-1">
-              <p class="break-words text-base text-ink-gray-9">
-                {{ d.etiqueta
-                }}<span v-if="!d.obligatorio" class="text-ink-gray-6">
-                  · opcional</span
-                >
-              </p>
-              <p v-if="d.notas" class="break-words text-sm text-ink-gray-6">
-                {{ d.notas }}
-              </p>
-              <a
-                v-if="d.archivo"
-                :href="d.archivo"
-                target="_blank"
-                rel="noopener"
-                class="text-sm text-ink-gray-7 underline underline-offset-4"
-                >Ver archivo</a
-              >
-            </div>
-            <StatusChip
-              v-if="d.estatus"
-              :label="d.estatus.label"
-              :tone="d.estatus.tone"
+            {{ primary.etiqueta }}
+          </component>
+          <Blocked :accion="primary" />
+        </template>
+        <!-- Beside it, the other steps that move the record on (at most two);
+           every action, and the ones that cancel, wait behind the bolt. -->
+        <div v-if="inline.length" class="flex flex-wrap gap-2">
+          <component
+            :is="a.url && a.habilitada ? linkTag(a.url) : NativeButton"
+            v-for="a in inline"
+            :key="a.id"
+            v-bind="a.url && a.habilitada ? actionProps(a) : { type: 'button' }"
+            :class="[TONAL, !a.habilitada && DISABLED]"
+            :aria-disabled="!a.habilitada || undefined"
+            :title="a.habilitada ? undefined : a.motivo"
+            :data-accion="a.id"
+            @click="(e) => act(a, e)"
+          >
+            <span
+              v-if="running === a.id"
+              class="lucide-loader-circle size-5 animate-spin"
+              aria-hidden="true"
             />
-          </div>
-          <div v-if="d.subir || d.verificar" class="flex flex-wrap gap-2 pl-8">
+            <span
+              v-else-if="a.id === 'whatsapp'"
+              class="lucide-message-circle size-5"
+              aria-hidden="true"
+            />
+            {{ a.etiqueta }}
+          </component>
+        </div>
+        <Blocked
+          v-for="a in inline.filter((x) => !x.habilitada)"
+          :key="`m-${a.id}`"
+          :accion="a"
+          secundaria
+        />
+        <!-- An action that failed: the worker stays here, reads why, and tries
+           again or carries on with the record. -->
+        <div
+          v-if="actionProblem"
+          class="flex flex-col gap-2 rounded-6 bg-surface-red-1 px-3 py-2 text-base text-ink-red-7"
+          role="alert"
+          data-testid="inmo-accion-problema"
+        >
+          <p>
+            <span class="font-medium">{{ actionProblem.etiqueta }}:</span>
+            {{ actionProblem.texto }}
+          </p>
+          <div class="flex flex-wrap gap-2">
             <button
-              v-if="d.subir"
+              v-if="actionProblem.reintentar"
               type="button"
               :class="TONAL"
-              :data-documento="d.requisito"
-              @click="openSheet(subirDocumento(d))"
+              @click="act(actionProblem.accion)"
             >
-              <span class="lucide-camera size-5" aria-hidden="true" />
-              {{ d.archivo ? 'Cambiar' : 'Subir' }}
+              Reintentar
             </button>
-            <button
-              v-if="d.verificar"
-              type="button"
-              :class="TONAL"
-              @click="openSheet(verificarDocumento(d, true))"
-            >
-              Verificar
+            <button v-else type="button" :class="TONAL" @click="refreshFicha">
+              Actualizar la ficha
             </button>
-            <button
-              v-if="d.verificar"
-              type="button"
-              :class="[TONAL, 'text-ink-red-7']"
-              @click="openSheet(verificarDocumento(d, false))"
-            >
-              Rechazar
+            <button type="button" :class="TONAL" @click="actionProblem = null">
+              Entendido
             </button>
           </div>
-        </li>
-      </ul>
-    </section>
+        </div>
+      </section>
 
-    <section v-if="ficha.conexiones?.length" class="flex flex-col">
+      <section
+        v-for="seccion in ficha.secciones"
+        :key="seccion.titulo"
+        class="flex flex-col"
+      >
+        <h2 class="mb-1 text-lg font-semibold text-ink-gray-9">
+          {{ seccion.titulo }}
+        </h2>
+        <dl v-if="seccion.filas" class="flex flex-col">
+          <div
+            v-for="fila in seccion.filas"
+            :key="fila.label"
+            class="flex min-h-11 border-b border-outline-gray-1 py-2.5 last:border-b-0"
+            :class="
+              stacks(fila)
+                ? 'flex-col justify-center gap-0.5'
+                : 'items-baseline justify-between gap-4'
+            "
+          >
+            <dt class="flex-none text-base text-ink-gray-6">
+              {{ fila.label }}
+            </dt>
+            <dd
+              class="min-w-0 break-words text-base text-ink-gray-9"
+              :class="[
+                TONE_TEXT[fila.tone],
+                FIGURE.has(fila.tipo) && 'num',
+                !stacks(fila) && 'text-right',
+              ]"
+            >
+              <component
+                :is="linkTag(fila.url)"
+                v-if="fila.url"
+                v-bind="linkProps(fila.url)"
+                class="underline decoration-outline-gray-3 underline-offset-4"
+                >{{ valueText(fila) }}</component
+              >
+              <template v-else>{{ valueText(fila) }}</template>
+            </dd>
+          </div>
+        </dl>
+        <div v-else-if="seccion.lista" class="-mx-4 flex flex-col">
+          <ListRow
+            v-for="(item, i) in seccion.lista"
+            :key="i"
+            :title="item.title?.tipo ? valueText(item.title) : item.title"
+            :subtitle="item.detail || ''"
+            :subtitle-tone="item.tone === 'danger' ? 'danger' : undefined"
+            :meta="item.meta ? valueText(item.meta) : ''"
+            v-bind="item.url ? linkProps(item.url, 'row') : {}"
+          >
+            <template v-if="item.estatus" #trailing>
+              <StatusChip
+                :label="item.estatus.label"
+                :tone="item.estatus.tone"
+              />
+            </template>
+          </ListRow>
+        </div>
+        <ul
+          v-else-if="seccion.documentos"
+          class="flex flex-col divide-y divide-outline-gray-1"
+          data-testid="inmo-documentos"
+        >
+          <li
+            v-for="d in seccion.documentos"
+            :key="d.name"
+            class="flex flex-col gap-2 py-3"
+          >
+            <div class="flex items-start gap-3">
+              <span
+                :class="[
+                  DOC_ICON[d.estatus?.tone] || 'lucide-circle',
+                  'mt-0.5 size-5 shrink-0',
+                  TONE_TEXT[d.estatus?.tone],
+                ]"
+                aria-hidden="true"
+              />
+              <div class="min-w-0 flex-1">
+                <p class="break-words text-base text-ink-gray-9">
+                  {{ d.etiqueta
+                  }}<span v-if="!d.obligatorio" class="text-ink-gray-6">
+                    · opcional</span
+                  >
+                </p>
+                <p v-if="d.notas" class="break-words text-sm text-ink-gray-6">
+                  {{ d.notas }}
+                </p>
+                <a
+                  v-if="d.archivo"
+                  :href="d.archivo"
+                  target="_blank"
+                  rel="noopener"
+                  class="text-sm text-ink-gray-7 underline underline-offset-4"
+                  >Ver archivo</a
+                >
+              </div>
+              <StatusChip
+                v-if="d.estatus"
+                :label="d.estatus.label"
+                :tone="d.estatus.tone"
+              />
+            </div>
+            <div
+              v-if="d.subir || d.verificar"
+              class="flex flex-wrap gap-2 pl-8"
+            >
+              <button
+                v-if="d.subir"
+                type="button"
+                :class="TONAL"
+                :data-documento="d.requisito"
+                @click="openSheet(subirDocumento(d))"
+              >
+                <span class="lucide-camera size-5" aria-hidden="true" />
+                {{ d.archivo ? 'Cambiar' : 'Subir' }}
+              </button>
+              <button
+                v-if="d.verificar"
+                type="button"
+                :class="TONAL"
+                @click="openSheet(verificarDocumento(d, true))"
+              >
+                Verificar
+              </button>
+              <button
+                v-if="d.verificar"
+                type="button"
+                :class="[TONAL, 'text-ink-red-7']"
+                @click="openSheet(verificarDocumento(d, false))"
+              >
+                Rechazar
+              </button>
+            </div>
+          </li>
+        </ul>
+      </section>
+    </div>
+    <section
+      v-if="ficha.conexiones?.length"
+      class="flex flex-col"
+      :class="wide && 'sticky top-4'"
+    >
       <h2 class="mb-1 text-lg font-semibold text-ink-gray-9">Conexiones</h2>
       <div class="-mx-4 flex flex-col">
         <ListRow
@@ -279,12 +341,17 @@
       </div>
     </section>
 
-    <a
-      v-if="desktop && ficha.desk"
-      :href="ficha.desk"
-      class="self-start text-sm text-ink-gray-6 underline underline-offset-4"
-      >Abrir en escritorio</a
+    <!-- «⋯»: the record's tools (reload, link, mail, the Desk form for an
+         administrator). Mounts on its first open. -->
+    <BottomSheet
+      v-if="toolsUsed"
+      v-model:open="toolsOpen"
+      title="Herramientas"
+      :subtitle="ficha.titulo"
+      flush
     >
+      <AccionesPanel :groups="toolGroups" @pick="onTool" />
+    </BottomSheet>
 
     <AccionSheet
       v-model:open="sheetOpen"
@@ -298,37 +365,48 @@
 </template>
 
 <script setup>
-import { computed, h, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, h, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { toast } from 'frappe-ui'
 import { ListRow, StatusChip } from '@/components/ui'
 import AccionSheet from '@/components/inmobiliaria/AccionSheet.vue'
+import RecordIsland from '@/components/documentos/RecordIsland.vue'
 import {
   NativeButton,
   SIN_METODO,
+  accionOf,
+  boltGroupsOf,
   externalLinkOf,
   inmobiliariaApi,
   linkOf,
   problemText,
   valueText,
 } from '@/composables/useInmobiliaria'
-import { useWindowSize } from '@vueuse/core'
+
+const BottomSheet = defineAsyncComponent(
+  () => import('@/components/ui/BottomSheet.vue'),
+)
+const AccionesPanel = defineAsyncComponent(
+  () => import('@/components/documentos/AccionesPanel.vue'),
+)
 
 const props = defineProps({
   ficha: { type: Object, required: true },
   /** Query to carry into the next record (the way back). */
   carry: { type: Object, default: () => ({}) },
+  /** false: the page's bar names the record and holds its island. */
+  header: { type: Boolean, default: true },
+  /** Desktop page: the record on the left, its connections beside it. */
+  wide: { type: Boolean, default: false },
 })
 const emit = defineEmits(['changed'])
 const route = useRoute()
 const router = useRouter()
-const { width } = useWindowSize()
-const desktop = computed(() => width.value >= 1024)
 
 const FILLED =
-  'flex min-h-12 w-full items-center justify-center rounded-full bg-surface-gray-10 px-5 text-base-medium text-ink-base hover:bg-surface-gray-9 active:bg-surface-gray-8'
+  'press flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-surface-gray-10 px-5 text-base-medium text-ink-base hover:bg-surface-gray-9 active:bg-surface-gray-8 sm:w-auto sm:self-start sm:min-w-56'
 const TONAL =
-  'inline-flex min-h-11 items-center gap-2 rounded-full bg-surface-gray-2 px-4 text-base-medium text-ink-gray-8'
+  'press inline-flex min-h-11 items-center gap-2 rounded-full bg-surface-gray-2 px-4 text-base-medium text-ink-gray-8 hover:bg-surface-gray-3'
 const DISABLED = 'cursor-not-allowed opacity-50'
 const TONE_TEXT = {
   danger: 'text-ink-red-7',
@@ -347,11 +425,24 @@ const acciones = computed(() => props.ficha.acciones || [])
 const primary = computed(
   () => acciones.value.find((a) => a.tipo === 'primary') || null,
 )
-const secondary = computed(() =>
-  acciones.value
-    .filter((a) => a !== primary.value)
-    .sort((a, b) => (a.tipo === 'danger') - (b.tipo === 'danger')),
+// Beside the next step: the other steps of this state, a blocked one with its
+// reason under it. The way back and the ones that cancel wait behind the bolt,
+// which lists every action.
+const inline = computed(() =>
+  acciones.value.filter(
+    (a) =>
+      a !== primary.value &&
+      a.tipo !== 'danger' &&
+      !String(a.id).startsWith('volver'),
+  ),
 )
+const boltGroups = computed(() => boltGroupsOf(props.ficha))
+
+// Figures read as figures (`.num`); a long text stacks under its label.
+const FIGURE = new Set(['money', 'date', 'percent'])
+function stacks(fila) {
+  return !FIGURE.has(fila.tipo) && valueText(fila).length > 26
+}
 
 // A blocked action says why (`motivo`) and what to do next (`solucion`). When
 // the way forward is a screen (`abrir`, a path) the next step is its link. An
@@ -465,6 +556,90 @@ function refreshFicha() {
   actionProblem.value = null
   emit('changed')
 }
+
+// The bolt (here or in the page's bar) picks an action by its id: a link is
+// followed, anything else runs as its button would.
+function run(accion) {
+  if (!accion?.habilitada) return
+  if (accion.url) {
+    const external = externalLinkOf(accion)
+    if (external.href) return window.open(external.href, '_blank', 'noopener')
+    const link = linkOf(accion.url)
+    if (link.to) return router.push(withCarry(link.to))
+    if (link.href) return window.location.assign(link.href)
+    return
+  }
+  act(accion)
+}
+function onBolt({ key }) {
+  run(accionOf(props.ficha, key))
+}
+
+function writeMail() {
+  const email = props.ficha.reach?.email
+  if (email) window.location.href = `mailto:${email}`
+}
+const toolsOpen = ref(false)
+const toolsUsed = ref(false)
+watch(toolsOpen, (open) => open && (toolsUsed.value = true))
+const toolGroups = computed(() => {
+  const items = [
+    {
+      key: 'actualizar',
+      label: 'Actualizar',
+      icon: 'lucide-refresh-cw',
+      hint: 'Vuelve a leer la ficha',
+      allowed: true,
+    },
+    {
+      key: 'enlace',
+      label: 'Copiar enlace',
+      icon: 'lucide-link',
+      hint: 'Para mandarlo a un compañero',
+      allowed: true,
+    },
+  ]
+  const email = props.ficha.reach?.email
+  if (email)
+    items.push({
+      key: 'correo',
+      label: `Escribir a ${props.ficha.reach?.who || props.ficha.titulo}`,
+      icon: 'lucide-mail',
+      hint: email,
+      allowed: true,
+    })
+  // The Desk form: an administrator's escape, never routine work.
+  if (props.ficha.desk)
+    items.push({
+      key: 'escritorio',
+      label: 'Abrir en escritorio',
+      icon: 'lucide-external-link',
+      hint: 'El formulario completo, para administradores',
+      allowed: true,
+    })
+  return [{ key: 'herramientas', title: 'Esta ficha', items }]
+})
+async function onTool({ key }) {
+  toolsOpen.value = false
+  if (key === 'actualizar') return refreshFicha()
+  if (key === 'correo') return writeMail()
+  if (key === 'escritorio' && props.ficha.desk)
+    return window.location.assign(props.ficha.desk)
+  if (key === 'enlace') {
+    try {
+      await navigator.clipboard.writeText(window.location.href)
+      toast.success('Enlace copiado')
+    } catch {
+      toast.error('No se pudo copiar el enlace.')
+    }
+  }
+}
+defineExpose({
+  run,
+  onBolt,
+  writeMail,
+  openTools: () => (toolsOpen.value = true),
+})
 
 async function act(accion, event) {
   if (!accion.habilitada) {

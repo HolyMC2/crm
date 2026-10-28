@@ -12,8 +12,14 @@
       :count="data?.count ?? null"
       :back="true"
       back-label="Volver"
-      :loading="loading"
+      :loading="loading && !!data"
+      :searchable="searchable"
+      :search="search"
+      :search-open="searchOpen"
+      search-label="Buscar en esta lista"
       data-testid="inmo-cola-appbar"
+      @update:search="search = $event"
+      @update:search-open="searchOpen = $event"
       @back="goBack"
     />
     <div class="flex min-h-0 flex-1">
@@ -39,7 +45,26 @@
             @click="salir"
           />
         </EmptyState>
-        <EmptyState v-else-if="!data" state="loading" title="Abriendo…" />
+        <!-- Opening: rows in grey where the rows will land, so nothing jumps. -->
+        <ul
+          v-else-if="!data"
+          class="animate-pulse motion-reduce:animate-none"
+          role="status"
+          aria-label="Abriendo…"
+          data-testid="inmo-cola-esqueleto"
+        >
+          <li
+            v-for="n in 6"
+            :key="n"
+            class="flex min-h-16 items-center gap-3 px-4 py-2"
+          >
+            <span class="flex flex-1 flex-col gap-2">
+              <span class="h-3.5 w-1/2 rounded-full bg-surface-gray-2" />
+              <span class="h-3 w-3/4 rounded-full bg-surface-gray-1" />
+            </span>
+            <span class="h-3.5 w-16 rounded-full bg-surface-gray-2" />
+          </li>
+        </ul>
         <!-- Records the list counts but cannot show one by one yet (a report
              queue): say how many, and lead on. -->
         <EmptyState
@@ -96,8 +121,16 @@
               @click="load({ more: problemMore })"
             />
           </div>
+          <EmptyState
+            v-if="search && !rows.length"
+            state="empty"
+            title="Nada coincide"
+            :message="`Ningún renglón de esta lista dice «${search}».`"
+            action="Borrar la búsqueda"
+            @action="search = ''"
+          />
           <ListRow
-            v-for="fila in data.filas"
+            v-for="fila in rows"
             :key="fila.name"
             :title="fila.title"
             :subtitle="fila.detail || ''"
@@ -107,6 +140,7 @@
             :selected="desktop && selected === fila.url"
             v-bind="rowLink(fila)"
             :data-fila="fila.name"
+            :data-fresh="live.fresh.value.has(fila.name) ? '' : undefined"
           >
             <template v-if="fila.estatus" #trailing>
               <StatusChip
@@ -115,7 +149,7 @@
               />
             </template>
           </ListRow>
-          <div v-if="data.mas" class="flex justify-center px-4 py-4">
+          <div v-if="data.mas && !search" class="flex justify-center px-4 py-4">
             <Button
               variant="subtle"
               size="lg"
@@ -124,7 +158,8 @@
               @click="load({ more: true })"
             />
           </div>
-          <div v-if="deskLink" class="flex justify-center px-4 py-4">
+          <!-- An administrator's escape on a desktop; never routine work. -->
+          <div v-if="deskLink && desktop" class="flex justify-center px-4 py-4">
             <a :href="deskLink" :class="DESK_LINK" data-testid="inmo-cola-desk"
               >Abrir la lista en el escritorio</a
             >
@@ -198,6 +233,8 @@ import {
 } from '@/composables/useInmobiliaria'
 import { parseFicha } from '@/utils/inmobiliariaTipos'
 import { createListCache } from '@/utils/listCache'
+import { useLiveList } from '@/composables/liveList'
+import { matchTokens } from '@/vendor/muelle-shell/contracts/search'
 
 const props = defineProps({ cola: { type: String, required: true } })
 const route = useRoute()
@@ -249,6 +286,21 @@ const deskLink = computed(() =>
     : null,
 )
 
+// One search field when the list is long enough to need it: any word, any
+// order, accents ignored (the shell rule), over what the row says.
+const search = ref('')
+const searchOpen = ref(false)
+const searchable = computed(() => (data.value?.filas?.length || 0) > 7)
+const rows = computed(() => {
+  const filas = data.value?.filas || []
+  const q = search.value.trim()
+  return q
+    ? filas.filter((f) =>
+        matchTokens(q, f.title, f.detail, f.estatus?.label, valueText(f.meta)),
+      )
+    : filas
+})
+
 const pendientes = (count) =>
   `${count} ${count === 1 ? 'pendiente' : 'pendientes'} en esta lista`
 
@@ -292,15 +344,19 @@ function paintCached() {
   listCache.paint((page) => (data.value = page))
 }
 
-async function load({ more = false } = {}) {
+async function load({ more = false, keep = false } = {}) {
   const listAt = more ? null : listCache.key()
   loading.value = true
   problem.value = ''
   try {
-    const page = await inmobiliariaApi('cola', {
+    const args = {
       key: props.cola,
       start: more ? data.value?.filas.length || 0 : 0,
-    })
+    }
+    // A live refresh keeps every row the worker already paged in.
+    if (keep && (data.value?.filas?.length || 0) > 30)
+      args.limit = Math.min(data.value.filas.length, 100)
+    const page = await inmobiliariaApi('cola', args)
     data.value =
       more && data.value
         ? { ...page, filas: [...data.value.filas, ...page.filas] }
@@ -314,12 +370,13 @@ async function load({ more = false } = {}) {
   }
 }
 
-async function loadFicha() {
-  ficha.value = null
+async function loadFicha({ quiet = false } = {}) {
+  // A quiet reload (live) keeps the record on screen until the new one lands.
+  if (!quiet) ficha.value = null
   fichaProblem.value = ''
   const target = parseFicha(linkOf(selected.value).to)
-  if (!desktop.value || !target) return
-  fichaLoading.value = true
+  if (!desktop.value || !target) return (ficha.value = null)
+  fichaLoading.value = !quiet
   try {
     const answer = await inmobiliariaApi('ficha', target)
     // Another row may have been chosen meanwhile.
@@ -340,14 +397,31 @@ function refresh() {
   loadFicha()
 }
 
+// A teammate's change to one of this queue's records shows without a reload;
+// a row that just came in is marked for a moment.
+const live = useLiveList(
+  () => data.value?.doctype || '',
+  async () => {
+    const before = (data.value?.filas || []).map((f) => f.name)
+    await load({ keep: true })
+    live.mark(
+      before,
+      (data.value?.filas || []).map((f) => f.name),
+    )
+    if (selected.value) loadFicha({ quiet: true })
+  },
+)
+
 watch(
   () => props.cola,
   () => {
+    search.value = ''
+    searchOpen.value = false
     paintCached()
     load()
   },
 )
-watch([selected, desktop], loadFicha)
+watch([selected, desktop], () => loadFicha())
 onMounted(() => {
   paintCached()
   load()
