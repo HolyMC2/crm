@@ -266,6 +266,8 @@ const titleProps = computed(() => ({
   pickable: props.scopes.length > 0,
   open: scopeSheet.value,
   pickLabel: props.scopeTitle || __('Choose a list'),
+  // A top-level bar is the page's heading: its title takes display size.
+  large: !props.back,
 }))
 
 function onBack(event) {
@@ -305,9 +307,13 @@ watch(
 )
 
 // The title gets its own row (M3 medium bar) when it would not fit in two
-// lines beside the icons, or when the icons leave it less than 6rem.
-const TITLE_MIN = 96
-const CHAR_PX = 9 // text-xl semibold, Archivo at the title width (92 %)
+// lines beside the icons, or when the icons leave it too little room: 6rem
+// for a title beside a back arrow, 9.5rem for a large one (at 22px a narrower
+// slot breaks «Por comprar» one word per line).
+const titleMin = () => (props.back ? 96 : 152)
+// Average glyph width, Archivo semibold at the title width (92 %): 22px for a
+// top-level (large) title, 17px beside a back arrow.
+const charPx = () => (props.back ? 9 : 11.5)
 let observer = null
 function measure() {
   const width = bar.value?.clientWidth || 0
@@ -319,8 +325,8 @@ function measure() {
     40 // the row's padding and gaps, and the title's own padding
   const room = width - used
   const text = `${props.title} ${props.count ?? ''}`.trim()
-  const needed = text.length * CHAR_PX + (props.scopes.length ? 24 : 0)
-  stacked.value = room < TITLE_MIN || (props.stack && needed > room * 2 * 0.9)
+  const needed = text.length * charPx() + (props.scopes.length ? 24 : 0)
+  stacked.value = room < titleMin() || (props.stack && needed > room * 2 * 0.9)
 }
 // The icons mount only in the normal mode (not while selecting or
 // searching): observe them whenever they (re)appear.
@@ -360,8 +366,10 @@ const AppBarTitle = (attrs, { emit: emitTitle }) => {
   const heading = h(
     'span',
     {
-      class:
-        'title-face line-clamp-2 break-words text-xl font-semibold leading-tight [text-wrap:balance]',
+      class: [
+        'title-face line-clamp-2 break-words font-semibold leading-tight [text-wrap:balance]',
+        attrs.large ? 'text-3xl max-[359px]:text-2xl' : 'text-xl',
+      ],
       'data-appbar-title': '',
     },
     [attrs.title, count],
@@ -405,6 +413,7 @@ AppBarTitle.props = [
   'pickable',
   'open',
   'pickLabel',
+  'large',
 ]
 AppBarTitle.emits = ['pick']
 </script>

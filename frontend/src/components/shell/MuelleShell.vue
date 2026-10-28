@@ -28,10 +28,11 @@
         v-if="phone && !drillDown && !route.meta.ownPhoneHeader"
         data-testid="shell-header"
         :back="backTo"
-        :title="headerTitle"
+        :title="barTitle"
         :stack="!backTo"
         :bell-active="activeKey === 'avisos'"
         class="transition-[margin] duration-200"
+        :class="backTo ? '' : '!border-b-transparent'"
         :style="headerHidden ? { marginTop: `-${headerHeight}px` } : null"
       >
         <template #title>
@@ -45,12 +46,14 @@
           />
           <h1
             data-testid="shell-title"
-            class="title-face min-w-0 flex-1 self-center text-xl font-semibold leading-tight [#app-header:has(*)+&]:hidden"
+            class="title-face min-w-0 flex-1 self-center font-semibold leading-tight [#app-header:has(*)+&]:hidden"
             :class="
-              backTo ? 'truncate pl-1 pr-2' : 'line-clamp-2 break-words px-3'
+              backTo
+                ? 'truncate pl-1 pr-2 text-xl'
+                : 'line-clamp-2 break-words px-3 text-3xl max-[359px]:text-2xl'
             "
           >
-            {{ headerTitle }}
+            {{ barTitle }}
           </h1>
         </template>
         <!-- The top bar names the place and holds global search and the bell.
@@ -274,6 +277,7 @@ import {
   openCamera,
 } from '@/components/captura/cameraDoor'
 import { primaryDock } from '@/components/ui/primaryDock'
+import { pageTitle } from '@/composables/pageTitle'
 import AppBar from '@/components/ui/AppBar.vue'
 import ShellRail from './ShellRail.vue'
 import ShellBottomNav from './ShellBottomNav.vue'
@@ -555,6 +559,10 @@ onBeforeUnmount(() => {
 })
 // Every route names itself through meta.title (English source, es-MX catalog).
 const headerTitle = computed(() => shellTitle(route, activeModule.value))
+// The bar shows the page's own title when it set one (Hoy's greeting).
+const barTitle = computed(
+  () => (!backTo.value && pageTitle.value) || headerTitle.value,
+)
 // «c» creates in the module the worker is in: the palette's create action for
 // it. A page with its own create (a dialog on the list) answers first.
 watch(

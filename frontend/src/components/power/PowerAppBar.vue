@@ -6,7 +6,7 @@
        data-power-* hooks are the pages' contract (their tests read them). -->
   <AppBar
     data-power-appbar
-    :title="heading"
+    :title="title || heading"
     :count="count"
     :loading="loading"
     :searchable="searchable"
@@ -33,15 +33,23 @@
         data-power-title
         @click="listSheet = true"
       >
-        <span
-          class="line-clamp-2 min-w-0 break-words text-lg font-semibold leading-snug [text-wrap:balance]"
-          >{{ heading
-          }}<span
-            v-if="count !== undefined && count !== null && count !== ''"
-            class="ml-1 text-base font-normal text-ink-gray-6"
-            >({{ count }})</span
-          ></span
-        >
+        <!-- The module in one small line, the list as the page's heading. -->
+        <span class="flex min-w-0 flex-col">
+          <span
+            v-if="moduleName && title"
+            class="truncate text-sm leading-tight text-ink-gray-6"
+            >{{ moduleName }}</span
+          >
+          <span
+            class="title-face line-clamp-2 min-w-0 break-words text-3xl font-semibold leading-tight [text-wrap:balance] max-[359px]:text-2xl"
+            >{{ title || moduleName
+            }}<span
+              v-if="count !== undefined && count !== null && count !== ''"
+              class="num ml-1.5 text-xl font-normal text-ink-gray-6"
+              >{{ count }}</span
+            ></span
+          >
+        </span>
         <LucideChevronDown class="h-5 w-5 shrink-0 text-ink-gray-6" />
       </button>
     </template>

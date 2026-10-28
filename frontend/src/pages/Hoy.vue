@@ -16,17 +16,18 @@
       />
     </div>
     <div
-      class="mx-auto w-full max-w-6xl px-4 pb-24 pt-4 sm:px-6 sm:pb-10 sm:pt-6"
+      class="mx-auto w-full max-w-6xl px-4 pb-24 pt-0.5 sm:px-6 sm:pb-10 sm:pt-6"
     >
       <header class="flex items-start gap-3 pb-4">
         <div class="min-w-0 flex-1">
-          <component
-            :is="phone ? 'p' : 'h1'"
+          <!-- On a phone the greeting is the top bar's title (pageTitle). -->
+          <h1
+            v-if="!phone"
             class="title-face text-3xl font-semibold text-ink-gray-9 [text-wrap:balance] sm:text-5xl"
           >
             {{ hello }}
-          </component>
-          <p class="mt-0.5 text-sm text-ink-gray-6">
+          </h1>
+          <p class="text-sm text-ink-gray-6 sm:mt-0.5">
             <span class="first-letter:uppercase">{{ dateLine }}</span>
             <template v-if="summary"> · {{ summary }}</template>
           </p>
@@ -530,6 +531,7 @@ import { useListKeys } from '@/composables/pageKeys'
 import AvisosList from '@/components/avisos/AvisosList.vue'
 import CompleteDialog from '@/components/pendientes/CompleteDialog.vue'
 import { isMobile } from '@/composables/breakpoint'
+import { pageTitle } from '@/composables/pageTitle'
 import { BottomSheet, ListRow } from '@/components/ui'
 import { currentScope, shellBoot } from '@/composables/muelleShell'
 import {
@@ -610,6 +612,12 @@ const hello = computed(() => {
   return name ? `${words}, ${name}` : words
 })
 const dateLine = computed(() => dayTitle(today.value, locale) || '')
+watch(
+  [phone, hello],
+  ([isPhone, words]) => (pageTitle.value = isPhone ? words : ''),
+  { immediate: true },
+)
+onBeforeUnmount(() => (pageTitle.value = ''))
 
 const tasks = computed(() => dueRows(pendientes.value))
 const moreTasks = computed(() => dueMore(pendientes.value))
