@@ -1,0 +1,91 @@
+<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (ce74d3b9f43a). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<template>
+  <!-- One pane-level state (CRM S5.4): loading, empty, denied or error, each
+       with words and, where it helps, the action that moves the worker on.
+       Never a blank pane. The default slot adds further ways out (a way back
+       next to «Retry»). -->
+  <div
+    class="flex min-h-[12rem] flex-1 flex-col items-center justify-center gap-2 px-6 py-10 text-center"
+    :role="state === 'error' || state === 'denied' ? 'alert' : 'status'"
+    :aria-busy="state === 'loading' || undefined"
+    :data-pane-state="state"
+  >
+    <span
+      class="size-6 flex-none text-ink-gray-5"
+      :class="[icon, state === 'loading' ? 'animate-spin' : '']"
+      aria-hidden="true"
+    />
+    <p class="text-base-medium text-ink-gray-8">{{ heading }}</p>
+    <p v-if="detail" class="max-w-sm text-sm text-ink-gray-6">{{ detail }}</p>
+    <div
+      v-if="actionLabel || $slots.default"
+      class="mt-2"
+      :class="
+        $slots.default && 'flex flex-wrap items-center justify-center gap-2'
+      "
+    >
+      <Button
+        v-if="actionLabel"
+        :label="actionLabel"
+        class="min-h-11"
+        @click="act"
+      />
+      <slot />
+    </div>
+  </div>
+</template>
+<script setup>
+import { t } from './host'
+import { computed } from 'vue'
+import { Button } from 'frappe-ui'
+
+const props = defineProps({
+  /** 'loading' | 'empty' | 'denied' | 'error' */
+  state: { type: String, required: true },
+  /** Overrides the default heading of the state. */
+  title: { type: String, default: '' },
+  message: { type: String, default: '' },
+  /** Label of the next action; `retry` is emitted when it is pressed. */
+  action: { type: String, default: '' },
+  /** Error/denied without a handler: reload the page (keeps the route). */
+  reload: { type: Boolean, default: false },
+})
+const emit = defineEmits(['retry'])
+
+const ICONS = {
+  loading: 'lucide-loader-circle',
+  empty: 'lucide-inbox',
+  denied: 'lucide-lock',
+  error: 'lucide-circle-alert',
+}
+const icon = computed(() => ICONS[props.state] || ICONS.empty)
+const heading = computed(
+  () =>
+    props.title ||
+    {
+      loading: t('Loading…'),
+      empty: t('Nothing here yet'),
+      denied: t('You do not have access to this'),
+      error: t('This could not be loaded'),
+    }[props.state] ||
+    '',
+)
+const detail = computed(
+  () =>
+    props.message ||
+    {
+      denied: t('Ask your manager for access, or go back.'),
+      error: t('Check your connection and try again.'),
+    }[props.state] ||
+    '',
+)
+const actionLabel = computed(
+  () =>
+    props.action ||
+    (props.reload && props.state === 'error' ? t('Reload') : ''),
+)
+function act() {
+  if (props.reload && !props.action) window.location.reload()
+  else emit('retry')
+}
+</script>

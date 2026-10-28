@@ -1,0 +1,231 @@
+/* Vendored from muelle/workspace/packages/ui@0.1.0 (ce74d3b9f43a). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. */
+/* The Muelle shell's type, motion and feel, shared by every app built on
+   @muelle/ui. Import it after frappe-ui's style and the @muelle/tokens CSS.
+   It needs the frappe-ui Tailwind preset for the colour tokens it names. */
+
+/* Shell typeface: Archivo (Omnibus-Type, OFL; OFL.txt beside this file).
+   One variable family whose width axis carries the roles: body at 100 %,
+   titles at 92 %, figures (money, counts, days) at 84 % with tabular digits,
+   so a column of amounts reads like price tags. Cut to Latin and Spanish,
+   weights 300–800 and widths 80–100 %: 56 KB. */
+@font-face {
+  font-family: 'Muelle Archivo';
+  src: url('./archivo-var.woff2') format('woff2');
+  font-weight: 300 800;
+  font-stretch: 80% 100%;
+  font-style: normal;
+  font-display: swap;
+}
+:root {
+  --muelle-font: 'Muelle Archivo', ui-sans-serif, system-ui, -apple-system,
+    'Segoe UI', Roboto, sans-serif;
+}
+html {
+  font-family: var(--muelle-font);
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-tap-highlight-color: transparent;
+}
+/* Figures: amounts, counts, ages, KPIs. Condensed, tabular, lining. */
+.num {
+  font-stretch: 84%;
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings:
+    'tnum' 1,
+    'lnum' 1;
+  letter-spacing: 0;
+}
+/* Titles: page, sheet and section heads. */
+.title-face {
+  font-stretch: 92%;
+  letter-spacing: -0.012em;
+}
+:is(h1, h2, h3, [data-testid='shell-title']) {
+  font-stretch: 92%;
+}
+.tabular-nums {
+  font-stretch: 84%;
+}
+
+/* The root colour shows wherever the page has not painted yet, such as the
+   frame while the on-screen keyboard resizes the viewport: keep it on the
+   theme's surface so dark mode never flashes white. */
+html,
+body {
+  background-color: var(--muelle-surface-base);
+}
+body {
+  overscroll-behavior-y: none;
+}
+button,
+a,
+[role='button'],
+[role='tab'] {
+  touch-action: manipulation;
+}
+
+/* Motion answers a tap: a sheet rises, a page arrives, a control trades
+   places. Transform and opacity only; enter is a touch slower than leave. */
+@keyframes sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+.sheet-in {
+  animation: sheet-in 0.22s cubic-bezier(0.32, 0.72, 0, 1);
+}
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.page-in,
+.route-enter-active {
+  animation: page-in 0.18s cubic-bezier(0.21, 1.02, 0.73, 1);
+}
+.fade-enter-active {
+  transition: opacity 0.2s ease-out;
+}
+.fade-leave-active {
+  transition: opacity 0.14s ease-in;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+.slide-x-enter-active {
+  transition:
+    opacity 0.16s ease-out,
+    transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.slide-x-leave-active {
+  transition:
+    opacity 0.1s ease-in,
+    transform 0.1s ease-in;
+}
+.slide-x-enter-from {
+  opacity: 0;
+  transform: translateX(8px);
+}
+.slide-x-leave-to {
+  opacity: 0;
+  transform: translateX(-4px);
+}
+.icon-swap-enter-active,
+.icon-swap-leave-active {
+  transition:
+    opacity 0.12s ease,
+    transform 0.16s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.icon-swap-enter-from {
+  opacity: 0;
+  transform: rotate(-90deg) scale(0.6);
+}
+.icon-swap-leave-to {
+  opacity: 0;
+  transform: rotate(90deg) scale(0.6);
+}
+/* Tactile press for buttons and chips. */
+.press {
+  transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.press:active {
+  transform: scale(0.96);
+}
+
+/* Skeleton rows while a list loads: no spinner, no layout shift. */
+.skel {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-gray-2);
+}
+.skel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--surface-gray-3),
+    transparent
+  );
+  animation: skel-shimmer 1.2s infinite;
+}
+@keyframes skel-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+/* Offscreen rows skip layout and paint; the estimate keeps the scrollbar sane. */
+.cv-row {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 96px;
+}
+/* A row a teammate just added: a soft wash that fades. */
+[data-fresh] {
+  animation: row-fresh 2.4s ease-out;
+}
+@keyframes row-fresh {
+  0%,
+  30% {
+    background-color: var(--muelle-accent-soft);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-fresh] {
+    animation: none;
+    background-color: var(--muelle-accent-soft);
+  }
+  .sheet-in,
+  .page-in,
+  .route-enter-active,
+  .skel::after {
+    animation: none !important;
+  }
+  .fade-enter-active,
+  .fade-leave-active,
+  .slide-x-enter-active,
+  .slide-x-leave-active,
+  .icon-swap-enter-active,
+  .icon-swap-leave-active,
+  .press {
+    transition: none !important;
+  }
+}
+
+/* The row j/k moved to is always visible, whatever the row's own styling. */
+[data-key-row]:focus-visible,
+[data-key-row] [data-row-focus]:focus-visible {
+  outline: 2px solid var(--outline-gray-5, #7c7c7c);
+  outline-offset: -2px;
+}
+
+/* AppBar summary (#summary slot): a small label over a large condensed
+   figure; a page's own colour class on the figure still wins. */
+:where([data-appbar-summary]) > * > span,
+:where([data-appbar-summary]) > span {
+  display: flex;
+  flex-direction: column;
+}
+:where([data-appbar-summary]) strong {
+  display: block;
+  margin-top: 1px;
+  color: var(--ink-gray-9);
+  font-size: 22px;
+  line-height: 1.1;
+  font-weight: 640;
+  font-stretch: 84%;
+  font-variant-numeric: tabular-nums lining-nums;
+  letter-spacing: -0.01em;
+}
