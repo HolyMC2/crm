@@ -92,6 +92,17 @@ export default {
     { value: 'outstanding_amount desc', label: 'Deben más' },
     { value: 'grand_total desc', label: 'Importe mayor' },
   ],
+  // «Acciones»: the queue that works these invoices, customer by customer.
+  listActions: () => [
+    {
+      key: 'cobranza',
+      label: 'Cobranza',
+      icon: 'lucide-hand-coins',
+      hint: 'Quién te debe, cuánto y desde cuándo',
+      to: { path: '/cobranza' },
+      app: 'cobranza',
+    },
+  ],
 
   row(row) {
     const status = docStatus(row)

@@ -22,8 +22,6 @@
       searchable
       :search-label="`Buscar en ${title.toLowerCase()}`"
       :search-input-attrs="{ 'data-list-search': '' }"
-      :selectable="rows.length > 0"
-      select-label="Seleccionar"
       :selecting="sel.active"
       :selected-count="sel.count"
       @start-select="sel.start()"
@@ -31,16 +29,15 @@
       @clear-selection="sel.clear()"
       @pick="openVistas"
     >
-      <template #actions>
-        <button
-          type="button"
-          class="flex size-12 flex-none items-center justify-center rounded-full text-ink-gray-7 hover:bg-surface-gray-2"
-          aria-label="Ordenar"
-          data-testid="documentos-sort"
-          @click="sortOpen = true"
-        >
-          <span class="lucide-arrow-up-down size-6" aria-hidden="true" />
-        </button>
+      <!-- Every list-wide action behind the bolt: the profile's own kinds of
+           new document and shortcuts, then sort, views and select. -->
+      <template v-if="profile" #actions>
+        <AccionesMenu
+          :groups="acciones"
+          :phone="phone"
+          :subtitle="view ? view.label : title"
+          @pick="runAccion"
+        />
       </template>
       <!-- Phone: search opens the status chips and the filters under it
            (ui/AppBar #search-panel); closed, what is on shows as chips. -->
@@ -318,15 +315,6 @@
       @apply="applyView"
       @changed="vistas = $event"
     />
-    <BottomSheet v-model:open="sortOpen" title="Ordenar" flush>
-      <ListRow
-        v-for="option in profile?.sorts || []"
-        :key="option.value || 'default'"
-        :title="option.label"
-        :selected="(state.sort || '') === option.value"
-        @click="setSort(option.value)"
-      />
-    </BottomSheet>
   </div>
 </template>
 <script setup>
@@ -341,7 +329,6 @@ import {
 import { useRoute, useRouter } from 'vue-router'
 import {
   AppBar,
-  BottomSheet,
   EmptyState,
   Fab,
   FilterChips,
@@ -354,6 +341,7 @@ import { feminineNoun } from '@/utils/display'
 import { shellBoot } from '@/composables/muelleShell'
 import { useListKeys } from '@/composables/pageKeys'
 import { docApi, errorText } from '@/documentos/api'
+import AccionesMenu from '@/components/documentos/AccionesMenu.vue'
 import FilterLink from '@/components/documentos/FilterLink.vue'
 import ChipGroup from '@/components/ui/ChipGroup.vue'
 import { chipClass } from '@/components/ui/chipClass'
@@ -368,6 +356,7 @@ import {
 } from '@/documentos/listState'
 import { loadProfile } from '@/documentos/profiles'
 import { activeView } from '@/documentos/vistas'
+import { listActionsFor } from '@/documentos/acciones'
 import { createListCache } from '@/utils/listCache'
 import { documentRoute, floorRoute, profileBySlug } from '@/documentos/registry'
 import { kindLabel, statusLabel } from '@/utils/display'
@@ -420,7 +409,6 @@ const entryIcon = computed(() => entry.value?.icon || 'lucide-file-text')
 const state = ref(readListQuery(route.query))
 const search = ref(state.value.search)
 const searchOpen = ref(!!state.value.search)
-const sortOpen = ref(false)
 const rows = ref([])
 const counts = ref({})
 const hasMore = ref(false)
@@ -680,6 +668,28 @@ function applyView(query) {
   apply()
 }
 
+// The bolt («Acciones»): documentos/acciones.js for this list, as it is now.
+const acciones = computed(() =>
+  listActionsFor(profile.value, {
+    createTo: createTo.value,
+    modules: shellBoot.value?.modules || {},
+    sort: state.value.sort || '',
+    rows: rows.value.length,
+    hasFilters: hasFilters.value,
+    vistas: true,
+    saved: vistas.value?.views?.length || 0,
+  }),
+)
+const ACCIONES = {
+  ordenar: (value) => setSort(value),
+  vistas: () => openVistas(),
+  seleccionar: () => sel.start(),
+  limpiar: () => clearAll(),
+}
+function runAccion({ key, value }) {
+  ACCIONES[key]?.(value)
+}
+
 function apply({ counts: withCounts = true } = {}) {
   const query = currentQuery.value
   router.replace({ query })
@@ -701,7 +711,6 @@ function setFilter(fieldname, value) {
   apply()
 }
 function setSort(value) {
-  sortOpen.value = false
   state.value = { ...state.value, sort: value }
   apply({ counts: false })
 }

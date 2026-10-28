@@ -143,8 +143,12 @@ const title = computed(() => {
 const context = computed(() =>
   entry.value ? entry.value.label : kindLabel(doctype.value),
 )
+// Only a mapped draft names who it is for: a blank one's title is ERPNext's
+// default (a new Stock Entry reads «Salida» before its type is picked).
 const party = computed(() =>
-  draft.value?.title && draft.value.title !== draft.value.doc?.name
+  source.value &&
+  draft.value?.title &&
+  draft.value.title !== draft.value.doc?.name
     ? `Para ${draft.value.title}`
     : '',
 )

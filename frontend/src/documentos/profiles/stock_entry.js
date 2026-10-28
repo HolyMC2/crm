@@ -172,6 +172,42 @@ export default {
     }
   },
 
+  // «Acciones» (documentos/acciones.js): the three everyday moves, each a
+  // new entry with its standard Stock Entry Type already picked.
+  createOptions: () => [
+    {
+      key: 'entrada',
+      label: 'Entrada',
+      icon: 'lucide-arrow-down-to-line',
+      hint: 'Llega mercancía a un almacén',
+      query: { stock_entry_type: 'Material Receipt' },
+    },
+    {
+      key: 'salida',
+      label: 'Salida',
+      icon: 'lucide-arrow-up-from-line',
+      hint: 'Sale mercancía sin venderse',
+      query: { stock_entry_type: 'Material Issue' },
+    },
+    {
+      key: 'traspaso',
+      label: 'Traspaso',
+      icon: 'lucide-arrow-left-right',
+      hint: 'Pasa de un almacén a otro',
+      query: { stock_entry_type: 'Material Transfer' },
+    },
+  ],
+  listActions: () => [
+    {
+      key: 'movimientos',
+      label: 'Movimientos por producto',
+      icon: 'lucide-history',
+      hint: 'El kardex: qué entró y salió y quedó',
+      to: { path: '/inventario/movimientos' },
+      app: 'inventario',
+    },
+  ],
+
   // The type picks the purpose; the default stores fill the rows on save.
   editFields: ['stock_entry_type', 'from_warehouse', 'to_warehouse', 'remarks'],
 

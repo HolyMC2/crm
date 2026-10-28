@@ -146,3 +146,22 @@ describe('a new draft opened from a queue', () => {
     )
   })
 })
+
+describe('who a new draft is for', () => {
+  it('names the party only on a mapped draft, never ERPNext’s blank title', async () => {
+    answers.draft = { doc: {}, title: 'Salida' }
+    await mount('/documentos/facturas-proveedor/nuevo')
+    await createButton()
+    expect(root.textContent).not.toContain('Para Salida')
+    app.unmount()
+    root.remove()
+
+    answers.draft = { doc: {}, title: 'Acme' }
+    await mount(
+      '/documentos/facturas-proveedor/nuevo?origen=Purchase+Order&desde=PO-1&con=purchase_invoice',
+    )
+    await createButton()
+    expect(root.textContent).toContain('Para Acme')
+    answers.draft = { doc: {}, title: '' }
+  })
+})

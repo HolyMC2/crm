@@ -79,6 +79,17 @@ export default {
     { value: 'schedule_date asc', label: 'Llegan primero' },
     { value: 'grand_total desc', label: 'Importe mayor' },
   ],
+  // «Acciones»: build the next order from a supplier's price list.
+  listActions: () => [
+    {
+      key: 'surtido',
+      label: 'Surtido',
+      icon: 'lucide-package-search',
+      hint: 'Arma un pedido con la lista de precios del proveedor',
+      to: { path: '/compras/surtido' },
+      app: 'compras',
+    },
+  ],
 
   row(row) {
     const waiting = row.docstatus === 1 && TO_RECEIVE.includes(row.status)
