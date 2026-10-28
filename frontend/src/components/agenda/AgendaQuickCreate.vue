@@ -719,6 +719,14 @@ onMounted(async () => {
   min-height: 44px;
   font-size: 16px;
 }
+/* 305 px: the two times share the row instead of running off it. */
+.ag-qc.is-phone .ag-qc__input[type='time'] {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.ag-qc.is-phone .ag-qc__input[type='time']::-webkit-calendar-picker-indicator {
+  display: none;
+}
 .ag-qc.is-phone .ag-qc__title {
   margin-left: 0;
   width: 100%;
