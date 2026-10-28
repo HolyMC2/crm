@@ -53,9 +53,22 @@
             {{ headerTitle }}
           </h1>
         </template>
-        <!-- The top bar only names the place (and holds the bell): search,
-             scan, the camera and the page's create action sit in the command
-             bar above the bottom nav, where the thumb is. -->
+        <!-- The top bar names the place and holds global search and the bell.
+             Scan, the camera, the assistant and the page's create action sit
+             in the command bar above the bottom nav, where the thumb is. -->
+        <template #actions>
+          <button
+            type="button"
+            class="flex size-12 flex-none items-center justify-center rounded-full text-ink-gray-7 active:bg-surface-gray-2 [@media(hover:hover)]:hover:bg-surface-gray-2"
+            :aria-label="__('Search')"
+            :title="searchHint"
+            :aria-keyshortcuts="searchKeys"
+            data-testid="shell-search"
+            @click="openPalette('all')"
+          >
+            <span class="lucide-search size-6" aria-hidden="true" />
+          </button>
+        </template>
       </AppBar>
       <div
         v-if="!online"
@@ -122,7 +135,7 @@
       >
         <slot />
       </main>
-      <!-- Phone command bar, the thumb's row: search or ask, scan a code, scan
+      <!-- Phone command bar, the thumb's row: ask Muelle, scan a code, scan
            a paper, and the page's one create action (ui/Fab teleports into
            #shell-primary-action while this bar is mounted, so it never floats
            over the last rows of a list). It hides with the nav (keyboard,
@@ -134,40 +147,23 @@
         class="flex shrink-0 items-center gap-1 border-t border-outline-gray-1 bg-surface-base py-1.5 pl-2 pr-1.5"
         data-testid="shell-command-bar"
       >
-        <div
-          class="flex h-11 min-w-0 flex-1 items-center rounded-full bg-surface-gray-2"
+        <!-- «Pregúntale a Muelle» (E7), only once shell_api.status said yes.
+             Not a search field: every list already has its own search, and
+             global search is the magnifier in the top bar, so a screen never
+             shows two search boxes. -->
+        <button
+          v-if="assistantOn"
+          type="button"
+          class="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full bg-surface-gray-2 pl-3.5 pr-4 text-left text-base font-medium text-ink-gray-8 active:bg-surface-gray-3"
+          :aria-label="__('Ask Muelle')"
+          :title="__('Ask Muelle')"
+          data-testid="shell-assistant"
+          @click="askMuelle"
         >
-          <button
-            type="button"
-            class="flex h-full min-w-0 flex-1 items-center gap-2.5 rounded-full pl-4 pr-2 text-left text-base text-ink-gray-6"
-            :aria-label="__('Search')"
-            :title="searchHint"
-            :aria-keyshortcuts="searchKeys"
-            data-testid="shell-search"
-            @click="openPalette('all')"
-          >
-            <span
-              class="lucide-search size-5 flex-none text-ink-gray-8"
-              aria-hidden="true"
-            />
-            <span class="min-w-0 truncate">{{
-              assistantOn ? __('Search or ask') : __('Search')
-            }}</span>
-          </button>
-          <!-- «Pregúntale a Muelle» (E7): inside the search pill, only once
-               shell_api.status said yes. -->
-          <button
-            v-if="assistantOn"
-            type="button"
-            class="mr-0.5 flex size-10 flex-none items-center justify-center rounded-full text-ink-gray-8 active:bg-surface-gray-3"
-            :aria-label="__('Ask Muelle')"
-            :title="__('Ask Muelle')"
-            data-testid="shell-assistant"
-            @click="askMuelle"
-          >
-            <span class="lucide-sparkles size-5" aria-hidden="true" />
-          </button>
-        </div>
+          <span class="lucide-sparkles size-5 flex-none" aria-hidden="true" />
+          <span class="min-w-0 truncate">{{ __('Ask Muelle') }}</span>
+        </button>
+        <span v-else class="flex-1" />
         <!-- Escáner is the shell's scanner: scan a code, land on its artículo. -->
         <a
           v-if="scanHref && !backTo"
