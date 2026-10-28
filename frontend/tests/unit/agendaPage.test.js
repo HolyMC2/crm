@@ -16,6 +16,7 @@ vi.mock('frappe-ui', async (importOriginal) => ({
   toast: Object.assign(vi.fn(), { success: vi.fn(), error: vi.fn() }),
 }))
 
+import '@/uiHost'
 import Agenda from '@/pages/Agenda.vue'
 import { resetAgendaPrefsForTests } from '@/composables/useAgendaPrefs'
 import { pageShortcuts, useShellKeyboard } from '@/composables/shellKeyboard'
@@ -192,11 +193,14 @@ describe('Agenda page', () => {
     document.body.dispatchEvent(event)
     await flush()
     expect(event.defaultPrevented).toBe(true)
-    expect(
-      document.body.querySelectorAll(
-        'input[placeholder="Call, visit, delivery…"]',
-      ),
-    ).toHaveLength(1)
+    // The event form loads on first use.
+    await vi.waitFor(() =>
+      expect(
+        document.body.querySelectorAll(
+          'input[placeholder="Call, visit, delivery…"]',
+        ),
+      ).toHaveLength(1),
+    )
     expect(router.currentRoute.value.query.create).toBeUndefined()
   })
 

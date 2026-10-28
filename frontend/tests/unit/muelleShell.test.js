@@ -67,6 +67,7 @@ vi.mock('@/utils/listWarmup', () => ({
     warmUp.calls.push({ modules, current }),
 }))
 
+import '@/uiHost'
 import MuelleShell from '@/components/shell/MuelleShell.vue'
 import { mobileView } from '@/composables/mobileView'
 import { resetAppStripForTests } from '@/composables/appStrip'
