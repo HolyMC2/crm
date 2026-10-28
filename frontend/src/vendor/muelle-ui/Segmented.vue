@@ -1,4 +1,4 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (1ceb2df0a0ad). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (2914c0d19b1b). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <template>
   <!-- Two to four views of the same thing (Shell SPEC §2.2.4): one outlined
        track, equal segments, the chosen one tonal with a check. Not for
@@ -87,8 +87,10 @@ function reveal() {
   const track = root.value
   const chosen = track?.querySelector('[aria-checked="true"]')
   if (!track || !chosen) return
-  const left = chosen.offsetLeft - track.offsetLeft
-  const right = left + chosen.offsetWidth
+  const box = chosen.getBoundingClientRect()
+  const left =
+    box.left - track.getBoundingClientRect().left + track.scrollLeft
+  const right = left + box.width
   if (left < track.scrollLeft) track.scrollLeft = left
   else if (right > track.scrollLeft + track.clientWidth)
     track.scrollLeft = right - track.clientWidth
