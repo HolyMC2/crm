@@ -117,6 +117,14 @@ const COPY = {
     missing:
       'Todavía falta acceso a Bancos. Comparte la solicitud y reintenta después del ajuste.',
   },
+  efectivo: {
+    reason:
+      'Efectivo muestra las cajas fuertes y las bolsas de efectivo de tu tienda a quien las cuida, las lleva al banco o las revisa. Pide al encargado acceso a la caja fuerte; después toca Reintentar permisos.',
+    request:
+      'Necesito ver Efectivo en Muelle: acceso a la caja fuerte de mi tienda (custodia de efectivo). Quiero retomar la bolsa que intentaba abrir.',
+    missing:
+      'Todavía falta acceso a Efectivo. Comparte la solicitud y reintenta después del ajuste.',
+  },
   contactos: {
     reason:
       'Para abrir Contactos necesitas permiso de lectura de un origen nativo y acceso a su módulo. Pide al encargado que revise tu usuario.',

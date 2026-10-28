@@ -440,6 +440,21 @@ const routes = [
       ownPhoneHeader: true,
     },
   },
+  // Efectivo (Shell-S14, contracts 0.16.0 module «efectivo»): POS Awesome's
+  // cash custody in the shell; posawesome's muelle_shell_modules hook enables it.
+  {
+    path: '/efectivo',
+    name: 'Efectivo',
+    component: () => import('@/pages/Efectivo.vue'),
+    meta: { app: 'efectivo', title: 'Efectivo', ownPhoneHeader: true },
+  },
+  {
+    path: '/efectivo/bolsa/:name',
+    name: 'EfectivoBolsa',
+    component: () => import('@/pages/EfectivoBolsa.vue'),
+    props: true,
+    meta: { app: 'efectivo', title: 'Efectivo', ownPhoneHeader: true, listParent: 'Efectivo' },
+  },
   {
     path: '/garantias',
     name: 'Garantias',
