@@ -248,6 +248,7 @@
         :key="r.name"
         :title="label(r)"
         :subtitle="mobileSubtitle(r)"
+        :data-fresh="live.fresh.value.has(r.name) || undefined"
         :time="timeAgo(r.modified)"
         :menu="rowMenu(r)"
         @open="openLead(r.name)"
@@ -364,6 +365,7 @@
           :key="r.name"
           role="button"
           tabindex="0"
+          :data-fresh="live.fresh.value.has(r.name) || undefined"
           class="grid cursor-pointer items-center border-b border-outline-gray-1 px-5 hover:bg-surface-gray-2"
           :style="`grid-template-columns:${GRID};min-height:50px`"
           @click="openLead(r.name)"
@@ -604,6 +606,7 @@
 </template>
 
 <script setup>
+import { useLiveList } from '@/composables/liveList'
 import ListCreateFab from '@/components/ventas/ListCreateFab.vue'
 import {
   computed,
@@ -822,6 +825,15 @@ const leads = createListResource({
   ],
   orderBy: 'lead_score desc',
   pageLength: Math.min(500, Math.max(50, Number(remembered.loaded) || 50)),
+})
+// A teammate's new or changed lead shows without a reload; new rows get a short highlight.
+const live = useLiveList('CRM Lead', async () => {
+  const before = (leads.data || []).map((r) => r.name)
+  await leads.reload()
+  live.mark(
+    before,
+    (leads.data || []).map((r) => r.name),
+  )
 })
 // Next-activity order can't be expressed server-side (no `ifnull(...)` through
 // frappe-ui, and plain `asc` would float every lead with NOTHING scheduled to the

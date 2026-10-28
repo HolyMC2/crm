@@ -328,7 +328,22 @@ input[type='checkbox'].rounded-4 {
   }
 }
 
+/* A row a teammate just added (composables/liveList.js): a soft wash that fades. */
+[data-fresh] {
+  animation: row-fresh 2.4s ease-out;
+}
+@keyframes row-fresh {
+  0%,
+  30% {
+    background-color: var(--muelle-accent-soft);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  [data-fresh] {
+    animation: none;
+    background-color: var(--muelle-accent-soft);
+  }
   .page-in,
   .route-enter-active {
     animation: none !important;

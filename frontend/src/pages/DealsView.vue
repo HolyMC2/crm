@@ -385,6 +385,7 @@
         :key="r.name"
         :title="cardTitle(r)"
         :subtitle="mobileSubtitle(r)"
+        :data-fresh="live.fresh.value.has(r.name) || undefined"
         :time="relativeTime(r.modified)"
         :menu="rowMenu(r)"
         @open="openDeal(r.name)"
@@ -538,6 +539,7 @@
               tabindex="0"
               data-key-row
               :data-row-current="r.name === lastOpened || undefined"
+              :data-fresh="live.fresh.value.has(r.name) || undefined"
               class="grid cursor-pointer items-center border-b border-outline-gray-1 px-5 hover:bg-surface-gray-1"
               :style="`grid-template-columns:${GRID};min-height:50px`"
               :data-deal="r.name"
@@ -873,6 +875,7 @@
 </template>
 
 <script setup>
+import { useLiveList } from '@/composables/liveList'
 import Fab from '@/components/ui/Fab.vue'
 import LayoutHeader from '@/components/LayoutHeader.vue'
 import { computed, defineAsyncComponent, nextTick, ref, watch } from 'vue'
@@ -1267,6 +1270,15 @@ const deals = createListResource({
       ? 200
       : listReturnPageLength(readListReturn(sessionStorage, RETURN_KEY)),
   onSuccess: () => loadDisplay(),
+})
+// A teammate's new or changed deal shows without a reload; new rows get a short highlight.
+const live = useLiveList('CRM Deal', async () => {
+  const before = (deals.data || []).map((r) => r.name)
+  await deals.reload()
+  live.mark(
+    before,
+    (deals.data || []).map((r) => r.name),
+  )
 })
 // Sorting by next activity can't be expressed server-side: frappe-ui has no
 // `ifnull(next_activity_at, '9999-12-31')`, and plain `asc` would float every

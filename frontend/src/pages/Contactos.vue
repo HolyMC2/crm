@@ -391,6 +391,7 @@
           :title="row.title || row.name"
           :subtitle="rowLine(row)"
           :selected="state.selected === row.source + ':' + row.name"
+          :data-fresh="live.fresh.value.has(rowKey(row)) || undefined"
           @click="openRow(row)"
         />
         <button
@@ -420,6 +421,7 @@
           :data-row-current="
             state.selected === row.source + ':' + row.name || undefined
           "
+          :data-fresh="live.fresh.value.has(rowKey(row)) || undefined"
           class="c-contact-row"
           :class="{
             compact: state.density === 'compact',
@@ -687,6 +689,7 @@ import {
   useContactosBootstrap,
   useContactosDraft,
 } from '@/composables/useContactos'
+import { useLiveList } from '@/composables/liveList'
 import { listKey, readCachedList, writeCachedList } from '@/utils/listCache'
 import {
   clauseLabel,
@@ -1056,6 +1059,7 @@ function filters() {
   return value
 }
 async function fetchRows(restore = false) {
+  appended = false
   if (legacyBlocked.value) {
     rows.value = []
     hasMore.value = false
@@ -1285,6 +1289,21 @@ function rowLine(row) {
     ''
   )
 }
+// A teammate's new or changed contact shows without a reload: this page is
+// read again (not a phone list grown by «Cargar más», which would shrink).
+const rowKey = (row) => `${row.source}:${row.name}`
+let appended = false
+const live = useLiveList(
+  ['Contact', 'Customer', 'Supplier', 'Address'],
+  async () => {
+    if (appended || legacyBlocked.value) return
+    const before = rows.value.map(rowKey)
+    contactosReads.clear()
+    await fetchRows()
+    live.mark(before, rows.value.map(rowKey))
+  },
+)
+
 // Phones read on instead of paging: the next page is added under the list.
 const loadingMore = ref(false)
 async function loadMore() {
@@ -1301,6 +1320,7 @@ async function loadMore() {
     if (result.available === false)
       throw new Error(result.reason || 'No se pudo cargar más contactos.')
     rows.value = [...rows.value, ...(result.rows || [])]
+    appended = true
     hasMore.value = !!result.has_more
     nextCursor.value = result.next_cursor
   } catch (e) {

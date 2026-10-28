@@ -31,6 +31,7 @@
           :title="callTitle(r)"
           :subtitle="callLine(r)"
           :subtitle-tone="MISSED.includes(r.status) ? 'danger' : ''"
+          :data-fresh="live.fresh.value.has(r.name) || undefined"
           data-testid="call-row"
           @click="openCall(r.name)"
         >
@@ -144,6 +145,7 @@
           type="button"
           class="grid w-full items-center gap-x-3 border-b border-outline-gray-1 px-5 py-2 text-left hover:bg-surface-gray-2"
           :style="`grid-template-columns:${GRID};min-height:52px`"
+          :data-fresh="live.fresh.value.has(r.name) || undefined"
           data-testid="call-row"
           @click="openCall(r.name)"
         >
@@ -232,6 +234,7 @@ import {
   onShift,
 } from '@/components/doco/calls/calls'
 import { globalStore } from '@/stores/global'
+import { useLiveList } from '@/composables/liveList'
 import {
   EmptyState,
   Fab,
@@ -283,6 +286,15 @@ const calls = createListResource({
   pageLength: 100,
 })
 const rows = computed(() => calls.data || [])
+// A call that comes in or a teammate logs shows at once, highlighted.
+const live = useLiveList('CRM Call Log', async () => {
+  const before = rows.value.map((r) => r.name)
+  await calls.reload()
+  live.mark(
+    before,
+    rows.value.map((r) => r.name),
+  )
+})
 
 function applyFilters() {
   const f = {}

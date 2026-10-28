@@ -237,6 +237,7 @@
             "
             :data-row-key="row.name"
             :data-row-current="row.name === route.params.name ? '' : undefined"
+            :data-fresh="live.fresh.value.has(row.name) ? '' : undefined"
             data-key-row
             data-testid="documentos-row"
             :style="phone ? '-webkit-touch-callout: none' : undefined"
@@ -341,6 +342,7 @@ import { isMobile } from '@/composables/breakpoint'
 import { feminineNoun } from '@/utils/display'
 import { shellBoot } from '@/composables/muelleShell'
 import { useListKeys } from '@/composables/pageKeys'
+import { useLiveList } from '@/composables/liveList'
 import { docApi, errorText } from '@/documentos/api'
 import AccionesMenu from '@/components/documentos/AccionesMenu.vue'
 import FilterLink from '@/components/documentos/FilterLink.vue'
@@ -638,6 +640,15 @@ async function loadCounts() {
     counts.value = {}
   }
 }
+
+// A teammate's save shows here without a reload: the same rows and counts,
+// read again at the size already loaded; new ones get a short highlight.
+const live = useLiveList(doctype, async () => {
+  if (!profile.value) return
+  const before = rowNames.value
+  await Promise.all([load({ count: rows.value.length }), loadCounts()])
+  live.mark(before, rowNames.value)
+})
 
 // «Vistas» (the title opens them): the list's query saved under a name.
 const vistas = ref(null)
