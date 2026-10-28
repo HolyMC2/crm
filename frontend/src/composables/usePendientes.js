@@ -230,7 +230,8 @@ export function dayHeading(day, today) {
   }
   const [, month, date] = day.split('-').map(Number)
   const weekday = t(WEEKDAY_NAMES[new Date(`${day}T00:00:00Z`).getUTCDay()])
-  const sameMonth = DAY.test(today || '') && today.slice(0, 7) === day.slice(0, 7)
+  const sameMonth =
+    DAY.test(today || '') && today.slice(0, 7) === day.slice(0, 7)
   return sameMonth
     ? `${weekday} ${date}`
     : `${weekday} ${date} ${MONTH_SHORT[month - 1]}`

@@ -22,11 +22,9 @@
           <Icon :icon="entry.icon || 'list'" class="h-4 w-4 shrink-0" /><span
             class="min-w-0 flex-1 truncate"
             >{{ entry.label }}</span
-          ><span
-            v-if="entry.count"
-            class="num shrink-0 text-ink-gray-5"
-            >{{ entry.count }}</span
-          >
+          ><span v-if="entry.count" class="num shrink-0 text-ink-gray-5">{{
+            entry.count
+          }}</span>
         </button>
       </nav>
       <template v-if="savedEntries.length">

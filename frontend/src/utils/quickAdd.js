@@ -210,7 +210,9 @@ function rules(today) {
         const date = parseDay(today)
         return {
           date: toDay(
-            new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0)),
+            new Date(
+              Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0),
+            ),
           ),
         }
       },
@@ -280,7 +282,8 @@ function weekdayDate(today, m) {
       )
       if (candidate.getUTCDate() !== number) continue
       const day = toDay(candidate)
-      if (day >= today && candidate.getUTCDay() === weekday) return { date: day }
+      if (day >= today && candidate.getUTCDay() === weekday)
+        return { date: day }
     }
   }
   const time = number <= 23 ? hour24(number, 0, '', true) : ''
@@ -294,7 +297,10 @@ function weekdayDate(today, m) {
  * @param ignore  folded token texts the worker removed (their words stay)
  * @returns {{ title, date, time, repeat, priority, person, mention, tokens }}
  */
-export function parseQuickAdd(text, { today = '', people = [], ignore = [] } = {}) {
+export function parseQuickAdd(
+  text,
+  { today = '', people = [], ignore = [] } = {},
+) {
   const raw = String(text || '')
   const folded = fold(raw)
   const skip = new Set(ignore)
@@ -319,7 +325,9 @@ export function parseQuickAdd(text, { today = '', people = [], ignore = [] } = {
     const wanted = fold(mention[1])
     const found =
       people.find((person) =>
-        fold(person.name).split(/\s+/).some((word) => word === wanted),
+        fold(person.name)
+          .split(/\s+/)
+          .some((word) => word === wanted),
       ) ||
       people.find((person) =>
         fold(person.name)
@@ -392,6 +400,8 @@ export function createValues(parsed, { me = '' } = {}) {
     priority: parsed.priority || 'Medium',
     repeat: parsed.repeat || '',
     assigned_to:
-      parsed.person?.user && parsed.person.user !== me ? parsed.person.user : '',
+      parsed.person?.user && parsed.person.user !== me
+        ? parsed.person.user
+        : '',
   }
 }

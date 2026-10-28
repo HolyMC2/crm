@@ -199,7 +199,8 @@ watch(
       try {
         const response = await pendientesApi('people', { search: mention })
         const known = new Map(people.value.map((p) => [p.user, p]))
-        for (const person of response?.rows || []) known.set(person.user, person)
+        for (const person of response?.rows || [])
+          known.set(person.user, person)
         people.value = [...known.values()]
       } catch {
         /* the chip keeps asking who it is */
@@ -221,10 +222,7 @@ const suggestions = computed(() => {
 })
 function mention(person) {
   const first = person.name.split(/\s+/)[0]
-  text.value = text.value.replace(
-    `@${parsed.value.mention}`,
-    `@${first}`,
-  )
+  text.value = text.value.replace(`@${parsed.value.mention}`, `@${first}`)
   input.value?.focus()
 }
 
