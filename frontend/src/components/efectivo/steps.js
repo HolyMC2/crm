@@ -35,7 +35,7 @@ async function attach(name, photo) {
   return uploadPhoto('POS Cash Bag', name, photo).catch(() => null)
 }
 
-export function sealBag(safe, me) {
+export function sealBag(safe) {
   return {
     sheet: 'conteo',
     props: {
@@ -43,7 +43,7 @@ export function sealBag(safe, me) {
       title: 'Sellar una bolsa',
       subtitle: safe.title,
       currency: safe.currency,
-      custody: `Sale del efectivo suelto de ${safe.title}. Queda sellada en la caja fuerte a tu nombre (${who(me, {})}) hasta que otra persona la cuente.`,
+      custody: `Sale del efectivo suelto de ${safe.title}. Queda sellada en la caja fuerte a tu cargo hasta que otra persona la cuente.`,
       confirmLabel: 'Sellar bolsa',
     },
     submit: guarded(async (v, id) => {

@@ -366,7 +366,7 @@
                 : `Suelto ${money(safe.loose_balance, safe.currency)}`
             "
             icon="lucide-vault"
-            @click="(choosing = false), open(sealBag(safe, me))"
+            @click="(choosing = false), open(sealBag(safe))"
           />
         </li>
       </ul>
@@ -423,7 +423,6 @@ const choosing = ref(false)
 const bagView = ref('sealed')
 
 const people = computed(() => data.value?.people || {})
-const me = computed(() => data.value?.user || '')
 const safes = computed(() => data.value?.safes || [])
 const scope = computed(() => String(route.query.caja || ''))
 const safeScopes = computed(() =>
@@ -693,7 +692,7 @@ const shownWaiting = computed(() =>
 
 const sealable = computed(() => visibleSafes.value.filter((s) => s.can.prepare))
 function startSeal() {
-  if (sealable.value.length === 1) open(sealBag(sealable.value[0], me.value))
+  if (sealable.value.length === 1) open(sealBag(sealable.value[0]))
   else choosing.value = true
 }
 function open(next) {
