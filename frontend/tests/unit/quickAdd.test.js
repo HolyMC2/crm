@@ -54,6 +54,13 @@ describe('quick add in es-MX words', () => {
       repeat: 'Daily',
       date: today,
     })
+    // A day the line names wins over the repeat's first weekday.
+    expect(parse('Llamar a Olga mañana 5pm @Olga cada lunes')).toMatchObject({
+      title: 'Llamar a Olga',
+      date: '2026-10-29',
+      time: '17:00',
+      repeat: 'Weekly',
+    })
     expect(parse('Corte de caja de lunes a viernes').repeat).toBe('Weekdays')
     expect(parse('Pagar luz cada mes').repeat).toBe('Monthly')
   })

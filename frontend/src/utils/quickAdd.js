@@ -126,9 +126,10 @@ function rules(today) {
     {
       kind: 'repeat',
       re: `(?:cada|todos los) ${WEEKDAY}s?`,
+      // The first «lunes» unless the line names its own day («mañana … cada lunes»).
       read: (m) => ({
         repeat: 'Weekly',
-        date: nextWeekday(today, weekdayIndex(m[1])),
+        startsOn: nextWeekday(today, weekdayIndex(m[1])),
       }),
     },
     {
@@ -306,6 +307,7 @@ export function parseQuickAdd(text, { today = '', people = [], ignore = [] } = {
     person: null,
     mention: '',
   }
+  let startsOn = ''
   const free = (start, end) =>
     !taken.some((t) => start < t.end && end > t.start)
   const take = (kind, start, end, values) => {
@@ -343,12 +345,14 @@ export function parseQuickAdd(text, { today = '', people = [], ignore = [] } = {
         if (Object.keys(values).some((key) => key !== 'date' && out[key]))
           continue
         if (values.date && out.date && rule.kind === 'date') continue
+        if (values.startsOn) startsOn = values.startsOn
         if (values.date && !out.date) out.date = values.date
         for (const key of ['time', 'repeat', 'priority'])
           if (values[key]) out[key] = values[key]
         take(rule.kind, start, end, values)
       }
     }
+    if (!out.date && startsOn) out.date = startsOn
     // A time alone means today (Todoist); a repeat alone starts today.
     if ((out.time || out.repeat) && !out.date) out.date = today
   }

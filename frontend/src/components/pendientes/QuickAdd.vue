@@ -129,7 +129,6 @@ import {
   dayHeading,
   pendientesApi,
   priorityLabel,
-  repeatLabel,
 } from '@/composables/usePendientes'
 
 const props = defineProps({
@@ -168,7 +167,7 @@ const tokens = computed(() => {
       chip.label = value.time
     } else if (token.kind === 'repeat') {
       chip.icon = 'repeat'
-      chip.label = repeatLabel(value.repeat)
+      chip.label = token.text.charAt(0).toUpperCase() + token.text.slice(1)
     } else if (token.kind === 'priority') {
       chip.icon = 'star'
       chip.label =

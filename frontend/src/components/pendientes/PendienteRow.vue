@@ -114,7 +114,7 @@
             >{{ sourceLabel(row) }}</span
           >
           <span v-if="row.from_name" class="truncate">{{
-            __('From {0}', [row.from_name])
+            __('From {0}', [row.from_name], 'Pendiente handed by')
           }}</span>
           <span v-if="showAssignee && !row.mine && assignee" class="truncate">
             {{ __('Assigned to {0}', [assignee]) }}</span

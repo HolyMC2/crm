@@ -29335,3 +29335,8 @@ msgstr "Subtareas {0}"
 #: frontend/src/pages/Pendientes.vue
 msgid "Complete"
 msgstr "Completar"
+
+#: frontend/src/components/pendientes/PendienteRow.vue
+msgctxt "Pendiente handed by"
+msgid "From {0}"
+msgstr "De {0}"

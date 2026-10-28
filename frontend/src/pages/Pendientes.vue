@@ -143,6 +143,7 @@
         data-pendientes-views
       >
         <Segmented
+          fit="content"
           :label="__('Smart lists')"
           :model-value="islandValue"
           :options="islandOptions"
@@ -719,7 +720,8 @@ const islandOptions = computed(() =>
         : segment === 'upcoming'
           ? __('Upcoming', null, 'Pendientes short')
           : segmentLabel(segment),
-    count: countOf(segment) || undefined,
+    // A zero says nothing on the island; the list itself says it is empty.
+    count: ['', '0'].includes(countOf(segment)) ? undefined : countOf(segment),
   })),
 )
 const islandValue = computed(() =>
