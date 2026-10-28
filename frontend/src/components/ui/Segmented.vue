@@ -87,7 +87,11 @@ function reveal() {
     ?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' })
 }
 onMounted(reveal)
-watch(() => props.modelValue, reveal, { flush: 'post' })
+// Counts that arrive later widen the segments: look again.
+watch(() => [props.modelValue, props.options], reveal, {
+  flush: 'post',
+  deep: true,
+})
 
 function select(value) {
   if (value !== props.modelValue) emit('update:modelValue', value)
