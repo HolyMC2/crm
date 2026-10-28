@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/shell-contracts@0.15.0 (b76caac5e828). DO NOT EDIT:
+// Vendored from muelle/workspace/packages/shell-contracts@0.16.0 (5f948583506e). DO NOT EDIT:
 // change the package, then run its scripts/vendor.mjs against this directory.
 // Module registry types and the shell's fixed module catalog (spec §1.1, §2.1, §4.7).
 // Framework-agnostic: the crm shell instantiates `ShellModule<RouteRecordRaw, …>`.
@@ -16,6 +16,7 @@ export type ShellModuleKey =
   | 'gastos'
   | 'resultados'
   | 'bancos'
+  | 'efectivo'
   | 'productos'
   | 'garantias'
   | 'encuestas'
@@ -39,7 +40,7 @@ export interface ShellModuleMeta {
   go: string
 }
 
-/** Rail order: Hoy, Pendientes, Agenda, Contactos, Ventas, Cobranza, Compras, Gastos, Resultados, Bancos, Productos, Garantías, Encuestas, Equipo, Archivos, Manual de la tienda, Documentos, Inventario, Inmobiliaria; Avisos pinned last. */
+/** Rail order: Hoy, Pendientes, Agenda, Contactos, Ventas, Cobranza, Compras, Gastos, Resultados, Bancos, Efectivo, Productos, Garantías, Encuestas, Equipo, Archivos, Manual de la tienda, Documentos, Inventario, Inmobiliaria; Avisos pinned last. */
 export const SHELL_MODULES: readonly ShellModuleMeta[] = Object.freeze([
   { key: 'hoy', label: 'Hoy', icon: 'lucide-sun', basePath: '/hoy', go: 'h' },
   { key: 'pendientes', label: 'Pendientes', icon: 'lucide-square-check-big', basePath: '/pendientes', go: 'p' },
@@ -51,6 +52,7 @@ export const SHELL_MODULES: readonly ShellModuleMeta[] = Object.freeze([
   { key: 'gastos', label: 'Gastos', icon: 'lucide-receipt', basePath: '/gastos', go: 'e' },
   { key: 'resultados', label: 'Resultados', icon: 'lucide-chart-column', basePath: '/resultados', go: 'n' },
   { key: 'bancos', label: 'Bancos', icon: 'lucide-wallet', basePath: '/bancos', go: 'y' },
+  { key: 'efectivo', label: 'Efectivo', icon: 'lucide-banknote', basePath: '/efectivo', go: 'j' },
   { key: 'productos', label: 'Productos', icon: 'lucide-package', basePath: '/productos', go: 'i' },
   { key: 'garantias', label: 'Garantías', icon: 'lucide-shield-check', basePath: '/garantias', go: 'r' },
   { key: 'encuestas', label: 'Encuestas', icon: 'lucide-smile', basePath: '/encuestas', go: 'u' },
