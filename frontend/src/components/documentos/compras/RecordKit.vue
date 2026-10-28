@@ -1,8 +1,8 @@
 <template>
   <!-- The engine's shared record sections for the richer purchase pages
-       (Shell SPEC §6 DD2): «Creado desde», Conexiones, Actividad, and the
-       sheets behind the «⋯» (RecordKitTools). Files stay in the page's own
-       Archivos panel, so Actividad lists events only. -->
+       (Shell SPEC §6 DD2): «Creado desde», Conexiones, Actividad y
+       comentarios, and the sheets behind the «⋯» (RecordKitTools). Files
+       stay in the page's own Archivos panel, so Actividad lists events only. -->
   <div class="flex flex-col gap-6 py-2" data-testid="compras-record-kit">
     <Cadena
       v-if="cadena && kit.recordName.value"
@@ -15,11 +15,17 @@
         :connections="kit.record.value.connections || []"
         :scope-label="kit.scopeLabel.value"
       />
-      <Actividad
-        :activity="eventsOnly"
+      <RecordActivity
+        ref="recordActivity"
+        :doctype="kit.doctype"
+        :name="kit.recordName.value"
+        :activity="kit.record.value.activity || null"
         :noun="kit.noun"
         :currency="kit.record.value.header?.currency || 'MXN'"
-        :can-attach="false"
+        :title="title || kit.scopeTitle.value"
+        :curate="kit.printFormats.value"
+        :files="false"
+        @changed="kit.setActivity"
       />
     </template>
     <input
@@ -87,13 +93,15 @@
   </div>
 </template>
 <script setup>
-import { computed, defineAsyncComponent } from 'vue'
-import Actividad from '@/components/documentos/Actividad.vue'
+import { defineAsyncComponent, ref, watch } from 'vue'
 import Conexiones from '@/components/documentos/Conexiones.vue'
 import ToolsSheet from '@/components/documentos/ToolsSheet.vue'
 import ConfirmSheet from '@/components/documentos/ConfirmSheet.vue'
 import Cadena from './Cadena.vue'
 
+const RecordActivity = defineAsyncComponent(
+  () => import('@/components/documentos/RecordActivity.vue'),
+)
 const CommentSheet = defineAsyncComponent(
   () => import('@/components/documentos/CommentSheet.vue'),
 )
@@ -116,13 +124,18 @@ const props = defineProps({
   cadena: { type: Boolean, default: true },
 })
 
-const eventsOnly = computed(() => {
-  const activity = props.kit.record.value?.activity
-  return activity ? { ...activity, attachments: [] } : null
-})
-
 // The kit's refs are the page's state (useRecordKit), set through it.
 const { fileInput, open } = props.kit
+
+// «Comentar», «Etiquetar» and «Compartir con tu equipo» from the «⋯» land in
+// Actividad y comentarios (its comment box and sheets) once it is on screen.
+const recordActivity = ref(null)
+const IN_ACTIVITY = { comment: 'comment', tag: 'tag', team: 'share' }
+watch(open, (key) => {
+  if (!IN_ACTIVITY[key] || !recordActivity.value) return
+  recordActivity.value.open(IN_ACTIVITY[key])
+  open.value = ''
+})
 function setFileInput(el) {
   fileInput.value = el
 }

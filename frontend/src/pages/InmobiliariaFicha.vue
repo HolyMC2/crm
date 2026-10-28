@@ -45,6 +45,13 @@
             <Button variant="subtle" label="Reintentar" @click="load" />
           </div>
           <FichaView :ficha="data" :carry="carry" @changed="load" />
+          <RecordActivity
+            v-if="data.doctype && data.name"
+            class="-mx-4 mt-6"
+            :doctype="data.doctype"
+            :name="data.name"
+            :title="data.titulo || data.name"
+          />
         </template>
       </div>
     </div>
@@ -52,7 +59,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Button } from 'frappe-ui'
 import { useWindowSize } from '@vueuse/core'
@@ -66,6 +73,10 @@ import {
   problemText,
   volverA,
 } from '@/composables/useInmobiliaria'
+
+const RecordActivity = defineAsyncComponent(
+  () => import('@/components/documentos/RecordActivity.vue'),
+)
 
 const props = defineProps({
   tipo: { type: String, required: true },

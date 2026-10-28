@@ -256,6 +256,29 @@ class TestDocumentosAccess(IntegrationTestCase):
 		activity = documentos.assign("Note", note.name, remove=[self.email])
 		self.assertNotIn(self.email, [a["user"] for a in activity["assigned"]])
 
+	def test_tags_are_cleaned_kept_once_and_suggested(self):
+		frappe.set_user("Administrator")
+		note = frappe.get_doc({"doctype": "Note", "title": "Nota para etiquetar", "public": 1}).insert()
+		activity = documentos.tag("Note", note.name, add=["Urgente", "urgente", "  Cliente,  VIP  "])
+		self.assertEqual(activity["tags"], ["Urgente", "Cliente VIP"])
+		self.assertTrue(activity["can"]["tag"])
+		self.assertIn("Cliente VIP", documentos.tag_suggestions("Note", "vip"))
+		activity = documentos.tag("Note", note.name, remove=["urgente"])
+		self.assertEqual(activity["tags"], ["Cliente VIP"])
+
+	def test_share_names_the_person_and_can_be_taken_back(self):
+		frappe.set_user("Administrator")
+		note = frappe.get_doc({"doctype": "Note", "title": "Nota para compartir", "public": 0}).insert()
+		activity = documentos.share("Note", note.name, add=[self.email])
+		shared = [s for s in activity["shared"] if s["user"] == self.email]
+		self.assertEqual(shared[0]["name"], "Lectora Documentos")
+		self.assertFalse(shared[0]["write"])
+		self.assertTrue(frappe.has_permission("Note", "read", note.name, user=self.email))
+		activity = documentos.share("Note", note.name, remove=[self.email])
+		self.assertNotIn(self.email, [s["user"] for s in activity["shared"]])
+		with self.assertRaises(frappe.ValidationError):
+			documentos.share("Note", note.name, add=["nadie@example.com"])
+
 	def test_only_allowlisted_mappers_run(self):
 		frappe.set_user("Administrator")
 		with self.assertRaises(frappe.PermissionError):

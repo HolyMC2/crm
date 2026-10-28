@@ -36,12 +36,18 @@ export function toolsFor(
     tool('comment', 'Comentar', 'lucide-message-square', {
       action: 'comment',
     }),
+    tool('tag', 'Etiquetar', 'lucide-tag', {
+      hint: 'Para encontrarlo y agruparlo después',
+    }),
     tool('attach', 'Adjuntar', 'lucide-paperclip', { action: 'attach' }),
     ...(camera
       ? [tool('camera', 'Tomar foto', 'lucide-camera', { action: 'attach' })]
       : []),
     tool('share', 'Compartir', 'lucide-square-arrow-out-up-right', {
       hint: 'Manda el PDF o el enlace',
+    }),
+    tool('team', 'Compartir con tu equipo', 'lucide-users', {
+      hint: 'Ábreselo a alguien que aún no lo ve',
     }),
     tool('print', 'Imprimir o PDF', 'lucide-file-text', { action: 'print' }),
   ]

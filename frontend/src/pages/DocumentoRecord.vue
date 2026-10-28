@@ -200,20 +200,19 @@
             :connections="record.connections"
             :scope-label="scopeLabel"
           />
-          <Actividad
+          <RecordActivity
             v-if="sections.includes('actividad')"
+            ref="recordActivity"
+            :doctype="doctype"
+            :name="name"
             :activity="record.activity"
             :noun="noun"
             :currency="record.header.currency || 'MXN'"
+            :title="view?.title || scopeTitle"
+            :curate="profile.printFormats || null"
             :can-attach="!!record.actions?.attach?.allowed"
             @attach="pickFile"
-          />
-          <CorreoHilo
-            v-if="sections.includes('actividad')"
-            :doctype="doctype"
-            :name="name"
-            :version="correoVersion"
-            @compose="onTool('correo')"
+            @changed="setActivity"
           />
           <component
             :is="recordPendientes"
@@ -281,7 +280,6 @@
         :name="name"
         :title="view?.title || ''"
         :curate="profile.printFormats || null"
-        @sent="correoVersion++"
       />
       <EditSheet
         v-if="canEdit"
@@ -317,7 +315,6 @@ import { computed, defineAsyncComponent, ref, shallowRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { toast } from 'frappe-ui'
 import { AppBar, EmptyState, StatusChip } from '@/components/ui'
-import Actividad from '@/components/documentos/Actividad.vue'
 import Conexiones from '@/components/documentos/Conexiones.vue'
 import StageSteps from '@/components/documentos/StageSteps.vue'
 import DatosList from '@/components/documentos/DatosList.vue'
@@ -372,9 +369,11 @@ const EditSheet = defineAsyncComponent(
 const CorreoSheet = defineAsyncComponent(
   () => import('@/components/correo/CorreoSheet.vue'),
 )
-const CorreoHilo = defineAsyncComponent(
-  () => import('@/components/correo/CorreoHilo.vue'),
+// Actividad y comentarios: chips, comment box, emails and the timeline.
+const RecordActivity = defineAsyncComponent(
+  () => import('@/components/documentos/RecordActivity.vue'),
 )
+const recordActivity = ref(null)
 const RepetirSheet = defineAsyncComponent(
   () => import('@/components/automatizaciones/RepetirSheet.vue'),
 )
@@ -527,7 +526,6 @@ const editOpen = ref(false)
 const avisameOpen = ref(false)
 const correoOpen = ref(false)
 const correoMounted = ref(false)
-const correoVersion = ref(0)
 const repetirOpen = ref(false)
 const avisameSheet = shallowRef(null)
 const avisameDoctypes = ref(null)
@@ -720,7 +718,13 @@ async function onTool(key) {
       assignOpen.value = true
       break
     case 'comment':
-      commentOpen.value = true
+      // the comment box under Actividad when the record shows it, else the sheet
+      if (recordActivity.value) recordActivity.value.open('comment')
+      else commentOpen.value = true
+      break
+    case 'tag':
+    case 'team':
+      recordActivity.value?.open(key === 'team' ? 'share' : 'tag')
       break
     case 'attach':
       pickFile()
@@ -745,8 +749,13 @@ async function onTool(key) {
       avisameOpen.value = true
       break
     case 'correo':
-      correoMounted.value = true
-      correoOpen.value = true
+      // RecordActivity sends and then lists the new email; the page's sheet
+      // only serves a record without Actividad.
+      if (recordActivity.value) recordActivity.value.open('correo')
+      else {
+        correoMounted.value = true
+        correoOpen.value = true
+      }
       break
     case 'repetir':
       repetirOpen.value = true

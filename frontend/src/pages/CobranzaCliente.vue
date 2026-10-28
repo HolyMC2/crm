@@ -519,6 +519,16 @@
           :return-to="`/crm${route.fullPath}`"
           :return-label="data.customer_name || props.customer"
         />
+        <!-- Actividad y comentarios of the customer: notes for whoever
+             collects next, who is on it, tags, shares and emails. -->
+        <RecordActivity
+          class="-mx-4 mt-6"
+          doctype="Customer"
+          :name="props.customer"
+          :title="data.customer_name || props.customer"
+          :files="false"
+          noun="el cliente"
+        />
       </template>
     </div>
 
@@ -604,6 +614,7 @@
 <script setup>
 import {
   computed,
+  defineAsyncComponent,
   getCurrentInstance,
   nextTick,
   onBeforeUnmount,
@@ -684,6 +695,9 @@ const LIVE_DOCTYPES = [
   'Comment',
 ]
 
+const RecordActivity = defineAsyncComponent(
+  () => import('@/components/documentos/RecordActivity.vue'),
+)
 const props = defineProps({ customer: { type: String, required: true } })
 const route = useRoute()
 const router = useRouter()

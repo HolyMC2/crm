@@ -1599,7 +1599,44 @@ def _timeline(doc):
 		{"name": row.name, "file_name": row.file_name, "file_url": row.file_url, "is_private": row.is_private}
 		for row in get_attachments(doc.doctype, doc.name)
 	]
-	return {"events": events[:80], "assigned": assigned, "attachments": attachments}
+	return {
+		"events": events[:80],
+		"assigned": assigned,
+		"attachments": attachments,
+		"tags": _tags_of(doc.doctype, doc.name),
+		"shared": _shared_with(doc),
+		# what the record's Actividad offers this worker (Etiquetar, Compartir, Correo);
+		# frappe.has_permission asks without the denial toast Document.has_permission prints
+		"can": {
+			key: bool(frappe.has_permission(doc.doctype, ptype, doc=doc))
+			for key, ptype in (("tag", "write"), ("share", "share"), ("email", "email"))
+		},
+	}
+
+
+def _tags_of(doctype, name):
+	value = frappe.db.get_value(doctype, name, "_user_tags", ignore=True) or ""
+	return [t.strip() for t in cstr(value).split(",") if t.strip()]
+
+
+def _shared_with(doc):
+	"""Who else reads this record through a share: people by full name, and «everyone»."""
+	rows = frappe.get_all(
+		"DocShare",
+		filters={"share_doctype": doc.doctype, "share_name": cstr(doc.name)},
+		fields=["user", "everyone", "write"],
+		order_by="creation asc",
+	)
+	return [
+		{
+			"user": row.user or "",
+			"name": _("Everyone") if row.everyone else _person(row.user),
+			"everyone": bool(row.everyone),
+			"write": bool(row.write),
+		}
+		for row in rows
+		if row.everyone or row.user
+	]
 
 
 def _workflow_state(doc):
@@ -2240,4 +2277,84 @@ def assign(
 	users = [u for u in (_parse(add, []) or []) if isinstance(u, str)][:20]
 	if users:
 		assign_to.add({"assign_to": users, "doctype": doctype, "name": name})
+	return _timeline(frappe.get_doc(doctype, name))
+
+
+MAX_TAG_LEN = 40
+
+
+def _clean_tag(tag):
+	"""One tag as Desk stores it: no commas (the column's separator), single spaces, short."""
+	return " ".join(cstr(tag).replace(",", " ").split())[:MAX_TAG_LEN]
+
+
+@frappe.whitelist(methods=["POST"])
+def tag(doctype: str, name: str, add: str | list | None = None, remove: str | list | None = None):
+	"""Etiquetar: add or remove the record's tags (Desk's `_user_tags`); needs write, like the
+	bulk «Etiquetar». Returns the refreshed Actividad."""
+	from frappe.desk.doctype.tag.tag import DocTags
+
+	_require(doctype)
+	doc = frappe.get_doc(doctype, name)
+	doc.check_permission("write")
+	tags = DocTags(doctype)
+	for value in [t for t in (_parse(remove, []) or []) if isinstance(t, str)][:20]:
+		if _clean_tag(value):
+			tags.remove(doc.name, _clean_tag(value))
+	current = {t.lower() for t in _tags_of(doctype, doc.name)}
+	for value in [t for t in (_parse(add, []) or []) if isinstance(t, str)][:20]:
+		value = _clean_tag(value)
+		if value and value.lower() not in current:
+			tags.add(doc.name, value)
+			current.add(value.lower())
+	return _timeline(frappe.get_doc(doctype, name))
+
+
+@frappe.whitelist()
+def tag_suggestions(doctype: str, search: str | None = None, limit: int | str = 12):
+	"""Tags for «Etiquetar»: the ones this doctype already uses, most used first, then any
+	other tag whose name matches the search."""
+	from collections import Counter
+
+	_require(doctype)
+	term = cstr(search).strip().lower()[:MAX_SEARCH]
+	limit = max(1, min(cint(limit) or 12, 30))
+	used = frappe.get_all("Tag Link", filters={"document_type": doctype}, pluck="tag", limit=500)
+	out = [t for t, _n in Counter(t for t in used if t).most_common() if term in t.lower()]
+	if term and len(out) < limit:
+		for value in frappe.get_all(
+			"Tag", filters={"name": ["like", f"%{term}%"]}, pluck="name", limit=limit
+		):
+			if value not in out:
+				out.append(value)
+	return out[:limit]
+
+
+@frappe.whitelist(methods=["POST"])
+def share(
+	doctype: str,
+	name: str,
+	add: str | list | None = None,
+	remove: str | list | None = None,
+	write: int | str = 0,
+):
+	"""Compartir con…: give coworkers read (or read and write) access to this one record, or
+	take it back. Frappe's share rules apply: the worker needs the share right on the record
+	and the rights they grant. Returns the refreshed Actividad."""
+	from frappe.share import add_docshare, check_share_permission
+	from frappe.share import remove as remove_share
+
+	_require(doctype)
+	doc = frappe.get_doc(doctype, name)
+	doc.check_permission("read")
+	removing = [u for u in (_parse(remove, []) or []) if isinstance(u, str) and u][:20]
+	adding = [u for u in (_parse(add, []) or []) if isinstance(u, str) and u][:20]
+	if removing:
+		check_share_permission(doctype, doc.name)
+		for user in removing:
+			remove_share(doctype, doc.name, user)
+	for user in adding:
+		if not frappe.db.exists("User", {"name": user, "enabled": 1}):
+			frappe.throw(_("That person is not on your team."), frappe.ValidationError)
+		add_docshare(doctype, doc.name, user=user, read=1, write=cint(write), notify=1)
 	return _timeline(frappe.get_doc(doctype, name))

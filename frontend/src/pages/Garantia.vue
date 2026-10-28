@@ -529,46 +529,15 @@
             </template>
           </section>
 
-          <section
-            class="rounded-6 border border-outline-gray-2 p-4 sm:col-span-2"
-          >
-            <h2 class="mb-2 text-sm font-semibold text-ink-gray-8">
-              {{ __('History', null, 'Garantías') }}
-            </h2>
-            <form
-              v-if="claim.can_write"
-              class="mb-3 flex gap-2"
-              @submit.prevent="addNote"
-            >
-              <FormControl
-                v-model="note"
-                class="flex-1"
-                :placeholder="__('Add a note for the team')"
-                :aria-label="__('Add a note for the team')"
-              />
-              <Button
-                :label="__('Save note')"
-                :loading="savingNote"
-                :disabled="!note.trim()"
-                @click="addNote"
-              />
-            </form>
-            <ul class="space-y-2">
-              <li
-                v-for="(entry, index) in claim.timeline"
-                :key="index"
-                class="text-sm"
-              >
-                <span class="text-ink-gray-9">{{ entry.text }}</span>
-                <span class="block text-xs text-ink-gray-5"
-                  >{{ entry.by }} · {{ entry.at }}</span
-                >
-              </li>
-              <li v-if="!claim.timeline.length" class="text-sm text-ink-gray-6">
-                {{ __('No history yet.') }}
-              </li>
-            </ul>
-          </section>
+          <!-- Actividad y comentarios: the case's notes, changes and emails,
+               who is on it, its tags and shares (crm.api.documentos). -->
+          <RecordActivity
+            class="-mx-4 sm:col-span-2 sm:mx-0"
+            doctype="Warranty Claim"
+            :name="claim.name"
+            :title="`${claim.name} · ${claim.customer_name || ''}`"
+            noun="la garantía"
+          />
         </div>
       </template>
     </div>
@@ -753,6 +722,7 @@
 <script setup>
 import {
   computed,
+  defineAsyncComponent,
   getCurrentInstance,
   onBeforeUnmount,
   onMounted,
@@ -810,6 +780,10 @@ import LucideMessageCircle from '~icons/lucide/message-circle'
 import LucideTruck from '~icons/lucide/truck'
 import LucideCheck from '~icons/lucide/check'
 
+const RecordActivity = defineAsyncComponent(
+  () => import('@/components/documentos/RecordActivity.vue'),
+)
+
 const props = defineProps({ name: { type: String, required: true } })
 const route = useRoute()
 const router = useRouter()
@@ -827,8 +801,6 @@ const transitioning = ref(false)
 const transitionProblem = ref(null)
 const pending = ref(null)
 const details = ref('')
-const note = ref('')
-const savingNote = ref(false)
 const picking = ref(false)
 const supplier = ref('')
 const supplierLabel = ref('')
@@ -1129,27 +1101,6 @@ async function applyTransition() {
   }
 }
 
-async function addNote() {
-  const text = note.value.trim()
-  if (!text) return
-  savingNote.value = true
-  try {
-    await call('frappe.desk.form.utils.add_comment', {
-      reference_doctype: 'Warranty Claim',
-      reference_name: claim.value.name,
-      content: text,
-      comment_email: garantiasBoot.value?.user || '',
-      comment_by: '',
-    })
-    note.value = ''
-    await load()
-  } catch (error) {
-    problem.value = problemOf(error)
-  } finally {
-    savingNote.value = false
-  }
-}
-
 watch(
   () => props.name,
   () => {
@@ -1208,9 +1159,7 @@ useLiveWatch(
       transitioning.value ||
       pending.value ||
       picking.value ||
-      outcomeLinking.value ||
-      savingNote.value ||
-      note.value
+      outcomeLinking.value
     if (!typing && !busy.value && !problem.value && claim.value) load()
   },
   { minIntervalMs: 3000 },

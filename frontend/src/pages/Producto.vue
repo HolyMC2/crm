@@ -1226,6 +1226,17 @@
                 }}
               </button>
             </section>
+
+            <!-- Actividad y comentarios: notes for the team, who is on it,
+                 tags, shares, emails and every change (crm.api.documentos). -->
+            <RecordActivity
+              v-if="product.name"
+              class="rounded-7 border border-outline-gray-2 bg-surface-base py-4"
+              doctype="Item"
+              :name="product.name"
+              :title="product.item_name || product.name"
+              noun="el producto"
+            />
           </div>
 
           <!-- ── side panel ─────────────────────────────────────────── -->
@@ -1796,6 +1807,9 @@ import LucideRepeat from '~icons/lucide/repeat'
 import LucideHash from '~icons/lucide/hash'
 
 // The product's pendientes (Shell D8), loaded only when the page shows them.
+const RecordActivity = defineAsyncComponent(
+  () => import('@/components/documentos/RecordActivity.vue'),
+)
 const RecordPendientes = defineAsyncComponent(
   () => import('@/components/pendientes/RecordPendientes.vue'),
 )

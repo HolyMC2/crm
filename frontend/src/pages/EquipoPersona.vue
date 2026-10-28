@@ -338,6 +338,15 @@
                 </li>
               </ul>
             </section>
+
+            <!-- Actividad y comentarios of the person's Employee record. -->
+            <RecordActivity
+              class="-mx-4 sm:col-span-2 sm:mx-0"
+              doctype="Employee"
+              :name="props.employee"
+              :title="person.full_name || props.employee"
+              noun="la ficha"
+            />
           </div>
         </template>
       </template>
@@ -345,7 +354,7 @@
   </div>
 </template>
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Avatar, Badge, Button, FormControl } from 'frappe-ui'
 import {
@@ -371,6 +380,10 @@ import {
 import { isMobile as isPhone } from '@/composables/breakpoint'
 import LucideArrowLeft from '~icons/lucide/arrow-left'
 import LucideKey from '~icons/lucide/key'
+
+const RecordActivity = defineAsyncComponent(
+  () => import('@/components/documentos/RecordActivity.vue'),
+)
 
 const props = defineProps({ employee: { type: String, required: true } })
 const route = useRoute()

@@ -271,6 +271,13 @@
             </li>
           </ol>
         </section>
+        <RecordActivity
+          class="-mx-4 mt-6"
+          doctype="Quality Feedback"
+          :name="props.name"
+          :title="answer.customer_name || props.name"
+          noun="la respuesta"
+        />
       </template>
     </div>
 
@@ -313,7 +320,7 @@
   </div>
 </template>
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Badge, Button, Dialog, FormControl } from 'frappe-ui'
 import { whatsappMode } from '@/composables/whatsapp'
@@ -353,6 +360,9 @@ const SCORE_CLASS = {
   promoter: 'bg-surface-green-2 text-ink-green-8',
 }
 
+const RecordActivity = defineAsyncComponent(
+  () => import('@/components/documentos/RecordActivity.vue'),
+)
 const props = defineProps({ name: { type: String, required: true } })
 const route = useRoute()
 const router = useRouter()

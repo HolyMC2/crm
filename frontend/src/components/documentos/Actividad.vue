@@ -1,12 +1,29 @@
 <template>
   <!-- Actividad (Shell SPEC §6 DD7): who did each step and when, newest first,
-       with full names (never emails). Files sit under «Archivos». -->
-  <section aria-labelledby="doc-actividad" class="px-4">
-    <h2 id="doc-actividad" class="pb-1 text-base font-semibold text-ink-gray-9">
+       with full names (never emails). Files sit under «Archivos». Inside
+       RecordActivity it drops its heading and shows one filter at a time,
+       with the record's emails among the events. -->
+  <section
+    :aria-labelledby="heading ? 'doc-actividad' : undefined"
+    :aria-label="heading ? undefined : 'Actividad'"
+    class="px-4"
+  >
+    <h2
+      v-if="heading"
+      id="doc-actividad"
+      class="pb-1 text-base font-semibold text-ink-gray-9"
+    >
       Actividad
     </h2>
-    <p v-if="assigned.length" class="pb-2 text-sm text-ink-gray-7">
+    <p v-if="heading && assigned.length" class="pb-2 text-sm text-ink-gray-7">
       Asignado a {{ assigned.map((a) => a.name).join(', ') }}
+    </p>
+    <p
+      v-if="!heading && !visible.length"
+      class="py-3 text-base text-ink-gray-6"
+      data-testid="documentos-events-empty"
+    >
+      {{ emptyText }}
     </p>
     <ol class="divide-y divide-outline-gray-1">
       <li
@@ -43,9 +60,27 @@
           </ul>
           <span
             v-if="event.kind === 'comment' && event.text"
-            class="whitespace-pre-line break-words text-base text-ink-gray-8"
+            class="w-fit max-w-full whitespace-pre-line break-words rounded-[14px] rounded-tl-[4px] bg-surface-gray-2 px-3 py-2 text-base text-ink-gray-9"
+            data-testid="documentos-comment"
             >{{ event.text }}</span
           >
+          <RouterLink
+            v-if="event.kind === 'email' && event.id"
+            :to="{ path: `/correo/${encodeURIComponent(event.id)}` }"
+            class="flex min-h-11 flex-col justify-center rounded-[14px] border border-outline-gray-2 px-3 py-2 hover:bg-surface-gray-1"
+            data-testid="documentos-email"
+          >
+            <span
+              class="line-clamp-2 break-words text-base-medium text-ink-gray-9"
+            >
+              {{ event.text }}
+            </span>
+            <span
+              v-if="event.snippet"
+              class="line-clamp-2 break-words text-sm text-ink-gray-6"
+              >{{ event.snippet }}</span
+            >
+          </RouterLink>
           <span class="text-sm text-ink-gray-6">{{ when(event.at) }}</span>
         </span>
       </li>
@@ -60,7 +95,7 @@
     </button>
   </section>
   <section
-    v-if="attachments.length || canAttach"
+    v-if="files && (attachments.length || canAttach)"
     aria-labelledby="doc-archivos"
     class="px-4"
   >
@@ -104,6 +139,7 @@
 </template>
 <script setup>
 import { computed, ref } from 'vue'
+import { inFilter } from '@/documentos/actividad'
 import {
   formatDateTime,
   formatMoney,
@@ -118,6 +154,7 @@ const ICONS = {
   cancel: 'lucide-circle-x',
   edit: 'lucide-pencil',
   comment: 'lucide-message-square',
+  email: 'lucide-mail',
   assignment: 'lucide-user-plus',
   attachment: 'lucide-paperclip',
   share: 'lucide-users',
@@ -134,10 +171,34 @@ const props = defineProps({
   currency: { type: String, default: 'MXN' },
   // Show «Adjuntar» (the record allows attaching).
   canAttach: { type: Boolean, default: false },
+  // Its own «Actividad» heading and assignees line (RecordActivity draws both).
+  heading: { type: Boolean, default: true },
+  // The «Archivos» section (off where the page shows files itself).
+  files: { type: Boolean, default: true },
+  // 'all' | 'comment' | 'email' | 'change' (RecordActivity's filter)
+  filter: { type: String, default: 'all' },
+  // The record's emails as events (kind 'email'), merged by date.
+  emails: { type: Array, default: () => [] },
 })
 const emit = defineEmits(['attach'])
 const all = ref(false)
-const events = computed(() => props.activity?.events || [])
+const events = computed(() => {
+  const own = props.activity?.events || []
+  const list = props.emails.length
+    ? [...own, ...props.emails].sort((a, b) =>
+        String(b.at || '').localeCompare(String(a.at || '')),
+      )
+    : own
+  return list.filter((event) => inFilter(event, props.filter))
+})
+const emptyText = computed(
+  () =>
+    ({
+      comment: 'Nadie ha comentado todavía. Escribe arriba para tu equipo.',
+      email: 'Aún no se ha mandado ningún correo de este documento.',
+      change: 'Sin cambios todavía.',
+    })[props.filter] || 'Sin actividad todavía.',
+)
 const assigned = computed(() => props.activity?.assigned || [])
 const attachments = computed(() => props.activity?.attachments || [])
 const visible = computed(() =>
@@ -177,6 +238,10 @@ function sentence(event) {
     }
     case 'comment':
       return `${who} comentó`
+    case 'email':
+      return event.direction === 'recibido'
+        ? `Llegó un correo de ${who}`
+        : `${who} envió un correo`
     case 'status':
       // ERPNext notes the new status as written in its writer's language («To
       // Bill» or «Por facturar»): say it as a change, in the list's words.

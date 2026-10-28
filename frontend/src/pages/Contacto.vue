@@ -693,7 +693,15 @@
           class="c-record-section c-activity-section"
           :style="sectionStyle('activity')"
         >
-          <Actividad :activity="actividad" noun="el contacto" />
+          <RecordActivity
+            :doctype="SOURCE_TYPES[nativeRoute.source]"
+            :name="record.name"
+            :activity="actividad"
+            :title="record.title || record.name"
+            :files="false"
+            noun="el contacto"
+            @changed="actividad = $event"
+          />
         </section>
       </div>
       <ArchivosRegistroPanel
@@ -963,8 +971,8 @@ const ChannelComposer = defineAsyncComponent(
 const CreateDialog = defineAsyncComponent(
   () => import('@/components/pendientes/CreateDialog.vue'),
 )
-const Actividad = defineAsyncComponent(
-  () => import('@/components/documentos/Actividad.vue'),
+const RecordActivity = defineAsyncComponent(
+  () => import('@/components/documentos/RecordActivity.vue'),
 )
 const route = useRoute(),
   router = useRouter()

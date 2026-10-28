@@ -400,6 +400,14 @@
           :return-to="`/crm/gastos/gasto/${encodeURIComponent(doc.name)}`"
           return-label="Gastos"
         />
+        <RecordActivity
+          class="-mx-4 mt-6"
+          doctype="Expense Claim"
+          :name="doc.name"
+          :title="doc.employee_name || doc.name"
+          :files="false"
+          noun="el gasto"
+        />
       </template>
     </div>
 
@@ -466,7 +474,14 @@
   </div>
 </template>
 <script setup>
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import {
+  computed,
+  defineAsyncComponent,
+  onMounted,
+  reactive,
+  ref,
+  watch,
+} from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Badge, Button, toast } from 'frappe-ui'
 import ApprovalDialog from '@/components/gastos/ApprovalDialog.vue'
@@ -495,6 +510,9 @@ import {
 import LucideArrowLeft from '~icons/lucide/arrow-left'
 import LucideX from '~icons/lucide/x'
 
+const RecordActivity = defineAsyncComponent(
+  () => import('@/components/documentos/RecordActivity.vue'),
+)
 const props = defineProps({ name: { type: String, required: true } })
 const route = useRoute()
 const router = useRouter()

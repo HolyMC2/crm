@@ -232,6 +232,8 @@ export function useRecordKit(doctype, { name, title, changed, modified } = {}) {
       case 'comment':
       case 'print':
       case 'avisame':
+      case 'tag':
+      case 'team':
         open.value = key
         break
       case 'attach':

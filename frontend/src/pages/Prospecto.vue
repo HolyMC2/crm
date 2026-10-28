@@ -105,6 +105,14 @@
           </dl>
         </section>
 
+        <RecordActivity
+          class="-mx-4 mt-6"
+          doctype="CRM Lead"
+          :name="leadId"
+          :title="name"
+          noun="el prospecto"
+        />
+
         <RouterLink
           :to="{ name: 'Lead', params: { leadId } }"
           class="mt-4 flex min-h-12 items-center gap-2 text-base-medium text-ink-gray-8"
@@ -138,6 +146,9 @@ import { formatPhone } from '@/composables/crmFormat'
 import { prospectName, sourceText } from '@/utils/prospects'
 import LucideBriefcase from '~icons/lucide/briefcase'
 
+const RecordActivity = defineAsyncComponent(
+  () => import('@/components/documentos/RecordActivity.vue'),
+)
 const ConvertToDealModal = defineAsyncComponent(
   () => import('@/components/Modals/ConvertToDealModal.vue'),
 )
