@@ -86,6 +86,7 @@
       </div>
       <div
         v-if="shellLoading && !shellBoot"
+        v-show="!appShown"
         role="status"
         class="flex flex-1 items-center justify-center p-6 text-sm text-ink-gray-6"
       >
@@ -93,6 +94,7 @@
       </div>
       <section
         v-else-if="blocked"
+        v-show="!appShown"
         role="alert"
         class="mx-auto min-h-0 w-full max-w-xl flex-1 space-y-4 overflow-y-auto p-6"
       >
@@ -132,12 +134,16 @@
       </section>
       <main
         v-else
+        v-show="!appShown"
         id="muelle-content"
         class="flex min-h-0 min-w-0 flex-1 overflow-hidden"
         @scroll.capture.passive="onContentScroll"
       >
         <slot />
       </main>
+      <!-- Apps opened from the rail (appStrip) take this place while one is
+           on screen; the page above stays mounted, as the worker left it. -->
+      <AppFrames v-if="!phone && openApps.length" v-show="appShown" />
       <!-- Phone command bar, the thumb's row: ask Muelle, scan a code, scan
            a paper, and the page's one create action (ui/Fab teleports into
            #shell-primary-action while this bar is mounted, so it never floats
@@ -279,6 +285,8 @@ import {
 import { primaryDock } from '@/components/ui/primaryDock'
 import { pageTitle } from '@/composables/pageTitle'
 import AppBar from '@/components/ui/AppBar.vue'
+import { currentApp, openApps, showShell } from '@/composables/appStrip'
+import AppFrames from './AppFrames.vue'
 import ShellRail from './ShellRail.vue'
 import ShellBottomNav from './ShellBottomNav.vue'
 
@@ -309,6 +317,11 @@ const paletteOpen = ref(false),
   moreOpen = ref(false),
   copied = ref('')
 const activeKey = computed(() => moduleKeyFor(route))
+// An app from the rail is on screen (desktop only). Going to another page
+// comes back to the shell; a hidden page that only rewrites its query (a
+// filter, a refresh) leaves the app on screen.
+const appShown = computed(() => !phone.value && !!currentApp.value)
+watch(() => route.path, showShell)
 const activeModule = computed(() =>
   shellModules.value.find((module) => module.key === activeKey.value),
 )

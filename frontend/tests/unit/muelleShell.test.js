@@ -69,6 +69,7 @@ vi.mock('@/utils/listWarmup', () => ({
 
 import MuelleShell from '@/components/shell/MuelleShell.vue'
 import { mobileView } from '@/composables/mobileView'
+import { resetAppStripForTests } from '@/composables/appStrip'
 import {
   hostedModules,
   isNeutralModule,
@@ -663,46 +664,80 @@ describe('one frame for every route', () => {
       expect(href.pathname).toBe('/scan/inicio')
       expect(href.searchParams.get('return_to')).toBe('/crm/contactos')
       expect(href.searchParams.get('return_label')).toBe('Contactos')
-      // Collapsed, they wait behind one «Otras apps» button beside the rail.
-      rail.querySelector('[data-testid="rail-toggle"]').click()
-      await nextTick()
-      expect(rail.querySelector('[data-sibling]')).toBeNull()
-      const apps = rail.querySelector('[data-testid="rail-apps"]')
-      expect(apps.getAttribute('aria-expanded')).toBe('false')
-      apps.click()
-      await nextTick()
-      expect(apps.getAttribute('aria-expanded')).toBe('true')
-      const menu = rail.querySelector('[role="menu"]')
-      expect(
-        [...menu.querySelectorAll('[data-sibling]')].map((a) =>
-          a.textContent.trim(),
-        ),
-      ).toEqual(['Escáner', 'POS'])
-      expect(menu.style.left).toBe('60px')
-      // The first app takes the focus; Esc from anywhere closes the menu.
-      expect(document.activeElement?.dataset.sibling).toBe('scan')
-      // Tab stays in the menu: Shift+Tab from the first app goes to the last.
-      const tab = (shiftKey) =>
-        document.activeElement.dispatchEvent(
-          new KeyboardEvent('keydown', {
-            key: 'Tab',
-            shiftKey,
-            bubbles: true,
-            cancelable: true,
-          }),
-        )
-      tab(true)
-      expect(document.activeElement?.dataset.sibling).toBe('pos')
-      tab(false)
-      expect(document.activeElement?.dataset.sibling).toBe('scan')
-      window.dispatchEvent(
-        new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }),
-      )
-      await nextTick()
-      expect(rail.querySelector('[role="menu"]')).toBeNull()
-      expect(apps.getAttribute('aria-expanded')).toBe('false')
     } finally {
       delete window.installed_apps
+    }
+  })
+
+  it('desktop rail: the other apps open inside the shell and keep their place, Ferdium-style', async () => {
+    state.mobile.value = false
+    resetRailForTests('collapsed')
+    resetAppStripForTests()
+    window.installed_apps = ['frappe', 'crm', 'scanner_kit', 'posawesome']
+    state.call.mockImplementation(async (method) => {
+      if (method === 'crm.api.shell.boot') return boot()
+      if (method === 'crm.api.shell.rail_counts')
+        return { pos: { count: 2, urgent: false } }
+      throw new Error(`unexpected ${method}`)
+    })
+    try {
+      await mount('/contactos')
+      const rail = root.querySelector('nav[aria-label="Apps"]')
+      const main = () => root.querySelector('#muelle-content')
+      const frame = (key) => root.querySelector(`[data-app-frame="${key}"]`)
+      const click = (el, init = {}) =>
+        el.dispatchEvent(
+          new MouseEvent('click', { bubbles: true, cancelable: true, ...init }),
+        )
+      // Icons only: round app icons with what waits in each on the badge.
+      const pos = await until(() =>
+        rail.querySelector('[data-sibling="pos"] [data-rail-count]'),
+      )
+      expect(pos.textContent).toBe('2')
+      expect(
+        rail.querySelector('[data-sibling="pos"]').getAttribute('aria-label'),
+      ).toBe('POS · 2')
+      const scan = rail.querySelector('[data-sibling="scan"]')
+      // A plain click opens Escáner inside the shell, in place of the page.
+      expect(click(scan)).toBe(false)
+      const scanFrame = await until(() => frame('scan'))
+      expect(scanFrame.getAttribute('src')).toBe(scan.getAttribute('href'))
+      await nextTick()
+      expect(main().style.display).toBe('none')
+      expect(scan.getAttribute('aria-current')).toBe('page')
+      expect(scan.hasAttribute('data-open')).toBe(true)
+      // Ctrl+click is the browser's: a new tab, no frame.
+      expect(
+        click(rail.querySelector('[data-sibling="pos"]'), { ctrlKey: true }),
+      ).toBe(true)
+      expect(frame('pos')).toBeNull()
+      // A module brings the page back; Escáner waits, hidden, where it was.
+      click(rail.querySelector('[data-module="contactos"]'))
+      await nextTick()
+      expect(main().style.display).toBe('')
+      expect(frame('scan')).toBe(scanFrame)
+      expect(scanFrame.style.display).toBe('none')
+      click(scan)
+      await nextTick()
+      expect(frame('scan')).toBe(scanFrame)
+      expect(scanFrame.style.display).toBe('')
+      // A hidden page that rewrites its query leaves the app on screen;
+      // going to another page comes back to the shell.
+      await router.replace('/contactos?segment=people')
+      await nextTick()
+      expect(main().style.display).toBe('none')
+      await router.push('/deals')
+      await nextTick()
+      expect(main().style.display).toBe('')
+      expect(scan.hasAttribute('aria-current')).toBe(false)
+      // × closes it; the next open starts fresh.
+      click(rail.querySelector('[data-close-app="scan"]'))
+      await nextTick()
+      expect(frame('scan')).toBeNull()
+      expect(scan.hasAttribute('data-open')).toBe(false)
+    } finally {
+      delete window.installed_apps
+      resetAppStripForTests()
     }
   })
 

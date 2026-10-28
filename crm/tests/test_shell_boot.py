@@ -125,8 +125,29 @@ class TestShellBoot(TestCase):
 		answer = shell.rail_counts()
 		self.assertIsInstance(answer, dict)
 		for key, found in answer.items():
-			self.assertIn(key, ("ventas", "pendientes"))
+			self.assertIn(key, ("ventas", "pendientes", "scan", "pos", "taller", "clinica", "mercado"))
 			self.assertGreater(found["count"], 0)
+
+	def test_other_apps_count_their_rail_icon_through_a_hook(self):
+		real_hooks = frappe.get_hooks
+		probe = "crm.tests.test_shell_boot"
+		paths = {
+			"taller": [f"{probe}._waiting_four"],
+			"pos": [f"{probe}._waiting_none"],
+			"clinica": [f"{probe}._failing_count"],
+			"mercado": [f"{probe}._no_such_count"],
+		}
+		with (
+			patch.object(shell, "_RAIL_COUNTS", ()),
+			patch.object(
+				frappe,
+				"get_hooks",
+				lambda hook=None, *a, **kw: (
+					paths if hook == "muelle_rail_counts" else real_hooks(hook, *a, **kw)
+				),
+			),
+		):
+			self.assertEqual(shell.rail_counts(), {"taller": {"count": 4, "urgent": True}})
 
 	def test_module_keys_follow_the_contracts_registry(self):
 		registry = Path(__file__).parents[2] / "frontend/src/vendor/muelle-shell/contracts/registry.ts"
@@ -1036,3 +1057,15 @@ class TestInmobiliariaModule(TestCase):
 		self.assertFalse(module["enabled"])
 		self.assertEqual(module["capabilities"], {})
 		self.assertNotEqual(self._boot_with(module)["user"]["nav_role"], "inmobiliaria")
+
+
+def _waiting_four():
+	return {"count": 4, "urgent": 1}
+
+
+def _waiting_none():
+	return None
+
+
+def _failing_count():
+	return 1 / 0

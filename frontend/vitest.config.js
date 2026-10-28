@@ -20,6 +20,10 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'happy-dom',
+    // Frames (the shell's app strip) stay blank instead of fetching their page.
+    environmentOptions: {
+      happyDOM: { settings: { disableIframePageLoading: true } },
+    },
     root: __dirname,
     setupFiles: ['./tests/setup.js'],
     // Exercise the pinned resource client through Vite's resolution, as the

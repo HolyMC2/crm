@@ -67,6 +67,7 @@
             ? 'bg-surface-gray-3 font-medium text-ink-gray-9'
             : 'text-ink-gray-6 hover:bg-surface-gray-2 hover:text-ink-gray-8',
         ]"
+        @click="showShell"
       >
         <span class="relative flex-none" aria-hidden="true">
           <span :class="[module.icon, 'block size-[18px]']" />
@@ -105,6 +106,7 @@
         data-state="unavailable"
         class="flex flex-none items-center rounded-6 text-ink-gray-5 hover:bg-surface-gray-2 hover:text-ink-gray-7"
         :class="ROW[expanded ? 'wide' : 'icon']"
+        @click="showShell"
       >
         <span class="relative flex-none" aria-hidden="true">
           <span :class="[module.icon, 'block size-[18px]']" />
@@ -121,86 +123,89 @@
           }}</span>
         </template>
       </RouterLink>
-      <template v-if="siblings.length && expanded">
-        <div
-          class="flex-none px-2.5 pb-0.5 pt-3 text-xs font-medium text-ink-gray-5"
-        >
-          {{ __('Other apps') }}
-        </div>
-        <a
-          v-for="app in siblings"
-          :key="app.key"
-          :href="siblingLinks[app.key]"
-          :aria-label="app.label"
-          :data-sibling="app.key"
-          class="flex flex-none items-center rounded-6 text-ink-gray-6 hover:bg-surface-gray-2 hover:text-ink-gray-8"
-          :class="ROW.wide"
-        >
-          <span
-            :class="[app.icon, 'size-[18px] flex-none']"
-            aria-hidden="true"
-          />
-          <span class="flex-1 truncate" aria-hidden="true">{{
-            app.label
-          }}</span>
-          <span
-            class="lucide-arrow-up-right size-3.5 flex-none text-ink-gray-4"
-            aria-hidden="true"
-          />
-        </a>
-      </template>
     </div>
-    <!-- Collapsed, the sibling apps wait behind one button. -->
-    <div v-if="siblings.length && !expanded" class="flex-none">
-      <button
-        ref="appsButton"
-        class="flex items-center justify-center rounded-6"
-        :class="[
-          ROW.icon,
-          appsOpen
-            ? 'bg-surface-gray-3 text-ink-gray-9'
-            : 'text-ink-gray-6 hover:bg-surface-gray-2 hover:text-ink-gray-8',
-        ]"
-        :aria-label="__('Other apps')"
-        :data-tip="__('Other apps')"
-        :aria-expanded="appsOpen"
-        aria-haspopup="menu"
-        data-testid="rail-apps"
-        @click="toggleApps"
+    <!-- The site's other apps, Ferdium-style: round icons that open the app
+         inside the shell (it keeps its page while the worker switches), with
+         what waits in it on the badge. Pinned below the modules, which scroll.
+         Ctrl/middle click still opens a tab; × on an open app closes it. -->
+    <div
+      v-if="siblings.length"
+      class="flex w-full flex-none flex-col gap-1 border-t border-outline-gray-1 pt-2"
+      :class="expanded ? '' : 'items-center'"
+      role="group"
+      :aria-label="__('Other apps')"
+      data-testid="rail-apps"
+    >
+      <div
+        v-for="app in siblings"
+        :key="app.key"
+        class="group relative flex flex-none"
+        :class="expanded ? 'w-full' : ''"
       >
-        <span class="lucide-layout-grid size-[18px]" aria-hidden="true" />
-      </button>
-      <template v-if="appsOpen">
-        <div class="fixed inset-0 z-40" @click="appsOpen = false" />
-        <div
-          ref="appsMenu"
-          role="menu"
-          class="fixed z-50 w-56 rounded-7 border border-outline-gray-2 bg-surface-base py-1.5 shadow-xl"
-          :style="appsMenuStyle"
+        <a
+          :href="siblingLinks[app.key]"
+          :aria-label="moduleLabel(app)"
+          :data-tip="moduleLabel(app)"
+          :aria-current="currentApp === app.key ? 'page' : undefined"
+          :data-sibling="app.key"
+          :data-open="isOpen(app.key) ? '' : undefined"
+          class="flex flex-none items-center rounded-6"
+          :class="[
+            expanded
+              ? 'h-9 w-full gap-2.5 px-1.5 text-sm'
+              : 'size-10 justify-center',
+            currentApp === app.key
+              ? 'font-medium text-ink-gray-9'
+              : 'text-ink-gray-6 hover:text-ink-gray-8',
+            expanded ? 'hover:bg-surface-gray-2' : '',
+          ]"
+          @click="onSibling(app, $event)"
         >
-          <div class="px-3.5 pb-1 pt-1.5 text-xs font-medium text-ink-gray-5">
-            {{ __('Other apps') }}
-          </div>
-          <a
-            v-for="app in siblings"
-            :key="app.key"
-            role="menuitem"
-            :href="siblingLinks[app.key]"
-            :data-sibling="app.key"
-            class="flex items-center gap-2.5 px-3.5 py-2 text-sm hover:bg-surface-gray-2"
+          <span
+            class="relative flex size-8 flex-none items-center justify-center rounded-full"
+            :class="
+              currentApp === app.key
+                ? 'bg-[var(--muelle-accent)] text-[var(--muelle-accent-ink)]'
+                : 'bg-surface-gray-2 group-hover:bg-surface-gray-3'
+            "
+            aria-hidden="true"
           >
+            <span :class="[app.icon, 'size-[18px]']" />
             <span
-              :class="[app.icon, 'size-4 text-ink-gray-6']"
-              aria-hidden="true"
-            />
-            <span class="flex-1">{{ app.label }}</span>
-            <span
-              class="lucide-arrow-up-right size-3.5 text-ink-gray-4"
-              aria-hidden="true"
-            />
-          </a>
-        </div>
-      </template>
+              v-if="counts[app.key]"
+              class="num absolute -right-2 -top-1.5 h-[18px] min-w-[18px] rounded-full px-1 text-center text-[11px] font-semibold leading-[18px] ring-2 ring-[var(--surface-base)]"
+              :class="badgeTone(counts[app.key])"
+              data-rail-count
+              >{{ counts[app.key].text }}</span
+            >
+          </span>
+          <span
+            v-if="isOpen(app.key)"
+            class="absolute left-0 top-1/2 h-2 w-1 -translate-y-1/2 rounded-r-full bg-ink-gray-7"
+            aria-hidden="true"
+            data-app-open
+          />
+          <span
+            v-if="expanded"
+            class="min-w-0 flex-1 truncate"
+            aria-hidden="true"
+            >{{ app.label }}</span
+          >
+        </a>
+        <button
+          v-if="isOpen(app.key)"
+          type="button"
+          class="absolute flex size-4 items-center justify-center rounded-full bg-surface-gray-7 text-ink-base opacity-0 focus:opacity-100 group-hover:opacity-100"
+          :class="
+            expanded ? 'right-2 top-1/2 -translate-y-1/2' : '-left-0.5 -top-0.5'
+          "
+          :aria-label="`${__('Close')} ${app.label}`"
+          :data-close-app="app.key"
+          @click="closeApp(app.key)"
+        >
+          <span class="lucide-x size-3" aria-hidden="true" />
+        </button>
+      </div>
     </div>
     <!-- «Pregúntale a Muelle» (E7): the desktop door, one item, only once
          shell_api.status said yes. No bubble (design/ASSISTANT.md). -->
@@ -289,7 +294,7 @@
     <!-- One label for every icon, beside the rail: the name (and count) a
          collapsed rail leaves out, at once instead of the browser's delay. -->
     <div
-      v-if="tip && !expanded && !appsOpen"
+      v-if="tip && !expanded"
       class="pointer-events-none fixed z-50 -translate-y-1/2 whitespace-nowrap rounded-6 bg-surface-gray-9 px-2 py-1 text-sm font-medium text-ink-base shadow-lg"
       :style="{ left: `${railWidth + 6}px`, top: `${tip.top}px` }"
       role="tooltip"
@@ -303,7 +308,6 @@
 import {
   computed,
   defineAsyncComponent,
-  nextTick,
   onBeforeUnmount,
   onMounted,
   ref,
@@ -314,7 +318,6 @@ import {
   ariaKeys,
   keyLabel,
   searchEntryHint,
-  useShellLayer,
 } from '@/composables/shellKeyboard'
 import { assistantOn } from '@/components/assistant/assistantDoor'
 import {
@@ -328,6 +331,13 @@ import {
   sortSiblings,
   toggleRail,
 } from '@/composables/shellRail'
+import {
+  closeApp,
+  currentApp,
+  openApp,
+  openApps,
+  showShell,
+} from '@/composables/appStrip'
 import UserMenu from './UserMenu.vue'
 import { installLinkPrefetch } from '@/utils/speculate'
 
@@ -372,7 +382,7 @@ const avisos = computed(() =>
 // window, moves to another page, or every two minutes while it is in view.
 const counts = computed(() =>
   Object.fromEntries(
-    props.modules.map((module) => [
+    [...props.modules, ...siblings].map((module) => [
       module.key,
       moduleCount(module, railCounts.value),
     ]),
@@ -428,40 +438,12 @@ const siblingLinks = computed(() => {
   )
 })
 
-// Collapsed: one «Otras apps» button opens them beside the rail. The first
-// app takes the focus and Tab stays in the menu; Esc (from anywhere) or
-// another page closes it.
-const appsOpen = ref(false)
-const appsButton = ref(null)
-const appsMenu = ref(null)
-const appsMenuStyle = ref({})
-function toggleApps() {
-  if (appsOpen.value) return closeApps()
-  const box = appsButton.value?.getBoundingClientRect()
-  const top = Math.max(
-    8,
-    Math.min((box?.top ?? 8) - 8, window.innerHeight - 260),
-  )
-  appsMenuStyle.value = { left: `${railWidth.value + 4}px`, top: `${top}px` }
-  appsOpen.value = true
-  nextTick(() => appsMenu.value?.querySelector('a')?.focus())
+// A plain click opens the app inside the shell (appStrip); with Ctrl/⌘,
+// Shift or the middle button the browser opens it in a tab or window.
+const isOpen = (key) => openApps.value.some((open) => open.key === key)
+function onSibling(app, event) {
+  if (event.button || event.metaKey || event.ctrlKey || event.shiftKey) return
+  event.preventDefault()
+  openApp(app, siblingLinks.value[app.key])
 }
-function closeApps() {
-  appsOpen.value = false
-  nextTick(() => appsButton.value?.focus())
-}
-useShellLayer(appsMenu, {
-  open: () => appsOpen.value,
-  onKeydown(event) {
-    if (event.key !== 'Escape') return
-    event.preventDefault()
-    event.stopPropagation()
-    closeApps()
-  },
-})
-watch(
-  () => route.fullPath,
-  () => (appsOpen.value = false),
-)
-watch(railExpanded, () => (appsOpen.value = false))
 </script>

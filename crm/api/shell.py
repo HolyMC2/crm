@@ -898,28 +898,37 @@ def _pendientes_count():
 _RAIL_COUNTS = (("ventas", _ventas_count), ("pendientes", _pendientes_count))
 
 
+def _app_counts():
+	"""The other apps' badges on the rail, from their hooks, keyed like the shell's sibling
+	apps: `muelle_rail_counts = {"taller": "taller.shell.rail_count"}`. Each returns
+	{count, urgent} for the session user, or None."""
+	hooks = frappe.get_hooks("muelle_rail_counts") or {}
+	return tuple(
+		(key, lambda path=paths[-1]: frappe.get_attr(path)()) for key, paths in hooks.items() if paths
+	)
+
+
 @frappe.whitelist()
 def rail_counts():
 	"""What waits in each module, for the desktop rail's badges (like the unread count
 	beside a chat): {module key: {count, urgent}}. Ventas counts the conversations owed
-	a reply, Pendientes the work due today or overdue (urgent when something is late).
+	a reply, Pendientes the work due today or overdue (urgent when something is late);
+	the other apps (Taller, POS…) count their own through `muelle_rail_counts`.
 	A source that is not installed, not readable or failing is left out; the boot keeps
 	the other modules' badges."""
 	if frappe.session.user == "Guest":
 		frappe.throw(_("Sign in to open Muelle."), frappe.AuthenticationError)
 	answer = {}
-	for key, read in _RAIL_COUNTS:
+	for key, read in (*_RAIL_COUNTS, *_app_counts()):
 		try:
 			found = read()
+			if found and int(found.get("count") or 0) > 0:
+				answer[key] = {"count": int(found["count"]), "urgent": bool(found.get("urgent"))}
 		except frappe.PermissionError:
 			frappe.clear_last_message()
-			continue
 		except Exception:
 			frappe.logger("crm.shell").exception(f"rail count {key} failed")
 			frappe.clear_last_message()
-			continue
-		if found and found["count"] > 0:
-			answer[key] = found
 	return answer
 
 
