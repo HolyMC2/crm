@@ -21,7 +21,9 @@ const output = outArg
   ? resolve(outArg)
   : resolve(here, '../../crm/public/frontend')
 
-export const BUDGET = { js: 180 * 1024, css: 61 * 1024 }
+// CSS may grow for the shell's look and motion (Marco, 2026-10-28); entry JS
+// stays where it is, because the feeling of speed is the first paint.
+export const BUDGET = { js: 180 * 1024, css: 72 * 1024 }
 export const ROUTE_BUDGET = { files: 60, bytes: 2.5 * 1024 * 1024 }
 // Components a route mounts at once: MuelleShell (App), and on Ventas
 // routes CrmRuntime + VentasFrame around the page.
