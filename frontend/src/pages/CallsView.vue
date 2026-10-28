@@ -42,17 +42,7 @@
                 r.type === 'Outgoing' ? __('Saliente') : __('Entrante')
               "
             >
-              <span
-                class="size-5"
-                :class="
-                  MISSED.includes(r.status)
-                    ? 'lucide-phone-missed'
-                    : r.type === 'Outgoing'
-                      ? 'lucide-phone-outgoing'
-                      : 'lucide-phone-incoming'
-                "
-                aria-hidden="true"
-              />
+              <span class="size-5" :class="dirIcon(r)" aria-hidden="true" />
             </span>
           </template>
           <!-- how it went rides line 2 (red when missed): a chip beside the
@@ -119,93 +109,108 @@
         </button>
       </div>
 
-      <!-- header -->
+      <!-- header: sentence case, the reading order of a call -->
       <div
-        class="grid flex-none items-center border-b border-outline-gray-1 bg-surface-gray-1 px-5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4"
+        class="grid flex-none items-center gap-x-3 border-b border-outline-gray-1 bg-surface-gray-1 px-5 text-sm font-medium text-ink-gray-5"
         :style="`grid-template-columns:${GRID};height:34px`"
       >
-        <div>{{ __('Dir.') }}</div>
-        <div>{{ __('Contacto') }}</div>
-        <template v-if="!isMobile">
-          <div>{{ __('Hora') }}</div>
-          <div>{{ __('Duración') }}</div>
-        </template>
-        <div>{{ __('Resultado') }}</div>
         <div />
+        <div>{{ __('Contacto') }}</div>
+        <div>{{ __('Fecha y hora') }}</div>
+        <div>{{ __('En turno') }}</div>
+        <div>{{ __('Motivo') }}</div>
+        <div>{{ __('¿Se logró?') }}</div>
+        <div>{{ __('Ánimo') }}</div>
       </div>
 
       <!-- rows -->
       <div class="scb min-h-0 flex-1 overflow-y-auto">
         <div
           v-if="calls.loading && !rows.length"
-          class="py-10 text-center text-xs text-ink-gray-4"
+          class="py-10 text-center text-sm text-ink-gray-5"
         >
           {{ __('Cargando…') }}
         </div>
         <div
           v-else-if="!rows.length"
-          class="py-10 text-center text-xs text-ink-gray-4"
+          class="py-10 text-center text-sm text-ink-gray-5"
         >
           {{ __('Sin llamadas') }}
         </div>
 
-        <div
+        <button
           v-for="r in rows"
           :key="r.name"
-          class="grid cursor-pointer items-center border-b border-outline-gray-1 px-5 hover:bg-surface-gray-2"
-          :style="`grid-template-columns:${GRID};min-height:50px`"
+          type="button"
+          class="grid w-full items-center gap-x-3 border-b border-outline-gray-1 px-5 py-2 text-left hover:bg-surface-gray-2"
+          :style="`grid-template-columns:${GRID};min-height:52px`"
+          data-testid="call-row"
           @click="openCall(r.name)"
         >
-          <div>
-            <span
-              class="inline-flex items-center gap-1 rounded-5 px-1.5 py-[2px] text-[10.5px] font-semibold"
-              :class="dirChip(r)"
-            >
-              {{
-                r.type === 'Outgoing'
-                  ? '↑ ' + __('Outgoing')
-                  : '↓ ' + __('Incoming')
-              }}
-            </span>
-          </div>
-          <div class="min-w-0">
-            <div class="truncate text-[13px] font-semibold text-ink-gray-9">
-              {{ phoneOf(r) }}
-            </div>
-            <div
-              v-if="r.reference_docname"
-              class="truncate text-[11px] text-ink-gray-4"
-            >
-              {{ r.reference_docname }}
-            </div>
-            <!-- phone: time and duration ride under the contact; their columns are gone -->
-            <div v-if="isMobile" class="truncate text-[11px] text-ink-gray-5">
-              {{ timeAgo(r.start_time) }} · {{ fmtDur(r.duration) }}
-            </div>
-          </div>
-          <template v-if="!isMobile">
-            <div class="text-[12px] text-ink-gray-5">
-              {{ timeAgo(r.start_time) }}
-            </div>
-            <div class="text-[12px] font-medium text-ink-gray-7">
-              {{ fmtDur(r.duration) }}
-            </div>
-          </template>
-          <div>
-            <StatusChip :status="r.status" kind="call" />
-          </div>
-          <button
-            class="text-[14px] text-ink-gray-4"
-            @click.stop="openCall(r.name)"
+          <span
+            class="flex size-8 items-center justify-center rounded-full"
+            :class="dirChip(r)"
+            :aria-label="
+              r.type === 'Outgoing' ? __('Saliente') : __('Entrante')
+            "
           >
-            ›
-          </button>
-        </div>
+            <span class="size-4" :class="dirIcon(r)" aria-hidden="true" />
+          </span>
+          <span class="min-w-0">
+            <span
+              class="block truncate text-base font-semibold text-ink-gray-9"
+            >
+              {{ callTitle(r) }}
+            </span>
+            <span class="block truncate text-sm text-ink-gray-5">
+              {{ callSub(r) }}
+            </span>
+          </span>
+          <span class="min-w-0">
+            <span class="num block truncate text-base text-ink-gray-8">
+              {{ callWhen(r.start_time) }}
+            </span>
+            <!-- how long it lasted, or how it failed, under when -->
+            <span
+              class="num block truncate text-sm"
+              :class="
+                MISSED.includes(r.status) ? 'text-ink-red-7' : 'text-ink-gray-5'
+              "
+            >
+              {{ timeLine(r) }}
+            </span>
+          </span>
+          <span class="truncate text-base text-ink-gray-7">
+            {{ onShift(r.start_time, shifts).join(', ') || '—' }}
+          </span>
+          <span
+            class="truncate text-base"
+            :class="info(r).call_reason ? 'text-ink-gray-8' : 'text-ink-gray-4'"
+            :title="info(r).call_reason || ''"
+          >
+            {{ info(r).call_reason || reasonPlaceholder(r) }}
+          </span>
+          <span>
+            <StatusChip
+              v-if="GOAL[info(r).goal_met]"
+              :label="GOAL[info(r).goal_met].label"
+              :tone="GOAL[info(r).goal_met].tone"
+            />
+          </span>
+          <span>
+            <StatusChip
+              v-if="SENTIMENT[info(r).tone]"
+              :label="SENTIMENT[info(r).tone].label"
+              :tone="SENTIMENT[info(r).tone].tone"
+            />
+          </span>
+        </button>
       </div>
     </template>
     <CallDetailDrawer
       v-if="selectedCall"
       :name="selectedCall"
+      :shifts="shifts"
       @close="selectedCall = null"
       @changed="calls.reload()"
     />
@@ -213,12 +218,20 @@
 </template>
 
 <script setup>
-import { computed, h, ref, watch } from 'vue'
+import { computed, h, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { createListResource } from 'frappe-ui'
-import { timeAgo } from '@/composables/crmFormat'
 import { useDoctypeModal } from '@/composables/doctypeModal'
 import { isMobile } from '@/composables/breakpoint'
 import CallDetailDrawer from '@/components/doco/calls/CallDetailDrawer.vue'
+import {
+  GOAL,
+  MISSED,
+  SENTIMENT,
+  callAgo,
+  callWhen,
+  onShift,
+} from '@/components/doco/calls/calls'
+import { globalStore } from '@/stores/global'
 import {
   EmptyState,
   Fab,
@@ -227,17 +240,13 @@ import {
   StatusChip,
 } from '@/components/ui'
 import { formatPhone } from '@/composables/crmFormat'
-import { relativeTime, statusLabel } from '@/utils/display'
+import { statusLabel } from '@/utils/display'
 import { call } from 'frappe-ui'
 
-// phone: direction + contact + outcome + chevron — the desktop track sum
-// (396px of fixed columns plus padding) widened every phone past its viewport.
-const GRID = computed(() =>
-  isMobile.value
-    ? '56px minmax(0,1fr) 96px 26px'
-    : '70px 1fr 90px 90px 120px 26px',
-)
-const MISSED = ['No Answer', 'Missed', 'Busy', 'Failed', 'Canceled']
+// Direction, contact, when, how long, who was on shift, then what the
+// analysis found: why they called, whether it worked, the customer's mood.
+const GRID =
+  '32px minmax(140px,1fr) 156px minmax(70px,.5fr) minmax(120px,1.3fr) 96px 80px'
 
 const { showModal } = useDoctypeModal()
 function logCall() {
@@ -347,6 +356,41 @@ watch(rows, async (list) => {
     }
   }
 })
+// What the calls page shows beyond CRM's own columns (doco_marketing):
+// each call's analysis and who was on shift. One read per page of calls.
+const context = ref({ analysis: {}, shifts: [] })
+const shifts = computed(() => context.value.shifts || [])
+let contextSeq = 0
+async function loadContext() {
+  const names = rows.value.map((r) => r.name)
+  const mine = ++contextSeq
+  if (!names.length) return
+  try {
+    const found = await call('doco_marketing.api.calls.page_context', {
+      names,
+    })
+    if (mine === contextSeq) context.value = found || context.value
+  } catch {
+    // Without doco_marketing the page keeps CRM's columns.
+  }
+}
+watch(rows, loadContext)
+function info(r) {
+  return context.value.analysis?.[r.name] || {}
+}
+function reasonPlaceholder(r) {
+  if (info(r).analysis_status === 'en_proceso') return __('Analizando…')
+  return '—'
+}
+
+// «Transcribir y analizar» finishes in the background; its result lands here.
+const { $socket } = globalStore()
+function onAnalysis() {
+  loadContext()
+}
+onMounted(() => $socket?.on('doco_call_analysis', onAnalysis))
+onBeforeUnmount(() => $socket?.off('doco_call_analysis', onAnalysis))
+
 function callTitle(r) {
   return refNames.value[r.reference_docname] || formatPhone(phoneOf(r))
 }
@@ -354,11 +398,28 @@ function callLine(r) {
   return [
     r.status && r.status !== 'Completed' && statusLabel(r.status, 'call'),
     refNames.value[r.reference_docname] && formatPhone(phoneOf(r)),
-    relativeTime(r.start_time),
+    callWhen(r.start_time),
     Number(r.duration) > 0 && fmtDur(r.duration),
   ]
     .filter(Boolean)
     .join(' · ')
+}
+// The linked record's number, or where it came from on an unlinked call.
+function callSub(r) {
+  const named = refNames.value[r.reference_docname]
+  return named ? formatPhone(phoneOf(r)) : r.reference_docname || ''
+}
+function timeLine(r) {
+  const how = MISSED.includes(r.status)
+    ? statusLabel(r.status, 'call')
+    : Number(r.duration) > 0 && fmtDur(r.duration)
+  return [how, callAgo(r.start_time)].filter(Boolean).join(' · ')
+}
+function dirIcon(r) {
+  if (MISSED.includes(r.status)) return 'lucide-phone-missed'
+  return r.type === 'Outgoing'
+    ? 'lucide-phone-outgoing'
+    : 'lucide-phone-incoming'
 }
 function dialable(r) {
   const digits = String(phoneOf(r)).replace(/[^+\d]/g, '')
@@ -387,8 +448,7 @@ const Stat = (props) =>
     h(
       'div',
       {
-        class:
-          'text-[10px] font-semibold uppercase tracking-[.07em] text-ink-gray-4',
+        class: 'text-sm text-ink-gray-5',
       },
       props.label,
     ),
@@ -396,7 +456,7 @@ const Stat = (props) =>
       'div',
       {
         class:
-          'text-[18px] font-bold ' + (props.color ? '' : 'text-ink-gray-9'),
+          'num text-[18px] font-bold ' + (props.color ? '' : 'text-ink-gray-9'),
         style: props.color ? `color:${props.color}` : undefined,
       },
       String(props.value),
