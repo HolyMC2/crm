@@ -1573,11 +1573,34 @@ useLiveWatch(
     'Patient Appointment',
     'Repair Order',
   ],
-  () => {
+  async () => {
     invalidate()
-    return load({ quiet: true })
+    const before = new Set(events.value.map(eventKey))
+    await load({ quiet: true })
+    markFresh(before)
   },
 )
+// A teammate's new event shows marked for a moment, as a new row does in the lists.
+let freshTimer = 0
+function markFresh(before) {
+  if (!before.size) return
+  const added = events.value.filter(
+    (row) => !row.pending && !before.has(eventKey(row)),
+  )
+  if (!added.length) return
+  const keys = new Set(added.map(eventKey))
+  events.value = events.value.map((row) =>
+    keys.has(eventKey(row)) ? { ...row, fresh: true } : row,
+  )
+  clearTimeout(freshTimer)
+  freshTimer = setTimeout(
+    () =>
+      (events.value = events.value.map((row) =>
+        row.fresh ? { ...row, fresh: false } : row,
+      )),
+    4000,
+  )
+}
 
 // --- selection and panel --------------------------------------------------------------
 const selectedEvent = ref(null)
@@ -2949,6 +2972,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('pointerdown', outsideViewMenu, true)
   clearInterval(clock)
   clearTimeout(prefetchTimer)
+  clearTimeout(freshTimer)
 })
 </script>
 <style>

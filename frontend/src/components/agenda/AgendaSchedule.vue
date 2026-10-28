@@ -296,6 +296,7 @@ const pillClasses = (event) => ({
   'is-done': event.status === 'Done' || event.status === 'Cancelled',
   'is-selected': props.selected === key(event),
   'is-pending': Boolean(event.pending),
+  'is-fresh': Boolean(event.fresh),
 })
 
 // Reaching the end asks for more days (the page grows the range up to its limit).
@@ -414,6 +415,25 @@ onBeforeUnmount(() => observer?.disconnect())
 .ag-sch__pill.is-done .ag-sch__title > .truncate {
   text-decoration: line-through;
   text-decoration-color: color-mix(in srgb, currentColor 55%, transparent);
+}
+.ag-sch__pill.is-fresh {
+  /* A teammate just added it: a ring that fades out. */
+  outline: 2px solid var(--ag-accent);
+  outline-offset: 2px;
+  animation: ag-fresh 4s ease-out forwards;
+}
+@keyframes ag-fresh {
+  70% {
+    outline-color: var(--ag-accent);
+  }
+  to {
+    outline-color: transparent;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ag-sch__pill.is-fresh {
+    animation: none;
+  }
 }
 .ag-sch__pill.is-pending {
   /* Saved on this screen, on its way to the server: drawn at once, opened once it lands. */

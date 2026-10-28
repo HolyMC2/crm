@@ -438,6 +438,7 @@ function eventClasses(item) {
     'is-selected': props.selectedKey === key(event),
     'is-draggable': Boolean(event.draggable),
     'is-pending': Boolean(event.pending),
+    'is-fresh': Boolean(event.fresh),
     'is-before': item.before,
     'is-after': item.after,
   }
@@ -1155,6 +1156,25 @@ defineExpose({ scrollToStart, rectOf })
   text-overflow: ellipsis;
   white-space: nowrap;
   opacity: 0.92;
+}
+.ag-event.is-fresh {
+  /* A teammate just added it: a ring that fades out. */
+  outline: 2px solid var(--ag-accent);
+  outline-offset: 2px;
+  animation: ag-fresh 4s ease-out forwards;
+}
+@keyframes ag-fresh {
+  70% {
+    outline-color: var(--ag-accent);
+  }
+  to {
+    outline-color: transparent;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ag-event.is-fresh {
+    animation: none;
+  }
 }
 .ag-event.is-pending {
   /* Saved on this screen, on its way to the server: drawn at once, opened once it lands. */
