@@ -29053,9 +29053,6 @@ msgstr "Abierto ({0})"
 msgid "Open work"
 msgstr "Abierto"
 
-msgid "Conversations"
-msgstr "Conversaciones"
-
 msgid "New conversation"
 msgstr "Nueva conversación"
 
