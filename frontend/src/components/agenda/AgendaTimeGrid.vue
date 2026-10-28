@@ -17,7 +17,7 @@
         <span class="ag-tg__weekday">{{ weekdayText(date) }}</span>
         <button
           type="button"
-          class="ag-tg__daynum"
+          class="ag-tg__daynum num"
           :aria-label="__('Open {0}', [longDate(date)])"
           @click="emit('open-day', date)"
         >
@@ -123,7 +123,7 @@
           <span
             v-for="hour in 23"
             :key="hour"
-            class="ag-tg__hour"
+            class="ag-tg__hour num"
             :style="{ top: `${hour * hourHeight}px` }"
             >{{ hourText(hour) }}</span
           >
@@ -156,12 +156,22 @@
               <!-- The body clips the text to the event's box, so on a phone the
                    button itself can take taps on a 44 px area around it. -->
               <span class="ag-event__body">
-                <span class="ag-event__title">{{ item.event.title }}</span>
+                <span class="ag-event__title"
+                  ><span
+                    v-if="kindIcon(item.event)"
+                    :class="kindIcon(item.event)"
+                    class="ag-event__icon"
+                    aria-hidden="true"
+                  />{{ item.event.title }}</span
+                >
                 <span
                   v-if="item.end - item.start >= 45"
-                  class="ag-event__time"
+                  class="ag-event__time num"
                   >{{ timeRange(item) }}</span
                 >
+                <span v-else-if="!item.before" class="ag-event__time num">{{
+                  minutesText(item.start)
+                }}</span>
                 <span
                   v-if="item.end - item.start >= 75 && item.event.location"
                   class="ag-event__time"
@@ -207,7 +217,8 @@
 </template>
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { textOn, withAlpha } from '@/components/agenda/agendaColors'
+import { cardPaint, kindIcon } from '@/components/agenda/agendaCard'
+import { textOn } from '@/components/agenda/agendaColors'
 import {
   daySegments,
   dayDiff,
@@ -301,8 +312,10 @@ const hourFormat = computed(
     }),
 )
 const civil = (date) => new Date(`${date}T12:00:00Z`)
-const weekdayText = (date) =>
-  weekdayFormat.value.format(civil(date)).replace('.', '')
+const weekdayText = (date) => {
+  const text = weekdayFormat.value.format(civil(date)).replace('.', '')
+  return text.charAt(0).toUpperCase() + text.slice(1)
+}
 const longDate = (date) => longFormat.value.format(civil(date))
 const minutesText = (minutes) =>
   timeFormat.value.format(new Date(Date.UTC(2024, 0, 1, 0, minutes % 1440)))
@@ -322,8 +335,16 @@ const zoneLabel = computed(() => {
     return ''
   }
 })
-const timeRange = (item) =>
-  `${minutesText(item.start)} – ${minutesText(item.end)}`
+// «9:00–10:30 a.m.»: the day period once when both ends share it.
+const timeRange = (item) => {
+  const at = (minutes) => new Date(Date.UTC(2024, 0, 1, 0, minutes))
+  const format = timeFormat.value
+  return typeof format.formatRange === 'function' &&
+    item.end > item.start &&
+    item.end < 1440
+    ? format.formatRange(at(item.start), at(item.end))
+    : `${minutesText(item.start)} – ${minutesText(item.end)}`
+}
 function ariaLabel(event) {
   if (event.kind === 'task') return `${event.title}, ${__('Task')}`
   if (isBar(event)) return `${event.title}, ${__('All day')}`
@@ -356,6 +377,8 @@ const visibleBars = computed(() =>
   ),
 )
 const alldayHeight = computed(() => {
+  // No all-day bars: a thin lane, so a phone's day starts right under its date.
+  if (!barModel.value.lanes) return props.compact ? 8 : 22
   const lanes =
     !expanded.value && barModel.value.lanes > maxLanes
       ? maxLanes
@@ -375,24 +398,13 @@ const nowMinutes = computed(() => {
 
 // --- styles ---------------------------------------------------------------------------
 const isPast = (event) => props.dimPast && Date.parse(event.end) < props.now
-function paint(event) {
-  const color = props.colorOf(event)
-  if (event.kind === 'shift' || event.kind === 'my_shift' || event.estimated)
-    return {
-      background: withAlpha(color, 0.16),
-      color: 'var(--ink-gray-9)',
-      borderLeft: `3px solid ${color}`,
-    }
-  if (event.status === 'Cancelled')
-    return {
-      background: 'var(--surface-base)',
-      color: 'var(--ink-gray-6)',
-      border: `1px dashed ${color}`,
-    }
-  return { background: color, color: textOn(color) }
+const RING = '0 0 0 1px var(--surface-base)'
+function paint(event, ring = RING) {
+  return cardPaint(event, props.colorOf(event), { past: isPast(event), ring })
 }
+// One cascade step: a later event sits this far in from the one under it.
+const INDENT = 'min(14%, 28px)'
 function eventStyle(item) {
-  const width = 100 / item.cols
   const top = (item.start / 60) * props.hourHeight
   const height = Math.max(
     ((item.end - item.start) / 60) * props.hourHeight - 2,
@@ -402,14 +414,18 @@ function eventStyle(item) {
     gesture.value?.active &&
     gesture.value.item &&
     key(gesture.value.item.event) === key(item.event)
+  const depth = item.depth || 0
+  const inset = depth ? `(${INDENT} * ${depth})` : '0px'
+  const band = `(100% - ${inset})`
+  const gutter = item.col + item.span < item.cols ? 0 : 10
   return {
     top: `${top}px`,
     height: `${height}px`,
-    left: `calc(${item.col * width}% + 1px)`,
-    width: `calc(${width * item.span}% - ${item.col + item.span < item.cols ? 0 : 10}px)`,
-    zIndex: 2 + item.col,
+    left: `calc(${inset} + ${band} * ${item.col / item.cols} + 1px)`,
+    width: `calc(${band} * ${item.span / item.cols} - ${gutter}px)`,
+    zIndex: 2 + depth * 8 + item.col,
     opacity: dragging ? 0.35 : undefined,
-    ...paint(item.event),
+    ...paint(item.event, depth ? '0 0 0 1.5px var(--surface-base)' : RING),
   }
 }
 function eventClasses(item) {
@@ -879,10 +895,8 @@ defineExpose({ scrollToStart, rectOf })
   padding: 6px 0 4px;
 }
 .ag-tg__weekday {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
   color: var(--ink-gray-6);
 }
 .ag-tg__daynum {
@@ -933,7 +947,6 @@ defineExpose({ scrollToStart, rectOf })
   position: relative;
   flex: 1 1 auto;
   min-width: 0;
-  min-height: 28px;
 }
 .ag-tg__alldaycell {
   position: absolute;
@@ -1018,7 +1031,7 @@ defineExpose({ scrollToStart, rectOf })
   position: absolute;
   right: 8px;
   transform: translateY(-50%);
-  font-size: 10px;
+  font-size: 11px;
   color: var(--ink-gray-6);
   white-space: nowrap;
 }
@@ -1142,23 +1155,27 @@ defineExpose({ scrollToStart, rectOf })
   white-space: nowrap;
   opacity: 0.92;
 }
-.ag-event.is-past,
-.ag-bar.is-past {
-  filter: saturate(0.55) brightness(1.08);
-  opacity: 0.78;
+.ag-event__icon {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  margin-right: 3px;
+  vertical-align: -1px;
 }
 .ag-event.is-done .ag-event__title,
 .ag-event.is-cancelled .ag-event__title,
 .ag-bar.is-done,
 .ag-bar.is-cancelled {
   text-decoration: line-through;
+  text-decoration-color: color-mix(in srgb, currentColor 55%, transparent);
 }
+/* The paint owns box-shadow (edge, ring), so selection is an outline plus a lift. */
 .ag-event.is-selected,
 .ag-bar.is-selected {
-  box-shadow:
-    0 6px 18px -6px rgba(0, 0, 0, 0.45),
-    0 0 0 2px var(--surface-base);
-  z-index: 40 !important;
+  outline: 2px solid var(--ag-accent);
+  outline-offset: 1px;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.28));
+  z-index: 60 !important;
 }
 .ag-event__handle {
   position: absolute;

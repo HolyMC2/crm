@@ -31,7 +31,7 @@
           @click="emit('open-day', block.date)"
         >
           <span class="ag-sch__weekday">{{ weekday(block.date) }}</span>
-          <span class="ag-sch__num">{{ Number(block.date.slice(8)) }}</span>
+          <span class="ag-sch__num num">{{ Number(block.date.slice(8)) }}</span>
         </button>
         <ul class="ag-sch__events">
           <template v-for="row in block.rows" :key="row.key">
@@ -65,11 +65,30 @@
                     class="h-4 w-4 shrink-0"
                     aria-hidden="true"
                   />
+                  <span
+                    v-else-if="kindIcon(row.event)"
+                    :class="kindIcon(row.event)"
+                    class="h-3.5 w-3.5 shrink-0"
+                    aria-hidden="true"
+                  />
                   <span class="truncate">{{ row.event.title }}</span>
                 </span>
-                <span v-if="row.caption" class="ag-sch__time">{{
-                  row.caption
-                }}</span>
+                <span
+                  v-if="row.caption || row.event.location"
+                  class="ag-sch__meta"
+                >
+                  <span v-if="row.caption" class="num shrink-0">{{
+                    row.caption
+                  }}</span>
+                  <span v-if="row.event.location" class="ag-sch__place"
+                    ><span
+                      class="lucide-map-pin h-3 w-3 shrink-0"
+                      aria-hidden="true"
+                    /><span class="truncate">{{
+                      row.event.location
+                    }}</span></span
+                  >
+                </span>
               </button>
             </li>
           </template>
@@ -104,7 +123,12 @@
 </template>
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { textOn, withAlpha } from '@/components/agenda/agendaColors'
+import {
+  cardPaint,
+  kindIcon,
+  timeAt,
+  timeSpan,
+} from '@/components/agenda/agendaCard'
 import { eventDates } from '@/components/agenda/agendaGrid'
 import { eventKey } from '@/composables/useAgenda'
 
@@ -148,18 +172,15 @@ const shortFmt = computed(() => fmt({ day: 'numeric', month: 'short' }))
 const longFmt = computed(() =>
   fmt({ weekday: 'long', day: 'numeric', month: 'long' }),
 )
-const timeFmt = computed(
-  () =>
-    new Intl.DateTimeFormat(props.locale, {
-      timeZone: props.timeZone,
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: props.hour12,
-    }),
-)
-const weekday = (date) => weekdayFmt.value.format(civil(date)).replace('.', '')
-const longDate = (date) => longFmt.value.format(civil(date))
+const clock = computed(() => ({
+  locale: props.locale,
+  timeZone: props.timeZone,
+  hour12: props.hour12,
+}))
 const capital = (text) => text.charAt(0).toUpperCase() + text.slice(1)
+const weekday = (date) =>
+  capital(weekdayFmt.value.format(civil(date)).replace('.', ''))
+const longDate = (date) => longFmt.value.format(civil(date))
 const clean = (text) => text.replace(/\./g, '')
 
 function shift(date, days) {
@@ -189,9 +210,9 @@ function caption(event, date) {
   if (event.kind === 'task') return ''
   if (event.allDay) return ''
   const s = span(event)
-  const start = timeFmt.value.format(new Date(event.start))
-  const end = timeFmt.value.format(new Date(event.end))
-  if (s.first === s.last) return `${start} – ${end}`
+  if (s.first === s.last) return timeSpan(event.start, event.end, clock.value)
+  const start = timeAt(event.start, clock.value)
+  const end = timeAt(event.end, clock.value)
   if (date === s.first) return __('From {0}', [start])
   if (date === s.last) return __('Until {0}', [end])
   return __('All day')
@@ -258,6 +279,8 @@ const blocks = computed(() => {
   return rows
 })
 
+const isPast = (event) =>
+  props.dimPast && event.kind !== 'task' && Date.parse(event.end) < props.now
 function pillStyle(event) {
   const color = props.colorOf(event)
   if (event.kind === 'task')
@@ -266,22 +289,10 @@ function pillStyle(event) {
       color: 'var(--ink-gray-9)',
       boxShadow: `inset 0 0 0 1.5px ${color}`,
     }
-  if (event.kind === 'shift' || event.kind === 'my_shift' || event.estimated)
-    return {
-      background: withAlpha(color, 0.18),
-      color: 'var(--ink-gray-9)',
-      borderLeft: `4px solid ${color}`,
-    }
-  if (event.status === 'Cancelled')
-    return {
-      background: 'transparent',
-      color: 'var(--ink-gray-6)',
-      boxShadow: `inset 0 0 0 1.5px ${color}`,
-    }
-  return { background: color, color: textOn(color) }
+  return cardPaint(event, color, { past: isPast(event) })
 }
 const pillClasses = (event) => ({
-  'is-past': props.dimPast && Date.parse(event.end) < props.now,
+  'is-past': isPast(event),
   'is-done': event.status === 'Done' || event.status === 'Cancelled',
   'is-selected': props.selected === key(event),
 })
@@ -399,11 +410,9 @@ onBeforeUnmount(() => observer?.disconnect())
   transform: scale(0.98);
   filter: brightness(0.92);
 }
-.ag-sch__pill.is-past {
-  opacity: 0.6;
-}
-.ag-sch__pill.is-done .ag-sch__title {
+.ag-sch__pill.is-done .ag-sch__title > .truncate {
   text-decoration: line-through;
+  text-decoration-color: color-mix(in srgb, currentColor 55%, transparent);
 }
 .ag-sch__pill.is-selected {
   box-shadow: 0 0 0 2px var(--ag-accent);
@@ -417,10 +426,23 @@ onBeforeUnmount(() => observer?.disconnect())
   font-weight: 500;
   line-height: 20px;
 }
-.ag-sch__time {
+.ag-sch__meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
   font-size: 13px;
   line-height: 18px;
-  opacity: 0.9;
+  opacity: 0.88;
+}
+.ag-sch__meta .num {
+  font-size: 14px;
+}
+.ag-sch__place {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
 }
 .ag-sch__now {
   position: relative;

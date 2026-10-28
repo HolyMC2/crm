@@ -109,7 +109,9 @@
                 class="ag-month__dot"
                 :style="{ background: colorOf(item.event) }"
               />
-              <span class="ag-month__time">{{ startText(item.event) }}</span>
+              <span class="ag-month__time num">{{
+                startText(item.event)
+              }}</span>
               <span class="truncate">{{ item.event.title }}</span>
             </template>
           </button>
@@ -165,13 +167,13 @@
     >
       <div class="flex items-start justify-between">
         <div class="flex-1 text-center">
-          <div class="text-xs font-medium uppercase text-ink-gray-6">
+          <div class="text-xs font-medium text-ink-gray-6">
             {{ weekdayText(more.date) }}
           </div>
           <button
             type="button"
             class="ag-month__cardnum"
-            @click="emit('open-day', more.date), (more = null)"
+            @click="(emit('open-day', more.date), (more = null))"
           >
             {{ Number(more.date.slice(8)) }}
           </button>
@@ -195,8 +197,12 @@
           :style="isBar(event) ? paint(event) : {}"
           :data-event-id="event.id"
           @click="
-            emit('select', event, $event.currentTarget.getBoundingClientRect()),
-              (more = null)
+            (emit(
+              'select',
+              event,
+              $event.currentTarget.getBoundingClientRect(),
+            ),
+            (more = null))
           "
         >
           <template v-if="isBar(event)">
@@ -207,7 +213,7 @@
               class="ag-month__dot"
               :style="{ background: colorOf(event) }"
             />
-            <span class="ag-month__time">{{ startText(event) }}</span>
+            <span class="ag-month__time num">{{ startText(event) }}</span>
             <span class="truncate">{{ event.title }}</span>
           </template>
         </button>
@@ -217,7 +223,8 @@
 </template>
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { textOn, withAlpha } from '@/components/agenda/agendaColors'
+import { cardPaint } from '@/components/agenda/agendaCard'
+import { textOn } from '@/components/agenda/agendaColors'
 import {
   dayDiff,
   eventDates,
@@ -293,8 +300,10 @@ const timeFmt = computed(
       timeZone: props.timeZone,
     }),
 )
-const weekdayText = (date) =>
-  weekdayFmt.value.format(civil(date)).replace('.', '')
+const weekdayText = (date) => {
+  const text = weekdayFmt.value.format(civil(date)).replace('.', '')
+  return text.charAt(0).toUpperCase() + text.slice(1)
+}
 const longDate = (date) => longFmt.value.format(civil(date))
 const monthShort = (date) => monthFmt.value.format(civil(date)).replace('.', '')
 const startText = (event) =>
@@ -409,19 +418,7 @@ function paint(event) {
       boxShadow: `inset 0 0 0 1px ${color}`,
       '--ag-dot': color,
     }
-  if (event.kind === 'shift' || event.kind === 'my_shift' || event.estimated)
-    return {
-      background: withAlpha(color, 0.16),
-      color: 'var(--ink-gray-9)',
-      borderLeft: `3px solid ${color}`,
-    }
-  if (event.status === 'Cancelled')
-    return {
-      background: 'transparent',
-      color: 'var(--ink-gray-6)',
-      boxShadow: `inset 0 0 0 1px ${color}`,
-    }
-  return { background: color, color: textOn(color) }
+  return cardPaint(event, color, { past: isPast(event) })
 }
 function itemStyle(item) {
   const n = columns.value
@@ -442,13 +439,13 @@ function chipStyle(item) {
   const n = columns.value
   const color = props.colorOf(item.event)
   const base =
-    item.event.kind === 'task' || item.event.status === 'Cancelled'
+    item.event.kind === 'task'
       ? {
           background: 'transparent',
           color: 'var(--ink-gray-8)',
           boxShadow: `inset 0 0 0 1px ${color}`,
         }
-      : { background: color, color: textOn(color) }
+      : cardPaint(item.event, color, { past: isPast(item.event) })
   return {
     left: `calc(${(item.from / n) * 100}% + 1px)`,
     width: `calc(${((item.to - item.from + 1) / n) * 100}% - 2px)`,
@@ -721,10 +718,8 @@ onBeforeUnmount(() => {
 .ag-month__weekday {
   padding: 6px 0 2px;
   text-align: center;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
   color: var(--ink-gray-6);
   border-right: 1px solid var(--outline-gray-1);
 }
@@ -839,8 +834,8 @@ onBeforeUnmount(() => {
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
 }
-.ag-month__item.is-past {
-  opacity: 0.62;
+.ag-month__item.is-past:not(.is-bar) {
+  color: var(--ink-gray-6);
 }
 .ag-month__item.is-done,
 .ag-month__item.is-cancelled {
@@ -890,9 +885,6 @@ onBeforeUnmount(() => {
   line-height: 15px;
   white-space: nowrap;
   text-overflow: clip;
-}
-.ag-month__chip.is-past {
-  opacity: 0.6;
 }
 .ag-month__chip.is-done,
 .ag-month__chip.is-cancelled {

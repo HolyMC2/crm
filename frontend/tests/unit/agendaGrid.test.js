@@ -82,18 +82,35 @@ describe('time grid layout', () => {
     ])
   })
 
-  it('shares the width between overlaps and stretches over free columns', () => {
+  it('shares the width between events that start together', () => {
     const rows = layoutDay([
       { event: ev('A', '', ''), start: 540, end: 660 },
-      { event: ev('B', '', ''), start: 570, end: 600 },
+      { event: ev('B', '', ''), start: 550, end: 600 },
       { event: ev('C', '', ''), start: 610, end: 640 },
       { event: ev('D', '', ''), start: 700, end: 760 },
     ])
     const by = Object.fromEntries(rows.map((row) => [row.event.id, row]))
-    expect(by.A).toMatchObject({ col: 0, cols: 2, span: 1 })
-    expect(by.B).toMatchObject({ col: 1, cols: 2 })
-    expect(by.C).toMatchObject({ col: 1, cols: 2 })
-    expect(by.D).toMatchObject({ col: 0, cols: 1, span: 1 })
+    expect(by.A).toMatchObject({ col: 0, cols: 2, span: 1, depth: 0 })
+    expect(by.B).toMatchObject({ col: 1, cols: 2, depth: 0 })
+    // C starts long after A: it stacks on top of A, one step in, full width.
+    expect(by.C).toMatchObject({ col: 0, cols: 1, span: 1, depth: 1 })
+    expect(by.D).toMatchObject({ col: 0, cols: 1, span: 1, depth: 0 })
+  })
+
+  it('stacks a later event over the one still on instead of a sliver', () => {
+    // 10:00 visit, 10:30 appointment and delivery, 11:00 call: three, not four, slivers.
+    const rows = layoutDay([
+      { event: ev('Visit', '', ''), start: 600, end: 660 },
+      { event: ev('Cita', '', ''), start: 630, end: 690 },
+      { event: ev('Entrega', '', ''), start: 630, end: 660 },
+      { event: ev('Call', '', ''), start: 665, end: 680 },
+    ])
+    const by = Object.fromEntries(rows.map((row) => [row.event.id, row]))
+    expect(by.Visit).toMatchObject({ depth: 0, cols: 1 })
+    expect(by.Cita).toMatchObject({ depth: 1, cols: 2, col: 0 })
+    expect(by.Entrega).toMatchObject({ depth: 1, cols: 2, col: 1 })
+    // Visit ended at 11:00; the call stacks over the 10:30 pair only.
+    expect(by.Call).toMatchObject({ depth: 2, cols: 1 })
   })
 
   it('packs multi-day bars into the first free lane', () => {
@@ -253,9 +270,8 @@ describe('colors and calendars', () => {
 
 describe('phone swipe paging', () => {
   it('commits a long or quick horizontal swipe, springs back a short one', async () => {
-    const { swipeOutcome, swipeAxis } = await import(
-      '@/components/agenda/agendaSwipe'
-    )
+    const { swipeOutcome, swipeAxis } =
+      await import('@/components/agenda/agendaSwipe')
     expect(swipeOutcome(-120, 400, 390)).toBe(1)
     expect(swipeOutcome(120, 400, 390)).toBe(-1)
     expect(swipeOutcome(-50, 400, 390)).toBe(0)
@@ -266,9 +282,8 @@ describe('phone swipe paging', () => {
   })
 
   it('keys a doctor or technician calendar by source and person', async () => {
-    const { calendarKey, splitCalendarKey, sourcesFor } = await import(
-      '@/composables/useAgenda'
-    )
+    const { calendarKey, splitCalendarKey, sourcesFor } =
+      await import('@/composables/useAgenda')
     expect(
       calendarKey({ source: 'Patient Appointment', resourceIds: ['DR-1'] }),
     ).toBe('Patient Appointment/DR-1')

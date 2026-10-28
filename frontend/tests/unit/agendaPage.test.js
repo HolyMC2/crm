@@ -44,6 +44,9 @@ const flush = async () => {
     await nextTick()
   }
 }
+// A card's calendar color, whether it is filled (coming) or tinted (already ended).
+const colorOf = (element) =>
+  element.style.getPropertyValue('--ag-color') || element.style.background
 const methods = () => calls.map(([method]) => method.split('.').pop())
 const last = (name) => calls.filter(([m]) => m.endsWith(`.${name}`)).at(-1)?.[1]
 
@@ -779,7 +782,7 @@ describe('Agenda page', () => {
     const router = await mountAt('/agenda?view=month&date=2026-10-01')
     const chip = root.querySelector('.ag-month__chip')
     expect(chip.textContent).toContain('Cita EV-1')
-    expect(chip.style.background).toMatch(/#039be5|rgb\(3, 155, 229\)/)
+    expect(colorOf(chip)).toMatch(/#039be5|rgb\(3, 155, 229\)/)
     root.querySelector('.ag-month [data-day="2026-10-07"]').click()
     await flush()
     expect(router.currentRoute.value.query).toMatchObject({
@@ -905,8 +908,8 @@ describe('Agenda page', () => {
     expect(ruiz).not.toBeNull()
     expect(soto).not.toBeNull()
     // The doctor's color, not the appointment type's, names whose visit it is.
-    expect(ruiz.style.background).not.toMatch(/#d50000|rgb\(213, 0, 0\)/)
-    expect(ruiz.style.background).not.toBe(soto.style.background)
+    expect(colorOf(ruiz)).not.toMatch(/#d50000|rgb\(213, 0, 0\)/)
+    expect(colorOf(ruiz)).not.toBe(colorOf(soto))
 
     // Hide one doctor: their visits leave, the other's stay, nothing reloads.
     const queries = calls.filter(([m]) => m.endsWith('.query')).length
@@ -1005,7 +1008,7 @@ describe('Agenda page', () => {
       calls.filter(([m, a]) => m.endsWith('.query') && a.source === 'Turno'),
     ).toHaveLength(0)
     const chip = root.querySelector('.ag-event[data-event-id="EV-1"]')
-    expect(chip.style.background).toMatch(/#039be5|rgb\(3, 155, 229\)/)
+    expect(colorOf(chip)).toMatch(/#039be5|rgb\(3, 155, 229\)/)
     const turnos = [...root.querySelectorAll('.ag-side__label')].find((label) =>
       label.textContent.includes('Shifts'),
     )

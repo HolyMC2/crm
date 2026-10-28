@@ -108,9 +108,16 @@ export function daySegments(events, dates, timeZone) {
   return result
 }
 
+/** Events starting this close share the width side by side; a later one stacks on top. */
+export const CASCADE_MINUTES = 30
+const MAX_DEPTH = 4
+
 /**
- * Overlap layout for one day, like the familiar calendars: overlapping events share the
- * width in columns; an event stretches right over free columns. Adds col, cols, span.
+ * Overlap layout for one day, like the familiar calendars. Events that start together
+ * (within CASCADE_MINUTES) share the width in columns, and one stretches right over free
+ * columns. An event that starts later than that, while another is still on, is drawn on
+ * top of it, indented one step (`depth`), so the earlier title stays readable and nobody
+ * is squeezed into a sliver. Adds col, cols, span and depth.
  */
 export function layoutDay(segments) {
   const sorted = [...segments].sort(
@@ -119,12 +126,35 @@ export function layoutDay(segments) {
       b.end - a.end ||
       String(a.event.title).localeCompare(String(b.event.title)),
   )
+  // 1. Groups of events that start together.
+  const groups = []
+  for (const segment of sorted) {
+    const item = { ...segment }
+    const last = groups[groups.length - 1]
+    if (
+      last &&
+      item.start - last.start < CASCADE_MINUTES &&
+      item.start < last.end
+    ) {
+      last.items.push(item)
+      last.end = Math.max(last.end, item.end)
+    } else groups.push({ start: item.start, end: item.end, items: [item] })
+  }
+  // 2. Each group sits one step in from the groups still on when it starts.
+  const placed = []
   const out = []
-  let cluster = []
-  let clusterEnd = -1
-  const flush = () => {
+  for (const group of groups) {
+    const under = placed.filter(
+      (other) => other.start < group.end && other.end > group.start,
+    )
+    group.depth = Math.min(
+      MAX_DEPTH,
+      under.reduce((depth, other) => Math.max(depth, other.depth + 1), 0),
+    )
+    placed.push(group)
+    // 3. Columns inside the group.
     const columns = []
-    for (const item of cluster) {
+    for (const item of group.items) {
       let index = columns.findIndex((end) => end <= item.start)
       if (index < 0) {
         index = columns.length
@@ -133,11 +163,12 @@ export function layoutDay(segments) {
       columns[index] = item.end
       item.col = index
     }
-    for (const item of cluster) {
+    for (const item of group.items) {
       item.cols = columns.length
+      item.depth = group.depth
       let span = 1
       for (let col = item.col + 1; col < columns.length; col++) {
-        const blocked = cluster.some(
+        const blocked = group.items.some(
           (other) =>
             other.col === col &&
             other.start < item.end &&
@@ -149,16 +180,7 @@ export function layoutDay(segments) {
       item.span = span
       out.push(item)
     }
-    cluster = []
-    clusterEnd = -1
   }
-  for (const segment of sorted) {
-    const item = { ...segment }
-    if (cluster.length && item.start >= clusterEnd) flush()
-    cluster.push(item)
-    clusterEnd = Math.max(clusterEnd, item.end)
-  }
-  if (cluster.length) flush()
   return out
 }
 
