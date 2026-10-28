@@ -1170,6 +1170,35 @@ def _random_name(meta) -> bool:
 	return rule in ("hash", "uuid") or meta.get("naming_rule") == "Random"
 
 
+# Where to reach the record's person, in order: the document's own contact, then the party's.
+_REACH_FIELDS = {
+	"phone": ("contact_mobile", "mobile_no", "contact_phone", "phone"),
+	"email": ("contact_email", "email_id", "email"),
+}
+
+
+def _reach(doc, party):
+	"""The phone and email the record's call, WhatsApp and mail icons use ("" when none)."""
+
+	def first(source, meta, kind):
+		for field in _REACH_FIELDS[kind]:
+			if meta.has_field(field) and cstr(source.get(field)).strip():
+				return cstr(source.get(field)).strip()
+		return ""
+
+	reach = {kind: first(doc, doc.meta, kind) for kind in _REACH_FIELDS}
+	missing = [kind for kind, value in reach.items() if not value]
+	if missing and party and frappe.has_permission(party["doctype"], "read", party["name"]):
+		meta = frappe.get_meta(party["doctype"])
+		fields = [f for kind in missing for f in _REACH_FIELDS[kind] if meta.has_field(f)]
+		values = (
+			frappe.db.get_value(party["doctype"], party["name"], fields, as_dict=True) if fields else None
+		)
+		for kind in missing:
+			reach[kind] = first(values or {}, meta, kind)
+	return reach
+
+
 def _header(doc, display):
 	row = _row(doc, display)
 	party = None
@@ -1196,6 +1225,7 @@ def _header(doc, display):
 		"due": row["due"],
 		"outstanding": row["outstanding"],
 		"party": party,
+		"reach": _reach(doc, party),
 		"company": doc.get("company"),
 		"is_return": cint(doc.get("is_return")),
 		"amended_from": doc.get("amended_from"),

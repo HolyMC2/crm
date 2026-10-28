@@ -18,7 +18,50 @@
       :bell="phone"
       :loading="(loading || busy) && !!record"
     >
+      <!-- WhatsApp-style: the name, and under it the state and the number. -->
+      <template v-if="view" #title>
+        <div class="flex min-h-12 min-w-0 flex-col justify-center px-3">
+          <span
+            class="title-face line-clamp-2 break-words text-xl font-semibold leading-tight [text-wrap:balance]"
+            data-appbar-title
+            >{{ view.title || entry?.label || 'Documento' }}</span
+          >
+          <span class="flex min-w-0 items-center gap-2 pt-0.5">
+            <!-- Shell D12: under a Workflow the chip is its state («Aprobada»). -->
+            <StatusChip
+              v-if="record.workflow && record.workflow_state"
+              :status="record.workflow_state.value"
+              :label="record.workflow_state.label"
+              data-testid="documentos-workflow-state"
+            />
+            <StatusChip
+              v-else-if="view.status"
+              :status="view.status"
+              :label="view.statusLabel || ''"
+              :tone="view.tone"
+            />
+            <span class="truncate text-sm leading-tight text-ink-gray-6">{{
+              [view.kind, view.number].filter(Boolean).join(' ')
+            }}</span>
+          </span>
+        </div>
+      </template>
       <template #actions>
+        <RecordIsland
+          v-if="record"
+          :reach="record.header.reach || {}"
+          :who="view?.title || ''"
+          :mail="record.actions?.email || null"
+          :composer="composerOn"
+          :groups="boltGroups"
+          :phone="phone"
+          :subtitle="scopeTitle"
+          @message="composerOpen = true"
+          @mail="mail"
+          @pick="onBolt"
+          @tools="toolsOpen = true"
+        />
+        <!-- In the split the close sits last, where a window's close sits. -->
         <button
           v-if="pane"
           type="button"
@@ -27,16 +70,6 @@
           @click="close"
         >
           <span class="lucide-x size-6" aria-hidden="true" />
-        </button>
-        <button
-          v-if="record"
-          type="button"
-          class="flex size-12 flex-none items-center justify-center rounded-full text-ink-gray-7 hover:bg-surface-gray-2"
-          aria-label="Herramientas"
-          data-testid="documentos-tools-open"
-          @click="toolsOpen = true"
-        >
-          <span class="lucide-ellipsis-vertical size-6" aria-hidden="true" />
         </button>
       </template>
     </AppBar>
@@ -66,26 +99,9 @@
             class="flex flex-col gap-2 px-4"
             data-testid="documentos-hero"
           >
-            <div class="flex flex-wrap items-center gap-2">
-              <!-- Shell D12: under a Workflow the chip is its state («Aprobada»). -->
-              <StatusChip
-                v-if="record.workflow && record.workflow_state"
-                :status="record.workflow_state.value"
-                :label="record.workflow_state.label"
-                data-testid="documentos-workflow-state"
-              />
-              <StatusChip
-                v-else-if="view.status"
-                :status="view.status"
-                :label="view.statusLabel || ''"
-                :tone="view.tone"
-              />
-              <span
-                v-if="record.header.is_return"
-                class="text-sm text-ink-gray-7"
-                >Devolución</span
-              >
-            </div>
+            <span v-if="record.header.is_return" class="text-sm text-ink-gray-7"
+              >Devolución</span
+            >
             <p
               v-if="view.amount"
               class="text-3xl font-semibold tabular-nums leading-tight text-ink-gray-9"
@@ -237,7 +253,7 @@
     <template v-if="record">
       <ToolsSheet
         v-model:open="toolsOpen"
-        :tools="tools"
+        :tools="sheetTools"
         :subtitle="scopeTitle"
         @tool="onTool"
       />
@@ -299,6 +315,14 @@
         :name="name"
         :title="view?.title || ''"
       />
+      <ChannelComposer
+        v-if="composerOpen"
+        v-model="composerOpen"
+        :doctype="doctype"
+        :docname="name"
+        :phone="record.header.reach?.phone || ''"
+        :contact-name="view?.title || ''"
+      />
       <RepetirSheet
         v-if="repetirOpen"
         v-model:open="repetirOpen"
@@ -321,6 +345,7 @@ import DatosList from '@/components/documentos/DatosList.vue'
 import DocTotals from '@/components/documentos/DocTotals.vue'
 import ItemsCards from '@/components/documentos/ItemsCards.vue'
 import ToolsSheet from '@/components/documentos/ToolsSheet.vue'
+import RecordIsland from '@/components/documentos/RecordIsland.vue'
 import ConfirmSheet from '@/components/documentos/ConfirmSheet.vue'
 import {
   assistantEnabled,
@@ -330,6 +355,8 @@ import {
 import { isMobile, isWide } from '@/composables/breakpoint'
 import { useFormKeys } from '@/composables/pageKeys'
 import { shellBoot } from '@/composables/muelleShell'
+import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
+import { FOLLOW_UP, recordActionsFor } from '@/documentos/acciones'
 import { docApi, errorText } from '@/documentos/api'
 import { makeTarget } from '@/documentos/form'
 import { loadProfile } from '@/documentos/profiles'
@@ -374,6 +401,11 @@ const RecordActivity = defineAsyncComponent(
   () => import('@/components/documentos/RecordActivity.vue'),
 )
 const recordActivity = ref(null)
+// WhatsApp with the shop's templates and a logged intent (Ventas); without
+// Ventas the icon opens wa.me.
+const ChannelComposer = defineAsyncComponent(
+  () => import('@/components/doco/channel/ChannelComposer.vue'),
+)
 const RepetirSheet = defineAsyncComponent(
   () => import('@/components/automatizaciones/RepetirSheet.vue'),
 )
@@ -593,6 +625,35 @@ const tools = computed(() =>
     extra: extraTools.value,
   }),
 )
+// The bolt holds the steps and the follow-ups; «⋯» keeps the rest.
+const boltGroups = computed(() =>
+  record.value
+    ? recordActionsFor({
+        steps: [step.value, ...altSteps.value].filter(Boolean),
+        canEdit: canEdit.value,
+        tools: tools.value,
+      })
+    : [],
+)
+const sheetTools = computed(() =>
+  tools.value.filter((t) => !FOLLOW_UP.includes(t.key)),
+)
+function onBolt({ key }) {
+  if (key === 'editar') editOpen.value = true
+  else if (key.startsWith('paso:')) {
+    const s = [step.value, ...altSteps.value].filter(Boolean)[
+      Number(key.slice(5))
+    ]
+    if (s) runStep(s)
+  } else onTool(key)
+}
+const composerOn = computed(() => moduleEnabled(shellBoot.value, 'ventas'))
+const composerOpen = ref(false)
+function mail() {
+  const action = record.value?.actions?.email
+  if (action?.allowed) onTool('correo')
+  else toast.error(action?.reason || 'No se puede enviar por correo.')
+}
 const confirmCopyFor = computed(() =>
   confirmCopy(confirmKind.value, {
     noun: noun.value,

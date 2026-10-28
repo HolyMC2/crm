@@ -80,15 +80,31 @@
             >
           </p>
         </div>
-        <Button
-          v-if="record.capabilities?.write && !isPhone"
-          class="c-title-edit"
-          :label="
-            record.source === 'address' ? 'Editar dirección' : 'Editar datos'
-          "
-          :icon-left="LucidePen"
-          @click="editIdentity"
-        />
+        <!-- Wider screens, WhatsApp-style: the ways to reach them share one
+             island beside the name (the links below move up), then the pencil. -->
+        <div v-if="!isPhone" class="c-reach-row">
+          <div
+            class="c-reach"
+            role="group"
+            aria-label="Contactar"
+            data-c-reach
+          />
+          <button
+            v-if="record.capabilities?.write"
+            type="button"
+            class="c-reach-edit"
+            :aria-label="
+              record.source === 'address' ? 'Editar dirección' : 'Editar datos'
+            "
+            :title="
+              record.source === 'address' ? 'Editar dirección' : 'Editar datos'
+            "
+            data-action="edit"
+            @click="editIdentity"
+          >
+            <span class="lucide-pencil size-5" aria-hidden="true" />
+          </button>
+        </div>
       </div>
       <!-- «Pregúntale a Muelle»: this record is the sheet's context, and what
            the customer owes is its one suggestion (SHELL-S2.3). -->
@@ -115,56 +131,61 @@
           @click="nextTask ? editFollowup(nextTask) : addFollowup()"
         />
         <!-- Llamar · Mensaje · Correo · Agendar always sit in the same place;
-             one without data greys out instead of disappearing. -->
-        <component
-          :is="phone ? 'a' : 'span'"
-          :href="phone ? `tel:${phone.replace(/[^+\d]/g, '')}` : undefined"
-          class="c-action-link"
-          :class="{ [GREYED]: !phone }"
-          :aria-disabled="!phone || undefined"
-          :title="phone ? undefined : 'Sin teléfono registrado'"
-          data-action="call"
-          ><span class="c-action-icon"><LucidePhone class="h-4 w-4" /></span
-          >Llamar</component
-        >
-        <button
-          type="button"
-          class="c-action-link"
-          :class="{ [GREYED]: !canMessage }"
-          :aria-disabled="!canMessage || undefined"
-          :title="canMessage ? undefined : messageHint"
-          data-action="message"
-          @click="openComposer"
-        >
-          <span class="c-action-icon"
-            ><LucideMessageCircle class="h-4 w-4" /></span
-          >Mensaje
-        </button>
-        <component
-          :is="email ? 'a' : 'span'"
-          :href="email ? `mailto:${encodeURIComponent(email)}` : undefined"
-          class="c-action-link"
-          :class="{ [GREYED]: !email }"
-          :aria-disabled="!email || undefined"
-          :title="email ? undefined : 'Sin correo registrado'"
-          data-action="email"
-          ><span class="c-action-icon"><LucideMail class="h-4 w-4" /></span
-          >Correo</component
-        >
-        <button
-          type="button"
-          class="c-action-link"
-          :class="{ [GREYED]: !scheduleOptions.length }"
-          :aria-disabled="!scheduleOptions.length || undefined"
-          :title="
-            scheduleOptions.length ? undefined : 'La agenda no está disponible'
-          "
-          data-action="schedule"
-          @click="openSchedule"
-        >
-          <span class="c-action-icon"><LucideCalendar class="h-4 w-4" /></span
-          >Agendar
-        </button>
+             one without data greys out instead of disappearing. On a wider
+             screen they move up beside the name as an icon island. -->
+        <Teleport defer to="[data-c-reach]" :disabled="isPhone">
+          <component
+            :is="phone ? 'a' : 'span'"
+            :href="phone ? `tel:${phone.replace(/[^+\d]/g, '')}` : undefined"
+            class="c-action-link"
+            :class="{ [GREYED]: !phone }"
+            :aria-disabled="!phone || undefined"
+            :title="phone ? `Llamar · ${phone}` : 'Sin teléfono registrado'"
+            data-action="call"
+            ><span class="c-action-icon"><LucidePhone class="h-4 w-4" /></span
+            ><span class="c-action-label">Llamar</span></component
+          >
+          <button
+            type="button"
+            class="c-action-link"
+            :class="{ [GREYED]: !canMessage }"
+            :aria-disabled="!canMessage || undefined"
+            :title="canMessage ? `Mensaje · ${phone}` : messageHint"
+            data-action="message"
+            @click="openComposer"
+          >
+            <span class="c-action-icon"
+              ><LucideMessageCircle class="h-4 w-4" /></span
+            ><span class="c-action-label">Mensaje</span>
+          </button>
+          <component
+            :is="email ? 'a' : 'span'"
+            :href="email ? `mailto:${encodeURIComponent(email)}` : undefined"
+            class="c-action-link"
+            :class="{ [GREYED]: !email }"
+            :aria-disabled="!email || undefined"
+            :title="email ? `Correo · ${email}` : 'Sin correo registrado'"
+            data-action="email"
+            ><span class="c-action-icon"><LucideMail class="h-4 w-4" /></span
+            ><span class="c-action-label">Correo</span></component
+          >
+          <button
+            type="button"
+            class="c-action-link"
+            :class="{ [GREYED]: !scheduleOptions.length }"
+            :aria-disabled="!scheduleOptions.length || undefined"
+            :title="
+              scheduleOptions.length
+                ? 'Agendar'
+                : 'La agenda no está disponible'
+            "
+            data-action="schedule"
+            @click="openSchedule"
+          >
+            <span class="c-action-icon"><LucideCalendar class="h-4 w-4" /></span
+            ><span class="c-action-label">Agendar</span>
+          </button>
+        </Teleport>
         <!-- A supplier's quote or invoice becomes a draft order or bill. -->
         <CapturarDocumentoButton
           v-if="record.source === 'supplier' && record.name"

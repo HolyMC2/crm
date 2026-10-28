@@ -454,6 +454,58 @@
   border-radius: 6px;
   font-size: 12px;
 }
+/* Wider screens: Llamar, Mensaje, Correo and Agendar as one icon island
+   beside the name (Contacto teleports the links here), then the pencil. */
+.c-reach-row {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+}
+.c-reach {
+  display: flex;
+  align-items: center;
+  padding: 2px;
+  border-radius: 9999px;
+  background: var(--surface-gray-1);
+}
+.c-reach:empty {
+  display: none;
+}
+.c-reach > .c-action-link,
+.c-reach-edit {
+  width: 40px;
+  height: 40px;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 9999px;
+  color: var(--ink-gray-7);
+}
+.c-reach-edit {
+  display: inline-flex;
+  align-items: center;
+  width: 48px;
+  height: 48px;
+}
+.c-reach > .c-action-link svg {
+  width: 20px;
+  height: 20px;
+}
+@media (hover: hover) {
+  .c-reach > .c-action-link:not([aria-disabled]):hover,
+  .c-reach-edit:hover {
+    background: var(--surface-gray-3);
+  }
+}
+.c-reach .c-action-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
 .c-source-chooser {
   padding: 12px 28px;
   border-top: 1px solid var(--c-line);

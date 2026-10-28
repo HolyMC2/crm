@@ -101,3 +101,36 @@ export function listActionsFor(profile, ctx = {}) {
     listGroup(profile, ctx),
   ].filter(Boolean)
 }
+
+// The tools of «⋯» that follow a record up rather than handle it: on a record
+// the bolt holds them, under its steps.
+export const FOLLOW_UP = ['pendiente', 'avisame', 'repetir', 'preguntar']
+
+/**
+ * The bolt's groups for one record: its steps (the profile's next step and the
+ * other steps of this state, then «Editar» on a draft the worker may change),
+ * then what keeps it in sight. A step picks as `paso:<i>` in the order given.
+ * @param steps  [{ label, icon }] (DocumentoRecord's `step` then `altSteps`)
+ * @param tools  documentos/tools.js toolsFor entries
+ */
+export function recordActionsFor({ steps = [], canEdit = false, tools = [] }) {
+  const next = steps.map((s, i) =>
+    ok({ key: `paso:${i}`, label: s.label, icon: s.icon || 'lucide-check' }),
+  )
+  if (canEdit)
+    next.push(
+      ok({
+        key: 'editar',
+        label: 'Editar',
+        icon: 'lucide-pencil',
+        hint: 'Cambia el borrador',
+      }),
+    )
+  const follow = FOLLOW_UP.map((key) => tools.find((t) => t.key === key))
+    .filter(Boolean)
+    .map((t) => ok({ ...t }))
+  return [
+    next.length && { key: 'pasos', title: 'Siguiente paso', items: next },
+    follow.length && { key: 'seguir', title: 'Dar seguimiento', items: follow },
+  ].filter(Boolean)
+}

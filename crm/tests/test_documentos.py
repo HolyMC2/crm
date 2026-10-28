@@ -363,6 +363,29 @@ class TestDocumentosERPNext(IntegrationTestCase):
 		self.assertTrue(bundle["actions"]["duplicate"]["allowed"] in (True, False))
 		self.assertFalse(bundle["actions"]["submit"]["allowed"])  # not submittable
 
+	def test_a_record_carries_how_to_reach_its_person(self):
+		customer = frappe.get_doc(
+			{
+				"doctype": "Customer",
+				"customer_name": "Cliente Alcance D4",
+				"customer_type": "Individual",
+			}
+		).insert(ignore_permissions=True)
+		customer.db_set({"mobile_no": "+52 667 100 2000", "email_id": "alcance@example.com"})
+		self.assertEqual(
+			documentos.record("Customer", customer.name)["header"]["reach"],
+			{"phone": "+52 667 100 2000", "email": "alcance@example.com"},
+		)
+		quote = frappe.new_doc("Quotation")
+		quote.update(
+			{"quotation_to": "Customer", "party_name": customer.name, "contact_email": "compras@example.com"}
+		)
+		party = {"doctype": "Customer", "name": customer.name}
+		self.assertEqual(
+			documentos._reach(quote, party),
+			{"phone": "+52 667 100 2000", "email": "compras@example.com"},
+		)
+
 	def test_hub_counts_only_readable_lists(self):
 		out = documentos.hub("documentos")
 		self.assertIn("Sales Invoice", out)
