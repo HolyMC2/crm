@@ -14,12 +14,17 @@ export const GROUPS = Object.freeze(['overdue', 'today', 'upcoming', 'undated'])
 // «Por aprobar» and «Esperando respuesta»: decisions owned by other modules,
 // listed here and decided on their owner's screen (useAprobaciones).
 export const APPROVAL_SEGMENTS = Object.freeze(['approve', 'waiting'])
+// Smart views (Shell-S8): «Hoy» is the overdue and today sections of
+// «Mis pendientes»; «Para mí» what somebody else handed me.
+export const SMART = Object.freeze(['hoy', 'upcoming', 'assigned'])
 export const SEGMENTS = Object.freeze([
   'mine',
   ...APPROVAL_SEGMENTS,
+  'hoy',
+  'upcoming',
+  'assigned',
   'overdue',
   'today',
-  'upcoming',
   'undated',
   'delegated',
   'team',
@@ -33,6 +38,8 @@ export const SOURCE_SLUGS = Object.freeze({
 export function segmentLabel(segment) {
   return {
     mine: t('My pendientes'),
+    hoy: t('Today'),
+    assigned: t('For me'),
     approve: t('To approve'),
     waiting: t('Waiting for an answer'),
     overdue: t('Overdue'),
@@ -54,6 +61,8 @@ export function segmentEntries({
 } = {}) {
   const icons = {
     mine: 'check-square',
+    hoy: 'sun',
+    assigned: 'user-check',
     approve: 'check-circle',
     waiting: 'clock',
     overdue: 'alert-circle',
@@ -64,7 +73,17 @@ export function segmentEntries({
     team: 'users',
     done: 'check',
   }
-  const shown = { team, delegated, approve, waiting }
+  // The due sections are parts of «Mis pendientes» and «Hoy», not lists of
+  // their own (old links still open them).
+  const shown = {
+    team,
+    delegated,
+    approve,
+    waiting,
+    overdue: false,
+    today: false,
+    undated: false,
+  }
   return SEGMENTS.filter((segment) => shown[segment] ?? true).map(
     (segment) => ({
       value: segment,
@@ -147,9 +166,101 @@ export function boardColumn(row) {
   return row?.status === 'Closed' ? 'done' : 'open'
 }
 
+/** The server list behind a view: «Hoy» reads the sections of «Mis pendientes». */
+export function serverSegment(segment) {
+  return segment === 'hoy' ? 'mine' : segment
+}
+
+/** The sections a sectioned view shows, in order. */
+export function viewGroups(segment) {
+  if (segment === 'hoy') return ['overdue', 'today']
+  return segment === 'mine' ? GROUPS : []
+}
+
+/** The smart lists' counts from one «Mis pendientes» answer ({value, capped}). */
+export function viewCounts(response) {
+  const sections = response?.sections || {}
+  const sum = (groups) => {
+    const counts = groups.map((group) => sections[group]?.count).filter(Boolean)
+    if (!counts.length) return null
+    return {
+      value: counts.reduce((total, count) => total + count.value, 0),
+      capped: counts.some((count) => count.capped),
+    }
+  }
+  return {
+    mine: sum(GROUPS),
+    hoy: sum(['overdue', 'today']),
+    upcoming: sections.upcoming?.count || null,
+    assigned: response?.assigned || null,
+    done: response?.done || null,
+  }
+}
+
+const WEEKDAY_NAMES = [
+  'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+]
+const MONTH_SHORT = [
+  'ene',
+  'feb',
+  'mar',
+  'abr',
+  'may',
+  'jun',
+  'jul',
+  'ago',
+  'sep',
+  'oct',
+  'nov',
+  'dic',
+]
+
+/** A day heading in «Próximos»: «Mañana», «Viernes 30», «Lunes 2 nov». */
+export function dayHeading(day, today) {
+  if (!DAY.test(day || '')) return t('No date')
+  if (DAY.test(today || '')) {
+    if (day === today) return t('Today')
+    if (day === addDays(today, 1)) return t('Tomorrow')
+  }
+  const [, month, date] = day.split('-').map(Number)
+  const weekday = t(WEEKDAY_NAMES[new Date(`${day}T00:00:00Z`).getUTCDay()])
+  const sameMonth = DAY.test(today || '') && today.slice(0, 7) === day.slice(0, 7)
+  return sameMonth
+    ? `${weekday} ${date}`
+    : `${weekday} ${date} ${MONTH_SHORT[month - 1]}`
+}
+
+/** Consecutive rows of one day, for «Próximos» headings: [{ day, rows }]. */
+export function byDay(rows = []) {
+  const out = []
+  for (const row of rows) {
+    const day = String(row.date || '').slice(0, 10)
+    const last = out.at(-1)
+    if (last && last.day === day) last.rows.push(row)
+    else out.push({ day, rows: [row] })
+  }
+  return out
+}
+
+/** The section a row belongs in, from its date (an optimistic row has no group yet). */
+export function groupOf(row, today) {
+  if (row?.status === 'Closed') return 'done'
+  const day = String(row?.date || '').slice(0, 10)
+  if (!day) return 'undated'
+  if (!DAY.test(today || '')) return 'upcoming'
+  if (day < today) return 'overdue'
+  return day === today ? 'today' : 'upcoming'
+}
+
 export function queueArgs(state, start = 0) {
   return {
-    segment: state.segment,
+    segment: serverSegment(state.segment),
     search: state.q,
     source: state.source,
     priority: state.priority,
@@ -284,6 +395,19 @@ function dueDay(row, today) {
       ? t('Overdue · yesterday')
       : t('Overdue · {0} days', [-diff])
   return t('In {0} days', [diff])
+}
+
+/** The late chip under a «Vencidos» heading: «Ayer», «Hace 10 días · 16:00». */
+export function lateText(row, today) {
+  const day = String(row?.date || '').slice(0, 10)
+  if (!DAY.test(day) || !DAY.test(today || '') || day >= today)
+    return dueText(row, today)
+  const diff = Math.round(
+    (Date.parse(`${today}T00:00:00Z`) - Date.parse(`${day}T00:00:00Z`)) /
+      86400000,
+  )
+  const text = diff === 1 ? t('Yesterday') : t('{0} days ago', [diff])
+  return row.time ? `${text} · ${row.time}` : text
 }
 
 export function countText(count) {

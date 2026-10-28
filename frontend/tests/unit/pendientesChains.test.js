@@ -89,6 +89,11 @@ vi.mock('@/components/pendientes/PendienteRow.vue', () => ({
 vi.mock('@/components/pendientes/DeclineDialog.vue', () => ({
   default: { render: () => null },
 }))
+// The live list joins the app's socket (stores); here the page is on its own.
+vi.mock('@/composables/liveList', async () => {
+  const { ref } = await import('vue')
+  return { useLiveList: () => ({ fresh: ref(new Set()), mark: () => {} }) }
+})
 
 import { firstModuleRoute, shellBoot } from '@/composables/muelleShell'
 import Pendiente from '@/pages/Pendiente.vue'

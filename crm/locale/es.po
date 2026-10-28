@@ -29227,3 +29227,111 @@ msgstr "Hola, te confirmo «{0}» el {1}."
 #: frontend/src/pages/Agenda.vue
 msgid "Follow-up: {0}"
 msgstr "Seguimiento: {0}"
+
+#: frontend/src/pages/Pendientes.vue
+msgid "Smart lists"
+msgstr "Listas inteligentes"
+
+#: frontend/src/pages/Pendientes.vue
+msgid "waiting for your OK"
+msgstr "esperan tu visto bueno"
+
+#: frontend/src/pages/Pendientes.vue
+msgid "Nothing left for today"
+msgstr "Nada pendiente para hoy"
+
+#: frontend/src/pages/Pendientes.vue
+msgid "See upcoming ({0})"
+msgstr "Ver próximos ({0})"
+
+#: frontend/src/pages/Pendientes.vue
+msgid "Add a pendiente"
+msgstr "Añadir pendiente"
+
+#: frontend/src/pages/Pendientes.vue
+msgid "What is late and what is due today"
+msgstr "Lo vencido y lo que toca hoy"
+
+#: frontend/src/pages/Pendientes.vue
+msgid "What comes next, day by day"
+msgstr "Lo que sigue, día por día"
+
+#: frontend/src/pages/Pendientes.vue
+msgid "What someone else handed you"
+msgstr "Lo que alguien más te encargó"
+
+#: frontend/src/pages/Pendientes.vue
+msgid "Nobody handed you anything open."
+msgstr "Nadie te ha encargado nada abierto."
+
+#: frontend/src/pages/Pendientes.vue
+msgid "Handed to {0}"
+msgstr "Encargado a {0}"
+
+#: frontend/src/pages/Pendientes.vue
+msgid "See"
+msgstr "Ver"
+
+#: frontend/src/pages/Pendientes.vue
+msgid "Added for {0}"
+msgstr "Añadido para {0}"
+
+#: frontend/src/pages/Pendientes.vue
+msgid "Drag to reorder"
+msgstr "Arrastra para ordenar"
+
+#: frontend/src/pages/Pendientes.vue
+msgid "Remove star"
+msgstr "Quitar estrella"
+
+#: frontend/src/pages/Pendientes.vue
+msgid "Star"
+msgstr "Destacar"
+
+#: frontend/src/pages/Pendientes.vue
+msgid "Starred"
+msgstr "Destacado"
+
+#: frontend/src/pages/Pendientes.vue
+msgid "What we understood"
+msgstr "Lo que entendimos"
+
+#: frontend/src/pages/Pendientes.vue
+msgid "Keep «{0}» as words"
+msgstr "Dejar «{0}» como texto"
+
+#: frontend/src/pages/Pendientes.vue
+msgid "Add a pendiente: «Call Olga tomorrow 5pm»"
+msgstr "Añadir pendiente: «Llamar a Olga mañana 5pm»"
+
+#: frontend/src/pages/Pendientes.vue
+msgid "Who is @{0}?"
+msgstr "¿Quién es @{0}?"
+
+#: frontend/src/pages/Pendientes.vue
+msgctxt "Pendientes section"
+msgid "Overdue"
+msgstr "Vencidos"
+
+#: frontend/src/pages/Pendientes.vue
+msgctxt "Pendientes"
+msgid "Completed"
+msgstr "Completados"
+
+#: frontend/src/pages/Pendientes.vue
+msgctxt "Pendientes"
+msgid "All"
+msgstr "Todos"
+
+#: frontend/src/pages/Pendientes.vue
+msgctxt "Pendientes short"
+msgid "Upcoming"
+msgstr "Próximos"
+
+#: frontend/src/pages/Pendientes.vue
+msgid "Subtasks {0}"
+msgstr "Subtareas {0}"
+
+#: frontend/src/pages/Pendientes.vue
+msgid "Complete"
+msgstr "Completar"
