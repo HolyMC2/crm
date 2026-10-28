@@ -1,7 +1,8 @@
 """Hoy (`/crm/hoy`): the shell's landing page and its one batched read.
 
 Doco answers the worker's day (pendientes, agenda, work in other apps); this
-adds the avisos that ask for action. Every section is guarded on its own, so a
+adds the avisos that ask for action, the seller's and team's follow-ups, and
+today's sales for the managers who follow them. Every section is guarded on its own, so a
 missing app or permission turns that section off with a reason, never the page.
 """
 
@@ -19,6 +20,7 @@ TEAM_QUEUE = "vencidos"
 TEAM_ROLES = ("Sales Manager", "System Manager")
 TEAM_LIMIT = 5
 TEAM_CAP = 2000
+SALES_CARD = "ventas"
 
 
 def check_hoy_permission(user: str | None = None) -> bool:
@@ -150,6 +152,36 @@ def _team_overdue():
 	}
 
 
+def _sales_today():
+	"""For the managers who follow sales: today's sales so far.
+
+	The number is Resultados' own «Ventas» card for Hoy (Mercado's board, with
+	the board's per-user cache and generation counter), so Hoy and Resultados
+	never disagree. A worker the card does not apply to, or who may not read
+	it, gets no section; its shop and company scope is the card's.
+	"""
+	from crm.api import resultados
+
+	if SALES_CARD not in (key for key, _path in resultados._providers()):
+		return {"available": False, "reason": None}
+	answer = resultados.board(periodo="hoy", compara="anterior", card=SALES_CARD)
+	card = next(iter(answer["cards"]), None)
+	if card and card.get("retry"):
+		return {"available": False, "failed": True}
+	if not card or card.get("blocked_reason"):
+		return {"available": False, "reason": None}
+	return {
+		"available": True,
+		"currency": answer.get("currency"),
+		"value": card.get("value"),
+		# Yesterday's whole day: context, not a percentage against a day still running.
+		"prev": card.get("prev"),
+		"facts": card.get("facts") or [],
+		"attention": card.get("attention"),
+		"drill": card.get("drill"),
+	}
+
+
 def _section(build):
 	try:
 		return build()
@@ -182,6 +214,7 @@ def page() -> dict:
 	day["avisos"] = _avisos()
 	day["seguimiento"] = _section(_follow_up)
 	day["equipo"] = _section(_team_overdue)
+	day["ventas"] = _section(_sales_today)
 	day["landing"] = frappe.defaults.get_user_default(LANDING_DEFAULT) or ""
 	return day
 

@@ -117,6 +117,45 @@
               {{ __('More pendientes due — open Pendientes') }}
             </RouterLink>
           </HoySection>
+          <!-- 2a · Ventas de hoy (managers): Resultados' own Ventas card -->
+          <HoySection
+            v-if="data?.ventas?.available || data?.ventas?.failed"
+            id="ventas"
+            :title="__('Today’s sales')"
+            icon="lucide-receipt"
+            :more="sales?.to ? { label: __('See sales'), to: sales.to } : null"
+            :collapsed="sales?.empty ? __('No sales yet today.') : ''"
+            :failed="Boolean(data?.ventas?.failed)"
+            @retry="refresh()"
+          >
+            <div v-if="sales" class="px-4 pb-3 sm:px-5">
+              <p
+                class="text-2xl font-semibold tabular-nums text-ink-gray-9"
+                data-testid="hoy-ventas-total"
+              >
+                {{ sales.total }}
+              </p>
+              <p
+                v-if="sales.facts.length || sales.yesterday"
+                class="mt-0.5 text-sm tabular-nums text-ink-gray-6"
+              >
+                {{
+                  [...sales.facts, sales.yesterday].filter(Boolean).join(' · ')
+                }}
+              </p>
+              <RouterLink
+                v-if="sales.attention?.to"
+                :to="sales.attention.to"
+                class="mt-1 flex min-h-11 items-center gap-2 text-sm font-medium text-ink-amber-8 hover:text-ink-gray-9 sm:min-h-8"
+              >
+                <span
+                  class="lucide-triangle-alert size-4 shrink-0"
+                  aria-hidden="true"
+                />
+                {{ sales.attention.label }}
+              </RouterLink>
+            </div>
+          </HoySection>
           <!-- 2b · Tratos sin seguimiento (sellers only) -->
           <HoySection
             v-if="data?.seguimiento?.available || data?.seguimiento?.failed"
@@ -511,6 +550,7 @@ import {
   hoyLive,
   loadHoy,
   runSourceAction,
+  salesToday,
   scanDrafts,
   teamOverdueRows,
   timeText,
@@ -608,6 +648,7 @@ const followUpCollapsed = computed(() => {
     ? ''
     : __('Every open deal of yours has a next step.')
 })
+const sales = computed(() => salesToday(data.value?.ventas))
 const teamRows = computed(() => teamOverdueRows(data.value?.equipo))
 const teamQueue = withReturn('/deals?follow_up=overdue')
 const teamCount = computed(() => {

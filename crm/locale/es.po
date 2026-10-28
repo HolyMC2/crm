@@ -29174,3 +29174,18 @@ msgstr "Sin existencia"
 #: frontend/src/utils/shellPalette.js
 msgid "See «{0}» in Productos"
 msgstr "Ver «{0}» en Productos"
+#: frontend/src/pages/Hoy.vue
+msgid "Today’s sales"
+msgstr "Ventas de hoy"
+
+#: frontend/src/pages/Hoy.vue
+msgid "See sales"
+msgstr "Ver ventas"
+
+#: frontend/src/pages/Hoy.vue
+msgid "No sales yet today."
+msgstr "Aún no hay ventas hoy."
+
+#: frontend/src/composables/useHoy.js
+msgid "Yesterday {0}"
+msgstr "Ayer {0}"

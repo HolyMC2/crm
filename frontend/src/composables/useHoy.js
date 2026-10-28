@@ -101,6 +101,71 @@ export function followUpQueueLink(section) {
   return withReturn(`/deals?${query}`)
 }
 
+// ── Ventas de hoy ───────────────────────────────────────────────────────────
+
+function money(value, currency) {
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: 'currency',
+      currency: currency || 'MXN',
+    }).format(Number(value))
+  } catch {
+    return `${Number(value).toLocaleString('es-MX')} ${currency || ''}`.trim()
+  }
+}
+
+function factText(fact, currency) {
+  if (fact?.value === null || fact?.value === undefined) return ''
+  const value =
+    fact.format === 'money'
+      ? money(fact.value, currency)
+      : Number(fact.value).toLocaleString('es-MX', { maximumFractionDigits: 0 })
+  return `${fact.label} ${value}`
+}
+
+/** A Resultados drill (`/crm/…` path and query) as a router location back to Hoy. */
+function drillLink(drill) {
+  const path = String(drill?.path || '')
+  if (!path.startsWith('/crm/')) return null
+  const query = new URLSearchParams()
+  for (const [key, value] of Object.entries(drill.query || {}))
+    if (value !== null && value !== undefined && value !== '')
+      query.set(key, String(value))
+  const search = query.toString()
+  return withReturn(`${path.slice(4)}${search ? `?${search}` : ''}`)
+}
+
+/**
+ * «Ventas de hoy» (managers): Resultados' own Ventas card for today. Null when
+ * the section is off; `empty` while nothing was sold yet. Yesterday is shown as
+ * its whole-day total, never as a percentage against a day still running.
+ */
+export function salesToday(section) {
+  if (!section?.available) return null
+  const currency = section.currency
+  const value = Number(section.value) || 0
+  const tickets = (section.facts || []).find((fact) => fact.format === 'count')
+  const empty = !value && !Number(tickets?.value)
+  const prev = Number(section.prev) || 0
+  return {
+    empty,
+    total: money(value, currency),
+    facts: empty
+      ? []
+      : (section.facts || [])
+          .map((fact) => factText(fact, currency))
+          .filter(Boolean),
+    yesterday: prev ? t('Yesterday {0}', [money(prev, currency)]) : '',
+    attention: section.attention?.label
+      ? {
+          label: section.attention.label,
+          to: drillLink(section.attention.drill),
+        }
+      : null,
+    to: drillLink(section.drill),
+  }
+}
+
 export function saveLanding(key) {
   return call('crm.api.hoy.save_landing', { key })
 }
