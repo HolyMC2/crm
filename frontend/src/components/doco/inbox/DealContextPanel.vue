@@ -36,6 +36,53 @@
       @merged="onMerged"
     />
 
+    <!-- Phone: the contact on top, as WhatsApp's contact info: photo, name,
+         number and the three things done from here. -->
+    <div
+      v-if="isMobile"
+      class="flex flex-none flex-col items-center border-b border-outline-gray-1 px-4 pb-4 pt-5 text-center"
+      data-testid="context-hero"
+    >
+      <span
+        class="flex size-20 items-center justify-center rounded-full bg-surface-gray-2 text-[26px] font-semibold text-ink-gray-7"
+        aria-hidden="true"
+      >
+        {{ initials(name) }}
+      </span>
+      <h2
+        class="mt-3 max-w-full truncate text-[22px] font-semibold leading-tight text-ink-gray-9"
+      >
+        {{ name || activeDeal }}
+      </h2>
+      <p v-if="row.mobile_no" class="num mt-1 text-[15px] text-ink-gray-6">
+        {{ formatPhone(row.mobile_no) }}
+      </p>
+      <div class="mt-4 grid w-full grid-cols-3 gap-2">
+        <button
+          v-for="tile in heroTiles"
+          :key="tile.key"
+          type="button"
+          class="press flex min-h-16 flex-col items-center justify-center gap-1 rounded-[14px] border border-outline-gray-2 text-[13px] text-ink-gray-8 hover:bg-surface-gray-2 disabled:opacity-50"
+          :disabled="tile.disabled"
+          @click="tile.run"
+        >
+          <component
+            :is="tile.icon"
+            class="size-5"
+            style="color: var(--brand)"
+            aria-hidden="true"
+          />
+          {{ tile.label }}
+        </button>
+      </div>
+    </div>
+
+    <ConversationMedia
+      v-if="activeDeal"
+      :doctype="activeDealDoctype"
+      :name="activeDeal"
+    />
+
     <!-- 🎓 notas de coaching (spec 7.4) — managers only; self-hides for everyone else -->
     <!-- Coaching is secondary to the worker's record and contact details. -->
 
@@ -69,6 +116,7 @@
         </button>
       </div>
       <button
+        v-if="!isMobile"
         class="w-full rounded-6 px-2.5 py-1.5 text-[11.5px] font-semibold text-white"
         style="background: var(--brand)"
         @click="call"
@@ -446,7 +494,7 @@
 
 <script setup>
 import PipelineSelector from '@/components/Pipeline/PipelineSelector.vue'
-import { computed, ref, watch, nextTick } from 'vue'
+import { defineAsyncComponent, computed, ref, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import {
   createResource,
@@ -463,6 +511,10 @@ import { guardStatusChange } from '@/utils/statusGuard'
 import { repairReadyStage } from '@/utils/repairReadyStage'
 import { stageLabel } from '@/utils/stageLabel'
 import LucideChevronLeft from '~icons/lucide/chevron-left'
+import LucidePhone from '~icons/lucide/phone'
+import LucideMessageCircle from '~icons/lucide/message-circle'
+import LucideSearch from '~icons/lucide/search'
+import { formatPhone } from '@/composables/crmFormat'
 import SidePanelLayout from '@/components/SidePanelLayout.vue'
 import { ArchivosRegistroPanel } from '@/components/archivos'
 import DealContactsSection from '@/components/doco/inbox/DealContactsSection.vue'
@@ -472,6 +524,12 @@ import DuplicateBanner from '@/components/doco/inbox/DuplicateBanner.vue'
 import CoachingPanel from '@/components/doco/inbox/CoachingPanel.vue'
 import { shellBoot } from '@/composables/muelleShell'
 import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
+
+// the sheet and its icons load on first use, not with every route that
+// mounts the inbox
+const ConversationMedia = defineAsyncComponent(
+  () => import('@/components/doco/inbox/ConversationMedia.vue'),
+)
 
 // ⚠ duplicate banner → jump to the other open record (detect+navigate only)
 // NB selectDeal arg order: (name, doctype)
@@ -499,6 +557,8 @@ import {
   setStageSilent,
   requestStage,
   mobileBack,
+  openThreadSearch,
+  initials,
   hasTaller,
   salesDocsEnabled,
   selectDeal,
@@ -749,6 +809,32 @@ const dealSummary = computed(() => {
 function call() {
   if (row.value.mobile_no) makeCall(row.value.mobile_no)
 }
+// Mensaje and Buscar return to the chat through history, so back from the
+// chat still goes to the list.
+const heroTiles = computed(() => [
+  {
+    key: 'call',
+    label: __('Llamar'),
+    icon: LucidePhone,
+    disabled: !row.value.mobile_no,
+    run: call,
+  },
+  {
+    key: 'chat',
+    label: __('Mensaje'),
+    icon: LucideMessageCircle,
+    run: mobileBack,
+  },
+  {
+    key: 'search',
+    label: __('Buscar'),
+    icon: LucideSearch,
+    run: () => {
+      mobileBack()
+      openThreadSearch()
+    },
+  },
+])
 
 // ── Acciones: inline-editable Estado / Asignado / Etiquetas ─────────────────────
 const pipelineStages = ref([])

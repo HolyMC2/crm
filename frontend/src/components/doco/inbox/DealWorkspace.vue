@@ -109,13 +109,14 @@
         >
           <!-- 🔎 búsqueda en el hilo (spec 2.7) — over the LOADED messages -->
           <ThreadSearch ref="threadSearch" :container="convoRef" />
+          <!-- phone: «Buscar» lives in the chat's ⋮ menu, as in WhatsApp -->
           <button
-            class="press absolute right-3 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-outline-gray-2 bg-surface-base text-[13px] text-ink-gray-6 shadow-sm hover:bg-surface-gray-2"
+            class="press absolute right-3 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-outline-gray-2 bg-surface-base text-ink-gray-6 shadow-sm hover:bg-surface-gray-2 max-sm:hidden"
             :title="__('Buscar en la conversación')"
             :aria-label="__('Buscar en la conversación')"
             @click="threadSearch?.toggle()"
           >
-            🔎
+            <LucideSearch class="size-4" aria-hidden="true" />
           </button>
           <Activities
             :key="'wa-' + activeDealDoctype + activeDeal"
@@ -214,6 +215,7 @@ import {
 import { Tabs } from 'frappe-ui'
 import LucideMessagesSquare from '~icons/lucide/messages-square'
 import LucideChevronDown from '~icons/lucide/chevron-down'
+import LucideSearch from '~icons/lucide/search'
 import ActivityIcon from '@/components/Icons/ActivityIcon.vue'
 import EmailIcon from '@/components/Icons/EmailIcon.vue'
 import CommentIcon from '@/components/Icons/CommentIcon.vue'
@@ -232,6 +234,7 @@ import {
   setComposerDraft,
   pulseSalesDocs,
   salesDocsEnabled,
+  threadSearchRequest,
 } from '@/composables/inbox'
 
 // Everything below renders only for an open conversation; the inbox list and
@@ -270,6 +273,19 @@ const Activities = defineAsyncComponent(
 
 const activityTabIndex = ref(0)
 const threadSearch = ref(null)
+// the ⋮ menu's «Buscar»: the search bar mounts with the conversation tab, so
+// the request waits for it
+let searchPending = false
+function showRequestedSearch() {
+  if (!searchPending || !threadSearch.value?.show) return
+  searchPending = false
+  threadSearch.value.show()
+}
+watch(threadSearchRequest, () => {
+  searchPending = true
+  nextTick(showRequestedSearch)
+})
+watch(threadSearch, showRequestedSearch)
 
 // ── P2 S10: intent chip → existing surface (chips never send / never auto-charge) ──
 function onIntentCatalogo() {

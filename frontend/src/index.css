@@ -390,6 +390,17 @@ input[type='checkbox'].rounded-4 {
 .menu-content {
   z-index: 101;
 }
+/* On touch screens a menu row is a thumb target (44px, 15px text), like the
+   WhatsApp ⋮ menu; mouse menus keep frappe-ui's compact rows. */
+@media (pointer: coarse) {
+  .menu-content {
+    min-width: 13rem;
+  }
+  .menu-content [data-slot='item'] > * {
+    min-height: 2.75rem;
+    font-size: 15px;
+  }
+}
 
 /* Keyboard standard: the row j/k moved to is always visible, whatever the
    page's own row styling (pageKeys.js focuses it programmatically). */

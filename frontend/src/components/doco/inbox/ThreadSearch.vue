@@ -12,7 +12,7 @@
     v-if="open"
     class="absolute left-1/2 top-2 z-20 flex w-[min(92%,380px)] -translate-x-1/2 items-center gap-1.5 rounded-7 border border-outline-gray-2 bg-surface-base px-2.5 py-1.5 shadow-lg"
   >
-    <span aria-hidden="true" class="flex-none text-[13px]">🔎</span>
+    <LucideSearch class="size-4 flex-none text-ink-gray-5" aria-hidden="true" />
     <input
       ref="inputEl"
       v-model="query"
@@ -69,6 +69,7 @@
 <script setup>
 import { ref, watch, nextTick, onBeforeUnmount } from 'vue'
 import { matchesQuery, stepMatch } from '@/utils/threadSearch'
+import LucideSearch from '~icons/lucide/search'
 
 const props = defineProps({
   // the scrollable conversation container to search within (.doco-convo element)
@@ -89,7 +90,20 @@ function toggle() {
   if (open.value) nextTick(() => inputEl.value?.focus())
   else close()
 }
-defineExpose({ toggle })
+// Opened from a menu (the chat's ⋮ «Buscar»): the closing menu hands focus
+// back to its trigger, so take it once more when that happens.
+function show() {
+  open.value = true
+  nextTick(() => inputEl.value?.focus())
+  const reclaim = (event) => {
+    if (!event.target?.matches?.('[aria-haspopup="menu"]')) return
+    document.removeEventListener('focusin', reclaim)
+    if (open.value) inputEl.value?.focus()
+  }
+  document.addEventListener('focusin', reclaim)
+  setTimeout(() => document.removeEventListener('focusin', reclaim), 1000)
+}
+defineExpose({ toggle, show })
 
 function close() {
   open.value = false

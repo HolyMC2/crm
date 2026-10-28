@@ -19,7 +19,7 @@
       <!-- identity: on mobile this whole block opens the customer/deal data pane
            (view 4), exactly like tapping the contact name in WhatsApp. -->
       <span
-        class="flex size-8 flex-none items-center justify-center rounded-full text-sm-semibold sm:size-[38px]"
+        class="flex size-10 flex-none items-center justify-center rounded-full text-sm-semibold sm:size-[38px]"
         :class="isMobile ? 'cursor-pointer' : ''"
         :style="`background:${avatarColor(name)[0]};color:${avatarColor(name)[1]}`"
         @click="isMobile && openContext()"
@@ -36,7 +36,7 @@
       >
         <div class="flex min-w-0 items-center gap-2 sm:flex-wrap">
           <span
-            class="truncate text-base-bold text-ink-gray-9"
+            class="truncate text-base-bold text-ink-gray-9 max-sm:text-[16px]"
             data-testid="deal-header-name"
             >{{ name || activeDeal || '—' }}</span
           >
@@ -233,26 +233,38 @@
           <LucideScrollText class="h-4 w-4" />
         </button>
         <button
-          class="press flex size-11 items-center justify-center rounded-6 text-[15px] text-white sm:size-[34px]"
-          style="background: var(--brand)"
+          class="press flex size-11 items-center justify-center text-[15px]"
+          :class="
+            isMobile
+              ? 'rounded-full text-ink-gray-8 hover:bg-surface-gray-2'
+              : 'rounded-6 text-white sm:size-[34px]'
+          "
+          :style="isMobile ? undefined : 'background: var(--brand)'"
           :title="__('Llamar')"
           :aria-label="__('Llamar')"
           @click="call"
         >
-          <LucidePhone class="h-4 w-4" />
+          <LucidePhone :class="isMobile ? 'size-5' : 'h-4 w-4'" />
         </button>
         <Dropdown v-if="isMobile" :options="mobileMenu" align="end">
           <button
-            class="press flex size-11 items-center justify-center rounded-6 text-ink-gray-7 hover:bg-surface-gray-2"
+            class="press -mr-2 flex size-11 items-center justify-center rounded-full text-ink-gray-8 hover:bg-surface-gray-2"
             :class="
               isSnoozed || (row.tags || []).length ? 'text-ink-violet-8' : ''
             "
             :aria-label="__('Más opciones')"
             data-testid="deal-header-more"
           >
-            <LucideEllipsis class="h-5 w-5" />
+            <LucideEllipsisVertical class="size-5" />
           </button>
         </Dropdown>
+        <ConversationMedia
+          v-if="isMobile && activeDeal && mediaUsed"
+          v-model:open="mediaOpen"
+          sheet-only
+          :doctype="activeDealDoctype"
+          :name="activeDeal"
+        />
       </div>
     </div>
 
@@ -414,7 +426,14 @@
 </template>
 
 <script setup>
-import { computed, inject, nextTick, ref, watch } from 'vue'
+import {
+  defineAsyncComponent,
+  computed,
+  inject,
+  nextTick,
+  ref,
+  watch,
+} from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   Button,
@@ -430,7 +449,7 @@ import LucideScrollText from '~icons/lucide/scroll-text'
 import LucideAlarmClock from '~icons/lucide/alarm-clock'
 import LucideTag from '~icons/lucide/tag'
 import LucideChevronLeft from '~icons/lucide/chevron-left'
-import LucideEllipsis from '~icons/lucide/ellipsis'
+import LucideEllipsisVertical from '~icons/lucide/ellipsis-vertical'
 import LucideCheckCheck from '~icons/lucide/check-check'
 import CadencePicker from '@/components/doco/inbox/CadencePicker.vue'
 import ResolveSheet from '@/components/doco/inbox/ResolveSheet.vue'
@@ -464,6 +483,7 @@ import {
   requestStage,
   openContext,
   openLedger,
+  openThreadSearch,
   mobileBack,
   mobileBackOr,
   mobileView,
@@ -487,6 +507,11 @@ import { useRecordActions } from '@/composables/recordActions'
 import { dealRecordActions } from '@/utils/dealRecordActions'
 import { openNextStep } from '@/composables/useNextStep'
 
+// the sheet and its icons load on first use, not with every route that
+// mounts the inbox
+const ConversationMedia = defineAsyncComponent(
+  () => import('@/components/doco/inbox/ConversationMedia.vue'),
+)
 const { showModal } = useDoctypeModal()
 
 const { makeCall } = globalStore()
@@ -962,43 +987,68 @@ const snoozeOptions = computed(() => {
   )
   return o
 })
-// Phone ⋯ menu: everything the desktop header shows as icon buttons.
+// Phone ⋮ menu, ordered as WhatsApp's chat menu: the contact, search and
+// media first, then what the desktop header shows as icon buttons.
+const mediaOpen = ref(false)
+// the sheet fetches the chat's media, so it mounts on first use per chat
+const mediaUsed = ref(false)
+watch(activeDeal, () => (mediaUsed.value = mediaOpen.value))
 const mobileMenu = computed(() => [
-  ...(canResolve.value
-    ? [
-        {
-          group: __('Conversation'),
-          options: [
-            {
-              label: headerResolveLabel(nextMode.value),
-              onClick: () => (resolveOpen.value = true),
-            },
-          ],
-        },
-      ]
-    : []),
+  {
+    group: __('Conversation'),
+    hideLabel: true,
+    options: [
+      {
+        label: isDeal.value ? __('Ver trato y contacto') : __('Ver contacto'),
+        icon: 'lucide-user-round',
+        onClick: openContext,
+      },
+      {
+        label: __('Buscar'),
+        icon: 'lucide-search',
+        onClick: openThreadSearch,
+      },
+      {
+        label: __('Archivos, enlaces y docs'),
+        icon: 'lucide-images',
+        onClick: () => (mediaUsed.value = mediaOpen.value = true),
+      },
+    ],
+  },
   {
     group: __('Trato'),
+    hideLabel: true,
     options: [
-      { label: __('Datos y contacto'), onClick: openContext },
+      canResolve.value && {
+        label: headerResolveLabel(nextMode.value),
+        icon: 'lucide-check-check',
+        onClick: () => (resolveOpen.value = true),
+      },
       {
         label: (row.value.tags || []).length
           ? __('Etiquetas ({0})', [row.value.tags.length])
           : __('Etiquetas'),
+        icon: 'lucide-tag',
         onClick: openTags,
+      },
+      {
+        label: isSnoozed.value
+          ? __('Pospuesta — reaparece sola')
+          : __('Posponer conversación'),
+        icon: 'lucide-alarm-clock',
+        submenu: snoozeOptions.value,
       },
       isDeal.value && {
         label: __('Cadencia de seguimiento'),
+        icon: 'lucide-calendar-clock',
         onClick: () => cadence.value?.open(),
       },
-      { label: __('Bitácora'), onClick: openLedger },
+      {
+        label: __('Bitácora'),
+        icon: 'lucide-scroll-text',
+        onClick: openLedger,
+      },
     ].filter(Boolean),
-  },
-  {
-    group: isSnoozed.value
-      ? __('Pospuesta — reaparece sola')
-      : __('Posponer conversación'),
-    options: snoozeOptions.value,
   },
 ])
 

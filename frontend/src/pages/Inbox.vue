@@ -16,9 +16,14 @@
         {{ __('Back to {0}', [returnLabel]) }}
       </button>
     </div>
-    <!-- Phone: the shared Segmented with short labels that fit at 305px. -->
+    <!-- Phone: the shared Segmented with short labels that fit at 305px. An
+         open conversation takes the whole screen, as a WhatsApp chat does. -->
     <div
-      v-if="addonAvailable && isMobile"
+      v-if="
+        addonAvailable &&
+        isMobile &&
+        (space !== 'activity' || mobileView === 'list')
+      "
       class="flex-none border-b border-outline-gray-1 px-4 py-2"
     >
       <Segmented
@@ -29,7 +34,7 @@
       />
     </div>
     <nav
-      v-else-if="addonAvailable"
+      v-else-if="addonAvailable && !isMobile"
       class="flex flex-none gap-4 border-b border-outline-gray-1 px-4 text-sm sm:py-3"
       :aria-label="__('Espacios de la bandeja')"
     >

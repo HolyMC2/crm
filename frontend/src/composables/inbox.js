@@ -31,9 +31,18 @@ export const queueCollapsed = ref(false) // hide the left queue pane for a wider
 // back stack, so the in-app ← buttons and the hardware/gesture back behave identically.
 import { mobileView } from './mobileView' // 'list' | 'thread' | 'context'
 import { requestNextStep } from './useNextStep'
+import { isMobile } from './breakpoint'
 export { mobileView }
 export function openContext() {
   mobileView.value = 'context'
+}
+// The chat's ⋮ «Buscar» (WhatsApp): show the conversation and open its search
+// bar; DealWorkspace answers each bump.
+export const threadSearchRequest = ref(0)
+export function openThreadSearch() {
+  activeTab.value = 'conversation'
+  mobileView.value = 'thread'
+  threadSearchRequest.value++
 }
 // One-shot attention pulse for 💰 Documentos (intent chip «pago» on desktop, where
 // the context panel is already visible and openContext alone changes nothing).
@@ -868,8 +877,11 @@ export function selectDeal(name, doctype = 'CRM Deal', opts = {}) {
   }
   activeDeal.value = name
   activeDealDoctype.value = doctype
+  // A phone opens the chat, as WhatsApp does; desktop starts on the summary.
   activeTab.value =
-    doctype === 'CRM Deal' && !opts.fromReplyQueue ? 'overview' : 'conversation'
+    doctype === 'CRM Deal' && !opts.fromReplyQueue && !isMobile.value
+      ? 'overview'
+      : 'conversation'
   loadThread()
   loadContactCard()
   loadAutoAckForConvo(doctype, name) // surface any pending auto-ack to approve in context

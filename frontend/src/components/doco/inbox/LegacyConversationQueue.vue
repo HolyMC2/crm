@@ -888,162 +888,140 @@
             @touchend="rowTouchEnd(r)"
             @touchcancel="rowTouchEnd(r, true)"
           >
-            <div class="mb-1.5 flex items-center gap-2">
+            <!-- WhatsApp's chat row: photo, name and time; the last message
+                 and the unread mark; then one quiet line with where the deal
+                 stands (due, stage, repair, balance). -->
+            <div class="flex items-start gap-3">
               <span
-                class="flex h-[30px] w-[30px] flex-none items-center justify-center rounded-full text-xs-semibold"
+                class="mt-0.5 flex size-12 flex-none items-center justify-center rounded-full text-[15px] font-semibold"
                 :style="`background:${avatarColor(r.contact_name)[0]};color:${avatarColor(r.contact_name)[1]}`"
               >
                 {{ initials(r.contact_name) }}
               </span>
               <div class="min-w-0 flex-1">
-                <div class="truncate text-[13px] font-semibold text-ink-gray-9">
-                  {{ r.contact_name || r.mobile_no || __('Sin nombre') }}
+                <div class="flex items-baseline gap-2">
+                  <span
+                    class="min-w-0 flex-1 truncate text-[16px] font-semibold text-ink-gray-9"
+                  >
+                    {{ r.contact_name || r.mobile_no || __('Sin nombre') }}
+                  </span>
+                  <span
+                    class="flex-none text-[12px]"
+                    :class="
+                      r.sla_overdue
+                        ? 'font-semibold text-ink-red-7'
+                        : r.unread_dot
+                          ? 'font-semibold text-ink-green-7'
+                          : 'text-ink-gray-5'
+                    "
+                  >
+                    {{ timeAgo(r.last_message_ts) }}
+                  </span>
                 </div>
-                <!-- the Tratos-list identity line, compressed: equipo · reparación ·
-                 teléfono. It used to show device OR phone, so a repair conversation
-                 hid the number and a plain one hid nothing useful. -->
-                <div class="truncate text-[11px] text-ink-gray-5">
-                  {{ subtitle(r) }}
+                <div class="mt-0.5 flex items-center gap-2">
+                  <!-- the channel as a coloured dot, its name for screen readers:
+                       «WA» before every line read as jargon (Shell S4) -->
+                  <span
+                    v-if="r.last_channel && r.last_message"
+                    class="size-1.5 flex-none rounded-full"
+                    :style="`background:${chColor(r.last_channel)}`"
+                    :title="chName(r.last_channel)"
+                  /><span
+                    v-if="r.last_channel && r.last_message"
+                    class="sr-only"
+                    >{{ chName(r.last_channel) }}</span
+                  >
+                  <!-- the Tratos-list identity line (equipo · reparación · teléfono)
+                       stands in when there is no message yet -->
+                  <span
+                    class="min-w-0 flex-1 truncate text-[14px]"
+                    :class="
+                      r.unread_dot ? 'text-ink-gray-8' : 'text-ink-gray-6'
+                    "
+                  >
+                    {{
+                      r.last_message
+                        ? lastMessageText(r.last_message)
+                        : subtitle(r)
+                    }}
+                  </span>
+                  <!-- unread mark: an inbound message newer than your last open.
+                       A READ marker: it clears when you open the conversation,
+                       independent of the due chip (which clears on reply). -->
+                  <span
+                    v-if="r.unread_dot"
+                    class="size-2.5 flex-none rounded-full"
+                    style="background: var(--brand)"
+                    :aria-label="__('Mensajes sin abrir')"
+                    :title="
+                      __(
+                        'Mensajes nuevos sin abrir · desaparece al abrir la conversación (no es lo mismo que «Responder»)',
+                      )
+                    "
+                  />
                 </div>
-              </div>
-              <div class="flex flex-none flex-col items-end gap-1">
                 <div
-                  class="text-[10px] font-semibold"
-                  :class="r.sla_overdue ? 'text-ink-red-7' : 'text-ink-gray-4'"
+                  v-if="
+                    dueChip(r) || r.snoozed_until || r.reactivated || rowMeta(r)
+                  "
+                  class="mt-1 flex min-w-0 items-center gap-1.5 text-[12px] text-ink-gray-5"
                 >
-                  {{ timeAgo(r.last_message_ts) }}
+                  <!-- The one due chip («Venció hace 25 min» red · «Vence en 12 min»
+                       amber · «Esperando 3 h» with no limit set): the customer is
+                       waiting for our answer. It clears when you reply or resolve,
+                       not on open. The × resolves it without asking. -->
+                  <span
+                    v-if="dueChip(r)"
+                    class="inline-flex flex-none items-center gap-0.5 rounded-4 py-px pl-1.5 pr-0.5 text-[11px] font-semibold"
+                    :class="CHIP_CLASS[dueChip(r).tone]"
+                    :title="
+                      __(
+                        'The customer is waiting for your answer. It clears when you reply or resolve the conversation.',
+                      )
+                    "
+                    data-testid="due-chip"
+                  >
+                    {{ dueChip(r).text }}
+                    <button
+                      class="ml-0.5 flex size-4 items-center justify-center rounded-full leading-none hover:bg-surface-gray-3"
+                      :aria-label="__('Resolve without asking')"
+                      :title="__('Resolve without asking')"
+                      @click.stop="
+                        clearResponder(r.ref_doctype || 'CRM Deal', r.name)
+                      "
+                    >
+                      ×
+                    </button>
+                  </span>
+                  <span
+                    v-if="r.snoozed_until"
+                    class="flex-none rounded-4 bg-surface-violet-2 px-1.5 py-px text-[11px] font-semibold text-ink-violet-8"
+                    :title="__('Pospuesta — reaparece sola')"
+                  >
+                    💤 {{ fmtSnooze(r.snoozed_until) }}
+                  </span>
+                  <!-- ⏰ the snooze sweep brought this conversation back (woke after
+                       your last open, nobody replied since). Clears when you open it. -->
+                  <span
+                    v-else-if="r.reactivated"
+                    class="flex-none rounded-4 bg-surface-violet-2 px-1.5 py-px text-[11px] font-semibold text-ink-violet-8"
+                    :title="
+                      __(
+                        'Pospuesta vencida: volvió a la bandeja y nadie la ha abierto — desaparece al abrirla',
+                      )
+                    "
+                  >
+                    ⏰ {{ __('Reactivada') }}
+                  </span>
+                  <span
+                    v-if="r.status"
+                    class="size-1.5 flex-none rounded-full"
+                    :style="`background:${statusColor(r.status)}`"
+                    aria-hidden="true"
+                  />
+                  <span class="min-w-0 truncate">{{ rowMeta(r) }}</span>
                 </div>
-                <!-- red unread dot: there's an inbound message newer than your last
-              open. It's a READ marker — clears when you open the conversation,
-              independent of the amber "Responder" chip (which clears on reply). -->
-                <span
-                  v-if="r.unread_dot"
-                  class="h-2.5 w-2.5 rounded-full"
-                  style="background: #ef4444"
-                  :aria-label="__('Mensajes sin abrir')"
-                  :title="
-                    __(
-                      'Mensajes nuevos sin abrir · desaparece al abrir la conversación (no es lo mismo que «Responder»)',
-                    )
-                  "
-                />
               </div>
-            </div>
-            <div
-              class="flex items-center gap-1.5 text-[11.5px] text-ink-gray-6"
-            >
-              <!-- the channel as a coloured dot, its name for screen readers:
-                   «WA» before every line read as jargon (Shell S4) -->
-              <span
-                v-if="r.last_channel && r.last_message"
-                class="size-1.5 flex-none rounded-full"
-                :style="`background:${chColor(r.last_channel)}`"
-                :title="chName(r.last_channel)"
-              /><span v-if="r.last_channel && r.last_message" class="sr-only">{{
-                chName(r.last_channel)
-              }}</span>
-              <span v-if="r.last_message" class="truncate">{{
-                lastMessageText(r.last_message)
-              }}</span>
-            </div>
-            <div class="mt-[7px] flex flex-wrap gap-1.5">
-              <!-- Lead vs Trato (Deal) — leads now share the queue -->
-              <span
-                v-if="r.ref_doctype === 'CRM Lead'"
-                class="rounded-4 px-1.5 py-px text-[9.5px] font-semibold text-ink-violet-8 bg-surface-violet-2"
-              >
-                {{ __('Lead') }}
-              </span>
-              <!-- The one due chip («Venció hace 25 min» red · «Vence en 12 min» amber ·
-            «Esperando 3 h» with no limit set): the customer is waiting for our answer.
-            It clears when you reply (last direction flips to outbound) or resolve,
-            not on open — it is not a read receipt. The × resolves it without asking. -->
-              <span
-                v-if="dueChip(r)"
-                class="inline-flex items-center gap-0.5 rounded-4 py-px pl-1.5 pr-0.5 text-[9.5px] font-semibold"
-                :class="CHIP_CLASS[dueChip(r).tone]"
-                :title="
-                  __(
-                    'The customer is waiting for your answer. It clears when you reply or resolve the conversation.',
-                  )
-                "
-                data-testid="due-chip"
-              >
-                {{ dueChip(r).text }}
-                <button
-                  class="ml-0.5 flex h-3 w-3 items-center justify-center rounded-full leading-none hover:bg-surface-gray-3"
-                  :aria-label="__('Resolve without asking')"
-                  :title="__('Resolve without asking')"
-                  @click.stop="
-                    clearResponder(r.ref_doctype || 'CRM Deal', r.name)
-                  "
-                >
-                  ×
-                </button>
-              </span>
-              <span
-                v-if="r.snoozed_until"
-                class="rounded-4 bg-surface-violet-2 px-1.5 py-px text-[9.5px] font-semibold text-ink-violet-8"
-                :title="__('Pospuesta — reaparece sola')"
-              >
-                💤 {{ fmtSnooze(r.snoozed_until) }}
-              </span>
-              <!-- ⏰ the snooze sweep brought this conversation back (backend
-               r.reactivated: woke after your last open, nobody replied since). The
-               row also floats to the top at wake time. Clears when you open it. -->
-              <span
-                v-else-if="r.reactivated"
-                class="rounded-4 bg-surface-violet-2 px-1.5 py-px text-[9.5px] font-semibold text-ink-violet-8"
-                :title="
-                  __(
-                    'Pospuesta vencida: volvió a la bandeja y nadie la ha abierto — desaparece al abrirla',
-                  )
-                "
-              >
-                ⏰ {{ __('Reactivada') }}
-              </span>
-              <span
-                v-for="tg in (r.tags || []).slice(0, 2)"
-                :key="tg"
-                class="rounded-4 bg-surface-gray-2 px-1.5 py-px text-[9.5px] font-semibold text-ink-gray-6"
-              >
-                🏷 {{ tg }}
-              </span>
-              <span
-                v-if="r.status"
-                class="inline-flex items-center gap-1 rounded-4 bg-surface-gray-2 px-1.5 py-px text-[9.5px] font-semibold text-ink-gray-7"
-              >
-                <span
-                  class="h-1.5 w-1.5 flex-none rounded-full"
-                  :style="`background:${statusColor(r.status)}`"
-                />
-                {{ recordStageLabel(r.status, r.ref_doctype) }}
-              </span>
-              <!-- 🔧 newest repair order: folio + ITS status. The deal status above says
-               where the sale stands; this says where the device stands — the pair the
-               Tratos list shows as separate columns. Absent without taller. -->
-              <span
-                v-if="r.repair_order"
-                class="inline-flex items-center gap-1 rounded-4 bg-surface-blue-1 px-1.5 py-px text-[9.5px] font-semibold text-ink-blue-8"
-                :title="__('Orden de reparación más reciente de este trato')"
-              >
-                🔧 {{ __('Reparación') }}
-                <span v-if="r.repair_status" class="opacity-80"
-                  >· {{ r.repair_status }}</span
-                >
-                <span v-if="r.repair_count > 1" class="opacity-70"
-                  >+{{ r.repair_count - 1 }}</span
-                >
-              </span>
-              <!-- 💰 outstanding on the deal's invoices (backend sends it only when
-               the sales-docs flag is on and the deal owes something) -->
-              <span
-                v-if="r.saldo"
-                class="rounded-4 px-1.5 py-px text-[9.5px] font-semibold text-ink-amber-9 bg-surface-amber-1"
-                :title="__('Saldo pendiente en facturas del trato')"
-              >
-                💰 {{ formatMoney(r.saldo) }}
-              </span>
             </div>
           </div>
         </div>
@@ -1657,6 +1635,25 @@ function subtitle(r) {
   const job = [r.device, r.repair_type].filter((p) => p && String(p).trim())
   if (job.length) return job.join(' · ')
   return r.mobile_no ? formatPhone(r.mobile_no) : '—'
+}
+
+// The row's quiet third line: where the deal and its device stand, and what
+// is still owed. The deal status says where the sale is; the repair says where
+// the device is (the pair the Tratos list shows as columns).
+function rowMeta(r) {
+  const repair = r.repair_order
+    ? [__('Reparación'), r.repair_status].filter(Boolean).join(': ') +
+      (r.repair_count > 1 ? ` +${r.repair_count - 1}` : '')
+    : ''
+  return [
+    r.ref_doctype === 'CRM Lead' ? __('Lead') : '',
+    r.status ? recordStageLabel(r.status, r.ref_doctype) : '',
+    repair,
+    r.saldo ? __('Saldo {0}', [formatMoney(r.saldo)]) : '',
+    ...(r.tags || []).slice(0, 2).map((tag) => `#${tag}`),
+  ]
+    .filter(Boolean)
+    .join(' · ')
 }
 
 // Omnichannel tabs (Meta-style). Counts are REAL per-channel totals across all
