@@ -1,3 +1,4 @@
+<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (2914c0d19b1b). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <template>
   <!-- A status in es-MX words (utils/display statusLabel), coloured only when
        the worker must act. Put it on a row only when it changes what the
@@ -13,7 +14,7 @@
 </template>
 <script setup>
 import { computed } from 'vue'
-import { statusLabel, statusTone } from '@/utils/display'
+import { statusLabel, statusTone } from './host'
 
 const props = defineProps({
   /** The stored status («Completed», «Overdue», «No Answer»…). */

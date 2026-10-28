@@ -1,3 +1,4 @@
+<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (2914c0d19b1b). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <template>
   <!-- One list row (Shell SPEC §2.2.5, M3 list item): a leading avatar or
        icon, the title (wraps to two lines, never letter by letter), one
@@ -69,7 +70,7 @@
 import UiTag from './UiTag'
 import { RouterLink } from 'vue-router'
 import { computed, useAttrs } from 'vue'
-import { initials } from '@/utils/display'
+import { initials } from './host'
 
 const props = defineProps({
   title: { type: String, default: '' },

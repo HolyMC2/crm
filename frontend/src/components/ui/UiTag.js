@@ -1,3 +1,4 @@
+// Vendored from muelle/workspace/packages/ui@0.1.0 (2914c0d19b1b). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory.
 import { h } from 'vue'
 
 // Renders `as` (a native tag name or a component such as RouterLink) with the

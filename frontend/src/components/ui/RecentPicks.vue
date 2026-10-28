@@ -1,19 +1,20 @@
+<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (2914c0d19b1b). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <!-- «Recientes» as bubbles, four to a row (WhatsApp's recent searches): one
      tap back into a record. Neutral initials, two-line names. -->
 <template>
   <section
     v-if="picks.length"
-    :aria-label="__('Recientes')"
+    :aria-label="t('Recientes')"
     data-testid="recent-picks"
   >
     <div class="mb-1 flex items-center justify-between">
-      <p class="text-xs font-medium text-ink-gray-6">{{ __('Recientes') }}</p>
+      <p class="text-xs font-medium text-ink-gray-6">{{ t('Recientes') }}</p>
       <button
         type="button"
         class="-mr-2 min-h-11 px-2 text-xs font-medium text-ink-gray-6 hover:text-ink-gray-9"
         @click="$emit('clear')"
       >
-        {{ __('Borrar todo') }}
+        {{ t('Borrar todo') }}
       </button>
     </div>
     <div class="grid grid-cols-4 gap-x-1 gap-y-2">
@@ -39,6 +40,7 @@
 </template>
 
 <script setup>
+import { t } from './host'
 defineProps({
   // from useRecentPicks().picks
   picks: { type: Array, default: () => [] },

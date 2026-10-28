@@ -1,3 +1,4 @@
+<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (2914c0d19b1b). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <template>
   <!-- The one sheet for bounded tasks (Shell SPEC §2.2.3, Material bottom
        sheet): drag handle, title, scrim; back, swipe down, Esc or the scrim
@@ -41,8 +42,8 @@
               class="flex h-6 w-16 items-center justify-center"
               :aria-label="
                 expanded
-                  ? __('Collapse', null, 'Bottom sheet')
-                  : __('Expand', null, 'Bottom sheet')
+                  ? t('Collapse', null, 'Bottom sheet')
+                  : t('Expand', null, 'Bottom sheet')
               "
               :aria-expanded="String(expanded)"
               data-ui-sheet-handle
@@ -64,7 +65,7 @@
                 class="break-words text-xl font-semibold leading-snug [text-wrap:balance]"
                 :class="title ? '' : 'sr-only'"
               >
-                {{ title || ariaLabel || __('Options') }}
+                {{ title || ariaLabel || t('Options') }}
               </DialogTitle>
               <DialogDescription
                 v-if="subtitle"
@@ -76,14 +77,14 @@
             <DialogClose
               v-if="!phone && dismissible"
               class="-mr-2 -mt-1 flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-7 hover:bg-surface-gray-2"
-              :aria-label="__('Close')"
+              :aria-label="t('Close')"
             >
               <span class="lucide-x size-5" aria-hidden="true" />
             </DialogClose>
           </div>
         </div>
         <DialogTitle v-if="!title && phone" class="sr-only">
-          {{ ariaLabel || __('Options') }}
+          {{ ariaLabel || t('Options') }}
         </DialogTitle>
         <!-- Fixed under the title, outside the drag area (a chip, a search field). -->
         <div
@@ -132,6 +133,7 @@
   </DialogRoot>
 </template>
 <script setup>
+import { t } from './host'
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import {
   DialogClose,
@@ -144,7 +146,7 @@ import {
 } from 'reka-ui'
 import { useEventListener, usePointerSwipe } from '@vueuse/core'
 import { useRouter } from 'vue-router'
-import { isMobile } from '@/composables/breakpoint'
+import { isMobile } from './host'
 import { closeSheet, installSheetHistory, openSheet } from './sheetHistory'
 
 const props = defineProps({

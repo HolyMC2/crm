@@ -1,3 +1,4 @@
+// Vendored from muelle/workspace/packages/ui@0.1.0 (2914c0d19b1b). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory.
 // One history controller for every open BottomSheet, so the phone's back
 // button closes the top sheet and never leaves the page.
 //

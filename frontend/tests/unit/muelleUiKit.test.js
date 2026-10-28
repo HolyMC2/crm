@@ -37,7 +37,7 @@ import {
   StatusChip,
   configureUi,
   t,
-} from '@/vendor/muelle-ui'
+} from '@/components/ui'
 
 const state = { phone: ref(true), boot: ref(null) }
 configureUi({

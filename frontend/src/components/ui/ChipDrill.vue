@@ -1,3 +1,4 @@
+<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (2914c0d19b1b). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <!-- «Más filtros» for a search panel: one chip per long option list (stage,
      owner, source…); tapping it slides that list open under the row as more
      chips, one list at a time. -->
@@ -20,8 +21,8 @@
         <span v-if="sec.selected.length" class="text-[10px] opacity-70">{{
           sec.selected.length
         }}</span>
-        <LucideChevronDown
-          class="size-3.5 transition-transform duration-200"
+        <span
+          class="lucide-chevron-down size-3.5 transition-transform duration-200"
           :class="expanded === sec.key ? 'rotate-180' : ''"
           aria-hidden="true"
         />
@@ -64,7 +65,7 @@
           v-if="!groupsOf(current).some((g) => g.options.length)"
           class="py-1 text-xs text-ink-gray-5"
         >
-          {{ __('Sin opciones') }}
+          {{ t('Sin opciones') }}
         </p>
       </div>
     </ExpandTransition>
@@ -72,8 +73,8 @@
 </template>
 
 <script setup>
+import { t } from './host'
 import { computed, ref } from 'vue'
-import LucideChevronDown from '~icons/lucide/chevron-down'
 import ExpandTransition from './ExpandTransition.vue'
 import { chipClass, dotBinding } from './chipClass'
 

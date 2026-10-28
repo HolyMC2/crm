@@ -1,3 +1,4 @@
+<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (2914c0d19b1b). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <!-- One labelled row of toggle chips for a search panel: 44 px pills that
      wrap, never scroll sideways. `multiple` toggles values in an array;
      otherwise one value is picked (tapping it again picks `clearValue`). -->
@@ -32,8 +33,8 @@
       >
         {{
           expanded
-            ? __('Ver menos')
-            : __('+{0} más', [options.length - shown.length])
+            ? t('Ver menos')
+            : t('+{0} más', [options.length - shown.length])
         }}
       </button>
     </div>
@@ -41,6 +42,7 @@
 </template>
 
 <script setup>
+import { t } from './host'
 import { computed, ref } from 'vue'
 import { chipClass, dotBinding } from './chipClass'
 

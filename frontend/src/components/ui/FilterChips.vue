@@ -1,3 +1,4 @@
+<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (2914c0d19b1b). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <template>
   <!-- One horizontal row of filter chips (Shell SPEC §2.2.4, M3 filter chip),
        never wrapping: it scrolls sideways with a fade at the end. Filters
@@ -6,7 +7,7 @@
   <!-- In a search panel (`inline`): the chips wrap and the «Filtros» content
        sits in place under them, no sheet. -->
   <div v-if="inline" class="space-y-3" data-ui-filter-chips>
-    <section :aria-label="label || __('Filters')">
+    <section :aria-label="label || t('Filters')">
       <p v-if="label" class="mb-1.5 text-xs font-medium text-ink-gray-6">
         {{ label }}
       </p>
@@ -34,10 +35,10 @@
         </button>
       </div>
     </section>
-    <section v-if="$slots.filters" :aria-label="filtersLabel || __('Filters')">
+    <section v-if="$slots.filters" :aria-label="filtersLabel || t('Filters')">
       <div class="mb-1.5 flex items-center justify-between">
         <p class="text-xs font-medium text-ink-gray-6">
-          {{ filtersLabel || __('Filters') }}
+          {{ filtersLabel || t('Filters') }}
         </p>
         <button
           v-if="filtersCount"
@@ -45,7 +46,7 @@
           class="-my-3 min-h-11 px-1 text-xs text-ink-gray-5 underline"
           @click="$emit('clear-filters')"
         >
-          {{ __('Clear filters') }}
+          {{ t('Clear filters') }}
         </button>
       </div>
       <slot name="filters" :close="() => {}" />
@@ -64,7 +65,7 @@
       :key="chip.value"
       type="button"
       :class="panelChip(true)"
-      :aria-label="__('Remove filter {0}', [chip.label])"
+      :aria-label="t('Remove filter {0}', [chip.label])"
       @click="toggle(chip.value)"
     >
       {{ chip.label }}
@@ -74,10 +75,10 @@
       v-if="filtersCount"
       type="button"
       :class="panelChip(true)"
-      :aria-label="__('Clear filters')"
+      :aria-label="t('Clear filters')"
       @click="$emit('clear-filters')"
     >
-      {{ __('{0} filters on', [filtersCount]) }}
+      {{ t('{0} filters on', [filtersCount]) }}
       <span class="lucide-x size-3 flex-none" aria-hidden="true" />
     </button>
   </div>
@@ -85,7 +86,7 @@
     <div
       ref="row"
       role="group"
-      :aria-label="label || __('Filters')"
+      :aria-label="label || t('Filters')"
       class="flex flex-nowrap items-center gap-2 overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       :class="fade ? 'ui-chips-fade' : ''"
       @scroll.passive="updateFade"
@@ -97,8 +98,8 @@
         aria-haspopup="dialog"
         :aria-label="
           filtersCount
-            ? __('{0} filters on', [filtersCount])
-            : filtersLabel || __('Filters')
+            ? t('{0} filters on', [filtersCount])
+            : filtersLabel || t('Filters')
         "
         data-ui-filters-chip
         @click="sheet = true"
@@ -108,7 +109,7 @@
             class="lucide-sliders-horizontal size-4 flex-none"
             aria-hidden="true"
           />
-          {{ filtersLabel || __('Filters') }}
+          {{ filtersLabel || t('Filters') }}
           <span
             v-if="filtersCount"
             class="min-w-5 rounded-full bg-surface-gray-10 px-1.5 text-center text-xs font-semibold leading-5 text-ink-base"
@@ -150,7 +151,7 @@
     <BottomSheet
       v-if="$slots.filters"
       v-model:open="sheet"
-      :title="filtersLabel || __('Filters')"
+      :title="filtersLabel || t('Filters')"
     >
       <slot name="filters" :close="() => (sheet = false)" />
       <template #actions>
@@ -159,14 +160,14 @@
           variant="ghost"
           size="lg"
           class="min-h-11 w-full"
-          :label="__('Clear filters')"
+          :label="t('Clear filters')"
           @click="$emit('clear-filters')"
         />
         <Button
           variant="solid"
           size="lg"
           class="min-h-11 w-full"
-          :label="__('Show results')"
+          :label="t('Show results')"
           @click="apply"
         />
       </template>
@@ -174,6 +175,7 @@
   </div>
 </template>
 <script setup>
+import { t } from './host'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { Button } from 'frappe-ui'
 import BottomSheet from './BottomSheet.vue'

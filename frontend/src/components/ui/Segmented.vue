@@ -1,3 +1,4 @@
+<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (2914c0d19b1b). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <template>
   <!-- Two to four views of the same thing (Shell SPEC §2.2.4): one outlined
        track, equal segments, the chosen one tonal with a check. Not for

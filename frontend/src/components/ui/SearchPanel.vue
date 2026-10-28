@@ -1,3 +1,4 @@
+<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (2914c0d19b1b). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <!-- A phone list's top bar (WhatsApp pattern, Marco 2026-10-28): only the
      search pill shows. Focusing it slides open the panel under it (channel or
      view toggles, filters, recent records: the default slot) over the greyed
@@ -19,8 +20,8 @@
       <div
         class="flex min-h-11 min-w-0 flex-1 items-center gap-2 rounded-full bg-surface-gray-2 px-4 focus-within:ring-1 focus-within:ring-outline-gray-3"
       >
-        <LucideSearch
-          class="size-4 flex-none text-ink-gray-5"
+        <span
+          class="lucide-search size-4 flex-none text-ink-gray-5"
           aria-hidden="true"
         />
         <input
@@ -40,10 +41,10 @@
           v-if="query"
           type="button"
           class="-my-2 -mr-3 flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-5 hover:text-ink-gray-8"
-          :aria-label="__('Limpiar búsqueda')"
+          :aria-label="t('Limpiar búsqueda')"
           @click="clearQuery"
         >
-          <LucideX class="size-4" aria-hidden="true" />
+          <span class="lucide-x size-4" aria-hidden="true" />
         </button>
       </div>
       <Transition name="slide-x" mode="out-in">
@@ -54,7 +55,7 @@
           data-testid="search-panel-done"
           @click="close"
         >
-          {{ __('Listo') }}
+          {{ t('Listo') }}
         </button>
         <div v-else-if="$slots.trailing" class="flex flex-none items-center">
           <slot name="trailing" />
@@ -79,9 +80,8 @@
 </template>
 
 <script setup>
+import { t } from './host'
 import { ref } from 'vue'
-import LucideSearch from '~icons/lucide/search'
-import LucideX from '~icons/lucide/x'
 import ExpandTransition from './ExpandTransition.vue'
 
 defineProps({

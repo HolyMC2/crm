@@ -1,3 +1,4 @@
+<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (2914c0d19b1b). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <template>
   <!-- The one phone top app bar (Shell SPEC §2.2.1), grown from PowerAppBar:
        up/back · title (optionally a scope picker) · ≤3 icon actions · bell.
@@ -13,7 +14,7 @@
         <button
           type="button"
           :class="ICON_BUTTON"
-          :aria-label="__('Clear selection')"
+          :aria-label="t('Clear selection')"
           @click="$emit('clear-selection')"
         >
           <span class="lucide-x size-6" aria-hidden="true" />
@@ -21,15 +22,15 @@
         <p class="min-w-0 flex-1 truncate px-1 text-lg font-semibold">
           {{
             selectedCount === 1
-              ? __('1 selected')
-              : __('{0} selected', [selectedCount])
+              ? t('1 selected')
+              : t('{0} selected', [selectedCount])
           }}
         </p>
         <slot name="selection-actions" />
         <button
           type="button"
           :class="ICON_BUTTON"
-          :aria-label="__('Select the visible page')"
+          :aria-label="t('Select the visible page')"
           @click="$emit('select-all')"
         >
           <span class="lucide-square-check-big size-6" aria-hidden="true" />
@@ -39,7 +40,7 @@
         <button
           type="button"
           :class="ICON_BUTTON"
-          :aria-label="__('Close search')"
+          :aria-label="t('Close search')"
           @click="closeSearch"
         >
           <span class="lucide-arrow-left size-6" aria-hidden="true" />
@@ -50,8 +51,8 @@
           type="search"
           enterkeyhint="search"
           class="h-11 min-w-0 flex-1 rounded-full border-0 bg-surface-gray-2 px-4 text-base [&::-webkit-search-cancel-button]:hidden"
-          :placeholder="searchLabel || __('Search')"
-          :aria-label="searchLabel || __('Search')"
+          :placeholder="searchLabel || t('Search')"
+          :aria-label="searchLabel || t('Search')"
           v-bind="searchInputAttrs"
           data-appbar-search
           @input="$emit('update:search', $event.target.value)"
@@ -60,7 +61,7 @@
           v-if="search"
           type="button"
           :class="ICON_BUTTON"
-          :aria-label="__('Clear search')"
+          :aria-label="t('Clear search')"
           @click="clearSearch"
         >
           <span class="lucide-x size-6" aria-hidden="true" />
@@ -73,7 +74,7 @@
           :to="backTarget || undefined"
           :type="backTarget ? undefined : 'button'"
           :class="ICON_BUTTON"
-          :aria-label="backLabel || __('Back')"
+          :aria-label="backLabel || t('Back')"
           data-appbar-back
           @click="onBack"
         >
@@ -89,7 +90,7 @@
           v-if="loading"
           class="lucide-loader-circle size-5 flex-none animate-spin text-ink-gray-6"
           role="status"
-          :aria-label="__('Loading')"
+          :aria-label="t('Loading')"
         />
         <div ref="icons" class="flex flex-none items-center">
           <slot name="actions" />
@@ -97,7 +98,7 @@
             v-if="searchable"
             type="button"
             :class="ICON_BUTTON"
-            :aria-label="searchLabel || __('Search')"
+            :aria-label="searchLabel || t('Search')"
             data-appbar-search-open
             @click="$emit('update:searchOpen', true)"
           >
@@ -107,12 +108,12 @@
             v-if="selectable"
             type="button"
             :class="ICON_BUTTON"
-            :aria-label="selectLabel || __('Select')"
+            :aria-label="selectLabel || t('Select')"
             @click="$emit('start-select')"
           >
             <span class="lucide-square-check-big size-6" aria-hidden="true" />
           </button>
-          <AvisosBell v-if="showBell" :active="bellActive" />
+          <component :is="Bell" v-if="Bell" :active="bellActive" />
         </div>
       </template>
     </div>
@@ -168,10 +169,10 @@
     <BottomSheet
       v-if="scopes.length && sheetUsed"
       v-model:open="scopeSheet"
-      :title="scopeTitle || __('Choose a list')"
+      :title="scopeTitle || t('Choose a list')"
       flush
     >
-      <nav class="px-2 pb-3" :aria-label="scopeTitle || __('Choose a list')">
+      <nav class="px-2 pb-3" :aria-label="scopeTitle || t('Choose a list')">
         <button
           v-for="entry in scopes"
           :key="entry.value"
@@ -202,6 +203,7 @@
   </header>
 </template>
 <script setup>
+import { t } from './host'
 import {
   computed,
   defineAsyncComponent,
@@ -215,18 +217,13 @@ import {
 } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import ExpandTransition from './ExpandTransition.vue'
-import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
-import { shellBoot } from '@/composables/muelleShell'
-import { canReturnToReferrer } from '@/utils/historyBack'
+import { canReturnToReferrer, uiBell } from './host'
 import UiTag from './UiTag'
 
 // The scope sheet loads on its first open: the shell header renders this bar
 // on every page, and the sheet (reka Dialog) would otherwise sit in the entry
 // chunk (budget 180 KB gzip).
 const BottomSheet = defineAsyncComponent(() => import('./BottomSheet.vue'))
-const AvisosBell = defineAsyncComponent(
-  () => import('@/components/avisos/AvisosBell.vue'),
-)
 
 // The hover fill is for a pointer only: a tap leaves :hover on the button it landed on,
 // and the next page's arrow would show as pressed. A finger sees the fill while it presses.
@@ -290,9 +287,7 @@ watch(scopeSheet, (open) => {
 })
 const stacked = ref(false)
 
-const showBell = computed(
-  () => props.bell && moduleEnabled(shellBoot.value, 'avisos'),
-)
+const Bell = computed(() => (props.bell ? uiBell() : null))
 const backTarget = computed(() =>
   props.back && props.back !== true ? props.back : null,
 )
@@ -307,7 +302,7 @@ const titleProps = computed(() => ({
   count: props.count,
   pickable: pickable.value,
   open: props.picker ? props.pickerOpen : scopeSheet.value,
-  pickLabel: props.scopeTitle || __('Choose a list'),
+  pickLabel: props.scopeTitle || t('Choose a list'),
   // A top-level bar is the page's heading: its title takes display size.
   large: !props.back,
 }))

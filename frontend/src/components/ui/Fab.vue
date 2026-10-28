@@ -1,3 +1,4 @@
+<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (2914c0d19b1b). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <template>
   <!-- The one create action of a list (Shell SPEC §2.2.6). On a phone it docks
        at the end of the shell's command bar (primaryDock), in the thumb's

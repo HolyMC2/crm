@@ -4,6 +4,7 @@
 window.__CRM_BUILD__ = '2026-06-24a'
 import './index.css'
 import './utils/resourceConfig'
+import './uiHost'
 
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
