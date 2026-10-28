@@ -595,12 +595,10 @@ reload()
 onMounted(watchKeyboard)
 </script>
 <style>
-/* doco injects a floating «Ayuda» launcher (support_workflow.js) whose dragged
-   position persists per browser; on phone it covered the header title. The
-   shell offers «Ayuda» in the Más sheet instead. */
-@media (max-width: 639px) {
-  #muelle-support-workflow {
-    display: none !important;
-  }
+/* doco injects a floating «Ayuda» launcher (support_workflow.js). The shell
+   has its own doors: the bug at the foot of the desktop rail and «Ayuda» in
+   the phone's Más sheet, so the pill never floats over a page. */
+#muelle-support-workflow {
+  display: none !important;
 }
 </style>

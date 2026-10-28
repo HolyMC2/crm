@@ -851,13 +851,13 @@ describe('one frame for every route', () => {
     mobileView.value = 'list'
   })
 
-  it('phone hides doco’s floating «Ayuda» pill; the Más sheet offers it', () => {
+  it('doco’s floating «Ayuda» pill never shows; the Más sheet offers it', () => {
     const source = readFileSync(
       resolve(__dirname, '../../src/components/shell/MuelleShell.vue'),
       'utf8',
     )
     expect(source).toMatch(
-      /@media \(max-width: 639px\)[\s\S]*#muelle-support-workflow[\s\S]*display: none !important/,
+      /<style>\s*(\/\*[\s\S]*?\*\/\s*)?#muelle-support-workflow \{\s*display: none !important;/,
     )
     const sheet = readFileSync(
       resolve(__dirname, '../../src/components/shell/MoreSheet.vue'),
@@ -865,6 +865,35 @@ describe('one frame for every route', () => {
     )
     expect(sheet).toContain('window.docoSupport.openHelp()')
   })
+
+  it.each([true, false])(
+    'desktop rail: «Ayuda» is the bug beside the account (support %s)',
+    async (installed) => {
+      state.mobile.value = false
+      const openHelp = vi.fn()
+      if (installed) window.docoSupport = { openHelp }
+      try {
+        await mount('/contactos')
+        const help = root.querySelector('[data-testid="rail-help"]')
+        if (!installed) {
+          expect(help).toBeNull()
+          return
+        }
+        expect(help.getAttribute('aria-label')).toBe(
+          'Help and report a problem',
+        )
+        // One island: the account and the bug share the rail's foot.
+        expect(help.parentElement).toBe(
+          root.querySelector('[data-testid="rail-account"]').parentElement
+            .parentElement,
+        )
+        help.click()
+        expect(openHelp).toHaveBeenCalledTimes(1)
+      } finally {
+        delete window.docoSupport
+      }
+    },
+  )
 
   it('Ctrl+K opens the command palette and g c goes to Contactos', async () => {
     state.mobile.value = false

@@ -241,7 +241,30 @@
       :ventas="ventas"
       :active="active === 'avisos'"
     />
-    <UserMenu :ventas="ventas" :expanded="expanded" />
+    <!-- The account and «Ayuda» share one island at the foot: the person,
+         then the bug that opens doco's help and problem reports (no floating
+         pill, MuelleShell hides it). Collapsed, the bug sits above the face. -->
+    <div
+      class="flex"
+      :class="expanded ? 'items-center gap-1' : 'flex-col-reverse items-center'"
+    >
+      <UserMenu
+        :ventas="ventas"
+        :expanded="expanded"
+        :class="expanded ? 'min-w-0 flex-1' : ''"
+      />
+      <button
+        v-if="helpOn"
+        class="press flex size-10 flex-none items-center justify-center rounded-full text-ink-gray-6 hover:bg-surface-gray-2 hover:text-ink-gray-8"
+        :class="expanded ? 'mt-1' : ''"
+        :aria-label="__('Help and report a problem')"
+        :title="__('Help and report a problem')"
+        data-testid="rail-help"
+        @click="openHelp"
+      >
+        <span class="lucide-bug size-[18px]" aria-hidden="true" />
+      </button>
+    </div>
   </nav>
 </template>
 <script setup>
@@ -290,6 +313,9 @@ const AvisosBell = defineAsyncComponent(
 )
 const route = useRoute()
 const expanded = railExpanded
+// doco's support script (injected in <head>) runs before this bundle.
+const helpOn = typeof window.docoSupport?.openHelp === 'function'
+const openHelp = () => window.docoSupport.openHelp()
 const toggleLabel = computed(() =>
   expanded.value ? __('Collapse sidebar') : __('Expand sidebar'),
 )
