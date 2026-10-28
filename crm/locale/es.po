@@ -29044,3 +29044,96 @@ msgstr "Nadie más en este sitio puede hacerlo: la solicitud regresaría a ti. M
 
 msgid "It waits in their Pendientes, under To approve, and in their notifications until it is done."
 msgstr "Le queda en Pendientes, en Por aprobar, y en sus avisos hasta que se resuelva."
+msgid "Back to the chat"
+msgstr "Volver al chat"
+
+msgid "Open work ({0})"
+msgstr "Abierto ({0})"
+
+msgid "Open work"
+msgstr "Abierto"
+
+msgid "Conversations"
+msgstr "Conversaciones"
+
+msgid "New conversation"
+msgstr "Nueva conversación"
+
+msgid "This week"
+msgstr "Esta semana"
+
+msgid "Earlier"
+msgstr "Antes"
+
+msgid "Continue this conversation"
+msgstr "Seguir esta conversación"
+
+msgid "Nothing to show from this conversation."
+msgstr "No hay nada que mostrar de esta conversación."
+
+msgid "Search conversations"
+msgstr "Buscar conversaciones"
+
+msgid "No conversation mentions «{0}»."
+msgstr "Ninguna conversación menciona «{0}»."
+
+msgid "Current conversation"
+msgstr "Conversación actual"
+
+msgid "Earlier conversations are not kept on this site yet."
+msgstr "Este sitio todavía no guarda las conversaciones anteriores."
+
+msgid "No archived conversations."
+msgstr "No hay conversaciones archivadas."
+
+msgid "No earlier conversations yet. «New conversation» keeps this one here."
+msgstr "Aún no hay conversaciones anteriores. «Nueva conversación» guarda esta aquí."
+
+msgid "Conversation name"
+msgstr "Nombre de la conversación"
+
+msgid "Pin"
+msgstr "Fijar"
+
+msgid "Archive"
+msgstr "Archivar"
+
+msgid "Back to conversations"
+msgstr "Volver a las conversaciones"
+
+msgid "Archived ({0})"
+msgstr "Archivadas ({0})"
+
+msgid "{0} messages"
+msgstr "{0} mensajes"
+
+msgid "Nothing open. Captures you did not finish and changes waiting for your yes show up here, even after a new conversation."
+msgstr "Nada abierto. Aquí aparecen las capturas que no terminaste y los cambios que esperan tu sí, aunque empieces una conversación nueva."
+
+msgid "Waiting for your yes ({0})"
+msgstr "Esperan tu sí ({0})"
+
+msgid "Apply it now?"
+msgstr "¿Lo aplico ahora?"
+
+msgid "Not yet"
+msgstr "Todavía no"
+
+msgid "Declining…"
+msgstr "Rechazando…"
+
+msgid "Applying…"
+msgstr "Aplicando…"
+
+msgid "Yes, apply"
+msgstr "Sí, aplicar"
+
+msgid "from the chat"
+msgstr "desde el chat"
+
+msgid "This capture came from the chat and we could not tell which document it is, so this review cannot register it. Discard it here and capture the document again, or ask the assistant."
+msgstr "Esta captura llegó por el chat y no supimos qué documento es, así que esta revisión no puede registrarla. Descártala aquí y vuelve a capturar el documento, o pídeselo al asistente."
+
+msgctxt "Conversations"
+msgid "Pinned"
+msgstr "Fijadas"

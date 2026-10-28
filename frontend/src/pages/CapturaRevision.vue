@@ -766,6 +766,17 @@
             v-if="!review.created && review.status !== 'Descartado'"
             class="space-y-3 border-t border-outline-gray-2 pt-4"
           >
+            <p
+              v-if="review.supported === false"
+              class="text-sm text-ink-gray-7"
+              data-testid="captura-unsupported"
+            >
+              {{
+                __(
+                  'This capture came from the chat and we could not tell which document it is, so this review cannot register it. Discard it here and capture the document again, or ask the assistant.',
+                )
+              }}
+            </p>
             <ul
               v-if="review.can?.blockers?.length"
               class="space-y-1 text-sm text-ink-gray-7"
@@ -802,13 +813,14 @@
                 />
               </template>
               <Button
-                v-else-if="canEdit"
+                v-else-if="canEdit || review.can?.discard"
                 class="min-h-11 sm:min-h-8"
                 :label="__('Discard')"
                 :disabled="Boolean(busy)"
                 @click="confirmDiscard = true"
               />
               <Button
+                v-if="review.supported !== false"
                 variant="solid"
                 class="min-h-11 sm:min-h-8"
                 :label="__('Create draft')"

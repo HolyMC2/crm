@@ -317,7 +317,7 @@ describe('pending captures', () => {
     expect(pendingCaptureStatus({ failed: true }).theme).toBe('red')
     expect(pendingCaptureStatus({ status: 'Mapeado' })).toEqual({
       label: 'To finish',
-      theme: 'orange',
+      theme: 'amber',
     })
   })
   it('Compras and Gastos list the captures they draft', () => {
@@ -438,6 +438,17 @@ describe('review answers before the draft', () => {
     expect(page).toContain("act('answer_payment', { choice: option.value })")
     expect(page).toMatch(
       /act\('answer_payment', \{\s*choice: 'other',\s*account: value,?\s*\}\)/,
+    )
+  })
+
+  it('lets a chat capture it cannot draft be discarded, and says why', () => {
+    const page = source('pages/CapturaRevision.vue')
+    expect(page).toContain('v-else-if="canEdit || review.can?.discard"')
+    expect(page).toMatch(
+      /v-if="review\.supported === false"\s*class="text-sm text-ink-gray-7"\s*data-testid="captura-unsupported"/,
+    )
+    expect(page).toMatch(
+      /v-if="review\.supported !== false"\s*variant="solid"[^>]*:label="__\('Create draft'\)"/,
     )
   })
 })

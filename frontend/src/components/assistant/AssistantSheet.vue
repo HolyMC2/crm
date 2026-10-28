@@ -25,9 +25,17 @@
       <AssistantHeader :closable="isMobile" @close="closeAssistant" />
     </template>
     <div ref="panel" data-testid="assistant-sheet">
-      <AssistantLog @navigate="onNavigate" />
+      <AssistantOpenWork
+        v-if="sessions.view === 'open'"
+        @navigate="onNavigate"
+      />
+      <AssistantConversations
+        v-else-if="sessions.view !== 'chat'"
+        @navigate="onNavigate"
+      />
+      <AssistantLog v-else @navigate="onNavigate" />
     </div>
-    <template #footer>
+    <template v-if="sessions.view === 'chat'" #footer>
       <AssistantComposer />
     </template>
   </BottomSheet>
@@ -42,9 +50,12 @@ import { shellTitle } from '@/utils/shellTitle'
 import BottomSheet from '@/components/ui/BottomSheet.vue'
 import { isMobile } from '@/composables/breakpoint'
 import AssistantComposer from './AssistantComposer.vue'
+import AssistantConversations from './AssistantConversations.vue'
 import AssistantHeader from './AssistantHeader.vue'
 import AssistantLog from './AssistantLog.vue'
+import AssistantOpenWork from './AssistantOpenWork.vue'
 import AssistantPanel from './AssistantPanel.vue'
+import { sessions } from './assistantSessions'
 import {
   assistant,
   assistantEnabled,

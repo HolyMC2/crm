@@ -192,8 +192,8 @@ export function draftTarget(created, { returnTo, returnLabel } = {}) {
 
 const LINE_STATES = {
   mapped: ['Item assigned', 'green'],
-  ask: ['Choose the item', 'orange'],
-  new: ['No item yet', 'orange'],
+  ask: ['Choose the item', 'amber'],
+  new: ['No item yet', 'amber'],
   dropped: ['Left out', 'gray'],
 }
 export function lineStateLabel(state) {
@@ -211,7 +211,7 @@ export function captureStatus(review) {
   if (review.error) return { label: tr('Needs attention'), theme: 'red' }
   if (review.status === 'Descartado')
     return { label: tr('Discarded'), theme: 'gray' }
-  return { label: tr('To review', null, 'Captura'), theme: 'orange' }
+  return { label: tr('To review', null, 'Captura'), theme: 'amber' }
 }
 
 function round2(value) {
@@ -265,7 +265,7 @@ export async function loadPendingCaptures(targets) {
 export function pendingCaptureStatus(row) {
   if (row?.processing) return { label: tr('Reading'), theme: 'blue' }
   if (row?.failed) return { label: tr('Needs attention'), theme: 'red' }
-  return { label: tr('To finish', null, 'Captura'), theme: 'orange' }
+  return { label: tr('To finish', null, 'Captura'), theme: 'amber' }
 }
 
 /** Lines still waiting for an item (the blockers count them too). */
