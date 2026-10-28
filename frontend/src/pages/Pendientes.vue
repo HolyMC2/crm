@@ -258,9 +258,7 @@
                 :key="n"
                 class="flex items-start gap-3 border-b border-outline-gray-1 py-3"
               >
-                <span
-                  class="size-5 shrink-0 rounded-full bg-surface-gray-2"
-                />
+                <span class="size-5 shrink-0 rounded-full bg-surface-gray-2" />
                 <span class="min-w-0 flex-1 space-y-2">
                   <span
                     class="block h-3.5 rounded-full bg-surface-gray-2"
@@ -297,7 +295,9 @@
                 <Button
                   v-if="state.segment === 'hoy' && counts.upcoming?.value"
                   class="mt-4 min-h-11 sm:min-h-8"
-                  :label="__('See upcoming ({0})', [countText(counts.upcoming)])"
+                  :label="
+                    __('See upcoming ({0})', [countText(counts.upcoming)])
+                  "
                   @click="selectSegment('upcoming')"
                 />
                 <Button
@@ -321,7 +321,10 @@
                 >
                   {{ groupLabel(group) }}
                   <span
-                    v-if="sections[group]?.rows?.length && countText(sections[group]?.count)"
+                    v-if="
+                      sections[group]?.rows?.length &&
+                      countText(sections[group]?.count)
+                    "
                     class="num font-medium"
                     :class="
                       group === 'overdue' ? 'text-ink-red-7' : 'text-ink-gray-5'
@@ -364,7 +367,9 @@
                 <div v-if="sections[group]?.has_more" class="px-4 py-2 sm:px-6">
                   <Button
                     :label="__('See all')"
-                    @click="selectSegment(group === 'upcoming' ? 'upcoming' : group)"
+                    @click="
+                      selectSegment(group === 'upcoming' ? 'upcoming' : group)
+                    "
                   />
                 </div>
               </section>
@@ -811,7 +816,8 @@ const shownGroups = computed(() =>
   viewGroups(state.value.segment).filter(
     (group) =>
       sections[group]?.rows?.length ||
-      (!phone.value && !(state.value.segment === 'mine' && group === 'overdue')),
+      (!phone.value &&
+        !(state.value.segment === 'mine' && group === 'overdue')),
   ),
 )
 const guard = ref(''),
@@ -1226,7 +1232,11 @@ async function undo(row) {
     doneRows.value = doneRows.value.filter((item) => rowKey(item) !== key)
     doneCount.value = Math.max(0, doneCount.value - 1)
   }
-  const open = { ...row, status: 'Open', group: groupOf({ ...row, status: 'Open' }, today.value) }
+  const open = {
+    ...row,
+    status: 'Open',
+    group: groupOf({ ...row, status: 'Open' }, today.value),
+  }
   const list = sectioned.value ? sections[open.group]?.rows : null
   if (list && !list.some((item) => rowKey(item) === key)) {
     list.unshift(open)
@@ -1368,10 +1378,7 @@ async function quickAdd({ values, parsed }) {
     if (list) {
       const index = list.findIndex((item) => rowKey(item) === key)
       if (index >= 0) list.splice(index, 1, row)
-      live.mark(
-        [],
-        [rowKey(row)],
-      )
+      live.mark([], [rowKey(row)])
     }
     if (others)
       toast.success(__('Handed to {0}', [parsed.person?.name || '']), {
@@ -1399,7 +1406,8 @@ async function quickAdd({ values, parsed }) {
       if (index >= 0) list.splice(index, 1)
       if (sectioned.value) bumpCount(temp.group, -1)
     }
-    if (!composer.value?.text) composer.value?.restore(parsed.title && textOf(parsed))
+    if (!composer.value?.text)
+      composer.value?.restore(parsed.title && textOf(parsed))
     const reason = pendienteError(error)
     toast.error(`${reason.title}. ${reason.detail}`)
   }
@@ -1410,7 +1418,11 @@ function textOf(parsed) {
 }
 // The list on screen a new row belongs in (null: another view shows it).
 function listFor(row) {
-  if (state.value.q || state.value.priority || state.value.source === 'CRM Task')
+  if (
+    state.value.q ||
+    state.value.priority ||
+    state.value.source === 'CRM Task'
+  )
     return null
   if (sectioned.value) {
     if (!viewGroups(state.value.segment).includes(row.group)) return null

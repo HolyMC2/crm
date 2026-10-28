@@ -315,14 +315,13 @@ const initials = computed(() =>
 )
 // Team rows open read-only; the owner completes them.
 const actionable = computed(() => props.row.mine && !props.row.cancelled)
-const late = computed(
-  () => props.row.group === 'overdue' && props.row.status !== 'Closed',
-)
+// Red only while it is still late: a ticked row is done, not overdue.
+const late = computed(() => props.row.group === 'overdue' && !checked.value)
 const dueToday = computed(() => props.row.group === 'today')
 // «Sin fecha» says nothing on a row; a dateless row shows no due at all.
 const due = computed(() => {
   if (!props.row.date && !checked.value) return ''
-  if (late.value && !props.completing) return lateText(props.row, props.today)
+  if (late.value) return lateText(props.row, props.today)
   return dueText(
     props.completing ? { ...props.row, status: 'Closed' } : props.row,
     props.today,
