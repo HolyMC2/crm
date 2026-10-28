@@ -54,7 +54,19 @@ vi.mock('@/components/ui', async () => {
         ]),
   })
   return {
-    AppBar: passthrough('header'),
+    // the bar's search panel renders as if open
+    AppBar: {
+      setup:
+        (props, { slots }) =>
+        () =>
+          h('header', [
+            h(
+              'div',
+              { 'data-appbar-search-panel': '' },
+              slots['search-panel']?.({ close: () => {} }),
+            ),
+          ]),
+    },
     EmptyState: passthrough('section'),
     FilterChips: {
       props: ['modelValue', 'chips'],
@@ -262,11 +274,15 @@ describe('page', () => {
     expect(el.querySelector('[aria-label="Apagar: Timbrar"]')).not.toBeNull()
   })
 
-  it('filters with the chips', async () => {
+  it('filters with the chips in the search panel', async () => {
     state.replies.herramientas = { herramientas: ROWS.map((r) => ({ ...r })) }
     const el = mount(Page)
     await flush()
-    el.querySelector('[data-chip="apagadas"]').click()
+    // On a phone the chips sit under the search (ui/AppBar #search-panel).
+    expect(el.querySelectorAll('[data-chip="apagadas"]')).toHaveLength(1)
+    el.querySelector(
+      '[data-appbar-search-panel] [data-chip="apagadas"]',
+    ).click()
     await flush()
     expect(
       [...el.querySelectorAll('li')].map((li) => li.textContent),

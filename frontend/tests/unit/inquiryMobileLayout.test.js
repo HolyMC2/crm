@@ -179,7 +179,7 @@ describe('native inquiry responsive layout rendering', () => {
     resize(390)
     await expectInquiryContent('mobile-header')
     expect(
-      root.querySelector('.page-in [data-testid="inquiries-page"]'),
+      root.querySelector('.ventas-scroll [data-testid="inquiries-page"]'),
     ).not.toBeNull()
     expect(root.querySelector('[data-testid="desktop-rail"]')).toBeNull()
 

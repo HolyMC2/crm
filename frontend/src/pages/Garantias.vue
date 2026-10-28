@@ -72,7 +72,45 @@
             <LucidePlus class="h-6 w-6" />
           </button>
         </template>
-        <!-- No counts strip: the chip row under the bar carries the counts. -->
+        <!-- Search opens the filters under it (ui/AppBar #search-panel); the
+             closed bar keeps only what narrows the list. -->
+        <template #search-panel>
+          <FilterChips
+            v-if="chipRow.length"
+            inline
+            multiple
+            :model-value="chipModel"
+            :chips="chipRow"
+            :label="__('Needs attention')"
+            @update:model-value="onChips"
+          />
+          <ChipGroup
+            :label="__('Kind', null, 'Garantías')"
+            :options="kindOptions.filter((option) => option.value)"
+            :model-value="state.kind || ''"
+            data-garantias-kind
+            @update:model-value="(value) => list.navigate({ kind: value })"
+          />
+        </template>
+        <template #active>
+          <FilterChips
+            summary
+            multiple
+            :model-value="chipModel"
+            :chips="chipRow"
+            @update:model-value="onChips"
+          />
+          <button
+            v-if="state.kind"
+            type="button"
+            :class="[chipClass(true), 'mt-1.5']"
+            :aria-label="__('Remove filter {0}', [kindLabel(state.kind)])"
+            @click="list.navigate({ kind: '' })"
+          >
+            {{ kindLabel(state.kind) }}
+            <span class="lucide-x size-3 flex-none" aria-hidden="true" />
+          </button>
+        </template>
       </PowerAppBar>
       <header
         v-else
@@ -121,7 +159,7 @@
       >
         {{ boot.setup_note }}
       </p>
-      <!-- On a phone the kind is in the chip row's «Filtros» sheet. -->
+      <!-- On a phone the kind is in the search panel. -->
       <div
         v-if="!list.phone.value"
         class="flex flex-wrap items-center gap-2 px-4 pb-2 pt-2 sm:px-6 sm:pt-0"
@@ -152,11 +190,11 @@
         />
       </div>
       <!-- One filter row: what needs attention (past the SLA, nobody on it)
-           and «Míos» instead of a separate checkbox. -->
+           and «Míos» instead of a separate checkbox. Phone: in the search
+           panel above. -->
       <div
-        v-if="chipRow.length || list.phone.value"
+        v-if="chipRow.length && !list.phone.value"
         class="pb-3 sm:px-2"
-        :class="list.phone.value ? 'pt-2' : ''"
         data-garantias-chips
       >
         <FilterChips
@@ -164,24 +202,8 @@
           :model-value="chipModel"
           :chips="chipRow"
           :label="__('Needs attention')"
-          :filters-count="state.kind ? 1 : 0"
           @update:model-value="onChips"
-          @clear-filters="list.navigate({ kind: '' })"
-        >
-          <template v-if="list.phone.value" #filters>
-            <p class="pb-1 text-sm text-ink-gray-6">
-              {{ __('Kind', null, 'Garantías') }}
-            </p>
-            <ListRow
-              v-for="option in kindOptions"
-              :key="option.value || 'all'"
-              :title="option.label"
-              :selected="state.kind === option.value"
-              data-garantias-kind
-              @click="list.navigate({ kind: option.value })"
-            />
-          </template>
-        </FilterChips>
+        />
       </div>
       <div
         v-if="problem"
@@ -306,42 +328,22 @@
                     data-next-step
                     >{{ nextStepLabel(row) }}</span
                   >
-                  <span class="mt-1 flex flex-wrap gap-1">
-                    <Badge theme="gray" :label="kindLabel(row.kind)" />
-                    <Badge
-                      v-if="state.segment === 'cerradas'"
-                      :theme="stateTheme(row.state)"
-                      :label="stateLabel(row.state)"
-                    />
-                    <template v-else>
-                      <Badge
-                        v-if="state.segment === 'mis-casos'"
-                        :theme="stateTheme(row.state)"
-                        :label="stateLabel(row.state)"
-                      />
-                      <Badge
-                        v-if="row.due"
-                        :theme="dueTheme(row.due)"
-                        :label="dueLabel(row.due)"
-                      />
-                      <Badge
-                        v-if="ageLabel(row.age_days)"
-                        :theme="ageTone(row.age_days)"
-                        :label="ageLabel(row.age_days)"
-                        data-age
-                      />
-                      <Badge
-                        v-if="!row.assignees?.length"
-                        theme="orange"
-                        :label="__('Unassigned')"
-                      />
-                    </template>
-                    <Badge
-                      v-for="person in row.assignees"
-                      :key="person.user"
-                      theme="blue"
-                      :label="person.full_name"
-                    />
+                  <!-- one meta line instead of a row of tags: kind · state or
+                       deadline · age · who; only the deadline and alerts carry colour -->
+                  <span
+                    class="mt-0.5 block truncate text-[13px] text-ink-gray-6"
+                    data-garantias-meta
+                  >
+                    <template
+                      v-for="(part, i) in metaParts(row)"
+                      :key="part.key"
+                      ><span v-if="i" aria-hidden="true"> · </span
+                      ><span
+                        :class="TONE_TEXT[part.tone] || ''"
+                        v-bind="part.attrs"
+                        >{{ part.text }}</span
+                      ></template
+                    >
                   </span>
                 </span>
               </a>
@@ -421,13 +423,15 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Badge, Button, FormControl, toast } from 'frappe-ui'
-import { FilterChips, ListRow } from '@/components/ui'
+import { Button, FormControl, toast } from 'frappe-ui'
+import { FilterChips } from '@/components/ui'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import AssignDialog from '@/components/garantias/AssignDialog.vue'
 import BulkAssignSheet from '@/components/garantias/BulkAssignSheet.vue'
 import NewClaimDialog from '@/components/garantias/NewClaimDialog.vue'
 import PowerAppBar from '@/components/power/PowerAppBar.vue'
+import ChipGroup from '@/components/ui/ChipGroup.vue'
+import { chipClass } from '@/components/ui/chipClass'
 import PowerBulkBar from '@/components/power/PowerBulkBar.vue'
 import { openShortcutSheet } from '@/composables/shellKeyboard'
 import { offerUndo, runUndo } from '@/composables/powerUndo'
@@ -630,6 +634,49 @@ const emptyBody = computed(() => {
       )
     : __('Cases move here as they progress.')
 })
+
+// Badge themes as text colour for the row's meta line; gray stays quiet.
+const TONE_TEXT = {
+  red: 'font-medium text-ink-red-7',
+  orange: 'text-ink-amber-8',
+  amber: 'text-ink-amber-8',
+  green: 'text-ink-green-7',
+  blue: 'text-ink-blue-7',
+}
+function metaParts(row) {
+  const parts = [{ key: 'kind', text: kindLabel(row.kind), tone: 'gray' }]
+  const closed = state.value.segment === 'cerradas'
+  if (closed || state.value.segment === 'mis-casos')
+    parts.push({
+      key: 'state',
+      text: stateLabel(row.state),
+      tone: stateTheme(row.state),
+    })
+  if (!closed) {
+    if (row.due)
+      parts.push({
+        key: 'due',
+        text: dueLabel(row.due),
+        tone: dueTheme(row.due),
+      })
+    if (ageLabel(row.age_days))
+      parts.push({
+        key: 'age',
+        text: ageLabel(row.age_days),
+        tone: ageTone(row.age_days),
+        attrs: { 'data-age': '' },
+      })
+    if (!row.assignees?.length)
+      parts.push({ key: 'nobody', text: __('Unassigned'), tone: 'orange' })
+  }
+  if (row.assignees?.length)
+    parts.push({
+      key: 'who',
+      text: row.assignees.map((person) => person.full_name).join(', '),
+      tone: 'gray',
+    })
+  return parts
+}
 
 /** The record's route; going back lands on this row of this list. */
 function recordRouteFor(row) {

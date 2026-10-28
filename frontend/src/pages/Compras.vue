@@ -50,18 +50,35 @@
           @select-all="list.selectAll"
           @clear-selection="list.clearSelection"
         >
-          <template #actions>
-            <CapturarDocumentoButton
-              variant="appbar"
-              :targets="['Purchase Order', 'Purchase Invoice']"
-              return-label="Compras"
-            />
-            <Button
-              :icon="LucideLayers"
-              variant="ghost"
-              class="min-h-11 min-w-11"
-              :aria-label="__('Restock from a list', null, 'Surtido')"
-              @click="router.push({ name: 'CompraSurtido' })"
+          <!-- Search, select and the bell only (Marco 2026-10-28): capture and
+               «Surtir» are shortcuts in the search panel. -->
+          <template #search-panel>
+            <section :aria-label="__('Shortcuts')">
+              <p class="mb-1.5 text-xs font-medium text-ink-gray-6">
+                {{ __('Shortcuts') }}
+              </p>
+              <div class="flex flex-wrap gap-1.5">
+                <CapturarDocumentoButton
+                  variant="chip"
+                  :targets="['Purchase Order', 'Purchase Invoice']"
+                  return-label="Compras"
+                />
+                <button
+                  type="button"
+                  :class="chipClass(false)"
+                  data-compras-surtido
+                  @click="router.push({ name: 'CompraSurtido' })"
+                >
+                  <LucideLayers class="size-3.5" aria-hidden="true" />
+                  {{ __('Restock from a list', null, 'Surtido') }}
+                </button>
+              </div>
+            </section>
+            <RecentPicks
+              v-if="!list.search.value"
+              :picks="recentPurchases.picks.value"
+              @pick="openRecent"
+              @clear="recentPurchases.clear()"
             />
           </template>
           <template v-if="counts" #summary>
@@ -235,14 +252,14 @@
                 </label>
                 <a
                   :href="recordHref(row)"
-                  class="flex min-h-14 min-w-0 flex-1 items-start gap-3 px-4 py-3 hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:px-6"
+                  class="flex min-h-14 min-w-0 flex-1 items-start gap-3 px-4 py-2.5 hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:px-6"
                   :class="
                     state.segment === 'por-comprar' &&
                     (!list.phone.value || list.selecting.value)
                       ? 'pl-2 sm:pl-2'
                       : ''
                   "
-                  @click="list.onRowClick($event, row)"
+                  @click="onRowOpen($event, row)"
                 >
                   <Icon
                     :icon="
@@ -259,11 +276,9 @@
                           : __('Supplier not visible'))
                       }}
                     </span>
-                    <!-- The delivery date never gets cut off: its own line on
-                       a phone, and on a wide row the number truncates first. -->
-                    <span
-                      class="flex flex-col text-sm text-ink-gray-6 sm:flex-row"
-                    >
+                    <!-- One meta line: status · delivery · what is pending. The
+                       delivery date never gets cut off: the status truncates first. -->
+                    <span class="flex min-w-0 text-[13px] text-ink-gray-6">
                       <span class="min-w-0 truncate">{{
                         statusLabel(row)
                       }}</span>
@@ -274,8 +289,7 @@
                           lateDays(row) ? 'font-medium text-ink-red-7' : ''
                         "
                         data-testid="compras-entrega"
-                        ><span class="hidden sm:inline" aria-hidden="true"
-                          >&nbsp;·&nbsp;</span
+                        ><span aria-hidden="true">&nbsp;·&nbsp;</span
                         >{{ __('Delivery {0}', [formatDay(row.due_date)])
                         }}<template v-if="lateDays(row)">
                           · atrasada</template
@@ -283,28 +297,48 @@
                       >
                     </span>
                     <span
-                      v-if="row.kind === 'orden' && Number(row.docstatus) === 1"
-                      class="mt-0.5 block text-sm text-ink-gray-8"
-                      >{{ progressLabel(row) }}</span
+                      v-if="
+                        (row.kind === 'orden' && Number(row.docstatus) === 1) ||
+                        row.in_receipt ||
+                        billPending(row)
+                      "
+                      class="block truncate text-[13px] text-ink-gray-8"
                     >
-                    <span class="mt-1 flex flex-wrap gap-1">
-                      <Badge
-                        v-if="row.in_receipt"
-                        theme="orange"
-                        :label="__('Receipt in progress')"
-                      />
-                      <Badge
-                        v-if="billPending(row)"
-                        theme="blue"
-                        :label="__('Bill pending')"
-                      />
+                      <template
+                        v-if="
+                          row.kind === 'orden' && Number(row.docstatus) === 1
+                        "
+                        >{{ progressLabel(row) }}</template
+                      ><template v-if="row.in_receipt"
+                        ><span
+                          v-if="
+                            row.kind === 'orden' && Number(row.docstatus) === 1
+                          "
+                          aria-hidden="true"
+                          >&nbsp;·&nbsp;</span
+                        ><span class="text-ink-amber-8">{{
+                          __('Receipt in progress')
+                        }}</span></template
+                      ><template v-if="billPending(row)"
+                        ><span
+                          v-if="
+                            (row.kind === 'orden' &&
+                              Number(row.docstatus) === 1) ||
+                            row.in_receipt
+                          "
+                          aria-hidden="true"
+                          >&nbsp;·&nbsp;</span
+                        ><span class="text-ink-blue-7">{{
+                          __('Bill pending')
+                        }}</span></template
+                      >
                     </span>
                   </span>
                   <span
                     v-if="
                       row.grand_total !== undefined && row.grand_total !== null
                     "
-                    class="shrink-0 text-right text-lg font-semibold tabular-nums text-ink-gray-9"
+                    class="num shrink-0 text-right text-base font-semibold text-ink-gray-9"
                     >{{ money(row.grand_total, row.currency) }}</span
                   >
                 </a>
@@ -430,7 +464,7 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Badge, Button, FormControl, toast } from 'frappe-ui'
+import { Button, FormControl, toast } from 'frappe-ui'
 import { formatDay } from '@/utils/contactos'
 import { dayDiff, parseServerDate } from '@/utils/display'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
@@ -440,6 +474,9 @@ import CapturarDocumentoButton from '@/components/captura/CapturarDocumentoButto
 import CapturasPendientes from '@/components/captura/CapturasPendientes.vue'
 import HandoffDialog from '@/components/compras/HandoffDialog.vue'
 import PowerAppBar from '@/components/power/PowerAppBar.vue'
+import RecentPicks from '@/components/ui/RecentPicks.vue'
+import { chipClass } from '@/components/ui/chipClass'
+import { useRecentPicks } from '@/composables/useRecentPicks'
 import PowerBulkBar from '@/components/power/PowerBulkBar.vue'
 import { openShortcutSheet } from '@/composables/shellKeyboard'
 import { usePowerList } from '@/composables/usePowerList'
@@ -600,6 +637,21 @@ function recordRouteFor(row, extra = {}) {
     ...recordRoute(row),
     query: { list: listHref(list.returnQuery(row)), ...extra },
   }
+}
+// The purchases opened lately on this device, in the search panel.
+const recentPurchases = useRecentPicks('muelle:compras-recent')
+function onRowOpen(event, row) {
+  if (row.party)
+    recentPurchases.touch({
+      name: row.name,
+      doctype: row.kind,
+      label: row.party,
+    })
+  list.onRowClick(event, row)
+}
+function openRecent(pick) {
+  list.searchOpen.value = false
+  router.push(recordRoute({ name: pick.name, kind: pick.doctype }))
 }
 function recordHref(row) {
   const target = recordRouteFor(row)

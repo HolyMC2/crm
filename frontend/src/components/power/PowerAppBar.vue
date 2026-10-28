@@ -56,6 +56,12 @@
     <template #actions>
       <slot name="actions" />
     </template>
+    <template v-if="$slots['search-panel']" #search-panel="panel">
+      <slot name="search-panel" v-bind="panel" />
+    </template>
+    <template v-if="$slots.active" #active>
+      <slot name="active" />
+    </template>
     <template v-if="$slots.summary" #summary>
       <div data-power-summary class="contents">
         <slot name="summary" />

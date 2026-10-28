@@ -2,6 +2,7 @@
 // Muelle may do, per tool, edited by the owner. The flags live in doco
 // (docoutils/assistant/herramientas); this file only calls them and shapes rows.
 import { call } from 'frappe-ui'
+import { matchTokens } from '@/vendor/muelle-shell/contracts/search'
 
 const API = 'doco.docoutils.assistant.herramientas.api'
 
@@ -36,12 +37,9 @@ export function matches(row, chip, query) {
   if (chip === 'escriben' && row.efecto === 'lectura') return false
   if (chip === 'sensibles' && !row.categoria) return false
   if (chip === 'cambiadas' && !row.cambiada) return false
-  const q = (query || '').trim().toLowerCase()
-  if (!q) return true
-  // what the owner sees, never the model's description or the tool id
-  return [row.titulo, row.resumen, row.grupo]
-    .filter(Boolean)
-    .some((text) => text.toLowerCase().includes(q))
+  // what the owner sees, never the model's description or the tool id; the
+  // shell's search rule (any word order, accent-blind)
+  return matchTokens(query || '', row.titulo, row.resumen, row.grupo)
 }
 
 export function chipCounts(rows) {

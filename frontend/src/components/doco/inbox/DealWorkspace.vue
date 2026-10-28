@@ -31,25 +31,37 @@
       </div>
       <LostStagePrompt />
 
+      <!-- Phone: the tabs share the width (no sideways scroll that hid
+           «Reparación», Marco 2026-10-28) and use short labels. The underline
+           slides to the picked tab. -->
       <div
+        ref="tabListEl"
         role="tablist"
-        class="flex h-11 flex-none items-center gap-0.5 overflow-x-auto border-b border-outline-gray-1 px-3 text-[13px]"
+        class="relative flex h-11 flex-none items-center border-b border-outline-gray-1 text-[13px] max-sm:px-1 sm:gap-0.5 sm:overflow-x-auto sm:px-3"
       >
         <button
           v-for="t in visibleTabs"
           :key="t.key"
+          :ref="(el) => (tabEls[t.key] = el)"
           role="tab"
           :aria-selected="activeTab === t.key"
-          class="press flex h-11 flex-none items-center gap-1.5 whitespace-nowrap border-b-2 px-[11px] transition-colors duration-150"
+          :aria-label="t.label"
+          class="press flex h-11 items-center justify-center whitespace-nowrap px-[11px] transition-colors duration-150 max-sm:min-w-0 max-sm:flex-1 max-sm:px-1 max-sm:text-[12.5px] sm:flex-none"
           :class="
             activeTab === t.key
-              ? 'border-outline-green-4 font-semibold text-ink-green-7'
-              : 'border-transparent text-ink-gray-5'
+              ? 'font-semibold text-ink-green-7'
+              : 'text-ink-gray-5'
           "
           @click="activeTab = t.key"
         >
-          {{ t.label }}
+          <span class="truncate sm:hidden">{{ t.short || t.label }}</span>
+          <span class="max-sm:hidden">{{ t.label }}</span>
         </button>
+        <span
+          class="pointer-events-none absolute bottom-[-1px] left-0 h-0.5 rounded-full bg-surface-green-7 transition-[transform,width] duration-200 ease-out motion-reduce:transition-none"
+          :style="indicator"
+          aria-hidden="true"
+        />
       </div>
 
       <DealOverview
@@ -349,7 +361,7 @@ onBeforeUnmount(detachScroll)
 
 const tabs = [
   { key: 'overview', label: __('Resumen') },
-  { key: 'conversation', label: __('Conversación') },
+  { key: 'conversation', label: __('Conversación'), short: __('Chat') },
   { key: 'activity', label: __('Actividad') },
   { key: 'items', label: __('Artículos') },
   { key: 'repair', label: __('Reparación') },
@@ -364,6 +376,32 @@ const visibleTabs = computed(() => {
   if (!hasTaller.value) t = t.filter((x) => x.key !== 'repair')
   return t
 })
+// The sliding underline: measured from the picked tab, re-measured when the
+// tab set or the strip's width changes.
+const tabListEl = ref(null)
+const tabEls = {}
+const indicator = ref({ width: '0px' })
+function placeIndicator() {
+  const el = tabEls[activeTab.value]
+  if (!el) return (indicator.value = { width: '0px' })
+  const inset = window.matchMedia?.('(max-width: 639px)').matches ? 10 : 6
+  indicator.value = {
+    width: `${Math.max(el.offsetWidth - inset * 2, 12)}px`,
+    transform: `translateX(${el.offsetLeft + inset}px)`,
+  }
+}
+watch([activeTab, visibleTabs, activeDeal], () => nextTick(placeIndicator), {
+  immediate: true,
+})
+const tabResize =
+  typeof ResizeObserver === 'undefined'
+    ? null
+    : new ResizeObserver(() => placeIndicator())
+watch(tabListEl, (el, prev) => {
+  if (prev) tabResize?.unobserve(prev)
+  if (el) tabResize?.observe(el)
+})
+onBeforeUnmount(() => tabResize?.disconnect())
 // If the persisted tab is repair but this tenant has no taller, fall back.
 watch(
   [hasTaller, activeTab],

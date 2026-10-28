@@ -25,7 +25,13 @@
       data-testid="list-create-fab"
       v-bind="$attrs"
     >
-      <span :class="[icon, 'size-6 flex-none']" aria-hidden="true" />
+      <Transition name="icon-swap" mode="out-in">
+        <span
+          :key="icon"
+          :class="[icon, 'size-6 flex-none']"
+          aria-hidden="true"
+        />
+      </Transition>
       <span v-if="extended && !primaryDock" class="whitespace-nowrap">{{
         label
       }}</span>

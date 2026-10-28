@@ -21,10 +21,11 @@
       }}</Button>
     </div>
     <template v-else>
+      <!-- Phone: the «Artículos» tab already names this; the actions come first -->
       <header
-        class="flex flex-wrap items-start justify-between gap-3 border-b border-outline-gray-1 px-5 py-4"
+        class="flex flex-wrap items-start justify-between gap-3 border-b border-outline-gray-1 px-5 py-4 max-sm:px-4 max-sm:py-3"
       >
-        <div>
+        <div class="max-sm:hidden">
           <h2 class="text-base font-semibold text-ink-gray-9">
             {{ __('Artículos y ventas') }}
           </h2>
@@ -32,7 +33,7 @@
             {{ __('Cotiza, da seguimiento y factura desde este trato.') }}
           </p>
         </div>
-        <div class="flex flex-wrap gap-2">
+        <div class="flex flex-wrap gap-2 max-sm:w-full max-sm:flex-row-reverse">
           <Button
             :disabled="busy || loading"
             :icon="LucideRefreshCw"
@@ -507,14 +508,19 @@
           >
             <option value="Sales Order">{{ __('Orden de venta') }}</option>
             <option value="Sales Invoice">{{ __('Factura') }}</option></select
-          ><input
-            v-model="linkQuery"
-            aria-label="Número de documento"
-            :placeholder="__('Número de documento')"
-            class="min-w-0 flex-1 rounded-4 border border-outline-gray-2 bg-surface-base text-sm"
-          /><Button type="submit" :loading="linkLoading">{{
-            __('Buscar')
-          }}</Button>
+          ><span class="relative min-w-0 flex-1"
+            ><input
+              v-model="linkQuery"
+              type="search"
+              enterkeyhint="search"
+              aria-label="Número de documento"
+              :placeholder="__('Número de documento')"
+              class="w-full rounded-4 border border-outline-gray-2 bg-surface-base pr-8 text-sm"
+              @input="searchLinksSoon" /><LucideLoaderCircle
+              v-if="linkLoading"
+              class="absolute right-2.5 top-1/2 size-4 -translate-y-1/2 animate-spin text-ink-gray-5"
+              aria-hidden="true"
+          /></span>
         </form>
         <p v-if="linkError" role="alert" class="mb-3 text-sm text-ink-red-7">
           {{ linkError }}
@@ -554,6 +560,7 @@
 <script setup>
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { Button, Dialog, call } from 'frappe-ui'
+import LucideLoaderCircle from '~icons/lucide/loader-circle'
 import { formatMoney } from '@/composables/crmFormat'
 import { reloadSalesSummary } from '@/composables/salesDocs'
 import { useReloadOnReturn } from '@/composables/reloadOnReturn'
@@ -845,6 +852,11 @@ function openLink() {
   linkOpen.value = true
   searchLinks()
 }
+let linkTyping = 0
+function searchLinksSoon() {
+  clearTimeout(linkTyping)
+  linkTyping = setTimeout(searchLinks, 250)
+}
 async function searchLinks() {
   const id = ++linkRequest
   linkLoading.value = true
@@ -878,6 +890,7 @@ watch(() => props.enabled, refresh, { immediate: true })
 // Repair Orders created in taller Intake appear here once the operator is back.
 useReloadOnReturn(() => props.hasTaller && refresh())
 onBeforeUnmount(() => {
+  clearTimeout(linkTyping)
   alive = false
   request++
   detailRequest++

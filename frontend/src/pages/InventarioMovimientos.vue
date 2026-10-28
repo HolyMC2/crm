@@ -16,7 +16,57 @@
       :title="title"
       searchable
       :search-label="__('Search a product', null, CTX)"
-    />
+    >
+      <!-- Search opens the period, kind and filters under it (ui/AppBar
+           #search-panel); each choice applies at once. -->
+      <template #search-panel>
+        <FilterChips
+          inline
+          :model-value="chipValues(state)"
+          :chips="chips"
+          multiple
+          :label="__('Filter movements', null, CTX)"
+          @update:model-value="(values) => navigate(applyChips(state, values))"
+        />
+        <div class="space-y-3" data-kardex-filters>
+          <ChipDrill
+            :label="__('More filters', null, CTX)"
+            :sections="panelGroups"
+          />
+          <div class="grid grid-cols-2 gap-3">
+            <FormControl
+              :model-value="state.desde"
+              type="date"
+              :label="__('From', null, CTX)"
+              :placeholder="__('Any day', null, CTX)"
+              @update:model-value="
+                (value) => navigate({ ...state, desde: value, periodo: '' })
+              "
+            />
+            <FormControl
+              :model-value="state.hasta"
+              type="date"
+              :label="__('To', null, CTX)"
+              :placeholder="__('Any day', null, CTX)"
+              @update:model-value="
+                (value) => navigate({ ...state, hasta: value, periodo: '' })
+              "
+            />
+          </div>
+        </div>
+      </template>
+      <template #active>
+        <FilterChips
+          summary
+          :model-value="chipValues(state)"
+          :chips="chips"
+          multiple
+          :filters-count="filtersOn(state)"
+          @update:model-value="(values) => navigate(applyChips(state, values))"
+          @clear-filters="clearFilters"
+        />
+      </template>
+    </AppBar>
     <header
       v-else
       class="flex flex-col gap-3 px-4 pb-2 pt-4 sm:px-6 sm:pt-6 lg:flex-row lg:items-end"
@@ -48,6 +98,7 @@
     </header>
 
     <FilterChips
+      v-if="!phone"
       class="py-2"
       :model-value="chipValues(state)"
       :chips="chips"
@@ -298,6 +349,7 @@ import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { Button, FormControl } from 'frappe-ui'
 import { useDebounceFn, useMediaQuery } from '@vueuse/core'
 import { AppBar, EmptyState, FilterChips } from '@/components/ui'
+import ChipDrill from '@/components/ui/ChipDrill.vue'
 import MovementRow from '@/components/inventario/MovementRow.vue'
 import {
   CTX,
@@ -353,6 +405,39 @@ const userOptions = computed(() => [
   ...(options.value?.users || []),
 ])
 
+// The phone panel's longer filters (store, kind, person): one chip each that
+// opens its choices; a tap applies at once, a second tap clears it.
+const panelGroups = computed(() =>
+  [
+    {
+      key: 'almacen',
+      label: __('Store', null, CTX),
+      options: storeOptions.value,
+    },
+    {
+      key: 'tipo',
+      label: __('Kind of movement', null, CTX),
+      options: kindOptions.value,
+    },
+    {
+      key: 'persona',
+      label: __('Who moved it', null, CTX),
+      options: userOptions.value,
+    },
+  ]
+    .filter((group) => group.options.length > 1)
+    .map((group) => ({
+      key: group.key,
+      label: group.label,
+      options: group.options.filter((o) => o.value),
+      selected: state.value[group.key] ? [state.value[group.key]] : [],
+      toggle: (value) =>
+        navigate({
+          ...state.value,
+          [group.key]: state.value[group.key] === value ? '' : value,
+        }),
+    })),
+)
 const scope = computed(() => data.value?.scope || {})
 const title = computed(
   () =>

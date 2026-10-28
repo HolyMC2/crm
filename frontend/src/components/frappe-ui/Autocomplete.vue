@@ -151,6 +151,7 @@
 </template>
 
 <script setup>
+import { matchTokens } from '@/vendor/muelle-shell/contracts/search'
 import {
   Combobox,
   ComboboxInput,
@@ -282,12 +283,14 @@ function filterOptions(options) {
   if (!query.value) {
     return options
   }
-  return options.filter((option) => {
-    let searchTexts = [option.label, option.value]
-    return searchTexts.some((text) =>
-      (text || '').toString().toLowerCase().includes(query.value.toLowerCase()),
-    )
-  })
+  // Muelle: the shell's search rule (any word order, accent-blind)
+  return options.filter((option) =>
+    matchTokens(
+      query.value,
+      String(option.label ?? ''),
+      String(option.value ?? ''),
+    ),
+  )
 }
 
 function displayValue(option) {

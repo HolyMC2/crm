@@ -1251,14 +1251,10 @@ export function initials(title) {
 }
 
 // Whole class strings (Tailwind keeps only what it can read in the source).
-export const TILE_TONES = Object.freeze([
-  'bg-surface-blue-2 text-ink-blue-8',
-  'bg-surface-green-2 text-ink-green-8',
-  'bg-surface-amber-2 text-ink-amber-8',
-  'bg-surface-violet-2 text-ink-violet-8',
-  'bg-surface-gray-3 text-ink-gray-8',
-])
-/** A steady tone per product group (or code): the same group, the same colour. */
+// One neutral tile for every product without a photo (Marco 2026-10-28: the
+// rainbow of initials read as noise), as the shell's avatars.
+export const TILE_TONES = Object.freeze(['bg-surface-gray-2 text-ink-gray-7'])
+/** The tile tone of a product group (or code); one neutral tone for now. */
 export function tileTone(key) {
   let hash = 0
   for (const char of String(key || ''))

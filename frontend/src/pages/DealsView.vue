@@ -15,9 +15,26 @@
     <!-- Phone: title, count and ⋯ ride in the shell's one header row. -->
     <LayoutHeader v-if="isMobile">
       <div class="flex h-12 min-w-0 items-center gap-2">
-        <h1 class="truncate text-lg font-semibold text-ink-gray-9">
-          {{ __('Tratos') }}
-        </h1>
+        <!-- the view switch rides in the title (Lista / Tablero / Embudo) -->
+        <Dropdown :options="viewTitleMenu">
+          <button
+            type="button"
+            class="press -ml-1 flex min-h-11 min-w-0 items-center gap-1.5 rounded-6 px-1"
+            :aria-label="__('Cambiar vista')"
+            data-testid="deals-view-switch"
+          >
+            <h1 class="truncate text-lg font-semibold text-ink-gray-9">
+              {{ __('Tratos') }}
+            </h1>
+            <span class="truncate text-sm text-ink-gray-5">{{
+              currentViewLabel
+            }}</span>
+            <LucideChevronDown
+              class="size-4 flex-none text-ink-gray-5"
+              aria-hidden="true"
+            />
+          </button>
+        </Dropdown>
         <div class="flex-1" />
         <Dropdown :options="mobileMenu">
           <button
@@ -29,84 +46,65 @@
         </Dropdown>
       </div>
     </LayoutHeader>
-    <div v-if="isMobile" class="flex-none border-b border-outline-gray-1">
-      <div class="px-3.5 pb-2 pt-2">
-        <div
-          class="flex h-[46px] items-center gap-2 rounded-[10px] border border-outline-gray-2 px-3 focus-within:border-outline-gray-4"
-        >
-          <LucideSearch class="h-4 w-4 flex-none text-ink-gray-4" />
-          <input
-            :value="search"
-            data-list-search
-            :aria-label="__('Buscar tratos')"
-            :placeholder="__('Buscar cliente, equipo…')"
-            class="h-full w-full border-0 bg-transparent text-[14px] text-ink-gray-9 placeholder:text-ink-gray-4 focus:outline-none focus:ring-0"
-            @input="onSearch($event.target.value)"
-          />
+    <!-- Phone: the shared search panel (ui/SearchPanel, as in the Inbox).
+         Seguimiento, embudo, etapa and the longer filters live in the panel;
+         closed, only what narrows the list shows as removable chips. -->
+    <SearchPanel
+      v-if="isMobile"
+      v-model:open="searchOpen"
+      class="flex-none border-b border-outline-gray-1"
+      :query="search"
+      :placeholder="__('Buscar cliente, equipo…')"
+      :label="__('Buscar tratos')"
+      @update:query="onSearch"
+    >
+      <template v-if="activeChips.length" #active>
+        <div class="flex flex-wrap items-center gap-1.5">
           <button
-            v-if="search"
-            class="press flex-none text-[13px] text-ink-gray-5"
-            :aria-label="__('Limpiar')"
-            @click="onSearch('')"
+            v-for="c in activeChips"
+            :key="c.key"
+            type="button"
+            :class="chipClass(true)"
+            :aria-label="__('Quitar filtro') + ' ' + c.label"
+            @click="c.remove()"
           >
-            ✕
+            {{ c.label }}
+            <LucideX class="size-3" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            class="min-h-11 px-2 text-xs text-ink-gray-5 underline"
+            @click="clearAll"
+          >
+            {{ __('Limpiar') }}
           </button>
         </div>
-      </div>
-      <div class="scb flex gap-1.5 overflow-x-auto px-3.5 pb-2">
-        <button
-          v-for="v in views"
-          :key="v.key"
-          class="press inline-flex min-h-11 flex-none items-center whitespace-nowrap rounded-full px-3 text-[12px] font-semibold"
-          :class="
-            v.key === view
-              ? 'bg-surface-gray-10 text-ink-base'
-              : 'bg-surface-gray-2 text-ink-gray-7'
-          "
-          :aria-pressed="v.key === view"
-          @click="selectView(v)"
-        >
-          {{ v.label }}
-        </button>
-        <span class="my-1 w-px flex-none bg-outline-gray-2" />
-        <button
-          class="press inline-flex min-h-11 flex-none items-center whitespace-nowrap rounded-full px-3 text-[12px] font-semibold"
-          :class="
-            chips.length
-              ? 'bg-surface-green-2 text-ink-green-8'
-              : 'bg-surface-gray-2 text-ink-gray-7'
-          "
-          @click="showFilterSheet = true"
-        >
-          {{ __('Filtros')
-          }}<span v-if="chips.length"> · {{ chips.length }}</span>
-        </button>
-        <!-- pipeline as one more pill; hidden when the site has a single one -->
-        <select
-          v-if="pipelineF || (pipelines.data || []).length > 1"
-          v-model="pipelineF"
-          :aria-label="__('Sales pipeline')"
-          class="press h-11 flex-none rounded-full border-0 bg-surface-gray-2 py-0 pl-3 pr-7 text-[12px] font-semibold text-ink-gray-7"
-        >
-          <option value="">{{ __('All pipelines') }}</option>
-          <option
-            v-for="pipeline in pipelines.data || []"
-            :key="pipeline.name"
-            :value="pipeline.name"
-          >
-            {{ pipelineLabel(pipeline)
-            }}{{ pipeline.archived ? ' · ' + __('Archived') : '' }}
-          </option>
-        </select>
-      </div>
-      <p
-        v-if="pipelines.error"
-        role="alert"
-        class="px-3.5 pb-2 text-sm text-ink-red-5"
-      >
+      </template>
+      <RecentPicks
+        v-if="!search"
+        :picks="recentDeals.picks.value"
+        @pick="(pick) => openDeal(pick.name)"
+        @clear="recentDeals.clear()"
+      />
+      <ChipGroup
+        :label="__('Seguimiento')"
+        :options="followUpOptions"
+        :model-value="followUp"
+        clear-value="all"
+        testid="deals-follow-up"
+        @update:model-value="selectFollowUp"
+      />
+      <ChipGroup
+        v-if="pipelineF || (pipelines.data || []).length > 1"
+        v-model="pipelineF"
+        :label="__('Sales pipeline')"
+        :options="pipelineOptions"
+      />
+      <ChipDrill :label="__('Más filtros')" :sections="drillSections" />
+      <p v-if="pipelines.error" role="alert" class="text-sm text-ink-red-5">
         {{ __('Pipelines could not load') }}
       </p>
-    </div>
+    </SearchPanel>
 
     <div
       v-if="!isMobile"
@@ -261,7 +259,8 @@
     </div>
 
     <section
-      class="flex-none border-b border-outline-gray-1 px-3.5 py-2 sm:px-5"
+      v-if="!isMobile"
+      class="flex-none border-b border-outline-gray-1 px-5 py-2"
       aria-label="Colas de seguimiento"
     >
       <div class="flex gap-2 overflow-x-auto pb-1">
@@ -858,15 +857,6 @@
       @click="showDealModal = true"
     />
 
-    <MobileFilterSheet
-      v-if="isMobile"
-      v-model="showFilterSheet"
-      :groups="mobileFilterGroups"
-      :count="count"
-      @change="onSheetChange"
-      @clear="clearAll"
-    />
-
     <DealModal
       v-if="showDealModal"
       v-model="showDealModal"
@@ -910,7 +900,14 @@ import { guardStatusChange } from '@/utils/statusGuard'
 import { requestNextStep } from '@/composables/useNextStep'
 import FunnelView from '@/components/doco/FunnelView.vue'
 import MobileRecordCard from '@/components/doco/MobileRecordCard.vue'
-import MobileFilterSheet from '@/components/doco/MobileFilterSheet.vue'
+import SearchPanel from '@/components/ui/SearchPanel.vue'
+import ChipGroup from '@/components/ui/ChipGroup.vue'
+import ChipDrill from '@/components/ui/ChipDrill.vue'
+import RecentPicks from '@/components/ui/RecentPicks.vue'
+import { chipClass } from '@/components/ui/chipClass'
+import { useRecentPicks } from '@/composables/useRecentPicks'
+import LucideChevronDown from '~icons/lucide/chevron-down'
+import LucideX from '~icons/lucide/x'
 import NextActivityChip from '@/components/doco/NextActivityChip.vue'
 import FollowUpCell from '@/components/doco/deals/FollowUpCell.vue'
 import { registerPageShortcuts } from '@/composables/shellKeyboard'
@@ -1352,7 +1349,9 @@ function repairChip(status) {
 }
 
 // ── mobile shell ─────────────────────────────────────────────────────────────
-const showFilterSheet = ref(false)
+// Phone search panel (ui/SearchPanel) and the deals opened lately on this device.
+const searchOpen = ref(false)
+const recentDeals = useRecentPicks('muelle:deals-recent')
 // Folio + phone under the customer's name: the two things a shop reads aloud.
 // When there's no customer the card title IS the folio, so don't repeat it.
 function mobileSubtitle(r) {
@@ -1369,29 +1368,86 @@ const mobileMenu = computed(() => [
   ...viewMenu.value,
   { label: '⭳ ' + __('Export'), onClick: exportDeals },
 ])
-const mobileFilterGroups = computed(() => [
-  {
-    key: 'status',
-    label: __('Stage'),
-    options: stageOptions.value,
-    selected: statusF.value,
-  },
-  {
-    key: 'source',
-    label: __('Source'),
-    options: sourceOptions.value,
-    selected: sourceF.value,
-  },
-  {
-    key: 'owner',
-    label: __('Owner'),
-    options: ownerOptions.value,
-    selected: ownerF.value,
-  },
+const followUpOptions = computed(() =>
+  followUpQueues.map((q) => ({
+    value: q.key,
+    label: __(q.label),
+    count: q.key !== 'all' ? queueCounts.value[q.key] : null,
+    title: __(q.description),
+  })),
+)
+const pipelineOptions = computed(() =>
+  (pipelines.data || []).map((pipeline) => ({
+    value: pipeline.name,
+    label:
+      pipelineLabel(pipeline) +
+      (pipeline.archived ? ' · ' + __('Archived') : ''),
+  })),
+)
+const drillSections = computed(() =>
+  [
+    {
+      key: 'status',
+      label: __('Stage'),
+      options: stageOptions.value,
+      ref_: statusF,
+    },
+    {
+      key: 'source',
+      label: __('Source'),
+      options: sourceOptions.value,
+      ref_: sourceF,
+    },
+    {
+      key: 'owner',
+      label: __('Owner'),
+      options: ownerOptions.value,
+      ref_: ownerF,
+    },
+  ].map(({ ref_, ...sec }) => ({
+    ...sec,
+    selected: ref_.value,
+    toggle: (v) => {
+      ref_.value = ref_.value.includes(v)
+        ? ref_.value.filter((x) => x !== v)
+        : [...ref_.value, v]
+    },
+  })),
+)
+// Closed panel: what narrows the list, each with its own ×.
+const activeChips = computed(() => [
+  ...(followUp.value !== 'all'
+    ? [
+        {
+          key: 'follow-up',
+          label: followUpOptions.value.find((q) => q.value === followUp.value)
+            ?.label,
+          remove: () => selectFollowUp('all'),
+        },
+      ]
+    : []),
+  ...(pipelineF.value
+    ? [
+        {
+          key: 'pipeline',
+          label:
+            pipelineOptions.value.find((o) => o.value === pipelineF.value)
+              ?.label || pipelineF.value,
+          remove: () => (pipelineF.value = ''),
+        },
+      ]
+    : []),
+  ...chips.value.map((c) => ({ ...c, remove: () => removeChip(c) })),
 ])
-function onSheetChange({ key, values }) {
-  ;({ status: statusF, source: sourceF, owner: ownerF })[key].value = values
-}
+const viewTitleMenu = computed(() =>
+  views.map((v) => ({
+    label: v.label + (v.key === view.value ? ' ✓' : ''),
+    onClick: () => selectView(v),
+  })),
+)
+const currentViewLabel = computed(
+  () => views.find((v) => v.key === view.value)?.label || '',
+)
 const count = computed(() =>
   countsLoaded.value
     ? String(
@@ -2006,6 +2062,10 @@ function toggleRow(name) {
 // The way back keeps the seller's place: the row they opened, how far the
 // list was scrolled and how many pages were loaded (filters live in QUEUE_KEY).
 function openDeal(name) {
+  const row = rows.value.find((r) => r.name === name)
+  if (row)
+    recentDeals.touch({ name, doctype: 'CRM Deal', label: cardTitle(row) })
+  searchOpen.value = false
   lastOpened.value = name
   writeListReturn(sessionStorage, RETURN_KEY, {
     deal: name,

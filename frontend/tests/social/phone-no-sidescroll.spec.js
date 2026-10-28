@@ -49,7 +49,7 @@ const STATIC_ROUTES = [
 async function measure(page) {
   return page.evaluate(() => {
     const width = window.innerWidth
-    const pageEl = document.querySelector('#app .page-in')
+    const pageEl = document.querySelector('#app .ventas-scroll')
     const column = pageEl?.parentElement
     if (!pageEl || !column || !pageEl.clientWidth || !column.clientWidth) {
       throw new Error('CRM mobile shell is missing or has no rendered width')
@@ -117,7 +117,7 @@ async function expectVerticalOnly(page, route) {
     /\/login(?:[/?#]|$)/,
   )
   await expect(
-    page.locator('#app .page-in'),
+    page.locator('#app .ventas-scroll'),
     `${route}: CRM mobile shell did not render`,
   ).toBeVisible()
   await expect(
@@ -125,7 +125,7 @@ async function expectVerticalOnly(page, route) {
     `${route}: CRM header did not mount`,
   ).toBeAttached()
   await expect(
-    page.locator('#app .page-in > :visible').first(),
+    page.locator('#app .ventas-scroll > :visible').first(),
     `${route}: route content did not render`,
   ).toBeVisible()
   await page.waitForTimeout(800) // lists, boards and charts settle

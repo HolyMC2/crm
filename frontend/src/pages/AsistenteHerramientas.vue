@@ -13,7 +13,28 @@
       :search-open="searchOpen"
       @update:search="(value) => (query = value)"
       @update:search-open="(value) => (searchOpen = value)"
-    />
+    >
+      <template v-if="rows.length" #search-panel>
+        <FilterChips
+          v-model="chip"
+          inline
+          :chips="chips"
+          :deselectable="false"
+          label="Mostrar"
+        />
+      </template>
+      <template v-if="chip !== 'todas'" #active>
+        <button
+          type="button"
+          :class="chipClass(true)"
+          :aria-label="`Quitar filtro ${chipLabel}`"
+          @click="chip = 'todas'"
+        >
+          {{ chipLabel }}
+          <span class="lucide-x size-3 flex-none" aria-hidden="true" />
+        </button>
+      </template>
+    </AppBar>
     <div class="mx-auto w-full max-w-3xl space-y-3 px-4 pb-24 pt-3">
       <header v-if="!isPhone" class="flex flex-wrap items-center gap-3">
         <h1 class="flex-1 text-xl font-semibold text-ink-gray-9">
@@ -47,7 +68,7 @@
       </p>
 
       <FilterChips
-        v-if="rows.length"
+        v-if="rows.length && !isPhone"
         v-model="chip"
         :chips="chips"
         :deselectable="false"
@@ -114,6 +135,7 @@
 </template>
 <script setup>
 import { computed, defineAsyncComponent, onMounted, ref } from 'vue'
+import { chipClass } from '@/components/ui/chipClass'
 import { toast } from 'frappe-ui'
 import { AppBar, EmptyState, FilterChips } from '@/components/ui'
 import { isMobile as isPhone } from '@/composables/breakpoint'
@@ -143,6 +165,9 @@ const busy = ref('')
 const editing = ref(null)
 
 const chips = computed(() => chipCounts(rows.value))
+const chipLabel = computed(
+  () => chips.value.find((c) => c.value === chip.value)?.label || '',
+)
 const groups = computed(() =>
   grouped(rows.value.filter((row) => matches(row, chip.value, query.value))),
 )

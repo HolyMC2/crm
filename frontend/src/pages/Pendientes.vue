@@ -38,7 +38,50 @@
         searchable
         :search-label="__('Search pendientes')"
         @update:scope="selectSegment"
-      />
+      >
+        <!-- Search opens the filters under it (ui/AppBar #search-panel). -->
+        <template v-if="!approvals" #search-panel>
+          <FilterChips
+            v-if="sourceChips.length"
+            inline
+            :label="__('Task source')"
+            :model-value="state.source === 'all' ? '' : state.source"
+            :chips="sourceChips"
+            @update:model-value="(value) => update({ source: value || 'all' })"
+          />
+          <ChipGroup
+            :label="__('Priority')"
+            :options="priorityChips"
+            :model-value="state.priority"
+            data-pendientes-priority
+            @update:model-value="(value) => update({ priority: value || '' })"
+          />
+          <button
+            v-if="state.from || state.to"
+            type="button"
+            :class="chipClass(true)"
+            @click="update({ from: '', to: '' })"
+          >
+            {{ rangeLabel }} <span aria-hidden="true">×</span
+            ><span class="sr-only">{{ __('Remove date range') }}</span>
+          </button>
+        </template>
+        <template v-if="!approvals && activeChips.length" #active>
+          <div class="flex flex-wrap gap-1.5">
+            <button
+              v-for="chip in activeChips"
+              :key="chip.key"
+              type="button"
+              :class="chipClass(true)"
+              :aria-label="__('Remove filter {0}', [chip.label])"
+              @click="chip.clear"
+            >
+              {{ chip.label }}
+              <span class="lucide-x size-3 flex-none" aria-hidden="true" />
+            </button>
+          </div>
+        </template>
+      </AppBar>
       <header
         v-else
         class="flex flex-wrap items-center gap-3 px-4 pb-2 pt-4 sm:px-6 sm:pt-6"
@@ -58,6 +101,7 @@
         <template v-if="!approvals">
           <Segmented
             v-if="!phone"
+            class="sm:w-56"
             :label="__('View', null, 'Pendientes')"
             :model-value="state.view || 'list'"
             :options="viewOptions"
@@ -85,50 +129,8 @@
           />
         </template>
       </header>
-      <FilterChips
-        v-if="phone && !approvals"
-        class="py-2"
-        :label="__('Filters')"
-        :model-value="state.source === 'all' ? '' : state.source"
-        :chips="sourceChips"
-        :filters-count="state.priority || state.from || state.to ? 1 : 0"
-        @update:model-value="(value) => update({ source: value || 'all' })"
-        @clear-filters="update({ priority: '', from: '', to: '' })"
-      >
-        <template #filters>
-          <fieldset class="space-y-1">
-            <legend class="pb-1 text-base font-semibold text-ink-gray-9">
-              {{ __('Priority') }}
-            </legend>
-            <label
-              v-for="option in priorityOptions"
-              :key="option.value"
-              class="flex min-h-11 items-center gap-3 text-base text-ink-gray-8"
-            >
-              <input
-                type="radio"
-                name="pendientes-priority"
-                class="size-5"
-                :value="option.value"
-                :checked="state.priority === option.value"
-                @change="update({ priority: option.value })"
-              />
-              {{ option.label }}
-            </label>
-          </fieldset>
-          <button
-            v-if="state.from || state.to"
-            type="button"
-            class="mt-3 flex min-h-11 items-center gap-2 rounded-full bg-surface-gray-2 px-4 text-base"
-            @click="update({ from: '', to: '' })"
-          >
-            {{ rangeLabel }} <span aria-hidden="true">×</span
-            ><span class="sr-only">{{ __('Remove date range') }}</span>
-          </button>
-        </template>
-      </FilterChips>
       <div
-        v-else-if="!phone"
+        v-if="!phone"
         class="flex flex-wrap items-center gap-x-2 gap-y-1 px-4 pb-2 sm:px-6"
       >
         <FormControl
@@ -440,6 +442,8 @@ import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { Button, FormControl, toast } from 'frappe-ui'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import { AppBar, Fab, FilterChips, Segmented } from '@/components/ui'
+import ChipGroup from '@/components/ui/ChipGroup.vue'
+import { chipClass } from '@/components/ui/chipClass'
 import { useMediaQuery } from '@vueuse/core'
 import { isMobile as phone } from '@/composables/breakpoint'
 import { useListKeys } from '@/composables/pageKeys'
@@ -530,12 +534,6 @@ const phoneEntries = computed(() =>
   ),
 )
 const searchOpen = ref(Boolean(state.value.q))
-const priorityOptions = computed(() => [
-  { label: __('Any priority'), value: '' },
-  { label: __('High'), value: 'High' },
-  { label: __('Medium'), value: 'Medium' },
-  { label: __('Low'), value: 'Low' },
-])
 // Source chips only where sources mix (both lists readable, not the team list).
 const sourceChips = computed(() =>
   boot.value?.sources?.['CRM Task'] && state.value.segment !== 'team'
@@ -545,6 +543,33 @@ const sourceChips = computed(() =>
       ]
     : [],
 )
+// What narrows the phone list, as removable chips under the closed search.
+const activeChips = computed(() => {
+  const out = []
+  const source = sourceChips.value.find((c) => c.value === state.value.source)
+  if (source)
+    out.push({
+      key: 'source',
+      label: source.label,
+      clear: () => update({ source: 'all' }),
+    })
+  const priority = priorityChips.value.find(
+    (c) => c.value === state.value.priority,
+  )
+  if (priority)
+    out.push({
+      key: 'priority',
+      label: priority.label,
+      clear: () => update({ priority: '' }),
+    })
+  if (state.value.from || state.value.to)
+    out.push({
+      key: 'range',
+      label: rangeLabel.value,
+      clear: () => update({ from: '', to: '' }),
+    })
+  return out
+})
 const priorityChips = computed(() => [
   { value: 'High', label: __('High') },
   { value: 'Medium', label: __('Medium') },

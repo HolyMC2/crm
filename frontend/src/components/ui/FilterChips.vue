@@ -3,7 +3,85 @@
        never wrapping: it scrolls sideways with a fade at the end. Filters
        that do not fit as chips go in the «Filtros» sheet (the #filters slot),
        whose chip shows how many are on. -->
-  <div class="relative" data-ui-filter-chips>
+  <!-- In a search panel (`inline`): the chips wrap and the «Filtros» content
+       sits in place under them, no sheet. -->
+  <div v-if="inline" class="space-y-3" data-ui-filter-chips>
+    <section :aria-label="label || __('Filters')">
+      <p v-if="label" class="mb-1.5 text-xs font-medium text-ink-gray-6">
+        {{ label }}
+      </p>
+      <div class="flex flex-wrap gap-1.5">
+        <button
+          v-for="chip in chips"
+          :key="chip.value"
+          type="button"
+          :class="panelChip(isOn(chip.value))"
+          :aria-pressed="String(isOn(chip.value))"
+          :data-chip="chip.value"
+          @click="toggle(chip.value)"
+        >
+          <span
+            v-if="chip.icon"
+            :class="[chip.icon, 'size-3.5 flex-none']"
+            aria-hidden="true"
+          />
+          {{ chip.label }}
+          <span
+            v-if="chip.count !== undefined && chip.count !== null"
+            class="text-[10px] tabular-nums opacity-70"
+            >{{ chip.count }}</span
+          >
+        </button>
+      </div>
+    </section>
+    <section v-if="$slots.filters" :aria-label="filtersLabel || __('Filters')">
+      <div class="mb-1.5 flex items-center justify-between">
+        <p class="text-xs font-medium text-ink-gray-6">
+          {{ filtersLabel || __('Filters') }}
+        </p>
+        <button
+          v-if="filtersCount"
+          type="button"
+          class="-my-3 min-h-11 px-1 text-xs text-ink-gray-5 underline"
+          @click="$emit('clear-filters')"
+        >
+          {{ __('Clear filters') }}
+        </button>
+      </div>
+      <slot name="filters" :close="() => {}" />
+    </section>
+  </div>
+  <!-- Search panel closed (`summary`): only what narrows the list, each chip
+       with its own ×. Renders nothing in the default view. -->
+  <div
+    v-else-if="summary"
+    v-show="onChips.length || filtersCount"
+    class="flex flex-wrap gap-1.5"
+    data-ui-filter-summary
+  >
+    <button
+      v-for="chip in onChips"
+      :key="chip.value"
+      type="button"
+      :class="panelChip(true)"
+      :aria-label="__('Remove filter {0}', [chip.label])"
+      @click="toggle(chip.value)"
+    >
+      {{ chip.label }}
+      <span class="lucide-x size-3 flex-none" aria-hidden="true" />
+    </button>
+    <button
+      v-if="filtersCount"
+      type="button"
+      :class="panelChip(true)"
+      :aria-label="__('Clear filters')"
+      @click="$emit('clear-filters')"
+    >
+      {{ __('{0} filters on', [filtersCount]) }}
+      <span class="lucide-x size-3 flex-none" aria-hidden="true" />
+    </button>
+  </div>
+  <div v-else class="relative" data-ui-filter-chips>
     <div
       ref="row"
       role="group"
@@ -96,9 +174,10 @@
   </div>
 </template>
 <script setup>
-import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { Button } from 'frappe-ui'
 import BottomSheet from './BottomSheet.vue'
+import { chipClass as panelChip } from './chipClass'
 
 const props = defineProps({
   /** The chosen value; an array with `multiple`. '' means «all». */
@@ -112,6 +191,10 @@ const props = defineProps({
   filtersLabel: { type: String, default: '' },
   /** How many filters in the sheet are on (shown on its chip). */
   filtersCount: { type: Number, default: 0 },
+  /** Laid out in a search panel: chips wrap, the #filters content in place. */
+  inline: { type: Boolean, default: false },
+  /** The closed panel's line: only the chips that are on, each with ×. */
+  summary: { type: Boolean, default: false },
 })
 const emit = defineEmits([
   'update:modelValue',
@@ -130,6 +213,10 @@ function chipClass(on) {
       : 'border-outline-gray-2 text-ink-gray-8',
   ]
 }
+// '' is «all»: the default view, never a chip to remove
+const onChips = computed(() =>
+  props.chips.filter((chip) => chip.value !== '' && isOn(chip.value)),
+)
 function isOn(value) {
   return props.multiple
     ? (props.modelValue || []).includes(value)

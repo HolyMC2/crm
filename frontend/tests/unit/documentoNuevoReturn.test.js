@@ -45,6 +45,17 @@ const flush = async () => {
   }
 }
 
+// The form loads its profile with a dynamic import: under a full parallel run
+// that takes longer than a few ticks, so wait for the button itself.
+async function createButton() {
+  for (let i = 0; i < 300; i++) {
+    const button = root.querySelector('[data-testid="documentos-create"]')
+    if (button) return button
+    await new Promise((done) => setTimeout(done, 10))
+  }
+  throw new Error('the draft form never loaded')
+}
+
 async function mount(path) {
   api.docApi.mockImplementation(async (method) => answers[method])
   const page = { template: '<p>page</p>' }
@@ -90,7 +101,8 @@ describe('a new draft opened from a queue', () => {
     const router = await mount(FROM_GASTOS)
     const push = vi.spyOn(router, 'push')
     const replace = vi.spyOn(router, 'replace')
-    root.querySelector('[data-testid="documentos-create"]').click()
+    const create = await createButton()
+    create.click()
     await flush()
     expect(api.docApi).toHaveBeenCalledWith(
       'save',
@@ -111,7 +123,8 @@ describe('a new draft opened from a queue', () => {
     expect(
       root.querySelector('[data-appbar-back]').getAttribute('aria-label'),
     ).toBe('Volver')
-    root.querySelector('[data-testid="documentos-create"]').click()
+    const create = await createButton()
+    create.click()
     await flush()
     expect(router.currentRoute.value.path).toBe(
       '/gastos/factura/ACC-PINV-2026-00009',
@@ -125,7 +138,8 @@ describe('a new draft opened from a queue', () => {
     expect(
       root.querySelector('[data-appbar-back]').getAttribute('aria-label'),
     ).toBe('Volver')
-    root.querySelector('[data-testid="documentos-create"]').click()
+    const create = await createButton()
+    create.click()
     await flush()
     expect(router.currentRoute.value.path).toBe(
       '/gastos/factura/ACC-PINV-2026-00009',

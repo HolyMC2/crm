@@ -75,6 +75,43 @@
               </template>
             </span>
           </template>
+          <!-- Search opens the filters under it (ui/AppBar #search-panel). -->
+          <template #search-panel>
+            <FilterChips
+              inline
+              data-cobranza-aging
+              :model-value="state.edad"
+              :chips="agingChips"
+              :label="__('Days overdue')"
+              @update:model-value="(value) => navigate({ edad: value })"
+            />
+            <ChipGroup
+              v-if="companies.length > 1"
+              :label="__('Company')"
+              :options="companies.map((name) => ({ value: name, label: name }))"
+              :model-value="state.company || ''"
+              data-cobranza-company
+              @update:model-value="(value) => navigate({ company: value })"
+            />
+          </template>
+          <template #active>
+            <FilterChips
+              summary
+              :model-value="state.edad"
+              :chips="agingChips"
+              @update:model-value="(value) => navigate({ edad: value })"
+            />
+            <button
+              v-if="state.company"
+              type="button"
+              :class="[chipClass(true), 'mt-1.5']"
+              :aria-label="__('Remove filter {0}', [state.company])"
+              @click="navigate({ company: '' })"
+            >
+              {{ state.company }}
+              <span class="lucide-x size-3 flex-none" aria-hidden="true" />
+            </button>
+          </template>
         </PowerAppBar>
       </div>
       <header
@@ -222,48 +259,16 @@
       </div>
       <!-- Aging chips: the customer's oldest overdue invoice, as in the receivables report. -->
       <!-- One chip row (S1 FilterChips): tap a range, tap it again for all. -->
-      <!-- On a phone the company is a filter in the «Filtros» sheet. -->
+      <!-- Phone: the aging chips and the company are in the search panel. -->
       <FilterChips
+        v-if="!phone"
         class="pb-3 pt-2 sm:pt-0"
         data-cobranza-aging
         :model-value="state.edad"
         :chips="agingChips"
         :label="__('Days overdue')"
-        :filters-label="__('Filters')"
-        :filters-count="state.company ? 1 : 0"
         @update:model-value="(value) => navigate({ edad: value })"
-        @clear-filters="navigate({ company: '' })"
-      >
-        <template v-if="phone && companies.length > 1" #filters="{ close }">
-          <fieldset data-cobranza-company>
-            <legend class="mb-2 text-sm font-medium text-ink-gray-7">
-              {{ __('Company') }}
-            </legend>
-            <button
-              v-for="c in [{ label: __('All companies'), value: '' }].concat(
-                companies.map((name) => ({ label: name, value: name })),
-              )"
-              :key="c.value"
-              type="button"
-              role="radio"
-              :aria-checked="String(state.company === c.value)"
-              class="flex min-h-12 w-full items-center gap-3 text-left text-base text-ink-gray-9"
-              @click="navigate({ company: c.value }), close()"
-            >
-              <span
-                class="size-5 shrink-0 rounded-full border-2"
-                :class="
-                  state.company === c.value
-                    ? 'border-[6px] border-ink-gray-9'
-                    : 'border-outline-gray-3'
-                "
-                aria-hidden="true"
-              />
-              {{ c.label }}
-            </button>
-          </fieldset>
-        </template>
-      </FilterChips>
+      />
       <p
         v-if="capped"
         class="mx-4 mb-2 text-sm text-ink-gray-6 sm:mx-6"
@@ -617,6 +622,8 @@ import {
 import { useRoute, useRouter } from 'vue-router'
 import { Badge, Button, FormControl, toast } from 'frappe-ui'
 import { FilterChips } from '@/components/ui'
+import ChipGroup from '@/components/ui/ChipGroup.vue'
+import { chipClass } from '@/components/ui/chipClass'
 import PowerAppBar from '@/components/power/PowerAppBar.vue'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import AutoSetupSheet from '@/components/cobranza/AutoSetupSheet.vue'

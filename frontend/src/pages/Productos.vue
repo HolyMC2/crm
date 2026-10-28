@@ -46,6 +46,128 @@
     <!-- The Fab sits in this wrapper, not in the scroller, so it stays put
          while the list scrolls. -->
     <div v-else class="relative flex min-h-0 min-w-0 flex-1 flex-col">
+      <!-- Phone: the search pill opens the lists, the store, the view and the
+           catálogo filters, and the products opened lately (ui/SearchPanel,
+           as in Tratos); closed, what narrows the list shows as chips. -->
+      <SearchPanel
+        v-if="isPhone"
+        ref="phoneSearch"
+        v-model:open="searchOpen"
+        class="flex-none"
+        :query="search"
+        :placeholder="__('Search name, code or barcode')"
+        @update:query="(value) => (search = value)"
+      >
+        <template v-if="phoneChips.length" #active>
+          <div class="flex flex-wrap gap-1.5" data-productos-active>
+            <button
+              v-for="chip in phoneChips"
+              :key="chip.key"
+              type="button"
+              :class="chipClass(true)"
+              :aria-label="__('Remove filter {0}', [chip.label])"
+              @click="chip.remove()"
+            >
+              {{ chip.label }}
+              <span class="lucide-x size-3 flex-none" aria-hidden="true" />
+            </button>
+          </div>
+        </template>
+        <RecentPicks
+          v-if="!search"
+          :picks="recentProducts.picks.value"
+          @pick="openRecent"
+          @clear="recentProducts.clear()"
+        />
+        <FilterChips
+          inline
+          :model-value="view"
+          :chips="viewChips"
+          :deselectable="false"
+          :label="__('List', null, 'Productos')"
+          :filters-label="__('Filters', null, 'Productos')"
+          :filters-count="sheetCount"
+          @update:model-value="selectView"
+          @clear-filters="clearSheet"
+        >
+          <template #filters>
+            <div class="space-y-3" data-productos-filters>
+              <template v-if="catalog">
+                <CatalogFilters
+                  touch
+                  :facets="facets"
+                  :state="state"
+                  :loading="facetsLoading"
+                  @update="filterBy"
+                />
+                <PriceListsToggle
+                  v-model="shownLists"
+                  :lists="boot?.price_lists || []"
+                  :main="boot?.default_price_list || ''"
+                />
+              </template>
+              <ChipGroup
+                v-if="storeOptions.length > 2"
+                :label="__('Store', null, 'Productos')"
+                :options="storeOptions"
+                :model-value="store"
+                testid="productos-store"
+                data-productos-store
+                @update:model-value="selectStore"
+              />
+              <ChipGroup
+                v-if="!inventory"
+                :label="__('View', null, 'Productos')"
+                :options="layoutOptions"
+                :model-value="layout"
+                :clear-value="layout"
+                testid="productos-layout"
+                @update:model-value="setLayout"
+              />
+
+              <div v-if="inventory" class="flex flex-col gap-3">
+                <FormControl
+                  v-if="view === 'sin-contar'"
+                  class="h-11 w-full"
+                  type="select"
+                  :aria-label="__('Not counted in')"
+                  :model-value="String(state.days)"
+                  :options="dayOptions"
+                  @update:model-value="
+                    (value) => update({ dias: value, sel: '' })
+                  "
+                />
+                <FormControl
+                  v-if="
+                    view !== 'conteos-abiertos' && filterOptions.groups.length
+                  "
+                  class="h-11 w-full"
+                  type="select"
+                  :aria-label="__('Group', null, 'Productos')"
+                  :model-value="state.group"
+                  :options="groupOptions"
+                  @update:model-value="
+                    (value) => update({ grupo: value, sel: '' })
+                  "
+                />
+                <FormControl
+                  v-if="
+                    view !== 'conteos-abiertos' && filterOptions.brands.length
+                  "
+                  class="h-11 w-full"
+                  type="select"
+                  :aria-label="__('Brand', null, 'Productos')"
+                  :model-value="state.brand"
+                  :options="brandOptions"
+                  @update:model-value="
+                    (value) => update({ marca: value, sel: '' })
+                  "
+                />
+              </div>
+            </div>
+          </template>
+        </FilterChips>
+      </SearchPanel>
       <div
         ref="scroller"
         class="min-h-0 flex-1 overflow-y-auto"
@@ -53,7 +175,15 @@
         data-productos-scroller
         @scroll.passive="rememberScroll"
       >
-        <PageHeader :title="heading" :subtitle="subtitle" :level="1">
+        <!-- A phone names the place in the app bar and the view in the chips;
+             «Build a pack» moves to the count line -->
+        <h1 v-if="isPhone" class="sr-only">{{ heading }}</h1>
+        <PageHeader
+          v-if="!isPhone || returnTo"
+          :title="isPhone ? '' : heading"
+          :subtitle="isPhone ? '' : subtitle"
+          :level="1"
+        >
           <template #actions>
             <!-- On a phone the app bar already carries the scan icon. -->
             <a
@@ -181,126 +311,10 @@
         >
           {{ boot.price_setup.reason }}
         </div>
-        <!-- Phone (Shell C4): one search pill, then one chip row for the list,
-           with the store, the view and every other filter in «Filtros». -->
-        <div v-if="isPhone" class="flex flex-col gap-2 pb-2">
-          <label class="relative mx-4 flex min-w-0 items-center">
-            <span
-              class="lucide-search pointer-events-none absolute left-4 h-4 w-4 text-ink-gray-5"
-              aria-hidden="true"
-            />
-            <input
-              ref="searchBox"
-              v-model="search"
-              type="search"
-              class="h-11 w-full rounded-full border-0 bg-surface-gray-2 pl-10 pr-4 text-base text-ink-gray-9 placeholder:text-ink-gray-5 focus:ring-2 focus:ring-outline-gray-4"
-              :placeholder="__('Search name, code or barcode')"
-              :aria-label="__('Search name, code or barcode')"
-            />
-          </label>
-          <FilterChips
-            :model-value="view"
-            :chips="viewChips"
-            :deselectable="false"
-            :label="__('List', null, 'Productos')"
-            :filters-label="__('Filters', null, 'Productos')"
-            :filters-count="sheetCount"
-            @update:model-value="selectView"
-            @clear-filters="clearSheet"
-          >
-            <template #filters>
-              <div class="space-y-5 pb-2" data-productos-filters>
-                <template v-if="catalog">
-                  <CatalogFilters
-                    touch
-                    :facets="facets"
-                    :state="state"
-                    :loading="facetsLoading"
-                    @update="filterBy"
-                  />
-                  <PriceListsToggle
-                    v-model="shownLists"
-                    :lists="boot?.price_lists || []"
-                    :main="boot?.default_price_list || ''"
-                  />
-                </template>
-                <!-- A native select: the phone's own picker, over the sheet. -->
-                <label v-if="storeOptions.length > 2" class="block">
-                  <span class="block pb-1 text-sm text-ink-gray-6">{{
-                    __('Store', null, 'Productos')
-                  }}</span>
-                  <select
-                    class="h-11 w-full rounded-6 border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9"
-                    :value="store"
-                    data-productos-store
-                    @change="selectStore($event.target.value)"
-                  >
-                    <option
-                      v-for="option in storeOptions"
-                      :key="option.value || 'all'"
-                      :value="option.value"
-                    >
-                      {{ option.label }}
-                    </option>
-                  </select>
-                </label>
-                <section v-if="!inventory">
-                  <p class="pb-1 text-sm text-ink-gray-6">
-                    {{ __('View', null, 'Productos') }}
-                  </p>
-                  <ListRow
-                    v-for="option in layoutOptions"
-                    :key="option.value"
-                    :title="option.label"
-                    :selected="layout === option.value"
-                    @click="setLayout(option.value)"
-                  />
-                </section>
-
-                <div v-if="inventory" class="flex flex-col gap-3">
-                  <FormControl
-                    v-if="view === 'sin-contar'"
-                    class="h-11 w-full"
-                    type="select"
-                    :aria-label="__('Not counted in')"
-                    :model-value="String(state.days)"
-                    :options="dayOptions"
-                    @update:model-value="
-                      (value) => update({ dias: value, sel: '' })
-                    "
-                  />
-                  <FormControl
-                    v-if="
-                      view !== 'conteos-abiertos' && filterOptions.groups.length
-                    "
-                    class="h-11 w-full"
-                    type="select"
-                    :aria-label="__('Group', null, 'Productos')"
-                    :model-value="state.group"
-                    :options="groupOptions"
-                    @update:model-value="
-                      (value) => update({ grupo: value, sel: '' })
-                    "
-                  />
-                  <FormControl
-                    v-if="
-                      view !== 'conteos-abiertos' && filterOptions.brands.length
-                    "
-                    class="h-11 w-full"
-                    type="select"
-                    :aria-label="__('Brand', null, 'Productos')"
-                    :model-value="state.brand"
-                    :options="brandOptions"
-                    @update:model-value="
-                      (value) => update({ marca: value, sel: '' })
-                    "
-                  />
-                </div>
-              </div>
-            </template>
-          </FilterChips>
-        </div>
-        <div v-else class="flex flex-wrap items-center gap-2 px-4 pb-3 sm:px-6">
+        <div
+          v-if="!isPhone"
+          class="flex flex-wrap items-center gap-2 px-4 pb-3 sm:px-6"
+        >
           <label
             class="relative flex min-w-0 flex-1 items-center"
             :class="inventory ? 'sm:max-w-xs' : ''"
@@ -406,6 +420,21 @@
               }}
             </template>
           </p>
+          <button
+            v-if="
+              isPhone &&
+              !returnTo &&
+              catalog &&
+              boot?.capabilities?.packs &&
+              rows.length
+            "
+            type="button"
+            class="ml-auto inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-ink-gray-8"
+            @click="packOpen = true"
+          >
+            <LucideLayers class="h-4 w-4" aria-hidden="true" />
+            {{ __('Build a pack', null, 'Productos') }}
+          </button>
           <span v-if="catalog" class="hidden items-center gap-2 sm:flex">
             <FormControl
               class="w-48"
@@ -427,7 +456,7 @@
             />
           </span>
           <button
-            v-for="chip in filterChips"
+            v-for="chip in isPhone ? [] : filterChips"
             :key="chip.key"
             type="button"
             class="inline-flex min-h-8 items-center gap-1 rounded-full border border-outline-gray-2 bg-surface-gray-1 py-0.5 pl-3 pr-2 text-xs text-ink-gray-8 hover:bg-surface-gray-2"
@@ -438,7 +467,7 @@
             <span class="lucide-x h-3.5 w-3.5" aria-hidden="true" />
           </button>
           <button
-            v-if="filterChips.length > 1"
+            v-if="filterChips.length > 1 && !isPhone"
             type="button"
             class="text-xs text-ink-gray-6 underline-offset-2 hover:underline"
             @click="filterBy({ grupo: '', existencias: '', foto: '' })"
@@ -771,7 +800,12 @@ import {
 } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Button, FormControl, toast } from 'frappe-ui'
-import { Fab, FilterChips, ListRow, PageHeader } from '@/components/ui'
+import { Fab, FilterChips, PageHeader } from '@/components/ui'
+import ChipGroup from '@/components/ui/ChipGroup.vue'
+import RecentPicks from '@/components/ui/RecentPicks.vue'
+import SearchPanel from '@/components/ui/SearchPanel.vue'
+import { chipClass } from '@/components/ui/chipClass'
+import { useRecentPicks } from '@/composables/useRecentPicks'
 import { isMobile as isPhone } from '@/composables/breakpoint'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import CountDialog from '@/components/productos/CountDialog.vue'
@@ -854,6 +888,47 @@ const notice = ref('')
 const copied = ref('')
 const scroller = ref(null)
 const searchBox = ref(null)
+const phoneSearch = ref(null)
+const searchOpen = ref(false)
+// Closed phone search: the list, the store and each filter, with its ×.
+const phoneChips = computed(() => {
+  const out = []
+  if (view.value !== 'todos')
+    out.push({
+      key: 'view',
+      label: viewLabel(view.value),
+      remove: () => selectView('todos'),
+    })
+  if (store.value)
+    out.push({
+      key: 'store',
+      label:
+        storeOptions.value.find((o) => o.value === store.value)?.label ||
+        store.value,
+      remove: () => selectStore(''),
+    })
+  for (const chip of filterChips.value)
+    out.push({
+      key: chip.key,
+      label: chip.label,
+      remove: () => filterBy(chip.query),
+    })
+  if (inventory.value) {
+    if (state.value.group)
+      out.push({
+        key: 'group',
+        label: state.value.group,
+        remove: () => update({ grupo: '', sel: '' }),
+      })
+    if (state.value.brand)
+      out.push({
+        key: 'brand',
+        label: state.value.brand,
+        remove: () => update({ marca: '', sel: '' }),
+      })
+  }
+  return out
+})
 const focusKey = ref('')
 const selected = ref(new Set())
 const known = new Map()
@@ -1312,6 +1387,15 @@ async function countSent(result) {
 }
 /** Leaving for the record or Escáner: remember the row, scroll and selection. */
 function leaveFor(row) {
+  if (
+    isPhone.value &&
+    (!inventory.value || ['stock', 'conteo'].includes(row.kind))
+  )
+    recentProducts.touch({
+      name: row.name,
+      doctype: 'Item',
+      label: row.title || row.name,
+    })
   focusKey.value = row.key || legacyKey(row)
   rememberScroll()
   try {
@@ -1590,7 +1674,7 @@ function onKey(event) {
     ArrowDown: () => move(1),
     k: () => move(-1),
     ArrowUp: () => move(-1),
-    '/': () => searchBox.value?.focus(),
+    '/': () => (isPhone.value ? phoneSearch.value : searchBox.value)?.focus(),
     Enter: () => current && openRow(current),
     x: () => inventory.value && current && toggle(current),
     X: () => inventory.value && current && extendSelection(current),
@@ -1603,6 +1687,12 @@ function onKey(event) {
   if (event.key === 'Escape' && !selected.value.size) return
   event.preventDefault()
   action()
+}
+// The products opened lately on this device, as bubbles in the search panel.
+const recentProducts = useRecentPicks('muelle:productos-recent')
+function openRecent(pick) {
+  searchOpen.value = false
+  router.push(productRoute({ name: pick.name }, listPath.value))
 }
 function openRow(row) {
   leaveFor(row)

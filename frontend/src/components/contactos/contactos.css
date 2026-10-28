@@ -216,8 +216,9 @@
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: var(--c-active);
-  color: var(--c-accent);
+  /* neutral initials, as every shell avatar (LOOK.md «Colour means state») */
+  background: var(--surface-gray-2);
+  color: var(--ink-gray-7);
   flex: none;
 }
 .c-avatar.company {

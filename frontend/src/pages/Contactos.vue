@@ -44,7 +44,103 @@
         @click="newIdentity = true"
       />
     </header>
-    <div class="c-toolbar">
+    <!-- Phone: the search pill opens the lists, the filters and the contacts
+         opened lately (ui/SearchPanel, as in Tratos); closed, what narrows
+         the list shows as removable chips. -->
+    <SearchPanel
+      v-if="isPhone"
+      v-model:open="searchOpen"
+      :query="state.q"
+      placeholder="Buscar nombre, teléfono, correo o RFC"
+      label="Buscar contactos"
+      @update:query="(value) => (state.q = value)"
+    >
+      <template #trailing>
+        <Button
+          class="c-mobile-actions-toggle size-11 rounded-full"
+          variant="ghost"
+          :icon="LucideEllipsisVertical"
+          aria-label="Más acciones de Contactos"
+          :aria-expanded="mobileActions"
+          @click="mobileActions = !mobileActions"
+        />
+      </template>
+      <template v-if="phoneChips.length" #active>
+        <div class="flex flex-wrap gap-1.5">
+          <button
+            v-for="chip in phoneChips"
+            :key="chip.key"
+            type="button"
+            :class="chipClass(true)"
+            :data-chip="chip.key"
+            :aria-label="`Quitar filtro ${chip.label}`"
+            @click="chip.remove()"
+          >
+            {{ chip.label }}
+            <span class="lucide-x size-3 flex-none" aria-hidden="true" />
+          </button>
+        </div>
+      </template>
+      <RecentPicks
+        v-if="!state.q"
+        :picks="recentContacts.picks.value"
+        @pick="openRecent"
+        @clear="recentContacts.clear()"
+      />
+      <ChipGroup
+        label="Lista"
+        :options="segmentOptions"
+        :model-value="state.segment"
+        :clear-value="state.segment"
+        :max="7"
+        testid="contactos-list"
+        @update:model-value="
+          (value) => value !== state.segment && selectSegment(value)
+        "
+      />
+      <template v-if="state.segment !== 'followups'">
+        <ChipGroup
+          label="Tipo"
+          :options="[
+            { value: 'person', label: 'Personas' },
+            { value: 'company', label: 'Empresas' },
+          ]"
+          :model-value="state.filters.kind || ''"
+          @update:model-value="(value) => setFilter('kind', value)"
+        />
+        <ChipGroup
+          label="Rol"
+          :options="[
+            { value: 'customer', label: 'Cliente' },
+            { value: 'supplier', label: 'Proveedor' },
+          ]"
+          :model-value="state.filters.role || ''"
+          @update:model-value="(value) => setFilter('role', value)"
+        />
+        <ChipGroup
+          label="Datos"
+          multiple
+          :options="[
+            { value: 'missing_phone', label: 'Sin teléfono' },
+            { value: 'disabled', label: 'Deshabilitados' },
+          ]"
+          :model-value="
+            ['missing_phone', 'disabled'].filter((key) => state.filters[key])
+          "
+          @update:model-value="setFlags"
+        />
+        <button
+          type="button"
+          :class="chipClass(filtersOpen)"
+          data-contactos-more-filters
+          @click="openMoreFilters"
+        >
+          <LucideFunnel class="size-3.5" aria-hidden="true" />
+          Más filtros
+        </button>
+      </template>
+    </SearchPanel>
+    <div v-if="!isPhone" class="c-toolbar">
       <FormControl
         v-if="state.segment !== 'followups'"
         ref="searchControl"
@@ -81,33 +177,6 @@
         label="Personalizar"
         :icon-left="LucideSlidersVertical"
         @click="openFromMobileMenu('customize')"
-      />
-    </div>
-    <!-- Phone: the list scope reads as text with its ▾, and the filter and ⋯
-         sit on the same row as icons (Shell S4, contactos #4 #9) -->
-    <div class="c-mobile-segment">
-      <FormControl
-        type="select"
-        aria-label="Lista de contactos"
-        :model-value="state.segment"
-        :options="segmentOptions"
-        @update:model-value="selectSegment"
-      />
-      <Button
-        v-if="state.segment !== 'followups'"
-        variant="ghost"
-        :icon="LucideFunnel"
-        aria-label="Filtros"
-        :aria-expanded="filtersOpen"
-        @click="filtersOpen = !filtersOpen"
-      />
-      <Button
-        class="c-mobile-actions-toggle"
-        variant="ghost"
-        :icon="LucideEllipsisVertical"
-        aria-label="Más acciones de Contactos"
-        :aria-expanded="mobileActions"
-        @click="mobileActions = !mobileActions"
       />
     </div>
     <div
@@ -224,7 +293,7 @@
       />
     </div>
     <div
-      v-if="activeFilters.length && state.segment !== 'followups'"
+      v-if="activeFilters.length && state.segment !== 'followups' && !isPhone"
       class="c-filter-chips"
     >
       <button
@@ -592,6 +661,11 @@ import { call } from 'frappe-ui'
 import { useRoute, useRouter } from 'vue-router'
 import ContactosLayout from '@/components/contactos/ContactosLayout.vue'
 import { Fab, ListRow } from '@/components/ui'
+import ChipGroup from '@/components/ui/ChipGroup.vue'
+import RecentPicks from '@/components/ui/RecentPicks.vue'
+import SearchPanel from '@/components/ui/SearchPanel.vue'
+import { chipClass } from '@/components/ui/chipClass'
+import { useRecentPicks } from '@/composables/useRecentPicks'
 import { isMobile as isPhone } from '@/composables/breakpoint'
 import { focusSearch, useListKeys } from '@/composables/pageKeys'
 import IdentityEditor from '@/components/contactos/IdentityEditor.vue'
@@ -1078,7 +1152,57 @@ function hoverRow(row, event) {
   if (!row || event?.pointerType !== 'mouse') return
   hoverTimer = setTimeout(() => prefetchRecord(row), 150)
 }
+// The contacts opened lately on this device, as bubbles in the search panel.
+const recentContacts = useRecentPicks('muelle:contactos-recent')
+const searchOpen = ref(false)
+function openRecent(pick) {
+  searchOpen.value = false
+  router.push(contactoRoute({ source: pick.doctype, name: pick.name }))
+}
+function setFilter(key, value) {
+  const next = { ...state.filters }
+  if (value) next[key] = value
+  else delete next[key]
+  state.filters = next
+}
+function setFlags(keys) {
+  const next = { ...state.filters }
+  for (const key of ['missing_phone', 'disabled'])
+    if (keys.includes(key)) next[key] = true
+    else delete next[key]
+  state.filters = next
+}
+// The rare filters (origin tag, the clientes' extra details) keep their form:
+// the panel closes onto it.
+function openMoreFilters() {
+  searchOpen.value = false
+  filtersOpen.value = !filtersOpen.value
+}
+// Closed phone search: the list (when not the default) and each filter, with ×.
+const phoneChips = computed(() => [
+  ...(state.segment !== 'all'
+    ? [
+        {
+          key: 'segment',
+          label: title.value,
+          remove: () => selectSegment('all'),
+        },
+      ]
+    : []),
+  ...(state.segment !== 'followups'
+    ? activeFilters.value.map((chip) => ({
+        ...chip,
+        remove: () => removeChip(chip),
+      }))
+    : []),
+])
 function openRow(row) {
+  if (isPhone.value)
+    recentContacts.touch({
+      name: row.name,
+      doctype: row.source,
+      label: row.title || row.name,
+    })
   state.selected = row.source + ':' + row.name
   remember()
   router.push(contactoRoute(row))

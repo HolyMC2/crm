@@ -26991,6 +26991,10 @@ msgid "Any day"
 msgstr "Cualquier día"
 
 msgctxt "Inventario"
+msgid "More filters"
+msgstr "Más filtros"
+
+msgctxt "Inventario"
 msgid "Retry"
 msgstr "Reintentar"
 

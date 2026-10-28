@@ -461,6 +461,7 @@
   </BottomSheet>
 </template>
 <script setup>
+import { matchTokens } from '@/vendor/muelle-shell/contracts/search'
 import {
   computed,
   defineComponent,
@@ -615,16 +616,11 @@ const canalLabel = computed(
     opciones.value?.canales?.find((c) => c.value === state.canal)?.label || '',
 )
 const rolesFound = computed(() => {
-  const text = roleSearch.value.trim().toLowerCase()
+  const text = roleSearch.value.trim()
   if (text.length < 2) return []
   const chosen = new Set(state.destinatarios.roles.map((r) => r.role))
   return (opciones.value?.roles || [])
-    .filter(
-      (r) =>
-        !chosen.has(r.role) &&
-        (r.label.toLowerCase().includes(text) ||
-          r.role.toLowerCase().includes(text)),
-    )
+    .filter((r) => !chosen.has(r.role) && matchTokens(text, r.label, r.role))
     .slice(0, 8)
 })
 const insertables = computed(() => {

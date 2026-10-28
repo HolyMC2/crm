@@ -9,18 +9,23 @@
     :dismissible="!selected.length"
   >
     <template #header>
-      <form class="flex gap-2" @submit.prevent="search">
+      <!-- searches as you type (Marco 2026-10-28: no «Buscar» button);
+           Enter searches at once -->
+      <form class="relative" @submit.prevent="search">
         <input
           v-model="query"
           type="search"
           enterkeyhint="search"
-          class="min-h-11 min-w-0 flex-1 rounded-4 border border-outline-gray-2 bg-surface-base px-3 py-2 text-lg sm:min-h-0 sm:text-sm"
+          class="min-h-11 w-full rounded-full border-0 bg-surface-gray-2 px-4 py-2 pr-10 text-lg focus:ring-1 focus:ring-outline-gray-3 sm:min-h-0 sm:text-sm"
           :aria-label="__('Nombre o código del artículo')"
           :placeholder="__('Buscar por nombre o código…')"
+          @input="searchSoon"
         />
-        <Button class="min-h-11 sm:min-h-0" type="submit" :loading="loading">{{
-          __('Buscar')
-        }}</Button>
+        <LucideLoaderCircle
+          v-if="loading"
+          class="absolute right-3.5 top-1/2 size-4 -translate-y-1/2 animate-spin text-ink-gray-5"
+          aria-hidden="true"
+        />
       </form>
       <label
         class="mt-2 flex min-h-11 items-center gap-2 text-sm text-ink-gray-6 sm:min-h-0"
@@ -207,6 +212,7 @@
 <script setup>
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { Button, call } from 'frappe-ui'
+import LucideLoaderCircle from '~icons/lucide/loader-circle'
 import { BottomSheet } from '@/components/ui'
 import { formatMoney } from '@/composables/crmFormat'
 import {
@@ -263,6 +269,11 @@ const canSelect = (code) =>
 function step(code, delta) {
   quantities.value[code] = stepQty(quantities.value[code], delta)
 }
+let typing = 0
+function searchSoon() {
+  clearTimeout(typing)
+  typing = setTimeout(search, 250)
+}
 async function search() {
   const id = ++request
   loading.value = true
@@ -296,7 +307,10 @@ watch(open, (value) => {
     search()
   } else request++
 })
-onBeforeUnmount(() => request++)
+onBeforeUnmount(() => {
+  clearTimeout(typing)
+  request++
+})
 </script>
 
 <style scoped>

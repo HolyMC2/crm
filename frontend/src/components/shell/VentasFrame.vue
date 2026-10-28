@@ -17,7 +17,7 @@
     <!-- min-w-0 + overflow-x-hidden: chip rows scroll inside, never the shell. -->
     <div
       :key="$route.fullPath"
-      class="page-in flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden"
+      class="ventas-scroll flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden"
     >
       <slot />
     </div>

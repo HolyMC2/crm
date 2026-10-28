@@ -38,9 +38,77 @@
           <span class="lucide-arrow-up-down size-6" aria-hidden="true" />
         </button>
       </template>
+      <!-- Phone: search opens the status chips and the filters under it
+           (ui/AppBar #search-panel); closed, what is on shows as chips. -->
+      <template v-if="phone && profile" #search-panel>
+        <FilterChips
+          inline
+          :model-value="chipValue"
+          :chips="chips"
+          :deselectable="false"
+          label="Estado"
+          :filters-count="filtersCount"
+          @update:model-value="setChip"
+          @clear-filters="clearFilters"
+        >
+          <template v-if="profile.filterFields?.length || state.scope" #filters>
+            <div class="space-y-3" data-documentos-filters>
+              <button
+                v-if="state.scope"
+                type="button"
+                :class="chipClass(true)"
+                @click="clearScope"
+              >
+                <span class="lucide-link size-3.5" aria-hidden="true" />
+                {{ state.scopeLabel || 'Un documento' }}
+                <span class="lucide-x size-3" aria-hidden="true" />
+              </button>
+              <template
+                v-for="field in profile.filterFields || []"
+                :key="field.fieldname"
+              >
+                <div v-if="field.kind === 'link'">
+                  <p class="mb-1.5 text-xs font-medium text-ink-gray-6">
+                    {{ field.label }}
+                  </p>
+                  <FilterLink
+                    :model-value="state.filters[field.fieldname] || ''"
+                    :doctype="field.doctype"
+                    :label="field.label"
+                    @update:model-value="setFilter(field.fieldname, $event)"
+                  />
+                </div>
+                <ChipGroup
+                  v-else
+                  :label="field.label"
+                  :options="filterOptions(field)"
+                  :model-value="state.filters[field.fieldname] || ''"
+                  @update:model-value="setFilter(field.fieldname, $event)"
+                />
+              </template>
+            </div>
+          </template>
+        </FilterChips>
+      </template>
+      <template v-if="phone && profile && activeChips.length" #active>
+        <div class="flex flex-wrap gap-1.5" data-documentos-active>
+          <button
+            v-for="chip in activeChips"
+            :key="chip.key"
+            type="button"
+            :class="chipClass(true)"
+            :aria-label="`Quitar filtro ${chip.label}`"
+            @click="chip.remove()"
+          >
+            {{ chip.label }}
+            <span class="lucide-x size-3 flex-none" aria-hidden="true" />
+          </button>
+        </div>
+      </template>
     </AppBar>
     <div v-if="profile" class="mx-auto w-full flex-none py-2" :class="width">
       <FilterChips
+        v-if="!phone"
         :model-value="chipValue"
         :chips="chips"
         :deselectable="false"
@@ -272,6 +340,8 @@ import { shellBoot } from '@/composables/muelleShell'
 import { useListKeys } from '@/composables/pageKeys'
 import { docApi, errorText } from '@/documentos/api'
 import FilterLink from '@/components/documentos/FilterLink.vue'
+import ChipGroup from '@/components/ui/ChipGroup.vue'
+import { chipClass } from '@/components/ui/chipClass'
 import {
   chipCountFilters,
   filterOptions,
@@ -370,6 +440,41 @@ const chips = computed(() =>
     count: counts.value[chip.value || 'todos'],
   })),
 )
+// Closed phone search: the status (when not the list's default) and each
+// filter, with its ×.
+const activeChips = computed(() => {
+  const out = []
+  const fallback = profile.value?.defaultChip ?? ''
+  if (chipValue.value !== fallback) {
+    const chip = chips.value.find((c) => c.value === chipValue.value)
+    if (chip)
+      out.push({
+        key: 'chip',
+        label: chip.label,
+        remove: () => setChip(fallback),
+      })
+  }
+  for (const field of profile.value?.filterFields || []) {
+    const value = state.value.filters[field.fieldname]
+    if (!value) continue
+    const option =
+      field.kind === 'link'
+        ? null
+        : filterOptions(field).find((o) => o.value === value)
+    out.push({
+      key: field.fieldname,
+      label: option?.label || value,
+      remove: () => setFilter(field.fieldname, ''),
+    })
+  }
+  if (state.value.scope)
+    out.push({
+      key: 'scope',
+      label: state.value.scopeLabel || 'Un documento',
+      remove: clearScope,
+    })
+  return out
+})
 const filtersCount = computed(
   () =>
     Object.values(state.value.filters).filter(Boolean).length +

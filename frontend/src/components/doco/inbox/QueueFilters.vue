@@ -18,11 +18,13 @@
   inbox.setQueueFilters): both answer the same question, and showing "Abiertos"
   while the list obeys a hand-picked status is a lie.
 
-  Two mounts share this file (2026-10-20, phone queue header ≤ 120 px): the
-  «Filtros» button sits on the search row and opens the panel; the `summary`
-  mount is one line under the channel chips with what narrows the list beyond
-  the default view («Abiertos», every channel, no date, tag or search) and
-  «Limpiar» to go back to it. The default view itself shows no chip and no count.
+  Three mounts share this file. Desktop: the «Filtros» button sits on the
+  search row and opens the panel. Phone (2026-10-28): `inline` lays the same
+  sections out in the search panel, under the channel toggles, as 44 px chips
+  with no popover. Both: the `summary` mount is one line under the channel
+  chips with what narrows the list beyond the default view («Abiertos», every
+  channel, no date, tag or search) and «Limpiar» to go back to it. The default
+  view itself shows no chip and no count.
 -->
 <template>
   <!-- active filters, so a narrowed queue can never look like an empty inbox -->
@@ -51,6 +53,81 @@
     >
       {{ __('Limpiar') }}
     </button>
+  </div>
+
+  <!-- phone: the sections straight in the search panel, same chips as the
+       channel toggles above them -->
+  <div v-else-if="inline" class="space-y-3" data-testid="queue-filters-inline">
+    <section :aria-label="__('Estado')">
+      <p class="mb-1.5 text-xs font-medium text-ink-gray-6">
+        {{ __('Estado') }}
+      </p>
+      <div class="flex flex-wrap gap-1.5">
+        <button
+          v-for="q in quickFilters"
+          :key="q.id"
+          type="button"
+          :class="chipClass(q.active)"
+          :aria-pressed="q.active"
+          :title="q.hint"
+          @click="q.apply()"
+        >
+          {{ q.label }}
+        </button>
+      </div>
+    </section>
+    <section :aria-label="__('Última actividad')">
+      <p class="mb-1.5 text-xs font-medium text-ink-gray-6">
+        {{ __('Última actividad') }}
+      </p>
+      <div class="flex flex-wrap gap-1.5">
+        <button
+          v-for="p in periods"
+          :key="p.days"
+          type="button"
+          :class="chipClass(activePeriod === p.days)"
+          :aria-pressed="activePeriod === p.days"
+          @click="setPeriod(p.days)"
+        >
+          {{ p.label }}
+        </button>
+        <button
+          type="button"
+          :class="chipClass(customRange)"
+          :aria-expanded="datesOpen"
+          @click="datesOpen = !datesOpen"
+        >
+          {{ __('Fechas') }}
+          <LucideChevronDown
+            class="size-3.5 transition-transform duration-200"
+            :class="datesOpen ? 'rotate-180' : ''"
+            aria-hidden="true"
+          />
+        </button>
+      </div>
+      <ExpandTransition>
+        <div v-if="datesOpen" class="flex items-center gap-2 pt-2">
+          <input
+            type="date"
+            :value="queueDateFrom"
+            :aria-label="__('Desde')"
+            class="min-h-11 w-full rounded-full border-0 bg-surface-gray-2 px-3 text-sm text-ink-gray-8 focus:ring-1 focus:ring-outline-gray-3"
+            @change="setQueueFilters({ date_from: $event.target.value })"
+          />
+          <span class="flex-none text-xs text-ink-gray-5" aria-hidden="true"
+            >→</span
+          >
+          <input
+            type="date"
+            :value="queueDateTo"
+            :aria-label="__('Hasta')"
+            class="min-h-11 w-full rounded-full border-0 bg-surface-gray-2 px-3 text-sm text-ink-gray-8 focus:ring-1 focus:ring-outline-gray-3"
+            @change="setQueueFilters({ date_to: $event.target.value })"
+          />
+        </div>
+      </ExpandTransition>
+    </section>
+    <ChipDrill :label="__('Más filtros')" :sections="sections" />
   </div>
 
   <div v-else-if="!summary" class="relative flex-none">
@@ -235,6 +312,10 @@
 <script setup>
 import { computed, ref } from 'vue'
 import LucideSlidersHorizontal from '~icons/lucide/sliders-horizontal'
+import LucideChevronDown from '~icons/lucide/chevron-down'
+import ExpandTransition from '@/components/ui/ExpandTransition.vue'
+import ChipDrill from '@/components/ui/ChipDrill.vue'
+import { chipClass } from '@/components/ui/chipClass'
 import {
   queueFilterOptions,
   queueDealStatus,
@@ -255,10 +336,18 @@ import { DEAL_STATUS, LEAD_STATUS, stageLabel } from '@/utils/stageLabel'
 defineProps({
   // the one-line summary under the channel chips, not the «Filtros» button
   summary: { type: Boolean, default: false },
+  // the sections laid out in place (phone search panel), no button or popover
+  inline: { type: Boolean, default: false },
 })
 
 const open = ref(false)
 const expanded = ref('') // which drill-down section is open (one at a time)
+const customRange = computed(
+  () =>
+    Boolean(queueDateTo.value) ||
+    (Boolean(queueDateFrom.value) && activePeriod.value == null),
+)
+const datesOpen = ref(false) // opened at the end of setup if a range is set
 
 const opts = computed(() => queueFilterOptions.data || {})
 const closedTypes = computed(
@@ -521,4 +610,7 @@ const narrowCount = computed(
     (queueSearch.value.trim() ? 1 : 0) +
     (queueChannel.value ? 1 : 0),
 )
+
+// a custom range is set: show its inputs, not just the lit «Fechas» chip
+datesOpen.value = customRange.value
 </script>

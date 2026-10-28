@@ -1,41 +1,55 @@
 <template>
   <div class="relative flex h-full flex-col overflow-hidden">
-    <!-- Phone (Shell D4): the one prospects list. Title in the shell bar,
-         one chip row, a «Filtros» sheet for the source, rows on ListRow. -->
-    <div v-if="isPhone" class="flex flex-col gap-2 px-4 pb-2 pt-3">
-      <TextInput
-        v-model="q"
-        type="search"
-        placeholder="Buscar prospectos"
-        aria-label="Buscar prospectos"
-        data-list-search
-        @update:model-value="searchSoon"
+    <!-- Phone (Shell D4): the one prospects list. Title in the shell bar;
+         the search pill opens the kind and source filters and the prospects
+         opened lately (ui/SearchPanel, as in Tratos). -->
+    <SearchPanel
+      v-if="isPhone"
+      v-model:open="searchOpen"
+      :query="q"
+      placeholder="Buscar nombre, teléfono o correo"
+      label="Buscar prospectos"
+      @update:query="onPanelQuery"
+    >
+      <template v-if="activeChips.length" #active>
+        <div class="flex flex-wrap gap-1.5">
+          <button
+            v-for="chip in activeChips"
+            :key="chip.key"
+            type="button"
+            :class="chipClass(true)"
+            :aria-label="`Quitar filtro ${chip.label}`"
+            @click="chip.clear"
+          >
+            {{ chip.label }}
+            <span class="lucide-x size-3 flex-none" aria-hidden="true" />
+          </button>
+        </div>
+      </template>
+      <RecentPicks
+        v-if="!q"
+        :picks="recent.picks.value"
+        @pick="openRecent"
+        @clear="recent.clear()"
       />
-      <FilterChips
-        :model-value="kind"
-        :chips="phoneChips"
-        :deselectable="false"
+      <ChipGroup
         label="Tipo"
-        :filters-count="source ? 1 : 0"
+        :options="phoneChips"
+        :model-value="kind"
+        testid="prospects-kind"
         @update:model-value="setKind"
-        @clear-filters="setSource('')"
-      >
-        <template #filters>
-          <p class="pb-1 text-sm text-ink-gray-6">Origen</p>
-          <ListRow
-            v-for="chip in [
-              { key: '', label: 'Todos los orígenes' },
-              ...sources,
-            ]"
-            :key="chip.key || 'all'"
-            :title="chip.label"
-            :meta="chip.count != null ? String(chip.count) : ''"
-            :selected="source === chip.key"
-            @click="setSource(chip.key)"
-          />
-        </template>
-      </FilterChips>
-    </div>
+      />
+      <ChipGroup
+        v-if="sources.length > 1 || source"
+        label="Origen"
+        :options="
+          sources.map((s) => ({ value: s.key, label: s.label, count: s.count }))
+        "
+        :model-value="source"
+        testid="prospects-source"
+        @update:model-value="setSource"
+      />
+    </SearchPanel>
     <header
       v-if="!isPhone"
       class="flex flex-wrap items-center justify-between gap-3 border-b px-5 py-3"
@@ -155,6 +169,7 @@
           :meta-tone="isOverdue(row) ? 'danger' : ''"
           :to="prospectRoute(row, { phone: true })"
           data-testid="prospect-row"
+          @click="touchRecent(row)"
         />
         <button
           v-if="hasMore"
@@ -241,7 +256,12 @@ import { computed, defineAsyncComponent, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { formatDue } from '@/utils/display'
 import { Badge, Button, TextInput, call } from 'frappe-ui'
-import { BottomSheet, Fab, FilterChips, ListRow } from '@/components/ui'
+import { BottomSheet, Fab, ListRow } from '@/components/ui'
+import ChipGroup from '@/components/ui/ChipGroup.vue'
+import RecentPicks from '@/components/ui/RecentPicks.vue'
+import SearchPanel from '@/components/ui/SearchPanel.vue'
+import { chipClass } from '@/components/ui/chipClass'
+import { useRecentPicks } from '@/composables/useRecentPicks'
 import { isMobile as isPhone } from '@/composables/breakpoint'
 import { formatPhone } from '@/composables/crmFormat'
 import {
@@ -303,6 +323,39 @@ const phoneChips = computed(() =>
       : counts.value.lead + counts.value.inquiry,
   })),
 )
+// Closed search: the kind and source that narrow the list, each with its ×.
+const activeChips = computed(() => {
+  const out = []
+  const kindChip = kind.value && KIND_CHIPS.find((c) => c.value === kind.value)
+  if (kindChip)
+    out.push({ key: 'kind', label: kindChip.label, clear: () => setKind('') })
+  const sourceChip =
+    source.value && sources.value.find((s) => s.key === source.value)
+  if (source.value)
+    out.push({
+      key: 'source',
+      label: sourceChip?.label || source.value,
+      clear: () => setSource(''),
+    })
+  return out
+})
+const searchOpen = ref(false)
+function onPanelQuery(text) {
+  q.value = text
+  searchSoon()
+}
+// The prospects opened lately on this device, as bubbles in the panel.
+const recent = useRecentPicks('muelle:prospectos-recent')
+function touchRecent(row) {
+  recent.touch({ name: row.name, doctype: row.kind, label: prospectName(row) })
+  searchOpen.value = false
+}
+function openRecent(pick) {
+  searchOpen.value = false
+  router.push(
+    prospectRoute({ name: pick.name, kind: pick.doctype }, { phone: true }),
+  )
+}
 // Line 2: how to reach them and where they came from.
 function phoneLine(row) {
   return [

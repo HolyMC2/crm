@@ -13,6 +13,18 @@
       >
         <LucideFilePlus class="h-6 w-6" />
       </button>
+      <!-- a shortcut chip in a search panel (ui/chipClass) -->
+      <button
+        v-else-if="variant === 'chip'"
+        type="button"
+        :class="chipClass(false)"
+        v-bind="$attrs"
+        data-capturar-documento
+        @click="show"
+      >
+        <LucideFilePlus class="size-3.5" aria-hidden="true" />
+        {{ buttonLabel }}
+      </button>
       <Button
         v-else
         :variant="variant"
@@ -36,6 +48,7 @@ import {
 } from '@/composables/useCaptura'
 import { loadCameraSheet, openCamera } from './cameraDoor'
 import LucideFilePlus from '~icons/lucide/file-plus'
+import { chipClass } from '@/components/ui/chipClass'
 
 // «Capturar documento»: a door of the shell's document camera (Shell D7,
 // SPEC DD14) with this page's intent preset: the targets it offers, the

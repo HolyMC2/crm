@@ -497,7 +497,7 @@ describe('Productos › catálogo', () => {
     expect(root.querySelector('ul.grid')).toBeTruthy()
   })
 
-  it('on a phone: the controls scroll with the list; one chip row and «Filtros»', async () => {
+  it('on a phone: the search pill opens the lists, the filters and the view', async () => {
     localStorage.clear()
     const width = window.innerWidth
     Object.defineProperty(window, 'innerWidth', {
@@ -508,31 +508,33 @@ describe('Productos › catálogo', () => {
     window.dispatchEvent(new Event('resize'))
     try {
       const router = await mountAt('/productos')
-      // The search and the chips live inside the one scroller (Shell C5).
-      const scroller = root.querySelector('[data-productos-scroller]')
-      expect(scroller.querySelector('input[type="search"]')).toBeTruthy()
-      expect(scroller.querySelector('[data-ui-filter-chips]')).toBeTruthy()
-      expect(scroller.querySelector('h1')).toBeTruthy()
+      // Only the search pill sits above the list (ui/SearchPanel).
+      const input = root.querySelector('input[data-list-search]')
+      expect(input).toBeTruthy()
+      expect(root.querySelector('[data-productos-scroller] h1')).toBeTruthy()
       // No list select, no list/cards toggle in the page on a phone.
       expect(root.querySelector('select[aria-label="List"]')).toBeNull()
       expect(
         root.querySelector('button[aria-pressed][title="Cards"]'),
       ).toBeNull()
+      expect(root.querySelector('[data-testid="search-panel"]')).toBeNull()
+      input.dispatchEvent(new Event('focus'))
+      await flush()
+      const panel = root.querySelector('[data-testid="search-panel"]')
+      expect(panel).toBeTruthy()
       // A list is a chip.
-      root.querySelector('[data-chip="sin-precio"]').click()
+      panel.querySelector('[data-chip="sin-precio"]').click()
       await flush()
       expect(router.currentRoute.value.query).toMatchObject({
         vista: 'sin-precio',
       })
       root.querySelector('[data-chip="todos"]').click()
       await flush()
-      // «Filtros» holds the store, the view and the catálogo filters.
-      root.querySelector('[data-ui-filters-chip]').click()
-      await flush()
-      const sheet = document.body.querySelector('[data-productos-filters]')
-      expect(sheet).toBeTruthy()
+      // The store, the view and the catálogo filters sit in the panel too.
+      const filters = root.querySelector('[data-productos-filters]')
+      expect(filters).toBeTruthy()
       const button = (text) =>
-        [...sheet.querySelectorAll('button')].find((b) =>
+        [...filters.querySelectorAll('button')].find((b) =>
           b.textContent.includes(text),
         )
       button('With stock').click()
@@ -540,22 +542,22 @@ describe('Productos › catálogo', () => {
       expect(router.currentRoute.value.query).toMatchObject({
         existencias: 'con',
       })
-      const store = sheet.querySelector('select[data-productos-store]')
-      store.value = 'Otra - GD'
-      store.dispatchEvent(new Event('change'))
+      root.querySelector('[data-testid="productos-store-Otra - GD"]').click()
       await flush()
       expect(router.currentRoute.value.query).toMatchObject({
         existencias: 'con',
         tienda: 'Otra - GD',
       })
-      expect(
-        root.querySelector('[data-ui-filters-chip]').getAttribute('aria-label'),
-      ).toBe('2 filters on')
-      button('Cards').click()
+      root.querySelector('[data-testid="productos-layout-tarjetas"]').click()
       await flush()
       expect(localStorage.getItem('muelle:productos:layout:ana@x.test')).toBe(
         'tarjetas',
       )
+      // Closed, what narrows the list shows as removable chips.
+      root.querySelector('[data-testid="search-panel-done"]').click()
+      await flush()
+      const active = root.querySelector('[data-productos-active]')
+      expect(active.querySelectorAll('button')).toHaveLength(2)
     } finally {
       Object.defineProperty(window, 'innerWidth', {
         configurable: true,

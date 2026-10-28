@@ -30,6 +30,22 @@
           <p class="text-sm text-ink-gray-6 sm:mt-0.5">
             <span class="first-letter:uppercase">{{ dateLine }}</span>
             <template v-if="summary"> · {{ summary }}</template>
+            <!-- «Pregúntale a Muelle» (SHELL-S2.3): its one suggestion rides on
+                 the summary it comes from instead of repeating a row below -->
+            <template v-if="hint">
+              ·
+              <button
+                type="button"
+                class="-my-3 inline-flex min-h-11 items-center gap-1 py-3 font-semibold text-ink-gray-9 hover:underline"
+                :aria-label="`${hint.verb}: ${hint.reason}`"
+                :title="hint.reason"
+                data-testid="assistant-suggestion"
+                @click="openAssistant({ text: hint.prompt, send: true })"
+              >
+                <span class="text-[var(--brand)]" aria-hidden="true">✦</span
+                >{{ hint.verb }}
+              </button>
+            </template>
           </p>
         </div>
         <Button
@@ -44,8 +60,6 @@
           </template>
         </Button>
       </header>
-      <!-- «Pregúntale a Muelle»: at most one suggestion, with its reason (SHELL-S2.3). -->
-      <AssistantSuggestion v-if="data" screen="hoy" :data="data" class="mb-4" />
 
       <div
         v-if="problem && !data"
@@ -526,7 +540,12 @@ import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { Button, toast } from 'frappe-ui'
 import HoySection from '@/components/hoy/HoySection.vue'
 import HoyTask from '@/components/hoy/HoyTask.vue'
-import AssistantSuggestion from '@/components/assistant/AssistantSuggestion.vue'
+import { hoySuggestion } from '@/components/assistant/suggestions'
+import {
+  assistantEnabled,
+  loadStatus,
+  openAssistant,
+} from '@/components/assistant/useAssistant'
 import { useListKeys } from '@/composables/pageKeys'
 import AvisosList from '@/components/avisos/AvisosList.vue'
 import CompleteDialog from '@/components/pendientes/CompleteDialog.vue'
@@ -680,6 +699,11 @@ const allClear = computed(
     !plan.value.rows.length,
 )
 const shortcuts = computed(() => accesos(shellBoot.value))
+
+loadStatus()
+const hint = computed(() =>
+  assistantEnabled.value && data.value ? hoySuggestion(data.value) : null,
+)
 
 const summary = computed(() => {
   if (!data.value) return ''

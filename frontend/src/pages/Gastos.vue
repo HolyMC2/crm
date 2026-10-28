@@ -93,6 +93,45 @@
               }}</strong></span
             >
           </template>
+          <!-- Search opens the filters under it (ui/AppBar #search-panel). -->
+          <template #search-panel>
+            <FilterChips
+              v-if="state.segment === 'por-pagar' && !state.po"
+              inline
+              data-gastos-chips
+              :model-value="state.chip"
+              :chips="dueChips"
+              :label="__('Filter by due date')"
+              @update:model-value="(value) => list.navigate({ chip: value })"
+            />
+            <section
+              v-if="state.segment === 'por-registrar' && !state.po"
+              :aria-label="__('Shortcuts')"
+            >
+              <button
+                type="button"
+                :class="chipClass(false)"
+                data-gastos-cfdi
+                @click="openCfdiImport"
+              >
+                <LucideUpload class="size-3.5" aria-hidden="true" />
+                {{ __('Upload supplier CFDI (XML)') }}
+              </button>
+            </section>
+            <RecentPicks
+              :picks="recentBills.picks.value"
+              @pick="openRecent"
+              @clear="recentBills.clear()"
+            />
+          </template>
+          <template v-if="state.segment === 'por-pagar' && !state.po" #active>
+            <FilterChips
+              summary
+              :model-value="state.chip"
+              :chips="dueChips"
+              @update:model-value="(value) => list.navigate({ chip: value })"
+            />
+          </template>
         </PowerAppBar>
         <header
           v-else
@@ -155,7 +194,7 @@
         </div>
         <!-- One chip row (S1 FilterChips), as Cobranza's: tap again for all. -->
         <FilterChips
-          v-if="state.segment === 'por-pagar' && !state.po"
+          v-if="state.segment === 'por-pagar' && !state.po && !list.phone.value"
           class="pt-2 sm:pt-0"
           data-gastos-chips
           :model-value="state.chip"
@@ -177,7 +216,11 @@
             data-power-search
           />
           <Button
-            v-if="state.segment === 'por-registrar' && !state.po"
+            v-if="
+              state.segment === 'por-registrar' &&
+              !state.po &&
+              !list.phone.value
+            "
             :icon-left="LucideUpload"
             class="min-h-11 sm:min-h-8"
             :label="__('Upload supplier CFDI (XML)')"
@@ -288,7 +331,7 @@
                       ? 'pl-2 sm:pl-2'
                       : ''
                   "
-                  @click="list.onRowClick($event, row)"
+                  @click="onRowOpen($event, row)"
                 >
                   <Icon
                     :icon="
@@ -455,6 +498,9 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Button, FormControl, toast } from 'frappe-ui'
 import { Fab, FilterChips } from '@/components/ui'
+import { chipClass } from '@/components/ui/chipClass'
+import RecentPicks from '@/components/ui/RecentPicks.vue'
+import { useRecentPicks } from '@/composables/useRecentPicks'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import ApprovalDialog from '@/components/gastos/ApprovalDialog.vue'
 import BulkPaySheet from '@/components/gastos/BulkPaySheet.vue'
@@ -654,6 +700,21 @@ function recordRoute(row, extra = {}) {
     params: { name: row.name },
     query: { list: listHref(list.returnQuery(row)), ...extra },
   }
+}
+// The bills opened lately on this device, in the search panel.
+const recentBills = useRecentPicks('muelle:gastos-recent')
+function onRowOpen(event, row) {
+  if (row.party)
+    recentBills.touch({
+      name: row.name,
+      doctype: 'Purchase Invoice',
+      label: row.party,
+    })
+  list.onRowClick(event, row)
+}
+function openRecent(pick) {
+  list.searchOpen.value = false
+  router.push(recordRoute({ name: pick.name }))
 }
 function recordHref(row) {
   const { query } = recordRoute(row)

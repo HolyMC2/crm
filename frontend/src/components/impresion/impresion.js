@@ -2,6 +2,7 @@
 // print preview and the owner's format editor. No Vue, no calls: the sheet,
 // the pages and the unit test read the same rules.
 import { kindLabel } from '@/utils/display'
+import { matchTokens } from '@/vendor/muelle-shell/contracts/search'
 
 /** How a format is built (server `kind_of`), in the owner's words. */
 export const KIND_LABELS = Object.freeze({
@@ -205,15 +206,10 @@ export function fieldSnippet(field) {
 
 /** Fields matching a search, by label or field name. */
 export function filterFields(fields, query) {
-  const q = String(query || '')
-    .trim()
-    .toLowerCase()
+  const q = String(query || '').trim()
   if (!q) return fields || []
-  return (fields || []).filter(
-    (f) =>
-      String(f.label || '')
-        .toLowerCase()
-        .includes(q) || String(f.fieldname).toLowerCase().includes(q),
+  return (fields || []).filter((f) =>
+    matchTokens(q, String(f.label || ''), String(f.fieldname)),
   )
 }
 

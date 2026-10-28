@@ -123,9 +123,15 @@
           __('Back to {0}', [returnLabel || __('the previous record')])
         }}</a
       >
+      <!-- Phone: the list and the company side by side, one row above the queue -->
       <div
-        class="shrink-0 gap-2 border-b border-outline-gray-2 p-3 sm:hidden"
-        :class="documentName || fileId ? 'hidden' : 'grid'"
+        class="shrink-0 gap-2 border-b border-outline-gray-2 px-3 py-2 sm:hidden"
+        :class="[
+          documentName || fileId ? 'hidden' : 'grid',
+          boot.companies.length > 1
+            ? 'grid-cols-[minmax(0,3fr)_minmax(0,2fr)]'
+            : '',
+        ]"
       >
         <ArchivosNav
           mobile
@@ -136,10 +142,19 @@
           :folders="folders"
           @select="go"
         />
+        <FormControl
+          v-if="boot.companies.length > 1"
+          class="[&_select]:h-11"
+          type="select"
+          :aria-label="__('Company')"
+          :model-value="company"
+          :options="boot.companies.map((c) => ({ value: c, label: c }))"
+          @update:model-value="selectCompany"
+        />
       </div>
       <div
         v-if="boot.companies.length > 1"
-        class="shrink-0 border-b border-outline-gray-2 px-3 py-2"
+        class="hidden shrink-0 border-b border-outline-gray-2 px-3 py-2 sm:block"
       >
         <FormControl
           class="h-11 sm:h-auto"
@@ -157,16 +172,18 @@
           class="flex min-h-0 w-full flex-col border-outline-gray-2 lg:w-[560px] lg:shrink-0 lg:border-r"
           :class="fileId ? 'hidden lg:flex' : 'flex'"
         >
-          <ArchivoUpload
-            v-if="uploadOpen"
-            class="m-3"
-            :company="company"
-            :folder="openFolder"
-            :limit-mb="boot.upload_limit_mb || 10"
-            :initial-file="droppedFile"
-            @received="onReceived"
-            @cancel="closeUpload"
-          />
+          <ExpandTransition>
+            <ArchivoUpload
+              v-if="uploadOpen"
+              class="m-3"
+              :company="company"
+              :folder="openFolder"
+              :limit-mb="boot.upload_limit_mb || 10"
+              :initial-file="droppedFile"
+              @received="onReceived"
+              @cancel="closeUpload"
+            />
+          </ExpandTransition>
           <ArchivosBrowser
             ref="browser"
             :view="view"
@@ -232,13 +249,23 @@
 
       <!-- Bandeja: the intake queue -->
       <div v-else class="flex min-h-0 flex-1">
+        <Fab
+          v-if="primaryDock && !documentName"
+          :label="uploadOpen ? __('Close') : __('Receive')"
+          :icon="uploadOpen ? 'lucide-x' : 'lucide-upload'"
+          :extended="false"
+          :aria-expanded="uploadOpen ? 'true' : 'false'"
+          @click="toggleUpload"
+        />
         <section
           class="flex min-h-0 w-full flex-col border-outline-gray-2 lg:w-[420px] lg:shrink-0 lg:border-r"
           :class="documentName ? 'hidden lg:flex' : 'flex'"
           :aria-label="viewLabel(view)"
         >
-          <div class="shrink-0 space-y-3 p-4">
-            <div class="flex items-start gap-3">
+          <div class="shrink-0 space-y-3 p-4 max-sm:pt-0">
+            <!-- On a phone the list picker names the view and «Receive» docks
+                 in the command bar -->
+            <div class="hidden items-start gap-3 sm:flex">
               <div class="min-w-0 flex-1">
                 <h1 class="text-xl font-semibold text-ink-gray-9">
                   {{ viewLabel(view) }}
@@ -290,15 +317,17 @@
                 :return-label="returnLabel"
               />
             </div>
-            <ArchivoUpload
-              v-if="uploadOpen"
-              :company="company"
-              :target="targetCtx?.supported ? targetCtx : null"
-              :limit-mb="boot.upload_limit_mb || 10"
-              :initial-file="droppedFile"
-              @received="onReceived"
-              @cancel="closeUpload"
-            />
+            <ExpandTransition>
+              <ArchivoUpload
+                v-if="uploadOpen"
+                :company="company"
+                :target="targetCtx?.supported ? targetCtx : null"
+                :limit-mb="boot.upload_limit_mb || 10"
+                :initial-file="droppedFile"
+                @received="onReceived"
+                @cancel="closeUpload"
+              />
+            </ExpandTransition>
             <FormControl
               v-if="!fiscalView"
               v-model="q"
@@ -539,6 +568,9 @@ import { useListKeys } from '@/composables/pageKeys'
 import ArchivoDetail from '@/components/archivos/ArchivoDetail.vue'
 import ArchivoGuard from '@/components/archivos/ArchivoGuard.vue'
 import ArchivoPreview from '@/components/archivos/ArchivoPreview.vue'
+import Fab from '@/components/ui/Fab.vue'
+import ExpandTransition from '@/components/ui/ExpandTransition.vue'
+import { primaryDock } from '@/components/ui/primaryDock'
 import ArchivoUpload from '@/components/archivos/ArchivoUpload.vue'
 import ArchivosBrowser from '@/components/archivos/ArchivosBrowser.vue'
 import ArchivosNav from '@/components/archivos/ArchivosNav.vue'

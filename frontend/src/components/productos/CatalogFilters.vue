@@ -1,5 +1,54 @@
 <template>
-  <div class="space-y-5" :aria-busy="loading || undefined">
+  <!-- In a phone search panel (`touch`): each filter is a row of chips. -->
+  <div v-if="touch" class="space-y-3" :aria-busy="loading || undefined">
+    <ChipGroup
+      v-if="sections.includes('stock') && facets?.stock !== null"
+      :label="__('Stock', null, 'Productos')"
+      :options="chipOptions(stockOptions)"
+      :model-value="state.stock"
+      testid="catalog-stock"
+      @update:model-value="(value) => emit('update', { existencias: value })"
+    />
+    <ChipGroup
+      v-if="sections.includes('photo')"
+      :label="__('Photo', null, 'Productos')"
+      :options="chipOptions(photoOptions)"
+      :model-value="state.photo"
+      testid="catalog-photo"
+      @update:model-value="(value) => emit('update', { foto: value })"
+    />
+    <section v-if="sections.includes('group') && groups.length">
+      <input
+        v-if="groups.length > SHOWN"
+        v-model="groupSearch"
+        type="search"
+        class="mb-1.5 h-11 w-full rounded-full border-0 bg-surface-gray-2 px-4 text-sm text-ink-gray-8 placeholder:text-ink-gray-5 focus:ring-1 focus:ring-outline-gray-3"
+        :placeholder="__('Search group')"
+        :aria-label="__('Search group')"
+      />
+      <ChipGroup
+        :label="__('Group', null, 'Productos')"
+        :options="
+          matching.map((g) => ({
+            value: g.value,
+            label: g.value,
+            count: g.count.toLocaleString(),
+          }))
+        "
+        :model-value="state.group"
+        :max="groupSearch ? 40 : SHOWN"
+        testid="catalog-group"
+        @update:model-value="(value) => emit('update', { grupo: value })"
+      />
+      <p
+        v-if="groupSearch && !matching.length"
+        class="py-1 text-sm text-ink-gray-6"
+      >
+        {{ __('No group matches «{0}».', [groupSearch]) }}
+      </p>
+    </section>
+  </div>
+  <div v-else class="space-y-5" :aria-busy="loading || undefined">
     <!-- In the «Filtros» sheet the sheet has the title and «Borrar filtros». -->
     <div v-if="!touch" class="flex items-center justify-between gap-2">
       <h2 class="text-sm font-semibold text-ink-gray-9">
@@ -144,6 +193,8 @@
 import { computed, ref } from 'vue'
 import { groupFacets } from '@/composables/useProductos'
 import Icon from '@/components/Icon.vue'
+import ChipGroup from '@/components/ui/ChipGroup.vue'
+import { matchTokens } from '@/vendor/muelle-shell/contracts/search'
 
 // «Todos» as a catalogue: what is on hand, what has a photo and which group,
 // each choice with how many products it leaves (the other filters applied).
@@ -212,12 +263,17 @@ const allGroups = computed(() =>
     ? facetGroups.value.reduce((sum, g) => sum + g.count, 0).toLocaleString()
     : '',
 )
-const matching = computed(() => {
-  const needle = groupSearch.value.trim().toLocaleLowerCase()
-  return needle
-    ? groups.value.filter((g) => g.value.toLocaleLowerCase().includes(needle))
-    : groups.value
-})
+// The shell's search rule: any word order, accent-blind (contracts/search).
+const matching = computed(() =>
+  groupSearch.value.trim()
+    ? groups.value.filter((g) => matchTokens(groupSearch.value, g.value))
+    : groups.value,
+)
+// Chips leave out «All»: tapping the picked chip again clears it.
+const chipOptions = (options) =>
+  options
+    .filter((o) => o.value)
+    .map((o) => ({ value: o.value, label: o.label, count: o.count || null }))
 const visibleGroups = computed(() => {
   if (groupSearch.value || showAll.value) return matching.value
   const top = matching.value.slice(0, SHOWN)

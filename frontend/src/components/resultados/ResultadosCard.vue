@@ -83,8 +83,8 @@
       <div v-if="!isRanked" class="flex items-end gap-3">
         <div class="min-w-0 flex-1">
           <p
-            class="font-semibold tabular-nums tracking-tight text-ink-gray-9"
-            :class="size === 'full' ? 'text-3xl' : 'text-2xl'"
+            class="num font-semibold leading-none text-ink-gray-9"
+            :class="size === 'full' ? 'text-[2.75rem]' : 'text-[2.25rem]'"
           >
             {{ formatValue(card.value, card.format, currency) }}
             <span
@@ -95,7 +95,7 @@
           </p>
           <p
             v-if="prevText"
-            class="mt-0.5 text-xs tabular-nums text-ink-gray-5"
+            class="mt-1.5 text-xs tabular-nums text-ink-gray-5"
             data-testid="prev"
           >
             {{ prevText }}
@@ -135,7 +135,7 @@
       >
         <div v-for="fact in card.facts" :key="fact.label" class="min-w-0">
           <dt class="truncate text-xs text-ink-gray-6">{{ fact.label }}</dt>
-          <dd class="truncate font-medium tabular-nums text-ink-gray-8">
+          <dd class="num truncate text-base font-semibold text-ink-gray-8">
             {{ formatValue(fact.value, fact.format, currency) }}
           </dd>
         </div>

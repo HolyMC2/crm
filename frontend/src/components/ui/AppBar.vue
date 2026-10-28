@@ -125,9 +125,40 @@
         <AppBarTitle v-bind="titleProps" @pick="scopeSheet = true" />
       </slot>
     </div>
+    <!-- Search open (WhatsApp pattern, Marco 2026-10-28): the page's filters,
+         toggles and recent records slide open under the search field, over
+         the greyed list; typing lifts the grey so results show live. Closed,
+         #active keeps what narrows the list in sight as removable chips. -->
+    <Transition name="fade">
+      <div
+        v-if="panelOpen && !search"
+        class="absolute inset-x-0 top-full h-[100dvh] bg-black/30"
+        aria-hidden="true"
+        data-appbar-scrim
+        @click="closeSearch"
+      />
+    </Transition>
+    <ExpandTransition>
+      <div
+        v-if="panelOpen"
+        class="max-h-[64dvh] space-y-3 overflow-y-auto overscroll-contain px-4 pb-3 pt-1"
+        data-appbar-search-panel
+      >
+        <slot name="search-panel" :close="closeSearch" />
+      </div>
+    </ExpandTransition>
+    <ExpandTransition>
+      <div
+        v-if="$slots.active && !(searchOpen && searchable) && !selecting"
+        class="px-4 pb-2 empty:hidden"
+        data-appbar-active
+      >
+        <slot name="active" />
+      </div>
+    </ExpandTransition>
     <!-- What matters in this list, in sight while it scrolls. -->
     <div
-      v-if="$slots.summary"
+      v-if="$slots.summary && !panelOpen"
       class="flex flex-wrap gap-x-6 gap-y-1 border-t border-outline-gray-1 px-4 pb-2.5 pt-2 text-xs text-ink-gray-6"
       data-appbar-summary
     >
@@ -179,9 +210,11 @@ import {
   onBeforeUnmount,
   onMounted,
   ref,
+  useSlots,
   watch,
 } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
+import ExpandTransition from './ExpandTransition.vue'
 import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
 import { shellBoot } from '@/composables/muelleShell'
 import { canReturnToReferrer } from '@/utils/historyBack'
@@ -290,6 +323,14 @@ function choose(value) {
   scopeSheet.value = false
   emit('update:scope', value)
 }
+const slots = useSlots()
+const panelOpen = computed(
+  () =>
+    props.searchOpen &&
+    props.searchable &&
+    !props.selecting &&
+    Boolean(slots['search-panel']),
+)
 function closeSearch() {
   emit('update:searchOpen', false)
   if (props.search) emit('update:search', '')

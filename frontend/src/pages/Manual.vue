@@ -65,6 +65,49 @@
     <!-- The page is `relative` so the phone's «Escribir artículo» FAB sits
          over its one scroller. -->
     <div v-else class="relative flex min-h-0 min-w-0 flex-1 flex-col">
+      <!-- Phone: only the search pill; it opens the categories and, for
+           writers, the lists (ui/SearchPanel, as in the Inbox). -->
+      <SearchPanel
+        v-if="isPhone"
+        v-model:open="searchOpen"
+        class="flex-none"
+        :query="search"
+        :placeholder="__('Search the shop manual')"
+        @update:query="(value) => (search = value)"
+      >
+        <template v-if="activeChips.length" #active>
+          <div class="flex flex-wrap gap-1.5" data-manual-chips>
+            <button
+              v-for="chip in activeChips"
+              :key="chip.key"
+              type="button"
+              :class="chipClass(true)"
+              :aria-label="__('Remove filter {0}', [chip.label])"
+              @click="chip.remove()"
+            >
+              {{ chip.label }}
+              <span class="lucide-x size-3 flex-none" aria-hidden="true" />
+            </button>
+          </div>
+        </template>
+        <ChipGroup
+          v-if="categories.length"
+          :label="__('Categories')"
+          :options="categoryChips.filter((c) => c.value)"
+          :model-value="state.categoria"
+          testid="manual-category"
+          @update:model-value="selectCategory"
+        />
+        <ChipGroup
+          v-if="caps.write"
+          :label="__('List', null, CTX)"
+          :options="entries"
+          :model-value="state.vista"
+          clear-value="publicados"
+          testid="manual-vista"
+          @update:model-value="selectVista"
+        />
+      </SearchPanel>
       <div
         class="min-h-0 flex-1 overflow-y-auto"
         :class="fab ? 'pb-24' : 'pb-6'"
@@ -108,8 +151,7 @@
           </template>
         </PageHeader>
 
-        <!-- On a phone the header is gone: the search keeps its own top gap. -->
-        <div class="px-4 pb-2 pt-3 sm:px-6 sm:pt-0">
+        <div v-if="!isPhone" class="px-4 pb-2 pt-3 sm:px-6 sm:pt-0">
           <label class="sr-only" for="manual-search">{{
             __('Search the shop manual')
           }}</label>
@@ -122,38 +164,6 @@
             class="form-input min-h-11 w-full rounded-6 border-outline-gray-2 bg-surface-gray-1 text-base text-ink-gray-9 sm:min-h-8 sm:text-sm"
             data-testid="manual-search"
           />
-        </div>
-
-        <!-- Phone: one chip row for the categories (S1 FilterChips); the
-             list (published, drafts…) is in its «Filtros» sheet. -->
-        <div
-          v-if="isPhone && (caps.write || categories.length)"
-          class="pb-3"
-          data-manual-chips
-        >
-          <FilterChips
-            :model-value="state.categoria"
-            :chips="categoryChips"
-            :deselectable="false"
-            :label="__('Categories')"
-            :filters-count="state.vista !== 'publicados' ? 1 : 0"
-            @update:model-value="selectCategory"
-            @clear-filters="selectVista('publicados')"
-          >
-            <template v-if="caps.write" #filters>
-              <p class="pb-1 text-sm text-ink-gray-6">
-                {{ __('List', null, CTX) }}
-              </p>
-              <ListRow
-                v-for="entry in entries"
-                :key="entry.value"
-                :title="entry.label"
-                :selected="state.vista === entry.value"
-                data-manual-vista
-                @click="selectVista(entry.value)"
-              />
-            </template>
-          </FilterChips>
         </div>
 
         <div
@@ -399,7 +409,10 @@
 import { computed, defineAsyncComponent, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { Badge, Button } from 'frappe-ui'
-import { Fab, FilterChips, ListRow, PageHeader } from '@/components/ui'
+import { Fab, PageHeader } from '@/components/ui'
+import ChipGroup from '@/components/ui/ChipGroup.vue'
+import SearchPanel from '@/components/ui/SearchPanel.vue'
+import { chipClass } from '@/components/ui/chipClass'
 import { isMobile as isPhone } from '@/composables/breakpoint'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import {
@@ -587,6 +600,28 @@ function replaceQuery(next) {
     if (route.query[key]) query[key] = route.query[key]
   router.replace({ query })
 }
+const searchOpen = ref(false)
+// Closed phone search: the category and the list (when not Publicados), with ×.
+const activeChips = computed(() => [
+  ...(state.value.categoria
+    ? [
+        {
+          key: 'categoria',
+          label: state.value.categoria,
+          remove: () => selectCategory(''),
+        },
+      ]
+    : []),
+  ...(state.value.vista && state.value.vista !== 'publicados'
+    ? [
+        {
+          key: 'vista',
+          label: vistaLabel(state.value.vista),
+          remove: () => selectVista('publicados'),
+        },
+      ]
+    : []),
+])
 function selectVista(vista) {
   replaceQuery({ ...state.value, vista })
 }

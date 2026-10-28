@@ -38,11 +38,11 @@ describe('avatarClass', () => {
     }
   })
 
-  it('spreads names over more than one slot', () => {
+  it('gives every name the same neutral circle', () => {
     const used = new Set(
       Array.from({ length: 40 }, (_, i) => avatarClass(`Cliente ${i}`)),
     )
-    expect(used.size).toBeGreaterThan(1)
+    expect([...used]).toEqual(['bg-surface-gray-2 text-ink-gray-7'])
   })
 
   it('uses theme token classes only, never a raw colour', () => {

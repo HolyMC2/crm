@@ -8,11 +8,118 @@
         : 'w-[286px] flex-none border-r border-outline-gray-1'
     "
   >
-    <div class="flex-none px-3.5 pb-2.5 pt-3.5">
+    <!-- Phone: the shared search panel (ui/SearchPanel, WhatsApp pattern):
+         only the search pill on top; focusing it slides open the channel
+         toggles, filters, tags and recent chats over the greyed list. -->
+    <SearchPanel
+      v-if="isMobile"
+      v-model:open="searchOpen"
+      class="flex-none"
+      :query="queueSearch"
+      :placeholder="__('Buscar equipo, cliente…')"
+      :label="__('Buscar en la bandeja')"
+      @update:query="onPanelQuery"
+    >
+      <template #trailing>
+        <button
+          type="button"
+          class="relative flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-6 hover:bg-surface-gray-2"
+          :aria-label="__('Más opciones de la bandeja')"
+          data-testid="queue-more"
+          @click="moreOpen = true"
+        >
+          <LucideEllipsisVertical class="size-5" />
+          <!-- lit only while the Sin asignar group is on the list: the same rule
+               the list obeys, so the dot never points at something a filter or
+               tag hides. The sheet keeps the full «sin atender» count. -->
+          <span
+            v-if="shownUnassigned.length"
+            class="absolute right-2 top-2 size-2 rounded-full bg-surface-amber-7"
+            aria-hidden="true"
+          />
+        </button>
+      </template>
+      <template #active>
+        <div
+          v-if="activeTabChip || queueTag"
+          class="mb-1 flex flex-wrap gap-1.5"
+        >
+          <button
+            v-if="activeTabChip"
+            type="button"
+            :class="chipClass(true)"
+            :aria-label="__('Quitar filtro {0}', [activeTabChip.label])"
+            data-testid="queue-active-tab"
+            @click="setInboxTab('all')"
+          >
+            {{ activeTabChip.label }}
+            <LucideX class="h-3 w-3" aria-hidden="true" />
+          </button>
+          <button
+            v-if="queueTag"
+            type="button"
+            :class="chipClass(true)"
+            :aria-label="__('Quitar filtro {0}', [queueTag])"
+            @click="setQueueTag(queueTag)"
+          >
+            🏷 {{ queueTag }}
+            <LucideX class="h-3 w-3" aria-hidden="true" />
+          </button>
+        </div>
+        <!-- «Por responder»: everyone's conversations, or only mine (deal/lead owner) -->
+        <div v-if="replying" class="mt-2 flex items-center gap-1.5">
+          <button
+            class="press inline-flex min-h-8 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold"
+            :class="
+              replyMine
+                ? 'bg-surface-green-2 text-ink-green-8'
+                : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'
+            "
+            :aria-pressed="replyMine"
+            data-testid="reply-mine"
+            @click="setReplyMine(!replyMine)"
+          >
+            {{ __('Mine') }}
+            <span v-if="replyQueue.data" class="text-[10px] opacity-70">{{
+              replyQueue.data.mine
+            }}</span>
+          </button>
+          <span class="text-[11px] text-ink-gray-5">{{
+            __('Most overdue first')
+          }}</span>
+        </div>
+        <QueueFilters v-if="filterableTab" summary class="mt-1" />
+      </template>
+      <RecentPicks
+        v-if="!queueSearch"
+        :picks="recent.picks.value"
+        @pick="openRecent"
+        @clear="recent.clear()"
+      />
+      <ChipGroup
+        :label="__('Mostrar')"
+        :options="tabOptions"
+        :model-value="inboxTab"
+        clear-value="all"
+        testid="inbox-tab"
+        @update:model-value="setInboxTab"
+      />
+      <!-- estado, actividad and the hand-picked statuses in place, not behind
+           a «Filtros» popover (Marco, 2026-10-28) -->
+      <QueueFilters v-if="filterableTab" inline />
+      <ChipGroup
+        v-if="(conversationTags.data || []).length"
+        :label="__('Etiquetas')"
+        :options="tagOptions"
+        :model-value="queueTag || ''"
+        @update:model-value="(tag) => setQueueTag(tag || queueTag)"
+      />
+    </SearchPanel>
+    <div v-else class="flex-none px-3.5 pb-2.5 pt-3.5">
       <!-- Phone: the shell bar already names the page; message search, sound,
            push and the unattended count live behind ⋯ and «Nuevo trato» is the
            FAB (Shell S4, inbox #3–#6). -->
-      <div v-if="!isMobile" class="mb-3 flex items-center justify-between">
+      <div class="mb-3 flex items-center justify-between">
         <div class="text-[15px] font-bold text-ink-gray-9">
           {{ __('Mi bandeja') }}
         </div>
@@ -96,17 +203,10 @@
           </button>
         </div>
       </div>
-      <!-- one row for the in-list search, «Filtros» and (phone) ⋯. The channel
-           chips below wrap onto more rows instead of scrolling sideways, so the
-           phone header grows by about 50 px for each row they add -->
-      <div class="mb-2 flex items-center gap-1 sm:mb-3">
+      <!-- one row for the in-list search and «Filtros» -->
+      <div class="mb-3 flex items-center gap-1">
         <div
-          class="flex min-w-0 flex-1 items-center gap-2 px-2.5 focus-within:ring-1 focus-within:ring-outline-gray-3"
-          :class="
-            isMobile
-              ? 'min-h-11 rounded-full bg-surface-gray-2 px-4'
-              : 'rounded-[9px] border border-outline-gray-2 py-[7px] focus-within:border-outline-gray-4'
-          "
+          class="flex min-w-0 flex-1 items-center gap-2 rounded-[9px] border border-outline-gray-2 px-2.5 py-[7px] focus-within:border-outline-gray-4 focus-within:ring-1 focus-within:ring-outline-gray-3"
         >
           <LucideSearch class="h-3.5 w-3.5 flex-none text-ink-gray-4" />
           <input
@@ -114,16 +214,14 @@
             data-list-search
             :value="queueSearch"
             :aria-label="__('Buscar en la bandeja')"
+            :placeholder="__('Buscar equipo, cliente…') + '  ( / )'"
+            class="w-full border-0 bg-transparent text-[12.5px] text-ink-gray-8 placeholder:text-ink-gray-4 focus:outline-none focus:ring-0"
             @input="onSearchInput($event.target.value)"
             @keydown.esc="clearQueueSearch"
-            :placeholder="
-              __('Buscar equipo, cliente…') + (isMobile ? '' : '  ( / )')
-            "
-            class="w-full border-0 bg-transparent text-[12.5px] text-ink-gray-8 placeholder:text-ink-gray-4 focus:outline-none focus:ring-0"
           />
           <button
             v-if="queueSearch"
-            class="-my-2 -mr-2 flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-5 hover:bg-surface-gray-3 hover:text-ink-gray-7 sm:my-0 sm:mr-0 sm:size-4"
+            class="flex size-4 flex-none items-center justify-center rounded-full text-ink-gray-5 hover:bg-surface-gray-3 hover:text-ink-gray-7"
             :aria-label="__('Limpiar búsqueda')"
             :title="__('Limpiar búsqueda')"
             @click="clearQueueSearch"
@@ -135,33 +233,14 @@
              fechas. Only on the conversation-list tabs — Por responder, Comentarios
              and Por aprobar are separate surfaces with their own queries. -->
         <QueueFilters v-if="filterableTab" />
-        <button
-          v-if="isMobile"
-          type="button"
-          class="relative flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-6 hover:bg-surface-gray-2"
-          :aria-label="__('Más opciones de la bandeja')"
-          data-testid="queue-more"
-          @click="moreOpen = true"
-        >
-          <LucideEllipsisVertical class="size-5" />
-          <!-- lit only while the Sin asignar group is on the list: the same rule
-               the list obeys, so the dot never points at something a filter or
-               tag hides. The sheet keeps the full «sin atender» count. -->
-          <span
-            v-if="shownUnassigned.length"
-            class="absolute right-2 top-2 size-2 rounded-full bg-surface-amber-7"
-            aria-hidden="true"
-          />
-        </button>
       </div>
       <!-- omnichannel tabs (Meta-style): Todos | WhatsApp | Messenger | Comentarios | …
-           They wrap and never scroll sideways: a sideways row hid the tabs off screen
-           (Marco, 2026-10-21). Phone chips stay 44 px tall. -->
+           They wrap and never scroll sideways (Marco, 2026-10-21). -->
       <div class="flex flex-wrap gap-1.5">
         <button
           v-for="t in inboxTabs"
           :key="t.id"
-          class="inline-flex min-h-11 flex-none items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-semibold sm:min-h-0"
+          class="inline-flex flex-none items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-semibold"
           :class="
             inboxTab === t.id
               ? 'bg-surface-green-2 text-ink-green-8'
@@ -207,7 +286,7 @@
       </div>
       <!-- what narrows the list beyond the default view, and «Limpiar»; renders
            nothing in the default view -->
-      <QueueFilters v-if="filterableTab" summary class="mt-3 sm:mt-2" />
+      <QueueFilters v-if="filterableTab" summary class="mt-2" />
       <!-- 🏷 etiqueta filter (spec 2.2) — wraps, tap toggles -->
       <div
         v-if="(conversationTags.data || []).length"
@@ -1044,6 +1123,7 @@
 </template>
 
 <script setup>
+import { matchTokens } from '@/vendor/muelle-shell/contracts/search'
 import {
   computed,
   defineAsyncComponent,
@@ -1092,6 +1172,11 @@ import { useListKeys } from '@/composables/pageKeys'
 import AutoAckReview from '@/components/doco/inbox/AutoAckReview.vue'
 import GlobalSearch from '@/components/doco/inbox/GlobalSearch.vue'
 import QueueFilters from '@/components/doco/inbox/QueueFilters.vue'
+import SearchPanel from '@/components/ui/SearchPanel.vue'
+import ChipGroup from '@/components/ui/ChipGroup.vue'
+import RecentPicks from '@/components/ui/RecentPicks.vue'
+import { chipClass } from '@/components/ui/chipClass'
+import { useRecentPicks } from '@/composables/useRecentPicks'
 import {
   queue,
   unassigned,
@@ -1150,6 +1235,49 @@ import {
 } from '@/composables/inbox'
 
 const { getDealStatus } = statusesStore()
+
+// Phone search panel (ui/SearchPanel) and the chats opened lately on this
+// device, as «Recientes» bubbles.
+const searchOpen = ref(false)
+function onPanelQuery(text) {
+  if (text) onSearchInput(text)
+  else clearQueueSearch()
+}
+const activeTabChip = computed(() =>
+  inboxTab.value === 'all'
+    ? null
+    : inboxTabs.value.find((t) => t.id === inboxTab.value) || null,
+)
+const tabOptions = computed(() =>
+  inboxTabs.value.map((t) => ({
+    value: t.id,
+    label: t.label,
+    color: t.dot,
+    count: t.count,
+    title: t.title,
+  })),
+)
+const tagOptions = computed(() =>
+  (conversationTags.data || []).map((tag) => ({
+    value: tag,
+    label: `🏷 ${tag}`,
+  })),
+)
+const recent = useRecentPicks('muelle:inbox-recent')
+watch(activeDeal, (name) => {
+  if (!name) return
+  const row = (queueRows.value || []).find((r) => r.name === name)
+  const label = row && (row.contact_name || formatPhone(row.mobile_no))
+  recent.touch({
+    name,
+    doctype: activeDealDoctype.value || 'CRM Deal',
+    label,
+  })
+})
+function openRecent(chat) {
+  searchOpen.value = false
+  selectDeal(chat.name, chat.doctype)
+}
 
 // the doco DealModal — deal + customer sync, and «Crear y recibir equipo» into taller
 // Intake (not the generic doctype modal, which only creates a bare deal)
@@ -1353,12 +1481,11 @@ const visibleUnassigned = computed(() => {
     rows = rows.filter((u) => u.last_channel !== 'messenger')
   else if (inboxTab.value === 'messenger')
     rows = rows.filter((u) => u.last_channel === 'messenger')
-  const q = queueSearch.value.trim().toLowerCase()
+  const q = queueSearch.value.trim()
   if (!q) return rows
+  // the shell's search rule: any word order, accent-blind
   return rows.filter((u) =>
-    [u.contact_name, u.phone, u.psid, u.last_message].some(
-      (f) => f && String(f).toLowerCase().includes(q),
-    ),
+    matchTokens(q, u.contact_name, u.phone, u.psid, u.last_message),
   )
 })
 

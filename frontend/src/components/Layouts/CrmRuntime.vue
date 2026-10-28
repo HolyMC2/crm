@@ -19,7 +19,12 @@
       />
     </div>
     <DesktopOnly v-if="$route.meta.desktopOnly && isNarrow" />
-    <router-view v-else :key="routeKey($route)" />
+    <!-- enter-only: the old page leaves at once, so a tap never waits -->
+    <router-view v-else v-slot="{ Component, route }">
+      <Transition name="route">
+        <component :is="Component" :key="routeKey(route)" />
+      </Transition>
+    </router-view>
   </Layout>
   <Settings v-if="session.isLoggedIn && showSettings" />
   <IntermediateStepModal

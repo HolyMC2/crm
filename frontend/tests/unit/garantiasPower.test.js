@@ -392,21 +392,18 @@ describe('Garantías list as a power app', () => {
     expect(root.querySelector('[data-power-appbar]').textContent).toContain(
       'New',
     )
-    // One filter row: no counts strip repeating the chips, and «Mine» is a
-    // chip in that row instead of a checkbox.
+    // No counts strip and no chip row under the bar: the filters live in
+    // the search panel (ui/AppBar #search-panel, Marco 2026-10-28).
     expect(root.querySelector('[data-power-summary]')).toBeNull()
-    const chips = root.querySelector('[data-garantias-chips]').textContent
-    expect(chips).toContain('Overdue')
-    expect(chips).toContain('Unassigned')
-    // The shared chip row (edge fade at 305px); «Mine» is one of its chips.
-    expect(
-      root.querySelector('[data-garantias-chips] [data-ui-filter-chips]'),
-    ).not.toBeNull()
+    expect(root.querySelector('[data-garantias-chips]')).toBeNull()
+    root.querySelector('[data-appbar-search-open]').click()
+    await flush()
+    const panel = () => root.querySelector('[data-appbar-search-panel]')
+    expect(panel().textContent).toContain('Overdue')
+    expect(panel().textContent).toContain('Unassigned')
     // «Mine» sits on top of the chosen chip; another chip replaces it.
     const tap = async (value) => {
-      root
-        .querySelector(`[data-garantias-chips] [data-chip="${value}"]`)
-        .click()
+      panel().querySelector(`[data-chip="${value}"]`).click()
       state.route.query = { ...state.router.push.mock.calls.at(-1)[0].query }
       await flush()
     }
@@ -417,16 +414,21 @@ describe('Garantías list as a power app', () => {
     await tap('sin-asignar')
     expect(state.route.query.chip || '').toBe('')
     expect(state.route.query).toMatchObject({ mine: '1' })
-    // One filter mechanism: the kind is in the chip row's «Filtros» sheet.
-    expect(root.querySelector('[aria-label="Kind"]')).toBeNull()
-    root.querySelector('[data-garantias-chips] [data-ui-filters-chip]').click()
-    await flush()
-    const kinds = [...document.body.querySelectorAll('[data-garantias-kind]')]
+    // One filter mechanism: the kind is a chip group in the same panel.
+    expect(root.querySelector('[aria-label="Kind"] select')).toBeNull()
+    const kinds = [...panel().querySelectorAll('[data-garantias-kind] button')]
     expect(kinds.length).toBeGreaterThan(1)
     kinds[1].click()
     state.route.query = { ...state.router.push.mock.calls.at(-1)[0].query }
     await flush()
     expect(state.route.query.kind).toBeTruthy()
+    // Closed, the bar keeps what narrows the list as removable chips.
+    root.querySelector('[data-appbar-scrim]')?.click()
+    root.querySelector('[aria-label="Close search"]')?.click()
+    await flush()
+    expect(root.querySelector('[data-appbar-active]')?.textContent).toContain(
+      'Mine',
+    )
   })
 })
 

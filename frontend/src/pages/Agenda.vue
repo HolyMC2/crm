@@ -404,50 +404,62 @@
       </section>
     </div>
 
-    <!-- phone: «+» (a small menu when tasks can be created too) -->
+    <!-- phone: «+» (a small menu when tasks can be created too), docked at
+         the end of the shell's command bar like every page's create action -->
     <template v-if="canCreate && phone">
       <Transition name="ag-fade">
         <div v-if="fabOpen" class="ag-fabscrim" @click="fabOpen = false" />
       </Transition>
-      <div class="ag-dial" :class="{ 'is-open': fabOpen }">
-        <Transition name="ag-dial">
-          <div v-if="fabOpen" class="ag-dial__items" role="menu">
-            <button
-              v-if="tasksEnabled"
-              type="button"
-              role="menuitem"
-              class="ag-dial__item"
-              @click="fabCreate('task')"
-            >
-              <span class="ag-dial__label">{{ __('Task') }}</span>
-              <span class="ag-dial__icon">
-                <span class="lucide-circle-check h-5 w-5" aria-hidden="true" />
-              </span>
-            </button>
-            <button
-              type="button"
-              role="menuitem"
-              class="ag-dial__item"
-              @click="fabCreate('event')"
-            >
-              <span class="ag-dial__label">{{ __('Event') }}</span>
-              <span class="ag-dial__icon">
-                <span class="lucide-calendar-plus h-5 w-5" aria-hidden="true" />
-              </span>
-            </button>
-          </div>
-        </Transition>
-        <button
-          type="button"
-          class="ag-fab"
-          :class="{ 'is-open': fabOpen }"
-          :aria-label="fabOpen ? __('Close') : __('New event')"
-          :aria-expanded="tasksEnabled ? fabOpen : undefined"
-          @click="fabPress"
+      <Teleport to="#shell-primary-action" :disabled="!primaryDock" defer>
+        <div
+          class="ag-dial"
+          :class="{ 'is-open': fabOpen, 'is-docked': primaryDock }"
         >
-          <span class="lucide-plus h-7 w-7" aria-hidden="true" />
-        </button>
-      </div>
+          <Transition name="ag-dial">
+            <div v-if="fabOpen" class="ag-dial__items" role="menu">
+              <button
+                v-if="tasksEnabled"
+                type="button"
+                role="menuitem"
+                class="ag-dial__item"
+                @click="fabCreate('task')"
+              >
+                <span class="ag-dial__label">{{ __('Task') }}</span>
+                <span class="ag-dial__icon">
+                  <span
+                    class="lucide-circle-check h-5 w-5"
+                    aria-hidden="true"
+                  />
+                </span>
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                class="ag-dial__item"
+                @click="fabCreate('event')"
+              >
+                <span class="ag-dial__label">{{ __('Event') }}</span>
+                <span class="ag-dial__icon">
+                  <span
+                    class="lucide-calendar-plus h-5 w-5"
+                    aria-hidden="true"
+                  />
+                </span>
+              </button>
+            </div>
+          </Transition>
+          <button
+            type="button"
+            class="ag-fab"
+            :class="{ 'is-open': fabOpen }"
+            :aria-label="fabOpen ? __('Close') : __('New event')"
+            :aria-expanded="tasksEnabled ? fabOpen : undefined"
+            @click="fabPress"
+          >
+            <span class="lucide-plus h-7 w-7" aria-hidden="true" />
+          </button>
+        </div>
+      </Teleport>
     </template>
 
     <!-- phone: the menu drawer (views, refresh, calendars, settings) -->
@@ -789,6 +801,7 @@ import {
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { BottomSheet, Button, Dialog, toast } from 'frappe-ui'
 import AvisosBell from '@/components/avisos/AvisosBell.vue'
+import { primaryDock } from '@/components/ui/primaryDock'
 import AgendaCitaForm from '@/components/agenda/AgendaCitaForm.vue'
 import AgendaCitasSettings from '@/components/agenda/AgendaCitasSettings.vue'
 import AgendaEventForm from '@/components/agenda/AgendaEventForm.vue'
@@ -3209,6 +3222,30 @@ onBeforeUnmount(() => {
 }
 .ag-fab.is-open .lucide-plus {
   transform: rotate(45deg);
+}
+.ag-dial.is-docked {
+  position: relative;
+  right: auto;
+  bottom: auto;
+  z-index: 41;
+  margin-left: 2px;
+}
+.ag-dial.is-docked .ag-dial__items {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 18px);
+}
+.ag-dial.is-docked .ag-fab {
+  width: 44px;
+  height: 44px;
+  border-radius: 9999px;
+  background: var(--muelle-accent);
+  color: var(--muelle-accent-ink);
+  box-shadow: none;
+}
+.ag-dial.is-docked .ag-fab .lucide-plus {
+  width: 24px;
+  height: 24px;
 }
 .ag-fabscrim {
   position: fixed;

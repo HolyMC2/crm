@@ -92,6 +92,7 @@
   </fieldset>
 </template>
 <script setup>
+import { matchTokens } from '@/vendor/muelle-shell/contracts/search'
 import { computed, ref } from 'vue'
 import { Button, FormControl } from 'frappe-ui'
 import LucideX from '~icons/lucide/x'
@@ -112,9 +113,9 @@ const open = ref(false),
   search = ref('')
 
 const visible = computed(() => {
-  const q = search.value.trim().toLowerCase()
+  const q = search.value.trim()
   const rows = props.options || []
-  return q ? rows.filter((r) => r.name.toLowerCase().includes(q)) : rows
+  return q ? rows.filter((r) => matchTokens(q, r.name)) : rows
 })
 function nameOf(id) {
   return props.options?.find((o) => o.id === id)?.name || `#${id}`

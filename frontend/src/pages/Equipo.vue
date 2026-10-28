@@ -30,11 +30,28 @@
         :class="fab ? 'pb-24' : 'pb-6'"
         data-equipo-scroller
       >
+        <!-- A phone names the list once: the list picker is the title -->
         <PageHeader
-          :title="segmentLabel(segment)"
-          :subtitle="subtitle"
+          :title="isPhone ? '' : segmentLabel(segment)"
+          :subtitle="isPhone ? '' : subtitle"
           :level="1"
         >
+          <div v-if="isPhone" class="space-y-1">
+            <h1 class="sr-only">{{ segmentLabel(segment) }}</h1>
+            <select
+              class="h-11 w-full rounded-4 border-transparent bg-surface-gray-2 px-3 text-base text-ink-gray-9 focus:border-outline-gray-4 focus:ring-0"
+              :aria-label="__('List', null, 'Equipo')"
+              :value="segment"
+              @change="selectSegment($event.target.value)"
+            >
+              <option v-for="e in entries" :key="e.value" :value="e.value">
+                {{ e.label }}
+              </option>
+            </select>
+            <p v-if="subtitle" class="text-sm leading-snug text-ink-gray-6">
+              {{ subtitle }}
+            </p>
+          </div>
           <template v-if="caps.hr || caps.configure || caps.hire" #actions>
             <Button
               v-if="caps.hr"
@@ -135,16 +152,6 @@
             </template>
           </div>
         </section>
-        <div class="px-4 pb-3 sm:hidden">
-          <FormControl
-            class="h-11 w-full"
-            type="select"
-            :aria-label="__('List', null, 'Equipo')"
-            :model-value="segment"
-            :options="entries.map((e) => ({ label: e.label, value: e.value }))"
-            @update:model-value="selectSegment"
-          />
-        </div>
         <div
           v-if="notice"
           role="status"
@@ -267,7 +274,7 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
-import { Avatar, Badge, Button, FormControl } from 'frappe-ui'
+import { Avatar, Badge, Button } from 'frappe-ui'
 import { Fab, PageHeader } from '@/components/ui'
 import { isMobile as isPhone } from '@/composables/breakpoint'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'

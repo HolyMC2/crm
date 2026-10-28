@@ -10,6 +10,7 @@
     <div class="min-w-0 flex-1">
       <component
         :is="`h${level}`"
+        v-if="title"
         class="break-words text-xl font-semibold leading-snug text-ink-gray-9 [text-wrap:balance]"
         data-ui-page-title
       >

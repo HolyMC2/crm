@@ -12,6 +12,48 @@
       title="Correo"
       :loading="loading"
     />
+    <!-- Phone: only the search pill; it opens the mailbox and account chips
+         (ui/SearchPanel, as in the Inbox). -->
+    <SearchPanel
+      v-if="isPhone && !state.categoria"
+      v-model:open="searchOpen"
+      class="flex-none"
+      :query="term"
+      placeholder="Buscar en el correo"
+      @update:query="onPanelQuery"
+    >
+      <template v-if="activeChips.length" #active>
+        <div class="flex flex-wrap gap-1.5">
+          <button
+            v-for="chip in activeChips"
+            :key="chip.key"
+            type="button"
+            :class="chipClass(true)"
+            :aria-label="`Quitar filtro ${chip.label}`"
+            @click="setQuery(chip.patch)"
+          >
+            {{ chip.label }}
+            <span class="lucide-x size-3 flex-none" aria-hidden="true" />
+          </button>
+        </div>
+      </template>
+      <ChipGroup
+        label="Bandeja"
+        :options="vistas"
+        :model-value="state.vista"
+        :clear-value="state.vista"
+        testid="correo-vista"
+        @update:model-value="setQuery({ vista: $event })"
+      />
+      <ChipGroup
+        v-if="cuentas.length > 1"
+        label="Cuenta"
+        :options="cuentaChips.filter((c) => c.value)"
+        :model-value="state.cuenta"
+        testid="correo-cuenta"
+        @update:model-value="setQuery({ cuenta: $event })"
+      />
+    </SearchPanel>
     <div class="flex min-h-0 flex-1">
       <div
         ref="listPane"
@@ -25,7 +67,7 @@
           <h1 v-if="!isPhone" class="text-xl font-semibold text-ink-gray-9">
             Correo
           </h1>
-          <form role="search" @submit.prevent="runSearch">
+          <form v-if="!isPhone" role="search" @submit.prevent="runSearch">
             <label class="relative block">
               <span class="sr-only">Buscar en el correo</span>
               <span
@@ -44,14 +86,14 @@
             </label>
           </form>
           <Segmented
-            v-if="!state.categoria"
+            v-if="!state.categoria && !isPhone"
             :model-value="state.vista"
             :options="vistas"
             label="Bandeja"
             @update:model-value="setQuery({ vista: $event })"
           />
           <FilterChips
-            v-if="cuentas.length > 1 && !state.categoria"
+            v-if="cuentas.length > 1 && !state.categoria && !isPhone"
             :model-value="state.cuenta"
             :chips="cuentaChips"
             label="Cuenta"
@@ -237,6 +279,9 @@ import {
   Segmented,
 } from '@/components/ui'
 import { isMobile as isPhone, isWide } from '@/composables/breakpoint'
+import ChipGroup from '@/components/ui/ChipGroup.vue'
+import SearchPanel from '@/components/ui/SearchPanel.vue'
+import { chipClass } from '@/components/ui/chipClass'
 import { BTN } from '@/documentos/tools'
 import { createListCache } from '@/utils/listCache'
 import {
@@ -317,6 +362,28 @@ function setQuery(patch) {
   router.replace({ query })
 }
 
+const searchOpen = ref(false)
+function onPanelQuery(text) {
+  term.value = text
+  debouncedSearch()
+}
+// Closed phone search: the mailbox (when not Recibidos) and the account, with ×.
+const activeChips = computed(() => [
+  ...(state.value.vista === 'enviados'
+    ? [{ key: 'vista', label: 'Enviados', patch: { vista: '' } }]
+    : []),
+  ...(state.value.cuenta
+    ? [
+        {
+          key: 'cuenta',
+          label:
+            cuentaChips.value.find((c) => c.value === state.value.cuenta)
+              ?.label || state.value.cuenta,
+          patch: { cuenta: '' },
+        },
+      ]
+    : []),
+])
 const debouncedSearch = useDebounceFn(() => runSearch(), 350)
 function runSearch() {
   if (term.value.trim() !== state.value.buscar)

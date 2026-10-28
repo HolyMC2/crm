@@ -309,6 +309,8 @@ describe('Pendientes list cutover', () => {
     state.api.mockResolvedValue({ sections: {} })
     mount(Pendientes)
     await flush()
+    // the desktop header keeps its list/board switch next to create
+    expect(button(root, 'Board')).toBeDefined()
     expect(button(root, 'New pendiente')).toBeUndefined()
     button(root, 'New sales task').click()
     expect(state.showModal).toHaveBeenCalledWith(
