@@ -1,6 +1,7 @@
 <template>
   <div class="flex h-full min-h-0 min-w-0 flex-1">
     <aside
+      v-if="aside"
       class="hidden w-[204px] shrink-0 overflow-y-auto border-r border-outline-gray-2 bg-surface-gray-1 px-3 py-5 sm:block"
       :aria-label="`Listas de ${title}`"
     >
@@ -64,6 +65,8 @@ defineProps({
   activeKey: { type: String, default: '' },
   savedEntries: { type: Array, default: () => [] },
   savedLabel: { type: String, default: 'Guardados' },
+  /** false: no side column; the page shows its lists as chips and Vistas. */
+  aside: { type: Boolean, default: true },
 })
 defineEmits(['select'])
 </script>

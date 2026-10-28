@@ -4,14 +4,6 @@
     :segments="segments"
     @select="selectSegment"
   >
-    <template #sidebar
-      ><Button
-        class="c-customize"
-        label="Personalizar"
-        :icon-left="LucideSlidersVertical"
-        variant="ghost"
-        @click="customize = true"
-    /></template>
     <!-- A phone's title is the shell bar's «Contactos»; create is the FAB. -->
     <Button
       v-if="isPhone && returnTo"
@@ -159,14 +151,27 @@
         :icon-left="LucideFunnel"
         @click="filtersOpen = !filtersOpen"
       />
-      <Button
-        v-if="state.segment !== 'followups'"
-        label="Guardar segmento"
-        class="c-save-segment"
-        :icon-left="LucideBookmark"
-        @click="segmentOpen = true"
+      <!-- The list's bolt: saved Vistas, «Guardar como vista», Personalizar. -->
+      <AccionesMenu
+        :groups="desktopActions"
+        subtitle="Contactos"
+        @pick="onDesktopAction"
       />
     </div>
+    <!-- Wider screens: the lists as chips (no side column). -->
+    <ChipGroup
+      v-if="!isPhone"
+      class="c-list-chips"
+      label=""
+      aria-label="Listas"
+      :options="listChips"
+      :model-value="state.segment"
+      :clear-value="state.segment"
+      testid="contactos-list"
+      @update:model-value="
+        (value) => value !== state.segment && selectSegment(value)
+      "
+    />
     <div v-if="mobileActions" class="c-mobile-actions">
       <Button
         v-if="state.segment !== 'followups'"
@@ -662,6 +667,7 @@ import { useRoute, useRouter } from 'vue-router'
 import ContactosLayout from '@/components/contactos/ContactosLayout.vue'
 import { Fab, ListRow } from '@/components/ui'
 import ChipGroup from '@/components/ui/ChipGroup.vue'
+import AccionesMenu from '@/components/documentos/AccionesMenu.vue'
 import RecentPicks from '@/components/ui/RecentPicks.vue'
 import SearchPanel from '@/components/ui/SearchPanel.vue'
 import { chipClass } from '@/components/ui/chipClass'
@@ -826,6 +832,56 @@ const title = computed(
     segments.value.find((s) => s.name === state.segment)?.title ||
     'Contactos',
 )
+// Wider screens: the built-in lists as chips; saved ones are Vistas behind the bolt.
+const listChips = computed(() => [
+  { value: 'all', label: 'Todos' },
+  ...Object.entries(names)
+    .filter(([value]) => value !== 'all')
+    .map(([value, label]) => ({ value, label })),
+  { value: 'duplicates', label: 'Posibles duplicados' },
+])
+const desktopActions = computed(() =>
+  [
+    segments.value.length && {
+      key: 'vistas',
+      title: 'Vistas',
+      items: segments.value.map((s) => ({
+        key: `vista:${s.name}`,
+        label: s.title || s.name,
+        icon: ['team', 'Team'].includes(s.visibility)
+          ? 'lucide-users'
+          : 'lucide-bookmark',
+        hint: state.segment === s.name ? 'La que ves ahora' : '',
+        allowed: true,
+      })),
+    },
+    {
+      key: 'lista',
+      title: 'Esta lista',
+      items: [
+        state.segment !== 'followups' && {
+          key: 'guardar',
+          label: 'Guardar como vista',
+          icon: 'lucide-bookmark-plus',
+          hint: 'Conserva la búsqueda y los filtros',
+          allowed: true,
+        },
+        {
+          key: 'personalizar',
+          label: 'Personalizar',
+          icon: 'lucide-sliders-vertical',
+          hint: 'Columnas y secciones de la ficha',
+          allowed: true,
+        },
+      ].filter(Boolean),
+    },
+  ].filter(Boolean),
+)
+function onDesktopAction({ key }) {
+  if (key.startsWith('vista:')) selectSegment(key.slice(6))
+  else if (key === 'guardar') segmentOpen.value = true
+  else if (key === 'personalizar') customize.value = true
+}
 const segmentOptions = computed(() => [
   ...Object.entries(names).map(([value, label]) => ({ value, label })),
   { value: 'duplicates', label: 'Posibles duplicados' },

@@ -325,6 +325,7 @@ import {
   onBeforeUnmount,
   ref,
   watch,
+  watchEffect,
 } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
@@ -374,6 +375,8 @@ const props = defineProps({
   // Left pane of the desktop split: rows keep the list's query, the open one is lit.
   pane: { type: Boolean, default: false },
 })
+// In the split: what the list holds, for the right pane before a record opens.
+const emit = defineEmits(['summary'])
 
 const PAGE = 30
 const root = ref(null)
@@ -698,6 +701,23 @@ function apply({ counts: withCounts = true } = {}) {
   load()
   if (withCounts) loadCounts()
 }
+
+watchEffect(() => {
+  if (!props.pane) return
+  const first = shown.value[0]
+  emit('summary', {
+    title: title.value,
+    icon: entryIcon.value,
+    chips: chips.value,
+    chip: chipValue.value,
+    setChip,
+    shown: rows.value.length,
+    more: hasMore.value,
+    first: first ? recordTo(first) : null,
+    firstTitle: first?.view?.title || '',
+    loading: loading.value || !profile.value,
+  })
+})
 
 function setChip(value) {
   state.value = { ...state.value, chip: value }

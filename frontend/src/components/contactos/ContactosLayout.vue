@@ -6,6 +6,7 @@
     :active-key="segment"
     :saved-entries="savedEntries"
     saved-label="Segmentos guardados"
+    :aside="false"
     @select="$emit('select', $event)"
   >
     <template #sidebar><slot name="sidebar" /></template>

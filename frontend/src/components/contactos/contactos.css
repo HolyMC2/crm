@@ -109,6 +109,9 @@
 .c-search {
   flex: 1;
 }
+.c-list-chips {
+  padding: 0 28px 14px;
+}
 .c-search input {
   height: 36px;
 }
