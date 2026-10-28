@@ -232,10 +232,11 @@
               <li
                 v-for="row in rows"
                 :key="rowKey(row)"
-                class="flex items-center gap-2 py-2 pl-4 pr-2"
+                class="flex flex-wrap items-center justify-end gap-x-2 py-2 pl-4 pr-2"
                 data-etq-row
               >
-                <div class="min-w-0 flex-1">
+                <!-- Below ~360 px the copies move under the name. -->
+                <div class="min-w-0 flex-1 basis-36">
                   <p class="line-clamp-2 text-base text-ink-gray-9">
                     {{ row.item_name }}
                   </p>
