@@ -202,7 +202,8 @@ describe('Producto', () => {
     expect(text).toContain('since 29 may')
     expect(text).not.toMatch(/\d{4}-\d{2}-\d{2}/)
     expect(text).toContain('Add photo')
-    // «Print label» prints here; Etiquetas stays one link away for sheets.
+    // «Print label» prints here; the shell's Etiquetas (templates, several
+    // products, the print history) stays one link away with this product on it.
     const label = [...root.querySelectorAll('button')].find((b) =>
       b.textContent.includes('Print label'),
     )
@@ -212,7 +213,7 @@ describe('Producto', () => {
       a.textContent.includes('More sizes and sheets in Etiquetas'),
     )
     expect(sheets.getAttribute('href')).toBe(
-      '/mercado/etiquetas?codes=ABIBMEX000130',
+      '/crm/productos/etiquetas?codigos=ABIBMEX000130',
     )
     // The price history: old struck through, new, the change.
     expect(text).toMatch(/-3\.7%/)

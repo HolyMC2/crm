@@ -336,6 +336,10 @@
 </template>
 <script setup>
 import { computed, defineAsyncComponent, ref, shallowRef, watch } from 'vue'
+import {
+  SOURCE_DOCTYPES as LABEL_SOURCES,
+  etiquetasHref,
+} from '@/composables/useEtiquetas'
 import { useRoute, useRouter } from 'vue-router'
 import { toast } from 'frappe-ui'
 import { AppBar, EmptyState, StatusChip } from '@/components/ui'
@@ -588,6 +592,22 @@ const extraTools = computed(() => {
       label: 'Pregúntale a Muelle sobre esta ficha',
       icon: 'lucide-sparkles',
       allowed: true,
+    })
+  // Labels for what this document brought in (Shell-S13): its lines, one
+  // label per piece, serial or lote, in Productos › Etiquetas.
+  const labelDocstatus =
+    record.value?.header?.docstatus ?? record.value?.doc?.docstatus
+  if (
+    LABEL_SOURCES.includes(doctype.value) &&
+    (labelDocstatus === 1 ||
+      (doctype.value === 'Purchase Invoice' && labelDocstatus === 0))
+  )
+    out.push({
+      key: 'etiquetas',
+      label: 'Imprimir etiquetas',
+      icon: 'lucide-tag',
+      allowed: true,
+      hint: 'Una por pieza de este documento',
     })
   const actions = record.value?.actions || {}
   if (actions.email)
@@ -855,6 +875,11 @@ async function onTool(key) {
       break
     case 'desk':
       window.open(deskUrl(doctype.value, name.value), '_blank', 'noopener')
+      break
+    case 'etiquetas':
+      router.push(
+        etiquetasHref([], { desde: `${doctype.value}:${name.value}` }),
+      )
       break
   }
 }

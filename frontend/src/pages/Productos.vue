@@ -206,6 +206,15 @@
               :label="__('New product', null, 'Productos')"
               @click="newProduct()"
             />
+            <RouterLink
+              to="/productos/etiquetas"
+              class="inline-flex min-h-11 items-center gap-1.5 rounded-5 px-3 text-base text-ink-gray-8 hover:bg-surface-gray-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-8"
+              title="Imprime etiquetas de precio y anaquel, y ve tus trabajos"
+              data-productos-etiquetas
+            >
+              <span class="lucide-tag h-4 w-4" aria-hidden="true" />
+              Etiquetas
+            </RouterLink>
             <Button
               v-if="catalog && boot?.capabilities?.packs && rows.length"
               class="min-h-11 sm:min-h-8"
@@ -420,6 +429,15 @@
               }}
             </template>
           </p>
+          <RouterLink
+            v-if="isPhone && !returnTo"
+            to="/productos/etiquetas"
+            class="ml-auto inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-ink-gray-8"
+            data-productos-etiquetas
+          >
+            <span class="lucide-tag h-4 w-4" aria-hidden="true" />
+            Etiquetas
+          </RouterLink>
           <button
             v-if="
               isPhone &&
@@ -429,7 +447,8 @@
               rows.length
             "
             type="button"
-            class="ml-auto inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-ink-gray-8"
+            class="inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-ink-gray-8"
+            :class="isPhone && !returnTo ? '' : 'ml-auto'"
             @click="packOpen = true"
           >
             <LucideLayers class="h-4 w-4" aria-hidden="true" />
@@ -524,6 +543,14 @@
                   : __('Ask the manager for a count')
               "
               @click="openCount(selectedRows)"
+            />
+            <Button
+              class="min-h-11 sm:min-h-8"
+              label="Imprimir etiquetas"
+              data-productos-imprimir-etiquetas
+              @click="
+                router.push(etiquetasHref(selectedRows.map((r) => r.name)))
+              "
             />
             <Button
               class="min-h-11 sm:min-h-8"
@@ -801,6 +828,7 @@ import {
 import { useRoute, useRouter } from 'vue-router'
 import { Button, FormControl, toast } from 'frappe-ui'
 import { Fab, FilterChips, PageHeader } from '@/components/ui'
+import { etiquetasHref } from '@/composables/useEtiquetas'
 import ChipGroup from '@/components/ui/ChipGroup.vue'
 import RecentPicks from '@/components/ui/RecentPicks.vue'
 import SearchPanel from '@/components/ui/SearchPanel.vue'

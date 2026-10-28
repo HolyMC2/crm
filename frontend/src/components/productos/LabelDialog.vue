@@ -75,11 +75,15 @@
         <p v-if="problem" role="alert" class="text-sm text-ink-red-7">
           {{ problem }}
         </p>
-        <a
+        <!-- Templates, several products and the print history live in
+             Productos › Etiquetas (Shell-S13), with this product on it. -->
+        <RouterLink
           v-if="sheetHref"
-          :href="sheetHref"
+          :to="etiquetasHref([item])"
           class="inline-block text-sm text-ink-gray-6 underline-offset-2 hover:text-ink-gray-9 hover:underline"
-          >{{ __('More sizes and sheets in Etiquetas', null, CTX) }}</a
+          data-label-more
+          @click="open = false"
+          >{{ __('More sizes and sheets in Etiquetas', null, CTX) }}</RouterLink
         >
       </div>
     </template>
@@ -101,6 +105,7 @@
 import { computed, ref, watch } from 'vue'
 import { Button, Dialog } from 'frappe-ui'
 import { CTX, problemOf, productosApi } from '@/composables/useProductos'
+import { etiquetasHref } from '@/composables/useEtiquetas'
 
 // «Imprimir etiqueta» in place: Mercado renders the label (its sizes, the
 // shop's price and barcode) and the browser prints it. Serialized and batched

@@ -318,6 +318,30 @@ const routes = [
     meta: { app: 'productos', title: 'Productos', listParent: 'Productos' },
   },
   {
+    // Etiquetas (Shell-S13): print, jobs and templates. Before `:item`.
+    path: '/productos/etiquetas',
+    name: 'Etiquetas',
+    component: () => import('@/pages/Etiquetas.vue'),
+    meta: {
+      app: 'productos',
+      title: 'Etiquetas',
+      listParent: 'Productos',
+      ownPhoneHeader: true,
+    },
+  },
+  {
+    path: '/productos/etiquetas/trabajo/:name',
+    name: 'EtiquetasTrabajo',
+    component: () => import('@/pages/EtiquetasTrabajo.vue'),
+    props: true,
+    meta: {
+      app: 'productos',
+      title: 'Etiquetas',
+      listParent: 'Productos',
+      ownPhoneHeader: true,
+    },
+  },
+  {
     path: '/productos/:item',
     name: 'Producto',
     component: () => import('@/pages/Producto.vue'),
