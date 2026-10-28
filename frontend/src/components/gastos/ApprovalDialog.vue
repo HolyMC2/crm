@@ -20,18 +20,42 @@
             })),
           ]"
         />
-        <p v-else class="rounded-6 bg-surface-gray-2 p-3 text-sm">
+        <p
+          v-else-if="options.fallback_to?.length"
+          class="rounded-6 bg-surface-gray-2 p-3 text-sm"
+        >
           {{
             claim
               ? __(
-                  'Nobody here can do it yet. The request goes to the administrators with this expense attached.',
+                  'Nobody here can do it yet. It goes to {0}, with this expense attached.',
+                  [options.fallback_to.join(', ')],
                 )
               : __(
-                  'Nobody here can do it yet. The request goes to the administrators with this bill attached.',
+                  'Nobody here can do it yet. It goes to {0}, with this bill attached.',
+                  [options.fallback_to.join(', ')],
                 )
           }}
         </p>
+        <p
+          v-else
+          role="alert"
+          class="rounded-6 bg-surface-amber-1 p-3 text-sm text-ink-amber-8"
+        >
+          {{
+            __(
+              'Nobody else on this site can do it: the request would come back to you. Resolve it here instead.',
+            )
+          }}
+        </p>
+        <p v-if="reachable" class="text-sm text-ink-gray-6">
+          {{
+            __(
+              'It waits in their Pendientes, under To approve, and in their notifications until it is done.',
+            )
+          }}
+        </p>
         <FormControl
+          v-if="reachable"
           v-model="note"
           type="textarea"
           :label="__('Note (optional)')"
@@ -58,7 +82,7 @@
         data-testid="approval-send"
         :label="__('Send request')"
         :loading="sending"
-        :disabled="!options || (options.candidates.length && !assignee)"
+        :disabled="!reachable || (options.candidates.length && !assignee)"
         @click="send"
       />
     </template>
@@ -91,6 +115,15 @@ const sent = ref('')
 let rid = requestId()
 
 const claim = computed(() => props.doctype === 'Expense Claim')
+// Someone other than the asker can receive it (a candidate or a named administrator).
+const reachable = computed(
+  () =>
+    !!options.value &&
+    (options.value.candidates.length > 0 ||
+      options.value.fallback_to?.length > 0 ||
+      // An older server without `fallback_to` still names «the administrators».
+      (options.value.fallback_to === undefined && !!options.value.fallback)),
+)
 const title = computed(() =>
   claim.value
     ? {

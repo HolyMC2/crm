@@ -164,16 +164,17 @@
                   : __('This bill is cancelled.')
           "
         >
-          <!-- The background registration was refused: ERPNext's sentence and
-               the ways on (fix it in the full form, try again, ask). -->
-          <div
+          <!-- The background registration was refused: what blocked it and
+               the fix, applied and registered in one step (RegistrationFix). -->
+          <RegistrationFix
             v-if="registrationFailed"
-            role="alert"
-            class="mt-2 space-y-1 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
-          >
-            <p class="font-medium">{{ __('It could not be registered') }}</p>
-            <p class="text-ink-red-8">{{ registrationFailed.message }}</p>
-          </div>
+            :name="props.name"
+            :doc="doc"
+            :registration="registrationFailed"
+            :desk="!!boot?.capabilities?.desk"
+            @retry="reviewOpen = true"
+            @ask="(note) => ask('review', note)"
+          />
           <p
             v-for="action in actions.filter((a) => a.fallback)"
             :key="action.key"
@@ -212,14 +213,14 @@
                 />
               </template>
               <Button
-                v-else-if="action.key === 'submit' && action.allowed"
+                v-else-if="
+                  action.key === 'submit' &&
+                  action.allowed &&
+                  !registrationFailed
+                "
                 variant="solid"
                 class="min-h-11 sm:min-h-8"
-                :label="
-                  registrationFailed
-                    ? __('Try again')
-                    : __('Review and register')
-                "
+                :label="__('Review and register')"
                 @click="reviewOpen = true"
               />
               <Button
@@ -250,12 +251,6 @@
                   @click="ask(action.fallback, action.reason)"
                 />
               </template>
-              <Button
-                v-if="action.key === 'submit' && registrationFailed"
-                class="min-h-11 sm:min-h-8"
-                :label="__('Ask for a review')"
-                @click="ask('review', registrationFailed.message)"
-              />
             </template>
             <CapturarDocumentoButton
               v-if="
@@ -507,6 +502,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { Badge, Button, Dialog, toast } from 'frappe-ui'
 import { ArchivosRegistroPanel } from '@/components/archivos'
 import ApprovalDialog from '@/components/gastos/ApprovalDialog.vue'
+import RegistrationFix from '@/components/gastos/RegistrationFix.vue'
 import PayDialog from '@/components/gastos/PayDialog.vue'
 import ApprovalAsk from '@/components/pendientes/ApprovalAsk.vue'
 import { shellBoot } from '@/composables/muelleShell'

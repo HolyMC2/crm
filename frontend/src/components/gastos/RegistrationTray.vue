@@ -100,7 +100,7 @@
               <Button
                 size="sm"
                 variant="solid"
-                :label="__('Review the bill')"
+                :label="__('Resolve')"
                 @click="openBill(row.name)"
               />
               <Button

@@ -378,18 +378,87 @@ describe('Gastos bill record', () => {
     expect(document.body.querySelector('[role="dialog"]')).toBeNull()
   })
 
-  it('a refused background registration says why and offers the ways on', async () => {
-    answers.invoice = draft({
-      registration: {
-        state: 'failed',
-        message: 'Supplier Renta Local is disabled',
-      },
+  const refused = (fix, message = 'Supplier Renta Local is disabled') =>
+    draft({ registration: { state: 'failed', message, fix } })
+
+  it('a deactivated supplier: «Activate supplier and register» in one step', async () => {
+    answers.invoice = refused({
+      kind: 'supplier_disabled',
+      supplier: 'SUP-1',
+      supplier_name: 'Renta Local',
+      can_fix: true,
+    })
+    answers.fix_and_register = { name: 'PI-1', docstatus: 0, queued: true }
+    await mountAt('/gastos/factura/PI-1')
+    expect(root.textContent).toContain(
+      'The supplier Renta Local is deactivated',
+    )
+    // The card carries the way on; no second «Review and register» beside it.
+    expect(root.textContent).not.toContain('Review and register')
+    await press('Activate supplier and register')
+    const sent = calls.find(([m]) => m === 'fix_and_register')[1]
+    expect(sent).toMatchObject({ name: 'PI-1', fix: 'supplier_disabled' })
+    expect(registrationOf('PI-1').state).toBe('queued')
+  })
+
+  it('a fix this worker cannot make offers the ask, with what ERPNext said', async () => {
+    answers.invoice = refused({
+      kind: 'supplier_disabled',
+      supplier: 'SUP-1',
+      supplier_name: 'Renta Local',
+      can_fix: false,
     })
     await mountAt('/gastos/factura/PI-1')
-    expect(root.textContent).toContain('It could not be registered')
     expect(root.textContent).toContain('Supplier Renta Local is disabled')
+    expect(root.textContent).toContain('whoever manages suppliers')
+    expect(root.textContent).toContain('Ask someone to activate it')
+    expect(root.textContent).not.toContain('Activate supplier and register')
+  })
+
+  it('a closed period: pick an open date, then change it and register', async () => {
+    answers.invoice = refused(
+      {
+        kind: 'closed_period',
+        posting_date: '2026-10-01',
+        suggested_date: '2026-10-06',
+        can_fix: true,
+      },
+      'You cannot create a Purchase Invoice within the closed Accounting Period Oct',
+    )
+    answers.fix_and_register = { name: 'PI-1', docstatus: 0, queued: true }
+    await mountAt('/gastos/factura/PI-1')
+    expect(root.textContent).toContain('falls in a closed accounting period')
+    await press('Change the date and register')
+    const sent = calls.find(([m]) => m === 'fix_and_register')[1]
+    expect(sent).toMatchObject({
+      fix: 'closed_period',
+      posting_date: '2026-10-06',
+    })
+  })
+
+  it('anything else: ERPNext’s sentence, «Try again» and the review ask', async () => {
+    answers.invoice = refused({ kind: 'other' }, 'Expense account is mandatory')
+    await mountAt('/gastos/factura/PI-1')
+    expect(root.textContent).toContain('ERPNext did not register it')
+    expect(root.textContent).toContain('Expense account is mandatory')
     expect(root.textContent).toContain('Try again')
     expect(root.textContent).toContain('Ask for a review')
+  })
+
+  it('the review ask never goes back to the one asking', async () => {
+    answers.invoice = refused({ kind: 'other' }, 'Expense account is mandatory')
+    answers.approval_options = {
+      candidates: [],
+      fallback: null,
+      fallback_to: [],
+    }
+    await mountAt('/gastos/factura/PI-1')
+    await press('Ask for a review')
+    expect(document.body.textContent).toContain(
+      'the request would come back to you',
+    )
+    const send = document.body.querySelector('[data-testid="approval-send"]')
+    expect(send.disabled).toBe(true)
   })
 })
 

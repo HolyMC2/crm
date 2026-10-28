@@ -28969,3 +28969,78 @@ msgstr "Capturas por terminar ({0})"
 msgctxt "Captura"
 msgid "To finish"
 msgstr "Por terminar"
+
+msgid "New bill date"
+msgstr "Nueva fecha de la factura"
+
+msgid "What ERPNext said:"
+msgstr "Lo que dijo ERPNext:"
+
+msgid "Fix it in the full form"
+msgstr "Corregir en el formulario completo"
+
+msgid "The supplier {0} is deactivated"
+msgstr "El proveedor {0} está desactivado"
+
+msgid "ERPNext does not register bills from a deactivated supplier. Activate it and this bill registers right away."
+msgstr "ERPNext no registra facturas de un proveedor desactivado. Actívalo y esta factura se registra enseguida."
+
+msgid "Activate supplier and register"
+msgstr "Activar proveedor y registrar"
+
+msgid "Activating a supplier is for whoever manages suppliers."
+msgstr "Activar un proveedor le toca a quien administra proveedores."
+
+msgid "Ask someone to activate it"
+msgstr "Pedir que lo activen"
+
+msgid "Please activate the supplier {0} so this bill can be registered."
+msgstr "Por favor activa al proveedor {0} para poder registrar esta factura."
+
+msgid "The supplier {0} is frozen"
+msgstr "El proveedor {0} está congelado"
+
+msgid "A frozen supplier takes no new bills until accounting lifts the freeze."
+msgstr "Un proveedor congelado no acepta facturas nuevas hasta que contabilidad lo descongele."
+
+msgid "Ask accounting to lift it"
+msgstr "Pedir a contabilidad que lo descongele"
+
+msgid "Please lift the freeze on {0} so this bill can be registered."
+msgstr "Por favor descongela a {0} para poder registrar esta factura."
+
+msgid "{0} falls in a closed accounting period"
+msgstr "El {0} cae en un periodo contable cerrado"
+
+msgid "Give the bill a date in an open period and it registers right away. If the date must stay, accounting can reopen the period."
+msgstr "Dale a la factura una fecha en un periodo abierto y se registra enseguida. Si la fecha debe quedarse, contabilidad puede reabrir el periodo."
+
+msgid "Change the date and register"
+msgstr "Cambiar fecha y registrar"
+
+msgid "Changing the bill date is for whoever can edit bills."
+msgstr "Cambiar la fecha le toca a quien puede editar facturas."
+
+msgid "Ask accounting to reopen it"
+msgstr "Pedir a contabilidad que lo reabra"
+
+msgid "Bill dated {0} is in a closed accounting period: {1}"
+msgstr "La factura con fecha {0} está en un periodo contable cerrado: {1}"
+
+msgid "ERPNext did not register it"
+msgstr "ERPNext no la registró"
+
+msgid "Something on the bill needs a correction first. Fix it, then try again."
+msgstr "Algo en la factura necesita corregirse primero. Corrígelo y vuelve a intentar."
+
+msgid "Nobody here can do it yet. It goes to {0}, with this expense attached."
+msgstr "Aquí nadie puede hacerlo todavía. Se le envía a {0}, con este gasto adjunto."
+
+msgid "Nobody here can do it yet. It goes to {0}, with this bill attached."
+msgstr "Aquí nadie puede hacerlo todavía. Se le envía a {0}, con esta factura adjunta."
+
+msgid "Nobody else on this site can do it: the request would come back to you. Resolve it here instead."
+msgstr "Nadie más en este sitio puede hacerlo: la solicitud regresaría a ti. Mejor resuélvelo aquí."
+
+msgid "It waits in their Pendientes, under To approve, and in their notifications until it is done."
+msgstr "Le queda en Pendientes, en Por aprobar, y en sus avisos hasta que se resuelva."

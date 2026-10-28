@@ -39,23 +39,36 @@ const requests = new Map()
  * Queue the bill's registration. Resolves once the server accepted it (or it
  * was already registered); a refusal of the quick checks throws as before.
  */
-export async function registerInBackground(doc) {
+export function registerInBackground(doc) {
+  return queue(doc, 'submit_bill', { background: 1 })
+}
+
+/**
+ * «Resolver»: apply the fix a refused registration named (activate the
+ * supplier, move the date out of a closed period), then register again.
+ */
+export function fixAndRegister(doc, fix, { postingDate = '' } = {}) {
+  return queue(doc, 'fix_and_register', { fix, posting_date: postingDate })
+}
+
+async function queue(doc, method, args) {
   const name = doc.name
-  const request = requests.get(name) || requestId()
-  requests.set(name, request)
+  const key = `${method}:${name}:${JSON.stringify(args)}`
+  const request = requests.get(key) || requestId()
+  requests.set(key, request)
   let result
   try {
-    result = await gastosApi('submit_bill', {
+    result = await gastosApi(method, {
       request_id: request,
       name,
       modified: doc.modified,
-      background: 1,
+      ...args,
     })
   } catch (error) {
-    if (!outcomeUnknown(error)) requests.delete(name)
+    if (!outcomeUnknown(error)) requests.delete(key)
     throw error
   }
-  requests.delete(name)
+  requests.delete(key)
   const entry = {
     name,
     party: doc.party || name,
@@ -64,17 +77,12 @@ export async function registerInBackground(doc) {
     startedAt: Date.now(),
     state: 'queued',
     message: '',
+    fix: null,
   }
   upsertRegistration(entry)
   if (Number(result?.docstatus) === 1) settle({ ...entry, state: 'done' })
   else ensurePolling()
   return result
-}
-
-/** Try again after a refusal: the entry goes back to «registering». */
-export function retryRegistration(doc) {
-  dismissRegistration(doc.name)
-  return registerInBackground(doc)
 }
 
 let router = null
@@ -150,6 +158,7 @@ function settle(payload) {
     currency: payload.currency || row.currency,
     state: payload.state,
     message: payload.message || '',
+    fix: payload.fix || null,
     endedAt: Date.now(),
   }
   upsertRegistration(outcome)
