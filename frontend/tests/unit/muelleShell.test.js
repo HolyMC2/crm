@@ -102,6 +102,7 @@ import NotPermitted from '@/pages/NotPermitted.vue'
 import { showSettings } from '@/composables/settings'
 import {
   RAIL_SAVE_DELAY_MS,
+  resetRailCountsForTests,
   resetRailForTests,
   scanPickHref,
   scanPickTarget,
@@ -256,6 +257,7 @@ beforeEach(() => {
     throw new Error(`unexpected ${method}`)
   })
   shellBoot.value = null
+  resetRailCountsForTests()
 })
 afterEach(() => {
   app?.unmount()
@@ -405,7 +407,7 @@ describe('module registry', () => {
         '[data-module="contactos"][data-state="unavailable"]',
       ),
     )
-    expect(tile.getAttribute('title')).toContain('No se pudo cargar Contactos')
+    expect(tile.dataset.tip).toContain('No se pudo cargar Contactos')
     expect(tile.getAttribute('aria-label')).toContain('Contactos')
     expect(document.querySelector('[data-module="ventas"]')).toBeTruthy()
     const alert = await until(() => document.querySelector('[role="alert"]'))
@@ -556,9 +558,13 @@ describe('one frame for every route', () => {
     expect(rail().style.width).toBe('56px')
     const icon = rail().querySelector('[data-module="contactos"]')
     expect(icon.textContent.trim()).toBe('')
-    // Collapsed, the name stays reachable: tooltip and accessible name.
-    expect(icon.getAttribute('title')).toBe('Contactos')
+    // Collapsed, the name stays reachable: a label on hover and the accessible name.
     expect(icon.getAttribute('aria-label')).toBe('Contactos')
+    icon.dispatchEvent(new PointerEvent('pointerover', { bubbles: true }))
+    await nextTick()
+    expect(
+      rail().querySelector('[data-testid="rail-tip"]').textContent.trim(),
+    ).toBe('Contactos')
     expect(toggle().getAttribute('aria-expanded')).toBe('false')
     expect(localStorage.getItem('muelle.rail:guest')).toBe('collapsed')
     // Saved for the worker's other devices, once, after the toggle settles.
@@ -568,6 +574,41 @@ describe('one frame for every route', () => {
         ([method]) => method === 'crm.api.shell.save_rail',
       ),
     ).toEqual([['crm.api.shell.save_rail', { state: 'collapsed' }]])
+  })
+
+  it('desktop rail: icons by default, each with what waits in it', async () => {
+    state.mobile.value = false
+    localStorage.clear()
+    resetRailForTests()
+    state.call.mockImplementation(async (method) => {
+      if (method === 'crm.api.shell.boot') return boot()
+      if (method === 'crm.api.shell.rail_counts')
+        return {
+          ventas: { count: 3, urgent: false },
+          contactos: { count: 120, urgent: true },
+        }
+      throw new Error(`unexpected ${method}`)
+    })
+    await mount('/contactos')
+    const rail = () => root.querySelector('nav[aria-label="Apps"]')
+    expect(rail().dataset.rail).toBe('collapsed')
+    const contactos = () => rail().querySelector('[data-module="contactos"]')
+    expect(
+      await until(() => contactos()?.querySelector('[data-rail-count]')),
+    ).toBeTruthy()
+    const badge = contactos().querySelector('[data-rail-count]')
+    expect(badge.textContent.trim()).toBe('99+')
+    expect(badge.className).toContain('bg-surface-red-7')
+    expect(contactos().getAttribute('aria-label')).toBe('Contactos · 99+')
+    // One read per visit, not one per page change inside the minute.
+    const reads = () =>
+      state.call.mock.calls.filter(
+        ([method]) => method === 'crm.api.shell.rail_counts',
+      ).length
+    expect(reads()).toBe(1)
+    window.dispatchEvent(new Event('focus'))
+    await nextTick()
+    expect(reads()).toBe(1)
   })
 
   it('desktop rail: the saved width follows the worker from the boot; «[» toggles it', async () => {
@@ -2704,7 +2745,7 @@ describe('keyboard standard: Ctrl+K / Ctrl+G modes and the Alt+H sheet', () => {
   it('the rail search names both keys; no hard-coded «Ctrl K»', async () => {
     await mount('/deals')
     const search = root.querySelector('[data-testid="rail-search"]')
-    expect(search.getAttribute('title')).toBe(
+    expect(search.dataset.tip).toBe(
       'Buscar o ir a… (Ctrl+K) · Buscar registros (Ctrl+G)',
     )
     expect(search.getAttribute('aria-keyshortcuts')).toBe('Control+K Control+G')

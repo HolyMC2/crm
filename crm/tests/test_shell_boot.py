@@ -108,6 +108,26 @@ class TestShellBoot(TestCase):
 			shell.save_rail("wide")
 		self.assertEqual(shell.boot()["rail"], "expanded")
 
+	def test_rail_counts_show_only_waiting_work_and_skip_a_failing_source(self):
+		with patch.object(
+			shell,
+			"_RAIL_COUNTS",
+			(
+				("ventas", lambda: {"count": 3, "urgent": False}),
+				("pendientes", lambda: {"count": 0, "urgent": False}),
+				("broken", lambda: 1 / 0),
+				("denied", lambda: frappe.throw("no", frappe.PermissionError)),
+			),
+		):
+			self.assertEqual(shell.rail_counts(), {"ventas": {"count": 3, "urgent": False}})
+
+	def test_rail_counts_read_the_installed_sources(self):
+		answer = shell.rail_counts()
+		self.assertIsInstance(answer, dict)
+		for key, found in answer.items():
+			self.assertIn(key, ("ventas", "pendientes"))
+			self.assertGreater(found["count"], 0)
+
 	def test_module_keys_follow_the_contracts_registry(self):
 		registry = Path(__file__).parents[2] / "frontend/src/vendor/muelle-shell/contracts/registry.ts"
 		if not registry.exists():

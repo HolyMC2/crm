@@ -870,6 +870,59 @@ def save_rail(state: str):
 	return state
 
 
+def _ventas_count():
+	# doco_marketing owns the conversations; the count is the «Responder» queue.
+	if "doco_marketing" not in frappe.get_installed_apps():
+		return None
+	from crm.api import check_app_permission
+
+	if not check_app_permission():
+		return None
+	from doco_marketing.api.shell import get_badge_counts
+
+	return {"count": int(get_badge_counts().get("unread_messages") or 0), "urgent": False}
+
+
+def _pendientes_count():
+	if "doco" not in frappe.get_installed_apps():
+		return None
+	try:
+		from doco.pendientes.api import counts
+	except ImportError:
+		return None
+	found = counts() or {}
+	overdue = int(found.get("overdue") or 0)
+	return {"count": overdue + int(found.get("today") or 0), "urgent": overdue > 0}
+
+
+_RAIL_COUNTS = (("ventas", _ventas_count), ("pendientes", _pendientes_count))
+
+
+@frappe.whitelist()
+def rail_counts():
+	"""What waits in each module, for the desktop rail's badges (like the unread count
+	beside a chat): {module key: {count, urgent}}. Ventas counts the conversations owed
+	a reply, Pendientes the work due today or overdue (urgent when something is late).
+	A source that is not installed, not readable or failing is left out; the boot keeps
+	the other modules' badges."""
+	if frappe.session.user == "Guest":
+		frappe.throw(_("Sign in to open Muelle."), frappe.AuthenticationError)
+	answer = {}
+	for key, read in _RAIL_COUNTS:
+		try:
+			found = read()
+		except frappe.PermissionError:
+			frappe.clear_last_message()
+			continue
+		except Exception:
+			frappe.logger("crm.shell").exception(f"rail count {key} failed")
+			frappe.clear_last_message()
+			continue
+		if found and found["count"] > 0:
+			answer[key] = found
+	return answer
+
+
 RECENT_LIMIT = 8
 
 

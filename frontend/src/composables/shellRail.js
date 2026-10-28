@@ -10,16 +10,15 @@ import {
   withReturn,
 } from '@/vendor/muelle-shell/contracts'
 
-// The desktop rail has two widths: «expanded» shows each app's name next to its
-// icon (a worker still learning the apps reads them), «collapsed» keeps only the
-// icons. The choice applies at once from this browser (localStorage, scoped per
-// user for shared shop PCs) and follows the worker to other devices through the
-// shell boot (crm.api.shell.boot → rail, saved by crm.api.shell.save_rail).
+// The desktop rail has two widths: «collapsed» (the default) keeps only the
+// icons, each with its count and a label on hover; «expanded» shows each app's
+// name next to its icon for a worker still learning the apps. The choice
+// applies at once from this browser (localStorage, scoped per user for shared
+// shop PCs) and follows the worker to other devices through the shell boot
+// (crm.api.shell.boot → rail, saved by crm.api.shell.save_rail).
 
 export const RAIL_STATES = Object.freeze(['expanded', 'collapsed'])
 const STORAGE_BASE = 'muelle.rail'
-/** Wide screens start expanded until the worker chooses. */
-export const EXPANDED_MIN_WIDTH = 1280
 export const RAIL_WIDTH = Object.freeze({ collapsed: 56, expanded: 216 })
 
 function readLocal() {
@@ -31,10 +30,7 @@ function readLocal() {
   }
 }
 
-function defaultState() {
-  const width = typeof window !== 'undefined' ? window.innerWidth : 0
-  return width >= EXPANDED_MIN_WIDTH ? 'expanded' : 'collapsed'
-}
+const defaultState = () => 'collapsed'
 
 export const railState = ref(readLocal() || defaultState())
 export const railExpanded = computed(() => railState.value === 'expanded')
@@ -83,6 +79,49 @@ export function resetRailForTests(state = null) {
   chosenHere = false
   clearTimeout(saveTimer)
   railState.value = state || readLocal() || defaultState()
+}
+
+// --- counts («3» on Ventas, like the unread count beside a chat) ---------------
+
+/** {module key: {count, urgent}} from crm.api.shell.rail_counts. */
+export const railCounts = ref({})
+export const RAIL_COUNTS_GAP_MS = 20000
+let countsAt = 0
+let countsLoading = null
+
+/** Reads the counts again unless they are fresher than RAIL_COUNTS_GAP_MS. */
+export function refreshRailCounts({ force = false } = {}) {
+  if (countsLoading) return countsLoading
+  if (!force && Date.now() - countsAt < RAIL_COUNTS_GAP_MS)
+    return Promise.resolve()
+  countsAt = Date.now()
+  countsLoading = call('crm.api.shell.rail_counts')
+    .then((found) => (railCounts.value = found || {}))
+    .catch(() => {})
+    .finally(() => (countsLoading = null))
+  return countsLoading
+}
+
+/**
+ * A module's count: the fresh read first, else what the boot said (Equipo's
+ * badge). `null` when nothing waits.
+ */
+export function moduleCount(module, counts = railCounts.value) {
+  const found = counts[module?.key] ?? module?.badge
+  const count = Number(typeof found === 'object' ? found?.count : found) || 0
+  if (count <= 0) return null
+  return {
+    count,
+    text: count > 99 ? '99+' : String(count),
+    urgent: !!(typeof found === 'object' && found?.urgent),
+  }
+}
+
+/** Tests: start from a clean slate. */
+export function resetRailCountsForTests() {
+  railCounts.value = {}
+  countsAt = 0
+  countsLoading = null
 }
 
 // --- sibling apps («Otras apps») ------------------------------------------------

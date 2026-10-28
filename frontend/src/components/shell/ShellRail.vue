@@ -5,6 +5,10 @@
     :style="{ width: `${railWidth}px` }"
     :aria-label="__('Apps')"
     :data-rail="expanded ? 'expanded' : 'collapsed'"
+    @pointerover="showTip"
+    @focusin="showTip"
+    @pointerleave="tip = null"
+    @focusout="tip = null"
   >
     <div
       class="mb-2 flex flex-none items-center gap-2.5"
@@ -26,7 +30,8 @@
       class="flex flex-none items-center rounded-6 text-ink-gray-6 hover:bg-surface-gray-2"
       :class="ROW[expanded ? 'wide' : 'icon']"
       :aria-label="__('Search')"
-      :title="searchHint"
+      :title="expanded ? searchHint : undefined"
+      :data-tip="searchHint"
       :aria-keyshortcuts="searchKeys"
       data-testid="rail-search"
       @click="$emit('palette')"
@@ -51,8 +56,8 @@
         v-for="module in apps"
         :key="module.key"
         :to="module.to"
-        :title="expanded ? undefined : module.label"
-        :aria-label="module.label"
+        :aria-label="moduleLabel(module)"
+        :data-tip="moduleLabel(module)"
         :aria-current="module.key === active ? 'page' : undefined"
         :data-module="module.key"
         class="flex flex-none items-center rounded-6"
@@ -63,13 +68,29 @@
             : 'text-ink-gray-6 hover:bg-surface-gray-2 hover:text-ink-gray-8',
         ]"
       >
-        <span
-          :class="[module.icon, 'size-[18px] flex-none']"
-          aria-hidden="true"
-        />
-        <span v-if="expanded" class="truncate" aria-hidden="true">{{
-          module.label
-        }}</span>
+        <span class="relative flex-none" aria-hidden="true">
+          <span :class="[module.icon, 'block size-[18px]']" />
+          <span
+            v-if="!expanded && counts[module.key]"
+            class="num absolute -right-2.5 -top-2 h-[18px] min-w-[18px] rounded-full px-1 text-center text-[11px] font-semibold leading-[18px] ring-2 ring-[var(--surface-base)]"
+            :class="badgeTone(counts[module.key])"
+            data-rail-count
+            >{{ counts[module.key].text }}</span
+          >
+        </span>
+        <template v-if="expanded">
+          <span class="min-w-0 flex-1 truncate" aria-hidden="true">{{
+            module.label
+          }}</span>
+          <span
+            v-if="counts[module.key]"
+            class="num h-[18px] min-w-[18px] flex-none rounded-full px-1.5 text-center text-[11px] font-semibold leading-[18px]"
+            :class="badgeTone(counts[module.key])"
+            aria-hidden="true"
+            data-rail-count
+            >{{ counts[module.key].text }}</span
+          >
+        </template>
       </RouterLink>
       <!-- A module whose builder failed on the server keeps its place: the
            tile says why, and its page offers the retry. -->
@@ -77,8 +98,8 @@
         v-for="module in unavailable"
         :key="module.key"
         :to="module.to"
-        :title="module.reason"
         :aria-label="`${module.label}: ${module.reason}`"
+        :data-tip="`${module.label}: ${module.reason}`"
         :aria-current="module.key === active ? 'page' : undefined"
         :data-module="module.key"
         data-state="unavailable"
@@ -141,7 +162,7 @@
             : 'text-ink-gray-6 hover:bg-surface-gray-2 hover:text-ink-gray-8',
         ]"
         :aria-label="__('Other apps')"
-        :title="__('Other apps')"
+        :data-tip="__('Other apps')"
         :aria-expanded="appsOpen"
         aria-haspopup="menu"
         data-testid="rail-apps"
@@ -188,7 +209,7 @@
       class="flex flex-none items-center rounded-6 text-ink-gray-6 hover:bg-surface-gray-2 hover:text-ink-gray-8"
       :class="ROW[expanded ? 'wide' : 'icon']"
       :aria-label="__('Ask Muelle')"
-      :title="`${__('Ask Muelle')} (${assistantKey})`"
+      :data-tip="`${__('Ask Muelle')} (${assistantKey})`"
       :aria-keyshortcuts="assistantKeys"
       data-testid="rail-assistant"
       @click="$emit('assistant')"
@@ -210,7 +231,7 @@
       :class="ROW[expanded ? 'wide' : 'icon']"
       :aria-label="toggleLabel"
       :aria-expanded="expanded"
-      :title="`${expanded ? toggleLabel : __('Show app names')} (${sidebarKey})`"
+      :data-tip="`${expanded ? toggleLabel : __('Show app names')} (${sidebarKey})`"
       aria-keyshortcuts="["
       data-testid="rail-toggle"
       @click="toggleRail"
@@ -258,17 +279,36 @@
         class="press flex size-10 flex-none items-center justify-center rounded-full text-ink-gray-6 hover:bg-surface-gray-2 hover:text-ink-gray-8"
         :class="expanded ? 'mt-1' : ''"
         :aria-label="__('Help and report a problem')"
-        :title="__('Help and report a problem')"
+        :data-tip="__('Help and report a problem')"
         data-testid="rail-help"
         @click="openHelp"
       >
         <span class="lucide-bug size-[18px]" aria-hidden="true" />
       </button>
     </div>
+    <!-- One label for every icon, beside the rail: the name (and count) a
+         collapsed rail leaves out, at once instead of the browser's delay. -->
+    <div
+      v-if="tip && !expanded && !appsOpen"
+      class="pointer-events-none fixed z-50 -translate-y-1/2 whitespace-nowrap rounded-6 bg-surface-gray-9 px-2 py-1 text-sm font-medium text-ink-base shadow-lg"
+      :style="{ left: `${railWidth + 6}px`, top: `${tip.top}px` }"
+      role="tooltip"
+      data-testid="rail-tip"
+    >
+      {{ tip.text }}
+    </div>
   </nav>
 </template>
 <script setup>
-import { computed, defineAsyncComponent, nextTick, ref, watch } from 'vue'
+import {
+  computed,
+  defineAsyncComponent,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  watch,
+} from 'vue'
 import { useRoute } from 'vue-router'
 import {
   ariaKeys,
@@ -279,8 +319,11 @@ import {
 import { assistantOn } from '@/components/assistant/assistantDoor'
 import {
   installedSiblings,
+  moduleCount,
+  railCounts,
   railExpanded,
   railWidth,
+  refreshRailCounts,
   siblingHref,
   sortSiblings,
   toggleRail,
@@ -325,6 +368,52 @@ const apps = computed(() =>
 const avisos = computed(() =>
   props.modules.some((module) => module.key === 'avisos'),
 )
+// What waits in each module, read again when the worker comes back to the
+// window, moves to another page, or every two minutes while it is in view.
+const counts = computed(() =>
+  Object.fromEntries(
+    props.modules.map((module) => [
+      module.key,
+      moduleCount(module, railCounts.value),
+    ]),
+  ),
+)
+const badgeTone = (found) =>
+  found.urgent
+    ? 'bg-surface-red-7 text-white'
+    : 'bg-[var(--muelle-accent)] text-[var(--muelle-accent-ink)]'
+function moduleLabel(module) {
+  const found = counts.value[module.key]
+  return found ? `${module.label} · ${found.text}` : module.label
+}
+const COUNTS_EVERY_MS = 120000
+let countsTimer = 0
+const onFocus = () => refreshRailCounts()
+onMounted(() => {
+  refreshRailCounts({ force: true })
+  window.addEventListener('focus', onFocus)
+  countsTimer = window.setInterval(() => {
+    if (document.visibilityState === 'visible') refreshRailCounts()
+  }, COUNTS_EVERY_MS)
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('focus', onFocus)
+  window.clearInterval(countsTimer)
+})
+watch(
+  () => route.path,
+  () => refreshRailCounts(),
+)
+
+// The label beside a hovered or focused icon (collapsed rail only).
+const tip = ref(null)
+function showTip(event) {
+  const target = event.target?.closest?.('[data-tip]')
+  if (!target || expanded.value) return (tip.value = null)
+  const box = target.getBoundingClientRect()
+  tip.value = { text: target.dataset.tip, top: box.top + box.height / 2 }
+}
+
 // Sibling SPAs (Escáner, POS, Taller…) open with the way back to this page:
 // «Volver a Productos» in Escáner returns to the record the worker left.
 const siblings = sortSiblings(installedSiblings())
