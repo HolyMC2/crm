@@ -619,6 +619,128 @@ def counts(doctype: str, chips: str | dict | None = None, search: str | None = N
 	}
 
 
+# «Vistas»: a list's chip, search, sort and filters saved under a name. They live
+# in CRM View Settings (the app's own views) marked with this route, which the
+# CRM's sidebar and view picker skip (crm.api.views.get_views).
+VIEW_ROUTE = "documentos"
+MAX_VIEW_LABEL = 60
+MAX_VIEWS = 50
+VIEW_KEYS = ("estado", "q", "orden", "de", "de_label")
+
+
+def _clean_view_query(query):
+	"""The list's URL query (documentos/listState writeListQuery), nothing else."""
+	query = _parse(query, {}) or {}
+	if not isinstance(query, dict):
+		frappe.throw(_("The filters could not be read."), frappe.ValidationError)
+	out = {}
+	for key, value in query.items():
+		key = cstr(key)
+		if (key in VIEW_KEYS or re.fullmatch(r"f_[a-z0-9_]{1,60}", key)) and isinstance(value, str):
+			out[key] = value[:500]
+	return out
+
+
+def _can_publish_views():
+	# The CRM's own rule for public views (crm_view_settings.public).
+	roles = frappe.get_roles()
+	return frappe.session.user == "Administrator" or bool({"System Manager", "Sales Manager"} & set(roles))
+
+
+def _view_rows(doctype, label=None):
+	View = frappe.qb.DocType("CRM View Settings")
+	query = (
+		frappe.qb.from_(View)
+		.select(View.name, View.label, View.filters, View.public, View.user)
+		.where(View.dt == doctype)
+		.where(View.route_name == VIEW_ROUTE)
+		.where((View.user == frappe.session.user) | (View.public == 1))
+		.orderby(View.public)
+		.orderby(View.label)
+		.limit(MAX_VIEWS)
+	)
+	if label is not None:
+		query = query.where(View.label == label)
+	return query.run(as_dict=True)
+
+
+def _check_view(name):
+	from crm.fcrm.doctype.crm_view_settings.crm_view_settings import check_permission
+
+	doc = frappe.get_doc("CRM View Settings", name)
+	if doc.route_name != VIEW_ROUTE:
+		frappe.throw(_("That view is not a document list view."), frappe.ValidationError)
+	check_permission(doc)
+	return doc
+
+
+@frappe.whitelist()
+def views(doctype: str):
+	"""The saved views of one list: the worker's own and the team's."""
+	_require(doctype)
+	me = frappe.session.user
+	publish = _can_publish_views()
+	return {
+		"views": [
+			{
+				"name": cstr(row.name),
+				"label": row.label,
+				"query": _clean_view_query(row.filters),
+				"public": bool(row.public),
+				"mine": row.user == me,
+				"can_change": row.user == me
+				or (bool(row.public) and publish)
+				or "System Manager" in frappe.get_roles(),
+			}
+			for row in _view_rows(doctype)
+		],
+		"can_publish": publish,
+	}
+
+
+@frappe.whitelist(methods=["POST"])
+def save_view(doctype: str, label: str, query: str | dict | None = None, public: int | str = 0):
+	"""Save the list as it is under a name; the same name again updates that view."""
+	_require(doctype)
+	label = " ".join(cstr(label).split())[:MAX_VIEW_LABEL]
+	if not label:
+		frappe.throw(_("Give the view a name."), frappe.ValidationError)
+	public = cint(public)
+	if public and not _can_publish_views():
+		frappe.throw(
+			_("Only a manager can save a view for the whole team. Save it for yourself."),
+			frappe.PermissionError,
+		)
+	filters = json.dumps(_clean_view_query(query), sort_keys=True)
+	same = [row for row in _view_rows(doctype, label) if bool(row.public) == bool(public)]
+	if same:
+		doc = _check_view(same[0].name)
+		doc.filters = filters
+		doc.save(ignore_permissions=True)
+	else:
+		frappe.get_doc(
+			{
+				"doctype": "CRM View Settings",
+				"dt": doctype,
+				"route_name": VIEW_ROUTE,
+				"type": "list",
+				"label": label,
+				"filters": filters,
+				"public": public,
+				"user": "" if public else frappe.session.user,
+			}
+		).insert(ignore_permissions=True)
+	return views(doctype)
+
+
+@frappe.whitelist(methods=["POST"])
+def delete_view(name: str):
+	doc = _check_view(name)
+	doctype = doc.dt
+	frappe.delete_doc("CRM View Settings", doc.name, ignore_permissions=True)
+	return views(doctype)
+
+
 # What asks for action in each curated list, for the hub's supporting line.
 ATTENTION = {
 	"Quotation": [["docstatus", "=", 1], ["status", "in", ["Open", "Replied"]]],

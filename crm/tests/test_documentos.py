@@ -289,6 +289,41 @@ class TestDocumentosAccess(IntegrationTestCase):
 			self.assertTrue(path.startswith("erpnext."), (source, key))
 			self.assertTrue(target)
 
+	def test_a_worker_saves_renames_and_deletes_their_own_list_views(self):
+		from crm.api.views import get_views
+
+		self._grant("Note")
+		frappe.set_user(self.email)
+		answer = documentos.save_view(
+			"Note", "  Mis   notas ", {"q": "hoy", "f_public": "1", "evil": "x", "f_bad key": "y"}
+		)
+		self.assertFalse(answer["can_publish"])
+		[view] = [v for v in answer["views"] if v["label"] == "Mis notas"]
+		self.assertEqual(view["query"], {"q": "hoy", "f_public": "1"})
+		self.assertTrue(view["mine"] and view["can_change"] and not view["public"])
+		# The same name again updates that view instead of adding another.
+		answer = documentos.save_view("Note", "Mis notas", {"q": "mañana"})
+		mine = [v for v in answer["views"] if v["label"] == "Mis notas"]
+		self.assertEqual([v["query"] for v in mine], [{"q": "mañana"}])
+		# Only a manager saves for the whole team; the CRM's own pickers never list them.
+		with self.assertRaises(frappe.PermissionError):
+			documentos.save_view("Note", "Para todos", {"q": "x"}, public=1)
+		with self.assertRaises(frappe.ValidationError):
+			documentos.save_view("Note", "   ", {})
+		self.assertNotIn(view["name"], [str(v.name) for v in get_views("Note")])
+		# Someone else's private view is neither listed nor deletable.
+		frappe.set_user("Administrator")
+		self.assertNotIn(view["name"], [v["name"] for v in documentos.views("Note")["views"]])
+		other = documentos.save_view("Note", "De la jefa", {"q": "x"})["views"]
+		other_name = next(v["name"] for v in other if v["label"] == "De la jefa")
+		frappe.set_user(self.email)
+		with self.assertRaises(frappe.PermissionError):
+			documentos.delete_view(other_name)
+		answer = documentos.delete_view(view["name"])
+		self.assertNotIn("Mis notas", [v["label"] for v in answer["views"]])
+		with self.assertRaises(frappe.PermissionError):
+			documentos.views("Email Account")
+
 
 @skipIf(not HAS_FRAPPE, "Frappe integration dependency is not installed")
 class TestDocumentosERPNext(IntegrationTestCase):

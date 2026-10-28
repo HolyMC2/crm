@@ -29193,3 +29193,19 @@ msgstr "Aún no hay ventas hoy."
 #: frontend/src/composables/useHoy.js
 msgid "Yesterday {0}"
 msgstr "Ayer {0}"
+
+#: crm/api/documentos.py
+msgid "That person is not on your team."
+msgstr "Esa persona no está en tu equipo."
+
+#: crm/api/documentos.py
+msgid "That view is not a document list view."
+msgstr "Esa vista no es de una lista de documentos."
+
+#: crm/api/documentos.py
+msgid "Give the view a name."
+msgstr "Ponle un nombre a la vista."
+
+#: crm/api/documentos.py
+msgid "Only a manager can save a view for the whole team. Save it for yourself."
+msgstr "Solo un encargado puede guardar una vista para todo el equipo. Guárdala para ti."

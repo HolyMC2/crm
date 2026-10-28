@@ -81,7 +81,7 @@
         </UiTag>
         <div v-if="!stacked" class="flex min-w-0 flex-1">
           <slot name="title">
-            <AppBarTitle v-bind="titleProps" @pick="scopeSheet = true" />
+            <AppBarTitle v-bind="titleProps" @pick="pick" />
           </slot>
         </div>
         <span v-else class="flex-1" />
@@ -122,7 +122,7 @@
       class="flex px-1 pb-2"
     >
       <slot name="title">
-        <AppBarTitle v-bind="titleProps" @pick="scopeSheet = true" />
+        <AppBarTitle v-bind="titleProps" @pick="pick" />
       </slot>
     </div>
     <!-- Search open (WhatsApp pattern, Marco 2026-10-28): the page's filters,
@@ -245,6 +245,9 @@ const props = defineProps({
   scopes: { type: Array, default: () => [] },
   scope: { type: String, default: '' },
   scopeTitle: { type: String, default: '' },
+  /** The title opens the page's own sheet instead (emits `pick`): a list's «Vistas». */
+  picker: { type: Boolean, default: false },
+  pickerOpen: { type: Boolean, default: false },
   loading: { type: Boolean, default: false },
   searchable: { type: Boolean, default: false },
   search: { type: String, default: '' },
@@ -268,6 +271,7 @@ const props = defineProps({
 const emit = defineEmits([
   'back',
   'update:scope',
+  'pick',
   'update:search',
   'update:searchOpen',
   'start-select',
@@ -292,12 +296,17 @@ const showBell = computed(
 const backTarget = computed(() =>
   props.back && props.back !== true ? props.back : null,
 )
+const pickable = computed(() => props.picker || props.scopes.length > 0)
+function pick() {
+  if (props.picker) emit('pick')
+  else scopeSheet.value = true
+}
 const titleProps = computed(() => ({
   title: props.title,
   context: props.context,
   count: props.count,
-  pickable: props.scopes.length > 0,
-  open: scopeSheet.value,
+  pickable: pickable.value,
+  open: props.picker ? props.pickerOpen : scopeSheet.value,
   pickLabel: props.scopeTitle || __('Choose a list'),
   // A top-level bar is the page's heading: its title takes display size.
   large: !props.back,
@@ -366,7 +375,7 @@ function measure() {
     40 // the row's padding and gaps, and the title's own padding
   const room = width - used
   const text = `${props.title} ${props.count ?? ''}`.trim()
-  const needed = text.length * charPx() + (props.scopes.length ? 24 : 0)
+  const needed = text.length * charPx() + (pickable.value ? 24 : 0)
   stacked.value = room < titleMin() || (props.stack && needed > room * 2 * 0.9)
 }
 // The icons mount only in the normal mode (not while selecting or

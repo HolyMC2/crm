@@ -12,8 +12,11 @@
       v-model:search-open="searchOpen"
       :back="backTo"
       :back-label="`Volver a ${moduleLabel}`"
-      :context="moduleLabel"
-      :title="title"
+      :context="view ? title : moduleLabel"
+      :title="view ? view.label : title"
+      :picker="!!profile"
+      :picker-open="vistasOpen"
+      scope-title="Vistas"
       :loading="loading && rows.length > 0"
       :bell="phone"
       searchable
@@ -26,6 +29,7 @@
       @start-select="sel.start()"
       @select-all="sel.allOnPage(rowNames)"
       @clear-selection="sel.clear()"
+      @pick="openVistas"
     >
       <template #actions>
         <button
@@ -303,6 +307,17 @@
       @done="onBulkDone"
       @clear="sel.clear()"
     />
+    <VistasSheet
+      v-if="vistasUsed"
+      v-model:open="vistasOpen"
+      :doctype="doctype"
+      :list-title="title"
+      :query="currentQuery"
+      :profile="profile"
+      :saved="vistas"
+      @apply="applyView"
+      @changed="vistas = $event"
+    />
     <BottomSheet v-model:open="sortOpen" title="Ordenar" flush>
       <ListRow
         v-for="option in profile?.sorts || []"
@@ -352,6 +367,7 @@ import {
   writeListQuery,
 } from '@/documentos/listState'
 import { loadProfile } from '@/documentos/profiles'
+import { activeView } from '@/documentos/vistas'
 import { createListCache } from '@/utils/listCache'
 import { documentRoute, floorRoute, profileBySlug } from '@/documentos/registry'
 import { kindLabel, statusLabel } from '@/utils/display'
@@ -360,6 +376,9 @@ import { useSeleccion } from '@/components/masivo/useSeleccion'
 
 const BulkBar = defineAsyncComponent(
   () => import('@/components/masivo/BulkBar.vue'),
+)
+const VistasSheet = defineAsyncComponent(
+  () => import('@/components/documentos/VistasSheet.vue'),
 )
 
 const props = defineProps({
@@ -629,10 +648,40 @@ async function loadCounts() {
   }
 }
 
-function apply({ counts: withCounts = true } = {}) {
-  const query = writeListQuery(state.value, {
+// «Vistas» (the title opens them): the list's query saved under a name.
+const vistas = ref(null)
+const vistasOpen = ref(false)
+const vistasUsed = ref(false)
+const currentQuery = computed(() =>
+  writeListQuery(state.value, {
     defaultChip: profile.value?.defaultChip ?? '',
-  })
+  }),
+)
+const view = computed(() => activeView(vistas.value?.views, currentQuery.value))
+function openVistas() {
+  vistasUsed.value = true
+  vistasOpen.value = true
+}
+async function loadVistas() {
+  const asked = doctype.value
+  try {
+    const out = await docApi('views', { doctype: asked })
+    if (asked === doctype.value) vistas.value = out
+  } catch {
+    // Without them the list works; the sheet asks again and says why.
+    vistas.value = null
+  }
+}
+function applyView(query) {
+  vistasOpen.value = false
+  state.value = readListQuery(query || {})
+  search.value = state.value.search
+  searchOpen.value = !!state.value.search
+  apply()
+}
+
+function apply({ counts: withCounts = true } = {}) {
+  const query = currentQuery.value
   router.replace({ query })
   scroller.value?.scrollTo?.({ top: 0 })
   listCache.paint(showPage)
@@ -707,7 +756,9 @@ async function open() {
   denied.value = false
   error.value = ''
   rows.value = []
+  vistas.value = null
   if (missing.value) return
+  loadVistas()
   state.value = readListQuery(route.query)
   search.value = state.value.search
   profile.value = await loadProfile({
