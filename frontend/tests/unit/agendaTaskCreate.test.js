@@ -232,12 +232,15 @@ describe('«Más opciones» on a task', () => {
     buttonNamed('More options').click()
     await flush()
 
-    // The card is gone and the full sheet is up, prefilled.
+    // The card is gone and the full sheet is up (loaded on first use), prefilled.
     expect(document.body.querySelector('form.ag-qc')).toBeNull()
-    const prefilled = [...document.body.querySelectorAll('textarea')].find(
-      (area) => area.value === 'Enviar cotización',
+    await vi.waitFor(() =>
+      expect(
+        [...document.body.querySelectorAll('textarea')].find(
+          (area) => area.value === 'Enviar cotización',
+        ),
+      ).toBeTruthy(),
     )
-    expect(prefilled).toBeTruthy()
     // Details and priority live behind the sheet's chips, as in Pendientes.
     buttonNamed('Details').click()
     await flush()

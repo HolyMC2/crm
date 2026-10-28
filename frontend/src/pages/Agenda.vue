@@ -55,7 +55,7 @@
       </div>
       <h1 class="ag-title">{{ rangeTitle }}</h1>
       <span
-        v-if="loading && !showSkeleton"
+        v-if="loading && !listSkeleton"
         class="ag-spinner"
         role="status"
         :aria-label="__('Loading')"
@@ -190,7 +190,7 @@
         />
       </button>
       <span
-        v-if="loading && !showSkeleton"
+        v-if="loading && !listSkeleton"
         class="ag-spinner"
         role="status"
         :aria-label="__('Loading')"
@@ -299,7 +299,9 @@
 
         <div ref="calendarRoot" class="ag-canvas" :class="`is-${state.view}`">
           <div :key="state.view" class="ag-viewin">
-            <div v-if="showSkeleton" class="space-y-3 p-4" aria-hidden="true">
+            <!-- Grids keep their frame while a range loads (no jump when data lands);
+                 only the lists show skeleton rows. -->
+            <div v-if="listSkeleton" class="space-y-3 p-4" aria-hidden="true">
               <div
                 v-for="n in 6"
                 :key="n"
@@ -602,6 +604,7 @@
 
     <!-- «Más opciones» on a task: the shared pendiente sheet, prefilled from the card -->
     <CreateDialog
+      v-if="taskSheet"
       :model-value="Boolean(taskSheet)"
       :today="state.date"
       :prefill="taskSheet"
@@ -792,6 +795,7 @@
 <script setup>
 import {
   computed,
+  defineAsyncComponent,
   getCurrentInstance,
   onBeforeUnmount,
   onMounted,
@@ -803,9 +807,6 @@ import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { BottomSheet, Button, Dialog, toast } from 'frappe-ui'
 import AvisosBell from '@/components/avisos/AvisosBell.vue'
 import { primaryDock } from '@/components/ui/primaryDock'
-import AgendaCitaForm from '@/components/agenda/AgendaCitaForm.vue'
-import AgendaCitasSettings from '@/components/agenda/AgendaCitasSettings.vue'
-import AgendaEventForm from '@/components/agenda/AgendaEventForm.vue'
 import AgendaEventPanel from '@/components/agenda/AgendaEventPanel.vue'
 import AgendaGuard from '@/components/agenda/AgendaGuard.vue'
 import AgendaList from '@/components/agenda/AgendaList.vue'
@@ -816,10 +817,8 @@ import AgendaPopover from '@/components/agenda/AgendaPopover.vue'
 import AgendaQuickCreate from '@/components/agenda/AgendaQuickCreate.vue'
 import AgendaSchedule from '@/components/agenda/AgendaSchedule.vue'
 import AgendaSearch from '@/components/agenda/AgendaSearch.vue'
-import AgendaSettings from '@/components/agenda/AgendaSettings.vue'
 import AgendaSidebar from '@/components/agenda/AgendaSidebar.vue'
 import AgendaTimeGrid from '@/components/agenda/AgendaTimeGrid.vue'
-import CreateDialog from '@/components/pendientes/CreateDialog.vue'
 import {
   defaultCalendarColor,
   eventColor,
@@ -903,6 +902,22 @@ import {
   getCita,
 } from '@/composables/useCitas'
 
+// The editors load on first use, so the route opens on the calendar alone.
+const AgendaEventForm = defineAsyncComponent(
+  () => import('@/components/agenda/AgendaEventForm.vue'),
+)
+const AgendaCitaForm = defineAsyncComponent(
+  () => import('@/components/agenda/AgendaCitaForm.vue'),
+)
+const AgendaCitasSettings = defineAsyncComponent(
+  () => import('@/components/agenda/AgendaCitasSettings.vue'),
+)
+const AgendaSettings = defineAsyncComponent(
+  () => import('@/components/agenda/AgendaSettings.vue'),
+)
+const CreateDialog = defineAsyncComponent(
+  () => import('@/components/pendientes/CreateDialog.vue'),
+)
 const route = useRoute()
 const router = useRouter()
 const socket = getCurrentInstance()?.appContext.config.globalProperties.$socket
@@ -985,6 +1000,10 @@ const gridDates = computed(() => {
   const work = dates.filter((date) => !isWeekend(date))
   return work.length ? work : dates
 })
+// Grids keep their frame while a range loads; only the lists swap in skeleton rows.
+const listSkeleton = computed(
+  () => showSkeleton.value && !gridView.value && state.value.view !== 'month',
+)
 const hourHeight = computed(
   () => DENSITIES[prefs.density] || DENSITIES.comfortable,
 )
@@ -3264,7 +3283,7 @@ onBeforeUnmount(() => {
   flex: 1 1 auto;
   flex-direction: column;
   min-height: 0;
-  animation: ag-viewin 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  animation: ag-viewin 0.16s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 @keyframes ag-viewin {
   from {
