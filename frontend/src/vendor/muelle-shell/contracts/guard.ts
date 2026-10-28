@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/shell-contracts@0.14.0 (ca0886b770b5). DO NOT EDIT:
+// Vendored from muelle/workspace/packages/shell-contracts@0.15.0 (b76caac5e828). DO NOT EDIT:
 // change the package, then run its scripts/vendor.mjs against this directory.
 // Blocked-state contract (spec §5.6, spec-contactos «structured guard»).
 //

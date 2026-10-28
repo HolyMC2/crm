@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/shell-contracts@0.14.0 (ca0886b770b5). DO NOT EDIT:
+// Vendored from muelle/workspace/packages/shell-contracts@0.15.0 (b76caac5e828). DO NOT EDIT:
 // change the package, then run its scripts/vendor.mjs against this directory.
 export {
   RETURN_PREFIXES,
@@ -129,3 +129,4 @@ export {
   type UniversalShortcutId,
 } from './keyboard'
 export { SHELL_MESSAGES_ES_MX, format, esMx, type Translate } from './messages'
+export { matchTokens, normalize as normalizeSearch, tokens as searchTokens } from './search'

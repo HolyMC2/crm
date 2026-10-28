@@ -9,6 +9,7 @@ import {
   bootScope,
   safeReturn,
   DESK_PREFIXES,
+  matchTokens,
 } from '@/vendor/muelle-shell/contracts'
 import { shellT } from '@/composables/shellKeyboard'
 import { ventasSection } from '@/composables/ventasSections'
@@ -29,7 +30,13 @@ import { createManualProvider } from '@/utils/manualPalette'
 import { createAssistantProvider } from '@/components/assistant/assistantPalette'
 // Reportes and Desk workspaces, as Desk lists them for this worker (E7).
 import { createDeskProviders } from '@/utils/deskPalette'
-import { formatMoney, kindLabel, statusLabel } from '@/utils/display'
+import {
+  formatDate,
+  formatMoney,
+  formatQty,
+  kindLabel,
+  statusLabel,
+} from '@/utils/display'
 import {
   TIPOS,
   deskTipo,
@@ -47,14 +54,9 @@ export function explicitQuestion(text) {
 }
 
 // Palette providers for the shell (spec §1.4): Contactos records and Ventas deals. Each answers on its own and is
-// cut off by the shared abort signal; the server rechecks every record.
-const match = (text, ...values) =>
-  !text ||
-  values.some((value) =>
-    String(value || '')
-      .toLowerCase()
-      .includes(text.toLowerCase()),
-  )
+// cut off by the shared abort signal; the server rechecks every record. The
+// rows the shell filters itself use the shell's search rule (matchTokens):
+// every word, in any order, without accents («cob venc», «garantias»).
 
 /**
  * Row rank (Shell E7b): a shell place or record matching the term is 0 (the
@@ -299,7 +301,7 @@ export function createShellProviders({ boot, modules }) {
       return query.kind === 'empty'
         ? [...own, ...items.slice(0, 1)]
         : [...own, ...items].filter((item) =>
-            match(query.text, item.title, item.keywords),
+            matchTokens(query.text, item.title, item.keywords),
           )
     },
   }
@@ -487,7 +489,7 @@ export function createShellProviders({ boot, modules }) {
               href: path,
             })
       return items.filter((item) =>
-        match(query.text, item.title, item.keywords),
+        matchTokens(query.text, item.title, item.keywords),
       )
     },
   }
@@ -532,6 +534,25 @@ export function createShellProviders({ boot, modules }) {
       return (rows || []).map(dealItem)
     },
   }
+  // Productos (doco.workspaces.products.palette): products by the shared item
+  // ranker («pan sm a05» finds «Pantalla SM A05»), and a serial number (IMEI)
+  // or batch typed or scanned whole says what it is and where.
+  const productos = {
+    key: 'productos',
+    label: 'Productos',
+    scopes: ['documents'],
+    async search(query, signal) {
+      if (query.kind === 'empty' || !moduleEnabled(boot.value, 'productos'))
+        return []
+      const text = query.text.slice(0, 140)
+      if (text.length < 2) return []
+      const result = await call('doco.workspaces.products.palette', { q: text })
+      if (signal.aborted) return []
+      return productosItems(result, text, {
+        taller: installedSiblings().some((app) => app.key === 'taller'),
+      })
+    },
+  }
   // Clínica answers for its own records (patients, today's appointments) when its module is on
   // for this user (clinica.shell.module). Items open in /clinica with the way back to here.
   const clinica = {
@@ -570,6 +591,7 @@ export function createShellProviders({ boot, modules }) {
     contactos,
     places,
     ventas,
+    productos,
     createDocumentosProvider({ boot }),
     createTiposProvider({ boot }),
     clinica,
@@ -625,6 +647,111 @@ export function inmobiliariaItems(result) {
       }
     })
     .filter(Boolean)
+}
+
+// The palette shows this many products (doco PALETTE_ROWS); a full page may
+// have more, so it offers the whole Productos list for the same words.
+const PRODUCT_ROWS = 5
+const productHref = (code) => `/productos/${encodeURIComponent(code)}`
+const deviceHistory = (code) =>
+  `/taller/imei?identifier=${encodeURIComponent(code)}`
+
+/**
+ * Productos' palette rows. A serial or batch leads with its product, state
+ * and place, then the device's history in Taller when it is installed; a
+ * code that no serial or batch has says so and offers where to look next.
+ * Products read «Producto · group · price · stock».
+ */
+export function productosItems(result, text, { taller = false } = {}) {
+  const items = []
+  for (const unit of result?.units || []) {
+    if (!unit?.name || !unit.item_code) continue
+    const serial = unit.kind === 'serial'
+    items.push({
+      id: `${unit.kind}:${unit.name}`,
+      group: 'registros',
+      title: serial
+        ? __('Serial {0}', [unit.name])
+        : __('Batch {0}', [unit.name]),
+      subtitle: [
+        unit.item_name,
+        serial ? unit.status_label : '',
+        serial ? unit.warehouse : formatQty(unit.qty),
+        !serial && unit.expiry
+          ? __(unit.expired ? 'Expired on {0}' : 'Expires {0}', [
+              formatDate(unit.expiry, { relative: false }),
+            ])
+          : '',
+        serial && unit.warranty_until
+          ? __('Warranty until {0}', [
+              formatDate(unit.warranty_until, { relative: false }),
+            ])
+          : '',
+        unit.disabled ? __('Disabled') : '',
+      ]
+        .filter(Boolean)
+        .join(' · '),
+      icon: serial ? 'lucide-barcode' : 'lucide-boxes',
+      href: productHref(unit.item_code),
+    })
+    if (serial && taller)
+      items.push({
+        id: `serial:${unit.name}:historial`,
+        group: 'acciones',
+        title: __('Device history of {0}', [unit.name]),
+        keywords: `${unit.name} imei historial equipo reparaciones ventas`,
+        icon: 'lucide-history',
+        external: deviceHistory(unit.name),
+        rank: PALETTE_RANK.specific,
+      })
+  }
+  const products = (result?.items || []).filter((row) => row?.name)
+  if (result?.checked && !items.length && !products.length)
+    items.push({
+      id: `unit:${text}:ninguna`,
+      group: 'registros',
+      title: __('No serial or batch «{0}»', [text]),
+      subtitle: taller
+        ? __('Not in the system. Look up the device history in Taller.')
+        : __('Not in the system. Check the code and try again.'),
+      icon: 'lucide-circle-help',
+      ...(taller
+        ? { external: deviceHistory(text) }
+        : { href: `/productos?q=${encodeURIComponent(text)}` }),
+    })
+  for (const row of products)
+    items.push({
+      id: `item:${row.name}`,
+      group: 'registros',
+      title: row.title || row.name,
+      subtitle: [
+        kindLabel('Item'),
+        row.item_group,
+        row.price?.rate != null
+          ? formatMoney(row.price.rate, row.price.currency || 'MXN')
+          : '',
+        !row.stock || !row.stock_item
+          ? ''
+          : row.stock.qty > 0
+            ? __('{0} in stock', [formatQty(row.stock.qty, row.uom)])
+            : __('Out of stock'),
+      ]
+        .filter(Boolean)
+        .join(' · '),
+      icon: 'lucide-package',
+      href: productHref(row.name),
+    })
+  if (products.length >= PRODUCT_ROWS)
+    items.push({
+      id: 'productos.todos',
+      group: 'acciones',
+      title: __('See «{0}» in Productos', [text]),
+      keywords: `${text} productos articulos inventario`,
+      icon: 'lucide-package-search',
+      href: `/productos?q=${encodeURIComponent(text)}`,
+      rank: PALETTE_RANK.specific,
+    })
+  return items
 }
 
 /** Clínica's palette rows: only links into /clinica/ are kept, opened as a sibling app. */

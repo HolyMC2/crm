@@ -29134,3 +29134,43 @@ msgstr "Esta captura llegó por el chat y no supimos qué documento es, así que
 msgctxt "Conversations"
 msgid "Pinned"
 msgstr "Fijadas"
+
+#: frontend/src/utils/shellPalette.js
+msgid "Serial {0}"
+msgstr "Serie {0}"
+
+#: frontend/src/utils/shellPalette.js
+msgid "Batch {0}"
+msgstr "Lote {0}"
+
+#: frontend/src/utils/shellPalette.js
+msgid "Expires {0}"
+msgstr "Vence el {0}"
+
+#: frontend/src/utils/shellPalette.js
+msgid "Warranty until {0}"
+msgstr "Garantía hasta el {0}"
+
+#: frontend/src/utils/shellPalette.js
+msgid "Device history of {0}"
+msgstr "Historial del equipo {0}"
+
+#: frontend/src/utils/shellPalette.js
+msgid "No serial or batch «{0}»"
+msgstr "Ninguna serie ni lote «{0}»"
+
+#: frontend/src/utils/shellPalette.js
+msgid "Not in the system. Look up the device history in Taller."
+msgstr "No está en el sistema. Busca el historial del equipo en Taller."
+
+#: frontend/src/utils/shellPalette.js
+msgid "Not in the system. Check the code and try again."
+msgstr "No está en el sistema. Revisa el código y vuelve a intentar."
+
+#: frontend/src/utils/shellPalette.js
+msgid "Out of stock"
+msgstr "Sin existencia"
+
+#: frontend/src/utils/shellPalette.js
+msgid "See «{0}» in Productos"
+msgstr "Ver «{0}» en Productos"

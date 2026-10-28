@@ -1,4 +1,8 @@
-import { can, moduleEnabled } from '@/vendor/muelle-shell/contracts'
+import {
+  can,
+  matchTokens,
+  moduleEnabled,
+} from '@/vendor/muelle-shell/contracts'
 import { TITLE, manualApi } from '@/composables/useManual'
 
 // ⌘K provider for Manual de la tienda: the articles this person may read
@@ -13,12 +17,6 @@ function tr(message, replace) {
     replace?.[n] !== undefined ? replace[n] : match,
   )
 }
-const has = (text, ...values) =>
-  values.some((value) =>
-    String(value || '')
-      .toLowerCase()
-      .includes(text.toLowerCase()),
-  )
 
 export function createManualProvider({ boot, api = manualApi }) {
   return {
@@ -32,7 +30,7 @@ export function createManualProvider({ boot, api = manualApi }) {
       const title = tr('New article in the shop manual')
       if (
         can(boot.value, 'manual', 'write') &&
-        has(query.text, title, 'nuevo artículo manual de la tienda')
+        matchTokens(query.text, title, 'nuevo artículo manual de la tienda')
       )
         items.push({
           id: 'manual.new',
@@ -72,7 +70,7 @@ export function createManualProvider({ boot, api = manualApi }) {
           href: `/manual?q=${encodeURIComponent(query.text)}`,
         })
       for (const category of page?.categories || [])
-        if (has(query.text, category))
+        if (matchTokens(query.text, category))
           items.push({
             id: `manual.categoria.${category}`,
             group: 'ir_a',
