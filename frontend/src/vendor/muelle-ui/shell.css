@@ -1,4 +1,4 @@
-/* Vendored from muelle/workspace/packages/ui@0.1.0 (ce74d3b9f43a). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. */
+/* Vendored from muelle/workspace/packages/ui@0.1.0 (1ceb2df0a0ad). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. */
 /* The Muelle shell's type, motion and feel, shared by every app built on
    @muelle/ui. Import it after frappe-ui's style and the @muelle/tokens CSS.
    It needs the frappe-ui Tailwind preset for the colour tokens it names. */

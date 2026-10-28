@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/ui@0.1.0 (ce74d3b9f43a). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory.
+// Vendored from muelle/workspace/packages/ui@0.1.0 (1ceb2df0a0ad). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory.
 // The Muelle shell's shared screen kit: the crm shell, Taller and Clínica
 // build their lists, records and sheets from it. Do and don't for each:
 // crm/docs/design/MOBILE_REFERENCES.md «Componentes»; live demo at /crm/_ui.

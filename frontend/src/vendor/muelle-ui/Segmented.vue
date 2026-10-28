@@ -1,4 +1,4 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (ce74d3b9f43a). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (1ceb2df0a0ad). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <template>
   <!-- Two to four views of the same thing (Shell SPEC §2.2.4): one outlined
        track, equal segments, the chosen one tonal with a check. Not for
@@ -8,7 +8,12 @@
     ref="root"
     role="radiogroup"
     :aria-label="label"
-    class="flex w-full overflow-hidden rounded-full border border-outline-gray-2"
+    class="flex w-full rounded-full border border-outline-gray-2"
+    :class="
+      fit === 'content'
+        ? 'overflow-x-auto overscroll-x-contain [scrollbar-width:none]'
+        : 'overflow-hidden'
+    "
     data-ui-segmented
     @keydown="onKey"
   >
@@ -20,8 +25,11 @@
       :aria-checked="String(option.value === modelValue)"
       :tabindex="tabStop(option.value, index) ? 0 : -1"
       :data-index="index"
-      class="flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1.5 px-2 py-1 text-sm font-medium leading-tight"
+      class="flex min-h-11 items-center justify-center gap-1.5 px-2 py-1 text-sm font-medium leading-tight"
       :class="[
+        fit === 'content'
+          ? 'flex-auto whitespace-nowrap px-3'
+          : 'min-w-0 flex-1',
         index ? 'border-l border-outline-gray-2' : '',
         option.value === modelValue
           ? 'bg-surface-gray-3 text-ink-gray-9'
@@ -51,7 +59,7 @@
   </div>
 </template>
 <script setup>
-import { ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 
 const props = defineProps({
   modelValue: { type: [String, Number], default: '' },
@@ -59,6 +67,9 @@ const props = defineProps({
   options: { type: Array, required: true },
   /** What the segments choose, for screen readers («Vista»). */
   label: { type: String, default: '' },
+  /** 'equal' segments (default), or 'content': each at least as wide as its
+   *  words (never hyphenated at 305 px or large text), the track scrolls. */
+  fit: { type: String, default: 'equal' },
 })
 const emit = defineEmits(['update:modelValue'])
 const root = ref(null)
@@ -68,6 +79,26 @@ const current = () =>
 // One tab stop: the chosen segment, or the first when none is.
 const tabStop = (value, index) =>
   value === props.modelValue || (current() < 0 && index === 0)
+
+// A scrolling track keeps the chosen segment in sight. Only the track moves:
+// scrollIntoView would also scroll the page to a Segmented below the fold.
+function reveal() {
+  if (props.fit !== 'content') return
+  const track = root.value
+  const chosen = track?.querySelector('[aria-checked="true"]')
+  if (!track || !chosen) return
+  const left = chosen.offsetLeft - track.offsetLeft
+  const right = left + chosen.offsetWidth
+  if (left < track.scrollLeft) track.scrollLeft = left
+  else if (right > track.scrollLeft + track.clientWidth)
+    track.scrollLeft = right - track.clientWidth
+}
+onMounted(reveal)
+// Counts that arrive later widen the segments: look again.
+watch(() => [props.modelValue, props.options], reveal, {
+  flush: 'post',
+  deep: true,
+})
 
 function select(value) {
   if (value !== props.modelValue) emit('update:modelValue', value)
