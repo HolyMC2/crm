@@ -270,8 +270,9 @@ describe('colors and calendars', () => {
 
 describe('phone swipe paging', () => {
   it('commits a long or quick horizontal swipe, springs back a short one', async () => {
-    const { swipeOutcome, swipeAxis } =
-      await import('@/components/agenda/agendaSwipe')
+    const { swipeOutcome, swipeAxis } = await import(
+      '@/components/agenda/agendaSwipe'
+    )
     expect(swipeOutcome(-120, 400, 390)).toBe(1)
     expect(swipeOutcome(120, 400, 390)).toBe(-1)
     expect(swipeOutcome(-50, 400, 390)).toBe(0)
@@ -282,8 +283,9 @@ describe('phone swipe paging', () => {
   })
 
   it('keys a doctor or technician calendar by source and person', async () => {
-    const { calendarKey, splitCalendarKey, sourcesFor } =
-      await import('@/composables/useAgenda')
+    const { calendarKey, splitCalendarKey, sourcesFor } = await import(
+      '@/composables/useAgenda'
+    )
     expect(
       calendarKey({ source: 'Patient Appointment', resourceIds: ['DR-1'] }),
     ).toBe('Patient Appointment/DR-1')

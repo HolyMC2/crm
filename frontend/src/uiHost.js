@@ -12,6 +12,8 @@ configureUi({
   statusLabel,
   statusTone,
   isMobile,
-  bell: defineAsyncComponent(() => import('@/components/avisos/AvisosBell.vue')),
+  bell: defineAsyncComponent(
+    () => import('@/components/avisos/AvisosBell.vue'),
+  ),
   showBell: () => moduleEnabled(shellBoot.value, 'avisos'),
 })
