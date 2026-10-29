@@ -11489,18 +11489,6 @@ msgid "Load more"
 msgstr "Cargar más"
 
 #: frontend/src/pages/Compras.vue
-msgid "Other purchase documents"
-msgstr "Otros documentos de compra"
-
-#: frontend/src/pages/Compras.vue
-msgid "Receipts, invoices and quotations (Desk)"
-msgstr "Recepciones, facturas y cotizaciones (Escritorio)"
-
-#: frontend/src/pages/Compras.vue
-msgid "Supplier catalogs (Desk)"
-msgstr "Catálogos de proveedores (Escritorio)"
-
-#: frontend/src/pages/Compras.vue
 msgid "Ask your manager for access to purchase orders or purchase requests."
 msgstr "Pide al encargado acceso a órdenes de compra o solicitudes de compra."
 

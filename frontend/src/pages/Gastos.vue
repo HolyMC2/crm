@@ -879,25 +879,10 @@ function clearOrder() {
   list.navigate({ po: '' })
 }
 
-// The supplier CFDI importer lives in the Inventario workspace for now; it
-// reads the queue to open from this tab's session state.
+// A supplier's CFDI is uploaded in Archivos: «Crear compra desde este CFDI»
+// leaves the draft bill and continues here (doco.docoutils.documents.fiscal).
 function openCfdiImport() {
-  try {
-    const key = `muelle-workspaces:${boot.value?.user}:inventario`
-    const saved = JSON.parse(sessionStorage.getItem(key) || '{}') || {}
-    sessionStorage.setItem(
-      key,
-      JSON.stringify({
-        ...saved,
-        queue: 'supplier_invoices',
-        start: 0,
-        search: '',
-      }),
-    )
-  } catch {
-    /* the workspace still opens; the worker picks the list */
-  }
-  window.location.assign('/app/muelle-inventario')
+  router.push({ name: 'Archivos' })
 }
 
 async function retryBoot() {

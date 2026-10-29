@@ -378,22 +378,6 @@
               @click="list.load({ more: true })"
             />
           </div>
-          <nav
-            v-if="state.segment === 'historial'"
-            :aria-label="__('Other purchase documents')"
-            class="flex flex-col gap-1 px-4 pt-4 text-sm sm:px-6"
-          >
-            <a
-              class="hidden min-h-11 py-2 text-ink-blue-link underline sm:block"
-              href="/app/muelle-compras?queue=receipts"
-              >{{ __('Receipts, invoices and quotations (Desk)') }}</a
-            >
-            <a
-              class="hidden min-h-11 py-2 text-ink-blue-link underline sm:block"
-              href="/app/muelle-compras?catalog_section=catalogs"
-              >{{ __('Supplier catalogs (Desk)') }}</a
-            >
-          </nav>
           <!-- Room under the last row for the FAB. -->
           <div
             v-if="list.phone.value && boot?.capabilities?.create"
