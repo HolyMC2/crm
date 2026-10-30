@@ -1,281 +1,409 @@
 <template>
+  <!-- An employee's expense, read like a chat with them (Shell look,
+       record-header): the bar names them with the state and the expense under
+       it, the bolt with its steps and «⋯» with every tool (print, share,
+       mail…). The amount and the one next step are the hero, and they change
+       in place: the page is never rebuilt. Then what was spent, what was
+       reimbursed, the receipt photos and the history; Archivos and the
+       engine's Actividad sit beside them on a desk. -->
   <div
-    class="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto"
+    class="relative flex h-full min-w-0 flex-1 flex-col overflow-hidden"
     data-testid="claim-record"
   >
-    <div class="mx-auto w-full max-w-4xl px-4 pb-28 pt-4 sm:px-6 sm:pb-10">
-      <nav class="mb-3">
-        <component
-          :is="back.route ? 'RouterLink' : 'a'"
-          v-bind="back.route ? { to: back.route } : { href: back.href }"
-          data-testid="claim-back"
-          class="inline-flex min-h-11 items-center gap-1 text-sm text-ink-gray-7 hover:text-ink-gray-9"
-        >
-          <LucideArrowLeft class="h-4 w-4" />
-          {{
-            back.label === 'Gastos'
-              ? __('Gastos', null, 'Gastos')
-              : __('Back to {0}', [back.label])
-          }}
-        </component>
-      </nav>
+    <AppBar
+      :back="true"
+      :back-label="backLabel"
+      :title="title"
+      :bell="phone"
+      :loading="loading && loaded"
+      @back="onBack"
+    >
+      <template v-if="loaded" #title>
+        <div class="flex min-h-12 min-w-0 flex-col justify-center px-3">
+          <span
+            class="title-face line-clamp-2 break-words text-xl font-semibold leading-tight [text-wrap:balance]"
+            data-appbar-title
+            >{{ title }}</span
+          >
+          <span class="flex min-w-0 items-center gap-2 pt-0.5">
+            <StatusChip
+              :label="stateLabel(doc)"
+              :tone="chipTone"
+              data-testid="claim-status"
+            />
+            <span class="truncate text-sm leading-tight text-ink-gray-6">{{
+              kindLine
+            }}</span>
+          </span>
+        </div>
+      </template>
+      <template #actions>
+        <RecordIsland
+          v-if="loaded"
+          :reach="kit.record.value?.header?.reach || {}"
+          :who="doc.employee_name || ''"
+          :mail="kit.record.value?.actions?.email || null"
+          :groups="boltGroups"
+          :phone="phone"
+          :subtitle="kit.scopeTitle.value"
+          @mail="mail"
+          @pick="onBolt"
+          @tools="kit.openTools()"
+        />
+      </template>
+    </AppBar>
 
-      <section
+    <div class="min-h-0 flex-1 overflow-y-auto pb-28 sm:pb-10">
+      <EmptyState
         v-if="guard"
         role="alert"
-        class="mx-auto max-w-xl space-y-4 py-6"
+        :state="guard.kind === 'permission' ? 'denied' : 'error'"
+        :title="guard.title"
+        :message="guard.detail"
+        :action="__('Retry', null, 'Gastos')"
+        @action="load"
+      />
+      <EmptyState
+        v-else-if="loading && !loaded"
+        role="status"
+        state="loading"
+        :title="__('Loading expense…')"
+      />
+
+      <div
+        v-else-if="loaded"
+        class="mx-auto grid w-full max-w-6xl gap-x-6 lg:grid-cols-[minmax(0,1fr)_22rem]"
       >
-        <h1 class="text-xl font-semibold">{{ guard.title }}</h1>
-        <p class="text-base text-ink-gray-7">{{ guard.detail }}</p>
-        <div class="flex flex-wrap gap-2">
-          <Button :label="__('Retry', null, 'Gastos')" @click="load" />
-          <Button :label="__('Back to {0}', [back.label])" @click="goBack" />
-        </div>
-      </section>
-
-      <div v-else-if="loading && !loaded" role="status" class="py-10 text-sm">
-        {{ __('Loading expense…') }}
-      </div>
-
-      <template v-else-if="loaded">
-        <!-- A header whose height does not depend on the state: the next-step block
-             below keeps its place on screen when a decision changes the badge or amount. -->
-        <header class="mb-4 flex items-start gap-3">
-          <div class="min-w-0 flex-1">
-            <p class="truncate text-sm text-ink-gray-6">{{ doc.name }}</p>
-            <div class="mt-1 flex">
-              <Badge
-                class="max-w-full"
-                :theme="stateTheme(doc)"
-                :label="stateLabel(doc)"
-              />
-            </div>
-            <h1 class="truncate text-2xl font-semibold text-ink-gray-9">
-              {{ doc.employee_name }}
-            </h1>
-            <p class="mt-1 text-sm text-ink-gray-6">
-              {{
-                [doc.type_label, doc.date, doc.company]
-                  .filter(Boolean)
-                  .join(' · ')
-              }}
+        <div class="flex min-w-0 flex-col gap-5 pt-4">
+          <!-- The hero: how much, where it stands, and the next step. It
+               changes in place: a decision never moves the page under the
+               thumb. -->
+          <section
+            class="flex flex-col gap-2 px-4"
+            :aria-label="__('Next step')"
+            data-testid="claim-next"
+          >
+            <p
+              class="num text-3xl font-semibold tabular-nums leading-tight text-ink-gray-9"
+            >
+              {{ money(doc.total, doc.currency) }}
             </p>
-          </div>
-          <div class="flex w-36 shrink-0 flex-col items-end gap-1 text-right">
-            <span class="text-xl font-semibold tabular-nums text-ink-gray-9">{{
-              money(doc.total, doc.currency)
-            }}</span>
-            <span
+            <p
               v-if="doc.sanctioned && doc.sanctioned < doc.claimed"
-              class="text-sm text-ink-gray-6"
-              >{{
-                __('Asked for {0}', [money(doc.claimed, doc.currency)])
-              }}</span
+              class="text-base text-ink-gray-7"
             >
-          </div>
-        </header>
+              {{ __('Asked for {0}', [money(doc.claimed, doc.currency)]) }}
+            </p>
+            <p class="flex flex-wrap gap-x-3 text-base text-ink-gray-7">
+              <span v-if="doc.type_label">{{ doc.type_label }}</span>
+              <span v-if="doc.date">{{ formatDay(doc.date) }}</span>
+            </p>
 
-        <!-- The next step: it changes in place, the page is never rebuilt. -->
-        <section
-          class="mb-4 rounded-7 border border-outline-gray-2 p-4"
-          :aria-label="__('Next step')"
-          data-testid="claim-next"
-        >
-          <template v-if="done">
-            <p role="status" class="text-base-medium text-ink-green-8">
-              {{ done.message }}
-            </p>
-            <p v-if="done.empty" class="mt-1 text-sm text-ink-gray-7">
-              {{ done.empty }}
-            </p>
-            <div class="mt-3 flex flex-wrap gap-2">
-              <template v-for="action in done.actions" :key="action.key">
-                <Button
-                  v-if="action.key === 'reimburse'"
-                  variant="solid"
-                  class="min-h-11 sm:min-h-8"
-                  :label="__('Reimburse now')"
-                  @click="reimburseOpen = true"
-                />
-                <Button
-                  v-else-if="action.key === 'ask_reimburse'"
-                  class="min-h-11 sm:min-h-8"
-                  data-testid="claim-ask-reimburse"
-                  :label="__('Ask for it to be reimbursed')"
-                  @click="ask('reimburse')"
-                />
-              </template>
-              <Button
-                v-if="nextName"
-                variant="solid"
-                class="min-h-11 sm:min-h-8"
-                data-testid="claim-next-button"
-                :label="__('Next', null, 'Gastos')"
-                @click="openNext"
-              />
-              <Button
-                v-else
-                class="min-h-11 sm:min-h-8"
-                :label="__('Back to {0}', [back.label])"
-                @click="goBack"
-              />
-            </div>
-          </template>
-          <template v-else>
-            <p class="text-base text-ink-gray-8">{{ explanation }}</p>
-            <p
-              v-if="advanceLine"
-              class="mt-1 text-sm text-ink-gray-7"
-              data-testid="claim-advance"
-            >
-              {{ advanceLine }}
-            </p>
-            <div class="mt-3 flex flex-wrap gap-2">
-              <template v-for="action in actions" :key="action.key">
-                <template v-if="action.key === 'edit' && action.allowed">
-                  <Button
-                    class="min-h-11 sm:min-h-8"
-                    icon-left="lucide-pencil"
-                    :label="__('Edit', null, 'Gastos')"
-                    @click="sheetOpen = true"
-                  />
-                </template>
-                <template v-else-if="action.key === 'send' && action.allowed">
-                  <Button
-                    variant="solid"
-                    class="min-h-11 sm:min-h-8"
-                    :label="
-                      action.resend
-                        ? __('Change who approves it')
-                        : __('Send for approval')
-                    "
-                    @click="sheetOpen = true"
-                  />
-                </template>
-                <template
-                  v-else-if="
-                    action.key === 'decide' && action.allowed && pendingDecide
-                  "
-                >
-                  <!-- A decision sent without an answer: it is checked, never replaced by another. -->
-                  <div
-                    class="w-full space-y-2 rounded-6 bg-surface-gray-2 p-3 text-sm text-ink-gray-8"
-                    role="status"
-                    data-testid="claim-pending-decision"
-                  >
-                    <p>
-                      {{
-                        __(
-                          'Your decision «{0}» was sent and we did not hear back. Check its result before deciding anything else; it is never done twice.',
-                          [decisionLabel(pendingDecide.data)],
-                        )
-                      }}
-                    </p>
-                    <Button
-                      variant="solid"
-                      class="min-h-11 sm:min-h-8"
-                      :loading="busy"
-                      :label="__('Check result')"
-                      @click="checkPending"
-                    />
-                  </div>
-                </template>
-                <template v-else-if="action.key === 'decide' && action.allowed">
-                  <Button
-                    variant="solid"
-                    class="min-h-11 sm:min-h-8"
-                    :loading="busy"
-                    data-testid="claim-approve"
-                    :label="__('Approve', null, 'Gastos')"
-                    @click="approve"
-                  />
-                  <Button
-                    class="min-h-11 sm:min-h-8"
-                    data-testid="claim-approve-less"
-                    :label="__('Approve less')"
-                    @click="openDecide('less')"
-                  />
-                  <Button
-                    class="min-h-11 sm:min-h-8"
-                    :label="__('Reject', null, 'Gastos')"
-                    @click="openDecide('reject')"
-                  />
-                  <Button
-                    class="min-h-11 sm:min-h-8"
-                    :label="__('Ask for a correction')"
-                    @click="openDecide('return')"
-                  />
-                </template>
-                <template
-                  v-else-if="action.key === 'reimburse' && action.allowed"
-                >
-                  <Button
-                    variant="solid"
-                    class="min-h-11 sm:min-h-8"
-                    data-testid="claim-reimburse"
-                    :label="__('Reimburse', null, 'Gastos')"
+            <template v-if="done">
+              <p role="status" class="text-base-medium text-ink-green-8">
+                {{ done.message }}
+              </p>
+              <p v-if="done.empty" class="text-base text-ink-gray-7">
+                {{ done.empty }}
+              </p>
+              <div class="flex flex-wrap gap-2 pt-2">
+                <template v-for="action in done.actions" :key="action.key">
+                  <button
+                    v-if="action.key === 'reimburse'"
+                    type="button"
+                    :class="['press', BTN.filled]"
                     @click="reimburseOpen = true"
-                  />
-                </template>
-                <template v-else-if="action.key === 'desk'">
-                  <a
-                    class="inline-flex min-h-11 items-center px-2 text-sm text-ink-blue-link underline sm:min-h-8"
-                    :href="`/app/expense-claim/${encodeURIComponent(doc.name)}`"
-                    >{{ __('Open the full expense form') }}</a
                   >
+                    <span class="lucide-hand-coins size-5" aria-hidden="true" />
+                    {{ __('Reimburse now') }}
+                  </button>
+                  <button
+                    v-else-if="action.key === 'ask_reimburse'"
+                    type="button"
+                    :class="['press', BTN.tonal]"
+                    data-testid="claim-ask-reimburse"
+                    @click="ask('reimburse')"
+                  >
+                    <span class="lucide-send size-5" aria-hidden="true" />
+                    {{ __('Ask for it to be reimbursed') }}
+                  </button>
                 </template>
-                <template v-else-if="action.fallback">
-                  <p class="w-full text-sm text-ink-gray-7">
-                    {{ action.reason }}
-                  </p>
-                  <Button
-                    variant="solid"
-                    class="min-h-11 sm:min-h-8"
-                    :label="fallbackLabel(action)"
-                    @click="ask(action.fallback, action.reason)"
+                <button
+                  v-if="nextName"
+                  type="button"
+                  :class="['press', BTN.filled]"
+                  data-testid="claim-next-button"
+                  @click="openNext"
+                >
+                  {{ __('Next', null, 'Gastos') }}
+                </button>
+                <button
+                  v-else
+                  type="button"
+                  :class="['press', BTN.tonal]"
+                  @click="goBack"
+                >
+                  {{ __('Back to {0}', [back.label]) }}
+                </button>
+              </div>
+            </template>
+            <template v-else>
+              <p class="break-words text-base text-ink-gray-8">
+                {{ explanation }}
+              </p>
+              <p
+                v-if="advanceLine"
+                class="break-words text-sm text-ink-gray-7"
+                data-testid="claim-advance"
+              >
+                {{ advanceLine }}
+              </p>
+              <!-- A decision sent without an answer: it is checked, never
+                   replaced by another. -->
+              <div
+                v-if="pendingDecide && canDecide"
+                class="space-y-2 rounded-6 bg-surface-gray-2 p-3 text-base text-ink-gray-8"
+                role="status"
+                data-testid="claim-pending-decision"
+              >
+                <p>
+                  {{
+                    __(
+                      'Your decision «{0}» was sent and we did not hear back. Check its result before deciding anything else; it is never done twice.',
+                      [decisionLabel(pendingDecide.data)],
+                    )
+                  }}
+                </p>
+                <button
+                  type="button"
+                  :class="['press', BTN.filled]"
+                  :disabled="busy"
+                  @click="checkPending"
+                >
+                  <span
+                    :class="[
+                      busy
+                        ? 'lucide-loader-circle animate-spin'
+                        : 'lucide-refresh-cw',
+                      'size-5',
+                    ]"
+                    aria-hidden="true"
                   />
-                </template>
-              </template>
-            </div>
-            <p
-              v-if="data.assignments?.length"
-              class="mt-3 text-sm text-ink-gray-7"
+                  {{ __('Check result') }}
+                </button>
+              </div>
+              <p
+                v-for="action in fallbacks"
+                :key="`why-${action.key}`"
+                class="break-words text-base text-ink-gray-7"
+              >
+                {{ action.reason }}
+              </p>
+              <div
+                v-if="steps.length || deskOpen"
+                class="flex flex-wrap gap-2 pt-2"
+              >
+                <button
+                  v-for="(step, i) in steps"
+                  :key="step.key"
+                  type="button"
+                  :class="['press', i === 0 && step.filled ? BTN.filled : BTN.tonal]"
+                  :disabled="busy && step.busy"
+                  :data-step="step.key"
+                  :data-testid="step.testid"
+                  @click="step.run()"
+                >
+                  <span
+                    :class="[
+                      busy && step.busy
+                        ? 'lucide-loader-circle animate-spin'
+                        : step.icon,
+                      'size-5',
+                    ]"
+                    aria-hidden="true"
+                  />
+                  {{ step.label }}
+                </button>
+                <a
+                  v-if="deskOpen"
+                  class="inline-flex min-h-11 items-center px-2 text-base text-ink-blue-link underline"
+                  :href="`/app/expense-claim/${encodeURIComponent(doc.name)}`"
+                  >{{ __('Open the full expense form') }}</a
+                >
+              </div>
+              <p
+                v-if="data.assignments?.length"
+                class="break-words text-sm text-ink-gray-7"
+              >
+                {{
+                  __('Waiting on: {0}', [
+                    data.assignments.map((a) => a.full_name).join(', '),
+                  ])
+                }}
+              </p>
+            </template>
+            <ClaimGuard v-if="refusal" :guard="refusal" @action="onAction" />
+            <div
+              v-if="problem"
+              role="alert"
+              class="space-y-2 rounded-6 bg-surface-red-1 p-3 text-base text-ink-red-7"
             >
+              <p>
+                <strong>{{ problem.title }}.</strong> {{ problem.detail }}
+              </p>
+              <button
+                v-if="problem.kind === 'conflict' || problem.kind === 'offline'"
+                type="button"
+                :class="['press', BTN.tonal]"
+                @click="refresh"
+              >
+                {{ problem.action }}
+              </button>
+            </div>
+          </section>
+
+          <!-- What was spent, line by line, with what was approved. -->
+          <section class="px-4" aria-labelledby="claim-spent">
+            <h2
+              id="claim-spent"
+              class="pb-1 text-base font-semibold text-ink-gray-9"
+            >
+              {{ __('What was spent') }}
+            </h2>
+            <ul class="divide-y divide-outline-gray-1">
+              <li
+                v-for="(line, i) in data.expenses"
+                :key="i"
+                class="flex min-h-14 min-w-0 items-center gap-3 py-2"
+              >
+                <span
+                  class="flex size-10 flex-none items-center justify-center rounded-full bg-surface-gray-2 text-ink-gray-7"
+                  aria-hidden="true"
+                >
+                  <span class="lucide-receipt size-5" />
+                </span>
+                <span class="flex min-w-0 flex-1 flex-col">
+                  <span class="break-words text-base text-ink-gray-9">{{
+                    line.type_label
+                  }}</span>
+                  <span
+                    v-if="line.date || line.description"
+                    class="break-words text-sm text-ink-gray-6"
+                    >{{
+                      [line.date && formatDay(line.date), line.description]
+                        .filter(Boolean)
+                        .join(' · ')
+                    }}</span
+                  >
+                </span>
+                <span class="num shrink-0 text-right tabular-nums">
+                  <span class="block text-base text-ink-gray-9">{{
+                    money(line.amount, doc.currency)
+                  }}</span>
+                  <span
+                    v-if="
+                      Number(doc.docstatus) === 1 &&
+                      line.sanctioned < line.amount
+                    "
+                    class="block text-sm text-ink-gray-6"
+                    >{{
+                      __('approved {0}', [money(line.sanctioned, doc.currency)])
+                    }}</span
+                  >
+                </span>
+              </li>
+            </ul>
+          </section>
+
+          <!-- Reimbursements and their bank side. -->
+          <section
+            v-if="data.payments?.length || doc.reimbursed"
+            class="px-4"
+            aria-labelledby="claim-paid"
+          >
+            <h2
+              id="claim-paid"
+              class="pb-1 text-base font-semibold text-ink-gray-9"
+            >
+              {{ __('Reimbursements', null, 'Gastos') }}
+            </h2>
+            <p class="text-base text-ink-gray-8">
               {{
-                __('Waiting on: {0}', [
-                  data.assignments.map((a) => a.full_name).join(', '),
+                __('Reimbursed {0} of {1}', [
+                  money(doc.reimbursed, doc.currency),
+                  money(owedTotal(doc), doc.currency),
                 ])
               }}
             </p>
-          </template>
-          <ClaimGuard
-            v-if="refusal"
-            class="mt-3"
-            :guard="refusal"
-            @action="onAction"
-          />
-          <div
-            v-if="problem"
-            role="alert"
-            class="mt-3 space-y-2 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
-          >
-            <p>
-              <strong>{{ problem.title }}.</strong> {{ problem.detail }}
-            </p>
-            <Button
-              v-if="problem.kind === 'conflict' || problem.kind === 'offline'"
-              :label="problem.action"
-              @click="refresh"
-            />
-          </div>
-        </section>
+            <ul class="divide-y divide-outline-gray-1">
+              <li
+                v-for="p in data.payments"
+                :key="p.name"
+                class="flex min-h-14 min-w-0 items-center gap-3 py-2"
+              >
+                <span
+                  class="flex size-10 flex-none items-center justify-center rounded-full bg-surface-gray-2 text-ink-gray-7"
+                  aria-hidden="true"
+                >
+                  <span class="lucide-banknote size-5" />
+                </span>
+                <span class="flex min-w-0 flex-1 flex-col">
+                  <span class="num text-base tabular-nums text-ink-gray-9">
+                    {{ money(p.amount, p.currency) }}
+                  </span>
+                  <span class="break-words text-sm text-ink-gray-6">{{
+                    paymentLine(p)
+                  }}</span>
+                </span>
+              </li>
+            </ul>
+          </section>
 
-        <div class="grid gap-4 sm:grid-cols-2">
-          <section class="rounded-7 border border-outline-gray-2 p-4">
-            <h2 class="mb-2 text-base font-semibold">
+          <!-- The expense's own data as rows. -->
+          <section class="px-4" aria-labelledby="claim-datos">
+            <h2
+              id="claim-datos"
+              class="pb-1 text-base font-semibold text-ink-gray-9"
+            >
+              {{ __('Expense details') }}
+            </h2>
+            <ul class="divide-y divide-outline-gray-1">
+              <li
+                v-for="fact in facts"
+                :key="fact.key"
+                class="flex min-h-14 min-w-0 items-center gap-3 py-2"
+              >
+                <span
+                  class="flex size-10 flex-none items-center justify-center rounded-full bg-surface-gray-2 text-ink-gray-7"
+                  aria-hidden="true"
+                >
+                  <span :class="[fact.icon, 'size-5']" />
+                </span>
+                <span class="flex min-w-0 flex-1 flex-col">
+                  <span class="text-sm text-ink-gray-6">{{ fact.label }}</span>
+                  <span class="break-words text-base text-ink-gray-9">{{
+                    fact.value
+                  }}</span>
+                </span>
+              </li>
+            </ul>
+          </section>
+        </div>
+
+        <aside class="flex min-w-0 flex-col gap-5 pt-5 lg:pt-4">
+          <!-- The receipt photos: tap to zoom; adding one is a step. -->
+          <section class="px-4" aria-labelledby="claim-fotos">
+            <h2
+              id="claim-fotos"
+              class="pb-1 text-base font-semibold text-ink-gray-9"
+            >
               {{ __('Receipt photos') }}
             </h2>
-            <p v-if="!data.photos?.length" class="text-sm text-ink-gray-6">
+            <p
+              v-if="!data.photos?.length"
+              class="flex min-h-11 items-center gap-2 text-base text-ink-gray-6"
+            >
+              <span class="lucide-camera size-5" aria-hidden="true" />
               {{ __('No photo yet.') }}
             </p>
             <ul v-else class="grid grid-cols-3 gap-2">
@@ -283,7 +411,7 @@
                 <button
                   v-if="photo.is_image"
                   type="button"
-                  class="block w-full overflow-hidden rounded-6 border border-outline-gray-2"
+                  class="press block w-full overflow-hidden rounded-6 border border-outline-gray-2"
                   :aria-label="__('Zoom {0}', [photo.file_name])"
                   @click="zoom = photo"
                 >
@@ -299,116 +427,62 @@
                   :href="photo.file_url"
                   target="_blank"
                   rel="noopener"
-                  class="flex aspect-square items-center justify-center rounded-6 border border-outline-gray-2 p-2 text-center text-xs text-ink-blue-link underline"
+                  class="flex aspect-square items-center justify-center rounded-6 border border-outline-gray-2 p-2 text-center text-sm text-ink-blue-link underline"
                   >{{ photo.file_name }}</a
                 >
               </li>
             </ul>
           </section>
 
-          <section class="rounded-7 border border-outline-gray-2 p-4">
-            <h2 class="mb-2 text-base font-semibold">
-              {{ __('What was spent') }}
+          <section
+            v-if="data.history?.length"
+            class="px-4"
+            aria-labelledby="claim-historia"
+          >
+            <h2
+              id="claim-historia"
+              class="pb-1 text-base font-semibold text-ink-gray-9"
+            >
+              {{ __('History') }}
             </h2>
-            <ul class="space-y-2 text-sm text-ink-gray-8">
+            <ul class="divide-y divide-outline-gray-1">
               <li
-                v-for="(line, i) in data.expenses"
+                v-for="(entry, i) in data.history"
                 :key="i"
-                class="flex justify-between gap-2"
+                class="flex min-h-14 min-w-0 items-center gap-3 py-2"
               >
-                <span class="min-w-0">
-                  <span class="block font-medium">{{ line.type_label }}</span>
-                  <span class="block text-ink-gray-6">{{
-                    [line.date, line.description].filter(Boolean).join(' · ')
+                <span
+                  class="flex size-10 flex-none items-center justify-center rounded-full bg-surface-gray-2 text-ink-gray-7"
+                  aria-hidden="true"
+                >
+                  <span class="lucide-history size-5" />
+                </span>
+                <span class="flex min-w-0 flex-1 flex-col">
+                  <span class="break-words text-base text-ink-gray-9">{{
+                    entry.text
+                  }}</span>
+                  <span class="text-sm text-ink-gray-6">{{
+                    [entry.who, entry.when && formatDay(entry.when)]
+                      .filter(Boolean)
+                      .join(' · ')
                   }}</span>
                 </span>
-                <span class="shrink-0 text-right tabular-nums">
-                  {{ money(line.amount, doc.currency) }}
-                  <span
-                    v-if="
-                      Number(doc.docstatus) === 1 &&
-                      line.sanctioned < line.amount
-                    "
-                    class="block text-xs text-ink-gray-6"
-                    >{{
-                      __('approved {0}', [money(line.sanctioned, doc.currency)])
-                    }}</span
-                  >
-                </span>
-              </li>
-            </ul>
-            <p v-if="doc.approver_name" class="mt-3 text-sm text-ink-gray-7">
-              {{ __('Approver: {0}', [doc.approver_name]) }}
-            </p>
-          </section>
-
-          <section
-            v-if="data.payments?.length || doc.reimbursed"
-            class="rounded-7 border border-outline-gray-2 p-4"
-          >
-            <h2 class="mb-2 text-base font-semibold">
-              {{ __('Reimbursements', null, 'Gastos') }}
-            </h2>
-            <p class="text-sm text-ink-gray-8">
-              {{
-                __('Reimbursed {0} of {1}', [
-                  money(doc.reimbursed, doc.currency),
-                  money(owedTotal(doc), doc.currency),
-                ])
-              }}
-            </p>
-            <ul class="mt-2 space-y-2">
-              <li v-for="p in data.payments" :key="p.name" class="text-sm">
-                <span class="block font-medium tabular-nums text-ink-gray-9">
-                  {{ money(p.amount, p.currency) }} · {{ p.posting_date }}
-                </span>
-                <span class="block text-ink-gray-6">{{
-                  [
-                    p.reference_no,
-                    p.reference_date && p.reference_date !== p.posting_date
-                      ? __('bank date {0}', [p.reference_date])
-                      : '',
-                    p.mode_of_payment,
-                    p.name,
-                  ]
-                    .filter(Boolean)
-                    .join(' · ')
-                }}</span>
               </li>
             </ul>
           </section>
 
-          <section class="rounded-7 border border-outline-gray-2 p-4">
-            <h2 class="mb-2 text-base font-semibold">{{ __('History') }}</h2>
-            <ul class="space-y-2 text-sm">
-              <li v-for="(entry, i) in data.history" :key="i">
-                <span class="block text-ink-gray-8">{{ entry.text }}</span>
-                <span class="block text-xs text-ink-gray-6">{{
-                  [entry.who, entry.when?.slice(0, 16)]
-                    .filter(Boolean)
-                    .join(' · ')
-                }}</span>
-              </li>
-            </ul>
-          </section>
-        </div>
-
-        <ArchivosRegistroPanel
-          class="mt-4"
-          doctype="Expense Claim"
-          :name="doc.name"
-          :return-to="`/crm/gastos/gasto/${encodeURIComponent(doc.name)}`"
-          return-label="Gastos"
-        />
-        <RecordActivity
-          class="-mx-4 mt-6"
-          doctype="Expense Claim"
-          :name="doc.name"
-          :title="doc.employee_name || doc.name"
-          :files="false"
-          noun="el gasto"
-        />
-      </template>
+          <ArchivosRegistroPanel
+            class="px-4"
+            doctype="Expense Claim"
+            :name="doc.name"
+            :return-to="`/crm/gastos/gasto/${encodeURIComponent(doc.name)}`"
+            return-label="Gastos"
+          />
+          <!-- Shell SPEC §6 DD2: the engine's «Creado desde», Conexiones,
+               Actividad and the sheets behind «⋯». -->
+          <RecordKit :kit="kit" :title="doc.employee_name || doc.name" />
+        </aside>
+      </div>
     </div>
 
     <!-- Tap to zoom: the photo as large as the screen allows. -->
@@ -435,7 +509,7 @@
           :aria-label="__('Close', null, 'Gastos')"
           @click.stop="zoom = null"
         >
-          <LucideX class="h-5 w-5" />
+          <span class="lucide-x size-5" aria-hidden="true" />
         </button>
       </div>
     </Teleport>
@@ -476,14 +550,21 @@
 <script setup>
 import {
   computed,
-  defineAsyncComponent,
   onMounted,
   reactive,
   ref,
   watch,
 } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Badge, Button, toast } from 'frappe-ui'
+import { toast } from 'frappe-ui'
+import { AppBar, EmptyState, StatusChip } from '@/components/ui'
+import RecordIsland from '@/components/documentos/RecordIsland.vue'
+import RecordKit from '@/components/documentos/compras/RecordKit.vue'
+import { useRecordKit } from '@/components/documentos/compras/recordKit'
+import { isMobile } from '@/composables/breakpoint'
+import { recordActionsFor } from '@/documentos/acciones'
+import { BTN } from '@/documentos/tools'
+import { formatDay } from '@/utils/contactos'
 import ApprovalDialog from '@/components/gastos/ApprovalDialog.vue'
 import ClaimGuard from '@/components/gastos/ClaimGuard.vue'
 import ClaimSheet from '@/components/gastos/ClaimSheet.vue'
@@ -504,18 +585,14 @@ import {
   pendingOperation,
   runOnce,
   sameDecision,
+  stateChipTone,
   stateLabel,
-  stateTheme,
 } from '@/composables/useGastosEmpleados'
-import LucideArrowLeft from '~icons/lucide/arrow-left'
-import LucideX from '~icons/lucide/x'
 
-const RecordActivity = defineAsyncComponent(
-  () => import('@/components/documentos/RecordActivity.vue'),
-)
 const props = defineProps({ name: { type: String, required: true } })
 const route = useRoute()
 const router = useRouter()
+const phone = isMobile
 const data = ref({})
 const loading = ref(false)
 const loaded = ref(false)
@@ -537,6 +614,176 @@ const pendingDecide = ref(null)
 const doc = computed(() => data.value.document || {})
 const actions = computed(() => data.value.actions || [])
 const back = computed(() => claimBack(route.query))
+// The engine's shared record parts (Shell SPEC §6 DD2): «⋯», Actividad.
+const kit = useRecordKit('Expense Claim', {
+  name: () => props.name,
+  title: () => doc.value.employee_name || '',
+  modified: () => doc.value.modified,
+  changed: () => load(),
+})
+
+// ── the bar: who spent it, where it stands, which expense ─────────────────
+const title = computed(() =>
+  loaded.value
+    ? doc.value.employee_name || doc.value.name
+    : __('Gastos', null, 'Gastos'),
+)
+const kindLine = computed(() => __('Expense {0}', [doc.value.name]))
+const chipTone = computed(() => stateChipTone(doc.value))
+const backLabel = computed(() =>
+  back.value.label === 'Gastos'
+    ? __('Gastos', null, 'Gastos')
+    : __('Back to {0}', [back.value.label]),
+)
+function onBack(event) {
+  event?.preventDefault?.()
+  goBack()
+}
+
+// ── the hero's steps: one filled (send, approve, reimburse), the rest tonal ─
+const canDecide = computed(() =>
+  actions.value.some((a) => a.key === 'decide' && a.allowed),
+)
+const fallbacks = computed(() =>
+  actions.value.filter((a) => !a.allowed && a.fallback),
+)
+const deskOpen = computed(() => actions.value.some((a) => a.key === 'desk'))
+const canPrint = computed(() => !!kit.record.value?.actions?.print?.allowed)
+const steps = computed(() => {
+  const out = []
+  for (const action of actions.value) {
+    if (action.key === 'send' && action.allowed)
+      out.push({
+        key: 'send',
+        label: action.resend
+          ? __('Change who approves it')
+          : __('Send for approval'),
+        icon: 'lucide-send',
+        filled: true,
+        testid: 'claim-send-step',
+        run: () => (sheetOpen.value = true),
+      })
+    else if (action.key === 'decide' && action.allowed && !pendingDecide.value)
+      out.push(
+        {
+          key: 'approve',
+          label: __('Approve', null, 'Gastos'),
+          icon: 'lucide-check',
+          filled: true,
+          busy: true,
+          testid: 'claim-approve',
+          run: approve,
+        },
+        {
+          key: 'less',
+          label: __('Approve less'),
+          icon: 'lucide-minus',
+          testid: 'claim-approve-less',
+          run: () => openDecide('less'),
+        },
+        {
+          key: 'reject',
+          label: __('Reject', null, 'Gastos'),
+          icon: 'lucide-circle-x',
+          run: () => openDecide('reject'),
+        },
+        {
+          key: 'return',
+          label: __('Ask for a correction'),
+          icon: 'lucide-undo-2',
+          run: () => openDecide('return'),
+        },
+      )
+    else if (action.key === 'reimburse' && action.allowed)
+      out.push({
+        key: 'reimburse',
+        label: __('Reimburse', null, 'Gastos'),
+        icon: 'lucide-hand-coins',
+        filled: true,
+        testid: 'claim-reimburse',
+        run: () => (reimburseOpen.value = true),
+      })
+    else if (action.key === 'edit' && action.allowed)
+      out.push({
+        key: 'edit',
+        label: __('Edit', null, 'Gastos'),
+        icon: 'lucide-pencil',
+        run: () => (sheetOpen.value = true),
+      })
+    else if (!action.allowed && action.fallback)
+      out.push({
+        key: `ask-${action.key}`,
+        label: fallbackLabel(action),
+        icon: 'lucide-send',
+        filled: true,
+        run: () => ask(action.fallback, action.reason),
+      })
+  }
+  if (canPrint.value)
+    out.push({
+      key: 'print',
+      label: __('Print', null, 'Gastos'),
+      icon: 'lucide-printer',
+      run: () => kit.onTool('print'),
+    })
+  // The one filled step leads; the others follow in the server's order.
+  const lead = out.findIndex((step) => step.filled)
+  return lead > 0 ? [out[lead], ...out.filter((_, i) => i !== lead)] : out
+})
+
+// ── the bolt: the hero's steps; «⋯» keeps print, share, mail and the rest ─
+const boltSteps = computed(() =>
+  steps.value.filter((step) => step.key !== 'edit'),
+)
+const boltGroups = computed(() =>
+  recordActionsFor({
+    steps: boltSteps.value,
+    canEdit: actions.value.some((a) => a.key === 'edit' && a.allowed),
+    tools: kit.tools.value,
+  }),
+)
+function onBolt({ key }) {
+  if (key === 'editar') sheetOpen.value = true
+  else if (key.startsWith('paso:')) boltSteps.value[Number(key.slice(5))]?.run()
+  else kit.onTool(key)
+}
+function mail() {
+  const action = kit.record.value?.actions?.email
+  if (action?.allowed) kit.onTool('correo')
+  else
+    toast.error(action?.reason || __('This expense cannot be sent by email.'))
+}
+
+// ── the expense's own data as rows ──────────────────────────────────────
+const facts = computed(() => {
+  const d = doc.value
+  return [
+    d.approver_name && {
+      key: 'aprueba',
+      icon: 'lucide-user-round',
+      label: __('Approver', null, 'Gastos'),
+      value: d.approver_name,
+    },
+    d.company && {
+      key: 'empresa',
+      icon: 'lucide-store',
+      label: __('Company', null, 'Gastos'),
+      value: d.company,
+    },
+  ].filter(Boolean)
+})
+function paymentLine(p) {
+  return [
+    p.posting_date && formatDay(p.posting_date),
+    p.reference_no,
+    p.reference_date && p.reference_date !== p.posting_date
+      ? __('bank date {0}', [formatDay(p.reference_date)])
+      : '',
+    p.mode_of_payment,
+  ]
+    .filter(Boolean)
+    .join(' · ')
+}
 const listPath = computed(() =>
   typeof route.query.list === 'string' && route.query.list.startsWith('/gastos')
     ? route.query.list

@@ -675,7 +675,10 @@ describe('the claim record', () => {
         'Ask for a correction',
       ]),
     )
-    expect(root.textContent).toContain('Back to Pendientes')
+    // The record's own bar goes back where it came from.
+    expect(
+      root.querySelector('[data-appbar-back][aria-label="Back to Pendientes"]'),
+    ).toBeTruthy()
     await click('Approve')
     const sent = calls.find(([m]) => m === 'decide')[1]
     expect(sent).toMatchObject({

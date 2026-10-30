@@ -298,7 +298,8 @@ const routes = [
     name: 'GastoEmpleado',
     component: () => import('@/pages/GastoEmpleado.vue'),
     props: true,
-    meta: { app: 'gastos', title: 'Gastos', listParent: 'Gastos' },
+    // The expense owns its bar (AppBar with the way back), like the bill.
+    meta: { app: 'gastos', title: 'Gastos', ownPhoneHeader: true },
   },
   {
     path: '/productos',

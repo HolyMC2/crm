@@ -29739,3 +29739,17 @@ msgstr "{0}: {1} por {2} artículo(s), a {3}, entrega {4}."
 
 msgid "Some items are still loading. Show them all before confirming."
 msgstr "Aún se están cargando artículos. Muéstralos todos antes de confirmar."
+
+# Gasto de empleado: the record bar and details (lane compras-records-ux-20261030)
+msgctxt "Gastos"
+msgid "Approver"
+msgstr "Aprueba"
+
+msgid "Expense details"
+msgstr "Datos del gasto"
+
+msgid "Expense {0}"
+msgstr "Gasto {0}"
+
+msgid "This expense cannot be sent by email."
+msgstr "Este gasto no se puede enviar por correo."
