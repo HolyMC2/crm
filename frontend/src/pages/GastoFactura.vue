@@ -1,330 +1,370 @@
 <template>
-  <div class="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
-    <div class="mx-auto w-full max-w-4xl px-4 pb-28 pt-4 sm:px-6 sm:pb-10">
-      <!-- On a phone the shell AppBar's back arrow (meta.listParent) is the
-           way back; this link is for the desktop. -->
-      <nav class="mb-3 hidden sm:block">
-        <button
-          class="flex min-h-11 items-center gap-1 text-sm text-ink-gray-7 hover:text-ink-gray-9"
-          @click="goBack()"
-        >
-          <LucideArrowLeft class="h-4 w-4" />
-          {{
-            back
-              ? __('Back to {0}', [back.label])
-              : __('Gastos', null, 'Gastos')
-          }}
-        </button>
-      </nav>
+  <!-- A supplier bill, read like a chat with the supplier (Shell look,
+       record-header): the bar names them with the state and the folio under
+       it, the ways to reach them, the bolt with the bill's steps and «⋯» with
+       every tool (print, share, mail…). The amount and the one next step are
+       the hero; then the lines, totals, payments, the bill's data and its goods
+       in the warehouse (Escáner). Creado desde, Conexiones, Actividad and
+       Archivos follow, in the side column on a desk. -->
+  <div class="relative flex h-full min-w-0 flex-1 flex-col overflow-hidden">
+    <AppBar
+      :back="true"
+      :back-label="backLabel"
+      :title="title"
+      :bell="phone"
+      :loading="loading && loaded"
+      @back="onBack"
+    >
+      <template v-if="loaded" #title>
+        <div class="flex min-h-12 min-w-0 flex-col justify-center px-3">
+          <span
+            class="title-face line-clamp-2 break-words text-xl font-semibold leading-tight [text-wrap:balance]"
+            data-appbar-title
+            >{{ title }}</span
+          >
+          <span class="flex min-w-0 items-center gap-2 pt-0.5">
+            <StatusChip
+              :label="chip.label"
+              :tone="chip.tone"
+              data-testid="bill-status"
+            />
+            <span class="truncate text-sm leading-tight text-ink-gray-6">{{
+              kindLine
+            }}</span>
+          </span>
+        </div>
+      </template>
+      <template #actions>
+        <RecordIsland
+          v-if="loaded"
+          :reach="kit.record.value?.header?.reach || {}"
+          :who="doc.party || ''"
+          :mail="kit.record.value?.actions?.email || null"
+          :groups="boltGroups"
+          :phone="phone"
+          :subtitle="kit.scopeTitle.value"
+          @mail="mail"
+          @pick="onBolt"
+          @tools="kit.openTools()"
+        />
+      </template>
+    </AppBar>
 
-      <section
+    <div class="min-h-0 flex-1 overflow-y-auto pb-28 sm:pb-10">
+      <EmptyState
         v-if="guard"
         role="alert"
-        class="mx-auto max-w-xl space-y-4 py-6"
+        :state="guard.kind === 'permission' ? 'denied' : 'error'"
+        :title="guard.title"
+        :message="guard.detail"
+        :action="__('Retry', null, 'Gastos')"
+        @action="load"
+      />
+      <EmptyState
+        v-else-if="loading && !loaded"
+        role="status"
+        state="loading"
+        :title="__('Loading bill…')"
+      />
+
+      <div
+        v-else-if="loaded"
+        class="mx-auto grid w-full max-w-6xl gap-x-6 lg:grid-cols-[minmax(0,1fr)_22rem]"
       >
-        <h1 class="text-xl font-semibold">{{ guard.title }}</h1>
-        <p class="text-base text-ink-gray-7">{{ guard.detail }}</p>
-        <div class="flex flex-wrap gap-2">
-          <Button :label="__('Retry', null, 'Gastos')" @click="load" />
-          <Button
-            :label="
-              back ? __('Back to {0}', [back.label]) : __('Back to Gastos')
-            "
-            @click="goBack()"
-          />
-        </div>
-      </section>
+        <div class="flex min-w-0 flex-col gap-5 pt-4">
+          <!-- What was asked of me on this bill (Pendientes «Por aprobar»). -->
+          <div class="px-4 empty:hidden">
+            <ApprovalAsk
+              ref="askBanner"
+              doctype="Purchase Invoice"
+              :name="props.name"
+              @declined="decided"
+            >
+              <template #primary>
+                <button
+                  v-if="primaryAction"
+                  type="button"
+                  :class="['press', BTN.filled]"
+                  @click="primaryAction.run"
+                >
+                  {{ primaryAction.label }}
+                </button>
+              </template>
+            </ApprovalAsk>
+          </div>
 
-      <div v-else-if="loading && !loaded" role="status" class="py-10 text-sm">
-        {{ __('Loading bill…') }}
-      </div>
-
-      <template v-else-if="loaded">
-        <!-- Header: who, how much, when — and the one next action. -->
-        <header
-          class="relative mb-4 flex flex-col gap-3 pr-12 sm:flex-row sm:items-start sm:pr-0"
-        >
-          <div class="min-w-0 flex-1">
+          <!-- The hero: how much, where it stands, when it is due, and the one
+               next step (filled) with the bill's other doors (tonal). -->
+          <section
+            class="flex flex-col gap-2 px-4"
+            :aria-label="__('Payment', null, 'Gastos')"
+            data-testid="bill-hero"
+          >
+            <span v-if="doc.is_return" class="text-sm text-ink-gray-7">{{
+              __('Credit note')
+            }}</span>
             <p
-              class="flex flex-wrap items-center gap-1 text-sm text-ink-gray-6"
+              class="num text-3xl font-semibold tabular-nums leading-tight text-ink-gray-9"
             >
-              <span v-if="doc.bill_no" class="break-words">{{
-                doc.bill_no
-              }}</span>
-              <Badge
-                :theme="statusTheme"
-                :label="registering ? __('Registering…') : statusLabel(doc)"
-              />
+              {{ money(doc.total, doc.currency) }}
             </p>
-            <h1
-              class="break-words text-2xl font-semibold leading-tight text-ink-gray-9"
+            <StageSteps
+              v-if="kit.stages.value"
+              :stages="kit.stages.value"
+              class="py-2"
+            />
+            <p class="flex flex-wrap gap-x-3 text-base text-ink-gray-7">
+              <span v-if="doc.date">{{ formatDay(doc.date) }}</span>
+              <span
+                v-if="owed && doc.due_date"
+                :class="doc.overdue ? 'text-ink-red-7' : ''"
+                >{{ dueLabel(doc.due_date, boot?.today || localToday()) }}</span
+              >
+            </p>
+            <p class="break-words text-base text-ink-gray-8">
+              {{ stateLine }}
+            </p>
+            <!-- The background registration was refused: what blocked it and
+                 the fix, applied and registered in one step (RegistrationFix). -->
+            <RegistrationFix
+              v-if="registrationFailed"
+              :name="props.name"
+              :doc="doc"
+              :registration="registrationFailed"
+              :desk="!!boot?.capabilities?.desk"
+              @retry="reviewOpen = true"
+              @ask="(note) => ask('review', note)"
+            />
+            <p
+              v-for="action in actions.filter((a) => a.fallback)"
+              :key="action.key"
+              class="break-words text-sm text-ink-gray-7"
             >
-              {{ doc.party || __('Supplier not visible') }}
-            </h1>
-            <p class="mt-1 break-words text-sm text-ink-gray-6">
+              {{ action.reason }}
+            </p>
+            <p
+              v-if="data.assignments?.length"
+              class="break-words text-sm text-ink-gray-7"
+            >
               {{
-                [doc.company, doc.date && formatDay(doc.date)]
-                  .filter(Boolean)
-                  .join(' · ')
+                __('Waiting on: {0}', [
+                  data.assignments.map((a) => a.full_name).join(', '),
+                ])
               }}
             </p>
-          </div>
-          <div
-            class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 sm:flex-col sm:items-end"
-          >
-            <span
-              class="whitespace-nowrap text-xl font-semibold tabular-nums text-ink-gray-9"
-              >{{ money(doc.total, doc.currency) }}</span
+            <div
+              v-if="notice"
+              role="status"
+              class="rounded-6 bg-surface-green-1 p-3 text-sm text-ink-green-8"
             >
-            <span
-              v-if="
-                Number(doc.docstatus) === 1 &&
-                Number(doc.outstanding_amount || 0) > 0
-              "
-              class="text-sm"
-              :class="doc.overdue ? 'text-ink-red-7' : 'text-ink-gray-6'"
-              >{{ dueLabel(doc.due_date, boot?.today) }}</span
+              {{ notice }}
+            </div>
+            <div
+              v-if="problem"
+              role="alert"
+              class="space-y-2 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
             >
-          </div>
-          <RecordKitTools
-            v-if="doc.name"
-            class="absolute right-2 top-2 sm:static"
-            :kit="kit"
-          />
-        </header>
-        <StageSteps
-          v-if="kit.stages.value"
-          :stages="kit.stages.value"
-          class="mb-4 py-2"
-        />
-
-        <!-- What was asked of me on this bill (Pendientes «Por aprobar»). -->
-        <ApprovalAsk
-          ref="askBanner"
-          doctype="Purchase Invoice"
-          :name="props.name"
-          @declined="decided"
-        >
-          <template #primary>
-            <Button
-              v-if="primaryAction"
-              variant="solid"
-              class="min-h-11"
-              :label="primaryAction.label"
-              @click="primaryAction.run"
-            />
-          </template>
-        </ApprovalAsk>
-
-        <div
-          v-if="notice"
-          role="status"
-          class="mb-4 rounded-6 bg-surface-green-1 p-3 text-sm text-ink-green-8"
-        >
-          {{ notice }}
-        </div>
-        <div
-          v-if="problem"
-          role="alert"
-          class="mb-4 space-y-2 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
-        >
-          <p>
-            <strong>{{ problem.title }}.</strong> {{ problem.detail }}
-          </p>
-          <div class="flex flex-wrap gap-2">
-            <Button
-              v-if="problem.kind === 'conflict' || problem.kind === 'offline'"
-              :label="problem.action"
-              @click="refresh"
-            />
-            <Button
-              :label="__('Ask for a review')"
-              @click="ask('review', problem.detail)"
-            />
-          </div>
-        </div>
-
-        <!-- The one next step (dinero NextStepCard): where the bill stands,
-             one filled action, then the tonal receipt capture. -->
-        <NextStepCard
-          class="mb-4"
-          :label="__('Payment', null, 'Gastos')"
-          :reason="Number(doc.docstatus) === 1 ? paidLabel(doc) : ''"
-          :detail="
-            Number(doc.docstatus) === 1
-              ? ''
-              : registering
-                ? __(
-                    'Registering in the background. You can keep working; you will be told when it is done.',
-                  )
-                : Number(doc.docstatus) === 0
-                  ? __(
-                      'Draft: review supplier, amounts and taxes, then register it so it can be paid.',
-                    )
-                  : __('This bill is cancelled.')
-          "
-        >
-          <!-- The background registration was refused: what blocked it and
-               the fix, applied and registered in one step (RegistrationFix). -->
-          <RegistrationFix
-            v-if="registrationFailed"
-            :name="props.name"
-            :doc="doc"
-            :registration="registrationFailed"
-            :desk="!!boot?.capabilities?.desk"
-            @retry="reviewOpen = true"
-            @ask="(note) => ask('review', note)"
-          />
-          <p
-            v-for="action in actions.filter((a) => a.fallback)"
-            :key="action.key"
-            class="mt-1 text-sm text-ink-gray-7"
-          >
-            {{ action.reason }}
-          </p>
-          <p
-            v-if="data.assignments?.length"
-            class="mt-1 text-sm text-ink-gray-7"
-          >
-            {{
-              __('Waiting on: {0}', [
-                data.assignments.map((a) => a.full_name).join(', '),
-              ])
-            }}
-          </p>
-          <template #actions>
-            <template v-for="action in actions" :key="action.key">
-              <template v-if="action.key === 'submit' && registering">
+              <p>
+                <strong>{{ problem.title }}.</strong> {{ problem.detail }}
+              </p>
+              <div class="flex flex-wrap gap-2">
+                <button
+                  v-if="
+                    problem.kind === 'conflict' || problem.kind === 'offline'
+                  "
+                  type="button"
+                  :class="['press', BTN.tonal]"
+                  @click="refresh"
+                >
+                  {{ problem.action }}
+                </button>
+                <button
+                  type="button"
+                  :class="['press', BTN.tonal]"
+                  @click="ask('review', problem.detail)"
+                >
+                  {{ __('Ask for a review') }}
+                </button>
+              </div>
+            </div>
+            <div class="flex flex-wrap gap-2 pt-2" data-testid="bill-next">
+              <template v-if="registering">
                 <span
                   role="status"
-                  class="inline-flex min-h-11 items-center gap-2 rounded-7 bg-surface-blue-1 px-3 text-sm font-medium text-ink-blue-9 sm:min-h-8"
+                  class="inline-flex min-h-12 items-center gap-2 rounded-full bg-surface-blue-1 px-5 text-base-medium text-ink-blue-9"
                 >
-                  <LucideLoaderCircle class="h-4 w-4 animate-spin" />
+                  <LucideLoaderCircle class="size-5 animate-spin" />
                   {{ __('Registering…') }}
                 </span>
-                <Button
-                  class="min-h-11 sm:min-h-8"
-                  :label="
+                <button
+                  type="button"
+                  :class="['press', BTN.tonal]"
+                  @click="goBack()"
+                >
+                  {{
                     back
                       ? __('Back to {0}', [back.label])
                       : __('Back to Gastos')
-                  "
-                  @click="goBack()"
-                />
+                  }}
+                </button>
               </template>
-              <Button
-                v-else-if="
-                  action.key === 'submit' &&
-                  action.allowed &&
-                  !registrationFailed
-                "
-                variant="solid"
-                class="min-h-11 sm:min-h-8"
-                :label="__('Review and register')"
-                @click="reviewOpen = true"
-              />
-              <Button
-                v-else-if="action.key === 'pay' && action.allowed"
-                variant="solid"
-                class="min-h-11 sm:min-h-8"
-                :label="__('Pay', null, 'Gastos')"
-                @click="payOpen = true"
-              />
-              <template v-else-if="action.fallback">
-                <Button
-                  v-if="action.fallback === 'release'"
-                  variant="solid"
-                  class="min-h-11 sm:min-h-8"
-                  :loading="busy"
-                  :label="__('Release hold')"
-                  @click="releaseHold"
-                />
-                <Button
-                  v-else
-                  variant="solid"
-                  class="min-h-11 sm:min-h-8"
-                  :label="
-                    action.fallback === 'review'
-                      ? __('Ask for a review')
-                      : __('Ask for approval')
-                  "
-                  @click="ask(action.fallback, action.reason)"
-                />
-              </template>
-            </template>
+              <button
+                v-for="(step, i) in nextSteps"
+                :key="step.key"
+                type="button"
+                :class="['press', i === 0 ? BTN.filled : BTN.tonal]"
+                :disabled="busy && step.key === 'release'"
+                :data-step="step.key"
+                @click="step.run()"
+              >
+                <span :class="[step.icon, 'size-5']" aria-hidden="true" />
+                {{ step.label }}
+              </button>
+              <button
+                v-if="canCapture"
+                type="button"
+                :class="['press', BTN.tonal]"
+                data-step="capture"
+                @click="captureOpen = true"
+              >
+                <span class="lucide-file-plus size-5" aria-hidden="true" />
+                {{ __('Capture receipt') }}
+              </button>
+              <button
+                v-if="canEdit"
+                type="button"
+                :class="['press', BTN.tonal]"
+                data-step="edit"
+                @click="editOpen = true"
+              >
+                <span class="lucide-pencil size-5" aria-hidden="true" />
+                {{ __('Edit', null, 'Gastos') }}
+              </button>
+              <button
+                v-if="canPrint"
+                type="button"
+                :class="['press', BTN.tonal]"
+                data-step="print"
+                @click="kit.onTool('print')"
+              >
+                <span class="lucide-printer size-5" aria-hidden="true" />
+                {{ __('Print', null, 'Gastos') }}
+              </button>
+            </div>
             <CapturarDocumentoButton
-              v-if="
-                Number(doc.docstatus) === 1 &&
-                Number(doc.outstanding_amount || 0) > 0
-              "
+              v-model:open="captureOpen"
+              :trigger="false"
               :label="__('Capture receipt')"
               :targets="['Payment Entry']"
               :invoice="props.name"
               :return-label="props.name"
             />
-            <a
-              v-if="boot?.capabilities?.desk"
-              class="hidden min-h-11 items-center px-2 text-sm text-ink-blue-link underline sm:inline-flex sm:min-h-8"
-              :href="`/app/purchase-invoice/${encodeURIComponent(doc.name)}`"
-              >{{ __('Open the full bill form') }}</a
-            >
-          </template>
-        </NextStepCard>
+          </section>
 
-        <div class="grid min-w-0 gap-4 sm:grid-cols-2">
+          <!-- The lines as cards and the totals with their taxes (the engine's
+               bundle); until it arrives, the bill's own short list. -->
+          <template v-if="kit.record.value?.items?.rows?.length">
+            <ItemsCards
+              :items="kit.record.value.items"
+              :currency="doc.currency || 'MXN'"
+              :limit="5"
+            />
+            <DocTotals
+              :totals="kit.record.value.totals"
+              :taxes="kit.record.value.taxes"
+              :currency="doc.currency || 'MXN'"
+              :docstatus="Number(doc.docstatus)"
+              owed-label="Por pagar"
+            />
+          </template>
+          <section
+            v-else-if="doc.items?.length"
+            class="px-4"
+            aria-labelledby="bill-items"
+          >
+            <h2
+              id="bill-items"
+              class="pb-1 text-base font-semibold text-ink-gray-9"
+            >
+              {{ __('Items', null, 'Gastos') }}
+            </h2>
+            <ul class="divide-y divide-outline-gray-1 text-base">
+              <li
+                v-for="(item, i) in doc.items"
+                :key="i"
+                class="flex min-h-11 items-center justify-between gap-3 py-2"
+              >
+                <span class="min-w-0 break-words"
+                  >{{ formatQty(item.qty, item.uom) }} ·
+                  {{ item.item_name }}</span
+                >
+                <span class="num shrink-0 whitespace-nowrap tabular-nums">{{
+                  money(item.amount, doc.currency)
+                }}</span>
+              </li>
+              <li
+                v-if="doc.item_count > doc.items.length"
+                class="py-2 text-ink-gray-6"
+              >
+                {{ __('{0} more lines', [doc.item_count - doc.items.length]) }}
+              </li>
+            </ul>
+          </section>
+
           <!-- Payments and their bank side (matched in Contador). -->
-          <section class="min-w-0 rounded-7 border border-outline-gray-2 p-4">
-            <h2 class="mb-2 text-base font-semibold">
+          <section
+            v-if="data.payments?.length"
+            class="px-4"
+            aria-labelledby="bill-payments"
+          >
+            <h2
+              id="bill-payments"
+              class="pb-1 text-base font-semibold text-ink-gray-9"
+            >
               {{ __('Payments', null, 'Gastos') }}
             </h2>
-            <p v-if="!data.payments?.length" class="text-sm text-ink-gray-6">
-              {{ __('No payments yet.') }}
-            </p>
-            <ul v-else class="space-y-3">
+            <ul class="divide-y divide-outline-gray-1">
               <li
                 v-for="p in data.payments"
                 :key="p.name"
-                class="min-w-0 text-sm"
+                class="flex min-w-0 items-start gap-3 py-2"
               >
                 <span
-                  class="block break-words font-medium tabular-nums text-ink-gray-9"
+                  class="flex size-10 flex-none items-center justify-center rounded-full bg-surface-gray-2 text-ink-gray-7"
+                  aria-hidden="true"
                 >
-                  {{ money(p.amount, p.currency) }} ·
-                  {{ formatDay(p.posting_date) }}
+                  <span class="lucide-banknote size-5" />
                 </span>
-                <span class="block break-words text-ink-gray-6">
-                  {{
-                    [
-                      p.reference_no,
-                      p.reference_date && p.reference_date !== p.posting_date
-                        ? __('bank date {0}', [formatDay(p.reference_date)])
-                        : '',
-                      modeOfPaymentLabel(p.mode_of_payment),
-                    ]
-                      .filter(Boolean)
-                      .join(' · ')
-                  }}
-                </span>
-                <span
-                  class="mt-0.5 flex flex-wrap items-center gap-2 text-ink-gray-7"
-                >
-                  <Badge
-                    :theme="p.reconciled ? 'green' : 'gray'"
-                    :label="bankLabel(p)"
-                  />
-                  <a
-                    v-if="bankAllowed"
-                    class="min-h-11 py-2 text-ink-blue-link underline sm:min-h-0 sm:py-0"
-                    :href="bankUrl(p.name, doc.name)"
-                    >{{ __('See in bank') }}</a
+                <span class="flex min-w-0 flex-1 flex-col gap-0.5">
+                  <span class="flex items-baseline justify-between gap-3">
+                    <span class="num text-base tabular-nums text-ink-gray-9">{{
+                      money(p.amount, p.currency)
+                    }}</span>
+                    <span class="text-sm text-ink-gray-6">{{
+                      formatDay(p.posting_date)
+                    }}</span>
+                  </span>
+                  <span
+                    v-if="paymentLine(p)"
+                    class="break-words text-sm text-ink-gray-6"
+                    >{{ paymentLine(p) }}</span
                   >
+                  <span class="flex flex-wrap items-center gap-2 pt-0.5">
+                    <StatusChip
+                      :label="bankLabel(p)"
+                      :tone="p.reconciled ? 'success' : 'neutral'"
+                    />
+                    <a
+                      v-if="bankAllowed"
+                      class="inline-flex min-h-11 items-center text-sm text-ink-gray-8 underline decoration-outline-gray-3 underline-offset-4 sm:min-h-0"
+                      :href="bankUrl(p.name, doc.name)"
+                      >{{ __('See in bank') }}</a
+                    >
+                  </span>
                 </span>
               </li>
             </ul>
-            <p
-              v-if="data.payments?.length && !bankAllowed"
-              class="mt-2 text-xs text-ink-gray-6"
-            >
+            <p v-if="!bankAllowed" class="pt-1 text-sm text-ink-gray-6">
               {{
                 __(
                   'Your accountant matches payments with the bank statement in Contador.',
@@ -333,137 +373,161 @@
             </p>
           </section>
 
-          <!-- Due dates, CFDI and where it came from. -->
-          <section class="min-w-0 rounded-7 border border-outline-gray-2 p-4">
-            <h2 class="mb-2 text-base font-semibold">
+          <!-- The bill's own facts: its CFDI, folio, due terms, the orders it
+               came from and the company that owes it. -->
+          <section class="px-4" aria-labelledby="bill-details">
+            <h2
+              id="bill-details"
+              class="pb-1 text-base font-semibold text-ink-gray-9"
+            >
               {{ __('Bill details') }}
             </h2>
-            <ul v-if="data.schedule?.length > 1" class="mb-3 space-y-1 text-sm">
+            <ul class="divide-y divide-outline-gray-1">
+              <li class="flex min-h-14 items-center gap-3 py-2">
+                <span :class="ROW_ICON" aria-hidden="true">
+                  <span class="lucide-code size-5" />
+                </span>
+                <span class="flex min-w-0 flex-1 flex-col">
+                  <span class="text-base text-ink-gray-9">CFDI</span>
+                  <span class="text-sm text-ink-gray-6">{{
+                    doc.has_xml ? __('With XML') : __('Without XML')
+                  }}</span>
+                </span>
+                <a
+                  v-if="!doc.has_xml && bankAllowed"
+                  class="inline-flex min-h-11 items-center text-right text-sm text-ink-gray-8 underline decoration-outline-gray-3 underline-offset-4"
+                  :href="cfdiUrl"
+                  >{{ __('Link the CFDI in Contador') }}</a
+                >
+              </li>
               <li
-                v-for="(term, i) in data.schedule"
-                :key="i"
-                class="flex justify-between gap-2"
+                v-if="doc.bill_no"
+                class="flex min-h-14 items-center gap-3 py-2"
               >
-                <span>{{ __('Due {0}', [formatDay(term.due_date)]) }}</span>
-                <span class="tabular-nums">
-                  {{ money(term.amount, doc.currency) }}
-                  <template v-if="term.outstanding > 0">
-                    ·
-                    {{
-                      __('{0} owed', [money(term.outstanding, doc.currency)])
-                    }}</template
+                <span :class="ROW_ICON" aria-hidden="true">
+                  <span class="lucide-receipt size-5" />
+                </span>
+                <span class="flex min-w-0 flex-1 flex-col">
+                  <span class="text-sm text-ink-gray-6">{{
+                    fiscalFolio
+                      ? __('Fiscal folio (UUID)')
+                      : __('Supplier folio')
+                  }}</span>
+                  <span
+                    class="text-base text-ink-gray-9"
+                    :class="fiscalFolio ? 'break-all text-sm' : 'break-words'"
+                    >{{ doc.bill_no }}</span
                   >
                 </span>
               </li>
-            </ul>
-            <p class="flex flex-wrap items-center gap-2 text-sm">
-              <Badge
-                :theme="doc.has_xml ? 'green' : 'orange'"
-                :label="doc.has_xml ? __('With XML') : __('Without XML')"
-              />
-              <a
-                v-if="!doc.has_xml && bankAllowed"
-                class="text-ink-blue-link underline"
-                :href="cfdiUrl"
-                >{{ __('Link the CFDI in Contador') }}</a
-              >
-            </p>
-            <template v-if="data.orders?.length">
-              <h3 class="mb-1 mt-3 text-sm font-semibold">
-                {{ __('From purchase orders') }}
-              </h3>
-              <RouterLink
-                v-for="o in data.orders"
-                :key="o.name"
-                class="mr-2 inline-block min-h-11 py-2 text-sm text-ink-blue-link underline sm:min-h-0 sm:py-0"
-                :to="{ name: 'CompraOrden', params: { name: o.name } }"
-                >{{
-                  displayName(o, 'Purchase Order', {
-                    fallback: __('Orden de compra'),
-                  })
-                }}</RouterLink
-              >
-            </template>
-            <h3 class="mb-1 mt-3 text-sm font-semibold">
-              {{ __('Items', null, 'Gastos') }}
-            </h3>
-            <ul class="space-y-1 text-sm text-ink-gray-8">
               <li
-                v-for="(item, i) in doc.items"
-                :key="i"
-                class="flex justify-between gap-2"
+                v-for="(term, i) in data.schedule?.length > 1
+                  ? data.schedule
+                  : []"
+                :key="`term${i}`"
+                class="flex min-h-14 items-center gap-3 py-2"
               >
-                <span class="min-w-0 break-words"
-                  >{{ formatQty(item.qty, item.uom) }} ·
-                  {{ item.item_name }}</span
-                >
-                <span class="shrink-0 whitespace-nowrap tabular-nums">{{
-                  money(item.amount, doc.currency)
+                <span :class="ROW_ICON" aria-hidden="true">
+                  <span class="lucide-calendar-clock size-5" />
+                </span>
+                <span class="min-w-0 flex-1 text-base text-ink-gray-9">{{
+                  __('Due {0}', [formatDay(term.due_date)])
                 }}</span>
+                <span class="num text-right text-base tabular-nums">
+                  {{ money(term.amount, doc.currency) }}
+                  <span
+                    v-if="term.outstanding > 0"
+                    class="block text-sm text-ink-gray-6"
+                    >{{
+                      __('{0} owed', [money(term.outstanding, doc.currency)])
+                    }}</span
+                  >
+                </span>
+              </li>
+              <li v-for="o in data.orders || []" :key="o.name">
+                <RouterLink
+                  class="press flex min-h-14 items-center gap-3 rounded-6 py-2 [@media(hover:hover)]:hover:bg-surface-gray-1"
+                  :to="{ name: 'CompraOrden', params: { name: o.name } }"
+                >
+                  <span :class="ROW_ICON" aria-hidden="true">
+                    <span class="lucide-package size-5" />
+                  </span>
+                  <span class="flex min-w-0 flex-1 flex-col">
+                    <span class="text-sm text-ink-gray-6">{{
+                      __('From purchase order')
+                    }}</span>
+                    <span class="break-words text-base text-ink-gray-9">{{
+                      displayName(o, 'Purchase Order', {
+                        fallback: __('Orden de compra'),
+                      })
+                    }}</span>
+                  </span>
+                </RouterLink>
               </li>
               <li
-                v-if="doc.item_count > doc.items.length"
-                class="text-ink-gray-6"
+                v-if="doc.company"
+                class="flex min-h-14 items-center gap-3 py-2"
               >
-                {{ __('{0} more lines', [doc.item_count - doc.items.length]) }}
+                <span :class="ROW_ICON" aria-hidden="true">
+                  <span class="lucide-store size-5" />
+                </span>
+                <span class="flex min-w-0 flex-1 flex-col">
+                  <span class="text-sm text-ink-gray-6">{{
+                    __('Company', null, 'Gastos')
+                  }}</span>
+                  <span class="break-words text-base text-ink-gray-9">{{
+                    doc.company
+                  }}</span>
+                </span>
               </li>
             </ul>
           </section>
+          <DatosList
+            v-if="kit.record.value?.fields?.length"
+            :fields="kit.record.value.fields"
+            :hide="DATOS_SHOWN"
+            :currency="doc.currency || 'MXN'"
+            :boot="shellBoot"
+          />
         </div>
 
-        <ArchivosRegistroPanel
-          v-if="doc.name && archivosEnabled"
-          class="mt-4"
-          doctype="Purchase Invoice"
-          :name="doc.name"
-          :return-to="`/crm${route.fullPath}`"
-          :return-label="__('Gastos', null, 'Gastos')"
-        />
-        <!-- Shell SPEC §6 DD2: the engine's «Creado desde», Conexiones, Actividad and «⋯» sheets. -->
-        <RecordKit
-          v-if="doc.name"
-          class="mt-6 -mx-4 sm:-mx-6"
-          :kit="kit"
-          :title="doc.party || ''"
-        />
-      </template>
+        <aside class="flex min-w-0 flex-col gap-5 pt-5">
+          <!-- Escáner: receive, receipts, tasks and labels for its goods. -->
+          <BillAlmacen
+            :rows="almacenRows"
+            :bill="props.name"
+            @ask="(reason) => ask('review', reason)"
+          />
+          <div v-if="doc.name && archivosEnabled" class="px-4">
+            <ArchivosRegistroPanel
+              doctype="Purchase Invoice"
+              :name="doc.name"
+              :return-to="`/crm${route.fullPath}`"
+              :return-label="__('Gastos', null, 'Gastos')"
+            />
+          </div>
+          <!-- Shell SPEC §6 DD2: the engine's «Creado desde», Conexiones,
+               Actividad and the sheets behind «⋯». -->
+          <RecordKit v-if="doc.name" :kit="kit" :title="doc.party || ''" />
+        </aside>
+      </div>
     </div>
 
-    <!-- «Revisar y registrar»: the bill's own submit. -->
-    <Dialog v-model="reviewOpen" :title="__('Register this bill?')">
-      <template #default>
-        <p class="text-base text-ink-gray-7">
-          {{
-            __(
-              '{0} for {1}. Once registered it is owed to the supplier and can be paid; changing it later means cancelling it.',
-              [doc.party || doc.name, money(doc.total, doc.currency)],
-            )
-          }}
-        </p>
-        <p class="mt-2 text-sm text-ink-gray-6">
-          {{
-            __(
-              'It registers in the background: you can keep working and you will be told when it is done.',
-            )
-          }}
-        </p>
-      </template>
-      <template #actions>
-        <div class="flex flex-wrap justify-end gap-2">
-          <Button
-            :label="__('Cancel', null, 'Gastos')"
-            @click="reviewOpen = false"
-          />
-          <Button
-            variant="solid"
-            :loading="busy"
-            :label="__('Register', null, 'Gastos')"
-            @click="submitBill"
-          />
-        </div>
-      </template>
-    </Dialog>
-
+    <!-- «Revisar y registrar»: the bill's own submit, in the background. -->
+    <ConfirmSheet
+      v-model:open="reviewOpen"
+      :copy="registerCopy"
+      :busy="busy"
+      @confirm="submitBill"
+    />
+    <EditSheet
+      v-if="canEdit && editOpen"
+      v-model:open="editOpen"
+      :record="kit.record.value"
+      :edit-fields="kit.profile.value?.editFields || null"
+      :subtitle="kit.scopeTitle.value"
+      @saved="kit.after(__('Draft saved'))"
+    />
     <PayDialog
       v-model="payOpen"
       :name="props.name"
@@ -491,6 +555,7 @@
 <script setup>
 import {
   computed,
+  defineAsyncComponent,
   getCurrentInstance,
   onBeforeUnmount,
   onMounted,
@@ -498,9 +563,10 @@ import {
   ref,
   watch,
 } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { Badge, Button, Dialog, toast } from 'frappe-ui'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { toast } from 'frappe-ui'
 import { ArchivosRegistroPanel } from '@/components/archivos'
+import { AppBar, EmptyState, StatusChip } from '@/components/ui'
 import ApprovalDialog from '@/components/gastos/ApprovalDialog.vue'
 import RegistrationFix from '@/components/gastos/RegistrationFix.vue'
 import PayDialog from '@/components/gastos/PayDialog.vue'
@@ -510,11 +576,25 @@ import { appleKeys, registerPageShortcuts } from '@/composables/shellKeyboard'
 import { completeTo, goTo, ownerReturn } from '@/composables/useAprobaciones'
 import { offerUndo, runUndo } from '@/composables/powerUndo'
 import CapturarDocumentoButton from '@/components/captura/CapturarDocumentoButton.vue'
-import NextStepCard from '@/components/dinero/NextStepCard.vue'
+import { allowedTargets, capturaBoot } from '@/composables/useCaptura'
+import ConfirmSheet from '@/components/documentos/ConfirmSheet.vue'
+import DatosList from '@/components/documentos/DatosList.vue'
+import DocTotals from '@/components/documentos/DocTotals.vue'
+import ItemsCards from '@/components/documentos/ItemsCards.vue'
+import RecordIsland from '@/components/documentos/RecordIsland.vue'
 import StageSteps from '@/components/documentos/StageSteps.vue'
 import RecordKit from '@/components/documentos/compras/RecordKit.vue'
-import RecordKitTools from '@/components/documentos/compras/RecordKitTools.vue'
 import { useRecordKit } from '@/components/documentos/compras/recordKit'
+import BillAlmacen from '@/components/gastos/BillAlmacen.vue'
+import {
+  loadBillWarehouse,
+  warehouseRows,
+} from '@/components/gastos/billAlmacen'
+import { isMobile } from '@/composables/breakpoint'
+import { etiquetasHref } from '@/composables/useEtiquetas'
+import { recordActionsFor } from '@/documentos/acciones'
+import { localToday } from '@/documentos/profiles/_compras'
+import { BTN } from '@/documentos/tools'
 import { hoyLive } from '@/composables/useHoy'
 import { registrationOf } from '@/composables/gastosRegistrations'
 import {
@@ -545,17 +625,39 @@ import { modeOfPaymentLabel } from '@/utils/modeOfPayment'
 import { keyAction } from '@/utils/powerList'
 import { formatDay } from '@/utils/contactos'
 import { displayName, formatQty } from '@/utils/display'
-import LucideArrowLeft from '~icons/lucide/arrow-left'
 import LucideLoaderCircle from '~icons/lucide/loader-circle'
+
+const EditSheet = defineAsyncComponent(
+  () => import('@/components/documentos/EditSheet.vue'),
+)
 
 const props = defineProps({ name: { type: String, required: true } })
 const route = useRoute()
 const router = useRouter()
 const boot = gastosBoot
+const phone = isMobile
 // Files on this record come from Archivos when the worker has it.
 const archivosEnabled = computed(() =>
   moduleEnabled(shellBoot.value, 'archivos'),
 )
+// Datos lists the rest of the bill: what the page already shows stays out.
+const DATOS_SHOWN = [
+  'supplier',
+  'supplier_name',
+  'bill_no',
+  'bill_date',
+  'company',
+  'posting_date',
+  'due_date',
+  'grand_total',
+  'rounded_total',
+  'outstanding_amount',
+  'status',
+  'currency',
+  'is_return',
+]
+const ROW_ICON =
+  'flex size-10 flex-none items-center justify-center rounded-full bg-surface-gray-2 text-ink-gray-7'
 const data = ref({})
 const loading = ref(false)
 const loaded = ref(false)
@@ -598,13 +700,87 @@ const cfdiUrl = computed(() => {
   })
   return `/contador/cfdis?${query}`
 })
-const statusTheme = computed(() => {
-  if (registering.value) return 'blue'
-  if (Number(doc.value.docstatus) === 0) return 'orange'
-  if (Number(doc.value.docstatus) === 2) return 'red'
-  if (Number(doc.value.outstanding_amount || 0) <= 0) return 'green'
-  return doc.value.overdue ? 'red' : 'blue'
+// The bar: the supplier, then the state and «Factura de proveedor <folio>».
+const title = computed(() =>
+  loaded.value
+    ? doc.value.party || __('Supplier not visible')
+    : __('Gastos', null, 'Gastos'),
+)
+// A CFDI's folio fiscal is a UUID: it is no number to read in the bar.
+const fiscalFolio = computed(() =>
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+    String(doc.value.bill_no || '').trim(),
+  ),
+)
+const kindLine = computed(() =>
+  [
+    __('Bill', null, 'Gastos'),
+    doc.value.bill_no && !fiscalFolio.value
+      ? doc.value.bill_no
+      : doc.value.name,
+  ]
+    .filter(Boolean)
+    .join(' '),
+)
+// Colour means state: amber waits on someone here, red is overdue.
+const chip = computed(() => {
+  const label = registering.value ? __('Registering…') : statusLabel(doc.value)
+  if (registering.value) return { label, tone: 'info' }
+  const docstatus = Number(doc.value.docstatus)
+  if (docstatus === 0) return { label, tone: 'warning' }
+  if (docstatus === 2) return { label, tone: 'neutral' }
+  if (Number(doc.value.outstanding_amount || 0) <= 0)
+    return { label, tone: 'success' }
+  if (doc.value.overdue) return { label, tone: 'danger' }
+  return { label, tone: doc.value.on_hold ? 'warning' : 'neutral' }
 })
+const owed = computed(
+  () =>
+    Number(doc.value.docstatus) === 1 &&
+    Number(doc.value.outstanding_amount || 0) > 0,
+)
+// Under the amount: what is paid, or what a draft needs.
+const stateLine = computed(() => {
+  const docstatus = Number(doc.value.docstatus)
+  if (docstatus === 1) return paidLabel(doc.value)
+  if (registering.value)
+    return __(
+      'Registering in the background. You can keep working; you will be told when it is done.',
+    )
+  if (docstatus === 0)
+    return __(
+      'Draft: review supplier, amounts and taxes, then register it so it can be paid.',
+    )
+  return __('This bill is cancelled.')
+})
+function paymentLine(p) {
+  return [
+    p.reference_no,
+    p.reference_date && p.reference_date !== p.posting_date
+      ? __('bank date {0}', [formatDay(p.reference_date)])
+      : '',
+    modeOfPaymentLabel(p.mode_of_payment),
+  ]
+    .filter(Boolean)
+    .join(' · ')
+}
+const registerCopy = computed(() => ({
+  title: __('Register this bill?'),
+  message: [
+    __(
+      '{0} for {1}. Once registered it is owed to the supplier and can be paid; changing it later means cancelling it.',
+      [
+        doc.value.party || doc.value.name,
+        money(doc.value.total, doc.value.currency),
+      ],
+    ),
+    __(
+      'It registers in the background: you can keep working and you will be told when it is done.',
+    ),
+  ].join(' '),
+  confirm: __('Register', null, 'Gastos'),
+  back: __('Cancel', null, 'Gastos'),
+}))
 const listPath = computed(() =>
   typeof route.query.list === 'string' &&
   (route.query.list.startsWith('/gastos') ||
@@ -615,6 +791,13 @@ const listPath = computed(() =>
 // Opened from another list (Pendientes «Por aprobar», Hoy): back goes there,
 // and a decision taken here goes back with `done=Purchase Invoice:<name>`.
 const back = computed(() => ownerReturn(route.query))
+const backLabel = computed(() =>
+  back.value ? __('Back to {0}', [back.value.label]) : __('Back to Gastos'),
+)
+function onBack(event) {
+  event?.preventDefault?.()
+  goBack()
+}
 const askBanner = ref(null)
 // The bill's own decision, repeated in the phone bar of the ask banner.
 const primaryAction = computed(() => {
@@ -633,12 +816,139 @@ const primaryAction = computed(() => {
   return null
 })
 
+// The hero's steps, in order: the bill's own decision first (filled), then
+// what else this state allows; the bolt lists the same.
+const nextSteps = computed(() => {
+  const out = []
+  for (const action of actions.value) {
+    if (action.key === 'submit' && registering.value) continue
+    if (action.key === 'submit' && action.allowed) {
+      if (!registrationFailed.value)
+        out.push({
+          key: 'submit',
+          label: __('Review and register'),
+          icon: 'lucide-check',
+          run: () => (reviewOpen.value = true),
+        })
+    } else if (action.key === 'pay' && action.allowed)
+      out.push({
+        key: 'pay',
+        label: __('Pay', null, 'Gastos'),
+        icon: 'lucide-wallet',
+        run: () => (payOpen.value = true),
+      })
+    else if (action.fallback === 'release')
+      out.push({
+        key: 'release',
+        label: __('Release hold'),
+        icon: 'lucide-check',
+        run: releaseHold,
+      })
+    else if (action.fallback)
+      out.push({
+        key: `ask:${action.key}`,
+        label:
+          action.fallback === 'review'
+            ? __('Ask for a review')
+            : __('Ask for approval'),
+        icon: 'lucide-send',
+        run: () => ask(action.fallback, action.reason),
+      })
+  }
+  return out
+})
+const captureOpen = ref(false)
+const canCapture = computed(
+  () =>
+    owed.value &&
+    allowedTargets(capturaBoot.value, ['Payment Entry']).length > 0,
+)
+const editOpen = ref(false)
+const canEdit = computed(
+  () =>
+    Number(doc.value.docstatus) === 0 &&
+    !registering.value &&
+    !!kit.record.value?.actions?.edit?.allowed,
+)
+const canPrint = computed(() => !!kit.record.value?.actions?.print?.allowed)
+
+// «En el almacén»: Escáner's side of the bill, loaded after the page.
+const almacen = ref(null)
+const labelsOn = computed(() => moduleEnabled(shellBoot.value, 'productos'))
+const almacenRows = computed(() =>
+  warehouseRows(almacen.value, {
+    bill: props.name,
+    back: { to: `/crm${route.fullPath}`, label: 'Gastos' },
+    labels: labelsOn.value && !doc.value.is_return,
+  }),
+)
+async function loadAlmacen() {
+  try {
+    almacen.value = await loadBillWarehouse(props.name)
+  } catch {
+    // Without it the bill still works; the section stays out.
+    almacen.value = null
+  }
+}
+
+// The bolt: the hero's steps, Escáner's receive and labels, «Editar», then
+// what keeps the bill in sight; «⋯» keeps print, share, mail and the rest.
+const boltSteps = computed(() => {
+  const out = [...nextSteps.value]
+  if (canCapture.value)
+    out.push({
+      label: __('Capture receipt'),
+      icon: 'lucide-file-plus',
+      run: () => (captureOpen.value = true),
+    })
+  for (const row of almacenRows.value.filter((r) => r.step))
+    out.push({
+      label: row.title,
+      icon: row.icon,
+      run: () => window.location.assign(row.href),
+    })
+  if (almacenRows.value.some((r) => r.labels))
+    out.push({
+      label: __('Print labels'),
+      icon: 'lucide-tag',
+      run: () =>
+        router.push(
+          etiquetasHref([], { desde: `Purchase Invoice:${props.name}` }),
+        ),
+    })
+  if (canPrint.value)
+    out.push({
+      label: __('Print', null, 'Gastos'),
+      icon: 'lucide-printer',
+      run: () => kit.onTool('print'),
+    })
+  return out
+})
+const boltGroups = computed(() =>
+  recordActionsFor({
+    steps: boltSteps.value,
+    canEdit: canEdit.value,
+    tools: kit.tools.value,
+  }),
+)
+function onBolt({ key }) {
+  if (key === 'editar') editOpen.value = true
+  else if (key.startsWith('paso:')) boltSteps.value[Number(key.slice(5))]?.run()
+  else kit.onTool(key)
+}
+function mail() {
+  const action = kit.record.value?.actions?.email
+  if (action?.allowed) kit.onTool('correo')
+  else toast.error(action?.reason || __('This bill cannot be sent by email.'))
+}
+
 async function load() {
   loading.value = true
   guard.value = null
   try {
     data.value = await gastosApi('invoice', { name: props.name })
     loaded.value = true
+    loadAlmacen()
   } catch (error) {
     const p = problemOf(error)
     if (!loaded.value || p.kind === 'permission') guard.value = p
@@ -827,7 +1137,14 @@ function onKey(event) {
 const socket = getCurrentInstance()?.appContext.config.globalProperties.$socket
 function quietLoad() {
   // Never under the worker's hands: an open form keeps what is typed.
-  if (busy.value || payOpen.value || reviewOpen.value || approval.open) return
+  if (
+    busy.value ||
+    payOpen.value ||
+    reviewOpen.value ||
+    editOpen.value ||
+    approval.open
+  )
+    return
   load()
 }
 useLiveWatch(hoyLive(socket), LIVE_DOCTYPES, quietLoad, {
@@ -837,6 +1154,7 @@ watch(
   () => props.name,
   () => {
     loaded.value = false
+    almacen.value = null
     notice.value = ''
     problem.value = null
     data.value = {}

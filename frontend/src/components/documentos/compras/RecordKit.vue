@@ -127,10 +127,16 @@ const props = defineProps({
 // The kit's refs are the page's state (useRecordKit), set through it.
 const { fileInput, open } = props.kit
 
-// «Comentar», «Etiquetar» and «Compartir con tu equipo» from the «⋯» land in
-// Actividad y comentarios (its comment box and sheets) once it is on screen.
+// «Comentar», «Etiquetar», «Compartir con tu equipo» and «Enviar por correo»
+// from the «⋯» land in Actividad y comentarios (its comment box and sheets)
+// once it is on screen.
 const recordActivity = ref(null)
-const IN_ACTIVITY = { comment: 'comment', tag: 'tag', team: 'share' }
+const IN_ACTIVITY = {
+  comment: 'comment',
+  tag: 'tag',
+  team: 'share',
+  correo: 'correo',
+}
 watch(open, (key) => {
   if (!IN_ACTIVITY[key] || !recordActivity.value) return
   recordActivity.value.open(IN_ACTIVITY[key])

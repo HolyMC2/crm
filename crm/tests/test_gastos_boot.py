@@ -114,3 +114,33 @@ class TestGastosPaths(TestCase):
 		):
 			self.assertFalse(check_gastos_permission())
 			self.assertFalse(get_capabilities()["enabled"])
+
+
+@skipIf(not HAS_FRAPPE, "Frappe integration dependency is not installed")
+class TestBillReceiveStep(TestCase):
+	"""«Verificar y acomodar» on a bill: offered, or the reason it is not."""
+
+	def step(self, docstatus=1, is_return=0, manager=True, inbounds=()):
+		from crm.api.gastos import _receive_step
+
+		doc = frappe._dict(docstatus=docstatus, is_return=is_return)
+		return _receive_step(doc, manager, list(inbounds))
+
+	def test_registered_bill_and_a_manager_can_start_it(self):
+		self.assertEqual(self.step(), {"allowed": True, "code": None, "reason": None})
+
+	def test_an_existing_receiving_always_opens(self):
+		self.assertTrue(self.step(manager=False, inbounds=[{"name": "IN-1"}])["allowed"])
+
+	def test_each_refusal_says_why(self):
+		for code, kwargs in (
+			("draft", {"docstatus": 0}),
+			("cancelled", {"docstatus": 2}),
+			("return", {"is_return": 1}),
+			("manager", {"manager": False}),
+		):
+			with self.subTest(code):
+				answer = self.step(**kwargs)
+				self.assertFalse(answer["allowed"])
+				self.assertEqual(answer["code"], code)
+				self.assertTrue(answer["reason"])

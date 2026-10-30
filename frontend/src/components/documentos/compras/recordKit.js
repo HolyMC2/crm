@@ -45,7 +45,7 @@ export function useRecordKit(doctype, { name, title, changed, modified } = {}) {
   const record = ref(null)
   const profile = shallowRef(null)
   const busy = ref(false)
-  const open = ref('') // tools · comment · assign · print · confirm · avisame
+  const open = ref('') // tools · comment · assign · print · confirm · avisame · correo
   const confirmKind = ref('')
   const confirmError = ref('')
   const avisame = ref(false)
@@ -97,6 +97,17 @@ export function useRecordKit(doctype, { name, title, changed, modified } = {}) {
         label: 'Pregúntale a Muelle sobre esta ficha',
         icon: 'lucide-sparkles',
         allowed: true,
+      })
+    // «Enviar por correo» (the PDF and a template), as on DocumentoRecord.
+    const email = record.value?.actions?.email
+    if (email)
+      out.push({
+        key: 'correo',
+        label: 'Enviar por correo',
+        icon: 'lucide-mail',
+        allowed: !!email.allowed,
+        reason: email.reason || '',
+        hint: 'Con el PDF y una plantilla',
       })
     return out
   })
@@ -234,6 +245,7 @@ export function useRecordKit(doctype, { name, title, changed, modified } = {}) {
       case 'avisame':
       case 'tag':
       case 'team':
+      case 'correo':
         open.value = key
         break
       case 'attach':
@@ -313,6 +325,7 @@ export function useRecordKit(doctype, { name, title, changed, modified } = {}) {
     kind,
     record,
     stages,
+    profile,
     printFormats: computed(() => profile.value?.printFormats || null),
     tools,
     busy,

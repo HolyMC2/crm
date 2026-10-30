@@ -289,7 +289,8 @@ const routes = [
     name: 'GastoFactura',
     component: () => import('@/pages/GastoFactura.vue'),
     props: true,
-    meta: { app: 'gastos', title: 'Gastos', listParent: 'Gastos' },
+    // The bill draws its own record bar: the supplier, the island, the bolt.
+    meta: { app: 'gastos', title: 'Gastos', ownPhoneHeader: true },
   },
   {
     path: '/gastos/gasto/:name',

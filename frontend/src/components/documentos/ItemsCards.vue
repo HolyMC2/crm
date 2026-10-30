@@ -2,13 +2,14 @@
   <!-- Items as cards (Shell SPEC §6 DD4): name, quantity with its unit, price,
        amount; a tap opens the Producto. A stock count («Ajustar existencia»,
        an Ajuste's rows carry current_qty) reads the before, the after and the
-       difference instead of a sale's qty × price. -->
+       difference instead of a sale's qty × price. With `limit`, a long
+       document shows its first lines and «Mostrar N artículos más». -->
   <section v-if="rows.length" aria-labelledby="doc-items" class="space-y-2">
     <h2 id="doc-items" class="px-4 text-base font-semibold text-ink-gray-9">
       {{ rows.length === 1 ? '1 artículo' : `${rows.length} artículos` }}
     </h2>
     <ul class="space-y-2 px-4">
-      <li v-for="row in rows" :key="row.name">
+      <li v-for="row in shown" :key="row.name">
         <UiTag
           :as="row.item_code ? RouterLink : 'div'"
           :to="row.item_code ? productRoute(row.item_code) : undefined"
@@ -64,10 +65,23 @@
         </UiTag>
       </li>
     </ul>
+    <button
+      v-if="shown.length < rows.length"
+      type="button"
+      class="press mx-4 min-h-11 text-base-medium text-ink-gray-8"
+      data-testid="documentos-items-more"
+      @click="all = true"
+    >
+      {{
+        rows.length - shown.length === 1
+          ? 'Mostrar 1 artículo más'
+          : `Mostrar ${rows.length - shown.length} artículos más`
+      }}
+    </button>
   </section>
 </template>
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import UiTag from '@/components/ui/UiTag'
 import { storeName } from '@/documentos/profiles/_generic'
@@ -76,8 +90,17 @@ import { formatMoney, formatQty } from '@/utils/display'
 const props = defineProps({
   items: { type: Object, default: null },
   currency: { type: String, default: 'MXN' },
+  // 0: every line; n: the first n, the rest behind «Mostrar … más».
+  limit: { type: Number, default: 0 },
 })
 const rows = computed(() => props.items?.rows || [])
+const all = ref(false)
+// One hidden line is not worth a button: it shows.
+const shown = computed(() =>
+  all.value || !props.limit || rows.value.length <= props.limit + 1
+    ? rows.value
+    : rows.value.slice(0, props.limit),
+)
 
 // An Ajuste's row carries the quantity found on hand and the movement it made
 // (Stock Reconciliation Item: current_qty, quantity_difference, amount_difference).

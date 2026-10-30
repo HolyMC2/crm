@@ -29589,3 +29589,118 @@ msgstr "Solo el dueño acomoda la barra de cada puesto. Pídeselo, o acomoda la 
 #: crm/api/shell.py
 msgid "Choose a puesto to arrange."
 msgstr "Elige un puesto para acomodar."
+
+# Gasto factura: the record bar, «En el almacén» (Escáner) and print (lane gasto-factura-ux-20261030)
+msgid "Credit note"
+msgstr "Nota de crédito"
+
+msgctxt "Gastos"
+msgid "Bill"
+msgstr "Factura"
+
+msgctxt "Gastos"
+msgid "Print"
+msgstr "Imprimir"
+
+msgid "Fiscal folio (UUID)"
+msgstr "Folio fiscal (UUID)"
+
+msgid "Supplier folio"
+msgstr "Folio del proveedor"
+
+msgid "From purchase order"
+msgstr "De la orden de compra"
+
+msgctxt "Gastos"
+msgid "Company"
+msgstr "Empresa"
+
+msgid "Draft saved"
+msgstr "Borrador guardado"
+
+msgid "Print labels"
+msgstr "Imprimir etiquetas"
+
+msgid "This bill cannot be sent by email."
+msgstr "Esta factura no se puede enviar por correo."
+
+msgctxt "Escáner"
+msgid "Count"
+msgstr "Conteo"
+
+msgctxt "Escáner"
+msgid "Put away"
+msgstr "Acomodo"
+
+msgctxt "Escáner"
+msgid "Pick"
+msgstr "Surtido"
+
+msgctxt "Escáner"
+msgid "Move"
+msgstr "Traslado"
+
+msgctxt "Escáner"
+msgid "Receive"
+msgstr "Recepción"
+
+msgctxt "Escáner"
+msgid "Task"
+msgstr "Tarea"
+
+msgid "Put away"
+msgstr "Acomodada"
+
+msgid "Verified, to put away"
+msgstr "Verificada, por acomodar"
+
+msgid "To verify"
+msgstr "Por verificar"
+
+msgid "Receiving in Escáner"
+msgstr "Recepción en Escáner"
+
+msgid "Verify and put away"
+msgstr "Verificar y acomodar"
+
+msgid "Count the boxes in Escáner and file each product"
+msgstr "Cuenta las cajas en Escáner y acomoda cada producto"
+
+msgid "Receiving is done in Escáner, which needs the scanner user role. Ask your manager for it."
+msgstr "La recepción se hace en Escáner, que necesita el rol de usuario de escáner. Pídeselo a tu encargado."
+
+msgid "Goods received"
+msgstr "Mercancía recibida"
+
+msgid "No receipt yet"
+msgstr "Sin recepción todavía"
+
+msgid "This bill does not move stock: its goods come in with a purchase receipt."
+msgstr "Esta factura no mueve inventario: su mercancía entra con una recepción de compra."
+
+msgctxt "Escáner"
+msgid "In progress"
+msgstr "En curso"
+
+msgctxt "Escáner"
+msgid "Open"
+msgstr "Abierta"
+
+msgid "One per piece on this bill"
+msgstr "Una por pieza de esta factura"
+
+msgid "In the warehouse"
+msgstr "En el almacén"
+
+msgid "Ask for it to be received"
+msgstr "Pedir que la reciban"
+
+msgid "A return sends goods back; there is nothing to receive."
+msgstr "Una devolución regresa mercancía; no hay nada que recibir."
+
+msgid "Register the bill first; then its goods can be verified and put away in Escáner."
+msgstr "Registra primero la factura; después su mercancía se puede verificar y acomodar en Escáner."
+
+msgid "Starting a receiving in Escáner takes a stock or scanner manager. Ask one to start it."
+msgstr "Iniciar una recepción en Escáner le toca a un encargado de almacén o de escáner. Pídele que la inicie."
+

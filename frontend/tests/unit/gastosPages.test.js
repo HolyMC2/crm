@@ -183,6 +183,46 @@ describe('Gastos bill record', () => {
     expect(root.querySelector('a[href*="/compras/orden/PO-9"]')).not.toBeNull()
   })
 
+  it('the bar names the supplier with its state and folio; Pagar leads and Escáner receives its goods', async () => {
+    answers.invoice = {
+      document: bill({ overdue: true }),
+      schedule: [],
+      orders: [],
+      payments: [],
+      assignments: [],
+      actions: [{ key: 'pay', allowed: true }],
+    }
+    answers.bill_warehouse = {
+      stock: true,
+      update_stock: true,
+      scanner: true,
+      can_open: true,
+      receipts: [],
+      warehouses: ['Tienda - GD'],
+      receive: { allowed: true, code: null, reason: null },
+      inbounds: [],
+      tasks: [],
+    }
+    await mountAt('/gastos/factura/PI-1')
+    expect(root.querySelector('[data-appbar-title]').textContent.trim()).toBe(
+      'Renta Local',
+    )
+    expect(root.querySelector('[data-testid="bill-status"]').textContent).toBe(
+      'Overdue',
+    )
+    expect(root.textContent).toContain('Bill F-77')
+    const [first] = root.querySelectorAll('[data-testid="bill-next"] button')
+    expect(first.dataset.step).toBe('pay')
+    expect(calls.find(([m]) => m === 'bill_warehouse')?.[1]).toEqual({
+      name: 'PI-1',
+    })
+    const receive = root.querySelector('a[href^="/scan/inbound?"]')
+    expect(receive.textContent).toContain('Verify and put away')
+    const url = new URL(receive.getAttribute('href'), 'https://x.invalid')
+    expect(url.searchParams.get('source_name')).toBe('PI-1')
+    expect(url.searchParams.get('return_to')).toBe('/crm/gastos/factura/PI-1')
+  })
+
   it('a worker who cannot pay gets the reason and «Ask for approval», never a dead button', async () => {
     answers.invoice = {
       document: bill(),

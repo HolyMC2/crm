@@ -441,8 +441,9 @@ describe('A bill opened from Por aprobar', () => {
       'Ana asked you: Pagar la factura PI-1 de Renta Local',
     )
     expect(root.textContent).toContain('Vence mañana')
-    const backButton = [...root.querySelectorAll('button')].find((b) =>
-      b.textContent.includes('Back to Por aprobar'),
+    // The bill's bar: its back arrow names where it goes.
+    const backButton = root.querySelector(
+      '[data-appbar-back][aria-label="Back to Por aprobar"]',
     )
     backButton.click()
     await flush()
