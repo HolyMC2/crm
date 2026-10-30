@@ -29,4 +29,3 @@ export function sortSiblings(apps) {
     (a, b) => SIBLING_ORDER.indexOf(a.key) - SIBLING_ORDER.indexOf(b.key),
   )
 }
-

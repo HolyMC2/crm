@@ -3843,9 +3843,9 @@ describe('the bar and Más follow each worker (Personalizar, Barra por puesto)',
     }
   }
   const tabs = () =>
-    [
-      ...root.querySelectorAll('nav[aria-label="Main navigation"] > a'),
-    ].map((tab) => tab.textContent.trim())
+    [...root.querySelectorAll('nav[aria-label="Main navigation"] > a')].map(
+      (tab) => tab.textContent.trim(),
+    )
   const openMore = async () => {
     root.querySelector('nav[aria-label="Main navigation"] > button').click()
     await until(() => document.querySelector('[data-shell-layer="more"]'))
@@ -3882,7 +3882,12 @@ describe('the bar and Más follow each worker (Personalizar, Barra por puesto)',
     state.call.mockImplementation(async (method) => {
       if (method === 'crm.api.shell.boot')
         return stockBoot({
-          layout: { dock: [], order: [], hidden: ['contactos'], source: 'team' },
+          layout: {
+            dock: [],
+            order: [],
+            hidden: ['contactos'],
+            source: 'team',
+          },
         })
       return null
     })
@@ -3955,9 +3960,9 @@ describe('the bar and Más follow each worker (Personalizar, Barra por puesto)',
     await until(sheet)
     await settle()
     const order = () =>
-      [
-        ...sheet().querySelectorAll('[data-reorder-list="bar"] > li'),
-      ].map((li) => li.dataset.layoutRow)
+      [...sheet().querySelectorAll('[data-reorder-list="bar"] > li')].map(
+        (li) => li.dataset.layoutRow,
+      )
     expect(order()).toEqual(['inventario', 'compras', 'productos'])
     row('productos')
       .querySelector('[data-drag-handle]')
@@ -4006,7 +4011,14 @@ describe('the bar and Más follow each worker (Personalizar, Barra por puesto)',
     const calls = []
     const owner = boot({
       user: { name: 'o@x.test', nav_role: 'dueno', arranges_team: true },
-      modules: on('hoy', 'pendientes', 'gastos', 'resultados', 'bancos', 'ventas'),
+      modules: on(
+        'hoy',
+        'pendientes',
+        'gastos',
+        'resultados',
+        'bancos',
+        'ventas',
+      ),
     })
     state.call.mockImplementation(async (method, args) => {
       calls.push([method, args])
@@ -4050,7 +4062,9 @@ describe('the bar and Más follow each worker (Personalizar, Barra por puesto)',
     })
     await mount('/compras')
     await openMore()
-    expect(document.querySelector('[data-testid="more-team-layout"]')).toBeNull()
+    expect(
+      document.querySelector('[data-testid="more-team-layout"]'),
+    ).toBeNull()
   })
 
   it('desktop rail: the bar’s places lead, the hidden wait behind «Más»', async () => {

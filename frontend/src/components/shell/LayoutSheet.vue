@@ -20,7 +20,11 @@
         class="h-11 w-full rounded-6 border-0 bg-surface-gray-2 pl-3 pr-8 text-base"
         data-testid="layout-class"
       >
-        <option v-for="(label, key) in NAV_CLASS_LABELS" :key="key" :value="key">
+        <option
+          v-for="(label, key) in NAV_CLASS_LABELS"
+          :key="key"
+          :value="key"
+        >
           {{ label }}{{ teamLayouts[key] ? '' : ` · ${__('suggested')}` }}
         </option>
       </select>
@@ -96,10 +100,7 @@
       </section>
 
       <section aria-labelledby="layout-more">
-        <h3
-          id="layout-more"
-          class="pb-2 text-sm font-semibold text-ink-gray-7"
-        >
+        <h3 id="layout-more" class="pb-2 text-sm font-semibold text-ink-gray-7">
           {{ __('In Más') }}
         </h3>
         <ul class="space-y-1" data-reorder-list="more">
@@ -214,7 +215,9 @@
       />
       <Button
         variant="solid"
-        :label="team ? __('Save for {0}', [NAV_CLASS_LABELS[klass]]) : __('Save')"
+        :label="
+          team ? __('Save for {0}', [NAV_CLASS_LABELS[klass]]) : __('Save')
+        "
         :loading="busy === 'save'"
         :disabled="!!busy || (team && !teamLoaded)"
         data-testid="layout-save"

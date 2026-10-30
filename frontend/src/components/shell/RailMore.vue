@@ -6,7 +6,9 @@
       ref="trigger"
       type="button"
       class="flex flex-none items-center rounded-6 text-ink-gray-6 hover:bg-surface-gray-2 hover:text-ink-gray-8"
-      :class="expanded ? 'h-8 w-full gap-3 px-2.5 text-sm' : 'size-10 justify-center'"
+      :class="
+        expanded ? 'h-8 w-full gap-3 px-2.5 text-sm' : 'size-10 justify-center'
+      "
       :aria-label="__('More')"
       :data-tip="tipText"
       :aria-expanded="open"
@@ -45,9 +47,7 @@
             v-for="place in hidden"
             :key="place.key"
             role="menuitem"
-            v-bind="
-              place.app ? { href: hrefs[place.key] } : { to: place.to }
-            "
+            v-bind="place.app ? { href: hrefs[place.key] } : { to: place.to }"
             :aria-current="place.key === active ? 'page' : undefined"
             :data-module="place.app ? undefined : place.key"
             :data-sibling="place.app ? place.key : undefined"
@@ -83,7 +83,10 @@
           data-testid="rail-team-layout"
           @click="customize('team')"
         >
-          <span class="lucide-users size-4 text-ink-gray-6" aria-hidden="true" />
+          <span
+            class="lucide-users size-4 text-ink-gray-6"
+            aria-hidden="true"
+          />
           {{ __('Bar by puesto') }}
         </button>
       </div>

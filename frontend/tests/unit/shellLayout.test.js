@@ -64,7 +64,12 @@ describe('arrangeShell', () => {
       },
     })
     // Hoy is never hidden; the saved dock leads, the registry fills the rest.
-    expect(keys(arranged.bar)).toEqual(['hoy', 'productos', 'pos', 'pendientes'])
+    expect(keys(arranged.bar)).toEqual([
+      'hoy',
+      'productos',
+      'pos',
+      'pendientes',
+    ])
     // The saved order first, then what it does not name in registry order.
     expect(keys(arranged.more)).toEqual(['contactos', 'scan', 'inventario'])
     expect(keys(arranged.hidden)).toEqual(['compras'])

@@ -183,7 +183,10 @@
           data-testid="more-team-layout"
           @click="customize('team')"
         >
-          <span class="lucide-users size-4 text-ink-gray-6" aria-hidden="true" />
+          <span
+            class="lucide-users size-4 text-ink-gray-6"
+            aria-hidden="true"
+          />
           {{ __('Bar by puesto') }}
         </button>
 
@@ -453,7 +456,9 @@ const siblings = computed(() =>
   shellLayout.value.more.filter((place) => place.app).map(withHref),
 )
 const hiddenPlaces = computed(() =>
-  shellLayout.value.hidden.map((place) => (place.app ? withHref(place) : place)),
+  shellLayout.value.hidden.map((place) =>
+    place.app ? withHref(place) : place,
+  ),
 )
 function customize(mode) {
   close()

@@ -267,11 +267,7 @@ import {
   shortcutSheet,
   useShellKeyboard,
 } from '@/composables/shellKeyboard'
-import {
-  scanPickHref,
-  siblingHref,
-  toggleRail,
-} from '@/composables/shellRail'
+import { scanPickHref, siblingHref, toggleRail } from '@/composables/shellRail'
 import { createTargetFor } from '@/utils/shellCreate'
 import { applyShellAppearance } from '@/utils/shellAppearance'
 import { moduleRefusal } from '@/utils/shellRoutes'

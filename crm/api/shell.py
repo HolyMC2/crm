@@ -911,7 +911,7 @@ def boot():
 			"puesto": puesto,
 			"nav_role": klass,
 			"is_admin": "System Manager" in frappe.get_roles(),
-			# May set the bar and Más for each puesto (Más › Barra por puesto).
+			# May set the bar and Más for each puesto (Más > Barra por puesto).
 			"arranges_team": _may_arrange_team(),
 		},
 		# What the client keys its boot copy by (also in the page boot as shell_scope).
@@ -964,7 +964,7 @@ def save_mobile_slots(slots: str | list):
 
 @frappe.whitelist(methods=["POST"])
 def save_layout(layout: str | dict):
-	"""The worker's own bar, Más order and hidden places (Más › Personalizar)."""
+	"""The worker's own bar, Más order and hidden places (Más > Personalizar)."""
 	_signed_in()
 	clean = _clean_layout(layout)
 	if clean is None:
@@ -997,7 +997,7 @@ def _require_team():
 
 @frappe.whitelist()
 def team_layouts():
-	"""The owner's layout per bar class (Más › Barra por puesto)."""
+	"""The owner's layout per bar class (Más > Barra por puesto)."""
 	_require_team()
 	return {"layouts": _team_layouts()}
 
