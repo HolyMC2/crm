@@ -1,95 +1,129 @@
 <template>
-  <div class="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
-    <div class="mx-auto w-full max-w-4xl px-4 pb-10 pt-4 sm:px-6">
-      <nav class="mb-3">
-        <button
-          class="flex min-h-11 items-center gap-1 text-sm text-ink-gray-7 hover:text-ink-gray-9"
-          @click="goBack()"
-        >
-          <LucideArrowLeft class="h-4 w-4" />
-          {{ backLabel }}
-        </button>
-      </nav>
-      <section v-if="guard" role="alert" class="max-w-xl space-y-4 py-6">
-        <h1 class="text-xl font-semibold">{{ guard.title }}</h1>
-        <p class="text-base text-ink-gray-7">{{ guard.detail }}</p>
-        <div class="flex flex-wrap gap-2">
-          <Button :label="__('Retry', null, 'Compras')" @click="load" />
-          <Button :label="__('Back to Compras')" @click="goBack()" />
+  <!-- A purchase request (Shell look, record-header): the bar names what is
+       asked for with its state and number, the bolt with its steps and «⋯»
+       with every tool. The hero says how much is ordered and received, when
+       it is needed and the one next step: choose the supplier and prepare
+       the purchase. Then the lines and the purchases made from it; Actividad
+       sits beside them on a desk. -->
+  <div class="relative flex h-full min-w-0 flex-1 flex-col overflow-hidden">
+    <AppBar
+      :back="true"
+      :back-label="backLabel"
+      :title="title"
+      :bell="phone"
+      @back="onBack"
+    >
+      <template v-if="doc.name" #title>
+        <div class="flex min-h-12 min-w-0 flex-col justify-center px-3">
+          <span
+            class="title-face line-clamp-2 break-words text-xl font-semibold leading-tight [text-wrap:balance]"
+            data-appbar-title
+            >{{ title }}</span
+          >
+          <span class="flex min-w-0 items-center gap-2 pt-0.5">
+            <StatusChip
+              :label="chip.label"
+              :tone="chip.tone"
+              data-testid="solicitud-status"
+            />
+            <span class="truncate text-sm leading-tight text-ink-gray-6">{{
+              __('Purchase request {0}', [doc.name])
+            }}</span>
+          </span>
         </div>
-      </section>
-      <div v-else-if="!data.document" role="status" class="py-10 text-sm">
-        {{ __('Loading request…') }}
-      </div>
-      <template v-else>
-        <header class="relative mb-4 pr-12">
-          <RecordKitTools
-            v-if="doc.name"
-            class="absolute right-0 top-0"
-            :kit="kit"
-          />
-          <p class="text-sm text-ink-gray-6">
-            {{ doc.name }} · {{ statusLabel({ ...doc, kind: 'solicitud' }) }}
-          </p>
-          <h1 class="break-words text-2xl font-semibold text-ink-gray-9">
-            {{
-              requestTitle(doc.title) || __('Purchase request', null, 'Compras')
-            }}
-          </h1>
-          <p class="mt-1 text-sm text-ink-gray-6">
-            {{
-              [
-                doc.company,
-                doc.schedule_date &&
-                  __('needed by {0}', [formatDate(doc.schedule_date)]),
-              ]
-                .filter(Boolean)
-                .join(' · ')
-            }}
-          </p>
-          <p class="mt-2 text-base text-ink-gray-8">
-            {{
-              __('{0}% ordered · {1}% received', [
-                qty(doc.per_ordered),
-                qty(doc.per_received),
-              ])
-            }}
-          </p>
-        </header>
-        <StageSteps
-          v-if="kit.stages.value"
-          :stages="kit.stages.value"
-          class="mb-4 py-2"
+      </template>
+      <template #actions>
+        <RecordIsland
+          v-if="doc.name"
+          :reach="kit.record.value?.header?.reach || {}"
+          :who="title"
+          :mail="kit.record.value?.actions?.email || null"
+          :groups="boltGroups"
+          :phone="phone"
+          :subtitle="kit.scopeTitle.value"
+          @mail="mail"
+          @pick="onBolt"
+          @tools="kit.openTools()"
         />
+      </template>
+    </AppBar>
 
-        <ApprovalAsk
-          doctype="Material Request"
-          :name="props.name"
-          @declined="goBack(true)"
-        />
+    <div class="min-h-0 flex-1 overflow-y-auto pb-28 sm:pb-10">
+      <EmptyState
+        v-if="guard"
+        role="alert"
+        state="error"
+        :title="guard.title"
+        :message="guard.detail"
+        :action="__('Retry', null, 'Compras')"
+        @action="load"
+      />
+      <EmptyState
+        v-else-if="!data.document"
+        role="status"
+        state="loading"
+        :title="__('Loading request…')"
+      />
 
-        <div
-          v-if="problem"
-          role="alert"
-          class="mb-4 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
-        >
-          <strong>{{ problem.title }}.</strong> {{ problem.detail }}
-          <Button
-            v-if="problem.kind === 'offline'"
-            class="ml-2"
-            :label="__('Check result')"
-            @click="prepare"
-          />
-        </div>
+      <div
+        v-else
+        class="mx-auto grid w-full max-w-6xl gap-x-6 lg:grid-cols-[minmax(0,1fr)_22rem]"
+      >
+        <div class="flex min-w-0 flex-col gap-5 pt-4">
+          <div class="px-4 empty:hidden">
+            <ApprovalAsk
+              doctype="Material Request"
+              :name="props.name"
+              @declined="goBack(true)"
+            />
+          </div>
 
-        <section
-          v-if="action"
-          class="mb-5 rounded-7 border border-outline-gray-2 p-4"
-          :aria-label="__('Next step', null, 'Compras')"
-        >
-          <template v-if="action.allowed">
-            <div class="flex flex-wrap items-end gap-2">
-              <div class="min-w-[16rem] flex-1">
+          <!-- The hero: how far the request got, when it is needed, and the
+               one next step. -->
+          <section
+            class="flex flex-col gap-2 px-4"
+            :aria-label="__('Next step', null, 'Compras')"
+            data-testid="solicitud-hero"
+          >
+            <p
+              class="num text-3xl font-semibold tabular-nums leading-tight text-ink-gray-9"
+            >
+              {{ __('{0}% ordered', [qty(doc.per_ordered)]) }}
+            </p>
+            <StageSteps
+              v-if="kit.stages.value"
+              :stages="kit.stages.value"
+              class="py-2"
+            />
+            <p class="flex flex-wrap gap-x-3 text-base text-ink-gray-7">
+              <span>{{
+                __('{0}% received', [qty(doc.per_received)], 'Compras')
+              }}</span>
+              <span
+                v-if="doc.schedule_date"
+                :class="late ? 'font-medium text-ink-red-7' : ''"
+                >{{ __('needed by {0}', [formatDay(doc.schedule_date)]) }}</span
+              >
+            </p>
+            <div
+              v-if="problem"
+              role="alert"
+              class="space-y-2 rounded-6 bg-surface-red-1 p-3 text-base text-ink-red-7"
+            >
+              <p>
+                <strong>{{ problem.title }}.</strong> {{ problem.detail }}
+              </p>
+              <button
+                v-if="problem.kind === 'offline'"
+                type="button"
+                :class="['press', BTN.tonal]"
+                @click="prepare"
+              >
+                {{ __('Check result') }}
+              </button>
+            </div>
+            <template v-if="action?.allowed">
+              <div data-solicitud-proveedor class="max-w-xl pt-2">
                 <ComprasPicker
                   v-model="supplier"
                   :display="supplierLabel"
@@ -100,118 +134,162 @@
                   @pick="(o) => (supplierLabel = o.label)"
                 />
               </div>
-              <Button
-                variant="solid"
-                class="min-h-11"
-                :label="action.label"
-                :loading="busy"
-                :disabled="!supplier"
-                @click="prepare"
-              />
-            </div>
-            <p class="mt-2 text-xs text-ink-gray-5">
-              {{
-                __(
-                  'If a draft purchase for this supplier already exists, you continue it instead of creating another.',
-                )
-              }}
-            </p>
-          </template>
-          <template v-else>
-            <p class="text-base-medium">{{ action.reason }}</p>
-            <!-- Drafts and transfer/manufacture requests continue on their own form. -->
-            <Button
-              v-if="action.resolve?.kind === 'desk'"
-              variant="solid"
-              class="mt-3 min-h-11"
-              :label="action.resolve.label"
-              :link="action.resolve.href"
-            />
-            <Button
-              v-else-if="action.resolve"
-              variant="solid"
-              class="mt-3 min-h-11"
-              :label="action.resolve.label"
-              @click="handoffOpen = true"
-            />
-          </template>
-        </section>
-
-        <section class="mb-6" :aria-label="__('Items', null, 'Compras')">
-          <h2 class="mb-2 text-base font-semibold">
-            {{ __('Items ({0})', [data.rows_scope?.total || 0]) }}
-          </h2>
-          <ul
-            class="divide-y divide-outline-gray-1 rounded-6 border border-outline-gray-2"
-          >
-            <li v-for="row in data.rows" :key="row.name" class="flex gap-3 p-3">
-              <div class="min-w-0 flex-1">
-                <p class="truncate font-medium">
-                  {{ row.item_name || row.item_code }}
-                </p>
-                <p class="truncate text-xs text-ink-gray-5">
-                  {{
-                    [row.item_code, row.warehouse].filter(Boolean).join(' · ')
-                  }}
-                </p>
-                <p class="mt-1 text-sm text-ink-gray-8">
-                  {{
-                    __('Ordered {0} · received {1} of {2} {3}', [
-                      qty(row.ordered_qty),
-                      qty(row.received_qty),
-                      qty(row.stock_qty),
-                      row.stock_uom,
-                    ])
-                  }}
-                </p>
-              </div>
-              <p class="shrink-0 text-sm font-medium tabular-nums">
-                {{ qty(row.qty) }} {{ row.uom }}
+              <p class="text-sm text-ink-gray-6">
+                {{
+                  __(
+                    'If a draft purchase for this supplier already exists, you continue it instead of creating another.',
+                  )
+                }}
               </p>
-            </li>
-          </ul>
-        </section>
+            </template>
+            <p
+              v-else-if="action"
+              class="break-words text-base text-ink-gray-8"
+            >
+              {{ action.reason }}
+            </p>
+            <div
+              v-if="nextSteps.length"
+              class="flex flex-wrap gap-2 pt-2"
+              data-testid="solicitud-next"
+            >
+              <template v-for="(step, i) in nextSteps" :key="step.key">
+                <!-- Native elements: `:is="'button'"` would resolve to the
+                     globally registered frappe-ui Button. -->
+                <a
+                  v-if="step.href"
+                  :href="step.href"
+                  :class="['press', i === 0 ? BTN.filled : BTN.tonal]"
+                  :data-step="step.key"
+                >
+                  <span :class="[step.icon, 'size-5']" aria-hidden="true" />
+                  {{ step.label }}
+                </a>
+                <button
+                  v-else
+                  type="button"
+                  :class="['press', i === 0 ? BTN.filled : BTN.tonal]"
+                  :disabled="step.disabled || (busy && step.busy)"
+                  :data-step="step.key"
+                  @click="step.run()"
+                >
+                  <span
+                    :class="[
+                      busy && step.busy
+                        ? 'lucide-loader-circle animate-spin'
+                        : step.icon,
+                      'size-5',
+                    ]"
+                    aria-hidden="true"
+                  />
+                  {{ step.label }}
+                </button>
+              </template>
+            </div>
+          </section>
 
-        <section :aria-label="__('Purchases', null, 'Compras')">
-          <h2 class="mb-2 text-base font-semibold">
-            {{ __('Purchases', null, 'Compras') }}
-          </h2>
-          <p v-if="!data.orders.length" class="text-sm text-ink-gray-6">
-            {{ __('No purchase has been prepared from this request yet.') }}
-          </p>
-          <ul
-            v-else
-            class="divide-y divide-outline-gray-1 rounded-6 border border-outline-gray-2"
-          >
-            <li v-for="row in data.orders" :key="row.name">
-              <RouterLink
-                :to="{ name: 'CompraOrden', params: { name: row.name } }"
-                class="flex min-h-14 items-center gap-3 px-3 py-2 hover:bg-surface-gray-1"
+          <!-- What is asked for: ordered and received per line. -->
+          <section class="px-4" aria-labelledby="solicitud-items">
+            <h2
+              id="solicitud-items"
+              class="pb-1 text-base font-semibold text-ink-gray-9"
+            >
+              {{ __('Items ({0})', [data.rows_scope?.total || 0]) }}
+            </h2>
+            <ul class="divide-y divide-outline-gray-1">
+              <li
+                v-for="row in data.rows"
+                :key="row.name"
+                class="flex min-w-0 gap-3 py-3"
               >
-                <span class="min-w-0 flex-1">
-                  <span class="block truncate font-medium">{{
-                    row.party || row.name
-                  }}</span>
-                  <span class="block truncate text-sm text-ink-gray-6"
-                    >{{ row.name }} · {{ statusLabel(row) }}
-                    <template v-if="Number(row.docstatus) === 1">
-                      · {{ progressLabel(row) }}</template
-                    ></span
+                <div class="min-w-0 flex-1">
+                  <p class="break-words text-base text-ink-gray-9">
+                    {{ row.item_name || row.item_code }}
+                  </p>
+                  <p class="break-words text-sm text-ink-gray-6">
+                    {{
+                      [row.item_code, row.warehouse].filter(Boolean).join(' · ')
+                    }}
+                  </p>
+                  <p
+                    class="pt-0.5 text-sm"
+                    :class="
+                      Number(row.received_qty) >= Number(row.stock_qty)
+                        ? 'text-ink-green-8'
+                        : 'text-ink-gray-8'
+                    "
                   >
-                </span>
-                <LucideChevronRight class="h-4 w-4" />
-              </RouterLink>
-            </li>
-          </ul>
-        </section>
-        <!-- Shell SPEC §6 DD2: the engine's «Creado desde», Conexiones, Actividad and «⋯» sheets. -->
-        <RecordKit
-          v-if="doc.name"
-          class="mt-6 -mx-4 sm:-mx-6"
-          :kit="kit"
-          :title="requestTitle(doc.title)"
-        />
-      </template>
+                    {{
+                      __('Ordered {0} · received {1} of {2} {3}', [
+                        qty(row.ordered_qty),
+                        qty(row.received_qty),
+                        qty(row.stock_qty),
+                        row.stock_uom,
+                      ])
+                    }}
+                  </p>
+                </div>
+                <p
+                  class="num shrink-0 text-base tabular-nums text-ink-gray-9"
+                >
+                  {{ qty(row.qty) }} {{ row.uom }}
+                </p>
+              </li>
+            </ul>
+          </section>
+        </div>
+
+        <aside class="flex min-w-0 flex-col gap-5 pt-5 lg:pt-4">
+          <!-- The purchases prepared from it, each to its own record. -->
+          <section class="px-4" aria-labelledby="solicitud-compras">
+            <h2
+              id="solicitud-compras"
+              class="pb-1 text-base font-semibold text-ink-gray-9"
+            >
+              {{ __('Purchases', null, 'Compras') }}
+            </h2>
+            <p
+              v-if="!data.orders.length"
+              class="flex min-h-11 items-center gap-2 text-base text-ink-gray-6"
+            >
+              {{ __('No purchase has been prepared from this request yet.') }}
+            </p>
+            <ul v-else class="divide-y divide-outline-gray-1">
+              <li v-for="row in data.orders" :key="row.name">
+                <RouterLink
+                  :to="{ name: 'CompraOrden', params: { name: row.name } }"
+                  class="press flex min-h-14 w-full items-center gap-3 rounded-6 py-2 [@media(hover:hover)]:hover:bg-surface-gray-1"
+                >
+                  <span
+                    class="flex size-10 flex-none items-center justify-center rounded-full bg-surface-gray-2 text-ink-gray-7"
+                    aria-hidden="true"
+                  >
+                    <span class="lucide-shopping-cart size-5" />
+                  </span>
+                  <span class="flex min-w-0 flex-1 flex-col">
+                    <span class="break-words text-base text-ink-gray-9">{{
+                      row.party || row.name
+                    }}</span>
+                    <span class="break-words text-sm text-ink-gray-6"
+                      >{{ statusLabel(row)
+                      }}<template v-if="Number(row.docstatus) === 1">
+                        · {{ progressLabel(row) }}</template
+                      ></span
+                    >
+                  </span>
+                  <span
+                    class="lucide-chevron-right size-4 flex-none text-ink-gray-5"
+                    aria-hidden="true"
+                  />
+                </RouterLink>
+              </li>
+            </ul>
+          </section>
+          <!-- Shell SPEC §6 DD2: the engine's «Creado desde», Conexiones,
+               Actividad and the sheets behind «⋯». -->
+          <RecordKit v-if="doc.name" :kit="kit" :title="title" />
+        </aside>
+      </div>
     </div>
     <HandoffDialog
       v-if="data.document"
@@ -227,8 +305,15 @@
 </template>
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { Button, toast } from 'frappe-ui'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { toast } from 'frappe-ui'
+import { AppBar, EmptyState, StatusChip } from '@/components/ui'
+import RecordIsland from '@/components/documentos/RecordIsland.vue'
+import { isMobile } from '@/composables/breakpoint'
+import { recordActionsFor } from '@/documentos/acciones'
+import { BTN } from '@/documentos/tools'
+import { formatDay } from '@/utils/contactos'
+import { dayDiff, parseServerDate } from '@/utils/display'
 import ComprasPicker from '@/components/compras/ComprasPicker.vue'
 import HandoffDialog from '@/components/compras/HandoffDialog.vue'
 import {
@@ -246,17 +331,14 @@ import {
 import ApprovalAsk from '@/components/pendientes/ApprovalAsk.vue'
 import StageSteps from '@/components/documentos/StageSteps.vue'
 import RecordKit from '@/components/documentos/compras/RecordKit.vue'
-import RecordKitTools from '@/components/documentos/compras/RecordKitTools.vue'
 import { useRecordKit } from '@/components/documentos/compras/recordKit'
 import { requestTitle } from '@/components/documentos/compras/words'
-import { formatDate } from '@/utils/display'
 import { useRecordPower } from '@/composables/useRecordPower'
-import LucideArrowLeft from '~icons/lucide/arrow-left'
-import LucideChevronRight from '~icons/lucide/chevron-right'
 
 const props = defineProps({ name: { type: String, required: true } })
 const route = useRoute()
 const router = useRouter()
+const phone = isMobile
 const data = ref({})
 const guard = ref(null)
 const problem = ref(null)
@@ -283,6 +365,107 @@ const backLabel = computed(() =>
       ])
     : __('Compras', null, 'Compras'),
 )
+
+// ── the bar: what is asked for, how far it got, its number ───────────────
+const title = computed(
+  () =>
+    requestTitle(doc.value.title) || __('Purchase request', null, 'Compras'),
+)
+const chip = computed(() => {
+  const d = doc.value
+  if (Number(d.docstatus) === 0)
+    return { label: __('Draft', null, 'Compras'), tone: 'warning' }
+  if (Number(d.docstatus) === 2)
+    return { label: __('Cancelled', null, 'Compras'), tone: 'neutral' }
+  if (Number(d.per_ordered) >= 100)
+    return { label: __('Ordered', null, 'Compras'), tone: 'success' }
+  if (Number(d.per_ordered) > 0)
+    return {
+      label: __('{0}% ordered', [qty(d.per_ordered)]),
+      tone: 'info',
+    }
+  return { label: __('To order'), tone: late.value ? 'danger' : 'warning' }
+})
+// Needed already and nothing ordered for it yet: the date goes red.
+const late = computed(() => {
+  const d = doc.value
+  if (Number(d.docstatus) !== 1 || Number(d.per_ordered) >= 100) return false
+  const date = parseServerDate(d.schedule_date)
+  return !!date && dayDiff(date) < 0
+})
+function onBack(event) {
+  event?.preventDefault?.()
+  goBack()
+}
+
+// ── the hero's steps: prepare the purchase (filled), or its way out ──────
+const canPrint = computed(() => !!kit.record.value?.actions?.print?.allowed)
+const nextSteps = computed(() => {
+  const out = []
+  const a = action.value
+  if (a?.allowed)
+    out.push({
+      key: 'prepare',
+      label: a.label,
+      icon: 'lucide-shopping-cart',
+      busy: true,
+      disabled: !supplier.value,
+      run: prepare,
+    })
+  else if (a?.resolve?.kind === 'desk')
+    // Drafts and transfer/manufacture requests continue on their own form.
+    out.push({
+      key: 'desk',
+      label: a.resolve.label,
+      icon: 'lucide-file-text',
+      href: a.resolve.href,
+    })
+  else if (a?.resolve)
+    out.push({
+      key: 'ask',
+      label: a.resolve.label,
+      icon: 'lucide-send',
+      run: () => (handoffOpen.value = true),
+    })
+  if (canPrint.value)
+    out.push({
+      key: 'print',
+      label: __('Print', null, 'Compras'),
+      icon: 'lucide-printer',
+      run: () => kit.onTool('print'),
+    })
+  return out
+})
+
+// ── the bolt: the hero's steps; «⋯» keeps print, share, mail and the rest ─
+const boltSteps = computed(() =>
+  nextSteps.value.map((step) =>
+    step.key === 'prepare' && !supplier.value
+      ? // No supplier yet: the bolt takes the worker to the picker.
+        { ...step, run: focusSupplier }
+      : step.href
+        ? { ...step, run: () => window.location.assign(step.href) }
+        : step,
+  ),
+)
+const boltGroups = computed(() =>
+  recordActionsFor({ steps: boltSteps.value, tools: kit.tools.value }),
+)
+function onBolt({ key }) {
+  if (key.startsWith('paso:')) boltSteps.value[Number(key.slice(5))]?.run()
+  else kit.onTool(key)
+}
+function focusSupplier() {
+  const box = document.querySelector('[data-solicitud-proveedor]')
+  box?.scrollIntoView({ block: 'center' })
+  box?.querySelector('button, input')?.focus()
+}
+function mail() {
+  const action = kit.record.value?.actions?.email
+  if (action?.allowed) kit.onTool('correo')
+  else
+    toast.error(action?.reason || __('This request cannot be sent by email.'))
+}
 
 async function load() {
   guard.value = null

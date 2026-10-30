@@ -29753,3 +29753,24 @@ msgstr "Gasto {0}"
 
 msgid "This expense cannot be sent by email."
 msgstr "Este gasto no se puede enviar por correo."
+
+# Compras solicitud: the record bar and hero (lane compras-records-ux-20261030)
+msgctxt "Compras"
+msgid "Ordered"
+msgstr "Pedida"
+
+msgctxt "Compras"
+msgid "{0}% received"
+msgstr "{0}% recibido"
+
+msgid "Purchase request {0}"
+msgstr "Solicitud de compra {0}"
+
+msgid "This request cannot be sent by email."
+msgstr "Esta solicitud no se puede enviar por correo."
+
+msgid "To order"
+msgstr "Por pedir"
+
+msgid "{0}% ordered"
+msgstr "{0}% pedido"

@@ -254,7 +254,7 @@ const routes = [
     name: 'CompraSolicitud',
     component: () => import('@/pages/CompraSolicitud.vue'),
     props: true,
-    meta: { app: 'compras', title: 'Compras', listParent: 'Compras' },
+    meta: { app: 'compras', title: 'Compras', ownPhoneHeader: true },
   },
   {
     // «Capturar documento» review (books capture pipeline → a draft record).
