@@ -346,11 +346,11 @@
           ⚠ {{ __('Sin asignar') }}
           <span
             class="rounded-full bg-surface-amber-1 px-1.5 text-[10px] text-ink-amber-9"
-            >{{ visibleUnassigned.length }}</span
+            >{{ shownUnassigned.length }}</span
           >
         </div>
         <button
-          v-for="u in visibleUnassigned"
+          v-for="u in shownUnassigned"
           :key="orphanKey(u)"
           data-key-row
           role="option"
@@ -439,8 +439,7 @@
           inboxTab !== 'aprobar' &&
           inboxTab !== 'snoozed' &&
           !replying &&
-          !queueTag &&
-          !queueFilterCount
+          !unstatusedHidden
         "
         class="mb-1.5"
       >
@@ -519,8 +518,7 @@
           inboxTab !== 'aprobar' &&
           inboxTab !== 'snoozed' &&
           !replying &&
-          !queueTag &&
-          !queueFilterCount
+          !unstatusedHidden
         "
         class="mb-1.5"
       >
@@ -629,7 +627,7 @@
       <div
         v-if="
           inboxTab === 'comments' ||
-          (inboxTab === 'all' && commentGroups.length && !queueFilterCount)
+          (inboxTab === 'all' && commentGroups.length && !unstatusedHidden)
         "
         class="mb-1.5"
       >
@@ -1145,6 +1143,7 @@ import {
 } from '@/composables/push'
 import { isMobile } from '@/composables/breakpoint'
 import { lastMessageText } from '@/utils/inboxMessage'
+import { filtersHideUnstatused, orphansForFilters } from '@/utils/inboxOrphans'
 import { formatMoney } from '@/composables/crmFormat'
 import { useListKeys } from '@/composables/pageKeys'
 import AutoAckReview from '@/components/doco/inbox/AutoAckReview.vue'
@@ -1177,7 +1176,13 @@ import {
   conversationTags,
   queueTag,
   setQueueTag,
-  queueFilterCount,
+  queueDealStatus,
+  queueLeadStatus,
+  queueRepairStatus,
+  queueDealState,
+  queueLeadState,
+  queueDateFrom,
+  queueDateTo,
   queueHasMore,
   queueLoadingMore,
   loadMoreQueue,
@@ -1467,17 +1472,30 @@ const visibleUnassigned = computed(() => {
   )
 })
 
+const recordFilters = computed(() => ({
+  tag: queueTag.value,
+  dealStatus: queueDealStatus.value,
+  leadStatus: queueLeadStatus.value,
+  repairStatus: queueRepairStatus.value,
+  dealState: queueDealState.value,
+  leadState: queueLeadState.value,
+  dateFrom: queueDateFrom.value,
+  dateTo: queueDateTo.value,
+}))
+// Archivados, Limpiados and comments have no status either: the same rule.
+const unstatusedHidden = computed(() =>
+  filtersHideUnstatused(recordFilters.value),
+)
+
 // The orphans the list actually shows above the deals: hidden on Comentarios
-// and Pospuestos and while a tag or a filter narrows the queue (the default
-// «Abiertos» filter included). The loading, error and empty states count only
-// these, so a hidden orphan never leaves the list blank while the queue loads.
+// and Pospuestos, and filtered by the record filters an orphan can answer
+// (utils/inboxOrphans — the default «Abiertos» view keeps them). The loading,
+// error and empty states count only these, so a hidden orphan never leaves the
+// list blank while the queue loads.
 const shownUnassigned = computed(() =>
-  inboxTab.value === 'comments' ||
-  inboxTab.value === 'snoozed' ||
-  queueTag.value ||
-  queueFilterCount.value
+  inboxTab.value === 'comments' || inboxTab.value === 'snoozed'
     ? []
-    : visibleUnassigned.value,
+    : orphansForFilters(visibleUnassigned.value, recordFilters.value),
 )
 
 // Archived orphans, same channel-scoping as the live list.
@@ -1516,10 +1534,12 @@ const selectedRowKey = computed(() => {
 // Keys of the rows actually rendered, in DOM order (orphans → comments → conversations).
 const renderedKeys = computed(() => {
   const ks = []
-  for (const u of visibleUnassigned.value) ks.push(orphanKey(u))
+  for (const u of shownUnassigned.value) ks.push(orphanKey(u))
   const commentsShown =
     inboxTab.value === 'comments' ||
-    (inboxTab.value === 'all' && commentGroups.value.length)
+    (inboxTab.value === 'all' &&
+      commentGroups.value.length &&
+      !unstatusedHidden.value)
   if (commentsShown) for (const g of commentGroups.value) ks.push(commentKey(g))
   if (inboxTab.value !== 'comments' && inboxTab.value !== 'aprobar')
     for (const r of rows.value) ks.push(convKey(r))
