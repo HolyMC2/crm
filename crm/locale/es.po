@@ -29332,3 +29332,136 @@ msgstr "De {0}"
 #: frontend/src/composables/useAprobaciones.js
 msgid "Approve in {0}"
 msgstr "Aprobar en {0}"
+
+#: frontend/src/components/assistant/assistantAgenda.js
+msgid "Coming up"
+msgstr "Próximos"
+
+#: frontend/src/components/assistant/assistantAgenda.js
+msgid "Waiting"
+msgstr "Esperando"
+
+#: frontend/src/components/assistant/assistantAgenda.js
+msgid "In 1 hour"
+msgstr "En 1 hora"
+
+#: frontend/src/components/assistant/assistantAgenda.js
+msgid "Tomorrow 9:00"
+msgstr "Mañana 9:00"
+
+#: frontend/src/components/assistant/assistantAgenda.js
+msgid "Monday 9:00"
+msgstr "Lunes 9:00"
+
+#: frontend/src/components/assistant/AssistantAgenda.vue
+msgid "Nothing on the agenda. Ask Muelle «remind me tomorrow at 9 to call Andrés» or «/encarga on Friday put together the posts for the week»."
+msgstr "No hay nada en la agenda. Pídele a Muelle «recuérdame mañana a las 9 llamar a Andrés» o «/encarga el viernes arma los posts de la semana»."
+
+#: frontend/src/components/assistant/AssistantAgenda.vue
+msgctxt "Encargo"
+msgid "Done"
+msgstr "Hecho"
+
+#: frontend/src/components/assistant/AssistantAgenda.vue
+msgid "Snooze"
+msgstr "Posponer"
+
+#: frontend/src/components/assistant/AssistantAgenda.vue
+msgid "Cancel it"
+msgstr "Cancelarlo"
+
+#: frontend/src/components/assistant/AssistantAgenda.vue
+msgid "Pick a time"
+msgstr "Elige una hora"
+
+#: frontend/src/components/assistant/AssistantAgenda.vue
+msgid "every day"
+msgstr "cada día"
+
+#: frontend/src/components/assistant/AssistantAgenda.vue
+msgid "every week"
+msgstr "cada semana"
+
+#: frontend/src/components/assistant/AssistantAgenda.vue
+msgid "every month"
+msgstr "cada mes"
+
+#: frontend/src/components/assistant/AssistantCanvas.vue
+msgid "The Lienzo is empty. Ask Muelle for a chart or a table and it shows up here and under its answer."
+msgstr "El Lienzo está vacío. Pídele a Muelle una gráfica o una tabla y aparece aquí y debajo de su respuesta."
+
+#: frontend/src/components/assistant/AssistantCanvasFile.vue
+msgid "Open in Lienzo"
+msgstr "Abrir en Lienzo"
+
+#: frontend/src/components/assistant/AssistantComposer.vue
+msgid "Coworkers"
+msgstr "Compañeros"
+
+#: frontend/src/components/assistant/AssistantComposer.vue
+msgid "Commands"
+msgstr "Comandos"
+
+#: frontend/src/components/assistant/AssistantComposer.vue
+msgid "(you)"
+msgstr "(tú)"
+
+#: frontend/src/components/assistant/AssistantHeader.vue
+msgid "New conversation (settles what is finished)"
+msgstr "Nueva conversación (liquida lo terminado)"
+
+#: frontend/src/components/assistant/AssistantHeader.vue
+msgid "Agenda ({0} today)"
+msgstr "Agenda ({0} hoy)"
+
+#: frontend/src/components/assistant/AssistantHeader.vue
+msgid "Lienzo"
+msgstr "Lienzo"
+
+#: frontend/src/components/assistant/assistantSessions.js
+msgid "Settled."
+msgstr "Liquidado."
+
+#: frontend/src/components/assistant/assistantSessions.js
+msgid "Archived 1 finished conversation."
+msgstr "Archivé 1 conversación terminada."
+
+#: frontend/src/components/assistant/assistantSessions.js
+msgid "Archived {0} finished conversations."
+msgstr "Archivé {0} conversaciones terminadas."
+
+#: frontend/src/components/assistant/assistantSessions.js
+msgid "1 change waiting for your yes"
+msgstr "1 cambio esperando tu sí"
+
+#: frontend/src/components/assistant/assistantSessions.js
+msgid "{0} changes waiting for your yes"
+msgstr "{0} cambios esperando tu sí"
+
+#: frontend/src/components/assistant/assistantSessions.js
+msgid "1 capture to finish"
+msgstr "1 captura por terminar"
+
+#: frontend/src/components/assistant/assistantSessions.js
+msgid "{0} captures to finish"
+msgstr "{0} capturas por terminar"
+
+#: frontend/src/components/assistant/assistantSessions.js
+msgid "1 task on the agenda"
+msgstr "1 encargo en la agenda"
+
+#: frontend/src/components/assistant/assistantSessions.js
+msgid "{0} tasks on the agenda"
+msgstr "{0} encargos en la agenda"
+
+#: frontend/src/components/assistant/assistantSessions.js
+msgid "({0} today)"
+msgstr "({0} hoy)"
+
+#: frontend/src/components/assistant/assistantSessions.js
+msgid "Still open: {0}."
+msgstr "Sigue abierto: {0}."
+
+#: frontend/src/components/assistant/assistantSessions.js
+msgid "Nothing stays open."
+msgstr "No queda nada abierto."

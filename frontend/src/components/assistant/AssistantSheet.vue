@@ -25,8 +25,13 @@
       <AssistantHeader :closable="isMobile" @close="closeAssistant" />
     </template>
     <div ref="panel" data-testid="assistant-sheet">
+      <AssistantAgenda
+        v-if="sessions.view === 'agenda'"
+        @navigate="onNavigate"
+      />
+      <AssistantCanvas v-else-if="sessions.view === 'canvas'" />
       <AssistantOpenWork
-        v-if="sessions.view === 'open'"
+        v-else-if="sessions.view === 'open'"
         @navigate="onNavigate"
       />
       <AssistantConversations
@@ -41,7 +46,14 @@
   </BottomSheet>
 </template>
 <script setup>
-import { computed, getCurrentInstance, onMounted, ref, watch } from 'vue'
+import {
+  computed,
+  defineAsyncComponent,
+  getCurrentInstance,
+  onMounted,
+  ref,
+  watch,
+} from 'vue'
 import { useRoute } from 'vue-router'
 import { useMediaQuery } from '@vueuse/core'
 import { registerPageKeys } from '@/composables/shellKeyboard'
@@ -64,6 +76,14 @@ import {
   loadStatus,
   screenContext,
 } from './useAssistant'
+
+// the agenda and the Lienzo load on their first open
+const AssistantAgenda = defineAsyncComponent(
+  () => import('./AssistantAgenda.vue'),
+)
+const AssistantCanvas = defineAsyncComponent(
+  () => import('./AssistantCanvas.vue'),
+)
 
 // The dock width the contract names (ASSISTANT.md «wider than 1280px»).
 const docked = useMediaQuery('(min-width: 1280px)')

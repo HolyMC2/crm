@@ -26,6 +26,7 @@ import {
   loadAssistantStatus,
 } from './assistantDoor'
 import { isImageFile } from './assistantFiles'
+import { canvas, onCanvasEvent, takePendingCanvas } from './assistantCanvas'
 
 export { ASSISTANT_API }
 // A turn that stays silent this long gets an honest line and a history check.
@@ -101,11 +102,91 @@ export function loadStatus(options) {
   )
 }
 
+// --- a reset ------------------------------------------------------------------
+// «Nueva conversación» empties the log at once; the server's reset follows. A
+// turn of the conversation that ended may still answer (a message sent before
+// the reset is still the person's): its reply, its edits and its typing are
+// the old conversation's and never land in the new one, and a history read
+// that started before the reset is dropped when it arrives.
+const retired = { clients: new Set(), mids: new Set(), busy: false }
+let generation = 0
+/** Our own reset: `pending` while the call runs, then the cutoff it returned. */
+export const ownReset = { pending: false, cutoff: '' }
+
+/** Empties the log for a new conversation; returns what `restoreConversation` puts back. */
+export function retireConversation() {
+  const before = {
+    messages: assistant.messages,
+    cards: assistant.cards,
+    awaitingReceipt: assistant.awaitingReceipt,
+    thinking: assistant.thinking,
+    progress: assistant.progress,
+    busy: retired.busy,
+    clients: [],
+    mids: [],
+  }
+  for (const m of assistant.messages) {
+    if (m.role === 'user' && m.id && !retired.clients.has(m.id)) {
+      retired.clients.add(m.id)
+      before.clients.push(m.id)
+    }
+    if (m.mid && !retired.mids.has(m.mid)) {
+      retired.mids.add(m.mid)
+      before.mids.push(m.mid)
+    }
+  }
+  retired.busy =
+    retired.busy ||
+    assistant.thinking ||
+    assistant.messages.some((m) => m.pending)
+  generation += 1
+  clearTimeout(silence)
+  // what the old turn wrote to the Lienzo stays there, not under a new answer
+  canvas.pending = []
+  Object.assign(assistant, {
+    messages: [],
+    cards: {},
+    awaitingReceipt: null,
+    thinking: false,
+    progress: '',
+    error: '',
+  })
+  return before
+}
+
+/** The reset failed: the conversation comes back as it was. */
+export function restoreConversation(before) {
+  for (const id of before.clients) retired.clients.delete(id)
+  for (const mid of before.mids) retired.mids.delete(mid)
+  retired.busy = before.busy
+  generation += 1
+  Object.assign(assistant, {
+    messages: before.messages,
+    cards: before.cards,
+    awaitingReceipt: before.awaitingReceipt,
+    thinking: before.thinking,
+    progress: before.progress,
+  })
+  armWatchdog()
+}
+
+function isRetired(payload) {
+  if (payload.client_id && retired.clients.has(payload.client_id)) {
+    if (payload.mid) retired.mids.add(payload.mid)
+    return true
+  }
+  return Boolean(payload.edit && payload.mid && retired.mids.has(payload.mid))
+}
+
 export async function loadHistory() {
+  const asked = generation
   try {
     const rows = await call(`${ASSISTANT_API}.history`, { limit: 40 })
+    if (asked !== generation) return
     const known = mergeHistory(
-      (rows || []).map(normalizeRow),
+      (rows || [])
+        .filter((row) => !retired.mids.has(row.mid))
+        .map(normalizeRow),
       assistant.messages,
     )
     // Sends the server has not logged yet stay at the end.
@@ -230,6 +311,8 @@ export async function send(text, { context = undefined, file = null } = {}) {
   assistant.messages = [...assistant.messages, message]
   assistant.error = ''
   assistant.thinking = true
+  // from here a typing event may be this turn's
+  retired.busy = false
   armWatchdog()
   const ctx =
     context !== undefined
@@ -312,6 +395,11 @@ function ours(payload) {
 
 export function onMessage(payload) {
   if (!ours(payload)) return
+  if (isRetired(payload)) {
+    if (!isProgress({ text: payload.text, buttons: payload.buttons }))
+      retired.busy = false
+    return
+  }
   const incoming = {
     ...normalizeRow({ ...payload, kind: 'bot' }),
     answer: payload.answer || null,
@@ -319,6 +407,8 @@ export function onMessage(payload) {
   const index = payload.edit
     ? assistant.messages.findIndex((m) => m.mid && m.mid === payload.mid)
     : -1
+  if (!isProgress(incoming) && canvas.pending.length)
+    incoming.canvas = takePendingCanvas()
   if (index >= 0) {
     const next = assistant.messages.slice()
     next[index] = {
@@ -349,15 +439,16 @@ export function onMessage(payload) {
 }
 
 export function onTyping(payload) {
-  if (!ours(payload)) return
+  if (!ours(payload) || retired.busy) return
   assistant.thinking = true
   armWatchdog()
 }
 
+/** A reset from another tab or the Desk; our own one already emptied the log. */
 export function onReset(payload) {
-  if (!ours(payload)) return
-  assistant.messages = []
-  assistant.cards = {}
+  if (!ours(payload) || ownReset.pending) return
+  if (payload?.cutoff && payload.cutoff === ownReset.cutoff) return
+  retireConversation()
   loadHistory()
 }
 
@@ -372,6 +463,7 @@ export function bindSocket(socket) {
   socket.on('doco_assistant_message', onMessage)
   socket.on('doco_assistant_typing', onTyping)
   socket.on('doco_assistant_reset', onReset)
+  socket.on('doco_assistant_canvas', onCanvasEvent)
   window.addEventListener('socket:reconnected', onReconnected)
 }
 
@@ -428,6 +520,11 @@ export function _resetAssistant() {
     loaded: false,
   })
   _resetAssistantDoor()
+  retired.clients.clear()
+  retired.mids.clear()
+  retired.busy = false
+  generation = 0
+  Object.assign(ownReset, { pending: false, cutoff: '' })
   boundSocket = null
   pageContexts.value = []
   clearTimeout(silence)

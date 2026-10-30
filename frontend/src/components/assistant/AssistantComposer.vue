@@ -17,6 +17,47 @@
         :file="assistant.attachment"
         @remove="clearAttachment"
       />
+      <!-- «/» commands and «@» coworkers: above the text, so a phone
+           keyboard never covers them; a tap picks (mousedown keeps focus). -->
+      <ul
+        v-if="complete.open"
+        id="assistant-complete"
+        role="listbox"
+        class="max-h-56 overflow-y-auto border-b border-outline-gray-1 py-1"
+        :aria-label="
+          complete.kind === 'persona' ? __('Coworkers') : __('Commands')
+        "
+        data-testid="assistant-complete"
+      >
+        <li
+          v-for="(item, index) in complete.items"
+          :id="`assistant-complete-${index}`"
+          :key="item.cmd || item.name"
+          role="option"
+          :aria-selected="index === complete.active"
+          class="flex min-h-11 cursor-pointer items-center gap-2 px-4 py-1 text-sm"
+          :class="
+            index === complete.active
+              ? 'bg-surface-gray-3 text-ink-gray-9'
+              : 'text-ink-gray-8 hover:bg-surface-gray-2'
+          "
+          :data-complete="item.cmd || item.name"
+          @mousedown.prevent="pick(index)"
+        >
+          <template v-if="item.cmd">
+            <span class="flex-none font-medium">{{ item.cmd }}</span>
+            <span class="min-w-0 truncate text-ink-gray-6">{{
+              item.label
+            }}</span>
+          </template>
+          <template v-else>
+            <span class="min-w-0 truncate font-medium">{{ item.label }}</span>
+            <span v-if="item.self" class="flex-none text-ink-gray-6">{{
+              __('(you)')
+            }}</span>
+          </template>
+        </li>
+      </ul>
       <label class="sr-only" for="assistant-input">{{
         __('Ask something')
       }}</label>
@@ -28,9 +69,18 @@
         class="max-h-32 min-h-11 w-full resize-none border-0 bg-transparent px-4 pb-1 pt-3 text-base text-ink-gray-9 placeholder:text-ink-gray-5 focus:ring-0"
         :placeholder="__('Ask something…')"
         enterkeyhint="send"
+        role="combobox"
+        aria-autocomplete="list"
+        aria-controls="assistant-complete"
+        :aria-expanded="complete.open"
+        :aria-activedescendant="
+          complete.open ? `assistant-complete-${complete.active}` : undefined
+        "
         data-testid="assistant-input"
-        @keydown.enter.exact.prevent="submit"
-        @input="grow"
+        @keydown="onKey"
+        @input="onInput"
+        @click="onCaret"
+        @blur="closeComplete"
       />
       <div class="flex items-center gap-1 px-2 pb-2">
         <button
@@ -77,6 +127,15 @@ import AssistantAttachment from './AssistantAttachment.vue'
 import AssistantMic from './AssistantMic.vue'
 import { ASSISTANT_FILE_ACCEPT, canSendDraft } from './assistantFiles'
 import {
+  closeComplete,
+  complete,
+  moveActive,
+  pickItem,
+  resolveCommand,
+  updateComplete,
+} from './assistantAutocomplete'
+import { runCommand } from './assistantSessions'
+import {
   assistant,
   attachFile,
   clearAttachment,
@@ -95,12 +154,69 @@ const ready = computed(() =>
 // to do instead, rather than opening a picker whose file the server would refuse.
 const canAttach = computed(() => Boolean(assistant.status?.can_attach))
 
-function submit() {
+async function submit() {
   if (!ready.value) return
+  closeComplete()
   const text = assistant.draft
   const file = takeAttachment()
   assistant.draft = ''
-  send(text, { file })
+  // «/recuerdame mañana…» goes out as «Recuérdame mañana…»; «/nueva» runs here
+  const command = file ? null : await resolveCommand(text)
+  if (command?.action) return runCommand(command.action)
+  send(command?.text || text, { file })
+}
+
+function onKey(event) {
+  if (complete.open) {
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault()
+      return moveActive(event.key === 'ArrowDown' ? 1 : -1)
+    }
+    if ((event.key === 'Enter' && !event.shiftKey) || event.key === 'Tab') {
+      event.preventDefault()
+      return pick(complete.active)
+    }
+    if (event.key === 'Escape') {
+      // the list closes; the sheet stays open
+      event.preventDefault()
+      event.stopPropagation()
+      return closeComplete()
+    }
+  }
+  if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
+    event.preventDefault()
+    submit()
+  }
+}
+
+function onInput() {
+  grow()
+  onCaret()
+}
+
+function onCaret() {
+  const el = input.value
+  if (el) updateComplete(el.value, el.selectionStart ?? el.value.length)
+}
+
+function pick(index) {
+  const out = pickItem(assistant.draft, index)
+  if (!out) return
+  if (out.action) {
+    assistant.draft = ''
+    return runCommand(out.action)
+  }
+  if (out.send) {
+    assistant.draft = out.text
+    return send(out.send)
+  }
+  assistant.draft = out.text
+  nextTick(() => {
+    const el = input.value
+    if (!el) return
+    el.focus()
+    el.setSelectionRange?.(out.caret, out.caret)
+  })
 }
 
 function attach() {

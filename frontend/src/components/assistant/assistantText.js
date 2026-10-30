@@ -457,7 +457,11 @@ export function mergeHistory(rows, live) {
     const mine = seen.get(row.mid)
     if (!mine) return row
     if (row.stale) return mine
-    return mine.receiptOf ? { ...row, receiptOf: mine.receiptOf } : row
+    if (!mine.receiptOf && !mine.canvas) return row
+    const kept = { ...row }
+    if (mine.receiptOf) kept.receiptOf = mine.receiptOf
+    if (mine.canvas) kept.canvas = mine.canvas
+    return kept
   })
   const have = new Set(out.map((m) => m.mid).filter(Boolean))
   let after = null

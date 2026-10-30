@@ -3,16 +3,30 @@
 // sidebar, through shell_api) and «Abierto», the work the chat left open:
 // captures to finish and proposals waiting for a yes. That work lives on the
 // server, not in the conversation, so a new conversation never strands it.
+// «Nueva conversación» is «Liquidar» (S40): one tap closes the conversation
+// into the list, archives the finished ones older than SETTLE_DAYS and says
+// in one line what stays open; «Deshacer» brings both back.
 import { reactive } from 'vue'
 import { call } from 'frappe-ui'
 import { parseServerDate, dayDiff } from '@/utils/display'
-import { newClientId, normalizeRow } from './assistantText'
-import { ASSISTANT_API, assistant, loadHistory } from './useAssistant'
+import { normalizeRow } from './assistantText'
+import { loadAgenda } from './assistantAgenda'
+import { loadCanvas } from './assistantCanvas'
+import {
+  ASSISTANT_API,
+  assistant,
+  loadHistory,
+  ownReset,
+  restoreConversation,
+  retireConversation,
+} from './useAssistant'
 
 export const ACTIONS_API = 'doco.docoutils.assistant.herramientas.api'
 /** The server's «current» id: a search hit in the live conversation. */
 export const CURRENT = 'current'
 export const SEARCH_MIN = 2
+/** Finished conversations older than this many days leave the list on «Liquidar». */
+export const SETTLE_DAYS = 7
 
 export const sessions = reactive({
   /** 'chat' | 'list' | 'transcript' | 'open' */
@@ -34,6 +48,8 @@ export const sessions = reactive({
   receipts: {},
   busy: false,
   error: '',
+  /** The last «Liquidar»: { closed, archived, open } until the next reset or its undo. */
+  settled: null,
 })
 
 function errorText(error) {
@@ -58,28 +74,112 @@ export function showView(view) {
   sessions.error = ''
   if (view === 'list') return loadConversations()
   if (view === 'open') return loadOpenWork()
+  if (view === 'agenda') return loadAgenda()
+  if (view === 'canvas') return loadCanvas()
 }
 
-function freshChat() {
-  assistant.messages = []
-  assistant.cards = {}
-  assistant.awaitingReceipt = null
-  assistant.error = ''
+/** A `client` command of the «/» list (doco comandos.py): `new`, `open`, `list`, `canvas`. */
+export function runCommand(action) {
+  if (action === 'new') return newConversation()
+  if (['open', 'list', 'canvas', 'agenda'].includes(action))
+    return showView(action)
+}
+
+/**
+ * One reset of the live conversation: the log empties before the server
+ * answers (useAssistant.retireConversation keeps the old turns out), and comes
+ * back as it was when the server refuses. `work` resolves to the server's
+ * answer, or null.
+ */
+async function reset(work) {
+  if (sessions.busy) return null
+  sessions.busy = true
+  const before = retireConversation()
   sessions.view = 'chat'
   sessions.transcript = null
   assistant.focus += 1
-  return Promise.all([loadHistory(), loadOpenWork()])
+  ownReset.pending = true
+  const out = await work()
+  ownReset.pending = false
+  sessions.busy = false
+  if (!out) {
+    restoreConversation(before)
+    assistant.error = sessions.error
+    return null
+  }
+  ownReset.cutoff = out.cutoff || out.conversation_cutoff || ownReset.cutoff
+  await Promise.all([loadHistory(), loadOpenWork(), loadAgenda()])
+  return out
 }
 
-/** «Nueva conversación»: the bubble's /clear; open work stays in «Abierto». */
+/**
+ * «Nueva conversación» = «Liquidar» (shell_api.liquidar): no model turn, so it
+ * never waits behind an answer. A server without it gets the plain reset.
+ */
 export async function newConversation() {
-  if (sessions.busy) return
-  sessions.busy = true
-  const done = await guarded(() =>
-    call(`${ASSISTANT_API}.new_conversation`, { client_id: newClientId() }),
+  const out = await reset(async () => {
+    const settled = await guarded(() =>
+      call(`${ASSISTANT_API}.liquidar`, { dias: SETTLE_DAYS }),
+    )
+    if (settled) return settled
+    return guarded(() => call(`${ASSISTANT_API}.new_conversation`))
+  })
+  if (out)
+    sessions.settled = {
+      closed: out.closed || null,
+      archived: out.archived || [],
+      open: out.open || null,
+    }
+}
+
+/** «Deshacer»: the archived conversations come back and the closed one continues. */
+export async function undoSettle() {
+  const settled = sessions.settled
+  if (!settled || sessions.busy) return
+  for (const id of settled.archived) {
+    const out = await guarded(() =>
+      call(`${ASSISTANT_API}.conversation_archive`, {
+        conversation_id: id,
+        archived: 0,
+      }),
+    )
+    if (out === null) return
+  }
+  sessions.settled = { ...settled, archived: [] }
+  if (settled.closed && !(await continueConversation(settled.closed))) return
+  sessions.settled = null
+}
+
+/** The one line «Liquidar» leaves on the clean chat: what was put away, what stays open. */
+export function settledLine(settled) {
+  if (!settled) return ''
+  const n = settled.archived?.length || 0
+  const parts = [__('Settled.')]
+  if (n === 1) parts.push(__('Archived 1 finished conversation.'))
+  else if (n > 1) parts.push(__('Archived {0} finished conversations.', [n]))
+  const open = settled.open
+  if (!open) return parts.join(' ')
+  const counts = [
+    [
+      open.proposals,
+      __('1 change waiting for your yes'),
+      __('{0} changes waiting for your yes'),
+    ],
+    [open.captures, __('1 capture to finish'), __('{0} captures to finish')],
+    [open.encargos, __('1 task on the agenda'), __('{0} tasks on the agenda')],
+  ]
+    .filter(([count]) => count > 0)
+    .map(([count, one, many]) =>
+      count === 1 ? one : many.replace('{0}', String(count)),
+    )
+  if (open.encargos_hoy)
+    counts[counts.length - 1] += ` ${__('({0} today)', [open.encargos_hoy])}`
+  parts.push(
+    counts.length
+      ? __('Still open: {0}.', [counts.join(', ')])
+      : __('Nothing stays open.'),
   )
-  sessions.busy = false
-  if (done !== null) await freshChat()
+  return parts.join(' ')
 }
 
 export async function loadConversations() {
@@ -119,13 +219,12 @@ export async function openConversation(id) {
 
 /** «Seguir esta conversación»: a new conversation seeded with its questions. */
 export async function continueConversation(id) {
-  if (sessions.busy) return
-  sessions.busy = true
-  const out = await guarded(() =>
-    call(`${ASSISTANT_API}.conversation_continue`, { conversation_id: id }),
+  sessions.settled = null
+  return reset(() =>
+    guarded(() =>
+      call(`${ASSISTANT_API}.conversation_continue`, { conversation_id: id }),
+    ),
   )
-  sessions.busy = false
-  if (out) await freshChat()
 }
 
 async function change(method, args) {
@@ -261,6 +360,7 @@ export function _resetSessions() {
     receipts: {},
     busy: false,
     error: '',
+    settled: null,
   })
   searchTurn = 0
 }

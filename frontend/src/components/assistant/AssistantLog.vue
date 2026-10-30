@@ -9,6 +9,28 @@
     aria-live="polite"
     data-testid="assistant-log"
   >
+    <div
+      v-if="settled"
+      role="status"
+      class="flex items-center gap-2 rounded-7 bg-surface-gray-1 py-1 pl-3 pr-1 text-sm text-ink-gray-8"
+      data-testid="assistant-settled"
+    >
+      <span
+        class="lucide-check-check size-4 flex-none text-ink-gray-6"
+        aria-hidden="true"
+      />
+      <span class="min-w-0 flex-1">{{ settled }}</span>
+      <button
+        v-if="sessions.settled.closed || sessions.settled.archived.length"
+        type="button"
+        class="press min-h-11 flex-none rounded-full px-3 font-medium text-ink-gray-9 hover:bg-surface-gray-2 disabled:opacity-50"
+        :disabled="sessions.busy"
+        data-testid="assistant-settled-undo"
+        @click="undoSettle"
+      >
+        {{ __('Undo') }}
+      </button>
+    </div>
     <p
       v-if="hidden && shown.length"
       class="text-center text-sm text-ink-gray-5"
@@ -112,6 +134,12 @@
           @change="change(card)"
           @navigate="$emit('navigate')"
         />
+        <AssistantCanvasFile
+          v-for="file in canvasOf(message)"
+          :key="file.file"
+          :file="file"
+          @open="openFile"
+        />
         <div v-if="view(message).choices.length" class="flex flex-wrap gap-2">
           <button
             v-for="choice in view(message).choices"
@@ -142,7 +170,20 @@
 <script setup>
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import ActionCard from './ActionCard.vue'
+import AssistantCanvasFile from './AssistantCanvasFile.vue'
 import AssistantProse from './AssistantProse.vue'
+import {
+  canvas,
+  canvasByAnswer,
+  loadCanvas,
+  openInCanvas,
+} from './assistantCanvas'
+import {
+  sessions,
+  settledLine,
+  showView,
+  undoSettle,
+} from './assistantSessions'
 import {
   firstRecordLink,
   proseOf,
@@ -163,6 +204,23 @@ const end = ref(null)
 // line a later answer has made old news (visibleMessages).
 const shown = computed(() => visibleMessages(assistant.messages))
 const hidden = computed(() => assistant.messages.some((m) => m.stale))
+const settled = computed(() => settledLine(sessions.settled))
+
+// Lienzo files under the answer they came with: the live link, or after a
+// reload the first answer logged after the file was written.
+const joined = computed(() => canvasByAnswer(assistant.messages, canvas.files))
+function canvasOf(message) {
+  return message.canvas || joined.value[message.id] || []
+}
+function openFile(file) {
+  openInCanvas(file)
+  showView('canvas')
+}
+watch(
+  () => assistant.loaded,
+  (loaded) => loaded && !canvas.loaded && loadCanvas(),
+  { immediate: true },
+)
 
 // A reply's prose, its action cards and its plain choices, computed once per text.
 const views = new WeakMap()

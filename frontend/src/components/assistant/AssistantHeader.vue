@@ -49,6 +49,25 @@
       }}</span>
       <div class="ml-auto flex flex-none items-center">
         <button
+          v-if="agenda.available"
+          type="button"
+          class="relative flex size-11 items-center justify-center rounded-full text-ink-gray-7 hover:bg-surface-gray-2"
+          :class="{ 'bg-surface-gray-2': sessions.view === 'agenda' }"
+          :aria-label="agendaLabel"
+          :title="agendaLabel"
+          :aria-pressed="sessions.view === 'agenda'"
+          data-testid="assistant-agenda"
+          @click="toggle('agenda')"
+        >
+          <span class="lucide-calendar-clock size-5" aria-hidden="true" />
+          <span
+            v-if="due"
+            class="absolute right-1 top-1 min-w-4 rounded-full bg-[var(--brand)] px-1 text-center text-2xs font-semibold leading-4 text-white"
+            aria-hidden="true"
+            >{{ due > 9 ? '9+' : due }}</span
+          >
+        </button>
+        <button
           type="button"
           class="relative flex size-11 items-center justify-center rounded-full text-ink-gray-7 hover:bg-surface-gray-2"
           :class="{ 'bg-surface-gray-2': sessions.view === 'open' }"
@@ -85,7 +104,7 @@
           type="button"
           class="flex size-11 items-center justify-center rounded-full text-ink-gray-7 hover:bg-surface-gray-2 disabled:opacity-50"
           :aria-label="__('New conversation')"
-          :title="__('New conversation')"
+          :title="__('New conversation (settles what is finished)')"
           :disabled="sessions.busy"
           data-testid="assistant-new"
           @click="newConversation"
@@ -133,6 +152,7 @@ import { computed, ref, watch } from 'vue'
 import { keyLabel } from '@/composables/shellKeyboard'
 import { chipsFor } from './assistantText'
 import { assistant, send } from './useAssistant'
+import { agenda, dueCount, loadAgenda } from './assistantAgenda'
 import {
   loadOpenWork,
   newConversation,
@@ -157,14 +177,23 @@ const chips = computed(() =>
 
 // «Abierto» counts what the chat left open each time the sheet opens, and
 // again after each answer (it may have parked a capture or a proposal).
+// The agenda too: an answer may have left an encargo on it.
+function refreshWork() {
+  loadOpenWork()
+  loadAgenda()
+}
 watch(
   () => assistant.open,
-  (open) => open && loadOpenWork(),
+  (open) => open && refreshWork(),
   { immediate: true },
 )
 watch(
   () => assistant.thinking,
-  (thinking, was) => was && !thinking && assistant.open && loadOpenWork(),
+  (thinking, was) => was && !thinking && assistant.open && refreshWork(),
+)
+const due = computed(() => dueCount(agenda.items))
+const agendaLabel = computed(() =>
+  due.value ? __('Agenda ({0} today)', [due.value]) : __('Agenda'),
 )
 // A door that opens the sheet or fills the composer brings the chat back.
 watch(
@@ -178,6 +207,8 @@ const openLabel = computed(() =>
 )
 const viewTitle = computed(() => {
   if (sessions.view === 'open') return __('Open work')
+  if (sessions.view === 'agenda') return __('Agenda')
+  if (sessions.view === 'canvas') return __('Lienzo')
   if (sessions.view === 'transcript')
     return sessions.transcript?.conversation?.title || __('Conversation')
   return __('Conversations')
