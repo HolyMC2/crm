@@ -157,6 +157,7 @@
       v-if="assistant.thinking"
       role="status"
       class="flex items-center gap-2 text-sm text-ink-gray-6"
+      data-testid="assistant-thinking"
     >
       <span class="text-[var(--brand)]" aria-hidden="true">✦</span>
       {{ assistant.progress ? stripEmoji(assistant.progress) : __('Looking…') }}
