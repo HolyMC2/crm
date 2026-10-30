@@ -24,6 +24,7 @@ class TestShellBoot(TestCase):
 
 	def tearDown(self):
 		frappe.defaults.clear_user_default(shell.MOBILE_SLOTS_DEFAULT)
+		frappe.defaults.clear_user_default(shell.LAYOUT_DEFAULT)
 		frappe.defaults.clear_user_default(shell.RAIL_DEFAULT)
 		frappe.set_user(self.previous)
 
@@ -92,11 +93,79 @@ class TestShellBoot(TestCase):
 		self.assertFalse(data["sales_access"])
 
 	def test_saved_bar_keeps_known_modules_once_and_at_most_four(self):
+		# Hoy is always first on the bar, so a layout never stores it.
 		saved = shell.save_mobile_slots(
-			'["ventas", "bogus", "contactos", "ventas", "hoy", "agenda", "compras"]'
+			'["ventas", "bogus", "contactos", "ventas", "hoy", "agenda", "compras", "gastos"]'
 		)
-		self.assertEqual(saved, ["ventas", "contactos", "hoy", "agenda"])
+		self.assertEqual(saved, ["ventas", "contactos", "agenda", "compras"])
 		self.assertEqual(shell.boot()["mobile_slots"], saved)
+		self.assertEqual(shell.boot()["layout"]["dock"], saved)
+
+	def test_a_bar_saved_before_layouts_reads_as_my_dock(self):
+		frappe.defaults.set_user_default(shell.MOBILE_SLOTS_DEFAULT, '["hoy", "compras", "agenda"]')
+		layout = shell.boot()["layout"]
+		self.assertEqual(layout["source"], "personal")
+		self.assertEqual(layout["dock"], ["compras", "agenda"])
+
+	def test_my_layout_places_each_known_place_once(self):
+		saved = shell.save_layout(
+			{
+				"dock": ["inventario", "scan", "compras", "productos", "agenda"],
+				"order": ["scan", "bogus", "ventas", "avisos", "hoy"],
+				"hidden": ["ventas", "encuestas", "pos"],
+			}
+		)
+		self.assertEqual(saved["dock"], ["inventario", "scan", "compras", "productos"])
+		# A place sits in one part only; Hoy and Avisos are never arranged.
+		self.assertEqual(saved["order"], ["ventas"])
+		self.assertEqual(saved["hidden"], ["encuestas", "pos"])
+		layout = shell.boot()["layout"]
+		self.assertEqual(layout["source"], "personal")
+		self.assertEqual(layout["hidden"], ["encuestas", "pos"])
+		with self.assertRaises(frappe.ValidationError):
+			shell.save_layout("not a layout")
+
+	def test_the_owner_sets_a_layout_per_class_and_mine_wins(self):
+		before = frappe.defaults.get_global_default(shell.TEAM_LAYOUTS_DEFAULT)
+		try:
+			shell.save_team_layout("dueno", {"dock": ["bancos", "efectivo"], "hidden": ["encuestas"]})
+			self.assertEqual(shell.team_layouts()["layouts"]["dueno"]["dock"], ["bancos", "efectivo"])
+			layout = shell.boot()["layout"]
+			self.assertEqual((layout["source"], layout["dock"]), ("team", ["bancos", "efectivo"]))
+			shell.save_layout({"dock": ["ventas"]})
+			self.assertEqual(shell.boot()["layout"]["dock"], ["ventas"])
+			# «Volver al de mi puesto» drops mine and answers with the class's.
+			back = shell.reset_layout("dueno")
+			self.assertEqual((back["source"], back["hidden"]), ("team", ["encuestas"]))
+			self.assertEqual(shell.boot()["layout"]["source"], "team")
+			# Unknown class names fall back to the class without a puesto.
+			self.assertEqual(shell.reset_layout("bogus")["source"], "default")
+			# An empty layout drops the class back to the contracts defaults.
+			shell.save_team_layout("dueno", None)
+			self.assertNotIn("dueno", shell.team_layouts()["layouts"])
+			self.assertEqual(shell.boot()["layout"]["source"], "default")
+			with self.assertRaises(frappe.ValidationError):
+				shell.save_team_layout("jefe", {"dock": ["ventas"]})
+		finally:
+			frappe.defaults.set_global_default(shell.TEAM_LAYOUTS_DEFAULT, before or "")
+
+	def test_only_the_owner_arranges_the_team(self):
+		self.assertTrue(shell.boot()["user"]["arranges_team"])
+		with patch.object(shell, "_may_arrange_team", return_value=False):
+			with self.assertRaises(frappe.PermissionError):
+				shell.team_layouts()
+			with self.assertRaises(frappe.PermissionError):
+				shell.save_team_layout("vendedor", {"dock": ["ventas"]})
+
+	def test_layout_places_follow_the_contracts_registry(self):
+		registry = Path(__file__).parents[2] / "frontend/src/vendor/muelle-shell/contracts/registry.ts"
+		if not registry.exists():
+			self.skipTest("frontend sources are not in this checkout")
+		text = registry.read_text()
+		apps = text.split("export const SIBLING_APPS", 1)[1]
+		self.assertEqual(set(re.findall(r"key: '([a-z]+)'", apps)), set(shell.SIBLING_KEYS))
+		roles = text.split("export type NavRole", 1)[1].split("export", 1)[0]
+		self.assertEqual(set(re.findall(r"'([a-z]+)'", roles)), set(shell.NAV_CLASSES))
 
 	def test_rail_width_follows_the_user_and_refuses_unknown_states(self):
 		self.assertIsNone(shell.boot()["rail"])

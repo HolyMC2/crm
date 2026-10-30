@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/shell-contracts@0.16.0 (5f948583506e). DO NOT EDIT:
+// Vendored from muelle/workspace/packages/shell-contracts@0.17.0 (5da43992cccc). DO NOT EDIT:
 // change the package, then run its scripts/vendor.mjs against this directory.
 // Capability flags and the boot payload (spec §7). Providers compute flags from
 // native permissions and never grant anything; module flags gate presence in

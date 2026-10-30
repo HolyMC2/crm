@@ -9,7 +9,8 @@
     >
     <ShellRail
       v-if="!phone"
-      :modules="shellModules"
+      :modules="railPlaces"
+      :hidden="shellLayout.hidden"
       :unavailable="unavailableModules"
       :active="activeKey"
       :ventas="ventasEnabled"
@@ -204,7 +205,7 @@
       </div>
       <ShellBottomNav
         v-if="phone && navVisible"
-        :slots="navSlots"
+        :slots="barSlots"
         :active="activeKey"
         @more="moreOpen = true"
       />
@@ -227,6 +228,7 @@
       :focus-key="paletteFocus"
     />
     <ShortcutSheet v-if="shortcutSheet.open" />
+    <LayoutSheet v-if="layoutSheet" :mode="layoutSheet.mode" />
   </div>
 </template>
 <script setup>
@@ -246,11 +248,13 @@ import { keyboardOpen, watchKeyboard } from '@/composables/keyboard'
 import { mobileView } from '@/composables/mobileView'
 import {
   firstModuleRoute,
+  layoutSheet,
   loadShell,
   moduleKeyFor,
   navSlots,
   shellBoot,
   shellError,
+  shellLayout,
   shellLoading,
   shellModules,
   unavailableModules,
@@ -263,7 +267,11 @@ import {
   shortcutSheet,
   useShellKeyboard,
 } from '@/composables/shellKeyboard'
-import { scanPickHref, toggleRail } from '@/composables/shellRail'
+import {
+  scanPickHref,
+  siblingHref,
+  toggleRail,
+} from '@/composables/shellRail'
 import { createTargetFor } from '@/utils/shellCreate'
 import { applyShellAppearance } from '@/utils/shellAppearance'
 import { moduleRefusal } from '@/utils/shellRoutes'
@@ -295,6 +303,7 @@ const CommandPalette = defineAsyncComponent(
   () => import('./CommandPalette.vue'),
 )
 const ShortcutSheet = defineAsyncComponent(() => import('./ShortcutSheet.vue'))
+const LayoutSheet = defineAsyncComponent(() => import('./LayoutSheet.vue'))
 const AssistantSheet = defineAsyncComponent(
   () => import('@/components/assistant/AssistantSheet.vue'),
 )
@@ -325,6 +334,24 @@ watch(() => route.path, showShell)
 const activeModule = computed(() =>
   shellModules.value.find((module) => module.key === activeKey.value),
 )
+// The bar's apps leave with the way back to this page.
+const barSlots = computed(() =>
+  navSlots.value.map((place) =>
+    place.app
+      ? {
+          ...place,
+          href: siblingHref(place, route.fullPath, activeModule.value?.label),
+        }
+      : place,
+  ),
+)
+// The rail in the worker's order: the bar's places, then Más; Avisos stays
+// the bell at its foot and the hidden ones wait behind its «Más» menu.
+const railPlaces = computed(() => [
+  ...shellLayout.value.bar,
+  ...shellLayout.value.more,
+  ...shellModules.value.filter((module) => module.key === 'avisos'),
+])
 const ventasEnabled = computed(() => moduleEnabled(shellBoot.value, 'ventas'))
 const avisosEnabled = computed(() => moduleEnabled(shellBoot.value, 'avisos'))
 // The refusal answers for the module the route belongs to, never another one.

@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/shell-contracts@0.16.0 (5f948583506e). DO NOT EDIT:
+// Vendored from muelle/workspace/packages/shell-contracts@0.17.0 (5da43992cccc). DO NOT EDIT:
 // change the package, then run its scripts/vendor.mjs against this directory.
 // Friendly token search: the rule behind the shell's search boxes, its search
 // dialogs (K and G) and long dropdowns. Order-independent, accent-blind, and

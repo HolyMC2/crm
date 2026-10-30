@@ -10988,14 +10988,6 @@ msgid "Ask for access"
 msgstr "Pedir acceso"
 
 #: frontend/src/components/shell
-msgid "Bar saved."
-msgstr "Barra guardada."
-
-#: frontend/src/components/shell
-msgid "Choose the order of the bottom bar. Hoy always comes first when available."
-msgstr "Elige el orden de la barra inferior. Hoy siempre va primero cuando está disponible."
-
-#: frontend/src/components/shell
 msgid "Choose up to four sections for the bar."
 msgstr "Elige hasta cuatro secciones para la barra."
 
@@ -11006,10 +10998,6 @@ msgstr "cerrar"
 #: frontend/src/components/shell
 msgid "Command palette"
 msgstr "Paleta de comandos"
-
-#: frontend/src/components/shell
-msgid "Customize bar"
-msgstr "Personalizar barra"
 
 #: frontend/src/components/shell
 msgid "Dark theme"
@@ -11038,14 +11026,6 @@ msgstr "Más"
 #: frontend/src/components/shell
 msgid "move"
 msgstr "mover"
-
-#: frontend/src/components/shell
-msgid "Move down {0}"
-msgstr "Bajar {0}"
-
-#: frontend/src/components/shell
-msgid "Move up {0}"
-msgstr "Subir {0}"
 
 #: frontend/src/components/shell
 msgid "New contact"
@@ -11082,10 +11062,6 @@ msgstr "Solicitud copiada. Compártela con tu encargado."
 #: frontend/src/components/shell
 msgid "Retry permissions"
 msgstr "Reintentar permisos"
-
-#: frontend/src/components/shell
-msgid "Save bar"
-msgstr "Guardar barra"
 
 #: frontend/src/components/shell
 msgid "Search (Ctrl K)"
@@ -11126,10 +11102,6 @@ msgstr "No tienes permiso para ver {0}. Pide acceso al encargado y reintenta."
 #: frontend/src/components/shell
 msgid "I need access to Compras: read permission for Purchase Order so I can follow purchases."
 msgstr "Necesito acceso a Compras: permiso de lectura de Orden de compra para dar seguimiento a las compras."
-
-#: frontend/src/components/shell
-msgid "We could not save the bar. Try again."
-msgstr "No pudimos guardar la barra. Reintenta."
 
 #: frontend/src/components/shell
 msgid "I need access to Contactos and read permission on the native records to continue. Please check my create/edit permissions if I need to save data."
@@ -29465,3 +29437,151 @@ msgstr "Sigue abierto: {0}."
 #: frontend/src/components/assistant/assistantSessions.js
 msgid "Nothing stays open."
 msgstr "No queda nada abierto."
+
+#: frontend/src/components/shell
+msgid "More: {0} hidden"
+msgstr "Más: {0} ocultos"
+
+#: frontend/src/components/shell
+msgid "Hidden places"
+msgstr "Ocultos"
+
+#: frontend/src/components/shell
+msgid "Bar by puesto"
+msgstr "Barra por puesto"
+
+#: frontend/src/components/shell
+msgid "Puesto"
+msgstr "Puesto"
+
+#: frontend/src/components/shell
+msgid "suggested"
+msgstr "sugerida"
+
+#: frontend/src/components/shell
+msgid "On the bar"
+msgstr "En la barra"
+
+#: frontend/src/components/shell
+msgid "{0} of {1}"
+msgstr "{0} de {1}"
+
+#: frontend/src/components/shell
+msgid "Always first"
+msgstr "Siempre primero"
+
+#: frontend/src/components/shell
+msgid "Move {0}"
+msgstr "Mover {0}"
+
+#: frontend/src/components/shell
+msgid "Drag, or use the arrow keys, to reorder"
+msgstr "Arrastra, o usa las flechas, para ordenar"
+
+#: frontend/src/components/shell
+msgid "Take {0} off the bar"
+msgstr "Quitar {0} de la barra"
+
+#: frontend/src/components/shell
+msgid "Take off the bar"
+msgstr "Quitar de la barra"
+
+#: frontend/src/components/shell
+msgid "Empty: Muelle fills the bar with what your puesto uses most. Pin a place from Más to choose."
+msgstr "Vacía: Muelle la llena con lo que más usa tu puesto. Fija algo de Más para elegir tú."
+
+#: frontend/src/components/shell
+msgid "In Más"
+msgstr "En Más"
+
+#: frontend/src/components/shell
+msgid "Pin {0} to the bar"
+msgstr "Fijar {0} en la barra"
+
+#: frontend/src/components/shell
+msgid "Pin to the bar"
+msgstr "Fijar en la barra"
+
+#: frontend/src/components/shell
+msgid "Hide {0}"
+msgstr "Ocultar {0}"
+
+#: frontend/src/components/shell
+msgid "Hide from Más"
+msgstr "Ocultar de Más"
+
+#: frontend/src/components/shell
+msgid "Nothing else: everything is on the bar or hidden."
+msgstr "Nada más: todo está en la barra u oculto."
+
+#: frontend/src/components/shell
+msgid "Hiding does not take access away: change the puesto in Equipo for that."
+msgstr "Ocultar no quita el acceso: para eso cambia el puesto en Equipo."
+
+#: frontend/src/components/shell
+msgid "Hidden places still open from Más > Hidden and from the search."
+msgstr "Lo oculto se sigue abriendo desde Más › Ocultos y desde la búsqueda."
+
+#: frontend/src/components/shell
+msgid "Show {0}"
+msgstr "Mostrar {0}"
+
+#: frontend/src/components/shell
+msgid "Save for {0}"
+msgstr "Guardar para {0}"
+
+#: frontend/src/components/shell
+msgid "We could not read the bars by puesto. Retry in a moment."
+msgstr "No pudimos leer las barras por puesto. Reintenta en un momento."
+
+#: frontend/src/components/shell
+msgid "How each puesto starts. People only see what their permissions open, and can arrange their own."
+msgstr "Así empieza cada puesto. Cada quien ve solo lo que sus permisos le abren y puede acomodar la suya."
+
+#: frontend/src/components/shell
+msgid "Keep what you use a tap away."
+msgstr "Deja a un toque lo que más usas."
+
+#: frontend/src/components/shell
+msgid "{0} moved to Más to make room."
+msgstr "{0} pasó a Más para hacer lugar."
+
+#: frontend/src/components/shell
+msgid "Use the suggested one"
+msgstr "Usar la sugerida"
+
+#: frontend/src/components/shell
+msgid "Back to my puesto's"
+msgstr "Volver a la de mi puesto"
+
+#: frontend/src/components/shell
+msgid "Saved for {0}. Whoever arranged their own keeps it."
+msgstr "Guardado para {0}. Quien acomodó la suya la conserva."
+
+#: frontend/src/components/shell
+msgid "Saved. Your bar and Más changed."
+msgstr "Guardado. Tu barra y Más ya cambiaron."
+
+#: frontend/src/components/shell
+msgid "We could not save it. Retry."
+msgstr "No pudimos guardarlo. Reintenta."
+
+#: frontend/src/components/shell
+msgid "{0} starts with the suggested bar again."
+msgstr "{0} vuelve a empezar con la barra sugerida."
+
+#: frontend/src/components/shell
+msgid "Back to your puesto's bar."
+msgstr "De vuelta a la barra de tu puesto."
+
+#: crm/api/shell.py
+msgid "We could not read that arrangement. Open Customize again and retry."
+msgstr "No pudimos leer ese acomodo. Abre Personalizar otra vez y reintenta."
+
+#: crm/api/shell.py
+msgid "Only the owner arranges the bar for each puesto. Ask them, or arrange your own from Más > Customize."
+msgstr "Solo el dueño acomoda la barra de cada puesto. Pídeselo, o acomoda la tuya en Más › Personalizar."
+
+#: crm/api/shell.py
+msgid "Choose a puesto to arrange."
+msgstr "Elige un puesto para acomodar."

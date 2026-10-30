@@ -107,6 +107,50 @@
         </div>
       </section>
 
+      <!-- What the worker hid (Personalizar) stays one tap away here. -->
+      <section v-if="hiddenPlaces.length">
+        <button
+          type="button"
+          :class="ROW"
+          :aria-expanded="showHidden"
+          aria-controls="more-hidden"
+          data-testid="more-hidden"
+          @click="showHidden = !showHidden"
+        >
+          <span
+            class="lucide-eye-off size-4 text-ink-gray-6"
+            aria-hidden="true"
+          />
+          <span class="flex-1">{{ __('Hidden places') }}</span>
+          <span class="num text-ink-gray-6">{{ hiddenPlaces.length }}</span>
+          <span
+            class="lucide-chevron-down size-4 text-ink-gray-6 transition-transform motion-reduce:transition-none"
+            :class="showHidden ? 'rotate-180' : ''"
+            aria-hidden="true"
+          />
+        </button>
+        <ExpandTransition>
+          <div
+            v-if="showHidden"
+            id="more-hidden"
+            class="grid grid-cols-3 gap-2 pt-2"
+          >
+            <component
+              :is="place.app ? 'a' : RouterLink"
+              v-for="place in hiddenPlaces"
+              :key="place.key"
+              v-bind="place.app ? { href: place.href } : { to: place.to }"
+              :data-sibling="place.app ? place.key : undefined"
+              :class="TILE"
+              @click="close"
+            >
+              <span :class="[place.icon, 'size-5']" aria-hidden="true" />
+              {{ place.label }}
+            </component>
+          </div>
+        </ExpandTransition>
+      </section>
+
       <!-- Ventas on a phone: the daily lists. The rest sits under Configuración. -->
       <VentasSections v-if="ventas" part="daily" @navigate="close" />
 
@@ -122,62 +166,26 @@
         <button
           type="button"
           :class="ROW"
-          :aria-expanded="customizing"
-          @click="customizing = !customizing"
+          data-testid="more-customize"
+          @click="customize('mine')"
         >
           <span
             class="lucide-layout-list size-4 text-ink-gray-6"
             aria-hidden="true"
           />
-          <span class="flex-1">{{ __('Customize bar') }}</span>
-          <span
-            class="lucide-chevron-down size-4 text-ink-gray-6"
-            aria-hidden="true"
-          />
+          {{ __('Customize') }}
         </button>
-        <div v-if="customizing" class="space-y-1 pb-2 pl-1">
-          <p class="pb-1 text-sm text-ink-gray-6">
-            {{
-              __(
-                'Choose the order of the bottom bar. Hoy always comes first when available.',
-              )
-            }}
-          </p>
-          <div
-            v-for="(key, index) in order"
-            :key="key"
-            class="flex min-h-11 items-center gap-2 rounded-6 bg-surface-gray-1 px-3"
-          >
-            <span class="flex-1">{{ labelOf(key) }}</span>
-            <button
-              type="button"
-              class="flex size-11 items-center justify-center rounded-6"
-              :aria-label="__('Move up {0}', [labelOf(key)])"
-              :disabled="index === 0"
-              @click="move(index, -1)"
-            >
-              <span class="lucide-arrow-up size-4" aria-hidden="true" />
-            </button>
-            <button
-              type="button"
-              class="flex size-11 items-center justify-center rounded-6"
-              :aria-label="__('Move down {0}', [labelOf(key)])"
-              :disabled="index === order.length - 1"
-              @click="move(index, 1)"
-            >
-              <span class="lucide-arrow-down size-4" aria-hidden="true" />
-            </button>
-          </div>
-          <p v-if="saveMessage" role="status" class="text-sm text-ink-gray-7">
-            {{ saveMessage }}
-          </p>
-          <Button
-            :label="__('Save bar')"
-            variant="solid"
-            class="w-full"
-            @click="saveOrder"
-          />
-        </div>
+        <!-- The owner sets how each puesto's bar and Más start. -->
+        <button
+          v-if="user.arranges_team"
+          type="button"
+          :class="ROW"
+          data-testid="more-team-layout"
+          @click="customize('team')"
+        >
+          <span class="lucide-users size-4 text-ink-gray-6" aria-hidden="true" />
+          {{ __('Bar by puesto') }}
+        </button>
 
         <div class="flex min-h-11 items-center gap-2.5 px-1 py-1">
           <span
@@ -332,9 +340,16 @@
   </BottomSheet>
 </template>
 <script setup>
-import { computed, defineAsyncComponent, nextTick, onMounted, ref } from 'vue'
+import {
+  computed,
+  defineAsyncComponent,
+  nextTick,
+  onMounted,
+  ref,
+  resolveComponent,
+} from 'vue'
 import { useShellLayer } from '@/composables/shellKeyboard'
-import { Button, toast } from 'frappe-ui'
+import { toast } from 'frappe-ui'
 import { landingOptions, saveLanding } from '@/composables/useHoy'
 import {
   assistantEnabled,
@@ -345,22 +360,17 @@ import { useRoute, useRouter } from 'vue-router'
 import { sessionStore } from '@/stores/session'
 import {
   moduleKeyFor,
-  navSlots,
+  openLayoutSheet,
   openSalesSettings,
-  saveNavSlots,
   shellBoot,
+  shellLayout,
 } from '@/composables/muelleShell'
-import {
-  installedSiblings,
-  scanPickHref,
-  siblingHref,
-  sortSiblings,
-} from '@/composables/shellRail'
+import { scanPickHref, siblingHref } from '@/composables/shellRail'
 import { installApp, installAvailable } from '@/composables/shellInstall'
 import { installLinkPrefetch } from '@/utils/speculate'
 import { THEME_CHOICES, useShellTheme } from '@/composables/shellTheme'
 import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
-import { BottomSheet } from '@/components/ui'
+import { BottomSheet, ExpandTransition } from '@/components/ui'
 import { isWide } from '@/composables/breakpoint'
 import { loadCameraSheet, openCamera } from '@/components/captura/cameraDoor'
 
@@ -378,8 +388,8 @@ const VentasSections = defineAsyncComponent(
 )
 const session = sessionStore()
 const { theme, setTheme } = useShellTheme()
-const customizing = ref(false)
-const saveMessage = ref('')
+const showHidden = ref(false)
+const RouterLink = resolveComponent('RouterLink')
 const user = computed(() => props.boot?.user || {})
 const ventas = computed(() => moduleEnabled(props.boot, 'ventas'))
 // «Abrir Muelle en»: Automático, Hoy, or one of my modules. A saved module I
@@ -418,11 +428,9 @@ const initials = computed(() => {
     .split(/\s+/)
   return ((parts[0]?.[0] || '') + (parts[1]?.[0] || '')).toUpperCase() || '?'
 })
-// Modules the bottom bar does not hold; the bar's own are one tap away below.
+// Más holds what the bar does not, in the worker's order (Personalizar).
 const extraModules = computed(() =>
-  props.modules.filter(
-    (module) => !navSlots.value.some((slot) => slot.key === module.key),
-  ),
+  shellLayout.value.more.filter((place) => !place.app),
 )
 // Sibling SPAs open with the way back to the page the worker left.
 const route = useRoute()
@@ -432,36 +440,24 @@ const moduleLabel = computed(
 )
 // Escáner goes to the picker with the way back to this page (the same link the
 // bar's scan icon uses), wherever the bar is not showing it.
-const siblings = computed(() =>
-  sortSiblings(installedSiblings()).map((app) => ({
+function withHref(app) {
+  return {
     ...app,
     href:
       app.key === 'scan'
         ? scanPickHref(route.fullPath, moduleLabel.value)
         : siblingHref(app, route.fullPath, moduleLabel.value),
-  })),
-)
-const order = ref(
-  [
-    ...navSlots.value.map((module) => module.key),
-    ...props.modules.map((module) => module.key),
-  ].filter((key, index, all) => all.indexOf(key) === index),
-)
-const labelOf = (key) =>
-  props.modules.find((module) => module.key === key)?.label || key
-function move(index, step) {
-  const next = order.value.slice()
-  const [key] = next.splice(index, 1)
-  next.splice(index + step, 0, key)
-  order.value = next
-}
-async function saveOrder() {
-  try {
-    await saveNavSlots(order.value)
-    saveMessage.value = __('Bar saved.')
-  } catch {
-    saveMessage.value = __('We could not save the bar. Try again.')
   }
+}
+const siblings = computed(() =>
+  shellLayout.value.more.filter((place) => place.app).map(withHref),
+)
+const hiddenPlaces = computed(() =>
+  shellLayout.value.hidden.map((place) => (place.app ? withHref(place) : place)),
+)
+function customize(mode) {
+  close()
+  openLayoutSheet(mode)
 }
 function close() {
   emit('update:modelValue', false)

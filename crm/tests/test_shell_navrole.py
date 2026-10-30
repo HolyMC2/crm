@@ -29,6 +29,12 @@ class TestNavRole(TestCase):
 		self.assertEqual(shell.nav_role(None, ["Sales User", "Stock User"]), "vendedor")
 		self.assertEqual(shell.nav_role(None, ["POS User", "Sales User", "Stock User"]), "cajero")
 		self.assertEqual(shell.nav_role(None, ["Accounts Manager", "Sales User"]), "dueno")
+		# Who keeps the books: Contador's role (even with Accounts Manager) or Accounts User.
+		self.assertEqual(shell.nav_role(None, ["Contador", "Accounts Manager"]), "contador")
+		self.assertEqual(shell.nav_role(None, ["Accounts User", "Sales User"]), "contador")
+		self.assertEqual(shell.nav_role(None, ["System Manager", "Contador"]), "dueno")
+		# A puesto still wins over the accounting roles.
+		self.assertEqual(shell.nav_role("Encargado", ["Accounts User"]), "dueno")
 		# An unknown puesto falls through to the roles, nothing to a plain bar.
 		self.assertEqual(shell.nav_role("Repartidor", ["Stock User"]), "almacen")
 		self.assertIsNone(shell.nav_role(None, ["Guest", "All"]))
@@ -46,7 +52,7 @@ class TestNavRole(TestCase):
 		self.assertIsNone(shell._module_nav_hint(modules))
 
 	def test_every_class_is_a_contracts_nav_role(self):
-		known = {"vendedor", "recepcion", "compras", "dueno", "inmobiliaria", "almacen", "cajero"}
+		known = {"vendedor", "recepcion", "compras", "dueno", "inmobiliaria", "almacen", "cajero", "contador"}
 		self.assertLessEqual(set(shell.NAV_ROLES.values()), known)
 		self.assertLessEqual({klass for _, klass in shell.ROLE_NAV_ROLES}, known)
 

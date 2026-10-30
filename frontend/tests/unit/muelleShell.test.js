@@ -3812,3 +3812,273 @@ describe('Inmobiliaria in the shell: every record screen opens, every state lead
     expect(router.currentRoute.value.path).toBe('/inmobiliaria')
   })
 })
+
+describe('the bar and Más follow each worker (Personalizar, Barra por puesto)', () => {
+  const on = (...keys) =>
+    Object.fromEntries(
+      keys.map((key) => [key, { key, enabled: true, capabilities: {} }]),
+    )
+  const stockBoot = (overrides = {}) =>
+    boot({
+      user: {
+        name: 'beto@example.test',
+        full_name: 'Beto Almacén',
+        nav_role: 'almacen',
+        ...(overrides.user || {}),
+      },
+      modules: on(
+        'hoy',
+        'pendientes',
+        'contactos',
+        'compras',
+        'productos',
+        'inventario',
+      ),
+      ...overrides,
+    })
+  const settle = async () => {
+    for (let i = 0; i < 4; i++) {
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      await nextTick()
+    }
+  }
+  const tabs = () =>
+    [
+      ...root.querySelectorAll('nav[aria-label="Main navigation"] > a'),
+    ].map((tab) => tab.textContent.trim())
+  const openMore = async () => {
+    root.querySelector('nav[aria-label="Main navigation"] > button').click()
+    await until(() => document.querySelector('[data-shell-layer="more"]'))
+    await settle()
+  }
+  const sheet = () => document.querySelector('[data-shell-layer="layout"]')
+  const row = (key) => sheet().querySelector(`[data-layout-row="${key}"]`)
+  afterEach(async () => {
+    const { layoutSheet } = await import('@/composables/muelleShell')
+    layoutSheet.value = null
+    delete window.installed_apps
+    state.toasts.length = 0
+  })
+
+  it('phone: a stock worker gets Inventario, Compras and Escáner, which leaves with the way back', async () => {
+    state.mobile.value = true
+    window.installed_apps = ['frappe', 'crm', 'scanner_kit']
+    state.call.mockImplementation(async (method) => {
+      if (method === 'crm.api.shell.boot') return stockBoot()
+      return null
+    })
+    await mount('/compras')
+    expect(tabs()).toEqual(['Hoy', 'Inventario', 'Compras', 'Escáner'])
+    const scan = root.querySelector(
+      'nav[aria-label="Main navigation"] > a[data-sibling="scan"]',
+    )
+    const href = new URL(scan.getAttribute('href'), 'https://x.test')
+    expect(href.pathname).toBe('/scan/inicio')
+    expect(href.searchParams.get('return_to')).toBe('/crm/compras')
+  })
+
+  it('phone Más: hidden places fold under «Hidden» and still open', async () => {
+    state.mobile.value = true
+    state.call.mockImplementation(async (method) => {
+      if (method === 'crm.api.shell.boot')
+        return stockBoot({
+          layout: { dock: [], order: [], hidden: ['contactos'], source: 'team' },
+        })
+      return null
+    })
+    await mount('/compras')
+    await openMore()
+    const more = document.querySelector('[data-shell-layer="more"]')
+    const tiles = () =>
+      [...more.querySelectorAll('a')].map((a) => a.textContent.trim())
+    expect(tiles()).toContain('Pendientes')
+    expect(tiles()).not.toContain('Contactos')
+    const fold = more.querySelector('[data-testid="more-hidden"]')
+    expect(fold.textContent).toContain('1')
+    fold.click()
+    await settle()
+    expect(tiles()).toContain('Contactos')
+  })
+
+  it('Personalizar: pinning to a full bar moves its last place to Más, and Save keeps it', async () => {
+    state.mobile.value = true
+    const saved = []
+    state.call.mockImplementation(async (method, args) => {
+      if (method === 'crm.api.shell.boot') return stockBoot()
+      if (method === 'crm.api.shell.save_layout') {
+        saved.push(JSON.parse(args.layout))
+        return { ...JSON.parse(args.layout), source: 'personal' }
+      }
+      return null
+    })
+    await mount('/compras')
+    await openMore()
+    document.querySelector('[data-testid="more-customize"]').click()
+    await until(sheet)
+    await settle()
+    expect(sheet().textContent).toContain('3 of 3')
+    // Pendientes onto the full bar: Productos (its last place) goes to Más.
+    row('pendientes').querySelector('[data-action="to-bar"]').click()
+    await settle()
+    expect(sheet().textContent).toContain(
+      'Productos moved to Más to make room.',
+    )
+    row('contactos').querySelector('[data-action="hide"]').click()
+    await settle()
+    // No reset while the bar is the puesto's.
+    expect(sheet().querySelector('[data-testid="layout-reset"]')).toBeNull()
+    sheet().querySelector('[data-testid="layout-save"]').click()
+    await settle()
+    expect(saved).toEqual([
+      {
+        dock: ['inventario', 'compras', 'pendientes'],
+        order: ['productos'],
+        hidden: ['contactos'],
+      },
+    ])
+    expect(tabs()).toEqual(['Hoy', 'Inventario', 'Compras', 'Pendientes'])
+    expect(state.toasts).toContainEqual([
+      'success',
+      'Saved. Your bar and Más changed.',
+    ])
+  })
+
+  it('Personalizar: the grip moves a place with the arrow keys', async () => {
+    state.mobile.value = true
+    state.call.mockImplementation(async (method) => {
+      if (method === 'crm.api.shell.boot') return stockBoot()
+      return null
+    })
+    await mount('/compras')
+    await openMore()
+    document.querySelector('[data-testid="more-customize"]').click()
+    await until(sheet)
+    await settle()
+    const order = () =>
+      [
+        ...sheet().querySelectorAll('[data-reorder-list="bar"] > li'),
+      ].map((li) => li.dataset.layoutRow)
+    expect(order()).toEqual(['inventario', 'compras', 'productos'])
+    row('productos')
+      .querySelector('[data-drag-handle]')
+      .dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }),
+      )
+    await settle()
+    expect(order()).toEqual(['inventario', 'productos', 'compras'])
+  })
+
+  it('my own arrangement offers the way back to my puesto’s', async () => {
+    state.mobile.value = true
+    const calls = []
+    state.call.mockImplementation(async (method, args) => {
+      calls.push([method, args])
+      if (method === 'crm.api.shell.boot')
+        return stockBoot({
+          layout: {
+            dock: ['pendientes'],
+            order: [],
+            hidden: [],
+            source: 'personal',
+          },
+        })
+      if (method === 'crm.api.shell.reset_layout')
+        return { dock: [], order: [], hidden: [], source: 'default' }
+      return null
+    })
+    await mount('/compras')
+    expect(tabs()[1]).toBe('Pendientes')
+    await openMore()
+    document.querySelector('[data-testid="more-customize"]').click()
+    await until(sheet)
+    await settle()
+    sheet().querySelector('[data-testid="layout-reset"]').click()
+    await settle()
+    expect(calls).toContainEqual([
+      'crm.api.shell.reset_layout',
+      { nav_class: 'almacen' },
+    ])
+    expect(tabs()).toEqual(['Hoy', 'Inventario', 'Compras', 'Productos'])
+  })
+
+  it('Barra por puesto: only the owner sees it, and Save sets that puesto’s bar', async () => {
+    state.mobile.value = true
+    const calls = []
+    const owner = boot({
+      user: { name: 'o@x.test', nav_role: 'dueno', arranges_team: true },
+      modules: on('hoy', 'pendientes', 'gastos', 'resultados', 'bancos', 'ventas'),
+    })
+    state.call.mockImplementation(async (method, args) => {
+      calls.push([method, args])
+      if (method === 'crm.api.shell.boot') return owner
+      if (method === 'crm.api.shell.team_layouts') return { layouts: {} }
+      if (method === 'crm.api.shell.save_team_layout')
+        return { layouts: { [args.nav_class]: JSON.parse(args.layout) } }
+      return null
+    })
+    await mount('/pendientes')
+    await openMore()
+    document.querySelector('[data-testid="more-team-layout"]').click()
+    await until(sheet)
+    await settle()
+    const select = sheet().querySelector('[data-testid="layout-class"]')
+    select.value = 'contador'
+    select.dispatchEvent(new Event('change'))
+    await settle()
+    expect(
+      [...sheet().querySelectorAll('[data-reorder-list="bar"] > li')].map(
+        (li) => li.dataset.layoutRow,
+      ),
+    ).toEqual(['bancos', 'gastos', 'resultados'])
+    sheet().querySelector('[data-testid="layout-save"]').click()
+    await settle()
+    const save = calls.find(([m]) => m === 'crm.api.shell.save_team_layout')
+    expect(save[1].nav_class).toBe('contador')
+    expect(JSON.parse(save[1].layout).dock).toEqual([
+      'bancos',
+      'gastos',
+      'resultados',
+    ])
+    expect(state.toasts.at(-1)[1]).toContain('Saved for Contador')
+  })
+
+  it('a worker who does not arrange the team never sees «Barra por puesto»', async () => {
+    state.mobile.value = true
+    state.call.mockImplementation(async (method) => {
+      if (method === 'crm.api.shell.boot') return stockBoot()
+      return null
+    })
+    await mount('/compras')
+    await openMore()
+    expect(document.querySelector('[data-testid="more-team-layout"]')).toBeNull()
+  })
+
+  it('desktop rail: the bar’s places lead, the hidden wait behind «Más»', async () => {
+    state.mobile.value = false
+    resetRailForTests('expanded')
+    state.call.mockImplementation(async (method) => {
+      if (method === 'crm.api.shell.boot')
+        return stockBoot({
+          layout: {
+            dock: ['productos'],
+            order: ['contactos'],
+            hidden: ['compras'],
+            source: 'personal',
+          },
+        })
+      return null
+    })
+    await mount('/pendientes')
+    const rail = root.querySelector('nav[aria-label="Apps"]')
+    expect(
+      [...rail.querySelectorAll('[data-module]')].map((a) => a.dataset.module),
+    ).toEqual(['hoy', 'productos', 'pendientes', 'contactos', 'inventario'])
+    rail.querySelector('[data-testid="rail-more"]').click()
+    await settle()
+    const menu = document.querySelector('[data-testid="rail-more-menu"]')
+    expect(menu.querySelector('[data-module="compras"]')).not.toBeNull()
+    menu.querySelector('[data-testid="rail-customize"]').click()
+    await until(sheet)
+    expect(sheet()).not.toBeNull()
+  })
+})

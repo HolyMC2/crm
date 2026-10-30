@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/shell-contracts@0.16.0 (5f948583506e). DO NOT EDIT:
+// Vendored from muelle/workspace/packages/shell-contracts@0.17.0 (5da43992cccc). DO NOT EDIT:
 // change the package, then run its scripts/vendor.mjs against this directory.
 export {
   RETURN_PREFIXES,
@@ -60,6 +60,7 @@ export {
   moduleForPath,
   mobileSlots,
   type LucideIcon,
+  type DockKey,
   type NavRole,
   type ShellModule,
   type ShellModuleBadge,

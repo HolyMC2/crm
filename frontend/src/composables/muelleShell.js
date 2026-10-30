@@ -3,11 +3,12 @@ import { call } from 'frappe-ui'
 import {
   SHELL_MODULES,
   bootScope,
-  mobileSlots,
   moduleEnabled,
   moduleForPath,
   railModules,
 } from '@/vendor/muelle-shell/contracts'
+import { installedSiblings, sortSiblings } from '@/composables/siblingApps'
+import { arrangeShell } from '@/utils/shellLayout'
 
 // One boot call (crm.api.shell.boot → ShellBoot) for every shell route; the
 // cache never crosses site or user.
@@ -218,24 +219,55 @@ export function moduleKeyFor(route) {
   return moduleForPath(route?.path || '', hostedModules)?.key || 'ventas'
 }
 
-export const navSlots = computed(() => {
-  const enabled = shellModules.value.map((module) => module.key)
-  return mobileSlots(
-    shellBoot.value?.user?.nav_role,
-    enabled,
-    shellBoot.value?.mobile_slots,
-  )
-    .map((key) => shellModules.value.find((module) => module.key === key))
-    .filter(Boolean)
-})
+// The boot's layout; a boot from before layouts carries only its bar order.
+function bootLayout(boot) {
+  if (boot?.layout) return boot.layout
+  return boot?.mobile_slots ? { dock: boot.mobile_slots } : null
+}
 
-export async function saveNavSlots(keys) {
-  const saved = await call('crm.api.shell.save_mobile_slots', {
-    slots: JSON.stringify(keys),
-  })
+/** Where each of my places sits: {bar, more, hidden} (utils/shellLayout.js). */
+export const shellLayout = computed(() =>
+  arrangeShell({
+    role: shellBoot.value?.user?.nav_role,
+    modules: shellModules.value,
+    apps: sortSiblings(installedSiblings()),
+    layout: bootLayout(shellBoot.value),
+  }),
+)
+
+export const navSlots = computed(() => shellLayout.value.bar)
+
+function applyLayout(layout) {
   if (shellBoot.value)
-    shellBoot.value = { ...shellBoot.value, mobile_slots: saved }
-  return saved
+    shellBoot.value = {
+      ...shellBoot.value,
+      layout,
+      mobile_slots: layout.dock?.length ? layout.dock : null,
+    }
+  return layout
+}
+
+/** Save my own arrangement ({dock, order, hidden}); the shell follows at once. */
+export async function saveLayout(layout) {
+  return applyLayout(
+    await call('crm.api.shell.save_layout', { layout: JSON.stringify(layout) }),
+  )
+}
+
+/** Drop my arrangement: back to the one my puesto has. */
+export async function resetLayout() {
+  return applyLayout(
+    await call('crm.api.shell.reset_layout', {
+      nav_class: shellBoot.value?.user?.nav_role || null,
+    }),
+  )
+}
+
+// «Personalizar» (mode 'mine') or the owner's «Barra por puesto» ('team'):
+// null while closed; MuelleShell mounts the sheet on its first open.
+export const layoutSheet = ref(null)
+export function openLayoutSheet(mode = 'mine') {
+  layoutSheet.value = { mode }
 }
 
 // The settings modal lives in the Ventas runtime: enter Ventas first when the

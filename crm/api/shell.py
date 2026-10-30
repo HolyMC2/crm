@@ -25,7 +25,12 @@ import json
 import frappe
 from frappe import _
 
+# The bar order saved before layouts (0.17.0): read as a personal dock, cleared on save.
 MOBILE_SLOTS_DEFAULT = "muelle_mobile_slots"
+# Where each place sits: the worker's own layout (user default) or their class's
+# layout the owner set (global default, by class). Layouts arrange; they never grant.
+LAYOUT_DEFAULT = "muelle_shell_layout"
+TEAM_LAYOUTS_DEFAULT = "muelle_shell_layouts"
 # Desktop rail width: «expanded» shows each app's name, «collapsed» only icons.
 RAIL_DEFAULT = "muelle_rail"
 RAIL_STATES = ("expanded", "collapsed")
@@ -52,6 +57,26 @@ MODULE_KEYS = (
 	"inmobiliaria",
 	"avisos",
 )
+# Sibling apps a layout may place (contracts SIBLING_APPS); each shows only where installed.
+SIBLING_KEYS = ("scan", "pos", "taller", "clinica", "mercado")
+# What a layout arranges: every module but Hoy (always first) and Avisos (the bell),
+# then the sibling apps.
+LAYOUT_KEYS = tuple(key for key in MODULE_KEYS if key not in ("hoy", "avisos")) + SIBLING_KEYS
+LAYOUT_PARTS = ("dock", "order", "hidden")
+# Hoy plus three, or four places when the worker has no Hoy (contracts MOBILE_SLOTS).
+DOCK_MAX = 4
+# Bar classes (contracts NavRole); «fallback» is a worker no class matches.
+NAV_CLASSES = (
+	"vendedor",
+	"recepcion",
+	"compras",
+	"dueno",
+	"inmobiliaria",
+	"almacen",
+	"cajero",
+	"contador",
+	"fallback",
+)
 # Doco puesto → phone bottom-nav class (contracts registry NavRole).
 NAV_ROLES = {"Cajero": "cajero", "Técnico": "recepcion", "Encargado": "dueno", "Dueño": "dueno"}
 # Without a puesto the class comes from the worker's Frappe roles, first match wins
@@ -59,7 +84,12 @@ NAV_ROLES = {"Cajero": "cajero", "Técnico": "recepcion", "Encargado": "dueno", 
 # accounting roles; only cashiers hold POS User without a puesto above them.
 ROLE_NAV_ROLES = (
 	("System Manager", "dueno"),
+	# Contador's own role (erpnext_mexico_compliance) names an outside accountant even
+	# when they also hold Accounts Manager.
+	("Contador", "contador"),
 	("Accounts Manager", "dueno"),
+	# Doco never gives a Cajero or Técnico accounting roles: whoever holds them keeps the books.
+	("Accounts User", "contador"),
 	("POS User", "cajero"),
 	("Sales User", "vendedor"),
 	("Purchase User", "compras"),
@@ -781,6 +811,69 @@ def _saved_slots():
 	return [key for key in slots if key in MODULE_KEYS] if isinstance(slots, list) else None
 
 
+def _clean_layout(raw) -> dict | None:
+	"""A layout as {dock, order, hidden}: known places only, each in one part, at most
+	DOCK_MAX docked. None when it is not a layout at all."""
+	if isinstance(raw, str):
+		try:
+			raw = json.loads(raw) if raw else None
+		except ValueError:
+			return None
+	if not isinstance(raw, dict):
+		return None
+	seen = set()
+	clean = {}
+	for part in LAYOUT_PARTS:
+		keys = raw.get(part) or []
+		clean[part] = []
+		for key in keys if isinstance(keys, list) else []:
+			if key in LAYOUT_KEYS and key not in seen:
+				seen.add(key)
+				clean[part].append(key)
+	clean["dock"] = clean["dock"][:DOCK_MAX]
+	return clean
+
+
+def _personal_layout() -> dict | None:
+	layout = _clean_layout(frappe.defaults.get_user_default(LAYOUT_DEFAULT))
+	if layout:
+		return layout
+	slots = _saved_slots()
+	if slots:
+		return _clean_layout({"dock": slots})
+	return None
+
+
+def _team_layouts() -> dict:
+	"""The owner's layout per bar class; a class without one uses the contracts defaults."""
+	raw = frappe.defaults.get_global_default(TEAM_LAYOUTS_DEFAULT)
+	try:
+		data = json.loads(raw) if raw else {}
+	except ValueError:
+		data = {}
+	if not isinstance(data, dict):
+		return {}
+	return {klass: layout for klass in NAV_CLASSES if (layout := _clean_layout(data.get(klass)))}
+
+
+def _layout(klass: str | None) -> dict:
+	"""Where this worker's places sit, and whose choice that is: their own, their class's
+	(the owner's), or the contracts defaults (empty parts)."""
+	personal = _personal_layout()
+	if personal:
+		return {**personal, "source": "personal"}
+	team = _team_layouts().get(klass or "fallback")
+	if team:
+		return {**team, "source": "team"}
+	return {"dock": [], "order": [], "hidden": [], "source": "default"}
+
+
+def _may_arrange_team() -> bool:
+	# The owner's call, like Disparadores: System Managers and the dueno class.
+	roles = frappe.get_roles()
+	return "System Manager" in roles or nav_role(_puesto(), roles) == "dueno"
+
+
 def _saved_rail():
 	value = frappe.defaults.get_user_default(RAIL_DEFAULT)
 	return value if value in RAIL_STATES else None
@@ -808,14 +901,18 @@ def boot():
 		)
 	user = frappe.db.get_value("User", frappe.session.user, ["full_name", "user_image"], as_dict=True) or {}
 	puesto = _puesto()
+	klass = nav_role(puesto, frappe.get_roles(), _module_nav_hint(modules))
+	layout = _layout(klass)
 	return {
 		"user": {
 			"name": frappe.session.user,
 			"full_name": user.get("full_name"),
 			"image": user.get("user_image"),
 			"puesto": puesto,
-			"nav_role": nav_role(puesto, frappe.get_roles(), _module_nav_hint(modules)),
+			"nav_role": klass,
 			"is_admin": "System Manager" in frappe.get_roles(),
+			# May set the bar and Más for each puesto (Más › Barra por puesto).
+			"arranges_team": _may_arrange_team(),
 		},
 		# What the client keys its boot copy by (also in the page boot as shell_scope).
 		"scope": scope_hash(),
@@ -825,7 +922,10 @@ def boot():
 		or frappe.utils.get_system_timezone(),
 		"currency": frappe.defaults.get_global_default("currency"),
 		"palette": _palette(),
-		"mobile_slots": _saved_slots(),
+		# Where the bar, Más and the rail put each place (the client resolves it with
+		# the contracts defaults); mobile_slots is its dock for clients older than 0.17.0.
+		"layout": layout,
+		"mobile_slots": layout["dock"] or None,
 		"rail": _saved_rail(),
 		# Where Muelle opens for me (Más > Configuración); the client shows
 		# «Automático» when the saved module is no longer one of mine.
@@ -844,28 +944,84 @@ def _saved_landing_key() -> str:
 	return frappe.defaults.get_user_default(LANDING_DEFAULT) or ""
 
 
-@frappe.whitelist(methods=["POST"])
-def save_mobile_slots(slots: str | list):
-	"""The user's own bottom-nav order; only known module keys, at most four."""
+def _signed_in():
 	if frappe.session.user == "Guest":
 		frappe.throw(_("Sign in to open Muelle."), frappe.AuthenticationError)
+
+
+@frappe.whitelist(methods=["POST"])
+def save_mobile_slots(slots: str | list):
+	"""The bar order from clients older than 0.17.0: the dock of the worker's own layout."""
+	_signed_in()
 	if isinstance(slots, str):
 		slots = json.loads(slots or "[]")
 	if not isinstance(slots, list):
 		frappe.throw(_("Choose up to four sections for the bar."))
-	clean = []
-	for key in slots:
-		if key in MODULE_KEYS and key not in clean:
-			clean.append(key)
-	frappe.defaults.set_user_default(MOBILE_SLOTS_DEFAULT, json.dumps(clean[:4]))
-	return clean[:4]
+	layout = _personal_layout() or {"order": [], "hidden": []}
+	saved = save_layout({**layout, "dock": slots})
+	return saved["dock"]
+
+
+@frappe.whitelist(methods=["POST"])
+def save_layout(layout: str | dict):
+	"""The worker's own bar, Más order and hidden places (Más › Personalizar)."""
+	_signed_in()
+	clean = _clean_layout(layout)
+	if clean is None:
+		frappe.throw(_("We could not read that arrangement. Open Customize again and retry."))
+	frappe.defaults.set_user_default(LAYOUT_DEFAULT, json.dumps(clean))
+	frappe.defaults.clear_user_default(MOBILE_SLOTS_DEFAULT)
+	return {**clean, "source": "personal"}
+
+
+@frappe.whitelist(methods=["POST"])
+def reset_layout(nav_class: str | None = None):
+	"""Drop the worker's own layout: back to their puesto's (the client names its boot class;
+	a layout only arranges, so trusting it grants nothing)."""
+	_signed_in()
+	frappe.defaults.clear_user_default(LAYOUT_DEFAULT)
+	frappe.defaults.clear_user_default(MOBILE_SLOTS_DEFAULT)
+	return _layout(nav_class if nav_class in NAV_CLASSES else None)
+
+
+def _require_team():
+	_signed_in()
+	if not _may_arrange_team():
+		frappe.throw(
+			_(
+				"Only the owner arranges the bar for each puesto. Ask them, or arrange your own from Más > Customize."
+			),
+			frappe.PermissionError,
+		)
+
+
+@frappe.whitelist()
+def team_layouts():
+	"""The owner's layout per bar class (Más › Barra por puesto)."""
+	_require_team()
+	return {"layouts": _team_layouts()}
+
+
+@frappe.whitelist(methods=["POST"])
+def save_team_layout(nav_class: str, layout: str | dict | None = None):
+	"""Set (or with no layout, drop) one class's layout. Workers who arranged their own keep it."""
+	_require_team()
+	if nav_class not in NAV_CLASSES:
+		frappe.throw(_("Choose a puesto to arrange."))
+	layouts = _team_layouts()
+	clean = _clean_layout(layout) if layout else None
+	if clean and any(clean.values()):
+		layouts[nav_class] = clean
+	else:
+		layouts.pop(nav_class, None)
+	frappe.defaults.set_global_default(TEAM_LAYOUTS_DEFAULT, json.dumps(layouts))
+	return {"layouts": layouts}
 
 
 @frappe.whitelist(methods=["POST"])
 def save_rail(state: str):
 	"""The user's own desktop rail width: «expanded» (names) or «collapsed» (icons)."""
-	if frappe.session.user == "Guest":
-		frappe.throw(_("Sign in to open Muelle."), frappe.AuthenticationError)
+	_signed_in()
 	if state not in RAIL_STATES:
 		frappe.throw(_("Choose whether the sidebar shows the app names or only their icons."))
 	frappe.defaults.set_user_default(RAIL_DEFAULT, state)

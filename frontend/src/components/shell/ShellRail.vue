@@ -123,6 +123,8 @@
           }}</span>
         </template>
       </RouterLink>
+      <!-- What the worker hid, and the door to arrange the rail and the bar. -->
+      <RailMore :hidden="hidden" :expanded="expanded" :active="active" />
     </div>
     <!-- The site's other apps, Ferdium-style: round icons that open the app
          inside the shell (it keeps its page while the worker switches), with
@@ -321,14 +323,12 @@ import {
 } from '@/composables/shellKeyboard'
 import { assistantOn } from '@/components/assistant/assistantDoor'
 import {
-  installedSiblings,
   moduleCount,
   railCounts,
   railExpanded,
   railWidth,
   refreshRailCounts,
   siblingHref,
-  sortSiblings,
   toggleRail,
 } from '@/composables/shellRail'
 import {
@@ -339,10 +339,14 @@ import {
   showShell,
 } from '@/composables/appStrip'
 import UserMenu from './UserMenu.vue'
+import RailMore from './RailMore.vue'
 import { installLinkPrefetch } from '@/utils/speculate'
 
 const props = defineProps({
+  // The worker's places in their order (shellLayout): modules, then the
+  // site's other apps ({app: true}); Avisos is the bell at the foot.
   modules: { type: Array, default: () => [] },
+  hidden: { type: Array, default: () => [] },
   unavailable: { type: Array, default: () => [] },
   active: { type: String, default: '' },
   ventas: Boolean,
@@ -373,7 +377,7 @@ const toggleLabel = computed(() =>
   expanded.value ? __('Collapse sidebar') : __('Expand sidebar'),
 )
 const apps = computed(() =>
-  props.modules.filter((module) => module.key !== 'avisos'),
+  props.modules.filter((module) => !module.app && module.key !== 'avisos'),
 )
 const avisos = computed(() =>
   props.modules.some((module) => module.key === 'avisos'),
@@ -382,7 +386,7 @@ const avisos = computed(() =>
 // window, moves to another page, or every two minutes while it is in view.
 const counts = computed(() =>
   Object.fromEntries(
-    [...props.modules, ...siblings].map((module) => [
+    [...props.modules, ...props.hidden].map((module) => [
       module.key,
       moduleCount(module, railCounts.value),
     ]),
@@ -426,7 +430,7 @@ function showTip(event) {
 
 // Sibling SPAs (Escáner, POS, Taller…) open with the way back to this page:
 // «Volver a Productos» in Escáner returns to the record the worker left.
-const siblings = sortSiblings(installedSiblings())
+const siblings = computed(() => props.modules.filter((module) => module.app))
 // Hovering a sibling app (data-sibling) fetches its page before the click.
 installLinkPrefetch()
 const siblingLinks = computed(() => {
@@ -434,7 +438,10 @@ const siblingLinks = computed(() => {
     (module) => module.key === props.active,
   )?.label
   return Object.fromEntries(
-    siblings.map((app) => [app.key, siblingHref(app, route.fullPath, label)]),
+    siblings.value.map((app) => [
+      app.key,
+      siblingHref(app, route.fullPath, label),
+    ]),
   )
 })
 

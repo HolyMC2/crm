@@ -4,10 +4,14 @@
     class="sticky bottom-0 flex shrink-0 items-stretch border-t border-outline-gray-1 bg-surface-base pb-[env(safe-area-inset-bottom)]"
     :aria-label="__('Main navigation')"
   >
-    <RouterLink
+    <!-- A docked app (Escáner on a stock worker's bar) is a plain link that
+         leaves the shell with the way back (`href`, from MuelleShell). -->
+    <component
+      :is="module.app ? 'a' : RouterLink"
       v-for="module in slots"
       :key="module.key"
-      :to="module.to"
+      v-bind="module.app ? { href: module.href } : { to: module.to }"
+      :data-sibling="module.app ? module.key : undefined"
       class="flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium"
       :class="module.key === active ? 'text-ink-gray-9' : 'text-ink-gray-6'"
       :aria-current="module.key === active ? 'page' : undefined"
@@ -20,7 +24,7 @@
         <span :class="[module.icon, 'size-5']" />
       </span>
       <span :class="LABEL">{{ module.label }}</span>
-    </RouterLink>
+    </component>
     <!-- «Más» lights up while the page is a module the bar does not hold: the
          worker reached it from the sheet, so the way back stays visible. -->
     <button
@@ -42,13 +46,14 @@
   </nav>
 </template>
 <script setup>
-import { computed } from 'vue'
+import { computed, resolveComponent } from 'vue'
 
 const props = defineProps({
   slots: { type: Array, default: () => [] },
   active: { type: String, default: '' },
 })
 defineEmits(['more'])
+const RouterLink = resolveComponent('RouterLink')
 // Five tabs below 360 px leave ~61 px each: «Documentos» at 11 px (~58 px)
 // touches its neighbours. 10 px and tighter tracking keep whole words with air
 // between tabs (measured at 305: «Documentos» 52 px); the ellipsis inside the

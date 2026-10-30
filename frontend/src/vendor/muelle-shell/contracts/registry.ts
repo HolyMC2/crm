@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/shell-contracts@0.16.0 (5f948583506e). DO NOT EDIT:
+// Vendored from muelle/workspace/packages/shell-contracts@0.17.0 (5da43992cccc). DO NOT EDIT:
 // change the package, then run its scripts/vendor.mjs against this directory.
 // Module registry types and the shell's fixed module catalog (spec §1.1, §2.1, §4.7).
 // Framework-agnostic: the crm shell instantiates `ShellModule<RouteRecordRaw, …>`.
@@ -126,19 +126,34 @@ export type NavRole =
   | 'inmobiliaria'
   | 'almacen'
   | 'cajero'
+  | 'contador'
   | 'fallback'
 
-export const MOBILE_SLOT_DEFAULTS: Readonly<Record<NavRole, readonly ShellModuleKey[]>> = Object.freeze({
+/**
+ * A dock place: a shell module, or a sibling app the bar opens in place (0.17.0:
+ * Escáner on a stock worker's bar). The host passes the installed apps in `enabled`.
+ */
+export type DockKey = ShellModuleKey | SiblingAppKey
+
+/**
+ * Each class's bar after Hoy, best first. A place the worker cannot open is skipped
+ * and the next one moves up, so a list may name more than the bar holds (0.17.0).
+ */
+export const MOBILE_SLOT_DEFAULTS: Readonly<Record<NavRole, readonly DockKey[]>> = Object.freeze({
   vendedor: ['pendientes', 'contactos', 'ventas'],
   recepcion: ['agenda', 'contactos', 'pendientes'],
   compras: ['compras', 'pendientes', 'contactos'],
   dueno: ['pendientes', 'ventas', 'contactos'],
   // A real-estate worker (líder de equipo, administrador): their queues, prospects, visits (0.11.0).
   inmobiliaria: ['inmobiliaria', 'contactos', 'agenda'],
-  // Stock people (Almacén): movements and counts, the catalog, their tasks (0.12.0).
-  almacen: ['inventario', 'productos', 'pendientes'],
+  // Stock people (Almacén): movements and counts, receipts (Compras › Recepción), the
+  // Escáner app; without them the catalog and their tasks (0.17.0).
+  almacen: ['inventario', 'compras', 'scan', 'productos', 'pendientes'],
   // The counter (Cajero): prices and stock, tickets and invoices, their tasks (0.12.0).
   cajero: ['productos', 'documentos', 'pendientes'],
+  // The accountant (Contador): banks and reconciliation, cash custody, expenses, then
+  // the results (0.17.0).
+  contador: ['bancos', 'efectivo', 'gastos', 'resultados', 'pendientes'],
   fallback: ['pendientes', 'agenda', 'contactos'],
 })
 
@@ -146,19 +161,20 @@ export const MOBILE_SLOTS = 4
 
 /**
  * Bottom-nav slots (Más is extra): Hoy first, then the user's saved order,
- * else the role defaults, then registry order — enabled modules only, Avisos
- * never (it is the header bell), no duplicates, at most four.
+ * else the role defaults, then registry order — enabled places only (modules,
+ * and the sibling apps the host lists as enabled), Avisos never (it is the
+ * header bell), no duplicates, at most four. Registry backfill is modules only.
  */
 export function mobileSlots(
   role: NavRole | null | undefined,
-  enabled: readonly ShellModuleKey[],
+  enabled: readonly DockKey[],
   override?: readonly string[] | null,
-): ShellModuleKey[] {
-  const allowed = new Set<ShellModuleKey>(enabled.filter((key) => key !== 'avisos'))
-  const out: ShellModuleKey[] = []
+): DockKey[] {
+  const allowed = new Set<DockKey>(enabled.filter((key) => key !== 'avisos'))
+  const out: DockKey[] = []
   const add = (key: string) => {
-    if (out.length < MOBILE_SLOTS && allowed.has(key as ShellModuleKey) && !out.includes(key as ShellModuleKey))
-      out.push(key as ShellModuleKey)
+    if (out.length < MOBILE_SLOTS && allowed.has(key as DockKey) && !out.includes(key as DockKey))
+      out.push(key as DockKey)
   }
   add('hoy')
   const preferred = override && override.length ? override : MOBILE_SLOT_DEFAULTS[role ?? 'fallback'] ?? MOBILE_SLOT_DEFAULTS.fallback

@@ -3,7 +3,11 @@ import { call } from 'frappe-ui'
 import { shellBoot } from '@/composables/muelleShell'
 import { userScopedKey } from '@/utils/storageKeys'
 import {
-  SIBLING_APPS,
+  SIBLING_APP_NAMES,
+  installedSiblings,
+  sortSiblings,
+} from '@/composables/siblingApps'
+import {
   defaultReturnLabel,
   readDone,
   safeReturn,
@@ -126,31 +130,9 @@ export function resetRailCountsForTests() {
 
 // --- sibling apps («Otras apps») ------------------------------------------------
 
-/** Frappe app that serves each sibling SPA; it shows only where installed. */
-export const SIBLING_APP_NAMES = Object.freeze({
-  pos: 'posawesome',
-  taller: 'taller',
-  clinica: 'clinica',
-  mercado: 'mercado',
-  scan: 'scanner_kit',
-})
-
-export function installedSiblings(apps = globalThis.window?.installed_apps) {
-  const installed = Array.isArray(apps) ? apps : []
-  return SIBLING_APPS.filter((app) =>
-    installed.includes(SIBLING_APP_NAMES[app.key]),
-  )
-}
-
-// Escáner first: the phone stock tool every shop opens from the shell.
-const SIBLING_ORDER = ['scan', 'pos', 'taller', 'clinica', 'mercado']
-
-/** Installed sibling apps in the shell's order (Escáner first). */
-export function sortSiblings(apps) {
-  return [...apps].sort(
-    (a, b) => SIBLING_ORDER.indexOf(a.key) - SIBLING_ORDER.indexOf(b.key),
-  )
-}
+// Which sibling apps this site has, in the shell's order (siblingApps.js, which
+// the boot's layout also reads without this module's rail state).
+export { SIBLING_APP_NAMES, installedSiblings, sortSiblings }
 
 // Where a sibling's home opens when it is not its bare root: Frappe answers
 // /scan/ with a redirect to /scan, outside Escáner's service-worker scope, so
