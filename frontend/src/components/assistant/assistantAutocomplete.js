@@ -11,6 +11,15 @@ import { ASSISTANT_API } from './useAssistant'
 
 export const DEBOUNCE_MS = 150
 
+// a server without autocompletar (an older doco): asked once, then no list
+// and typed commands go out as written
+let available = true
+const MISSING = /not whitelisted|has no attribute|Failed to get method/i
+function unavailable(error) {
+  if (MISSING.test(String(error?.message || error?.exc_type || '')))
+    available = false
+}
+
 export const complete = reactive({
   open: false,
   /** 'comando' | 'persona' */
@@ -79,14 +88,16 @@ export function updateComplete(text, caret) {
 }
 
 async function fetchItems(token, mine) {
-  let items = []
+  if (!available) return
+  let items
   try {
     const out = await call(`${ASSISTANT_API}.autocompletar`, {
       q: token.query,
       kind: token.kind,
     })
     items = out?.items || []
-  } catch {
+  } catch (error) {
+    unavailable(error)
     items = []
   }
   // an older answer never replaces a newer one, nor reopens a closed list
@@ -142,15 +153,16 @@ export function expandWith(item, rest) {
  */
 export async function resolveCommand(text) {
   const m = String(text || '').match(/^\s*\/([^\s/]+)\s*([\s\S]*)$/u)
-  if (!m) return null
-  let items = []
+  if (!m || !available) return null
+  let items
   try {
     const out = await call(`${ASSISTANT_API}.autocompletar`, {
       q: m[1],
       kind: 'comando',
     })
     items = out?.items || []
-  } catch {
+  } catch (error) {
+    unavailable(error)
     return null
   }
   const fold = (s) =>
@@ -169,4 +181,5 @@ export async function resolveCommand(text) {
 export function _resetComplete() {
   closeComplete()
   turn = 0
+  available = true
 }

@@ -188,6 +188,16 @@ describe('a typed command', () => {
     expect(await resolveCommand('/nada que ver')).toBe(null)
     expect(await resolveCommand('hola')).toBe(null)
   })
+
+  it('on a server without autocompletar is asked once, then goes out as typed', async () => {
+    mocks.call.mockReset()
+    mocks.call.mockRejectedValue(
+      new Error('Function shell_api.autocompletar is not whitelisted.'),
+    )
+    expect(await resolveCommand('/nueva')).toBe(null)
+    expect(await resolveCommand('/abierto')).toBe(null)
+    expect(mocks.call).toHaveBeenCalledTimes(1)
+  })
 })
 
 describe('in the composer', () => {
