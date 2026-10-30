@@ -101,6 +101,14 @@ lacks a feature, ask the Shell S1 owner instead of making a private copy.
   cliente con el mismo nombre» replaces a repeated name, relations name each end's kind, and the
   KPI labels are sentence case (`ContactOverviewTab.vue`), «Datos» lists only fields with data
   (one «Mostrar N campos sin dato» toggle).
+- 2026-10-30 · Gasto factura (`pages/GastoFactura.vue`): the supplier bill joins the record pattern of
+  the Sales Invoice. Its own bar (`meta.ownPhoneHeader`) names the supplier with the state chip and
+  «Factura <folio>» (a CFDI UUID never stands in for the folio), the call/WhatsApp/correo island, the
+  bolt with the bill's steps and «⋯». The hero is the amount, stages, due line and one filled step
+  with tonal Capturar comprobante, Editar and Imprimir. Lines are `ItemsCards` (`limit` 5, then
+  «Mostrar N artículos más»), `DocTotals` with each tax, payments and the bill's facts as icon rows,
+  then Datos. «En el almacén» (`components/gastos/BillAlmacen.vue`, `crm.api.gastos.bill_warehouse`)
+  opens Escáner's receiving, receipts and open tasks with `return_to`, and labels in Productos.
 - Still to do on Contacto: fold Seguimientos «Hechos/Cancelados» into a collapsed «Completados
   (n)»; grey out an action that does not apply instead of hiding it.
 
