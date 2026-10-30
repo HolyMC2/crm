@@ -97,6 +97,10 @@
             )
           }}
         </p>
+        <!-- What a pin to a full bar moved, said where it happened. -->
+        <p v-if="note" role="status" class="pt-2 text-sm text-ink-gray-7">
+          {{ note }}
+        </p>
       </section>
 
       <section aria-labelledby="layout-more">
@@ -199,9 +203,6 @@
           </li>
         </ul>
       </section>
-      <p v-if="note" role="status" class="text-sm text-ink-gray-7">
-        {{ note }}
-      </p>
     </div>
 
     <template v-if="!loadError" #actions>
