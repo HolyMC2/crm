@@ -333,6 +333,19 @@ const routes = [
     },
   },
   {
+    // Precios: many products' prices against their cost, standalone or from
+    // a purchase, a material request or a stock movement. Before `:item`.
+    path: '/productos/precios',
+    name: 'Precios',
+    component: () => import('@/pages/Precios.vue'),
+    meta: {
+      app: 'productos',
+      title: 'Precios',
+      listParent: 'Productos',
+      ownPhoneHeader: true,
+    },
+  },
+  {
     path: '/productos/etiquetas/trabajo/:name',
     name: 'EtiquetasTrabajo',
     component: () => import('@/pages/EtiquetasTrabajo.vue'),

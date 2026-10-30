@@ -207,6 +207,15 @@
               @click="newProduct()"
             />
             <RouterLink
+              to="/productos/precios"
+              class="inline-flex min-h-11 items-center gap-1.5 rounded-5 px-3 text-base text-ink-gray-8 hover:bg-surface-gray-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-8"
+              title="Revisa muchos precios contra lo que te costaron y cámbialos a la vez"
+              data-productos-precios
+            >
+              <span class="lucide-percent h-4 w-4" aria-hidden="true" />
+              Precios
+            </RouterLink>
+            <RouterLink
               to="/productos/etiquetas"
               class="inline-flex min-h-11 items-center gap-1.5 rounded-5 px-3 text-base text-ink-gray-8 hover:bg-surface-gray-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-8"
               title="Imprime etiquetas de precio y anaquel, y ve tus trabajos"
@@ -431,8 +440,17 @@
           </p>
           <RouterLink
             v-if="isPhone && !returnTo"
-            to="/productos/etiquetas"
+            to="/productos/precios"
             class="ml-auto inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-ink-gray-8"
+            data-productos-precios
+          >
+            <span class="lucide-percent h-4 w-4" aria-hidden="true" />
+            Precios
+          </RouterLink>
+          <RouterLink
+            v-if="isPhone && !returnTo"
+            to="/productos/etiquetas"
+            class="inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-ink-gray-8"
             data-productos-etiquetas
           >
             <span class="lucide-tag h-4 w-4" aria-hidden="true" />
@@ -543,6 +561,16 @@
                   : __('Ask the manager for a count')
               "
               @click="openCount(selectedRows)"
+            />
+            <Button
+              class="min-h-11 sm:min-h-8"
+              label="Revisar precios"
+              data-productos-revisar-precios
+              @click="
+                router.push(
+                  preciosHref({ codigos: selectedRows.map((r) => r.name) }),
+                )
+              "
             />
             <Button
               class="min-h-11 sm:min-h-8"
@@ -829,6 +857,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { Button, FormControl, toast } from 'frappe-ui'
 import { Fab, FilterChips, PageHeader } from '@/components/ui'
 import { etiquetasHref } from '@/composables/useEtiquetas'
+import { preciosHref } from '@/composables/preciosLink'
 import ChipGroup from '@/components/ui/ChipGroup.vue'
 import RecentPicks from '@/components/ui/RecentPicks.vue'
 import SearchPanel from '@/components/ui/SearchPanel.vue'

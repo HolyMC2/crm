@@ -1137,6 +1137,16 @@
                 <h2 class="flex-1 text-base font-semibold text-ink-gray-9">
                   {{ __('Price changes') }}
                 </h2>
+                <button
+                  type="button"
+                  class="press inline-flex min-h-11 items-center gap-1.5 rounded-6 px-3 text-sm font-medium text-ink-gray-8 hover:bg-surface-gray-2 sm:min-h-8"
+                  title="Lo que costó cada compra y el precio en el tiempo"
+                  data-producto-grafica
+                  @click="openPriceHistory"
+                >
+                  <span class="lucide-chart-spline size-4" aria-hidden="true" />
+                  Gráfica
+                </button>
               </header>
               <p
                 v-if="!history.readable"
@@ -1633,6 +1643,12 @@
       :sheet-href="data.links?.labels || ''"
       :on-hand="unitList"
     />
+    <HistorySheet
+      v-if="priceHistoryMounted"
+      v-model:open="priceHistoryOpen"
+      :item="product.name"
+      :list="data?.prices?.default_price_list || ''"
+    />
     <PriceDialog
       v-if="data"
       v-model="priceOpen"
@@ -1737,6 +1753,10 @@ const AjustarSheet = defineAsyncComponent(
 const AvisameSheet = defineAsyncComponent(
   () => import('@/components/documentos/AvisameSheet.vue'),
 )
+// Precios' history chart: its own chunk, on first open.
+const HistorySheet = defineAsyncComponent(
+  () => import('@/components/precios/HistorySheet.vue'),
+)
 const MinimoSheet = defineAsyncComponent(
   () => import('@/components/productos/MinimoSheet.vue'),
 )
@@ -1824,6 +1844,12 @@ const problem = ref(null)
 const guard = ref(null)
 const notice = ref(null)
 const priceOpen = ref(false)
+const priceHistoryOpen = ref(false)
+const priceHistoryMounted = ref(false)
+function openPriceHistory() {
+  priceHistoryMounted.value = true
+  priceHistoryOpen.value = true
+}
 const editOpen = ref(false)
 const countOpen = ref(false)
 const avisameOpen = ref(false)

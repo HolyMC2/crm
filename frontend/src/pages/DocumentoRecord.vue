@@ -350,6 +350,11 @@ import {
   SOURCE_DOCTYPES as LABEL_SOURCES,
   etiquetasHref,
 } from '@/composables/useEtiquetas'
+import {
+  SOURCE_DOCTYPES as PRICE_SOURCES,
+  preciosHref,
+  sourceName,
+} from '@/composables/preciosLink'
 import { useRoute, useRouter } from 'vue-router'
 import { call, toast } from 'frappe-ui'
 import { AppBar, EmptyState, StatusChip } from '@/components/ui'
@@ -623,6 +628,16 @@ const extraTools = computed(() => {
       icon: 'lucide-tag',
       allowed: true,
       hint: 'Una por pieza de este documento',
+    })
+  // Prices of what this document moved (Precios): what it cost against what
+  // it sells for, and the change in place for all of them at once.
+  if (PRICE_SOURCES.includes(doctype.value) && labelDocstatus !== 2)
+    out.push({
+      key: 'precios',
+      label: 'Revisar precios',
+      icon: 'lucide-percent',
+      allowed: true,
+      hint: 'Lo que costó contra lo que lo vendes',
     })
   const actions = record.value?.actions || {}
   if (actions.email)
@@ -928,6 +943,15 @@ async function onTool(key) {
       break
     case 'desk':
       window.open(deskUrl(doctype.value, name.value), '_blank', 'noopener')
+      break
+    case 'precios':
+      router.push(
+        preciosHref({
+          desde: `${doctype.value}:${name.value}`,
+          returnTo: `/crm${route.fullPath}`,
+          returnLabel: sourceName(doctype.value),
+        }),
+      )
       break
     case 'etiquetas':
       router.push(
