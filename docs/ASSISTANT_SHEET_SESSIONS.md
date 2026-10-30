@@ -40,7 +40,9 @@ integration with its workspace for html graphs and stuff, autocomplete on / cmds
 - **Reset without a turn.** `shell_api.new_conversation` and `shell_api.liquidar` call
   `books.context.clear_chat` directly (conversations.close records the stretch, the epoch moves,
   `doco_assistant_reset` goes out after commit) instead of queueing «/clear» behind the running
-  turn. The conductor queue is kept: a message sent before the reset is still answered.
+  turn. The conductor queue is kept: a message sent before the reset is still answered, in the
+  conversation it was asked in (doco's `turn_at` fence: no live event, left out of the live
+  history, shown in that earlier conversation; a reload, another tab and the phone agree).
 - **No stale message.** `useAssistant.retireConversation` empties the log before the call returns
   and retires the old conversation's client ids and message ids: the old turn's reply, its edits
   and its typing are dropped; a history read that started before the reset is discarded; our own
