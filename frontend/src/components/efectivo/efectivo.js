@@ -62,7 +62,7 @@ function target(safe) {
   return safe.store ? { safe: safe.safe } : { pos_profile: safe.pos_profile }
 }
 
-/** `service.command`: prepare, verify, unpack, dispatch, confirm_bank, return_bank, count_safe, review. */
+/** `service.command`: prepare, verify, unpack, dispatch, confirm_bank, return_bank, count_safe, review, transfer_safe, fund. */
 export function custody(action, safe, payload, requestId) {
   return call(`${POSA}.cash_custody.service.command`, {
     action,
@@ -121,6 +121,38 @@ export const authorizePosting = (row, reason, password) =>
     reason,
     password,
   })
+
+/** Accounts a custodian may bring outside money from («Ingresar efectivo»). */
+export const fundSources = (safe) =>
+  call(`${POSA}.cash_custody.service.fund_sources`, target(safe))
+
+/**
+ * A bag's handover sheet (`slip`) or the tag that travels on it (`label`),
+ * printed from a window opened on the tap so the browser does not block it.
+ */
+export async function printEvidence(doctype, name, layout = 'slip') {
+  const popup = window.open('', '_blank')
+  if (!popup)
+    throw new Error(
+      'Permite las ventanas emergentes de este sitio para imprimir.',
+    )
+  try {
+    const html = await call(`${POSA}.cash_custody.printing.evidence`, {
+      doctype,
+      name,
+      layout,
+    })
+    popup.opener = null
+    popup.document.open()
+    popup.document.write(html)
+    popup.document.close()
+    popup.focus()
+    popup.print()
+  } catch (error) {
+    popup.close()
+    throw error
+  }
+}
 
 export const listPhotos = (doctype, name) =>
   call(`${POSA}.cash_custody.photos.list_photos`, { doctype, name })

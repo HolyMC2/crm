@@ -473,6 +473,29 @@ const routes = [
     meta: { app: 'efectivo', title: 'Efectivo', ownPhoneHeader: true },
   },
   {
+    path: '/efectivo/cajas',
+    name: 'EfectivoCajas',
+    component: () => import('@/pages/EfectivoCajas.vue'),
+    meta: {
+      app: 'efectivo',
+      title: 'Cajas',
+      ownPhoneHeader: true,
+      listParent: 'Efectivo',
+    },
+  },
+  {
+    path: '/efectivo/caja/:name',
+    name: 'EfectivoCaja',
+    component: () => import('@/pages/EfectivoCaja.vue'),
+    props: true,
+    meta: {
+      app: 'efectivo',
+      title: 'Cajas',
+      ownPhoneHeader: true,
+      listParent: 'EfectivoCajas',
+    },
+  },
+  {
     path: '/efectivo/bolsa/:name',
     name: 'EfectivoBolsa',
     component: () => import('@/pages/EfectivoBolsa.vue'),

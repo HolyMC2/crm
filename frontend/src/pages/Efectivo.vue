@@ -47,7 +47,7 @@
       </div>
       <template v-else>
         <EmptyState
-          v-if="!safes.length"
+          v-if="!safes.length && !stores.length"
           class="py-10"
           state="empty"
           title="Sin cajas fuertes a tu cargo"
@@ -159,7 +159,8 @@
         <section
           v-if="
             visibleSafes.length > 1 ||
-            (visibleSafes[0] && visibleSafes[0].can.count_safe)
+            (visibleSafes[0] &&
+              (visibleSafes[0].can.count_safe || visibleSafes[0].can.fund))
           "
           class="mt-5"
           aria-label="Cajas fuertes"
@@ -192,10 +193,22 @@
                 >{{ money(safe.balance, safe.currency) }}</span
               >
               <div
-                v-if="safe.can.count_safe"
+                v-if="safe.can.count_safe || safe.can.fund"
                 class="flex flex-none rounded-full bg-surface-gray-1 p-0.5"
               >
                 <button
+                  v-if="safe.can.fund"
+                  type="button"
+                  class="press grid size-10 place-items-center rounded-full text-ink-gray-7"
+                  :aria-label="`Ingresar efectivo a ${safe.title}`"
+                  title="Ingresar efectivo"
+                  data-efectivo-fund
+                  @click="open(fundSafe(safe))"
+                >
+                  <span class="lucide-hand-coins size-5" aria-hidden="true" />
+                </button>
+                <button
+                  v-if="safe.can.count_safe"
                   type="button"
                   class="press grid size-10 place-items-center rounded-full text-ink-gray-7"
                   :aria-label="`Contar ${safe.title}`"
@@ -205,6 +218,33 @@
                   <span class="lucide-calculator size-5" aria-hidden="true" />
                 </button>
               </div>
+            </li>
+          </ul>
+        </section>
+
+        <!-- Cajas: each store's registers, managed on their own page. -->
+        <section
+          v-if="stores.length"
+          class="mt-5"
+          aria-label="Cajas"
+          data-efectivo-cajas
+        >
+          <h2 class="px-4 pb-1 text-sm font-semibold text-ink-gray-8">Cajas</h2>
+          <ul class="divide-y divide-outline-gray-1">
+            <li v-for="store in stores" :key="store.name">
+              <ListRow
+                :title="store.store_name"
+                :subtitle="storeLine(store)"
+                :subtitle-tone="store.attention ? 'danger' : ''"
+                icon="lucide-store"
+                :to="{ name: 'EfectivoCajas', query: { tienda: store.name } }"
+              >
+                <template #trailing>
+                  <span class="num text-base font-semibold text-ink-gray-9">{{
+                    store.registers
+                  }}</span>
+                </template>
+              </ListRow>
             </li>
           </ul>
         </section>
@@ -403,6 +443,7 @@ import {
   authorize,
   countSafe,
   declineChange,
+  fundSafe,
   handTransfer,
   reviewCount,
   sealBag,
@@ -424,6 +465,15 @@ const bagView = ref('sealed')
 
 const people = computed(() => data.value?.people || {})
 const safes = computed(() => data.value?.safes || [])
+const stores = computed(() => data.value?.cajas?.stores || [])
+/** «3 cajas, 1 abierta · 1 por atender» */
+function storeLine(store) {
+  const parts = [store.registers === 1 ? '1 caja' : `${store.registers} cajas`]
+  if (store.open)
+    parts.push(store.open === 1 ? '1 abierta' : `${store.open} abiertas`)
+  const line = parts.join(', ')
+  return store.attention ? `${line} · ${store.attention} por atender` : line
+}
 const scope = computed(() => String(route.query.caja || ''))
 const safeScopes = computed(() =>
   safes.value.length > 1

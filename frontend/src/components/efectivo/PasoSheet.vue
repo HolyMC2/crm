@@ -27,33 +27,58 @@
         {{ custody }}
       </p>
       <p v-if="message" class="text-sm text-ink-gray-7">{{ message }}</p>
-      <label v-for="field in fields" :key="field.key" class="block space-y-1">
-        <span class="text-sm font-medium text-ink-gray-7">{{
-          field.label
-        }}</span>
-        <textarea
-          v-if="field.kind === 'reason'"
-          v-model="values[field.key]"
-          rows="2"
-          class="w-full rounded-6 border-0 bg-surface-gray-1 px-3 py-2 text-base"
-          :placeholder="field.placeholder || 'Ocho letras o más'"
-          :disabled="busy"
-          :data-field="field.key"
-        />
-        <input
-          v-else
-          v-model="values[field.key]"
-          :type="field.kind === 'password' ? 'password' : 'text'"
-          :autocomplete="field.kind === 'password' ? 'current-password' : 'off'"
-          class="h-11 w-full rounded-6 border-0 bg-surface-gray-1 px-3 text-base"
-          :placeholder="field.placeholder || ''"
-          :disabled="busy"
-          :data-field="field.key"
-        />
-        <span v-if="field.hint" class="block text-xs text-ink-gray-6">{{
-          field.hint
-        }}</span>
-      </label>
+      <p
+        v-if="guard"
+        role="status"
+        class="rounded-6 bg-surface-amber-1 px-3 py-2 text-sm text-ink-amber-8"
+        data-efectivo-guard
+      >
+        {{ guard }}
+      </p>
+      <template v-for="field in fields" :key="field.key">
+        <label
+          v-if="field.kind === 'confirm'"
+          class="flex items-start gap-3 rounded-6 bg-surface-gray-1 px-3 py-3"
+        >
+          <input
+            v-model="values[field.key]"
+            type="checkbox"
+            class="mt-0.5 size-5 flex-none rounded"
+            :disabled="busy || !!guard"
+            :data-field="field.key"
+          />
+          <span class="text-base text-ink-gray-9">{{ field.label }}</span>
+        </label>
+        <label v-else class="block space-y-1">
+          <span class="text-sm font-medium text-ink-gray-7">{{
+            field.label
+          }}</span>
+          <textarea
+            v-if="field.kind === 'reason'"
+            v-model="values[field.key]"
+            rows="2"
+            class="w-full rounded-6 border-0 bg-surface-gray-1 px-3 py-2 text-base"
+            :placeholder="field.placeholder || 'Ocho letras o más'"
+            :disabled="busy"
+            :data-field="field.key"
+          />
+          <input
+            v-else
+            v-model="values[field.key]"
+            :type="field.kind === 'password' ? 'password' : 'text'"
+            :autocomplete="
+              field.kind === 'password' ? 'current-password' : 'off'
+            "
+            class="h-11 w-full rounded-6 border-0 bg-surface-gray-1 px-3 text-base"
+            :placeholder="field.placeholder || ''"
+            :disabled="busy"
+            :data-field="field.key"
+          />
+          <span v-if="field.hint" class="block text-xs text-ink-gray-6">{{
+            field.hint
+          }}</span>
+        </label>
+      </template>
     </div>
     <template #actions>
       <p
@@ -70,12 +95,12 @@
         size="lg"
         class="w-full"
         :label="busy ? 'Guardando…' : confirmLabel"
-        :disabled="busy || !ready"
+        :disabled="busy || !ready || !!guard"
         data-efectivo-confirm
         @click="confirm"
       />
       <p
-        v-if="!ready && missing"
+        v-if="!guard && !ready && missing"
         class="mt-2 text-center text-sm text-ink-gray-6"
       >
         {{ missing }}
@@ -97,8 +122,10 @@ const props = defineProps({
   currency: { type: String, default: 'MXN' },
   custody: { type: String, default: '' },
   message: { type: String, default: '' },
-  /** [{ key, label, kind: 'reason'|'text'|'password', min?, placeholder?, hint? }] */
+  /** [{ key, label, kind: 'reason'|'text'|'password'|'confirm', min?, placeholder?, hint? }] */
   fields: { type: Array, default: () => [] },
+  /** Why this step cannot be taken now: shown in place of the button's promise. */
+  guard: { type: String, default: '' },
   confirmLabel: { type: String, default: 'Confirmar' },
   danger: { type: Boolean, default: false },
   submit: { type: Function, required: true },
@@ -113,17 +140,19 @@ watch(
   (open) => {
     if (!open) return
     for (const key of Object.keys(values)) delete values[key]
-    for (const field of props.fields) values[field.key] = ''
+    for (const field of props.fields)
+      values[field.key] = field.kind === 'confirm' ? false : ''
     error.value = ''
   },
   { immediate: true },
 )
 
 const short = computed(() =>
-  props.fields.find(
-    (f) =>
-      String(values[f.key] || '').trim().length <
-      (f.min ?? (f.kind === 'reason' ? 8 : 1)),
+  props.fields.find((f) =>
+    f.kind === 'confirm'
+      ? values[f.key] !== true
+      : String(values[f.key] || '').trim().length <
+        (f.min ?? (f.kind === 'reason' ? 8 : 1)),
   ),
 )
 const ready = computed(() => !short.value)
@@ -133,6 +162,7 @@ const missing = computed(() => {
   if (field.kind === 'reason')
     return 'Escribe el motivo, con ocho letras o más.'
   if (field.kind === 'password') return 'Escribe tu contraseña para firmar.'
+  if (field.kind === 'confirm') return 'Marca la casilla para confirmar.'
   return `Falta: ${field.label.toLowerCase()}.`
 })
 
@@ -142,7 +172,10 @@ async function confirm() {
   try {
     const out = {}
     for (const field of props.fields)
-      out[field.key] = String(values[field.key] || '').trim()
+      out[field.key] =
+        field.kind === 'confirm'
+          ? values[field.key] === true
+          : String(values[field.key] || '').trim()
     const result = await props.submit(out)
     emit('done', result)
     emit('update:open', false)

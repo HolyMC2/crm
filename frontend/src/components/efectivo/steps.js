@@ -11,6 +11,7 @@ import {
   dispatchTransfer,
   errorText,
   fromMinor,
+  fundSources,
   money,
   oneInstruction,
   prepareTransfer,
@@ -220,6 +221,88 @@ export function unpackBag(bag, safe) {
     submit: guarded(async (v, id) => ({
       ...(await custody('unpack', safe, { bag: bag.name, note: v.note }, id)),
       toast: 'Bolsa abierta',
+    })),
+  }
+}
+
+/**
+ * The whole bag, sealed and unopened, leaves the store for the safe's off-site
+ * ledger (the owner's or the head office's cash). Nothing is counted here: the
+ * amount and the destination are the server's, and an unverified bag leaves
+ * still marked unverified.
+ */
+export function sendOffsite(bag, safe, people) {
+  const destination = safe.offsite || 'el efectivo fuera de la tienda'
+  const unverified = !bag.verified_by
+  return {
+    sheet: 'paso',
+    props: {
+      title: `Sacar ${bag.seal} de la tienda`,
+      amount: bag.amount,
+      currency: safe.currency,
+      custody: `Sale completa de la caja fuerte a ${destination}. Deja de estar a cargo de la tienda.`,
+      message: unverified
+        ? `Nadie la ha verificado: sale solo con el conteo de ${who(bag.prepared_by, people)} y sigue marcada sin verificar.`
+        : `La verificó ${who(bag.verified_by, people)}.`,
+      guard: safe.can?.transfer_safe ? '' : safe.transfer_blocker || '',
+      fields: [
+        {
+          key: 'note',
+          label: 'Quién se la lleva y a dónde',
+          kind: 'reason',
+          placeholder: 'Se la lleva el dueño a la matriz',
+        },
+        {
+          key: 'confirmed',
+          label: `La bolsa completa, sellada y sin abrir, ya salió hacia ${destination}.`,
+          kind: 'confirm',
+        },
+      ],
+      confirmLabel: 'Sacar de la tienda',
+    },
+    submit: guarded(async (v, id) => ({
+      ...(await custody(
+        'transfer_safe',
+        safe,
+        { bag: bag.name, note: v.note },
+        id,
+      )),
+      toast: 'La bolsa salió de la tienda',
+    })),
+  }
+}
+
+/**
+ * Outside money into the safe: the owner's cash, a bank withdrawal, a loan or
+ * a capital contribution. Counted by face like every cash that moves; the
+ * source account is the server's list, revalidated on the write.
+ */
+export function fundSafe(safe) {
+  return {
+    sheet: 'conteo',
+    props: {
+      mode: 'fund',
+      title: 'Ingresar efectivo',
+      subtitle: safe.title,
+      currency: safe.currency,
+      custody: `Entra suelto a ${safe.title}, a tu cargo. Cuenta lo que metes; el sistema registra de dónde viene.`,
+      confirmLabel: 'Ingresar',
+      fetchSources: async () => {
+        try {
+          return await fundSources(safe)
+        } catch (error) {
+          throw new Error(errorText(error), { cause: error })
+        }
+      },
+    },
+    submit: guarded(async (v, id) => ({
+      ...(await custody(
+        'fund',
+        safe,
+        { count: v.count, source_account: v.source, note: v.note },
+        id,
+      )),
+      toast: 'Efectivo ingresado a la caja fuerte',
     })),
   }
 }

@@ -214,13 +214,38 @@
         <div class="h-28 flex-none lg:h-12" aria-hidden="true" />
       </template>
     </div>
+    <BottomSheet
+      v-model:open="printing"
+      title="Imprimir"
+      :subtitle="bag ? bag.seal : ''"
+      flush
+    >
+      <ul class="divide-y divide-outline-gray-1">
+        <li>
+          <ListRow
+            title="Hoja de entrega"
+            subtitle="El conteo, quién la tuvo y espacio para firmas"
+            icon="lucide-file-text"
+            @click="print('slip')"
+          />
+        </li>
+        <li>
+          <ListRow
+            title="Etiqueta de la bolsa"
+            subtitle="Sello, importe y para qué es; va pegada a la bolsa"
+            icon="lucide-tag"
+            @click="print('label')"
+          />
+        </li>
+      </ul>
+    </BottomSheet>
     <StepHost :step="step" @close="step = null" @done="load" />
   </div>
 </template>
 <script setup>
 import { computed, ref, watch } from 'vue'
-import { Button } from 'frappe-ui'
-import { AppBar, StatusChip } from '@/components/ui'
+import { Button, toast } from 'frappe-ui'
+import { AppBar, BottomSheet, ListRow, StatusChip } from '@/components/ui'
 import StepHost from '@/components/efectivo/StepHost.vue'
 import {
   PURPOSE,
@@ -231,6 +256,7 @@ import {
   holderText,
   listPhotos,
   money,
+  printEvidence,
   uploadPhoto,
   who,
 } from '@/components/efectivo/efectivo'
@@ -239,6 +265,7 @@ import {
   dispatchBag,
   returnFromBank,
   reviewCount,
+  sendOffsite,
   unpackBag,
   verifyBag,
 } from '@/components/efectivo/steps'
@@ -252,6 +279,7 @@ const step = ref(null)
 const photos = ref({ photos: [], can_upload: false })
 const uploading = ref(false)
 const photoError = ref('')
+const printing = ref(false)
 
 const bag = computed(() => data.value?.bag || null)
 const safe = computed(() => data.value?.safe || { can: {} })
@@ -284,6 +312,23 @@ const secondary = computed(() => {
       label: 'Abrir la bolsa',
       icon: 'lucide-package-open',
       run: () => run('unpack'),
+    })
+  // A custodian without an off-site ledger still finds the step, and reads why.
+  if (
+    ['Available', 'Unverified'].includes(b?.state) &&
+    (can.transfer_safe ||
+      (safe.value.can_manage && safe.value.transfer_blocker))
+  )
+    out.push({
+      label: 'Sacar de la tienda',
+      icon: 'lucide-truck',
+      run: () => run('transfer_safe'),
+    })
+  if (b)
+    out.push({
+      label: 'Imprimir',
+      icon: 'lucide-printer',
+      run: () => (printing.value = true),
     })
   return out
 })
@@ -335,6 +380,7 @@ function run(action) {
     confirm_bank: () => confirmDeposit(b, s, p),
     return_bank: () => returnFromBank(b, s, p),
     unpack: () => unpackBag(b, s),
+    transfer_safe: () => sendOffsite(b, s, p),
     review: () => {
       const open = [...counts.value]
         .reverse()
@@ -343,6 +389,15 @@ function run(action) {
     },
   }
   step.value = builders[action]?.() || null
+}
+
+async function print(layout) {
+  printing.value = false
+  try {
+    await printEvidence('POS Cash Bag', props.name, layout)
+  } catch (error) {
+    toast.error(errorText(error))
+  }
 }
 
 async function loadPhotos() {

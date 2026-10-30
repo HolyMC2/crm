@@ -20,6 +20,63 @@
         {{ custody }}
       </p>
 
+      <div v-if="mode === 'fund'" class="space-y-1" data-efectivo-source>
+        <label
+          for="efectivo-fund-source"
+          class="text-sm font-medium text-ink-gray-7"
+          >De dónde viene el dinero</label
+        >
+        <select
+          id="efectivo-fund-source"
+          v-model="source"
+          class="h-11 w-full rounded-6 border-0 bg-surface-gray-1 px-3 text-base"
+          :disabled="busy || sources.state !== 'ready' || !sources.rows.length"
+        >
+          <option value="">
+            {{
+              sources.state === 'loading'
+                ? 'Cargando cuentas…'
+                : 'Elige la cuenta'
+            }}
+          </option>
+          <optgroup
+            v-for="group in sourceGroups"
+            :key="group.label"
+            :label="group.label"
+          >
+            <option v-for="row in group.rows" :key="row.name" :value="row.name">
+              {{ sourceLabel(row) }}
+            </option>
+          </optgroup>
+        </select>
+        <p
+          v-if="sources.state === 'error'"
+          role="alert"
+          class="text-sm text-ink-red-7"
+        >
+          {{ sources.error }}
+          <button
+            type="button"
+            class="font-medium underline"
+            @click="loadSources"
+          >
+            Reintentar
+          </button>
+        </p>
+        <p
+          v-else-if="sources.state === 'ready' && !sources.rows.length"
+          class="text-sm text-ink-gray-7"
+        >
+          Ninguna cuenta de la empresa puede meter dinero a la caja fuerte. Pide
+          a tu contador una cuenta de efectivo, banco, préstamo o capital.
+        </p>
+        <p v-else class="text-xs text-ink-gray-6">
+          Efectivo del dueño o un retiro del banco salen de una cuenta de
+          efectivo o banco; un préstamo, de una de pasivo; una aportación, de
+          una de capital.
+        </p>
+      </div>
+
       <Segmented
         v-if="mode === 'prepare'"
         v-model="purpose"
@@ -163,12 +220,12 @@
               ? `${confirmLabel} · ${money(fromMinor(total), currency)}`
               : confirmLabel
         "
-        :disabled="busy || total <= 0"
+        :disabled="busy || !!missing"
         data-efectivo-confirm
         @click="confirm"
       />
-      <p v-if="total <= 0" class="mt-2 text-center text-sm text-ink-gray-6">
-        Cuenta las piezas para poder continuar.
+      <p v-if="missing" class="mt-2 text-center text-sm text-ink-gray-6">
+        {{ missing }}
       </p>
     </template>
   </BottomSheet>
@@ -188,8 +245,10 @@ import {
 
 const props = defineProps({
   open: { type: Boolean, default: false },
-  /** prepare (seal a bag) · verify (a bag) · count_safe · transfer */
+  /** prepare (seal a bag) · verify (a bag) · count_safe · transfer · fund (money into the safe) */
   mode: { type: String, default: 'prepare' },
+  /** fund: () => Promise<{accounts, has_more}>, the source accounts. */
+  fetchSources: { type: Function, default: null },
   title: { type: String, default: '' },
   subtitle: { type: String, default: '' },
   /** Who holds the cash now and who will after this step. */
@@ -211,16 +270,56 @@ const busy = ref(false)
 const error = ref('')
 const total = computed(() => totalMinor(rows.value))
 const photoAllowed = computed(() => ['prepare', 'verify'].includes(props.mode))
-const noteLabel = computed(() =>
-  props.mode === 'prepare'
-    ? 'Nota (opcional)'
-    : 'Si no cuadra, explica por qué',
+const source = ref('')
+const sources = ref({ state: 'idle', rows: [], error: '' })
+const noteLabel = computed(
+  () =>
+    ({
+      prepare: 'Nota (opcional)',
+      fund: 'Por qué entra',
+    })[props.mode] || 'Si no cuadra, explica por qué',
 )
-const notePlaceholder = computed(() =>
-  props.mode === 'prepare'
-    ? 'Corte de la mañana, caja 2…'
-    : 'Ocho letras o más: faltó un billete de $200…',
+const notePlaceholder = computed(
+  () =>
+    ({
+      prepare: 'Corte de la mañana, caja 2…',
+      fund: 'Ocho letras o más: retiro del banco para cambio…',
+    })[props.mode] || 'Ocho letras o más: faltó un billete de $200…',
 )
+/** Why the button cannot be pressed yet, in the worker's words. */
+const missing = computed(() => {
+  if (total.value <= 0) return 'Cuenta las piezas para poder continuar.'
+  if (props.mode !== 'fund') return ''
+  if (!source.value) return 'Elige de dónde viene el dinero.'
+  if (note.value.trim().length < 8)
+    return 'Escribe por qué entra, con ocho letras o más.'
+  return ''
+})
+
+const SOURCE_GROUPS = [
+  { label: 'Efectivo o banco', test: (r) => r.root_type === 'Asset' },
+  { label: 'Aportación del dueño', test: (r) => r.root_type === 'Equity' },
+  { label: 'Préstamo', test: (r) => r.root_type === 'Liability' },
+]
+const sourceGroups = computed(() =>
+  SOURCE_GROUPS.map((g) => ({
+    label: g.label,
+    rows: sources.value.rows.filter(g.test),
+  })).filter((g) => g.rows.length),
+)
+const sourceLabel = (row) =>
+  [row.account_number, row.account_name || row.name].filter(Boolean).join(' ')
+
+async function loadSources() {
+  if (!props.fetchSources) return
+  sources.value = { state: 'loading', rows: [], error: '' }
+  try {
+    const answer = await props.fetchSources()
+    sources.value = { state: 'ready', rows: answer?.accounts || [], error: '' }
+  } catch (e) {
+    sources.value = { state: 'error', rows: [], error: e?.message || String(e) }
+  }
+}
 
 watch(
   () => props.open,
@@ -232,7 +331,10 @@ watch(
     photo.value = ''
     error.value = ''
     purpose.value = 'Takings'
+    source.value = ''
+    if (props.mode === 'fund') loadSources()
   },
+  { immediate: true },
 )
 
 function step(face, delta) {
@@ -264,6 +366,7 @@ async function confirm() {
       seal: seal.value,
       note: note.value.trim(),
       photo: photo.value,
+      source: source.value,
     })
     emit('done', result)
     emit('update:open', false)
