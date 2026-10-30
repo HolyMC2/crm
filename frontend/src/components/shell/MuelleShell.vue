@@ -57,17 +57,19 @@
             {{ barTitle }}
           </h1>
         </template>
-        <!-- The top bar names the place and holds global search and the bell.
-             Scan, the camera, the assistant and the page's create action sit
-             in the command bar above the bottom nav, where the thumb is. -->
-        <template #actions>
+        <!-- The top bar names the place and holds the bell. Global search,
+             scan, the camera, the assistant and the page's create action sit
+             in the command bar above the bottom nav, where the thumb is; a
+             record with its own bottom bar has no command bar, so its search
+             comes back up here. -->
+        <template v-if="route.meta.ownBottomBar" #actions>
           <button
             type="button"
             class="flex size-12 flex-none items-center justify-center rounded-full text-ink-gray-7 active:bg-surface-gray-2 [@media(hover:hover)]:hover:bg-surface-gray-2"
             :aria-label="__('Search')"
             :title="searchHint"
             :aria-keyshortcuts="searchKeys"
-            data-testid="shell-search"
+            data-testid="shell-search-top"
             @click="openPalette('all')"
           >
             <span class="lucide-search size-6" aria-hidden="true" />
@@ -145,8 +147,8 @@
       <!-- Apps opened from the rail (appStrip) take this place while one is
            on screen; the page above stays mounted, as the worker left it. -->
       <AppFrames v-if="!phone && openApps.length" v-show="appShown" />
-      <!-- Phone command bar, the thumb's row: ask Muelle, scan a code, scan
-           a paper, and the page's one create action (ui/Fab teleports into
+      <!-- Phone command bar, the thumb's row: global search, ask Muelle, scan
+           a code, scan a paper, and the page's one create action (ui/Fab teleports into
            #shell-primary-action while this bar is mounted, so it never floats
            over the last rows of a list). It hides with the nav (keyboard,
            drill-down panes, records with their own bottom bar) but stays
@@ -157,23 +159,37 @@
         class="flex shrink-0 items-center gap-1 border-t border-outline-gray-1 bg-surface-base py-1.5 pl-2 pr-1.5"
         data-testid="shell-command-bar"
       >
-        <!-- «Pregúntale a Muelle» (E7), only once shell_api.status said yes.
-             Not a search field: every list already has its own search, and
-             global search is the magnifier in the top bar, so a screen never
-             shows two search boxes. -->
+        <!-- Global search (⌘K «Buscar o ir a…») is the bar's main door: find
+             a record, go to a place or run an action. It opens the palette,
+             so the list's own search above stays the only field on screen. -->
+        <button
+          type="button"
+          class="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full bg-surface-gray-2 pl-3.5 pr-4 text-left text-base text-ink-gray-6 active:bg-surface-gray-3"
+          :aria-label="__('Search or go to…')"
+          :title="searchHint"
+          :aria-keyshortcuts="searchKeys"
+          data-testid="shell-search"
+          @click="openPalette('all')"
+        >
+          <span
+            class="lucide-search size-5 flex-none text-ink-gray-7"
+            aria-hidden="true"
+          />
+          <span class="min-w-0 truncate">{{ __('Search or go to…') }}</span>
+        </button>
+        <!-- «Pregúntale a Muelle» (E7) beside it, an icon, only once
+             shell_api.status said yes. -->
         <button
           v-if="assistantOn"
           type="button"
-          class="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full bg-surface-gray-2 pl-3.5 pr-4 text-left text-base font-medium text-ink-gray-8 active:bg-surface-gray-3"
+          :class="COMMAND_ICON"
           :aria-label="__('Ask Muelle')"
           :title="__('Ask Muelle')"
           data-testid="shell-assistant"
           @click="askMuelle"
         >
-          <span class="lucide-sparkles size-5 flex-none" aria-hidden="true" />
-          <span class="min-w-0 truncate">{{ __('Ask Muelle') }}</span>
+          <span class="lucide-sparkles size-6" aria-hidden="true" />
         </button>
-        <span v-else class="flex-1" />
         <!-- Escáner is the shell's scanner: scan a code, land on its artículo. -->
         <a
           v-if="scanHref && !backTo"

@@ -26,28 +26,53 @@
         >Muelle</span
       >
     </div>
-    <button
-      class="flex flex-none items-center rounded-6 text-ink-gray-6 hover:bg-surface-gray-2"
-      :class="ROW[expanded ? 'wide' : 'icon']"
-      :aria-label="__('Search')"
-      :title="expanded ? searchHint : undefined"
-      :data-tip="searchHint"
-      :aria-keyshortcuts="searchKeys"
-      data-testid="rail-search"
-      @click="$emit('palette')"
+    <!-- Search first (⌘K / ⌘G): expanded it reads as a field; «Pregúntale a
+         Muelle» (E7) is the sparkle beside it (under it when collapsed), only
+         once shell_api.status said yes. No bubble (design/ASSISTANT.md). -->
+    <div
+      class="flex flex-none items-center gap-1"
+      :class="expanded ? 'w-full' : 'flex-col'"
     >
-      <span class="lucide-search size-[18px] flex-none" aria-hidden="true" />
-      <template v-if="expanded">
-        <span class="flex-1 truncate text-left" aria-hidden="true">{{
-          __('Search')
-        }}</span>
-        <kbd
-          class="rounded-4 border border-outline-gray-2 px-1 font-sans text-xs text-ink-gray-5"
-          aria-hidden="true"
-          >{{ paletteKey }}</kbd
-        >
-      </template>
-    </button>
+      <button
+        class="flex flex-none items-center text-ink-gray-6"
+        :class="
+          expanded
+            ? 'h-8 min-w-0 flex-1 gap-2 rounded-full bg-surface-gray-2 pl-2.5 pr-1.5 text-sm hover:bg-surface-gray-3'
+            : 'size-10 justify-center rounded-6 hover:bg-surface-gray-2'
+        "
+        :aria-label="__('Search')"
+        :title="expanded ? searchHint : undefined"
+        :data-tip="searchHint"
+        :aria-keyshortcuts="searchKeys"
+        data-testid="rail-search"
+        @click="$emit('palette')"
+      >
+        <span class="lucide-search size-[18px] flex-none" aria-hidden="true" />
+        <template v-if="expanded">
+          <span class="min-w-0 flex-1 truncate text-left" aria-hidden="true">{{
+            __('Search')
+          }}</span>
+          <kbd
+            class="flex-none rounded-4 border border-outline-gray-2 px-1 font-sans text-xs text-ink-gray-5"
+            aria-hidden="true"
+            >{{ paletteKey }}</kbd
+          >
+        </template>
+      </button>
+      <button
+        v-if="assistantOn"
+        class="flex flex-none items-center justify-center text-ink-gray-6 hover:bg-surface-gray-2 hover:text-ink-gray-8"
+        :class="expanded ? 'size-8 rounded-full' : 'size-10 rounded-6'"
+        :aria-label="__('Ask Muelle')"
+        :title="expanded ? `${__('Ask Muelle')} (${assistantKey})` : undefined"
+        :data-tip="`${__('Ask Muelle')} (${assistantKey})`"
+        :aria-keyshortcuts="assistantKeys"
+        data-testid="rail-assistant"
+        @click="$emit('assistant')"
+      >
+        <span class="lucide-sparkles size-[18px]" aria-hidden="true" />
+      </button>
+    </div>
     <div
       class="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden [scrollbar-width:none] hover:[scrollbar-width:thin]"
       :class="expanded ? 'items-stretch gap-px' : 'items-center gap-1'"
@@ -209,30 +234,6 @@
         </button>
       </div>
     </div>
-    <!-- «Pregúntale a Muelle» (E7): the desktop door, one item, only once
-         shell_api.status said yes. No bubble (design/ASSISTANT.md). -->
-    <button
-      v-if="assistantOn"
-      class="flex flex-none items-center rounded-6 text-ink-gray-6 hover:bg-surface-gray-2 hover:text-ink-gray-8"
-      :class="ROW[expanded ? 'wide' : 'icon']"
-      :aria-label="__('Ask Muelle')"
-      :data-tip="`${__('Ask Muelle')} (${assistantKey})`"
-      :aria-keyshortcuts="assistantKeys"
-      data-testid="rail-assistant"
-      @click="$emit('assistant')"
-    >
-      <span class="lucide-sparkles size-[18px] flex-none" aria-hidden="true" />
-      <template v-if="expanded">
-        <span class="flex-1 truncate text-left" aria-hidden="true">{{
-          __('Ask Muelle')
-        }}</span>
-        <kbd
-          class="rounded-4 border border-outline-gray-2 px-1 font-sans text-xs text-ink-gray-5"
-          aria-hidden="true"
-          >{{ assistantKey }}</kbd
-        >
-      </template>
-    </button>
     <button
       class="flex flex-none items-center rounded-6 text-ink-gray-6 hover:bg-surface-gray-2 hover:text-ink-gray-8"
       :class="ROW[expanded ? 'wide' : 'icon']"

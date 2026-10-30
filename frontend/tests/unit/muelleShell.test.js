@@ -2276,7 +2276,7 @@ describe('Ventas navigation on every screen', () => {
   })
 
   it.each([true, false])(
-    'desktop rail: «Pregúntale a Muelle» is one item after the modules only when the status says yes (%s); it opens the sheet',
+    'desktop rail: «Pregúntale a Muelle» is the sparkle right after search, only when the status says yes (%s); it opens the sheet',
     async (enabled) => {
       const { assistant, _resetAssistant } = await import(
         '@/components/assistant/useAssistant'
@@ -2303,9 +2303,11 @@ describe('Ventas navigation on every screen', () => {
       const order = [...rail.querySelectorAll('[data-testid]')].map(
         (el) => el.dataset.testid,
       )
-      expect(order.indexOf('rail-assistant')).toBeGreaterThan(
-        order.indexOf('rail-search'),
+      expect(order.indexOf('rail-assistant')).toBe(
+        order.indexOf('rail-search') + 1,
       )
+      // An icon beside the field, not a row with its own name.
+      expect(door.textContent.trim()).toBe('')
       expect(order.indexOf('rail-assistant')).toBeLessThan(
         order.indexOf('rail-toggle'),
       )
@@ -2319,7 +2321,7 @@ describe('Ventas navigation on every screen', () => {
     },
   )
 
-  it('phone AppBar: the sparkle beside search only when the status says yes', async () => {
+  it('phone command bar: search is the main door, the sparkle an icon beside it', async () => {
     const { _resetAssistant } = await import(
       '@/components/assistant/useAssistant'
     )
@@ -2333,10 +2335,31 @@ describe('Ventas navigation on every screen', () => {
     await mount('/contactos')
     await new Promise((resolve) => setTimeout(resolve, 0))
     await nextTick()
-    const door = root.querySelector('[data-testid="shell-assistant"]')
+    const bar = root.querySelector('[data-testid="shell-command-bar"]')
+    const search = bar.querySelector('[data-testid="shell-search"]')
+    const door = bar.querySelector('[data-testid="shell-assistant"]')
+    expect(search.textContent.trim()).toBe('Search or go to…')
+    expect(search.getAttribute('aria-keyshortcuts')).toBe('Control+K Control+G')
     expect(door.getAttribute('aria-label')).toBe('Ask Muelle')
+    expect(door.textContent.trim()).toBe('')
+    const order = [...bar.querySelectorAll('[data-testid]')].map(
+      (el) => el.dataset.testid,
+    )
+    expect(order.slice(0, 2)).toEqual(['shell-search', 'shell-assistant'])
+    // One global search door: the top bar keeps only the title and the bell.
+    expect(root.querySelector('[data-testid="shell-search-top"]')).toBeNull()
     expect(root.querySelector('[data-testid="rail-assistant"]')).toBeNull()
+    search.click()
+    await until(() => document.querySelector('[aria-label="Command palette"]'))
     _resetAssistant()
+  })
+
+  it('phone command bar: search stays the main door with the assistant off', async () => {
+    state.mobile.value = true
+    await mount('/contactos')
+    const bar = root.querySelector('[data-testid="shell-command-bar"]')
+    expect(bar.querySelector('[data-testid="shell-search"]')).not.toBeNull()
+    expect(bar.querySelector('[data-testid="shell-assistant"]')).toBeNull()
   })
 
   it('⌘J with a dialog open and the status off closes nothing', async () => {
