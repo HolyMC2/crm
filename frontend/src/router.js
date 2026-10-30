@@ -540,7 +540,7 @@ const routes = [
     name: 'Garantia',
     component: () => import('@/pages/Garantia.vue'),
     props: true,
-    meta: { app: 'garantias', title: 'Garantías', listParent: 'Garantias' },
+    meta: { app: 'garantias', title: 'Garantías', ownPhoneHeader: true },
   },
   {
     path: '/encuestas',

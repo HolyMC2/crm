@@ -29769,6 +29769,12 @@ msgstr "Solicitud de compra {0}"
 msgid "This request cannot be sent by email."
 msgstr "Esta solicitud no se puede enviar por correo."
 
+msgid "This case cannot be sent by email."
+msgstr "Este caso no se puede enviar por correo."
+
+msgid "Fewer actions"
+msgstr "Menos acciones"
+
 msgid "To order"
 msgstr "Por pedir"
 

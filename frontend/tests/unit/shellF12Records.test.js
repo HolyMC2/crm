@@ -373,7 +373,7 @@ describe('one back on a phone: the app bar arrow (F12 P2)', () => {
     const root = await mount((await import('@/pages/Garantia.vue')).default, {
       name: 'SER-WRN-2026-00001',
     })
-    expect(byText(root, 'Back to Taller')).toBeTruthy()
+    expect(appBarBack(root)?.getAttribute('aria-label')).toBe('Back to Taller')
   })
 
   it('Encuesta opened from another app keeps its way back on a phone', async () => {
