@@ -34,11 +34,11 @@
       :class="expanded ? 'w-full' : 'flex-col'"
     >
       <button
-        class="flex flex-none items-center text-ink-gray-6"
+        class="flex items-center text-ink-gray-6"
         :class="
           expanded
             ? 'h-8 min-w-0 flex-1 gap-2 rounded-full bg-surface-gray-2 pl-2.5 pr-1.5 text-sm hover:bg-surface-gray-3'
-            : 'size-10 justify-center rounded-6 hover:bg-surface-gray-2'
+            : 'size-10 flex-none justify-center rounded-6 hover:bg-surface-gray-2'
         "
         :aria-label="__('Search')"
         :title="expanded ? searchHint : undefined"

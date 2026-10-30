@@ -2338,7 +2338,13 @@ describe('Ventas navigation on every screen', () => {
     const bar = root.querySelector('[data-testid="shell-command-bar"]')
     const search = bar.querySelector('[data-testid="shell-search"]')
     const door = bar.querySelector('[data-testid="shell-assistant"]')
-    expect(search.textContent.trim()).toBe('Search or go to…')
+    expect(search.getAttribute('aria-label')).toBe('Search or go to…')
+    // The full words, or just «Buscar» under 360px.
+    expect(
+      [...search.querySelectorAll('span:not([aria-hidden])')].map((el) =>
+        el.textContent.trim(),
+      ),
+    ).toEqual(['Search or go to…', 'Search'])
     expect(search.getAttribute('aria-keyshortcuts')).toBe('Control+K Control+G')
     expect(door.getAttribute('aria-label')).toBe('Ask Muelle')
     expect(door.textContent.trim()).toBe('')

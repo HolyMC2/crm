@@ -175,7 +175,12 @@
             class="lucide-search size-5 flex-none text-ink-gray-7"
             aria-hidden="true"
           />
-          <span class="min-w-0 truncate">{{ __('Search or go to…') }}</span>
+          <span class="min-w-0 truncate max-[359px]:hidden">{{
+            __('Search or go to…')
+          }}</span>
+          <span class="min-w-0 truncate min-[360px]:hidden">{{
+            __('Search')
+          }}</span>
         </button>
         <!-- «Pregúntale a Muelle» (E7) beside it, an icon, only once
              shell_api.status said yes. -->
