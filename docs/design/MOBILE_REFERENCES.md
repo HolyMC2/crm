@@ -109,6 +109,15 @@ lacks a feature, ask the Shell S1 owner instead of making a private copy.
   «Mostrar N artículos más»), `DocTotals` with each tax, payments and the bill's facts as icon rows,
   then Datos. «En el almacén» (`components/gastos/BillAlmacen.vue`, `crm.api.gastos.bill_warehouse`)
   opens Escáner's receiving, receipts and open tasks with `return_to`, and labels in Productos.
+- 2026-10-30 · Compras and Gastos records follow it: Compra orden, Compra solicitud and Gasto de
+  empleado own their bar (supplier, request or employee with the state chip and «Orden de compra /
+  Solicitud de compra / Gasto <n>»), the island with the bolt and «⋯» (`useRecordKit` serves any
+  readable doctype, Expense Claim included), and a hero with one filled step and tonal Editar and
+  Imprimir. The order keeps its own lines (what arrived per line), adds `DocTotals`, its facts as icon
+  rows and «En el almacén» (receipts into Escáner, labels); its review is a `ConfirmSheet`. Surtido
+  is a wizard, not a record: its own bar with «Pregúntale a Muelle» as a sparkle, the three steps as
+  chips. Trap: `<component :is="'button'">` resolves to the globally registered frappe-ui `Button`;
+  render a native `<button>` (or `<a>`) with `v-if` instead.
 - Still to do on Contacto: fold Seguimientos «Hechos/Cancelados» into a collapsed «Completados
   (n)»; grey out an action that does not apply instead of hiding it.
 
