@@ -2,7 +2,7 @@
 // inside the screen and the name is never cut to «Br…», Garantía's primary
 // says what it does without a document id and shows dates the way the rest
 // of the shell does («dom 25 de oct»), and the app bar's back arrow is the
-// only «back» on a phone.
+// only «back» (the record pattern: the name owns the bar on every width).
 // happy-dom has no layout engine: these pin the rendered DOM that the phase A
 // probe (shell-program/evidence/F12/probe-records.mjs) measures on the lab.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -20,7 +20,12 @@ const state = vi.hoisted(() => ({
 vi.mock('vue-router', async () => {
   const { reactive } = await import('vue')
   state.route = reactive({ name: '', params: {}, query: {}, fullPath: '/' })
-  const router = { push: vi.fn(), replace: vi.fn(), back: vi.fn() }
+  const router = {
+    push: vi.fn(),
+    replace: vi.fn(),
+    back: vi.fn(),
+    beforeEach: vi.fn(),
+  }
   return { useRoute: () => state.route, useRouter: () => router }
 })
 vi.mock('@/composables/breakpoint', async () => {
@@ -107,6 +112,7 @@ const byText = (root, text) =>
   buttons(root).find((b) => b.textContent.trim().includes(text))
 const describedBy = (button) =>
   document.getElementById(button.getAttribute('aria-describedby'))
+const appBarBack = (root) => root.querySelector('[data-appbar-back]')
 const LONG_NAME = 'Refacciones Ficticias del Norte SA de C.V. Sucursal Centro'
 
 beforeEach(async () => {
@@ -188,22 +194,23 @@ afterEach(() => {
 describe('Equipo persona on a phone (F12-1, F12-2)', () => {
   const page = () => import('@/pages/EquipoPersona.vue')
 
-  it('lays the cards in one column no wider than the screen', async () => {
+  it('lays the sections in one column no wider than the screen', async () => {
     const root = await mount((await page()).default, {
       employee: 'HR-EMP-00007',
     })
     const grid = root.querySelector('section h2').closest('.grid')
-    // grid-cols-1 is repeat(1, minmax(0, 1fr)): the track never grows to a
-    // card's widest unwrapped line.
-    expect(grid.classList).toContain('grid-cols-1')
+    // No column template below lg: one implicit track the width of the
+    // screen; the desk's main track is minmax(0, 1fr), never a line's width.
+    expect([...grid.classList].filter((c) => /^grid-cols/.test(c))).toEqual([])
+    expect(grid.className).toContain('lg:grid-cols-[minmax(0,1fr)_22rem]')
   })
 
   it('wraps a week row instead of cutting the shift hours', async () => {
     const root = await mount((await page()).default, {
       employee: 'HR-EMP-00007',
     })
-    const hours = [...root.querySelectorAll('li span')].find((s) =>
-      s.textContent.includes('9:00–18:00'),
+    const hours = [...root.querySelectorAll('li span')].find(
+      (s) => s.textContent.includes('9:00–18:00') && !s.querySelector('span'),
     )
     expect(hours.textContent.trim()).toBe('Mañana · 9:00–18:00')
     expect(hours.className).not.toMatch(/\btruncate\b|whitespace-nowrap/)
@@ -214,20 +221,20 @@ describe('Equipo persona on a phone (F12-1, F12-2)', () => {
     const root = await mount((await page()).default, {
       employee: 'HR-EMP-00007',
     })
-    const name = root.querySelector('h1')
+    const name = root.querySelector('[data-appbar-title]')
     expect(name.textContent.trim()).toBe('Brandon Leonel Ramírez Castañeda')
     expect(name.className).not.toMatch(/\btruncate\b/)
     expect(name.classList).toContain('line-clamp-2')
   })
 
-  it('moves «Access and puesto» below the name on a phone', async () => {
+  it('offers «Access and puesto» among the hero steps, not beside the name', async () => {
     const root = await mount((await page()).default, {
       employee: 'HR-EMP-00007',
     })
     const access = byText(root, 'Access and puesto')
     expect(access).toBeTruthy()
-    // Its own row of the wrapping header, so the name keeps the full width.
-    expect(access.closest('header > *').classList).toContain('basis-full')
+    // The name keeps the bar's full width; the step wraps with the others.
+    expect(access.closest('[data-testid="equipo-next"]')).toBeTruthy()
   })
 })
 
@@ -316,7 +323,8 @@ describe('customer name on a record (F12 fix round)', () => {
     it(`${name}: a long name wraps to two lines instead of «Refacciones…»`, async () => {
       longName()
       const root = await mount((await page()).default, props)
-      const h1 = root.querySelector('h1')
+      const h1 =
+        root.querySelector('[data-appbar-title]') || root.querySelector('h1')
       expect(h1.textContent.trim()).toBe(LONG_NAME)
       expect(h1.className).not.toMatch(/\btruncate\b/)
       expect(h1.classList).toContain('line-clamp-2')
@@ -344,13 +352,16 @@ describe('one back on a phone: the app bar arrow (F12 P2)', () => {
     ],
   }
   for (const [name, [page, props, back]] of Object.entries(pages)) {
-    it(`${name}: no «${back}» link on a phone, kept on a computer`, async () => {
+    it(`${name}: «${back}» is the bar's arrow on a phone and a computer`, async () => {
       const component = (await page()).default
-      expect(byText(await mount(component, props), back)).toBeUndefined()
-      app.unmount()
-      host.remove()
-      state.mobile.value = false
-      expect(byText(await mount(component, props), back)).toBeTruthy()
+      for (const mobile of [true, false]) {
+        state.mobile.value = mobile
+        const root = await mount(component, props)
+        expect(byText(root, back)).toBeUndefined()
+        expect(appBarBack(root)?.getAttribute('aria-label')).toBe(back)
+        app.unmount()
+        host.remove()
+      }
     })
   }
 
@@ -373,6 +384,6 @@ describe('one back on a phone: the app bar arrow (F12 P2)', () => {
     const root = await mount((await import('@/pages/Encuesta.vue')).default, {
       name: 'QA-FB-12273',
     })
-    expect(byText(root, 'Back to Taller')).toBeTruthy()
+    expect(appBarBack(root)?.getAttribute('aria-label')).toBe('Back to Taller')
   })
 })

@@ -566,7 +566,7 @@ const routes = [
     name: 'EquipoPersona',
     component: () => import('@/pages/EquipoPersona.vue'),
     props: true,
-    meta: { app: 'equipo', title: 'Equipo', listParent: 'Equipo' },
+    meta: { app: 'equipo', title: 'Equipo', ownPhoneHeader: true },
   },
   {
     path: '/equipo/vacaciones',
