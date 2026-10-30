@@ -142,10 +142,7 @@
                 }}
               </p>
             </template>
-            <p
-              v-else-if="action"
-              class="break-words text-base text-ink-gray-8"
-            >
+            <p v-else-if="action" class="break-words text-base text-ink-gray-8">
               {{ action.reason }}
             </p>
             <div
@@ -229,9 +226,7 @@
                     }}
                   </p>
                 </div>
-                <p
-                  class="num shrink-0 text-base tabular-nums text-ink-gray-9"
-                >
+                <p class="num shrink-0 text-base tabular-nums text-ink-gray-9">
                   {{ qty(row.qty) }} {{ row.uom }}
                 </p>
               </li>

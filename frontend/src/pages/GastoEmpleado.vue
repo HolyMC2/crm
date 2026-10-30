@@ -207,7 +207,10 @@
                   v-for="(step, i) in steps"
                   :key="step.key"
                   type="button"
-                  :class="['press', i === 0 && step.filled ? BTN.filled : BTN.tonal]"
+                  :class="[
+                    'press',
+                    i === 0 && step.filled ? BTN.filled : BTN.tonal,
+                  ]"
                   :disabled="busy && step.busy"
                   :data-step="step.key"
                   :data-testid="step.testid"
@@ -548,13 +551,7 @@
   </div>
 </template>
 <script setup>
-import {
-  computed,
-  onMounted,
-  reactive,
-  ref,
-  watch,
-} from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { toast } from 'frappe-ui'
 import { AppBar, EmptyState, StatusChip } from '@/components/ui'

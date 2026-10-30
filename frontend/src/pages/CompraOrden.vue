@@ -165,7 +165,11 @@
                   type="button"
                   :class="['press', BTN.tonal]"
                   @click="
-                    openHandoff('review', __('Ask for a review'), problem.detail)
+                    openHandoff(
+                      'review',
+                      __('Ask for a review'),
+                      problem.detail,
+                    )
                   "
                 >
                   {{ __('Ask for help') }}
@@ -338,7 +342,10 @@
               <RouterLink
                 v-if="isNew && missing.includes('supplier')"
                 class="ml-1 underline"
-                :to="{ name: 'Contactos', query: { return_to: route.fullPath } }"
+                :to="{
+                  name: 'Contactos',
+                  query: { return_to: route.fullPath },
+                }"
                 >{{ __('Add a supplier in Contactos') }}</RouterLink
               >
               <button
@@ -1104,7 +1111,8 @@ const facts = computed(() => {
   return out
 })
 function billState(b) {
-  if (Number(b.docstatus) === 0) return __('draft, to register', null, 'Compras')
+  if (Number(b.docstatus) === 0)
+    return __('draft, to register', null, 'Compras')
   if (Number(b.outstanding_amount) > 0)
     return __('{0} to pay', [money(b.outstanding_amount, b.currency)])
   return __('paid', null, 'Compras')
