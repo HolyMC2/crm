@@ -51,8 +51,9 @@ integration with its workspace for html graphs and stuff, autocomplete on / cmds
 - **Lienzo safety (Session 12 rules).** Model HTML never enters the page: an `<iframe sandbox="">`
   (no scripts, no same-origin) loads `canvas.preview`, which sends `Content-Security-Policy:
   default-src 'none'; img-src data:; style-src 'unsafe-inline'`. Live, the `doco_assistant_canvas`
-  event marks the file for the answer that ends the turn; after a reload a file goes under the
-  first answer logged at or after it was written.
+  event (published when the turn commits, so usually after its answer) puts the file under the
+  answer on screen, or under the one still to come while the turn runs; after a reload a file goes
+  under the first answer logged at or after it was written.
 - **Older servers.** No `liquidar`: the plain reset. No `encargos`: the Agenda button goes away.
   No Lienzo: no inline files.
 
