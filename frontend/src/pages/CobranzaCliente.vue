@@ -4,16 +4,18 @@
     class="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto"
     data-cobranza-record
   >
-    <!-- Phone: the record's own app bar (route meta.ownPhoneHeader): back to
-         the same place in the list, who this is, the next customer. -->
-    <!-- The shared AppBar (S1): back to the same place in the list, the
-         customer's name on up to two lines with what they owe, the next
-         customer, and the bell. -->
+    <!-- The record's own bar (record-header) on every width: back to the
+         same place in the list, the customer's name on up to two lines with
+         what they owe; the next customer, the island (on a desk: call and
+         WhatsApp), the bolt with the record's steps and «⋯» with every tool.
+         The phone keeps its call tile below and the focused invoice's
+         actions at the thumb. -->
     <AppBar
-      v-if="phone"
       data-cobranza-appbar
       back
       :back-label="backLabel"
+      :title="data?.customer_name || __('Cobranza', null, CTX)"
+      :bell="phone"
       @back="
         (event) => {
           event?.preventDefault?.()
@@ -22,15 +24,15 @@
       "
     >
       <template #title>
-        <div class="min-w-0 flex-1 px-1">
-          <p
-            class="line-clamp-2 break-words text-lg font-semibold leading-snug"
+        <div class="flex min-h-12 min-w-0 flex-col justify-center px-3">
+          <span
+            class="title-face line-clamp-2 break-words text-xl font-semibold leading-tight [text-wrap:balance]"
+            data-appbar-title
+            >{{ data?.customer_name || __('Cobranza', null, CTX) }}</span
           >
-            {{ data?.customer_name || __('Cobranza', null, CTX) }}
-          </p>
-          <p
+          <span
             v-if="data"
-            class="truncate text-xs tabular-nums"
+            class="num truncate pt-0.5 text-sm leading-tight tabular-nums"
             :class="
               data.overdue_amount > 0 ? 'text-ink-red-7' : 'text-ink-gray-6'
             "
@@ -52,46 +54,45 @@
                 __('{0} overdue', [money(data.overdue_amount, data.currency)])
               }}
             </template>
-          </p>
+          </span>
         </div>
       </template>
       <template #actions>
         <button
           v-if="data && !returnTo"
           type="button"
-          class="flex size-12 shrink-0 items-center justify-center rounded-full text-ink-gray-7"
+          class="press flex size-12 shrink-0 items-center justify-center rounded-full text-ink-gray-7 active:bg-surface-gray-2 [@media(hover:hover)]:hover:bg-surface-gray-2"
           :aria-label="__('Next customer')"
+          :title="__('Next customer')"
+          :aria-keyshortcuts="'N'"
           :disabled="findingNext"
+          data-cobranza-next
           @click="goNext"
         >
-          <span class="lucide-chevron-right size-6" aria-hidden="true" />
+          <span
+            :class="[
+              findingNext
+                ? 'lucide-loader-circle animate-spin'
+                : 'lucide-chevron-right',
+              'size-6',
+            ]"
+            aria-hidden="true"
+          />
         </button>
+        <RecordIsland
+          v-if="data"
+          :reach="phone ? {} : reach"
+          :who="data.customer_name || ''"
+          :groups="boltGroups"
+          :phone="phone"
+          :subtitle="kit.scopeTitle.value"
+          @pick="onBolt"
+          @tools="kit.openTools()"
+        />
       </template>
     </AppBar>
 
     <div class="mx-auto w-full max-w-4xl px-4 pb-28 pt-4 sm:px-6 sm:pb-10">
-      <nav v-if="!phone" class="mb-3 flex items-center gap-2">
-        <button
-          class="flex min-h-11 items-center gap-1 text-sm text-ink-gray-7 hover:text-ink-gray-9"
-          :aria-keyshortcuts="'Escape'"
-          @click="goBack"
-        >
-          <LucideArrowLeft class="h-4 w-4" />
-          {{ backLabel }}
-        </button>
-        <span class="flex-1" />
-        <Button
-          v-if="data && !returnTo"
-          variant="ghost"
-          :label="__('Next customer')"
-          :loading="findingNext"
-          :aria-keyshortcuts="'N'"
-          @click="goNext"
-        >
-          <template #suffix><LucideArrowRight class="h-4 w-4" /></template>
-        </Button>
-      </nav>
-
       <section
         v-if="guard"
         role="alert"
@@ -100,12 +101,18 @@
         <h1 class="text-xl font-semibold">{{ guard.title }}</h1>
         <p class="text-base text-ink-gray-7">{{ guard.detail }}</p>
         <div class="flex flex-wrap gap-2">
-          <Button :label="__('Retry', null, CTX)" @click="start" />
-          <Button
-            :label="__('Copy access request')"
+          <button type="button" :class="['press', BTN.filled]" @click="start">
+            <span class="lucide-refresh-cw size-5" aria-hidden="true" />
+            {{ __('Retry', null, CTX) }}
+          </button>
+          <button
+            type="button"
+            :class="['press', BTN.tonal]"
             @click="copy(requestText)"
-          />
-          <Button :label="__('Back to Cobranza')" @click="goBack" />
+          >
+            <span class="lucide-copy size-5" aria-hidden="true" />
+            {{ __('Copy access request') }}
+          </button>
         </div>
         <p v-if="copied" role="status" class="text-sm text-ink-gray-6">
           {{ copied }}
@@ -124,27 +131,32 @@
         >
           <p>{{ doneNotice }}</p>
           <div v-if="data.outstanding <= 0" class="flex flex-wrap gap-2">
-            <Button
-              variant="solid"
-              class="min-h-11 sm:min-h-8"
-              :label="__('Next customer')"
-              :loading="findingNext"
+            <button
+              type="button"
+              :class="['press', BTN.filled]"
+              :disabled="findingNext"
               @click="goNext"
-            />
-            <Button
-              class="min-h-11 sm:min-h-8"
-              :label="__('Back to Cobranza')"
-              @click="goBack"
-            />
+            >
+              <span
+                :class="[
+                  findingNext
+                    ? 'lucide-loader-circle animate-spin'
+                    : 'lucide-chevron-right',
+                  'size-5',
+                ]"
+                aria-hidden="true"
+              />
+              {{ __('Next customer') }}
+            </button>
+            <button type="button" :class="['press', BTN.tonal]" @click="goBack">
+              {{ __('Back to Cobranza') }}
+            </button>
           </div>
         </div>
 
         <header class="mb-4 flex flex-wrap items-start gap-3">
           <div class="min-w-0 flex-1">
-            <h1
-              class="text-xl font-semibold text-ink-gray-9"
-              :class="phone ? 'sr-only' : ''"
-            >
+            <h1 class="sr-only">
               {{ data.customer_name }}
             </h1>
             <p class="text-sm text-ink-gray-6">
@@ -165,27 +177,29 @@
               <template v-else> · {{ __('No mobile number') }}</template>
             </p>
             <div class="mt-1 flex flex-wrap gap-1">
-              <Badge
+              <StatusChip
                 v-if="data.suppressed"
-                theme="red"
+                tone="danger"
                 :label="__('Does not accept messages')"
               />
-              <Badge
+              <StatusChip
                 v-if="autoChip(data.auto, data.today)"
-                :theme="autoChip(data.auto, data.today).theme"
+                :tone="TONE[autoChip(data.auto, data.today).theme]"
                 :label="autoChip(data.auto, data.today).label"
                 data-auto-chip
               />
-              <Badge
+              <StatusChip
                 v-if="followupChip(data.followup, data.today)"
-                :theme="followupChip(data.followup, data.today).theme"
+                :tone="TONE[followupChip(data.followup, data.today).theme]"
                 :label="followupChip(data.followup, data.today).label"
                 data-followup-chip
               />
             </div>
           </div>
           <div class="text-right" :class="phone ? 'hidden' : ''">
-            <p class="text-2xl font-semibold tabular-nums text-ink-gray-9">
+            <p
+              class="num text-3xl font-semibold tabular-nums leading-tight text-ink-gray-9"
+            >
               {{ money(data.outstanding, data.currency) }}
             </p>
             <p
@@ -244,7 +258,7 @@
             :href="`tel:${data.phones[0].display.replace(/[^\d+]/g, '')}`"
           >
             <!-- «Llamar» dials; the thumb bar's «Llamada» logs one. -->
-            <LucidePhoneOutgoing class="h-5 w-5" />
+            <span class="lucide-phone-outgoing size-5" aria-hidden="true" />
             {{ __('Make a Call') }}
           </a>
           <button
@@ -253,7 +267,7 @@
             class="flex min-h-16 flex-col items-center justify-center gap-1 rounded-7 bg-surface-gray-2 px-1 text-center text-xs font-medium text-ink-gray-8"
             @click="openFollowup('followup')"
           >
-            <LucideUserCheck class="h-5 w-5" />
+            <span class="lucide-user-check size-5" aria-hidden="true" />
             {{ __('Follow-up', null, CTX) }}
           </button>
           <button
@@ -262,40 +276,23 @@
             class="flex min-h-16 flex-col items-center justify-center gap-1 rounded-7 bg-surface-gray-2 px-1 text-center text-xs font-medium text-ink-gray-8"
             @click="statementOpen = true"
           >
-            <LucideFileText class="h-5 w-5" />
+            <span class="lucide-file-text size-5" aria-hidden="true" />
             {{ __('Statement', null, CTX) }}
           </button>
         </div>
         <!-- The customer's next steps: payment for any invoices, collector, follow-up. -->
         <div v-else class="mb-4 flex flex-wrap gap-2" data-record-actions>
-          <Button
-            v-if="caps.pay && invoices.length"
-            class="min-h-11 sm:min-h-8"
-            :label="__('Register payment')"
-            :aria-keyshortcuts="'$'"
-            @click="openPayment('')"
+          <button
+            v-for="step in recordSteps"
+            :key="step.key"
+            type="button"
+            :class="['press', BTN.tonal]"
+            :aria-keyshortcuts="step.keys"
+            @click="step.run()"
           >
-            <template #prefix><LucideDollarSign class="h-4 w-4" /></template>
-          </Button>
-          <Button
-            v-if="caps.assign"
-            class="min-h-11 sm:min-h-8"
-            :label="
-              data.followup ? __('Change follow-up') : __('Schedule follow-up')
-            "
-            :aria-keyshortcuts="'S'"
-            @click="openFollowup('followup')"
-          >
-            <template #prefix><LucideUserCheck class="h-4 w-4" /></template>
-          </Button>
-          <Button
-            v-if="caps.statement"
-            class="min-h-11 sm:min-h-8"
-            :label="__('Statement of account')"
-            @click="statementOpen = true"
-          >
-            <template #prefix><LucideFileText class="h-4 w-4" /></template>
-          </Button>
+            <span :class="[step.icon, 'size-5']" aria-hidden="true" />
+            {{ step.label }}
+          </button>
         </div>
 
         <!-- Recordatorios automáticos: what happens next, and the way to resume. -->
@@ -304,16 +301,26 @@
           class="mb-4 flex flex-wrap items-center gap-2 rounded-6 bg-surface-gray-1 p-3 text-sm text-ink-gray-8"
           data-auto-line
         >
-          <LucideSend class="h-4 w-4 shrink-0 text-ink-gray-6" />
+          <span
+            class="lucide-send size-5 shrink-0 text-ink-gray-6"
+            aria-hidden="true"
+          />
           <p class="min-w-0 flex-1">{{ autoLine(data.auto, data.today) }}</p>
           <template v-if="data.auto.state === 'replied'">
-            <Button
+            <button
               v-if="data.capabilities.remind"
-              class="min-h-11 sm:min-h-8"
-              :label="__('Resume reminders')"
-              :loading="busy === 'resume'"
+              type="button"
+              :class="['press', BTN.tonal]"
+              :disabled="busy === 'resume'"
               @click="resumeReminders"
-            />
+            >
+              <span
+                v-if="busy === 'resume'"
+                class="lucide-loader-circle size-5 animate-spin"
+                aria-hidden="true"
+              />
+              {{ __('Resume reminders') }}
+            </button>
             <RouterLink
               class="inline-flex min-h-11 items-center text-ink-blue-link underline sm:min-h-0"
               :to="autoConversationRoute(data.auto)"
@@ -321,24 +328,37 @@
               >{{ __('Open the conversation') }}</RouterLink
             >
           </template>
-          <Button
+          <button
             v-else-if="
               data.auto.manual &&
               data.auto.actions.includes('share') &&
               manualInvoice
             "
-            variant="solid"
-            class="min-h-11 sm:min-h-8"
-            :label="__('Prepare and send')"
-            :loading="busy === `${manualInvoice.name}:remind`"
+            type="button"
+            :class="['press', BTN.filled]"
+            :disabled="busy === `${manualInvoice.name}:remind`"
             @click="run(manualInvoice, { key: 'remind' }, true)"
-          />
-          <Button
+          >
+            <span
+              :class="[
+                busy === `${manualInvoice.name}:remind`
+                  ? 'lucide-loader-circle animate-spin'
+                  : 'lucide-send',
+                'size-5',
+              ]"
+              aria-hidden="true"
+            />
+            {{ __('Prepare and send') }}
+          </button>
+          <button
             v-else-if="data.auto.manual && manualInvoice"
-            class="min-h-11 sm:min-h-8"
-            :label="__('Log call')"
+            type="button"
+            :class="['press', BTN.tonal]"
             @click="run(manualInvoice, { key: 'call' })"
-          />
+          >
+            <span class="lucide-phone size-5" aria-hidden="true" />
+            {{ __('Log call') }}
+          </button>
         </div>
 
         <FormControl
@@ -356,8 +376,17 @@
           role="alert"
           class="mb-3 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
         >
-          <strong>{{ problem.title }}.</strong> {{ problem.detail }}
-          <Button class="ml-2" :label="__('Retry', null, CTX)" @click="load" />
+          <p>
+            <strong>{{ problem.title }}.</strong> {{ problem.detail }}
+          </p>
+          <button
+            type="button"
+            :class="['press mt-2', BTN.tonal]"
+            @click="load"
+          >
+            <span class="lucide-refresh-cw size-5" aria-hidden="true" />
+            {{ __('Retry', null, CTX) }}
+          </button>
         </div>
 
         <p
@@ -403,14 +432,14 @@
                   {{ agingLabel(inv, data.today) }}
                 </p>
                 <div class="mt-1 flex flex-wrap gap-1">
-                  <Badge
+                  <StatusChip
                     v-if="promiseChip(inv.promise, owedIn(inv))"
-                    :theme="promiseChip(inv.promise, owedIn(inv)).theme"
+                    :tone="TONE[promiseChip(inv.promise, owedIn(inv)).theme]"
                     :label="promiseChip(inv.promise, owedIn(inv)).label"
                   />
-                  <Badge
+                  <StatusChip
                     v-if="inv.current_dunning"
-                    theme="gray"
+                    tone="neutral"
                     :label="__('{0} sent', [inv.due_label])"
                   />
                 </div>
@@ -451,32 +480,42 @@
               class="mt-3 rounded-6 bg-surface-amber-1 p-2 text-sm"
             >
               <p>{{ actionsOf(inv).primary.blocked }}</p>
-              <Button
-                class="mt-2 min-h-11 sm:min-h-8"
-                :label="actionsOf(inv).primary.resolve.label"
-                :loading="busy === `${inv.name}:resolve`"
+              <button
+                type="button"
+                :class="['press mt-2', BTN.tonal]"
+                :disabled="busy === `${inv.name}:resolve`"
                 @click="resolve(inv, actionsOf(inv).primary.resolve)"
-              />
+              >
+                <span
+                  v-if="busy === `${inv.name}:resolve`"
+                  class="lucide-loader-circle size-5 animate-spin"
+                  aria-hidden="true"
+                />
+                {{ actionsOf(inv).primary.resolve.label }}
+              </button>
             </div>
             <!-- On a phone the focused invoice's actions sit in the thumb bar:
                  the card does not repeat them. -->
             <div v-if="!phone" class="mt-3 flex flex-wrap gap-2">
-              <Button
-                v-if="!actionsOf(inv).primary.blocked"
-                variant="solid"
-                class="min-h-11 sm:min-h-8"
-                :label="actionsOf(inv).primary.label"
-                :loading="busy === `${inv.name}:${actionsOf(inv).primary.key}`"
-                @click.stop="run(inv, actionsOf(inv).primary)"
-              />
-              <Button
-                v-for="action in actionsOf(inv).secondary"
+              <button
+                v-for="action in invoiceButtons(inv)"
                 :key="action.key"
-                class="min-h-11 sm:min-h-8"
-                :label="action.label"
-                :loading="busy === `${inv.name}:${action.key}`"
+                type="button"
+                :class="['press', action.primary ? BTN.filled : BTN.tonal]"
+                :disabled="busy === `${inv.name}:${action.key}`"
                 @click.stop="run(inv, action)"
-              />
+              >
+                <span
+                  :class="[
+                    busy === `${inv.name}:${action.key}`
+                      ? 'lucide-loader-circle animate-spin'
+                      : BUTTON_ICONS[action.key] || 'lucide-arrow-right',
+                    'size-5',
+                  ]"
+                  aria-hidden="true"
+                />
+                {{ action.label }}
+              </button>
             </div>
           </li>
         </ul>
@@ -495,10 +534,10 @@
               />
               <span class="min-w-0 flex-1">
                 <span class="text-ink-gray-9">{{ eventTitle(event) }}</span>
-                <Badge
+                <StatusChip
                   v-if="event.automatic"
                   class="ml-1"
-                  theme="blue"
+                  tone="info"
                   :label="__('automatic')"
                   data-auto-badge
                 />
@@ -519,15 +558,13 @@
           :return-to="`/crm${route.fullPath}`"
           :return-label="data.customer_name || props.customer"
         />
-        <!-- Actividad y comentarios of the customer: notes for whoever
-             collects next, who is on it, tags, shares and emails. -->
-        <RecordActivity
+        <!-- Shell SPEC §6 DD2: Conexiones, Actividad y comentarios of the
+             customer (notes for whoever collects next) and the «⋯» sheets. -->
+        <RecordKit
           class="-mx-4 mt-6"
-          doctype="Customer"
-          :name="props.customer"
+          :kit="kit"
           :title="data.customer_name || props.customer"
-          :files="false"
-          noun="el cliente"
+          :cadena="false"
         />
       </template>
     </div>
@@ -614,7 +651,6 @@
 <script setup>
 import {
   computed,
-  defineAsyncComponent,
   getCurrentInstance,
   nextTick,
   onBeforeUnmount,
@@ -623,8 +659,13 @@ import {
   watch,
 } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Badge, Button, FormControl, toast } from 'frappe-ui'
-import { AppBar } from '@/components/ui'
+import { FormControl, toast } from 'frappe-ui'
+import { AppBar, StatusChip } from '@/components/ui'
+import RecordIsland from '@/components/documentos/RecordIsland.vue'
+import RecordKit from '@/components/documentos/compras/RecordKit.vue'
+import { useRecordKit } from '@/components/documentos/compras/recordKit'
+import { recordActionsFor } from '@/documentos/acciones'
+import { BTN } from '@/documentos/tools'
 import { ArchivosRegistroPanel } from '@/components/archivos'
 import CallSheet from '@/components/cobranza/CallSheet.vue'
 import CobranzaSendSheet from '@/components/cobranza/CobranzaSendSheet.vue'
@@ -679,13 +720,6 @@ import {
 } from '@/vendor/muelle-shell/contracts'
 import { useLiveWatch } from '@/vendor/muelle-shell/live-sync/vue'
 import Icon from '@/components/Icon.vue'
-import LucideArrowLeft from '~icons/lucide/arrow-left'
-import LucideArrowRight from '~icons/lucide/arrow-right'
-import LucidePhoneOutgoing from '~icons/lucide/phone-outgoing'
-import LucideUserCheck from '~icons/lucide/user-check'
-import LucideFileText from '~icons/lucide/file-text'
-import LucideDollarSign from '~icons/lucide/dollar-sign'
-import LucideSend from '~icons/lucide/send'
 
 const LIVE_DOCTYPES = [
   'Sales Invoice',
@@ -695,9 +729,14 @@ const LIVE_DOCTYPES = [
   'Comment',
 ]
 
-const RecordActivity = defineAsyncComponent(
-  () => import('@/components/documentos/RecordActivity.vue'),
-)
+// The chips' Badge themes, as StatusChip tones.
+const TONE = {
+  green: 'success',
+  blue: 'info',
+  orange: 'warning',
+  red: 'danger',
+  gray: 'neutral',
+}
 const props = defineProps({ customer: { type: String, required: true } })
 const route = useRoute()
 const router = useRouter()
@@ -784,6 +823,15 @@ const ICONS = {
   remind: 'send',
   resend: 'send',
 }
+// The same steps as icon classes (CSS masks: literal names get generated).
+const BUTTON_ICONS = {
+  collect: 'lucide-shopping-bag',
+  pay: 'lucide-banknote',
+  promise: 'lucide-calendar',
+  call: 'lucide-phone',
+  remind: 'lucide-send',
+  resend: 'lucide-send',
+}
 const SHORT = {
   collect: () => __('Register', null, CTX),
   pay: () => __('Payment', null, CTX),
@@ -807,6 +855,76 @@ const phoneActions = computed(() => {
     short: SHORT[action.key]?.() || action.label,
   }))
 })
+
+// On a desk each invoice carries its own buttons; the primary is filled.
+function invoiceButtons(inv) {
+  const { primary, secondary } = actionsOf(inv)
+  return [
+    ...(primary.blocked ? [] : [{ ...primary, primary: true }]),
+    ...secondary,
+  ]
+}
+
+// The engine's «⋯» tools, Conexiones and Actividad of the Customer.
+const kit = useRecordKit('Customer', {
+  name: () => props.customer,
+  title: () => data.value?.customer_name || '',
+  changed: () => load(),
+})
+const reach = computed(() => ({
+  phone: data.value?.phones?.[0]?.display || '',
+}))
+// The customer's steps (the desk's row and the bolt): payment, follow-up,
+// statement; the bolt adds the next customer.
+const recordSteps = computed(() => {
+  const out = []
+  if (caps.value.pay && invoices.value.length)
+    out.push({
+      key: 'pay',
+      label: __('Register payment'),
+      icon: 'lucide-banknote',
+      keys: '$',
+      run: () => openPayment(''),
+    })
+  if (caps.value.assign)
+    out.push({
+      key: 'followup',
+      label: data.value?.followup
+        ? __('Change follow-up')
+        : __('Schedule follow-up'),
+      icon: 'lucide-user-check',
+      keys: 'S',
+      run: () => openFollowup('followup'),
+    })
+  if (caps.value.statement)
+    out.push({
+      key: 'statement',
+      label: __('Statement of account'),
+      icon: 'lucide-file-text',
+      run: () => (statementOpen.value = true),
+    })
+  return out
+})
+const boltSteps = computed(() =>
+  data.value && !returnTo.value
+    ? [
+        ...recordSteps.value,
+        {
+          key: 'next',
+          label: __('Next customer'),
+          icon: 'lucide-chevron-right',
+          run: goNext,
+        },
+      ]
+    : recordSteps.value,
+)
+const boltGroups = computed(() =>
+  recordActionsFor({ steps: boltSteps.value, tools: kit.tools.value }),
+)
+function onBolt({ key }) {
+  if (key.startsWith('paso:')) boltSteps.value[Number(key.slice(5))]?.run()
+  else kit.onTool(key)
+}
 
 function actionsOf(inv) {
   const primary = invoiceAction(inv, {

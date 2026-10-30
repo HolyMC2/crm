@@ -584,7 +584,7 @@ describe('Cobranza record as a power app', () => {
     await flush()
     const open = [
       ...root.querySelectorAll('[data-record-actions] button'),
-    ].find((b) => b.textContent === 'Statement of account')
+    ].find((b) => b.textContent.trim() === 'Statement of account')
     open.click()
     await flush()
     expect(
