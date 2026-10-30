@@ -78,7 +78,7 @@ describe('a chart the turn writes', () => {
     expect(assistant.messages[0].canvas).toBeUndefined()
   })
 
-  it('after a reload goes under the first answer logged after it, in this conversation only', () => {
+  it('after a reload goes under the answer of its turn, in this conversation only', () => {
     const messages = [
       { id: 'u1', role: 'user', at: '2026-10-29 10:00:00' },
       { id: 'b1', role: 'bot', at: '2026-10-29 10:00:20' },
@@ -91,6 +91,23 @@ describe('a chart the turn writes', () => {
       { file: 'tabla.csv', kind: 'csv', modified: '2026-10-29 10:05:11' },
     ]
     expect(canvasByAnswer(messages, files)).toEqual({ b2: [files[0]] })
+  })
+
+  it('after a reload finds its answer even when the answer row keeps its progress line time', () => {
+    // history collapses an edit trail at its first position: the answer reads
+    // 21:16:37 (the progress line), the file was written at 21:16:46
+    const messages = [
+      { id: 'u1', role: 'user', at: '2026-10-29 21:16:35.495857' },
+      { id: 'b1', role: 'bot', at: '2026-10-29 21:16:37.804698' },
+    ]
+    const files = [
+      {
+        file: 'prueba-lienzo.html',
+        kind: 'html',
+        modified: '2026-10-29 21:16:46.672134',
+      },
+    ]
+    expect(canvasByAnswer(messages, files)).toEqual({ b1: files })
   })
 })
 

@@ -87,9 +87,9 @@ export function takePendingCanvas() {
 }
 
 /**
- * After a reload the live link is gone: each inline file goes under the first
- * answer logged at or after it was written (both are server times), once,
- * and only within the conversation on screen.
+ * After a reload the live link is gone: each inline file goes under the
+ * answer of the turn it was written in (server times), once, and only within
+ * the conversation on screen.
  */
 export function canvasByAnswer(messages, files) {
   const out = {}
@@ -105,7 +105,19 @@ export function canvasByAnswer(messages, files) {
     if (!INLINE_KINDS.includes(file.kind) || shown.has(file.file)) continue
     const when = String(file.modified || '')
     if (!when || when < first) continue
-    const answer = answers.find((m) => String(m.at) >= when)
+    // the turn it was written in: the first answer after the person's last
+    // message before it (an answer row keeps its progress line's time, so
+    // it can read earlier than the file)
+    let asked = -1
+    messages.forEach((m, i) => {
+      if (m.role === 'user' && m.at && String(m.at) <= when) asked = i
+    })
+    const answer =
+      asked >= 0
+        ? messages
+            .slice(asked + 1)
+            .find((m) => m.role === 'bot' && m.at && !m.stale)
+        : answers.find((m) => String(m.at) >= when)
     if (!answer) continue
     out[answer.id] = [...(out[answer.id] || []), file]
   }
