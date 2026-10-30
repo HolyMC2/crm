@@ -1,288 +1,326 @@
 <template>
-  <div class="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
-    <div class="mx-auto w-full max-w-3xl px-4 pb-28 pt-4 sm:px-6 sm:pb-10">
-      <!-- On a phone the shell's app bar has the back arrow (meta.listParent);
-           an answer opened from another app keeps its way back to that app. -->
-      <nav v-if="!isPhone || returnTo" class="mb-3">
-        <button
-          class="flex min-h-11 items-center gap-1 text-sm text-ink-gray-7 hover:text-ink-gray-9"
-          @click="goBack"
-        >
-          <LucideArrowLeft class="h-4 w-4" />
-          {{ backLabel }}
-        </button>
-      </nav>
-
-      <section
-        v-if="guard"
-        role="alert"
-        class="mx-auto max-w-xl space-y-4 py-6"
-      >
-        <h1 class="text-xl font-semibold">{{ guard.title }}</h1>
-        <p class="text-base text-ink-gray-7">{{ guard.detail }}</p>
-        <div class="flex flex-wrap gap-2">
-          <Button :label="__('Retry', null, 'Encuestas')" @click="load" />
-          <Button :label="__('Back to Encuestas')" @click="goBack" />
-        </div>
-      </section>
-
-      <div v-else-if="!answer" role="status" class="py-10 text-sm">
-        {{ __('Loading answer…') }}
-      </div>
-
-      <template v-else>
-        <header class="mb-4 flex items-start gap-3">
+  <!-- An answer to a survey (Shell look, record-header): the bar names the
+       customer with the follow-up's state; the island calls and writes to
+       them, the bolt holds the next steps and «⋯» every tool. The hero shows
+       the score, what they said and the one filled step: take it, or close
+       the follow-up. Then the customer and sale, the follow-up so far and
+       Actividad, beside them on a desk. -->
+  <div class="relative flex h-full min-w-0 flex-1 flex-col overflow-hidden">
+    <AppBar
+      :back="true"
+      :back-label="backLabel"
+      :title="answer?.customer_name || ''"
+      :bell="isPhone"
+      @back="onBack"
+    >
+      <template v-if="answer" #title>
+        <div class="flex min-h-12 min-w-0 flex-col justify-center px-3">
           <span
-            class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-2xl font-semibold"
-            :class="SCORE_CLASS[answer.bucket]"
-            :aria-label="scoreLabel(answer.score, answer.scale)"
-            :title="scoreLabel(answer.score, answer.scale)"
-            data-testid="encuesta-score"
-            >{{ answer.score }}</span
+            class="title-face line-clamp-2 break-words text-xl font-semibold leading-tight [text-wrap:balance]"
+            data-appbar-title
+            >{{ answer.customer_name }}</span
           >
-          <div class="min-w-0 flex-1">
-            <p
-              class="flex flex-wrap items-center gap-1 text-sm text-ink-gray-6"
-            >
-              <Badge
-                v-if="answer.kind === 'service'"
-                theme="blue"
-                :label="kindLabel('service')"
-              />
-              <Badge
-                :theme="bucketTheme(answer.bucket)"
-                :label="bucketLabel(answer.bucket, answer.kind)"
-              />
-              <Badge
-                :theme="followUpTheme(answer.follow_up_status)"
-                :label="followUpLabel(answer.follow_up_status)"
-              />
-              <span>{{ when(answer.creation) }}</span>
-            </p>
-            <h1
-              class="line-clamp-2 break-words text-2xl font-semibold text-ink-gray-9"
-            >
-              {{ answer.customer_name }}
-            </h1>
-            <p class="mt-1 text-sm text-ink-gray-6">
-              {{
-                [
-                  answer.kind === 'service'
-                    ? scoreLabel(answer.score, answer.scale)
-                    : answer.sale,
-                  answer.company,
-                ]
-                  .filter(Boolean)
-                  .join(' · ')
-              }}
-            </p>
-          </div>
-        </header>
-
-        <div
-          v-if="notice"
-          role="status"
-          class="mb-4 rounded-6 bg-surface-green-1 p-3 text-sm text-ink-green-8"
-        >
-          {{ notice }}
-          <RouterLink
-            v-if="nextName"
-            :to="{ ...recordRoute(nextName), query: listQuery }"
-            class="ml-1 font-medium underline"
-            >{{ __('Next customer') }}</RouterLink
-          >
+          <span class="flex min-w-0 items-center gap-2 pt-0.5">
+            <StatusChip
+              :label="chip.label"
+              :tone="chip.tone"
+              data-testid="encuesta-status"
+            />
+            <span class="truncate text-sm leading-tight text-ink-gray-6">{{
+              kindLine
+            }}</span>
+          </span>
         </div>
-        <div
-          v-if="problem"
-          role="alert"
-          class="mb-4 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
-        >
-          <strong>{{ problem.title }}.</strong> {{ problem.detail }}
-          <Button
-            class="ml-2"
-            :label="__('Refresh', null, 'Encuestas')"
-            @click="load"
-          />
-        </div>
-
-        <section class="mb-4 rounded-6 border border-outline-gray-2 p-4">
-          <h2 class="mb-1 text-sm font-medium text-ink-gray-6">
-            {{ __('What they said') }}
-          </h2>
-          <p
-            v-if="answer.comment"
-            class="whitespace-pre-line text-base text-ink-gray-9"
-          >
-            {{ answer.comment }}
-          </p>
-          <p v-else class="text-base text-ink-gray-6">
-            {{ __('They gave a score without a comment.') }}
-          </p>
-        </section>
-
-        <section class="mb-4 flex flex-wrap gap-2">
-          <Button
-            v-if="answer.actions?.take"
-            :variant="
-              answer.follow_up_status === 'Completed' ? 'subtle' : 'solid'
-            "
-            :icon-left="LucideUserCheck"
-            :label="takeLabel"
-            :loading="busy === 'take'"
-            class="min-h-11 sm:min-h-8"
-            @click="take"
-          />
-          <Button
-            v-if="answer.actions?.close"
-            :variant="answer.actions?.take ? 'subtle' : 'solid'"
-            :icon-left="LucideCheck"
-            :label="__('Close follow-up')"
-            class="min-h-11 sm:min-h-8"
-            @click="closing = true"
-          />
-          <a
-            v-if="waHref"
-            :href="waHref"
-            target="_blank"
-            rel="noopener"
-            class="inline-flex min-h-11 items-center gap-1 rounded-4 bg-surface-gray-2 px-3 text-sm font-medium text-ink-gray-8 hover:bg-surface-gray-3 sm:min-h-8"
-          >
-            <LucideMessageCircle class="h-4 w-4" />
-            {{ __('Message on WhatsApp') }}
-          </a>
-          <a
-            v-if="answer.phone"
-            :href="`tel:${answer.phone}`"
-            class="inline-flex min-h-11 items-center gap-1 rounded-4 bg-surface-gray-2 px-3 text-sm font-medium text-ink-gray-8 hover:bg-surface-gray-3 sm:min-h-8"
-          >
-            <LucidePhone class="h-4 w-4" />
-            {{ __('Call', null, 'Encuestas') }}
-          </a>
-          <RouterLink
-            v-if="garantiaLink"
-            :to="garantiaLink"
-            class="inline-flex min-h-11 items-center gap-1 rounded-4 bg-surface-gray-2 px-3 text-sm font-medium text-ink-gray-8 hover:bg-surface-gray-3 sm:min-h-8"
-          >
-            <LucideShield class="h-4 w-4" />
-            {{ __('Open a warranty case') }}
-          </RouterLink>
-          <!-- «¿Cómo te atendimos?»: the conversation it was about, back here after -->
-          <RouterLink
-            v-if="conversationLink"
-            :to="conversationLink"
-            class="inline-flex min-h-11 items-center gap-1 rounded-4 bg-surface-gray-2 px-3 text-sm font-medium text-ink-gray-8 hover:bg-surface-gray-3 sm:min-h-8"
-            data-testid="encuesta-open-conversation"
-          >
-            <LucideMessageSquare class="h-4 w-4" />
-            {{ __('Open the conversation') }}
-          </RouterLink>
-        </section>
-        <p
-          v-if="!answer.phone"
-          role="status"
-          class="mb-4 text-sm text-ink-gray-6"
-        >
-          {{
-            __(
-              'This sale has no phone. Open the customer to find another way to reach them.',
-            )
-          }}
-        </p>
-        <p
-          v-else-if="!waHref && !whatsappOff"
-          class="mb-4 text-sm text-ink-gray-6"
-        >
-          {{ __('The phone looks incomplete; call or open the customer.') }}
-        </p>
-
-        <section class="mb-4 rounded-6 border border-outline-gray-2 p-4">
-          <h2 class="mb-2 text-sm font-medium text-ink-gray-6">
-            {{ __('Customer and sale') }}
-          </h2>
-          <dl class="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
-            <div>
-              <dt class="text-ink-gray-6">
-                {{ __('Customer', null, 'Encuestas') }}
-              </dt>
-              <dd>
-                <RouterLink
-                  v-if="customerLink"
-                  :to="customerLink"
-                  class="font-medium text-ink-gray-9 underline"
-                  >{{ answer.customer_name }}</RouterLink
-                >
-                <span v-else>{{ answer.customer_name }}</span>
-              </dd>
-            </div>
-            <div>
-              <dt class="text-ink-gray-6">
-                {{ __('Phone', null, 'Encuestas') }}
-              </dt>
-              <dd>{{ answer.phone || '—' }}</dd>
-            </div>
-            <div v-if="answer.kind === 'service'">
-              <dt class="text-ink-gray-6">
-                {{ __('Conversation', null, 'Encuestas') }}
-              </dt>
-              <dd>{{ answer.conversation || '—' }}</dd>
-            </div>
-            <div v-else>
-              <dt class="text-ink-gray-6">
-                {{ __('Sale', null, 'Encuestas') }}
-              </dt>
-              <dd>{{ answer.sale || '—' }}</dd>
-            </div>
-            <div>
-              <dt class="text-ink-gray-6">
-                {{ __('Answered', null, 'Encuestas') }}
-              </dt>
-              <dd>{{ when(answer.creation, true) }}</dd>
-            </div>
-          </dl>
-        </section>
-
-        <section
-          v-if="steps.length"
-          class="rounded-6 border border-outline-gray-2 p-4"
-        >
-          <h2 class="mb-2 text-sm font-medium text-ink-gray-6">
-            {{ __('Follow-up') }}
-          </h2>
-          <ol class="space-y-3">
-            <li v-for="(step, index) in steps" :key="index" class="text-sm">
-              <p class="font-medium text-ink-gray-9">
-                {{ step.responsible_name || step.responsible }}
-                <Badge
-                  class="ml-1"
-                  :theme="step.status === 'Completed' ? 'green' : 'blue'"
-                  :label="
-                    step.status === 'Completed'
-                      ? __('Done', null, 'Encuestas')
-                      : __('In progress', null, 'Encuestas')
-                  "
-                />
-              </p>
-              <p
-                v-if="step.resolution"
-                class="whitespace-pre-line text-ink-gray-8"
-              >
-                {{ step.resolution }}
-              </p>
-            </li>
-          </ol>
-        </section>
-        <RecordActivity
-          class="-mx-4 mt-6"
-          doctype="Quality Feedback"
-          :name="props.name"
-          :title="answer.customer_name || props.name"
-          noun="la respuesta"
+      </template>
+      <template #actions>
+        <RecordIsland
+          v-if="answer"
+          :reach="{ phone: answer.phone || '' }"
+          :who="answer.customer_name || ''"
+          :groups="boltGroups"
+          :phone="isPhone"
+          :subtitle="kit.scopeTitle.value"
+          @pick="onBolt"
+          @tools="kit.openTools()"
         />
       </template>
+    </AppBar>
+
+    <div class="min-h-0 flex-1 overflow-y-auto pb-28 sm:pb-10">
+      <EmptyState
+        v-if="guard"
+        role="alert"
+        state="error"
+        :title="guard.title"
+        :message="guard.detail"
+        :action="__('Retry', null, 'Encuestas')"
+        @action="load"
+      />
+      <EmptyState
+        v-else-if="!answer"
+        role="status"
+        state="loading"
+        :title="__('Loading answer…')"
+      />
+
+      <div
+        v-else
+        class="mx-auto grid w-full max-w-6xl gap-x-6 lg:grid-cols-[minmax(0,1fr)_22rem]"
+      >
+        <div class="flex min-w-0 flex-col gap-5 pt-4">
+          <div
+            v-if="notice"
+            role="status"
+            class="mx-4 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-6 bg-surface-green-1 p-3 text-base text-ink-green-8"
+          >
+            <span
+              class="lucide-circle-check size-5 flex-none"
+              aria-hidden="true"
+            />
+            <span class="min-w-0 flex-1">{{ notice }}</span>
+            <RouterLink
+              v-if="nextName"
+              :to="{ ...recordRoute(nextName), query: listQuery }"
+              :class="['press', BTN.tonal]"
+              data-testid="encuesta-next-customer"
+              >{{ __('Next customer') }}
+              <span class="lucide-chevron-right size-5" aria-hidden="true"
+            /></RouterLink>
+          </div>
+          <div
+            v-if="problem"
+            role="alert"
+            class="mx-4 space-y-2 rounded-6 bg-surface-red-1 p-3 text-base text-ink-red-7"
+          >
+            <p>
+              <strong>{{ problem.title }}.</strong> {{ problem.detail }}
+            </p>
+            <button type="button" :class="['press', BTN.tonal]" @click="load">
+              <span class="lucide-refresh-cw size-5" aria-hidden="true" />
+              {{ __('Refresh', null, 'Encuestas') }}
+            </button>
+          </div>
+
+          <!-- The hero: the score, what they said, and the one next step. -->
+          <section
+            class="flex flex-col gap-3 px-4"
+            :aria-label="__('Next step', null, 'Compras')"
+            data-testid="encuesta-hero"
+          >
+            <div class="flex items-center gap-3">
+              <span
+                class="num flex size-14 flex-none items-center justify-center rounded-full text-2xl font-semibold tabular-nums"
+                :class="SCORE_CLASS[answer.bucket]"
+                :aria-label="scoreLabel(answer.score, answer.scale)"
+                :title="scoreLabel(answer.score, answer.scale)"
+                data-testid="encuesta-score"
+                >{{ answer.score }}</span
+              >
+              <div class="min-w-0">
+                <p class="text-lg font-semibold text-ink-gray-9">
+                  {{ bucketLabel(answer.bucket, answer.kind) }}
+                </p>
+                <p class="text-base text-ink-gray-6">
+                  {{
+                    [
+                      scoreLabel(answer.score, answer.scale),
+                      when(answer.creation),
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')
+                  }}
+                </p>
+              </div>
+            </div>
+            <blockquote
+              class="rounded-6 bg-surface-gray-1 p-3 text-base"
+              :aria-label="__('What they said')"
+            >
+              <p
+                v-if="answer.comment"
+                class="whitespace-pre-line break-words text-ink-gray-9"
+              >
+                {{ answer.comment }}
+              </p>
+              <p v-else class="text-ink-gray-6">
+                {{ __('They gave a score without a comment.') }}
+              </p>
+            </blockquote>
+            <p
+              v-if="!answer.phone"
+              role="status"
+              class="text-base text-ink-gray-7"
+            >
+              {{
+                __(
+                  'This sale has no phone. Open the customer to find another way to reach them.',
+                )
+              }}
+            </p>
+            <p
+              v-else-if="!waHref && !whatsappOff"
+              class="text-base text-ink-gray-7"
+            >
+              {{ __('The phone looks incomplete; call or open the customer.') }}
+            </p>
+            <div
+              v-if="nextSteps.length"
+              class="flex flex-wrap gap-2"
+              data-testid="encuesta-next"
+            >
+              <template v-for="step in nextSteps" :key="step.key">
+                <a
+                  v-if="step.href"
+                  :href="step.href"
+                  :target="step.external ? '_blank' : undefined"
+                  :rel="step.external ? 'noopener' : undefined"
+                  :class="['press', step.filled ? BTN.filled : BTN.tonal]"
+                  :data-step="step.key"
+                  :data-testid="step.testid"
+                  ><span :class="[step.icon, 'size-5']" aria-hidden="true" />
+                  {{ step.label }}</a
+                >
+                <button
+                  v-else
+                  type="button"
+                  :class="['press', step.filled ? BTN.filled : BTN.tonal]"
+                  :disabled="!!busy"
+                  :data-step="step.key"
+                  :data-testid="step.testid"
+                  @click="step.run()"
+                >
+                  <span
+                    :class="[
+                      busy === step.key
+                        ? 'lucide-loader-circle animate-spin'
+                        : step.icon,
+                      'size-5',
+                    ]"
+                    aria-hidden="true"
+                  />
+                  {{ step.label }}
+                </button>
+              </template>
+            </div>
+          </section>
+
+          <!-- Who answered and about what, each to its own record. -->
+          <section class="px-4" aria-labelledby="encuesta-cliente">
+            <h2
+              id="encuesta-cliente"
+              class="pb-1 text-base font-semibold text-ink-gray-9"
+            >
+              {{ __('Customer and sale') }}
+            </h2>
+            <ul class="divide-y divide-outline-gray-1">
+              <li v-for="row in facts" :key="row.key">
+                <component
+                  :is="row.to ? RouterLink : 'div'"
+                  :to="row.to"
+                  class="flex min-h-14 items-center gap-3 rounded-6 py-2"
+                  :class="
+                    row.to &&
+                    'press [@media(hover:hover)]:hover:bg-surface-gray-1'
+                  "
+                >
+                  <span
+                    class="flex size-10 flex-none items-center justify-center rounded-full bg-surface-gray-2 text-ink-gray-7"
+                    aria-hidden="true"
+                  >
+                    <span :class="[row.icon, 'size-5']" />
+                  </span>
+                  <span class="flex min-w-0 flex-1 flex-col">
+                    <span class="text-sm text-ink-gray-6">{{ row.label }}</span>
+                    <span class="break-words text-base text-ink-gray-9">{{
+                      row.value
+                    }}</span>
+                  </span>
+                  <span
+                    v-if="row.to"
+                    class="lucide-chevron-right size-4 flex-none text-ink-gray-5"
+                    aria-hidden="true"
+                  />
+                </component>
+              </li>
+            </ul>
+          </section>
+        </div>
+
+        <aside class="flex min-w-0 flex-col gap-5 pt-5 lg:pt-4">
+          <section
+            v-if="steps.length"
+            class="px-4"
+            aria-labelledby="encuesta-seguimiento"
+          >
+            <h2
+              id="encuesta-seguimiento"
+              class="pb-1 text-base font-semibold text-ink-gray-9"
+            >
+              {{ __('Follow-up') }}
+            </h2>
+            <ol class="divide-y divide-outline-gray-1">
+              <li
+                v-for="(step, index) in steps"
+                :key="index"
+                class="flex min-w-0 gap-3 py-3"
+              >
+                <span
+                  class="flex size-10 flex-none items-center justify-center rounded-full"
+                  :class="
+                    step.status === 'Completed'
+                      ? 'bg-surface-green-1 text-ink-green-7'
+                      : 'bg-surface-gray-2 text-ink-gray-7'
+                  "
+                  aria-hidden="true"
+                >
+                  <span
+                    :class="[
+                      step.status === 'Completed'
+                        ? 'lucide-circle-check'
+                        : 'lucide-user-check',
+                      'size-5',
+                    ]"
+                  />
+                </span>
+                <div class="min-w-0 flex-1">
+                  <p class="text-base text-ink-gray-9">
+                    {{ step.responsible_name || step.responsible }}
+                  </p>
+                  <p class="text-sm text-ink-gray-6">
+                    {{
+                      step.status === 'Completed'
+                        ? __('Done', null, 'Encuestas')
+                        : __('In progress', null, 'Encuestas')
+                    }}
+                  </p>
+                  <p
+                    v-if="step.resolution"
+                    class="whitespace-pre-line break-words pt-1 text-base text-ink-gray-8"
+                  >
+                    {{ step.resolution }}
+                  </p>
+                </div>
+              </li>
+            </ol>
+          </section>
+          <!-- Shell SPEC §6 DD2: Conexiones, Actividad and the «⋯» sheets. -->
+          <RecordKit
+            :kit="kit"
+            :title="answer.customer_name || props.name"
+            :cadena="false"
+          />
+        </aside>
+      </div>
     </div>
 
-    <Dialog v-model="closing" :title="__('Close follow-up')" size="md">
-      <template #default>
+    <BottomSheet
+      :open="closing"
+      :title="__('Close follow-up')"
+      :subtitle="answer?.customer_name || ''"
+      :dismissible="busy !== 'close'"
+      @update:open="(value) => (closing = value)"
+    >
+      <div class="space-y-3 pt-1" data-testid="encuesta-close-sheet">
         <FormControl
           v-model="whatWeDid"
           type="textarea"
@@ -295,44 +333,52 @@
         <p
           v-if="closeProblem"
           role="alert"
-          class="mt-3 rounded-5 bg-surface-red-1 p-3 text-sm text-ink-red-7"
+          class="rounded-6 bg-surface-red-1 p-3 text-base text-ink-red-7"
         >
           <strong>{{ closeProblem.title }}.</strong> {{ closeProblem.detail }}
         </p>
-      </template>
+      </div>
       <template #actions>
-        <div class="flex flex-wrap justify-end gap-2">
-          <Button
-            :label="__('Cancel', null, 'Encuestas')"
-            @click="closing = false"
+        <button
+          type="button"
+          :class="['press', BTN.filled, 'w-full justify-center']"
+          :disabled="!whatWeDid.trim() || busy === 'close'"
+          data-testid="encuesta-close-confirm"
+          @click="close"
+        >
+          <span
+            :class="[
+              busy === 'close'
+                ? 'lucide-loader-circle animate-spin'
+                : 'lucide-check',
+              'size-5',
+            ]"
+            aria-hidden="true"
           />
-          <Button
-            variant="solid"
-            :label="__('Close follow-up')"
-            :loading="busy === 'close'"
-            :disabled="!whatWeDid.trim()"
-            class="min-h-11 sm:min-h-8"
-            @click="close"
-          />
-        </div>
+          {{ __('Close follow-up') }}
+        </button>
       </template>
-    </Dialog>
+    </BottomSheet>
   </div>
 </template>
 <script setup>
-import { computed, defineAsyncComponent, onMounted, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { Badge, Button, Dialog, FormControl } from 'frappe-ui'
+import { computed, onMounted, ref, watch } from 'vue'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { FormControl } from 'frappe-ui'
+import { AppBar, BottomSheet, EmptyState, StatusChip } from '@/components/ui'
+import RecordIsland from '@/components/documentos/RecordIsland.vue'
+import RecordKit from '@/components/documentos/compras/RecordKit.vue'
+import { useRecordKit } from '@/components/documentos/compras/recordKit'
+import { recordActionsFor } from '@/documentos/acciones'
+import { BTN } from '@/documentos/tools'
 import { whatsappMode } from '@/composables/whatsapp'
 import {
   bucketLabel,
-  bucketTheme,
   conversationHref,
   customerHref,
   encuestasApi,
   encuestasBoot,
   followUpLabel,
-  followUpTheme,
   garantiaHref,
   greeting,
   kindLabel,
@@ -346,13 +392,6 @@ import {
 import { shellBoot } from '@/composables/muelleShell'
 import { isMobile as isPhone } from '@/composables/breakpoint'
 import { can, moduleEnabled } from '@/vendor/muelle-shell/contracts'
-import LucideArrowLeft from '~icons/lucide/arrow-left'
-import LucideUserCheck from '~icons/lucide/user-check'
-import LucideCheck from '~icons/lucide/check'
-import LucideMessageCircle from '~icons/lucide/message-circle'
-import LucidePhone from '~icons/lucide/phone'
-import LucideShield from '~icons/lucide/shield'
-import LucideMessageSquare from '~icons/lucide/message-square'
 
 const SCORE_CLASS = {
   detractor: 'bg-surface-red-2 text-ink-red-8',
@@ -360,9 +399,6 @@ const SCORE_CLASS = {
   promoter: 'bg-surface-green-2 text-ink-green-8',
 }
 
-const RecordActivity = defineAsyncComponent(
-  () => import('@/components/documentos/RecordActivity.vue'),
-)
 const props = defineProps({ name: { type: String, required: true } })
 const route = useRoute()
 const router = useRouter()
@@ -375,6 +411,14 @@ const busy = ref('')
 const closing = ref(false)
 const whatWeDid = ref('')
 const closeProblem = ref(null)
+
+// The engine's «⋯» tools, Conexiones and Actividad, loaded after paint.
+const kit = useRecordKit('Quality Feedback', {
+  name: () => props.name,
+  title: () => answer.value?.customer_name || '',
+  modified: () => answer.value?.modified,
+  changed: () => load(),
+})
 
 const returnTo = computed(() => safeReturn(route.query.return_to))
 const listQuery = computed(() =>
@@ -414,6 +458,135 @@ const garantiaLink = computed(() =>
 )
 // The server offers it only to a reader of that deal or lead; Conversaciones checks again.
 const conversationLink = computed(() => conversationHref(answer.value))
+
+// ── the bar: the customer, the follow-up's state, what kind of answer ────
+const chip = computed(() => {
+  const a = answer.value || {}
+  const label = followUpLabel(a.follow_up_status)
+  if (a.follow_up_status === 'Completed') return { label, tone: 'success' }
+  if (a.follow_up_status === 'Open') return { label, tone: 'info' }
+  return { label, tone: a.bucket === 'detractor' ? 'danger' : 'neutral' }
+})
+const kindLine = computed(() => {
+  const a = answer.value || {}
+  return [a.kind === 'service' ? kindLabel('service') : a.sale, a.company]
+    .filter(Boolean)
+    .join(' · ')
+})
+
+// ── the hero's steps: take it or close it (filled), then the ways to reach ─
+const nextSteps = computed(() => {
+  const a = answer.value || {}
+  const done = a.follow_up_status === 'Completed'
+  const out = []
+  if (a.actions?.take)
+    out.push({
+      key: 'take',
+      label: takeLabel.value,
+      icon: 'lucide-user-check',
+      filled: !done,
+      testid: 'encuesta-take',
+      run: take,
+    })
+  if (a.actions?.close)
+    out.push({
+      key: 'close',
+      label: __('Close follow-up'),
+      icon: 'lucide-check',
+      filled: !a.actions?.take,
+      testid: 'encuesta-close',
+      run: () => {
+        closeProblem.value = null
+        closing.value = true
+      },
+    })
+  // The bar's island calls; this one opens WhatsApp with the greeting written.
+  if (waHref.value)
+    out.push({
+      key: 'whatsapp',
+      label: __('Message on WhatsApp'),
+      icon: 'lucide-message-circle',
+      href: waHref.value,
+      external: true,
+    })
+  if (garantiaLink.value)
+    out.push({
+      key: 'garantia',
+      label: __('Open a warranty case'),
+      icon: 'lucide-shield',
+      run: () => router.push(garantiaLink.value),
+    })
+  // «¿Cómo te atendimos?»: the conversation it was about, back here after.
+  if (conversationLink.value)
+    out.push({
+      key: 'conversation',
+      label: __('Open the conversation'),
+      icon: 'lucide-message-square',
+      testid: 'encuesta-open-conversation',
+      run: () => router.push(conversationLink.value),
+    })
+  return out.sort((x, y) => Number(!!y.filled) - Number(!!x.filled))
+})
+
+const facts = computed(() => {
+  const a = answer.value || {}
+  return [
+    {
+      key: 'customer',
+      label: __('Customer', null, 'Encuestas'),
+      value: a.customer_name || '—',
+      icon: 'lucide-user',
+      to: customerLink.value,
+    },
+    {
+      key: 'phone',
+      label: __('Phone', null, 'Encuestas'),
+      value: a.phone || '—',
+      icon: 'lucide-phone',
+    },
+    a.kind === 'service'
+      ? {
+          key: 'conversation',
+          label: __('Conversation', null, 'Encuestas'),
+          value: a.conversation || '—',
+          icon: 'lucide-message-square',
+        }
+      : {
+          key: 'sale',
+          label: __('Sale', null, 'Encuestas'),
+          value: a.sale || '—',
+          icon: 'lucide-receipt',
+        },
+    {
+      key: 'answered',
+      label: __('Answered', null, 'Encuestas'),
+      value: when(a.creation, true),
+      icon: 'lucide-calendar',
+    },
+  ]
+})
+
+// ── the bolt: the hero's steps; «⋯» keeps print, share and the rest ──────
+const boltSteps = computed(() =>
+  nextSteps.value.map((step) =>
+    step.href
+      ? {
+          ...step,
+          run: () =>
+            step.external
+              ? window.open(step.href, '_blank', 'noopener')
+              : window.location.assign(step.href),
+        }
+      : step,
+  ),
+)
+const boltGroups = computed(() =>
+  recordActionsFor({ steps: boltSteps.value, tools: kit.tools.value }),
+)
+function onBolt({ key }) {
+  if (key.startsWith('paso:')) boltSteps.value[Number(key.slice(5))]?.run()
+  else kit.onTool(key)
+}
 
 function when(value, withTime = false) {
   if (!value) return ''
@@ -487,6 +660,10 @@ async function close() {
   }
 }
 
+function onBack(event) {
+  event?.preventDefault?.()
+  goBack()
+}
 function goBack() {
   if (returnTo.value) return window.location.assign(returnTo.value)
   const list = typeof route.query.list === 'string' ? route.query.list : ''

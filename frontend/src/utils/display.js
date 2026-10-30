@@ -154,6 +154,8 @@ const KINDS = {
   'Journal Entry': 'Póliza',
   'Payment Request': 'Solicitud de pago',
   'Warranty Claim': 'Garantía',
+  'Expense Claim': 'Gasto',
+  'Quality Feedback': 'Respuesta de encuesta',
   'Repair Order': 'Reparación',
   Employee: 'Persona del equipo',
   'Leave Application': 'Vacaciones',

@@ -553,7 +553,7 @@ const routes = [
     name: 'Encuesta',
     component: () => import('@/pages/Encuesta.vue'),
     props: true,
-    meta: { app: 'encuestas', title: 'Encuestas', listParent: 'Encuestas' },
+    meta: { app: 'encuestas', title: 'Encuestas', ownPhoneHeader: true },
   },
   {
     path: '/equipo',
