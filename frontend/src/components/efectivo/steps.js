@@ -233,6 +233,9 @@ export function unpackBag(bag, safe) {
  */
 export function sendOffsite(bag, safe, people) {
   const destination = safe.offsite || 'el efectivo fuera de la tienda'
+  const toDestination = safe.offsite
+    ? `a ${safe.offsite}`
+    : 'al efectivo fuera de la tienda'
   const unverified = !bag.verified_by
   return {
     sheet: 'paso',
@@ -240,7 +243,7 @@ export function sendOffsite(bag, safe, people) {
       title: `Sacar ${bag.seal} de la tienda`,
       amount: bag.amount,
       currency: safe.currency,
-      custody: `Sale completa de la caja fuerte a ${destination}. Deja de estar a cargo de la tienda.`,
+      custody: `Sale completa de la caja fuerte ${toDestination}. Deja de estar a cargo de la tienda.`,
       message: unverified
         ? `Nadie la ha verificado: sale solo con el conteo de ${who(bag.prepared_by, people)} y sigue marcada sin verificar.`
         : `La verificó ${who(bag.verified_by, people)}.`,

@@ -82,6 +82,16 @@ describe('a whole bag leaves the store', () => {
     expect(step.props.guard).toBe('Configura una cuenta de efectivo externa.')
     expect(step.props.message).toBe('La verificó Jenni.')
   })
+
+  it('with no ledger named it still reads as Spanish', () => {
+    const step = steps.sendOffsite(bag, { ...safe, offsite: null }, people)
+    expect(step.props.custody).toContain(
+      'caja fuerte al efectivo fuera de la tienda.',
+    )
+    expect(step.props.fields[1].label).toContain(
+      'ya salió hacia el efectivo fuera de la tienda.',
+    )
+  })
 })
 
 describe('money into the safe', () => {

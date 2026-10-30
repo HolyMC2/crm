@@ -131,7 +131,11 @@
                     }}</span
                   >
                   <StatusChip
-                    v-if="c.lifecycle !== 'Ready'"
+                    v-if="
+                      c.lifecycle !== 'Ready' &&
+                      lifecycle(c.lifecycle).label !==
+                        cajaLine(c, formatDateTime)
+                    "
                     :label="lifecycle(c.lifecycle).label"
                     :tone="lifecycle(c.lifecycle).tone"
                   />

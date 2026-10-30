@@ -172,14 +172,14 @@
             <li
               v-for="safe in visibleSafes"
               :key="safe.safe"
-              class="flex items-center gap-3 rounded-7 border border-outline-gray-1 px-4 py-3"
+              class="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-7 border border-outline-gray-1 px-4 py-3"
               :data-safe="safe.safe"
             >
               <span
                 class="lucide-vault size-6 flex-none text-ink-gray-6"
                 aria-hidden="true"
               />
-              <div class="min-w-0 flex-1">
+              <div class="min-w-24 flex-1">
                 <p class="truncate text-base font-medium text-ink-gray-9">
                   {{ safe.title }}
                 </p>
@@ -194,7 +194,7 @@
               >
               <div
                 v-if="safe.can.count_safe || safe.can.fund"
-                class="flex flex-none rounded-full bg-surface-gray-1 p-0.5"
+                class="ml-auto flex flex-none rounded-full bg-surface-gray-1 p-0.5"
               >
                 <button
                   v-if="safe.can.fund"
