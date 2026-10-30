@@ -2,8 +2,10 @@
   <!-- The context chip and the ✦ are the one bold element (ASSISTANT.md).
        Fixed above the conversation: the sheet's #header, the dock's top. -->
   <div>
+    <!-- Below 400 px the context chip takes its own row under the island:
+         five icons leave it no room on a 305 px phone. -->
     <div
-      class="flex min-h-14 items-center gap-2"
+      class="flex min-h-14 flex-wrap items-center gap-x-2"
       :class="docked ? 'pl-4 pr-1' : ''"
     >
       <span
@@ -28,7 +30,7 @@
       </button>
       <div
         v-else-if="chipTitle"
-        class="flex min-h-11 min-w-0 items-center gap-1 rounded-full bg-[var(--brand-soft)] pl-3 pr-1 text-sm text-ink-gray-9"
+        class="flex min-h-11 min-w-0 items-center gap-1 rounded-full bg-[var(--brand-soft)] pl-3 pr-1 text-sm text-ink-gray-9 max-[399px]:order-[99] max-[399px]:mb-2"
         data-testid="assistant-context"
       >
         <span class="min-w-0 truncate">{{
@@ -47,6 +49,11 @@
       <span v-else class="min-w-0 truncate font-semibold">{{
         __('Ask Muelle')
       }}</span>
+      <span
+        v-if="sessions.view === 'chat' && chipTitle"
+        class="hidden h-0 basis-full max-[399px]:order-[98] max-[399px]:block"
+        aria-hidden="true"
+      />
       <div class="ml-auto flex flex-none items-center">
         <button
           v-if="agenda.available"
