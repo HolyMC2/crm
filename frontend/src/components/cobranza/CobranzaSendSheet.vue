@@ -4,13 +4,15 @@
     :model-value="modelValue"
     kind="send"
     size="xl"
-    :title="__('Send reminder by WhatsApp')"
+    :title="title || __('Send reminder by WhatsApp')"
     @update:model-value="$emit('update:modelValue', $event)"
   >
     <template #default>
       <div class="space-y-4 text-base">
         <p class="text-sm text-ink-gray-6">
-          {{ __('Reminder {0} for {1}', [name, customerName || '']) }}
+          {{
+            subtitle || __('Reminder {0} for {1}', [name, customerName || ''])
+          }}
         </p>
         <div v-if="loading && !context" role="status" class="text-sm">
           {{ __('Preparing the preview…') }}
@@ -94,9 +96,13 @@
           >
             <p class="mb-1 text-ink-gray-6">
               {{
-                __(
-                  'Approved template (the customer has not written in 24 hours)',
-                )
+                context.first_contact
+                  ? __(
+                      'First message to this customer: it goes as the approved template and starts the conversation',
+                    )
+                  : __(
+                      'Approved template (the customer has not written in 24 hours)',
+                    )
               }}
             </p>
             <p class="whitespace-pre-line">{{ context.template.text }}</p>
@@ -253,6 +259,9 @@ const props = defineProps({
   doctype: { type: String, default: 'Dunning' },
   name: { type: String, default: '' },
   customerName: { type: String, default: '' },
+  // Another document's sheet (a record's WhatsApp icon) names itself; empty: a reminder.
+  title: { type: String, default: '' },
+  subtitle: { type: String, default: '' },
   // Offer «I sent it» for a reminder the worker sends from their own phone.
   manualDone: { type: Boolean, default: false },
   confirming: { type: Boolean, default: false },

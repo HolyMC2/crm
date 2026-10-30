@@ -15491,6 +15491,10 @@ msgid "Approved template (the customer has not written in 24 hours)"
 msgstr "Plantilla aprobada (el cliente no ha escrito en 24 horas)"
 
 #: frontend/src/components/cobranza/CobranzaSendSheet.vue
+msgid "First message to this customer: it goes as the approved template and starts the conversation"
+msgstr "Primer mensaje a este cliente: sale como plantilla aprobada y abre la conversación"
+
+#: frontend/src/components/cobranza/CobranzaSendSheet.vue
 msgid "Customer mobile"
 msgstr "Celular del cliente"
 

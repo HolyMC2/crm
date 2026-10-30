@@ -82,6 +82,9 @@ export const PRINT = Object.freeze({
   // The CFDI one prints only a «no timbrado» notice until the invoice is stamped.
   'Sales Invoice': {
     only: ['Sales Invoice Standard', 'Factura CFDI 4.0'],
+    // doco-mirror has no «Sales Invoice Standard» (2026-10-30): without a stand-in only
+    // the CFDI layout was left, which an unstamped invoice prints as «no timbrado».
+    standIn: { 'Sales Invoice Standard': 'Standard' },
     labels: {
       'Factura CFDI 4.0': 'Factura (CFDI 4.0)',
       'Sales Invoice Standard': 'Factura',

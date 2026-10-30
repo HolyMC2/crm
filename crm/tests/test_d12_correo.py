@@ -106,6 +106,37 @@ class TestCorreoPuro(TestCase):
 		html = correo.html_de_texto("Hola <Ana>,\n\nTe mando\nla factura")
 		self.assertEqual(html, "<p>Hola &lt;Ana&gt;,</p><p>Te mando<br>la factura</p>")
 
+	def test_an_unstamped_invoice_is_never_mailed_with_a_cfdi_layout(self):
+		from types import SimpleNamespace
+		from unittest.mock import patch
+
+		formats = [
+			{"name": "Factura CFDI 4.0", "default": True},
+			{"name": "Ticket CFDI 4.0 (térmico)", "default": False},
+			{"name": "Standard", "default": False},
+		]
+
+		def invoice(uuid):
+			meta = SimpleNamespace(has_field=lambda field: field == "mx_uuid")
+			return SimpleNamespace(meta=meta, get=lambda field: uuid if field == "mx_uuid" else None)
+
+		with (
+			patch.object(frappe, "has_permission", return_value=True),
+			patch.object(
+				correo.documentos, "print_formats", side_effect=lambda dt: [dict(f) for f in formats]
+			),
+			patch.object(
+				frappe, "get_all", return_value=["Factura CFDI 4.0", "Ticket CFDI 4.0 (térmico)"]
+			) as fiscal,
+		):
+			unstamped = correo._formatos("Sales Invoice", invoice(None))
+			stamped = correo._formatos("Sales Invoice", invoice("6F1C2A3B-0000-4000-8000-000000000001"))
+			bare = correo._formatos("Sales Invoice")
+		self.assertEqual([f["name"] for f in unstamped], ["Standard"])
+		self.assertEqual(fiscal.call_args.kwargs["filters"]["module"], correo.FISCAL_MODULE)
+		self.assertEqual(len(stamped), 3)
+		self.assertEqual(len(bare), 3)
+
 	def test_template_fit_reads_the_fields_it_needs(self):
 		self.assertEqual(
 			correo.variables(

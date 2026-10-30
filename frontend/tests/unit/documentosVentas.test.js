@@ -302,6 +302,23 @@ describe('print formats a customer can get', () => {
       false,
     )
   })
+
+  it('a site without «Sales Invoice Standard» offers «Standard» as the Factura, not only the CFDI', () => {
+    const mirror = server.filter((f) => f.name !== 'Sales Invoice Standard')
+    const out = curateFormats(mirror, PRINT['Sales Invoice'])
+    expect(out.map((f) => [f.name, f.label])).toEqual([
+      ['Standard', 'Factura'],
+      ['Factura CFDI 4.0', 'Factura (CFDI 4.0)'],
+    ])
+    expect(out.filter((f) => f.default).map((f) => f.name)).toEqual([
+      'Standard',
+    ])
+    // an unstamped invoice: the server already left the CFDI layouts out
+    const unstamped = mirror.filter((f) => f.name !== 'Factura CFDI 4.0')
+    expect(
+      curateFormats(unstamped, PRINT['Sales Invoice']).map((f) => f.label),
+    ).toEqual(['Factura'])
+  })
 })
 
 describe('«Creado desde» and «¿De dónde vino?»', () => {

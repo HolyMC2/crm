@@ -230,3 +230,77 @@ class TestRealChannelDigits(unittest.TestCase):
 		self.assertEqual(wa_digits("+52 1 55 1234 5678", "MX"), "525512345678")
 		self.assertEqual(wa_digits("5215512345678", "MX"), "525512345678")
 		self.assertIsNone(wa_digits("12345", "MX"))
+
+
+class TestRecordWhatsapp(unittest.TestCase):
+	"""What a record's WhatsApp icon opens, per mode; nothing is sent or opened here."""
+
+	def setUp(self):
+		self.doc = frappe._dict(doctype="Delivery Note", name="DN-FICT-1", customer="CUST-FICT")
+		self.readable = True
+		for p in (
+			patch.object(frappe.db, "exists", return_value=True),
+			patch.object(frappe, "get_doc", side_effect=lambda *a, **k: self.doc),
+			patch.object(frappe, "has_permission", side_effect=lambda *a, **k: self.readable),
+			patch.object(crm_channel, "channel", _fake_channel(mode="api")),
+			patch.object(crm_channel, "_document_send_type", side_effect=lambda dt: dt == "Sales Invoice"),
+			patch.object(crm_channel, "_customer_thread", return_value=None),
+			patch.object(crm_channel, "_customer_conversation", return_value=None),
+		):
+			self.enterContext(p)
+
+	def ask(self, phone="+52 669 123 4567"):
+		return crm_channel.record_whatsapp(self.doc.doctype, self.doc.name, phone)
+
+	def test_manual_mode_keeps_the_composer_and_off_gives_a_reason(self):
+		with patch.object(crm_channel, "channel", _fake_channel(mode="manual")):
+			self.assertEqual(self.ask(), {"action": "composer"})
+		with patch.object(crm_channel, "channel", _fake_channel(mode="off")):
+			self.assertEqual(self.ask()["action"], "none")
+
+	def test_an_official_account_sends_a_document_doco_handles(self):
+		self.doc = frappe._dict(self.doc, doctype="Sales Invoice", name="SINV-FICT-1")
+		self.assertEqual(self.ask(), {"action": "send"})
+
+	def test_other_records_open_the_customers_thread_then_conversation_then_a_reason(self):
+		with patch.object(crm_channel, "_customer_thread", return_value=("CRM Deal", "DEAL-FICT")) as thread:
+			self.assertEqual(self.ask(), {"action": "thread", "doctype": "CRM Deal", "name": "DEAL-FICT"})
+		thread.assert_called_once_with("CUST-FICT", "526691234567")
+		with patch.object(crm_channel, "_customer_conversation", return_value="conv-fict"):
+			self.assertEqual(self.ask(), {"action": "conversation", "name": "conv-fict"})
+		self.assertEqual(self.ask()["action"], "none")
+
+	def test_a_frappe_whatsapp_without_the_channel_module_follows_the_api_flag(self):
+		self.doc = frappe._dict(self.doc, doctype="Sales Invoice", name="SINV-FICT-1")
+		with (
+			patch.object(crm_channel, "channel", None),
+			patch("crm.api.whatsapp.is_whatsapp_enabled", return_value=True),
+		):
+			self.assertEqual(self.ask(), {"action": "send"})
+
+	def test_an_unreadable_record_is_refused(self):
+		self.readable = False
+		with self.assertRaises(frappe.PermissionError):
+			self.ask()
+
+	def test_the_customer_of_each_kind_of_record(self):
+		cases = (
+			(frappe._dict(doctype="Customer", name="CUST-A"), "CUST-A"),
+			(
+				frappe._dict(
+					doctype="Contact",
+					links=[
+						frappe._dict(link_doctype="Supplier", link_name="SUP-1"),
+						frappe._dict(link_doctype="Customer", link_name="CUST-E"),
+					],
+				),
+				"CUST-E",
+			),
+			(frappe._dict(doctype="Quotation", quotation_to="Customer", party_name="CUST-B"), "CUST-B"),
+			(frappe._dict(doctype="Quotation", quotation_to="Lead", party_name="LEAD-1"), None),
+			(frappe._dict(doctype="Payment Entry", party_type="Customer", party="CUST-C"), "CUST-C"),
+			(frappe._dict(doctype="Sales Order", customer="CUST-D"), "CUST-D"),
+		)
+		for doc, customer in cases:
+			with self.subTest(doc.doctype):
+				self.assertEqual(crm_channel._record_customer(doc), customer)

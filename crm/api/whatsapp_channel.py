@@ -11,6 +11,8 @@ answers for every app (WhatsApp Settings.channel_mode, Auto/Manual/Off).
 
 Without frappe_whatsapp's channel module the manual path is off and the
 existing API behaviour is untouched.
+
+``record_whatsapp`` decides what a record's WhatsApp icon opens in each mode.
 """
 
 import re
@@ -178,3 +180,118 @@ def log_manual_open(
 		content += "<blockquote>{}</blockquote>".format(escape_html(text).replace("\n", "<br>"))
 	comment = doc.add_comment("Comment", content)
 	return comment.name
+
+
+# --- the record's WhatsApp icon -------------------------------------------
+
+
+def _record_customer(doc):
+	"""The Customer a document is for (a Quotation names it in `party_name`, a payment in `party`)."""
+	if doc.doctype == "Customer":
+		return doc.name
+	if doc.doctype == "Contact":
+		return next(
+			(link.link_name for link in doc.get("links") or [] if link.link_doctype == "Customer"), None
+		)
+	if doc.get("quotation_to") == "Customer":
+		return doc.get("party_name")
+	if doc.get("party_type") == "Customer":
+		return doc.get("party")
+	return doc.get("customer")
+
+
+def _document_send_type(doctype):
+	"""Whether doco's «Enviar por WhatsApp» sends this document's PDF (its own gates decide the rest)."""
+	if "doco" not in frappe.get_installed_apps():
+		return False
+	try:
+		from doco.docoutils.document_send import registry
+	except ImportError:
+		return False
+	return doctype in registry.types() and registry.artifact_allowed(doctype, "receipt")
+
+
+def _customer_thread(customer, phone):
+	"""The Lead/Deal whose Bandeja thread holds this customer's WhatsApp, if the worker may read it."""
+	found = None
+	if customer and "doco_marketing" in frappe.get_installed_apps():
+		try:
+			from doco_marketing.services.registration import crm_record_for_customer
+		except ImportError:
+			crm_record_for_customer = None
+		if crm_record_for_customer:
+			found = crm_record_for_customer(customer)
+	if not found and phone:
+		from crm.api.whatsapp_routing import resolve_reference_for_number
+
+		name, doctype = resolve_reference_for_number(phone)
+		found = (doctype, name) if name else None
+	if found and frappe.has_permission(found[0], "read", found[1]):
+		return found
+	return None
+
+
+def _customer_conversation(phone):
+	"""The native conversation with this number on the outgoing account, else None."""
+	try:
+		from frappe_whatsapp.utils import outgoing_default
+
+		from crm.api.outbox_bridge import governing_peer
+	except ImportError:
+		return None
+	account = outgoing_default()
+	if not account or not phone:
+		return None
+	name, _peer = governing_peer(frappe.get_doc("WhatsApp Account", account), phone)
+	return name
+
+
+@frappe.whitelist()
+def record_whatsapp(doctype: str, name: str, phone: str = ""):
+	"""What a record's WhatsApp icon opens, decided here so every surface agrees.
+
+	- manual: the composer (wa.me with the shop's texts), as before;
+	- api: the document itself when doco sends its PDF (the shop's account, the approved
+	  template outside 24 h, a first message to a customer who never wrote); else the
+	  customer's Lead/Deal thread in the Bandeja, where approved templates go out; else
+	  their conversation; else a reason. Nothing here sends.
+	- off: a reason.
+	`phone` is the number the icon shows; it only finds a thread the worker may read.
+	"""
+	if not (
+		isinstance(doctype, str)
+		and frappe.db.exists("DocType", doctype)
+		and frappe.has_permission(doctype, "read")
+	):
+		frappe.throw(_("No tienes acceso a este documento."), frappe.PermissionError)
+	if not frappe.db.exists(doctype, name):
+		frappe.throw(_("Este documento no existe."), frappe.DoesNotExistError)
+	doc = frappe.get_doc(doctype, name)
+	if not frappe.has_permission(doctype, "read", doc=doc):
+		frappe.throw(_("No tienes acceso a este documento."), frappe.PermissionError)
+	mode = resolve_mode()
+	if not channel:
+		# A frappe_whatsapp without the channel module: the API-only behaviour.
+		from crm.api.whatsapp import is_whatsapp_enabled
+
+		mode = "api" if is_whatsapp_enabled() else "off"
+	if mode == "manual":
+		return {"action": "composer"}
+	if mode != "api":
+		return {"action": "none", "message": _("Este negocio tiene WhatsApp apagado.")}
+	if _document_send_type(doctype):
+		return {"action": "send"}
+	phone = re.sub(r"\D", "", phone or "")[:20]
+	thread = _customer_thread(_record_customer(doc), phone)
+	if thread:
+		return {"action": "thread", "doctype": thread[0], "name": thread[1]}
+	conversation = _customer_conversation(phone)
+	if conversation:
+		return {"action": "conversation", "name": conversation}
+	return {
+		"action": "none",
+		"message": _(
+			"Este cliente todavía no tiene un trato ni una conversación de WhatsApp. "
+			"Envíale un documento suyo (factura, cotización o pedido) para empezarla."
+		),
+	}

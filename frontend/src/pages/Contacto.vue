@@ -915,6 +915,7 @@
 import { computed, defineAsyncComponent, ref, watch } from 'vue'
 import { loadTimeline } from '@/components/documentos/timeline'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { call, toast } from 'frappe-ui'
 import {
   AppBar,
   BottomSheet,
@@ -1240,8 +1241,41 @@ const messageHint = computed(() =>
     ? 'Los mensajes se envían desde la ficha de la persona'
     : 'Sin teléfono registrado',
 )
-function openComposer() {
-  if (canMessage.value) composerOpen.value = true
+// The server's record_whatsapp decides: manual mode keeps the composer; with the
+// official account the person's thread in the Bandeja (approved templates go out there).
+let messageAsking = false
+async function openComposer() {
+  if (!canMessage.value || messageAsking) return
+  messageAsking = true
+  try {
+    const next = await call('crm.api.whatsapp_channel.record_whatsapp', {
+      doctype: 'Contact',
+      name: contactName.value,
+      phone: phone.value,
+    })
+    if (next?.action === 'thread')
+      router.push({
+        name: 'Inbox',
+        query: {
+          deal: next.name,
+          doctype: next.doctype,
+          return_to: route.fullPath,
+          return_label: record.value?.title || undefined,
+        },
+      })
+    else if (next?.action === 'conversation')
+      router.push({
+        name: 'Inbox',
+        query: { workspace: 'conversations', conversation: next.name },
+      })
+    else if (next?.action === 'none')
+      toast.error(next.message || 'No se puede abrir WhatsApp aquí.')
+    else composerOpen.value = true
+  } catch {
+    composerOpen.value = true
+  } finally {
+    messageAsking = false
+  }
 }
 // «Agendar»: one action; a sheet offers the appointment or the calendar event.
 const scheduleOptions = computed(() =>

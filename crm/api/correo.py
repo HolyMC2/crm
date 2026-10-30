@@ -658,13 +658,31 @@ def _plantillas(doc):
 	return out, fallidas
 
 
-def _formatos(doctype):
+# The compliance app's CFDI layouts (Factura CFDI 4.0, the CFDI tickets) print only a «no
+# timbrado» notice on an invoice that has no CFDI yet, so it is never mailed that way.
+FISCAL_MODULE = "ERPNext Mexico Compliance"
+
+
+def _sin_timbrar(doc):
+	"""A document that can carry a CFDI and has none yet (no `mx_uuid`)."""
+	return doc is not None and doc.meta.has_field("mx_uuid") and not doc.get("mx_uuid")
+
+
+def _formatos(doctype, doc=None):
 	if not frappe.has_permission(doctype, "print"):
 		return []
 	try:
-		return documentos.print_formats(doctype)
+		formats = documentos.print_formats(doctype)
 	except frappe.PermissionError:
 		return []
+	if _sin_timbrar(doc):
+		fiscal = set(
+			frappe.get_all(
+				"Print Format", filters={"doc_type": doctype, "module": FISCAL_MODULE}, pluck="name"
+			)
+		)
+		formats = [f for f in formats if f["name"] not in fiscal]
+	return formats
 
 
 @frappe.whitelist()
@@ -718,7 +736,7 @@ def borrador(doctype: str, name: str, plantilla: str | None = None):
 			if fallidas
 			else None
 		),
-		"formatos": _formatos(doctype),
+		"formatos": _formatos(doctype, doc),
 		"remitente": (
 			{"nombre": cstr(cuenta.get("email_account_name") or cuenta.name), "correo": cstr(cuenta.email_id)}
 			if cuenta
@@ -802,8 +820,9 @@ def enviar(
 			frappe.throw(
 				_("Your user cannot print this document, so the PDF cannot go."), frappe.PermissionError
 			)
-		valid = {f["name"] for f in _formatos(doctype)}
-		print_format = formato or frappe.get_meta(doctype).default_print_format or "Standard"
+		formatos = _formatos(doctype, doc)
+		valid = {f["name"] for f in formatos}
+		print_format = formato or next((f["name"] for f in formatos if f.get("default")), "Standard")
 		if print_format not in valid:
 			frappe.throw(_("That PDF format is not available for this document."), frappe.ValidationError)
 	if plantilla and not frappe.db.exists("Email Template", plantilla):

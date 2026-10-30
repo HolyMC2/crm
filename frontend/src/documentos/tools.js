@@ -92,12 +92,23 @@ export function deskUrl(doctype, name) {
  * A profile's say on the print-format picker (Shell D2): `only` keeps just those
  * formats (when at least one of them exists), `hide` drops internal ones, `labels`
  * and `hints` give Spanish names and a line, `first` is the default and goes on top.
- * Without a curation the server's list passes through.
+ * `standIn` names a format that takes the place of one this site lacks («Standard»
+ * for a missing «Sales Invoice Standard»): its spot in `only` and `first`, its label
+ * and hint. Without a curation the server's list passes through.
  */
 export function curateFormats(formats, curate) {
   const list = Array.isArray(formats) ? formats : []
   if (!curate) return list
-  const { only, hide = [], labels = {}, hints = {}, first } = curate
+  const { hide = [], labels = {}, hints = {}, standIn = {} } = curate
+  const present = new Set(list.map((f) => f.name))
+  const replaced = {}
+  for (const [missing, standing] of Object.entries(standIn))
+    if (!present.has(missing) && present.has(standing))
+      replaced[standing] = missing
+  const swap = (name) =>
+    Object.keys(replaced).find((s) => replaced[s] === name) || name
+  const only = curate.only?.map(swap)
+  const first = curate.first && swap(curate.first)
   // The owner's default (Desk or «Formatos de impresión»: the Property Setter
   // `default_print_format`, `owner_default` from the server) wins over the
   // profile's `first` while `only`/`hide` keep it; else `first` (Shell D12).
@@ -109,8 +120,8 @@ export function curateFormats(formats, curate) {
   }
   out = out.map((f) => ({
     ...f,
-    label: labels[f.name] || f.label,
-    hint: hints[f.name] || f.hint || '',
+    label: labels[f.name] || labels[replaced[f.name]] || f.label,
+    hint: hints[f.name] || hints[replaced[f.name]] || f.hint || '',
   }))
   const top =
     (owner && out.find((f) => f.name === owner)) ||

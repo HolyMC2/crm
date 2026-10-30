@@ -165,6 +165,30 @@ def governing_peer(account, number):
 	return found[0] if found else (None, None)
 
 
+def open_first_contact(account, peer, actor, send_key):
+	"""The conversation for a person's first document to a customer who never wrote.
+
+	doco's document-send worker calls it as the sender, inside the transaction that
+	inserts the template message, so a refused send leaves no conversation behind.
+	A new conversation starts owned by `actor` (recorded as a `take`), which is what
+	`queue_transcript` would do for a reply to an unowned one; an existing one is
+	returned unchanged and its ownership rules apply. None when this account cannot
+	have a native conversation (demo transport, no outbox): the caller refuses.
+	"""
+	if not isinstance(peer, str) or not account or (account.get("mode") or "Live") != "Live":
+		return None
+	if not all(frappe.db.exists("DocType", d) for d in (control.DOCTYPE, outbox.DOCTYPE)):
+		return None
+	if not frappe.db.has_column(outbox.DOCTYPE, "transcript_message"):
+		return None
+	existing = governing_conversation(account, peer)
+	if existing:
+		return existing
+	doc = control.get_or_create("WhatsApp", account.phone_id, peer)
+	control.internal_take_for_reply(doc.name, actor, send_key)
+	return doc.name
+
+
 def control_preview(name, actor):
 	"""What a person's send into this conversation would meet, without changing it.
 

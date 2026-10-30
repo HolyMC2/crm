@@ -407,3 +407,31 @@ class TestOutboxBridge(test_outbox.TestOutbox):
 		self.assertEqual(
 			bridge.governing_peers(account, other), [(second.name, other), (self.doc.name, self.peer)]
 		)
+
+	def test_outbox_bridge_first_contact_opens_a_conversation_owned_by_the_sender(self):
+		account = frappe.get_doc("WhatsApp Account", self.account.name)
+		self.assertEqual(
+			bridge.open_first_contact(account, self.peer, self.users["one"], "S-0"), self.doc.name
+		)
+		stranger = "5215550100123"
+		self.assertIsNone(bridge.governing_conversation(account, stranger))
+		frappe.set_user(self.users["one"])
+		name = bridge.open_first_contact(account, stranger, self.users["one"], "DS-first-1")
+		frappe.set_user("Administrator")
+		self.assertEqual(bridge.governing_conversation(account, stranger), name)
+		row = frappe.db.get_value(
+			"CRM Conversation", name, ["human_owner", "control_state", "peer_id"], as_dict=True
+		)
+		self.assertEqual(
+			(row.human_owner, row.control_state, row.peer_id), (self.users["one"], "Human", stranger)
+		)
+		self.assertTrue(
+			frappe.db.exists(
+				"CRM Conversation Control Event",
+				{"conversation": name, "action": "take", "reason": "first_reply"},
+			)
+		)
+		self.assertIsNone(bridge.control_preview(name, self.users["one"])["action"])
+		account.mode = "Demo"
+		self.assertIsNone(bridge.open_first_contact(account, "5215550100124", self.users["one"], "DS-2"))
+		self.assertIsNone(bridge.open_first_contact(account, None, self.users["one"], "DS-3"))
