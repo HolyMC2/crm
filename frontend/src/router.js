@@ -240,7 +240,7 @@ const routes = [
     path: '/compras/surtido',
     name: 'CompraSurtido',
     component: () => import('@/pages/CompraSurtido.vue'),
-    meta: { app: 'compras', title: 'Compras', listParent: 'Compras' },
+    meta: { app: 'compras', title: 'Compras', ownPhoneHeader: true },
   },
   {
     path: '/compras/orden/:name',

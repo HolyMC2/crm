@@ -1,72 +1,77 @@
 <template>
-  <div class="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
-    <div class="mx-auto w-full max-w-5xl px-4 pb-12 pt-4 sm:px-6">
-      <nav class="mb-3 flex items-center justify-between gap-2">
+  <!-- Surtido: a supplier list → a buy plan within budget → the supplier's
+       reply. The page owns its bar (the way back to Compras, «Pregúntale a
+       Muelle» beside the title); the three steps sit under it as chips. -->
+  <div class="relative flex h-full min-w-0 flex-1 flex-col overflow-hidden">
+    <AppBar
+      :back="true"
+      :back-label="__('Compras', null, 'Compras')"
+      :title="__('Restock from a supplier list', null, 'Surtido')"
+      :bell="phone"
+      @back="onBack"
+    >
+      <template #actions>
         <button
-          class="flex min-h-11 items-center gap-1 text-sm text-ink-gray-7 hover:text-ink-gray-9"
-          @click="goBack()"
-        >
-          <LucideArrowLeft class="h-4 w-4" />
-          {{ __('Compras', null, 'Compras') }}
-        </button>
-        <Button
           v-if="ready && assistantOn"
-          :icon-left="LucideMessageCircle"
-          class="min-h-11 sm:min-h-8"
-          :label="__('Ask Muelle', null, 'Surtido')"
+          type="button"
+          class="press flex size-12 flex-none items-center justify-center rounded-full text-ink-gray-7 active:bg-surface-gray-2 [@media(hover:hover)]:hover:bg-surface-gray-2"
+          :aria-label="__('Ask Muelle', null, 'Surtido')"
+          :title="__('Ask Muelle', null, 'Surtido')"
+          data-testid="surtido-ask"
           @click="askMuelle"
-        />
-      </nav>
+        >
+          <span class="lucide-sparkles size-6" aria-hidden="true" />
+        </button>
+      </template>
+    </AppBar>
 
-      <section v-if="guard" role="alert" class="max-w-xl space-y-4 py-6">
-        <h1 class="text-xl font-semibold">{{ guard.title }}</h1>
-        <p class="text-base text-ink-gray-7">{{ guard.detail }}</p>
-        <Button :label="__('Retry', null, 'Compras')" @click="start" />
-      </section>
-      <div v-else-if="!ready" role="status" class="py-10 text-sm">
-        {{ __('Loading supplier lists…', null, 'Surtido') }}
-      </div>
+    <div class="min-h-0 flex-1 overflow-y-auto pb-28 sm:pb-12">
+      <EmptyState
+        v-if="guard"
+        role="alert"
+        state="error"
+        :title="guard.title"
+        :message="guard.detail"
+        :action="__('Retry', null, 'Compras')"
+        @action="start"
+      />
+      <EmptyState
+        v-else-if="!ready"
+        role="status"
+        state="loading"
+        :title="__('Loading supplier lists…', null, 'Surtido')"
+      />
 
-      <template v-else>
-        <header class="mb-4">
-          <h1 class="text-2xl font-semibold text-ink-gray-9">
-            {{ __('Restock from a supplier list', null, 'Surtido') }}
-          </h1>
-          <p class="mt-1 text-sm text-ink-gray-6">
-            {{
-              __(
-                'The supplier list, a buy plan from your sales and stock that never passes the budget, then the supplier reply.',
-                null,
-                'Surtido',
-              )
-            }}
-          </p>
-        </header>
+      <div v-else class="mx-auto w-full max-w-5xl px-4 pt-4 sm:px-6">
+        <p class="mb-3 text-base text-ink-gray-7">
+          {{
+            __(
+              'The supplier list, a buy plan from your sales and stock that never passes the budget, then the supplier reply.',
+              null,
+              'Surtido',
+            )
+          }}
+        </p>
 
         <ol
-          class="mb-5 grid grid-cols-3 gap-2"
+          class="mb-5 flex gap-2 overflow-x-auto pb-1"
           :aria-label="__('Steps', null, 'Surtido')"
         >
-          <li v-for="(s, i) in steps" :key="s.key">
+          <li v-for="(s, i) in steps" :key="s.key" class="flex-none">
             <button
               type="button"
-              class="flex min-h-11 w-full items-center gap-2 rounded-6 border px-3 py-2 text-left text-sm"
+              class="press flex min-h-11 items-center gap-2 rounded-full px-4 text-base disabled:opacity-50"
               :class="
                 step === s.key
-                  ? 'border-outline-gray-4 bg-surface-gray-2 font-semibold text-ink-gray-9'
-                  : 'border-outline-gray-2 text-ink-gray-6 hover:bg-surface-gray-1'
+                  ? 'bg-surface-gray-10 font-medium text-ink-base'
+                  : 'bg-surface-gray-2 text-ink-gray-8 [@media(hover:hover)]:hover:bg-surface-gray-3'
               "
               :aria-current="step === s.key ? 'step' : undefined"
               :disabled="s.disabled"
               @click="go(s.key)"
             >
-              <span
-                class="hidden h-6 w-6 shrink-0 items-center sm:flex justify-center rounded-full bg-surface-gray-3 text-xs tabular-nums"
-                >{{ i + 1 }}</span
-              >
-              <span class="min-w-0 leading-tight sm:truncate">{{
-                s.label
-              }}</span>
+              <span class="num tabular-nums">{{ i + 1 }}</span>
+              <span class="whitespace-nowrap">{{ s.label }}</span>
             </button>
           </li>
         </ol>
@@ -198,14 +203,23 @@
                   :placeholder="__('October cases', null, 'Surtido')"
                 />
               </div>
-              <Button
-                variant="solid"
-                class="min-h-11 sm:min-h-8"
-                :label="__('Create and get the upload link', null, 'Surtido')"
-                :loading="busy === 'catalog'"
-                :disabled="!newSupplier"
+              <button
+                type="button"
+                :class="['press', BTN.filled]"
+                :disabled="!newSupplier || busy === 'catalog'"
                 @click="createCatalog"
-              />
+              >
+                <span
+                  :class="[
+                    busy === 'catalog'
+                      ? 'lucide-loader-circle animate-spin'
+                      : 'lucide-upload',
+                    'size-5',
+                  ]"
+                  aria-hidden="true"
+                />
+                {{ __('Create and get the upload link', null, 'Surtido') }}
+              </button>
             </div>
           </details>
 
@@ -247,13 +261,18 @@
           </div>
 
           <div class="mt-5 flex justify-end">
-            <Button
-              variant="solid"
-              class="min-h-11"
-              :label="__('Next: buy plan', null, 'Surtido')"
+            <button
+              type="button"
+              :class="['press', BTN.filled]"
               :disabled="!catalog"
               @click="go('plan')"
-            />
+            >
+              <span
+                :class="['lucide-chevron-right', 'size-5']"
+                aria-hidden="true"
+              />
+              {{ __('Next: buy plan', null, 'Surtido') }}
+            </button>
           </div>
         </section>
 
@@ -305,18 +324,26 @@
               {{ __('Include new models', null, 'Surtido') }}
             </label>
             <div class="col-span-2 flex justify-end sm:col-span-4">
-              <Button
+              <button
                 type="submit"
-                variant="solid"
-                class="min-h-11 sm:min-h-8"
-                :label="
+                :class="['press', BTN.filled]"
+                :disabled="!form.budget || !catalog || busy === 'plan'"
+              >
+                <span
+                  :class="[
+                    busy === 'plan'
+                      ? 'lucide-loader-circle animate-spin'
+                      : 'lucide-list-checks',
+                    'size-5',
+                  ]"
+                  aria-hidden="true"
+                />
+                {{
                   plan
                     ? __('Make a new plan', null, 'Surtido')
                     : __('Make the plan', null, 'Surtido')
-                "
-                :loading="busy === 'plan'"
-                :disabled="!form.budget || !catalog"
-              />
+                }}
+              </button>
             </div>
           </form>
 
@@ -529,17 +556,30 @@
                 :disabled="!pendingChanges.length"
                 @click="applyChanges"
               />
-              <Button
+              <button
                 v-if="boot.owner"
-                variant="solid"
-                class="min-h-11 sm:min-h-8"
-                :label="
-                  __('Approve: draft order to the supplier', null, 'Surtido')
+                type="button"
+                :class="['press', BTN.filled]"
+                :disabled="
+                  !plan.lines.length ||
+                  pendingChanges.length > 0 ||
+                  busy === 'approve'
                 "
-                :loading="busy === 'approve'"
-                :disabled="!plan.lines.length || pendingChanges.length > 0"
                 @click="approve"
-              />
+              >
+                <span
+                  :class="[
+                    busy === 'approve'
+                      ? 'lucide-loader-circle animate-spin'
+                      : 'lucide-check',
+                    'size-5',
+                  ]"
+                  aria-hidden="true"
+                />
+                {{
+                  __('Approve: draft order to the supplier', null, 'Surtido')
+                }}
+              </button>
             </div>
             <p
               v-if="!boot.owner"
@@ -810,13 +850,23 @@
                   :loading="busy === 'omit'"
                   @click="omit"
                 />
-                <Button
-                  variant="solid"
-                  :label="__('Create chosen items', null, 'Surtido')"
-                  :disabled="!picked.length || !pickedReady"
-                  :loading="busy === 'items'"
+                <button
+                  type="button"
+                  :class="['press', BTN.filled]"
+                  :disabled="!picked.length || !pickedReady || busy === 'items'"
                   @click="createItems"
-                />
+                >
+                  <span
+                    :class="[
+                      busy === 'items'
+                        ? 'lucide-loader-circle animate-spin'
+                        : 'lucide-package',
+                      'size-5',
+                    ]"
+                    aria-hidden="true"
+                  />
+                  {{ __('Create chosen items', null, 'Surtido') }}
+                </button>
               </div>
               <p
                 v-if="picked.length && !pickedReady"
@@ -968,17 +1018,27 @@
                   )
                 }}
               </p>
-              <Button
-                variant="solid"
-                class="min-h-11 sm:min-h-8"
-                :label="__('Close the order', null, 'Surtido')"
-                :loading="busy === 'close'"
+              <button
+                type="button"
+                :class="['press', BTN.filled]"
+                :disabled="busy === 'close'"
                 @click="closePedido"
-              />
+              >
+                <span
+                  :class="[
+                    busy === 'close'
+                      ? 'lucide-loader-circle animate-spin'
+                      : 'lucide-check',
+                    'size-5',
+                  ]"
+                  aria-hidden="true"
+                />
+                {{ __('Close the order', null, 'Surtido') }}
+              </button>
             </div>
           </template>
         </section>
-      </template>
+      </div>
     </div>
   </div>
 </template>
@@ -986,6 +1046,9 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Badge, Button, FormControl, toast } from 'frappe-ui'
+import { AppBar, EmptyState } from '@/components/ui'
+import { isMobile } from '@/composables/breakpoint'
+import { BTN } from '@/documentos/tools'
 import ComprasPicker from '@/components/compras/ComprasPicker.vue'
 import {
   assistantOn,
@@ -1000,8 +1063,6 @@ import {
   pedidoTone,
   readyRows,
 } from '@/utils/surtido'
-import LucideArrowLeft from '~icons/lucide/arrow-left'
-import LucideMessageCircle from '~icons/lucide/message-circle'
 import LucideRefreshCw from '~icons/lucide/refresh-cw'
 import LucideChevronRight from '~icons/lucide/chevron-right'
 import LucideRotateCcw from '~icons/lucide/rotate-ccw'
@@ -1013,6 +1074,7 @@ const call = (method, args = {}) => comprasApi(API + method, args)
 
 const route = useRoute()
 const router = useRouter()
+const phone = isMobile
 const ready = ref(false)
 const guard = ref(null)
 const problem = ref(null)
@@ -1439,6 +1501,10 @@ async function askMuelle() {
   m.openAssistant({ text })
 }
 
+function onBack(event) {
+  event?.preventDefault?.()
+  goBack()
+}
 function goBack() {
   router.push({ name: 'Compras' })
 }
