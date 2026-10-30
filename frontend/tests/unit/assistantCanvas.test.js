@@ -18,6 +18,7 @@ import {
 import {
   _resetAssistant,
   assistant,
+  onCanvasWritten,
   onMessage,
   retireConversation,
 } from '@/components/assistant/useAssistant'
@@ -48,6 +49,25 @@ describe('a chart the turn writes', () => {
     expect(assistant.messages[0].canvas).toEqual([
       { file: 'ventas.html', version: 2, kind: 'html' },
     ])
+    expect(canvas.pending).toEqual([])
+  })
+
+  it('arriving after the answer (it is published on commit) goes under that answer', () => {
+    onMessage({ chat_id: chat, mid: 'b1', text: 'Lista: quedó en tu Lienzo.' })
+    onCanvasWritten({ kind: 'html', file: 'grafica.html', version: 1 })
+    expect(assistant.messages[0].canvas).toEqual([
+      { file: 'grafica.html', version: 1, kind: 'html' },
+    ])
+    expect(canvas.pending).toEqual([])
+  })
+
+  it('while the turn still runs waits for its answer; on an empty log it only reaches the Lienzo', () => {
+    onMessage({ chat_id: chat, mid: 'b1', text: 'Armando la gráfica…' })
+    onCanvasWritten({ kind: 'html', file: 'grafica.html', version: 1 })
+    expect(assistant.messages[0].canvas).toBeUndefined()
+    expect(canvas.pending).toHaveLength(1)
+    retireConversation()
+    onCanvasWritten({ kind: 'png', file: 'foto.png', version: 1 })
     expect(canvas.pending).toEqual([])
   })
 

@@ -438,6 +438,31 @@ export function onMessage(payload) {
   armWatchdog()
 }
 
+/**
+ * canvas.py publishes once the turn commits, so the answer a file belongs to
+ * is usually on screen already and takes it now; while the turn still runs
+ * (the last line is the question or a progress line) it waits for the answer.
+ * On an empty log (a reset since) it only reaches the Lienzo.
+ */
+export function onCanvasWritten(payload) {
+  onCanvasEvent(payload)
+  if (!canvas.pending.length) return
+  const last = assistant.messages[assistant.messages.length - 1]
+  if (!last) {
+    takePendingCanvas()
+    return
+  }
+  if (last.role !== 'bot' || isProgress(last)) return
+  const files = takePendingCanvas()
+  const kept = (last.canvas || []).filter(
+    (f) => !files.some((n) => n.file === f.file),
+  )
+  assistant.messages = [
+    ...assistant.messages.slice(0, -1),
+    { ...last, canvas: [...kept, ...files] },
+  ]
+}
+
 export function onTyping(payload) {
   if (!ours(payload) || retired.busy) return
   assistant.thinking = true
@@ -463,7 +488,7 @@ export function bindSocket(socket) {
   socket.on('doco_assistant_message', onMessage)
   socket.on('doco_assistant_typing', onTyping)
   socket.on('doco_assistant_reset', onReset)
-  socket.on('doco_assistant_canvas', onCanvasEvent)
+  socket.on('doco_assistant_canvas', onCanvasWritten)
   window.addEventListener('socket:reconnected', onReconnected)
 }
 
