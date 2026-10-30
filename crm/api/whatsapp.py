@@ -1,4 +1,5 @@
 import json
+import re
 
 import frappe
 from frappe import _
@@ -66,6 +67,8 @@ def validate(doc, method):
 		# Catalog carts/orders bind only to their authenticated receipt's conversation.
 		if doc.get("content_type") == "order" or not doc.get("from"):
 			return
+		if _private_peer(doc.get("from")):
+			return
 		# Everything else auto-attaches to the customer's current work (product decision).
 		try:
 			name, doctype = resolve_inbound_reference(doc.get("from"))
@@ -75,13 +78,23 @@ def validate(doc, method):
 			frappe.log_error(frappe.get_traceback(), "CRM WhatsApp: failed to resolve contact from number")
 		return
 	phone_number = doc.get("to")
-	if phone_number:
+	if phone_number and not _private_peer(phone_number):
 		try:
 			name, doctype = resolve_reference_for_number(phone_number)
 			if doctype and name:
 				doc.reference_doctype, doc.reference_name = doctype, name
 		except Exception:
 			frappe.log_error(frappe.get_traceback(), "CRM WhatsApp: failed to resolve contact from number")
+
+
+def _private_peer(number) -> bool:
+	"""The owner's or a staff member's own number with the assistant: those chats are the
+	assistant's, so they never auto-attach to that person's deals (a deal's thread, clock
+	and «Por responder» must not move because the owner asked the bot for today's sales)."""
+	from crm.conversation_scope import private_whatsapp_suffixes
+
+	digits = re.sub(r"\D", "", str(number or ""))
+	return len(digits) >= 10 and digits[-10:] in private_whatsapp_suffixes()
 
 
 def on_update(doc, method):

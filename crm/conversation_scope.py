@@ -81,3 +81,34 @@ def customer_peer_condition(peer):
 				)
 			)
 	return Criterion.all(conditions)
+
+
+def private_whatsapp_suffixes():
+	"""Trailing ten digits of every private assistant WhatsApp identity (same evidence as
+	customer_peer_condition: registrations of any state, legacy chats, chat history).
+
+	For raw readers that group conversations by number (the inbox's «Sin asignar»): the
+	owner's and staff's chats with the assistant never surface as customer orphans. Ten
+	digits, not the exact peer, so the MX 52/521 variants of one number are both private.
+	"""
+	import re
+
+	ids = set()
+	if doctype_exists("Asistente Canal"):
+		for row in frappe.get_all(
+			"Asistente Canal", filters={"channel": "WhatsApp"}, fields=["external_id", "address"]
+		):
+			ids.update((row.external_id, row.address))
+	for doctype in ("Books Assistant Chat", "Books Chat Log"):
+		if doctype_exists(doctype):
+			ids.update(
+				frappe.get_all(
+					doctype, filters={"chat_id": ["like", "wa:%"]}, pluck="chat_id", distinct=True
+				)
+			)
+	out = set()
+	for value in ids:
+		digits = re.sub(r"\D", "", str(value or ""))
+		if len(digits) >= 10:
+			out.add(digits[-10:])
+	return out
