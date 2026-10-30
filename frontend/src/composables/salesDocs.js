@@ -71,3 +71,48 @@ export function acceptQuotation(deal, quotation) {
 export function sendQuotationWhatsapp(deal, quotation, to) {
   return _quoteCall('send_quotation_whatsapp', { deal, quotation, to })
 }
+
+// ── the quote as a page to sign (doco.docoutils.quote_firma) ────────────────
+// «Pedir firma»: the customer reviews, signs and accepts the quote from a link
+// (and pays it when «Cobro en línea» is on). Deal write is the gate.
+const QUOTE_FIRMA = 'doco.docoutils.quote_firma'
+export function getQuoteFirma(deal, quotation) {
+  return call(`${QUOTE_FIRMA}.deal_sheet`, { deal, quotation })
+}
+export function requestQuoteFirma(
+  deal,
+  quotation,
+  request_uuid,
+  expected_stamp,
+) {
+  return call(`${QUOTE_FIRMA}.deal_request`, {
+    deal,
+    quotation,
+    request_uuid,
+    expected_stamp,
+  })
+}
+export function cancelQuoteFirma(deal, quotation, request) {
+  return call(`${QUOTE_FIRMA}.deal_cancel`, { deal, quotation, request })
+}
+export function enableQuoteFirma(deal, quotation) {
+  return call(`${QUOTE_FIRMA}.deal_enable`, { deal, quotation })
+}
+// The link's message into the deal's WhatsApp conversation (the composer's own send,
+// with its window and sender gates).
+export function sendQuoteFirmaText(deal, content, to) {
+  return call('doco_marketing.api.inbox.send_message', {
+    reference_doctype: 'CRM Deal',
+    reference_name: deal,
+    channel: 'whatsapp',
+    content,
+    to: to || undefined,
+  })
+}
+export function newRequestKey() {
+  const c = globalThis.crypto
+  if (c?.randomUUID) return c.randomUUID().replace(/-/g, '')
+  return Array.from({ length: 32 }, () =>
+    Math.floor(Math.random() * 16).toString(16),
+  ).join('')
+}

@@ -2,7 +2,8 @@
   Cotización inline (ERP_INTEGRATION_SPEC P2.2/P2.3) — the minimal line editor
   for a deal quotation inside the 💰 Documentos panel. Deliberately small:
   qty + discount + remove on drafts; submit («Emitir»), «Cliente aceptó» → SO
-  draft, and «Enviar por WhatsApp» (PDF document into the conversation).
+  draft, «Enviar por WhatsApp» (PDF document into the conversation) and «Pedir
+  firma» (the quote as the customer's page to sign, accept and pay: QuoteFirmaPanel).
 -->
 <template>
   <div class="rounded-6 border border-outline-gray-2 bg-surface-gray-1 p-2">
@@ -130,6 +131,17 @@
           🤝 {{ __('Cliente aceptó') }}
         </button>
         <button
+          class="press rounded-6 border border-outline-gray-2 bg-surface-base px-2.5 py-1.5 text-[11.5px] font-semibold text-ink-gray-8 disabled:opacity-50"
+          :disabled="busy || !detail.lines.length"
+          :aria-expanded="firmaOpen ? 'true' : 'false'"
+          :title="
+            __('Mandar la cotización como página para que el cliente la firme')
+          "
+          @click="firmaOpen = !firmaOpen"
+        >
+          ✍️ {{ __('Pedir firma') }}
+        </button>
+        <button
           v-if="editable"
           class="rounded-6 border border-outline-gray-2 bg-surface-base px-2.5 py-1.5 text-[11.5px] text-ink-gray-7 disabled:opacity-50"
           :disabled="busy || !detail.lines.length"
@@ -139,12 +151,20 @@
           {{ __('Emitir') }}
         </button>
       </div>
+      <QuoteFirmaPanel
+        v-if="firmaOpen"
+        :deal="deal"
+        :quotation="quotation"
+        :to="to"
+        @close="firmaOpen = false"
+        @changed="onFirmaChanged"
+      />
     </template>
   </div>
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, ref, watch } from 'vue'
 import { toast } from 'frappe-ui'
 import { formatMoney } from '@/composables/crmFormat'
 import {
@@ -157,6 +177,10 @@ import {
   salesRollup,
 } from '@/composables/salesDocs'
 import { requestNextStep } from '@/composables/useNextStep'
+
+const QuoteFirmaPanel = defineAsyncComponent(
+  () => import('./QuoteFirmaPanel.vue'),
+)
 
 const props = defineProps({
   deal: { type: String, required: true },
@@ -171,6 +195,7 @@ const loading = ref(false)
 const busy = ref(false)
 const error = ref('')
 const editable = computed(() => detail.value?.docstatus === 0)
+const firmaOpen = ref(false)
 
 async function load() {
   loading.value = true
@@ -240,6 +265,10 @@ async function accept() {
     )
     load()
   }
+}
+function onFirmaChanged() {
+  emit('changed')
+  load()
 }
 async function sendWhatsapp() {
   const out = await run(
