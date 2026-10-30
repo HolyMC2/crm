@@ -71,9 +71,8 @@
           a tu contador una cuenta de efectivo, banco, préstamo o capital.
         </p>
         <p v-else class="text-xs text-ink-gray-6">
-          Efectivo del dueño o un retiro del banco salen de una cuenta de
-          efectivo o banco; un préstamo, de una de pasivo; una aportación, de
-          una de capital.
+          Elige la cuenta de donde sale: el banco del que lo retiraste, el
+          préstamo que lo trajo o lo que pone el dueño.
         </p>
       </div>
 
