@@ -1050,15 +1050,28 @@ export async function assignUnassigned(
   if (channel === 'messenger') params.psid = id
   else params.phone = id
   const res = await call('doco_marketing.api.inbox.assign_unassigned', params)
+  reloadUnassigned()
+  // «+ Cliente»: the person is now a Contact but has no Lead/Deal, so the chat
+  // stays open here (notes, follow-ups, replies) until someone archives it.
+  if (res?.kept_unassigned) {
+    unassignedThread.reload()
+    return res
+  }
   activeUnassigned.value = null
   activeUnassignedArchived.value = false
-  reloadUnassigned()
   reloadQueue()
   if (showArchived.value) reloadArchived() // converting an archived orphan drops it from Archivados
   if (res?.doctype === 'CRM Deal' || res?.doctype === 'CRM Lead')
     selectDeal(res.name, res.doctype)
   return res
 }
+
+// «+ Cliente»'s ERPNext choices (customer group, territory, SAT regime, CFDI use).
+export const captureOptions = createResource({
+  url: 'doco_marketing.api.inbox.get_capture_options',
+  cache: 'inbox-capture-options',
+  auto: false,
+})
 
 // Archive an orphan (no lead/deal worth opening): it leaves "Sin asignar" but the thread
 // stays reachable in Archivados + replyable, and a newer inbound auto-resurfaces it. Closes

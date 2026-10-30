@@ -102,9 +102,7 @@ def private_whatsapp_suffixes():
 	for doctype in ("Books Assistant Chat", "Books Chat Log"):
 		if doctype_exists(doctype):
 			ids.update(
-				frappe.get_all(
-					doctype, filters={"chat_id": ["like", "wa:%"]}, pluck="chat_id", distinct=True
-				)
+				frappe.get_all(doctype, filters={"chat_id": ["like", "wa:%"]}, pluck="chat_id", distinct=True)
 			)
 	out = set()
 	for value in ids:

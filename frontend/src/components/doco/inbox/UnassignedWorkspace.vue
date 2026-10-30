@@ -3,7 +3,8 @@
   conversation is selected. Read-only thread + a quick capture form that converts
   the number to a Lead, Deal, or Customer(+Contact). Fields map to real doctype
   fields server-side (assign_unassigned); a Deal/Lead then opens in the normal
-  workspace, a Customer files under its Contact.
+  workspace. A Customer keeps the chat here (no Lead/Deal yet) with the contact's
+  notes and follow-ups beside it, until someone archives it.
 -->
 <template>
   <div class="flex min-w-0 flex-1 flex-col">
@@ -269,6 +270,10 @@
           class="mx-auto mb-2 h-1 w-10 flex-none rounded-full bg-surface-gray-4"
           aria-hidden="true"
         />
+        <OrphanContactPanel
+          v-if="boundContact?.contact"
+          :contact="boundContact"
+        />
         <div class="mb-2 flex items-center justify-between">
           <div
             class="text-[11px] font-bold uppercase tracking-[.08em] text-ink-gray-4"
@@ -320,6 +325,33 @@
           >
           <input v-model="form.device" :class="inputCls"
         /></label>
+        <!-- ERPNext's own customer data: the group brings its price list (a
+             «Técnico» buys at technician prices), the territory is the branch town -->
+        <div
+          v-if="!isMessenger && (opts.customer_group || opts.territory)"
+          class="mt-2 grid grid-cols-2 gap-2"
+        >
+          <label v-if="opts.customer_group" class="block"
+            ><span class="text-[10px] font-medium text-ink-gray-5">{{
+              __('Grupo de cliente')
+            }}</span>
+            <select v-model="form.customer_group" :class="inputCls">
+              <option v-for="o in opts.customer_group" :key="o" :value="o">
+                {{ o }}
+              </option>
+            </select></label
+          >
+          <label v-if="opts.territory" class="block"
+            ><span class="text-[10px] font-medium text-ink-gray-5">{{
+              __('Zona')
+            }}</span>
+            <select v-model="form.territory" :class="inputCls">
+              <option v-for="o in opts.territory" :key="o" :value="o">
+                {{ o }}
+              </option>
+            </select></label
+          >
+        </div>
 
         <!-- Forecasting (only when CRM forecasting is on): a Deal then requires an
              expected value + closure date, else "Crear Trato" fails server-side. -->
@@ -354,10 +386,32 @@
           :aria-expanded="showFiscal"
           @click="showFiscal = !showFiscal"
         >
-          {{ showFiscal ? '▾' : '▸' }} {{ __('Datos fiscales') }}
+          {{ showFiscal ? '▾' : '▸' }} {{ __('Más datos del cliente') }}
           <span class="text-ink-gray-4">({{ __('opcional') }})</span>
         </button>
         <div v-if="showFiscal" class="mt-1.5 flex flex-col gap-2">
+          <div class="grid grid-cols-2 gap-2">
+            <label class="block"
+              ><span class="text-[10px] font-medium text-ink-gray-5">{{
+                __('Tipo')
+              }}</span>
+              <select v-model="form.customer_type" :class="inputCls">
+                <option value="Individual">{{ __('Persona') }}</option>
+                <option value="Company">{{ __('Empresa') }}</option>
+              </select></label
+            >
+            <label v-if="opts.gender" class="block"
+              ><span class="text-[10px] font-medium text-ink-gray-5">{{
+                __('Género')
+              }}</span>
+              <select v-model="form.gender" :class="inputCls">
+                <option value="" />
+                <option v-for="o in opts.gender" :key="o" :value="o">
+                  {{ __(o) }}
+                </option>
+              </select></label
+            >
+          </div>
           <label class="block"
             ><span class="text-[10px] font-medium text-ink-gray-5">{{
               __('RFC')
@@ -384,12 +438,63 @@
               <input v-model="form.city" :class="inputCls"
             /></label>
           </div>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="block"
+              ><span class="text-[10px] font-medium text-ink-gray-5">{{
+                __('Código postal')
+              }}</span>
+              <input
+                v-model="form.pincode"
+                inputmode="numeric"
+                maxlength="5"
+                :class="inputCls"
+            /></label>
+            <label class="block"
+              ><span class="text-[10px] font-medium text-ink-gray-5">{{
+                __('Estado')
+              }}</span>
+              <input v-model="form.state" :class="inputCls"
+            /></label>
+          </div>
+          <label v-if="opts.mx_tax_regime" class="block"
+            ><span class="text-[10px] font-medium text-ink-gray-5">{{
+              __('Régimen fiscal')
+            }}</span>
+            <select v-model="form.mx_tax_regime" :class="inputCls">
+              <option value="" />
+              <option v-for="o in opts.mx_tax_regime" :key="o" :value="o">
+                {{ o }}
+              </option>
+            </select></label
+          >
+          <label v-if="opts.mx_cfdi_use" class="block"
+            ><span class="text-[10px] font-medium text-ink-gray-5">{{
+              __('Uso de CFDI')
+            }}</span>
+            <select v-model="form.mx_cfdi_use" :class="inputCls">
+              <option value="" />
+              <option v-for="o in opts.mx_cfdi_use" :key="o" :value="o">
+                {{ o }}
+              </option>
+            </select></label
+          >
           <label class="block"
             ><span class="text-[10px] font-medium text-ink-gray-5">{{
               __('Cumpleaños')
             }}</span>
             <input v-model="form.birth_date" type="date" :class="inputCls"
           /></label>
+          <label class="block"
+            ><span class="text-[10px] font-medium text-ink-gray-5">{{
+              __('Notas del cliente')
+            }}</span>
+            <textarea
+              v-model="form.customer_details"
+              rows="2"
+              :placeholder="__('Ej. técnico de Rosario, compra pantallas')"
+              :class="inputCls"
+            />
+          </label>
         </div>
 
         <div class="mt-4 flex flex-col gap-2">
@@ -410,7 +515,7 @@
               + {{ __('Lead') }}
             </button>
             <button
-              v-if="!isMessenger"
+              v-if="!isMessenger && !boundContact"
               class="rounded-6 border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2 disabled:opacity-50"
               :disabled="busy"
               @click="convert('Customer')"
@@ -532,6 +637,7 @@ import SmileIcon from '@/components/Icons/SmileIcon.vue'
 import CannedReplyPicker from '@/components/doco/inbox/CannedReplyPicker.vue'
 import { isMobile } from '@/composables/breakpoint'
 import CatalogPicker from '@/components/doco/inbox/CatalogPicker.vue'
+import OrphanContactPanel from '@/components/doco/inbox/OrphanContactPanel.vue'
 import {
   activeUnassigned,
   activeUnassignedChannel,
@@ -539,6 +645,7 @@ import {
   unassignedThread,
   suggestions,
   assignUnassigned,
+  captureOptions,
   linkUnassignedToExisting,
   sendUnassignedMessenger,
   archiveOrphan,
@@ -756,19 +863,58 @@ watch(activeUnassigned, () => {
 })
 const showFiscal = ref(false)
 const messages = computed(() => unassignedThread.data?.messages || [])
-const form = reactive({
-  first_name: '',
-  last_name: '',
-  email: '',
-  device: '',
-  rfc: '',
-  legal_name: '',
-  address: '',
-  city: '',
-  birth_date: '',
-  expected_deal_value: '',
-  expected_closure_date: '',
-})
+// The ERPNext Customer/Contact/Address fields «+ Cliente» sends as `customer`
+// (doco_marketing orphans._customer_fields writes only the ones the site has).
+const CUSTOMER_KEYS = [
+  'customer_group',
+  'territory',
+  'customer_type',
+  'gender',
+  'mx_tax_regime',
+  'mx_cfdi_use',
+  'pincode',
+  'state',
+  'customer_details',
+]
+function emptyForm() {
+  const defaults = captureOptions.data?.defaults || {}
+  return {
+    first_name: '',
+    last_name: '',
+    email: '',
+    device: '',
+    rfc: '',
+    legal_name: '',
+    address: '',
+    city: '',
+    birth_date: '',
+    expected_deal_value: '',
+    expected_closure_date: '',
+    customer_group: defaults.customer_group || '',
+    territory: defaults.territory || '',
+    customer_type: 'Individual',
+    gender: '',
+    mx_tax_regime: '',
+    mx_cfdi_use: '',
+    pincode: '',
+    state: '',
+    customer_details: '',
+  }
+}
+const form = reactive(emptyForm())
+const opts = computed(() => captureOptions.data || {})
+if (!captureOptions.data && !captureOptions.loading) captureOptions.fetch()
+// The options arrive after the form exists: fill the site defaults once.
+watch(
+  () => captureOptions.data?.defaults,
+  (d) => {
+    if (!d) return
+    if (!form.customer_group && d.customer_group)
+      form.customer_group = d.customer_group
+    if (!form.territory && d.territory) form.territory = d.territory
+  },
+  { immediate: true },
+)
 
 // Contact bound to this orphan number (kept-unassigned link) — drives the header's
 // name/data + avatar. WhatsApp only; a Messenger orphan carries no phone-bound Contact.
@@ -803,19 +949,7 @@ const prefillName = computed(() => {
 
 // Reset the capture form + picker when switching orphans.
 watch(activeUnassigned, () => {
-  Object.assign(form, {
-    first_name: '',
-    last_name: '',
-    email: '',
-    device: '',
-    rfc: '',
-    legal_name: '',
-    address: '',
-    city: '',
-    birth_date: '',
-    expected_deal_value: '',
-    expected_closure_date: '',
-  })
+  Object.assign(form, emptyForm())
   linkQuery.value = ''
   linkResults.value = []
 })
@@ -857,8 +991,13 @@ async function convert(target) {
   busy.value = true
   try {
     const fields = {}
-    for (const [k, v] of Object.entries(form))
-      if (v && k !== 'device') fields[k] = v
+    const customer = {}
+    for (const [k, v] of Object.entries(form)) {
+      if (!v || k === 'device') continue
+      if (CUSTOMER_KEYS.includes(k)) customer[k] = v
+      else fields[k] = v
+    }
+    if (target === 'Customer') fields.customer = customer
     // one "Dispositivo / Empresa" input: the repair device on a Deal, the
     // organization on a Lead/Customer.
     if (form.device) {
@@ -877,7 +1016,14 @@ async function convert(target) {
         : target === 'Customer'
           ? __('Cliente')
           : __('Lead')
-    toast.success(`${label} ${__('creado')}: ${res.name}`)
+    toast.success(
+      res?.kept_unassigned
+        ? __(
+            'Cliente {0} creado · la conversación sigue aquí hasta que la archives',
+            [res.name],
+          )
+        : `${label} ${__('creado')}: ${res.name}`,
+    )
   } catch (e) {
     toast.error(e?.messages?.[0] || __('No se pudo convertir'))
   } finally {

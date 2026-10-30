@@ -386,13 +386,24 @@
               <LucideMessageCircleQuestion class="h-4 w-4" />
             </span>
             <div class="min-w-0 flex-1">
-              <div class="truncate text-[13px] font-semibold text-ink-gray-9">
-                {{
-                  u.contact_name ||
-                  (u.last_channel === 'messenger'
-                    ? __('Messenger') + ' ' + (u.psid || '').slice(-6)
-                    : formatPhone(u.phone))
-                }}
+              <div class="flex min-w-0 items-center gap-1.5">
+                <span
+                  class="truncate text-[13px] font-semibold text-ink-gray-9"
+                  >{{
+                    u.contact_name ||
+                    (u.last_channel === 'messenger'
+                      ? __('Messenger') + ' ' + (u.psid || '').slice(-6)
+                      : formatPhone(u.phone))
+                  }}</span
+                >
+                <!-- registered with «+ Cliente», still no Lead/Deal: stays here
+                     until archived (notes and follow-ups live on the contact) -->
+                <span
+                  v-if="u.registered"
+                  class="flex-none rounded-4 px-1.5 py-0.5 text-[9.5px] font-semibold"
+                  style="color: #5b21b6; background: #ede9fe"
+                  >{{ __('Contacto') }}</span
+                >
               </div>
               <div class="truncate text-[11px] text-ink-gray-5">
                 {{
