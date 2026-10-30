@@ -115,7 +115,7 @@
         >
           <li v-for="c in cajas" :key="c.name" :data-caja="c.name">
             <ListRow
-              :title="scope ? c.label : `${c.label} · ${c.store_name}`"
+              :title="oneStore ? c.label : `${c.label} · ${c.store_name}`"
               :subtitle="cajaLine(c, formatDateTime)"
               :subtitle-tone="c.severity === 'blocking' ? 'danger' : ''"
               icon="lucide-monitor-smartphone"
@@ -268,6 +268,10 @@ function pickScope(value) {
   router.replace({ query: { ...route.query, tienda: value || undefined } })
 }
 
+/** One store on screen: its name is in the title, not on every row. */
+const oneStore = computed(
+  () => Boolean(scope.value) || (stores.value || []).length === 1,
+)
 const canCreateStore = computed(() => canCreateIn.value.length > 0)
 const configurable = computed(() =>
   (store.value ? [store.value] : stores.value || []).filter(
@@ -372,7 +376,6 @@ async function load() {
     if (stores.value.length) await loadCajas()
   } catch (error) {
     loadError.value = errorText(error)
-    if (!stores.value) stores.value = null
   }
 }
 async function more() {
