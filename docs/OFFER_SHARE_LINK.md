@@ -1,6 +1,13 @@
 # Offer share link: online, tokenized customer view of a CRM Offer
 
 Status: spec, lane `offer-share-link-20261005` (2026-10-05).
+
+> **2026-10-30: superseded for shell quotes.** The `/o/<token>` page serves CRM Offers, which only the
+> old Deal page could share; the shell sends Deal 360 there, so it is unreachable. Deal quotes are
+> ERPNext Quotations and their customer page is doco.firma's `/f/<link>`: «✍️ Pedir firma» in
+> `QuoteEditor.vue` (`QuoteFirmaPanel.vue`) asks `doco.docoutils.quote_firma`, the customer signs to
+> accept (Sales Order draft, the same as «Cliente aceptó») and, with «Cobro en línea» on, pays it
+> through the governed Mercado Pago link. Switches: Doco Business Settings > Quotation, off by default.
 Reference: Odoo's `/my/orders/<id>?access_token=<uuid>` quotation page (amount header, validity banner,
 lines, totals, terms, "print", contact card, communication history, accept/sign).
 
