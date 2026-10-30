@@ -192,8 +192,12 @@ describe('purchase order chain', () => {
       },
     ])
     await mountAt('/compras/orden/PO-2?accion=confirmar')
+    // The review is a sheet (ConfirmSheet): it portals in a few ticks later.
+    await flush()
     expect(router.currentRoute.value.query.accion).toBeUndefined()
-    expect(document.body.textContent).toContain('Confirm purchase')
+    expect(
+      document.querySelector('[data-testid="documentos-confirm"]')?.textContent,
+    ).toContain('Confirm purchase')
   })
 
   it('a step not available here says so instead of doing nothing', async () => {

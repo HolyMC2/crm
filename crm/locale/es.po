@@ -29704,3 +29704,38 @@ msgstr "Registra primero la factura; después su mercancía se puede verificar y
 msgid "Starting a receiving in Escáner takes a stock or scanner manager. Ask one to start it."
 msgstr "Iniciar una recepción en Escáner le toca a un encargado de almacén o de escáner. Pídele que la inicie."
 
+
+# Compras orden: the record bar, hero and «En el almacén» (lane compras-records-ux-20261030)
+msgctxt "Compras"
+msgid "Purchase"
+msgstr "Compra"
+
+msgid "Show {0} more items"
+msgstr "Mostrar {0} artículos más"
+
+msgctxt "Compras"
+msgid "1 day late"
+msgstr "atrasada 1 día"
+
+msgctxt "Compras"
+msgid "{0} days late"
+msgstr "atrasada {0} días"
+
+msgid "Receive without Escáner"
+msgstr "Recibir sin Escáner"
+
+msgctxt "Compras"
+msgid "Print"
+msgstr "Imprimir"
+
+msgid "One per piece on this order"
+msgstr "Una por pieza de esta orden"
+
+msgid "This purchase cannot be sent by email."
+msgstr "Esta compra no se puede enviar por correo."
+
+msgid "{0}: {1} for {2} item(s), to {3}, delivery {4}."
+msgstr "{0}: {1} por {2} artículo(s), a {3}, entrega {4}."
+
+msgid "Some items are still loading. Show them all before confirming."
+msgstr "Aún se están cargando artículos. Muéstralos todos antes de confirmar."

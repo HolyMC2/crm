@@ -1,575 +1,663 @@
 <template>
-  <div class="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
-    <div class="mx-auto w-full max-w-5xl px-4 pb-28 pt-4 sm:px-6 sm:pb-10">
-      <!-- On a phone the shell AppBar's back arrow (meta.listParent) is the
-           way back; this link is for the desktop. -->
-      <nav class="mb-3 hidden sm:block">
-        <button
-          class="flex min-h-11 items-center gap-1 text-sm text-ink-gray-7 hover:text-ink-gray-9"
-          @click="goBack"
-        >
-          <LucideArrowLeft class="h-4 w-4" />
-          {{ backLabel }}
-        </button>
-      </nav>
+  <!-- A purchase order, read like a chat with the supplier (Shell look,
+       record-header): the bar names them with the state and the order under
+       it, the ways to reach them, the bolt with the order's steps and «⋯»
+       with every tool (print, share, mail…). The amount, the delivery and the
+       one next step are the hero; then the lines with what arrived, the
+       totals and the order's data. Receipts (Escáner), bills (Gastos),
+       follow-ups, Archivos and the engine's Actividad sit beside them on a
+       desk and below them on a phone. A new or draft order edits in place. -->
+  <div class="relative flex h-full min-w-0 flex-1 flex-col overflow-hidden">
+    <AppBar
+      :back="true"
+      :back-label="backLabel"
+      :title="title"
+      :bell="phone"
+      :loading="loading && loaded"
+      @back="onBack"
+    >
+      <template v-if="loaded && !isNew && doc.name" #title>
+        <div class="flex min-h-12 min-w-0 flex-col justify-center px-3">
+          <span
+            class="title-face line-clamp-2 break-words text-xl font-semibold leading-tight [text-wrap:balance]"
+            data-appbar-title
+            >{{ title }}</span
+          >
+          <span class="flex min-w-0 items-center gap-2 pt-0.5">
+            <StatusChip
+              :label="chip.label"
+              :tone="chip.tone"
+              data-testid="orden-status"
+            />
+            <span class="truncate text-sm leading-tight text-ink-gray-6">{{
+              kindLine
+            }}</span>
+          </span>
+        </div>
+      </template>
+      <template #actions>
+        <RecordIsland
+          v-if="loaded && !isNew && doc.name"
+          :reach="kit.record.value?.header?.reach || {}"
+          :who="doc.party || ''"
+          :mail="kit.record.value?.actions?.email || null"
+          :groups="boltGroups"
+          :phone="phone"
+          :subtitle="kit.scopeTitle.value"
+          @mail="mail"
+          @pick="onBolt"
+          @tools="kit.openTools()"
+        />
+      </template>
+    </AppBar>
 
-      <section
+    <div class="min-h-0 flex-1 overflow-y-auto pb-28 sm:pb-10">
+      <EmptyState
         v-if="guard"
         role="alert"
-        class="mx-auto max-w-xl space-y-4 py-6"
+        state="error"
+        :title="guard.title"
+        :message="guard.detail"
+        :action="__('Retry', null, 'Compras')"
+        @action="load"
+      />
+      <EmptyState
+        v-else-if="loading && !loaded"
+        role="status"
+        state="loading"
+        :title="__('Loading purchase…')"
+      />
+
+      <div
+        v-else-if="loaded"
+        class="mx-auto grid w-full max-w-6xl gap-x-6 lg:grid-cols-[minmax(0,1fr)_22rem]"
       >
-        <h1 class="text-xl font-semibold">{{ guard.title }}</h1>
-        <p class="text-base text-ink-gray-7">{{ guard.detail }}</p>
-        <div class="flex flex-wrap gap-2">
-          <Button :label="__('Retry', null, 'Compras')" @click="load" />
-          <Button :label="__('Back to Compras')" @click="goBack" />
-        </div>
-      </section>
+        <div class="flex min-w-0 flex-col gap-5 pt-4">
+          <!-- What was asked of me on this purchase (Pendientes «Por aprobar»).
+               Hidden while editing: the save bar owns the phone's bottom edge. -->
+          <div v-if="!isNew && doc.name && !editing" class="px-4 empty:hidden">
+            <ApprovalAsk
+              doctype="Purchase Order"
+              :name="doc.name"
+              :settle-kinds="['compras.review']"
+              :settle-label="__('Reviewed', null, 'Compras')"
+              @declined="goBack"
+              @settled="reviewed"
+            >
+              <template #primary>
+                <button
+                  v-if="primary?.allowed && primary.key === 'confirm'"
+                  type="button"
+                  :class="['press', BTN.filled]"
+                  :disabled="busy"
+                  @click="runAction(primary)"
+                >
+                  {{ primary.label }}
+                </button>
+              </template>
+            </ApprovalAsk>
+          </div>
 
-      <div v-else-if="loading && !loaded" role="status" class="py-10 text-sm">
-        {{ __('Loading purchase…') }}
-      </div>
+          <!-- What just happened and what needs the worker: Escáner's receipt
+               came back, an unsaved draft, a refusal, someone else's change. -->
+          <div class="flex flex-col gap-3 px-4 empty:hidden">
+            <div
+              v-if="doneNotice"
+              role="status"
+              class="flex flex-wrap items-center gap-2 rounded-6 bg-surface-green-1 p-3 text-base text-ink-green-8"
+            >
+              <span class="min-w-0 flex-1">{{ doneNotice }}</span>
+              <RouterLink
+                v-if="doneBill"
+                class="min-h-11 py-2 text-ink-blue-link underline"
+                :to="billRoute(doneBill, returnHere)"
+                >{{ __('Open bill') }}</RouterLink
+              >
+            </div>
+            <div
+              v-if="draftNotice"
+              role="status"
+              class="flex flex-wrap items-center gap-2 rounded-6 bg-surface-amber-1 p-3 text-base text-ink-amber-9"
+            >
+              <span class="min-w-0 flex-1">{{ draftNotice }}</span>
+              <button
+                type="button"
+                :class="['press', BTN.tonal]"
+                @click="recoverDraft"
+              >
+                {{ __('Recover', null, 'Compras') }}
+              </button>
+              <button
+                type="button"
+                :class="['press', BTN.text]"
+                @click="discardDraft"
+              >
+                {{ __('Discard', null, 'Compras') }}
+              </button>
+            </div>
+            <div
+              v-if="problem"
+              role="alert"
+              class="space-y-2 rounded-6 bg-surface-red-1 p-3 text-base text-ink-red-7"
+            >
+              <p>
+                <strong>{{ problem.title }}.</strong> {{ problem.detail }}
+              </p>
+              <div class="flex flex-wrap gap-2">
+                <button
+                  v-if="problem.kind === 'offline'"
+                  type="button"
+                  :class="['press', BTN.tonal]"
+                  @click="retryLast"
+                >
+                  {{ __('Check result') }}
+                </button>
+                <button
+                  v-if="problem.kind === 'conflict'"
+                  type="button"
+                  :class="['press', BTN.tonal]"
+                  @click="compare"
+                >
+                  {{ __('Refresh and compare') }}
+                </button>
+                <button
+                  v-if="problem.kind === 'permission' && !isNew"
+                  type="button"
+                  :class="['press', BTN.tonal]"
+                  @click="
+                    openHandoff('review', __('Ask for a review'), problem.detail)
+                  "
+                >
+                  {{ __('Ask for help') }}
+                </button>
+              </div>
+            </div>
 
-      <template v-else>
-        <!-- Header: who, what, where, when, how much — and the one next action. -->
-        <header class="mb-4 flex flex-wrap items-start gap-3">
-          <div class="min-w-0 flex-1">
-            <p class="text-sm text-ink-gray-6">
-              {{ isNew ? __('New purchase') : __('Orden de compra') }}
-              <Badge
+            <!-- Conflict: your version beside the current one; input is kept. -->
+            <section
+              v-if="conflict"
+              class="rounded-6 border border-outline-amber-2 p-3 text-base"
+              :aria-label="__('Compare versions')"
+            >
+              <p class="mb-2 font-semibold">
+                {{ __('Someone else changed this purchase') }}
+              </p>
+              <table class="w-full text-left text-sm">
+                <thead>
+                  <tr class="text-ink-gray-6">
+                    <th class="py-1">{{ __('Field', null, 'Compras') }}</th>
+                    <th class="py-1">{{ __('Your version') }}</th>
+                    <th class="py-1">{{ __('Current', null, 'Compras') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="diff in conflict.diffs" :key="diff.label">
+                    <td class="py-1">{{ diff.label }}</td>
+                    <td class="py-1">{{ diff.mine }}</td>
+                    <td class="py-1">{{ diff.current }}</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="mt-2 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  :class="['press', BTN.filled]"
+                  @click="reapply"
+                >
+                  {{ __('Reapply my changes') }}
+                </button>
+                <button
+                  type="button"
+                  :class="['press', BTN.tonal]"
+                  @click="useCurrent"
+                >
+                  {{ __('Use the current one') }}
+                </button>
+              </div>
+            </section>
+          </div>
+
+          <!-- The hero: how much, when it arrives, how much arrived, and the
+               one next step (filled) with the order's other doors (tonal). -->
+          <section
+            v-if="!isNew && !editing"
+            class="flex flex-col gap-2 px-4"
+            :aria-label="__('Purchase', null, 'Compras')"
+            data-testid="orden-hero"
+          >
+            <p
+              class="num text-3xl font-semibold tabular-nums leading-tight text-ink-gray-9"
+            >
+              {{ money(doc.grand_total, doc.currency) }}
+            </p>
+            <StageSteps
+              v-if="kit.stages.value"
+              :stages="kit.stages.value"
+              class="py-2"
+            />
+            <p
+              v-if="doc.schedule_date"
+              class="text-base text-ink-gray-7"
+              :class="lateDays ? 'font-medium text-ink-red-7' : ''"
+              data-testid="compra-entrega"
+            >
+              {{ __('delivery {0}', [formatDay(doc.schedule_date)])
+              }}<template v-if="lateDays"> · {{ lateText }}</template>
+            </p>
+            <p v-if="summaryLine" class="break-words text-base text-ink-gray-8">
+              {{ summaryLine }}
+            </p>
+            <p
+              v-if="primary && !primary.allowed && primary.reason"
+              class="break-words text-base text-ink-gray-8"
+            >
+              {{ primary.reason }}
+            </p>
+            <p
+              v-else-if="!primary && Number(doc.docstatus) === 1"
+              class="break-words text-base text-ink-gray-8"
+            >
+              <template v-if="!summaryLine"
+                >{{ __('Nothing left to receive on this purchase.') }}
+              </template>
+              <RouterLink
+                class="text-ink-blue-link underline"
+                :to="{ name: 'Compras', query: { segment: 'por-recibir' } }"
+                >{{ __('Back to the queue') }}</RouterLink
+              >
+            </p>
+            <div class="flex flex-wrap gap-2 pt-2" data-testid="orden-next">
+              <button
+                v-for="(step, i) in nextSteps"
+                :key="step.key"
+                type="button"
+                :class="['press', i === 0 ? BTN.filled : BTN.tonal]"
+                :disabled="busy && step.busy"
+                :data-step="step.key"
+                :data-testid="step.testid"
+                @click="step.run()"
+              >
+                <span :class="[step.icon, 'size-5']" aria-hidden="true" />
+                {{ step.label }}
+              </button>
+            </div>
+          </section>
+
+          <!-- Editor: draft purchases only, never a submitted one. -->
+          <section
+            v-if="editing"
+            class="space-y-4 px-4"
+            :aria-label="__('Purchase details', null, 'Compras')"
+          >
+            <div class="compra-fields grid gap-3 sm:grid-cols-2">
+              <ComprasPicker
+                v-model="form.supplier"
+                :display="form.supplier_label"
+                :label="__('Supplier', null, 'Compras')"
+                :placeholder="__('Search supplier')"
+                :empty-text="__('No supplier you can use matches.')"
+                :invalid="showMissing && missing.includes('supplier')"
+                :load="(q) => comprasApi('suppliers', { search: q })"
+                @pick="(o) => (form.supplier_label = o.label)"
+              />
+              <FormControl
+                v-model="form.company"
+                type="select"
+                :label="__('Company', null, 'Compras')"
+                :options="companyOptions"
+              />
+              <ComprasPicker
+                v-model="form.set_warehouse"
+                :display="form.set_warehouse"
+                :label="__('Destination warehouse', null, 'Compras')"
+                :placeholder="__('Search warehouse')"
+                :empty-text="__('No warehouse of this company you can use.')"
+                :invalid="showMissing && missing.includes('warehouse')"
+                :disabled="!form.company"
+                :load="
+                  (q) =>
+                    comprasApi('warehouses', {
+                      company: form.company,
+                      search: q,
+                    })
+                "
+              />
+              <FormControl
+                v-model="form.schedule_date"
+                type="date"
+                :placeholder="__('Elige la fecha', null, 'Compras')"
+                :label="__('Delivery date', null, 'Compras')"
+              />
+            </div>
+            <p
+              v-if="missing.length && showMissing"
+              role="status"
+              class="text-base text-ink-amber-9"
+            >
+              {{ __('Missing: {0}.', [missingText]) }}
+              <RouterLink
+                v-if="isNew && missing.includes('supplier')"
+                class="ml-1 underline"
+                :to="{ name: 'Contactos', query: { return_to: route.fullPath } }"
+                >{{ __('Add a supplier in Contactos') }}</RouterLink
+              >
+              <button
                 v-if="!isNew"
-                class="ml-1"
-                :theme="statusTheme"
-                :label="statusLabel(doc)"
-              />
-            </p>
-            <h1 class="truncate text-2xl font-semibold text-ink-gray-9">
-              {{ form.supplier_label || doc.party || __('Choose a supplier') }}
-            </h1>
-            <p v-if="!isNew" class="mt-1 text-sm text-ink-gray-6">
-              {{
-                [
-                  doc.company,
-                  doc.set_warehouse && __('to {0}', [doc.set_warehouse]),
-                ]
-                  .filter(Boolean)
-                  .join(' · ')
-              }}<template v-if="doc.schedule_date"
-                >{{ doc.company || doc.set_warehouse ? ' · ' : ''
-                }}<span
-                  :class="lateDays ? 'font-medium text-ink-red-7' : ''"
-                  data-testid="compra-entrega"
-                  >{{ __('delivery {0}', [formatDay(doc.schedule_date)])
-                  }}<template v-if="lateDays">
-                    ·
-                    {{
-                      lateDays === 1
-                        ? 'atrasada 1 día'
-                        : `atrasada ${lateDays} días`
-                    }}</template
-                  ></span
-                ></template
+                type="button"
+                class="ml-1 min-h-11 underline"
+                @click="
+                  openHandoff(
+                    'setup',
+                    __('Ask for setup'),
+                    __(
+                      'Ask someone to add the missing supplier, warehouse or configuration.',
+                    ),
+                  )
+                "
               >
+                {{ __('Ask for setup') }}
+              </button>
             </p>
-          </div>
-          <div class="hidden flex-col items-end gap-1 sm:flex">
-            <span
-              v-if="!isNew"
-              class="text-xl font-semibold tabular-nums text-ink-gray-9"
-              >{{ money(doc.grand_total, doc.currency) }}</span
-            >
-            <span v-if="!isNew" class="text-xs text-ink-gray-5">{{
-              doc.currency
-            }}</span>
-          </div>
-          <RecordKitTools v-if="!isNew && doc.name" :kit="kit" />
-        </header>
-        <StageSteps
-          v-if="!isNew && kit.stages.value"
-          :stages="kit.stages.value"
-          class="mb-4 py-2"
-        />
 
-        <!-- What was asked of me on this purchase (Pendientes «Por aprobar»). -->
-        <!-- Hidden while editing: the save bar owns the phone's bottom edge then. -->
-        <ApprovalAsk
-          v-if="!isNew && doc.name && !editing"
-          doctype="Purchase Order"
-          :name="doc.name"
-          :settle-kinds="['compras.review']"
-          :settle-label="__('Reviewed', null, 'Compras')"
-          @declined="goBack"
-          @settled="reviewed"
-        >
-          <template #primary>
-            <Button
-              v-if="primary?.allowed && primary.key === 'confirm' && !editing"
-              variant="solid"
-              class="min-h-11"
-              :label="primary.label"
-              :loading="busy"
-              @click="runAction(primary)"
-            />
-          </template>
-        </ApprovalAsk>
-
-        <!-- Done from Escáner: the receipt we handed off came back confirmed. -->
-        <div
-          v-if="doneNotice"
-          role="status"
-          class="mb-4 flex flex-wrap items-center gap-2 rounded-6 bg-surface-green-1 p-3 text-sm text-ink-green-8"
-        >
-          <span class="min-w-0 flex-1">{{ doneNotice }}</span>
-          <RouterLink
-            v-if="doneBill"
-            class="min-h-11 py-2 text-ink-blue-link underline sm:min-h-0 sm:py-0"
-            :to="billRoute(doneBill, returnHere)"
-            >{{ __('Open bill') }}</RouterLink
-          >
-        </div>
-
-        <div
-          v-if="draftNotice"
-          role="status"
-          class="mb-4 flex flex-wrap items-center gap-2 rounded-6 bg-surface-amber-1 p-3 text-sm text-ink-amber-8"
-        >
-          <span class="flex-1">{{ draftNotice }}</span>
-          <Button
-            :label="__('Recover', null, 'Compras')"
-            @click="recoverDraft"
-          />
-          <Button
-            :label="__('Discard', null, 'Compras')"
-            @click="discardDraft"
-          />
-        </div>
-
-        <div
-          v-if="problem"
-          role="alert"
-          class="mb-4 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
-        >
-          <p>
-            <strong>{{ problem.title }}.</strong> {{ problem.detail }}
-          </p>
-          <div class="mt-2 flex flex-wrap gap-2">
-            <Button
-              v-if="problem.kind === 'offline'"
-              :label="__('Check result')"
-              @click="retryLast"
-            />
-            <Button
-              v-if="problem.kind === 'conflict'"
-              :label="__('Refresh and compare')"
-              @click="compare"
-            />
-            <Button
-              v-if="problem.kind === 'permission' && !isNew"
-              :label="__('Ask for help')"
-              @click="
-                openHandoff('review', __('Ask for a review'), problem.detail)
-              "
-            />
-          </div>
-        </div>
-
-        <!-- Conflict: your version beside the current one; input is kept. -->
-        <section
-          v-if="conflict"
-          class="mb-4 rounded-6 border border-outline-amber-2 p-3 text-sm"
-          :aria-label="__('Compare versions')"
-        >
-          <p class="mb-2 font-semibold">
-            {{ __('Someone else changed this purchase') }}
-          </p>
-          <table class="w-full text-left">
-            <thead>
-              <tr class="text-ink-gray-5">
-                <th class="py-1">{{ __('Field', null, 'Compras') }}</th>
-                <th class="py-1">{{ __('Your version') }}</th>
-                <th class="py-1">{{ __('Current', null, 'Compras') }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="diff in conflict.diffs" :key="diff.label">
-                <td class="py-1">{{ diff.label }}</td>
-                <td class="py-1">{{ diff.mine }}</td>
-                <td class="py-1">{{ diff.current }}</td>
-              </tr>
-            </tbody>
-          </table>
-          <div class="mt-2 flex flex-wrap gap-2">
-            <Button :label="__('Use the current one')" @click="useCurrent" />
-            <Button
-              variant="solid"
-              :label="__('Reapply my changes')"
-              @click="reapply"
-            />
-          </div>
-        </section>
-
-        <!-- Next action: exactly one primary; a blocked one says why and how. -->
-        <NextStepCard
-          v-if="primary && !editing"
-          class="mb-5"
-          :label="__('Next step', null, 'Compras')"
-          :reason="primary.allowed ? '' : primary.reason"
-          :detail="summaryLine"
-        >
-          <template #actions>
-            <template v-if="primary.allowed">
-              <Button
-                variant="solid"
-                size="md"
-                class="min-h-11"
-                :label="primary.label"
-                :loading="busy"
-                @click="runAction(primary)"
-              />
-              <Button
-                v-if="doc.can_write"
-                class="min-h-11"
-                :label="__('Edit purchase')"
-                @click="startEditing"
-              />
-            </template>
-            <template v-else>
-              <Button
-                v-if="primary.resolve"
-                variant="solid"
-                class="min-h-11"
-                :label="primary.resolve.label"
-                @click="resolve(primary)"
-              />
-              <Button
-                v-if="primary.resolve?.recheck"
-                class="min-h-11"
-                :label="__('Check again')"
-                @click="recheck"
-              />
-              <!-- Escáner is not ready here: the receipt can still be made in
-                   Muelle, as a draft from ERPNext's mapper (the engine's «Recibir»). -->
-              <Button
-                v-if="receiveHere"
-                variant="subtle"
-                class="min-h-11"
-                label="Recibir sin Escáner"
-                data-testid="compra-recibir-aqui"
-                @click="receiveInMuelle"
-              />
-            </template>
-            <Button
-              v-for="action in secondary"
-              :key="action.key"
-              class="min-h-11"
-              :label="action.allowed ? action.label : action.resolve?.label"
-              @click="action.allowed ? runAction(action) : resolve(action)"
-            />
-          </template>
-        </NextStepCard>
-        <p
-          v-else-if="!editing && !isNew && Number(doc.docstatus) === 1"
-          class="mb-5 rounded-7 bg-surface-gray-1 p-4 text-base"
-        >
-          {{ summaryLine || __('Nothing left to receive on this purchase.') }}
-          <RouterLink
-            class="ml-1 text-ink-blue-link underline"
-            :to="{ name: 'Compras', query: { segment: 'por-recibir' } }"
-            >{{ __('Back to the queue') }}</RouterLink
-          >
-        </p>
-
-        <!-- Editor: draft purchases only, never a submitted one. -->
-        <section
-          v-if="editing"
-          class="mb-6 space-y-4"
-          :aria-label="__('Purchase details', null, 'Compras')"
-        >
-          <div class="compra-fields grid gap-3 sm:grid-cols-2">
-            <ComprasPicker
-              v-model="form.supplier"
-              :display="form.supplier_label"
-              :label="__('Supplier', null, 'Compras')"
-              :placeholder="__('Search supplier')"
-              :empty-text="__('No supplier you can use matches.')"
-              :invalid="showMissing && missing.includes('supplier')"
-              :load="(q) => comprasApi('suppliers', { search: q })"
-              @pick="(o) => (form.supplier_label = o.label)"
-            />
-            <FormControl
-              v-model="form.company"
-              type="select"
-              :label="__('Company', null, 'Compras')"
-              :options="companyOptions"
-            />
-            <ComprasPicker
-              v-model="form.set_warehouse"
-              :display="form.set_warehouse"
-              :label="__('Destination warehouse', null, 'Compras')"
-              :placeholder="__('Search warehouse')"
-              :empty-text="__('No warehouse of this company you can use.')"
-              :invalid="showMissing && missing.includes('warehouse')"
-              :disabled="!form.company"
-              :load="
-                (q) =>
-                  comprasApi('warehouses', { company: form.company, search: q })
-              "
-            />
-            <FormControl
-              v-model="form.schedule_date"
-              type="date"
-              :placeholder="__('Elige la fecha', null, 'Compras')"
-              :label="__('Delivery date', null, 'Compras')"
-            />
-          </div>
-          <p
-            v-if="missing.length && showMissing"
-            role="status"
-            class="text-sm text-ink-amber-8"
-          >
-            {{ __('Missing: {0}.', [missingText]) }}
-            <RouterLink
-              v-if="isNew && missing.includes('supplier')"
-              class="ml-1 underline"
-              :to="{ name: 'Contactos', query: { return_to: route.fullPath } }"
-              >{{ __('Add a supplier in Contactos') }}</RouterLink
-            >
-            <button
-              v-if="!isNew"
-              class="ml-1 underline"
-              @click="
-                openHandoff(
-                  'setup',
-                  __('Ask for setup'),
-                  __(
-                    'Ask someone to add the missing supplier, warehouse or configuration.',
-                  ),
-                )
-              "
-            >
-              {{ __('Ask for setup') }}
-            </button>
-          </p>
-
-          <div>
-            <h2 class="mb-2 text-base font-semibold">
-              {{ __('Items ({0})', [form.items.length]) }}
-            </h2>
-            <ul
-              class="divide-y divide-outline-gray-1 rounded-6 border border-outline-gray-2"
-            >
-              <li
-                v-for="(row, index) in form.items"
-                :key="row.key"
-                class="grid gap-2 p-3 sm:grid-cols-[1fr_6rem_8rem_8rem_auto] sm:items-end"
+            <div>
+              <h2 class="pb-1 text-base font-semibold text-ink-gray-9">
+                {{ __('Items ({0})', [form.items.length]) }}
+              </h2>
+              <ul
+                class="divide-y divide-outline-gray-1 rounded-6 border border-outline-gray-2"
               >
-                <div class="min-w-0">
-                  <p class="truncate font-medium">
-                    {{ row.item_label || row.item_code }}
-                  </p>
-                  <p class="truncate text-xs text-ink-gray-5">
-                    {{ row.item_code
-                    }}<template v-if="row.material_request">
-                      · {{ __('from {0}', [row.material_request]) }}</template
-                    ><template
-                      v-if="
-                        row.warehouse && row.warehouse !== form.set_warehouse
-                      "
-                    >
-                      · {{ __('to {0}', [row.warehouse]) }}
-                      <button
-                        class="underline"
-                        @click="row.warehouse = form.set_warehouse"
+                <li
+                  v-for="(row, index) in form.items"
+                  :key="row.key"
+                  class="grid gap-2 p-3 sm:grid-cols-[1fr_6rem_8rem_8rem_auto] sm:items-end"
+                >
+                  <div class="min-w-0">
+                    <p class="break-words font-medium">
+                      {{ row.item_label || row.item_code }}
+                    </p>
+                    <p class="break-words text-sm text-ink-gray-6">
+                      {{ row.item_code
+                      }}<template v-if="row.material_request">
+                        · {{ __('from {0}', [row.material_request]) }}</template
+                      ><template
+                        v-if="
+                          row.warehouse && row.warehouse !== form.set_warehouse
+                        "
                       >
-                        {{ __('use destination') }}
-                      </button></template
-                    ><template v-if="row.tracked">
-                      · {{ __('serial/batch: reviewed on receipt') }}</template
+                        · {{ __('to {0}', [row.warehouse]) }}
+                        <button
+                          type="button"
+                          class="underline"
+                          @click="row.warehouse = form.set_warehouse"
+                        >
+                          {{ __('use destination') }}
+                        </button></template
+                      ><template v-if="row.tracked">
+                        ·
+                        {{ __('serial/batch: reviewed on receipt') }}</template
+                      >
+                    </p>
+                    <p
+                      v-if="
+                        row.note &&
+                        Number(row.qty) === row.note_for?.qty &&
+                        row.uom === row.note_for?.uom
+                      "
+                      class="text-sm text-ink-gray-6"
                     >
+                      {{ row.note }}
+                    </p>
+                  </div>
+                  <FormControl
+                    v-model="row.qty"
+                    type="number"
+                    :label="__('Quantity', null, 'Compras')"
+                    min="0"
+                    step="any"
+                  />
+                  <FormControl
+                    v-model="row.uom"
+                    type="select"
+                    :label="__('Unit', null, 'Compras')"
+                    :options="
+                      (row.uoms || []).map((u) => ({
+                        label:
+                          u.factor && u.factor !== 1
+                            ? `${u.uom} (×${u.factor})`
+                            : u.uom,
+                        value: u.uom,
+                      }))
+                    "
+                  />
+                  <FormControl
+                    v-model="row.rate"
+                    type="number"
+                    :label="__('Price (optional)')"
+                    min="0"
+                    step="any"
+                  />
+                  <button
+                    type="button"
+                    class="press flex size-11 items-center justify-center self-end rounded-full text-ink-gray-7 [@media(hover:hover)]:hover:bg-surface-gray-2"
+                    :aria-label="
+                      __('Remove {0}', [row.item_label || row.item_code])
+                    "
+                    :title="__('Remove {0}', [row.item_label || row.item_code])"
+                    @click="form.items.splice(index, 1)"
+                  >
+                    <LucideTrash2 class="size-5" aria-hidden="true" />
+                  </button>
+                </li>
+                <li class="p-3">
+                  <ComprasPicker
+                    model-value=""
+                    :label="__('Add item')"
+                    :placeholder="__('Search item, code or barcode')"
+                    :empty-text="
+                      __('Only existing purchasable items appear here.')
+                    "
+                    clear-on-pick
+                    :load="(q) => comprasApi('items', { search: q })"
+                    @pick="addItem"
+                  />
+                </li>
+              </ul>
+            </div>
+            <div
+              class="fixed inset-x-0 bottom-0 z-20 flex gap-2 border-t border-outline-gray-2 bg-surface-base p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:static sm:border-0 sm:p-0"
+            >
+              <button
+                type="button"
+                :class="['press flex-1 sm:flex-none', BTN.filled]"
+                :disabled="busy"
+                data-testid="compra-guardar"
+                @click="save"
+              >
+                <span
+                  :class="[
+                    busy ? 'lucide-loader-circle animate-spin' : 'lucide-check',
+                    'size-5',
+                  ]"
+                  aria-hidden="true"
+                />
+                {{ isNew ? __('Save purchase') : __('Save changes') }}
+              </button>
+              <button
+                v-if="!isNew"
+                type="button"
+                :class="['press', BTN.tonal]"
+                @click="cancelEditing"
+              >
+                {{ __('Cancel', null, 'Compras') }}
+              </button>
+            </div>
+          </section>
+
+          <!-- Lines of a saved purchase: ordered, received, in a draft
+               receipt, missing; then the totals with their taxes. -->
+          <section
+            v-if="!isNew && !editing"
+            class="px-4"
+            aria-labelledby="orden-items"
+          >
+            <h2
+              id="orden-items"
+              class="pb-1 text-base font-semibold text-ink-gray-9"
+            >
+              {{ __('Items ({0})', [data.rows_scope?.total || rows.length]) }}
+            </h2>
+            <ul class="divide-y divide-outline-gray-1">
+              <li
+                v-for="row in shownRows"
+                :key="row.name"
+                class="flex min-w-0 gap-3 py-3"
+              >
+                <div class="min-w-0 flex-1">
+                  <p class="break-words text-base text-ink-gray-9">
+                    {{ row.item_name || row.item_code }}
+                  </p>
+                  <p class="break-words text-sm text-ink-gray-6">
+                    {{
+                      [
+                        row.item_code,
+                        row.warehouse ||
+                          (row.warehouse_restricted
+                            ? __('restricted warehouse')
+                            : ''),
+                        row.material_request,
+                      ]
+                        .filter(Boolean)
+                        .join(' · ')
+                    }}
                   </p>
                   <p
-                    v-if="
-                      row.note &&
-                      Number(row.qty) === row.note_for?.qty &&
-                      row.uom === row.note_for?.uom
+                    v-if="Number(doc.docstatus) === 1"
+                    class="pt-0.5 text-sm"
+                    :class="
+                      row.remaining_qty > 0
+                        ? 'text-ink-gray-8'
+                        : 'text-ink-green-8'
                     "
-                    class="text-xs text-ink-gray-6"
                   >
-                    {{ row.note }}
+                    {{ rowProgress(row) }}
+                  </p>
+                  <p v-if="row.tracked" class="pt-0.5 text-sm text-ink-amber-9">
+                    {{ __('Needs serial/batch review when it arrives.') }}
                   </p>
                 </div>
-                <FormControl
-                  v-model="row.qty"
-                  type="number"
-                  :label="__('Quantity', null, 'Compras')"
-                  min="0"
-                  step="any"
-                />
-                <FormControl
-                  v-model="row.uom"
-                  type="select"
-                  :label="__('Unit', null, 'Compras')"
-                  :options="
-                    (row.uoms || []).map((u) => ({
-                      label:
-                        u.factor && u.factor !== 1
-                          ? `${u.uom} (×${u.factor})`
-                          : u.uom,
-                      value: u.uom,
-                    }))
-                  "
-                />
-                <FormControl
-                  v-model="row.rate"
-                  type="number"
-                  :label="__('Price (optional)')"
-                  min="0"
-                  step="any"
-                />
-                <Button
-                  class="min-h-11"
-                  :icon="LucideTrash2"
-                  :aria-label="
-                    __('Remove {0}', [row.item_label || row.item_code])
-                  "
-                  @click="form.items.splice(index, 1)"
-                />
-              </li>
-              <li class="p-3">
-                <ComprasPicker
-                  model-value=""
-                  :label="__('Add item')"
-                  :placeholder="__('Search item, code or barcode')"
-                  :empty-text="
-                    __('Only existing purchasable items appear here.')
-                  "
-                  clear-on-pick
-                  :load="(q) => comprasApi('items', { search: q })"
-                  @pick="addItem"
-                />
+                <div class="num shrink-0 text-right tabular-nums">
+                  <p class="text-base text-ink-gray-9">
+                    {{ formatQty(row.qty, row.uom) }}
+                  </p>
+                  <p
+                    v-if="row.uom !== row.stock_uom"
+                    class="text-sm text-ink-gray-6"
+                  >
+                    = {{ formatQty(row.stock_qty, row.stock_uom) }}
+                  </p>
+                  <p class="text-sm text-ink-gray-6">
+                    {{ money(row.amount, doc.currency) }}
+                  </p>
+                </div>
               </li>
             </ul>
-          </div>
-          <div
-            class="fixed inset-x-0 bottom-0 z-20 flex gap-2 border-t border-outline-gray-2 bg-surface-base p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:static sm:border-0 sm:p-0"
-          >
-            <Button
-              variant="solid"
-              class="min-h-11 flex-1 sm:flex-none"
-              :label="isNew ? __('Save purchase') : __('Save changes')"
-              :loading="busy"
-              @click="save"
-            />
-            <Button
-              v-if="!isNew"
-              class="min-h-11"
-              :label="__('Cancel', null, 'Compras')"
-              @click="cancelEditing"
-            />
-          </div>
-        </section>
-
-        <!-- Rows of a saved purchase: ordered, received, in receipt, missing. -->
-        <section
-          v-if="!isNew && !editing"
-          class="mb-6"
-          :aria-label="__('Items', null, 'Compras')"
-        >
-          <h2 class="mb-2 text-base font-semibold">
-            {{ __('Items ({0})', [data.rows_scope?.total || rows.length]) }}
-          </h2>
-          <ul
-            class="divide-y divide-outline-gray-1 rounded-6 border border-outline-gray-2"
-          >
-            <li v-for="row in rows" :key="row.name" class="flex gap-3 p-3">
-              <div class="min-w-0 flex-1">
-                <p class="truncate font-medium">
-                  {{ row.item_name || row.item_code }}
-                </p>
-                <p class="truncate text-xs text-ink-gray-5">
-                  {{
-                    [
-                      row.item_code,
-                      row.warehouse ||
-                        (row.warehouse_restricted
-                          ? __('restricted warehouse')
-                          : ''),
-                      row.material_request,
-                    ]
-                      .filter(Boolean)
-                      .join(' · ')
-                  }}
-                </p>
-                <p
-                  v-if="Number(doc.docstatus) === 1"
-                  class="mt-1 text-sm text-ink-gray-8"
-                >
-                  {{ rowProgress(row) }}
-                </p>
-                <p v-if="row.tracked" class="mt-1 text-xs text-ink-amber-8">
-                  {{ __('Needs serial/batch review when it arrives.') }}
-                </p>
-              </div>
-              <div class="shrink-0 text-right text-sm tabular-nums">
-                <p class="font-medium">{{ formatQty(row.qty, row.uom) }}</p>
-                <p
-                  v-if="row.uom !== row.stock_uom"
-                  class="text-xs text-ink-gray-5"
-                >
-                  = {{ formatQty(row.stock_qty, row.stock_uom) }}
-                </p>
-                <p class="text-xs text-ink-gray-5">
-                  {{ money(row.amount, doc.currency) }}
-                </p>
-              </div>
-            </li>
-          </ul>
-          <Button
-            v-if="data.rows_scope?.has_more"
-            class="mt-2 min-h-11"
-            :label="__('Show more items')"
-            @click="loadMoreRows"
-          />
-        </section>
-
-        <!-- Linked: receipts (Escáner), requests, finance, follow-ups. -->
-        <section
-          v-if="!isNew"
-          class="grid gap-4 sm:grid-cols-2"
-          :aria-label="__('Linked records', null, 'Compras')"
-        >
-          <div class="rounded-7 border border-outline-gray-2 p-4">
-            <h2 class="mb-2 text-base font-semibold">
-              {{ __('Receipts', null, 'Compras') }}
-            </h2>
-            <p
-              v-if="!data.receipts?.rows?.length"
-              class="text-sm text-ink-gray-6"
+            <button
+              v-if="rows.length > shownRows.length"
+              type="button"
+              :class="['press mt-1', BTN.text]"
+              data-testid="orden-items-more"
+              @click="allRows = true"
             >
-              {{ __('Nothing received yet.') }}
-            </p>
-            <ul v-else class="space-y-1 text-sm">
-              <li v-for="receipt in data.receipts.rows" :key="receipt.name">
-                <a
-                  class="text-ink-blue-link underline"
-                  :href="scannerReceiptUrl(receipt.name, doc.name)"
-                  >{{ receipt.name }}</a
+              {{ __('Show {0} more items', [rows.length - shownRows.length]) }}
+            </button>
+            <button
+              v-else-if="data.rows_scope?.has_more"
+              type="button"
+              :class="['press mt-1', BTN.text]"
+              @click="loadMoreRows"
+            >
+              {{ __('Show more items') }}
+            </button>
+          </section>
+          <DocTotals
+            v-if="!isNew && !editing && kit.record.value?.totals"
+            :totals="kit.record.value.totals"
+            :taxes="kit.record.value.taxes"
+            :currency="doc.currency || 'MXN'"
+            :docstatus="Number(doc.docstatus)"
+          />
+
+          <!-- The order's own data as rows; Datos lists the rest. -->
+          <section
+            v-if="!isNew && !editing"
+            class="px-4"
+            aria-labelledby="orden-datos"
+          >
+            <h2
+              id="orden-datos"
+              class="pb-1 text-base font-semibold text-ink-gray-9"
+            >
+              {{ __('Purchase details', null, 'Compras') }}
+            </h2>
+            <ul class="divide-y divide-outline-gray-1">
+              <li
+                v-for="fact in facts"
+                :key="fact.key"
+                class="flex min-h-14 min-w-0 items-center gap-3 py-2"
+              >
+                <span
+                  class="flex size-10 flex-none items-center justify-center rounded-full bg-surface-gray-2 text-ink-gray-7"
+                  aria-hidden="true"
                 >
-                ·
-                {{
-                  Number(receipt.docstatus) === 1
-                    ? __('confirmed', null, 'Compras')
-                    : __('draft, not stock yet')
-                }}
-                · {{ formatDay(receipt.posting_date) }}
+                  <span :class="[fact.icon, 'size-5']" />
+                </span>
+                <span class="flex min-w-0 flex-1 flex-col">
+                  <span class="text-sm text-ink-gray-6">{{ fact.label }}</span>
+                  <span class="flex flex-wrap gap-x-3 break-words text-base">
+                    <template v-if="fact.links">
+                      <RouterLink
+                        v-for="link in fact.links"
+                        :key="link.name"
+                        class="min-h-11 py-2 text-ink-blue-link underline sm:min-h-0 sm:py-0"
+                        :to="link.to"
+                        >{{ link.name }}</RouterLink
+                      >
+                    </template>
+                    <template v-else>{{ fact.value }}</template>
+                  </span>
+                </span>
               </li>
             </ul>
-          </div>
-          <div class="rounded-7 border border-outline-gray-2 p-4">
-            <h2 class="mb-2 text-base font-semibold">
+          </section>
+          <DatosList
+            v-if="!isNew && !editing && kit.record.value?.fields?.length"
+            :fields="kit.record.value.fields"
+            :hide="DATOS_SHOWN"
+            :currency="doc.currency || 'MXN'"
+            :boot="shellBoot"
+          />
+        </div>
+
+        <aside
+          v-if="!isNew && doc.name"
+          class="flex min-w-0 flex-col gap-5 pt-5 lg:pt-4"
+        >
+          <!-- Escáner's side: the receipts that brought the goods, labels. -->
+          <BillAlmacen
+            :rows="almacenRows"
+            :bill="doc.name"
+            doctype="Purchase Order"
+          />
+
+          <!-- Gastos' side: the supplier bills of this order. -->
+          <section class="px-4" aria-labelledby="orden-facturas">
+            <h2
+              id="orden-facturas"
+              class="pb-1 text-base font-semibold text-ink-gray-9"
+            >
               {{ __('Billing', null, 'Compras') }}
             </h2>
-            <p class="text-sm text-ink-gray-7">
+            <p class="break-words text-base text-ink-gray-7">
               {{
                 doc.billing_pending
                   ? __(
@@ -582,128 +670,96 @@
             </p>
             <ul
               v-if="data.bills?.length"
-              class="mt-2 space-y-1 text-sm"
+              class="divide-y divide-outline-gray-1"
               data-order-bills
             >
               <li v-for="b in data.bills" :key="b.name">
                 <RouterLink
-                  class="text-ink-blue-link underline"
+                  class="press flex min-h-14 w-full items-center gap-3 rounded-6 py-2 [@media(hover:hover)]:hover:bg-surface-gray-1"
                   :to="billRoute(b.name, returnHere)"
-                  >{{ b.bill_no || b.name }}</RouterLink
                 >
-                ·
-                {{
-                  Number(b.docstatus) === 0
-                    ? __('draft, to register', null, 'Compras')
-                    : Number(b.outstanding_amount) > 0
-                      ? __('{0} to pay', [
-                          money(b.outstanding_amount, b.currency),
-                        ])
-                      : __('paid', null, 'Compras')
-                }}
+                  <span
+                    class="flex size-10 flex-none items-center justify-center rounded-full bg-surface-gray-2 text-ink-gray-7"
+                    aria-hidden="true"
+                  >
+                    <span class="lucide-receipt size-5" />
+                  </span>
+                  <span class="flex min-w-0 flex-1 flex-col">
+                    <span class="break-words text-base text-ink-gray-9">{{
+                      b.bill_no || b.name
+                    }}</span>
+                    <span class="text-sm text-ink-gray-6">{{
+                      billState(b)
+                    }}</span>
+                  </span>
+                </RouterLink>
               </li>
             </ul>
             <RouterLink
               v-if="gastosOn && Number(doc.docstatus) === 1"
-              class="mt-1 inline-block min-h-11 py-2 text-sm text-ink-blue-link underline sm:min-h-0 sm:py-0"
+              class="inline-block min-h-11 py-2 text-base text-ink-blue-link underline"
               :to="orderBillsRoute(doc.name)"
               >{{ __('See this order’s bills in Gastos') }}</RouterLink
             >
-            <template v-if="data.requests?.length">
-              <h2 class="mb-1 mt-3 text-base font-semibold">
-                {{ __('From requests') }}
-              </h2>
-              <RouterLink
-                v-for="mr in data.requests"
-                :key="mr.name"
-                class="mr-2 text-sm text-ink-blue-link underline"
-                :to="{ name: 'CompraSolicitud', params: { name: mr.name } }"
-                >{{ mr.name }}</RouterLink
-              >
-            </template>
-          </div>
-          <div
+          </section>
+
+          <section
             v-if="data.followups?.rows?.length"
-            class="rounded-7 border border-outline-gray-2 p-4 sm:col-span-2"
+            class="px-4"
+            aria-labelledby="orden-seguimiento"
           >
-            <h2 class="mb-2 text-base font-semibold">
+            <h2
+              id="orden-seguimiento"
+              class="pb-1 text-base font-semibold text-ink-gray-9"
+            >
               {{ __('Assigned', null, 'Compras') }}
             </h2>
-            <ul class="space-y-1 text-sm">
-              <li v-for="task in data.followups.rows" :key="task.name">
-                {{ task.description }}
-                <span class="text-ink-gray-5"
-                  >· {{ formatDay(task.date) }}</span
+            <ul class="divide-y divide-outline-gray-1">
+              <li
+                v-for="task in data.followups.rows"
+                :key="task.name"
+                class="flex min-h-14 min-w-0 items-center gap-3 py-2"
+              >
+                <span
+                  class="flex size-10 flex-none items-center justify-center rounded-full bg-surface-gray-2 text-ink-gray-7"
+                  aria-hidden="true"
                 >
+                  <span class="lucide-list-checks size-5" />
+                </span>
+                <span class="flex min-w-0 flex-1 flex-col">
+                  <span class="break-words text-base text-ink-gray-9">{{
+                    task.description
+                  }}</span>
+                  <span class="text-sm text-ink-gray-6">{{
+                    formatDay(task.date)
+                  }}</span>
+                </span>
               </li>
             </ul>
-          </div>
-        </section>
-        <!-- Shell SPEC §6 DD2: the engine's «Creado desde», Conexiones, Actividad and «⋯» sheets. -->
-        <RecordKit
-          v-if="!isNew && doc.name"
-          class="mt-6 -mx-4 sm:-mx-6"
-          :kit="kit"
-          :title="doc.party || ''"
-        />
-      </template>
+          </section>
+
+          <ArchivosRegistroPanel
+            v-if="archivosEnabled"
+            class="px-4"
+            doctype="Purchase Order"
+            :name="doc.name"
+            :return-to="`/crm${route.fullPath}`"
+            :return-label="__('Compras', null, 'Compras')"
+          />
+          <!-- Shell SPEC §6 DD2: the engine's «Creado desde», Conexiones,
+               Actividad and the sheets behind «⋯». -->
+          <RecordKit :kit="kit" :title="doc.party || ''" />
+        </aside>
+      </div>
     </div>
 
-    <!-- Review before confirming: total, currency, destination, date, rows. -->
-    <Dialog v-model="reviewOpen" :title="__('Review and confirm')">
-      <template #default>
-        <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
-          <dt class="text-ink-gray-5">{{ __('Supplier', null, 'Compras') }}</dt>
-          <dd>{{ doc.party }}</dd>
-          <dt class="text-ink-gray-5">{{ __('Company', null, 'Compras') }}</dt>
-          <dd>{{ doc.company }}</dd>
-          <dt class="text-ink-gray-5">
-            {{ __('Destination', null, 'Compras') }}
-          </dt>
-          <dd>{{ doc.set_warehouse || __('per item') }}</dd>
-          <dt class="text-ink-gray-5">
-            {{ __('Delivery date', null, 'Compras') }}
-          </dt>
-          <dd>{{ formatDay(doc.schedule_date) }}</dd>
-          <dt class="text-ink-gray-5">{{ __('Items', null, 'Compras') }}</dt>
-          <dd>{{ data.rows_scope?.total }}</dd>
-          <dt class="text-ink-gray-5">{{ __('Total', null, 'Compras') }}</dt>
-          <dd class="text-base font-semibold">
-            {{ money(doc.grand_total, doc.currency) }} ({{ doc.currency }})
-          </dd>
-        </dl>
-        <p class="mt-3 text-sm text-ink-gray-6">
-          {{
-            __(
-              'Confirming commits this purchase with the supplier. Stock moves only when goods are received.',
-            )
-          }}
-        </p>
-      </template>
-      <template #actions>
-        <div class="flex justify-end gap-2">
-          <Button
-            :label="__('Back', null, 'Compras')"
-            @click="reviewOpen = false"
-          />
-          <Button
-            variant="solid"
-            :label="__('Confirm purchase')"
-            :loading="busy"
-            :disabled="data.rows_scope?.has_more"
-            @click="confirm"
-          />
-        </div>
-      </template>
-    </Dialog>
-
-    <ArchivosRegistroPanel
-      v-if="!isNew && doc.name && archivosEnabled"
-      class="mt-4"
-      doctype="Purchase Order"
-      :name="doc.name"
-      :return-to="`/crm${route.fullPath}`"
-      :return-label="__('Compras', null, 'Compras')"
+    <!-- «Revisar y confirmar»: what is committed with the supplier. -->
+    <ConfirmSheet
+      v-model:open="reviewOpen"
+      :copy="reviewCopy"
+      :busy="busy"
+      :error="reviewError"
+      @confirm="confirm"
     />
 
     <HandoffDialog
@@ -728,12 +784,22 @@ import {
   ref,
   watch,
 } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { Badge, Button, Dialog, FormControl, toast } from 'frappe-ui'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { FormControl, toast } from 'frappe-ui'
 import { ArchivosRegistroPanel } from '@/components/archivos'
+import { AppBar, EmptyState, StatusChip } from '@/components/ui'
 import ComprasPicker from '@/components/compras/ComprasPicker.vue'
 import HandoffDialog from '@/components/compras/HandoffDialog.vue'
 import ApprovalAsk from '@/components/pendientes/ApprovalAsk.vue'
+import ConfirmSheet from '@/components/documentos/ConfirmSheet.vue'
+import DatosList from '@/components/documentos/DatosList.vue'
+import DocTotals from '@/components/documentos/DocTotals.vue'
+import RecordIsland from '@/components/documentos/RecordIsland.vue'
+import BillAlmacen from '@/components/gastos/BillAlmacen.vue'
+import { isMobile } from '@/composables/breakpoint'
+import { etiquetasHref } from '@/composables/useEtiquetas'
+import { recordActionsFor } from '@/documentos/acciones'
+import { BTN } from '@/documentos/tools'
 import { shellBoot } from '@/composables/muelleShell'
 import { appleKeys, registerPageShortcuts } from '@/composables/shellKeyboard'
 import { hoyLive } from '@/composables/useHoy'
@@ -744,10 +810,8 @@ import { orderBillsRoute } from '@/composables/useGastos'
 import { can } from '@/vendor/muelle-shell/contracts'
 import { formatDay } from '@/utils/contactos'
 import { dayDiff, formatQty, parseServerDate } from '@/utils/display'
-import NextStepCard from '@/components/dinero/NextStepCard.vue'
 import StageSteps from '@/components/documentos/StageSteps.vue'
 import RecordKit from '@/components/documentos/compras/RecordKit.vue'
-import RecordKitTools from '@/components/documentos/compras/RecordKitTools.vue'
 import { useRecordKit } from '@/components/documentos/compras/recordKit'
 import { documentRoute } from '@/documentos/registry'
 import {
@@ -781,13 +845,13 @@ import {
   scannerReceiptUrl,
   statusLabel,
 } from '@/composables/useCompras'
-import LucideArrowLeft from '~icons/lucide/arrow-left'
 import LucideTrash2 from '~icons/lucide/trash-2'
 
 const props = defineProps({ name: { type: String, default: '' } })
 const route = useRoute()
 const router = useRouter()
 const boot = comprasBoot
+const phone = isMobile
 const isNew = computed(() => !props.name)
 // Supplier bills of this order: for bill readers (an employee filing expenses has Gastos too).
 const gastosOn = computed(() => can(shellBoot.value, 'gastos', 'read'))
@@ -882,14 +946,262 @@ const returnHere = computed(() => {
     : path
 })
 const doneBill = ref('')
-const statusTheme = computed(() =>
-  Number(doc.value.docstatus) === 0
-    ? 'orange'
-    : Number(doc.value.docstatus) === 2
-      ? 'red'
-      : doc.value.billing_pending && Number(doc.value.per_received) >= 100
-        ? 'green'
-        : 'blue',
+
+// ── the bar: the supplier, the order's state and its number ──────────────
+const title = computed(() => {
+  if (isNew.value) return __('New purchase')
+  return loaded.value
+    ? doc.value.party || __('Supplier not visible')
+    : __('Compras', null, 'Compras')
+})
+const kindLine = computed(() => __('Purchase order {0}', [doc.value.name]))
+const chip = computed(() => {
+  const label = statusLabel(doc.value)
+  const docstatus = Number(doc.value.docstatus)
+  if (docstatus === 0) return { label, tone: 'warning' }
+  if (docstatus === 2) return { label, tone: 'neutral' }
+  if (lateDays.value) return { label, tone: 'danger' }
+  if (doc.value.status === 'On Hold') return { label, tone: 'warning' }
+  if (['Completed', 'Closed'].includes(doc.value.status))
+    return { label, tone: 'success' }
+  return { label, tone: 'info' }
+})
+const lateText = computed(() =>
+  lateDays.value === 1
+    ? __('1 day late', null, 'Compras')
+    : __('{0} days late', [lateDays.value], 'Compras'),
+)
+
+// ── the hero's steps: the engine's next step first (filled), then billing,
+// receiving without Escáner, editing and printing (tonal) ─────────────────
+const STEP_ICONS = {
+  confirm: 'lucide-check',
+  receive: 'lucide-scan-barcode',
+  bill: 'lucide-receipt',
+  edit: 'lucide-pencil',
+}
+const canEdit = computed(
+  () => !!doc.value.can_write && Number(doc.value.docstatus) === 0,
+)
+const canPrint = computed(() => !!kit.record.value?.actions?.print?.allowed)
+const nextSteps = computed(() => {
+  const out = []
+  const p = primary.value
+  if (p?.allowed)
+    out.push({
+      key: p.key,
+      label: p.label,
+      icon: STEP_ICONS[p.key] || 'lucide-check',
+      busy: true,
+      run: () => runAction(p),
+    })
+  else if (p?.resolve)
+    out.push({
+      key: `resolve-${p.key}`,
+      label: p.resolve.label,
+      icon: p.resolve.kind === 'edit' ? 'lucide-pencil' : 'lucide-send',
+      run: () => resolve(p),
+    })
+  if (p && !p.allowed && p.resolve?.recheck)
+    out.push({
+      key: 'recheck',
+      label: __('Check again'),
+      icon: 'lucide-refresh-cw',
+      run: recheck,
+    })
+  // Escáner is not ready here: the receipt can still be made in Muelle, as
+  // a draft from ERPNext's mapper (the engine's «Recibir»).
+  if (receiveHere.value)
+    out.push({
+      key: 'receive-here',
+      label: __('Receive without Escáner'),
+      icon: 'lucide-truck',
+      testid: 'compra-recibir-aqui',
+      run: receiveInMuelle,
+    })
+  for (const action of secondary.value)
+    out.push({
+      key: action.key,
+      label: action.allowed ? action.label : action.resolve?.label,
+      icon: STEP_ICONS[action.key] || 'lucide-send',
+      busy: true,
+      run: () => (action.allowed ? runAction(action) : resolve(action)),
+    })
+  if (canEdit.value && p?.resolve?.kind !== 'edit')
+    out.push({
+      key: 'edit',
+      label: __('Edit purchase'),
+      icon: 'lucide-pencil',
+      run: startEditing,
+    })
+  if (canPrint.value)
+    out.push({
+      key: 'print',
+      label: __('Print', null, 'Compras'),
+      icon: 'lucide-printer',
+      run: () => kit.onTool('print'),
+    })
+  return out
+})
+
+// ── lines: the first ones, the rest on «Mostrar» ─────────────────────────
+const ROWS_SHOWN = 8
+const allRows = ref(false)
+const shownRows = computed(() =>
+  allRows.value || rows.value.length <= ROWS_SHOWN + 1
+    ? rows.value
+    : rows.value.slice(0, ROWS_SHOWN),
+)
+
+// ── the order's data as rows; Datos lists the rest ───────────────────────
+const DATOS_SHOWN = [
+  'supplier',
+  'supplier_name',
+  'company',
+  'set_warehouse',
+  'schedule_date',
+  'transaction_date',
+  'grand_total',
+  'rounded_total',
+  'status',
+  'per_received',
+  'per_billed',
+]
+const facts = computed(() => {
+  const d = doc.value
+  const out = []
+  if (d.set_warehouse)
+    out.push({
+      key: 'almacen',
+      icon: 'lucide-warehouse',
+      label: __('Destination warehouse', null, 'Compras'),
+      value: d.set_warehouse,
+    })
+  if (d.schedule_date)
+    out.push({
+      key: 'entrega',
+      icon: 'lucide-calendar-clock',
+      label: __('Delivery date', null, 'Compras'),
+      value: formatDay(d.schedule_date),
+    })
+  if (data.value.requests?.length)
+    out.push({
+      key: 'solicitudes',
+      icon: 'lucide-clipboard-list',
+      label: __('From requests'),
+      links: data.value.requests.map((mr) => ({
+        name: mr.name,
+        to: { name: 'CompraSolicitud', params: { name: mr.name } },
+      })),
+    })
+  if (d.company)
+    out.push({
+      key: 'empresa',
+      icon: 'lucide-store',
+      label: __('Company', null, 'Compras'),
+      value: d.company,
+    })
+  return out
+})
+function billState(b) {
+  if (Number(b.docstatus) === 0) return __('draft, to register', null, 'Compras')
+  if (Number(b.outstanding_amount) > 0)
+    return __('{0} to pay', [money(b.outstanding_amount, b.currency)])
+  return __('paid', null, 'Compras')
+}
+
+// ── Escáner's side: receipts open in Escáner with the way back; labels ───
+const labelsOn = computed(() => moduleEnabled(shellBoot.value, 'productos'))
+const almacenRows = computed(() => {
+  if (isNew.value || !doc.value.name) return []
+  const out = (data.value.receipts?.rows || []).map((receipt) => ({
+    key: `pr:${receipt.name}`,
+    icon: 'lucide-truck',
+    title: receipt.name,
+    subtitle: [
+      Number(receipt.docstatus) === 1
+        ? __('confirmed', null, 'Compras')
+        : __('draft, not stock yet'),
+      formatDay(receipt.posting_date),
+    ]
+      .filter(Boolean)
+      .join(' · '),
+    href: scannerReceiptUrl(receipt.name, doc.value.name),
+  }))
+  if (!out.length && Number(doc.value.docstatus) === 1)
+    out.push({
+      key: 'sin-recepcion',
+      icon: 'lucide-truck',
+      title: __('Receipts', null, 'Compras'),
+      reason: __('Nothing received yet.'),
+    })
+  if (labelsOn.value && Number(doc.value.docstatus) === 1)
+    out.push({
+      key: 'etiquetas',
+      icon: 'lucide-tag',
+      title: __('Print labels'),
+      subtitle: __('One per piece on this order'),
+      labels: true,
+    })
+  return out
+})
+
+// ── the bolt: the hero's steps and labels; «⋯» keeps print, share, mail ──
+const boltSteps = computed(() => {
+  const out = nextSteps.value.filter((step) => step.key !== 'edit')
+  if (almacenRows.value.some((row) => row.labels))
+    out.push({
+      label: __('Print labels'),
+      icon: 'lucide-tag',
+      run: () =>
+        router.push(
+          etiquetasHref([], { desde: `Purchase Order:${doc.value.name}` }),
+        ),
+    })
+  return out
+})
+const boltGroups = computed(() =>
+  recordActionsFor({
+    steps: boltSteps.value,
+    canEdit: canEdit.value,
+    tools: kit.tools.value,
+  }),
+)
+function onBolt({ key }) {
+  if (key === 'editar') startEditing()
+  else if (key.startsWith('paso:')) boltSteps.value[Number(key.slice(5))]?.run()
+  else kit.onTool(key)
+}
+function mail() {
+  const action = kit.record.value?.actions?.email
+  if (action?.allowed) kit.onTool('correo')
+  else
+    toast.error(action?.reason || __('This purchase cannot be sent by email.'))
+}
+
+// «Revisar y confirmar»: what is committed with the supplier, in one sentence.
+const reviewCopy = computed(() => ({
+  title: __('Review and confirm'),
+  message: [
+    __('{0}: {1} for {2} item(s), to {3}, delivery {4}.', [
+      doc.value.party || doc.value.name,
+      `${money(doc.value.grand_total, doc.value.currency)} (${doc.value.currency || ''})`,
+      data.value.rows_scope?.total ?? rows.value.length,
+      doc.value.set_warehouse || __('per item'),
+      formatDay(doc.value.schedule_date) || '—',
+    ]),
+    __(
+      'Confirming commits this purchase with the supplier. Stock moves only when goods are received.',
+    ),
+  ].join(' '),
+  confirm: __('Confirm purchase'),
+  back: __('Back', null, 'Compras'),
+}))
+// Never confirm from an incomplete review: every line has to be loaded.
+const reviewError = computed(() =>
+  data.value.rows_scope?.has_more
+    ? __('Some items are still loading. Show them all before confirming.')
+    : '',
 )
 const summaryLine = computed(() => {
   const s = data.value.summary
@@ -1180,6 +1492,7 @@ async function createNew() {
 }
 
 async function confirm() {
+  if (reviewError.value) return
   try {
     const result = await call('confirm', 'confirm_order', {
       name: doc.value.name,
@@ -1353,6 +1666,10 @@ function reviewed() {
   if (returnTo.value) return goBack()
 }
 
+function onBack(event) {
+  event?.preventDefault?.()
+  goBack()
+}
 function goBack() {
   // Pendientes is in this SPA: back without reloading the shell.
   if (fromApprovals.value)
@@ -1394,6 +1711,7 @@ watch(
   () => {
     loaded.value = false
     editing.value = false
+    allRows.value = false
     data.value = {}
     rows.value = []
     load()
@@ -1446,16 +1764,17 @@ onMounted(async () => {
       .catch(() => {})
   await handleDone()
   await load()
-  openFromList()
+  await openFromList()
 })
 onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 
 // «Revisar y confirmar» handed over by the list (key O): opened once.
-function openFromList() {
+async function openFromList() {
   if (route.query.accion !== 'confirmar') return
   const query = { ...route.query }
   delete query.accion
-  router.replace({ query })
+  // A sheet closes on navigation: the query settles before it opens.
+  await router.replace({ query })
   if (primary.value?.key !== 'confirm') return
   if (primary.value.allowed) reviewOpen.value = true
   // Missing data or not this worker's to confirm: its own way out.

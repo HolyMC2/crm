@@ -1,6 +1,6 @@
 <template>
-  <!-- «En el almacén»: the bill's goods in Escáner (receive, its receipts and
-       tasks) and their labels, as flat rows. A step this worker cannot take
+  <!-- «En el almacén»: a bill's or an order's goods in Escáner (receive, its
+       receipts and tasks) and their labels, as flat rows. A step this worker cannot take
        says why and, when a manager can, offers to ask one. -->
   <section
     v-if="rows.length"
@@ -79,8 +79,9 @@ import { etiquetasHref } from '@/composables/useEtiquetas'
 const props = defineProps({
   // billAlmacen.js warehouseRows(...)
   rows: { type: Array, default: () => [] },
-  // The bill, for its labels' «desde».
+  // The record, for its labels' «desde».
   bill: { type: String, required: true },
+  doctype: { type: String, default: 'Purchase Invoice' },
 })
 const emit = defineEmits(['ask'])
 
@@ -97,7 +98,7 @@ function target(row) {
     }
   if (row.labels)
     return {
-      to: etiquetasHref([], { desde: `Purchase Invoice:${props.bill}` }),
+      to: etiquetasHref([], { desde: `${props.doctype}:${props.bill}` }),
     }
   return {}
 }

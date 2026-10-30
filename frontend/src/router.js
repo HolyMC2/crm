@@ -231,7 +231,8 @@ const routes = [
     path: '/compras/nueva',
     name: 'CompraNueva',
     component: () => import('@/pages/CompraOrden.vue'),
-    meta: { app: 'compras', title: 'Compras', listParent: 'Compras' },
+    // The order owns its bar (AppBar with the way back), new or saved.
+    meta: { app: 'compras', title: 'Compras', ownPhoneHeader: true },
   },
   {
     // Surtido: supplier price list → budgeted buy plan → supplier reply
@@ -246,7 +247,7 @@ const routes = [
     name: 'CompraOrden',
     component: () => import('@/pages/CompraOrden.vue'),
     props: true,
-    meta: { app: 'compras', title: 'Compras', listParent: 'Compras' },
+    meta: { app: 'compras', title: 'Compras', ownPhoneHeader: true },
   },
   {
     path: '/compras/solicitud/:name',
