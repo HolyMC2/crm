@@ -1,1631 +1,1738 @@
 <template>
+  <!-- A product (Shell look, record-header): the bar names it with its state,
+       code and group; the bolt holds its actions and «⋯» every tool. The hero
+       keeps the photo, where it lives and price and stock at a glance; the
+       phone keeps Etiqueta · Conteo · Precios at the thumb. -->
   <div
-    class="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto bg-surface-gray-1"
+    class="relative flex h-full min-w-0 flex-1 flex-col overflow-hidden bg-surface-gray-1"
   >
-    <div
-      class="mx-auto w-full max-w-7xl px-4 pb-28 pt-3 sm:px-6 sm:pb-10 lg:px-8"
+    <AppBar
+      :back="true"
+      :back-label="backLabel"
+      :title="data ? product.item_name || product.name : ''"
+      :bell="isPhone"
+      @back="onBack"
     >
-      <!-- On a phone the shell's app bar has the back arrow (meta.listParent). -->
-      <nav v-if="!isPhone" class="mb-2 flex flex-wrap items-center gap-2">
-        <button
-          class="flex min-h-11 items-center gap-1 rounded-5 pr-2 text-sm text-ink-gray-7 hover:text-ink-gray-9 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
-          @click="goBack"
-        >
-          <LucideArrowLeft class="h-4 w-4" />
-          {{ backLabel }}
-        </button>
-      </nav>
-
-      <section
-        v-if="guard"
-        role="alert"
-        class="mx-auto max-w-xl space-y-4 rounded-7 border border-outline-gray-2 bg-surface-base p-6"
-      >
-        <h1 class="text-xl font-semibold">{{ guard.title }}</h1>
-        <p class="text-base text-ink-gray-7">{{ guard.detail }}</p>
-        <div class="flex flex-wrap gap-2">
-          <Button :label="__('Retry', null, 'Productos')" @click="load" />
-          <Button :label="__('Back to Productos')" @click="goBack" />
-        </div>
-      </section>
-
-      <div
-        v-else-if="loading && !data"
-        role="status"
-        :aria-label="__('Loading product…')"
-        class="space-y-4"
-      >
-        <div
-          class="flex gap-5 rounded-7 border border-outline-gray-2 bg-surface-base p-5"
-        >
-          <div class="h-32 w-32 animate-pulse rounded-7 bg-surface-gray-2" />
-          <div class="flex-1 space-y-3 pt-2">
-            <div class="h-3 w-40 animate-pulse rounded-4 bg-surface-gray-2" />
-            <div class="h-6 w-72 animate-pulse rounded-4 bg-surface-gray-2" />
-            <div class="h-3 w-56 animate-pulse rounded-4 bg-surface-gray-2" />
-          </div>
-        </div>
-        <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
-          <div class="h-48 animate-pulse rounded-7 bg-surface-gray-2" />
-          <div class="h-48 animate-pulse rounded-7 bg-surface-gray-2" />
-        </div>
-      </div>
-
-      <template v-else-if="data">
-        <!-- Hero: photo, where it lives, what it is, what to do next. -->
-        <header
-          class="grid gap-4 rounded-7 border border-outline-gray-2 bg-surface-base p-4 sm:grid-cols-[auto_minmax(0,1fr)] sm:gap-5 sm:p-5 xl:grid-cols-[auto_minmax(0,1fr)_auto]"
-        >
-          <div class="flex flex-col items-center gap-2 sm:items-start">
-            <img
-              v-if="product.image && !photoBroken"
-              :src="product.image"
-              :alt="product.item_name || product.name"
-              class="h-36 w-36 rounded-7 object-cover ring-1 ring-outline-gray-2 sm:h-40 sm:w-40"
-              @error="photoBroken = true"
+      <template v-if="data" #title>
+        <div class="flex min-h-12 min-w-0 flex-col justify-center px-3">
+          <span
+            class="title-face line-clamp-2 break-words text-xl font-semibold leading-tight [text-wrap:balance]"
+            data-appbar-title
+            >{{ product.item_name || product.name }}</span
+          >
+          <span class="flex min-w-0 items-center gap-2 pt-0.5">
+            <StatusChip
+              v-if="chip"
+              :label="chip.label"
+              :tone="chip.tone"
+              data-testid="producto-status"
             />
-            <div
-              v-else
-              class="flex h-36 w-36 flex-col items-center justify-center gap-1 rounded-7 border border-dashed border-outline-gray-3 bg-surface-gray-1 text-center sm:h-40 sm:w-40"
-            >
-              <LucideImage class="h-7 w-7 text-ink-gray-4" aria-hidden="true" />
-              <span class="px-2 text-xs text-ink-gray-6">{{
-                __('No photo yet')
-              }}</span>
-            </div>
-            <div
-              v-if="data.can_edit"
-              class="flex flex-wrap justify-center gap-2 sm:justify-start"
-            >
-              <FileUploader
-                file-types="image/*"
-                :upload-args="{
-                  doctype: 'Item',
-                  docname: product.name,
-                  private: false,
-                }"
-                @success="photoUploaded"
-                @failure="photoFailed"
-              >
-                <template #default="{ openFileSelector, uploading, progress }">
-                  <Button
-                    class="min-h-11 sm:min-h-8"
-                    :loading="uploading || photoSaving"
-                    :label="
-                      uploading
-                        ? __('Uploading {0}%', [progress])
-                        : product.image
-                          ? __('Change photo')
-                          : __('Add photo')
-                    "
-                    @click="openFileSelector"
-                  >
-                    <template #prefix>
-                      <LucideCamera class="h-4 w-4" aria-hidden="true" />
-                    </template>
-                  </Button>
-                </template>
-              </FileUploader>
-              <!-- Shell D7: the shell's camera, one photo as shot (no page crop). -->
-              <Button
-                class="min-h-11 sm:min-h-8"
-                :label="__('Take photo')"
-                :disabled="photoSaving"
-                data-testid="producto-tomar-foto"
-                @pointerenter="loadCameraSheet"
-                @focus="loadCameraSheet"
-                @click="takePhoto"
-              >
-                <template #prefix>
-                  <LucideAperture class="h-4 w-4" aria-hidden="true" />
-                </template>
-              </Button>
+            <span class="truncate text-sm leading-tight text-ink-gray-6">{{
+              kindLine
+            }}</span>
+          </span>
+        </div>
+      </template>
+      <template #actions>
+        <RecordIsland
+          v-if="data"
+          :groups="boltGroups"
+          :phone="isPhone"
+          :subtitle="kit.scopeTitle.value"
+          @pick="onBolt"
+          @tools="kit.openTools()"
+        />
+      </template>
+    </AppBar>
+    <div class="min-h-0 flex-1 overflow-y-auto">
+      <div
+        class="mx-auto w-full max-w-7xl px-4 pb-28 pt-3 sm:px-6 sm:pb-10 lg:px-8"
+      >
+        <section
+          v-if="guard"
+          role="alert"
+          class="mx-auto max-w-xl space-y-4 rounded-7 border border-outline-gray-2 bg-surface-base p-6"
+        >
+          <h1 class="text-xl font-semibold">{{ guard.title }}</h1>
+          <p class="text-base text-ink-gray-7">{{ guard.detail }}</p>
+          <div class="flex flex-wrap gap-2">
+            <button type="button" :class="['press', BTN.filled]" @click="load">
+              <span class="lucide-refresh-cw size-5" aria-hidden="true" />
+              {{ __('Retry', null, 'Productos') }}
+            </button>
+          </div>
+        </section>
+
+        <div
+          v-else-if="loading && !data"
+          role="status"
+          :aria-label="__('Loading product…')"
+          class="space-y-4"
+        >
+          <div
+            class="flex gap-5 rounded-7 border border-outline-gray-2 bg-surface-base p-5"
+          >
+            <div class="h-32 w-32 animate-pulse rounded-7 bg-surface-gray-2" />
+            <div class="flex-1 space-y-3 pt-2">
+              <div class="h-3 w-40 animate-pulse rounded-4 bg-surface-gray-2" />
+              <div class="h-6 w-72 animate-pulse rounded-4 bg-surface-gray-2" />
+              <div class="h-3 w-56 animate-pulse rounded-4 bg-surface-gray-2" />
             </div>
           </div>
+          <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
+            <div class="h-48 animate-pulse rounded-7 bg-surface-gray-2" />
+            <div class="h-48 animate-pulse rounded-7 bg-surface-gray-2" />
+          </div>
+        </div>
 
-          <div class="min-w-0">
-            <h1
-              class="break-words text-2xl font-semibold leading-tight text-ink-gray-9 [text-wrap:balance]"
-            >
-              {{ product.item_name || product.name }}
-            </h1>
-            <!-- Where it lives: one line under the name, in the group's own
-                 case; the parents shorten first, the nearest group stays. -->
-            <nav
-              v-if="groupPath.length"
-              :aria-label="__('Product group')"
-              class="mt-1 flex min-w-0 items-center gap-x-1 whitespace-nowrap text-sm text-ink-gray-6"
-              data-group-path
-            >
-              <template v-for="(group, index) in groupPath" :key="group">
-                <span v-if="index" class="shrink-0" aria-hidden="true">›</span>
-                <RouterLink
-                  :to="groupRoute(group)"
-                  class="min-w-0 truncate rounded-4 hover:text-ink-gray-8 hover:underline"
-                  :class="
-                    index === groupPath.length - 1 ? 'shrink-0 max-w-full' : ''
-                  "
-                  :title="__('See the products of {0}', [group])"
-                  >{{ group }}</RouterLink
-                >
-              </template>
-            </nav>
-            <div class="mt-2 flex flex-wrap items-center gap-1.5">
-              <span
-                v-if="kind"
-                class="inline-flex h-6 items-center gap-1.5 rounded-full px-2.5 text-xs font-medium"
-                :class="
-                  kind.kind === 'service'
-                    ? 'bg-surface-gray-2 text-ink-gray-8'
-                    : 'bg-surface-blue-2 text-ink-blue-8'
-                "
+        <template v-else-if="data">
+          <!-- Hero: photo, where it lives, what it is, what to do next. -->
+          <header
+            class="grid gap-4 rounded-7 border border-outline-gray-2 bg-surface-base p-4 sm:grid-cols-[auto_minmax(0,1fr)] sm:gap-5 sm:p-5 xl:grid-cols-[auto_minmax(0,1fr)_auto]"
+          >
+            <div class="flex flex-col items-center gap-2 sm:items-start">
+              <img
+                v-if="product.image && !photoBroken"
+                :src="product.image"
+                :alt="product.item_name || product.name"
+                class="h-36 w-36 rounded-7 object-cover ring-1 ring-outline-gray-2 sm:h-40 sm:w-40"
+                @error="photoBroken = true"
+              />
+              <div
+                v-else
+                class="flex h-36 w-36 flex-col items-center justify-center gap-1 rounded-7 border border-dashed border-outline-gray-3 bg-surface-gray-1 text-center sm:h-40 sm:w-40"
               >
-                <Icon
-                  :icon="kind.kind === 'service' ? 'briefcase' : 'package'"
-                  class="h-3.5 w-3.5"
+                <LucideImage
+                  class="h-7 w-7 text-ink-gray-4"
                   aria-hidden="true"
                 />
-                {{ kind.text }}
-              </span>
+                <span class="px-2 text-xs text-ink-gray-6">{{
+                  __('No photo yet')
+                }}</span>
+              </div>
+              <div
+                v-if="data.can_edit"
+                class="flex flex-wrap justify-center gap-2 sm:justify-start"
+              >
+                <FileUploader
+                  file-types="image/*"
+                  :upload-args="{
+                    doctype: 'Item',
+                    docname: product.name,
+                    private: false,
+                  }"
+                  @success="photoUploaded"
+                  @failure="photoFailed"
+                >
+                  <template
+                    #default="{ openFileSelector, uploading, progress }"
+                  >
+                    <button
+                      type="button"
+                      :class="['press', BTN.tonal]"
+                      :disabled="uploading || photoSaving"
+                      @click="openFileSelector"
+                    >
+                      <span
+                        :class="[
+                          uploading || photoSaving
+                            ? 'lucide-loader-circle animate-spin'
+                            : 'lucide-image-plus',
+                          'size-5',
+                        ]"
+                        aria-hidden="true"
+                      />
+                      {{
+                        uploading
+                          ? __('Uploading {0}%', [progress])
+                          : product.image
+                            ? __('Change photo')
+                            : __('Add photo')
+                      }}
+                    </button>
+                  </template>
+                </FileUploader>
+                <!-- Shell D7: the shell's camera, one photo as shot (no page crop). -->
+                <button
+                  type="button"
+                  :class="['press', BTN.tonal]"
+                  :disabled="photoSaving"
+                  data-testid="producto-tomar-foto"
+                  @pointerenter="loadCameraSheet"
+                  @focus="loadCameraSheet"
+                  @click="takePhoto"
+                >
+                  <span class="lucide-camera size-5" aria-hidden="true" />
+                  {{ __('Take photo') }}
+                </button>
+              </div>
+            </div>
+
+            <div class="min-w-0">
+              <h1 class="sr-only">
+                {{ product.item_name || product.name }}
+              </h1>
+              <!-- Where it lives: one line under the name, in the group's own
+                 case; the parents shorten first, the nearest group stays. -->
+              <nav
+                v-if="groupPath.length"
+                :aria-label="__('Product group')"
+                class="mt-1 flex min-w-0 items-center gap-x-1 whitespace-nowrap text-sm text-ink-gray-6"
+                data-group-path
+              >
+                <template v-for="(group, index) in groupPath" :key="group">
+                  <span v-if="index" class="shrink-0" aria-hidden="true"
+                    >›</span
+                  >
+                  <RouterLink
+                    :to="groupRoute(group)"
+                    class="min-w-0 truncate rounded-4 hover:text-ink-gray-8 hover:underline"
+                    :class="
+                      index === groupPath.length - 1
+                        ? 'shrink-0 max-w-full'
+                        : ''
+                    "
+                    :title="__('See the products of {0}', [group])"
+                    >{{ group }}</RouterLink
+                  >
+                </template>
+              </nav>
+              <div class="mt-2 flex flex-wrap items-center gap-1.5">
+                <span
+                  v-if="kind"
+                  class="inline-flex h-6 items-center gap-1.5 rounded-full px-2.5 text-xs font-medium"
+                  :class="
+                    kind.kind === 'service'
+                      ? 'bg-surface-gray-2 text-ink-gray-8'
+                      : 'bg-surface-blue-2 text-ink-blue-8'
+                  "
+                >
+                  <Icon
+                    :icon="kind.kind === 'service' ? 'briefcase' : 'package'"
+                    class="h-3.5 w-3.5"
+                    aria-hidden="true"
+                  />
+                  {{ kind.text }}
+                </span>
+                <a
+                  v-if="isTemplate"
+                  href="#variantes"
+                  class="inline-flex h-6 items-center gap-1.5 rounded-full bg-surface-blue-2 px-2.5 text-xs font-medium text-ink-blue-8 hover:underline"
+                >
+                  <LucideLayers class="h-3.5 w-3.5" aria-hidden="true" />
+                  {{ variantsLabel({ count: data.variants.count }) }}
+                </a>
+                <StatusChip
+                  v-if="product.disabled"
+                  tone="danger"
+                  :label="__('Disabled', null, 'Productos')"
+                />
+                <StatusChip
+                  v-if="!product.is_sales_item"
+                  tone="neutral"
+                  :label="__('Not for sale')"
+                />
+              </div>
+              <p
+                v-if="product.variant_of"
+                class="mt-2 flex flex-wrap items-center gap-1.5 text-sm text-ink-gray-6"
+              >
+                <span>{{ __('Variant of', null, 'Productos') }}</span>
+                <RouterLink
+                  :to="templateRoute"
+                  class="font-medium text-ink-gray-9 underline-offset-2 hover:underline"
+                  >{{ product.template_name || product.variant_of }}</RouterLink
+                >
+                <span
+                  v-for="entry in product.attributes"
+                  :key="entry.attribute"
+                  :title="entry.attribute"
+                  class="inline-flex h-6 items-center rounded-full bg-surface-gray-2 px-2.5 text-xs font-medium text-ink-gray-8"
+                  >{{ entry.value }}</span
+                >
+              </p>
+              <p
+                class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-gray-6"
+              >
+                <span class="font-mono text-ink-gray-8">{{
+                  product.name
+                }}</span>
+                <span>{{
+                  __('Unit: {0}', [unitName(product.stock_uom)])
+                }}</span>
+                <span v-if="product.brand">{{
+                  __('Brand: {0}', [product.brand])
+                }}</span>
+              </p>
+              <!-- Phone (Records 3): the actions are equal tonal pills with the
+                 label under each, sharing the row. -->
+              <div
+                v-if="isPhone"
+                class="mt-4 flex flex-wrap gap-x-2 gap-y-3"
+                data-hero-pills
+              >
+                <!-- Native tags: a dynamic «button» would resolve to the
+                   globally registered frappe-ui Button. -->
+                <template v-for="entry in phonePills" :key="entry.key">
+                  <a
+                    v-if="entry.href"
+                    :href="entry.href"
+                    :class="PILL"
+                    :title="entry.title || undefined"
+                    :data-action="entry.key"
+                  >
+                    <span :class="PILL_ICON" aria-hidden="true">
+                      <Icon :icon="entry.icon" class="h-5 w-5" />
+                    </span>
+                    {{ entry.label }}
+                  </a>
+                  <button
+                    v-else
+                    type="button"
+                    :class="[PILL, entry.enabled ? '' : 'opacity-60']"
+                    :title="entry.title || entry.reason || undefined"
+                    :data-action="entry.key"
+                    @click="run(entry)"
+                  >
+                    <span :class="PILL_ICON" aria-hidden="true">
+                      <Icon :icon="entry.icon" class="h-5 w-5" />
+                    </span>
+                    {{ entry.label }}
+                  </button>
+                </template>
+              </div>
+              <div v-else class="mt-4 flex flex-wrap gap-2">
+                <template v-for="entry in heroActions" :key="entry.key">
+                  <a
+                    v-if="entry.href"
+                    :href="entry.href"
+                    :class="['press', BTN.tonal]"
+                    :title="entry.title || undefined"
+                    :data-action="entry.key"
+                  >
+                    <Icon
+                      :icon="entry.icon"
+                      class="size-5"
+                      aria-hidden="true"
+                    />
+                    {{ entry.label }}</a
+                  >
+                  <button
+                    v-else
+                    type="button"
+                    :class="[
+                      'press',
+                      entry.primary ? BTN.filled : BTN.tonal,
+                      entry.enabled ? '' : 'opacity-60',
+                    ]"
+                    :title="entry.title || entry.reason || undefined"
+                    :data-action="entry.key"
+                    @click="run(entry)"
+                  >
+                    <Icon
+                      :icon="entry.icon"
+                      class="size-5"
+                      aria-hidden="true"
+                    />
+                    {{ entry.label }}
+                  </button>
+                </template>
+              </div>
+            </div>
+
+            <!-- What a worker opens the product for: price and stock. -->
+            <dl
+              class="grid grid-cols-2 gap-3 sm:col-span-2 xl:col-span-1 xl:w-64 xl:grid-cols-1"
+            >
+              <a
+                href="#precios"
+                class="rounded-6 bg-surface-gray-1 px-4 py-3 ring-1 ring-outline-gray-1 hover:bg-surface-gray-2"
+              >
+                <dt class="text-xs text-ink-gray-6">
+                  {{
+                    priceListLabel(defaultPrice?.price_list) ||
+                    __('Price', null, 'Productos')
+                  }}
+                </dt>
+                <!-- No shop, no shop list: the price is unseen, not missing. -->
+                <dd
+                  v-if="!hasRate(defaultPrice) && data.stock.unassigned"
+                  class="mt-0.5 text-base font-semibold text-ink-gray-8"
+                  data-price-unassigned
+                >
+                  No lo ves
+                </dd>
+                <dd
+                  v-else
+                  class="mt-0.5 text-2xl font-semibold tabular-nums text-ink-gray-9"
+                  :class="hasRate(defaultPrice) ? '' : 'text-ink-gray-5'"
+                >
+                  {{
+                    hasRate(defaultPrice)
+                      ? money(defaultPrice.rate, defaultPrice.currency)
+                      : __('No price', null, 'Productos')
+                  }}
+                </dd>
+                <dd
+                  v-if="hasRate(defaultPrice)"
+                  class="text-xs text-ink-gray-6"
+                >
+                  {{
+                    __('per {0}', [
+                      unitName(defaultPrice.uom || product.stock_uom),
+                    ])
+                  }}
+                  <template v-if="defaultAge.text">
+                    ·
+                    {{
+                      __('updated {0}', [defaultAge.text.toLocaleLowerCase()])
+                    }}</template
+                  >
+                </dd>
+              </a>
               <a
                 v-if="isTemplate"
                 href="#variantes"
-                class="inline-flex h-6 items-center gap-1.5 rounded-full bg-surface-blue-2 px-2.5 text-xs font-medium text-ink-blue-8 hover:underline"
+                class="rounded-6 bg-surface-gray-1 px-4 py-3 ring-1 ring-outline-gray-1 hover:bg-surface-gray-2"
               >
-                <LucideLayers class="h-3.5 w-3.5" aria-hidden="true" />
-                {{ variantsLabel({ count: data.variants.count }) }}
+                <dt class="text-xs text-ink-gray-6">
+                  {{ __('Variants', null, 'Productos') }}
+                </dt>
+                <dd
+                  class="mt-0.5 text-2xl font-semibold tabular-nums text-ink-gray-9"
+                >
+                  {{ qty(data.variants.count) }}
+                </dd>
+                <dd class="text-xs text-ink-gray-6">
+                  {{ __('Stock and price per variant', null, 'Productos') }}
+                </dd>
               </a>
-              <Badge
-                v-if="product.disabled"
-                theme="red"
-                :label="__('Disabled', null, 'Productos')"
-              />
-              <Badge
-                v-if="!product.is_sales_item"
-                theme="gray"
-                :label="__('Not for sale')"
-              />
-            </div>
-            <p
-              v-if="product.variant_of"
-              class="mt-2 flex flex-wrap items-center gap-1.5 text-sm text-ink-gray-6"
-            >
-              <span>{{ __('Variant of', null, 'Productos') }}</span>
-              <RouterLink
-                :to="templateRoute"
-                class="font-medium text-ink-gray-9 underline-offset-2 hover:underline"
-                >{{ product.template_name || product.variant_of }}</RouterLink
+              <a
+                v-else
+                href="#existencias"
+                class="rounded-6 bg-surface-gray-1 px-4 py-3 ring-1 ring-outline-gray-1 hover:bg-surface-gray-2"
               >
-              <span
-                v-for="entry in product.attributes"
-                :key="entry.attribute"
-                :title="entry.attribute"
-                class="inline-flex h-6 items-center rounded-full bg-surface-gray-2 px-2.5 text-xs font-medium text-ink-gray-8"
-                >{{ entry.value }}</span
-              >
-            </p>
-            <p
-              class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-gray-6"
+                <dt class="text-xs text-ink-gray-6">
+                  {{ __('On hand', null, 'Productos') }}
+                </dt>
+                <template v-if="data.stock.service">
+                  <dd class="mt-0.5 text-base font-semibold text-ink-gray-8">
+                    {{ __('Service') }}
+                  </dd>
+                  <dd class="text-xs text-ink-gray-6">
+                    {{ __('Carries no stock') }}
+                  </dd>
+                </template>
+                <!-- No store assigned (Mercado scope): the read is empty, which
+                   is not «0» nor «agotado»; say what is missing instead. -->
+                <template v-else-if="data.stock.unassigned">
+                  <dd class="mt-0.5 text-base font-semibold text-ink-gray-8">
+                    {{ __('You do not see it', null, 'Productos') }}
+                  </dd>
+                  <dd class="text-xs text-ink-gray-6" data-stock-unassigned>
+                    {{ __('Ask your manager to assign you a store') }}
+                  </dd>
+                </template>
+                <template v-else-if="data.stock.readable">
+                  <dd
+                    class="mt-0.5 text-2xl font-semibold tabular-nums"
+                    :class="
+                      data.stock.total > 0
+                        ? 'text-ink-gray-9'
+                        : 'text-ink-red-7'
+                    "
+                  >
+                    {{ qty(data.stock.total) }}
+                    <span class="text-sm font-medium text-ink-gray-6">{{
+                      unitName(product.stock_uom)
+                    }}</span>
+                  </dd>
+                  <dd class="text-xs text-ink-gray-6">
+                    {{
+                      data.stock.total > 0
+                        ? __('in {0} store(s)', [storesWithStock])
+                        : __('Sold out in your stores')
+                    }}
+                  </dd>
+                </template>
+                <dd v-else class="mt-0.5 text-sm text-ink-gray-6">—</dd>
+              </a>
+            </dl>
+          </header>
+
+          <div
+            v-if="unit.mismatch"
+            role="status"
+            class="mt-4 rounded-6 bg-surface-amber-1 p-3 text-sm text-ink-amber-7"
+          >
+            {{
+              __(
+                'This link is for the price per {0}. Here prices change per {1} only; the price per {0} is set by whoever maintains prices.',
+                [unitName(unit.requested), unitName(unit.stock)],
+              )
+            }}
+            <span class="mt-2 flex flex-wrap gap-2">
+              <Button
+                v-if="action('price')?.enabled"
+                :label="__('Change the price per {0}', [unitName(unit.stock)])"
+                @click="openPrice"
+              />
+              <Button
+                :label="
+                  __('Ask for the price per {0}', [unitName(unit.requested)])
+                "
+                @click="askUnitPrice"
+              />
+            </span>
+          </div>
+          <div
+            v-if="notice"
+            role="status"
+            class="mt-4 rounded-6 bg-surface-green-1 p-3 text-sm text-ink-green-8"
+          >
+            {{ notice.text }}
+            <Button
+              v-if="notice.action"
+              class="ml-1"
+              :label="notice.action.label"
+              data-notice-action
+              @click="notice.action.run()"
+            />
+            <RouterLink
+              v-if="notice.to"
+              :to="notice.to"
+              class="ml-1 underline"
+              >{{ notice.link }}</RouterLink
             >
-              <span class="font-mono text-ink-gray-8">{{ product.name }}</span>
-              <span>{{ __('Unit: {0}', [unitName(product.stock_uom)]) }}</span>
-              <span v-if="product.brand">{{
-                __('Brand: {0}', [product.brand])
-              }}</span>
-            </p>
-            <!-- Phone (Records 3): the actions are equal tonal pills with the
-                 label under each, sharing the row. -->
-            <div
-              v-if="isPhone"
-              class="mt-4 flex flex-wrap gap-x-2 gap-y-3"
-              data-hero-pills
-            >
-              <!-- Native tags: a dynamic «button» would resolve to the
-                   globally registered frappe-ui Button. -->
-              <template v-for="entry in phonePills" :key="entry.key">
-                <a
-                  v-if="entry.href"
-                  :href="entry.href"
-                  :class="PILL"
-                  :title="entry.title || undefined"
-                  :data-action="entry.key"
-                >
-                  <span :class="PILL_ICON" aria-hidden="true">
-                    <Icon :icon="entry.icon" class="h-5 w-5" />
-                  </span>
-                  {{ entry.label }}
-                </a>
-                <button
-                  v-else
-                  type="button"
-                  :class="[PILL, entry.enabled ? '' : 'opacity-60']"
-                  :title="entry.title || entry.reason || undefined"
-                  :data-action="entry.key"
-                  @click="run(entry)"
-                >
-                  <span :class="PILL_ICON" aria-hidden="true">
-                    <Icon :icon="entry.icon" class="h-5 w-5" />
-                  </span>
-                  {{ entry.label }}
-                </button>
-              </template>
-            </div>
-            <div v-else class="mt-4 flex flex-wrap gap-2">
-              <template v-for="entry in heroActions" :key="entry.key">
-                <a
-                  v-if="entry.href"
-                  :href="entry.href"
-                  class="inline-flex min-h-11 items-center gap-1.5 rounded-5 bg-surface-gray-2 px-3 text-base text-ink-gray-8 hover:bg-surface-gray-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-8"
-                  :title="entry.title || undefined"
-                >
-                  <Icon
-                    :icon="entry.icon"
-                    class="h-4 w-4"
-                    aria-hidden="true"
-                  />{{ entry.label }}</a
-                >
-                <Button
-                  v-else
-                  :variant="entry.primary ? 'solid' : 'subtle'"
-                  :label="entry.label"
-                  :title="entry.reason || undefined"
-                  class="min-h-11 sm:min-h-8"
-                  @click="run(entry)"
-                >
-                  <template #prefix>
-                    <Icon
-                      :icon="entry.icon"
-                      class="h-4 w-4"
-                      aria-hidden="true"
-                    />
-                  </template>
-                </Button>
-              </template>
-            </div>
+            <Button
+              v-if="listBack"
+              class="ml-2"
+              :label="__('Back to the list')"
+              @click="router.push(listBack)"
+            />
+          </div>
+          <div
+            v-if="problem"
+            role="alert"
+            class="mt-4 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
+          >
+            <strong>{{ problem.title }}.</strong> {{ problem.detail }}
+            <Button
+              class="ml-2"
+              :label="__('Retry', null, 'Productos')"
+              @click="load"
+            />
           </div>
 
-          <!-- What a worker opens the product for: price and stock. -->
-          <dl
-            class="grid grid-cols-2 gap-3 sm:col-span-2 xl:col-span-1 xl:w-64 xl:grid-cols-1"
+          <div
+            class="mt-4 grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-5"
           >
-            <a
-              href="#precios"
-              class="rounded-6 bg-surface-gray-1 px-4 py-3 ring-1 ring-outline-gray-1 hover:bg-surface-gray-2"
-            >
-              <dt class="text-xs text-ink-gray-6">
-                {{
-                  priceListLabel(defaultPrice?.price_list) ||
-                  __('Price', null, 'Productos')
-                }}
-              </dt>
-              <!-- No shop, no shop list: the price is unseen, not missing. -->
-              <dd
-                v-if="!hasRate(defaultPrice) && data.stock.unassigned"
-                class="mt-0.5 text-base font-semibold text-ink-gray-8"
-                data-price-unassigned
-              >
-                No lo ves
-              </dd>
-              <dd
-                v-else
-                class="mt-0.5 text-2xl font-semibold tabular-nums text-ink-gray-9"
-                :class="hasRate(defaultPrice) ? '' : 'text-ink-gray-5'"
-              >
-                {{
-                  hasRate(defaultPrice)
-                    ? money(defaultPrice.rate, defaultPrice.currency)
-                    : __('No price', null, 'Productos')
-                }}
-              </dd>
-              <dd v-if="hasRate(defaultPrice)" class="text-xs text-ink-gray-6">
-                {{
-                  __('per {0}', [
-                    unitName(defaultPrice.uom || product.stock_uom),
-                  ])
-                }}
-                <template v-if="defaultAge.text">
-                  ·
-                  {{
-                    __('updated {0}', [defaultAge.text.toLocaleLowerCase()])
-                  }}</template
-                >
-              </dd>
-            </a>
-            <a
-              v-if="isTemplate"
-              href="#variantes"
-              class="rounded-6 bg-surface-gray-1 px-4 py-3 ring-1 ring-outline-gray-1 hover:bg-surface-gray-2"
-            >
-              <dt class="text-xs text-ink-gray-6">
-                {{ __('Variants', null, 'Productos') }}
-              </dt>
-              <dd
-                class="mt-0.5 text-2xl font-semibold tabular-nums text-ink-gray-9"
-              >
-                {{ qty(data.variants.count) }}
-              </dd>
-              <dd class="text-xs text-ink-gray-6">
-                {{ __('Stock and price per variant', null, 'Productos') }}
-              </dd>
-            </a>
-            <a
-              v-else
-              href="#existencias"
-              class="rounded-6 bg-surface-gray-1 px-4 py-3 ring-1 ring-outline-gray-1 hover:bg-surface-gray-2"
-            >
-              <dt class="text-xs text-ink-gray-6">
-                {{ __('On hand', null, 'Productos') }}
-              </dt>
-              <template v-if="data.stock.service">
-                <dd class="mt-0.5 text-base font-semibold text-ink-gray-8">
-                  {{ __('Service') }}
-                </dd>
-                <dd class="text-xs text-ink-gray-6">
-                  {{ __('Carries no stock') }}
-                </dd>
-              </template>
-              <!-- No store assigned (Mercado scope): the read is empty, which
-                   is not «0» nor «agotado»; say what is missing instead. -->
-              <template v-else-if="data.stock.unassigned">
-                <dd class="mt-0.5 text-base font-semibold text-ink-gray-8">
-                  {{ __('You do not see it', null, 'Productos') }}
-                </dd>
-                <dd class="text-xs text-ink-gray-6" data-stock-unassigned>
-                  {{ __('Ask your manager to assign you a store') }}
-                </dd>
-              </template>
-              <template v-else-if="data.stock.readable">
-                <dd
-                  class="mt-0.5 text-2xl font-semibold tabular-nums"
-                  :class="
-                    data.stock.total > 0 ? 'text-ink-gray-9' : 'text-ink-red-7'
-                  "
-                >
-                  {{ qty(data.stock.total) }}
-                  <span class="text-sm font-medium text-ink-gray-6">{{
-                    unitName(product.stock_uom)
-                  }}</span>
-                </dd>
-                <dd class="text-xs text-ink-gray-6">
-                  {{
-                    data.stock.total > 0
-                      ? __('in {0} store(s)', [storesWithStock])
-                      : __('Sold out in your stores')
-                  }}
-                </dd>
-              </template>
-              <dd v-else class="mt-0.5 text-sm text-ink-gray-6">—</dd>
-            </a>
-          </dl>
-        </header>
-
-        <div
-          v-if="unit.mismatch"
-          role="status"
-          class="mt-4 rounded-6 bg-surface-amber-1 p-3 text-sm text-ink-amber-7"
-        >
-          {{
-            __(
-              'This link is for the price per {0}. Here prices change per {1} only; the price per {0} is set by whoever maintains prices.',
-              [unitName(unit.requested), unitName(unit.stock)],
-            )
-          }}
-          <span class="mt-2 flex flex-wrap gap-2">
-            <Button
-              v-if="action('price')?.enabled"
-              :label="__('Change the price per {0}', [unitName(unit.stock)])"
-              @click="openPrice"
-            />
-            <Button
-              :label="
-                __('Ask for the price per {0}', [unitName(unit.requested)])
-              "
-              @click="askUnitPrice"
-            />
-          </span>
-        </div>
-        <div
-          v-if="notice"
-          role="status"
-          class="mt-4 rounded-6 bg-surface-green-1 p-3 text-sm text-ink-green-8"
-        >
-          {{ notice.text }}
-          <Button
-            v-if="notice.action"
-            class="ml-1"
-            :label="notice.action.label"
-            data-notice-action
-            @click="notice.action.run()"
-          />
-          <RouterLink v-if="notice.to" :to="notice.to" class="ml-1 underline">{{
-            notice.link
-          }}</RouterLink>
-          <Button
-            v-if="listBack"
-            class="ml-2"
-            :label="__('Back to the list')"
-            @click="router.push(listBack)"
-          />
-        </div>
-        <div
-          v-if="problem"
-          role="alert"
-          class="mt-4 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
-        >
-          <strong>{{ problem.title }}.</strong> {{ problem.detail }}
-          <Button
-            class="ml-2"
-            :label="__('Retry', null, 'Productos')"
-            @click="load"
-          />
-        </div>
-
-        <div
-          class="mt-4 grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-5"
-        >
-          <!-- ── main column ─────────────────────────────────────────── -->
-          <div class="min-w-0 space-y-4 lg:space-y-5">
-            <VariantGrid
-              v-if="isTemplate"
-              ref="variantGrid"
-              :item="product.name"
-              :count="data.variants.count"
-              :attributes="data.variants.attributes"
-              :initial-search="variantSearch"
-              :list="variantListPath"
-            />
-            <section
-              id="precios"
-              class="scroll-mt-4 rounded-7 border border-outline-gray-2 bg-surface-base"
-            >
-              <header
-                class="flex flex-wrap items-center gap-2 border-b border-outline-gray-1 px-4 py-3"
-              >
-                <h2 class="flex-1 text-base font-semibold text-ink-gray-9">
-                  {{ __('Price lists') }}
-                  <span
-                    v-if="data.prices.rows.length"
-                    class="ml-1 text-sm font-normal text-ink-gray-5"
-                    >{{ data.prices.rows.length }}</span
-                  >
-                </h2>
-                <Button
-                  v-if="action('price')"
-                  class="min-h-11 sm:min-h-7"
-                  variant="ghost"
-                  :label="action('price').label"
-                  @click="run(action('price'))"
-                >
-                  <template #prefix>
-                    <span class="lucide-pencil h-4 w-4" aria-hidden="true" />
-                  </template>
-                </Button>
-              </header>
-              <p
-                v-if="data.prices.setup"
-                class="mx-4 mt-3 rounded-6 bg-surface-amber-1 p-3 text-sm text-ink-amber-7"
-              >
-                {{ data.prices.setup.reason }}
-              </p>
-              <p
-                v-if="!data.prices.readable"
-                class="px-4 py-4 text-sm text-ink-gray-6"
-              >
-                {{ __('You cannot see prices. Ask your manager for access.') }}
-              </p>
-              <p
-                v-else-if="data.prices.reason"
-                class="px-4 py-4 text-sm text-ink-gray-6"
-              >
-                {{ plain(data.prices.reason) }}
-              </p>
-              <div
-                v-else-if="!data.prices.rows.length"
-                class="flex flex-wrap items-center gap-3 px-4 py-4 text-sm text-ink-gray-6"
-              >
-                <LucideTag class="h-5 w-5 text-ink-gray-4" aria-hidden="true" />
-                <span class="flex-1">{{
-                  __('No price list sells this product yet.')
-                }}</span>
-              </div>
-              <ProductPrices
-                v-else
-                :rows="data.prices.rows"
-                :today="boot?.today || ''"
+            <!-- ── main column ─────────────────────────────────────────── -->
+            <div class="min-w-0 space-y-4 lg:space-y-5">
+              <VariantGrid
+                v-if="isTemplate"
+                ref="variantGrid"
+                :item="product.name"
+                :count="data.variants.count"
+                :attributes="data.variants.attributes"
+                :initial-search="variantSearch"
+                :list="variantListPath"
               />
-            </section>
-
-            <PhotoGallery
-              ref="gallery"
-              :item="product.name"
-              @changed="load({ quiet: true })"
-            />
-            <section
-              v-if="!isTemplate"
-              id="existencias"
-              class="scroll-mt-4 rounded-7 border border-outline-gray-2 bg-surface-base"
-            >
-              <!-- «Mínimos por tienda» (Shell SPEC §6 DD9) when the record
-                   brings them: each store's row also holds its minimum. -->
-              <header
-                class="flex flex-wrap items-start gap-2 border-b border-outline-gray-1 px-4 py-3"
+              <section
+                id="precios"
+                class="scroll-mt-4 rounded-7 border border-outline-gray-2 bg-surface-base"
               >
-                <div class="min-w-0 flex-1">
-                  <h2 class="text-base font-semibold text-ink-gray-9">
-                    {{
-                      minimos
-                        ? __('Minimums by store', null, 'Productos')
-                        : __('Stock by store')
-                    }}
+                <header
+                  class="flex flex-wrap items-center gap-2 border-b border-outline-gray-1 px-4 py-3"
+                >
+                  <h2 class="flex-1 text-base font-semibold text-ink-gray-9">
+                    {{ __('Price lists') }}
+                    <span
+                      v-if="data.prices.rows.length"
+                      class="ml-1 text-sm font-normal text-ink-gray-5"
+                      >{{ data.prices.rows.length }}</span
+                    >
                   </h2>
-                  <p
-                    v-if="minimos"
-                    class="mt-0.5 text-sm text-ink-gray-6"
-                    data-minimos-story
+                  <Button
+                    v-if="action('price')"
+                    class="min-h-11 sm:min-h-7"
+                    variant="ghost"
+                    :label="action('price').label"
+                    @click="run(action('price'))"
                   >
-                    {{
-                      __(
-                        'How much each store should have. If it drops, I let you know once and take you to order.',
-                        null,
-                        'Productos',
-                      )
-                    }}
-                  </p>
-                </div>
-                <span
-                  v-if="
-                    data.stock.readable &&
-                    !data.stock.service &&
-                    !data.stock.unassigned
-                  "
-                  class="text-sm tabular-nums text-ink-gray-6"
-                  >{{
-                    __('Total {0} {1}', [
-                      qty(data.stock.total),
-                      unitName(product.stock_uom),
-                    ])
-                  }}</span
+                    <template #prefix>
+                      <span class="lucide-pencil h-4 w-4" aria-hidden="true" />
+                    </template>
+                  </Button>
+                </header>
+                <p
+                  v-if="data.prices.setup"
+                  class="mx-4 mt-3 rounded-6 bg-surface-amber-1 p-3 text-sm text-ink-amber-7"
                 >
-              </header>
-              <div
-                v-if="data.stock.service"
-                class="m-4 flex items-start gap-3 rounded-6 border border-outline-gray-2 bg-surface-gray-1 p-3 text-sm text-ink-gray-7"
-              >
-                <LucideBriefcase
-                  class="mt-0.5 h-5 w-5 shrink-0 text-ink-gray-5"
-                  aria-hidden="true"
-                />
-                <span>{{
-                  __(
-                    'Service item: it carries no stock. It is sold without counting or filing it.',
-                  )
-                }}</span>
-              </div>
-              <!-- Without the stock read, the sentence says why; the
-                   minimums still list below it, so who keeps the catalog
-                   can change or clear one. -->
-              <p
-                v-else-if="!data.stock.readable"
-                class="px-4 py-4 text-sm text-ink-gray-6"
-                data-stock-unreadable
-              >
-                {{ __('You cannot see stock. Ask your manager for access.') }}
-              </p>
-              <p
-                v-else-if="data.stock.unassigned"
-                class="px-4 py-4 text-sm text-ink-gray-6"
-                data-stock-unassigned
-              >
-                {{
-                  __(
-                    'You have no store assigned, so you do not see its stock. Ask your manager to assign you one.',
-                  )
-                }}
-              </p>
-              <div
-                v-if="stockSeen && !storeRows.length"
-                class="m-4 flex flex-wrap items-center gap-3 rounded-6 border border-dashed border-outline-gray-3 p-3 text-sm text-ink-gray-7"
-              >
-                <span
-                  class="lucide-package-open h-5 w-5 shrink-0 text-ink-gray-5"
-                  aria-hidden="true"
-                />
-                <span
-                  v-if="minimos"
-                  class="min-w-0 flex-1"
-                  data-minimos-empty
-                  >{{
-                    __('No stores in sight for this item.', null, 'Productos')
-                  }}</span
+                  {{ data.prices.setup.reason }}
+                </p>
+                <p
+                  v-if="!data.prices.readable"
+                  class="px-4 py-4 text-sm text-ink-gray-6"
                 >
-                <span v-else class="min-w-0 flex-1">{{
-                  __(
-                    'None in your stores yet. It appears here when it is received, counted or moved in.',
-                  )
-                }}</span>
-                <Button
-                  v-if="action('purchase')?.enabled"
-                  class="min-h-11 sm:min-h-7"
-                  :label="__('Order it')"
-                  @click="run(action('purchase'))"
-                />
-              </div>
-              <ul
-                v-else-if="storeRows.length && (stockSeen || minimos)"
-                class="divide-y divide-outline-gray-1"
-              >
-                <li
-                  v-for="row in storeRows"
-                  :key="row.warehouse"
-                  class="flex flex-wrap items-start gap-3 px-4 py-3"
-                  :data-minimos-store="row.minimum ? row.warehouse : undefined"
+                  {{
+                    __('You cannot see prices. Ask your manager for access.')
+                  }}
+                </p>
+                <p
+                  v-else-if="data.prices.reason"
+                  class="px-4 py-4 text-sm text-ink-gray-6"
                 >
-                  <span
-                    class="lucide-store mt-0.5 h-4 w-4 shrink-0 text-ink-gray-5"
+                  {{ plain(data.prices.reason) }}
+                </p>
+                <div
+                  v-else-if="!data.prices.rows.length"
+                  class="flex flex-wrap items-center gap-3 px-4 py-4 text-sm text-ink-gray-6"
+                >
+                  <LucideTag
+                    class="h-5 w-5 text-ink-gray-4"
                     aria-hidden="true"
                   />
-                  <span class="min-w-0 flex-1">
-                    <!-- The store and its minimum open that store's minimum:
-                         to change it, or to read who sets it. -->
-                    <button
-                      v-if="row.minimum"
-                      type="button"
-                      class="-mx-1 block min-h-11 w-[calc(100%+0.5rem)] rounded-5 px-1 text-left hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-0"
-                      aria-haspopup="dialog"
-                      data-minimos-open
-                      @click="openMinimum(row.warehouse)"
+                  <span class="flex-1">{{
+                    __('No price list sells this product yet.')
+                  }}</span>
+                </div>
+                <ProductPrices
+                  v-else
+                  :rows="data.prices.rows"
+                  :today="boot?.today || ''"
+                />
+              </section>
+
+              <PhotoGallery
+                ref="gallery"
+                :item="product.name"
+                @changed="load({ quiet: true })"
+              />
+              <section
+                v-if="!isTemplate"
+                id="existencias"
+                class="scroll-mt-4 rounded-7 border border-outline-gray-2 bg-surface-base"
+              >
+                <!-- «Mínimos por tienda» (Shell SPEC §6 DD9) when the record
+                   brings them: each store's row also holds its minimum. -->
+                <header
+                  class="flex flex-wrap items-start gap-2 border-b border-outline-gray-1 px-4 py-3"
+                >
+                  <div class="min-w-0 flex-1">
+                    <h2 class="text-base font-semibold text-ink-gray-9">
+                      {{
+                        minimos
+                          ? __('Minimums by store', null, 'Productos')
+                          : __('Stock by store')
+                      }}
+                    </h2>
+                    <p
+                      v-if="minimos"
+                      class="mt-0.5 text-sm text-ink-gray-6"
+                      data-minimos-story
                     >
-                      <span class="block font-medium text-ink-gray-9">{{
-                        row.label
-                      }}</span>
-                      <span
-                        class="block text-sm tabular-nums text-ink-gray-7"
-                        data-minimos-line
-                        >{{ minimumLine(row.minimum) }}</span
-                      >
-                    </button>
-                    <span v-else class="block font-medium text-ink-gray-9">{{
-                      row.label
-                    }}</span>
-                    <template v-if="row.minimum">
-                      <!-- What the minimum is compared with, when it is not
-                           what is on hand. -->
-                      <span
-                        v-if="row.projection"
-                        class="block text-xs tabular-nums text-ink-gray-6"
-                        data-minimos-projection
-                        >{{ row.projection }}</span
-                      >
-                      <!-- The store's other ERPNext rules, read only. -->
-                      <span
-                        v-if="row.otherRules"
-                        class="block text-sm text-ink-gray-6"
-                        data-minimos-other-rules
-                        >{{ row.otherRules }}</span
-                      >
-                    </template>
-                    <!-- A store with no stock of it yet shows only its minimum. -->
-                    <template v-if="row.stocked">
-                      <span class="block text-sm text-ink-gray-6">
-                        {{
-                          [
-                            __('Reserved {0}', [qty(row.reserved_qty)]),
-                            __('Projected {0}', [qty(row.projected_qty)]),
-                            !row.minimum &&
-                              row.reorder_level !== null &&
-                              __('Minimum {0}', [qty(row.reorder_level)]),
-                          ]
-                            .filter(Boolean)
-                            .join(' · ')
-                        }}
-                      </span>
-                      <span
-                        v-if="row.cajones.length"
-                        class="mt-1 flex flex-wrap gap-1"
-                      >
-                        <component
-                          :is="data.inventory?.scanner ? 'a' : 'span'"
-                          v-for="cajon in row.cajones"
-                          :key="cajon.ubicacion"
-                          :href="
-                            data.inventory?.scanner
-                              ? binUrl(cajon.ubicacion)
-                              : undefined
-                          "
-                          :title="
-                            cajon.qty === null || cajon.qty === undefined
-                              ? __('Not counted in this bin', null, 'Productos')
-                              : __(
-                                  '{0} in this bin',
-                                  [qty(cajon.qty)],
-                                  'Productos',
-                                )
-                          "
-                          class="inline-flex h-6 items-center gap-1 rounded-5 bg-surface-gray-2 px-2 text-xs text-ink-gray-8"
-                          :class="
-                            data.inventory?.scanner
-                              ? 'hover:bg-surface-gray-3'
-                              : ''
-                          "
-                          ><span
-                            class="lucide-inbox h-3.5 w-3.5"
-                            aria-hidden="true"
-                          />{{ cajon.label || cajon.ubicacion
-                          }}<span class="ml-1 tabular-nums text-ink-gray-6"
-                            >·
-                            {{
-                              cajon.qty === null || cajon.qty === undefined
-                                ? __('not counted', null, 'Productos')
-                                : qty(cajon.qty)
-                            }}</span
-                          ></component
-                        >
-                      </span>
-                      <span
-                        v-else-if="data.inventory?.scanner"
-                        class="block text-sm text-ink-amber-7"
-                        >{{ __('Not filed in a bin here') }}</span
-                      >
-                      <span
-                        class="block text-sm"
-                        :class="
-                          row.last_counted
-                            ? 'text-ink-gray-6'
-                            : 'text-ink-amber-7'
-                        "
-                        >{{
-                          lastCountedLabel(row.last_counted, boot?.today)
-                        }}</span
-                      >
-                      <span
-                        v-for="pending in row.counts_pending"
-                        :key="pending.task"
-                        class="block text-sm text-ink-blue-7"
-                        >{{
-                          pending.assigned_date
-                            ? __('Count asked of {0} · {1}', [
-                                pending.assigned_to,
-                                pending.assigned_date,
-                              ])
-                            : __('Count asked of {0}', [pending.assigned_to])
-                        }}</span
-                      >
-                    </template>
-                    <!-- One row of actions: the minimum's, then the stock's. -->
+                      {{
+                        __(
+                          'How much each store should have. If it drops, I let you know once and take you to order.',
+                          null,
+                          'Productos',
+                        )
+                      }}
+                    </p>
+                  </div>
+                  <span
+                    v-if="
+                      data.stock.readable &&
+                      !data.stock.service &&
+                      !data.stock.unassigned
+                    "
+                    class="text-sm tabular-nums text-ink-gray-6"
+                    >{{
+                      __('Total {0} {1}', [
+                        qty(data.stock.total),
+                        unitName(product.stock_uom),
+                      ])
+                    }}</span
+                  >
+                </header>
+                <div
+                  v-if="data.stock.service"
+                  class="m-4 flex items-start gap-3 rounded-6 border border-outline-gray-2 bg-surface-gray-1 p-3 text-sm text-ink-gray-7"
+                >
+                  <LucideBriefcase
+                    class="mt-0.5 h-5 w-5 shrink-0 text-ink-gray-5"
+                    aria-hidden="true"
+                  />
+                  <span>{{
+                    __(
+                      'Service item: it carries no stock. It is sold without counting or filing it.',
+                    )
+                  }}</span>
+                </div>
+                <!-- Without the stock read, the sentence says why; the
+                   minimums still list below it, so who keeps the catalog
+                   can change or clear one. -->
+                <p
+                  v-else-if="!data.stock.readable"
+                  class="px-4 py-4 text-sm text-ink-gray-6"
+                  data-stock-unreadable
+                >
+                  {{ __('You cannot see stock. Ask your manager for access.') }}
+                </p>
+                <p
+                  v-else-if="data.stock.unassigned"
+                  class="px-4 py-4 text-sm text-ink-gray-6"
+                  data-stock-unassigned
+                >
+                  {{
+                    __(
+                      'You have no store assigned, so you do not see its stock. Ask your manager to assign you one.',
+                    )
+                  }}
+                </p>
+                <div
+                  v-if="stockSeen && !storeRows.length"
+                  class="m-4 flex flex-wrap items-center gap-3 rounded-6 border border-dashed border-outline-gray-3 p-3 text-sm text-ink-gray-7"
+                >
+                  <span
+                    class="lucide-package-open h-5 w-5 shrink-0 text-ink-gray-5"
+                    aria-hidden="true"
+                  />
+                  <span
+                    v-if="minimos"
+                    class="min-w-0 flex-1"
+                    data-minimos-empty
+                    >{{
+                      __('No stores in sight for this item.', null, 'Productos')
+                    }}</span
+                  >
+                  <span v-else class="min-w-0 flex-1">{{
+                    __(
+                      'None in your stores yet. It appears here when it is received, counted or moved in.',
+                    )
+                  }}</span>
+                  <Button
+                    v-if="action('purchase')?.enabled"
+                    class="min-h-11 sm:min-h-7"
+                    :label="__('Order it')"
+                    @click="run(action('purchase'))"
+                  />
+                </div>
+                <ul
+                  v-else-if="storeRows.length && (stockSeen || minimos)"
+                  class="divide-y divide-outline-gray-1"
+                >
+                  <li
+                    v-for="row in storeRows"
+                    :key="row.warehouse"
+                    class="flex flex-wrap items-start gap-3 px-4 py-3"
+                    :data-minimos-store="
+                      row.minimum ? row.warehouse : undefined
+                    "
+                  >
                     <span
-                      v-if="row.actions.length || stockActions(row)"
-                      class="mt-2 flex flex-wrap gap-2"
-                    >
-                      <Button
-                        v-if="row.actions.includes('reorder')"
-                        class="min-h-11 sm:min-h-7"
-                        :aria-label="`${__('Reorder', null, 'Productos')} · ${row.label}`"
-                        data-minimos-reorder
-                        @click="reorderStore(row.minimum)"
-                      >
-                        <template #prefix>
-                          <span
-                            class="lucide-shopping-cart size-4"
-                            aria-hidden="true"
-                          />
-                        </template>
-                        {{ __('Reorder', null, 'Productos') }}
-                      </Button>
-                      <Button
-                        v-if="row.actions.includes('watch')"
-                        class="min-h-11 sm:min-h-7"
-                        :aria-label="`${__('Alert me', null, 'Productos')} · ${row.label}`"
-                        :loading="watchBusy === row.warehouse"
-                        :disabled="
-                          Boolean(watchBusy) && watchBusy !== row.warehouse
-                        "
-                        data-minimos-watch-on
-                        @click="watchStore(row.minimum)"
-                      >
-                        <template #prefix>
-                          <span class="lucide-bell size-4" aria-hidden="true" />
-                        </template>
-                        {{ __('Alert me', null, 'Productos') }}
-                      </Button>
-                      <Button
-                        v-if="row.actions.includes('unwatch')"
-                        class="min-h-11 sm:min-h-7"
-                        :aria-label="`${__('Remove alert', null, 'Productos')} · ${row.label}`"
-                        :loading="watchBusy === row.warehouse"
-                        :disabled="
-                          Boolean(watchBusy) && watchBusy !== row.warehouse
-                        "
-                        data-minimos-watch-off
-                        @click="unwatchStore(row.minimum)"
-                      >
-                        {{ __('Remove alert', null, 'Productos') }}
-                      </Button>
-                      <Button
-                        v-if="row.actions.includes('set')"
-                        class="min-h-11 sm:min-h-7"
-                        :aria-label="`${__('Set minimum', null, 'Productos')} · ${row.label}`"
+                      class="lucide-store mt-0.5 h-4 w-4 shrink-0 text-ink-gray-5"
+                      aria-hidden="true"
+                    />
+                    <span class="min-w-0 flex-1">
+                      <!-- The store and its minimum open that store's minimum:
+                         to change it, or to read who sets it. -->
+                      <button
+                        v-if="row.minimum"
+                        type="button"
+                        class="-mx-1 block min-h-11 w-[calc(100%+0.5rem)] rounded-5 px-1 text-left hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-0"
                         aria-haspopup="dialog"
-                        data-minimos-set
+                        data-minimos-open
                         @click="openMinimum(row.warehouse)"
                       >
-                        {{ __('Set minimum', null, 'Productos') }}
-                      </Button>
-                      <template v-if="stockActions(row)">
-                        <template
-                          v-if="
-                            data.inventory.scanner &&
-                            data.inventory.scanner_user
-                          "
+                        <span class="block font-medium text-ink-gray-9">{{
+                          row.label
+                        }}</span>
+                        <span
+                          class="block text-sm tabular-nums text-ink-gray-7"
+                          data-minimos-line
+                          >{{ minimumLine(row.minimum) }}</span
                         >
-                          <a
-                            :href="countNowUrl(row)"
-                            class="inline-flex min-h-11 items-center rounded-5 bg-surface-gray-2 px-3 text-sm text-ink-gray-8 hover:bg-surface-gray-3 sm:min-h-7"
-                            >{{ __('Count now') }}</a
+                      </button>
+                      <span v-else class="block font-medium text-ink-gray-9">{{
+                        row.label
+                      }}</span>
+                      <template v-if="row.minimum">
+                        <!-- What the minimum is compared with, when it is not
+                           what is on hand. -->
+                        <span
+                          v-if="row.projection"
+                          class="block text-xs tabular-nums text-ink-gray-6"
+                          data-minimos-projection
+                          >{{ row.projection }}</span
+                        >
+                        <!-- The store's other ERPNext rules, read only. -->
+                        <span
+                          v-if="row.otherRules"
+                          class="block text-sm text-ink-gray-6"
+                          data-minimos-other-rules
+                          >{{ row.otherRules }}</span
+                        >
+                      </template>
+                      <!-- A store with no stock of it yet shows only its minimum. -->
+                      <template v-if="row.stocked">
+                        <span class="block text-sm text-ink-gray-6">
+                          {{
+                            [
+                              __('Reserved {0}', [qty(row.reserved_qty)]),
+                              __('Projected {0}', [qty(row.projected_qty)]),
+                              !row.minimum &&
+                                row.reorder_level !== null &&
+                                __('Minimum {0}', [qty(row.reorder_level)]),
+                            ]
+                              .filter(Boolean)
+                              .join(' · ')
+                          }}
+                        </span>
+                        <span
+                          v-if="row.cajones.length"
+                          class="mt-1 flex flex-wrap gap-1"
+                        >
+                          <component
+                            :is="data.inventory?.scanner ? 'a' : 'span'"
+                            v-for="cajon in row.cajones"
+                            :key="cajon.ubicacion"
+                            :href="
+                              data.inventory?.scanner
+                                ? binUrl(cajon.ubicacion)
+                                : undefined
+                            "
+                            :title="
+                              cajon.qty === null || cajon.qty === undefined
+                                ? __(
+                                    'Not counted in this bin',
+                                    null,
+                                    'Productos',
+                                  )
+                                : __(
+                                    '{0} in this bin',
+                                    [qty(cajon.qty)],
+                                    'Productos',
+                                  )
+                            "
+                            class="inline-flex h-6 items-center gap-1 rounded-5 bg-surface-gray-2 px-2 text-xs text-ink-gray-8"
+                            :class="
+                              data.inventory?.scanner
+                                ? 'hover:bg-surface-gray-3'
+                                : ''
+                            "
+                            ><span
+                              class="lucide-inbox h-3.5 w-3.5"
+                              aria-hidden="true"
+                            />{{ cajon.label || cajon.ubicacion
+                            }}<span class="ml-1 tabular-nums text-ink-gray-6"
+                              >·
+                              {{
+                                cajon.qty === null || cajon.qty === undefined
+                                  ? __('not counted', null, 'Productos')
+                                  : qty(cajon.qty)
+                              }}</span
+                            ></component
                           >
-                          <a
-                            v-if="row.cajones.length"
-                            :href="moveUrl(row)"
-                            class="inline-flex min-h-11 items-center rounded-5 bg-surface-gray-2 px-3 text-sm text-ink-gray-8 hover:bg-surface-gray-3 sm:min-h-7"
-                            >{{ __('Move to another bin') }}</a
-                          >
-                          <a
-                            v-else
-                            :href="assignUrl(row)"
-                            class="inline-flex min-h-11 items-center rounded-5 bg-surface-gray-2 px-3 text-sm text-ink-gray-8 hover:bg-surface-gray-3 sm:min-h-7"
-                            >{{ __('Assign bin') }}</a
-                          >
-                        </template>
-                        <Button
-                          v-if="data.inventory.scanner"
-                          class="min-h-11 sm:min-h-7"
-                          :label="
-                            row.can_request_count
-                              ? __('Ask for a count')
-                              : __('Ask the manager for a count')
+                        </span>
+                        <span
+                          v-else-if="data.inventory?.scanner"
+                          class="block text-sm text-ink-amber-7"
+                          >{{ __('Not filed in a bin here') }}</span
+                        >
+                        <span
+                          class="block text-sm"
+                          :class="
+                            row.last_counted
+                              ? 'text-ink-gray-6'
+                              : 'text-ink-amber-7'
                           "
-                          @click="askCount(row)"
-                        />
-                        <!-- «Ajustar existencia» (D4): a draft Ajuste for this store. -->
+                          >{{
+                            lastCountedLabel(row.last_counted, boot?.today)
+                          }}</span
+                        >
+                        <span
+                          v-for="pending in row.counts_pending"
+                          :key="pending.task"
+                          class="block text-sm text-ink-blue-7"
+                          >{{
+                            pending.assigned_date
+                              ? __('Count asked of {0} · {1}', [
+                                  pending.assigned_to,
+                                  pending.assigned_date,
+                                ])
+                              : __('Count asked of {0}', [pending.assigned_to])
+                          }}</span
+                        >
+                      </template>
+                      <!-- One row of actions: the minimum's, then the stock's. -->
+                      <span
+                        v-if="row.actions.length || stockActions(row)"
+                        class="mt-2 flex flex-wrap gap-2"
+                      >
                         <Button
-                          v-if="data.inventory.stock_adjust"
+                          v-if="row.actions.includes('reorder')"
                           class="min-h-11 sm:min-h-7"
-                          label="Ajustar"
-                          data-producto-ajustar
-                          @click="askAdjust(row)"
+                          :aria-label="`${__('Reorder', null, 'Productos')} · ${row.label}`"
+                          data-minimos-reorder
+                          @click="reorderStore(row.minimum)"
+                        >
+                          <template #prefix>
+                            <span
+                              class="lucide-shopping-cart size-4"
+                              aria-hidden="true"
+                            />
+                          </template>
+                          {{ __('Reorder', null, 'Productos') }}
+                        </Button>
+                        <Button
+                          v-if="row.actions.includes('watch')"
+                          class="min-h-11 sm:min-h-7"
+                          :aria-label="`${__('Alert me', null, 'Productos')} · ${row.label}`"
+                          :loading="watchBusy === row.warehouse"
+                          :disabled="
+                            Boolean(watchBusy) && watchBusy !== row.warehouse
+                          "
+                          data-minimos-watch-on
+                          @click="watchStore(row.minimum)"
+                        >
+                          <template #prefix>
+                            <span
+                              class="lucide-bell size-4"
+                              aria-hidden="true"
+                            />
+                          </template>
+                          {{ __('Alert me', null, 'Productos') }}
+                        </Button>
+                        <Button
+                          v-if="row.actions.includes('unwatch')"
+                          class="min-h-11 sm:min-h-7"
+                          :aria-label="`${__('Remove alert', null, 'Productos')} · ${row.label}`"
+                          :loading="watchBusy === row.warehouse"
+                          :disabled="
+                            Boolean(watchBusy) && watchBusy !== row.warehouse
+                          "
+                          data-minimos-watch-off
+                          @click="unwatchStore(row.minimum)"
+                        >
+                          {{ __('Remove alert', null, 'Productos') }}
+                        </Button>
+                        <Button
+                          v-if="row.actions.includes('set')"
+                          class="min-h-11 sm:min-h-7"
+                          :aria-label="`${__('Set minimum', null, 'Productos')} · ${row.label}`"
+                          aria-haspopup="dialog"
+                          data-minimos-set
+                          @click="openMinimum(row.warehouse)"
+                        >
+                          {{ __('Set minimum', null, 'Productos') }}
+                        </Button>
+                        <template v-if="stockActions(row)">
+                          <template
+                            v-if="
+                              data.inventory.scanner &&
+                              data.inventory.scanner_user
+                            "
+                          >
+                            <a
+                              :href="countNowUrl(row)"
+                              class="inline-flex min-h-11 items-center rounded-5 bg-surface-gray-2 px-3 text-sm text-ink-gray-8 hover:bg-surface-gray-3 sm:min-h-7"
+                              >{{ __('Count now') }}</a
+                            >
+                            <a
+                              v-if="row.cajones.length"
+                              :href="moveUrl(row)"
+                              class="inline-flex min-h-11 items-center rounded-5 bg-surface-gray-2 px-3 text-sm text-ink-gray-8 hover:bg-surface-gray-3 sm:min-h-7"
+                              >{{ __('Move to another bin') }}</a
+                            >
+                            <a
+                              v-else
+                              :href="assignUrl(row)"
+                              class="inline-flex min-h-11 items-center rounded-5 bg-surface-gray-2 px-3 text-sm text-ink-gray-8 hover:bg-surface-gray-3 sm:min-h-7"
+                              >{{ __('Assign bin') }}</a
+                            >
+                          </template>
+                          <Button
+                            v-if="data.inventory.scanner"
+                            class="min-h-11 sm:min-h-7"
+                            :label="
+                              row.can_request_count
+                                ? __('Ask for a count')
+                                : __('Ask the manager for a count')
+                            "
+                            @click="askCount(row)"
+                          />
+                          <!-- «Ajustar existencia» (D4): a draft Ajuste for this store. -->
+                          <Button
+                            v-if="data.inventory.stock_adjust"
+                            class="min-h-11 sm:min-h-7"
+                            label="Ajustar"
+                            data-producto-ajustar
+                            @click="askAdjust(row)"
+                          />
+                        </template>
+                      </span>
+                      <span
+                        v-if="row.negative"
+                        role="note"
+                        class="mt-2 block space-y-1 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-8"
+                      >
+                        <span class="block font-medium">{{
+                          __(
+                            'The system says {0} here: more left than was recorded coming in.',
+                            [qty(row.actual_qty)],
+                          )
+                        }}</span>
+                        <span class="block">{{
+                          __(
+                            'Usually goods arrived without their receipt, or were sold from another store. The latest outgoing movements:',
+                          )
+                        }}</span>
+                        <span
+                          v-for="out in row.explain?.outs || []"
+                          :key="`${out.voucher_no}:${out.posting_time}`"
+                          class="block text-ink-gray-8"
+                          >{{
+                            __('{0} {1} · {2} · {3} → {4}', [
+                              out.voucher_type,
+                              out.voucher_no,
+                              out.posting_date,
+                              qty(out.actual_qty),
+                              qty(out.qty_after_transaction),
+                            ])
+                          }}</span
+                        >
+                        <span
+                          v-if="row.explain?.fix === 'receive'"
+                          class="block"
+                        >
+                          {{
+                            __(
+                              '{0} are on order for this store: receiving them fixes it.',
+                              [qty(row.explain.incoming)],
+                            )
+                          }}
+                          <RouterLink
+                            :to="{
+                              name: 'Compras',
+                              query: { segment: 'por-recibir' },
+                            }"
+                            class="underline"
+                            >{{ __('Purchases to receive') }}</RouterLink
+                          >
+                        </span>
+                        <span v-else class="block">{{
+                          __(
+                            'Fastest fix: count it. The difference is reviewed and adjusted with a stock reconciliation.',
+                          )
+                        }}</span>
+                        <span v-if="data.inventory?.stock_adjust" class="block">
+                          {{
+                            __('If it is already counted, you may adjust it:')
+                          }}
+                          <button
+                            type="button"
+                            class="underline"
+                            data-producto-ajuste
+                            @click="askAdjust(row)"
+                          >
+                            Ajustar existencia
+                          </button>
+                        </span>
+                        <span v-else class="block text-ink-gray-7">{{
+                          __(
+                            'Setting the stock directly needs the Stock Reconciliation permission (stock manager); counting it does not.',
+                          )
+                        }}</span>
+                      </span>
+                    </span>
+                    <span class="flex flex-col items-end gap-1">
+                      <span
+                        v-if="row.stocked"
+                        class="text-right text-lg font-semibold tabular-nums"
+                        :class="
+                          row.actual_qty > 0
+                            ? 'text-ink-gray-9'
+                            : 'text-ink-red-7'
+                        "
+                      >
+                        {{ qty(row.actual_qty) }}
+                        <span class="text-xs font-normal text-ink-gray-6">{{
+                          unitName(product.stock_uom)
+                        }}</span>
+                      </span>
+                      <!-- The store against its minimum, and the worker's own
+                         watch there: words, colour only adds to them. -->
+                      <template v-if="row.minimum">
+                        <Badge
+                          v-if="row.chip"
+                          :theme="row.chip.theme"
+                          :label="row.chip.label"
+                          :data-minimos-state="row.chip.key"
+                        />
+                        <Badge
+                          v-if="row.watchChip"
+                          :theme="row.watchChip.theme"
+                          :label="row.watchChip.label"
+                          :data-minimos-watch="row.watchChip.key"
+                        />
+                      </template>
+                      <template v-else>
+                        <Badge
+                          v-if="row.state === 'faltan'"
+                          theme="red"
+                          :label="__('Out of stock', null, 'Productos')"
+                        />
+                        <Badge
+                          v-else-if="row.state === 'bajo'"
+                          theme="orange"
+                          :label="__('Below minimum', null, 'Productos')"
                         />
                       </template>
                     </span>
-                    <span
-                      v-if="row.negative"
-                      role="note"
-                      class="mt-2 block space-y-1 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-8"
-                    >
-                      <span class="block font-medium">{{
-                        __(
-                          'The system says {0} here: more left than was recorded coming in.',
-                          [qty(row.actual_qty)],
-                        )
-                      }}</span>
-                      <span class="block">{{
-                        __(
-                          'Usually goods arrived without their receipt, or were sold from another store. The latest outgoing movements:',
-                        )
-                      }}</span>
-                      <span
-                        v-for="out in row.explain?.outs || []"
-                        :key="`${out.voucher_no}:${out.posting_time}`"
-                        class="block text-ink-gray-8"
-                        >{{
-                          __('{0} {1} · {2} · {3} → {4}', [
-                            out.voucher_type,
-                            out.voucher_no,
-                            out.posting_date,
-                            qty(out.actual_qty),
-                            qty(out.qty_after_transaction),
-                          ])
-                        }}</span
-                      >
-                      <span v-if="row.explain?.fix === 'receive'" class="block">
-                        {{
-                          __(
-                            '{0} are on order for this store: receiving them fixes it.',
-                            [qty(row.explain.incoming)],
-                          )
-                        }}
-                        <RouterLink
-                          :to="{
-                            name: 'Compras',
-                            query: { segment: 'por-recibir' },
-                          }"
-                          class="underline"
-                          >{{ __('Purchases to receive') }}</RouterLink
-                        >
-                      </span>
-                      <span v-else class="block">{{
-                        __(
-                          'Fastest fix: count it. The difference is reviewed and adjusted with a stock reconciliation.',
-                        )
-                      }}</span>
-                      <span v-if="data.inventory?.stock_adjust" class="block">
-                        {{ __('If it is already counted, you may adjust it:') }}
-                        <button
-                          type="button"
-                          class="underline"
-                          data-producto-ajuste
-                          @click="askAdjust(row)"
-                        >
-                          Ajustar existencia
-                        </button>
-                      </span>
-                      <span v-else class="block text-ink-gray-7">{{
-                        __(
-                          'Setting the stock directly needs the Stock Reconciliation permission (stock manager); counting it does not.',
-                        )
-                      }}</span>
-                    </span>
-                  </span>
-                  <span class="flex flex-col items-end gap-1">
-                    <span
-                      v-if="row.stocked"
-                      class="text-right text-lg font-semibold tabular-nums"
-                      :class="
-                        row.actual_qty > 0
-                          ? 'text-ink-gray-9'
-                          : 'text-ink-red-7'
-                      "
-                    >
-                      {{ qty(row.actual_qty) }}
-                      <span class="text-xs font-normal text-ink-gray-6">{{
-                        unitName(product.stock_uom)
-                      }}</span>
-                    </span>
-                    <!-- The store against its minimum, and the worker's own
-                         watch there: words, colour only adds to them. -->
-                    <template v-if="row.minimum">
-                      <Badge
-                        v-if="row.chip"
-                        :theme="row.chip.theme"
-                        :label="row.chip.label"
-                        :data-minimos-state="row.chip.key"
-                      />
-                      <Badge
-                        v-if="row.watchChip"
-                        :theme="row.watchChip.theme"
-                        :label="row.watchChip.label"
-                        :data-minimos-watch="row.watchChip.key"
-                      />
-                    </template>
-                    <template v-else>
-                      <Badge
-                        v-if="row.state === 'faltan'"
-                        theme="red"
-                        :label="__('Out of stock', null, 'Productos')"
-                      />
-                      <Badge
-                        v-else-if="row.state === 'bajo'"
-                        theme="orange"
-                        :label="__('Below minimum', null, 'Productos')"
-                      />
-                    </template>
-                  </span>
-                </li>
-              </ul>
-              <p
-                v-if="data.stock.hidden"
-                class="border-t border-outline-gray-1 px-4 py-2 text-sm text-ink-gray-6"
-              >
-                {{
-                  __(
-                    '{0} more store(s) have this product but are outside your access.',
-                    [data.stock.hidden],
-                  )
-                }}
-              </p>
-              <p
-                v-if="
-                  !data.stock.service &&
-                  data.inventory?.scanner &&
-                  !data.inventory.scanner_user
-                "
-                class="border-t border-outline-gray-1 px-4 py-2 text-sm text-ink-gray-6"
-              >
-                {{
-                  __(
-                    'Counting, filing and moving happen in Escáner, which needs the scanner user role. Ask your manager for it.',
-                  )
-                }}
-                <Button
-                  class="ml-1"
-                  :label="__('Copy access request')"
-                  @click="copyScannerRequest"
-                />
-              </p>
-            </section>
-
-            <ProductInsights
-              v-if="!isTemplate && data.insights?.readable"
-              :insights="data.insights"
-              :stock="data.stock.rows || []"
-              :reorder="minimos ? reorderStores : []"
-              :purchase="action('purchase')"
-              :currency="defaultPrice?.currency || 'MXN'"
-              @reorder="reorder"
-            />
-
-            <section
-              v-if="!isTemplate"
-              id="movimientos"
-              class="scroll-mt-4 rounded-7 border border-outline-gray-2 bg-surface-base"
-            >
-              <header
-                class="flex items-center gap-2 border-b border-outline-gray-1 px-4 py-3"
-              >
-                <h2 class="flex-1 text-base font-semibold text-ink-gray-9">
-                  {{ __('Recent stock movements') }}
-                </h2>
-              </header>
-              <p
-                v-if="!data.ledger.rows.length"
-                class="flex items-start gap-3 px-4 py-4 text-sm text-ink-gray-6"
-              >
-                <LucideRepeat
-                  class="mt-0.5 h-4 w-4 shrink-0 text-ink-gray-4"
-                  aria-hidden="true"
-                />
-                {{
-                  !data.ledger.readable
-                    ? __('You cannot see stock movements.')
-                    : data.stock.unassigned
-                      ? __(
-                          "You see no store's movements: ask your manager to assign you a store.",
-                        )
-                      : data.stock.service
-                        ? __('A service has no stock movements.')
-                        : __(
-                            'No stock movements yet: sales, purchases, transfers and adjustments appear here.',
-                          )
-                }}
-              </p>
-              <template v-else>
-                <!-- The newest five in the kardex's words (who, verb, signed
-                     quantity, balance); «Ver todo» opens the kardex on this product. -->
-                <ul
-                  class="divide-y divide-outline-gray-1"
-                  data-producto-movements
-                >
-                  <li
-                    v-for="row in data.ledger.rows.slice(0, LEDGER_PREVIEW)"
-                    :key="row.id || row.voucher_no + row.warehouse"
-                  >
-                    <MovementRow
-                      :row="row"
-                      :show-item="false"
-                      :show-store="(data.stock.rows || []).length > 1"
-                      :when="movementWhen(row)"
-                    />
                   </li>
                 </ul>
-                <RouterLink
-                  :to="{
-                    name: 'InventarioMovimientos',
-                    query: { articulo: product.name },
-                  }"
-                  class="flex min-h-12 items-center justify-center border-t border-outline-gray-1 px-4 text-sm font-medium text-ink-gray-8 hover:bg-surface-gray-1"
-                  data-producto-movements-all
-                  >{{ __('See all movements', null, 'Productos') }}</RouterLink
+                <p
+                  v-if="data.stock.hidden"
+                  class="border-t border-outline-gray-1 px-4 py-2 text-sm text-ink-gray-6"
                 >
-              </template>
-            </section>
-
-            <!-- Who follows up on this product, by when (Shell D8). -->
-            <RecordPendientes
-              v-if="!isTemplate && product.name"
-              class="rounded-7 border border-outline-gray-2 bg-surface-base p-4"
-              reference-type="Item"
-              :reference-name="product.name"
-              :reference-label="product.item_name || product.name"
-              :return-label="__('Product', null, 'Productos')"
-            />
-
-            <section
-              id="historial"
-              class="scroll-mt-4 rounded-7 border border-outline-gray-2 bg-surface-base"
-            >
-              <header
-                class="flex items-center gap-2 border-b border-outline-gray-1 px-4 py-3"
-              >
-                <h2 class="flex-1 text-base font-semibold text-ink-gray-9">
-                  {{ __('Price changes') }}
-                </h2>
-                <button
-                  type="button"
-                  class="press inline-flex min-h-11 items-center gap-1.5 rounded-6 px-3 text-sm font-medium text-ink-gray-8 hover:bg-surface-gray-2 sm:min-h-8"
-                  title="Lo que costó cada compra y el precio en el tiempo"
-                  data-producto-grafica
-                  @click="openPriceHistory"
-                >
-                  <span class="lucide-chart-spline size-4" aria-hidden="true" />
-                  Gráfica
-                </button>
-              </header>
-              <p
-                v-if="!history.readable"
-                class="px-4 py-4 text-sm text-ink-gray-6"
-              >
-                {{ __('Price changes are seen by whoever manages prices.') }}
-              </p>
-              <p
-                v-else-if="!history.rows.length"
-                class="flex items-start gap-3 px-4 py-4 text-sm text-ink-gray-6"
-              >
-                <span
-                  class="lucide-history mt-0.5 h-4 w-4 shrink-0 text-ink-gray-4"
-                  aria-hidden="true"
-                />
-                {{
-                  __(
-                    'No price changes recorded. When someone changes a price, it appears here with who and when.',
-                  )
-                }}
-              </p>
-              <ul v-else class="divide-y divide-outline-gray-1">
-                <li
-                  v-for="(row, index) in shownHistory"
-                  :key="index"
-                  class="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5 text-sm"
-                >
-                  <span class="min-w-0 flex-1">
-                    <span class="block font-medium text-ink-gray-9"
-                      >{{ priceListLabel(row.price_list) }}
-                      <Badge
-                        v-if="row.buying"
-                        class="ml-1"
-                        theme="gray"
-                        :label="__('Cost')"
-                      />
-                      <Badge
-                        v-if="row.first_price"
-                        class="ml-1"
-                        theme="blue"
-                        :label="__('First price')"
-                      />
-                    </span>
-                    <span class="block text-xs text-ink-gray-6"
-                      >{{ row.by }} ·
-                      <span :title="row.at">{{
-                        relativeAge(row.at, boot?.today).text || row.at
-                      }}</span>
-                      · {{ formatDateTime(row.at) }}</span
-                    >
-                  </span>
-                  <span class="flex items-baseline gap-2 tabular-nums">
-                    <span
-                      v-if="row.old_rate !== null && row.old_rate !== undefined"
-                      class="text-xs text-ink-gray-5 line-through"
-                      >{{ money(row.old_rate, row.currency) }}</span
-                    >
-                    <span
-                      v-if="row.new_rate !== null && row.new_rate !== undefined"
-                      class="font-semibold text-ink-gray-9"
-                      >{{ money(row.new_rate, row.currency) }}</span
-                    >
-                    <span v-else class="text-ink-red-7">{{
-                      __('Removed')
-                    }}</span>
-                    <span
-                      v-if="change(row)"
-                      class="text-xs"
-                      :class="
-                        change(row) > 0 ? 'text-ink-green-7' : 'text-ink-red-7'
-                      "
-                      >{{ change(row) > 0 ? '+' : '' }}{{ change(row) }}%</span
-                    >
-                  </span>
-                </li>
-              </ul>
-              <button
-                v-if="history.rows.length > 6"
-                type="button"
-                class="min-h-11 w-full border-t border-outline-gray-1 px-4 py-2 text-left text-sm font-medium text-ink-gray-7 hover:bg-surface-gray-1 sm:min-h-9"
-                @click="historyAll = !historyAll"
-              >
-                {{
-                  historyAll
-                    ? __('See fewer')
-                    : __('See all {0} changes', [history.rows.length])
-                }}
-              </button>
-            </section>
-
-            <!-- Actividad y comentarios: notes for the team, who is on it,
-                 tags, shares, emails and every change (crm.api.documentos). -->
-            <RecordActivity
-              v-if="product.name"
-              class="rounded-7 border border-outline-gray-2 bg-surface-base py-4"
-              doctype="Item"
-              :name="product.name"
-              :title="product.item_name || product.name"
-              noun="el producto"
-            />
-          </div>
-
-          <!-- ── side panel ─────────────────────────────────────────── -->
-          <aside class="min-w-0 space-y-4 lg:space-y-5">
-            <section
-              v-if="data.cost"
-              class="rounded-7 border border-outline-gray-2 bg-surface-base"
-              :aria-label="__('Cost and margin')"
-            >
-              <header
-                class="flex items-center gap-2 border-b border-outline-gray-1 px-4 py-3"
-              >
-                <span
-                  class="lucide-lock h-4 w-4 text-ink-gray-5"
-                  aria-hidden="true"
-                />
-                <h2 class="flex-1 text-base font-semibold text-ink-gray-9">
-                  {{ __('Cost and margin') }}
-                </h2>
-                <span class="text-xs text-ink-gray-5">{{
-                  __('managers only')
-                }}</span>
-              </header>
-              <dl class="grid grid-cols-2 gap-px bg-surface-gray-2">
-                <div
-                  v-for="figure in costFigures"
-                  :key="figure.label"
-                  class="bg-surface-base px-4 py-3"
-                >
-                  <dt class="text-xs text-ink-gray-6">{{ figure.label }}</dt>
-                  <dd
-                    class="mt-0.5 text-lg font-semibold tabular-nums"
-                    :class="figure.tone || 'text-ink-gray-9'"
-                  >
-                    {{ figure.value }}
-                  </dd>
-                </div>
-              </dl>
-              <p class="px-4 py-2 text-xs text-ink-gray-6">{{ costBasis }}</p>
-            </section>
-
-            <section
-              class="rounded-7 border border-outline-gray-2 bg-surface-base"
-            >
-              <header
-                class="flex items-center gap-2 border-b border-outline-gray-1 px-4 py-3"
-              >
-                <h2 class="flex-1 text-base font-semibold text-ink-gray-9">
-                  {{ __('Description', null, 'Productos') }}
-                </h2>
-                <Button
-                  v-if="action('edit')"
-                  variant="ghost"
-                  class="min-h-11 sm:min-h-7"
-                  :label="
-                    action('edit').enabled ? __('Edit') : action('edit').label
+                  {{
+                    __(
+                      '{0} more store(s) have this product but are outside your access.',
+                      [data.stock.hidden],
+                    )
+                  }}
+                </p>
+                <p
+                  v-if="
+                    !data.stock.service &&
+                    data.inventory?.scanner &&
+                    !data.inventory.scanner_user
                   "
-                  @click="run(action('edit'))"
-                />
-              </header>
-              <p
-                v-if="product.description"
-                class="whitespace-pre-line break-words px-4 py-3 text-sm leading-relaxed text-ink-gray-8"
-              >
-                {{ product.description }}
-              </p>
-              <p v-else class="px-4 py-3 text-sm text-ink-gray-6">
-                {{
-                  action('edit')?.enabled
-                    ? __(
-                        'No description yet. Add what the customer asks about: model, compatibility, what it includes.',
-                      )
-                    : __('No description yet.')
-                }}
-              </p>
-            </section>
-
-            <section
-              class="rounded-7 border border-outline-gray-2 bg-surface-base"
-            >
-              <header
-                class="flex items-center gap-2 border-b border-outline-gray-1 px-4 py-3"
-              >
-                <h2 class="flex-1 text-base font-semibold text-ink-gray-9">
-                  {{ __('Barcodes') }}
-                  <span
-                    v-if="product.barcodes?.length"
-                    class="ml-1 text-sm font-normal text-ink-gray-5"
-                    >{{ product.barcodes.length }}</span
-                  >
-                </h2>
-                <Button
-                  v-if="action('edit')?.enabled"
-                  variant="ghost"
-                  class="min-h-11 sm:min-h-7"
-                  :label="product.barcodes?.length ? __('Edit') : __('Add')"
-                  @click="run(action('edit'))"
-                />
-              </header>
-              <ul
-                v-if="product.barcodes?.length"
-                class="divide-y divide-outline-gray-1"
-              >
-                <li
-                  v-for="code in product.barcodes"
-                  :key="code.barcode"
-                  class="flex items-center gap-2 px-4 py-2 text-sm"
+                  class="border-t border-outline-gray-1 px-4 py-2 text-sm text-ink-gray-6"
                 >
-                  <LucideHash
-                    class="h-4 w-4 text-ink-gray-5"
+                  {{
+                    __(
+                      'Counting, filing and moving happen in Escáner, which needs the scanner user role. Ask your manager for it.',
+                    )
+                  }}
+                  <Button
+                    class="ml-1"
+                    :label="__('Copy access request')"
+                    @click="copyScannerRequest"
+                  />
+                </p>
+              </section>
+
+              <ProductInsights
+                v-if="!isTemplate && data.insights?.readable"
+                :insights="data.insights"
+                :stock="data.stock.rows || []"
+                :reorder="minimos ? reorderStores : []"
+                :purchase="action('purchase')"
+                :currency="defaultPrice?.currency || 'MXN'"
+                @reorder="reorder"
+              />
+
+              <section
+                v-if="!isTemplate"
+                id="movimientos"
+                class="scroll-mt-4 rounded-7 border border-outline-gray-2 bg-surface-base"
+              >
+                <header
+                  class="flex items-center gap-2 border-b border-outline-gray-1 px-4 py-3"
+                >
+                  <h2 class="flex-1 text-base font-semibold text-ink-gray-9">
+                    {{ __('Recent stock movements') }}
+                  </h2>
+                </header>
+                <p
+                  v-if="!data.ledger.rows.length"
+                  class="flex items-start gap-3 px-4 py-4 text-sm text-ink-gray-6"
+                >
+                  <LucideRepeat
+                    class="mt-0.5 h-4 w-4 shrink-0 text-ink-gray-4"
                     aria-hidden="true"
                   />
-                  <span
-                    class="min-w-0 flex-1 truncate font-mono text-ink-gray-9"
-                    >{{ code.barcode }}</span
-                  >
-                  <span
-                    v-if="code.barcode_type"
-                    class="text-xs text-ink-gray-5"
-                    >{{ code.barcode_type }}</span
-                  >
-                </li>
-              </ul>
-              <p v-else class="px-4 py-3 text-sm text-ink-gray-6">
-                {{
-                  action('edit')?.enabled
-                    ? __(
-                        'No barcodes yet. Add one so the scanner and the POS find it.',
-                      )
-                    : __('No barcodes yet.')
-                }}
-              </p>
-            </section>
-
-            <section
-              class="rounded-7 border border-outline-gray-2 bg-surface-base"
-            >
-              <header class="border-b border-outline-gray-1 px-4 py-3">
-                <h2 class="text-base font-semibold text-ink-gray-9">
-                  {{ __('Details') }}
-                </h2>
-              </header>
-              <dl class="divide-y divide-outline-gray-1 text-sm">
-                <div
-                  v-for="fact in facts"
-                  :key="fact.label"
-                  class="flex gap-3 px-4 py-2"
-                >
-                  <dt class="w-28 shrink-0 text-ink-gray-6">
-                    {{ fact.label }}
-                  </dt>
-                  <dd class="min-w-0 flex-1 break-words text-ink-gray-9">
-                    {{ fact.value }}
-                  </dd>
-                </div>
-              </dl>
-              <!-- Every setting of the product in words (SHELL-D6, DD13). -->
-              <RouterLink
-                :to="{ name: 'ProductoAjustes', params: { item: props.item } }"
-                class="flex min-h-12 items-center gap-3 border-t border-outline-gray-1 px-4 py-2 text-sm font-medium text-ink-gray-9 hover:bg-surface-gray-2"
-                data-producto-ajustes
-              >
-                <span
-                  class="lucide-sliders-horizontal size-4 flex-none text-ink-gray-6"
-                  aria-hidden="true"
-                />
-                <span class="min-w-0 flex-1">{{ __('All settings') }}</span>
-                <span
-                  class="lucide-chevron-right size-4 flex-none text-ink-gray-5"
-                  aria-hidden="true"
-                />
-              </RouterLink>
-            </section>
-
-            <section
-              v-if="data.units"
-              id="unidades"
-              class="scroll-mt-4 rounded-7 border border-outline-gray-2 bg-surface-base"
-            >
-              <header
-                class="flex items-center gap-2 border-b border-outline-gray-1 px-4 py-3"
-              >
-                <h2 class="flex-1 text-base font-semibold text-ink-gray-9">
                   {{
-                    data.units.serials
-                      ? __('Serial numbers on hand', null, 'Productos')
-                      : __('Batches on hand', null, 'Productos')
+                    !data.ledger.readable
+                      ? __('You cannot see stock movements.')
+                      : data.stock.unassigned
+                        ? __(
+                            "You see no store's movements: ask your manager to assign you a store.",
+                          )
+                        : data.stock.service
+                          ? __('A service has no stock movements.')
+                          : __(
+                              'No stock movements yet: sales, purchases, transfers and adjustments appear here.',
+                            )
                   }}
-                </h2>
-                <span class="text-sm tabular-nums text-ink-gray-6">{{
-                  qty(unitList.length)
-                }}</span>
-              </header>
-              <p v-if="!unitReadable" class="px-4 py-3 text-sm text-ink-gray-6">
-                {{
-                  __(
-                    'You cannot see serial numbers or batches.',
-                    null,
-                    'Productos',
-                  )
-                }}
-              </p>
-              <p
-                v-else-if="!unitList.length"
-                class="px-4 py-3 text-sm text-ink-gray-6"
+                </p>
+                <template v-else>
+                  <!-- The newest five in the kardex's words (who, verb, signed
+                     quantity, balance); «Ver todo» opens the kardex on this product. -->
+                  <ul
+                    class="divide-y divide-outline-gray-1"
+                    data-producto-movements
+                  >
+                    <li
+                      v-for="row in data.ledger.rows.slice(0, LEDGER_PREVIEW)"
+                      :key="row.id || row.voucher_no + row.warehouse"
+                    >
+                      <MovementRow
+                        :row="row"
+                        :show-item="false"
+                        :show-store="(data.stock.rows || []).length > 1"
+                        :when="movementWhen(row)"
+                      />
+                    </li>
+                  </ul>
+                  <RouterLink
+                    :to="{
+                      name: 'InventarioMovimientos',
+                      query: { articulo: product.name },
+                    }"
+                    class="flex min-h-12 items-center justify-center border-t border-outline-gray-1 px-4 text-sm font-medium text-ink-gray-8 hover:bg-surface-gray-1"
+                    data-producto-movements-all
+                    >{{
+                      __('See all movements', null, 'Productos')
+                    }}</RouterLink
+                  >
+                </template>
+              </section>
+
+              <!-- Who follows up on this product, by when (Shell D8). -->
+              <RecordPendientes
+                v-if="!isTemplate && product.name"
+                class="rounded-7 border border-outline-gray-2 bg-surface-base p-4"
+                reference-type="Item"
+                :reference-name="product.name"
+                :reference-label="product.item_name || product.name"
+                :return-label="__('Product', null, 'Productos')"
+              />
+
+              <section
+                id="historial"
+                class="scroll-mt-4 rounded-7 border border-outline-gray-2 bg-surface-base"
               >
-                {{ __('Nothing on hand in your stores.', null, 'Productos') }}
-              </p>
-              <ul v-else class="divide-y divide-outline-gray-1 text-sm">
-                <li
-                  v-for="row in visibleRows(unitList, unitsAll, 8)"
-                  :key="`${row.serial || row.batch}|${row.warehouse}`"
-                  class="flex flex-wrap items-center gap-x-3 gap-y-0.5 px-4 py-2"
+                <header
+                  class="flex items-center gap-2 border-b border-outline-gray-1 px-4 py-3"
+                >
+                  <h2 class="flex-1 text-base font-semibold text-ink-gray-9">
+                    {{ __('Price changes') }}
+                  </h2>
+                  <button
+                    type="button"
+                    class="press inline-flex min-h-11 items-center gap-1.5 rounded-6 px-3 text-sm font-medium text-ink-gray-8 hover:bg-surface-gray-2 sm:min-h-8"
+                    title="Lo que costó cada compra y el precio en el tiempo"
+                    data-producto-grafica
+                    @click="openPriceHistory"
+                  >
+                    <span
+                      class="lucide-chart-spline size-4"
+                      aria-hidden="true"
+                    />
+                    Gráfica
+                  </button>
+                </header>
+                <p
+                  v-if="!history.readable"
+                  class="px-4 py-4 text-sm text-ink-gray-6"
+                >
+                  {{ __('Price changes are seen by whoever manages prices.') }}
+                </p>
+                <p
+                  v-else-if="!history.rows.length"
+                  class="flex items-start gap-3 px-4 py-4 text-sm text-ink-gray-6"
                 >
                   <span
-                    class="min-w-0 flex-1 truncate font-mono text-ink-gray-9"
-                    >{{ row.serial || row.batch }}</span
+                    class="lucide-history mt-0.5 h-4 w-4 shrink-0 text-ink-gray-4"
+                    aria-hidden="true"
+                  />
+                  {{
+                    __(
+                      'No price changes recorded. When someone changes a price, it appears here with who and when.',
+                    )
+                  }}
+                </p>
+                <ul v-else class="divide-y divide-outline-gray-1">
+                  <li
+                    v-for="(row, index) in shownHistory"
+                    :key="index"
+                    class="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5 text-sm"
                   >
-                  <span v-if="row.batch" class="tabular-nums text-ink-gray-7"
-                    >{{ qty(row.qty) }} {{ unitName(product.stock_uom) }}</span
-                  >
-                  <span
-                    v-if="row.expiry"
-                    class="text-xs"
-                    :class="
-                      row.expired
-                        ? 'font-medium text-ink-red-7'
-                        : 'text-ink-gray-6'
-                    "
-                    >{{
-                      row.expired
-                        ? __('Expired {0}', [row.expiry], 'Productos')
-                        : __('Expires {0}', [row.expiry], 'Productos')
-                    }}</span
-                  >
-                  <span class="w-full truncate text-xs text-ink-gray-5">{{
-                    storeLabel(row.warehouse)
-                  }}</span>
-                </li>
-              </ul>
-              <div
-                v-if="unitList.length > 8"
-                class="border-t border-outline-gray-1 px-4 py-2"
-              >
+                    <span class="min-w-0 flex-1">
+                      <span class="block font-medium text-ink-gray-9"
+                        >{{ priceListLabel(row.price_list) }}
+                        <Badge
+                          v-if="row.buying"
+                          class="ml-1"
+                          theme="gray"
+                          :label="__('Cost')"
+                        />
+                        <Badge
+                          v-if="row.first_price"
+                          class="ml-1"
+                          theme="blue"
+                          :label="__('First price')"
+                        />
+                      </span>
+                      <span class="block text-xs text-ink-gray-6"
+                        >{{ row.by }} ·
+                        <span :title="row.at">{{
+                          relativeAge(row.at, boot?.today).text || row.at
+                        }}</span>
+                        · {{ formatDateTime(row.at) }}</span
+                      >
+                    </span>
+                    <span class="flex items-baseline gap-2 tabular-nums">
+                      <span
+                        v-if="
+                          row.old_rate !== null && row.old_rate !== undefined
+                        "
+                        class="text-xs text-ink-gray-5 line-through"
+                        >{{ money(row.old_rate, row.currency) }}</span
+                      >
+                      <span
+                        v-if="
+                          row.new_rate !== null && row.new_rate !== undefined
+                        "
+                        class="font-semibold text-ink-gray-9"
+                        >{{ money(row.new_rate, row.currency) }}</span
+                      >
+                      <span v-else class="text-ink-red-7">{{
+                        __('Removed')
+                      }}</span>
+                      <span
+                        v-if="change(row)"
+                        class="text-xs"
+                        :class="
+                          change(row) > 0
+                            ? 'text-ink-green-7'
+                            : 'text-ink-red-7'
+                        "
+                        >{{ change(row) > 0 ? '+' : ''
+                        }}{{ change(row) }}%</span
+                      >
+                    </span>
+                  </li>
+                </ul>
                 <button
+                  v-if="history.rows.length > 6"
                   type="button"
-                  class="min-h-11 text-sm font-medium text-ink-gray-7 hover:text-ink-gray-9 sm:min-h-8"
-                  :aria-expanded="unitsAll ? 'true' : 'false'"
-                  @click="unitsAll = !unitsAll"
+                  class="min-h-11 w-full border-t border-outline-gray-1 px-4 py-2 text-left text-sm font-medium text-ink-gray-7 hover:bg-surface-gray-1 sm:min-h-9"
+                  @click="historyAll = !historyAll"
                 >
                   {{
-                    unitsAll
-                      ? __('Show fewer', null, 'Productos')
-                      : __('See all ({0})', [unitList.length], 'Productos')
+                    historyAll
+                      ? __('See fewer')
+                      : __('See all {0} changes', [history.rows.length])
                   }}
                 </button>
-              </div>
-            </section>
+              </section>
 
-            <section
-              id="compras"
-              class="scroll-mt-4 rounded-7 border border-outline-gray-2 bg-surface-base"
-            >
-              <header
-                class="flex items-center gap-2 border-b border-outline-gray-1 px-4 py-3"
-              >
-                <h2 class="flex-1 text-base font-semibold text-ink-gray-9">
-                  {{ __('Open purchases') }}
-                </h2>
-                <Button
-                  v-if="action('purchase')?.enabled"
-                  variant="ghost"
-                  class="min-h-11 sm:min-h-7"
-                  :label="action('purchase').label"
-                  @click="run(action('purchase'))"
-                />
-              </header>
-              <p
-                v-if="!data.purchases.rows.length"
-                class="px-4 py-3 text-sm text-ink-gray-6"
-              >
-                {{
-                  data.purchases.readable
-                    ? __('No open purchases of this product.')
-                    : __('You cannot see purchases.')
-                }}
-              </p>
-              <ul v-else class="divide-y divide-outline-gray-1">
-                <li v-for="row in data.purchases.rows" :key="row.name">
-                  <RouterLink
-                    :to="purchaseRecord(row)"
-                    class="flex min-h-11 flex-wrap items-start gap-3 px-4 py-2 text-sm hover:bg-surface-gray-1"
-                  >
-                    <span class="min-w-0 flex-1">
-                      <span class="block font-medium">{{
-                        row.supplier_name ||
-                        (row.doctype === 'Material Request'
-                          ? __('Purchase request', null, 'Productos')
-                          : row.name)
-                      }}</span>
-                      <span class="block text-ink-gray-6"
-                        >{{ row.name }} ·
-                        {{
-                          row.schedule_date
-                            ? __('Delivery {0}', [row.schedule_date])
-                            : row.status
-                        }}</span
-                      >
-                    </span>
-                    <span
-                      v-if="row.per_received !== undefined"
-                      class="tabular-nums text-ink-gray-6"
-                      >{{ __('{0}% received', [qty(row.per_received)]) }}</span
-                    >
-                  </RouterLink>
-                </li>
-              </ul>
-            </section>
+              <!-- Actividad y comentarios: notes for the team, who is on it,
+                 tags, shares, emails and every change (crm.api.documentos). -->
+              <RecordKit
+                v-if="product.name"
+                class="rounded-7 border border-outline-gray-2 bg-surface-base"
+                :kit="kit"
+                :title="product.item_name || product.name"
+                :cadena="false"
+              />
+            </div>
 
-            <section
-              id="ventas"
-              class="scroll-mt-4 rounded-7 border border-outline-gray-2 bg-surface-base"
-            >
-              <header
-                class="flex items-center gap-2 border-b border-outline-gray-1 px-4 py-3"
+            <!-- ── side panel ─────────────────────────────────────────── -->
+            <aside class="min-w-0 space-y-4 lg:space-y-5">
+              <section
+                v-if="data.cost"
+                class="rounded-7 border border-outline-gray-2 bg-surface-base"
+                :aria-label="__('Cost and margin')"
               >
-                <h2 class="flex-1 text-base font-semibold text-ink-gray-9">
-                  {{ __('Recent sales') }}
-                </h2>
-              </header>
-              <p
-                v-if="!data.sales.rows.length"
-                class="px-4 py-3 text-sm text-ink-gray-6"
-              >
-                {{
-                  data.sales.readable
-                    ? __('No sales of this product yet.')
-                    : __('You cannot see sales invoices.')
-                }}
-              </p>
-              <ul v-else class="divide-y divide-outline-gray-1">
-                <li
-                  v-for="row in visibleRows(data.sales.rows, salesAll)"
-                  :key="row.name"
+                <header
+                  class="flex items-center gap-2 border-b border-outline-gray-1 px-4 py-3"
                 >
-                  <component
-                    :is="documentTag('Sales Invoice', row.name)"
-                    v-bind="documentProps('Sales Invoice', row.name)"
-                    class="flex min-h-14 items-start gap-3 px-4 py-2 text-sm"
-                    data-producto-sale
+                  <span
+                    class="lucide-lock h-4 w-4 text-ink-gray-5"
+                    aria-hidden="true"
+                  />
+                  <h2 class="flex-1 text-base font-semibold text-ink-gray-9">
+                    {{ __('Cost and margin') }}
+                  </h2>
+                  <span class="text-xs text-ink-gray-5">{{
+                    __('managers only')
+                  }}</span>
+                </header>
+                <dl class="grid grid-cols-2 gap-px bg-surface-gray-2">
+                  <div
+                    v-for="figure in costFigures"
+                    :key="figure.label"
+                    class="bg-surface-base px-4 py-3"
                   >
-                    <span class="min-w-0 flex-1">
+                    <dt class="text-xs text-ink-gray-6">{{ figure.label }}</dt>
+                    <dd
+                      class="mt-0.5 text-lg font-semibold tabular-nums"
+                      :class="figure.tone || 'text-ink-gray-9'"
+                    >
+                      {{ figure.value }}
+                    </dd>
+                  </div>
+                </dl>
+                <p class="px-4 py-2 text-xs text-ink-gray-6">{{ costBasis }}</p>
+              </section>
+
+              <section
+                class="rounded-7 border border-outline-gray-2 bg-surface-base"
+              >
+                <header
+                  class="flex items-center gap-2 border-b border-outline-gray-1 px-4 py-3"
+                >
+                  <h2 class="flex-1 text-base font-semibold text-ink-gray-9">
+                    {{ __('Description', null, 'Productos') }}
+                  </h2>
+                  <Button
+                    v-if="action('edit')"
+                    variant="ghost"
+                    class="min-h-11 sm:min-h-7"
+                    :label="
+                      action('edit').enabled ? __('Edit') : action('edit').label
+                    "
+                    @click="run(action('edit'))"
+                  />
+                </header>
+                <p
+                  v-if="product.description"
+                  class="whitespace-pre-line break-words px-4 py-3 text-sm leading-relaxed text-ink-gray-8"
+                >
+                  {{ product.description }}
+                </p>
+                <p v-else class="px-4 py-3 text-sm text-ink-gray-6">
+                  {{
+                    action('edit')?.enabled
+                      ? __(
+                          'No description yet. Add what the customer asks about: model, compatibility, what it includes.',
+                        )
+                      : __('No description yet.')
+                  }}
+                </p>
+              </section>
+
+              <section
+                class="rounded-7 border border-outline-gray-2 bg-surface-base"
+              >
+                <header
+                  class="flex items-center gap-2 border-b border-outline-gray-1 px-4 py-3"
+                >
+                  <h2 class="flex-1 text-base font-semibold text-ink-gray-9">
+                    {{ __('Barcodes') }}
+                    <span
+                      v-if="product.barcodes?.length"
+                      class="ml-1 text-sm font-normal text-ink-gray-5"
+                      >{{ product.barcodes.length }}</span
+                    >
+                  </h2>
+                  <Button
+                    v-if="action('edit')?.enabled"
+                    variant="ghost"
+                    class="min-h-11 sm:min-h-7"
+                    :label="product.barcodes?.length ? __('Edit') : __('Add')"
+                    @click="run(action('edit'))"
+                  />
+                </header>
+                <ul
+                  v-if="product.barcodes?.length"
+                  class="divide-y divide-outline-gray-1"
+                >
+                  <li
+                    v-for="code in product.barcodes"
+                    :key="code.barcode"
+                    class="flex items-center gap-2 px-4 py-2 text-sm"
+                  >
+                    <LucideHash
+                      class="h-4 w-4 text-ink-gray-5"
+                      aria-hidden="true"
+                    />
+                    <span
+                      class="min-w-0 flex-1 truncate font-mono text-ink-gray-9"
+                      >{{ code.barcode }}</span
+                    >
+                    <span
+                      v-if="code.barcode_type"
+                      class="text-xs text-ink-gray-5"
+                      >{{ code.barcode_type }}</span
+                    >
+                  </li>
+                </ul>
+                <p v-else class="px-4 py-3 text-sm text-ink-gray-6">
+                  {{
+                    action('edit')?.enabled
+                      ? __(
+                          'No barcodes yet. Add one so the scanner and the POS find it.',
+                        )
+                      : __('No barcodes yet.')
+                  }}
+                </p>
+              </section>
+
+              <section
+                class="rounded-7 border border-outline-gray-2 bg-surface-base"
+              >
+                <header class="border-b border-outline-gray-1 px-4 py-3">
+                  <h2 class="text-base font-semibold text-ink-gray-9">
+                    {{ __('Details') }}
+                  </h2>
+                </header>
+                <dl class="divide-y divide-outline-gray-1 text-sm">
+                  <div
+                    v-for="fact in facts"
+                    :key="fact.label"
+                    class="flex gap-3 px-4 py-2"
+                  >
+                    <dt class="w-28 shrink-0 text-ink-gray-6">
+                      {{ fact.label }}
+                    </dt>
+                    <dd class="min-w-0 flex-1 break-words text-ink-gray-9">
+                      {{ fact.value }}
+                    </dd>
+                  </div>
+                </dl>
+                <!-- Every setting of the product in words (SHELL-D6, DD13). -->
+                <RouterLink
+                  :to="{
+                    name: 'ProductoAjustes',
+                    params: { item: props.item },
+                  }"
+                  class="flex min-h-12 items-center gap-3 border-t border-outline-gray-1 px-4 py-2 text-sm font-medium text-ink-gray-9 hover:bg-surface-gray-2"
+                  data-producto-ajustes
+                >
+                  <span
+                    class="lucide-sliders-horizontal size-4 flex-none text-ink-gray-6"
+                    aria-hidden="true"
+                  />
+                  <span class="min-w-0 flex-1">{{ __('All settings') }}</span>
+                  <span
+                    class="lucide-chevron-right size-4 flex-none text-ink-gray-5"
+                    aria-hidden="true"
+                  />
+                </RouterLink>
+              </section>
+
+              <section
+                v-if="data.units"
+                id="unidades"
+                class="scroll-mt-4 rounded-7 border border-outline-gray-2 bg-surface-base"
+              >
+                <header
+                  class="flex items-center gap-2 border-b border-outline-gray-1 px-4 py-3"
+                >
+                  <h2 class="flex-1 text-base font-semibold text-ink-gray-9">
+                    {{
+                      data.units.serials
+                        ? __('Serial numbers on hand', null, 'Productos')
+                        : __('Batches on hand', null, 'Productos')
+                    }}
+                  </h2>
+                  <span class="text-sm tabular-nums text-ink-gray-6">{{
+                    qty(unitList.length)
+                  }}</span>
+                </header>
+                <p
+                  v-if="!unitReadable"
+                  class="px-4 py-3 text-sm text-ink-gray-6"
+                >
+                  {{
+                    __(
+                      'You cannot see serial numbers or batches.',
+                      null,
+                      'Productos',
+                    )
+                  }}
+                </p>
+                <p
+                  v-else-if="!unitList.length"
+                  class="px-4 py-3 text-sm text-ink-gray-6"
+                >
+                  {{ __('Nothing on hand in your stores.', null, 'Productos') }}
+                </p>
+                <ul v-else class="divide-y divide-outline-gray-1 text-sm">
+                  <li
+                    v-for="row in visibleRows(unitList, unitsAll, 8)"
+                    :key="`${row.serial || row.batch}|${row.warehouse}`"
+                    class="flex flex-wrap items-center gap-x-3 gap-y-0.5 px-4 py-2"
+                  >
+                    <span
+                      class="min-w-0 flex-1 truncate font-mono text-ink-gray-9"
+                      >{{ row.serial || row.batch }}</span
+                    >
+                    <span v-if="row.batch" class="tabular-nums text-ink-gray-7"
+                      >{{ qty(row.qty) }}
+                      {{ unitName(product.stock_uom) }}</span
+                    >
+                    <span
+                      v-if="row.expiry"
+                      class="text-xs"
+                      :class="
+                        row.expired
+                          ? 'font-medium text-ink-red-7'
+                          : 'text-ink-gray-6'
+                      "
+                      >{{
+                        row.expired
+                          ? __('Expired {0}', [row.expiry], 'Productos')
+                          : __('Expires {0}', [row.expiry], 'Productos')
+                      }}</span
+                    >
+                    <span class="w-full truncate text-xs text-ink-gray-5">{{
+                      storeLabel(row.warehouse)
+                    }}</span>
+                  </li>
+                </ul>
+                <div
+                  v-if="unitList.length > 8"
+                  class="border-t border-outline-gray-1 px-4 py-2"
+                >
+                  <button
+                    type="button"
+                    class="min-h-11 text-sm font-medium text-ink-gray-7 hover:text-ink-gray-9 sm:min-h-8"
+                    :aria-expanded="unitsAll ? 'true' : 'false'"
+                    @click="unitsAll = !unitsAll"
+                  >
+                    {{
+                      unitsAll
+                        ? __('Show fewer', null, 'Productos')
+                        : __('See all ({0})', [unitList.length], 'Productos')
+                    }}
+                  </button>
+                </div>
+              </section>
+
+              <section
+                id="compras"
+                class="scroll-mt-4 rounded-7 border border-outline-gray-2 bg-surface-base"
+              >
+                <header
+                  class="flex items-center gap-2 border-b border-outline-gray-1 px-4 py-3"
+                >
+                  <h2 class="flex-1 text-base font-semibold text-ink-gray-9">
+                    {{ __('Open purchases') }}
+                  </h2>
+                  <Button
+                    v-if="action('purchase')?.enabled"
+                    variant="ghost"
+                    class="min-h-11 sm:min-h-7"
+                    :label="action('purchase').label"
+                    @click="run(action('purchase'))"
+                  />
+                </header>
+                <p
+                  v-if="!data.purchases.rows.length"
+                  class="px-4 py-3 text-sm text-ink-gray-6"
+                >
+                  {{
+                    data.purchases.readable
+                      ? __('No open purchases of this product.')
+                      : __('You cannot see purchases.')
+                  }}
+                </p>
+                <ul v-else class="divide-y divide-outline-gray-1">
+                  <li v-for="row in data.purchases.rows" :key="row.name">
+                    <RouterLink
+                      :to="purchaseRecord(row)"
+                      class="flex min-h-11 flex-wrap items-start gap-3 px-4 py-2 text-sm hover:bg-surface-gray-1"
+                    >
+                      <span class="min-w-0 flex-1">
+                        <span class="block font-medium">{{
+                          row.supplier_name ||
+                          (row.doctype === 'Material Request'
+                            ? __('Purchase request', null, 'Productos')
+                            : row.name)
+                        }}</span>
+                        <span class="block text-ink-gray-6"
+                          >{{ row.name }} ·
+                          {{
+                            row.schedule_date
+                              ? __('Delivery {0}', [row.schedule_date])
+                              : row.status
+                          }}</span
+                        >
+                      </span>
                       <span
-                        class="block break-words text-base text-ink-gray-9"
+                        v-if="row.per_received !== undefined"
+                        class="tabular-nums text-ink-gray-6"
                         >{{
-                          row.customer_name || __('Customer', null, 'Productos')
+                          __('{0}% received', [qty(row.per_received)])
                         }}</span
                       >
-                      <span class="block text-ink-gray-6"
-                        >{{ formatDate(row.posting_date)
-                        }}<template v-if="row.is_return">
-                          · {{ __('Return', null, 'Productos') }}</template
-                        ><template v-if="row.is_pos">
-                          ·
-                          {{ __('Point of sale', null, 'Productos') }}</template
-                        ></span
-                      >
-                    </span>
-                    <span class="tabular-nums">{{
-                      money(row.grand_total, row.currency)
-                    }}</span>
-                  </component>
-                </li>
-              </ul>
-              <ShowAll v-model="salesAll" :total="data.sales.rows.length" />
-            </section>
-          </aside>
-        </div>
-      </template>
+                    </RouterLink>
+                  </li>
+                </ul>
+              </section>
+
+              <section
+                id="ventas"
+                class="scroll-mt-4 rounded-7 border border-outline-gray-2 bg-surface-base"
+              >
+                <header
+                  class="flex items-center gap-2 border-b border-outline-gray-1 px-4 py-3"
+                >
+                  <h2 class="flex-1 text-base font-semibold text-ink-gray-9">
+                    {{ __('Recent sales') }}
+                  </h2>
+                </header>
+                <p
+                  v-if="!data.sales.rows.length"
+                  class="px-4 py-3 text-sm text-ink-gray-6"
+                >
+                  {{
+                    data.sales.readable
+                      ? __('No sales of this product yet.')
+                      : __('You cannot see sales invoices.')
+                  }}
+                </p>
+                <ul v-else class="divide-y divide-outline-gray-1">
+                  <li
+                    v-for="row in visibleRows(data.sales.rows, salesAll)"
+                    :key="row.name"
+                  >
+                    <component
+                      :is="documentTag('Sales Invoice', row.name)"
+                      v-bind="documentProps('Sales Invoice', row.name)"
+                      class="flex min-h-14 items-start gap-3 px-4 py-2 text-sm"
+                      data-producto-sale
+                    >
+                      <span class="min-w-0 flex-1">
+                        <span
+                          class="block break-words text-base text-ink-gray-9"
+                          >{{
+                            row.customer_name ||
+                            __('Customer', null, 'Productos')
+                          }}</span
+                        >
+                        <span class="block text-ink-gray-6"
+                          >{{ formatDate(row.posting_date)
+                          }}<template v-if="row.is_return">
+                            · {{ __('Return', null, 'Productos') }}</template
+                          ><template v-if="row.is_pos">
+                            ·
+                            {{
+                              __('Point of sale', null, 'Productos')
+                            }}</template
+                          ></span
+                        >
+                      </span>
+                      <span class="tabular-nums">{{
+                        money(row.grand_total, row.currency)
+                      }}</span>
+                    </component>
+                  </li>
+                </ul>
+                <ShowAll v-model="salesAll" :total="data.sales.rows.length" />
+              </section>
+            </aside>
+          </div>
+        </template>
+      </div>
     </div>
 
     <ProductoBar
@@ -1739,6 +1846,12 @@ import {
 } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Badge, Button, FileUploader, toast } from 'frappe-ui'
+import { AppBar, StatusChip } from '@/components/ui'
+import RecordIsland from '@/components/documentos/RecordIsland.vue'
+import RecordKit from '@/components/documentos/compras/RecordKit.vue'
+import { useRecordKit } from '@/components/documentos/compras/recordKit'
+import { recordActionsFor } from '@/documentos/acciones'
+import { BTN } from '@/documentos/tools'
 import { loadCameraSheet, openCamera } from '@/components/captura/cameraDoor'
 import PriceDialog from '@/components/productos/PriceDialog.vue'
 import EditDialog from '@/components/productos/EditDialog.vue'
@@ -1816,10 +1929,7 @@ import {
   withoutDone,
 } from '@/composables/useProductos'
 import Icon from '@/components/Icon.vue'
-import LucideArrowLeft from '~icons/lucide/arrow-left'
 import LucideImage from '~icons/lucide/image'
-import LucideCamera from '~icons/lucide/camera'
-import LucideAperture from '~icons/lucide/aperture'
 import LucideLayers from '~icons/lucide/layers'
 import LucideTag from '~icons/lucide/tag'
 import LucideBriefcase from '~icons/lucide/briefcase'
@@ -1827,9 +1937,6 @@ import LucideRepeat from '~icons/lucide/repeat'
 import LucideHash from '~icons/lucide/hash'
 
 // The product's pendientes (Shell D8), loaded only when the page shows them.
-const RecordActivity = defineAsyncComponent(
-  () => import('@/components/documentos/RecordActivity.vue'),
-)
 const RecordPendientes = defineAsyncComponent(
   () => import('@/components/pendientes/RecordPendientes.vue'),
 )
@@ -2181,6 +2288,58 @@ const phonePills = computed(() => {
   const inBar = new Set(barActions.value.map((entry) => entry.key))
   return heroActions.value.filter((entry) => !inBar.has(entry.key))
 })
+// The engine's «⋯» tools, Conexiones and Actividad of the Item.
+const kit = useRecordKit('Item', {
+  name: () => product.value.name || props.item,
+  title: () => product.value.item_name || '',
+  changed: () => load(),
+})
+// ── the bar: its name, whether it sells, its code and group (the kind
+// stays in the hero) ─────────────────────────────────────────────────────
+const chip = computed(() => {
+  const item = product.value
+  if (item.disabled)
+    return { label: __('Disabled', null, 'Productos'), tone: 'danger' }
+  if (data.value && !item.is_sales_item)
+    return { label: __('Not for sale'), tone: 'neutral' }
+  return null
+})
+const kindLine = computed(() =>
+  [product.value.name, groupPath.value.at(-1)].filter(Boolean).join(' · '),
+)
+// ── the bolt: the hero's actions as icon classes (CSS masks are generated
+// from literal names); «⋯» keeps share, print and the rest ───────────────
+const BOLT_ICONS = {
+  price: 'lucide-tag',
+  edit: 'lucide-pencil',
+  purchase: 'lucide-shopping-cart',
+  count: 'lucide-clipboard-list',
+  scanner: 'lucide-scan-barcode',
+  labels: 'lucide-printer',
+  variants: 'lucide-layers',
+  avisame: 'lucide-bell',
+  quote: 'lucide-file-text',
+}
+const boltSteps = computed(() =>
+  heroActions.value.map((entry) => ({
+    ...entry,
+    icon: BOLT_ICONS[entry.key] || 'lucide-arrow-right',
+  })),
+)
+const boltGroups = computed(() =>
+  recordActionsFor({ steps: boltSteps.value, tools: kit.tools.value }),
+)
+function onBolt({ key }) {
+  if (!key.startsWith('paso:')) return kit.onTool(key)
+  const entry = heroActions.value[Number(key.slice(5))]
+  if (entry?.href) window.location.assign(entry.href)
+  else if (entry) run(entry)
+}
+function onBack(event) {
+  event?.preventDefault?.()
+  goBack()
+}
+
 function runBar(entry) {
   if (entry.key !== 'precios') return run(entry)
   document

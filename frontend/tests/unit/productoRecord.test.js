@@ -818,7 +818,10 @@ describe('Mínimos por tienda', () => {
       quitar: { ok: true },
     })
     await mountAt('/productos/ABIBMEX000130')
-    const reads = () => calls.filter(([method]) => method === 'record').length
+    // The page's own payload; the record kit reads documentos.record too.
+    const reads = () =>
+      calls.filter(([method, body]) => method === 'record' && !body.doctype)
+        .length
     const before = reads()
     row('Norte - D').querySelector('[data-minimos-watch-on]').click()
     await flush()

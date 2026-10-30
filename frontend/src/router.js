@@ -366,7 +366,7 @@ const routes = [
     meta: {
       app: 'productos',
       title: 'Productos',
-      listParent: 'Productos',
+      ownPhoneHeader: true,
       ownBottomBar: true,
     },
   },
