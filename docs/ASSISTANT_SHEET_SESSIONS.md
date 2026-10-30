@@ -53,7 +53,8 @@ integration with its workspace for html graphs and stuff, autocomplete on / cmds
   default-src 'none'; img-src data:; style-src 'unsafe-inline'`. Live, the `doco_assistant_canvas`
   event (published when the turn commits, so usually after its answer) puts the file under the
   answer on screen, or under the one still to come while the turn runs; after a reload a file goes
-  under the first answer logged at or after it was written.
+  under the answer of the turn it was written in (the first answer after the person's last
+  message before it).
 - **Older servers.** No `liquidar`: the plain reset. No `encargos`: the Agenda button goes away.
   No Lienzo: no inline files.
 
