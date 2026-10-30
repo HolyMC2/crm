@@ -118,6 +118,16 @@ lacks a feature, ask the Shell S1 owner instead of making a private copy.
   is a wizard, not a record: its own bar with «Pregúntale a Muelle» as a sparkle, the three steps as
   chips. Trap: `<component :is="'button'">` resolves to the globally registered frappe-ui `Button`;
   render a native `<button>` (or `<a>`) with `v-if` instead.
+- 2026-10-30 · The remaining records follow it: Prospecto, Respuesta de encuesta, Persona (Equipo),
+  Garantía, Cliente en Cobranza and Producto own their bar (name, state chip, kind line), the island
+  (reach where there is a person) with the bolt and «⋯», and `RecordKit` at the end. Each hero
+  leads with one filled step (convert the lead, take the follow-up, approve the leave request, open
+  the repair, register the payment). Garantía shows four steps and folds the rest behind «Más acciones»;
+  its repair, transition and outcome dialogs are `BottomSheet`s. Cobranza keeps «Siguiente
+  cliente» as a chevron in the bar on every width. Producto keeps its thumb bar (Etiqueta · Conteo ·
+  Precios) and moves the kind out of the bar chip, which shows only Deshabilitado or No se vende.
+  Trap: an icon class built at runtime (`` `lucide-${name}` ``) is never generated; map keys to
+  literal class names.
 - Still to do on Contacto: fold Seguimientos «Hechos/Cancelados» into a collapsed «Completados
   (n)»; grey out an action that does not apply instead of hiding it.
 
