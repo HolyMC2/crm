@@ -34,7 +34,9 @@
         v-else-if="!caps.register"
         class="py-10"
         :title="__('Promotions need the register')"
-        :message="__('Ask whoever runs Muelle to add the register app to this shop.')"
+        :message="
+          __('Ask whoever runs Muelle to add the register app to this shop.')
+        "
       />
       <template v-else>
         <section
@@ -48,7 +50,11 @@
             type="button"
             class="press flex min-h-24 flex-col items-start justify-between gap-2 rounded-7 border border-outline-gray-2 bg-surface-base p-3 text-left hover:bg-surface-gray-1"
             :class="tile.denied && 'opacity-60'"
-            :aria-describedby="tile.denied && deniedTile === tile.key ? 'fidelidad-denied' : undefined"
+            :aria-describedby="
+              tile.denied && deniedTile === tile.key
+                ? 'fidelidad-denied'
+                : undefined
+            "
             :data-testid="`fidelidad-rapida-${tile.key}`"
             @click="openTile(tile)"
           >
@@ -98,13 +104,19 @@
             :action="caps.create_offer ? __('New promotion') : ''"
             @action="sheet = 'promo'"
           />
-          <ul v-else class="divide-y divide-outline-gray-1" data-testid="fidelidad-promos">
+          <ul
+            v-else
+            class="divide-y divide-outline-gray-1"
+            data-testid="fidelidad-promos"
+          >
             <li v-for="o in shownOffers" :key="o.name">
               <ListRow
                 :title="o.title"
                 :subtitle="`${offerSummary(o, currency)} · ${offerWhen(o)}`"
                 :subtitle-tone="o.ending_soon ? 'text-ink-amber-8' : ''"
-                :icon="o.coupon_based ? 'lucide-ticket' : 'lucide-badge-percent'"
+                :icon="
+                  o.coupon_based ? 'lucide-ticket' : 'lucide-badge-percent'
+                "
                 @click="openOffer(o)"
               >
                 <template #trailing>
@@ -125,7 +137,11 @@
               class="grid grid-cols-2 gap-px overflow-hidden rounded-7 border border-outline-gray-2 bg-surface-gray-2 lg:grid-cols-4"
               data-testid="fidelidad-programa"
             >
-              <div v-for="fact in programFacts" :key="fact.label" class="bg-surface-base p-3">
+              <div
+                v-for="fact in programFacts"
+                :key="fact.label"
+                class="bg-surface-base p-3"
+              >
                 <p class="text-xs text-ink-gray-6">{{ fact.label }}</p>
                 <p class="num text-base font-semibold text-ink-gray-9">
                   {{ fact.value }}
@@ -148,11 +164,17 @@
             :title="__('No points program yet')"
             :message="
               program?.can_create
-                ? __('Create it from a customer: Contacts, the customer, «Points and balance».')
+                ? __(
+                    'Create it from a customer: Contacts, the customer, «Points and balance».',
+                  )
                 : __('An accounts manager can create it.')
             "
           />
-          <p v-if="membersError" role="alert" class="px-4 pt-2 text-sm text-ink-red-7">
+          <p
+            v-if="membersError"
+            role="alert"
+            class="px-4 pt-2 text-sm text-ink-red-7"
+          >
             {{ membersError }}
           </p>
           <ul
@@ -160,7 +182,11 @@
             class="mt-2 divide-y divide-outline-gray-1"
             data-testid="fidelidad-miembros"
           >
-            <li v-for="(m, i) in members" :key="m.name" class="flex items-center">
+            <li
+              v-for="(m, i) in members"
+              :key="m.name"
+              class="flex items-center"
+            >
               <ListRow
                 class="min-w-0 flex-1"
                 :title="m.customer_name"
@@ -191,7 +217,9 @@
             v-else-if="program?.state === 'active' && !membersLoading"
             class="px-4 py-6 text-sm text-ink-gray-6"
           >
-            {{ memberQuery ? __('Nothing matches that.') : __('No members yet.') }}
+            {{
+              memberQuery ? __('Nothing matches that.') : __('No members yet.')
+            }}
           </p>
         </template>
 
@@ -200,10 +228,17 @@
           <p class="px-4 pt-3 text-sm text-ink-gray-6">
             {{ __('A group sets the price list its customers buy at.') }}
           </p>
-          <p v-if="groupsError" role="alert" class="px-4 pt-2 text-sm text-ink-red-7">
+          <p
+            v-if="groupsError"
+            role="alert"
+            class="px-4 pt-2 text-sm text-ink-red-7"
+          >
             {{ groupsError }}
           </p>
-          <ul class="mt-2 divide-y divide-outline-gray-1" data-testid="fidelidad-grupos">
+          <ul
+            class="mt-2 divide-y divide-outline-gray-1"
+            data-testid="fidelidad-grupos"
+          >
             <li v-for="g in groups" :key="g.name">
               <ListRow
                 :title="g.label"
@@ -287,7 +322,9 @@
           type="button"
           :class="BTN.filled"
           class="press"
-          :disabled="groupSaving || groupPriceList === (openedGroup?.price_list || '')"
+          :disabled="
+            groupSaving || groupPriceList === (openedGroup?.price_list || '')
+          "
           data-testid="grupo-guardar"
           @click="saveGroup"
         >
@@ -345,7 +382,12 @@ const board = ref(null)
 const loading = ref(false)
 const error = ref('')
 const sheet = ref('')
-const mounted = reactive({ promo: false, cupon: false, puntos: false, oferta: false })
+const mounted = reactive({
+  promo: false,
+  cupon: false,
+  puntos: false,
+  oferta: false,
+})
 watch(sheet, (name) => name && name in mounted && (mounted[name] = true))
 
 const caps = computed(() => board.value?.capabilities || {})
@@ -359,12 +401,16 @@ const vista = computed({
     VISTAS.includes(route.query.vista) ? route.query.vista : 'promociones',
   set: (value) =>
     router.replace({
-      query: { ...route.query, vista: value === 'promociones' ? undefined : value },
+      query: {
+        ...route.query,
+        vista: value === 'promociones' ? undefined : value,
+      },
     }),
 })
 const ESTADOS = ['live', 'scheduled', 'paused', 'ended']
 const estado = computed({
-  get: () => (ESTADOS.includes(route.query.estado) ? route.query.estado : 'live'),
+  get: () =>
+    ESTADOS.includes(route.query.estado) ? route.query.estado : 'live',
   set: (value) =>
     router.replace({
       query: { ...route.query, estado: value === 'live' ? undefined : value },
@@ -416,7 +462,9 @@ const tiles = computed(() => [
     label: __('Adjust points'),
     denied:
       caps.value.denied?.adjust_points ||
-      (program.value?.state !== 'active' ? __('There is no points program yet.') : ''),
+      (program.value?.state !== 'active'
+        ? __('There is no points program yet.')
+        : ''),
   },
   {
     key: 'precios',
@@ -437,7 +485,10 @@ function openTile(tile) {
   }
   deniedTile.value = ''
   if (tile.key === 'precios') {
-    router.push({ name: 'Precios', query: { return_to: `/crm${route.fullPath}` } })
+    router.push({
+      name: 'Precios',
+      query: { return_to: `/crm${route.fullPath}` },
+    })
     return
   }
   if (tile.key === 'cupon') {
@@ -542,7 +593,9 @@ const programFacts = computed(() => {
     {
       label: __('Earns'),
       value: p.collection_factor
-        ? __('1 pt per {0}', [formatMoney(p.collection_factor, currency.value, { decimals: 0 })])
+        ? __('1 pt per {0}', [
+            formatMoney(p.collection_factor, currency.value, { decimals: 0 }),
+          ])
         : '—',
     },
     {

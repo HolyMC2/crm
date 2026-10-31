@@ -23,7 +23,10 @@
               ? __('One use, only for {0}', [done.coupon.customer_name])
               : couponUses(done.coupon)
           }}<template v-if="done.coupon.valid_upto">
-            · {{ __('until {0}', [formatDate(done.coupon.valid_upto)]) }}</template
+            ·
+            {{
+              __('until {0}', [formatDate(done.coupon.valid_upto)])
+            }}</template
           >
         </p>
       </div>
@@ -150,7 +153,9 @@
           @click="give"
         >
           <span
-            :class="saving ? 'lucide-loader-circle animate-spin' : 'lucide-ticket'"
+            :class="
+              saving ? 'lucide-loader-circle animate-spin' : 'lucide-ticket'
+            "
             class="size-4"
             aria-hidden="true"
           />
@@ -238,7 +243,10 @@ const missing = computed(() => {
   if (mode.value === 'customer' && !pickedCustomer.value)
     return __('Choose the customer.')
   if (!offer.value) return __('Choose the promotion.')
-  if (mode.value === 'public' && code.value.replace(/[^a-z0-9]/gi, '').length < 4)
+  if (
+    mode.value === 'public' &&
+    code.value.replace(/[^a-z0-9]/gi, '').length < 4
+  )
     return __('Write a code of at least 4 letters or numbers.')
   return ''
 })

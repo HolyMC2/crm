@@ -80,7 +80,9 @@
         </div>
         <ChipGroup
           :model-value="''"
-          :label="row.state === 'ended' ? __('Run it again until') : __('Extend')"
+          :label="
+            row.state === 'ended' ? __('Run it again until') : __('Extend')
+          "
           :options="extendOptions"
           testid="oferta-extender"
           @update:model-value="(v) => v && change('extend', v)"
@@ -134,7 +136,12 @@
         {{ error }}
       </p>
     </div>
-    <template v-if="row?.coupon_based && row.state !== 'ended' && row.state !== 'paused'" #actions>
+    <template
+      v-if="
+        row?.coupon_based && row.state !== 'ended' && row.state !== 'paused'
+      "
+      #actions
+    >
       <button
         type="button"
         :class="BTN.filled"
@@ -181,9 +188,7 @@ let confirmTimer = 0
 
 const row = computed(() => detail.value || props.offer)
 const chip = computed(() => offerChip(row.value))
-const canEdit = computed(() =>
-  detail.value ? detail.value.can_edit : false,
-)
+const canEdit = computed(() => (detail.value ? detail.value.can_edit : false))
 const extendOptions = computed(() => extendChips(row.value))
 
 watch(

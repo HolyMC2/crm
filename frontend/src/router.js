@@ -988,7 +988,12 @@ const routes = [
     path: '/ventas/fidelidad',
     name: 'Fidelidad',
     component: () => import('@/pages/Fidelidad.vue'),
-    meta: { navLabel: 'Loyalty', title: 'Fidelidad', app: 'ventas', ownPhoneHeader: true },
+    meta: {
+      navLabel: 'Loyalty',
+      title: 'Fidelidad',
+      app: 'ventas',
+      ownPhoneHeader: true,
+    },
   },
   {
     path: '/deal/:dealId',

@@ -141,7 +141,11 @@ const balance = computed(() =>
 const missing = computed(() => {
   if (!picked.value) return __('Choose the member.')
   if (!(Number(amount.value) > 0)) return __('Choose how many points.')
-  if (sign.value === 'take' && balance.value !== null && amount.value > balance.value)
+  if (
+    sign.value === 'take' &&
+    balance.value !== null &&
+    amount.value > balance.value
+  )
     return __('They have {0} points; you can take away at most that many.', [
       balance.value,
     ])
@@ -182,7 +186,10 @@ async function save() {
   saving.value = true
   error.value = ''
   try {
-    const out = await call(ADJUST_POINTS, { ...payload, request_id: pending.id })
+    const out = await call(ADJUST_POINTS, {
+      ...payload,
+      request_id: pending.id,
+    })
     toast.success(
       points > 0
         ? __('{0} points added to {1}', [points, picked.value.title])

@@ -10,7 +10,9 @@ const SERVICE = 'doco.fidelidad.api'
 
 /** A promotion's amounts read whole when they are: «$150», not «$150.00». */
 const money = (value, currency) =>
-  formatMoney(value, currency, { decimals: Number.isInteger(Number(value)) ? 0 : 2 })
+  formatMoney(value, currency, {
+    decimals: Number.isInteger(Number(value)) ? 0 : 2,
+  })
 
 export function fidelidadApi(method, args = {}) {
   const params = {}
@@ -41,9 +43,7 @@ export function targetLabel(offer, currency = 'MXN') {
   const target = offer?.target || {}
   if (target.kind === 'ticket') {
     return offer.min_amount
-      ? __('The whole ticket from {0}', [
-          money(offer.min_amount, currency),
-        ])
+      ? __('The whole ticket from {0}', [money(offer.min_amount, currency)])
       : __('The whole ticket')
   }
   return target.label || target.name || ''
@@ -51,7 +51,10 @@ export function targetLabel(offer, currency = 'MXN') {
 
 /** «10 % · Fundas y Carcasas». */
 export function offerSummary(offer, currency = 'MXN') {
-  return [discountLabel(offer?.discount, currency), targetLabel(offer, currency)]
+  return [
+    discountLabel(offer?.discount, currency),
+    targetLabel(offer, currency),
+  ]
     .filter(Boolean)
     .join(' · ')
 }
@@ -139,7 +142,9 @@ export function untilChips(now = new Date()) {
 /** «Extender»: more days from the later of today and the current end. */
 export function extendChips(offer, now = new Date()) {
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-  const end = offer?.valid_upto ? new Date(`${offer.valid_upto}T00:00:00`) : null
+  const end = offer?.valid_upto
+    ? new Date(`${offer.valid_upto}T00:00:00`)
+    : null
   const from = end && end > today ? end : today
   const plus = (days) => {
     const d = new Date(from)
@@ -202,14 +207,11 @@ export function offerMissing(draft) {
 export function offerPreview(draft, currency = 'MXN') {
   const value = Number(draft.value) || 0
   if (!value) return ''
-  const amount =
-    draft.kind === 'amount' ? money(value, currency) : `${value} %`
+  const amount = draft.kind === 'amount' ? money(value, currency) : `${value} %`
   const target =
     draft.target === 'ticket'
       ? Number(draft.minimum)
-        ? __('the whole ticket from {0}', [
-            money(draft.minimum, currency),
-          ])
+        ? __('the whole ticket from {0}', [money(draft.minimum, currency)])
         : __('the whole ticket')
       : draft.pick?.title || draft.pick?.name || '…'
   const until =

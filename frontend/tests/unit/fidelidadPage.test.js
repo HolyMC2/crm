@@ -66,7 +66,13 @@ const board = (extra = {}) => ({
     offer('Buen Fin', 'scheduled', { coupon_based: true }),
   ],
   counts: { live: 1, scheduled: 1, paused: 0, ended: 0, ending_soon: 1 },
-  program: { state: 'active', members: 3, collection_factor: 10, conversion_factor: 0.1, expiry_days: 365 },
+  program: {
+    state: 'active',
+    members: 3,
+    collection_factor: 10,
+    conversion_factor: 0.1,
+    expiry_days: 365,
+  },
   capabilities: CAPS,
   ...extra,
 })
@@ -125,7 +131,11 @@ describe('Fidelidad page', () => {
 
   it('switches to scheduled promotions from the state chip in the URL', async () => {
     answer({ get_board: board() })
-    const { el } = await mountApp(Fidelidad, {}, '/ventas/fidelidad?estado=scheduled')
+    const { el } = await mountApp(
+      Fidelidad,
+      {},
+      '/ventas/fidelidad?estado=scheduled',
+    )
     const rows = el.querySelector('[data-testid=fidelidad-promos]')
     expect(text(rows)).toContain('Buen Fin')
     expect(text(rows)).not.toContain('Mes Patrio')
@@ -137,7 +147,10 @@ describe('Fidelidad page', () => {
         capabilities: {
           ...CAPS,
           create_offer: false,
-          denied: { ...CAPS.denied, create_offer: 'A sales manager can do it.' },
+          denied: {
+            ...CAPS.denied,
+            create_offer: 'A sales manager can do it.',
+          },
         },
       }),
     })
@@ -148,22 +161,40 @@ describe('Fidelidad page', () => {
     expect(text(el.querySelector('[data-testid=fidelidad-denied]'))).toContain(
       'A sales manager can do it.',
     )
-    expect(document.querySelector('[data-testid=fidelidad-promo-sheet]')).toBeNull()
+    expect(
+      document.querySelector('[data-testid=fidelidad-promo-sheet]'),
+    ).toBeNull()
   })
 
   it('ranks points members and offers «Ajustar» to a manager', async () => {
     answer({
       get_board: board(),
       get_members: [
-        { name: 'C-1', customer_name: 'Aldo', customer_group: 'Mostrador', points: 245 },
-        { name: 'C-2', customer_name: 'Bety', customer_group: 'Mostrador', points: 10 },
+        {
+          name: 'C-1',
+          customer_name: 'Aldo',
+          customer_group: 'Mostrador',
+          points: 245,
+        },
+        {
+          name: 'C-2',
+          customer_name: 'Bety',
+          customer_group: 'Mostrador',
+          points: 10,
+        },
       ],
     })
-    const { el } = await mountApp(Fidelidad, {}, '/ventas/fidelidad?vista=puntos')
+    const { el } = await mountApp(
+      Fidelidad,
+      {},
+      '/ventas/fidelidad?vista=puntos',
+    )
     const list = el.querySelector('[data-testid=fidelidad-miembros]')
     expect(text(list)).toMatch(/Aldo.*245 pts.*Bety.*10 pts/)
     expect(el.querySelector('[data-testid=fidelidad-ajustar-0]')).not.toBeNull()
-    expect(text(el.querySelector('[data-testid=fidelidad-programa]'))).toContain('365 days')
+    expect(
+      text(el.querySelector('[data-testid=fidelidad-programa]')),
+    ).toContain('365 days')
   })
 
   it('lists customer groups with their price list', async () => {
@@ -171,13 +202,27 @@ describe('Fidelidad page', () => {
       get_board: board(),
       get_groups: {
         groups: [
-          { name: 'Mayoreo', label: 'Mayoreo', customers: 4, price_list: 'Mayoreo' },
-          { name: 'Mostrador', label: 'Mostrador', customers: 90, price_list: null },
+          {
+            name: 'Mayoreo',
+            label: 'Mayoreo',
+            customers: 4,
+            price_list: 'Mayoreo',
+          },
+          {
+            name: 'Mostrador',
+            label: 'Mostrador',
+            customers: 90,
+            price_list: null,
+          },
         ],
         price_lists: ['Mayoreo', 'Venta'],
       },
     })
-    const { el } = await mountApp(Fidelidad, {}, '/ventas/fidelidad?vista=grupos')
+    const { el } = await mountApp(
+      Fidelidad,
+      {},
+      '/ventas/fidelidad?vista=grupos',
+    )
     const list = text(el.querySelector('[data-testid=fidelidad-grupos]'))
     expect(list).toContain('4 customers · Mayoreo')
     expect(list).toContain('90 customers · Default price list')
@@ -186,7 +231,15 @@ describe('Fidelidad page', () => {
 
 describe('Nueva promoción sheet', () => {
   it('starts a ticket promotion in a few taps', async () => {
-    answer({ create_offer: (args) => ({ name: 'P1', title: 'P1', state: 'live', coupon_based: false, request: args }) })
+    answer({
+      create_offer: (args) => ({
+        name: 'P1',
+        title: 'P1',
+        state: 'live',
+        coupon_based: false,
+        request: args,
+      }),
+    })
     const onCreated = vi.fn()
     await mountApp(PromoSheet, { open: true, company: 'Grupo Doco', onCreated })
     const sheet = document.querySelector('[data-testid=fidelidad-promo-sheet]')
@@ -221,9 +274,9 @@ describe('Nueva promoción sheet', () => {
     await mountApp(PromoSheet, { open: true })
     document.querySelector('[data-testid=promo-iniciar]').click()
     await flush(2)
-    expect(text(document.querySelector('[data-testid=promo-missing]'))).toContain(
-      'Choose the category.',
-    )
+    expect(
+      text(document.querySelector('[data-testid=promo-missing]')),
+    ).toContain('Choose the category.')
     expect(call).not.toHaveBeenCalled()
     expect(docApi).toHaveBeenCalledWith(
       'rows',
@@ -254,13 +307,20 @@ describe('Regalar cupón sheet', () => {
       customer: { name: 'C-1', title: 'Aldo' },
     })
     const sheet = document.querySelector('[data-testid=fidelidad-cupon-sheet]')
-    expect(text(sheet.querySelector('[data-testid=cupon-cliente-picked]'))).toContain('Aldo')
+    expect(
+      text(sheet.querySelector('[data-testid=cupon-cliente-picked]')),
+    ).toContain('Aldo')
     document.querySelector('[data-testid=cupon-dar]').click()
     await flush()
     const [method, args] = call.mock.calls.at(-1)
     expect(method).toBe(`${API}.issue_coupon`)
-    expect(JSON.parse(args.data)).toEqual({ offer: 'Buen Fin', customer: 'C-1' })
-    expect(text(document.querySelector('[data-testid=cupon-codigo]'))).toContain('AB12CD34EF')
+    expect(JSON.parse(args.data)).toEqual({
+      offer: 'Buen Fin',
+      customer: 'C-1',
+    })
+    expect(
+      text(document.querySelector('[data-testid=cupon-codigo]')),
+    ).toContain('AB12CD34EF')
   })
 
   it('says who can give coupons instead of a form', async () => {
@@ -270,13 +330,16 @@ describe('Regalar cupón sheet', () => {
         capabilities: {
           ...CAPS,
           issue_coupon: false,
-          denied: { ...CAPS.denied, issue_coupon: 'A sales manager or accounts user can do it.' },
+          denied: {
+            ...CAPS.denied,
+            issue_coupon: 'A sales manager or accounts user can do it.',
+          },
         },
       }),
     })
-    expect(text(document.querySelector('[data-testid=cupon-denied]'))).toContain(
-      'A sales manager or accounts user can do it.',
-    )
+    expect(
+      text(document.querySelector('[data-testid=cupon-denied]')),
+    ).toContain('A sales manager or accounts user can do it.')
     expect(document.querySelector('[data-testid=cupon-dar]')).toBeNull()
   })
 })
