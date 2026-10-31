@@ -36,7 +36,9 @@ export const usersStore = defineStore('crm-users', () => {
       }
     },
     onSuccess() {
-      scheduleBackgroundFetch()
+      // Only a System Manager gets more than this list (get_users ignores
+      // include_all for everyone else); other emails resolve on demand.
+      if (isAdmin(session.user)) scheduleBackgroundFetch()
     },
   })
 
