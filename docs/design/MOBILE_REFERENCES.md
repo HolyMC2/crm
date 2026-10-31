@@ -128,6 +128,15 @@ lacks a feature, ask the Shell S1 owner instead of making a private copy.
   Precios) and moves the kind out of the bar chip, which shows only Deshabilitado or No se vende.
   Trap: an icon class built at runtime (`` `lucide-${name}` ``) is never generated; map keys to
   literal class names.
+- 2026-10-30 · «Cliente» beside a deal or a prospect (`components/ventas/ClientePanel.vue`,
+  `doco_marketing.api.contact360.get_contact_client`): «Cliente desde», Ganado/Abierto/Perdido tiles,
+  then per customer its group («Cambiar» opens a sheet of leaf groups), points and tier, monedero,
+  active coupons and the referral code (both copy), and «Vender en caja». Then the history of every
+  deal and prospect, the current one first. Each action goes to its owner: the group through Frappe's
+  own write check, «Activar tarjeta» through Clientes frecuentes, «Abonar» and «Vender en caja» to the
+  register with `return_to`, «Ficha completa» to Contacto. Points, coupons and gift cards are spent at
+  the register, never in Ventas. The Ventas sidebar folds to icons with «Solo íconos» at its foot
+  (`ventasCompact`, saved per user), like the shell rail.
 - Still to do on Contacto: fold Seguimientos «Hechos/Cancelados» into a collapsed «Completados
   (n)»; grey out an action that does not apply instead of hiding it.
 
