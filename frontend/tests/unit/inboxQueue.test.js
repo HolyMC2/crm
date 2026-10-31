@@ -390,7 +390,10 @@ describe('inbox counts (tab badges + «Por responder»)', () => {
     }
     await inbox.reloadCounts()
     expect(__resources[CHANNELS].reload).toHaveBeenCalledTimes(1)
-    expect(__resources[REPLY].submit).toHaveBeenCalledWith({ limit: 50, mine: 0 })
+    expect(__resources[REPLY].submit).toHaveBeenCalledWith({
+      limit: 50,
+      mine: 0,
+    })
   })
 
   it('refreshes once for a burst of messages', async () => {
