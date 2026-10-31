@@ -29780,3 +29780,102 @@ msgstr "Por pedir"
 
 msgid "{0}% ordered"
 msgstr "{0}% pedido"
+
+msgid "Activate card"
+msgstr "Activar tarjeta"
+
+msgid "Card activated: this customer earns points from the next sale."
+msgstr "Tarjeta activada: este cliente gana puntos desde la próxima venta."
+
+msgid "Change group of {0}"
+msgstr "Cambiar el grupo de {0}"
+
+msgid "Client"
+msgstr "Cliente"
+
+msgid "Client since {0}"
+msgstr "Cliente desde {0}"
+
+msgid "Copied: {0}"
+msgstr "Copiado: {0}"
+
+msgid "Copy code {0}"
+msgstr "Copiar el código {0}"
+
+msgid "Customer group"
+msgstr "Grupo de cliente"
+
+msgid "Full record"
+msgstr "Ficha completa"
+
+msgid "Gift cards they paid with"
+msgstr "Tarjetas de regalo con que pagó"
+
+msgid "Group"
+msgstr "Grupo"
+
+msgid "Group saved: {0}."
+msgstr "Grupo guardado: {0}."
+
+msgid "Loading groups…"
+msgstr "Cargando grupos…"
+
+msgid "Loading the client…"
+msgstr "Cargando el cliente…"
+
+msgid "No customer card yet."
+msgstr "Todavía sin tarjeta de cliente."
+
+msgid "No customer card yet. A manager can activate it."
+msgstr "Todavía sin tarjeta de cliente. Un encargado puede activarla."
+
+msgid "No other deals or prospects with this person yet."
+msgstr "Todavía no hay otros tratos ni prospectos con esta persona."
+
+msgid "Not a customer yet: the group, points and coupons belong to a customer. The first sale at the register creates it."
+msgstr "Todavía no es cliente: el grupo, los puntos y los cupones son de un cliente. La primera venta en caja lo crea."
+
+msgid "Points, monedero, coupons and gift cards are spent at the register."
+msgstr "Los puntos, el monedero, los cupones y las tarjetas de regalo se usan en caja."
+
+msgid "Prospect"
+msgstr "Prospecto"
+
+msgid "Referral code"
+msgstr "Código de referido"
+
+msgid "Save group"
+msgstr "Guardar grupo"
+
+msgid "Show all {0}"
+msgstr "Ver los {0}"
+
+msgid "The client could not be loaded."
+msgstr "No se pudo cargar el cliente."
+
+msgid "The group decides the prices, offers and promotions this customer gets at the register and on documents."
+msgstr "El grupo decide los precios, ofertas y promociones que este cliente recibe en caja y en los documentos."
+
+msgid "There is no points program yet. Set it up from Contactos."
+msgstr "Todavía no hay programa de puntos. Configúralo desde Contactos."
+
+msgid "This prospect has no contact record yet. Its history, points and coupons show here once it becomes a deal or is linked to a contact."
+msgstr "Este prospecto todavía no tiene ficha de contacto. Su historial, puntos y cupones aparecen aquí cuando se vuelve trato o se vincula a un contacto."
+
+msgid "Top up"
+msgstr "Abonar"
+
+msgid "Top up monedero of {0} at the register"
+msgstr "Abonar al monedero de {0} en caja"
+
+msgid "Valid until {0}"
+msgstr "Válido hasta {0}"
+
+msgid "this one"
+msgstr "este"
+
+msgid "worth {0}"
+msgstr "valen {0}"
+
+msgid "{0} points expire on {1}"
+msgstr "{0} puntos vencen el {1}"

@@ -256,6 +256,17 @@
     <!-- compact contact card (name/phone/email + edit popup) -->
     <ContactCardEditable />
 
+    <!-- «Cliente»: their deals and prospects, group, card, points, monedero,
+         coupons and referral code; the register is one tap away. -->
+    <ClientePanel
+      v-if="activeDeal && (clientContact || !isDeal)"
+      :contact="clientContact"
+      :lead="isDeal ? '' : activeDeal"
+      :deal="isDeal ? activeDeal : ''"
+      :return-to="`/crm${route.fullPath}`"
+      :return-label="__('Ventas')"
+    />
+
     <!-- deal summary: read-only key facts of the trato -->
     <div v-if="isDeal" class="flex-none border-b border-outline-gray-1 p-3.5">
       <div
@@ -519,6 +530,7 @@ import SidePanelLayout from '@/components/SidePanelLayout.vue'
 import { ArchivosRegistroPanel } from '@/components/archivos'
 import DealContactsSection from '@/components/doco/inbox/DealContactsSection.vue'
 import ContactCardEditable from '@/components/doco/inbox/ContactCardEditable.vue'
+import ClientePanel from '@/components/ventas/ClientePanel.vue'
 import DealCommercialDocs from '@/components/ventas/DealCommercialDocs.vue'
 import DuplicateBanner from '@/components/doco/inbox/DuplicateBanner.vue'
 import CoachingPanel from '@/components/doco/inbox/CoachingPanel.vue'
@@ -550,6 +562,7 @@ import {
   activeDeal,
   activeDealDoctype,
   activeTab,
+  contactCard,
   convoTemplateOpen,
   queue,
   GRADE_COLORS,
@@ -576,6 +589,7 @@ const route = useRoute()
 const onDeal360 = computed(() => route.name === 'Deal 360')
 
 const isDeal = computed(() => activeDealDoctype.value === 'CRM Deal')
+const clientContact = computed(() => contactCard.data?.contact || '')
 // Files on this record come from Archivos when the worker has it.
 const archivosEnabled = computed(() =>
   moduleEnabled(shellBoot.value, 'archivos'),
