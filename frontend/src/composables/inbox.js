@@ -181,6 +181,28 @@ export function setReplyMine(value) {
   replyMine.value = !!value
   return reloadReplyQueue()
 }
+// The tab badges and «Por responder» together, from one server read: each one
+// alone reads every conversation in scope with its last message.
+export async function reloadCounts() {
+  try {
+    const out = await call('doco_marketing.api.inbox.get_queue_counts', {
+      limit: 50,
+      mine: replyMine.value ? 1 : 0,
+    })
+    channelCounts.setData(out.channel_counts)
+    replyQueue.setData(out.reply_queue)
+  } catch {
+    // A server without get_queue_counts still answers the two reads.
+    channelCounts.reload()
+    reloadReplyQueue()
+  }
+}
+// A burst of messages refreshes the counts once.
+let _countsTimer = 0
+export function scheduleCountsReload() {
+  clearTimeout(_countsTimer)
+  _countsTimer = setTimeout(reloadCounts, 400)
+}
 // Single "cosas sin atender" total across all four inbox surfaces: WhatsApp + Messenger
 // orphans (Sin asignar) + overdue conversations (Por responder, past due) + new FB
 // comments. The buckets are disjoint (orphans have no Lead/Deal so are never overdue;
@@ -538,8 +560,7 @@ export function initInbox(opts = {}) {
   reloadUnassigned()
   reloadComments()
   commentCounts.fetch()
-  channelCounts.fetch()
-  reloadReplyQueue()
+  reloadCounts()
   autoAckCount.fetch() // "por aprobar" badge — count only on init; the list loads on tab open
   snoozedCount.fetch() // «Pospuestas» chip
   conversationTags.fetch() // 🏷 filter chips
@@ -1270,8 +1291,7 @@ export function catchUpInbox() {
   reloadUnassigned()
   if (activeDeal.value) loadThread()
   else if (activeUnassigned.value) reloadUnassignedThread()
-  channelCounts.reload()
-  reloadReplyQueue()
+  reloadCounts()
   autoAckCount.reload()
   commentCounts.reload()
 }
@@ -1280,8 +1300,8 @@ export function catchUpInbox() {
 export function onThreadUpdate(payload) {
   if (payload?.deal && payload.deal === activeDeal.value) loadThread()
   scheduleQueueReload() // debounced merge — bursts + the whatsapp_message reload coalesce
-  channelCounts.reload() // a new message may flip a conversation's last_channel
-  reloadReplyQueue() // ...and a reply/inbound changes who is owed an answer
+  // A new message may flip a conversation's channel and changes who is owed an answer.
+  scheduleCountsReload()
   autoAckCount.reload() // a reply may resolve a pending draft; an inbound may add one
   // ...and while the review list is on screen it must drop rows the server just
   // auto-discarded (deal Completado / repair Entregado close-out), not only the badge.

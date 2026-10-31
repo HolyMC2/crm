@@ -27,6 +27,7 @@ vi.mock('frappe-ui', () => {
         }),
         fetch: vi.fn(),
         reload: vi.fn(),
+        setData: vi.fn((data) => (r.data = data)),
       }
       resources[opts.url] = r
       return r
@@ -354,5 +355,55 @@ describe('filters: Limpiar and the saved range', () => {
     expect(inbox.queueDealState.value).toBe('open')
     expect(inbox.queueLeadState.value).toBe('open')
     expect(inbox.queueDateFrom.value).toBe('')
+  })
+})
+
+describe('inbox counts (tab badges + «Por responder»)', () => {
+  const COUNTS = 'doco_marketing.api.inbox.get_queue_counts'
+  const CHANNELS = 'doco_marketing.api.inbox.get_channel_counts'
+  const REPLY = 'doco_marketing.api.inbox.get_reply_queue'
+  afterEach(() => vi.useRealTimers())
+
+  it('fills both from one read', async () => {
+    const { inbox } = await freshInbox()
+    const { __callState, __resources } = await import('frappe-ui')
+    const calls = []
+    __callState.behavior = async (method, args) => {
+      calls.push([method, args])
+      return {
+        channel_counts: { whatsapp: 2, messenger: 1, all: 4 },
+        reply_queue: { count: 1, overdue: 1, mine: 0, conversations: [] },
+      }
+    }
+    await inbox.reloadCounts()
+    expect(calls).toEqual([[COUNTS, { limit: 50, mine: 0 }]])
+    expect(__resources[CHANNELS].data.all).toBe(4)
+    expect(__resources[REPLY].data.overdue).toBe(1)
+    expect(__resources[CHANNELS].reload).not.toHaveBeenCalled()
+  })
+
+  it('falls back to the two reads on a server without it', async () => {
+    const { inbox } = await freshInbox()
+    const { __callState, __resources } = await import('frappe-ui')
+    __callState.behavior = async () => {
+      throw new Error('not whitelisted')
+    }
+    await inbox.reloadCounts()
+    expect(__resources[CHANNELS].reload).toHaveBeenCalledTimes(1)
+    expect(__resources[REPLY].submit).toHaveBeenCalledWith({ limit: 50, mine: 0 })
+  })
+
+  it('refreshes once for a burst of messages', async () => {
+    vi.useFakeTimers()
+    const { inbox } = await freshInbox()
+    const { __callState } = await import('frappe-ui')
+    const calls = []
+    __callState.behavior = async (method) => {
+      calls.push(method)
+      return { channel_counts: {}, reply_queue: {} }
+    }
+    for (let i = 0; i < 5; i++) inbox.onThreadUpdate({ deal: 'X' })
+    await vi.advanceTimersByTimeAsync(1000)
+    expect(calls.filter((m) => m === COUNTS)).toHaveLength(1)
   })
 })
