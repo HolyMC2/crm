@@ -61,6 +61,10 @@ Everywhere
     `crm/avisos/resolve.py` `record_label` translates the field when it is a Select, so the row
     reads «Sistema te asignó «Conteo»». The catalogues are es, then es_MX on top (doco's
     `es_MX.po` holds the Scan Task kinds).
+16. A routine job with few choices is one sheet of taps: chips for each choice (a few common
+    values plus «Other»), one sentence that reads the result back, one filled button with the
+    job's verb. The button says what is missing instead of greying out. A screen's quick jobs
+    sit on top as big tiles; a tile the worker may not use stays a button and says who can.
 
 ## Componentes
 
@@ -137,6 +141,12 @@ lacks a feature, ask the Shell S1 owner instead of making a private copy.
   register with `return_to`, «Ficha completa» to Contacto. Points, coupons and gift cards are spent at
   the register, never in Ventas. The Ventas sidebar folds to icons with «Solo íconos» at its foot
   (`ventasCompact`, saved per user), like the shell rail.
+- Fidelidad (`/ventas/fidelidad`, 2026-10-30): four quick-job tiles (Nueva promoción, Regalar
+  cupón, Ajustar puntos, Precios), each one sheet of chips; then Promociones by state (pause,
+  extend, end in one or two taps), Puntos (the program in four facts, members ranked) and Grupos
+  (price list per group). The «Cliente» panel opens the same coupon and points sheets on the deal.
+  Writes go to their owners through `doco.fidelidad.api`: POS Offer and POS Coupon under their
+  own permissions, points through Clientes frecuentes. Gift cards stay at the register.
 - Still to do on Contacto: fold Seguimientos «Hechos/Cancelados» into a collapsed «Completados
   (n)»; grey out an action that does not apply instead of hiding it.
 
