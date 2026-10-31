@@ -308,7 +308,9 @@ describe('CreateDialog «Para» in one tap', () => {
       ['Dani P.', 'false'],
     ])
     type(root.querySelector('textarea'), 'Mandar la cotización')
-    ;[...root.querySelectorAll('[data-testid=pendiente-para] [role=radio]')][1].click()
+    ;[
+      ...root.querySelectorAll('[data-testid=pendiente-para] [role=radio]'),
+    ][1].click()
     await nextTick()
     expect(quickRow()[1][1]).toBe('true')
     expect(quickRow()[0][1]).toBe('false')
@@ -342,7 +344,9 @@ describe('CreateDialog «Para» in one tap', () => {
     await flush()
     expect(root.querySelector('[data-control="For"]')).not.toBeNull()
     // Back to me: the edit sends me as the one who does it.
-    ;[...root.querySelectorAll('[data-testid=pendiente-para] [role=radio]')][0].click()
+    ;[
+      ...root.querySelectorAll('[data-testid=pendiente-para] [role=radio]'),
+    ][0].click()
     root.querySelector('form').dispatchEvent(new Event('submit'))
     await flush()
     const [method, args] = state.api.mock.calls.at(-1)
@@ -355,6 +359,8 @@ describe('CreateDialog «Para» in one tap', () => {
     mount(CreateDialog, { modelValue: true, today: '2026-10-18' })
     await flush()
     expect(quickRow()).toEqual([['Me', 'true']])
-    expect(root.querySelector('[data-testid=pendiente-para-otro]')).not.toBeNull()
+    expect(
+      root.querySelector('[data-testid=pendiente-para-otro]'),
+    ).not.toBeNull()
   })
 })

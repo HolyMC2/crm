@@ -2069,7 +2069,10 @@ async function moveDays(event, delta) {
 // when only its day changes, and goes through the editor's writer (it saves the time).
 async function moveTask(event, to, { undo = false } = {}) {
   const before = event.timed
-    ? { date: event.date, minutes: wallParts(event.start, timeZone.value).minutes }
+    ? {
+        date: event.date,
+        minutes: wallParts(event.start, timeZone.value).minutes,
+      }
     : event.date
   busy.value = true
   try {

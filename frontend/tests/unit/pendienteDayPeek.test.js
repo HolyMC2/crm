@@ -53,12 +53,9 @@ describe('the day peek', () => {
       { time: '15:00', until: '', done: true },
       { time: '', until: '' },
     ]
-    expect(freeHours(items, { date: '2026-10-20', today: '2026-10-19' })).toEqual([
-      '10:00',
-      '13:00',
-      '14:00',
-      '15:00',
-    ])
+    expect(
+      freeHours(items, { date: '2026-10-20', today: '2026-10-19' }),
+    ).toEqual(['10:00', '13:00', '14:00', '15:00'])
     expect(
       freeHours(items, {
         date: '2026-10-20',

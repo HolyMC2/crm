@@ -408,7 +408,8 @@ function times() {
   if (task)
     return {
       start: from,
-      end: from && new Date(Date.parse(from) + TASK_MINUTES * 60000).toISOString(),
+      end:
+        from && new Date(Date.parse(from) + TASK_MINUTES * 60000).toISOString(),
     }
   let to = wallToInstant(form.date, form.endTime, props.timeZone)
   if (from && to && Date.parse(to) <= Date.parse(from))

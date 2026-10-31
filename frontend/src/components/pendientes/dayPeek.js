@@ -3,7 +3,9 @@
 import { instantToWall } from '@/composables/useAgenda'
 
 const minutesOf = (clock) => {
-  const [h, m] = String(clock || '').split(':').map(Number)
+  const [h, m] = String(clock || '')
+    .split(':')
+    .map(Number)
   return Number.isFinite(h) && Number.isFinite(m) ? h * 60 + m : null
 }
 
@@ -42,7 +44,8 @@ export function freeHours(
       const end = minutesOf(item.until)
       return [start, end > start ? end : start + 30]
     })
-  const first = date === today ? Math.max(from, Math.floor(nowMinutes / 60) + 1) : from
+  const first =
+    date === today ? Math.max(from, Math.floor(nowMinutes / 60) + 1) : from
   const hours = []
   for (let hour = first; hour <= to && hours.length < max; hour++) {
     const start = hour * 60

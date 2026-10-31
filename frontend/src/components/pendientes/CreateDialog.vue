@@ -579,7 +579,9 @@ const quickPeople = computed(() => {
 })
 // «Carla D.»: the row stays two lines on a phone; the full name is the chip's title.
 const shortName = (name) => {
-  const words = String(name || '').trim().split(/\s+/)
+  const words = String(name || '')
+    .trim()
+    .split(/\s+/)
   return words.length > 1 ? `${words[0]} ${words[1][0]}.` : words[0]
 }
 const isFor = (person) =>
