@@ -1,4 +1,4 @@
-import { onMounted, onUnmounted } from 'vue'
+import { getCurrentInstance, onMounted, onUnmounted } from 'vue'
 
 const STORAGE_KEY = 'app_broadcasts'
 const bus = {
@@ -37,9 +37,11 @@ export function useBroadcast() {
     })
   }
 
-  onUnmounted(() => {
-    listeners.forEach(({ event, handler }) => bus.off(event, handler))
-  })
+  // Onboarding loads on the first tap, outside any component: it only sends.
+  if (getCurrentInstance())
+    onUnmounted(() => {
+      listeners.forEach(({ event, handler }) => bus.off(event, handler))
+    })
 
   return { on, send: bus.send }
 }

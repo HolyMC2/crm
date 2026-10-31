@@ -48,7 +48,7 @@
             type="button"
             class="press flex min-h-24 flex-col items-start justify-between gap-2 rounded-7 border border-outline-gray-2 bg-surface-base p-3 text-left hover:bg-surface-gray-1"
             :class="tile.denied && 'opacity-60'"
-            :aria-disabled="tile.denied ? 'true' : undefined"
+            :aria-describedby="tile.denied && deniedTile === tile.key ? 'fidelidad-denied' : undefined"
             :data-testid="`fidelidad-rapida-${tile.key}`"
             @click="openTile(tile)"
           >
@@ -65,6 +65,7 @@
         <p
           v-if="deniedNote"
           class="px-4 pt-2 text-sm text-ink-gray-6"
+          id="fidelidad-denied"
           role="note"
           data-testid="fidelidad-denied"
         >
@@ -372,7 +373,7 @@ const estado = computed({
 
 const counts = computed(() => board.value?.counts || {})
 const vistaOptions = computed(() => [
-  { value: 'promociones', label: __('Promotions'), count: counts.value.live || undefined },
+  { value: 'promociones', label: __('Promotions') },
   { value: 'puntos', label: __('Points') },
   { value: 'grupos', label: __('Groups') },
 ])

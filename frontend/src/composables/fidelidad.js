@@ -8,6 +8,10 @@ import { formatDate, formatMoney } from '@/utils/display'
 
 const SERVICE = 'doco.fidelidad.api'
 
+/** A promotion's amounts read whole when they are: «$150», not «$150.00». */
+const money = (value, currency) =>
+  formatMoney(value, currency, { decimals: Number.isInteger(Number(value)) ? 0 : 2 })
+
 export function fidelidadApi(method, args = {}) {
   const params = {}
   for (const [key, value] of Object.entries(args)) {
@@ -26,10 +30,10 @@ export const ADJUST_POINTS = 'doco.clientes_frecuentes.api.adjust_points'
 export function discountLabel(discount, currency = 'MXN') {
   if (!discount) return ''
   if (discount.kind === 'percent') return `${Number(discount.value) || 0} %`
-  if (discount.kind === 'amount') return formatMoney(discount.value, currency)
+  if (discount.kind === 'amount') return money(discount.value, currency)
   if (discount.kind === 'gift') return __('Free product')
   if (discount.kind === 'points') return __('{0} points', [discount.value])
-  return __('Special price {0}', [formatMoney(discount.value, currency)])
+  return __('Special price {0}', [money(discount.value, currency)])
 }
 
 /** What the promotion applies to, as the worker names it. */
@@ -38,7 +42,7 @@ export function targetLabel(offer, currency = 'MXN') {
   if (target.kind === 'ticket') {
     return offer.min_amount
       ? __('The whole ticket from {0}', [
-          formatMoney(offer.min_amount, currency),
+          money(offer.min_amount, currency),
         ])
       : __('The whole ticket')
   }
@@ -199,12 +203,12 @@ export function offerPreview(draft, currency = 'MXN') {
   const value = Number(draft.value) || 0
   if (!value) return ''
   const amount =
-    draft.kind === 'amount' ? formatMoney(value, currency) : `${value} %`
+    draft.kind === 'amount' ? money(value, currency) : `${value} %`
   const target =
     draft.target === 'ticket'
       ? Number(draft.minimum)
         ? __('the whole ticket from {0}', [
-            formatMoney(draft.minimum, currency),
+            money(draft.minimum, currency),
           ])
         : __('the whole ticket')
       : draft.pick?.title || draft.pick?.name || '…'

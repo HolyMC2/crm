@@ -143,7 +143,6 @@ describe('Fidelidad page', () => {
     })
     const { el } = await mountApp(Fidelidad)
     const tile = el.querySelector('[data-testid=fidelidad-rapida-promo]')
-    expect(tile.getAttribute('aria-disabled')).toBe('true')
     tile.click()
     await flush(2)
     expect(text(el.querySelector('[data-testid=fidelidad-denied]'))).toContain(
