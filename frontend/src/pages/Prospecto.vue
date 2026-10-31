@@ -183,6 +183,14 @@
               aria-hidden="true"
             />
           </RouterLink>
+          <!-- «Cliente»: the person's other deals and prospects, group, card,
+               points and coupons, once the prospect has a contact. -->
+          <ClientePanel
+            class="mx-4 rounded-7 border border-outline-gray-2"
+            :lead="leadId"
+            :return-to="'/crm' + route.fullPath"
+            :return-label="__('Leads')"
+          />
           <!-- Shell SPEC §6 DD2: Conexiones, Actividad and the «⋯» sheets. -->
           <RecordKit :kit="kit" :title="name" :cadena="false" />
         </aside>
@@ -199,7 +207,8 @@
 
 <script setup>
 import { computed, defineAsyncComponent, ref, watch } from 'vue'
-import { RouterLink, useRouter } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
+import ClientePanel from '@/components/ventas/ClientePanel.vue'
 import { createResource, toast } from 'frappe-ui'
 import { AppBar, EmptyState, StatusChip } from '@/components/ui'
 import RecordIsland from '@/components/documentos/RecordIsland.vue'
@@ -217,6 +226,7 @@ const ConvertToDealModal = defineAsyncComponent(
 )
 const props = defineProps({ leadId: { type: String, required: true } })
 const router = useRouter()
+const route = useRoute()
 
 const lead = createResource({
   url: 'frappe.client.get',
