@@ -638,19 +638,30 @@ export function writeResourceCache(value) {
 // --- tasks (Pendientes) on the calendar ----------------------------------------------------
 const TASK_SLUGS = { ToDo: 'todo', 'CRM Task': 'crm-task' }
 
+/** A pendiente with a time takes this long on the calendar. */
+export const TASK_MINUTES = 30
+
 export function taskToEvent(row, timeZone) {
-  const start = wallToInstant(row.date, '00:00', timeZone)
-  const next = shiftCalendarDate(row.date, 1)
   const done = row.status === 'Closed'
+  // A pendiente with a time sits at its hour; without one it is a chip of its day.
+  const at = /^\d{2}:\d{2}/.test(row.time || '')
+    ? wallToInstant(row.date, row.time.slice(0, 5), timeZone)
+    : null
+  const start = at || wallToInstant(row.date, '00:00', timeZone)
+  const end = at
+    ? new Date(Date.parse(at) + TASK_MINUTES * 60000).toISOString()
+    : wallToInstant(shiftCalendarDate(row.date, 1), '00:00', timeZone)
   return {
     id: `${row.doctype}:${row.name}`,
     source: TASKS,
     kind: 'task',
     title: row.description || __('Task'),
     date: row.date,
+    time: at ? row.time.slice(0, 5) : '',
+    timed: Boolean(at),
     start,
-    end: wallToInstant(next, '00:00', timeZone),
-    allDay: true,
+    end,
+    allDay: !at,
     status: row.cancelled ? 'Cancelled' : done ? 'Done' : 'Scheduled',
     draggable: !done,
     canEdit: true,
@@ -743,12 +754,22 @@ export const rescheduleTask = (event, date) =>
     date,
     request_id: requestId(),
   })
+/** A timed pendiente moved on the grid: its day and hour (or only its day, keeping the hour). */
+export const moveTaskTo = (event, { date, time }) =>
+  call(`${PENDIENTES}.update`, {
+    doctype: event.task.doctype,
+    name: String(event.task.name),
+    modified: event.task.modified,
+    values: time === undefined ? { date } : { date, time },
+    request_id: requestId(),
+  })
 // A task is one native task, through the same writer «Nuevo pendiente» and the
 // record pages use (doco.pendientes.api.create): on a Lead/Deal a CRM Task linked
 // to the record, anywhere else an ERPNext ToDo. Agenda never keeps its own copy.
 export const createTask = ({
   title,
   date,
+  time = '',
   reference,
   assignedTo = '',
   priority = 'Medium',
@@ -757,6 +778,7 @@ export const createTask = ({
   call(`${PENDIENTES}.create`, {
     description: title,
     date,
+    time,
     request_id: requestId(),
     priority,
     notes,

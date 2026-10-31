@@ -195,6 +195,50 @@ describe('the task quick card writes a native pendiente', () => {
   })
 })
 
+describe('a pendiente keeps its hour on the Agenda', () => {
+  it('«Create > Task» starts with no time; unticking «No time» sends the hour', async () => {
+    await mountAt('/agenda?view=week&date=2026-10-07')
+    await openTaskCard()
+    const title = document.body.querySelector('.ag-qc__title')
+    title.value = 'Llamar al proveedor'
+    title.dispatchEvent(new Event('input', { bubbles: true }))
+    const noTime = [...document.body.querySelectorAll('form.ag-qc label')].find(
+      (label) => label.textContent.trim() === 'No time',
+    )
+    expect(noTime.querySelector('input').checked).toBe(true)
+    noTime.querySelector('input').click()
+    await flush()
+    const time = document.body.querySelector('form.ag-qc input[type=time]')
+    time.value = '11:30'
+    time.dispatchEvent(new Event('input', { bubbles: true }))
+    await flush()
+    document.body
+      .querySelector('form.ag-qc')
+      .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+    await flush()
+    expect(last('create')).toMatchObject({
+      description: 'Llamar al proveedor',
+      date: '2026-10-07',
+      time: '11:30',
+    })
+  })
+
+  it('draws a timed pendiente at its hour and an untimed one as a chip of its day', async () => {
+    handler.taskRows = [
+      task('TD-2', { time: '10:30' }),
+      task('TD-3', { description: 'Sin hora' }),
+    ]
+    await mountAt('/agenda?view=week&date=2026-10-07')
+    expect(
+      document.body.querySelector('.ag-event[data-event-id="ToDo:TD-2"]'),
+    ).not.toBeNull()
+    expect(
+      document.body.querySelector('.ag-event[data-event-id="ToDo:TD-3"]'),
+    ).toBeNull()
+    expect(document.body.textContent).toContain('Sin hora')
+  })
+})
+
 describe('the task chip opens its native record and comes back', () => {
   it('«Open task» keeps the Agenda view as the way back', async () => {
     handler.taskRows = [task()]
@@ -233,13 +277,16 @@ describe('«Más opciones» on a task', () => {
     await flush()
 
     // The card is gone and the full sheet is up (loaded on first use), prefilled.
+    // Its first import is transformed on demand, past waitFor's 1 s under a full run.
     expect(document.body.querySelector('form.ag-qc')).toBeNull()
-    await vi.waitFor(() =>
-      expect(
-        [...document.body.querySelectorAll('textarea')].find(
-          (area) => area.value === 'Enviar cotización',
-        ),
-      ).toBeTruthy(),
+    await vi.waitFor(
+      () =>
+        expect(
+          [...document.body.querySelectorAll('textarea')].find(
+            (area) => area.value === 'Enviar cotización',
+          ),
+        ).toBeTruthy(),
+      { timeout: 8000 },
     )
     // Details and priority live behind the sheet's chips, as in Pendientes.
     buttonNamed('Details').click()
@@ -303,6 +350,8 @@ describe('task route and catalogue', () => {
       'Low',
       'Medium',
       'High',
+      'No time',
+      'Time',
     ])
       expect(entries.has(key), key).toBe(true)
   })

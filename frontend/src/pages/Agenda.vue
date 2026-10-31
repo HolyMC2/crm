@@ -331,7 +331,12 @@
                 :compact="phone"
                 @select="select"
                 @create="startCreate"
-                @move="(event, times) => doMove(event, times)"
+                @move="
+                  (event, times) =>
+                    event.kind === 'task'
+                      ? moveTask(event, wallParts(times.start, timeZone))
+                      : doMove(event, times)
+                "
                 @resize="(event, times) => doMove(event, times)"
                 @move-days="moveDays"
                 @open-day="(date) => setState({ date })"
@@ -824,6 +829,7 @@ import {
   eventColor,
 } from '@/components/agenda/agendaColors'
 import {
+  clockText,
   eventDates,
   wallInstant,
   wallParts,
@@ -860,6 +866,7 @@ import {
   icsSubscription,
   loadCapabilities,
   moveEvent,
+  moveTaskTo,
   moveToDateTimes,
   parseEventKey,
   parseState,
@@ -2058,11 +2065,22 @@ async function moveDays(event, delta) {
   const times = moveToDateTimes(event, target, timeZone.value)
   if (times) return doMove(event, times)
 }
-async function moveTask(event, date, { undo = false } = {}) {
-  const before = event.date
+// `to` is a day, or {date, minutes} from the grid; a timed pendiente keeps its hour
+// when only its day changes, and goes through the editor's writer (it saves the time).
+async function moveTask(event, to, { undo = false } = {}) {
+  const before = event.timed
+    ? { date: event.date, minutes: wallParts(event.start, timeZone.value).minutes }
+    : event.date
   busy.value = true
   try {
-    await rescheduleTask(event, date)
+    if (typeof to === 'string' && !event.timed) await rescheduleTask(event, to)
+    else
+      await moveTaskTo(
+        event,
+        typeof to === 'string'
+          ? { date: to }
+          : { date: to.date, time: clockText(to.minutes) },
+      )
     invalidate()
     await load({ quiet: true })
     if (!undo)
@@ -2354,6 +2372,7 @@ async function saveQuick(payload, confirm = 0) {
       const result = await createTask({
         title: payload.title,
         date: payload.date,
+        time: payload.time,
         reference: current.context?.reference,
         assignedTo: payload.assignedTo,
         priority: payload.priority,
@@ -2469,6 +2488,7 @@ function quickMore(payload) {
     taskSheet.value = {
       title: payload.title,
       date: payload.date,
+      time: payload.time || '',
       priority: payload.priority,
       notes: payload.notes,
       assigned_to: payload.assignedTo || '',

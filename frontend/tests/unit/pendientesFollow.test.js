@@ -273,3 +273,88 @@ describe('CreateDialog Vence/Hora', () => {
     expect(root.querySelector('[data-date-field="time"]').value).toBe('')
   })
 })
+
+describe('CreateDialog «Para» in one tap', () => {
+  const people = [
+    { user: 'ana@example.test', name: 'Ana López', often: true },
+    { user: 'beto@example.test', name: 'Beto Ruiz', often: true },
+    { user: 'vendedor@example.test', name: 'Vero Vendedora', me: true },
+    { user: 'carla@example.test', name: 'Carla Díaz' },
+    { user: 'dani@example.test', name: 'Dani Paz' },
+    { user: 'eva@example.test', name: 'Eva Sol' },
+  ]
+  const answer = (rows = people) =>
+    state.api.mockImplementation(async (method) =>
+      method === 'people' ? { rows } : { row: { name: 'new' } },
+    )
+  const quickRow = () =>
+    [...root.querySelectorAll('[data-testid=pendiente-para] [role=radio]')].map(
+      (chip) => [
+        chip.querySelector('.truncate').textContent.trim(),
+        chip.getAttribute('aria-checked'),
+      ],
+    )
+
+  it('shows me first, then the people I hand pendientes to most; one tap assigns', async () => {
+    answer()
+    mount(CreateDialog, { modelValue: true, today: '2026-10-18' })
+    await flush()
+    expect(state.api).toHaveBeenCalledWith('people', { search: '' })
+    expect(quickRow()).toEqual([
+      ['Me', 'true'],
+      ['Ana López', 'false'],
+      ['Beto Ruiz', 'false'],
+      ['Carla Díaz', 'false'],
+      ['Dani Paz', 'false'],
+    ])
+    type(root.querySelector('textarea'), 'Mandar la cotización')
+    ;[...root.querySelectorAll('[data-testid=pendiente-para] [role=radio]')][1].click()
+    await nextTick()
+    expect(quickRow()[1][1]).toBe('true')
+    expect(quickRow()[0][1]).toBe('false')
+    root.querySelector('form').dispatchEvent(new Event('submit'))
+    await flush()
+    const [method, args] = state.api.mock.calls.at(-1)
+    expect(method).toBe('create')
+    expect(args.assigned_to).toBe('ana@example.test')
+  })
+
+  it('keeps the current assignee in the row and searches everyone else from «Otra persona»', async () => {
+    answer()
+    mount(CreateDialog, {
+      modelValue: true,
+      today: '2026-10-18',
+      row: {
+        doctype: 'ToDo',
+        name: '9',
+        description: 'Cerrar caja',
+        date: '2026-10-20',
+        assigned_to: 'zoe@example.test',
+        assigned_to_name: 'Zoe Mar',
+        modified: '2026-10-18 10:00:00',
+      },
+    })
+    await flush()
+    expect(quickRow()[1]).toEqual(['Zoe Mar', 'true'])
+    expect(quickRow()).toHaveLength(5)
+    expect(root.querySelector('[data-control="For"]')).toBeNull()
+    root.querySelector('[data-testid=pendiente-para-otro]').click()
+    await flush()
+    expect(root.querySelector('[data-control="For"]')).not.toBeNull()
+    // Back to me: the edit sends me as the one who does it.
+    ;[...root.querySelectorAll('[data-testid=pendiente-para] [role=radio]')][0].click()
+    root.querySelector('form').dispatchEvent(new Event('submit'))
+    await flush()
+    const [method, args] = state.api.mock.calls.at(-1)
+    expect(method).toBe('update')
+    expect(args.values).toEqual({ assigned_to: 'vendedor@example.test' })
+  })
+
+  it('still offers «Me» and «Otra persona» when the coworkers cannot be read', async () => {
+    state.api.mockRejectedValue(new Error('offline'))
+    mount(CreateDialog, { modelValue: true, today: '2026-10-18' })
+    await flush()
+    expect(quickRow()).toEqual([['Me', 'true']])
+    expect(root.querySelector('[data-testid=pendiente-para-otro]')).not.toBeNull()
+  })
+})

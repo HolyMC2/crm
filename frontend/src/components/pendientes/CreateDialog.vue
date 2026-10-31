@@ -57,6 +57,63 @@
           @click="form.time = ''"
         />
       </div>
+      <DayPeek
+        v-if="form.date"
+        :date="form.date"
+        :time="form.time"
+        :today="today"
+        :skip-id="row ? `${row.doctype}:${row.name}` : ''"
+        :linkable="!dirty"
+        @pick="form.time = $event"
+        @leave="$emit('update:modelValue', false)"
+      />
+
+      <!-- «Para» in one tap: me, the people I hand pendientes to most, then search. -->
+      <div class="space-y-1.5">
+        <span class="block text-xs text-ink-gray-5">{{
+          __('For', null, 'Pendiente')
+        }}</span>
+        <div
+          class="flex flex-wrap gap-2"
+          role="radiogroup"
+          :aria-label="__('For', null, 'Pendiente')"
+          data-testid="pendiente-para"
+        >
+          <button
+            v-for="person in quickPeople"
+            :key="person.user"
+            type="button"
+            role="radio"
+            class="press flex min-h-11 max-w-full items-center gap-1.5 rounded-full border pl-1 pr-3 text-sm sm:min-h-8"
+            :class="
+              isFor(person)
+                ? 'border-transparent bg-surface-green-2 text-ink-green-8'
+                : 'border-outline-gray-2 text-ink-gray-7'
+            "
+            :aria-checked="String(isFor(person))"
+            @click="pickPerson(person)"
+          >
+            <span
+              class="flex size-6 shrink-0 items-center justify-center rounded-full bg-surface-gray-3 text-[10px] font-semibold text-ink-gray-7"
+              aria-hidden="true"
+              >{{ initials(person.name) }}</span
+            >
+            <span class="truncate">{{
+              person.me ? __('Me') : person.name
+            }}</span>
+          </button>
+          <button
+            type="button"
+            class="press flex min-h-11 items-center gap-1.5 rounded-full border border-dashed border-outline-gray-3 px-3 text-sm text-ink-gray-7 sm:min-h-8"
+            :aria-expanded="String(open === 'person')"
+            data-testid="pendiente-para-otro"
+            @click="open = open === 'person' ? '' : 'person'"
+          >
+            <Icon icon="search" class="size-4 shrink-0" aria-hidden="true" />
+            {{ __('Someone else') }}
+          </button>
+        </div>
+      </div>
 
       <!-- The quick details as chips (Google Tasks): each opens its field here. -->
       <div
@@ -284,7 +341,14 @@
   </BottomSheet>
 </template>
 <script setup>
-import { computed, nextTick, reactive, ref, watch } from 'vue'
+import {
+  computed,
+  defineAsyncComponent,
+  nextTick,
+  reactive,
+  ref,
+  watch,
+} from 'vue'
 import { Button, FormControl, call } from 'frappe-ui'
 import { BottomSheet } from '@/components/ui'
 import DateField from '@/components/ui/DateField.vue'
@@ -303,6 +367,11 @@ import {
   stateLabel,
 } from '@/composables/usePendientes'
 import Icon from '@/components/Icon.vue'
+
+// The day's Agenda loads with the agenda helpers, apart from the sheet.
+const DayPeek = defineAsyncComponent(
+  () => import('@/components/pendientes/DayPeek.vue'),
+)
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
@@ -385,15 +454,6 @@ const chips = computed(() => {
       set: Boolean(form.notes.trim()),
     },
     {
-      key: 'person',
-      icon: 'user',
-      label:
-        !form.assigned_to || form.assigned_to === me.value
-          ? __('For me')
-          : __('For {0}', [form.assigned_name || form.assigned_to]),
-      set: Boolean(form.assigned_to && form.assigned_to !== me.value),
-    },
-    {
       key: 'priority',
       icon: 'flag',
       label: __('Priority: {0}', [priorityLabel(form.priority).toLowerCase()]),
@@ -436,28 +496,6 @@ const chips = computed(() => {
   return list
 })
 
-watch(
-  () => props.modelValue,
-  async (isOpen) => {
-    if (!isOpen) return
-    problem.value = null
-    if (editing.value) fill(props.row)
-    else if (props.prefill)
-      Object.assign(form, blank(), { date: props.today }, props.prefill)
-    else if (!form.title && !dirty.value)
-      Object.assign(form, blank(), { date: props.today })
-    if (!editing.value)
-      initial = props.prefill
-        ? { ...blank(), date: props.today, ...props.prefill }
-        : { ...blank(), date: props.today }
-    open.value = props.focus || ''
-    await nextTick()
-    if (!props.focus)
-      titleInput.value?.$el?.querySelector?.('textarea')?.focus()
-  },
-  { immediate: true },
-)
-
 function fill(row) {
   Object.assign(form, {
     title: row.description || '',
@@ -497,6 +535,51 @@ const peopleQuery = ref(''),
   peopleProblem = ref('')
 let peopleTimer,
   peopleGeneration = 0
+// The quick row: me, whoever it is for now, then the people I hand pendientes to
+// most (the server ranks them), up to QUICK in all. Read once per sheet.
+const QUICK = 5
+let quickRead = null
+const quick = ref([])
+async function readQuick() {
+  try {
+    return (await pendientesApi('people', { search: '' }))?.rows || []
+  } catch {
+    quickRead = null
+    return []
+  }
+}
+function loadQuick() {
+  quickRead ||= readQuick()
+  quickRead.then((rows) => {
+    quick.value = rows
+    if (!people.value.length && !peopleQuery.value) people.value = rows
+  })
+}
+const quickPeople = computed(() => {
+  const mine = quick.value.find((person) => person.me) || {
+    user: me.value,
+    name: boot.value?.full_name || me.value,
+    me: true,
+  }
+  const list = [mine]
+  const current = form.assigned_to && form.assigned_to !== mine.user
+  if (current)
+    list.push(
+      quick.value.find((person) => person.user === form.assigned_to) || {
+        user: form.assigned_to,
+        name: form.assigned_name || form.assigned_to,
+      },
+    )
+  for (const person of quick.value) {
+    if (list.length >= QUICK) break
+    if (!list.some((row) => row.user === person.user)) list.push(person)
+  }
+  return list
+})
+const isFor = (person) =>
+  person.me
+    ? !form.assigned_to || form.assigned_to === me.value
+    : form.assigned_to === person.user
 const peopleShown = computed(() => {
   const mine = people.value.find((person) => person.me)
   const others = people.value.filter((person) => !person.me)
@@ -509,7 +592,7 @@ async function loadPeople() {
       search: peopleQuery.value.trim(),
     })
     if (current !== peopleGeneration) return
-    people.value = response.rows || []
+    people.value = response?.rows || []
     peopleProblem.value = ''
   } catch (error) {
     if (current === peopleGeneration)
@@ -585,6 +668,29 @@ function setLink(option) {
   form.reference_label = option ? option.label || option.value : ''
   open.value = ''
 }
+
+watch(
+  () => props.modelValue,
+  async (isOpen) => {
+    if (!isOpen) return
+    problem.value = null
+    if (editing.value) fill(props.row)
+    else if (props.prefill)
+      Object.assign(form, blank(), { date: props.today }, props.prefill)
+    else if (!form.title && !dirty.value)
+      Object.assign(form, blank(), { date: props.today })
+    if (!editing.value)
+      initial = props.prefill
+        ? { ...blank(), date: props.today, ...props.prefill }
+        : { ...blank(), date: props.today }
+    open.value = props.focus || ''
+    loadQuick()
+    await nextTick()
+    if (!props.focus)
+      titleInput.value?.$el?.querySelector?.('textarea')?.focus()
+  },
+  { immediate: true },
+)
 
 function createArgs() {
   const reference = fixedReference.value

@@ -30278,3 +30278,22 @@ msgstr "Corrección"
 msgctxt "Promotion"
 msgid "Resume"
 msgstr "Reanudar"
+#: frontend/src/components/pendientes/CreateDialog.vue
+msgid "Someone else"
+msgstr "Otra persona"
+
+#: frontend/src/components/pendientes/DayPeek.vue
+msgid "On your agenda that day"
+msgstr "En tu agenda ese día"
+
+#: frontend/src/components/pendientes/DayPeek.vue
+msgid "Open in Agenda"
+msgstr "Abrir en Agenda"
+
+#: frontend/src/components/pendientes/DayPeek.vue
+msgid "Nothing on your agenda that day."
+msgstr "Nada en tu agenda ese día."
+
+#: frontend/src/components/pendientes/DayPeek.vue
+msgid "Free at"
+msgstr "Libre a las"

@@ -346,7 +346,8 @@ const timeRange = (item) => {
     : `${minutesText(item.start)} – ${minutesText(item.end)}`
 }
 function ariaLabel(event) {
-  if (event.kind === 'task') return `${event.title}, ${__('Task')}`
+  if (event.kind === 'task' && !event.timed)
+    return `${event.title}, ${__('Task')}`
   if (isBar(event)) return `${event.title}, ${__('All day')}`
   const start = wallParts(event.start, props.timeZone)
   const end = wallParts(event.end, props.timeZone)

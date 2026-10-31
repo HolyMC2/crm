@@ -81,6 +81,7 @@ export function timeAt(instant, { locale, timeZone, hour12 = true } = {}) {
 export function kindIcon(event) {
   if (event?.status === 'Done') return 'lucide-check'
   if (event?.kind === 'cita') return 'lucide-calendar-check'
+  if (event?.kind === 'task') return 'lucide-circle'
   if (/call|llamad/i.test(String(event?.category || ''))) return 'lucide-phone'
   return ''
 }

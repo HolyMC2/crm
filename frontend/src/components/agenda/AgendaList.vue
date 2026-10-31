@@ -42,7 +42,9 @@
             <span
               class="w-20 shrink-0 pt-0.5 text-sm tabular-nums text-ink-gray-7"
             >
-              <template v-if="event.kind === 'task'">{{ __('Task') }}</template>
+              <template v-if="event.kind === 'task' && !event.timed">{{
+                __('Task')
+              }}</template>
               <template v-else-if="event.allDay">{{ __('All day') }}</template>
               <template v-else>
                 {{ time(event.start) }}<br /><span class="text-ink-gray-5">{{

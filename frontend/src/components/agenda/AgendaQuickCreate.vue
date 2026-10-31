@@ -65,35 +65,32 @@
               />
             </template>
           </div>
-          <div
-            v-if="kind === 'event' && !form.allDay"
-            class="flex items-center gap-1.5"
-          >
+          <!-- A pendiente keeps the hour it was created at; «Sin hora» makes it a chip of its day. -->
+          <div v-if="!form.allDay" class="flex items-center gap-1.5">
             <input
               v-model="form.startTime"
               type="time"
               step="900"
               class="ag-qc__input"
-              :aria-label="__('Starts')"
+              :aria-label="kind === 'task' ? __('Time') : __('Starts')"
             />
-            <span class="text-ink-gray-6">–</span>
-            <input
-              v-model="form.endTime"
-              type="time"
-              step="900"
-              class="ag-qc__input"
-              :aria-label="__('Ends')"
-            />
+            <template v-if="kind === 'event'">
+              <span class="text-ink-gray-6">–</span>
+              <input
+                v-model="form.endTime"
+                type="time"
+                step="900"
+                class="ag-qc__input"
+                :aria-label="__('Ends')"
+              />
+            </template>
           </div>
-          <label
-            v-if="kind === 'event'"
-            class="flex items-center gap-2 text-sm text-ink-gray-7"
-          >
+          <label class="flex items-center gap-2 text-sm text-ink-gray-7">
             <input
               v-model="form.allDay"
               type="checkbox"
               class="h-4 w-4 rounded-4"
-            />{{ __('All day') }}
+            />{{ kind === 'task' ? __('No time') : __('All day') }}
           </label>
         </div>
       </div>
@@ -300,6 +297,7 @@ import { Button } from 'frappe-ui'
 import AgendaGuard from '@/components/agenda/AgendaGuard.vue'
 import { PALETTE, textOn } from '@/components/agenda/agendaColors'
 import {
+  TASK_MINUTES,
   instantToWall,
   taskPeople,
   wallToInstant,
@@ -391,9 +389,10 @@ const form = reactive({
 })
 
 function times() {
-  if (form.allDay || kind.value === 'task') {
+  const task = kind.value === 'task'
+  if (form.allDay) {
     const last = new Date(
-      `${form.allDay ? form.endDate || form.date : form.date}T12:00:00Z`,
+      `${task ? form.date : form.endDate || form.date}T12:00:00Z`,
     )
     last.setUTCDate(last.getUTCDate() + 1)
     return {
@@ -405,8 +404,13 @@ function times() {
       ),
     }
   }
-  let to = wallToInstant(form.date, form.endTime, props.timeZone)
   const from = wallToInstant(form.date, form.startTime, props.timeZone)
+  if (task)
+    return {
+      start: from,
+      end: from && new Date(Date.parse(from) + TASK_MINUTES * 60000).toISOString(),
+    }
+  let to = wallToInstant(form.date, form.endTime, props.timeZone)
   if (from && to && Date.parse(to) <= Date.parse(from))
     to = new Date(Date.parse(to) + 24 * 3600 * 1000).toISOString()
   return { start: from, end: to }
@@ -427,7 +431,7 @@ watch(
     if (value.start && value.end)
       emit('change', {
         ...value,
-        allDay: form.allDay || kind.value === 'task',
+        allDay: form.allDay,
         title: form.title,
         kind: kind.value,
       })
@@ -462,6 +466,7 @@ function payload() {
     end: value.end,
     date: form.date,
     allDay: form.allDay,
+    time: kind.value === 'task' && !form.allDay ? form.startTime : '',
     location: form.location.trim(),
     color: form.color,
     priority: form.priority,

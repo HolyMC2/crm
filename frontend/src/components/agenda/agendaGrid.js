@@ -34,13 +34,17 @@ export function wallParts(instant, timeZone) {
   }
 }
 
+/** «HH:MM» of minutes into a day (wrapping past midnight). */
+export function clockText(minutes) {
+  const rest = ((minutes % 1440) + 1440) % 1440
+  const hh = String(Math.floor(rest / 60)).padStart(2, '0')
+  return `${hh}:${String(rest % 60).padStart(2, '0')}`
+}
+
 /** Instant of a wall date + minutes (1440 is the next day's midnight). */
 export function wallInstant(date, minutes, timeZone) {
   const day = shiftCalendarDate(date, Math.floor(minutes / 1440))
-  const rest = ((minutes % 1440) + 1440) % 1440
-  const hh = String(Math.floor(rest / 60)).padStart(2, '0')
-  const mm = String(rest % 60).padStart(2, '0')
-  return wallToInstant(day, `${hh}:${mm}`, timeZone)
+  return wallToInstant(day, clockText(minutes), timeZone)
 }
 
 export function dayDiff(from, to) {
@@ -57,7 +61,7 @@ export function datesBetween(first, count) {
 
 /** All-day events and anything lasting a whole day or more go to the bar lane. */
 export function isBar(event) {
-  if (event.allDay || event.kind === 'task') return true
+  if (event.allDay || (event.kind === 'task' && !event.timed)) return true
   return Date.parse(event.end) - Date.parse(event.start) >= DAY_MS
 }
 
