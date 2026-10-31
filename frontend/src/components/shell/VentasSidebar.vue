@@ -92,7 +92,7 @@
          sidebar is icons only anyway. -->
     <button
       type="button"
-      class="press mt-auto hidden min-h-9 w-full flex-none items-center justify-center gap-2.5 rounded-6 px-2.5 text-sm text-ink-gray-6 hover:bg-surface-gray-2 hover:text-ink-gray-8 lg:flex"
+      class="press mt-auto hidden min-h-9 w-full flex-none items-center justify-center gap-2.5 rounded-6 px-2.5 text-left text-sm text-ink-gray-6 hover:bg-surface-gray-2 hover:text-ink-gray-8 lg:flex"
       :class="wide && 'lg:justify-start'"
       :aria-label="wide ? __('Collapse sidebar') : __('Expand sidebar')"
       :aria-expanded="wide"

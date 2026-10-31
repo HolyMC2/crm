@@ -13215,6 +13215,11 @@ msgctxt "Captura"
 msgid "Change"
 msgstr "Cambiar"
 
+#: frontend/src/components/ventas/ClientePanel.vue
+msgctxt "Cliente"
+msgid "Change"
+msgstr "Cambiar"
+
 #: frontend/src/composables/useCaptura.js
 #: frontend/src/pages/CapturaRevision.vue
 msgctxt "Captura"

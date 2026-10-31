@@ -127,7 +127,7 @@
             data-testid="cliente-cambiar-grupo"
             @click="openGroups(row)"
           >
-            {{ __('Change') }}
+            {{ __('Change', null, 'Cliente') }}
           </button>
         </div>
 
