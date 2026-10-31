@@ -91,6 +91,7 @@
                 : 'border-outline-gray-2 text-ink-gray-7'
             "
             :aria-checked="String(isFor(person))"
+            :title="person.me ? undefined : person.name"
             @click="pickPerson(person)"
           >
             <span
@@ -99,7 +100,7 @@
               >{{ initials(person.name) }}</span
             >
             <span class="truncate">{{
-              person.me ? __('Me') : person.name
+              person.me ? __('Me') : shortName(person.name)
             }}</span>
           </button>
           <button
@@ -576,6 +577,11 @@ const quickPeople = computed(() => {
   }
   return list
 })
+// «Carla D.»: the row stays two lines on a phone; the full name is the chip's title.
+const shortName = (name) => {
+  const words = String(name || '').trim().split(/\s+/)
+  return words.length > 1 ? `${words[0]} ${words[1][0]}.` : words[0]
+}
 const isFor = (person) =>
   person.me
     ? !form.assigned_to || form.assigned_to === me.value

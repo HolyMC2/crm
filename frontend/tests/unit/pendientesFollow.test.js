@@ -302,10 +302,10 @@ describe('CreateDialog «Para» in one tap', () => {
     expect(state.api).toHaveBeenCalledWith('people', { search: '' })
     expect(quickRow()).toEqual([
       ['Me', 'true'],
-      ['Ana López', 'false'],
-      ['Beto Ruiz', 'false'],
-      ['Carla Díaz', 'false'],
-      ['Dani Paz', 'false'],
+      ['Ana L.', 'false'],
+      ['Beto R.', 'false'],
+      ['Carla D.', 'false'],
+      ['Dani P.', 'false'],
     ])
     type(root.querySelector('textarea'), 'Mandar la cotización')
     ;[...root.querySelectorAll('[data-testid=pendiente-para] [role=radio]')][1].click()
@@ -335,7 +335,7 @@ describe('CreateDialog «Para» in one tap', () => {
       },
     })
     await flush()
-    expect(quickRow()[1]).toEqual(['Zoe Mar', 'true'])
+    expect(quickRow()[1]).toEqual(['Zoe M.', 'true'])
     expect(quickRow()).toHaveLength(5)
     expect(root.querySelector('[data-control="For"]')).toBeNull()
     root.querySelector('[data-testid=pendiente-para-otro]').click()
