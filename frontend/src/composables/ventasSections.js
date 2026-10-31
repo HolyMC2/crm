@@ -7,7 +7,7 @@ import { navItems, navItemsBottom } from '@/composables/navModel'
 // Keys of navModel entries, in order. «Prospectos» (CRM-S3.4, D4) is leads and
 // inquiries in one list; their own lists stay under «Más».
 export const VENTAS_SECTIONS = Object.freeze({
-  daily: ['deals', 'prospectos', 'inbox'],
+  daily: ['deals', 'prospectos', 'inbox', 'fidelidad'],
   more: [
     'dashboard',
     'leads',

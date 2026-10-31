@@ -34,12 +34,13 @@ for (const m of po.matchAll(
 const keys = (section) => ventasSection(section).map((item) => item.key)
 
 describe('Ventas navigation (S5.1)', () => {
-  it('opens on three daily lists: Tratos, Prospectos, Bandeja de entrada', () => {
-    expect(keys('daily')).toEqual(['deals', 'prospectos', 'inbox'])
+  it('opens on four daily lists: Tratos, Prospectos, Bandeja de entrada, Fidelidad', () => {
+    expect(keys('daily')).toEqual(['deals', 'prospectos', 'inbox', 'fidelidad'])
     expect(ventasSection('daily').map((item) => item.label)).toEqual([
       'Deals',
       'Prospectos',
       'Inbox',
+      'Loyalty',
     ])
   })
 

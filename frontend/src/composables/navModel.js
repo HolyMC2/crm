@@ -48,6 +48,15 @@ export const navItems = [
     group: 'prospectos',
   },
   {
+    // Promotions, coupons, points and groups (the tag is Mercado's icon too:
+    // a new ~icons import here re-chunks every route).
+    key: 'fidelidad',
+    icon: MercadoIcon,
+    label: 'Loyalty',
+    to: '/ventas/fidelidad',
+    group: 'fidelidad',
+  },
+  {
     key: 'leads',
     icon: LeadsIcon,
     label: 'Leads',
@@ -186,6 +195,7 @@ export function routeGroup(path) {
   if (/^\/automations(\/|$)/.test(path)) return 'automations'
   // An inquiry opens from Prospectos (the list is retired, Shell D3).
   if (/^\/(prospectos|inquiries)(\/|$)/.test(path)) return 'prospectos'
+  if (/^\/ventas\/fidelidad(\/|$)/.test(path)) return 'fidelidad'
   if (/^\/inbox(\/|$)/.test(path)) return 'inbox'
   // «Por aprobar» is an Inbox space; its standalone page lights the Inbox entry.
   if (/^\/whatsapp-queue(\/|$)/.test(path)) return 'inbox'

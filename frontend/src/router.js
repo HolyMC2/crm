@@ -983,6 +983,14 @@ const routes = [
     },
   },
   {
+    // Ventas › Fidelidad: promotions, coupons, points and groups, with the
+    // quick sheets on top (doco.fidelidad.api).
+    path: '/ventas/fidelidad',
+    name: 'Fidelidad',
+    component: () => import('@/pages/Fidelidad.vue'),
+    meta: { navLabel: 'Loyalty', title: 'Fidelidad', app: 'ventas', ownPhoneHeader: true },
+  },
+  {
     path: '/deal/:dealId',
     redirect: legacyDealRedirect,
   },

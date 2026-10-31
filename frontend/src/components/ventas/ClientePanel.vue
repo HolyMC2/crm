@@ -157,6 +157,16 @@
                 money(row.loyalty.points_value, row.loyalty.currency),
               ])
             }}</span>
+            <button
+              v-if="row.loyalty.actions?.adjust"
+              type="button"
+              :class="SMALL"
+              :aria-label="__('Adjust points of {0}', [row.customer_name])"
+              data-testid="cliente-ajustar-puntos"
+              @click="openPoints(row)"
+            >
+              {{ __('Adjust') }}
+            </button>
           </div>
           <p
             v-if="row.loyalty.state === 'member' && row.loyalty.next_expiry"
@@ -264,6 +274,28 @@
           >
             <span class="font-mono">{{ coupon.code }}</span>
             <span class="lucide-copy size-3.5" aria-hidden="true" />
+          </button>
+        </div>
+        <div
+          v-if="row.loyalty?.actions?.sell"
+          class="flex min-h-9 items-center gap-2.5 text-sm"
+        >
+          <span :class="ICON" aria-hidden="true"
+            ><span class="lucide-gift size-4"
+          /></span>
+          <span class="flex-1 truncate text-ink-gray-6">{{
+            row.coupons?.length
+              ? __('{0} coupons to use', [row.coupons.length])
+              : __('No coupons')
+          }}</span>
+          <button
+            type="button"
+            :class="SMALL"
+            :aria-label="__('Give {0} a coupon', [row.customer_name])"
+            data-testid="cliente-regalar-cupon"
+            @click="openCoupon(row)"
+          >
+            {{ __('Give a coupon') }}
           </button>
         </div>
         <div
@@ -388,6 +420,20 @@
       </button>
     </template>
 
+    <CuponSheet
+      v-if="couponFor"
+      :open="sheet === 'cupon'"
+      :customer="couponFor"
+      @update:open="(open) => open || (sheet = '')"
+      @given="load"
+    />
+    <PuntosSheet
+      v-if="pointsFor"
+      :open="sheet === 'puntos'"
+      :customer="pointsFor"
+      @update:open="(open) => open || (sheet = '')"
+      @adjusted="load"
+    />
     <BottomSheet
       :open="Boolean(grouping)"
       :title="__('Customer group')"
@@ -439,7 +485,7 @@
 </template>
 
 <script setup>
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, reactive, ref, watch } from 'vue'
 import { call, toast } from 'frappe-ui'
 import { BottomSheet, StatusChip } from '@/components/ui'
 import { BTN, copyText } from '@/documentos/tools'
@@ -478,6 +524,29 @@ const KIND_LABEL = {
 }
 
 const data = ref(null)
+// «Regalar cupón» and «Ajustar puntos» are Fidelidad's quick sheets, opened
+// here so the seller stays on the deal; they mount on the first open.
+const CuponSheet = defineAsyncComponent(
+  () => import('@/components/fidelidad/CuponSheet.vue'),
+)
+const PuntosSheet = defineAsyncComponent(
+  () => import('@/components/fidelidad/PuntosSheet.vue'),
+)
+const sheet = ref('')
+const couponFor = ref(null)
+const pointsFor = ref(null)
+function openCoupon(row) {
+  couponFor.value = { name: row.name, title: row.customer_name }
+  sheet.value = 'cupon'
+}
+function openPoints(row) {
+  pointsFor.value = {
+    name: row.name,
+    title: row.customer_name,
+    points: row.loyalty?.points ?? null,
+  }
+  sheet.value = 'puntos'
+}
 const loading = ref(false)
 const failed = ref(false)
 const busy = ref(false)

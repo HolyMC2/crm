@@ -29884,3 +29884,393 @@ msgstr "valen {0}"
 
 msgid "{0} points expire on {1}"
 msgstr "{0} puntos vencen el {1}"
+
+msgid "Free product"
+msgstr "Producto gratis"
+
+msgid "{0} points"
+msgstr "{0} puntos"
+
+msgid "Special price {0}"
+msgstr "Precio especial {0}"
+
+msgid "The whole ticket from {0}"
+msgstr "Todo el ticket desde {0}"
+
+msgid "The whole ticket"
+msgstr "Todo el ticket"
+
+msgid "Starts {0}"
+msgstr "Empieza el {0}"
+
+msgid "Ended {0}"
+msgstr "Terminó el {0}"
+
+msgid "Ends today"
+msgstr "Termina hoy"
+
+msgid "Ends tomorrow"
+msgstr "Termina mañana"
+
+msgid "Ends in {0} days"
+msgstr "Termina en {0} días"
+
+msgid "With a coupon"
+msgstr "Con cupón"
+
+msgid "Applies by itself at the register"
+msgstr "Se aplica sola en caja"
+
+msgid "{0} of {1} uses"
+msgstr "{0} de {1} usos"
+
+msgid "{0} uses"
+msgstr "{0} usos"
+
+msgid "This weekend"
+msgstr "Este fin de semana"
+
+msgid "End of month"
+msgstr "Fin de mes"
+
+msgid "No end"
+msgstr "Sin fin"
+
+msgid "+1 day"
+msgstr "+1 día"
+
+msgid "+7 days"
+msgstr "+7 días"
+
+msgid "Choose the product."
+msgstr "Elige el producto."
+
+msgid "Choose the category."
+msgstr "Elige la categoría."
+
+msgid "Choose how much off."
+msgstr "Elige cuánto descuento."
+
+msgid "A percentage off cannot be more than 100."
+msgstr "Un descuento en porcentaje no puede pasar de 100."
+
+msgid "Choose until when."
+msgstr "Elige hasta cuándo."
+
+msgid "the whole ticket from {0}"
+msgstr "todo el ticket desde {0}"
+
+msgid "the whole ticket"
+msgstr "todo el ticket"
+
+msgid "with no end date"
+msgstr "sin fecha de fin"
+
+msgid "until {0}"
+msgstr "hasta el {0}"
+
+msgid "with a coupon"
+msgstr "con cupón"
+
+msgid "by itself at the register"
+msgstr "sola en caja"
+
+msgid "{0} off {1}, {2}, {3}."
+msgstr "{0} de descuento en {1}, {2}, {3}."
+
+msgid "Your coupon {0} for «{1}». Show it at the register."
+msgstr "Tu cupón {0} para «{1}». Muéstralo en caja."
+
+msgid "Loyalty"
+msgstr "Fidelidad"
+
+msgid "Promotions need the register"
+msgstr "Las promociones necesitan la caja"
+
+msgid "Ask whoever runs Muelle to add the register app to this shop."
+msgstr "Pide a quien administra Muelle que agregue la app de caja a esta tienda."
+
+msgid "Quick actions"
+msgstr "Acciones rápidas"
+
+msgid "Start one in a few taps."
+msgstr "Inicia una en unos toques."
+
+msgid "New promotion"
+msgstr "Nueva promoción"
+
+msgid "Search a member"
+msgstr "Buscar un socio"
+
+msgid "No points program yet"
+msgstr "Aún no hay programa de puntos"
+
+msgid "Create it from a customer: Contacts, the customer, «Points and balance»."
+msgstr "Créalo desde un cliente: Contactos, el cliente, «Puntos y saldo»."
+
+msgid "An accounts manager can create it."
+msgstr "Un gerente de contabilidad puede crearlo."
+
+msgid "{0} pts"
+msgstr "{0} pts"
+
+msgid "Adjust points of {0}"
+msgstr "Ajustar puntos de {0}"
+
+msgid "Nothing matches that."
+msgstr "Nada coincide con eso."
+
+msgid "No members yet."
+msgstr "Aún no hay socios."
+
+msgid "A group sets the price list its customers buy at."
+msgstr "Un grupo fija la lista de precios con la que compran sus clientes."
+
+msgid "Price list"
+msgstr "Lista de precios"
+
+msgid "Whoever manages customer groups can change it."
+msgstr "Quien administra los grupos de clientes puede cambiarla."
+
+msgid "Save price list"
+msgstr "Guardar lista de precios"
+
+msgid "Promotions"
+msgstr "Promociones"
+
+msgid "Running"
+msgstr "Activas"
+
+msgid "Ended"
+msgstr "Terminadas"
+
+msgid "No promotion is running"
+msgstr "No hay promociones activas"
+
+msgid "Nothing paused"
+msgstr "Nada en pausa"
+
+msgid "Nothing ended lately"
+msgstr "Nada terminó hace poco"
+
+msgid "Give a coupon"
+msgstr "Regalar cupón"
+
+msgid "There is no points program yet."
+msgstr "Aún no hay programa de puntos."
+
+msgid "Prices"
+msgstr "Precios"
+
+msgid "Members"
+msgstr "Socios"
+
+msgid "Earns"
+msgstr "Gana"
+
+msgid "1 pt per {0}"
+msgstr "1 pt por cada {0}"
+
+msgid "A point is worth"
+msgstr "Un punto vale"
+
+msgid "Points last"
+msgstr "Los puntos duran"
+
+msgid "Forever"
+msgstr "Siempre"
+
+msgid "Default price list"
+msgstr "Lista de precios general"
+
+msgid "Price list saved for {0}"
+msgstr "Lista de precios guardada para {0}"
+
+msgid "Adjust"
+msgstr "Ajustar"
+
+msgid "{0} coupons to use"
+msgstr "{0} cupones por usar"
+
+msgid "No coupons"
+msgstr "Sin cupones"
+
+msgid "Give {0} a coupon"
+msgstr "Regalar un cupón a {0}"
+
+msgid "Member"
+msgstr "Socio"
+
+msgid "Has {0} points now."
+msgstr "Tiene {0} puntos ahora."
+
+msgid "Add or take away"
+msgstr "Sumar o quitar"
+
+msgid "Why?"
+msgstr "¿Por qué?"
+
+msgid "Add {0} points"
+msgstr "Sumar {0} puntos"
+
+msgid "Take away {0} points"
+msgstr "Quitar {0} puntos"
+
+msgid "Take away"
+msgstr "Quitar"
+
+msgid "Choose the member."
+msgstr "Elige el socio."
+
+msgid "Choose how many points."
+msgstr "Elige cuántos puntos."
+
+msgid "They have {0} points; you can take away at most that many."
+msgstr "Tiene {0} puntos; puedes quitar como máximo esos."
+
+msgid "Choose why."
+msgstr "Elige el motivo."
+
+msgid "{0} points added to {1}"
+msgstr "{0} puntos sumados a {1}"
+
+msgid "{0} points taken from {1}"
+msgstr "{0} puntos quitados a {1}"
+
+msgid "Coupon ready"
+msgstr "Cupón listo"
+
+msgid "One use, only for {0}"
+msgstr "Un uso, solo para {0}"
+
+msgid "Who gets it"
+msgstr "Para quién"
+
+msgid "Promotion"
+msgstr "Promoción"
+
+msgid "No promotion with coupons is running."
+msgstr "No hay ninguna promoción con cupón activa."
+
+msgid "Start one with a coupon"
+msgstr "Inicia una con cupón"
+
+msgid "How many times can it be used?"
+msgstr "¿Cuántas veces se puede usar?"
+
+msgid "Copy code"
+msgstr "Copiar código"
+
+msgid "Create code"
+msgstr "Crear código"
+
+msgid "Give coupon"
+msgstr "Regalar cupón"
+
+msgid "You cannot give coupons."
+msgstr "No puedes regalar cupones."
+
+msgid "One customer"
+msgstr "Un cliente"
+
+msgid "Everyone"
+msgstr "Todos"
+
+msgid "No limit"
+msgstr "Sin límite"
+
+msgid "Choose the promotion."
+msgstr "Elige la promoción."
+
+msgid "Write a code of at least 4 letters or numbers."
+msgstr "Escribe un código de al menos 4 letras o números."
+
+msgid "On what?"
+msgstr "¿En qué?"
+
+msgid "Search a category"
+msgstr "Buscar una categoría"
+
+msgid "Search a product"
+msgstr "Buscar un producto"
+
+msgid "From a ticket of"
+msgstr "Desde un ticket de"
+
+msgid "How much off?"
+msgstr "¿Cuánto descuento?"
+
+msgid "Discount type"
+msgstr "Tipo de descuento"
+
+msgid "Until when?"
+msgstr "¿Hasta cuándo?"
+
+msgid "How does it reach the ticket?"
+msgstr "¿Cómo llega al ticket?"
+
+msgid "Only customers with a coupon or the code get it."
+msgstr "Solo la obtienen los clientes con cupón o con el código."
+
+msgid "Every sale that qualifies gets it, no code needed."
+msgstr "Toda venta que califique la obtiene, sin código."
+
+msgid "Start promotion"
+msgstr "Iniciar promoción"
+
+msgid "A category"
+msgstr "Una categoría"
+
+msgid "A product"
+msgstr "Un producto"
+
+msgid "Any amount"
+msgstr "Cualquier monto"
+
+msgid "By itself"
+msgstr "Sola"
+
+msgid "Promotion started: {0}"
+msgstr "Promoción iniciada: {0}"
+
+msgid "Coupons given"
+msgstr "Cupones regalados"
+
+msgid "Used"
+msgstr "Usados"
+
+msgid "Yes, end it"
+msgstr "Sí, terminarla"
+
+msgid "End today"
+msgstr "Terminar hoy"
+
+msgid "Run it again until"
+msgstr "Volver a activarla hasta"
+
+msgid "Extend"
+msgstr "Extender"
+
+msgid "A sales manager can pause, extend or end it."
+msgstr "Un gerente de ventas puede pausarla, extenderla o terminarla."
+
+msgid "Coupons"
+msgstr "Cupones"
+
+msgid "Copy {0}"
+msgstr "Copiar {0}"
+
+msgid "Running again"
+msgstr "Activa de nuevo"
+
+msgid "Extended"
+msgstr "Extendida"
+
+msgid "Courtesy"
+msgstr "Cortesía"
+
+msgid "Compensation for a problem"
+msgstr "Compensación por un problema"
+
+msgid "Correction"
+msgstr "Corrección"
