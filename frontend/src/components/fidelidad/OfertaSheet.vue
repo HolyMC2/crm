@@ -7,7 +7,7 @@
     :title="row?.title || __('Promotion')"
     @update:open="(v) => !v && emit('update:open', false)"
   >
-    <div data-testid="fidelidad-oferta-sheet" v-if="row" class="space-y-5">
+    <div v-if="row" data-testid="fidelidad-oferta-sheet" class="space-y-5">
       <div class="space-y-1">
         <div class="flex flex-wrap items-center gap-2">
           <StatusChip :label="chip.label" :tone="chip.tone" />
@@ -51,7 +51,7 @@
             @click="change('resume')"
           >
             <span class="lucide-play size-4" aria-hidden="true" />
-            {{ __('Resume') }}
+            {{ __('Resume', null, 'Promotion') }}
           </button>
           <template v-else-if="row.state !== 'ended'">
             <button

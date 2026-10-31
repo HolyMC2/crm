@@ -219,7 +219,6 @@ describe('Nueva promoción sheet', () => {
 
   it('asks for the category before starting', async () => {
     await mountApp(PromoSheet, { open: true })
-    const sheet = document.querySelector('[data-testid=fidelidad-promo-sheet]')
     document.querySelector('[data-testid=promo-iniciar]').click()
     await flush(2)
     expect(text(document.querySelector('[data-testid=promo-missing]'))).toContain(

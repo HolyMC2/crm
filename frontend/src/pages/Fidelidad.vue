@@ -64,8 +64,8 @@
         </section>
         <p
           v-if="deniedNote"
-          class="px-4 pt-2 text-sm text-ink-gray-6"
           id="fidelidad-denied"
+          class="px-4 pt-2 text-sm text-ink-gray-6"
           role="note"
           data-testid="fidelidad-denied"
         >

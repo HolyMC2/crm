@@ -30274,3 +30274,7 @@ msgstr "Compensación por un problema"
 
 msgid "Correction"
 msgstr "Corrección"
+
+msgctxt "Promotion"
+msgid "Resume"
+msgstr "Reanudar"
