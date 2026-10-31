@@ -9,6 +9,7 @@ import {
   ventasSection,
 } from '@/composables/ventasSections'
 import { usersStore } from '@/stores/users'
+import { userScopedKey } from '@/utils/storageKeys'
 import {
   addonAvailable,
   loadCapabilities,
@@ -52,6 +53,31 @@ function setOpen(section, value) {
   open.value = { ...open.value, [section]: value }
   try {
     localStorage.setItem(OPEN_KEY, JSON.stringify(open.value))
+  } catch {
+    // private mode: the choice lasts for this tab
+  }
+}
+
+// «Solo íconos»: the sections sidebar keeps only its icons on a wide screen,
+// like the shell rail (below 1024 px it always does). Per user, per browser.
+const COMPACT_BASE = 'muelle.ventas.compact'
+function readCompact() {
+  try {
+    return localStorage.getItem(userScopedKey(COMPACT_BASE)) === '1'
+  } catch {
+    return false
+  }
+}
+export const ventasCompact = ref(
+  typeof localStorage === 'undefined' ? false : readCompact(),
+)
+export function toggleVentasCompact() {
+  ventasCompact.value = !ventasCompact.value
+  try {
+    localStorage.setItem(
+      userScopedKey(COMPACT_BASE),
+      ventasCompact.value ? '1' : '0',
+    )
   } catch {
     // private mode: the choice lasts for this tab
   }

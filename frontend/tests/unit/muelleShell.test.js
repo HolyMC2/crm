@@ -41,7 +41,10 @@ vi.mock('@/stores/session', () => ({
 }))
 vi.mock('@/composables/ventasNav', async () => {
   const { ref } = await import('vue')
+  const ventasCompact = ref(false)
   return {
+    ventasCompact,
+    toggleVentasCompact: () => (ventasCompact.value = !ventasCompact.value),
     useVentasNav: () => ({
       primary: ref([]),
       more: ref([]),
@@ -2122,6 +2125,50 @@ describe('Ventas navigation on every screen', () => {
     expect(el.classList).not.toContain('md:flex')
     sidebarApp.unmount()
     host.remove()
+  })
+
+  it('«Solo íconos» folds the Ventas sections to icons and stays chosen', async () => {
+    const { default: VentasSidebar } = await import(
+      '@/components/shell/VentasSidebar.vue'
+    )
+    const { ventasCompact } = await import('@/composables/ventasNav')
+    ventasCompact.value = false
+    state.mobile.value = false
+    await mount('/deals')
+    const show = () => {
+      const host = document.createElement('div')
+      document.body.append(host)
+      const app = createApp({ render: () => h(VentasSidebar) })
+      app.config.globalProperties.__ = (text) => text
+      app.use(router)
+      app.mount(host)
+      return { host, app, aside: host.querySelector('aside') }
+    }
+    let view = show()
+    expect(view.aside.dataset.ventasSidebar).toBe('wide')
+    expect(view.aside.classList).toContain('lg:w-[220px]')
+    const toggle = view.aside.querySelector(
+      '[data-testid="ventas-sidebar-toggle"]',
+    )
+    expect(toggle.getAttribute('aria-label')).toBe('Collapse sidebar')
+    expect(toggle.textContent.trim()).toBe('Icons only')
+    toggle.click()
+    await nextTick()
+    expect(view.aside.dataset.ventasSidebar).toBe('compact')
+    expect(view.aside.classList).not.toContain('lg:w-[220px]')
+    // The word goes; the icon and its label for readers stay.
+    expect(toggle.textContent.trim()).toBe('')
+    expect(toggle.getAttribute('aria-label')).toBe('Expand sidebar')
+    view.app.unmount()
+    view.host.remove()
+    // Another page (a remount) keeps the choice.
+    view = show()
+    expect(view.aside.dataset.ventasSidebar).toBe('compact')
+    view.aside.querySelector('[data-testid="ventas-sidebar-toggle"]').click()
+    await nextTick()
+    expect(view.aside.dataset.ventasSidebar).toBe('wide')
+    view.app.unmount()
+    view.host.remove()
   })
 
   it.each([
