@@ -161,7 +161,7 @@ import AjustesSwitch from '@/components/ajustes/AjustesSwitch.vue'
 import Link from '@/components/Controls/Link.vue'
 import SettingSwitch from './SettingSwitch.vue'
 
-defineModel('doc', { type: Object, required: true })
+const doc = defineModel('doc', { type: Object, required: true })
 const API = 'crm.api.inbox.'
 const TEAMS = [
   { value: '', label: __('Every team') },

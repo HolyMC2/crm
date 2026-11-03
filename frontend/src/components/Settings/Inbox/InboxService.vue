@@ -157,6 +157,6 @@ import Link from '@/components/Controls/Link.vue'
 import SettingSwitch from './SettingSwitch.vue'
 import WeekHours from './WeekHours.vue'
 
-defineModel('doc', { type: Object, required: true })
+const doc = defineModel('doc', { type: Object, required: true })
 const id = useId()
 </script>
