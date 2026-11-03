@@ -1,10 +1,13 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (2914c0d19b1b). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (5dfe9cf54255). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <template>
   <!-- The one sheet for bounded tasks (Shell SPEC §2.2.3, Material bottom
        sheet): drag handle, title, scrim; back, swipe down, Esc or the scrim
        close it. It opens at about 60% of the screen and drags (or taps on the
        handle) up to full height when its content is longer. Actions sit at
-       the bottom, in thumb reach. On wider screens it is a centred dialog. -->
+       the bottom, in thumb reach. On wider screens it is a centred dialog.
+       With v-model:fullscreen it also fills the screen: on a phone the handle
+       always offers it, in the dialog a button beside the close does, and
+       the content keeps a readable column. -->
   <DialogRoot :open="open" @update:open="setOpen">
     <DialogPortal>
       <DialogOverlay
@@ -15,16 +18,24 @@
           'z-50 flex flex-col bg-surface-base text-ink-gray-9 shadow-xl focus:outline-none',
           phone
             ? [
-                'ui-sheet fixed inset-x-0 bottom-0 mx-auto w-full max-w-2xl transform-gpu rounded-t-3xl',
-                expanded ? 'h-[96dvh]' : 'max-h-[60dvh]',
+                'ui-sheet fixed inset-x-0 bottom-0 mx-auto w-full transform-gpu',
+                full
+                  ? 'h-[100dvh] pt-[env(safe-area-inset-top)]'
+                  : [
+                      'max-w-2xl rounded-t-3xl',
+                      expanded ? 'h-[96dvh]' : 'max-h-[60dvh]',
+                    ],
               ]
-            : 'ui-dialog fixed left-1/2 top-1/2 max-h-[85dvh] w-[min(32rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-8',
+            : full
+              ? 'ui-dialog fixed inset-0'
+              : 'ui-dialog fixed left-1/2 top-1/2 max-h-[85dvh] w-[min(32rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-8',
         ]"
         :style="phone ? dragStyle : undefined"
         v-bind="subtitle ? {} : { 'aria-describedby': undefined }"
         data-ui-sheet
         :data-shell-layer="layer || undefined"
         :data-expanded="expanded || undefined"
+        :data-fullscreen="full || undefined"
         @escape-key-down="onDismissAttempt"
         @interact-outside="onDismissAttempt"
         @open-auto-focus="focusSheet"
@@ -37,17 +48,14 @@
           <div v-if="phone" class="flex justify-center pt-1">
             <!-- The handle is also a button: tap to expand or shrink. -->
             <button
-              v-if="expandable"
+              v-if="canExpand"
               type="button"
               class="flex h-6 w-16 items-center justify-center"
-              :aria-label="
-                expanded
-                  ? t('Collapse', null, 'Bottom sheet')
-                  : t('Expand', null, 'Bottom sheet')
-              "
+              :aria-label="handleLabel"
+              :title="fullscreenable ? handleLabel : undefined"
               :aria-expanded="String(expanded)"
               data-ui-sheet-handle
-              @click="expanded = !expanded"
+              @click="setExpanded(!expanded)"
             >
               <span class="h-1 w-8 rounded-full bg-surface-gray-4" />
             </button>
@@ -74,6 +82,23 @@
                 {{ subtitle }}
               </DialogDescription>
             </div>
+            <button
+              v-if="!phone && fullscreenable"
+              type="button"
+              class="-mt-1 flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-7 hover:bg-surface-gray-2"
+              :class="dismissible ? '' : '-mr-2'"
+              :aria-label="fullscreenLabel"
+              :title="fullscreenLabel"
+              :aria-pressed="String(full)"
+              data-ui-sheet-fullscreen
+              @click="emit('update:fullscreen', !full)"
+            >
+              <span
+                :class="full ? 'lucide-minimize-2' : 'lucide-maximize-2'"
+                class="size-5"
+                aria-hidden="true"
+              />
+            </button>
             <DialogClose
               v-if="!phone && dismissible"
               class="-mr-2 -mt-1 flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-7 hover:bg-surface-gray-2"
@@ -90,6 +115,7 @@
         <div
           v-if="$slots.header"
           class="flex-none px-5 pb-2"
+          :class="column"
           data-ui-sheet-header
         >
           <slot name="header" />
@@ -100,7 +126,7 @@
           :class="flush ? '' : 'px-5 pb-4'"
           data-ui-sheet-body
         >
-          <div ref="content">
+          <div ref="content" :class="column">
             <slot />
           </div>
         </div>
@@ -108,9 +134,10 @@
         <div
           v-if="$slots.actions"
           class="grid flex-none gap-2 border-t border-outline-gray-1 px-5 pt-3"
-          :class="
-            phone ? 'pb-[max(0.75rem,env(safe-area-inset-bottom))]' : 'pb-4'
-          "
+          :class="[
+            phone ? 'pb-[max(0.75rem,env(safe-area-inset-bottom))]' : 'pb-4',
+            column,
+          ]"
           data-ui-sheet-actions
         >
           <slot name="actions" />
@@ -119,7 +146,7 @@
         <div
           v-else-if="$slots.footer"
           class="flex-none"
-          :class="phone ? 'pb-[env(safe-area-inset-bottom)]' : ''"
+          :class="[phone ? 'pb-[env(safe-area-inset-bottom)]' : '', column]"
           data-ui-sheet-footer
         >
           <slot name="footer" />
@@ -161,8 +188,10 @@ const props = defineProps({
   flush: { type: Boolean, default: false },
   /** The shell's layer name (data-shell-layer): the shortcuts and the keys skip it. */
   layer: { type: String, default: '' },
+  /** v-model:fullscreen. null (left out): the sheet offers no full screen. */
+  fullscreen: { type: Boolean, default: null },
 })
-const emit = defineEmits(['update:open', 'closed'])
+const emit = defineEmits(['update:open', 'update:fullscreen', 'closed'])
 
 const phone = isMobile
 const handle = ref(null)
@@ -175,6 +204,33 @@ const dragY = ref(0)
 const dragging = ref(false)
 const closing = ref(false)
 let closeTimer = 0
+
+// ── full screen: the phone's expanded sheet, or the dialog grown to the screen
+const fullscreenable = computed(() => props.fullscreen !== null)
+const canExpand = computed(() => fullscreenable.value || expandable.value)
+const full = computed(() => fullscreenable.value && Boolean(props.fullscreen))
+// A dialog that fills a wide screen keeps its content to a readable column.
+const column = computed(() =>
+  full.value && !phone.value ? 'mx-auto w-full max-w-3xl' : '',
+)
+const fullscreenLabel = computed(() =>
+  full.value ? t('Exit full screen') : t('Full screen'),
+)
+const handleLabel = computed(() => {
+  if (fullscreenable.value) return fullscreenLabel.value
+  return expanded.value
+    ? t('Collapse', null, 'Bottom sheet')
+    : t('Expand', null, 'Bottom sheet')
+})
+// On a phone full screen is the expanded sheet; the parent keeps the choice.
+function setExpanded(value) {
+  expanded.value = value
+  if (fullscreenable.value && value !== full.value)
+    emit('update:fullscreen', value)
+}
+watch(full, (value) => {
+  if (props.open) expanded.value = value
+})
 
 // Focus the sheet itself, so a screen reader announces it, without
 // opening the keyboard on its first field.
@@ -211,6 +267,7 @@ watch(
       if (was) emit('closed')
       return
     }
+    expanded.value = full.value
     await nextTick()
     measure()
     if (typeof ResizeObserver !== 'undefined' && content.value) {
@@ -310,13 +367,13 @@ const { distanceY } = usePointerSwipe(handle, {
     const flick = velocity()
     dragY.value = 0
     if (raw < -MOVE / 2 || (flick < -FLICK && raw < -FLICK_MIN)) {
-      if (expandable.value) expanded.value = true
+      if (canExpand.value) setExpanded(true)
       return
     }
     if (raw <= 0) return
     const flickDown = flick > FLICK && raw > FLICK_MIN
     if (expanded.value && (raw > MOVE || flickDown)) {
-      expanded.value = false
+      setExpanded(false)
       return
     }
     if (

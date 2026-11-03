@@ -35,6 +35,8 @@ export const SILENCE_MS = 120000
 export const assistant = reactive({
   status: null,
   open: false,
+  /** Full screen instead of the sheet or the dock; kept from one open to the next. */
+  full: false,
   messages: [],
   thinking: false,
   progress: '',
@@ -531,6 +533,7 @@ export function _resetAssistant() {
   Object.assign(assistant, {
     status: null,
     open: false,
+    full: false,
     messages: [],
     thinking: false,
     progress: '',

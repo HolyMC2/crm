@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/ui@0.1.0 (2914c0d19b1b). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory.
+// Vendored from muelle/workspace/packages/ui@0.1.0 (5dfe9cf54255). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory.
 import { computed, ref, shallowReactive } from 'vue'
 
 // What the kit needs from the app around it. An app calls configureUi once in
@@ -50,8 +50,10 @@ const ES = {
   Close: 'Cerrar',
   'Close search': 'Cerrar búsqueda',
   Collapse: 'Contraer',
+  'Exit full screen': 'Salir de pantalla completa',
   Expand: 'Expandir',
   Filters: 'Filtros',
+  'Full screen': 'Pantalla completa',
   Loading: 'Cargando',
   'Loading…': 'Cargando…',
   'Nothing here yet': 'Todavía no hay nada aquí',

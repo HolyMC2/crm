@@ -2,8 +2,8 @@
   <!-- The context chip and the ✦ are the one bold element (ASSISTANT.md).
        Fixed above the conversation: the sheet's #header, the dock's top. -->
   <div>
-    <!-- Below 400 px the context chip takes its own row under the island:
-         five icons leave it no room on a 305 px phone. -->
+    <!-- Below 400 px, and in the 400 px dock, the context chip takes its own
+         row under the island: five or six icons leave it no room. -->
     <div
       class="flex min-h-14 flex-wrap items-center gap-x-2"
       :class="docked ? 'pl-4 pr-1' : ''"
@@ -30,7 +30,10 @@
       </button>
       <div
         v-else-if="chipTitle"
-        class="flex min-h-11 min-w-0 items-center gap-1 rounded-full bg-[var(--brand-soft)] pl-3 pr-1 text-sm text-ink-gray-9 max-[399px]:order-[99] max-[399px]:mb-2"
+        class="flex min-h-11 min-w-0 items-center gap-1 rounded-full bg-[var(--brand-soft)] pl-3 pr-1 text-sm text-ink-gray-9"
+        :class="
+          docked ? 'order-[99] mb-2' : 'max-[399px]:order-[99] max-[399px]:mb-2'
+        "
         data-testid="assistant-context"
       >
         <span class="min-w-0 truncate">{{
@@ -51,7 +54,12 @@
       }}</span>
       <span
         v-if="sessions.view === 'chat' && chipTitle"
-        class="hidden h-0 basis-full max-[399px]:order-[98] max-[399px]:block"
+        class="h-0 basis-full"
+        :class="
+          docked
+            ? 'order-[98]'
+            : 'hidden max-[399px]:order-[98] max-[399px]:block'
+        "
         aria-hidden="true"
       />
       <div class="ml-auto flex flex-none items-center">
@@ -119,6 +127,19 @@
           <span class="lucide-square-pen size-5" aria-hidden="true" />
         </button>
       </div>
+      <!-- The dock's own way to full screen; the sheet's is its handle or
+           the button beside its close. -->
+      <button
+        v-if="docked"
+        type="button"
+        class="flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-7 hover:bg-surface-gray-2"
+        :aria-label="__('Full screen')"
+        :title="__('Full screen')"
+        data-testid="assistant-fullscreen"
+        @click="assistant.full = true"
+      >
+        <span class="lucide-maximize-2 size-5" aria-hidden="true" />
+      </button>
       <button
         v-if="closable"
         type="button"

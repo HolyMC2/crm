@@ -63,7 +63,14 @@ async function mount(component, props = {}, slots = {}) {
   const bound = reactive({ ...props })
   const events = []
   const listeners = {}
-  for (const key of ['modelValue', 'open', 'scope', 'search', 'searchOpen'])
+  for (const key of [
+    'modelValue',
+    'open',
+    'scope',
+    'search',
+    'searchOpen',
+    'fullscreen',
+  ])
     listeners[`onUpdate:${key}`] = (value) => {
       bound[key] = value
       events.push([`update:${key}`, value])
@@ -321,6 +328,54 @@ describe('BottomSheet', () => {
     expect(dialog.querySelector('[aria-label="Close"]')).not.toBeNull()
     // Back closes it on a tablet or a phone in landscape too.
     expect(window.history.state?.uiSheet).toMatch(/^ui-sheet-/)
+    // No v-model:fullscreen, no full screen.
+    expect(dialog.querySelector('[aria-label="Full screen"]')).toBeNull()
+  })
+  it('v-model:fullscreen: on a wide screen a button beside the close fills the screen and back', async () => {
+    state.phone.value = false
+    const { bound, events } = await mount(BottomSheet, {
+      open: true,
+      title: 'A',
+      fullscreen: false,
+    })
+    const dialog = document.querySelector('[role="dialog"]')
+    expect(dialog.hasAttribute('data-fullscreen')).toBe(false)
+    dialog.querySelector('[aria-label="Full screen"]').click()
+    await flush()
+    expect(events).toContainEqual(['update:fullscreen', true])
+    expect(dialog.hasAttribute('data-fullscreen')).toBe(true)
+    dialog.querySelector('[aria-label="Exit full screen"]').click()
+    await flush()
+    expect(bound.fullscreen).toBe(false)
+    expect(dialog.hasAttribute('data-fullscreen')).toBe(false)
+  })
+  it('v-model:fullscreen: on a phone the handle always offers it, even for short content', async () => {
+    const { bound } = await mount(BottomSheet, {
+      open: true,
+      ariaLabel: 'Chat',
+      fullscreen: false,
+    })
+    const dialog = document.querySelector('[role="dialog"]')
+    const handle = dialog.querySelector('[data-ui-sheet-handle]')
+    expect(handle.getAttribute('aria-label')).toBe('Full screen')
+    handle.click()
+    await flush()
+    expect(bound.fullscreen).toBe(true)
+    expect(dialog.hasAttribute('data-fullscreen')).toBe(true)
+    expect(handle.getAttribute('aria-label')).toBe('Exit full screen')
+    // The parent keeps the choice: the next open starts full screen.
+    bound.open = false
+    await flush()
+    bound.open = true
+    await flush()
+    expect(
+      document.querySelector('[role="dialog"]').hasAttribute('data-fullscreen'),
+    ).toBe(true)
+    expect(bound.fullscreen).toBe(true)
+  })
+  it('a phone sheet with short content and no v-model:fullscreen has no handle button', async () => {
+    await mount(BottomSheet, { open: true, ariaLabel: 'Chat' })
+    expect(document.querySelector('[data-ui-sheet-handle]')).toBeNull()
   })
 })
 

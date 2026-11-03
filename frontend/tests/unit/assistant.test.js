@@ -10,11 +10,18 @@ vi.mock('frappe-ui', () => ({
 // The sheet's frame is S1's (tested there); here only its slots matter.
 vi.mock('@/components/ui/BottomSheet.vue', () => ({
   default: {
-    props: ['open'],
+    props: ['open', 'fullscreen'],
     setup:
-      (_, { slots }) =>
+      (props, { slots }) =>
       () =>
-        h('div', [slots.header?.(), slots.default?.(), slots.footer?.()]),
+        h(
+          'div',
+          {
+            'data-testid': 'sheet-frame',
+            'data-fullscreen': props.fullscreen || undefined,
+          },
+          [slots.header?.(), slots.default?.(), slots.footer?.()],
+        ),
   },
 }))
 
@@ -594,6 +601,40 @@ describe('the ⌘J door', () => {
     // Only shellKeyboard's shellAssistant (MuelleShell) toggles it now.
     expect(assistant.open).toBe(true)
     app.unmount()
+  })
+})
+
+describe('full screen', () => {
+  it('the dock grows to the full-screen sheet, which goes back to the dock', async () => {
+    const matchMedia = window.matchMedia
+    window.matchMedia = (media) => ({
+      media,
+      matches: media === '(min-width: 1280px)',
+      addEventListener() {},
+      removeEventListener() {},
+    })
+    const { el, app } = mount(AssistantSheet)
+    await openAssistant()
+    await nextTick()
+    expect(
+      document.querySelector('[data-testid="assistant-dock"]'),
+    ).not.toBeNull()
+    expect(el.querySelector('[data-testid="sheet-frame"]')).toBeNull()
+
+    document.querySelector('[data-testid="assistant-fullscreen"]').click()
+    await nextTick()
+    expect(assistant.full).toBe(true)
+    expect(document.querySelector('[data-testid="assistant-dock"]')).toBeNull()
+    const frame = el.querySelector('[data-testid="sheet-frame"]')
+    expect(frame.hasAttribute('data-fullscreen')).toBe(true)
+    // The sheet's own minimize (its v-model) brings the dock back.
+    assistant.full = false
+    await nextTick()
+    expect(
+      document.querySelector('[data-testid="assistant-dock"]'),
+    ).not.toBeNull()
+    app.unmount()
+    window.matchMedia = matchMedia
   })
 })
 

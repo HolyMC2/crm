@@ -30297,3 +30297,12 @@ msgstr "Nada en tu agenda ese día."
 #: frontend/src/components/pendientes/DayPeek.vue
 msgid "Free at"
 msgstr "Libre a las"
+
+#: frontend/src/components/ui/BottomSheet.vue
+#: frontend/src/components/assistant/AssistantHeader.vue
+msgid "Full screen"
+msgstr "Pantalla completa"
+
+#: frontend/src/components/ui/BottomSheet.vue
+msgid "Exit full screen"
+msgstr "Salir de pantalla completa"

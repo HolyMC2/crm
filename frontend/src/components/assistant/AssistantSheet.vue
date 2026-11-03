@@ -3,9 +3,11 @@
        ASSISTANT.md). On a phone it is a modal bottom sheet over the screen the
        worker is on (ui/BottomSheet: back, swipe down, Esc and the scrim
        close it); on a desktop of 1280px or more it docks as a right panel
-       and the page reflows beside it. Never a floating bubble. -->
+       and the page reflows beside it. Never a floating bubble. Full screen
+       (the sheet's handle, the dialog's or the dock's maximize) is the same
+       sheet grown to the screen. -->
   <aside
-    v-if="docked && assistant.open"
+    v-if="docked && assistant.open && !assistant.full"
     ref="panel"
     class="flex h-full w-[400px] flex-none flex-col border-l border-outline-gray-1 bg-surface-base"
     data-shell-layer="assistant"
@@ -15,7 +17,8 @@
     <AssistantPanel docked @close="closeAssistant" @navigate="onNavigate" />
   </aside>
   <BottomSheet
-    v-else-if="!docked"
+    v-else-if="!docked || assistant.full"
+    v-model:fullscreen="assistant.full"
     :open="assistant.open"
     :aria-label="__('Ask Muelle')"
     layer="assistant"
@@ -113,18 +116,25 @@ watch(
 // MuelleShell). Esc closes the dock when the focus is in it.
 registerPageKeys({
   root: panel,
-  keys: () => (assistant.open && docked.value ? { close: closeAssistant } : {}),
+  keys: () =>
+    assistant.open && docked.value && !assistant.full
+      ? { close: closeAssistant }
+      : {},
 })
 
-// On a phone the record opens full screen; the conversation waits.
+// On a phone the record opens full screen; the conversation waits. On a
+// desktop the full screen goes back to the dock, beside the record.
 function onNavigate() {
   if (!docked.value) closeAssistant()
+  else assistant.full = false
 }
 </script>
 <style>
 /* doco's floating «Ayuda» launcher sits bottom right, over the dock's send
    button; while the dock is open «Ayuda» stays in the rail's Más. */
-body:has([data-testid='assistant-dock']) #muelle-support-workflow {
+body:has([data-testid='assistant-dock']) #muelle-support-workflow,
+body:has([data-ui-sheet][data-shell-layer='assistant'][data-fullscreen])
+  #muelle-support-workflow {
   display: none !important;
 }
 </style>
