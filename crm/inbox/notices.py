@@ -12,6 +12,7 @@ import re
 from datetime import timedelta
 
 import frappe
+from frappe import _
 from frappe.utils import now_datetime
 
 KINDS = {"away", "csat", "macro"}
@@ -24,7 +25,7 @@ def queue_notice(conversation, *, kind, key, text, actor="Administrator"):
 	from crm.api.outbox_policy import automation_reason
 
 	if kind not in KINDS or not isinstance(key, str) or not key:
-		frappe.throw("Invalid inbox notice.")
+		frappe.throw(_("Invalid inbox notice."))
 	name = outbox._hash([1, conversation, "notice", kind, key])
 	with control.conversation_fence(conversation):
 		if frappe.db.get_value(outbox.DOCTYPE, name, "name", for_update=True):

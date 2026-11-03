@@ -30934,3 +30934,7 @@ msgstr "En cola de nuevo con el mismo id"
 #: crm/fcrm/doctype/crm_integration_subscription/crm_integration_subscription.json
 msgid "CRM Integration Subscription"
 msgstr "Suscripción de integración CRM"
+
+#: crm/inbox/notices.py
+msgid "Invalid inbox notice."
+msgstr "Aviso de bandeja no válido."
