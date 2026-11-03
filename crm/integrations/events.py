@@ -134,12 +134,32 @@ def _permitted(fn):
 		raise Skip("The connection's user may not read this record.") from None
 
 
+NOTE = "CRM Conversation Note"
+RATING = "CRM Conversation Rating"
+
+
 def build_conversation(event, doctype, name, context):
 	from crm.api import conversation_threads as threads
 	from crm.api import conversations as control
 
+	row = None
+	if doctype == NOTE:
+		row = frappe.db.get_value(
+			NOTE, name, ["conversation", "author", "content", "mentions", "creation"], as_dict=True
+		)
+	elif doctype == RATING:
+		row = frappe.db.get_value(
+			RATING,
+			name,
+			["conversation", "status", "rating", "comment", "human_owner", "rated_at"],
+			as_dict=True,
+		)
+	if doctype in (NOTE, RATING) and not row:
+		raise Skip("The record is gone.")
+	conversation = row.conversation if row else name
+
 	def view():
-		doc = control._load(name)
+		doc = control._load(conversation)
 		control._authorize(doc)
 		if threads._private_peer(doc.provider, doc.peer_id):
 			control._deny()
@@ -148,6 +168,22 @@ def build_conversation(event, doctype, name, context):
 	data = {"conversation": _permitted(view)}
 	if event == "conversation.status_changed" or event == "conversation.updated":
 		data["change"] = {k: v for k, v in context.items() if v is not None}
+	if doctype == NOTE:
+		data["note"] = {
+			"id": name,
+			"author": row.author,
+			"content": row.content,
+			"mentions": json.loads(row.mentions) if row.mentions else [],
+			"created_at": str(row.creation),
+		}
+	elif doctype == RATING:
+		data["rating"] = {
+			"id": name,
+			"rating": row.rating,
+			"comment": row.comment or "",
+			"agent": row.human_owner,
+			"rated_at": str(row.rated_at) if row.rated_at else None,
+		}
 	return data
 
 

@@ -1,0 +1,157 @@
+"""Private notes on a conversation. The customer never sees them; @mentions notify teammates."""
+
+import json
+
+import frappe
+from frappe import _
+from frappe.utils import escape_html
+
+from crm.inbox import insert_private, run_command
+
+NOTE = "CRM Conversation Note"
+MAX_TEXT = 4000
+MAX_MENTIONS = 10
+
+
+def _mentions(value):
+	if isinstance(value, str):
+		try:
+			value = json.loads(value) if value.strip() else []
+		except ValueError:
+			frappe.throw(_("Send the mentioned people as a list."))
+	if value is None:
+		return []
+	if not isinstance(value, list) or len(value) > MAX_MENTIONS:
+		frappe.throw(_("A note can mention at most {0} people.").format(MAX_MENTIONS))
+	return list(dict.fromkeys(v for v in value if isinstance(v, str) and v))
+
+
+def add_note(name, content, command_id, mentions=None):
+	from crm.api import conversation_threads as threads
+	from crm.api import conversations as control
+
+	if not isinstance(content, str) or not content.strip() or len(content) > MAX_TEXT:
+		frappe.throw(_("Write a note of 1 to {0} characters.").format(MAX_TEXT))
+	content = content.strip()
+	people = _mentions(mentions)
+	actor = frappe.session.user
+
+	def apply(doc, roles):
+		unreadable = [
+			user
+			for user in people
+			if user == actor or not threads._permitted(lambda user=user: control._authorize(doc, user))
+		]
+		if unreadable:
+			frappe.throw(
+				_("These people cannot open this conversation, so they cannot be mentioned: {0}.").format(
+					", ".join(unreadable)
+				)
+			)
+		note = insert_private(
+			{
+				"doctype": NOTE,
+				"conversation": doc.name,
+				"author": actor,
+				"content": content,
+				"mentions": json.dumps(people) if people else None,
+			}
+		)
+		_notify(doc, note, people, actor)
+		from crm.integrations.webhooks import emit
+
+		emit("conversation.note_created", NOTE, note.name, version="created")
+		return "note:" + note.name, {"note": note.name}
+
+	return run_command(name, command_id, "note", [content, people], apply)
+
+
+def _notify(doc, note, people, actor):
+	if not people:
+		return
+	author = frappe.db.get_value("User", actor, "full_name") or actor
+	snippet = note.content[:200]
+	for user in people:
+		if frappe.db.exists("DocType", "CRM Notification"):
+			frappe.get_doc(
+				{
+					"doctype": "CRM Notification",
+					"from_user": actor,
+					"to_user": user,
+					"type": "Mention",
+					"notification_type_doctype": NOTE,
+					"notification_type_doc": note.name,
+					"reference_doctype": "CRM Conversation",
+					"reference_name": doc.name,
+					"notification_text": _("{0} mentioned you in a conversation note").format(author),
+					"message": "<p>{0}</p>".format(escape_html(snippet)),
+				}
+			).insert(ignore_permissions=True)
+		frappe.publish_realtime(
+			"crm_conversation_note",
+			{"conversation": doc.name, "note": note.name},
+			user=user,
+			after_commit=True,
+		)
+
+
+def list_notes(name, limit=100):
+	from crm.api import conversation_threads as threads
+	from crm.api import conversations as control
+
+	doc = control._load(name)
+	control._authorize(doc)
+	if threads._private_peer(doc.provider, doc.peer_id):
+		control._deny()
+	rows = frappe.get_all(
+		NOTE,
+		filters={"conversation": doc.name},
+		fields=["name", "author", "content", "mentions", "creation"],
+		order_by="creation asc",
+		limit=min(max(int(limit), 1), 200),
+		ignore_permissions=True,
+	)
+	names = {
+		u.name: u.full_name or u.name
+		for u in frappe.get_all(
+			"User",
+			filters={"name": ["in", list({r.author for r in rows} or {""})]},
+			fields=["name", "full_name"],
+		)
+	}
+	return [
+		{
+			"name": r.name,
+			"author": r.author,
+			"author_name": names.get(r.author, r.author),
+			"content": r.content,
+			"mentions": json.loads(r.mentions) if r.mentions else [],
+			"creation": str(r.creation),
+			"own": r.author == frappe.session.user,
+		}
+		for r in rows
+	]
+
+
+def mentionable(name, query=""):
+	"""Teammates who can open this conversation, for the note's @mention picker."""
+	from crm.api import conversation_threads as threads
+	from crm.api import conversations as control
+
+	doc = control._load(name)
+	control._authorize(doc)
+	if threads._private_peer(doc.provider, doc.peer_id):
+		control._deny()
+	query = control._text(query, 80, required=False)
+	candidates = frappe.db.sql(
+		"""SELECT name, full_name FROM `tabUser`
+		WHERE enabled=1 AND user_type='System User' AND name NOT IN ('Guest','Administrator', %s)
+		AND (name LIKE %s OR full_name LIKE %s) ORDER BY full_name, name LIMIT 100""",
+		(frappe.session.user, "%" + query + "%", "%" + query + "%"),
+		as_dict=True,
+	)
+	return [
+		{"name": row.name, "label": row.full_name or row.name}
+		for row in candidates
+		if threads._permitted(lambda user=row.name: control._authorize(doc, user))
+	][:20]

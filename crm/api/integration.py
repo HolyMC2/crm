@@ -80,7 +80,7 @@ def send_test(name: str):
 	)
 	delivery.flags.crm_integration_engine = True
 	delivery.insert(ignore_permissions=True)
-	frappe.db.commit()
+	frappe.db.commit()  # nosemgrep: frappe-manual-commit -- the test delivery row must exist before the synchronous send
 	return webhooks.deliver(delivery.name, force=True)
 
 
@@ -124,7 +124,7 @@ def summary(name: str):
 	doc = _connection(name)
 	counts = dict(
 		frappe.db.sql(
-			f"SELECT status, COUNT(*) FROM `tab{DELIVERY}` WHERE integration=%s GROUP BY status", (doc.name,)
+			"SELECT status, COUNT(*) FROM `tabCRM Integration Delivery` WHERE integration=%s GROUP BY status", (doc.name,)
 		)
 	)
 	problems = frappe.get_all(

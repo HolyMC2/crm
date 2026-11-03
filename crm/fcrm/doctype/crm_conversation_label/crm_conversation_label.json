@@ -1,0 +1,73 @@
+{
+ "actions": [],
+ "creation": "2026-11-03 15:00:00.000000",
+ "modified": "2026-11-03 15:00:00.000000",
+ "modified_by": "Administrator",
+ "owner": "Administrator",
+ "doctype": "DocType",
+ "name": "CRM Conversation Label",
+ "module": "FCRM",
+ "engine": "InnoDB",
+ "allow_rename": 0,
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1
+  },
+  {
+   "role": "Sales Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1
+  },
+  {
+   "role": "Sales User",
+   "read": 1
+  }
+ ],
+ "links": [],
+ "states": [],
+ "index_web_pages_for_search": 0,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "field_order": [
+  "label_name",
+  "color",
+  "description"
+ ],
+ "fields": [
+  {
+   "fieldname": "label_name",
+   "fieldtype": "Data",
+   "label": "Label",
+   "reqd": 1,
+   "unique": 1,
+   "length": 40,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "color",
+   "fieldtype": "Select",
+   "label": "Color",
+   "options": "gray\nblue\ngreen\namber\nred\nviolet\npink\ncyan",
+   "default": "gray",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description"
+  }
+ ],
+ "autoname": "field:label_name",
+ "title_field": "label_name",
+ "description": "Labels the team puts on customer conversations to sort and find them."
+}

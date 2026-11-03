@@ -22,7 +22,12 @@
   "routed_at",
   "context_links",
   "automation_run",
-  "automation_state"
+  "automation_state",
+  "labels",
+  "snoozed_until",
+  "snoozed_by",
+  "away_notice_at",
+  "last_customer_message_at"
  ],
  "fields": [
   {
@@ -159,6 +164,42 @@
    "label": "Automation State",
    "read_only": 1,
    "length": 40
+  },
+  {
+   "fieldname": "labels",
+   "fieldtype": "Small Text",
+   "label": "Labels",
+   "read_only": 1,
+   "hidden": 1,
+   "description": "Conversation labels the team set, as a list of label names."
+  },
+  {
+   "fieldname": "snoozed_until",
+   "fieldtype": "Datetime",
+   "label": "Snoozed Until",
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "snoozed_by",
+   "fieldtype": "Link",
+   "label": "Snoozed By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "away_notice_at",
+   "fieldtype": "Datetime",
+   "label": "Away Message Sent At",
+   "read_only": 1,
+   "hidden": 1
+  },
+  {
+   "fieldname": "last_customer_message_at",
+   "fieldtype": "Datetime",
+   "label": "Last Customer Message At",
+   "read_only": 1,
+   "search_index": 1
   }
  ],
  "permissions": [],

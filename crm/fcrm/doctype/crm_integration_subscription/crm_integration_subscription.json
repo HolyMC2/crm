@@ -17,7 +17,7 @@
    "fieldname": "event",
    "fieldtype": "Select",
    "label": "Event",
-   "options": "conversation.created\nconversation.status_changed\nconversation.updated\nmessage.created\nmessage.updated\noutbound.updated\ncontact.created\ncontact.updated\nlead.created\nlead.updated\nlead.status_changed\ndeal.created\ndeal.updated\ndeal.status_changed\ninquiry.created\nassistant.message_created\nassistant.decision_pending",
+   "options": "conversation.created\nconversation.status_changed\nconversation.updated\nconversation.note_created\nconversation.rated\nmessage.created\nmessage.updated\noutbound.updated\ncontact.created\ncontact.updated\nlead.created\nlead.updated\nlead.status_changed\ndeal.created\ndeal.updated\ndeal.status_changed\ninquiry.created\nassistant.message_created\nassistant.decision_pending",
    "reqd": 1,
    "in_list_view": 1,
    "columns": 4

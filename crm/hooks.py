@@ -72,6 +72,7 @@ website_route_rules = [
 	{"from_route": "/crm/<path:app_path>", "to_route": "crm"},
 	{"from_route": "/crm-form/<route>", "to_route": "crm_form"},
 	{"from_route": "/o/<token>", "to_route": "crm_offer"},
+	{"from_route": "/rate/<token>", "to_route": "crm_rating"},
 ]
 
 # Generators
@@ -240,7 +241,10 @@ doc_events = {
 	},
 	"WhatsApp Message": {
 		"validate": ["crm.api.whatsapp.validate"],
-		"after_insert": ["crm.integrations.events.on_message_insert"],
+		"after_insert": [
+			"crm.integrations.events.on_message_insert",
+			"crm.inbox.customer_message.on_message_insert",
+		],
 		"on_update": ["crm.api.whatsapp.on_update", "crm.integrations.events.on_message_update"],
 	},
 	"CRM Deal": {
@@ -297,11 +301,29 @@ doc_events = {
 	},
 	"CRM Inquiry": {"after_insert": ["crm.integrations.events.on_inquiry_insert"]},
 	"CRM Conversation": {"after_insert": ["crm.integrations.events.on_conversation_insert"]},
-	"CRM Conversation Control Event": {"after_insert": ["crm.integrations.events.on_control_event"]},
+	"CRM Conversation Control Event": {
+		"after_insert": ["crm.integrations.events.on_control_event", "crm.inbox.csat.on_control_event"]
+	},
 	"CRM Outbound Intent": {"on_update": ["crm.integrations.events.on_intent_update"]},
-	"CRM Webchat Message": {"after_insert": ["crm.integrations.events.on_message_insert"]},
-	"Messenger Message": {"after_insert": ["crm.integrations.events.on_message_insert"]},
-	"CRM Channel Message": {"after_insert": ["crm.integrations.events.on_message_insert"]},
+	# Customer inbox follow-up (snooze wake, away message, assignment) runs after commit.
+	"CRM Webchat Message": {
+		"after_insert": [
+			"crm.integrations.events.on_message_insert",
+			"crm.inbox.customer_message.on_message_insert",
+		]
+	},
+	"Messenger Message": {
+		"after_insert": [
+			"crm.integrations.events.on_message_insert",
+			"crm.inbox.customer_message.on_message_insert",
+		]
+	},
+	"CRM Channel Message": {
+		"after_insert": [
+			"crm.integrations.events.on_message_insert",
+			"crm.inbox.customer_message.on_message_insert",
+		]
+	},
 }
 
 # Scheduled Tasks
@@ -316,6 +338,7 @@ scheduler_events = {
 		"crm.fcrm.doctype.crm_view_settings.crm_view_settings.clear_old_versions",
 		"crm.forms.wiring.send_daily_digests",
 		"crm.integrations.webhooks.purge",
+		"crm.inbox.csat.expire_due",
 	],
 	"weekly": ["crm.api.event.trigger_weekly_event_notifications"],
 	"daily_long": ["crm.lead_syncing.background_sync.sync_leads_from_sources_daily"],
@@ -323,7 +346,10 @@ scheduler_events = {
 	"monthly_long": ["crm.lead_syncing.background_sync.sync_leads_from_sources_monthly"],
 	"cron": {
 		"* * * * *": ["crm.api.outbox.recover_intents", "crm.integrations.webhooks.recover"],
-		"*/5 * * * *": ["crm.lead_syncing.background_sync.sync_leads_from_sources_5_minutes"],
+		"*/5 * * * *": [
+			"crm.lead_syncing.background_sync.sync_leads_from_sources_5_minutes",
+			"crm.inbox.snooze.wake_due",
+		],
 		"*/10 * * * *": ["crm.lead_syncing.background_sync.sync_leads_from_sources_10_minutes"],
 		"*/15 * * * *": [
 			"crm.lead_syncing.background_sync.sync_leads_from_sources_15_minutes",

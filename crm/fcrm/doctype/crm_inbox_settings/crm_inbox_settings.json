@@ -1,0 +1,172 @@
+{
+ "actions": [],
+ "creation": "2026-11-03 15:00:00.000000",
+ "modified": "2026-11-03 15:00:00.000000",
+ "modified_by": "Administrator",
+ "owner": "Administrator",
+ "doctype": "DocType",
+ "name": "CRM Inbox Settings",
+ "module": "FCRM",
+ "engine": "InnoDB",
+ "allow_rename": 0,
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1
+  },
+  {
+   "role": "Sales Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1
+  },
+  {
+   "role": "Sales User",
+   "read": 1
+  }
+ ],
+ "links": [],
+ "states": [],
+ "index_web_pages_for_search": 0,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "field_order": [
+  "section_hours",
+  "office_hours_enabled",
+  "working_hours",
+  "holiday_list",
+  "away_message",
+  "away_repeat_hours",
+  "section_csat",
+  "csat_enabled",
+  "csat_message",
+  "csat_valid_days",
+  "section_assign",
+  "auto_assign_enabled",
+  "auto_assign_max_open",
+  "assignment_agents",
+  "section_targets",
+  "first_response_minutes",
+  "resolution_hours"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_hours",
+   "fieldtype": "Section Break",
+   "label": "Office hours"
+  },
+  {
+   "fieldname": "office_hours_enabled",
+   "fieldtype": "Check",
+   "label": "Answer automatically outside office hours",
+   "default": "0"
+  },
+  {
+   "fieldname": "working_hours",
+   "fieldtype": "Table",
+   "label": "Office hours",
+   "options": "CRM Service Day",
+   "description": "Days and hours your team answers. Outside them the customer gets the away message once."
+  },
+  {
+   "fieldname": "holiday_list",
+   "fieldtype": "Link",
+   "label": "Holidays",
+   "options": "CRM Holiday List"
+  },
+  {
+   "fieldname": "away_message",
+   "fieldtype": "Small Text",
+   "label": "Away message",
+   "default": "Gracias por escribirnos. En este momento estamos fuera de horario; te responderemos en cuanto abramos."
+  },
+  {
+   "fieldname": "away_repeat_hours",
+   "fieldtype": "Int",
+   "label": "Send the away message again after (hours)",
+   "default": "12",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "section_csat",
+   "fieldtype": "Section Break",
+   "label": "Customer satisfaction"
+  },
+  {
+   "fieldname": "csat_enabled",
+   "fieldtype": "Check",
+   "label": "Ask customers to rate the conversation when it is closed",
+   "default": "0"
+  },
+  {
+   "fieldname": "csat_message",
+   "fieldtype": "Small Text",
+   "label": "Rating message",
+   "default": "¡Gracias por escribirnos! ¿Cómo te atendimos? Califícanos en un toque: {link}",
+   "description": "{link} is replaced by the rating page for this conversation."
+  },
+  {
+   "fieldname": "csat_valid_days",
+   "fieldtype": "Int",
+   "label": "Rating link valid for (days)",
+   "default": "7",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "section_assign",
+   "fieldtype": "Section Break",
+   "label": "Automatic assignment"
+  },
+  {
+   "fieldname": "auto_assign_enabled",
+   "fieldtype": "Check",
+   "label": "Assign new customer conversations automatically",
+   "default": "0",
+   "description": "Each unassigned conversation goes to the person below with the fewest open conversations."
+  },
+  {
+   "fieldname": "auto_assign_max_open",
+   "fieldtype": "Int",
+   "label": "Most open conversations per person",
+   "default": "0",
+   "non_negative": 1,
+   "description": "0 means no limit."
+  },
+  {
+   "fieldname": "assignment_agents",
+   "fieldtype": "Table",
+   "label": "People",
+   "options": "CRM Inbox Agent"
+  },
+  {
+   "fieldname": "section_targets",
+   "fieldtype": "Section Break",
+   "label": "Service targets"
+  },
+  {
+   "fieldname": "first_response_minutes",
+   "fieldtype": "Int",
+   "label": "First reply within (minutes)",
+   "default": "15",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "resolution_hours",
+   "fieldtype": "Int",
+   "label": "Close within (hours)",
+   "default": "24",
+   "non_negative": 1
+  }
+ ],
+ "issingle": 1,
+ "track_changes": 1,
+ "description": "How the customer inbox answers outside office hours, asks for ratings and assigns conversations."
+}

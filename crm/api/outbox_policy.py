@@ -39,27 +39,7 @@ def manual_reply_reason(intent):
 	if frappe.conf.get("maintenance_mode"):
 		return "site_maintenance"
 	if intent.provider == "Webchat":
-		from crm.api.webchat import current_session
-
-		try:
-			current_session(intent.account_id, intent.peer_id)
-		except (frappe.PermissionError, frappe.ValidationError, frappe.DoesNotExistError):
-			return "webchat_session_unavailable"
-		channel = frappe.db.get_value(
-			"CRM Webchat Channel",
-			intent.account_id,
-			["name", "profile", "public_origin"],
-			as_dict=True,
-			for_update=True,
-		)
-		if (
-			not channel
-			or intent.source_doctype != "CRM Webchat Channel"
-			or intent.source_name != channel.name
-			or intent.source_action != webchat_revision(channel)
-		):
-			return "account_configuration_changed"
-		return None
+		return _webchat_reason(intent)
 	if intent.provider != "WhatsApp":
 		return "producer_not_ready"
 	reason, account = whatsapp_account_reason(intent)
@@ -68,10 +48,39 @@ def manual_reply_reason(intent):
 	return _recipient_reason(intent, account)
 
 
+def _webchat_reason(intent):
+	"""The visitor's session is live and the channel is the one the reply was frozen for."""
+	from crm.api.webchat import current_session
+
+	try:
+		current_session(intent.account_id, intent.peer_id)
+	except (frappe.PermissionError, frappe.ValidationError, frappe.DoesNotExistError):
+		return "webchat_session_unavailable"
+	channel = frappe.db.get_value(
+		"CRM Webchat Channel",
+		intent.account_id,
+		["name", "profile", "public_origin"],
+		as_dict=True,
+		for_update=True,
+	)
+	if (
+		not channel
+		or intent.source_doctype != "CRM Webchat Channel"
+		or intent.source_name != channel.name
+		or intent.source_action != webchat_revision(channel)
+	):
+		return "account_configuration_changed"
+	return None
+
+
 def automation_reason(intent):
 	"""Automated or approved notices: no ownership, but every account, peer and
 	provider-control rule a person's reply obeys. A control change never cancels one."""
-	if intent.origin != "Automation" or intent.purpose != "automation" or intent.provider != "WhatsApp":
+	from crm.api.outbox import HOOKED_CHANNELS
+
+	if intent.origin != "Automation" or intent.purpose != "automation":
+		return "producer_not_ready"
+	if intent.provider not in {"WhatsApp", "Webchat", *HOOKED_CHANNELS}:
 		return "producer_not_ready"
 	if frappe.conf.get("maintenance_mode"):
 		return "site_maintenance"
@@ -90,6 +99,13 @@ def automation_reason(intent):
 		return "authority_revoked"
 	if current.provider_control not in {"Ours", "Not Applicable"}:
 		return "provider_control_unavailable"
+	if intent.provider == "Webchat":
+		return _webchat_reason(intent)
+	if intent.provider in HOOKED_CHANNELS:
+		# The owning transport's window, suppression and account evidence.
+		from crm.api.outbox import _channel_reply_reason
+
+		return _channel_reply_reason(intent)
 	reason, account = whatsapp_account_reason(intent)
 	if reason:
 		return reason

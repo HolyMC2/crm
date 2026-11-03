@@ -414,9 +414,27 @@ def _channel_source(conversation):
 	return tuple(source)
 
 
+def account_source(current):
+	"""(source doctype, record, revision) a reply to this conversation is frozen against."""
+	from crm.api.outbox_policy import account_revision, webchat_revision
+
+	if current.provider in HOOKED_CHANNELS:
+		return _channel_source(current)
+	source = "CRM Webchat Channel" if current.provider == "Webchat" else "WhatsApp Account"
+	fields = (
+		["name", "profile", "public_origin"] if current.provider == "Webchat" else ["name", "app_id", "business_id"]
+	)
+	account = frappe.db.get_value(source, current.account_record, fields, as_dict=True, for_update=True)
+	if not account:
+		frappe.throw(_("Native sending is not ready for this channel."))
+	revision = webchat_revision(account) if current.provider == "Webchat" else account_revision(account)
+	return source, account.name, revision
+
+
 def _channel_reply_reason(intent):
 	"""Current eligibility from the owning transport: account revision, window, suppression."""
-	if intent.origin not in {"Human", "Bot"} or intent.purpose not in {"manual", "service", "automation"}:
+	person_or_bot = intent.origin in {"Human", "Bot"} and intent.purpose in {"manual", "service", "automation"}
+	if not person_or_bot and (intent.origin, intent.purpose) != ("Automation", "automation"):
 		return "producer_not_ready"
 	if frappe.conf.get("maintenance_mode"):
 		return "site_maintenance"
@@ -525,26 +543,7 @@ def _queue_human(conversation, expected_generation, request_id, payload, *, acti
 				frappe.throw(_("Reply request ID was already used for different content."))
 			return _projection(existing)
 		control.assert_current_generation(conversation, generation, actor_user=actor)
-		from crm.api.outbox_policy import account_revision, webchat_revision
-
-		if catalog_source:
-			source, source_name, revision = catalog_source
-		elif current.provider in HOOKED_CHANNELS:
-			source, source_name, revision = _channel_source(current)
-		else:
-			source = "CRM Webchat Channel" if current.provider == "Webchat" else "WhatsApp Account"
-			fields = (
-				["name", "profile", "public_origin"]
-				if current.provider == "Webchat"
-				else ["name", "app_id", "business_id"]
-			)
-			account = frappe.db.get_value(
-				source, current.account_record, fields, as_dict=True, for_update=True
-			)
-			source_name = account.name
-			revision = (
-				webchat_revision(account) if current.provider == "Webchat" else account_revision(account)
-			)
+		source, source_name, revision = catalog_source or account_source(current)
 		doc = frappe.get_doc(
 			{
 				"doctype": DOCTYPE,

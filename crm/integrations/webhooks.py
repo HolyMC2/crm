@@ -50,6 +50,11 @@ EVENTS = {
 		"CRM Conversation",
 		"Owner, team, linked records or automation state changed without a control change.",
 	),
+	"conversation.note_created": (
+		"CRM Conversation Note",
+		"A teammate wrote a private note on a conversation (never shown to the customer).",
+	),
+	"conversation.rated": ("CRM Conversation Rating", "The customer rated a closed conversation."),
 	"message.created": ("Message", "A customer message arrived or a reply was recorded."),
 	"message.updated": ("Message", "A message's delivery status changed (sent, delivered, read, failed)."),
 	"outbound.updated": ("CRM Outbound Intent", "A queued reply moved state (accepted, failed, unknown)."),
@@ -260,11 +265,11 @@ def _enqueue(names):
 @contextmanager
 def as_user(user):
 	previous = frappe.session.user
-	frappe.set_user(user)
+	frappe.set_user(user)  # nosemgrep: frappe-setuser -- payload built as the connection user
 	try:
 		yield
 	finally:
-		frappe.set_user(previous)
+		frappe.set_user(previous)  # nosemgrep: frappe-setuser -- restore the worker's user
 
 
 def _builder(event):
@@ -350,7 +355,7 @@ def _health(integration, status, error="", failed=False):
 def _claim(name):
 	"""Lease one due delivery; False when another worker holds it or it is not due."""
 	row = frappe.db.sql(
-		f"""SELECT name,status,next_attempt_at,lease_until FROM `tab{DELIVERY}` WHERE name=%s FOR UPDATE""",
+		"""SELECT name,status,next_attempt_at,lease_until FROM `tabCRM Integration Delivery` WHERE name=%s FOR UPDATE""",
 		(name,),
 		as_dict=True,
 	)
@@ -364,7 +369,7 @@ def _claim(name):
 	if row.status != "Sending" and row.next_attempt_at and get_datetime(row.next_attempt_at) > now:
 		return False
 	_set(name, status="Sending", lease_until=add_to_date(now, seconds=LEASE_SECONDS))
-	frappe.db.commit()
+	frappe.db.commit()  # nosemgrep: frappe-manual-commit -- delivery state is durable before and after the HTTP call
 	return True
 
 
@@ -387,12 +392,12 @@ def deliver(delivery, *, force=False):
 			last_error="The connection is disabled or was removed.",
 			lease_until=None,
 		)
-		frappe.db.commit()
+		frappe.db.commit()  # nosemgrep: frappe-manual-commit -- delivery state is durable before and after the HTTP call
 		return _projection(delivery)
 	if not frappe.db.get_value("User", integration.integration_user, "enabled"):
 		_set(delivery, status="Skipped", last_error="The connection's user is disabled.", lease_until=None)
 		_health(integration.name, "Skipped", "The connection's user is disabled.", failed=True)
-		frappe.db.commit()
+		frappe.db.commit()  # nosemgrep: frappe-manual-commit -- delivery state is durable before and after the HTTP call
 		return _projection(delivery)
 	body = doc.payload
 	if not body:
@@ -400,14 +405,14 @@ def deliver(delivery, *, force=False):
 			body = build_payload(doc, integration)
 		except Skip as e:
 			_set(delivery, status="Skipped", last_error=str(e)[:500], lease_until=None)
-			frappe.db.commit()
+			frappe.db.commit()  # nosemgrep: frappe-manual-commit -- delivery state is durable before and after the HTTP call
 			return _projection(delivery)
 		except Exception:
 			frappe.db.rollback()
 			frappe.log_error(title=f"CRM integration payload {delivery}", message=frappe.get_traceback())
 			return _fail(doc, integration, "The event could not be prepared; support has the error log.")
 		_set(delivery, payload=body)
-		frappe.db.commit()
+		frappe.db.commit()  # nosemgrep: frappe-manual-commit -- delivery state is durable before and after the HTTP call
 	timestamp = str(int(time.time()))
 	headers = {
 		"Content-Type": "application/json",
@@ -436,7 +441,7 @@ def deliver(delivery, *, force=False):
 			lease_until=None,
 		)
 		_health(integration.name, f"Delivered ({response.status_code}, {elapsed} ms)")
-		frappe.db.commit()
+		frappe.db.commit()  # nosemgrep: frappe-manual-commit -- delivery state is durable before and after the HTTP call
 		return _projection(delivery)
 	snippet = (response.text or "")[:200].replace("\n", " ")
 	final = response.status_code == 410  # Standard Webhooks: the receiver no longer wants these
@@ -461,7 +466,7 @@ def _fail(doc, integration, error, *, code=None, final=False):
 		)
 	_set(doc.name, **values)
 	_health(integration.name, "Dead" if dead else "Retrying", error, failed=True)
-	frappe.db.commit()
+	frappe.db.commit()  # nosemgrep: frappe-manual-commit -- delivery state is durable before and after the HTTP call
 	return _projection(doc.name)
 
 
@@ -494,7 +499,7 @@ def recover():
 		return
 	now = now_datetime()
 	rows = frappe.db.sql(
-		f"""SELECT name FROM `tab{DELIVERY}`
+		"""SELECT name FROM `tabCRM Integration Delivery`
         WHERE (status='Pending' AND creation<=%s)
            OR (status='Failed' AND next_attempt_at<=%s)
            OR (status='Sending' AND lease_until<=%s)
@@ -510,10 +515,10 @@ def purge():
 		return
 	now = now_datetime()
 	frappe.db.sql(
-		f"DELETE FROM `tab{DELIVERY}` WHERE status IN ('Delivered','Skipped') AND modified<%s",
+		"DELETE FROM `tabCRM Integration Delivery` WHERE status IN ('Delivered','Skipped') AND modified<%s",
 		(now - timedelta(days=KEEP_DELIVERED_DAYS),),
 	)
 	frappe.db.sql(
-		f"DELETE FROM `tab{DELIVERY}` WHERE status='Dead' AND modified<%s",
+		"DELETE FROM `tabCRM Integration Delivery` WHERE status='Dead' AND modified<%s",
 		(now - timedelta(days=KEEP_FAILED_DAYS),),
 	)

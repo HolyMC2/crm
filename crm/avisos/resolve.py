@@ -291,8 +291,30 @@ def _sibling(doctype, name, access, label):
 	)
 
 
+def _conversation_target(name):
+	"""A customer conversation opens in the inbox; the conversation broker decides access."""
+	from crm.api import conversations as control
+
+	try:
+		control._authorize(control._load(name))
+	except Exception:
+		frappe.clear_last_message()
+		return _target(
+			reason=_("You can no longer open this conversation. Mark the aviso as read."),
+		)
+	where = _("Inbox")
+	return _target(
+		route="/inbox?" + urlencode({"conversation": name}),
+		label=_("Customer conversation"),
+		where=where,
+		action=_open_in(where),
+	)
+
+
 def record_target(group, access):
 	doctype, name = group["doctype"], group["docname"]
+	if doctype == "CRM Conversation":
+		return _conversation_target(name)
 	try:
 		exists = frappe.db.exists(doctype, name)
 	except Exception:

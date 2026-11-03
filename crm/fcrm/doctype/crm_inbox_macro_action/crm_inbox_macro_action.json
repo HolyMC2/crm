@@ -1,0 +1,41 @@
+{
+ "actions": [],
+ "creation": "2026-11-03 15:00:00.000000",
+ "modified": "2026-11-03 15:00:00.000000",
+ "modified_by": "Administrator",
+ "owner": "Administrator",
+ "doctype": "DocType",
+ "name": "CRM Inbox Macro Action",
+ "module": "FCRM",
+ "engine": "InnoDB",
+ "allow_rename": 0,
+ "permissions": [],
+ "links": [],
+ "states": [],
+ "index_web_pages_for_search": 0,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "field_order": [
+  "action",
+  "value"
+ ],
+ "fields": [
+  {
+   "fieldname": "action",
+   "fieldtype": "Select",
+   "label": "Step",
+   "options": "Send reply\nAdd label\nRemove label\nAdd private note\nSend to team\nSnooze\nClose",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "value",
+   "fieldtype": "Small Text",
+   "label": "Value",
+   "in_list_view": 1,
+   "description": "Reply or note text, label, team, or hours to snooze."
+  }
+ ],
+ "istable": 1,
+ "editable_grid": 1
+}

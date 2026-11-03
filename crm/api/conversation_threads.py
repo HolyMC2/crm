@@ -424,6 +424,11 @@ def _detail(doc):
 	result["context_links"] = control.context_view(doc)
 	result["automation_run"] = doc.get("automation_run") or None
 	result["routed_at"] = doc.get("routed_at")
+	from crm.inbox.labels import parse
+
+	result["labels"] = parse(doc.get("labels"))
+	result["snoozed_until"] = doc.get("snoozed_until")
+	result["snoozed_by"] = doc.get("snoozed_by")
 	result["control_requests"] = frappe.db.get_values(
 		control.EVENT,
 		{"conversation": doc.name, "action": "request", "to_generation": doc.generation},
@@ -736,6 +741,8 @@ def list_accounts():
 
 @frappe.whitelist()
 def list_threads(provider: str, account_id: str, cursor: str | None = None, limit: int | str = 30):
+	from crm.inbox.labels import parse as parse_labels
+
 	_actor()
 	scope = _scope(provider, account_id)
 	context = ["threads", provider, account_id]
@@ -781,6 +788,8 @@ def list_threads(provider: str, account_id: str, cursor: str | None = None, limi
 			"human_owner": doc.human_owner if doc else None,
 			"preview": message["content"][:160] if message else "",
 			"last_message_at": message["timestamp"] if message else None,
+			"labels": parse_labels(doc.get("labels")) if doc else [],
+			"snoozed_until": doc.get("snoozed_until") if doc else None,
 		}
 		items.append(item)
 		if len(items) == size:

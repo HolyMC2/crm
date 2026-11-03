@@ -1,0 +1,146 @@
+{#- Frappe's Jinja does not autoescape; every value on this public page must be escaped. #}
+{% autoescape true %}
+<!doctype html>
+<html lang="{{ lang or 'en' }}">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="referrer" content="no-referrer" />
+    <title>{{ i18n.title }}{% if company %} · {{ company }}{% endif %}</title>
+    <meta property="og:title" content="{{ i18n.title }}" />
+    <meta property="og:description" content="" />
+    <style>
+      :root {
+        --ink-strong: oklch(0.168 0 0);
+        --ink: oklch(0.205 0 0);
+        --muted: oklch(0.586 0 0);
+        --border: oklch(0.913 0 0);
+        --bg: oklch(0.964 0 0);
+        --card: oklch(1 0 0);
+        --field: oklch(0.964 0 0);
+        --accent: oklch(0.205 0 0);
+        --accent-ink: oklch(1 0 0);
+        --star: oklch(0.8 0.16 85);
+        --danger: oklch(0.507 0.165 25.286);
+        --ok-bg: oklch(0.965 0.03 155.987);
+        --ok-ink: oklch(0.4 0.09 155);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --ink-strong: oklch(0.97 0 0);
+          --ink: oklch(0.9 0 0);
+          --muted: oklch(0.68 0 0);
+          --border: oklch(0.32 0 0);
+          --bg: oklch(0.18 0 0);
+          --card: oklch(0.22 0 0);
+          --field: oklch(0.27 0 0);
+          --accent: oklch(0.95 0 0);
+          --accent-ink: oklch(0.18 0 0);
+          --ok-bg: oklch(0.3 0.04 155);
+          --ok-ink: oklch(0.9 0.06 155);
+        }
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+        background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased;
+        padding: 32px 16px 48px; line-height: 1.45;
+      }
+      .card { max-width: 440px; margin: 0 auto; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 24px; }
+      .brand { font-weight: 600; color: var(--muted); font-size: 13px; margin-bottom: 12px; }
+      h1 { font-size: 24px; margin: 0 0 6px; color: var(--ink-strong); letter-spacing: -0.01em; }
+      .muted { color: var(--muted); font-size: 14px; margin: 0 0 18px; }
+      .stars { display: flex; flex-direction: row-reverse; justify-content: center; gap: 6px; border: 0; padding: 0; margin: 0 0 6px; }
+      .stars input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+      .stars label { font-size: 40px; line-height: 1; cursor: pointer; color: var(--border); padding: 4px; min-width: 48px; text-align: center; }
+      .stars label:hover, .stars label:hover ~ label, .stars input:checked ~ label { color: var(--star); }
+      .stars input:focus-visible + label { outline: 2px solid var(--accent); border-radius: 8px; }
+      .pick { text-align: center; min-height: 1.4em; color: var(--muted); font-size: 14px; }
+      label.field { display: block; font-size: 13px; color: var(--muted); margin: 16px 0 6px; }
+      textarea {
+        width: 100%; font: inherit; font-size: 15px; color: var(--ink); background: var(--field);
+        border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; min-height: 90px; resize: vertical;
+      }
+      button {
+        font: inherit; font-size: 15px; font-weight: 500; border-radius: 8px; padding: 12px 14px; cursor: pointer; margin-top: 16px;
+        border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink); width: 100%;
+      }
+      button:disabled { opacity: 0.6; cursor: default; }
+      .banner { border-radius: 10px; padding: 14px; font-size: 15px; background: var(--ok-bg); color: var(--ok-ink); }
+      .error { color: var(--danger); font-size: 13px; margin-top: 8px; min-height: 1em; }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      {% if company %}<div class="brand">{{ company }}</div>{% endif %}
+      {% if status == "Rated" %}
+      <div class="banner" role="status">{{ i18n.thanks }}</div>
+      {% elif status == "Expired" %}
+      <div class="banner" role="status">{{ i18n.expired }}</div>
+      {% else %}
+      <h1>{{ i18n.title }}</h1>
+      <p class="muted">{{ i18n.intro }}</p>
+      <form id="rating-form" novalidate>
+        <fieldset class="stars" aria-label="{{ i18n.title }}">
+          {% for n in [5, 4, 3, 2, 1] %}
+          <input type="radio" id="star-{{ n }}" name="rating" value="{{ n }}" />
+          <label for="star-{{ n }}" title="{{ i18n.stars[n - 1] }}" aria-label="{{ n }} · {{ i18n.stars[n - 1] }}">★</label>
+          {% endfor %}
+        </fieldset>
+        <div class="pick" id="pick" aria-live="polite"></div>
+        <label class="field" for="comment">{{ i18n.comment }}</label>
+        <textarea id="comment" maxlength="1000"></textarea>
+        <div class="error" id="error" role="alert"></div>
+        <button type="submit">{{ i18n.send }}</button>
+      </form>
+      {% endif %}
+    </main>
+    {% if status == "Sent" %}
+    <script>
+      (function () {
+        var TOKEN = {{ token | tojson }};
+        var CSRF = {{ csrf_token | tojson }};
+        var I18N = {{ i18n | tojson }};
+        var form = document.getElementById("rating-form");
+        var pick = document.getElementById("pick");
+        var error = document.getElementById("error");
+        Array.prototype.forEach.call(form.querySelectorAll('input[name="rating"]'), function (input) {
+          input.addEventListener("change", function () { pick.textContent = I18N.stars[Number(input.value) - 1]; });
+        });
+        form.addEventListener("submit", function (ev) {
+          ev.preventDefault();
+          var chosen = form.querySelector('input[name="rating"]:checked');
+          if (!chosen) { error.textContent = I18N.choose; return; }
+          var button = form.querySelector("button");
+          button.disabled = true;
+          error.textContent = "";
+          fetch("/api/method/crm.api.inbox.submit_rating", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "X-Frappe-CSRF-Token": CSRF, Accept: "application/json" },
+            body: new URLSearchParams({ token: TOKEN, rating: chosen.value, comment: document.getElementById("comment").value }),
+          }).then(function (r) {
+            return r.json().catch(function () { return {}; }).then(function (json) {
+              if (!r.ok) {
+                var msg = I18N.error;
+                try {
+                  var list = JSON.parse(json._server_messages || "[]");
+                  if (list.length) msg = JSON.parse(list[0]).message || msg;
+                } catch (e) {}
+                throw new Error(msg);
+              }
+              window.location.reload();
+            });
+          }).catch(function (e) {
+            error.textContent = e.message;
+            button.disabled = false;
+          });
+        });
+      })();
+    </script>
+    {% endif %}
+  </body>
+</html>
+{% endautoescape %}
