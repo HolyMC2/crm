@@ -19,12 +19,22 @@ vi.mock('frappe-ui', async () => {
     },
   }
 })
-vi.mock('vue-router', () => ({
-  useRoute: () => ({ query: context.query }),
-  useRouter: () => ({ replace: context.replace }),
-  onBeforeRouteLeave: vi.fn(),
-  onBeforeRouteUpdate: vi.fn(),
-}))
+vi.mock('vue-router', async () => {
+  const { h: render } = await import('vue')
+  return {
+    RouterLink: {
+      props: ['to'],
+      setup:
+        (props, { slots }) =>
+        () =>
+          render('a', slots.default?.()),
+    },
+    useRoute: () => ({ query: context.query }),
+    useRouter: () => ({ replace: context.replace }),
+    onBeforeRouteLeave: vi.fn(),
+    onBeforeRouteUpdate: vi.fn(),
+  }
+})
 vi.mock('@/stores/session', () => ({
   sessionStore: () => ({ user: 'agent@example.invalid' }),
 }))
@@ -97,6 +107,7 @@ function base(method) {
     return { labels: LABELS, can_manage: false }
   if (method.endsWith('list_macros')) return [MACRO]
   if (method.endsWith('list_notes')) return []
+  if (method.endsWith('record_notes')) return { records: [], notes: [] }
   return {}
 }
 async function mount() {
@@ -269,6 +280,63 @@ describe('private notes and help articles', () => {
       mentions: '["two@example.invalid"]',
     })
     expect(note.value).toBe('')
+  })
+  it('shows the linked deal notes and saves a note on the deal', async () => {
+    const deal = { doctype: 'CRM Deal', name: 'DEAL-1', label: 'Mostrador' }
+    context.call.mockImplementation((method) => {
+      if (method.endsWith('list_notes'))
+        return [
+          {
+            name: 'n1',
+            author_name: 'Uno',
+            content: 'Interna',
+            creation: '2026-11-02 10:00:00',
+          },
+        ]
+      if (method.endsWith('record_notes'))
+        return {
+          records: [deal],
+          notes: [
+            {
+              name: 'f1',
+              title: 'Llamar',
+              content: 'Llamar el lunes',
+              author_name: 'Dos',
+              creation: '2026-11-01 09:00:00',
+              record: deal,
+            },
+          ],
+        }
+      return base(method)
+    })
+    const el = await mount()
+    const details = [...el.querySelectorAll('details')].find((d) =>
+      d.querySelector('summary').textContent.includes('Notas internas'),
+    )
+    details.open = true
+    details.dispatchEvent(new Event('toggle'))
+    await flush()
+    const items = [...details.querySelectorAll('li')].map((li) => li.textContent)
+    expect(items[0]).toContain('Trato «Mostrador»')
+    expect(items[0]).toContain('Llamar el lunes')
+    expect(items[1]).toContain('Interna')
+    const where = [...details.querySelectorAll('select')][0]
+    await choose(where, 'CRM Deal|DEAL-1')
+    expect(details.querySelector('input[type="search"]')).toBeNull()
+    const note = details.querySelector('textarea')
+    note.value = 'Cotizar 3 piezas'
+    note.dispatchEvent(new Event('input', { bubbles: true }))
+    details
+      .querySelector('form')
+      .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+    await flush()
+    expect(calls('add_record_note').at(-1)[1]).toEqual({
+      name: 'conv1',
+      doctype: 'CRM Deal',
+      docname: 'DEAL-1',
+      content: 'Cotizar 3 piezas',
+    })
+    expect(calls('add_note')).toHaveLength(0)
   })
   it('inserts a picked help article into the reply draft', async () => {
     const el = await mount()

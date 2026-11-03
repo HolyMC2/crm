@@ -59,6 +59,16 @@ def add_note(name: str, content: str, command_id: str, mentions: str | list | No
 
 
 @frappe.whitelist()
+def record_notes(name: str):
+	return notes.record_notes(name)
+
+
+@frappe.whitelist(methods=["POST"])
+def add_record_note(name: str, doctype: str, docname: str, content: str):
+	return notes.add_record_note(name, doctype, docname, content)
+
+
+@frappe.whitelist()
 def mentionable(name: str, query: str | None = ""):
 	return notes.mentionable(name, query or "")
 

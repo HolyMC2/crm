@@ -6,7 +6,15 @@
       <div class="truncate text-lg-medium text-ink-gray-8">
         {{ note.title }}
       </div>
+      <span
+        v-if="note.source === 'conversation'"
+        class="shrink-0 rounded-4 bg-surface-gray-3 px-1.5 py-0.5 text-xs text-ink-gray-6"
+        :title="__('Private note from the inbox. Open it to reply or add another.')"
+      >
+        {{ __('Inbox') }}
+      </span>
       <Dropdown
+        v-else
         :options="[
           {
             label: __('Delete'),

@@ -254,6 +254,74 @@ class TestLabelsAndNotes(_Inbox):
 		self.assertEqual(data["conversation"]["name"], self.conversation)
 		self.assertEqual(data["note"]["content"], "Revisar garantía")
 
+	def test_conversation_notes_join_the_lead_timeline_and_lead_notes_join_the_inbox(self):
+		from crm.api import activities
+
+		lead = frappe.get_doc(
+			{
+				"doctype": "CRM Lead",
+				"first_name": "Fictional",
+				"lead_owner": self.one,
+				"email": self.prefix + "-lead@example.invalid",
+			}
+		).insert(ignore_permissions=True)
+		# The outsider reads the lead (assigned) but cannot open the conversation.
+		frappe.get_doc(
+			{
+				"doctype": "ToDo",
+				"allocated_to": self.outsider,
+				"reference_type": "CRM Lead",
+				"reference_name": lead.name,
+				"status": "Open",
+				"description": "Fictional follow-up",
+			}
+		).insert(ignore_permissions=True)
+		frappe.db.set_value(
+			control.DOCTYPE,
+			self.conversation,
+			{"reference_doctype": "CRM Lead", "reference_name": lead.name},
+			update_modified=False,
+		)
+		self.take(self.one)
+		with patch("crm.integrations.webhooks.emit"), self.as_user(self.one):
+			notes.add_note(self.conversation, "Pide factura\nA nombre de la empresa", secrets.token_hex(16))
+			timeline = activities.conversation_notes("CRM Lead", lead.name)
+			notes.add_record_note(self.conversation, "CRM Lead", lead.name, "Llamar el lunes")
+			panel = notes.record_notes(self.conversation)
+			with self.assertRaises(frappe.PermissionError):
+				notes.add_record_note(self.conversation, "CRM Deal", "not-linked", "Otra")
+		self.assertEqual([n["source"] for n in timeline], ["conversation"])
+		self.assertEqual(timeline[0]["conversation"], self.conversation)
+		self.assertIn("Pide factura<br>A nombre de la empresa", timeline[0]["content"])
+		self.assertEqual([r["name"] for r in panel["records"]], [lead.name])
+		self.assertEqual([n["content"] for n in panel["notes"]], ["Llamar el lunes"])
+		self.assertEqual(panel["notes"][0]["author"], self.one)
+		self.assertTrue(
+			frappe.db.exists(
+				"FCRM Note", {"reference_doctype": "CRM Lead", "reference_docname": lead.name}
+			)
+		)
+		with self.as_user(self.outsider):
+			self.assertTrue(frappe.has_permission("CRM Lead", "read", lead.name))
+			self.assertEqual(activities.conversation_notes("CRM Lead", lead.name), [])
+
+	def test_a_person_linked_record_finds_its_conversation_notes(self):
+		lead = frappe.get_doc(
+			{"doctype": "CRM Lead", "first_name": "Linked_100%", "email": self.prefix + "-l2@example.invalid"}
+		).insert(ignore_permissions=True)
+		links = [{"doctype": "CRM Lead", "name": lead.name, "source": "person"}]
+		frappe.db.set_value(
+			control.DOCTYPE,
+			self.conversation,
+			"context_links",
+			json.dumps(links, sort_keys=True, separators=(",", ":")),
+			update_modified=False,
+		)
+		self.assertEqual(
+			[d.name for d in notes.record_conversations("CRM Lead", lead.name)], [self.conversation]
+		)
+		self.assertEqual(notes.record_conversations("CRM Lead", lead.name[:-1] + "%"), [])
+
 	def test_a_conversation_aviso_opens_the_inbox(self):
 		from crm.avisos.resolve import record_target
 

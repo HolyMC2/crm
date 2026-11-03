@@ -218,6 +218,7 @@ def get_deal_activities(name: str):
 	linked_calls = get_linked_calls("CRM Deal", name)
 	calls = calls + linked_calls.get("calls", [])
 	notes = notes + get_linked_notes("CRM Deal", name) + linked_calls.get("notes", [])
+	notes += conversation_notes("CRM Deal", name)
 	tasks = tasks + get_linked_tasks("CRM Deal", name) + linked_calls.get("tasks", [])
 	attachments = attachments + get_attachments("CRM Deal", name)
 
@@ -372,6 +373,7 @@ def get_lead_activities(name: str):
 	linked_calls = get_linked_calls("CRM Lead", name)
 	calls = linked_calls.get("calls", [])
 	notes = get_linked_notes("CRM Lead", name) + linked_calls.get("notes", [])
+	notes += conversation_notes("CRM Lead", name)
 	tasks = get_linked_tasks("CRM Lead", name) + linked_calls.get("tasks", [])
 	attachments = get_attachments("CRM Lead", name)
 
@@ -544,6 +546,14 @@ def get_linked_calls(doctype: str, name: str):
 def get_linked_notes(doctype: str, name: str):
 	_check_activity_parent(doctype, name)
 	return get_permitted_docs("FCRM Note", filters={"reference_doctype": doctype, "reference_docname": name})
+
+
+def conversation_notes(doctype: str, name: str):
+	"""Private notes from the record's customer conversations, read-only on its timeline."""
+	from crm.inbox.notes import notes_for_record
+
+	_check_activity_parent(doctype, name)
+	return notes_for_record(doctype, name)
 
 
 def get_linked_tasks(doctype: str, name: str):

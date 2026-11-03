@@ -71,6 +71,11 @@ function updateTaskStatus(status, task) {
 
 // Notes
 function showNote(note) {
+  // A conversation's private note is edited where it was written: the inbox.
+  if (note?.source === 'conversation') {
+    router.push({ name: 'Inbox', query: { conversation: note.conversation } })
+    return
+  }
   showModal({
     name: note?.name,
     doctype: 'FCRM Note',

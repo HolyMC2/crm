@@ -30938,3 +30938,15 @@ msgstr "Suscripción de integración CRM"
 #: crm/inbox/notices.py
 msgid "Invalid inbox notice."
 msgstr "Aviso de bandeja no válido."
+
+#: crm/inbox/notes.py
+msgid "Conversation with {0}"
+msgstr "Conversación con {0}"
+
+#: crm/inbox/notes.py
+msgid "Link this record to the conversation first, then save the note on it."
+msgstr "Primero vincula este registro a la conversación y luego guarda la nota en él."
+
+#: frontend/src/components/Activities/NoteArea.vue
+msgid "Private note from the inbox. Open it to reply or add another."
+msgstr "Nota interna de la bandeja. Ábrela para responder o añadir otra."
