@@ -306,7 +306,9 @@ def _hears(integration, actor, readable_doc):
 	if readable_doc is not None:
 		return bool(
 			row.integration_user
-			and frappe.has_permission(readable_doc.doctype, "read", doc=readable_doc, user=row.integration_user)
+			and frappe.has_permission(
+				readable_doc.doctype, "read", doc=readable_doc, user=row.integration_user
+			)
 		)
 	return True
 
