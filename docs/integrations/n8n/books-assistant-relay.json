@@ -1,0 +1,212 @@
+{
+  "name": "Muelle · books assistant relay",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "books-ask",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "name": "Ask the assistant",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.MUELLE_SITE_URL }}/api/method/doco.docoutils.assistant.api.say",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({text: $json.body.text, client_id: $execution.id}) }}"
+      },
+      "name": "Assistant say",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        240,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "muelle-books",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "name": "Muelle webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\nconst item = $input.first();\nconst h = item.json.headers;\nconst body = Buffer.from(item.binary.data.data, 'base64').toString('utf8');\nconst key = Buffer.from($env.MUELLE_WHSEC.replace(/^whsec_/, ''), 'base64');\nconst expected = crypto.createHmac('sha256', key)\n  .update(`${h['webhook-id']}.${h['webhook-timestamp']}.${body}`).digest('base64');\nconst ok = (h['webhook-signature'] || '').split(' ').some((s) => s === `v1,${expected}`);\nif (!ok || Math.abs(Date.now() / 1000 - Number(h['webhook-timestamp'])) > 300) {\n  throw new Error('Bad signature');\n}\nreturn [{ json: JSON.parse(body) }];"
+      },
+      "name": "Verify signature",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.type }}",
+              "value2": "assistant.decision_pending"
+            }
+          ]
+        }
+      },
+      "name": "Has buttons?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        480,
+        240
+      ]
+    },
+    {
+      "parameters": {},
+      "name": "Forward answer (replace)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        720,
+        360
+      ]
+    },
+    {
+      "parameters": {},
+      "name": "Ask a person to choose (replace)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        720,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "books-decide",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "name": "Button chosen",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.MUELLE_SITE_URL }}/api/method/doco.docoutils.assistant.api.callback",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({data: $json.body.data}) }}"
+      },
+      "name": "Assistant callback",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        240,
+        480
+      ]
+    }
+  ],
+  "connections": {
+    "Ask the assistant": {
+      "main": [
+        [
+          {
+            "node": "Assistant say",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Muelle webhook": {
+      "main": [
+        [
+          {
+            "node": "Verify signature",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify signature": {
+      "main": [
+        [
+          {
+            "node": "Has buttons?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has buttons?": {
+      "main": [
+        [
+          {
+            "node": "Ask a person to choose (replace)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Forward answer (replace)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Button chosen": {
+      "main": [
+        [
+          {
+            "node": "Assistant callback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "note": "Credentials: Header Auth «Authorization: token <api_key>:<api_secret>» of the connection user. Env: MUELLE_SITE_URL, MUELLE_WHSEC (from «Show signing secret»). See crm/docs/integrations/N8N.md."
+  }
+}

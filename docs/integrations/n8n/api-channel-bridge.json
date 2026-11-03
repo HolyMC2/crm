@@ -1,0 +1,186 @@
+{
+  "name": "Muelle CRM · API inbox channel bridge",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "my-channel-inbound",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "name": "Channel inbound",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.MUELLE_SITE_URL }}/api/method/crm.api.integration.channel_message",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({contact_id: $json.body.from, text: $json.body.text, message_id: $json.body.id, sender_name: $json.body.name}) }}"
+      },
+      "name": "CRM channel_message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        240,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "muelle-crm-channel",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "name": "Muelle webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\nconst item = $input.first();\nconst h = item.json.headers;\nconst body = Buffer.from(item.binary.data.data, 'base64').toString('utf8');\nconst key = Buffer.from($env.MUELLE_WHSEC.replace(/^whsec_/, ''), 'base64');\nconst expected = crypto.createHmac('sha256', key)\n  .update(`${h['webhook-id']}.${h['webhook-timestamp']}.${body}`).digest('base64');\nconst ok = (h['webhook-signature'] || '').split(' ').some((s) => s === `v1,${expected}`);\nif (!ok || Math.abs(Date.now() / 1000 - Number(h['webhook-timestamp'])) > 300) {\n  throw new Error('Bad signature');\n}\nreturn [{ json: JSON.parse(body) }];"
+      },
+      "name": "Verify signature",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.type + ':' + $json.data.message.direction }}",
+              "value2": "message.created:out"
+            }
+          ]
+        }
+      },
+      "name": "Agent reply?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        480,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.MY_CHANNEL_SEND_URL }}",
+        "method": "POST",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({to: $json.data.thread.peer_id, text: $json.data.message.content}) }}"
+      },
+      "name": "Send on my channel",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        720,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.MUELLE_SITE_URL }}/api/method/crm.api.integration.channel_status",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({message: $('Verify signature').item.json.data.message.id, status: 'delivered'}) }}"
+      },
+      "name": "CRM channel_status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        960,
+        240
+      ]
+    }
+  ],
+  "connections": {
+    "Channel inbound": {
+      "main": [
+        [
+          {
+            "node": "CRM channel_message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Muelle webhook": {
+      "main": [
+        [
+          {
+            "node": "Verify signature",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify signature": {
+      "main": [
+        [
+          {
+            "node": "Agent reply?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent reply?": {
+      "main": [
+        [
+          {
+            "node": "Send on my channel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send on my channel": {
+      "main": [
+        [
+          {
+            "node": "CRM channel_status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "note": "Credentials: Header Auth «Authorization: token <api_key>:<api_secret>» of the connection user. Env: MUELLE_SITE_URL, MUELLE_WHSEC (from «Show signing secret»). See crm/docs/integrations/N8N.md."
+  }
+}

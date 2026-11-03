@@ -1,0 +1,92 @@
+{
+  "name": "Muelle CRM · verify and route webhooks",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "muelle-crm",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "name": "Muelle webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\nconst item = $input.first();\nconst h = item.json.headers;\nconst body = Buffer.from(item.binary.data.data, 'base64').toString('utf8');\nconst key = Buffer.from($env.MUELLE_WHSEC.replace(/^whsec_/, ''), 'base64');\nconst expected = crypto.createHmac('sha256', key)\n  .update(`${h['webhook-id']}.${h['webhook-timestamp']}.${body}`).digest('base64');\nconst ok = (h['webhook-signature'] || '').split(' ').some((s) => s === `v1,${expected}`);\nif (!ok || Math.abs(Date.now() / 1000 - Number(h['webhook-timestamp'])) > 300) {\n  throw new Error('Bad signature');\n}\nreturn [{ json: JSON.parse(body) }];"
+      },
+      "name": "Verify signature",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.type }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": "message.created"
+            },
+            {
+              "value2": "conversation.status_changed"
+            },
+            {
+              "value2": "lead.status_changed"
+            },
+            {
+              "value2": "deal.status_changed"
+            }
+          ]
+        }
+      },
+      "name": "Route by event",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [
+        480,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Muelle webhook": {
+      "main": [
+        [
+          {
+            "node": "Verify signature",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify signature": {
+      "main": [
+        [
+          {
+            "node": "Route by event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "note": "Credentials: Header Auth «Authorization: token <api_key>:<api_secret>» of the connection user. Env: MUELLE_SITE_URL, MUELLE_WHSEC (from «Show signing secret»). See crm/docs/integrations/N8N.md."
+  }
+}
