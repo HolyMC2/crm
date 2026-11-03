@@ -81,6 +81,17 @@ EVENTS = {
 	),
 }
 TEST_EVENT = "ping"
+ANY_RECORD = "Any record type"
+
+
+def _document_events():
+	from crm.integrations.documents import EVENTS as DOCUMENT_EVENTS
+
+	return DOCUMENT_EVENTS
+
+
+def known(event):
+	return event in EVENTS or event in _document_events()
 
 
 class Skip(Exception):
@@ -88,8 +99,12 @@ class Skip(Exception):
 
 
 def catalog():
+	"""Every event; document.* rows also need the record type they are about."""
 	return [
 		{"event": event, "record": record, "description": text} for event, (record, text) in EVENTS.items()
+	] + [
+		{"event": event, "record": ANY_RECORD, "description": text, "needs_document_type": True}
+		for event, text in _document_events().items()
 	]
 
 
@@ -159,23 +174,41 @@ def clear_subscriber_cache():
 	frappe.cache.delete_value(_CACHE_KEY)
 
 
+def _key(event, doctype=None):
+	return f"{event}|{doctype}" if event in _document_events() else event
+
+
 def _subscribers():
-	"""{event: [connection names]} for enabled connections, cached until a connection changes."""
+	"""{event (document.*: "event|record type"): [connection names]} for enabled
+	connections, cached until a connection changes."""
 	cached = frappe.cache.get_value(_CACHE_KEY)
 	if cached is not None:
 		return cached
 	out = {}
 	if frappe.db.table_exists(INTEGRATION) and frappe.db.table_exists("CRM Integration Subscription"):
+		typed = frappe.db.has_column("CRM Integration Subscription", "document_type")
 		rows = frappe.db.sql(
-			"""SELECT i.name, s.event FROM `tabCRM Integration` i
+			"""SELECT i.name, s.event, s.document_type FROM `tabCRM Integration` i
+            JOIN `tabCRM Integration Subscription` s ON s.parent=i.name AND s.parenttype='CRM Integration'
+            WHERE i.enabled=1 AND COALESCE(i.webhook_url,'')<>''"""
+			if typed
+			else """SELECT i.name, s.event, NULL AS document_type FROM `tabCRM Integration` i
             JOIN `tabCRM Integration Subscription` s ON s.parent=i.name AND s.parenttype='CRM Integration'
             WHERE i.enabled=1 AND COALESCE(i.webhook_url,'')<>''""",
 			as_dict=True,
 		)
 		for row in rows:
-			out.setdefault(row.event, []).append(row.name)
+			out.setdefault(_key(row.event, row.document_type), []).append(row.name)
 	frappe.cache.set_value(_CACHE_KEY, out)
 	return out
+
+
+def document_types():
+	"""Record types some enabled connection wants document.* events for (none while
+	installing or migrating, when every record save passes through here)."""
+	if _quiet():
+		return set()
+	return {key.split("|", 1)[1] for key in _subscribers() if "|" in key}
 
 
 # ---------------------------------------------------------------- emission
@@ -193,19 +226,33 @@ def _quiet():
 	)
 
 
-def emit(event, doctype, name, *, version=None, context=None, to=None, user=None):
+def emit(
+	event,
+	doctype,
+	name,
+	*,
+	version=None,
+	context=None,
+	to=None,
+	user=None,
+	actor=None,
+	readable_doc=None,
+):
 	"""Queue `event` about (doctype, name) for every subscribed connection.
 
 	`to` names connections that receive it whether or not they subscribed (an inbox
 	channel always receives its own replies); they must still be enabled with a URL.
 	`user` keeps only connections acting as that user (a private assistant chat).
+	`actor` is who made the change: a connection acting as that user that skips its
+	own changes does not hear of it. `readable_doc` keeps only connections whose user
+	may read that record now (a deletion, whose payload cannot be checked later).
 	`version` deduplicates repeats of the same change (a hook firing twice). Never
 	raises into the producer: an automation outage must not stop CRM work.
 	"""
-	if event not in EVENTS or _quiet():
+	if not known(event) or _quiet():
 		return []
 	try:
-		targets = list(_subscribers().get(event) or [])
+		targets = list(_subscribers().get(_key(event, doctype)) or [])
 		for name_ in to or []:
 			if name_ not in targets and frappe.db.get_value(
 				INTEGRATION, {"name": name_, "enabled": 1, "webhook_url": ["is", "set"]}, "name"
@@ -213,6 +260,8 @@ def emit(event, doctype, name, *, version=None, context=None, to=None, user=None
 				targets.append(name_)
 		if user:
 			targets = [t for t in targets if frappe.db.get_value(INTEGRATION, t, "integration_user") == user]
+		if actor or readable_doc is not None:
+			targets = [t for t in targets if _hears(t, actor, readable_doc)]
 		created = []
 		for integration in targets:
 			key = hashlib.sha256(
@@ -245,6 +294,21 @@ def emit(event, doctype, name, *, version=None, context=None, to=None, user=None
 	except Exception:
 		frappe.log_error(title=f"CRM integration event {event} not queued", message=frappe.get_traceback())
 		return []
+
+
+def _hears(integration, actor, readable_doc):
+	row = (
+		frappe.db.get_value(INTEGRATION, integration, ["integration_user", "skip_own_changes"], as_dict=True)
+		or frappe._dict()
+	)
+	if actor and row.skip_own_changes and row.integration_user == actor:
+		return False
+	if readable_doc is not None:
+		return bool(
+			row.integration_user
+			and frappe.has_permission(readable_doc.doctype, "read", doc=readable_doc, user=row.integration_user)
+		)
+	return True
 
 
 def _enqueue(names):

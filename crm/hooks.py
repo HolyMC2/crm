@@ -213,6 +213,15 @@ whatsapp_template_context = {
 crm_channel_adapters = {"API": "crm.integrations.channel"}
 
 doc_events = {
+	# document.* webhook events (crm.integrations.documents): a cached set check first.
+	"*": {
+		"after_insert": "crm.integrations.documents.after_insert",
+		"on_update": "crm.integrations.documents.on_update",
+		"on_update_after_submit": "crm.integrations.documents.on_update",
+		"on_submit": "crm.integrations.documents.on_submit",
+		"on_cancel": "crm.integrations.documents.on_cancel",
+		"on_trash": "crm.integrations.documents.on_trash",
+	},
 	# The shipped translations hold DocType names, labels and Select options (crm.shell_dictionary).
 	"DocType": {"on_update": "crm.shell_dictionary.clear", "on_trash": "crm.shell_dictionary.clear"},
 	"Custom Field": {"on_update": "crm.shell_dictionary.clear", "on_trash": "crm.shell_dictionary.clear"},

@@ -291,6 +291,70 @@ class TestIntegrationWebhooks(IntegrationTestCase):
 		self.assertIn(connection.name, [c.name for c in me["connections"]])
 		self.assertIn("message.created", me["events"])
 
+	def test_every_catalog_event_can_be_chosen_on_a_connection(self):
+		options = frappe.get_meta("CRM Integration Subscription").get_field("event").options.split("\n")
+		self.assertEqual(sorted(options), sorted(e["event"] for e in webhooks.catalog()))
+
+	# ------------------------------------------------------------ any record type
+
+	def documents(self, *events_, doctype="ToDo", user="admin"):
+		doc = frappe.get_doc(
+			{
+				"doctype": webhooks.INTEGRATION,
+				"title": "Fictional n8n " + uuid4().hex[:6],
+				"integration_user": self.users[user],
+				"webhook_url": "https://hooks.example.com/n8n",
+				"subscriptions": [{"event": e, "document_type": doctype} for e in events_],
+			}
+		).insert()
+		doc.enabled = 1
+		doc.save()
+		webhooks.clear_subscriber_cache()
+		return doc
+
+	def test_document_events_follow_the_chosen_record_type(self):
+		connection = self.documents("document.created", "document.updated", "document.deleted")
+		self.assertIn("ToDo", webhooks.document_types())
+		todo = frappe.get_doc({"doctype": "ToDo", "description": "Fictional call back"}).insert()
+		self.assertEqual(len(self.deliveries(connection, "document.created")), 1)
+		self.assertEqual(self.deliveries(connection, "document.updated"), [], "an insert is not an update")
+		todo.description = "Fictional call back tomorrow"
+		todo.save()
+		updated = self.deliveries(connection, "document.updated")
+		self.assertEqual(len(updated), 1)
+		frappe.get_doc({"doctype": "CRM Lead", "first_name": "Fictional"}).insert(ignore_permissions=True)
+		self.assertEqual(len(self.deliveries(connection)), 2, "other record types are not sent")
+		row = frappe.get_doc(webhooks.DELIVERY, updated[0])
+		body = json.loads(webhooks.build_payload(row, connection))
+		self.assertEqual(body["data"]["record"]["description"], "Fictional call back tomorrow")
+		self.assertEqual(body["data"]["change"], {"fields": ["description"]})
+		self.assertEqual(body["api_version"], webhooks.API_VERSION)
+		frappe.delete_doc("ToDo", todo.name)
+		gone = frappe.get_doc(webhooks.DELIVERY, self.deliveries(connection, "document.deleted")[0])
+		data = json.loads(webhooks.build_payload(gone, connection))["data"]
+		self.assertEqual((data["doctype"], data["name"]), ("ToDo", todo.name))
+
+	def test_document_subscriptions_explain_what_cannot_be_sent(self):
+		for doctype in ("User", "CRM Integration Delivery", "CRM Service Day", None):
+			with self.assertRaises(frappe.ValidationError, msg=doctype):
+				self.documents("document.created", doctype=doctype)
+		with self.assertRaises(frappe.ValidationError):
+			self.documents("document.created", doctype="CRM Deal", user="outsider")
+		names = {row["name"] for row in api.document_types("todo")}
+		self.assertIn("ToDo", names)
+		self.assertNotIn("User", {row["name"] for row in api.document_types("user")})
+
+	def test_a_connection_does_not_hear_its_own_changes(self):
+		connection = self.connection(["lead.created"])
+		frappe.set_user(self.users["admin"])
+		self.lead()
+		self.assertEqual(self.deliveries(connection), [])
+		frappe.set_user("Administrator")
+		frappe.db.set_value(webhooks.INTEGRATION, connection.name, "skip_own_changes", 0)
+		frappe.set_user(self.users["admin"])
+		self.lead()
+		self.assertEqual(len(self.deliveries(connection)), 1)
+
 	# ------------------------------------------------------------ conversations and messages
 
 	def whatsapp(self):

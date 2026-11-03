@@ -10,17 +10,29 @@
  "engine": "InnoDB",
  "allow_rename": 0,
  "field_order": [
-  "event"
+  "event",
+  "document_type"
  ],
  "fields": [
   {
    "fieldname": "event",
    "fieldtype": "Select",
    "label": "Event",
-   "options": "conversation.created\nconversation.status_changed\nconversation.updated\nconversation.note_created\nconversation.rated\nconversation.reply_overdue\nmessage.created\nmessage.updated\noutbound.updated\ncontact.created\ncontact.updated\nlead.created\nlead.updated\nlead.status_changed\ndeal.created\ndeal.updated\ndeal.status_changed\ninquiry.created\nassistant.message_created\nassistant.decision_pending",
+   "options": "conversation.created\nconversation.status_changed\nconversation.updated\nconversation.note_created\nconversation.rated\nconversation.reply_overdue\nmessage.created\nmessage.updated\noutbound.updated\ncontact.created\ncontact.updated\nlead.created\nlead.updated\nlead.status_changed\ndeal.created\ndeal.updated\ndeal.status_changed\ninquiry.created\nassistant.message_created\nassistant.decision_pending\ndocument.created\ndocument.updated\ndocument.submitted\ndocument.cancelled\ndocument.deleted",
    "reqd": 1,
    "in_list_view": 1,
-   "columns": 4
+   "columns": 3
+  },
+  {
+   "fieldname": "document_type",
+   "fieldtype": "Link",
+   "label": "Record type",
+   "options": "DocType",
+   "in_list_view": 1,
+   "columns": 3,
+   "depends_on": "eval:(doc.event || '').startsWith('document.')",
+   "mandatory_depends_on": "eval:(doc.event || '').startsWith('document.')",
+   "description": "For document events: which records, for example Sales Invoice or Item."
   }
  ],
  "permissions": [],

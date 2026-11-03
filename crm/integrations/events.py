@@ -92,7 +92,7 @@ def on_intent_update(doc, method=None):
 def on_record_insert(doc, method=None):
 	prefix = RECORD_EVENTS.get(doc.doctype)
 	if prefix:
-		emit(prefix + ".created", doc.doctype, doc.name, version="created")
+		emit(prefix + ".created", doc.doctype, doc.name, version="created", actor=frappe.session.user)
 
 
 def on_record_update(doc, method=None):
@@ -110,6 +110,7 @@ def on_record_update(doc, method=None):
 			doc.name,
 			version="status:" + version,
 			context={"from_status": before.get("status"), "to_status": doc.get("status")},
+			actor=frappe.session.user,
 		)
 	changed = sorted(
 		f.fieldname
@@ -117,7 +118,14 @@ def on_record_update(doc, method=None):
 		if f.fieldname and before.get(f.fieldname) != doc.get(f.fieldname)
 	)
 	if changed:
-		emit(prefix + ".updated", doc.doctype, doc.name, version=version, context={"fields": changed})
+		emit(
+			prefix + ".updated",
+			doc.doctype,
+			doc.name,
+			version=version,
+			context={"fields": changed},
+			actor=frappe.session.user,
+		)
 
 
 def on_inquiry_insert(doc, method=None):
@@ -298,6 +306,7 @@ def _record(doctype, name):
 	doc = _permitted(view)
 	allowed = set(get_permitted_fields(doctype, user=frappe.session.user) or [])
 	allowed |= {"name", "creation", "modified", "owner", "modified_by"}
+	allowed -= {f.fieldname for f in doc.meta.fields if f.fieldtype == "Password"}
 	out = {}
 	for key, value in doc.as_dict(no_nulls=True).items():
 		if key not in allowed or key.startswith("_"):
@@ -329,7 +338,14 @@ def build_assistant(event, doctype, name, context):
 	return frappe.get_attr(builder[-1])(event, doctype, name, context)
 
 
+def build_document(event, doctype, name, context):
+	from crm.integrations import documents
+
+	return documents.build(event, doctype, name, context)
+
+
 BUILDERS = {
+	"document": build_document,
 	"conversation": build_conversation,
 	"message": build_message,
 	"outbound": build_outbound,

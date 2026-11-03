@@ -49,6 +49,14 @@ def events():
 	return webhooks.catalog()
 
 
+@frappe.whitelist()
+def document_types(query: str | None = ""):
+	"""Record types the caller may choose for document.* events."""
+	from crm.integrations import documents
+
+	return documents.document_types(query or "")
+
+
 def _manager():
 	frappe.only_for("System Manager")
 
@@ -124,7 +132,8 @@ def summary(name: str):
 	doc = _connection(name)
 	counts = dict(
 		frappe.db.sql(
-			"SELECT status, COUNT(*) FROM `tabCRM Integration Delivery` WHERE integration=%s GROUP BY status", (doc.name,)
+			"SELECT status, COUNT(*) FROM `tabCRM Integration Delivery` WHERE integration=%s GROUP BY status",
+			(doc.name,),
 		)
 	)
 	problems = frappe.get_all(

@@ -31014,3 +31014,63 @@ msgstr "Aviso de respuesta tardía enviado"
 #: crm/inbox/waiting.py
 msgid "{0} has been waiting {1} minutes for a reply"
 msgstr "{0} lleva {1} minutos esperando respuesta"
+
+#: crm/integrations/documents.py
+msgid "A record of the chosen type was created."
+msgstr "Se creó un registro del tipo elegido."
+
+#: crm/integrations/documents.py
+msgid "A record of the chosen type was changed."
+msgstr "Se cambió un registro del tipo elegido."
+
+#: crm/integrations/documents.py
+msgid "A record of the chosen type was submitted (invoices, orders, payments…)."
+msgstr "Se validó un registro del tipo elegido (facturas, pedidos, pagos…)."
+
+#: crm/integrations/documents.py
+msgid "A submitted record of the chosen type was cancelled."
+msgstr "Se canceló un registro validado del tipo elegido."
+
+#: crm/integrations/documents.py
+msgid "A record of the chosen type was deleted."
+msgstr "Se borró un registro del tipo elegido."
+
+#: crm/integrations/documents.py
+msgid "Choose the record type this event is about."
+msgstr "Elige el tipo de registro de este evento."
+
+#: crm/integrations/documents.py
+msgid "{0} is part of another record or a settings page; choose the main record type."
+msgstr "{0} es parte de otro registro o una página de ajustes; elige el tipo de registro principal."
+
+#: crm/integrations/documents.py
+msgid "{0} holds system or security data and cannot be sent to automations."
+msgstr "{0} guarda datos del sistema o de seguridad y no se puede enviar a automatizaciones."
+
+#: crm/fcrm/doctype/crm_integration/crm_integration.py
+msgid "Row {0}: {1}"
+msgstr "Fila {0}: {1}"
+
+#: crm/fcrm/doctype/crm_integration/crm_integration.py
+msgid "Row {0}: {1} cannot read {2}. Give that user a role that can, or choose another record type."
+msgstr "Fila {0}: {1} no puede leer {2}. Dale a ese usuario un rol que pueda, o elige otro tipo de registro."
+
+#: crm/fcrm/doctype/crm_integration_subscription/crm_integration_subscription.json
+msgid "For document events: which records, for example Sales Invoice or Item."
+msgstr "Para eventos de documentos: qué registros, por ejemplo Factura de venta o Producto."
+
+#: crm/fcrm/doctype/crm_integration/crm_integration.json
+msgid "Skip changes this connection made"
+msgstr "Omitir los cambios que hizo esta conexión"
+
+#: crm/fcrm/doctype/crm_integration/crm_integration.json
+msgid "Record and document events are not sent for changes made with this connection's own user, so a flow that writes back does not trigger itself."
+msgstr "No se envían eventos de registros ni de documentos por cambios hechos con el usuario de esta conexión, para que un flujo que escribe de vuelta no se dispare a sí mismo."
+
+#: crm/integrations/webhooks.py
+msgid "A customer has waited longer than the inbox reply goal (once per wait)."
+msgstr "Un cliente esperó más que la meta de respuesta de la bandeja (una vez por espera)."
+
+#: crm/integrations/webhooks.py
+msgid "Any record type"
+msgstr "Cualquier tipo de registro"

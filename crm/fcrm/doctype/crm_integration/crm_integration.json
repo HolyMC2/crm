@@ -19,6 +19,7 @@
   "description",
   "section_events",
   "subscriptions",
+  "skip_own_changes",
   "section_channel",
   "api_channel",
   "channel_account_id",
@@ -87,6 +88,13 @@
    "fieldtype": "Table",
    "label": "Send these events",
    "options": "CRM Integration Subscription"
+  },
+  {
+   "fieldname": "skip_own_changes",
+   "fieldtype": "Check",
+   "label": "Skip changes this connection made",
+   "default": "1",
+   "description": "Record and document events are not sent for changes made with this connection's own user, so a flow that writes back does not trigger itself."
   },
   {
    "fieldname": "section_channel",
