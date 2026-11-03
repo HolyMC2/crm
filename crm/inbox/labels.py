@@ -45,9 +45,9 @@ def _requested(labels):
 	missing = [v for v in wanted if v not in known]
 	if missing:
 		frappe.throw(
-			_("These labels do not exist yet: {0}. A manager can create them in Conversation Labels.").format(
-				", ".join(missing)
-			)
+			_(
+				"These labels do not exist yet: {0}. A manager can create them in Settings › Customer inbox."
+			).format(", ".join(missing))
 		)
 	return sorted(wanted, key=str.casefold)
 

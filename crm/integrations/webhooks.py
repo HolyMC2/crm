@@ -99,11 +99,19 @@ class Skip(Exception):
 
 
 def catalog():
-	"""Every event; document.* rows also need the record type they are about."""
+	"""Every event; document.* rows also need the record type they are about.
+	`description` stays English for clients; `label` is in the caller's language."""
 	return [
-		{"event": event, "record": record, "description": text} for event, (record, text) in EVENTS.items()
+		{"event": event, "record": record, "description": text, "label": _(text)}
+		for event, (record, text) in EVENTS.items()
 	] + [
-		{"event": event, "record": ANY_RECORD, "description": text, "needs_document_type": True}
+		{
+			"event": event,
+			"record": ANY_RECORD,
+			"description": text,
+			"label": _(text),
+			"needs_document_type": True,
+		}
 		for event, text in _document_events().items()
 	]
 

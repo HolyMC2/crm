@@ -166,6 +166,7 @@
             :actor="session.user"
             :labels="inbox.labels"
             :macros="macros"
+            :can-manage="inbox.can_manage"
             :blocked="
               !!state.pending ||
               state.controlLoading ||

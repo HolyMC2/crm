@@ -30351,10 +30351,6 @@ msgid "A conversation can have at most {0} labels."
 msgstr "Una conversación puede tener como máximo {0} etiquetas."
 
 #: crm/inbox/labels.py
-msgid "These labels do not exist yet: {0}. A manager can create them in Conversation Labels."
-msgstr "Estas etiquetas aún no existen: {0}. Un gerente puede crearlas en «Etiqueta de conversación»."
-
-#: crm/inbox/labels.py
 msgid "Labels are not set up on this system yet. Ask support to finish the update."
 msgstr "Las etiquetas aún no están instaladas en este sistema. Pide a soporte que termine la actualización."
 
@@ -31074,3 +31070,567 @@ msgstr "Un cliente esperó más que la meta de respuesta de la bandeja (una vez 
 #: crm/integrations/webhooks.py
 msgid "Any record type"
 msgstr "Cualquier tipo de registro"
+
+#: crm/integrations/webhooks.py
+msgid "A customer conversation was opened."
+msgstr "Se abrió una conversación con un cliente."
+
+#: crm/integrations/webhooks.py
+msgid "Control changed: Human, Bot, Paused or Closed (take, release, close, reopen, hand off)."
+msgstr "Cambió quién atiende: persona, bot, en pausa o cerrada (tomar, soltar, cerrar, reabrir, transferir)."
+
+#: crm/integrations/webhooks.py
+msgid "Owner, team, linked records or automation state changed without a control change."
+msgstr "Cambió el responsable, el equipo, los registros vinculados o la automatización, sin cambiar quién atiende."
+
+#: crm/integrations/webhooks.py
+msgid "A teammate wrote a private note on a conversation (never shown to the customer)."
+msgstr "Alguien del equipo escribió una nota interna en una conversación (el cliente nunca la ve)."
+
+#: crm/integrations/webhooks.py
+msgid "The customer rated a closed conversation."
+msgstr "El cliente calificó una conversación cerrada."
+
+#: crm/integrations/webhooks.py
+msgid "A customer message arrived or a reply was recorded."
+msgstr "Llegó un mensaje del cliente o se registró una respuesta."
+
+#: crm/integrations/webhooks.py
+msgid "A message's delivery status changed (sent, delivered, read, failed)."
+msgstr "Cambió el estado de entrega de un mensaje (enviado, entregado, leído, fallido)."
+
+#: crm/integrations/webhooks.py
+msgid "A queued reply moved state (accepted, failed, unknown)."
+msgstr "Una respuesta en cola cambió de estado (aceptada, fallida, desconocida)."
+
+#: crm/integrations/webhooks.py
+msgid "A contact was created."
+msgstr "Se creó un contacto."
+
+#: crm/integrations/webhooks.py
+msgid "A contact was changed."
+msgstr "Se cambió un contacto."
+
+#: crm/integrations/webhooks.py
+msgid "A lead was created."
+msgstr "Se creó un prospecto."
+
+#: crm/integrations/webhooks.py
+msgid "A lead was changed."
+msgstr "Se cambió un prospecto."
+
+#: crm/integrations/webhooks.py
+msgid "A lead's status changed."
+msgstr "Cambió el estado de un prospecto."
+
+#: crm/integrations/webhooks.py
+msgid "A deal was created."
+msgstr "Se creó un trato."
+
+#: crm/integrations/webhooks.py
+msgid "A deal was changed."
+msgstr "Se cambió un trato."
+
+#: crm/integrations/webhooks.py
+msgid "A deal's stage changed."
+msgstr "Cambió la etapa de un trato."
+
+#: crm/integrations/webhooks.py
+msgid "A new inquiry was captured."
+msgstr "Se capturó una nueva solicitud."
+
+#: crm/integrations/webhooks.py
+msgid "The business assistant wrote in the connection user's own assistant chat."
+msgstr "El asistente del negocio escribió en el chat del usuario de esta conexión."
+
+#: crm/integrations/webhooks.py
+msgid "The business assistant is waiting for the connection user's decision (buttons)."
+msgstr "El asistente del negocio espera una decisión del usuario de esta conexión (botones)."
+
+#: crm/inbox/labels.py
+msgid "These labels do not exist yet: {0}. A manager can create them in Settings › Customer inbox."
+msgstr "Estas etiquetas aún no existen: {0}. Un gerente puede crearlas en Ajustes › Bandeja de clientes."
+
+#: frontend/src/components/Settings
+msgid "Conversation labels"
+msgstr "Etiquetas de conversación"
+
+#: frontend/src/components/Settings
+msgid "The team sorts and finds conversations with them. Deleting a label takes it off every conversation."
+msgstr "El equipo ordena y encuentra conversaciones con ellas. Borrar una etiqueta la quita de todas las conversaciones."
+
+#: frontend/src/components/Settings
+msgid "What it is for (optional)"
+msgstr "Para qué sirve (opcional)"
+
+#: frontend/src/components/Settings
+msgid "Delete {0}"
+msgstr "Borrar {0}"
+
+#: frontend/src/components/Settings
+msgid "Delete label"
+msgstr "Borrar etiqueta"
+
+#: frontend/src/components/Settings
+msgid "No labels yet. Create the ones your team uses, for example «Factura», «Garantía» or «Mayoreo»."
+msgstr "Aún no hay etiquetas. Crea las que usa tu equipo, por ejemplo «Factura», «Garantía» o «Mayoreo»."
+
+#: frontend/src/components/Settings
+msgid "New label"
+msgstr "Nueva etiqueta"
+
+#: frontend/src/components/Settings
+msgid "For example: Garantía"
+msgstr "Por ejemplo: Garantía"
+
+#: frontend/src/components/Settings
+msgid "Create label"
+msgstr "Crear etiqueta"
+
+#: frontend/src/components/Settings
+msgid "Amber"
+msgstr "Ámbar"
+
+#: frontend/src/components/Settings
+msgid "Violet"
+msgstr "Violeta"
+
+#: frontend/src/components/Settings
+msgid "The labels could not be loaded."
+msgstr "No se pudieron cargar las etiquetas."
+
+#: frontend/src/components/Settings
+msgid "The label was not saved. Try again."
+msgstr "La etiqueta no se guardó. Inténtalo de nuevo."
+
+#: frontend/src/components/Settings
+msgid "The label was not created. Try again."
+msgstr "La etiqueta no se creó. Inténtalo de nuevo."
+
+#: frontend/src/components/Settings
+msgid "The label was not deleted. Try again."
+msgstr "La etiqueta no se borró. Inténtalo de nuevo."
+
+#: frontend/src/components/Settings
+msgid "Macros"
+msgstr "Macros"
+
+#: frontend/src/components/Settings
+msgid "New macro"
+msgstr "Nueva macro"
+
+#: frontend/src/components/Settings
+msgid "Several steps in one tap from a conversation: reply, label, note, send to a team, snooze or close. If one step cannot run, none of them does."
+msgstr "Varios pasos en un toque desde una conversación: responder, etiquetar, anotar, enviar a un equipo, posponer o cerrar. Si un paso no puede hacerse, no se hace ninguno."
+
+#: frontend/src/components/Settings
+msgid "Edit macro"
+msgstr "Editar macro"
+
+#: frontend/src/components/Settings
+msgid "Off: only the person who created it sees it in the inbox."
+msgstr "Apagado: solo quien la creó la ve en la bandeja."
+
+#: frontend/src/components/Settings
+msgid "Move up"
+msgstr "Subir"
+
+#: frontend/src/components/Settings
+msgid "Move down"
+msgstr "Bajar"
+
+#: frontend/src/components/Settings
+msgid "Remove step"
+msgstr "Quitar paso"
+
+#: frontend/src/components/Settings
+msgid "What the customer receives"
+msgstr "Lo que recibe el cliente"
+
+#: frontend/src/components/Settings
+msgid "What the team reads (the customer never sees it)"
+msgstr "Lo que lee el equipo (el cliente nunca lo ve)"
+
+#: frontend/src/components/Settings
+msgid "Choose a label"
+msgstr "Elige una etiqueta"
+
+#: frontend/src/components/Settings
+msgid "Closes the conversation. It must be the last step."
+msgstr "Cierra la conversación. Debe ser el último paso."
+
+#: frontend/src/components/Settings
+msgid "Add a step"
+msgstr "Añadir un paso"
+
+#: frontend/src/components/Settings
+msgid "Delete macro"
+msgstr "Borrar macro"
+
+#: frontend/src/components/Settings
+msgid "Save macro"
+msgstr "Guardar macro"
+
+#: frontend/src/components/Settings
+msgid "Only its author"
+msgstr "Solo quien la creó"
+
+#: frontend/src/components/Settings
+msgid "No macros yet."
+msgstr "Aún no hay macros."
+
+#: frontend/src/components/Settings
+msgid "No team"
+msgstr "Sin equipo"
+
+#: frontend/src/components/Settings
+msgid "Finance"
+msgstr "Finanzas"
+
+#: frontend/src/components/Settings
+msgid "The macros could not be loaded."
+msgstr "No se pudieron cargar las macros."
+
+#: frontend/src/components/Settings
+msgid "This macro could not be opened."
+msgstr "No se pudo abrir esta macro."
+
+#: frontend/src/components/Settings
+msgid "Macro «{0}» saved."
+msgstr "Macro «{0}» guardada."
+
+#: frontend/src/components/Settings
+msgid "The macro was not saved. Your steps are still here; try again."
+msgstr "La macro no se guardó. Tus pasos siguen aquí; inténtalo de nuevo."
+
+#: frontend/src/components/Settings
+msgid "The macro was not deleted. Try again."
+msgstr "La macro no se borró. Inténtalo de nuevo."
+
+#: frontend/src/components/Settings
+msgid "Who receives conversations"
+msgstr "Quién recibe conversaciones"
+
+#: frontend/src/components/Settings
+msgid "{0} of {1} available"
+msgstr "{0} de {1} disponibles"
+
+#: frontend/src/components/Settings
+msgid "Only people on this list receive new conversations, and only while they are available."
+msgstr "Solo las personas de esta lista reciben conversaciones nuevas, y solo mientras están disponibles."
+
+#: frontend/src/components/Settings
+msgid "Turn on automatic assignment above to hand out new conversations to this list."
+msgstr "Activa la asignación automática arriba para repartir las conversaciones nuevas entre esta lista."
+
+#: frontend/src/components/Settings
+msgid "{0} open"
+msgstr "{0} abiertas"
+
+#: frontend/src/components/Settings
+msgid "Remove from the list"
+msgstr "Quitar de la lista"
+
+#: frontend/src/components/Settings
+msgid "Nobody is on the list yet. Add the people who answer customers; they can also add themselves from the inbox."
+msgstr "Aún no hay nadie en la lista. Añade a quienes atienden clientes; también pueden añadirse solos desde la bandeja."
+
+#: frontend/src/components/Settings
+msgid "Search people"
+msgstr "Buscar personas"
+
+#: frontend/src/components/Settings
+msgid "Every team"
+msgstr "Todos los equipos"
+
+#: frontend/src/components/Settings
+msgid "The list could not be loaded. Close and open this page again."
+msgstr "No se pudo cargar la lista. Cierra y vuelve a abrir esta página."
+
+#: frontend/src/components/Settings
+msgid "The change was not saved. Check your connection and try again."
+msgstr "El cambio no se guardó. Revisa tu conexión e inténtalo de nuevo."
+
+#: frontend/src/components/Settings
+msgid "{0} no longer receives conversations."
+msgstr "{0} ya no recibe conversaciones."
+
+#: frontend/src/components/Settings
+msgid "This person is already on the list."
+msgstr "Esta persona ya está en la lista."
+
+#: frontend/src/components/Settings
+msgid "No holidays"
+msgstr "Sin días festivos"
+
+#: frontend/src/components/Settings
+msgid "Set a first reply goal above to turn alerts on."
+msgstr "Pon una meta de primera respuesta arriba para activar los avisos."
+
+#: frontend/src/components/Settings
+msgid "Ratings show in the conversation header and in the team performance report."
+msgstr "Las calificaciones se ven en el encabezado de la conversación y en el desempeño del equipo."
+
+#: frontend/src/components/Settings
+msgid "Customer inbox"
+msgstr "Bandeja de clientes"
+
+#: frontend/src/components/Settings
+msgid "How the team answers customers: office hours, who receives new conversations, reply goals, ratings, labels and macros."
+msgstr "Cómo atiende el equipo a los clientes: horario, quién recibe las conversaciones nuevas, metas de respuesta, calificaciones, etiquetas y macros."
+
+#: frontend/src/components/Settings
+msgid "Labels and macros"
+msgstr "Etiquetas y macros"
+
+#: frontend/src/components/Settings
+msgid "Remove these hours"
+msgstr "Quitar este horario"
+
+#: frontend/src/components/Settings
+msgid "Ends before it starts. Change one of the two times."
+msgstr "Termina antes de empezar. Cambia una de las dos horas."
+
+#: frontend/src/components/Settings
+msgid "Add another range (for example after lunch)"
+msgstr "Añadir otro horario (por ejemplo, después de comer)"
+
+#: frontend/src/components/Settings
+msgid "Back to connections"
+msgstr "Volver a las conexiones"
+
+#: frontend/src/components/Settings
+msgid "Connect n8n"
+msgstr "Conectar n8n"
+
+#: frontend/src/components/Settings
+msgid "1. Webhook URL"
+msgstr "1. URL del webhook"
+
+#: frontend/src/components/Settings
+msgid "2. Acts as user"
+msgstr "2. Actúa como usuario"
+
+#: frontend/src/components/Settings
+msgid "3. API access for n8n (HTTP Request credential)"
+msgstr "3. Acceso a la API para n8n (credencial de HTTP Request)"
+
+#: frontend/src/components/Settings
+msgid "Check the credential with"
+msgstr "Prueba la credencial con"
+
+#: frontend/src/components/Settings
+msgid "Header «Authorization»"
+msgstr "Encabezado «Authorization»"
+
+#: frontend/src/components/Settings
+msgid "Copy it now: the secret is shown only once. Paste it into an n8n «Header Auth» credential."
+msgstr "Cópialo ahora: el secreto se muestra una sola vez. Pégalo en una credencial «Header Auth» de n8n."
+
+#: frontend/src/components/Settings
+msgid "This user already has an API key. Making a new secret stops flows that use the old one until you paste the new one."
+msgstr "Este usuario ya tiene llave de API. Un secreto nuevo detiene los flujos que usan el anterior hasta que pegues el nuevo."
+
+#: frontend/src/components/Settings
+msgid "This user has no API key yet."
+msgstr "Este usuario aún no tiene llave de API."
+
+#: frontend/src/components/Settings
+msgid "Yes, make a new secret"
+msgstr "Sí, crear un secreto nuevo"
+
+#: frontend/src/components/Settings
+msgid "Make a new API secret"
+msgstr "Crear un secreto de API nuevo"
+
+#: frontend/src/components/Settings
+msgid "Create API key"
+msgstr "Crear llave de API"
+
+#: frontend/src/components/Settings
+msgid "4. Signing secret"
+msgstr "4. Secreto de firma"
+
+#: frontend/src/components/Settings
+msgid "Every event is signed (Standard Webhooks). Check the webhook-signature header in n8n with this secret to accept only events from this CRM."
+msgstr "Cada evento va firmado (Standard Webhooks). Revisa el encabezado webhook-signature en n8n con este secreto para aceptar solo eventos de este CRM."
+
+#: frontend/src/components/Settings
+msgid "Yes, replace the secret"
+msgstr "Sí, reemplazar el secreto"
+
+#: frontend/src/components/Settings
+msgid "Replace secret"
+msgstr "Reemplazar secreto"
+
+#: frontend/src/components/Settings
+msgid "5. Send a test event"
+msgstr "5. Enviar un evento de prueba"
+
+#: frontend/src/components/Settings
+msgid "{0} chosen"
+msgstr "{0} elegidos"
+
+#: frontend/src/components/Settings
+msgid "Invoices, orders, payments, products, appointments or any other record this user can read."
+msgstr "Facturas, pedidos, pagos, productos, citas o cualquier otro registro que este usuario pueda leer."
+
+#: frontend/src/components/Settings
+msgid "Stop sending {0}"
+msgstr "Dejar de enviar {0}"
+
+#: frontend/src/components/Settings
+msgid "Add a record type, for example Sales Invoice"
+msgstr "Añade un tipo de registro, por ejemplo Factura de venta"
+
+#: frontend/src/components/Settings
+msgid "Add a record type"
+msgstr "Añadir un tipo de registro"
+
+#: frontend/src/components/Settings
+msgid "Record types"
+msgstr "Tipos de registro"
+
+#: frontend/src/components/Settings
+msgid "No record type matches, or this user cannot read it. Give the user a role that can read it first."
+msgstr "Ningún tipo de registro coincide, o este usuario no puede leerlo. Primero dale al usuario un rol que pueda leerlo."
+
+#: frontend/src/components/Settings
+msgid "Bring a customer message in with"
+msgstr "Trae un mensaje del cliente con"
+
+#: frontend/src/components/Settings
+msgid "Last error: {0}"
+msgstr "Último error: {0}"
+
+#: frontend/src/components/Settings
+msgid "Events that did not arrive"
+msgstr "Eventos que no llegaron"
+
+#: frontend/src/components/Settings
+msgid "Delete this connection and its delivery history"
+msgstr "Borrar esta conexión y su historial de envíos"
+
+#: frontend/src/components/Settings
+msgid "Delete connection"
+msgstr "Borrar conexión"
+
+#: frontend/src/components/Settings
+msgid "Messages and replies"
+msgstr "Mensajes y respuestas"
+
+#: frontend/src/components/Settings
+msgid "Contacts, leads, deals and inquiries"
+msgstr "Contactos, prospectos, tratos y solicitudes"
+
+#: frontend/src/components/Settings
+msgid "Business assistant"
+msgstr "Asistente del negocio"
+
+#: frontend/src/components/Settings
+msgid "Waiting to send"
+msgstr "Por enviar"
+
+#: frontend/src/components/Settings
+msgid "Retrying"
+msgstr "Reintentando"
+
+#: frontend/src/components/Settings
+msgid "Gave up"
+msgstr "Sin entregar"
+
+#: frontend/src/components/Settings
+msgid "Skipped: the user cannot read it"
+msgstr "Omitido: el usuario no puede leerlo"
+
+#: frontend/src/components/Settings
+msgid "n8n answered {0}. The connection works."
+msgstr "n8n respondió {0}. La conexión funciona."
+
+#: frontend/src/components/Settings
+msgid "It did not arrive: {0}"
+msgstr "No llegó: {0}"
+
+#: frontend/src/components/Settings
+msgid "It did not arrive (answer {0})."
+msgstr "No llegó (respuesta {0})."
+
+#: frontend/src/components/Settings
+msgid "The delivery summary could not be loaded."
+msgstr "No se pudo cargar el resumen de envíos."
+
+#: frontend/src/components/Settings
+msgid "The event list could not be loaded."
+msgstr "No se pudo cargar la lista de eventos."
+
+#: frontend/src/components/Settings
+msgid "Connection saved."
+msgstr "Conexión guardada."
+
+#: frontend/src/components/Settings
+msgid "The connection was not saved. Try again."
+msgstr "La conexión no se guardó. Inténtalo de nuevo."
+
+#: frontend/src/components/Settings
+msgid "That did not work. Try again."
+msgstr "No funcionó. Inténtalo de nuevo."
+
+#: frontend/src/components/Settings
+msgid "New signing secret. Paste it into n8n."
+msgstr "Secreto de firma nuevo. Pégalo en n8n."
+
+#: frontend/src/components/Settings
+msgid "Queued again. It leaves in a moment."
+msgstr "En cola otra vez. Sale en un momento."
+
+#: frontend/src/components/Settings
+msgid "Automations (n8n)"
+msgstr "Automatizaciones (n8n)"
+
+#: frontend/src/components/Settings
+msgid "Send what happens in the CRM, the inbox, the assistant and any ERP record to n8n, and let n8n act through the same permissions as a person."
+msgstr "Envía a n8n lo que pasa en el CRM, la bandeja, el asistente y cualquier registro del ERP, y deja que n8n actúe con los mismos permisos que una persona."
+
+#: frontend/src/components/Settings
+msgid "For example: Follow up new leads"
+msgstr "Por ejemplo: Seguimiento de prospectos nuevos"
+
+#: frontend/src/components/Settings
+msgid "A dedicated user, for example n8n@yourshop"
+msgstr "Un usuario solo para esto, por ejemplo n8n@tutienda"
+
+#: frontend/src/components/Settings
+msgid "Create connection"
+msgstr "Crear conexión"
+
+#: frontend/src/components/Settings
+msgid "No connections yet"
+msgstr "Aún no hay conexiones"
+
+#: frontend/src/components/Settings
+msgid "A connection sends signed events to an n8n Webhook node, and gives n8n an API key to answer customers, update records or ask the assistant."
+msgstr "Una conexión envía eventos firmados a un nodo Webhook de n8n y le da a n8n una llave de API para responder a clientes, actualizar registros o preguntarle al asistente."
+
+#: frontend/src/components/Settings
+msgid "The connections could not be loaded."
+msgstr "No se pudieron cargar las conexiones."
+
+#: frontend/src/components/Settings
+msgid "On. Last event {0}: {1}"
+msgstr "Encendida. Último evento {0}: {1}"
+
+#: frontend/src/components/Settings
+msgid "On. No events sent yet."
+msgstr "Encendida. Aún no envía eventos."
+
+#: frontend/src/components/Settings
+msgid "The connection was not created. Try again."
+msgstr "La conexión no se creó. Inténtalo de nuevo."
+
+#: frontend/src/components/Settings
+msgid "The browser did not allow copying. Select the text and copy it."
+msgstr "El navegador no permitió copiar. Selecciona el texto y cópialo."
+
+#: frontend/src/components/Settings
+msgid "Discard unsaved settings and return to your work?"
+msgstr "¿Descartar los ajustes sin guardar y volver a tu trabajo?"

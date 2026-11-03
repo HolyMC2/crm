@@ -35,8 +35,17 @@
           {{ item.name }}
         </option>
       </select>
+      <button
+        v-else-if="!labels.length && canManage"
+        type="button"
+        class="underline"
+        @click="openInboxSettings"
+      >
+        Crear etiquetas
+      </button>
       <span v-else-if="!labels.length" class="text-ink-gray-5"
-        >Un gerente crea las etiquetas en «Etiqueta de conversación».</span
+        >Aún no hay etiquetas. Un gerente las crea en Ajustes › Bandeja de
+        clientes.</span
       >
     </div>
     <div v-if="canSteer" class="flex min-w-0 flex-wrap items-center gap-1">
@@ -102,6 +111,7 @@
 import { computed, ref, watch, useId } from 'vue'
 import { call } from 'frappe-ui'
 import { formatDateTime } from '@/utils/display'
+import { openInboxSettings } from './inboxSettings'
 
 const API = 'crm.api.inbox.'
 const props = defineProps({
@@ -110,6 +120,7 @@ const props = defineProps({
   labels: { type: Array, default: () => [] },
   macros: { type: Array, default: () => [] },
   blocked: Boolean,
+  canManage: Boolean,
 })
 const emit = defineEmits(['refresh', 'pending'])
 const id = useId()

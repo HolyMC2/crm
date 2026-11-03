@@ -65,15 +65,19 @@
           </option>
         </select>
       </label>
-      <button
-        v-if="canManage"
-        type="button"
-        class="mb-3 text-xs underline"
-        :disabled="disabled"
-        @click="$emit('performance')"
-      >
-        Desempeño del equipo
-      </button>
+      <div v-if="canManage" class="mb-3 flex flex-wrap gap-x-4 gap-y-1 text-xs">
+        <button
+          type="button"
+          class="underline"
+          :disabled="disabled"
+          @click="$emit('performance')"
+        >
+          Desempeño del equipo
+        </button>
+        <button type="button" class="underline" @click="openInboxSettings">
+          Ajustes de la bandeja
+        </button>
+      </div>
       <label v-if="view === 'account'" class="block text-xs font-medium"
         >Cuenta del canal
         <select
@@ -184,6 +188,8 @@ import AjustesSwitch from '@/components/ajustes/AjustesSwitch.vue'
 import Segmented from '@/components/ui/Segmented.vue'
 import { useListKeys } from '@/composables/pageKeys'
 import { formatDateTime, parseServerDate } from '@/utils/display'
+import { labelColorClass } from './labelColors'
+import { openInboxSettings } from './inboxSettings'
 
 // Webchat and API inbox channels have opaque 64-character ids; their label is the name.
 const labelOnly = (item) => ['Webchat', 'API'].includes(item?.provider)
@@ -236,19 +242,8 @@ const emit = defineEmits([
   'sort',
   'availability',
 ])
-const LABEL_COLORS = {
-  gray: 'border-outline-gray-2',
-  blue: 'border-blue-300 text-blue-700',
-  green: 'border-green-300 text-green-700',
-  amber: 'border-amber-300 text-amber-700',
-  red: 'border-red-300 text-red-700',
-  violet: 'border-violet-300 text-violet-700',
-  pink: 'border-pink-300 text-pink-700',
-  cyan: 'border-cyan-300 text-cyan-700',
-}
 const labelClass = (name) =>
-  LABEL_COLORS[props.labels.find((l) => l.name === name)?.color] ||
-  LABEL_COLORS.gray
+  labelColorClass(props.labels.find((l) => l.name === name)?.color)
 const when = (value) => formatDateTime(value)
 // The wait figures move with the clock, one tick a minute.
 const now = ref(Date.now())

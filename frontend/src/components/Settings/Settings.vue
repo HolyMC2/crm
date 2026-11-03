@@ -169,7 +169,16 @@ import {
 } from '@/composables/settings'
 import { isWhatsappInstalled } from '@/composables/whatsapp'
 import { Dialog, Avatar } from 'frappe-ui'
-import { ref, markRaw, computed, watch, h, provide, onBeforeUnmount } from 'vue'
+import {
+  ref,
+  markRaw,
+  computed,
+  watch,
+  h,
+  provide,
+  onBeforeUnmount,
+  defineAsyncComponent,
+} from 'vue'
 import { useRouter } from 'vue-router'
 import {
   addonAvailable,
@@ -183,6 +192,14 @@ import {
 import AssignmentRulePage from './AssignmentRules/AssignmentRulePage.vue'
 import ShieldCheck from '~icons/lucide/shield-check'
 import SlaConfig from './Sla/SlaConfig.vue'
+
+// Loaded when opened: most sessions never visit them.
+const InboxSettingsPage = defineAsyncComponent(
+  () => import('./Inbox/InboxSettingsPage.vue'),
+)
+const AutomationsPage = defineAsyncComponent(
+  () => import('./Automations/AutomationsPage.vue'),
+)
 
 const { isAdmin, isManager, getUser } = usersStore()
 
@@ -310,6 +327,13 @@ const tabs = computed(() => {
           icon: markRaw(LucideTextCursorInput),
         },
         {
+          // CRM Inbox Settings, the people who receive conversations, labels
+          // and macros. Sales Manager writes all of them.
+          label: __('Customer inbox'),
+          component: markRaw(InboxSettingsPage),
+          icon: 'inbox',
+        },
+        {
           // The channel ladder lives here: tier, shop number, event→action rules.
           // System Manager only — the doctype grants Sales Manager read but not
           // write, and an Update button that always 403s is worse than no tab.
@@ -366,6 +390,13 @@ const tabs = computed(() => {
           icon: 'refresh-cw',
           component: markRaw(LeadSyncSourcePage),
           condition: () => isManager(),
+        },
+        {
+          // CRM Integration is System Manager only, like its API.
+          label: __('Automations (n8n)'),
+          icon: 'workflow',
+          component: markRaw(AutomationsPage),
+          condition: () => isAdmin(),
         },
       ],
     },
