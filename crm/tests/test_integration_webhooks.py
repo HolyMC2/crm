@@ -13,6 +13,7 @@ from uuid import uuid4
 
 import frappe
 from frappe.tests import IntegrationTestCase
+from frappe.utils import getdate
 
 from crm.api import conversations as control
 from crm.api import integration as api
@@ -327,12 +328,33 @@ class TestIntegrationWebhooks(IntegrationTestCase):
 		row = frappe.get_doc(webhooks.DELIVERY, updated[0])
 		body = json.loads(webhooks.build_payload(row, connection))
 		self.assertEqual(body["data"]["record"]["description"], "Fictional call back tomorrow")
-		self.assertEqual(body["data"]["change"], {"fields": ["description"]})
+		self.assertIn("description", body["data"]["change"]["fields"])
+		self.assertNotIn("date", body["data"]["change"]["fields"], "an unset date is not a change")
 		self.assertEqual(body["api_version"], webhooks.API_VERSION)
 		frappe.delete_doc("ToDo", todo.name)
 		gone = frappe.get_doc(webhooks.DELIVERY, self.deliveries(connection, "document.deleted")[0])
 		data = json.loads(webhooks.build_payload(gone, connection))["data"]
 		self.assertEqual((data["doctype"], data["name"]), ("ToDo", todo.name))
+
+	def test_changed_fields_compare_stored_values_and_table_rows(self):
+		changed_fields = events.changed_fields
+
+		def deal(**values):
+			return frappe.get_doc(
+				{"doctype": "CRM Deal", "products": [{"product_name": "Fictional", "rate": 10}]} | values
+			)
+
+		self.assertEqual(changed_fields(deal(expected_closure_date=None), deal(expected_closure_date="")), [])
+		self.assertEqual(
+			changed_fields(
+				deal(expected_closure_date="2026-01-02"), deal(expected_closure_date=getdate("2026-01-02"))
+			),
+			[],
+		)
+		self.assertEqual(changed_fields(deal(probability=50), deal(probability="50.0")), [])
+		after = deal()
+		after.products[0].rate = 12
+		self.assertEqual(changed_fields(deal(), after), ["products"])
 
 	def test_document_subscriptions_explain_what_cannot_be_sent(self):
 		for doctype in ("User", "CRM Integration Delivery", "CRM Service Day", None):

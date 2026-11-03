@@ -9,7 +9,8 @@ message or a conversation that the same user could not read through the API.
 import json
 
 import frappe
-from frappe.model import get_permitted_fields
+from frappe.model import get_permitted_fields, no_value_fields, table_fields
+from frappe.utils import cint, cstr, flt, get_datetime, get_time, getdate
 
 from crm.integrations.webhooks import Skip, emit
 
@@ -112,11 +113,7 @@ def on_record_update(doc, method=None):
 			context={"from_status": before.get("status"), "to_status": doc.get("status")},
 			actor=frappe.session.user,
 		)
-	changed = sorted(
-		f.fieldname
-		for f in doc.meta.fields
-		if f.fieldname and before.get(f.fieldname) != doc.get(f.fieldname)
-	)
+	changed = changed_fields(before, doc)
 	if changed:
 		emit(
 			prefix + ".updated",
@@ -126,6 +123,46 @@ def on_record_update(doc, method=None):
 			context={"fields": changed},
 			actor=frappe.session.user,
 		)
+
+
+def _value(df, value):
+	"""A field's stored meaning: an unsaved "" equals NULL, "2026-01-02" equals a date."""
+	if value in (None, ""):
+		return None
+	if df.fieldtype == "Date":
+		return str(getdate(value))
+	if df.fieldtype == "Datetime":
+		return str(get_datetime(value))
+	if df.fieldtype == "Time":
+		return str(get_time(value))
+	if df.fieldtype in ("Check", "Int"):
+		return cint(value)
+	if df.fieldtype in ("Float", "Currency", "Percent"):
+		return flt(value)
+	return cstr(value)
+
+
+def _rows(meta, rows):
+	fields = [df for df in meta.fields if df.fieldname and df.fieldtype not in no_value_fields]
+	return [tuple(_value(df, row.get(df.fieldname)) for df in fields) for row in rows or []]
+
+
+def changed_fields(before, doc):
+	"""Fields whose stored value this save changes (child tables by their rows'
+	content), never Password fields."""
+	out = []
+	for df in doc.meta.fields:
+		if not df.fieldname or df.fieldtype == "Password":
+			continue
+		if df.fieldtype in table_fields:
+			meta = frappe.get_meta(df.options)
+			if _rows(meta, before.get(df.fieldname)) != _rows(meta, doc.get(df.fieldname)):
+				out.append(df.fieldname)
+		elif df.fieldtype not in no_value_fields and _value(df, before.get(df.fieldname)) != _value(
+			df, doc.get(df.fieldname)
+		):
+			out.append(df.fieldname)
+	return sorted(out)
 
 
 def on_inquiry_insert(doc, method=None):

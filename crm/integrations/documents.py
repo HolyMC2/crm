@@ -116,13 +116,9 @@ def on_update(doc, method=None):
 	before = doc.get_doc_before_save()
 	if before is None:
 		return
-	changed = sorted(
-		f.fieldname
-		for f in doc.meta.fields
-		if f.fieldname
-		and f.fieldtype not in ("Password",)
-		and before.get(f.fieldname) != doc.get(f.fieldname)
-	)
+	from crm.integrations.events import changed_fields
+
+	changed = changed_fields(before, doc)
 	if changed:
 		_emit(doc, "document.updated", version=str(doc.modified), context={"fields": changed})
 
