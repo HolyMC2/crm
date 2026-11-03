@@ -124,6 +124,30 @@
           :text="prose(message)"
           @navigate="$emit('navigate')"
         />
+        <template v-if="view(message).chart">
+          <dl
+            v-if="view(message).stats.length"
+            class="flex flex-wrap gap-x-6 gap-y-1"
+          >
+            <div v-for="(stat, index) in view(message).stats" :key="index">
+              <dt class="text-sm text-ink-gray-6">{{ stat.label }}</dt>
+              <dd class="num text-lg font-semibold text-ink-gray-9">
+                {{ stat.value }}
+              </dd>
+            </div>
+          </dl>
+          <AssistantChart
+            :chart="view(message).chart"
+            :answer="message.answer"
+          />
+          <p
+            v-for="(line, index) in view(message).insights"
+            :key="index"
+            class="text-base text-ink-gray-8"
+          >
+            {{ line }}
+          </p>
+        </template>
         <ActionCard
           v-for="card in view(message).cards"
           :key="card.id"
@@ -169,10 +193,18 @@
   </div>
 </template>
 <script setup>
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import {
+  computed,
+  defineAsyncComponent,
+  nextTick,
+  onMounted,
+  ref,
+  watch,
+} from 'vue'
 import ActionCard from './ActionCard.vue'
 import AssistantCanvasFile from './AssistantCanvasFile.vue'
 import AssistantProse from './AssistantProse.vue'
+import { chartOf } from './assistantChart'
 import {
   canvas,
   canvasByAnswer,
@@ -198,6 +230,10 @@ import { assistant, retry, retryAnswer, tap } from './useAssistant'
 // docked: the log scrolls itself; in the sheet the sheet's body scrolls.
 const props = defineProps({ docked: { type: Boolean, default: false } })
 defineEmits(['navigate'])
+// The charts library loads with the first answer that carries a chart.
+const AssistantChart = defineAsyncComponent(
+  () => import('./AssistantChart.vue'),
+)
 
 const end = ref(null)
 
@@ -223,13 +259,27 @@ watch(
   { immediate: true },
 )
 
-// A reply's prose, its action cards and its plain choices, computed once per text.
+// A reply's prose, its action cards, its plain choices and its chart, computed
+// once per text. A report's text is its chart's values as a list, so a drawn
+// report shows its totals, the chart, the findings and the values behind «Ver
+// valores» instead (the Desk bubble's report card).
 const views = new WeakMap()
 function view(message) {
   const cached = views.get(message)
   if (cached) return cached
   const { cards, choices } = splitButtons(message)
-  const out = { cards, choices, prose: proseOf(message, cards) }
+  const chart = chartOf(message.answer)
+  const report = Boolean(chart && message.answer.spec)
+  const out = {
+    cards,
+    choices,
+    prose: report ? '' : proseOf(message, cards),
+    chart,
+    insights: report ? (message.answer.insights || []).map(String) : [],
+    stats: report
+      ? (message.answer.stats || []).filter((s) => s?.label && s.value != null)
+      : [],
+  }
   views.set(message, out)
   return out
 }

@@ -402,10 +402,7 @@ export function onMessage(payload) {
       retired.busy = false
     return
   }
-  const incoming = {
-    ...normalizeRow({ ...payload, kind: 'bot' }),
-    answer: payload.answer || null,
-  }
+  const incoming = normalizeRow({ ...payload, kind: 'bot' })
   const index = payload.edit
     ? assistant.messages.findIndex((m) => m.mid && m.mid === payload.mid)
     : -1

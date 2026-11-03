@@ -30306,3 +30306,7 @@ msgstr "Pantalla completa"
 #: frontend/src/components/ui/BottomSheet.vue
 msgid "Exit full screen"
 msgstr "Salir de pantalla completa"
+
+#: frontend/src/components/assistant/assistantChart.js
+msgid "Series {0}"
+msgstr "Serie {0}"

@@ -489,6 +489,7 @@ export function normalizeRow(row) {
     role: bot ? 'bot' : 'user',
     text,
     buttons: bot ? row.buttons || [] : [],
+    answer: (bot && row.answer) || null,
     at: row.creation || null,
     stale: bot && isNotReplayed(text),
     down: bot && isServiceDown(text),
