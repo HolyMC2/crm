@@ -19,3 +19,14 @@ msg::Frappe Mail Site
 # Form Scripts editor (developers write the class there): the field name
 # «trigger» clashes with the script's own trigger() method; the word is literal.
 msg::⚠️ Avoid using "trigger" as a field name — it conflicts with the built-in trigger() method.
+
+# n8n / automation connections: System Manager setup screens and API errors for whoever
+# builds the automation. «webhook», «payload» and «message_id» are the words n8n itself uses
+# for what they must paste or send; the payload is shown so the admin can see what was sent.
+crm/fcrm/doctype/crm_integration/*
+crm/fcrm/doctype/crm_integration_delivery/*
+crm/integrations/webhooks.py
+crm/integrations/channel.py
+crm/api/integration.py
+# API channel messages are never opened in Desk (no read permission); the notes say who writes them.
+crm/fcrm/doctype/crm_channel_message/*::rule=written-by note

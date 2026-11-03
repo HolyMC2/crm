@@ -60,7 +60,6 @@
    "fieldname": "message_key",
    "fieldtype": "Data",
    "label": "Message key",
-   "reqd": 1,
    "read_only": 1,
    "unique": 1,
    "length": 64,
