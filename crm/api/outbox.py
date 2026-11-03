@@ -422,7 +422,9 @@ def account_source(current):
 		return _channel_source(current)
 	source = "CRM Webchat Channel" if current.provider == "Webchat" else "WhatsApp Account"
 	fields = (
-		["name", "profile", "public_origin"] if current.provider == "Webchat" else ["name", "app_id", "business_id"]
+		["name", "profile", "public_origin"]
+		if current.provider == "Webchat"
+		else ["name", "app_id", "business_id"]
 	)
 	account = frappe.db.get_value(source, current.account_record, fields, as_dict=True, for_update=True)
 	if not account:
@@ -433,7 +435,11 @@ def account_source(current):
 
 def _channel_reply_reason(intent):
 	"""Current eligibility from the owning transport: account revision, window, suppression."""
-	person_or_bot = intent.origin in {"Human", "Bot"} and intent.purpose in {"manual", "service", "automation"}
+	person_or_bot = intent.origin in {"Human", "Bot"} and intent.purpose in {
+		"manual",
+		"service",
+		"automation",
+	}
 	if not person_or_bot and (intent.origin, intent.purpose) != ("Automation", "automation"):
 		return "producer_not_ready"
 	if frappe.conf.get("maintenance_mode"):
