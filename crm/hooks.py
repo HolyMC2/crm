@@ -396,6 +396,9 @@ filter_link_titles = {
 # Encuestas' recommendation number (B3).
 muelle_resultados_cards = ["crm.resultados_cards.tratos", "crm.resultados_cards.encuestas"]
 
+# Tableros (doco docs/TABLEROS.md): every Resultados card is a board source.
+doco_tablero_sources = ["crm.tableros.catalogo"]
+
 # Aprobaciones (Shell D12): open Frappe Workflow Actions in Pendientes «Por aprobar»
 # (contract: doco.pendientes.aprobaciones). Warranty Claim stays with doco Garantías.
 doco_approval_sources = ["crm.api.automatizaciones.flujo_aprobaciones"]

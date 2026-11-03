@@ -120,8 +120,13 @@ export function chartProps(chart) {
   const seriesConfig = Object.fromEntries(
     chart.series.map((s, i) => [
       keys[i],
-      // the tooltip prints the full figure; the axis keeps its short ticks
-      { label: s.name || chart.title || __('Value'), format },
+      // the tooltip prints the full figure; the axis keeps its short ticks;
+      // a board widget may pin the first series to its own colour
+      {
+        label: s.name || chart.title || __('Value'),
+        format,
+        ...(i === 0 && chart.color ? { color: chart.color } : {}),
+      },
     ]),
   )
   return {

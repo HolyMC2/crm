@@ -56,8 +56,8 @@
       </button>
 
       <!-- The bar's modules are not repeated here: only what the bar leaves out.
-           Correo (Shell D12) is for everyone: Frappe shows each worker only
-           the mail they may read. -->
+           Correo (Shell D12) and Tableros are for everyone: Frappe shows each
+           worker only the mail and the numbers they may read. -->
       <section aria-labelledby="more-modules">
         <h2
           id="more-modules"
@@ -84,6 +84,16 @@
           >
             <span class="lucide-mail size-5" aria-hidden="true" />
             Correo
+          </RouterLink>
+          <!-- Tableros (doco docs/TABLEROS.md): every desk user's own boards. -->
+          <RouterLink
+            to="/tableros"
+            :class="TILE"
+            data-testid="more-tableros"
+            @click="close"
+          >
+            <span class="lucide-layout-dashboard size-5" aria-hidden="true" />
+            Tableros
           </RouterLink>
         </div>
       </section>

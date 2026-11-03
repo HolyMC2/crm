@@ -140,6 +140,17 @@
             :chart="view(message).chart"
             :answer="message.answer"
           />
+          <!-- The chart as a live widget on one of the person's boards. -->
+          <button
+            v-if="message.answer?.id"
+            type="button"
+            class="press inline-flex min-h-11 items-center gap-1.5 rounded-6 px-2 text-sm font-medium text-ink-gray-7 hover:bg-surface-gray-2 hover:text-ink-gray-9"
+            data-testid="add-to-board"
+            @click="pinning = message"
+          >
+            <span class="lucide-layout-dashboard size-4" aria-hidden="true" />
+            Agregar a un tablero
+          </button>
           <p
             v-for="(line, index) in view(message).insights"
             :key="index"
@@ -190,6 +201,14 @@
       {{ assistant.error }}
     </p>
     <span ref="end" aria-hidden="true" />
+    <AddToBoard
+      v-if="pinning"
+      :open="Boolean(pinning)"
+      :answer="pinning.answer"
+      :title="view(pinning).chart?.title || ''"
+      @update:open="(value) => !value && (pinning = null)"
+      @added="$emit('navigate')"
+    />
   </div>
 </template>
 <script setup>
@@ -234,6 +253,11 @@ defineEmits(['navigate'])
 const AssistantChart = defineAsyncComponent(
   () => import('./AssistantChart.vue'),
 )
+const AddToBoard = defineAsyncComponent(
+  () => import('@/components/tableros/AddToBoard.vue'),
+)
+// The chart answer whose «Agregar a un tablero» sheet is open.
+const pinning = ref(null)
 
 const end = ref(null)
 
