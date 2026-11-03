@@ -184,18 +184,23 @@ def _quiet():
 	)
 
 
-def emit(event, doctype, name, *, version=None, context=None, only=None):
+def emit(event, doctype, name, *, version=None, context=None, to=None):
 	"""Queue `event` about (doctype, name) for every subscribed connection.
 
+	`to` names connections that receive it whether or not they subscribed (an inbox
+	channel always receives its own replies); they must still be enabled with a URL.
 	`version` deduplicates repeats of the same change (a hook firing twice). Never
 	raises into the producer: an automation outage must not stop CRM work.
 	"""
 	if event not in EVENTS or _quiet():
 		return []
 	try:
-		targets = _subscribers().get(event) or []
-		if only:
-			targets = [t for t in targets if t in only]
+		targets = list(_subscribers().get(event) or [])
+		for name_ in to or []:
+			if name_ not in targets and frappe.db.get_value(
+				INTEGRATION, {"name": name_, "enabled": 1, "webhook_url": ["is", "set"]}, "name"
+			):
+				targets.append(name_)
 		created = []
 		for integration in targets:
 			key = hashlib.sha256(

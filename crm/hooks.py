@@ -139,6 +139,7 @@ permission_query_conditions = {
 	"CRM Pipeline": "crm.pipeline.services.configuration.pipeline_query",
 	"CRM Webchat Session": "crm.fcrm.doctype.crm_webchat_session.crm_webchat_session.get_permission_query_conditions",
 	"CRM Webchat Message": "crm.fcrm.doctype.crm_webchat_message.crm_webchat_message.get_permission_query_conditions",
+	"CRM Channel Message": "crm.fcrm.doctype.crm_channel_message.crm_channel_message.get_permission_query_conditions",
 	"CRM Outbound Intent": "crm.fcrm.doctype.crm_outbound_intent.crm_outbound_intent.get_permission_query_conditions",
 	"CRM Conversation": "crm.fcrm.doctype.crm_conversation.crm_conversation.get_permission_query_conditions",
 	"CRM Conversation Control Event": "crm.fcrm.doctype.crm_conversation_control_event.crm_conversation_control_event.get_permission_query_conditions",
@@ -156,6 +157,7 @@ has_permission = {
 	"CRM Pipeline": "crm.pipeline.services.configuration.pipeline_permission",
 	"CRM Webchat Session": "crm.fcrm.doctype.crm_webchat_session.crm_webchat_session.has_permission",
 	"CRM Webchat Message": "crm.fcrm.doctype.crm_webchat_message.crm_webchat_message.has_permission",
+	"CRM Channel Message": "crm.fcrm.doctype.crm_channel_message.crm_channel_message.has_permission",
 	"CRM Outbound Intent": "crm.fcrm.doctype.crm_outbound_intent.crm_outbound_intent.has_permission",
 	"CRM Conversation": "crm.fcrm.doctype.crm_conversation.crm_conversation.has_permission",
 	"CRM Conversation Control Event": "crm.fcrm.doctype.crm_conversation_control_event.crm_conversation_control_event.has_permission",
@@ -178,6 +180,7 @@ filter_shared_documents = {
 	"CRM Pipeline": "crm.pipeline.services.configuration.filter_shared_documents",
 	"CRM Webchat Session": "crm.pipeline.services.configuration.deny_shared_documents",
 	"CRM Webchat Message": "crm.pipeline.services.configuration.deny_shared_documents",
+	"CRM Channel Message": "crm.pipeline.services.configuration.deny_shared_documents",
 	"CRM Outbound Intent": "crm.pipeline.services.configuration.deny_shared_documents",
 	"CRM Conversation": "crm.pipeline.services.configuration.deny_shared_documents",
 	"CRM Conversation Control Event": "crm.pipeline.services.configuration.deny_shared_documents",
@@ -204,6 +207,9 @@ whatsapp_template_context = {
 	"CRM Deal": ["crm.api.whatsapp_template_context.CRM_DEAL"],
 	"CRM Lead": ["crm.api.whatsapp_template_context.CRM_LEAD"],
 }
+
+# CRM's own API inbox channel (a CRM Integration bridging another channel through n8n).
+crm_channel_adapters = {"API": "crm.integrations.channel"}
 
 doc_events = {
 	# The shipped translations hold DocType names, labels and Select options (crm.shell_dictionary).
@@ -295,6 +301,7 @@ doc_events = {
 	"CRM Outbound Intent": {"on_update": ["crm.integrations.events.on_intent_update"]},
 	"CRM Webchat Message": {"after_insert": ["crm.integrations.events.on_message_insert"]},
 	"Messenger Message": {"after_insert": ["crm.integrations.events.on_message_insert"]},
+	"CRM Channel Message": {"after_insert": ["crm.integrations.events.on_message_insert"]},
 }
 
 # Scheduled Tasks

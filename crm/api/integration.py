@@ -140,3 +140,53 @@ def summary(name: str):
 		"blocker": webhooks.enable_blocker(doc),
 		"api_key_ready": bool(frappe.db.get_value("User", doc.integration_user, "api_key")),
 	}
+
+
+def _own_channel(connection=None):
+	"""The caller's inbox-channel connection; the API key's user must be its «Acts as user»."""
+	user = frappe.session.user
+	filters = {"integration_user": user, "api_channel": 1}
+	if connection:
+		filters["name"] = connection
+	names = frappe.get_all(INTEGRATION, filters=filters, pluck="name", ignore_permissions=True)
+	if not names:
+		frappe.throw(
+			_(
+				"No inbox-channel connection acts as {0}. In CRM Integration, set «Acts as user» to this "
+				"user and turn on «Use as an inbox channel»."
+			).format(user),
+			frappe.PermissionError,
+		)
+	if len(names) > 1:
+		frappe.throw(
+			_("{0} acts for several inbox channels; send connection with one of: {1}.").format(
+				user, ", ".join(names)
+			)
+		)
+	return names[0]
+
+
+@frappe.whitelist(methods=["POST"])
+def channel_message(
+	contact_id: str,
+	text: str,
+	message_id: str,
+	sender_name: str | None = None,
+	connection: str | None = None,
+):
+	"""Bring one customer message from another channel into the CRM inbox.
+
+	`contact_id` is the customer's stable id on that channel (email, phone, chat id);
+	`message_id` is that channel's id for this message and makes retries safe.
+	"""
+	from crm.integrations import channel
+
+	return channel.receive(_own_channel(connection), contact_id, text, message_id, sender_name)
+
+
+@frappe.whitelist(methods=["POST"])
+def channel_status(message: str, status: str, connection: str | None = None):
+	"""Report what happened to a reply this channel was handed: sent, delivered, read or failed."""
+	from crm.integrations import channel
+
+	return channel.report_status(_own_channel(connection), message, status)

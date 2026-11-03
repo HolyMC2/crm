@@ -180,8 +180,11 @@ class TestIntegrationWebhooks(IntegrationTestCase):
 	def test_lead_status_change_emits_status_and_update(self):
 		connection = self.connection(["lead.status_changed", "lead.updated"])
 		lead = self.lead()
-		statuses = frappe.get_all("CRM Lead Status", pluck="name", limit=5)
-		target = next((s for s in statuses if s != lead.status), None)
+		statuses = set(frappe.get_all("CRM Lead Status", pluck="name"))
+		# Junk/Unqualified need a lost reason; pick an open stage.
+		target = next(
+			(s for s in ("Contacted", "Nurture", "Qualified") if s in statuses and s != lead.status), None
+		)
 		if not target:
 			self.skipTest("Needs two lead statuses on the template site.")
 		lead.status = target
@@ -364,3 +367,102 @@ class TestIntegrationWebhooks(IntegrationTestCase):
 		self.assertTrue(data["conversation"]["name"])
 		with patch.object(webhooks, "_post", side_effect=AssertionError("must not send")):
 			self.assertEqual(webhooks.deliver(self.deliveries(outsider)[0]).status, "Skipped")
+
+	# ------------------------------------------------------------ API inbox channel
+
+	def channel(self, events_=()):
+		doc = frappe.get_doc(
+			{
+				"doctype": webhooks.INTEGRATION,
+				"title": "Fictional email bridge",
+				"integration_user": self.users["agent"],
+				"webhook_url": "https://hooks.example.com/bridge",
+				"api_channel": 1,
+				"subscriptions": [{"event": e} for e in events_],
+			}
+		).insert()
+		doc.enabled = 1
+		doc.save()
+		webhooks.clear_subscriber_cache()
+		return doc
+
+	def test_api_channel_round_trip_through_inbox_and_outbox(self):
+		from crm.api import conversation_threads as threads
+		from crm.api import outbox
+
+		connection = self.channel()
+		self.assertRegex(connection.channel_account_id, r"^[0-9a-f]{64}$")
+		frappe.set_user(self.users["agent"])
+		first = api.channel_message(
+			"ana@example.invalid", "Hola, ¿abren el sábado?", "mail-1", "Ana Ficticia"
+		)
+		again = api.channel_message(
+			"ana@example.invalid", "Hola, ¿abren el sábado?", "mail-1", "Ana Ficticia"
+		)
+		self.assertEqual((again["conversation"], again["replayed"]), (first["conversation"], True))
+		with self.assertRaisesRegex(frappe.ValidationError, "different text"):
+			api.channel_message("ana@example.invalid", "Otro texto", "mail-1")
+		self.assertIn(
+			("API", connection.channel_account_id),
+			[(a["provider"], a["account_id"]) for a in threads.list_accounts()["accounts"]],
+		)
+		history = threads.get_history(first["conversation"])
+		self.assertEqual(history["conversation"]["display_name"], "Ana Ficticia")
+		self.assertEqual(
+			[(m["direction"], m["content"]) for m in history["messages"]], [("in", "Hola, ¿abren el sábado?")]
+		)
+		self.assertTrue(history["conversation"]["send_available"] is False)  # nobody owns it yet
+		taken = control.apply_control(
+			first["conversation"], "take", history["conversation"]["generation"], uuid4().hex
+		)
+		intent = outbox.queue_message(
+			first["conversation"],
+			taken["generation"],
+			uuid4().hex,
+			{"type": "text", "text": "Sí, de 10 a 14 h."},
+		)
+		frappe.set_user("Administrator")
+		with patch.object(frappe.db, "rollback"):
+			outbox.dispatch_intent(intent["name"])
+		state = frappe.db.get_value(
+			outbox.DOCTYPE, intent["name"], ["state", "provider_message_id"], as_dict=True
+		)
+		self.assertEqual(state.state, "Accepted")
+		self.assertTrue(state.provider_message_id.startswith("api."))
+		reply = frappe.get_all(
+			"CRM Channel Message",
+			filters={"integration": connection.name, "direction": "Outgoing"},
+			fields=["name", "text", "status"],
+		)
+		self.assertEqual([(r.text, r.status) for r in reply], [("Sí, de 10 a 14 h.", "sent")])
+		# The channel's own webhook gets the reply although it subscribed to nothing.
+		out = self.deliveries(connection, "message.created")
+		self.assertEqual(len(out), 1)
+		with patch.object(webhooks, "_post", return_value=FakeResponse(200)) as post:
+			self.assertEqual(webhooks.deliver(out[0]).status, "Delivered")
+		data = json.loads(post.call_args.args[1])["data"]
+		self.assertEqual(
+			(data["message"]["direction"], data["message"]["content"], data["thread"]["peer_id"]),
+			("out", "Sí, de 10 a 14 h.", "ana@example.invalid"),
+		)
+		frappe.set_user(self.users["agent"])
+		self.assertEqual(api.channel_status(reply[0].name, "delivered")["status"], "delivered")
+		with self.assertRaises(frappe.ValidationError):
+			api.channel_status(reply[0].name, "teleported")
+
+	def test_api_channel_refuses_callers_and_states_it_cannot_serve(self):
+		connection = self.channel()
+		frappe.set_user(self.users["admin"])
+		with self.assertRaisesRegex(frappe.PermissionError, "Acts as user"):
+			api.channel_message("ana@example.invalid", "Hola", "mail-2")
+		frappe.set_user("Administrator")
+		frappe.db.set_value(webhooks.INTEGRATION, connection.name, "enabled", 0)
+		frappe.set_user(self.users["agent"])
+		with self.assertRaisesRegex(frappe.ValidationError, "disabled"):
+			api.channel_message("ana@example.invalid", "Hola", "mail-3")
+		frappe.set_user("Administrator")
+		frappe.db.set_value(webhooks.INTEGRATION, connection.name, "enabled", 1)
+		frappe.set_user(self.users["agent"])
+		for bad in ("", " lead", "a" * 129, "ana smith"):
+			with self.subTest(contact=bad), self.assertRaises(frappe.ValidationError):
+				api.channel_message(bad, "Hola", "mail-" + uuid4().hex[:6])

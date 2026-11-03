@@ -1,0 +1,113 @@
+{
+ "actions": [],
+ "creation": "2026-11-03 12:00:00.000000",
+ "modified": "2026-11-03 12:00:00.000000",
+ "modified_by": "Administrator",
+ "owner": "Administrator",
+ "doctype": "DocType",
+ "name": "CRM Channel Message",
+ "module": "FCRM",
+ "engine": "InnoDB",
+ "allow_rename": 0,
+ "field_order": [
+  "integration",
+  "peer_id",
+  "conversation",
+  "direction",
+  "message_key",
+  "external_id",
+  "intent",
+  "sender_name",
+  "text",
+  "status"
+ ],
+ "fields": [
+  {
+   "fieldname": "integration",
+   "fieldtype": "Link",
+   "label": "Connection",
+   "options": "CRM Integration",
+   "reqd": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "peer_id",
+   "fieldtype": "Data",
+   "label": "Contact id",
+   "reqd": 1,
+   "read_only": 1,
+   "length": 128,
+   "search_index": 1
+  },
+  {
+   "fieldname": "conversation",
+   "fieldtype": "Link",
+   "label": "Conversation",
+   "options": "CRM Conversation",
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "direction",
+   "fieldtype": "Select",
+   "label": "Direction",
+   "options": "Incoming\nOutgoing",
+   "reqd": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "message_key",
+   "fieldtype": "Data",
+   "label": "Message key",
+   "reqd": 1,
+   "read_only": 1,
+   "unique": 1,
+   "length": 64,
+   "hidden": 1
+  },
+  {
+   "fieldname": "external_id",
+   "fieldtype": "Data",
+   "label": "External id",
+   "read_only": 1,
+   "length": 140
+  },
+  {
+   "fieldname": "intent",
+   "fieldtype": "Data",
+   "label": "Outbound intent",
+   "read_only": 1,
+   "length": 64
+  },
+  {
+   "fieldname": "sender_name",
+   "fieldtype": "Data",
+   "label": "Sender name",
+   "read_only": 1,
+   "length": 140
+  },
+  {
+   "fieldname": "text",
+   "fieldtype": "Code",
+   "label": "Text",
+   "options": "Text",
+   "read_only": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Data",
+   "label": "Status",
+   "read_only": 1,
+   "length": 20
+  }
+ ],
+ "permissions": [],
+ "links": [],
+ "states": [],
+ "index_web_pages_for_search": 0,
+ "track_changes": 0,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "description": "A message in an API inbox channel (a CRM Integration bridging another channel). Written only by the channel broker."
+}

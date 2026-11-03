@@ -15,7 +15,7 @@ from crm.integrations.webhooks import Skip, emit
 
 CONVERSATION = "CRM Conversation"
 CONTROL_EVENT = "CRM Conversation Control Event"
-MESSAGE_DOCTYPES = ("CRM Webchat Message", "WhatsApp Message", "Messenger Message")
+MESSAGE_DOCTYPES = ("CRM Webchat Message", "WhatsApp Message", "Messenger Message", "CRM Channel Message")
 RECORD_EVENTS = {"Contact": "contact", "CRM Lead": "lead", "CRM Deal": "deal"}
 
 
@@ -159,6 +159,10 @@ def message_identity(doctype, name):
 			return None
 		account = frappe.db.get_value("CRM Webchat Channel", row.channel, "account_id")
 		return ("Webchat", account, row.peer_id) if account and row.peer_id else None
+	if doctype == "CRM Channel Message":
+		row = frappe.db.get_value(doctype, name, ["integration", "peer_id"], as_dict=True)
+		account = row and frappe.db.get_value("CRM Integration", row.integration, "channel_account_id")
+		return ("API", account, row.peer_id) if account else None
 	if doctype == "WhatsApp Message":
 		row = frappe.db.get_value(doctype, name, ["type", "from", "to", "whatsapp_account"], as_dict=True)
 		if not row or not row.whatsapp_account:

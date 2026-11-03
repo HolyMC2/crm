@@ -77,7 +77,7 @@
    "fieldtype": "Select",
    "label": "Provider",
    "read_only": 1,
-   "options": "WhatsApp\nMessenger\nInstagram\nWebchat\nEmail",
+   "options": "WhatsApp\nMessenger\nInstagram\nWebchat\nEmail\nAPI",
    "reqd": 1
   },
   {

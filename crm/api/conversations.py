@@ -21,7 +21,13 @@ from crm.api import automation_departments as departments
 
 DOCTYPE = "CRM Conversation"
 EVENT = "CRM Conversation Control Event"
-PROVIDERS = {"WhatsApp", "Messenger", "Instagram", "Webchat"}
+PROVIDERS = {"WhatsApp", "Messenger", "Instagram", "Webchat", "API"}
+# API: an inbox channel fed by a CRM Integration (n8n bridging email, SMS, Telegram, …).
+_PATTERNS = {
+	"Webchat": (r"[0-9a-f]{64}", r"[0-9a-f]{64}"),
+	"API": (r"[0-9a-f]{64}", r"[A-Za-z0-9][A-Za-z0-9._:@+=-]{0,127}"),
+}
+_NUMERIC = (r"[0-9]{1,40}", r"[0-9]{1,40}")
 REFERENCES = {"CRM Inquiry", "CRM Lead", "CRM Deal"}
 STATES = {"Human", "Bot", "Paused", "Closed"}
 CONTROL_ACTIONS = {"request", "take", "transfer", "release", "pause", "close", "reopen"}
@@ -82,11 +88,18 @@ def _digest(value):
 	).hexdigest()
 
 
+def account_pattern(provider):
+	return _PATTERNS.get(provider, _NUMERIC)[0]
+
+
+def peer_pattern(provider):
+	return _PATTERNS.get(provider, _NUMERIC)[1]
+
+
 def conversation_key(provider, account_id, peer_id):
 	if provider not in PROVIDERS:
 		frappe.throw(_("Unsupported customer conversation provider."))
-	pattern = r"[0-9a-f]{64}" if provider == "Webchat" else r"[0-9]{1,40}"
-	for value in (account_id, peer_id):
+	for value, pattern in ((account_id, account_pattern(provider)), (peer_id, peer_pattern(provider))):
 		if not isinstance(value, str) or not re.fullmatch(pattern, value):
 			frappe.throw(_("An exact provider account and peer are required."))
 	return _digest([1, provider, account_id, peer_id])
@@ -178,6 +191,17 @@ def _account(provider, account_id, active=True):
 		if not row or (active and row.enabled != 1):
 			_deny()
 		return frappe._dict(name=row.name, shop=None, scoped=False)
+	if provider == "API":
+		rows = frappe.db.get_values(
+			"CRM Integration",
+			{"channel_account_id": account_id, "api_channel": 1},
+			["name", "enabled"],
+			as_dict=True,
+			for_update=_locked(),
+		)
+		if len(rows) != 1 or (active and rows[0].enabled != 1):
+			_deny()
+		return frappe._dict(name=rows[0].name, shop=None, scoped=False)
 	if provider == "WhatsApp" and "frappe_whatsapp" in apps:
 		doctype, identity, status, enabled = "WhatsApp Account", "phone_id", "status", "Active"
 		shop = "doco_shop" if frappe.db.has_column(doctype, "doco_shop") else None
@@ -340,7 +364,9 @@ def get_or_create(provider, account_id, peer_id, *, reference_doctype=None, refe
 				"human_owner": None,
 				"generation": 1,
 				"bot_enabled": 0,
-				"provider_control": "Not Applicable" if provider in {"WhatsApp", "Webchat"} else "Unknown",
+				"provider_control": "Not Applicable"
+				if provider in {"WhatsApp", "Webchat", "API"}
+				else "Unknown",
 			}
 		)
 		if reference_doctype or reference_name:
@@ -671,6 +697,33 @@ def _claimed_receipt(receipt_name, provider, account_id):
 	if row.event_type not in {"message", "postback"}:
 		_deny()
 	return row
+
+
+def internal_channel_message(integration, peer_id, message_name):
+	"""A message an API inbox channel stored for its own account: materialize and record it.
+
+	Called by crm.integrations.channel after the immutable message row exists, in the
+	same transaction. The channel has no bot automation, so control is only observed.
+	"""
+	account_id = frappe.db.get_value("CRM Integration", integration, "channel_account_id")
+	name = conversation_key("API", account_id, peer_id)
+	with conversation_fence(name):
+		doc = get_or_create("API", account_id, peer_id)
+		key = _event_key(name, "Provider", "API", message_name)
+		fingerprint = _digest(["API", account_id, peer_id, message_name])
+		replay = _replay(key, fingerprint)
+		if replay:
+			return replay
+		return _persist_transition(
+			doc,
+			_snapshot(doc),
+			key=key,
+			fingerprint=fingerprint,
+			origin="Provider",
+			actor=None,
+			action="customer_reply",
+			reason="customer_message_observed",
+		)
 
 
 def internal_customer_message(

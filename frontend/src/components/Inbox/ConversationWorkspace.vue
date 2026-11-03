@@ -216,7 +216,13 @@ import ConversationOutbox from './ConversationOutbox.vue'
 import CatalogCommerce from './CatalogCommerce.vue'
 import CitaBooking from './CitaBooking.vue'
 import MessengerArea from '@/components/Activities/MessengerArea.vue'
-const NATIVE_PROVIDERS = ['WhatsApp', 'Webchat', 'Messenger', 'Instagram']
+const NATIVE_PROVIDERS = [
+  'WhatsApp',
+  'Webchat',
+  'Messenger',
+  'Instagram',
+  'API',
+]
 const session = sessionStore(),
   route = useRoute(),
   router = useRouter()

@@ -76,8 +76,8 @@ TRANSITIONS = {
 }
 
 
-HOOKED_CHANNELS = frozenset({"Messenger", "Instagram"})
-TEXT_LIMITS = {"Webchat": 2000, "Messenger": 2000, "Instagram": 1000}
+HOOKED_CHANNELS = frozenset({"Messenger", "Instagram", "API"})
+TEXT_LIMITS = {"Webchat": 2000, "Messenger": 2000, "Instagram": 1000, "API": 4096}
 # Only states that carry the provider's own acceptance get a history row.
 HISTORY_STATES = frozenset({"Accepted", "Delivered", "Read"})
 # Meta Send API message ids are opaque; bounded like the ledger column and

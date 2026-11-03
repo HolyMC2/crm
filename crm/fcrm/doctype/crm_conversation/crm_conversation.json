@@ -38,7 +38,7 @@
    "fieldtype": "Select",
    "label": "Provider",
    "read_only": 1,
-   "options": "WhatsApp\nMessenger\nInstagram\nWebchat",
+   "options": "WhatsApp\nMessenger\nInstagram\nWebchat\nAPI",
    "reqd": 1
   },
   {

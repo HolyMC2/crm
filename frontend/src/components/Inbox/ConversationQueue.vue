@@ -20,7 +20,7 @@
             :value="accountKey(item)"
           >
             {{ item.provider }} · {{ item.label
-            }}{{ item.provider === 'Webchat' ? '' : ' · ' + item.account_id
+            }}{{ labelOnly(item) ? '' : ' · ' + item.account_id
             }}{{ item.active ? '' : ' (inactiva)' }}
           </option>
         </select>
@@ -30,9 +30,7 @@
         class="mt-2 text-xs text-ink-gray-5 [overflow-wrap:anywhere]"
       >
         {{ account.provider }} ·
-        {{
-          account.provider === 'Webchat' ? account.label : account.account_id
-        }}
+        {{ labelOnly(account) ? account.label : account.account_id }}
       </p>
     </div>
     <div class="min-h-0 flex-1 overflow-y-auto">
@@ -82,6 +80,9 @@
 <script setup>
 import { ref } from 'vue'
 import { useListKeys } from '@/composables/pageKeys'
+
+// Webchat and API inbox channels have opaque 64-character ids; their label is the name.
+const labelOnly = (item) => ['Webchat', 'API'].includes(item?.provider)
 
 const props = defineProps({
   accounts: { type: Array, default: () => [] },

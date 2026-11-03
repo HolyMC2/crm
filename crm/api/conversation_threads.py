@@ -97,6 +97,8 @@ def _channel_available(provider):
 			and frappe.db.exists("DocType", "WhatsApp Account")
 			and frappe.db.exists("DocType", "WhatsApp Message")
 		)
+	if provider == "API":
+		return bool(frappe.db.exists("DocType", "CRM Channel Message"))
 	return (
 		"doco_marketing" in apps
 		and frappe.db.exists("DocType", "Messenger Page")
@@ -168,6 +170,16 @@ def _scope(provider, account_id, doc=None):
 			args=[account.name],
 			timestamp="m.creation",
 		)
+	if provider == "API":
+		return frappe._dict(
+			doctype="CRM Channel Message",
+			table="`tabCRM Channel Message`",
+			peer="m.peer_id",
+			peer_match="m.peer_id=%s",
+			where="m.integration=%s AND m.direction IN ('Incoming','Outgoing')",
+			args=[account.name],
+			timestamp="m.creation",
+		)
 	if provider == "WhatsApp":
 		peer = "CASE WHEN m.type='Incoming' THEN m.`from` ELSE m.`to` END"
 		return frappe._dict(
@@ -201,13 +213,13 @@ def _scope(provider, account_id, doc=None):
 
 def _reference_clause(scope=None):
 	# Never even fetch Chart/Patient/non-CRM content or attachment columns.
-	if scope and scope.doctype == "CRM Webchat Message":
+	if scope and scope.doctype in ("CRM Webchat Message", "CRM Channel Message"):
 		return "1=1"  # This private transcript has no source-document/attachment fields.
 	return "(COALESCE(m.reference_doctype,'')='' OR m.reference_doctype IN ('CRM Inquiry','CRM Lead','CRM Deal'))"
 
 
 def _reference_columns(scope):
-	if scope.doctype == "CRM Webchat Message":
+	if scope.doctype in ("CRM Webchat Message", "CRM Channel Message"):
 		return "NULL AS reference_doctype, NULL AS reference_name"
 	return "m.reference_doctype, m.reference_name"
 
@@ -245,7 +257,7 @@ def _metadata(scope, peer, *, cursor=None, limit=SCAN):
 
 
 def _first_visible(scope, peer):
-	if scope.doctype == "CRM Webchat Message":
+	if scope.doctype in ("CRM Webchat Message", "CRM Channel Message"):
 		rows = _metadata(scope, peer, limit=1)
 		return rows[0] if rows else None
 	# Permission-check distinct references before selecting the preview. A long
@@ -326,6 +338,12 @@ def _message(scope, metadata):
 		)
 		direction, content = row.direction, row.text
 		row.update({"attach": None, "content_type": "text", "status": ""})
+	elif scope.doctype == "CRM Channel Message":
+		row = frappe.db.get_value(
+			scope.doctype, metadata.name, ["direction", "text", "status"], as_dict=True, for_update=locked
+		)
+		direction, content = row.direction, row.text
+		row.update({"attach": None, "content_type": "text"})
 	elif scope.doctype == "WhatsApp Message":
 		fields = [
 			"type",
@@ -428,6 +446,18 @@ def _display_names(provider, peers):
 	providers keep their exact identity."""
 	peers = [p for p in peers if p]
 	names = {p: _display_name(provider, p) for p in peers}
+	if provider == "API" and peers:
+		# The name the bridged channel sent with the customer's latest message.
+		for row in frappe.db.sql(
+			"""SELECT peer_id, sender_name FROM `tabCRM Channel Message`
+            WHERE direction='Incoming' AND COALESCE(sender_name,'')<>'' AND peer_id IN %(peers)s
+            ORDER BY creation DESC""",
+			{"peers": tuple(sorted(set(peers))[:SCAN])},
+			as_dict=True,
+		):
+			if names.get(row.peer_id) == row.peer_id:
+				names[row.peer_id] = row.sender_name
+		return names
 	if provider != "WhatsApp" or not peers:
 		return names
 	keys = {p: p[-PEER_SUFFIX:] for p in peers}
@@ -663,11 +693,15 @@ def _implied_threads(doctype, name, seen):
 def list_accounts():
 	_actor()
 	result = []
-	for provider in ("WhatsApp", "Messenger", "Instagram", "Webchat"):
+	for provider in ("WhatsApp", "Messenger", "Instagram", "Webchat", "API"):
 		if not _channel_available(provider):
 			continue
+		filters = {}
 		if provider == "Webchat":
 			doctype, field, label, status = "CRM Webchat Channel", "account_id", "label", "enabled"
+		elif provider == "API":
+			doctype, field, label, status = "CRM Integration", "channel_account_id", "title", "enabled"
+			filters = {"api_channel": 1}
 		elif provider == "WhatsApp":
 			doctype, field, label, status = "WhatsApp Account", "phone_id", "account_name", "status"
 		else:
@@ -678,11 +712,10 @@ def list_accounts():
 				"enabled",
 			)
 		for row in frappe.db.get_values(
-			doctype, {}, ["name", field, label, status], as_dict=True, for_update=control._locked()
+			doctype, filters, ["name", field, label, status], as_dict=True, for_update=control._locked()
 		):
 			identity = row.get(field)
-			pattern = r"[0-9a-f]{64}" if provider == "Webchat" else r"[0-9]{1,40}"
-			if not isinstance(identity, str) or not re.fullmatch(pattern, identity):
+			if not isinstance(identity, str) or not re.fullmatch(control.account_pattern(provider), identity):
 				continue
 			if _permitted(lambda: _account_probe(provider, identity)):
 				result.append(
@@ -707,7 +740,7 @@ def list_threads(provider: str, account_id: str, cursor: str | None = None, limi
 	scope = _scope(provider, account_id)
 	context = ["threads", provider, account_id]
 	after = _cursor(cursor, context) or ""
-	pattern = r"[0-9a-f]{64}" if provider == "Webchat" else r"[0-9]{1,40}"
+	pattern = control.peer_pattern(provider)
 	if not isinstance(after, str) or (after and not re.fullmatch(pattern, after)):
 		frappe.throw("Invalid page cursor.")
 	size = _limit(limit)

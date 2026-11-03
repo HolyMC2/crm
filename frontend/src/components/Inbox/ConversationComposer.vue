@@ -72,6 +72,8 @@ const LIMITS = {
   Webchat: 2000,
   Messenger: 2000,
   Instagram: 1000,
+  // An inbox channel bridged by a CRM Integration (n8n): crm.integrations.channel.
+  API: 4096,
 }
 // Webchat and the Meta Send API refuse C0 controls other than tab, LF and CR.
 const STRICT = ['Webchat', 'Messenger', 'Instagram']

@@ -97,6 +97,7 @@ const accepted = {
   Messenger: 'Aceptado por Messenger',
   Instagram: 'Aceptado por Instagram',
   Webchat: 'Disponible en la conversación',
+  API: 'Entregado a la conexión',
 }
 const labels = {
   Queued: 'En cola',
