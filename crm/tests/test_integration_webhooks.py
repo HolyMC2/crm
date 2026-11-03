@@ -364,6 +364,11 @@ class TestIntegrationWebhooks(IntegrationTestCase):
 			self.documents("document.created", doctype="CRM Deal", user="outsider")
 		names = {row["name"] for row in api.document_types("todo")}
 		self.assertIn("ToDo", names)
+		self.assertNotIn(
+			"CRM Deal",
+			{row["name"] for row in api.document_types("deal", user=self.users["outsider"])},
+			"the picker offers what the connection's user can read",
+		)
 		self.assertNotIn("User", {row["name"] for row in api.document_types("user")})
 
 	def test_a_connection_does_not_hear_its_own_changes(self):

@@ -60,8 +60,8 @@ def refusal(doctype):
 	return None
 
 
-def document_types(query="", limit=20):
-	"""Record types a connection can subscribe to, for the settings picker."""
+def document_types(query="", limit=20, user=None):
+	"""Record types a connection acting as `user` can subscribe to, for the settings picker."""
 	query = (query or "").strip()
 	filters = {"istable": 0, "issingle": 0, "module": ["not in", sorted(DENY_MODULES)]}
 	rows = frappe.get_all(
@@ -74,7 +74,7 @@ def document_types(query="", limit=20):
 	)
 	out = []
 	for row in rows:
-		if row.name in DENY_DOCTYPES or not frappe.has_permission(row.name, "read"):
+		if row.name in DENY_DOCTYPES or not frappe.has_permission(row.name, "read", user=user):
 			continue
 		out.append(
 			{

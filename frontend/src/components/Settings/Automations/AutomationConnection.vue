@@ -646,7 +646,10 @@ function searchTypes() {
   typeTimer = setTimeout(async () => {
     typeLoading.value = true
     try {
-      const rows = await call(API + 'document_types', { query: text })
+      const rows = await call(API + 'document_types', {
+        query: text,
+        user: doc.value?.integration_user || null,
+      })
       if (mine === typeRequest)
         typeResults.value = (rows || []).filter(
           (r) => !documentTypes.value.includes(r.name),

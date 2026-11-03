@@ -6,7 +6,16 @@ If it is disconnected, the inbox, the outbox and the assistant keep working, and
 and then go Dead. This replaces what Chatwoot gave n8n (webhooks, agent bot, API channel); Chatwoot
 itself stays retired. The feature comparison is in [CHATWOOT_PARITY.md](../CHATWOOT_PARITY.md).
 
-## 1. Set up a connection (Desk → CRM Integration)
+## 1. Set up a connection (Settings › Automations (n8n))
+
+A System Manager opens **Settings › Automations (n8n)** in the CRM, creates a connection
+(name + «Acts as user») and follows its five steps: webhook URL, acts-as user, API access
+(**Create API key** generates the user's key and shows the `Authorization` header once, next to
+the base URL and the `whoami` check), signing secret (show, copy, replace) and **Send test
+event**. Events are ticked by what they describe, record types are added from a search that only
+offers types the acts-as user can read, and **Deliveries** shows the counts and the latest
+problems with **Send again**. The Desk form (CRM Integration) is the same document; the steps
+below describe its fields.
 
 1. Create a **dedicated user** for the automation (for example `n8n@<site>`). Give it only the
    roles it needs:
@@ -92,6 +101,7 @@ connections.
 | `conversation.updated` | route, link to lead/deal, labels, snooze, metadata | `conversation` plus `change` (`action: "metadata"` lists the changed `fields`) |
 | `conversation.note_created` | someone adds a private note (the customer never sees it) | `conversation` plus `note`: `id`, `author`, `content`, `mentions`, `created_at` |
 | `conversation.rated` | the customer answers the satisfaction request | `conversation` plus `rating`: `id`, `rating` (1–5), `comment`, `agent`, `rated_at` |
+| `conversation.reply_overdue` | a customer has waited longer than the inbox's first-reply goal (once per wait; only while open when office hours are on) | `conversation` plus `waiting`: `since`, `goal_minutes` |
 | `message.created` | a customer or agent message on WhatsApp, Messenger, Webchat or the API channel | `message` (`id`, `direction` in/out, `content`, `content_type`, `attach`, `status`, `timestamp`), `conversation`, `thread` (`provider`, `account_id`, `peer_id`) |
 | `message.updated` | delivery status (sent, delivered, read, failed) | as `message.created` plus `change.status` |
 | `outbound.updated` | an outbox intent changes state (queued, accepted, blocked, failed) | `intent`: as `outbox.get_intent` returns it |
@@ -101,9 +111,25 @@ connections.
 | `inquiry.created` | storefront or form inquiry | `doctype`, `record` |
 | `assistant.message_created` | the books assistant answered the connection user | see §6 |
 | `assistant.decision_pending` | that answer has buttons waiting for a decision | see §6 |
+| `document.created` / `document.updated` / `document.submitted` / `document.cancelled` | any record type chosen on the row (Sales Invoice, Item, Appointment…) | `doctype`, `record` (the fields the user can read); `updated` adds `change.fields` |
+| `document.deleted` | that record type, deleted | `doctype`, `name`, `deleted_by` |
 | `ping` | **Send test event** | `{}` |
 
 Installs, migrations, patches and data imports do not emit events.
+
+Every `conversation` object carries `waiting_since` (the customer's first message after the last
+reply a person sent, or null) and `ratings` (the latest answers to the satisfaction request).
+
+**Any record type.** A `document.*` row names its **Record type**. Child tables, settings pages
+and system or security types (users, roles, logs, this engine's own rows) are refused with the
+reason, and so is a type the acts-as user cannot read. A deletion is only sent to connections
+whose user could read the record before it went. `change.fields` lists the fields whose stored
+value changed (a blank and an unset value are the same; a child table counts once, by its rows'
+content). Password fields are never sent. The hook checks one cached set of subscribed types
+before doing anything, so record types nobody subscribed to cost a set lookup per save.
+
+**Skip changes this connection made** (on by default) drops record and document events whose
+change was made by the acts-as user itself, so a flow that writes back does not trigger itself.
 
 ## 4. Actions (n8n → CRM)
 
@@ -122,19 +148,27 @@ protect against double sends and stale takes.
 | Snooze or wake | `crm.api.inbox.snooze_conversation(name, command_id, until=None, preset=None)` (`preset`: `1h`, `3h`, `tomorrow`, `next_week`, in site time) / `unsnooze_conversation(name, command_id)` |
 | Run a macro | `crm.api.inbox.run_macro(name, macro, expected_generation, command_id)`; all steps or none |
 | Read a queue | `crm.api.inbox.list_queue(view, state="open", label=None, department=None, start=0, limit=30)` (`view`: `mine`, `unassigned`, `all`, `snoozed`) |
+| Turn your own new conversations on or off | `crm.api.inbox.set_availability(receives_new, user=None)` (another `user` needs a manager) |
+| Who receives conversations (managers) | `crm.api.inbox.list_agents()` / `save_agent(user, receives_new=1, department=None, max_open=0)` / `remove_agent(user)` |
 | Team performance (managers) | `crm.api.inbox.performance(from_date=None, to_date=None, department=None)`: first response, resolution, ratings per person, 92 days at most |
 | Create or update leads, deals, contacts, notes, tasks | standard REST `/api/resource/<DocType>` (permissions apply) |
 
 Use a stable `request_id` / `command_id` derived from the n8n execution, so a retried node never
 sends twice.
 
-**CRM Inbox Settings** (Desk) runs the inbox's own automation, so n8n does not have to:
+**CRM Inbox Settings** (Settings › Customer inbox in the CRM, or Desk) runs the inbox's own
+automation, so n8n does not have to:
 
 - **Office hours and the away message.** Outside the hours or on a holiday, a customer who writes gets the away
   message once per `away_repeat_hours`.
-- **Auto-assign.** A new customer message on an unowned conversation goes to the active agent
-  with the fewest open conversations, up to each agent's limit. It is recorded as an `auto_assign`
-  control event.
+- **Auto-assign.** A new customer message on an unowned conversation goes to a listed person who
+  is available (they switch «Recibir conversaciones nuevas» in the inbox), can answer that team
+  and is under their limit, with the fewest open conversations. It is recorded as an
+  `auto_assign` control event.
+- **Reopen.** A customer who writes on a closed conversation reopens it, back to the person who
+  had it if they can still answer it (on by default).
+- **Late-reply alerts.** A wait longer than the first-reply goal notifies the owner, or the
+  managers when nobody has it, once per wait, and emits `conversation.reply_overdue`.
 - **Satisfaction rating.** When a conversation closes, the customer gets a `/rate/<token>` link.
   The first answer counts and emits `conversation.rated`. A link expires after the configured
   days.

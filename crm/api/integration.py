@@ -50,11 +50,14 @@ def events():
 
 
 @frappe.whitelist()
-def document_types(query: str | None = ""):
-	"""Record types the caller may choose for document.* events."""
+def document_types(query: str | None = "", user: str | None = None):
+	"""Record types a connection may choose for document.* events: those `user` (the
+	connection's «Acts as user», the caller by default) can read."""
 	from crm.integrations import documents
 
-	return documents.document_types(query or "")
+	if user and user != frappe.session.user:
+		_manager()
+	return documents.document_types(query or "", user=user or None)
 
 
 def _manager():

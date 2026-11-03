@@ -10,7 +10,7 @@ Legend: ✅ covered · ◐ partly or differently · ✗ gap (not built)
 
 | Chatwoot | Muelle | |
 |---|---|---|
-| Account/inbox webhooks (`message_created`, `conversation_status_changed`, …) | CRM Integration events (19 types), durable, retried, Standard Webhooks signed. See [integrations/N8N.md](integrations/N8N.md) | ✅ |
+| Account/inbox webhooks (`message_created`, `conversation_status_changed`, …) | CRM Integration events (20 types plus `document.*` for any record type), durable, retried, Standard Webhooks signed. See [integrations/N8N.md](integrations/N8N.md) | ✅ |
 | Webhook payload has the full conversation | payload built as the connection user with the inbox's own read policy; unreadable records are Skipped | ✅ (stricter) |
 | Webhook retries | 8 attempts over about 21 h, Dead state, 410 stops at once, **Send again** | ✅ (Chatwoot did not retry durably) |
 | HMAC on webhooks (`X-Chatwoot-Signature`, added late) | `webhook-signature` v1 HMAC-SHA256 with timestamp, secret rotation | ✅ |
@@ -34,26 +34,27 @@ Legend: ✅ covered · ◐ partly or differently · ✗ gap (not built)
 | Telegram, SMS, Line channels | through the API channel and n8n | ◐ bridged |
 | Assign to an agent or team | owner take/release/transfer, departments (`route`), Assignment Rules on leads/deals, manager queues (`workload`) | ✅ |
 | Conversation views: mine, unassigned, all, snoozed | inbox queues across every account the person can read, with label filter; `?queue=` remembers the view | ✅ |
-| Auto-assignment for conversations | CRM Inbox Settings: least-busy active agent per team, per-agent limit, recorded as a control event | ✅ |
+| Auto-assignment for conversations | CRM Inbox Settings: least-busy available person per team, per-person limit, recorded as a control event | ✅ |
+| Agent availability (online/offline) | each person switches «Recibir conversaciones nuevas» in the inbox; managers edit the list in Settings › Customer inbox | ✅ |
 | Canned responses | composer `/` palette (templates and quick replies) and saved replies in the inbox composer (with doco_marketing) | ✅ |
-| Private notes with @mentions | CRM Conversation Note: immutable, never sent to the customer, mention → CRM Notification, `conversation.note_created` | ✅ |
+| Private notes with @mentions | CRM Conversation Note: immutable, never sent to the customer, mention → CRM Notification, `conversation.note_created`; shown on the linked lead's and deal's timeline, and the linked records' notes show (and can be written) in the inbox | ✅ |
 | Labels on conversations | CRM Conversation Label (name, colour) on the conversation; filters the queues; `conversation.updated` | ✅ |
 | Snooze | until a preset time (site time, from the team's opening hours) or until the customer writes; tells the person who snoozed | ✅ |
 | Conversation linked to contact or CRM record | `link_record` to Contact, Lead, Deal | ✅ |
 | Macros (several actions at once) | CRM Inbox Macro: reply, label, note, team, snooze, close; personal or shared by a manager; all steps or none | ✅ |
 | Automation rules (on event → action) | CRM Automation Policy for bot flows, Inbox Settings for away/assign/rating; anything else through events → n8n | ◐ by design |
-| SLA | first-response and resolution targets in Inbox Settings, measured in the performance report; CRM SLA stays on leads/deals | ◐ measured, no breach alert |
+| SLA | first-response and resolution targets in Inbox Settings, measured in the performance report; the queue shows each wait (amber near the goal, red past it) and sorts by «Esperan más»; a late-reply alert notifies the owner or the managers once per wait and emits `conversation.reply_overdue` | ✅ |
 | CSAT survey after resolution | rating link sent on close (`/rate/<token>`, 1–5 and comment), first answer counts, `conversation.rated` | ✅ |
 | Reports (first response, resolution time, CSAT) | team performance dialog for managers (`crm.api.inbox.performance`), per person and team | ✅ |
 | Typing indicator, read receipts | WhatsApp statuses shown; API channel statuses through `channel_status` | ◐ |
 | Business hours / out-of-office auto reply | Inbox Settings office hours per weekday plus a holiday list, and an away message with `{{nombre}}`, repeated at most every N hours | ✅ |
 | Help center (knowledge base) | published Help Articles (Frappe website), searched and inserted from the composer | ✅ |
+| Reopen on a new customer message | on by default; back to the previous owner when they can still answer | ✅ |
+| Inbox settings screens | Settings › Customer inbox (hours, people, goals, ratings, labels, macros) and Settings › Automations (n8n) | ✅ |
+| Webhooks for other records | `document.*` for any ERP or app record type the connection user can read | ✅ (Chatwoot had none) |
 
 ## Still different from Chatwoot
 
-1. No SLA breach alert. Targets are measured in the report only.
-2. No typing indicator.
-3. Platform API and client widget API are shaped differently (Boat provisioning, Webchat session
+1. No typing indicator.
+2. Platform API and client widget API are shaped differently (Boat provisioning, Webchat session
    API).
-4. A closed conversation stays closed when the customer writes again. The inbox shows the new
-   message, and a person reopens the conversation.
