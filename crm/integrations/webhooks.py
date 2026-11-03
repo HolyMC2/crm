@@ -184,11 +184,12 @@ def _quiet():
 	)
 
 
-def emit(event, doctype, name, *, version=None, context=None, to=None):
+def emit(event, doctype, name, *, version=None, context=None, to=None, user=None):
 	"""Queue `event` about (doctype, name) for every subscribed connection.
 
 	`to` names connections that receive it whether or not they subscribed (an inbox
 	channel always receives its own replies); they must still be enabled with a URL.
+	`user` keeps only connections acting as that user (a private assistant chat).
 	`version` deduplicates repeats of the same change (a hook firing twice). Never
 	raises into the producer: an automation outage must not stop CRM work.
 	"""
@@ -201,6 +202,8 @@ def emit(event, doctype, name, *, version=None, context=None, to=None):
 				INTEGRATION, {"name": name_, "enabled": 1, "webhook_url": ["is", "set"]}, "name"
 			):
 				targets.append(name_)
+		if user:
+			targets = [t for t in targets if frappe.db.get_value(INTEGRATION, t, "integration_user") == user]
 		created = []
 		for integration in targets:
 			key = hashlib.sha256(

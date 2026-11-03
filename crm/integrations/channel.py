@@ -85,6 +85,8 @@ def receive(connection_name, peer_id, text, external_id, sender_name=None):
 			frappe.throw(_("message_id {0} was already used for a different text.").format(external_id))
 		return {"conversation": existing.conversation, "message": existing.name, "replayed": True}
 	with control.conversation_fence(name):
+		# The message row links its conversation, so it must exist first.
+		control.get_or_create(PROVIDER, connection.channel_account_id, peer_id)
 		message = _insert(
 			{
 				"integration": connection.name,
