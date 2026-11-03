@@ -75,7 +75,7 @@
             <p class="text-p-sm text-ink-gray-5">
               {{
                 __(
-                  "Your n8n Webhook node's production URL. HTTPS is required unless the host is listed in the site's crm_integration_allowed_hosts.",
+                  "Your n8n Webhook node's production URL. It must start with https://; for an n8n on your own network, ask support to allow its address.",
                 )
               }}
             </p>

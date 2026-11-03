@@ -30763,10 +30763,6 @@ msgstr "Actúa como usuario"
 msgid "Events carry only what this user may read, and the connection's API calls use this user's API key. Use a dedicated user with only the roles the workflow needs."
 msgstr "Los eventos llevan solo lo que este usuario puede leer, y las llamadas a la API de la conexión usan la clave de API de este usuario. Usa un usuario exclusivo con solo los roles que el flujo necesita."
 
-#: crm/fcrm/doctype/crm_integration/crm_integration.json
-msgid "Your n8n Webhook node's production URL. HTTPS is required unless the host is listed in the site's crm_integration_allowed_hosts."
-msgstr "La URL de producción del nodo Webhook de n8n. Se requiere HTTPS, salvo que el host esté en crm_integration_allowed_hosts del sitio."
-
 #: crm/fcrm/doctype/crm_integration/crm_integration.json crm/fcrm/doctype/crm_integration/crm_integration.js
 msgid "Signing secret"
 msgstr "Secreto de firma"
@@ -31392,10 +31388,6 @@ msgid "Ends before it starts. Change one of the two times."
 msgstr "Termina antes de empezar. Cambia una de las dos horas."
 
 #: frontend/src/components/Settings
-msgid "Add another range (for example after lunch)"
-msgstr "Añadir otro horario (por ejemplo, después de comer)"
-
-#: frontend/src/components/Settings
 msgid "Back to connections"
 msgstr "Volver a las conexiones"
 
@@ -31634,3 +31626,63 @@ msgstr "El navegador no permitió copiar. Selecciona el texto y cópialo."
 #: frontend/src/components/Settings
 msgid "Discard unsaved settings and return to your work?"
 msgstr "¿Descartar los ajustes sin guardar y volver a tu trabajo?"
+
+#: crm/fcrm/doctype/crm_integration/crm_integration.json
+msgid "Your n8n Webhook node's production URL. It must start with https://; for an n8n on your own network, ask support to allow its address."
+msgstr "La URL de producción del nodo Webhook de n8n. Debe empezar con https://; si tu n8n está en tu propia red, pide a soporte que permita su dirección."
+
+#: crm/integrations/webhooks.py
+msgid "Use an https:// webhook URL. For an n8n on your own network, ask support to allow its address."
+msgstr "Usa una URL de webhook https://. Si tu n8n está en tu propia red, pide a soporte que permita su dirección."
+
+#: crm/api/integration.py
+msgid "No inbox-channel connection acts as {0}. In Settings › Automations (n8n), set «Acts as user» to this user and turn on «Use as an inbox channel»."
+msgstr "Ninguna conexión de canal de bandeja actúa como {0}. En Ajustes › Automatizaciones (n8n), elige a este usuario en «Actúa como usuario» y activa «Usar como canal de bandeja»."
+
+#: crm/api/outbox.py
+msgid "Native sending is not ready for this channel."
+msgstr "Este canal todavía no puede enviar mensajes desde aquí."
+
+#: crm/avisos/resolve.py
+msgid "You can no longer open this conversation. Mark the aviso as read."
+msgstr "Ya no puedes abrir esta conversación. Marca el aviso como leído."
+
+#: crm/avisos/resolve.py
+msgid "Customer conversation"
+msgstr "Conversación con cliente"
+
+#: frontend/src/components/Settings/Inbox/WeekHours.vue
+msgid "Add another range"
+msgstr "Añadir otro horario"
+
+#: frontend/src/components/Settings/Settings.vue
+msgid "Back to settings"
+msgstr "Volver a ajustes"
+
+#: frontend/src/components/Settings/Settings.vue
+msgid "Return to work"
+msgstr "Volver al trabajo"
+
+#: frontend/src/components/Settings/Settings.vue
+msgid "Settings categories"
+msgstr "Categorías de ajustes"
+
+#: frontend/src/components/Settings/Settings.vue
+msgid "Marketing and Social settings are unavailable because Marketing is not installed."
+msgstr "Los ajustes de Marketing y Social no están disponibles porque Marketing no está instalado."
+
+#: frontend/src/components/Settings/Settings.vue
+msgid "Checking optional settings…"
+msgstr "Revisando ajustes opcionales…"
+
+#: frontend/src/components/Settings/Settings.vue
+msgid "Optional settings could not be checked. Native CRM settings remain available."
+msgstr "No se pudieron revisar los ajustes opcionales. Los ajustes propios del CRM siguen disponibles."
+
+#: frontend/src/components/Settings/Settings.vue
+msgid "Effective configuration"
+msgstr "Configuración efectiva"
+
+#: frontend/src/components/Settings/Settings.vue
+msgid "Wait for the current save to finish. Your settings stay open."
+msgstr "Espera a que termine el guardado. Tus ajustes siguen abiertos."

@@ -29,7 +29,12 @@
       </div>
     </header>
     <div class="px-2">
-      <Segmented v-model="view" :options="views" :label="__('Section')" />
+      <Segmented
+        v-model="view"
+        :options="views"
+        fit="content"
+        :label="__('Section')"
+      />
     </div>
     <div v-if="loadError" role="alert" class="flex flex-col gap-2 px-2">
       <p class="text-p-sm">{{ loadError }}</p>

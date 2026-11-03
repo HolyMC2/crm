@@ -2,61 +2,68 @@
   <!-- One line per weekday: open or closed, then its time ranges. Edits the
        CRM Service Day rows of the inbox settings in place. -->
   <ul class="divide-y divide-outline-gray-1" :aria-label="__('Office hours')">
-    <li
-      v-for="day in DAYS"
-      :key="day.value"
-      class="flex flex-wrap items-center gap-x-3 gap-y-1 py-1.5"
-    >
-      <AjustesSwitch
-        :model-value="ranges(day.value).length > 0"
-        :label="day.label"
-        :disabled="disabled"
-        @update:model-value="(open) => toggle(day.value, open)"
-      />
-      <span class="w-24 text-p-base-medium text-ink-gray-8">{{
-        day.label
-      }}</span>
-      <span
-        v-if="!ranges(day.value).length"
-        class="text-p-sm text-ink-gray-5"
-        >{{ __('Closed') }}</span
+    <li v-for="day in DAYS" :key="day.value" class="flex flex-col gap-2 py-2.5">
+      <div class="flex items-center gap-3">
+        <AjustesSwitch
+          :model-value="ranges(day.value).length > 0"
+          :label="day.label"
+          :disabled="disabled"
+          @update:model-value="(open) => toggle(day.value, open)"
+        />
+        <span class="min-w-0 flex-1 text-p-base-medium text-ink-gray-8">{{
+          day.label
+        }}</span>
+        <span
+          v-if="!ranges(day.value).length"
+          class="text-p-sm text-ink-gray-5"
+          >{{ __('Closed') }}</span
+        >
+      </div>
+      <div
+        v-if="ranges(day.value).length"
+        class="flex flex-col gap-1.5 sm:pl-16"
       >
-      <div v-else class="flex min-w-0 flex-1 flex-col gap-1">
         <div
           v-for="row in ranges(day.value)"
           :key="rowKey(row)"
-          class="flex flex-wrap items-center gap-1.5"
+          class="flex flex-col gap-1"
         >
-          <input
-            v-model="row.start_time"
-            type="time"
-            class="num h-8 rounded-4 border border-outline-gray-2 bg-surface-base px-2 text-sm"
-            :aria-label="`${day.label}: ${__('Start Time')}`"
-            :disabled="disabled"
-          />
-          <span class="text-ink-gray-5" aria-hidden="true">–</span>
-          <input
-            v-model="row.end_time"
-            type="time"
-            class="num h-8 rounded-4 border border-outline-gray-2 bg-surface-base px-2 text-sm"
-            :aria-label="`${day.label}: ${__('End Time')}`"
-            :disabled="disabled"
-          />
-          <button
-            v-if="ranges(day.value).length > 1"
-            type="button"
-            class="press flex size-8 items-center justify-center rounded-4 text-ink-gray-6 hover:bg-surface-gray-2"
-            :aria-label="__('Remove these hours')"
-            :title="__('Remove these hours')"
-            :disabled="disabled"
-            @click="remove(row)"
+          <div
+            class="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_2.25rem] items-center gap-1.5 sm:max-w-sm"
           >
-            <span class="lucide-x size-4" aria-hidden="true" />
-          </button>
+            <input
+              :value="hhmm(row.start_time)"
+              type="time"
+              class="num h-9 w-full min-w-0 rounded-4 border border-outline-gray-2 bg-surface-base px-1.5 text-sm text-ink-gray-8"
+              :aria-label="`${day.label}: ${__('Start Time')}`"
+              :disabled="disabled"
+              @input="(event) => (row.start_time = event.target.value)"
+            />
+            <span class="text-ink-gray-5" aria-hidden="true">–</span>
+            <input
+              :value="hhmm(row.end_time)"
+              type="time"
+              class="num h-9 w-full min-w-0 rounded-4 border border-outline-gray-2 bg-surface-base px-1.5 text-sm text-ink-gray-8"
+              :aria-label="`${day.label}: ${__('End Time')}`"
+              :disabled="disabled"
+              @input="(event) => (row.end_time = event.target.value)"
+            />
+            <button
+              v-if="ranges(day.value).length > 1"
+              type="button"
+              class="press flex size-9 items-center justify-center rounded-4 text-ink-gray-6 hover:bg-surface-gray-2"
+              :aria-label="__('Remove these hours')"
+              :title="__('Remove these hours')"
+              :disabled="disabled"
+              @click="remove(row)"
+            >
+              <span class="lucide-x size-4" aria-hidden="true" />
+            </button>
+          </div>
           <span
             v-if="backwards(row)"
             role="alert"
-            class="w-full text-p-sm text-ink-red-7"
+            class="text-p-sm text-ink-red-7"
             >{{
               __('Ends before it starts. Change one of the two times.')
             }}</span
@@ -64,11 +71,12 @@
         </div>
         <button
           type="button"
-          class="press self-start text-p-sm text-ink-gray-7 underline"
+          class="press flex min-h-9 items-center gap-1 self-start rounded-4 px-1 text-p-sm text-ink-gray-7 hover:bg-surface-gray-2"
           :disabled="disabled"
           @click="add(day.value)"
         >
-          {{ __('Add another range (for example after lunch)') }}
+          <span class="lucide-plus size-4" aria-hidden="true" />
+          {{ __('Add another range') }}
         </button>
       </div>
     </li>
@@ -99,6 +107,11 @@ function rowKey(row) {
   if (row.name) return row.name
   if (!keys.has(row)) keys.set(row, `new-${++local}`)
   return keys.get(row)
+}
+// Frappe sends a Time as 9:00:00; a time input only shows two-digit hours.
+const hhmm = (value) => {
+  const [h, m = '0'] = String(value || '').split(':')
+  return h ? `${h.padStart(2, '0')}:${m.padStart(2, '0')}` : ''
 }
 const minutes = (value) => {
   const [h, m] = String(value || '').split(':')

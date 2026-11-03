@@ -117,6 +117,29 @@ beforeEach(() => {
 afterEach(() => cleanups.splice(0).forEach((fn) => fn()))
 
 describe('office hours', () => {
+  it('shows the times Frappe sends without a leading zero', async () => {
+    const doc = ref({
+      working_hours: [
+        {
+          name: 'r1',
+          workday: 'Monday',
+          start_time: '9:00:00',
+          end_time: '18:30:00',
+        },
+      ],
+    })
+    const el = await mount(WeekHours, {
+      doc: doc.value,
+      'onUpdate:doc': (v) => (doc.value = v),
+    })
+    const [start, end] = el.querySelectorAll('input[type="time"]')
+    expect([start.value, end.value]).toEqual(['09:00', '18:30'])
+    expect(el.textContent).not.toContain('Ends before it starts')
+    start.value = '08:15'
+    start.dispatchEvent(new Event('input'))
+    await flush()
+    expect(doc.value.working_hours[0].start_time).toBe('08:15')
+  })
   it('opens a day with the hours of the day before and flags a backwards range', async () => {
     const doc = ref({
       working_hours: [

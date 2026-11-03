@@ -164,7 +164,7 @@ def _own_channel(connection=None):
 	if not names:
 		frappe.throw(
 			_(
-				"No inbox-channel connection acts as {0}. In CRM Integration, set «Acts as user» to this "
+				"No inbox-channel connection acts as {0}. In Settings › Automations (n8n), set «Acts as user» to this "
 				"user and turn on «Use as an inbox channel»."
 			).format(user),
 			frappe.PermissionError,

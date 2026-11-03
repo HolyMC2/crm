@@ -140,8 +140,7 @@ def validate_url(url):
 	if parsed.scheme != "https" and not allowed:
 		frappe.throw(
 			_(
-				"Use an https:// webhook URL. A private n8n on your own network can use http:// once "
-				"support adds its host name to the site's crm_integration_allowed_hosts."
+				"Use an https:// webhook URL. For an n8n on your own network, ask support to allow its address."
 			)
 		)
 	return parsed
@@ -159,9 +158,7 @@ def _resolve(host, port):
 	if host not in _allowed_hosts():
 		for ip in ips:
 			if not ipaddress.ip_address(ip).is_global:
-				raise DeliveryError(
-					f"{host} points to a private address. Ask support to allow it in crm_integration_allowed_hosts."
-				)
+				raise DeliveryError(f"{host} points to a private address. Ask support to allow it.")
 	return ips[0]
 
 

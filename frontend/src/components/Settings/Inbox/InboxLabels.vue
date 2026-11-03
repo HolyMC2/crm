@@ -17,52 +17,54 @@
       <li
         v-for="item in labels"
         :key="item.name"
-        class="flex flex-wrap items-center gap-x-3 gap-y-2 py-2"
+        class="flex flex-col gap-2 py-2.5"
       >
-        <span
-          class="inline-flex max-w-full items-center rounded-4 border px-1.5 py-0.5 text-xs [overflow-wrap:anywhere]"
-          :class="labelColorClass(item.color)"
-          >{{ item.name }}</span
-        >
-        <select
-          :value="item.color || 'gray'"
-          class="h-8 rounded-4 border border-outline-gray-2 bg-surface-base px-2 text-sm"
-          :aria-label="`${item.name}: ${__('Color')}`"
-          :disabled="busy"
-          @change="(event) => update(item, { color: event.target.value })"
-        >
-          <option v-for="c in COLORS" :key="c.value" :value="c.value">
-            {{ c.label }}
-          </option>
-        </select>
+        <div class="flex items-center gap-2">
+          <span
+            class="mr-auto inline-flex min-w-0 items-center rounded-4 border px-1.5 py-0.5 text-xs [overflow-wrap:anywhere]"
+            :class="labelColorClass(item.color)"
+            >{{ item.name }}</span
+          >
+          <select
+            :value="item.color || 'gray'"
+            class="h-9 rounded-4 border border-outline-gray-2 bg-surface-base px-2 text-sm"
+            :aria-label="`${item.name}: ${__('Color')}`"
+            :disabled="busy"
+            @change="(event) => update(item, { color: event.target.value })"
+          >
+            <option v-for="c in COLORS" :key="c.value" :value="c.value">
+              {{ c.label }}
+            </option>
+          </select>
+          <button
+            type="button"
+            class="press flex h-9 min-w-9 items-center justify-center rounded-4 px-2 text-sm"
+            :class="
+              confirming === item.name
+                ? 'bg-surface-red-2 text-ink-red-7'
+                : 'text-ink-gray-6 hover:bg-surface-gray-2'
+            "
+            :aria-label="
+              confirming === item.name
+                ? __('Delete {0}', [item.name])
+                : __('Delete label')
+            "
+            :title="__('Delete label')"
+            :disabled="busy"
+            @click="remove(item)"
+          >
+            <span v-if="confirming === item.name">{{ __('Delete') }}</span>
+            <span v-else class="lucide-trash-2 size-4" aria-hidden="true" />
+          </button>
+        </div>
         <input
           :value="item.description"
-          class="h-8 min-w-0 flex-1 basis-40 rounded-4 border border-outline-gray-2 bg-surface-base px-2 text-sm"
+          class="h-9 w-full min-w-0 rounded-4 border border-outline-gray-2 bg-surface-base px-2 text-sm"
           :placeholder="__('What it is for (optional)')"
           :aria-label="`${item.name}: ${__('Description')}`"
           :disabled="busy"
           @change="(event) => update(item, { description: event.target.value })"
         />
-        <button
-          type="button"
-          class="press flex h-8 items-center justify-center rounded-4 px-2 text-sm"
-          :class="
-            confirming === item.name
-              ? 'bg-surface-red-2 text-ink-red-7'
-              : 'text-ink-gray-6 hover:bg-surface-gray-2'
-          "
-          :aria-label="
-            confirming === item.name
-              ? __('Delete {0}', [item.name])
-              : __('Delete label')
-          "
-          :title="__('Delete label')"
-          :disabled="busy"
-          @click="remove(item)"
-        >
-          <span v-if="confirming === item.name">{{ __('Delete') }}</span>
-          <span v-else class="lucide-trash-2 size-4" aria-hidden="true" />
-        </button>
       </li>
     </ul>
     <p v-else-if="!loading" class="text-p-sm text-ink-gray-6">
