@@ -32,6 +32,18 @@
         La respuesta no se ha confirmado. Conservamos el texto y la misma
         solicitud.
       </p>
+      <div
+        v-if="!pending"
+        class="mt-2 flex flex-wrap items-center gap-3"
+        aria-label="Insertar en la respuesta"
+      >
+        <CannedReplyPicker
+          v-if="cannedReplies"
+          :channel="provider"
+          @pick="insert"
+        />
+        <HelpArticlePicker :disabled="busy || blocked" @pick="insert" />
+      </div>
       <div class="mt-2 flex flex-wrap items-center justify-between gap-2">
         <span class="text-xs text-ink-gray-5"
           >{{ length }}/{{ maxLength }} · Consulta el estado en Envíos.</span
@@ -59,6 +71,9 @@
 <script setup>
 import { computed, ref, watch, onUnmounted, useId } from 'vue'
 import { call } from 'frappe-ui'
+import CannedReplyPicker from '@/components/doco/inbox/CannedReplyPicker.vue'
+import HelpArticlePicker from './HelpArticlePicker.vue'
+import { addonAvailable as cannedReplies } from '@/utils/crmCapabilities'
 const props = defineProps({
   conversation: { type: Object, required: true },
   actor: { type: String, required: true },
@@ -96,6 +111,11 @@ function textProblem(text, strict) {
   return ''
 }
 const id = useId()
+// Saved replies (cannedReplies) live in the marketing add-on; without it the picker stays out.
+function insert(text) {
+  if (!text || pending.value) return
+  body.value = body.value.trim() ? `${body.value.trimEnd()}\n${text}` : text
+}
 const body = ref(''),
   pending = ref(null),
   busy = ref(false),

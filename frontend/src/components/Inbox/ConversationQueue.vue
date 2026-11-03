@@ -5,7 +5,49 @@
     aria-label="Conversaciones de clientes"
   >
     <div class="border-b border-outline-gray-1 p-3">
-      <label class="block text-xs font-medium"
+      <nav
+        class="mb-3 flex flex-wrap gap-1 text-xs"
+        aria-label="Vista de conversaciones"
+      >
+        <button
+          v-for="item in VIEWS"
+          :key="item.id"
+          type="button"
+          class="rounded-4 border border-outline-gray-2 px-2 py-1"
+          :class="view === item.id ? 'bg-surface-gray-3 font-medium' : ''"
+          :aria-pressed="view === item.id"
+          :disabled="disabled"
+          @click="$emit('view', item.id, label)"
+        >
+          {{ item.label }}
+        </button>
+      </nav>
+      <label
+        v-if="view !== 'account' && labels.length"
+        class="mb-3 block text-xs font-medium"
+        >Etiqueta
+        <select
+          :value="label"
+          :disabled="disabled"
+          class="mt-2 block w-full min-w-0 rounded-4 border border-outline-gray-2 bg-surface-base p-2 text-sm text-ink-gray-8"
+          @change="$emit('view', view, $event.target.value)"
+        >
+          <option value="">Todas las etiquetas</option>
+          <option v-for="item in labels" :key="item.name" :value="item.name">
+            {{ item.name }}
+          </option>
+        </select>
+      </label>
+      <button
+        v-if="canManage"
+        type="button"
+        class="mb-3 text-xs underline"
+        :disabled="disabled"
+        @click="$emit('performance')"
+      >
+        Desempeño del equipo
+      </button>
+      <label v-if="view === 'account'" class="block text-xs font-medium"
         >Cuenta del canal
         <select
           :value="accountKey(account)"
@@ -26,7 +68,7 @@
         </select>
       </label>
       <p
-        v-if="account"
+        v-if="account && view === 'account'"
         class="mt-2 text-xs text-ink-gray-5 [overflow-wrap:anywhere]"
       >
         {{ account.provider }} ·
@@ -35,11 +77,11 @@
     </div>
     <div class="min-h-0 flex-1 overflow-y-auto">
       <p v-if="!threads.length && !loading" class="p-4 text-sm text-ink-gray-5">
-        No hay conversaciones visibles en esta cuenta.
+        {{ EMPTY[view] || EMPTY.account }}
       </p>
       <button
         v-for="thread in threads"
-        :key="thread.peer_id"
+        :key="thread.name || thread.peer_id"
         type="button"
         data-key-row
         :data-row-current="
@@ -60,9 +102,31 @@
             ? thread.human_owner || 'Sin responsable'
             : 'Abrir historial de esta cuenta y destinatario'
         }}</span>
+        <span
+          v-if="view !== 'account'"
+          class="mt-1 block text-xs text-ink-gray-5"
+          >{{ thread.provider }}</span
+        >
         <span v-if="thread.preview" class="mt-2 line-clamp-2 text-sm">{{
           thread.preview
         }}</span>
+        <span
+          v-if="thread.labels?.length || thread.snoozed_until"
+          class="mt-2 flex flex-wrap gap-1"
+        >
+          <span
+            v-if="thread.snoozed_until"
+            class="rounded-4 bg-surface-gray-3 px-1.5 py-0.5 text-xs"
+            >Pospuesta hasta {{ when(thread.snoozed_until) }}</span
+          >
+          <span
+            v-for="item in thread.labels"
+            :key="item"
+            class="rounded-4 border px-1.5 py-0.5 text-xs"
+            :class="labelClass(item)"
+            >{{ item }}</span
+          >
+        </span>
       </button>
       <button
         v-if="more"
@@ -80,20 +144,54 @@
 <script setup>
 import { ref } from 'vue'
 import { useListKeys } from '@/composables/pageKeys'
+import { formatDateTime } from '@/utils/display'
 
 // Webchat and API inbox channels have opaque 64-character ids; their label is the name.
 const labelOnly = (item) => ['Webchat', 'API'].includes(item?.provider)
+
+const VIEWS = [
+  { id: 'mine', label: 'Mías' },
+  { id: 'unassigned', label: 'Sin asignar' },
+  { id: 'all', label: 'Todas' },
+  { id: 'snoozed', label: 'Pospuestas' },
+  { id: 'account', label: 'Por cuenta' },
+]
+const EMPTY = {
+  account: 'No hay conversaciones visibles en esta cuenta.',
+  mine: 'No tienes conversaciones abiertas. Revisa «Sin asignar» para tomar una.',
+  unassigned: 'No hay conversaciones esperando responsable.',
+  all: 'No hay conversaciones abiertas que puedas ver.',
+  snoozed: 'No hay conversaciones pospuestas.',
+}
 
 const props = defineProps({
   accounts: { type: Array, default: () => [] },
   account: { type: Object, default: null },
   threads: { type: Array, default: () => [] },
   selected: { type: String, default: null },
+  view: { type: String, default: 'account' },
+  label: { type: String, default: '' },
+  labels: { type: Array, default: () => [] },
+  canManage: Boolean,
   loading: Boolean,
   disabled: Boolean,
   more: Boolean,
 })
-const emit = defineEmits(['account', 'select', 'more'])
+const emit = defineEmits(['account', 'select', 'more', 'view', 'performance'])
+const LABEL_COLORS = {
+  gray: 'border-outline-gray-2',
+  blue: 'border-blue-300 text-blue-700',
+  green: 'border-green-300 text-green-700',
+  amber: 'border-amber-300 text-amber-700',
+  red: 'border-red-300 text-red-700',
+  violet: 'border-violet-300 text-violet-700',
+  pink: 'border-pink-300 text-pink-700',
+  cyan: 'border-cyan-300 text-cyan-700',
+}
+const labelClass = (name) =>
+  LABEL_COLORS[props.labels.find((l) => l.name === name)?.color] ||
+  LABEL_COLORS.gray
+const when = (value) => formatDateTime(value)
 // Keyboard standard: j/k walk the threads, Enter opens one.
 const root = ref(null)
 useListKeys({ page: 'inbox-conversations', root, rows: true, open: true })

@@ -64,8 +64,9 @@ def mentionable(name: str, query: str | None = ""):
 
 
 @frappe.whitelist(methods=["POST"])
-def snooze_conversation(name: str, until: str, command_id: str):
-	return snooze.snooze(name, until, command_id)
+def snooze_conversation(name: str, command_id: str, until: str | None = None, preset: str | None = None):
+	"""`preset` (1h, 3h, tomorrow, next_week) is resolved in site time; `until` is a site-time datetime."""
+	return snooze.snooze(name, snooze.preset_until(preset) if preset else until, command_id)
 
 
 @frappe.whitelist(methods=["POST"])

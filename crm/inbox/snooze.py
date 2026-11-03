@@ -4,7 +4,7 @@ A snoozed conversation wakes when its time comes (cron) or as soon as the custom
 writes again, whichever is first, and the person who snoozed it is told.
 """
 
-from datetime import timedelta
+from datetime import datetime, time, timedelta
 
 import frappe
 from frappe import _
@@ -24,6 +24,37 @@ def _until(value):
 	if not until or until <= now + timedelta(minutes=1) or until > now + timedelta(days=MAX_DAYS):
 		frappe.throw(_("Choose a time between one minute and {0} days from now.").format(MAX_DAYS))
 	return until.replace(microsecond=0)
+
+
+PRESETS = ("1h", "3h", "tomorrow", "next_week")
+DEFAULT_OPENING = time(9, 0)
+
+
+def _opening(day):
+	"""When the team starts on `day`: the earliest office-hours start that weekday, else 9:00."""
+	from crm.inbox import settings
+	from crm.inbox.office_hours import _time
+
+	starts = [
+		_time(row.start_time)
+		for row in settings().get("working_hours") or []
+		if row.workday == day.strftime("%A") and _time(row.start_time)
+	]
+	return datetime.combine(day, min(starts) if starts else DEFAULT_OPENING)
+
+
+def preset_until(preset):
+	"""Site-time end of a snooze preset (the browser's clock and zone never decide it)."""
+	now = now_datetime()
+	if preset == "1h":
+		return now + timedelta(hours=1)
+	if preset == "3h":
+		return now + timedelta(hours=3)
+	if preset == "tomorrow":
+		return _opening(now.date() + timedelta(days=1))
+	if preset == "next_week":
+		return _opening(now.date() + timedelta(days=7 - now.weekday()))
+	frappe.throw(_("Choose when the conversation comes back."))
 
 
 def snooze(name, until, command_id):

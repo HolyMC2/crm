@@ -2,6 +2,9 @@ import { reactive, watch } from 'vue'
 import { call } from 'frappe-ui'
 
 const API = 'crm.api.conversation_threads.'
+// Cross-account queue views (crm.api.inbox.list_queue); 'account' is the per-account list.
+const QUEUE = 'crm.api.inbox.list_queue'
+export const QUEUE_VIEWS = ['account', 'mine', 'unassigned', 'all', 'snoozed']
 const CONTROL = 'crm.api.conversations.apply_control'
 const VERIFY = 'crm.api.provider_control.verify'
 const errorType = (e) =>
@@ -19,6 +22,8 @@ export function useConversations({
   const state = reactive({
     accounts: [],
     account: null,
+    view: 'account',
+    label: '',
     threads: [],
     threadsCursor: null,
     conversation: null,
@@ -54,6 +59,8 @@ export function useConversations({
     Object.assign(state, {
       accounts: [],
       account: null,
+      view: 'account',
+      label: '',
       threads: [],
       threadsCursor: null,
       pending: null,
@@ -95,13 +102,58 @@ export function useConversations({
     if (state.pending) return false
     epoch++
     clearThread()
+    state.view = 'account'
+    state.label = ''
     state.account = account
     state.threads = []
     state.threadsCursor = null
     state.error = ''
     return loadThreads()
   }
+  async function selectView(view, label = state.label) {
+    if (state.pending || !QUEUE_VIEWS.includes(view)) return false
+    // The open conversation stays; queueRequest discards an older list response.
+    state.view = view
+    state.label = view === 'account' ? '' : label || ''
+    state.threads = []
+    state.threadsCursor = null
+    state.error = ''
+    return loadThreads()
+  }
+  async function loadQueue(more = false) {
+    if (more && state.threadsCursor === null) return false
+    const stamp = epoch,
+      user = actor(),
+      view = state.view,
+      label = state.label
+    const request = ++queueRequest
+    state.loading = true
+    try {
+      const result = await rpc(QUEUE, {
+        view,
+        label: label || null,
+        start: more ? state.threadsCursor : 0,
+      })
+      if (
+        !current(stamp, user) ||
+        request !== queueRequest ||
+        view !== state.view ||
+        label !== state.label
+      )
+        return false
+      state.threads = more ? [...state.threads, ...result.items] : result.items
+      state.threadsCursor = result.next_start ?? null
+      return true
+    } catch (e) {
+      if (current(stamp, user) && request === queueRequest) failed(e)
+      return false
+    } finally {
+      if (current(stamp, user) && request === queueRequest)
+        state.loading = false
+    }
+  }
   async function loadThreads(more = false) {
+    if (state.view !== 'account') return loadQueue(more)
     if (!state.account || (more && !state.threadsCursor)) return false
     const stamp = epoch,
       user = actor(),
@@ -318,6 +370,7 @@ export function useConversations({
     state,
     loadAccounts,
     selectAccount,
+    selectView,
     loadThreads,
     selectThread,
     loadHistory,

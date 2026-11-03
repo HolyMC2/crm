@@ -35,12 +35,18 @@
         :account="state.account"
         :threads="state.threads"
         :selected="state.conversation?.name"
+        :view="state.view"
+        :label="state.label"
+        :labels="inbox.labels"
+        :can-manage="inbox.can_manage"
         :loading="state.loading"
         :disabled="pendingWork"
         :more="!!state.threadsCursor"
         @account="selectAccount"
+        @view="selectView"
         @select="select"
         @more="workspace.loadThreads(true)"
+        @performance="performanceOpen = true"
       />
       <section
         class="min-h-0 min-w-0 flex-1 flex-col"
@@ -117,13 +123,30 @@
               state.historyLoading ||
               queuePending ||
               outboxPending ||
-              commercePending
+              commercePending ||
+              toolsPending
             "
             :pending="state.pending"
             :provider-notice="state.providerNotice"
             @control="workspace.applyControl"
             @retry="workspace.applyControl()"
             @operators="workspace.loadOperators"
+          />
+          <ConversationTools
+            :conversation="state.conversation"
+            :actor="session.user"
+            :labels="inbox.labels"
+            :macros="macros"
+            :blocked="
+              !!state.pending ||
+              state.controlLoading ||
+              state.historyLoading ||
+              queuePending ||
+              outboxPending ||
+              commercePending
+            "
+            @pending="toolsPending = $event"
+            @refresh="toolsChanged"
           />
           <button
             v-if="state.historyCursor"
@@ -150,7 +173,9 @@
             ref="outbox"
             :conversation="state.conversation"
             :actor="session.user"
-            :blocked="!!state.pending || queuePending || commercePending"
+            :blocked="
+              !!state.pending || queuePending || commercePending || toolsPending
+            "
             @pending="outboxPending = $event"
             @refresh="workspace.loadHistory()"
           />
@@ -161,6 +186,7 @@
               !!state.pending ||
               queuePending ||
               outboxPending ||
+              toolsPending ||
               state.historyLoading
             "
             @pending="commercePending = $event"
@@ -170,9 +196,15 @@
           <CitaBooking
             :conversation="state.conversation"
             :actor="session.user"
-            :blocked="!!state.pending || outboxPending || commercePending"
+            :blocked="
+              !!state.pending ||
+              outboxPending ||
+              commercePending ||
+              toolsPending
+            "
             @queued="queued"
           />
+          <ConversationNotes :conversation="state.conversation" />
           <ConversationComposer
             :conversation="state.conversation"
             :actor="session.user"
@@ -180,6 +212,7 @@
               !!state.pending ||
               outboxPending ||
               commercePending ||
+              toolsPending ||
               state.historyLoading
             "
             @pending="queuePending = $event"
@@ -196,6 +229,10 @@
         </p>
       </section>
     </div>
+    <ConversationPerformance
+      v-if="inbox.can_manage"
+      v-model="performanceOpen"
+    />
   </div>
 </template>
 <script setup>
@@ -208,9 +245,13 @@ import {
 } from 'vue-router'
 import { sessionStore } from '@/stores/session'
 import { globalStore } from '@/stores/global'
-import { useConversations } from '@/composables/useConversations'
+import { call } from 'frappe-ui'
+import { useConversations, QUEUE_VIEWS } from '@/composables/useConversations'
 import ConversationQueue from './ConversationQueue.vue'
 import ConversationControls from './ConversationControls.vue'
+import ConversationTools from './ConversationTools.vue'
+import ConversationNotes from './ConversationNotes.vue'
+import ConversationPerformance from './ConversationPerformance.vue'
 import ConversationComposer from './ConversationComposer.vue'
 import ConversationOutbox from './ConversationOutbox.vue'
 import CatalogCommerce from './CatalogCommerce.vue'
@@ -231,13 +272,19 @@ const { state } = workspace
 const outbox = ref(null),
   queuePending = ref(false),
   outboxPending = ref(false),
-  commercePending = ref(false)
+  commercePending = ref(false),
+  toolsPending = ref(false),
+  performanceOpen = ref(false)
+// Labels, macros and the manager flag (crm.api.inbox); empty until they load.
+const inbox = ref({ labels: [], can_manage: false }),
+  macros = ref([])
 const pendingWork = computed(
   () =>
     !!state.pending ||
     queuePending.value ||
     outboxPending.value ||
-    commercePending.value,
+    commercePending.value ||
+    toolsPending.value,
 )
 const emit = defineEmits(['pending'])
 watch(
@@ -302,10 +349,37 @@ async function initialize() {
   if (!(await workspace.loadAccounts())) return
   if (typeof route.query.conversation === 'string')
     await workspace.selectThread({ name: route.query.conversation })
-  if (state.account || state.accounts[0]) {
+  // ?queue=mine|unassigned|all|snoozed brings the person back to the list they left.
+  const queue = route.query.queue
+  if (queue !== 'account' && QUEUE_VIEWS.includes(queue))
+    await workspace.selectView(queue)
+  else if (state.account || state.accounts[0]) {
     if (state.conversation) await workspace.loadThreads()
     else await workspace.selectAccount(state.accounts[0])
   }
+}
+async function loadInbox() {
+  // Older servers lack crm.api.inbox; the workspace then runs without labels or macros.
+  const [settings, list] = await Promise.allSettled(
+    ['get_settings', 'list_macros'].map(async (m) =>
+      call('crm.api.inbox.' + m),
+    ),
+  )
+  if (settings.status === 'fulfilled' && settings.value)
+    inbox.value = { labels: [], can_manage: false, ...settings.value }
+  if (list.status === 'fulfilled') macros.value = list.value || []
+}
+async function selectView(view, label) {
+  if (pendingWork.value) return
+  await workspace.selectView(view, label)
+  router.replace({
+    query: { ...route.query, queue: view === 'account' ? undefined : view },
+  })
+}
+// Labels and snooze change the queue row too; macros may close or move the conversation.
+async function toolsChanged() {
+  await workspace.loadHistory()
+  if (!pendingWork.value) await workspace.loadThreads()
 }
 function updated(event) {
   if (
@@ -328,7 +402,10 @@ function socialMessage(event) {
     updated({ name: current.name })
 }
 function selectAccount(account) {
-  if (!pendingWork.value) workspace.selectAccount(account)
+  if (pendingWork.value) return
+  workspace.selectAccount(account)
+  if (route.query.queue)
+    router.replace({ query: { ...route.query, queue: undefined } })
 }
 function queued(intent) {
   outbox.value?.upsert(intent)
@@ -343,7 +420,7 @@ function scheduleRefresh() {
   if (!refreshActive) return
   refreshTimer = setTimeout(async () => {
     if (
-      state.account?.provider === 'Webchat' &&
+      (state.view !== 'account' || state.account?.provider === 'Webchat') &&
       document.visibilityState === 'visible' &&
       !pendingWork.value &&
       !state.loading &&
@@ -381,6 +458,7 @@ watch(
 )
 onMounted(() => {
   initialize()
+  loadInbox()
   refreshActive = true
   scheduleRefresh()
   $socket?.on('crm_conversation_updated', updated)

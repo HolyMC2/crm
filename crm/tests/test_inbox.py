@@ -10,15 +10,16 @@ import re
 import secrets
 import unittest
 from contextlib import contextmanager
-from datetime import timedelta
+from datetime import datetime, time, timedelta
 from unittest.mock import patch
 from uuid import uuid4
 
 import frappe
-from frappe.utils import now_datetime
+from frappe.utils import get_datetime, now_datetime
 
 from crm import inbox
 from crm.api import conversations as control
+from crm.api import inbox as inbox_api
 from crm.api import outbox, webchat
 from crm.inbox import (
 	assignment,
@@ -293,6 +294,28 @@ class TestSnoozeAndQueue(_Inbox):
 			control.apply_control(self.conversation, "close", self.doc().generation, secrets.token_hex(16))
 			with self.assertRaises(frappe.ValidationError):
 				snooze.snooze(self.conversation, now_datetime() + timedelta(hours=1), secrets.token_hex(16))
+
+	def test_snooze_presets_come_back_when_the_team_opens(self):
+		tomorrow = (now_datetime() + timedelta(days=1)).date()
+		day = tomorrow.strftime("%A")
+		self.configure(
+			working_hours=[
+				{"workday": day, "start_time": "10:30:00", "end_time": "18:00:00"},
+				{"workday": day, "start_time": "08:15:00", "end_time": "12:00:00"},
+			]
+		)
+		self.assertEqual(snooze.preset_until("tomorrow"), datetime.combine(tomorrow, time(8, 15)))
+		monday = now_datetime().date() + timedelta(days=7 - now_datetime().weekday())
+		opening = time(8, 15) if monday == tomorrow else snooze.DEFAULT_OPENING
+		self.assertEqual(snooze.preset_until("next_week"), datetime.combine(monday, opening))
+		with self.assertRaises(frappe.ValidationError):
+			snooze.preset_until("someday")
+		self.take(self.one)
+		before = now_datetime().replace(microsecond=0)
+		with self.as_user(self.one):
+			inbox_api.snooze_conversation(self.conversation, secrets.token_hex(16), preset="3h")
+		until = get_datetime(self.doc().snoozed_until)
+		self.assertTrue(before + timedelta(hours=3) <= until <= now_datetime() + timedelta(hours=3))
 
 	def test_queue_views_split_mine_unassigned_and_all(self):
 		other = control.get_or_create("Webchat", self.account, self.visitor()[0]).name
