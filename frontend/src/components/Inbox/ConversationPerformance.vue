@@ -1,9 +1,6 @@
 <template>
-  <Dialog
-    v-model="open"
-    :options="{ title: 'Desempeño del equipo', size: '4xl' }"
-  >
-    <template #body-content>
+  <Dialog v-model="open" title="Desempeño del equipo" size="4xl">
+    <template #default>
       <form
         class="flex flex-wrap items-end gap-2 text-xs"
         @submit.prevent="load"

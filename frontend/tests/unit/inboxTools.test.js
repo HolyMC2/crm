@@ -11,11 +11,11 @@ vi.mock('frappe-ui', async () => {
   return {
     call: (...args) => context.call(...args),
     Dialog: {
-      props: ['modelValue', 'options'],
+      props: ['modelValue', 'title', 'size'],
       setup:
         (props, { slots }) =>
         () =>
-          props.modelValue ? render('div', slots['body-content']?.()) : null,
+          props.modelValue ? render('div', slots.default?.()) : null,
     },
   }
 })
