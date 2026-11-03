@@ -31,7 +31,7 @@ def insert_private(values):
 
 def require_service(doc):
 	if doc.flags.get("crm_inbox_service") is not WRITE_TOKEN:
-		frappe.throw(_("This record is written by the customer inbox."), frappe.PermissionError)
+		frappe.throw(_("Add notes and ratings from the conversation in the inbox."), frappe.PermissionError)
 
 
 def run_command(name, command_id, kind, values, apply):

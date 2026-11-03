@@ -30359,8 +30359,8 @@ msgid "Labels are not set up on this system yet. Ask support to finish the updat
 msgstr "Las etiquetas aún no están instaladas en este sistema. Pide a soporte que termine la actualización."
 
 #: crm/inbox/__init__.py
-msgid "This record is written by the customer inbox."
-msgstr "Este registro lo escribe la bandeja de clientes."
+msgid "Add notes and ratings from the conversation in the inbox."
+msgstr "Las notas y calificaciones se agregan desde la conversación en la bandeja."
 
 #: crm/inbox/macros.py
 msgid "This macro is private to the person who made it."

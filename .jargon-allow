@@ -30,3 +30,12 @@ crm/integrations/channel.py
 crm/api/integration.py
 # API channel messages are never opened in Desk (no read permission); the notes say who writes them.
 crm/fcrm/doctype/crm_channel_message/*::rule=written-by note
+# The same n8n setup and API texts in the Spanish catalogue (crm/locale/es.po).
+msg::Enter the full webhook URL, for example https://n8n.example.com/webhook/…
+msg::Add the webhook URL from your n8n Webhook node first.
+msg::Send message_id: your channel's own id for this message (up to 140 characters).
+msg::message_id {0} was already used for a different text.
+msg::Deliveries are written by the integration engine.
+msg::Your n8n Webhook node's production URL. HTTPS is required unless the host is listed in the site's crm_integration_allowed_hosts.
+msg::Your webhook answered {0}. You can enable the connection now.
+msg::Payload
