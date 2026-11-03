@@ -85,6 +85,8 @@ describe('who holds the cash', () => {
       label: 'Contar y verificar',
     })
     expect(bagStep(bag, storeSafe, 'karla@x').reason).toMatch(/otra persona/)
+    const owner = { ...storeSafe, can: { ...storeSafe.can, self_review: true } }
+    expect(bagStep(bag, owner, 'karla@x').action).toBe('verify')
     expect(
       bagStep({ ...bag, state: 'In Transit' }, { can: {} }, 'jenni@x').reason,
     ).toMatch(/ficha del banco/)

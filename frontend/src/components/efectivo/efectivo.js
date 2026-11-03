@@ -274,7 +274,8 @@ export function bagStep(bag, safe, me) {
     case 'Unverified':
       if (!can.verify)
         return { reason: 'La verifica quien cuida la caja fuerte.' }
-      if (bag.prepared_by === me)
+      // The owner (can.self_review) verifies their own bag; anyone else asks a second person.
+      if (bag.prepared_by === me && !can.self_review)
         return {
           reason:
             'Tú la sellaste: otra persona la cuenta y la verifica. Pídeselo a quien cuida la caja fuerte contigo.',
