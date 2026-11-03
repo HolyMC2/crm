@@ -338,9 +338,19 @@ class TestCustomerMessage(_Inbox):
 		other = WEEKDAYS[(WEEKDAYS.index(today) + 1) % 7]
 		return [{"workday": other, "start_time": "09:00:00", "end_time": "18:00:00"}]
 
-	def test_a_customer_message_queues_the_follow_up_job(self):
+	def test_a_customer_message_queues_the_follow_up_job_after_commit(self):
 		self.enqueue.reset_mock()
-		message = self.incoming()
+		with patch.object(frappe.db.after_commit, "add") as later:
+			message = self.incoming()
+		follow_up = [
+			c.args[0] for c in later.call_args_list if c.args[0].func is customer_message.queue_follow_up
+		]
+		self.assertEqual(len(follow_up), 1)
+		self.assertFalse(
+			[c for c in self.enqueue.call_args_list if c.args[:1] == ("crm.inbox.customer_message.handle",)],
+			"nothing touches the queue before the message commits",
+		)
+		follow_up[0]()
 		calls = [
 			c for c in self.enqueue.call_args_list if c.args[:1] == ("crm.inbox.customer_message.handle",)
 		]

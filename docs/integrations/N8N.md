@@ -89,7 +89,9 @@ connections.
 |---|---|---|
 | `conversation.created` | a conversation is materialized | `conversation`: the inbox detail (provider, account, peer, owner, state, generation) |
 | `conversation.status_changed` | take, release, close, reopen, bot/human handover | `conversation` plus `change`: action, origin, actor, from/to state and owner, generation |
-| `conversation.updated` | route, link to lead/deal, metadata | `conversation` plus `change` |
+| `conversation.updated` | route, link to lead/deal, labels, snooze, metadata | `conversation` plus `change` (`action: "metadata"` lists the changed `fields`) |
+| `conversation.note_created` | someone adds a private note (the customer never sees it) | `conversation` plus `note`: `id`, `author`, `content`, `mentions`, `created_at` |
+| `conversation.rated` | the customer answers the satisfaction request | `conversation` plus `rating`: `id`, `rating` (1–5), `comment`, `agent`, `rated_at` |
 | `message.created` | a customer or agent message on WhatsApp, Messenger, Webchat or the API channel | `message` (`id`, `direction` in/out, `content`, `content_type`, `attach`, `status`, `timestamp`), `conversation`, `thread` (`provider`, `account_id`, `peer_id`) |
 | `message.updated` | delivery status (sent, delivered, read, failed) | as `message.created` plus `change.status` |
 | `outbound.updated` | an outbox intent changes state (queued, accepted, blocked, failed) | `intent`: as `outbox.get_intent` returns it |
@@ -111,14 +113,35 @@ protect against double sends and stale takes.
 | Goal | Call (POST `/api/method/…`) |
 |---|---|
 | Reply in a conversation | `crm.api.outbox.queue_message(conversation, expected_generation, request_id, payload)` |
-| Take, release, close, reopen, hand to the bot | `crm.api.conversations.apply_control(name, action, generation, command_id)` |
+| Request, take, transfer, release, pause, close, reopen | `crm.api.conversations.apply_control(name, action, expected_generation, command_id, owner=None, reason=None)` (`owner` only for `transfer`) |
 | Read the history | `crm.api.conversation_threads.get_history(conversation, cursor=None, limit=50)` |
-| Route to a department | `crm.api.conversations.route(name, department, expected_generation, command_id, reason=None)` |
-| Link to a lead, deal or contact | `crm.api.conversations.link_record(name, doctype, docname, command_id, remove=False)` |
+| Route to a department | `crm.api.automation.route_conversation(name, department, expected_generation, command_id, reason=None)` |
+| Link or unlink a lead, deal or contact | `crm.api.automation.link_record(name, doctype, docname, command_id)` / `unlink_record(…)` |
+| Set the labels | `crm.api.inbox.set_labels(name, labels, command_id)` (`labels` is a JSON list of CRM Conversation Label names) |
+| Add a private note, mentioning people | `crm.api.inbox.add_note(name, content, command_id, mentions=None)` (`mentions`: JSON list of users) |
+| Snooze or wake | `crm.api.inbox.snooze_conversation(name, command_id, until=None, preset=None)` (`preset`: `1h`, `3h`, `tomorrow`, `next_week`, in site time) / `unsnooze_conversation(name, command_id)` |
+| Run a macro | `crm.api.inbox.run_macro(name, macro, expected_generation, command_id)`; all steps or none |
+| Read a queue | `crm.api.inbox.list_queue(view, state="open", label=None, department=None, start=0, limit=30)` (`view`: `mine`, `unassigned`, `all`, `snoozed`) |
+| Team performance (managers) | `crm.api.inbox.performance(from_date=None, to_date=None, department=None)`: first response, resolution, ratings per person, 92 days at most |
 | Create or update leads, deals, contacts, notes, tasks | standard REST `/api/resource/<DocType>` (permissions apply) |
 
 Use a stable `request_id` / `command_id` derived from the n8n execution, so a retried node never
 sends twice.
+
+**CRM Inbox Settings** (Desk) runs the inbox's own automation, so n8n does not have to:
+
+- **Office hours and the away message.** Outside the hours or on a holiday, a customer who writes gets the away
+  message once per `away_repeat_hours`.
+- **Auto-assign.** A new customer message on an unowned conversation goes to the active agent
+  with the fewest open conversations, up to each agent's limit. It is recorded as an `auto_assign`
+  control event.
+- **Satisfaction rating.** When a conversation closes, the customer gets a `/rate/<token>` link.
+  The first answer counts and emits `conversation.rated`. A link expires after the configured
+  days.
+- **Response targets** for the performance report.
+
+Away messages, rating requests and macro replies are outbox intents with `origin: Automation`,
+so `outbound.updated` reports them like any other send.
 
 ## 5. API inbox channel (bring another channel into the inbox)
 

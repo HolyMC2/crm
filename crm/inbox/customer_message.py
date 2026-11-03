@@ -1,10 +1,11 @@
 """After a customer writes: note the time for the queue, wake a snoozed conversation,
 answer outside office hours and assign an unowned conversation. Runs in a short job
-after the message commits, so channel ingest never waits on it and a failure here
-never loses the message.
+queued once the message commits, so channel ingest never waits on it or on the queue,
+a rolled-back ingest queues nothing, and a failure here never loses the message.
 """
 
 from datetime import timedelta
+from functools import partial
 
 import frappe
 from frappe.utils import get_datetime, now_datetime
@@ -31,19 +32,22 @@ def on_message_insert(doc, method=None):
 		return
 	if doc.doctype == "Messenger Message" and (doc.get("event_type") or "message") != "message":
 		return
+	frappe.db.after_commit.add(partial(queue_follow_up, doc.doctype, doc.name))
+
+
+def queue_follow_up(doctype, name):
 	try:
 		frappe.enqueue(
 			"crm.inbox.customer_message.handle",
 			queue="short",
 			timeout=120,
-			enqueue_after_commit=True,
-			job_id=f"crm-inbox-{doc.doctype}-{doc.name}",
+			job_id=f"crm-inbox-{doctype}-{name}",
 			deduplicate=True,
-			doctype=doc.doctype,
-			name=doc.name,
+			doctype=doctype,
+			name=name,
 		)
 	except Exception:
-		# Never block a channel's ingest; the message is already stored.
+		# The message is already stored; only its follow-up is lost.
 		frappe.log_error(title="CRM inbox follow-up not queued", message=frappe.get_traceback())
 
 
