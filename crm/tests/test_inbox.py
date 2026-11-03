@@ -11,7 +11,7 @@ import secrets
 import unittest
 from contextlib import contextmanager
 from datetime import datetime, time, timedelta
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
 import frappe
@@ -340,10 +340,12 @@ class TestCustomerMessage(_Inbox):
 
 	def test_a_customer_message_queues_the_follow_up_job_after_commit(self):
 		self.enqueue.reset_mock()
-		with patch.object(frappe.db.after_commit, "add") as later:
+		with patch.object(frappe.db, "after_commit", MagicMock()) as later:
 			message = self.incoming()
 		follow_up = [
-			c.args[0] for c in later.call_args_list if c.args[0].func is customer_message.queue_follow_up
+			c.args[0]
+			for c in later.add.call_args_list
+			if getattr(c.args[0], "func", None) is customer_message.queue_follow_up
 		]
 		self.assertEqual(len(follow_up), 1)
 		self.assertFalse(
