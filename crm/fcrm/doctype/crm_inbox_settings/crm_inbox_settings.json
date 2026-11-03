@@ -1,7 +1,7 @@
 {
  "actions": [],
  "creation": "2026-11-03 15:00:00.000000",
- "modified": "2026-11-03 15:00:00.000000",
+ "modified": "2026-11-03 16:00:00.000000",
  "modified_by": "Administrator",
  "owner": "Administrator",
  "doctype": "DocType",
@@ -52,10 +52,11 @@
   "section_assign",
   "auto_assign_enabled",
   "auto_assign_max_open",
-  "assignment_agents",
+  "reopen_on_customer_message",
   "section_targets",
   "first_response_minutes",
-  "resolution_hours"
+  "resolution_hours",
+  "sla_alerts_enabled"
  ],
  "fields": [
   {
@@ -130,7 +131,7 @@
    "fieldtype": "Check",
    "label": "Assign new customer conversations automatically",
    "default": "0",
-   "description": "Each unassigned conversation goes to the person below with the fewest open conversations."
+   "description": "Each unassigned conversation goes to the available person with the fewest open conversations. People turn their availability on and off from the inbox."
   },
   {
    "fieldname": "auto_assign_max_open",
@@ -141,10 +142,11 @@
    "description": "0 means no limit."
   },
   {
-   "fieldname": "assignment_agents",
-   "fieldtype": "Table",
-   "label": "People",
-   "options": "CRM Inbox Agent"
+   "fieldname": "reopen_on_customer_message",
+   "fieldtype": "Check",
+   "label": "Reopen a closed conversation when the customer writes again",
+   "default": "1",
+   "description": "It goes back to the person who had it, if they can still answer it; otherwise it waits in «Sin asignar»."
   },
   {
    "fieldname": "section_targets",
@@ -156,7 +158,8 @@
    "fieldtype": "Int",
    "label": "First reply within (minutes)",
    "default": "15",
-   "non_negative": 1
+   "non_negative": 1,
+   "description": "The late reply alert uses it for every wait, counted from the customer's first unanswered message."
   },
   {
    "fieldname": "resolution_hours",
@@ -164,6 +167,13 @@
    "label": "Close within (hours)",
    "default": "24",
    "non_negative": 1
+  },
+  {
+   "fieldname": "sla_alerts_enabled",
+   "fieldtype": "Check",
+   "label": "Alert when a customer waits longer than the reply goal",
+   "default": "0",
+   "description": "Tells the person who has the conversation, or the managers when nobody has it. Once per wait, and only while you are open when office hours are on."
   }
  ],
  "issingle": 1,

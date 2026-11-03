@@ -178,6 +178,91 @@ describe('inbox queue views', () => {
   })
 })
 
+describe('waiting customers and availability', () => {
+  it('shows how long each customer waits and lists the longest wait first', async () => {
+    vi.setSystemTime(new Date(2026, 10, 3, 12, 0, 0))
+    context.query = { queue: 'all' }
+    context.call.mockImplementation((method) => {
+      if (method.endsWith('get_settings'))
+        return { labels: [], can_manage: false, first_response_minutes: 15 }
+      if (method.endsWith('list_queue'))
+        return {
+          items: [
+            { ...conversation, waiting_since: '2026-11-03 11:40:00' },
+            {
+              ...conversation,
+              name: 'conv2',
+              waiting_since: '2026-11-03 11:52:00',
+            },
+          ],
+          next_start: null,
+        }
+      return base(method)
+    })
+    const el = await mount()
+    const waits = [...el.querySelectorAll('.num')].map((n) => n.textContent)
+    expect(waits).toContain('Espera 20 min')
+    expect(waits).toContain('Espera 8 min')
+    const late = [...el.querySelectorAll('.num')].find(
+      (n) => n.textContent === 'Espera 20 min',
+    )
+    expect(late.className).toContain('text-ink-red-7')
+    await [...el.querySelectorAll('[role="radio"]')]
+      .find((b) => b.textContent.includes('Esperan más'))
+      .click()
+    await flush()
+    expect(calls('list_queue').at(-1)[1]).toMatchObject({
+      view: 'all',
+      sort: 'waiting',
+    })
+  })
+  it('lets the person stop and resume receiving new conversations', async () => {
+    context.query = { queue: 'mine' }
+    context.call.mockImplementation((method) => {
+      if (method.endsWith('get_settings'))
+        return {
+          labels: [],
+          can_manage: false,
+          auto_assign: true,
+          availability: { listed: true, receives_new: true, open: 2 },
+        }
+      if (method.endsWith('set_availability'))
+        return { listed: true, receives_new: false, open: 2 }
+      return base(method)
+    })
+    const el = await mount()
+    expect(el.textContent).toContain('Tienes 2 abiertas')
+    el.querySelector('[role="switch"]').click()
+    await flush()
+    expect(calls('set_availability').at(-1)[1]).toEqual({ receives_new: 0 })
+    expect(el.textContent).toContain('No te llegan nuevas')
+  })
+  it('hides the switch when automatic assignment is off', async () => {
+    context.query = { queue: 'mine' }
+    const el = await mount()
+    expect(el.querySelector('[role="switch"]')).toBeNull()
+  })
+  it('shows the wait and the customer rating on the open conversation', async () => {
+    context.call.mockImplementation((method) =>
+      method.endsWith('get_history')
+        ? {
+            conversation: {
+              ...conversation,
+              waiting_since: '2026-11-03 11:40:00',
+              ratings: [{ rating: 4, comment: 'Rápido' }],
+            },
+            messages: [],
+            next_cursor: null,
+          }
+        : base(method),
+    )
+    const el = await mount()
+    expect(el.textContent).toContain('Espera respuesta desde')
+    expect(el.textContent).toContain('4/5')
+    expect(el.textContent).toContain('«Rápido»')
+  })
+})
+
 describe('conversation tools', () => {
   it('labels, snoozes and runs a macro against the open conversation', async () => {
     const el = await mount()
@@ -316,7 +401,9 @@ describe('private notes and help articles', () => {
     details.open = true
     details.dispatchEvent(new Event('toggle'))
     await flush()
-    const items = [...details.querySelectorAll('li')].map((li) => li.textContent)
+    const items = [...details.querySelectorAll('li')].map(
+      (li) => li.textContent,
+    )
     expect(items[0]).toContain('Trato «Mostrador»')
     expect(items[0]).toContain('Llamar el lunes')
     expect(items[1]).toContain('Interna')

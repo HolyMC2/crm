@@ -42,8 +42,14 @@
         :loading="state.loading"
         :disabled="pendingWork"
         :more="!!state.threadsCursor"
+        :sort="state.sort"
+        :availability="inbox.auto_assign ? inbox.availability : null"
+        :availability-busy="availabilityBusy"
+        :goal-minutes="inbox.first_response_minutes || 0"
         @account="selectAccount"
         @view="selectView"
+        @sort="workspace.selectSort"
+        @availability="setAvailability"
         @select="select"
         @more="workspace.loadThreads(true)"
         @performance="performanceOpen = true"
@@ -80,6 +86,29 @@
                     ? state.account?.label
                     : state.conversation.account_id
                 }}
+              </p>
+              <p
+                v-if="state.conversation.waiting_since"
+                class="mt-1 text-xs text-ink-gray-7"
+              >
+                Espera respuesta desde
+                <span class="num">{{
+                  formatDateTime(state.conversation.waiting_since)
+                }}</span>
+              </p>
+              <p
+                v-for="(rate, i) in (state.conversation.ratings || []).slice(
+                  0,
+                  1,
+                )"
+                :key="i"
+                class="mt-1 text-xs text-ink-gray-7"
+              >
+                Calificación del cliente:
+                <span class="num font-medium">{{ rate.rating }}/5</span
+                ><template v-if="rate.comment">
+                  · «{{ rate.comment }}»</template
+                >
               </p>
               <nav
                 v-if="recordLinks.length"
@@ -246,6 +275,7 @@ import {
 import { sessionStore } from '@/stores/session'
 import { globalStore } from '@/stores/global'
 import { call } from 'frappe-ui'
+import { formatDateTime } from '@/utils/display'
 import { useConversations, QUEUE_VIEWS } from '@/composables/useConversations'
 import ConversationQueue from './ConversationQueue.vue'
 import ConversationControls from './ConversationControls.vue'
@@ -274,7 +304,8 @@ const outbox = ref(null),
   outboxPending = ref(false),
   commercePending = ref(false),
   toolsPending = ref(false),
-  performanceOpen = ref(false)
+  performanceOpen = ref(false),
+  availabilityBusy = ref(false)
 // Labels, macros and the manager flag (crm.api.inbox); empty until they load.
 const inbox = ref({ labels: [], can_manage: false }),
   macros = ref([])
@@ -368,6 +399,23 @@ async function loadInbox() {
   if (settings.status === 'fulfilled' && settings.value)
     inbox.value = { labels: [], can_manage: false, ...settings.value }
   if (list.status === 'fulfilled') macros.value = list.value || []
+}
+// The person's own switch for automatic assignment (crm.api.inbox.set_availability).
+async function setAvailability(receivesNew) {
+  if (availabilityBusy.value) return
+  availabilityBusy.value = true
+  try {
+    const result = await call('crm.api.inbox.set_availability', {
+      receives_new: receivesNew ? 1 : 0,
+    })
+    inbox.value = { ...inbox.value, availability: result }
+  } catch (e) {
+    state.error = e?.messages?.length
+      ? String(e.messages[0]).replace(/<[^>]+>/g, '')
+      : 'No se guardó tu disponibilidad. Inténtalo de nuevo.'
+  } finally {
+    availabilityBusy.value = false
+  }
 }
 async function selectView(view, label) {
   if (pendingWork.value) return

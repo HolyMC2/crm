@@ -349,6 +349,7 @@ scheduler_events = {
 		"*/5 * * * *": [
 			"crm.lead_syncing.background_sync.sync_leads_from_sources_5_minutes",
 			"crm.inbox.snooze.wake_due",
+			"crm.inbox.waiting.alert_overdue",
 		],
 		"*/10 * * * *": ["crm.lead_syncing.background_sync.sync_leads_from_sources_10_minutes"],
 		"*/15 * * * *": [

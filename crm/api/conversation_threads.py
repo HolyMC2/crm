@@ -429,6 +429,12 @@ def _detail(doc):
 	result["labels"] = parse(doc.get("labels"))
 	result["snoozed_until"] = doc.get("snoozed_until")
 	result["snoozed_by"] = doc.get("snoozed_by")
+	from crm.inbox import csat, waiting
+
+	result["waiting_since"] = (
+		waiting.waiting_since(doc, waiting.last_replies([doc.name])) if waiting.ready() else None
+	)
+	result["ratings"] = csat.recent(doc.name)
 	result["control_requests"] = frappe.db.get_values(
 		control.EVENT,
 		{"conversation": doc.name, "action": "request", "to_generation": doc.generation},

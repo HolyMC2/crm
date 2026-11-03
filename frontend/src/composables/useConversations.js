@@ -24,6 +24,7 @@ export function useConversations({
     account: null,
     view: 'account',
     label: '',
+    sort: 'recent',
     threads: [],
     threadsCursor: null,
     conversation: null,
@@ -120,25 +121,38 @@ export function useConversations({
     state.error = ''
     return loadThreads()
   }
+  // 'recent': newest customer message first; 'waiting': who waits longest first.
+  async function selectSort(sort) {
+    if (state.pending || !['recent', 'waiting'].includes(sort)) return false
+    state.sort = sort
+    if (state.view === 'account') return true
+    state.threads = []
+    state.threadsCursor = null
+    state.error = ''
+    return loadQueue()
+  }
   async function loadQueue(more = false) {
     if (more && state.threadsCursor === null) return false
     const stamp = epoch,
       user = actor(),
       view = state.view,
-      label = state.label
+      label = state.label,
+      sort = state.sort
     const request = ++queueRequest
     state.loading = true
     try {
       const result = await rpc(QUEUE, {
         view,
         label: label || null,
+        sort,
         start: more ? state.threadsCursor : 0,
       })
       if (
         !current(stamp, user) ||
         request !== queueRequest ||
         view !== state.view ||
-        label !== state.label
+        label !== state.label ||
+        sort !== state.sort
       )
         return false
       state.threads = more ? [...state.threads, ...result.items] : result.items
@@ -371,6 +385,7 @@ export function useConversations({
     loadAccounts,
     selectAccount,
     selectView,
+    selectSort,
     loadThreads,
     selectThread,
     loadHistory,

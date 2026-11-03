@@ -22,6 +22,33 @@
           {{ item.label }}
         </button>
       </nav>
+      <div
+        v-if="availability"
+        class="mb-3 flex items-center justify-between gap-2 text-xs"
+      >
+        <p class="min-w-0">
+          <span class="block font-medium">Recibir conversaciones nuevas</span>
+          <span class="block text-ink-gray-5">{{
+            availability.receives_new
+              ? `Te llegan por turno. Tienes ${availability.open} abiertas.`
+              : 'No te llegan nuevas; las tuyas siguen aquí.'
+          }}</span>
+        </p>
+        <AjustesSwitch
+          :model-value="availability.receives_new"
+          label="Recibir conversaciones nuevas"
+          :disabled="disabled || availabilityBusy"
+          @update:model-value="$emit('availability', $event)"
+        />
+      </div>
+      <Segmented
+        v-if="view !== 'account'"
+        class="mb-3"
+        :model-value="sort"
+        :options="SORTS"
+        label="Orden de la lista"
+        @update:model-value="!disabled && $emit('sort', $event)"
+      />
       <label
         v-if="view !== 'account' && labels.length"
         class="mb-3 block text-xs font-medium"
@@ -77,7 +104,11 @@
     </div>
     <div class="min-h-0 flex-1 overflow-y-auto">
       <p v-if="!threads.length && !loading" class="p-4 text-sm text-ink-gray-5">
-        {{ EMPTY[view] || EMPTY.account }}
+        {{
+          (sort === 'waiting' && view !== 'account' && EMPTY.waiting) ||
+          EMPTY[view] ||
+          EMPTY.account
+        }}
       </p>
       <button
         v-for="thread in threads"
@@ -104,8 +135,14 @@
         }}</span>
         <span
           v-if="view !== 'account'"
-          class="mt-1 block text-xs text-ink-gray-5"
-          >{{ thread.provider }}</span
+          class="mt-1 flex flex-wrap items-baseline gap-x-2 text-xs text-ink-gray-5"
+          >{{ thread.provider }}
+          <span
+            v-if="thread.waiting_since"
+            class="num"
+            :class="waitTone(thread.waiting_since)"
+            >Espera {{ waited(thread.waiting_since) }}</span
+          ></span
         >
         <span v-if="thread.preview" class="mt-2 line-clamp-2 text-sm">{{
           thread.preview
@@ -142,9 +179,11 @@
   </section>
 </template>
 <script setup>
-import { ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
+import AjustesSwitch from '@/components/ajustes/AjustesSwitch.vue'
+import Segmented from '@/components/ui/Segmented.vue'
 import { useListKeys } from '@/composables/pageKeys'
-import { formatDateTime } from '@/utils/display'
+import { formatDateTime, parseServerDate } from '@/utils/display'
 
 // Webchat and API inbox channels have opaque 64-character ids; their label is the name.
 const labelOnly = (item) => ['Webchat', 'API'].includes(item?.provider)
@@ -156,12 +195,17 @@ const VIEWS = [
   { id: 'snoozed', label: 'Pospuestas' },
   { id: 'account', label: 'Por cuenta' },
 ]
+const SORTS = [
+  { value: 'recent', label: 'Recientes' },
+  { value: 'waiting', label: 'Esperan más' },
+]
 const EMPTY = {
   account: 'No hay conversaciones visibles en esta cuenta.',
   mine: 'No tienes conversaciones abiertas. Revisa «Sin asignar» para tomar una.',
   unassigned: 'No hay conversaciones esperando responsable.',
   all: 'No hay conversaciones abiertas que puedas ver.',
   snoozed: 'No hay conversaciones pospuestas.',
+  waiting: 'Nadie espera respuesta en esta vista.',
 }
 
 const props = defineProps({
@@ -176,8 +220,22 @@ const props = defineProps({
   loading: Boolean,
   disabled: Boolean,
   more: Boolean,
+  sort: { type: String, default: 'recent' },
+  /** { receives_new, open } while automatic assignment is on, else null. */
+  availability: { type: Object, default: null },
+  availabilityBusy: Boolean,
+  /** The inbox's reply goal in minutes; 0 when none is set. */
+  goalMinutes: { type: Number, default: 0 },
 })
-const emit = defineEmits(['account', 'select', 'more', 'view', 'performance'])
+const emit = defineEmits([
+  'account',
+  'select',
+  'more',
+  'view',
+  'performance',
+  'sort',
+  'availability',
+])
 const LABEL_COLORS = {
   gray: 'border-outline-gray-2',
   blue: 'border-blue-300 text-blue-700',
@@ -192,6 +250,28 @@ const labelClass = (name) =>
   LABEL_COLORS[props.labels.find((l) => l.name === name)?.color] ||
   LABEL_COLORS.gray
 const when = (value) => formatDateTime(value)
+// The wait figures move with the clock, one tick a minute.
+const now = ref(Date.now())
+let clock
+onMounted(() => (clock = setInterval(() => (now.value = Date.now()), 60000)))
+onBeforeUnmount(() => clearInterval(clock))
+const minutesSince = (value) =>
+  Math.max(0, Math.floor((now.value - parseServerDate(value)) / 60000))
+function waited(value) {
+  const minutes = minutesSince(value)
+  if (minutes < 60) return `${minutes} min`
+  if (minutes < 1440)
+    return `${Math.floor(minutes / 60)} h ${String(minutes % 60).padStart(2, '0')} min`
+  return `${Math.floor(minutes / 1440)} d`
+}
+// Red only on a wait past the goal; amber in its last quarter.
+function waitTone(value) {
+  const goal = props.goalMinutes
+  if (!goal) return ''
+  const minutes = minutesSince(value)
+  if (minutes >= goal) return 'font-semibold text-ink-red-7'
+  return minutes >= goal * 0.75 ? 'text-ink-amber-9' : ''
+}
 // Keyboard standard: j/k walk the threads, Enter opens one.
 const root = ref(null)
 useListKeys({ page: 'inbox-conversations', root, rows: true, open: true })

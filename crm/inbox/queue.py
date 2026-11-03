@@ -1,21 +1,24 @@
 """The person's conversation queue across every account they can read: mine, unassigned,
-everything, snoozed, filtered by state, label and team, newest customer message first."""
+everything, snoozed, filtered by state, label and team; newest customer message first, or
+the customer waiting longest first."""
 
 import frappe
 from frappe import _
 from frappe.utils import cint
 
 VIEWS = {"mine", "unassigned", "all", "snoozed"}
+SORTS = {"recent", "waiting"}
 STATES = {"open": ["in", ["Human", "Paused", "Bot"]], "closed": "Closed", "any": None}
 SCAN = 200
 
 
-def list_queue(view="mine", state="open", label=None, department=None, start=0, limit=30):
+def list_queue(view="mine", state="open", label=None, department=None, start=0, limit=30, sort="recent"):
 	from crm.api import conversation_threads as threads
 	from crm.api import conversations as control
+	from crm.inbox import waiting
 	from crm.inbox.labels import clean_name, parse
 
-	if view not in VIEWS or state not in STATES:
+	if view not in VIEWS or state not in STATES or sort not in SORTS:
 		frappe.throw(_("Unknown queue view."))
 	user = frappe.session.user
 	filters = {}
@@ -40,6 +43,9 @@ def list_queue(view="mine", state="open", label=None, department=None, start=0, 
 	order = "modified desc"
 	if frappe.db.has_column(control.DOCTYPE, "last_customer_message_at"):
 		order = "last_customer_message_at desc, modified desc"
+	if sort == "waiting" and waiting.ready():
+		filters["awaiting_since"] = ["is", "set"]
+		order = "awaiting_since asc, name asc"
 	size, offset = min(max(cint(limit), 1), 50), max(cint(start), 0)
 	rows = frappe.get_all(
 		control.DOCTYPE,
@@ -51,6 +57,7 @@ def list_queue(view="mine", state="open", label=None, department=None, start=0, 
 		ignore_permissions=True,
 	)
 	items, scanned = [], 0
+	replies = waiting.last_replies(rows) if waiting.ready() else {}
 	for name in rows:
 		scanned += 1
 		doc = control._load(name)
@@ -61,7 +68,10 @@ def list_queue(view="mine", state="open", label=None, department=None, start=0, 
 		labels = parse(doc.get("labels"))
 		if label and label not in labels:
 			continue
-		items.append(_item(doc, labels))
+		since = waiting.waiting_since(doc, replies)
+		if sort == "waiting" and not since:
+			continue
+		items.append(_item(doc, labels) | {"waiting_since": since})
 		if len(items) == size:
 			break
 	names = {}

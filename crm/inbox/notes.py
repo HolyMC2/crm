@@ -180,9 +180,9 @@ def _like(value):
 def record_conversations(doctype, name):
 	"""Conversations about a lead or deal the viewer may open: those that belong to it
 	(for a deal, also to the lead it came from) and those a person or run linked it to."""
+	from crm.api import automation_departments as departments
 	from crm.api import conversation_threads as threads
 	from crm.api import conversations as control
-	from crm.api import automation_departments as departments
 
 	if doctype not in NOTE_RECORDS:
 		return []
@@ -208,7 +208,9 @@ def record_conversations(doctype, name):
 		doc = _readable_conversation(conversation)
 		if not doc:
 			continue
-		linked = {(link["doctype"], link["name"]) for link in departments.parse_links(doc.get("context_links"))}
+		linked = {
+			(link["doctype"], link["name"]) for link in departments.parse_links(doc.get("context_links"))
+		}
 		if (doc.reference_doctype, doc.reference_name) in references or (doctype, name) in linked:
 			out.append(doc)
 	return out

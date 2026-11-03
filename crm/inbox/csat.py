@@ -154,3 +154,20 @@ def expire_due():
 		"Expired",
 		update_modified=False,
 	)
+
+
+def recent(conversation, limit=3):
+	"""The customer's latest answers on this conversation, newest first, for the inbox header."""
+	if not frappe.db.exists("DocType", RATING):
+		return []
+	return [
+		{"rating": r.rating, "comment": r.comment or "", "agent": r.human_owner, "rated_at": str(r.rated_at)}
+		for r in frappe.get_all(
+			RATING,
+			filters={"conversation": conversation, "status": "Rated"},
+			fields=["rating", "comment", "human_owner", "rated_at"],
+			order_by="rated_at desc",
+			limit=limit,
+			ignore_permissions=True,
+		)
+	]

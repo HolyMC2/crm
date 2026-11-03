@@ -55,6 +55,10 @@ EVENTS = {
 		"A teammate wrote a private note on a conversation (never shown to the customer).",
 	),
 	"conversation.rated": ("CRM Conversation Rating", "The customer rated a closed conversation."),
+	"conversation.reply_overdue": (
+		"CRM Conversation",
+		"A customer has waited longer than the inbox reply goal (once per wait).",
+	),
 	"message.created": ("Message", "A customer message arrived or a reply was recorded."),
 	"message.updated": ("Message", "A message's delivery status changed (sent, delivered, read, failed)."),
 	"outbound.updated": ("CRM Outbound Intent", "A queued reply moved state (accepted, failed, unknown)."),

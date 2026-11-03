@@ -168,6 +168,8 @@ def build_conversation(event, doctype, name, context):
 	data = {"conversation": _permitted(view)}
 	if event == "conversation.status_changed" or event == "conversation.updated":
 		data["change"] = {k: v for k, v in context.items() if v is not None}
+	elif event == "conversation.reply_overdue":
+		data["waiting"] = {"since": context.get("waiting_since"), "goal_minutes": context.get("goal_minutes")}
 	if doctype == NOTE:
 		data["note"] = {
 			"id": name,

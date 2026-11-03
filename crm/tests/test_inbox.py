@@ -22,6 +22,7 @@ from crm.api import conversations as control
 from crm.api import inbox as inbox_api
 from crm.api import outbox, webchat
 from crm.inbox import (
+	agents,
 	assignment,
 	csat,
 	customer_message,
@@ -34,6 +35,7 @@ from crm.inbox import (
 	queue,
 	report,
 	snooze,
+	waiting,
 )
 
 DOCTYPES = (
@@ -42,6 +44,7 @@ DOCTYPES = (
 	notes.NOTE,
 	csat.RATING,
 	macros.MACRO,
+	assignment.AGENT,
 	control.DOCTYPE,
 	outbox.DOCTYPE,
 	webchat.CHANNEL,
@@ -297,9 +300,7 @@ class TestLabelsAndNotes(_Inbox):
 		self.assertEqual([n["content"] for n in panel["notes"]], ["Llamar el lunes"])
 		self.assertEqual(panel["notes"][0]["author"], self.one)
 		self.assertTrue(
-			frappe.db.exists(
-				"FCRM Note", {"reference_doctype": "CRM Lead", "reference_docname": lead.name}
-			)
+			frappe.db.exists("FCRM Note", {"reference_doctype": "CRM Lead", "reference_docname": lead.name})
 		)
 		with self.as_user(self.outsider):
 			self.assertTrue(frappe.has_permission("CRM Lead", "read", lead.name))
@@ -463,15 +464,15 @@ class TestCustomerMessage(_Inbox):
 		customer_message.handle(webchat.MESSAGE, self.incoming().name)
 		self.assertIsNone(self.doc().snoozed_until)
 
-	def test_auto_assignment_balances_open_conversations(self):
-		self.configure(
-			auto_assign_enabled=1,
-			assignment_agents=[
-				{"user": self.one, "active": 1},
-				{"user": self.two, "active": 1},
-				{"user": self.outsider, "active": 1},
-			],
+	def agent(self, user, **values):
+		frappe.get_doc({"doctype": assignment.AGENT, "user": user, "receives_new": 1, **values}).insert(
+			ignore_permissions=True
 		)
+
+	def test_auto_assignment_balances_open_conversations(self):
+		self.configure(auto_assign_enabled=1)
+		for user in (self.one, self.two, self.outsider):
+			self.agent(user)
 		other = control.get_or_create("Webchat", self.account, self.visitor()[0]).name
 		before = self.doc().generation
 		first = assignment.assign(self.conversation, inbox.settings(), "m1")
@@ -488,12 +489,131 @@ class TestCustomerMessage(_Inbox):
 		self.assertEqual((event[0].origin, event[0].actor_user), ("System", first))
 
 	def test_auto_assignment_respects_the_open_limit(self):
-		self.configure(
-			auto_assign_enabled=1, auto_assign_max_open=1, assignment_agents=[{"user": self.one, "active": 1}]
-		)
+		self.configure(auto_assign_enabled=1, auto_assign_max_open=1)
+		self.agent(self.one)
 		other = control.get_or_create("Webchat", self.account, self.visitor()[0]).name
 		self.take(self.one, other)
 		self.assertIsNone(assignment.assign(self.conversation, inbox.settings(), "m1"))
+		# A person's own limit replaces the inbox limit.
+		frappe.db.set_value(assignment.AGENT, self.one, "max_open", 2)
+		self.assertEqual(assignment.assign(self.conversation, inbox.settings(), "m2"), self.one)
+
+	def test_people_turn_their_own_availability_on_and_off(self):
+		self.configure(auto_assign_enabled=1)
+		with self.as_user(self.one):
+			self.assertEqual(agents.availability()["listed"], False)
+			self.assertTrue(agents.set_availability(1)["receives_new"], "turning it on adds them")
+			self.assertFalse(agents.set_availability("false")["receives_new"])
+			with self.assertRaises(frappe.PermissionError):
+				agents.set_availability(1, self.two)
+			with self.assertRaises(frappe.PermissionError):
+				agents.list_agents()
+		self.agent(self.two)
+		self.assertEqual(
+			assignment.assign(self.conversation, inbox.settings(), "m1"), self.two, "one is away"
+		)
+		rows = {r["user"]: r for r in agents.save_agent(self.one, 1, "sales", 3)}
+		self.assertEqual((rows[self.one]["department"], rows[self.one]["max_open"]), ("sales", 3))
+		self.assertEqual(rows[self.two]["open"], 1)
+		with self.assertRaises(frappe.ValidationError):
+			agents.save_agent(self.one, 1, "nowhere")
+		self.assertNotIn(self.one, {r["user"] for r in agents.remove_agent(self.one)})
+
+
+class TestWaiting(_Inbox):
+	def reply(self, user, at):
+		with self.as_user(user):
+			queued = outbox.queue_message(
+				self.conversation,
+				self.doc().generation,
+				secrets.token_hex(16),
+				{"type": "text", "text": "Hola"},
+			)
+		frappe.db.set_value(outbox.DOCTYPE, queued["name"], {"state": "Accepted", "accepted_at": at})
+
+	def test_a_wait_starts_with_the_first_unanswered_message_and_ends_with_a_reply(self):
+		self.take(self.one)
+		t = now_datetime().replace(microsecond=0)
+		waiting.customer_wrote(self.conversation, t - timedelta(minutes=30))
+		waiting.customer_wrote(self.conversation, t - timedelta(minutes=10))
+		self.assertEqual(get_datetime(self.doc().awaiting_since), t - timedelta(minutes=30))
+		with self.as_user(self.one):
+			items = queue.list_queue("mine", sort="waiting")["items"]
+		self.assertEqual(get_datetime(items[0]["waiting_since"]), t - timedelta(minutes=30))
+		self.reply(self.one, t - timedelta(minutes=5))
+		with self.as_user(self.one):
+			self.assertEqual(queue.list_queue("mine", sort="waiting")["items"], [])
+			self.assertIsNone(queue.list_queue("mine")["items"][0]["waiting_since"])
+		waiting.customer_wrote(self.conversation, t)
+		self.assertEqual(get_datetime(self.doc().awaiting_since), t, "a new wait after the reply")
+		with self.assertRaises(frappe.ValidationError):
+			queue.list_queue("mine", sort="oldest")
+
+	def test_a_late_reply_alerts_the_owner_once_per_wait(self):
+		self.configure(sla_alerts_enabled=1, first_response_minutes=15)
+		self.take(self.one)
+		waiting.customer_wrote(self.conversation, now_datetime() - timedelta(minutes=20))
+		with patch("crm.integrations.webhooks.emit") as emit:
+			waiting.alert_overdue()
+			waiting.alert_overdue()
+		texts = frappe.get_all(
+			"CRM Notification",
+			filters={"to_user": self.one, "reference_name": self.conversation},
+			pluck="notification_text",
+		)
+		self.assertEqual(len(texts), 1)
+		self.assertIn("20", texts[0])
+		emit.assert_called_once()
+		self.assertEqual(
+			emit.call_args.args[:3], ("conversation.reply_overdue", control.DOCTYPE, self.conversation)
+		)
+
+	def test_an_unowned_late_conversation_alerts_the_managers_who_can_open_it(self):
+		boss = self.user("boss", "Sales Manager", channel=False)
+		self.configure(sla_alerts_enabled=1, first_response_minutes=15)
+		waiting.customer_wrote(self.conversation, now_datetime() - timedelta(minutes=20))
+		with patch("crm.integrations.webhooks.emit"):
+			waiting.alert_overdue()
+		alerted = set(
+			frappe.get_all("CRM Notification", filters={"reference_name": self.conversation}, pluck="to_user")
+		)
+		self.assertIn(boss, alerted)
+		self.assertNotIn(self.one, alerted)
+
+	def test_no_alerts_while_closed_or_when_turned_off(self):
+		self.take(self.one)
+		waiting.customer_wrote(self.conversation, now_datetime() - timedelta(minutes=20))
+		self.configure(sla_alerts_enabled=0, first_response_minutes=15)
+		waiting.alert_overdue()
+		closed = [{"workday": d, "start_time": "00:00:00", "end_time": "00:01:00"} for d in WEEKDAYS]
+		self.configure(sla_alerts_enabled=1, office_hours_enabled=1, working_hours=closed)
+		waiting.alert_overdue()
+		self.assertFalse(frappe.db.exists("CRM Notification", {"reference_name": self.conversation}))
+
+	def test_a_customer_message_reopens_a_closed_conversation_for_its_owner(self):
+		self.configure(reopen_on_customer_message=1)
+		self.take(self.one)
+		with self.as_user(self.one):
+			control.apply_control(self.conversation, "close", self.doc().generation, secrets.token_hex(16))
+		customer_message.handle(webchat.MESSAGE, self.incoming().name)
+		doc = self.doc()
+		self.assertEqual((doc.control_state, doc.human_owner), ("Human", self.one))
+		self.assertTrue(doc.awaiting_since)
+		self.configure(reopen_on_customer_message=0)
+		with self.as_user(self.one):
+			control.apply_control(self.conversation, "close", self.doc().generation, secrets.token_hex(16))
+		customer_message.handle(webchat.MESSAGE, self.incoming().name)
+		self.assertEqual(self.doc().control_state, "Closed")
+
+	def test_the_conversation_header_shows_the_wait_and_the_rating(self):
+		from crm.api import conversation_threads as threads
+
+		self.take(self.one)
+		waiting.customer_wrote(self.conversation, now_datetime() - timedelta(minutes=3))
+		with self.as_user(self.one):
+			detail = threads._detail(self.doc())
+		self.assertTrue(detail["waiting_since"])
+		self.assertEqual(detail["ratings"], [])
 
 
 class TestRatings(_Inbox):

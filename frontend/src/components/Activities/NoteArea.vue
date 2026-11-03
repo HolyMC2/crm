@@ -9,7 +9,9 @@
       <span
         v-if="note.source === 'conversation'"
         class="shrink-0 rounded-4 bg-surface-gray-3 px-1.5 py-0.5 text-xs text-ink-gray-6"
-        :title="__('Private note from the inbox. Open it to reply or add another.')"
+        :title="
+          __('Private note from the inbox. Open it to reply or add another.')
+        "
       >
         {{ __('Inbox') }}
       </span>

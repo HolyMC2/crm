@@ -24,7 +24,6 @@ class CRMInboxSettings(Document):
 			frappe.throw(_("Write the message customers receive outside office hours."))
 		if self.csat_enabled and "{link}" not in (self.csat_message or ""):
 			frappe.throw(_("The rating message must include {link}, where the rating link goes."))
-		self._validate_agents()
 
 	def _validate_hours(self):
 		if self.office_hours_enabled and not self.working_hours:
@@ -35,13 +34,3 @@ class CRMInboxSettings(Document):
 				frappe.throw(
 					_("Row {0}: office hours must start before they end on the same day.").format(row.idx)
 				)
-
-	def _validate_agents(self):
-		seen = set()
-		for row in self.assignment_agents or []:
-			key = (row.user, row.department or "")
-			if key in seen:
-				frappe.throw(_("Row {0}: {1} is listed twice for the same team.").format(row.idx, row.user))
-			seen.add(key)
-		if self.auto_assign_enabled and not any(r.active for r in self.assignment_agents or []):
-			frappe.throw(_("Add at least one active person to assign conversations to."))

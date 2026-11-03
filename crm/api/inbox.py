@@ -4,7 +4,7 @@ team performance and the customer's satisfaction rating. Logic lives in crm.inbo
 import frappe
 from frappe.rate_limiter import rate_limit
 
-from crm.inbox import csat, macros, notes, queue, report, snooze
+from crm.inbox import agents, csat, macros, notes, queue, report, snooze
 from crm.inbox import help as help_articles
 from crm.inbox import labels as conversation_labels
 
@@ -17,8 +17,9 @@ def list_queue(
 	department: str | None = None,
 	start: int | str = 0,
 	limit: int | str = 30,
+	sort: str = "recent",
 ):
-	return queue.list_queue(view, state, label or None, department or None, start, limit)
+	return queue.list_queue(view, state, label or None, department or None, start, limit, sort or "recent")
 
 
 @frappe.whitelist()
@@ -33,9 +34,36 @@ def get_settings():
 		"csat": bool(settings.get("csat_enabled")),
 		"auto_assign": bool(settings.get("auto_assign_enabled")),
 		"first_response_minutes": settings.get("first_response_minutes") or 0,
+		"sla_alerts": bool(settings.get("sla_alerts_enabled")),
 		"resolution_hours": settings.get("resolution_hours") or 0,
 		"can_manage": bool(report.MANAGER_ROLES & set(frappe.get_roles())),
+		"availability": agents.availability(),
 	}
+
+
+@frappe.whitelist(methods=["POST"])
+def set_availability(receives_new: bool | int | str, user: str | None = None):
+	return agents.set_availability(receives_new, user or None)
+
+
+@frappe.whitelist()
+def list_agents():
+	return agents.list_agents()
+
+
+@frappe.whitelist(methods=["POST"])
+def save_agent(
+	user: str,
+	receives_new: bool | int | str = 1,
+	department: str | None = None,
+	max_open: int | str = 0,
+):
+	return agents.save_agent(user, receives_new, department or None, max_open)
+
+
+@frappe.whitelist(methods=["POST"])
+def remove_agent(user: str):
+	return agents.remove_agent(user)
 
 
 @frappe.whitelist()

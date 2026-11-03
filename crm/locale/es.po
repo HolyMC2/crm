@@ -30595,14 +30595,6 @@ msgstr "Agrega al menos un día con horario de atención o desactiva el horario.
 msgid "Row {0}: office hours must start before they end on the same day."
 msgstr "Fila {0}: el horario debe empezar antes de terminar el mismo día."
 
-#: crm/fcrm/doctype/crm_inbox_settings/crm_inbox_settings.py
-msgid "Row {0}: {1} is listed twice for the same team."
-msgstr "Fila {0}: {1} aparece dos veces para el mismo equipo."
-
-#: crm/fcrm/doctype/crm_inbox_settings/crm_inbox_settings.py
-msgid "Add at least one active person to assign conversations to."
-msgstr "Agrega al menos una persona activa a quien asignar conversaciones."
-
 #: crm/fcrm/doctype/crm_conversation_note/crm_conversation_note.py
 msgid "A conversation note cannot be changed once written."
 msgstr "Una nota de conversación no se puede cambiar una vez escrita."
@@ -30650,10 +30642,6 @@ msgstr "Calificada el"
 #: crm/fcrm/doctype/crm_inbox_agent/crm_inbox_agent.json
 msgid "CRM Inbox Agent"
 msgstr "Persona de la bandeja"
-
-#: crm/fcrm/doctype/crm_inbox_agent/crm_inbox_agent.json
-msgid "Leave empty to receive conversations of every team."
-msgstr "Déjalo vacío para recibir conversaciones de todos los equipos."
 
 #: crm/fcrm/doctype/crm_inbox_agent/crm_inbox_agent.json
 msgid "Receives new conversations"
@@ -30742,10 +30730,6 @@ msgstr "Asignación automática"
 #: crm/fcrm/doctype/crm_inbox_settings/crm_inbox_settings.json
 msgid "Assign new customer conversations automatically"
 msgstr "Asignar automáticamente las conversaciones nuevas de clientes"
-
-#: crm/fcrm/doctype/crm_inbox_settings/crm_inbox_settings.json
-msgid "Each unassigned conversation goes to the person below with the fewest open conversations."
-msgstr "Cada conversación sin asignar va a la persona de abajo con menos conversaciones abiertas."
 
 #: crm/fcrm/doctype/crm_inbox_settings/crm_inbox_settings.json
 msgid "Most open conversations per person"
@@ -30950,3 +30934,83 @@ msgstr "Primero vincula este registro a la conversación y luego guarda la nota 
 #: frontend/src/components/Activities/NoteArea.vue
 msgid "Private note from the inbox. Open it to reply or add another."
 msgstr "Nota interna de la bandeja. Ábrela para responder o añadir otra."
+
+#: crm/fcrm/doctype/crm_inbox_agent/crm_inbox_agent.json
+msgid "Off while away; the person turns it on and off from the inbox."
+msgstr "Apagado mientras no está; la persona lo enciende y apaga desde la bandeja."
+
+#: crm/fcrm/doctype/crm_inbox_agent/crm_inbox_agent.json
+msgid "Only this team"
+msgstr "Solo este equipo"
+
+#: crm/fcrm/doctype/crm_inbox_agent/crm_inbox_agent.json
+msgid "Leave empty to receive conversations of every team the person can answer."
+msgstr "Déjalo vacío para recibir conversaciones de todos los equipos que la persona puede atender."
+
+#: crm/fcrm/doctype/crm_inbox_agent/crm_inbox_agent.json
+msgid "Most open conversations"
+msgstr "Máximo de conversaciones abiertas"
+
+#: crm/fcrm/doctype/crm_inbox_agent/crm_inbox_agent.json
+msgid "0 uses the inbox limit."
+msgstr "0 usa el límite de la bandeja."
+
+#: crm/fcrm/doctype/crm_inbox_settings/crm_inbox_settings.json
+msgid "Each unassigned conversation goes to the available person with the fewest open conversations. People turn their availability on and off from the inbox."
+msgstr "Cada conversación sin asignar va a la persona disponible con menos conversaciones abiertas. Cada quien enciende y apaga su disponibilidad desde la bandeja."
+
+#: crm/fcrm/doctype/crm_inbox_agent/crm_inbox_agent.py
+msgid "Only people who sign in to the system can receive conversations."
+msgstr "Solo las personas que inician sesión en el sistema pueden recibir conversaciones."
+
+#: crm/inbox/agents.py
+msgid "Only managers can change who receives conversations."
+msgstr "Solo los gerentes pueden cambiar quién recibe conversaciones."
+
+#: crm/inbox/agents.py
+msgid "This person's account is disabled."
+msgstr "La cuenta de esta persona está desactivada."
+
+#: crm/inbox/agents.py
+msgid "Choose one of the teams."
+msgstr "Elige uno de los equipos."
+
+#: crm/fcrm/doctype/crm_inbox_settings/crm_inbox_settings.json
+msgid "Reopen a closed conversation when the customer writes again"
+msgstr "Reabrir una conversación cerrada cuando el cliente vuelve a escribir"
+
+#: crm/fcrm/doctype/crm_inbox_settings/crm_inbox_settings.json
+msgid "It goes back to the person who had it, if they can still answer it; otherwise it waits in «Sin asignar»."
+msgstr "Vuelve a la persona que la tenía, si todavía puede atenderla; si no, espera en «Sin asignar»."
+
+#: crm/fcrm/doctype/crm_inbox_settings/crm_inbox_settings.json
+msgid "The late reply alert uses it for every wait, counted from the customer's first unanswered message."
+msgstr "El aviso de respuesta tardía la usa en cada espera, contada desde el primer mensaje del cliente sin responder."
+
+#: crm/fcrm/doctype/crm_inbox_settings/crm_inbox_settings.json
+msgid "Alert when a customer waits longer than the reply goal"
+msgstr "Avisar cuando un cliente espera más que la meta de respuesta"
+
+#: crm/fcrm/doctype/crm_inbox_settings/crm_inbox_settings.json
+msgid "Tells the person who has the conversation, or the managers when nobody has it. Once per wait, and only while you are open when office hours are on."
+msgstr "Avisa a quien tiene la conversación, o a los gerentes cuando nadie la tiene. Una vez por espera, y solo en horario de atención cuando el horario está activo."
+
+#: crm/fcrm/doctype/crm_conversation/crm_conversation.json
+msgid "Customer Waiting Since"
+msgstr "Cliente espera desde"
+
+#: crm/fcrm/doctype/crm_conversation/crm_conversation.json
+msgid "The customer's first message after the last reply a person sent."
+msgstr "El primer mensaje del cliente después de la última respuesta que envió una persona."
+
+#: crm/fcrm/doctype/crm_conversation/crm_conversation.json
+msgid "Last Reply From the Phone At"
+msgstr "Última respuesta desde el teléfono"
+
+#: crm/fcrm/doctype/crm_conversation/crm_conversation.json
+msgid "Late Reply Alert Sent At"
+msgstr "Aviso de respuesta tardía enviado"
+
+#: crm/inbox/waiting.py
+msgid "{0} has been waiting {1} minutes for a reply"
+msgstr "{0} lleva {1} minutos esperando respuesta"

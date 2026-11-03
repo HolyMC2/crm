@@ -26,7 +26,10 @@
             >
             {{ note.author_name || note.author }} · {{ when(note.creation) }}
           </p>
-          <p v-if="note.title && note.title !== note.content" class="mt-1 font-medium">
+          <p
+            v-if="note.title && note.title !== note.content"
+            class="mt-1 font-medium"
+          >
             {{ note.title }}
           </p>
           <p class="mt-1 whitespace-pre-wrap">{{ note.content }}</p>
@@ -96,7 +99,11 @@
             Guardar nota
           </button>
         </div>
-        <ul v-if="people.length && !target" class="mt-1 text-xs" aria-label="Personas">
+        <ul
+          v-if="people.length && !target"
+          class="mt-1 text-xs"
+          aria-label="Personas"
+        >
           <li v-for="person in people" :key="person.name">
             <button type="button" class="underline" @click="mention(person)">
               {{ person.label }}
@@ -137,7 +144,7 @@ const recordLabel = (record) =>
   `${KIND[record.doctype] || record.doctype} «${record.label || record.name}»`
 const recordRoute = (record) =>
   record.doctype === 'CRM Deal'
-    ? { name: 'Deal', params: { dealId: record.name } }
+    ? { name: 'Deal 360', params: { dealId: record.name } }
     : { name: 'Lead', params: { leadId: record.name } }
 // One history: the conversation's own notes and the linked records' notes, oldest first.
 const merged = computed(() =>

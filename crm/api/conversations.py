@@ -1559,6 +1559,12 @@ def internal_apply_provider_event(
 				if doc.control_state != "Closed":
 					doc.control_state = "Human"
 				doc.human_owner, doc.bot_enabled = None, 0
+				if frappe.db.has_column(DOCTYPE, "last_reply_at"):
+					# A reply from the phone app ends the customer's wait (crm.inbox.waiting).
+					doc.last_reply_at = now_datetime()
+					frappe.db.set_value(
+						DOCTYPE, doc.name, "last_reply_at", doc.last_reply_at, update_modified=False
+					)
 			elif action == "control_lost":
 				doc.provider_control = "Other"
 				if doc.control_state != "Closed":

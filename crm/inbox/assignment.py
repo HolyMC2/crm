@@ -1,6 +1,6 @@
-"""Automatic assignment: an unassigned conversation goes to the listed person with the
-fewest open conversations (ties: the one assigned longest ago), within the per-person
-limit. Only people who can already work this conversation are candidates.
+"""Automatic assignment: an unassigned conversation goes to the available person with
+the fewest open conversations (ties: the one assigned longest ago), within their limit.
+Only people who can already work this conversation are candidates.
 """
 
 import frappe
@@ -8,41 +8,53 @@ from frappe.utils import get_datetime
 
 from crm.inbox import system_event
 
+AGENT = "CRM Inbox Agent"
 EPOCH = get_datetime("2000-01-01")
 
 
 def candidates(doc, settings):
+	"""{user: open limit} of the available people who may work this conversation."""
 	from crm.api import conversation_threads as threads
 	from crm.api import conversations as control
 
 	department = doc.get("department") or None
-	users = []
-	for row in settings.get("assignment_agents") or []:
-		if not row.active or not row.user or row.user in users:
-			continue
-		if row.department and row.department != department:
-			continue
-		if not frappe.db.get_value("User", row.user, "enabled"):
+	rows = frappe.get_all(
+		AGENT,
+		filters={"receives_new": 1},
+		fields=["user", "department", "max_open"],
+		order_by="user asc",
+	)
+	enabled = set(
+		frappe.get_all(
+			"User", filters={"name": ["in", [r.user for r in rows] or [""]], "enabled": 1}, pluck="name"
+		)
+	)
+	default = int(settings.get("auto_assign_max_open") or 0)
+	users = {}
+	for row in rows:
+		if row.user not in enabled or (row.department and row.department != department):
 			continue
 		if threads._permitted(lambda user=row.user: control._authorize(doc, user, write=True)):
-			users.append(row.user)
+			users[row.user] = int(row.max_open or 0) or default
 	return users
 
 
-def choose(doc, settings):
-	users = candidates(doc, settings)
+def open_counts(users):
 	if not users:
-		return None
-	open_counts = dict(
+		return {}
+	return dict(
 		frappe.db.sql(
 			"""SELECT human_owner, COUNT(*) FROM `tabCRM Conversation`
 			WHERE control_state='Human' AND human_owner IN %s GROUP BY human_owner""",
 			(tuple(users),),
 		)
 	)
-	limit = int(settings.get("auto_assign_max_open") or 0)
-	if limit:
-		users = [u for u in users if open_counts.get(u, 0) < limit]
+
+
+def choose(doc, settings):
+	limits = candidates(doc, settings)
+	counts = open_counts(list(limits))
+	users = [u for u, limit in limits.items() if not limit or counts.get(u, 0) < limit]
 	if not users:
 		return None
 	last = dict(
@@ -52,7 +64,7 @@ def choose(doc, settings):
 			(tuple(users),),
 		)
 	)
-	return min(users, key=lambda u: (open_counts.get(u, 0), get_datetime(last.get(u) or EPOCH), u))
+	return min(users, key=lambda u: (counts.get(u, 0), get_datetime(last.get(u) or EPOCH), u))
 
 
 def assign(name, settings, message_key):

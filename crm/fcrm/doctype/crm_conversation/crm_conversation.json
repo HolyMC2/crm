@@ -27,7 +27,10 @@
   "snoozed_until",
   "snoozed_by",
   "away_notice_at",
-  "last_customer_message_at"
+  "last_customer_message_at",
+  "awaiting_since",
+  "last_reply_at",
+  "sla_alerted_at"
  ],
  "fields": [
   {
@@ -200,6 +203,28 @@
    "label": "Last Customer Message At",
    "read_only": 1,
    "search_index": 1
+  },
+  {
+   "fieldname": "awaiting_since",
+   "fieldtype": "Datetime",
+   "label": "Customer Waiting Since",
+   "read_only": 1,
+   "search_index": 1,
+   "description": "The customer's first message after the last reply a person sent."
+  },
+  {
+   "fieldname": "last_reply_at",
+   "fieldtype": "Datetime",
+   "label": "Last Reply From the Phone At",
+   "read_only": 1,
+   "hidden": 1
+  },
+  {
+   "fieldname": "sla_alerted_at",
+   "fieldtype": "Datetime",
+   "label": "Late Reply Alert Sent At",
+   "read_only": 1,
+   "hidden": 1
   }
  ],
  "permissions": [],

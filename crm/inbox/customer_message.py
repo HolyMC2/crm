@@ -1,5 +1,6 @@
-"""After a customer writes: note the time for the queue, wake a snoozed conversation,
-answer outside office hours and assign an unowned conversation. Runs in a short job
+"""After a customer writes: note the time and the start of the wait, reopen a closed
+conversation, wake a snoozed one, answer outside office hours and assign an unowned
+conversation. Runs in a short job
 queued once the message commits, so channel ingest never waits on it or on the queue,
 a rolled-back ingest queues nothing, and a failure here never loses the message.
 """
@@ -11,7 +12,7 @@ import frappe
 from frappe.utils import get_datetime, now_datetime
 
 from crm import inbox
-from crm.inbox import assignment, office_hours, snooze
+from crm.inbox import assignment, office_hours, snooze, system_event, waiting
 
 INBOUND = {
 	"WhatsApp Message": ("type", "Incoming"),
@@ -78,13 +79,14 @@ def handle(doctype, name):
 	settings = inbox.settings()
 	away = office_hours.configured(settings) and not office_hours.is_open(settings, now_datetime())
 	assign = bool(settings.get("auto_assign_enabled"))
-	conversation = _conversation(provider, account_id, peer_id, create=away or assign)
+	alerts = bool(settings.get("sla_alerts_enabled"))
+	conversation = _conversation(provider, account_id, peer_id, create=away or assign or alerts)
 	if not conversation:
 		return
 	if frappe.db.has_column(control.DOCTYPE, "last_customer_message_at"):
-		frappe.db.set_value(
-			control.DOCTYPE, conversation, "last_customer_message_at", now_datetime(), update_modified=False
-		)
+		waiting.customer_wrote(conversation, now_datetime())
+	if settings.get("reopen_on_customer_message"):
+		reopen(conversation, f"{doctype}:{name}")
 	snooze.wake(conversation, "customer_message")
 	if away:
 		send_away(conversation, settings, f"{doctype}:{name}")
@@ -114,3 +116,22 @@ def send_away(conversation, settings, message_key):
 				control.DOCTYPE, conversation, "away_notice_at", now_datetime(), update_modified=False
 			)
 		return intent or refused
+
+
+def reopen(conversation, message_key):
+	"""A closed conversation the customer writes in again goes back to the person who had
+	it when they can still answer it, otherwise to «Sin asignar»."""
+	from crm.api import conversation_threads as threads
+	from crm.api import conversations as control
+
+	with control.conversation_fence(conversation):
+		doc = control._load(conversation)
+		if doc.control_state != "Closed":
+			return None
+		owner = doc.human_owner
+		if owner and not threads._permitted(lambda: control._authorize(doc, owner, write=True)):
+			owner = None
+		before = control._snapshot(doc)
+		doc.control_state, doc.human_owner, doc.bot_enabled = "Human", owner, 0
+		system_event(doc, before, "reopen:" + message_key, "reopen", actor=owner, reason="customer_message")
+	return owner or True
