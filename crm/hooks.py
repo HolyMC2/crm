@@ -213,6 +213,8 @@ doc_events = {
 	"CRM Deal Status": {"after_insert": "crm.pipeline.services.configuration.add_legacy_status"},
 	"Contact": {
 		"validate": ["crm.api.contact.validate"],
+		"after_insert": ["crm.integrations.events.on_record_insert"],
+		"on_update": ["crm.integrations.events.on_record_update"],
 	},
 	"Notification Log": {
 		"before_insert": ["crm.extends.notification_log.before_insert"],
@@ -232,12 +234,15 @@ doc_events = {
 	},
 	"WhatsApp Message": {
 		"validate": ["crm.api.whatsapp.validate"],
-		"on_update": ["crm.api.whatsapp.on_update"],
+		"after_insert": ["crm.integrations.events.on_message_insert"],
+		"on_update": ["crm.api.whatsapp.on_update", "crm.integrations.events.on_message_update"],
 	},
 	"CRM Deal": {
 		"validate": ["crm.pipeline.hooks.ensure_deal_name"],
+		"after_insert": ["crm.integrations.events.on_record_insert"],
 		"on_update": [
-			"crm.fcrm.doctype.erpnext_crm_settings.erpnext_crm_settings.create_customer_in_erpnext"
+			"crm.fcrm.doctype.erpnext_crm_settings.erpnext_crm_settings.create_customer_in_erpnext",
+			"crm.integrations.events.on_record_update",
 		],
 	},
 	"CRM Task": {
@@ -278,6 +283,18 @@ doc_events = {
 		"before_validate": ["crm.api.live_demo.validate_user"],
 		"validate_reset_password": ["crm.api.live_demo.validate_reset_password"],
 	},
+	# Integration webhooks: producers only queue a delivery; payloads are built later as the
+	# connection's user (crm.integrations.events). A disconnected n8n never blocks these saves.
+	"CRM Lead": {
+		"after_insert": ["crm.integrations.events.on_record_insert"],
+		"on_update": ["crm.integrations.events.on_record_update"],
+	},
+	"CRM Inquiry": {"after_insert": ["crm.integrations.events.on_inquiry_insert"]},
+	"CRM Conversation": {"after_insert": ["crm.integrations.events.on_conversation_insert"]},
+	"CRM Conversation Control Event": {"after_insert": ["crm.integrations.events.on_control_event"]},
+	"CRM Outbound Intent": {"on_update": ["crm.integrations.events.on_intent_update"]},
+	"CRM Webchat Message": {"after_insert": ["crm.integrations.events.on_message_insert"]},
+	"Messenger Message": {"after_insert": ["crm.integrations.events.on_message_insert"]},
 }
 
 # Scheduled Tasks
@@ -291,13 +308,14 @@ scheduler_events = {
 		"crm.fcrm.doctype.crm_invitation.crm_invitation.expire_invitations",
 		"crm.fcrm.doctype.crm_view_settings.crm_view_settings.clear_old_versions",
 		"crm.forms.wiring.send_daily_digests",
+		"crm.integrations.webhooks.purge",
 	],
 	"weekly": ["crm.api.event.trigger_weekly_event_notifications"],
 	"daily_long": ["crm.lead_syncing.background_sync.sync_leads_from_sources_daily"],
 	"hourly_long": ["crm.lead_syncing.background_sync.sync_leads_from_sources_hourly"],
 	"monthly_long": ["crm.lead_syncing.background_sync.sync_leads_from_sources_monthly"],
 	"cron": {
-		"* * * * *": ["crm.api.outbox.recover_intents"],
+		"* * * * *": ["crm.api.outbox.recover_intents", "crm.integrations.webhooks.recover"],
 		"*/5 * * * *": ["crm.lead_syncing.background_sync.sync_leads_from_sources_5_minutes"],
 		"*/10 * * * *": ["crm.lead_syncing.background_sync.sync_leads_from_sources_10_minutes"],
 		"*/15 * * * *": [

@@ -1256,6 +1256,9 @@ def _write_metadata(doc, values):
 	_require_metadata()
 	frappe.db.set_value(DOCTYPE, doc.name, values, update_modified=False)
 	doc.update(values)
+	from crm.integrations.events import conversation_metadata_changed
+
+	conversation_metadata_changed(doc.name, values)
 
 
 def route(name, department, expected_generation, command_id, reason=None):

@@ -1,0 +1,168 @@
+{
+ "actions": [],
+ "creation": "2026-11-03 12:00:00.000000",
+ "modified": "2026-11-03 12:00:00.000000",
+ "modified_by": "Administrator",
+ "owner": "Administrator",
+ "doctype": "DocType",
+ "name": "CRM Integration",
+ "module": "FCRM",
+ "engine": "InnoDB",
+ "allow_rename": 0,
+ "field_order": [
+  "title",
+  "enabled",
+  "integration_user",
+  "column_break_main",
+  "webhook_url",
+  "signing_secret",
+  "description",
+  "section_events",
+  "subscriptions",
+  "section_channel",
+  "api_channel",
+  "channel_account_id",
+  "section_health",
+  "last_delivery_at",
+  "last_delivery_status",
+  "column_break_health",
+  "consecutive_failures",
+  "last_error"
+ ],
+ "fields": [
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "label": "Title",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled",
+   "default": "0",
+   "in_list_view": 1,
+   "description": "New connections start disabled. Enable after «Send test event» succeeds."
+  },
+  {
+   "fieldname": "integration_user",
+   "fieldtype": "Link",
+   "label": "Acts as user",
+   "options": "User",
+   "reqd": 1,
+   "description": "Events carry only what this user may read, and the connection's API calls use this user's API key. Use a dedicated user with only the roles the workflow needs."
+  },
+  {
+   "fieldname": "column_break_main",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "webhook_url",
+   "fieldtype": "Data",
+   "label": "Webhook URL",
+   "options": "URL",
+   "description": "Your n8n Webhook node's production URL. HTTPS is required unless the host is listed in the site's crm_integration_allowed_hosts."
+  },
+  {
+   "fieldname": "signing_secret",
+   "fieldtype": "Password",
+   "label": "Signing secret",
+   "read_only": 1,
+   "length": 100,
+   "description": "Created automatically. Use «Show signing secret» to copy it into n8n."
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  },
+  {
+   "fieldname": "section_events",
+   "fieldtype": "Section Break",
+   "label": "Events"
+  },
+  {
+   "fieldname": "subscriptions",
+   "fieldtype": "Table",
+   "label": "Send these events",
+   "options": "CRM Integration Subscription"
+  },
+  {
+   "fieldname": "section_channel",
+   "fieldtype": "Section Break",
+   "label": "Inbox channel",
+   "collapsible": 1,
+   "description": "Optional. Lets this connection bring messages from another channel (email, SMS, Telegram…) into the CRM inbox. Replies written in the inbox leave as message.created events with direction «out»."
+  },
+  {
+   "fieldname": "api_channel",
+   "fieldtype": "Check",
+   "label": "Use as an inbox channel",
+   "default": "0"
+  },
+  {
+   "fieldname": "channel_account_id",
+   "fieldtype": "Data",
+   "label": "Channel account",
+   "read_only": 1,
+   "length": 64,
+   "unique": 1,
+   "description": "Stable identifier of this inbox channel; created when the channel is first enabled."
+  },
+  {
+   "fieldname": "section_health",
+   "fieldtype": "Section Break",
+   "label": "Delivery health"
+  },
+  {
+   "fieldname": "last_delivery_at",
+   "fieldtype": "Datetime",
+   "label": "Last attempt",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_delivery_status",
+   "fieldtype": "Data",
+   "label": "Last result",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_health",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "consecutive_failures",
+   "fieldtype": "Int",
+   "label": "Failures in a row",
+   "read_only": 1,
+   "default": "0"
+  },
+  {
+   "fieldname": "last_error",
+   "fieldtype": "Small Text",
+   "label": "Last error",
+   "read_only": 1
+  }
+ ],
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1
+  }
+ ],
+ "links": [],
+ "states": [],
+ "index_web_pages_for_search": 0,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "autoname": "format:INT-{####}",
+ "title_field": "title",
+ "show_title_field_in_link": 1,
+ "track_changes": 1,
+ "description": "A connection to n8n or another automation service: signed webhook events out, scoped API calls in."
+}

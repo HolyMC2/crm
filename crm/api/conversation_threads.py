@@ -206,6 +206,24 @@ def _reference_clause(scope=None):
 	return "(COALESCE(m.reference_doctype,'')='' OR m.reference_doctype IN ('CRM Inquiry','CRM Lead','CRM Deal'))"
 
 
+def _reference_columns(scope):
+	if scope.doctype == "CRM Webchat Message":
+		return "NULL AS reference_doctype, NULL AS reference_name"
+	return "m.reference_doctype, m.reference_name"
+
+
+def message_metadata(scope, name):
+	"""One message's history metadata inside `scope` (None when it lies outside it)."""
+	# Security review: _scope supplies only fixed SQL structure; the name is a bound parameter.
+	rows = frappe.db.sql(  # nosemgrep: frappe-sql-format-injection
+		f"""SELECT m.name, {_reference_columns(scope)}, {scope.timestamp} AS timestamp
+        FROM {scope.table} m WHERE m.name=%s AND {scope.where} AND {_reference_clause(scope)}""",
+		[name, *scope.args],
+		as_dict=True,
+	)
+	return rows[0] if rows else None
+
+
 def _metadata(scope, peer, *, cursor=None, limit=SCAN):
 	args = [*scope.args, peer]
 	before = ""
@@ -214,11 +232,7 @@ def _metadata(scope, peer, *, cursor=None, limit=SCAN):
 			frappe.throw("Invalid history cursor.")
 		before = f" AND ({scope.timestamp}<%s OR ({scope.timestamp}=%s AND m.name<%s))"
 		args.extend([cursor[0], cursor[0], cursor[1]])
-	references = (
-		"NULL AS reference_doctype, NULL AS reference_name"
-		if scope.doctype == "CRM Webchat Message"
-		else "m.reference_doctype, m.reference_name"
-	)
+	references = _reference_columns(scope)
 	# Security review: _scope supplies only fixed SQL structure; all request values use bound parameters.
 	return frappe.db.sql(  # nosemgrep: frappe-sql-format-injection
 		f"""SELECT m.name, {references},
