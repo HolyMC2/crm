@@ -36,7 +36,7 @@
         </option>
       </select>
       <span v-else-if="!labels.length" class="text-ink-gray-5"
-        >Un gerente crea las etiquetas en Etiquetas de conversación.</span
+        >Un gerente crea las etiquetas en «Etiqueta de conversación».</span
       >
     </div>
     <div v-if="canSteer" class="flex min-w-0 flex-wrap items-center gap-1">

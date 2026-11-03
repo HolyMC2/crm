@@ -30318,3 +30318,619 @@ msgstr "La tarjeta «{0}» de Resultados, por el periodo del tablero."
 #: crm/tableros.py
 msgid "This card does not apply to you."
 msgstr "Esta tarjeta no aplica para ti."
+#: crm/inbox/notes.py
+msgid "Send the mentioned people as a list."
+msgstr "Envía a las personas mencionadas como una lista."
+
+#: crm/inbox/notes.py
+msgid "A note can mention at most {0} people."
+msgstr "Una nota puede mencionar como máximo a {0} personas."
+
+#: crm/inbox/notes.py
+msgid "Write a note of 1 to {0} characters."
+msgstr "Escribe una nota de 1 a {0} caracteres."
+
+#: crm/inbox/notes.py
+msgid "These people cannot open this conversation, so they cannot be mentioned: {0}."
+msgstr "Estas personas no pueden abrir esta conversación, así que no se les puede mencionar: {0}."
+
+#: crm/inbox/notes.py
+msgid "{0} mentioned you in a conversation note"
+msgstr "{0} te mencionó en una nota de conversación"
+
+#: crm/inbox/labels.py
+msgid "A label has 1 to 40 characters, without quotes, commas or backslashes."
+msgstr "Una etiqueta tiene de 1 a 40 caracteres, sin comillas, comas ni barras invertidas."
+
+#: crm/inbox/labels.py
+msgid "Send the labels as a list."
+msgstr "Envía las etiquetas como una lista."
+
+#: crm/inbox/labels.py
+msgid "A conversation can have at most {0} labels."
+msgstr "Una conversación puede tener como máximo {0} etiquetas."
+
+#: crm/inbox/labels.py
+msgid "These labels do not exist yet: {0}. A manager can create them in Conversation Labels."
+msgstr "Estas etiquetas aún no existen: {0}. Un gerente puede crearlas en «Etiqueta de conversación»."
+
+#: crm/inbox/labels.py
+msgid "Labels are not set up on this system yet. Ask support to finish the update."
+msgstr "Las etiquetas aún no están instaladas en este sistema. Pide a soporte que termine la actualización."
+
+#: crm/inbox/__init__.py
+msgid "This record is written by the customer inbox."
+msgstr "Este registro lo escribe la bandeja de clientes."
+
+#: crm/inbox/macros.py
+msgid "This macro is private to the person who made it."
+msgstr "Esta macro es privada de quien la creó."
+
+#: crm/inbox/macros.py
+msgid "Step {0} ({1}) could not run: {2}"
+msgstr "El paso {0} ({1}) no se pudo hacer: {2}"
+
+#: crm/inbox/macros.py
+msgid "try it by hand"
+msgstr "hazlo a mano"
+
+#: crm/inbox/macros.py
+msgid "Macro not applied"
+msgstr "Macro no aplicada"
+
+#: crm/inbox/macros.py
+msgid "The assistant is answering this conversation. Take it first."
+msgstr "El asistente está respondiendo esta conversación. Tómala primero."
+
+#: crm/inbox/macros.py
+msgid "Unknown macro step."
+msgstr "Paso de macro desconocido."
+
+#: crm/inbox/report.py
+msgid "Choose a period of at most {0} days."
+msgstr "Elige un periodo de {0} días como máximo."
+
+#: crm/inbox/report.py
+msgid "Only managers can see team performance."
+msgstr "Solo los gerentes pueden ver el desempeño del equipo."
+
+#: crm/inbox/report.py
+msgid "Without a person"
+msgstr "Sin persona"
+
+#: crm/inbox/assignment.py
+msgid "A customer conversation was assigned to you"
+msgstr "Se te asignó una conversación de cliente"
+
+#: crm/inbox/csat.py crm/www/crm_rating.py
+msgid "Choose from 1 to 5 stars."
+msgstr "Elige de 1 a 5 estrellas."
+
+#: crm/inbox/queue.py
+msgid "Unknown queue view."
+msgstr "Vista de bandeja desconocida."
+
+#: crm/inbox/snooze.py
+msgid "Choose a time between one minute and {0} days from now."
+msgstr "Elige una hora entre un minuto y {0} días a partir de ahora."
+
+#: crm/inbox/snooze.py
+msgid "Choose when the conversation comes back."
+msgstr "Elige cuándo vuelve la conversación."
+
+#: crm/inbox/snooze.py
+msgid "A closed conversation cannot be snoozed. Reopen it first."
+msgstr "Una conversación cerrada no se puede posponer. Reábrela primero."
+
+#: crm/inbox/snooze.py
+msgid "A customer wrote in a conversation you snoozed"
+msgstr "Un cliente escribió en una conversación que pospusiste"
+
+#: crm/inbox/snooze.py
+msgid "A conversation you snoozed is back in your queue"
+msgstr "Una conversación que pospusiste volvió a tu bandeja"
+
+#: crm/www/crm_rating.py
+msgid "How did we do?"
+msgstr "¿Cómo te atendimos?"
+
+#: crm/www/crm_rating.py
+msgid "Tell us how we helped you in this conversation."
+msgstr "Cuéntanos cómo te ayudamos en esta conversación."
+
+#: crm/www/crm_rating.py
+msgctxt "Customer rating"
+msgid "Very bad"
+msgstr "Muy mal"
+
+#: crm/www/crm_rating.py
+msgctxt "Customer rating"
+msgid "Bad"
+msgstr "Mal"
+
+#: crm/www/crm_rating.py
+msgctxt "Customer rating"
+msgid "Okay"
+msgstr "Regular"
+
+#: crm/www/crm_rating.py
+msgctxt "Customer rating"
+msgid "Good"
+msgstr "Bien"
+
+#: crm/www/crm_rating.py
+msgctxt "Customer rating"
+msgid "Excellent"
+msgstr "Excelente"
+
+#: crm/www/crm_rating.py
+msgid "Anything else you want to tell us? (optional)"
+msgstr "¿Algo más que quieras contarnos? (opcional)"
+
+#: crm/www/crm_rating.py
+msgid "Send rating"
+msgstr "Enviar calificación"
+
+#: crm/www/crm_rating.py
+msgid "Thank you! We received your rating."
+msgstr "¡Gracias! Recibimos tu calificación."
+
+#: crm/www/crm_rating.py
+msgid "This rating link has expired. Thank you for writing to us."
+msgstr "Este enlace para calificar ya venció. Gracias por escribirnos."
+
+#: crm/integrations/webhooks.py
+msgid "Enter the full webhook URL, for example https://n8n.example.com/webhook/…"
+msgstr "Escribe la URL completa del webhook, por ejemplo https://n8n.example.com/webhook/…"
+
+#: crm/integrations/webhooks.py crm/api/integration.py
+msgid "Add the webhook URL from your n8n Webhook node first."
+msgstr "Primero agrega la URL del nodo Webhook de n8n."
+
+#: crm/integrations/webhooks.py
+msgid "Choose at least one event to send."
+msgstr "Elige al menos un evento para enviar."
+
+#: crm/integrations/webhooks.py
+msgid "Choose an enabled user for «Acts as user»."
+msgstr "Elige un usuario habilitado en «Actúa como usuario»."
+
+#: crm/integrations/webhooks.py
+msgid "Create a dedicated user for this connection instead of {0}."
+msgstr "Crea un usuario exclusivo para esta conexión en lugar de {0}."
+
+#: crm/integrations/channel.py
+msgid "This connection is not an inbox channel. Turn on «Use as an inbox channel» first."
+msgstr "Esta conexión no es un canal de bandeja. Primero activa «Usar como canal de bandeja»."
+
+#: crm/integrations/channel.py
+msgid "This connection is disabled. Enable it in CRM Integration to receive messages."
+msgstr "Esta conexión está deshabilitada. Habilítala en «Integración CRM» para recibir mensajes."
+
+#: crm/integrations/channel.py
+msgid "Send the message text (1 to {0} characters)."
+msgstr "Envía el texto del mensaje (de 1 a {0} caracteres)."
+
+#: crm/integrations/channel.py
+msgid "Send message_id: your channel's own id for this message (up to 140 characters)."
+msgstr "Envía message_id: el id que tu canal le da a este mensaje (hasta 140 caracteres)."
+
+#: crm/integrations/channel.py
+msgid "message_id {0} was already used for a different text."
+msgstr "message_id {0} ya se usó para otro texto."
+
+#: crm/integrations/channel.py
+msgid "status must be one of: {0}."
+msgstr "status debe ser uno de: {0}."
+
+#: crm/integrations/channel.py
+msgid "No reply {0} was sent through this connection."
+msgstr "No se envió ninguna respuesta {0} por esta conexión."
+
+#: crm/api/integration.py
+msgid "Sign in or send an API key."
+msgstr "Inicia sesión o envía una clave de API."
+
+#: crm/api/integration.py
+msgid "This connection no longer exists."
+msgstr "Esta conexión ya no existe."
+
+#: crm/api/integration.py
+msgid "Choose an enabled user for «Acts as user» first."
+msgstr "Primero elige un usuario habilitado en «Actúa como usuario»."
+
+#: crm/api/integration.py
+msgid "This delivery no longer exists."
+msgstr "Esta entrega ya no existe."
+
+#: crm/api/integration.py
+msgid "Enable the connection before sending its events again."
+msgstr "Habilita la conexión antes de volver a enviar sus eventos."
+
+#: crm/api/integration.py
+msgid "{0} acts for several inbox channels; send connection with one of: {1}."
+msgstr "{0} actúa por varios canales de bandeja; envía connection con uno de: {1}."
+
+#: crm/fcrm/doctype/crm_inbox_macro/crm_inbox_macro.py
+msgid "Only a manager can share a macro with the team."
+msgstr "Solo un gerente puede compartir una macro con el equipo."
+
+#: crm/fcrm/doctype/crm_inbox_macro/crm_inbox_macro.py
+msgid "Add at least one step."
+msgstr "Agrega al menos un paso."
+
+#: crm/fcrm/doctype/crm_inbox_macro/crm_inbox_macro.py
+msgid "Step {0}"
+msgstr "Paso {0}"
+
+#: crm/fcrm/doctype/crm_inbox_macro/crm_inbox_macro.py
+msgid "{0}: write a text of 1 to {1} characters."
+msgstr "{0}: escribe un texto de 1 a {1} caracteres."
+
+#: crm/fcrm/doctype/crm_inbox_macro/crm_inbox_macro.py
+msgid "{0}: the label {1} does not exist."
+msgstr "{0}: la etiqueta {1} no existe."
+
+#: crm/fcrm/doctype/crm_inbox_macro/crm_inbox_macro.py
+msgid "{0}: snooze for 1 to {1} hours."
+msgstr "{0}: pospón de 1 a {1} horas."
+
+#: crm/fcrm/doctype/crm_inbox_macro/crm_inbox_macro.py
+msgid "{0}: closing must be the last step."
+msgstr "{0}: cerrar debe ser el último paso."
+
+#: crm/fcrm/doctype/crm_inbox_settings/crm_inbox_settings.py
+msgid "Write the message customers receive outside office hours."
+msgstr "Escribe el mensaje que reciben los clientes fuera del horario de atención."
+
+#: crm/fcrm/doctype/crm_inbox_settings/crm_inbox_settings.py
+msgid "The rating message must include {link}, where the rating link goes."
+msgstr "El mensaje para calificar debe incluir {link}, donde va el enlace para calificar."
+
+#: crm/fcrm/doctype/crm_inbox_settings/crm_inbox_settings.py
+msgid "Add at least one day with office hours, or turn office hours off."
+msgstr "Agrega al menos un día con horario de atención o desactiva el horario."
+
+#: crm/fcrm/doctype/crm_inbox_settings/crm_inbox_settings.py
+msgid "Row {0}: office hours must start before they end on the same day."
+msgstr "Fila {0}: el horario debe empezar antes de terminar el mismo día."
+
+#: crm/fcrm/doctype/crm_inbox_settings/crm_inbox_settings.py
+msgid "Row {0}: {1} is listed twice for the same team."
+msgstr "Fila {0}: {1} aparece dos veces para el mismo equipo."
+
+#: crm/fcrm/doctype/crm_inbox_settings/crm_inbox_settings.py
+msgid "Add at least one active person to assign conversations to."
+msgstr "Agrega al menos una persona activa a quien asignar conversaciones."
+
+#: crm/fcrm/doctype/crm_conversation_note/crm_conversation_note.py
+msgid "A conversation note cannot be changed once written."
+msgstr "Una nota de conversación no se puede cambiar una vez escrita."
+
+#: crm/fcrm/doctype/crm_integration/crm_integration.py
+msgid "Event {0} is listed twice."
+msgstr "El evento {0} aparece dos veces."
+
+#: crm/fcrm/doctype/crm_integration/crm_integration.py
+msgid "This connection cannot be enabled yet"
+msgstr "Esta conexión aún no se puede habilitar"
+
+#: crm/fcrm/doctype/crm_integration_delivery/crm_integration_delivery.py
+msgid "Deliveries are written by the integration engine."
+msgstr "Las entregas las escribe el motor de integraciones."
+
+#: crm/fcrm/doctype/crm_conversation_label/crm_conversation_label.json
+msgid "CRM Conversation Label"
+msgstr "Etiqueta de conversación"
+
+#: crm/fcrm/doctype/crm_conversation_note/crm_conversation_note.json
+msgid "CRM Conversation Note"
+msgstr "Nota de conversación"
+
+#: crm/fcrm/doctype/crm_conversation_rating/crm_conversation_rating.json
+msgid "CRM Conversation Rating"
+msgstr "Calificación de conversación"
+
+#: crm/fcrm/doctype/crm_conversation_rating/crm_conversation_rating.json
+msgid "Rated"
+msgstr "Calificada"
+
+#: crm/fcrm/doctype/crm_conversation_rating/crm_conversation_rating.json
+msgid "Attended by"
+msgstr "Atendió"
+
+#: crm/fcrm/doctype/crm_conversation_rating/crm_conversation_rating.json
+msgid "Link check"
+msgstr "Verificación del enlace"
+
+#: crm/fcrm/doctype/crm_conversation_rating/crm_conversation_rating.json
+msgid "Rated at"
+msgstr "Calificada el"
+
+#: crm/fcrm/doctype/crm_inbox_agent/crm_inbox_agent.json
+msgid "CRM Inbox Agent"
+msgstr "Persona de la bandeja"
+
+#: crm/fcrm/doctype/crm_inbox_agent/crm_inbox_agent.json
+msgid "Leave empty to receive conversations of every team."
+msgstr "Déjalo vacío para recibir conversaciones de todos los equipos."
+
+#: crm/fcrm/doctype/crm_inbox_agent/crm_inbox_agent.json
+msgid "Receives new conversations"
+msgstr "Recibe conversaciones nuevas"
+
+#: crm/fcrm/doctype/crm_inbox_macro/crm_inbox_macro.json
+msgid "CRM Inbox Macro"
+msgstr "Macro de bandeja"
+
+#: crm/fcrm/doctype/crm_inbox_macro/crm_inbox_macro.json
+msgid "Everyone in the inbox can use it"
+msgstr "Todos en la bandeja pueden usarla"
+
+#: crm/fcrm/doctype/crm_inbox_macro_action/crm_inbox_macro_action.json
+msgid "CRM Inbox Macro Action"
+msgstr "Paso de macro de bandeja"
+
+#: crm/fcrm/doctype/crm_inbox_macro_action/crm_inbox_macro_action.json
+msgid "Add label"
+msgstr "Agregar etiqueta"
+
+#: crm/fcrm/doctype/crm_inbox_macro_action/crm_inbox_macro_action.json
+msgid "Remove label"
+msgstr "Quitar etiqueta"
+
+#: crm/fcrm/doctype/crm_inbox_macro_action/crm_inbox_macro_action.json
+msgid "Add private note"
+msgstr "Agregar nota interna"
+
+#: crm/fcrm/doctype/crm_inbox_macro_action/crm_inbox_macro_action.json
+msgid "Send to team"
+msgstr "Enviar al equipo"
+
+#: crm/fcrm/doctype/crm_inbox_macro_action/crm_inbox_macro_action.json
+msgid "Reply or note text, label, team, or hours to snooze."
+msgstr "Texto de la respuesta o nota, etiqueta, equipo u horas para posponer."
+
+#: crm/fcrm/doctype/crm_inbox_settings/crm_inbox_settings.json
+msgid "CRM Inbox Settings"
+msgstr "Ajustes de bandeja"
+
+#: crm/fcrm/doctype/crm_inbox_settings/crm_inbox_settings.json
+msgid "Office hours"
+msgstr "Horario de atención"
+
+#: crm/fcrm/doctype/crm_inbox_settings/crm_inbox_settings.json
+msgid "Answer automatically outside office hours"
+msgstr "Responder automáticamente fuera del horario de atención"
+
+#: crm/fcrm/doctype/crm_inbox_settings/crm_inbox_settings.json
+msgid "Days and hours your team answers. Outside them the customer gets the away message once."
+msgstr "Días y horas en que tu equipo responde. Fuera de ellos, el cliente recibe una vez el mensaje de ausencia."
+
+#: crm/fcrm/doctype/crm_inbox_settings/crm_inbox_settings.json
+msgid "Away message"
+msgstr "Mensaje de ausencia"
+
+#: crm/fcrm/doctype/crm_inbox_settings/crm_inbox_settings.json
+msgid "Send the away message again after (hours)"
+msgstr "Volver a enviar el mensaje de ausencia después de (horas)"
+
+#: crm/fcrm/doctype/crm_inbox_settings/crm_inbox_settings.json
+msgid "Customer satisfaction"
+msgstr "Satisfacción del cliente"
+
+#: crm/fcrm/doctype/crm_inbox_settings/crm_inbox_settings.json
+msgid "Ask customers to rate the conversation when it is closed"
+msgstr "Pedir a los clientes que califiquen la conversación al cerrarla"
+
+#: crm/fcrm/doctype/crm_inbox_settings/crm_inbox_settings.json
+msgid "Rating message"
+msgstr "Mensaje para calificar"
+
+#: crm/fcrm/doctype/crm_inbox_settings/crm_inbox_settings.json
+msgid "{link} is replaced by the rating page for this conversation."
+msgstr "{link} se reemplaza por la página para calificar esta conversación."
+
+#: crm/fcrm/doctype/crm_inbox_settings/crm_inbox_settings.json
+msgid "Rating link valid for (days)"
+msgstr "El enlace para calificar vale (días)"
+
+#: crm/fcrm/doctype/crm_inbox_settings/crm_inbox_settings.json
+msgid "Automatic assignment"
+msgstr "Asignación automática"
+
+#: crm/fcrm/doctype/crm_inbox_settings/crm_inbox_settings.json
+msgid "Assign new customer conversations automatically"
+msgstr "Asignar automáticamente las conversaciones nuevas de clientes"
+
+#: crm/fcrm/doctype/crm_inbox_settings/crm_inbox_settings.json
+msgid "Each unassigned conversation goes to the person below with the fewest open conversations."
+msgstr "Cada conversación sin asignar va a la persona de abajo con menos conversaciones abiertas."
+
+#: crm/fcrm/doctype/crm_inbox_settings/crm_inbox_settings.json
+msgid "Most open conversations per person"
+msgstr "Máximo de conversaciones abiertas por persona"
+
+#: crm/fcrm/doctype/crm_inbox_settings/crm_inbox_settings.json
+msgid "0 means no limit."
+msgstr "0 significa sin límite."
+
+#: crm/fcrm/doctype/crm_inbox_settings/crm_inbox_settings.json
+msgid "Service targets"
+msgstr "Metas de servicio"
+
+#: crm/fcrm/doctype/crm_inbox_settings/crm_inbox_settings.json
+msgid "First reply within (minutes)"
+msgstr "Primera respuesta en (minutos)"
+
+#: crm/fcrm/doctype/crm_inbox_settings/crm_inbox_settings.json
+msgid "Close within (hours)"
+msgstr "Cerrar en (horas)"
+
+#: crm/fcrm/doctype/crm_integration/crm_integration.json
+msgid "CRM Integration"
+msgstr "Integración CRM"
+
+#: crm/fcrm/doctype/crm_integration/crm_integration.json
+msgid "New connections start disabled. Enable after «Send test event» succeeds."
+msgstr "Las conexiones nuevas empiezan deshabilitadas. Habilítala cuando «Enviar evento de prueba» funcione."
+
+#: crm/fcrm/doctype/crm_integration/crm_integration.json
+msgid "Acts as user"
+msgstr "Actúa como usuario"
+
+#: crm/fcrm/doctype/crm_integration/crm_integration.json
+msgid "Events carry only what this user may read, and the connection's API calls use this user's API key. Use a dedicated user with only the roles the workflow needs."
+msgstr "Los eventos llevan solo lo que este usuario puede leer, y las llamadas a la API de la conexión usan la clave de API de este usuario. Usa un usuario exclusivo con solo los roles que el flujo necesita."
+
+#: crm/fcrm/doctype/crm_integration/crm_integration.json
+msgid "Your n8n Webhook node's production URL. HTTPS is required unless the host is listed in the site's crm_integration_allowed_hosts."
+msgstr "La URL de producción del nodo Webhook de n8n. Se requiere HTTPS, salvo que el host esté en crm_integration_allowed_hosts del sitio."
+
+#: crm/fcrm/doctype/crm_integration/crm_integration.json crm/fcrm/doctype/crm_integration/crm_integration.js
+msgid "Signing secret"
+msgstr "Secreto de firma"
+
+#: crm/fcrm/doctype/crm_integration/crm_integration.json
+msgid "Created automatically. Use «Show signing secret» to copy it into n8n."
+msgstr "Se crea automáticamente. Usa «Mostrar secreto de firma» para copiarlo en n8n."
+
+#: crm/fcrm/doctype/crm_integration/crm_integration.json
+msgid "Send these events"
+msgstr "Enviar estos eventos"
+
+#: crm/fcrm/doctype/crm_integration/crm_integration.json
+msgid "Inbox channel"
+msgstr "Canal de bandeja"
+
+#: crm/fcrm/doctype/crm_integration/crm_integration.json
+msgid "Optional. Lets this connection bring messages from another channel (email, SMS, Telegram…) into the CRM inbox. Replies written in the inbox leave as message.created events with direction «out»."
+msgstr "Opcional. Permite que esta conexión traiga a la bandeja del CRM mensajes de otro canal (correo, SMS, Telegram…). Las respuestas escritas en la bandeja salen como eventos message.created con direction «out»."
+
+#: crm/fcrm/doctype/crm_integration/crm_integration.json
+msgid "Use as an inbox channel"
+msgstr "Usar como canal de bandeja"
+
+#: crm/fcrm/doctype/crm_integration/crm_integration.json
+msgid "Channel account"
+msgstr "Cuenta del canal"
+
+#: crm/fcrm/doctype/crm_integration/crm_integration.json
+msgid "Stable identifier of this inbox channel; created when the channel is first enabled."
+msgstr "Identificador fijo de este canal de bandeja; se crea la primera vez que se habilita el canal."
+
+#: crm/fcrm/doctype/crm_integration/crm_integration.json
+msgid "Delivery health"
+msgstr "Estado de las entregas"
+
+#: crm/fcrm/doctype/crm_integration/crm_integration.json
+msgid "Last attempt"
+msgstr "Último intento"
+
+#: crm/fcrm/doctype/crm_integration/crm_integration.json
+msgid "Last result"
+msgstr "Último resultado"
+
+#: crm/fcrm/doctype/crm_integration/crm_integration.json
+msgid "Failures in a row"
+msgstr "Fallos seguidos"
+
+#: crm/fcrm/doctype/crm_integration/crm_integration.json
+msgid "Last error"
+msgstr "Último error"
+
+#: crm/fcrm/doctype/crm_integration/crm_integration.js
+msgid "API key"
+msgstr "Clave de API"
+
+#: crm/fcrm/doctype/crm_integration/crm_integration.js
+msgid "Deliveries"
+msgstr "Entregas"
+
+#: crm/fcrm/doctype/crm_integration/crm_integration.js
+msgid "New signing secret"
+msgstr "Nuevo secreto de firma"
+
+#: crm/fcrm/doctype/crm_integration/crm_integration.js
+msgid "No answer."
+msgstr "Sin respuesta."
+
+#: crm/fcrm/doctype/crm_integration/crm_integration.js
+msgid "Requests will be signed with a new secret from now on. Update n8n right after."
+msgstr "Desde ahora las solicitudes se firmarán con un secreto nuevo. Actualiza n8n enseguida."
+
+#: crm/fcrm/doctype/crm_integration/crm_integration.js
+msgid "Rotate signing secret"
+msgstr "Cambiar secreto de firma"
+
+#: crm/fcrm/doctype/crm_integration/crm_integration.js
+msgid "Secret"
+msgstr "Secreto"
+
+#: crm/fcrm/doctype/crm_integration/crm_integration.js
+msgid "Send test event"
+msgstr "Enviar evento de prueba"
+
+#: crm/fcrm/doctype/crm_integration/crm_integration.js
+msgid "Show signing secret"
+msgstr "Mostrar secreto de firma"
+
+#: crm/fcrm/doctype/crm_integration/crm_integration.js
+msgid "Test event delivered"
+msgstr "Evento de prueba entregado"
+
+#: crm/fcrm/doctype/crm_integration/crm_integration.js
+msgid "Test event not delivered"
+msgstr "Evento de prueba no entregado"
+
+#: crm/fcrm/doctype/crm_integration/crm_integration.js
+msgid "Your webhook answered {0}. You can enable the connection now."
+msgstr "Tu webhook respondió {0}. Ya puedes habilitar la conexión."
+
+#: crm/fcrm/doctype/crm_integration_delivery/crm_integration_delivery.json
+msgid "CRM Integration Delivery"
+msgstr "Entrega de integración CRM"
+
+#: crm/fcrm/doctype/crm_integration_delivery/crm_integration_delivery.json
+msgid "Dead"
+msgstr "Sin entregar"
+
+#: crm/fcrm/doctype/crm_integration_delivery/crm_integration_delivery.json
+msgid "Event key"
+msgstr "Clave del evento"
+
+#: crm/fcrm/doctype/crm_integration_delivery/crm_integration_delivery.json
+msgid "Attempts"
+msgstr "Intentos"
+
+#: crm/fcrm/doctype/crm_integration_delivery/crm_integration_delivery.json
+msgid "Next attempt"
+msgstr "Próximo intento"
+
+#: crm/fcrm/doctype/crm_integration_delivery/crm_integration_delivery.json
+msgid "Lease until"
+msgstr "Reservada hasta"
+
+#: crm/fcrm/doctype/crm_integration_delivery/crm_integration_delivery.json
+msgid "Delivered at"
+msgstr "Entregada el"
+
+#: crm/fcrm/doctype/crm_integration_delivery/crm_integration_delivery.json
+msgid "Response code"
+msgstr "Código de respuesta"
+
+#: crm/fcrm/doctype/crm_integration_delivery/crm_integration_delivery.json
+msgid "Payload"
+msgstr "Contenido"
+
+#: crm/fcrm/doctype/crm_integration_delivery/crm_integration_delivery.js
+msgid "Open connection"
+msgstr "Abrir conexión"
+
+#: crm/fcrm/doctype/crm_integration_delivery/crm_integration_delivery.js
+msgid "Queued again with the same id"
+msgstr "En cola de nuevo con el mismo id"
+
+#: crm/fcrm/doctype/crm_integration_subscription/crm_integration_subscription.json
+msgid "CRM Integration Subscription"
+msgstr "Suscripción de integración CRM"

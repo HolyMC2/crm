@@ -34,7 +34,14 @@ def get_context(context):
 	context.i18n = {
 		"title": _("How did we do?"),
 		"intro": _("Tell us how we helped you in this conversation."),
-		"stars": [_("Very bad"), _("Bad"), _("Okay"), _("Good"), _("Excellent")],
+		# Context keeps these short words from changing «Good» or «Bad» anywhere else.
+		"stars": [
+			_("Very bad", context="Customer rating"),
+			_("Bad", context="Customer rating"),
+			_("Okay", context="Customer rating"),
+			_("Good", context="Customer rating"),
+			_("Excellent", context="Customer rating"),
+		],
 		"comment": _("Anything else you want to tell us? (optional)"),
 		"send": _("Send rating"),
 		"thanks": _("Thank you! We received your rating."),
