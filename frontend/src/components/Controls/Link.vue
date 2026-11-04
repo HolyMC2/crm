@@ -17,7 +17,9 @@
       :search-label="
         attrs.label ? `${__('Search')} ${__(attrs.label)}` : undefined
       "
+      :title="attrs.label ? __(attrs.label) : ''"
       :options="options.data"
+      :loading="Boolean(options.loading)"
       :size="attrs.size || 'sm'"
       :variant="attrs.variant"
       :placeholder="attrs.placeholder"
@@ -53,7 +55,8 @@
         </slot>
       </template>
 
-      <template #footer="{ value: v, close }">
+      <!-- No footer when there is nothing to create or clear. -->
+      <template v-if="attrs.onCreate || value" #footer="{ value: v, close }">
         <div v-if="attrs.onCreate">
           <Button
             variant="ghost"
@@ -63,7 +66,7 @@
             @click="() => attrs.onCreate(v, close)"
           />
         </div>
-        <div>
+        <div v-if="value">
           <Button
             variant="ghost"
             class="w-full !justify-start"
@@ -129,7 +132,7 @@ watchDebounced(
     text.value = val
     reload(val)
   },
-  { debounce: 300, immediate: true },
+  { debounce: 250, immediate: true },
 )
 
 watchDebounced(

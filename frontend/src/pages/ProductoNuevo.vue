@@ -1,16 +1,21 @@
 <template>
   <div class="flex min-h-0 min-w-0 flex-1 flex-col" data-producto-nuevo>
-    <PageHeader
-      :title="__('New product', null, 'Productos')"
-      :subtitle="
-        __(
-          'Only what you need to sell it: name, group and price. Photos, labels and stock come next, on the product.',
-          null,
-          'Productos',
-        )
-      "
-      :level="1"
-    />
+    <!-- Heading, fields and buttons share one column, so on a wide screen
+         nothing sits at the far edges. -->
+    <div class="w-full px-4 sm:px-6">
+      <PageHeader
+        class="mx-auto max-w-xl !px-0"
+        :title="__('New product', null, 'Productos')"
+        :subtitle="
+          __(
+            'Only what you need to sell it: name, group and price. Photos, labels and stock come next, on the product.',
+            null,
+            'Productos',
+          )
+        "
+        :level="1"
+      />
+    </div>
     <p v-if="!boot" role="status" class="px-6 py-8 text-sm text-ink-gray-6">
       {{ __('Loading products…') }}
     </p>
@@ -143,31 +148,45 @@
               </li>
             </ul>
           </section>
-          <div>
-            <Button
-              class="min-h-11"
-              variant="ghost"
+          <div class="border-t border-outline-gray-1 pt-2">
+            <button
+              type="button"
+              class="press -mx-2 flex min-h-11 w-[calc(100%+1rem)] items-center gap-2 rounded-6 px-2 text-left text-base font-medium text-ink-gray-8 hover:bg-surface-gray-2 sm:min-h-9"
               :aria-expanded="showMore ? 'true' : 'false'"
-              :label="
+              aria-controls="nuevo-mas-detalles"
+              data-nuevo-mas
+              @click="showMore = !showMore"
+            >
+              <span class="flex-1">{{
                 showMore
                   ? __('Hide details', null, 'Productos')
                   : __('More details (optional)', null, 'Productos')
-              "
-              @click="showMore = !showMore"
-            />
+              }}</span>
+              <span
+                class="lucide-chevron-down size-4 text-ink-gray-5 transition-transform motion-reduce:transition-none"
+                :class="showMore ? 'rotate-180' : ''"
+                aria-hidden="true"
+              />
+            </button>
+            <ExpandTransition>
+              <div
+                v-if="showMore"
+                id="nuevo-mas-detalles"
+                class="space-y-5 pb-1 pt-3"
+              >
+                <Link
+                  v-model="form.brand"
+                  doctype="Brand"
+                  :label="__('Brand', null, 'Productos')"
+                />
+                <FormControl
+                  v-model="form.description"
+                  type="textarea"
+                  :label="__('Description', null, 'Productos')"
+                />
+              </div>
+            </ExpandTransition>
           </div>
-          <template v-if="showMore">
-            <Link
-              v-model="form.brand"
-              doctype="Brand"
-              :label="__('Brand', null, 'Productos')"
-            />
-            <FormControl
-              v-model="form.description"
-              type="textarea"
-              :label="__('Description', null, 'Productos')"
-            />
-          </template>
           <div
             v-if="problem"
             role="alert"
@@ -187,20 +206,24 @@
         </div>
       </div>
       <footer
-        class="flex shrink-0 items-center justify-between gap-2 border-t border-outline-gray-2 bg-surface-base px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 sm:px-6"
+        class="shrink-0 border-t border-outline-gray-2 bg-surface-base px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 sm:px-6"
       >
-        <Button
-          class="min-h-11 sm:min-h-8"
-          :label="__('Cancel', null, 'Productos')"
-          @click="leave"
-        />
-        <Button
-          class="min-h-11 flex-1 sm:min-h-8 sm:flex-none"
-          variant="solid"
-          type="submit"
-          :label="__('Save product', null, 'Productos')"
-          :loading="saving"
-        />
+        <div
+          class="mx-auto flex w-full max-w-xl items-center justify-between gap-2"
+        >
+          <Button
+            class="min-h-11 sm:min-h-8"
+            :label="__('Cancel', null, 'Productos')"
+            @click="leave"
+          />
+          <Button
+            class="min-h-11 flex-1 sm:min-h-8 sm:flex-none"
+            variant="solid"
+            type="submit"
+            :label="__('Save product', null, 'Productos')"
+            :loading="saving"
+          />
+        </div>
       </footer>
     </form>
   </div>
@@ -218,7 +241,7 @@ import {
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { Button, FormControl } from 'frappe-ui'
 import Link from '@/components/Controls/Link.vue'
-import { PageHeader } from '@/components/ui'
+import { ExpandTransition, PageHeader } from '@/components/ui'
 import {
   loadProductosBoot,
   money,

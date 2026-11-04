@@ -31746,3 +31746,7 @@ msgstr "No es un mensaje de cliente."
 #: crm/integrations/events.py
 msgid "The business assistant is not installed."
 msgstr "El asistente del negocio no está instalado."
+
+#: frontend/src/components/frappe-ui/Autocomplete.vue
+msgid "Choose or type to search"
+msgstr "Elige o escribe para buscar"
