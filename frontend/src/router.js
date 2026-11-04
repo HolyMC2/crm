@@ -715,6 +715,26 @@ const routes = [
     },
   },
   {
+    // Más › Tableros (doco docs/TABLEROS.md): the person's saved boards, edited
+    // by hand or by Muelle. Every desk user has them, so they light «Más» like
+    // the other pages any worker opens from there, never a module they lack.
+    path: '/tableros',
+    name: 'Tableros',
+    component: () => import('@/pages/Tableros.vue'),
+    meta: { app: 'avisos', title: 'Tableros', ownPhoneHeader: true },
+  },
+  {
+    path: '/tableros/:name',
+    name: 'Tablero',
+    component: () => import('@/pages/Tablero.vue'),
+    meta: {
+      app: 'avisos',
+      title: 'Tablero',
+      ownPhoneHeader: true,
+      listParent: 'Tableros',
+    },
+  },
+  {
     // Más › Configuración › Disparadores (Shell Wave D, DD8): team recipes on
     // business events. Lights Avisos, where their avisos land.
     path: '/disparadores',

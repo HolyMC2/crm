@@ -1,12 +1,19 @@
 <template>
   <!-- The chart an answer carries, with its values one tap away: the table
        is the chart's text twin (screen readers, copying a figure). -->
-  <figure class="min-w-0" data-testid="assistant-chart" :data-kind="chart.kind">
+  <figure
+    class="min-w-0"
+    :class="fill && 'flex h-full flex-col'"
+    data-testid="assistant-chart"
+    :data-kind="chart.kind"
+  >
     <!-- The chart fills its parent (its root is `h-full`), so the height
-         lives on this box, as in ReportChart. -->
+         lives on this box, as in ReportChart; on a board, the widget's. -->
     <div
       class="w-full min-w-0"
-      :class="drawn.component === 'donut' ? 'h-80' : 'h-56'"
+      :class="
+        fill ? 'min-h-0 flex-1' : drawn.component === 'donut' ? 'h-80' : 'h-56'
+      "
     >
       <DonutChart
         v-if="drawn.component === 'donut'"
@@ -27,7 +34,7 @@
         :subtitle="chart.subtitle"
       />
     </div>
-    <details class="mt-2 text-sm">
+    <details v-if="values" class="mt-2 text-sm">
       <summary class="cursor-pointer py-2 text-ink-gray-6">
         {{ __('View chart values') }}
       </summary>
@@ -71,6 +78,10 @@ import { chartProps, tableOf } from './assistantChart'
 const props = defineProps({
   chart: { type: Object, required: true },
   answer: { type: Object, default: null },
+  /** Fill the parent's height (a board widget) instead of a fixed one. */
+  fill: { type: Boolean, default: false },
+  /** «View chart values» under the chart. */
+  values: { type: Boolean, default: true },
 })
 const drawn = computed(() => chartProps(props.chart))
 const table = computed(() => tableOf(props.answer, props.chart))

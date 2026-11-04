@@ -30310,3 +30310,11 @@ msgstr "Salir de pantalla completa"
 #: frontend/src/components/assistant/assistantChart.js
 msgid "Series {0}"
 msgstr "Serie {0}"
+
+#: crm/tableros.py
+msgid "The «{0}» card of Resultados, for the board's period."
+msgstr "La tarjeta «{0}» de Resultados, por el periodo del tablero."
+
+#: crm/tableros.py
+msgid "This card does not apply to you."
+msgstr "Esta tarjeta no aplica para ti."

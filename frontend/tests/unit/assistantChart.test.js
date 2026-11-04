@@ -282,6 +282,19 @@ describe('the log draws it', () => {
       expect(el.querySelector('[data-chart="bar"]')).not.toBeNull(),
     )
     expect(el.textContent).toContain('Aquí está la gráfica de este mes.')
+    // a chart the model drew has no stored answer to put on a board
+    expect(el.querySelector('[data-testid="add-to-board"]')).toBeNull()
+    app.unmount()
+  })
+
+  it('a stored chart answer can go on a board', async () => {
+    onMessage({ mid: 'm1', text: reportText, answer: report })
+    const { el, app } = mount(AssistantLog, {})
+    await vi.waitFor(() =>
+      expect(el.querySelector('[data-chart="line"]')).not.toBeNull(),
+    )
+    const add = el.querySelector('[data-testid="add-to-board"]')
+    expect(add.textContent.trim()).toBe('Agregar a un tablero')
     app.unmount()
   })
 

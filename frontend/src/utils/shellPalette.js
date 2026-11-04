@@ -393,6 +393,15 @@ export function createShellProviders({ boot, modules }) {
             icon: 'lucide-chart-column',
             href: query ? `/resultados?${query}` : '/resultados',
           })
+      // Tableros: every desk user's own boards (Más › Tableros).
+      items.push({
+        id: 'tableros',
+        group: 'ir_a',
+        title: 'Tableros',
+        keywords: 'dashboard graficas widgets panel',
+        icon: 'lucide-layout-dashboard',
+        href: '/tableros',
+      })
       // Bancos (Shell D11): its places besides the module itself.
       if (moduleEnabled(boot.value, 'bancos'))
         for (const [path, label, keywords] of [
