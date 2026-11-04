@@ -9,6 +9,7 @@ message or a conversation that the same user could not read through the API.
 import json
 
 import frappe
+from frappe import _
 from frappe.model import get_permitted_fields, no_value_fields, table_fields
 from frappe.utils import cint, cstr, flt, get_datetime, get_time, getdate
 
@@ -176,7 +177,7 @@ def _permitted(fn):
 	try:
 		return fn()
 	except (frappe.PermissionError, frappe.DoesNotExistError):
-		raise Skip("The connection's user may not read this record.") from None
+		raise Skip(_("The connection's user may not read this record.")) from None
 
 
 NOTE = "CRM Conversation Note"
@@ -200,7 +201,7 @@ def build_conversation(event, doctype, name, context):
 			as_dict=True,
 		)
 	if doctype in (NOTE, RATING) and not row:
-		raise Skip("The record is gone.")
+		raise Skip(_("The record is gone."))
 	conversation = row.conversation if row else name
 
 	def view():
@@ -298,7 +299,7 @@ def build_message(event, doctype, name, context):
 
 	identity = message_identity(doctype, name)
 	if not identity:
-		raise Skip("Not a customer message.")
+		raise Skip(_("Not a customer message."))
 	provider, account_id, peer_id = identity
 	conversation = _existing_conversation(provider, account_id, peer_id)
 
@@ -371,7 +372,7 @@ def build_record(event, doctype, name, context):
 def build_assistant(event, doctype, name, context):
 	builder = frappe.get_hooks("crm_integration_assistant_payload")
 	if not builder:
-		raise Skip("The business assistant is not installed.")
+		raise Skip(_("The business assistant is not installed."))
 	return frappe.get_attr(builder[-1])(event, doctype, name, context)
 
 

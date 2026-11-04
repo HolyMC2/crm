@@ -31686,3 +31686,63 @@ msgstr "Configuración efectiva"
 #: frontend/src/components/Settings/Settings.vue
 msgid "Wait for the current save to finish. Your settings stay open."
 msgstr "Espera a que termine el guardado. Tus ajustes siguen abiertos."
+
+#: crm/integrations/webhooks.py
+msgid "The host {0} could not be found."
+msgstr "No se encontró el servidor {0}."
+
+#: crm/integrations/webhooks.py
+msgid "{0} points to a private address. Ask support to allow it."
+msgstr "{0} apunta a una dirección privada. Pide a soporte que la permita."
+
+#: crm/integrations/webhooks.py
+msgid "No payload builder for this event."
+msgstr "Este evento no tiene cómo armar su contenido."
+
+#: crm/integrations/webhooks.py
+msgid "Payload is larger than 256 KiB."
+msgstr "El contenido pesa más de 256 KiB."
+
+#: crm/integrations/webhooks.py
+msgid "No answer from the webhook within {0} seconds."
+msgstr "El webhook no respondió en {0} segundos."
+
+#: crm/integrations/webhooks.py
+msgid "Could not reach the webhook: {0}."
+msgstr "No se pudo conectar con el webhook: {0}."
+
+#: crm/integrations/webhooks.py
+msgid "The connection is disabled or was removed."
+msgstr "La conexión está desactivada o se borró."
+
+#: crm/integrations/webhooks.py
+msgid "The connection's user is disabled."
+msgstr "El usuario de la conexión está desactivado."
+
+#: crm/integrations/webhooks.py
+msgid "Skipped"
+msgstr "Omitida"
+
+#: crm/integrations/webhooks.py
+msgid "The event could not be prepared; support has the error log."
+msgstr "No se pudo preparar el evento; soporte tiene el registro del error."
+
+#: crm/integrations/webhooks.py
+msgid "Delivered ({0}, {1} ms)"
+msgstr "Entregada ({0}, {1} ms)"
+
+#: crm/integrations/events.py
+msgid "The connection's user may not read this record."
+msgstr "El usuario de la conexión no puede ver este registro."
+
+#: crm/integrations/events.py
+msgid "The record is gone."
+msgstr "El registro ya no existe."
+
+#: crm/integrations/events.py
+msgid "Not a customer message."
+msgstr "No es un mensaje de cliente."
+
+#: crm/integrations/events.py
+msgid "The business assistant is not installed."
+msgstr "El asistente del negocio no está instalado."

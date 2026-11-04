@@ -151,14 +151,16 @@ def _resolve(host, port):
 	try:
 		infos = socket.getaddrinfo(host, port, proto=socket.IPPROTO_TCP)
 	except socket.gaierror:
-		raise DeliveryError(f"The host {host} could not be found.") from None
+		raise DeliveryError(_("The host {0} could not be found.").format(host)) from None
 	ips = [info[4][0] for info in infos]
 	if not ips:
-		raise DeliveryError(f"The host {host} could not be found.")
+		raise DeliveryError(_("The host {0} could not be found.").format(host))
 	if host not in _allowed_hosts():
 		for ip in ips:
 			if not ipaddress.ip_address(ip).is_global:
-				raise DeliveryError(f"{host} points to a private address. Ask support to allow it.")
+				raise DeliveryError(
+					_("{0} points to a private address. Ask support to allow it.").format(host)
+				)
 	return ips[0]
 
 
@@ -361,7 +363,7 @@ def build_payload(delivery, integration):
 	else:
 		builder = _builder(delivery.event)
 		if not builder:
-			raise Skip("No payload builder for this event.")
+			raise Skip(_("No payload builder for this event."))
 		with as_user(integration.integration_user):
 			data = builder(delivery.event, delivery.reference_doctype, delivery.reference_name, context)
 	body = {
@@ -375,7 +377,7 @@ def build_payload(delivery, integration):
 	}
 	raw = json.dumps(body, ensure_ascii=False, separators=(",", ":"), default=str)
 	if len(raw.encode()) > MAX_PAYLOAD_BYTES:
-		raise Skip("Payload is larger than 256 KiB.")
+		raise Skip(_("Payload is larger than 256 KiB."))
 	return raw
 
 
@@ -405,9 +407,11 @@ def _post(url, body, headers):
 			url, data=body.encode(), headers=headers, timeout=TIMEOUT_SECONDS, allow_redirects=False
 		)
 	except requests.Timeout:
-		raise DeliveryError(f"No answer from the webhook within {TIMEOUT_SECONDS} seconds.") from None
+		raise DeliveryError(
+			_("No answer from the webhook within {0} seconds.").format(TIMEOUT_SECONDS)
+		) from None
 	except requests.RequestException as e:
-		raise DeliveryError(f"Could not reach the webhook: {type(e).__name__}.") from None
+		raise DeliveryError(_("Could not reach the webhook: {0}.").format(type(e).__name__)) from None
 	finally:
 		session.close()
 
@@ -464,14 +468,15 @@ def deliver(delivery, *, force=False):
 		_set(
 			delivery,
 			status="Skipped",
-			last_error="The connection is disabled or was removed.",
+			last_error=_("The connection is disabled or was removed."),
 			lease_until=None,
 		)
 		frappe.db.commit()  # nosemgrep: frappe-manual-commit -- delivery state is durable before and after the HTTP call
 		return _projection(delivery)
 	if not frappe.db.get_value("User", integration.integration_user, "enabled"):
-		_set(delivery, status="Skipped", last_error="The connection's user is disabled.", lease_until=None)
-		_health(integration.name, "Skipped", "The connection's user is disabled.", failed=True)
+		reason = _("The connection's user is disabled.")
+		_set(delivery, status="Skipped", last_error=reason, lease_until=None)
+		_health(integration.name, _("Skipped"), reason, failed=True)
 		frappe.db.commit()  # nosemgrep: frappe-manual-commit -- delivery state is durable before and after the HTTP call
 		return _projection(delivery)
 	body = doc.payload
@@ -485,7 +490,7 @@ def deliver(delivery, *, force=False):
 		except Exception:
 			frappe.db.rollback()
 			frappe.log_error(title=f"CRM integration payload {delivery}", message=frappe.get_traceback())
-			return _fail(doc, integration, "The event could not be prepared; support has the error log.")
+			return _fail(doc, integration, _("The event could not be prepared; support has the error log."))
 		_set(delivery, payload=body)
 		frappe.db.commit()  # nosemgrep: frappe-manual-commit -- delivery state is durable before and after the HTTP call
 	timestamp = str(int(time.time()))
@@ -515,7 +520,7 @@ def deliver(delivery, *, force=False):
 			last_error="",
 			lease_until=None,
 		)
-		_health(integration.name, f"Delivered ({response.status_code}, {elapsed} ms)")
+		_health(integration.name, _("Delivered ({0}, {1} ms)").format(response.status_code, elapsed))
 		frappe.db.commit()  # nosemgrep: frappe-manual-commit -- delivery state is durable before and after the HTTP call
 		return _projection(delivery)
 	snippet = (response.text or "")[:200].replace("\n", " ")
@@ -546,7 +551,7 @@ def _fail(doc, integration, error, *, code=None, final=False):
 			status="Failed", next_attempt_at=add_to_date(now_datetime(), seconds=BACKOFF[attempts - 1])
 		)
 	_set(doc.name, **values)
-	_health(integration.name, "Dead" if dead else "Retrying", error, failed=True)
+	_health(integration.name, _("Gave up") if dead else _("Retrying"), error, failed=True)
 	frappe.db.commit()  # nosemgrep: frappe-manual-commit -- delivery state is durable before and after the HTTP call
 	return _projection(doc.name)
 
