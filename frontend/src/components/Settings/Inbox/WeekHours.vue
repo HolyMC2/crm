@@ -29,7 +29,12 @@
           class="flex flex-col gap-1"
         >
           <div
-            class="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_2.25rem] items-center gap-1.5 sm:max-w-sm"
+            class="grid items-center gap-1.5 sm:max-w-sm"
+            :class="
+              ranges(day.value).length > 1
+                ? 'grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_2.25rem]'
+                : 'grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]'
+            "
           >
             <input
               :value="hhmm(row.start_time)"
