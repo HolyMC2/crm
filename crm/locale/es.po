@@ -31750,3 +31750,242 @@ msgstr "El asistente del negocio no está instalado."
 #: frontend/src/components/frappe-ui/Autocomplete.vue
 msgid "Choose or type to search"
 msgstr "Elige o escribe para buscar"
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "Complete"
+msgstr "Completo"
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "Confirm receipt"
+msgstr "Confirmar recepción"
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "Confirmed"
+msgstr "Confirmada"
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "Confirming…"
+msgstr "Confirmando…"
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "Counted."
+msgstr "Contado."
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "Everything on the order arrived"
+msgstr "Llegó todo lo de la orden"
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "Keep counting"
+msgstr "Seguir contando"
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "Lines"
+msgstr "Renglones"
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "Looking up «{0}»…"
+msgstr "Buscando «{0}»…"
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "No line matches «{0}». Press Enter to look it up as a code."
+msgstr "Ningún renglón coincide con «{0}». Presiona Enter para buscarlo como código."
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "No product has the code «{0}»."
+msgstr "Ningún producto tiene el código «{0}»."
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "Not on the order"
+msgstr "No está en la orden"
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "Nothing counted yet"
+msgstr "Todavía no cuentas nada"
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "Nothing was counted."
+msgstr "No se contó nada."
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "One less"
+msgstr "Uno menos"
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "One more"
+msgstr "Uno más"
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "Open in Escáner"
+msgstr "Abrir en Escáner"
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "Opening the receipt…"
+msgstr "Abriendo la recepción…"
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "Print"
+msgstr "Imprimir"
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "Purchase"
+msgstr "Compra"
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "Quantity of {0}"
+msgstr "Cantidad de {0}"
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "Receipt"
+msgstr "Recepción"
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "Received"
+msgstr "Recibido"
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "Received of {0}"
+msgstr "Recibido de {0}"
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "Retry"
+msgstr "Reintentar"
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "Scan or type a code or name"
+msgstr "Escanea o escribe un código o nombre"
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "Scan the first piece or type its code; the order lines show up here."
+msgstr "Escanea la primera pieza o escribe su código; aquí aparecen los renglones de la orden."
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "Scan with the camera"
+msgstr "Escanear con la cámara"
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "Serial {0} is already on another line."
+msgstr "La serie {0} ya está en otro renglón."
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "That label counts in {0} and the order in {1}. Open it in Escáner to count it."
+msgstr "Esa etiqueta cuenta en {0} y la orden en {1}. Ábrela en Escáner para contarla."
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "This label needs a review in Escáner before it counts."
+msgstr "Esta etiqueta necesita una revisión en Escáner antes de contar."
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "To confirm"
+msgstr "Por confirmar"
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "Total"
+msgstr "Total"
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "Which line is it for?"
+msgstr "¿Para qué renglón es?"
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "of {0}"
+msgstr "de {0}"
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "pieces received"
+msgstr "piezas recibidas"
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "{0} is not on this order. Nothing was added."
+msgstr "{0} no está en esta orden. No se agregó nada."
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "{0} is off this receipt; it stays pending on the order."
+msgstr "{0} salió de esta recepción; sigue pendiente en la orden."
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "{0} lines"
+msgstr "{0} renglones"
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "{0} missing"
+msgstr "Faltan {0}"
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "{0} more than ordered"
+msgstr "{0} de más"
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "{0} of {1}"
+msgstr "{0} de {1}"
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "{0} pieces are still missing; they stay pending on the order for another delivery."
+msgstr "Faltan {0} piezas; quedan pendientes en la orden para otra entrega."
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "{0} pieces go into stock. The stock changes as soon as you confirm."
+msgstr "Entran {0} piezas al inventario. El inventario cambia en cuanto confirmas."
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "{0} pieces more than ordered came in."
+msgstr "Llegaron {0} piezas de más."
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "{0} still to count"
+msgstr "Faltan {0} por contar"
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "{0}: {1} of {2}"
+msgstr "{0}: {1} de {2}"
+
+#: frontend/src/composables/useCompras.js
+msgid "Nothing has arrived yet. Receive it first."
+msgstr "Todavía no llega nada. Primero recíbelo."

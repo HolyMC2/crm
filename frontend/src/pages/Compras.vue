@@ -488,7 +488,7 @@ import {
   requestId,
   rowKey,
   rowStep,
-  scannerReceiptUrl,
+  receiptRoute,
   segmentLabel,
   statusLabel,
 } from '@/composables/useCompras'
@@ -676,9 +676,7 @@ function rowActions(row) {
       Number(row.per_received || 0) < 100 &&
       !['Closed', 'On Hold'].includes(row.status) && {
         key: 'receive',
-        label: row.in_receipt
-          ? __('Continue receiving')
-          : __('Receive in Escáner'),
+        label: row.in_receipt ? __('Continue receiving') : __('Receive'),
         icon: 'truck',
         hint: 'R',
       },
@@ -701,7 +699,7 @@ function explain(step, row) {
       onClick: () => runVerb('confirm', row),
     },
     receive: {
-      label: __('Receive in Escáner'),
+      label: __('Receive'),
       onClick: () => runVerb('receive', row),
     },
     bills: {
@@ -768,7 +766,7 @@ async function call(key, method, args, row) {
   }
 }
 
-/** «Recibir en Escáner»: the one draft receipt, counted in Escáner; back to the order. */
+/** «Recibir»: the one draft receipt, counted in the shell's Recepción; back to the order. */
 async function receive(row) {
   const result = await call(
     `receive:${row.name}`,
@@ -778,12 +776,8 @@ async function receive(row) {
   )
   if (!result?.receipt) return
   await list.focusRow(row)
-  window.location.assign(
-    scannerReceiptUrl(
-      result.receipt,
-      row.name,
-      listHref(list.returnQuery(row)),
-    ),
+  router.push(
+    receiptRoute(result.receipt, row.name, listHref(list.returnQuery(row))),
   )
 }
 

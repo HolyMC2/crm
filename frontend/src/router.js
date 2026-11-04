@@ -250,6 +250,13 @@ const routes = [
     meta: { app: 'compras', title: 'Compras', ownPhoneHeader: true },
   },
   {
+    path: '/compras/recepcion/:name',
+    name: 'CompraRecepcion',
+    component: () => import('@/pages/CompraRecepcion.vue'),
+    props: true,
+    meta: { app: 'compras', title: 'Compras', ownPhoneHeader: true },
+  },
+  {
     path: '/compras/solicitud/:name',
     name: 'CompraSolicitud',
     component: () => import('@/pages/CompraSolicitud.vue'),

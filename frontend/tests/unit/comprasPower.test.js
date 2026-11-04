@@ -250,20 +250,22 @@ describe('Compras list as a power app', () => {
     })
   })
 
-  it('r receives the focused order in Escáner, with the way back to the order and this row', async () => {
+  it('r receives the focused order in the shell, with the way back to the order and this row', async () => {
     state.route.query = { segment: 'por-recibir', foco: 'PO-3' }
     mount()
     await flush()
     press('r')
     await flush()
     expect(calls('start_receipt')[0]).toMatchObject({ name: 'PO-3' })
-    const url = new URL(assign.mock.calls[0][0], 'https://x.test')
-    expect(url.pathname).toBe('/scan/docs/PR/PR-9')
-    const back = new URL(url.searchParams.get('return_to'), 'https://x.test')
-    expect(back.pathname).toBe('/crm/compras/orden/PO-3')
-    expect(back.searchParams.get('list')).toBe(
-      '/compras?segment=por-recibir&foco=PO-3',
-    )
+    expect(assign).not.toHaveBeenCalled()
+    expect(state.router.push).toHaveBeenCalledWith({
+      name: 'CompraRecepcion',
+      params: { name: 'PR-9' },
+      query: {
+        orden: 'PO-3',
+        list: '/compras?segment=por-recibir&foco=PO-3',
+      },
+    })
   })
 
   it('f registers the bill of what arrived in Gastos; back lands on the same row', async () => {
@@ -291,9 +293,9 @@ describe('Compras list as a power app', () => {
     await flush()
     expect(calls('start_bill')).toHaveLength(0)
     expect(state.toast.error).toHaveBeenCalledWith(
-      'Nothing has arrived yet. Receive it in Escáner first.',
+      'Nothing has arrived yet. Receive it first.',
       expect.objectContaining({
-        action: expect.objectContaining({ label: 'Receive in Escáner' }),
+        action: expect.objectContaining({ label: 'Receive' }),
       }),
     )
     // A request is prepared as a purchase first: the reason and «Open purchase».

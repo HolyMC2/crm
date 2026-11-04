@@ -86,11 +86,13 @@ const props = defineProps({
 const emit = defineEmits(['ask'])
 
 function tag(row) {
+  if (row.to) return RouterLink
   if (row.href) return 'a'
   if (row.receipt || row.labels) return RouterLink
   return 'div'
 }
 function target(row) {
+  if (row.to) return { to: row.to }
   if (row.href) return { href: row.href }
   if (row.receipt)
     return {

@@ -279,6 +279,18 @@ export function orderPath(order, list = '') {
     : path
 }
 
+/** The receipt counted in the shell (Recepción), with the way back to this order. */
+export function receiptRoute(receipt, order, list = '') {
+  return {
+    name: 'CompraRecepcion',
+    params: { name: receipt },
+    query: {
+      ...(order ? { orden: order } : {}),
+      ...(list && list.startsWith('/compras') ? { list } : {}),
+    },
+  }
+}
+
 /** Escáner's receipt editor, with the way back to this order (and its queue). */
 export function scannerReceiptUrl(receipt, order, list = '') {
   const query = new URLSearchParams({
@@ -575,7 +587,7 @@ export function queueShortcuts(caps = {}) {
     caps.receive && {
       id: 'compras.receive',
       keys: ['r'],
-      description: 'Receive in Escáner',
+      description: 'Receive',
     },
     {
       id: 'compras.bill',
@@ -662,7 +674,7 @@ export function rowStep(row, verb, { caps = {}, scanner = null } = {}) {
     if (Number(row.per_received || 0) <= 0)
       return {
         kind: 'receive',
-        text: tr('Nothing has arrived yet. Receive it in Escáner first.'),
+        text: tr('Nothing has arrived yet. Receive it first.'),
       }
     return { kind: 'go' }
   }

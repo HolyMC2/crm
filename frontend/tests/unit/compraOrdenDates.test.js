@@ -83,13 +83,17 @@ describe('purchase order dates', () => {
           component: CompraOrden,
           props: true,
         },
-        ...['Compras', 'CompraSolicitud', 'Contactos', 'Gastos'].map(
-          (name) => ({
-            path: `/${name}/:name?`,
-            name,
-            component: { render: () => null },
-          }),
-        ),
+        ...[
+          'Compras',
+          'CompraSolicitud',
+          'CompraRecepcion',
+          'Contactos',
+          'Gastos',
+        ].map((name) => ({
+          path: `/${name}/:name?`,
+          name,
+          component: { render: () => null },
+        })),
       ],
     })
     router.push('/compras/orden/PUR-ORD-2026-00001')

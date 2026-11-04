@@ -849,7 +849,7 @@ import {
   requestId,
   safeReturn,
   saveDraft,
-  scannerReceiptUrl,
+  receiptRoute,
   statusLabel,
 } from '@/composables/useCompras'
 import LucideTrash2 from '~icons/lucide/trash-2'
@@ -1118,7 +1118,7 @@ function billState(b) {
   return __('paid', null, 'Compras')
 }
 
-// ── Escáner's side: receipts open in Escáner with the way back; labels ───
+// ── the warehouse side: receipts open in Recepción with the way back; labels
 const labelsOn = computed(() => moduleEnabled(shellBoot.value, 'productos'))
 const almacenRows = computed(() => {
   if (isNew.value || !doc.value.name) return []
@@ -1134,7 +1134,7 @@ const almacenRows = computed(() => {
     ]
       .filter(Boolean)
       .join(' · '),
-    href: scannerReceiptUrl(receipt.name, doc.value.name),
+    to: receiptRoute(receipt.name, doc.value.name, listQuery.value),
   }))
   if (!out.length && Number(doc.value.docstatus) === 1)
     out.push({
@@ -1525,9 +1525,7 @@ async function receive() {
     const result = await call('receive', 'start_receipt', {
       name: doc.value.name,
     })
-    window.location.assign(
-      scannerReceiptUrl(result.receipt, doc.value.name, listQuery.value),
-    )
+    router.push(receiptRoute(result.receipt, doc.value.name, listQuery.value))
   } catch {
     /* problem shown */
   }

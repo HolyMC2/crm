@@ -117,11 +117,13 @@ async function mountAt(path) {
         name: 'GastoFactura',
         component: { render: () => null },
       },
-      ...['Compras', 'CompraSolicitud', 'Gastos'].map((name) => ({
-        path: `/${name}/:name?`,
-        name,
-        component: { render: () => null },
-      })),
+      ...['Compras', 'CompraSolicitud', 'CompraRecepcion', 'Gastos'].map(
+        (name) => ({
+          path: `/${name}/:name?`,
+          name,
+          component: { render: () => null },
+        }),
+      ),
     ],
   })
   router.push(path)
