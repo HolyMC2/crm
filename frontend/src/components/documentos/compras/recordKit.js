@@ -125,6 +125,8 @@ export function useRecordKit(doctype, { name, title, changed, modified } = {}) {
   )
 
   let seq = 0
+  // Why the last load failed: «⋯» says it instead of doing nothing.
+  let failure = ''
   async function load() {
     if (!recordName.value || recordName.value === 'nuevo') return
     const mine = ++seq
@@ -138,10 +140,14 @@ export function useRecordKit(doctype, { name, title, changed, modified } = {}) {
       if (mine !== seq) return
       profile.value = own
       record.value = loaded
+      failure = ''
       loadExtras()
-    } catch {
+    } catch (error) {
       // The page shows its own errors; the kit only stays out of the way.
-      if (mine === seq) record.value = null
+      if (mine === seq) {
+        record.value = null
+        failure = errorText(error)
+      }
     }
   }
 
@@ -346,8 +352,17 @@ export function useRecordKit(doctype, { name, title, changed, modified } = {}) {
     doConfirm,
     setActivity,
     after,
-    openTools: () => {
+    // Before the bundle is in (or after it failed): load it, then open.
+    openTools: async () => {
+      if (!recordName.value || recordName.value === 'nuevo') return
+      if (!record.value) await load()
       if (record.value) open.value = 'tools'
+      else
+        toast.error(
+          failure
+            ? `No se pudieron abrir las herramientas. ${failure}`
+            : 'No se pudieron abrir las herramientas.',
+        )
     },
   }
 }

@@ -1,6 +1,7 @@
 """Documentos engine (Shell Wave D): paths, module gates, lists, records, permissions."""
 
 from unittest import TestCase, skipIf
+from unittest.mock import patch
 
 from crm.documentos_routes import is_documentos_path, is_inventario_path
 
@@ -362,6 +363,34 @@ class TestDocumentosERPNext(IntegrationTestCase):
 				self.assertTrue(item["filters"])
 		self.assertTrue(bundle["actions"]["duplicate"]["allowed"] in (True, False))
 		self.assertFalse(bundle["actions"]["submit"]["allowed"])  # not submittable
+
+	def test_a_dashboard_naming_a_missing_doctype_still_opens_the_record(self):
+		# ERPNext 16.52 lists «Item Standard Cost» on Item without shipping it.
+		from frappe.model.meta import Meta
+
+		customer = frappe.get_doc(
+			{
+				"doctype": "Customer",
+				"customer_name": "Cliente Conexiones Fantasma",
+				"customer_type": "Individual",
+			}
+		).insert(ignore_permissions=True)
+		real = Meta.get_dashboard_data
+
+		def with_ghost(meta):
+			data = real(meta)
+			data.transactions = [
+				*data.transactions,
+				{"label": "Fantasma", "items": ["Doctype Que No Existe"]},
+			]
+			return data
+
+		with patch.object(Meta, "get_dashboard_data", with_ghost):
+			bundle = documentos.record("Customer", customer.name)
+		doctypes = {item["doctype"] for group in bundle["connections"] for item in group["items"]}
+		self.assertIn("Sales Invoice", doctypes)
+		self.assertNotIn("Doctype Que No Existe", doctypes)
+		self.assertNotIn("Fantasma", [group["label"] for group in bundle["connections"]])
 
 	def test_a_record_carries_how_to_reach_its_person(self):
 		customer = frappe.get_doc(

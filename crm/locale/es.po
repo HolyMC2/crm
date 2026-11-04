@@ -14709,8 +14709,11 @@ msgctxt "Gastos"
 msgid "Cancel"
 msgstr "Cancelar"
 
-msgid "Draft: review supplier, amounts and taxes, then register it so it can be paid."
-msgstr "Borrador: revisa proveedor, importes e impuestos y regístrala para poder pagarla."
+msgid "Draft: review supplier, amounts and taxes, then register it. «Pay» then asks which bank or cash account the money leaves from."
+msgstr "Borrador: revisa proveedor, importes e impuestos y regístrala. Después, «Pagar» te pregunta de qué cuenta de banco o caja sale el dinero."
+
+msgid "Then «Pay» asks which bank or cash account it is paid from."
+msgstr "Después, «Pagar» te pregunta de qué cuenta de banco o caja se paga."
 
 msgid "From purchase orders"
 msgstr "De las órdenes de compra"

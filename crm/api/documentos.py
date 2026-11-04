@@ -1243,8 +1243,16 @@ def _connections(doc):
 		return []
 	if not data or not data.get("transactions"):
 		return []
+	# A dashboard can name a doctype no installed app ships (ERPNext 16.52 lists «Item Standard
+	# Cost» on Item); Frappe's counter would raise on it and take the whole record down.
+	blocked = _blocked_modules()
+	for group in data.get("transactions"):
+		group["items"] = [t for t in group.get("items") or [] if readable(t, blocked)]
+	items = [t for group in data.get("transactions") for t in group["items"]]
+	if not items:
+		return []
 	try:
-		found = (get_open_count(doc.doctype, doc.name) or {}).get("count") or {}
+		found = (get_open_count(doc.doctype, doc.name, items) or {}).get("count") or {}
 	except frappe.PermissionError:
 		return []
 	counts = {}
@@ -1254,13 +1262,10 @@ def _connections(doc):
 		counts[entry["doctype"]] = entry
 	fieldname = data.get("fieldname")
 	non_standard = data.get("non_standard_fieldnames") or {}
-	blocked = _blocked_modules()
 	groups = []
-	for group in data.get("transactions") or []:
+	for group in data.get("transactions"):
 		items = []
-		for target in group.get("items") or []:
-			if not readable(target, blocked):
-				continue
+		for target in group["items"]:
 			entry = counts.get(target) or {}
 			count = entry.get("count")
 			names = entry.get("names")

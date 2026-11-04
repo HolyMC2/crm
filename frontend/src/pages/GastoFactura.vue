@@ -749,7 +749,7 @@ const stateLine = computed(() => {
     )
   if (docstatus === 0)
     return __(
-      'Draft: review supplier, amounts and taxes, then register it so it can be paid.',
+      'Draft: review supplier, amounts and taxes, then register it. «Pay» then asks which bank or cash account the money leaves from.',
     )
   return __('This bill is cancelled.')
 })
@@ -777,6 +777,7 @@ const registerCopy = computed(() => ({
     __(
       'It registers in the background: you can keep working and you will be told when it is done.',
     ),
+    __('Then «Pay» asks which bank or cash account it is paid from.'),
   ].join(' '),
   confirm: __('Register', null, 'Gastos'),
   back: __('Cancel', null, 'Gastos'),
