@@ -57,15 +57,19 @@
       :aria-label="`Muestra de ${current.label}`"
       data-etq-template-sample
     >
-      <EtqPreview
+      <EtqStage
+        v-model:index="index"
+        class="h-56 lg:h-72"
         :html="sample"
+        :size="size"
+        :designed="current.kind === 'size'"
+        :count="count"
         :loading="loading"
-        :min-height="160"
-        :max-height="300"
+        :label="layoutName(current)"
         :title="`Muestra de ${current.label}`"
-        :caption="caption"
         :empty="problem || current.problem || 'Sin muestra.'"
       />
+      <p class="text-sm text-ink-gray-6">{{ caption }}</p>
       <div class="flex flex-wrap gap-2">
         <Button
           variant="solid"
@@ -90,17 +94,19 @@
 import { computed, ref, watch } from 'vue'
 import { Button } from 'frappe-ui'
 import { ListRow } from '@/components/ui'
-import EtqPreview from '@/components/etiquetas/EtqPreview.vue'
+import EtqStage from '@/components/etiquetas/EtqStage.vue'
 import {
   etiquetasApi,
   layoutGroups,
+  layoutName,
   problemText,
 } from '@/composables/useEtiquetas'
 
 const props = defineProps({
   layouts: { type: Array, default: () => [] },
   inUse: { type: String, default: '' },
-  parts: { type: Array, default: () => [] },
+  // The design the sizes are shown with: the one «Imprimir» uses.
+  design: { type: Object, default: null },
   newTemplateUrl: { type: String, default: '' },
 })
 const emit = defineEmits(['use'])
@@ -111,12 +117,15 @@ const current = computed(() =>
   props.layouts.find((layout) => layout.key === shown.value),
 )
 const sample = ref('')
+const size = ref({ w_mm: 0, h_mm: 0 })
+const count = ref(1)
+const index = ref(0)
 const loading = ref(false)
 const problem = ref('')
 const caption = computed(() => {
   if (!current.value) return ''
   if (current.value.kind === 'size')
-    return 'Muestra con un producto de ejemplo y lo que eliges en «Qué lleva».'
+    return 'Muestra con un producto de ejemplo y lo que lleva tu etiqueta en «Imprimir».'
   if (current.value.kind === 'format')
     return 'Formato de impresión de la tienda, con un producto de ejemplo.'
   return 'Plantilla de diseño, con un producto de ejemplo.'
@@ -135,9 +144,15 @@ async function draw() {
   try {
     const answer = await etiquetasApi('preview', {
       layout: layout.key,
-      fields: layout.kind === 'size' ? props.parts : null,
+      design:
+        layout.kind === 'size' && props.design
+          ? JSON.stringify(props.design)
+          : null,
     })
-    if (mine === ticket) sample.value = answer?.html || ''
+    if (mine !== ticket) return
+    sample.value = answer?.html || ''
+    size.value = answer?.size || { w_mm: layout.w_mm, h_mm: layout.h_mm }
+    count.value = answer?.shown || 1
   } catch (error) {
     if (mine === ticket) {
       sample.value = ''

@@ -84,6 +84,21 @@
     <p v-if="error" role="alert" class="pt-2 text-base text-ink-red-7">
       {{ error }}
     </p>
+    <!-- The word is shared with the labels stuck on products: a record
+         whose products get labels points there. -->
+    <p
+      v-if="labelsHref"
+      class="mt-4 border-t border-outline-gray-1 pt-3 text-sm text-ink-gray-6"
+      data-testid="tag-sheet-labels"
+    >
+      Estas etiquetas sirven para encontrar documentos. Las que se pegan en los
+      productos:
+      <RouterLink
+        :to="labelsHref"
+        class="inline-flex min-h-11 items-center font-medium text-ink-gray-9 underline underline-offset-2"
+        >Imprimir etiquetas</RouterLink
+      >
+    </p>
   </BottomSheet>
 </template>
 <script setup>
@@ -93,6 +108,7 @@ import { chipClass } from '@/components/ui/chipClass'
 import { docApi, errorText } from '@/documentos/api'
 import { BTN } from '@/documentos/tools'
 import { cleanTag } from '@/documentos/actividad'
+import { etiquetasFor } from '@/composables/etiquetasLink'
 
 const props = defineProps({
   open: { type: Boolean, default: false },
@@ -109,6 +125,8 @@ const found = ref([])
 const busy = ref('')
 const error = ref('')
 const field = ref(null)
+
+const labelsHref = computed(() => etiquetasFor(props.doctype, props.name))
 
 const suggestions = computed(() => {
   const have = new Set(props.tags.map((t) => t.toLowerCase()))

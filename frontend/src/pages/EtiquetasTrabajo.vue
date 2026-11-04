@@ -152,15 +152,21 @@
       </div>
 
       <aside class="min-w-0 space-y-3 lg:sticky lg:top-4">
-        <EtqPreview
+        <EtqStage
+          v-model:index="shownIndex"
+          v-model:view="stageView"
+          class="h-64 lg:h-80"
           :html="job.preview"
-          :caption="
-            job.label_count > 6
-              ? `Muestra de las primeras 6 de ${labelsText(job.label_count)}.`
-              : ''
-          "
+          :size="job.size"
+          :designed="!!job.preview_per_product"
+          :count="previewCount"
+          :label="job.layout_label"
+          :title="`Etiquetas de ${job.title}`"
           :empty="job.problem || 'Sin muestra.'"
         />
+        <p v-if="caption" class="px-1 text-sm text-ink-gray-6">
+          {{ caption }}
+        </p>
         <p
           v-if="job.problem"
           role="alert"
@@ -169,15 +175,16 @@
           Esta plantilla ya no imprime: {{ job.problem }} Usa «Cambiar y volver
           a imprimir» para elegir otra.
         </p>
+        <!-- The print takes the room; a button that wraps takes its row. -->
         <div
           class="sticky bottom-0 z-10 -mx-4 flex flex-wrap gap-2 border-t border-outline-gray-1 bg-surface-base px-4 pb-3 pt-2 lg:static lg:mx-0 lg:border-0 lg:p-0"
         >
           <Button
             variant="solid"
-            class="press min-h-12 flex-1 text-base"
+            class="press min-h-12 min-w-0 grow-[999] basis-48 text-base"
             label="Volver a imprimir"
-            :loading="busy"
-            :disabled="!job.can_reprint"
+            :loading="busy === 'print'"
+            :disabled="!job.can_reprint || !!busy"
             @click="reprint"
           >
             <template #prefix>
@@ -185,7 +192,21 @@
             </template>
           </Button>
           <Button
-            class="press min-h-12"
+            v-if="job.size?.w_mm && job.size?.h_mm"
+            class="press min-h-12 flex-auto"
+            :label="phone ? 'Compartir PDF' : 'PDF'"
+            :aria-label="phone ? 'Compartir en PDF' : 'Guardar en PDF'"
+            title="Un PDF con una etiqueta por página, para imprimir desde otra app o guardarlo"
+            :loading="busy === 'pdf'"
+            :disabled="!job.can_reprint || !!busy"
+            @click="reprintPdf"
+          >
+            <template #prefix>
+              <Icon icon="file-down" class="size-5" />
+            </template>
+          </Button>
+          <Button
+            class="press min-h-12 flex-auto"
             label="Cambiar y volver a imprimir"
             @click="
               router.push({
@@ -223,21 +244,24 @@ import { useRouter } from 'vue-router'
 import { Button } from 'frappe-ui'
 import { AppBar, EmptyState, StatusChip } from '@/components/ui'
 import Icon from '@/components/Icon.vue'
-import EtqPreview from '@/components/etiquetas/EtqPreview.vue'
+import EtqStage from '@/components/etiquetas/EtqStage.vue'
 import { isMobile as phone } from '@/composables/breakpoint'
 import { useLiveList } from '@/composables/liveList'
 import { documentRoute } from '@/documentos/registry'
 import { errorKind } from '@/utils/contactos'
 import {
+  PREVIEW_ROWS,
   downloadHtml,
   etiquetasApi,
   jobLine,
   jobState,
   labelsText,
+  pdfFile,
   printHtml,
   problemText as sayProblem,
   rowLine,
   rowPrice,
+  sendPdf,
   sourceName,
 } from '@/composables/useEtiquetas'
 
@@ -249,13 +273,32 @@ const job = ref(null)
 const problem = ref('')
 const denied = ref(false)
 const problemText = ref('')
-const busy = ref(false)
+// '' | 'print' | 'pdf'
+const busy = ref('')
 const lastHtml = ref('')
+const shownIndex = ref(0)
+const stageView = ref('una')
 
 const state = computed(() => jobState(job.value?.status))
 const line = computed(() =>
   job.value ? jobLine({ ...job.value, layout_label: '', mine: true }) : '',
 )
+// A size shows each product's label once (the first PREVIEW_ROWS); a
+// store format shows its first labels as it prints them.
+const previewCount = computed(() =>
+  Math.min(job.value?.rows?.length || 0, PREVIEW_ROWS),
+)
+const caption = computed(() => {
+  const value = job.value
+  if (!value?.preview) return ''
+  if (value.preview_per_product)
+    return value.rows.length > PREVIEW_ROWS
+      ? `Los primeros ${PREVIEW_ROWS} de ${value.rows.length} productos, una etiqueta de cada uno.`
+      : ''
+  return value.label_count > 6
+    ? `Muestra de las primeras 6 de ${labelsText(value.label_count)}.`
+    : ''
+})
 const sourceRoute = computed(() =>
   job.value?.source
     ? documentRoute(job.value.source.doctype, job.value.source.name)
@@ -275,7 +318,7 @@ async function load({ quiet = false } = {}) {
 }
 
 async function reprint() {
-  busy.value = true
+  busy.value = 'print'
   problemText.value = ''
   try {
     const answer = await etiquetasApi('reprint', { job: props.name })
@@ -290,7 +333,30 @@ async function reprint() {
   } catch (error) {
     problemText.value = sayProblem(error)
   } finally {
-    busy.value = false
+    busy.value = ''
+  }
+}
+
+// The same labels as a PDF, one a page: a phone shares it, a computer saves it.
+async function reprintPdf() {
+  busy.value = 'pdf'
+  problemText.value = ''
+  try {
+    const answer = await etiquetasApi('reprint', {
+      job: props.name,
+      output: 'pdf',
+    })
+    await sendPdf(
+      pdfFile(answer?.pdf, answer?.filename || `${props.name}.pdf`),
+      {
+        share: phone.value,
+      },
+    )
+    job.value = { ...job.value, ...(answer?.job || {}) }
+  } catch (error) {
+    problemText.value = sayProblem(error)
+  } finally {
+    busy.value = ''
   }
 }
 

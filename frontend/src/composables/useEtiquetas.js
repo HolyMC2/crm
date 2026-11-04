@@ -1,15 +1,24 @@
 import { comprasApi, outcomeUnknown, requestId } from '@/composables/useCompras'
 import { formatMoney, relativeTime } from '@/utils/display'
+import { SOURCE_DOCTYPES } from './etiquetasLink'
 
-// Etiquetas (Productos › Etiquetas): what to label, the layout, the copies,
-// preview, print in the browser and the print jobs with their state. Doco's
-// labels service (`doco.workspaces.labels`) owns every read and write; each
-// print is a «Doco Label Print Job», the same record Desk lists. Pure helpers
-// live here so the screens and their tests share them.
+// Etiquetas (Productos › Etiquetas): what to label, the size and what each
+// label carries (its design), the copies, the preview, print in the browser or
+// a PDF, and the print jobs with their state. Doco's labels service
+// (`doco.workspaces.labels`) owns every read and write and lays each label out
+// (`doco.docoutils.labels.design`); each print is a «Doco Label Print Job», the
+// same record Desk lists. Pure helpers live here so the screens and their
+// tests share them.
 
 const SERVICE = 'doco.workspaces.labels'
 
 export { requestId }
+export {
+  SOURCE_DOCTYPES,
+  etiquetasFor,
+  etiquetasHref,
+  sourceName,
+} from './etiquetasLink'
 
 export function etiquetasApi(method, args = {}) {
   return comprasApi(`${SERVICE}.${method}`, args)
@@ -60,7 +69,7 @@ export function labelsText(count) {
 // ── layouts ───────────────────────────────────────────────────────────
 
 const KINDS = [
-  { kind: 'size', title: 'Tamaños', hint: 'Elige qué lleva cada etiqueta' },
+  { kind: 'size', title: 'Medidas', hint: 'Elige qué lleva cada etiqueta' },
   { kind: 'format', title: 'Formatos de la tienda', hint: '' },
   { kind: 'template', title: 'Plantillas de diseño', hint: '' },
 ]
@@ -79,12 +88,135 @@ export function layoutName(layout) {
 }
 
 /** The layout to start with: the remembered one if it still prints, else the server's. */
-export function startLayout(layouts = [], remembered = '', fallback = '') {
+export function startLayout(
+  layouts = [],
+  remembered = '',
+  fallback = '',
+  limits,
+) {
   const ok = (key) =>
-    key && layouts.some((layout) => layout.key === key && !layout.problem)
+    key &&
+    (layouts.some((layout) => layout.key === key && !layout.problem) ||
+      customLayout(key, limits))
   if (ok(remembered)) return remembered
   if (ok(fallback)) return fallback
   return layouts.find((layout) => !layout.problem)?.key || ''
+}
+
+/** The layout behind a key: one the server listed, or a measured label. */
+export function findLayout(key, layouts = [], limits) {
+  return (
+    layouts.find((layout) => layout.key === key) || customLayout(key, limits)
+  )
+}
+
+// ── measured labels (`custom:<w>x<h>`) ────────────────────────────────
+
+const CUSTOM = /^custom:(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)$/
+const LIMITS = { min: 10, max: 300 }
+
+function mmText(value) {
+  return Number(value).toLocaleString('es-MX', { maximumFractionDigits: 1 })
+}
+
+export function sizeText(w, h) {
+  return `${mmText(w)} × ${mmText(h)} mm`
+}
+
+/** Whether a side is one the labels print at (10 to 300 mm by default). */
+export function sideOk(value, limits = LIMITS) {
+  const n = Number(value)
+  return Number.isFinite(n) && n >= limits.min && n <= limits.max
+}
+
+export function customKey(w, h) {
+  return `custom:${+Number(w).toFixed(1)}x${+Number(h).toFixed(1)}`
+}
+
+/** `custom:62x29` as a layout, or null when it is not a size that prints. */
+export function customLayout(key, limits = LIMITS) {
+  const match = CUSTOM.exec(key || '')
+  if (!match) return null
+  const w = Number(match[1])
+  const h = Number(match[2])
+  if (!sideOk(w, limits) || !sideOk(h, limits)) return null
+  return {
+    key: customKey(w, h),
+    kind: 'size',
+    label: 'Medida',
+    size: sizeText(w, h),
+    w_mm: w,
+    h_mm: h,
+    name: 'custom',
+  }
+}
+
+// ── what a size's label carries ───────────────────────────────────────
+
+export const NAME_SIZES = [
+  { value: 's', label: 'Chico' },
+  { value: 'm', label: 'Normal' },
+  { value: 'l', label: 'Grande' },
+]
+export const PRICE_SIZES = [
+  { value: 'm', label: 'Chico' },
+  { value: 'l', label: 'Normal' },
+  { value: 'xl', label: 'Grande' },
+]
+export const CODE_KINDS = [
+  { value: 'unit', label: 'La pieza' },
+  { value: 'item', label: 'El producto' },
+]
+
+/** What each part is for, said where the worker switches it on. */
+export const PART_HINTS = {
+  shop: 'El nombre de la tienda, arriba',
+  name: 'Tan grande como quepa; nunca se corta',
+  brand: 'La marca, sobre el nombre',
+  price: 'El precio de venta de la lista de la tienda',
+  sku: 'El código del producto, para buscarlo',
+  qr: 'Se escanea en caja: la pieza, o el producto',
+  bar: 'Barras para lectores que no leen QR',
+  sn: 'La serie o el IMEI de cada pieza',
+  batch: 'El lote y su fecha de caducidad',
+  date: 'El día en que se imprimió',
+  text: 'Una línea tuya: «Garantía 30 días», «Oferta»',
+}
+
+const PARTS = Object.keys(PART_HINTS)
+const DEFAULT_PARTS = ['shop', 'name', 'price', 'sku', 'qr', 'sn', 'batch']
+
+function oneOf(value, options, fallback) {
+  return options.some((option) => option.value === value) ? value : fallback
+}
+
+/**
+ * A design as the server reads it: known parts in reading order (none falls
+ * back to the default set), options it knows, the texts cut to their length.
+ * `meta` is bootstrap's `design` ({ parts, default, text_max, shop_max }).
+ */
+export function cleanDesign(value, meta = {}) {
+  const source = Array.isArray(value) ? { parts: value } : value || {}
+  const order = (meta.parts || []).map((part) => part.key)
+  const known = order.length ? order : PARTS
+  const wanted = new Set(source.parts || [])
+  let parts = known.filter((key) => wanted.has(key))
+  if (!parts.length)
+    parts = (meta.default || DEFAULT_PARTS).filter((key) => known.includes(key))
+  return {
+    parts,
+    name_size: oneOf(source.name_size, NAME_SIZES, 'm'),
+    price_size: oneOf(source.price_size, PRICE_SIZES, 'l'),
+    code: oneOf(source.code, CODE_KINDS, 'unit'),
+    text: String(source.text || '').slice(0, meta.text_max || 60),
+    shop_text: String(source.shop_text || '').slice(0, meta.shop_max || 40),
+  }
+}
+
+/** «Nombre, Precio, QR»: the parts of a design in the worker's words. */
+export function partsText(design, fields = []) {
+  const names = new Map(fields.map((field) => [field.key, field.label]))
+  return (design?.parts || []).map((key) => names.get(key) || key).join(', ')
 }
 
 // ── rows ──────────────────────────────────────────────────────────────
@@ -117,6 +249,9 @@ export function mergeRows(current = [], incoming = []) {
 
 export const MAX_COPIES = 200
 export const MAX_LABELS = 1000
+// The most products one preview draws (doco's PREVIEW_ROWS): a longer list
+// is previewed a window at a time.
+export const PREVIEW_ROWS = 30
 
 export function clampQty(value) {
   const n = Math.round(Number(value) || 1)
@@ -148,7 +283,7 @@ export function rowPrice(row) {
 export function printBlock({ rows = [], layout = '', busy = false } = {}) {
   if (busy) return 'Imprimiendo…'
   if (!rows.length) return 'Agrega al menos un producto para imprimir.'
-  if (!layout) return 'Elige una plantilla.'
+  if (!layout) return 'Elige la medida de la etiqueta.'
   const total = totalLabels(rows)
   if (total > MAX_LABELS)
     return `Son ${total.toLocaleString('es-MX')} etiquetas; imprime hasta ${MAX_LABELS.toLocaleString('es-MX')} a la vez.`
@@ -175,19 +310,48 @@ export const SOURCES = [
     hint: 'Precios de los últimos 7 días',
     icon: 'tag',
   },
+  {
+    key: 'existencias',
+    label: 'Lo que hay en tienda',
+    hint: 'Los productos con existencia de un almacén',
+    icon: 'warehouse',
+  },
+  {
+    key: 'pegar',
+    label: 'Pegar códigos',
+    hint: 'Una lista de códigos copiada de Excel o de un mensaje',
+    icon: 'clipboard-list',
+  },
 ]
 
-const SOURCE_NAMES = {
-  'Purchase Receipt': 'Recepción',
-  'Purchase Invoice': 'Factura de proveedor',
-  'Stock Entry': 'Entrada',
-  'Purchase Order': 'Orden de compra',
-  'Stock Reconciliation': 'Ajuste de inventario',
-}
-export const SOURCE_DOCTYPES = Object.keys(SOURCE_NAMES)
-
-export function sourceName(doctype) {
-  return SOURCE_NAMES[doctype] || doctype
+/**
+ * Codes pasted from a sheet or a message, one per line, a count after the
+ * code when it has one («750123 3», «A-1<tab>x2»): `[{ code, qty }]`, the
+ * same code once with its copies added up.
+ */
+export function parsePasted(text = '') {
+  const counts = new Map()
+  const add = (code, qty = 1) =>
+    code && counts.set(code, clampQty((counts.get(code) || 0) + qty))
+  const copies = /^[x×]?\s*(\d{1,3})$/i
+  for (const raw of String(text).split(/\r?\n/).slice(0, 300)) {
+    const line = raw.trim()
+    if (!line) continue
+    let cells = line
+      .split(/[\t;,]/)
+      .map((cell) => cell.trim())
+      .filter(Boolean)
+    if (cells.length === 1) {
+      const words = line.split(/\s+/)
+      if (words.length === 2 && copies.test(words[1])) cells = words
+    }
+    if (cells.length === 2 && copies.test(cells[1])) {
+      add(cells[0], Number(copies.exec(cells[1])[1]) || 1)
+      continue
+    }
+    for (const cell of cells) add(cell)
+  }
+  return [...counts].map(([code, qty]) => ({ code, qty }))
 }
 
 /**
@@ -213,16 +377,6 @@ export function startFrom(query = {}) {
     name: '',
     items: codes.map((code) => ({ code, qty: 1 })),
   }
-}
-
-/** The shell link that opens Etiquetas with these products already on it. */
-export function etiquetasHref(codes = [], { desde = '' } = {}) {
-  const params = new URLSearchParams()
-  if (desde) params.set('desde', desde)
-  const list = [...new Set(codes.filter(Boolean))]
-  if (list.length) params.set('codigos', list.join(','))
-  const query = params.toString()
-  return `/productos/etiquetas${query ? `?${query}` : ''}`
 }
 
 // ── printing ──────────────────────────────────────────────────────────
@@ -291,7 +445,10 @@ export function withBase(html, origin = globalThis.location?.origin || '') {
 
 /** Saves the labels as a file the worker can print from another app. */
 export function downloadHtml(html, filename = 'etiquetas.html') {
-  const blob = new Blob([withBase(html)], { type: 'text/html' })
+  saveFile(new Blob([withBase(html)], { type: 'text/html' }), filename)
+}
+
+function saveFile(blob, filename) {
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
@@ -302,9 +459,38 @@ export function downloadHtml(html, filename = 'etiquetas.html') {
   setTimeout(() => URL.revokeObjectURL(url), 5000)
 }
 
+/** The server's PDF (base64) as a file. */
+export function pdfFile(base64, filename = 'etiquetas.pdf') {
+  const bytes = Uint8Array.from(atob(base64 || ''), (c) => c.charCodeAt(0))
+  return new File([bytes], filename, { type: 'application/pdf' })
+}
+
+/**
+ * Hands the PDF on: a phone shares it (to the label printer's app, WhatsApp,
+ * Drive), a computer saves it. `'shared' | 'saved' | 'cancelled'`.
+ */
+export async function sendPdf(
+  file,
+  { share = false, nav = globalThis.navigator } = {},
+) {
+  if (share && nav?.canShare?.({ files: [file] })) {
+    try {
+      await nav.share({ files: [file], title: file.name })
+      return 'shared'
+    } catch (error) {
+      if (error?.name === 'AbortError') return 'cancelled'
+    }
+  }
+  saveFile(file, file.name)
+  return 'saved'
+}
+
 // ── remembered choices ────────────────────────────────────────────────
 
 const LAYOUT_KEY = 'muelle:etiquetas:plantilla'
+const DESIGN_KEY = 'muelle:etiquetas:diseno'
+const SIZES_KEY = 'muelle:etiquetas:medidas'
+// Older screens kept the parts alone.
 const FIELDS_KEY = 'muelle:etiquetas:partes'
 
 export function rememberedLayout() {
@@ -321,18 +507,42 @@ export function rememberLayout(key) {
     // Private mode: the choice is just not remembered.
   }
 }
-export function rememberedFields() {
+function readJson(key) {
   try {
-    const value = JSON.parse(localStorage.getItem(FIELDS_KEY) || 'null')
-    return Array.isArray(value) ? value : null
+    return JSON.parse(localStorage.getItem(key) || 'null')
   } catch {
     return null
   }
 }
-export function rememberFields(fields) {
+function writeJson(key, value) {
   try {
-    localStorage.setItem(FIELDS_KEY, JSON.stringify(fields))
+    localStorage.setItem(key, JSON.stringify(value))
   } catch {
     // Private mode.
   }
+}
+
+/** The design last used on this device (raw: clean it with the boot's meta). */
+export function rememberedDesign() {
+  const design = readJson(DESIGN_KEY)
+  if (design && typeof design === 'object' && !Array.isArray(design))
+    return design
+  const parts = readJson(FIELDS_KEY)
+  return Array.isArray(parts) ? { parts } : null
+}
+export function rememberDesign(design) {
+  writeJson(DESIGN_KEY, design)
+}
+
+/** Measures typed lately, newest first, four at most. */
+export function rememberedSizes() {
+  const keys = readJson(SIZES_KEY)
+  return Array.isArray(keys) ? keys.filter((key) => CUSTOM.test(key)) : []
+}
+export function rememberSize(key) {
+  if (!CUSTOM.test(key || '')) return
+  writeJson(
+    SIZES_KEY,
+    [key, ...rememberedSizes().filter((kept) => kept !== key)].slice(0, 4),
+  )
 }

@@ -12,21 +12,34 @@
       context="Productos"
       title="Etiquetas"
     />
-    <header v-else class="px-6 pb-2 pt-6">
-      <RouterLink
-        :to="{ name: 'Productos' }"
-        class="mb-1 inline-flex min-h-8 items-center gap-1 text-sm text-ink-gray-6 hover:text-ink-gray-9"
-      >
-        <span class="lucide-arrow-left size-4" aria-hidden="true" />
-        Productos
-      </RouterLink>
-      <h1 class="title-face text-3xl font-semibold text-ink-gray-9">
-        Etiquetas
-      </h1>
-      <p class="text-sm text-ink-gray-6">
-        Precios, anaqueles, piezas con serie o lote: elige qué etiquetar, revisa
-        la muestra e imprime.
-      </p>
+    <header
+      v-else
+      class="flex flex-wrap items-end justify-between gap-x-6 gap-y-3 px-6 pb-3 pt-6"
+    >
+      <div class="min-w-0">
+        <RouterLink
+          :to="{ name: 'Productos' }"
+          class="mb-1 inline-flex min-h-8 items-center gap-1 text-sm text-ink-gray-6 hover:text-ink-gray-9"
+        >
+          <span class="lucide-arrow-left size-4" aria-hidden="true" />
+          Productos
+        </RouterLink>
+        <h1 class="title-face text-3xl font-semibold text-ink-gray-9">
+          Etiquetas
+        </h1>
+        <p class="text-sm text-ink-gray-6">
+          Precios, anaqueles, piezas con serie o lote: elige qué etiquetar,
+          diseña la etiqueta e imprime.
+        </p>
+      </div>
+      <Segmented
+        v-if="boot && !bootState"
+        :model-value="vista"
+        label="Etiquetas"
+        :options="vistas"
+        class="w-full max-w-sm"
+        @update:model-value="setVista"
+      />
     </header>
 
     <EmptyState
@@ -49,25 +62,141 @@
     </EmptyState>
 
     <template v-else-if="boot">
-      <div class="px-4 pb-3 pt-2 sm:px-6">
+      <div v-if="phone" class="px-4 pb-3 pt-2">
         <Segmented
           :model-value="vista"
           label="Etiquetas"
           :options="vistas"
-          class="max-w-md"
           @update:model-value="setVista"
         />
       </div>
 
-      <!-- ── Imprimir ─────────────────────────────────────────────── -->
+      <!-- ── Imprimir ─────────────────────────────────────────────────
+           Phone: the label, its design (a sheet), the list, the print at
+           the thumb. Tablet: the list beside the label and its design.
+           Desk: list · label · design, the print under the label. -->
       <div
         v-if="vista === 'imprimir'"
-        class="grid flex-1 gap-4 px-4 pb-4 sm:px-6 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-start"
+        class="grid flex-1 grid-cols-1 items-start gap-4 px-4 pb-4 sm:px-6 md:grid-cols-2 lg:grid-cols-[minmax(18rem,22rem)_minmax(0,1fr)_minmax(17rem,20rem)] lg:gap-6"
         data-etq-imprimir
       >
-        <div class="min-w-0 space-y-4">
-          <!-- What to label: one search (type, paste or scan a code) and the
-               two everyday sources. -->
+        <!-- The label as it prints. -->
+        <section
+          class="min-w-0 space-y-2 md:col-start-2 md:row-start-1 lg:sticky lg:top-4"
+          aria-label="Así sale"
+          data-etq-preview
+        >
+          <EtqStage
+            v-model:index="shownIndex"
+            v-model:view="stageView"
+            class="h-64 sm:h-72 lg:h-[min(28rem,calc(100dvh-15rem))]"
+            :html="previewHtml"
+            :size="previewSize"
+            :designed="isSize"
+            :count="previewShown"
+            :offset="previewOffset"
+            :total="rows.length"
+            :loading="previewing"
+            :label="layoutName(currentLayout)"
+            :title="stageTitle"
+            :empty="previewProblem || 'Elige una medida para ver la etiqueta.'"
+          />
+          <div class="flex items-baseline justify-between gap-3 px-1 text-sm">
+            <p class="min-w-0 truncate text-ink-gray-8" data-etq-caption>
+              {{ caption }}
+            </p>
+            <p v-if="rows.length" class="num flex-none text-ink-gray-6">
+              {{ labelsText(total) }}
+            </p>
+          </div>
+          <!-- Desk: the print under the label, in sight. -->
+          <div v-if="wide" class="space-y-2 pt-1" data-etq-desk-print>
+            <EtqPrintBar
+              :label="printLabel(rows)"
+              :blocked="blocked"
+              :busy="busy"
+              :result="result"
+              :share="false"
+              :pdf="hasSize"
+              @print="print"
+              @pdf="pdf"
+              @retry="retry"
+              @download="download"
+              @again="sendAgain"
+              @job="openJob"
+              @clear="clearList(true)"
+              @dismiss="result = null"
+            />
+            <p class="flex items-start gap-2 px-1 text-xs text-ink-gray-6">
+              <Icon icon="printer" class="mt-0.5 size-4 flex-none" />
+              {{ printerText }}
+            </p>
+          </div>
+          <ul
+            v-if="fit.text || fit.notes?.length"
+            class="space-y-1 rounded-6 bg-surface-amber-1 p-3 text-sm text-ink-amber-9"
+            data-etq-fit
+          >
+            <li v-if="fit.text">{{ fit.text }}</li>
+            <li v-for="note in fit.notes || []" :key="note.key">
+              {{ note.text }}
+            </li>
+          </ul>
+          <button
+            v-if="narrow"
+            type="button"
+            class="press flex min-h-14 w-full items-center gap-3 rounded-8 border border-outline-gray-2 px-4 py-2 text-left hover:bg-surface-gray-1"
+            data-etq-layout
+            @click="designOpen = true"
+          >
+            <Icon icon="sliders-horizontal" class="size-5 text-ink-gray-7" />
+            <span class="min-w-0 flex-1">
+              <span class="block truncate text-base text-ink-gray-9">{{
+                layoutName(currentLayout) || 'Elige la medida'
+              }}</span>
+              <span class="block truncate text-sm text-ink-gray-6">{{
+                isSize ? partsText(design, designMeta.parts) : 'Diseño propio'
+              }}</span>
+            </span>
+            <span class="text-sm font-medium text-ink-gray-8">Diseño</span>
+          </button>
+          <ul v-if="warnings.length" class="space-y-2" data-etq-warnings>
+            <li
+              v-for="warning in warnings"
+              :key="warning.key"
+              class="space-y-2 rounded-6 bg-surface-amber-1 p-3 text-sm text-ink-amber-9"
+            >
+              <p>{{ warning.text }}</p>
+              <div
+                v-if="warning.key === 'sin_precio'"
+                class="flex flex-wrap gap-2"
+              >
+                <Button
+                  class="press min-h-11"
+                  :label="`Quitar ${warning.items.length === 1 ? 'el que no tiene' : `los ${warning.items.length} sin`} precio`"
+                  @click="removeUnpriced"
+                />
+                <Button
+                  v-if="warning.items.length === 1"
+                  class="press min-h-11"
+                  label="Ponerle precio"
+                  @click="
+                    router.push({
+                      name: 'Producto',
+                      params: { item: warning.items[0] },
+                    })
+                  "
+                />
+              </div>
+            </li>
+          </ul>
+        </section>
+
+        <!-- What to label: one search (type, paste or scan a code), the
+             everyday sources, and the list. -->
+        <div
+          class="min-w-0 space-y-4 md:col-start-1 md:row-span-2 md:row-start-1"
+        >
           <section aria-label="Qué etiquetar" class="space-y-2">
             <label class="relative flex items-center">
               <span
@@ -84,7 +213,10 @@
                 placeholder="Nombre, código o escanea"
                 aria-label="Agrega un producto: nombre, código o escanea"
                 data-etq-search
+                @focus="openSearch"
+                @blur="closeSearchSoon"
                 @keydown.enter.prevent="addTyped"
+                @keydown.esc="closeSearch"
               />
               <span
                 v-if="searching"
@@ -93,35 +225,74 @@
               />
             </label>
             <ExpandTransition>
-              <ul
-                v-if="query.trim() && (results.length || !searching)"
+              <div
+                v-if="panelOpen"
                 class="overflow-hidden rounded-8 border border-outline-gray-2 bg-surface-base"
-                aria-label="Productos encontrados"
                 data-etq-results
               >
-                <li v-for="item in results" :key="item.item_code">
-                  <ListRow
-                    :title="item.item_name"
-                    :subtitle="resultLine(item)"
-                    icon="lucide-package"
-                    @click="addItems([{ code: item.item_code }], true)"
+                <ul v-if="query.trim()" aria-label="Productos encontrados">
+                  <li v-for="item in results" :key="item.item_code">
+                    <ListRow
+                      :title="item.item_name"
+                      :subtitle="resultLine(item)"
+                      icon="lucide-package"
+                      @click="pickResult(item)"
+                    >
+                      <template #trailing>
+                        <span
+                          class="lucide-plus size-5 text-ink-gray-7"
+                          aria-hidden="true"
+                        />
+                      </template>
+                    </ListRow>
+                  </li>
+                  <li
+                    v-if="!results.length && !searching"
+                    class="px-4 py-3 text-sm text-ink-gray-6"
                   >
-                    <template #trailing>
-                      <span
-                        class="lucide-plus size-5 text-ink-gray-7"
-                        aria-hidden="true"
-                      />
-                    </template>
-                  </ListRow>
-                </li>
-                <li
-                  v-if="!results.length"
-                  class="px-4 py-3 text-sm text-ink-gray-6"
-                >
-                  Ningún producto se llama así. Si es un código, presiona Enter
-                  para buscarlo como serie o lote.
-                </li>
-              </ul>
+                    Ningún producto se llama así. Si es un código, presiona
+                    Enter para buscarlo como serie o lote.
+                  </li>
+                </ul>
+                <template v-else>
+                  <RecentPicks
+                    class="px-3 pt-2"
+                    :picks="recent.picks.value"
+                    @pick="pickRecent"
+                    @clear="recent.clear()"
+                  />
+                  <p
+                    v-if="suggestions.length"
+                    class="px-4 pb-1 pt-3 text-xs font-medium text-ink-gray-6"
+                  >
+                    Editados hace poco
+                  </p>
+                  <ul v-if="suggestions.length" aria-label="Editados hace poco">
+                    <li v-for="item in suggestions" :key="item.item_code">
+                      <ListRow
+                        :title="item.item_name"
+                        :subtitle="resultLine(item)"
+                        icon="lucide-package"
+                        @click="pickResult(item)"
+                      >
+                        <template #trailing>
+                          <span
+                            class="lucide-plus size-5 text-ink-gray-7"
+                            aria-hidden="true"
+                          />
+                        </template>
+                      </ListRow>
+                    </li>
+                  </ul>
+                  <p
+                    v-else-if="!recent.picks.value.length"
+                    class="px-4 py-3 text-sm text-ink-gray-6"
+                  >
+                    Escribe el nombre o el código, o escanea la etiqueta del
+                    proveedor.
+                  </p>
+                </template>
+              </div>
             </ExpandTransition>
             <div class="flex flex-wrap gap-2">
               <button
@@ -161,6 +332,14 @@
             class="rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
           >
             {{ loadProblem }}
+          </p>
+          <p
+            v-if="more"
+            role="status"
+            class="rounded-6 bg-surface-amber-1 p-3 text-sm text-ink-amber-9"
+          >
+            Traje los primeros {{ MAX_ROWS }}: es lo más que sale en una
+            impresión. Imprime estos y trae el resto por grupo.
           </p>
 
           <!-- What will print -->
@@ -221,251 +400,61 @@
               v-else-if="!rows.length"
               class="rounded-8 border border-dashed border-outline-gray-3 px-4 py-6 text-center text-sm text-ink-gray-6"
             >
-              Busca o escanea un producto, o trae lo que llegó o cambió de
-              precio.
+              Busca o escanea un producto, o trae lo que llegó, lo que cambió de
+              precio o lo que hay en tienda.
             </div>
-            <ul
+            <EtqRows
               v-else
-              class="divide-y divide-outline-gray-1 rounded-8 border border-outline-gray-2"
-              data-etq-rows
-            >
-              <li
-                v-for="row in rows"
-                :key="rowKey(row)"
-                class="flex flex-wrap items-center justify-end gap-x-2 py-2 pl-4 pr-2"
-                data-etq-row
-              >
-                <!-- Below ~360 px the copies move under the name. -->
-                <div class="min-w-0 flex-1 basis-36">
-                  <p class="line-clamp-2 text-base text-ink-gray-9">
-                    {{ row.item_name }}
-                  </p>
-                  <p class="truncate text-sm text-ink-gray-6">
-                    {{ rowLine(row) }}
-                  </p>
-                  <p class="text-sm">
-                    <span
-                      v-if="rowPrice(row)"
-                      class="num font-semibold text-ink-gray-9"
-                      >{{ rowPrice(row) }}</span
-                    >
-                    <RouterLink
-                      v-else
-                      :to="{
-                        name: 'Producto',
-                        params: { item: row.item_code },
-                      }"
-                      class="text-ink-amber-9 underline underline-offset-2"
-                      data-etq-sin-precio
-                      >Sin precio · ponle uno</RouterLink
-                    >
-                  </p>
-                </div>
-                <div
-                  v-if="!row.serial_no"
-                  class="flex flex-none items-center rounded-full bg-surface-gray-2"
-                  role="group"
-                  :aria-label="`Copias de ${row.item_name}`"
-                >
-                  <button
-                    type="button"
-                    class="press flex size-11 items-center justify-center rounded-full text-ink-gray-8 disabled:opacity-40"
-                    :disabled="row.qty <= 1"
-                    :aria-label="`Una copia menos de ${row.item_name}`"
-                    @click="setQty(row, row.qty - 1)"
-                  >
-                    <span class="lucide-minus size-4" aria-hidden="true" />
-                  </button>
-                  <input
-                    :value="row.qty"
-                    type="number"
-                    inputmode="numeric"
-                    min="1"
-                    :max="MAX_COPIES"
-                    class="num w-11 border-0 bg-transparent p-0 text-center text-base font-semibold text-ink-gray-9 [appearance:textfield] focus:ring-0 [&::-webkit-inner-spin-button]:appearance-none"
-                    :aria-label="`Copias de ${row.item_name}`"
-                    @change="setQty(row, $event.target.value)"
-                  />
-                  <button
-                    type="button"
-                    class="press flex size-11 items-center justify-center rounded-full text-ink-gray-8 disabled:opacity-40"
-                    :disabled="row.qty >= MAX_COPIES"
-                    :aria-label="`Una copia más de ${row.item_name}`"
-                    @click="setQty(row, row.qty + 1)"
-                  >
-                    <span class="lucide-plus size-4" aria-hidden="true" />
-                  </button>
-                </div>
-                <span
-                  v-else
-                  class="num flex-none px-3 text-sm text-ink-gray-6"
-                  title="Una pieza con serie lleva una sola etiqueta"
-                  >1 pieza</span
-                >
-                <button
-                  type="button"
-                  class="press flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-6 hover:bg-surface-gray-2"
-                  :aria-label="`Quitar ${row.item_name}`"
-                  @click="removeRow(row)"
-                >
-                  <span class="lucide-x size-4" aria-hidden="true" />
-                </button>
-              </li>
-            </ul>
+              :rows="rows"
+              :shown="stageView === 'todas' ? -1 : shownIndex"
+              @qty="setQty"
+              @remove="removeRow"
+              @rename="rename"
+              @pieces="openPieces"
+              @show="showRow"
+            />
           </section>
         </div>
 
-        <!-- The layout, the sample and the print, side by side on desktop. -->
+        <!-- Tablet and desk: the design beside the label. -->
         <aside
-          class="min-w-0 space-y-3 lg:sticky lg:top-4"
-          aria-label="Plantilla e impresión"
+          v-if="!narrow"
+          class="min-w-0 md:col-start-2 md:row-start-2 lg:sticky lg:top-4 lg:col-start-3 lg:row-start-1 lg:max-h-[calc(100dvh-2rem)] lg:overflow-y-auto lg:pr-1"
+          aria-label="Diseño"
         >
-          <button
-            type="button"
-            class="press flex min-h-14 w-full items-center gap-3 rounded-8 border border-outline-gray-2 px-4 py-2 text-left hover:bg-surface-gray-1"
-            data-etq-layout
-            @click="layoutOpen = true"
-          >
-            <Icon icon="layout-template" class="size-5 text-ink-gray-7" />
-            <span class="min-w-0 flex-1">
-              <span class="block text-sm text-ink-gray-6">Plantilla</span>
-              <span class="block truncate text-base text-ink-gray-9">{{
-                layoutName(currentLayout) || 'Elige una'
-              }}</span>
-              <span
-                v-if="currentLayout?.kind === 'size'"
-                class="block truncate text-sm text-ink-gray-6"
-                >{{ partsText }}</span
-              >
-            </span>
-            <span class="text-sm font-medium text-ink-gray-8">Cambiar</span>
-          </button>
-
-          <EtqPreview
-            :html="previewHtml"
-            :loading="previewing"
-            :caption="previewCaption"
+          <EtqDesign
+            v-model:layout="layout"
+            v-model:design="design"
+            :layouts="boot.layouts || []"
+            :meta="designMeta"
+            :dropped="droppedKeys"
+            :rows="rows"
+            :price-list="boot.price_list || ''"
           />
-
-          <ul v-if="warnings.length" class="space-y-2" data-etq-warnings>
-            <li
-              v-for="warning in warnings"
-              :key="warning.key"
-              class="space-y-2 rounded-6 bg-surface-amber-1 p-3 text-sm text-ink-amber-9"
-            >
-              <p>{{ warning.text }}</p>
-              <div
-                v-if="warning.key === 'sin_precio'"
-                class="flex flex-wrap gap-2"
-              >
-                <Button
-                  class="press min-h-11"
-                  :label="`Quitar ${warning.items.length === 1 ? 'el que no tiene' : `los ${warning.items.length} sin`} precio`"
-                  @click="removeUnpriced"
-                />
-                <Button
-                  v-if="warning.items.length === 1"
-                  class="press min-h-11"
-                  label="Ponerle precio"
-                  @click="
-                    router.push({
-                      name: 'Producto',
-                      params: { item: warning.items[0] },
-                    })
-                  "
-                />
-              </div>
-            </li>
-          </ul>
-
-          <!-- How the last print went, with the way on. -->
-          <section
-            v-if="result"
-            role="status"
-            class="space-y-2 rounded-8 p-3 text-sm"
-            :class="
-              result.ok
-                ? 'bg-surface-green-1 text-ink-green-8'
-                : 'bg-surface-red-1 text-ink-red-7'
-            "
-            data-etq-result
-          >
-            <p class="font-semibold">
-              {{ result.ok ? 'Enviada a la impresora' : 'No se imprimió' }}
-            </p>
-            <p v-if="result.ok">
-              {{ labelsText(result.job?.label_count) }} en
-              {{ result.job?.layout_label }}. Si no salió, revisa que elegiste
-              la impresora de etiquetas en el diálogo y vuelve a imprimir.
-            </p>
-            <p v-else>{{ result.reason }}</p>
-            <div class="flex flex-wrap gap-2">
-              <Button
-                v-if="!result.ok"
-                variant="solid"
-                class="press min-h-11"
-                label="Volver a intentar"
-                :loading="busy"
-                @click="retry"
-              />
-              <Button
-                v-if="!result.ok && result.html"
-                class="press min-h-11"
-                label="Descargar etiquetas"
-                @click="download"
-              />
-              <Button
-                v-if="result.job"
-                class="press min-h-11"
-                label="Ver trabajo"
-                @click="
-                  router.push({
-                    name: 'EtiquetasTrabajo',
-                    params: { name: result.job.name },
-                  })
-                "
-              />
-              <Button
-                v-if="result.ok"
-                class="press min-h-11"
-                label="Vaciar lista"
-                @click="clearList(true)"
-              />
-            </div>
-          </section>
-
-          <p class="flex items-start gap-2 text-sm text-ink-gray-6">
-            <Icon icon="printer" class="mt-0.5 size-4 flex-none" />
-            {{ boot.printer?.text }}
-          </p>
-
-          <!-- The print sits at the thumb on a phone; its reason, when it
-               cannot run, beside it. -->
-          <div
-            class="sticky bottom-0 z-10 -mx-4 space-y-1 border-t border-outline-gray-1 bg-surface-base px-4 pb-3 pt-2 lg:static lg:mx-0 lg:border-0 lg:p-0"
-            data-etq-print
-          >
-            <p
-              v-if="blocked && !busy"
-              class="text-sm text-ink-gray-6"
-              data-etq-print-why
-            >
-              {{ blocked }}
-            </p>
-            <Button
-              variant="solid"
-              class="press min-h-12 w-full text-base"
-              :label="printLabel(rows)"
-              :loading="busy"
-              :disabled="!!blocked"
-              @click="print"
-            >
-              <template #prefix>
-                <Icon icon="printer" class="size-5" />
-              </template>
-            </Button>
-          </div>
         </aside>
+
+        <!-- Phone and tablet: the print at the thumb, over the list. -->
+        <div
+          v-if="!wide"
+          class="sticky bottom-0 z-10 -mx-4 space-y-2 border-t border-outline-gray-1 bg-surface-base px-4 pb-3 pt-2 sm:-mx-6 sm:px-6 md:col-span-2"
+        >
+          <EtqPrintBar
+            :label="printLabel(rows)"
+            :blocked="blocked"
+            :busy="busy"
+            :result="result"
+            :share="phone"
+            :pdf="hasSize"
+            @print="print"
+            @pdf="pdf"
+            @retry="retry"
+            @download="download"
+            @again="sendAgain"
+            @job="openJob"
+            @clear="clearList(true)"
+            @dismiss="result = null"
+          />
+        </div>
       </div>
 
       <!-- ── Trabajos ─────────────────────────────────────────────── -->
@@ -481,37 +470,47 @@
 
       <!-- ── Plantillas ───────────────────────────────────────────── -->
       <div v-else class="pb-6 sm:px-6">
-        <EmptyState
-          v-if="!boot.layouts?.length"
-          title="Aún no hay plantillas de etiqueta"
-          :message="noLayoutsText"
-        />
         <EtqTemplates
-          v-else
-          :layouts="boot.layouts"
+          :layouts="boot.layouts || []"
           :in-use="layout"
-          :parts="parts"
+          :design="design"
           :new-template-url="boot.new_template_url"
           @use="useLayout"
         />
       </div>
     </template>
 
-    <EtqLayoutSheet
-      v-if="layoutMounted"
-      v-model:open="layoutOpen"
+    <EtqDesignSheet
+      v-if="designMounted"
+      v-model:open="designOpen"
+      v-model:layout="layout"
+      v-model:design="design"
+      v-model:index="shownIndex"
+      :subtitle="layoutName(currentLayout)"
       :layouts="boot?.layouts || []"
-      :fields="boot?.fields || []"
-      :layout="layout"
-      :parts="parts"
-      :new-template-url="boot?.new_template_url || ''"
-      @apply="applyLayout"
+      :meta="designMeta"
+      :dropped="droppedKeys"
+      :rows="rows"
+      :price-list="boot?.price_list || ''"
+      :html="previewHtml"
+      :size="previewSize"
+      :designed="isSize"
+      :count="previewShown"
+      :offset="previewOffset"
+      :total="rows.length"
+      :loading="previewing"
     />
     <EtqSourceSheet
       v-if="sourceMounted"
       v-model:open="sourceOpen"
       :source="sourceKind"
       @pick="pickSource"
+    />
+    <EtqUnitsSheet
+      v-if="piecesMounted"
+      v-model:open="piecesOpen"
+      :row="piecesRow"
+      @pick="pickPieces"
     />
   </div>
 </template>
@@ -520,33 +519,51 @@ import { computed, defineAsyncComponent, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Button } from 'frappe-ui'
 import { useDebounceFn } from '@vueuse/core'
-import { AppBar, EmptyState, ListRow, Segmented } from '@/components/ui'
+import {
+  AppBar,
+  EmptyState,
+  ListRow,
+  RecentPicks,
+  Segmented,
+} from '@/components/ui'
 import ExpandTransition from '@/components/ui/ExpandTransition.vue'
 import Icon from '@/components/Icon.vue'
-import EtqPreview from '@/components/etiquetas/EtqPreview.vue'
-import { isMobile as phone } from '@/composables/breakpoint'
+import EtqStage from '@/components/etiquetas/EtqStage.vue'
+import EtqRows from '@/components/etiquetas/EtqRows.vue'
+import EtqPrintBar from '@/components/etiquetas/EtqPrintBar.vue'
+import {
+  isMobile as phone,
+  isNarrow as narrow,
+  isWide as wide,
+} from '@/composables/breakpoint'
+import { useRecentPicks } from '@/composables/useRecentPicks'
 import { documentRoute } from '@/documentos/registry'
 import {
-  MAX_COPIES,
   SOURCES,
   clampQty,
+  cleanDesign,
   downloadHtml,
   etiquetasApi,
+  findLayout,
   labelsText,
   layoutName,
   mergeRows,
+  partsText,
+  pdfFile,
   printBlock,
   printHtml,
+  PREVIEW_ROWS,
   printLabel,
   problemText,
-  rememberFields,
+  rememberDesign,
   rememberLayout,
-  rememberedFields,
+  rememberSize,
+  rememberedDesign,
   rememberedLayout,
   requestId,
   rowKey,
-  rowLine,
   rowPrice,
+  sendPdf,
   startFrom,
   startLayout,
   totalLabels,
@@ -558,16 +575,24 @@ const EtqJobs = defineAsyncComponent(
 const EtqTemplates = defineAsyncComponent(
   () => import('@/components/etiquetas/EtqTemplates.vue'),
 )
-const EtqLayoutSheet = defineAsyncComponent(
-  () => import('@/components/etiquetas/EtqLayoutSheet.vue'),
+const EtqDesign = defineAsyncComponent(
+  () => import('@/components/etiquetas/EtqDesign.vue'),
+)
+const EtqDesignSheet = defineAsyncComponent(
+  () => import('@/components/etiquetas/EtqDesignSheet.vue'),
 )
 const EtqSourceSheet = defineAsyncComponent(
   () => import('@/components/etiquetas/EtqSourceSheet.vue'),
+)
+const EtqUnitsSheet = defineAsyncComponent(
+  () => import('@/components/etiquetas/EtqUnitsSheet.vue'),
 )
 
 const route = useRoute()
 const router = useRouter()
 const LIST_KEY = 'muelle:etiquetas:lista'
+// The most rows one print takes (doco's MAX_ROWS).
+const MAX_ROWS = 300
 
 // ── boot ──────────────────────────────────────────────────────────────
 const boot = ref(null)
@@ -585,11 +610,21 @@ async function loadBoot() {
   }
 }
 
-const noLayoutsText = computed(() =>
-  boot.value?.new_template_url
-    ? 'Diseña la primera en el escritorio: medidas de la etiqueta, textos y códigos.'
-    : 'Pide al encargado que active las etiquetas de la tienda o que diseñe una plantilla.',
-)
+// The parts a size can carry, in the worker's words (older servers send
+// them as `fields` only).
+const designMeta = computed(() => {
+  const meta = boot.value?.design || {}
+  return { ...meta, parts: meta.parts || boot.value?.fields || [] }
+})
+const printerText = computed(() => {
+  const size = currentLayout.value?.size
+  const base =
+    boot.value?.printer?.text ||
+    'Imprime con la impresora que elijas en el diálogo de impresión.'
+  return size
+    ? `${base} Si sale chica o en una hoja, elige papel de ${size}, escala 100 % y sin márgenes.`
+    : base
+})
 
 // The whole screen's guard: it says why and offers the way on.
 const bootState = computed(() => {
@@ -611,11 +646,13 @@ const bootState = computed(() => {
       action: 'Volver a Productos',
       run: () => router.push({ name: 'Productos' }),
     }
-  if (!boot.value.layouts?.some((layout) => !layout.problem))
+  if (!boot.value.layouts?.some((entry) => !entry.problem))
     return {
       state: 'empty',
       title: 'Aún no hay plantillas de etiqueta',
-      message: noLayoutsText.value,
+      message: boot.value.new_template_url
+        ? 'Diseña la primera en el escritorio: medidas de la etiqueta, textos y códigos.'
+        : 'Pide al encargado que active las etiquetas de la tienda o que diseñe una plantilla.',
       href: boot.value.new_template_url,
       hrefLabel: 'Crear plantilla en el escritorio',
       action: 'Volver a Productos',
@@ -652,27 +689,27 @@ function setFilter(value) {
   router.replace({ query: { ...route.query, filtro: value || undefined } })
 }
 
-// ── layout ────────────────────────────────────────────────────────────
+// ── layout and design ─────────────────────────────────────────────────
 const layout = ref('')
-const parts = ref([])
-const layoutOpen = ref(false)
-const layoutMounted = ref(false)
-watch(layoutOpen, (open) => open && (layoutMounted.value = true))
+const design = ref(cleanDesign(null))
+const designOpen = ref(false)
+const designMounted = ref(false)
+watch(designOpen, (open) => open && (designMounted.value = true))
 const currentLayout = computed(() =>
-  boot.value?.layouts?.find((entry) => entry.key === layout.value),
+  findLayout(layout.value, boot.value?.layouts || [], designMeta.value.custom),
 )
-const partsText = computed(() => {
-  const names = new Map((boot.value?.fields || []).map((f) => [f.key, f.label]))
-  return parts.value.map((key) => names.get(key) || key).join(', ')
-})
-function applyLayout({ layout: key, parts: chosen }) {
-  layout.value = key
-  if (chosen?.length) parts.value = chosen
+const isSize = computed(() => currentLayout.value?.kind === 'size')
+const hasSize = computed(
+  () => currentLayout.value?.w_mm > 0 && currentLayout.value?.h_mm > 0,
+)
+watch(layout, (key) => {
+  if (!key) return
   rememberLayout(key)
-  rememberFields(parts.value)
-}
+  rememberSize(key)
+})
+watch(design, (value) => rememberDesign(value), { deep: true })
 function useLayout(key) {
-  applyLayout({ layout: key, parts: parts.value })
+  layout.value = key
   setVista('imprimir')
 }
 
@@ -681,6 +718,7 @@ const rows = ref([])
 const unknown = ref([])
 const source = ref(null)
 const title = ref('')
+const more = ref(false)
 const loadingRows = ref(false)
 const loadProblem = ref('')
 const confirmClear = ref(false)
@@ -688,40 +726,48 @@ const total = computed(() => totalLabels(rows.value))
 const sourceRoute = computed(() =>
   source.value ? documentRoute(source.value.doctype, source.value.name) : null,
 )
+const recent = useRecentPicks('muelle:etiquetas-recent')
 
-async function addItems(items, clearSearch = false) {
-  if (!items.length) return
+// Rows land on the list (a product already there adds its copies) and the
+// first of them shows on the stage.
+function land(incoming, { replace = false } = {}) {
+  rows.value = mergeRows(replace ? [] : rows.value, incoming)
+  if (!incoming.length) return
+  const first = rows.value.findIndex(
+    (row) => rowKey(row) === rowKey(incoming[0]),
+  )
+  if (first >= 0) showRow(first)
+}
+
+async function load(args, { replace = false } = {}) {
   loadingRows.value = true
   loadProblem.value = ''
   try {
-    const answer = await etiquetasApi('rows', { items: JSON.stringify(items) })
-    rows.value = mergeRows(rows.value, answer?.rows || [])
+    const answer = await etiquetasApi('rows', args)
+    land(answer?.rows || [], { replace })
     unknown.value = answer?.unknown || []
-    if (clearSearch) query.value = ''
+    more.value = !!answer?.more
     result.value = null
+    return answer
   } catch (error) {
     loadProblem.value = problemText(error)
+    return null
   } finally {
     loadingRows.value = false
   }
 }
 
+async function addItems(items) {
+  if (!items.length) return null
+  return load({ items: JSON.stringify(items) })
+}
+
 async function addFrom({ doctype, name }) {
-  loadingRows.value = true
-  loadProblem.value = ''
-  try {
-    const answer = await etiquetasApi('rows', { doctype, name })
-    // A document is its own batch: its lines replace the list.
-    rows.value = mergeRows([], answer?.rows || [])
-    unknown.value = answer?.unknown || []
-    source.value = answer?.source || { doctype, name, title: name }
-    title.value = source.value.title
-    result.value = null
-  } catch (error) {
-    loadProblem.value = problemText(error)
-  } finally {
-    loadingRows.value = false
-  }
+  // A document is its own batch: its lines replace the list.
+  const answer = await load({ doctype, name }, { replace: true })
+  if (!answer) return
+  source.value = answer.source || { doctype, name, title: name }
+  title.value = source.value.title
 }
 
 async function fromJob(name) {
@@ -729,9 +775,9 @@ async function fromJob(name) {
   try {
     const job = await etiquetasApi('job', { name })
     rows.value = mergeRows([], job?.rows || [])
-    if (job?.layout && boot.value?.layouts?.some((l) => l.key === job.layout))
+    if (job?.layout && findLayout(job.layout, boot.value?.layouts || []))
       layout.value = job.layout
-    if (job?.fields?.length) parts.value = job.fields
+    if (job?.design) design.value = cleanDesign(job.design, designMeta.value)
     source.value = job?.source ? { ...job.source, title: job.title } : null
     title.value = job?.title || ''
   } catch (error) {
@@ -744,6 +790,18 @@ async function fromJob(name) {
 function setQty(row, value) {
   rows.value = rows.value.map((entry) =>
     rowKey(entry) === rowKey(row) ? { ...entry, qty: clampQty(value) } : entry,
+  )
+}
+// The name a label prints, for this print only.
+function rename(row, name) {
+  rows.value = rows.value.map((entry) =>
+    rowKey(entry) === rowKey(row)
+      ? {
+          ...entry,
+          base_name: entry.base_name || entry.item_name,
+          item_name: name,
+        }
+      : entry,
   )
 }
 function removeRow(row) {
@@ -763,6 +821,7 @@ function clearList(now = false) {
   confirmClear.value = false
   rows.value = []
   unknown.value = []
+  more.value = false
   result.value = null
   forgetSource()
 }
@@ -823,10 +882,34 @@ async function restore() {
   }
 }
 
+// ── pieces ────────────────────────────────────────────────────────────
+const piecesOpen = ref(false)
+const piecesMounted = ref(false)
+const piecesRow = ref(null)
+function openPieces(row) {
+  piecesRow.value = row
+  piecesMounted.value = true
+  piecesOpen.value = true
+}
+// The picked pieces take the product's place on the list.
+function pickPieces({ row, units }) {
+  piecesOpen.value = false
+  const at = rows.value.findIndex((entry) => rowKey(entry) === rowKey(row))
+  const kept = rows.value.filter((entry) => rowKey(entry) !== rowKey(row))
+  const merged = mergeRows(kept.slice(0, Math.max(0, at)), units)
+  rows.value = mergeRows(merged, kept.slice(Math.max(0, at)))
+  if (at >= 0) showRow(at)
+}
+
 // ── search ────────────────────────────────────────────────────────────
 const query = ref('')
 const results = ref([])
 const searching = ref(false)
+const searchFocused = ref(false)
+const searchBox = ref(null)
+const suggestions = ref([])
+let suggested = false
+const panelOpen = computed(() => !!query.value.trim() || searchFocused.value)
 let searchTicket = 0
 const search = useDebounceFn(async () => {
   const text = query.value.trim()
@@ -850,14 +933,54 @@ const search = useDebounceFn(async () => {
 }, 250)
 watch(query, search)
 
+// Before a word is typed: what this device labelled lately and the
+// products edited last.
+async function openSearch() {
+  searchFocused.value = true
+  if (suggested) return
+  suggested = true
+  try {
+    const answer = await etiquetasApi('candidates', { kind: 'productos' })
+    suggestions.value = (answer?.rows || []).slice(0, 6)
+  } catch {
+    suggested = false
+  }
+}
+let blurTimer
+function closeSearchSoon() {
+  // A tap on a suggestion lands before the panel folds.
+  clearTimeout(blurTimer)
+  blurTimer = setTimeout(() => (searchFocused.value = false), 180)
+}
+function closeSearch() {
+  clearTimeout(blurTimer)
+  searchFocused.value = false
+  query.value = ''
+  searchBox.value?.blur()
+}
+// What the worker picked by hand comes back as a «Reciente».
+function pickResult(item) {
+  closeSearch()
+  recent.touch({ name: item.item_code, label: item.item_name })
+  addItems([{ code: item.item_code }])
+}
+function pickRecent(pick) {
+  closeSearch()
+  recent.touch(pick)
+  addItems([{ code: pick.name }])
+}
+
 // A scanner types the code and presses Enter: add it as it is.
-function addTyped() {
+async function addTyped() {
   const text = query.value.trim()
   if (!text) return
   const exact = results.value.find(
     (item) => item.item_code.toLowerCase() === text.toLowerCase(),
   )
-  addItems([{ code: exact?.item_code || text }], true)
+  query.value = ''
+  const answer = await addItems([{ code: exact?.item_code || text }])
+  const [row] = answer?.rows || []
+  if (row) recent.touch({ name: row.item_code, label: row.item_name })
 }
 function resultLine(item) {
   const kind =
@@ -881,7 +1004,10 @@ function openSource(entry) {
 async function pickSource(pick) {
   sourceOpen.value = false
   if (pick.doctype) await addFrom(pick)
-  else {
+  else if (pick.stock) {
+    await load({ stock: JSON.stringify(pick.stock) })
+    if (pick.title && !source.value) title.value = pick.title
+  } else {
     await addItems(pick.items || [])
     if (pick.title && !source.value) title.value = pick.title
   }
@@ -891,69 +1017,134 @@ async function pickSource(pick) {
 const previewHtml = ref('')
 const previewing = ref(false)
 const previewShown = ref(0)
+// Where the drawing on the stage starts in the list.
+const previewOffset = ref(0)
+const previewSize = ref({ w_mm: 0, h_mm: 0 })
+const previewProblem = ref('')
 const warnings = ref([])
-const previewCaption = computed(() => {
-  if (!rows.value.length || !previewHtml.value) return ''
-  return previewShown.value < total.value
-    ? `Muestra de las primeras ${previewShown.value} de ${labelsText(total.value)}.`
-    : `Así salen las ${labelsText(total.value)}.`
+const fit = ref({ dropped: [], text: '', notes: [] })
+const shownIndex = ref(0)
+const stageView = ref('una')
+const droppedKeys = computed(() => (fit.value.dropped || []).map((p) => p.key))
+const shownRow = computed(() =>
+  rows.value.length ? rows.value[shownIndex.value] : null,
+)
+const stageTitle = computed(() =>
+  shownRow.value
+    ? `Etiqueta de ${shownRow.value.item_name}`
+    : 'Etiqueta de ejemplo',
+)
+const caption = computed(() => {
+  if (!previewHtml.value) return ''
+  if (!rows.value.length)
+    return 'Producto de ejemplo: así sale con lo que elegiste.'
+  if (stageView.value === 'todas') {
+    const from = previewOffset.value
+    const span =
+      rows.value.length > previewShown.value
+        ? `Del ${from + 1} al ${from + previewShown.value} de ${rows.value.length}, una`
+        : 'Una'
+    return `${span} de cada producto; se imprimen ${labelsText(total.value)}.`
+  }
+  const row = shownRow.value
+  if (!row) return ''
+  const copies = row.serial_no
+    ? '1 pieza'
+    : row.qty === 1
+      ? '1 copia'
+      : `${row.qty} copias`
+  return `${row.item_name} · ${copies}`
 })
+function showRow(position) {
+  if (stageView.value === 'todas') stageView.value = 'una'
+  shownIndex.value = Math.max(0, position)
+}
+// A long list draws the window of products around the one on the stage.
+const windowStart = computed(() =>
+  rows.value.length > PREVIEW_ROWS
+    ? Math.floor(shownIndex.value / PREVIEW_ROWS) * PREVIEW_ROWS
+    : 0,
+)
+
 let previewTicket = 0
 const drawPreview = useDebounceFn(async () => {
-  if (!rows.value.length || !layout.value) {
+  if (!layout.value) {
     previewHtml.value = ''
     warnings.value = []
     return
   }
   const mine = ++previewTicket
+  const start = windowStart.value
+  const drawn = rows.value.slice(start, start + PREVIEW_ROWS)
   previewing.value = true
   try {
     const answer = await etiquetasApi('preview', {
       layout: layout.value,
-      rows: JSON.stringify(rows.value),
-      fields: currentLayout.value?.kind === 'size' ? parts.value : null,
+      rows: drawn.length ? JSON.stringify(drawn) : null,
+      design: isSize.value ? JSON.stringify(design.value) : null,
     })
     if (mine !== previewTicket) return
+    previewProblem.value = ''
     previewHtml.value = answer?.html || ''
     previewShown.value = answer?.shown || 0
+    previewOffset.value = drawn.length ? start : 0
+    previewSize.value = answer?.size || {
+      w_mm: currentLayout.value?.w_mm || 0,
+      h_mm: currentLayout.value?.h_mm || 0,
+    }
+    fit.value = answer?.fit || { dropped: [], text: '', notes: [] }
     warnings.value = answer?.warnings || []
   } catch (error) {
     if (mine === previewTicket) {
       previewHtml.value = ''
-      warnings.value = [{ key: 'preview', text: problemText(error) }]
+      previewProblem.value = problemText(error)
+      fit.value = { dropped: [], text: '', notes: [] }
+      warnings.value = []
     }
   } finally {
     if (mine === previewTicket) previewing.value = false
   }
-}, 350)
-watch([rows, layout, parts], drawPreview, { deep: true })
+}, 250)
+// The stage says it is drawing from the change on, not from the request.
+watch(
+  [rows, layout, design, windowStart],
+  () => {
+    if (layout.value) previewing.value = true
+    drawPreview()
+  },
+  { deep: true },
+)
 
 // ── print ─────────────────────────────────────────────────────────────
-const busy = ref(false)
+const busy = ref('')
 const result = ref(null)
 const blocked = computed(() =>
-  printBlock({ rows: rows.value, layout: layout.value, busy: busy.value }),
+  printBlock({ rows: rows.value, layout: layout.value, busy: !!busy.value }),
 )
+
+function printArgs(output) {
+  return {
+    layout: layout.value,
+    rows: JSON.stringify(rows.value),
+    design: isSize.value ? JSON.stringify(design.value) : null,
+    title: title.value,
+    source_doctype: source.value?.doctype || '',
+    source_name: source.value?.name || '',
+    request_key: requestId(),
+    output,
+  }
+}
 
 async function print() {
   if (blocked.value) return
-  busy.value = true
+  busy.value = 'print'
   result.value = null
   try {
-    const answer = await etiquetasApi('print_labels', {
-      layout: layout.value,
-      rows: JSON.stringify(rows.value),
-      fields: currentLayout.value?.kind === 'size' ? parts.value : null,
-      title: title.value,
-      source_doctype: source.value?.doctype || '',
-      source_name: source.value?.name || '',
-      request_key: requestId(),
-    })
-    await send(answer)
+    await send(await etiquetasApi('print_labels', printArgs('html')))
   } catch (error) {
     result.value = { ok: false, reason: problemText(error) }
   } finally {
-    busy.value = false
+    busy.value = ''
   }
 }
 
@@ -983,13 +1174,13 @@ async function send(answer) {
 
 async function retry() {
   if (!result.value?.job) return print()
-  busy.value = true
+  busy.value = 'print'
   try {
     await send(await etiquetasApi('reprint', { job: result.value.job.name }))
   } catch (error) {
     result.value = { ...result.value, reason: problemText(error) }
   } finally {
-    busy.value = false
+    busy.value = ''
   }
 }
 function download() {
@@ -998,6 +1189,36 @@ function download() {
       result.value.html,
       `${result.value.job?.name || 'etiquetas'}.html`,
     )
+}
+
+// A PDF, one label a page at the label's size: a phone shares it (the
+// printer's app, WhatsApp), a computer saves it.
+let lastPdf = null
+async function pdf() {
+  if (blocked.value) return
+  busy.value = 'pdf'
+  result.value = null
+  try {
+    const answer = await etiquetasApi('print_labels', printArgs('pdf'))
+    lastPdf = pdfFile(answer?.pdf, answer?.filename || 'etiquetas.pdf')
+    const how = await sendPdf(lastPdf, { share: phone.value })
+    if (how !== 'cancelled')
+      result.value = { ok: true, pdf: how, job: answer?.job }
+  } catch (error) {
+    result.value = { ok: false, reason: problemText(error) }
+  } finally {
+    busy.value = ''
+  }
+}
+async function sendAgain() {
+  if (lastPdf) await sendPdf(lastPdf, { share: phone.value })
+}
+function openJob() {
+  if (result.value?.job)
+    router.push({
+      name: 'EtiquetasTrabajo',
+      params: { name: result.value.job.name },
+    })
 }
 
 // ── start ─────────────────────────────────────────────────────────────
@@ -1009,10 +1230,9 @@ async function start() {
     boot.value.layouts,
     rememberedLayout(),
     boot.value.default_layout,
+    designMeta.value.custom,
   )
-  const known = (boot.value.fields || []).map((f) => f.key)
-  const saved = (rememberedFields() || []).filter((key) => known.includes(key))
-  parts.value = saved.length ? saved : known
+  design.value = cleanDesign(rememberedDesign(), designMeta.value)
   if (!boot.value.capabilities?.print) return
   const from = startFrom(route.query)
   if (route.query.trabajo) await fromJob(String(route.query.trabajo))

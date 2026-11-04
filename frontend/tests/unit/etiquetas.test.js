@@ -13,15 +13,26 @@ vi.mock('@/composables/useEtiquetas', async (original) => ({
 import * as etq from '@/composables/useEtiquetas'
 import Etiquetas from '@/pages/Etiquetas.vue'
 import EtiquetasTrabajo from '@/pages/EtiquetasTrabajo.vue'
+import TagSheet from '@/components/documentos/TagSheet.vue'
 
 const {
+  cleanDesign,
+  customKey,
+  customLayout,
+  etiquetasFor,
   etiquetasHref,
+  findLayout,
   jobLine,
   jobState,
   layoutGroups,
   mergeRows,
+  parsePasted,
+  partsText,
+  pdfFile,
   printBlock,
   printLabel,
+  sendPdf,
+  sizeText,
   startFrom,
   startLayout,
   totalLabels,
@@ -29,27 +40,63 @@ const {
 } = etq
 
 const LAYOUTS = [
-  { key: 'preset:medium', kind: 'size', label: 'Mediana', size: '50 × 30 mm' },
+  {
+    key: 'preset:medium',
+    kind: 'size',
+    label: 'Mediana',
+    size: '50 × 30 mm',
+    w_mm: 50,
+    h_mm: 30,
+  },
   {
     key: 'preset:gondola',
     kind: 'size',
     label: 'Góndola',
     size: '100 × 60 mm',
+    w_mm: 100,
+    h_mm: 60,
   },
   {
     key: 'printformat:Mercado Etiqueta 50x30 mm (Mediana)',
     kind: 'format',
     label: 'Mercado Etiqueta 50x30 mm (Mediana)',
     size: '50 × 30 mm',
+    w_mm: 50,
+    h_mm: 30,
   },
   {
     key: 'template:57x40mm',
     kind: 'template',
     label: '57x40mm',
     size: '',
+    w_mm: 0,
+    h_mm: 0,
     problem: 'Le falta el tamaño de la etiqueta.',
   },
 ]
+// bootstrap's `design`, as doco sends it.
+const PARTS = [
+  ['shop', 'Tienda'],
+  ['name', 'Nombre'],
+  ['brand', 'Marca'],
+  ['price', 'Precio'],
+  ['sku', 'Código'],
+  ['qr', 'QR'],
+  ['bar', 'Código de barras'],
+  ['sn', 'Serie'],
+  ['batch', 'Lote y caducidad'],
+  ['date', 'Fecha'],
+  ['text', 'Texto libre'],
+].map(([key, label]) => ({ key, label }))
+const DEFAULT_PARTS = ['shop', 'name', 'price', 'sku', 'qr', 'sn', 'batch']
+const META = {
+  parts: PARTS,
+  default: DEFAULT_PARTS,
+  custom: { min: 10, max: 300 },
+  text_max: 60,
+  shop: 'Perfeccel',
+  shop_max: 40,
+}
 const ROWS = {
   A: {
     item_code: 'A',
@@ -70,6 +117,17 @@ const ROWS = {
     uom: 'Pza',
     serial_no: '',
     batch_no: '',
+  },
+  C: {
+    item_code: 'C',
+    item_name: 'Teléfono A14',
+    barcode: '',
+    price: '3999',
+    qty: 1,
+    uom: 'Pza',
+    serial_no: '',
+    batch_no: '',
+    units: 'serie',
   },
 }
 const JOB = {
@@ -107,7 +165,7 @@ describe('helpers', () => {
       'Agrega al menos un producto para imprimir.',
     )
     expect(printBlock({ rows: [ROWS.A], layout: '' })).toBe(
-      'Elige una plantilla.',
+      'Elige la medida de la etiqueta.',
     )
     const many = Array.from({ length: 6 }, (_, i) => ({
       ...ROWS.A,
@@ -137,6 +195,12 @@ describe('helpers', () => {
     expect(etiquetasHref([], { desde: 'Stock Entry:STE-1' })).toBe(
       '/productos/etiquetas?desde=Stock+Entry%3ASTE-1',
     )
+    // A record's door: a product's own labels, a document's lines, or none.
+    expect(etiquetasFor('Item', 'A')).toBe('/productos/etiquetas?codigos=A')
+    expect(etiquetasFor('Purchase Invoice', 'PINV-1')).toBe(
+      '/productos/etiquetas?desde=Purchase+Invoice%3APINV-1',
+    )
+    expect(etiquetasFor('Sales Invoice', 'SINV-1')).toBe('')
   })
   it('names each job state in the worker’s words', () => {
     expect(jobState('Dispatched').label).toBe('Enviada a la impresora')
@@ -154,7 +218,7 @@ describe('helpers', () => {
     expect(
       layoutGroups(LAYOUTS).map((g) => [g.title, g.layouts.length]),
     ).toEqual([
-      ['Tamaños', 2],
+      ['Medidas', 2],
       ['Formatos de la tienda', 1],
       ['Plantillas de diseño', 1],
     ])
@@ -176,7 +240,109 @@ describe('helpers', () => {
       '<base href="/x/">y',
     )
   })
+  it('takes a measure the worker types when it is one that prints', () => {
+    expect(customLayout('custom:62x29')).toMatchObject({
+      kind: 'size',
+      label: 'Medida',
+      size: '62 × 29 mm',
+      w_mm: 62,
+      h_mm: 29,
+    })
+    expect(customLayout('custom:5x29')).toBeNull()
+    expect(customLayout('custom:62x29', { min: 10, max: 50 })).toBeNull()
+    expect(customLayout('preset:medium')).toBeNull()
+    expect(customKey('62.5', 29.04)).toBe('custom:62.5x29')
+    expect(sizeText(62.5, 29)).toBe('62.5 × 29 mm')
+    expect(findLayout('custom:62x29', LAYOUTS).size).toBe('62 × 29 mm')
+    expect(findLayout('preset:gondola', LAYOUTS).label).toBe('Góndola')
+    expect(startLayout(LAYOUTS, 'custom:62x29', 'preset:medium')).toBe(
+      'custom:62x29',
+    )
+    expect(startLayout(LAYOUTS, 'custom:900x29', 'preset:medium')).toBe(
+      'preset:medium',
+    )
+  })
+  it('cleans a design as doco reads it', () => {
+    const design = cleanDesign(
+      {
+        parts: ['qr', 'name', 'nope'],
+        name_size: 'xl',
+        price_size: 'xl',
+        code: 'serial',
+        text: 'x'.repeat(80),
+      },
+      META,
+    )
+    expect(design).toMatchObject({
+      parts: ['name', 'qr'],
+      name_size: 'm',
+      price_size: 'xl',
+      code: 'unit',
+    })
+    expect(design.text).toHaveLength(60)
+    // What older screens kept: the parts alone.
+    expect(cleanDesign(['price', 'name'], META).parts).toEqual([
+      'name',
+      'price',
+    ])
+    expect(cleanDesign(null, META).parts).toEqual(DEFAULT_PARTS)
+    expect(cleanDesign({ parts: [] }, META).parts).toEqual(DEFAULT_PARTS)
+    expect(partsText({ parts: ['name', 'qr', 'batch'] }, PARTS)).toBe(
+      'Nombre, QR, Lote y caducidad',
+    )
+  })
+  it('reads codes pasted from a sheet or a message, with their copies', () => {
+    expect(
+      parsePasted('750123 3\nA-1\tx2\n\nB;C\n750123\nD, 4\nE 900'),
+    ).toEqual([
+      { code: '750123', qty: 4 },
+      { code: 'A-1', qty: 2 },
+      { code: 'B', qty: 1 },
+      { code: 'C', qty: 1 },
+      { code: 'D', qty: 4 },
+      { code: 'E', qty: 200 },
+    ])
+    expect(parsePasted('  \n')).toEqual([])
+  })
+  it('shares the PDF on a phone and saves it on a computer', async () => {
+    const file = pdfFile(btoa('%PDF-1.4'), 'LPJ-9.pdf')
+    expect([file.name, file.type, file.size]).toEqual([
+      'LPJ-9.pdf',
+      'application/pdf',
+      8,
+    ])
+    const share = vi.fn(async () => {})
+    const nav = { canShare: () => true, share }
+    expect(await sendPdf(file, { share: true, nav })).toBe('shared')
+    expect(share).toHaveBeenCalledWith({ files: [file], title: 'LPJ-9.pdf' })
+    const cancelled = Object.assign(new Error('x'), { name: 'AbortError' })
+    share.mockRejectedValueOnce(cancelled)
+    expect(await sendPdf(file, { share: true, nav })).toBe('cancelled')
+    const saved = await saving(() => sendPdf(file, { share: false, nav }))
+    expect(saved.result).toBe('saved')
+    expect(saved.clicks).toBe(1)
+    expect(share).toHaveBeenCalledTimes(2)
+  })
 })
+
+// A file saved through a download link: the link is clicked, nothing opens.
+async function saving(run) {
+  const create = URL.createObjectURL
+  const revoke = URL.revokeObjectURL
+  URL.createObjectURL = vi.fn(() => 'blob:etiquetas')
+  URL.revokeObjectURL = vi.fn()
+  const click = vi
+    .spyOn(HTMLAnchorElement.prototype, 'click')
+    .mockImplementation(() => {})
+  try {
+    const result = await run()
+    return { result, clicks: click.mock.calls.length }
+  } finally {
+    click.mockRestore()
+    URL.createObjectURL = create
+    URL.revokeObjectURL = revoke
+  }
+}
 
 // ── screens ────────────────────────────────────────────────────────────
 
@@ -196,14 +362,13 @@ function boot(extra = {}) {
     },
     layouts: LAYOUTS,
     default_layout: 'preset:medium',
-    fields: [
-      { key: 'name', label: 'Nombre' },
-      { key: 'price', label: 'Precio' },
-    ],
+    fields: PARTS,
+    design: META,
     price_list: 'Standard Selling',
     printer: { kind: 'browser', text: 'Imprime con la impresora que elijas.' },
     counts: { today: 2, failed: 1 },
     new_template_url: '',
+    pdf: true,
     ...extra,
   }
 }
@@ -279,10 +444,32 @@ async function mountAt(path) {
 }
 
 const text = () => root.textContent.replace(/\s+/g, ' ')
-const button = (label) =>
-  [...root.querySelectorAll('button')].find((b) =>
+const button = (label, scope = root) =>
+  [...scope.querySelectorAll('button')].find((b) =>
     b.textContent.trim().includes(label),
   )
+// Sheets open in the page's body, outside the screen's root.
+const sheetButton = (label) => button(label, document.body)
+// The preview waits 250 ms for the last change before drawing.
+async function settle() {
+  await new Promise((resolve) => setTimeout(resolve, 400))
+  await flush()
+}
+function type(input, value, event = 'input') {
+  input.value = value
+  input.dispatchEvent(new Event(event))
+}
+const lastCall = (method) => calls.filter(([m]) => m === method).at(-1)?.[1]
+
+// Two products, one label each, as doco's design engine draws them.
+const LABELS_HTML =
+  '<html><head></head><body><div class="doco-label">A</div><div class="doco-label">B</div></body></html>'
+function sizeOf(key) {
+  const custom = /^custom:(\d+)x(\d+)$/.exec(key || '')
+  if (custom) return { w_mm: Number(custom[1]), h_mm: Number(custom[2]) }
+  const layout = LAYOUTS.find((entry) => entry.key === key)
+  return { w_mm: layout?.w_mm || 0, h_mm: layout?.h_mm || 0 }
+}
 
 beforeEach(() => {
   vi.useRealTimers()
@@ -292,17 +479,19 @@ beforeEach(() => {
     bootstrap: boot(),
     rows: (args) => ({
       rows: JSON.parse(args.items || '[]')
-        .map((it) => ROWS[it.code])
+        .map((it) => ROWS[it.code] && { ...ROWS[it.code], qty: it.qty || 1 })
         .filter(Boolean),
       unknown: JSON.parse(args.items || '[]')
         .map((it) => it.code)
         .filter((code) => !ROWS[code]),
       source: null,
     }),
-    preview: {
-      html: '<html><body>label</body></html>',
+    preview: (args) => ({
+      html: LABELS_HTML,
       label_count: 2,
-      shown: 2,
+      shown: JSON.parse(args.rows || '[]').length || 1,
+      size: sizeOf(args.layout),
+      fit: { dropped: [], text: '', notes: [] },
       warnings: [
         {
           key: 'sin_precio',
@@ -310,7 +499,7 @@ beforeEach(() => {
           text: '1 sin precio en Standard Selling: su etiqueta sale sin precio.',
         },
       ],
-    },
+    }),
     print_labels: (args) => ({
       job: {
         ...JOB,
@@ -347,6 +536,16 @@ beforeEach(() => {
       job: { ...JOB, status: 'Rendered' },
       html: '<html>again</html>',
     },
+    candidates: (args) =>
+      args.kind === 'piezas'
+        ? {
+            rows: ['S1', 'S2'].map((serial) => ({
+              ...ROWS.C,
+              serial_no: serial,
+            })),
+            more: false,
+          }
+        : { rows: [] },
   }
   stubApi()
   etq.printHtml.mockClear()
@@ -367,10 +566,10 @@ describe('Etiquetas › Imprimir', () => {
       'Sin precio · ponle uno',
     )
     expect(text()).toContain('No encontré ZZZ')
-    expect(text()).toContain('Mediana · 50 × 30 mm')
-    await new Promise((resolve) => setTimeout(resolve, 400))
-    await flush()
+    await settle()
     expect(calls.some(([m]) => m === 'preview')).toBe(true)
+    // The stage names the size it draws.
+    expect(text()).toContain('Mediana · 50 × 30 mm')
     expect(text()).toContain('1 sin precio en Standard Selling')
     expect(button('Imprimir 2 etiquetas')).toBeTruthy()
   })
@@ -406,7 +605,8 @@ describe('Etiquetas › Imprimir', () => {
     const [, printed] = calls.find(([m]) => m === 'print_labels')
     expect(printed.layout).toBe('preset:medium')
     expect(JSON.parse(printed.rows).map((r) => r.item_code)).toEqual(['A'])
-    expect(printed.fields).toEqual(['name', 'price'])
+    expect(JSON.parse(printed.design).parts).toEqual(DEFAULT_PARTS)
+    expect(printed.output).toBe('html')
     expect(printed.request_key).toBeTruthy()
     expect(etq.printHtml).toHaveBeenCalledWith(
       '<html><body>labels</body></html>',
@@ -493,6 +693,174 @@ describe('Etiquetas › Imprimir', () => {
   })
 })
 
+describe('Etiquetas › the label and its design', () => {
+  it('pages through the products, a tap shows a row’s label and renames it for this print', async () => {
+    await mountAt('/productos/etiquetas?codigos=A,B')
+    await settle()
+    const pager = () => root.querySelector('[data-etq-pager]').textContent
+    expect(pager()).toContain('1 de 2')
+    root
+      .querySelector(
+        '[aria-label="Funda sin precio: ver su etiqueta y editarla"]',
+      )
+      .click()
+    await flush()
+    expect(pager()).toContain('2 de 2')
+    expect(text()).toContain('Funda sin precio · 1 copia')
+    const name = root.querySelector('[aria-label="Nombre en la etiqueta de B"]')
+    type(name, 'Funda azul A14', 'change')
+    await flush()
+    expect(text()).toContain('el producto se sigue llamando «Funda sin precio»')
+    expect(button('Volver al nombre')).toBeTruthy()
+    await settle()
+    expect(
+      JSON.parse(lastCall('preview').rows).map((r) => r.item_name),
+    ).toEqual(['Cargador rápido', 'Funda azul A14'])
+    root.querySelector('[data-etq-print] button').click()
+    await flush()
+    expect(
+      JSON.parse(lastCall('print_labels').rows).map((r) => r.item_name),
+    ).toEqual(['Cargador rápido', 'Funda azul A14'])
+  })
+
+  it('switching a part off redraws the label without it and prints it so', async () => {
+    await mountAt('/productos/etiquetas?codigos=A')
+    await vi.waitFor(
+      () => expect(root.querySelector('[data-etq-part="qr"]')).toBeTruthy(),
+      { timeout: 3000 },
+    )
+    const qr = () => root.querySelector('[data-etq-part="qr"] [role="switch"]')
+    expect(qr().getAttribute('aria-checked')).toBe('true')
+    expect(text()).toContain('Se escanea en caja')
+    qr().click()
+    await settle()
+    expect(qr().getAttribute('aria-checked')).toBe('false')
+    const drawn = JSON.parse(lastCall('preview').design)
+    expect(drawn.parts).not.toContain('qr')
+    expect(drawn.parts).toContain('name')
+    // The next visit starts with the same design.
+    expect(
+      JSON.parse(localStorage.getItem('muelle:etiquetas:diseno')).parts,
+    ).toEqual(drawn.parts)
+    root.querySelector('[data-etq-print] button').click()
+    await flush()
+    expect(JSON.parse(lastCall('print_labels').design).parts).toEqual(
+      drawn.parts,
+    )
+  })
+
+  it('a measure the worker types says why until it prints, then draws and prints at it', async () => {
+    await mountAt('/productos/etiquetas?codigos=A')
+    await vi.waitFor(
+      () => expect(root.querySelector('[data-etq-otra-medida]')).toBeTruthy(),
+      { timeout: 3000 },
+    )
+    root.querySelector('[data-etq-otra-medida]').click()
+    await flush()
+    const form = root.querySelector('[data-etq-medida-form]')
+    const width = form.querySelector('[aria-label^="Ancho"]')
+    const height = form.querySelector('[aria-label^="Alto"]')
+    type(width, '5')
+    type(height, '29')
+    await flush()
+    expect(root.querySelector('[data-etq-medida-why]').textContent).toContain(
+      'Cada lado va de 10 a 300 mm.',
+    )
+    expect(button('Usar').disabled).toBe(true)
+    type(width, '62')
+    await flush()
+    expect(button('Usar').disabled).toBe(false)
+    form.dispatchEvent(new Event('submit', { cancelable: true }))
+    await settle()
+    expect(lastCall('preview').layout).toBe('custom:62x29')
+    expect(text()).toContain('Medida · 62 × 29 mm')
+    expect(localStorage.getItem('muelle:etiquetas:plantilla')).toBe(
+      'custom:62x29',
+    )
+    expect(
+      JSON.parse(localStorage.getItem('muelle:etiquetas:medidas')),
+    ).toEqual(['custom:62x29'])
+    root.querySelector('[data-etq-print] button').click()
+    await flush()
+    expect(lastCall('print_labels').layout).toBe('custom:62x29')
+  })
+
+  it('pasted codes come in with their copies', async () => {
+    await mountAt('/productos/etiquetas')
+    button('Pegar códigos').click()
+    await vi.waitFor(
+      () => expect(document.querySelector('[data-etq-pegar]')).toBeTruthy(),
+      { timeout: 3000 },
+    )
+    type(document.querySelector('[data-etq-pegar]'), 'A 3\nB')
+    await flush()
+    expect(document.body.textContent).toContain('2 códigos, 4 etiquetas.')
+    sheetButton('Agregar 2 códigos').click()
+    await flush()
+    expect(JSON.parse(lastCall('rows').items)).toEqual([
+      { code: 'A', qty: 3 },
+      { code: 'B', qty: 1 },
+    ])
+    expect(button('Imprimir 4 etiquetas')).toBeTruthy()
+  })
+
+  it('a product with serials gives way to the pieces picked, one label each', async () => {
+    await mountAt('/productos/etiquetas?codigos=C')
+    const serie = () => root.querySelector('[data-etq-part="sn"]')?.textContent
+    await vi.waitFor(() =>
+      expect(serie()).toContain(
+        'Para que salga, elige las piezas por serie en la lista.',
+      ),
+    )
+    root
+      .querySelector('[aria-label="Teléfono A14: ver su etiqueta y editarla"]')
+      .click()
+    await flush()
+    button('Elegir piezas por serie').click()
+    await vi.waitFor(
+      () => expect(sheetButton('Agregar 2 etiquetas')).toBeTruthy(),
+      { timeout: 3000 },
+    )
+    expect(lastCall('candidates')).toMatchObject({
+      kind: 'piezas',
+      query: 'C',
+    })
+    sheetButton('Agregar 2 etiquetas').click()
+    await flush()
+    const rows = [...root.querySelectorAll('[data-etq-row]')]
+    expect(rows.map((row) => row.textContent)).toEqual([
+      expect.stringContaining('Serie S1'),
+      expect.stringContaining('Serie S2'),
+    ])
+    expect(text()).toContain('1 pieza')
+    expect(button('Imprimir 2 etiquetas')).toBeTruthy()
+    expect(serie()).toContain('La serie o el IMEI de cada pieza')
+  })
+
+  it('a PDF records the job and is saved on a computer', async () => {
+    answers.print_labels = (args) => ({
+      job: { ...JOB, name: 'LPJ-10', status: 'Rendered', label_count: 1 },
+      pdf: btoa('%PDF-1.4'),
+      filename: 'LPJ-10.pdf',
+      output: args.output,
+    })
+    await mountAt('/productos/etiquetas?codigos=A')
+    const saved = await saving(async () => {
+      root.querySelector('[data-etq-pdf]').click()
+      await flush()
+    })
+    expect(lastCall('print_labels')).toMatchObject({
+      layout: 'preset:medium',
+      output: 'pdf',
+    })
+    expect(saved.clicks).toBe(1)
+    const result = root.querySelector('[data-etq-result]').textContent
+    expect(result).toContain('PDF guardado')
+    expect(result).toContain('1 etiqueta, una por página.')
+    expect(etq.printHtml).not.toHaveBeenCalled()
+  })
+})
+
 describe('Etiquetas › Trabajos', () => {
   it('lists the jobs with their state and filters the ones that did not print', async () => {
     await mountAt('/productos/etiquetas?vista=trabajos')
@@ -526,5 +894,43 @@ describe('Etiquetas › a job', () => {
       outcome: 'printed',
     })
     expect(text()).toContain('Enviada a la impresora')
+  })
+})
+
+describe('a record’s tags', () => {
+  it('point a document with products to the labels that print', async () => {
+    const router = await mountAt('/productos')
+    const sheet = (doctype) => {
+      const host = document.createElement('div')
+      document.body.appendChild(host)
+      const view = createApp({
+        render: () =>
+          h(TagSheet, {
+            open: true,
+            doctype,
+            name: 'PINV-1',
+            tags: ['38x35mm'],
+          }),
+      })
+      view.use(router)
+      view.mount(host)
+      return { view, host }
+    }
+    const invoice = sheet('Purchase Invoice')
+    await flush()
+    const door = document.querySelector('[data-testid="tag-sheet-labels"] a')
+    expect(door.textContent).toContain('Imprimir etiquetas')
+    expect(door.getAttribute('href')).toBe(
+      '/crm/productos/etiquetas?desde=Purchase+Invoice%3APINV-1',
+    )
+    invoice.view.unmount()
+    invoice.host.remove()
+    const sale = sheet('Sales Invoice')
+    await flush()
+    expect(
+      document.querySelector('[data-testid="tag-sheet-labels"]'),
+    ).toBeNull()
+    sale.view.unmount()
+    sale.host.remove()
   })
 })
