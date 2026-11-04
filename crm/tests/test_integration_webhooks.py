@@ -8,16 +8,26 @@ import base64
 import hashlib
 import hmac
 import json
+import socket
 from unittest.mock import patch
 from uuid import uuid4
 
 import frappe
+import requests
 from frappe.tests import IntegrationTestCase
 from frappe.utils import getdate
 
 from crm.api import conversations as control
 from crm.api import integration as api
 from crm.integrations import events, webhooks
+
+# setUp blocks the network; the real-path tests put the real method back and fake
+# only DNS and the transport below the pinned adapter.
+REAL_REQUEST = requests.sessions.Session.request
+
+
+def addresses(*ips):
+	return [(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP, "", (ip, 443)) for ip in ips]
 
 
 class FakeResponse:
@@ -283,6 +293,56 @@ class TestIntegrationWebhooks(IntegrationTestCase):
 		frappe.set_user(self.users["agent"])
 		with self.assertRaises(frappe.PermissionError):
 			api.redeliver(name)
+
+	def test_send_test_through_the_real_post_pins_the_checked_address(self):
+		connection = self.connection(["lead.created"], enabled=0, url="https://hooks.example.com/n8n?x=1")
+		sent = []
+
+		def transport(adapter, request, **kwargs):
+			sent.append(
+				(request.url, dict(request.headers), dict(adapter.poolmanager.connection_pool_kw), kwargs)
+			)
+			response = requests.Response()
+			response.status_code, response._content, response.url = 204, b"", request.url
+			return response
+
+		with (
+			patch("requests.sessions.Session.request", REAL_REQUEST),
+			patch("socket.getaddrinfo", return_value=addresses("93.184.215.14")),
+			patch("requests.adapters.HTTPAdapter.send", transport),
+		):
+			result = api.send_test(connection.name)
+		self.assertEqual((result.status, result.response_code), ("Delivered", 204))
+		url, headers, pool, kwargs = sent[0]
+		self.assertEqual(url, "https://93.184.215.14/n8n?x=1")
+		self.assertEqual(headers["Host"], "hooks.example.com")
+		self.assertEqual((pool["server_hostname"], pool["assert_hostname"]), ("hooks.example.com",) * 2)
+		self.assertEqual(kwargs["timeout"], webhooks.TIMEOUT_SECONDS)
+		self.assertEqual(headers["webhook-id"], result.name)
+		self.assertTrue(headers["webhook-signature"].startswith("v1,"))
+
+	def test_send_test_through_the_real_post_explains_what_went_wrong(self):
+		connection = self.connection(["lead.created"], enabled=0)
+		cases = (
+			({"side_effect": socket.gaierror(-2, "Name or service not known")}, None, "could not be found"),
+			({"return_value": addresses("10.0.0.7")}, None, "private address"),
+			(
+				{"return_value": addresses("93.184.215.14")},
+				requests.ConnectionError("refused"),
+				"Could not reach",
+			),
+			({"return_value": addresses("93.184.215.14")}, requests.ConnectTimeout("slow"), "No answer"),
+		)
+		for dns, failure, words in cases:
+			with (
+				self.subTest(words=words),
+				patch("requests.sessions.Session.request", REAL_REQUEST),
+				patch("socket.getaddrinfo", **dns),
+				patch("requests.adapters.HTTPAdapter.send", side_effect=failure or AssertionError("no send")),
+			):
+				result = api.send_test(connection.name)
+				self.assertEqual(result.status, "Dead")
+				self.assertIn(words, result.last_error)
 
 	def test_whoami_lists_the_callers_connections(self):
 		connection = self.connection(["lead.created"])
