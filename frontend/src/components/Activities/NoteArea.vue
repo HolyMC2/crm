@@ -65,12 +65,7 @@
 </template>
 <script setup>
 import UserAvatar from '@/components/UserAvatar.vue'
-import {
-  timeAgo,
-  formatDate,
-  formatDateTime,
-  formatTimestampFull,
-} from '@/utils'
+import { timeAgo, formatDateTime, formatTimestampFull } from '@/utils'
 import { Tooltip, Dropdown, call, toast } from 'frappe-ui'
 import { TextEditor } from 'frappe-ui/experimental'
 import { usersStore } from '@/stores/users'
