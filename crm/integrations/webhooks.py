@@ -363,7 +363,7 @@ def build_payload(delivery, integration):
 	else:
 		builder = _builder(delivery.event)
 		if not builder:
-			raise Skip(_("No payload builder for this event."))
+			raise Skip(_("This event cannot be sent yet."))
 		with as_user(integration.integration_user):
 			data = builder(delivery.event, delivery.reference_doctype, delivery.reference_name, context)
 	body = {
@@ -377,7 +377,7 @@ def build_payload(delivery, integration):
 	}
 	raw = json.dumps(body, ensure_ascii=False, separators=(",", ":"), default=str)
 	if len(raw.encode()) > MAX_PAYLOAD_BYTES:
-		raise Skip(_("Payload is larger than 256 KiB."))
+		raise Skip(_("The event is larger than 256 KiB."))
 	return raw
 
 
@@ -407,11 +407,9 @@ def _post(url, body, headers):
 			url, data=body.encode(), headers=headers, timeout=TIMEOUT_SECONDS, allow_redirects=False
 		)
 	except requests.Timeout:
-		raise DeliveryError(
-			_("No answer from the webhook within {0} seconds.").format(TIMEOUT_SECONDS)
-		) from None
+		raise DeliveryError(_("No answer within {0} seconds.").format(TIMEOUT_SECONDS)) from None
 	except requests.RequestException as e:
-		raise DeliveryError(_("Could not reach the webhook: {0}.").format(type(e).__name__)) from None
+		raise DeliveryError(_("Could not connect: {0}.").format(type(e).__name__)) from None
 	finally:
 		session.close()
 

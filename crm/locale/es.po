@@ -31696,20 +31696,20 @@ msgid "{0} points to a private address. Ask support to allow it."
 msgstr "{0} apunta a una dirección privada. Pide a soporte que la permita."
 
 #: crm/integrations/webhooks.py
-msgid "No payload builder for this event."
-msgstr "Este evento no tiene cómo armar su contenido."
+msgid "This event cannot be sent yet."
+msgstr "Este evento todavía no se puede enviar."
 
 #: crm/integrations/webhooks.py
-msgid "Payload is larger than 256 KiB."
-msgstr "El contenido pesa más de 256 KiB."
+msgid "The event is larger than 256 KiB."
+msgstr "El evento pesa más de 256 KiB."
 
 #: crm/integrations/webhooks.py
-msgid "No answer from the webhook within {0} seconds."
-msgstr "El webhook no respondió en {0} segundos."
+msgid "No answer within {0} seconds."
+msgstr "No hubo respuesta en {0} segundos."
 
 #: crm/integrations/webhooks.py
-msgid "Could not reach the webhook: {0}."
-msgstr "No se pudo conectar con el webhook: {0}."
+msgid "Could not connect: {0}."
+msgstr "No se pudo conectar: {0}."
 
 #: crm/integrations/webhooks.py
 msgid "The connection is disabled or was removed."

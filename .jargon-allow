@@ -36,6 +36,12 @@ msg::Add the webhook URL from your n8n Webhook node first.
 msg::Send message_id: your channel's own id for this message (up to 140 characters).
 msg::message_id {0} was already used for a different text.
 msg::Deliveries are written by the integration engine.
-msg::Your n8n Webhook node's production URL. HTTPS is required unless the host is listed in the site's crm_integration_allowed_hosts.
 msg::Your webhook answered {0}. You can enable the connection now.
 msg::Payload
+# n8n's own names on the Automations (n8n) setup screens: its «Webhook» node, the URL the admin
+# copies from it, and the Standard Webhooks «webhook-signature» header they check in n8n.
+msg::1. Webhook URL
+msg::Your n8n Webhook node's production URL. It must start with https://; for an n8n on your own network, ask support to allow its address.
+msg::Use an https:// webhook URL. For an n8n on your own network, ask support to allow its address.
+msg::Every event is signed (Standard Webhooks). Check the webhook-signature header in n8n with this secret to accept only events from this CRM.
+msg::A connection sends signed events to an n8n Webhook node, and gives n8n an API key to answer customers, update records or ask the assistant.

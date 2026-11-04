@@ -329,7 +329,7 @@ class TestIntegrationWebhooks(IntegrationTestCase):
 			(
 				{"return_value": addresses("93.184.215.14")},
 				requests.ConnectionError("refused"),
-				"Could not reach",
+				"Could not connect",
 			),
 			({"return_value": addresses("93.184.215.14")}, requests.ConnectTimeout("slow"), "No answer"),
 		)
