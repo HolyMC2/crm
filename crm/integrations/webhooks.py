@@ -532,7 +532,13 @@ def deliver(delivery, *, force=False):
 def _fail(doc, integration, error, *, code=None, final=False):
 	attempts = (doc.attempts or 0) + 1
 	dead = final or attempts >= MAX_ATTEMPTS or doc.event == TEST_EVENT
-	values = {"attempts": attempts, "last_error": error[:500], "response_code": code, "lease_until": None}
+	# response_code is an Int column (NOT NULL): 0 records that no HTTP answer came back.
+	values = {
+		"attempts": attempts,
+		"last_error": error[:500],
+		"response_code": code or 0,
+		"lease_until": None,
+	}
 	if dead:
 		values["status"] = "Dead"
 	else:

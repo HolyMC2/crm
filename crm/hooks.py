@@ -395,7 +395,8 @@ before_tests = "crm.tests.before_tests"
 # Ignore links to specified DocTypes when deleting documents
 # -----------------------------------------------------------
 
-ignore_links_on_delete = ["Failed Lead Sync Log"]
+# Delivery logs keep pointing at the record they describe, a deleted one included.
+ignore_links_on_delete = ["Failed Lead Sync Log", "CRM Integration Delivery"]
 
 # Request Events
 # ----------------

@@ -341,8 +341,23 @@ class TestIntegrationWebhooks(IntegrationTestCase):
 				patch("requests.adapters.HTTPAdapter.send", side_effect=failure or AssertionError("no send")),
 			):
 				result = api.send_test(connection.name)
-				self.assertEqual(result.status, "Dead")
+				self.assertEqual((result.status, result.response_code), ("Dead", 0))
 				self.assertIn(words, result.last_error)
+
+	def test_a_queued_event_with_no_answer_retries_later(self):
+		connection = self.connection(["lead.created"])
+		self.lead()
+		name = self.deliveries(connection)[0]
+		with (
+			patch("requests.sessions.Session.request", REAL_REQUEST),
+			patch(
+				"socket.getaddrinfo", side_effect=socket.gaierror(-3, "Temporary failure in name resolution")
+			),
+		):
+			result = webhooks.deliver(name)
+		self.assertEqual((result.status, result.attempts, result.response_code), ("Failed", 1, 0))
+		self.assertIsNotNone(result.next_attempt_at)
+		self.assertIn("could not be found", result.last_error)
 
 	def test_whoami_lists_the_callers_connections(self):
 		connection = self.connection(["lead.created"])
