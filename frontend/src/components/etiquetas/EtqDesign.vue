@@ -489,7 +489,7 @@ function hint(key) {
       ? 'Para que salga, elige los lotes en la lista.'
       : 'Ningún producto de la lista tiene lote: no sale.'
   if (key === 'price' && props.priceList)
-    return `De la lista ${props.priceList}`
+    return `De «${props.priceList}»`
   return PART_HINTS[key] || ''
 }
 const sizeLabel = computed(() =>
