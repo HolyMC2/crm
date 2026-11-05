@@ -346,8 +346,13 @@ describe('earlier conversations', () => {
       conversation_id: 'CONV-1',
       archived: 1,
     })
+    // rename lives in the row's «⋯», which unfolds in place
     el.querySelector(
-      '[data-conversation="CONV-1"] [aria-label="Rename"]',
+      '[data-conversation="CONV-1"] [data-testid="assistant-conversation-more"]',
+    ).click()
+    await flush()
+    el.querySelector(
+      '[data-conversation-actions] [data-action="rename"]',
     ).click()
     await flush()
     const input = el.querySelector('[aria-label="Conversation name"]')
