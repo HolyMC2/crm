@@ -72,21 +72,35 @@ function linkLabel(href) {
   return href
 }
 
-const URL_RX = /(https?:\/\/[^\s<>«»"]+|\/(?:app|desk|crm)\/[^\s<>«»"]+)/g
+// A Markdown link `[CRM-DEAL-2026-00694](/crm/deal/…)` is one link named by
+// its text; before this the brackets stayed on screen around «Abrir» (Marco,
+// 2026-11-05, /crm/efectivo). A bare URL is a link too.
+const urlSource = (stop) =>
+  String.raw`https?:\/\/[^\s<>«»"${stop}]+|\/(?:app|desk|crm)\/[^\s<>«»"${stop}]+`
+const LINK_RX = new RegExp(
+  String.raw`\[([^\]\n]{1,200})\]\((${urlSource(')')})\)|(${urlSource('')})`,
+  'g',
+)
 
-/** Text → [{ text }] and [{ href, label, to? }] parts, for rendering without v-html. */
+/** Text → [{ text }] and [{ href, label, to?, named? }] parts, for rendering without v-html. */
 export function textParts(text) {
   const parts = []
   let last = 0
   const value = String(text || '')
-  for (const match of value.matchAll(URL_RX)) {
-    const raw = match[0].replace(/[.,;:)]+$/, '')
+  for (const match of value.matchAll(LINK_RX)) {
+    const named = match[1]?.trim()
+    const raw = named ? match[2] : match[3].replace(/[.,;:)]+$/, '')
     if (match.index > last) parts.push({ text: value.slice(last, match.index) })
     const to = shellPathFor(raw)
-    parts.push(
-      to ? { href: raw, label: raw, to } : { href: raw, label: linkLabel(raw) },
-    )
-    last = match.index + raw.length
+    if (named)
+      parts.push({ href: raw, label: named, named: true, ...(to && { to }) })
+    else
+      parts.push(
+        to
+          ? { href: raw, label: raw, to }
+          : { href: raw, label: linkLabel(raw) },
+      )
+    last = match.index + (named ? match[0].length : raw.length)
   }
   if (last < value.length) parts.push({ text: value.slice(last) })
   return parts

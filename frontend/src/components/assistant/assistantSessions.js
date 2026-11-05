@@ -12,6 +12,7 @@ import { parseServerDate, dayDiff } from '@/utils/display'
 import { normalizeRow } from './assistantText'
 import { loadAgenda } from './assistantAgenda'
 import { loadCanvas } from './assistantCanvas'
+import { loadModels } from './assistantModels'
 import {
   ASSISTANT_API,
   assistant,
@@ -108,7 +109,8 @@ async function reset(work) {
     return null
   }
   ownReset.cutoff = out.cutoff || out.conversation_cutoff || ownReset.cutoff
-  await Promise.all([loadHistory(), loadOpenWork(), loadAgenda()])
+  // the server dropped this conversation's model pick with it
+  await Promise.all([loadHistory(), loadOpenWork(), loadAgenda(), loadModels()])
   return out
 }
 

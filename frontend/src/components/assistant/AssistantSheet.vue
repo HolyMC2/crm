@@ -4,8 +4,9 @@
        worker is on (ui/BottomSheet: back, swipe down, Esc and the scrim
        close it); on a desktop of 1280px or more it docks as a right panel
        and the page reflows beside it. Never a floating bubble. Full screen
-       (the sheet's handle, the dialog's or the dock's maximize) is the same
-       sheet grown to the screen. -->
+       on a phone is the same sheet grown to the screen; on the desktop the
+       dock's maximize opens the workspace (AssistantWorkspace: conversations,
+       the chat, side panels). -->
   <aside
     v-if="docked && assistant.open && !assistant.full"
     ref="panel"
@@ -16,8 +17,9 @@
   >
     <AssistantPanel docked @close="closeAssistant" @navigate="onNavigate" />
   </aside>
+  <AssistantWorkspace v-else-if="docked && assistant.full && assistant.open" />
   <BottomSheet
-    v-else-if="!docked || assistant.full"
+    v-else-if="!docked"
     v-model:fullscreen="assistant.full"
     :open="assistant.open"
     :aria-label="__('Ask Muelle')"
@@ -86,6 +88,9 @@ const AssistantAgenda = defineAsyncComponent(
 )
 const AssistantCanvas = defineAsyncComponent(
   () => import('./AssistantCanvas.vue'),
+)
+const AssistantWorkspace = defineAsyncComponent(
+  () => import('./AssistantWorkspace.vue'),
 )
 
 // The dock width the contract names (ASSISTANT.md «wider than 1280px»).

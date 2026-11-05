@@ -31992,3 +31992,91 @@ msgstr "{0}: {1} de {2}"
 #: frontend/src/composables/useCompras.js
 msgid "Nothing has arrived yet. Receive it first."
 msgstr "Todavía no llega nada. Primero recíbelo."
+
+#: frontend/src/components/assistant/AssistantModelPicker.vue
+msgid "Model: {0}"
+msgstr "Modelo: {0}"
+
+#: frontend/src/components/assistant/AssistantModelPicker.vue
+msgid "Model of this conversation"
+msgstr "Modelo de esta conversación"
+
+#: frontend/src/components/assistant/AssistantModelPicker.vue
+msgid "The owner chooses the model on this site."
+msgstr "En esta tienda el dueño elige el modelo."
+
+#: frontend/src/components/assistant/AssistantModelPicker.vue
+msgid "Reasoning"
+msgstr "Razonamiento"
+
+#: frontend/src/components/assistant/AssistantModelPicker.vue
+msgid "Back to the default ({0})"
+msgstr "Volver al predeterminado ({0})"
+
+#: frontend/src/components/assistant/AssistantModelPicker.vue
+msgid "A new conversation starts on the default again."
+msgstr "Una conversación nueva empieza otra vez con el predeterminado."
+
+#: frontend/src/components/assistant/assistantModels.js
+msgid "No reasoning"
+msgstr "Sin razonar"
+
+#: frontend/src/components/assistant/assistantModels.js
+msgid "Very high"
+msgstr "Muy alto"
+
+#: frontend/src/components/assistant/assistantModels.js
+msgid "Maximum"
+msgstr "Máximo"
+
+#: frontend/src/components/assistant/AssistantWorkspace.vue
+msgid "Hide conversations"
+msgstr "Ocultar conversaciones"
+
+#: frontend/src/components/assistant/AssistantWorkspace.vue
+msgid "Show conversations"
+msgstr "Mostrar conversaciones"
+
+#: frontend/src/components/assistant/AssistantWorkspace.vue
+msgid "Hide side panels"
+msgstr "Ocultar paneles"
+
+#: frontend/src/components/assistant/AssistantWorkspace.vue
+msgid "Show side panels"
+msgstr "Mostrar paneles"
+
+#: frontend/src/components/assistant/AssistantWorkspace.vue
+msgid "Side panels"
+msgstr "Paneles"
+
+#: frontend/src/components/assistant/AssistantSidePanels.vue
+msgid "This screen"
+msgstr "Esta pantalla"
+
+#: frontend/src/components/assistant/AssistantSidePanels.vue
+msgid "Answer about this screen"
+msgstr "Responder sobre esta pantalla"
+
+#: frontend/src/components/assistant/AssistantSidePanels.vue
+msgid "Charts and tables Muelle makes for you show up here."
+msgstr "Aquí aparecen las gráficas y tablas que Muelle te prepara."
+
+#: frontend/src/components/assistant/AssistantSidePanels.vue
+msgid "This conversation"
+msgstr "Esta conversación"
+
+#: frontend/src/components/assistant/AssistantSidePanels.vue
+msgid "Model"
+msgstr "Modelo"
+
+#: frontend/src/components/assistant/AssistantSidePanels.vue
+msgid "Answers"
+msgstr "Respuestas"
+
+#: frontend/src/components/assistant/AssistantSidePanels.vue
+msgid "Files on the Lienzo"
+msgstr "Archivos en el Lienzo"
+
+#: frontend/src/components/assistant/AssistantSidePanels.vue
+msgid "Started"
+msgstr "Empezó"

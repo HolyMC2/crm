@@ -27,6 +27,7 @@ vi.mock('@/components/ui/BottomSheet.vue', () => ({
 
 import {
   chipsFor,
+  firstRecordLink,
   inlineParts,
   looksLikeQuestion,
   mergeHistory,
@@ -188,6 +189,44 @@ describe('what a reply says', () => {
       },
       { text: '. Gracias' },
     ])
+  })
+
+  it('reads a Markdown link as one link named by its text, no brackets left', () => {
+    // /crm/efectivo 2026-11-05: «[CRM-DEAL-2026-00694](Abrir) — aesebaa»
+    expect(
+      textParts(
+        '[CRM-DEAL-2026-00694](/app/crm-deal/CRM-DEAL-2026-00694) — aesebaa',
+      ),
+    ).toEqual([
+      {
+        href: '/app/crm-deal/CRM-DEAL-2026-00694',
+        label: 'CRM-DEAL-2026-00694',
+        named: true,
+        to: '/deal/CRM-DEAL-2026-00694',
+      },
+      { text: ' — aesebaa' },
+    ])
+    expect(
+      textParts(
+        '- [ACC-JV-2026-00032](https://muelle.invalid/app/journal-entry/ACC-JV-2026-00032) · Renta',
+      ),
+    ).toEqual([
+      { text: '- ' },
+      {
+        href: 'https://muelle.invalid/app/journal-entry/ACC-JV-2026-00032',
+        label: 'ACC-JV-2026-00032',
+        named: true,
+      },
+      { text: ' · Renta' },
+    ])
+    // bold around the link keeps the link
+    expect(inlineParts('**[T-9](/app/todo/T-9)** listo')[0]).toMatchObject({
+      label: 'T-9',
+      to: '/pendientes/todo/T-9',
+    })
+    expect(firstRecordLink('Quedó: [T-9](/app/todo/T-9).')?.to).toBe(
+      '/pendientes/todo/T-9',
+    )
   })
 
   it('offers the chips of the screen', () => {
@@ -605,7 +644,7 @@ describe('the ⌘J door', () => {
 })
 
 describe('full screen', () => {
-  it('the dock grows to the full-screen sheet, which goes back to the dock', async () => {
+  it('the dock grows to the workspace, which goes back to the dock', async () => {
     const matchMedia = window.matchMedia
     window.matchMedia = (media) => ({
       media,
@@ -622,13 +661,16 @@ describe('full screen', () => {
     expect(el.querySelector('[data-testid="sheet-frame"]')).toBeNull()
 
     document.querySelector('[data-testid="assistant-fullscreen"]').click()
-    await nextTick()
+    await vi.waitFor(() =>
+      expect(
+        document.querySelector('[data-testid="assistant-workspace"]'),
+      ).not.toBeNull(),
+    )
     expect(assistant.full).toBe(true)
     expect(document.querySelector('[data-testid="assistant-dock"]')).toBeNull()
-    const frame = el.querySelector('[data-testid="sheet-frame"]')
-    expect(frame.hasAttribute('data-fullscreen')).toBe(true)
-    // The sheet's own minimize (its v-model) brings the dock back.
-    assistant.full = false
+    // the phone's full-screen sheet is not used on a desktop
+    expect(el.querySelector('[data-testid="sheet-frame"]')).toBeNull()
+    document.querySelector('[data-testid="assistant-minimize"]').click()
     await nextTick()
     expect(
       document.querySelector('[data-testid="assistant-dock"]'),

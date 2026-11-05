@@ -35,6 +35,20 @@ integration with its workspace for html graphs and stuff, autocomplete on / cmds
    shows under the answer it came with, with «Descargar» and «Abrir en Lienzo»; the Lienzo view
    lists every file and opens one in the same viewer.
 
+6. **Model.** The composer's chip («Haiku 5.5 · Medio», beside «Enviar») names the brain of this
+   conversation and opens its menu: the models the owner published, the reasoning efforts of the
+   current one, «Volver al predeterminado». The pick lasts until «Nueva conversación»
+   (`shell_api.models` / `model_set` → doco `assistant/model_choice.py`). Staff the owner did not
+   allow see the model and the reason; a server without the endpoint shows no chip.
+7. **Workspace** (lane `assistant-workspace`, 2026-11-05). On a desktop of 1280 px or more the
+   dock's «Pantalla completa» opens `AssistantWorkspace.vue` instead of the full-screen sheet:
+   conversations on the left (`AssistantSidebar`), the conversation in a 48rem column, side panels
+   on the right (`AssistantSidePanels`: Esta pantalla, Abierto, Agenda, Lienzo, Esta
+   conversación). The panels sit beside the conversation, never over it. Each side and each panel
+   folds, remembered in localStorage (`muelle-assistant-workspace`, `muelle-assistant-panels`).
+   The views that have a column there (`list`, `open`, `agenda`) open it and keep the chat.
+   Minimize goes back to the dock, Esc closes. A phone keeps the sheet.
+
 ## Contract
 
 - **Reset without a turn.** `shell_api.new_conversation` and `shell_api.liquidar` call

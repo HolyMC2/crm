@@ -2,8 +2,8 @@
   <!-- The composer: fixed at the bottom of the sheet (#footer) and the dock,
        on the same gutter as the conversation above it (20px in the sheet,
        16px in the dock). One card holds the text and its tools: a file waiting
-       to go sits above the text, the clip and the mic on the left, send on the
-       right. -->
+       to go sits above the text, the clip and the mic on the left, the model
+       of the conversation and send on the right. -->
   <form
     class="border-t border-outline-gray-1 pb-3 pt-2"
     :class="docked ? 'px-4' : 'px-5'"
@@ -108,6 +108,7 @@
           @error="(text) => (assistant.error = text)"
         />
         <span class="flex-1" />
+        <AssistantModelPicker />
         <button
           type="submit"
           class="flex size-11 flex-none items-center justify-center rounded-full bg-surface-gray-10 text-ink-base disabled:bg-surface-gray-3 disabled:text-ink-gray-5"
@@ -125,6 +126,7 @@
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import AssistantAttachment from './AssistantAttachment.vue'
 import AssistantMic from './AssistantMic.vue'
+import AssistantModelPicker from './AssistantModelPicker.vue'
 import { ASSISTANT_FILE_ACCEPT, canSendDraft } from './assistantFiles'
 import {
   closeComplete,

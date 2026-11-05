@@ -1,0 +1,298 @@
+<template>
+  <!-- The workspace's left column (Marco 2026-11-05: «leftside sessions/
+       threads», as in Claude and T3 Code): a new conversation, search, the
+       live one and the earlier ones, pinned first. The same store and gates
+       as «Conversaciones» (assistantSessions); a row's pin, rename and
+       archive show on hover or focus. -->
+  <nav
+    class="flex h-full min-h-0 flex-col"
+    :aria-label="__('Conversations')"
+    data-testid="assistant-sidebar"
+  >
+    <div class="flex-none space-y-2 px-3 pb-2 pt-3">
+      <button
+        type="button"
+        class="press flex min-h-11 w-full items-center gap-2 rounded-6 px-3 text-sm font-medium text-ink-gray-9 hover:bg-surface-gray-3 disabled:opacity-50"
+        :title="__('New conversation (settles what is finished)')"
+        :disabled="sessions.busy"
+        data-testid="assistant-sidebar-new"
+        @click="newConversation"
+      >
+        <span class="lucide-square-pen size-4 flex-none" aria-hidden="true" />
+        {{ __('New conversation') }}
+      </button>
+      <label class="relative block">
+        <span class="sr-only">{{ __('Search conversations') }}</span>
+        <span
+          class="lucide-search pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-gray-5"
+          aria-hidden="true"
+        />
+        <input
+          :value="sessions.query"
+          type="search"
+          class="min-h-10 w-full rounded-6 border border-outline-gray-2 bg-surface-base pl-9 pr-3 text-sm text-ink-gray-9"
+          :placeholder="__('Search conversations')"
+          data-testid="assistant-sidebar-search"
+          @input="onSearch($event.target.value)"
+        />
+      </label>
+    </div>
+
+    <div
+      class="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-3 pb-3"
+    >
+      <ul v-if="sessions.results" class="space-y-0.5">
+        <li
+          v-if="!sessions.results.results?.length"
+          class="px-3 py-2 text-sm text-ink-gray-6"
+        >
+          {{ __('No conversation mentions «{0}».', [sessions.results.query]) }}
+        </li>
+        <li
+          v-for="hit in sessions.results.results"
+          :key="`${hit.conversation.id}-${hit.hit_at || 'title'}`"
+        >
+          <button
+            type="button"
+            class="block w-full rounded-6 px-3 py-2 text-left hover:bg-surface-gray-3"
+            data-testid="assistant-sidebar-hit"
+            @click="openConversation(hit.conversation.id)"
+          >
+            <span class="block truncate text-sm text-ink-gray-9">{{
+              hit.conversation.title
+            }}</span>
+            <span
+              v-if="hit.snippet?.text"
+              class="block truncate text-xs text-ink-gray-6"
+              >{{ hit.snippet.text }}</span
+            >
+          </button>
+        </li>
+      </ul>
+
+      <template v-else>
+        <button
+          v-if="!sessions.showArchived"
+          type="button"
+          class="flex min-h-11 w-full items-center gap-2 rounded-6 px-3 text-left text-sm"
+          :class="
+            sessions.view === 'transcript'
+              ? 'text-ink-gray-8 hover:bg-surface-gray-3'
+              : 'bg-surface-gray-3 font-medium text-ink-gray-9'
+          "
+          :aria-current="sessions.view === 'transcript' ? undefined : 'true'"
+          data-testid="assistant-sidebar-current"
+          @click="openConversation(CURRENT)"
+        >
+          <span
+            class="size-2 flex-none rounded-full"
+            :class="
+              assistant.thinking ? 'bg-[var(--brand)]' : 'bg-surface-gray-5'
+            "
+            aria-hidden="true"
+          />
+          <span class="min-w-0 flex-1 truncate">{{ currentTitle }}</span>
+        </button>
+        <p
+          v-if="!sessions.available"
+          class="px-3 text-sm text-ink-gray-6"
+          data-testid="assistant-sidebar-unavailable"
+        >
+          {{ __('Earlier conversations are not kept on this site yet.') }}
+        </p>
+        <p
+          v-else-if="sessions.showArchived && !sessions.list.length"
+          class="px-3 text-sm text-ink-gray-6"
+        >
+          {{ __('No archived conversations.') }}
+        </p>
+        <section v-for="group in groups" :key="group.key">
+          <h3 class="px-3 pb-1 text-xs font-medium text-ink-gray-5">
+            {{ group.label }}
+          </h3>
+          <ul class="space-y-0.5">
+            <li
+              v-for="row in group.rows"
+              :key="row.id"
+              class="group relative flex items-center rounded-6"
+              :class="
+                openId === row.id
+                  ? 'bg-surface-gray-3'
+                  : 'hover:bg-surface-gray-3'
+              "
+              :data-conversation="row.id"
+            >
+              <form
+                v-if="renaming === row.id"
+                class="flex min-h-11 flex-1 items-center gap-1 px-1"
+                @submit.prevent="saveName(row)"
+              >
+                <input
+                  ref="nameInput"
+                  v-model="newName"
+                  class="min-h-9 min-w-0 flex-1 rounded-6 border border-outline-gray-2 px-2 text-sm"
+                  :aria-label="__('Conversation name')"
+                  maxlength="140"
+                  @keydown.esc.stop.prevent="renaming = null"
+                />
+                <button
+                  type="submit"
+                  class="min-h-9 rounded-6 px-2 text-sm font-medium text-ink-gray-9 hover:bg-surface-gray-2"
+                >
+                  {{ __('Save') }}
+                </button>
+              </form>
+              <template v-else>
+                <button
+                  type="button"
+                  class="block min-h-11 min-w-0 flex-1 px-3 py-1.5 text-left"
+                  :aria-current="openId === row.id ? 'true' : undefined"
+                  :title="row.title"
+                  @click="openConversation(row.id)"
+                >
+                  <span class="block truncate text-sm text-ink-gray-9">{{
+                    row.title
+                  }}</span>
+                  <span class="block truncate text-xs text-ink-gray-5">{{
+                    stamp(row)
+                  }}</span>
+                </button>
+                <!-- the row's island: shown on hover or keyboard focus -->
+                <div
+                  class="absolute inset-y-0 right-1 hidden items-center rounded-6 bg-surface-gray-3 group-focus-within:flex group-hover:flex"
+                >
+                  <button
+                    type="button"
+                    class="flex size-8 items-center justify-center rounded-full text-ink-gray-6 hover:bg-surface-gray-4"
+                    :aria-label="row.pinned ? __('Unpin') : __('Pin')"
+                    :title="row.pinned ? __('Unpin') : __('Pin')"
+                    @click="pinConversation(row.id, !row.pinned)"
+                  >
+                    <span
+                      :class="row.pinned ? 'lucide-pin-off' : 'lucide-pin'"
+                      class="size-4"
+                      aria-hidden="true"
+                    />
+                  </button>
+                  <button
+                    type="button"
+                    class="flex size-8 items-center justify-center rounded-full text-ink-gray-6 hover:bg-surface-gray-4"
+                    :aria-label="__('Rename')"
+                    :title="__('Rename')"
+                    @click="startRename(row)"
+                  >
+                    <span class="lucide-pencil size-4" aria-hidden="true" />
+                  </button>
+                  <button
+                    type="button"
+                    class="flex size-8 items-center justify-center rounded-full text-ink-gray-6 hover:bg-surface-gray-4"
+                    :aria-label="row.archived ? __('Restore') : __('Archive')"
+                    :title="row.archived ? __('Restore') : __('Archive')"
+                    @click="archiveConversation(row.id, !row.archived)"
+                  >
+                    <span
+                      :class="
+                        row.archived
+                          ? 'lucide-archive-restore'
+                          : 'lucide-archive'
+                      "
+                      class="size-4"
+                      aria-hidden="true"
+                    />
+                  </button>
+                </div>
+              </template>
+            </li>
+          </ul>
+        </section>
+      </template>
+      <p v-if="sessions.error" role="alert" class="px-3 text-sm text-ink-red-7">
+        {{ sessions.error }}
+      </p>
+    </div>
+
+    <button
+      v-if="sessions.archivedCount || sessions.showArchived"
+      type="button"
+      class="flex min-h-11 flex-none items-center gap-2 border-t border-outline-gray-1 px-6 text-sm text-ink-gray-7 hover:bg-surface-gray-3"
+      data-testid="assistant-sidebar-archived"
+      @click="toggleArchived"
+    >
+      <span class="lucide-archive size-4" aria-hidden="true" />
+      {{
+        sessions.showArchived
+          ? __('Back to conversations')
+          : __('Archived ({0})', [sessions.archivedCount])
+      }}
+    </button>
+  </nav>
+</template>
+<script setup>
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { formatDateTime } from '@/utils/display'
+import { assistant } from './useAssistant'
+import {
+  CURRENT,
+  archiveConversation,
+  groupConversations,
+  loadConversations,
+  newConversation,
+  openConversation,
+  pinConversation,
+  renameConversation,
+  searchConversations,
+  sessions,
+  toggleArchived,
+} from './assistantSessions'
+
+const groups = computed(() => groupConversations(sessions.list))
+const openId = computed(() =>
+  sessions.view === 'transcript' ? sessions.transcript?.conversation?.id : null,
+)
+const currentTitle = computed(
+  () =>
+    (assistant.messages.length && sessions.current?.title) ||
+    (assistant.messages.length
+      ? __('Current conversation')
+      : __('New conversation')),
+)
+
+onMounted(loadConversations)
+// a reset (new, continue, settle) put the old conversation in the list
+watch(
+  () => sessions.busy,
+  (busy, was) => was && !busy && loadConversations(),
+)
+// the live one gets its title from its first question
+watch(
+  () => assistant.thinking,
+  (thinking, was) => was && !thinking && loadConversations(),
+)
+
+function stamp(row) {
+  const parts = [formatDateTime(row.ended_at || row.started_at)]
+  if (row.messages) parts.push(__('{0} messages', [row.messages]))
+  return parts.filter(Boolean).join(' · ')
+}
+
+let typing = null
+function onSearch(value) {
+  sessions.query = value
+  clearTimeout(typing)
+  typing = setTimeout(() => searchConversations(value), 250)
+}
+
+const renaming = ref(null)
+const newName = ref('')
+const nameInput = ref(null)
+function startRename(row) {
+  renaming.value = row.id
+  newName.value = row.title
+  nextTick(() => [nameInput.value].flat()[0]?.focus?.())
+}
+async function saveName(row) {
+  const title = newName.value.trim()
+  renaming.value = null
+  if (title && title !== row.title) await renameConversation(row.id, title)
+}
+</script>
