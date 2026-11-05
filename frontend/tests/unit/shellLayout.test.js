@@ -96,11 +96,13 @@ describe('arrangeShell', () => {
       role: null,
       modules: modules('hoy', 'pendientes', 'agenda', 'contactos', 'ventas'),
     })
+    // Agenda, Contactos, then Productos; without a catalog the registry
+    // fills the last place.
     expect(keys(arranged.bar)).toEqual([
       'hoy',
-      'pendientes',
       'agenda',
       'contactos',
+      'pendientes',
     ])
     expect(keys(arranged.more)).toEqual(['ventas'])
   })

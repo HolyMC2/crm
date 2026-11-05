@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/shell-contracts@0.17.0 (5da43992cccc). DO NOT EDIT:
+// Vendored from muelle/workspace/packages/shell-contracts@0.18.0 (e498a2d01057). DO NOT EDIT:
 // change the package, then run its scripts/vendor.mjs against this directory.
 // Module registry types and the shell's fixed module catalog (spec §1.1, §2.1, §4.7).
 // Framework-agnostic: the crm shell instantiates `ShellModule<RouteRecordRaw, …>`.
@@ -140,10 +140,12 @@ export type DockKey = ShellModuleKey | SiblingAppKey
  * and the next one moves up, so a list may name more than the bar holds (0.17.0).
  */
 export const MOBILE_SLOT_DEFAULTS: Readonly<Record<NavRole, readonly DockKey[]>> = Object.freeze({
-  vendedor: ['pendientes', 'contactos', 'ventas'],
+  // The seller: customers, prices and stock, their deals; Hoy already carries the day's pendientes (0.18.0).
+  vendedor: ['contactos', 'productos', 'ventas', 'agenda'],
   recepcion: ['agenda', 'contactos', 'pendientes'],
   compras: ['compras', 'pendientes', 'contactos'],
-  dueno: ['pendientes', 'ventas', 'contactos'],
+  // The owner and the encargado: the day's appointments, customers, the catalog (0.18.0).
+  dueno: ['agenda', 'contactos', 'productos', 'pendientes'],
   // A real-estate worker (líder de equipo, administrador): their queues, prospects, visits (0.11.0).
   inmobiliaria: ['inmobiliaria', 'contactos', 'agenda'],
   // Stock people (Almacén): movements and counts, receipts (Compras › Recepción), the
@@ -154,7 +156,8 @@ export const MOBILE_SLOT_DEFAULTS: Readonly<Record<NavRole, readonly DockKey[]>>
   // The accountant (Contador): banks and reconciliation, cash custody, expenses, then
   // the results (0.17.0).
   contador: ['bancos', 'efectivo', 'gastos', 'resultados', 'pendientes'],
-  fallback: ['pendientes', 'agenda', 'contactos'],
+  // No class matched: the same bar as the owner (0.18.0).
+  fallback: ['agenda', 'contactos', 'productos', 'pendientes'],
 })
 
 export const MOBILE_SLOTS = 4
