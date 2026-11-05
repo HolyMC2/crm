@@ -10,7 +10,11 @@ const source = readFileSync(
   'utf8',
 )
 const roots = []
-afterEach(() => roots.splice(0).forEach((root) => root.remove()))
+afterEach(() => {
+  roots.splice(0).forEach((root) => root.remove())
+  vi.useRealTimers()
+  vi.unstubAllGlobals()
+})
 const account = {
   provider: 'WhatsApp',
   account_id: '123',
@@ -224,6 +228,55 @@ describe('native Desk customer page', () => {
     expect(commands[0][0].args).toEqual(before)
     expect(commands[1][0].args).toEqual(before)
     expect(page.pending).toBeNull()
+  })
+  it('refreshes Webchat in the background without frappe.call, so a failed round opens no dialog', async () => {
+    vi.useFakeTimers()
+    const webAccount = { ...account, provider: 'Webchat' }
+    const web = { ...doc, provider: 'Webchat' }
+    const reply = (method) =>
+      method.endsWith('list_accounts')
+        ? { accounts: [webAccount] }
+        : method.endsWith('get_history')
+          ? { conversation: web, messages: [], next_cursor: null }
+          : response(method)
+    const { page, root, frappe } = mount(async ({ method }) => ({
+      message: reply(method),
+    }))
+    frappe.get_route = () => ['customer-conversations']
+    frappe.csrf_token = 'csrf'
+    let down = false
+    const fetch = vi.fn(async (url) =>
+      down
+        ? { ok: false, status: 502, json: async () => JSON.parse('<html>') }
+        : {
+            ok: true,
+            status: 200,
+            json: async () => ({
+              message: reply(url.replace('/api/method/', '')),
+            }),
+          },
+    )
+    vi.stubGlobal('fetch', fetch)
+    await page.load()
+    await page.select(web)
+    const count = frappe.call.mock.calls.length
+    page.startRefresh()
+    await vi.advanceTimersByTimeAsync(15000)
+    expect(fetch.mock.calls.map(([url]) => url.split('.').at(-1))).toEqual([
+      'list_threads',
+      'get_history',
+      'list_intents',
+    ])
+    const [, init] = fetch.mock.calls[0]
+    expect(init.method).toBe('POST')
+    expect(init.headers['X-Frappe-CSRF-Token']).toBe('csrf')
+    expect(init.body.get('account_id')).toBe('123')
+    expect(init.body.has('cursor')).toBe(false)
+    down = true
+    await vi.advanceTimersByTimeAsync(15000)
+    page.stopRefresh()
+    expect(frappe.call.mock.calls).toHaveLength(count)
+    expect(root.textContent).toContain('Actualiza para comprobar tu acceso')
   })
   it('discards a response when the authenticated actor changes', async () => {
     let resolve

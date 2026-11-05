@@ -15,6 +15,36 @@ frappe.pages["customer-conversations"].on_page_hide = function (wrapper) {
   wrapper.customer_conversations?.stopRefresh();
 };
 
+// Reads the page makes by itself. frappe.call opens a dialog for the server's
+// message and, whatever its options, for 403/404/5xx, so a failed refresh
+// round would stack dialogs; the page reports failures inline instead.
+async function quietCall(method, args) {
+  const body = new URLSearchParams();
+  for (const [key, value] of Object.entries(args || {})) {
+    if (value == null) continue;
+    body.append(
+      key,
+      typeof value === "object" ? JSON.stringify(value) : String(value),
+    );
+  }
+  let response;
+  try {
+    response = await fetch(`/api/method/${method}`, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "X-Frappe-CSRF-Token": frappe.csrf_token,
+      },
+      body,
+    });
+  } catch {
+    throw { status: 0 };
+  }
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw { ...data, status: response.status };
+  return data;
+}
+
 class CustomerConversations {
   constructor(page) {
     this.root = document.createElement("div");
@@ -57,10 +87,12 @@ class CustomerConversations {
     button.onclick = action;
     return button;
   }
-  async call(method, args) {
+  async call(method, args, quiet = false) {
     const epoch = this.epoch,
       actor = this.actor;
-    const response = await frappe.call({ method, args });
+    const response = quiet
+      ? await quietCall(method, args)
+      : await frappe.call({ method, args });
     if (!this.fresh(epoch, actor)) {
       this.clear();
       throw { exc_type: "AuthenticationError" };
@@ -116,8 +148,8 @@ class CustomerConversations {
         !this.root.contains(document.activeElement)
       ) {
         await this.run(async () => {
-          await this.threads();
-          if (this.doc) await this.history(this.doc.name);
+          await this.threads(false, true);
+          if (this.doc) await this.history(this.doc.name, false, true);
         });
       }
       this.startRefresh();
@@ -162,7 +194,7 @@ class CustomerConversations {
       }
     }
   }
-  async threads(more = false) {
+  async threads(more = false, quiet = false) {
     if (!this.account) return;
     const result = await this.call(
       "crm.api.conversation_threads.list_threads",
@@ -171,6 +203,7 @@ class CustomerConversations {
         account_id: this.account.account_id,
         cursor: more ? this.next : null,
       },
+      quiet,
     );
     this.items = more ? [...this.items, ...result.items] : result.items;
     this.next = result.next_cursor;
@@ -197,12 +230,13 @@ class CustomerConversations {
       this.render();
     }
   }
-  async history(name, more = false) {
+  async history(name, more = false, quiet = false) {
     const previous = this.doc?.name;
-    const result = await this.call("crm.api.conversation_threads.get_history", {
-      conversation: name,
-      cursor: more ? this.older : null,
-    });
+    const result = await this.call(
+      "crm.api.conversation_threads.get_history",
+      { conversation: name, cursor: more ? this.older : null },
+      quiet,
+    );
     this.doc = result.conversation;
     this.messages = more
       ? [...result.messages, ...this.messages]
@@ -211,7 +245,7 @@ class CustomerConversations {
     if (!more) {
       this.outbound = [];
       if (previous !== name) this.draft = "";
-      if (this.nativeChannel()) await this.loadOutbox();
+      if (this.nativeChannel()) await this.loadOutbox(false, quiet);
     }
   }
   async select(item) {
@@ -604,14 +638,18 @@ class CustomerConversations {
       ["Queued", "Claimed", "Blocked", "Deferred", "Failed"].includes(row.state)
     );
   }
-  async loadOutbox(more = false) {
+  async loadOutbox(more = false, quiet = false) {
     if (!this.nativeChannel()) return;
     try {
-      const rows = await this.call("crm.api.outbox.list_intents", {
-        conversation: this.doc.name,
-        limit: 50,
-        before: more ? this.outbound.at(-1)?.name : null,
-      });
+      const rows = await this.call(
+        "crm.api.outbox.list_intents",
+        {
+          conversation: this.doc.name,
+          limit: 50,
+          before: more ? this.outbound.at(-1)?.name : null,
+        },
+        quiet,
+      );
       if (!Array.isArray(rows)) throw new Error("Invalid outbox response");
       this.outbound = more
         ? [
