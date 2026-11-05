@@ -185,12 +185,13 @@ const viewTitle = computed(() =>
 )
 
 // Tab stays in the workspace; Esc puts it away unless a list or menu inside
-// (the «/» list, the model menu, a rename) takes it first.
+// (the «/» list, the model menu, a rename, a row's «⋯») takes it first.
 useShellLayer(root, {
   onKeydown(event) {
     if (event.key !== 'Escape' || event.defaultPrevented) return
     if (complete.open) return
     if (event.target?.closest?.('[data-conversation] form')) return
+    if (event.target?.closest?.('[data-conversation-actions]')) return
     event.preventDefault()
     closeAssistant()
   },

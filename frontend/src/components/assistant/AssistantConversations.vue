@@ -1,7 +1,9 @@
 <template>
   <!-- Earlier conversations: the Desk bubble's sidebar in the sheet. One is
        read-only once closed; «Continue this conversation» starts a new one
-       seeded with its questions (doco conversations.continue_from). -->
+       seeded with its questions (doco conversations.continue_from). A row's
+       «⋯» unfolds the rest in place: resolve, snooze, rename, a new title,
+       unread, copy, continue, archive. -->
   <div
     class="space-y-3 py-2"
     :class="
@@ -146,79 +148,150 @@
             <li
               v-for="row in group.rows"
               :key="row.id"
+              :data-conversation="row.id"
+            >
+              <div class="flex items-center gap-1">
+                <form
+                  v-if="renaming === row.id"
+                  class="flex min-h-11 flex-1 items-center gap-2 py-1"
+                  @submit.prevent="saveName(row)"
+                >
+                  <input
+                    ref="nameInput"
+                    v-model="newName"
+                    class="min-h-9 min-w-0 flex-1 rounded-6 border border-outline-gray-2 px-2 text-sm"
+                    :aria-label="__('Conversation name')"
+                    maxlength="140"
+                    @keydown.esc.prevent="renaming = null"
+                  />
+                  <button
+                    type="submit"
+                    class="min-h-9 rounded-6 px-2 text-sm font-medium text-ink-gray-9 hover:bg-surface-gray-2"
+                  >
+                    {{ __('Save') }}
+                  </button>
+                </form>
+                <button
+                  v-else
+                  type="button"
+                  class="block min-h-11 min-w-0 flex-1 py-2 text-left hover:bg-surface-gray-2"
+                  @click="openConversation(row.id)"
+                >
+                  <span class="flex items-center gap-1.5">
+                    <span
+                      v-if="row.unread"
+                      class="size-2 flex-none rounded-full bg-[var(--brand)]"
+                      :title="__('Unread')"
+                      data-mark="unread"
+                    />
+                    <span
+                      v-if="row.settled"
+                      class="lucide-circle-check size-3.5 flex-none text-ink-gray-5"
+                      :title="__('Resolved')"
+                      data-mark="settled"
+                    />
+                    <span
+                      class="block min-w-0 truncate text-sm"
+                      :class="
+                        row.unread
+                          ? 'font-semibold text-ink-gray-9'
+                          : row.settled
+                            ? 'font-medium text-ink-gray-6'
+                            : 'font-medium text-ink-gray-9'
+                      "
+                      >{{ row.title }}</span
+                    >
+                  </span>
+                  <span class="block truncate text-xs text-ink-gray-6">{{
+                    stamp(row)
+                  }}</span>
+                </button>
+                <button
+                  type="button"
+                  class="flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-6 hover:bg-surface-gray-2"
+                  :aria-label="row.pinned ? __('Unpin') : __('Pin')"
+                  :title="row.pinned ? __('Unpin') : __('Pin')"
+                  @click="pinConversation(row.id, !row.pinned)"
+                >
+                  <span
+                    :class="row.pinned ? 'lucide-pin-off' : 'lucide-pin'"
+                    class="size-4"
+                    aria-hidden="true"
+                  />
+                </button>
+                <button
+                  type="button"
+                  class="flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-6 hover:bg-surface-gray-2"
+                  :aria-label="row.archived ? __('Restore') : __('Archive')"
+                  :title="row.archived ? __('Restore') : __('Archive')"
+                  @click="archiveConversation(row.id, !row.archived)"
+                >
+                  <span
+                    :class="
+                      row.archived ? 'lucide-archive-restore' : 'lucide-archive'
+                    "
+                    class="size-4"
+                    aria-hidden="true"
+                  />
+                </button>
+                <button
+                  type="button"
+                  class="flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-6 hover:bg-surface-gray-2"
+                  :aria-label="__('More actions: {0}', [row.title])"
+                  :title="__('More actions')"
+                  :aria-expanded="menuFor === row.id ? 'true' : 'false'"
+                  data-testid="assistant-conversation-more"
+                  @click="menuFor = menuFor === row.id ? null : row.id"
+                >
+                  <span class="lucide-ellipsis size-4" aria-hidden="true" />
+                </button>
+              </div>
+              <ExpandTransition>
+                <AssistantConversationActions
+                  v-if="menuFor === row.id"
+                  :row="row"
+                  class="mb-2"
+                  @close="menuFor = null"
+                  @rename="startRename"
+                />
+              </ExpandTransition>
+            </li>
+          </ul>
+        </section>
+        <section
+          v-if="!sessions.showArchived && sessions.snoozed.length"
+          data-testid="assistant-snoozed"
+        >
+          <h3 class="mb-1 text-xs font-semibold text-ink-gray-6">
+            {{ __('Snoozed') }}
+          </h3>
+          <ul class="divide-y divide-outline-gray-1">
+            <li
+              v-for="row in sessions.snoozed"
+              :key="row.id"
               class="flex items-center gap-1"
               :data-conversation="row.id"
             >
-              <form
-                v-if="renaming === row.id"
-                class="flex min-h-11 flex-1 items-center gap-2 py-1"
-                @submit.prevent="saveName(row)"
-              >
-                <input
-                  ref="nameInput"
-                  v-model="newName"
-                  class="min-h-9 min-w-0 flex-1 rounded-6 border border-outline-gray-2 px-2 text-sm"
-                  :aria-label="__('Conversation name')"
-                  maxlength="140"
-                  @keydown.esc.prevent="renaming = null"
-                />
-                <button
-                  type="submit"
-                  class="min-h-9 rounded-6 px-2 text-sm font-medium text-ink-gray-9 hover:bg-surface-gray-2"
-                >
-                  {{ __('Save') }}
-                </button>
-              </form>
               <button
-                v-else
                 type="button"
                 class="block min-h-11 min-w-0 flex-1 py-2 text-left hover:bg-surface-gray-2"
                 @click="openConversation(row.id)"
               >
-                <span
-                  class="block truncate text-sm font-medium text-ink-gray-9"
-                  >{{ row.title }}</span
-                >
+                <span class="block truncate text-sm text-ink-gray-7">{{
+                  row.title
+                }}</span>
                 <span class="block truncate text-xs text-ink-gray-6">{{
-                  stamp(row)
+                  __('Back {0}', [formatDateTime(row.snoozed_until)])
                 }}</span>
               </button>
               <button
                 type="button"
                 class="flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-6 hover:bg-surface-gray-2"
-                :aria-label="row.pinned ? __('Unpin') : __('Pin')"
-                :title="row.pinned ? __('Unpin') : __('Pin')"
-                @click="pinConversation(row.id, !row.pinned)"
+                :aria-label="__('Back to the list now: {0}', [row.title])"
+                :title="__('Back to the list now')"
+                @click="snoozeConversation(row.id)"
               >
-                <span
-                  :class="row.pinned ? 'lucide-pin-off' : 'lucide-pin'"
-                  class="size-4"
-                  aria-hidden="true"
-                />
-              </button>
-              <button
-                type="button"
-                class="flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-6 hover:bg-surface-gray-2"
-                :aria-label="__('Rename')"
-                :title="__('Rename')"
-                @click="startRename(row)"
-              >
-                <span class="lucide-pencil size-4" aria-hidden="true" />
-              </button>
-              <button
-                type="button"
-                class="flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-6 hover:bg-surface-gray-2"
-                :aria-label="row.archived ? __('Restore') : __('Archive')"
-                :title="row.archived ? __('Restore') : __('Archive')"
-                @click="archiveConversation(row.id, !row.archived)"
-              >
-                <span
-                  :class="
-                    row.archived ? 'lucide-archive-restore' : 'lucide-archive'
-                  "
-                  class="size-4"
-                  aria-hidden="true"
-                />
+                <span class="lucide-undo-2 size-4" aria-hidden="true" />
               </button>
             </li>
           </ul>
@@ -242,11 +315,20 @@
     <p v-if="sessions.error" role="alert" class="text-sm text-ink-red-7">
       {{ sessions.error }}
     </p>
+    <p
+      v-else-if="sessions.notice"
+      role="status"
+      class="text-sm text-ink-gray-6"
+    >
+      {{ sessions.notice }}
+    </p>
   </div>
 </template>
 <script setup>
 import { computed, nextTick, ref } from 'vue'
 import { formatDateTime } from '@/utils/display'
+import ExpandTransition from '@/components/ui/ExpandTransition.vue'
+import AssistantConversationActions from './AssistantConversationActions.vue'
 import AssistantProse from './AssistantProse.vue'
 import { proseOf, splitButtons, visibleMessages } from './assistantText'
 import {
@@ -259,6 +341,7 @@ import {
   renameConversation,
   searchConversations,
   sessions,
+  snoozeConversation,
   toggleArchived,
 } from './assistantSessions'
 
@@ -296,6 +379,7 @@ function onSearch(value) {
   typing = setTimeout(() => searchConversations(value), 250)
 }
 
+const menuFor = ref(null)
 const renaming = ref(null)
 const newName = ref('')
 const nameInput = ref(null)

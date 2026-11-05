@@ -32080,3 +32080,82 @@ msgstr "Archivos en el Lienzo"
 #: frontend/src/components/assistant/AssistantSidePanels.vue
 msgid "Started"
 msgstr "Empezó"
+
+#: frontend/src/components/assistant/assistantSessions.js
+msgid "In 3 hours"
+msgstr "En 3 horas"
+
+#: frontend/src/components/assistant/assistantSessions.js
+msgid "Tomorrow at 9:00"
+msgstr "Mañana a las 9:00"
+
+#: frontend/src/components/assistant/assistantSessions.js
+msgid "Monday at 9:00"
+msgstr "El lunes a las 9:00"
+
+#: frontend/src/components/assistant/assistantSessions.js
+msgctxt "Conversations"
+msgid "To review"
+msgstr "Para revisar"
+
+#: frontend/src/components/assistant/assistantSessions.js
+msgctxt "Conversations"
+msgid "Resolved"
+msgstr "Resueltas"
+
+#: frontend/src/components/assistant/assistantSessions.js
+msgid "This browser did not let Muelle copy. Open the conversation and select its text."
+msgstr "Este navegador no dejó copiar a Muelle. Abre la conversación y selecciona su texto."
+
+#: frontend/src/components/assistant/assistantSessions.js
+msgid "Conversation copied."
+msgstr "Conversación copiada."
+
+#: frontend/src/components/assistant/AssistantConversationActions.vue
+msgid "Actions for «{0}»"
+msgstr "Acciones de «{0}»"
+
+#: frontend/src/components/assistant/AssistantConversationActions.vue
+msgid "Back in the list, unread:"
+msgstr "Vuelve a la lista, sin leer:"
+
+#: frontend/src/components/assistant/AssistantConversationActions.vue
+msgid "Mark as resolved"
+msgstr "Marcar como resuelta"
+
+#: frontend/src/components/assistant/AssistantConversationActions.vue
+msgid "Back to the list now"
+msgstr "Volver a la lista ya"
+
+#: frontend/src/components/assistant/AssistantConversationActions.vue
+msgid "Snooze…"
+msgstr "Posponer…"
+
+#: frontend/src/components/assistant/AssistantConversationActions.vue
+msgid "Regenerate title"
+msgstr "Regenerar título"
+
+#: frontend/src/components/assistant/AssistantConversationActions.vue
+msgctxt "Conversations"
+msgid "Mark as read"
+msgstr "Marcar como leída"
+
+#: frontend/src/components/assistant/AssistantConversationActions.vue
+msgid "Mark as unread"
+msgstr "Marcar como no leída"
+
+#: frontend/src/components/assistant/AssistantConversationActions.vue
+msgid "Copy conversation"
+msgstr "Copiar conversación"
+
+#: frontend/src/components/assistant/AssistantSidebar.vue
+msgid "Snoozed"
+msgstr "Pospuestas"
+
+#: frontend/src/components/assistant/AssistantSidebar.vue
+msgid "Back {0}"
+msgstr "Vuelve el {0}"
+
+#: frontend/src/components/assistant/AssistantSidebar.vue
+msgid "Back to the list now: {0}"
+msgstr "Volver a la lista ya: {0}"

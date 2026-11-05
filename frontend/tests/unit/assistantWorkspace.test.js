@@ -1,6 +1,8 @@
 // The assistant's desktop workspace (Marco 2026-11-05: model selection,
 // conversations on the left, side panels on the right) and the composer's
-// model picker, which the dock and the phone sheet share.
+// model picker, which the dock and the phone sheet share. Thread management
+// (2026-11-05, T3's thread menu): a row's «⋯» resolves, snoozes, marks
+// unread, regenerates the title and copies.
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick } from 'vue'
 import { createMemoryHistory, createRouter } from 'vue-router'
@@ -21,6 +23,7 @@ import {
 } from '@/components/assistant/assistantModels'
 import {
   _resetSessions,
+  groupConversations,
   sessions,
   showView,
 } from '@/components/assistant/assistantSessions'
@@ -347,6 +350,231 @@ describe('the desktop workspace', () => {
     )
     await flush()
     expect(assistant.open).toBe(false)
+    app.unmount()
+    restore()
+  })
+})
+
+describe('managing conversations (T3 thread menu)', () => {
+  let rows
+  beforeEach(() => {
+    rows = [
+      {
+        id: 'C1',
+        title: 'Factura XMovil',
+        ended_at: '2026-11-04 10:00:00',
+        messages: 6,
+      },
+    ]
+    answers[`${API}.conversations`] = () =>
+      Promise.resolve({
+        available: true,
+        current: { title: 'Ventas de hoy', messages: 2 },
+        conversations: rows.filter((r) => !r.snoozed_until),
+        snoozed: rows.filter((r) => r.snoozed_until),
+        archived: 0,
+      })
+  })
+
+  async function openWorkspace() {
+    const restore = desktop()
+    const mounted = await mount(AssistantSheet)
+    assistant.open = true
+    assistant.full = true
+    await vi.waitFor(() => expect(q('[data-conversation="C1"]')).not.toBeNull())
+    await flush()
+    return { ...mounted, restore }
+  }
+  const more = (id) =>
+    q(`[data-conversation="${id}"] [data-testid="assistant-sidebar-more"]`)
+  const action = (key) =>
+    q(`[data-conversation-actions] [data-action="${key}"]`)
+
+  it('groups pinned, to review, by day and resolved last', () => {
+    const now = new Date(2026, 10, 5, 12)
+    const groups = groupConversations(
+      [
+        { id: 'a', ended_at: '2026-11-05 09:00:00', settled: true },
+        { id: 'b', ended_at: '2026-10-01 09:00:00', unread: true },
+        { id: 'c', ended_at: '2026-11-05 08:00:00' },
+        {
+          id: 'd',
+          ended_at: '2026-10-01 09:00:00',
+          pinned: true,
+          unread: true,
+        },
+      ],
+      now,
+    )
+    expect(groups.map((g) => [g.key, g.rows.map((r) => r.id)])).toEqual([
+      ['pinned', ['d']],
+      ['unread', ['b']],
+      ['today', ['c']],
+      ['settled', ['a']],
+    ])
+  })
+
+  it('«⋯» unfolds the actions in place and resolving reloads the list', async () => {
+    answers[`${API}.conversation_settle`] = ({ settled }) => {
+      rows[0].settled = !!settled
+      return Promise.resolve(rows[0])
+    }
+    const { app, restore } = await openWorkspace()
+    more('C1').click()
+    await flush()
+    expect(
+      [
+        ...document.querySelectorAll(
+          '[data-conversation-actions] [data-action]',
+        ),
+      ].map((b) => b.dataset.action),
+    ).toEqual([
+      'pin',
+      'settle',
+      'snooze',
+      'rename',
+      'retitle',
+      'unread',
+      'copy',
+      'continue',
+      'archive',
+    ])
+    // the keyboard is in the menu
+    expect(document.activeElement).toBe(action('pin'))
+    const before = calls('conversations').length
+    action('settle').click()
+    await flush()
+    expect(calls('conversation_settle')[0][1]).toEqual({
+      conversation_id: 'C1',
+      settled: 1,
+    })
+    expect(calls('conversations').length).toBe(before + 1)
+    expect(q('[data-conversation-actions]')).toBeNull()
+    expect(q('[data-conversation="C1"] [data-mark="settled"]')).not.toBeNull()
+    expect(q('[data-testid="assistant-sidebar"]').textContent).toContain(
+      'Resolved',
+    )
+    app.unmount()
+    restore()
+  })
+
+  it('snooze picks a preset; the row waits under «Snoozed» and comes back', async () => {
+    answers[`${API}.conversation_snooze`] = ({ preset }) => {
+      rows[0].snoozed_until = preset ? '2026-11-09 09:00:00' : null
+      return Promise.resolve(rows[0])
+    }
+    const { app, restore } = await openWorkspace()
+    more('C1').click()
+    await flush()
+    action('snooze').click()
+    await flush()
+    const presets = [...document.querySelectorAll('[data-snooze]')]
+    expect(presets.map((b) => b.dataset.snooze)).toEqual([
+      '1h',
+      '3h',
+      'tomorrow',
+      'monday',
+    ])
+    expect(document.activeElement).toBe(presets[0])
+    presets[3].click()
+    await flush()
+    expect(calls('conversation_snooze')[0][1]).toEqual({
+      conversation_id: 'C1',
+      preset: 'monday',
+    })
+    const waiting = q('[data-testid="assistant-sidebar-snoozed"]')
+    expect(waiting.textContent).toContain('Factura XMovil')
+    waiting.querySelector('[aria-label^="Back to the list now"]').click()
+    await flush()
+    expect(calls('conversation_snooze')[1][1]).toEqual({
+      conversation_id: 'C1',
+    })
+    expect(q('[data-testid="assistant-sidebar-snoozed"]')).toBeNull()
+    app.unmount()
+    restore()
+  })
+
+  it('an unread row shows its dot until it is opened', async () => {
+    rows[0].unread = true
+    answers[`${API}.conversation`] = () => {
+      rows[0].unread = false
+      return Promise.resolve({ conversation: rows[0], messages: [] })
+    }
+    const { app, restore } = await openWorkspace()
+    expect(q('[data-conversation="C1"] [data-mark="unread"]')).not.toBeNull()
+    expect(q('[data-testid="assistant-sidebar"]').textContent).toContain(
+      'To review',
+    )
+    q(
+      '[data-conversation="C1"] button[aria-current], [data-conversation="C1"] button',
+    ).click()
+    await flush()
+    expect(q('[data-conversation="C1"] [data-mark="unread"]')).toBeNull()
+    more('C1').click()
+    await flush()
+    expect(action('unread').textContent).toContain('Mark as unread')
+    app.unmount()
+    restore()
+  })
+
+  it('regenerates the title and copies the conversation', async () => {
+    answers[`${API}.conversation_retitle`] = () => {
+      rows[0].title = 'Factura de XMovil por pagar'
+      return Promise.resolve(rows[0])
+    }
+    answers[`${API}.conversation_export`] = () =>
+      Promise.resolve({
+        text: 'Conversación con el Asistente Muelle: «Factura XMovil»',
+      })
+    const writeText = vi.fn(() => Promise.resolve())
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText },
+      configurable: true,
+    })
+    const { app, restore } = await openWorkspace()
+    more('C1').click()
+    await flush()
+    action('retitle').click()
+    await flush()
+    expect(q('[data-conversation="C1"]').textContent).toContain(
+      'Factura de XMovil por pagar',
+    )
+    more('C1').click()
+    await flush()
+    action('copy').click()
+    await flush()
+    expect(writeText).toHaveBeenCalledWith(
+      'Conversación con el Asistente Muelle: «Factura XMovil»',
+    )
+    expect(
+      q('[data-testid="assistant-sidebar"] [role="status"]').textContent,
+    ).toContain('Conversation copied.')
+    app.unmount()
+    restore()
+  })
+
+  it('rename from the menu opens the name field; Esc in the menu keeps the workspace', async () => {
+    const { app, restore } = await openWorkspace()
+    more('C1').click()
+    await flush()
+    document.activeElement.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'Escape',
+        bubbles: true,
+        cancelable: true,
+      }),
+    )
+    await flush()
+    expect(q('[data-conversation-actions]')).toBeNull()
+    expect(assistant.open).toBe(true)
+    expect(document.activeElement).toBe(more('C1'))
+    more('C1').click()
+    await flush()
+    action('rename').click()
+    await flush()
+    expect(q('[data-conversation="C1"] form input').value).toBe(
+      'Factura XMovil',
+    )
     app.unmount()
     restore()
   })

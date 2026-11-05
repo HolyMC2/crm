@@ -2,8 +2,9 @@
   <!-- The workspace's left column (Marco 2026-11-05: «leftside sessions/
        threads», as in Claude and T3 Code): a new conversation, search, the
        live one and the earlier ones, pinned first. The same store and gates
-       as «Conversaciones» (assistantSessions); a row's pin, rename and
-       archive show on hover or focus. -->
+       as «Conversaciones» (assistantSessions); a row's pin, archive and «⋯»
+       show on hover or focus, and «⋯» unfolds the rest under it (resolve,
+       snooze, rename, a new title, unread, copy, continue). -->
   <nav
     class="flex h-full min-h-0 flex-col"
     :aria-label="__('Conversations')"
@@ -114,100 +115,185 @@
             <li
               v-for="row in group.rows"
               :key="row.id"
-              class="group relative flex items-center rounded-6"
-              :class="
-                openId === row.id
-                  ? 'bg-surface-gray-3'
-                  : 'hover:bg-surface-gray-3'
-              "
               :data-conversation="row.id"
             >
-              <form
-                v-if="renaming === row.id"
-                class="flex min-h-11 flex-1 items-center gap-1 px-1"
-                @submit.prevent="saveName(row)"
+              <div
+                class="group relative flex items-center rounded-6"
+                :class="
+                  openId === row.id || menuFor === row.id
+                    ? 'bg-surface-gray-3'
+                    : 'hover:bg-surface-gray-3'
+                "
               >
-                <input
-                  ref="nameInput"
-                  v-model="newName"
-                  class="min-h-9 min-w-0 flex-1 rounded-6 border border-outline-gray-2 px-2 text-sm"
-                  :aria-label="__('Conversation name')"
-                  maxlength="140"
-                  @keydown.esc.stop.prevent="renaming = null"
+                <form
+                  v-if="renaming === row.id"
+                  class="flex min-h-11 flex-1 items-center gap-1 px-1"
+                  @submit.prevent="saveName(row)"
+                >
+                  <input
+                    ref="nameInput"
+                    v-model="newName"
+                    class="min-h-9 min-w-0 flex-1 rounded-6 border border-outline-gray-2 px-2 text-sm"
+                    :aria-label="__('Conversation name')"
+                    maxlength="140"
+                    @keydown.esc.stop.prevent="renaming = null"
+                  />
+                  <button
+                    type="submit"
+                    class="min-h-9 rounded-6 px-2 text-sm font-medium text-ink-gray-9 hover:bg-surface-gray-2"
+                  >
+                    {{ __('Save') }}
+                  </button>
+                </form>
+                <template v-else>
+                  <button
+                    type="button"
+                    class="block min-h-11 min-w-0 flex-1 px-3 py-1.5 text-left"
+                    :aria-current="openId === row.id ? 'true' : undefined"
+                    :title="row.title"
+                    @click="openConversation(row.id)"
+                  >
+                    <span class="flex items-center gap-1.5">
+                      <span
+                        v-if="row.unread"
+                        class="size-2 flex-none rounded-full bg-[var(--brand)]"
+                        :title="__('Unread')"
+                        data-mark="unread"
+                      />
+                      <span
+                        v-if="row.settled"
+                        class="lucide-circle-check size-3.5 flex-none text-ink-gray-5"
+                        :title="__('Resolved')"
+                        data-mark="settled"
+                      />
+                      <span
+                        class="block min-w-0 truncate text-sm"
+                        :class="
+                          row.unread
+                            ? 'font-semibold text-ink-gray-9'
+                            : row.settled
+                              ? 'text-ink-gray-6'
+                              : 'text-ink-gray-9'
+                        "
+                        >{{ row.title }}</span
+                      >
+                    </span>
+                    <span class="block truncate text-xs text-ink-gray-5">{{
+                      stamp(row)
+                    }}</span>
+                  </button>
+                  <!-- the row's island: shown on hover or keyboard focus -->
+                  <div
+                    class="absolute inset-y-0 right-1 items-center rounded-6 bg-surface-gray-3 group-focus-within:flex group-hover:flex"
+                    :class="menuFor === row.id ? 'flex' : 'hidden'"
+                  >
+                    <button
+                      type="button"
+                      class="flex size-8 items-center justify-center rounded-full text-ink-gray-6 hover:bg-surface-gray-4"
+                      :aria-label="row.pinned ? __('Unpin') : __('Pin')"
+                      :title="row.pinned ? __('Unpin') : __('Pin')"
+                      @click="pinConversation(row.id, !row.pinned)"
+                    >
+                      <span
+                        :class="row.pinned ? 'lucide-pin-off' : 'lucide-pin'"
+                        class="size-4"
+                        aria-hidden="true"
+                      />
+                    </button>
+                    <button
+                      type="button"
+                      class="flex size-8 items-center justify-center rounded-full text-ink-gray-6 hover:bg-surface-gray-4"
+                      :aria-label="row.archived ? __('Restore') : __('Archive')"
+                      :title="row.archived ? __('Restore') : __('Archive')"
+                      @click="archiveConversation(row.id, !row.archived)"
+                    >
+                      <span
+                        :class="
+                          row.archived
+                            ? 'lucide-archive-restore'
+                            : 'lucide-archive'
+                        "
+                        class="size-4"
+                        aria-hidden="true"
+                      />
+                    </button>
+                    <button
+                      type="button"
+                      class="flex size-8 items-center justify-center rounded-full text-ink-gray-6 hover:bg-surface-gray-4"
+                      :aria-label="__('More actions: {0}', [row.title])"
+                      :title="__('More actions')"
+                      :aria-expanded="menuFor === row.id ? 'true' : 'false'"
+                      data-testid="assistant-sidebar-more"
+                      @click="toggleMenu(row.id)"
+                    >
+                      <span class="lucide-ellipsis size-4" aria-hidden="true" />
+                    </button>
+                  </div>
+                </template>
+              </div>
+              <ExpandTransition>
+                <AssistantConversationActions
+                  v-if="menuFor === row.id"
+                  :row="row"
+                  class="my-1"
+                  @close="closeMenu(row.id)"
+                  @rename="startRename"
                 />
-                <button
-                  type="submit"
-                  class="min-h-9 rounded-6 px-2 text-sm font-medium text-ink-gray-9 hover:bg-surface-gray-2"
-                >
-                  {{ __('Save') }}
-                </button>
-              </form>
-              <template v-else>
-                <button
-                  type="button"
-                  class="block min-h-11 min-w-0 flex-1 px-3 py-1.5 text-left"
-                  :aria-current="openId === row.id ? 'true' : undefined"
-                  :title="row.title"
-                  @click="openConversation(row.id)"
-                >
-                  <span class="block truncate text-sm text-ink-gray-9">{{
-                    row.title
-                  }}</span>
-                  <span class="block truncate text-xs text-ink-gray-5">{{
-                    stamp(row)
-                  }}</span>
-                </button>
-                <!-- the row's island: shown on hover or keyboard focus -->
-                <div
-                  class="absolute inset-y-0 right-1 hidden items-center rounded-6 bg-surface-gray-3 group-focus-within:flex group-hover:flex"
-                >
-                  <button
-                    type="button"
-                    class="flex size-8 items-center justify-center rounded-full text-ink-gray-6 hover:bg-surface-gray-4"
-                    :aria-label="row.pinned ? __('Unpin') : __('Pin')"
-                    :title="row.pinned ? __('Unpin') : __('Pin')"
-                    @click="pinConversation(row.id, !row.pinned)"
-                  >
-                    <span
-                      :class="row.pinned ? 'lucide-pin-off' : 'lucide-pin'"
-                      class="size-4"
-                      aria-hidden="true"
-                    />
-                  </button>
-                  <button
-                    type="button"
-                    class="flex size-8 items-center justify-center rounded-full text-ink-gray-6 hover:bg-surface-gray-4"
-                    :aria-label="__('Rename')"
-                    :title="__('Rename')"
-                    @click="startRename(row)"
-                  >
-                    <span class="lucide-pencil size-4" aria-hidden="true" />
-                  </button>
-                  <button
-                    type="button"
-                    class="flex size-8 items-center justify-center rounded-full text-ink-gray-6 hover:bg-surface-gray-4"
-                    :aria-label="row.archived ? __('Restore') : __('Archive')"
-                    :title="row.archived ? __('Restore') : __('Archive')"
-                    @click="archiveConversation(row.id, !row.archived)"
-                  >
-                    <span
-                      :class="
-                        row.archived
-                          ? 'lucide-archive-restore'
-                          : 'lucide-archive'
-                      "
-                      class="size-4"
-                      aria-hidden="true"
-                    />
-                  </button>
-                </div>
-              </template>
+              </ExpandTransition>
             </li>
           </ul>
         </section>
       </template>
+      <section
+        v-if="
+          !sessions.results && !sessions.showArchived && sessions.snoozed.length
+        "
+        data-testid="assistant-sidebar-snoozed"
+      >
+        <h3 class="px-3 pb-1 text-xs font-medium text-ink-gray-5">
+          {{ __('Snoozed') }}
+        </h3>
+        <ul class="space-y-0.5">
+          <li
+            v-for="row in sessions.snoozed"
+            :key="row.id"
+            class="flex items-center rounded-6 hover:bg-surface-gray-3"
+            :data-conversation="row.id"
+          >
+            <button
+              type="button"
+              class="block min-h-11 min-w-0 flex-1 px-3 py-1.5 text-left"
+              :title="row.title"
+              @click="openConversation(row.id)"
+            >
+              <span class="block truncate text-sm text-ink-gray-7">{{
+                row.title
+              }}</span>
+              <span class="block truncate text-xs text-ink-gray-5">{{
+                __('Back {0}', [formatDateTime(row.snoozed_until)])
+              }}</span>
+            </button>
+            <button
+              type="button"
+              class="mr-1 flex size-8 flex-none items-center justify-center rounded-full text-ink-gray-6 hover:bg-surface-gray-4"
+              :aria-label="__('Back to the list now: {0}', [row.title])"
+              :title="__('Back to the list now')"
+              @click="snoozeConversation(row.id)"
+            >
+              <span class="lucide-undo-2 size-4" aria-hidden="true" />
+            </button>
+          </li>
+        </ul>
+      </section>
       <p v-if="sessions.error" role="alert" class="px-3 text-sm text-ink-red-7">
         {{ sessions.error }}
+      </p>
+      <p
+        v-else-if="sessions.notice"
+        role="status"
+        class="px-3 text-sm text-ink-gray-6"
+      >
+        {{ sessions.notice }}
       </p>
     </div>
 
@@ -230,6 +316,8 @@
 <script setup>
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { formatDateTime } from '@/utils/display'
+import ExpandTransition from '@/components/ui/ExpandTransition.vue'
+import AssistantConversationActions from './AssistantConversationActions.vue'
 import { assistant } from './useAssistant'
 import {
   CURRENT,
@@ -242,6 +330,7 @@ import {
   renameConversation,
   searchConversations,
   sessions,
+  snoozeConversation,
   toggleArchived,
 } from './assistantSessions'
 
@@ -280,6 +369,23 @@ function onSearch(value) {
   sessions.query = value
   clearTimeout(typing)
   typing = setTimeout(() => searchConversations(value), 250)
+}
+
+const menuFor = ref(null)
+function toggleMenu(id) {
+  menuFor.value = menuFor.value === id ? null : id
+}
+function closeMenu(id) {
+  if (menuFor.value !== id) return
+  menuFor.value = null
+  // back to the row's «⋯», where the keyboard was
+  nextTick(() =>
+    document
+      .querySelector(
+        `[data-conversation="${CSS.escape(id)}"] [data-testid="assistant-sidebar-more"]`,
+      )
+      ?.focus(),
+  )
 }
 
 const renaming = ref(null)
