@@ -48,6 +48,16 @@ integration with its workspace for html graphs and stuff, autocomplete on / cmds
    folds, remembered in localStorage (`muelle-assistant-workspace`, `muelle-assistant-panels`).
    The views that have a column there (`list`, `open`, `agenda`) open it and keep the chat.
    Minimize goes back to the dock, Esc closes. A phone keeps the sheet.
+8. **Managing conversations** (same lane, Marco 2026-11-05 with T3 Code's thread menu). A row's
+   «⋯» (workspace sidebar on hover beside pin and archive; the dock and phone list beside them)
+   unfolds `AssistantConversationActions` in place under the row: Fijar, Marcar como resuelta /
+   Reabrir, Posponer… (en 1 hora, en 3 horas, mañana 9:00, el lunes 9:00; the server computes the
+   time in site time), Renombrar, Regenerar título (doco's cheap model over the person's own
+   questions, never the replies), Marcar como no leída / leída, Copiar conversación (the export
+   text on the clipboard), Seguir esta conversación, Archivar. The list groups Fijadas, Para
+   revisar (unread, with a dot), Hoy, Esta semana, Antes and Resueltas at the foot; snoozed ones
+   wait under «Pospuestas» with «Volver a la lista ya» and come back unread when due. Opening a
+   conversation reads it. Nothing is deleted: there is no «Borrar».
 
 ## Contract
 
