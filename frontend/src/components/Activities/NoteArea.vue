@@ -67,7 +67,7 @@
 import UserAvatar from '@/components/UserAvatar.vue'
 import { timeAgo, formatDateTime, formatTimestampFull } from '@/utils'
 import { Tooltip, Dropdown, call, toast } from 'frappe-ui'
-import { TextEditor } from 'frappe-ui/experimental'
+import { TextEditor } from '@/components/Controls/lazyTextEditor'
 import { usersStore } from '@/stores/users'
 import LucideTrash2 from '~icons/lucide/trash-2'
 

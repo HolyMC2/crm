@@ -463,7 +463,7 @@ import {
   Button,
   toast,
 } from 'frappe-ui'
-import { TextEditor } from 'frappe-ui/experimental'
+import { TextEditor } from '@/components/Controls/lazyTextEditor'
 import { usersStore } from '@/stores/users'
 import { isMobile } from '@/composables/breakpoint'
 import { notifyTyping, aiEnabled, composerDraft } from '@/composables/inbox'
