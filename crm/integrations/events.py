@@ -347,7 +347,11 @@ def _record(doctype, name):
 	doc = _permitted(view)
 	user = frappe.session.user
 	allowed = _readable_fields(doctype, user)
-	children = {df.fieldname: df.options for df in doc.meta.get_table_fields()}
+	# get_permitted_fields never lists tables (they hold no value of their own): a table is readable
+	# at its permlevel, and the read check above already covers level 0
+	levels = set(doc.meta.get_permlevel_access("read", user=user)) | {0}
+	children = {df.fieldname: df.options for df in doc.meta.get_table_fields() if df.permlevel in levels}
+	allowed |= set(children)
 	out = {}
 	for key, value in doc.as_dict(no_nulls=True).items():
 		if key not in allowed or key.startswith("_"):
