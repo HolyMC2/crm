@@ -1,6 +1,7 @@
 # Copyright (c) 2026, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+import os
 from unittest.mock import MagicMock, patch
 
 import frappe
@@ -28,6 +29,9 @@ class TestTranslationsScript(IntegrationTestCase):
 		# The hash and the queued-build markers next to it.
 		frappe.cache.delete_keys(shell_dictionary.CACHE_KEY)
 		frappe.local.cache.pop(frappe.cache.make_key(shell_dictionary.CACHE_KEY), None)
+		# And the site store the build writes next to the cache.
+		for name in shell_dictionary._stored_files():
+			os.remove(name)
 
 	def patched(self, messages, listing=FULL, user_translations=None, enqueue=_build_now):
 		return (
@@ -124,6 +128,36 @@ class TestTranslationsScript(IntegrationTestCase):
 		self.assertEqual(response.headers["Cache-Control"], "private, no-cache")
 		self.assertIn('"Ventas":"Sales"', response.get_data(as_text=True))
 		# Queued once, however many pages load before the job runs.
+		self.assertEqual(len(queued), 1)
+
+	def test_a_cache_clear_serves_the_built_set_from_the_site_store(self):
+		messages = {"Ventas": "Sales", "Unused": "Not shipped"}
+		listing = ("k1", frozenset({"Ventas"}))
+		self.page_version(messages, listing=listing)
+		v = self.page_version(messages, listing=listing)
+		self.assertEqual(len(v), 16)
+		# bench clear-cache after a deploy, or a Redis restart: the hash is gone, the file stays.
+		frappe.cache.delete_value(shell_dictionary.CACHE_KEY)
+		frappe.local.cache.pop(frappe.cache.make_key(shell_dictionary.CACHE_KEY), None)
+
+		def never(method, **kwargs):
+			self.fail("a stored set needs no build")
+
+		self.assertEqual(self.page_version(messages, listing=listing, enqueue=never), v)
+		response = self.serve(messages, v=v, listing=listing, enqueue=never)
+		self.assertEqual(response.headers["Cache-Control"], "private, max-age=31536000, immutable")
+		body = response.get_data(as_text=True)
+		self.assertIn('"Ventas":"Sales"', body)
+		self.assertNotIn("Not shipped", body)
+
+	def test_a_meta_change_drops_the_stored_set_too(self):
+		queued = []
+		messages = {"Ventas": "Sales"}
+		self.page_version(messages)
+		self.assertTrue(shell_dictionary._stored_files())
+		shell_dictionary.clear()
+		self.assertEqual(shell_dictionary._stored_files(), [])
+		self.assertEqual(self.page_version(messages, enqueue=lambda method, **kw: queued.append(kw)), "")
 		self.assertEqual(len(queued), 1)
 
 	def test_the_versioned_url_is_immutable_and_any_other_revalidates(self):
