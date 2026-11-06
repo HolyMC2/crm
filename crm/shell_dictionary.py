@@ -147,9 +147,37 @@ def _queued_key(field: str) -> str:
 
 
 def clear(*_args) -> None:
-	"""after_migrate, and a DocType, Custom Field or Property Setter change: labels, options and
-	DocType names may have moved, so the next page load builds the set again."""
+	"""A DocType, Custom Field or Property Setter change: labels, options and DocType names may
+	have moved, so the next page load builds the set again."""
 	frappe.cache.delete_value(CACHE_KEY)
+
+
+def rebuild(*_args) -> None:
+	"""after_migrate: build the set again now for the languages the site's people use, so the
+	first pages after a deploy ship the trimmed dictionary instead of the whole one while a
+	queued job runs. A language whose build fails is left to the page-load queue."""
+	clear()
+	for lang in site_languages():
+		try:
+			build(lang, f"{lang}|{build_literals()[0]}|{_user_translations_fingerprint(lang)}")
+		except Exception:
+			frappe.log_error("crm shell dictionary rebuild")
+
+
+def site_languages() -> list[str]:
+	"""The system language, the languages of enabled system users, and the current one."""
+	langs = [
+		frappe.db.get_single_value("System Settings", "language"),
+		*frappe.get_all(
+			"User",
+			filters={"enabled": 1, "user_type": "System User"},
+			pluck="language",
+			distinct=True,
+			order_by=None,
+		),
+		frappe.local.lang,
+	]
+	return list(dict.fromkeys(lang for lang in langs if lang))
 
 
 def _warn_missing(path: str) -> None:
