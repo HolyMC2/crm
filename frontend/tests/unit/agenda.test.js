@@ -2,6 +2,8 @@ import { describe, expect, it, vi } from 'vitest'
 
 vi.mock('frappe-ui', () => ({ call: vi.fn() }))
 
+import { call } from 'frappe-ui'
+
 import {
   constraintActions,
   instantToWall,
@@ -9,6 +11,7 @@ import {
   moveToDateTimes,
   parseEventKey,
   parseState,
+  querySources,
   rangeFor,
   recordLink,
   rescheduleTimes,
@@ -153,6 +156,76 @@ describe('URL state', () => {
       id: 'EV-1@2026-10-07',
     })
     expect(parseEventKey('nonsense')).toBeNull()
+  })
+})
+
+describe('reading the calendars of a range', () => {
+  const range = { start: '2026-11-09T06:00:00Z', end: '2026-11-16T06:00:00Z' }
+  const refused = {
+    constraints: [{ code: 'read_only', message: 'Turnos', severity: 'block' }],
+  }
+
+  it('asks once for every calendar where the server batches them', async () => {
+    call.mockReset()
+    call.mockResolvedValueOnce({
+      results: {
+        Event: {
+          events: [{ id: 'EV-1', source: 'Event' }],
+          timeZone: MX,
+          resources: [{ id: 'r1' }],
+        },
+        Turno: refused,
+      },
+    })
+    const out = await querySources(['Event', 'Turno', 'Nope'], range, {
+      batch: true,
+    })
+    expect(call).toHaveBeenCalledTimes(1)
+    expect(call).toHaveBeenCalledWith('doco.agenda.api.query_many', {
+      sources: ['Event', 'Turno', 'Nope'],
+      ...range,
+    })
+    expect(out.events.map((event) => event.id)).toEqual(['EV-1'])
+    expect(out.timeZone).toBe(MX)
+    expect(out.resources).toEqual({ Event: [{ id: 'r1' }] })
+    // A refused calendar and one the answer lacks are problems of their own, not of the others.
+    expect(
+      out.problems.map((problem) => [problem.source, problem.constraint.code]),
+    ).toEqual([
+      ['Turno', 'read_only'],
+      ['Nope', 'unavailable'],
+    ])
+  })
+
+  it('asks per calendar without the batch, and for a single one', async () => {
+    call.mockReset()
+    call.mockImplementation(async (method, args) =>
+      args.source === 'Turno' ? refused : { events: [], timeZone: MX },
+    )
+    const out = await querySources(['Event', 'Turno'], range)
+    expect(call).toHaveBeenCalledTimes(2)
+    expect(call).toHaveBeenCalledWith('doco.agenda.api.query', {
+      source: 'Event',
+      ...range,
+    })
+    expect(out.problems.map((problem) => problem.source)).toEqual(['Turno'])
+    call.mockClear()
+    await querySources(['Event'], range, { batch: true })
+    expect(call).toHaveBeenCalledWith('doco.agenda.api.query', {
+      source: 'Event',
+      ...range,
+    })
+  })
+
+  it('reports every calendar unavailable when the batched request itself fails', async () => {
+    call.mockReset()
+    call.mockRejectedValueOnce(new Error('offline'))
+    const out = await querySources(['Event', 'Turno'], range, { batch: true })
+    expect(out.events).toEqual([])
+    expect(out.problems.map((problem) => problem.constraint.message)).toEqual([
+      'offline',
+      'offline',
+    ])
   })
 })
 

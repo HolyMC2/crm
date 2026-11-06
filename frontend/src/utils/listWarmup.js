@@ -79,6 +79,15 @@ export const WARMERS = {
   },
 }
 
+/** The next idle slot: a warm-up of several modules yields between them, so a tap never queues behind one. */
+function idleSlot() {
+  return new Promise((resolve) =>
+    typeof requestIdleCallback === 'function'
+      ? requestIdleCallback(() => resolve(), { timeout: 8000 })
+      : setTimeout(resolve, 250),
+  )
+}
+
 /** Data saver or a 2g line: lists load when opened. */
 export function warmUpAllowed(connection = globalThis.navigator?.connection) {
   return !connection?.saveData && !SLOW_LINES.has(connection?.effectiveType)
@@ -99,6 +108,8 @@ export async function warmLists(
   for (const module of modules) {
     if (module === except || !warmers[module]) continue
     try {
+      // Each module's import and read start in their own idle slot (4x-slow phones).
+      await idleSlot()
       const target = await warmers[module]()
       if (!target || readCachedList(target.list, scope, WARM_FRESH_MS)) continue
       const answer = await target.read()
