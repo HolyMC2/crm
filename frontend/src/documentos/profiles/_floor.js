@@ -78,7 +78,7 @@ export function cellText(col, row, { now = new Date() } = {}) {
       return looksLikeId(value) ? '' : String(value)
     }
     case 'Select':
-      return col.choices?.[value] || statusWord(value)
+      return statusWord(value, col.choices?.[value])
     case 'Check':
       return Number(value) ? col.label : ''
     case 'Date':
@@ -123,6 +123,7 @@ export function floorFilterFields(meta, facets) {
   const out = facets.map((facet) => ({
     fieldname: facet.fieldname,
     label: facet.label,
+    fieldtype: facet.fieldtype,
     facet: true,
     options: [],
   }))
@@ -195,12 +196,17 @@ export function floorProfile(meta) {
   }
 }
 
+/** A facet value's word: a Select's stored value in the shell's words, else the server's label. */
+function facetLabel(facet, v) {
+  return facet.fieldtype === 'Select' ? statusWord(v.value, v.label) : v.label
+}
+
 /** The «Filtros» options of a facet from its counts; the picked value stays even when it fell out of the top. */
 export function facetOptions(field, counts, picked = '') {
   const found = counts?.[field.fieldname]
   const options = (found?.values || []).map((v) => ({
     value: v.value,
-    label: v.label,
+    label: facetLabel(field, v),
     count: v.count,
   }))
   if (picked && !options.some((o) => o.value === picked))
@@ -225,7 +231,7 @@ export function facetGroups(facets, counts, selected = {}) {
         more: !!found?.more,
         values: values.map((v) => ({
           value: v.value,
-          label: v.label,
+          label: facetLabel(facet, v),
           count: Number(v.count) || 0,
           share: (Number(v.count) || 0) / max,
         })),

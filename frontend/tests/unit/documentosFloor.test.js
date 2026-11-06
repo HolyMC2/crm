@@ -28,7 +28,8 @@ const CHECKIN = {
       label: 'Tipo de registro',
       fieldtype: 'Select',
       options: null,
-      choices: { IN: 'Entrada', OUT: 'Salida' },
+      // What the server sends: Frappe's literal translation of IN/OUT.
+      choices: { IN: 'EN', OUT: 'FUERA' },
     },
   ],
   facets: [
@@ -73,6 +74,7 @@ describe('a floor row', () => {
       now: NOW,
     })
     expect(row.title).toBe('Jennifer Corona')
+    // The shell's word wins over the server's literal «EN».
     expect(row.subtitle).toBe('Entrada')
     expect(row.meta).toBe('hoy 09:02')
     expect(row.status).toBe('')
@@ -162,9 +164,22 @@ describe('a floor row', () => {
       cell({
         fieldname: 'kind',
         fieldtype: 'Select',
-        choices: { OUT: 'Salida' },
+        choices: { OUT: 'FUERA' },
       }),
     ).toBe('Salida')
+    expect(
+      cell({
+        fieldname: 'kind',
+        fieldtype: 'Select',
+        choices: { OUT: 'Fuera de turno' },
+      }),
+    ).toBe('Salida')
+    expect(
+      cellText(
+        { fieldname: 'kind', fieldtype: 'Select', choices: { X: 'Equis' } },
+        { fields: { kind: 'X' }, titles: {} },
+      ),
+    ).toBe('Equis')
     expect(cell({ fieldname: 'when', fieldtype: 'Datetime' })).toBe(
       'ayer 18:30',
     )
@@ -279,7 +294,7 @@ describe('the floor chips and filters', () => {
         more: false,
       },
     }
-    const field = { fieldname: 'employee', facet: true }
+    const field = { fieldname: 'employee', fieldtype: 'Link', facet: true }
     expect(facetOptions(field, counts, '')).toEqual([
       { value: 'HR-EMP-00003', label: 'Jennifer Corona', count: 812 },
       { value: 'HR-EMP-00001', label: 'Teresa Rubí', count: 803 },
@@ -297,8 +312,8 @@ describe('the floor chips and filters', () => {
       {
         log_type: {
           values: [
-            { value: 'IN', label: 'Entrada', count: 812 },
-            { value: 'OUT', label: 'Salida', count: 406 },
+            { value: 'IN', label: 'EN', count: 812 },
+            { value: 'OUT', label: 'FUERA', count: 406 },
           ],
           more: false,
         },
@@ -306,6 +321,7 @@ describe('the floor chips and filters', () => {
       { log_type: 'OUT' },
     )
     expect(groups).toHaveLength(1)
+    expect(groups[0].values.map((v) => v.label)).toEqual(['Entrada', 'Salida'])
     expect(groups[0]).toMatchObject({
       fieldname: 'log_type',
       label: 'Tipo de registro',

@@ -43,6 +43,7 @@ import {
   formatDate,
   formatDateTime,
   formatMoney,
+  statusEntry,
   statusLabel,
 } from '@/utils/display'
 
@@ -70,7 +71,7 @@ function text(row) {
     case 'Percent':
       return `${Number(value)} %`
     case 'Select':
-      return row.fieldname === 'status'
+      return row.fieldname === 'status' || statusEntry(value)
         ? statusLabel(value)
         : row.title || value
     case 'Link':

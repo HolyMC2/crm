@@ -508,6 +508,9 @@ const STATUS = {
   high: ['Alta', 'warning'],
   medium: ['Media', 'neutral'],
   low: ['Baja', 'neutral'],
+  // A check-in's log type (Employee Checkin): Frappe translates IN/OUT literally.
+  in: ['Entrada', 'neutral'],
+  out: ['Salida', 'neutral'],
 }
 
 // The same English word reads differently by what it describes.

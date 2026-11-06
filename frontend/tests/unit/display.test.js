@@ -205,6 +205,8 @@ describe('status labels', () => {
     expect(statusLabel('Draft')).toBe('Borrador')
     expect(statusLabel('Paid')).toBe('Pagada')
     expect(statusLabel('To Receive and Bill')).toBe('Por recibir y facturar')
+    expect(statusLabel('IN')).toBe('Entrada')
+    expect(statusLabel('OUT')).toBe('Salida')
     expect(statusLabel('Partial Success')).toBe('Lista en parte')
   })
   it('depends on what it describes', () => {
