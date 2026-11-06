@@ -29,6 +29,7 @@
 <script setup>
 import Section from '@/components/FieldLayout/Section.vue'
 import { useDocument } from '@/data/document'
+import { indexTabs } from '@/utils/tabs'
 import { Tabs } from 'frappe-ui'
 import { ref, computed, provide } from 'vue'
 
@@ -63,7 +64,7 @@ if (props.context) {
 
 const processedTabs = computed(() => {
   const ov = overrides.value
-  return props.tabs
+  const visibleTabs = props.tabs
     .map((tab) => {
       const tabOverrides = ov[tab.name]
       const processedTab = tabOverrides ? { ...tab, ...tabOverrides } : tab
@@ -78,6 +79,7 @@ const processedTabs = computed(() => {
       }
     })
     .filter((tab) => !tab.hidden)
+  return indexTabs(visibleTabs)
 })
 
 const hasTabs = computed(() => {

@@ -213,6 +213,7 @@ import {
   defineAsyncComponent,
 } from 'vue'
 import { Tabs } from 'frappe-ui'
+import { indexTabs } from '@/utils/tabs'
 import LucideMessagesSquare from '~icons/lucide/messages-square'
 import LucideChevronDown from '~icons/lucide/chevron-down'
 import LucideSearch from '~icons/lucide/search'
@@ -427,14 +428,14 @@ watch(
   },
   { immediate: true },
 )
-const dealTabs = [
+const dealTabs = indexTabs([
   { name: 'Activity', label: __('Activity'), icon: ActivityIcon },
   { name: 'Emails', label: __('Emails'), icon: EmailIcon },
   { name: 'Comments', label: __('Comments'), icon: CommentIcon },
   { name: 'Calls', label: __('Calls'), icon: PhoneIcon },
   { name: 'Tasks', label: __('Tasks'), icon: TaskIcon },
   { name: 'Notes', label: __('Notes'), icon: NoteIcon },
-]
+])
 const convoTabs = [{ name: 'WhatsApp', label: 'WhatsApp', icon: WhatsAppIcon }]
 </script>
 

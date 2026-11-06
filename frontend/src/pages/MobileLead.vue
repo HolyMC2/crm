@@ -147,6 +147,7 @@ import SLASection from '@/components/SLASection.vue'
 import CustomActions from '@/components/CustomActions.vue'
 import { setupCustomizations, isTranslatable } from '@/utils'
 import { getView } from '@/utils/view'
+import { indexTabs } from '@/utils/tabs'
 import { getSettings } from '@/stores/settings'
 import { globalStore } from '@/stores/global'
 import { statusesStore } from '@/stores/statuses'
@@ -335,7 +336,9 @@ const tabs = computed(() => {
       condition: () => whatsappTabEnabled.value,
     },
   ]
-  return tabOptions.filter((tab) => (tab.condition ? tab.condition() : true))
+  return indexTabs(
+    tabOptions.filter((tab) => (tab.condition ? tab.condition() : true)),
+  )
 })
 
 const { tabIndex } = useActiveTabManager(tabs, 'lastLeadTab')

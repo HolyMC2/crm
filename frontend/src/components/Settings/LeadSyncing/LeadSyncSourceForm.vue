@@ -188,6 +188,7 @@ import FailureLogs from './FailureLogs.vue'
 import DetailsIcon from '@/components/Icons/DetailsIcon.vue'
 import RefreshIcon from '@/components/Icons/RefreshIcon.vue'
 import { formatDate } from '@/utils'
+import { indexTabs } from '@/utils/tabs'
 
 const props = defineProps({
   sourceData: { type: Object, default: () => ({}) },
@@ -210,7 +211,7 @@ const tabs = computed(() => {
     })
   }
 
-  return tabList
+  return indexTabs(tabList)
 })
 
 const tabIndex = ref(0)
