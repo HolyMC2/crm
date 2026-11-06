@@ -127,6 +127,8 @@ function expectCanonicalSocket() {
   expect(socket.options).toEqual({
     withCredentials: true,
     reconnectionDelayMax: 30000,
+    transports: ['websocket', 'polling'],
+    tryAllTransports: true,
   })
   const root = fixture.roots[0]
   expect(root.proxy.$socket).toBe(socket)
@@ -203,6 +205,8 @@ describe('CRM socket bootstrap ownership', () => {
       expect(socket.options).toEqual({
         withCredentials: true,
         reconnectionDelayMax: 30000,
+        transports: ['websocket', 'polling'],
+        tryAllTransports: true,
       })
     },
   )

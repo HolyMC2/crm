@@ -11,12 +11,6 @@
     <meta name="apple-mobile-web-app-title" content="Muelle" />
     <meta name="apple-mobile-web-app-status-bar-style" content="white" />
 
-    <!-- The translations this build uses (crm/shell_dictionary.py), ahead of the module entry; immutable per version -->
-    <script
-      defer
-      src="/api/method/crm.www.crm.translations?v={{ translations_version }}"
-    ></script>
-
     <!-- PWA -->
     <link rel="icon" type="image/svg+xml" href="/assets/crm/images/logo.svg" />
     <link
@@ -27,5 +21,12 @@
   <body class="sm:overscroll-y-none no-scrollbar">
     <div id="app" class="h-full"></div>
     <script type="module" src="/src/main.js"></script>
+    <!-- The translations this build uses (crm/shell_dictionary.py); immutable per version.
+         After the module entry, so the app evaluates while this downloads; main.js waits for
+         it before mounting (utils/translationsReady.js). -->
+    <script
+      defer
+      src="/api/method/crm.www.crm.translations?v={{ translations_version }}"
+    ></script>
   </body>
 </html>

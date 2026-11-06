@@ -26,6 +26,10 @@ export const assistantOn = ref(null)
 const SAVED = 'assistant:status'
 // After the first route: the check never competes with the first screen.
 const CHECK_DELAY_MS = 1500
+// A copy this young is not checked again: the answer changes when the Dueño
+// turns the assistant on or off, which is rare, and the check is the
+// heaviest call of the boot (about 400 ms and 300 queries on the server).
+export const STATUS_FRESH_MS = 5 * 60 * 1000
 
 let statusPromise = null
 /** shell_api.status, asked once; every door reuses the answer. */
@@ -51,13 +55,15 @@ export function loadAssistantStatus({ refresh = false } = {}) {
 
 /**
  * The boot's ask: the last answer shows the doors at once and the fresh
- * check runs once the first route has its data; a first visit asks now.
+ * check runs once the first route has its data, unless the answer is
+ * younger than STATUS_FRESH_MS; a first visit asks now.
  */
 export function bootAssistantStatus(router) {
   if (statusPromise || assistantOn.value !== null) return
   const saved = readCachedList(SAVED)
   if (!saved) return void loadAssistantStatus()
   assistantOn.value = Boolean(saved.enabled)
+  if (readCachedList(SAVED, undefined, STATUS_FRESH_MS)) return
   afterFirstRoute(router, () => loadAssistantStatus(), {
     delay: CHECK_DELAY_MS,
   })

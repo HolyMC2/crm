@@ -40,7 +40,7 @@
                 :aria-label="`${hint.verb}: ${hint.reason}`"
                 :title="hint.reason"
                 data-testid="assistant-suggestion"
-                @click="openAssistant({ text: hint.prompt, send: true })"
+                @click="askMuelle"
               >
                 <span class="text-[var(--brand)]" aria-hidden="true">✦</span
                 >{{ hint.verb }}
@@ -517,6 +517,7 @@
       <!-- «Abrir Muelle en» lives in Más › Configuración (SHELL-S1.2), not on a work screen. -->
     </div>
     <CompleteDialog
+      v-if="completeMounted"
       v-model="completeOpen"
       :row="selected"
       :today="today"
@@ -529,6 +530,7 @@
 <script setup>
 import {
   computed,
+  defineAsyncComponent,
   getCurrentInstance,
   onBeforeUnmount,
   onMounted,
@@ -541,14 +543,14 @@ import { Button, toast } from 'frappe-ui'
 import HoySection from '@/components/hoy/HoySection.vue'
 import HoyTask from '@/components/hoy/HoyTask.vue'
 import { hoySuggestion } from '@/components/assistant/suggestions'
+// The door's answer (the boot asks shell_api.status once, assistantDoor.js)
+// decides the suggestion; the assistant itself loads when the worker taps it.
 import {
-  assistantEnabled,
-  loadStatus,
-  openAssistant,
-} from '@/components/assistant/useAssistant'
+  assistantOn,
+  loadAssistant,
+} from '@/components/assistant/assistantDoor'
 import { useListKeys } from '@/composables/pageKeys'
 import AvisosList from '@/components/avisos/AvisosList.vue'
-import CompleteDialog from '@/components/pendientes/CompleteDialog.vue'
 import { isMobile } from '@/composables/breakpoint'
 import { pageTitle } from '@/composables/pageTitle'
 import { BottomSheet, ListRow } from '@/components/ui'
@@ -700,10 +702,21 @@ const allClear = computed(
 )
 const shortcuts = computed(() => accesos(shellBoot.value))
 
-loadStatus()
 const hint = computed(() =>
-  assistantEnabled.value && data.value ? hoySuggestion(data.value) : null,
+  assistantOn.value && data.value ? hoySuggestion(data.value) : null,
 )
+function askMuelle() {
+  const prompt = hint.value?.prompt
+  if (!prompt) return
+  loadAssistant().then((m) => m.openAssistant({ text: prompt, send: true }))
+}
+
+// «Completar» and its form widgets (about a third of this page's closure)
+// load on the first tap that needs them, not with the page.
+const CompleteDialog = defineAsyncComponent(
+  () => import('@/components/pendientes/CompleteDialog.vue'),
+)
+const completeMounted = ref(false)
 
 const summary = computed(() => {
   if (!data.value) return ''
@@ -930,6 +943,7 @@ async function reschedule(row, date) {
 }
 function openComplete(row) {
   selected.value = row
+  completeMounted.value = true
   completeOpen.value = true
 }
 function afterComplete(response) {

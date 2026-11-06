@@ -12,9 +12,15 @@ export function initSocket() {
   // blip permanently killed realtime for the tab (socket.io stops retrying after
   // the cap) — every message after that needed an F5. Retry forever (default),
   // with capped backoff so a down server isn't hammered.
+  // WebSocket first: the default polling-first handshake costs the boot three
+  // to six XHRs and a long-poll that holds one of the page's HTTP/1.1
+  // connections while the route's chunks queue behind it. A network that blocks
+  // WebSockets still connects: tryAllTransports falls back to polling.
   let socket = io(url, {
     withCredentials: true,
     reconnectionDelayMax: 30000,
+    transports: ['websocket', 'polling'],
+    tryAllTransports: true,
   })
   // Any gap in connectivity is a window where events were silently lost. Announce
   // recovery so data owners (inbox, threads) can refetch and catch up — socket.io's
