@@ -253,23 +253,28 @@ def _routes():
 def _load_routes():
 	routes, connections = {}, {}
 	if frappe.db.table_exists(INTEGRATION) and frappe.db.table_exists(SUBSCRIPTION):
+		for row in frappe.get_all(
+			INTEGRATION,
+			filters={"enabled": 1, "webhook_url": ["is", "set"]},
+			fields=["name", "integration_user", "skip_own_changes"],
+		):
+			connections[row.name] = (row.integration_user, bool(row.skip_own_changes))
 		# columns added after the first release: a process may run new code before the migrate
-		optional = ", ".join(
-			f"s.{column}" if frappe.db.has_column(SUBSCRIPTION, column) else f"NULL AS {column}"
-			for column in ("document_type", "only_fields")
-		)
-		rows = frappe.db.sql(
-			f"""SELECT i.name, i.integration_user, i.skip_own_changes, s.event, {optional}
-            FROM `tabCRM Integration` i
-            LEFT JOIN `tabCRM Integration Subscription` s ON s.parent=i.name AND s.parenttype='CRM Integration'
-            WHERE i.enabled=1 AND COALESCE(i.webhook_url,'')<>''""",
-			as_dict=True,
+		optional = [c for c in ("document_type", "only_fields") if frappe.db.has_column(SUBSCRIPTION, c)]
+		rows = (
+			frappe.get_all(
+				SUBSCRIPTION,
+				filters={"parenttype": INTEGRATION, "parent": ["in", list(connections)]},
+				fields=["parent", "event", *optional],
+			)
+			if connections
+			else []
 		)
 		for row in rows:
-			connections[row.name] = (row.integration_user, bool(row.skip_own_changes))
 			if row.event:
-				watched = field_list(row.only_fields) if watches_fields(row.event) else None
-				routes.setdefault(_key(row.event, row.document_type), []).append((row.name, watched))
+				watched = field_list(row.get("only_fields")) if watches_fields(row.event) else None
+				key = _key(row.event, row.get("document_type"))
+				routes.setdefault(key, []).append((row.parent, watched))
 	return {
 		"routes": {key: tuple(rows) for key, rows in routes.items()},
 		"connections": connections,
