@@ -636,7 +636,8 @@ class TestRatings(_Inbox):
 		self.enqueue.reset_mock()
 		event = self.close(self.one)
 		queued = [c for c in self.enqueue.call_args_list if c.args[:1] == ("crm.inbox.csat.send_request",)]
-		self.assertEqual(queued[0].kwargs["event"], event)
+		self.assertEqual(queued[0].kwargs["control_event"], event)
+		self.assertNotIn("event", queued[0].kwargs, "frappe.enqueue keeps `event` and the job never gets it")
 		rating = csat.send_request(event)
 		self.assertEqual(csat.send_request(event), "already_sent")
 		row = frappe.db.get_value(csat.RATING, rating, ["status", "human_owner", "token_hash"], as_dict=True)

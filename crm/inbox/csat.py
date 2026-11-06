@@ -52,13 +52,14 @@ def on_control_event(doc, method=None):
 			enqueue_after_commit=True,
 			job_id=f"crm-csat-{doc.name}",
 			deduplicate=True,
-			event=doc.name,
+			# not `event`: frappe.enqueue keeps that keyword for itself and the job never gets it
+			control_event=doc.name,
 		)
 	except Exception:
 		frappe.log_error(title="CRM rating request not queued", message=frappe.get_traceback())
 
 
-def send_request(event):
+def send_request(control_event):
 	"""Queue the rating message for one close; returns the rating name or a refusal code."""
 	from crm.api import conversation_threads as threads
 	from crm.api import conversations as control
@@ -67,9 +68,9 @@ def send_request(event):
 	settings = inbox.settings()
 	if not settings.get("csat_enabled"):
 		return "disabled"
-	if frappe.db.exists(RATING, {"closed_event": event}):
+	if frappe.db.exists(RATING, {"closed_event": control_event}):
 		return "already_sent"
-	conversation = frappe.db.get_value(CONTROL_EVENT, event, "conversation")
+	conversation = frappe.db.get_value(CONTROL_EVENT, control_event, "conversation")
 	if not conversation:
 		return "not_found"
 	doc = control._load(conversation)
@@ -83,7 +84,7 @@ def send_request(event):
 	link = url_for(token)
 	text = render(settings.get("csat_message") or "", doc)
 	text = text.replace("{link}", link) if "{link}" in text else f"{text}\n{link}".strip()
-	intent, refused = queue_notice(doc.name, kind="csat", key=event, text=text)
+	intent, refused = queue_notice(doc.name, kind="csat", key=control_event, text=text)
 	if not intent:
 		return refused
 	days = max(cint(settings.get("csat_valid_days")) or 7, 1)
@@ -95,7 +96,7 @@ def send_request(event):
 			"human_owner": doc.human_owner,
 			"department": doc.get("department"),
 			"provider": doc.provider,
-			"closed_event": event,
+			"closed_event": control_event,
 			"token_hash": _hash(token),
 			"expires_at": now_datetime() + timedelta(days=days),
 		}
