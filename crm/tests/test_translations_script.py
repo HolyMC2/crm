@@ -4,7 +4,7 @@
 from unittest.mock import MagicMock, patch
 
 import frappe
-from frappe.tests.utils import FrappeTestCase
+from frappe.tests import IntegrationTestCase
 from werkzeug.test import EnvironBuilder
 from werkzeug.wrappers import Request
 
@@ -23,7 +23,7 @@ def _build_now(method, **kwargs):
 	shell_dictionary.build(kwargs["lang"], kwargs["field"])
 
 
-class TestTranslationsScript(FrappeTestCase):
+class TestTranslationsScript(IntegrationTestCase):
 	def setUp(self):
 		# The hash and the queued-build markers next to it.
 		frappe.cache.delete_keys(shell_dictionary.CACHE_KEY)
