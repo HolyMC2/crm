@@ -2872,7 +2872,10 @@ function purchaseRecord(row) {
 }
 
 function goBack() {
-  if (back.value.href) return window.location.assign(back.value.href)
+  const href = back.value.href
+  // A way back into this app stays in the router (no page reload).
+  if (href?.startsWith('/crm/')) return router.push(href.slice(4))
+  if (href) return window.location.assign(href)
   router.push(back.value.to)
 }
 

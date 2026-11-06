@@ -32504,3 +32504,77 @@ msgstr "Texto"
 msgctxt "Lienzo"
 msgid "Data"
 msgstr "Datos"
+
+msgid "Search customer, product or document"
+msgstr "Buscar cliente, producto o documento"
+
+msgid "Try another customer, product or document number."
+msgstr "Prueba con otro cliente, producto o número de documento."
+
+msgctxt "Resultados"
+msgid "Summary"
+msgstr "Resumen"
+
+msgctxt "Resultados"
+msgid "Average {0}"
+msgstr "Promedio {0}"
+
+msgctxt "Resultados"
+msgid "Owes {0}"
+msgstr "Debe {0}"
+
+msgctxt "Resultados"
+msgid "+{0} more"
+msgstr "+{0} más"
+
+msgctxt "Resultados"
+msgid "Sold"
+msgstr "Vendido"
+
+msgctxt "Resultados"
+msgid "Returned"
+msgstr "Devuelto"
+
+msgctxt "Resultados"
+msgid "Cash difference"
+msgstr "Diferencia de caja"
+
+msgctxt "Resultados"
+msgid "Closings"
+msgstr "Cierres"
+
+msgctxt "Resultados"
+msgid "Bought"
+msgstr "Compró"
+
+msgctxt "Resultados"
+msgid "What was sold"
+msgstr "Lo que se vendió"
+
+msgctxt "Resultados"
+msgid "{0} items"
+msgstr "{0} artículos"
+
+msgctxt "Resultados"
+msgid "IMEI or serial {0}"
+msgstr "IMEI o serie {0}"
+
+msgctxt "Resultados"
+msgid "Showing the first {0} lines."
+msgstr "Se muestran las primeras {0} partidas."
+
+msgctxt "Resultados"
+msgid "Rung up by {0}"
+msgstr "Cobró {0}"
+
+msgctxt "Resultados"
+msgid "Change given"
+msgstr "Cambio entregado"
+
+msgctxt "Resultados"
+msgid "Total"
+msgstr "Total"
+
+msgctxt "Resultados"
+msgid "Still owed"
+msgstr "Saldo pendiente"

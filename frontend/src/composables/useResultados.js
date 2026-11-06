@@ -1,5 +1,9 @@
 import { comprasApi, money } from '@/composables/useCompras'
-import { safeReturn, withReturn } from '@/vendor/muelle-shell/contracts'
+import {
+  matchTokens,
+  safeReturn,
+  withReturn,
+} from '@/vendor/muelle-shell/contracts'
 
 // Resultados: the owner's numbers for a period, each one opening the list
 // that owns its records (Ventas tickets, cash closings, Cobranza, Taller
@@ -368,10 +372,139 @@ export function rowRoute(row, lensPath) {
       `/crm/contactos/customer/${encodeURIComponent(row.name)}`,
       back,
     )
+  // `list` points the shell's back arrow at this lens, not the board.
+  const list = routerPath(lensPath)
+  const path = `/crm/resultados/documento/${encodeURIComponent(row.doctype)}/${encodeURIComponent(row.name)}`
   return withReturn(
-    `/crm/resultados/documento/${encodeURIComponent(row.doctype)}/${encodeURIComponent(row.name)}`,
+    list ? `${path}?${new URLSearchParams({ list })}` : path,
     back,
   )
+}
+
+/** A sold item opens its product and comes back to `back` (a /crm/ path). */
+export function productHref(itemCode, back, label) {
+  if (!itemCode) return null
+  const path = `/crm/productos/${encodeURIComponent(itemCode)}`
+  return back ? withReturn(path, { to: back, label }) : path
+}
+
+/** Every word of the search in the customer, the ticket, the deal, the
+ * cashier or what was sold (any order, accent-blind). */
+export function lensMatch(row, query) {
+  const items = row.items || []
+  return matchTokens(
+    query,
+    row.title,
+    row.name,
+    row.deal,
+    row.owner,
+    ...items.map((i) => i.item_name),
+    ...items.map((i) => i.item_code),
+  )
+}
+
+/** How the rows were paid, the biggest mode first: `[{mode, amount, share}]`
+ * with `share` 0–100 of everything paid. */
+export function paymentSplit(rows) {
+  const by = new Map()
+  for (const row of rows || [])
+    for (const p of row.payments || []) {
+      const amount = Number(p.amount) || 0
+      if (amount) by.set(p.mode, (by.get(p.mode) || 0) + amount)
+    }
+  const paid = [...by.values()].reduce((sum, v) => sum + Math.abs(v), 0)
+  return [...by.entries()]
+    .map(([mode, amount]) => ({
+      mode,
+      amount,
+      share: paid ? Math.round((Math.abs(amount) / paid) * 100) : 0,
+    }))
+    .sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount))
+}
+
+/** «16:23» for a posting time («16:23:05.1», «9:05:00»); '' when unreadable. */
+export function clockText(value) {
+  const [hours, minutes] = String(value || '').split(':')
+  return /^\d{1,2}$/.test(hours || '') && /^\d{2}/.test(minutes || '')
+    ? `${hours.padStart(2, '0')}:${minutes.slice(0, 2)}`
+    : ''
+}
+
+/** What a ticket row says under its name (its time leads the row): how it
+ * was paid and who rang it. */
+export function saleLine(row, modeLabel = (m) => m, person = (p) => p) {
+  const modes = [...new Set((row.payments || []).map((p) => p.mode))]
+  return [modes.map(modeLabel).join(' + '), row.owner ? person(row.owner) : '']
+    .filter(Boolean)
+    .join(' · ')
+}
+
+/** The state a ticket row shows: only when it changes what the worker does
+ * (owed, a return). A paid sale shows none. */
+export function saleState(row) {
+  if (row.return_against) return { status: 'Return' }
+  if (Number(row.outstanding) > 0.005)
+    return { status: row.status === 'Overdue' ? 'Overdue' : 'Unpaid' }
+  return null
+}
+
+// The lens and its tickets answer from memory while the server refreshes, so
+// going back to a list or opening a ticket twice never shows a skeleton.
+const LENS_MEMORY = 12
+const lensMemory = new Map()
+const docMemory = new Map()
+const rowMemory = new Map()
+const docKey = (doctype, name) => `${doctype}\n${name}`
+
+function remember(map, key, value, max) {
+  map.delete(key)
+  map.set(key, value)
+  while (map.size > max) map.delete(map.keys().next().value)
+}
+
+/** The last answer for a lens query (`{rows, capped, period}`), if any. */
+export function lensFromMemory(key) {
+  return lensMemory.get(key) || null
+}
+export function lensToMemory(key, value) {
+  remember(lensMemory, key, value, LENS_MEMORY)
+  for (const row of value.rows || [])
+    remember(rowMemory, docKey(row.doctype, row.name), row, 1000)
+}
+
+/** The lens row a ticket was opened from: its header shows at once. */
+export function rowFromMemory(doctype, name) {
+  return rowMemory.get(docKey(doctype, name)) || null
+}
+
+/** One ticket or closing; a read started in the last 30 s is reused, so a
+ * press that prefetched it makes the open instant. */
+export function fetchDocument(doctype, name, { maxAge = 30_000 } = {}) {
+  const key = docKey(doctype, name)
+  const known = docMemory.get(key)
+  if (known && Date.now() - known.at < maxAge) return known.promise
+  const entry = {
+    at: Date.now(),
+    value: known?.value || null,
+    promise: resultadosApi('document', { doctype, name }).then(
+      (doc) => {
+        entry.value = doc
+        return doc
+      },
+      (error) => {
+        if (docMemory.get(key) === entry) docMemory.delete(key)
+        throw error
+      },
+    ),
+  }
+  entry.promise.catch(() => {})
+  remember(docMemory, key, entry, 40)
+  return entry.promise
+}
+
+/** The ticket as last read, for an instant first paint. */
+export function documentFromMemory(doctype, name) {
+  return docMemory.get(docKey(doctype, name))?.value || null
 }
 
 // «Personalizar»: the cards a user hides follow them to every device (the

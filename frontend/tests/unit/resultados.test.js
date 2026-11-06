@@ -23,9 +23,20 @@ import {
   cardSpan,
   cardState,
   cardTitle,
+  clockText,
   deltaChip,
+  documentFromMemory,
   drillHref,
+  fetchDocument,
   formatValue,
+  lensFromMemory,
+  lensMatch,
+  lensToMemory,
+  paymentSplit,
+  productHref,
+  rowFromMemory,
+  saleLine,
+  saleState,
   readHiddenCopy,
   readLensQuery,
   readQuery,
@@ -191,6 +202,10 @@ describe('drills carry the way back', () => {
     )
     expect(ticket.pathname).toBe(
       '/crm/resultados/documento/Sales%20Invoice/SINV%201',
+    )
+    // The shell's back arrow returns to the lens, not to the board.
+    expect(ticket.searchParams.get('list')).toBe(
+      '/resultados/documentos?tipo=ventas&periodo=hoy',
     )
     const customer = new URL(
       rowRoute({ doctype: 'Customer', name: 'Ana' }, lens),
@@ -663,5 +678,120 @@ describe('Recomendación (Encuestas) on the board', () => {
     )
     expect(url.pathname).toBe('/crm/encuestas')
     expect(url.searchParams.get('view')).toBe('todas')
+  })
+})
+
+describe('a ticket in the lens', () => {
+  const sale = {
+    doctype: 'Sales Invoice',
+    name: 'ACC-SINV-2026-03969',
+    title: 'vianey de jesus rojas faustos',
+    owner: 'trgc111409',
+    posting_time: '16:23',
+    amount: 952,
+    outstanding: 0,
+    status: 'Paid',
+    items: [
+      { item_code: 'IPN003282', item_name: 'Mica 9D Samsung A16', qty: 1 },
+      {
+        item_code: 'IPN003707',
+        item_name: 'Samsung A16 128GB+4GB Negro',
+        qty: 1,
+      },
+    ],
+    items_count: 4,
+    payments: [{ mode: 'Cash', amount: 952 }],
+  }
+
+  it('the search finds it by what was sold, in any order and without accents', () => {
+    expect(lensMatch(sale, 'a16 mica')).toBe(true)
+    expect(lensMatch(sale, 'IPN003707')).toBe(true)
+    expect(lensMatch(sale, 'vianey')).toBe(true)
+    expect(lensMatch(sale, 'iphone')).toBe(false)
+  })
+
+  it('reads how it was paid and who rang it', () => {
+    expect(saleLine(sale, (m) => (m === 'Cash' ? 'Efectivo' : m))).toBe(
+      'Efectivo · trgc111409',
+    )
+    expect(
+      saleLine({ payments: [{ mode: 'Cash' }, { mode: 'Credit Card' }] }),
+    ).toBe('Cash + Credit Card')
+  })
+
+  it('shows a state only when it changes what the worker does', () => {
+    expect(saleState(sale)).toBe(null)
+    expect(saleState({ ...sale, outstanding: 200 })).toEqual({
+      status: 'Unpaid',
+    })
+    expect(saleState({ ...sale, return_against: 'X' })).toEqual({
+      status: 'Return',
+    })
+  })
+
+  it('splits the period by payment mode, the biggest first', () => {
+    const split = paymentSplit([
+      sale,
+      { payments: [{ mode: 'Credit Card', amount: 100 }] },
+      { payments: [{ mode: 'Cash', amount: 200 }] },
+    ])
+    expect(split.map((p) => [p.mode, p.amount, p.share])).toEqual([
+      ['Cash', 1152, 92],
+      ['Credit Card', 100, 8],
+    ])
+    expect(paymentSplit([])).toEqual([])
+  })
+
+  it('a sold item opens its product and comes back to the ticket', () => {
+    const back = '/crm/resultados/documento/Sales%20Invoice/X'
+    const url = new URL(productHref('IPN 1', back, 'X'), 'https://x.invalid')
+    expect(url.pathname).toBe('/crm/productos/IPN%201')
+    expect(url.searchParams.get('return_to')).toBe(back)
+    expect(productHref('', back)).toBe(null)
+  })
+
+  it('posting times read as hours and minutes', () => {
+    expect(clockText('16:23:05.123')).toBe('16:23')
+    expect(clockText('9:05:00')).toBe('09:05')
+    expect(clockText('')).toBe('')
+    expect(clockText('nope')).toBe('')
+  })
+})
+
+describe('the lens answers from memory', () => {
+  afterEach(() => vi.unstubAllGlobals())
+
+  it('a list read once shows again at once, and its rows seed their tickets', () => {
+    const rows = [{ doctype: 'Sales Invoice', name: 'MEM-1', title: 'Ana' }]
+    lensToMemory('k', { rows, capped: false, period: {} })
+    expect(lensFromMemory('k').rows).toBe(rows)
+    expect(rowFromMemory('Sales Invoice', 'MEM-1').title).toBe('Ana')
+    expect(lensFromMemory('other')).toBe(null)
+  })
+
+  it('a ticket prefetched on press is read once, and kept for the next open', async () => {
+    const fetch = vi.fn(async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({ message: { name: 'MEM-2', items: [] } }),
+    }))
+    vi.stubGlobal('fetch', fetch)
+    const first = fetchDocument('Sales Invoice', 'MEM-2')
+    const again = fetchDocument('Sales Invoice', 'MEM-2')
+    expect(again).toBe(first)
+    await first
+    expect(fetch).toHaveBeenCalledTimes(1)
+    expect(documentFromMemory('Sales Invoice', 'MEM-2').name).toBe('MEM-2')
+  })
+
+  it('a failed read is forgotten, so the next open asks again', async () => {
+    const fetch = vi.fn(async () => {
+      throw new Error('offline')
+    })
+    vi.stubGlobal('fetch', fetch)
+    await expect(fetchDocument('Sales Invoice', 'MEM-3')).rejects.toBeTruthy()
+    await expect(fetchDocument('Sales Invoice', 'MEM-3')).rejects.toBeTruthy()
+    expect(fetch).toHaveBeenCalledTimes(2)
+    expect(documentFromMemory('Sales Invoice', 'MEM-3')).toBe(null)
   })
 })
