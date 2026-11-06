@@ -20,13 +20,16 @@ year.
 3. **Server.** `crm/shell_dictionary.py` keeps the dictionary keys that are in that list and adds
    the strings that reach `__()` only at runtime:
 
-   - every DocType name;
-   - the labels, descriptions and Select options of the DocTypes the build names, and of the
-     DocTypes their Link, Table and Table MultiSelect fields point to, one level deep (child
-     tables, FieldLayout labels, status values the server sends, and the fields of a "create new"
-     dialog for a linked record such as a Territory);
-   - record names of translated DocTypes, and of non-child DocTypes the build names that have at
-     most 500 records (stages, lead sources);
+   - every DocType name except child tables' (a notification or a link names its DocType; a
+     child table is never shown by name);
+   - the labels and Select options of the DocTypes the build names, and of the DocTypes their
+     Link, Table and Table MultiSelect fields point to, one level deep (child tables, FieldLayout
+     labels, status values the server sends, and the fields of a "create new" dialog for a linked
+     record such as a Territory). Field descriptions are not shipped: the UI shows them as they
+     are, and they were a fifth of the payload;
+   - record names of non-child DocTypes the build names that have at most 500 records (stages,
+     lead sources), and of translated DocTypes among the named ones and their link targets (a
+     country list the whole site translates is vocabulary only where a form shows it);
    - string literals in crm's own Python, which sends some English for the client to translate
      (`api/workload.py`). Tests and patches are skipped.
 
