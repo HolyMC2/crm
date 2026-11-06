@@ -43,7 +43,7 @@
       class="flex min-h-0 flex-1 flex-col"
       v-on="swipeBackHandlers"
     >
-      <DealContextPanel v-if="activeDeal" />
+      <DealContextPanel v-if="activeDeal && contextOpened" />
     </div>
   </div>
 
@@ -89,6 +89,16 @@ import {
   catchUpInbox,
 } from '@/composables/inbox'
 import { playPing } from '@/composables/notificationSound'
+// The phone's context pane mounts the first time it opens (its reads stay off
+// the conversation's open) and stays mounted after, under the v-show.
+const contextOpened = ref(false)
+watch(
+  mobileView,
+  (view) => {
+    if (view === 'context') contextOpened.value = true
+  },
+  { immediate: true },
+)
 
 // Panes shown only for an open conversation load with it, not with the list
 // (bundle budget, SPEC §4).

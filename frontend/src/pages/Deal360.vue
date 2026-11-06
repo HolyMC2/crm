@@ -58,18 +58,32 @@
         class="flex min-h-0 flex-1 flex-col"
         v-on="swipeBackHandlers"
       >
-        <DealContextPanel v-if="activeDeal" data-deal-context />
+        <DealContextPanel
+          v-if="activeDeal && contextOpened"
+          data-deal-context
+        />
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, provide, watch, ref } from 'vue'
+import {
+  computed,
+  defineAsyncComponent,
+  onMounted,
+  onUnmounted,
+  provide,
+  watch,
+  ref,
+} from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { dealReturnLink, dealTab } from '@/utils/ventasRoutes'
 import DealWorkspace from '@/components/doco/inbox/DealWorkspace.vue'
-import DealContextPanel from '@/components/doco/inbox/DealContextPanel.vue'
+// «Datos y contacto» opens on demand on both layouts, so its chunk loads then.
+const DealContextPanel = defineAsyncComponent(
+  () => import('@/components/doco/inbox/DealContextPanel.vue'),
+)
 import { isMobile } from '@/composables/breakpoint'
 import { nextTick } from 'vue'
 import { useFormKeys } from '@/composables/pageKeys'
@@ -93,6 +107,16 @@ const props = defineProps({ dealId: { type: String, default: '' } })
 const route = useRoute()
 const router = useRouter()
 const showContext = ref(false)
+// The phone's context pane mounts the first time it opens (its reads stay off
+// the cold open of the deal) and stays mounted after, under the v-show.
+const contextOpened = ref(false)
+watch(
+  mobileView,
+  (view) => {
+    if (view === 'context') contextOpened.value = true
+  },
+  { immediate: true },
+)
 
 // Is the deal there and readable? One small check beside the workspace's own
 // loads (they render meanwhile); only a definite answer replaces the page.
@@ -167,12 +191,21 @@ function focus() {
 async function editDeal() {
   if (isMobile.value) openContext()
   else showContext.value = true
-  await nextTick()
-  document
-    .querySelector(
-      '[data-deal-context] input:not([type="hidden"]):not([disabled]), [data-deal-context] textarea, [data-deal-context] select',
-    )
-    ?.focus()
+  const field = await firstContextField()
+  field?.focus()
+}
+// The panel mounts on demand and its fields arrive with its sections, so the
+// focus waits for the first field, up to a second.
+async function firstContextField() {
+  const selector =
+    '[data-deal-context] input:not([type="hidden"]):not([disabled]), [data-deal-context] textarea, [data-deal-context] select'
+  for (let i = 0; i < 20; i++) {
+    await nextTick()
+    const field = document.querySelector(selector)
+    if (field) return field
+    await new Promise((resolve) => setTimeout(resolve, 50))
+  }
+  return null
 }
 useFormKeys({
   page: 'deal',
