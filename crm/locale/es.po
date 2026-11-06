@@ -27719,6 +27719,126 @@ msgctxt "Productos"
 msgid "Customer"
 msgstr "Cliente"
 
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Upload the supplier's catalog"
+msgstr "Sube el catálogo del proveedor"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "PDF or spreadsheet: drop it here or choose it. It reads itself in the background."
+msgstr "PDF u hoja de cálculo: suéltalo aquí o elígelo. Se lee solo en segundo plano."
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Supplier (optional)"
+msgstr "Proveedor (opcional)"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Uploading {0}… {1}%"
+msgstr "Subiendo {0}… {1}%"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "No supplier list yet. Drop the first one above."
+msgstr "Aún no hay listas de proveedor. Suelta la primera arriba."
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "No supplier list yet. The owner uploads them."
+msgstr "Aún no hay listas de proveedor. Las sube el dueño."
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Read the products"
+msgstr "Leer los productos"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Reading {0} pages of products uses {1} units of your plan. The plan step opens when they are read."
+msgstr "Leer {0} páginas de productos usa {1} unidades de tu plan. El paso del plan se abre cuando terminen."
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Not now"
+msgstr "Ahora no"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Read them"
+msgstr "Leerlas"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "This list has no product pages to read. Send it as a PDF with prices or a spreadsheet."
+msgstr "Esta lista no tiene páginas de productos por leer. Mándala como PDF con precios o como hoja de cálculo."
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Upload from another device"
+msgstr "Subir desde otro dispositivo"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "A link for your phone or the supplier, with the supplier chosen above if any. It lasts one day."
+msgstr "Una liga para tu celular o para el proveedor, con el proveedor elegido arriba si lo hay. Dura un día."
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Models first"
+msgstr "Primero estos modelos"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "A07, iPhone 16"
+msgstr "A07, iPhone 16"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "This list does not carry: {0}"
+msgstr "Esta lista no trae: {0}"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Whose list is this?"
+msgstr "¿De qué proveedor es esta lista?"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Choose the supplier to approve. A new one? Ask Muelle: it creates it with the order."
+msgstr "Elige el proveedor para aprobar. ¿Es nuevo? Pregúntale a Muelle: lo crea con el pedido."
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Reading products"
+msgstr "Leyendo productos"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "{0} is ready: {1} products"
+msgstr "{0} está lista: {1} productos"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "The upload stopped"
+msgstr "Se detuvo la subida"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "The connection dropped. Choose the file again on its list."
+msgstr "Se cortó la conexión. Vuelve a elegir el archivo en su lista."
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "A part of the file was not saved. Choose the file again on its list."
+msgstr "Una parte del archivo no se guardó. Vuelve a elegir el archivo en su lista."
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "{0} uploaded; it reads itself now"
+msgstr "{0} subido; ya se está leyendo"
+
 msgctxt "Productos"
 msgid "Point of sale"
 msgstr "Punto de venta"

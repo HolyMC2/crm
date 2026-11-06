@@ -60,12 +60,12 @@ const CATALOG = {
   Indexado: 'blue',
   Recibido: 'blue',
   Error: 'red',
-  'Esperando archivo': 'orange',
+  'Esperando archivo': 'amber',
 }
 const PEDIDO = {
   Borrador: 'gray',
   Enviado: 'blue',
-  Cotizado: 'orange',
+  Cotizado: 'amber',
   Cerrado: 'green',
 }
 const LINE = {

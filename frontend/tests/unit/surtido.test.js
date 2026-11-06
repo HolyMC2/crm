@@ -106,3 +106,16 @@ describe('surtido strings (es-MX)', () => {
       expect(po).toContain(`msgctxt "Surtido"\nmsgid "${id}"\nmsgstr "${es}"`)
   })
 })
+
+describe('surtido supplier pickers', () => {
+  const page = readFileSync(
+    resolve(here, '../../src/pages/CompraSurtido.vue'),
+    'utf8',
+  )
+
+  it('search through Surtido, which asks for the owner rather than the right to buy', () => {
+    const loads = [...page.matchAll(/:load="\(q\) => (\w+)\('suppliers'/g)]
+    expect(loads.map((m) => m[1])).toEqual(['call', 'call'])
+    expect(page).toContain("const API = 'doco.workspaces.sourcing.'")
+  })
+})

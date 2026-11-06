@@ -96,13 +96,88 @@
               @click="loadBoot"
             />
           </div>
+          <div
+            v-if="boot.owner"
+            class="mb-4 rounded-6 border border-dashed border-outline-gray-3 p-4"
+            :class="dropping ? 'bg-surface-gray-2' : ''"
+            data-testid="surtido-drop"
+            @dragover.prevent="dropping = true"
+            @dragleave="dropping = false"
+            @drop.prevent="dropCatalog"
+          >
+            <p class="text-sm font-medium">
+              {{ __("Upload the supplier's catalog", null, 'Surtido') }}
+            </p>
+            <p class="text-xs text-ink-gray-5">
+              {{
+                __(
+                  'PDF or spreadsheet: drop it here or choose it. It reads itself in the background.',
+                  null,
+                  'Surtido',
+                )
+              }}
+            </p>
+            <div class="mt-3 flex flex-wrap items-end gap-2">
+              <div class="min-w-[14rem] flex-1">
+                <ComprasPicker
+                  v-model="newSupplier"
+                  :display="newSupplierLabel"
+                  :label="__('Supplier (optional)', null, 'Surtido')"
+                  :placeholder="__('Search supplier', null, 'Surtido')"
+                  :load="(q) => call('suppliers', { search: q })"
+                  @pick="(o) => (newSupplierLabel = o.label)"
+                />
+              </div>
+              <label
+                class="press inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-6 bg-surface-gray-2 px-4 text-base hover:bg-surface-gray-3 sm:min-h-8 sm:text-sm"
+                :class="upload ? 'pointer-events-none opacity-50' : ''"
+              >
+                <span class="lucide-upload size-5" aria-hidden="true" />
+                {{ __('Choose file', null, 'Surtido') }}
+                <input
+                  type="file"
+                  class="sr-only"
+                  :accept="CATALOG_ACCEPT"
+                  :disabled="!!upload"
+                  data-testid="surtido-file"
+                  @change="pickCatalog"
+                />
+              </label>
+            </div>
+            <div v-if="upload" class="mt-3" role="status">
+              <p class="truncate text-sm">
+                {{
+                  __(
+                    'Uploading {0}… {1}%',
+                    [upload.name, upload.pct],
+                    'Surtido',
+                  )
+                }}
+              </p>
+              <div
+                class="mt-1 h-2 overflow-hidden rounded-full bg-surface-gray-2"
+              >
+                <div
+                  class="h-full rounded-full bg-surface-gray-7"
+                  :style="{ width: upload.pct + '%' }"
+                />
+              </div>
+            </div>
+          </div>
+
           <p v-if="!boot.catalogs.length" class="text-sm text-ink-gray-6">
             {{
-              __(
-                'No supplier list yet. Upload the first one below.',
-                null,
-                'Surtido',
-              )
+              boot.owner
+                ? __(
+                    'No supplier list yet. Drop the first one above.',
+                    null,
+                    'Surtido',
+                  )
+                : __(
+                    'No supplier list yet. The owner uploads them.',
+                    null,
+                    'Surtido',
+                  )
             }}
           </p>
           <ul
@@ -116,7 +191,7 @@
               :class="catalog === c.name ? 'bg-surface-gray-1' : ''"
             >
               <label
-                class="flex min-w-0 flex-1 cursor-pointer items-start gap-3"
+                class="flex min-w-0 flex-1 basis-56 cursor-pointer items-start gap-3"
               >
                 <input
                   v-model="catalog"
@@ -144,15 +219,94 @@
                   </span>
                 </span>
               </label>
-              <Badge
-                :theme="catalogTheme(c.status)"
-                :label="catalogStatus(c)"
-              />
-              <Button
-                v-if="boot.owner && c.status === 'Esperando archivo'"
-                :label="__('Upload link', null, 'Surtido')"
-                @click="linkFor(c.name)"
-              />
+              <div
+                class="ml-auto flex flex-wrap items-center justify-end gap-2"
+              >
+                <Badge
+                  :theme="c.reading ? 'blue' : catalogTheme(c.status)"
+                  :label="catalogStatus(c)"
+                />
+                <Button
+                  v-if="boot.owner && canRead(c)"
+                  :label="__('Read the products', null, 'Surtido')"
+                  :loading="busy === 'estimate:' + c.name"
+                  @click="estimateRead(c.name)"
+                />
+                <template v-if="boot.owner && c.status === 'Esperando archivo'">
+                  <label
+                    class="press inline-flex min-h-11 cursor-pointer items-center rounded-6 bg-surface-gray-2 px-3 text-base hover:bg-surface-gray-3 sm:min-h-8 sm:text-sm"
+                    :class="upload ? 'pointer-events-none opacity-50' : ''"
+                  >
+                    {{ __('Choose file', null, 'Surtido') }}
+                    <input
+                      type="file"
+                      class="sr-only"
+                      :accept="CATALOG_ACCEPT"
+                      :disabled="!!upload"
+                      @change="(e) => pickInto(c.name, e)"
+                    />
+                  </label>
+                  <Button
+                    :label="__('Upload link', null, 'Surtido')"
+                    @click="linkFor(c.name)"
+                  />
+                </template>
+              </div>
+              <p
+                v-if="c.error && !c.lines && !c.reading"
+                class="basis-full text-sm text-ink-red-7"
+              >
+                {{ c.error }}
+              </p>
+              <div
+                v-if="readQuote?.catalog === c.name"
+                class="basis-full rounded-6 bg-surface-gray-1 p-3 text-sm"
+                role="status"
+              >
+                <template v-if="readQuote.pages">
+                  <p>
+                    {{
+                      __(
+                        'Reading {0} pages of products uses {1} units of your plan. The plan step opens when they are read.',
+                        [readQuote.pages, readQuote.units],
+                        'Surtido',
+                      )
+                    }}
+                  </p>
+                  <div class="mt-2 flex flex-wrap justify-end gap-2">
+                    <Button
+                      :label="__('Not now', null, 'Surtido')"
+                      @click="readQuote = null"
+                    />
+                    <button
+                      type="button"
+                      :class="['press', BTN.filled]"
+                      :disabled="busy === 'read'"
+                      @click="readProducts"
+                    >
+                      <span
+                        :class="[
+                          busy === 'read'
+                            ? 'lucide-loader-circle animate-spin'
+                            : 'lucide-check',
+                          'size-5',
+                        ]"
+                        aria-hidden="true"
+                      />
+                      {{ __('Read them', null, 'Surtido') }}
+                    </button>
+                  </div>
+                </template>
+                <p v-else>
+                  {{
+                    __(
+                      'This list has no product pages to read. Send it as a PDF with prices or a spreadsheet.',
+                      null,
+                      'Surtido',
+                    )
+                  }}
+                </p>
+              </div>
             </li>
           </ul>
 
@@ -183,19 +337,18 @@
             class="mt-4 rounded-6 border border-outline-gray-2 p-3"
           >
             <summary class="cursor-pointer text-sm font-medium">
-              {{ __('New supplier list', null, 'Surtido') }}
+              {{ __('Upload from another device', null, 'Surtido') }}
             </summary>
+            <p class="mt-2 text-xs text-ink-gray-5">
+              {{
+                __(
+                  'A link for your phone or the supplier, with the supplier chosen above if any. It lasts one day.',
+                  null,
+                  'Surtido',
+                )
+              }}
+            </p>
             <div class="mt-3 flex flex-wrap items-end gap-2">
-              <div class="min-w-[14rem] flex-1">
-                <ComprasPicker
-                  v-model="newSupplier"
-                  :display="newSupplierLabel"
-                  :label="__('Supplier', null, 'Surtido')"
-                  :placeholder="__('Search supplier', null, 'Surtido')"
-                  :load="(q) => comprasApi('suppliers', { search: q })"
-                  @pick="(o) => (newSupplierLabel = o.label)"
-                />
-              </div>
               <div class="min-w-[12rem] flex-1">
                 <FormControl
                   v-model="newTitle"
@@ -206,7 +359,9 @@
               <button
                 type="button"
                 :class="['press', BTN.filled]"
-                :disabled="!newSupplier || busy === 'catalog'"
+                :disabled="
+                  !(newSupplier || newTitle.trim()) || busy === 'catalog'
+                "
                 @click="createCatalog"
               >
                 <span
@@ -308,6 +463,11 @@
               :placeholder="__('case, rugged', null, 'Surtido')"
             />
             <FormControl
+              v-model="form.focus"
+              :label="__('Models first', null, 'Surtido')"
+              :placeholder="__('A07, iPhone 16', null, 'Surtido')"
+            />
+            <FormControl
               v-model="form.model"
               :label="__('Only this model', null, 'Surtido')"
             />
@@ -383,7 +543,11 @@
                 }}
               </p>
               <ul
-                v-if="plan.notes?.length || plan.unresolved?.length"
+                v-if="
+                  plan.notes?.length ||
+                  plan.unresolved?.length ||
+                  plan.focus_missing?.length
+                "
                 class="mt-2 space-y-1 text-sm"
               >
                 <li v-for="n in plan.notes" :key="n" class="text-ink-gray-7">
@@ -395,6 +559,15 @@
                   class="text-ink-amber-7"
                 >
                   {{ __('Not applied: {0}', [u], 'Surtido') }}
+                </li>
+                <li v-if="plan.focus_missing?.length" class="text-ink-amber-7">
+                  {{
+                    __(
+                      'This list does not carry: {0}',
+                      [plan.focus_missing.join(', ')],
+                      'Surtido',
+                    )
+                  }}
                 </li>
               </ul>
             </div>
@@ -539,6 +712,28 @@
               </ul>
             </details>
 
+            <div
+              v-if="boot.owner && !plan.supplier"
+              class="mt-4 flex flex-wrap items-end justify-end gap-2"
+            >
+              <div class="min-w-[14rem] flex-1 sm:max-w-sm">
+                <ComprasPicker
+                  v-model="planSupplier"
+                  :label="__('Whose list is this?', null, 'Surtido')"
+                  :placeholder="__('Search supplier', null, 'Surtido')"
+                  :hint="
+                    planSupplier
+                      ? ''
+                      : __(
+                          'Choose the supplier to approve. A new one? Ask Muelle: it creates it with the order.',
+                          null,
+                          'Surtido',
+                        )
+                  "
+                  :load="(q) => call('suppliers', { search: q })"
+                />
+              </div>
+            </div>
             <div class="mt-4 flex flex-wrap items-center justify-end gap-2">
               <span
                 v-if="pendingChanges.length"
@@ -563,6 +758,7 @@
                 :disabled="
                   !plan.lines.length ||
                   pendingChanges.length > 0 ||
+                  (!plan.supplier && !planSupplier) ||
                   busy === 'approve'
                 "
                 @click="approve"
@@ -1043,7 +1239,7 @@
   </div>
 </template>
 <script setup>
-import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Badge, Button, FormControl, toast } from 'frappe-ui'
 import { AppBar, EmptyState } from '@/components/ui'
@@ -1063,6 +1259,7 @@ import {
   pedidoTone,
   readyRows,
 } from '@/utils/surtido'
+import { CATALOG_ACCEPT, uploadCatalog } from '@/utils/catalogUpload'
 import LucideRefreshCw from '~icons/lucide/refresh-cw'
 import LucideChevronRight from '~icons/lucide/chevron-right'
 import LucideRotateCcw from '~icons/lucide/rotate-ccw'
@@ -1086,11 +1283,18 @@ const uploadUrl = ref('')
 const newSupplier = ref('')
 const newSupplierLabel = ref('')
 const newTitle = ref('')
+const planSupplier = ref('')
+const upload = ref(null)
+const dropping = ref(false)
+const readQuote = ref(null)
+// the catalog the owner just dropped or asked to read: picked once it has lines
+const awaited = ref('')
 const form = reactive({
   budget: '',
   months: 12,
   cover_days: 60,
   terms: '',
+  focus: '',
   model: '',
   colour: '',
   low_stock: true,
@@ -1154,6 +1358,7 @@ const STATUS = {
 }
 const label = (status) => (STATUS[status] ? STATUS[status]() : status || '')
 function catalogStatus(c) {
+  if (c.reading) return __('Reading products', null, 'Surtido')
   const base = label(c.status)
   return c.status === 'Indexando' && c.index_progress
     ? `${base} ${c.index_progress}%`
@@ -1182,10 +1387,149 @@ async function run(key, fn) {
   }
 }
 
+const SETTLING = ['Recibido', 'Indexando']
+
+function setBoot(out) {
+  boot.value = { catalogs: [], pedidos: [], ...out }
+  const done = boot.value.catalogs.find((c) => c.name === awaited.value)
+  if (!done || done.reading || SETTLING.includes(done.status)) return
+  awaited.value = ''
+  if (done.lines) {
+    catalog.value = done.name
+    toast.success(
+      __(
+        '{0} is ready: {1} products',
+        [done.title || done.name, done.lines],
+        'Surtido',
+      ),
+    )
+  } else if (canRead(done)) estimateRead(done.name)
+}
+
 async function loadBoot() {
   const out = await run('boot', () => call('bootstrap'))
-  if (out) boot.value = { catalogs: [], pedidos: [], ...out }
+  if (out) setBoot(out)
   return out
+}
+
+// A list still uploading, indexing or being read refreshes itself; a quiet
+// refresh keeps the problem on screen (run() clears it).
+const POLL_MS = 5000
+let poll = null
+async function refresh() {
+  try {
+    const out = await call('bootstrap')
+    if (out?.enabled) setBoot(out)
+  } catch {
+    // the next tick, or Refresh, tries again
+  }
+}
+const settling = computed(() =>
+  boot.value.catalogs.some((c) => c.reading || SETTLING.includes(c.status)),
+)
+function schedulePoll() {
+  clearTimeout(poll)
+  poll = null
+  if (!settling.value) return
+  poll = setTimeout(async () => {
+    await refresh()
+    schedulePoll()
+  }, POLL_MS)
+}
+watch(settling, schedulePoll)
+
+const READABLE = ['Indexado', 'Listo']
+const canRead = (c) => READABLE.includes(c.status) && !c.lines && !c.reading
+
+function uploadProblem(error) {
+  if (error?.uploadFailure === 'network')
+    return {
+      title: __('The upload stopped', null, 'Surtido'),
+      detail: __(
+        'The connection dropped. Choose the file again on its list.',
+        null,
+        'Surtido',
+      ),
+    }
+  if (error?.uploadFailure)
+    return {
+      title: __('The upload stopped', null, 'Surtido'),
+      detail: __(
+        'A part of the file was not saved. Choose the file again on its list.',
+        null,
+        'Surtido',
+      ),
+    }
+  return problemOf(error)
+}
+
+async function sendCatalog(link, name, file) {
+  upload.value = { name: file.name, pct: 0 }
+  problem.value = null
+  try {
+    await uploadCatalog(link, file, {
+      onProgress: (pct) => (upload.value = { name: file.name, pct }),
+    })
+    awaited.value = name
+    toast.success(
+      __('{0} uploaded; it reads itself now', [file.name], 'Surtido'),
+    )
+  } catch (error) {
+    problem.value = uploadProblem(error)
+  } finally {
+    upload.value = null
+    await refresh()
+    schedulePoll()
+  }
+}
+
+async function newFromFile(file) {
+  if (!file || upload.value) return
+  const out = await run('catalog', () =>
+    call('new_catalog', {
+      supplier: newSupplier.value || undefined,
+      title: file.name,
+    }),
+  )
+  if (out) await sendCatalog(out.upload_url, out.catalog, file)
+}
+
+function pickCatalog(event) {
+  newFromFile(event.target.files?.[0])
+  event.target.value = ''
+}
+
+function dropCatalog(event) {
+  dropping.value = false
+  newFromFile(event.dataTransfer?.files?.[0])
+}
+
+async function pickInto(name, event) {
+  const file = event.target.files?.[0]
+  event.target.value = ''
+  if (!file || upload.value) return
+  const out = await run('link', () => call('upload_link', { catalog: name }))
+  if (out) await sendCatalog(out.upload_url, name, file)
+}
+
+async function estimateRead(name) {
+  readQuote.value = null
+  const out = await run('estimate:' + name, () =>
+    call('read_estimate', { catalog: name }),
+  )
+  if (out) readQuote.value = { catalog: name, ...out }
+}
+
+async function readProducts() {
+  const quote = readQuote.value
+  const out = await run('read', () =>
+    call('read_products', { catalog: quote.catalog, units: quote.units }),
+  )
+  if (!out) return
+  readQuote.value = null
+  awaited.value = quote.catalog
+  await refresh()
+  schedulePoll()
 }
 
 async function start() {
@@ -1253,6 +1597,7 @@ function planArgs() {
     months: Number(form.months) || 12,
     cover_days: Number(form.cover_days) || 60,
     terms: terms.length ? JSON.stringify(terms) : '',
+    focus: form.focus.trim(),
     model: form.model.trim(),
     colour: form.colour.trim(),
     low_stock: form.low_stock ? 1 : 0,
@@ -1269,6 +1614,7 @@ async function makePlan() {
   const out = await run('plan', () => call('plan', planArgs()))
   if (!out) return
   plan.value = out
+  planSupplier.value = ''
   resetEdits()
 }
 
@@ -1324,7 +1670,10 @@ function showPedido(state) {
 
 async function approve() {
   const out = await run('approve', () =>
-    call('approve', { plan: plan.value.id }),
+    call('approve', {
+      plan: plan.value.id,
+      supplier: plan.value.supplier ? undefined : planSupplier.value,
+    }),
   )
   if (!out) return
   toast.success(
@@ -1509,6 +1858,9 @@ function goBack() {
   router.push({ name: 'Compras' })
 }
 
-onMounted(start)
-onBeforeUnmount(() => dropContext?.())
+onMounted(() => start().then(schedulePoll))
+onBeforeUnmount(() => {
+  dropContext?.()
+  clearTimeout(poll)
+})
 </script>
