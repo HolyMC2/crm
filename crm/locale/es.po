@@ -32578,3 +32578,25 @@ msgstr "Total"
 msgctxt "Resultados"
 msgid "Still owed"
 msgstr "Saldo pendiente"
+
+#: crm/fcrm/doctype/crm_integration_subscription/crm_integration_subscription.json
+#: crm/fcrm/doctype/crm_integration/crm_integration.py
+#: frontend/src/components/Settings
+msgid "Only when these fields change"
+msgstr "Solo cuando cambien estos campos"
+
+#: crm/fcrm/doctype/crm_integration_subscription/crm_integration_subscription.json
+msgid "For contact, lead, deal and record updates: field names, separated by commas, for example status, grand_total. Other changes are not sent. Empty: every change."
+msgstr "Para cambios de contactos, prospectos, tratos y registros: nombres de campo separados por comas, por ejemplo status, grand_total. Los demás cambios no se envían. Vacío: cualquier cambio."
+
+#: frontend/src/components/Settings
+msgid "Field names, separated by commas. Empty: every change."
+msgstr "Nombres de campo separados por comas. Vacío: cualquier cambio."
+
+#: crm/fcrm/doctype/crm_integration/crm_integration.py
+msgid "Row {0}: only contact, lead, deal and record updates can wait for chosen fields. Clear «{1}» on {2}."
+msgstr "Fila {0}: solo los cambios de contactos, prospectos, tratos y registros pueden esperar campos elegidos. Vacía «{1}» en {2}."
+
+#: crm/fcrm/doctype/crm_integration/crm_integration.py
+msgid "Row {0}: {1} has no field {2} that can be watched. Use the field names, for example status."
+msgstr "Fila {0}: {1} no tiene un campo {2} que se pueda vigilar. Usa los nombres de campo, por ejemplo status."

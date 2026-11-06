@@ -7,6 +7,11 @@ retry sends identical bytes. Signatures follow Standard Webhooks
 (webhook-id / webhook-timestamp / webhook-signature: v1,<base64 HMAC-SHA256>).
 Delivery is at-least-once; receivers deduplicate on webhook-id. A connection that
 is disabled, deleted or unreachable never blocks the CRM work that produced the event.
+
+Cost: what enabled connections listen to is kept in each process (client cache) until a
+connection changes, so a save nobody listens to costs a dict lookup. Event rows are one
+multi-row INSERT; after commit, one worker job per connection sends its rows in order
+over one kept-alive connection to the receiver, and writes the connection's health once.
 """
 
 import base64
@@ -14,6 +19,7 @@ import hashlib
 import hmac
 import ipaddress
 import json
+import re
 import secrets
 import socket
 import time
@@ -26,10 +32,12 @@ from zoneinfo import ZoneInfo
 import frappe
 import requests
 from frappe import _
+from frappe.model.naming import make_autoname
 from frappe.utils import add_to_date, get_datetime, get_system_timezone, now_datetime
 
 INTEGRATION = "CRM Integration"
 DELIVERY = "CRM Integration Delivery"
+SUBSCRIPTION = "CRM Integration Subscription"
 API_VERSION = 1
 TIMEOUT_SECONDS = 10
 LEASE_SECONDS = 60
@@ -42,7 +50,28 @@ MAX_ANSWER_BYTES = 1024
 ROTATION_GRACE_HOURS = 24
 KEEP_DELIVERED_DAYS = 30
 KEEP_FAILED_DAYS = 90
-_CACHE_KEY = "crm_integration_subscribers"
+# A delivered body is only needed while someone may look into it; the row stays for its history.
+KEEP_DELIVERED_BODY_DAYS = 3
+# One worker job sends at most this many deliveries of one connection, for at most this long.
+BATCH_SIZE = 50
+BATCH_SECONDS = 120
+JOB_TIMEOUT = 300
+_CACHE_KEY = "crm_integration_routes"
+_INSERT_COLUMNS = (
+	"name",
+	"creation",
+	"modified",
+	"owner",
+	"modified_by",
+	"integration",
+	"event",
+	"event_key",
+	"reference_doctype",
+	"reference_name",
+	"status",
+	"next_attempt_at",
+	"context_json",
+)
 
 # Event → (record type it describes, short description shown in docs and whoami).
 EVENTS = {
@@ -85,18 +114,34 @@ EVENTS = {
 		"The business assistant is waiting for the connection user's decision (buttons).",
 	),
 }
+# document.* events (crm.integrations.documents): any record type, chosen on the subscription row.
+DOCUMENT_EVENTS = {
+	"document.created": "A record of the chosen type was created.",
+	"document.updated": "A record of the chosen type was changed.",
+	"document.submitted": "A record of the chosen type was submitted (invoices, orders, payments…).",
+	"document.cancelled": "A submitted record of the chosen type was cancelled.",
+	"document.deleted": "A record of the chosen type was deleted.",
+}
 TEST_EVENT = "ping"
 ANY_RECORD = "Any record type"
 
 
-def _document_events():
-	from crm.integrations.documents import EVENTS as DOCUMENT_EVENTS
-
-	return DOCUMENT_EVENTS
-
-
 def known(event):
-	return event in EVENTS or event in _document_events()
+	return event in EVENTS or event in DOCUMENT_EVENTS
+
+
+# Update events whose sender diffs the record, so a subscription can wait for chosen fields.
+WATCHABLE = frozenset({"contact.updated", "lead.updated", "deal.updated", "document.updated"})
+
+
+def watches_fields(event):
+	"""The event can wait for chosen fields («Only when these fields change»)."""
+	return event in WATCHABLE
+
+
+def field_list(value):
+	"""The field names a subscription row waits for, from «a, b» or one per line; None: any change."""
+	return frozenset(part for part in re.split(r"[\s,]+", value or "") if part) or None
 
 
 class Skip(Exception):
@@ -106,7 +151,7 @@ class Skip(Exception):
 def catalog():
 	"""Every event; document.* rows also need the record type they are about.
 	`description` stays English for clients; `label` is in the caller's language."""
-	return [
+	rows = [
 		{"event": event, "record": record, "description": text, "label": _(text)}
 		for event, (record, text) in EVENTS.items()
 	] + [
@@ -117,8 +162,12 @@ def catalog():
 			"label": _(text),
 			"needs_document_type": True,
 		}
-		for event, text in _document_events().items()
+		for event, text in DOCUMENT_EVENTS.items()
 	]
+	for row in rows:
+		if row["event"] in WATCHABLE:
+			row["watches_fields"] = True
+	return rows
 
 
 # ---------------------------------------------------------------- configuration
@@ -183,44 +232,74 @@ def enable_blocker(doc):
 
 
 def clear_subscriber_cache():
-	frappe.cache.delete_value(_CACHE_KEY)
+	frappe.client_cache.delete_value(_CACHE_KEY)
 
 
 def _key(event, doctype=None):
-	return f"{event}|{doctype}" if event in _document_events() else event
+	return f"{event}|{doctype}" if event in DOCUMENT_EVENTS else event
 
 
-def _subscribers():
-	"""{event (document.*: "event|record type"): [connection names]} for enabled
-	connections, cached until a connection changes."""
-	cached = frappe.cache.get_value(_CACHE_KEY)
-	if cached is not None:
-		return cached
-	out = {}
-	if frappe.db.table_exists(INTEGRATION) and frappe.db.table_exists("CRM Integration Subscription"):
-		typed = frappe.db.has_column("CRM Integration Subscription", "document_type")
+def _routes():
+	"""What enabled connections with a webhook URL listen to, kept in each process until a
+	connection changes (its form clears it):
+
+	- routes: {event (document.*: "event|record type"): ((connection, watched fields or None), …)}
+	- connections: {connection: (acts-as user, skips its own changes)}
+	- types: record types some connection wants document.* events for
+	"""
+	return frappe.client_cache.get_value(_CACHE_KEY, generator=_load_routes)
+
+
+def _load_routes():
+	routes, connections = {}, {}
+	if frappe.db.table_exists(INTEGRATION) and frappe.db.table_exists(SUBSCRIPTION):
+		# columns added after the first release: a process may run new code before the migrate
+		optional = ", ".join(
+			f"s.{column}" if frappe.db.has_column(SUBSCRIPTION, column) else f"NULL AS {column}"
+			for column in ("document_type", "only_fields")
+		)
 		rows = frappe.db.sql(
-			"""SELECT i.name, s.event, s.document_type FROM `tabCRM Integration` i
-            JOIN `tabCRM Integration Subscription` s ON s.parent=i.name AND s.parenttype='CRM Integration'
-            WHERE i.enabled=1 AND COALESCE(i.webhook_url,'')<>''"""
-			if typed
-			else """SELECT i.name, s.event, NULL AS document_type FROM `tabCRM Integration` i
-            JOIN `tabCRM Integration Subscription` s ON s.parent=i.name AND s.parenttype='CRM Integration'
+			f"""SELECT i.name, i.integration_user, i.skip_own_changes, s.event, {optional}
+            FROM `tabCRM Integration` i
+            LEFT JOIN `tabCRM Integration Subscription` s ON s.parent=i.name AND s.parenttype='CRM Integration'
             WHERE i.enabled=1 AND COALESCE(i.webhook_url,'')<>''""",
 			as_dict=True,
 		)
 		for row in rows:
-			out.setdefault(_key(row.event, row.document_type), []).append(row.name)
-	frappe.cache.set_value(_CACHE_KEY, out)
-	return out
+			connections[row.name] = (row.integration_user, bool(row.skip_own_changes))
+			if row.event:
+				watched = field_list(row.only_fields) if watches_fields(row.event) else None
+				routes.setdefault(_key(row.event, row.document_type), []).append((row.name, watched))
+	return {
+		"routes": {key: tuple(rows) for key, rows in routes.items()},
+		"connections": connections,
+		"types": frozenset(key.split("|", 1)[1] for key in routes if "|" in key),
+	}
+
+
+def wants(event, doctype=None):
+	"""Whether some enabled connection listens to this event (on this record type). Producers
+	ask first, so a change nobody listens to costs no diff, no query and no row."""
+	return not _quiet() and _key(event, doctype) in _routes()["routes"]
+
+
+def watched(event, doctype=None):
+	"""The fields worth comparing for an update event: None while some connection hears every
+	change, else the fields its connections wait for."""
+	fields = set()
+	for _connection, only in _routes()["routes"].get(_key(event, doctype)) or ():
+		if not only:
+			return None
+		fields |= only
+	return frozenset(fields)
 
 
 def document_types():
 	"""Record types some enabled connection wants document.* events for (none while
 	installing or migrating, when every record save passes through here)."""
 	if _quiet():
-		return set()
-	return {key.split("|", 1)[1] for key in _subscribers() if "|" in key}
+		return frozenset()
+	return _routes()["types"]
 
 
 # ---------------------------------------------------------------- emission
@@ -249,6 +328,7 @@ def emit(
 	user=None,
 	actor=None,
 	readable_doc=None,
+	changed=None,
 ):
 	"""Queue `event` about (doctype, name) for every subscribed connection.
 
@@ -258,87 +338,142 @@ def emit(
 	`actor` is who made the change: a connection acting as that user that skips its
 	own changes does not hear of it. `readable_doc` keeps only connections whose user
 	may read that record now (a deletion, whose payload cannot be checked later).
-	`version` deduplicates repeats of the same change (a hook firing twice). Never
-	raises into the producer: an automation outage must not stop CRM work.
+	`changed` lists the fields an update changed: a subscription that waits for chosen
+	fields hears it only when one of them is among them. `version` deduplicates repeats
+	of the same change (a hook firing twice). Never raises into the producer: an
+	automation outage must not stop CRM work.
 	"""
 	if not known(event) or _quiet():
 		return []
 	try:
-		targets = list(_subscribers().get(_key(event, doctype)) or [])
-		for name_ in to or []:
-			if name_ not in targets and frappe.db.get_value(
-				INTEGRATION, {"name": name_, "enabled": 1, "webhook_url": ["is", "set"]}, "name"
-			):
-				targets.append(name_)
+		routes = _routes()
+		connections = routes["connections"]
+		changed = set(changed) if changed is not None else None
+		targets = [
+			connection
+			for connection, only in routes["routes"].get(_key(event, doctype)) or ()
+			if not (only and changed is not None and not only & changed)
+		]
+		targets += [t for t in dict.fromkeys(to or ()) if t in connections and t not in targets]
 		if user:
-			targets = [t for t in targets if frappe.db.get_value(INTEGRATION, t, "integration_user") == user]
-		if actor or readable_doc is not None:
-			targets = [t for t in targets if _hears(t, actor, readable_doc)]
-		created = []
-		for integration in targets:
-			key = hashlib.sha256(
+			targets = [t for t in targets if connections[t][0] == user]
+		if actor:
+			targets = [t for t in targets if not (connections[t][1] and connections[t][0] == actor)]
+		if readable_doc is not None:
+			targets = [
+				t
+				for t in targets
+				if connections[t][0]
+				and frappe.has_permission(
+					readable_doc.doctype, "read", doc=readable_doc, user=connections[t][0]
+				)
+			]
+		if not targets:
+			return []
+		keys = {
+			integration: hashlib.sha256(
 				json.dumps([integration, event, doctype, name, str(version or "")], default=str).encode()
 			).hexdigest()
-			if version is not None and frappe.db.exists(DELIVERY, {"event_key": key}):
-				continue
-			if version is None:
-				key = hashlib.sha256((key + frappe.generate_hash(length=16)).encode()).hexdigest()
-			doc = frappe.get_doc(
-				{
-					"doctype": DELIVERY,
-					"integration": integration,
-					"event": event,
-					"event_key": key,
-					"reference_doctype": doctype,
-					"reference_name": name,
-					"status": "Pending",
-					"next_attempt_at": now_datetime(),
-					"context_json": json.dumps(context or {}, default=str),
-				}
+			for integration in targets
+		}
+		if version is not None:
+			seen = set(
+				frappe.get_all(
+					DELIVERY, filters={"event_key": ["in", list(keys.values())]}, pluck="event_key"
+				)
 			)
-			doc.flags.crm_integration_engine = True
-			doc.flags.ignore_links = True
-			doc.insert(ignore_permissions=True)
-			created.append(doc.name)
-		if created:
-			frappe.db.after_commit.add(lambda: _enqueue(created))
-		return created
+			keys = {integration: key for integration, key in keys.items() if key not in seen}
+		else:
+			keys = {
+				integration: hashlib.sha256((key + frappe.generate_hash(length=16)).encode()).hexdigest()
+				for integration, key in keys.items()
+			}
+		if not keys:
+			return []
+		now, by = now_datetime(), frappe.session.user
+		context_json = json.dumps(context or {}, default=str)
+
+		def rows():
+			return [
+				(
+					make_autoname("hash"),
+					now,
+					now,
+					by,
+					by,
+					integration,
+					event,
+					key,
+					doctype,
+					name,
+					"Pending",
+					now,
+					context_json,
+				)
+				for integration, key in keys.items()
+			]
+
+		# the engine is the only writer of this log: one INSERT, no document hooks or realtime
+		values = rows()
+		try:
+			frappe.db.bulk_insert(DELIVERY, _INSERT_COLUMNS, values)
+		except Exception as e:
+			if not frappe.db.is_primary_key_violation(e):
+				raise
+			values = rows()  # a random name collided: draw new ones once, as Document.insert does
+			frappe.db.bulk_insert(DELIVERY, _INSERT_COLUMNS, values)
+		for row in values:
+			_send_after_commit(row[5], row[0])
+		return [row[0] for row in values]
 	except Exception:
 		frappe.log_error(title=f"CRM integration event {event} not queued", message=frappe.get_traceback())
 		return []
 
 
-def _hears(integration, actor, readable_doc):
-	row = (
-		frappe.db.get_value(INTEGRATION, integration, ["integration_user", "skip_own_changes"], as_dict=True)
-		or frappe._dict()
-	)
-	if actor and row.skip_own_changes and row.integration_user == actor:
-		return False
-	if readable_doc is not None:
-		return bool(
-			row.integration_user
-			and frappe.has_permission(
-				readable_doc.doctype, "read", doc=readable_doc, user=row.integration_user
-			)
-		)
-	return True
+def _send_after_commit(integration, delivery):
+	"""Collect this transaction's deliveries, so its commit starts one job per connection."""
+	pending = getattr(frappe.local, "crm_integration_pending", None)
+	if pending is None:
+		pending = frappe.local.crm_integration_pending = {}
+		frappe.db.after_commit.add(_flush_pending)
+		frappe.db.after_rollback.add(_drop_pending)
+	pending.setdefault(integration, []).append(delivery)
 
 
-def _enqueue(names):
-	for name in names:
-		try:
-			frappe.enqueue(
-				"crm.integrations.webhooks.deliver",
-				delivery=name,
-				queue="short",
-				timeout=60,
-				job_id="crm-integration-" + name,
-				deduplicate=True,
-			)
-		except Exception:
-			# The committed row is the queue; the sweep picks it up.
-			pass
+def _flush_pending():
+	pending = getattr(frappe.local, "crm_integration_pending", None) or {}
+	frappe.local.crm_integration_pending = None
+	_enqueue(pending)
+
+
+def _drop_pending():
+	frappe.local.crm_integration_pending = None
+
+
+def _enqueue(batches, *, sweep=False):
+	"""One worker job per connection and BATCH_SIZE deliveries ({connection: [delivery, …]}).
+
+	A sweep names its jobs by connection and position, so while one is still queued or
+	running the next minute's sweep does not queue the same work again."""
+	for integration, names in batches.items():
+		for start in range(0, len(names), BATCH_SIZE):
+			chunk = list(names[start : start + BATCH_SIZE])
+			if sweep:
+				job = f"sweep-{hashlib.sha256(integration.encode()).hexdigest()[:16]}-{start // BATCH_SIZE}"
+			else:
+				job = hashlib.sha256("|".join(chunk).encode()).hexdigest()[:32]
+			try:
+				frappe.enqueue(
+					"crm.integrations.webhooks.deliver_batch",
+					deliveries=chunk,
+					queue="short",
+					timeout=JOB_TIMEOUT,
+					job_id="crm-integration-" + job,
+					deduplicate=True,
+				)
+			except Exception:
+				# The committed rows are the queue; the sweep picks them up.
+				pass
 
 
 # ---------------------------------------------------------------- payloads
@@ -398,16 +533,22 @@ def sign(secret, msg_id, timestamp, body):
 	return "v1," + base64.b64encode(hmac.new(key, content, hashlib.sha256).digest()).decode()
 
 
-def signatures(integration, msg_id, timestamp, body):
+def signatures(integration, msg_id, timestamp, body, secrets=None):
 	"""The webhook-signature header: the current secret's, plus the previous one's while a
 	rotation's grace window is open (Standard Webhooks allows several, space-separated)."""
-	out = [sign(integration.get_password("signing_secret"), msg_id, timestamp, body)]
+	return " ".join(
+		sign(secret, msg_id, timestamp, body) for secret in secrets or signing_secrets(integration)
+	)
+
+
+def signing_secrets(integration):
+	out = [integration.get_password("signing_secret")]
 	until = integration.get("previous_secret_until")
 	if until and get_datetime(until) > now_datetime():
 		previous = integration.get_password("previous_signing_secret", raise_exception=False)
 		if previous:
-			out.append(sign(previous, msg_id, timestamp, body))
-	return " ".join(out)
+			out.append(previous)
+	return out
 
 
 # ---------------------------------------------------------------- delivery
@@ -420,15 +561,37 @@ class DeliveryError(Exception):
 Answer = namedtuple("Answer", "status_code text")
 
 
-def _post(url, body, headers):
-	parsed = validate_url(url)
-	port = parsed.port or (443 if parsed.scheme == "https" else 80)
-	ip = _resolve(parsed.hostname.lower(), port)
-	from crm.integrations.api import _PinnedIPAdapter
+class _Sessions:
+	"""One HTTP session per receiver for the life of a worker job, pinned to the address that
+	was checked when it opened, so consecutive deliveries reuse one TLS connection."""
 
-	session = requests.Session()
-	session.mount(f"{parsed.scheme}://", _PinnedIPAdapter(ip, parsed.hostname))
+	def __init__(self):
+		self._open = {}
+
+	def get(self, parsed):
+		port = parsed.port or (443 if parsed.scheme == "https" else 80)
+		key = (parsed.scheme, parsed.hostname.lower(), port)
+		if key not in self._open:
+			from crm.integrations.api import _PinnedIPAdapter
+
+			ip = _resolve(key[1], port)
+			session = requests.Session()
+			session.mount(f"{parsed.scheme}://", _PinnedIPAdapter(ip, parsed.hostname))
+			self._open[key] = session
+		return self._open[key]
+
+	def close(self):
+		for session in self._open.values():
+			session.close()
+		self._open.clear()
+
+
+def _post(url, body, headers, *, sessions=None):
+	parsed = validate_url(url)
+	own = sessions is None
+	sessions = sessions or _Sessions()
 	try:
+		session = sessions.get(parsed)
 		# stream, then read only the start: the answer is shown as an error snippet, and a receiver
 		# that answers with an endless body must not fill the worker's memory
 		with session.post(
@@ -440,112 +603,193 @@ def _post(url, body, headers):
 			stream=True,
 		) as response:
 			head = next(response.iter_content(MAX_ANSWER_BYTES), b"")
+			if getattr(response.raw, "closed", False) and hasattr(response.raw, "release_conn"):
+				# the whole answer was read: the connection stays open for the next delivery
+				response.raw.release_conn()
 			return Answer(response.status_code, head.decode("utf-8", "replace"))
 	except requests.Timeout:
 		raise DeliveryError(_("No answer within {0} seconds.").format(TIMEOUT_SECONDS)) from None
 	except requests.RequestException as e:
 		raise DeliveryError(_("Could not connect: {0}.").format(type(e).__name__)) from None
 	finally:
-		session.close()
+		if own:
+			sessions.close()
 
 
 def _set(name, **values):
 	frappe.db.set_value(DELIVERY, name, values, update_modified=True)
 
 
-def _health(integration, status, error="", failed=False):
-	values = {
-		"last_delivery_at": now_datetime(),
-		"last_delivery_status": status,
-		"last_error": (error or "")[:500],
-	}
-	failures = frappe.db.get_value(INTEGRATION, integration, "consecutive_failures") or 0
-	values["consecutive_failures"] = failures + 1 if failed else 0
-	frappe.db.set_value(INTEGRATION, integration, values, update_modified=False)
+class _Courier:
+	"""What the deliveries of one worker job share: each connection with its signing secrets and
+	its user's state, read once; one HTTP session per receiver; and the connections' health,
+	written once at the end instead of after every delivery."""
 
+	def __init__(self):
+		self.sessions = _Sessions()
+		self.stopped = False  # the receiver cannot take more now: the minute sweep sends the rest
+		self._connections, self._secrets, self._users, self._health = {}, {}, {}, {}
 
-def _claim(name):
-	"""Lease one due delivery; False when another worker holds it or it is not due."""
-	row = frappe.db.sql(
-		"""SELECT name,status,next_attempt_at,lease_until FROM `tabCRM Integration Delivery` WHERE name=%s FOR UPDATE""",
-		(name,),
-		as_dict=True,
-	)
-	if not row:
-		return False
-	row, now = row[0], now_datetime()
-	if row.status == "Sending" and row.lease_until and get_datetime(row.lease_until) > now:
-		return False
-	if row.status not in ("Pending", "Failed", "Sending"):
-		return False
-	if row.status != "Sending" and row.next_attempt_at and get_datetime(row.next_attempt_at) > now:
-		return False
-	_set(name, status="Sending", lease_until=add_to_date(now, seconds=LEASE_SECONDS))
-	frappe.db.commit()  # nosemgrep: frappe-manual-commit -- delivery state is durable before and after the HTTP call
-	return True
+	def connection(self, name):
+		if name not in self._connections:
+			self._connections[name] = (
+				frappe.get_doc(INTEGRATION, name) if frappe.db.exists(INTEGRATION, name) else None
+			)
+		return self._connections[name]
+
+	def secrets(self, integration):
+		if integration.name not in self._secrets:
+			self._secrets[integration.name] = signing_secrets(integration)
+		return self._secrets[integration.name]
+
+	def user_enabled(self, user):
+		if user not in self._users:
+			self._users[user] = bool(user and frappe.db.get_value("User", user, "enabled"))
+		return self._users[user]
+
+	def note(self, integration, status, error="", failed=False):
+		self._health.setdefault(integration, []).append((status, error, failed))
+
+	def write_health(self):
+		"""Last outcome per connection, and how many failures followed its last success."""
+		for integration, outcomes in self._health.items():
+			status, error, _failed = outcomes[-1]
+			streak = 0
+			for *_rest, failed in reversed(outcomes):
+				if not failed:
+					break
+				streak += 1
+			if streak == len(outcomes):  # nothing got through in this job: the stored streak goes on
+				streak += frappe.db.get_value(INTEGRATION, integration, "consecutive_failures") or 0
+			frappe.db.set_value(
+				INTEGRATION,
+				integration,
+				{
+					"last_delivery_at": now_datetime(),
+					"last_delivery_status": status,
+					"last_error": (error or "")[:500],
+					"consecutive_failures": streak,
+				},
+				update_modified=False,
+			)
+		if self._health:
+			self._health = {}
+			frappe.db.commit()  # nosemgrep: frappe-manual-commit -- connection health, after the deliveries' own commits
 
 
 def deliver(delivery, *, force=False):
-	"""Worker entry: send one delivery. Returns its final projection (used by «Send test event»)."""
-	if not frappe.db.exists(DELIVERY, delivery):
-		return None
-	if not force and not _claim(delivery):
-		return _projection(delivery)
-	doc = frappe.get_doc(DELIVERY, delivery)
-	integration = (
-		frappe.get_doc(INTEGRATION, doc.integration)
-		if frappe.db.exists(INTEGRATION, doc.integration)
-		else None
-	)
+	"""Send one delivery now. Returns its final projection (used by «Send test event»)."""
+	courier = _Courier()
+	try:
+		_send(delivery, courier, force=force)
+		courier.write_health()
+	finally:
+		courier.sessions.close()
+	return _projection(delivery)
+
+
+def deliver_batch(deliveries):
+	"""Worker entry: send deliveries of one connection in order over one kept-alive connection.
+	A receiver that does not answer, or answers 429 or 5xx, ends the job; the minute sweep sends
+	the rest, so a down receiver costs one attempt per sweep instead of one per event."""
+	courier = _Courier()
+	started = time.monotonic()
+	try:
+		for name in deliveries:
+			if courier.stopped or time.monotonic() - started > BATCH_SECONDS:
+				break
+			_send(name, courier)
+		courier.write_health()
+	finally:
+		courier.sessions.close()
+
+
+_CLAIM = """SELECT name, integration, event, status, next_attempt_at, lease_until, attempts, payload,
+    context_json, reference_doctype, reference_name, creation
+    FROM `tabCRM Integration Delivery` WHERE name=%s FOR UPDATE"""
+
+
+def _due(row, now):
+	if row.status == "Sending" and row.lease_until and get_datetime(row.lease_until) > now:
+		return False  # another worker holds it
+	if row.status not in ("Pending", "Failed", "Sending"):
+		return False
+	return row.status == "Sending" or not row.next_attempt_at or get_datetime(row.next_attempt_at) <= now
+
+
+def _send(name, courier, *, force=False):
+	"""Claim, prepare, sign and post one delivery. The claim (with the frozen body) is committed
+	before the HTTP call and the outcome after it: two commits per delivery."""
+	rows = frappe.db.sql(_CLAIM, (name,), as_dict=True)
+	if not rows:
+		return
+	doc, now = rows[0], now_datetime()
+	if not force and not _due(doc, now):
+		return
+	integration = courier.connection(doc.integration)
 	if not integration or (not integration.enabled and doc.event != TEST_EVENT):
 		_set(
-			delivery,
+			name,
 			status="Skipped",
 			last_error=_("The connection is disabled or was removed."),
 			lease_until=None,
 		)
 		frappe.db.commit()  # nosemgrep: frappe-manual-commit -- delivery state is durable before and after the HTTP call
-		return _projection(delivery)
-	if not frappe.db.get_value("User", integration.integration_user, "enabled"):
+		return
+	if not courier.user_enabled(integration.integration_user):
 		reason = _("The connection's user is disabled.")
-		_set(delivery, status="Skipped", last_error=reason, lease_until=None)
-		_health(integration.name, _("Skipped"), reason, failed=True)
+		_set(name, status="Skipped", last_error=reason, lease_until=None)
+		courier.note(integration.name, _("Skipped"), reason, failed=True)
 		frappe.db.commit()  # nosemgrep: frappe-manual-commit -- delivery state is durable before and after the HTTP call
-		return _projection(delivery)
+		return
+	claim = {"status": "Sending", "lease_until": add_to_date(now, seconds=LEASE_SECONDS)}
 	body = doc.payload
 	if not body:
 		try:
-			body = build_payload(doc, integration)
+			body = claim["payload"] = build_payload(doc, integration)
 		except Skip as e:
-			_set(delivery, status="Skipped", last_error=str(e)[:500], lease_until=None)
+			_set(name, status="Skipped", last_error=str(e)[:500], lease_until=None)
 			frappe.db.commit()  # nosemgrep: frappe-manual-commit -- delivery state is durable before and after the HTTP call
-			return _projection(delivery)
+			return
 		except Exception:
 			frappe.db.rollback()
-			frappe.log_error(title=f"CRM integration payload {delivery}", message=frappe.get_traceback())
-			return _fail(doc, integration, _("The event could not be prepared; support has the error log."))
-		_set(delivery, payload=body)
-		frappe.db.commit()  # nosemgrep: frappe-manual-commit -- delivery state is durable before and after the HTTP call
+			frappe.log_error(title=f"CRM integration payload {name}", message=frappe.get_traceback())
+			# the rollback let go of the row: take it again before recording the failure
+			rows = frappe.db.sql(_CLAIM, (name,), as_dict=True)
+			if rows and (force or _due(rows[0], now_datetime())):
+				_fail(
+					rows[0],
+					integration,
+					courier,
+					_("The event could not be prepared; support has the error log."),
+				)
+			return
+	_set(name, **claim)
+	frappe.db.commit()  # nosemgrep: frappe-manual-commit -- delivery state is durable before and after the HTTP call
 	timestamp = str(int(time.time()))
 	headers = {
 		"Content-Type": "application/json",
 		"User-Agent": "Muelle-CRM-Webhooks/1",
 		"webhook-id": doc.name,
 		"webhook-timestamp": timestamp,
-		"webhook-signature": signatures(integration, doc.name, timestamp, body),
+		"webhook-signature": signatures(integration, doc.name, timestamp, body, courier.secrets(integration)),
 		"X-Muelle-Event": doc.event,
 	}
 	started = time.monotonic()
 	try:
-		response = _post(integration.webhook_url, body, headers)
+		response = _post(integration.webhook_url, body, headers, sessions=courier.sessions)
 	except DeliveryError as e:
-		return _fail(doc, integration, str(e))
+		courier.stopped = True
+		_fail(doc, integration, courier, str(e))
+		return
 	except frappe.ValidationError as e:
-		return _fail(doc, integration, str(e), final=True)
+		courier.stopped = True
+		_fail(doc, integration, courier, str(e), final=True)
+		return
 	elapsed = int((time.monotonic() - started) * 1000)
 	if 200 <= response.status_code < 300:
 		_set(
-			delivery,
+			name,
 			status="Delivered",
 			attempts=(doc.attempts or 0) + 1,
 			delivered_at=now_datetime(),
@@ -553,21 +797,24 @@ def deliver(delivery, *, force=False):
 			last_error="",
 			lease_until=None,
 		)
-		_health(integration.name, _("Delivered ({0}, {1} ms)").format(response.status_code, elapsed))
+		courier.note(integration.name, _("Delivered ({0}, {1} ms)").format(response.status_code, elapsed))
 		frappe.db.commit()  # nosemgrep: frappe-manual-commit -- delivery state is durable before and after the HTTP call
-		return _projection(delivery)
+		return
+	if response.status_code == 429 or response.status_code >= 500:
+		courier.stopped = True
 	snippet = (response.text or "")[:200].replace("\n", " ")
 	final = response.status_code == 410  # Standard Webhooks: the receiver no longer wants these
-	return _fail(
+	_fail(
 		doc,
 		integration,
+		courier,
 		f"HTTP {response.status_code} {snippet}".strip(),
 		code=response.status_code,
 		final=final,
 	)
 
 
-def _fail(doc, integration, error, *, code=None, final=False):
+def _fail(doc, integration, courier, error, *, code=None, final=False):
 	attempts = (doc.attempts or 0) + 1
 	dead = final or attempts >= MAX_ATTEMPTS or doc.event == TEST_EVENT
 	# response_code is an Int column (NOT NULL): 0 records that no HTTP answer came back.
@@ -584,9 +831,8 @@ def _fail(doc, integration, error, *, code=None, final=False):
 			status="Failed", next_attempt_at=add_to_date(now_datetime(), seconds=BACKOFF[attempts - 1])
 		)
 	_set(doc.name, **values)
-	_health(integration.name, _("Gave up") if dead else _("Retrying"), error, failed=True)
+	courier.note(integration.name, _("Gave up") if dead else _("Retrying"), error, failed=True)
 	frappe.db.commit()  # nosemgrep: frappe-manual-commit -- delivery state is durable before and after the HTTP call
-	return _projection(doc.name)
 
 
 def _projection(name):
@@ -618,21 +864,28 @@ def recover():
 		return
 	now = now_datetime()
 	rows = frappe.db.sql(
-		"""SELECT name FROM `tabCRM Integration Delivery`
+		"""SELECT name, integration FROM `tabCRM Integration Delivery`
         WHERE (status='Pending' AND creation<=%s)
            OR (status='Failed' AND next_attempt_at<=%s)
            OR (status='Sending' AND lease_until<=%s)
-        ORDER BY creation LIMIT 200""",
+        ORDER BY creation LIMIT 500""",
 		(now - timedelta(seconds=30), now, now),
 	)
-	_enqueue([r[0] for r in rows])
+	batches = {}
+	for name, integration in rows:
+		batches.setdefault(integration, []).append(name)
+	_enqueue(batches, sweep=True)
 
 
 def purge():
-	"""Daily: keep delivered history 30 days and failures 90 days."""
+	"""Daily: keep delivered history 30 days (its bodies 3) and failures 90 days."""
 	if not frappe.db.table_exists(DELIVERY):
 		return
 	now = now_datetime()
+	frappe.db.sql(
+		"UPDATE `tabCRM Integration Delivery` SET payload=NULL WHERE status='Delivered' AND payload IS NOT NULL AND modified<%s",
+		(now - timedelta(days=KEEP_DELIVERED_BODY_DAYS),),
+	)
 	frappe.db.sql(
 		"DELETE FROM `tabCRM Integration Delivery` WHERE status IN ('Delivered','Skipped') AND modified<%s",
 		(now - timedelta(days=KEEP_DELIVERED_DAYS),),

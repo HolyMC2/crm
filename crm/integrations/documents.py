@@ -2,9 +2,10 @@
 connections that subscribe to that type.
 
 A connection picks the record type on each document.* event row. The "*" doc_events
-hook returns at once unless an enabled connection subscribed to that type (one cached
-set, cleared whenever a connection changes), and the payload is built later as the
-connection's user like every other event. Changes the connection's own user made are
+hook returns at once unless an enabled connection subscribed to that event on that type
+(one lookup in a map each process keeps until a connection changes), and the payload is
+built later as the connection's user like every other event. An update compares only the
+fields the connections wait for, when every one of them chose fields. Changes the connection's own user made are
 skipped when the connection says so, so a flow that writes back does not loop.
 """
 
@@ -13,13 +14,7 @@ from frappe import _
 
 from crm.integrations import webhooks
 
-EVENTS = {
-	"document.created": "A record of the chosen type was created.",
-	"document.updated": "A record of the chosen type was changed.",
-	"document.submitted": "A record of the chosen type was submitted (invoices, orders, payments…).",
-	"document.cancelled": "A submitted record of the chosen type was cancelled.",
-	"document.deleted": "A record of the chosen type was deleted.",
-}
+EVENTS = webhooks.DOCUMENT_EVENTS
 # Record types that hold credentials, logs, permissions or this engine's own rows.
 DENY_MODULES = {"Core", "Custom", "Email", "Integrations"}
 DENY_DOCTYPES = {
@@ -89,11 +84,7 @@ def document_types(query="", limit=20, user=None):
 	return out
 
 
-def _subscribed(doctype):
-	return doctype in webhooks.document_types()
-
-
-def _emit(doc, event, *, version, context=None, readable=False):
+def _emit(doc, event, *, version, context=None, readable=False, changed=None):
 	webhooks.emit(
 		event,
 		doc.doctype,
@@ -102,40 +93,47 @@ def _emit(doc, event, *, version, context=None, readable=False):
 		context=context,
 		actor=frappe.session.user,
 		readable_doc=doc if readable else None,
+		changed=changed,
 	)
 
 
 def after_insert(doc, method=None):
-	if _subscribed(doc.doctype):
+	if webhooks.wants("document.created", doc.doctype):
 		_emit(doc, "document.created", version="created")
 
 
 def on_update(doc, method=None):
-	if doc.flags.in_insert or not _subscribed(doc.doctype):
+	if doc.flags.in_insert or not webhooks.wants("document.updated", doc.doctype):
 		return
 	before = doc.get_doc_before_save()
 	if before is None:
 		return
-	from crm.integrations.events import changed_fields
+	from crm.integrations.events import changed_fields, previous_values
 
-	changed = changed_fields(before, doc)
+	changed = changed_fields(before, doc, only=webhooks.watched("document.updated", doc.doctype))
 	if changed:
-		_emit(doc, "document.updated", version=str(doc.modified), context={"fields": changed})
+		_emit(
+			doc,
+			"document.updated",
+			version=str(doc.modified),
+			context={"fields": changed, "previous": previous_values(before, doc, changed)},
+			changed=changed,
+		)
 
 
 def on_submit(doc, method=None):
-	if _subscribed(doc.doctype):
+	if webhooks.wants("document.submitted", doc.doctype):
 		_emit(doc, "document.submitted", version="submitted")
 
 
 def on_cancel(doc, method=None):
-	if _subscribed(doc.doctype):
+	if webhooks.wants("document.cancelled", doc.doctype):
 		_emit(doc, "document.cancelled", version="cancelled")
 
 
 def on_trash(doc, method=None):
 	# The record is gone when the payload is built, so who may hear of it is decided now.
-	if _subscribed(doc.doctype):
+	if webhooks.wants("document.deleted", doc.doctype):
 		_emit(
 			doc,
 			"document.deleted",
@@ -146,11 +144,11 @@ def on_trash(doc, method=None):
 
 
 def build(event, doctype, name, context):
-	from crm.integrations.events import _record
+	from crm.integrations.events import _change, _record
 
 	if event == "document.deleted":
 		return {"doctype": doctype, "name": name, "deleted_by": context.get("deleted_by")}
 	data = {"doctype": doctype, "record": _record(doctype, name)}
 	if context:
-		data["change"] = context
+		data["change"] = _change(doctype, context)
 	return data

@@ -40,19 +40,61 @@ class CRMIntegration(Document):
 					)
 			else:
 				row.document_type = None
+			self._validate_watched_fields(row)
 			key = (row.event, row.document_type or "")
 			if key in seen:
 				label = f"{row.event} ({_(row.document_type)})" if row.document_type else row.event
 				frappe.throw(_("Event {0} is listed twice.").format(label))
 			seen.add(key)
 
-	def on_update(self):
+	def _validate_watched_fields(self, row):
+		"""«Only when these fields change»: diffing update events only, and fields the record type has."""
+		from frappe.model import no_value_fields, table_fields
+
 		from crm.integrations import webhooks
 
-		webhooks.clear_subscriber_cache()
+		names = webhooks.field_list(row.get("only_fields"))
+		if not names:
+			row.only_fields = None
+			return
+		if not webhooks.watches_fields(row.event):
+			frappe.throw(
+				_(
+					"Row {0}: only contact, lead, deal and record updates can wait for chosen fields. Clear «{1}» on {2}."
+				).format(row.idx, _("Only when these fields change"), row.event)
+			)
+		doctype = (
+			row.document_type if row.event in webhooks.DOCUMENT_EVENTS else webhooks.EVENTS[row.event][0]
+		)
+		meta = frappe.get_meta(doctype)
+		# a table counts by its rows, as changed_fields compares it; layout and secret fields never change
+		unknown = sorted(
+			name
+			for name in names
+			if not (df := meta.get_field(name))
+			or df.fieldtype == "Password"
+			or (df.fieldtype in no_value_fields and df.fieldtype not in table_fields)
+		)
+		if unknown:
+			frappe.throw(
+				_(
+					"Row {0}: {1} has no field {2} that can be watched. Use the field names, for example status."
+				).format(row.idx, _(doctype), ", ".join(unknown))
+			)
+		row.only_fields = ", ".join(sorted(names))
+
+	def on_update(self):
+		self._clear_routes()
 
 	def on_trash(self):
+		self._clear_routes()
+		frappe.db.delete("CRM Integration Delivery", {"integration": self.name})
+
+	def _clear_routes(self):
+		# now for this process, and again once the change is committed or rolled back, so no
+		# process keeps a map it read while this transaction was still open
 		from crm.integrations import webhooks
 
 		webhooks.clear_subscriber_cache()
-		frappe.db.delete("CRM Integration Delivery", {"integration": self.name})
+		frappe.db.after_commit.add(webhooks.clear_subscriber_cache)
+		frappe.db.after_rollback.add(webhooks.clear_subscriber_cache)

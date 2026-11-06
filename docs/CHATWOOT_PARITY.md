@@ -22,6 +22,7 @@ Legend: ✅ covered · ◐ partly or differently · ✗ gap (not built)
 | Agent bot (webhook on each customer message, bot replies through the API) | events `message.created` + `queue_message`; the in-house customer bot (CRM Automation Policy) covers WhatsApp/Webchat | ✅ |
 | Agent bot handoff to a human | `apply_control` bot/human transitions; `conversation.status_changed` tells n8n, also when a take or transfer moves the owner | ✅ |
 | Contact / custom attribute webhooks | `contact.*`, `lead.*`, `deal.*`, `inquiry.created` | ✅ (more than Chatwoot) |
+| `changed_attributes` on update webhooks (previous and current value) | `change.fields` plus `change.previous` on every `*.updated` record event; a subscription can wait for chosen fields («Only when these fields change») so other edits are never sent | ✅ (Chatwoot sent every update) |
 | Staff assistant over the API | books assistant `say` / `callback` + `assistant.message_created` / `decision_pending` | ✅ (Chatwoot had nothing similar) |
 | Platform API (create accounts or users from outside) | Frappe REST under permissions; tenant provisioning is Boat's job | ◐ by design |
 | Client API for a custom widget | Webchat channel (CRM Webchat Channel), with its own session API | ◐ different shape |

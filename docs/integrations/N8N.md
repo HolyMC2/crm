@@ -30,7 +30,10 @@ below describe its fields.
    - **Webhook URL**: the n8n Webhook node's production URL. Only `https` is accepted, and the
      host must resolve to public addresses. A private or `http` host (n8n on the LAN) must be
      listed in site config `crm_integration_allowed_hosts`.
-   - **Events**: one row per event you want (catalog below).
+   - **Events**: one row per event you want (catalog below). On `contact.updated`,
+     `lead.updated`, `deal.updated` and `document.updated` rows, **Only when these fields change**
+     takes field names (`status, grand_total`): other changes are not sent. Empty means every
+     change. Unknown names are refused when you save.
    - Save. The signing secret (`whsec_…`) is created automatically. Use **Show signing secret**
      to copy it into n8n, and **Rotate** if it leaks. For 24 hours after a rotation every event
      carries two signatures, one per secret, so n8n keeps accepting events until you paste the
@@ -54,7 +57,18 @@ The payload is built on the first attempt and then frozen, so retries send the s
   deletion the user could not have seen is not sent. The row's error says which.
 - Any 2xx is success. The connection shows the last status, consecutive failures and the last
   error.
-- Delivered and Skipped rows are kept for 30 days, Dead rows for 90 days.
+- Delivered rows drop their body after 3 days; the row (id, event, status, timings) stays for
+  30 days, like Skipped rows. Dead rows are kept for 90 days. **Send again** on a row whose body
+  was dropped builds it again from the record as it is now, with the same `webhook-id`.
+
+What an event costs the CRM: a save checks a routing map that every worker keeps in memory
+(refreshed when a connection changes), so a record type or event nobody listens to costs a set
+lookup and no diff. The events of one transaction are written with one `INSERT` and queued as one
+job per connection. That job sends them in order over one kept-alive HTTPS connection, with two
+commits per event, and writes the connection's health once at the end. When the receiver fails
+(no connection, timeout, 429 or 5xx), the job stops there. That event is retried on the schedule
+above, and the rest stay Pending for the sweep that runs every minute, so a down n8n gets about
+one request per connection a minute, not one per event.
 
 Headers follow [Standard Webhooks](https://www.standardwebhooks.com/):
 
@@ -108,8 +122,10 @@ try {
 ```
 
 Delivery is at-least-once: a CRM retry after a lost answer repeats `webhook-id`. Drop ids the
-workflow already handled before doing anything a customer sees (the templates keep the last 1000
-in the workflow's static data, in the «Seen before?» node).
+workflow already handled before doing anything a customer sees. The templates do it inside
+**Verify signature**, after the signature is good: the last 1000 ids live in the workflow's
+static data, a repeat returns `{duplicate: true}`, still gets its 204 (so the CRM stops retrying)
+and ends at **New event?**.
 
 Body:
 
@@ -143,13 +159,13 @@ connections.
 | `message.created` | a customer or agent message on WhatsApp, Messenger, Webchat or the API channel | `message` (`id`, `direction` in/out, `content`, `content_type`, `attach`, `status`, `timestamp`), `conversation`, `thread` (`provider`, `account_id`, `peer_id`) |
 | `message.updated` | delivery status (sent, delivered, read, failed) | as `message.created` plus `change.status` |
 | `outbound.updated` | an outbox intent changes state (queued, accepted, blocked, failed) | `intent`: as `outbox.get_intent` returns it |
-| `contact.created` / `contact.updated` | Contact | `doctype`, `record` (the fields the user can read) |
-| `lead.created` / `lead.updated` / `lead.status_changed` | CRM Lead | `doctype`, `record`; status changes add `change.from_status` / `to_status` |
+| `contact.created` / `contact.updated` | Contact | `doctype`, `record` (the fields the user can read); `updated` adds `change.fields` and `change.previous` |
+| `lead.created` / `lead.updated` / `lead.status_changed` | CRM Lead | `doctype`, `record`; `updated` as contacts; status changes add `change.from_status` / `to_status` |
 | `deal.created` / `deal.updated` / `deal.status_changed` | CRM Deal | as leads |
 | `inquiry.created` | storefront or form inquiry | `doctype`, `record` |
 | `assistant.message_created` | the books assistant answered the connection user | see §6 |
 | `assistant.decision_pending` | that answer has buttons waiting for a decision | see §6 |
-| `document.created` / `document.updated` / `document.submitted` / `document.cancelled` | any record type chosen on the row (Sales Invoice, Item, Appointment…) | `doctype`, `record` (the fields the user can read); `updated` adds `change.fields` |
+| `document.created` / `document.updated` / `document.submitted` / `document.cancelled` | any record type chosen on the row (Sales Invoice, Item, Appointment…) | `doctype`, `record` (the fields the user can read); `updated` adds `change.fields` and `change.previous` |
 | `document.deleted` | that record type, deleted | `doctype`, `name`, `deleted_by` |
 | `ping` | **Send test event** | `{}` |
 
@@ -165,6 +181,13 @@ whose user could read the record before it went. `change.fields` lists the field
 value changed (a blank and an unset value are the same; a child table counts once, by its rows'
 content). Password fields are never sent. The hook checks one cached set of subscribed types
 before doing anything, so record types nobody subscribed to cost a set lookup per save.
+
+**What changed, and from what.** On `*.updated`, `change.fields` names the changed fields and
+`change.previous` holds what the plain ones (text lines, numbers, dates, checks, selects, links)
+held before the save, limited to fields the acts-as user can read. A flow can therefore act on
+«status went from Recibido to Listo» without keeping its own copy of the record. Child rows come
+with their parent: a Repair Order's parts arrive in `record` on that order's `document.updated`,
+and a change to a part lists the table in `change.fields`.
 
 **Skip changes this connection made** (on by default) drops record and document events whose
 change was made by the acts-as user itself, so a flow that writes back does not trigger itself.
@@ -273,8 +296,9 @@ Each workflow is its own connection, with its own webhook URL and secret:
 | `api-channel-bridge.json` | `muelle-crm-channel`, `my-channel-inbound` | `MUELLE_CHANNEL_WHSEC`, `MUELLE_SITE_URL`, `MY_CHANNEL_SEND_URL` |
 | `books-assistant-relay.json` | `muelle-books`, `books-ask`, `books-decide` | `MUELLE_BOOKS_WHSEC`, `MUELLE_SITE_URL` |
 
-Every CRM-facing workflow runs Webhook → **Verify signature** → **Signed?** → **Accepted** (204) →
-**Seen before?** → the work; a refused request ends at **Refuse** (401). The channel bridge
+Every CRM-facing workflow runs Webhook → **Verify signature** (signature and repeat check in one
+Code node) → **Signed?** → **Accepted** (204) → **New event?** → the work; a refused request ends
+at **Refuse** (401). The channel bridge
 reports each send as `sent`, or `failed` when your channel does not answer 2xx, so the inbox shows
 it.
 
@@ -288,3 +312,23 @@ answer when the flow has finished, so the caller sees a failure and can retry
 assistant's `client_id`, so a caller of `books-ask` sends `{text, id}`). The webhook nodes carry a `webhookId`, so the production URL is
 `https://<n8n>/webhook/<path>` however the workflow is imported (UI or `n8n import:workflow`;
 after a CLI import, `n8n publish:workflow --id=<id>` and restart n8n).
+
+### Keep n8n light
+
+The templates save nothing for a successful run (`saveDataSuccessExecution: none`), keep failed
+runs, and skip manual-run and progress saving, so a busy connection does not grow n8n's
+database. The editor still shows a test run while you watch it. Turn saving back on in the
+workflow's settings while you debug. For a small n8n that only runs these flows, these
+environment settings (n8n 2.x names) keep memory and disk flat:
+
+```
+EXECUTIONS_DATA_PRUNE=true
+EXECUTIONS_DATA_MAX_AGE=168            # hours: keep failed runs a week
+EXECUTIONS_DATA_PRUNE_MAX_COUNT=5000
+N8N_DIAGNOSTICS_ENABLED=false
+N8N_VERSION_NOTIFICATIONS_ENABLED=false
+N8N_TEMPLATES_ENABLED=false
+N8N_PERSONALIZATION_ENABLED=false
+```
+
+They apply to every workflow on that n8n, so check them against your other flows first.
