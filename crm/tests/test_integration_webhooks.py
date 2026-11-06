@@ -645,6 +645,22 @@ class TestIntegrationWebhooks(IntegrationTestCase):
 		)
 		self.assertIsNone(frappe.local.crm_integration_pending)
 
+	def test_a_change_another_transaction_queued_first_still_reaches_the_other_connections(self):
+		first = self.connection(["lead.created"])
+		other = self.connection(["lead.created"])
+		lead = self.lead()
+		(kept,) = self.deliveries(first)
+		frappe.db.delete(webhooks.DELIVERY, {"integration": other.name})
+		# the repeat check runs before the other transaction's row is visible
+		with (
+			patch.object(frappe, "get_all", return_value=[]),
+			patch.object(frappe, "log_error", side_effect=AssertionError("must not fail")),
+		):
+			queued = webhooks.emit("lead.created", "CRM Lead", lead.name, version="created")
+		self.assertEqual(self.deliveries(first), [kept])
+		self.assertEqual(queued, self.deliveries(other))
+		self.assertEqual(len(queued), 1)
+
 	def test_a_batch_stops_when_the_receiver_fails_and_the_sweep_sends_the_rest(self):
 		connection = self.connection(["lead.created"])
 		self.lead()

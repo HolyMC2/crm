@@ -418,10 +418,19 @@ def emit(
 		try:
 			frappe.db.bulk_insert(DELIVERY, _INSERT_COLUMNS, values)
 		except Exception as e:
-			if not frappe.db.is_primary_key_violation(e):
+			if not frappe.db.is_duplicate_entry(e):
 				raise
-			values = rows()  # a random name collided: draw new ones once, as Document.insert does
-			frappe.db.bulk_insert(DELIVERY, _INSERT_COLUMNS, values)
+			# a random name collided, or another transaction queued the same change first:
+			# new names, skip what already exists, keep the rows that are ours
+			values = rows()
+			frappe.db.bulk_insert(DELIVERY, _INSERT_COLUMNS, values, ignore_duplicates=True)
+			stored = set(
+				frappe.db.sql(
+					"SELECT name, event_key FROM `tabCRM Integration Delivery` WHERE name IN %s",
+					(tuple(row[0] for row in values),),
+				)
+			)
+			values = [row for row in values if (row[0], row[7]) in stored]
 		for row in values:
 			_send_after_commit(row[5], row[0])
 		return [row[0] for row in values]
