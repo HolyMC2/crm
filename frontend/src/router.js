@@ -21,6 +21,7 @@ import { legacyDealRedirect, legacyVentasRoute } from '@/utils/ventasRoutes'
 import { legacyIdentityRoute, safeIntendedRoute } from '@/utils/shellRoutes'
 import { legacyTasksRoute } from '@/composables/usePendientesRoutes'
 import { prefetchHoy } from '@/utils/hoyPrefetch'
+import { bootPersonaCaptured } from '@/utils/personaBoot'
 // Before createWebHistory: the sheets' popstate gate must run before the router's.
 import '@/components/ui/sheetGate'
 
@@ -30,10 +31,14 @@ export const PERSONA_DONE_KEY = 'crm_persona_captured'
 async function shouldCapturePersona() {
   // Client-side flag guards against re-prompting if the server persist failed.
   if (localStorage.getItem(PERSONA_DONE_KEY)) return false
-  const captured = await call('frappe.client.get_single_value', {
-    doctype: 'FCRM Settings',
-    field: 'persona_captured',
-  })
+  // A page boot older than this build has no answer: ask the server as before.
+  let captured = bootPersonaCaptured()
+  if (captured === undefined) {
+    captured = await call('frappe.client.get_single_value', {
+      doctype: 'FCRM Settings',
+      field: 'persona_captured',
+    })
+  }
   if (captured) return false
   // The wizard only feeds telemetry; skip it entirely if the user opted out.
   const { enabled } =

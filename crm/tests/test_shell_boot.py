@@ -37,6 +37,19 @@ class TestShellBoot(TestCase):
 		self.assertEqual(data["sales_access"], data["modules"]["ventas"]["enabled"])
 		self.assertIn("locale", data)
 
+	def test_the_page_boot_carries_the_persona_answer(self):
+		from frappe.utils import cint
+
+		from crm.www import crm as entry
+
+		before = frappe.db.get_single_value("FCRM Settings", "persona_captured")
+		try:
+			for value in (0, 1):
+				frappe.db.set_single_value("FCRM Settings", "persona_captured", value)
+				self.assertEqual(entry.get_boot(neutral=True, module="hoy")["persona_captured"], value)
+		finally:
+			frappe.db.set_single_value("FCRM Settings", "persona_captured", cint(before))
+
 	def test_older_doco_without_contactos_turns_the_module_off_not_the_shell(self):
 		with patch.dict(sys.modules, {"doco.contactos.api": None}):
 			data = shell.boot()
