@@ -34,6 +34,7 @@ crm/fcrm/doctype/crm_channel_message/*::rule=written-by note
 msg::Enter the full webhook URL, for example https://n8n.example.com/webhook/…
 msg::Add the webhook URL from your n8n Webhook node first.
 msg::Send message_id: your channel's own id for this message (up to 140 characters).
+msg::Send contact_id: the customer's id on your channel, up to 128 letters, digits or . _ : @ + = - and no spaces.
 msg::message_id {0} was already used for a different text.
 msg::Deliveries are written by the integration engine.
 msg::Your webhook answered {0}. You can enable the connection now.
