@@ -379,6 +379,13 @@
       payment-link
     />
 
+    <!-- «No lo tenía»: the chat's asks without stock, the assistant's drafts first -->
+    <InboxLostSales
+      v-if="activeDeal"
+      :doctype="activeDealDoctype"
+      :name="activeDeal"
+    />
+
     <!-- score (doco-specific; not in the upstream sidepanel) -->
     <div v-if="grade" class="flex-none border-b border-outline-gray-1 p-3.5">
       <div
@@ -541,6 +548,9 @@ import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
 // mounts the inbox
 const ConversationMedia = defineAsyncComponent(
   () => import('@/components/doco/inbox/ConversationMedia.vue'),
+)
+const InboxLostSales = defineAsyncComponent(
+  () => import('@/components/doco/inbox/InboxLostSales.vue'),
 )
 
 // ⚠ duplicate banner → jump to the other open record (detect+navigate only)

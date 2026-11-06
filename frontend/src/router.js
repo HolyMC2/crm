@@ -296,6 +296,13 @@ const routes = [
     meta: { app: 'compras', title: 'Compras', ownPhoneHeader: true },
   },
   {
+    // Compras › Hoy: the owner's buying board (doco.workspaces.compras_hoy).
+    path: '/compras/hoy',
+    name: 'CompraHoy',
+    component: () => import('@/pages/CompraHoy.vue'),
+    meta: { app: 'compras', title: 'Compras', ownPhoneHeader: true },
+  },
+  {
     path: '/compras/orden/:name',
     name: 'CompraOrden',
     component: () => import('@/pages/CompraOrden.vue'),

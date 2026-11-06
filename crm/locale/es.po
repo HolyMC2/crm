@@ -34502,3 +34502,953 @@ msgstr "Atrasada"
 msgctxt "Compras"
 msgid "late"
 msgstr "atrasada"
+# Compras loop: Hoy, Niveles sections and settings, «No lo tenía»
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "Today"
+msgstr "Hoy"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "Could not open the buying board"
+msgstr "No se pudo abrir el tablero de compras"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "Reading the buying board…"
+msgstr "Leyendo el tablero de compras…"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "No stock levels yet"
+msgstr "Aún no hay niveles de surtido"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "Set how many pieces you keep of each model and this board tells you what to buy."
+msgstr "Di cuántas piezas tienes de cada modelo y este tablero te dice qué comprar."
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "Stock levels"
+msgstr "Niveles de surtido"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "To buy"
+msgstr "Por comprar"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "{0} levels below their minimum; filling them costs {1}."
+msgstr "{0} niveles bajo su mínimo; llenarlos cuesta {1}."
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "{0} short"
+msgstr "faltan {0}"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "And {0} more."
+msgstr "Y {0} más."
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "None of your suppliers brings: {0}."
+msgstr "Ninguno de tus proveedores trae: {0}."
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "Who fills it"
+msgstr "Quién lo surte"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "Each supplier’s newest catalogue at its own price. «Build the order» leaves a draft to review; nothing is sent."
+msgstr "El catálogo más nuevo de cada proveedor, a su precio. «Armar pedido» deja un borrador para revisar; no se manda nada."
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "{0} models, {1} pieces · {2}"
+msgstr "{0} modelos, {1} piezas · {2}"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "Build the order"
+msgstr "Armar pedido"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "The owner builds the orders."
+msgstr "El dueño arma los pedidos."
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "Prices"
+msgstr "Precios"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "{0} at {1} against {2} at {3}"
+msgstr "{0} a {1} contra {2} a {3}"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "saves {0}"
+msgstr "ahorras {0}"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "up from {0} to {1}"
+msgstr "subió de {0} a {1}"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "down from {0} to {1}"
+msgstr "bajó de {0} a {1}"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "Open orders"
+msgstr "Órdenes abiertas"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "{0} pending to receive, the oldest first."
+msgstr "{0} por recibir, la más vieja primero."
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "{0} days, late"
+msgstr "{0} días, atrasada"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "{0} days"
+msgstr "{0} días"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "Arrived, to receive"
+msgstr "Llegó, por recibir"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "Bills due this week"
+msgstr "Facturas que vencen esta semana"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "due {0}"
+msgstr "vence {0}"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "This month"
+msgstr "Este mes"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "From {0}, {1} days."
+msgstr "Desde el {0}, {1} días."
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "{0} sold, {1} in stock"
+msgstr "{0} vendidas, {1} en existencia"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "Monthly budgets"
+msgstr "Presupuestos del mes"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "Edit budgets"
+msgstr "Editar presupuestos"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "No budgets. With one per product type, a buy plan never spends more than what is left this month."
+msgstr "Sin presupuestos. Con uno por tipo de producto, un plan de compra nunca gasta más de lo que queda del mes."
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "{0} of {1}"
+msgstr "{0} de {1}"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "Spent: plans of this type wait for next month."
+msgstr "Gastado: los planes de este tipo esperan al mes que entra."
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "{0} left"
+msgstr "quedan {0}"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "Delivery days"
+msgstr "Días de entrega"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "What each product type may commit in purchase orders this month."
+msgstr "Lo que cada tipo de producto puede comprometer en órdenes de compra este mes."
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "Product type"
+msgstr "Tipo de producto"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "Search group"
+msgstr "Buscar grupo"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "Per month"
+msgstr "Al mes"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "Remove budget"
+msgstr "Quitar presupuesto"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "Add a budget"
+msgstr "Agregar presupuesto"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "Save budgets"
+msgstr "Guardar presupuestos"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "Days from the order to the receipt. Empty: measured from its orders."
+msgstr "Días de la orden a la recepción. Vacío: se miden de sus órdenes."
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "Reading the suppliers…"
+msgstr "Leyendo los proveedores…"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "No supplier has a purchase order yet."
+msgstr "Ningún proveedor tiene una orden de compra todavía."
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "Delivery days of {0}"
+msgstr "Días de entrega de {0}"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "Save"
+msgstr "Guardar"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "Levels met"
+msgstr "Niveles cumplidos"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "{0} late"
+msgstr "{0} atrasadas"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "To receive"
+msgstr "Por recibir"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "Bills this week"
+msgstr "Facturas de la semana"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "{0} overdue"
+msgstr "{0} vencidas"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "Asked without stock"
+msgstr "Pedido sin haber"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "this week"
+msgstr "esta semana"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "{0} at {1}"
+msgstr "{0} a {1}"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "asked {0} without stock"
+msgstr "pidieron {0} sin haber"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "sold {0} of what it had"
+msgstr "vendió {0} de lo que tenía"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "stock for {0} days"
+msgstr "existencia para {0} días"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "{0} turns a year"
+msgstr "{0} vueltas al año"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "margin {0}"
+msgstr "margen {0}"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "{0} sells {1}"
+msgstr "{0} vende {1}"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "Draft order ready: {0}"
+msgstr "Pedido en borrador listo: {0}"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "Budgets saved"
+msgstr "Presupuestos guardados"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "{0} days, yours"
+msgstr "{0} días, los tuyos"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "{0} days, measured over {1} receipts"
+msgstr "{0} días, medidos en {1} recepciones"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "{0} days, the default"
+msgstr "{0} días, los de ajustes"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "Delivery days saved"
+msgstr "Días de entrega guardados"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "Buying settings"
+msgstr "Ajustes de compras"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "Section"
+msgstr "Sección"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "Levels"
+msgstr "Niveles"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "Suggested"
+msgstr "Sugerencias"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "Floor"
+msgstr "Piso"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "Lost sales"
+msgstr "Ventas perdidas"
+
+#: frontend/src/components/compras/LostSaleSheet.vue
+msgctxt "VentasPerdidas"
+msgid "We did not have it"
+msgstr "No lo tenía"
+
+#: frontend/src/components/compras/LostSaleSheet.vue
+msgctxt "VentasPerdidas"
+msgid "What the customer asked for; it counts as demand for the levels."
+msgstr "Lo que pidió el cliente; cuenta como demanda para los niveles."
+
+#: frontend/src/components/compras/LostSaleSheet.vue
+msgctxt "VentasPerdidas"
+msgid "Product type"
+msgstr "Tipo de producto"
+
+#: frontend/src/components/compras/LostSaleSheet.vue
+msgctxt "VentasPerdidas"
+msgid "Model"
+msgstr "Modelo"
+
+#: frontend/src/components/compras/LostSaleSheet.vue
+msgctxt "VentasPerdidas"
+msgid "iPhone 12, A15…"
+msgstr "iPhone 12, A15…"
+
+#: frontend/src/components/compras/LostSaleSheet.vue
+msgctxt "VentasPerdidas"
+msgid "Colour (optional)"
+msgstr "Color (opcional)"
+
+#: frontend/src/components/compras/LostSaleSheet.vue
+msgctxt "VentasPerdidas"
+msgid "Pieces"
+msgstr "Piezas"
+
+#: frontend/src/components/compras/LostSaleSheet.vue
+msgctxt "VentasPerdidas"
+msgid "Note (optional)"
+msgstr "Nota (opcional)"
+
+#: frontend/src/components/compras/LostSaleSheet.vue
+msgctxt "VentasPerdidas"
+msgid "Record it"
+msgstr "Anotarlo"
+
+#: frontend/src/components/compras/LostSaleSheet.vue
+msgctxt "VentasPerdidas"
+msgid "Choose the product type and the model."
+msgstr "Elige el tipo de producto y el modelo."
+
+#: frontend/src/components/compras/LostSaleSheet.vue
+msgctxt "VentasPerdidas"
+msgid "Recorded: {0}"
+msgstr "Anotado: {0}"
+
+#: frontend/src/components/compras/niveles/NivelesAjustes.vue
+msgctxt "Niveles"
+msgid "Could not read the settings"
+msgstr "No se pudieron leer los ajustes"
+
+#: frontend/src/components/compras/niveles/NivelesAjustes.vue
+msgctxt "Niveles"
+msgid "Reading the settings…"
+msgstr "Leyendo los ajustes…"
+
+#: frontend/src/components/compras/niveles/NivelesAjustes.vue
+msgctxt "Niveles"
+msgid "Suggested levels"
+msgstr "Niveles sugeridos"
+
+#: frontend/src/components/compras/niveles/NivelesAjustes.vue
+msgctxt "Niveles"
+msgid "Weeks of sales"
+msgstr "Semanas de ventas"
+
+#: frontend/src/components/compras/niveles/NivelesAjustes.vue
+msgctxt "Niveles"
+msgid "Days between orders"
+msgstr "Días entre pedidos"
+
+#: frontend/src/components/compras/niveles/NivelesAjustes.vue
+msgctxt "Niveles"
+msgid "Delivery days"
+msgstr "Días de entrega"
+
+#: frontend/src/components/compras/niveles/NivelesAjustes.vue
+msgctxt "Niveles"
+msgid "When a supplier has none of its own."
+msgstr "Cuando un proveedor no tiene los suyos."
+
+#: frontend/src/components/compras/niveles/NivelesAjustes.vue
+msgctxt "Niveles"
+msgid "Days of lost sales"
+msgstr "Días de ventas perdidas"
+
+#: frontend/src/components/compras/niveles/NivelesAjustes.vue
+msgctxt "Niveles"
+msgid "Surplus after days unsold"
+msgstr "Sobra tras días sin venta"
+
+#: frontend/src/components/compras/niveles/NivelesAjustes.vue
+msgctxt "Niveles"
+msgid "Weekly buy review"
+msgstr "Revisión semanal de compras"
+
+#: frontend/src/components/compras/niveles/NivelesAjustes.vue
+msgctxt "Niveles"
+msgid "Leave me the week’s buy list in Avisos"
+msgstr "Déjame la lista de compras de la semana en Avisos"
+
+#: frontend/src/components/compras/niveles/NivelesAjustes.vue
+msgctxt "Niveles"
+msgid "Day of the review"
+msgstr "Día de la revisión"
+
+#: frontend/src/components/compras/niveles/NivelesAjustes.vue
+msgctxt "Niveles"
+msgid "Hour (0 to 23)"
+msgstr "Hora (0 a 23)"
+
+#: frontend/src/components/compras/niveles/NivelesAjustes.vue
+msgctxt "Niveles"
+msgid "It sends nothing: it leaves the list for you to look at."
+msgstr "No manda nada: te deja la lista para que la veas."
+
+#: frontend/src/components/compras/niveles/NivelesAjustes.vue
+msgctxt "Niveles"
+msgid "Displays"
+msgstr "Exhibiciones"
+
+#: frontend/src/components/compras/niveles/NivelesAjustes.vue
+msgctxt "Niveles"
+msgid "The display store and the backroom that refills it, for «Refill the display»."
+msgstr "El almacén de exhibición y la bodega que lo surte, para «Reponer exhibición»."
+
+#: frontend/src/components/compras/niveles/NivelesAjustes.vue
+msgctxt "Niveles"
+msgid "Display"
+msgstr "Exhibición"
+
+#: frontend/src/components/compras/niveles/NivelesAjustes.vue
+msgctxt "Niveles"
+msgid "Search store"
+msgstr "Buscar almacén"
+
+#: frontend/src/components/compras/niveles/NivelesAjustes.vue
+msgctxt "Niveles"
+msgid "Refilled from"
+msgstr "Se surte de"
+
+#: frontend/src/components/compras/niveles/NivelesAjustes.vue
+msgctxt "Niveles"
+msgid "Remove display"
+msgstr "Quitar exhibición"
+
+#: frontend/src/components/compras/niveles/NivelesAjustes.vue
+msgctxt "Niveles"
+msgid "Add a display"
+msgstr "Agregar exhibición"
+
+#: frontend/src/components/compras/niveles/NivelesAjustes.vue
+msgctxt "Niveles"
+msgid "Save settings"
+msgstr "Guardar ajustes"
+
+#: frontend/src/components/compras/niveles/NivelesAjustes.vue
+msgctxt "Niveles"
+msgid "Settings saved"
+msgstr "Ajustes guardados"
+
+#: frontend/src/components/compras/niveles/NivelesPerdidas.vue
+msgctxt "Niveles"
+msgid "Could not read the lost sales"
+msgstr "No se pudieron leer las ventas perdidas"
+
+#: frontend/src/components/compras/niveles/NivelesPerdidas.vue
+msgctxt "Niveles"
+msgid "Reading lost sales…"
+msgstr "Leyendo ventas perdidas…"
+
+#: frontend/src/components/compras/niveles/NivelesPerdidas.vue
+msgctxt "Niveles"
+msgid "Asked for without stock in the last {0} days."
+msgstr "Lo que pidieron sin haber en los últimos {0} días."
+
+#: frontend/src/components/compras/niveles/NivelesPerdidas.vue
+msgctxt "Niveles"
+msgid "No lost sales"
+msgstr "Sin ventas perdidas"
+
+#: frontend/src/components/compras/niveles/NivelesPerdidas.vue
+msgctxt "Niveles"
+msgid "When a customer asks for something you do not have, record it here, in the POS or from the chat."
+msgstr "Cuando un cliente pida algo que no tienes, anótalo aquí, en el punto de venta o desde el chat."
+
+#: frontend/src/components/compras/niveles/NivelesPerdidas.vue
+msgctxt "Niveles"
+msgid "No model"
+msgstr "Sin modelo"
+
+#: frontend/src/components/compras/niveles/NivelesPerdidas.vue
+msgctxt "Niveles"
+msgid "{0} asked"
+msgstr "pidieron {0}"
+
+#: frontend/src/components/compras/niveles/NivelesPerdidas.vue
+msgctxt "Niveles"
+msgid "Noted by the assistant"
+msgstr "Lo anotó el asistente"
+
+#: frontend/src/components/compras/niveles/NivelesPerdidas.vue
+msgctxt "Niveles"
+msgid "They count once a seller confirms them."
+msgstr "Cuentan cuando un vendedor las confirma."
+
+#: frontend/src/components/compras/niveles/NivelesPerdidas.vue
+msgctxt "Niveles"
+msgid "Discard"
+msgstr "Descartar"
+
+#: frontend/src/components/compras/niveles/NivelesPerdidas.vue
+msgctxt "Niveles"
+msgid "Confirm"
+msgstr "Confirmar"
+
+#: frontend/src/components/compras/niveles/NivelesPerdidas.vue
+msgctxt "Niveles"
+msgid "Latest"
+msgstr "Recientes"
+
+#: frontend/src/components/compras/niveles/NivelesPerdidas.vue
+msgctxt "Niveles"
+msgid "Confirmed: it counts as demand"
+msgstr "Confirmada: cuenta como demanda"
+
+#: frontend/src/components/compras/niveles/NivelesPerdidas.vue
+msgctxt "Niveles"
+msgid "Discarded"
+msgstr "Descartada"
+
+#: frontend/src/components/compras/niveles/NivelesPiso.vue
+msgctxt "Niveles"
+msgid "The floor"
+msgstr "El piso"
+
+#: frontend/src/components/compras/niveles/NivelesPiso.vue
+msgctxt "Niveles"
+msgid "Could not read the floor"
+msgstr "No se pudo leer el piso"
+
+#: frontend/src/components/compras/niveles/NivelesPiso.vue
+msgctxt "Niveles"
+msgid "Reading stores and displays…"
+msgstr "Leyendo almacenes y exhibiciones…"
+
+#: frontend/src/components/compras/niveles/NivelesPiso.vue
+msgctxt "Niveles"
+msgid "This site has no Escáner: moves and counts are done by hand with a stock transfer in Inventario."
+msgstr "Este sitio no tiene Escáner: los movimientos y conteos se hacen a mano con un traspaso en Inventario."
+
+#: frontend/src/components/compras/niveles/NivelesPiso.vue
+msgctxt "Niveles"
+msgid "Move between stores"
+msgstr "Mover entre tiendas"
+
+#: frontend/src/components/compras/niveles/NivelesPiso.vue
+msgctxt "Niveles"
+msgid "No store is short of its share while another has too many."
+msgstr "Ninguna tienda está corta mientras otra tiene de más."
+
+#: frontend/src/components/compras/niveles/NivelesPiso.vue
+msgctxt "Niveles"
+msgid "{0} {1} from {2} to {3}"
+msgstr "{0} {1} de {2} a {3}"
+
+#: frontend/src/components/compras/niveles/NivelesPiso.vue
+msgctxt "Niveles"
+msgid "Create transfer"
+msgstr "Crear traspaso"
+
+#: frontend/src/components/compras/niveles/NivelesPiso.vue
+msgctxt "Niveles"
+msgid "Refill the display"
+msgstr "Reponer exhibición"
+
+#: frontend/src/components/compras/niveles/NivelesPiso.vue
+msgctxt "Niveles"
+msgid "Say which store is a display and which backroom fills it in Settings."
+msgstr "Di en Ajustes qué almacén es exhibición y qué bodega lo surte."
+
+#: frontend/src/components/compras/niveles/NivelesPiso.vue
+msgctxt "Niveles"
+msgid "Open settings"
+msgstr "Abrir ajustes"
+
+#: frontend/src/components/compras/niveles/NivelesPiso.vue
+msgctxt "Niveles"
+msgid "Every display is at its level."
+msgstr "Cada exhibición está en su nivel."
+
+#: frontend/src/components/compras/niveles/NivelesPiso.vue
+msgctxt "Niveles"
+msgid "{0}: {1} missing in {2}"
+msgstr "{0}: faltan {1} en {2}"
+
+#: frontend/src/components/compras/niveles/NivelesPiso.vue
+msgctxt "Niveles"
+msgid "Bring {0} from {1}: {2}"
+msgstr "Traer {0} de {1}: {2}"
+
+#: frontend/src/components/compras/niveles/NivelesPiso.vue
+msgctxt "Niveles"
+msgid "{0} are not in the backroom either: they go on the buy plan."
+msgstr "{0} tampoco están en la bodega: van al plan de compra."
+
+#: frontend/src/components/compras/niveles/NivelesPiso.vue
+msgctxt "Niveles"
+msgid "Create refill"
+msgstr "Crear reposición"
+
+#: frontend/src/components/compras/niveles/NivelesPiso.vue
+msgctxt "Niveles"
+msgid "Over its level"
+msgstr "Sobra"
+
+#: frontend/src/components/compras/niveles/NivelesPiso.vue
+msgctxt "Niveles"
+msgid "Over its level and unsold for {0} days: move it to a store that is short, bundle it, or mark it down."
+msgstr "Arriba de su nivel y sin venderse en {0} días: muévelo a una tienda que le falte, arma un paquete o bájale el precio."
+
+#: frontend/src/components/compras/niveles/NivelesPiso.vue
+msgctxt "Niveles"
+msgid "Nothing sits over its level."
+msgstr "Nada está arriba de su nivel."
+
+#: frontend/src/components/compras/niveles/NivelesPiso.vue
+msgctxt "Niveles"
+msgid "{0}: {1} over ({2} of {3})"
+msgstr "{0}: sobran {1} ({2} de {3})"
+
+#: frontend/src/components/compras/niveles/NivelesPiso.vue
+msgctxt "Niveles"
+msgid "last sold {0}"
+msgstr "última venta {0}"
+
+#: frontend/src/components/compras/niveles/NivelesPiso.vue
+msgctxt "Niveles"
+msgid "never sold"
+msgstr "nunca se vendió"
+
+#: frontend/src/components/compras/niveles/NivelesPiso.vue
+msgctxt "Niveles"
+msgid "Mark down"
+msgstr "Bajar precio"
+
+#: frontend/src/components/compras/niveles/NivelesPiso.vue
+msgctxt "Niveles"
+msgid "Count"
+msgstr "Contar"
+
+#: frontend/src/components/compras/niveles/NivelesPiso.vue
+msgctxt "Niveles"
+msgid "No number looks wrong."
+msgstr "Ningún número se ve mal."
+
+#: frontend/src/components/compras/niveles/NivelesPiso.vue
+msgctxt "Niveles"
+msgid "{0} in {1}"
+msgstr "{0} en {1}"
+
+#: frontend/src/components/compras/niveles/NivelesPiso.vue
+msgctxt "Niveles"
+msgid "Count it"
+msgstr "Contarlo"
+
+#: frontend/src/components/compras/niveles/NivelesPiso.vue
+msgctxt "Niveles"
+msgid "Count {0}"
+msgstr "Contar {0}"
+
+#: frontend/src/components/compras/niveles/NivelesPiso.vue
+msgctxt "Niveles"
+msgid "Every style and colour of the model in this store, as one count in Escáner. It goes to the count approvals."
+msgstr "Cada estilo y color del modelo en esta tienda, como un conteo en Escáner. Pasa a las aprobaciones de conteo."
+
+#: frontend/src/components/compras/niveles/NivelesPiso.vue
+msgctxt "Niveles"
+msgid "Nobody counts in this store yet. Give someone the store in Escáner › Conteo."
+msgstr "Nadie cuenta en esta tienda todavía. Dale la tienda a alguien en Escáner › Conteo."
+
+#: frontend/src/components/compras/niveles/NivelesPiso.vue
+msgctxt "Niveles"
+msgid "Create count"
+msgstr "Crear conteo"
+
+#: frontend/src/components/compras/niveles/NivelesPiso.vue
+msgctxt "Niveles"
+msgid "Choose who counts."
+msgstr "Elige quién cuenta."
+
+#: frontend/src/components/compras/niveles/NivelesPiso.vue
+msgctxt "Niveles"
+msgid "bins {0}"
+msgstr "cajones {0}"
+
+#: frontend/src/components/compras/niveles/NivelesPiso.vue
+msgctxt "Niveles"
+msgid "The pick to {0} is in Escáner; when it is scanned the transfer waits for you as a draft."
+msgstr "El surtido para {0} está en Escáner; al escanearlo, el traspaso te espera en borrador."
+
+#: frontend/src/components/compras/niveles/NivelesPiso.vue
+msgctxt "Niveles"
+msgid "Count of {0} created in Escáner."
+msgstr "Conteo de {0} creado en Escáner."
+
+#: frontend/src/components/compras/niveles/NivelesSugerencias.vue
+msgctxt "Niveles"
+msgid "Could not read the suggestions"
+msgstr "No se pudieron leer las sugerencias"
+
+#: frontend/src/components/compras/niveles/NivelesSugerencias.vue
+msgctxt "Niveles"
+msgid "Reading sales and asks…"
+msgstr "Leyendo ventas y pedidos sin haber…"
+
+#: frontend/src/components/compras/niveles/NivelesSugerencias.vue
+msgctxt "Niveles"
+msgid "{0} weeks of sales, {1} days of delivery ({2}) and {3} days between orders"
+msgstr "{0} semanas de ventas, {1} días de entrega ({2}) y {3} días entre pedidos"
+
+#: frontend/src/components/compras/niveles/NivelesSugerencias.vue
+msgctxt "Niveles"
+msgid "Nothing to suggest yet"
+msgstr "Nada que sugerir todavía"
+
+#: frontend/src/components/compras/niveles/NivelesSugerencias.vue
+msgctxt "Niveles"
+msgid "Nothing of these types sold or was asked for in these weeks."
+msgstr "Nada de estos tipos se vendió ni se pidió en estas semanas."
+
+#: frontend/src/components/compras/niveles/NivelesSugerencias.vue
+msgctxt "Niveles"
+msgid "Use the level of {0}"
+msgstr "Usar el nivel de {0}"
+
+#: frontend/src/components/compras/niveles/NivelesSugerencias.vue
+msgctxt "Niveles"
+msgid "Fill up to {0}, order below {1}"
+msgstr "Llenar hasta {0}, pedir con menos de {1}"
+
+#: frontend/src/components/compras/niveles/NivelesSugerencias.vue
+msgctxt "Niveles"
+msgid "No sales: no level"
+msgstr "Sin ventas: sin nivel"
+
+#: frontend/src/components/compras/niveles/NivelesSugerencias.vue
+msgctxt "Niveles"
+msgid "Sold {0}, asked for without stock {1}: {2} a week"
+msgstr "Vendidas {0}, pedidas sin haber {1}: {2} a la semana"
+
+#: frontend/src/components/compras/niveles/NivelesSugerencias.vue
+msgctxt "Niveles"
+msgid "now {0}, below {1}"
+msgstr "ahora {0}, con menos de {1}"
+
+#: frontend/src/components/compras/niveles/NivelesSugerencias.vue
+msgctxt "Niveles"
+msgid "Pick none"
+msgstr "Ninguna"
+
+#: frontend/src/components/compras/niveles/NivelesSugerencias.vue
+msgctxt "Niveles"
+msgid "Pick all"
+msgstr "Todas"
+
+#: frontend/src/components/compras/niveles/NivelesSugerencias.vue
+msgctxt "Niveles"
+msgid "Use {0}"
+msgstr "Usar {0}"
+
+#: frontend/src/components/compras/niveles/NivelesSugerencias.vue
+msgctxt "Niveles"
+msgid "Tick the levels to keep."
+msgstr "Marca los niveles que te quedas."
+
+#: frontend/src/components/compras/niveles/NivelesSugerencias.vue
+msgctxt "Niveles"
+msgid "The owner uses the suggestions."
+msgstr "El dueño usa las sugerencias."
+
+#: frontend/src/components/compras/niveles/NivelesSugerencias.vue
+msgctxt "Niveles"
+msgid "New"
+msgstr "Nuevo"
+
+#: frontend/src/components/compras/niveles/NivelesSugerencias.vue
+msgctxt "Niveles"
+msgid "Raise"
+msgstr "Subir"
+
+#: frontend/src/components/compras/niveles/NivelesSugerencias.vue
+msgctxt "Niveles"
+msgid "Lower"
+msgstr "Bajar"
+
+#: frontend/src/components/compras/niveles/NivelesSugerencias.vue
+msgctxt "Niveles"
+msgid "New mix"
+msgstr "Otra mezcla"
+
+#: frontend/src/components/compras/niveles/NivelesSugerencias.vue
+msgctxt "Niveles"
+msgid "No sales"
+msgstr "Sin ventas"
+
+#: frontend/src/components/compras/niveles/NivelesSugerencias.vue
+msgctxt "Niveles"
+msgid "Same"
+msgstr "Igual"
+
+#: frontend/src/components/compras/niveles/NivelesSugerencias.vue
+msgctxt "Niveles"
+msgid "the supplier’s"
+msgstr "los del proveedor"
+
+#: frontend/src/components/compras/niveles/NivelesSugerencias.vue
+msgctxt "Niveles"
+msgid "measured"
+msgstr "medidos"
+
+#: frontend/src/components/compras/niveles/NivelesSugerencias.vue
+msgctxt "Niveles"
+msgid "default"
+msgstr "de ajustes"
+
+#: frontend/src/components/compras/niveles/NivelesSugerencias.vue
+msgctxt "Niveles"
+msgid "{0} levels saved"
+msgstr "{0} niveles guardados"
+
+#: frontend/src/components/doco/inbox/InboxLostSales.vue
+msgctxt "VentasPerdidas"
+msgid "Lost sales"
+msgstr "Ventas perdidas"
+
+#: frontend/src/components/doco/inbox/InboxLostSales.vue
+msgctxt "VentasPerdidas"
+msgid "Noted by the assistant"
+msgstr "Lo anotó el asistente"
+
+#: frontend/src/components/doco/inbox/InboxLostSales.vue
+msgctxt "VentasPerdidas"
+msgid "Discard"
+msgstr "Descartar"
+
+#: frontend/src/components/doco/inbox/InboxLostSales.vue
+msgctxt "VentasPerdidas"
+msgid "Confirm"
+msgstr "Confirmar"
+
+#: frontend/src/components/doco/inbox/InboxLostSales.vue
+msgctxt "VentasPerdidas"
+msgid "Confirmed: it counts as demand"
+msgstr "Confirmada: cuenta como demanda"
+
+#: frontend/src/components/doco/inbox/InboxLostSales.vue
+msgctxt "VentasPerdidas"
+msgid "Discarded"
+msgstr "Descartada"

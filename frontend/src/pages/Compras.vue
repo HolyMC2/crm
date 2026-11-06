@@ -66,6 +66,18 @@
                 <button
                   type="button"
                   :class="chipClass(false)"
+                  data-compras-hoy
+                  @click="router.push({ name: 'CompraHoy' })"
+                >
+                  <span
+                    class="lucide-layout-dashboard size-3.5"
+                    aria-hidden="true"
+                  />
+                  {{ __('Today', null, 'ComprasHoy') }}
+                </button>
+                <button
+                  type="button"
+                  :class="chipClass(false)"
                   data-compras-surtido
                   @click="router.push({ name: 'CompraSurtido' })"
                 >
