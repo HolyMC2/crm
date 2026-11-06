@@ -387,7 +387,9 @@ describe('automation connection', () => {
     expect(el.textContent).not.toContain('also carry the old signature')
     api.resource.doc.previous_secret_until = '2999-01-01 10:00:00'
     await flush()
-    expect(el.textContent).toContain('Events also carry the old signature until')
+    expect(el.textContent).toContain(
+      'Events also carry the old signature until',
+    )
     api.resource.doc.previous_secret_until = '2000-01-01 10:00:00'
     await flush()
     expect(el.textContent).not.toContain('also carry the old signature')
