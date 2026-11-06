@@ -34,7 +34,8 @@ below describe its fields.
    - Save. The signing secret (`whsec_…`) is created automatically. Use **Show signing secret**
      to copy it into n8n, and **Rotate** if it leaks. For 24 hours after a rotation every event
      carries two signatures, one per secret, so n8n keeps accepting events until you paste the
-     new one; the verify snippet below accepts either.
+     new one; the verify snippet below accepts either. Replacing it again within those 24 hours
+     keeps only the latest old secret, so the one before it stops working at once.
 3. **Enable**. If something is missing, enabling says exactly what (user without an API key, no
    URL, no events…).
 4. **Send test event** posts a signed `ping` synchronously and shows the response.
