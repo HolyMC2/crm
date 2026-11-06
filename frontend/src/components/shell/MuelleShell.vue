@@ -650,8 +650,10 @@ watch(
 )
 // Ask for the boot during setup: from onMounted the routed page would already
 // have mounted (children mount first), fired its requests, then unmounted for
-// «Opening Muelle…» and mounted again.
-reload()
+// «Opening Muelle…» and mounted again. Not a forced refresh: the entry asks
+// for the boot as it starts (main.js), and a boot that call already brought
+// is this page load's; a saved copy from an earlier load still refreshes.
+loadShell().catch(() => {})
 onMounted(watchKeyboard)
 </script>
 <style>
