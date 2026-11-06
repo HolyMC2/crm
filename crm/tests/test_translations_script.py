@@ -94,7 +94,14 @@ class TestTranslationsScript(IntegrationTestCase):
 		# Every DocType name but child tables', the labels and Select options of named DocTypes,
 		# their records, and English the crm server code sends for __() (api/workload.py OPEN).
 		self.assertIn("ToDo", keys)
-		self.assertNotIn("DocField", keys)
+		literals = shell_dictionary.python_literals(shell_dictionary.APP)
+		targets = {target for name in named for target in shell_dictionary._targets(name)}
+		child = next(
+			name
+			for name in frappe.get_all("DocType", filters={"istable": 1}, pluck="name", order_by="name")
+			if name not in literals and name not in targets
+		)
+		self.assertNotIn(child, keys)
 		meta = frappe.get_meta("CRM Deal")
 		self.assertIn(meta.get_field("status").label, keys)
 		self.assertIn("Won", keys)
