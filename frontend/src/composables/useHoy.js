@@ -2,8 +2,7 @@
 // every action runs through the owning module's own endpoint. Pure helpers are
 // exported for unit tests; the page owns presentation.
 import { call } from 'frappe-ui'
-import { bootScope, can, moduleEnabled } from '@/vendor/muelle-shell/contracts'
-import { createLiveSync } from '@/vendor/muelle-shell/live-sync'
+import { can, moduleEnabled } from '@/vendor/muelle-shell/contracts'
 import { contactScope, contactStorage } from '@/utils/contactos'
 import { sourceSlugs } from '@/utils/shellRoutes'
 import { takeHoy } from '@/utils/hoyPrefetch'
@@ -590,20 +589,5 @@ export function landingOptions(modules = []) {
 
 // ── live updates ────────────────────────────────────────────────────────────
 
-let hub
-/** One live-sync hub for Hoy, on the app socket; sibling tabs of another user never hear it. */
-export function hoyLive(socket) {
-  if (!hub) {
-    const user = decodeURIComponent(
-      document.cookie
-        .split('; ')
-        .find((part) => part.startsWith('user_id='))
-        ?.slice(8) || '',
-    )
-    hub = createLiveSync({
-      socket: socket || null,
-      namespace: bootScope(window.site_name || location.host, user),
-    })
-  }
-  return hub
-}
+/** The tab's one live-sync hub (composables/liveHub), under its first name. */
+export { liveHub as hoyLive } from '@/composables/liveHub'

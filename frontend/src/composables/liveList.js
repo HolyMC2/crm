@@ -1,14 +1,17 @@
 import { onBeforeUnmount, ref, unref, watch } from 'vue'
+import { liveHub } from '@/composables/liveHub'
 import { globalStore } from '@/stores/global'
 import { sessionStore } from '@/stores/session'
 
 // A list on screen stays current: a teammate's new or changed record shows
 // without reloading the page. Frappe announces every save as `list_update`
-// to the doctype's room; joining it (`doctype_subscribe`) checks that the
-// worker may read the doctype. A burst of saves becomes one refresh; while
-// the tab is hidden the refresh waits for the worker to come back; after a
-// dropped connection the room is joined again and the list refreshed, since
-// the saves in between were missed.
+// to the doctype's room; the tab's live hub (composables/liveHub) joins it,
+// once for every view that shows the doctype (the websocket server checks
+// that the worker may read it), and turns a burst of saves into one refresh.
+// The worker's own saves are already on screen. A hidden tab refreshes when
+// the worker comes back; a reconnect and the hub's reconciliation each minute
+// read the list again, since saves in between may have been missed. While the
+// socket is down those reads wait for it: its reconnect reads the list again.
 
 export const LIVE_DELAY_MS = 800
 
@@ -32,69 +35,59 @@ function sessionUser() {
  * @param doctype  a doctype name or a list of them, or a ref / getter of that
  *                 ('' = none)
  * @param refresh  reloads the list (keeps its size and position)
+ * @param options.minIntervalMs  floor between two refreshes, for lists that
+ *                 a busy shop changes all day (stock moves)
  * @returns {{ fresh: Ref<Set<string>>, mark: (before: string[], after: string[]) => void }}
  *   `fresh` holds the names that just appeared, for a short highlight.
  */
 export function useLiveList(doctype, refresh, options = {}) {
   const {
     socket = appSocket(),
+    hub = socket ? liveHub(socket) : null,
     me = sessionUser,
     delay = LIVE_DELAY_MS,
+    minIntervalMs = 0,
     freshFor = 2600,
   } = options
   const current = () => {
     const value = typeof doctype === 'function' ? doctype() : unref(doctype)
     return [value || []].flat().filter(Boolean).map(String).sort().join('\n')
   }
-  let joined = []
-  let timer = 0
-  let waiting = false
+  let doctypes = []
+  let unwatch = null
 
-  function join(key) {
-    const next = key ? key.split('\n') : []
-    for (const name of joined)
-      if (!next.includes(name)) socket?.emit('doctype_unsubscribe', name)
-    for (const name of next)
-      if (!joined.includes(name)) socket?.emit('doctype_subscribe', name)
-    joined = next
+  // Names the worker saved here; a batch of only those is not read again.
+  const own = new Set()
+  function onSave(data) {
+    if (!doctypes.includes(data?.doctype) || !data.name) return
+    if (data.user && data.user === me()) own.add(data.name)
   }
-
-  function run() {
-    timer = 0
-    if (typeof document !== 'undefined' && document.hidden) {
-      waiting = true
-      return
-    }
-    waiting = false
-    refresh()
-  }
-  function soon() {
-    clearTimeout(timer)
-    timer = setTimeout(run, delay)
+  function onBatch(batch) {
+    if (batch.reason !== 'change' && socket && !socket.connected) return
+    const mine =
+      !batch.full &&
+      batch.names.length > 0 &&
+      batch.names.every((name) => own.has(name))
+    for (const name of batch.names) own.delete(name)
+    if (!mine) return refresh()
   }
 
-  function onUpdate(data) {
-    if (!joined.includes(data?.doctype)) return
-    if (data.user && data.user === me()) return
-    soon()
-  }
-  function onVisible() {
-    if (waiting && !document.hidden) run()
-  }
-  // The first connect only joins; a later one also catches up on what was missed.
-  let connectedBefore = !!socket?.connected
-  function onConnect() {
-    const names = joined
-    joined = []
-    join(names.join('\n'))
-    if (names.length && connectedBefore) soon()
-    connectedBefore = true
+  // The next doctypes are watched before the last ones are left, so a room
+  // both share is never left in between.
+  function follow(key) {
+    doctypes = key ? key.split('\n') : []
+    own.clear()
+    const next =
+      hub && doctypes.length
+        ? hub.watch(doctypes, onBatch, { debounceMs: delay, minIntervalMs })
+        : null
+    unwatch?.()
+    unwatch = next
   }
 
-  socket?.on('list_update', onUpdate)
-  socket?.on('connect', onConnect)
-  document.addEventListener('visibilitychange', onVisible)
-  const stop = watch(current, join, { immediate: true })
+  socket?.on('list_update', onSave)
+  socket?.on('doc_update', onSave)
+  const stop = watch(current, follow, { immediate: true })
 
   const fresh = ref(new Set())
   let freshTimer = 0
@@ -110,12 +103,10 @@ export function useLiveList(doctype, refresh, options = {}) {
 
   onBeforeUnmount(() => {
     stop()
-    join('')
-    clearTimeout(timer)
+    follow('')
     clearTimeout(freshTimer)
-    socket?.off('list_update', onUpdate)
-    socket?.off('connect', onConnect)
-    document.removeEventListener('visibilitychange', onVisible)
+    socket?.off('list_update', onSave)
+    socket?.off('doc_update', onSave)
   })
 
   return { fresh, mark }
