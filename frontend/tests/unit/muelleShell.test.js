@@ -71,6 +71,13 @@ vi.mock('@/utils/listWarmup', () => ({
   warmListsAfterFirstRoute: (router, modules, current) =>
     warmUp.calls.push({ modules, current }),
 }))
+// afterFirstRoute (utils/prefetch.js) runs its work as soon as the first
+// route is in: the tests read the deferred checks right after the mount.
+vi.mock('@/utils/prefetch', async (importOriginal) => ({
+  ...(await importOriginal()),
+  afterFirstRoute: (router, work) =>
+    Promise.resolve(router?.isReady?.()).then(work, work),
+}))
 
 import '@/uiHost'
 import MuelleShell from '@/components/shell/MuelleShell.vue'
@@ -467,6 +474,9 @@ describe('module registry', () => {
     expect(labels).toContain('Ask for access')
     app.unmount()
     root.remove()
+    // The shell boots from the entry's call once; a new mount reads the boot
+    // kept in memory unless the test forgets it.
+    resetShellForTests()
 
     state.call.mockImplementation(async () =>
       boot({

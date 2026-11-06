@@ -56,14 +56,17 @@ export function loadAssistantStatus({ refresh = false } = {}) {
 /**
  * The boot's ask: the last answer shows the doors at once and the fresh
  * check runs once the first route has its data, unless the answer is
- * younger than STATUS_FRESH_MS; a first visit asks now.
+ * younger than STATUS_FRESH_MS. A first visit asks then too: the check is
+ * the heaviest call of the boot and asking with the boot held the route's
+ * own requests back on a phone (the doors appear a moment later, once).
  */
 export function bootAssistantStatus(router) {
   if (statusPromise || assistantOn.value !== null) return
   const saved = readCachedList(SAVED)
-  if (!saved) return void loadAssistantStatus()
-  assistantOn.value = Boolean(saved.enabled)
-  if (readCachedList(SAVED, undefined, STATUS_FRESH_MS)) return
+  if (saved) {
+    assistantOn.value = Boolean(saved.enabled)
+    if (readCachedList(SAVED, undefined, STATUS_FRESH_MS)) return
+  }
   afterFirstRoute(router, () => loadAssistantStatus(), {
     delay: CHECK_DELAY_MS,
   })

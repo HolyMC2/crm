@@ -32,11 +32,14 @@ beforeEach(() => {
 })
 
 describe('the assistant doors show from the last answer', () => {
-  it('a first visit asks at once and keeps the answer', async () => {
+  it('a first visit asks once the first screen has its data and keeps the answer', async () => {
+    vi.useFakeTimers()
     call.mockResolvedValue({ enabled: true, surface: 'sheet' })
     bootAssistantStatus(router)
+    expect(assistantOn.value).toBeNull()
+    expect(call).not.toHaveBeenCalled()
+    await vi.runAllTimersAsync()
     expect(call).toHaveBeenCalledTimes(1)
-    await flush()
     expect(assistantOn.value).toBe(true)
     expect(readCachedList('assistant:status')).toEqual({
       enabled: true,
