@@ -200,6 +200,18 @@
               :currency="currency"
               :boot="shellBoot"
             />
+            <!-- Datos is a summary (no switches, tables or accounts); the whole
+                 form is one click away where Desk fits. -->
+            <a
+              v-if="key === 'datos' && isWide"
+              :href="deskUrl(doctype, name)"
+              target="_blank"
+              rel="noopener"
+              class="mx-4 -mt-3 flex min-h-11 items-center gap-2 self-start text-base-medium text-ink-gray-8"
+            >
+              <span class="lucide-external-link size-5" aria-hidden="true" />
+              Ver todos los campos en el escritorio
+            </a>
           </template>
         </div>
         <aside class="flex min-w-0 flex-col gap-5 pt-5">
