@@ -22,6 +22,15 @@ import App from './App.vue'
 // the boot: both start with the entry instead of after the mount has rendered
 // App.vue and fetched MuelleShell's chunk (the same specifier as App.vue, so
 // it is that chunk). A saved boot refreshes in the background as before.
+// The socket's handshake authenticates against the backend: it waits for the
+// first screen's data like the other deferred work. Pages bind their listeners
+// on setup, before the connect; an event in the meantime is not replayed, so
+// the wait is short.
+const SOCKET_DELAY_MS = 1500
+function connectAfterFirstRoute(socket) {
+  afterFirstRoute(router, () => socket.connect(), { delay: SOCKET_DELAY_MS })
+}
+
 function startShell() {
   const user = document.cookie
     .split('; ')
@@ -98,6 +107,7 @@ if (import.meta.env.DEV) {
       loadPrintingRuntime()
       socket = initSocket()
       app.config.globalProperties.$socket = socket
+      connectAfterFirstRoute(socket)
       startShell()
       mountWhenTranslated(() => app.mount('#app'))
     })
@@ -107,6 +117,7 @@ if (import.meta.env.DEV) {
   afterFirstRoute(router, loadPrintingRuntime)
   socket = initSocket()
   app.config.globalProperties.$socket = socket
+  connectAfterFirstRoute(socket)
   startShell()
   // The first render reads the dictionary (App.vue): the mount waits for its
   // script, which the page loads after this entry so both come in parallel.

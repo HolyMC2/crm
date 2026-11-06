@@ -26,7 +26,13 @@ vi.mock('../../node_modules/frappe-ui/src/resources/plugin', () => ({
 
 vi.mock('socket.io-client', () => ({
   io: vi.fn((url, options) => {
-    const socket = { url, options, on: vi.fn(), io: { on: vi.fn() } }
+    const socket = {
+      url,
+      options,
+      on: vi.fn(),
+      connect: vi.fn(),
+      io: { on: vi.fn() },
+    }
     fixture.sockets.push(socket)
     return socket
   }),
@@ -129,7 +135,10 @@ function expectCanonicalSocket() {
     reconnectionDelayMax: 30000,
     transports: ['websocket', 'polling'],
     tryAllTransports: true,
+    autoConnect: false,
   })
+  // The handshake waits for the first screen (main.js connectAfterFirstRoute).
+  expect(socket.connect).not.toHaveBeenCalled()
   const root = fixture.roots[0]
   expect(root.proxy.$socket).toBe(socket)
   expect(fixture.mountedSockets).toEqual([socket])
@@ -207,6 +216,7 @@ describe('CRM socket bootstrap ownership', () => {
         reconnectionDelayMax: 30000,
         transports: ['websocket', 'polling'],
         tryAllTransports: true,
+        autoConnect: false,
       })
     },
   )

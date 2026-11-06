@@ -8,12 +8,16 @@ The build lists every string literal of its modules in `translation-keys.json`
 dictionary restricted to the keys the UI can ask for:
 
 - the build's literals, and `message:context` keys whose parts both are keys;
-- every DocType name, and the labels, descriptions and Select options of the
-  DocTypes the build names, of their child tables and of the DocTypes they link
-  to (labels the UI reads from DocType meta, status values the server sends, the
-  fields of a "create new" dialog);
-- the record names of translated DocTypes and of small DocTypes the build names
-  (stages, lead sources);
+- every DocType name but child tables' (a notification or a link names its
+  DocType), and the labels and Select options of the DocTypes the build names,
+  of their child tables and of the DocTypes they link to (labels the UI reads
+  from DocType meta, status values the server sends, the fields of a "create
+  new" dialog). Field descriptions are not shipped: the UI shows them as they
+  are, and they were a fifth of the payload;
+- the record names of small DocTypes the build names (stages, lead sources) and
+  of translated DocTypes among the named ones and their link targets (a
+  country list the whole site translates is vocabulary only where a form
+  shows it);
 - string literals in this app's Python, which sends some English the client
   translates (api/workload.py).
 
@@ -188,10 +192,10 @@ def runtime_keys(literals: frozenset[str]) -> set[str]:
 	named = {name for name in doctypes if name in literals}
 	# One level deep: child tables and Link targets, not what those link to.
 	targets = {target for doctype in named for target in _targets(doctype) if target in doctypes}
-	keys = set(doctypes)
+	keys = {name for name, row in doctypes.items() if not row.istable}
 	for doctype in named | targets:
 		keys |= _doctype_strings(doctype)
-	translated = set(get_translated_doctypes())
+	translated = set(get_translated_doctypes()) & (named | targets)
 	small = {name for name in named if not (doctypes[name].istable or doctypes[name].issingle)}
 	for doctype in translated | small:
 		row = doctypes.get(doctype)
@@ -217,9 +221,9 @@ def _doctype_strings(doctype: str) -> set[str]:
 		meta = frappe.get_meta(doctype)
 	except Exception:
 		return set()
-	strings = {meta.name, meta.description}
+	strings = {meta.name}
 	for field in meta.fields:
-		strings |= {field.label, field.description}
+		strings.add(field.label)
 		if field.fieldtype == "Select" and field.options:
 			strings |= set(field.options.split("\n"))
 	strings.discard(None)
