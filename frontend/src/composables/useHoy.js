@@ -38,7 +38,10 @@ export function loadHoy({ fresh = false } = {}) {
 }
 
 // A resync this soon after a read started finds nothing that read did not.
-export const RESYNC_FRESH_MS = 3000
+// The socket's first connect lands several seconds after the page read on a
+// slow phone; a change inside that window reaches the page with its next live
+// event, a full re-read for it is not worth the page's cost.
+export const RESYNC_FRESH_MS = 20_000
 
 /**
  * One read per render. The live hub resyncs every view when the socket first
