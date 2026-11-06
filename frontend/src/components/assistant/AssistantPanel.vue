@@ -21,7 +21,7 @@
     />
     <AssistantLog v-else docked @navigate="$emit('navigate')" />
     <AssistantComposer
-      v-if="sessions.view === 'chat'"
+      v-if="sessions.view === 'chat' || sessions.view === 'canvas'"
       docked
       class="flex-none"
     />

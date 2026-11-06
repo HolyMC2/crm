@@ -32445,3 +32445,62 @@ msgstr "Grupos de clientes"
 
 msgid "{0} % of the customers"
 msgstr "{0} % de los clientes"
+
+#: frontend/src/components/assistant/AssistantCanvasFile.vue
+msgid "Opening…"
+msgstr "Abriendo…"
+
+#: frontend/src/components/assistant/AssistantCanvasFile.vue
+msgid "This table is empty."
+msgstr "Esta tabla está vacía."
+
+#: frontend/src/components/assistant/AssistantCanvasFile.vue
+msgid "Showing {0} of {1} rows. Download it for all of them."
+msgstr "Se ven {0} de {1} filas. Descárgala para verlas todas."
+
+#: frontend/src/components/assistant/AssistantCanvasFile.vue
+msgid "This file only downloads. Use the button below."
+msgstr "Este archivo solo se descarga. Usa el botón de abajo."
+
+#: frontend/src/components/assistant/AssistantCanvasFile.vue
+msgid "version {0}"
+msgstr "versión {0}"
+
+#: frontend/src/components/assistant/assistantCanvas.js
+msgid "Muelle could not open this file. Download it or try again."
+msgstr "Muelle no pudo abrir este archivo. Descárgalo o inténtalo de nuevo."
+
+#: frontend/src/components/assistant/assistantCanvas.js
+msgctxt "Lienzo"
+msgid "Page"
+msgstr "Página"
+
+#: frontend/src/components/assistant/assistantCanvas.js
+msgctxt "Lienzo"
+msgid "Image"
+msgstr "Imagen"
+
+#: frontend/src/components/assistant/assistantCanvas.js
+msgctxt "Lienzo"
+msgid "Table"
+msgstr "Tabla"
+
+#: frontend/src/components/assistant/assistantCanvas.js
+msgctxt "Lienzo"
+msgid "Spreadsheet"
+msgstr "Hoja de cálculo"
+
+#: frontend/src/components/assistant/assistantCanvas.js
+msgctxt "Lienzo"
+msgid "Notes"
+msgstr "Notas"
+
+#: frontend/src/components/assistant/assistantCanvas.js
+msgctxt "Lienzo"
+msgid "Text"
+msgstr "Texto"
+
+#: frontend/src/components/assistant/assistantCanvas.js
+msgctxt "Lienzo"
+msgid "Data"
+msgstr "Datos"

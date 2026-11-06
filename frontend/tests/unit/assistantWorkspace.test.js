@@ -353,6 +353,25 @@ describe('the desktop workspace', () => {
     app.unmount()
     restore()
   })
+
+  it('the Lienzo keeps the composer; a question asked there answers in the chat', async () => {
+    const { app, restore } = await openWorkspace()
+    showView('canvas')
+    // the Lienzo view is its own chunk
+    await vi.waitFor(() =>
+      expect(q('[data-testid="assistant-canvas-view"]')).not.toBeNull(),
+    )
+    const input = q('[data-testid="assistant-input"]')
+    expect(input).not.toBeNull()
+    assistant.draft = '¿Qué dice la tabla de ventas?'
+    await flush()
+    q('[data-testid="assistant-send"]').click()
+    await flush()
+    expect(calls('say').at(-1)[1].text).toBe('¿Qué dice la tabla de ventas?')
+    expect(sessions.view).toBe('chat')
+    app.unmount()
+    restore()
+  })
 })
 
 describe('managing conversations (T3 thread menu)', () => {

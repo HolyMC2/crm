@@ -17,7 +17,7 @@
       <button
         v-if="sessions.view !== 'chat'"
         type="button"
-        class="flex min-h-11 min-w-0 items-center gap-1 rounded-full pr-3 text-ink-gray-9 hover:bg-surface-gray-2"
+        class="flex min-h-11 min-w-0 flex-1 items-center gap-1 rounded-full pr-3 text-ink-gray-9 hover:bg-surface-gray-2"
         :aria-label="__('Back to the chat')"
         data-testid="assistant-back"
         @click="back"

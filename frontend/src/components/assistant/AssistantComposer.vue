@@ -136,7 +136,7 @@ import {
   resolveCommand,
   updateComplete,
 } from './assistantAutocomplete'
-import { runCommand } from './assistantSessions'
+import { runCommand, sessions } from './assistantSessions'
 import {
   assistant,
   attachFile,
@@ -165,7 +165,13 @@ async function submit() {
   // «/recuerdame mañana…» goes out as «Recuérdame mañana…»; «/nueva» runs here
   const command = file ? null : await resolveCommand(text)
   if (command?.action) return runCommand(command.action)
+  toChat()
   send(command?.text || text, { file })
+}
+
+// asked from the Lienzo: the answer shows in the chat
+function toChat() {
+  if (sessions.view === 'canvas') sessions.view = 'chat'
 }
 
 function onKey(event) {
@@ -210,6 +216,7 @@ function pick(index) {
   }
   if (out.send) {
     assistant.draft = out.text
+    toChat()
     return send(out.send)
   }
   assistant.draft = out.text

@@ -121,7 +121,7 @@
         @navigate="onNavigate"
       />
       <AssistantComposer
-        v-if="sessions.view === 'chat'"
+        v-if="sessions.view === 'chat' || sessions.view === 'canvas'"
         docked
         class="!px-[max(1rem,calc((100%-48rem)/2))]"
       />

@@ -10,8 +10,31 @@ import { call } from 'frappe-ui'
 export const CANVAS_API = 'doco.docoutils.assistant.canvas'
 /** Shown inline under an answer; the rest is listed in the Lienzo. */
 export const INLINE_KINDS = ['html', 'png', 'jpg', 'pdf']
-/** Served by canvas.preview; xlsx and ods only download. */
-const PREVIEW_KINDS = [...INLINE_KINDS, 'md', 'txt', 'json', 'csv']
+/** Loaded in the sandboxed frame from canvas.preview. */
+const FRAME_KINDS = INLINE_KINDS
+/** Read through the facade and drawn by Vue (text, never HTML). */
+export const TABLE_KINDS = ['csv', 'xlsx', 'ods']
+export const TEXT_KINDS = ['md', 'txt', 'json']
+/** Rows the Lienzo view shows of a table; the download has them all. */
+export const TABLE_ROWS = 200
+
+/** What the person calls each kind of file (never the extension). */
+export function kindLabel(kind) {
+  return (
+    {
+      html: __('Page', null, 'Lienzo'),
+      pdf: __('PDF'),
+      png: __('Image', null, 'Lienzo'),
+      jpg: __('Image', null, 'Lienzo'),
+      csv: __('Table', null, 'Lienzo'),
+      xlsx: __('Excel'),
+      ods: __('Spreadsheet', null, 'Lienzo'),
+      md: __('Notes', null, 'Lienzo'),
+      txt: __('Text', null, 'Lienzo'),
+      json: __('Data', null, 'Lienzo'),
+    }[kind] || kind
+  )
+}
 
 export const canvas = reactive({
   files: [],
@@ -55,8 +78,68 @@ export function downloadUrl(file) {
   return `/api/method/${CANVAS_API}.download?${query(file)}`
 }
 
+/** The kinds the sandboxed frame shows (a csv there downloads instead). */
 export function canPreview(file) {
-  return PREVIEW_KINDS.includes(file?.kind)
+  return FRAME_KINDS.includes(file?.kind) && !isImage(file)
+}
+
+function facadeError(out) {
+  return (
+    out?.message ||
+    __('Muelle could not open this file. Download it or try again.')
+  )
+}
+
+/**
+ * The Lienzo view's copy of one file: a table's first rows (`grid`) or a
+ * text file's text (`get`). `{ grid }` | `{ text }` | `{ error }`.
+ */
+export async function readFile(file) {
+  const tabular = TABLE_KINDS.includes(file?.kind)
+  if (!tabular && !TEXT_KINDS.includes(file?.kind)) return {}
+  const payload = { file: file.file }
+  if (file.version) payload.version = file.version
+  if (tabular) payload.limit = TABLE_ROWS
+  try {
+    const out = await call(`${CANVAS_API}.facade`, {
+      command: tabular ? 'grid' : 'get',
+      payload: JSON.stringify(payload),
+    })
+    if (out?.ok === false) return { error: facadeError(out) }
+    return tabular ? { grid: out.grid || {} } : { text: out.text || '' }
+  } catch (error) {
+    return { error: facadeError({ message: error?.messages?.[0] }) }
+  }
+}
+
+/** JSON as the person reads it: indented, or as it came when it is not JSON. */
+export function prettyJson(text) {
+  try {
+    return JSON.stringify(JSON.parse(text), null, 2)
+  } catch {
+    return text
+  }
+}
+
+/** «Borrar» (two taps in place): the file and its versions leave the Lienzo. */
+export async function deleteFile(file) {
+  try {
+    const out = await call(`${CANVAS_API}.facade`, {
+      command: 'delete',
+      payload: JSON.stringify({ file: file.file }),
+    })
+    if (out?.ok === false) {
+      canvas.error = facadeError(out)
+      return false
+    }
+  } catch (error) {
+    canvas.error = facadeError({ message: error?.messages?.[0] })
+    return false
+  }
+  canvas.files = canvas.files.filter((f) => f.file !== file.file)
+  if (canvas.selected === file.file) canvas.selected = null
+  canvas.error = ''
+  return true
 }
 
 export function isImage(file) {

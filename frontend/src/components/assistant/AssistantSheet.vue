@@ -45,7 +45,10 @@
       />
       <AssistantLog v-else @navigate="onNavigate" />
     </div>
-    <template v-if="sessions.view === 'chat'" #footer>
+    <template
+      v-if="sessions.view === 'chat' || sessions.view === 'canvas'"
+      #footer
+    >
       <AssistantComposer />
     </template>
   </BottomSheet>
