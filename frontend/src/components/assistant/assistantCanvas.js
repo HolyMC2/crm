@@ -112,6 +112,15 @@ export async function readFile(file) {
   }
 }
 
+/** A cell that reads as an amount or a count: a csv brings every cell as text. */
+export function isFigure(cell) {
+  if (typeof cell === 'number') return true
+  return (
+    typeof cell === 'string' &&
+    /^[-+]?\$?\s?\d[\d,]*(\.\d+)?\s?%?$/.test(cell.trim())
+  )
+}
+
 /** JSON as the person reads it: indented, or as it came when it is not JSON. */
 export function prettyJson(text) {
   try {

@@ -2,8 +2,9 @@
   <!-- The context chip and the ✦ are the one bold element (ASSISTANT.md).
        Fixed above the conversation: the sheet's #header, the dock's top. -->
   <div>
-    <!-- Below 400 px, and in the 400 px dock, the context chip takes its own
-         row under the island: five or six icons leave it no room. -->
+    <!-- Below 400 px, and in the 400 px dock, the context chip (or a view's
+         way back with its title) takes its own row under the island: five or
+         six icons leave it no room. -->
     <div
       class="flex min-h-14 flex-wrap items-center gap-x-2"
       :class="docked ? 'pl-4 pr-1' : ''"
@@ -18,6 +19,9 @@
         v-if="sessions.view !== 'chat'"
         type="button"
         class="flex min-h-11 min-w-0 flex-1 items-center gap-1 rounded-full pr-3 text-ink-gray-9 hover:bg-surface-gray-2"
+        :class="
+          docked ? 'order-[99] mb-2' : 'max-[399px]:order-[99] max-[399px]:mb-2'
+        "
         :aria-label="__('Back to the chat')"
         data-testid="assistant-back"
         @click="back"
@@ -53,7 +57,7 @@
         __('Ask Muelle')
       }}</span>
       <span
-        v-if="sessions.view === 'chat' && chipTitle"
+        v-if="sessions.view !== 'chat' || chipTitle"
         class="h-0 basis-full"
         :class="
           docked

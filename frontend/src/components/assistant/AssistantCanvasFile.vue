@@ -64,6 +64,7 @@
               :key="c"
               scope="col"
               class="whitespace-nowrap px-3 py-2 font-medium"
+              :class="figures[c] && 'text-right'"
             >
               {{ column }}
             </th>
@@ -75,7 +76,7 @@
               v-for="(cell, c) in row"
               :key="c"
               class="whitespace-nowrap px-3 py-1.5 text-ink-gray-9"
-              :class="typeof cell === 'number' && 'num text-right'"
+              :class="figures[c] && 'num text-right'"
             >
               {{ cell }}
             </td>
@@ -171,12 +172,13 @@
   </figure>
 </template>
 <script setup>
-import { nextTick, reactive, ref, watch } from 'vue'
+import { computed, nextTick, reactive, ref, watch } from 'vue'
 import AssistantProse from './AssistantProse.vue'
 import {
   canPreview,
   deleteFile,
   downloadUrl,
+  isFigure,
   isImage,
   kindLabel,
   prettyJson,
@@ -217,6 +219,16 @@ watch(
   },
   { immediate: true },
 )
+
+// a column of amounts or counts lines up on the right, its heading too
+const figures = computed(() => {
+  const rows = read.grid?.rows || []
+  return (read.grid?.columns || []).map(
+    (_, c) =>
+      rows.some((row) => isFigure(row[c])) &&
+      rows.every((row) => row[c] === '' || row[c] == null || isFigure(row[c])),
+  )
+})
 
 async function remove() {
   confirming.value = false

@@ -85,12 +85,11 @@
                 file.file
               }}</span>
               <span class="block truncate text-xs text-ink-gray-6">{{
-                relativeTime(file.modified)
+                [kindLabel(file.kind), relativeTime(file.modified)]
+                  .filter(Boolean)
+                  .join(' · ')
               }}</span>
             </span>
-            <span class="flex-none text-xs text-ink-gray-5">{{
-              file.kind
-            }}</span>
           </button>
         </li>
       </ul>
@@ -145,7 +144,7 @@ import { formatDateTime, relativeTime } from '@/utils/display'
 import AssistantOpenWork from './AssistantOpenWork.vue'
 import AssistantPanelCard from './AssistantPanelCard.vue'
 import { agenda, dueCount, loadAgenda } from './assistantAgenda'
-import { canvas, loadCanvas, openInCanvas } from './assistantCanvas'
+import { canvas, kindLabel, loadCanvas, openInCanvas } from './assistantCanvas'
 import { effortLabel, models, shortLabel } from './assistantModels'
 import { loadOpenWork, sessions, showView } from './assistantSessions'
 import { chipsFor, isProgress } from './assistantText'

@@ -158,10 +158,10 @@ describe('the Lienzo view (Marco 2026-11-05: «/lienzo is just broken»)', () =>
     mocks.call.mockResolvedValue({
       ok: true,
       grid: {
-        columns: ['Producto', 'Piezas'],
+        columns: ['Producto', 'Piezas', 'Saldo'],
         rows: [
-          ['Batería LTH', 12],
-          ['Filtro', 3],
+          ['Batería LTH', 12, '1,200.50'],
+          ['Filtro', 3, ''],
         ],
         total_rows: 450,
         truncated: true,
@@ -179,8 +179,15 @@ describe('the Lienzo view (Marco 2026-11-05: «/lienzo is just broken»)', () =>
     const table = el.querySelector('[data-testid="canvas-table"]')
     expect(
       [...table.querySelectorAll('th')].map((th) => th.textContent.trim()),
-    ).toEqual(['Producto', 'Piezas'])
+    ).toEqual(['Producto', 'Piezas', 'Saldo'])
     expect(table.querySelectorAll('tbody tr')).toHaveLength(2)
+    // a csv brings «1,200.50» as text: its column still lines up as figures
+    const figure = (th) => th.classList.contains('text-right')
+    expect([...table.querySelectorAll('th')].map(figure)).toEqual([
+      false,
+      true,
+      true,
+    ])
     expect(table.textContent).toContain('Showing 2 of 450 rows')
     expect(el.textContent).toContain('Table · version 2')
     app.unmount()

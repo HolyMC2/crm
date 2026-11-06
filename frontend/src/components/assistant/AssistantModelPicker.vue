@@ -2,11 +2,13 @@
   <!-- Which brain answers this conversation, next to «Enviar» as in Claude
        and T3 Code: «Haiku 5.5 · Medio». The menu grows up from the chip
        (the composer sits at the bottom). The pick lasts until «Nueva
-       conversación»; who may not choose sees the model and the reason. -->
-  <div v-if="models.available" ref="root" class="relative flex-none">
+       conversación»; who may not choose sees the model and the reason.
+       On a 305 px phone the chip gives way (its name truncates) so «Enviar»
+       stays inside the composer. -->
+  <div v-if="models.available" ref="root" class="relative min-w-0">
     <button
       type="button"
-      class="press flex min-h-11 max-w-[11rem] items-center gap-1 rounded-full px-2 text-sm text-ink-gray-7 hover:bg-surface-gray-2"
+      class="press flex min-h-11 w-full max-w-[11rem] items-center gap-1 rounded-full px-2 text-sm text-ink-gray-7 hover:bg-surface-gray-2"
       :aria-label="__('Model: {0}', [chipText])"
       :title="__('Model of this conversation')"
       :aria-expanded="open"
