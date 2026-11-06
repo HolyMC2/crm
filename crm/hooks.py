@@ -472,7 +472,7 @@ after_migrate = [
 	"crm.install.add_default_scripts",
 	"crm.install.add_web_form_custom_fields",
 	"crm.api.deal_queues.ensure_default_queues",
-	"crm.shell_dictionary.clear",
+	"crm.shell_dictionary.rebuild",
 ]
 
 # Virtual list columns: {doctype: [provider modules]}; any app may add its own.

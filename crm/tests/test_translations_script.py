@@ -199,8 +199,24 @@ class TestTranslationsScript(IntegrationTestCase):
 		keys = shell_dictionary.runtime_keys(frozenset({"CRM Deal"}))
 		self.assertIn(frappe.get_meta("CRM Territory").get_field("territory_manager").label, keys)
 
-	def test_migrate_and_meta_changes_drop_the_cached_set(self):
-		self.assertIn("crm.shell_dictionary.clear", frappe.get_hooks("after_migrate"))
+	def test_migrate_rebuilds_the_set_for_the_site_languages_at_once(self):
+		self.assertIn("crm.shell_dictionary.rebuild", frappe.get_hooks("after_migrate"))
+		self.assertNotIn("crm.shell_dictionary.clear", frappe.get_hooks("after_migrate"))
+		languages = shell_dictionary.site_languages()
+		self.assertIn(frappe.local.lang, languages)
+		self.assertIn(frappe.db.get_single_value("System Settings", "language"), languages)
+		messages = {"Ventas": "Sales"}
+		self.page_version(messages)
+		self.assertTrue(self.page_version(messages), "a version is cached")
+		a, b, c, d = self.patched({"Ventas": "Revenue"}, enqueue=RuntimeError("no queue after migrate"))
+		with a, b, c, d:
+			shell_dictionary.rebuild()
+			# The page links the fresh build at once: nothing is queued, no whole dictionary.
+			version = _translations_version()
+			self.assertEqual(len(version), 16)
+			self.assertIn("Revenue", translations(version).get_data(as_text=True))
+
+	def test_meta_changes_drop_the_cached_set(self):
 		messages = {"Ventas": "Sales"}
 		self.page_version(messages)
 		self.assertTrue(self.page_version(messages))
