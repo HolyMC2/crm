@@ -27114,6 +27114,317 @@ msgstr "quedan {0}"
 msgctxt "Productos"
 msgid "See all movements"
 msgstr "Ver todos los movimientos"
+# Niveles de surtido: frontend/src/pages/CompraNiveles.vue (and its Surtido lines)
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "Stock levels"
+msgstr "Niveles de surtido"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "Loading stock levels…"
+msgstr "Cargando niveles de surtido…"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "How many pieces you keep of each model, over every style and colour. A buy plan in Surtido asks for what a level lacks."
+msgstr "Cuántas piezas quieres de cada modelo, contando todos sus estilos y colores. Un plan de compra en Surtido pide lo que le falta a cada nivel."
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "Show"
+msgstr "Mostrar"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "No stock levels yet"
+msgstr "Todavía no hay niveles"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "Say how many pieces you want of a model, for example 10 cases of iPhone 12, half dark and half bright."
+msgstr "Di cuántas piezas quieres de un modelo, por ejemplo 10 fundas de iPhone 12, mitad oscuras y mitad vivas."
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "The owner sets the stock levels."
+msgstr "El dueño fija los niveles de surtido."
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "New level"
+msgstr "Nuevo nivel"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "No level is short."
+msgstr "Ningún nivel está bajo su mínimo."
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "{0} of {1}"
+msgstr "{0} de {1}"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "{0} coming"
+msgstr "vienen {0}"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "{0} short: {1}"
+msgstr "faltan {0}: {1}"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "{0} short"
+msgstr "faltan {0}"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "Full"
+msgstr "Completo"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "Sales hit the reading limit: a level for every sold model may miss some models."
+msgstr "Las ventas llegaron al tope de lectura: el nivel de cada modelo vendido puede omitir algunos modelos."
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "Colour tones"
+msgstr "Tonos de color"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "Change level"
+msgstr "Cambiar nivel"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "Product type"
+msgstr "Tipo de producto"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "Search group"
+msgstr "Buscar grupo"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "Model"
+msgstr "Modelo"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "Every model sold"
+msgstr "Cada modelo vendido"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "Every style and colour of the model counts. Empty: one level for each model of the type that sold."
+msgstr "Cuentan todos los estilos y colores del modelo. Vacío: un nivel para cada modelo de ese tipo que se vendió."
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "Fill up to"
+msgstr "Llenar hasta"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "Order when fewer than"
+msgstr "Pedir cuando queden menos de"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "Colour mix"
+msgstr "Mezcla de colores"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "Percent of {0}"
+msgstr "Porcentaje de {0}"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "The mix adds up to {0} %; make it 100 %."
+msgstr "La mezcla suma {0} %; ajústala a 100 %."
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "Delete"
+msgstr "Borrar"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "Delete level"
+msgstr "Borrar nivel"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "Save level"
+msgstr "Guardar nivel"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "Which tone each colour of the shop counts for in a mix."
+msgstr "En qué tono cuenta cada color de la tienda dentro de una mezcla."
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "Tone of {0}"
+msgstr "Tono de {0}"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "Save tones"
+msgstr "Guardar tonos"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "All"
+msgstr "Todos"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "Short"
+msgstr "Faltan"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "every model sold"
+msgstr "cada modelo vendido"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "Could not open stock levels"
+msgstr "No se pudieron abrir los niveles"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "No mix"
+msgstr "Sin mezcla"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "Half and half"
+msgstr "Mitad y mitad"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "More dark"
+msgstr "Más oscuros"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "More bright"
+msgstr "Más vivos"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "Choose the product type."
+msgstr "Elige el tipo de producto."
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "Say how many pieces to fill up to."
+msgstr "Di hasta cuántas piezas llenar."
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "Make the mix add up to 100 %."
+msgstr "Ajusta la mezcla para que sume 100 %."
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "Order before the level, not above it."
+msgstr "Pide antes de llegar al nivel, no por encima de él."
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "Level saved"
+msgstr "Nivel guardado"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "Level deleted"
+msgstr "Nivel borrado"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "Tones saved"
+msgstr "Tonos guardados"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "In my stock levels, "
+msgstr "En mis niveles de surtido, "
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Stock levels of {0}: a model with a level buys what fills it"
+msgstr "Niveles de {0}: un modelo con nivel pide lo que le falta para llenarlo"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "{0}: {1} of {2}, {3} short"
+msgstr "{0}: {1} de {2}, faltan {3}"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "{0}: {1} of {2}, full"
+msgstr "{0}: {1} de {2}, completo"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "This list has no {0} for {1} ({2} short)"
+msgstr "Esta lista no trae {0} para {1} (faltan {2})"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "{0} is below its level and not in this list ({1} short)"
+msgstr "{0} está bajo su nivel y no viene en esta lista (faltan {1})"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "From your items"
+msgstr "Desde tus artículos"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "These models have no level yet, but their items carry reorder levels. Added up per model:"
+msgstr "Estos modelos aún no tienen nivel, pero sus artículos traen puntos de reorden. Sumados por modelo:"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "{0} · order below {1}, fill up to {2} · {3} items"
+msgstr "{0} · pedir con menos de {1}, llenar hasta {2} · {3} artículos"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "Use"
+msgstr "Usar"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "Use for {0}"
+msgstr "Usar para {0}"
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "And {0} more."
+msgstr "Y {0} más."
+
+#: frontend/src/pages/CompraNiveles.vue
+msgctxt "Niveles"
+msgid "Orders below {0}"
+msgstr "Se pide con menos de {0}"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "{0}: {1} of {2}, orders below {3}"
+msgstr "{0}: {1} de {2}, se pide con menos de {3}"
+
 # Surtido (ASI-S4): frontend/src/pages/CompraSurtido.vue
 #: frontend/src/pages/CompraSurtido.vue
 msgctxt "Surtido"

@@ -288,6 +288,14 @@ const routes = [
     meta: { app: 'compras', title: 'Compras', ownPhoneHeader: true },
   },
   {
+    // Niveles de surtido: pieces per model over every style and colour, with
+    // the dark / bright mix (doco.workspaces.sourcing.levels).
+    path: '/compras/niveles',
+    name: 'CompraNiveles',
+    component: () => import('@/pages/CompraNiveles.vue'),
+    meta: { app: 'compras', title: 'Compras', ownPhoneHeader: true },
+  },
+  {
     path: '/compras/orden/:name',
     name: 'CompraOrden',
     component: () => import('@/pages/CompraOrden.vue'),

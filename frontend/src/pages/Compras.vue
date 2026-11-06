@@ -93,6 +93,18 @@
                   <span class="lucide-truck size-3.5" aria-hidden="true" />
                   {{ __('Shipping rules') }}
                 </RouterLink>
+                <button
+                  type="button"
+                  :class="chipClass(false)"
+                  data-compras-niveles
+                  @click="router.push({ name: 'CompraNiveles' })"
+                >
+                  <span
+                    class="lucide-sliders-horizontal size-3.5"
+                    aria-hidden="true"
+                  />
+                  {{ __('Stock levels', null, 'Niveles') }}
+                </button>
               </div>
             </section>
             <RecentPicks

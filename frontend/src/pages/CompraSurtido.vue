@@ -12,6 +12,17 @@
     >
       <template #actions>
         <button
+          v-if="ready"
+          type="button"
+          class="press flex size-12 flex-none items-center justify-center rounded-full text-ink-gray-7 active:bg-surface-gray-2 [@media(hover:hover)]:hover:bg-surface-gray-2"
+          :aria-label="__('Stock levels', null, 'Niveles')"
+          :title="__('Stock levels', null, 'Niveles')"
+          data-testid="surtido-niveles"
+          @click="router.push({ name: 'CompraNiveles' })"
+        >
+          <span class="lucide-sliders-horizontal size-6" aria-hidden="true" />
+        </button>
+        <button
           v-if="ready && assistantOn"
           type="button"
           class="press flex size-12 flex-none items-center justify-center rounded-full text-ink-gray-7 active:bg-surface-gray-2 [@media(hover:hover)]:hover:bg-surface-gray-2"
@@ -570,6 +581,74 @@
                   }}
                 </li>
               </ul>
+              <div
+                v-if="
+                  plan.levels?.length ||
+                  plan.tones_missing?.length ||
+                  plan.levels_uncovered?.length
+                "
+                class="mt-3 border-t border-outline-gray-1 pt-3 text-sm"
+                data-testid="surtido-levels"
+              >
+                <p class="font-medium">
+                  {{
+                    __(
+                      'Stock levels of {0}: a model with a level buys what fills it',
+                      [plan.level_group],
+                      'Surtido',
+                    )
+                  }}
+                </p>
+                <ul class="mt-1 space-y-0.5 text-ink-gray-7">
+                  <li v-for="l in plan.levels" :key="'lv' + l.model">
+                    {{
+                      l.need
+                        ? __(
+                            '{0}: {1} of {2}, {3} short',
+                            [l.model, l.have, l.target, l.need],
+                            'Surtido',
+                          )
+                        : levelState(l) === 'full'
+                          ? __(
+                              '{0}: {1} of {2}, full',
+                              [l.model, l.have, l.target],
+                              'Surtido',
+                            )
+                          : __(
+                              '{0}: {1} of {2}, orders below {3}',
+                              [l.model, l.have, l.target, l.min],
+                              'Surtido',
+                            )
+                    }}<template v-if="buyText(l)"> · {{ buyText(l) }}</template>
+                  </li>
+                  <li
+                    v-for="t in plan.tones_missing"
+                    :key="'tm' + t.model + t.tone"
+                    class="text-ink-amber-7"
+                  >
+                    {{
+                      __(
+                        'This list has no {0} for {1} ({2} short)',
+                        [t.tone, t.model, t.qty],
+                        'Surtido',
+                      )
+                    }}
+                  </li>
+                  <li
+                    v-for="u in plan.levels_uncovered"
+                    :key="'lu' + u.model"
+                    class="text-ink-amber-7"
+                  >
+                    {{
+                      __(
+                        '{0} is below its level and not in this list ({1} short)',
+                        [u.model, u.need],
+                        'Surtido',
+                      )
+                    }}
+                  </li>
+                </ul>
+              </div>
             </div>
 
             <div
@@ -1260,6 +1339,7 @@ import {
   readyRows,
 } from '@/utils/surtido'
 import { CATALOG_ACCEPT, uploadCatalog } from '@/utils/catalogUpload'
+import { buyText, levelState } from '@/utils/niveles'
 import LucideRefreshCw from '~icons/lucide/refresh-cw'
 import LucideChevronRight from '~icons/lucide/chevron-right'
 import LucideRotateCcw from '~icons/lucide/rotate-ccw'
