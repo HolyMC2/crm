@@ -28,6 +28,11 @@ export function measureKeyboard() {
 export function watchKeyboard() {
   if (bound || typeof window === 'undefined' || !window.visualViewport) return
   bound = true
-  measureKeyboard()
+  // The first measure waits for the first frame: the viewport read right
+  // after the mount forced a layout of the fresh tree (a quarter second on a
+  // phone), and the keyboard is down while the shell mounts anyway.
+  if (typeof requestAnimationFrame === 'function')
+    requestAnimationFrame(measureKeyboard)
+  else measureKeyboard()
   window.visualViewport.addEventListener('resize', measureKeyboard)
 }

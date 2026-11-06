@@ -89,13 +89,25 @@ class TestTranslationsScript(FrappeTestCase):
 			frappe.get_doc({"doctype": "CRM Deal Status", "deal_status": "Won"}).insert(
 				ignore_permissions=True
 			)
-		keys = shell_dictionary.runtime_keys(frozenset({"CRM Deal", "CRM Deal Status"}))
-		# Every DocType name, the labels and Select options of named DocTypes, their records,
-		# and English the crm server code sends for __() (api/workload.py OPEN).
+		named = {"CRM Deal", "CRM Deal Status"}
+		keys = shell_dictionary.runtime_keys(frozenset(named))
+		# Every DocType name but child tables', the labels and Select options of named DocTypes,
+		# their records, and English the crm server code sends for __() (api/workload.py OPEN).
 		self.assertIn("ToDo", keys)
-		self.assertIn(frappe.get_meta("CRM Deal").get_field("status").label, keys)
+		self.assertNotIn("DocField", keys)
+		meta = frappe.get_meta("CRM Deal")
+		self.assertIn(meta.get_field("status").label, keys)
 		self.assertIn("Won", keys)
 		self.assertIn("On Hold", keys)
+		# Field descriptions are shown as they are, so they are not shipped.
+		described = [field.description for field in meta.fields if field.description]
+		self.assertTrue(described, "CRM Deal has a field with a description")
+		for description in described:
+			self.assertNotIn(description, keys)
+		# Records of a translated DocType no named DocType links to are not vocabulary here.
+		linked = {field.options for name in named for field in frappe.get_meta(name).fields}
+		self.assertNotIn("Country", linked | named)
+		self.assertNotIn("Mexico", keys)
 
 	def test_while_the_build_is_pending_the_page_gets_the_whole_dictionary_revalidating(self):
 		queued = []

@@ -4,17 +4,18 @@
     ><router-view v-if="neutral" /><CrmRuntime v-else
   /></MuelleShell>
   <Dialogs v-if="neutral" />
-  <FrappeDialogs />
+  <FrappeDialogs v-if="dialogHost" />
   <RegistrationTray v-if="session.isLoggedIn && hasRegistrations" />
 </template>
 <script setup>
-import { computed, defineAsyncComponent, provide } from 'vue'
-import { useRoute } from 'vue-router'
+import { computed, defineAsyncComponent, provide, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { ToastProvider, setConfig, useColorScheme } from 'frappe-ui'
 import { sessionStore } from '@/stores/session'
 import { Dialogs } from '@/utils/dialogs'
 import { isNeutralModule } from '@/composables/muelleShell'
 import { hasRegistrations } from '@/composables/gastosRegistrations'
+import { afterFirstRoute } from '@/utils/prefetch'
 // What FrappeUIProvider renders, with frappe-ui's dialog host loaded after the
 // entry: its `dialog.confirm`/`prompt` module statically imports FormControl
 // and with it every reka-ui form control (DatePicker, Combobox, MultiSelect…),
@@ -25,6 +26,20 @@ import { hasRegistrations } from '@/composables/gastosRegistrations'
 const FrappeDialogs = defineAsyncComponent(() =>
   import('frappe-ui-components/Dialogs.vue').then((m) => m.default),
 )
+// Its chunk loaded with the first screen's own (at 1.3 s on a phone); the
+// host mounts after the first route, or at the first touch if that is sooner.
+const dialogHost = ref(false)
+const FIRST_TOUCH = ['pointerdown', 'keydown']
+function mountDialogHost() {
+  dialogHost.value = true
+  for (const type of FIRST_TOUCH)
+    window.removeEventListener(type, mountDialogHost, true)
+}
+for (const type of FIRST_TOUCH)
+  window.addEventListener(type, mountDialogHost, {
+    capture: true,
+    passive: true,
+  })
 const MuelleShell = defineAsyncComponent(
   () => import('@/components/shell/MuelleShell.vue'),
 )
@@ -38,6 +53,7 @@ const RegistrationTray = defineAsyncComponent(
 const session = sessionStore()
 provide('session', session)
 const route = useRoute()
+afterFirstRoute(useRouter(), mountDialogHost)
 // Keep the hard-refresh boot neutral until the router resolves its first match.
 const neutral = computed(
   () =>

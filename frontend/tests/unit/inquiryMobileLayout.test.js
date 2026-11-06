@@ -60,7 +60,10 @@ vi.mock('@/stores/global', () => ({
 // Favicon synchronization is a shell side effect, independent of the real
 // route-slot/breakpoint behavior under test. Identity behavior has its own suite.
 vi.mock('@/stores/settings', () => ({ syncBrandFavicon() {} }))
-vi.mock('@/utils/prefetch', () => ({ prefetchHotChunks() {} }))
+vi.mock('@/utils/prefetch', () => ({
+  prefetchHotChunks() {},
+  afterFirstRoute() {},
+}))
 vi.mock('@/composables/telemetry', () => ({ initTelemetry() {} }))
 // Onboarding has its own real-resource shell suite; keep this route/layout
 // test's existing assertion that every request belongs to inquiries.

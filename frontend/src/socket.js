@@ -16,11 +16,16 @@ export function initSocket() {
   // to six XHRs and a long-poll that holds one of the page's HTTP/1.1
   // connections while the route's chunks queue behind it. A network that blocks
   // WebSockets still connects: tryAllTransports falls back to polling.
+  // Not connected yet: the handshake authenticates against the backend, a
+  // request the first screen's own would queue behind on a phone. main.js
+  // connects once the first route has its data; listeners bound before that
+  // (pages register on setup) fire from the first event.
   let socket = io(url, {
     withCredentials: true,
     reconnectionDelayMax: 30000,
     transports: ['websocket', 'polling'],
     tryAllTransports: true,
+    autoConnect: false,
   })
   // Any gap in connectivity is a window where events were silently lost. Announce
   // recovery so data owners (inbox, threads) can refetch and catch up — socket.io's
