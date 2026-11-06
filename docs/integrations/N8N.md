@@ -44,7 +44,10 @@ Each event is one durable *CRM Integration Delivery* row, queued after the trans
 The payload is built on the first attempt and then frozen, so retries send the same bytes.
 
 - Retries: 30 s, 2 min, 10 min, 30 min, 2 h, 6 h, 12 h; after 8 attempts the row is **Dead**.
-  HTTP 410 marks it Dead at once (the receiver asked to stop).
+  HTTP 410 marks it Dead at once (the receiver asked to stop). A test `ping` is never retried:
+  if it fails, it is Dead straight away. **Send again** needs the connection enabled.
+- An event about a record that «Acts as user» may not read is **Skipped** and not sent; a
+  deletion it could not have seen is not sent either.
 - Any 2xx is success. The connection shows the last status, consecutive failures and the last
   error.
 - Delivered and Skipped rows are kept for 30 days, Dead rows for 90 days.
