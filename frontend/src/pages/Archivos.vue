@@ -419,7 +419,11 @@
               class="divide-y divide-outline-gray-1"
               :aria-label="viewLabel(view)"
             >
-              <li v-for="row in rows" :key="row.name">
+              <li
+                v-for="row in rows"
+                :key="row.name"
+                :data-fresh="live.fresh.value.has(row.name) ? '' : undefined"
+              >
                 <button
                   type="button"
                   data-key-row
@@ -565,6 +569,7 @@ import { useDebounceFn } from '@vueuse/core'
 import { Badge, Button, Dialog, FormControl, toast } from 'frappe-ui'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import { useListKeys } from '@/composables/pageKeys'
+import { useLiveList } from '@/composables/liveList'
 import ArchivoDetail from '@/components/archivos/ArchivoDetail.vue'
 import ArchivoGuard from '@/components/archivos/ArchivoGuard.vue'
 import ArchivoPreview from '@/components/archivos/ArchivoPreview.vue'
@@ -1271,4 +1276,31 @@ function onPageGuard(action) {
 }
 
 onMounted(() => start())
+
+// A file a teammate uploads, classifies, moves or trashes shows without a
+// reload; a new one is marked for a moment. A list paged further by «more» is
+// left as it is (the read is per page). The lists keep their rows while they
+// read again, so only «Load more» spins.
+const live = useLiveList(
+  () =>
+    boot.value?.enabled && company.value
+      ? ['Doco Document', 'Doco Folder']
+      : '',
+  async () => {
+    if (route.name !== 'Archivos') return
+    loadFolders({ force: true })
+    loadSummary({ force: true })
+    if (browsing.value) {
+      if (browsePage.value <= 1) await loadBrowse()
+      return
+    }
+    if (page.value > 1) return
+    const before = rows.value.map((row) => row.name)
+    await loadList()
+    live.mark(
+      before,
+      rows.value.map((row) => row.name),
+    )
+  },
+)
 </script>

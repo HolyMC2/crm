@@ -162,6 +162,7 @@
         <ListRow
           v-for="row in rows"
           :key="`${row.kind}:${row.name}`"
+          :data-fresh="live.fresh.value.has(rowKey(row)) ? '' : undefined"
           :avatar="avatarName(row)"
           :title="prospectName(row)"
           :subtitle="phoneLine(row)"
@@ -183,7 +184,11 @@
         </button>
       </div>
       <ul v-else class="divide-y">
-        <li v-for="row in rows" :key="`${row.kind}:${row.name}`">
+        <li
+          v-for="row in rows"
+          :key="`${row.kind}:${row.name}`"
+          :data-fresh="live.fresh.value.has(rowKey(row)) ? '' : undefined"
+        >
           <RouterLink
             :to="prospectRoute(row)"
             class="flex flex-wrap items-center gap-x-4 gap-y-1 py-2 hover:bg-surface-gray-1"
@@ -263,6 +268,7 @@ import SearchPanel from '@/components/ui/SearchPanel.vue'
 import { chipClass } from '@/components/ui/chipClass'
 import { useRecentPicks } from '@/composables/useRecentPicks'
 import { isMobile as isPhone } from '@/composables/breakpoint'
+import { useLiveList } from '@/composables/liveList'
 import { formatPhone } from '@/composables/crmFormat'
 import {
   KIND_CHIPS,
@@ -394,10 +400,12 @@ function chipLabel(chip) {
 }
 
 let seq = 0
-async function load(at = 0, { append = false } = {}) {
+// `quiet` (a live refresh): the rows already shown are read again in place,
+// and a failed read keeps them.
+async function load(at = 0, { append = false, quiet = false } = {}) {
   const mine = ++seq
-  loading.value = true
-  error.value = null
+  loading.value = !quiet
+  if (!quiet) error.value = null
   try {
     const page = await call(
       'crm.api.prospects.list_prospects',
@@ -406,7 +414,7 @@ async function load(at = 0, { append = false } = {}) {
         source: source.value,
         q: q.value,
         start: at,
-        pageLength: PAGE,
+        pageLength: quiet ? Math.max(PAGE, rows.value.length) : PAGE,
       }),
     )
     if (mine !== seq) return
@@ -417,9 +425,9 @@ async function load(at = 0, { append = false } = {}) {
     inquiriesEnabled.value = !!page.inquiries_enabled
     counts.value = page.counts || { lead: 0, inquiry: 0 }
     hasMore.value = !!page.has_more
-    start.value = at
+    if (!quiet) start.value = at
   } catch (e) {
-    if (mine === seq) error.value = e
+    if (mine === seq && !quiet) error.value = e
   } finally {
     if (mine === seq) loading.value = false
   }
@@ -460,4 +468,16 @@ function clearFilters() {
 }
 
 load(0)
+
+// A lead or inquiry that comes in, or one a teammate works, shows without a
+// reload; a new one is marked for a moment. The server reads at most 100 rows
+// at once: a list grown past that by «Cargar más» is left as it is.
+const LIVE_MAX = 100
+const rowKey = (row) => `${row.kind}:${row.name}`
+const live = useLiveList(['CRM Lead', 'CRM Inquiry'], async () => {
+  if (rows.value.length > LIVE_MAX) return
+  const before = rows.value.map(rowKey)
+  await load(0, { quiet: true })
+  live.mark(before, rows.value.map(rowKey))
+})
 </script>

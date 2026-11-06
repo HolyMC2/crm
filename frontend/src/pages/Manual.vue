@@ -334,7 +334,11 @@
           class="divide-y divide-outline-gray-1"
           data-testid="manual-rows"
         >
-          <li v-for="row in rows" :key="row.name">
+          <li
+            v-for="row in rows"
+            :key="row.name"
+            :data-fresh="live.fresh.value.has(row.name) ? '' : undefined"
+          >
             <RouterLink
               :to="articleRoute(row)"
               class="flex min-h-14 items-start gap-3 px-4 py-3 hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:px-6"
@@ -417,6 +421,7 @@ import { isMobile as isPhone } from '@/composables/breakpoint'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import {
   CTX,
+  DOCTYPE,
   TITLE,
   backTarget,
   copyText,
@@ -439,6 +444,7 @@ import {
 import LucideLayers from '~icons/lucide/layers'
 import LucidePlus from '~icons/lucide/plus'
 import { createListCache } from '@/utils/listCache'
+import { useLiveList } from '@/composables/liveList'
 
 const TemplatesSheet = defineAsyncComponent(
   () => import('@/components/manual/TemplatesSheet.vue'),
@@ -557,19 +563,24 @@ function paintCached() {
   })
 }
 
-async function load({ more = false } = {}) {
+// `quiet` (a live refresh): the rows already shown are read again in place,
+// and a failed read keeps them. The server reads 20 to 50 rows at once.
+const LIVE_MIN = 20
+const LIVE_MAX = 50
+async function load({ more = false, quiet = false } = {}) {
   const current = ++ticket
   const listAt = more ? null : listCache.key()
-  loading.value = true
-  problem.value = null
+  loading.value = !quiet
+  if (!quiet) problem.value = null
   try {
     const page = await manualApi('list_articles', {
       ...state.value,
       lugar: lugarInfo.value.send,
       start: more ? rows.value.length : 0,
+      ...(quiet ? { limit: Math.max(LIVE_MIN, rows.value.length) } : {}),
     })
     if (current !== ticket) return
-    if (lugarInfo.value.send && !more) {
+    if (lugarInfo.value.send && !more && !quiet) {
       const found = resolveLugar(page.rows || [])
       lugarEmpty.value = found.kind === 'none'
       if (found.kind === 'one') {
@@ -588,7 +599,7 @@ async function load({ more = false } = {}) {
     showPage(page)
     if (!more) listCache.save(listAt, page)
   } catch (error) {
-    if (current === ticket) problem.value = problemOf(error)
+    if (current === ticket && !quiet) problem.value = problemOf(error)
   } finally {
     if (current === ticket) loading.value = false
   }
@@ -683,6 +694,20 @@ watch(
     if (typeof route.query.q !== 'string' && search.value) search.value = ''
     paintCached()
     load()
+  },
+)
+// An article a teammate publishes or edits shows without a reload; a new one
+// is marked for a moment. A list grown past LIVE_MAX by «more» is left as it is.
+const live = useLiveList(
+  () => (boot.value?.enabled ? DOCTYPE : ''),
+  async () => {
+    if (route.name !== 'Manual' || rows.value.length > LIVE_MAX) return
+    const before = rows.value.map((row) => row.name)
+    await load({ quiet: true })
+    live.mark(
+      before,
+      rows.value.map((row) => row.name),
+    )
   },
 )
 onMounted(async () => {

@@ -5,6 +5,15 @@ import { formatDate, formatMoney, parseServerDate } from '@/utils/display'
 const SERVICE = 'crm.api.bancos'
 
 /** One Bancos endpoint; empty arguments stay out of the request. */
+// What moves an account's balance or its movements: a bank line, a payment,
+// a journal entry or a sale paid into it.
+export const LIVE_DOCTYPES = Object.freeze([
+  'Bank Transaction',
+  'Payment Entry',
+  'Journal Entry',
+  'Sales Invoice',
+])
+
 export function bancosApi(method, args = {}) {
   const params = {}
   for (const [key, value] of Object.entries(args)) {

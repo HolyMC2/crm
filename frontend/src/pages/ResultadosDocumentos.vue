@@ -123,7 +123,11 @@
             >
           </h2>
           <ul class="divide-y divide-outline-gray-1" data-testid="lens-rows">
-            <li v-for="row in group.rows" :key="`${row.doctype}:${row.name}`">
+            <li
+              v-for="row in group.rows"
+              :key="`${row.doctype}:${row.name}`"
+              :data-fresh="live.fresh.value.has(rowKey(row)) ? '' : undefined"
+            >
               <a
                 :href="rowHref(row)"
                 class="flex min-h-14 items-center gap-3 px-4 py-3 hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:px-6"
@@ -181,6 +185,7 @@ import { FilterChips } from '@/components/ui'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import { problemOf } from '@/composables/useCobranza'
 import { money } from '@/composables/useCompras'
+import { useLiveList } from '@/composables/liveList'
 import { shellBoot } from '@/composables/muelleShell'
 import {
   CTX,
@@ -388,6 +393,20 @@ async function copyRequest() {
     copied.value = text
   }
 }
+
+// A sale rung up, cancelled or returned, or a cash closing, while the list is
+// open shows without a reload; a new one is marked for a moment.
+const rowKey = (row) => `${row.doctype}:${row.name}`
+const live = useLiveList(
+  () =>
+    state.value.tipo === 'cierres' ? 'POS Closing Shift' : 'Sales Invoice',
+  async () => {
+    if (route.name !== 'ResultadosDocumentos') return
+    const before = rows.value.map(rowKey)
+    await load()
+    live.mark(before, rows.value.map(rowKey))
+  },
+)
 
 watch(
   () => [

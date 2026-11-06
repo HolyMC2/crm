@@ -317,7 +317,11 @@
           />
         </div>
         <ul v-else class="divide-y divide-outline-gray-1">
-          <li v-for="row in rows" :key="row.name">
+          <li
+            v-for="row in rows"
+            :key="row.name"
+            :data-fresh="live.fresh.value.has(row.name) ? '' : undefined"
+          >
             <RouterLink
               :to="{ ...recordRoute(row.name), query: { list: listPath } }"
               class="flex min-h-14 items-start gap-3 px-4 py-3 hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:px-6"
@@ -431,6 +435,7 @@ import {
 import LucideSettings from '~icons/lucide/settings'
 import LucideMessageCircle from '~icons/lucide/message-circle'
 import { createListCache } from '@/utils/listCache'
+import { useLiveList } from '@/composables/liveList'
 
 // Score chip colors from the shared palette (tokens only).
 const SCORE_CLASS = {
@@ -570,13 +575,15 @@ function paintCached() {
   summaryCache.paint((answer) => (summary.value = answer.summary))
 }
 
-async function load(more = false) {
+// `quiet` (a live refresh): the rows already shown are read again in place,
+// and a failed read keeps them.
+async function load(more = false, { quiet = false } = {}) {
   const current = ++ticket
   const listAt = more ? null : listCache.key()
   // The painted copy already holds the scroll; the read keeps it.
-  const fromCache = !more && listCache.showing()
-  loading.value = true
-  problem.value = null
+  const fromCache = quiet || (!more && listCache.showing())
+  loading.value = !quiet
+  if (!quiet) problem.value = null
   try {
     const page = await encuestasApi('queue', {
       view: view.value,
@@ -585,26 +592,27 @@ async function load(more = false) {
       mine: mine.value ? 1 : 0,
       q: search.value.trim(),
       start: more ? rows.value.length : 0,
-      page_length: 30,
+      page_length: quiet ? Math.max(30, rows.value.length) : 30,
     })
     if (current !== ticket) return
     rows.value = more ? [...rows.value, ...page.rows] : page.rows
     showPage(page)
     if (!more) listCache.save(listAt, page)
     if (!more && !fromCache) restoreScroll()
+    problem.value = null
   } catch (error) {
-    if (current === ticket) problem.value = problemOf(error)
+    if (current === ticket && !quiet) problem.value = problemOf(error)
   } finally {
     if (current === ticket) loading.value = false
   }
 }
-async function loadSummary() {
+async function loadSummary({ quiet = false } = {}) {
   const listAt = summaryCache.key()
   try {
     summary.value = await encuestasApi('summary', { days: period.value })
     summaryCache.save(listAt, { summary: summary.value })
   } catch {
-    summary.value = null
+    if (!quiet) summary.value = null
   }
 }
 
@@ -732,6 +740,23 @@ watch(
   () => route.query.periodo,
   () => {
     if (route.name === 'Encuestas' && boot.value?.enabled) loadSummary()
+  },
+)
+// A response that comes in, or a follow-up a teammate closes, shows without a
+// reload; a new response is marked for a moment.
+const live = useLiveList(
+  () => (boot.value?.enabled ? 'Quality Feedback' : ''),
+  async () => {
+    if (route.name !== 'Encuestas') return
+    const before = rows.value.map((row) => row.name)
+    await Promise.all([
+      load(false, { quiet: true }),
+      loadSummary({ quiet: true }),
+    ])
+    live.mark(
+      before,
+      rows.value.map((row) => row.name),
+    )
   },
 )
 onMounted(async () => {

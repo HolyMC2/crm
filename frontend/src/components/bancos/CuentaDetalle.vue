@@ -156,7 +156,11 @@
           {{ group.label }}
         </h2>
         <ul class="divide-y divide-outline-gray-1">
-          <li v-for="row in group.rows" :key="row.name">
+          <li
+            v-for="row in group.rows"
+            :key="row.name"
+            :data-fresh="live.fresh.value.has(row.name) ? '' : undefined"
+          >
             <MovimientoRow
               :row="row"
               :vista="list?.vista || state.vista"
@@ -193,9 +197,11 @@ import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { Button } from 'frappe-ui'
 import { useDebounceFn } from '@vueuse/core'
 import { AppBar, EmptyState, FilterChips, Segmented } from '@/components/ui'
+import { useLiveList } from '@/composables/liveList'
 import { shellBoot } from '@/composables/muelleShell'
 import MovimientoRow from './MovimientoRow.vue'
 import {
+  LIVE_DOCTYPES,
   balanceWhen,
   bancosApi,
   cardContext,
@@ -288,20 +294,24 @@ function clearAll() {
   navigate({ filtro: '', q: '' })
 }
 
-async function loadHeader() {
+async function loadHeader({ quiet = false } = {}) {
   try {
     const result = await bancosApi('cuenta', { cuenta: props.cuenta })
     header.value = result.header
   } catch (error) {
-    loadError.value = errorText(error)
+    if (!quiet) loadError.value = errorText(error)
   }
 }
 
 let sequence = 0
-async function load(start = 0) {
+// `quiet` (a live refresh): the movements already shown are read again in
+// place, and a failed read keeps them. The server reads 50 to 100 at once.
+const PAGE = 50
+const LIVE_MAX = 100
+async function load(start = 0, { quiet = false } = {}) {
   const mine = ++sequence
-  loading.value = true
-  loadError.value = ''
+  loading.value = !quiet
+  if (!quiet) loadError.value = ''
   try {
     const result = await bancosApi('movimientos', {
       cuenta: props.cuenta,
@@ -309,12 +319,13 @@ async function load(start = 0) {
       filtro: state.value.filtro,
       q: state.value.q,
       start,
+      ...(quiet ? { limit: Math.max(PAGE, rows.value.length) } : {}),
     })
     if (mine !== sequence) return
     list.value = result
     rows.value = start ? [...rows.value, ...result.rows] : result.rows
   } catch (error) {
-    if (mine === sequence) loadError.value = errorText(error)
+    if (mine === sequence && !quiet) loadError.value = errorText(error)
   } finally {
     if (mine === sequence) loading.value = false
   }
@@ -340,6 +351,24 @@ function onChanged(result) {
   loadHeader()
   load()
 }
+
+// A bank line imported, a payment or a sale posted elsewhere shows here
+// without a reload, at most every 10 s on a busy day; a new movement is
+// marked for a moment. A list grown past LIVE_MAX by «more» keeps its rows.
+const live = useLiveList(
+  LIVE_DOCTYPES,
+  async () => {
+    loadHeader({ quiet: true })
+    if (rows.value.length > LIVE_MAX) return
+    const before = rows.value.map((row) => row.name)
+    await load(0, { quiet: true })
+    live.mark(
+      before,
+      rows.value.map((row) => row.name),
+    )
+  },
+  { minIntervalMs: 10000 },
+)
 
 const pushSearch = useDebounceFn((q) => navigate({ q }), 300)
 watch(search, (q) => pushSearch((q || '').trim()))

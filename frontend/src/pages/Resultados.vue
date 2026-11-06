@@ -410,6 +410,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { Button, FormControl } from 'frappe-ui'
 import { FilterChips, Segmented } from '@/components/ui'
 import { isMobile } from '@/composables/breakpoint'
+import { useLiveList } from '@/composables/liveList'
 import ResultadosCard from '@/components/resultados/ResultadosCard.vue'
 import { problemOf } from '@/composables/useCobranza'
 import { shellBoot } from '@/composables/muelleShell'
@@ -578,12 +579,15 @@ function showBoard(out, at) {
   loaded.value = true
 }
 
-async function load({ refresh = false } = {}) {
+// `quiet` (a live refresh): as a pull to refresh, and a failed read keeps the
+// board without a notice.
+async function load({ refresh = false, quiet = false } = {}) {
   const mine = ++ticket
   const boardAt = boardCache.key()
-  if (!refresh) boardCache.paint((saved) => showBoard(saved.out, saved.at))
-  loading.value = !refresh || !loaded.value
-  problem.value = null
+  if (!refresh && !quiet)
+    boardCache.paint((saved) => showBoard(saved.out, saved.at))
+  loading.value = !(refresh || quiet) || !loaded.value
+  if (!quiet) problem.value = null
   try {
     const out = await resultadosApi('board', state.value)
     if (mine !== ticket) return
@@ -594,8 +598,9 @@ async function load({ refresh = false } = {}) {
     showBoard(out, at)
     adoptSaved(out.hidden)
     boardCache.save(boardAt, { out, at })
+    problem.value = null
   } catch (error) {
-    if (mine === ticket) problem.value = problemOf(error)
+    if (mine === ticket && !quiet) problem.value = problemOf(error)
   } finally {
     if (mine === ticket) loading.value = false
   }
@@ -616,6 +621,17 @@ async function retryCard(key) {
 
 const { pull, refreshing } = usePullRefresh(scroller, () =>
   load({ refresh: true }),
+)
+
+// A sale, a cash closing or a repair order settled elsewhere retires the
+// board's cache: the numbers on screen are read again, no more than every
+// 15 s while the register is busy.
+useLiveList(
+  ['Sales Invoice', 'POS Closing Shift', 'Repair Order'],
+  () => {
+    if (route.name === 'Resultados') return load({ quiet: true })
+  },
+  { minIntervalMs: 15000 },
 )
 
 watch(

@@ -192,7 +192,11 @@
             {{ group.label }}
           </h2>
           <ul class="divide-y divide-outline-gray-1">
-            <li v-for="row in group.rows" :key="row.id">
+            <li
+              v-for="row in group.rows"
+              :key="row.id"
+              :data-fresh="live.fresh.value.has(row.id) ? '' : undefined"
+            >
               <MovementRow
                 :row="row"
                 :show-item="!state.articulo"
@@ -249,6 +253,7 @@
             <tr
               v-for="row in group.rows"
               :key="row.id"
+              :data-fresh="live.fresh.value.has(row.id) ? '' : undefined"
               class="border-b border-outline-gray-1 align-top hover:bg-surface-gray-1"
               data-kardex-row
               :data-kind="row.kind"
@@ -368,6 +373,7 @@ import {
   voucherLink,
 } from '@/components/inventario/kardex'
 import { isMobile as phone } from '@/composables/breakpoint'
+import { useLiveList } from '@/composables/liveList'
 import { errorKind } from '@/utils/contactos'
 import { formatMoney, formatQty } from '@/utils/display'
 
@@ -531,22 +537,27 @@ function clearAll() {
   navigate({ articulo: state.value.articulo })
 }
 
+const PAGE = 50
+// The server reads at most 100 rows at once.
+const LIVE_MAX = 100
 let sequence = 0
-async function load(cursor = '') {
+// `quiet` (a live refresh): the rows already shown are read again in place,
+// and a failed read keeps them.
+async function load(cursor = '', { quiet = false } = {}) {
   const mine = ++sequence
-  loading.value = true
-  loadError.value = ''
+  loading.value = !quiet
+  if (!quiet) loadError.value = ''
   try {
     const result = await kardexApi('movements', {
       ...kardexArgs(state.value),
       cursor,
-      limit: 50,
+      limit: quiet ? Math.max(PAGE, rows.value.length) : PAGE,
     })
     if (mine !== sequence) return
     data.value = result
     rows.value = cursor ? [...rows.value, ...result.rows] : result.rows
   } catch (error) {
-    if (mine !== sequence) return
+    if (mine !== sequence || quiet) return
     loadError.value =
       error?.messages?.join(' ') ||
       (errorKind(error) === 'permission'
@@ -586,4 +597,21 @@ watch(
 kardexApi('options')
   .then((result) => (options.value = result))
   .catch(() => (options.value = null))
+
+// A sale, receipt, transfer or count posted anywhere shows here without a
+// reload, at most every 10 s on a busy day; a new movement is marked for a
+// moment. A list grown past LIVE_MAX by «more» is left as it is.
+const live = useLiveList(
+  'Stock Ledger Entry',
+  async () => {
+    if (rows.value.length > LIVE_MAX) return
+    const before = rows.value.map((row) => row.id)
+    await load('', { quiet: true })
+    live.mark(
+      before,
+      rows.value.map((row) => row.id),
+    )
+  },
+  { minIntervalMs: 10000 },
+)
 </script>

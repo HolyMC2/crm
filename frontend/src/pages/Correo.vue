@@ -177,7 +177,11 @@
           class="mx-auto w-full max-w-3xl divide-y divide-outline-gray-1"
           data-testid="correo-filas"
         >
-          <li v-for="row in rows" :key="row.name">
+          <li
+            v-for="row in rows"
+            :key="row.name"
+            :data-fresh="live.fresh.value.has(row.name) ? '' : undefined"
+          >
             <ListRow
               :to="
                 isWide
@@ -284,6 +288,7 @@ import SearchPanel from '@/components/ui/SearchPanel.vue'
 import { chipClass } from '@/components/ui/chipClass'
 import { BTN } from '@/documentos/tools'
 import { createListCache } from '@/utils/listCache'
+import { useLiveList } from '@/composables/liveList'
 import {
   bandeja,
   categoryLabel,
@@ -390,14 +395,14 @@ function runSearch() {
     setQuery({ q: term.value.trim() })
 }
 
-function args(inicio = 0) {
+function args(inicio = 0, limite = 30) {
   return {
     vista: state.value.vista,
     buscar: state.value.buscar,
     cuenta: state.value.cuenta,
     categoria: state.value.categoria,
     inicio,
-    limite: 30,
+    limite,
   }
 }
 
@@ -420,24 +425,31 @@ function showTray(out) {
 }
 
 let ticket = 0
-async function load() {
+// `quiet` (a live refresh): the mail already shown is read again in place,
+// keeping the worker's place, and a failed read keeps it.
+async function load({ quiet = false } = {}) {
   const mine = ++ticket
   const listAt = listCache.key()
   // The painted copy starts at the top; the read then keeps the worker's place.
-  const fromCache = listCache.paint((out) => {
-    showTray(out)
-    listPane.value?.scrollTo?.({ top: 0 })
-  })
-  loading.value = true
-  error.value = ''
+  const fromCache =
+    quiet ||
+    listCache.paint((out) => {
+      showTray(out)
+      listPane.value?.scrollTo?.({ top: 0 })
+    })
+  loading.value = !quiet
+  if (!quiet) error.value = ''
   try {
-    const out = (await bandeja(args(0))) || {}
+    const out =
+      (await bandeja(
+        args(0, quiet ? Math.max(30, rows.value.length) : undefined),
+      )) || {}
     if (mine !== ticket) return
     showTray(out)
     listCache.save(listAt, out)
     if (!fromCache) listPane.value?.scrollTo?.({ top: 0 })
   } catch (e) {
-    if (mine === ticket) error.value = errorText(e)
+    if (mine === ticket && !quiet) error.value = errorText(e)
   } finally {
     if (mine === ticket) loading.value = false
   }
@@ -490,4 +502,18 @@ watch(
   },
   { immediate: true },
 )
+
+// Mail that arrives, or that a teammate files, shows without a reload; a new
+// message is marked for a moment. The server reads at most 50 at once: a
+// tray grown past that keeps its rows.
+const LIVE_MAX = 50
+const live = useLiveList('Communication', async () => {
+  if (rows.value.length > LIVE_MAX || loadingMore.value) return
+  const before = rows.value.map((row) => row.name)
+  await load({ quiet: true })
+  live.mark(
+    before,
+    rows.value.map((row) => row.name),
+  )
+})
 </script>

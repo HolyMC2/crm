@@ -195,7 +195,8 @@
           <ul v-else class="divide-y divide-outline-gray-1">
             <li
               v-for="row in rows"
-              :key="row.name || row.employee || row.user"
+              :key="rowKey(row)"
+              :data-fresh="live.fresh.value.has(rowKey(row)) ? '' : undefined"
               class="flex min-h-14 items-center gap-3 px-4 py-3 hover:bg-surface-gray-1 sm:px-6"
               :class="focus && row.name === focus ? 'bg-surface-gray-1' : ''"
             >
@@ -295,6 +296,7 @@ import LucideCalendar from '~icons/lucide/calendar'
 import LucideUserPlus from '~icons/lucide/user-plus'
 import LucideWallet from '~icons/lucide/wallet'
 import { createListCache } from '@/utils/listCache'
+import { useLiveList } from '@/composables/liveList'
 
 const route = useRoute()
 const router = useRouter()
@@ -413,18 +415,19 @@ function paintCached() {
   listCache.paint(showPage)
 }
 
-async function load() {
+// `quiet` (a live refresh): no spinner, and a failed read keeps the list.
+async function load({ quiet = false } = {}) {
   const current = ++ticket
   const listAt = listCache.key()
-  loading.value = true
-  problem.value = null
+  loading.value = !quiet
+  if (!quiet) problem.value = null
   try {
     const page = await equipoApi('list_people', { segment: segment.value })
     if (current !== ticket) return
     showPage(page)
     listCache.save(listAt, page)
   } catch (error) {
-    if (current === ticket) problem.value = problemOf(error)
+    if (current === ticket && !quiet) problem.value = problemOf(error)
   } finally {
     if (current === ticket) loading.value = false
   }
@@ -501,6 +504,22 @@ async function retryBoot() {
   await loadEquipoBoot({ refresh: true })
   if (boot.value?.enabled) load()
 }
+
+// A person added, a leave approved or a shift assigned elsewhere shows
+// without a reload; a new person is marked for a moment.
+const rowKey = (row) => row.name || row.employee || row.user
+const live = useLiveList(
+  () =>
+    boot.value?.enabled
+      ? ['Employee', 'Leave Application', 'Shift Assignment']
+      : '',
+  async () => {
+    if (route.name !== 'Equipo') return
+    const before = rows.value.map(rowKey)
+    await load({ quiet: true })
+    live.mark(before, rows.value.map(rowKey))
+  },
+)
 
 watch(
   () => route.query.segment,

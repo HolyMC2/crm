@@ -484,6 +484,7 @@ import PrecioRow from '@/components/precios/PrecioRow.vue'
 import PreciosFiltros from '@/components/precios/PreciosFiltros.vue'
 import { useSeleccion } from '@/components/masivo/useSeleccion'
 import { isMobile as phone } from '@/composables/breakpoint'
+import { useLiveList } from '@/composables/liveList'
 import { shellBoot } from '@/composables/muelleShell'
 import { documentRoute } from '@/documentos/registry'
 import { formatDate } from '@/utils/display'
@@ -762,10 +763,11 @@ function scopeArgs() {
   return { ...args, view: view.value }
 }
 
-async function load({ append = false } = {}) {
+// `quiet` (a live refresh): no spinner, and a failed read keeps the rows.
+async function load({ append = false, quiet = false } = {}) {
   const mine = ++ticket
-  loading.value = true
-  loadProblem.value = ''
+  loading.value = !quiet
+  if (!quiet) loadProblem.value = ''
   try {
     const answer = await preciosApi('rows', {
       ...scopeArgs(),
@@ -783,7 +785,7 @@ async function load({ append = false } = {}) {
     if (answer?.source) sourceInfo.value = answer.source
     if (!append) seleccion.prune?.(codes)
   } catch (error) {
-    if (mine === ticket) loadProblem.value = problemOf(error).detail
+    if (mine === ticket && !quiet) loadProblem.value = problemOf(error).detail
   } finally {
     if (mine === ticket) loading.value = false
   }
@@ -818,6 +820,26 @@ async function loadCounts() {
     // The chips just go without their numbers.
   }
 }
+
+// A price or a product a teammate saves elsewhere shows without a reload. One
+// page is read again; a longer list keeps its rows and reads their prices.
+// While prices are being edited the list stays as it is: each save checks the
+// price against the one the worker saw.
+const LIVE_PAGE = 30
+const LIVE_CODES = 300
+useLiveList(
+  () => (activeList.value ? ['Item Price', 'Item'] : ''),
+  async () => {
+    if (route.name !== 'Precios' || drafts.size || keep.size) return
+    loadCounts()
+    if (rowCodes.value.length <= LIVE_PAGE) return load({ quiet: true })
+    try {
+      remember((await fetchCodes(rowCodes.value.slice(0, LIVE_CODES))).rows)
+    } catch {
+      // The prices on screen stay; the next change or visit reads them.
+    }
+  },
+)
 
 const reload = useDebounceFn(() => load(), 250)
 watch(search, reload)

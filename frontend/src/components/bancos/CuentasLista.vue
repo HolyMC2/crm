@@ -144,7 +144,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { Button } from 'frappe-ui'
 import { AppBar, EmptyState, ListRow } from '@/components/ui'
 import CuentaCard from './CuentaCard.vue'
-import { bancosApi, errorText, money } from './bancos'
+import { LIVE_DOCTYPES, bancosApi, errorText, money } from './bancos'
+import { useLiveList } from '@/composables/liveList'
 import { createListCache } from '@/utils/listCache'
 
 const props = defineProps({
@@ -206,11 +207,14 @@ const listCache = createListCache('bancos', () => [
 ])
 
 let sequence = 0
-async function load() {
+// `quiet` (a live refresh): the cards on screen stay, and a failed read keeps them.
+async function load({ quiet = false } = {}) {
   const mine = ++sequence
   const listAt = listCache.key()
-  listCache.paint((result) => (data.value = result))
-  loadError.value = ''
+  if (!quiet) {
+    listCache.paint((result) => (data.value = result))
+    loadError.value = ''
+  }
   try {
     const result = await bancosApi('cuentas', {
       company: route.query.empresa || '',
@@ -219,9 +223,18 @@ async function load() {
     data.value = result
     listCache.save(listAt, result)
   } catch (error) {
-    if (mine === sequence) loadError.value = errorText(error)
+    if (mine === sequence && !quiet) loadError.value = errorText(error)
   }
 }
-watch(() => route.query.empresa, load, { immediate: true })
+watch(
+  () => route.query.empresa,
+  () => load(),
+  { immediate: true },
+)
+// Money that moves elsewhere moves the balances here, read again at most
+// every 10 s on a busy day.
+useLiveList(LIVE_DOCTYPES, () => load({ quiet: true }), {
+  minIntervalMs: 10000,
+})
 defineExpose({ reload: load, props })
 </script>

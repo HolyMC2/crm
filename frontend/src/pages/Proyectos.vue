@@ -96,7 +96,11 @@
         :aria-busy="loading"
         data-proyectos-list
       >
-        <li v-for="row in rows" :key="row.name">
+        <li
+          v-for="row in rows"
+          :key="row.name"
+          :data-fresh="live.fresh.value.has(row.name) ? '' : undefined"
+        >
           <ListRow
             :title="row.project_name"
             :subtitle="dueLine(row)"
@@ -125,6 +129,7 @@ import { Button, FormControl } from 'frappe-ui'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import { AppBar, EmptyState, Fab, ListRow } from '@/components/ui'
 import { isMobile as phone } from '@/composables/breakpoint'
+import { useLiveList } from '@/composables/liveList'
 import { loadShell, shellBoot } from '@/composables/muelleShell'
 import {
   SCOPES,
@@ -210,10 +215,11 @@ const emptyMessage = computed(() =>
 
 let generation = 0,
   timer
-async function load() {
+// `quiet` (a live refresh): the rows stay on screen, and a failed read keeps them.
+async function load({ quiet = false } = {}) {
   const current = ++generation
-  loading.value = true
-  problem.value = null
+  loading.value = !quiet
+  if (!quiet) problem.value = null
   try {
     const answer = await proyectosApi('lista', {
       scope: scope.value,
@@ -223,8 +229,9 @@ async function load() {
     rows.value = answer?.rows || []
     counts.value = answer?.counts || {}
     today.value = answer?.today || ''
+    problem.value = null
   } catch (error) {
-    if (current !== generation) return
+    if (current !== generation || quiet) return
     rows.value = []
     problem.value = proyectoError(error)
   } finally {
@@ -264,4 +271,17 @@ watch(search, (value) => {
 onMounted(() => {
   if (!guard.value) load()
 })
+// A teammate's project, or a pendiente that moves its progress, shows
+// without a reload; a new project is marked for a moment.
+const live = useLiveList(
+  () => (guard.value ? '' : ['Project', 'ToDo']),
+  async () => {
+    const before = rows.value.map((row) => row.name)
+    await load({ quiet: true })
+    live.mark(
+      before,
+      rows.value.map((row) => row.name),
+    )
+  },
+)
 </script>
