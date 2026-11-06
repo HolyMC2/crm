@@ -315,6 +315,8 @@ const head = computed(() => {
     currency: h?.currency || currency.value,
   }
 })
+// «Volver a vianey…»: the way back names the customer, never the folio.
+const backName = computed(() => head.value?.title || RETURN_LABEL)
 const lineCount = computed(
   () => doc.value?.items_total || doc.value?.items?.length || 0,
 )
@@ -350,7 +352,7 @@ function lineTo(item) {
     props.doctype !== 'Sales Invoice'
   )
     return null
-  return routerPath(productHref(item.item_code, here.value, props.name))
+  return routerPath(productHref(item.item_code, here.value, backName.value))
 }
 function lineDetail(item) {
   if (item.qty === undefined) return ''
@@ -370,7 +372,7 @@ const dealHref = computed(() =>
   doc.value?.deal
     ? withReturn(`/crm/ventas/deal/${encodeURIComponent(doc.value.deal)}`, {
         to: here.value,
-        label: props.name,
+        label: backName.value,
       })
     : null,
 )
@@ -380,7 +382,7 @@ const customerHref = computed(() =>
         `/crm/contactos/customer/${encodeURIComponent(doc.value.header.customer)}`,
         {
           to: here.value,
-          label: props.name,
+          label: backName.value,
         },
       )
     : null,
