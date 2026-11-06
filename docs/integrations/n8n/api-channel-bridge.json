@@ -7,7 +7,9 @@
         "path": "my-channel-inbound",
         "options": {
           "rawBody": true
-        }
+        },
+        "authentication": "headerAuth",
+        "responseMode": "lastNode"
       },
       "webhookId": "46774972-5423-4bd1-94d6-94c62fb509f9",
       "name": "Channel inbound",
@@ -43,7 +45,8 @@
         "path": "muelle-crm-channel",
         "options": {
           "rawBody": true
-        }
+        },
+        "responseMode": "responseNode"
       },
       "webhookId": "2508ae02-045f-4e21-b55f-a4c88c204129",
       "name": "Muelle webhook",
@@ -56,7 +59,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const crypto = require('crypto');\nconst item = $input.first();\nconst h = item.json.headers;\nconst body = (await this.helpers.getBinaryDataBuffer(0, 'data')).toString('utf8');\nconst secret = $env.MUELLE_CHANNEL_WHSEC;\nif (!secret) throw new Error('Set MUELLE_CHANNEL_WHSEC in n8n to this connection\\'s signing secret');\nconst key = Buffer.from(secret.replace(/^whsec_/, ''), 'base64');\nconst expected = crypto.createHmac('sha256', key)\n  .update(`${h['webhook-id']}.${h['webhook-timestamp']}.${body}`).digest('base64');\nconst ok = (h['webhook-signature'] || '').split(' ').some((s) => s === `v1,${expected}`);\nif (!ok || Math.abs(Date.now() / 1000 - Number(h['webhook-timestamp'])) > 300) {\n  throw new Error('Bad signature');\n}\nreturn [{ json: JSON.parse(body) }];"
+        "jsCode": "const crypto = require('crypto');\nconst item = $input.first();\nconst h = item.json.headers;\nconst body = (await this.helpers.getBinaryDataBuffer(0, 'data')).toString('utf8');\nconst secret = $env.MUELLE_CHANNEL_WHSEC;\nif (!secret) return [{ json: { refused: 'Set MUELLE_CHANNEL_WHSEC in n8n to this connection\\'s signing secret' } }];\nconst key = Buffer.from(secret.replace(/^whsec_/, ''), 'base64');\nconst expected = crypto.createHmac('sha256', key)\n  .update(`${h['webhook-id']}.${h['webhook-timestamp']}.${body}`).digest('base64');\nconst ok = (h['webhook-signature'] || '').split(' ').some((s) => s === `v1,${expected}`);\nif (!ok || Math.abs(Date.now() / 1000 - Number(h['webhook-timestamp'])) > 300) {\n  return [{ json: { refused: 'Bad signature' } }];\n}\nreturn [{ json: JSON.parse(body) }];"
       },
       "name": "Verify signature",
       "type": "n8n-nodes-base.code",
@@ -81,7 +84,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        480,
+        1200,
         240
       ]
     },
@@ -92,13 +95,21 @@
         "sendBody": true,
         "contentType": "json",
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({to: $json.data.thread.peer_id, text: $json.data.message.content}) }}"
+        "jsonBody": "={{ JSON.stringify({to: $json.data.thread.peer_id, text: $json.data.message.content}) }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "fullResponse": true
+            }
+          }
+        }
       },
       "name": "Send on my channel",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        720,
+        1440,
         240
       ]
     },
@@ -111,14 +122,76 @@
         "sendBody": true,
         "contentType": "json",
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({message: $('Verify signature').item.json.data.message.id, status: 'delivered'}) }}"
+        "jsonBody": "={{ JSON.stringify({message: $('Verify signature').first().json.data.message.id, status: $json.statusCode >= 200 && $json.statusCode < 300 ? 'sent' : 'failed'}) }}"
       },
       "name": "CRM channel_status",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
+        1680,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "noData",
+        "options": {
+          "responseCode": 204
+        }
+      },
+      "name": "Accepted",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        720,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Delivery is at-least-once: a retry repeats webhook-id. Drop ids this workflow already handled.\nconst id = $('Muelle webhook').first().json.headers['webhook-id'];\nconst store = $getWorkflowStaticData('global');\nconst seen = store.seenIds || [];\nif (seen.includes(id)) return [];\nseen.push(id);\nstore.seenIds = seen.slice(-1000);\nreturn $('Verify signature').all();"
+      },
+      "name": "Seen before?",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
         960,
         240
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ !$json.refused }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "name": "Signed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        480,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ error: $json.refused }) }}",
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "name": "Refuse",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        720,
+        380
       ]
     }
   ],
@@ -149,7 +222,7 @@
       "main": [
         [
           {
-            "node": "Agent reply?",
+            "node": "Signed?",
             "type": "main",
             "index": 0
           }
@@ -177,12 +250,52 @@
           }
         ]
       ]
+    },
+    "Accepted": {
+      "main": [
+        [
+          {
+            "node": "Seen before?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Seen before?": {
+      "main": [
+        [
+          {
+            "node": "Agent reply?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Signed?": {
+      "main": [
+        [
+          {
+            "node": "Accepted",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Refuse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
     "executionOrder": "v1"
   },
   "meta": {
-    "note": "Credentials: Header Auth «Authorization: token <api_key>:<api_secret>» of the connection user. Env: MUELLE_SITE_URL, MUELLE_WHSEC (from «Show signing secret»). See crm/docs/integrations/N8N.md."
+    "note": "Credentials: Header Auth «Authorization: token <api_key>:<api_secret>» of the connection user on the CRM calls; the inbound webhook uses Header Auth: set a credential for what your channel sends to my-channel-inbound (or replace it with that channel's own check). Env: MUELLE_SITE_URL, MUELLE_CHANNEL_WHSEC, MY_CHANNEL_SEND_URL. A send your channel refuses is reported as failed, so the inbox shows it. See crm/docs/integrations/N8N.md."
   }
 }

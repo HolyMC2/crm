@@ -32,7 +32,9 @@ below describe its fields.
      listed in site config `crm_integration_allowed_hosts`.
    - **Events**: one row per event you want (catalog below).
    - Save. The signing secret (`whsec_…`) is created automatically. Use **Show signing secret**
-     to copy it into n8n, and **Rotate** if it leaks.
+     to copy it into n8n, and **Rotate** if it leaks. For 24 hours after a rotation every event
+     carries two signatures, one per secret, so n8n keeps accepting events until you paste the
+     new one; the verify snippet below accepts either.
 3. **Enable**. If something is missing, enabling says exactly what (user without an API key, no
    URL, no events…).
 4. **Send test event** posts a signed `ping` synchronously and shows the response.
@@ -46,8 +48,9 @@ The payload is built on the first attempt and then frozen, so retries send the s
 - Retries: 30 s, 2 min, 10 min, 30 min, 2 h, 6 h, 12 h; after 8 attempts the row is **Dead**.
   HTTP 410 marks it Dead at once (the receiver asked to stop). A test `ping` is never retried:
   if it fails, it is Dead straight away. **Send again** needs the connection enabled.
-- An event about a record that «Acts as user» may not read is **Skipped** and not sent; a
-  deletion it could not have seen is not sent either.
+- An event about a record that «Acts as user» may not read is **Skipped** and not sent, and so
+  is one whose record was deleted before the send (its `document.deleted` still goes out). A
+  deletion the user could not have seen is not sent. The row's error says which.
 - Any 2xx is success. The connection shows the last status, consecutive failures and the last
   error.
 - Delivered and Skipped rows are kept for 30 days, Dead rows for 90 days.
@@ -58,12 +61,18 @@ Headers follow [Standard Webhooks](https://www.standardwebhooks.com/):
 webhook-id: <delivery id, stable across retries — use it to dedupe>
 webhook-timestamp: <unix seconds>
 webhook-signature: v1,<base64 HMAC-SHA256(secret_bytes, "<id>.<timestamp>.<raw body>")>
+                   (two, space-separated, for 24 h after a rotation)
 X-Muelle-Event: <event type>
 ```
 
 `secret_bytes` is the base64-decoded part after `whsec_`. In n8n, verify in a Code node right
-after the Webhook node (Webhook option «Raw body» on). n8n 2.x blocks both `require('crypto')`
-and `$env` in Code nodes by default, so set these in n8n's environment and restart it:
+after the Webhook node (Webhook option «Raw body» on, «Respond» set to «Using 'Respond to Webhook'
+node»), and answer only after the check: 2xx once the signature is good, 401 when it is not, so
+the CRM retries what n8n refused (for example while you paste a rotated secret). Do not answer
+«Immediately»: every request would count as delivered, bad signature or not. And do not refuse
+by throwing: n8n 2.x answers 200 when a flow fails before its Respond node. n8n 2.x also blocks
+both `require('crypto')` and `$env` in Code nodes by default, so set these in n8n's environment
+and restart it:
 
 ```
 NODE_FUNCTION_ALLOW_BUILTIN=crypto
@@ -84,10 +93,14 @@ const expected = crypto.createHmac('sha256', key)
   .update(`${h['webhook-id']}.${h['webhook-timestamp']}.${body}`).digest('base64');
 const ok = h['webhook-signature'].split(' ').some((s) => s === `v1,${expected}`);
 if (!ok || Math.abs(Date.now() / 1000 - Number(h['webhook-timestamp'])) > 300) {
-  throw new Error('Bad signature');
+  return [{ json: { refused: 'Bad signature' } }];  // an IF sends this to a Respond 401
 }
-return [{ json: JSON.parse(body) }];
+return [{ json: JSON.parse(body) }];  // the IF's true branch: Respond 204, then the work
 ```
+
+Delivery is at-least-once: a CRM retry after a lost answer repeats `webhook-id`. Drop ids the
+workflow already handled before doing anything a customer sees (the templates keep the last 1000
+in the workflow's static data, in the «Seen before?» node).
 
 Body:
 
@@ -251,7 +264,17 @@ Each workflow is its own connection, with its own webhook URL and secret:
 | `api-channel-bridge.json` | `muelle-crm-channel`, `my-channel-inbound` | `MUELLE_CHANNEL_WHSEC`, `MUELLE_SITE_URL`, `MY_CHANNEL_SEND_URL` |
 | `books-assistant-relay.json` | `muelle-books`, `books-ask`, `books-decide` | `MUELLE_BOOKS_WHSEC`, `MUELLE_SITE_URL` |
 
+Every CRM-facing workflow runs Webhook → **Verify signature** → **Signed?** → **Accepted** (204) →
+**Seen before?** → the work; a refused request ends at **Refuse** (401). The channel bridge
+reports each send as `sent`, or `failed` when your channel does not answer 2xx, so the inbox shows
+it.
+
 Set the Header Auth credential (`Authorization: token key:secret`) on the HTTP Request nodes;
-no secret lives in the JSON. The webhook nodes carry a `webhookId`, so the production URL is
+no secret lives in the JSON. The entry points other systems call (`my-channel-inbound`,
+`books-ask`, `books-decide`) use **Header Auth** too: give them their own credential (a header
+your channel or app sends), never the CRM key. `books-ask` and `books-decide` act with the
+connection user's access to the books, and an open URL would let anyone ask or approve. They
+answer when the flow has finished, so the caller sees a failure and can retry
+(`message_id` / `client_id` make that safe). The webhook nodes carry a `webhookId`, so the production URL is
 `https://<n8n>/webhook/<path>` however the workflow is imported (UI or `n8n import:workflow`;
 after a CLI import, `n8n publish:workflow --id=<id>` and restart n8n).

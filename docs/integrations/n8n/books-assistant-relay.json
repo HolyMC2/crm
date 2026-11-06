@@ -7,7 +7,9 @@
         "path": "books-ask",
         "options": {
           "rawBody": true
-        }
+        },
+        "authentication": "headerAuth",
+        "responseMode": "lastNode"
       },
       "webhookId": "fdfd6f90-9115-4cb6-9d59-a594a71b96e6",
       "name": "Ask the assistant",
@@ -43,7 +45,8 @@
         "path": "muelle-books",
         "options": {
           "rawBody": true
-        }
+        },
+        "responseMode": "responseNode"
       },
       "webhookId": "3a23bc5c-db0b-4dbf-bc80-19f458216b77",
       "name": "Muelle webhook",
@@ -56,7 +59,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const crypto = require('crypto');\nconst item = $input.first();\nconst h = item.json.headers;\nconst body = (await this.helpers.getBinaryDataBuffer(0, 'data')).toString('utf8');\nconst secret = $env.MUELLE_BOOKS_WHSEC;\nif (!secret) throw new Error('Set MUELLE_BOOKS_WHSEC in n8n to this connection\\'s signing secret');\nconst key = Buffer.from(secret.replace(/^whsec_/, ''), 'base64');\nconst expected = crypto.createHmac('sha256', key)\n  .update(`${h['webhook-id']}.${h['webhook-timestamp']}.${body}`).digest('base64');\nconst ok = (h['webhook-signature'] || '').split(' ').some((s) => s === `v1,${expected}`);\nif (!ok || Math.abs(Date.now() / 1000 - Number(h['webhook-timestamp'])) > 300) {\n  throw new Error('Bad signature');\n}\nreturn [{ json: JSON.parse(body) }];"
+        "jsCode": "const crypto = require('crypto');\nconst item = $input.first();\nconst h = item.json.headers;\nconst body = (await this.helpers.getBinaryDataBuffer(0, 'data')).toString('utf8');\nconst secret = $env.MUELLE_BOOKS_WHSEC;\nif (!secret) return [{ json: { refused: 'Set MUELLE_BOOKS_WHSEC in n8n to this connection\\'s signing secret' } }];\nconst key = Buffer.from(secret.replace(/^whsec_/, ''), 'base64');\nconst expected = crypto.createHmac('sha256', key)\n  .update(`${h['webhook-id']}.${h['webhook-timestamp']}.${body}`).digest('base64');\nconst ok = (h['webhook-signature'] || '').split(' ').some((s) => s === `v1,${expected}`);\nif (!ok || Math.abs(Date.now() / 1000 - Number(h['webhook-timestamp'])) > 300) {\n  return [{ json: { refused: 'Bad signature' } }];\n}\nreturn [{ json: JSON.parse(body) }];"
       },
       "name": "Verify signature",
       "type": "n8n-nodes-base.code",
@@ -81,7 +84,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        480,
+        1200,
         240
       ]
     },
@@ -111,7 +114,9 @@
         "path": "books-decide",
         "options": {
           "rawBody": true
-        }
+        },
+        "authentication": "headerAuth",
+        "responseMode": "lastNode"
       },
       "webhookId": "8852cd45-cbe7-4e23-bd4a-79f2836e0138",
       "name": "Button chosen",
@@ -139,6 +144,68 @@
       "position": [
         240,
         480
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "noData",
+        "options": {
+          "responseCode": 204
+        }
+      },
+      "name": "Accepted",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        720,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Delivery is at-least-once: a retry repeats webhook-id. Drop ids this workflow already handled.\nconst id = $('Muelle webhook').first().json.headers['webhook-id'];\nconst store = $getWorkflowStaticData('global');\nconst seen = store.seenIds || [];\nif (seen.includes(id)) return [];\nseen.push(id);\nstore.seenIds = seen.slice(-1000);\nreturn $('Verify signature').all();"
+      },
+      "name": "Seen before?",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ !$json.refused }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "name": "Signed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        480,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ error: $json.refused }) }}",
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "name": "Refuse",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        720,
+        380
       ]
     }
   ],
@@ -169,7 +236,7 @@
       "main": [
         [
           {
-            "node": "Has buttons?",
+            "node": "Signed?",
             "type": "main",
             "index": 0
           }
@@ -204,12 +271,52 @@
           }
         ]
       ]
+    },
+    "Accepted": {
+      "main": [
+        [
+          {
+            "node": "Seen before?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Seen before?": {
+      "main": [
+        [
+          {
+            "node": "Has buttons?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Signed?": {
+      "main": [
+        [
+          {
+            "node": "Accepted",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Refuse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
     "executionOrder": "v1"
   },
   "meta": {
-    "note": "Credentials: Header Auth «Authorization: token <api_key>:<api_secret>» of the connection user. Env: MUELLE_SITE_URL, MUELLE_WHSEC (from «Show signing secret»). See crm/docs/integrations/N8N.md."
+    "note": "Credentials: Header Auth «Authorization: token <api_key>:<api_secret>» of the connection user on the CRM calls; a Header Auth credential guards books-ask and books-decide, which act with the connection user's access to the books. Env: MUELLE_SITE_URL, MUELLE_BOOKS_WHSEC. See crm/docs/integrations/N8N.md."
   }
 }
