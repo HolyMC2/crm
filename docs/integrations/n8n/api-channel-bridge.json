@@ -9,6 +9,7 @@
           "rawBody": true
         }
       },
+      "webhookId": "46774972-5423-4bd1-94d6-94c62fb509f9",
       "name": "Channel inbound",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
@@ -44,6 +45,7 @@
           "rawBody": true
         }
       },
+      "webhookId": "2508ae02-045f-4e21-b55f-a4c88c204129",
       "name": "Muelle webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
@@ -54,7 +56,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const crypto = require('crypto');\nconst item = $input.first();\nconst h = item.json.headers;\nconst body = Buffer.from(item.binary.data.data, 'base64').toString('utf8');\nconst key = Buffer.from($env.MUELLE_WHSEC.replace(/^whsec_/, ''), 'base64');\nconst expected = crypto.createHmac('sha256', key)\n  .update(`${h['webhook-id']}.${h['webhook-timestamp']}.${body}`).digest('base64');\nconst ok = (h['webhook-signature'] || '').split(' ').some((s) => s === `v1,${expected}`);\nif (!ok || Math.abs(Date.now() / 1000 - Number(h['webhook-timestamp'])) > 300) {\n  throw new Error('Bad signature');\n}\nreturn [{ json: JSON.parse(body) }];"
+        "jsCode": "const crypto = require('crypto');\nconst item = $input.first();\nconst h = item.json.headers;\nconst body = (await this.helpers.getBinaryDataBuffer(0, 'data')).toString('utf8');\nconst secret = $env.MUELLE_CHANNEL_WHSEC;\nif (!secret) throw new Error('Set MUELLE_CHANNEL_WHSEC in n8n to this connection\\'s signing secret');\nconst key = Buffer.from(secret.replace(/^whsec_/, ''), 'base64');\nconst expected = crypto.createHmac('sha256', key)\n  .update(`${h['webhook-id']}.${h['webhook-timestamp']}.${body}`).digest('base64');\nconst ok = (h['webhook-signature'] || '').split(' ').some((s) => s === `v1,${expected}`);\nif (!ok || Math.abs(Date.now() / 1000 - Number(h['webhook-timestamp'])) > 300) {\n  throw new Error('Bad signature');\n}\nreturn [{ json: JSON.parse(body) }];"
       },
       "name": "Verify signature",
       "type": "n8n-nodes-base.code",

@@ -406,10 +406,19 @@ class TestIntegrationWebhooks(IntegrationTestCase):
 		self.assertIn("description", body["data"]["change"]["fields"])
 		self.assertNotIn("date", body["data"]["change"]["fields"], "an unset date is not a change")
 		self.assertEqual(body["api_version"], webhooks.API_VERSION)
+		self.assertRegex(
+			body["timestamp"], r"^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$", "ISO 8601 UTC, as documented"
+		)
 		frappe.delete_doc("ToDo", todo.name)
 		gone = frappe.get_doc(webhooks.DELIVERY, self.deliveries(connection, "document.deleted")[0])
 		data = json.loads(webhooks.build_payload(gone, connection))["data"]
 		self.assertEqual((data["doctype"], data["name"]), ("ToDo", todo.name))
+
+	def test_envelope_timestamp_is_utc(self):
+		with patch("crm.integrations.webhooks.get_system_timezone", return_value="America/Mazatlan"):
+			self.assertEqual(webhooks.utc_iso("2026-11-06 13:02:41.171421"), "2026-11-06T20:02:41Z")
+		with patch("crm.integrations.webhooks.get_system_timezone", return_value="Europe/Berlin"):
+			self.assertEqual(webhooks.utc_iso("2026-07-01 12:00:00"), "2026-07-01T10:00:00Z")
 
 	def test_changed_fields_compare_stored_values_and_table_rows(self):
 		changed_fields = events.changed_fields

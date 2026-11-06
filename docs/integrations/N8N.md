@@ -59,12 +59,23 @@ X-Muelle-Event: <event type>
 ```
 
 `secret_bytes` is the base64-decoded part after `whsec_`. In n8n, verify in a Code node right
-after the Webhook node (Webhook option «Raw body» on):
+after the Webhook node (Webhook option «Raw body» on). n8n 2.x blocks both `require('crypto')`
+and `$env` in Code nodes by default, so set these in n8n's environment and restart it:
+
+```
+NODE_FUNCTION_ALLOW_BUILTIN=crypto
+N8N_BLOCK_ENV_ACCESS_IN_NODE=false
+MUELLE_WHSEC=whsec_…            # this connection's signing secret
+```
+
+Each connection has its own secret, so each workflow reads its own variable (the templates use
+`MUELLE_WHSEC`, `MUELLE_CHANNEL_WHSEC` and `MUELLE_BOOKS_WHSEC`). Read the body with
+`getBinaryDataBuffer`, which works whether n8n keeps binary data in memory or on disk:
 
 ```js
 const crypto = require('crypto');
 const h = $input.first().json.headers;
-const body = Buffer.from($input.first().binary.data.data, 'base64').toString('utf8');
+const body = (await this.helpers.getBinaryDataBuffer(0, 'data')).toString('utf8');
 const key = Buffer.from($env.MUELLE_WHSEC.replace(/^whsec_/, ''), 'base64');
 const expected = crypto.createHmac('sha256', key)
   .update(`${h['webhook-id']}.${h['webhook-timestamp']}.${body}`).digest('base64');
@@ -88,6 +99,8 @@ Body:
   "data": { "...": "event-specific, see below" }
 }
 ```
+
+`timestamp` is when the event happened, in UTC.
 
 ## 3. Event catalog
 
@@ -227,5 +240,15 @@ person, and a channel never adds power.
 - `books-assistant-relay.json`: a message → `say`; `assistant.message_created` → forward the
   text; a button → `callback`.
 
-Set the credentials (`Header Auth`: `Authorization: token key:secret`) and `MUELLE_WHSEC` in
-n8n; no secret lives in the JSON.
+Each workflow is its own connection, with its own webhook URL and secret:
+
+| Template | Webhook path(s) | Environment |
+|---|---|---|
+| `crm-webhook-verify.json` | `muelle-crm` | `MUELLE_WHSEC` |
+| `api-channel-bridge.json` | `muelle-crm-channel`, `my-channel-inbound` | `MUELLE_CHANNEL_WHSEC`, `MUELLE_SITE_URL`, `MY_CHANNEL_SEND_URL` |
+| `books-assistant-relay.json` | `muelle-books`, `books-ask`, `books-decide` | `MUELLE_BOOKS_WHSEC`, `MUELLE_SITE_URL` |
+
+Set the Header Auth credential (`Authorization: token key:secret`) on the HTTP Request nodes;
+no secret lives in the JSON. The webhook nodes carry a `webhookId`, so the production URL is
+`https://<n8n>/webhook/<path>` however the workflow is imported (UI or `n8n import:workflow`;
+after a CLI import, `n8n publish:workflow --id=<id>` and restart n8n).

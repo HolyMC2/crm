@@ -18,13 +18,14 @@ import secrets
 import socket
 import time
 from contextlib import contextmanager
-from datetime import timedelta
+from datetime import timedelta, timezone
 from urllib.parse import urlparse
+from zoneinfo import ZoneInfo
 
 import frappe
 import requests
 from frappe import _
-from frappe.utils import add_to_date, get_datetime, now_datetime
+from frappe.utils import add_to_date, get_datetime, get_system_timezone, now_datetime
 
 INTEGRATION = "CRM Integration"
 DELIVERY = "CRM Integration Delivery"
@@ -355,6 +356,12 @@ def _builder(event):
 	return events.BUILDERS.get(event.split(".", 1)[0])
 
 
+def utc_iso(value):
+	"""A stored (site-local, naive) datetime as ISO 8601 UTC, e.g. 2026-11-03T20:00:00Z."""
+	local = get_datetime(value).replace(tzinfo=ZoneInfo(get_system_timezone()))
+	return local.astimezone(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
+
+
 def build_payload(delivery, integration):
 	"""The exact body for this delivery, built as the connection's user."""
 	context = json.loads(delivery.context_json or "{}")
@@ -370,7 +377,7 @@ def build_payload(delivery, integration):
 		"id": delivery.name,
 		"type": delivery.event,
 		"api_version": API_VERSION,
-		"timestamp": str(delivery.creation),
+		"timestamp": utc_iso(delivery.creation),
 		"site": frappe.local.site,
 		"connection": integration.name,
 		"data": data,
