@@ -126,8 +126,8 @@ connections.
 | Event | When | `data` |
 |---|---|---|
 | `conversation.created` | a conversation is materialized | `conversation`: the inbox detail (provider, account, peer, owner, state, generation) |
-| `conversation.status_changed` | take, release, close, reopen, bot/human handover | `conversation` plus `change`: action, origin, actor, from/to state and owner, generation |
-| `conversation.updated` | route, link to lead/deal, labels, snooze, metadata | `conversation` plus `change` (`action: "metadata"` lists the changed `fields`) |
+| `conversation.status_changed` | take, transfer, release, pause, close, reopen, bot/human handover: the control state or the owner moved | `conversation` plus `change`: action, origin, actor, from/to state and owner, generation |
+| `conversation.updated` | route, link to lead/deal, labels, snooze, metadata, and `request` (someone asked the owner for it; nothing moves) | `conversation` plus `change` (`action: "metadata"` lists the changed `fields`) |
 | `conversation.note_created` | someone adds a private note (the customer never sees it) | `conversation` plus `note`: `id`, `author`, `content`, `mentions`, `created_at` |
 | `conversation.rated` | the customer answers the satisfaction request | `conversation` plus `rating`: `id`, `rating` (1–5), `comment`, `agent`, `rated_at` |
 | `conversation.reply_overdue` | a customer has waited longer than the inbox's first-reply goal (once per wait; only while open when office hours are on) | `conversation` plus `waiting`: `since`, `goal_minutes` |
@@ -275,6 +275,7 @@ no secret lives in the JSON. The entry points other systems call (`my-channel-in
 your channel or app sends), never the CRM key. `books-ask` and `books-decide` act with the
 connection user's access to the books, and an open URL would let anyone ask or approve. They
 answer when the flow has finished, so the caller sees a failure and can retry
-(`message_id` / `client_id` make that safe). The webhook nodes carry a `webhookId`, so the production URL is
+(`channel_message` dedupes on `message_id`; the books relay passes the caller's `id` as the
+assistant's `client_id`, so a caller of `books-ask` sends `{text, id}`). The webhook nodes carry a `webhookId`, so the production URL is
 `https://<n8n>/webhook/<path>` however the workflow is imported (UI or `n8n import:workflow`;
 after a CLI import, `n8n publish:workflow --id=<id>` and restart n8n).

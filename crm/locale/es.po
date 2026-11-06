@@ -31075,12 +31075,12 @@ msgid "A customer conversation was opened."
 msgstr "Se abrió una conversación con un cliente."
 
 #: crm/integrations/webhooks.py
-msgid "Control changed: Human, Bot, Paused or Closed (take, release, close, reopen, hand off)."
-msgstr "Cambió quién atiende: persona, bot, en pausa o cerrada (tomar, soltar, cerrar, reabrir, transferir)."
+msgid "Control or owner changed: Human, Bot, Paused or Closed, or a new owner (take, transfer, release, pause, close, reopen, hand off)."
+msgstr "Cambió quién atiende o el responsable: persona, bot, en pausa, cerrada o un responsable nuevo (tomar, transferir, soltar, pausar, cerrar, reabrir, pasar al bot)."
 
 #: crm/integrations/webhooks.py
-msgid "Owner, team, linked records or automation state changed without a control change."
-msgstr "Cambió el responsable, el equipo, los registros vinculados o la automatización, sin cambiar quién atiende."
+msgid "Team, labels, snooze, linked records or automation state changed, or someone asked the owner for the conversation."
+msgstr "Cambió el equipo, las etiquetas, la pausa programada, los registros vinculados o la automatización, o alguien pidió la conversación a su responsable."
 
 #: crm/integrations/webhooks.py
 msgid "A teammate wrote a private note on a conversation (never shown to the customer)."

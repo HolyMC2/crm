@@ -29,7 +29,7 @@
         "sendBody": true,
         "contentType": "json",
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({text: $json.body.text, client_id: $execution.id}) }}"
+        "jsonBody": "={{ JSON.stringify({text: $json.body.text, client_id: String($json.body.id || $execution.id)}) }}"
       },
       "name": "Assistant say",
       "type": "n8n-nodes-base.httpRequest",
@@ -317,6 +317,6 @@
     "executionOrder": "v1"
   },
   "meta": {
-    "note": "Credentials: Header Auth «Authorization: token <api_key>:<api_secret>» of the connection user on the CRM calls; a Header Auth credential guards books-ask and books-decide, which act with the connection user's access to the books. Env: MUELLE_SITE_URL, MUELLE_BOOKS_WHSEC. See crm/docs/integrations/N8N.md."
+    "note": "Credentials: Header Auth «Authorization: token <api_key>:<api_secret>» of the connection user on the CRM calls; a Header Auth credential guards books-ask and books-decide, which act with the connection user's access to the books. Env: MUELLE_SITE_URL, MUELLE_BOOKS_WHSEC. See crm/docs/integrations/N8N.md. Callers of books-ask send {text, id}: the id makes their retry safe."
   }
 }

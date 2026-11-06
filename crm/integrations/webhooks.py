@@ -47,11 +47,11 @@ EVENTS = {
 	"conversation.created": ("CRM Conversation", "A customer conversation was opened."),
 	"conversation.status_changed": (
 		"CRM Conversation",
-		"Control changed: Human, Bot, Paused or Closed (take, release, close, reopen, hand off).",
+		"Control or owner changed: Human, Bot, Paused or Closed, or a new owner (take, transfer, release, pause, close, reopen, hand off).",
 	),
 	"conversation.updated": (
 		"CRM Conversation",
-		"Owner, team, linked records or automation state changed without a control change.",
+		"Team, labels, snooze, linked records or automation state changed, or someone asked the owner for the conversation.",
 	),
 	"conversation.note_created": (
 		"CRM Conversation Note",
