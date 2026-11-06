@@ -500,11 +500,16 @@ class TestIntegrationWebhooks(IntegrationTestCase):
 		changes = [
 			json.loads(frappe.db.get_value(webhooks.DELIVERY, n, "context_json"))
 			for n in self.deliveries(connection, "conversation.status_changed")
-		] + [
-			json.loads(frappe.db.get_value(webhooks.DELIVERY, n, "context_json"))
-			for n in self.deliveries(connection, "conversation.updated")
 		]
+		# take keeps the state (Human) and moves the owner: still a status change
 		self.assertIn(("take", self.users["agent"]), [(c["action"], c["to_owner"]) for c in changes])
+		self.assertNotIn(
+			"take",
+			[
+				json.loads(frappe.db.get_value(webhooks.DELIVERY, n, "context_json"))["action"]
+				for n in self.deliveries(connection, "conversation.updated")
+			],
+		)
 		closed = [c for c in changes if c["action"] == "close"]
 		self.assertEqual((closed[0]["from_state"], closed[0]["to_state"]), ("Human", "Closed"))
 		name = self.deliveries(connection, "conversation.status_changed")[-1]

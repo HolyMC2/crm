@@ -37,7 +37,8 @@ def on_control_event(doc, method=None):
 		before, after = {}, {}
 	if doc.from_generation == doc.to_generation and doc.action != "request":
 		return  # replay or no-op command: nothing changed
-	state_changed = before.get("control_state") != after.get("control_state")
+	# a take moves the owner without moving the state (Human -> Human): that is a handover too
+	state_changed = any(before.get(f) != after.get(f) for f in ("control_state", "human_owner"))
 	context = {
 		"action": doc.action,
 		"origin": doc.origin,
