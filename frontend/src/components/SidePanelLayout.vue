@@ -420,7 +420,6 @@ import FormattedInput from '@/components/Controls/FormattedInput.vue'
 import AttachControl from '@/components/Controls/AttachControl.vue'
 import HtmlControl from '@/components/Controls/HtmlControl.vue'
 import GeolocationControl from '@/components/Controls/GeolocationControl.vue'
-import TextEditorControl from '@/components/Controls/TextEditorControl.vue'
 import ButtonControl, {
   getButtonTheme,
   getButtonVariant,
@@ -458,7 +457,12 @@ import {
   Tooltip,
 } from 'frappe-ui'
 import { useDocument } from '@/data/document'
-import { ref, computed, getCurrentInstance } from 'vue'
+import { ref, computed, defineAsyncComponent, getCurrentInstance } from 'vue'
+
+// The rich text editor loads for a Text Editor field only (see FieldLayout/Field.vue).
+const TextEditorControl = defineAsyncComponent(
+  () => import('@/components/Controls/TextEditorControl.vue'),
+)
 
 const props = defineProps({
   sections: { type: Object, default: () => ({}) },

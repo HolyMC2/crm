@@ -307,7 +307,6 @@ import DurationInput from '@/components/Controls/DurationInput.vue'
 import RatingInput from '@/components/Controls/RatingInput.vue'
 import AttachControl from '@/components/Controls/AttachControl.vue'
 import HtmlControl from '@/components/Controls/HtmlControl.vue'
-import TextEditorControl from '@/components/Controls/TextEditorControl.vue'
 import GeolocationControl from '@/components/Controls/GeolocationControl.vue'
 import ButtonControl, {
   getButtonTheme,
@@ -344,7 +343,13 @@ import {
   DateTimePicker,
   TimePicker,
 } from 'frappe-ui'
-import { computed, provide, inject, ref } from 'vue'
+import { computed, defineAsyncComponent, provide, inject, ref } from 'vue'
+
+// The rich text editor is 900 KB of script: it loads for a Text Editor field, not
+// for every record that renders fields.
+const TextEditorControl = defineAsyncComponent(
+  () => import('@/components/Controls/TextEditorControl.vue'),
+)
 
 const props = defineProps({
   field: { type: Object, required: true },
