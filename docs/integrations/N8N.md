@@ -85,17 +85,25 @@ Each connection has its own secret, so each workflow reads its own variable (the
 `getBinaryDataBuffer`, which works whether n8n keeps binary data in memory or on disk:
 
 ```js
-const crypto = require('crypto');
-const h = $input.first().json.headers;
-const body = (await this.helpers.getBinaryDataBuffer(0, 'data')).toString('utf8');
-const key = Buffer.from($env.MUELLE_WHSEC.replace(/^whsec_/, ''), 'base64');
-const expected = crypto.createHmac('sha256', key)
-  .update(`${h['webhook-id']}.${h['webhook-timestamp']}.${body}`).digest('base64');
-const ok = h['webhook-signature'].split(' ').some((s) => s === `v1,${expected}`);
-if (!ok || Math.abs(Date.now() / 1000 - Number(h['webhook-timestamp'])) > 300) {
-  return [{ json: { refused: 'Bad signature' } }];  // an IF sends this to a Respond 401
+try {
+  const crypto = require('crypto');
+  const h = $input.first().json.headers;
+  const body = (await this.helpers.getBinaryDataBuffer(0, 'data')).toString('utf8');
+  const key = Buffer.from($env.MUELLE_WHSEC.replace(/^whsec_/, ''), 'base64');
+  const expected = Buffer.from('v1,' + crypto.createHmac('sha256', key)
+    .update(`${h['webhook-id']}.${h['webhook-timestamp']}.${body}`).digest('base64'));
+  const ok = String(h['webhook-signature'] || '').split(' ').some((s) => {
+    const given = Buffer.from(s);
+    return given.length === expected.length && crypto.timingSafeEqual(given, expected);
+  });
+  if (!ok || Math.abs(Date.now() / 1000 - Number(h['webhook-timestamp'])) > 300) {
+    return [{ json: { refused: 'Bad signature' } }];  // an IF sends this to a Respond 401
+  }
+  return [{ json: JSON.parse(body) }];  // the IF's true branch: Respond 204, then the work
+} catch (e) {
+  // a missing setting (crypto not allowed, no MUELLE_WHSEC, «Raw body» off) is refused too
+  return [{ json: { refused: `Cannot verify: ${e.message}` } }];
 }
-return [{ json: JSON.parse(body) }];  // the IF's true branch: Respond 204, then the work
 ```
 
 Delivery is at-least-once: a CRM retry after a lost answer repeats `webhook-id`. Drop ids the
