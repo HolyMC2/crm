@@ -87,6 +87,103 @@ export function offerChip(offer) {
   return { label: __(state.label), tone: state.tone }
 }
 
+/** The discount as a table's figure, with what it is under it. */
+export function discountFigure(discount, currency = 'MXN') {
+  if (!discount) return { value: '', note: '' }
+  if (discount.kind === 'percent')
+    return { value: `${Number(discount.value) || 0} %`, note: __('Discount') }
+  if (discount.kind === 'amount')
+    return { value: money(discount.value, currency), note: __('Discount') }
+  if (discount.kind === 'gift')
+    return {
+      value: `${Number(discount.value) || 1}×`,
+      note: __('Free product'),
+    }
+  if (discount.kind === 'points')
+    return { value: `+${Number(discount.value) || 0}`, note: __('Points') }
+  return { value: money(discount.value, currency), note: __('Special price') }
+}
+
+/** A promotion's coupons in one cell: «2 of 5 used», or none needed. */
+export function couponLine(offer) {
+  if (!offer?.coupon_based) return __('No coupon needed')
+  const { issued = 0, used = 0 } = offer.coupons || {}
+  return issued ? __('{0} of {1} used', [used, issued]) : __('None given yet')
+}
+
+/** The board's figures: what runs, what the coupons did, who collects
+ * points and which groups buy at their own prices. */
+export function boardFigures(board, groups = null, currency = 'MXN') {
+  const counts = board?.counts || {}
+  const offers = board?.offers || []
+  const program = board?.program
+  const coupons = offers.reduce(
+    (sum, o) => ({
+      issued: sum.issued + (o.coupons?.issued || 0),
+      used: sum.used + (o.coupons?.used || 0),
+    }),
+    { issued: 0, used: 0 },
+  )
+  const running = counts.live || 0
+  const runningHint = counts.ending_soon
+    ? __('{0} ending soon', [counts.ending_soon])
+    : counts.scheduled
+      ? __('{0} scheduled', [counts.scheduled])
+      : counts.paused
+        ? __('{0} paused', [counts.paused])
+        : ''
+  const active = program?.state === 'active'
+  const priced = (groups || []).filter((g) => g.price_list)
+  return [
+    {
+      key: 'promociones',
+      label: __('Promotions running'),
+      value: running,
+      hint: runningHint,
+    },
+    {
+      key: 'cupones',
+      label: __('Coupons used'),
+      value: coupons.used,
+      hint: coupons.issued
+        ? __('of {0} given', [coupons.issued])
+        : __('None given yet'),
+    },
+    {
+      key: 'puntos',
+      label: __('Points members'),
+      value: active ? program.members || 0 : '—',
+      hint: !active
+        ? __('No points program yet')
+        : program.collection_factor
+          ? __('1 pt per {0}', [
+              formatMoney(program.collection_factor, currency, {
+                decimals: 0,
+              }),
+            ])
+          : '',
+    },
+    {
+      key: 'grupos',
+      label: __('Groups with their own prices'),
+      value: groups ? priced.length : '—',
+      hint: groups
+        ? __('{0} customers buy at them', [
+            priced.reduce((sum, g) => sum + (g.customers || 0), 0),
+          ])
+        : '',
+    },
+  ]
+}
+
+/** «852 customers · Mayoreo», the group's line in a list row. */
+export function groupLine(group) {
+  const people = __('{0} customers', [group.customers])
+  return group.price_list
+    ? `${people} · ${group.price_list}`
+    : `${people} · ${__('Default price list')}`
+}
+
 /** How it reaches the ticket: by itself, or with a coupon. */
 export function offerHow(offer) {
   return offer?.coupon_based

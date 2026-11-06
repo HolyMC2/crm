@@ -148,6 +148,14 @@ lacks a feature, ask the Shell S1 owner instead of making a private copy.
   (price list per group). The «Cliente» panel opens the same coupon and points sheets on the deal.
   Writes go to their owners through `doco.fidelidad.api`: POS Offer and POS Coupon under their
   own permissions, points through Clientes frecuentes. Gift cards stay at the register.
+  Desktop (2026-11-06) is one board instead of the phone's one list at a time: the quick jobs
+  as buttons in the bar, four figures (promociones activas, cupones usados, socios con puntos,
+  grupos con precios propios), Promociones as a table with the discount as a figure (the coupons
+  column only when one of them takes coupons), Grupos with each one's share of the customers and
+  its price list, and the points program with its ranking (first 8, «Ver los N») beside them. The
+  layout follows the page's own width (`useElementSize`), not the window's, because the rail and
+  the Ventas column take a varying share: two columns from 1000 px of content, a table from 620
+  px, list rows below that, icon buttons in the bar under 760 px.
 - Still to do on Contacto: fold Seguimientos «Hechos/Cancelados» into a collapsed «Completados
   (n)»; grey out an action that does not apply instead of hiding it.
 

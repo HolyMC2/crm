@@ -1,8 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
 vi.mock('frappe-ui', () => ({ call: vi.fn() }))
 import {
+  boardFigures,
+  couponLine,
+  discountFigure,
   discountLabel,
   extendChips,
+  groupLine,
   offerChip,
   offerMissing,
   offerPayload,
@@ -52,6 +56,87 @@ describe('Fidelidad words', () => {
       tone: 'warning',
     })
     expect(offerChip({ state: 'scheduled' }).tone).toBe('info')
+  })
+})
+
+describe('the desktop board', () => {
+  it('shows the discount as a figure with what it is under it', () => {
+    expect(discountFigure({ kind: 'percent', value: 15 })).toEqual({
+      value: '15 %',
+      note: 'Discount',
+    })
+    expect(discountFigure({ kind: 'price', value: 99 }).note).toBe(
+      'Special price',
+    )
+    expect(discountFigure({ kind: 'price', value: 99 }).value).toContain('99')
+    expect(discountFigure({ kind: 'gift', value: 2 })).toEqual({
+      value: '2×',
+      note: 'Free product',
+    })
+  })
+
+  it("counts a promotion's coupons, or says it needs none", () => {
+    expect(couponLine({ coupon_based: false })).toBe('No coupon needed')
+    expect(
+      couponLine({ coupon_based: true, coupons: { issued: 0, used: 0 } }),
+    ).toBe('None given yet')
+    expect(
+      couponLine({ coupon_based: true, coupons: { issued: 5, used: 2 } }),
+    ).toBe('2 of 5 used')
+  })
+
+  it('sums the figures the board leads with', () => {
+    const board = {
+      counts: { live: 3, scheduled: 1, paused: 0, ended: 2, ending_soon: 1 },
+      offers: [
+        { coupons: { issued: 10, used: 4 } },
+        { coupons: { issued: 2, used: 1 } },
+      ],
+      program: { state: 'active', members: 154, collection_factor: 100 },
+    }
+    const groups = [
+      { name: 'Mayoreo', price_list: 'Mayoreo', customers: 7 },
+      { name: 'Payjoy', price_list: 'Enganches', customers: 154 },
+      { name: 'Mostrador', price_list: null, customers: 852 },
+    ]
+    const byKey = Object.fromEntries(
+      boardFigures(board, groups).map((f) => [f.key, f]),
+    )
+    expect(byKey.promociones).toMatchObject({
+      value: 3,
+      hint: '1 ending soon',
+    })
+    expect(byKey.cupones).toMatchObject({ value: 5, hint: 'of 12 given' })
+    expect(byKey.puntos.value).toBe(154)
+    expect(byKey.puntos.hint).toContain('100')
+    expect(byKey.grupos).toMatchObject({
+      value: 2,
+      hint: '161 customers buy at them',
+    })
+  })
+
+  it('waits for the groups and says when there is no points program', () => {
+    const byKey = Object.fromEntries(
+      boardFigures({ program: { state: 'no_program' } }, null).map((f) => [
+        f.key,
+        f,
+      ]),
+    )
+    expect(byKey.grupos.value).toBe('—')
+    expect(byKey.puntos).toMatchObject({
+      value: '—',
+      hint: 'No points program yet',
+    })
+    expect(byKey.cupones.hint).toBe('None given yet')
+  })
+
+  it('names a group by its customers and price list', () => {
+    expect(groupLine({ customers: 4, price_list: 'Mayoreo' })).toBe(
+      '4 customers · Mayoreo',
+    )
+    expect(groupLine({ customers: 90, price_list: null })).toBe(
+      '90 customers · Default price list',
+    )
   })
 })
 

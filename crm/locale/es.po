@@ -32401,3 +32401,47 @@ msgstr "El secreto anterior también firma hasta"
 #: crm/fcrm/doctype/crm_integration/crm_integration.json
 msgid "After the secret is replaced, each event carries a signature with the new and the old secret until then, so n8n keeps accepting events while you update it."
 msgstr "Después de reemplazar el secreto, cada evento lleva una firma con el secreto nuevo y otra con el anterior hasta entonces, para que n8n siga aceptando eventos mientras lo actualizas."
+msgid "Promotions running"
+msgstr "Promociones activas"
+
+msgid "{0} ending soon"
+msgstr "Por vencer: {0}"
+
+msgid "{0} scheduled"
+msgstr "Programadas: {0}"
+
+msgid "{0} paused"
+msgstr "En pausa: {0}"
+
+msgid "Coupons used"
+msgstr "Cupones usados"
+
+msgid "of {0} given"
+msgstr "de {0} entregados"
+
+msgid "None given yet"
+msgstr "Aún no se entrega ninguno"
+
+msgid "Points members"
+msgstr "Socios con puntos"
+
+msgid "Groups with their own prices"
+msgstr "Grupos con precios propios"
+
+msgid "{0} customers buy at them"
+msgstr "{0} clientes compran con esos precios"
+
+msgid "Special price"
+msgstr "Precio especial"
+
+msgid "No coupon needed"
+msgstr "Sin cupón"
+
+msgid "{0} of {1} used"
+msgstr "{0} de {1} usados"
+
+msgid "Customer groups"
+msgstr "Grupos de clientes"
+
+msgid "{0} % of the customers"
+msgstr "{0} % de los clientes"

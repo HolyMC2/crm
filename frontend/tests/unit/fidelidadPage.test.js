@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, nextTick } from 'vue'
 import { createMemoryHistory, createRouter } from 'vue-router'
 vi.mock('frappe-ui', () => ({
@@ -24,7 +24,38 @@ const cleanups = []
 afterEach(() => {
   cleanups.splice(0).forEach((fn) => fn())
   vi.resetAllMocks()
+  vi.restoreAllMocks()
 })
+const originalWidth = window.innerWidth
+function resize(width) {
+  window.innerWidth = width
+  window.dispatchEvent(new Event('resize'))
+}
+afterEach(() => resize(originalWidth))
+/** The room the page measures for its board (the shell's rail and the Ventas
+ * column take the rest of the window), reported after layout as a browser's
+ * ResizeObserver does. */
+function room(width) {
+  class Observer {
+    constructor(report) {
+      this.report = report
+    }
+    observe() {
+      setTimeout(() =>
+        this.report([
+          {
+            borderBoxSize: [{ inlineSize: width, blockSize: 800 }],
+            contentRect: { width, height: 800 },
+          },
+        ]),
+      )
+    }
+    unobserve() {}
+    disconnect() {}
+  }
+  window.ResizeObserver = Observer
+  cleanups.push(() => delete window.ResizeObserver)
+}
 const flush = async (n = 10) => {
   for (let i = 0; i < n; i++) {
     await new Promise((r) => setTimeout(r, 0))
@@ -111,7 +142,9 @@ async function mountApp(component, props = {}, path = '/ventas/fidelidad') {
   return { el, router }
 }
 
-describe('Fidelidad page', () => {
+describe('Fidelidad page on a phone', () => {
+  beforeEach(() => resize(412))
+
   it('shows the four quick jobs and the running promotions', async () => {
     answer({ get_board: board() })
     const { el } = await mountApp(Fidelidad)
@@ -226,6 +259,145 @@ describe('Fidelidad page', () => {
     const list = text(el.querySelector('[data-testid=fidelidad-grupos]'))
     expect(list).toContain('4 customers · Mayoreo')
     expect(list).toContain('90 customers · Default price list')
+  })
+})
+
+const GROUPS = {
+  groups: [
+    { name: 'Mayoreo', label: 'Mayoreo', customers: 4, price_list: 'Mayoreo' },
+    { name: 'Mostrador', label: 'Mostrador', customers: 90, price_list: null },
+  ],
+  price_lists: ['Mayoreo', 'Venta'],
+}
+const member = (n) => ({
+  name: `C-${n}`,
+  customer_name: `Cliente ${n}`,
+  customer_group: 'Mostrador',
+  points: 100 - n,
+})
+
+describe('Fidelidad page on desktop', () => {
+  beforeEach(() => resize(1440))
+
+  it('shows the whole board at once, the quick jobs in the bar', async () => {
+    room(1200)
+    answer({
+      get_board: board({
+        offers: [
+          offer('Mes Patrio', 'live', { ending_soon: true, ends_in: 1 }),
+          offer('Cupón amigo', 'live', {
+            coupon_based: true,
+            coupons: { issued: 4, used: 1 },
+          }),
+          offer('Buen Fin', 'scheduled'),
+        ],
+        counts: { live: 2, scheduled: 1, paused: 0, ended: 0, ending_soon: 1 },
+      }),
+      get_members: [member(1), member(2)],
+      get_groups: GROUPS,
+    })
+    const { el } = await mountApp(Fidelidad)
+    const bar = el.querySelector('[data-appbar] [data-fidelidad-rapidas]')
+    expect(
+      [...bar.querySelectorAll('button')].map((b) => text(b).trim()),
+    ).toEqual(['New promotion', 'Give a coupon', 'Adjust points', 'Prices'])
+    expect(el.querySelector('[role=tablist], [data-ui-segmented]')).toBeNull()
+
+    const figures = text(el.querySelector('[data-testid=fidelidad-cifras]'))
+    expect(figures).toMatch(/Promotions running\s*2\s*1 ending soon/)
+    expect(figures).toMatch(/Coupons used\s*1\s*of 4 given/)
+    expect(figures).toMatch(/Points members\s*3/)
+    expect(figures).toMatch(
+      /Groups with their own prices\s*1\s*4 customers buy at them/,
+    )
+
+    const rows = [...el.querySelectorAll('[data-fidelidad-promo-fila]')]
+    expect(rows.map((r) => text(r))).toEqual([
+      expect.stringMatching(
+        /Mes Patrio.*Ends tomorrow.*10 %.*No coupon needed.*Ends soon/,
+      ),
+      expect.stringMatching(/Cupón amigo.*1 of 4 used.*Running/),
+    ])
+    const groups = [...el.querySelectorAll('[data-fidelidad-grupo-fila]')]
+    expect(text(groups[1])).toMatch(/Mostrador.*90.*Default price list/)
+    expect(text(el.querySelector('[data-testid=fidelidad-miembros]'))).toMatch(
+      /Cliente 1.*99 pts.*Cliente 2/,
+    )
+    const methods = call.mock.calls.map(([m]) => m.replace(`${API}.`, ''))
+    expect(methods).toEqual(
+      expect.arrayContaining(['get_board', 'get_members', 'get_groups']),
+    )
+  })
+
+  it('opens a promotion from its table row', async () => {
+    room(1200)
+    answer({
+      get_board: board(),
+      get_members: [],
+      get_groups: GROUPS,
+      get_offer: (args) => offer(args.name, 'live'),
+    })
+    const { el } = await mountApp(Fidelidad)
+    el.querySelector('[data-fidelidad-promo-fila]').click()
+    await vi.waitFor(() =>
+      expect(
+        document.querySelector('[data-testid=fidelidad-oferta-sheet]'),
+      ).not.toBeNull(),
+    )
+    expect(call).toHaveBeenCalledWith(`${API}.get_offer`, {
+      name: 'Mes Patrio',
+    })
+  })
+
+  it('folds the table into list rows and the bar into icons when narrow', async () => {
+    room(600)
+    answer({ get_board: board(), get_members: [], get_groups: GROUPS })
+    const { el } = await mountApp(Fidelidad)
+    expect(el.querySelector('[data-fidelidad-promo-fila]')).toBeNull()
+    expect(text(el.querySelector('[data-testid=fidelidad-promos]'))).toContain(
+      'Mes Patrio',
+    )
+    expect(text(el.querySelector('[data-testid=fidelidad-grupos]'))).toContain(
+      '4 customers · Mayoreo',
+    )
+    const coupon = el.querySelector('[data-testid=fidelidad-rapida-cupon]')
+    expect(coupon.getAttribute('aria-label')).toBe('Give a coupon')
+    expect(text(coupon).trim()).toBe('')
+    expect(
+      text(el.querySelector('[data-testid=fidelidad-rapida-promo]')).trim(),
+    ).toBe('New promotion')
+  })
+
+  it('folds a long points ranking under its first rows', async () => {
+    room(1200)
+    answer({
+      get_board: board(),
+      get_members: Array.from({ length: 10 }, (_, i) => member(i + 1)),
+      get_groups: GROUPS,
+    })
+    const { el } = await mountApp(Fidelidad)
+    const rows = () =>
+      el.querySelectorAll('[data-testid=fidelidad-miembros] > li').length
+    expect(rows()).toBe(8)
+    const more = el.querySelector('[data-testid=fidelidad-miembros-todos]')
+    expect(text(more).trim()).toBe('Show all 10')
+    more.click()
+    await flush(2)
+    expect(rows()).toBe(10)
+  })
+
+  it('says how to start a points program in place of the ranking', async () => {
+    room(1200)
+    answer({
+      get_board: board({ program: { state: 'no_program', can_create: true } }),
+      get_groups: GROUPS,
+    })
+    const { el } = await mountApp(Fidelidad)
+    expect(text(el)).toContain('Create it from a customer')
+    expect(el.querySelector('[data-testid=fidelidad-miembros]')).toBeNull()
+    expect(call.mock.calls.some(([m]) => m === `${API}.get_members`)).toBe(
+      false,
+    )
   })
 })
 

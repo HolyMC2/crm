@@ -1,23 +1,73 @@
 <template>
-  <!-- «Fidelidad» (Ventas): what the shop gives back. On top the four quick
-       jobs as big tiles, each one sheet of taps; under them the running
-       promotions, the points members and the customer groups. The register
-       applies and redeems all of it (doco.fidelidad.api). -->
+  <!-- «Fidelidad» (Ventas): what the shop gives back. On a phone the four
+       quick jobs are big tiles, each one sheet of taps, over one list at a
+       time: the running promotions, the points members or the customer
+       groups. On desktop the quick jobs are buttons in the bar and the whole
+       board shows at once: the figures, the promotions as a table, the points
+       programme beside them and the groups under them. The register applies
+       and redeems all of it (doco.fidelidad.api). -->
   <div
     class="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto"
     data-fidelidad
   >
-    <AppBar :title="__('Loyalty')" :loading="loading && !!board" />
-    <div class="mx-auto w-full max-w-3xl flex-none">
+    <AppBar :title="__('Loyalty')" :loading="loading && !!board">
+      <template v-if="!phone && board && caps.register" #actions>
+        <div
+          class="mr-1 flex items-center gap-2"
+          role="group"
+          :aria-label="__('Quick actions')"
+          data-fidelidad-rapidas
+        >
+          <button
+            v-for="tile in tiles"
+            :key="tile.key"
+            type="button"
+            class="press inline-flex h-10 items-center justify-center gap-2 rounded-full text-base-medium"
+            :class="[
+              tile.key === 'promo'
+                ? 'bg-surface-gray-10 px-4 text-ink-base hover:bg-surface-gray-9'
+                : 'bg-surface-gray-2 text-ink-gray-9 hover:bg-surface-gray-3',
+              tile.key !== 'promo' && (roomy ? 'px-4' : 'w-10'),
+              tile.denied && 'opacity-60',
+            ]"
+            :aria-label="roomy || tile.key === 'promo' ? undefined : tile.label"
+            :title="tile.label"
+            :aria-describedby="
+              tile.denied && deniedTile === tile.key
+                ? 'fidelidad-denied'
+                : undefined
+            "
+            :data-testid="`fidelidad-rapida-${tile.key}`"
+            @click="openTile(tile)"
+          >
+            <span :class="tile.icon" class="size-4" aria-hidden="true" />
+            <template v-if="roomy || tile.key === 'promo'">{{
+              tile.label
+            }}</template>
+          </button>
+        </div>
+      </template>
+    </AppBar>
+    <div
+      ref="frame"
+      class="mx-auto w-full flex-none"
+      :class="phone ? 'max-w-3xl' : 'max-w-6xl px-6 pt-5'"
+    >
       <p
         v-if="error && !board"
         role="alert"
-        class="mx-4 my-3 rounded-6 bg-surface-red-1 p-4 text-sm text-ink-red-7"
+        class="my-3 rounded-6 bg-surface-red-1 p-4 text-sm text-ink-red-7"
+        :class="phone && 'mx-4'"
       >
         {{ error }}
       </p>
-      <div v-else-if="!board" role="status" class="space-y-3 px-4 py-4">
-        <div class="grid grid-cols-2 gap-2 lg:grid-cols-4">
+      <div
+        v-else-if="!board"
+        role="status"
+        class="space-y-3"
+        :class="phone && 'p-4'"
+      >
+        <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
           <div
             v-for="n in 4"
             :key="n"
@@ -38,9 +88,11 @@
           __('Ask whoever runs Muelle to add the register app to this shop.')
         "
       />
-      <template v-else>
+
+      <!-- Phone: the quick tiles, then one list at a time. -->
+      <template v-else-if="phone">
         <section
-          class="grid grid-cols-2 gap-2 px-4 pt-2 lg:grid-cols-4"
+          class="grid grid-cols-2 gap-2 px-4 pt-2"
           :aria-label="__('Quick actions')"
           data-fidelidad-rapidas
         >
@@ -86,7 +138,6 @@
           />
         </div>
 
-        <!-- Promociones -->
         <template v-if="vista === 'promociones'">
           <FilterChips
             class="py-2"
@@ -104,42 +155,23 @@
             :action="caps.create_offer ? __('New promotion') : ''"
             @action="sheet = 'promo'"
           />
-          <ul
+          <PromosLista
             v-else
-            class="divide-y divide-outline-gray-1"
-            data-testid="fidelidad-promos"
-          >
-            <li v-for="o in shownOffers" :key="o.name">
-              <ListRow
-                :title="o.title"
-                :subtitle="`${offerSummary(o, currency)} · ${offerWhen(o)}`"
-                :subtitle-tone="o.ending_soon ? 'text-ink-amber-8' : ''"
-                :icon="
-                  o.coupon_based ? 'lucide-ticket' : 'lucide-badge-percent'
-                "
-                @click="openOffer(o)"
-              >
-                <template #trailing>
-                  <StatusChip
-                    :label="offerChip(o).label"
-                    :tone="offerChip(o).tone"
-                  />
-                </template>
-              </ListRow>
-            </li>
-          </ul>
+            :offers="shownOffers"
+            :currency="currency"
+            @open="openOffer"
+          />
         </template>
 
-        <!-- Puntos -->
         <template v-else-if="vista === 'puntos'">
-          <div v-if="program?.state === 'active'" class="px-4 pt-3">
+          <div v-if="programActive" class="px-4 pt-3">
             <div
-              class="grid grid-cols-2 gap-px overflow-hidden rounded-7 border border-outline-gray-2 bg-surface-gray-2 lg:grid-cols-4"
+              class="grid grid-cols-2 gap-px overflow-hidden rounded-7 border border-outline-gray-2 bg-surface-gray-2"
               data-testid="fidelidad-programa"
             >
               <div
                 v-for="fact in programFacts"
-                :key="fact.label"
+                :key="fact.key"
                 class="bg-surface-base p-3"
               >
                 <p class="text-xs text-ink-gray-6">{{ fact.label }}</p>
@@ -162,13 +194,7 @@
             v-else
             class="py-10"
             :title="__('No points program yet')"
-            :message="
-              program?.can_create
-                ? __(
-                    'Create it from a customer: Contacts, the customer, «Points and balance».',
-                  )
-                : __('An accounts manager can create it.')
-            "
+            :message="noProgramMessage"
           />
           <p
             v-if="membersError"
@@ -177,53 +203,21 @@
           >
             {{ membersError }}
           </p>
-          <ul
-            v-if="program?.state === 'active' && members.length"
-            class="mt-2 divide-y divide-outline-gray-1"
-            data-testid="fidelidad-miembros"
-          >
-            <li
-              v-for="(m, i) in members"
-              :key="m.name"
-              class="flex items-center"
-            >
-              <ListRow
-                class="min-w-0 flex-1"
-                :title="m.customer_name"
-                :subtitle="m.customer_group || ''"
-                :avatar="m.customer_name"
-                :to="sourceRoute('Customer', m.name)"
-              >
-                <template #trailing>
-                  <span class="num whitespace-nowrap text-sm font-semibold">
-                    {{ __('{0} pts', [m.points]) }}
-                  </span>
-                </template>
-              </ListRow>
-              <button
-                v-if="caps.adjust_points"
-                type="button"
-                class="press mr-2 grid size-11 flex-none place-items-center rounded-full hover:bg-surface-gray-2"
-                :aria-label="__('Adjust points of {0}', [m.customer_name])"
-                :title="__('Adjust points of {0}', [m.customer_name])"
-                :data-testid="`fidelidad-ajustar-${i}`"
-                @click="adjust(m)"
-              >
-                <span class="lucide-coins size-4" aria-hidden="true" />
-              </button>
-            </li>
-          </ul>
+          <MiembrosLista
+            v-if="programActive && members.length"
+            class="mt-2"
+            :members="members"
+            :can-adjust="!!caps.adjust_points"
+            @adjust="adjust"
+          />
           <p
-            v-else-if="program?.state === 'active' && !membersLoading"
+            v-else-if="programActive && !membersLoading"
             class="px-4 py-6 text-sm text-ink-gray-6"
           >
-            {{
-              memberQuery ? __('Nothing matches that.') : __('No members yet.')
-            }}
+            {{ noMembersText }}
           </p>
         </template>
 
-        <!-- Grupos -->
         <template v-else>
           <p class="px-4 pt-3 text-sm text-ink-gray-6">
             {{ __('A group sets the price list its customers buy at.') }}
@@ -235,22 +229,158 @@
           >
             {{ groupsError }}
           </p>
-          <ul
-            class="mt-2 divide-y divide-outline-gray-1"
-            data-testid="fidelidad-grupos"
-          >
-            <li v-for="g in groups" :key="g.name">
-              <ListRow
-                :title="g.label"
-                :subtitle="groupLine(g)"
-                icon="lucide-users"
-                @click="openGroup(g)"
-              />
-            </li>
-          </ul>
+          <GruposLista class="mt-2" :groups="groups" @open="openGroup" />
         </template>
       </template>
-      <div class="h-24 flex-none lg:h-10" aria-hidden="true" />
+
+      <!-- Desktop: the figures, then every list at once. -->
+      <template v-else>
+        <p
+          v-if="deniedNote"
+          id="fidelidad-denied"
+          class="pb-3 text-sm text-ink-gray-6"
+          role="note"
+          data-testid="fidelidad-denied"
+        >
+          {{ deniedNote }}
+        </p>
+        <KpiGrid data-testid="fidelidad-cifras">
+          <KpiTile
+            v-for="figure in figures"
+            :key="figure.key"
+            :label="figure.label"
+            :value="figure.value"
+            :hint="figure.hint"
+          />
+        </KpiGrid>
+        <div
+          class="mt-6 grid gap-x-8 gap-y-6"
+          :class="twoColumns && 'grid-cols-[minmax(0,1fr)_22rem] items-start'"
+        >
+          <div class="min-w-0 space-y-6">
+            <HoySection
+              id="fidelidad-promociones"
+              :title="__('Promotions')"
+              icon="lucide-badge-percent"
+            >
+              <FilterChips
+                class="pb-2 pl-1"
+                :model-value="estado"
+                :chips="estadoChips"
+                :deselectable="false"
+                :label="__('State')"
+                @update:model-value="(v) => v && (estado = v)"
+              />
+              <EmptyState
+                v-if="!shownOffers.length"
+                class="py-8"
+                :title="emptyTitle"
+                :message="
+                  caps.create_offer ? __('Start one in a few taps.') : ''
+                "
+                :action="caps.create_offer ? __('New promotion') : ''"
+                @action="sheet = 'promo'"
+              />
+              <PromosLista
+                v-else
+                :offers="shownOffers"
+                :currency="currency"
+                :table="tableRows"
+                @open="openOffer"
+              />
+            </HoySection>
+            <HoySection
+              id="fidelidad-grupos"
+              :title="__('Customer groups')"
+              icon="lucide-users"
+              :skeleton="!groupsReady && !groupsError"
+              :collapsed="groupsError"
+              :failed="!!groupsError"
+              @retry="loadGroups"
+            >
+              <p class="px-5 pb-2 text-sm text-ink-gray-6">
+                {{ __('A group sets the price list its customers buy at.') }}
+              </p>
+              <GruposLista
+                :groups="groups"
+                :table="tableRows"
+                @open="openGroup"
+              />
+            </HoySection>
+          </div>
+          <HoySection
+            id="fidelidad-puntos"
+            :title="program?.label || __('Points')"
+            icon="lucide-coins"
+            :collapsed="programActive ? '' : noProgramMessage"
+          >
+            <div class="px-5">
+              <dl
+                class="grid gap-px overflow-hidden rounded-7 border border-outline-gray-2 bg-surface-gray-2"
+                :class="twoColumns ? 'grid-cols-1' : 'grid-cols-3'"
+                data-testid="fidelidad-programa"
+              >
+                <div
+                  v-for="fact in programFacts.filter(
+                    (f) => f.key !== 'members',
+                  )"
+                  :key="fact.key"
+                  class="flex items-baseline justify-between gap-3 bg-surface-base px-3 py-2"
+                >
+                  <dt class="text-sm text-ink-gray-6">{{ fact.label }}</dt>
+                  <dd class="num text-base font-semibold text-ink-gray-9">
+                    {{ fact.value }}
+                  </dd>
+                </div>
+              </dl>
+              <input
+                v-model="memberQuery"
+                type="search"
+                autocomplete="off"
+                :placeholder="__('Search a member')"
+                :aria-label="__('Search a member')"
+                class="mt-3 min-h-10 w-full rounded-6 border border-outline-gray-2 bg-surface-base px-3 text-base"
+                data-testid="fidelidad-miembros-buscar"
+              />
+            </div>
+            <p
+              v-if="membersError"
+              role="alert"
+              class="px-5 pt-2 text-sm text-ink-red-7"
+            >
+              {{ membersError }}
+            </p>
+            <MiembrosLista
+              v-if="members.length"
+              class="mt-2"
+              :members="shownMembers"
+              :can-adjust="!!caps.adjust_points"
+              @adjust="adjust"
+            />
+            <p
+              v-else-if="!membersLoading"
+              class="px-5 py-4 text-sm text-ink-gray-6"
+            >
+              {{ noMembersText }}
+            </p>
+            <button
+              v-if="members.length > MEMBERS_FOLDED"
+              type="button"
+              class="mx-3 mt-1 flex min-h-10 items-center rounded-6 px-2 text-sm font-medium text-ink-gray-7 hover:bg-surface-gray-2"
+              :aria-expanded="String(membersOpen)"
+              data-testid="fidelidad-miembros-todos"
+              @click="membersOpen = !membersOpen"
+            >
+              {{
+                membersOpen
+                  ? __('Show fewer')
+                  : __('Show all {0}', [members.length])
+              }}
+            </button>
+          </HoySection>
+        </div>
+      </template>
+      <div class="h-24 flex-none sm:h-10" aria-hidden="true" />
     </div>
 
     <Fab
@@ -313,8 +443,8 @@
         <p v-else class="text-sm text-ink-gray-6" role="note">
           {{ __('Whoever manages customer groups can change it.') }}
         </p>
-        <p v-if="groupsError" role="alert" class="mt-2 text-sm text-ink-red-7">
-          {{ groupsError }}
+        <p v-if="groupError" role="alert" class="mt-2 text-sm text-ink-red-7">
+          {{ groupError }}
         </p>
       </template>
       <template v-if="caps.edit_groups" #actions>
@@ -335,9 +465,16 @@
   </div>
 </template>
 <script setup>
-import { computed, defineAsyncComponent, reactive, ref, watch } from 'vue'
+import {
+  computed,
+  defineAsyncComponent,
+  nextTick,
+  reactive,
+  ref,
+  watch,
+} from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useDebounceFn } from '@vueuse/core'
+import { useDebounceFn, useElementSize } from '@vueuse/core'
 import { toast } from 'frappe-ui'
 import {
   AppBar,
@@ -346,21 +483,19 @@ import {
   EmptyState,
   Fab,
   FilterChips,
-  ListRow,
+  KpiGrid,
+  KpiTile,
   Segmented,
-  StatusChip,
 } from '@/components/ui'
+import HoySection from '@/components/hoy/HoySection.vue'
+import PromosLista from '@/components/fidelidad/PromosLista.vue'
+import MiembrosLista from '@/components/fidelidad/MiembrosLista.vue'
+import GruposLista from '@/components/fidelidad/GruposLista.vue'
 import { BTN } from '@/documentos/tools'
 import { errorText } from '@/documentos/api'
 import { isMobile as phone } from '@/composables/breakpoint'
-import { sourceRoute } from '@/utils/shellRoutes'
 import { formatMoney } from '@/utils/display'
-import {
-  fidelidadApi,
-  offerChip,
-  offerSummary,
-  offerWhen,
-} from '@/composables/fidelidad'
+import { boardFigures, fidelidadApi, groupLine } from '@/composables/fidelidad'
 
 // Sheets mount on their first open (they carry the forms).
 const PromoSheet = defineAsyncComponent(
@@ -393,6 +528,23 @@ watch(sheet, (name) => name && name in mounted && (mounted[name] = true))
 const caps = computed(() => board.value?.capabilities || {})
 const currency = computed(() => board.value?.currency || 'MXN')
 const program = computed(() => board.value?.program)
+const programActive = computed(() => program.value?.state === 'active')
+
+// --- desktop layout, from the room the page has (the shell's rail and the
+// Ventas column take a varying share of the window) --------------------------
+const frame = ref(null)
+const { width: frameWidth } = useElementSize(frame, undefined, {
+  box: 'border-box',
+})
+const inner = computed(() => frameWidth.value - 48)
+/** Points beside the lists once the lists keep a table's room. */
+const twoColumns = computed(() => inner.value >= 1000)
+const mainWidth = computed(() =>
+  twoColumns.value ? inner.value - 384 : inner.value,
+)
+const tableRows = computed(() => mainWidth.value >= 620)
+/** The bar's quick jobs keep their words while they fit. */
+const roomy = computed(() => frameWidth.value >= 760)
 
 // --- the view and its state chip live in the URL (back keeps them) -------
 const VISTAS = ['promociones', 'puntos', 'grupos']
@@ -441,6 +593,13 @@ const emptyTitle = computed(
       ended: __('Nothing ended lately'),
     })[estado.value],
 )
+const figures = computed(() =>
+  boardFigures(
+    board.value,
+    groupsReady.value ? groups.value : null,
+    currency.value,
+  ),
+)
 
 // --- quick tiles ------------------------------------------------------------
 const tiles = computed(() => [
@@ -462,9 +621,7 @@ const tiles = computed(() => [
     label: __('Adjust points'),
     denied:
       caps.value.denied?.adjust_points ||
-      (program.value?.state !== 'active'
-        ? __('There is no points program yet.')
-        : ''),
+      (!programActive.value ? __('There is no points program yet.') : ''),
   },
   {
     key: 'precios',
@@ -572,10 +729,27 @@ async function loadMembers() {
   }
 }
 watch(memberQuery, useDebounceFn(loadMembers, 250))
+// The phone loads the members when their view opens; desktop shows them.
 watch(
-  () => [vista.value, program.value?.state],
-  ([view, state]) => view === 'puntos' && state === 'active' && loadMembers(),
+  () => [!phone.value || vista.value === 'puntos', programActive.value],
+  ([shown, active]) => shown && active && loadMembers(),
   { immediate: true },
+)
+// Desktop folds a long ranking under its first rows.
+const MEMBERS_FOLDED = 8
+const membersOpen = ref(false)
+const shownMembers = computed(() =>
+  membersOpen.value ? members.value : members.value.slice(0, MEMBERS_FOLDED),
+)
+const noMembersText = computed(() =>
+  memberQuery.value ? __('Nothing matches that.') : __('No members yet.'),
+)
+const noProgramMessage = computed(() =>
+  program.value?.can_create
+    ? __(
+        'Create it from a customer: Contacts, the customer, «Points and balance».',
+      )
+    : __('An accounts manager can create it.'),
 )
 const pointsCustomer = ref(null)
 function adjust(member) {
@@ -589,8 +763,9 @@ function adjust(member) {
 const programFacts = computed(() => {
   const p = program.value || {}
   return [
-    { label: __('Members'), value: p.members ?? 0 },
+    { key: 'members', label: __('Members'), value: p.members ?? 0 },
     {
+      key: 'earns',
       label: __('Earns'),
       value: p.collection_factor
         ? __('1 pt per {0}', [
@@ -599,10 +774,12 @@ const programFacts = computed(() => {
         : '—',
     },
     {
+      key: 'worth',
       label: __('A point is worth'),
       value: formatMoney(p.conversion_factor || 0, currency.value),
     },
     {
+      key: 'lasts',
       label: __('Points last'),
       value: p.expiry_days ? __('{0} days', [p.expiry_days]) : __('Forever'),
     },
@@ -612,30 +789,30 @@ const programFacts = computed(() => {
 // --- groups -----------------------------------------------------------------
 const groups = ref([])
 const priceLists = ref([])
+const groupsReady = ref(false)
 const groupsError = ref('')
+async function loadGroups() {
+  groupsError.value = ''
+  try {
+    const out = await fidelidadApi('get_groups')
+    groups.value = out.groups || []
+    priceLists.value = out.price_lists || []
+    groupsReady.value = true
+  } catch (failure) {
+    groupsError.value = errorText(failure)
+  }
+}
+// The phone loads them when their view opens; desktop shows them (and counts
+// the groups with their own prices among the figures).
 watch(
-  vista,
-  async (view) => {
-    if (view !== 'grupos' || groups.value.length) return
-    try {
-      const out = await fidelidadApi('get_groups')
-      groups.value = out.groups || []
-      priceLists.value = out.price_lists || []
-    } catch (failure) {
-      groupsError.value = errorText(failure)
-    }
-  },
+  () => phone.value && vista.value !== 'grupos',
+  (later) => !later && !groupsReady.value && loadGroups(),
   { immediate: true },
 )
-function groupLine(group) {
-  const people = __('{0} customers', [group.customers])
-  return group.price_list
-    ? `${people} · ${group.price_list}`
-    : `${people} · ${__('Default price list')}`
-}
 const openedGroup = ref(null)
 const groupPriceList = ref('')
 const groupSaving = ref(false)
+const groupError = ref('')
 const priceListOptions = computed(() => [
   { value: '', label: __('Default') },
   ...priceLists.value.map((name) => ({ value: name, label: name })),
@@ -643,12 +820,12 @@ const priceListOptions = computed(() => [
 function openGroup(group) {
   openedGroup.value = group
   groupPriceList.value = group.price_list || ''
-  groupsError.value = ''
+  groupError.value = ''
   sheet.value = 'grupo'
 }
 async function saveGroup() {
   groupSaving.value = true
-  groupsError.value = ''
+  groupError.value = ''
   try {
     const row = await fidelidadApi('set_group_price_list', {
       group: openedGroup.value.name,
@@ -658,7 +835,7 @@ async function saveGroup() {
     toast.success(__('Price list saved for {0}', [row.label]))
     sheet.value = ''
   } catch (failure) {
-    groupsError.value = errorText(failure)
+    groupError.value = errorText(failure)
   } finally {
     groupSaving.value = false
   }
@@ -671,6 +848,20 @@ watch(
     if (!ready || !['promo', 'cupon', 'puntos'].includes(nuevo)) return
     router.replace({ query: { ...route.query, nuevo: undefined } })
     openTile(tiles.value.find((t) => t.key === nuevo))
+  },
+  { immediate: true },
+)
+// ?vista=puntos|grupos on desktop: the board shows everything, so bring that
+// section into view once it has drawn.
+watch(
+  () => !!board.value && !phone.value,
+  async (drawn) => {
+    const target = route.query.vista
+    if (!drawn || !['puntos', 'grupos'].includes(target)) return
+    await nextTick()
+    document
+      .getElementById(`hoy-fidelidad-${target}`)
+      ?.scrollIntoView?.({ block: 'start' })
   },
   { immediate: true },
 )
