@@ -76,7 +76,7 @@
 import UserAvatar from '@/components/UserAvatar.vue'
 import AttachmentItem from '@/components/AttachmentItem.vue'
 import { Tooltip, Dropdown, Button, call, toast } from 'frappe-ui'
-import { TextEditor } from 'frappe-ui/experimental'
+import { TextEditor } from '@/components/Controls/lazyTextEditor'
 import {
   timeAgo,
   formatDate,
