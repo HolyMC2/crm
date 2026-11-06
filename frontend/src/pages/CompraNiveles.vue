@@ -1,7 +1,9 @@
 <template>
   <!-- Niveles de surtido: how many pieces of each model the owner keeps,
        counted over every variant and style, with the mix of dark and bright
-       colours. The buy plan in Surtido asks for what a level lacks. -->
+       colours. The buy plan in Surtido asks for what a level lacks. Beside the
+       levels: the suggested ones, the floor («Sobra», «Mover», «Reponer
+       exhibición», «Contar») and the asks without stock (`?ver=`). -->
   <div class="relative flex h-full min-w-0 flex-1 flex-col overflow-hidden">
     <AppBar
       :back="true"
@@ -11,6 +13,17 @@
       @back="onBack"
     >
       <template #actions>
+        <button
+          v-if="ready && data.can_edit"
+          type="button"
+          class="press flex size-12 flex-none items-center justify-center rounded-full text-ink-gray-7 active:bg-surface-gray-2 [@media(hover:hover)]:hover:bg-surface-gray-2"
+          :aria-label="__('Buying settings', null, 'Niveles')"
+          :title="__('Buying settings', null, 'Niveles')"
+          data-testid="niveles-settings"
+          @click="openSettings"
+        >
+          <span class="lucide-settings size-6" aria-hidden="true" />
+        </button>
         <button
           v-if="ready && assistantOn"
           type="button"
@@ -43,7 +56,16 @@
       />
 
       <div v-else class="mx-auto w-full max-w-3xl px-4 pt-4 sm:px-6">
-        <p class="mb-3 text-base text-ink-gray-7">
+        <Segmented
+          :model-value="section"
+          :options="sections"
+          :label="__('Section', null, 'Niveles')"
+          fit="content"
+          class="mb-3"
+          data-testid="niveles-sections"
+          @update:model-value="setSection"
+        />
+        <p v-if="section === 'niveles'" class="mb-3 text-base text-ink-gray-7">
           {{
             __(
               'How many pieces you keep of each model, over every style and colour. A buy plan in Surtido asks for what a level lacks.',
@@ -62,12 +84,13 @@
         </div>
 
         <div
+          v-if="sectionFilters.length > 1"
           class="mb-3 flex flex-wrap gap-1.5"
           role="group"
           :aria-label="__('Show', null, 'Niveles')"
         >
           <button
-            v-for="f in filters"
+            v-for="f in sectionFilters"
             :key="f.value"
             type="button"
             :class="chipClass(filter === f.value)"
@@ -75,179 +98,199 @@
             @click="filter = f.value"
           >
             {{ f.label }}
-            <span class="num tabular-nums">{{ f.count }}</span>
+            <span v-if="section === 'niveles'" class="num tabular-nums">{{
+              f.count
+            }}</span>
           </button>
         </div>
 
-        <EmptyState
-          v-if="!data.rows.length"
-          :title="__('No stock levels yet', null, 'Niveles')"
-          :message="
-            data.can_edit
-              ? __(
-                  'Say how many pieces you want of a model, for example 10 cases of iPhone 12, half dark and half bright.',
+        <NivelesSugerencias
+          v-if="section === 'sugerencias'"
+          :group="group"
+          @saved="load"
+        />
+        <NivelesPiso
+          v-else-if="section === 'piso'"
+          ref="piso"
+          :group="group"
+          @settings="openSettings"
+        />
+        <NivelesPerdidas v-else-if="section === 'perdidas'" :group="group" />
+        <template v-else>
+          <EmptyState
+            v-if="!data.rows.length"
+            :title="__('No stock levels yet', null, 'Niveles')"
+            :message="
+              data.can_edit
+                ? __(
+                    'Say how many pieces you want of a model, for example 10 cases of iPhone 12, half dark and half bright.',
+                    null,
+                    'Niveles',
+                  )
+                : __('The owner sets the stock levels.', null, 'Niveles')
+            "
+            :action="data.can_edit ? __('New level', null, 'Niveles') : ''"
+            @action="openLevel()"
+          />
+          <p
+            v-else-if="!shown.length"
+            class="rounded-6 bg-surface-gray-1 p-3 text-sm text-ink-gray-7"
+          >
+            {{ __('No level is short.', null, 'Niveles') }}
+          </p>
+
+          <ul
+            v-if="shown.length"
+            class="divide-y divide-outline-gray-1 rounded-6 border border-outline-gray-2"
+            :aria-label="__('Stock levels', null, 'Niveles')"
+            data-testid="niveles-list"
+          >
+            <li v-for="row in shown" :key="row.level + row.model">
+              <button
+                type="button"
+                class="press flex min-h-14 w-full flex-col gap-1.5 px-3 py-2.5 text-left [@media(hover:hover)]:hover:bg-surface-gray-1 disabled:cursor-default"
+                :disabled="!data.can_edit"
+                :aria-label="rowLabel(row)"
+                @click="openLevel(row)"
+              >
+                <span class="flex w-full items-baseline gap-2">
+                  <span class="min-w-0 flex-1 truncate text-base font-medium">{{
+                    row.model
+                  }}</span>
+                  <span class="num flex-none text-base tabular-nums">{{
+                    __('{0} of {1}', [row.have, row.target], 'Niveles')
+                  }}</span>
+                </span>
+                <span
+                  class="flex h-2 w-full overflow-hidden rounded-full bg-surface-gray-2"
+                  aria-hidden="true"
+                >
+                  <span
+                    v-for="(seg, i) in toneSegments(row)"
+                    :key="seg.tone + i"
+                    class="h-full"
+                    :class="seg.untoned ? UNTONED : SEGMENT[i % SEGMENT.length]"
+                    :style="{ width: seg.pct + '%' }"
+                  />
+                </span>
+                <span
+                  class="flex w-full flex-wrap gap-x-2 text-xs text-ink-gray-6"
+                >
+                  <span class="truncate">{{ scopeText(row) }}</span>
+                  <span v-if="row.incoming">{{
+                    __('{0} coming', [row.incoming], 'Niveles')
+                  }}</span>
+                  <span v-if="row.need" class="font-medium text-ink-gray-8">{{
+                    buyText(row)
+                      ? __(
+                          '{0} short: {1}',
+                          [row.need, buyText(row)],
+                          'Niveles',
+                        )
+                      : __('{0} short', [row.need], 'Niveles')
+                  }}</span>
+                  <span v-else>{{ restText(row) }}</span>
+                </span>
+              </button>
+            </li>
+          </ul>
+
+          <section
+            v-if="erpShown.length"
+            class="mt-6"
+            :aria-label="__('From your items', null, 'Niveles')"
+            data-testid="niveles-erp"
+          >
+            <h2 class="title-face text-lg font-semibold text-ink-gray-9">
+              {{ __('From your items', null, 'Niveles') }}
+            </h2>
+            <p class="mb-2 text-sm text-ink-gray-6">
+              {{
+                __(
+                  'These models have no level yet, but their items carry reorder levels. Added up per model:',
                   null,
                   'Niveles',
                 )
-              : __('The owner sets the stock levels.', null, 'Niveles')
-          "
-          :action="data.can_edit ? __('New level', null, 'Niveles') : ''"
-          @action="openLevel()"
-        />
-        <p
-          v-else-if="!shown.length"
-          class="rounded-6 bg-surface-gray-1 p-3 text-sm text-ink-gray-7"
-        >
-          {{ __('No level is short.', null, 'Niveles') }}
-        </p>
-
-        <ul
-          v-if="shown.length"
-          class="divide-y divide-outline-gray-1 rounded-6 border border-outline-gray-2"
-          :aria-label="__('Stock levels', null, 'Niveles')"
-          data-testid="niveles-list"
-        >
-          <li v-for="row in shown" :key="row.level + row.model">
-            <button
-              type="button"
-              class="press flex min-h-14 w-full flex-col gap-1.5 px-3 py-2.5 text-left [@media(hover:hover)]:hover:bg-surface-gray-1 disabled:cursor-default"
-              :disabled="!data.can_edit"
-              :aria-label="rowLabel(row)"
-              @click="openLevel(row)"
+              }}
+            </p>
+            <ul
+              class="divide-y divide-outline-gray-1 rounded-6 border border-outline-gray-2"
             >
-              <span class="flex w-full items-baseline gap-2">
-                <span class="min-w-0 flex-1 truncate text-base font-medium">{{
-                  row.model
-                }}</span>
-                <span class="num flex-none text-base tabular-nums">{{
-                  __('{0} of {1}', [row.have, row.target], 'Niveles')
-                }}</span>
-              </span>
-              <span
-                class="flex h-2 w-full overflow-hidden rounded-full bg-surface-gray-2"
-                aria-hidden="true"
+              <li
+                v-for="row in erpShown.slice(0, ERP_ROWS)"
+                :key="row.item_group + row.model"
+                class="flex min-h-14 items-center gap-3 px-3 py-2"
               >
-                <span
-                  v-for="(seg, i) in toneSegments(row)"
-                  :key="seg.tone + i"
-                  class="h-full"
-                  :class="seg.untoned ? UNTONED : SEGMENT[i % SEGMENT.length]"
-                  :style="{ width: seg.pct + '%' }"
-                />
-              </span>
-              <span
-                class="flex w-full flex-wrap gap-x-2 text-xs text-ink-gray-6"
-              >
-                <span class="truncate">{{ scopeText(row) }}</span>
-                <span v-if="row.incoming">{{
-                  __('{0} coming', [row.incoming], 'Niveles')
-                }}</span>
-                <span v-if="row.need" class="font-medium text-ink-gray-8">{{
-                  buyText(row)
-                    ? __('{0} short: {1}', [row.need, buyText(row)], 'Niveles')
-                    : __('{0} short', [row.need], 'Niveles')
-                }}</span>
-                <span v-else>{{ restText(row) }}</span>
-              </span>
-            </button>
-          </li>
-        </ul>
+                <span class="min-w-0 flex-1">
+                  <span class="block truncate text-base font-medium">{{
+                    row.model
+                  }}</span>
+                  <span class="block text-xs text-ink-gray-6">{{
+                    __(
+                      '{0} · order below {1}, fill up to {2} · {3} items',
+                      [row.item_group, row.min_qty, row.target_qty, row.items],
+                      'Niveles',
+                    )
+                  }}</span>
+                </span>
+                <!-- the word in the slot: a label prop would replace the aria-label -->
+                <Button
+                  v-if="data.can_edit"
+                  :aria-label="__('Use for {0}', [row.model], 'Niveles')"
+                  class="min-h-11 flex-none sm:min-h-8"
+                  @click="openLevel(adoptedLevel(row))"
+                >
+                  {{ __('Use', null, 'Niveles') }}
+                </Button>
+              </li>
+            </ul>
+            <p
+              v-if="erpShown.length > ERP_ROWS"
+              class="mt-2 text-xs text-ink-gray-5"
+            >
+              {{ __('And {0} more.', [erpShown.length - ERP_ROWS], 'Niveles') }}
+            </p>
+          </section>
 
-        <section
-          v-if="erpShown.length"
-          class="mt-6"
-          :aria-label="__('From your items', null, 'Niveles')"
-          data-testid="niveles-erp"
-        >
-          <h2 class="title-face text-lg font-semibold text-ink-gray-9">
-            {{ __('From your items', null, 'Niveles') }}
-          </h2>
-          <p class="mb-2 text-sm text-ink-gray-6">
+          <p v-if="data.sold_cut" class="mt-2 text-xs text-ink-gray-5">
             {{
               __(
-                'These models have no level yet, but their items carry reorder levels. Added up per model:',
+                'Sales hit the reading limit: a level for every sold model may miss some models.',
                 null,
                 'Niveles',
               )
             }}
           </p>
-          <ul
-            class="divide-y divide-outline-gray-1 rounded-6 border border-outline-gray-2"
-          >
-            <li
-              v-for="row in erpShown.slice(0, ERP_ROWS)"
-              :key="row.item_group + row.model"
-              class="flex min-h-14 items-center gap-3 px-3 py-2"
-            >
-              <span class="min-w-0 flex-1">
-                <span class="block truncate text-base font-medium">{{
-                  row.model
-                }}</span>
-                <span class="block text-xs text-ink-gray-6">{{
-                  __(
-                    '{0} · order below {1}, fill up to {2} · {3} items',
-                    [row.item_group, row.min_qty, row.target_qty, row.items],
-                    'Niveles',
-                  )
-                }}</span>
-              </span>
-              <!-- the word in the slot: a label prop would replace the aria-label -->
-              <Button
-                v-if="data.can_edit"
-                :aria-label="__('Use for {0}', [row.model], 'Niveles')"
-                class="min-h-11 flex-none sm:min-h-8"
-                @click="openLevel(adoptedLevel(row))"
-              >
-                {{ __('Use', null, 'Niveles') }}
-              </Button>
-            </li>
-          </ul>
-          <p
-            v-if="erpShown.length > ERP_ROWS"
-            class="mt-2 text-xs text-ink-gray-5"
-          >
-            {{ __('And {0} more.', [erpShown.length - ERP_ROWS], 'Niveles') }}
-          </p>
-        </section>
 
-        <p v-if="data.sold_cut" class="mt-2 text-xs text-ink-gray-5">
-          {{
-            __(
-              'Sales hit the reading limit: a level for every sold model may miss some models.',
-              null,
-              'Niveles',
-            )
-          }}
-        </p>
-
-        <div class="mt-4 flex flex-wrap justify-end gap-2">
-          <Button
-            v-if="data.can_edit && data.colours.length"
-            :label="__('Colour tones', null, 'Niveles')"
-            :icon-left="LucidePalette"
-            class="min-h-11 sm:min-h-8"
-            @click="openTones"
-          />
-          <Button
-            :label="__('Restock from a list', null, 'Surtido')"
-            :icon-left="LucideLayers"
-            class="min-h-11 sm:min-h-8"
-            @click="router.push({ name: 'CompraSurtido' })"
-          />
-          <Button
-            v-if="data.can_edit && !phone"
-            variant="solid"
-            :label="__('New level', null, 'Niveles')"
-            :icon-left="LucidePlus"
-            class="min-h-11 sm:min-h-8"
-            @click="openLevel()"
-          />
-        </div>
+          <div class="mt-4 flex flex-wrap justify-end gap-2">
+            <Button
+              v-if="data.can_edit && data.colours.length"
+              :label="__('Colour tones', null, 'Niveles')"
+              :icon-left="LucidePalette"
+              class="min-h-11 sm:min-h-8"
+              @click="openTones"
+            />
+            <Button
+              :label="__('Restock from a list', null, 'Surtido')"
+              :icon-left="LucideLayers"
+              class="min-h-11 sm:min-h-8"
+              @click="router.push({ name: 'CompraSurtido' })"
+            />
+            <Button
+              v-if="data.can_edit && !phone"
+              variant="solid"
+              :label="__('New level', null, 'Niveles')"
+              :icon-left="LucidePlus"
+              class="min-h-11 sm:min-h-8"
+              @click="openLevel()"
+            />
+          </div>
+        </template>
       </div>
     </div>
 
     <Fab
-      v-if="ready && phone && data.can_edit"
+      v-if="ready && phone && data.can_edit && section === 'niveles'"
       :label="__('New level', null, 'Niveles')"
       data-testid="niveles-new"
       @click="openLevel()"
@@ -433,11 +476,24 @@
         />
       </div>
     </BottomSheet>
+
+    <NivelesAjustes
+      v-if="settingsMounted"
+      v-model:open="settingsOpen"
+      @saved="onSettingsSaved"
+    />
   </div>
 </template>
 <script setup>
-import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import {
+  computed,
+  defineAsyncComponent,
+  onBeforeUnmount,
+  onMounted,
+  reactive,
+  ref,
+} from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { Button, FormControl, toast } from 'frappe-ui'
 import {
   AppBar,
@@ -471,6 +527,19 @@ import LucidePalette from '~icons/lucide/palette'
 import LucidePlus from '~icons/lucide/plus'
 import LucideTrash2 from '~icons/lucide/trash-2'
 
+const NivelesSugerencias = defineAsyncComponent(
+  () => import('@/components/compras/niveles/NivelesSugerencias.vue'),
+)
+const NivelesPiso = defineAsyncComponent(
+  () => import('@/components/compras/niveles/NivelesPiso.vue'),
+)
+const NivelesPerdidas = defineAsyncComponent(
+  () => import('@/components/compras/niveles/NivelesPerdidas.vue'),
+)
+const NivelesAjustes = defineAsyncComponent(
+  () => import('@/components/compras/niveles/NivelesAjustes.vue'),
+)
+
 const API = 'doco.workspaces.sourcing.'
 const call = (method, args = {}) => comprasApi(API + method, args)
 // the tones in the bar: the first (dark) solid, the second lighter, the rest between
@@ -480,6 +549,7 @@ const UNTONED = 'bg-surface-gray-5'
 const ERP_ROWS = 20
 
 const router = useRouter()
+const route = useRoute()
 const phone = isMobile
 const ready = ref(false)
 const guard = ref(null)
@@ -516,6 +586,44 @@ const filters = computed(() => [
       }))
     : []),
 ])
+
+// ---- the sections ---------------------------------------------------------
+const SECTIONS = ['niveles', 'sugerencias', 'piso', 'perdidas']
+const section = computed(() =>
+  SECTIONS.includes(route.query.ver) ? route.query.ver : 'niveles',
+)
+const sections = computed(() => [
+  { value: 'niveles', label: __('Levels', null, 'Niveles') },
+  { value: 'sugerencias', label: __('Suggested', null, 'Niveles') },
+  { value: 'piso', label: __('Floor', null, 'Niveles') },
+  { value: 'perdidas', label: __('Lost sales', null, 'Niveles') },
+])
+// the other sections read one product type or all; «Short» is the levels' own
+const group = computed(() =>
+  data.value.groups.includes(filter.value) ? filter.value : '',
+)
+const sectionFilters = computed(() =>
+  section.value === 'niveles'
+    ? filters.value
+    : filters.value.filter((f) => f.value !== 'faltan'),
+)
+
+function setSection(value) {
+  if (value !== 'niveles' && filter.value === 'faltan') filter.value = 'todos'
+  const query = { ...route.query, ver: value === 'niveles' ? undefined : value }
+  router.replace({ query })
+}
+
+const piso = ref(null)
+const settingsMounted = ref(false)
+const settingsOpen = ref(false)
+function openSettings() {
+  settingsMounted.value = true
+  settingsOpen.value = true
+}
+function onSettingsSaved() {
+  piso.value?.load?.()
+}
 
 function scopeText(row) {
   return [
