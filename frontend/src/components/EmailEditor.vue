@@ -1,11 +1,13 @@
 <template>
-  <Editor
+  <ComposerEditor
+    v-if="opened"
     ref="textEditor"
     v-model="content"
-    :extensions="extensions"
+    email
     :placeholder="placeholder"
     :editable="editable"
-    :upload-function="(file) => uploadFile(file, doctype, modelValue.name)"
+    :doctype="doctype"
+    :docname="modelValue.name"
   >
     <div class="relative w-full">
       <SlashCommandMenu
@@ -186,7 +188,7 @@
                 />
               </template>
             </FileUploader>
-            <EditorFixedMenu :items="fullToolbar" />
+            <ComposerToolbar />
             <IconPicker
               v-slot="{ togglePopover }"
               v-model="emoji"
@@ -211,7 +213,7 @@
         </div>
       </div>
     </div>
-  </Editor>
+  </ComposerEditor>
   <EmailTemplateSelectorModal
     v-model="showEmailTemplateSelectorModal"
     :doctype="doctype"
@@ -252,22 +254,16 @@ import {
   useComposerCommands,
   renderTemplate,
 } from '@/composables/composerCommands'
-import {
-  buildEditorExtensions,
-  fullToolbar,
-  uploadFile,
-} from '@/components/editor/config'
 import { FileUploader, call, FormControl } from 'frappe-ui'
 import {
-  Editor,
+  ComposerEditor,
+  ComposerToolbar,
   EditorContent,
-  EditorFixedMenu,
   EditorTableMenu,
-} from 'frappe-ui/editor'
+} from '@/components/editor/lazy'
 import { useTelemetry } from '@framework/ui'
 import { useDocument } from '@/data/document'
 import { validateEmail, submitShortcutLabel } from '@/utils'
-import Paragraph from '@tiptap/extension-paragraph'
 import { ref, computed, nextTick, inject, watch } from 'vue'
 
 const props = defineProps({
@@ -278,24 +274,6 @@ const props = defineProps({
   editorProps: { type: Object, default: () => ({}) },
   submitButtonProps: { type: Object, default: () => ({}) },
   discardButtonProps: { type: Object, default: () => ({}) },
-})
-
-const CustomParagraph = Paragraph.extend({
-  addAttributes() {
-    return {
-      class: {
-        default: null,
-        renderHTML: (attributes) => {
-          if (!attributes.class) {
-            return {}
-          }
-          return {
-            class: `${attributes.class}`,
-          }
-        },
-      },
-    }
-  },
 })
 
 const emit = defineEmits(['documentSent'])
@@ -311,6 +289,15 @@ const { user: sessionUser } = inject('session')
 const { document: user } = useDocument('User', sessionUser)
 
 const textEditor = ref(null)
+// The editor core mounts the first time the composer opens and stays, so the
+// draft survives closing it; a record page that never opens it loads nothing.
+const opened = ref(props.editable)
+watch(
+  () => props.editable,
+  (editable) => {
+    if (editable) opened.value = true
+  },
+)
 const cc = ref(false)
 const bcc = ref(false)
 const emoji = ref('')
@@ -322,11 +309,6 @@ const ccEmails = ref([])
 const bccEmails = ref([])
 const ccInput = ref(null)
 const bccInput = ref(null)
-
-const extensions = buildEditorExtensions({
-  starterKit: { paragraph: false },
-  extra: [CustomParagraph],
-})
 
 const from = computed(() => {
   if (!user.doc || !user.doc.user_emails?.length) return []
@@ -353,6 +335,18 @@ watch(
 )
 
 const editor = computed(() => textEditor.value?.editor)
+
+// Resolves with the TipTap instance once the lazy editor has mounted.
+function editorReady() {
+  return new Promise((resolve) => {
+    if (editor.value) return resolve(editor.value)
+    const stop = watch(editor, (instance) => {
+      if (!instance) return
+      stop()
+      resolve(instance)
+    })
+  })
+}
 
 function removeAttachment(attachment) {
   attachments.value = attachments.value.filter((a) => a !== attachment)
@@ -526,6 +520,7 @@ function toggleBCC() {
 
 defineExpose({
   editor,
+  editorReady,
   subject,
   cc,
   bcc,

@@ -13,11 +13,17 @@ const props = defineProps({
   content: { type: String, required: true },
 })
 
-const files = import.meta.glob('/src/index.css', {
-  eager: true,
-  query: '?inline',
-})
-const css = files['/src/index.css'].default
+// The page's own stylesheets, by reference. A copy of index.css inlined here was
+// two thirds of the Activities chunk, downloaded again by every record page.
+function pageStyleTags() {
+  const links = [
+    ...document.querySelectorAll('link[rel="stylesheet"][href]'),
+  ].map((link) => `<link rel="stylesheet" href="${link.href}">`)
+  const styles = [...document.querySelectorAll('style')].map(
+    (style) => `<style>${style.textContent}</style>`,
+  )
+  return [...links, ...styles].join('\n  ')
+}
 
 const iframeRef = ref(null)
 const _content = ref(props.content)
@@ -109,8 +115,8 @@ const htmlContent = `
 <!DOCTYPE html>
 <html>
 <head>
+  ${pageStyleTags()}
   <style>
-    ${css}
     :root {
       --bg-surface-gray-3: #ededed;
       --bg-surface-gray-4: #e2e2e2;
@@ -232,8 +238,10 @@ const htmlContent = `
 watch(iframeRef, (iframe) => {
   if (iframe) {
     iframe.onload = () => {
+      // A frame removed before its document loads has no window.
       const emailContent =
-        iframe.contentWindow.document.querySelector('.email-content')
+        iframe.contentWindow?.document.querySelector('.email-content')
+      if (!emailContent) return
       let parent = emailContent.closest('html')
 
       let theme = document.documentElement.getAttribute('data-theme')

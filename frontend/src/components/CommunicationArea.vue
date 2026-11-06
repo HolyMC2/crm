@@ -98,7 +98,7 @@ import { usersStore } from '@/stores/users'
 import { useStorage } from '@vueuse/core'
 import { useTelemetry } from '@framework/ui'
 import { call, createResource, toast } from 'frappe-ui'
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, nextTick } from 'vue'
 import { addonAvailable } from '@/utils/crmCapabilities'
 import { remember } from '@/composables/fieldMemory'
 
@@ -180,23 +180,27 @@ watch(newEmail, (value) => {
   if (!value) signatureAdded.value = false
 })
 
+// The editor mounts on first open (EmailEditor). A reply that opened the box
+// fills the body right after the editor is ready; the signature goes in front
+// of it one tick later, as it did when the editor was always there.
 watch(
   () => showEmailBox.value,
-  (value) => {
-    if (value) {
-      let editor = newEmailEditor.value.editor
-      editor.commands.focus()
-      setSignature(editor)
-    }
+  async (value) => {
+    if (!value) return
+    const editor = await newEmailEditor.value.editorReady()
+    await nextTick()
+    if (!showEmailBox.value) return
+    editor.commands.focus()
+    setSignature(editor)
   },
 )
 
 watch(
   () => showCommentBox.value,
-  (value) => {
-    if (value) {
-      newCommentEditor.value.editor.commands.focus()
-    }
+  async (value) => {
+    if (!value) return
+    const editor = await newCommentEditor.value.editorReady()
+    if (showCommentBox.value) editor.commands.focus()
   },
 )
 
@@ -354,5 +358,6 @@ defineExpose({
   show: showEmailBox,
   showComment: showCommentBox,
   editor: newEmailEditor,
+  editorReady: () => newEmailEditor.value.editorReady(),
 })
 </script>

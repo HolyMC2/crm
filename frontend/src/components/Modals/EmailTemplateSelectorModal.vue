@@ -66,7 +66,7 @@
 import { showSettings, activeSettingsPage } from '@/composables/settings'
 import { useBroadcast } from '@/composables/useBroadcast'
 import { createListResource } from 'frappe-ui'
-import { TextEditor } from 'frappe-ui/experimental'
+import { TextEditor } from '@/components/Controls/lazyTextEditor'
 import { ref, computed, nextTick, watch, onMounted } from 'vue'
 
 const props = defineProps({

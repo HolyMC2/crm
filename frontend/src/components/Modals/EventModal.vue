@@ -249,10 +249,8 @@ import {
   dayjs,
   Dropdown,
 } from 'frappe-ui'
-import {
-  TextEditor,
-  CalendarColorMap as colorMap,
-} from 'frappe-ui/experimental'
+import { CalendarColorMap as colorMap } from 'frappe-ui/experimental'
+import { TextEditor } from '@/components/Controls/lazyTextEditor'
 import { globalStore } from '@/stores/global'
 import { validateEmail } from '@/utils'
 import {
