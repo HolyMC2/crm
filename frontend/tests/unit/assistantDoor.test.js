@@ -4,6 +4,7 @@ const call = vi.hoisted(() => vi.fn())
 vi.mock('frappe-ui', () => ({ call }))
 
 import {
+  STATUS_FRESH_MS,
   _resetAssistantDoor,
   assistantOn,
   bootAssistantStatus,
@@ -13,6 +14,11 @@ import { readCachedList, writeCachedList } from '@/utils/listCache'
 
 const router = { isReady: () => Promise.resolve() }
 const flush = () => new Promise((done) => setTimeout(done))
+/** A saved answer from an earlier session, older than the freshness window. */
+function saveOld(status) {
+  writeCachedList('assistant:status', status)
+  vi.setSystemTime(Date.now() + STATUS_FRESH_MS + 1000)
+}
 
 beforeEach(() => {
   // currentScope() reads the page boot's scope and the user cookie.
@@ -40,7 +46,7 @@ describe('the assistant doors show from the last answer', () => {
 
   it('with an answer saved the doors show now and the check waits for the first screen', async () => {
     vi.useFakeTimers()
-    writeCachedList('assistant:status', { enabled: true })
+    saveOld({ enabled: true })
     call.mockResolvedValue({ enabled: false })
     bootAssistantStatus(router)
     expect(assistantOn.value).toBe(true)
@@ -51,9 +57,19 @@ describe('the assistant doors show from the last answer', () => {
     expect(readCachedList('assistant:status')).toEqual({ enabled: false })
   })
 
-  it('a door before the check asks once; the check reuses its answer', async () => {
+  it('an answer younger than the freshness window is not checked again', async () => {
     vi.useFakeTimers()
     writeCachedList('assistant:status', { enabled: true })
+    vi.setSystemTime(Date.now() + STATUS_FRESH_MS - 1000)
+    bootAssistantStatus(router)
+    expect(assistantOn.value).toBe(true)
+    await vi.runAllTimersAsync()
+    expect(call).not.toHaveBeenCalled()
+  })
+
+  it('a door before the check asks once; the check reuses its answer', async () => {
+    vi.useFakeTimers()
+    saveOld({ enabled: true })
     call.mockResolvedValue({ enabled: true })
     bootAssistantStatus(router)
     await loadAssistantStatus()

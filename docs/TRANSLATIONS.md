@@ -35,8 +35,10 @@ year.
 
 ## Serving and caching
 
-- `crm.html` loads `/api/method/crm.www.crm.translations?v=<version>` as a `defer` script ahead of
-  the module entry. The version is the first 16 hex characters of the payload's sha256 and comes from
+- `crm.html` loads `/api/method/crm.www.crm.translations?v=<version>` as a `defer` script placed
+  after the module entry, so the entry evaluates while the dictionary downloads; `main.js` waits for
+  the script (`utils/translationsReady.js`, 10 s cap) before mounting, so the first render reads it.
+  The version is the first 16 hex characters of the payload's sha256 and comes from
   `context.translations_version`.
 - A matching `v` is answered with `private, max-age=31536000, immutable`. Any other `v` (an old tab,
   or `""`) gets `private, no-cache` with an ETag.

@@ -1,4 +1,4 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (680ec7564007). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (35b1cb1283f2). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <template>
   <!-- One horizontal row of filter chips (Shell SPEC §2.2.4, M3 filter chip),
        never wrapping: it scrolls sideways with a fade at the end. Filters

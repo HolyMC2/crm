@@ -13,8 +13,24 @@ import { initSocket } from './socket'
 import router from './router'
 import { listenForPushNavigation } from './utils/pushNavigate'
 import { installTelemetry } from './utils/startupTelemetry'
+import { mountWhenTranslated } from './utils/translationsReady'
+import { loadShell } from './composables/muelleShell'
 import translationPlugin from './translation'
 import App from './App.vue'
+
+// A signed-in page shows the shell chrome on every route and the chrome needs
+// the boot: both start with the entry instead of after the mount has rendered
+// App.vue and fetched MuelleShell's chunk (the same specifier as App.vue, so
+// it is that chunk). A saved boot refreshes in the background as before.
+function startShell() {
+  const user = document.cookie
+    .split('; ')
+    .find((part) => part.startsWith('user_id='))
+    ?.slice(8)
+  if (!user || user === 'Guest') return
+  loadShell().catch(() => {})
+  import('@/components/shell/MuelleShell.vue').catch(() => {})
+}
 
 function loadPrintingRuntime() {
   if (
@@ -82,7 +98,8 @@ if (import.meta.env.DEV) {
       loadPrintingRuntime()
       socket = initSocket()
       app.config.globalProperties.$socket = socket
-      app.mount('#app')
+      startShell()
+      mountWhenTranslated(() => app.mount('#app'))
     })
 } else {
   // The print-job consumer polls every 5 s anyway: it starts once the first
@@ -90,7 +107,10 @@ if (import.meta.env.DEV) {
   afterFirstRoute(router, loadPrintingRuntime)
   socket = initSocket()
   app.config.globalProperties.$socket = socket
-  app.mount('#app')
+  startShell()
+  // The first render reads the dictionary (App.vue): the mount waits for its
+  // script, which the page loads after this entry so both come in parallel.
+  mountWhenTranslated(() => app.mount('#app'))
 }
 
 if (import.meta.env.DEV) {
