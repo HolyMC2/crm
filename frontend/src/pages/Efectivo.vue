@@ -18,9 +18,16 @@
       :search="search"
       :search-open="searchOpen"
       search-label="Buscar sello, persona o importe"
+      :selectable="selectable"
+      select-label="Seleccionar bolsas"
+      :selecting="selecting"
+      :selected-count="selected.size"
       @update:scope="pickScope"
       @update:search="(v) => (search = v)"
       @update:search-open="(v) => (searchOpen = v)"
+      @start-select="selecting = true"
+      @select-all="selectShown"
+      @clear-selection="clearSelection"
     />
 
     <div class="mx-auto w-full max-w-3xl flex-1">
@@ -267,6 +274,13 @@
               :options="bagViews"
             />
           </div>
+          <p
+            v-if="selecting && otherSafe"
+            class="px-4 pb-2 text-sm text-ink-gray-6"
+          >
+            Eliges bolsas de {{ selectionSafe.title }}. Las de otra caja fuerte
+            se manejan aparte.
+          </p>
           <ul v-if="shownBags.length" class="divide-y divide-outline-gray-1">
             <li v-for="bag in shownBags" :key="bag.name" :data-bag="bag.name">
               <ListRow
@@ -274,8 +288,34 @@
                 :subtitle="bagLine(bag)"
                 :subtitle-tone="bag.state === 'Disputed' ? 'danger' : ''"
                 icon="lucide-banknote"
-                :to="{ name: 'EfectivoBolsa', params: { name: bag.name } }"
+                :to="
+                  selecting
+                    ? null
+                    : { name: 'EfectivoBolsa', params: { name: bag.name } }
+                "
+                :selected="selected.has(bag.name)"
+                :aria-pressed="selecting ? selected.has(bag.name) : undefined"
+                :disabled="selecting && !pickable(bag)"
+                :class="selecting && !pickable(bag) ? 'opacity-50' : ''"
+                @click="selecting && toggle(bag)"
               >
+                <template v-if="selecting" #leading>
+                  <span
+                    class="grid size-9 flex-none place-items-center rounded-full"
+                    :class="
+                      selected.has(bag.name)
+                        ? 'bg-ink-gray-9 text-ink-white'
+                        : 'bg-surface-gray-2 text-ink-gray-5'
+                    "
+                    aria-hidden="true"
+                    data-efectivo-check
+                  >
+                    <span
+                      v-if="selected.has(bag.name)"
+                      class="lucide-check size-5"
+                    />
+                  </span>
+                </template>
                 <template #trailing>
                   <div class="flex flex-col items-end gap-1">
                     <span class="num text-base font-semibold text-ink-gray-9">{{
@@ -384,8 +424,56 @@
       </template>
     </div>
 
+    <!-- The selection: how much it holds and what to do with all of it. -->
+    <PowerBulkBar
+      v-if="selected.size"
+      :count="selected.size"
+      :summary="`${bagsWord(selectedBags.length)} · ${money(bagsTotal(selectedBags), selectionSafe?.currency)}`"
+      label="Bolsas elegidas"
+      stacked
+      :clearable="false"
+      data-efectivo-bulk
+    >
+      <Button
+        v-if="mainAction"
+        variant="solid"
+        class="min-h-12 flex-1 sm:min-h-8 sm:flex-none"
+        :label="mainAction.label"
+        data-efectivo-bulk-main
+        @click="runBulk(mainAction)"
+      />
+      <Button
+        v-if="bulk.length > (mainAction ? 1 : 0)"
+        class="min-h-12 sm:min-h-8"
+        :class="mainAction ? '' : 'flex-1 sm:flex-none'"
+        :label="mainAction ? 'Más' : 'Qué hacer'"
+        data-efectivo-bulk-more
+        @click="actionsOpen = true"
+      >
+        <template #prefix>
+          <span class="lucide-ellipsis size-4" aria-hidden="true" />
+        </template>
+      </Button>
+    </PowerBulkBar>
+    <BottomSheet
+      v-model:open="actionsOpen"
+      :title="`Qué hacer con ${bagsWord(selectedBags.length)}`"
+      flush
+    >
+      <ul class="divide-y divide-outline-gray-1" data-efectivo-bulk-actions>
+        <li v-for="action in bulk" :key="action.key" :data-action="action.key">
+          <ListRow
+            :title="action.label"
+            :subtitle="actionLine(action)"
+            :icon="action.icon"
+            @click="(actionsOpen = false), runBulk(action)"
+          />
+        </li>
+      </ul>
+    </BottomSheet>
+
     <Fab
-      v-if="sealable.length"
+      v-if="sealable.length && !selecting"
       label="Sellar bolsa"
       icon="lucide-package-plus"
       @click="startSeal"
@@ -417,7 +505,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Button } from 'frappe-ui'
+import { Button, toast } from 'frappe-ui'
 import {
   AppBar,
   BottomSheet,
@@ -428,25 +516,43 @@ import {
   StatusChip,
 } from '@/components/ui'
 import StepHost from '@/components/efectivo/StepHost.vue'
+import PowerBulkBar from '@/components/power/PowerBulkBar.vue'
 import {
   WAITING_LABELS,
   bagState,
+  bagsTotal,
+  bagsWord,
+  bulkActions,
   errorText,
   fromMinor,
   holderText,
   homeRead,
   money,
+  printLabels,
   who,
 } from '@/components/efectivo/efectivo'
 import {
   approveChange,
   authorize,
+  confirmDeposit,
+  confirmDeposits,
   countSafe,
   declineChange,
+  depositBags,
+  dispatchBag,
+  dispatchBags,
   fundSafe,
   handTransfer,
+  returnBags,
+  returnFromBank,
   reviewCount,
   sealBag,
+  sendOffsite,
+  sendOffsiteBags,
+  unpackBag,
+  unpackBags,
+  verifyEach,
+  verifyTogether,
 } from '@/components/efectivo/steps'
 import { useLiveList } from '@/composables/liveList'
 import { createListCache } from '@/utils/listCache'
@@ -740,6 +846,108 @@ const shownWaiting = computed(() =>
     : waitingRows.value.slice(0, WAITING_SHOWN),
 )
 
+// Seleccionar: several bags of one safe, one instruction (`batch.command`).
+const selecting = ref(false)
+const selected = ref(new Set())
+const actionsOpen = ref(false)
+const me = computed(() => data.value?.user)
+const BULK_CAN = [
+  'verify',
+  'dispatch',
+  'confirm_bank',
+  'transfer_safe',
+  'unpack',
+  'deposit',
+]
+const selectable = computed(
+  () =>
+    allBags.value.length > 1 &&
+    visibleSafes.value.some((s) => BULK_CAN.some((key) => s.can[key])),
+)
+const selectedBags = computed(() =>
+  allBags.value.filter((b) => selected.value.has(b.name)),
+)
+/** The first chosen bag names the safe: a batch moves the bags of one safe. */
+const selectionSafe = computed(() => selectedBags.value[0]?._safe || null)
+const pickable = (bag) =>
+  !selectionSafe.value || bag._safe.safe === selectionSafe.value.safe
+const otherSafe = computed(() => shownBags.value.some((b) => !pickable(b)))
+function toggle(bag) {
+  if (!pickable(bag)) return
+  const next = new Set(selected.value)
+  if (next.has(bag.name)) next.delete(bag.name)
+  else next.add(bag.name)
+  selected.value = next
+}
+function selectShown() {
+  const first = shownBags.value.find(pickable)
+  if (!first) return
+  const safe = selectionSafe.value?.safe || first._safe.safe
+  selected.value = new Set([
+    ...selected.value,
+    ...shownBags.value.filter((b) => b._safe.safe === safe).map((b) => b.name),
+  ])
+}
+function clearSelection() {
+  selected.value = new Set()
+  selecting.value = false
+  actionsOpen.value = false
+}
+const bulk = computed(() =>
+  selectionSafe.value
+    ? bulkActions(selectedBags.value, selectionSafe.value, me.value)
+    : [],
+)
+/** The bar's button: the first step every chosen bag can take. */
+const mainAction = computed(
+  () =>
+    bulk.value.find(
+      (a) => a.key !== 'labels' && a.bags.length === selectedBags.value.length,
+    ) || null,
+)
+function actionLine(action) {
+  const n = selectedBags.value.length
+  const amount = money(bagsTotal(action.bags), selectionSafe.value?.currency)
+  return action.bags.length === n
+    ? `${n === 1 ? 'La bolsa' : `Las ${n}`} · ${amount}`
+    : `${action.bags.length} de las ${n} · ${amount}`
+}
+/** One bag takes its own sheet; several take the batch's. */
+const SINGLE = {
+  dispatch: (b, s, p, u) => dispatchBag(b, s, p, u),
+  confirm_bank: (b, s, p) => confirmDeposit(b, s, p),
+  return_bank: (b, s, p) => returnFromBank(b, s, p),
+  transfer_safe: (b, s, p) => sendOffsite(b, s, p),
+  unpack: (b, s) => unpackBag(b, s),
+}
+const SEVERAL = {
+  verify_together: (bags, s, p) => verifyTogether(bags, s, p),
+  verify_each: (bags, s, p) => verifyEach(bags, s, p),
+  deposit: (bags, s) => depositBags(bags, s),
+  dispatch: (bags, s, p, u) => dispatchBags(bags, s, p, u),
+  confirm_bank: (bags, s) => confirmDeposits(bags, s),
+  return_bank: (bags, s) => returnBags(bags, s),
+  transfer_safe: (bags, s) => sendOffsiteBags(bags, s),
+  unpack: (bags, s) => unpackBags(bags, s),
+}
+async function runBulk(action) {
+  const safe = selectionSafe.value
+  if (action.key === 'labels') {
+    try {
+      await printLabels(action.bags.map((b) => b.name))
+    } catch (error) {
+      toast.error(errorText(error))
+    }
+    return
+  }
+  const one = action.bags.length === 1 && SINGLE[action.key]
+  open(
+    one
+      ? one(action.bags[0], safe, people.value, me.value)
+      : SEVERAL[action.key](action.bags, safe, people.value, me.value),
+  )
+}
+
 const sealable = computed(() => visibleSafes.value.filter((s) => s.can.prepare))
 function startSeal() {
   if (sealable.value.length === 1) open(sealBag(sealable.value[0]))
@@ -765,10 +973,14 @@ async function load() {
     if (mine === sequence && !data.value) loadError.value = errorText(error)
   }
 }
-function afterStep() {
+function afterStep(result) {
+  clearSelection()
   load()
+  // The next bag of «Contar una por una», once this sheet has closed.
+  if (result?.next) setTimeout(() => open(result.next))
 }
 watch(scope, () => (bagView.value = 'sealed'))
+watch([scope, bagView], () => (selected.value = new Set()))
 load()
 // A cajero's drop, a teammate's verification or the bank run land without a reload.
 useLiveList(

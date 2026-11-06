@@ -6,11 +6,19 @@
     :aria-label="label"
     data-power-bulkbar
   >
-    <p class="min-w-0 flex-1 text-sm font-medium">
-      {{ count === 1 ? __('1 selected') : __('{0} selected', [count]) }}
+    <p
+      class="min-w-0 text-sm font-medium"
+      :class="stacked ? 'basis-full sm:flex-1 sm:basis-auto' : 'flex-1'"
+      data-power-bulkbar-summary
+    >
+      {{
+        summary ||
+        (count === 1 ? __('1 selected') : __('{0} selected', [count]))
+      }}
     </p>
     <slot />
     <Button
+      v-if="clearable"
       variant="ghost"
       class="min-h-12 sm:min-h-8"
       :label="__('Clear selection')"
@@ -23,7 +31,13 @@ import { Button } from 'frappe-ui'
 
 defineProps({
   count: { type: Number, default: 0 },
+  /** What the selection holds, in the page's words («3 bolsas · $6,633.00»); default «N selected». */
+  summary: { type: String, default: '' },
   label: { type: String, default: '' },
+  /** On a phone the summary takes its own line and the actions share the one under it. */
+  stacked: { type: Boolean, default: false },
+  /** Off when the page's bar already clears the selection (AppBar's ✕ while selecting). */
+  clearable: { type: Boolean, default: true },
 })
 defineEmits(['clear'])
 </script>

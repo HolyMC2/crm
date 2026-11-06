@@ -1,8 +1,8 @@
 <template>
   <!-- Count cash by denomination (Shell-S14): seal a bag, verify one someone
-       else sealed, count the safe, or count what a traslado takes. The total
-       is a sum of whole pieces, never a typed figure; the server counts the
-       same rows again. -->
+       else sealed or several at once, count the safe, or count what a
+       traslado takes. The total is a sum of whole pieces, never a typed
+       figure; the server counts the same rows again. -->
   <BottomSheet
     :open="open"
     :title="title"
@@ -19,6 +19,7 @@
       >
         {{ custody }}
       </p>
+      <BagItems v-if="items.length" :items="items" />
 
       <div v-if="mode === 'fund'" class="space-y-1" data-efectivo-source>
         <label
@@ -209,6 +210,15 @@
         {{ error }}
       </p>
       <Button
+        v-if="error && fallback"
+        variant="subtle"
+        size="lg"
+        class="mb-2 w-full"
+        :label="fallbackLabel"
+        data-efectivo-fallback
+        @click="takeFallback"
+      />
+      <Button
         variant="solid"
         size="lg"
         class="w-full"
@@ -233,6 +243,7 @@
 import { computed, ref, watch } from 'vue'
 import { Button } from 'frappe-ui'
 import { BottomSheet, Segmented } from '@/components/ui'
+import BagItems from './BagItems.vue'
 import {
   custodyCount,
   faceLabel,
@@ -244,8 +255,13 @@ import {
 
 const props = defineProps({
   open: { type: Boolean, default: false },
-  /** prepare (seal a bag) · verify (a bag) · count_safe · transfer · fund (money into the safe) */
+  /** prepare (seal a bag) · verify (a bag) · verify_together (several) · count_safe · transfer · fund (money into the safe) */
   mode: { type: String, default: 'prepare' },
+  /** The bags counted together: [{ key, title, meta? }]. */
+  items: { type: Array, default: () => [] },
+  /** After a refusal: () => the step to take instead (count them one by one). */
+  fallback: { type: Function, default: null },
+  fallbackLabel: { type: String, default: '' },
   /** fund: () => Promise<{accounts, has_more}>, the source accounts. */
   fetchSources: { type: Function, default: null },
   title: { type: String, default: '' },
@@ -275,6 +291,7 @@ const noteLabel = computed(
   () =>
     ({
       prepare: 'Nota (opcional)',
+      verify_together: 'Nota (opcional)',
       fund: 'Por qué entra',
     })[props.mode] || 'Si no cuadra, explica por qué',
 )
@@ -282,6 +299,7 @@ const notePlaceholder = computed(
   () =>
     ({
       prepare: 'Corte de la mañana, caja 2…',
+      verify_together: 'Las bolsas del corte del sábado…',
       fund: 'Ocho letras o más: retiro del banco para cambio…',
     })[props.mode] || 'Ocho letras o más: faltó un billete de $200…',
 )
@@ -343,6 +361,11 @@ function step(face, delta) {
 function type(face, text) {
   const n = Number(String(text).replace(/\D/g, '').slice(0, 6)) || 0
   rows.value = { ...rows.value, [face]: n }
+}
+
+function takeFallback() {
+  emit('done', { next: props.fallback() })
+  emit('update:open', false)
 }
 
 function pick(event) {

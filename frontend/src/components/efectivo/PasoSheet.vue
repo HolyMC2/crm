@@ -1,9 +1,9 @@
 <template>
   <!-- One custody step without a count (Shell-S14): hand a bag to the bank
        run, record the deposit slip, bring a bag back, resolve a difference,
-       decline a change request, authorize a posting. It names who holds the
-       cash before and after, asks only what the server requires, and keeps
-       the server's sentence when it refuses. -->
+       decline a change request, authorize a posting; for one bag or several.
+       It names who holds the cash before and after, asks only what the server
+       requires, and keeps the server's sentence when it refuses. -->
   <BottomSheet
     :open="open"
     :title="title"
@@ -26,6 +26,7 @@
       >
         {{ custody }}
       </p>
+      <BagItems v-if="items.length" :items="items" />
       <p v-if="message" class="text-sm text-ink-gray-7">{{ message }}</p>
       <p
         v-if="guard"
@@ -47,14 +48,29 @@
             :disabled="busy || !!guard"
             :data-field="field.key"
           />
-          <span class="text-base text-ink-gray-9">{{ field.label }}</span>
+          <span class="text-base text-ink-gray-9">{{ labelOf(field) }}</span>
         </label>
         <label v-else class="block space-y-1">
           <span class="text-sm font-medium text-ink-gray-7">{{
-            field.label
+            labelOf(field)
           }}</span>
+          <select
+            v-if="field.kind === 'choice'"
+            v-model="values[field.key]"
+            class="h-11 w-full rounded-6 border-0 bg-surface-gray-1 px-3 text-base"
+            :disabled="busy"
+            :data-field="field.key"
+          >
+            <option
+              v-for="option in field.options"
+              :key="option.value"
+              :value="option.value"
+            >
+              {{ option.label }}
+            </option>
+          </select>
           <textarea
-            v-if="field.kind === 'reason'"
+            v-else-if="field.kind === 'reason'"
             v-model="values[field.key]"
             rows="2"
             class="w-full rounded-6 border-0 bg-surface-gray-1 px-3 py-2 text-base"
@@ -112,6 +128,7 @@
 import { computed, reactive, ref, watch } from 'vue'
 import { Button } from 'frappe-ui'
 import { BottomSheet } from '@/components/ui'
+import BagItems from './BagItems.vue'
 import { money } from './efectivo'
 
 const props = defineProps({
@@ -122,7 +139,13 @@ const props = defineProps({
   currency: { type: String, default: 'MXN' },
   custody: { type: String, default: '' },
   message: { type: String, default: '' },
-  /** [{ key, label, kind: 'reason'|'text'|'password'|'confirm', min?, placeholder?, hint? }] */
+  /** The bags a step on several acts on: [{ key, title, meta? }]. */
+  items: { type: Array, default: () => [] },
+  /**
+   * [{ key, label, kind: 'reason'|'text'|'password'|'confirm'|'choice', min?,
+   *    placeholder?, hint?, options? }]; `label` may be (values) => text,
+   * `options` are a choice's [{ value, label }] (the first one starts chosen).
+   */
   fields: { type: Array, default: () => [] },
   /** Why this step cannot be taken now: shown in place of the button's promise. */
   guard: { type: String, default: '' },
@@ -141,11 +164,19 @@ watch(
     if (!open) return
     for (const key of Object.keys(values)) delete values[key]
     for (const field of props.fields)
-      values[field.key] = field.kind === 'confirm' ? false : ''
+      values[field.key] =
+        field.kind === 'confirm'
+          ? false
+          : field.kind === 'choice'
+            ? field.options?.[0]?.value ?? ''
+            : ''
     error.value = ''
   },
   { immediate: true },
 )
+
+const labelOf = (field) =>
+  typeof field.label === 'function' ? field.label(values) : field.label
 
 const short = computed(() =>
   props.fields.find((f) =>
@@ -163,7 +194,7 @@ const missing = computed(() => {
     return 'Escribe el motivo, con ocho letras o más.'
   if (field.kind === 'password') return 'Escribe tu contraseña para firmar.'
   if (field.kind === 'confirm') return 'Marca la casilla para confirmar.'
-  return `Falta: ${field.label.toLowerCase()}.`
+  return `Falta: ${labelOf(field).toLowerCase()}.`
 })
 
 async function confirm() {

@@ -74,6 +74,21 @@ export function custody(action, safe, payload, requestId) {
   })
 }
 
+/**
+ * `batch.command`: one custody action on several bags of one safe. Every bag
+ * or none; a refusal names the bag's seal, a retry replays every bag.
+ */
+export function custodyBatch(action, safe, payload, requestId) {
+  return call(`${POSA}.cash_custody.batch.command`, {
+    action,
+    payload: JSON.stringify({
+      ...target(safe),
+      ...payload,
+      request_id: requestId,
+    }),
+  })
+}
+
 export const assignRequest = (request, requestId) =>
   call(`${POSA}.cash_transfer.requests.assign`, {
     request_id: requestId,
@@ -130,18 +145,27 @@ export const fundSources = (safe) =>
  * A bag's handover sheet (`slip`) or the tag that travels on it (`label`),
  * printed from a window opened on the tap so the browser does not block it.
  */
-export async function printEvidence(doctype, name, layout = 'slip') {
+export const printEvidence = (doctype, name, layout = 'slip') =>
+  printWindow(() =>
+    call(`${POSA}.cash_custody.printing.evidence`, { doctype, name, layout }),
+  )
+
+/** The tags of several bags on one sheet (`printing.bag_labels`, up to 50). */
+export const printLabels = (names) =>
+  printWindow(() =>
+    call(`${POSA}.cash_custody.printing.bag_labels`, {
+      names: JSON.stringify(names),
+    }),
+  )
+
+async function printWindow(fetchHtml) {
   const popup = window.open('', '_blank')
   if (!popup)
     throw new Error(
       'Permite las ventanas emergentes de este sitio para imprimir.',
     )
   try {
-    const html = await call(`${POSA}.cash_custody.printing.evidence`, {
-      doctype,
-      name,
-      layout,
-    })
+    const html = await fetchHtml()
     popup.opener = null
     popup.document.open()
     popup.document.write(html)
@@ -305,6 +329,87 @@ export function bagStep(bag, safe, me) {
       return null
   }
 }
+
+/**
+ * What the worker may do with the selected bags of one safe, in the order the
+ * bar offers it: [{key, label, icon, bags, danger?}]. `bags` are the selected
+ * bags the step applies to: all of them, or fewer when some do not qualify.
+ */
+export function bulkActions(bags, safe, me) {
+  const can = safe?.can || {}
+  const where = (...states) => bags.filter((b) => states.includes(b.state))
+  // As bagStep: the owner verifies their own bag; anyone else asks a second person.
+  const countable = where('Unverified').filter(
+    (b) => b.prepared_by !== me || can.self_review,
+  )
+  const available = where('Available')
+  const transit = where('In Transit')
+  return [
+    can.verify_together &&
+      countable.length > 1 && {
+        key: 'verify_together',
+        label: 'Contar juntas',
+        icon: 'lucide-calculator',
+        bags: countable,
+      },
+    can.verify && {
+      key: 'verify_each',
+      label: 'Contar una por una',
+      icon: 'lucide-list-checks',
+      bags: countable,
+    },
+    can.deposit && {
+      key: 'deposit',
+      label: 'Depositar con la ficha',
+      icon: 'lucide-receipt',
+      bags: available,
+    },
+    can.dispatch && {
+      key: 'dispatch',
+      label: 'Llevar al banco',
+      icon: 'lucide-building-2',
+      bags: available,
+    },
+    can.confirm_bank && {
+      key: 'confirm_bank',
+      label: 'Registrar el depósito',
+      icon: 'lucide-receipt',
+      bags: transit,
+    },
+    can.confirm_bank && {
+      key: 'return_bank',
+      label: 'Regresaron sin depositar',
+      icon: 'lucide-undo-2',
+      bags: transit,
+    },
+    can.transfer_safe && {
+      key: 'transfer_safe',
+      label: 'Sacar de la tienda',
+      icon: 'lucide-truck',
+      bags: where('Available', 'Unverified'),
+    },
+    can.unpack && {
+      key: 'unpack',
+      label: 'Abrir las bolsas',
+      icon: 'lucide-package-open',
+      bags: available,
+      danger: true,
+    },
+    {
+      key: 'labels',
+      label: 'Imprimir etiquetas',
+      icon: 'lucide-printer',
+      bags,
+    },
+  ].filter((row) => row && row.bags.length)
+}
+
+/** «3 bolsas» */
+export const bagsWord = (n) => (n === 1 ? '1 bolsa' : `${n} bolsas`)
+
+/** The sum of some bags, in centavos so ten bags never drift. */
+export const bagsTotal = (bags) =>
+  bags.reduce((n, b) => n + Math.round((Number(b.amount) || 0) * 100), 0) / 100
 
 /** The worker's sentence for a failed call: the server's own message, never a traceback. */
 export function errorText(error) {

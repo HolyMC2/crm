@@ -11,6 +11,7 @@ vi.mock('frappe-ui', () => ({
 
 const {
   bagStep,
+  bulkActions,
   custodyCount,
   faceLabel,
   holderText,
@@ -211,5 +212,198 @@ describe('steps send the custody commands', () => {
       document_name: 'JV-1',
       password: 'secreto',
     })
+  })
+})
+
+describe('several bags, one instruction', () => {
+  const pair = {
+    safe: 'CASH-SAFE-2',
+    title: 'Caja fuerte Tienda',
+    store: null,
+    pos_profile: 'Tienda',
+    currency: 'MXN',
+    offsite: 'Caja fuerte casa',
+    destinations: [{ account: 'HOME', label: 'Caja fuerte casa' }],
+    can: {
+      verify: true,
+      unpack: true,
+      dispatch: true,
+      confirm_bank: true,
+      transfer_safe: true,
+      verify_together: true,
+      deposit: true,
+    },
+  }
+  const bag = (name, state, extra = {}) => ({
+    name,
+    seal: `SEAL-${name}`,
+    state,
+    amount: 1000.1,
+    prepared_by: 'jenni@x',
+    ...extra,
+  })
+  const keys = (rows) => rows.map((r) => `${r.key}:${r.bags.length}`)
+  const payload = (n = 0) => JSON.parse(calls[n].args.payload)
+  const BATCH = 'posawesome.posawesome.api.cash_custody.batch.command'
+
+  it('offers each step to the chosen bags it applies to', () => {
+    const chosen = [
+      bag('B1', 'Unverified'),
+      bag('B2', 'Unverified'),
+      bag('B3', 'Unverified', { prepared_by: 'karla@x' }),
+      bag('B4', 'Available'),
+    ]
+    expect(keys(bulkActions(chosen, pair, 'karla@x'))).toEqual([
+      'verify_together:2',
+      'verify_each:2',
+      'deposit:1',
+      'dispatch:1',
+      'transfer_safe:4',
+      'unpack:1',
+      'labels:4',
+    ])
+    // The owner counts their own bag too.
+    const owner = { ...pair, can: { ...pair.can, self_review: true } }
+    expect(keys(bulkActions(chosen, owner, 'karla@x'))[0]).toBe(
+      'verify_together:3',
+    )
+  })
+
+  it('counting together needs two bags and someone who resolves differences', () => {
+    const chosen = [bag('B1', 'Unverified'), bag('B2', 'Unverified')]
+    const custodian = { ...pair, can: { ...pair.can, verify_together: false } }
+    expect(keys(bulkActions(chosen, custodian, 'karla@x'))[0]).toBe(
+      'verify_each:2',
+    )
+    expect(keys(bulkActions(chosen.slice(0, 1), pair, 'karla@x'))[0]).toBe(
+      'verify_each:1',
+    )
+    const cashier = { ...pair, can: {} }
+    expect(keys(bulkActions(chosen, cashier, 'karla@x'))).toEqual(['labels:2'])
+  })
+
+  it('a bank trip for several bags is one batch with one note', async () => {
+    const step = steps.dispatchBags(
+      [bag('B1', 'Available'), bag('B2', 'Available')],
+      pair,
+      people,
+      'karla@x',
+    )
+    expect(step.props.title).toBe('Llevar 2 bolsas al banco')
+    expect(step.props.amount).toBe(2000.2)
+    expect(step.props.items.map((i) => i.title)).toEqual(['SEAL-B1', 'SEAL-B2'])
+    await step.submit({ note: 'BBVA centro, Karla' })
+    expect(calls[0].method).toBe(BATCH)
+    expect(calls[0].args.action).toBe('dispatch')
+    expect(payload()).toMatchObject({
+      pos_profile: 'Tienda',
+      bags: ['B1', 'B2'],
+      note: 'BBVA centro, Karla',
+    })
+    expect(payload().request_id).toMatch(/^shell-/)
+  })
+
+  it('a deposit takes one slip; a blank note is left to the server', async () => {
+    await steps
+      .depositBags([bag('B1', 'Available')], pair)
+      .submit({ reference: 'F-88', note: '' })
+    expect(calls[0].args.action).toBe('deposit')
+    expect(payload()).toEqual({
+      pos_profile: 'Tienda',
+      bags: ['B1'],
+      reference: 'F-88',
+      request_id: payload().request_id,
+    })
+  })
+
+  it('bags leave for the destination the worker picks when the safe lists several', async () => {
+    const chosen = [bag('B1', 'Available'), bag('B2', 'Unverified')]
+    const one = steps.sendOffsiteBags(chosen, pair)
+    expect(one.props.fields.map((f) => f.key)).toEqual(['note', 'confirmed'])
+    expect(one.props.message).toMatch(/^1 de 2 no se han verificado/)
+    await one.submit({ note: 'Se las lleva el dueño', confirmed: true })
+    expect(payload()).not.toHaveProperty('destination')
+
+    const several = {
+      ...pair,
+      destinations: [...pair.destinations, { account: 'HQ', label: 'Matriz' }],
+    }
+    const step = steps.sendOffsiteBags(chosen, several)
+    const [choice, , confirm] = step.props.fields
+    expect(choice.options).toEqual([
+      { value: 'HOME', label: 'Caja fuerte casa' },
+      { value: 'HQ', label: 'Matriz' },
+    ])
+    expect(confirm.label({ destination: 'HQ' })).toMatch(/hacia Matriz\.$/)
+    await step.submit({
+      destination: 'HQ',
+      note: 'Se las lleva el dueño',
+      confirmed: true,
+    })
+    expect(calls[1].args.action).toBe('transfer_safe')
+    expect(payload(1)).toMatchObject({ bags: ['B1', 'B2'], destination: 'HQ' })
+
+    await steps
+      .sendOffsite(bag('B3', 'Available'), several, people)
+      .submit({ destination: 'HQ', note: 'Se la lleva el dueño' })
+    expect(calls[2].method).toBe(
+      'posawesome.posawesome.api.cash_custody.service.command',
+    )
+    expect(payload(2)).toMatchObject({ bag: 'B3', destination: 'HQ' })
+  })
+
+  it('one count for the pile, and counting one by one when it does not match', async () => {
+    const chosen = [bag('B1', 'Unverified'), bag('B2', 'Unverified')]
+    const step = steps.verifyTogether(chosen, pair, people)
+    expect(step.props.mode).toBe('verify_together')
+    // A blind count: the sheet lists the seals, never what they hold.
+    expect(step.props.items.map((i) => i.meta)).toEqual([
+      'la selló Jenni',
+      'la selló Jenni',
+    ])
+    expect(step).not.toHaveProperty('props.amount')
+    await step.submit({ count: custodyCount({ 100000: 2, 20: 1 }), note: '' })
+    expect(calls[0].args.action).toBe('verify_together')
+    expect(payload()).toMatchObject({
+      bags: ['B1', 'B2'],
+      count: { source: 'denominations' },
+    })
+
+    const each = step.props.fallback()
+    expect(each.props.title).toBe('Contar SEAL-B1 · 1 de 2')
+    answer = async () => ({ state: 'Available' })
+    const first = await each.submit({ count: custodyCount({ 100000: 1 }) })
+    expect(first.toast).toBe('Bolsa verificada · falta 1')
+    expect(first.next.props.title).toBe('Contar SEAL-B2 · 2 de 2')
+    answer = async () => ({ state: 'Disputed' })
+    const last = await first.next.submit({ count: custodyCount({ 50000: 1 }) })
+    expect(last.next).toBeUndefined()
+    expect(last.toast).toBe('No cuadró: la bolsa queda con diferencia')
+    expect(
+      calls.slice(1).map((c) => [c.args.action, payload(calls.indexOf(c)).bag]),
+    ).toEqual([
+      ['verify', 'B1'],
+      ['verify', 'B2'],
+    ])
+  })
+
+  it('a refused batch comes back as the server sentence with the seal', async () => {
+    answer = async () => {
+      throw {
+        messages: [
+          'SEAL-B2: Only verified available bags can leave for the bank.',
+        ],
+      }
+    }
+    await expect(
+      steps
+        .dispatchBags(
+          [bag('B1', 'Available'), bag('B2', 'Available')],
+          pair,
+          people,
+          'karla@x',
+        )
+        .submit({ note: 'BBVA centro, Karla' }),
+    ).rejects.toThrow('SEAL-B2: Only verified available bags')
   })
 })

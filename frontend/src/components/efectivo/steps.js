@@ -5,8 +5,11 @@
 import {
   assignRequest,
   authorizePosting,
+  bagsTotal,
+  bagsWord,
   cancelTransfer,
   custody,
+  custodyBatch,
   declineRequest,
   dispatchTransfer,
   errorText,
@@ -228,14 +231,16 @@ export function unpackBag(bag, safe) {
 /**
  * The whole bag, sealed and unopened, leaves the store for the safe's off-site
  * ledger (the owner's or the head office's cash). Nothing is counted here: the
- * amount and the destination are the server's, and an unverified bag leaves
- * still marked unverified.
+ * amount is the server's, the destination one the safe lists (the worker picks
+ * when it lists several), and an unverified bag leaves still marked unverified.
  */
 export function sendOffsite(bag, safe, people) {
-  const destination = safe.offsite || 'el efectivo fuera de la tienda'
-  const toDestination = safe.offsite
-    ? `a ${safe.offsite}`
-    : 'al efectivo fuera de la tienda'
+  const choice = destinationField(safe)
+  const toDestination = choice
+    ? 'al destino que elijas'
+    : safe.offsite
+      ? `a ${safe.offsite}`
+      : 'al efectivo fuera de la tienda'
   const unverified = !bag.verified_by
   return {
     sheet: 'paso',
@@ -249,6 +254,7 @@ export function sendOffsite(bag, safe, people) {
         : `La verificó ${who(bag.verified_by, people)}.`,
       guard: safe.can?.transfer_safe ? '' : safe.transfer_blocker || '',
       fields: [
+        ...(choice ? [choice] : []),
         {
           key: 'note',
           label: 'Quién se la lleva y a dónde',
@@ -257,7 +263,11 @@ export function sendOffsite(bag, safe, people) {
         },
         {
           key: 'confirmed',
-          label: `La bolsa completa, sellada y sin abrir, ya salió hacia ${destination}.`,
+          label: followsChoice(
+            choice,
+            (to) =>
+              `La bolsa completa, sellada y sin abrir, ya salió hacia ${destinationName(safe, to)}.`,
+          ),
           kind: 'confirm',
         },
       ],
@@ -267,11 +277,291 @@ export function sendOffsite(bag, safe, people) {
       ...(await custody(
         'transfer_safe',
         safe,
-        { bag: bag.name, note: v.note },
+        { bag: bag.name, note: v.note, ...destinationOf(choice, v) },
         id,
       )),
       toast: 'La bolsa salió de la tienda',
     })),
+  }
+}
+
+/** Where a whole bag may go, when the safe lists more than one place (`safe.destinations`). */
+function destinationField(safe) {
+  const listed = safe.destinations || []
+  if (listed.length < 2) return null
+  return {
+    key: 'destination',
+    label: 'A dónde va',
+    kind: 'choice',
+    options: listed.map((d) => ({ value: d.account, label: d.label })),
+  }
+}
+
+function destinationName(safe, account) {
+  const listed = safe.destinations || []
+  return (
+    listed.find((d) => d.account === account)?.label ||
+    safe.offsite ||
+    listed[0]?.label ||
+    'el efectivo fuera de la tienda'
+  )
+}
+
+/** A sentence that names the chosen destination, as it changes. */
+const followsChoice = (choice, text) =>
+  choice ? (v) => text(v.destination) : text()
+
+/** Only a worker who chose among several destinations names one; otherwise the server's default. */
+const destinationOf = (choice, v) =>
+  choice ? { destination: v.destination } : {}
+
+// Several bags of one safe, one instruction (`batch.command`) ---------------
+
+const names = (bags) => bags.map((b) => b.name)
+
+/** The bags a step acts on, as the sheet lists them. */
+const listed = (bags, safe) =>
+  bags.map((b) => ({
+    key: b.name,
+    title: b.seal,
+    meta: money(b.amount, safe.currency),
+  }))
+
+function several(action, bags, safe, props, payload, toast) {
+  return {
+    sheet: 'paso',
+    props: {
+      amount: bagsTotal(bags),
+      currency: safe.currency,
+      items: listed(bags, safe),
+      ...props,
+    },
+    submit: guarded(async (v, id) => ({
+      ...(await custodyBatch(
+        action,
+        safe,
+        { bags: names(bags), ...payload(v) },
+        id,
+      )),
+      toast,
+    })),
+  }
+}
+
+export function dispatchBags(bags, safe, people, me) {
+  return several(
+    'dispatch',
+    bags,
+    safe,
+    {
+      title: `Llevar ${bagsWord(bags.length)} al banco`,
+      custody: `Salen de la caja fuerte contigo (${who(me, people)}). Hasta que registren la ficha del banco, están a tu cargo.`,
+      fields: [
+        {
+          key: 'note',
+          label: 'A qué banco y quién las lleva',
+          kind: 'reason',
+          placeholder: 'BBVA sucursal centro, las lleva Karla',
+        },
+      ],
+      confirmLabel: 'Salgo al banco',
+    },
+    (v) => ({ note: v.note }),
+    `${bagsWord(bags.length)} en camino al banco`,
+  )
+}
+
+/** The bank trip and its slip in one step, once the cash is already in the bank. */
+export function depositBags(bags, safe) {
+  return several(
+    'deposit',
+    bags,
+    safe,
+    {
+      title: `Depositar ${bagsWord(bags.length)}`,
+      custody:
+        'Para cuando ya las depositaste: se registra la salida al banco y la ficha de una vez, y el efectivo queda en el banco.',
+      fields: [
+        {
+          key: 'reference',
+          label: 'Número de la ficha de depósito',
+          kind: 'text',
+          placeholder: 'Folio o referencia del banco',
+        },
+        {
+          key: 'note',
+          label: 'Banco y quién las llevó (opcional)',
+          kind: 'reason',
+          min: 0,
+          placeholder: 'BBVA sucursal centro, las llevó Karla',
+        },
+      ],
+      confirmLabel: 'Registrar depósito',
+    },
+    (v) => ({ reference: v.reference, note: v.note || undefined }),
+    `Depósito de ${bagsWord(bags.length)} registrado`,
+  )
+}
+
+export function confirmDeposits(bags, safe) {
+  return several(
+    'confirm_bank',
+    bags,
+    safe,
+    {
+      title: `Depósito de ${bagsWord(bags.length)}`,
+      custody:
+        'Una ficha para todas: con ella quedan en el banco y salen del cargo de quien las llevó.',
+      fields: [
+        {
+          key: 'reference',
+          label: 'Número de la ficha de depósito',
+          kind: 'text',
+          placeholder: 'Folio o referencia del banco',
+        },
+      ],
+      confirmLabel: 'Registrar depósito',
+    },
+    (v) => ({ reference: v.reference }),
+    'Depósito registrado',
+  )
+}
+
+export function returnBags(bags, safe) {
+  return several(
+    'return_bank',
+    bags,
+    safe,
+    {
+      title: `${bagsWord(bags.length)} sin depositar`,
+      custody:
+        'Vuelven a la caja fuerte. Otra persona las cuenta de nuevo antes de volver a salir.',
+      fields: [
+        { key: 'note', label: 'Por qué no se depositaron', kind: 'reason' },
+      ],
+      confirmLabel: 'Regresan a la caja fuerte',
+    },
+    (v) => ({ note: v.note }),
+    'Bolsas de vuelta en la caja fuerte',
+  )
+}
+
+export function unpackBags(bags, safe) {
+  return several(
+    'unpack',
+    bags,
+    safe,
+    {
+      title: `Abrir ${bagsWord(bags.length)}`,
+      custody:
+        'El efectivo vuelve a estar suelto en la caja fuerte y las bolsas se cierran.',
+      fields: [{ key: 'note', label: 'Por qué se abren', kind: 'reason' }],
+      confirmLabel: 'Abrir las bolsas',
+      danger: true,
+    },
+    (v) => ({ note: v.note }),
+    'Bolsas abiertas',
+  )
+}
+
+export function sendOffsiteBags(bags, safe) {
+  const choice = destinationField(safe)
+  const unverified = bags.filter((b) => b.state === 'Unverified').length
+  return several(
+    'transfer_safe',
+    bags,
+    safe,
+    {
+      title: `Sacar ${bagsWord(bags.length)} de la tienda`,
+      custody: `Salen completas de la caja fuerte ${choice ? 'al destino que elijas' : `a ${destinationName(safe)}`}. Dejan de estar a cargo de la tienda.`,
+      message: !unverified
+        ? 'Todas están verificadas.'
+        : unverified === bags.length
+          ? 'Nadie las ha verificado: salen solo con el conteo de quien las selló y siguen marcadas sin verificar.'
+          : `${unverified} de ${bags.length} no se han verificado: salen solo con el conteo de quien las selló y siguen marcadas sin verificar.`,
+      guard: safe.can?.transfer_safe ? '' : safe.transfer_blocker || '',
+      fields: [
+        ...(choice ? [choice] : []),
+        {
+          key: 'note',
+          label: 'Quién se las lleva y a dónde',
+          kind: 'reason',
+          placeholder: 'Se las lleva el dueño a la matriz',
+        },
+        {
+          key: 'confirmed',
+          label: followsChoice(
+            choice,
+            (to) =>
+              `Las bolsas completas, selladas y sin abrir, ya salieron hacia ${destinationName(safe, to)}.`,
+          ),
+          kind: 'confirm',
+        },
+      ],
+      confirmLabel: 'Sacar de la tienda',
+    },
+    (v) => ({ note: v.note, ...destinationOf(choice, v) }),
+    `${bagsWord(bags.length)} salieron de la tienda`,
+  )
+}
+
+/**
+ * One count of the whole pile. When it matches what the bags hold, each bag is
+ * verified with its own count; when it does not, nothing is verified and the
+ * sheet offers counting them one by one.
+ */
+export function verifyTogether(bags, safe, people) {
+  return {
+    sheet: 'conteo',
+    props: {
+      mode: 'verify_together',
+      title: `Contar ${bags.length} bolsas juntas`,
+      subtitle: 'Cuenta el efectivo de todas, sin ver las etiquetas',
+      currency: safe.currency,
+      items: bags.map((b) => ({
+        key: b.name,
+        title: b.seal,
+        meta: `la selló ${who(b.prepared_by, people)}`,
+      })),
+      custody:
+        'Si tu conteo cuadra con lo que suman, cada bolsa queda verificada con su conteo. Si no cuadra, no se verifica ninguna: cuéntalas una por una para encontrar la diferencia.',
+      confirmLabel: 'Verificar las bolsas',
+      fallbackLabel: 'Contar una por una',
+      fallback: () => verifyEach(bags, safe, people),
+    },
+    submit: guarded(async (v, id) => ({
+      ...(await custodyBatch(
+        'verify_together',
+        safe,
+        { bags: names(bags), count: v.count, note: v.note },
+        id,
+      )),
+      toast: `${bagsWord(bags.length)} verificadas`,
+    })),
+  }
+}
+
+/** The single verification, bag after bag: each answer opens the next count. */
+export function verifyEach(bags, safe, people, index = 0) {
+  const bag = bags[index]
+  const one = verifyBag(bag, safe, people)
+  const left = bags.length - index - 1
+  if (bags.length < 2) return one
+  return {
+    ...one,
+    props: {
+      ...one.props,
+      title: `Contar ${bag.seal} · ${index + 1} de ${bags.length}`,
+    },
+    submit: async (v) => {
+      const result = await one.submit(v)
+      if (!left) return result
+      return {
+        ...result,
+        toast: `${result.toast} · ${left === 1 ? 'falta 1' : `faltan ${left}`}`,
+        next: verifyEach(bags, safe, people, index + 1),
+      }
+    },
   }
 }
 
