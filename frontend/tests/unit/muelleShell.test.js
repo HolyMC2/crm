@@ -983,13 +983,10 @@ describe('one frame for every route', () => {
     window.dispatchEvent(
       new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }),
     )
-    for (let i = 0; i < 20; i++) {
-      await Promise.resolve()
-      await nextTick()
-      if (document.querySelector('[aria-label="Command palette"]')) break
-      await new Promise((resolve) => setTimeout(resolve, 10))
-    }
-    const palette = document.querySelector('[aria-label="Command palette"]')
+    // The first open imports the palette's module (until: slow runners).
+    const palette = await until(() =>
+      document.querySelector('[aria-label="Command palette"]'),
+    )
     expect(palette).not.toBeNull()
     // The standard's footer is one reviewed es-MX line, not bare verbs.
     expect(
