@@ -432,11 +432,14 @@ def _column_titles(meta, display, docs, rows):
 			link_doctype = _column_doctype(col, doc)
 			if link_doctype and doc.get(col["fieldname"]):
 				wanted.setdefault(link_doctype, set()).add(doc.get(col["fieldname"]))
-	titles = _link_titles(wanted)
+	titles = _link_titles({k: v for k, v in wanted.items() if k != "DocType"})
 	for doc, row in zip(docs, rows, strict=False):
 		row["titles"] = {}
 		for col in links:
-			title = titles.get((_column_doctype(col, doc), doc.get(col["fieldname"])))
+			link_doctype = _column_doctype(col, doc)
+			value = doc.get(col["fieldname"])
+			# A document type names itself, in the worker's language («Nota»).
+			title = _(value) if link_doctype == "DocType" and value else titles.get((link_doctype, value))
 			if title:
 				row["titles"][col["fieldname"]] = title
 
