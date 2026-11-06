@@ -126,7 +126,10 @@ vi.mock('@/components/FieldLayout/FieldLayout.vue', () => ({
   default: { render: () => null },
 }))
 vi.mock('@/stores/settings', () => ({ syncBrandFavicon() {} }))
-vi.mock('@/utils/prefetch', () => ({ prefetchHotChunks() {} }))
+vi.mock('@/utils/prefetch', () => ({
+  prefetchHotChunks() {},
+  afterFirstRoute() {},
+}))
 vi.mock('@/composables/telemetry', () => ({ initTelemetry() {} }))
 vi.mock('@/utils/dialogs', () => ({ Dialogs: { render: () => null } }))
 vi.mock('@/pages/NotPermitted.vue', () => ({ default: { render: () => null } }))
