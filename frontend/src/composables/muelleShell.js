@@ -148,6 +148,7 @@ export function resetShellForTests() {
 const HOSTED = [
   'hoy',
   'pendientes',
+  'proyectos',
   'agenda',
   'contactos',
   'ventas',

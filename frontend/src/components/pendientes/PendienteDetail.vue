@@ -284,6 +284,28 @@
           <dt class="text-sm text-ink-gray-6">{{ __('Repeats') }}</dt>
           <dd class="text-base">{{ repeatLabel(row.repeat) }}</dd>
         </div>
+        <div v-if="row.project">
+          <dt class="text-sm text-ink-gray-6">{{ __('Project') }}</dt>
+          <dd class="text-base">
+            <!-- The project as a chip: it opens the project, back returns here. -->
+            <RouterLink
+              :to="proyectoRoute(row.project)"
+              class="inline-flex min-h-11 max-w-full items-center gap-2 rounded-full bg-surface-gray-2 px-3 text-left text-base text-ink-gray-9 sm:min-h-8"
+              data-pendiente-project
+            >
+              <span
+                class="lucide-folder-kanban size-4 flex-none text-ink-gray-6"
+                aria-hidden="true"
+              />
+              <span class="truncate">{{
+                row.project_name || row.project
+              }}</span>
+            </RouterLink>
+            <span v-if="row.start" class="mt-1 block text-sm text-ink-gray-6">
+              {{ __('Starts {0}', [formatDay(row.start)]) }}
+            </span>
+          </dd>
+        </div>
         <div v-if="row.activity_type && row.activity_type !== 'Task'">
           <dt class="text-sm text-ink-gray-6">{{ __('Activity') }}</dt>
           <dd class="text-base">{{ __(row.activity_type) }}</dd>
@@ -516,6 +538,7 @@ import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Button, Dropdown, FormControl, toast } from 'frappe-ui'
 import { initials, kindLabel, personName, relativeTime } from '@/utils/display'
+import { proyectoRoute } from '@/composables/useProyectos'
 import CompleteDialog from '@/components/pendientes/CompleteDialog.vue'
 import CreateDialog from '@/components/pendientes/CreateDialog.vue'
 import { loadShell, shellBoot } from '@/composables/muelleShell'

@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/shell-contracts@0.18.0 (e498a2d01057). DO NOT EDIT:
+// Vendored from muelle/workspace/packages/shell-contracts@0.19.0 (751d47fca2c0). DO NOT EDIT:
 // change the package, then run its scripts/vendor.mjs against this directory.
 // Module registry types and the shell's fixed module catalog (spec §1.1, §2.1, §4.7).
 // Framework-agnostic: the crm shell instantiates `ShellModule<RouteRecordRaw, …>`.
@@ -8,6 +8,7 @@ export type ShellModuleKey =
   | 'hoy'
   | 'contactos'
   | 'pendientes'
+  | 'proyectos'
   | 'agenda'
   | 'archivos'
   | 'compras'
@@ -40,10 +41,11 @@ export interface ShellModuleMeta {
   go: string
 }
 
-/** Rail order: Hoy, Pendientes, Agenda, Contactos, Ventas, Cobranza, Compras, Gastos, Resultados, Bancos, Efectivo, Productos, Garantías, Encuestas, Equipo, Archivos, Manual de la tienda, Documentos, Inventario, Inmobiliaria; Avisos pinned last. */
+/** Rail order: Hoy, Pendientes, Proyectos, Agenda, Contactos, Ventas, Cobranza, Compras, Gastos, Resultados, Bancos, Efectivo, Productos, Garantías, Encuestas, Equipo, Archivos, Manual de la tienda, Documentos, Inventario, Inmobiliaria; Avisos pinned last. */
 export const SHELL_MODULES: readonly ShellModuleMeta[] = Object.freeze([
   { key: 'hoy', label: 'Hoy', icon: 'lucide-sun', basePath: '/hoy', go: 'h' },
   { key: 'pendientes', label: 'Pendientes', icon: 'lucide-square-check-big', basePath: '/pendientes', go: 'p' },
+  { key: 'proyectos', label: 'Proyectos', icon: 'lucide-folder-kanban', basePath: '/proyectos', go: 't' },
   { key: 'agenda', label: 'Agenda', icon: 'lucide-calendar-days', basePath: '/agenda', go: 'a' },
   { key: 'contactos', label: 'Contactos', icon: 'lucide-users', basePath: '/contactos', go: 'c' },
   { key: 'ventas', label: 'Ventas', icon: 'lucide-handshake', basePath: '/ventas', go: 'v' },

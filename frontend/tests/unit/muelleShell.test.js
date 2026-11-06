@@ -288,6 +288,7 @@ describe('module registry', () => {
     expect(hostedModules.map((m) => m.key)).toEqual([
       'hoy',
       'pendientes',
+      'proyectos',
       'agenda',
       'contactos',
       'ventas',

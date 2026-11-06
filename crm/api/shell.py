@@ -37,6 +37,7 @@ RAIL_STATES = ("expanded", "collapsed")
 MODULE_KEYS = (
 	"hoy",
 	"pendientes",
+	"proyectos",
 	"agenda",
 	"contactos",
 	"ventas",
@@ -99,6 +100,7 @@ ROLE_NAV_ROLES = (
 MODULE_LABELS = {
 	"hoy": "Hoy",
 	"pendientes": "Pendientes",
+	"proyectos": "Proyectos",
 	"agenda": "Agenda",
 	"contactos": "Contactos",
 	"ventas": "Ventas",
@@ -531,6 +533,40 @@ def _pendientes():
 	}
 
 
+def _proyectos():
+	"""A named group of pendientes with dates on ERPNext Project (Shell SPEC §7 DE7); doco
+	owns the record and its rows, this answers whether the worker reads projects."""
+	try:
+		# A doco older than Proyectos leaves the module off, not the shell down.
+		from doco.proyectos.api import bootstrap
+	except ImportError:
+		bootstrap = None
+	if "doco" not in frappe.get_installed_apps() or bootstrap is None:
+		return {
+			"key": "proyectos",
+			"enabled": False,
+			"reason": _("Proyectos is not installed. Ask your manager to update the app."),
+			"capabilities": {},
+		}
+	answer = bootstrap() or {}
+	enabled = bool(answer.get("enabled"))
+	capabilities = answer.get("capabilities") or {}
+	return {
+		"key": "proyectos",
+		"enabled": enabled,
+		"reason": None
+		if enabled
+		else answer.get("reason") or _("Ask your manager for permission to read projects, then retry."),
+		"capabilities": {
+			"read": enabled,
+			"create": enabled and bool(capabilities.get("create")),
+			"write": enabled and bool(capabilities.get("write")),
+			"pendientes": enabled and bool(capabilities.get("pendientes")),
+		},
+		"today": answer.get("today"),
+	}
+
+
 def _agenda():
 	# Doco owns the calendar sources; crm.api.agenda answers which ones this worker may open.
 	from crm.api.agenda import get_capabilities
@@ -582,6 +618,7 @@ def _builtin_providers():
 		"contactos": _contactos,
 		"ventas": _ventas,
 		"pendientes": _pendientes,
+		"proyectos": _proyectos,
 		"agenda": _agenda,
 		"cobranza": _cobranza,
 		"compras": _compras,

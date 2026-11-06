@@ -260,6 +260,64 @@
         />
       </fieldset>
 
+      <section v-else-if="open === 'project'" class="space-y-2">
+        <FormControl
+          v-model="projectQuery"
+          type="search"
+          :label="__('Project')"
+          :placeholder="__('Search a project')"
+        />
+        <ul
+          class="divide-y divide-outline-gray-1"
+          role="listbox"
+          :aria-label="__('Project')"
+        >
+          <li v-if="form.project">
+            <button
+              type="button"
+              class="flex min-h-11 w-full items-center gap-2 px-1 text-left text-base text-ink-red-7"
+              @click="setProject(null)"
+            >
+              <span class="lucide-x size-4" aria-hidden="true" />{{
+                __('Remove from project')
+              }}
+            </button>
+          </li>
+          <li v-for="option in projectOptions" :key="option.name">
+            <button
+              type="button"
+              role="option"
+              :aria-selected="form.project === option.name"
+              class="flex min-h-11 w-full items-center gap-3 px-1 text-left text-base"
+              @click="setProject(option)"
+            >
+              <span class="min-w-0 flex-1 truncate">{{
+                option.project_name
+              }}</span>
+              <span
+                v-if="form.project === option.name"
+                class="lucide-check size-5 text-ink-gray-8"
+                aria-hidden="true"
+              />
+            </button>
+          </li>
+        </ul>
+        <p v-if="projectProblem" class="text-sm text-ink-red-7">
+          {{ projectProblem }}
+        </p>
+        <div class="space-y-1.5">
+          <span class="block text-xs text-ink-gray-5">{{ __('Starts') }}</span>
+          <DateField v-model="form.start" mode="date" :label="__('Starts')" />
+          <p class="text-xs text-ink-gray-5">
+            {{
+              __(
+                'From its start day to its due day: a bar in the project timeline.',
+              )
+            }}
+          </p>
+        </div>
+      </section>
+
       <section v-else-if="open === 'link'" class="space-y-2">
         <div
           class="flex flex-wrap gap-2"
@@ -367,6 +425,7 @@ import {
   savesAsSalesTask,
   stateLabel,
 } from '@/composables/usePendientes'
+import { proyectoError, proyectosApi } from '@/composables/useProyectos'
 import Icon from '@/components/Icon.vue'
 
 // The day's Agenda loads with the agenda helpers, apart from the sheet.
@@ -415,6 +474,9 @@ const blank = () => ({
   reference_type: '',
   reference_name: '',
   reference_label: '',
+  project: '',
+  project_name: '',
+  start: '',
 })
 const form = reactive(blank())
 let initial = blank()
@@ -482,6 +544,14 @@ const chips = computed(() => {
       set: Boolean(form.repeat),
     },
   )
+  // Proyectos: the chip shows only where the worker reads projects.
+  if (shellBoot.value?.modules?.proyectos?.enabled || form.project)
+    list.push({
+      key: 'project',
+      icon: 'folder',
+      label: form.project ? form.project_name || form.project : __('Project'),
+      set: Boolean(form.project),
+    })
   if (
     !fixedReference.value &&
     !(editing.value && props.row?.doctype === 'CRM Task')
@@ -512,6 +582,9 @@ function fill(row) {
     reference_type: row.reference_type || '',
     reference_name: row.reference_name || '',
     reference_label: row.reference_label || '',
+    project: row.project || '',
+    project_name: row.project_name || '',
+    start: row.start || '',
   })
   initial = { ...form }
 }
@@ -677,6 +750,41 @@ function setLink(option) {
   open.value = ''
 }
 
+// «Proyecto»: the open projects by name; the start day rides with the choice.
+const projectQuery = ref(''),
+  projectOptions = ref([]),
+  projectProblem = ref('')
+let projectTimer,
+  projectGeneration = 0
+async function searchProjects() {
+  const current = ++projectGeneration
+  projectProblem.value = ''
+  try {
+    const result = await proyectosApi('lista', {
+      scope: 'open',
+      search: projectQuery.value.trim(),
+    })
+    if (current === projectGeneration)
+      projectOptions.value = (result?.rows || []).slice(0, 8)
+  } catch (error) {
+    if (current !== projectGeneration) return
+    projectOptions.value = []
+    projectProblem.value = proyectoError(error).detail
+  }
+}
+watch(projectQuery, () => {
+  clearTimeout(projectTimer)
+  projectTimer = setTimeout(searchProjects, 200)
+})
+watch(open, (section) => {
+  if (section === 'project' && !projectOptions.value.length) searchProjects()
+})
+function setProject(option) {
+  form.project = option ? option.name : ''
+  form.project_name = option ? option.project_name || option.name : ''
+  if (!option) form.start = ''
+}
+
 watch(
   () => props.modelValue,
   async (isOpen) => {
@@ -714,6 +822,8 @@ function createArgs() {
     repeat: form.repeat,
     reference_type: reference?.reference_type || form.reference_type || null,
     reference_name: reference?.reference_name || form.reference_name || null,
+    project: form.project || null,
+    start: form.start,
   }
 }
 
@@ -734,6 +844,8 @@ function changes() {
     values.reference_type = form.reference_type || null
     values.reference_name = form.reference_name || null
   }
+  if (!same('project')) values.project = form.project || null
+  if (!same('start')) values.start = form.start
   return values
 }
 

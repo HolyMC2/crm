@@ -190,6 +190,31 @@ const routes = [
     },
   },
   {
+    path: '/proyectos',
+    name: 'Proyectos',
+    component: () => import('@/pages/Proyectos.vue'),
+    // Phone: the list brings its AppBar (list picker as the title, search, bell).
+    meta: {
+      app: 'proyectos',
+      title: 'Proyectos',
+      stableKey: true,
+      ownPhoneHeader: true,
+    },
+  },
+  {
+    path: '/proyectos/:name',
+    name: 'Proyecto',
+    component: () => import('@/pages/Proyecto.vue'),
+    props: true,
+    // The record's AppBar: up to the list, its name, the edit pencil.
+    meta: {
+      app: 'proyectos',
+      title: 'Proyectos',
+      stableKey: true,
+      ownPhoneHeader: true,
+    },
+  },
+  {
     path: '/cobranza',
     name: 'Cobranza',
     component: () => import('@/pages/Cobranza.vue'),

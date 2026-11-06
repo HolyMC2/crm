@@ -36,6 +36,11 @@ A builder that answers without a `key` is the module the provider table names, s
 `first_module` and `resolve_recent` still see a built-in whose answer carries only `enabled`
 (the Pendientes gate tests patch `_pendientes` that way).
 
+`_proyectos` (2026-11-05) asks `doco.proyectos.api.bootstrap`. A doco without that module turns
+the tile `off` with `missing_app`; a worker who cannot read Project gets `permission` with the
+«ask your manager» hint. Capabilities: `read`, `create`, `write`, `pendientes`. The module itself
+is in `docs/PROYECTOS.md`.
+
 ## Why a builder never takes the shell down
 
 Before 2026-10-25 a Contactos builder that raised (one bad tenant setting was enough) killed the

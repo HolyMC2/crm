@@ -63,6 +63,7 @@ const RECOVERY_MODULES = {
   hoy: 'hoy',
   pendientes: 'pendientes',
   tasks: 'pendientes',
+  proyectos: 'proyectos',
   agenda: 'agenda',
   calendar: 'agenda',
   archivos: 'archivos',

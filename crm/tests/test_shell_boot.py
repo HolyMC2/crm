@@ -494,6 +494,7 @@ class TestShellBoot(TestCase):
 			patch.object(shell, "_contactos", off("contactos")),
 			patch.object(shell, "_ventas", off("ventas")),
 			patch.object(shell, "_pendientes", off("pendientes")),
+			patch.object(shell, "_proyectos", off("proyectos")),
 			patch.object(shell, "_agenda", off("agenda")),
 			patch.object(shell, "_cobranza", off("cobranza")),
 			patch.object(shell, "_compras", off("compras")),
@@ -663,6 +664,47 @@ class TestShellBoot(TestCase):
 		self.assertFalse(data["modules"]["pendientes"]["enabled"])
 		self.assertTrue(data["modules"]["pendientes"]["reason"])
 		self.assertEqual(data["modules"]["pendientes"]["capabilities"], {})
+		self.assertTrue(data["modules"]["ventas"]["enabled"])
+
+	def _skip_without_proyectos(self):
+		self._skip_without_pendientes()
+		try:
+			import doco.proyectos.api
+		except ImportError:
+			self.skipTest("doco without Proyectos")
+		if not frappe.db.exists("DocType", "Project"):
+			self.skipTest("ERPNext Project not installed")
+
+	def test_proyectos_provider_follows_project_read_access(self):
+		self._skip_without_proyectos()
+		proyectos = shell.boot()["modules"]["proyectos"]
+		self.assertTrue(proyectos["enabled"])
+		self.assertIsNone(proyectos["reason"])
+		self.assertTrue(proyectos["capabilities"]["read"])
+		self.assertTrue(proyectos["capabilities"]["create"])
+		self.assertTrue(proyectos["today"])
+
+	def test_refused_proyectos_carries_its_own_reason_and_no_actions(self):
+		self._skip_without_proyectos()
+		answer = {
+			"enabled": False,
+			"reason": "Pide al encargado el rol «Projects User» para ver los proyectos.",
+			"capabilities": {"create": True, "write": True, "pendientes": True},
+		}
+		with patch("doco.proyectos.api.bootstrap", return_value=answer):
+			data = shell.boot()
+		proyectos = data["modules"]["proyectos"]
+		self.assertFalse(proyectos["enabled"])
+		self.assertEqual(proyectos["reason"], answer["reason"])
+		self.assertFalse(any(proyectos["capabilities"].values()))
+		self.assertTrue(data["modules"]["pendientes"]["enabled"])
+
+	def test_older_doco_without_proyectos_turns_it_off_not_the_shell(self):
+		with patch.dict(sys.modules, {"doco.proyectos.api": None}):
+			data = shell.boot()
+		self.assertFalse(data["modules"]["proyectos"]["enabled"])
+		self.assertTrue(data["modules"]["proyectos"]["reason"])
+		self.assertEqual(data["modules"]["proyectos"]["capabilities"], {})
 		self.assertTrue(data["modules"]["ventas"]["enabled"])
 
 	def _skip_without_agenda(self):

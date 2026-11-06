@@ -7,7 +7,7 @@
 // translation catalog («Lines» → «Pagos del depósito»). Pure functions; every
 // one takes `now` / `locale` so tests pin the output.
 
-const LOCALE = 'es-MX'
+export const LOCALE = 'es-MX'
 
 // ── names, never IDs ──────────────────────────────────────────────────────
 
@@ -154,6 +154,7 @@ const KINDS = {
   'Journal Entry': 'Póliza',
   'Payment Request': 'Solicitud de pago',
   'Warranty Claim': 'Garantía',
+  Project: 'Proyecto',
   'Expense Claim': 'Gasto',
   'Quality Feedback': 'Respuesta de encuesta',
   'Repair Order': 'Reparación',

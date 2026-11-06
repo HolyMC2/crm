@@ -32159,3 +32159,221 @@ msgstr "Vuelve el {0}"
 #: frontend/src/components/assistant/AssistantSidebar.vue
 msgid "Back to the list now: {0}"
 msgstr "Volver a la lista ya: {0}"
+#: frontend/src/composables/useProyectos.js
+msgid "A project groups the pendientes of one job: a store opening, a campaign, a big repair."
+msgstr "Un proyecto agrupa los pendientes de un trabajo: abrir una sucursal, una campaña, una reparación grande."
+
+#: frontend/src/composables/useProyectos.js
+msgid "Add the first one: it shows here, in the board and in the timeline."
+msgstr "Agrega el primero: aparece aquí, en el tablero y en el cronograma."
+
+#: frontend/src/composables/useProyectos.js
+msgid "Ask your manager for access to projects."
+msgstr "Pide al encargado acceso a los proyectos."
+
+#: frontend/src/composables/useProyectos.js
+msgid "Back to Proyectos"
+msgstr "Volver a Proyectos"
+
+#: frontend/src/composables/useProyectos.js
+msgid "Edit project"
+msgstr "Editar proyecto"
+
+#: frontend/src/composables/useProyectos.js
+msgid "Every project, whatever its state."
+msgstr "Todos los proyectos, en cualquier estado."
+
+#: frontend/src/composables/useProyectos.js
+msgid "Finished and cancelled projects."
+msgstr "Proyectos terminados y cancelados."
+
+#: frontend/src/composables/useProyectos.js
+msgid "From its start day to its due day: a bar in the project timeline."
+msgstr "De su día de inicio a su vencimiento: una barra en el cronograma del proyecto."
+
+#: frontend/src/composables/useProyectos.js
+msgid "New project"
+msgstr "Nuevo proyecto"
+
+#: frontend/src/composables/useProyectos.js
+msgid "Next: {0}"
+msgstr "Siguiente: {0}"
+
+#: frontend/src/composables/useProyectos.js
+msgid "No finished projects"
+msgstr "No hay proyectos terminados"
+
+#: frontend/src/composables/useProyectos.js
+msgid "No pendientes in this project yet"
+msgstr "Este proyecto aún no tiene pendientes"
+
+#: frontend/src/composables/useProyectos.js
+msgid "No pendientes yet"
+msgstr "Aún sin pendientes"
+
+#: frontend/src/composables/useProyectos.js
+msgid "No project matches"
+msgstr "Ningún proyecto coincide"
+
+#: frontend/src/composables/useProyectos.js
+msgid "No projects on hold"
+msgstr "No hay proyectos en pausa"
+
+#: frontend/src/composables/useProyectos.js
+msgid "No projects under way"
+msgstr "No hay proyectos en curso"
+
+#: frontend/src/composables/useProyectos.js
+msgid "No projects yet"
+msgstr "Todavía no hay proyectos"
+
+#: frontend/src/composables/useProyectos.js
+msgid "Past its end date"
+msgstr "Pasó su fecha de fin"
+
+#: frontend/src/composables/useProyectos.js
+msgid "Project name"
+msgstr "Nombre del proyecto"
+
+#: frontend/src/composables/useProyectos.js
+msgid "Projects paused for now; their pendientes wait with them."
+msgstr "Proyectos en pausa por ahora; sus pendientes esperan con ellos."
+
+#: frontend/src/composables/useProyectos.js
+msgid "Projects under way, the nearest end date first."
+msgstr "Proyectos en curso, primero el que termina más pronto."
+
+#: frontend/src/composables/useProyectos.js
+msgid "Projects your team creates show here."
+msgstr "Los proyectos que cree tu equipo aparecen aquí."
+
+#: frontend/src/composables/useProyectos.js
+msgid "Proyectos"
+msgstr "Proyectos"
+
+#: frontend/src/composables/useProyectos.js
+msgid "Proyectos is not available"
+msgstr "Proyectos no está disponible"
+
+#: frontend/src/composables/useProyectos.js
+msgid "Remove from project"
+msgstr "Quitar del proyecto"
+
+#: frontend/src/composables/useProyectos.js
+msgid "Rescheduled"
+msgstr "Reprogramado"
+
+#: frontend/src/composables/useProyectos.js
+msgid "Save project"
+msgstr "Guardar proyecto"
+
+#: frontend/src/composables/useProyectos.js
+msgid "Search a project"
+msgstr "Buscar un proyecto"
+
+#: frontend/src/composables/useProyectos.js
+msgid "Search projects"
+msgstr "Buscar proyectos"
+
+#: frontend/src/composables/useProyectos.js
+msgid "Store opening, Christmas campaign…"
+msgstr "Apertura de sucursal, campaña navideña…"
+
+#: frontend/src/composables/useProyectos.js
+msgid "This project changed"
+msgstr "Este proyecto cambió"
+
+#: frontend/src/composables/useProyectos.js
+msgid "Try another word, or look in another list."
+msgstr "Prueba otra palabra o busca en otra lista."
+
+#: frontend/src/composables/useProyectos.js
+msgid "What this project is for, who is in it…"
+msgstr "Para qué es este proyecto, quién participa…"
+
+#: frontend/src/composables/useProyectos.js
+msgid "{0} of {1} done"
+msgstr "{0} de {1} hechos"
+
+#: frontend/src/composables/useProyectos.js
+msgid "{0} without a date; give them a day to see them here."
+msgstr "{0} sin fecha; ponles un día para verlos aquí."
+
+#: frontend/src/composables/useProyectos.js
+msgctxt "Proyecto"
+msgid "Board"
+msgstr "Tablero"
+
+#: frontend/src/composables/useProyectos.js
+msgctxt "Proyecto"
+msgid "Cancelled"
+msgstr "Cancelado"
+
+#: frontend/src/composables/useProyectos.js
+msgctxt "Proyecto"
+msgid "Completed"
+msgstr "Hechos"
+
+#: frontend/src/composables/useProyectos.js
+msgctxt "Proyecto"
+msgid "Finished"
+msgstr "Terminado"
+
+#: frontend/src/composables/useProyectos.js
+msgctxt "Proyecto"
+msgid "In progress"
+msgstr "En curso"
+
+#: frontend/src/composables/useProyectos.js
+msgctxt "Proyecto"
+msgid "List"
+msgstr "Lista"
+
+#: frontend/src/composables/useProyectos.js
+msgctxt "Proyecto"
+msgid "On hold"
+msgstr "En pausa"
+
+#: frontend/src/composables/useProyectos.js
+msgctxt "Proyecto"
+msgid "Timeline"
+msgstr "Cronograma"
+
+#: frontend/src/composables/useProyectos.js
+msgctxt "Proyecto"
+msgid "View"
+msgstr "Vista"
+
+#: frontend/src/composables/useProyectos.js
+msgctxt "Proyectos"
+msgid "All"
+msgstr "Todos"
+
+#: frontend/src/composables/useProyectos.js
+msgctxt "Proyectos"
+msgid "Back"
+msgstr "Volver"
+
+#: frontend/src/composables/useProyectos.js
+msgctxt "Proyectos"
+msgid "Finished"
+msgstr "Terminados"
+
+#: frontend/src/composables/useProyectos.js
+msgctxt "Proyectos"
+msgid "In progress"
+msgstr "En curso"
+
+#: frontend/src/composables/useProyectos.js
+msgctxt "Proyectos"
+msgid "On hold"
+msgstr "En pausa"
+
+msgid "No pendientes"
+msgstr "Sin pendientes"
+
+msgid "This project ended with no pendientes"
+msgstr "Este proyecto terminó sin pendientes"
+
+msgid "A finished or cancelled project takes no new pendientes."
+msgstr "Un proyecto terminado o cancelado ya no recibe pendientes."
