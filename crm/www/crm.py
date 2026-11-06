@@ -369,6 +369,8 @@ def get_boot(neutral=False, module="contactos"):
 			},
 			"state_options": get_state_options(),
 			"shell_scope": _shell_scope(),
+			# The router's first route decides on the persona wizard from here, without a call.
+			"persona_captured": cint(frappe.db.get_single_value("FCRM Settings", "persona_captured")),
 		}
 	)
 

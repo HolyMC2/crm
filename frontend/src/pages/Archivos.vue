@@ -810,25 +810,33 @@ function openInBandeja(name) {
   })
 }
 
+// The boot's company and start() name the same page within one tick: start asks
+// only for a page nobody requested yet (ifNew); every other caller reloads.
 let requestSeq = 0
-async function loadList({ more = false } = {}) {
+let listKey = ''
+async function loadList({ more = false, ifNew = false } = {}) {
   if (!company.value || browsing.value || fiscalView.value) return
+  const params = {
+    view: view.value,
+    company: company.value,
+    query: q.value,
+    page: more ? page.value + 1 : 1,
+  }
+  const key = JSON.stringify(params)
+  if (ifNew && key === listKey) return
+  listKey = key
   const seq = ++requestSeq
   listLoading.value = true
   listProblem.value = null
   try {
-    const data = await archivosApi('queue', {
-      view: view.value,
-      company: company.value,
-      query: q.value,
-      page: more ? page.value + 1 : 1,
-    })
+    const data = await archivosApi('queue', params)
     if (seq !== requestSeq) return
     rows.value = more ? [...rows.value, ...data.documents] : data.documents
     page.value = data.page
     hasMore.value = data.has_more
     counts.value = data.counts
   } catch (error) {
+    listKey = ''
     if (seq === requestSeq) listProblem.value = problem(error)
   } finally {
     if (seq === requestSeq) listLoading.value = false
@@ -841,38 +849,49 @@ const debouncedSearch = useDebounceFn(() => {
 watch(q, debouncedSearch)
 
 let browseSeq = 0
-async function loadBrowse({ more = false } = {}) {
+let browseKey = ''
+async function loadBrowse({ more = false, ifNew = false } = {}) {
   if (!company.value || !browsing.value) return
   const state = browseState.value
+  const params = {
+    company: company.value,
+    view: state.view,
+    key: state.key || undefined,
+    query: state.q,
+    kind: state.kind || undefined,
+    channel: state.channel || undefined,
+    month: state.month || undefined,
+    page: more ? browsePage.value + 1 : 1,
+    page_size: 50,
+    sort: state.sort,
+  }
+  const key = JSON.stringify(params)
+  if (ifNew && key === browseKey) return
+  browseKey = key
   const seq = ++browseSeq
   browseLoading.value = true
   browseProblem.value = null
   try {
-    const data = await archivosApi(`${BROWSE}.files`, {
-      company: company.value,
-      view: state.view,
-      key: state.key || undefined,
-      query: state.q,
-      kind: state.kind || undefined,
-      channel: state.channel || undefined,
-      month: state.month || undefined,
-      page: more ? browsePage.value + 1 : 1,
-      page_size: 50,
-      sort: state.sort,
-    })
+    const data = await archivosApi(`${BROWSE}.files`, params)
     if (seq !== browseSeq) return
     if (more && browseData.value)
       data.items = [...(browseData.value.items || []), ...(data.items || [])]
     browseData.value = data
     browsePage.value = data.page || 1
   } catch (error) {
+    browseKey = ''
     if (seq === browseSeq) browseProblem.value = problem(error)
   } finally {
     if (seq === browseSeq) browseLoading.value = false
   }
 }
-async function loadFolders() {
+// The boot's company, the record origin and start() name the same company within
+// one tick: the tree and the summary load once per company; a write forces them.
+const asked = { folders: '', summary: '' }
+async function loadFolders({ force = false } = {}) {
   if (!company.value) return
+  if (!force && asked.folders === company.value) return
+  asked.folders = company.value
   try {
     const data = await archivosApi(`${BROWSE}.folders`, {
       company: company.value,
@@ -881,16 +900,20 @@ async function loadFolders() {
   } catch {
     // The tree is a convenience: a refusal must not take down the page.
     folders.value = []
+    asked.folders = ''
   }
 }
-async function loadSummary() {
+async function loadSummary({ force = false } = {}) {
   if (!company.value) return
+  if (!force && asked.summary === company.value) return
+  asked.summary = company.value
   try {
     summary.value = await archivosApi(`${BROWSE}.summary`, {
       company: company.value,
     })
   } catch {
     summary.value = null
+    asked.summary = ''
   }
 }
 
@@ -1022,8 +1045,8 @@ const previewVersion = ref(0)
 function afterWrite() {
   previewVersion.value++
   refresh()
-  loadFolders()
-  loadSummary()
+  loadFolders({ force: true })
+  loadSummary({ force: true })
 }
 // F2 opens the file and asks for its new name in one step.
 const renameWanted = ref('')
@@ -1256,10 +1279,10 @@ async function start({ refresh: again = false } = {}) {
   await loadArchivosBoot({ refresh: again })
   if (!boot.value?.enabled) return
   await loadTarget()
-  loadFolders()
-  loadSummary()
-  if (browsing.value) loadBrowse()
-  else loadList()
+  loadFolders({ force: again })
+  loadSummary({ force: again })
+  if (browsing.value) loadBrowse({ ifNew: !again })
+  else loadList({ ifNew: !again })
 }
 // A boot that failed for the network or the server (not for permissions) says
 // so (or asks to sign in again); only a real refusal asks for access.
