@@ -411,6 +411,88 @@ export const bagsWord = (n) => (n === 1 ? '1 bolsa' : `${n} bolsas`)
 export const bagsTotal = (bags) =>
   bags.reduce((n, b) => n + Math.round((Number(b.amount) || 0) * 100), 0) / 100
 
+/**
+ * Where the safe's money sits, in the order it moves: loose, sealed and
+ * waiting for a second count, ready, with a difference, on its way to the
+ * bank. `view` is the Bolsas tab a part opens; `dot` its state colour, a
+ * literal class so Tailwind emits it (the funnel's dot shades).
+ */
+export const CASH_PARTS = [
+  { key: 'loose', label: 'Suelto', dot: 'bg-surface-gray-6' },
+  {
+    key: 'Unverified',
+    label: 'Por verificar',
+    dot: 'bg-surface-amber-7',
+    view: 'sealed',
+  },
+  {
+    key: 'Available',
+    label: 'Listas',
+    dot: 'bg-surface-green-7',
+    view: 'sealed',
+  },
+  {
+    key: 'Disputed',
+    label: 'Con diferencia',
+    dot: 'bg-surface-red-7',
+    view: 'diff',
+  },
+  {
+    key: 'In Transit',
+    label: 'En camino',
+    dot: 'bg-surface-blue-7',
+    view: 'transit',
+  },
+]
+
+/** The dot on a bag's icon: its state's colour, grey once it left the safe's hands. */
+export const stateDot = (state) =>
+  (CASH_PARTS.find((p) => p.key === state) || CASH_PARTS[0]).dot
+
+/**
+ * The cash map of the safes a worker sees: their balance and its parts, or
+ * null when no balance is theirs to see or the safes keep different
+ * currencies. Loose and in-transit cash come from the ledger, the bags'
+ * states from the bags; a part with no bag stays off the map.
+ */
+export function cashMap(safes) {
+  const shown = safes.filter(
+    (s) => s.balance !== null && s.balance !== undefined,
+  )
+  if (!shown.length) return null
+  const currency = shown[0].currency
+  if (shown.some((s) => s.currency !== currency)) return null
+  const ledger = (key) =>
+    shown.reduce((n, s) => n + Math.round((Number(s[key]) || 0) * 100), 0) / 100
+  const bags = shown.flatMap((s) => s.bags || [])
+  const parts = CASH_PARTS.map((part) => {
+    if (part.key === 'loose')
+      return { ...part, amount: ledger('loose_balance'), count: null }
+    const mine = bags.filter((b) => b.state === part.key)
+    const amount =
+      part.key === 'In Transit' ? ledger('in_transit') : bagsTotal(mine)
+    return { ...part, amount, count: mine.length }
+  }).filter((part) => part.key === 'loose' || part.count || part.amount)
+  return {
+    label: shown.length === 1 ? `En ${shown[0].title}` : 'En tus cajas fuertes',
+    currency,
+    balance: ledger('balance'),
+    parts,
+  }
+}
+
+/** The bar's segments: each part's share of the cash and where it starts. */
+export function cashSegments(parts) {
+  const total = parts.reduce((n, p) => n + Math.max(0, p.amount), 0)
+  let start = 0
+  return parts.map((part) => {
+    const share = total ? Math.max(0, part.amount) / total : 0
+    const segment = { key: part.key, dot: part.dot, start, share }
+    start += share
+    return segment
+  })
+}
+
 /** The worker's sentence for a failed call: the server's own message, never a traceback. */
 export function errorText(error) {
   const message = error?.messages?.[0] || error?.message || ''

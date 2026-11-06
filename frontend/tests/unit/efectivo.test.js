@@ -12,6 +12,8 @@ vi.mock('frappe-ui', () => ({
 const {
   bagStep,
   bulkActions,
+  cashMap,
+  cashSegments,
   custodyCount,
   faceLabel,
   holderText,
@@ -405,5 +407,57 @@ describe('several bags, one instruction', () => {
         )
         .submit({ note: 'BBVA centro, Karla' }),
     ).rejects.toThrow('SEAL-B2: Only verified available bags')
+  })
+})
+
+describe('where the cash is', () => {
+  const safe = (over = {}) => ({
+    title: 'Caja fuerte centro',
+    currency: 'MXN',
+    balance: 10000,
+    loose_balance: 2600,
+    in_transit: 3100,
+    bags: [
+      { state: 'Unverified', amount: 2211 },
+      { state: 'Unverified', amount: 1500.5 },
+      { state: 'Available', amount: 3688.5 },
+      { state: 'In Transit', amount: 3100 },
+      { state: 'Deposited', amount: 900 },
+    ],
+    ...over,
+  })
+
+  it('splits the safe by where its money sits, in the order it moves', () => {
+    const map = cashMap([safe()])
+    expect(map.label).toBe('En Caja fuerte centro')
+    expect(map.balance).toBe(10000)
+    expect(map.parts.map((p) => [p.label, p.amount, p.count, p.view])).toEqual([
+      ['Suelto', 2600, null, undefined],
+      ['Por verificar', 3711.5, 2, 'sealed'],
+      ['Listas', 3688.5, 1, 'sealed'],
+      ['En camino', 3100, 1, 'transit'],
+    ])
+  })
+
+  it('adds the safes a worker sees and leaves out what is not theirs to see', () => {
+    const map = cashMap([safe(), safe({ title: 'Norte', balance: 500 })])
+    expect(map.label).toBe('En tus cajas fuertes')
+    expect(map.balance).toBe(10500)
+    expect(cashMap([safe({ balance: null })])).toBeNull()
+    expect(cashMap([safe(), safe({ currency: 'USD' })])).toBeNull()
+  })
+
+  it('gives each part its share of the bar, a short ledger counting as none', () => {
+    const segments = cashSegments([
+      { key: 'loose', amount: -50 },
+      { key: 'Unverified', amount: 300 },
+      { key: 'Available', amount: 100 },
+    ])
+    expect(segments.map((s) => [s.key, s.start, s.share])).toEqual([
+      ['loose', 0, 0],
+      ['Unverified', 0, 0.75],
+      ['Available', 0.75, 0.25],
+    ])
+    expect(cashSegments([{ key: 'loose', amount: 0 }])[0].share).toBe(0)
   })
 })
