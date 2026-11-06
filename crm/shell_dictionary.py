@@ -50,6 +50,8 @@ KEYS_FILE = ("public", "frontend", "translation-keys.json")
 # CRM Lead Source); larger ones hold data, not vocabulary.
 RECORD_LIMIT = 500
 CACHE_SECONDS = 24 * 3600
+# The site folder that keeps each built set across cache clears.
+STORE_DIR = "crm-shell-dictionary"
 # A queued build that never ran (the worker was killed, the job lost) is queued again after this.
 QUEUED_SECONDS = 300
 # The DocTypes a named DocType links to, whose labels open in "create new" dialogs.
@@ -86,7 +88,7 @@ def script() -> tuple[str, bytes]:
 	Translation edit) it is the whole dictionary under version "", which no page links.
 	"""
 	field = _field()
-	cached = frappe.cache.hget(CACHE_KEY, "p|" + field)
+	cached = frappe.cache.hget(CACHE_KEY, "p|" + field) or _restore(field)
 	if cached is None:
 		_queue_build(field)
 		return "", _payload(_dictionary(frappe.local.lang))
@@ -98,6 +100,9 @@ def version() -> str:
 	field = _field()
 	current = frappe.cache.hget(CACHE_KEY, "v|" + field)
 	if current is None:
+		stored = _restore(field)
+		if stored is not None:
+			return stored[0]
 		_queue_build(field)
 		return ""
 	return current
@@ -111,8 +116,8 @@ def build(lang: str, field: str) -> None:
 		# and the next page load queues the build again.
 		payload = _payload(shipped_messages(_dictionary(lang, strict=True), build_literals()[1]))
 		current = hashlib.sha256(payload).hexdigest()[:16]
-		frappe.cache.hset(CACHE_KEY, "p|" + field, (current, payload))
-		frappe.cache.hset(CACHE_KEY, "v|" + field, current)
+		_cache(field, current, payload)
+		_store(field, current, payload)
 		# The whole hash lives a day from its first field, so record names (a new stage or lead
 		# source) join the set within a day, or at the next deploy (bench migrate clears the
 		# cache) or Translation save, and fields of past builds do not pile up.
@@ -150,6 +155,58 @@ def clear(*_args) -> None:
 	"""A DocType, Custom Field or Property Setter change: labels, options and DocType names may
 	have moved, so the next page load builds the set again."""
 	frappe.cache.delete_value(CACHE_KEY)
+	for name in _stored_files():
+		try:
+			os.remove(name)
+		except OSError:
+			pass
+
+
+def _cache(field: str, current: str, payload: bytes) -> None:
+	frappe.cache.hset(CACHE_KEY, "p|" + field, (current, payload))
+	frappe.cache.hset(CACHE_KEY, "v|" + field, current)
+
+
+# The built set also lives in a site file: a cache clear (bench clear-cache after a deploy,
+# a worker restart) empties the hash, and without the file every page until the queued
+# build runs would ship the whole dictionary. The field names the build (language, keys
+# file, translation edits), so a stored set is current whenever its field is asked for.
+def _store_path(field: str) -> str:
+	return frappe.get_site_path(STORE_DIR, hashlib.sha1(field.encode()).hexdigest()[:24] + ".json")
+
+
+def _stored_files() -> list[str]:
+	folder = frappe.get_site_path(STORE_DIR)
+	try:
+		return [os.path.join(folder, name) for name in os.listdir(folder) if name.endswith(".json")]
+	except OSError:
+		return []
+
+
+def _store(field: str, current: str, payload: bytes) -> None:
+	path = _store_path(field)
+	try:
+		os.makedirs(os.path.dirname(path), exist_ok=True)
+		tmp = f"{path}.{os.getpid()}.tmp"
+		with open(tmp, "w", encoding="utf-8") as f:
+			json.dump({"field": field, "version": current, "payload": payload.decode()}, f)
+		os.replace(tmp, path)
+	except OSError:
+		frappe.log_error("crm shell dictionary store")
+
+
+def _restore(field: str) -> tuple[str, bytes] | None:
+	"""The stored set for this field, put back in the cache; None without one."""
+	try:
+		with open(_store_path(field), encoding="utf-8") as f:
+			data = json.load(f)
+	except (OSError, ValueError):
+		return None
+	if data.get("field") != field or not data.get("version") or not data.get("payload"):
+		return None
+	entry = (data["version"], data["payload"].encode())
+	_cache(field, *entry)
+	return entry
 
 
 def rebuild(*_args) -> None:
