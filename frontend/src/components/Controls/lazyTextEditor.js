@@ -3,6 +3,6 @@
 // downloads it (TextEditorControl.vue is the field-renderer side of this).
 import { defineAsyncComponent } from 'vue'
 
-export const TextEditor = defineAsyncComponent(() =>
-  import('frappe-ui/experimental').then((m) => m.TextEditor),
+export const TextEditor = defineAsyncComponent(
+  () => import('@/components/Controls/textEditorMount.js'),
 )
