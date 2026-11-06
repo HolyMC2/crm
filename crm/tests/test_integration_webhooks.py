@@ -7,6 +7,7 @@ commits inside the delivery worker are suppressed so every test rolls back.
 import base64
 import hashlib
 import hmac
+import io
 import json
 import socket
 from unittest.mock import patch
@@ -303,7 +304,7 @@ class TestIntegrationWebhooks(IntegrationTestCase):
 				(request.url, dict(request.headers), dict(adapter.poolmanager.connection_pool_kw), kwargs)
 			)
 			response = requests.Response()
-			response.status_code, response._content, response.url = 204, b"", request.url
+			response.status_code, response.raw, response.url = 204, io.BytesIO(b""), request.url
 			return response
 
 		with (
@@ -320,6 +321,35 @@ class TestIntegrationWebhooks(IntegrationTestCase):
 		self.assertEqual(kwargs["timeout"], webhooks.TIMEOUT_SECONDS)
 		self.assertEqual(headers["webhook-id"], result.name)
 		self.assertTrue(headers["webhook-signature"].startswith("v1,"))
+
+	def test_an_endless_answer_is_read_only_as_far_as_the_error_snippet(self):
+		connection = self.connection(["lead.created"], enabled=0)
+
+		class Endless(io.RawIOBase):
+			served = 0
+
+			def readable(self):
+				return True
+
+			def read(self, size=-1):
+				size = 64 * 1024 if size is None or size < 0 else size
+				Endless.served += size
+				return b"x" * size
+
+		def transport(adapter, request, **kwargs):
+			response = requests.Response()
+			response.status_code, response.raw, response.url = 500, Endless(), request.url
+			return response
+
+		with (
+			patch("requests.sessions.Session.request", REAL_REQUEST),
+			patch("socket.getaddrinfo", return_value=addresses("93.184.215.14")),
+			patch("requests.adapters.HTTPAdapter.send", transport),
+		):
+			result = api.send_test(connection.name)
+		self.assertEqual((result.status, result.response_code), ("Dead", 500))
+		self.assertTrue(result.last_error.startswith("HTTP 500 xxx"))
+		self.assertLessEqual(Endless.served, webhooks.MAX_ANSWER_BYTES)
 
 	def test_send_test_through_the_real_post_explains_what_went_wrong(self):
 		connection = self.connection(["lead.created"], enabled=0)

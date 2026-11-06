@@ -17,6 +17,7 @@ import json
 import secrets
 import socket
 import time
+from collections import namedtuple
 from contextlib import contextmanager
 from datetime import timedelta, timezone
 from urllib.parse import urlparse
@@ -36,6 +37,7 @@ LEASE_SECONDS = 60
 BACKOFF = (30, 120, 600, 1800, 7200, 21600, 43200)
 MAX_ATTEMPTS = len(BACKOFF) + 1
 MAX_PAYLOAD_BYTES = 256 * 1024
+MAX_ANSWER_BYTES = 1024
 # After a rotation the old secret also signs for this long, so receivers can switch without losing events.
 ROTATION_GRACE_HOURS = 24
 KEEP_DELIVERED_DAYS = 30
@@ -415,6 +417,9 @@ class DeliveryError(Exception):
 	pass
 
 
+Answer = namedtuple("Answer", "status_code text")
+
+
 def _post(url, body, headers):
 	parsed = validate_url(url)
 	port = parsed.port or (443 if parsed.scheme == "https" else 80)
@@ -424,9 +429,18 @@ def _post(url, body, headers):
 	session = requests.Session()
 	session.mount(f"{parsed.scheme}://", _PinnedIPAdapter(ip, parsed.hostname))
 	try:
-		return session.post(
-			url, data=body.encode(), headers=headers, timeout=TIMEOUT_SECONDS, allow_redirects=False
-		)
+		# stream, then read only the start: the answer is shown as an error snippet, and a receiver
+		# that answers with an endless body must not fill the worker's memory
+		with session.post(
+			url,
+			data=body.encode(),
+			headers=headers,
+			timeout=TIMEOUT_SECONDS,
+			allow_redirects=False,
+			stream=True,
+		) as response:
+			head = next(response.iter_content(MAX_ANSWER_BYTES), b"")
+			return Answer(response.status_code, head.decode("utf-8", "replace"))
 	except requests.Timeout:
 		raise DeliveryError(_("No answer within {0} seconds.").format(TIMEOUT_SECONDS)) from None
 	except requests.RequestException as e:
