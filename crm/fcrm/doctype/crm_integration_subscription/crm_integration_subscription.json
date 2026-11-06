@@ -1,7 +1,7 @@
 {
  "actions": [],
  "creation": "2026-11-03 12:00:00.000000",
- "modified": "2026-11-03 12:00:00.000000",
+ "modified": "2026-11-06 16:00:00.000000",
  "modified_by": "Administrator",
  "owner": "Administrator",
  "doctype": "DocType",
@@ -11,7 +11,8 @@
  "allow_rename": 0,
  "field_order": [
   "event",
-  "document_type"
+  "document_type",
+  "only_fields"
  ],
  "fields": [
   {
@@ -33,6 +34,15 @@
    "depends_on": "eval:(doc.event || '').startsWith('document.')",
    "mandatory_depends_on": "eval:(doc.event || '').startsWith('document.')",
    "description": "For document events: which records, for example Sales Invoice or Item."
+  },
+  {
+   "fieldname": "only_fields",
+   "fieldtype": "Small Text",
+   "label": "Only when these fields change",
+   "in_list_view": 1,
+   "columns": 3,
+   "depends_on": "eval:['contact.updated', 'lead.updated', 'deal.updated', 'document.updated'].includes(doc.event)",
+   "description": "For contact, lead, deal and record updates: field names, separated by commas, for example status, grand_total. Other changes are not sent. Empty: every change."
   }
  ],
  "permissions": [],

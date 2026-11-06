@@ -1,7 +1,7 @@
 """Event producers (doc_events) and payload builders for CRM integration webhooks.
 
 Producers only record *that* something happened: record type, name and a version
-for deduplication. Builders run later in the delivery worker as the connection's
+for deduplication, and they return before any work when no connection listens. Builders run later in the delivery worker as the connection's
 user and reuse the inbox/outbox read policy, so an event never shows a field, a
 message or a conversation that the same user could not read through the API.
 """
@@ -13,12 +13,33 @@ from frappe import _
 from frappe.model import get_permitted_fields, no_value_fields, table_fields
 from frappe.utils import cint, cstr, flt, get_datetime, get_time, getdate
 
-from crm.integrations.webhooks import Skip, emit
+from crm.integrations.webhooks import Skip, emit, wants, watched
 
 CONVERSATION = "CRM Conversation"
 CONTROL_EVENT = "CRM Conversation Control Event"
 MESSAGE_DOCTYPES = ("CRM Webchat Message", "WhatsApp Message", "Messenger Message", "CRM Channel Message")
 RECORD_EVENTS = {"Contact": "contact", "CRM Lead": "lead", "CRM Deal": "deal"}
+# Field types whose value before a change is sent as change.previous (texts, tables and secrets stay out).
+PREVIOUS_TYPES = frozenset(
+	(
+		"Autocomplete",
+		"Check",
+		"Currency",
+		"Data",
+		"Date",
+		"Datetime",
+		"Duration",
+		"Dynamic Link",
+		"Float",
+		"Int",
+		"Link",
+		"Percent",
+		"Phone",
+		"Rating",
+		"Select",
+		"Time",
+	)
+)
 
 
 # ---------------------------------------------------------------- producers
@@ -30,6 +51,8 @@ def on_conversation_insert(doc, method=None):
 
 def on_control_event(doc, method=None):
 	"""Every control command writes one immutable event row: map it to status_changed/updated."""
+	if not (wants("conversation.status_changed") or wants("conversation.updated")):
+		return
 	try:
 		before = json.loads(doc.previous_json or "{}")
 		after = json.loads(doc.result_json or "{}")
@@ -102,11 +125,15 @@ def on_record_update(doc, method=None):
 	prefix = RECORD_EVENTS.get(doc.doctype)
 	if not prefix:
 		return
+	status = prefix in ("lead", "deal") and wants(prefix + ".status_changed")
+	update = wants(prefix + ".updated")
+	if not (status or update):
+		return
 	before = doc.get_doc_before_save()
 	if before is None:
 		return
 	version = str(doc.modified)
-	if prefix in ("lead", "deal") and doc.has_value_changed("status"):
+	if status and doc.has_value_changed("status"):
 		emit(
 			prefix + ".status_changed",
 			doc.doctype,
@@ -115,15 +142,16 @@ def on_record_update(doc, method=None):
 			context={"from_status": before.get("status"), "to_status": doc.get("status")},
 			actor=frappe.session.user,
 		)
-	changed = changed_fields(before, doc)
+	changed = changed_fields(before, doc, only=watched(prefix + ".updated")) if update else None
 	if changed:
 		emit(
 			prefix + ".updated",
 			doc.doctype,
 			doc.name,
 			version=version,
-			context={"fields": changed},
+			context={"fields": changed, "previous": previous_values(before, doc, changed)},
 			actor=frappe.session.user,
+			changed=changed,
 		)
 
 
@@ -149,12 +177,12 @@ def _rows(meta, rows):
 	return [tuple(_value(df, row.get(df.fieldname)) for df in fields) for row in rows or []]
 
 
-def changed_fields(before, doc):
+def changed_fields(before, doc, only=None):
 	"""Fields whose stored value this save changes (child tables by their rows'
-	content), never Password fields."""
+	content), never Password fields; with `only`, just those fields are compared."""
 	out = []
 	for df in doc.meta.fields:
-		if not df.fieldname or df.fieldtype == "Password":
+		if not df.fieldname or df.fieldtype == "Password" or (only is not None and df.fieldname not in only):
 			continue
 		if df.fieldtype in table_fields:
 			meta = frappe.get_meta(df.options)
@@ -165,6 +193,17 @@ def changed_fields(before, doc):
 		):
 			out.append(df.fieldname)
 	return sorted(out)
+
+
+def previous_values(before, doc, fields):
+	"""What the changed plain fields held before this save, so a flow can tell «Recibido → Listo»
+	from any other change. Builders keep only the fields the connection's user may read."""
+	out = {}
+	for fieldname in fields:
+		df = doc.meta.get_field(fieldname)
+		if df and df.fieldtype in PREVIOUS_TYPES:
+			out[fieldname] = _value(df, before.get(fieldname))
+	return out
 
 
 def on_inquiry_insert(doc, method=None):
@@ -384,10 +423,19 @@ def _readable_fields(doctype, user, parenttype=None):
 	return {f for f in allowed if not f.startswith("_")}
 
 
+def _change(doctype, context):
+	"""The change as the connection's user may see it: earlier values of fields it cannot read stay out."""
+	change = dict(context)
+	if change.get("previous"):
+		readable = _readable_fields(doctype, frappe.session.user)
+		change["previous"] = {k: v for k, v in change["previous"].items() if k in readable}
+	return change
+
+
 def build_record(event, doctype, name, context):
 	data = {"record": _record(doctype, name), "doctype": doctype}
 	if context:
-		data["change"] = context
+		data["change"] = _change(doctype, context)
 	return data
 
 

@@ -21,7 +21,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Refuse instead of throwing: n8n answers 200 when a flow fails before its Respond node,\n// so a missing setting would count every event as delivered.\ntry {\n  const crypto = require('crypto');\n  const h = $input.first().json.headers;\n  const secret = $env.MUELLE_WHSEC;\n  if (!secret) return [{ json: { refused: \"Set MUELLE_WHSEC in n8n to this connection's signing secret\" } }];\n  const body = (await this.helpers.getBinaryDataBuffer(0, 'data')).toString('utf8');\n  const key = Buffer.from(secret.replace(/^whsec_/, ''), 'base64');\n  const expected = Buffer.from('v1,' + crypto.createHmac('sha256', key)\n    .update(`${h['webhook-id']}.${h['webhook-timestamp']}.${body}`).digest('base64'));\n  const ok = String(h['webhook-signature'] || '').split(' ').some((s) => {\n    const given = Buffer.from(s);\n    return given.length === expected.length && crypto.timingSafeEqual(given, expected);\n  });\n  if (!ok || Math.abs(Date.now() / 1000 - Number(h['webhook-timestamp'])) > 300) {\n    return [{ json: { refused: 'Bad signature' } }];\n  }\n  return [{ json: JSON.parse(body) }];\n} catch (e) {\n  return [{ json: { refused: `Cannot verify: ${e.message}` } }];\n}"
+        "jsCode": "// Refuse instead of throwing: n8n answers 200 when a flow fails before its Respond node,\n// so a missing setting would count every event as delivered.\ntry {\n  const crypto = require('crypto');\n  const h = $input.first().json.headers;\n  const secret = $env.MUELLE_WHSEC;\n  if (!secret) return [{ json: { refused: \"Set MUELLE_WHSEC in n8n to this connection's signing secret\" } }];\n  const body = (await this.helpers.getBinaryDataBuffer(0, 'data')).toString('utf8');\n  const key = Buffer.from(secret.replace(/^whsec_/, ''), 'base64');\n  const expected = Buffer.from('v1,' + crypto.createHmac('sha256', key)\n    .update(`${h['webhook-id']}.${h['webhook-timestamp']}.${body}`).digest('base64'));\n  const ok = String(h['webhook-signature'] || '').split(' ').some((s) => {\n    const given = Buffer.from(s);\n    return given.length === expected.length && crypto.timingSafeEqual(given, expected);\n  });\n  if (!ok || Math.abs(Date.now() / 1000 - Number(h['webhook-timestamp'])) > 300) {\n    return [{ json: { refused: 'Bad signature' } }];\n  }\n  const event = JSON.parse(body);\n  // Delivery is at-least-once: a retry repeats webhook-id. Answer it, but do the work once.\n  const store = $getWorkflowStaticData('global');\n  const seen = store.seenIds || [];\n  if (seen.includes(h['webhook-id'])) return [{ json: { duplicate: true } }];\n  store.seenIds = [...seen.slice(-999), h['webhook-id']];\n  return [{ json: event }];\n} catch (e) {\n  return [{ json: { refused: `Cannot verify: ${e.message}` } }];\n}"
       },
       "name": "Verify signature",
       "type": "n8n-nodes-base.code",
@@ -77,11 +77,18 @@
     },
     {
       "parameters": {
-        "jsCode": "// Delivery is at-least-once: a retry repeats webhook-id. Drop ids this workflow already handled.\nconst id = $('Muelle webhook').first().json.headers['webhook-id'];\nconst store = $getWorkflowStaticData('global');\nconst seen = store.seenIds || [];\nif (seen.includes(id)) return [];\nseen.push(id);\nstore.seenIds = seen.slice(-1000);\nreturn $('Verify signature').all();"
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ !$json.duplicate }}",
+              "value2": true
+            }
+          ]
+        }
       },
-      "name": "Seen before?",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "name": "New event?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
       "position": [
         960,
         0
@@ -150,18 +157,7 @@
       "main": [
         [
           {
-            "node": "Seen before?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Seen before?": {
-      "main": [
-        [
-          {
-            "node": "Route by event",
+            "node": "New event?",
             "type": "main",
             "index": 0
           }
@@ -185,10 +181,25 @@
           }
         ]
       ]
+    },
+    "New event?": {
+      "main": [
+        [
+          {
+            "node": "Route by event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "all",
+    "saveManualExecutions": false,
+    "saveExecutionProgress": false
   },
   "meta": {
     "note": "Credentials: Header Auth «Authorization: token <api_key>:<api_secret>» of the connection user on the CRM calls. Env: MUELLE_WHSEC (from «Show signing secret»). See crm/docs/integrations/N8N.md."

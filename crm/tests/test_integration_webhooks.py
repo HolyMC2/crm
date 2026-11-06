@@ -89,6 +89,7 @@ class TestIntegrationWebhooks(IntegrationTestCase):
 		self.enterContext(patch("frappe.publish_realtime"))
 		self.enterContext(patch.object(frappe.db, "commit"))
 		webhooks.clear_subscriber_cache()
+		frappe.local.crm_integration_pending = None  # commits are suppressed, so nothing flushes it
 
 	def tearDown(self):
 		frappe.set_user("Administrator")
@@ -403,14 +404,21 @@ class TestIntegrationWebhooks(IntegrationTestCase):
 
 	# ------------------------------------------------------------ any record type
 
-	def documents(self, *events_, doctype="ToDo", user="admin"):
+	def documents(self, *events_, doctype="ToDo", user="admin", only=None):
 		doc = frappe.get_doc(
 			{
 				"doctype": webhooks.INTEGRATION,
 				"title": "Fictional n8n " + uuid4().hex[:6],
 				"integration_user": self.users[user],
 				"webhook_url": "https://hooks.example.com/n8n",
-				"subscriptions": [{"event": e, "document_type": doctype} for e in events_],
+				"subscriptions": [
+					{
+						"event": e,
+						"document_type": doctype,
+						"only_fields": only if e.endswith(".updated") else None,
+					}
+					for e in events_
+				],
 			}
 		).insert()
 		doc.enabled = 1
@@ -559,9 +567,174 @@ class TestIntegrationWebhooks(IntegrationTestCase):
 		self.assertEqual(self.deliveries(connection), [])
 		frappe.set_user("Administrator")
 		frappe.db.set_value(webhooks.INTEGRATION, connection.name, "skip_own_changes", 0)
+		webhooks.clear_subscriber_cache()  # a raw write skips the form, which clears it
 		frappe.set_user(self.users["admin"])
 		self.lead()
 		self.assertEqual(len(self.deliveries(connection)), 1)
+
+	# ------------------------------------------------------------ cost: filters, batches, storage
+
+	def test_an_update_waits_for_the_chosen_fields_and_says_what_they_were(self):
+		connection = self.documents("document.updated", only="status")
+		self.assertEqual(connection.subscriptions[0].only_fields, "status")
+		todo = frappe.get_doc({"doctype": "ToDo", "description": "Fictional", "status": "Open"}).insert()
+		todo.description = "Fictional, reworded"
+		todo.save()
+		self.assertEqual(self.deliveries(connection), [], "a change to another field is not sent")
+		todo.status = "Closed"
+		todo.save()
+		[name] = self.deliveries(connection, "document.updated")
+		row = frappe.get_doc(webhooks.DELIVERY, name)
+		change = json.loads(webhooks.build_payload(row, connection))["data"]["change"]
+		self.assertEqual((change["fields"], change["previous"]), (["status"], {"status": "Open"}))
+		real = events.get_permitted_fields
+
+		def without_status(doctype, *args, **kwargs):
+			fields = real(doctype, *args, **kwargs)
+			return [f for f in fields if f != "status"] if doctype == "ToDo" else fields
+
+		with patch.object(events, "get_permitted_fields", side_effect=without_status):
+			change = json.loads(webhooks.build_payload(row, connection))["data"]["change"]
+		self.assertEqual(change["previous"], {}, "an earlier value the user may not read stays out")
+
+	def test_watched_fields_are_checked_and_written_back_clean(self):
+		connection = self.documents("document.updated", only=" status,\npriority status ")
+		self.assertEqual(connection.subscriptions[0].only_fields, "priority, status")
+		with self.assertRaisesRegex(frappe.ValidationError, "no_such_field"):
+			self.documents("document.updated", only="status, no_such_field")
+		for row in (
+			{"event": "document.created", "document_type": "ToDo"},
+			{"event": "conversation.updated"},
+		):
+			connection = frappe.get_doc(
+				{
+					"doctype": webhooks.INTEGRATION,
+					"title": "Fictional",
+					"integration_user": self.users["admin"],
+					"subscriptions": [{**row, "only_fields": "status"}],
+				}
+			)
+			with self.assertRaisesRegex(frappe.ValidationError, "can wait for chosen fields"):
+				connection.insert()
+		watchable = {row["event"] for row in webhooks.catalog() if row.get("watches_fields")}
+		self.assertEqual(watchable, webhooks.WATCHABLE)
+
+	def test_nobody_listening_costs_no_diff(self):
+		lead = self.lead()
+		lead.first_name = "Fictional, renamed"
+		with patch.object(events, "changed_fields", side_effect=AssertionError("no connection listens")):
+			lead.save(ignore_permissions=True)
+			todo = frappe.get_doc({"doctype": "ToDo", "description": "Fictional"}).insert()
+			todo.description = "Fictional, edited"
+			todo.save()
+
+	def test_one_transaction_starts_one_job_per_connection(self):
+		connection = self.connection(["lead.created"])
+		other = self.connection(["lead.created"])
+		self.lead()
+		self.lead()
+		webhooks._flush_pending()
+		calls = [
+			c.kwargs
+			for c in frappe.enqueue.call_args_list
+			if c.args == ("crm.integrations.webhooks.deliver_batch",)
+		]
+		self.assertEqual(
+			sorted(sorted(c["deliveries"]) for c in calls),
+			sorted([sorted(self.deliveries(connection)), sorted(self.deliveries(other))]),
+		)
+		self.assertIsNone(frappe.local.crm_integration_pending)
+
+	def test_a_batch_stops_when_the_receiver_fails_and_the_sweep_sends_the_rest(self):
+		connection = self.connection(["lead.created"])
+		self.lead()
+		self.lead()
+		first, second = self.deliveries(connection)
+		with patch.object(webhooks, "_post", return_value=FakeResponse(503, "busy")) as post:
+			webhooks.deliver_batch([first, second])
+		self.assertEqual(post.call_count, 1, "a failing receiver gets one attempt per job")
+		self.assertEqual(frappe.db.get_value(webhooks.DELIVERY, first, "status"), "Failed")
+		self.assertEqual(frappe.db.get_value(webhooks.DELIVERY, second, "status"), "Pending")
+		self.assertEqual(
+			frappe.db.get_value(webhooks.INTEGRATION, connection.name, "consecutive_failures"), 1
+		)
+		with patch.object(webhooks, "_post", return_value=FakeResponse(204)) as post:
+			webhooks.deliver_batch([first, second])
+		self.assertEqual(post.call_count, 1, "the failed one waits for its retry time")
+		self.assertEqual(frappe.db.get_value(webhooks.DELIVERY, second, "status"), "Delivered")
+		health = frappe.db.get_value(
+			webhooks.INTEGRATION,
+			connection.name,
+			["last_delivery_status", "consecutive_failures"],
+			as_dict=True,
+		)
+		self.assertTrue(health.last_delivery_status.startswith("Delivered"))
+		self.assertEqual(health.consecutive_failures, 0)
+
+	def test_a_batch_opens_one_connection_to_the_receiver(self):
+		connection = self.connection(["lead.created"])
+		self.lead()
+		self.lead()
+		sent = []
+
+		class Answered(io.RawIOBase):
+			"""A short answer with urllib3's bookkeeping: read to the end, its connection can go
+			back to the pool; closed before that, the connection is dropped."""
+
+			kept = dropped = 0
+
+			def __init__(self, body):
+				self.body, self.held = body, True
+
+			def readable(self):
+				return True
+
+			def read(self, size=-1):
+				size = len(self.body) if size is None or size < 0 else size
+				out, self.body = self.body[:size], self.body[size:]
+				return out
+
+			@property
+			def closed(self):
+				return not self.body
+
+			def release_conn(self):
+				if self.held:
+					Answered.kept += 1
+					self.held = False
+
+			def close(self):
+				if self.held:
+					Answered.dropped += 1
+					self.held = False
+
+		def transport(adapter, request, **kwargs):
+			sent.append(request.headers["webhook-id"])
+			response = requests.Response()
+			response.status_code, response.raw, response.url = 200, Answered(b'{"ok":true}'), request.url
+			return response
+
+		with (
+			patch("requests.sessions.Session.request", REAL_REQUEST),
+			patch("socket.getaddrinfo", return_value=addresses("93.184.215.14")) as dns,
+			patch("requests.adapters.HTTPAdapter.send", transport),
+		):
+			webhooks.deliver_batch(self.deliveries(connection))
+		self.assertEqual(sent, self.deliveries(connection))
+		self.assertEqual(dns.call_count, 1, "one checked address for the whole job")
+		self.assertEqual((Answered.kept, Answered.dropped), (2, 0), "each connection is kept for the next")
+
+	def test_delivered_bodies_are_dropped_after_a_few_days_and_the_row_stays(self):
+		connection = self.connection(["lead.created"])
+		self.lead()
+		name = self.deliveries(connection)[0]
+		with patch.object(webhooks, "_post", return_value=FakeResponse(204)):
+			webhooks.deliver(name)
+		old = frappe.utils.add_days(frappe.utils.now_datetime(), -(webhooks.KEEP_DELIVERED_BODY_DAYS + 1))
+		frappe.db.sql("UPDATE `tabCRM Integration Delivery` SET modified=%s WHERE name=%s", (old, name))
+		webhooks.purge()
+		row = frappe.db.get_value(webhooks.DELIVERY, name, ["status", "payload"], as_dict=True)
+		self.assertEqual((row.status, row.payload), ("Delivered", None))
 
 	# ------------------------------------------------------------ conversations and messages
 

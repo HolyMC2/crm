@@ -233,26 +233,30 @@
           <legend class="mb-1 text-p-base-medium text-ink-gray-8">
             {{ group.label }}
           </legend>
-          <label
-            v-for="item in group.events"
-            :key="item.event"
-            class="flex min-h-11 cursor-pointer items-start gap-2 py-1"
-          >
-            <input
-              type="checkbox"
-              class="mt-0.5 size-4 flex-none"
-              :checked="has(item.event)"
-              @change="
-                (event) => toggle(item.event, null, event.target.checked)
-              "
+          <div v-for="item in group.events" :key="item.event">
+            <label class="flex min-h-11 cursor-pointer items-start gap-2 py-1">
+              <input
+                type="checkbox"
+                class="mt-0.5 size-4 flex-none"
+                :checked="has(item.event)"
+                @change="
+                  (event) => toggle(item.event, null, event.target.checked)
+                "
+              />
+              <span class="min-w-0">
+                <span class="block text-p-sm text-ink-gray-8">{{
+                  item.label || item.description
+                }}</span>
+                <code class="text-xs text-ink-gray-5">{{ item.event }}</code>
+              </span>
+            </label>
+            <WatchedFields
+              v-if="item.watches_fields && has(item.event)"
+              class="mb-1 ml-6"
+              :value="rowOf(item.event)?.only_fields"
+              @change="(value) => setWatched(item.event, null, value)"
             />
-            <span class="min-w-0">
-              <span class="block text-p-sm text-ink-gray-8">{{
-                item.label || item.description
-              }}</span>
-              <code class="text-xs text-ink-gray-5">{{ item.event }}</code>
-            </span>
-          </label>
+          </div>
         </fieldset>
 
         <fieldset class="flex flex-col gap-2">
@@ -301,6 +305,11 @@
                 {{ DOCUMENT_WORDS[item.event] || item.event }}
               </label>
             </div>
+            <WatchedFields
+              v-if="has('document.updated', type)"
+              :value="rowOf('document.updated', type)?.only_fields"
+              @change="(value) => setWatched('document.updated', type, value)"
+            />
           </div>
           <div class="relative">
             <input
@@ -488,6 +497,7 @@ import {
 } from '@/composables/settingsSession'
 import { formatDateTime, parseServerDate } from '@/utils/display'
 import CopyLine from './CopyLine.vue'
+import WatchedFields from './WatchedFields.vue'
 
 const props = defineProps({ name: { type: String, required: true } })
 const emit = defineEmits(['back'])
@@ -619,10 +629,15 @@ const testText = computed(() => {
     : __('It did not arrive (answer {0}).', [t.response_code || '—'])
 })
 
-const has = (event, type = null) =>
-  (doc.value?.subscriptions || []).some(
+const rowOf = (event, type = null) =>
+  (doc.value?.subscriptions || []).find(
     (row) => row.event === event && (row.document_type || null) === type,
   )
+const has = (event, type = null) => !!rowOf(event, type)
+function setWatched(event, type, value) {
+  const row = rowOf(event, type)
+  if (row) row.only_fields = value.trim() || null
+}
 function toggle(event, type, on) {
   const rows = doc.value.subscriptions || []
   doc.value.subscriptions = on

@@ -130,7 +130,7 @@ def redeliver(delivery: str):
 	if row.status == "Skipped":
 		values["payload"] = None  # rebuild: the user's access may have been fixed since
 	frappe.db.set_value(DELIVERY, delivery, values)
-	frappe.db.after_commit.add(lambda: webhooks._enqueue([delivery]))
+	frappe.db.after_commit.add(lambda: webhooks._enqueue({row.integration: [delivery]}))
 	return webhooks._projection(delivery)
 
 
