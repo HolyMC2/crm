@@ -11,16 +11,16 @@ Legend: ✅ covered · ◐ partly or differently · ✗ gap (not built)
 | Chatwoot | Muelle | |
 |---|---|---|
 | Account/inbox webhooks (`message_created`, `conversation_status_changed`, …) | CRM Integration events (20 types plus `document.*` for any record type), durable, retried, Standard Webhooks signed. See [integrations/N8N.md](integrations/N8N.md) | ✅ |
-| Webhook payload has the full conversation | payload built as the connection user with the inbox's own read policy; unreadable records are Skipped | ✅ (stricter) |
+| Webhook payload has the full conversation | payload built as the connection user with the inbox's own read policy, child rows included; unreadable records are Skipped | ✅ (stricter) |
 | Webhook retries | 8 attempts over about 21 h, Dead state, 410 stops at once, **Send again** | ✅ (Chatwoot did not retry durably) |
-| HMAC on webhooks (`X-Chatwoot-Signature`, added late) | `webhook-signature` v1 HMAC-SHA256 with timestamp, secret rotation | ✅ |
+| HMAC on webhooks (`X-Chatwoot-Signature`, added late) | `webhook-signature` v1 HMAC-SHA256 with timestamp; a replaced secret keeps signing alongside the new one for 24 h; the n8n templates refuse with 401 whatever they cannot verify | ✅ |
 | Application API (`api_access_token`) | Frappe API key of a dedicated user; every role and record permission still applies | ✅ |
 | API: send a message | `crm.api.outbox.queue_message`, idempotent through the outbox fences | ✅ |
 | API: toggle status, assign | `conversations.apply_control` (take, release, close, reopen), with generation fences | ✅ |
 | API: conversation history | `conversation_threads.get_history` | ✅ |
 | API channel inbox (bring any channel in) | CRM Integration «Use as an inbox channel»: `channel_message` in, outbox → webhook out, `channel_status` | ✅ |
 | Agent bot (webhook on each customer message, bot replies through the API) | events `message.created` + `queue_message`; the in-house customer bot (CRM Automation Policy) covers WhatsApp/Webchat | ✅ |
-| Agent bot handoff to a human | `apply_control` bot/human transitions; `conversation.status_changed` tells n8n | ✅ |
+| Agent bot handoff to a human | `apply_control` bot/human transitions; `conversation.status_changed` tells n8n, also when a take or transfer moves the owner | ✅ |
 | Contact / custom attribute webhooks | `contact.*`, `lead.*`, `deal.*`, `inquiry.created` | ✅ (more than Chatwoot) |
 | Staff assistant over the API | books assistant `say` / `callback` + `assistant.message_created` / `decision_pending` | ✅ (Chatwoot had nothing similar) |
 | Platform API (create accounts or users from outside) | Frappe REST under permissions; tenant provisioning is Boat's job | ◐ by design |
