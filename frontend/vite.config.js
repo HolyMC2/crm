@@ -177,6 +177,12 @@ export default defineConfig(async () => {
           // their importers: a first route fetched 70+ files, most under 2 KB
           // (SPEC §4: ≤ 60 scripts on a daily route).
           experimentalMinChunkSize: 2 * 1024,
+          // The emoji table is a chunk of its own that only the picker loads.
+          // Left to the small-chunk merge, rollup folded a shared helper into
+          // it and every record page downloaded 244 KB of emoji.
+          manualChunks(id) {
+            if (id.includes('/node_modules/gemoji/')) return 'gemoji'
+          },
         },
       },
     },

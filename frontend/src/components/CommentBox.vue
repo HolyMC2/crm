@@ -1,11 +1,13 @@
 <template>
-  <Editor
+  <ComposerEditor
+    v-if="opened"
     ref="commentEditor"
     v-model="content"
-    :extensions="extensions"
+    :mentions="() => users"
     :placeholder="placeholder"
     :editable="editable"
-    :upload-function="(file) => uploadFile(file, doctype, modelValue.name)"
+    :doctype="doctype"
+    :docname="modelValue.name"
   >
     <div class="relative w-full">
       <EditorContent
@@ -53,7 +55,7 @@
                 />
               </template>
             </FileUploader>
-            <EditorFixedMenu :items="fullToolbar" />
+            <ComposerToolbar />
             <IconPicker
               v-slot="{ togglePopover }"
               v-model="emoji"
@@ -78,31 +80,26 @@
         </div>
       </div>
     </div>
-  </Editor>
+  </ComposerEditor>
 </template>
 <script setup>
 import IconPicker from '@/components/IconPicker.vue'
 import SmileIcon from '@/components/Icons/SmileIcon.vue'
 import AttachmentIcon from '@/components/Icons/AttachmentIcon.vue'
 import AttachmentItem from '@/components/AttachmentItem.vue'
-import {
-  buildEditorExtensions,
-  fullToolbar,
-  uploadFile,
-} from '@/components/editor/config'
 import { submitShortcutLabel } from '@/utils'
 import { usersStore } from '@/stores/users'
 import { useTelemetry } from '@framework/ui'
 import { FileUploader } from 'frappe-ui'
 import {
-  Editor,
+  ComposerEditor,
+  ComposerToolbar,
   EditorContent,
-  EditorFixedMenu,
   EditorTableMenu,
-} from 'frappe-ui/editor'
-import { ref, computed } from 'vue'
+} from '@/components/editor/lazy'
+import { ref, computed, watch } from 'vue'
 
-defineProps({
+const props = defineProps({
   placeholder: { type: String, default: null },
   editable: { type: Boolean, default: true },
   doctype: { type: String, default: 'CRM Lead' },
@@ -122,9 +119,30 @@ const { users: usersList } = usersStore()
 const { capture } = useTelemetry()
 
 const commentEditor = ref(null)
+// The editor core mounts the first time the box opens and stays (EmailEditor
+// does the same): a record page that never comments loads no editor.
+const opened = ref(props.editable)
+watch(
+  () => props.editable,
+  (editable) => {
+    if (editable) opened.value = true
+  },
+)
 const emoji = ref('')
 
 const editor = computed(() => commentEditor.value?.editor)
+
+// Resolves with the TipTap instance once the lazy editor has mounted.
+function editorReady() {
+  return new Promise((resolve) => {
+    if (editor.value) return resolve(editor.value)
+    const stop = watch(editor, (instance) => {
+      if (!instance) return
+      stop()
+      resolve(instance)
+    })
+  })
+}
 
 const users = computed(
   () =>
@@ -135,8 +153,6 @@ const users = computed(
         label: user.full_name?.trim() || user.name,
       })) || [],
 )
-
-const extensions = buildEditorExtensions({ mentions: () => users.value })
 
 function appendEmoji() {
   editor.value.commands.insertContent(emoji.value)
@@ -149,5 +165,5 @@ function removeAttachment(attachment) {
   attachments.value = attachments.value.filter((a) => a !== attachment)
 }
 
-defineExpose({ editor })
+defineExpose({ editor, editorReady })
 </script>

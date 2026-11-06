@@ -69,7 +69,7 @@
 
 <script setup>
 import { createListResource } from 'frappe-ui'
-import { TextEditor } from 'frappe-ui/experimental'
+import { TextEditor } from '@/components/Controls/lazyTextEditor'
 import { ref, computed, nextTick, watch, onMounted } from 'vue'
 
 const props = defineProps({

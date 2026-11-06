@@ -1,7 +1,12 @@
 <template>
   <Popover bare trigger="manual">
     <template #trigger="{ open, setOpen }">
-      <slot v-bind="{ isOpen: open, togglePopover: () => setOpen(!open) }">
+      <slot
+        v-bind="{
+          isOpen: open,
+          togglePopover: () => openPicker(open, setOpen),
+        }"
+      >
         <span class="text-base"> {{ modelValue || '' }} </span>
       </slot>
     </template>
@@ -20,11 +25,7 @@
             {{ r }}
           </button>
         </div>
-        <Button
-          class="rounded-full"
-          icon="lucide-plus"
-          @click.stop="() => (reaction = false)"
-        />
+        <Button class="rounded-full" icon="lucide-plus" @click.stop="showAll" />
       </div>
       <div v-else class="my-3 max-w-max transform bg-surface-base px-4 sm:px-0">
         <div
@@ -67,8 +68,7 @@
 </template>
 <script setup>
 import { Popover } from 'frappe-ui'
-import { gemoji } from 'gemoji'
-import { ref, computed } from 'vue'
+import { ref, computed, shallowRef } from 'vue'
 
 const search = ref('')
 const emoji = defineModel({ type: String, default: '' })
@@ -76,9 +76,30 @@ const reaction = defineModel('reaction', { type: Boolean })
 
 const reactionEmojis = ref(['👍', '❤️', '😂', '😮', '😢', '🙏'])
 
+// The emoji table (gemoji, about 180 KB) loads the first time the picker opens,
+// not with every composer that carries the button.
+const table = shallowRef([])
+let tableLoad = null
+function loadTable() {
+  tableLoad ||= import('gemoji').then((m) => {
+    table.value = m.gemoji
+  })
+  return tableLoad
+}
+
+function openPicker(open, setOpen) {
+  if (!open) loadTable()
+  setOpen(!open)
+}
+
+function showAll() {
+  reaction.value = false
+  loadTable()
+}
+
 const emojiGroups = computed(() => {
   let groups = {}
-  for (let _emoji of gemoji) {
+  for (let _emoji of table.value) {
     if (search.value) {
       let keywords = [_emoji.description, ..._emoji.names, ..._emoji.tags]
         .join(' ')
@@ -95,16 +116,17 @@ const emojiGroups = computed(() => {
     }
     group.push(_emoji)
   }
-  if (!Object.keys(groups).length) {
+  if (table.value.length && !Object.keys(groups).length) {
     groups['No results'] = []
   }
   return groups
 })
 
-function setRandom() {
-  let total = gemoji.length
+async function setRandom() {
+  await loadTable()
+  let total = table.value.length
   let index = randomInt(0, total - 1)
-  emoji.value = gemoji[index].emoji
+  emoji.value = table.value[index].emoji
 }
 
 function randomInt(min, max) {

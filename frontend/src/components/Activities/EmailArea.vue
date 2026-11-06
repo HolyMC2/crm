@@ -152,7 +152,7 @@ async function linkToArchivos(attachment) {
   })
 }
 
-function reply(email, reply_all = false) {
+async function reply(email, reply_all = false) {
   emailBox.show = true
   let editor = emailBox.editor
   let message = email.content
@@ -189,7 +189,9 @@ function reply(email, reply_all = false) {
 
   let repliedMessage = `<blockquote>${message}</blockquote>`
 
-  editor.editor
+  // The composer's editor mounts on first open: quote the message once it is there.
+  const tiptap = await emailBox.editorReady()
+  tiptap
     .chain()
     .clearContent()
     .updateAttributes('paragraph', { class: 'reply-to-content' })
