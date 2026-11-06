@@ -38,6 +38,7 @@ import {
 } from '@/utils/shellPalette'
 import { createTiposProvider, documentosPlaces } from '@/documentos/palette'
 import { pushRecent } from '@/vendor/muelle-shell/contracts/palette'
+import { _resetPaletteReach } from '@/utils/paletteReach'
 import { _resetAssistant } from '@/components/assistant/useAssistant'
 
 const boot = (overrides = {}) => ({
@@ -105,56 +106,62 @@ beforeEach(() => {
   globalThis.__ = (text, args) =>
     args ? text.replace(/{(\d+)}/g, (_, i) => args[i]) : text
   _resetAssistant()
+  _resetPaletteReach()
   state.call.mockReset()
   state.call.mockImplementation(async (method, args) => {
-    if (method === 'crm.api.documentos.doctypes') return doctypes
     if (method.endsWith('shell_api.status')) return state.status
-    if (method === 'crm.api.shell.reports')
-      return [
-        {
-          name: 'Stock Ledger',
-          title: 'Mayor de Inventarios',
-          report_type: 'Script Report',
-          ref_doctype: 'Stock Ledger Entry',
-          ref_label: 'Movimiento de inventario',
-          href: '/app/query-report/Stock%20Ledger',
-        },
-        {
-          name: 'Sales Register',
-          title: 'Registro de ventas',
-          report_type: 'Report Builder',
-          ref_doctype: 'Sales Invoice',
-          ref_label: 'Factura de venta',
-          href: '/app/sales-invoice/view/report/Sales%20Register',
-        },
-      ]
-    if (method === 'crm.api.shell.workspaces')
-      return [
-        {
-          name: 'Compras',
-          title: 'Compras',
-          label: 'Compras',
-          href: '/app/compras',
-        },
-        {
-          name: 'Muelle Inventario',
-          title: 'Muelle Inventario',
-          label: 'Inventario Muelle',
-          href: '/app/muelle-inventario',
-        },
-      ]
+    if (method === 'crm.api.shell.palette_reach')
+      return {
+        reports: state.reports || reports,
+        workspaces,
+        lists: state.lists || doctypes,
+      }
     throw new Error(`unexpected ${method} ${JSON.stringify(args)}`)
   })
 })
-afterEach(() => localStorage.clear())
+afterEach(() => {
+  localStorage.clear()
+  state.lists = null
+  state.reports = null
+})
+const reports = [
+  {
+    name: 'Stock Ledger',
+    title: 'Mayor de Inventarios',
+    report_type: 'Script Report',
+    ref_doctype: 'Stock Ledger Entry',
+    ref_label: 'Movimiento de inventario',
+    href: '/app/query-report/Stock%20Ledger',
+  },
+  {
+    name: 'Sales Register',
+    title: 'Registro de ventas',
+    report_type: 'Report Builder',
+    ref_doctype: 'Sales Invoice',
+    ref_label: 'Factura de venta',
+    href: '/app/sales-invoice/view/report/Sales%20Register',
+  },
+]
+const workspaces = [
+  {
+    name: 'Compras',
+    title: 'Compras',
+    label: 'Compras',
+    href: '/app/compras',
+  },
+  {
+    name: 'Muelle Inventario',
+    title: 'Muelle Inventario',
+    label: 'Inventario Muelle',
+    href: '/app/muelle-inventario',
+  },
+]
 
 describe('Listas: every readable DocType through the generic floor', () => {
   it('lists a doctype without a profile on the floor, with «Crear» only where the worker may create', async () => {
     const tipos = createTiposProvider({ boot: ref(boot()) })
     const items = await tipos.search(query('almac'))
-    expect(state.call).toHaveBeenCalledWith('crm.api.documentos.doctypes', {
-      search: 'almac',
-    })
+    expect(state.call).toHaveBeenCalledWith('crm.api.shell.palette_reach')
     const almacen = items.find((i) => i.id === 'tipos:Warehouse')
     expect(almacen).toMatchObject({
       group: 'listas',
@@ -168,8 +175,12 @@ describe('Listas: every readable DocType through the generic floor', () => {
       title: 'Create Almacén',
       href: '/documentos/tipo/Warehouse/nuevo',
     })
-    expect(items.some((i) => i.id === 'tipos:Item Group:nuevo')).toBe(false)
-    expect(items.some((i) => i.id === 'tipos:Item Group')).toBe(true)
+    const grupos = await tipos.search(query('grupo'))
+    expect(grupos.some((i) => i.id === 'tipos:Item Group:nuevo')).toBe(false)
+    expect(grupos.some((i) => i.id === 'tipos:Item Group')).toBe(true)
+    expect(grupos.some((i) => i.id.startsWith('tipos:Warehouse'))).toBe(false)
+    // One read of the reach answers both searches.
+    expect(state.call).toHaveBeenCalledTimes(1)
   })
 
   it('a curated list stays a place (no duplicate row) and its English name matches there', async () => {
@@ -489,7 +500,7 @@ describe('Recientes remember any stable row', () => {
 })
 
 describe('rank (E7b): a shell place matching the term outranks generic fan-out', () => {
-  // What the server returns for a term: any substring of the unaccented label or the name.
+  // The lists the reach carries; the palette keeps those holding every word of the term.
   const catalog = [
     ['CRM Sales Hierarchy', 'Jerarquía de ventas CRM', 'CRM', true],
     [
@@ -510,8 +521,6 @@ describe('rank (E7b): a shell place matching the term outranks generic fan-out',
     module,
     create,
   }))
-  const fold = (value) =>
-    String(value).toLowerCase().normalize('NFD').replace(/\p{M}/gu, '')
   const rail = [
     ...modules,
     { key: 'ventas', label: 'Ventas', icon: 'lucide-handshake', to: '/ventas' },
@@ -524,15 +533,20 @@ describe('rank (E7b): a shell place matching the term outranks generic fan-out',
   ]
 
   beforeEach(() => {
+    state.lists = catalog
+    // The kárdex as a Desk report too, by its Spanish title.
+    state.reports = [
+      ...reports,
+      {
+        name: 'Stock Ledger Variance',
+        title: 'Diferencias del kárdex',
+        ref_doctype: 'Stock Ledger Entry',
+        ref_label: 'Registro del kárdex',
+        href: '/app/query-report/Stock%20Ledger%20Variance',
+      },
+    ]
     const base = state.call.getMockImplementation()
     state.call.mockImplementation(async (method, args) => {
-      if (method === 'crm.api.documentos.doctypes') {
-        const term = fold(args.search)
-        return catalog.filter(
-          (row) =>
-            fold(row.label).includes(term) || fold(row.doctype).includes(term),
-        )
-      }
       if (
         method === 'crm.api.palette.search_deals' ||
         method === 'crm.api.documentos.search'
@@ -586,7 +600,7 @@ describe('rank (E7b): a shell place matching the term outranks generic fan-out',
       'acciones/Create Pronóstico de ventas',
     ])
     expect(firstOf(list, 'listas')).toBeGreaterThan(firstOf(list, 'acciones'))
-    // «Postventas» is still a list (the server matched it); only its «Crear» row needs a word start.
+    // «Postventas» is still a list (the term is inside a word); only its «Crear» row needs a word start.
     expect(list).toContain('listas/Postventas')
   })
 

@@ -1364,3 +1364,19 @@ def workspaces(search: str | None = None):
 	return [row for row in rows if _desk_matches(term, row["label"], row["title"], row["name"])][
 		: DESK_REACH_LIMIT["workspaces"]
 	]
+
+
+@frappe.whitelist()
+def palette_reach():
+	"""The palette's Desk reach in one read: every report this worker may run, the Desk workspaces
+	they see and every list they read. The palette filters them as the worker types, the way the
+	Desk awesomebar filters its boot lists, instead of asking three endpoints per keystroke."""
+	if frappe.session.user == "Guest":
+		frappe.throw(_("Sign in to open Muelle."), frappe.AuthenticationError)
+	from crm.api import documentos
+
+	return {
+		"reports": _desk_cached("reports", _allowed_reports),
+		"workspaces": _desk_cached("workspaces", _allowed_workspaces),
+		"lists": documentos.listable_doctypes(),
+	}

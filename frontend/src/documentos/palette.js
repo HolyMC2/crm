@@ -18,7 +18,7 @@ import {
   profileFor,
   readableDoctypes,
 } from './registry'
-import { docApi } from './api'
+import { loadPaletteReach, reachMatches } from '@/utils/paletteReach'
 
 /** One palette row for a found document: party first, kind · number · date as the line. */
 export function documentItem(row, boot) {
@@ -129,6 +129,8 @@ const startsAWord = (term, ...values) =>
 
 // «Crear X» rows per query (E7b): generic fan-out, so a few at most.
 const CREATE_CAP = 3
+// The matching types a query weighs, as many as the server's search answers (60).
+const LIST_ROWS = 60
 
 /**
  * «Listas» (Shell E7, DE9): every DocType this worker reads, by its Spanish
@@ -137,23 +139,28 @@ const CREATE_CAP = 3
  * starts a word of the label or the name (the server matches any substring).
  * Those rows are generic fan-out (rank 2, utils/shellPalette PALETTE_RANK): a
  * shell place matching the term renders above them. The curated lists are
- * already places (above).
+ * already places (above). The types come from the palette reach, read once
+ * (utils/paletteReach): a keystroke filters them here.
  */
 export function createTiposProvider({ boot }) {
   return {
     key: 'tipos',
     label: 'Lists',
     scopes: ['documents'],
-    async search(query, signal) {
+    local: true,
+    async search(query) {
       if (query.kind === 'empty' || !moduleEnabled(boot.value, 'documentos'))
         return []
       const text = String(query.text || '').trim()
       if (text.length < 2) return []
-      const rows = await docApi('doctypes', { search: text.slice(0, 80) })
-      if (signal?.aborted) return []
+      const lists = (await loadPaletteReach())?.lists || []
+      const rows = reachMatches(lists, text.slice(0, 80), 'words').slice(
+        0,
+        LIST_ROWS,
+      )
       const items = []
       let creates = 0
-      for (const row of rows || []) {
+      for (const row of rows) {
         if (profileFor(row.doctype)) continue
         const floor = floorRoute(row.doctype).path
         items.push({

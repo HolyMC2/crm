@@ -39,6 +39,8 @@ export function createManualProvider({ boot, api = manualApi }) {
           icon: 'lucide-file-plus',
           href: '/manual/nuevo',
         })
+      // Articles from the second letter, as every record search (asksServer).
+      if (query.text.trim().length < 2) return items
       let page
       try {
         // Every keystroke: rows and categories only, never the editor counts.

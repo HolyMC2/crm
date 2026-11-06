@@ -66,6 +66,42 @@ class TestDeskReach(TestCase):
 		frappe.local.user_perms = None
 		self.assertIn("Customer", [r["doctype"] for r in documentos.doctypes("customer")])
 
+	def test_the_palette_reach_is_what_the_three_searches_answer_in_one_read(self):
+		def names(rows, key="name"):
+			return {row[key] for row in rows}
+
+		reach = shell.palette_reach()
+		self.assertEqual(set(reach), {"reports", "workspaces", "lists"})
+		self.assertLessEqual(names(shell.reports("")), names(reach["reports"]))
+		self.assertLessEqual(names(shell.workspaces("")), names(reach["workspaces"]))
+		self.assertEqual(reach["lists"], documentos.listable_doctypes())
+		self.assertLessEqual(names(documentos.doctypes("ware"), "doctype"), names(reach["lists"], "doctype"))
+		self.assertTrue(reach["lists"])
+		for row in reach["lists"]:
+			self.assertEqual(set(row), {"doctype", "label", "module", "create"})
+		# Child, single and virtual types are never lists.
+		listed = names(reach["lists"], "doctype")
+		for doctype in frappe.get_all(
+			"DocType", filters={"istable": 1}, pluck="name", limit=20
+		) + frappe.get_all("DocType", filters={"issingle": 1}, pluck="name", limit=20):
+			self.assertNotIn(doctype, listed)
+		self.assertIn("ToDo", listed)
+
+	def test_the_palette_reach_follows_the_worker(self):
+		if not frappe.db.exists("DocType", "Customer"):
+			self.skipTest("ERPNext's Customer is not installed")
+		frappe.set_user(self.seller)
+		frappe.local.user_perms = None
+		listed = {row["doctype"] for row in shell.palette_reach()["lists"]}
+		self.assertIn("Customer", listed)
+		self.assertNotIn("DocType", listed)
+		frappe.set_user(self.nobody)
+		frappe.local.user_perms = None
+		self.assertEqual(shell.palette_reach()["reports"], [])
+		frappe.set_user("Guest")
+		with self.assertRaises(frappe.AuthenticationError):
+			shell.palette_reach()
+
 	def test_a_report_builder_report_opens_as_a_view_of_its_list(self):
 		frappe.get_doc(
 			{

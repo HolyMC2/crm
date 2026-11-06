@@ -1031,35 +1031,51 @@ def search(q: str | None = None, limit: int | str = 8):
 	return out[:limit]
 
 
+def listable_doctypes():
+	"""Every document type the worker can read and list here, by Spanish label: no child, single
+	or virtual type, nothing from a blocked module. One read of tabDocType, never a meta per
+	name: a System Manager reads about a thousand types."""
+	from unidecode import unidecode
+
+	user = frappe.get_user()
+	# UserPermissions fills can_read/can_create lazily: ask through the getter.
+	readable = set(user.get_can_read())
+	if not readable:
+		return []
+	can_create = set(user.can_create)
+	blocked = _blocked_modules()
+	out = []
+	for row in frappe.get_all(
+		"DocType",
+		filters={"istable": 0, "issingle": 0, "is_virtual": 0},
+		fields=["name", "module"],
+		order_by="name asc",
+	):
+		if row.name not in readable or row.module in blocked:
+			continue
+		out.append(
+			{
+				"doctype": row.name,
+				"label": _(row.name),
+				"module": _(row.module),
+				"create": row.name in can_create,
+			}
+		)
+	out.sort(key=lambda row: unidecode(row["label"].lower()))
+	return out
+
+
 @frappe.whitelist()
 def doctypes(search: str | None = None):
 	"""«Todos los tipos»: document types the worker can read, by their Spanish name."""
 	from unidecode import unidecode
 
 	term = unidecode(cstr(search).strip().lower())[:MAX_SEARCH]
-	blocked = _blocked_modules()
-	user = frappe.get_user()
-	# UserPermissions fills can_read/can_create lazily: ask through the getter.
-	readable = set(user.get_can_read())
-	can_create = set(user.can_create)
-	out = []
-	for doctype in sorted(readable):
-		meta = frappe.get_meta(doctype)
-		if meta.istable or meta.issingle or meta.is_virtual or meta.module in blocked:
-			continue
-		label = _(doctype)
-		if term and term not in unidecode(label.lower()) and term not in doctype.lower():
-			continue
-		out.append(
-			{
-				"doctype": doctype,
-				"label": label,
-				"module": _(meta.module),
-				"create": doctype in can_create,
-			}
-		)
-	out.sort(key=lambda row: unidecode(row["label"].lower()))
-	return out[:60]
+	return [
+		row
+		for row in listable_doctypes()
+		if not term or term in unidecode(row["label"].lower()) or term in row["doctype"].lower()
+	][:60]
 
 
 # ── Record ────────────────────────────────────────────────────────────────────

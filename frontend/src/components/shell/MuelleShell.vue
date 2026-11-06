@@ -302,6 +302,7 @@ import {
 } from '@/components/assistant/assistantDoor'
 import { moduleEnabled, moduleMeta } from '@/vendor/muelle-shell/contracts'
 import { warmListsAfterFirstRoute } from '@/utils/listWarmup'
+import { warmAfterFirstRoute } from '@/utils/prefetch'
 import {
   camera,
   loadCameraSheet,
@@ -316,9 +317,8 @@ import ShellRail from './ShellRail.vue'
 import ShellBottomNav from './ShellBottomNav.vue'
 
 const MoreSheet = defineAsyncComponent(() => import('./MoreSheet.vue'))
-const CommandPalette = defineAsyncComponent(
-  () => import('./CommandPalette.vue'),
-)
+const loadPalette = () => import('./CommandPalette.vue')
+const CommandPalette = defineAsyncComponent(loadPalette)
 const ShortcutSheet = defineAsyncComponent(() => import('./ShortcutSheet.vue'))
 const LayoutSheet = defineAsyncComponent(() => import('./LayoutSheet.vue'))
 const AssistantSheet = defineAsyncComponent(
@@ -584,6 +584,9 @@ watch(
   },
   { immediate: true },
 )
+// ⌘K opens at once: the palette's module loads in idle time after the first
+// route (a phone or a slow line loads it on the first open, utils/prefetch).
+warmAfterFirstRoute(router, loadPalette)
 function askMuelle() {
   loadAssistant().then((module) => module.openAssistant())
 }

@@ -13,9 +13,9 @@ reaches»).
 | Acciones | «Nuevo contacto», «Crear <tipo>» (`tipos`, where the worker may create), theme, shortcuts, «Preguntar a Muelle: «…»» for a question | the shell |
 | Registros | Contactos (seven sources), Ventas deals, Documentos by number or party (`crm.api.documentos.search`), Clínica, Inmobiliaria, Manual | the shell |
 | Ir a | modules, Contactos/Ventas/Documentos places, sibling apps, and «Pregúntale a Muelle» (a door word, the empty palette, a bare `?`) | the shell |
-| Listas | every DocType the worker reads and that has no curated list, by Spanish label or English name (`crm.api.documentos.doctypes`), on the generic floor `/documentos/tipo/<DocType>` | the shell |
-| Reportes | the reports the worker may run, as Desk lists them (`crm.api.shell.reports`) | Desk, this tab, subtitled «Desk» |
-| Desk | the Desk workspaces the worker sees (`crm.api.shell.workspaces`), minus the ones a shell module already is | Desk, this tab, subtitled «Desk» |
+| Listas | every DocType the worker reads and that has no curated list, by Spanish label or English name (the reach's `lists`), on the generic floor `/documentos/tipo/<DocType>` | the shell |
+| Reportes | the reports the worker may run, as Desk lists them (the reach's `reports`) | Desk, this tab, subtitled «Desk» |
+| Desk | the Desk workspaces the worker sees (the reach's `workspaces`), minus the ones a shell module already is | Desk, this tab, subtitled «Desk» |
 | Recientes | the last eight rows chosen with a stable target | as chosen |
 
 Shell places always sort above Listas, Reportes and Desk. A Desk row (`desk`, an `/app/…` URL)
@@ -31,7 +31,29 @@ inside a group, and moves a group whose best row is generic after Ir a: «ventas
 Ventas › Tratos and Ventas › Prospectos before «Crear Pronóstico de ventas», and «stock ledger»
 lists Inventario › Movimientos before «Nuevo contacto «stock ledger»». The Listas provider offers
 at most three «Crear X» rows per query and only where the term starts a word of the label or the
-DocType name (the server matches any substring, so the list row still shows).
+DocType name (the list matches a term inside a word, so the list row still shows).
+
+## Speed: what a keystroke costs
+
+The Desk awesomebar answers from lists in its boot and asks the server at most once per keystroke;
+the palette follows it.
+
+- **Local providers** (`local: true`: actions, Ir a, the assistant, Listas, Reportes, Desk) answer
+  from memory on every keystroke, with no pause. Listas, Reportes and Desk filter the **palette
+  reach** (`frontend/src/utils/paletteReach.js`): one `crm.api.shell.palette_reach` read when the
+  palette opens, kept five minutes, every row's words folded once. They match by the shell's rule
+  (every word, any order, accents aside), the reports named by the term before the ones only about
+  its DocType.
+- **Record providers** (Contactos, Ventas, Productos, Documentos, Clínica, Inmobiliaria, Manual)
+  ask the server once the typing pauses for `PALETTE_DEBOUNCE_MS` (150 ms), from the second letter
+  (`asksServer`). While one asks, its rows of the last query stay if the text still matches their
+  title or line, so the list narrows instead of blinking; «Nada coincide» waits for every answer.
+- The palette's module loads in idle time after the first route (`warmAfterFirstRoute`), so the
+  first ⌘K opens at once; a phone or a slow line loads it on the first open.
+
+On doco-mirror (System Manager, 2026-11-06) the Listas search alone took 0.8–1.4 s warm and
+10.5 s cold per keystroke (a `get_meta` per readable DocType, about a thousand), and the list
+moved for 1.2–2.1 s after the last key while «factura» fired 48 requests.
 
 ## Prefixes (scopes)
 
@@ -42,8 +64,12 @@ nothing else answers. Unprefixed text reaches every provider.
 
 ## Server side
 
+- `crm.api.shell.palette_reach()`: `{reports, workspaces, lists}`, the three sets below in full,
+  for the palette to filter as the worker types.
 - `crm.api.documentos.doctypes(search)`: readable, non-child, non-single, non-virtual DocTypes
   whose module is not blocked, ≤60, with `create` (the floor's `/nuevo` works for any of them).
+  Both read them through `listable_doctypes()`: one read of tabDocType, never a meta per name.
+  The Documentos hub still searches through `doctypes`.
 - `crm.api.shell.reports(search)`: frappe's own allowed-report set for the user (roles, Custom
   Role, `disabled = 0`, Report permission), minus blocked modules and reports whose `ref_doctype`
   the user cannot read; `href` is the awesomebar's route (`/app/query-report/<name>`, or

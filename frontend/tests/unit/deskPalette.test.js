@@ -26,6 +26,7 @@ vi.mock('@/composables/breakpoint', async () => {
 import { parsePaletteQuery } from '@/vendor/muelle-shell/contracts'
 import { createShellProviders } from '@/utils/shellPalette'
 import { createDeskProviders } from '@/utils/deskPalette'
+import { _resetPaletteReach } from '@/utils/paletteReach'
 import { _resetAssistant } from '@/components/assistant/useAssistant'
 
 const boot = (overrides = {}) => ({
@@ -93,59 +94,57 @@ beforeEach(() => {
   globalThis.__ = (text, args) =>
     args ? text.replace(/{(\d+)}/g, (_, i) => args[i]) : text
   _resetAssistant()
+  _resetPaletteReach()
   state.call.mockReset()
   state.call.mockImplementation(async (method, args) => {
-    if (method === 'crm.api.documentos.doctypes') return doctypes
     if (method.endsWith('shell_api.status')) return state.status
-    if (method === 'crm.api.shell.reports')
-      return [
-        {
-          name: 'Stock Ledger',
-          title: 'Mayor de Inventarios',
-          report_type: 'Script Report',
-          ref_doctype: 'Stock Ledger Entry',
-          ref_label: 'Movimiento de inventario',
-          href: '/app/query-report/Stock%20Ledger',
-        },
-        {
-          name: 'Sales Register',
-          title: 'Registro de ventas',
-          report_type: 'Report Builder',
-          ref_doctype: 'Sales Invoice',
-          ref_label: 'Factura de venta',
-          href: '/app/sales-invoice/view/report/Sales%20Register',
-        },
-      ]
-    if (method === 'crm.api.shell.workspaces')
-      return [
-        {
-          name: 'Compras',
-          title: 'Compras',
-          label: 'Compras',
-          href: '/app/compras',
-        },
-        {
-          name: 'Muelle Inventario',
-          title: 'Muelle Inventario',
-          label: 'Inventario Muelle',
-          href: '/app/muelle-inventario',
-        },
-      ]
+    if (method === 'crm.api.shell.palette_reach')
+      return { reports, workspaces, lists: doctypes }
     throw new Error(`unexpected ${method} ${JSON.stringify(args)}`)
   })
 })
 afterEach(() => localStorage.clear())
+const reports = [
+  {
+    name: 'Stock Ledger',
+    title: 'Mayor de Inventarios',
+    report_type: 'Script Report',
+    ref_doctype: 'Stock Ledger Entry',
+    ref_label: 'Movimiento de inventario',
+    href: '/app/query-report/Stock%20Ledger',
+  },
+  {
+    name: 'Sales Register',
+    title: 'Registro de ventas',
+    report_type: 'Report Builder',
+    ref_doctype: 'Sales Invoice',
+    ref_label: 'Factura de venta',
+    href: '/app/sales-invoice/view/report/Sales%20Register',
+  },
+]
+const workspaces = [
+  {
+    name: 'Compras',
+    title: 'Compras',
+    label: 'Compras',
+    href: '/app/compras',
+  },
+  {
+    name: 'Muelle Inventario',
+    title: 'Muelle Inventario',
+    label: 'Inventario Muelle',
+    href: '/app/muelle-inventario',
+  },
+]
 
 describe('Reportes and Desk rows leave the shell only where it has no page', () => {
-  it('reports are Desk rows labelled Desk, from the server, with the Desk URL', async () => {
+  it('reports are Desk rows labelled Desk, from the reach, with the Desk URL', async () => {
     const [reportes] = createDeskProviders({
       boot: ref(boot()),
       modules: ref(modules),
     })
     const items = await reportes.search(query('stock'))
-    expect(state.call).toHaveBeenCalledWith('crm.api.shell.reports', {
-      search: 'stock',
-    })
+    expect(state.call).toHaveBeenCalledWith('crm.api.shell.palette_reach')
     expect(items[0]).toMatchObject({
       id: 'reporte:Stock Ledger',
       group: 'reportes',
@@ -154,7 +153,9 @@ describe('Reportes and Desk rows leave the shell only where it has no page', () 
       desk: '/app/query-report/Stock%20Ledger',
     })
     expect(items[0].subtitle).toMatch(/^Desk · Movimiento de inventario$/)
-    expect(items[1].desk).toBe(
+    expect(items).toHaveLength(1)
+    const [register] = await reportes.search(query('registro'))
+    expect(register.desk).toBe(
       '/app/sales-invoice/view/report/Sales%20Register',
     )
   })
@@ -172,6 +173,45 @@ describe('Reportes and Desk rows leave the shell only where it has no page', () 
       subtitle: 'Desk',
       desk: '/app/muelle-inventario',
     })
+  })
+
+  it('the reach is read once when the palette opens; keystrokes filter it in memory', async () => {
+    const [reportes, desk] = createDeskProviders({
+      boot: ref(boot()),
+      modules: ref(modules),
+    })
+    expect(state.call).toHaveBeenCalledTimes(1)
+    for (const raw of ['st', 'sto', 'stock', 'stock led', 'ventas', 'inv'])
+      await Promise.all([reportes.search(query(raw)), desk.search(query(raw))])
+    // A second palette in the same page reuses it too.
+    createDeskProviders({ boot: ref(boot()), modules: ref(modules) })
+    expect(state.call).toHaveBeenCalledTimes(1)
+    // Every word, any order, accents aside: «ventas registro» finds «Registro de ventas».
+    expect(
+      (await reportes.search(query('ventas registro'))).map((i) => i.id),
+    ).toEqual(['reporte:Sales Register'])
+    // A report named by the term comes before one that only reports on its DocType.
+    expect((await reportes.search(query('factura'))).map((i) => i.id)).toEqual([
+      'reporte:Sales Register',
+    ])
+    expect(
+      (await reportes.search(query('inventario'))).map((i) => i.id),
+    ).toEqual(['reporte:Stock Ledger'])
+  })
+
+  it('a failed read leaves the groups empty and the next search asks again', async () => {
+    state.call.mockImplementationOnce(async () => {
+      throw new Error('offline')
+    })
+    const [reportes] = createDeskProviders({
+      boot: ref(boot()),
+      modules: ref(modules),
+    })
+    expect(await reportes.search(query('stock'))).toEqual([])
+    expect((await reportes.search(query('stock'))).map((i) => i.id)).toEqual([
+      'reporte:Stock Ledger',
+    ])
+    expect(state.call).toHaveBeenCalledTimes(2)
   })
 
   it('the registry carries every provider with its scopes once', () => {

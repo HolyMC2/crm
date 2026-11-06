@@ -14,6 +14,8 @@ export function createAssistantProvider() {
     key: 'asistente',
     label: 'Ask Muelle',
     scopes: ['assistant'],
+    // The status is read once per page (loadAssistantStatus): it answers from memory.
+    local: true,
     async search(query) {
       const raw = query.raw ?? query.text
       const scoped = query.scope === 'assistant'

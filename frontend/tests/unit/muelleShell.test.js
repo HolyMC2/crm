@@ -125,7 +125,7 @@ import {
 } from '@/composables/shellKeyboard'
 import { agendaShortcuts } from '@/composables/useAgenda'
 import { useRecordActions } from '@/composables/recordActions'
-import { bootScope } from '@/vendor/muelle-shell/contracts'
+import { PALETTE_DEBOUNCE_MS, bootScope } from '@/vendor/muelle-shell/contracts'
 
 function boot(overrides = {}) {
   return {
@@ -2105,6 +2105,80 @@ describe('palette recents never outlive read access', () => {
     expect(palette.textContent).toContain('Jorge L.')
     expect(palette.textContent).not.toMatch(/Ana|669|jorge@example/)
     expect(storedRecent().map((item) => item.record.name)).toEqual(['Jorge'])
+  })
+})
+
+describe('the palette answers as the worker types', () => {
+  const deals = new Map()
+  const options = () =>
+    [...document.querySelectorAll('[role="option"]')].map((o) => o.textContent)
+  async function type(input, text) {
+    input.value = text
+    input.dispatchEvent(new Event('input'))
+    for (let i = 0; i < 4; i++) {
+      await Promise.resolve()
+      await nextTick()
+    }
+  }
+  const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+  beforeEach(() => {
+    deals.clear()
+    state.mobile.value = false
+    state.call.mockImplementation(async (method, args) => {
+      // Ventas only: no Contactos search reaching for the network.
+      if (method === 'crm.api.shell.boot')
+        return boot({
+          modules: {
+            ventas: {
+              key: 'ventas',
+              enabled: true,
+              capabilities: { read: true },
+            },
+          },
+        })
+      if (method === 'crm.api.palette.search_deals')
+        return deals.get(args.q) ?? []
+      return null
+    })
+  })
+  const searched = () =>
+    state.call.mock.calls
+      .filter(([method]) => method === 'crm.api.palette.search_deals')
+      .map(([, args]) => args.q)
+
+  it('places answer at the keystroke; the deal search waits for the typing to pause', async () => {
+    await mount('/deals')
+    const input = (await openPalette()).querySelector('input')
+    await type(input, 'dea')
+    await type(input, 'deals')
+    expect(options()).toContain('Ventas › Deals')
+    expect(searched()).toEqual([])
+    await until(() => searched().length)
+    await wait(PALETTE_DEBOUNCE_MS)
+    // «dea» never asked: the next letter came within the pause.
+    expect(searched()).toEqual(['deals'])
+  })
+
+  it('a deal of the last query stays while the next search asks, while the text still matches it', async () => {
+    let answer
+    deals.set('acm', [{ name: 'CRM-DEAL-1', title: 'Acme', status: 'Open' }])
+    deals.set('acme', new Promise((resolve) => (answer = resolve)))
+    await mount('/deals')
+    const palette = await openPalette()
+    const input = palette.querySelector('input')
+    await type(input, 'acm')
+    await until(() => options().some((text) => text.includes('Acme')))
+    await type(input, 'acme')
+    await until(() => searched().includes('acme'))
+    expect(options().some((text) => text.includes('Acme'))).toBe(true)
+    // A letter it no longer matches drops it at once; «Nothing matches»
+    // waits for the answer.
+    await type(input, 'acmz')
+    expect(options().some((text) => text.includes('Acme'))).toBe(false)
+    expect(palette.textContent).not.toContain('Nothing matches')
+    await until(() => palette.textContent.includes('Nothing matches'))
+    expect(palette.textContent).toContain('Nothing matches «acmz».')
+    answer([])
   })
 })
 

@@ -138,7 +138,7 @@
           {{ __('Searching…') }}
         </p>
         <p
-          v-else-if="query.kind !== 'empty' && !flat.length"
+          v-else-if="query.kind !== 'empty' && !flat.length && !asking"
           class="px-4 py-6 text-center text-sm text-ink-gray-6"
         >
           {{ __('Nothing matches «{0}».', [query.text]) }}
@@ -167,6 +167,7 @@ import {
   PALETTE_MODE_KEYS,
   federatedSearch,
   groupPaletteItems,
+  matchTokens,
   parsePaletteQuery,
   providersFor,
   SHELL_MODULES,
@@ -226,10 +227,35 @@ resolveRecent(recentRefs, shellBoot.value).then((items) => {
   recentRefs = items.map(toRecentRef)
   saveRecent(recentRefs)
 })
+// A provider marked `local` (actions, places, Listas, Reportes, Desk) answers
+// from memory on every keystroke; one that asks the server waits until the
+// typing pauses for PALETTE_DEBOUNCE_MS.
+const pause = (ms, signal) =>
+  new Promise((resolve) => {
+    const timer = setTimeout(resolve, ms)
+    signal.addEventListener(
+      'abort',
+      () => {
+        clearTimeout(timer)
+        resolve()
+      },
+      { once: true },
+    )
+  })
 const providers = createShellProviders({
   boot: shellBoot,
   modules: shellModules,
-})
+}).map((provider) =>
+  provider.local
+    ? provider
+    : {
+        ...provider,
+        async search(query, signal) {
+          if (query.kind !== 'empty') await pause(PALETTE_DEBOUNCE_MS, signal)
+          return signal.aborted ? [] : provider.search(query, signal)
+        },
+      },
+)
 const activeMode = computed(() =>
   PALETTE_MODES.includes(props.mode) ? props.mode : 'all',
 )
@@ -286,42 +312,48 @@ const sections = computed(() => {
   return orderPaletteSections(grouped, { empty })
 })
 const flat = computed(() => sections.value.flatMap((section) => section.items))
-
-let timer = null
-let controller = null
-watch(
-  [raw, activeMode],
-  () => {
-    clearTimeout(timer)
-    controller?.abort()
-    timer = setTimeout(
-      run,
-      query.value.kind === 'empty' ? 0 : PALETTE_DEBOUNCE_MS,
-    )
-  },
-  { immediate: true },
+// «Nothing matches» waits for every provider: a record search may still answer.
+const asking = computed(() =>
+  states.value.some(
+    (state) => state.status === 'loading' || state.status === 'slow',
+  ),
 )
+
+let controller = null
+watch([raw, activeMode], run, { immediate: true })
 async function run() {
+  controller?.abort()
   controller = new AbortController()
   const signal = controller.signal
-  searching.value = true
+  const current = query.value
+  cursor.value = 0
   const answering = providersFor(
     providers,
-    query.value,
+    current,
     'contactos',
     activeMode.value,
   )
-  await federatedSearch(answering, query.value, {
+  await federatedSearch(answering, current, {
     signal,
     onUpdate(next) {
-      states.value = next
+      // A provider still asking keeps the rows of the last query that the
+      // text still matches: the list narrows as the worker types instead of
+      // blinking empty at every letter.
+      const last = new Map(states.value.map((state) => [state.key, state]))
+      states.value = next.map((state) =>
+        state.status === 'loading' || state.status === 'slow'
+          ? {
+              ...state,
+              items: (last.get(state.key)?.items || []).filter((item) =>
+                matchTokens(current.text, item.title, item.subtitle),
+              ),
+            }
+          : state,
+      )
       searching.value = next.some((state) => state.status === 'slow')
     },
   })
-  if (!signal.aborted) {
-    searching.value = false
-    cursor.value = 0
-  }
+  if (!signal.aborted) searching.value = false
 }
 
 function close() {
@@ -407,7 +439,6 @@ watch(() => props.focusKey, focusInput)
 onMounted(focusInput)
 onBeforeUnmount(() => {
   controller?.abort()
-  clearTimeout(timer)
   previousFocus?.focus?.()
 })
 </script>

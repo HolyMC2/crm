@@ -66,6 +66,16 @@ export function explicitQuestion(text) {
  */
 export const PALETTE_RANK = Object.freeze({ place: 0, specific: 1, generic: 2 })
 
+/**
+ * A record search asks the server from the second letter, as the Desk
+ * awesomebar does: one letter matches half the shop and costs every provider
+ * a request. Providers marked `local` answer from memory on every keystroke;
+ * the rest wait for the typing to pause (CommandPalette).
+ */
+export function asksServer(query) {
+  return query.kind !== 'empty' && String(query.text || '').trim().length >= 2
+}
+
 const CONTACTOS_PLACES = [
   ['people', 'Personas'],
   ['companies', 'Empresas'],
@@ -192,6 +202,7 @@ export function createShellProviders({ boot, modules }) {
     key: 'acciones',
     label: 'Actions',
     scopes: ['actions'],
+    local: true,
     async search(query) {
       // The record on screen first (Deal 360: Llamar, WhatsApp…), then create.
       const own = recordActions.value.map(recordItem)
@@ -308,6 +319,7 @@ export function createShellProviders({ boot, modules }) {
   const places = {
     key: 'ir_a',
     label: 'Go to',
+    local: true,
     async search(query) {
       const items = modules.value.map((module) => ({
         id: `module.${module.key}`,
@@ -507,7 +519,7 @@ export function createShellProviders({ boot, modules }) {
     label: 'Contactos',
     scopes: ['people'],
     async search(query, signal) {
-      if (query.kind === 'empty' || !moduleEnabled(boot.value, 'contactos'))
+      if (!asksServer(query) || !moduleEnabled(boot.value, 'contactos'))
         return []
       const result = await contactosApi('search', { q: query.text })
       if (signal.aborted) return []
@@ -534,8 +546,7 @@ export function createShellProviders({ boot, modules }) {
     label: 'Ventas',
     scopes: ['documents'],
     async search(query, signal) {
-      if (query.kind === 'empty' || !moduleEnabled(boot.value, 'ventas'))
-        return []
+      if (!asksServer(query) || !moduleEnabled(boot.value, 'ventas')) return []
       const rows = await call('crm.api.palette.search_deals', {
         q: query.text,
       })
@@ -569,8 +580,7 @@ export function createShellProviders({ boot, modules }) {
     label: 'Clínica',
     scopes: ['people'],
     async search(query, signal) {
-      if (query.kind === 'empty' || !moduleEnabled(boot.value, 'clinica'))
-        return []
+      if (!asksServer(query) || !moduleEnabled(boot.value, 'clinica')) return []
       const result = await call('clinica.shell.search', { q: query.text })
       if (signal.aborted) return []
       return clinicaItems(result)
