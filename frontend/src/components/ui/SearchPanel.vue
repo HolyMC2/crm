@@ -1,12 +1,17 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (5dfe9cf54255). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (680ec7564007). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <!-- A phone list's top bar (WhatsApp pattern, Marco 2026-10-28): only the
      search pill shows. Focusing it slides open the panel under it (channel or
      view toggles, filters, recent records: the default slot) over the greyed
-     list; typing lifts the grey so results show live; «Listo», Esc or a tap
-     on the grey closes it. Closed, `#active` shows what narrows the list as
-     removable chips and `#trailing` sits beside the pill (⋯). -->
+     list. Typing folds the panel so the results show live (Marco 2026-11-06);
+     the filters button beside the pill unfolds it over them, and an empty
+     pill shows it again. The keyboard going away or the list scrolling
+     (host.js watchSoftKeyboard, watchListScroll) folds it too, the query
+     staying in the pill behind the filters button; with nothing typed they
+     close it, as «Listo», Esc or a tap on the grey do. Folded or closed,
+     `#active` shows what narrows the list as removable chips; closed,
+     `#trailing` sits beside the pill (⋯). -->
 <template>
-  <div class="relative z-20 bg-surface-base px-3.5 pb-2.5 pt-2">
+  <div ref="rootEl" class="relative z-20 bg-surface-base px-3.5 pb-2.5 pt-2">
     <Transition name="fade">
       <div
         v-if="open && !query"
@@ -49,7 +54,20 @@
       </div>
       <Transition name="slide-x" mode="out-in">
         <button
-          v-if="open"
+          v-if="open && query"
+          key="filters"
+          type="button"
+          class="flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-8"
+          :aria-label="t('Filters')"
+          :aria-pressed="String(!folded)"
+          data-testid="search-panel-toggle"
+          @click="togglePanel"
+        >
+          <span class="lucide-sliders-horizontal size-5" aria-hidden="true" />
+        </button>
+        <button
+          v-else-if="open"
+          key="done"
           type="button"
           class="flex min-h-11 flex-none items-center px-2 text-sm font-medium text-ink-gray-8"
           data-testid="search-panel-done"
@@ -63,13 +81,13 @@
       </Transition>
     </div>
     <ExpandTransition>
-      <div v-if="!open && $slots.active" class="pt-2">
+      <div v-if="(!open || folded) && $slots.active" class="pt-2">
         <slot name="active" />
       </div>
     </ExpandTransition>
     <ExpandTransition>
       <div
-        v-if="open"
+        v-if="open && !folded"
         class="-mx-3.5 max-h-[64dvh] space-y-3 overflow-y-auto overscroll-contain px-3.5 pb-1 pt-3"
         data-testid="search-panel"
       >
@@ -80,8 +98,8 @@
 </template>
 
 <script setup>
-import { t } from './host'
-import { ref } from 'vue'
+import { t, watchListScroll, watchSoftKeyboard } from './host'
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import ExpandTransition from './ExpandTransition.vue'
 
 defineProps({
@@ -91,11 +109,55 @@ defineProps({
 const open = defineModel('open', { type: Boolean, default: false })
 const query = defineModel('query', { type: String, default: '' })
 const inputEl = ref(null)
+const rootEl = ref(null)
+// The panel folded away: typing folds it so the results show live, the
+// filters button unfolds it over them, an empty pill shows it again.
+const folded = ref(Boolean(query.value))
+watch(query, (value) => {
+  folded.value = Boolean(value)
+})
+function togglePanel() {
+  folded.value = !folded.value
+  if (folded.value) inputEl.value?.focus()
+  else inputEl.value?.blur()
+}
 
 function close() {
   open.value = false
   inputEl.value?.blur()
 }
+// The worker moved on (the keyboard went, the list scrolled): a query stays
+// in the pill behind the filters button, panel folded; nothing typed closes.
+function fold() {
+  if (!query.value) {
+    close()
+    return
+  }
+  folded.value = true
+  inputEl.value?.blur()
+}
+let unwatchKeyboard = null
+watch(
+  inputEl,
+  (el) => {
+    unwatchKeyboard?.()
+    unwatchKeyboard = el
+      ? watchSoftKeyboard({ input: el, within: rootEl.value, onHide: fold })
+      : null
+  },
+  { flush: 'post' },
+)
+const shown = () => open.value && !folded.value
+let listScroll = null
+onMounted(() => {
+  listScroll = watchListScroll({ within: rootEl.value, onScroll: fold })
+  if (shown()) listScroll.arm()
+})
+watch(shown, (on) => (on ? listScroll?.arm() : listScroll?.disarm()))
+onBeforeUnmount(() => {
+  unwatchKeyboard?.()
+  listScroll?.stop()
+})
 function clearQuery() {
   query.value = ''
   inputEl.value?.focus()

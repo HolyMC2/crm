@@ -1,4 +1,4 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (5dfe9cf54255). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (680ec7564007). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <template>
   <!-- The one phone top app bar (Shell SPEC §2.2.1), grown from PowerAppBar:
        up/back · title (optionally a scope picker) · ≤3 icon actions · bell.
@@ -55,7 +55,7 @@
           :aria-label="searchLabel || t('Search')"
           v-bind="searchInputAttrs"
           data-appbar-search
-          @input="$emit('update:search', $event.target.value)"
+          @input="onInput"
         />
         <button
           v-if="search"
@@ -65,6 +65,18 @@
           @click="clearSearch"
         >
           <span class="lucide-x size-6" aria-hidden="true" />
+        </button>
+        <!-- Typing folds the panel so the results show live; this unfolds it over them. -->
+        <button
+          v-if="search && $slots['search-panel']"
+          type="button"
+          :class="ICON_BUTTON"
+          :aria-label="t('Filters')"
+          :aria-pressed="String(!folded)"
+          data-appbar-panel-toggle
+          @click="togglePanel"
+        >
+          <span class="lucide-sliders-horizontal size-6" aria-hidden="true" />
         </button>
       </template>
       <template v-else>
@@ -128,8 +140,12 @@
     </div>
     <!-- Search open (WhatsApp pattern, Marco 2026-10-28): the page's filters,
          toggles and recent records slide open under the search field, over
-         the greyed list; typing lifts the grey so results show live. Closed,
-         #active keeps what narrows the list in sight as removable chips. -->
+         the greyed list. Typing folds the panel so the results show live
+         (Marco 2026-11-06); the filters button at the field's end unfolds it
+         over them, and an empty field shows it again. The keyboard going away
+         or the list scrolling folds it too (host.js watchSoftKeyboard,
+         watchListScroll); with nothing typed they end the search. Folded or
+         closed, #active keeps what narrows the list in sight as chips. -->
     <Transition name="fade">
       <div
         v-if="panelOpen && !search"
@@ -150,7 +166,9 @@
     </ExpandTransition>
     <ExpandTransition>
       <div
-        v-if="$slots.active && !(searchOpen && searchable) && !selecting"
+        v-if="
+          $slots.active && !selecting && (!(searchOpen && searchable) || folded)
+        "
         class="px-4 pb-2 empty:hidden"
         data-appbar-active
       >
@@ -217,7 +235,12 @@ import {
 } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import ExpandTransition from './ExpandTransition.vue'
-import { canReturnToReferrer, uiBell } from './host'
+import {
+  canReturnToReferrer,
+  uiBell,
+  watchListScroll,
+  watchSoftKeyboard,
+} from './host'
 import UiTag from './UiTag'
 
 // The scope sheet loads on its first open: the shell header renders this bar
@@ -328,11 +351,16 @@ function choose(value) {
   emit('update:scope', value)
 }
 const slots = useSlots()
+// The panel folded away: typing folds it so the results show live, the
+// keyboard going folds it, the filters button unfolds it over the results,
+// and an empty field shows it again.
+const folded = ref(Boolean(props.search))
 const panelOpen = computed(
   () =>
     props.searchOpen &&
     props.searchable &&
     !props.selecting &&
+    !folded.value &&
     Boolean(slots['search-panel']),
 )
 function closeSearch() {
@@ -343,9 +371,56 @@ function clearSearch() {
   emit('update:search', '')
   input.value?.focus()
 }
+function onInput(event) {
+  const value = event.target.value
+  folded.value = value !== ''
+  emit('update:search', value)
+}
+// Unfolded, the keyboard leaves the panel its room; folded, the field types.
+function togglePanel() {
+  folded.value = !folded.value
+  if (folded.value) input.value?.focus()
+  else input.value?.blur()
+}
+// The worker moved on (the keyboard went, the list scrolled): nothing typed
+// ends the search (the title and the active chips come back); a query stays
+// in the field over its results, panel folded.
+function fold() {
+  if (!slots['search-panel']) return
+  if (!props.search) {
+    closeSearch()
+    return
+  }
+  folded.value = true
+  input.value?.blur()
+}
+watch(
+  () => props.search,
+  (value) => {
+    folded.value = Boolean(value)
+  },
+)
+let unwatchKeyboard = null
+watch(
+  input,
+  (el) => {
+    unwatchKeyboard?.()
+    unwatchKeyboard = el
+      ? watchSoftKeyboard({ input: el, within: bar.value, onHide: fold })
+      : null
+  },
+  { flush: 'post' },
+)
+let listScroll = null
+onMounted(() => {
+  listScroll = watchListScroll({ within: bar.value, onScroll: fold })
+  if (panelOpen.value) listScroll.arm()
+})
+watch(panelOpen, (open) => (open ? listScroll?.arm() : listScroll?.disarm()))
 watch(
   () => props.searchOpen,
   (open) => {
+    folded.value = Boolean(props.search)
     if (open) nextTick(() => input.value?.focus())
   },
   { immediate: true },
@@ -396,7 +471,11 @@ watch(
   },
 )
 onMounted(measure)
-onBeforeUnmount(() => observer?.disconnect())
+onBeforeUnmount(() => {
+  observer?.disconnect()
+  unwatchKeyboard?.()
+  listScroll?.stop()
+})
 
 // The title: plain, or a button that opens the scope sheet.
 const AppBarTitle = (attrs, { emit: emitTitle }) => {

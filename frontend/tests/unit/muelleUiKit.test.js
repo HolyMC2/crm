@@ -33,6 +33,7 @@ import {
   KpiTile,
   ListRow,
   PageHeader,
+  SearchPanel,
   Segmented,
   StatusChip,
   configureUi,
@@ -69,6 +70,7 @@ async function mount(component, props = {}, slots = {}) {
     'scope',
     'search',
     'searchOpen',
+    'query',
     'fullscreen',
   ])
     listeners[`onUpdate:${key}`] = (value) => {
@@ -105,6 +107,18 @@ async function mount(component, props = {}, slots = {}) {
   return { bound, events }
 }
 const all = (selector) => [...document.querySelectorAll(selector)]
+// The on-screen keyboard as the visual viewport sees it: it shrinks when the
+// keyboard shows and grows back when it goes (Android's back button keeps the
+// field focused, so the viewport is the only sign).
+function keyboard() {
+  const viewport = Object.assign(new EventTarget(), { height: 900 })
+  window.visualViewport = viewport
+  const resize = (height) => {
+    viewport.height = height
+    viewport.dispatchEvent(new Event('resize'))
+  }
+  return { show: () => resize(540), hide: () => resize(900) }
+}
 const byText = (selector, text) =>
   all(selector).find((el) => el.textContent.trim().includes(text))
 
@@ -255,6 +269,311 @@ describe('AppBar', () => {
     root.querySelector('[aria-label="Select the visible page"]').click()
     root.querySelector('[aria-label="Clear selection"]').click()
     expect(events.map((e) => e[0])).toEqual(['select-all', 'clear-selection'])
+  })
+})
+
+describe('the search panel: typing, the keyboard, the list scrolling', () => {
+  let now = 10_000
+  beforeEach(() => {
+    vi.spyOn(document, 'hasFocus').mockReturnValue(true)
+    vi.spyOn(Date, 'now').mockImplementation(() => now)
+  })
+  afterEach(() => {
+    vi.restoreAllMocks()
+    delete window.visualViewport
+  })
+  // A tap: the pointer lands before the click, as on a phone.
+  const tap = (el) => {
+    el.dispatchEvent(new Event('pointerdown', { bubbles: true }))
+    el.click()
+  }
+  const type = (input, value) => {
+    input.value = value
+    input.dispatchEvent(new Event('input'))
+  }
+  // A list beside the bar; scroll events never bubble, the document's capture listener sees them.
+  const list = () => {
+    const el = document.createElement('div')
+    document.body.appendChild(el)
+    let top = 0
+    Object.defineProperty(el, 'scrollTop', {
+      get: () => top,
+      configurable: true,
+    })
+    return {
+      el,
+      to(y) {
+        top = y
+        el.dispatchEvent(new Event('scroll'))
+      },
+    }
+  }
+  const panel = () => root.querySelector('[data-appbar-search-panel]')
+  const toggle = () => root.querySelector('[data-appbar-panel-toggle]')
+  const activeChip = () => root.querySelector('[data-active-chip]')
+  const slots = {
+    'search-panel': () =>
+      h('div', [h('button', { type: 'button', 'data-chip': '' }, 'Pagadas')]),
+    active: () => h('span', { 'data-active-chip': '' }, 'Pagadas'),
+  }
+
+  it('ends an empty search when the keyboard goes away', async () => {
+    const kb = keyboard()
+    const { events } = await mount(
+      AppBar,
+      { title: 'Compras', searchable: true, searchOpen: true },
+      slots,
+    )
+    expect(panel()).not.toBeNull()
+    expect(toggle()).toBeNull()
+    expect(document.activeElement).toBe(
+      root.querySelector('[data-appbar-search]'),
+    )
+    kb.show()
+    kb.hide()
+    await flush()
+    expect(events).toContainEqual(['update:searchOpen', false])
+  })
+
+  it('typing folds the panel so the results show live; the filters button unfolds it; an empty field shows it again', async () => {
+    keyboard()
+    const { bound } = await mount(
+      AppBar,
+      { title: 'Compras', searchable: true, searchOpen: true },
+      slots,
+    )
+    const input = root.querySelector('[data-appbar-search]')
+    type(input, 'c')
+    await flush()
+    expect(bound.search).toBe('c')
+    expect(panel()).toBeNull()
+    // What narrows the list stays in sight while the panel is folded.
+    expect(activeChip()).not.toBeNull()
+    expect(toggle().getAttribute('aria-pressed')).toBe('false')
+    tap(toggle())
+    await flush()
+    expect(panel()).not.toBeNull()
+    expect(toggle().getAttribute('aria-pressed')).toBe('true')
+    expect(document.activeElement).not.toBe(input)
+    tap(toggle())
+    await flush()
+    expect(panel()).toBeNull()
+    expect(document.activeElement).toBe(input)
+    tap(root.querySelector('[aria-label="Clear search"]'))
+    await flush()
+    expect(bound.search).toBe('')
+    expect(panel()).not.toBeNull()
+    expect(toggle()).toBeNull()
+  })
+
+  it('opens folded over a query; the keyboard going away folds an unfolded one and keeps the query', async () => {
+    const kb = keyboard()
+    const { events } = await mount(
+      AppBar,
+      { title: 'Compras', searchable: true, searchOpen: true, search: 'cell' },
+      slots,
+    )
+    expect(panel()).toBeNull()
+    expect(activeChip()).not.toBeNull()
+    tap(toggle())
+    await flush()
+    expect(panel()).not.toBeNull()
+    const input = root.querySelector('[data-appbar-search]')
+    input.focus()
+    kb.show()
+    kb.hide()
+    await flush()
+    expect(panel()).toBeNull()
+    expect(input.value).toBe('cell')
+    expect(events).not.toContainEqual(['update:searchOpen', false])
+    expect(events).not.toContainEqual(['update:search', ''])
+  })
+
+  it('keeps the panel through a tap on a chip and folds it when the focus leaves the bar', async () => {
+    keyboard()
+    await mount(
+      AppBar,
+      { title: 'Compras', searchable: true, searchOpen: true, search: 'cell' },
+      slots,
+    )
+    tap(toggle())
+    await flush()
+    const input = root.querySelector('[data-appbar-search]')
+    input.focus()
+    root
+      .querySelector('[data-chip]')
+      .dispatchEvent(new Event('pointerdown', { bubbles: true }))
+    input.blur()
+    await flush()
+    expect(panel()).not.toBeNull()
+    // Later, the field loses its focus to the list (iOS «Done», a tap outside).
+    input.focus()
+    now += 5_000
+    input.blur()
+    await flush()
+    expect(panel()).toBeNull()
+  })
+
+  it('a bar without a panel keeps its search through the keyboard going', async () => {
+    const kb = keyboard()
+    const { events } = await mount(AppBar, {
+      title: 'Compras',
+      searchable: true,
+      searchOpen: true,
+    })
+    kb.show()
+    kb.hide()
+    await flush()
+    expect(events).not.toContainEqual(['update:searchOpen', false])
+  })
+
+  it('SearchPanel: typing folds it, the filters button unfolds it, the keyboard going folds it behind the button', async () => {
+    const kb = keyboard()
+    const { bound } = await mount(
+      SearchPanel,
+      { placeholder: 'Buscar contactos', open: false, query: '' },
+      {
+        default: () => h('button', { type: 'button' }, 'Clientes'),
+        active: () => h('span', { 'data-active-chip': '' }, 'Clientes'),
+      },
+    )
+    const input = root.querySelector('[data-list-search]')
+    const sp = () => root.querySelector('[data-testid="search-panel"]')
+    const spToggle = () =>
+      root.querySelector('[data-testid="search-panel-toggle"]')
+    input.focus()
+    await flush()
+    expect(bound.open).toBe(true)
+    expect(sp()).not.toBeNull()
+    expect(spToggle()).toBeNull()
+    expect(
+      root.querySelector('[data-testid="search-panel-done"]'),
+    ).not.toBeNull()
+    type(input, 'ana')
+    await flush()
+    expect(bound.query).toBe('ana')
+    expect(sp()).toBeNull()
+    expect(activeChip()).not.toBeNull()
+    expect(spToggle().getAttribute('aria-pressed')).toBe('false')
+    expect(root.querySelector('[data-testid="search-panel-done"]')).toBeNull()
+    tap(spToggle())
+    await flush()
+    expect(sp()).not.toBeNull()
+    input.focus()
+    kb.show()
+    kb.hide()
+    await flush()
+    expect(bound.open).toBe(true)
+    expect(sp()).toBeNull()
+    expect(spToggle().getAttribute('aria-pressed')).toBe('false')
+    expect(bound.query).toBe('ana')
+    expect(input.value).toBe('ana')
+    // Nothing typed: the keyboard going closes it.
+    type(input, '')
+    await flush()
+    expect(sp()).not.toBeNull()
+    input.focus()
+    kb.show()
+    kb.hide()
+    await flush()
+    expect(bound.open).toBe(false)
+  })
+
+  it('scrolling the list folds the panel: an empty search ends, a query stays behind the filters button', async () => {
+    keyboard()
+    const { events } = await mount(
+      AppBar,
+      { title: 'Compras', searchable: true, searchOpen: true },
+      slots,
+    )
+    const results = list()
+    // The panel's own first moments never count, nor a nudge, nor the panel's own scroll.
+    results.to(10)
+    results.to(200)
+    await flush()
+    expect(panel()).not.toBeNull()
+    now += 1_000
+    results.to(200)
+    results.to(210)
+    await flush()
+    expect(panel()).not.toBeNull()
+    panel().dispatchEvent(new Event('scroll'))
+    await flush()
+    expect(panel()).not.toBeNull()
+    results.to(260)
+    await flush()
+    expect(events).toContainEqual(['update:searchOpen', false])
+  })
+
+  it('scrolling under an unfolded query folds it and keeps the query', async () => {
+    keyboard()
+    const { events } = await mount(
+      AppBar,
+      { title: 'Compras', searchable: true, searchOpen: true, search: 'cell' },
+      slots,
+    )
+    tap(toggle())
+    await flush()
+    expect(panel()).not.toBeNull()
+    const results = list()
+    now += 1_000
+    results.to(0)
+    results.to(40)
+    await flush()
+    expect(panel()).toBeNull()
+    expect(toggle().getAttribute('aria-pressed')).toBe('false')
+    expect(root.querySelector('[data-appbar-search]').value).toBe('cell')
+    expect(events).not.toContainEqual(['update:searchOpen', false])
+    expect(events).not.toContainEqual(['update:search', ''])
+    // Unfolded again, the next scroll folds it again.
+    tap(toggle())
+    await flush()
+    now += 1_000
+    results.to(40)
+    results.to(100)
+    await flush()
+    expect(panel()).toBeNull()
+  })
+
+  it('SearchPanel: scrolling the list closes an empty one and folds one with a query', async () => {
+    keyboard()
+    const { bound } = await mount(
+      SearchPanel,
+      { placeholder: 'Buscar contactos', open: false, query: '' },
+      {
+        default: () => h('button', { type: 'button' }, 'Clientes'),
+        active: () => h('span', { 'data-active-chip': '' }, 'Clientes'),
+      },
+    )
+    const input = root.querySelector('[data-list-search]')
+    const sp = () => root.querySelector('[data-testid="search-panel"]')
+    const spToggle = () =>
+      root.querySelector('[data-testid="search-panel-toggle"]')
+    input.focus()
+    await flush()
+    expect(sp()).not.toBeNull()
+    const results = list()
+    now += 1_000
+    results.to(0)
+    results.to(60)
+    await flush()
+    expect(bound.open).toBe(false)
+    expect(sp()).toBeNull()
+    input.focus()
+    type(input, 'ana')
+    await flush()
+    tap(spToggle())
+    await flush()
+    expect(sp()).not.toBeNull()
+    now += 1_000
+    results.to(60)
+    results.to(120)
+    await flush()
+    expect(bound.open).toBe(true)
+    expect(sp()).toBeNull()
+    expect(spToggle().getAttribute('aria-pressed')).toBe('false')
+    expect(bound.query).toBe('ana')
+    expect(activeChip()).not.toBeNull()
   })
 })
 
