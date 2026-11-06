@@ -452,8 +452,14 @@ class TestIntegrationWebhooks(IntegrationTestCase):
 			fields = real(doctype, *args, **kwargs)
 			return [f for f in fields if f != "rate"] if doctype == "CRM Products" else fields
 
+		# the CRM's own currency: another one would look up an exchange rate online
+		currency = frappe.db.get_single_value("FCRM Settings", "currency") or "USD"
 		deal = frappe.get_doc(
-			{"doctype": "CRM Deal", "products": [{"product_name": "Fictional", "rate": 10, "qty": 2}]}
+			{
+				"doctype": "CRM Deal",
+				"currency": currency,
+				"products": [{"product_name": "Fictional", "rate": 10, "qty": 2}],
+			}
 		).insert(ignore_permissions=True)
 		row = frappe.get_doc(webhooks.DELIVERY, self.deliveries(connection, "document.created")[0])
 		with patch.object(events, "get_permitted_fields", side_effect=without_rate):
