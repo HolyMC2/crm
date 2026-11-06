@@ -30515,6 +30515,10 @@ msgid "Send message_id: your channel's own id for this message (up to 140 charac
 msgstr "Envía message_id: el id que tu canal le da a este mensaje (hasta 140 caracteres)."
 
 #: crm/integrations/channel.py
+msgid "Send contact_id: the customer's id on your channel, up to 128 letters, digits or . _ : @ + = - and no spaces."
+msgstr "Envía contact_id: el id del cliente en tu canal, hasta 128 letras, números o . _ : @ + = - y sin espacios."
+
+#: crm/integrations/channel.py
 msgid "message_id {0} was already used for a different text."
 msgstr "message_id {0} ya se usó para otro texto."
 

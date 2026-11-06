@@ -13,6 +13,7 @@ back through crm.api.integration.channel_status.
 
 import hashlib
 import json
+import re
 
 import frappe
 from frappe import _
@@ -74,6 +75,12 @@ def receive(connection_name, peer_id, text, external_id, sender_name=None):
 		frappe.throw(_("Send the message text (1 to {0} characters).").format(MAX_TEXT))
 	if not isinstance(external_id, str) or not external_id.strip() or len(external_id) > 140:
 		frappe.throw(_("Send message_id: your channel's own id for this message (up to 140 characters)."))
+	if not isinstance(peer_id, str) or not re.fullmatch(control.peer_pattern(PROVIDER), peer_id):
+		frappe.throw(
+			_(
+				"Send contact_id: the customer's id on your channel, up to 128 letters, digits or . _ : @ + = - and no spaces."
+			)
+		)
 	sender_name = (sender_name or "").strip()[:140] or None
 	name = control.conversation_key(PROVIDER, connection.channel_account_id, peer_id)
 	key = _key(connection.name, "Incoming", external_id.strip())

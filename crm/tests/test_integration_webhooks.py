@@ -735,5 +735,5 @@ class TestIntegrationWebhooks(IntegrationTestCase):
 		frappe.db.set_value(webhooks.INTEGRATION, connection.name, "enabled", 1)
 		frappe.set_user(self.users["agent"])
 		for bad in ("", " lead", "a" * 129, "ana smith"):
-			with self.subTest(contact=bad), self.assertRaises(frappe.ValidationError):
+			with self.subTest(contact=bad), self.assertRaisesRegex(frappe.ValidationError, "contact_id"):
 				api.channel_message(bad, "Hola", "mail-" + uuid4().hex[:6])
