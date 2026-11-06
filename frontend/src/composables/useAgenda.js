@@ -308,20 +308,41 @@ export function loadCapabilities() {
   return call('crm.api.agenda.get_capabilities')
 }
 
-export async function querySources(keys, range) {
-  const results = await Promise.all(
-    keys.map((source) =>
-      call(`${API}.query`, { source, start: range.start, end: range.end })
-        .then((data) => ({ source, data }))
-        .catch((error) => ({ source, error })),
-    ),
-  )
+// One request for every calendar of the range where the server batches
+// (capabilities.batch_query: doco.agenda.api.query_many); each calendar still
+// answers on its own, constraints included.
+async function queryBatch(keys, range) {
+  try {
+    const answer = await call(`${API}.query_many`, {
+      sources: keys,
+      start: range.start,
+      end: range.end,
+    })
+    if (answer?.constraints)
+      return keys.map((source) => ({ source, data: answer }))
+    return keys.map((source) => ({ source, data: answer?.results?.[source] }))
+  } catch (error) {
+    return keys.map((source) => ({ source, error }))
+  }
+}
+
+export async function querySources(keys, range, { batch = false } = {}) {
+  const results =
+    batch && keys.length > 1
+      ? await queryBatch(keys, range)
+      : await Promise.all(
+          keys.map((source) =>
+            call(`${API}.query`, { source, start: range.start, end: range.end })
+              .then((data) => ({ source, data }))
+              .catch((error) => ({ source, error })),
+          ),
+        )
   const events = []
   const problems = []
   const resources = {}
   let timeZone = null
   for (const { source, data, error } of results) {
-    if (error || data?.constraints) {
+    if (error || !data || data.constraints) {
       problems.push({
         source,
         constraint: data?.constraints?.[0] || {

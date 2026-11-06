@@ -1376,14 +1376,21 @@ const wantTasks = computed(
 
 async function fetchRange(target, { store = true } = {}) {
   const sources = neededSources.value
-  const parts = await Promise.all(
-    sources.map(async (source) => {
-      const result = await querySources([source], target)
-      if (store && !result.problems.length)
-        cache.set(cache.key(source, target), result.events)
-      return result
-    }),
-  )
+  // One request for all the calendars where the server batches them, else one each.
+  const parts = caps.value?.batch_query
+    ? [await querySources(sources, target, { batch: true })]
+    : await Promise.all(sources.map((source) => querySources([source], target)))
+  if (store) {
+    const failed = new Set(
+      parts.flatMap((part) => part.problems.map((problem) => problem.source)),
+    )
+    const bySource = Object.fromEntries(sources.map((source) => [source, []]))
+    for (const event of parts.flatMap((part) => part.events))
+      bySource[event.source]?.push(event)
+    for (const source of sources)
+      if (!failed.has(source))
+        cache.set(cache.key(source, target), bySource[source])
+  }
   let tasks = []
   if (wantTasks.value) {
     try {

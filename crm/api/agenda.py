@@ -35,7 +35,7 @@ def get_capabilities() -> dict:
 		}
 	try:
 		# A doco older than the Agenda (crm updated first) leaves the module off, not the shell down.
-		from doco.agenda.api import sources
+		import doco.agenda.api as agenda_api
 	except ImportError:
 		return {
 			"enabled": False,
@@ -44,13 +44,15 @@ def get_capabilities() -> dict:
 			"sources": [],
 		}
 
-	rows = sources()["sources"]
+	rows = agenda_api.sources()["sources"]
 	for row in rows:
 		if row.get("reason"):
 			row["reason"] = _(row["reason"])
 	return {
 		"enabled": any(row["enabled"] for row in rows),
 		"sales_access": sales,
+		# One request for every calendar of a range (doco.agenda.api.query_many), else one per calendar.
+		"batch_query": callable(getattr(agenda_api, "query_many", None)),
 		"user": frappe.session.user,
 		"user_time_zone": frappe.db.get_value("User", frappe.session.user, "time_zone") or "",
 		"sources": rows,
