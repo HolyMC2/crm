@@ -10,11 +10,15 @@ import {
   statusTone,
 } from '@/utils/display'
 
-/** The status a worker reads: a draft and a cancelled document say so even without a `status` field. */
-export function docStatus(row) {
+/**
+ * The status a worker reads: a draft and a cancelled document say so even without
+ * a `status` field. A document that is never confirmed (`submittable: false`) is
+ * no draft while it waits: it has no state to show.
+ */
+export function docStatus(row, { submittable = true } = {}) {
   if (row?.docstatus === 2) return 'Cancelled'
   if (row?.status) return row.status
-  if (row?.docstatus === 0) return 'Draft'
+  if (row?.docstatus === 0 && submittable) return 'Draft'
   return ''
 }
 
@@ -106,8 +110,8 @@ export const genericProfile = {
   sections: ['items', 'totals', 'datos', 'conexiones', 'actividad', 'archivos'],
 
   /** One list row: title (never the ID), one useful line, trailing amount or date, status. */
-  row(row, { doctype }) {
-    const status = docStatus(row)
+  row(row, { doctype, submittable = true } = {}) {
+    const status = docStatus(row, { submittable })
     const date = row.date ? formatDate(row.date) : ''
     const number =
       looksLikeId(row.name) && titleOf(row, doctype) !== row.name
@@ -132,7 +136,10 @@ export const genericProfile = {
   /** The record header: title, the kind and number as small meta, the hero amount. */
   header(record) {
     const h = record.header || {}
-    const status = docStatus({ ...h, docstatus: h.docstatus })
+    const status = docStatus(
+      { ...h, docstatus: h.docstatus },
+      { submittable: record.submittable !== false },
+    )
     return {
       title: titleOf({ title: h.title, name: record.name }, record.doctype),
       kind: kindLabel(record.doctype) || record.label,

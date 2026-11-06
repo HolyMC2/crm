@@ -30,6 +30,7 @@ describe('looksLikeId', () => {
     'ACC-PINV-2025-00016',
     'CRM-DEAL-2025-00086',
     'MAT-MR-2026-00005',
+    'EMP-CKIN-11-2026-000017',
     'RO-00157',
     'MKCAMP-000003',
     'PRJ-0001',

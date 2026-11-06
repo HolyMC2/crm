@@ -36,6 +36,28 @@ Budgets (DD12): nothing here is imported statically from the router, `main.js` o
 `registry.js` is the one small module others may import lazily (Avisos, the kardex, the palette) to
 resolve a link with `documentRoute`; it carries no profile code. Profiles load lazily.
 
+## The floor reads the meta: `floor`, `facets`
+
+A doctype without a curated profile (`/documentos/tipo/:doctype`) still reads at a glance.
+`DocumentosList` asks `crm.api.documentos.floor` once per doctype and merges
+`profiles/_floor.js` `floorProfile(meta)` over the generic profile:
+
+| `floor` key   | what                                                                                                                                                        | becomes                                                                                                                                    |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `submittable` | whether a draft exists at all                                                                                                                               | a never-confirmed document (Employee Checkin, ToDo) never reads «Borrador»; `docStatus(row, { submittable })`                              |
+| `columns`     | the `in_list_view` fields Desk shows (else the required ones), minus the title, status, amount and date the row already carries; `choices` for a Select     | the row's cells after its state («Entrada · Turno matutino»), at most 3; `row.titles[fieldname]` names a linked record                     |
+| `date`        | the display date, or the first list-view Date/Datetime (a checkin's `time`)                                                                                 | the row's trailing «hoy 09:02», the default order, and «Fecha» as period presets in «Filtros»                                              |
+| `status`      | the status Select's options, translated                                                                                                                     | the chips («Todos · Abierta · Cerrada»), capped at 6; a submittable doctype without one gets Todos · Borradores · Confirmados · Cancelados |
+| `facets`      | the status, then the Select, Link and Check fields Desk lists or filters on (`in_list_view` or `in_standard_filter`), at most 5; bookkeeping links left out | «Filtros» fields with counted options, and the summary pane's groups                                                                       |
+
+`facets(doctype, fields, search)` takes `{ fieldname: filters }` and answers `{ fieldname: { values:
+[{ value, label, count }], more } }`: the top 8 values by count, empties left out, each counted within
+every filter but its own, so a value's count is what picking it would show. The fields must be facets
+of the doctype. On desktop `ListSummary` draws each facet as rows with the count and a bar for its share
+of the largest (a tap narrows the list, the picked one lets go); on the phone the same counts sit on
+the «Filtros» chips in the search panel. `counts` always answers `todos`, so the summary's first line is
+the view's exact size.
+
 ## Where a link goes: `documentRoute`
 
 ```js
@@ -98,7 +120,7 @@ from the shell (§1.5); the only Desk door is «Abrir en escritorio» in the too
 | `chips`                 | `{ value, label, filters }[]`                                                           | the one chip row; `value: ''` is «Todas/Todos» with `filters: null`. Filters are Frappe filter triples                                                                                        |
 | `defaultChip`           | `string`                                                                                | chip on when the URL names none (kept out of the URL)                                                                                                                                         |
 | `filterFields`          | `{ fieldname, label, options?, kind?, doctype?, field?, filters?, allLabel? }[]`        | the «Filtros» sheet (below)                                                                                                                                                                   |
-| `sorts`                 | `{ value, label }[]`                                                                    | «Ordenar» in the bolt; `value` is `field asc` or `field desc`; `''` = the date field, newest first                                                                                                       |
+| `sorts`                 | `{ value, label }[]`                                                                    | «Ordenar» in the bolt; `value` is `field asc` or `field desc`; `''` = the date field, newest first                                                                                            |
 | `sections`              | `string[]`                                                                              | record sections in order: `items`, `totals`, `datos`, `conexiones`, `actividad`, `archivos`                                                                                                   |
 | `owedLabel`             | `string`                                                                                | totals' label for the outstanding amount («Por cobrar», «Por pagar»)                                                                                                                          |
 | `row(row, { doctype })` | → `{ title, subtitle, subtitleTone?, meta, metaTone?, status, tone, avatar? \| icon? }` | one list row (`ui/ListRow`)                                                                                                                                                                   |
@@ -110,8 +132,8 @@ from the shell (§1.5); the only Desk door is «Abrir en escritorio» in the too
 | `moreFields`            | `string[]`                                                                              | fields behind «Más datos» in the form (opened by itself when one of them is missing)                                                                                                          |
 | `defaults`              | `{ [fieldname]: value }`                                                                | values a blank `/nuevo` saves with (cobros: `payment_type: Receive`, `party_type: Customer`); not used on a mapper's draft                                                                    |
 | `creatable`             | `false`                                                                                 | the list offers no «Nuevo» (Tickets come from the POS)                                                                                                                                        |
-| `createOptions(ctx)`    | → `{ key, label, icon, hint, query }[]`                                                | kinds of new document as tiles under the bolt («Acciones», `acciones.js`); each opens `/nuevo?<query>`. Shown only to who may create                                                       |
-| `listActions(ctx)`      | → `{ key, label, icon, hint, to, app? }[]`                                             | the list's own shortcuts under the bolt («Ir a»); `app` hides one while that shell module is off                                                                                                |
+| `createOptions(ctx)`    | → `{ key, label, icon, hint, query }[]`                                                 | kinds of new document as tiles under the bolt («Acciones», `acciones.js`); each opens `/nuevo?<query>`. Shown only to who may create                                                          |
+| `listActions(ctx)`      | → `{ key, label, icon, hint, to, app? }[]`                                              | the list's own shortcuts under the bolt («Ir a»); `app` hides one while that shell module is off                                                                                              |
 | `editFields`            | `string[]` or `null`                                                                    | fields of the edit sheet and `/nuevo`, in order; `null`: the required and list fields the worker may write                                                                                    |
 | `altSteps(record)`      | → `step[]`                                                                              | other steps of this state, tonal next to the filled one (Pedido: «Entregar» filled, «Facturar» tonal)                                                                                         |
 | `panels`                | `{ key, at: 'hero' \| 'aside', load: () => import(…), when?(record) }[]`                | lazy components on the record (props `record`, `doctype`, `name`): under the hero or atop the side column                                                                                     |

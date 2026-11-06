@@ -52,7 +52,7 @@
           @update:model-value="setChip"
           @clear-filters="clearFilters"
         >
-          <template v-if="profile.filterFields?.length || state.scope" #filters>
+          <template v-if="filterFields.length || state.scope" #filters>
             <div class="space-y-3" data-documentos-filters>
               <button
                 v-if="state.scope"
@@ -64,10 +64,7 @@
                 {{ state.scopeLabel || 'Un documento' }}
                 <span class="lucide-x size-3" aria-hidden="true" />
               </button>
-              <template
-                v-for="field in profile.filterFields || []"
-                :key="field.fieldname"
-              >
+              <template v-for="field in filterFields" :key="field.fieldname">
                 <div v-if="field.kind === 'link'">
                   <p class="mb-1.5 text-xs font-medium text-ink-gray-6">
                     {{ field.label }}
@@ -118,7 +115,7 @@
         @update:model-value="setChip"
         @clear-filters="clearFilters"
       >
-        <template v-if="profile.filterFields?.length || state.scope" #filters>
+        <template v-if="filterFields.length || state.scope" #filters>
           <div v-if="state.scope" class="pb-3">
             <p class="pb-1 text-sm text-ink-gray-6">Relacionados con</p>
             <ListRow
@@ -129,7 +126,7 @@
             />
           </div>
           <div
-            v-for="field in profile.filterFields || []"
+            v-for="field in filterFields"
             :key="field.fieldname"
             class="pb-3"
           >
@@ -150,6 +147,7 @@
                   ]"
               :key="option.value || 'all'"
               :title="option.label"
+              :meta="option.count != null ? String(option.count) : ''"
               :selected="
                 (state.filters[field.fieldname] || '') === option.value
               "
@@ -222,6 +220,7 @@
             :key="row.name"
             :title="row.view.title"
             :subtitle="row.view.subtitle"
+            :subtitle-lines="row.view.subtitleLines || 1"
             :subtitle-tone="row.view.subtitleTone"
             :meta="row.view.meta"
             :meta-tone="row.view.metaTone"
@@ -357,7 +356,12 @@ import {
   rememberScroll,
   writeListQuery,
 } from '@/documentos/listState'
-import { loadProfile } from '@/documentos/profiles'
+import { hasCuratedProfile, loadProfile } from '@/documentos/profiles'
+import {
+  facetGroups,
+  facetOptions,
+  floorProfile,
+} from '@/documentos/profiles/_floor'
 import { activeView } from '@/documentos/vistas'
 import { listActionsFor } from '@/documentos/acciones'
 import { createListCache } from '@/utils/listCache'
@@ -416,6 +420,10 @@ const search = ref(state.value.search)
 const searchOpen = ref(!!state.value.search)
 const rows = ref([])
 const counts = ref({})
+// The floor's facets counted within the other filters: { fieldname: { values, more } }.
+const facetCounts = ref({})
+// Whether a draft exists at all (`rows` says); a document never confirmed is no «Borrador».
+const submittable = ref(true)
 const hasMore = ref(false)
 const loading = ref(false)
 const error = ref('')
@@ -440,6 +448,7 @@ watch(rowNames, (names) => sel.prune(names))
 function onBulkDone() {
   load({ count: rows.value.length })
   loadCounts()
+  loadFacets()
 }
 
 const chipValue = computed(
@@ -451,6 +460,22 @@ const chips = computed(() =>
     label: chip.label,
     count: counts.value[chip.value || 'todos'],
   })),
+)
+// The «Filtros» fields as the worker sees them now: a facet's options are its
+// counted values (the picked one always among them).
+const filterFields = computed(() =>
+  (profile.value?.filterFields || []).map((field) =>
+    field.facet
+      ? {
+          ...field,
+          options: facetOptions(
+            field,
+            facetCounts.value,
+            state.value.filters[field.fieldname] || '',
+          ),
+        }
+      : field,
+  ),
 )
 // Closed phone search: the status (when not the list's default) and each
 // filter, with its ×.
@@ -466,7 +491,7 @@ const activeChips = computed(() => {
         remove: () => setChip(fallback),
       })
   }
-  for (const field of profile.value?.filterFields || []) {
+  for (const field of filterFields.value) {
     const value = state.value.filters[field.fieldname]
     if (!value) continue
     const option =
@@ -501,7 +526,10 @@ const hasFilters = computed(
 const shown = computed(() =>
   rows.value.map((row) => ({
     ...row,
-    view: profile.value.row(row, { doctype: doctype.value }),
+    view: profile.value.row(row, {
+      doctype: doctype.value,
+      submittable: submittable.value,
+    }),
   })),
 )
 const emptyTitle = computed(() =>
@@ -586,6 +614,7 @@ function showPage(page) {
   rows.value = page.rows || []
   hasMore.value = !!page.has_more
   serverLabel.value = page.label || ''
+  if (page.submittable != null) submittable.value = !!page.submittable
 }
 
 let seq = 0
@@ -610,6 +639,7 @@ async function load({ append = false, count = 0 } = {}) {
       rows.value = [...rows.value, ...page.rows]
       hasMore.value = !!page.has_more
       serverLabel.value = page.label || ''
+      if (page.submittable != null) submittable.value = !!page.submittable
     } else {
       showPage(page)
       listCache.save(listAt, page)
@@ -629,15 +659,61 @@ async function load({ append = false, count = 0 } = {}) {
 }
 
 async function loadCounts() {
-  if (!profile.value?.chips?.length) return
+  if (!profile.value) return
+  const chips = chipCountFilters(profile.value, state.value)
+  // Without chips (a floor doctype with no status) the view still has a size.
+  if (!('todos' in chips)) chips.todos = listFilters(profile.value, state.value)
+  const asked = doctype.value
   try {
-    counts.value = await docApi('counts', {
-      doctype: doctype.value,
-      chips: chipCountFilters(profile.value, state.value),
+    const out = await docApi('counts', {
+      doctype: asked,
+      chips,
       search: state.value.search,
     })
+    if (asked === doctype.value) counts.value = out
   } catch {
     counts.value = {}
+  }
+}
+const total = computed(() => counts.value[chipValue.value || 'todos'] ?? null)
+
+// The floor's profile from the doctype's meta (columns, facets, chips, the
+// date), once per doctype in this session.
+const FLOOR = new Map()
+async function loadFloor() {
+  const asked = doctype.value
+  try {
+    if (!FLOOR.has(asked))
+      FLOOR.set(asked, await docApi('floor', { doctype: asked }))
+    if (asked !== doctype.value) return
+    profile.value = { ...profile.value, ...floorProfile(FLOOR.get(asked)) }
+  } catch {
+    // The generic profile still lists; `rows` says why when it cannot.
+    FLOOR.delete(asked)
+  }
+}
+
+// Each facet counted within everything but its own filter, so a value's count
+// is what picking it would show.
+async function loadFacets() {
+  const facets = profile.value?.facets || []
+  if (!facets.length) return
+  const asked = doctype.value
+  const fields = {}
+  for (const facet of facets)
+    fields[facet.fieldname] = listFilters(profile.value, {
+      ...state.value,
+      filters: { ...state.value.filters, [facet.fieldname]: '' },
+    })
+  try {
+    const out = await docApi('facets', {
+      doctype: asked,
+      fields,
+      search: state.value.search,
+    })
+    if (asked === doctype.value) facetCounts.value = out || {}
+  } catch {
+    facetCounts.value = {}
   }
 }
 
@@ -646,7 +722,11 @@ async function loadCounts() {
 const live = useLiveList(doctype, async () => {
   if (!profile.value) return
   const before = rowNames.value
-  await Promise.all([load({ count: rows.value.length }), loadCounts()])
+  await Promise.all([
+    load({ count: rows.value.length }),
+    loadCounts(),
+    loadFacets(),
+  ])
   live.mark(before, rowNames.value)
 })
 
@@ -711,6 +791,7 @@ function apply({ counts: withCounts = true } = {}) {
   listCache.paint(showPage)
   load()
   if (withCounts) loadCounts()
+  loadFacets()
 }
 
 watchEffect(() => {
@@ -724,6 +805,13 @@ watchEffect(() => {
     setChip,
     shown: rows.value.length,
     more: hasMore.value,
+    total: total.value,
+    facets: facetGroups(
+      profile.value?.facets || [],
+      facetCounts.value,
+      state.value.filters,
+    ),
+    setFilter,
     first: first ? recordTo(first) : null,
     firstTitle: first?.view?.title || '',
     loading: loading.value || !profile.value,
@@ -796,6 +884,9 @@ async function open() {
   denied.value = false
   error.value = ''
   rows.value = []
+  counts.value = {}
+  facetCounts.value = {}
+  submittable.value = true
   vistas.value = null
   if (missing.value) return
   loadVistas()
@@ -805,11 +896,13 @@ async function open() {
     doctype: doctype.value,
     entry: entry.value,
   })
+  if (!entry.value && !hasCuratedProfile(doctype.value)) await loadFloor()
   const saved = recallScroll(route.fullPath)
   // The last answer shows while the read runs, already at the saved place.
   const painted = listCache.paint(showPage)
   if (painted && saved) restoreScroll(saved.top)
   loadCounts()
+  loadFacets()
   await load({ count: saved?.count || 0 })
   if (saved && !painted) restoreScroll(saved.top)
 }

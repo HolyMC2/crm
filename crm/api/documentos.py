@@ -296,6 +296,13 @@ def _display(meta):
 		return None
 
 	lines = known.get("lines")
+	date = field("date", () if known else ("posting_date", "transaction_date", "date"))
+	if not known and not date:
+		# The floor: a document whose moment is one of its own list fields (a checkin's «time»).
+		date = next(
+			(df.fieldname for df in meta.fields if df.in_list_view and df.fieldtype in ("Date", "Datetime")),
+			None,
+		)
 	return {
 		"title": title,
 		"stock": tuple(f for f in known.get("stock", ()) if meta.has_field(f)),
@@ -303,7 +310,7 @@ def _display(meta):
 		"status": status,
 		"amount": field("amount", () if known else ("grand_total",)),
 		"currency": field("currency", ("currency",)),
-		"date": field("date", () if known else ("posting_date", "transaction_date", "date")),
+		"date": date,
 		"due": field("due"),
 		"outstanding": field("outstanding"),
 	}
@@ -316,6 +323,122 @@ def _list_fields(meta):
 		if df.in_list_view and df.fieldtype not in _HIDDEN_TYPES and not df.permlevel:
 			fields.append(df.fieldname)
 	return fields[:6]
+
+
+# The floor (any doctype without a curated profile) reads its list from the meta, as Desk
+# does: the row carries the fields Desk lists, and the list is sliced by its status, choices
+# and links («facets»). A curated profile says all of this better and never uses it.
+FLOOR_COLUMNS = 4
+FLOOR_FACETS = 5
+FACET_VALUES = 8
+MAX_FACET_GROUPS = 60
+_FACET_TYPES = ("Select", "Link", "Check")
+
+
+def _select_choices(df):
+	"""A Select's options in the worker's language: {stored: shown}."""
+	return {o: _(o) for o in (opt.strip() for opt in cstr(df.options).split("\n")) if o}
+
+
+def _floor_usable(df, shown):
+	return (
+		df.fieldtype not in _HIDDEN_TYPES and not df.permlevel and not df.hidden and df.fieldname not in shown
+	)
+
+
+def _floor_columns(meta, display):
+	"""The cells of a floor row: the list-view fields Desk shows (else the required ones),
+	minus what the row already carries as title, status, amount or date."""
+	shown = _header_fields(display) | {display["currency"]}
+	fields = [df for df in meta.fields if df.in_list_view and _floor_usable(df, shown)]
+	if not fields:
+		fields = [df for df in meta.fields if df.reqd and _floor_usable(df, shown)]
+	out = []
+	for df in fields[:FLOOR_COLUMNS]:
+		col = {
+			"fieldname": df.fieldname,
+			"label": _(df.label) if df.label else df.fieldname,
+			"fieldtype": df.fieldtype,
+			"options": df.options if df.fieldtype in ("Link", "Dynamic Link") else None,
+		}
+		if df.fieldtype == "Select":
+			col["choices"] = _select_choices(df)
+		out.append(col)
+	return out
+
+
+def _floor_facets(meta, display):
+	"""What a floor list is sliced by: its status, then the choices, links and switches
+	Desk lists or filters on. Bookkeeping links (accounts, templates) stay out."""
+	shown = set(display["title"]) | {
+		display["amount"],
+		display["currency"],
+		display["date"],
+		display["due"],
+		display["outstanding"],
+	}
+	out = []
+	for df in meta.fields:
+		if df.fieldtype not in _FACET_TYPES or not _floor_usable(df, shown):
+			continue
+		if df.fieldname != display["status"] and not (df.in_list_view or df.in_standard_filter):
+			continue
+		if df.fieldtype == "Link" and df.options in _DATOS_LINK_SKIP:
+			continue
+		out.append(
+			{
+				"fieldname": df.fieldname,
+				"label": _(df.label) if df.label else df.fieldname,
+				"fieldtype": df.fieldtype,
+				"options": df.options if df.fieldtype == "Link" else None,
+			}
+		)
+	out.sort(key=lambda facet: facet["fieldname"] != display["status"])
+	return out[:FLOOR_FACETS]
+
+
+def _link_titles(wanted):
+	"""{(doctype, name): title} for linked records whose doctype names them by a title
+	field, one query per doctype and only where the worker may read it."""
+	titles = {}
+	for link_doctype, names in wanted.items():
+		if not names or not _exists(link_doctype) or not frappe.has_permission(link_doctype, "read"):
+			continue
+		meta = frappe.get_meta(link_doctype)
+		field = meta.title_field if meta.title_field and meta.title_field != "name" else None
+		if not field or not meta.has_field(field):
+			continue
+		for found in frappe.get_list(
+			link_doctype, filters={"name": ["in", list(names)]}, fields=["name", field]
+		):
+			if found.get(field):
+				titles[(link_doctype, found.name)] = cstr(found.get(field)).strip()
+	return titles
+
+
+def _column_doctype(col, doc):
+	return doc.get(col["options"]) if col["fieldtype"] == "Dynamic Link" else col["options"]
+
+
+def _column_titles(meta, display, docs, rows):
+	"""`row.titles`: what each linked record a floor row shows is called («Turno matutino»,
+	never its ID), one query per linked doctype."""
+	links = [c for c in _floor_columns(meta, display) if c["fieldtype"] in ("Link", "Dynamic Link")]
+	if not links or not docs:
+		return
+	wanted = {}
+	for doc in docs:
+		for col in links:
+			link_doctype = _column_doctype(col, doc)
+			if link_doctype and doc.get(col["fieldname"]):
+				wanted.setdefault(link_doctype, set()).add(doc.get(col["fieldname"]))
+	titles = _link_titles(wanted)
+	for doc, row in zip(docs, rows, strict=False):
+		row["titles"] = {}
+		for col in links:
+			title = titles.get((_column_doctype(col, doc), doc.get(col["fieldname"])))
+			if title:
+				row["titles"][col["fieldname"]] = title
 
 
 _ABBR = re.compile(r"\s+-\s+[^\s-]{1,12}$")
@@ -469,6 +592,10 @@ def _wanted_fields(meta, display, extra):
 			fields.add(display[key])
 	if not DISPLAY.get(meta.name):
 		fields.update(_list_fields(meta))
+		for col in _floor_columns(meta, display):
+			fields.add(col["fieldname"])
+			if col["fieldtype"] == "Dynamic Link" and meta.has_field(col["options"]):
+				fields.add(col["options"])
 	for key in (
 		"party",
 		"party_type",
@@ -538,6 +665,8 @@ def rows(
 	)
 	out = [_row(doc, display) for doc in found[:limit]]
 	_party_titles(doctype, found[:limit], out)
+	if not DISPLAY.get(meta.name):
+		_column_titles(meta, display, found[:limit], out)
 	if "_items" in (_parse(fields, []) or []):
 		_items_summary(meta, out)
 	_line_counts(meta, display, out)
@@ -545,6 +674,8 @@ def rows(
 		"rows": out,
 		"has_more": len(found) > limit,
 		"label": _(doctype),
+		# A document that is never confirmed is never a «Borrador» either.
+		"submittable": bool(meta.is_submittable),
 	}
 
 
@@ -617,6 +748,96 @@ def counts(doctype: str, chips: str | dict | None = None, search: str | None = N
 		cstr(key)[:40]: _count(doctype, value or None, or_filters)
 		for key, value in list(chips.items())[:MAX_CHIPS]
 	}
+
+
+@frappe.whitelist()
+def floor(doctype: str):
+	"""The generic floor's profile, from the meta: what a row shows (`columns`), what the
+	list is sliced by (`facets`), the status words for its chips, the date it orders by and
+	whether a draft exists at all (`submittable`)."""
+	meta = _require(doctype)
+	display = _display(meta)
+	status = None
+	if display["status"] and meta.get_field("status").fieldtype == "Select":
+		status = [{"value": k, "label": v} for k, v in _select_choices(meta.get_field("status")).items()]
+	date = meta.get_field(display["date"]) if display["date"] else None
+	return {
+		"label": _(doctype),
+		"submittable": bool(meta.is_submittable),
+		"title": list(display["title"]),
+		"date": {
+			"fieldname": date.fieldname,
+			"fieldtype": date.fieldtype,
+			"label": _(date.label) if date.label else date.fieldname,
+		}
+		if date
+		else None,
+		"status": status,
+		"columns": _floor_columns(meta, display),
+		"facets": _floor_facets(meta, display),
+	}
+
+
+def _facet_label(facet, value, titles):
+	if facet["fieldtype"] == "Check":
+		return _("Yes") if cint(value) else _("No")
+	if facet["fieldtype"] == "Link":
+		return titles.get((facet["options"], value)) or _(cstr(value))
+	return _(cstr(value))
+
+
+@frappe.whitelist()
+def facets(doctype: str, fields: str | dict | None = None, search: str | None = None):
+	"""How many documents each value of a floor facet holds within the list's other filters:
+	`{fieldname: filters}` → `{fieldname: {values: [{value, label, count}], more}}`. Only
+	the doctype's own facets (`floor`), the top values by count, empties left out."""
+	from crm.api.doc import COUNT_NAME
+
+	meta = _require(doctype)
+	display = _display(meta)
+	asked = _parse(fields, {}) or {}
+	if not isinstance(asked, dict):
+		frappe.throw(_("The filters could not be read."), frappe.ValidationError)
+	allowed = {facet["fieldname"]: facet for facet in _floor_facets(meta, display)}
+	or_filters = _search_filters(meta, display, search)
+	out = {}
+	for fieldname, filters in list(asked.items())[:MAX_CHIPS]:
+		facet = allowed.get(cstr(fieldname))
+		if not facet:
+			frappe.throw(
+				_("{0} is not a filter of {1}.").format(cstr(fieldname)[:40], _(doctype)),
+				frappe.ValidationError,
+			)
+		groups = frappe.get_list(
+			doctype,
+			filters=_parse(filters, None) or None,
+			or_filters=or_filters,
+			fields=[facet["fieldname"], COUNT_NAME],
+			group_by=facet["fieldname"],
+			limit_page_length=MAX_FACET_GROUPS,
+		)
+		counted = sorted(
+			(
+				(group.get(facet["fieldname"]), cint(group.total_count))
+				for group in groups
+				if group.get(facet["fieldname"]) not in (None, "")
+			),
+			key=lambda pair: -pair[1],
+		)
+		top = counted[:FACET_VALUES]
+		titles = (
+			_link_titles({facet["options"]: {value for value, _count_ in top}})
+			if facet["fieldtype"] == "Link"
+			else {}
+		)
+		out[facet["fieldname"]] = {
+			"values": [
+				{"value": cstr(value), "label": _facet_label(facet, value, titles), "count": count}
+				for value, count in top
+			],
+			"more": len(counted) > FACET_VALUES,
+		}
+	return out
 
 
 # «Vistas»: a list's chip, search, sort and filters saved under a name. They live

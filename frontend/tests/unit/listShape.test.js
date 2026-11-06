@@ -109,3 +109,75 @@ describe('a module without its side column', () => {
     expect(root.querySelector('aside')).not.toBe(null)
   })
 })
+
+describe('the list summary by facets', () => {
+  const facets = () => [
+    {
+      fieldname: 'log_type',
+      label: 'Tipo de registro',
+      selected: '',
+      more: false,
+      values: [
+        { value: 'IN', label: 'Entrada', count: 812, share: 1 },
+        { value: 'OUT', label: 'Salida', count: 406, share: 0.5 },
+      ],
+    },
+    {
+      fieldname: 'employee',
+      label: 'Empleado',
+      selected: 'HR-EMP-00003',
+      more: true,
+      values: [
+        {
+          value: 'HR-EMP-00003',
+          label: 'Jennifer Corona',
+          count: 812,
+          share: 1,
+        },
+      ],
+    },
+  ]
+
+  it('shows each facet with its counts, the exact size, and narrows on a tap', async () => {
+    const setFilter = vi.fn()
+    await mount(ListSummary, {
+      summary: summary({
+        chips: [],
+        total: 1615,
+        shown: 30,
+        more: true,
+        facets: facets(),
+        setFilter,
+      }),
+    })
+    expect(text()).toContain('1,615 documentos en esta vista')
+    const groups = [...root.querySelectorAll('[data-facet]')]
+    expect(groups.map((g) => g.getAttribute('data-facet'))).toEqual([
+      'log_type',
+      'employee',
+    ])
+    const cells = [...root.querySelectorAll('[data-facet-value]')].map((b) =>
+      [...b.querySelectorAll('span')]
+        .filter((s) => !s.children.length)
+        .map((s) => s.textContent.trim())
+        .filter(Boolean)
+        .join(' '),
+    )
+    expect(cells).toEqual(['Entrada 812', 'Salida 406', 'Jennifer Corona 812'])
+    expect(text()).toContain('Los más frecuentes')
+    const salida = root.querySelector('[data-facet-value="OUT"]')
+    expect(salida.getAttribute('aria-pressed')).toBe('false')
+    salida.click()
+    expect(setFilter).toHaveBeenCalledWith('log_type', 'OUT')
+    const picked = root.querySelector('[data-facet-value="HR-EMP-00003"]')
+    expect(picked.getAttribute('aria-pressed')).toBe('true')
+    picked.click()
+    expect(setFilter).toHaveBeenCalledWith('employee', '')
+  })
+
+  it('shows no facets block and the loaded count without them', async () => {
+    await mount(ListSummary, { summary: summary({ facets: [] }) })
+    expect(root.querySelector('[data-testid="documentos-facets"]')).toBeNull()
+    expect(text()).toContain('24 documentos en esta vista')
+  })
+})

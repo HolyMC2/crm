@@ -7,6 +7,7 @@ from crm.documentos_routes import is_documentos_path, is_inventario_path
 
 try:
 	import frappe
+	from frappe import _
 	from frappe.tests import IntegrationTestCase
 
 	from crm.api import documentos
@@ -173,6 +174,64 @@ class TestDocumentosAccess(IntegrationTestCase):
 		self.assertEqual(comments[0]["text"].strip(), "Llamar el lunes")
 		for event in bundle["activity"]["events"]:
 			self.assertNotIn("@", event["who"])
+
+	def test_the_floor_reads_a_doctype_from_its_meta_and_counts_its_facets(self):
+		# ToDo on the floor: no draft (never confirmed), its status words for the chips, the
+		# row's cells (priority, the linked doctype) and the facets Desk lists or filters on.
+		self._grant("ToDo")
+		frappe.set_user("Administrator")
+		mark = "floor-facets-" + frappe.generate_hash(length=6)
+		for status, priority in (("Open", "High"), ("Open", "Low"), ("Closed", "High")):
+			frappe.get_doc(
+				{
+					"doctype": "ToDo",
+					"description": f"{mark} {priority}",
+					"status": status,
+					"priority": priority,
+					"allocated_to": "Administrator",
+					"reference_type": "Note",
+				}
+			).insert(ignore_permissions=True)
+		frappe.set_user(self.email)
+		meta = documentos.floor("ToDo")
+		self.assertFalse(meta["submittable"])
+		self.assertEqual([o["value"] for o in meta["status"]], ["Open", "Closed", "Cancelled"])
+		self.assertEqual(meta["date"]["fieldname"], "date")
+		columns = {c["fieldname"]: c for c in meta["columns"]}
+		self.assertIn("priority", columns)
+		self.assertEqual(columns["priority"]["choices"]["High"], _("High"))
+		self.assertEqual(columns["reference_type"]["options"], "DocType")
+		# The title, status and date are the row's own: never a cell too.
+		self.assertNotIn("status", columns)
+		self.assertNotIn("description", columns)
+		facets = [f["fieldname"] for f in meta["facets"]]
+		self.assertEqual(facets[0], "status")
+		self.assertIn("priority", facets)
+		self.assertIn("allocated_to", facets)
+
+		page = documentos.rows("ToDo", search=mark)
+		self.assertFalse(page["submittable"])
+		self.assertEqual(len(page["rows"]), 3)
+		row = page["rows"][0]
+		self.assertEqual(row["titles"]["reference_type"], "Note")
+
+		scope = [["ToDo", "description", "like", f"%{mark}%"]]
+		counted = documentos.facets(
+			"ToDo", fields={"status": scope, "priority": [*scope, ["status", "=", "Open"]]}
+		)
+		by_status = {v["value"]: v["count"] for v in counted["status"]["values"]}
+		self.assertEqual(by_status, {"Open": 2, "Closed": 1})
+		self.assertEqual([v["label"] for v in counted["status"]["values"]], [_("Open"), _("Closed")])
+		# Priority within the other filters (open ones only): High 1, Low 1.
+		by_priority = {v["value"]: v["count"] for v in counted["priority"]["values"]}
+		self.assertEqual(by_priority, {"High": 1, "Low": 1})
+		self.assertFalse(counted["priority"]["more"])
+		with self.assertRaises(frappe.ValidationError):
+			documentos.facets("ToDo", fields={"description": scope})
+		with self.assertRaises(frappe.PermissionError):
+			documentos.facets("User Permission", fields={"user": []})
+		with self.assertRaises(frappe.PermissionError):
+			documentos.floor("User Permission")
 
 	def test_a_reader_opens_a_record_without_a_message_for_each_action_it_lacks(self):
 		# Asking which actions are allowed is a question, not a refusal: no «no tiene acceso» toast.

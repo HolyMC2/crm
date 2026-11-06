@@ -12,12 +12,13 @@ export const LOCALE = 'es-MX'
 // ── names, never IDs ──────────────────────────────────────────────────────
 
 // Naming-series IDs: a capitalised prefix, then a year and a counter
-// (PUR-ORD-2026-00025, ACC-PINV-2025-00016, CRM-DEAL-2025-00086), or a long
-// or zero-padded counter (RO-00157, MKCAMP-000003, PRJ-0001). Model names
+// (PUR-ORD-2026-00025, ACC-PINV-2025-00016, CRM-DEAL-2025-00086, with a
+// month in between: EMP-CKIN-11-2026-000017), or a long or zero-padded
+// counter (RO-00157, MKCAMP-000003, PRJ-0001). Model names
 // (IPHONE-13, RTX-4090, LOTE-2026) are not IDs. Also UUIDs, long hex hashes
 // and Frappe's 10-character hex hashes.
 const SERIES_ID =
-  /^[A-Z][A-Z0-9]*(?:-[A-Z][A-Z0-9]*)*-(?:(?:19|20)\d{2}-\d+|\d{5,}|0\d{2,})(?:-\d+)?$/
+  /^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*-(?:(?:19|20)\d{2}-\d+|\d{5,}|0\d{2,})(?:-\d+)?$/
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const HEX = /^[0-9a-f]{16,}$/i
 const FRAPPE_HASH = /^(?=.*\d)(?=.*[a-f])[0-9a-f]{10}$/
