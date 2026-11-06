@@ -381,4 +381,15 @@ describe('automation connection', () => {
     expect(el.textContent).toContain('token k1:s1')
     expect(el.textContent).toContain('the secret is shown only once')
   })
+  it('says how long the old signature keeps going out after the secret is replaced', async () => {
+    respond()
+    const el = await mount(AutomationConnection, { name: 'INT-0001' })
+    expect(el.textContent).not.toContain('also carry the old signature')
+    api.resource.doc.previous_secret_until = '2999-01-01 10:00:00'
+    await flush()
+    expect(el.textContent).toContain('Events also carry the old signature until')
+    api.resource.doc.previous_secret_until = '2000-01-01 10:00:00'
+    await flush()
+    expect(el.textContent).not.toContain('also carry the old signature')
+  })
 })

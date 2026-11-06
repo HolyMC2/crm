@@ -30835,8 +30835,8 @@ msgid "No answer."
 msgstr "Sin respuesta."
 
 #: crm/fcrm/doctype/crm_integration/crm_integration.js
-msgid "Requests will be signed with a new secret from now on. Update n8n right after."
-msgstr "Desde ahora las solicitudes se firmarán con un secreto nuevo. Actualiza n8n enseguida."
+msgid "Events will be signed with a new secret from now on. For 24 hours they also carry the old signature, so update n8n within that time."
+msgstr "Desde ahora los eventos se firmarán con un secreto nuevo. Durante 24 horas también llevan la firma anterior; actualiza n8n en ese tiempo."
 
 #: crm/fcrm/doctype/crm_integration/crm_integration.js
 msgid "Rotate signing secret"
@@ -31535,8 +31535,8 @@ msgid "Gave up"
 msgstr "Sin entregar"
 
 #: frontend/src/components/Settings
-msgid "Skipped: the user cannot read it"
-msgstr "Omitido: el usuario no puede leerlo"
+msgid "Not sent"
+msgstr "No enviado"
 
 #: frontend/src/components/Settings
 msgid "n8n answered {0}. The connection works."
@@ -31571,8 +31571,8 @@ msgid "That did not work. Try again."
 msgstr "No funcionó. Inténtalo de nuevo."
 
 #: frontend/src/components/Settings
-msgid "New signing secret. Paste it into n8n."
-msgstr "Secreto de firma nuevo. Pégalo en n8n."
+msgid "New signing secret. Paste it into n8n within 24 hours; until then events also carry the old signature."
+msgstr "Secreto de firma nuevo. Pégalo en n8n en las próximas 24 horas; mientras, los eventos también llevan la firma anterior."
 
 #: frontend/src/components/Settings
 msgid "Queued again. It leaves in a moment."
@@ -32377,3 +32377,23 @@ msgstr "Este proyecto terminó sin pendientes"
 
 msgid "A finished or cancelled project takes no new pendientes."
 msgstr "Un proyecto terminado o cancelado ya no recibe pendientes."
+
+#: frontend/src/components/Settings
+msgid "Events also carry the old signature until {0}. Paste the new secret into n8n before then."
+msgstr "Los eventos también llevan la firma anterior hasta el {0}. Pega el secreto nuevo en n8n antes."
+
+#: crm/integrations/events.py
+msgid "The record was deleted before the event could be sent."
+msgstr "El registro se borró antes de que se pudiera enviar el evento."
+
+#: crm/fcrm/doctype/crm_integration/crm_integration.json
+msgid "Previous signing secret"
+msgstr "Secreto de firma anterior"
+
+#: crm/fcrm/doctype/crm_integration/crm_integration.json
+msgid "Old secret also signs until"
+msgstr "El secreto anterior también firma hasta"
+
+#: crm/fcrm/doctype/crm_integration/crm_integration.json
+msgid "After the secret is replaced, each event carries a signature with the new and the old secret until then, so n8n keeps accepting events while you update it."
+msgstr "Después de reemplazar el secreto, cada evento lleva una firma con el secreto nuevo y otra con el anterior hasta entonces, para que n8n siga aceptando eventos mientras lo actualizas."

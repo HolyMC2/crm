@@ -36,6 +36,8 @@ LEASE_SECONDS = 60
 BACKOFF = (30, 120, 600, 1800, 7200, 21600, 43200)
 MAX_ATTEMPTS = len(BACKOFF) + 1
 MAX_PAYLOAD_BYTES = 256 * 1024
+# After a rotation the old secret also signs for this long, so receivers can switch without losing events.
+ROTATION_GRACE_HOURS = 24
 KEEP_DELIVERED_DAYS = 30
 KEEP_FAILED_DAYS = 90
 _CACHE_KEY = "crm_integration_subscribers"
@@ -394,6 +396,18 @@ def sign(secret, msg_id, timestamp, body):
 	return "v1," + base64.b64encode(hmac.new(key, content, hashlib.sha256).digest()).decode()
 
 
+def signatures(integration, msg_id, timestamp, body):
+	"""The webhook-signature header: the current secret's, plus the previous one's while a
+	rotation's grace window is open (Standard Webhooks allows several, space-separated)."""
+	out = [sign(integration.get_password("signing_secret"), msg_id, timestamp, body)]
+	until = integration.get("previous_secret_until")
+	if until and get_datetime(until) > now_datetime():
+		previous = integration.get_password("previous_signing_secret", raise_exception=False)
+		if previous:
+			out.append(sign(previous, msg_id, timestamp, body))
+	return " ".join(out)
+
+
 # ---------------------------------------------------------------- delivery
 
 
@@ -504,7 +518,7 @@ def deliver(delivery, *, force=False):
 		"User-Agent": "Muelle-CRM-Webhooks/1",
 		"webhook-id": doc.name,
 		"webhook-timestamp": timestamp,
-		"webhook-signature": sign(integration.get_password("signing_secret"), doc.name, timestamp, body),
+		"webhook-signature": signatures(integration, doc.name, timestamp, body),
 		"X-Muelle-Event": doc.event,
 	}
 	started = time.monotonic()

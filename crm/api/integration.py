@@ -103,11 +103,16 @@ def show_secret(name: str):
 
 @frappe.whitelist(methods=["POST"])
 def rotate_secret(name: str):
-	"""New secret from now on; deliveries already sent keep the old signature."""
+	"""New secret from now on. For ROTATION_GRACE_HOURS every event is also signed with the
+	old one, so the receiver keeps accepting events until it has the new secret."""
 	doc = _connection(name)
+	doc.previous_signing_secret = doc.get_password("signing_secret", raise_exception=False)
+	doc.previous_secret_until = frappe.utils.add_to_date(
+		frappe.utils.now_datetime(), hours=webhooks.ROTATION_GRACE_HOURS
+	)
 	doc.signing_secret = webhooks.new_secret()
 	doc.save()
-	return {"secret": doc.get_password("signing_secret")}
+	return {"secret": doc.get_password("signing_secret"), "previous_until": doc.previous_secret_until}
 
 
 @frappe.whitelist(methods=["POST"])

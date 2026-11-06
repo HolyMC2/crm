@@ -1,7 +1,7 @@
 {
  "actions": [],
  "creation": "2026-11-03 12:00:00.000000",
- "modified": "2026-11-03 12:00:00.000000",
+ "modified": "2026-11-06 14:00:00.000000",
  "modified_by": "Administrator",
  "owner": "Administrator",
  "doctype": "DocType",
@@ -16,6 +16,8 @@
   "column_break_main",
   "webhook_url",
   "signing_secret",
+  "previous_signing_secret",
+  "previous_secret_until",
   "description",
   "section_events",
   "subscriptions",
@@ -72,6 +74,22 @@
    "read_only": 1,
    "length": 100,
    "description": "Created automatically. Use «Show signing secret» to copy it into n8n."
+  },
+  {
+   "fieldname": "previous_signing_secret",
+   "fieldtype": "Password",
+   "label": "Previous signing secret",
+   "read_only": 1,
+   "hidden": 1,
+   "length": 100
+  },
+  {
+   "fieldname": "previous_secret_until",
+   "fieldtype": "Datetime",
+   "label": "Old secret also signs until",
+   "read_only": 1,
+   "depends_on": "previous_secret_until",
+   "description": "After the secret is replaced, each event carries a signature with the new and the old secret until then, so n8n keeps accepting events while you update it."
   },
   {
    "fieldname": "description",

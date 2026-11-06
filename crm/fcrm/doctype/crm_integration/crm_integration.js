@@ -69,7 +69,7 @@ frappe.ui.form.on("CRM Integration", {
 			__("Rotate signing secret"),
 			() =>
 				frappe.confirm(
-					__("Requests will be signed with a new secret from now on. Update n8n right after."),
+					__("Events will be signed with a new secret from now on. For 24 hours they also carry the old signature, so update n8n within that time."),
 					() =>
 						frappe
 							.call({ method: API + "rotate_secret", args: { name: frm.doc.name } })

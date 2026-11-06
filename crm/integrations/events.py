@@ -177,7 +177,9 @@ def on_inquiry_insert(doc, method=None):
 def _permitted(fn):
 	try:
 		return fn()
-	except (frappe.PermissionError, frappe.DoesNotExistError):
+	except frappe.DoesNotExistError:
+		raise Skip(_("The record was deleted before the event could be sent.")) from None
+	except frappe.PermissionError:
 		raise Skip(_("The connection's user may not read this record.")) from None
 
 
@@ -343,24 +345,39 @@ def _record(doctype, name):
 		return doc
 
 	doc = _permitted(view)
-	allowed = set(get_permitted_fields(doctype, user=frappe.session.user) or [])
-	allowed |= {"name", "creation", "modified", "owner", "modified_by"}
-	allowed -= {f.fieldname for f in doc.meta.fields if f.fieldtype == "Password"}
+	user = frappe.session.user
+	allowed = _readable_fields(doctype, user)
+	children = {df.fieldname: df.options for df in doc.meta.get_table_fields()}
 	out = {}
 	for key, value in doc.as_dict(no_nulls=True).items():
 		if key not in allowed or key.startswith("_"):
 			continue
 		if isinstance(value, list):
+			# child rows obey the child type's field levels too (read through the parent)
+			row_allowed = (
+				_readable_fields(children[key], user, parenttype=doctype) if key in children else set()
+			)
 			value = [
 				{
 					k: v
 					for k, v in row.items()
-					if not k.startswith("_") and k not in ("doctype", "parent", "parentfield", "parenttype")
+					if k in row_allowed and k not in ("doctype", "parent", "parentfield", "parenttype")
 				}
 				for row in value
 			]
 		out[key] = value
 	return out
+
+
+def _readable_fields(doctype, user, parenttype=None):
+	"""Fields `user` may read on `doctype` (as a child of `parenttype`), never Password fields."""
+	permission = "read" if parenttype else None
+	allowed = set(
+		get_permitted_fields(doctype, parenttype=parenttype, user=user, permission_type=permission) or []
+	)
+	allowed |= {"name", "creation", "modified", "owner", "modified_by"} | ({"idx"} if parenttype else set())
+	allowed -= {f.fieldname for f in frappe.get_meta(doctype).fields if f.fieldtype == "Password"}
+	return {f for f in allowed if not f.startswith("_")}
 
 
 def build_record(event, doctype, name, context):

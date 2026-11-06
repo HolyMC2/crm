@@ -156,6 +156,14 @@
               :label="__('Signing secret')"
               :value="secret"
             />
+            <p v-if="rotationOpen" class="text-p-sm text-ink-gray-6">
+              {{
+                __(
+                  'Events also carry the old signature until {0}. Paste the new secret into n8n before then.',
+                  [formatDateTime(doc.previous_secret_until)],
+                )
+              }}
+            </p>
             <div class="flex flex-wrap gap-2">
               <Button
                 class="press"
@@ -478,7 +486,7 @@ import {
   settingsErrorMessage,
   useSettingsDraft,
 } from '@/composables/settingsSession'
-import { formatDateTime } from '@/utils/display'
+import { formatDateTime, parseServerDate } from '@/utils/display'
 import CopyLine from './CopyLine.vue'
 
 const props = defineProps({ name: { type: String, required: true } })
@@ -525,7 +533,7 @@ const STATUS = {
   Sending: __('Waiting to send'),
   Failed: __('Retrying'),
   Dead: __('Gave up'),
-  Skipped: __('Skipped: the user cannot read it'),
+  Skipped: __('Not sent'),
 }
 const id = useId()
 const origin = window.location.origin
@@ -553,6 +561,9 @@ const resource = settingsDocumentResource({
 })
 const doc = computed(() => resource.doc)
 const pending = computed(() => !!busy.value || resource.save.loading)
+const rotationOpen = computed(
+  () => (parseServerDate(doc.value?.previous_secret_until) || 0) > new Date(),
+)
 const message = (e, fallback) =>
   e?.messages?.length ? String(e.messages[0]).replace(/<[^>]+>/g, '') : fallback
 const statusLabel = (status) => STATUS[status] || status
@@ -736,7 +747,11 @@ async function rotate() {
   )
   if (out?.secret) {
     secret.value = out.secret
-    toast.success(__('New signing secret. Paste it into n8n.'))
+    toast.success(
+      __(
+        'New signing secret. Paste it into n8n within 24 hours; until then events also carry the old signature.',
+      ),
+    )
     resource.reload()
   }
 }

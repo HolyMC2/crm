@@ -414,6 +414,67 @@ class TestIntegrationWebhooks(IntegrationTestCase):
 		data = json.loads(webhooks.build_payload(gone, connection))["data"]
 		self.assertEqual((data["doctype"], data["name"]), ("ToDo", todo.name))
 
+	def test_child_rows_carry_only_fields_the_user_may_read(self):
+		connection = self.documents("document.created", doctype="CRM Deal")
+		real = events.get_permitted_fields
+
+		def without_rate(doctype, *args, **kwargs):
+			fields = real(doctype, *args, **kwargs)
+			return [f for f in fields if f != "rate"] if doctype == "CRM Products" else fields
+
+		deal = frappe.get_doc(
+			{"doctype": "CRM Deal", "products": [{"product_name": "Fictional", "rate": 10, "qty": 2}]}
+		).insert(ignore_permissions=True)
+		row = frappe.get_doc(webhooks.DELIVERY, self.deliveries(connection, "document.created")[0])
+		with patch.object(events, "get_permitted_fields", side_effect=without_rate):
+			record = json.loads(webhooks.build_payload(row, connection))["data"]["record"]
+		self.assertEqual(record["name"], deal.name)
+		product = record["products"][0]
+		self.assertEqual((product["product_name"], product["qty"]), ("Fictional", 2))
+		self.assertNotIn("rate", product, "a child field the user may not read stays out")
+
+	def test_a_record_deleted_before_sending_says_so(self):
+		connection = self.documents("document.updated")
+		todo = frappe.get_doc({"doctype": "ToDo", "description": "Fictional"}).insert()
+		todo.description = "Fictional, edited"
+		todo.save()
+		name = self.deliveries(connection, "document.updated")[0]
+		frappe.db.delete("ToDo", {"name": todo.name})
+		with patch.object(webhooks, "_post", side_effect=AssertionError("must not send")):
+			result = webhooks.deliver(name)
+		self.assertEqual(result.status, "Skipped")
+		self.assertIn("deleted before", result.last_error)
+
+	def test_rotation_signs_with_both_secrets_for_a_day(self):
+		connection = self.connection(["lead.created"])
+		old = connection.get_password("signing_secret")
+		frappe.set_user(self.users["admin"])
+		new = api.rotate_secret(connection.name)["secret"]
+		frappe.set_user("Administrator")
+		self.assertNotEqual(old, new)
+		self.lead()
+		name = self.deliveries(connection)[0]
+		with patch.object(webhooks, "_post", return_value=FakeResponse(204)) as post:
+			webhooks.deliver(name)
+		_, body, headers = post.call_args.args
+		sent = headers["webhook-signature"].split(" ")
+		ts = headers["webhook-timestamp"]
+		self.assertEqual(sent, [webhooks.sign(new, name, ts, body), webhooks.sign(old, name, ts, body)])
+		frappe.db.set_value(
+			webhooks.INTEGRATION,
+			connection.name,
+			"previous_secret_until",
+			frappe.utils.add_to_date(frappe.utils.now_datetime(), hours=-1),
+		)
+		self.lead()
+		later = self.deliveries(connection)[-1]
+		with patch.object(webhooks, "_post", return_value=FakeResponse(204)) as post:
+			webhooks.deliver(later)
+		_, body, headers = post.call_args.args
+		self.assertEqual(
+			headers["webhook-signature"], webhooks.sign(new, later, headers["webhook-timestamp"], body)
+		)
+
 	def test_envelope_timestamp_is_utc(self):
 		with patch("crm.integrations.webhooks.get_system_timezone", return_value="America/Mazatlan"):
 			self.assertEqual(webhooks.utc_iso("2026-11-06 13:02:41.171421"), "2026-11-06T20:02:41Z")
