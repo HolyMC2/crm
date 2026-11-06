@@ -33101,8 +33101,8 @@ msgid "Only when these fields change"
 msgstr "Solo cuando cambien estos campos"
 
 #: crm/fcrm/doctype/crm_integration_subscription/crm_integration_subscription.json
-msgid "For contact, lead, deal and record updates: field names, separated by commas, for example status, grand_total. Other changes are not sent. Empty: every change."
-msgstr "Para cambios de contactos, prospectos, tratos y registros: nombres de campo separados por comas, por ejemplo status, grand_total. Los demás cambios no se envían. Vacío: cualquier cambio."
+msgid "For contact, lead, deal and record updates: field names, separated by commas, for example status. Other changes are not sent. Empty: every change."
+msgstr "Para cambios de contactos, prospectos, tratos y registros: nombres de campo separados por comas, por ejemplo status. Los demás cambios no se envían. Vacío: cualquier cambio."
 
 #: frontend/src/components/Settings
 msgid "Field names, separated by commas. Empty: every change."
