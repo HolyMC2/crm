@@ -181,9 +181,9 @@
 
       <div
         v-else-if="activeTab === 'repair' && hasTaller"
-        class="scb flex-1 overflow-y-auto p-5"
+        class="scb flex-1 overflow-y-auto p-3 sm:p-5"
       >
-        <RepairOrdersSection :docname="activeDeal" />
+        <RepairOrdersSection :docname="activeDeal" chat />
       </div>
     </template>
 

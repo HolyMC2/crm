@@ -13,6 +13,19 @@ export function repairMoney(value, currency) {
   }).format(amount)
 }
 
+// Taller's order statuses. Colour only where the seller acts: get the
+// customer's answer, or tell them it is ready.
+const REPAIR_TONES = {
+  'Esperando Cliente': 'warning',
+  'Listo para Entregar': 'success',
+}
+export function repairTone(status) {
+  return REPAIR_TONES[status] || 'neutral'
+}
+export function repairClosed(status) {
+  return status === 'Entregado' || status === 'Cancelado'
+}
+
 export function repairReturnPath(deal, fullPath) {
   const fallback = `/crm/deals/${encodeURIComponent(deal)}`
   if (

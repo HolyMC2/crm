@@ -1,21 +1,24 @@
 <template>
-  <div class="mt-6 border-t pt-6">
-    <!-- Header -->
+  <!-- The deal's repair orders as a seller reads them while talking to the
+       customer: what the device is, where it stands and what comes next, the
+       money, the technician's photos (sent to the chat from here), the latest
+       progress. Reception and billing detail fold under «Más detalles»;
+       Taller stays the place to work the order. -->
+  <section :class="chat ? '' : 'mt-6 border-t pt-6'">
     <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
-      <span class="text-base-semibold text-ink-gray-8">
-        {{ __('Repair Orders') }}
+      <h3 class="text-base font-semibold text-ink-gray-9">
+        {{ __('Reparaciones') }}
         <span
-          v-if="state.context?.orders?.length"
-          class="ml-1.5 text-xs text-ink-gray-5"
+          v-if="orders.length"
+          class="num ml-1 text-sm font-normal text-ink-gray-5"
+          >{{ orders.length }}</span
         >
-          ({{ state.context.orders.length }})
-        </span>
-      </span>
+      </h3>
       <!-- Intake belongs to taller: same tab, Back and «Volver al trato» return here. -->
       <a
         v-if="intakeHref"
         :href="intakeHref"
-        class="inline-flex h-7 items-center rounded-4 bg-surface-gray-2 px-2 text-base text-ink-gray-8 hover:bg-surface-gray-3"
+        class="press inline-flex min-h-9 items-center gap-1.5 rounded-full bg-surface-gray-2 px-3 text-sm font-medium text-ink-gray-9 hover:bg-surface-gray-3"
         >{{ __('Nueva reparación') }}</a
       >
     </div>
@@ -47,532 +50,519 @@
       </p>
       <Button :label="__('Reintentar consulta')" @click="refresh()" />
     </div>
-    <div
-      v-else-if="!state.context?.orders?.length"
-      class="py-2 text-sm text-ink-gray-5"
+    <p
+      v-else-if="!orders.length"
+      class="rounded-6 border border-dashed border-outline-gray-3 p-4 text-sm text-ink-gray-5"
     >
-      {{ __('No repair orders linked to this deal.') }}
-    </div>
+      {{
+        __(
+          'Este trato aún no tiene órdenes de reparación. Recibe el equipo con «Nueva reparación».',
+        )
+      }}
+    </p>
 
-    <!-- Repair order cards -->
-    <div v-else class="space-y-3">
-      <div
-        v-for="ro in state.context.orders"
+    <div v-else class="space-y-4">
+      <article
+        v-for="ro in orders"
         :key="ro.name"
-        class="overflow-hidden rounded-7 border bg-surface-base shadow-sm"
+        class="overflow-hidden rounded-7 border border-outline-gray-2 bg-surface-base"
+        :data-order="ro.name"
       >
-        <!-- Card header -->
-        <div
-          class="flex flex-wrap items-start justify-between gap-2 border-b bg-surface-gray-1 px-4 py-2.5"
-        >
-          <!-- link to the TALLER SPA order page (operators use that, not the Desk doctype) -->
-          <a
-            :href="orderHref(ro.name)"
-            class="min-w-0 break-all text-sm-semibold text-ink-blue-9 hover:underline"
-          >
-            {{ ro.name }}
-          </a>
-          <div class="flex min-w-0 flex-wrap items-center gap-1.5">
-            <!-- Purchase-side ETA (ERP spec P3): what «Esperando Pieza» is waiting ON -->
-            <span
-              v-if="waitingPo(ro)"
-              class="break-all rounded-4 bg-surface-amber-1 px-1.5 py-px text-[10.5px] font-semibold text-ink-amber-9"
-              :title="__('Pieza en camino — Purchase Order vinculado')"
-            >
-              🧩 {{ waitingPo(ro).purchase_order
-              }}<template v-if="waitingPo(ro).po_expected_date">
-                · {{ __('llega') }}
-                {{ waitingPo(ro).po_expected_date }}</template
-              >
-            </span>
-            <Badge :label="__(ro.status)" :theme="statusTheme(ro.status)" />
+        <div class="px-4 pt-4">
+          <div class="flex items-start gap-3">
+            <!-- the TALLER SPA order page (operators use that, not the Desk doctype) -->
             <a
               :href="orderHref(ro.name)"
-              class="rounded-4 border px-2 py-1 text-xs text-ink-blue-9 hover:underline"
-              >{{ __('Abrir en Taller') }}</a
+              class="title-face min-w-0 flex-1 break-words text-lg font-semibold leading-snug text-ink-gray-9 hover:underline"
+              >{{ ro.device_model || __('Equipo sin modelo') }}</a
             >
-            <button
-              v-if="ro.capabilities?.can_print"
-              :title="__('Print Ticket')"
-              class="rounded-4 p-1 text-ink-gray-5 hover:bg-surface-gray-3 hover:text-ink-gray-8"
-              @click="printTicket(ro.name)"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="13"
-                height="13"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <polyline points="6 9 6 2 18 2 18 9" />
-                <path
-                  d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"
-                />
-                <rect x="6" y="14" width="12" height="8" />
-              </svg>
-            </button>
+            <StatusChip
+              :label="ro.status ? __(ro.status) : __('Sin estado')"
+              :tone="repairTone(ro.status)"
+            />
           </div>
+          <p class="mt-0.5 text-sm text-ink-gray-6">
+            {{ ro.repair_to_be_done || __('Servicio por definir') }}
+          </p>
+          <p class="mt-0.5 text-xs text-ink-gray-5">
+            {{ __('Folio') }} {{ ro.name }}
+          </p>
         </div>
 
-        <!-- Card body — vertical stack, one field per row -->
-        <div class="divide-y text-sm">
-          <!-- Photo strip (low-res thumbnails; click opens full-res) -->
-          <div v-if="ro.photos?.length" class="px-4 py-3">
-            <div class="mb-1.5 text-xs uppercase tracking-wide text-ink-gray-5">
-              {{ __('Fotos') }}
-              <span class="text-ink-gray-4">({{ ro.photos.length }})</span>
+        <p
+          v-if="nextStep(ro)"
+          class="mx-4 mt-3 rounded-6 bg-surface-gray-1 px-3 py-2 text-sm text-ink-gray-8"
+          data-next-step
+        >
+          {{ nextStep(ro) }}
+        </p>
+        <p
+          v-if="promise(ro)"
+          class="mx-4 mt-2 text-sm text-ink-gray-7"
+          data-promise
+        >
+          {{ __('Prometido para') }}
+          <span
+            :class="
+              promise(ro).overdue ? 'font-medium text-ink-red-7' : 'font-medium'
+            "
+            >{{ promise(ro).label }}</span
+          >
+        </p>
+
+        <!-- Receipt rows: an amount never truncates, whatever the width. -->
+        <dl
+          class="mx-4 mt-3 max-w-md divide-y divide-outline-gray-1 rounded-6 border border-outline-gray-1 text-sm"
+        >
+          <div class="flex items-baseline justify-between gap-3 px-3 py-2">
+            <dt class="min-w-0 text-ink-gray-6">
+              {{ __('Cotización') }}
+              <span
+                v-if="decision(ro)"
+                class="ml-1 text-xs"
+                :class="decision(ro).class"
+                >{{ decision(ro).label }}</span
+              >
+            </dt>
+            <dd class="num whitespace-nowrap font-semibold text-ink-gray-9">
+              {{ money(ro.quote_amount, ro.currency) }}
+            </dd>
+          </div>
+          <div class="flex items-baseline justify-between gap-3 px-3 py-2">
+            <dt class="min-w-0 text-ink-gray-6">{{ __('Anticipo') }}</dt>
+            <dd class="num whitespace-nowrap font-semibold text-ink-gray-9">
+              {{ money(ro.advance_amount, ro.currency) }}
+            </dd>
+          </div>
+          <div class="flex items-baseline justify-between gap-3 px-3 py-2">
+            <dt class="min-w-0 text-ink-gray-6">{{ __('Saldo') }}</dt>
+            <dd
+              class="num whitespace-nowrap font-semibold"
+              :class="owedAfterDelivery(ro) ? 'text-ink-red-7' : 'text-ink-gray-9'"
+            >
+              {{ money(ro.balance_due, ro.currency) }}
+            </dd>
+          </div>
+        </dl>
+
+        <template v-if="isOpen(ro)">
+          <div class="mt-4 px-4" data-photos>
+            <div class="mb-2 flex min-h-9 items-center justify-between gap-2">
+              <h4 class="text-sm font-medium text-ink-gray-7">
+                {{ __('Fotos del taller') }}
+                <span v-if="photoTotal(ro)" class="num text-ink-gray-5">{{
+                  photoTotal(ro)
+                }}</span>
+              </h4>
+              <button
+                v-if="chat && ro.photos?.length"
+                type="button"
+                class="press inline-flex min-h-9 items-center gap-1.5 rounded-full bg-surface-gray-2 px-3 text-sm font-medium text-ink-gray-9 hover:bg-surface-gray-3"
+                @click="sendToChat(ro)"
+              >
+                <span class="lucide-send size-3.5" aria-hidden="true" />
+                {{ __('Enviar al chat') }}
+              </button>
             </div>
-            <div class="flex gap-2 overflow-x-auto pb-1">
+            <div
+              v-if="ro.photos?.length"
+              class="flex gap-2 overflow-x-auto pb-1"
+            >
               <button
                 v-for="ph in ro.photos"
                 :key="ph.name"
-                class="relative h-16 w-16 flex-none overflow-hidden rounded-6 border bg-surface-gray-2 hover:ring-2 hover:ring-outline-gray-3"
-                :title="ph.photo_type || __('Foto')"
+                type="button"
+                class="press relative size-20 flex-none overflow-hidden rounded-6 bg-surface-gray-2"
+                :title="ph.photo_type ? __(ph.photo_type) : __('Foto')"
+                :aria-label="__('Ver foto')"
                 @click="openPhoto(ph)"
               >
                 <img
-                  :src="ph.thumbnail_url"
-                  class="h-full w-full object-cover"
+                  :src="ph.thumbnail_url || ph.image"
+                  :alt="ph.photo_type ? __(ph.photo_type) : __('Foto')"
+                  class="size-full object-cover"
                   loading="lazy"
                 />
                 <span
                   v-if="ph.show_on_tracker"
-                  class="absolute right-0.5 top-0.5 rounded-4 bg-surface-green-7 px-1 text-[8px] font-bold text-ink-green-1"
-                  :title="__('Visible en el tracker del cliente')"
-                  >T</span
+                  class="absolute right-1 top-1 flex size-5 items-center justify-center rounded-full bg-black/45 text-white"
+                  :title="__('Visible para el cliente en el seguimiento')"
                 >
+                  <span class="lucide-eye size-3" aria-hidden="true" />
+                </span>
               </button>
+              <template v-if="photoTotal(ro) > ro.photos.length">
+                <button
+                  v-if="chat"
+                  type="button"
+                  :class="moreClass"
+                  :aria-label="__('Ver todas las fotos')"
+                  @click="sendToChat(ro)"
+                >
+                  +{{ photoTotal(ro) - ro.photos.length }}
+                </button>
+                <a
+                  v-else
+                  :href="orderHref(ro.name)"
+                  :class="moreClass"
+                  :aria-label="__('Ver todas las fotos')"
+                  >+{{ photoTotal(ro) - ro.photos.length }}</a
+                >
+              </template>
             </div>
+            <p v-else class="text-sm text-ink-gray-5">
+              {{ __('Sin fotos todavía. El técnico las sube en Taller.') }}
+            </p>
           </div>
 
-          <p class="px-4 py-2 text-xs text-ink-gray-6">
-            {{
-              __(
-                'Continúa el diagnóstico, documentos y comunicación con el cliente en Taller. Allí verás las acciones disponibles para tu rol.',
-              )
-            }}
-          </p>
-          <!-- Primary: device + repair type + client + technician -->
-          <div class="px-4 py-3 space-y-2">
-            <Row :label="__('Device Model')" :value="ro.device_model" />
-            <Row :label="__('Repair Type')" :value="ro.repair_to_be_done" />
-            <Row
+          <div class="mt-4 space-y-3 px-4">
+            <Fact
               :label="__('Falla reportada')"
-              :value="ro.falla_reportada"
-              :preWrap="true"
-              :emphasize="!ro.falla_reportada"
+              :text="ro.falla_reportada || __('Sin falla capturada')"
+              :muted="!ro.falla_reportada"
             />
-            <Row :label="__('Client')" :value="ro.client_name || ro.client" />
-            <Row
-              :label="__('Device Condition')"
-              :value="ro.general_status && __(ro.general_status)"
+            <Fact
+              v-if="ro.diagnosis_summary"
+              :label="__('Diagnóstico')"
+              :text="ro.diagnosis_summary"
             />
-            <Row
-              :label="__('Technician')"
-              :value="ro.technician_name || ro.technician"
-            />
-            <Row
-              v-if="ro.received_by_name || ro.received_by"
-              :label="__('Received by')"
-              :value="ro.received_by_name || ro.received_by"
-            />
-            <Row
-              v-if="ro.delivered_by_name || ro.delivered_by"
-              :label="__('Delivered by')"
-              :value="ro.delivered_by_name || ro.delivered_by"
-            />
-            <Row
-              v-if="ro.laboratorio"
-              :label="__('Laboratorio')"
-              :value="ro.laboratorio"
+            <Fact
+              v-if="ro.work_performed"
+              :label="__('Trabajo realizado')"
+              :text="ro.work_performed"
             />
           </div>
 
-          <!-- Device state pills -->
-          <div class="px-4 py-3">
-            <div class="mb-1.5 text-xs uppercase tracking-wide text-ink-gray-5">
-              {{ __('Device State') }}
-            </div>
-            <div class="flex flex-wrap gap-1.5">
-              <span
-                v-if="ro.turns_on != null"
-                class="inline-flex items-center rounded-full px-2 py-0.5 text-xs-medium"
-                :class="
-                  ro.turns_on
-                    ? 'bg-surface-green-2 text-ink-green-8'
-                    : 'bg-surface-red-1 text-ink-red-7'
-                "
-              >
-                {{ ro.turns_on ? __('Turns on ✓') : __('Does not turn on ✗') }}
-              </span>
-              <span
-                v-if="ro.has_sim_tray != null"
-                class="inline-flex items-center rounded-full px-2 py-0.5 text-xs-medium"
-                :class="
-                  ro.has_sim_tray
-                    ? 'bg-surface-green-2 text-ink-green-8'
-                    : 'bg-surface-gray-2 text-ink-gray-5'
-                "
-              >
-                {{ ro.has_sim_tray ? __('SIM tray ✓') : __('No SIM tray') }}
-              </span>
-              <span
-                v-if="ro.has_phone_case"
-                class="inline-flex items-center rounded-full bg-surface-blue-1 px-2 py-0.5 text-xs-medium text-ink-blue-9"
-              >
-                {{ __('Case ✓') }}
-              </span>
-              <span
-                v-if="ro.broken_screen"
-                class="inline-flex items-center rounded-full bg-surface-amber-1 px-2 py-0.5 text-xs-medium text-ink-amber-9"
-              >
-                {{ __('Broken screen ⚠') }}
-              </span>
-              <span
-                v-if="ro.is_wet"
-                class="inline-flex items-center rounded-full bg-surface-amber-1 px-2 py-0.5 text-xs-medium text-ink-amber-9"
-              >
-                {{ __('Wet ⚠') }}
-              </span>
-              <span
-                v-if="ro.is_warranty_claim"
-                class="inline-flex items-center rounded-full bg-surface-violet-2 px-2 py-0.5 text-xs-medium text-ink-violet-8"
-              >
-                {{ __('Warranty claim') }}
-              </span>
-            </div>
-          </div>
-
-          <!-- Security: phone PIN / pattern (sensitive) -->
-          <div v-if="ro.phone_pin || ro.phone_pattern" class="px-4 py-3">
-            <div class="mb-1.5 text-xs uppercase tracking-wide text-ink-gray-5">
-              {{ __('Security') }}
-            </div>
-            <div class="flex flex-wrap gap-3 font-mono text-xs">
-              <span v-if="ro.phone_pin">
-                <span class="text-ink-gray-5">{{ __('PIN') }}:</span>
-                <code
-                  class="ml-1 rounded-4 bg-surface-gray-2 px-1.5 py-0.5 text-ink-gray-8"
-                  >{{ ro.phone_pin }}</code
-                >
-              </span>
-              <span v-if="ro.phone_pattern">
-                <span class="text-ink-gray-5">{{ __('Pattern') }}:</span>
-                <code
-                  class="ml-1 rounded-4 bg-surface-gray-2 px-1.5 py-0.5 text-ink-gray-8"
-                  >{{ ro.phone_pattern }}</code
-                >
-              </span>
-            </div>
-          </div>
-
-          <!-- IMEI / serial numbers -->
-          <div v-if="ro.serial_numbers?.length" class="px-4 py-3">
-            <div class="mb-1.5 text-xs uppercase tracking-wide text-ink-gray-5">
-              {{ __('IMEI / Serial') }}
-            </div>
-            <div class="flex flex-wrap gap-1.5">
-              <code
-                v-for="sn in ro.serial_numbers"
-                :key="sn.serial_no"
-                class="rounded-4 bg-surface-gray-2 px-1.5 py-0.5 font-mono text-xs text-ink-gray-7"
-              >
-                {{ sn.identifier_type }}: {{ sn.serial_no }}
-              </code>
-            </div>
-          </div>
-
-          <!-- Financials (always shown — operators see cotización/anticipo at a glance) -->
-          <div class="px-4 py-3 space-y-2">
-            <div class="mb-0.5 text-xs uppercase tracking-wide text-ink-gray-5">
-              {{ __('Financials') }} ·
-              {{ ro.currency || __('Moneda no disponible') }}
-            </div>
-            <Row
-              :label="__('Cotización')"
-              :value="money(ro.quote_amount, ro.currency) || __('—')"
-            />
-            <Row
-              :label="__('Anticipo')"
-              :value="money(ro.advance_amount, ro.currency) || __('—')"
-            />
-            <Row
-              :label="__('Saldo')"
-              :value="money(ro.balance_due, ro.currency) || __('—')"
-              :emphasize="(ro.balance_due || 0) > 0"
-            />
-            <Row
-              :label="__('Mano de obra')"
-              :value="money(ro.labor_charge, ro.currency) || __('—')"
-            />
-            <Row
-              :label="__('Total facturable')"
-              :value="money(ro.billing_total, ro.currency) || __('—')"
-            />
-          </div>
-
-          <!-- Refacciones (always shown — empty state makes missing parts visible) -->
-          <div class="px-4 py-3">
-            <div class="mb-1.5 text-xs uppercase tracking-wide text-ink-gray-5">
-              {{ __('Refacciones') }}
-              <span v-if="ro.parts?.length" class="text-ink-gray-4"
-                >({{ ro.parts.length }})</span
-              >
-            </div>
-            <div v-if="!ro.parts?.length" class="text-xs text-ink-gray-5">
-              {{ __('Sin refacciones cargadas.') }}
-            </div>
-            <div v-else class="space-y-1.5">
-              <div
-                v-for="(p, i) in ro.parts"
-                :key="`${ro.name}-part-${i}`"
-                class="flex items-center justify-between rounded-4 border bg-surface-base px-2 py-1.5 text-xs"
-              >
-                <div class="min-w-0 truncate">
-                  <span class="font-medium text-ink-gray-8">{{
-                    p.item_name || p.item || '—'
-                  }}</span>
-                  <span v-if="p.source" class="ml-1.5 text-ink-gray-5"
-                    >[{{ __(p.source) }}]</span
-                  >
-                  <span
-                    v-if="p.purchase_order && p.po_status"
-                    class="ml-1.5 rounded-4 bg-surface-amber-1 px-1 py-px text-[10px] font-semibold text-ink-amber-9"
-                    :title="`${p.purchase_order} · ${p.po_status}`"
-                  >
-                    🧩
-                    {{
-                      p.po_expected_date
-                        ? __('llega') + ' ' + p.po_expected_date
-                        : p.purchase_order
-                    }}
-                  </span>
-                </div>
-                <div class="ml-2 whitespace-nowrap font-mono text-ink-gray-7">
-                  {{ p.qty || 0 }}{{ p.uom ? ' ' + p.uom : '' }}
-                  <span
-                    v-if="p.customer_charge != null"
-                    class="ml-2 text-ink-gray-5"
-                  >
-                    · {{ money(p.customer_charge, ro.currency) }}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Repair log (recent entries, newest first) -->
-          <div class="px-4 py-3">
-            <div class="mb-1.5 text-xs uppercase tracking-wide text-ink-gray-5">
-              {{ __('Repair Log') }}
-              <span v-if="ro.repair_log?.length" class="text-ink-gray-4"
-                >({{ ro.repair_log.length }})</span
-              >
-            </div>
-            <div v-if="!ro.repair_log?.length" class="text-xs text-ink-gray-5">
-              {{ __('Sin entradas de log.') }}
-            </div>
-            <div v-else class="space-y-2">
-              <div
-                v-for="e in ro.repair_log"
+          <div v-if="ro.repair_log?.length" class="mt-4 px-4" data-log>
+            <h4 class="mb-1.5 text-sm font-medium text-ink-gray-7">
+              {{ __('Último avance') }}
+            </h4>
+            <ul class="space-y-2">
+              <li
+                v-for="e in logShown(ro)"
                 :key="e.name"
-                class="rounded-4 border bg-surface-base px-2 py-1.5"
+                class="rounded-6 border border-outline-gray-1 px-3 py-2"
               >
-                <div class="flex items-center justify-between gap-2 text-xs">
-                  <div class="flex items-center gap-1.5">
-                    <Badge
-                      v-if="e.step_type"
-                      size="sm"
-                      :label="__(e.step_type)"
-                      theme="gray"
-                    />
-                    <Badge
-                      v-if="e.outcome"
-                      size="sm"
-                      :label="__(e.outcome)"
-                      :theme="
-                        e.outcome === 'OK'
-                          ? 'green'
-                          : e.outcome === 'KO'
-                            ? 'red'
-                            : 'gray'
-                      "
-                    />
-                    <span class="text-ink-gray-7">{{
-                      e.technician_name || e.technician || '—'
-                    }}</span>
-                  </div>
-                  <span class="text-ink-gray-5">{{
-                    formatDate(e.entry_datetime)
+                <div
+                  class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-gray-6"
+                >
+                  <span class="font-medium text-ink-gray-8">{{
+                    e.technician_name || __('Taller')
+                  }}</span>
+                  <span v-if="e.step_type">{{ __(e.step_type) }}</span>
+                  <StatusChip
+                    v-if="e.outcome"
+                    :label="__(e.outcome)"
+                    :tone="e.outcome === 'KO' ? 'warning' : 'neutral'"
+                  />
+                  <span class="ml-auto">{{
+                    relativeTime(e.entry_datetime)
                   }}</span>
                 </div>
-                <div
+                <p
                   v-if="e.description"
-                  class="mt-1 whitespace-pre-wrap text-xs text-ink-gray-8"
+                  class="mt-1 whitespace-pre-wrap text-sm text-ink-gray-8"
                 >
                   {{ e.description }}
+                </p>
+                <p
+                  v-if="e.resolution"
+                  class="mt-1 whitespace-pre-wrap text-sm text-ink-gray-7"
+                >
+                  {{ __('Resolución') }}: {{ e.resolution }}
+                </p>
+              </li>
+            </ul>
+            <button
+              v-if="ro.repair_log.length > 1"
+              type="button"
+              class="press mt-1 inline-flex min-h-9 items-center text-sm font-medium text-ink-gray-7 hover:text-ink-gray-9"
+              :aria-expanded="String(!!fullLog[ro.name])"
+              @click="fullLog[ro.name] = !fullLog[ro.name]"
+            >
+              {{
+                fullLog[ro.name]
+                  ? __('Ver solo el último')
+                  : __('Ver bitácora ({0})', [ro.repair_log.length])
+              }}
+            </button>
+          </div>
+
+          <div v-if="ro.parts?.length" class="mt-4 px-4">
+            <h4 class="mb-1.5 text-sm font-medium text-ink-gray-7">
+              {{ __('Refacciones') }}
+              <span class="num text-ink-gray-5">{{ ro.parts.length }}</span>
+            </h4>
+            <ul
+              class="divide-y divide-outline-gray-1 rounded-6 border border-outline-gray-1"
+            >
+              <li
+                v-for="(p, i) in ro.parts"
+                :key="`${ro.name}-part-${i}`"
+                class="flex items-center justify-between gap-3 px-3 py-2 text-sm"
+              >
+                <div class="min-w-0">
+                  <p class="truncate text-ink-gray-8">
+                    {{ p.item_name || p.item || '—' }}
+                  </p>
+                  <p
+                    v-if="p.purchase_order && p.po_status"
+                    class="text-xs text-ink-amber-9"
+                    :title="`${p.purchase_order} · ${p.po_status}`"
+                  >
+                    {{
+                      p.po_expected_date
+                        ? __('En camino · llega {0}', [
+                            formatDate(p.po_expected_date),
+                          ])
+                        : __('En camino')
+                    }}
+                  </p>
+                </div>
+                <span class="num flex-none text-ink-gray-7">
+                  {{ formatQty(p.qty || 0, p.uom) }}
+                  <template v-if="p.customer_charge != null">
+                    · {{ money(p.customer_charge, ro.currency) }}
+                  </template>
+                </span>
+              </li>
+            </ul>
+          </div>
+
+          <p
+            v-if="warranty(ro)"
+            class="mx-4 mt-4 text-sm text-ink-gray-7"
+            data-warranty
+          >
+            {{ warranty(ro) }}
+          </p>
+
+          <div class="mt-4 border-t border-outline-gray-1">
+            <button
+              type="button"
+              class="flex min-h-11 w-full items-center justify-between px-4 text-sm font-medium text-ink-gray-7 hover:bg-surface-gray-1"
+              :aria-expanded="String(!!details[ro.name])"
+              @click="details[ro.name] = !details[ro.name]"
+            >
+              {{ __('Más detalles') }}
+              <span
+                class="lucide-chevron-down size-4 transition-transform duration-200 motion-reduce:transition-none"
+                :class="details[ro.name] ? 'rotate-180' : ''"
+                aria-hidden="true"
+              />
+            </button>
+            <ExpandTransition>
+              <div v-if="details[ro.name]" class="space-y-4 px-4 pb-4">
+                <dl class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                  <Pair
+                    :label="__('Recibió')"
+                    :value="ro.received_by_name || ro.received_by"
+                  />
+                  <Pair
+                    :label="__('Técnico')"
+                    :value="ro.technician_name || ro.technician"
+                  />
+                  <Pair
+                    v-if="ro.delivered_by_name || ro.delivered_by"
+                    :label="__('Entregó')"
+                    :value="ro.delivered_by_name || ro.delivered_by"
+                  />
+                  <Pair
+                    :label="__('Cliente')"
+                    :value="ro.client_name || ro.client"
+                  />
+                  <Pair :label="__('Laboratorio')" :value="ro.laboratorio" />
+                  <Pair
+                    :label="__('Condición del equipo')"
+                    :value="ro.general_status && __(ro.general_status)"
+                  />
+                </dl>
+                <div
+                  v-if="deviceState(ro).length"
+                  class="flex flex-wrap gap-1.5"
+                >
+                  <StatusChip
+                    v-for="s in deviceState(ro)"
+                    :key="s.label"
+                    :label="s.label"
+                    :tone="s.tone"
+                  />
                 </div>
                 <div
-                  v-if="e.resolution"
-                  class="mt-1 whitespace-pre-wrap text-xs text-ink-gray-7"
+                  v-if="ro.serial_numbers?.length"
+                  class="flex flex-wrap gap-1.5"
                 >
-                  <span class="text-ink-gray-5">{{ __('Resolución') }}:</span>
-                  {{ e.resolution }}
+                  <code
+                    v-for="sn in ro.serial_numbers"
+                    :key="sn.serial_no"
+                    class="rounded-4 bg-surface-gray-2 px-1.5 py-0.5 font-mono text-xs text-ink-gray-7"
+                    >{{ sn.identifier_type }}: {{ sn.serial_no }}</code
+                  >
+                </div>
+                <dl class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                  <Pair
+                    :label="__('Mano de obra')"
+                    :value="money(ro.labor_charge, ro.currency)"
+                  />
+                  <Pair
+                    v-if="ro.diagnostic_fee"
+                    :label="__('Costo de diagnóstico')"
+                    :value="money(ro.diagnostic_fee, ro.currency)"
+                  />
+                  <Pair
+                    :label="__('Total facturable')"
+                    :value="money(ro.billing_total, ro.currency)"
+                  />
+                  <Pair
+                    v-if="ro.quote_valid_until"
+                    :label="__('Cotización vigente hasta')"
+                    :value="
+                      formatDate(ro.quote_valid_until, { relative: false })
+                    "
+                  />
+                </dl>
+                <div
+                  v-if="ro.quotation || ro.sales_order || ro.invoices?.length"
+                  class="flex flex-wrap gap-x-4 gap-y-1 text-sm"
+                >
+                  <a
+                    v-if="ro.quotation"
+                    :href="`/app/quotation/${encodeURIComponent(ro.quotation)}`"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="text-ink-blue-9 hover:underline"
+                    >{{ __('Cotización') }} {{ ro.quotation }}</a
+                  >
+                  <a
+                    v-if="ro.sales_order"
+                    :href="`/app/sales-order/${encodeURIComponent(ro.sales_order)}`"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="text-ink-blue-9 hover:underline"
+                    >{{ __('Pedido') }} {{ ro.sales_order }}</a
+                  >
+                  <a
+                    v-for="inv in ro.invoices || []"
+                    :key="`${inv.invoice_type}-${inv.invoice}`"
+                    :href="`/app/${inv.invoice_type === 'POS Invoice' ? 'pos-invoice' : 'sales-invoice'}/${encodeURIComponent(inv.invoice)}`"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="text-ink-blue-9 hover:underline"
+                    >{{
+                      inv.invoice_type === 'POS Invoice'
+                        ? __('Venta')
+                        : __('Factura')
+                    }}
+                    {{ inv.invoice }}</a
+                  >
+                </div>
+                <div v-if="ro.last_communication" class="text-sm">
+                  <p class="text-xs text-ink-gray-5">
+                    {{ __('Último aviso al cliente') }}
+                    <template v-if="ro.last_communication_date">
+                      · {{ formatDateTime(ro.last_communication_date) }}
+                    </template>
+                  </p>
+                  <p class="mt-0.5 whitespace-pre-wrap text-ink-gray-8">
+                    {{ ro.last_communication }}
+                  </p>
                 </div>
               </div>
-            </div>
+            </ExpandTransition>
           </div>
+        </template>
 
-          <!-- Warranty -->
-          <div
-            v-if="ro.warranty_expires_on || ro.warranty_period_days"
-            class="px-4 py-3 space-y-2"
+        <div
+          class="flex items-center justify-end gap-1 border-t border-outline-gray-1 px-2 py-1.5"
+          :class="isOpen(ro) ? '' : 'mt-3'"
+        >
+          <button
+            v-if="!isOpen(ro)"
+            type="button"
+            class="press mr-auto inline-flex min-h-10 items-center rounded-full px-3 text-sm font-medium text-ink-gray-8 hover:bg-surface-gray-2"
+            @click="expanded[ro.name] = true"
           >
-            <div class="mb-0.5 text-xs uppercase tracking-wide text-ink-gray-5">
-              {{ __('Warranty') }}
-            </div>
-            <Row
-              v-if="ro.warranty_period_days"
-              :label="__('Period (days)')"
-              :value="ro.warranty_period_days"
-            />
-            <Row
-              v-if="ro.warranty_expires_on"
-              :label="__('Expires on')"
-              :value="ro.warranty_expires_on"
-            />
-          </div>
-
-          <!-- Deal status echo -->
-          <div v-if="ro.deal_status" class="px-4 py-3">
-            <Row
-              :label="__('Deal status')"
-              :value="stageLabel(ro.deal_status)"
-            />
-          </div>
-
-          <!-- Last communication mirror -->
-          <div v-if="ro.last_communication" class="px-4 py-3">
-            <div class="mb-1.5 flex items-center gap-2">
-              <div class="text-xs uppercase tracking-wide text-ink-gray-5">
-                {{ __('Last communication') }}
-              </div>
-              <Badge
-                v-if="ro.communication_status"
-                size="sm"
-                :label="__(ro.communication_status)"
-                :theme="ro.communication_status === 'Open' ? 'orange' : 'green'"
-              />
-            </div>
-            <div class="text-sm text-ink-gray-8 whitespace-pre-wrap">
-              {{ ro.last_communication }}
-            </div>
-            <div class="mt-1 text-xs text-ink-gray-5">
-              {{ ro.last_communication_sender || __('Unknown') }}
-              <span v-if="ro.last_communication_date">
-                · {{ formatDate(ro.last_communication_date) }}
-              </span>
-            </div>
-          </div>
-
-          <!-- Documentos financieros (always shown — empty state makes gaps obvious) -->
-          <div class="px-4 py-3">
-            <div class="mb-1.5 text-xs uppercase tracking-wide text-ink-gray-5">
-              {{ __('Documentos financieros') }}
-            </div>
-            <div
-              v-if="!ro.quotation && !ro.sales_order && !ro.invoices?.length"
-              class="text-xs text-ink-gray-5"
-            >
-              {{ __('Sin documentos vinculados.') }}
-            </div>
-            <div v-else class="flex flex-wrap gap-x-4 gap-y-1 text-xs">
-              <a
-                v-if="ro.quotation"
-                :href="`/app/quotation/${encodeURIComponent(ro.quotation)}`"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="text-ink-blue-9 hover:underline"
-              >
-                {{ __('Cotización') }}: {{ ro.quotation }}
-              </a>
-              <a
-                v-if="ro.sales_order"
-                :href="`/app/sales-order/${encodeURIComponent(ro.sales_order)}`"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="text-ink-blue-9 hover:underline"
-              >
-                {{ __('SO') }}: {{ ro.sales_order }}
-              </a>
-              <a
-                v-for="inv in ro.invoices || []"
-                :key="`${inv.invoice_type}-${inv.invoice}`"
-                :href="`/app/${inv.invoice_type === 'POS Invoice' ? 'pos-invoice' : 'sales-invoice'}/${encodeURIComponent(inv.invoice)}`"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="text-ink-blue-9 hover:underline"
-              >
-                {{
-                  inv.invoice_type === 'POS Invoice'
-                    ? __('POS')
-                    : __('Factura')
-                }}: {{ inv.invoice }}
-              </a>
-            </div>
-          </div>
+            {{ __('Ver orden') }}
+          </button>
+          <a
+            :href="orderHref(ro.name)"
+            class="press inline-flex min-h-10 items-center gap-1.5 rounded-full px-3 text-sm font-medium text-ink-gray-8 hover:bg-surface-gray-2"
+          >
+            <span class="lucide-external-link size-4" aria-hidden="true" />
+            {{ __('Abrir en Taller') }}
+          </a>
+          <button
+            v-if="ro.capabilities?.can_print"
+            type="button"
+            :title="__('Print Ticket')"
+            :aria-label="__('Print Ticket')"
+            class="press flex size-10 items-center justify-center rounded-full text-ink-gray-7 hover:bg-surface-gray-2"
+            @click="printTicket(ro.name)"
+          >
+            <span class="lucide-printer size-4" aria-hidden="true" />
+          </button>
         </div>
-      </div>
+      </article>
     </div>
-  </div>
+  </section>
 </template>
 
 <script setup>
-import { Badge, Button, createResource } from 'frappe-ui'
-import { computed, h } from 'vue'
+import { Button, createResource } from 'frappe-ui'
+import { computed, h, reactive } from 'vue'
 import { useRoute } from 'vue-router'
-import { hasTaller } from '@/composables/inbox'
+import { ExpandTransition, StatusChip } from '@/components/ui'
+import { hasTaller, requestTallerPhotos } from '@/composables/inbox'
 import { useRepairOrders } from '@/composables/repairOrders'
-import { stageLabel } from '@/utils/stageLabel'
 import {
+  formatDate,
+  formatDateTime,
+  formatDue,
+  formatQty,
+  parseServerDate,
+  relativeTime,
+} from '@/utils/display'
+import {
+  repairClosed,
   repairMoney as money,
   repairOrderHref,
+  repairTone,
   tallerIntakeHref,
 } from '@/utils/repairOrders'
 
-// Small inline helper for a label/value row. Stacked vertical layout —
-// label on top, value below, both full-width.
-const Row = (props) =>
+// A labelled block of free text (falla, diagnóstico): label over the text.
+const Fact = (props) =>
   h('div', null, [
-    h('div', { class: 'text-xs text-ink-gray-5' }, props.label),
+    h('p', { class: 'text-xs text-ink-gray-5' }, props.label),
     h(
-      'div',
+      'p',
       {
         class: [
-          'mt-0.5 font-medium',
-          props.preWrap ? 'whitespace-pre-wrap' : '',
-          props.emphasize ? 'text-ink-red-7' : 'text-ink-gray-8',
+          'mt-0.5 whitespace-pre-wrap text-sm',
+          props.muted ? 'text-ink-gray-5' : 'text-ink-gray-8',
         ],
       },
+      props.text,
+    ),
+  ])
+// One label/value pair of «Más detalles».
+const Pair = (props) =>
+  h('div', { class: 'min-w-0' }, [
+    h('dt', { class: 'text-xs text-ink-gray-5' }, props.label),
+    h(
+      'dd',
+      { class: 'mt-0.5 break-words text-ink-gray-8' },
       props.value === undefined || props.value === null || props.value === ''
         ? '—'
         : String(props.value),
     ),
   ])
 
-function formatDate(s) {
-  if (!s) return ''
-  const d = new Date(s.replace(' ', 'T'))
-  if (Number.isNaN(d.getTime())) return s
-  return d.toLocaleString()
-}
-
 const props = defineProps({
   docname: { type: String, required: true },
+  // Mounted beside the deal's conversation (the inbox workspace): the photos
+  // can go to that chat.
+  chat: { type: Boolean, default: false },
 })
 
 const route = useRoute()
@@ -584,31 +574,127 @@ const intakeHref = computed(() =>
     : null,
 )
 
-const STATUS_THEMES = {
-  Entregado: 'green',
-  'Listo para Entregar': 'green',
-  'En Reparación': 'blue',
-  'Control de Calidad': 'blue',
-  'En Diagnóstico': 'orange',
-  'Esperando Aprobación': 'yellow',
-  'En Espera de Pieza': 'purple',
-  'Esperando Pieza': 'purple',
-  'Esperando Cliente': 'yellow',
-  'Por Revisar': 'gray',
-  Cancelado: 'red',
+// Open orders first (the Deal's own order among each); a delivered or
+// cancelled order folds to its header and money while another is open.
+const orders = computed(() => {
+  const list = state.value.context?.orders || []
+  return [
+    ...list.filter((ro) => !repairClosed(ro.status)),
+    ...list.filter((ro) => repairClosed(ro.status)),
+  ]
+})
+const anyOpen = computed(() =>
+  orders.value.some((ro) => !repairClosed(ro.status)),
+)
+const expanded = reactive({})
+const details = reactive({})
+const fullLog = reactive({})
+function isOpen(ro) {
+  return expanded[ro.name] ?? !(repairClosed(ro.status) && anyOpen.value)
 }
 
-function statusTheme(status) {
-  return STATUS_THEMES[status] || 'gray'
+const moreClass =
+  'press num flex size-20 flex-none items-center justify-center rounded-6 border border-outline-gray-2 text-sm font-medium text-ink-gray-7 hover:bg-surface-gray-2'
+function photoTotal(ro) {
+  return Math.max(ro.photo_count || 0, ro.photos?.length || 0)
+}
+function logShown(ro) {
+  return fullLog[ro.name] ? ro.repair_log : ro.repair_log.slice(0, 1)
 }
 
-// Purchase-side ETA (ERP spec P3): the first PO-linked part of a waiting order —
-// feeds the header chip. po_status is merged ONLY when the tenant flag is on,
-// and it's the render key — so a flag-off tenant shows nothing even if part
-// rows carry stray purchase_order values.
+// Purchase-side ETA (ERP spec P3): the first PO-linked part of a waiting order.
+// po_status is merged ONLY when the tenant flag is on, so a flag-off tenant
+// shows nothing even if part rows carry stray purchase_order values.
 function waitingPo(ro) {
-  if (ro.status !== 'Esperando Pieza') return null
   return (ro.parts || []).find((p) => p.purchase_order && p.po_status) || null
+}
+
+// The one line a seller says next: what the order waits on, or what to do.
+function nextStep(ro) {
+  const due = ro.pending_due && formatDue(ro.pending_due).label
+  const withDue = (text) => (text && due ? `${text} · ${due}` : text)
+  if (ro.status === 'Listo para Entregar')
+    return Number(ro.balance_due) > 0
+      ? __('Listo: avisa al cliente y cobra {0} al entregar.', [
+          money(ro.balance_due, ro.currency),
+        ])
+      : __('Listo: avisa al cliente que puede pasar por su equipo.')
+  if (ro.status === 'Esperando Pieza') {
+    const po = waitingPo(ro)
+    if (po?.po_expected_date)
+      return __('Esperando la pieza: llega {0}.', [
+        formatDate(po.po_expected_date),
+      ])
+    return withDue(
+      ro.pending_action || ro.wait_reason || __('Esperando la pieza.'),
+    )
+  }
+  if (ro.status === 'Esperando Cliente' && ro.estimate_decision === 'Pendiente')
+    return ro.quote_valid_until
+      ? __('El cliente debe aprobar la cotización (vigente hasta {0}).', [
+          formatDate(ro.quote_valid_until, { relative: false }),
+        ])
+      : __('El cliente debe aprobar la cotización.')
+  if (repairClosed(ro.status)) return ''
+  return withDue(ro.pending_action || ro.wait_reason || '')
+}
+
+function promise(ro) {
+  if (!ro.promised_at || repairClosed(ro.status)) return null
+  const at = parseServerDate(ro.promised_at)
+  if (!at) return null
+  return {
+    label: formatDateTime(at),
+    overdue: at < new Date() && ro.status !== 'Listo para Entregar',
+  }
+}
+
+const DECISIONS = {
+  Pendiente: { label: __('Por aprobar'), class: 'text-ink-amber-9' },
+  Aprobado: { label: __('Aprobada'), class: 'text-ink-green-8' },
+  Rechazado: { label: __('Rechazada'), class: 'text-ink-gray-6' },
+}
+function decision(ro) {
+  return DECISIONS[ro.estimate_decision] || null
+}
+// Red goes on the one figure that is overdue: money still owed on a device
+// the customer already took.
+function owedAfterDelivery(ro) {
+  return ro.status === 'Entregado' && Number(ro.balance_due) > 0
+}
+
+function warranty(ro) {
+  if (ro.is_warranty_claim) return __('Esta orden es un reclamo de garantía.')
+  if (!ro.warranty_expires_on) return ''
+  const until = formatDate(ro.warranty_expires_on, { relative: false })
+  const at = parseServerDate(ro.warranty_expires_on)
+  return at && at < new Date()
+    ? __('La garantía venció el {0}.', [until])
+    : __('Garantía hasta el {0}.', [until])
+}
+
+function deviceState(ro) {
+  const out = []
+  if (ro.turns_on != null)
+    out.push(
+      ro.turns_on
+        ? { label: __('Enciende'), tone: 'neutral' }
+        : { label: __('No enciende'), tone: 'warning' },
+    )
+  if (ro.has_sim_tray != null)
+    out.push({
+      label: ro.has_sim_tray ? __('Con charola SIM') : __('Sin charola SIM'),
+      tone: 'neutral',
+    })
+  if (ro.has_phone_case) out.push({ label: __('Con funda'), tone: 'neutral' })
+  if (ro.broken_screen)
+    out.push({ label: __('Pantalla rota'), tone: 'warning' })
+  if (ro.is_wet) out.push({ label: __('Mojado'), tone: 'warning' })
+  return out
+}
+
+function sendToChat(ro) {
+  requestTallerPhotos({ deal: props.docname, order: ro.name })
 }
 
 // Open a photo full-res. Local files serve directly; S3-backed originals need a

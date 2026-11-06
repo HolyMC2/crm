@@ -399,6 +399,17 @@ export function setComposerDraft(d) {
   mobileView.value = 'thread' // mobile: surface the composer (no-op on desktop)
 }
 
+// «Fotos del taller» handoff: the Reparación tab's «Enviar al chat» switches to
+// the conversation; the WhatsAppBox of that same deal opens the photo sheet with
+// {order, photo} preselected and clears the request. The seller still picks
+// and sends.
+export const tallerPhotosRequest = ref(null) // {deal, order, photo}
+export function requestTallerPhotos({ deal, order = '', photo = '' }) {
+  tallerPhotosRequest.value = { deal, order, photo }
+  activeTab.value = 'conversation'
+  mobileView.value = 'thread'
+}
+
 // ── presence / collision detection (spec 2.4) ─────────────────────────────────
 // Ephemeral map: deal → { user → {state, full_name, ts} }. Fed by the realtime
 // 'doco_marketing:presence' event (Inbox.vue wires the socket); entries age out

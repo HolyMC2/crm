@@ -92,6 +92,16 @@
       >
         📦 {{ __('Catálogo') }}
       </button>
+      <button
+        v-if="tallerPhotosOn"
+        type="button"
+        class="press rounded-5 border border-outline-gray-2 px-2 py-1 text-xs-semibold text-ink-gray-7 hover:bg-surface-gray-2"
+        :title="__('Enviar las fotos que el técnico subió a la orden')"
+        data-testid="taller-photos-chip"
+        @click="openTallerPhotos()"
+      >
+        📷 {{ __('Fotos del taller') }}
+      </button>
       <!-- ✨ AI suggested replies (spec 5.1) — fetch on demand, operator edits+sends -->
       <button
         v-if="
@@ -435,6 +445,16 @@
     :body="saveDialog.body"
     @saved="() => loadCatalog({ fresh: true })"
   />
+  <TallerPhotoSheet
+    v-if="tallerPhotos.mounted"
+    v-model:open="tallerPhotos.open"
+    :doctype="doctype"
+    :name="doc.name || ''"
+    :to="toOverride || doc.mobile_no || ''"
+    :account="whatsappAccount"
+    :preselect="tallerPhotos.preselect"
+    @sent="onTallerPhotosSent"
+  />
 </template>
 
 <script setup>
@@ -466,10 +486,24 @@ import {
 import { TextEditor } from 'frappe-ui/experimental'
 import { usersStore } from '@/stores/users'
 import { isMobile } from '@/composables/breakpoint'
-import { notifyTyping, aiEnabled, composerDraft } from '@/composables/inbox'
+import {
+  notifyTyping,
+  aiEnabled,
+  composerDraft,
+  hasTaller,
+  tallerPhotosRequest,
+} from '@/composables/inbox'
 import { addonAvailable } from '@/utils/crmCapabilities'
 import { enqueueOutbox } from '@/composables/outbox'
-import { ref, nextTick, watch, computed, onBeforeUnmount } from 'vue'
+import {
+  ref,
+  reactive,
+  nextTick,
+  watch,
+  computed,
+  onBeforeUnmount,
+  defineAsyncComponent,
+} from 'vue'
 import LucideFile from '~icons/lucide/file'
 import LucideImage from '~icons/lucide/image'
 import LucideCamera from '~icons/lucide/camera'
@@ -1151,8 +1185,54 @@ function uploadOptions(openFileSelector) {
         openFileSelector('video/*')
       },
     },
+    ...(tallerPhotosOn.value
+      ? [
+          {
+            label: __('Fotos del taller'),
+            icon: LucideImage,
+            onClick: () => openTallerPhotos(),
+          },
+        ]
+      : []),
   ]
 }
+
+// «Fotos del taller»: the photos the technician uploaded to this conversation's
+// repair orders, sent from here without uploading them again. The sheet mounts
+// on its first open.
+const TallerPhotoSheet = defineAsyncComponent(
+  () => import('@/components/doco/TallerPhotoSheet.vue'),
+)
+const tallerPhotosOn = computed(
+  () =>
+    hasTaller.value &&
+    !props.replyOnly &&
+    ['CRM Deal', 'CRM Lead'].includes(props.doctype),
+)
+const tallerPhotos = reactive({ mounted: false, open: false, preselect: null })
+function openTallerPhotos(preselect = null) {
+  if (!tallerPhotosOn.value) return
+  tallerPhotos.preselect = preselect
+  tallerPhotos.mounted = true
+  tallerPhotos.open = true
+  capture('whatsapp_taller_photos_opened')
+}
+function onTallerPhotosSent(count) {
+  whatsapp.value?.reload?.()
+  capture('whatsapp_taller_photos_sent', { count })
+}
+// The Reparación tab's «Enviar al chat» lands here once this deal's
+// conversation mounts: open with that order first, then clear the request.
+watch(
+  [tallerPhotosRequest, () => doc.value?.name],
+  ([request, name]) => {
+    if (!request || props.doctype !== 'CRM Deal' || request.deal !== name)
+      return
+    tallerPhotosRequest.value = null
+    openTallerPhotos({ order: request.order, photo: request.photo })
+  },
+  { immediate: true },
+)
 
 watch(reply, (value) => {
   if (value?.message) {

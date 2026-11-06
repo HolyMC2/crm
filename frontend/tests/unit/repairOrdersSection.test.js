@@ -1,7 +1,11 @@
 /* eslint-disable vue/one-component-per-file -- Test-local UI boundary doubles. */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, defineComponent, h, nextTick, reactive } from 'vue'
-const api = vi.hoisted(() => ({ call: vi.fn(), hasTaller: null }))
+const api = vi.hoisted(() => ({
+  call: vi.fn(),
+  hasTaller: null,
+  requestTallerPhotos: vi.fn(),
+}))
 vi.mock('vue-router', () => ({
   useRoute: () => ({
     fullPath: '/deals/DEAL-1?returnTo=%2Fdeals%3Fowner%3Dme#activity',
@@ -10,7 +14,10 @@ vi.mock('vue-router', () => ({
 vi.mock('@/composables/inbox', async () => {
   const { ref } = await import('vue')
   api.hasTaller = ref(true)
-  return { hasTaller: api.hasTaller }
+  return {
+    hasTaller: api.hasTaller,
+    requestTallerPhotos: (...args) => api.requestTallerPhotos(...args),
+  }
 })
 vi.mock('frappe-ui', () => ({
   call: (...args) => api.call(...args),
@@ -65,6 +72,7 @@ async function mount(values = { docname: 'DEAL-1' }) {
 beforeEach(() => {
   api.call.mockReset()
   api.hasTaller.value = true
+  api.requestTallerPhotos.mockReset()
 })
 afterEach(() => {
   app?.unmount()
@@ -83,10 +91,10 @@ describe('CRM repair panel (real component, API doubles)', () => {
     )
     await mount()
     expect(root.textContent).toContain('Cargando reparaciones')
-    expect(root.textContent).not.toContain('No repair orders linked')
+    expect(root.textContent).not.toContain('aún no tiene órdenes de reparación')
     resolve(context())
     await settle()
-    expect(root.textContent).toContain('No repair orders linked')
+    expect(root.textContent).toContain('aún no tiene órdenes de reparación')
     app.unmount()
     app = null
     root.remove()
@@ -95,7 +103,7 @@ describe('CRM repair panel (real component, API doubles)', () => {
       .mockResolvedValueOnce(context())
     await mount()
     expect(root.textContent).toContain('No se pudieron cargar')
-    expect(root.textContent).not.toContain('No repair orders linked')
+    expect(root.textContent).not.toContain('aún no tiene órdenes de reparación')
     const callsBeforeRetry = api.call.mock.calls.length
     button('Reintentar consulta').click()
     await settle()
@@ -104,7 +112,7 @@ describe('CRM repair panel (real component, API doubles)', () => {
       'taller.repair.repair_orders.get_deal_repair_context',
       { deal_name: 'DEAL-1' },
     )
-    expect(root.textContent).toContain('No repair orders linked')
+    expect(root.textContent).toContain('aún no tiene órdenes de reparación')
   })
 
   it('hands «Nueva reparación» to taller Intake in the same tab with a CRM return', async () => {
@@ -164,7 +172,7 @@ describe('CRM repair panel (real component, API doubles)', () => {
   it('shows the Repair Order received in taller once the operator returns', async () => {
     api.call.mockResolvedValueOnce(context())
     await mount()
-    expect(root.textContent).toContain('No repair orders linked')
+    expect(root.textContent).toContain('aún no tiene órdenes de reparación')
     api.call.mockResolvedValueOnce(
       context({
         orders: [{ name: 'RO-NEW', status: 'Por Revisar', capabilities: {} }],
@@ -201,6 +209,101 @@ describe('CRM repair panel (real component, API doubles)', () => {
     expect(root.textContent).toContain('Cargando reparaciones')
     resolve(context())
     await settle()
-    expect(root.textContent).toContain('No repair orders linked')
+    expect(root.textContent).toContain('aún no tiene órdenes de reparación')
+  })
+
+  it('leads each order with what the seller tells the customer', async () => {
+    api.call.mockResolvedValue(
+      context({
+        orders: [
+          {
+            name: 'RO-READY',
+            device_model: 'iPhone 13',
+            repair_to_be_done: 'Cambio de pantalla',
+            status: 'Listo para Entregar',
+            estimate_decision: 'Aprobado',
+            quote_amount: 1800,
+            advance_amount: 500,
+            balance_due: 1300,
+            currency: 'MXN',
+            falla_reportada: 'Pantalla estrellada',
+            diagnosis_summary: 'Display roto, touch sin respuesta',
+            photo_count: 0,
+            photos: [],
+            capabilities: {},
+          },
+        ],
+      }),
+    )
+    await mount()
+    const card = root.querySelector('[data-order="RO-READY"]')
+    expect(card.textContent).toContain('iPhone 13')
+    expect(card.textContent).toContain('Cambio de pantalla')
+    expect(card.querySelector('[data-next-step]').textContent).toMatch(
+      /avisa al cliente y cobra .*1,300/,
+    )
+    expect(card.textContent).toContain('Aprobada')
+    expect(card.textContent).toContain('Display roto, touch sin respuesta')
+    expect(card.textContent).toContain('El técnico las sube en Taller')
+    // reception and billing detail stay folded until asked for
+    expect(card.textContent).not.toContain('Mano de obra')
+    button('Más detalles').click()
+    await settle()
+    expect(card.textContent).toContain('Mano de obra')
+  })
+
+  it('puts open orders first and folds a delivered one while another is open', async () => {
+    api.call.mockResolvedValue(
+      context({
+        orders: [
+          {
+            name: 'RO-OLD',
+            status: 'Entregado',
+            falla_reportada: 'Batería',
+            capabilities: {},
+          },
+          {
+            name: 'RO-OPEN',
+            status: 'En Reparación',
+            falla_reportada: 'No carga',
+            pending_action: 'Probar centro de carga',
+            capabilities: {},
+          },
+        ],
+      }),
+    )
+    await mount()
+    const cards = [...root.querySelectorAll('[data-order]')]
+    expect(cards.map((c) => c.dataset.order)).toEqual(['RO-OPEN', 'RO-OLD'])
+    expect(cards[0].textContent).toContain('Probar centro de carga')
+    expect(cards[1].textContent).not.toContain('Batería')
+    button('Ver orden').click()
+    await settle()
+    expect(cards[1].textContent).toContain('Batería')
+  })
+
+  it('sends an order’s photos to the open chat only beside the conversation', async () => {
+    const order = {
+      name: 'RO-PH',
+      status: 'En Diagnóstico',
+      photo_count: 12,
+      photos: [
+        { name: 'PH-1', image: '/private/files/a.jpg', thumbnail_url: '' },
+      ],
+      capabilities: {},
+    }
+    api.call.mockResolvedValue(context({ orders: [order] }))
+    await mount()
+    expect(root.textContent).toContain('Fotos del taller')
+    expect(button('Enviar al chat')).toBeUndefined()
+    app.unmount()
+    root.remove()
+    await mount({ docname: 'DEAL-1', chat: true })
+    expect(root.querySelector('[data-photos]').textContent).toContain('+11')
+    button('Enviar al chat').click()
+    expect(api.requestTallerPhotos).toHaveBeenCalledWith({
+      deal: 'DEAL-1',
+      order: 'RO-PH',
+    })
   })
 })

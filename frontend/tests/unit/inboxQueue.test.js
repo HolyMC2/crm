@@ -410,3 +410,19 @@ describe('inbox counts (tab badges + «Por responder»)', () => {
     expect(calls.filter((m) => m === COUNTS)).toHaveLength(1)
   })
 })
+
+describe('«Fotos del taller» handoff', () => {
+  it('switches to the deal’s conversation and leaves the request for its composer', async () => {
+    const { inbox } = await freshInbox()
+    inbox.activeTab.value = 'repair'
+    inbox.mobileView.value = 'context'
+    inbox.requestTallerPhotos({ deal: 'DEAL-1', order: 'RO-1' })
+    expect(inbox.tallerPhotosRequest.value).toEqual({
+      deal: 'DEAL-1',
+      order: 'RO-1',
+      photo: '',
+    })
+    expect(inbox.activeTab.value).toBe('conversation')
+    expect(inbox.mobileView.value).toBe('thread')
+  })
+})
