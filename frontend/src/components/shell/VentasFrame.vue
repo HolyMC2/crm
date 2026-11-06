@@ -14,9 +14,11 @@
   <div v-else class="flex h-full w-full min-w-0 flex-col overflow-x-hidden">
     <OutboxStrip />
     <CallUI class="mx-3 empty:hidden" />
-    <!-- min-w-0 + overflow-x-hidden: chip rows scroll inside, never the shell. -->
+    <!-- min-w-0 + overflow-x-hidden: chip rows scroll inside, never the shell.
+         The scroll position resets per page, with the same key the runtime
+         gives the page: a record that rewrites its query stays mounted. -->
     <div
-      :key="$route.fullPath"
+      :key="routeKey($route)"
       class="ventas-scroll flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden"
     >
       <slot />
@@ -26,6 +28,7 @@
 </template>
 <script setup>
 import { isMobile } from '@/composables/breakpoint'
+import { routeKey } from '@/utils/routeKey'
 import AppHeader from '@/components/Layouts/AppHeader.vue'
 import GlobalModals from '@/components/Modals/GlobalModals.vue'
 import OutboxStrip from '@/components/shell/OutboxStrip.vue'
