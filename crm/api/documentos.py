@@ -773,7 +773,9 @@ def floor(doctype: str):
 		if date
 		else None,
 		"status": status,
-		"columns": _floor_columns(meta, display),
+		# Cells only where `rows` carries them: a server-curated doctype (DISPLAY) reads
+		# its own title, amount and date and nothing more.
+		"columns": [] if DISPLAY.get(meta.name) else _floor_columns(meta, display),
 		"facets": _floor_facets(meta, display),
 	}
 
