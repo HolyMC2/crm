@@ -136,7 +136,7 @@ const LIST_ROWS = 60
  * «Listas» (Shell E7, DE9): every DocType this worker reads, by its Spanish
  * label or English name, on the generic floor; «Crear <label>» where the
  * worker may create one, at most CREATE_CAP of them and only where the term
- * starts a word of the label or the name (the server matches any substring).
+ * starts a word of the label or the name (the list matches any substring).
  * Those rows are generic fan-out (rank 2, utils/shellPalette PALETTE_RANK): a
  * shell place matching the term renders above them. The curated lists are
  * already places (above). The types come from the palette reach, read once
