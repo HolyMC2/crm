@@ -30,10 +30,12 @@ vi.mock('frappe-ui', async () => {
 vi.mock('@/composables/breakpoint', async () => {
   const { computed, ref } = await import('vue')
   state.mobile = ref(false)
+  // A tablet (640–1023 px): the desktop rail without room for its names.
+  state.tablet = ref(false)
   return {
     isMobile: state.mobile,
     isNarrow: state.mobile,
-    isWide: computed(() => !state.mobile.value),
+    isWide: computed(() => !state.mobile.value && !state.tablet.value),
   }
 })
 vi.mock('@/stores/session', () => ({
@@ -107,6 +109,7 @@ import NotPermitted from '@/pages/NotPermitted.vue'
 import { showSettings } from '@/composables/settings'
 import {
   RAIL_SAVE_DELAY_MS,
+  railState,
   resetRailCountsForTests,
   resetRailForTests,
   scanPickHref,
@@ -648,6 +651,42 @@ describe('one frame for every route', () => {
     press(field)
     await nextTick()
     expect(rail().dataset.rail).toBe('expanded')
+  })
+
+  it('tablet rail: icons whatever the saved choice; «[» shows the names for this visit only', async () => {
+    state.mobile.value = false
+    state.tablet.value = true
+    localStorage.clear()
+    resetRailForTests('expanded')
+    try {
+      await mount('/contactos')
+      const rail = () => root.querySelector('nav[aria-label="Apps"]')
+      expect(await until(() => rail()?.dataset.rail === 'collapsed')).toBe(true)
+      const press = () =>
+        document.body.dispatchEvent(
+          new KeyboardEvent('keydown', {
+            key: '[',
+            bubbles: true,
+            cancelable: true,
+          }),
+        )
+      press()
+      await nextTick()
+      expect(rail().dataset.rail).toBe('expanded')
+      press()
+      await nextTick()
+      expect(rail().dataset.rail).toBe('collapsed')
+      // The saved choice is the desktop's: untouched, and back with the room.
+      expect(railState.value).toBe('expanded')
+      expect(
+        state.call.mock.calls.some(([m]) => m === 'crm.api.shell.save_rail'),
+      ).toBe(false)
+      state.tablet.value = false
+      await nextTick()
+      expect(rail().dataset.rail).toBe('expanded')
+    } finally {
+      state.tablet.value = false
+    }
   })
 
   it('desktop rail: installed sibling apps open with the way back to this page', async () => {
