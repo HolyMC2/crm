@@ -313,8 +313,24 @@
             @click="navigate({ edad: '' })"
           />
         </div>
+        <!-- ≥1024 the customers read as a table: one header, a column per fact. -->
+        <div
+          v-if="wide && rows.length"
+          class="flex items-center border-b border-outline-gray-1 text-sm text-ink-gray-6"
+          aria-hidden="true"
+          data-cobranza-columnas
+        >
+          <span class="w-10 flex-none" />
+          <span class="cobranza-fila min-w-0 flex-1 py-2 pl-2 pr-4">
+            <span>{{ __('Customer') }}</span>
+            <span>{{ __('Days overdue') }}</span>
+            <span>{{ __('Follow-up', null, CTX) }}</span>
+            <span class="text-right">{{ __('Overdue', null, CTX) }}</span>
+            <span class="text-right">{{ __('Balance') }}</span>
+          </span>
+        </div>
         <ul
-          v-else
+          v-if="rows.length"
           ref="listbox"
           tabindex="0"
           class="divide-y divide-outline-gray-1 focus:outline-none"
@@ -339,7 +355,8 @@
             <div class="flex items-start">
               <label
                 v-if="!phone || selecting"
-                class="flex min-h-14 shrink-0 cursor-pointer items-center pl-5"
+                class="flex w-10 shrink-0 cursor-pointer items-center justify-end"
+                :class="wide ? 'min-h-12' : 'min-h-14'"
                 :aria-label="__('Select {0}', [row.customer_name])"
               >
                 <input
@@ -350,6 +367,80 @@
                 />
               </label>
               <a
+                v-if="wide"
+                :href="customerHref(row.customer, customerRoute(row).query)"
+                class="cobranza-fila min-h-12 min-w-0 flex-1 py-2 pl-2 pr-4 hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
+                data-cobranza-fila
+                @click="onRowClick($event, row)"
+              >
+                <span class="min-w-0">
+                  <span class="block truncate font-medium text-ink-gray-9">{{
+                    row.customer_name
+                  }}</span>
+                  <span class="block truncate text-sm text-ink-gray-6"
+                    >{{
+                      row.invoices === 1
+                        ? __('1 invoice')
+                        : __('{0} invoices', [row.invoices])
+                    }}<template v-if="mixedCompanies">
+                      · {{ row.company }}</template
+                    ></span
+                  >
+                </span>
+                <span
+                  class="truncate text-sm"
+                  :class="toneClass(agingTone(row))"
+                  >{{ agingLabel(row, today) }}</span
+                >
+                <span class="flex min-w-0 flex-wrap gap-1">
+                  <Badge
+                    v-if="followupChip(row.followup, today)"
+                    :theme="followupChip(row.followup, today).theme"
+                    :label="followupChip(row.followup, today).label"
+                    data-followup-chip
+                  />
+                  <Badge
+                    v-if="promiseChip(row.promise, row.currency)"
+                    :theme="promiseChip(row.promise, row.currency).theme"
+                    :label="promiseChip(row.promise, row.currency).label"
+                  />
+                  <Badge
+                    v-if="reminderChip(row.last_reminder)"
+                    :theme="reminderChip(row.last_reminder).theme"
+                    :label="reminderChip(row.last_reminder).label"
+                  />
+                  <Badge
+                    v-if="autoChip(row.auto, today)"
+                    :theme="autoChip(row.auto, today).theme"
+                    :label="autoChip(row.auto, today).label"
+                    data-auto-chip
+                  />
+                </span>
+                <!-- Red goes on the overdue figure only. -->
+                <span class="num text-right text-sm text-ink-red-7">{{
+                  row.overdue_amount > 0
+                    ? money(row.overdue_amount, row.currency)
+                    : ''
+                }}</span>
+                <span class="text-right">
+                  <span
+                    class="num block text-base font-semibold text-ink-gray-9"
+                    >{{ money(row.outstanding, row.currency) }}</span
+                  >
+                  <span
+                    v-if="
+                      isForeign(row.currency, row.company_currency) &&
+                      row.base_outstanding !== undefined
+                    "
+                    class="num block text-xs text-ink-gray-6"
+                    >{{
+                      approxMoney(row.base_outstanding, row.company_currency)
+                    }}</span
+                  >
+                </span>
+              </a>
+              <a
+                v-else
                 :href="customerHref(row.customer, customerRoute(row).query)"
                 class="flex min-h-14 min-w-0 flex-1 items-start gap-3 px-4 py-3 hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
                 :class="!phone || selecting ? 'pl-2' : ''"
@@ -633,7 +724,7 @@ import CobranzaSendSheet from '@/components/cobranza/CobranzaSendSheet.vue'
 import FollowupSheet from '@/components/cobranza/FollowupSheet.vue'
 import PaymentSheet from '@/components/cobranza/PaymentSheet.vue'
 import PromiseSheet from '@/components/cobranza/PromiseSheet.vue'
-import { isMobile } from '@/composables/breakpoint'
+import { isMobile, isWide } from '@/composables/breakpoint'
 import {
   appleKeys,
   openShortcutSheet,
@@ -706,6 +797,8 @@ const LIVE_DOCTYPES = [
 const route = useRoute()
 const router = useRouter()
 const phone = isMobile
+// ≥1024 the customers are a table (header and columns), below a list of rows.
+const wide = isWide
 const boot = cobranzaBoot
 const socket = getCurrentInstance()?.appContext.config.globalProperties.$socket
 const scroller = ref(null)
@@ -1541,3 +1634,16 @@ onBeforeUnmount(() => {
   window.clearTimeout(searchTimer)
 })
 </script>
+<style scoped>
+/* The desktop customers' columns: customer and invoices, days overdue,
+   follow-up, overdue, balance. Scoped, not Tailwind arbitrary values: keeps
+   the global sheet in budget. */
+.cobranza-fila {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 2fr) minmax(0, 1.2fr) minmax(0, 2fr) 8.5rem
+    9rem;
+  column-gap: 1rem;
+  align-items: center;
+}
+</style>
