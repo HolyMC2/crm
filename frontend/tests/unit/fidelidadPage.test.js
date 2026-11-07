@@ -260,6 +260,41 @@ describe('Fidelidad page on a phone', () => {
     expect(list).toContain('4 customers · Mayoreo')
     expect(list).toContain('90 customers · Default price list')
   })
+
+  it('offers the customer cards as a view only where the register has them', async () => {
+    answer({ get_board: board() })
+    const plain = await mountApp(Fidelidad)
+    expect(text(plain.el)).not.toContain('Cards')
+
+    answer({
+      get_board: board({ capabilities: { ...CAPS, cards: true } }),
+      get_cards: {
+        company: 'Grupo Doco',
+        can_create: true,
+        denied: null,
+        counts: { active: 2, blank: 8, digital: 1 },
+        batches: [],
+      },
+    })
+    const { el } = await mountApp(
+      Fidelidad,
+      {},
+      '/ventas/fidelidad?vista=tarjetas',
+    )
+    // The section's component loads with its view.
+    await vi.waitFor(() =>
+      expect(el.querySelector('[data-testid=tarjetas-cifras]')).not.toBeNull(),
+    )
+    expect(text(el)).toContain('Cards')
+    expect(call).toHaveBeenCalledWith(`${API}.get_cards`, {
+      company: 'Grupo Doco',
+    })
+    expect(
+      [...el.querySelectorAll('[data-testid=tarjetas-cifras] dd')].map((d) =>
+        text(d).trim(),
+      ),
+    ).toEqual(['2', '1', '8'])
+  })
 })
 
 const GROUPS = {

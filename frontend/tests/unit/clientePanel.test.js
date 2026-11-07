@@ -230,6 +230,23 @@ describe('«Cliente» beside a deal', () => {
     ).toContain('AMIGO7')
   })
 
+  it('names the card with a QR they carry by its last two symbols only', async () => {
+    call.mockResolvedValue(payload())
+    const { el } = await mount()
+    expect(el.querySelector('[data-testid="cliente-tarjeta-qr"]')).toBeNull()
+
+    const withCard = payload()
+    withCard.customers[0].loyalty = {
+      ...member,
+      card: { status: 'Active', kind: 'Digital', masked: '•••• ••7Q' },
+    }
+    call.mockResolvedValue(withCard)
+    const second = await mount({ deal: 'DEAL-4' })
+    expect(
+      text(second.el.querySelector('[data-testid="cliente-tarjeta-qr"]')),
+    ).toBe('Digital card •••• ••7Q')
+  })
+
   it('changes the customer group in a sheet and reads the person again', async () => {
     call.mockImplementation(async (method) => {
       if (method === CLIENT) return payload()

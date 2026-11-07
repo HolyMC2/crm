@@ -202,6 +202,26 @@
             </button>
           </div>
 
+          <!-- The card with a QR they carry (the register gives it). Only
+               the last two symbols: the code itself confirms them at a register. -->
+          <div
+            v-if="row.loyalty.card"
+            class="flex min-h-9 items-center gap-2.5 text-sm"
+            data-testid="cliente-tarjeta-qr"
+          >
+            <span :class="ICON" aria-hidden="true"
+              ><span class="lucide-id-card size-4"
+            /></span>
+            <span class="flex-1 truncate text-ink-gray-6">{{
+              row.loyalty.card.kind === 'Digital'
+                ? __('Digital card')
+                : __('Printed card')
+            }}</span>
+            <span class="num font-semibold text-ink-gray-9">{{
+              row.loyalty.card.masked
+            }}</span>
+          </div>
+
           <div
             v-if="row.loyalty.monedero"
             class="flex min-h-9 items-center gap-2.5 text-sm"

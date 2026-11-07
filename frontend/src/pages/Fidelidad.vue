@@ -218,6 +218,10 @@
           </p>
         </template>
 
+        <div v-else-if="vista === 'tarjetas'" class="pt-3">
+          <TarjetasCliente :company="board?.company || ''" />
+        </div>
+
         <template v-else>
           <p class="px-4 pt-3 text-sm text-ink-gray-6">
             {{ __('A group sets the price list its customers buy at.') }}
@@ -308,76 +312,86 @@
               />
             </HoySection>
           </div>
-          <HoySection
-            id="fidelidad-puntos"
-            :title="program?.label || __('Points')"
-            icon="lucide-coins"
-            :collapsed="programActive ? '' : noProgramMessage"
-          >
-            <div class="px-5">
-              <dl
-                class="grid gap-px overflow-hidden rounded-7 border border-outline-gray-2 bg-surface-gray-2"
-                :class="twoColumns ? 'grid-cols-1' : 'grid-cols-3'"
-                data-testid="fidelidad-programa"
-              >
-                <div
-                  v-for="fact in programFacts.filter(
-                    (f) => f.key !== 'members',
-                  )"
-                  :key="fact.key"
-                  class="flex items-baseline justify-between gap-3 bg-surface-base px-3 py-2"
+          <div class="min-w-0 space-y-6">
+            <HoySection
+              id="fidelidad-puntos"
+              :title="program?.label || __('Points')"
+              icon="lucide-coins"
+              :collapsed="programActive ? '' : noProgramMessage"
+            >
+              <div class="px-5">
+                <dl
+                  class="grid gap-px overflow-hidden rounded-7 border border-outline-gray-2 bg-surface-gray-2"
+                  :class="twoColumns ? 'grid-cols-1' : 'grid-cols-3'"
+                  data-testid="fidelidad-programa"
                 >
-                  <dt class="text-sm text-ink-gray-6">{{ fact.label }}</dt>
-                  <dd class="num text-base font-semibold text-ink-gray-9">
-                    {{ fact.value }}
-                  </dd>
-                </div>
-              </dl>
-              <input
-                v-model="memberQuery"
-                type="search"
-                autocomplete="off"
-                :placeholder="__('Search a member')"
-                :aria-label="__('Search a member')"
-                class="mt-3 min-h-10 w-full rounded-6 border border-outline-gray-2 bg-surface-base px-3 text-base"
-                data-testid="fidelidad-miembros-buscar"
+                  <div
+                    v-for="fact in programFacts.filter(
+                      (f) => f.key !== 'members',
+                    )"
+                    :key="fact.key"
+                    class="flex items-baseline justify-between gap-3 bg-surface-base px-3 py-2"
+                  >
+                    <dt class="text-sm text-ink-gray-6">{{ fact.label }}</dt>
+                    <dd class="num text-base font-semibold text-ink-gray-9">
+                      {{ fact.value }}
+                    </dd>
+                  </div>
+                </dl>
+                <input
+                  v-model="memberQuery"
+                  type="search"
+                  autocomplete="off"
+                  :placeholder="__('Search a member')"
+                  :aria-label="__('Search a member')"
+                  class="mt-3 min-h-10 w-full rounded-6 border border-outline-gray-2 bg-surface-base px-3 text-base"
+                  data-testid="fidelidad-miembros-buscar"
+                />
+              </div>
+              <p
+                v-if="membersError"
+                role="alert"
+                class="px-5 pt-2 text-sm text-ink-red-7"
+              >
+                {{ membersError }}
+              </p>
+              <MiembrosLista
+                v-if="members.length"
+                class="mt-2"
+                :members="shownMembers"
+                :can-adjust="!!caps.adjust_points"
+                @adjust="adjust"
               />
-            </div>
-            <p
-              v-if="membersError"
-              role="alert"
-              class="px-5 pt-2 text-sm text-ink-red-7"
+              <p
+                v-else-if="!membersLoading"
+                class="px-5 py-4 text-sm text-ink-gray-6"
+              >
+                {{ noMembersText }}
+              </p>
+              <button
+                v-if="members.length > MEMBERS_FOLDED"
+                type="button"
+                class="mx-3 mt-1 flex min-h-10 items-center rounded-6 px-2 text-sm font-medium text-ink-gray-7 hover:bg-surface-gray-2"
+                :aria-expanded="String(membersOpen)"
+                data-testid="fidelidad-miembros-todos"
+                @click="membersOpen = !membersOpen"
+              >
+                {{
+                  membersOpen
+                    ? __('Show fewer')
+                    : __('Show all {0}', [members.length])
+                }}
+              </button>
+            </HoySection>
+            <HoySection
+              v-if="caps.cards"
+              id="fidelidad-tarjetas"
+              :title="__('Customer cards')"
+              icon="lucide-id-card"
             >
-              {{ membersError }}
-            </p>
-            <MiembrosLista
-              v-if="members.length"
-              class="mt-2"
-              :members="shownMembers"
-              :can-adjust="!!caps.adjust_points"
-              @adjust="adjust"
-            />
-            <p
-              v-else-if="!membersLoading"
-              class="px-5 py-4 text-sm text-ink-gray-6"
-            >
-              {{ noMembersText }}
-            </p>
-            <button
-              v-if="members.length > MEMBERS_FOLDED"
-              type="button"
-              class="mx-3 mt-1 flex min-h-10 items-center rounded-6 px-2 text-sm font-medium text-ink-gray-7 hover:bg-surface-gray-2"
-              :aria-expanded="String(membersOpen)"
-              data-testid="fidelidad-miembros-todos"
-              @click="membersOpen = !membersOpen"
-            >
-              {{
-                membersOpen
-                  ? __('Show fewer')
-                  : __('Show all {0}', [members.length])
-              }}
-            </button>
-          </HoySection>
+              <TarjetasCliente :company="board?.company || ''" />
+            </HoySection>
+          </div>
         </div>
       </template>
       <div class="h-24 flex-none sm:h-10" aria-hidden="true" />
@@ -510,6 +524,10 @@ const PuntosSheet = defineAsyncComponent(
 const OfertaSheet = defineAsyncComponent(
   () => import('@/components/fidelidad/OfertaSheet.vue'),
 )
+// The register's customer cards: loaded with their section.
+const TarjetasCliente = defineAsyncComponent(
+  () => import('@/components/fidelidad/TarjetasCliente.vue'),
+)
 
 const route = useRoute()
 const router = useRouter()
@@ -547,7 +565,7 @@ const tableRows = computed(() => mainWidth.value >= 620)
 const roomy = computed(() => frameWidth.value >= 760)
 
 // --- the view and its state chip live in the URL (back keeps them) -------
-const VISTAS = ['promociones', 'puntos', 'grupos']
+const VISTAS = ['promociones', 'puntos', 'grupos', 'tarjetas']
 const vista = computed({
   get: () =>
     VISTAS.includes(route.query.vista) ? route.query.vista : 'promociones',
@@ -574,6 +592,7 @@ const vistaOptions = computed(() => [
   { value: 'promociones', label: __('Promotions') },
   { value: 'puntos', label: __('Points') },
   { value: 'grupos', label: __('Groups') },
+  ...(caps.value.cards ? [{ value: 'tarjetas', label: __('Cards') }] : []),
 ])
 const estadoChips = computed(() => [
   { value: 'live', label: __('Running'), count: counts.value.live },
@@ -857,7 +876,7 @@ watch(
   () => !!board.value && !phone.value,
   async (drawn) => {
     const target = route.query.vista
-    if (!drawn || !['puntos', 'grupos'].includes(target)) return
+    if (!drawn || !['puntos', 'grupos', 'tarjetas'].includes(target)) return
     await nextTick()
     document
       .getElementById(`hoy-fidelidad-${target}`)

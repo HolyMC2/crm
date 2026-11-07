@@ -211,4 +211,31 @@ describe('Puntos y saldo tab', () => {
     expect(text).toContain('Monedero')
     expect(text).not.toContain('312')
   })
+
+  it('names their card with a QR by its last two symbols, and nothing without one', async () => {
+    await mount(payload({ state: 'member', card: null }))
+    expect(root.querySelector('[data-testid="loyalty-card"]')).toBeNull()
+    app.unmount()
+    root.remove()
+    await mount(
+      payload({
+        state: 'member',
+        card: {
+          status: 'Active',
+          kind: 'Printed',
+          masked: '•••• ••XH',
+          activated_on: '2026-11-07 10:15:00',
+        },
+      }),
+    )
+    const parts = []
+    const walker = document.createTreeWalker(
+      root.querySelector('[data-testid="loyalty-card"]'),
+      NodeFilter.SHOW_TEXT,
+    )
+    while (walker.nextNode()) parts.push(walker.currentNode.textContent)
+    const line = parts.join(' ').replace(/\s+/g, ' ').trim()
+    expect(line).toMatch(/^Printed card •••• ••XH since /)
+    expect(root.textContent).not.toMatch(/[0-9A-Z]{8}/)
+  })
 })

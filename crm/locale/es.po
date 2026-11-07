@@ -33026,3 +33026,68 @@ msgstr "Año pasado"
 #: crm/tableros.py
 msgid "As the page says"
 msgstr "Como diga la página"
+msgid "Print a batch of blank cards; at the register, scanning one gives it to the customer on the sale."
+msgstr "Imprime un lote de tarjetas en blanco; en la caja, al escanear una se le da al cliente de la venta."
+
+msgid "How many cards"
+msgstr "Cuántas tarjetas"
+
+msgid "Counter, a campaign, the print shop…"
+msgstr "Mostrador, una campaña, la imprenta…"
+
+msgid "A batch holds between 1 and {0} cards."
+msgstr "Un lote lleva de 1 a {0} tarjetas."
+
+msgid "Make the batch"
+msgstr "Hacer el lote"
+
+msgid "New print batch"
+msgstr "Nuevo lote para imprimir"
+
+msgid "Every card of this batch was given out."
+msgstr "Ya se entregaron todas las tarjetas de este lote."
+
+msgid "File for a print shop"
+msgstr "Archivo para la imprenta"
+
+msgid "No print batch yet."
+msgstr "Aún no hay lotes para imprimir."
+
+msgctxt "Tarjetas"
+msgid "Given"
+msgstr "Entregadas"
+
+msgctxt "Tarjetas"
+msgid "Digital"
+msgstr "Digitales"
+
+msgctxt "Tarjetas"
+msgid "Blank"
+msgstr "En blanco"
+
+msgid "{0} blank of {1}, made {2}"
+msgstr "{0} en blanco de {1}, hecho {2}"
+
+msgid "{0} blank, made {1}"
+msgstr "{0} en blanco, hecho {1}"
+
+msgid "{0} cards"
+msgstr "{0} tarjetas"
+
+msgid "{0} blank cards are ready to print."
+msgstr "{0} tarjetas en blanco listas para imprimir."
+
+msgid "Allow pop-ups to print the cards."
+msgstr "Permite las ventanas emergentes para imprimir las tarjetas."
+
+msgid "Customer cards"
+msgstr "Tarjetas de cliente"
+
+msgid "Cards"
+msgstr "Tarjetas"
+
+msgid "Digital card"
+msgstr "Tarjeta digital"
+
+msgid "Printed card"
+msgstr "Tarjeta impresa"

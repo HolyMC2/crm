@@ -197,6 +197,29 @@
           />
         </div>
 
+        <!-- The card with a QR they carry: only its last two symbols, since
+             the code confirms them at a register. The register gives, prints
+             and replaces it, with the customer there. -->
+        <p
+          v-if="row.card"
+          class="flex flex-wrap items-center gap-x-2 text-sm text-ink-gray-7"
+          data-testid="loyalty-card"
+        >
+          <span
+            class="lucide-id-card size-4 text-ink-gray-6"
+            aria-hidden="true"
+          />
+          <span class="font-medium text-ink-gray-8">{{
+            row.card.kind === 'Digital'
+              ? __('Digital card')
+              : __('Printed card')
+          }}</span>
+          <span class="num">{{ row.card.masked }}</span>
+          <span v-if="row.card.activated_on" class="text-ink-gray-5">{{
+            __('since {0}', [date(row.card.activated_on)])
+          }}</span>
+        </p>
+
         <div class="flex flex-wrap gap-2">
           <a
             v-if="row.actions?.sell"
