@@ -613,6 +613,19 @@ const routes = [
     meta: { app: 'equipo', title: 'Equipo', listParent: 'Equipo' },
   },
   {
+    path: '/equipo/bonos',
+    name: 'EquipoBonos',
+    component: () => import('@/pages/EquipoBonos.vue'),
+    meta: { app: 'equipo', title: 'Equipo', listParent: 'Equipo' },
+  },
+  {
+    path: '/equipo/bonos/reglas',
+    name: 'EquipoBonosReglas',
+    component: () => import('@/pages/EquipoBonosReglas.vue'),
+    // The back arrow returns to Bonos through `list` (EquipoBonos passes it).
+    meta: { app: 'equipo', title: 'Equipo', listParent: 'Equipo' },
+  },
+  {
     path: '/manual',
     name: 'Manual',
     component: () => import('@/pages/Manual.vue'),

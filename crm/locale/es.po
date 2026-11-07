@@ -32578,3 +32578,219 @@ msgstr "Total"
 msgctxt "Resultados"
 msgid "Still owed"
 msgstr "Saldo pendiente"
+
+msgid "A bonus measures repairs or sales, each person’s or the whole team’s, against a goal, and pays per piece, a percentage or a fixed amount."
+msgstr "Un bono mide reparaciones o ventas, las de cada persona o las de todo el equipo, contra una meta, y paga por cada una, un porcentaje o un monto fijo."
+
+msgid "A fixed amount at the goal"
+msgstr "Un monto fijo al llegar a la meta"
+
+msgid "A percentage of the amount"
+msgstr "Un porcentaje del monto"
+
+msgid "Adds up with the other bonuses"
+msgstr "Se suma a los demás bonos"
+
+msgid "All of them, once the goal is reached"
+msgstr "Todas, al llegar a la meta"
+
+msgid "Amount at the goal"
+msgstr "Monto al llegar a la meta"
+
+msgid "Amount per {0}"
+msgstr "Monto por {0}"
+
+msgid "An amount per {0}"
+msgstr "Un monto por {0}"
+
+msgid "Back to bonuses"
+msgstr "Volver a Bonos"
+
+msgid "Bonus period"
+msgstr "Periodo del bono"
+
+msgid "Bonus rules"
+msgstr "Reglas de bonos"
+
+msgid "Bonuses"
+msgstr "Bonos"
+
+msgid "Counts"
+msgstr "Cuenta"
+
+msgid "Create a bonus"
+msgstr "Crear un bono"
+
+msgid "Each person their own: each one with their own goal"
+msgstr "Cada quien lo suyo: cada persona con su propia meta"
+
+msgid "Each shop pays its own way: per repair or sale, a percentage, or a fixed amount at a goal; for each person’s work or the whole team’s, to whoever did it, to named people or to everybody."
+msgstr "Cada negocio paga a su manera: por reparación o venta, un porcentaje o un monto fijo al llegar a una meta; con el trabajo de cada persona o el de todo el equipo, a quien lo hizo, a personas elegidas o a todos."
+
+msgid "Everybody active in Equipo"
+msgstr "Todas las personas activas en Equipo"
+
+msgid "Fortnight"
+msgstr "Quincena"
+
+msgid "Goal"
+msgstr "Meta"
+
+msgid "Goal 0: no goal, it pays from the first one."
+msgstr "Meta 0: sin meta, paga desde la primera."
+
+msgid "Goal and pay"
+msgstr "Meta y pago"
+
+msgid "Goal {0}"
+msgstr "Meta de {0}"
+
+msgid "How it pays"
+msgstr "Cómo paga"
+
+msgid "How many ({0})"
+msgstr "Cuántas ({0})"
+
+msgid "How much they add up to ($)"
+msgstr "Cuánto suman ($)"
+
+msgid "If {0} does {1}, it pays {2}; with {3}, {4}."
+msgstr "Si {0} hace {1}, paga {2}; con {3}, {4}."
+
+msgid "Measured with the whole team’s work."
+msgstr "Se mide con el trabajo de todo el equipo."
+
+msgid "Measures"
+msgstr "Qué mide"
+
+msgid "Minimum amount of each one"
+msgstr "Monto mínimo de cada una"
+
+msgid "New bonus"
+msgstr "Nuevo bono"
+
+msgid "No bonuses yet. «New bonus» starts with 20 per week at $20 each and orders from $250."
+msgstr "Todavía no hay bonos. «Nuevo bono» empieza con 20 a la semana, $20 por cada una y órdenes desde $250."
+
+msgid "No goal"
+msgstr "Sin meta"
+
+msgid "No record in Equipo: payroll cannot pay it yet."
+msgstr "Sin ficha en Equipo: la nómina todavía no puede pagarlo."
+
+msgid "Nobody has work that counts in this period yet."
+msgstr "Nadie tiene trabajo que cuente en este periodo todavía."
+
+msgid "Nobody is active in Equipo yet."
+msgstr "Todavía no hay personas activas en Equipo."
+
+msgid "Nobody marked: everybody active in Equipo, sales included."
+msgstr "Sin marcar: todas las personas activas en Equipo, ventas incluidas."
+
+msgid "Nobody marked: whoever did the work."
+msgstr "Sin marcar: a quien hizo el trabajo."
+
+msgid "Nothing in this period yet."
+msgstr "Nada en este periodo todavía."
+
+msgid "Off"
+msgstr "Inactivo"
+
+msgid "Off: of the bonuses that do not add up, each person gets the one that pays more. Use it for tiers (20 repairs at $20, 30 at $25)."
+msgstr "Apagado: de los bonos que no se suman, a cada persona se le paga el que da más. Sirve para escalones (20 reparaciones a $20, 30 a $25)."
+
+msgid "Only the ones past the goal"
+msgstr "Solo las que pasan la meta"
+
+msgid "Only the owner changes the bonuses. Ask them for a new one."
+msgstr "Solo el Dueño cambia los bonos. Pídele uno nuevo."
+
+msgid "Percentage"
+msgstr "Porcentaje"
+
+msgid "Reached: {0} for each of {1} people"
+msgstr "Lograda: {0} para cada una de {1} personas"
+
+msgid "Save bonus"
+msgstr "Guardar bono"
+
+msgid "The goal counts"
+msgstr "La meta cuenta"
+
+msgid "The owner creates the bonuses."
+msgstr "El Dueño crea los bonos."
+
+msgid "The whole team: one goal with everybody’s work"
+msgstr "Todo el equipo: una meta con el trabajo de todos"
+
+msgid "There are no bonuses for this period yet."
+msgstr "Todavía no hay bonos para este periodo."
+
+msgid "This system has nothing a bonus can measure yet."
+msgstr "Este sistema todavía no tiene nada que un bono pueda medir."
+
+msgid "Total for the period"
+msgstr "Total del periodo"
+
+msgid "Weekly repairs bonus"
+msgstr "Bono semanal por reparaciones"
+
+msgid "What each person earns from the shop’s bonus rules. The pre-payroll shows it in the pay period that holds the bonus’s last day."
+msgstr "Lo que gana cada persona con las reglas de bonos del negocio. La pre-nómina lo muestra en el periodo de pago que tiene el último día del bono."
+
+msgid "What it counts"
+msgstr "Qué cuenta"
+
+msgid "Who it pays"
+msgstr "A quién paga"
+
+msgid "Whoever did the work"
+msgstr "A quien hizo el trabajo"
+
+msgid "Whose work"
+msgstr "De quién cuenta"
+
+msgid "a person"
+msgstr "una persona"
+
+msgid "each person their own"
+msgstr "cada quien lo suyo"
+
+
+
+
+msgid "past the goal"
+msgstr "arriba de la meta"
+
+msgid "the best one is paid"
+msgstr "se paga el mejor"
+
+msgid "the other bonus pays more"
+msgstr "otro bono paga más"
+
+msgid "the team"
+msgstr "el equipo"
+
+msgid "whole team"
+msgstr "todo el equipo"
+
+msgid "{0} once reached"
+msgstr "{0} al llegar"
+
+msgid "{0} per {1}"
+msgstr "{0} por {1}"
+
+msgid "{0} to go"
+msgstr "faltan {0}"
+
+msgid "{0}% of the amount"
+msgstr "{0} % del monto"
+
+msgid "{0}: this system can no longer measure what it counts."
+msgstr "{0}: este sistema ya no puede medir lo que cuenta."
+
+msgid "Reached: {0} for one person"
+msgstr "Lograda: {0} para una persona"
+
+msgid "each one from {0}"
+msgstr "cada una desde {0}"

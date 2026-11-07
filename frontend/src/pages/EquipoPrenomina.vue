@@ -141,7 +141,10 @@
           v-else-if="answer.rows.length"
           class="overflow-x-auto rounded-6 border border-outline-gray-2"
         >
-          <table class="w-full min-w-[44rem] text-left text-sm">
+          <table
+            class="w-full text-left text-sm"
+            :class="answer.bonuses ? 'min-w-[50rem]' : 'min-w-[44rem]'"
+          >
             <thead class="border-b border-outline-gray-2 text-ink-gray-6">
               <tr>
                 <th scope="col" class="p-3 font-medium">
@@ -158,6 +161,17 @@
                 </th>
                 <th scope="col" class="p-3 text-right font-medium">
                   {{ __('Open advances') }}
+                </th>
+                <th
+                  v-if="answer.bonuses"
+                  scope="col"
+                  class="p-3 text-right font-medium"
+                >
+                  <RouterLink
+                    :to="{ name: 'EquipoBonos', query: bonosQuery }"
+                    class="underline"
+                    >{{ __('Bonuses') }}</RouterLink
+                  >
                 </th>
                 <th scope="col" class="p-3 font-medium">
                   {{ __('Missing to pay') }}
@@ -199,6 +213,19 @@
                 <td class="p-3 text-right tabular-nums text-ink-gray-9">
                   {{ advancesText(row.advances) }}
                 </td>
+                <td
+                  v-if="answer.bonuses"
+                  class="p-3 text-right tabular-nums text-ink-gray-9"
+                  :data-bonus="row.employee"
+                >
+                  {{ money(row.bonus?.amount || 0) }}
+                  <span
+                    v-for="bono in row.bonus?.bonos || []"
+                    :key="`${bono.bono_name}-${bono.start}`"
+                    class="block text-xs text-ink-gray-6"
+                    >{{ bono.bono_name }}: {{ money(bono.amount) }}</span
+                  >
+                </td>
                 <td class="p-3">
                   <ul v-if="row.faltantes.length" class="space-y-1">
                     <li
@@ -232,6 +259,13 @@
                 </td>
                 <td class="p-3 text-right tabular-nums">
                   {{ advancesText(answer.totals.advances) }}
+                </td>
+                <td
+                  v-if="answer.bonuses"
+                  class="p-3 text-right tabular-nums"
+                  data-testid="prenomina-bonus-total"
+                >
+                  {{ money(answer.totals.bonus || 0) }}
                 </td>
                 <td class="p-3">
                   {{
@@ -267,6 +301,8 @@ import {
   personRoute,
   problemOf,
 } from '@/composables/useEquipo'
+import { bonosPeriodQuery } from '@/composables/useBonos'
+import { money } from '@/utils/numberFormat'
 import LucideArrowLeft from '~icons/lucide/arrow-left'
 import LucideChevronLeft from '~icons/lucide/chevron-left'
 import LucideChevronRight from '~icons/lucide/chevron-right'
@@ -288,6 +324,10 @@ const periodOptions = computed(() =>
   })),
 )
 const lift = computed(() => liftAction(answer.value?.guard))
+// The bonuses column opens Bonos on the same pay period's first day.
+const bonosQuery = computed(() =>
+  bonosPeriodQuery(wanted.value.period, answer.value?.period?.start || null),
+)
 
 function go(period, start) {
   router.replace({ query: periodQuery(period, start) })
