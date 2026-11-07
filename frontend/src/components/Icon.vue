@@ -26,5 +26,6 @@ import { ensureLucideSprite } from '@/utils/lucideSprite'
 import { toLucideName } from '@/utils/lucideNames'
 
 const props = defineProps({ icon: { type: [String, Object], required: true } })
-if (typeof props.icon === 'string' && !isEmoji(props.icon)) ensureLucideSprite()
+if (typeof props.icon === 'string' && !isEmoji(props.icon))
+  ensureLucideSprite(toLucideName(props.icon))
 </script>

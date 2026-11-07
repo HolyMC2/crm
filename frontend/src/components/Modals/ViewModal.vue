@@ -72,6 +72,7 @@
 <script setup>
 import { IconPicker } from 'frappe-ui/experimental'
 import { isEmoji } from '@/utils'
+import { ensureLucideSprite } from '@/utils/lucideSprite'
 import { call } from 'frappe-ui'
 import { ref, computed, watch, nextTick } from 'vue'
 
@@ -84,6 +85,8 @@ const props = defineProps({
 })
 
 const show = defineModel({ type: Boolean })
+// The picker lists every lucide icon: the whole sprite, not the shell's subset.
+watch(show, (open) => open && ensureLucideSprite(), { immediate: true })
 const view = defineModel('view', { type: Object, default: () => ({}) })
 
 // frappe-ui's IconPicker is lucide-only. Legacy views may store an emoji, which
