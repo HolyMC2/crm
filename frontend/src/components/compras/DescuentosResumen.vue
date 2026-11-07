@@ -4,7 +4,7 @@
        for whom, from how much and until when, so a buyer compares them
        without opening each. A discount's name opens it beside the list. -->
   <div
-    class="mx-auto flex w-full max-w-4xl flex-col gap-6 px-6 py-8"
+    class="resumen mx-auto flex w-full max-w-4xl flex-col gap-6 px-6 py-8"
     data-testid="descuentos-resumen"
   >
     <div class="flex items-center gap-3">
@@ -39,21 +39,21 @@
       class="w-full border-collapse text-left text-base"
     >
       <thead>
-        <tr class="text-sm text-ink-gray-6">
+        <tr class="whitespace-nowrap text-sm text-ink-gray-6">
           <th scope="col" class="pb-2 pr-4 font-medium">
             {{ __('Discount', null, 'Descuentos') }}
           </th>
           <th scope="col" class="pb-2 pr-4 text-right font-medium">
             {{ __('How much', null, 'Descuentos') }}
           </th>
-          <th scope="col" class="pb-2 pr-4 font-medium">
+          <th scope="col" class="resumen-ancho pb-2 pr-4 font-medium">
             {{ __('On what', null, 'Descuentos') }}
           </th>
-          <th scope="col" class="pb-2 pr-4 font-medium">
+          <th scope="col" class="resumen-ancho pb-2 pr-4 font-medium">
             {{ __('For', null, 'Descuentos') }}
           </th>
-          <th scope="col" class="pb-2 font-medium">
-            {{ __('From how much and when', null, 'Descuentos') }}
+          <th scope="col" class="resumen-ancho pb-2 font-medium">
+            {{ __('When it applies', null, 'Descuentos') }}
           </th>
         </tr>
       </thead>
@@ -75,19 +75,23 @@
               class="block text-sm font-normal text-ink-gray-6"
               >{{ stateChip(rule.state).label }}</span
             >
+            <span
+              class="resumen-angosto block text-sm font-normal text-ink-gray-6"
+              >{{ ruleLine(rule) }}</span
+            >
           </th>
           <td
             class="num whitespace-nowrap py-2 pr-4 text-right align-top text-ink-gray-9"
           >
             {{ discountFigure(rule.discount, rule.currency || 'MXN') }}
           </td>
-          <td class="py-2 pr-4 align-top text-ink-gray-8">
+          <td class="resumen-ancho py-2 pr-4 align-top text-ink-gray-8">
             {{ capital(whatText(rule.what)) }}
           </td>
-          <td class="py-2 pr-4 align-top text-ink-gray-8">
+          <td class="resumen-ancho py-2 pr-4 align-top text-ink-gray-8">
             {{ whoName(rule.who) }}
           </td>
-          <td class="py-2 align-top text-ink-gray-7">
+          <td class="resumen-ancho py-2 align-top text-ink-gray-7">
             {{ capital(conditionsText(rule, rule.currency || 'MXN')) || '' }}
           </td>
         </tr>
@@ -100,6 +104,7 @@ import { computed } from 'vue'
 import {
   conditionsText,
   discountFigure,
+  ruleLine,
   stateChip,
   whatText,
   whoName,
@@ -117,3 +122,20 @@ const countLine = computed(() => {
     : __('{0} discounts. Pick one to open it.', [n])
 })
 </script>
+<style scoped>
+/* A narrow pane (1024 px) keeps the name and the figure; what, for whom
+   and when go in one line under the name. */
+.resumen {
+  container-type: inline-size;
+}
+@container (max-width: 32rem) {
+  .resumen-ancho {
+    display: none;
+  }
+}
+@container (min-width: 32rem) {
+  .resumen-angosto {
+    display: none;
+  }
+}
+</style>

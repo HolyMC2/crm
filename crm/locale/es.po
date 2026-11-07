@@ -34041,11 +34041,23 @@ msgid "For"
 msgstr "Para"
 
 msgctxt "Descuentos"
-msgid "From how much and when"
-msgstr "Desde cuánto y cuándo"
+msgid "When it applies"
+msgstr "Cuándo aplica"
 
 msgid "1 discount. Pick it to open it."
 msgstr "1 descuento. Elígelo para abrirlo."
 
 msgid "{0} discounts. Pick one to open it."
 msgstr "{0} descuentos. Elige uno para abrirlo."
+
+msgctxt "Compras"
+msgid "Status"
+msgstr "Estado"
+
+msgctxt "Compras"
+msgid "Delivery"
+msgstr "Entrega"
+
+msgctxt "Compras"
+msgid "Progress"
+msgstr "Avance"

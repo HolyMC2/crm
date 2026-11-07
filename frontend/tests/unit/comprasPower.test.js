@@ -12,6 +12,7 @@ const state = vi.hoisted(() => ({
   route: null,
   router: null,
   mobile: null,
+  wide: null,
   hub: null,
   toast: null,
 }))
@@ -35,7 +36,8 @@ vi.mock('vue-router', async () => {
 vi.mock('@/composables/breakpoint', async () => {
   const { ref } = await import('vue')
   state.mobile = ref(false)
-  return { isMobile: state.mobile }
+  state.wide = ref(false)
+  return { isMobile: state.mobile, isWide: state.wide }
 })
 vi.mock('@/composables/useHoy', () => ({
   hoyLive: () => {
@@ -119,6 +121,7 @@ import {
   RECORD_KEYS,
   bulkConfirmPlan,
   listMemoryKey,
+  money,
   queueShortcuts,
   recordShortcuts,
   rowStep,
@@ -216,6 +219,7 @@ beforeEach(() => {
   state.route.name = 'Compras'
   state.route.query = {}
   state.mobile.value = false
+  state.wide.value = false
   state.toast.success.mockReset()
   state.toast.error.mockReset()
   sessionStorage.clear()
@@ -231,6 +235,25 @@ afterEach(() => {
 })
 
 describe('Compras list as a power app', () => {
+  it('reads as a table on a wide screen: one header, a column per fact', async () => {
+    state.wide.value = true
+    state.route.query = { segment: 'por-recibir' }
+    QUEUE.rows = [order('PO-3', { due_date: '2020-01-02' })]
+    mount()
+    await flush()
+    const header = root.querySelector('[data-compras-columnas]')
+    expect(header.textContent).toContain('Delivery')
+    expect(header.textContent).toContain('Total')
+    const row = root.querySelector('[data-compras-fila]')
+    const cells = [...row.children].map((cell) => cell.textContent.trim())
+    expect(cells[0]).toContain('Proveedor PO-3')
+    expect(cells[0]).toContain('PO-3')
+    expect(cells[1]).toBe('To receive')
+    // Overdue: the delivery says so in its own column.
+    expect(cells[2]).toContain('atrasada')
+    expect(cells[4]).toBe(money(500, 'MXN'))
+  })
+
   it('j/k move a focus the URL keeps; Enter opens the purchase with a return to the same row', async () => {
     mount()
     await flush()

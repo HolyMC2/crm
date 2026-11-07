@@ -4,7 +4,7 @@
        account it goes to, so a buyer compares them without opening each.
        A rule's name opens it beside the list. -->
   <div
-    class="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-8"
+    class="resumen mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-8"
     data-testid="envios-resumen"
   >
     <div class="flex items-center gap-3">
@@ -49,7 +49,7 @@
           <th scope="col" class="pb-2 pr-4 text-right font-medium">
             {{ __('Charges', null, 'Envios') }}
           </th>
-          <th scope="col" class="pb-2 font-medium">
+          <th scope="col" class="resumen-ancho pb-2 font-medium">
             {{ __('Account', null, 'Envios') }}
           </th>
         </tr>
@@ -77,17 +77,24 @@
               class="block text-sm font-normal text-ink-gray-6"
               >{{ stateChip(rule.state).label }}</span
             >
+            <span
+              v-if="rule.account?.label"
+              class="resumen-angosto block text-sm font-normal text-ink-gray-6"
+              >{{ rule.account.label }}</span
+            >
           </th>
           <td class="py-2 pr-4 align-top text-ink-gray-8">
             {{ range.label }}
           </td>
-          <td class="num py-2 pr-4 text-right align-top text-ink-gray-9">
+          <td
+            class="num whitespace-nowrap py-2 pr-4 text-right align-top text-ink-gray-9"
+          >
             {{ range.charge }}
           </td>
           <td
             v-if="!index"
             :rowspan="rangeRows(rule).length"
-            class="py-2 align-top text-ink-gray-7"
+            class="resumen-ancho py-2 align-top text-ink-gray-7"
           >
             {{ rule.account?.label || '' }}
           </td>
@@ -110,3 +117,19 @@ const countLine = computed(() => {
     : __('{0} shipping rules. Pick one to open it.', [n])
 })
 </script>
+<style scoped>
+/* A narrow pane (1024 px) names the account under the rule instead. */
+.resumen {
+  container-type: inline-size;
+}
+@container (max-width: 32rem) {
+  .resumen-ancho {
+    display: none;
+  }
+}
+@container (min-width: 32rem) {
+  .resumen-angosto {
+    display: none;
+  }
+}
+</style>

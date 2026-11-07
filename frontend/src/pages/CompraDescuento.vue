@@ -339,7 +339,7 @@
             :class="readOnly ? 'opacity-60' : ''"
             :inert="readOnly || undefined"
           >
-            <div class="min-w-0 flex-1 basis-64 space-y-1.5">
+            <div class="descuento-fecha space-y-1.5">
               <span class="block text-xs text-ink-gray-5">{{
                 __('Starts', null, 'Descuentos')
               }}</span>
@@ -352,7 +352,7 @@
                 {{ __('Without a date it applies from now.') }}
               </p>
             </div>
-            <div class="min-w-0 flex-1 basis-64 space-y-1.5">
+            <div class="descuento-fecha space-y-1.5">
               <span class="block text-xs text-ink-gray-5">{{
                 __('Ends', null, 'Descuentos')
               }}</span>
@@ -876,5 +876,11 @@ onMounted(load)
   .descuento-angosto-sm {
     max-width: 28rem;
   }
+}
+/* Two dates side by side only where each keeps its quick picks on one line. */
+.descuento-fecha {
+  flex: 1 1 20rem;
+  min-width: 0;
+  max-width: 28rem;
 }
 </style>
