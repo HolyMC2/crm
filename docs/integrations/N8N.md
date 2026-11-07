@@ -320,12 +320,17 @@ The templates save nothing for a successful run (`saveDataSuccessExecution: none
 runs, and skip manual-run and progress saving, so a busy connection does not grow n8n's
 database. The editor still shows a test run while you watch it. Turn saving back on in the
 workflow's settings while you debug. For a small n8n that only runs these flows, these
-environment settings (n8n 2.x names) keep memory and disk flat:
+environment settings (checked on n8n 2.9 and 2.46) keep memory and disk flat:
 
 ```
 EXECUTIONS_DATA_PRUNE=true
 EXECUTIONS_DATA_MAX_AGE=168            # hours: keep failed runs a week
 EXECUTIONS_DATA_PRUNE_MAX_COUNT=5000
+EXECUTIONS_DATA_SAVE_ON_SUCCESS=none   # the default for workflows without their own setting
+EXECUTIONS_DATA_SAVE_ON_PROGRESS=false
+N8N_EVENTBUS_LOGWRITER_MAXFILESIZEINKB=2048
+N8N_EVENTBUS_LOGWRITER_KEEPLOGCOUNT=2  # n8n's own event log: two files of 2 MB
+DB_SQLITE_VACUUM_ON_STARTUP=true       # SQLite only: give pruned space back at restart
 N8N_DIAGNOSTICS_ENABLED=false
 N8N_VERSION_NOTIFICATIONS_ENABLED=false
 N8N_TEMPLATES_ENABLED=false
