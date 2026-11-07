@@ -186,6 +186,74 @@ export function rowsFor(payload) {
   return null
 }
 
+// --- the chart builder --------------------------------------------------------------
+
+/** doco's own query source: what, how, by what, for the board's period. */
+export const CONSULTA = 'consulta'
+// A preset's own period follows the board's (or the page's): never asked.
+const PERIOD_PARAMS = new Set(['periodo'])
+
+/**
+ * A source's params as the editor asks them (doco sources.PARAM_LABELS):
+ * chips for its choices, a number with its limits, else text. A param the
+ * source does not name in the owner's words stays out.
+ */
+export function paramFields(params) {
+  const out = []
+  for (const [name, p] of Object.entries(params || {})) {
+    if (!p?.etiqueta || PERIOD_PARAMS.has(name)) continue
+    const field = {
+      name,
+      label: p.etiqueta,
+      default: p.default ?? null,
+      vacio: p.vacio || '',
+    }
+    if (Array.isArray(p.opciones)) {
+      field.kind = 'choice'
+      field.choices = p.opciones.map((value, at) => ({
+        value,
+        label: p.etiquetas?.[at] ?? String(value),
+      }))
+    } else if (p.min != null || p.max != null) {
+      Object.assign(field, { kind: 'number', min: p.min, max: p.max })
+    } else field.kind = 'text'
+    out.push(field)
+  }
+  return out
+}
+
+const isEmpty = (value) => value === '' || value === null || value === undefined
+
+/** What a param reads as in the editor: its own value, else the source's default. */
+export function paramValue(params, field) {
+  const value = params?.[field.name]
+  if (!isEmpty(value)) return value
+  return field.vacio ? '' : field.default ?? ''
+}
+
+/** The params with one of them set; an emptied one is dropped. */
+export function withParam(params, field, value) {
+  const out = { ...(params || {}) }
+  if (isEmpty(value)) delete out[field.name]
+  else if (field.kind === 'number') {
+    const n = Math.round(Number(value))
+    if (!Number.isFinite(n)) delete out[field.name]
+    else out[field.name] = Math.min(field.max ?? n, Math.max(field.min ?? n, n))
+  } else out[field.name] = value
+  return out
+}
+
+/** A new source's params: every choice at its default, so the preview answers
+ * at once (a chart of a query is drawn by day, not as one number). */
+export function startParams(params, tipo) {
+  let out = {}
+  for (const field of paramFields(params))
+    if (field.kind === 'choice' && !field.vacio && !isEmpty(field.default))
+      out = withParam(out, field, field.default)
+  if (tipo === 'grafica' && out.group_by === 'none') out.group_by = 'day'
+  return out
+}
+
 // --- operations --------------------------------------------------------------------
 
 /** A widget the page adds from a source: its size by kind; with no x and y

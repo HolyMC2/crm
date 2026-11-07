@@ -32794,3 +32794,235 @@ msgstr "Lograda: {0} para una persona"
 
 msgid "each one from {0}"
 msgstr "cada una desde {0}"
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "Views"
+msgstr "Vistas"
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "Ask Muelle"
+msgstr "Pídeselo a Muelle"
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "More view actions"
+msgstr "Más acciones de la vista"
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "More actions"
+msgstr "Más acciones"
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "Shared by {0}"
+msgstr "La comparte {0}"
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "Opens first"
+msgstr "Abre primero"
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "New view"
+msgstr "Vista nueva"
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "Customize this view"
+msgstr "Personalizar esta vista"
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "Tap a pencil to change a piece. It saves on its own."
+msgstr "Toca un lápiz para cambiar una pieza. Se guarda solo."
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "Drag a piece to move it and its corner to resize it. It saves on its own."
+msgstr "Arrastra una pieza para moverla y su esquina para cambiar su tamaño. Se guarda solo."
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "Add"
+msgstr "Agregar"
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "Library"
+msgstr "Biblioteca"
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "Versions"
+msgstr "Versiones"
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "Undo"
+msgstr "Deshacer"
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "Done"
+msgstr "Listo"
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "Retry"
+msgstr "Reintentar"
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "Back to the summary"
+msgstr "Volver al resumen"
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "Opening the view…"
+msgstr "Abriendo la vista…"
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "This view is empty"
+msgstr "Esta vista está vacía"
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "Add a chart, a number or a note, or ask Muelle to build it for you."
+msgstr "Agrega una gráfica, un número o una nota, o pídele a Muelle que la arme por ti."
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "Whoever shares it has not put anything on it yet."
+msgstr "Quien la comparte todavía no le pone nada."
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "View name"
+msgstr "Nombre de la vista"
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "Name"
+msgstr "Nombre"
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "Save name"
+msgstr "Guardar nombre"
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "Start from"
+msgstr "Empezar con"
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "It follows the period and filters of the page, like Muelle’s views. Muelle can also build it for you: open it and ask."
+msgstr "Sigue el periodo y los filtros de la página, como las vistas de Muelle. Muelle también la puede armar por ti: ábrela y pídeselo."
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "Create view"
+msgstr "Crear vista"
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "Muelle built «{0}»."
+msgstr "Muelle armó «{0}»."
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "Your own copy, «{0}», is ready. Change it as you like; the original stays as it was."
+msgstr "Tu copia, «{0}», está lista. Cámbiala como quieras; la original se queda igual."
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "Name saved."
+msgstr "Nombre guardado."
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "View duplicated: this copy is yours."
+msgstr "Vista duplicada: esta copia es tuya."
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "Tap «Delete view» again to delete it."
+msgstr "Toca «Borrar vista» otra vez para borrarla."
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "View deleted."
+msgstr "Vista borrada."
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "Resultados opens first in this view."
+msgstr "Resultados abre primero en esta vista."
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "Blank"
+msgstr "En blanco"
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "Make my copy"
+msgstr "Hacer mi copia"
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "Rename"
+msgstr "Cambiar nombre"
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "Duplicate"
+msgstr "Duplicar"
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "Share"
+msgstr "Compartir"
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "Stop opening first in this view"
+msgstr "Ya no abrir primero en esta vista"
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "Always open in this view"
+msgstr "Abrir siempre en esta vista"
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "Delete view (confirm)"
+msgstr "Borrar vista (confirma)"
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "Delete view"
+msgstr "Borrar vista"
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "Results, view «{0}»"
+msgstr "Resultados, vista «{0}»"
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "The assistant is not available for your user."
+msgstr "El asistente no está disponible para tu usuario."
+
+#: crm/tableros.py
+msgid "Last year"
+msgstr "Año pasado"
+
+#: crm/tableros.py
+msgid "As the page says"
+msgstr "Como diga la página"

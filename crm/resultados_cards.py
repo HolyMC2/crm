@@ -135,7 +135,7 @@ def encuestas(ctx: dict) -> dict | None:
 	prev = service.recommendation_between(*other)["value"] if other else None
 	value = now["value"]
 	if value is None:
-		note = _("No answers yet in this period.")
+		note = _("No answers yet in this period.", context="Encuestas")
 	elif now["few"]:
 		note = _("Still few answers")
 	else:

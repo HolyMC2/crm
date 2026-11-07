@@ -64,6 +64,8 @@ const one = (value) =>
   typeof value === 'string' ? value : Array.isArray(value) ? one(value[0]) : ''
 const text = (value) => one(value).trim().slice(0, 140)
 const ISO = /^\d{4}-\d{2}-\d{2}$/
+// A view: one of Muelle's (resumen) or a Tablero's name.
+const VISTA = /^[A-Za-z0-9_-]{1,140}$/
 const isoDate = (value) => {
   const v = one(value).trim()
   if (!ISO.test(v)) return ''
@@ -77,7 +79,8 @@ const isoDate = (value) => {
 }
 
 /** The board's state from the URL; unknown values fall back to Mes vs anterior.
- * Rango needs both `desde` and `hasta` (ordered); without them it is Mes. */
+ * Rango needs both `desde` and `hasta` (ordered); without them it is Mes.
+ * `vista`, when the link names one, is the view it opens. */
 export function readQuery(query = {}) {
   let periodo = one(query.periodo)
   const compara = one(query.compara)
@@ -96,6 +99,8 @@ export function readQuery(query = {}) {
       state.hasta = ends[1]
     } else state.periodo = 'mes'
   }
+  const vista = one(query.vista).trim()
+  if (VISTA.test(vista)) state.vista = vista
   return state
 }
 
@@ -110,6 +115,7 @@ export function toQuery(state) {
   if (state.compara && state.compara !== 'anterior') q.compara = state.compara
   if (state.empresa) q.empresa = state.empresa
   if (state.tienda) q.tienda = state.tienda
+  if (state.vista) q.vista = state.vista
   return q
 }
 
@@ -290,19 +296,6 @@ const TITLES = {
   hora_dia: 'Hour × day',
 }
 
-/** Board order and width while the first answer is on its way. */
-export const SKELETON = Object.freeze([
-  ['ventas', ''],
-  ['tickets', ''],
-  ['ticket_promedio', ''],
-  ['promedio_diario', ''],
-  ['tendencia', 'full'],
-  ['margen', ''],
-  ['efectivo', ''],
-  ['por_cobrar', ''],
-  ['reparaciones', ''],
-])
-
 const WIDTH = { '': 1, wide: 2, full: 4 }
 const LG_SPAN = {
   1: '',
@@ -319,44 +312,6 @@ export function cardSpan(size, lg = 0) {
   return [sm, wide].filter(Boolean).join(' ')
 }
 
-/**
- * The 4-column layout in board order with no hole at a row's end. When the
- * next card does not fit, a later card that fits the gap moves up; with none,
- * the row's last card widens to fill it. `cards` is [[key, size], ...];
- * returns {order: [[key, size], ...], spans: {key: columns}}.
- */
-export function packRows(cards, columns = 4) {
-  const width = ([, size]) => Math.min(columns, WIDTH[size] || 1)
-  const queue = [...cards]
-  const order = []
-  const spans = {}
-  let row = []
-  let used = 0
-  const close = () => {
-    if (row.length && used < columns)
-      spans[row[row.length - 1]] += columns - used
-    row = []
-    used = 0
-  }
-  while (queue.length) {
-    let i = 0
-    if (used + width(queue[0]) > columns) {
-      i = queue.findIndex((card) => used + width(card) <= columns)
-      if (i < 0) {
-        close()
-        i = 0
-      }
-    }
-    const [card] = queue.splice(i, 1)
-    order.push(card)
-    spans[card[0]] = width(card)
-    row.push(card[0])
-    used += width(card)
-    if (used === columns) close()
-  }
-  close()
-  return { order, spans }
-}
 /** A card's title even when its provider only sent a reason. */
 export function cardTitle(key) {
   return tr(TITLES[key] || key || '', null, CTX)
@@ -505,42 +460,4 @@ export function fetchDocument(doctype, name, { maxAge = 30_000 } = {}) {
 /** The ticket as last read, for an instant first paint. */
 export function documentFromMemory(doctype, name) {
   return docMemory.get(docKey(doctype, name))?.value || null
-}
-
-// «Personalizar»: the cards a user hides follow them to every device (the
-// user default behind crm.api.resultados.save_hidden). This device keeps a
-// copy so the board opens without the hidden cards before the server answers.
-export const HIDDEN_KEY = 'muelle:resultados:hidden'
-
-/** Card keys only, once each; anything else is dropped, never an error. */
-export function cleanHidden(value) {
-  if (!Array.isArray(value)) return []
-  return [...new Set(value.filter((v) => typeof v === 'string' && v))]
-}
-
-export function readHiddenCopy(storage = globalThis.localStorage) {
-  try {
-    return cleanHidden(JSON.parse(storage?.getItem(HIDDEN_KEY) || '[]'))
-  } catch {
-    return []
-  }
-}
-
-export function writeHiddenCopy(keys, storage = globalThis.localStorage) {
-  try {
-    storage?.setItem(HIDDEN_KEY, JSON.stringify(keys))
-  } catch {
-    // Private mode: the account still keeps the choice.
-  }
-}
-
-/**
- * What the board hides after the server answers. The account's choice wins;
- * a user who never chose on the server brings this device's older choice
- * with them (`push`), so nothing they hid before comes back.
- */
-export function adoptHidden(server, copy) {
-  if (Array.isArray(server)) return { hidden: cleanHidden(server), push: false }
-  const hidden = cleanHidden(copy)
-  return { hidden, push: hidden.length > 0 }
 }

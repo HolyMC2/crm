@@ -15,9 +15,7 @@ vi.mock('frappe-ui', () => ({
 }))
 
 import {
-  HIDDEN_KEY,
   accessRequest,
-  adoptHidden,
   axisLabel,
   boardHref,
   cardSpan,
@@ -37,14 +35,12 @@ import {
   rowFromMemory,
   saleLine,
   saleState,
-  readHiddenCopy,
   readLensQuery,
   readQuery,
   routerPath,
   rowRoute,
   toQuery,
   walkInName,
-  writeHiddenCopy,
 } from '../../src/composables/useResultados.js'
 import { accesos } from '../../src/composables/useHoy.js'
 import { hostedModules } from '../../src/composables/muelleShell.js'
@@ -517,76 +513,6 @@ describe('shell wiring', () => {
     expect(accesos(boot(true)).map((i) => i.key)).toEqual(['resultados.read'])
     expect(accesos(boot(true))[0].to).toBe('/resultados')
     expect(accesos(boot(false))).toEqual([])
-  })
-})
-
-describe('packRows', () => {
-  it('fills every row of four: a later card moves up, else the last widens', async () => {
-    const { packRows } = await import('../../src/composables/useResultados.js')
-    const { order, spans } = packRows([
-      ['a', ''],
-      ['b', ''],
-      ['c', ''],
-      ['t', 'wide'],
-      ['d', ''],
-      ['w', 'full'],
-      ['e', ''],
-    ])
-    // Row 2: t, then e moves up before w and widens to close the row.
-    expect(order.map(([k]) => k)).toEqual(['a', 'b', 'c', 'd', 't', 'e', 'w'])
-    expect(spans).toEqual({ a: 1, b: 1, c: 1, d: 1, t: 2, e: 2, w: 4 })
-    // Row 2: t + gap of two with nothing left that fits → t widens.
-    expect(
-      packRows([
-        ['x', 'wide'],
-        ['y', 'full'],
-      ]).spans,
-    ).toEqual({ x: 4, y: 4 })
-  })
-})
-
-describe('Personalizar follows the account', () => {
-  function memory(initial = {}) {
-    const data = { ...initial }
-    return {
-      getItem: (k) => (k in data ? data[k] : null),
-      setItem: (k, v) => {
-        data[k] = String(v)
-      },
-      data,
-    }
-  }
-
-  it('the account choice wins over the device copy, even when empty', () => {
-    expect(adoptHidden(['margen'], ['tendencia'])).toEqual({
-      hidden: ['margen'],
-      push: false,
-    })
-    expect(adoptHidden([], ['tendencia'])).toEqual({ hidden: [], push: false })
-  })
-
-  it('a user who never chose on the account brings this device along', () => {
-    expect(adoptHidden(null, ['tendencia', 'tendencia', 3])).toEqual({
-      hidden: ['tendencia'],
-      push: true,
-    })
-    expect(adoptHidden(undefined, [])).toEqual({ hidden: [], push: false })
-  })
-
-  it('the device copy reads back what it wrote and survives junk', () => {
-    const storage = memory()
-    writeHiddenCopy(['margen', 'por_cobrar'], storage)
-    expect(readHiddenCopy(storage)).toEqual(['margen', 'por_cobrar'])
-    for (const junk of ['{', '{"a":1}', '7', '[1,null,""]']) {
-      expect(readHiddenCopy(memory({ [HIDDEN_KEY]: junk }))).toEqual([])
-    }
-    const broken = {
-      getItem: () => null,
-      setItem: () => {
-        throw new Error('private mode')
-      },
-    }
-    expect(() => writeHiddenCopy(['margen'], broken)).not.toThrow()
   })
 })
 

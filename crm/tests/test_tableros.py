@@ -78,8 +78,29 @@ class TestResolver(TestCase):
 			out = tableros.resolver("resultados.ventas", {"compara": "anio"}, {"periodo": "este_mes"})
 		board.assert_called_once_with(card="ventas", compara="anio", empresa=None, tienda=None, periodo="mes")
 		self.assertEqual(out["kind"], "card")
+
 		self.assertEqual(out["card"], card)
 		self.assertEqual(out["currency"], "MXN")
+
+	def test_the_resultados_page_drives_the_period_and_the_filters(self):
+		card = {"key": "ventas", "label": "Ventas", "value": 1200, "format": "money"}
+		ctx = {
+			"periodo": "rango",
+			"desde": "2026-10-01",
+			"hasta": "2026-10-31",
+			"filtros": {"compara": "anio", "tienda": "Centro"},
+		}
+		with self._board([card]) as board:
+			tableros.resolver("resultados.ventas", {"tienda": "Norte"}, ctx)
+		board.assert_called_once_with(
+			card="ventas",
+			compara="anio",
+			empresa=None,
+			tienda="Norte",
+			periodo="rango",
+			desde="2026-10-01",
+			hasta="2026-10-31",
+		)
 
 	def test_a_refused_card_says_why(self):
 		blocked = {"key": "efectivo", "blocked_reason": "Solo el encargado ve el efectivo."}

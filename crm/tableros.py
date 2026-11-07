@@ -5,6 +5,11 @@ Encuestas) is a board source `resultados.<card key>`, so a card is a widget
 with no code in the app that owns it. The resolver reads the card through
 `resultados.board` as the person looking at the board: the same cache, the
 same refusal, the same drill. Registered with `doco_tablero_sources`.
+
+In the Resultados workspace the page's own period bar drives every view: the
+board's period may then be a «rango» of dates, and the page's comparison,
+company and shop come as `ctx["filtros"]`, the defaults of every card that
+does not pin its own.
 """
 
 import frappe
@@ -51,15 +56,29 @@ TITLES = {
 	"hora_dia": "Hour × day",
 }
 APPS = {"tratos": "crm", "encuestas": "crm", "reparaciones": "taller"}
-PARAMS = {
-	"compara": {"default": "anterior", "opciones": list(resultados.COMPARAS)},
-	"empresa": {"default": None, "opciones": None},
-	"tienda": {"default": None, "opciones": None},
-}
 
 
-def board_query(periodo):
-	"""The Resultados query for a board period."""
+def params():
+	"""A card's params as the page's chart builder names them; left empty, a
+	card follows the page's own comparison, company and shop."""
+	labels = {"anterior": _("Previous period"), "anio": _("Last year"), "no": _("No comparison")}
+	return {
+		"compara": {
+			"default": "anterior",
+			"opciones": list(resultados.COMPARAS),
+			"etiqueta": _("Compare with"),
+			"etiquetas": [labels.get(c, c) for c in resultados.COMPARAS],
+			"vacio": _("As the page says"),
+		},
+		"empresa": {"default": None, "opciones": None},
+		"tienda": {"default": None, "opciones": None},
+	}
+
+
+def board_query(periodo, desde=None, hasta=None):
+	"""The Resultados query for a board period (a «rango» carries its dates)."""
+	if periodo == "rango":
+		return {"periodo": "rango", "desde": desde, "hasta": hasta}
 	if periodo in PERIODO:
 		return {"periodo": PERIODO[periodo]}
 	from doco.docoutils.books.analytics_query import resolve_period
@@ -86,7 +105,7 @@ def catalogo(ctx):
 				),
 				"app": APPS.get(key, "mercado"),
 				"tipos": ["numero", "grafica", "lista"],
-				"params": PARAMS,
+				"params": params(),
 				"resolver": RESOLVER,
 			}
 		)
@@ -103,12 +122,13 @@ def resolver(source_id, params, ctx):
 	if not key:
 		raise LookupError(source_id)
 	params = params or {}
+	page = ctx.get("filtros") or {}
 	out = resultados.board(
 		card=key,
-		compara=params.get("compara"),
-		empresa=params.get("empresa"),
-		tienda=params.get("tienda"),
-		**board_query(ctx.get("periodo")),
+		compara=params.get("compara") or page.get("compara"),
+		empresa=params.get("empresa") or page.get("empresa"),
+		tienda=params.get("tienda") or page.get("tienda"),
+		**board_query(ctx.get("periodo"), ctx.get("desde"), ctx.get("hasta")),
 	)
 	card = next(iter(out.get("cards") or []), None)
 	if not card:
