@@ -416,6 +416,29 @@ describe('automation connection', () => {
     })
     expect(el.textContent).toContain('n8n answered 200. The connection works.')
   })
+  it('shows a stored error in the reader’s language', async () => {
+    const original = globalThis.__
+    globalThis.__ = (msg, args) =>
+      msg === 'The connection is disabled or was removed.'
+        ? 'La conexión está deshabilitada o se borró.'
+        : original(msg, args)
+    try {
+      respond({
+        'crm.api.integration.send_test': () => ({
+          status: 'Dead',
+          response_code: 0,
+          last_error: 'The connection is disabled or was removed.',
+        }),
+      })
+      const el = await mount(AutomationConnection, { name: 'INT-0001' })
+      await click(el, 'Send test event')
+      expect(el.textContent).toContain(
+        'It did not arrive: La conexión está deshabilitada o se borró.',
+      )
+    } finally {
+      globalThis.__ = original
+    }
+  })
   it('creates an API key for the connection user and shows the header once', async () => {
     respond({
       'frappe.core.doctype.user.user.generate_keys': () => ({
