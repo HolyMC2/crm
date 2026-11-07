@@ -234,8 +234,8 @@ describe('Gastos list as a power app', () => {
     )
     expect(cells[0]).toContain('Proveedor PI-1')
     expect(cells[0]).toContain('F-PI-1')
-    expect(cells[1]).toBe('Overdue')
-    // Only the due words turn red: four days past the site's today.
+    // The due column says it is overdue (in red); the state says what is paid.
+    expect(cells[1]).toBe('Partly paid')
     expect(cells[2]).toBe('Overdue 4 days')
     expect(cells[3]).toBe(money(1000, 'MXN'))
     expect(cells[4]).toBe(money(600, 'MXN'))
@@ -262,7 +262,11 @@ describe('Gastos list as a power app', () => {
     )
     expect(cells[1]).toBe('Draft')
     expect(cells[2]).not.toBe('')
-    expect(cells[4]).toBe('')
+    // A draft owes nothing yet: no balance column.
+    expect(cells).toHaveLength(4)
+    expect(
+      root.querySelector('[data-gastos-columnas]').textContent,
+    ).not.toContain('Balance')
   })
 
   it('j/k move a focus the URL keeps; Enter opens the bill with a return to the same row', async () => {

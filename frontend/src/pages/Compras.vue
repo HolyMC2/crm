@@ -278,7 +278,8 @@
               @click="newPurchase"
             />
           </div>
-          <!-- ≥1024 the queue reads as a table: one header, a column per fact. -->
+          <!-- Where the list has room the queue reads as a table: one header, a
+               column per fact. -->
           <div
             v-if="wide && rows.length"
             class="flex items-center border-b border-outline-gray-1 text-sm text-ink-gray-6"
@@ -351,43 +352,47 @@
                   @click="onRowOpen($event, row)"
                 >
                   <span class="min-w-0">
-                    <span class="block truncate font-medium text-ink-gray-9">{{
-                      partyOf(row)
-                    }}</span>
+                    <span
+                      class="block truncate font-medium text-ink-gray-9"
+                      :title="partyOf(row)"
+                      >{{ partyOf(row) }}</span
+                    >
                     <span class="num block truncate text-sm text-ink-gray-6">{{
                       row.name
                     }}</span>
                   </span>
-                  <span class="truncate text-sm text-ink-gray-8">{{
+                  <span class="break-words text-sm text-ink-gray-8">{{
                     statusLabel(row)
                   }}</span>
                   <span
-                    class="whitespace-nowrap text-sm"
+                    class="text-sm"
                     :class="
                       lateDays(row)
                         ? 'font-medium text-ink-red-7'
                         : 'text-ink-gray-8'
                     "
                     data-testid="compras-entrega"
-                    >{{ row.due_date ? formatDay(row.due_date) : ''
-                    }}<template v-if="lateDays(row)">
-                      · atrasada</template
-                    ></span
+                    ><span class="whitespace-nowrap">{{
+                      row.due_date ? formatDay(row.due_date) : ''
+                    }}</span
+                    ><span v-if="lateDays(row)" class="block">{{
+                      __('Late', null, 'Compras')
+                    }}</span></span
                   >
                   <span class="flex min-w-0 flex-col text-sm">
                     <span
                       v-if="row.kind === 'orden' && Number(row.docstatus) === 1"
-                      class="truncate text-ink-gray-8"
+                      class="break-words text-ink-gray-8"
                       >{{ progressLabel(row) }}</span
                     >
                     <span
                       v-if="row.in_receipt"
-                      class="truncate text-ink-amber-8"
+                      class="break-words text-ink-amber-8"
                       >{{ __('Receipt in progress') }}</span
                     >
                     <span
                       v-if="billPending(row)"
-                      class="truncate text-ink-blue-7"
+                      class="break-words text-ink-blue-7"
                       >{{ __('Bill pending') }}</span
                     >
                   </span>
@@ -438,7 +443,7 @@
                         ><span aria-hidden="true">&nbsp;·&nbsp;</span
                         >{{ __('Delivery {0}', [formatDay(row.due_date)])
                         }}<template v-if="lateDays(row)">
-                          · atrasada</template
+                          · {{ __('late', null, 'Compras') }}</template
                         ></span
                       >
                     </span>
@@ -597,7 +602,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { Button, Dropdown, FormControl, toast } from 'frappe-ui'
 import { formatDay } from '@/utils/contactos'
 import { dayDiff, parseServerDate } from '@/utils/display'
-import { isWide } from '@/composables/breakpoint'
+import { useTableWidth } from '@/composables/useTableWidth'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import { Fab } from '@/components/ui'
 import BulkConfirmSheet from '@/components/compras/BulkConfirmSheet.vue'
@@ -715,8 +720,9 @@ const list = usePowerList({
 })
 const rows = list.rows
 const problem = list.problem
-// ≥1024 the queue is a table (header and columns), below a list of rows.
-const wide = isWide
+// Where the list has room the queue is a table (header and columns),
+// elsewhere a list of rows.
+const wide = useTableWidth(list.scroller)
 function partyOf(row) {
   return (
     row.party ||
@@ -1053,8 +1059,8 @@ onMounted(async () => {
 .compras-fila {
   display: grid;
   grid-template-columns:
-    minmax(0, 2.2fr) minmax(0, 1.2fr) 9.5rem minmax(0, 1.8fr)
-    8.5rem;
+    minmax(0, 2.2fr) minmax(0, 1fr) 8.5rem minmax(0, 1.6fr)
+    7.5rem;
   column-gap: 1rem;
   align-items: center;
 }

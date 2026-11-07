@@ -250,7 +250,7 @@ describe('Compras list as a power app', () => {
     expect(cells[0]).toContain('PO-3')
     expect(cells[1]).toBe('To receive')
     // Overdue: the delivery says so in its own column.
-    expect(cells[2]).toContain('atrasada')
+    expect(cells[2]).toContain('Late')
     expect(cells[4]).toBe(money(500, 'MXN'))
   })
 

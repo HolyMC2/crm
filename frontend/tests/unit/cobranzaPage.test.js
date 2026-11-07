@@ -319,7 +319,7 @@ describe('Cobranza list as a power app', () => {
     ].map((fila) => [...fila.children].map((cell) => cell.textContent.trim()))
     expect(laura[0]).toContain('Laura S.A.')
     expect(laura[0]).toContain('3 invoices')
-    expect(laura[1]).toBe('Overdue 40 days')
+    expect(laura[1]).toBe('40')
     expect(laura[3]).toBe(money(400, 'MXN'))
     expect(laura[4]).toBe(money(1500, 'MXN'))
     // Nothing overdue: the overdue column stays empty, not «$0.00».

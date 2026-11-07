@@ -283,7 +283,8 @@
               >{{ __('Open the full order form to bill it') }}</a
             >
           </div>
-          <!-- ≥1024 the bills read as a table: one header, a column per fact. -->
+          <!-- Where the list has room the bills read as a table: one header, a
+               column per fact. -->
           <div
             v-if="wide && rows.length"
             class="flex items-center border-b border-outline-gray-1 text-sm text-ink-gray-6"
@@ -293,13 +294,18 @@
             <span v-if="canSelect" class="w-10 flex-none" />
             <span
               class="gastos-fila min-w-0 flex-1 px-4 py-2 sm:px-6"
-              :class="canSelect ? 'sm:pl-2' : ''"
+              :class="[
+                canSelect ? 'sm:pl-2' : '',
+                draftDates ? 'gastos-borrador' : '',
+              ]"
             >
               <span>{{ __('Supplier') }}</span>
               <span>{{ __('Status') }}</span>
               <span>{{ draftDates ? __('Date', null, CTX) : __('Due') }}</span>
               <span class="text-right">{{ __('Total') }}</span>
-              <span class="text-right">{{ __('Balance') }}</span>
+              <span v-if="!draftDates" class="text-right">{{
+                __('Balance')
+              }}</span>
             </span>
           </div>
           <ul
@@ -347,14 +353,19 @@
                   v-if="wide"
                   :href="recordHref(row)"
                   class="gastos-fila min-h-12 min-w-0 flex-1 px-4 py-2 hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:px-6"
-                  :class="canSelect ? 'sm:pl-2' : ''"
+                  :class="[
+                    canSelect ? 'sm:pl-2' : '',
+                    draftDates ? 'gastos-borrador' : '',
+                  ]"
                   data-gastos-fila
                   @click="onRowOpen($event, row)"
                 >
                   <span class="min-w-0">
-                    <span class="block truncate font-medium text-ink-gray-9">{{
-                      row.party || __('Supplier not visible')
-                    }}</span>
+                    <span
+                      class="block truncate font-medium text-ink-gray-9"
+                      :title="row.party"
+                      >{{ row.party || __('Supplier not visible') }}</span
+                    >
                     <span class="block truncate text-sm text-ink-gray-6"
                       ><span class="num">{{ row.bill_no || row.name }}</span
                       ><template v-if="multiCompany && row.company">
@@ -362,12 +373,12 @@
                       ></span
                     >
                   </span>
-                  <span class="truncate text-sm text-ink-gray-8">{{
-                    registeringHere(row) ? __('Registering…') : statusLabel(row)
+                  <span class="break-words text-sm text-ink-gray-8">{{
+                    stateCell(row)
                   }}</span>
-                  <!-- Only the overdue words turn red. -->
+                  <!-- Only the overdue words turn red; they wrap, never cut. -->
                   <span
-                    class="truncate text-sm"
+                    class="break-words text-sm"
                     :class="
                       row.overdue
                         ? 'font-medium text-ink-red-7'
@@ -376,10 +387,18 @@
                     data-testid="gasto-due"
                     >{{ dateCell(row) }}</span
                   >
-                  <span class="num text-right text-sm text-ink-gray-8">{{
-                    money(row.total, row.currency)
-                  }}</span>
+                  <!-- A draft owes nothing yet: its total is the figure. -->
                   <span
+                    class="num text-right"
+                    :class="
+                      draftDates
+                        ? 'text-base font-semibold text-ink-gray-9'
+                        : 'text-sm text-ink-gray-8'
+                    "
+                    >{{ money(row.total, row.currency) }}</span
+                  >
+                  <span
+                    v-if="!draftDates"
                     class="num text-right text-base font-semibold text-ink-gray-9"
                     >{{
                       Number(row.docstatus) === 1
@@ -613,7 +632,7 @@ import LucidePlus from '~icons/lucide/plus'
 import LucideUpload from '~icons/lucide/upload'
 import LucideDollarSign from '~icons/lucide/dollar-sign'
 import { registrationOf } from '@/composables/gastosRegistrations'
-import { isWide } from '@/composables/breakpoint'
+import { useTableWidth } from '@/composables/useTableWidth'
 import { formatDay } from '@/utils/contactos'
 
 // A draft this tab sent to register in the background (the tray follows it).
@@ -685,13 +704,20 @@ const problem = list.problem
 const multiCompany = computed(
   () => new Set(rows.value.map((row) => row.company)).size > 1,
 )
-// ≥1024 the bills are a table (header and columns), below a list of rows.
-const wide = isWide
+// Where the list has room the bills are a table (header and columns),
+// elsewhere a list of rows.
+const wide = useTableWidth(list.scroller)
 // Drafts to register have no due date that matters yet: their column is the
 // bill's date. Registered bills say when they are due.
 const draftDates = computed(
   () => state.value.segment === 'por-registrar' && !state.value.po,
 )
+// The due column already says «Vencida hace …» in red: the state says
+// what is paid of it.
+function stateCell(row) {
+  if (registeringHere(row)) return __('Registering…')
+  return statusLabel({ ...row, overdue: false })
+}
 function dateCell(row) {
   if (draftDates.value) return row.date ? formatDay(row.date) : ''
   return Number(row.docstatus) === 1
@@ -1008,14 +1034,18 @@ onMounted(async () => {
 </script>
 <style scoped>
 /* The desktop bills' columns: supplier and folio, status, due (or date),
-   total, balance. Scoped, not Tailwind arbitrary values: keeps the global
+   total, balance (not on drafts). Scoped, not Tailwind arbitrary values: keeps the global
    sheet in budget. */
 .gastos-fila {
   display: grid;
   grid-template-columns:
-    minmax(0, 2.2fr) minmax(0, 1fr) minmax(0, 1.4fr) 8.5rem
-    8.5rem;
+    minmax(0, 2fr) minmax(0, 0.9fr) minmax(0, 1.6fr) 7rem
+    7.5rem;
   column-gap: 1rem;
   align-items: center;
+}
+/* Drafts owe nothing yet: no balance column. */
+.gastos-fila.gastos-borrador {
+  grid-template-columns: minmax(0, 2fr) minmax(0, 0.9fr) minmax(0, 1.6fr) 7rem;
 }
 </style>
