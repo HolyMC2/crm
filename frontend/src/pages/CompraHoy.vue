@@ -323,6 +323,47 @@
         </section>
 
         <section
+          v-if="board.retire?.length"
+          :aria-label="
+            __('Models the lists no longer carry', null, 'ComprasHoy')
+          "
+          data-testid="hoy-retire"
+        >
+          <h2 class="title-face text-lg font-semibold text-ink-gray-9">
+            {{ __('Models the lists no longer carry', null, 'ComprasHoy') }}
+          </h2>
+          <p class="mb-2 text-sm text-ink-gray-6">
+            {{
+              __(
+                'After a receipt, the models a supplier stopped listing wait for you to archive, delete or keep them.',
+                null,
+                'ComprasHoy',
+              )
+            }}
+          </p>
+          <ul
+            class="divide-y divide-outline-gray-1 rounded-6 border border-outline-gray-2"
+          >
+            <li v-for="r in board.retire" :key="r.pedido">
+              <RouterLink
+                :to="{ name: 'CompraLista', params: { name: r.catalog } }"
+                class="press flex min-h-12 items-center gap-3 px-3 py-2 [@media(hover:hover)]:hover:bg-surface-gray-1"
+              >
+                <span class="min-w-0 flex-1">
+                  <span class="block truncate text-base">{{
+                    r.supplier_name
+                  }}</span>
+                  <span class="block text-xs text-ink-gray-6">{{
+                    __('{0} models waiting', [r.count], 'ComprasHoy')
+                  }}</span>
+                </span>
+                <span class="num flex-none tabular-nums">{{ r.count }}</span>
+              </RouterLink>
+            </li>
+          </ul>
+        </section>
+
+        <section
           v-if="board.bills?.count"
           :aria-label="__('Bills due this week', null, 'ComprasHoy')"
         >

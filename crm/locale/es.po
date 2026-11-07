@@ -28037,11 +28037,6 @@ msgstr "Sube el catálogo del proveedor"
 
 #: frontend/src/pages/CompraSurtido.vue
 msgctxt "Surtido"
-msgid "PDF or spreadsheet: drop it here or choose it. It reads itself in the background."
-msgstr "PDF u hoja de cálculo: suéltalo aquí o elígelo. Se lee solo en segundo plano."
-
-#: frontend/src/pages/CompraSurtido.vue
-msgctxt "Surtido"
 msgid "Supplier (optional)"
 msgstr "Proveedor (opcional)"
 
@@ -35452,3 +35447,1333 @@ msgstr "Confirmada: cuenta como demanda"
 msgctxt "VentasPerdidas"
 msgid "Discarded"
 msgstr "Descartada"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Pictures of the list, a PDF or a spreadsheet: drop them here or choose them. It reads itself in the background."
+msgstr "Fotos de la lista, un PDF o una hoja de cálculo: suéltalos aquí o elígelos. Se lee sola en segundo plano."
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Open the list"
+msgstr "Abrir lista"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "{0} pictures uploaded; the list reads itself now"
+msgstr "{0} fotos subidas; la lista ya se está leyendo"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "{0} pictures"
+msgstr "{0} fotos"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Restock"
+msgstr "Surtido"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Search brand, model or code"
+msgstr "Buscar marca, modelo o código"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Show"
+msgstr "Mostrar"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Section"
+msgstr "Sección"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Remove filter {0}"
+msgstr "Quitar filtro {0}"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Opening the list…"
+msgstr "Abriendo la lista…"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Close"
+msgstr "Cerrar"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Reading {0} pages of products uses {1} units of your plan. The lines appear here as they are read."
+msgstr "Leer {0} páginas de productos usa {1} unidades de tu plan. Las líneas aparecen aquí conforme se leen."
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Not now"
+msgstr "Ahora no"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Read them"
+msgstr "Leerlas"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "This list has no product pages left to read. Add clearer pictures or the file with prices."
+msgstr "Esta lista ya no tiene páginas de productos por leer. Agrega fotos más claras o el archivo con precios."
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "All"
+msgstr "Todas"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "The list has no products yet"
+msgstr "La lista aún no tiene productos"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Drop the pictures of the list here, or its PDF or spreadsheet, and it reads itself."
+msgstr "Suelta aquí las fotos de la lista, o su PDF u hoja de cálculo, y se lee sola."
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "The owner adds the pictures of the list."
+msgstr "El dueño agrega las fotos de la lista."
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Add pictures"
+msgstr "Agregar fotos"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Nothing matches"
+msgstr "Nada coincide"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Change the words, or clear the filters."
+msgstr "Cambia las palabras o quita los filtros."
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Clear filters"
+msgstr "Quitar filtros"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "{0} of {1} lines shown"
+msgstr "{0} de {1} líneas a la vista"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Product"
+msgstr "Producto"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Price"
+msgstr "Precio"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Change"
+msgstr "Cambio"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Elsewhere"
+msgstr "Otro proveedor"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "You paid"
+msgstr "Pagaste"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Stock"
+msgstr "Existencia"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Qty"
+msgstr "Cant."
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Total"
+msgstr "Total"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "No section"
+msgstr "Sin sección"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Read corrected"
+msgstr "Lectura corregida"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Quantity of {0}"
+msgstr "Cantidad de {0}"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "{0}+ at {1}"
+msgstr "{0}+ a {1}"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Order to the supplier"
+msgstr "Pedido al proveedor"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "No supplier named"
+msgstr "Sin proveedor"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "{0} pieces · {1} models"
+msgstr "{0} pzas · {1} modelos"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Tier prices save"
+msgstr "Ahorro por escalones"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Promo discounts"
+msgstr "Descuentos de promo"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Over the budget of {0}"
+msgstr "Pasa el presupuesto de {0}"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Send the order"
+msgstr "Enviar pedido"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "The order as a file"
+msgstr "El pedido como archivo"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Only the owner builds orders."
+msgstr "Solo el dueño arma pedidos."
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Name the supplier of this list in Restock before ordering from it."
+msgstr "Indica el proveedor de esta lista en Surtido antes de pedirle."
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Set quantities on the lines and the order builds itself here."
+msgstr "Pon cantidades en las líneas y el pedido se arma aquí."
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Pictures"
+msgstr "Fotos"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Pages"
+msgstr "Páginas"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Promos"
+msgstr "Promos"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Previous list"
+msgstr "Lista anterior"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "See the order"
+msgstr "Ver pedido"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Drop the pictures of the list, or its PDF or spreadsheet"
+msgstr "Suelta las fotos de la lista, o su PDF u hoja de cálculo"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Price list"
+msgstr "Lista de precios"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "List of {0}"
+msgstr "Lista del {0}"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "New"
+msgstr "Nuevos"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Newly listed"
+msgstr "Nuevo"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Went up"
+msgstr "Subieron"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Went down"
+msgstr "Bajaron"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "With promo"
+msgstr "Con promo"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "In the order"
+msgstr "En el pedido"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Below level"
+msgstr "Bajo nivel"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "pieces"
+msgstr "piezas"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "{0} off with {1} {2}"
+msgstr "{0} de descuento con {1} {2}"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "{0} × {1} with {2} {3}"
+msgstr "{0} × {1} con {2} {3}"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "{0} more {1} reach the discount"
+msgstr "{0} {1} más alcanzan el descuento"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Take {0} more {1} for the {2}"
+msgstr "Lleva {0} {1} más para {2}"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Print"
+msgstr "Imprimir"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "was {0}"
+msgstr "antes {0}"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "same"
+msgstr "igual"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "not in the shop"
+msgstr "no está en tienda"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "{0} in stock +{1} coming"
+msgstr "{0} en tienda +{1} en camino"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "{0} in stock"
+msgstr "{0} en tienda"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "level {0} · {1} short"
+msgstr "nivel {0} · faltan {1}"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "level {0}"
+msgstr "nivel {0}"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Correction saved"
+msgstr "Corrección guardada"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Line added"
+msgstr "Línea agregada"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Photo saved"
+msgstr "Foto guardada"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Linked to the product"
+msgstr "Ligada al artículo"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Unlinked"
+msgstr "Desligada"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Order marked as sent"
+msgstr "Pedido marcado como enviado"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Nothing to read"
+msgstr "Nada que leer"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Drop pictures of the list, a PDF or a spreadsheet."
+msgstr "Suelta fotos de la lista, un PDF o una hoja de cálculo."
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Picture added; the list reads it now"
+msgstr "Foto agregada; la lista ya la está leyendo"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "{0} pictures added; the list reads them now"
+msgstr "{0} fotos agregadas; la lista ya las está leyendo"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "{0} uploaded; the new list reads itself now"
+msgstr "{0} subido; la lista nueva ya se está leyendo"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Reading the products; the lines appear as they are read"
+msgstr "Leyendo los productos; las líneas aparecen conforme se leen"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Uploading {0}… {1}%"
+msgstr "Subiendo {0}… {1}%"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Uploading picture {0} of {1}…"
+msgstr "Subiendo foto {0} de {1}…"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Reading the products of the list; the lines appear as they are read."
+msgstr "Leyendo los productos de la lista; las líneas aparecen conforme se leen."
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Reading the list… {0}%"
+msgstr "Leyendo la lista… {0}%"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "List received; it reads itself in a moment."
+msgstr "Lista recibida; se lee en un momento."
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "The list has no pictures or file yet."
+msgstr "La lista aún no tiene fotos ni archivo."
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "The list could not be read."
+msgstr "La lista no se pudo leer."
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "The free read found no products on these pages. A paid read of the product pages can."
+msgstr "La lectura gratis no encontró productos en estas páginas. Una lectura de pago de las páginas de productos sí puede."
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Read the products"
+msgstr "Leer los productos"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Open Restock"
+msgstr "Abrir Surtido"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Only the owner edits the list."
+msgstr "Solo el dueño edita la lista."
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Set quantities on the lines first."
+msgstr "Primero pon cantidades en las líneas."
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "List"
+msgstr "Lista"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Add a line"
+msgstr "Agregar línea"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "A product the read missed"
+msgstr "Un producto que la lectura no vio"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "{0} active"
+msgstr "{0} activas"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "None on this list"
+msgstr "Ninguna en esta lista"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "More pages of this list, or a PDF or spreadsheet"
+msgstr "Más páginas de esta lista, o un PDF u hoja de cálculo"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Refresh"
+msgstr "Actualizar"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Order"
+msgstr "Pedido"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Order summary"
+msgstr "Resumen del pedido"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "{0} pieces · {1}"
+msgstr "{0} pzas · {1}"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Export to Excel"
+msgstr "Exportar a Excel"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Export to PDF"
+msgstr "Exportar a PDF"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Go to"
+msgstr "Ir a"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "This is the first list of this supplier."
+msgstr "Es la primera lista de este proveedor."
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Restock plan"
+msgstr "Plan de surtido"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Stock levels"
+msgstr "Niveles"
+
+#: frontend/src/components/compras/lista/ListaForma.vue
+msgctxt "Lista"
+msgid "Correct the read"
+msgstr "Corregir lectura"
+
+#: frontend/src/components/compras/lista/ListaForma.vue
+msgctxt "Lista"
+msgid "Brand"
+msgstr "Marca"
+
+#: frontend/src/components/compras/lista/ListaForma.vue
+msgctxt "Lista"
+msgid "Model"
+msgstr "Modelo"
+
+#: frontend/src/components/compras/lista/ListaForma.vue
+msgctxt "Lista"
+msgid "Storage (GB)"
+msgstr "Almacenamiento (GB)"
+
+#: frontend/src/components/compras/lista/ListaForma.vue
+msgctxt "Lista"
+msgid "RAM"
+msgstr "RAM"
+
+#: frontend/src/components/compras/lista/ListaForma.vue
+msgctxt "Lista"
+msgid "Version"
+msgstr "Versión"
+
+#: frontend/src/components/compras/lista/ListaForma.vue
+msgctxt "Lista"
+msgid "Has the NOM mark"
+msgstr "Trae sello NOM"
+
+#: frontend/src/components/compras/lista/ListaForma.vue
+msgctxt "Lista"
+msgid "Description (when it is not a phone)"
+msgstr "Descripción (cuando no es un celular)"
+
+#: frontend/src/components/compras/lista/ListaForma.vue
+msgctxt "Lista"
+msgid "Supplier code"
+msgstr "Código del proveedor"
+
+#: frontend/src/components/compras/lista/ListaForma.vue
+msgctxt "Lista"
+msgid "Prices by quantity"
+msgstr "Precios por cantidad"
+
+#: frontend/src/components/compras/lista/ListaForma.vue
+msgctxt "Lista"
+msgid "From"
+msgstr "Desde"
+
+#: frontend/src/components/compras/lista/ListaForma.vue
+msgctxt "Lista"
+msgid "Printed as"
+msgstr "Impreso como"
+
+#: frontend/src/components/compras/lista/ListaForma.vue
+msgctxt "Lista"
+msgid "Wholesale"
+msgstr "Mayoreo"
+
+#: frontend/src/components/compras/lista/ListaForma.vue
+msgctxt "Lista"
+msgid "The first row is the price of one piece; the others, the price from that many pieces."
+msgstr "La primera fila es el precio de una pieza; las demás, el precio a partir de esas piezas."
+
+#: frontend/src/components/compras/lista/ListaForma.vue
+msgctxt "Lista"
+msgid "Marks (Pay Joy, single piece…)"
+msgstr "Marcas (Pay Joy, pieza única…)"
+
+#: frontend/src/components/compras/lista/ListaForma.vue
+msgctxt "Lista"
+msgid "Separate them with commas"
+msgstr "Sepáralas con comas"
+
+#: frontend/src/components/compras/lista/ListaForma.vue
+msgctxt "Lista"
+msgid "Note"
+msgstr "Nota"
+
+#: frontend/src/components/compras/lista/ListaForma.vue
+msgctxt "Lista"
+msgid "Save the correction"
+msgstr "Guardar corrección"
+
+#: frontend/src/components/compras/lista/ListaForma.vue
+msgctxt "Lista"
+msgid "Add the line"
+msgstr "Agregar la línea"
+
+#: frontend/src/components/compras/lista/ListaForma.vue
+msgctxt "Lista"
+msgid "Nothing changed yet."
+msgstr "Aún no cambia nada."
+
+#: frontend/src/components/compras/lista/ListaForma.vue
+msgctxt "Lista"
+msgid "Write at least the model or the description, and a price."
+msgstr "Escribe al menos el modelo o la descripción, y un precio."
+
+#: frontend/src/components/compras/lista/ListaHistoria.vue
+msgctxt "Lista"
+msgid "List price"
+msgstr "Precio de lista"
+
+#: frontend/src/components/compras/lista/ListaHistoria.vue
+msgctxt "Lista"
+msgid "Paid"
+msgstr "Pagado"
+
+#: frontend/src/components/compras/lista/ListaHistoria.vue
+msgctxt "Lista"
+msgid "Ordered"
+msgstr "Pedido"
+
+#: frontend/src/components/compras/lista/ListaHistoria.vue
+msgctxt "Lista"
+msgid "No earlier lists or purchases of this product."
+msgstr "No hay listas ni compras anteriores de este producto."
+
+#: frontend/src/components/compras/lista/ListaHistoria.vue
+msgctxt "Lista"
+msgid "List {0}"
+msgstr "Lista {0}"
+
+#: frontend/src/components/compras/lista/ListaHistoria.vue
+msgctxt "Lista"
+msgid "Ordered at {0}"
+msgstr "Pedido a {0}"
+
+#: frontend/src/components/compras/lista/ListaHistoria.vue
+msgctxt "Lista"
+msgid "Paid {0}"
+msgstr "Pagado {0}"
+
+#: frontend/src/components/compras/lista/ListaHistoria.vue
+msgctxt "Lista"
+msgid "Price points"
+msgstr "Puntos de precio"
+
+#: frontend/src/components/compras/lista/ListaHistoria.vue
+msgctxt "Lista"
+msgid "No price points"
+msgstr "Sin puntos de precio"
+
+#: frontend/src/components/compras/lista/ListaHistoria.vue
+msgctxt "Lista"
+msgid "{0} price points, from {1} to {2}"
+msgstr "{0} puntos de precio, de {1} a {2}"
+
+#: frontend/src/components/compras/lista/ListaLinea.vue
+msgctxt "Lista"
+msgid "Catalog picture"
+msgstr "Foto del catálogo"
+
+#: frontend/src/components/compras/lista/ListaLinea.vue
+msgctxt "Lista"
+msgid "Take a photo"
+msgstr "Tomar foto"
+
+#: frontend/src/components/compras/lista/ListaLinea.vue
+msgctxt "Lista"
+msgid "Upload"
+msgstr "Subir"
+
+#: frontend/src/components/compras/lista/ListaLinea.vue
+msgctxt "Lista"
+msgid "Or paste a picture here with ⌘V."
+msgstr "O pega una foto aquí con ⌘V."
+
+#: frontend/src/components/compras/lista/ListaLinea.vue
+msgctxt "Lista"
+msgid "Saving the photo…"
+msgstr "Guardando la foto…"
+
+#: frontend/src/components/compras/lista/ListaLinea.vue
+msgctxt "Lista"
+msgid "Prices"
+msgstr "Precios"
+
+#: frontend/src/components/compras/lista/ListaLinea.vue
+msgctxt "Lista"
+msgid "From {0} pieces"
+msgstr "Desde {0} piezas"
+
+#: frontend/src/components/compras/lista/ListaLinea.vue
+msgctxt "Lista"
+msgid "Each"
+msgstr "Cada una"
+
+#: frontend/src/components/compras/lista/ListaLinea.vue
+msgctxt "Lista"
+msgid "Single price: no wholesale tier."
+msgstr "Precio único: sin escalón de mayoreo."
+
+#: frontend/src/components/compras/lista/ListaLinea.vue
+msgctxt "Lista"
+msgid "{0} more reach {1} each."
+msgstr "{0} más alcanzan {1} cada una."
+
+#: frontend/src/components/compras/lista/ListaLinea.vue
+msgctxt "Lista"
+msgid "New this list"
+msgstr "Nuevo en esta lista"
+
+#: frontend/src/components/compras/lista/ListaLinea.vue
+msgctxt "Lista"
+msgid "Best other supplier"
+msgstr "Mejor otro proveedor"
+
+#: frontend/src/components/compras/lista/ListaLinea.vue
+msgctxt "Lista"
+msgid "Last paid"
+msgstr "Último pagado"
+
+#: frontend/src/components/compras/lista/ListaLinea.vue
+msgctxt "Lista"
+msgid "In stock"
+msgstr "En tienda"
+
+#: frontend/src/components/compras/lista/ListaLinea.vue
+msgctxt "Lista"
+msgid "+{0} coming"
+msgstr "+{0} en camino"
+
+#: frontend/src/components/compras/lista/ListaLinea.vue
+msgctxt "Lista"
+msgid "Level"
+msgstr "Nivel"
+
+#: frontend/src/components/compras/lista/ListaLinea.vue
+msgctxt "Lista"
+msgid "keep {0}, order under {1}"
+msgstr "mantener {0}, pedir con menos de {1}"
+
+#: frontend/src/components/compras/lista/ListaLinea.vue
+msgctxt "Lista"
+msgid "{0} short"
+msgstr "faltan {0}"
+
+#: frontend/src/components/compras/lista/ListaLinea.vue
+msgctxt "Lista"
+msgid "Selling price"
+msgstr "Precio de venta"
+
+#: frontend/src/components/compras/lista/ListaLinea.vue
+msgctxt "Lista"
+msgid "Marks on the list"
+msgstr "Marcas en la lista"
+
+#: frontend/src/components/compras/lista/ListaLinea.vue
+msgctxt "Lista"
+msgid "Corrected by the owner; the first read was: {0}."
+msgstr "Corregida por el dueño; la primera lectura fue: {0}."
+
+#: frontend/src/components/compras/lista/ListaLinea.vue
+msgctxt "Lista"
+msgid "Unlink"
+msgstr "Desligar"
+
+#: frontend/src/components/compras/lista/ListaLinea.vue
+msgctxt "Lista"
+msgid "This product is archived; the order will bring it back."
+msgstr "Este artículo está archivado; el pedido lo reactiva."
+
+#: frontend/src/components/compras/lista/ListaLinea.vue
+msgctxt "Lista"
+msgid "Not linked to a product yet; the close creates one."
+msgstr "Aún no está ligada a un artículo; al cerrar se crea uno."
+
+#: frontend/src/components/compras/lista/ListaLinea.vue
+msgctxt "Lista"
+msgid "Search a product to link"
+msgstr "Buscar artículo para ligar"
+
+#: frontend/src/components/compras/lista/ListaLinea.vue
+msgctxt "Lista"
+msgid "No product matches; the close can create it."
+msgstr "Ningún artículo coincide; al cerrar se puede crear."
+
+#: frontend/src/components/compras/lista/ListaLinea.vue
+msgctxt "Lista"
+msgid "More"
+msgstr "Más"
+
+#: frontend/src/components/compras/lista/ListaLinea.vue
+msgctxt "Lista"
+msgid "History"
+msgstr "Historial"
+
+#: frontend/src/components/compras/lista/ListaLinea.vue
+msgctxt "Lista"
+msgid "Suppliers"
+msgstr "Proveedores"
+
+#: frontend/src/components/compras/lista/ListaLinea.vue
+msgctxt "Lista"
+msgid "Reading the history…"
+msgstr "Leyendo el historial…"
+
+#: frontend/src/components/compras/lista/ListaLinea.vue
+msgctxt "Lista"
+msgid "Comparing suppliers…"
+msgstr "Comparando proveedores…"
+
+#: frontend/src/components/compras/lista/ListaLinea.vue
+msgctxt "Lista"
+msgid "No other supplier lists this product."
+msgstr "Ningún otro proveedor trae este producto."
+
+#: frontend/src/components/compras/lista/ListaLinea.vue
+msgctxt "Lista"
+msgid "list of {0}"
+msgstr "lista del {0}"
+
+#: frontend/src/components/compras/lista/ListaLinea.vue
+msgctxt "Lista"
+msgid "· ordered {0} at {1}"
+msgstr "· pedido {0} a {1}"
+
+#: frontend/src/components/compras/lista/ListaLinea.vue
+msgctxt "Lista"
+msgid "Quantity"
+msgstr "Cantidad"
+
+#: frontend/src/components/compras/lista/ListaLinea.vue
+msgctxt "Lista"
+msgid "Not in the order"
+msgstr "No está en el pedido"
+
+#: frontend/src/components/compras/lista/ListaLinea.vue
+msgctxt "Lista"
+msgid "Only the owner orders."
+msgstr "Solo el dueño pide."
+
+#: frontend/src/components/compras/lista/ListaPedido.vue
+msgctxt "Lista"
+msgid "Set quantities on the list and the order builds itself here."
+msgstr "Pon cantidades en la lista y el pedido se arma aquí."
+
+#: frontend/src/components/compras/lista/ListaPedido.vue
+msgctxt "Lista"
+msgid "Order rows"
+msgstr "Líneas del pedido"
+
+#: frontend/src/components/compras/lista/ListaPedido.vue
+msgctxt "Lista"
+msgid "{0} pieces in {1} rows"
+msgstr "{0} piezas en {1} líneas"
+
+#: frontend/src/components/compras/lista/ListaPedido.vue
+msgctxt "Lista"
+msgid "Budget for this order"
+msgstr "Presupuesto de este pedido"
+
+#: frontend/src/components/compras/lista/ListaPedido.vue
+msgctxt "Lista"
+msgid "No limit"
+msgstr "Sin límite"
+
+#: frontend/src/components/compras/lista/ListaPedido.vue
+msgctxt "Lista"
+msgid "Over the budget by {0}. Lower some quantities or raise it."
+msgstr "Pasa el presupuesto por {0}. Baja cantidades o súbelo."
+
+#: frontend/src/components/compras/lista/ListaPedido.vue
+msgctxt "Lista"
+msgid "Send"
+msgstr "Enviar"
+
+#: frontend/src/components/compras/lista/ListaPedido.vue
+msgctxt "Lista"
+msgid "Send it"
+msgstr "Enviarlo"
+
+#: frontend/src/components/compras/lista/ListaPedido.vue
+msgctxt "Lista"
+msgid "Name the supplier of this list before sending the order."
+msgstr "Indica el proveedor de esta lista antes de enviar el pedido."
+
+#: frontend/src/components/compras/lista/ListaPedido.vue
+msgctxt "Lista"
+msgid "Checking the ways to send…"
+msgstr "Revisando las formas de enviar…"
+
+#: frontend/src/components/compras/lista/ListaPedido.vue
+msgctxt "Lista"
+msgid "File format"
+msgstr "Formato del archivo"
+
+#: frontend/src/components/compras/lista/ListaPedido.vue
+msgctxt "Lista"
+msgid "usual"
+msgstr "habitual"
+
+#: frontend/src/components/compras/lista/ListaPedido.vue
+msgctxt "Lista"
+msgid "Download {0}"
+msgstr "Descargar {0}"
+
+#: frontend/src/components/compras/lista/ListaPedido.vue
+msgctxt "Lista"
+msgid "Open WhatsApp with the text"
+msgstr "Abrir WhatsApp con el texto"
+
+#: frontend/src/components/compras/lista/ListaPedido.vue
+msgctxt "Lista"
+msgid "Text copied"
+msgstr "Texto copiado"
+
+#: frontend/src/components/compras/lista/ListaPedido.vue
+msgctxt "Lista"
+msgid "Copy it from the text above."
+msgstr "Cópialo del texto de arriba."
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "A page of the list could not be read: {0}"
+msgstr "Una página de la lista no se pudo leer: {0}"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Pages of the list are still unread ({0})."
+msgstr "Faltan páginas de la lista por leer ({0})."
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Read the rest"
+msgstr "Leer el resto"
+
+#: frontend/src/components/compras/lista/ListaPedido.vue
+msgctxt "Lista"
+msgid "It goes to {0} with the text above and the {1} file."
+msgstr "Va a {0} con el texto de arriba y el archivo {1}."
+
+#: frontend/src/components/compras/lista/ListaPedido.vue
+msgctxt "Lista"
+msgid "Yes, send it now"
+msgstr "Sí, enviarlo ahora"
+
+#: frontend/src/components/compras/lista/ListaPedido.vue
+msgctxt "Lista"
+msgid "Mark as sent"
+msgstr "Marcar como enviado"
+
+#: frontend/src/components/compras/lista/ListaPedido.vue
+msgctxt "Lista"
+msgid "Only the owner sends orders."
+msgstr "Solo el dueño envía pedidos."
+
+#: frontend/src/components/compras/lista/ListaPedido.vue
+msgctxt "Lista"
+msgid "The message did not go out; share the file instead."
+msgstr "El mensaje no salió; comparte el archivo."
+
+#: frontend/src/components/compras/lista/ListaPromos.vue
+msgctxt "Lista"
+msgid "{0} on this list"
+msgstr "{0} en esta lista"
+
+#: frontend/src/components/compras/lista/ListaPromos.vue
+msgctxt "Lista"
+msgid "The list printed no promos. The owner can add one below."
+msgstr "La lista no trae promos impresas. El dueño puede agregar una abajo."
+
+#: frontend/src/components/compras/lista/ListaPromos.vue
+msgctxt "Lista"
+msgid "Edit promo"
+msgstr "Editar promo"
+
+#: frontend/src/components/compras/lista/ListaPromos.vue
+msgctxt "Lista"
+msgid "Per how many pieces"
+msgstr "Por cuántas piezas"
+
+#: frontend/src/components/compras/lista/ListaPromos.vue
+msgctxt "Lista"
+msgid "Discount %"
+msgstr "% de descuento"
+
+#: frontend/src/components/compras/lista/ListaPromos.vue
+msgctxt "Lista"
+msgid "Gift"
+msgstr "Regalo"
+
+#: frontend/src/components/compras/lista/ListaPromos.vue
+msgctxt "Lista"
+msgid "Save"
+msgstr "Guardar"
+
+#: frontend/src/components/compras/lista/ListaPromos.vue
+msgctxt "Lista"
+msgid "Switch off"
+msgstr "Apagar"
+
+#: frontend/src/components/compras/lista/ListaPromos.vue
+msgctxt "Lista"
+msgid "Switch on"
+msgstr "Encender"
+
+#: frontend/src/components/compras/lista/ListaPromos.vue
+msgctxt "Lista"
+msgid "Delete"
+msgstr "Borrar"
+
+#: frontend/src/components/compras/lista/ListaPromos.vue
+msgctxt "Lista"
+msgid "Remove"
+msgstr "Quitar"
+
+#: frontend/src/components/compras/lista/ListaPromos.vue
+msgctxt "Lista"
+msgid "Your own promo or discount"
+msgstr "Tu propia promo o descuento"
+
+#: frontend/src/components/compras/lista/ListaPromos.vue
+msgctxt "Lista"
+msgid "For 3 Realme C85 take a speaker"
+msgstr "Por 3 Realme C85 llévate una bocina"
+
+#: frontend/src/components/compras/lista/ListaPromos.vue
+msgctxt "Lista"
+msgid "Write it as the supplier would; the pieces, brand, model and gift or % are read from it."
+msgstr "Escríbela como la pondría el proveedor; de ahí se leen las piezas, la marca, el modelo y el regalo o el %."
+
+#: frontend/src/components/compras/lista/ListaPromos.vue
+msgctxt "Lista"
+msgid "Add promo"
+msgstr "Agregar promo"
+
+#: frontend/src/components/compras/lista/ListaPromos.vue
+msgctxt "Lista"
+msgid "Only the owner changes promos."
+msgstr "Solo el dueño cambia las promos."
+
+#: frontend/src/components/compras/lista/ListaPromos.vue
+msgctxt "Lista"
+msgid "{0} % off"
+msgstr "{0} % de descuento"
+
+#: frontend/src/components/compras/lista/ListaPromos.vue
+msgctxt "Lista"
+msgid "gift: {0}"
+msgstr "regalo: {0}"
+
+#: frontend/src/components/compras/lista/ListaPromos.vue
+msgctxt "Lista"
+msgid "per {0} of {1}"
+msgstr "por {0} de {1}"
+
+#: frontend/src/components/compras/lista/ListaPromos.vue
+msgctxt "Lista"
+msgid "per {0} pieces"
+msgstr "por {0} piezas"
+
+#: frontend/src/components/compras/lista/ListaPromos.vue
+msgctxt "Lista"
+msgid "yours"
+msgstr "tuya"
+
+#: frontend/src/components/compras/lista/ListaPromos.vue
+msgctxt "Lista"
+msgid "printed on the list"
+msgstr "impresa en la lista"
+
+#: frontend/src/components/compras/lista/ListaPromos.vue
+msgctxt "Lista"
+msgid "off"
+msgstr "apagada"
+
+#: frontend/src/components/compras/lista/ListaStepper.vue
+msgctxt "Lista"
+msgid "One less"
+msgstr "Una menos"
+
+#: frontend/src/components/compras/lista/ListaStepper.vue
+msgctxt "Lista"
+msgid "One more"
+msgstr "Una más"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "{0} models the list no longer carries"
+msgstr "{0} modelos que ya no vienen en la lista"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Review"
+msgstr "Revisar"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Models the list no longer carries"
+msgstr "Modelos que ya no vienen en la lista"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "{0} waiting to archive, delete or keep"
+msgstr "{0} por archivar, borrar o conservar"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "{0} models archived"
+msgstr "{0} modelos archivados"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "{0} models deleted"
+msgstr "{0} modelos borrados"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "{0} models kept"
+msgstr "{0} modelos conservados"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "{0} waiting"
+msgstr "{0} pendientes"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "The last receipt against this order found none."
+msgstr "La última recepción de este pedido no encontró ninguno."
+
+#: frontend/src/components/compras/lista/ListaRetiro.vue
+msgctxt "Lista"
+msgid "{0} of this supplier, waiting"
+msgstr "{0} de este proveedor, pendientes"
+
+#: frontend/src/components/compras/lista/ListaRetiro.vue
+msgctxt "Lista"
+msgid "Nothing waits. After the next receipt against this order, the models the list dropped show here."
+msgstr "No hay pendientes. Tras la siguiente recepción de este pedido, aquí aparecen los modelos que la lista dejó de traer."
+
+#: frontend/src/components/compras/lista/ListaRetiro.vue
+msgctxt "Lista"
+msgid "The last receipt found these models of the supplier that the list no longer prints. Archive hides them from sales and purchases and keeps their history; delete is for models with no record."
+msgstr "La última recepción encontró estos modelos del proveedor que la lista ya no imprime. Archivar los quita de ventas y compras y conserva su historial; borrar es para modelos sin registros."
+
+#: frontend/src/components/compras/lista/ListaRetiro.vue
+msgctxt "Lista"
+msgid "Choose none"
+msgstr "Quitar la selección"
+
+#: frontend/src/components/compras/lista/ListaRetiro.vue
+msgctxt "Lista"
+msgid "Choose all that can go"
+msgstr "Elegir todos los que pueden irse"
+
+#: frontend/src/components/compras/lista/ListaRetiro.vue
+msgctxt "Lista"
+msgid "{0} chosen"
+msgstr "{0} elegidos"
+
+#: frontend/src/components/compras/lista/ListaRetiro.vue
+msgctxt "Lista"
+msgid "{0} pieces in stock; sell or move them first."
+msgstr "{0} piezas en existencia; véndelas o muévelas primero."
+
+#: frontend/src/components/compras/lista/ListaRetiro.vue
+msgctxt "Lista"
+msgid "Has purchases or sales on record"
+msgstr "Tiene compras o ventas registradas"
+
+#: frontend/src/components/compras/lista/ListaRetiro.vue
+msgctxt "Lista"
+msgid "Only the owner archives or deletes models."
+msgstr "Solo el dueño archiva o borra modelos."
+
+#: frontend/src/components/compras/lista/ListaRetiro.vue
+msgctxt "Lista"
+msgid "Archive chosen"
+msgstr "Archivar elegidos"
+
+#: frontend/src/components/compras/lista/ListaRetiro.vue
+msgctxt "Lista"
+msgid "Keep chosen"
+msgstr "Conservar elegidos"
+
+#: frontend/src/components/compras/lista/ListaRetiro.vue
+msgctxt "Lista"
+msgid "Delete for good"
+msgstr "Borrar definitivamente"
+
+#: frontend/src/components/compras/lista/ListaRetiro.vue
+msgctxt "Lista"
+msgid "Delete chosen"
+msgstr "Borrar elegidos"
+
+#: frontend/src/components/compras/lista/ListaRetiro.vue
+msgctxt "Lista"
+msgid "Look again"
+msgstr "Volver a revisar"
+
+#: frontend/src/components/compras/lista/ListaRetiro.vue
+msgctxt "Lista"
+msgid "last on the list of {0}"
+msgstr "última vez en la lista del {0}"
+
+#: frontend/src/components/compras/lista/ListaRetiro.vue
+msgctxt "Lista"
+msgid "Choose the models to act on."
+msgstr "Elige los modelos."
+
+#: frontend/src/components/compras/lista/ListaRetiro.vue
+msgctxt "Lista"
+msgid "{0} still has pieces in stock; take it off the choice or move them first."
+msgstr "{0} todavía tiene piezas en existencia; quítalo de la selección o muévelas primero."
+
+#: frontend/src/components/compras/lista/ListaRetiro.vue
+msgctxt "Lista"
+msgid "{0} has purchases or sales on record; archive it instead of deleting."
+msgstr "{0} tiene compras o ventas registradas; archívalo en lugar de borrarlo."
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "Models the lists no longer carry"
+msgstr "Modelos que ya no vienen en las listas"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "After a receipt, the models a supplier stopped listing wait for you to archive, delete or keep them."
+msgstr "Tras una recepción, los modelos que un proveedor dejó de listar esperan a que los archives, borres o conserves."
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "{0} models waiting"
+msgstr "{0} modelos pendientes"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Items the close creates ({0})"
+msgstr "Artículos que crea el cierre ({0})"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Each one takes its name from the list and the product type of its section. Serial numbers follow the section unless you say otherwise."
+msgstr "Cada uno toma su nombre de la lista y el tipo de producto de su sección. Los números de serie siguen a la sección salvo que indiques otra cosa."
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Section «{0}» has no product type; set it in Compras › Settings, sections of the list."
+msgstr "La sección «{0}» no tiene tipo de producto; indícalo en Compras › Ajustes, secciones de la lista."
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Give section «{0}» a product type in Compras › Settings before closing."
+msgstr "Da un tipo de producto a la sección «{0}» en Compras › Ajustes antes de cerrar."

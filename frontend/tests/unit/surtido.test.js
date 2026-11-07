@@ -4,7 +4,13 @@ import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { budgetShare, buildChanges, readyRows } from '@/utils/surtido'
+import {
+  budgetShare,
+  buildChanges,
+  closeSpecs,
+  missingGroups,
+  readyRows,
+} from '@/utils/surtido'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const plan = {
@@ -60,6 +66,56 @@ describe('surtido plan corrections', () => {
         { index: 4, has_batch: false, has_serial: true },
       ],
     })
+  })
+})
+
+describe('the items the close creates', () => {
+  const items = [
+    {
+      catalogo_linea: 'L1',
+      name: 'SAMSUNG A07 64GB/4GB NACIONAL',
+      section: 'CELULARES',
+      has_serial_default: true,
+      group_missing: false,
+    },
+    {
+      catalogo_linea: 'L2',
+      name: 'HP 15-FD',
+      section: 'LAPTOP',
+      has_serial_default: false,
+      group_missing: true,
+    },
+  ]
+
+  it('answers serials from the section unless the owner said, and no batches by default', () => {
+    expect(closeSpecs(items)).toEqual({
+      L1: { has_serial: true, has_batch: false },
+      L2: { has_serial: false, has_batch: false },
+    })
+    expect(closeSpecs(items, { L2: '1' }, { L1: '0' })).toEqual({
+      L1: { has_serial: false, has_batch: false },
+      L2: { has_serial: false, has_batch: true },
+    })
+    expect(closeSpecs([{ name: 'no line' }])).toEqual({})
+  })
+
+  it('names the items whose section has no product type', () => {
+    expect(missingGroups(items)).toEqual(['HP 15-FD'])
+    expect(missingGroups([])).toEqual([])
+  })
+
+  it('the page sends the specs with the close and holds it while a section lacks a type', () => {
+    const page = readFileSync(
+      resolve(here, '../../src/pages/CompraSurtido.vue'),
+      'utf8',
+    )
+    expect(page).toContain(
+      "act('close', 'close', { specs: JSON.stringify(specs) }, (out) => {",
+    )
+    expect(page).toContain(
+      ':disabled="busy === \'close\' || Boolean(firstMissing)"',
+    )
+    expect(page).toContain('data-testid="surtido-new-items"')
   })
 })
 

@@ -122,7 +122,7 @@
             <p class="text-xs text-ink-gray-5">
               {{
                 __(
-                  'PDF or spreadsheet: drop it here or choose it. It reads itself in the background.',
+                  'Pictures of the list, a PDF or a spreadsheet: drop them here or choose them. It reads itself in the background.',
                   null,
                   'Surtido',
                 )
@@ -148,7 +148,8 @@
                 <input
                   type="file"
                   class="sr-only"
-                  :accept="CATALOG_ACCEPT"
+                  multiple
+                  :accept="LIST_ACCEPT"
                   :disabled="!!upload"
                   data-testid="surtido-file"
                   @change="pickCatalog"
@@ -237,6 +238,14 @@
                   :theme="c.reading ? 'blue' : catalogTheme(c.status)"
                   :label="catalogStatus(c)"
                 />
+                <RouterLink
+                  :to="{ name: 'CompraLista', params: { name: c.name } }"
+                  class="press inline-flex min-h-11 items-center gap-1.5 rounded-6 px-3 text-base text-ink-gray-8 hover:bg-surface-gray-2 sm:min-h-8 sm:text-sm"
+                  data-testid="surtido-abrir-lista"
+                >
+                  <span class="lucide-table size-4" aria-hidden="true" />
+                  {{ __('Open the list', null, 'Surtido') }}
+                </RouterLink>
                 <Button
                   v-if="boot.owner && canRead(c)"
                   :label="__('Read the products', null, 'Surtido')"
@@ -252,7 +261,8 @@
                     <input
                       type="file"
                       class="sr-only"
-                      :accept="CATALOG_ACCEPT"
+                      multiple
+                      :accept="LIST_ACCEPT"
                       :disabled="!!upload"
                       @change="(e) => pickInto(c.name, e)"
                     />
@@ -1280,23 +1290,130 @@
               </p>
             </section>
 
+            <!-- the Items the close creates, from the price list's lines -->
+            <section
+              v-if="
+                pedido.owner &&
+                pedido.status === 'Cotizado' &&
+                pedido.new_items?.length
+              "
+              class="mb-5"
+              data-testid="surtido-new-items"
+            >
+              <h3 class="mb-1 text-base font-semibold">
+                {{
+                  __(
+                    'Items the close creates ({0})',
+                    [pedido.new_items.length],
+                    'Surtido',
+                  )
+                }}
+              </h3>
+              <p class="mb-2 text-xs text-ink-gray-5">
+                {{
+                  __(
+                    'Each one takes its name from the list and the product type of its section. Serial numbers follow the section unless you say otherwise.',
+                    null,
+                    'Surtido',
+                  )
+                }}
+              </p>
+              <ul
+                class="divide-y divide-outline-gray-1 rounded-6 border border-outline-gray-2"
+              >
+                <li
+                  v-for="row in pedido.new_items"
+                  :key="row.catalogo_linea"
+                  class="flex flex-wrap items-center gap-3 p-3"
+                >
+                  <div class="min-w-0 flex-1 basis-56">
+                    <p class="truncate font-medium">{{ row.name }}</p>
+                    <p
+                      v-if="row.group_missing"
+                      class="truncate text-xs text-ink-amber-9"
+                    >
+                      {{
+                        __(
+                          'Section «{0}» has no product type; set it in Compras › Settings, sections of the list.',
+                          [row.section],
+                          'Surtido',
+                        )
+                      }}
+                    </p>
+                    <p v-else class="truncate text-xs text-ink-gray-5">
+                      {{
+                        [row.section, row.item_group]
+                          .filter(Boolean)
+                          .join(' · ')
+                      }}
+                    </p>
+                  </div>
+                  <label class="flex items-center gap-1 text-sm">
+                    {{ __('Batches', null, 'Surtido') }}
+                    <select
+                      :value="newBatch[row.catalogo_linea] ?? '0'"
+                      class="h-8 rounded-4 border border-outline-gray-2 text-sm"
+                      @change="
+                        newBatch = {
+                          ...newBatch,
+                          [row.catalogo_linea]: $event.target.value,
+                        }
+                      "
+                    >
+                      <option value="1">
+                        {{ __('Yes', null, 'Surtido') }}
+                      </option>
+                      <option value="0">{{ __('No', null, 'Surtido') }}</option>
+                    </select>
+                  </label>
+                  <label class="flex items-center gap-1 text-sm">
+                    {{ __('Serials', null, 'Surtido') }}
+                    <select
+                      :value="
+                        newSerial[row.catalogo_linea] ??
+                        (row.has_serial_default ? '1' : '0')
+                      "
+                      class="h-8 rounded-4 border border-outline-gray-2 text-sm"
+                      @change="
+                        newSerial = {
+                          ...newSerial,
+                          [row.catalogo_linea]: $event.target.value,
+                        }
+                      "
+                    >
+                      <option value="1">
+                        {{ __('Yes', null, 'Surtido') }}
+                      </option>
+                      <option value="0">{{ __('No', null, 'Surtido') }}</option>
+                    </select>
+                  </label>
+                </li>
+              </ul>
+            </section>
+
             <div
               v-if="pedido.owner && pedido.status === 'Cotizado'"
               class="flex flex-wrap items-center justify-end gap-2 border-t border-outline-gray-2 pt-4"
             >
               <p class="min-w-0 flex-1 text-sm text-ink-gray-6">
                 {{
-                  __(
-                    'Closing makes the supplier quotation and a draft purchase with what the supplier confirmed.',
-                    null,
-                    'Surtido',
-                  )
+                  firstMissing
+                    ? __(
+                        'Give section «{0}» a product type in Compras › Settings before closing.',
+                        [firstMissing],
+                        'Surtido',
+                      )
+                    : __(
+                        'Closing makes the supplier quotation and a draft purchase with what the supplier confirmed.',
+                        null,
+                        'Surtido',
+                      )
                 }}
               </p>
               <button
                 type="button"
                 :class="['press', BTN.filled]"
-                :disabled="busy === 'close'"
+                :disabled="busy === 'close' || Boolean(firstMissing)"
                 @click="closePedido"
               >
                 <span
@@ -1336,9 +1453,11 @@ import {
   catalogTone,
   lineTone,
   pedidoTone,
+  closeSpecs,
   readyRows,
 } from '@/utils/surtido'
-import { CATALOG_ACCEPT, uploadCatalog } from '@/utils/catalogUpload'
+import { uploadCatalog, uploadPictures } from '@/utils/catalogUpload'
+import { LIST_ACCEPT, dropFiles } from '@/utils/listaPrecios'
 import { buyText, levelState } from '@/utils/niveles'
 import LucideRefreshCw from '~icons/lucide/refresh-cw'
 import LucideChevronRight from '~icons/lucide/chevron-right'
@@ -1390,6 +1509,8 @@ const dragging = ref(false)
 const rowPick = ref({})
 const rowBatch = ref({})
 const rowSerial = ref({})
+const newBatch = ref({})
+const newSerial = ref({})
 const missingPick = ref({})
 const lastRequest = ref('')
 
@@ -1413,6 +1534,11 @@ const picked = computed(() =>
 )
 const pickedReady = computed(
   () => readyRows(picked.value, rowBatch.value, rowSerial.value).ok,
+)
+const firstMissing = computed(
+  () =>
+    (pedido.value?.new_items || []).find((row) => row.group_missing)?.section ||
+    '',
 )
 const missingPicked = computed(() =>
   (pedido.value?.missing || [])
@@ -1563,6 +1689,40 @@ async function sendCatalog(link, name, file) {
   }
 }
 
+// Pictures of a list: the first through the session, the rest beside it,
+// then the read; the page opens the list so the lines appear as they are read.
+async function sendPictures(link, name, files) {
+  upload.value = { name: __('{0} pictures', [files.length], 'Surtido'), pct: 0 }
+  problem.value = null
+  let opened = false
+  try {
+    await uploadPictures(link, name, files, {
+      onProgress: (done, total) =>
+        (upload.value = {
+          name: __('{0} pictures', [total], 'Surtido'),
+          pct: Math.round((100 * done) / total),
+        }),
+    })
+    toast.success(
+      __(
+        '{0} pictures uploaded; the list reads itself now',
+        [files.length],
+        'Surtido',
+      ),
+    )
+    opened = true
+    router.push({ name: 'CompraLista', params: { name } })
+  } catch (error) {
+    problem.value = uploadProblem(error)
+  } finally {
+    upload.value = null
+    if (!opened) {
+      await refresh()
+      schedulePoll()
+    }
+  }
+}
+
 async function newFromFile(file) {
   if (!file || upload.value) return
   const out = await run('catalog', () =>
@@ -1574,22 +1734,43 @@ async function newFromFile(file) {
   if (out) await sendCatalog(out.upload_url, out.catalog, file)
 }
 
+async function newFromPictures(files) {
+  if (!files.length || upload.value) return
+  const out = await run('catalog', () =>
+    call('new_catalog', {
+      supplier: newSupplier.value || undefined,
+      title: files[0].name,
+    }),
+  )
+  if (out) await sendPictures(out.upload_url, out.catalog, files)
+}
+
+/** A drop or a pick: pictures become one list; a PDF or a sheet, its own. */
+function newFromFiles(list) {
+  const { pictures, documents } = dropFiles(list)
+  if (pictures.length) return newFromPictures(pictures)
+  if (documents.length) return newFromFile(documents[0])
+  return null
+}
+
 function pickCatalog(event) {
-  newFromFile(event.target.files?.[0])
+  newFromFiles(event.target.files)
   event.target.value = ''
 }
 
 function dropCatalog(event) {
   dropping.value = false
-  newFromFile(event.dataTransfer?.files?.[0])
+  newFromFiles(event.dataTransfer?.files)
 }
 
 async function pickInto(name, event) {
-  const file = event.target.files?.[0]
+  const { pictures, documents } = dropFiles(event.target.files)
   event.target.value = ''
-  if (!file || upload.value) return
+  if ((!pictures.length && !documents.length) || upload.value) return
   const out = await run('link', () => call('upload_link', { catalog: name }))
-  if (out) await sendCatalog(out.upload_url, name, file)
+  if (!out) return
+  if (pictures.length) await sendPictures(out.upload_url, name, pictures)
+  else await sendCatalog(out.upload_url, name, documents[0])
 }
 
 async function estimateRead(name) {
@@ -1735,6 +1916,8 @@ function resetReply() {
   rowPick.value = {}
   rowBatch.value = {}
   rowSerial.value = {}
+  newBatch.value = {}
+  newSerial.value = {}
   missingPick.value = {}
 }
 
@@ -1884,7 +2067,12 @@ function materialRequest() {
 }
 
 function closePedido() {
-  act('close', 'close', {}, (out) => {
+  const specs = closeSpecs(
+    pedido.value?.new_items || [],
+    newBatch.value,
+    newSerial.value,
+  )
+  act('close', 'close', { specs: JSON.stringify(specs) }, (out) => {
     toast.success(
       __(
         'Order closed; draft purchase {0}',
