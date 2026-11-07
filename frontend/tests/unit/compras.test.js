@@ -5,6 +5,10 @@ import {
   followDestination,
   loadWholeOrder,
   missingFields,
+  moreFrom,
+  morePayload,
+  moreValues,
+  netRate,
   normalizeSegment,
   orderPayload,
   outcomeUnknown,
@@ -13,6 +17,8 @@ import {
   progressLabel,
   reapplyRows,
   recordRoute,
+  rowPrice,
+  ruleLocked,
   safeReturn,
   scannerReceiptUrl,
 } from '../../src/composables/useCompras.js'
@@ -110,6 +116,110 @@ describe('editor payload', () => {
         items: [{ qty: 0 }],
       }),
     ).toEqual(['supplier', 'schedule_date', 'warehouse', 'qty'])
+  })
+})
+
+describe('more details and line discounts', () => {
+  const document = {
+    transaction_date: '2026-11-06',
+    taxes_and_charges: 'IVA 16 % - DC',
+    taxes_and_charges_label: 'IVA 16 %',
+    additional_discount_percentage: 0,
+    discount_amount: 0,
+    apply_discount_on: 'Grand Total',
+    payment_terms_template: '',
+    terms: 'Entregar en mostrador',
+    terms_rich: false,
+    ignore_pricing_rule: 0,
+  }
+  const editing = () => {
+    const more = moreFrom(document)
+    return { ...more, more_base: moreValues(more) }
+  }
+  it('sends only the details the worker changed', () => {
+    const form = editing()
+    expect(morePayload(form)).toEqual({})
+    form.payment_terms_template = '30 días'
+    expect(morePayload(form)).toEqual({ payment_terms_template: '30 días' })
+  })
+  it('an amount discount clears the percentage', () => {
+    const form = editing()
+    form.discount_kind = 'amount'
+    form.discount_value = '50'
+    expect(morePayload(form)).toEqual({ discount_amount: 50 })
+    form.discount_kind = 'percent'
+    form.discount_value = '5'
+    expect(morePayload(form)).toEqual({ additional_discount_percentage: 5 })
+  })
+  it('reads a saved amount discount as an amount', () => {
+    const more = moreFrom({ ...document, discount_amount: 120 })
+    expect([more.discount_kind, more.discount_value]).toEqual(['amount', 120])
+  })
+  it('never sends formatted notes', () => {
+    const form = { ...editing(), terms_rich: true, terms: '<b>x</b>' }
+    expect(morePayload(form)).not.toHaveProperty('terms')
+  })
+  it('a line shows its price before the discount and what it costs after', () => {
+    const row = { rate: 85, price_list_rate: 100, discount_percentage: 15 }
+    expect(rowPrice(row)).toBe(100)
+    expect(
+      rowPrice({ rate: 85, price_list_rate: 100, discount_percentage: 0 }),
+    ).toBe(85)
+    expect(netRate(100, 15)).toBe(85)
+    expect(netRate(100, 150)).toBe(0)
+  })
+  it('sends a line discount, and none when a saved one is emptied', () => {
+    const payload = orderPayload({
+      name: 'PO-1',
+      modified: 'v1',
+      items: [
+        {
+          name: 'row1',
+          item_code: 'A',
+          qty: 1,
+          rate: 100,
+          discount_percentage: 15,
+        },
+        {
+          name: 'row2',
+          item_code: 'B',
+          qty: 1,
+          rate: 10,
+          discount_percentage: '',
+        },
+        { name: '', item_code: 'C', qty: 1, rate: 10, discount_percentage: '' },
+      ],
+    })
+    expect(payload.items.map((row) => row.discount_percentage)).toEqual([
+      15,
+      0,
+      undefined,
+    ])
+  })
+  it('a supplier discount owns the line % unless automatic discounts are off', () => {
+    const row = { rules: [{ name: 'PRLE-0001', title: 'Tecnomaxx 10 %' }] }
+    expect(ruleLocked(row, { ignore_pricing_rule: false })).toBe(true)
+    expect(ruleLocked(row, { ignore_pricing_rule: true })).toBe(false)
+    expect(ruleLocked({ rules: [] }, { ignore_pricing_rule: false })).toBe(
+      false,
+    )
+  })
+  it('a line discount above 100 % blocks the save', () => {
+    expect(
+      missingFields({
+        supplier: 'S',
+        company: 'CO',
+        schedule_date: '2026-11-10',
+        set_warehouse: 'WH',
+        items: [{ qty: 1, discount_percentage: '101' }],
+      }),
+    ).toEqual(['discount'])
+  })
+  it('hears back which supplier discount was saved', () => {
+    expect(parseDone('Pricing Rule:PRLE-0001')).toEqual({
+      doctype: 'Pricing Rule',
+      name: 'PRLE-0001',
+    })
   })
 })
 

@@ -27,6 +27,9 @@ class TestComprasPaths(TestCase):
 			"/crm/compras/surtido",
 			"/crm/compras/surtido?pedido=PC-2026-00001",
 			"/crm/compras/solicitud/MAT-MR-2026-00003?return_to=%2Fcrm%2Fpendientes",
+			"/crm/compras/descuentos?estado=vencido",
+			"/crm/compras/descuento/PRLE-0001",
+			"/crm/compras/descuento/nuevo?supplier=Tecnomaxx",
 		):
 			with self.subTest(path=path):
 				self.assertTrue(is_compras_path(path))
@@ -40,6 +43,9 @@ class TestComprasPaths(TestCase):
 			"/crm/compras/orden/1/extra",
 			"/crm/compras/surtido/extra",
 			"/crm/compras/surtidos",
+			"/crm/compras/descuentos/extra",
+			"/crm/compras/descuento/PRLE-0001/extra",
+			"/crm/compras/descuento",
 			"//evil.invalid/crm/compras",
 			"https://evil.invalid/crm/compras",
 			"/crm/compras\\evil",

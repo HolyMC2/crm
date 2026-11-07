@@ -113,6 +113,16 @@
                 :to="billRoute(doneBill, returnHere)"
                 >{{ __('Open bill') }}</RouterLink
               >
+              <button
+                v-if="doneRule && canEdit && !editing"
+                type="button"
+                :class="['press', BTN.tonal]"
+                :disabled="busy"
+                data-testid="orden-aplicar-descuentos"
+                @click="applyDiscounts"
+              >
+                {{ __('Apply to this purchase') }}
+              </button>
             </div>
             <div
               v-if="draftNotice"
@@ -376,9 +386,10 @@
                 <li
                   v-for="(row, index) in form.items"
                   :key="row.key"
-                  class="grid gap-2 p-3 sm:grid-cols-[1fr_6rem_8rem_8rem_auto] sm:items-end"
+                  class="relative grid grid-cols-2 gap-2 p-3 sm:grid-cols-[1fr_5.5rem_7.5rem_7.5rem_5.5rem_auto] sm:items-end"
+                  :data-compra-linea="row.item_code"
                 >
-                  <div class="min-w-0">
+                  <div class="col-span-2 min-w-0 pr-11 sm:col-span-1 sm:pr-0">
                     <p class="break-words font-medium">
                       {{ row.item_label || row.item_code }}
                     </p>
@@ -443,9 +454,18 @@
                     min="0"
                     step="any"
                   />
+                  <FormControl
+                    v-model="row.discount_percentage"
+                    type="number"
+                    :label="__('% disc.', null, 'Compras')"
+                    :disabled="ruleLocked(row, form)"
+                    min="0"
+                    max="100"
+                    step="any"
+                  />
                   <button
                     type="button"
-                    class="press flex size-11 items-center justify-center self-end rounded-full text-ink-gray-7 [@media(hover:hover)]:hover:bg-surface-gray-2"
+                    class="press absolute right-2 top-2 flex size-11 items-center justify-center rounded-full text-ink-gray-7 sm:static sm:self-end [@media(hover:hover)]:hover:bg-surface-gray-2"
                     :aria-label="
                       __('Remove {0}', [row.item_label || row.item_code])
                     "
@@ -454,6 +474,17 @@
                   >
                     <LucideTrash2 class="size-5" aria-hidden="true" />
                   </button>
+                  <p
+                    v-if="linePriceNote(row)"
+                    class="col-span-2 break-words text-sm sm:col-span-6"
+                    :class="
+                      ruleLocked(row, form)
+                        ? 'text-ink-green-8'
+                        : 'text-ink-gray-6'
+                    "
+                  >
+                    {{ linePriceNote(row) }}
+                  </p>
                 </li>
                 <li class="p-3">
                   <ComprasPicker
@@ -470,6 +501,18 @@
                 </li>
               </ul>
             </div>
+            <OrdenMasDatos
+              :values="moreForm"
+              :company="form.company"
+              :currency="doc.currency || 'MXN'"
+              :order-rules="isNew ? [] : doc.order_rules || []"
+              :can-ignore="
+                isNew
+                  ? Boolean(boot?.capabilities?.ignore_rules)
+                  : Boolean(doc.can_ignore_pricing_rule)
+              "
+              @patch="(patch) => Object.assign(form, patch)"
+            />
             <div
               class="fixed inset-x-0 bottom-0 z-20 flex gap-2 border-t border-outline-gray-2 bg-surface-base p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:static sm:border-0 sm:p-0"
             >
@@ -547,6 +590,12 @@
                     "
                   >
                     {{ rowProgress(row) }}
+                  </p>
+                  <p
+                    v-if="Number(row.discount_percentage) > 0"
+                    class="pt-0.5 text-sm text-ink-green-8"
+                  >
+                    {{ rowDiscount(row) }}
                   </p>
                   <p v-if="row.tracked" class="pt-0.5 text-sm text-ink-amber-9">
                     {{ __('Needs serial/batch review when it arrives.') }}
@@ -654,6 +703,14 @@
             :rows="almacenRows"
             :bill="doc.name"
             doctype="Purchase Order"
+          />
+
+          <!-- The supplier's discounts: ERPNext applies them on every save. -->
+          <OrdenDescuentos
+            :discounts="data.discounts || {}"
+            :supplier="doc.supplier || ''"
+            :currency="doc.currency || 'MXN'"
+            :return-to="returnHere"
           />
 
           <!-- Gastos' side: the supplier bills of this order. -->
@@ -797,6 +854,8 @@ import { ArchivosRegistroPanel } from '@/components/archivos'
 import { AppBar, EmptyState, StatusChip } from '@/components/ui'
 import ComprasPicker from '@/components/compras/ComprasPicker.vue'
 import HandoffDialog from '@/components/compras/HandoffDialog.vue'
+import OrdenDescuentos from '@/components/compras/OrdenDescuentos.vue'
+import OrdenMasDatos from '@/components/compras/OrdenMasDatos.vue'
 import ApprovalAsk from '@/components/pendientes/ApprovalAsk.vue'
 import ConfirmSheet from '@/components/documentos/ConfirmSheet.vue'
 import DatosList from '@/components/documentos/DatosList.vue'
@@ -835,6 +894,9 @@ import {
   loadWholeOrder,
   missingFields,
   money,
+  moreFrom,
+  moreValues,
+  netRate,
   orderPayload,
   outcomeUnknown,
   parseDone,
@@ -847,6 +909,8 @@ import {
   qty,
   recordShortcuts,
   requestId,
+  rowPrice,
+  ruleLocked,
   safeReturn,
   saveDraft,
   receiptRoute,
@@ -896,9 +960,16 @@ const blankForm = () => ({
   company: boot.value?.default_company || '',
   schedule_date: '',
   set_warehouse: prefillFromQuery(route.query).warehouse,
+  ...moreFrom(),
+  more_base: moreValues(moreFrom()),
   items: [],
 })
 const form = reactive(blankForm())
+// «Más datos» as the section edits them (useCompras moreFrom keys).
+const MORE_KEYS = Object.keys(moreFrom())
+const moreForm = computed(() =>
+  Object.fromEntries(MORE_KEYS.map((key) => [key, form[key]])),
+)
 const doc = computed(() => data.value.document || {})
 // The engine's shared record parts (Shell SPEC §6 DD2/DD5): loaded after paint.
 const kit = useRecordKit('Purchase Order', {
@@ -953,6 +1024,8 @@ const returnHere = computed(() => {
     : path
 })
 const doneBill = ref('')
+// Back from a new supplier discount: one tap saves the draft so ERPNext applies it.
+const doneRule = ref(false)
 
 // ── the bar: the supplier, the order's state and its number ──────────────
 const title = computed(() => {
@@ -1068,6 +1141,13 @@ const DATOS_SHOWN = [
   'set_warehouse',
   'schedule_date',
   'transaction_date',
+  'taxes_and_charges',
+  'apply_discount_on',
+  'additional_discount_percentage',
+  'discount_amount',
+  'payment_terms_template',
+  'terms',
+  'ignore_pricing_rule',
   'grand_total',
   'rounded_total',
   'status',
@@ -1108,8 +1188,82 @@ const facts = computed(() => {
       label: __('Company', null, 'Compras'),
       value: d.company,
     })
+  if (d.transaction_date)
+    out.push({
+      key: 'fecha',
+      icon: 'lucide-calendar',
+      label: __('Purchase date', null, 'Compras'),
+      value: formatDay(d.transaction_date),
+    })
+  if (d.taxes_and_charges || d.taxes_restricted)
+    out.push({
+      key: 'impuestos',
+      icon: 'lucide-percent',
+      label: __('Taxes', null, 'Compras'),
+      value: d.taxes_and_charges_label || __('a template you cannot see'),
+    })
+  const extra = Number(d.additional_discount_percentage) || 0
+  if (extra || Number(d.discount_amount))
+    out.push({
+      key: 'descuento',
+      icon: 'lucide-badge-percent',
+      label: __('Extra discount on the whole purchase'),
+      value: extra
+        ? __('{0} % off', [qty(extra)])
+        : __('{0} off', [money(d.discount_amount, d.currency)]),
+    })
+  if (d.payment_terms_template)
+    out.push({
+      key: 'pago',
+      icon: 'lucide-wallet',
+      label: __('Payment terms', null, 'Compras'),
+      value: d.payment_terms_template,
+    })
+  if (d.terms)
+    out.push({
+      key: 'notas',
+      icon: 'lucide-sticky-note',
+      label: __('Notes for the supplier'),
+      value: d.terms,
+    })
+  if (d.ignore_pricing_rule)
+    out.push({
+      key: 'sin-descuentos',
+      icon: 'lucide-ban',
+      label: __('Automatic discounts'),
+      value: __('Not applied on this purchase'),
+    })
   return out
 })
+// A line's discount on the saved purchase, with the supplier discount that set it.
+function rowDiscount(row) {
+  const off = __('{0} % off', [qty(row.discount_percentage)])
+  const rules = (row.rules || []).map((rule) => rule.title).filter(Boolean)
+  return rules.length
+    ? __('{0}, supplier discount «{1}»', [off, rules.join(', ')])
+    : off
+}
+// Under a line in the editor: who sets its % and what it costs with it.
+function linePriceNote(row) {
+  const off = Number(row.discount_percentage) || 0
+  const priced = row.rate !== '' && row.rate !== null && row.rate !== undefined
+  const net =
+    off > 0 && priced
+      ? __('With the discount: {0} each.', [
+          money(netRate(row.rate, off), doc.value.currency),
+        ])
+      : ''
+  if (ruleLocked(row, form))
+    return [
+      __('The supplier discount «{0}» sets this % when you save.', [
+        row.rules.map((rule) => rule.title).join(', '),
+      ]),
+      net,
+    ]
+      .filter(Boolean)
+      .join(' ')
+  return net
+}
 function billState(b) {
   if (Number(b.docstatus) === 0)
     return __('draft, to register', null, 'Compras')
@@ -1271,6 +1425,8 @@ function formFrom(payload) {
     company: document.company || '',
     schedule_date: document.schedule_date || '',
     set_warehouse: document.set_warehouse || '',
+    ...moreFrom(document),
+    more_base: moreValues(moreFrom(document)),
     row_total: rows.value.length,
     items: rows.value.map((row) => ({
       key: ++rowKey,
@@ -1285,7 +1441,10 @@ function formFrom(payload) {
           ? [{ uom: row.stock_uom, factor: 1 }]
           : []),
       ],
-      rate: row.rate,
+      // The price before the line's discount, so «% desc.» reads on top of it.
+      rate: rowPrice(row),
+      discount_percentage: Number(row.discount_percentage) || 0,
+      rules: row.rules || [],
       warehouse: row.warehouse || '',
       material_request: row.material_request,
       tracked: row.tracked,
@@ -1362,6 +1521,16 @@ watch(
   },
   { deep: true },
 )
+// «No aplicar descuentos automáticos»: lines the supplier discount set go back
+// to their price before it, as ERPNext leaves them on save.
+watch(
+  () => form.ignore_pricing_rule,
+  (on, was) => {
+    if (!editing.value || !on || was) return
+    for (const row of form.items)
+      if (row.rules?.length) row.discount_percentage = 0
+  },
+)
 // One destination: rows that followed the previous one follow the new one.
 watch(
   () => form.set_warehouse,
@@ -1396,6 +1565,8 @@ function addItem(option) {
     uom: option.uom,
     uoms: option.uoms,
     rate: '',
+    discount_percentage: '',
+    rules: [],
     warehouse: '',
     tracked: option.tracked,
   })
@@ -1438,7 +1609,7 @@ async function save() {
   if (
     !resending &&
     missing.value.some((key) =>
-      ['supplier', 'company', 'items', 'qty'].includes(key),
+      ['supplier', 'company', 'items', 'qty', 'discount'].includes(key),
     )
   ) {
     problem.value = {
@@ -1620,11 +1791,36 @@ async function compare() {
       mine.items.map((row) => `${row.item_code}×${row.qty}`).join(', '),
       current.rows.map((row) => `${row.item_code}×${row.qty}`).join(', '),
     ],
+    [
+      __('Prices', null, 'Compras'),
+      mine.items
+        .map((row) => linePrice(row.rate, row.discount_percentage))
+        .join(', '),
+      current.rows
+        .map((row) => linePrice(rowPrice(row), row.discount_percentage))
+        .join(', '),
+    ],
+    [
+      __('Taxes', null, 'Compras'),
+      mine.taxes_label || mine.taxes_and_charges,
+      document.taxes_and_charges_label || document.taxes_and_charges,
+    ],
+    [
+      __('Extra discount on the whole purchase'),
+      mine.discount_value || 0,
+      moreFrom(document).discount_value || 0,
+    ],
   ]
     .filter(([, a, b]) => String(a ?? '') !== String(b ?? ''))
     .map(([label, a, b]) => ({ label, mine: a, current: b }))
   conflict.value = { diffs, current, mine }
   problem.value = null
+}
+function linePrice(price, discount) {
+  const off = Number(discount) || 0
+  const value =
+    price === '' || price === null || price === undefined ? '—' : price
+  return off ? `${value} −${off} %` : String(value)
 }
 function useCurrent() {
   data.value = conflict.value.current
@@ -1665,6 +1861,21 @@ function reapply() {
   save()
 }
 
+/** Save the draft as it is: ERPNext applies the supplier discounts on every save. */
+async function applyDiscounts() {
+  try {
+    await call('save', 'save_order', {
+      data: orderPayload(formFrom(data.value)),
+    })
+  } catch {
+    return
+  }
+  doneRule.value = false
+  doneNotice.value = ''
+  toast.success(__('Supplier discounts applied'))
+  await load()
+}
+
 // «Revisada»: the review asked of me is answered without confirming anything;
 // who asked hears it. From another list, back there with `done`.
 function reviewed() {
@@ -1696,17 +1907,22 @@ async function handleDone() {
   const done = parseDone(route.query.done)
   if (!done) return
   doneBill.value = done.doctype === 'Purchase Invoice' ? done.name : ''
+  doneRule.value = done.doctype === 'Pricing Rule'
   doneNotice.value =
-    done.doctype === 'Purchase Receipt'
+    done.doctype === 'Pricing Rule'
       ? __(
-          'Receipt {0} confirmed. Stock is updated; see what is still missing below.',
-          [done.name],
+          'Supplier discount saved. It applies to this purchase the next time it is saved.',
         )
-      : done.doctype === 'Purchase Invoice'
-        ? __('Bill {0} registered. Pay it from Gastos when it is due.', [
-            done.name,
-          ])
-        : __('{0} saved.', [done.name])
+      : done.doctype === 'Purchase Receipt'
+        ? __(
+            'Receipt {0} confirmed. Stock is updated; see what is still missing below.',
+            [done.name],
+          )
+        : done.doctype === 'Purchase Invoice'
+          ? __('Bill {0} registered. Pay it from Gastos when it is due.', [
+              done.name,
+            ])
+          : __('{0} saved.', [done.name])
   const query = { ...route.query }
   delete query.done
   router.replace({ query })
