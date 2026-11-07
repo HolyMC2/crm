@@ -216,6 +216,23 @@ export function formatDay(value, { lang, now = new Date() } = {}) {
     timeZone: 'UTC',
   }).format(new Date(Date.UTC(year, month - 1, date)))
 }
+/** When a follow-up is due, in the list's words: «Hoy», «Vencido, lun, 3 nov»,
+ *  «jue, 13 nov», «Sin fecha». */
+export function followupWhen(followup, today, options) {
+  const label = dueLabel({ status: 'Open', date: followup?.date }, today)
+  if (label === 'Vencido')
+    return `Vencido, ${formatDay(followup.date, options)}`
+  if (label === 'Próximo') return formatDay(followup.date, options)
+  return label
+}
+/** The desktop table's columns that its own width holds: below 860 px (1024
+ *  with the rail open, a tablet) roles and company give way to the name, the
+ *  way to reach them and the next follow-up. `width` 0 is not measured yet. */
+export function contactColumns(columns, width) {
+  return width && width < 860
+    ? columns.filter((c) => c !== 'roles' && c !== 'company')
+    : columns
+}
 /** A server timestamp (naive, in the system time zone) as «hace 2 horas» or «5 oct, 1:22 p.m.». */
 export function formatMoment(value, { lang, timezone, now = Date.now() } = {}) {
   const match = String(value || '').match(

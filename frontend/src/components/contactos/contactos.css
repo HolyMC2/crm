@@ -174,9 +174,13 @@
   min-height: 76px;
 }
 .c-contact-row.compact {
-  min-height: 62px;
-  padding-top: 9px;
-  padding-bottom: 9px;
+  min-height: 52px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+.c-contact-row.compact .c-avatar {
+  width: 28px;
+  height: 28px;
 }
 .c-contact-row:hover,
 .c-contact-row.selected {
@@ -222,6 +226,8 @@
   /* neutral initials, as every shell avatar (LOOK.md «Colour means state») */
   background: var(--surface-gray-2);
   color: var(--ink-gray-7);
+  font-size: 12px;
+  font-weight: 600;
   flex: none;
 }
 .c-avatar.company {
@@ -240,11 +246,28 @@
   color: var(--c-muted);
   white-space: nowrap;
 }
+.c-row-roles,
 .c-row-channel,
 .c-row-company,
 .c-row-next {
+  font-size: 13px;
+  color: var(--c-ink);
+  white-space: nowrap;
+}
+.c-row-next > span,
+.c-row-next > small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.c-row-next > small {
+  margin-top: 2px;
   font-size: 12px;
   color: var(--c-muted);
+}
+.c-row-next > small.overdue {
+  color: var(--c-danger);
+  font-weight: 500;
 }
 .c-tags {
   display: flex;
@@ -739,19 +762,6 @@
 @media (max-width: 1000px) {
   .c-sidebar {
     width: 180px;
-  }
-  .c-row-company,
-  .c-row-next {
-    display: none;
-  }
-  .c-list-head {
-    display: none;
-  }
-  .c-contact-row {
-    grid-template-columns: minmax(180px, 2fr) minmax(100px, 1fr) minmax(
-        120px,
-        1fr
-      ) !important;
   }
   .c-record-grid {
     gap: 18px;

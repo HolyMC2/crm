@@ -409,10 +409,10 @@
       <template v-else>
         <div v-if="rows.length" class="c-list-head" :style="gridStyle">
           <span>Nombre</span
-          ><span v-if="state.columns.includes('roles')">Tipo / roles</span
-          ><span v-if="state.columns.includes('phone')">Teléfono / correo</span
-          ><span v-if="state.columns.includes('company')">Empresa</span
-          ><span v-if="state.columns.includes('next')">Próxima acción</span>
+          ><span v-if="shown.includes('roles')">Tipo / roles</span
+          ><span v-if="shown.includes('phone')">Teléfono / correo</span
+          ><span v-if="shown.includes('company')">Empresa</span
+          ><span v-if="shown.includes('next')">Próxima acción</span>
         </div>
         <button
           v-for="row in rows"
@@ -432,9 +432,20 @@
           @pointerenter="hoverRow(row, $event)"
           @pointerleave="hoverRow(null)"
         >
+          <!-- Grey initials, as every shell avatar; a company's is square. A
+               name with no letter to take («_Test») keeps the icon. -->
           <span class="c-row-identity"
-            ><span class="c-avatar" :class="{ company: row.kind === 'company' }"
+            ><span
+              class="c-avatar"
+              :class="{ company: row.kind === 'company' }"
+              aria-hidden="true"
+              ><template
+                v-if="
+                  row.source !== 'address' && initials(row.title || row.name)
+                "
+                >{{ initials(row.title || row.name) }}</template
               ><Icon
+                v-else
                 :icon="
                   row.source === 'address'
                     ? 'map-pin'
@@ -455,26 +466,35 @@
               ></span
             ></span
           >
-          <span v-if="state.columns.includes('roles')" class="c-row-roles"
-            ><span class="c-type">{{ identityTypeLabel(row) }}</span
-            ><small>{{ roleLabel(row) }}</small></span
-          >
-          <span v-if="state.columns.includes('phone')" class="c-row-channel">{{
+          <!-- An empty cell stays empty: no «Sin canal», no «—». -->
+          <span v-if="shown.includes('roles')" class="c-row-roles">{{
+            roleLabel(row) || identityTypeLabel(row)
+          }}</span>
+          <span v-if="shown.includes('phone')" class="c-row-channel">{{
             row.fields?.mobile_no ||
             row.fields?.phone ||
             row.fields?.email_id ||
-            'Sin canal'
+            ''
           }}</span>
-          <span
-            v-if="state.columns.includes('company')"
-            class="c-row-company"
-            >{{
-              row.fields?.company_name || row.fields?.organization || '—'
-            }}</span
+          <span v-if="shown.includes('company')" class="c-row-company">{{
+            row.fields?.company_name || row.fields?.organization || ''
+          }}</span>
+          <!-- The follow-up itself: what and when, red only when overdue.
+               «Añadir seguimiento» on every row said nothing. -->
+          <span v-if="shown.includes('next')" class="c-row-next"
+            ><template v-if="row.next_followup"
+              ><span>{{
+                row.next_followup.description || row.next_action?.label
+              }}</span
+              ><small
+                :class="{ overdue: row.next_followup.overdue }"
+                data-followup-when
+                >{{ followupWhen(row.next_followup, boot?.today) }}</small
+              ></template
+            ><template v-else-if="row.next_action?.type === 'followups'">{{
+              row.next_action.label
+            }}</template></span
           >
-          <span v-if="state.columns.includes('next')" class="c-row-next">{{
-            row.next_action?.label || row.next_followup?.description || '—'
-          }}</span>
         </button>
       </template>
       <div v-if="!loading && !rows.length && !error" class="c-empty">
@@ -666,6 +686,7 @@ import {
 } from 'vue'
 import { call } from 'frappe-ui'
 import { useRoute, useRouter } from 'vue-router'
+import { useElementSize } from '@vueuse/core'
 import ContactosLayout from '@/components/contactos/ContactosLayout.vue'
 import { Fab, ListRow } from '@/components/ui'
 import ChipGroup from '@/components/ui/ChipGroup.vue'
@@ -707,6 +728,8 @@ import {
   contactoRoute,
   dueLabel,
   formatDay,
+  followupWhen,
+  contactColumns,
   sourceSlug,
   sourceLabel,
   legacyFilters,
@@ -718,6 +741,7 @@ import {
 import { safeReturn } from '@/composables/useCompras'
 import { goToReturn } from '@/utils/atencion'
 import Icon from '@/components/Icon.vue'
+import { initials } from '@/components/ui/host'
 import LucideSlidersVertical from '~icons/lucide/sliders-vertical'
 import LucideArrowLeft from '~icons/lucide/arrow-left'
 import LucidePlus from '~icons/lucide/plus'
@@ -913,10 +937,13 @@ const sectionLabels = {
   saldo: 'Saldo',
   extra: __('More details'),
 }
+// The table keeps the columns its own width holds (contactColumns).
+const { width: listWidth } = useElementSize(scroller)
+const shown = computed(() => contactColumns(state.columns, listWidth.value))
 const gridStyle = computed(() => ({
   gridTemplateColumns: [
     'minmax(190px, 2fr)',
-    ...state.columns.map((v) =>
+    ...shown.value.map((v) =>
       v === 'roles' ? 'minmax(100px, 1fr)' : 'minmax(130px, 1fr)',
     ),
   ].join(' '),
