@@ -289,6 +289,28 @@ const routes = [
     meta: { app: 'compras', title: 'Compras', ownPhoneHeader: true },
   },
   {
+    // Descuentos de proveedor: the buying Pricing Rules ERPNext applies on
+    // every purchase save (doco.workspaces.descuentos).
+    path: '/compras/descuentos',
+    name: 'CompraDescuentos',
+    component: () => import('@/pages/CompraDescuentos.vue'),
+    meta: { app: 'compras', title: 'Compras', ownPhoneHeader: true },
+  },
+  {
+    // One discount; `nuevo` starts one (`?supplier=` from a purchase).
+    path: '/compras/descuento/:name',
+    name: 'CompraDescuento',
+    component: () => import('@/pages/CompraDescuento.vue'),
+    props: true,
+    meta: {
+      app: 'compras',
+      title: 'Compras',
+      ownPhoneHeader: true,
+      // The editor's save bar takes the phone nav's place.
+      ownBottomBar: true,
+    },
+  },
+  {
     // «Capturar documento» review (books capture pipeline → a draft record).
     // It lives under the module it drafts into, so a reload gets that
     // module's shell (crm/www/crm.py classifies the path server-side).

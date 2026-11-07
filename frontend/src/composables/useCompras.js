@@ -264,9 +264,12 @@ export function parseDone(value) {
   if (index < 1) return null
   const doctype = value.slice(0, index)
   const name = value.slice(index + 1)
-  return ['Purchase Receipt', 'Purchase Order', 'Purchase Invoice'].includes(
-    doctype,
-  ) && name
+  return [
+    'Purchase Receipt',
+    'Purchase Order',
+    'Purchase Invoice',
+    'Pricing Rule',
+  ].includes(doctype) && name
     ? { doctype, name }
     : null
 }
@@ -347,9 +350,77 @@ export function problemOf(error) {
   return { kind: 'error', title: tr('Could not finish'), detail, action: null }
 }
 
+const given = (value) => value !== '' && value !== null && value !== undefined
+
+/** The price a line shows: the one before its discount (Desk's «Precio de
+ *  lista»), so «% desc.» reads on top of it; without a discount, the rate. */
+export function rowPrice(row) {
+  return Number(row.discount_percentage) > 0 && Number(row.price_list_rate) > 0
+    ? row.price_list_rate
+    : row.rate
+}
+
+/** What a line costs per unit after its discount, as the server computes it. */
+export function netRate(price, discount) {
+  const base = Number(price) || 0
+  const off = Math.min(Math.max(Number(discount) || 0, 0), 100)
+  return Math.round(base * (1 - off / 100) * 100) / 100
+}
+
+/** «Más datos» on the editor form, from the order the service read. */
+export function moreFrom(document = {}) {
+  const percent = Number(document.additional_discount_percentage) || 0
+  const amount = Number(document.discount_amount) || 0
+  return {
+    transaction_date: document.transaction_date || '',
+    taxes_and_charges: document.taxes_and_charges || '',
+    taxes_label: document.taxes_and_charges_label || '',
+    taxes_restricted: Boolean(document.taxes_restricted),
+    discount_kind: !percent && amount ? 'amount' : 'percent',
+    discount_value: percent || amount || '',
+    apply_discount_on: document.apply_discount_on || 'Grand Total',
+    payment_terms_template: document.payment_terms_template || '',
+    payment_terms_label: document.payment_terms_template || '',
+    payment_terms_restricted: Boolean(document.payment_terms_restricted),
+    terms: document.terms || '',
+    terms_rich: Boolean(document.terms_rich),
+    ignore_pricing_rule: Boolean(document.ignore_pricing_rule),
+  }
+}
+
+/** The service's «Más datos» values for what the form holds. */
+export function moreValues(form) {
+  const value = Number(form.discount_value) || 0
+  const percent = form.discount_kind !== 'amount'
+  return {
+    transaction_date: form.transaction_date || null,
+    taxes_and_charges: form.taxes_and_charges || null,
+    apply_discount_on: form.apply_discount_on || 'Grand Total',
+    additional_discount_percentage: percent ? value : 0,
+    discount_amount: percent ? null : value,
+    payment_terms_template: form.payment_terms_template || null,
+    // Formatted notes are Desk's: never sent from here.
+    terms: form.terms_rich ? undefined : String(form.terms || '').trim(),
+    ignore_pricing_rule: form.ignore_pricing_rule ? 1 : 0,
+  }
+}
+
+/** Only the «Más datos» the worker changed travel, so a save never puts back
+ *  what someone else set meanwhile, nor what a new supplier just brought. */
+export function morePayload(form) {
+  const now = moreValues(form)
+  const base = form.more_base || moreValues(moreFrom())
+  const out = {}
+  for (const [key, value] of Object.entries(now)) {
+    if (value === undefined) continue
+    if (JSON.stringify(value) !== JSON.stringify(base[key])) out[key] = value
+  }
+  return out
+}
+
 /** Editor rows → the allowlisted payload the service accepts. A saved order
  *  carries how many rows the editor loaded, so a partial view never replaces
- *  the whole row list. */
+ *  the whole row list. A line's price is the one before its discount. */
 export function orderPayload(form) {
   return {
     ...(form.name ? { name: form.name, modified: form.modified } : {}),
@@ -360,17 +431,27 @@ export function orderPayload(form) {
     company: form.company || null,
     schedule_date: form.schedule_date || null,
     set_warehouse: form.set_warehouse || null,
+    ...morePayload(form),
     items: form.items.map((row) => ({
       ...(row.name ? { name: row.name } : {}),
       item_code: row.item_code,
       qty: Number(row.qty),
       ...(row.uom ? { uom: row.uom } : {}),
-      ...(row.rate !== '' && row.rate !== null && row.rate !== undefined
-        ? { rate: Number(row.rate) }
+      ...(given(row.rate) ? { rate: Number(row.rate) } : {}),
+      // A saved line whose «% desc.» was emptied goes back to no discount.
+      ...(given(row.discount_percentage) ||
+      (row.name && row.discount_percentage === '')
+        ? { discount_percentage: Number(row.discount_percentage) || 0 }
         : {}),
       ...(row.warehouse ? { warehouse: row.warehouse } : {}),
     })),
   }
+}
+
+/** A line whose discount the supplier's automatic discount sets on every
+ *  save (ERPNext Pricing Rules): its «% desc.» is not the worker's to type. */
+export function ruleLocked(row, form) {
+  return Boolean(row.rules?.length) && !form.ignore_pricing_rule
 }
 
 /** What still blocks a save, as field keys, so the editor can point at them. */
@@ -383,6 +464,17 @@ export function missingFields(form) {
     missing.push('warehouse')
   if (!form.items.length) missing.push('items')
   if (form.items.some((row) => !(Number(row.qty) > 0))) missing.push('qty')
+  if (
+    form.items.some(
+      (row) =>
+        given(row.discount_percentage) &&
+        !(
+          Number(row.discount_percentage) >= 0 &&
+          Number(row.discount_percentage) <= 100
+        ),
+    )
+  )
+    missing.push('discount')
   return missing
 }
 
@@ -393,6 +485,7 @@ export const MISSING_LABELS = Object.freeze({
   warehouse: 'destination warehouse',
   items: 'items',
   qty: 'quantities above zero',
+  discount: 'line discounts from 0 to 100 %',
 })
 
 const DRAFT_PREFIX = 'muelle:compras:draft:'

@@ -32578,3 +32578,531 @@ msgstr "Total"
 msgctxt "Resultados"
 msgid "Still owed"
 msgstr "Saldo pendiente"
+
+msgctxt "Compras"
+msgid "More details"
+msgstr "Más datos"
+
+msgctxt "Compras"
+msgid "Purchase date"
+msgstr "Fecha de compra"
+
+msgctxt "Compras"
+msgid "Today"
+msgstr "Hoy"
+
+msgctxt "Compras"
+msgid "Taxes"
+msgstr "Impuestos"
+
+msgctxt "Compras"
+msgid "No taxes"
+msgstr "Sin impuestos"
+
+msgctxt "Compras"
+msgid "Discount in"
+msgstr "Descuento en"
+
+msgctxt "Compras"
+msgid "Discount amount"
+msgstr "Importe de descuento"
+
+msgctxt "Compras"
+msgid "Discount percentage"
+msgstr "Porcentaje de descuento"
+
+msgctxt "Compras"
+msgid "Discount on"
+msgstr "Descuento sobre"
+
+msgctxt "Compras"
+msgid "Payment terms"
+msgstr "Condiciones de pago"
+
+msgctxt "Compras"
+msgid "No payment terms"
+msgstr "Sin condiciones de pago"
+
+msgctxt "Compras"
+msgid "with notes"
+msgstr "con notas"
+
+msgctxt "Compras"
+msgid "% disc."
+msgstr "% desc."
+
+msgctxt "Compras"
+msgid "Prices"
+msgstr "Precios"
+
+msgctxt "Compras"
+msgid "line discounts from 0 to 100 %"
+msgstr "descuentos por partida de 0 a 100 %"
+
+msgid "Search tax template"
+msgstr "Buscar plantilla de impuestos"
+
+msgid "No tax template of this company."
+msgstr "Esta empresa no tiene plantillas de impuestos."
+
+msgid "This purchase uses a tax template you cannot see; it stays as it is."
+msgstr "Esta compra usa una plantilla de impuestos que no puedes ver; se queda como está."
+
+msgid "Extra discount on the whole purchase"
+msgstr "Descuento adicional en toda la compra"
+
+msgid "The supplier discount «{0}» sets this discount every time the purchase is saved."
+msgstr "El descuento de proveedor «{0}» pone este descuento cada vez que se guarda la compra."
+
+msgid "Search payment terms"
+msgstr "Buscar condiciones de pago"
+
+msgid "No payment terms match."
+msgstr "Ninguna condición de pago coincide."
+
+msgid "Notes for the supplier"
+msgstr "Notas para el proveedor"
+
+msgid "These notes have formatting (bold, lists); change them in the full form."
+msgstr "Estas notas tienen formato (negritas, listas); cámbialas en el formulario completo."
+
+msgid "Delivery, packing, who receives…"
+msgstr "Entrega, empaque, quién recibe…"
+
+msgid "Do not apply automatic discounts"
+msgstr "No aplicar descuentos automáticos"
+
+msgid "Only the purchasing manager turns the supplier discounts off on a purchase."
+msgstr "Solo el encargado de compras quita los descuentos de proveedor de una compra."
+
+msgid "Lines keep the price and discount you type; the supplier discounts are not applied."
+msgstr "Las partidas conservan el precio y el descuento que escribes; no se aplican los descuentos de proveedor."
+
+msgid "The supplier discounts apply to the lines they cover every time you save."
+msgstr "Los descuentos de proveedor se aplican a las partidas que cubren cada vez que guardas."
+
+msgid "on the total with taxes"
+msgstr "sobre el total con impuestos"
+
+msgid "on the subtotal before taxes"
+msgstr "sobre el subtotal antes de impuestos"
+
+msgid "Purchase date {0}"
+msgstr "Fecha de compra {0}"
+
+msgid "Purchase date today"
+msgstr "Fecha de compra hoy"
+
+msgid "{0} off"
+msgstr "{0} menos"
+
+msgid "{0} % off"
+msgstr "{0} % de descuento"
+
+msgid "no automatic discounts"
+msgstr "sin descuentos automáticos"
+
+msgid "Supplier discounts"
+msgstr "Descuentos de proveedor"
+
+msgctxt "Descuentos"
+msgid "Supplier discounts"
+msgstr "Descuentos de proveedor"
+
+msgid "This supplier has no active discounts."
+msgstr "Este proveedor no tiene descuentos activos."
+
+msgid "All discounts"
+msgstr "Todos los descuentos"
+
+msgid "the purchase"
+msgstr "la compra"
+
+msgid "Apply to this purchase"
+msgstr "Aplicar a esta compra"
+
+msgid "a template you cannot see"
+msgstr "una plantilla que no puedes ver"
+
+msgid "Automatic discounts"
+msgstr "Descuentos automáticos"
+
+msgid "Not applied on this purchase"
+msgstr "No se aplican en esta compra"
+
+msgid "{0}, supplier discount «{1}»"
+msgstr "{0}, descuento de proveedor «{1}»"
+
+msgid "With the discount: {0} each."
+msgstr "Con el descuento: {0} c/u."
+
+msgid "The supplier discount «{0}» sets this % when you save."
+msgstr "El descuento de proveedor «{0}» pone este % al guardar."
+
+msgid "Supplier discounts applied"
+msgstr "Descuentos de proveedor aplicados"
+
+msgid "Supplier discount saved. It applies to this purchase the next time it is saved."
+msgstr "Descuento de proveedor guardado. Se aplica a esta compra la próxima vez que se guarde."
+
+msgid "priced at {0}"
+msgstr "a precio de {0}"
+
+msgid "on the whole purchase"
+msgstr "en toda la compra"
+
+msgid "on {0}"
+msgstr "en {0}"
+
+msgid "on the group {0}"
+msgstr "en el grupo {0}"
+
+msgid "on the brand {0}"
+msgstr "en la marca {0}"
+
+msgid "on {0} items"
+msgstr "en {0} artículos"
+
+msgid "on {0} groups"
+msgstr "en {0} grupos"
+
+msgid "on {0} brands"
+msgstr "en {0} marcas"
+
+msgid "For every supplier"
+msgstr "Para todos los proveedores"
+
+msgid "For the supplier group {0}"
+msgstr "Para el grupo de proveedores {0}"
+
+msgid "from {0} pieces"
+msgstr "desde {0} piezas"
+
+msgid "starts {0}"
+msgstr "empieza el {0}"
+
+msgid "Every supplier"
+msgstr "Todos los proveedores"
+
+msgid "the supplier group"
+msgstr "el grupo de proveedores"
+
+msgctxt "Descuentos"
+msgid "the supplier"
+msgstr "el proveedor"
+
+msgid "at least one item"
+msgstr "al menos un artículo"
+
+msgid "at least one item group"
+msgstr "al menos un grupo de artículos"
+
+msgid "at least one brand"
+msgstr "al menos una marca"
+
+msgid "a % or an amount for the whole purchase"
+msgstr "un % o un importe para toda la compra"
+
+msgid "a discount above 0 and up to 100 %"
+msgstr "un descuento mayor a 0 y de hasta 100 %"
+
+msgid "an amount off above zero"
+msgstr "un descuento en pesos mayor a cero"
+
+msgid "the price"
+msgstr "el precio"
+
+msgid "an end date after the start"
+msgstr "una fecha de fin posterior al inicio"
+
+msgctxt "Descuentos"
+msgid "Active"
+msgstr "Activos"
+
+msgctxt "Descuentos"
+msgid "Scheduled"
+msgstr "Programados"
+
+msgctxt "Descuentos"
+msgid "Ended"
+msgstr "Vencidos"
+
+msgctxt "Descuentos"
+msgid "Turned off"
+msgstr "Desactivados"
+
+msgctxt "Descuentos"
+msgid "All"
+msgstr "Todos"
+
+msgctxt "Descuento"
+msgid "Active"
+msgstr "Activo"
+
+msgctxt "Descuento"
+msgid "Scheduled"
+msgstr "Programado"
+
+msgctxt "Descuento"
+msgid "Ended"
+msgstr "Vencido"
+
+msgctxt "Descuento"
+msgid "Turned off"
+msgstr "Desactivado"
+
+msgctxt "Descuentos"
+msgid "Active discounts"
+msgstr "Descuentos activos"
+
+msgctxt "Descuentos"
+msgid "Scheduled discounts"
+msgstr "Descuentos programados"
+
+msgctxt "Descuentos"
+msgid "Ended discounts"
+msgstr "Descuentos vencidos"
+
+msgctxt "Descuentos"
+msgid "Turned-off discounts"
+msgstr "Descuentos desactivados"
+
+msgctxt "Descuentos"
+msgid "New discount"
+msgstr "Nuevo descuento"
+
+msgid "Search discount, supplier or item"
+msgstr "Buscar descuento, proveedor o artículo"
+
+msgid "Show every supplier"
+msgstr "Mostrar todos los proveedores"
+
+msgid "this supplier"
+msgstr "este proveedor"
+
+msgid "Loading discounts…"
+msgstr "Cargando descuentos…"
+
+msgid "Show more discounts"
+msgstr "Mostrar más descuentos"
+
+msgid "Showing the newest 500 discounts. Search to find an older one."
+msgstr "Se muestran los 500 descuentos más recientes. Busca para encontrar uno anterior."
+
+msgid "No discount matches «{0}»"
+msgstr "Ningún descuento coincide con «{0}»"
+
+msgid "No active supplier discounts"
+msgstr "No hay descuentos de proveedor activos"
+
+msgid "No discounts here"
+msgstr "No hay descuentos aquí"
+
+msgid "Try the supplier’s name, an item code or another state."
+msgstr "Prueba con el nombre del proveedor, un código de artículo u otro estado."
+
+msgid "A supplier discount takes a % or an amount off what you buy from them; it applies on every purchase you save."
+msgstr "Un descuento de proveedor quita un % o un importe de lo que le compras; se aplica en cada compra que guardas."
+
+msgid "You cannot see the supplier discounts"
+msgstr "No puedes ver los descuentos de proveedor"
+
+msgid "Could not load the discounts"
+msgstr "No se pudieron cargar los descuentos"
+
+msgid "Loading discount…"
+msgstr "Cargando descuento…"
+
+msgid "See the current version"
+msgstr "Ver la versión actual"
+
+msgid "Another discount covers the same at the same priority. A purchase that meets both cannot be saved until one of them has a higher priority (in «More conditions»)."
+msgstr "Otro descuento cubre lo mismo con la misma prioridad. Una compra que cumpla ambos no se podrá guardar hasta que uno tenga mayor prioridad (en «Más condiciones»)."
+
+msgid "Open the full form"
+msgstr "Abrir el formulario completo"
+
+msgid "Kind of discount"
+msgstr "Tipo de descuento"
+
+msgid "For which suppliers?"
+msgstr "¿Para qué proveedores?"
+
+msgid "Supplier group"
+msgstr "Grupo de proveedores"
+
+msgid "Search supplier group"
+msgstr "Buscar grupo de proveedores"
+
+msgid "Nothing you can use matches."
+msgstr "Nada de lo que puedes usar coincide."
+
+msgid "It takes the discount off the purchase total, like the extra discount in «More details»."
+msgstr "Quita el descuento del total de la compra, como el descuento adicional en «Más datos»."
+
+msgid "Conditions"
+msgstr "Condiciones"
+
+msgid "From how much, and when?"
+msgstr "¿Desde cuánto y cuándo?"
+
+msgid "From (pieces)"
+msgstr "Desde (piezas)"
+
+msgid "From (amount)"
+msgstr "Desde (importe)"
+
+msgctxt "Descuentos"
+msgid "Any"
+msgstr "Cualquiera"
+
+msgctxt "Descuentos"
+msgid "Starts"
+msgstr "Empieza"
+
+msgctxt "Descuentos"
+msgid "Ends"
+msgstr "Termina"
+
+msgid "More conditions"
+msgstr "Más condiciones"
+
+msgid "Up to (pieces)"
+msgstr "Hasta (piezas)"
+
+msgid "Up to (amount)"
+msgstr "Hasta (importe)"
+
+msgctxt "Descuentos"
+msgid "No limit"
+msgstr "Sin límite"
+
+msgid "Only for the warehouse"
+msgstr "Solo para el almacén"
+
+msgid "Any warehouse"
+msgstr "Cualquier almacén"
+
+msgid "Priority (1 to 20)"
+msgstr "Prioridad (1 a 20)"
+
+msgctxt "Descuentos"
+msgid "None"
+msgstr "Ninguna"
+
+msgid "When two discounts cover the same purchase line, the higher priority wins."
+msgstr "Cuando dos descuentos cubren la misma partida, gana el de mayor prioridad."
+
+msgctxt "Descuentos"
+msgid "Name"
+msgstr "Nombre"
+
+msgid "Turned off: purchases do not get this discount."
+msgstr "Desactivado: las compras no reciben este descuento."
+
+msgid "Draft purchases get it the next time they are saved."
+msgstr "Las compras en borrador lo reciben la próxima vez que se guardan."
+
+msgid "Also set in the full form: {0}."
+msgstr "Además, en el formulario completo: {0}."
+
+msgid "Save discount"
+msgstr "Guardar descuento"
+
+msgid "Discount saved"
+msgstr "Descuento guardado"
+
+msgid "This discount uses options this page does not change ({0})."
+msgstr "Este descuento usa opciones que esta página no cambia ({0})."
+
+msgid "Only the purchasing manager changes supplier discounts."
+msgstr "Solo el encargado de compras cambia los descuentos de proveedor."
+
+msgid "Supplier discount"
+msgstr "Descuento de proveedor"
+
+msgid "% off"
+msgstr "% menos"
+
+msgid "$ off"
+msgstr "$ menos"
+
+msgid "Fixed price"
+msgstr "Precio fijo"
+
+msgid "One supplier"
+msgstr "Un proveedor"
+
+msgid "A group"
+msgstr "Un grupo"
+
+msgctxt "Descuentos"
+msgid "Every one"
+msgstr "Todos"
+
+msgid "Item groups"
+msgstr "Grupos de artículos"
+
+msgid "Brands"
+msgstr "Marcas"
+
+msgid "Whole purchase"
+msgstr "Toda la compra"
+
+msgid "Amount off each piece"
+msgstr "Descuento por pieza"
+
+msgid "Price per piece"
+msgstr "Precio por pieza"
+
+msgid "Add item group"
+msgstr "Agregar grupo de artículos"
+
+msgid "Add brand"
+msgstr "Agregar marca"
+
+msgid "Search item group"
+msgstr "Buscar grupo de artículos"
+
+msgid "Search brand"
+msgstr "Buscar marca"
+
+msgid "up to {0} pieces"
+msgstr "hasta {0} piezas"
+
+msgid "up to {0}"
+msgstr "hasta {0}"
+
+msgid "priority {0}"
+msgstr "prioridad {0}"
+
+msgid "Limits, company, warehouse and priority"
+msgstr "Límites, empresa, almacén y prioridad"
+
+msgid "You cannot create supplier discounts"
+msgstr "No puedes crear descuentos de proveedor"
+
+msgid "You cannot open this discount"
+msgstr "No puedes abrir este descuento"
+
+msgid "Could not open this discount"
+msgstr "No se pudo abrir este descuento"
+
+msgid "Someone else changed this discount"
+msgstr "Otra persona cambió este descuento"
+
+msgid "Free items"
+msgstr "Artículos de regalo"
+
+msgid "It gives free items instead of a discount."
+msgstr "Regala artículos en lugar de un descuento."
+
+msgctxt "Descuentos"
+msgid "All discounts"
+msgstr "Todos los descuentos"
+
+msgid "Without a date it applies from now."
+msgstr "Sin fecha, aplica desde ya."
+
+msgid "Without a date it never ends."
+msgstr "Sin fecha, no vence."

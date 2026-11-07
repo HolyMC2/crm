@@ -72,6 +72,18 @@
                   <LucideLayers class="size-3.5" aria-hidden="true" />
                   {{ __('Restock from a list', null, 'Surtido') }}
                 </button>
+                <RouterLink
+                  v-if="caps.discounts"
+                  :class="chipClass(false)"
+                  data-compras-descuentos
+                  :to="{ name: 'CompraDescuentos' }"
+                >
+                  <span
+                    class="lucide-badge-percent size-3.5"
+                    aria-hidden="true"
+                  />
+                  {{ __('Supplier discounts') }}
+                </RouterLink>
               </div>
             </section>
             <RecentPicks
@@ -128,6 +140,17 @@
             class="min-h-11 sm:min-h-8"
             @click="router.push({ name: 'CompraSurtido' })"
           />
+          <Button
+            v-if="caps.discounts"
+            :label="__('Supplier discounts')"
+            class="min-h-11 sm:min-h-8"
+            data-compras-descuentos
+            @click="router.push({ name: 'CompraDescuentos' })"
+          >
+            <template #prefix>
+              <span class="lucide-badge-percent size-4" aria-hidden="true" />
+            </template>
+          </Button>
           <Button
             v-if="boot?.capabilities?.create"
             variant="solid"
