@@ -1,6 +1,7 @@
 import { computed, ref, watch } from 'vue'
 import { call } from 'frappe-ui'
 import { shellBoot } from '@/composables/muelleShell'
+import { isWide } from '@/composables/breakpoint'
 import { userScopedKey } from '@/utils/storageKeys'
 import {
   SIBLING_APP_NAMES,
@@ -37,8 +38,17 @@ function readLocal() {
 const defaultState = () => 'collapsed'
 
 export const railState = ref(readLocal() || defaultState())
-export const railExpanded = computed(() => railState.value === 'expanded')
-export const railWidth = computed(() => RAIL_WIDTH[railState.value])
+// Below 1024 px (a tablet) the rail starts as icons whatever the saved choice:
+// its names would take a fifth of the screen from the page (at 768 px a module
+// list kept 348 px). The toggle there shows them for this visit only and leaves
+// the saved choice alone.
+const tabletOpen = ref(false)
+export const railExpanded = computed(() =>
+  isWide.value ? railState.value === 'expanded' : tabletOpen.value,
+)
+export const railWidth = computed(
+  () => RAIL_WIDTH[railExpanded.value ? 'expanded' : 'collapsed'],
+)
 
 // The boot's saved choice wins over a stale local one (it is the latest from
 // any device); a fresh toggle in this tab is saved back before the next boot.
@@ -75,12 +85,17 @@ export function setRail(state) {
 }
 
 export function toggleRail() {
+  if (!isWide.value) {
+    tabletOpen.value = !tabletOpen.value
+    return
+  }
   setRail(railExpanded.value ? 'collapsed' : 'expanded')
 }
 
 /** Tests: start from a clean slate. */
 export function resetRailForTests(state = null) {
   chosenHere = false
+  tabletOpen.value = false
   clearTimeout(saveTimer)
   railState.value = state || readLocal() || defaultState()
 }
