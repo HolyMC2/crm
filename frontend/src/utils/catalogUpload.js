@@ -5,6 +5,7 @@
 // quota, the verification and the attachment, then indexes the file in the
 // background. A part goes to object storage (presigned) or to the site itself.
 import { comprasApi } from '@/composables/useCompras'
+import { callError } from '@/utils/contactos'
 
 const API = 'doco.docoutils.books.catalogs.uploads.'
 const PART_TIMEOUT_MS = 10 * 60 * 1000
@@ -98,11 +99,13 @@ export function putPart(url, bytes, onLoaded = () => {}) {
   })
 }
 
-/** Upload `file` on the session of `link`; `onProgress` gets 0–100. */
+/** Upload `file` on the session of `link`; `onProgress` gets 0–100. With
+ *  `more`, the server waits for the drop's other pictures (`addPicture`, then
+ *  `indexPictures`) before reading the list. */
 export async function uploadCatalog(
   link,
   file,
-  { onProgress = () => {}, api = comprasApi, put = putPart } = {},
+  { onProgress = () => {}, api = comprasApi, put = putPart, more = false } = {},
 ) {
   const token = tokenOf(link)
   if (!token) throw failure('part')
@@ -121,6 +124,83 @@ export async function uploadCatalog(
     parts.push({ n: part.n, etag })
     done += bytes.size
   }
-  await api(API + 'complete', { token, parts })
+  await api(
+    API + 'complete',
+    more ? { token, parts, more: 1 } : { token, parts },
+  )
   onProgress(100)
+}
+
+/** POST one picture as multipart to a doco method (`add_picture`, `set_photo`). */
+export async function postPicture(
+  method,
+  args,
+  file,
+  { fetcher = fetch } = {},
+) {
+  const body = new FormData()
+  body.append('file', file, file.name || 'foto.jpg')
+  const headers = { Accept: 'application/json' }
+  if (window.csrf_token && window.csrf_token !== '{{ csrf_token }}')
+    headers['X-Frappe-CSRF-Token'] = window.csrf_token
+  const query = new URLSearchParams(args).toString()
+  const response = await fetcher(`/api/method/${method}?${query}`, {
+    method: 'POST',
+    headers,
+    body,
+  })
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) throw callError(method, response.status, data)
+  return data.message
+}
+
+/** One more picture of a list already created. */
+export function addPicture(catalog, file, options) {
+  return postPicture(API + 'add_picture', { catalogo: catalog }, file, options)
+}
+
+/** More pictures of a list that already has its first: each one, then the
+ *  read. `onProgress(done, total)`. */
+export async function addPictures(
+  catalog,
+  files,
+  { onProgress = () => {}, api = comprasApi, post = postPicture } = {},
+) {
+  let done = 0
+  for (const file of files) {
+    await post(API + 'add_picture', { catalogo: catalog }, file)
+    done += 1
+    onProgress(done, files.length)
+  }
+  if (done) await api(API + 'index_now', { catalogo: catalog })
+}
+
+/** The whole drop: the first picture through the upload session (the list's
+ *  file), the rest as extra pictures, then the read. `onProgress(done, total)`. */
+export async function uploadPictures(
+  link,
+  catalog,
+  files,
+  {
+    onProgress = () => {},
+    api = comprasApi,
+    put = putPart,
+    post = postPicture,
+  } = {},
+) {
+  const [first, ...rest] = files
+  const total = files.length
+  await uploadCatalog(link, first, {
+    api,
+    put,
+    more: rest.length > 0,
+    onProgress: (pct) => onProgress(pct / 100, total),
+  })
+  let done = 1
+  for (const file of rest) {
+    await post(API + 'add_picture', { catalogo: catalog }, file)
+    done += 1
+    onProgress(done, total)
+  }
+  if (rest.length) await api(API + 'index_now', { catalogo: catalog })
 }

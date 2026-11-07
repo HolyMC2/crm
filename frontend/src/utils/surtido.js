@@ -78,3 +78,28 @@ const LINE = {
 export const catalogTone = (status) => CATALOG[status] || 'gray'
 export const pedidoTone = (status) => PEDIDO[status] || 'gray'
 export const lineTone = (status) => LINE[status] || 'gray'
+
+/** The close's answers for the Items it creates, by catalog line: the owner's
+ *  select when they touched it, else the section's serial default and no
+ *  batches. `{ catalogo_linea: { has_serial, has_batch } }`. */
+export function closeSpecs(items = [], batch = {}, serial = {}) {
+  const out = {}
+  for (const row of items) {
+    if (!row?.catalogo_linea) continue
+    const said = (v) => v === '1' || v === '0'
+    out[row.catalogo_linea] = {
+      has_serial: said(serial[row.catalogo_linea])
+        ? serial[row.catalogo_linea] === '1'
+        : Boolean(row.has_serial_default),
+      has_batch: said(batch[row.catalogo_linea])
+        ? batch[row.catalogo_linea] === '1'
+        : false,
+    }
+  }
+  return out
+}
+
+/** The new Items the close cannot name a product type for. */
+export function missingGroups(items = []) {
+  return items.filter((row) => row.group_missing).map((row) => row.name)
+}

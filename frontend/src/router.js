@@ -288,6 +288,16 @@ const routes = [
     meta: { app: 'compras', title: 'Compras', ownPhoneHeader: true },
   },
   {
+    // The price-list workbench: one supplier list, its lines by section with
+    // tiers, changes, other suppliers and stock, and the order built in place
+    // (doco.workspaces.lista_precios). Lazy: its sheets load on first open.
+    path: '/compras/lista/:name',
+    name: 'CompraLista',
+    component: () => import('@/pages/CompraLista.vue'),
+    props: true,
+    meta: { app: 'compras', title: 'Compras', ownPhoneHeader: true },
+  },
+  {
     // Niveles de surtido: pieces per model over every style and colour, with
     // the dark / bright mix (doco.workspaces.sourcing.levels).
     path: '/compras/niveles',
