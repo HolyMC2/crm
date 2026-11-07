@@ -283,8 +283,27 @@
               >{{ __('Open the full order form to bill it') }}</a
             >
           </div>
+          <!-- ≥1024 the bills read as a table: one header, a column per fact. -->
+          <div
+            v-if="wide && rows.length"
+            class="flex items-center border-b border-outline-gray-1 text-sm text-ink-gray-6"
+            aria-hidden="true"
+            data-gastos-columnas
+          >
+            <span v-if="canSelect" class="w-10 flex-none" />
+            <span
+              class="gastos-fila min-w-0 flex-1 px-4 py-2 sm:px-6"
+              :class="canSelect ? 'sm:pl-2' : ''"
+            >
+              <span>{{ __('Supplier') }}</span>
+              <span>{{ __('Status') }}</span>
+              <span>{{ draftDates ? __('Date', null, CTX) : __('Due') }}</span>
+              <span class="text-right">{{ __('Total') }}</span>
+              <span class="text-right">{{ __('Balance') }}</span>
+            </span>
+          </div>
           <ul
-            v-else
+            v-if="rows.length"
             :ref="(el) => (list.listbox.value = el)"
             tabindex="0"
             class="divide-y divide-outline-gray-1 focus:outline-none"
@@ -313,7 +332,8 @@
                   v-if="
                     canSelect && (!list.phone.value || list.selecting.value)
                   "
-                  class="flex min-h-14 shrink-0 cursor-pointer items-center pl-5"
+                  class="flex w-10 shrink-0 cursor-pointer items-center justify-end"
+                  :class="wide ? 'min-h-12' : 'min-h-14'"
                   :aria-label="__('Select {0}', [row.bill_no || row.name])"
                 >
                   <input
@@ -324,6 +344,55 @@
                   />
                 </label>
                 <a
+                  v-if="wide"
+                  :href="recordHref(row)"
+                  class="gastos-fila min-h-12 min-w-0 flex-1 px-4 py-2 hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:px-6"
+                  :class="canSelect ? 'sm:pl-2' : ''"
+                  data-gastos-fila
+                  @click="onRowOpen($event, row)"
+                >
+                  <span class="min-w-0">
+                    <span class="block truncate font-medium text-ink-gray-9">{{
+                      row.party || __('Supplier not visible')
+                    }}</span>
+                    <span class="block truncate text-sm text-ink-gray-6"
+                      ><span class="num">{{ row.bill_no || row.name }}</span
+                      ><template v-if="multiCompany && row.company">
+                        · {{ row.company }}</template
+                      ></span
+                    >
+                  </span>
+                  <span class="truncate text-sm text-ink-gray-8">{{
+                    registeringHere(row) ? __('Registering…') : statusLabel(row)
+                  }}</span>
+                  <!-- Only the overdue words turn red. -->
+                  <span
+                    class="truncate text-sm"
+                    :class="
+                      row.overdue
+                        ? 'font-medium text-ink-red-7'
+                        : 'text-ink-gray-8'
+                    "
+                    data-testid="gasto-due"
+                    >{{ dateCell(row) }}</span
+                  >
+                  <span class="num text-right text-sm text-ink-gray-8">{{
+                    money(row.total, row.currency)
+                  }}</span>
+                  <span
+                    class="num text-right text-base font-semibold text-ink-gray-9"
+                    >{{
+                      Number(row.docstatus) === 1
+                        ? money(
+                            row.outstanding_amount,
+                            row.owed_currency || row.currency,
+                          )
+                        : ''
+                    }}</span
+                  >
+                </a>
+                <a
+                  v-else
                   :href="recordHref(row)"
                   class="flex min-h-14 min-w-0 flex-1 items-start gap-3 px-4 py-3 hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:px-6"
                   :class="
@@ -544,6 +613,8 @@ import LucidePlus from '~icons/lucide/plus'
 import LucideUpload from '~icons/lucide/upload'
 import LucideDollarSign from '~icons/lucide/dollar-sign'
 import { registrationOf } from '@/composables/gastosRegistrations'
+import { isWide } from '@/composables/breakpoint'
+import { formatDay } from '@/utils/contactos'
 
 // A draft this tab sent to register in the background (the tray follows it).
 const registeringHere = (row) =>
@@ -614,6 +685,19 @@ const problem = list.problem
 const multiCompany = computed(
   () => new Set(rows.value.map((row) => row.company)).size > 1,
 )
+// ≥1024 the bills are a table (header and columns), below a list of rows.
+const wide = isWide
+// Drafts to register have no due date that matters yet: their column is the
+// bill's date. Registered bills say when they are due.
+const draftDates = computed(
+  () => state.value.segment === 'por-registrar' && !state.value.po,
+)
+function dateCell(row) {
+  if (draftDates.value) return row.date ? formatDay(row.date) : ''
+  return Number(row.docstatus) === 1
+    ? dueLabel(row.due_date, boot.value?.today)
+    : ''
+}
 
 const countText = (n) => (counts.value?.capped && n >= 500 ? '500+' : String(n))
 function countLabel(value) {
@@ -922,3 +1006,16 @@ onMounted(async () => {
   if (boot.value?.enabled && billSegment.value) list.load({ restore: true })
 })
 </script>
+<style scoped>
+/* The desktop bills' columns: supplier and folio, status, due (or date),
+   total, balance. Scoped, not Tailwind arbitrary values: keeps the global
+   sheet in budget. */
+.gastos-fila {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 2.2fr) minmax(0, 1fr) minmax(0, 1.4fr) 8.5rem
+    8.5rem;
+  column-gap: 1rem;
+  align-items: center;
+}
+</style>

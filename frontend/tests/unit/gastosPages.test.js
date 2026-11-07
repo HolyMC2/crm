@@ -136,7 +136,13 @@ describe('Gastos queue', () => {
     expect(queue).toMatchObject({ segment: 'por-pagar', chip: 'semana' })
     expect(root.textContent).toContain('Renta Local')
     expect(root.textContent).toContain('Due tomorrow')
-    expect(root.textContent).toMatch(/Paid .*400.* of/)
+    // jsdom's 1024 px window is a desktop: the table says what is paid as
+    // the bill's total beside its balance.
+    const cells = [...root.querySelector('[data-gastos-fila]').children].map(
+      (cell) => cell.textContent.trim(),
+    )
+    expect(cells[3]).toMatch(/1,000\.00/)
+    expect(cells[4]).toMatch(/600\.00/)
     const link = root.querySelector('a[href*="/gastos/factura/PI-1"]')
     expect(decodeURIComponent(link.getAttribute('href'))).toContain(
       'list=/gastos?chip=semana',

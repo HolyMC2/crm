@@ -11,6 +11,7 @@ const state = vi.hoisted(() => ({
   route: null,
   router: null,
   mobile: null,
+  wide: null,
   hub: null,
   toast: null,
 }))
@@ -45,7 +46,8 @@ vi.mock('vue-router', async () => {
 vi.mock('@/composables/breakpoint', async () => {
   const { ref } = await import('vue')
   state.mobile = ref(false)
-  return { isMobile: state.mobile }
+  state.wide = ref(false)
+  return { isMobile: state.mobile, isWide: state.wide }
 })
 vi.mock('@/composables/useHoy', () => ({
   hoyLive: () => {
@@ -120,7 +122,7 @@ vi.mock('@/composables/useGastos', async (importOriginal) => {
   }
 })
 
-import { gastosBoot, listMemoryKey } from '@/composables/useGastos'
+import { gastosBoot, listMemoryKey, money } from '@/composables/useGastos'
 import { pageShortcuts } from '@/composables/shellKeyboard'
 import Gastos from '@/pages/Gastos.vue'
 
@@ -196,6 +198,7 @@ beforeEach(() => {
   state.route.name = 'Gastos'
   state.route.query = {}
   state.mobile.value = false
+  state.wide.value = false
   state.toast.success.mockReset()
   state.toast.error.mockReset()
   sessionStorage.clear()
@@ -209,6 +212,59 @@ afterEach(() => {
 })
 
 describe('Gastos list as a power app', () => {
+  it('reads as a table on a wide screen: one header, a column per fact', async () => {
+    state.wide.value = true
+    state.api.mockImplementation(async (method) =>
+      method === 'queue'
+        ? {
+            ...QUEUE,
+            rows: [
+              bill('PI-1', { total: 1000, paid: 400, outstanding_amount: 600 }),
+            ],
+          }
+        : null,
+    )
+    mount()
+    await flush()
+    const header = root.querySelector('[data-gastos-columnas]')
+    expect(header.textContent).toContain('Due')
+    expect(header.textContent).toContain('Balance')
+    const cells = [...root.querySelector('[data-gastos-fila]').children].map(
+      (cell) => cell.textContent.trim(),
+    )
+    expect(cells[0]).toContain('Proveedor PI-1')
+    expect(cells[0]).toContain('F-PI-1')
+    expect(cells[1]).toBe('Overdue')
+    // Only the due words turn red: four days past the site's today.
+    expect(cells[2]).toBe('Overdue 4 days')
+    expect(cells[3]).toBe(money(1000, 'MXN'))
+    expect(cells[4]).toBe(money(600, 'MXN'))
+  })
+
+  it('Por registrar dates each draft by its bill date and leaves its balance empty', async () => {
+    state.wide.value = true
+    state.route.query = { segment: 'por-registrar' }
+    state.api.mockImplementation(async (method) =>
+      method === 'queue'
+        ? {
+            ...QUEUE,
+            rows: [bill('PI-3', { docstatus: 0, date: '2026-10-12' })],
+          }
+        : null,
+    )
+    mount()
+    await flush()
+    expect(root.querySelector('[data-gastos-columnas]').textContent).toContain(
+      'Date',
+    )
+    const cells = [...root.querySelector('[data-gastos-fila]').children].map(
+      (cell) => cell.textContent.trim(),
+    )
+    expect(cells[1]).toBe('Draft')
+    expect(cells[2]).not.toBe('')
+    expect(cells[4]).toBe('')
+  })
+
   it('j/k move a focus the URL keeps; Enter opens the bill with a return to the same row', async () => {
     mount()
     await flush()

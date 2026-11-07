@@ -10,6 +10,7 @@ const state = vi.hoisted(() => ({
   route: null,
   router: null,
   mobile: null,
+  wide: null,
   hub: null,
   toast: null,
 }))
@@ -33,7 +34,8 @@ vi.mock('vue-router', async () => {
 vi.mock('@/composables/breakpoint', async () => {
   const { ref } = await import('vue')
   state.mobile = ref(false)
-  return { isMobile: state.mobile }
+  state.wide = ref(false)
+  return { isMobile: state.mobile, isWide: state.wide }
 })
 vi.mock('@/composables/useHoy', () => ({
   hoyLive: () => {
@@ -132,7 +134,7 @@ vi.mock('@/composables/useCobranza', async (importOriginal) => {
   }
 })
 
-import { ACTIONS, listMemoryKey } from '@/composables/useCobranza'
+import { ACTIONS, listMemoryKey, money } from '@/composables/useCobranza'
 import { useCobranzaUndo } from '@/composables/useCobranzaActions'
 import { pageShortcuts } from '@/composables/shellKeyboard'
 import Cobranza from '@/pages/Cobranza.vue'
@@ -271,6 +273,7 @@ beforeEach(() => {
   state.route.name = 'Cobranza'
   state.route.query = {}
   state.mobile.value = false
+  state.wide.value = false
   state.toast.success.mockReset()
   sessionStorage.clear()
   window.__ = (text, values) =>
@@ -286,6 +289,41 @@ describe('Cobranza list as a power app', () => {
     state.api.mockImplementation(async (method) =>
       method.endsWith('get_queue') ? QUEUE : null,
     )
+  })
+
+  it('reads as a table on a wide screen: one header, a column per fact', async () => {
+    state.wide.value = true
+    state.api.mockImplementation(async (method) =>
+      method.endsWith('get_queue')
+        ? {
+            ...QUEUE,
+            rows: [
+              row('Laura', {
+                invoices: 3,
+                outstanding: 1500,
+                overdue_amount: 400,
+                promise: { amount: 400, date: '2026-10-20', state: 'open' },
+              }),
+              row('Importadora', { oldest_overdue_days: 0, overdue_amount: 0 }),
+            ],
+          }
+        : null,
+    )
+    mount(Cobranza)
+    await flush()
+    const header = root.querySelector('[data-cobranza-columnas]')
+    expect(header.textContent).toContain('Days overdue')
+    expect(header.textContent).toContain('Balance')
+    const [laura, importadora] = [
+      ...root.querySelectorAll('[data-cobranza-fila]'),
+    ].map((fila) => [...fila.children].map((cell) => cell.textContent.trim()))
+    expect(laura[0]).toContain('Laura S.A.')
+    expect(laura[0]).toContain('3 invoices')
+    expect(laura[1]).toBe('Overdue 40 days')
+    expect(laura[3]).toBe(money(400, 'MXN'))
+    expect(laura[4]).toBe(money(1500, 'MXN'))
+    // Nothing overdue: the overdue column stays empty, not «$0.00».
+    expect(importadora[3]).toBe('')
   })
 
   it('j/k move a focus the URL keeps; Enter opens it with a return to the same row', async () => {
