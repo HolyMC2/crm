@@ -272,6 +272,17 @@ describe('automation connection', () => {
   const catalog = [
     { event: 'lead.created', record: 'CRM Lead', label: 'A lead was created.' },
     {
+      event: 'lead.updated',
+      record: 'CRM Lead',
+      label: 'A lead was changed.',
+      watches_fields: true,
+    },
+    {
+      event: 'conversation.updated',
+      record: 'CRM Conversation',
+      label: 'Team, labels or snooze changed.',
+    },
+    {
       event: 'conversation.created',
       record: 'CRM Conversation',
       label: 'A customer conversation was opened.',
@@ -281,6 +292,7 @@ describe('automation connection', () => {
       record: 'Any record type',
       label: v,
       needs_document_type: true,
+      ...(v === 'updated' ? { watches_fields: true } : {}),
     })),
   ]
   function respond(overrides = {}) {
@@ -347,6 +359,45 @@ describe('automation connection', () => {
       'document.submitted',
     ])
     expect(buttons(el, 'Save').length).toBe(1)
+  })
+  it('lets an update event wait for chosen fields, and only the events that can', async () => {
+    respond()
+    const el = await mount(AutomationConnection, { name: 'INT-0001' })
+    const tick = async (event) => {
+      ;[...el.querySelectorAll('label')]
+        .find((l) => l.textContent.includes(event))
+        .querySelector('input')
+        .click()
+      await flush()
+    }
+    const watched = () =>
+      [...el.querySelectorAll('label')].filter((l) =>
+        l.textContent.includes('Only when these fields change'),
+      )
+    await tick('lead.created')
+    await tick('conversation.updated')
+    expect(watched()).toHaveLength(0)
+    await tick('lead.updated')
+    expect(watched()).toHaveLength(1)
+    const input = watched()[0].querySelector('input')
+    input.value = ' status, priority '
+    input.dispatchEvent(new Event('change'))
+    await flush()
+    const row = () =>
+      api.resource.doc.subscriptions.find((r) => r.event === 'lead.updated')
+    expect(row().only_fields).toBe('status, priority')
+    input.value = '  '
+    input.dispatchEvent(new Event('change'))
+    await flush()
+    expect(row().only_fields).toBeNull()
+    api.resource.doc.subscriptions.push({
+      event: 'document.updated',
+      document_type: 'ToDo',
+      only_fields: 'status',
+    })
+    await flush()
+    expect(watched()).toHaveLength(2)
+    expect(watched()[1].querySelector('input').value).toBe('status')
   })
   it('saves pending changes before the test event and reports what n8n answered', async () => {
     respond({
