@@ -30,6 +30,9 @@ class TestComprasPaths(TestCase):
 			"/crm/compras/descuentos?estado=vencido",
 			"/crm/compras/descuento/PRLE-0001",
 			"/crm/compras/descuento/nuevo?supplier=Tecnomaxx",
+			"/crm/compras/envios?estado=desactivado",
+			"/crm/compras/envio/Paqueter%C3%ADa%20local",
+			"/crm/compras/envio/nuevo",
 		):
 			with self.subTest(path=path):
 				self.assertTrue(is_compras_path(path))
@@ -46,6 +49,8 @@ class TestComprasPaths(TestCase):
 			"/crm/compras/descuentos/extra",
 			"/crm/compras/descuento/PRLE-0001/extra",
 			"/crm/compras/descuento",
+			"/crm/compras/envios/extra",
+			"/crm/compras/envio",
 			"//evil.invalid/crm/compras",
 			"https://evil.invalid/crm/compras",
 			"/crm/compras\\evil",

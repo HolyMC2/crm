@@ -376,6 +376,12 @@ export function moreFrom(document = {}) {
     taxes_and_charges: document.taxes_and_charges || '',
     taxes_label: document.taxes_and_charges_label || '',
     taxes_restricted: Boolean(document.taxes_restricted),
+    shipping_rule: document.shipping_rule || '',
+    shipping_label: document.shipping_rule_label || '',
+    shipping_restricted: Boolean(document.shipping_restricted),
+    // What the last save charged, while the rule is the saved one.
+    shipping_saved: document.shipping_rule || '',
+    shipping_charge: Number(document.shipping_charge) || 0,
     discount_kind: !percent && amount ? 'amount' : 'percent',
     discount_value: percent || amount || '',
     apply_discount_on: document.apply_discount_on || 'Grand Total',
@@ -395,6 +401,7 @@ export function moreValues(form) {
   return {
     transaction_date: form.transaction_date || null,
     taxes_and_charges: form.taxes_and_charges || null,
+    shipping_rule: form.shipping_rule || null,
     apply_discount_on: form.apply_discount_on || 'Grand Total',
     additional_discount_percentage: percent ? value : 0,
     discount_amount: percent ? null : value,

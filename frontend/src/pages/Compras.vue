@@ -84,6 +84,15 @@
                   />
                   {{ __('Supplier discounts') }}
                 </RouterLink>
+                <RouterLink
+                  v-if="caps.shipping_rules"
+                  :class="chipClass(false)"
+                  data-compras-envios
+                  :to="{ name: 'CompraEnvios' }"
+                >
+                  <span class="lucide-truck size-3.5" aria-hidden="true" />
+                  {{ __('Shipping rules') }}
+                </RouterLink>
               </div>
             </section>
             <RecentPicks
@@ -140,8 +149,27 @@
             class="min-h-11 sm:min-h-8"
             @click="router.push({ name: 'CompraSurtido' })"
           />
+          <!-- The purchasing manager's rules share one menu (the header keeps
+               its width); a worker with one of them gets its own button. -->
+          <Dropdown
+            v-if="caps.discounts && caps.shipping_rules"
+            :options="rulesMenu"
+          >
+            <Button
+              :label="__('Discounts and shipping')"
+              class="min-h-11 sm:min-h-8"
+              data-compras-reglas
+            >
+              <template #prefix>
+                <span class="lucide-badge-percent size-4" aria-hidden="true" />
+              </template>
+              <template #suffix>
+                <span class="lucide-chevron-down size-4" aria-hidden="true" />
+              </template>
+            </Button>
+          </Dropdown>
           <Button
-            v-if="caps.discounts"
+            v-else-if="caps.discounts"
             :label="__('Supplier discounts')"
             class="min-h-11 sm:min-h-8"
             data-compras-descuentos
@@ -149,6 +177,17 @@
           >
             <template #prefix>
               <span class="lucide-badge-percent size-4" aria-hidden="true" />
+            </template>
+          </Button>
+          <Button
+            v-else-if="caps.shipping_rules"
+            :label="__('Shipping rules')"
+            class="min-h-11 sm:min-h-8"
+            data-compras-envios
+            @click="router.push({ name: 'CompraEnvios' })"
+          >
+            <template #prefix>
+              <span class="lucide-truck size-4" aria-hidden="true" />
             </template>
           </Button>
           <Button
@@ -471,7 +510,7 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Button, FormControl, toast } from 'frappe-ui'
+import { Button, Dropdown, FormControl, toast } from 'frappe-ui'
 import { formatDay } from '@/utils/contactos'
 import { dayDiff, parseServerDate } from '@/utils/display'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
@@ -540,6 +579,16 @@ const pending = {}
 // The URL is the state: list, search and focused purchase.
 const state = computed(() => queueState(route.query))
 const caps = computed(() => boot.value?.capabilities || {})
+const rulesMenu = computed(() => [
+  {
+    label: __('Supplier discounts'),
+    onClick: () => router.push({ name: 'CompraDescuentos' }),
+  },
+  {
+    label: __('Shipping rules'),
+    onClick: () => router.push({ name: 'CompraEnvios' }),
+  },
+])
 
 const list = usePowerList({
   name: 'compras',

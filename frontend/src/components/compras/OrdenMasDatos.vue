@@ -70,6 +70,32 @@
           </button>
         </div>
 
+        <div v-if="canShip || values.shipping_rule">
+          <ComprasPicker
+            v-model="shipping"
+            :display="values.shipping_label"
+            :label="__('Shipping', null, 'Compras')"
+            :placeholder="__('Search shipping rule')"
+            :empty-text="__('No shipping rule of this company.')"
+            :disabled="!company || !canShip || values.shipping_restricted"
+            :load="loadShipping"
+            @pick="(o) => set({ shipping_label: o.label })"
+          />
+          <p class="mt-1 text-sm text-ink-gray-6" data-testid="compra-envio">
+            {{ shippingNote }}
+          </p>
+          <button
+            v-if="
+              values.shipping_rule && canShip && !values.shipping_restricted
+            "
+            type="button"
+            class="press mt-1 min-h-11 text-sm text-ink-blue-link underline sm:min-h-0"
+            @click="set({ shipping_rule: '', shipping_label: '' })"
+          >
+            {{ __('No shipping charge') }}
+          </button>
+        </div>
+
         <div class="flex flex-col gap-2 sm:col-span-2">
           <span class="text-xs text-ink-gray-5">{{
             __('Extra discount on the whole purchase')
@@ -200,6 +226,7 @@ import { FormControl } from 'frappe-ui'
 import { ExpandTransition, Segmented } from '@/components/ui'
 import ComprasPicker from '@/components/compras/ComprasPicker.vue'
 import { comprasApi, money } from '@/composables/useCompras'
+import { pickHint } from '@/composables/useEnvios'
 import { formatDay } from '@/utils/contactos'
 
 const props = defineProps({
@@ -212,6 +239,8 @@ const props = defineProps({
   orderRules: { type: Array, default: () => [] },
   // «No aplicar descuentos automáticos» is the purchasing manager's (level 1).
   canIgnore: { type: Boolean, default: false },
+  // Buyers pick a shipping rule with «select» on it (bootstrap `shipping`).
+  canShip: { type: Boolean, default: false },
 })
 const emit = defineEmits(['patch'])
 const open = ref(false)
@@ -227,11 +256,39 @@ const field = (key) =>
   })
 const transactionDate = field('transaction_date')
 const taxes = field('taxes_and_charges')
+const shipping = field('shipping_rule')
 const discountValue = field('discount_value')
 const discountOn = field('apply_discount_on')
 const paymentTerms = field('payment_terms_template')
 const terms = field('terms')
 const ignoreRules = field('ignore_pricing_rule')
+
+async function loadShipping(search) {
+  const rows = await comprasApi('shipping_rules', {
+    company: props.company,
+    search,
+  })
+  return rows.map((row) => ({ ...row, hint: pickHint(row) }))
+}
+// Under the picker: what the saved purchase pays, or when it is worked out.
+const shippingNote = computed(() => {
+  const m = props.values
+  if (m.shipping_restricted)
+    return __(
+      'This purchase uses a shipping rule you cannot see; it stays as it is.',
+    )
+  if (!m.shipping_rule)
+    return __(
+      'A shipping rule adds the delivery to the purchase’s taxes and charges.',
+    )
+  if (m.shipping_rule === m.shipping_saved)
+    return m.shipping_charge
+      ? __('It charges {0} on this purchase.', [
+          money(m.shipping_charge, props.currency),
+        ])
+      : __('It charges nothing on this purchase as it is.')
+  return __('The charge is worked out when you save.')
+})
 
 const kindOptions = computed(() => [
   { value: 'percent', label: '%' },
@@ -253,6 +310,8 @@ const summary = computed(() => {
   )
   if (m.taxes_label || m.taxes_and_charges)
     parts.push(m.taxes_label || m.taxes_and_charges)
+  if (m.shipping_label || m.shipping_rule)
+    parts.push(__('shipping {0}', [m.shipping_label || m.shipping_rule]))
   const value = Number(m.discount_value) || 0
   if (value)
     parts.push(
