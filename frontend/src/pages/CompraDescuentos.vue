@@ -2,7 +2,9 @@
   <!-- Compras «Descuentos de proveedor»: the buying Pricing Rules ERPNext
        applies on every purchase save. The title is the door to the states
        (Activos, Programados, Vencidos, Desactivados, Todos); one search; the
-       page's one create action is «Nuevo descuento». -->
+       page's one create action is «Nuevo descuento». In the desktop split
+       (`pane`) it is the left column: the open discount is lit and rows keep
+       the list's state, search and supplier. -->
   <div class="relative flex h-full min-w-0 flex-1 flex-col overflow-hidden">
     <AppBar
       v-model:search="search"
@@ -21,7 +23,7 @@
     />
 
     <div class="min-h-0 flex-1 overflow-y-auto pb-28 sm:pb-10">
-      <div class="mx-auto w-full max-w-3xl pt-2">
+      <div :class="['w-full pt-2', pane ? '' : 'mx-auto max-w-3xl']">
         <div v-if="supplier" class="flex flex-wrap gap-2 px-4 pb-2">
           <button
             type="button"
@@ -66,11 +68,12 @@
         >
           <li v-for="rule in rows" :key="rule.name">
             <ListRow
-              :to="ruleRoute(rule.name, backQuery)"
-              icon="lucide-badge-percent"
+              :to="rowTo(rule.name)"
               :title="rule.title"
-              :subtitle="rowLine(rule)"
+              :subtitle="ruleLine(rule)"
               :subtitle-lines="2"
+              :meta="discountFigure(rule.discount, rule.currency || 'MXN')"
+              :selected="pane && rule.name === route.params.name"
               :data-descuento="rule.name"
             >
               <template v-if="!state" #trailing>
@@ -107,12 +110,20 @@
       v-if="canCreate"
       :label="__('New discount', null, 'Descuentos')"
       icon="lucide-plus"
+      :extended="!pane"
       :to="newRoute"
     />
   </div>
 </template>
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import {
+  computed,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  watch,
+  watchEffect,
+} from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { AppBar, EmptyState, Fab, ListRow, StatusChip } from '@/components/ui'
 import { BTN } from '@/documentos/tools'
@@ -120,14 +131,20 @@ import { problemOf } from '@/composables/useCompras'
 import {
   STATES,
   descuentosApi,
+  discountFigure,
   normalizeState,
+  ruleLine,
   ruleRoute,
-  ruleSummary,
   stateChip,
   stateTitle,
-  whoText,
 } from '@/composables/useDescuentos'
 
+const props = defineProps({
+  // Left pane of the desktop split (CompraReglas).
+  pane: { type: Boolean, default: false },
+})
+// In the split: what the list holds, for the right pane before one opens.
+const emit = defineEmits(['summary'])
 const route = useRoute()
 const router = useRouter()
 const text = (value) =>
@@ -173,19 +190,34 @@ const emptyMessage = computed(() =>
         'A supplier discount takes a % or an amount off what you buy from them; it applies on every purchase you save.',
       ),
 )
-// What it takes off first (what a buyer scans for), then for whom.
-function rowLine(rule) {
-  const line = ruleSummary(rule, rule.currency || 'MXN')
-  return `${line.charAt(0).toUpperCase()}${line.slice(1)}. ${whoText(rule.who)}.`
+// The list's own state, which a discount opened beside it keeps in the URL.
+const listQuery = computed(() => {
+  const query = {}
+  if (state.value !== 'activo') query.estado = state.value
+  if (search.value) query.q = search.value
+  if (supplier.value) query.supplier = supplier.value
+  return query
+})
+// Alone, a discount opened from here comes back to this same list; in the
+// split the list stays where it is.
+function rowTo(name) {
+  return props.pane
+    ? ruleRoute(name, listQuery.value)
+    : ruleRoute(name, {
+        return_to: `/crm${route.fullPath}`,
+        return_label: __('Supplier discounts'),
+      })
 }
 const newRoute = computed(() =>
-  ruleRoute('nuevo', supplier.value ? { supplier: supplier.value } : {}),
+  ruleRoute(
+    'nuevo',
+    props.pane
+      ? listQuery.value
+      : supplier.value
+        ? { supplier: supplier.value }
+        : {},
+  ),
 )
-// A discount opened from here comes back to this same list.
-const backQuery = computed(() => ({
-  return_to: `/crm${route.fullPath}`,
-  return_label: __('Supplier discounts'),
-}))
 
 async function load({ more = false } = {}) {
   const mine = ++ticket
@@ -223,11 +255,7 @@ async function load({ more = false } = {}) {
 
 // The URL is the list's state: state, search and supplier.
 function syncQuery() {
-  const query = {}
-  if (state.value !== 'activo') query.estado = state.value
-  if (search.value) query.q = search.value
-  if (supplier.value) query.supplier = supplier.value
-  router.replace({ query })
+  router.replace({ query: listQuery.value })
 }
 function setState(value) {
   state.value = value
@@ -247,6 +275,18 @@ watch(search, () => {
     load()
   }, 250)
 })
+watchEffect(() => {
+  if (!props.pane) return
+  emit('summary', {
+    title: title.value,
+    state: state.value,
+    rows: rows.value,
+    loaded: loaded.value,
+    rowTo,
+  })
+})
 onMounted(load)
 onBeforeUnmount(() => window.clearTimeout(timer))
+// The split reloads it after a discount beside it is saved.
+defineExpose({ load })
 </script>

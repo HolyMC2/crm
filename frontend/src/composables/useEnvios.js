@@ -78,6 +78,40 @@ export function stepLines(steps = [], basedOn = 'net_total', currency = 'MXN') {
   })
 }
 
+/** A rule's ranges as table rows, what each covers and what it charges:
+ *  [{ label: «De $1,000.00 a $3,000.00», charge: «$80.00» }]. A fixed rule is
+ *  one row «Por compra»; a shape Desk entered reads as ERPNext stores it. */
+export function rangeRows(rule, currency = rule?.currency || 'MXN') {
+  if (!rule) return []
+  const basedOn = rule.based_on
+  const at = (value) => measure(value, basedOn, currency)
+  if (basedOn === 'fixed')
+    return [
+      { label: tr('Per purchase'), charge: charge(rule.amount, currency) },
+    ]
+  if (rule.steps?.length)
+    return rule.steps.map((step, index) => {
+      const from = index ? rule.steps[index - 1].to : 0
+      const open = step.to === null || step.to === undefined || step.to === ''
+      return {
+        label: open
+          ? index
+            ? tr('More than {0}', [at(from)])
+            : tr('Any purchase')
+          : index
+            ? tr('From {0} to {1}', [at(from), at(step.to)], 'Envios')
+            : tr('Up to {0}', [at(step.to)], 'Envios'),
+        charge: charge(step.amount, currency),
+      }
+    })
+  return (rule.ranges || []).map((row) => ({
+    label: row.to
+      ? tr('From {0} to {1}', [at(row.from), at(row.to)], 'Envios')
+      : tr('From {0}, no limit', [at(row.from)]),
+    charge: charge(row.amount, currency),
+  }))
+}
+
 /** «Según el monto de la compra», «Según el peso neto de la compra». */
 export function basisText(basedOn) {
   return basedOn === 'net_weight'
@@ -93,6 +127,67 @@ export function chargeSummary(rule, currency = rule?.currency || 'MXN') {
   if (rule.steps?.length)
     return `${basisText(rule.based_on)}: ${stepLines(rule.steps, rule.based_on, currency).join('; ')}`
   return `${basisText(rule.based_on)}: ${tr('ranges set in the full form')}`
+}
+
+/** What a list row sums up under the name: how it charges and where it goes,
+ *  «3 rangos por monto, a Fletes y acarreos». */
+export function ruleShape(rule) {
+  const account = rule?.account?.label || ''
+  const count = rule?.steps?.length || rule?.ranges?.length || 0
+  const shape =
+    rule?.based_on === 'fixed'
+      ? tr('Fixed per purchase')
+      : rule?.based_on === 'net_weight'
+        ? count === 1
+          ? tr('1 range by weight')
+          : tr('{0} ranges by weight', [count])
+        : count === 1
+          ? tr('1 range by amount')
+          : tr('{0} ranges by amount', [count])
+  return account ? tr('{0}, to {1}', [shape, account], 'Envios') : shape
+}
+
+/** The row's figure: the fixed charge, or the lowest to the highest charge
+ *  of its ranges («$0.00–$150.00»). */
+export function chargeRange(rule, currency = rule?.currency || 'MXN') {
+  if (!rule) return ''
+  if (rule.based_on === 'fixed') return money(rule.amount, currency)
+  const amounts = (rule.steps?.length ? rule.steps : rule.ranges || []).map(
+    (step) => Number(step.amount) || 0,
+  )
+  if (!amounts.length) return ''
+  const low = Math.min(...amounts)
+  const high = Math.max(...amounts)
+  return low === high
+    ? money(low, currency)
+    : `${money(low, currency)}–${money(high, currency)}`
+}
+
+/** What a purchase of `value` (subtotal or net weight) pays under these
+ *  ranges, read as ERPNext reads them: the first range it falls in. */
+export function chargeFor(steps = [], value) {
+  const v = Number(value)
+  if (!Number.isFinite(v) || v < 0) return null
+  for (const [index, step] of steps.entries()) {
+    const open = step.to === null || step.to === undefined || step.to === ''
+    const from = index ? Number(steps[index - 1].to) || 0 : 0
+    if (open || (from <= v && v <= Number(step.to)))
+      return Number(step.amount) || 0
+  }
+  return 0
+}
+
+/** «$» for MXN: the prefix of an amount field. */
+export function currencySymbol(currency = 'MXN') {
+  try {
+    return (
+      new Intl.NumberFormat(undefined, { style: 'currency', currency })
+        .formatToParts(0)
+        .find((part) => part.type === 'currency')?.value || currency
+    )
+  } catch {
+    return currency
+  }
 }
 
 /** A rule as the purchase picker lists it: its charge as the hint. */

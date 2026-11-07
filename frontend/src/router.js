@@ -106,6 +106,22 @@ function documentosRoutes(path, kind, app) {
   ]
 }
 
+// Compras' rules (CompraReglas): ≥1024 a list and its rule are one page
+// instance (master-detail), as documentosSplitKey.
+const reglas = () => import('@/pages/CompraReglas.vue')
+function reglasMeta(kind) {
+  return {
+    app: 'compras',
+    title: 'Compras',
+    ownPhoneHeader: true,
+    reglas: kind,
+    splitKey: () =>
+      typeof window !== 'undefined' && window.innerWidth >= 1024
+        ? `split:/compras/${kind}`
+        : null,
+  }
+}
+
 // Shell D12 pages draw their own phone header.
 const d12 = (meta) => ({ ownPhoneHeader: true, ...meta })
 
@@ -293,43 +309,32 @@ const routes = [
     // every purchase save (doco.workspaces.descuentos).
     path: '/compras/descuentos',
     name: 'CompraDescuentos',
-    component: () => import('@/pages/CompraDescuentos.vue'),
-    meta: { app: 'compras', title: 'Compras', ownPhoneHeader: true },
+    component: reglas,
+    meta: reglasMeta('descuentos'),
   },
   {
     // One discount; `nuevo` starts one (`?supplier=` from a purchase).
     path: '/compras/descuento/:name',
     name: 'CompraDescuento',
-    component: () => import('@/pages/CompraDescuento.vue'),
-    props: true,
-    meta: {
-      app: 'compras',
-      title: 'Compras',
-      ownPhoneHeader: true,
-      // The editor's save bar takes the phone nav's place.
-      ownBottomBar: true,
-    },
+    component: reglas,
+    // The editor's save bar takes the phone nav's place.
+    meta: { ...reglasMeta('descuentos'), ownBottomBar: true },
   },
   {
     // Compras «Reglas de envío»: buying Shipping Rules a purchase picks in
-    // «Más datos» (doco.workspaces.envios).
+    // «Más datos» (doco.workspaces.envios). List and rule share CompraReglas:
+    // ≥1024 side by side as one instance, below one page each.
     path: '/compras/envios',
     name: 'CompraEnvios',
-    component: () => import('@/pages/CompraEnvios.vue'),
-    meta: { app: 'compras', title: 'Compras', ownPhoneHeader: true },
+    component: reglas,
+    meta: reglasMeta('envios'),
   },
   {
     // One shipping rule; `nuevo` starts one.
     path: '/compras/envio/:name',
     name: 'CompraEnvio',
-    component: () => import('@/pages/CompraEnvio.vue'),
-    props: true,
-    meta: {
-      app: 'compras',
-      title: 'Compras',
-      ownPhoneHeader: true,
-      ownBottomBar: true,
-    },
+    component: reglas,
+    meta: { ...reglasMeta('envios'), ownBottomBar: true },
   },
   {
     // «Capturar documento» review (books capture pipeline → a draft record).

@@ -2,7 +2,9 @@
   <!-- Compras «Reglas de envío»: the buying Shipping Rules a purchase picks
        in «Más datos»; ERPNext adds the charge on every save. The title is the
        door to the states (Activas, Desactivadas, Todas); one search; the
-       page's one create action is «Nueva regla de envío». -->
+       page's one create action is «Nueva regla de envío». In the desktop
+       split (`pane`) it is the left column: the open rule is lit and rows
+       keep the list's state and search. -->
   <div class="relative flex h-full min-w-0 flex-1 flex-col overflow-hidden">
     <AppBar
       v-model:search="search"
@@ -21,7 +23,7 @@
     />
 
     <div class="min-h-0 flex-1 overflow-y-auto pb-28 sm:pb-10">
-      <div class="mx-auto w-full max-w-3xl pt-2">
+      <div :class="['w-full pt-2', pane ? '' : 'mx-auto max-w-3xl']">
         <EmptyState
           v-if="guard"
           role="alert"
@@ -49,11 +51,11 @@
         <ul v-else class="divide-y divide-outline-gray-1" data-testid="envios">
           <li v-for="rule in rows" :key="rule.name">
             <ListRow
-              :to="ruleRoute(rule.name, backQuery)"
-              icon="lucide-truck"
+              :to="rowTo(rule.name)"
               :title="rule.label"
-              :subtitle="rowLine(rule)"
-              :subtitle-lines="2"
+              :subtitle="ruleShape(rule)"
+              :meta="chargeRange(rule)"
+              :selected="pane && rule.name === route.params.name"
               :data-envio="rule.name"
             >
               <template v-if="!state" #trailing>
@@ -90,26 +92,41 @@
       v-if="canCreate"
       :label="__('New shipping rule', null, 'Envios')"
       icon="lucide-plus"
+      :extended="!pane"
       :to="newRoute"
     />
   </div>
 </template>
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import {
+  computed,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  watch,
+  watchEffect,
+} from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { AppBar, EmptyState, Fab, ListRow, StatusChip } from '@/components/ui'
 import { BTN } from '@/documentos/tools'
 import { problemOf } from '@/composables/useCompras'
 import {
   STATES,
-  chargeSummary,
+  chargeRange,
   enviosApi,
   normalizeState,
   ruleRoute,
+  ruleShape,
   stateChip,
   stateTitle,
 } from '@/composables/useEnvios'
 
+const props = defineProps({
+  // Left pane of the desktop split (CompraReglas).
+  pane: { type: Boolean, default: false },
+})
+// In the split: what the list holds, for the right pane before a rule opens.
+const emit = defineEmits(['summary'])
 const route = useRoute()
 const router = useRouter()
 const text = (value) =>
@@ -153,18 +170,26 @@ const emptyMessage = computed(() =>
         'A shipping rule adds what the delivery costs to a purchase: a fixed amount, or by the purchase’s amount or weight.',
       ),
 )
-// What it charges first (what a buyer scans for), then where it goes.
-function rowLine(rule) {
-  const line = chargeSummary(rule)
-  const account = rule.account?.label
-  return account ? `${line}. ${__('Charged to {0}', [account])}.` : `${line}.`
+// The list's own state, which a rule opened beside it keeps in the URL.
+const listQuery = computed(() => {
+  const query = {}
+  if (state.value !== 'activo') query.estado = state.value
+  if (search.value) query.q = search.value
+  return query
+})
+// Alone, a rule opened from here comes back to this same list; in the split
+// the list stays where it is.
+function rowTo(name) {
+  return props.pane
+    ? ruleRoute(name, listQuery.value)
+    : ruleRoute(name, {
+        return_to: `/crm${route.fullPath}`,
+        return_label: __('Shipping rules'),
+      })
 }
-const newRoute = computed(() => ruleRoute('nuevo'))
-// A rule opened from here comes back to this same list.
-const backQuery = computed(() => ({
-  return_to: `/crm${route.fullPath}`,
-  return_label: __('Shipping rules'),
-}))
+const newRoute = computed(() =>
+  ruleRoute('nuevo', props.pane ? listQuery.value : {}),
+)
 
 async function load({ more = false } = {}) {
   const mine = ++ticket
@@ -200,10 +225,7 @@ async function load({ more = false } = {}) {
 
 // The URL is the list's state: state and search.
 function syncQuery() {
-  const query = {}
-  if (state.value !== 'activo') query.estado = state.value
-  if (search.value) query.q = search.value
-  router.replace({ query })
+  router.replace({ query: listQuery.value })
 }
 function setState(value) {
   state.value = value
@@ -217,6 +239,21 @@ watch(search, () => {
     load()
   }, 250)
 })
+watchEffect(() => {
+  if (!props.pane) return
+  emit('summary', {
+    title: title.value,
+    state: state.value,
+    rows: rows.value,
+    counts: counts.value,
+    loaded: loaded.value,
+    canCreate: canCreate.value,
+    newRoute: newRoute.value,
+    rowTo,
+  })
+})
 onMounted(load)
 onBeforeUnmount(() => window.clearTimeout(timer))
+// The split reloads it after a rule beside it is saved.
+defineExpose({ load })
 </script>

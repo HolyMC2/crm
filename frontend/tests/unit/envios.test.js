@@ -19,13 +19,17 @@ import {
 import {
   addStep,
   blankRule,
+  chargeFor,
+  chargeRange,
   chargeSummary,
   normalizeState,
   pickHint,
+  rangeRows,
   removeStep,
   ruleForm,
   ruleMissing,
   rulePayload,
+  ruleShape,
   stateChip,
   stateTitle,
   stepLines,
@@ -77,6 +81,44 @@ describe('a shipping rule in words', () => {
     expect(chargeSummary(LADDER)).toBe(
       `By the purchase amount: Up to ${money(1000, 'MXN')}: ${money(150, 'MXN')}; More than ${money(1000, 'MXN')}: no charge`,
     )
+  })
+  it('sums a rule up for its list row and the comparison table', () => {
+    expect(ruleShape(LADDER)).toBe('2 ranges by amount, to Fletes y acarreos')
+    expect(ruleShape({ based_on: 'fixed' })).toBe('Fixed per purchase')
+    expect(chargeRange(LADDER)).toBe(`${money(0, 'MXN')}–${money(150, 'MXN')}`)
+    expect(
+      chargeRange({ based_on: 'fixed', amount: 189, currency: 'MXN' }),
+    ).toBe(money(189, 'MXN'))
+    expect(rangeRows(LADDER)).toEqual([
+      { label: `Up to ${money(1000, 'MXN')}`, charge: money(150, 'MXN') },
+      { label: `More than ${money(1000, 'MXN')}`, charge: 'no charge' },
+    ])
+    // A shape Desk entered reads as ERPNext stores it.
+    expect(
+      rangeRows({
+        ...LADDER,
+        steps: [],
+        ranges: [{ from: 500, to: 0, amount: 90 }],
+      }),
+    ).toEqual([
+      {
+        label: `From ${money(500, 'MXN')}, no limit`,
+        charge: money(90, 'MXN'),
+      },
+    ])
+  })
+  it('works out what a purchase pays as ERPNext does: the first range it falls in', () => {
+    const steps = [
+      { to: 1000, amount: 150 },
+      { to: 3000, amount: 80 },
+      { to: null, amount: 0 },
+    ]
+    expect(chargeFor(steps, 0)).toBe(150)
+    expect(chargeFor(steps, 1000)).toBe(150)
+    expect(chargeFor(steps, 1000.5)).toBe(80)
+    expect(chargeFor(steps, 9000)).toBe(0)
+    expect(chargeFor(steps, -1)).toBeNull()
+    expect(chargeFor(steps, 'x')).toBeNull()
   })
   it('lists a rule for the purchase picker with what it charges', () => {
     expect(pickHint({ based_on: 'fixed', amount: 99, currency: 'MXN' })).toBe(
@@ -195,7 +237,7 @@ function answer(replies) {
   )
 }
 
-async function open(name) {
+async function open(name, { pane = false } = {}) {
   const router = createRouter({
     history: createMemoryHistory('/crm'),
     routes: [
@@ -203,7 +245,7 @@ async function open(name) {
         path: '/compras/envio/:name',
         name: 'CompraEnvio',
         component: CompraEnvio,
-        props: true,
+        props: (r) => ({ name: r.params.name, pane }),
       },
       {
         path: '/compras/envios',
@@ -232,9 +274,21 @@ describe('the shipping rule page', () => {
     })
     const router = await open(LADDER.name)
     const text = root.textContent
-    expect(text).toContain(`From ${money(0, 'MXN')}`)
+    expect(root.querySelector('[data-envio-rango="1"]').textContent).toContain(
+      money(1000, 'MXN'),
+    )
     expect(text).toContain(`More than ${money(1000, 'MXN')}`)
     expect(text).toContain('Fletes y acarreos')
+    // The try-out line reads the ladder as ERPNext will.
+    const probe =
+      root.querySelector('[data-testid="envio-prueba"] input') ||
+      root.querySelector('[data-testid="envio-prueba"]')
+    probe.value = '2500'
+    probe.dispatchEvent(new Event('input'))
+    await flush()
+    expect(
+      root.querySelector('[data-testid="envio-prueba-cobra"]').textContent,
+    ).toContain('It pays no shipping.')
     root.querySelector('[data-testid="envio-agregar-rango"]').click()
     await flush()
     const ranges = root.querySelectorAll('[data-testid="envio-rangos"] > li')
@@ -256,6 +310,21 @@ describe('the shipping rule page', () => {
       { to: 3000, amount: 80 },
       { amount: 0 },
     ])
+    expect(router.currentRoute.value.name).toBe('CompraEnvios')
+  })
+  it('beside the list, a save stays on the rule and reads it again', async () => {
+    answer({
+      rule: { rule: LADDER, can_write: true, companies: [] },
+      save_rule: { name: LADDER.name, modified: 'v2', drafts: 0 },
+    })
+    const router = await open(LADDER.name, { pane: true })
+    expect(root.querySelector('[data-testid="envio-cerrar"]')).not.toBeNull()
+    root.querySelector('[data-testid="envio-guardar"]').click()
+    await flush()
+    expect(calls.map((c) => c.method)).toEqual(['rule', 'save_rule', 'rule'])
+    expect(router.currentRoute.value.name).toBe('CompraEnvio')
+    root.querySelector('[data-testid="envio-cerrar"]').click()
+    await flush()
     expect(router.currentRoute.value.name).toBe('CompraEnvios')
   })
   it('reads a selling rule and sends the worker to the full form', async () => {
