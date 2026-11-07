@@ -37,6 +37,7 @@
               {{ view.icon }}
             </div>
             <IconPicker
+              v-if="spriteReady"
               v-model="pickerIcon"
               class="flex-1"
               :max-icons="1000"
@@ -46,6 +47,9 @@
                   : __('Select an icon...')
               "
             />
+            <div v-else class="flex-1 text-base text-ink-gray-5">
+              {{ __('Cargando…') }}
+            </div>
           </div>
         </div>
       </div>
@@ -85,8 +89,17 @@ const props = defineProps({
 })
 
 const show = defineModel({ type: Boolean })
-// The picker lists every lucide icon: the whole sprite, not the shell's subset.
-watch(show, (open) => open && ensureLucideSprite(), { immediate: true })
+// The picker lists the symbols of the sprite element once, when it mounts:
+// it mounts after the whole sprite is in, not the shell's subset.
+const spriteReady = ref(false)
+watch(
+  show,
+  (open) => {
+    if (open && !spriteReady.value)
+      ensureLucideSprite().then(() => (spriteReady.value = true))
+  },
+  { immediate: true },
+)
 const view = defineModel('view', { type: Object, default: () => ({}) })
 
 // frappe-ui's IconPicker is lucide-only. Legacy views may store an emoji, which
