@@ -121,83 +121,90 @@
           v-else
           class="flex flex-wrap items-center gap-3 px-4 pb-2 pt-4 sm:px-6 sm:pt-6"
         >
-          <div class="min-w-0 flex-1">
+          <!-- The title keeps 16 rem; the actions move under it as one row
+               when they do not fit beside it. -->
+          <div class="min-w-0 flex-1 basis-64">
             <h1 class="truncate text-xl font-semibold text-ink-gray-9">
               {{ segmentLabel(state.segment) }}
             </h1>
             <p class="text-sm text-ink-gray-6">{{ subtitle }}</p>
           </div>
-          <button
-            type="button"
-            class="text-sm text-ink-gray-6 hover:text-ink-gray-8"
-            :aria-keyshortcuts="'Alt+H'"
-            @click="openShortcutSheet()"
-          >
-            <kbd
-              class="rounded-4 border border-outline-gray-2 px-1.5 py-0.5 text-xs"
-              >?</kbd
+          <div class="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              class="text-sm text-ink-gray-6 hover:text-ink-gray-8"
+              :aria-keyshortcuts="'Alt+H'"
+              @click="openShortcutSheet()"
             >
-            {{ __('Keyboard shortcuts') }}
-          </button>
-          <CapturarDocumentoButton
-            :targets="['Purchase Order', 'Purchase Invoice']"
-            return-label="Compras"
-          />
-          <Button
-            :icon-left="LucideLayers"
-            :label="__('Restock from a list', null, 'Surtido')"
-            class="min-h-11 sm:min-h-8"
-            @click="router.push({ name: 'CompraSurtido' })"
-          />
-          <!-- The purchasing manager's rules share one menu (the header keeps
-               its width); a worker with one of them gets its own button. -->
-          <Dropdown
-            v-if="caps.discounts && caps.shipping_rules"
-            :options="rulesMenu"
-          >
+              <kbd
+                class="rounded-4 border border-outline-gray-2 px-1.5 py-0.5 text-xs"
+                >?</kbd
+              >
+              {{ __('Keyboard shortcuts') }}
+            </button>
+            <CapturarDocumentoButton
+              :targets="['Purchase Order', 'Purchase Invoice']"
+              return-label="Compras"
+            />
             <Button
-              :label="__('Discounts and shipping')"
+              :icon-left="LucideLayers"
+              :label="__('Restock from a list', null, 'Surtido')"
               class="min-h-11 sm:min-h-8"
-              data-compras-reglas
+              @click="router.push({ name: 'CompraSurtido' })"
+            />
+            <!-- The purchasing manager's rules share one menu (the header keeps
+               its width); a worker with one of them gets its own button. -->
+            <Dropdown
+              v-if="caps.discounts && caps.shipping_rules"
+              :options="rulesMenu"
+            >
+              <Button
+                :label="__('Discounts and shipping')"
+                class="min-h-11 sm:min-h-8"
+                data-compras-reglas
+              >
+                <template #prefix>
+                  <span
+                    class="lucide-badge-percent size-4"
+                    aria-hidden="true"
+                  />
+                </template>
+                <template #suffix>
+                  <span class="lucide-chevron-down size-4" aria-hidden="true" />
+                </template>
+              </Button>
+            </Dropdown>
+            <Button
+              v-else-if="caps.discounts"
+              :label="__('Supplier discounts')"
+              class="min-h-11 sm:min-h-8"
+              data-compras-descuentos
+              @click="router.push({ name: 'CompraDescuentos' })"
             >
               <template #prefix>
                 <span class="lucide-badge-percent size-4" aria-hidden="true" />
               </template>
-              <template #suffix>
-                <span class="lucide-chevron-down size-4" aria-hidden="true" />
+            </Button>
+            <Button
+              v-else-if="caps.shipping_rules"
+              :label="__('Shipping rules')"
+              class="min-h-11 sm:min-h-8"
+              data-compras-envios
+              @click="router.push({ name: 'CompraEnvios' })"
+            >
+              <template #prefix>
+                <span class="lucide-truck size-4" aria-hidden="true" />
               </template>
             </Button>
-          </Dropdown>
-          <Button
-            v-else-if="caps.discounts"
-            :label="__('Supplier discounts')"
-            class="min-h-11 sm:min-h-8"
-            data-compras-descuentos
-            @click="router.push({ name: 'CompraDescuentos' })"
-          >
-            <template #prefix>
-              <span class="lucide-badge-percent size-4" aria-hidden="true" />
-            </template>
-          </Button>
-          <Button
-            v-else-if="caps.shipping_rules"
-            :label="__('Shipping rules')"
-            class="min-h-11 sm:min-h-8"
-            data-compras-envios
-            @click="router.push({ name: 'CompraEnvios' })"
-          >
-            <template #prefix>
-              <span class="lucide-truck size-4" aria-hidden="true" />
-            </template>
-          </Button>
-          <Button
-            v-if="boot?.capabilities?.create"
-            variant="solid"
-            :icon-left="LucidePlus"
-            :label="__('New purchase')"
-            class="min-h-11 sm:min-h-8"
-            @click="newPurchase"
-          />
+            <Button
+              v-if="boot?.capabilities?.create"
+              variant="solid"
+              :icon-left="LucidePlus"
+              :label="__('New purchase')"
+              class="min-h-11 sm:min-h-8"
+              @click="newPurchase"
+            />
+          </div>
         </header>
         <CapturasPendientes
           :targets="['Purchase Order', 'Purchase Invoice']"
@@ -271,8 +278,30 @@
               @click="newPurchase"
             />
           </div>
+          <!-- ≥1024 the queue reads as a table: one header, a column per fact. -->
+          <div
+            v-if="wide && rows.length"
+            class="flex items-center border-b border-outline-gray-1 text-sm text-ink-gray-6"
+            aria-hidden="true"
+            data-compras-columnas
+          >
+            <span
+              v-if="state.segment === 'por-comprar'"
+              class="w-10 flex-none"
+            />
+            <span
+              class="compras-fila min-w-0 flex-1 px-4 py-2 sm:px-6"
+              :class="state.segment === 'por-comprar' ? 'sm:pl-2' : ''"
+            >
+              <span>{{ __('Supplier', null, 'Compras') }}</span>
+              <span>{{ __('Status', null, 'Compras') }}</span>
+              <span>{{ __('Delivery', null, 'Compras') }}</span>
+              <span>{{ __('Progress', null, 'Compras') }}</span>
+              <span class="text-right">{{ __('Total', null, 'Compras') }}</span>
+            </span>
+          </div>
           <ul
-            v-else
+            v-if="rows.length"
             :ref="(el) => (list.listbox.value = el)"
             tabindex="0"
             class="divide-y divide-outline-gray-1 focus:outline-none"
@@ -302,7 +331,8 @@
                     state.segment === 'por-comprar' &&
                     (!list.phone.value || list.selecting.value)
                   "
-                  class="flex min-h-14 shrink-0 cursor-pointer items-center pl-5"
+                  class="flex w-10 shrink-0 cursor-pointer items-center justify-end"
+                  :class="wide ? 'min-h-12' : 'min-h-14'"
                   :aria-label="__('Select {0}', [row.name])"
                 >
                   <input
@@ -313,6 +343,65 @@
                   />
                 </label>
                 <a
+                  v-if="wide"
+                  :href="recordHref(row)"
+                  class="compras-fila min-h-12 min-w-0 flex-1 px-4 py-2 hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:px-6"
+                  :class="state.segment === 'por-comprar' ? 'sm:pl-2' : ''"
+                  data-compras-fila
+                  @click="onRowOpen($event, row)"
+                >
+                  <span class="min-w-0">
+                    <span class="block truncate font-medium text-ink-gray-9">{{
+                      partyOf(row)
+                    }}</span>
+                    <span class="num block truncate text-sm text-ink-gray-6">{{
+                      row.name
+                    }}</span>
+                  </span>
+                  <span class="truncate text-sm text-ink-gray-8">{{
+                    statusLabel(row)
+                  }}</span>
+                  <span
+                    class="whitespace-nowrap text-sm"
+                    :class="
+                      lateDays(row)
+                        ? 'font-medium text-ink-red-7'
+                        : 'text-ink-gray-8'
+                    "
+                    data-testid="compras-entrega"
+                    >{{ row.due_date ? formatDay(row.due_date) : ''
+                    }}<template v-if="lateDays(row)">
+                      · atrasada</template
+                    ></span
+                  >
+                  <span class="flex min-w-0 flex-col text-sm">
+                    <span
+                      v-if="row.kind === 'orden' && Number(row.docstatus) === 1"
+                      class="truncate text-ink-gray-8"
+                      >{{ progressLabel(row) }}</span
+                    >
+                    <span
+                      v-if="row.in_receipt"
+                      class="truncate text-ink-amber-8"
+                      >{{ __('Receipt in progress') }}</span
+                    >
+                    <span
+                      v-if="billPending(row)"
+                      class="truncate text-ink-blue-7"
+                      >{{ __('Bill pending') }}</span
+                    >
+                  </span>
+                  <span
+                    class="num text-right text-base font-semibold text-ink-gray-9"
+                    >{{
+                      row.grand_total !== undefined && row.grand_total !== null
+                        ? money(row.grand_total, row.currency)
+                        : ''
+                    }}</span
+                  >
+                </a>
+                <a
+                  v-else
                   :href="recordHref(row)"
                   class="flex min-h-14 min-w-0 flex-1 items-start gap-3 px-4 py-2.5 hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:px-6"
                   :class="
@@ -331,12 +420,7 @@
                   />
                   <span class="min-w-0 flex-1">
                     <span class="block truncate font-medium text-ink-gray-9">
-                      {{
-                        row.party ||
-                        (row.kind === 'solicitud'
-                          ? __('Purchase request', null, 'Compras')
-                          : __('Supplier not visible'))
-                      }}
+                      {{ partyOf(row) }}
                     </span>
                     <!-- One meta line: status · delivery · what is pending. The
                        delivery date never gets cut off: the status truncates first. -->
@@ -513,6 +597,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { Button, Dropdown, FormControl, toast } from 'frappe-ui'
 import { formatDay } from '@/utils/contactos'
 import { dayDiff, parseServerDate } from '@/utils/display'
+import { isWide } from '@/composables/breakpoint'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import { Fab } from '@/components/ui'
 import BulkConfirmSheet from '@/components/compras/BulkConfirmSheet.vue'
@@ -630,6 +715,16 @@ const list = usePowerList({
 })
 const rows = list.rows
 const problem = list.problem
+// ≥1024 the queue is a table (header and columns), below a list of rows.
+const wide = isWide
+function partyOf(row) {
+  return (
+    row.party ||
+    (row.kind === 'solicitud'
+      ? __('Purchase request', null, 'Compras')
+      : __('Supplier not visible'))
+  )
+}
 
 const countText = (n) => (counts.value?.capped && n >= 500 ? '500+' : String(n))
 function countLabel(value) {
@@ -951,3 +1046,16 @@ onMounted(async () => {
   list.load({ restore: true })
 })
 </script>
+<style scoped>
+/* The desktop queue's columns: supplier and number, status, delivery,
+   progress, total. Scoped, not Tailwind arbitrary values: keeps the global
+   sheet in budget. */
+.compras-fila {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 2.2fr) minmax(0, 1.2fr) 9.5rem minmax(0, 1.8fr)
+    8.5rem;
+  column-gap: 1rem;
+  align-items: center;
+}
+</style>
