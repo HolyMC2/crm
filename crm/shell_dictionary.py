@@ -252,8 +252,13 @@ def _field() -> str:
 
 
 def _payload(messages: dict[str, str]) -> bytes:
+	# The dictionary travels as one string literal for JSON.parse: an engine parses a quarter
+	# megabyte that way in one pass, where an object literal is code to tokenise. The JSON
+	# text has no raw control characters, so a doubled backslash and an escaped apostrophe
+	# make it a valid single-quoted literal.
 	body = frappe.as_json(messages, indent=None, separators=(",", ":"), ensure_ascii=False)
-	return f"window.translated_messages = {body};".encode()
+	literal = body.replace("\\", "\\\\").replace("'", "\\'")
+	return f"window.translated_messages = JSON.parse('{literal}');".encode()
 
 
 def shipped_messages(dictionary: dict[str, str], literals: frozenset[str] | None) -> dict[str, str]:
