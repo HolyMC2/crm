@@ -1,6 +1,7 @@
 # Copyright (c) 2026, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+import json
 import os
 from unittest.mock import MagicMock, patch
 
@@ -65,7 +66,7 @@ class TestTranslationsScript(IntegrationTestCase):
 		# non-ASCII characters kept as UTF-8 rather than \u escapes.
 		self.assertEqual(
 			response.get_data(as_text=True),
-			'window.translated_messages = {"Año":"Year","Ventas":"Sales"};',
+			'window.translated_messages = JSON.parse(\'{"Año":"Year","Ventas":"Sales"}\');',
 		)
 
 	def test_only_the_keys_the_build_uses_are_served_with_their_values_unchanged(self):
@@ -84,9 +85,19 @@ class TestTranslationsScript(IntegrationTestCase):
 			response = self.serve(dictionary, listing=listing)
 		self.assertEqual(
 			response.get_data(as_text=True),
-			'window.translated_messages = {"Compras":"Compras","Open":"Abrir",'
-			'"Open:Compras":"Abrir pedido","Save":"Guardar"};',
+			'window.translated_messages = JSON.parse(\'{"Compras":"Compras","Open":"Abrir",'
+			'"Open:Compras":"Abrir pedido","Save":"Guardar"}\');',
 		)
+
+	def test_the_literal_carries_quotes_apostrophes_and_backslashes_back_to_the_same_dictionary(self):
+		messages = {'It\'s "quoted" \\ ok': 'Es "citado" \\ bien\nlínea', "Año": "Year"}
+		body = self.serve(messages).get_data(as_text=True)
+		prefix, suffix = "window.translated_messages = JSON.parse('", "');"
+		self.assertTrue(body.startswith(prefix) and body.endswith(suffix), body[:80])
+		literal = body[len(prefix) : -len(suffix)]
+		# What the engine's string literal evaluates to, then what JSON.parse reads from it.
+		text = literal.replace("\\'", "'").replace("\\\\", "\\")
+		self.assertEqual(json.loads(text), messages)
 
 	def test_runtime_keys_cover_doctypes_records_and_server_strings(self):
 		if not frappe.db.exists("CRM Deal Status", "Won"):
