@@ -19,15 +19,8 @@
       >
         {{ money(amount, currency) }}
       </p>
-      <p
-        v-if="custody"
-        class="rounded-6 bg-surface-gray-1 px-3 py-2 text-sm text-ink-gray-7"
-        data-efectivo-custody
-      >
-        {{ custody }}
-      </p>
-      <BagItems v-if="items.length" :items="items" />
-      <!-- Where the cash came from: the turn and its closing, the counter's note. -->
+      <!-- Where the cash came from (the turn, its closing, the counter's note) and the
+           sentence about it come before what the step does to the cash. -->
       <div
         v-if="source"
         class="rounded-6 border border-outline-gray-1 px-3 py-2"
@@ -50,7 +43,20 @@
           <span class="lucide-chevron-right size-4" aria-hidden="true" />
         </RouterLink>
       </div>
-      <p v-if="message" class="text-sm text-ink-gray-7">{{ message }}</p>
+      <p v-if="message && source" class="text-sm text-ink-gray-7">
+        {{ message }}
+      </p>
+      <p
+        v-if="custody"
+        class="rounded-6 bg-surface-gray-1 px-3 py-2 text-sm text-ink-gray-7"
+        data-efectivo-custody
+      >
+        {{ custody }}
+      </p>
+      <BagItems v-if="items.length" :items="items" />
+      <p v-if="message && !source" class="text-sm text-ink-gray-7">
+        {{ message }}
+      </p>
       <p
         v-if="guard"
         role="status"

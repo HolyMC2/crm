@@ -741,7 +741,7 @@ const emptyBags = computed(
 /**
  * The row's second line: what the bag is for, the turn its cash came from
  * and who answers for it now («Corte de Teresa · vie 6 nov, 15:05–19:49 ·
- * 7 ventas · responde Teresa»).
+ * 7 ventas · responde Teresa»; «En el banco · ficha 0048 · Corte de Jennifer…»).
  */
 function bagLine(bag) {
   const fund = bag.purpose === 'Float'
@@ -750,10 +750,11 @@ function bagLine(bag) {
     h.kind === 'safe' && h.user
       ? `responde ${who(h.user, people.value)}`
       : holderText(bag, people.value)
+  const turn = shiftLine(bag.shift, people.value, { sales: !fund })
+  // In the safe the corte leads; once the bag left, where it went does.
   const line = [
     fund ? 'Fondo' : '',
-    shiftLine(bag.shift, people.value, { sales: !fund }),
-    holder,
+    ...(h.kind === 'safe' ? [turn, holder] : [holder, turn]),
   ]
     .filter(Boolean)
     .join(' · ')
