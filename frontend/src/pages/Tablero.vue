@@ -55,7 +55,7 @@
           v-if="board?.can_write"
           variant="solid"
           class="min-h-11"
-          label="Agregar widget"
+          label="Agregar pieza"
           data-testid="add-widget"
           @click="openSheet(null)"
         >
@@ -166,7 +166,7 @@
         v-if="arranging && !phone"
         class="mt-2 rounded-6 bg-surface-gray-2 p-2 text-sm text-ink-gray-7"
       >
-        Arrastra un widget para moverlo y su esquina para cambiar su tamaño. Se
+        Arrastra una pieza para moverla y su esquina para cambiar su tamaño. Se
         guarda solo.
         <button
           type="button"
@@ -200,78 +200,33 @@
             ? 'Agrega una gráfica, un número o una nota, o pídele a Muelle que lo arme por ti.'
             : 'Quien lo comparte todavía no le pone nada.'
         "
-        :action="board.can_write ? 'Agregar widget' : ''"
+        :action="board.can_write ? 'Agregar pieza' : ''"
         @action="openSheet(null)"
       />
 
-      <!-- Phone: one column in reading order. -->
-      <div
-        v-else-if="board && phone"
-        class="mt-3 flex flex-col gap-3"
-        data-testid="board-column"
-      >
-        <div
-          v-for="w in ordered"
-          :key="w.id"
-          :style="
-            phoneHeight(w) && datos[w.id]?.kind !== 'card'
-              ? { height: `${phoneHeight(w)}px` }
-              : undefined
-          "
-        >
-          <TableroWidget
-            :widget="w"
-            :payload="datos[w.id]"
-            :loading="loadingData && !datos[w.id]"
-            :can-edit="board.can_write"
-            :currency="currency"
-            :back="back"
-            @edit="openSheet(w)"
-            @retry="loadData([w.id], true)"
-          />
-        </div>
-      </div>
-
-      <!-- Desk: the board's own grid, dragged and resized in «Acomodar». -->
-      <div
+      <BoardCanvas
         v-else-if="board"
-        class="-mx-1.5 mt-3"
-        :class="
-          arranging &&
-          'rounded-7 bg-surface-gray-1 outline-dashed outline-1 outline-outline-gray-3'
-        "
-        data-testid="board-grid"
-      >
-        <GridLayout
-          v-model="grid"
-          :cols="COLS"
-          :row-height="ROW_PX"
-          :disabled="!arranging"
-          @layout-updated="onLayout"
-        >
-          <template #item="{ i }">
-            <div class="h-full p-1.5" :class="arranging && 'cursor-move'">
-              <TableroWidget
-                v-if="byId[i]"
-                :widget="byId[i]"
-                :payload="datos[i]"
-                :loading="loadingData && !datos[i]"
-                :can-edit="board.can_write && !arranging"
-                :currency="currency"
-                :back="back"
-                @edit="openSheet(byId[i])"
-                @retry="loadData([i], true)"
-                @fit="(px) => fit(i, px)"
-              />
-            </div>
-          </template>
-        </GridLayout>
-      </div>
+        :key="board.name"
+        class="mt-3"
+        :widgets="board.widgets"
+        :grid="grid"
+        :datos="datos"
+        :loading="loadingData"
+        :can-edit="board.can_write && !arranging"
+        :arranging="arranging"
+        :currency="currency"
+        :back="back"
+        @update:grid="(value) => (grid = value)"
+        @layout="onLayout"
+        @edit="openSheet"
+        @retry="(id) => loadData([id], true)"
+        @fit="fit"
+      />
     </div>
 
     <Fab
       v-if="phone && board?.can_write"
-      label="Agregar widget"
+      label="Agregar pieza"
       @click="openSheet(null)"
     />
 
@@ -281,10 +236,29 @@
       :widget="sheet.widget"
       :saving="sheet.saving"
       :problem="sheet.problem"
+      :tablero="board?.name || ''"
+      :period-args="{ periodo }"
+      :period-label="periodoLabel(periodo).toLowerCase()"
+      :currency="currency"
       @save="saveWidget"
       @duplicate="duplicateWidget"
       @remove="removeWidget"
+      @catch-up="catchUp"
+      @kept="() => load({ quiet: true })"
       @ask="(draft) => ask(sheet.widget?.id ? sheet.widget : draft)"
+    />
+    <VersionsSheet
+      v-if="versions.mounted && board"
+      v-model:open="versions.open"
+      :board="board"
+      @restored="(view) => replace(view, { all: true })"
+    />
+    <LibrarySheet
+      v-if="library.mounted && board"
+      v-model:open="library.open"
+      :tablero="board.name"
+      :can-write="board.can_write"
+      @inserted="(view) => replace(view)"
     />
     <ShareSheet
       v-if="share.mounted && board"
@@ -320,22 +294,12 @@
   </div>
 </template>
 <script setup>
-import {
-  computed,
-  defineAsyncComponent,
-  getCurrentInstance,
-  onBeforeUnmount,
-  onMounted,
-  reactive,
-  ref,
-  watch,
-} from 'vue'
+import { computed, defineAsyncComponent, reactive, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { Button, Dropdown, FormControl, toast } from 'frappe-ui'
 import { AppBar, BottomSheet, EmptyState, Fab } from '@/components/ui'
 import { chipClass } from '@/components/ui/chipClass'
-import GridLayout from '@/components/Dashboard/GridLayout.vue'
-import TableroWidget from '@/components/tableros/TableroWidget.vue'
+import BoardCanvas from '@/components/tableros/BoardCanvas.vue'
 import {
   openAssistant,
   useAssistantContext,
@@ -344,24 +308,23 @@ import { isMobile as phone } from '@/composables/breakpoint'
 import { problemOf } from '@/composables/useCobranza'
 import { shellBoot } from '@/composables/muelleShell'
 import {
-  COLS,
   HOME,
   PERIODOS,
   PERIODOS_CORTOS,
-  ROW_PX,
   askPrompt,
-  editOps,
-  gridOf,
-  moveOps,
-  newWidget,
-  fitRows,
-  phoneHeight,
-  readingOrder,
+  periodoLabel,
   tablerosApi,
 } from '@/tableros/board'
+import { useBoard } from '@/tableros/useBoard'
 
 const WidgetSheet = defineAsyncComponent(
   () => import('@/components/tableros/WidgetSheet.vue'),
+)
+const VersionsSheet = defineAsyncComponent(
+  () => import('@/components/tableros/VersionsSheet.vue'),
+)
+const LibrarySheet = defineAsyncComponent(
+  () => import('@/components/tableros/LibrarySheet.vue'),
 )
 const ShareSheet = defineAsyncComponent(
   () => import('@/components/documentos/ShareSheet.vue'),
@@ -370,89 +333,34 @@ const ShareSheet = defineAsyncComponent(
 const route = useRoute()
 const router = useRouter()
 const scroller = ref(null)
-const board = ref(null)
-const datos = reactive({})
-const loading = ref(false)
-const loadingData = ref(false)
-const problem = ref(null)
-const arranging = ref(false)
-const grid = ref([])
 const name = computed(() => String(route.params.name || ''))
+const {
+  board,
+  datos,
+  loading,
+  loadingData,
+  problem,
+  arranging,
+  grid,
+  sheet,
+  fit,
+  clear,
+  load,
+  loadData,
+  change,
+  replace,
+  onLayout,
+  openSheet,
+  saveWidget,
+  duplicateWidget,
+  removeWidget,
+  catchUp,
+  undo,
+} = useBoard({ name: () => name.value })
 const currency = computed(() => shellBoot.value?.currency || '')
 const back = computed(() => `/crm${route.fullPath}`)
 const periodo = computed(() => board.value?.periodo || 'este_mes')
 const shortPeriods = PERIODOS.filter((p) => PERIODOS_CORTOS.includes(p.value))
-const byId = computed(() =>
-  Object.fromEntries((board.value?.widgets || []).map((w) => [w.id, w])),
-)
-const ordered = computed(() => readingOrder(board.value?.widgets))
-let ticket = 0
-
-// Rows each card asked for, kept across reloads so a card never shrinks back
-// under its content. Saved only when the person arranges the board.
-const fitted = {}
-
-function show(view) {
-  board.value = view
-  grid.value = gridOf(view.widgets, fitted)
-}
-
-function fit(id, px) {
-  const rows = fitRows(px)
-  if (rows <= (fitted[id] || 0)) return
-  fitted[id] = rows
-  grid.value = grid.value.map((g) =>
-    g.i === id && g.h < rows ? { ...g, h: rows } : g,
-  )
-}
-
-async function load() {
-  const mine = ++ticket
-  loading.value = true
-  problem.value = null
-  try {
-    const view = await tablerosApi('abrir', { name: name.value })
-    if (mine !== ticket) return
-    show(view)
-    loadData()
-  } catch (error) {
-    if (mine === ticket) problem.value = problemOf(error)
-  } finally {
-    if (mine === ticket) loading.value = false
-  }
-}
-
-/** Every widget's numbers (or `ids` only), each one alone. */
-async function loadData(ids = null, retry = false) {
-  if (!board.value) return
-  loadingData.value = true
-  const args = { name: board.value.name, periodo: periodo.value }
-  if (ids) args.ids = ids
-  if (retry) for (const id of ids || []) delete datos[id]
-  try {
-    const out = await tablerosApi('datos', args)
-    if (!ids) for (const key of Object.keys(datos)) delete datos[key]
-    Object.assign(datos, out.datos || {})
-  } catch (error) {
-    const reason = problemOf(error).detail
-    for (const w of board.value.widgets)
-      if (!ids || ids.includes(w.id))
-        datos[w.id] = { kind: 'blocked', reason, retry: true }
-  } finally {
-    loadingData.value = false
-  }
-}
-
-/** Operations on the latest board; the answer is the board as saved. */
-async function change(operaciones, { reload = [] } = {}) {
-  const view = await tablerosApi('cambiar', {
-    name: board.value.name,
-    operaciones,
-  })
-  show(view)
-  if (reload.length) loadData(reload)
-  return view
-}
 
 async function setPeriodo(value) {
   if (value === periodo.value) return
@@ -463,103 +371,6 @@ async function setPeriodo(value) {
   try {
     await change([{ op: 'periodo', periodo: value }])
     loadData()
-  } catch (error) {
-    toast.error(problemOf(error).detail)
-  }
-}
-
-let moving = null
-async function onLayout(layout) {
-  if (!arranging.value || !board.value) return
-  const ops = moveOps(board.value.widgets, layout)
-  if (!ops.length) return
-  const mine = (moving = change(ops))
-  try {
-    await mine
-  } catch (error) {
-    toast.error(problemOf(error).detail)
-    if (moving === mine) load()
-  }
-}
-
-// --- the editor ---------------------------------------------------------------
-const sheet = reactive({
-  mounted: false,
-  open: false,
-  widget: null,
-  saving: false,
-  problem: '',
-})
-function openSheet(widget) {
-  sheet.widget = widget || newWidget('grafica', null)
-  sheet.problem = ''
-  sheet.mounted = true
-  sheet.open = true
-}
-
-async function saveWidget(draft) {
-  sheet.saving = true
-  sheet.problem = ''
-  try {
-    const before = sheet.widget?.id ? byId.value[sheet.widget.id] : null
-    if (before) {
-      const ops = editOps(before, draft)
-      if (ops.length) {
-        const { campos } = ops[0]
-        await change(ops)
-        if (campos.fuente || campos.fuentes || campos.tipo)
-          loadData([before.id])
-      }
-    } else {
-      const known = new Set(board.value.widgets.map((w) => w.id))
-      const view = await change([{ op: 'agregar', widget: draft }])
-      const added = view.widgets
-        .filter((w) => !known.has(w.id))
-        .map((w) => w.id)
-      if (added.length) loadData(added)
-    }
-    sheet.open = false
-    toast.success(before ? 'Widget guardado.' : 'Widget agregado.')
-  } catch (error) {
-    sheet.problem = problemOf(error).detail
-  } finally {
-    sheet.saving = false
-  }
-}
-
-async function duplicateWidget() {
-  const id = sheet.widget?.id
-  if (!id) return
-  try {
-    const known = new Set(board.value.widgets.map((w) => w.id))
-    const view = await change([{ op: 'duplicar', id }])
-    const added = view.widgets.filter((w) => !known.has(w.id)).map((w) => w.id)
-    for (const copy of added) datos[copy] = datos[id]
-    sheet.open = false
-    toast.success('Widget duplicado.')
-  } catch (error) {
-    sheet.problem = problemOf(error).detail
-  }
-}
-
-async function removeWidget() {
-  const id = sheet.widget?.id
-  if (!id) return
-  try {
-    await change([{ op: 'quitar', id }])
-    delete datos[id]
-    sheet.open = false
-    toast.success('Widget quitado. «Deshacer» lo devuelve.')
-  } catch (error) {
-    sheet.problem = problemOf(error).detail
-  }
-}
-
-async function undo() {
-  try {
-    show(await tablerosApi('deshacer', { name: board.value.name }))
-    loadData()
-    toast.success('Listo, el tablero quedó como antes.')
   } catch (error) {
     toast.error(problemOf(error).detail)
   }
@@ -584,6 +395,8 @@ function onShared(activity) {
   if (Array.isArray(activity?.shared))
     board.value = { ...board.value, shared: activity.shared }
 }
+const versions = reactive({ mounted: false, open: false })
+const library = reactive({ mounted: false, open: false })
 
 async function duplicateBoard() {
   try {
@@ -623,6 +436,15 @@ const menu = computed(() => {
     })
   if (phone.value && b.can_undo)
     items.push({ label: 'Deshacer el último cambio', onClick: undo })
+  items.push({
+    label: 'Versiones',
+    onClick: () => Object.assign(versions, { mounted: true, open: true }),
+  })
+  if (b.can_write)
+    items.push({
+      label: 'Agregar de la biblioteca',
+      onClick: () => Object.assign(library, { mounted: true, open: true }),
+    })
   items.push({ label: 'Duplicar tablero', onClick: duplicateBoard })
   if (b.mine)
     items.push({
@@ -652,23 +474,11 @@ async function ask(widget = null) {
   if (!opened) toast.error('El asistente no está disponible para tu usuario.')
 }
 
-// --- live: the bot's (or a coworker's) change reloads the board ---------------------
-const socket = getCurrentInstance()?.appContext.config.globalProperties.$socket
-function onRemote(event) {
-  if (!board.value || event?.name !== board.value.name) return
-  if ((event.revision || 0) <= (board.value.revision || 0)) return
-  load()
-}
-onMounted(() => socket?.on?.('doco_tablero', onRemote))
-onBeforeUnmount(() => socket?.off?.('doco_tablero', onRemote))
-
 watch(
   name,
   (value) => {
     if (!value || route.name !== 'Tablero') return
-    arranging.value = false
-    for (const key of Object.keys(datos)) delete datos[key]
-    board.value = null
+    clear()
     load()
   },
   { immediate: true },

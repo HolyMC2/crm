@@ -87,10 +87,10 @@ class TestResultadosQuery(TestCase):
 
 
 @skipIf(not HAS_FRAPPE, "Frappe integration dependency is not installed")
-class TestResultadosHidden(TestCase):
-	"""«Personalizar» follows the user to every device: one user default each."""
+class TestResultadosVista(TestCase):
+	"""The view Resultados opens on follows the user to every device: one user default each."""
 
-	OTHER = "resultados-hidden-other@example.invalid"
+	OTHER = "resultados-vista-other@example.invalid"
 
 	def setUp(self):
 		self.previous = frappe.session.user
@@ -103,39 +103,34 @@ class TestResultadosHidden(TestCase):
 
 	def _forget(self):
 		for user in ("Administrator", self.OTHER):
-			frappe.defaults.clear_user_default(resultados.HIDDEN_DEFAULT, user=user)
+			frappe.defaults.clear_user_default(resultados.VISTA_DEFAULT, user=user)
 
-	def test_only_card_keys_once_each_in_order(self):
-		self.assertEqual(
-			resultados.clean_hidden(["margen", "margen", "<b>", 3, "Ventas", "x" * 61, "por_cobrar"]),
-			["margen", "por_cobrar"],
-		)
-		self.assertEqual(resultados.clean_hidden('["tendencia"]'), ["tendencia"])
-		for junk in (None, "", "nope", '{"a": 1}', 7):
+	def test_a_view_key_or_a_board_name_and_nothing_else(self):
+		self.assertEqual(resultados.clean_vista(" ventas "), "ventas")
+		self.assertEqual(resultados.clean_vista("a1b2c3d4e5"), "a1b2c3d4e5")
+		for junk in (None, "", "<b>", "../x", "a b", 7, "x" * 141):
 			with self.subTest(junk=junk):
-				self.assertEqual(resultados.clean_hidden(junk), [])
-		many = [f"card_{n}" for n in range(100)]
-		self.assertEqual(len(resultados.clean_hidden(many)), resultados.MAX_HIDDEN)
-
-	def test_never_chosen_is_none_and_an_empty_choice_is_kept(self):
-		self.assertIsNone(resultados.saved_hidden())
-		self.assertEqual(resultados.save_hidden([]), {"hidden": []})
-		self.assertEqual(resultados.saved_hidden(), [])
+				self.assertEqual(resultados.clean_vista(junk), "")
 
 	def test_saved_per_user_and_returned_with_the_board(self):
-		self.assertEqual(resultados.save_hidden('["margen", "tendencia"]')["hidden"], ["margen", "tendencia"])
-		self.assertEqual(resultados.saved_hidden("Administrator"), ["margen", "tendencia"])
-		self.assertIsNone(resultados.saved_hidden(self.OTHER))
+		self.assertIsNone(resultados.saved_vista())
+		self.assertEqual(resultados.save_vista("dinero"), {"vista": "dinero"})
+		self.assertEqual(resultados.saved_vista("Administrator"), "dinero")
+		self.assertIsNone(resultados.saved_vista(self.OTHER))
 		providers = [("reparaciones", "crm.tests.test_resultados.plain_card")]
 		with patch.object(resultados, "_providers", return_value=providers):
-			self.assertEqual(resultados.board(periodo="hoy")["hidden"], ["margen", "tendencia"])
+			out = resultados.board(periodo="hoy")
+			self.assertEqual(out["vista"], "dinero")
+			self.assertIsInstance(out["tableros"], bool)
 			# A card's own retry carries neither the scope nor the choice.
-			self.assertIsNone(resultados.board(periodo="hoy", card="reparaciones")["hidden"])
+			self.assertIsNone(resultados.board(periodo="hoy", card="reparaciones")["vista"])
+		self.assertEqual(resultados.save_vista(""), {"vista": None})
+		self.assertIsNone(resultados.saved_vista())
 
 	def test_a_guest_cannot_save(self):
 		frappe.set_user("Guest")
 		with self.assertRaises(frappe.AuthenticationError):
-			resultados.save_hidden(["margen"])
+			resultados.save_vista("ventas")
 
 
 @skipIf(not HAS_FRAPPE, "Frappe integration dependency is not installed")

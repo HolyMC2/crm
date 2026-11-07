@@ -9,23 +9,30 @@
     <ResultadosCard
       ref="cardEl"
       class="min-h-full"
-      :card-key="payload.card.key"
-      :card="title ? { ...payload.card, label: title } : payload.card"
+      :card-key="payload.card?.key || payload.key || ''"
+      :card="
+        title && payload.card ? { ...payload.card, label: title } : payload.card
+      "
+      :loading="loading || !payload.card"
       :compara="payload.query?.compara || 'anterior'"
       :currency="payload.currency || currency"
       :back="back"
-    />
-    <button
-      v-if="canEdit"
-      type="button"
-      class="press absolute right-2 top-2 flex size-9 items-center justify-center rounded-full bg-surface-base text-ink-gray-6 shadow-sm hover:text-ink-gray-9"
-      :aria-label="`Editar «${title}»`"
-      title="Editar"
-      data-testid="widget-edit"
-      @click="$emit('edit')"
+      @retry="$emit('retry')"
+      @filter="(patch) => $emit('filter', patch)"
     >
-      <span class="lucide-pencil size-4" aria-hidden="true" />
-    </button>
+      <template v-if="canEdit" #actions>
+        <button
+          type="button"
+          class="press -my-1 -mr-2 flex size-9 shrink-0 items-center justify-center rounded-full text-ink-gray-5 hover:bg-surface-gray-2 hover:text-ink-gray-9"
+          :aria-label="`Editar «${title || payload.card?.label || tipo.label}»`"
+          title="Editar"
+          data-testid="widget-edit"
+          @click="$emit('edit')"
+        >
+          <span class="lucide-pencil size-4" aria-hidden="true" />
+        </button>
+      </template>
+    </ResultadosCard>
   </div>
   <article
     v-else
@@ -183,14 +190,15 @@ const WidgetBox = defineAsyncComponent(
 
 const props = defineProps({
   widget: { type: Object, required: true },
-  /** The widget's data (doco tableros service.datos): chart, number, table, card, inputs or blocked. */
+  /** The widget's data (doco tableros service.datos): chart, number, table,
+   * card, inputs or blocked. A card still on its way is `{kind: 'card', key, card: null}`. */
   payload: { type: Object, default: null },
   loading: { type: Boolean, default: false },
   canEdit: { type: Boolean, default: false },
   currency: { type: String, default: '' },
   back: { type: String, default: '' },
 })
-const emit = defineEmits(['edit', 'retry', 'fit'])
+const emit = defineEmits(['edit', 'retry', 'fit', 'filter'])
 
 // A Resultados card has its own height; it tells the board when its place is
 // too short, and the board grows the place (Tablero.vue fit).

@@ -1,8 +1,10 @@
 """Resultados: the owner's numbers for a period, each one opening its records.
 
 Resultados owns no records; the only thing it writes is the caller's own
-choice of hidden cards («Personalizar»), a user default that follows them to
-every device. The cards come from the apps
+choice of the view it opens on, a user default that follows them to every
+device. The views themselves are Tableros (doco docs/TABLEROS.md): Muelle's
+built-in ones (the frontend's resultados/vistas.js) lay these cards out, and
+the person's own are Tablero documents. The cards come from the apps
 that own the numbers through the `muelle_resultados_cards` hook: each dotted
 path is one card (its function name is the card key) and returns a card, a card
 blocked with its reason, or None when the card does not apply to the caller.
@@ -17,7 +19,6 @@ value, prev, facts, attention, drill), so a change to that card's shape is a
 change to Hoy too.
 """
 
-import json
 import re
 
 import frappe
@@ -62,12 +63,10 @@ COMPARAS = ("anterior", "anio", "no")
 TTL = {"hoy": 60, "ayer": 600, "semana": 300, "mes": 300, "mes_anterior": 900, "rango": 300}
 GEN_KEY = "resultados:gen"
 MAX_TEXT = 140
-# «Personalizar»: the card keys the user hides, as a JSON list in a user
-# default. Keys are card function names; unknown ones are kept (a card the user
-# may not see today stays hidden once they may), malformed ones are dropped.
-HIDDEN_DEFAULT = "muelle_resultados_hidden"
-MAX_HIDDEN = 64
-_CARD_KEY = re.compile(r"^[a-z][a-z0-9_]{0,59}$")
+# The view Resultados opens on: a built-in view's key («resumen») or a
+# Tablero's name, as a user default. A view that is gone falls back on the page.
+VISTA_DEFAULT = "muelle_resultados_vista"
+_VISTA = re.compile(r"^[A-Za-z0-9_-]{1,140}$")
 
 
 def _providers():
@@ -124,33 +123,23 @@ def cache_key(user, card, q, gen):
 	)
 
 
-def clean_hidden(keys):
-	"""Card keys only, once each, in the order given, at most MAX_HIDDEN."""
-	if isinstance(keys, str):
-		try:
-			keys = json.loads(keys)
-		except ValueError:
-			keys = None
-	if not isinstance(keys, list | tuple):
-		return []
-	out = []
-	for key in keys:
-		if isinstance(key, str) and _CARD_KEY.match(key) and key not in out:
-			out.append(key)
-	return out[:MAX_HIDDEN]
+def clean_vista(value):
+	"""A view key or a Tablero name; anything else is ""."""
+	value = value.strip() if isinstance(value, str) else ""
+	return value if _VISTA.match(value) else ""
 
 
-def saved_hidden(user=None):
-	"""The user's hidden cards, or None when they never chose (the device's
-	own older choice may then be adopted)."""
-	raw = frappe.defaults.get_user_default(HIDDEN_DEFAULT, user=user or frappe.session.user)
-	if not raw:
-		return None
-	try:
-		value = json.loads(raw)
-	except ValueError:
-		return None
-	return clean_hidden(value) if isinstance(value, list) else None
+def saved_vista(user=None):
+	"""The view the user opens Resultados on, or None when they never chose."""
+	return (
+		clean_vista(frappe.defaults.get_user_default(VISTA_DEFAULT, user=user or frappe.session.user)) or None
+	)
+
+
+def tableros_on():
+	"""The person's own views need doco's Tableros; without it only the
+	built-in ones show."""
+	return "doco" in frappe.get_installed_apps() and bool(frappe.db.exists("DocType", "Tablero"))
 
 
 def _blocked(key, reason, retry=False):
@@ -266,20 +255,24 @@ def board(
 		"cards": cards,
 		"period": period,
 		"scope": None if card else _scope(ctx),
-		"hidden": None if card else saved_hidden(user),
+		"vista": None if card else saved_vista(user),
+		"tableros": None if card else tableros_on(),
 		"currency": frappe.defaults.get_global_default("currency"),
 		"generated_at": frappe.utils.now(),
 	}
 
 
 @frappe.whitelist(methods=["POST"])
-def save_hidden(hidden: str | list | None = None):
-	"""The caller's own «Personalizar»: the cards they hide on every device.
-	Only their user default changes; the board still computes every card."""
+def save_vista(vista: str | None = None):
+	"""The view the caller opens Resultados on, on every device. Only their
+	user default changes; an empty one goes back to Muelle's default."""
 	_require_user()
-	clean = clean_hidden(hidden)
-	frappe.defaults.set_user_default(HIDDEN_DEFAULT, json.dumps(clean), user=frappe.session.user)
-	return {"hidden": clean}
+	clean = clean_vista(vista)
+	if clean:
+		frappe.defaults.set_user_default(VISTA_DEFAULT, clean, user=frappe.session.user)
+	else:
+		frappe.defaults.clear_user_default(VISTA_DEFAULT, user=frappe.session.user)
+	return {"vista": clean or None}
 
 
 def _delegate(hook, *args):

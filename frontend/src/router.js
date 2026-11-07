@@ -435,7 +435,13 @@ const routes = [
     path: '/resultados',
     name: 'Resultados',
     component: () => import('@/pages/Resultados.vue'),
-    meta: { app: 'resultados', title: 'Resultados', stableKey: true },
+    // the page's own bar: its title opens the views
+    meta: {
+      app: 'resultados',
+      title: 'Resultados',
+      stableKey: true,
+      ownPhoneHeader: true,
+    },
   },
   {
     path: '/resultados/documentos',

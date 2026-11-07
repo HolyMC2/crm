@@ -41,6 +41,8 @@
           aria-hidden="true"
         />{{ delta.label }}</span
       >
+      <!-- A board puts its edit pencil here, in line with the title. -->
+      <slot name="actions" />
     </header>
 
     <template v-if="state === 'loading'">
