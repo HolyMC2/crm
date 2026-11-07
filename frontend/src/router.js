@@ -112,7 +112,6 @@ const reglas = () => import('@/pages/CompraReglas.vue')
 function reglasMeta(kind) {
   return {
     app: 'compras',
-    title: 'Compras',
     ownPhoneHeader: true,
     reglas: kind,
     splitKey: () =>
@@ -310,7 +309,7 @@ const routes = [
     path: '/compras/descuentos',
     name: 'CompraDescuentos',
     component: reglas,
-    meta: reglasMeta('descuentos'),
+    meta: { title: 'Compras', ...reglasMeta('descuentos') },
   },
   {
     // One discount; `nuevo` starts one (`?supplier=` from a purchase).
@@ -318,7 +317,7 @@ const routes = [
     name: 'CompraDescuento',
     component: reglas,
     // The editor's save bar takes the phone nav's place.
-    meta: { ...reglasMeta('descuentos'), ownBottomBar: true },
+    meta: { title: 'Compras', ...reglasMeta('descuentos'), ownBottomBar: true },
   },
   {
     // Compras «Reglas de envío»: buying Shipping Rules a purchase picks in
@@ -327,14 +326,14 @@ const routes = [
     path: '/compras/envios',
     name: 'CompraEnvios',
     component: reglas,
-    meta: reglasMeta('envios'),
+    meta: { title: 'Compras', ...reglasMeta('envios') },
   },
   {
     // One shipping rule; `nuevo` starts one.
     path: '/compras/envio/:name',
     name: 'CompraEnvio',
     component: reglas,
-    meta: { ...reglasMeta('envios'), ownBottomBar: true },
+    meta: { title: 'Compras', ...reglasMeta('envios'), ownBottomBar: true },
   },
   {
     // «Capturar documento» review (books capture pipeline → a draft record).
