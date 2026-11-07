@@ -3,6 +3,7 @@ import { createResource } from 'frappe-ui'
 import { sessionStore } from './session'
 import { computed, reactive } from 'vue'
 import { useRouter } from 'vue-router'
+import { afterFirstRoute } from '@/utils/prefetch'
 
 export const usersStore = defineStore('crm-users', () => {
   const session = sessionStore()
@@ -67,16 +68,15 @@ export const usersStore = defineStore('crm-users', () => {
     },
   })
 
+  // The full list serves emails the first screen's own reads do not cover
+  // (comment authors, document owners, recipient typeahead): it fetches once
+  // the first route has settled and the browser is idle, not inside the
+  // page's own read window.
   let backgroundFetchScheduled = false
   function scheduleBackgroundFetch() {
     if (backgroundFetchScheduled) return
     backgroundFetchScheduled = true
-    const fire = () => usersFull.fetch()
-    if (typeof requestIdleCallback === 'function') {
-      requestIdleCallback(fire, { timeout: 5000 })
-    } else {
-      setTimeout(fire, 2000)
-    }
+    afterFirstRoute(router, () => usersFull.fetch())
   }
 
   // Coalesced on-demand resolver. Used when getUser(email) is called for
