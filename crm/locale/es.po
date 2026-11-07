@@ -33106,3 +33106,305 @@ msgstr "Sin fecha, aplica desde ya."
 
 msgid "Without a date it never ends."
 msgstr "Sin fecha, no vence."
+
+msgid "Loading shipping rule…"
+msgstr "Cargando regla de envío…"
+
+msgid "Charge"
+msgstr "Cargo"
+
+msgid "How much does it charge?"
+msgstr "¿Cuánto cobra?"
+
+msgid "How it charges"
+msgstr "Cómo cobra"
+
+msgid "Charge per purchase"
+msgstr "Cargo por compra"
+
+msgid "It reads the net weight of the purchase’s items (their weight per unit)."
+msgstr "Toma el peso neto de los artículos de la compra (su peso por unidad)."
+
+msgid "It reads the purchase subtotal, before taxes."
+msgstr "Toma el subtotal de la compra, antes de impuestos."
+
+msgctxt "Envios"
+msgid "Up to"
+msgstr "Hasta"
+
+msgctxt "Envios"
+msgid "Charges"
+msgstr "Cobra"
+
+msgid "0 is no charge"
+msgstr "0 es sin cargo"
+
+msgid "Remove this range"
+msgstr "Quitar este rango"
+
+msgid "Add a range"
+msgstr "Agregar un rango"
+
+msgctxt "Envios"
+msgid "Account"
+msgstr "Cuenta"
+
+msgid "Which account does it go to?"
+msgstr "¿A qué cuenta va?"
+
+msgid "Search account, name or number"
+msgstr "Buscar cuenta, nombre o número"
+
+msgid "No account of this company matches."
+msgstr "Ninguna cuenta de esta empresa coincide."
+
+msgctxt "Envios"
+msgid "Cost center"
+msgstr "Centro de costos"
+
+msgid "The company’s"
+msgstr "El de la empresa"
+
+msgid "No cost center of this company matches."
+msgstr "Ningún centro de costos de esta empresa coincide."
+
+msgid "Use the company’s"
+msgstr "Usar el de la empresa"
+
+msgid "The charge goes on the purchase as a line of its taxes and charges, on this account."
+msgstr "El cargo entra a la compra como un renglón de sus impuestos y cargos, en esta cuenta."
+
+msgctxt "Envios"
+msgid "Name"
+msgstr "Nombre"
+
+msgid "Parcel service, local freight…"
+msgstr "Paquetería, flete local…"
+
+msgctxt "Envio"
+msgid "Active"
+msgstr "Activa"
+
+msgctxt "Envio"
+msgid "Turned off"
+msgstr "Desactivada"
+
+msgctxt "Envios"
+msgid "Active"
+msgstr "Activas"
+
+msgctxt "Envios"
+msgid "Turned off"
+msgstr "Desactivadas"
+
+msgctxt "Envios"
+msgid "All"
+msgstr "Todas"
+
+msgctxt "Envios"
+msgid "Active shipping rules"
+msgstr "Reglas de envío activas"
+
+msgctxt "Envios"
+msgid "Turned-off shipping rules"
+msgstr "Reglas de envío desactivadas"
+
+msgctxt "Envios"
+msgid "All shipping rules"
+msgstr "Todas las reglas de envío"
+
+msgid "Turned off: purchases cannot pick it; the ones that have it keep it."
+msgstr "Desactivada: las compras ya no la pueden elegir; las que la tienen la conservan."
+
+msgid "Draft purchases that have it take the change the next time they are saved."
+msgstr "Las compras en borrador que la tienen toman el cambio la próxima vez que se guarden."
+
+msgid "Save shipping rule"
+msgstr "Guardar regla de envío"
+
+msgid "Only the purchasing manager changes shipping rules."
+msgstr "Solo el encargado de compras cambia las reglas de envío."
+
+msgid "This shipping rule is for sales; change it in the full form."
+msgstr "Esta regla de envío es de ventas; cámbiala en el formulario completo."
+
+msgid "Its ranges were entered in the full form in a shape this page does not draw; change them there."
+msgstr "Sus rangos se capturaron en el formulario completo de una forma que esta página no muestra; cámbialos ahí."
+
+msgctxt "Envios"
+msgid "New shipping rule"
+msgstr "Nueva regla de envío"
+
+msgid "Shipping rule"
+msgstr "Regla de envío"
+
+msgid "Shipping rules"
+msgstr "Reglas de envío"
+
+msgctxt "Envios"
+msgid "Fixed"
+msgstr "Fijo"
+
+msgctxt "Envios"
+msgid "By amount"
+msgstr "Por monto"
+
+msgctxt "Envios"
+msgid "By weight"
+msgstr "Por peso"
+
+msgid "Any purchase"
+msgstr "Cualquier compra"
+
+msgid "After the range above"
+msgstr "Después del rango de arriba"
+
+msgctxt "Envios"
+msgid "From {0}"
+msgstr "Desde {0}"
+
+msgid "More than {0}"
+msgstr "Más de {0}"
+
+msgid "From {0} to {1}: {2}"
+msgstr "De {0} a {1}: {2}"
+
+msgid "From {0}, no limit: {1}"
+msgstr "Desde {0}, sin tope: {1}"
+
+msgid "You cannot create shipping rules"
+msgstr "No puedes crear reglas de envío"
+
+msgid "You cannot open this shipping rule"
+msgstr "No puedes abrir esta regla de envío"
+
+msgid "Could not open this shipping rule"
+msgstr "No se pudo abrir esta regla de envío"
+
+msgid "Shipping rule saved. A draft purchase has it; it takes the change when it is saved."
+msgstr "Regla de envío guardada. Una compra en borrador la tiene; toma el cambio al guardarse."
+
+msgid "Shipping rule saved. {0} draft purchases have it; they take the change when they are saved."
+msgstr "Regla de envío guardada. {0} compras en borrador la tienen; toman el cambio al guardarse."
+
+msgid "Shipping rule saved"
+msgstr "Regla de envío guardada"
+
+msgid "Someone else changed this shipping rule"
+msgstr "Otra persona cambió esta regla de envío"
+
+msgid "Search shipping rule or account"
+msgstr "Buscar regla de envío o cuenta"
+
+msgid "Loading shipping rules…"
+msgstr "Cargando reglas de envío…"
+
+msgid "Show more shipping rules"
+msgstr "Ver más reglas de envío"
+
+msgid "Showing the newest 500 shipping rules. Search to find an older one."
+msgstr "Se muestran las 500 reglas de envío más recientes. Busca para encontrar una anterior."
+
+msgid "No shipping rule matches «{0}»"
+msgstr "Ninguna regla de envío coincide con «{0}»"
+
+msgid "No active shipping rules"
+msgstr "No hay reglas de envío activas"
+
+msgid "No shipping rules here"
+msgstr "No hay reglas de envío aquí"
+
+msgid "Try the rule’s name, the account or another state."
+msgstr "Prueba con el nombre de la regla, la cuenta u otro estado."
+
+msgid "A shipping rule adds what the delivery costs to a purchase: a fixed amount, or by the purchase’s amount or weight."
+msgstr "Una regla de envío suma a la compra lo que cuesta la entrega: un monto fijo, o según el monto o el peso de la compra."
+
+msgid "Charged to {0}"
+msgstr "Se carga a {0}"
+
+msgid "You cannot see the shipping rules"
+msgstr "No puedes ver las reglas de envío"
+
+msgid "Could not load the shipping rules"
+msgstr "No se pudieron cargar las reglas de envío"
+
+msgid "no charge"
+msgstr "sin cargo"
+
+msgid "More than {0}: {1}"
+msgstr "Más de {0}: {1}"
+
+msgid "Any purchase: {0}"
+msgstr "Cualquier compra: {0}"
+
+msgid "Up to {0}: {1}"
+msgstr "Hasta {0}: {1}"
+
+msgid "By the purchase’s net weight"
+msgstr "Según el peso neto de la compra"
+
+msgid "By the purchase amount"
+msgstr "Según el monto de la compra"
+
+msgid "{0} per purchase"
+msgstr "{0} por compra"
+
+msgid "ranges set in the full form"
+msgstr "rangos del formulario completo"
+
+msgid "the name"
+msgstr "el nombre"
+
+msgctxt "Envios"
+msgid "the company"
+msgstr "la empresa"
+
+msgid "the account it charges to"
+msgstr "la cuenta del cargo"
+
+msgid "what it charges"
+msgstr "lo que cobra"
+
+msgid "where each range ends, from low to high"
+msgstr "dónde termina cada rango, de menor a mayor"
+
+msgid "what each range charges"
+msgstr "lo que cobra cada rango"
+
+msgctxt "Compras"
+msgid "Shipping"
+msgstr "Envío"
+
+msgid "Search shipping rule"
+msgstr "Buscar regla de envío"
+
+msgid "No shipping rule of this company."
+msgstr "Esta empresa no tiene reglas de envío."
+
+msgid "No shipping charge"
+msgstr "Sin cargo de envío"
+
+msgid "This purchase uses a shipping rule you cannot see; it stays as it is."
+msgstr "Esta compra usa una regla de envío que no puedes ver; se queda como está."
+
+msgid "A shipping rule adds the delivery to the purchase’s taxes and charges."
+msgstr "Una regla de envío suma la entrega a los impuestos y cargos de la compra."
+
+msgid "It charges {0} on this purchase."
+msgstr "Cobra {0} en esta compra."
+
+msgid "It charges nothing on this purchase as it is."
+msgstr "Con la compra como está, no cobra nada."
+
+msgid "The charge is worked out when you save."
+msgstr "El cargo se calcula al guardar."
+
+msgid "shipping {0}"
+msgstr "envío {0}"
+
+msgid "a shipping rule you cannot see"
+msgstr "una regla de envío que no puedes ver"
+
+msgid "Discounts and shipping"
+msgstr "Descuentos y envíos"

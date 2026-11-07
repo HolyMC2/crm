@@ -4,7 +4,7 @@ import re
 from urllib.parse import urlsplit
 
 _COMPRAS_PATH = re.compile(
-	r"^/crm/compras(?:/nueva|/surtido|/descuentos|/(?:orden|solicitud|captura|descuento)/[^/]+)?/*$"
+	r"^/crm/compras(?:/nueva|/surtido|/descuentos|/envios|/(?:orden|solicitud|captura|descuento|envio)/[^/]+)?/*$"
 )
 
 

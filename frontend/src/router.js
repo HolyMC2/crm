@@ -311,6 +311,27 @@ const routes = [
     },
   },
   {
+    // Compras «Reglas de envío»: buying Shipping Rules a purchase picks in
+    // «Más datos» (doco.workspaces.envios).
+    path: '/compras/envios',
+    name: 'CompraEnvios',
+    component: () => import('@/pages/CompraEnvios.vue'),
+    meta: { app: 'compras', title: 'Compras', ownPhoneHeader: true },
+  },
+  {
+    // One shipping rule; `nuevo` starts one.
+    path: '/compras/envio/:name',
+    name: 'CompraEnvio',
+    component: () => import('@/pages/CompraEnvio.vue'),
+    props: true,
+    meta: {
+      app: 'compras',
+      title: 'Compras',
+      ownPhoneHeader: true,
+      ownBottomBar: true,
+    },
+  },
+  {
     // «Capturar documento» review (books capture pipeline → a draft record).
     // It lives under the module it drafts into, so a reload gets that
     // module's shell (crm/www/crm.py classifies the path server-side).

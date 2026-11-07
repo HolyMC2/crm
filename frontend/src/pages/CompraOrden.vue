@@ -511,6 +511,7 @@
                   ? Boolean(boot?.capabilities?.ignore_rules)
                   : Boolean(doc.can_ignore_pricing_rule)
               "
+              :can-ship="Boolean(boot?.capabilities?.shipping)"
               @patch="(patch) => Object.assign(form, patch)"
             />
             <div
@@ -1202,6 +1203,19 @@ const facts = computed(() => {
       label: __('Taxes', null, 'Compras'),
       value: d.taxes_and_charges_label || __('a template you cannot see'),
     })
+  if (d.shipping_rule || d.shipping_restricted)
+    out.push({
+      key: 'envio',
+      icon: 'lucide-truck',
+      label: __('Shipping', null, 'Compras'),
+      value: d.shipping_restricted
+        ? __('a shipping rule you cannot see')
+        : `${d.shipping_rule_label || d.shipping_rule}, ${
+            Number(d.shipping_charge)
+              ? money(d.shipping_charge, d.currency)
+              : __('no charge')
+          }`,
+    })
   const extra = Number(d.additional_discount_percentage) || 0
   if (extra || Number(d.discount_amount))
     out.push({
@@ -1804,6 +1818,11 @@ async function compare() {
       __('Taxes', null, 'Compras'),
       mine.taxes_label || mine.taxes_and_charges,
       document.taxes_and_charges_label || document.taxes_and_charges,
+    ],
+    [
+      __('Shipping', null, 'Compras'),
+      mine.shipping_label || mine.shipping_rule,
+      document.shipping_rule_label || document.shipping_rule,
     ],
     [
       __('Extra discount on the whole purchase'),
