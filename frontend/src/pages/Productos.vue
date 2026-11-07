@@ -1184,7 +1184,7 @@ const heading = computed(() =>
 const subtitle = computed(() =>
   searching.value && view.value === 'todos'
     ? __(
-        'Exact code first, then what is on hand and selling; variants under their product.',
+        'Exact code first, then the closest match; variants under their product.',
         null,
         'Productos',
       )

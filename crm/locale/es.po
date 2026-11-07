@@ -23505,8 +23505,8 @@ msgstr "Resultados para «{0}»"
 
 #: frontend/src/pages/Productos.vue
 msgctxt "Productos"
-msgid "Exact code first, then what is on hand and selling; variants under their product."
-msgstr "Primero el código exacto, luego lo que hay en existencia y se vende; las variantes, dentro de su producto."
+msgid "Exact code first, then the closest match; variants under their product."
+msgstr "Primero el código exacto, luego lo más parecido; las variantes, dentro de su producto."
 
 #: frontend/src/pages/Productos.vue
 msgctxt "Productos"
