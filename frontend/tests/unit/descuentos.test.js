@@ -2,8 +2,11 @@ import { describe, expect, it } from 'vitest'
 import { money } from '../../src/composables/useCompras.js'
 import {
   blankRule,
+  conditionsText,
+  discountFigure,
   normalizeState,
   ruleForm,
+  ruleLine,
   ruleMissing,
   rulePayload,
   ruleRoute,
@@ -12,6 +15,7 @@ import {
   stateTitle,
   suggestedTitle,
   whatText,
+  whoName,
   whoText,
 } from '../../src/composables/useDescuentos.js'
 
@@ -63,6 +67,36 @@ describe('a discount in one line', () => {
     expect(
       line.startsWith(`priced at ${money(90, 'MXN')} on 2 items, starts `),
     ).toBe(true)
+  })
+})
+
+describe('a discount as a list row and a table row', () => {
+  it('puts how much beside the name and the rest under it', () => {
+    expect(discountFigure({ kind: 'percent', value: 10 }, 'MXN')).toBe('10 %')
+    expect(discountFigure({ kind: 'amount', value: 15 }, 'MXN')).toBe(
+      `−${money(15, 'MXN')}`,
+    )
+    expect(discountFigure({ kind: 'price', value: 250 }, 'MXN')).toBe(
+      money(250, 'MXN'),
+    )
+    expect(discountFigure({ kind: 'product' }, 'MXN')).toBe('Free items')
+    expect(
+      ruleLine({
+        discount: { kind: 'percent', value: 5 },
+        what: { kind: 'order' },
+        min_amt: 5000,
+        who: { kind: 'supplier', ...supplier },
+        currency: 'MXN',
+      }),
+    ).toBe(`On the whole purchase, from ${money(5000, 'MXN')}. For Tecnomaxx.`)
+  })
+  it('names who it is for and its conditions as table cells', () => {
+    expect(whoName({ kind: 'all' })).toBe('Every supplier')
+    expect(whoName({ kind: 'group', name: 'May', label: 'Mayoristas' })).toBe(
+      'Mayoristas',
+    )
+    expect(conditionsText({ min_qty: 10 })).toBe('from 10 pieces')
+    expect(conditionsText({})).toBe('')
   })
 })
 

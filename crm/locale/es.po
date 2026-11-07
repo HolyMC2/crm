@@ -33944,3 +33944,108 @@ msgstr "una regla de envío que no puedes ver"
 
 msgid "Discounts and shipping"
 msgstr "Descuentos y envíos"
+
+msgid "Close shipping rule"
+msgstr "Cerrar regla de envío"
+
+msgctxt "Envios"
+msgid "Range"
+msgstr "Rango"
+
+msgctxt "Envios"
+msgid "From"
+msgstr "Desde"
+
+msgid "Up to, range {0}"
+msgstr "Hasta, rango {0}"
+
+msgctxt "Envios"
+msgid "No limit"
+msgstr "Sin límite"
+
+msgid "Charges, range {0}"
+msgstr "Cobra, rango {0}"
+
+msgid "Try a purchase that weighs"
+msgstr "Prueba una compra que pesa"
+
+msgid "Try a purchase of"
+msgstr "Prueba una compra de"
+
+msgid "It pays {0} of shipping."
+msgstr "Paga {0} de envío."
+
+msgid "It pays no shipping."
+msgstr "No paga envío."
+
+msgctxt "Envios"
+msgid "Rule"
+msgstr "Regla"
+
+msgid "1 shipping rule. Pick it to open it."
+msgstr "1 regla de envío. Elígela para abrirla."
+
+msgid "{0} shipping rules. Pick one to open it."
+msgstr "{0} reglas de envío. Elige una para abrirla."
+
+msgid "Per purchase"
+msgstr "Por compra"
+
+msgctxt "Envios"
+msgid "From {0} to {1}"
+msgstr "De {0} a {1}"
+
+msgctxt "Envios"
+msgid "Up to {0}"
+msgstr "Hasta {0}"
+
+msgid "From {0}, no limit"
+msgstr "Desde {0}, sin límite"
+
+msgid "Fixed per purchase"
+msgstr "Fijo por compra"
+
+msgid "1 range by weight"
+msgstr "1 rango por peso"
+
+msgid "{0} ranges by weight"
+msgstr "{0} rangos por peso"
+
+msgid "1 range by amount"
+msgstr "1 rango por monto"
+
+msgid "{0} ranges by amount"
+msgstr "{0} rangos por monto"
+
+msgctxt "Envios"
+msgid "{0}, to {1}"
+msgstr "{0}, a {1}"
+
+msgid "Close discount"
+msgstr "Cerrar descuento"
+
+msgctxt "Descuentos"
+msgid "Discount"
+msgstr "Descuento"
+
+msgctxt "Descuentos"
+msgid "How much"
+msgstr "Cuánto"
+
+msgctxt "Descuentos"
+msgid "On what"
+msgstr "En qué"
+
+msgctxt "Descuentos"
+msgid "For"
+msgstr "Para"
+
+msgctxt "Descuentos"
+msgid "From how much and when"
+msgstr "Desde cuánto y cuándo"
+
+msgid "1 discount. Pick it to open it."
+msgstr "1 descuento. Elígelo para abrirlo."
+
+msgid "{0} discounts. Pick one to open it."
+msgstr "{0} descuentos. Elige uno para abrirlo."

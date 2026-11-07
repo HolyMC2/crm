@@ -3,12 +3,14 @@
        thinks of it: how much off, for whom, on what, from how much, when.
        The rest of Desk's options fold under «Más condiciones»; a rule built
        with options this page does not edit (free items, conditions, coupons)
-       is read here and changed in the full form. -->
+       is read here and changed in the full form. In the desktop split
+       (`pane`) it sits beside the list and closes to it. -->
   <div class="relative flex h-full min-w-0 flex-1 flex-col overflow-hidden">
     <AppBar
-      :back="true"
+      :back="!pane"
       :back-label="backLabel"
       :title="title"
+      :bell="!pane"
       :loading="loading && loaded"
       @back="onBack"
     >
@@ -31,9 +33,22 @@
           </span>
         </div>
       </template>
+      <template v-if="pane" #actions>
+        <!-- In the split the close sits last, where a window's close sits. -->
+        <button
+          type="button"
+          class="press flex size-12 flex-none items-center justify-center rounded-full text-ink-gray-7 [@media(hover:hover)]:hover:bg-surface-gray-2"
+          :aria-label="__('Close discount')"
+          :title="__('Close discount')"
+          data-testid="descuento-cerrar"
+          @click="close"
+        >
+          <span class="lucide-x size-6" aria-hidden="true" />
+        </button>
+      </template>
     </AppBar>
 
-    <div class="min-h-0 flex-1 overflow-y-auto pb-28 sm:pb-10">
+    <div class="min-h-0 flex-1 overflow-y-auto">
       <EmptyState
         v-if="guard"
         role="alert"
@@ -52,7 +67,7 @@
 
       <div
         v-else-if="loaded"
-        class="mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 pt-4"
+        class="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-4 sm:px-6"
       >
         <div class="flex flex-col gap-3 empty:hidden">
           <div
@@ -101,7 +116,12 @@
                 <RouterLink
                   v-if="other.name"
                   class="min-h-11 py-2 underline sm:min-h-0 sm:py-0"
-                  :to="ruleRoute(other.name, { return_to: returnHere })"
+                  :to="
+                    ruleRoute(
+                      other.name,
+                      pane ? listQuery() : { return_to: returnHere },
+                    )
+                  "
                   >{{ other.title }}</RouterLink
                 >
                 <span v-else>{{ other.title }}</span>
@@ -134,17 +154,19 @@
           >
             {{ __('It gives free items instead of a discount.') }}
           </p>
-          <Segmented
-            v-else
-            v-model="form.discount_kind"
-            :options="kindOptions"
-            :label="__('Kind of discount')"
-            :class="readOnly ? 'opacity-60' : ''"
-            :inert="readOnly || undefined"
-          />
+          <div v-else class="descuento-angosto-sm">
+            <Segmented
+              v-model="form.discount_kind"
+              :options="kindOptions"
+              :label="__('Kind of discount')"
+              :class="readOnly ? 'opacity-60' : ''"
+              :inert="readOnly || undefined"
+            />
+          </div>
           <FormControl
             v-if="form.discount_kind !== 'product'"
             v-model="form.discount_value"
+            class="descuento-fields descuento-angosto-xs"
             type="number"
             :label="valueLabel"
             :disabled="readOnly"
@@ -152,13 +174,21 @@
             :max="form.discount_kind === 'percent' ? 100 : undefined"
             step="any"
             data-testid="descuento-valor"
-          />
+          >
+            <template v-if="form.discount_kind !== 'percent'" #prefix>
+              <span class="text-base text-ink-gray-5">{{ symbol }}</span>
+            </template>
+            <template v-else #suffix>
+              <span class="text-base text-ink-gray-5">%</span>
+            </template>
+          </FormControl>
           <FormControl
             v-if="
               form.what_kind === 'order' &&
               !['price', 'product'].includes(form.discount_kind)
             "
             v-model="form.apply_discount_on"
+            class="descuento-fields descuento-angosto-sm"
             type="select"
             :label="__('Discount on', null, 'Compras')"
             :disabled="readOnly"
@@ -174,17 +204,20 @@
           <h2 class="text-base font-semibold text-ink-gray-9">
             {{ __('For which suppliers?') }}
           </h2>
-          <Segmented
-            :model-value="form.who_kind"
-            :options="whoOptions"
-            :label="__('For which suppliers?')"
-            :class="readOnly ? 'opacity-60' : ''"
-            :inert="readOnly || undefined"
-            @update:model-value="setWho"
-          />
+          <div class="descuento-angosto-sm">
+            <Segmented
+              :model-value="form.who_kind"
+              :options="whoOptions"
+              :label="__('For which suppliers?')"
+              :class="readOnly ? 'opacity-60' : ''"
+              :inert="readOnly || undefined"
+              @update:model-value="setWho"
+            />
+          </div>
           <ComprasPicker
             v-if="form.who_kind !== 'all'"
             v-model="form.who_name"
+            class="descuento-angosto-sm"
             :display="form.who_label"
             :label="
               form.who_kind === 'group'
@@ -251,6 +284,7 @@
             </ul>
             <ComprasPicker
               v-if="!readOnly"
+              class="descuento-angosto-sm"
               model-value=""
               :label="targetLabel"
               :placeholder="targetPlaceholder"
@@ -277,7 +311,9 @@
           <h2 class="text-base font-semibold text-ink-gray-9">
             {{ __('From how much, and when?') }}
           </h2>
-          <div class="descuento-fields grid grid-cols-2 gap-3">
+          <div
+            class="descuento-fields descuento-angosto-sm grid grid-cols-2 gap-3"
+          >
             <FormControl
               v-model="form.min_qty"
               type="number"
@@ -433,6 +469,7 @@
         <section class="flex flex-col gap-3" :aria-label="__('Name')">
           <FormControl
             v-model="form.title"
+            class="descuento-fields descuento-angosto-sm"
             type="text"
             :label="__('Name', null, 'Descuentos')"
             :placeholder="suggestedTitle(form, currency)"
@@ -459,40 +496,42 @@
             }}
           </p>
         </section>
-
-        <div
-          v-if="!readOnly"
-          class="fixed inset-x-0 bottom-0 z-20 flex flex-wrap gap-2 border-t border-outline-gray-2 bg-surface-base p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:static sm:border-0 sm:p-0 sm:pb-6"
-        >
-          <!-- Beside the button, so a phone sees why nothing was saved. -->
-          <p
-            v-if="showMissing && missing.length"
-            role="status"
-            class="basis-full text-base text-ink-amber-9"
-          >
-            {{ __('Missing: {0}.', [missing.join(', ')]) }}
-          </p>
-          <button
-            type="button"
-            :class="['press flex-1 sm:flex-none', BTN.filled]"
-            :disabled="busy"
-            data-testid="descuento-guardar"
-            @click="save"
-          >
-            <span
-              :class="[
-                busy ? 'lucide-loader-circle animate-spin' : 'lucide-check',
-                'size-5',
-              ]"
-              aria-hidden="true"
-            />
-            {{ __('Save discount') }}
-          </button>
-          <button type="button" :class="['press', BTN.tonal]" @click="onBack">
-            {{ __('Cancel', null, 'Compras') }}
-          </button>
-        </div>
       </div>
+    </div>
+
+    <!-- The save bar stays in sight at every width: on a phone it takes the
+         nav's place, beside the list it closes the pane. -->
+    <div
+      v-if="loaded && !readOnly"
+      class="flex flex-none flex-wrap items-center gap-2 border-t border-outline-gray-2 bg-surface-base px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:px-6 sm:pb-3"
+    >
+      <!-- Beside the button, so a phone sees why nothing was saved. -->
+      <p
+        v-if="showMissing && missing.length"
+        role="status"
+        class="basis-full text-base text-ink-amber-9"
+      >
+        {{ __('Missing: {0}.', [missing.join(', ')]) }}
+      </p>
+      <button
+        type="button"
+        :class="['press flex-1 sm:flex-none', BTN.filled]"
+        :disabled="busy"
+        data-testid="descuento-guardar"
+        @click="save"
+      >
+        <span
+          :class="[
+            busy ? 'lucide-loader-circle animate-spin' : 'lucide-check',
+            'size-5',
+          ]"
+          aria-hidden="true"
+        />
+        {{ __('Save discount') }}
+      </button>
+      <button type="button" :class="['press', BTN.tonal]" @click="onBack">
+        {{ __('Cancel', null, 'Compras') }}
+      </button>
     </div>
   </div>
 </template>
@@ -520,6 +559,7 @@ import {
   returnWithDone,
   safeReturn,
 } from '@/composables/useCompras'
+import { currencySymbol } from '@/composables/useEnvios'
 import {
   blankRule,
   descuentosApi,
@@ -532,7 +572,13 @@ import {
   whoText,
 } from '@/composables/useDescuentos'
 
-const props = defineProps({ name: { type: String, default: 'nuevo' } })
+const props = defineProps({
+  name: { type: String, default: 'nuevo' },
+  // Right pane of the desktop split (CompraReglas): saving stays here.
+  pane: { type: Boolean, default: false },
+})
+// A save the list beside it should show.
+const emit = defineEmits(['saved'])
 const route = useRoute()
 const router = useRouter()
 const isNew = computed(() => !props.name || props.name === 'nuevo')
@@ -554,6 +600,7 @@ let pending = null
 let saved = ''
 
 const currency = computed(() => rule.value?.currency || 'MXN')
+const symbol = computed(() => currencySymbol(currency.value))
 const readOnly = computed(
   () => !canWrite.value || (rule.value && !rule.value.editable),
 )
@@ -705,6 +752,7 @@ async function load() {
       rule.value = result.rule
       companies.value = result.companies || []
       canWrite.value = Boolean(result.can_write)
+      overlaps.value = result.overlaps || []
       Object.assign(form, ruleForm(result.rule))
     }
     loaded.value = true
@@ -738,15 +786,19 @@ async function save() {
     saved = result.name
     overlaps.value = result.overlaps || []
     toast.success(__('Discount saved'))
-    if (overlaps.value.length) {
+    if (props.pane && !returnTo.value) emit('saved', result.name)
+    if (overlaps.value.length || (props.pane && !returnTo.value)) {
       // Stay: the worker settles the overlap here (the new name reloads it).
       if (isNew.value)
         await router.replace({
           name: 'CompraDescuento',
           params: { name: result.name },
-          query: route.query,
+          query: props.pane ? listQuery() : route.query,
         })
-      else await load()
+      else {
+        triedSave.value = false
+        await load()
+      }
       return
     }
     goBack(result.name)
@@ -764,7 +816,21 @@ async function save() {
 
 function onBack(event) {
   event?.preventDefault?.()
+  if (props.pane && !returnTo.value) return close()
   goBack(saved)
+}
+// The list's state, search and supplier, which the split keeps in the URL.
+function listQuery() {
+  const { estado, q, supplier } = route.query
+  return {
+    ...(estado !== undefined && { estado }),
+    ...(q && { q }),
+    ...(supplier && { supplier }),
+  }
+}
+// The pane closes to the list beside it, as it was.
+function close() {
+  router.push({ name: 'CompraDescuentos', query: listQuery() })
 }
 // Back where the worker came from (a purchase hears which discount was saved).
 function goBack(saved = '') {
@@ -799,6 +865,16 @@ onMounted(load)
   .descuento-fields :deep(input:not([type='checkbox'])) {
     min-height: 44px;
     font-size: 1rem;
+  }
+}
+/* A wide pane keeps short answers short. Scoped, not Tailwind arbitrary
+   values: keeps the global sheet in budget. */
+@media (min-width: 640px) {
+  .descuento-angosto-xs {
+    max-width: 14rem;
+  }
+  .descuento-angosto-sm {
+    max-width: 28rem;
   }
 }
 </style>

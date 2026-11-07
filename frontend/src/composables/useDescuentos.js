@@ -110,6 +110,48 @@ export function whoText(who) {
   return tr('For {0}', [who.label || ''])
 }
 
+/** The row's figure: «10 %», «−$15.00», «$250.00» (the price), «Artículos de regalo». */
+export function discountFigure(discount, currency) {
+  const value = Number(discount?.value) || 0
+  if (discount?.kind === 'product') return tr('Free items')
+  if (discount?.kind === 'amount') return `−${money(value, currency)}`
+  if (discount?.kind === 'price') return money(value, currency)
+  return `${qty(value)} %`
+}
+
+/** From how much and when, in a few words: «desde 10 piezas, hasta el jue 31 de dic.». */
+export function conditionsText(rule, currency = 'MXN') {
+  const parts = []
+  if (Number(rule.min_qty) > 0)
+    parts.push(tr('from {0} pieces', [qty(rule.min_qty)]))
+  if (Number(rule.min_amt) > 0)
+    parts.push(tr('from {0}', [money(rule.min_amt, currency)]))
+  if (rule.valid_upto) parts.push(tr('until {0}', [formatDay(rule.valid_upto)]))
+  else if (rule.state === 'programado' && rule.valid_from)
+    parts.push(tr('starts {0}', [formatDay(rule.valid_from)]))
+  return parts.join(', ')
+}
+
+/** The row's line under the name, its figure beside it: on what, from how
+ *  much and when, for whom. «En el grupo Pantallas, hasta el jue 31 de dic.
+ *  Para Refacciones Ficticias.» */
+export function ruleLine(rule, currency = rule?.currency || 'MXN') {
+  const what = whatText(rule.what)
+  const head = [
+    `${what.charAt(0).toUpperCase()}${what.slice(1)}`,
+    conditionsText(rule, currency),
+  ]
+    .filter(Boolean)
+    .join(', ')
+  return `${head}. ${whoText(rule.who)}.`
+}
+
+/** Who a rule is for, as a table cell: the supplier, the group, or everyone. */
+export function whoName(who) {
+  if (!who || who.kind === 'all') return tr('Every supplier')
+  return who.label || who.name || ''
+}
+
 /** The rule in one line: what it takes off, on what, from when on, until when. */
 export function ruleSummary(rule, currency = 'MXN') {
   const parts = [
