@@ -313,7 +313,8 @@
             @click="navigate({ edad: '' })"
           />
         </div>
-        <!-- ≥1024 the customers read as a table: one header, a column per fact. -->
+        <!-- Where the list has room the customers read as a table: one header,
+             a column per fact. -->
         <div
           v-if="wide && rows.length"
           class="flex items-center border-b border-outline-gray-1 text-sm text-ink-gray-6"
@@ -323,7 +324,7 @@
           <span class="w-10 flex-none" />
           <span class="cobranza-fila min-w-0 flex-1 py-2 pl-2 pr-4">
             <span>{{ __('Customer') }}</span>
-            <span>{{ __('Days overdue') }}</span>
+            <span class="whitespace-nowrap">{{ __('Days overdue') }}</span>
             <span>{{ __('Follow-up', null, CTX) }}</span>
             <span class="text-right">{{ __('Overdue', null, CTX) }}</span>
             <span class="text-right">{{ __('Balance') }}</span>
@@ -374,9 +375,11 @@
                 @click="onRowClick($event, row)"
               >
                 <span class="min-w-0">
-                  <span class="block truncate font-medium text-ink-gray-9">{{
-                    row.customer_name
-                  }}</span>
+                  <span
+                    class="block truncate font-medium text-ink-gray-9"
+                    :title="row.customer_name"
+                    >{{ row.customer_name }}</span
+                  >
                   <span class="block truncate text-sm text-ink-gray-6"
                     >{{
                       row.invoices === 1
@@ -388,9 +391,10 @@
                   >
                 </span>
                 <span
-                  class="truncate text-sm"
+                  class="num break-words text-sm"
                   :class="toneClass(agingTone(row))"
-                  >{{ agingLabel(row, today) }}</span
+                  :title="agingLabel(row, today)"
+                  >{{ daysCell(row) }}</span
                 >
                 <span class="flex min-w-0 flex-wrap gap-1">
                   <Badge
@@ -724,7 +728,8 @@ import CobranzaSendSheet from '@/components/cobranza/CobranzaSendSheet.vue'
 import FollowupSheet from '@/components/cobranza/FollowupSheet.vue'
 import PaymentSheet from '@/components/cobranza/PaymentSheet.vue'
 import PromiseSheet from '@/components/cobranza/PromiseSheet.vue'
-import { isMobile, isWide } from '@/composables/breakpoint'
+import { isMobile } from '@/composables/breakpoint'
+import { useTableWidth } from '@/composables/useTableWidth'
 import {
   appleKeys,
   openShortcutSheet,
@@ -797,11 +802,18 @@ const LIVE_DOCTYPES = [
 const route = useRoute()
 const router = useRouter()
 const phone = isMobile
-// ≥1024 the customers are a table (header and columns), below a list of rows.
-const wide = isWide
 const boot = cobranzaBoot
 const socket = getCurrentInstance()?.appContext.config.globalProperties.$socket
 const scroller = ref(null)
+// Where the list has room the customers are a table (header and columns),
+// elsewhere a list of rows.
+const wide = useTableWidth(scroller)
+// The «Días vencidos» column: the oldest overdue invoice's days, or when
+// the next one falls due.
+function daysCell(row) {
+  const days = Number(row.oldest_overdue_days ?? row.overdue_days ?? 0)
+  return days > 0 ? String(days) : agingLabel(row, today.value)
+}
 const listbox = ref(null)
 const rows = ref([])
 const counts = ref({})
@@ -1641,8 +1653,8 @@ onBeforeUnmount(() => {
 .cobranza-fila {
   display: grid;
   grid-template-columns:
-    minmax(0, 2fr) minmax(0, 1.2fr) minmax(0, 2fr) 8.5rem
-    9rem;
+    minmax(0, 2.4fr) 6.5rem minmax(0, 1.2fr) 7rem
+    7.5rem;
   column-gap: 1rem;
   align-items: center;
 }

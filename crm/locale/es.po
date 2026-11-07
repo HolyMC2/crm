@@ -33525,3 +33525,13 @@ msgstr "Entrega"
 msgctxt "Compras"
 msgid "Progress"
 msgstr "Avance"
+
+#: frontend/src/pages/Compras.vue
+msgctxt "Compras"
+msgid "Late"
+msgstr "Atrasada"
+
+#: frontend/src/pages/Compras.vue
+msgctxt "Compras"
+msgid "late"
+msgstr "atrasada"
