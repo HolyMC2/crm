@@ -9,9 +9,10 @@ Delivery is at-least-once; receivers deduplicate on webhook-id. A connection tha
 is disabled, deleted or unreachable never blocks the CRM work that produced the event.
 
 Cost: what enabled connections listen to is kept in each process (client cache) until a
-connection changes, so a save nobody listens to costs a dict lookup. Event rows are one
-multi-row INSERT; after commit, one worker job per connection sends its rows in order
-over one kept-alive connection to the receiver, and writes the connection's health once.
+connection changes, so a save nobody listens to costs a dict lookup. An event is one INSERT
+(a row per listening connection, no document hooks); after commit, one worker job per
+connection sends the transaction's rows in order over one kept-alive connection to the
+receiver, and writes the connection's health once.
 """
 
 import base64

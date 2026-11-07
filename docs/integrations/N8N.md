@@ -63,9 +63,10 @@ The payload is built on the first attempt and then frozen, so retries send the s
 
 What an event costs the CRM: a save checks a routing map that every worker keeps in memory
 (refreshed when a connection changes), so a record type or event nobody listens to costs a set
-lookup and no diff. The events of one transaction are written with one `INSERT` and queued as one
-job per connection. That job sends them in order over one kept-alive HTTPS connection, with two
-commits per event, and writes the connection's health once at the end. When the receiver fails
+lookup and no diff. Each event is one `INSERT` (a row per listening connection, no document
+hooks), and the events of one transaction are queued as one job per connection. That job sends
+them in order over one kept-alive HTTPS connection, with two commits per event, and writes the
+connection's health once at the end. When the receiver fails
 (no connection, timeout, 429 or 5xx), the job stops there. That event is retried on the schedule
 above, and the rest stay Pending for the sweep that runs every minute, so a down n8n gets about
 one request per connection a minute, not one per event.
