@@ -416,7 +416,7 @@
           </div>
         </dl>
         <p v-if="doc.last_error" class="text-p-sm text-ink-gray-7">
-          {{ __('Last error: {0}', [doc.last_error]) }}
+          {{ __('Last error: {0}', [__(doc.last_error)]) }}
         </p>
         <ul
           v-if="summary?.problems?.length"
@@ -437,7 +437,7 @@
               <span
                 v-if="row.last_error"
                 class="block text-p-sm text-ink-gray-5 [overflow-wrap:anywhere]"
-                >{{ row.last_error }}</span
+                >{{ __(row.last_error) }}</span
               >
             </span>
             <Button
@@ -625,7 +625,7 @@ const testText = computed(() => {
   if (t.status === 'Delivered')
     return __('n8n answered {0}. The connection works.', [t.response_code])
   return t.last_error
-    ? __('It did not arrive: {0}', [t.last_error])
+    ? __('It did not arrive: {0}', [__(t.last_error)])
     : __('It did not arrive (answer {0}).', [t.response_code || '—'])
 })
 
