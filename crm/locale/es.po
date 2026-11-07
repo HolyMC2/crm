@@ -33091,3 +33091,6 @@ msgstr "Tarjeta digital"
 
 msgid "Printed card"
 msgstr "Tarjeta impresa"
+#: crm/api/bancos.py
+msgid "We could not find that bank connection."
+msgstr "No encontramos esa conexión con el banco."

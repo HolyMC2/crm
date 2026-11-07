@@ -39,6 +39,8 @@ SHELL_RECORDS = {
 	"Warranty Claim": ("garantias", "/garantias/{}"),
 	"Quality Feedback": ("encuestas", "/encuestas/{}"),
 	"Item": ("productos", "/productos/{}"),
+	# A bank login that needs the person (syncfy_connector): its page in Bancos.
+	"Syncfy Connection": ("bancos", "/bancos/conexion/{}"),
 }
 # Records whose worker screen is a sibling SPA on the same site: doctype → (app, path).
 SIBLING_RECORDS = {
@@ -61,6 +63,7 @@ MODULE_LABELS = {
 	"productos": "Productos",
 	"garantias": "Garantías",
 	"encuestas": "Encuestas",
+	"bancos": "Bancos",
 }
 APP_LABELS = {"taller": "Taller", "scanner_kit": "Escáner", "erpnext_mexico_compliance": "Contador"}
 FISCAL_APP = "erpnext_mexico_compliance"

@@ -1,7 +1,7 @@
 <template>
   <!-- Bancos (Shell SPEC §6 DD19). ≥1024: master-detail, the account cards
-       on the left and the chosen account on the right. Below: one page at a
-       time; the account's back returns to the cards. -->
+       on the left and the chosen account or bank login on the right. Below:
+       one page at a time; the back returns to the cards. -->
   <div
     v-if="wide"
     class="flex h-full min-w-0 flex-1 overflow-hidden"
@@ -10,10 +10,16 @@
     <div
       class="bancos-master flex flex-none flex-col overflow-hidden border-r border-outline-gray-1"
     >
-      <CuentasLista pane :selected="cuenta" />
+      <CuentasLista pane :selected="cuenta" :selected-conexion="conexion" />
     </div>
     <div class="relative flex min-w-0 flex-1 flex-col overflow-hidden">
-      <CuentaDetalle v-if="cuenta" :key="cuenta" :cuenta="cuenta" pane />
+      <ConexionDetalle
+        v-if="conexion"
+        :key="`c:${conexion}`"
+        :name="conexion"
+        pane
+      />
+      <CuentaDetalle v-else-if="cuenta" :key="cuenta" :cuenta="cuenta" pane />
       <EmptyState
         v-else
         state="empty"
@@ -22,20 +28,31 @@
       />
     </div>
   </div>
+  <ConexionDetalle
+    v-else-if="conexion"
+    :key="`c:${conexion}`"
+    :name="conexion"
+  />
   <CuentaDetalle v-else-if="cuenta" :key="cuenta" :cuenta="cuenta" />
   <CuentasLista v-else />
 </template>
 <script setup>
-import { computed } from 'vue'
+import { computed, defineAsyncComponent } from 'vue'
 import { useRoute } from 'vue-router'
 import { EmptyState } from '@/components/ui'
 import { isWide } from '@/composables/breakpoint'
 import CuentaDetalle from '@/components/bancos/CuentaDetalle.vue'
 import CuentasLista from '@/components/bancos/CuentasLista.vue'
 
+// A bank login's page loads only where syncfy_connector feeds Bancos.
+const ConexionDetalle = defineAsyncComponent(
+  () => import('@/components/bancos/ConexionDetalle.vue'),
+)
+
 const route = useRoute()
 const wide = isWide
 const cuenta = computed(() => String(route.params.cuenta || ''))
+const conexion = computed(() => String(route.params.conexion || ''))
 </script>
 <style scoped>
 /* scoped, not Tailwind arbitrary values: keeps the global sheet in budget */

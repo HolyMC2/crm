@@ -6,6 +6,9 @@ from unittest import TestCase, skipIf
 from crm.bancos_routes import is_bancos_path
 from crm.bancos_words import (
 	account_display,
+	connection_detail,
+	connection_kind,
+	connection_state,
 	last4,
 	movement_words,
 	natural_sign,
@@ -88,12 +91,55 @@ class TestBancosWords(TestCase):
 		self.assertIsNone(parse_amount(""))
 
 
+class TestConnectionWords(TestCase):
+	"""A bank login reads as its state and the one step that settles it."""
+
+	def test_each_state_names_its_step(self):
+		cases = {
+			("Connected", False): ("Conectada", "ok", "sync"),
+			("Connected", True): ("Conectada", "ok", "code"),  # asks a code on every sync
+			("Waiting for code", False): ("Pide un código", "needs", "code"),
+			("Needs attention", False): ("Hay que reconectar", "needs", "reconnect"),
+			("Error", False): ("No se pudo sincronizar", "needs", "sync"),
+			("Institution unavailable", False): ("El banco no responde", "wait", None),
+			("Connecting", False): ("Conectando", "busy", None),
+			("Retired", False): ("Ya no se puede conectar", "off", None),
+			("Disconnected", False): ("Desconectada", "off", "connect"),
+		}
+		for (status, twofa), (word, tone, step) in cases.items():
+			with self.subTest(status=status, twofa=twofa):
+				self.assertEqual(connection_state(status, twofa), {"word": word, "tone": tone, "step": step})
+
+	def test_an_unknown_state_waits_instead_of_offering_a_step(self):
+		self.assertEqual(connection_state(None)["step"], None)
+		self.assertEqual(connection_state("Something new")["tone"], "busy")
+
+	def test_the_hero_detail_does_not_repeat_the_state(self):
+		ok = "Conectada. Los movimientos nuevos llegan solos cada día."
+		self.assertEqual(
+			connection_detail("Connected", ok, "Conectada"), "Los movimientos nuevos llegan solos cada día."
+		)
+		self.assertEqual(
+			connection_detail("Connected", "Conectada, pero sin cuentas.", "Conectada"),
+			"Conectada, pero sin cuentas.",
+		)
+		self.assertEqual(connection_detail("Connected", ok, "Conectada", is_twofa=True), "")
+		refused = "La institución rechazó el acceso."
+		self.assertEqual(connection_detail("Needs attention", refused, "Hay que reconectar"), refused)
+
+	def test_kinds_in_words(self):
+		self.assertEqual(connection_kind("Tax"), "SAT")
+		self.assertEqual(connection_kind("Wallet"), "Monedero")
+		self.assertEqual(connection_kind(None), "Institución")
+
+
 class TestBancosPaths(TestCase):
 	def test_gate_accepts_bancos_pages(self):
 		for path in (
 			"/crm/bancos",
 			"/crm/bancos/",
 			"/crm/bancos/cuenta/BBVA%20Debito%20-%20BBVA%20Mexico",
+			"/crm/bancos/conexion/6aef85a1317ff811d1205171",
 			"/crm/bancos/catalogo",
 			"/crm/bancos/catalogo/Bancos%20-%20GD",
 			"/crm/bancos/balanza",
@@ -108,6 +154,8 @@ class TestBancosPaths(TestCase):
 			"/crm/bancosx",
 			"/crm/bancos/cuenta",
 			"/crm/bancos/cuenta/a/b",
+			"/crm/bancos/conexion",
+			"/crm/bancos/conexion/a/b",
 			"/crm/bancos/catalogo/a/b",
 			"//evil.invalid/crm/bancos",
 			"https://evil.invalid/crm/bancos",

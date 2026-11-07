@@ -1,13 +1,14 @@
 """Pure URL classification for the Bancos entry gate (bench-free tests).
 
-/crm/bancos (cards), /crm/bancos/cuenta/<cuenta> (one account), /crm/bancos/catalogo[/<cuenta>]
-(the account tree, one account's ledger) and /crm/bancos/balanza.
+/crm/bancos (cards), /crm/bancos/cuenta/<cuenta> (one account), /crm/bancos/conexion/<conexion>
+(one bank login, Bancos conectados), /crm/bancos/catalogo[/<cuenta>] (the account tree, one
+account's ledger) and /crm/bancos/balanza.
 """
 
 import re
 from urllib.parse import urlsplit
 
-_BANCOS_PATH = re.compile(r"^/crm/bancos(?:/cuenta/[^/]+|/catalogo(?:/[^/]+)?|/balanza)?/*$")
+_BANCOS_PATH = re.compile(r"^/crm/bancos(?:/cuenta/[^/]+|/conexion/[^/]+|/catalogo(?:/[^/]+)?|/balanza)?/*$")
 
 
 def is_bancos_path(path):

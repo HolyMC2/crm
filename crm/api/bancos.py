@@ -13,6 +13,9 @@ Screen-shaped reads and one-tap actions over ERPNext's ledger:
 - ``catalogo`` / ``cuenta_contable`` / ``balanza`` / ``crear_cuenta``: the chart of accounts as
   drill-down lists with balances, SAT código agrupador in words, the ledger (Mayor) of one
   account and the trial balance (Balanza).
+- ``conexiones`` / ``conexion``: bank logins where syncfy_connector is installed (Bancos
+  conectados): each login's state and next step, its accounts and the movements that wait for
+  a decision. Its actions are the connector's own endpoints, called from the shell.
 
 Frappe permissions are the only wall: every list goes through ``frappe.get_list`` (User
 Permissions by company apply), raw sums run only over accounts that list returned and only
@@ -28,7 +31,12 @@ from frappe import _
 from frappe.utils import add_months, cint, flt, get_first_day, get_last_day, getdate, today
 
 from crm.bancos_words import (
+	REVIEW_STATES,
+	UNLINKED_STATE,
 	account_display,
+	connection_detail,
+	connection_kind,
+	connection_state,
 	last4,
 	movement_words,
 	natural_sign,
@@ -39,6 +47,7 @@ from crm.bancos_words import (
 from crm.utils.doctypes import doctype_exists
 
 CONTADOR = "erpnext_mexico_compliance"
+SYNCFY = "syncfy_connector"
 PAGE = 50
 MATCHABLE = ("Payment Entry", "Journal Entry")
 OPEN_INVOICE = {"deposit": "Sales Invoice", "withdrawal": "Purchase Invoice"}
@@ -84,6 +93,7 @@ def get_capabilities():
 	# ERPNext lets sellers and cashiers read Account (for their pickers); the catalog with
 	# balances is for who also reads the ledger, so the account names alone do not open it.
 	catalogo = saldos and _may("Account")
+	conectados = bool(_syncfy_environment()) and _may("Syncfy Connection")
 	return {
 		"enabled": bancos or catalogo,
 		"reason": None if (bancos or catalogo) else "Pide a tu encargado acceso a Bancos.",
@@ -94,6 +104,11 @@ def get_capabilities():
 			"movimientos": _may("Bank Transaction"),
 			"conciliar": _may("Bank Transaction", "write"),
 			"crear_cuenta": _may("Account", "create"),
+			# Bancos conectados (syncfy_connector): who sees the bank logins, and who may
+			# connect one, sync it and decide its movements (the connector's own roles;
+			# its endpoints check them again).
+			"conectados": conectados,
+			"conectar": conectados and _syncfy_manager(),
 		},
 	}
 
@@ -133,6 +148,25 @@ def _empresas(current):
 		for name in names
 		if name and frappe.db.exists("Company", name) and frappe.has_permission("Company", "read", name)
 	)
+
+
+def _syncfy_environment():
+	"""«Sandbox» / «Production» when syncfy_connector is installed and on here, else None."""
+	if SYNCFY not in frappe.get_installed_apps() or not doctype_exists("Syncfy Connection"):
+		return None
+	try:
+		from syncfy_connector import config
+	except ImportError:
+		return None
+	return config.environment() if config.is_enabled() else None
+
+
+def _syncfy_manager():
+	try:
+		from syncfy_connector.services.permissions import MANAGE_ROLES
+	except ImportError:
+		return False
+	return bool(set(MANAGE_ROLES) & set(frappe.get_roles()))
 
 
 def _abbr(company):
@@ -416,6 +450,7 @@ def _header(bank, ledger):
 	counts = _pending_counts([bank.name]) if bank else None
 	pending = (counts.get(bank.name) or {}).get("n", 0) if counts is not None else None
 	synced = _bank_side_balances([bank.name]).get(bank.name) if bank else None
+	feed = _feed_of(bank.name) if bank else None
 	return {
 		"cuenta": bank.name if bank else ledger,
 		"kind": ("tarjeta" if bank.is_credit_card else "banco")
@@ -434,6 +469,7 @@ def _header(bank, ledger):
 		"bank_balance": synced,
 		"pending": pending,
 		"reconcilable": bool(bank),
+		"conexion": feed,
 	}
 
 
@@ -447,6 +483,281 @@ def cuenta(cuenta: str) -> dict:
 		"can": can,
 		"engine": "contador" if _contador_module() else "erpnext",
 	}
+
+
+# ---------------------------------------------------------------- bancos conectados (Syncfy)
+#
+# syncfy_connector keeps one Syncfy Connection per login (a bank, a card, the SAT) and one
+# Syncfy Account per account behind it. These reads shape them for the shell; every action
+# (connect, sync, link, retry, skip) is the connector's own endpoint, which checks the
+# manager roles and the company again. Nothing here calls Syncfy.
+
+CONNECTION_FIELDS = [
+	"name",
+	"title",
+	"institution",
+	"kind",
+	"status",
+	"status_message",
+	"is_twofa",
+	"can_sync",
+	"dt_ready",
+	"dt_refresh",
+	"last_pulled_at",
+	"fiscal_lane",
+	"company",
+	"id_credential",
+]
+
+
+def _connection_row(row, accounts=None):
+	state = connection_state(row.status, bool(row.is_twofa))
+	return {
+		"name": row.name,
+		"title": row.title or row.institution or connection_kind(row.kind),
+		"kind": row.kind or "Other",
+		"kind_word": connection_kind(row.kind),
+		"status": row.status,
+		"word": state["word"],
+		"tone": state["tone"],
+		"step": state["step"],
+		"detail": connection_detail(
+			row.status, _(row.status_message) if row.status_message else "", state["word"], bool(row.is_twofa)
+		),
+		"asks_code": bool(row.is_twofa),
+		# Syncfy's cool-down after a sync: «Sincronizar ahora» waits until then.
+		"ready_at": str(row.dt_ready or "") if not row.can_sync else "",
+		"refreshed_at": str(row.dt_refresh or ""),
+		"pulled_at": str(row.last_pulled_at or ""),
+		"feeds_contador": bool(row.fiscal_lane),
+		"company": row.company,
+		# Syncfy's handle for the login: the widget opens on it to re-sync or fix it.
+		"credential": row.id_credential,
+		"accounts": accounts or [],
+	}
+
+
+def _waiting(accounts):
+	"""{syncfy account: {"revisar": n, "sin_enlazar": n}} of movements that wait for the person."""
+	if not accounts or not frappe.has_permission("Syncfy Transaction", "read"):
+		return {}
+	rows = frappe.get_list(
+		"Syncfy Transaction",
+		filters={"account": ["in", accounts], "lane_status": ["in", [*REVIEW_STATES, UNLINKED_STATE]]},
+		fields=["account", "lane_status", {"COUNT": "name", "as": "n"}],
+		group_by="account, lane_status",
+		limit_page_length=0,
+	)
+	out = {}
+	for row in rows:
+		key = "sin_enlazar" if row.lane_status == UNLINKED_STATE else "revisar"
+		counts = out.setdefault(row.account, {"revisar": 0, "sin_enlazar": 0})
+		counts[key] += cint(row.n)
+	return out
+
+
+def _syncfy_accounts(connections):
+	"""{connection: [account rows]} with the Bank Account each one feeds, in the worker's words."""
+	if not connections:
+		return {}
+	rows = frappe.get_list(
+		"Syncfy Account",
+		filters={"connection": ["in", connections], "is_disabled": 0},
+		fields=[
+			"name",
+			"connection",
+			"account_label",
+			"account_name",
+			"number_masked",
+			"account_type",
+			"currency",
+			"balance",
+			"balance_at",
+			"bank_account",
+			"lane",
+			"conexion_bancaria",
+		],
+		order_by="account_label asc",
+		limit_page_length=500,
+	)
+	stopped = _contador_stopped([r.conexion_bancaria for r in rows if r.lane == "Contador"])
+	banks = {
+		row.name: row
+		for row in (
+			frappe.get_list(
+				"Bank Account",
+				filters={"name": ["in", [r.bank_account for r in rows if r.bank_account]]},
+				fields=["name", "account_name"],
+			)
+			if any(r.bank_account for r in rows)
+			else []
+		)
+	}
+	waiting = _waiting([r.name for r in rows])
+	out = {}
+	for row in rows:
+		bank = banks.get(row.bank_account)
+		out.setdefault(row.connection, []).append(
+			{
+				"name": row.name,
+				"label": row.account_label or row.account_name or "",
+				"last4": last4(row.number_masked),
+				"type": row.account_type or "",
+				"currency": row.currency or "",
+				"balance": flt(row.balance, 2) if row.balance is not None else None,
+				"balance_at": str(row.balance_at or ""),
+				# The Bank Account it feeds, when the worker can open it (else only that it is linked).
+				"cuenta": bank.name if bank else None,
+				"cuenta_label": (bank.account_name or bank.name) if bank else "",
+				"linked": bool(row.bank_account),
+				"contador": row.lane == "Contador",
+				# Contador stopped taking it (paused, or the person who linked it left):
+				# linking it again re-authorizes it as the manager who does it.
+				"relink": row.lane == "Contador" and row.conexion_bancaria in stopped,
+				"waiting": waiting.get(row.name, {"revisar": 0, "sin_enlazar": 0}),
+			}
+		)
+	return out
+
+
+def _contador_stopped(names):
+	"""Contador sources (Conexion Bancaria) that no longer collect: paused, or
+	authorized by a user who is no longer active. Contador runs each collection
+	as that person and stops without a word when they are gone."""
+	names = [n for n in set(names) if n]
+	if not names or not doctype_exists("Conexion Bancaria"):
+		return set()
+	rows = frappe.get_all(
+		"Conexion Bancaria", filters={"name": ["in", names]}, fields=["name", "enabled", "authorized_by"]
+	)
+	users = {r.authorized_by for r in rows if r.authorized_by}
+	active = set(
+		frappe.get_all("User", filters={"name": ["in", list(users)], "enabled": 1}, pluck="name")
+		if users
+		else []
+	)
+	known = {r.name for r in rows}
+	return {r.name for r in rows if not r.enabled or r.authorized_by not in active} | (set(names) - known)
+
+
+@frappe.whitelist()
+def conexiones(company: str | None = None) -> dict:
+	"""The company's bank, card and SAT logins: each one's state, the step that settles it
+	and its accounts. Logins that no longer sync come last."""
+	can = _require()
+	company = _company(company)
+	environment = _syncfy_environment()
+	if not environment or not can.get("conectados"):
+		return {"enabled": bool(environment), "company": company, "conexiones": [], "can": can}
+	rows = frappe.get_list(
+		"Syncfy Connection",
+		filters={"company": company, "environment": environment},
+		fields=CONNECTION_FIELDS,
+		order_by="modified desc",
+		limit_page_length=50,
+	)
+	accounts = _syncfy_accounts([row.name for row in rows])
+	out = [_connection_row(row, accounts.get(row.name)) for row in rows]
+	order = {"needs": 0, "busy": 1, "wait": 1, "ok": 2, "off": 3}
+	out.sort(key=lambda c: order.get(c["tone"], 2))
+	return {
+		"enabled": True,
+		"environment": environment,
+		"company": company,
+		"conexiones": out,
+		"can": can,
+	}
+
+
+def _review_rows(accounts):
+	"""Held and removed movements of these Syncfy accounts (rows of `_syncfy_accounts`).
+	One that Contador held is reviewed in Contador, which owns that decision."""
+	if not accounts or not frappe.has_permission("Syncfy Transaction", "read"):
+		return []
+	contador = {a["name"] for a in accounts if a.get("contador")}
+	rows = frappe.get_list(
+		"Syncfy Transaction",
+		filters={
+			"account": ["in", [a["name"] for a in accounts]],
+			"lane_status": ["in", list(REVIEW_STATES)],
+		},
+		fields=[
+			"name",
+			"account",
+			"transaction_date",
+			"description",
+			"amount",
+			"currency",
+			"lane_status",
+			"lane_message",
+			"bank_transaction",
+		],
+		order_by="transaction_date desc",
+		limit_page_length=PAGE,
+	)
+	out = []
+	for row in rows:
+		amount = flt(row.amount, 2)
+		words = movement_words(row.description, None, amount)
+		out.append(
+			{
+				"name": row.name,
+				"account": row.account,
+				"date": str(row.transaction_date or ""),
+				"title": words["title"],
+				"detail": words["detail"],
+				"amount": amount,
+				"currency": row.currency or "",
+				"removed": row.lane_status == "Removed at source",
+				"contador": row.account in contador,
+				"reason": _(row.lane_message) if row.lane_message else "",
+			}
+		)
+	return out
+
+
+@frappe.whitelist()
+def conexion(conexion: str) -> dict:
+	"""One bank login: its state and step, its accounts with the Bank Account each feeds,
+	and the movements that wait for a decision."""
+	can = _require()
+	if not can.get("conectados") or not frappe.db.exists("Syncfy Connection", conexion):
+		frappe.throw(_("We could not find that bank connection."), frappe.DoesNotExistError)
+	doc = frappe.get_doc("Syncfy Connection", conexion)
+	doc.check_permission("read")
+	_company(doc.company)
+	row = frappe._dict({field: doc.get(field) for field in CONNECTION_FIELDS})
+	accounts = _syncfy_accounts([doc.name]).get(doc.name, [])
+	return {
+		"conexion": _connection_row(row, accounts),
+		"revisar": _review_rows(accounts),
+		"can": can,
+	}
+
+
+def _feed_of(bank_account):
+	"""The login that feeds a Bank Account, for its hero: state, step and what waits."""
+	if not bank_account or not _syncfy_environment() or not _may("Syncfy Account"):
+		return None
+	account = frappe.get_list(
+		"Syncfy Account",
+		filters={"bank_account": bank_account, "is_disabled": 0},
+		fields=["name", "connection"],
+		limit_page_length=1,
+	)
+	if not account:
+		return None
+	rows = frappe.get_list(
+		"Syncfy Connection",
+		filters={"name": account[0].connection},
+		fields=CONNECTION_FIELDS,
+		limit_page_length=1,
+	)
+	if not rows:
+		return None
+	out = _connection_row(rows[0])
+	out["waiting"] = _waiting([account[0].name]).get(account[0].name, {"revisar": 0, "sin_enlazar": 0})
+	return out
 
 
 @frappe.whitelist()

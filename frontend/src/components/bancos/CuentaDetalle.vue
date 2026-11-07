@@ -74,7 +74,59 @@
         }}</span>
         · {{ balanceWhen(header.bank_balance.at) }}
       </p>
+      <!-- Bancos conectados: the login that feeds this account, how fresh
+           it is, and its step right here (Sincronizar ahora). -->
+      <RouterLink
+        v-if="feed"
+        :to="{
+          name: 'BancoConexion',
+          params: { conexion: feed.name },
+          query: companyQuery,
+        }"
+        class="mt-2 flex min-h-11 items-center gap-2 rounded-6 text-sm hover:bg-surface-gray-1"
+        data-bancos-cuenta-conexion
+      >
+        <span
+          class="lucide-refresh-cw size-4 flex-none text-ink-gray-6"
+          aria-hidden="true"
+        />
+        <span class="min-w-0 flex-1">
+          <span class="block text-ink-gray-8"
+            >Se sincroniza con {{ feed.title }}</span
+          >
+          <span class="block" :class="toneInk(feed.tone)">{{
+            conexionLine(feed)
+          }}</span>
+        </span>
+        <span
+          class="lucide-chevron-right size-5 flex-none text-ink-gray-5"
+          aria-hidden="true"
+        />
+      </RouterLink>
       <div class="mt-3 flex flex-wrap gap-2">
+        <Button
+          v-if="feed && feedStep && can.conectar"
+          class="min-h-11"
+          :variant="feed.tone === 'needs' ? 'solid' : 'subtle'"
+          :label="feedStep"
+          :loading="step.busy.value"
+          :disabled="!!feedReady"
+          :title="feedReady || undefined"
+          data-bancos-cuenta-sincronizar
+          @click="step.run(feed)"
+        />
+        <RouterLink
+          v-if="feed && waitingOf(feed).revisar"
+          :to="{
+            name: 'BancoConexion',
+            params: { conexion: feed.name },
+            query: companyQuery,
+          }"
+          class="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-surface-amber-2 px-4 text-sm font-medium text-ink-amber-8"
+          data-bancos-cuenta-revisar
+        >
+          {{ waitingText({ revisar: waitingOf(feed).revisar }) }}
+        </RouterLink>
         <button
           v-if="header.pending"
           type="button"
@@ -184,6 +236,20 @@
       <div class="h-24 flex-none lg:h-10" aria-hidden="true" />
     </div>
 
+    <p
+      v-if="feedReady && can.conectar"
+      class="px-4 pb-2 text-sm text-ink-gray-6"
+    >
+      {{ feedReady }}
+    </p>
+    <p
+      v-if="step.problem.value"
+      role="alert"
+      class="mx-4 mb-2 rounded-6 bg-surface-red-1 p-3 text-sm text-ink-red-7"
+    >
+      {{ step.problem.value }}
+    </p>
+
     <ConciliarSheet
       v-model:open="sheetOpen"
       :movement="current"
@@ -211,6 +277,16 @@ import {
   voucherRoute,
 } from './bancos'
 
+import {
+  conexionLine,
+  readyText,
+  stepLabel,
+  toneInk,
+  waitingOf,
+  waitingText,
+} from './conectados'
+import { useConexionStep } from './useConexionStep'
+
 const ConciliarSheet = defineAsyncComponent(
   () => import('./ConciliarSheet.vue'),
 )
@@ -230,6 +306,7 @@ const state = computed(() => ({
 const search = ref(state.value.q)
 const searchOpen = ref(!!state.value.q)
 const header = ref(null)
+const can = ref({})
 const list = ref(null)
 const rows = ref([])
 const loading = ref(false)
@@ -242,6 +319,11 @@ const companyQuery = computed(() =>
 )
 const backTo = computed(() => ({ name: 'Bancos', query: companyQuery.value }))
 const context = computed(() => (header.value ? cardContext(header.value) : ''))
+// The bank login that feeds this account (syncfy_connector), if any.
+const feed = computed(() => header.value?.conexion || null)
+const feedStep = computed(() => stepLabel(feed.value))
+const feedReady = computed(() => readyText(feed.value))
+const step = useConexionStep(() => loadHeader({ quiet: true }))
 const vistas = [
   { value: 'banco', label: 'Banco' },
   { value: 'libros', label: 'Libros' },
@@ -298,6 +380,7 @@ async function loadHeader({ quiet = false } = {}) {
   try {
     const result = await bancosApi('cuenta', { cuenta: props.cuenta })
     header.value = result.header
+    can.value = result.can || {}
   } catch (error) {
     if (!quiet) loadError.value = errorText(error)
   }

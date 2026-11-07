@@ -487,6 +487,18 @@ const routes = [
     },
   },
   {
+    // One bank login (Bancos conectados, syncfy_connector): beside the cards on desktop.
+    path: '/bancos/conexion/:conexion',
+    name: 'BancoConexion',
+    component: () => import('@/pages/Bancos.vue'),
+    meta: {
+      app: 'bancos',
+      title: 'Bancos',
+      ownPhoneHeader: true,
+      stableKey: true,
+    },
+  },
+  {
     path: '/bancos/catalogo',
     name: 'CatalogoCuentas',
     component: () => import('@/pages/CatalogoCuentas.vue'),

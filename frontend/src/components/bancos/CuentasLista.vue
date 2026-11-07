@@ -97,6 +97,13 @@
         </ul>
       </section>
 
+      <ConexionesSeccion
+        v-if="data.can?.conectados"
+        :company="data.company"
+        :can="data.can"
+        :selected="selectedConexion"
+      />
+
       <section v-if="data.can?.catalogo" class="mt-6" aria-label="Contabilidad">
         <h2 class="px-4 pb-1 text-sm font-semibold text-ink-gray-7">
           Contabilidad
@@ -139,7 +146,7 @@
   </div>
 </template>
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Button } from 'frappe-ui'
 import { AppBar, EmptyState, ListRow } from '@/components/ui'
@@ -148,10 +155,16 @@ import { LIVE_DOCTYPES, bancosApi, errorText, money } from './bancos'
 import { useLiveList } from '@/composables/liveList'
 import { createListCache } from '@/utils/listCache'
 
+// Bancos conectados (syncfy_connector): its own chunk, only where it is on.
+const ConexionesSeccion = defineAsyncComponent(
+  () => import('./ConexionesSeccion.vue'),
+)
+
 const props = defineProps({
   /** Left column of the desktop split: a compact bar, no bell. */
   pane: { type: Boolean, default: false },
   selected: { type: String, default: '' },
+  selectedConexion: { type: String, default: '' },
 })
 
 const route = useRoute()

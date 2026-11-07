@@ -154,3 +154,63 @@ def parse_amount(text):
 	if not re.fullmatch(r"[-+−]?\d{1,3}(?:,\d{3})*(?:\.\d{1,2})?|[-+−]?\d+(?:\.\d{1,2})?", cleaned):
 		return None
 	return abs(float(cleaned.replace(",", "").replace("−", "-")))
+
+
+# ---------------------------------------------------------------- bancos conectados (Syncfy)
+
+# A Syncfy Connection status → (the word under its name, how loud it is). Tones: «ok» quiet,
+# «busy» working by itself, «needs» the person must act, «wait» the bank is down (nothing to
+# do), «off» no longer syncing.
+_CONNECTION_STATES = {
+	"Connected": ("Conectada", "ok"),
+	"Connecting": ("Conectando", "busy"),
+	"Waiting for code": ("Pide un código", "needs"),
+	"Needs attention": ("Hay que reconectar", "needs"),
+	"Error": ("No se pudo sincronizar", "needs"),
+	"Institution unavailable": ("El banco no responde", "wait"),
+	"Retired": ("Ya no se puede conectar", "off"),
+	"Disconnected": ("Desconectada", "off"),
+}
+_CONNECTION_KINDS = {"Bank": "Banco", "Tax": "SAT", "Wallet": "Monedero", "Other": "Institución"}
+
+
+def connection_state(status, is_twofa=False):
+	"""{word, tone, step} of a bank login. ``step`` is what its one filled button does:
+	«sync» (Sincronizar ahora), «code» (open Syncfy for the one-time code), «reconnect»
+	(open Syncfy on the login to fix it), «connect» (connect it again) or None (nothing
+	the person can do: it is working, or the bank is down)."""
+	word, tone = _CONNECTION_STATES.get(status or "", ("Conectando", "busy"))
+	if status == "Connected":
+		step = "code" if is_twofa else "sync"
+	elif status == "Waiting for code":
+		step = "code"
+	elif status == "Needs attention":
+		step = "reconnect"
+	elif status == "Error":
+		step = "sync"
+	elif status == "Disconnected":
+		step = "connect"
+	else:
+		step = None
+	return {"word": word, "tone": tone, "step": step}
+
+
+def connection_detail(status, message, word, is_twofa=False):
+	"""The connector's own sentence for this state, already translated, minus
+	what the hero says above it: a working login does not repeat «Conectada.»,
+	and one that asks for a code says so in the shell's own line."""
+	if status != "Connected":
+		return message
+	if is_twofa:
+		return ""
+	head = f"{word}."
+	return message[len(head) :].strip() if message.startswith(head) else message
+
+
+def connection_kind(kind):
+	return _CONNECTION_KINDS.get(kind or "", "Institución")
+
+
+# Movements that wait for the person, by the connector's lane state.
+REVIEW_STATES = ("Held", "Removed at source")
+UNLINKED_STATE = "Not linked"
