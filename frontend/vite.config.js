@@ -4,6 +4,7 @@ import vueJsx from '@vitejs/plugin-vue-jsx'
 import path from 'path'
 import { VitePWA } from 'vite-plugin-pwa'
 import { retainPreviousBuilds } from './scripts/retain-builds.mjs'
+import { lucideSubset } from './scripts/lucide-subset.mjs'
 import { translationKeys } from './scripts/translation-keys.mjs'
 
 // https://vitejs.dev/config/
@@ -20,6 +21,8 @@ export default defineConfig(async () => {
       retain,
       // translation-keys.json: the strings the server ships translations for.
       translationKeys(),
+      // virtual:lucide-subset: the icons the source names, cut from the sprite.
+      lucideSubset(),
       {
         name: 'emit-version-json',
         apply: 'build',

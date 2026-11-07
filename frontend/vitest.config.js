@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitest/config'
 import vue from '@vitejs/plugin-vue'
 import path from 'path'
+import { lucideSubset } from './scripts/lucide-subset.mjs'
 
 // `~icons/*` is resolved by unplugin-icons inside the frappe-ui vite plugin,
 // which vitest does not load; stub every icon as an empty component so
@@ -16,7 +17,7 @@ const stubIcons = {
 export default defineConfig({
   // SFC transform for component tests (doco/forms renderer); pure-JS unit
   // tests are unaffected.
-  plugins: [vue(), stubIcons],
+  plugins: [vue(), stubIcons, lucideSubset()],
   test: {
     globals: true,
     environment: 'happy-dom',
