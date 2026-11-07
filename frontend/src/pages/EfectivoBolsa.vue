@@ -107,6 +107,25 @@
           </div>
         </section>
 
+        <!-- The turn its cash came from: whoever opens the bag cold knows which corte it closed. -->
+        <section
+          v-if="source"
+          class="mt-5"
+          aria-label="De qué corte salió"
+          data-efectivo-bolsa-turno
+        >
+          <h2 class="px-4 pb-1 text-sm font-semibold text-ink-gray-8">
+            De qué corte salió
+          </h2>
+          <ListRow
+            :title="source.title"
+            :subtitle="source.line"
+            :subtitle-lines="2"
+            icon="lucide-receipt"
+            :to="source.to"
+          />
+        </section>
+
         <section class="mt-5" aria-label="Por qué manos pasó">
           <h2 class="px-4 pb-1 text-sm font-semibold text-ink-gray-8">
             Por qué manos pasó
@@ -257,6 +276,7 @@ import {
   listPhotos,
   money,
   printEvidence,
+  shiftSource,
   uploadPhoto,
   who,
 } from '@/components/efectivo/efectivo'
@@ -270,7 +290,9 @@ import {
   verifyBag,
 } from '@/components/efectivo/steps'
 import { useLiveList } from '@/composables/liveList'
+import { shellBoot } from '@/composables/muelleShell'
 import { formatDateTime } from '@/utils/display'
+import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
 
 const props = defineProps({ name: { type: String, required: true } })
 const data = ref(null)
@@ -285,6 +307,14 @@ const bag = computed(() => data.value?.bag || null)
 const safe = computed(() => data.value?.safe || { can: {} })
 const people = computed(() => data.value?.people || {})
 const counts = computed(() => data.value?.counts || [])
+/** The bag's turn; its closing opens in Resultados when that module is on. */
+const sourceOf = (extra = {}) =>
+  shiftSource(bag.value?.shift, people.value, {
+    currency: safe.value.currency,
+    link: moduleEnabled(shellBoot.value, 'resultados'),
+    ...extra,
+  })
+const source = computed(() => sourceOf())
 
 const next = computed(() => {
   const found = bagStep(bag.value, safe.value, data.value?.me)
@@ -385,7 +415,14 @@ function run(action) {
       const open = [...counts.value]
         .reverse()
         .find((c) => c.state === 'Exception')
-      return open ? reviewCount(open, s, p) : null
+      return open
+        ? reviewCount(
+            open,
+            s,
+            p,
+            sourceOf({ note: open.note, noteBy: open.counted_by }),
+          )
+        : null
     },
   }
   step.value = builders[action]?.() || null

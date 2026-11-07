@@ -19,6 +19,10 @@ const {
   holderText,
   minorCount,
   oneInstruction,
+  salesWord,
+  shiftLine,
+  shiftSource,
+  shiftWhen,
   totalMinor,
 } = await import('@/components/efectivo/efectivo')
 const steps = await import('@/components/efectivo/steps')
@@ -459,5 +463,142 @@ describe('where the cash is', () => {
       ['Available', 0.75, 0.25],
     ])
     expect(cashSegments([{ key: 'loose', amount: 0 }])[0].share).toBe(0)
+  })
+})
+
+describe('the turn the cash came from', () => {
+  // Saturday 7 Nov 2026, 10:00 on the device: Friday is «ayer».
+  const now = new Date(2026, 10, 7, 10, 0)
+  const corte = {
+    shift: 'POSA-OS-1',
+    cashier: 'jenni@x',
+    caja: 'Doco Ventas',
+    opened: '2026-11-03 09:28:19.995152',
+    closed: '2026-11-03 15:01:17.156824',
+    closing: 'POSA-CS-1',
+    sales: 7,
+    total: 920,
+  }
+
+  it('says when the turn ran, across midnight or still open', () => {
+    expect(shiftWhen(corte, { now })).toBe('mar 3 nov, 09:28–15:01')
+    expect(
+      shiftWhen(
+        {
+          ...corte,
+          opened: '2026-11-06 15:05:10',
+          closed: '2026-11-06 19:49:15',
+        },
+        { now },
+      ),
+    ).toBe('ayer, 15:05–19:49')
+    expect(
+      shiftWhen(
+        {
+          ...corte,
+          opened: '2026-11-05 22:00:00',
+          closed: '2026-11-06 02:10:00',
+        },
+        { now },
+      ),
+    ).toBe('jue 5 nov 22:00 – ayer 02:10')
+    expect(
+      shiftWhen(
+        {
+          ...corte,
+          opened: '2026-11-07 09:26:54',
+          closed: null,
+          closing: null,
+        },
+        { now },
+      ),
+    ).toBe('abierto desde hoy 09:26')
+    expect(shiftWhen(null)).toBe('')
+  })
+
+  it('a row names the cashier, the day and how many sales the corte holds', () => {
+    expect(shiftLine(corte, people, { now })).toBe(
+      'Corte de Jenni · mar 3 nov, 09:28–15:01 · 7 ventas',
+    )
+    expect(shiftLine({ ...corte, sales: 1 }, people, { now })).toMatch(
+      /· 1 venta$/,
+    )
+    expect(salesWord(0)).toBe('sin ventas')
+    // A fund leaves the sales out; an open turn has none to count yet.
+    expect(shiftLine(corte, people, { now, sales: false })).toBe(
+      'Corte de Jenni · mar 3 nov, 09:28–15:01',
+    )
+    expect(
+      shiftLine(
+        {
+          ...corte,
+          opened: '2026-11-07 09:26:54',
+          closed: null,
+          closing: null,
+          sales: null,
+        },
+        people,
+        { now },
+      ),
+    ).toBe('Turno de Jenni · abierto desde hoy 09:26')
+    expect(shiftLine(null, people)).toBe('')
+  })
+
+  it('the page adds the caja, the sales total when it is visible, the note and the closing', () => {
+    const source = shiftSource(corte, people, {
+      now,
+      link: true,
+      note: 'faltan las recargas del cel',
+      noteBy: 'jenni@x',
+    })
+    expect(source).toEqual({
+      title: 'Corte de Jenni',
+      line: 'mar 3 nov, 09:28–15:01 · 7 ventas por $920.00 · Doco Ventas',
+      note: 'Nota de Jenni: «faltan las recargas del cel»',
+      to: {
+        name: 'ResultadosDocumento',
+        params: { doctype: 'POS Closing Shift', name: 'POSA-CS-1' },
+      },
+    })
+    // A reader without the safe's totals gets the count of sales, no amount, and no link without Resultados.
+    const blind = shiftSource({ ...corte, total: null }, people, { now })
+    expect(blind.line).toBe('mar 3 nov, 09:28–15:01 · 7 ventas · Doco Ventas')
+    expect(blind.to).toBeNull()
+    expect(blind.note).toBe('')
+    expect(shiftSource(null, people)).toBeNull()
+  })
+
+  it('the review of a short corte and the count of a bag carry their turn', () => {
+    const source = shiftSource(corte, people, { now })
+    const review = steps.reviewCount(
+      {
+        name: 'CASH-COUNT-1',
+        amount: 1211,
+        expected_amount: 1361,
+        difference: -150,
+        counted_by: 'jenni@x',
+      },
+      storeSafe,
+      people,
+      source,
+    )
+    expect(review.props.source).toBe(source)
+    expect(review.props.title).toBe('Faltante por revisar')
+    expect(review.props.message).toBe(
+      'Se esperaban $1,361.00 y Jenni contó $1,211.00.',
+    )
+    const verify = steps.verifyBag(
+      {
+        name: 'BAG-1',
+        seal: 'JENNIFER-031126-02',
+        prepared_by: 'jenni@x',
+        shift: corte,
+      },
+      storeSafe,
+      people,
+    )
+    expect(verify.props.custody).toMatch(
+      /^Corte de Jenni · .+ · 7 ventas\. La selló Jenni\./,
+    )
   })
 })

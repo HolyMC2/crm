@@ -27,6 +27,29 @@
         {{ custody }}
       </p>
       <BagItems v-if="items.length" :items="items" />
+      <!-- Where the cash came from: the turn and its closing, the counter's note. -->
+      <div
+        v-if="source"
+        class="rounded-6 border border-outline-gray-1 px-3 py-2"
+        data-efectivo-source
+      >
+        <p class="text-base font-medium text-ink-gray-9">{{ source.title }}</p>
+        <p v-if="source.line" class="text-sm text-ink-gray-6">
+          {{ source.line }}
+        </p>
+        <p v-if="source.note" class="mt-1 text-sm text-ink-gray-8">
+          {{ source.note }}
+        </p>
+        <RouterLink
+          v-if="source.to"
+          :to="source.to"
+          class="press -mx-1 mt-1 inline-flex min-h-10 items-center gap-1 rounded-full px-1 text-sm font-medium text-ink-gray-9 underline"
+          data-efectivo-source-link
+        >
+          Ver el corte
+          <span class="lucide-chevron-right size-4" aria-hidden="true" />
+        </RouterLink>
+      </div>
       <p v-if="message" class="text-sm text-ink-gray-7">{{ message }}</p>
       <p
         v-if="guard"
@@ -139,6 +162,8 @@ const props = defineProps({
   currency: { type: String, default: 'MXN' },
   custody: { type: String, default: '' },
   message: { type: String, default: '' },
+  /** The turn the cash came from (`shiftSource`): { title, line, note?, to? }. */
+  source: { type: Object, default: null },
   /** The bags a step on several acts on: [{ key, title, meta? }]. */
   items: { type: Array, default: () => [] },
   /**

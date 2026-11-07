@@ -18,6 +18,7 @@ import {
   money,
   oneInstruction,
   prepareTransfer,
+  shiftLine,
   uploadPhoto,
   who,
 } from './efectivo'
@@ -76,7 +77,8 @@ export function verifyBag(bag, safe, people) {
       title: `Contar la bolsa ${bag.seal}`,
       subtitle: 'Cuenta sin ver lo que dice la etiqueta',
       currency: safe.currency,
-      custody: `La selló ${who(bag.prepared_by, people)}. Si tu conteo cuadra queda verificada en la caja fuerte; si no, queda con diferencia para que la revise otra persona.`,
+      // The turn it came from first: the counter knows which corte this cash closed.
+      custody: `${bag.shift ? `${shiftLine(bag.shift, people)}. ` : ''}La selló ${who(bag.prepared_by, people)}. Si tu conteo cuadra queda verificada en la caja fuerte; si no, queda con diferencia para que la revise otra persona.`,
       confirmLabel: 'Guardar conteo',
     },
     submit: guarded(async (v, id) => {
@@ -601,7 +603,8 @@ export function fundSafe(safe) {
 }
 
 /** A count that did not match (bag, safe or drawer): the reviewer books the difference. */
-export function reviewCount(count, safe, people) {
+/** `source`: the turn the count closed (`shiftSource`), shown above the sentence. */
+export function reviewCount(count, safe, people, source = null) {
   const diff = Number(count.difference)
   const sentence =
     count.expected_amount === null || count.expected_amount === undefined
@@ -618,6 +621,7 @@ export function reviewCount(count, safe, people) {
             : 'Diferencia por revisar',
       amount: Math.abs(diff) || count.amount,
       currency: safe.currency,
+      source,
       message: sentence,
       custody:
         'Al resolverla, el conteo queda como lo correcto y la diferencia se registra en la cuenta de diferencias de la caja fuerte.',

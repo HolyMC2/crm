@@ -196,7 +196,8 @@
                 <li v-for="c in arqueos" :key="c.name">
                   <ListRow
                     :title="countTitle(c)"
-                    :subtitle="`${who(c.counted_by, people)} · ${formatDateTime(c.modified)}`"
+                    :subtitle="countLine(c, c._safe, { difference: false })"
+                    :subtitle-lines="2"
                     :subtitle-tone="c.state === 'Exception' ? 'danger' : ''"
                     icon="lucide-calculator"
                     :to="
@@ -208,7 +209,14 @@
                       !c.bag &&
                         c.state === 'Exception' &&
                         c._safe.can.review &&
-                        open(reviewCount(c, c._safe, people))
+                        open(
+                          reviewCount(
+                            c,
+                            c._safe,
+                            people,
+                            countSource(c, c._safe),
+                          ),
+                        )
                     "
                   >
                     <template #trailing>
@@ -257,6 +265,7 @@
                     class="min-w-0 flex-1"
                     :title="row.title"
                     :subtitle="row.subtitle"
+                    :subtitle-lines="2"
                     :subtitle-tone="row.urgent ? 'danger' : ''"
                     :icon="row.icon"
                     :to="row.to"
@@ -342,6 +351,7 @@
                   <ListRow
                     :title="bag.seal"
                     :subtitle="bagLine(bag)"
+                    :subtitle-lines="2"
                     :subtitle-tone="bag.state === 'Disputed' ? 'danger' : ''"
                     :to="
                       selecting
@@ -572,6 +582,8 @@ import {
   homeRead,
   money,
   printLabels,
+  shiftLine,
+  shiftSource,
   stateDot,
   who,
 } from '@/components/efectivo/efectivo'
@@ -599,10 +611,11 @@ import {
   verifyTogether,
 } from '@/components/efectivo/steps'
 import { useLiveList } from '@/composables/liveList'
+import { shellBoot } from '@/composables/muelleShell'
 import { useTween } from '@/composables/tween'
 import { createListCache } from '@/utils/listCache'
 import { formatDateTime } from '@/utils/display'
-import { matchTokens } from '@/vendor/muelle-shell/contracts'
+import { matchTokens, moduleEnabled } from '@/vendor/muelle-shell/contracts'
 
 const route = useRoute()
 const router = useRouter()
@@ -690,6 +703,8 @@ const matches = (bag) =>
       who(bag.holder?.user, people.value),
       String(bag.amount),
       bagState(bag.state).label,
+      shiftLine(bag.shift, people.value),
+      who(bag.shift?.cashier, people.value),
     ].join(' '),
     search.value,
   )
@@ -723,13 +738,26 @@ const emptyBags = computed(
       done: 'Aún no hay bolsas terminadas.',
     })[bagView.value],
 )
-/** The row's second line: what the bag is for and who answers for it now. */
+/**
+ * The row's second line: what the bag is for, the turn its cash came from
+ * and who answers for it now («Corte de Teresa · vie 6 nov, 15:05–19:49 ·
+ * 7 ventas · responde Teresa»).
+ */
 function bagLine(bag) {
-  const fund = bag.purpose === 'Float' ? 'Fondo · ' : ''
+  const fund = bag.purpose === 'Float'
   const h = bag.holder || {}
-  if (h.kind === 'safe')
-    return `${fund}${fund ? 'responde' : 'Responde'} ${who(h.user, people.value)}`
-  return fund + holderText(bag, people.value)
+  const holder =
+    h.kind === 'safe' && h.user
+      ? `responde ${who(h.user, people.value)}`
+      : holderText(bag, people.value)
+  const line = [
+    fund ? 'Fondo' : '',
+    shiftLine(bag.shift, people.value, { sales: !fund }),
+    holder,
+  ]
+    .filter(Boolean)
+    .join(' · ')
+  return line.charAt(0).toUpperCase() + line.slice(1)
 }
 
 const liveTransfers = computed(() =>
@@ -787,19 +815,76 @@ function countTitle(c) {
     }[c.scope] || 'Conteo'
   return c.state === 'Exception' ? `${what}: no cuadró` : what
 }
+/** The turn a count closed: its own, or the one of the bag it counted. */
+function countShift(c, safe) {
+  return (
+    c.shift || (c.bag && safe.bags.find((b) => b.name === c.bag)?.shift) || null
+  )
+}
+/**
+ * A count's second line: the turn it closed, who counted when it was not
+ * that cashier, the difference and the counter's own note («Corte de Jennifer ·
+ * mar 3 nov, 09:28–15:01 · 7 ventas · faltan $150.00 · «faltan las recargas»»).
+ */
+function countLine(c, safe, { difference = true } = {}) {
+  const shift = countShift(c, safe)
+  const counter = who(c.counted_by, people.value)
+  const d = Number(c.difference) || 0
+  return [
+    shift
+      ? shiftLine(shift, people.value)
+      : `Contó ${counter} · ${formatDateTime(c.modified)}`,
+    shift && c.counted_by && shift.cashier !== c.counted_by
+      ? `contó ${counter}`
+      : '',
+    difference && c.state === 'Exception' && d
+      ? `${d < 0 ? 'faltan' : 'sobran'} ${money(Math.abs(d), safe.currency)}`
+      : '',
+    c.note ? `«${c.note}»` : '',
+  ]
+    .filter(Boolean)
+    .join(' · ')
+}
+/** Resultados opens a closing; without that module the turn still reads, unlinked. */
+const corteLink = computed(() => moduleEnabled(shellBoot.value, 'resultados'))
+/** The review sheet's «De qué corte»: the turn, its closing and the counter's note. */
+function countSource(c, safe) {
+  const shift = countShift(c, safe)
+  if (!shift)
+    return c.note
+      ? {
+          title: `Nota de ${who(c.counted_by, people.value)}`,
+          note: `«${c.note}»`,
+        }
+      : null
+  return shiftSource(shift, people.value, {
+    currency: safe.currency,
+    link: corteLink.value,
+    note: c.note,
+    noteBy: c.counted_by,
+  })
+}
 function signed(n, currency) {
   const v = Number(n) || 0
   return `${v > 0 ? '+' : v < 0 ? '−' : ''}${money(Math.abs(v), currency)}`
 }
 
+/** A Te toca bag's line after its seal: its turn, then who last touched it. */
 function waitingLine(action, bag) {
   const name = (u) => who(u, people.value)
-  if (action === 'verify') return `la selló ${name(bag.prepared_by)}`
+  const turn = shiftLine(bag.shift, people.value)
+  let step = holderText(bag, people.value)
+  // The turn already names who sealed it when that was its own cashier.
+  if (action === 'verify')
+    step =
+      turn && bag.shift.cashier === bag.prepared_by
+        ? ''
+        : `la selló ${name(bag.prepared_by)}`
   if (action === 'dispatch')
-    return bag.verified_by
+    step = bag.verified_by
       ? `la verificó ${name(bag.verified_by)}`
       : 'verificada'
-  return holderText(bag, people.value)
+  return [turn, step].filter(Boolean).join(' · ')
 }
 
 /** Te toca: one row per step, with what it is and the money it moves. */
@@ -826,12 +911,15 @@ const waitingRows = computed(() => {
           key: `c:${w.name}`,
           action: 'review',
           title: countTitle(c),
-          subtitle: `Contó ${who(c.counted_by, people.value)} · diferencia ${signed(c.difference, safe.currency)}`,
+          subtitle: countLine(c, safe),
           urgent: true,
           icon: 'lucide-calculator',
           amount: money(c.amount, safe.currency),
           to: c.bag ? { name: 'EfectivoBolsa', params: { name: c.bag } } : null,
-          open: c.bag ? null : () => open(reviewCount(c, safe, people.value)),
+          open: c.bag
+            ? null
+            : () =>
+                open(reviewCount(c, safe, people.value, countSource(c, safe))),
         })
       } else if (w.kind === 'request') {
         const r = safe.requests.find((x) => x.name === w.name)

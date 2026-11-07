@@ -1,5 +1,11 @@
 import { call } from 'frappe-ui'
-import { formatMoney } from '@/utils/display'
+import {
+  dayDiff,
+  formatDate,
+  formatMoney,
+  formatTime,
+  parseServerDate,
+} from '@/utils/display'
 
 // Efectivo (Shell-S14): POS Awesome's cash custody in the shell. Reads come
 // from posawesome's shell read (api/cash_custody/shell.py); every step is the
@@ -263,6 +269,80 @@ export const PURPOSE = { Float: 'Fondo para una caja', Takings: 'Recaudación' }
 export function who(user, people = {}) {
   if (!user) return ''
   return people[user] || String(user).split('@')[0]
+}
+
+/** «Jenni» of «Jenni Corona»: a row names the cashier, the page the whole name. */
+const firstName = (name) => String(name || '').split(/\s+/)[0]
+
+/** «7 ventas», «1 venta», «sin ventas». */
+export const salesWord = (n) =>
+  n === 1 ? '1 venta' : n ? `${n} ventas` : 'sin ventas'
+
+/**
+ * When a turn ran: «mar 3 nov, 09:28–15:01», «ayer, 15:05–19:49»; across
+ * midnight «jue 5 nov 22:00 – vie 6 nov 02:10»; still open «abierto desde hoy 09:26».
+ */
+export function shiftWhen(shift, { now = new Date() } = {}) {
+  const begin = parseServerDate(shift?.opened)
+  if (!begin) return ''
+  const day = formatDate(begin, { now, weekday: true })
+  const start = formatTime(begin)
+  const end = parseServerDate(shift.closed)
+  if (!end) return `abierto desde ${day} ${start}`
+  if (dayDiff(end, begin))
+    return `${day} ${start} – ${formatDate(end, { now, weekday: true })} ${formatTime(end)}`
+  return `${day}, ${start}–${formatTime(end)}`
+}
+
+/**
+ * The turn a bag or a count came from, in a row: «Corte de Teresa · vie 6
+ * nov, 15:05–19:49 · 7 ventas», or «Turno de Jenni · abierto desde hoy
+ * 09:26» while it runs. `sales: false` leaves the sales out (a fund).
+ */
+export function shiftLine(shift, people = {}, { now, sales = true } = {}) {
+  if (!shift) return ''
+  const name = firstName(who(shift.cashier, people))
+  return [
+    `${shift.closing ? 'Corte' : 'Turno'} de ${name}`,
+    shiftWhen(shift, { now }),
+    shift.closing && sales ? salesWord(shift.sales) : '',
+  ]
+    .filter(Boolean)
+    .join(' · ')
+}
+
+/**
+ * The same turn where a bag or a difference is worked on: {title, line, note,
+ * to}. The line adds the caja and, for who sees the safe's totals, what the
+ * turn sold; `to` opens its closing in Resultados (`link`: that module is on).
+ */
+export function shiftSource(
+  shift,
+  people = {},
+  { currency = 'MXN', now, link = false, note = '', noteBy = '' } = {},
+) {
+  if (!shift) return null
+  const sold = !shift.closing
+    ? ''
+    : shift.total === null || shift.total === undefined
+      ? salesWord(shift.sales)
+      : `${salesWord(shift.sales)} por ${money(shift.total, currency)}`
+  return {
+    title: `${shift.closing ? 'Corte' : 'Turno'} de ${who(shift.cashier, people)}`,
+    line: [shiftWhen(shift, { now }), sold, shift.caja]
+      .filter(Boolean)
+      .join(' · '),
+    note: note
+      ? `${noteBy ? `Nota de ${firstName(who(noteBy, people))}` : 'Nota'}: «${note}»`
+      : '',
+    to:
+      link && shift.closing
+        ? {
+            name: 'ResultadosDocumento',
+            params: { doctype: 'POS Closing Shift', name: shift.closing },
+          }
+        : null,
+  }
 }
 
 /** «La tiene Karla, rumbo al banco»: who answers for the cash right now. */
