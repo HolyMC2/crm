@@ -75,6 +75,7 @@ vi.mock('@/components/ui', async () => {
           ),
     },
     ExpandTransition: pass('div'),
+    EmptyState: pass('div'),
     BottomSheet: pass('div'),
     ChipGroup: pass('div'),
     DateField: pass('div'),
@@ -94,6 +95,9 @@ vi.mock('vue-router', async () => {
     },
   }
 })
+vi.mock('@/utils/listCache', () => ({
+  createListCache: () => ({ key: () => '', paint: () => {}, save: () => {} }),
+}))
 vi.mock('@/composables/liveList', () => ({
   useLiveList: () => ({ fresh: { value: new Set() }, mark: () => {} }),
 }))
@@ -104,9 +108,12 @@ vi.mock('@/components/bancos/syncfyWidget', async (original) => ({
 
 import {
   askText,
+  conexionBank,
   conexionLine,
   conexionListLine,
   jobOf,
+  needsChipText,
+  sameAccountName,
   syncfyAccountTitle,
   ledgerLabel,
   readyText,
@@ -117,6 +124,7 @@ import {
 import { useConexionStep } from '@/components/bancos/useConexionStep'
 import ConexionDetalle from '@/components/bancos/ConexionDetalle.vue'
 import ConexionesSeccion from '@/components/bancos/ConexionesSeccion.vue'
+import CuentasLista from '@/components/bancos/CuentasLista.vue'
 
 const flush = async () => {
   for (let i = 0; i < 8; i++) {
@@ -199,6 +207,31 @@ const REVISAR = [
 ]
 
 describe('bancos conectados words', () => {
+  it('names the bank of a login and the logins that need the person', () => {
+    expect(conexionBank({ title: 'Acme Bank · t**t' })).toBe('Acme Bank')
+    expect(needsChipText([])).toBe('')
+    expect(
+      needsChipText([
+        { title: 'Acme Bank · t**t', word: 'Hay que reconectar' },
+      ]),
+    ).toBe('Acme Bank: hay que reconectar')
+    expect(needsChipText([{ title: '', word: 'No se pudo sincronizar' }])).toBe(
+      'No se pudo sincronizar',
+    )
+    expect(needsChipText([{ title: 'A' }, { title: 'B' }])).toBe(
+      '2 conexiones necesitan atención',
+    )
+  })
+
+  it('reads two names of one account as the same', () => {
+    expect(sameAccountName('ACME Checking', 'ACME Checking ••0001')).toBe(true)
+    expect(sameAccountName('Débito BBVA', 'debito-bbva')).toBe(true)
+    expect(sameAccountName('BBVA Debito', 'Cuenta de cheques ••1234')).toBe(
+      false,
+    )
+    expect(sameAccountName('', '')).toBe(false)
+  })
+
   it('names the one button by the step the server chose', () => {
     expect(stepLabel({ step: 'sync', status: 'Connected' })).toBe(
       'Sincronizar ahora',
@@ -549,6 +582,33 @@ describe('ConexionDetalle', () => {
     expect(open.textContent).toContain('Enlazar')
   })
 
+  it('does not repeat the name of an account created from this one', async () => {
+    const [first, second] = LOGIN.accounts
+    mount(
+      { conectados: true, conectar: true },
+      {
+        ...LOGIN,
+        accounts: [
+          { ...first, cuenta_label: 'Cuenta de cheques' },
+          {
+            ...second,
+            cuenta_label: 'Tarjeta Oro',
+            linked: true,
+            contador: true,
+          },
+        ],
+      },
+    )
+    await flush()
+    const lines = [
+      ...host.querySelectorAll('[data-syncfy-account] [data-subtitle]'),
+    ]
+    expect(lines.map((l) => l.textContent)).toEqual([
+      'Llega a su cuenta en Bancos, 1 por revisar',
+      'Llega a su cuenta en Bancos (Contador)',
+    ])
+  })
+
   it('retries or skips a held movement with the connector', async () => {
     mount({ conectados: true, conectar: true })
     await flush()
@@ -682,13 +742,28 @@ describe('ConexionesSeccion', () => {
     word: 'Desconectada',
     tone: 'off',
   }
+  let reported
   const mount = (can, conexiones = [LOGIN, OK, OFF]) => {
+    reported = []
     state.call.mockResolvedValue({ enabled: true, conexiones, can })
     app = createApp({
-      render: () => h(ConexionesSeccion, { company: 'Grupo Doco', can }),
+      render: () =>
+        h(ConexionesSeccion, {
+          company: 'Grupo Doco',
+          can,
+          onNeeds: (list) => reported.push(list.map((c) => c.name)),
+        }),
     })
     app.mount(host)
   }
+
+  it('reports the logins that need the person, for the chip on the total', async () => {
+    mount({ conectados: true, conectar: true })
+    await flush()
+    expect(reported.at(-1)).toEqual(['cred-1'])
+    app.unmount()
+    expect(reported.at(-1)).toEqual([])
+  })
 
   it('lists the logins, flags the one that needs the person, folds the off ones', async () => {
     mount({ conectados: true, conectar: true })
@@ -732,5 +807,73 @@ describe('ConexionesSeccion', () => {
     await flush()
     expect(host.querySelector('[data-bancos-conexiones]')).toBeNull()
     expect(state.call).not.toHaveBeenCalled()
+  })
+})
+
+describe('CuentasLista', () => {
+  let host, app
+  beforeEach(() => {
+    state.call.mockReset()
+    state.push.mockReset()
+    state.route = { query: { empresa: 'Grupo Doco' }, params: {} }
+    host = document.createElement('div')
+    document.body.appendChild(host)
+  })
+  afterEach(() => {
+    app?.unmount()
+    host.remove()
+  })
+  const SECOND = { ...LOGIN, name: 'cred-9', title: 'Banorte · ana' }
+  const mount = (conexiones) => {
+    state.call.mockImplementation(async (method) => {
+      if (method === 'crm.api.bancos.cuentas')
+        return {
+          company: 'Grupo Doco',
+          empresas: ['Grupo Doco'],
+          currency: 'MXN',
+          total: 1500,
+          pending: 3,
+          cards: [],
+          can: { conectados: true, conectar: true, catalogo: false },
+        }
+      if (method === 'crm.api.bancos.conexiones')
+        return { enabled: true, conexiones, can: { conectar: true } }
+      return {}
+    })
+    app = createApp({ render: () => h(CuentasLista) })
+    app.mount(host)
+  }
+  const settle = async () => {
+    await flush()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    await flush()
+  }
+
+  it('brings a login that needs the person up to the total and opens it', async () => {
+    mount([LOGIN])
+    await settle()
+    expect(host.querySelector('[data-bancos-pending]').textContent).toContain(
+      '3 movimientos sin conciliar',
+    )
+    const chip = host.querySelector('[data-bancos-conexion-aviso]')
+    expect(chip.textContent.trim()).toBe('BBVA: hay que reconectar')
+    chip.click()
+    expect(state.push).toHaveBeenCalledWith({
+      name: 'BancoConexion',
+      params: { conexion: 'cred-1' },
+      query: { empresa: 'Grupo Doco' },
+    })
+  })
+
+  it('counts several and shows nothing when every login works', async () => {
+    mount([LOGIN, SECOND])
+    await settle()
+    expect(
+      host.querySelector('[data-bancos-conexion-aviso]').textContent.trim(),
+    ).toBe('2 conexiones necesitan atención')
+    app.unmount()
+    mount([{ ...LOGIN, tone: 'ok', word: 'Conectada' }])
+    await settle()
+    expect(host.querySelector('[data-bancos-conexion-aviso]')).toBeNull()
   })
 })

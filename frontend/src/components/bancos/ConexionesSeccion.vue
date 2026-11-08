@@ -2,7 +2,8 @@
   <!-- «Conexiones con tu banco» on the Bancos cards: each login with its
        state (or how fresh it is), what waits for the person, and for a
        manager «Conectar un banco». A login that needs the person comes
-       first; the ones that no longer sync fold at the end. -->
+       first (and is reported up for the chip on the total); the ones that
+       no longer sync fold at the end. -->
   <section
     v-if="visible"
     class="mt-6"
@@ -112,7 +113,13 @@
   </section>
 </template>
 <script setup>
-import { computed, defineAsyncComponent, ref, watch } from 'vue'
+import {
+  computed,
+  defineAsyncComponent,
+  onBeforeUnmount,
+  ref,
+  watch,
+} from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ExpandTransition, ListRow } from '@/components/ui'
 import { useLiveList } from '@/composables/liveList'
@@ -131,6 +138,8 @@ const props = defineProps({
   can: { type: Object, default: () => ({}) },
   selected: { type: String, default: '' },
 })
+/** `needs`: the logins that need the person, for the chip on Bancos' total. */
+const emit = defineEmits(['needs'])
 const route = useRoute()
 const router = useRouter()
 const data = ref(null)
@@ -147,6 +156,12 @@ const companyQuery = computed(() =>
 const all = computed(() => data.value?.conexiones || [])
 const active = computed(() => all.value.filter((c) => c.tone !== 'off'))
 const off = computed(() => all.value.filter((c) => c.tone === 'off'))
+watch(
+  () => active.value.filter((c) => c.tone === 'needs'),
+  (needs) => emit('needs', needs),
+  { immediate: true },
+)
+onBeforeUnmount(() => emit('needs', []))
 
 const KIND_ICONS = {
   Bank: 'lucide-wallet',

@@ -58,13 +58,33 @@
               : 'Saldo en libros, hoy. Las tarjetas no suman.'
           }}
         </p>
-        <p
-          v-if="data.pending"
-          class="mt-3 inline-flex min-h-8 items-center gap-1.5 rounded-full bg-surface-amber-2 px-3 text-sm font-medium text-ink-amber-8"
-          data-bancos-pending
+        <div
+          v-if="data.pending || needs.length"
+          class="mt-3 flex flex-wrap items-center gap-2"
         >
-          {{ pendingText(data.pending) }}
-        </p>
+          <p
+            v-if="data.pending"
+            class="inline-flex min-h-8 items-center gap-1.5 rounded-full bg-surface-amber-2 px-3 text-sm font-medium text-ink-amber-8"
+            data-bancos-pending
+          >
+            {{ pendingText(data.pending) }}
+          </p>
+          <!-- A bank login that needs the person sits far below the cards;
+               the chip brings it up here and opens it (several: the list). -->
+          <button
+            v-if="needs.length"
+            type="button"
+            class="press inline-flex min-h-8 items-center gap-1 rounded-full bg-surface-amber-2 py-1 pl-3 pr-2 text-left text-sm font-medium leading-tight text-ink-amber-8"
+            data-bancos-conexion-aviso
+            @click="openNeeds"
+          >
+            {{ needsChipText(needs) }}
+            <span
+              class="lucide-chevron-right size-4 flex-none"
+              aria-hidden="true"
+            />
+          </button>
+        </div>
       </section>
 
       <EmptyState
@@ -102,6 +122,7 @@
         :company="data.company"
         :can="data.can"
         :selected="selectedConexion"
+        @needs="needs = $event"
       />
 
       <section v-if="data.can?.catalogo" class="mt-6" aria-label="Contabilidad">
@@ -154,6 +175,7 @@ import CuentaCard from './CuentaCard.vue'
 import { LIVE_DOCTYPES, bancosApi, errorText, money } from './bancos'
 import { useLiveList } from '@/composables/liveList'
 import { createListCache } from '@/utils/listCache'
+import { needsChipText } from './conectados'
 
 // Bancos conectados (syncfy_connector): its own chunk, only where it is on.
 const ConexionesSeccion = defineAsyncComponent(
@@ -208,6 +230,23 @@ function pendingText(n) {
   return n === 1
     ? '1 movimiento sin conciliar'
     : `${n} movimientos sin conciliar`
+}
+
+// Logins that need the person, reported by «Conexiones con tu banco».
+const needs = ref([])
+function openNeeds() {
+  if (needs.value.length === 1) {
+    router.push({
+      name: 'BancoConexion',
+      params: { conexion: needs.value[0].name },
+      query: companyQuery.value,
+    })
+    return
+  }
+  const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+  document
+    .querySelector('[data-bancos-conexiones]')
+    ?.scrollIntoView({ block: 'start', behavior: still ? 'auto' : 'smooth' })
 }
 
 function pickCompany(value) {

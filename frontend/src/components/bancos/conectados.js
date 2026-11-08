@@ -121,14 +121,50 @@ export function syncfyAccountTitle(account, conexion) {
     .split(' · ')
     .map((p) => p.trim())
     .filter(Boolean)
-  const bank = String(conexion?.title || '')
-    .split(' · ')[0]
-    .trim()
+  const bank = conexionBank(conexion)
   if (parts.length > 1 && bank && parts[0] === bank) parts.shift()
   let text = parts.join(' ')
   if (account?.last4 && !text.includes(`••${account.last4}`))
     text = `${text} ••${account.last4}`
   return text.trim() || 'Cuenta'
+}
+
+/** The bank a login is at: «Acme Bank» from «Acme Bank · t**t». */
+export function conexionBank(conexion) {
+  return String(conexion?.title || '')
+    .split(' · ')[0]
+    .trim()
+}
+
+/**
+ * Two names of one account read as the same: «ACME Checking» and «ACME
+ * Checking ••0001», whatever the accents, case or punctuation.
+ */
+export function sameAccountName(a, b) {
+  const plain = (s) =>
+    String(s || '')
+      .replace(/••\s*\d+/g, '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '')
+  return !!plain(a) && plain(a) === plain(b)
+}
+
+/**
+ * The chip on Bancos' total for the logins that need the person: one names
+ * its bank and state («Acme Bank: hay que reconectar»), several are counted.
+ */
+export function needsChipText(logins) {
+  const list = logins || []
+  if (list.length > 1) return `${list.length} conexiones necesitan atención`
+  const [c] = list
+  if (!c) return ''
+  const word = c.word || 'Necesita atención'
+  const bank = conexionBank(c)
+  return bank
+    ? `${bank}: ${word.charAt(0).toLowerCase()}${word.slice(1)}`
+    : word
 }
 
 /** A Bank Account as a person names it: «BBVA Oro ••9775», not «BBVA Oro - BBVA Mexico». */

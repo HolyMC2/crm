@@ -342,6 +342,7 @@ import {
   movementsWaiting,
   readyText,
   refreshedText,
+  sameAccountName,
   stepLabel,
   syncfy,
   syncfyAccountTitle,
@@ -424,8 +425,15 @@ function accountLine(account) {
     return held ? `Sin enlazar, ${movementsWaiting(held)}` : 'Sin enlazar'
   }
   const waiting = waitingText({ revisar: account.waiting?.revisar })
-  const feeds = account.cuenta_label
-    ? `Llega a ${account.cuenta_label}${account.contador ? ' (Contador)' : ''}`
+  // An account created from this one carries its name; the row's title says it already.
+  const target = sameAccountName(
+    account.cuenta_label,
+    syncfyAccountTitle(account, conexion.value),
+  )
+    ? 'su cuenta en Bancos'
+    : account.cuenta_label
+  const feeds = target
+    ? `Llega a ${target}${account.contador ? ' (Contador)' : ''}`
     : 'Enlazada'
   return waiting ? `${feeds}, ${waiting}` : feeds
 }
