@@ -13,7 +13,7 @@
       :back="pane ? false : backTo"
       back-label="Volver a Bancos"
       context="Bancos"
-      :title="conexion?.title || 'Conexión'"
+      :title="conexion ? conexionBank(conexion) || 'Conexión' : 'Conexión'"
       :bell="!pane"
       :stack="false"
     >
@@ -58,7 +58,10 @@
         aria-label="Estado"
         data-bancos-conexion-hero
       >
-        <p class="text-sm text-ink-gray-6">{{ conexion.kind_word }}</p>
+        <!-- Who logs in tells two logins at one bank apart: «Banco, usuario t**t». -->
+        <p class="text-sm text-ink-gray-6" data-bancos-conexion-tipo>
+          {{ [conexion.kind_word, conexion.user].filter(Boolean).join(', ') }}
+        </p>
         <p
           class="title-face text-2xl font-semibold"
           :class="
@@ -339,6 +342,8 @@ import { amountTone, bancosApi, errorText, money, signedMoney } from './bancos'
 import {
   LIVE_CONEXIONES,
   askText,
+  conexionBank,
+  conexionFullName,
   movementsWaiting,
   readyText,
   refreshedText,
@@ -407,7 +412,7 @@ const confirmCopy = computed(() =>
         tone: 'primary',
       }
     : {
-        title: `¿Desconectar ${conexion.value?.title || ''}?`,
+        title: `¿Desconectar ${conexionFullName(conexion.value)}?`,
         message:
           'Syncfy borra esta conexión y deja de traer movimientos. Los movimientos y documentos que ya están en Muelle se quedan. Para volver a conectarla tendrás que entrar otra vez al banco.',
         confirm: 'Desconectar',

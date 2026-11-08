@@ -109,7 +109,9 @@ vi.mock('@/components/bancos/syncfyWidget', async (original) => ({
 import {
   askText,
   conexionBank,
+  conexionFullName,
   conexionLine,
+  conexionName,
   conexionListLine,
   jobOf,
   needsChipText,
@@ -136,6 +138,8 @@ const flush = async () => {
 const LOGIN = {
   name: 'cred-1',
   title: 'BBVA · ana',
+  bank: 'BBVA',
+  user: 'usuario ana',
   kind: 'Bank',
   kind_word: 'Banco',
   status: 'Needs attention',
@@ -221,6 +225,20 @@ describe('bancos conectados words', () => {
     expect(needsChipText([{ title: 'A' }, { title: 'B' }])).toBe(
       '2 conexiones necesitan atención',
     )
+  })
+
+  it('names a login by its bank, and says who logs in only to tell two apart', () => {
+    const a = { name: 'a', bank: 'Acme Bank', user: 'usuario t**t' }
+    const b = { name: 'b', bank: 'Acme Bank', user: 'usuario m**a' }
+    const c = { name: 'c', bank: 'BBVA', user: 'usuario a**a' }
+    expect(conexionName(a, [a, c])).toBe('Acme Bank')
+    expect(conexionName(a, [a, b, c])).toBe('Acme Bank, usuario t**t')
+    expect(conexionFullName(c)).toBe('BBVA, usuario a**a')
+    // An older server sends only the connector's title.
+    expect(conexionName({ name: 'x', title: 'Acme Bank · t**t' })).toBe(
+      'Acme Bank',
+    )
+    expect(conexionFullName({ title: '' })).toBe('Conexión')
   })
 
   it('reads two names of one account as the same', () => {
@@ -546,7 +564,10 @@ describe('ConexionDetalle', () => {
   it('shows the state, its reason and the one step for a manager', async () => {
     mount({ conectados: true, conectar: true })
     await flush()
-    expect(host.querySelector('h1').textContent).toBe('BBVA · ana')
+    expect(host.querySelector('h1').textContent).toBe('BBVA')
+    expect(
+      host.querySelector('[data-bancos-conexion-tipo]').textContent.trim(),
+    ).toBe('Banco, usuario ana')
     expect(
       host.querySelector('[data-bancos-conexion-estado]').textContent.trim(),
     ).toBe('Hay que reconectar')
@@ -728,6 +749,7 @@ describe('ConexionesSeccion', () => {
     ...LOGIN,
     name: 'cred-2',
     title: 'Banorte · ana',
+    bank: 'Banorte',
     status: 'Connected',
     word: 'Conectada',
     tone: 'ok',
@@ -739,6 +761,7 @@ describe('ConexionesSeccion', () => {
     ...OK,
     name: 'cred-3',
     title: 'HSBC · ana',
+    bank: 'HSBC',
     word: 'Desconectada',
     tone: 'off',
   }
@@ -787,6 +810,25 @@ describe('ConexionesSeccion', () => {
     ).toBe('Conectar otro banco')
   })
 
+  it('names each login by its bank, and two at one bank by who logs in', async () => {
+    const TWIN = { ...LOGIN, name: 'cred-4', user: 'usuario m**a' }
+    mount({ conectados: true, conectar: true }, [LOGIN, OK])
+    await flush()
+    const titles = () =>
+      [...host.querySelectorAll('[data-conexion] [data-title]')].map(
+        (t) => t.textContent,
+      )
+    expect(titles()).toEqual(['BBVA', 'Banorte'])
+    app.unmount()
+    mount({ conectados: true, conectar: true }, [LOGIN, TWIN, OK])
+    await flush()
+    expect(titles()).toEqual([
+      'BBVA, usuario ana',
+      'BBVA, usuario m**a',
+      'Banorte',
+    ])
+  })
+
   it('invites a manager to connect the first bank, and nobody else', async () => {
     mount({ conectados: true, conectar: true }, [])
     await flush()
@@ -823,7 +865,12 @@ describe('CuentasLista', () => {
     app?.unmount()
     host.remove()
   })
-  const SECOND = { ...LOGIN, name: 'cred-9', title: 'Banorte · ana' }
+  const SECOND = {
+    ...LOGIN,
+    name: 'cred-9',
+    title: 'Banorte · ana',
+    bank: 'Banorte',
+  }
   const mount = (conexiones) => {
     state.call.mockImplementation(async (method) => {
       if (method === 'crm.api.bancos.cuentas')

@@ -9,7 +9,7 @@
         ? `Enlazar ${syncfyAccountTitle(account, conexion)}`
         : 'Enlazar cuenta'
     "
-    :subtitle="ctx?.institution || conexion?.institution || ''"
+    :subtitle="ctx?.institution || conexionBank(conexion)"
     :dismissible="!busy"
     layer="bancos-enlazar"
     @update:open="(v) => emit('update:open', v)"
@@ -88,6 +88,7 @@ import { formatDate } from '@/utils/display'
 import { errorText } from './bancos'
 import {
   bankAccountLabel,
+  conexionBank,
   ledgerLabel,
   syncfy,
   syncfyAccountTitle,

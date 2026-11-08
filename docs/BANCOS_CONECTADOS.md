@@ -13,6 +13,8 @@ Bank, card, wallet and SAT logins made through Syncfy (`syncfy_connector`) are h
 | «Enlazar» (`EnlazarSheet.vue`) | Asks which Bank Account the movements go to: a free one, or «Una cuenta nueva» on a bank ledger. It asks where they are reviewed (En Contador or En Bancos) and from which day; the date is prefilled to the day after the last movement already in the account. One sentence reads the choice back. A Mercado Pago wallet that Contador already collects is refused with the next step. |
 | A Bank Account's page (`CuentaDetalle.vue`) | «Se sincroniza con <login>» links to the login's page. It shows the step for a manager and «N por revisar». |
 
+A login is named by its bank («Acme Bank»), not by the connector's title «Acme Bank · t**t». Who logs in («usuario t**t»; for the SAT, «RFC …») shows on the login's page beside its kind, in «¿Desconectar …?», and in the list only when two logins are at the same bank.
+
 On a wide screen the login's page opens in the right pane; on a phone it is a full page.
 
 ## Server
@@ -20,6 +22,7 @@ On a wide screen the login's page opens in the right pane; on a phone it is a fu
 `crm/api/bancos.py` reads the connector's doctypes directly, as the caller (`frappe.get_list` permissions, `_company` scoping). Every action is the connector's own endpoint (`syncfy_connector.api.connect.*`, `syncfy_connector.api.connections.*`). Those endpoints require System Manager or Accounts Manager (`MANAGE_ROLES`) and the company.
 
 - `get_capabilities`: `conectados` when the connector is installed and enabled on this site (Platform mode follows Boat's `syncfy_platform` flag) and the person can read Syncfy Connection. `conectar` additionally needs a manager role.
+- Each login row carries `bank` and `user` (`connection_name` in `crm/bancos_words.py`) beside the connector's `title`. With no title the bank falls back to the kind's word, never to the institution, whose name is a Syncfy site id.
 - `conexiones(company)` lists the logins (needs first, off last) with their accounts and waiting counts. `conexion(name)` returns one login plus its «Por revisar» rows. The account header carries `conexion`: the login that feeds it.
 - Words live in `crm/bancos_words.py` (`connection_state`, `connection_detail`, `connection_kind`), tested bench-free in `crm/tests/test_bancos.py`. A retired institution is a «needs» state whose step is `disconnect`: Syncfy keeps billing a login until it is disconnected.
 - `relink` marks a Contador-lane account whose Contador source stopped. That means it is paused, or the person who authorized it is no longer active; Contador collects as that person and stops without a word otherwise.
@@ -35,5 +38,5 @@ On a wide screen the login's page opens in the right pane; on a phone it is a fu
 
 ## Follow-ups
 
-- A login's title is the connector's «<bank> · <masked user>» («Acme Bank · t**t»). Two logins at one bank read apart by the masked user only. A name the person gives the login (or the holder's name Syncfy reports) belongs in `syncfy_connector`, which builds the title.
+- A login could carry a name the person gives it («Cuenta de la tienda»), for two logins at one bank whose masked users look alike. That is a field and a rename endpoint in `syncfy_connector`, which owns the record.
 - «Enlazar» asks «Desde qué día» with the shared `DateField`, whose quick picks are «Hoy», «Mañana» and «En una semana». A day to import from is never in the future, so this field wants past picks. The date is prefilled with the day after the account's last movement, so the picks are rarely needed. The fix is a picks prop in `@muelle/ui` (muelle `workspace/packages/ui`). That package is checked across every app by muelle's vendor-parity gate (`scripts/ci/shell-vendor-parity.mjs`), so it ships as a package release that pins the apps left on the old copy, then crm re-vendors.

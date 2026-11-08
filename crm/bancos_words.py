@@ -217,6 +217,20 @@ def connection_kind(kind):
 	return _CONNECTION_KINDS.get(kind or "", "Institución")
 
 
+def connection_name(title, masked, kind=None):
+	"""(bank, user) of a login as the person tells it apart. The connector titles a login
+	«<bank> · <masked user>» («Acme Bank · t**t»); the shell names it by the bank and says
+	«usuario t**t» (for the SAT, whose login is the RFC, «RFC …») where it matters. With no
+	title it falls back to the kind's word, never to the institution (a Syncfy site id)."""
+	title, masked = (title or "").strip(), (masked or "").strip()
+	tail = f" · {masked}"
+	bank = title[: -len(tail)].strip() if masked and title.endswith(tail) else title
+	bank = bank or connection_kind(kind)
+	if not masked:
+		return bank, ""
+	return bank, f"RFC {masked}" if kind == "Tax" else f"usuario {masked}"
+
+
 # Movements that wait for the person, by the connector's lane state.
 REVIEW_STATES = ("Held", "Removed at source")
 UNLINKED_STATE = "Not linked"

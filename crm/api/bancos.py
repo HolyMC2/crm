@@ -36,6 +36,7 @@ from crm.bancos_words import (
 	account_display,
 	connection_detail,
 	connection_kind,
+	connection_name,
 	connection_state,
 	last4,
 	movement_words,
@@ -507,14 +508,19 @@ CONNECTION_FIELDS = [
 	"fiscal_lane",
 	"company",
 	"id_credential",
+	"username_masked",
 ]
 
 
 def _connection_row(row, accounts=None):
 	state = connection_state(row.status, bool(row.is_twofa))
+	bank, user = connection_name(row.title, row.username_masked, row.kind)
 	return {
 		"name": row.name,
 		"title": row.title or row.institution or connection_kind(row.kind),
+		# The shell names a login by its bank and adds who logs in where two need telling apart.
+		"bank": bank,
+		"user": user,
 		"kind": row.kind or "Other",
 		"kind_word": connection_kind(row.kind),
 		"status": row.status,

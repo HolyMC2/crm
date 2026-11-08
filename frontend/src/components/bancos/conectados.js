@@ -129,11 +129,33 @@ export function syncfyAccountTitle(account, conexion) {
   return text.trim() || 'Cuenta'
 }
 
-/** The bank a login is at: «Acme Bank» from «Acme Bank · t**t». */
+/**
+ * The bank a login is at: the server's `bank`, or «Acme Bank» from the
+ * connector's title «Acme Bank · t**t».
+ */
 export function conexionBank(conexion) {
+  if (conexion?.bank) return conexion.bank
   return String(conexion?.title || '')
     .split(' · ')[0]
     .trim()
+}
+
+/** A login in full, where it must not be mistaken: «Acme Bank, usuario t**t». */
+export function conexionFullName(conexion) {
+  const bank = conexionBank(conexion) || 'Conexión'
+  return conexion?.user ? `${bank}, ${conexion.user}` : bank
+}
+
+/**
+ * A login's name in a list: its bank, and who logs in only when another
+ * login in `all` is at the same bank.
+ */
+export function conexionName(conexion, all = []) {
+  const bank = conexionBank(conexion)
+  const twin = all.some(
+    (c) => c.name !== conexion?.name && conexionBank(c) === bank,
+  )
+  return twin ? conexionFullName(conexion) : bank || 'Conexión'
 }
 
 /**

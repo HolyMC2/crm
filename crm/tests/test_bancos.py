@@ -8,6 +8,7 @@ from crm.bancos_words import (
 	account_display,
 	connection_detail,
 	connection_kind,
+	connection_name,
 	connection_state,
 	last4,
 	movement_words,
@@ -141,6 +142,16 @@ class TestConnectionWords(TestCase):
 		self.assertEqual(connection_kind("Tax"), "SAT")
 		self.assertEqual(connection_kind("Wallet"), "Monedero")
 		self.assertEqual(connection_kind(None), "Institución")
+
+	def test_login_names_by_bank_and_user(self):
+		self.assertEqual(connection_name("Acme Bank · t**t", "t**t"), ("Acme Bank", "usuario t**t"))
+		self.assertEqual(
+			connection_name("SAT · EKU9003173C9", "EKU9003173C9", kind="Tax"), ("SAT", "RFC EKU9003173C9")
+		)
+		# A title the connector built without the user, or none at all.
+		self.assertEqual(connection_name("BBVA", ""), ("BBVA", ""))
+		self.assertEqual(connection_name("", "a**a", "Bank"), ("Banco", "usuario a**a"))
+		self.assertEqual(connection_name("", "", kind="Wallet"), ("Monedero", ""))
 
 
 class TestBancosPaths(TestCase):

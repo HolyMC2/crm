@@ -38,7 +38,7 @@
       <ul class="divide-y divide-outline-gray-1">
         <li v-for="c in active" :key="c.name" :data-conexion="c.name">
           <ListRow
-            :title="c.title"
+            :title="conexionName(c, all)"
             :subtitle="rowLine(c)"
             :subtitle-lines="2"
             :icon="kindIcon(c.kind)"
@@ -89,7 +89,7 @@
           <ul v-if="showOff" class="divide-y divide-outline-gray-1">
             <li v-for="c in off" :key="c.name">
               <ListRow
-                :title="c.title"
+                :title="conexionName(c, all)"
                 :subtitle="c.word"
                 :icon="kindIcon(c.kind)"
                 :to="{
@@ -127,6 +127,7 @@ import { bancosApi, errorText } from './bancos'
 import {
   LIVE_CONEXIONES,
   conexionListLine,
+  conexionName,
   waitingOf,
   countText,
 } from './conectados'

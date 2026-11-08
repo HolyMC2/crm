@@ -92,7 +92,7 @@
         />
         <span class="min-w-0 flex-1">
           <span class="block text-ink-gray-8"
-            >Se sincroniza con {{ feed.title }}</span
+            >Se sincroniza con {{ conexionBank(feed) }}</span
           >
           <span class="block" :class="toneInk(feed.tone)">{{
             conexionLine(feed)
@@ -278,6 +278,7 @@ import {
 } from './bancos'
 
 import {
+  conexionBank,
   conexionLine,
   readyText,
   stepLabel,
