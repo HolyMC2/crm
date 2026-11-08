@@ -13,7 +13,7 @@ Bank, card, wallet and SAT logins made through Syncfy (`syncfy_connector`) are h
 | «Enlazar» (`EnlazarSheet.vue`) | Asks which Bank Account the movements go to: a free one, or «Una cuenta nueva» on a bank ledger. It asks where they are reviewed (En Contador or En Bancos) and from which day; the date is prefilled to the day after the last movement already in the account. One sentence reads the choice back. A Mercado Pago wallet that Contador already collects is refused with the next step. |
 | A Bank Account's page (`CuentaDetalle.vue`) | «Se sincroniza con <login>» links to the login's page. It shows the step for a manager and «N por revisar». |
 
-A login is named by its bank («Acme Bank»), not by the connector's title «Acme Bank · t**t». Who logs in («usuario t**t»; for the SAT, «RFC …») shows on the login's page beside its kind, in «¿Desconectar …?», and in the list only when two logins are at the same bank.
+A login is named by its bank («Acme Bank»), not by the connector's title «Acme Bank · t**t». Who logs in («usuario t**t»; for the SAT, «RFC …») shows on the login's page beside its kind, in «¿Desconectar …?», and in the list only when two logins at the same bank have different users (the same user twice is told apart by the row's line, «Pide código, …»).
 
 On a wide screen the login's page opens in the right pane; on a phone it is a full page.
 

@@ -233,6 +233,8 @@ describe('bancos conectados words', () => {
     const c = { name: 'c', bank: 'BBVA', user: 'usuario a**a' }
     expect(conexionName(a, [a, c])).toBe('Acme Bank')
     expect(conexionName(a, [a, b, c])).toBe('Acme Bank, usuario t**t')
+    // The same user twice at one bank: the user tells nothing apart.
+    expect(conexionName(a, [a, { ...a, name: 'a2' }])).toBe('Acme Bank')
     expect(conexionFullName(c)).toBe('BBVA, usuario a**a')
     // An older server sends only the connector's title.
     expect(conexionName({ name: 'x', title: 'Acme Bank · t**t' })).toBe(

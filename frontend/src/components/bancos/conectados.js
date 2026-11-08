@@ -148,12 +148,17 @@ export function conexionFullName(conexion) {
 
 /**
  * A login's name in a list: its bank, and who logs in only when another
- * login in `all` is at the same bank.
+ * login in `all` is at the same bank with someone else (the same user twice
+ * tells nothing apart; the row's line does, «Pide código, …»).
  */
 export function conexionName(conexion, all = []) {
   const bank = conexionBank(conexion)
+  const user = conexion?.user || ''
   const twin = all.some(
-    (c) => c.name !== conexion?.name && conexionBank(c) === bank,
+    (c) =>
+      c.name !== conexion?.name &&
+      conexionBank(c) === bank &&
+      (c.user || '') !== user,
   )
   return twin ? conexionFullName(conexion) : bank || 'Conexión'
 }
