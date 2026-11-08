@@ -136,6 +136,16 @@ function onNavigate() {
   if (!docked.value) closeAssistant()
   else assistant.full = false
 }
+
+// A screen opened from outside the assistant (⌘K, the rail, back) shows:
+// the full screen steps down to the dock beside it, or on a phone to the
+// sheet's usual height over it.
+watch(
+  () => route.path,
+  () => {
+    if (assistant.full) assistant.full = false
+  },
+)
 </script>
 <style>
 /* doco's floating «Ayuda» launcher sits bottom right, over the dock's send

@@ -257,6 +257,25 @@ describe('the desktop workspace', () => {
     restore()
   })
 
+  it('steps down to the dock when a screen opens from outside it (⌘K, the rail)', async () => {
+    const { app, restore } = await openWorkspace()
+    await app.config.globalProperties.$router.push('/contactos')
+    await flush()
+    expect(assistant.full).toBe(false)
+    expect(assistant.open).toBe(true)
+    await vi.waitFor(() =>
+      expect(q('[data-testid="assistant-dock"]')).not.toBeNull(),
+    )
+    expect(q('[data-testid="assistant-workspace"]')).toBeNull()
+    // a filter on the same screen leaves the full screen alone
+    assistant.full = true
+    await app.config.globalProperties.$router.push('/contactos?q=ana')
+    await flush()
+    expect(assistant.full).toBe(true)
+    app.unmount()
+    restore()
+  })
+
   it('opens an earlier conversation in the middle and comes back to the chat', async () => {
     answers[`${API}.conversation`] = () =>
       Promise.resolve({
