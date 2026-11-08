@@ -584,12 +584,25 @@ describe('ConexionDetalle', () => {
   })
 
   it('sends a movement Contador held to Contador, without retrying it here', async () => {
-    mount({ conectados: true, conectar: true })
+    mount({ conectados: true, conectar: true, contador: true })
     await flush()
     const row = host.querySelector('[data-syncfy-movimiento="mov-2"]')
     const link = row.querySelector('[data-bancos-revisar-contador]')
     expect(link.textContent.trim()).toBe('Revisar en Contador')
     expect(link.getAttribute('href')).toBe('/contador/bancos')
+    expect(row.querySelectorAll('button')).toHaveLength(0)
+  })
+
+  it('tells someone without Contador whom to ask about a movement Contador held', async () => {
+    mount({ conectados: true, conectar: true, contador: false })
+    await flush()
+    const row = host.querySelector('[data-syncfy-movimiento="mov-2"]')
+    expect(row.querySelector('[data-bancos-revisar-contador]')).toBeNull()
+    expect(
+      row
+        .querySelector('[data-bancos-revisar-contador-pide]')
+        .textContent.trim(),
+    ).toBe('Se revisa en Contador. Pide al área de contabilidad que lo vea.')
     expect(row.querySelectorAll('button')).toHaveLength(0)
   })
 

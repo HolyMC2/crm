@@ -728,10 +728,13 @@ def conexion(conexion: str) -> dict:
 	_company(doc.company)
 	row = frappe._dict({field: doc.get(field) for field in CONNECTION_FIELDS})
 	accounts = _syncfy_accounts([doc.name]).get(doc.name, [])
+	revisar = _review_rows(accounts)
+	# A movement Contador held is reviewed there, by someone with its fiscal role.
+	held_by_contador = any(r["contador"] and not r["removed"] for r in revisar)
 	return {
 		"conexion": _connection_row(row, accounts),
-		"revisar": _review_rows(accounts),
-		"can": can,
+		"revisar": revisar,
+		"can": {**can, "contador": bool(held_by_contador and _fiscal_role())},
 	}
 
 

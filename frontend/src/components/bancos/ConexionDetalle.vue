@@ -229,14 +229,24 @@
             <p v-if="row.reason" class="mt-1 text-sm text-ink-amber-8">
               {{ row.reason }}
             </p>
-            <!-- Contador held it: its review and its retry are Contador's. -->
-            <a
-              v-if="row.contador && !row.removed"
-              href="/contador/bancos"
-              class="press mt-2 inline-flex min-h-11 items-center rounded-full bg-surface-gray-2 px-4 text-base font-medium text-ink-gray-8"
-              data-bancos-revisar-contador
-              >Revisar en Contador</a
-            >
+            <!-- Contador held it: its review and its retry are Contador's,
+                 for whoever holds its fiscal role. -->
+            <template v-if="row.contador && !row.removed">
+              <a
+                v-if="can.contador"
+                href="/contador/bancos"
+                class="press mt-2 inline-flex min-h-11 items-center rounded-full bg-surface-gray-2 px-4 text-base font-medium text-ink-gray-8"
+                data-bancos-revisar-contador
+                >Revisar en Contador</a
+              >
+              <p
+                v-else
+                class="mt-1 text-sm text-ink-gray-6"
+                data-bancos-revisar-contador-pide
+              >
+                Se revisa en Contador. Pide al área de contabilidad que lo vea.
+              </p>
+            </template>
             <div v-else-if="can.conectar" class="mt-2 flex flex-wrap gap-2">
               <Button
                 v-if="!row.removed"
