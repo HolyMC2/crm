@@ -1412,6 +1412,7 @@ import { isMobile as phone } from '@/composables/breakpoint'
 import { comprasApi, money, problemOf } from '@/composables/useCompras'
 import { BTN } from '@/documentos/tools'
 import { formatDate } from '@/utils/display'
+import { progressOf, progressView } from '@/utils/catalogProgress'
 import {
   addPictures as addPicturesTo,
   postPicture,
@@ -2723,22 +2724,29 @@ const strip = computed(() => {
       pct: Math.round((100 * u.done) / u.total),
     }
   }
+  // index_progress counts pages: the bar is pages indexed of the pages, then
+  // pages read of the pages picked (books.catalogs.progress)
+  const moving = progressView(progressOf(c))
   if (c.reading)
     return {
       tone: 'neutral',
       icon: 'lucide-loader-circle animate-spin',
-      text: __(
-        'Reading the products of the list; the lines appear as they are read.',
-        null,
-        'Lista',
-      ),
+      ...(c.progress?.stage === 'read'
+        ? { text: moving.line, pct: moving.pct }
+        : {
+            text: __(
+              'Reading the products of the list; the lines appear as they are read.',
+              null,
+              'Lista',
+            ),
+          }),
     }
   if (c.status === 'Indexando')
     return {
       tone: 'neutral',
       icon: 'lucide-loader-circle animate-spin',
-      text: __('Reading the list… {0}%', [c.index_progress || 0], 'Lista'),
-      pct: c.index_progress || 0,
+      text: __('Reading the list… {0}%', [moving.pct || 0], 'Lista'),
+      pct: moving.pct || 0,
     }
   if (c.status === 'Recibido' || c.status === 'En cola')
     return {

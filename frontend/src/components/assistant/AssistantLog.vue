@@ -188,6 +188,12 @@
           :file="file"
           @open="openFile"
         />
+        <CatalogProgress
+          v-if="latestProgress[view(message).progress] === message"
+          :catalog="view(message).progress"
+          card
+          @navigate="$emit('navigate')"
+        />
         <div v-if="view(message).choices.length" class="flex flex-wrap gap-2">
           <button
             v-for="choice in view(message).choices"
@@ -273,6 +279,10 @@ const AssistantChart = defineAsyncComponent(
 const AddToBoard = defineAsyncComponent(
   () => import('@/components/tableros/AddToBoard.vue'),
 )
+// A supplier list's bar loads with the first message that carries one.
+const CatalogProgress = defineAsyncComponent(
+  () => import('@/components/compras/CatalogProgress.vue'),
+)
 // The chart answer whose «Agregar a un tablero» sheet is open.
 const pinning = ref(null)
 
@@ -315,12 +325,13 @@ const views = new WeakMap()
 function view(message) {
   const cached = views.get(message)
   if (cached) return cached
-  const { cards, choices } = splitButtons(message)
+  const { cards, choices, progress } = splitButtons(message)
   const chart = chartOf(message.answer)
   const report = Boolean(chart && message.answer.spec)
   const out = {
     cards,
     choices,
+    progress,
     prose: report ? '' : proseOf(message, cards),
     chart,
     insights: report ? (message.answer.insights || []).map(String) : [],
@@ -331,6 +342,14 @@ function view(message) {
   views.set(message, out)
   return out
 }
+
+// A list's bar shows once, under the newest message about that list.
+const latestProgress = computed(() => {
+  const out = {}
+  for (const m of shown.value)
+    if (m.role === 'bot' && view(m).progress) out[view(m).progress] = m
+  return out
+})
 
 // A receipt's record link is its card's «Abrir»: the reply does not repeat
 // it while that card is on screen, confirmed, with this link. Without the

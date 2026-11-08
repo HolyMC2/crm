@@ -198,144 +198,176 @@
                   )
             }}
           </p>
-          <ul
-            v-else
-            class="divide-y divide-outline-gray-1 rounded-6 border border-outline-gray-2"
-          >
-            <li
-              v-for="c in boot.catalogs"
-              :key="c.name"
-              class="flex flex-wrap items-center gap-3 p-3"
-              :class="catalog === c.name ? 'bg-surface-gray-1' : ''"
+          <!-- a table where its own column has room (a container query: the
+               sheet beside it narrows the page), one grid for the header and
+               every row so the columns line up whatever actions a row has -->
+          <div v-else class="listas-wrap">
+            <div
+              class="listas overflow-hidden rounded-6 border border-outline-gray-2"
+              data-testid="surtido-listas"
             >
-              <label
-                class="flex min-w-0 flex-1 basis-56 cursor-pointer items-start gap-3"
-              >
-                <input
-                  v-model="catalog"
-                  type="radio"
-                  name="catalog"
-                  class="mt-1"
-                  :value="c.name"
-                  :disabled="!c.lines"
-                />
-                <span class="min-w-0">
-                  <span class="block truncate font-medium">{{
-                    c.title || c.name
-                  }}</span>
-                  <span class="block truncate text-sm text-ink-gray-6">
-                    {{
-                      [
-                        c.supplier,
-                        c.page_count &&
-                          __('{0} pages', [c.page_count], 'Surtido'),
-                        __('{0} products', [c.lines || 0], 'Surtido'),
-                      ]
-                        .filter(Boolean)
-                        .join(' · ')
-                    }}
-                  </span>
-                </span>
-              </label>
               <div
-                class="ml-auto flex flex-wrap items-center justify-end gap-2"
+                class="listas-head hidden border-b border-outline-gray-2 bg-surface-gray-1 px-3 py-2 text-sm text-ink-gray-6"
+                aria-hidden="true"
               >
-                <Badge
-                  :theme="c.reading ? 'blue' : catalogTheme(c.status)"
-                  :label="catalogStatus(c)"
-                />
-                <RouterLink
-                  :to="{ name: 'CompraLista', params: { name: c.name } }"
-                  class="press inline-flex min-h-11 items-center gap-1.5 rounded-6 px-3 text-base text-ink-gray-8 hover:bg-surface-gray-2 sm:min-h-8 sm:text-sm"
-                  data-testid="surtido-abrir-lista"
+                <span>{{ __('List', null, 'Surtido') }}</span>
+                <span class="text-right">{{
+                  __('Pages', null, 'Surtido')
+                }}</span>
+                <span class="text-right">{{
+                  __('Products', null, 'Surtido')
+                }}</span>
+                <span>{{ __('State', null, 'Surtido') }}</span>
+                <span />
+              </div>
+              <ul class="listas-rows divide-y divide-outline-gray-1">
+                <li
+                  v-for="c in boot.catalogs"
+                  :key="c.name"
+                  class="lista grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 px-3 py-2.5"
+                  :class="catalog === c.name ? 'bg-surface-gray-1' : ''"
+                  data-testid="surtido-lista"
                 >
-                  <span class="lucide-table size-4" aria-hidden="true" />
-                  {{ __('Open the list', null, 'Surtido') }}
-                </RouterLink>
-                <Button
-                  v-if="boot.owner && canRead(c)"
-                  :label="__('Read the products', null, 'Surtido')"
-                  :loading="busy === 'estimate:' + c.name"
-                  @click="estimateRead(c.name)"
-                />
-                <template v-if="boot.owner && c.status === 'Esperando archivo'">
-                  <label
-                    class="press inline-flex min-h-11 cursor-pointer items-center rounded-6 bg-surface-gray-2 px-3 text-base hover:bg-surface-gray-3 sm:min-h-8 sm:text-sm"
-                    :class="upload ? 'pointer-events-none opacity-50' : ''"
-                  >
-                    {{ __('Choose file', null, 'Surtido') }}
+                  <label class="flex min-w-0 cursor-pointer items-start gap-3">
                     <input
-                      type="file"
-                      class="sr-only"
-                      multiple
-                      :accept="LIST_ACCEPT"
-                      :disabled="!!upload"
-                      @change="(e) => pickInto(c.name, e)"
+                      v-model="catalog"
+                      type="radio"
+                      name="catalog"
+                      class="mt-1 flex-none"
+                      :value="c.name"
+                      :disabled="!c.lines"
+                      :aria-label="c.title || c.name"
                     />
-                  </label>
-                  <Button
-                    :label="__('Upload link', null, 'Surtido')"
-                    @click="linkFor(c.name)"
-                  />
-                </template>
-              </div>
-              <p
-                v-if="c.error && !c.lines && !c.reading"
-                class="basis-full text-sm text-ink-red-7"
-              >
-                {{ c.error }}
-              </p>
-              <div
-                v-if="readQuote?.catalog === c.name"
-                class="basis-full rounded-6 bg-surface-gray-1 p-3 text-sm"
-                role="status"
-              >
-                <template v-if="readQuote.pages">
-                  <p>
-                    {{
-                      __(
-                        'Reading {0} pages of products uses {1} units of your plan. The plan step opens when they are read.',
-                        [readQuote.pages, readQuote.units],
-                        'Surtido',
-                      )
-                    }}
-                  </p>
-                  <div class="mt-2 flex flex-wrap justify-end gap-2">
-                    <Button
-                      :label="__('Not now', null, 'Surtido')"
-                      @click="readQuote = null"
-                    />
-                    <button
-                      type="button"
-                      :class="['press', BTN.filled]"
-                      :disabled="busy === 'read'"
-                      @click="readProducts"
-                    >
+                    <span class="min-w-0">
+                      <span class="block truncate font-medium">{{
+                        c.title || c.name
+                      }}</span>
+                      <span class="block truncate text-sm text-ink-gray-6">
+                        {{
+                          c.supplier || __('No supplier yet', null, 'Surtido')
+                        }}
+                      </span>
                       <span
-                        :class="[
-                          busy === 'read'
-                            ? 'lucide-loader-circle animate-spin'
-                            : 'lucide-check',
-                          'size-5',
-                        ]"
-                        aria-hidden="true"
-                      />
-                      {{ __('Read them', null, 'Surtido') }}
-                    </button>
+                        class="lista-counts num block truncate text-sm text-ink-gray-6"
+                      >
+                        {{ countsText(c) }}
+                      </span>
+                    </span>
+                  </label>
+                  <span
+                    class="lista-num num hidden text-right tabular-nums text-ink-gray-8"
+                    >{{ pagesText(c) }}</span
+                  >
+                  <span
+                    class="lista-num num hidden text-right tabular-nums text-ink-gray-8"
+                    >{{ c.lines || 0 }}</span
+                  >
+                  <div class="lista-state order-last col-span-full min-w-0">
+                    <CatalogProgress
+                      v-if="showsBar(c)"
+                      :progress="progressOf(c)"
+                      compact
+                    />
+                    <Badge
+                      v-else
+                      :theme="catalogTheme(c.status)"
+                      :label="catalogStatus(c)"
+                    />
                   </div>
-                </template>
-                <p v-else>
-                  {{
-                    __(
-                      'This list has no product pages to read. Send it as a PDF with prices or a spreadsheet.',
-                      null,
-                      'Surtido',
-                    )
-                  }}
-                </p>
-              </div>
-            </li>
-          </ul>
+                  <div class="flex flex-wrap items-center justify-end gap-1">
+                    <Button
+                      v-if="boot.owner && canRead(c)"
+                      :label="__('Read the products', null, 'Surtido')"
+                      :loading="busy === 'estimate:' + c.name"
+                      @click="estimateRead(c.name)"
+                    />
+                    <template
+                      v-if="boot.owner && c.status === 'Esperando archivo'"
+                    >
+                      <label
+                        class="press inline-flex min-h-11 cursor-pointer items-center rounded-6 bg-surface-gray-2 px-3 text-base hover:bg-surface-gray-3 sm:min-h-8 sm:text-sm"
+                        :class="upload ? 'pointer-events-none opacity-50' : ''"
+                      >
+                        {{ __('Choose file', null, 'Surtido') }}
+                        <input
+                          type="file"
+                          class="sr-only"
+                          multiple
+                          :accept="LIST_ACCEPT"
+                          :disabled="!!upload"
+                          @change="(e) => pickInto(c.name, e)"
+                        />
+                      </label>
+                      <Button
+                        :label="__('Upload link', null, 'Surtido')"
+                        @click="linkFor(c.name)"
+                      />
+                    </template>
+                    <RouterLink
+                      :to="{ name: 'CompraLista', params: { name: c.name } }"
+                      class="press inline-flex size-11 items-center justify-center rounded-6 text-ink-gray-7 hover:bg-surface-gray-2 hover:text-ink-gray-9 sm:size-8"
+                      :aria-label="
+                        __('Open the list {0}', [c.title || c.name], 'Surtido')
+                      "
+                      :title="__('Open the list', null, 'Surtido')"
+                      data-testid="surtido-abrir-lista"
+                    >
+                      <span class="lucide-table size-4" aria-hidden="true" />
+                    </RouterLink>
+                  </div>
+                  <div
+                    v-if="readQuote?.catalog === c.name"
+                    class="col-span-full rounded-6 bg-surface-gray-1 p-3 text-sm"
+                    role="status"
+                  >
+                    <template v-if="readQuote.pages">
+                      <p>
+                        {{
+                          __(
+                            'Reading {0} pages of products uses {1} units of your plan. The plan step opens when they are read.',
+                            [readQuote.pages, readQuote.units],
+                            'Surtido',
+                          )
+                        }}
+                      </p>
+                      <div class="mt-2 flex flex-wrap justify-end gap-2">
+                        <Button
+                          :label="__('Not now', null, 'Surtido')"
+                          @click="readQuote = null"
+                        />
+                        <button
+                          type="button"
+                          :class="['press', BTN.filled]"
+                          :disabled="busy === 'read'"
+                          @click="readProducts"
+                        >
+                          <span
+                            :class="[
+                              busy === 'read'
+                                ? 'lucide-loader-circle animate-spin'
+                                : 'lucide-check',
+                              'size-5',
+                            ]"
+                            aria-hidden="true"
+                          />
+                          {{ __('Read them', null, 'Surtido') }}
+                        </button>
+                      </div>
+                    </template>
+                    <p v-else>
+                      {{
+                        __(
+                          'This list has no product pages to read. Send it as a PDF with prices or a spreadsheet.',
+                          null,
+                          'Surtido',
+                        )
+                      }}
+                    </p>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
 
           <div
             v-if="uploadUrl"
@@ -536,15 +568,24 @@
 
           <template v-if="plan">
             <div class="mb-4 rounded-7 border border-outline-gray-2 p-4">
-              <div class="flex flex-wrap items-baseline justify-between gap-2">
+              <p class="truncate text-sm text-ink-gray-6">
+                {{ plan.catalog_title || plan.catalog }}
+              </p>
+              <div
+                class="flex flex-wrap items-baseline justify-between gap-x-4"
+              >
                 <p class="text-base">
-                  <strong class="tabular-nums">{{ money(plan.total) }}</strong>
+                  <strong class="num text-xl">{{ money(plan.total) }}</strong>
                   {{ __('of {0}', [money(plan.budget)], 'Surtido') }}
-                  · {{ __('{0} lines', [plan.lines.length], 'Surtido') }}
                 </p>
-                <p class="text-sm text-ink-gray-6">
-                  {{ __('{0} left', [money(plan.remaining)], 'Surtido') }} ·
-                  {{ plan.catalog_title || plan.catalog }}
+                <p class="text-sm tabular-nums text-ink-gray-7">
+                  {{
+                    __(
+                      '{0} lines, {1} left',
+                      [plan.lines.length, money(plan.remaining)],
+                      'Surtido',
+                    )
+                  }}
                 </p>
               </div>
               <div
@@ -573,10 +614,18 @@
                 v-if="
                   plan.notes?.length ||
                   plan.unresolved?.length ||
-                  plan.focus_missing?.length
+                  plan.focus_missing?.length ||
+                  skipped.length
                 "
                 class="mt-2 space-y-1 text-sm"
               >
+                <li
+                  v-if="skipped.length"
+                  class="text-ink-gray-7"
+                  data-testid="surtido-skipped"
+                >
+                  {{ __('Not proposed: {0}', [skipped.join(', ')], 'Surtido') }}
+                </li>
                 <li v-for="n in plan.notes" :key="n" class="text-ink-gray-7">
                   {{ n }}
                 </li>
@@ -635,7 +684,7 @@
                               [l.model, l.have, l.target, l.min],
                               'Surtido',
                             )
-                    }}<template v-if="buyText(l)"> · {{ buyText(l) }}</template>
+                    }}<template v-if="buyText(l)">, {{ buyText(l) }}</template>
                   </li>
                   <li
                     v-for="t in plan.tones_missing"
@@ -696,75 +745,147 @@
               </ul>
             </div>
 
-            <ul
-              class="divide-y divide-outline-gray-1 rounded-6 border border-outline-gray-2"
-              :aria-label="__('Plan lines', null, 'Surtido')"
+            <div
+              v-if="!plan.lines.length"
+              class="rounded-6 border border-dashed border-outline-gray-3 p-4 text-sm"
+              role="status"
+              data-testid="surtido-plan-empty"
             >
-              <li
-                v-for="line in plan.lines"
-                :key="line.line"
-                class="flex flex-wrap items-start gap-3 p-3"
-                :class="edits[line.line]?.remove ? 'opacity-50' : ''"
+              <p class="font-medium text-ink-gray-9">
+                {{ __('Nothing to buy with these filters', null, 'Surtido') }}
+              </p>
+              <p class="mt-1 text-ink-gray-7">
+                {{
+                  __(
+                    'Clear «Only what runs low», cover more days, or name the models in «Models first».',
+                    null,
+                    'Surtido',
+                  )
+                }}
+              </p>
+            </div>
+            <div v-else class="plan-wrap">
+              <div
+                class="plan rounded-6 border border-outline-gray-2"
+                data-testid="surtido-plan-lines"
               >
-                <div class="min-w-0 flex-1 basis-64">
-                  <p class="font-medium">
-                    {{ line.name }}
-                    <span
-                      v-if="line.page"
-                      class="ml-1 text-xs font-normal text-ink-gray-5"
-                      >{{ __('p. {0}', [line.page], 'Surtido') }}</span
-                    >
-                  </p>
-                  <p class="truncate text-xs text-ink-gray-5">
-                    {{
-                      [line.code, line.model, line.colour]
-                        .filter(Boolean)
-                        .join(' · ')
-                    }}
-                  </p>
-                  <p class="mt-1 flex flex-wrap gap-1">
-                    <span
-                      v-for="r in line.reasons"
-                      :key="r"
-                      class="rounded-4 bg-surface-gray-2 px-1.5 py-0.5 text-xs text-ink-gray-7"
-                      >{{ r }}</span
-                    >
-                  </p>
-                </div>
-                <div class="flex items-center gap-2">
-                  <input
-                    type="number"
-                    min="1"
-                    class="h-9 w-20 rounded-4 border border-outline-gray-2 px-2 text-right tabular-nums"
-                    :aria-label="__('Pieces of {0}', [line.name], 'Surtido')"
-                    :value="edits[line.line]?.qty ?? line.qty"
-                    :disabled="!boot.owner || edits[line.line]?.remove"
-                    @change="setEdit(line, 'qty', Number($event.target.value))"
-                  />
-                  <span class="w-24 text-right text-sm tabular-nums">{{
-                    money(line.total)
+                <div
+                  class="plan-head hidden border-b border-outline-gray-2 px-3 py-2 text-xs text-ink-gray-5"
+                  aria-hidden="true"
+                >
+                  <span>{{ __('Product', null, 'Surtido') }}</span>
+                  <span class="text-right">{{
+                    __('Pieces', null, 'Surtido')
                   }}</span>
-                  <Button
-                    v-if="boot.owner"
-                    :icon="edits[line.line]?.remove ? LucideRotateCcw : LucideX"
-                    :aria-label="
-                      edits[line.line]?.remove
-                        ? __('Keep {0}', [line.name], 'Surtido')
-                        : __('Remove {0}', [line.name], 'Surtido')
-                    "
-                    @click="setEdit(line, 'remove', !edits[line.line]?.remove)"
-                  />
-                  <Button
-                    v-if="boot.owner && line.colour"
-                    :icon="LucideDroplet"
-                    :aria-label="
-                      __('Change colour of {0}', [line.name], 'Surtido')
-                    "
-                    @click="askColour(line)"
-                  />
+                  <span class="text-right">{{
+                    __('Price', null, 'Surtido')
+                  }}</span>
+                  <span class="text-right">{{
+                    __('Total', null, 'Surtido')
+                  }}</span>
+                  <span />
                 </div>
-              </li>
-            </ul>
+                <ul
+                  class="plan-rows divide-y divide-outline-gray-1"
+                  :aria-label="__('Plan lines', null, 'Surtido')"
+                >
+                  <li
+                    v-for="line in plan.lines"
+                    :key="line.line"
+                    class="plan-line grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 p-3"
+                    :class="edits[line.line]?.remove ? 'opacity-50' : ''"
+                  >
+                    <div class="col-span-full min-w-0 plan-cell-name">
+                      <p class="font-medium">
+                        {{ line.name }}
+                        <span
+                          v-if="line.page"
+                          class="ml-1 text-xs font-normal text-ink-gray-5"
+                          >{{ __('p. {0}', [line.page], 'Surtido') }}</span
+                        >
+                      </p>
+                      <p
+                        v-if="lineMeta(line)"
+                        class="truncate text-xs text-ink-gray-5"
+                      >
+                        {{ lineMeta(line) }}
+                      </p>
+                      <p
+                        v-if="line.reasons?.length"
+                        class="mt-1 flex flex-wrap gap-1"
+                      >
+                        <span
+                          v-for="r in line.reasons"
+                          :key="r"
+                          class="rounded-4 bg-surface-gray-2 px-1.5 py-0.5 text-xs text-ink-gray-7"
+                          >{{ r }}</span
+                        >
+                      </p>
+                    </div>
+                    <input
+                      type="number"
+                      min="1"
+                      inputmode="numeric"
+                      class="h-9 w-[4.5rem] justify-self-end rounded-4 border border-outline-gray-2 px-2 text-right tabular-nums"
+                      :aria-label="__('Pieces of {0}', [line.name], 'Surtido')"
+                      :value="edits[line.line]?.qty ?? line.qty"
+                      :disabled="!boot.owner || edits[line.line]?.remove"
+                      @change="
+                        setEdit(line, 'qty', Number($event.target.value))
+                      "
+                    />
+                    <div
+                      class="plan-money flex flex-col-reverse items-end justify-self-end leading-tight"
+                    >
+                      <span
+                        class="plan-price whitespace-nowrap text-xs tabular-nums text-ink-gray-6"
+                      >
+                        <span class="plan-times" aria-hidden="true">× </span
+                        >{{ money(line.price) }}
+                      </span>
+                      <span
+                        class="plan-total whitespace-nowrap text-right text-sm font-medium tabular-nums"
+                        >{{ money(line.total) }}</span
+                      >
+                    </div>
+                    <div
+                      v-if="boot.owner"
+                      class="plan-actions flex justify-end gap-0.5"
+                    >
+                      <Button
+                        v-if="line.colour"
+                        variant="ghost"
+                        :icon="LucideDroplet"
+                        :aria-label="
+                          __('Change colour of {0}', [line.name], 'Surtido')
+                        "
+                        :title="__('Change colour', null, 'Surtido')"
+                        @click="askColour(line)"
+                      />
+                      <Button
+                        variant="ghost"
+                        :icon="
+                          edits[line.line]?.remove ? LucideRotateCcw : LucideX
+                        "
+                        :aria-label="
+                          edits[line.line]?.remove
+                            ? __('Keep {0}', [line.name], 'Surtido')
+                            : __('Remove {0}', [line.name], 'Surtido')
+                        "
+                        :title="
+                          edits[line.line]?.remove
+                            ? __('Keep', null, 'Surtido')
+                            : __('Remove', null, 'Surtido')
+                        "
+                        @click="
+                          setEdit(line, 'remove', !edits[line.line]?.remove)
+                        "
+                      />
+                    </div>
+                  </li>
+                </ul>
+              </div>
+            </div>
 
             <details
               v-if="plan.left_out?.length"
@@ -896,7 +1017,10 @@
             <div class="mb-4 rounded-7 border border-outline-gray-2 p-4">
               <div class="flex flex-wrap items-center gap-2">
                 <h2 class="min-w-0 flex-1 truncate text-lg font-semibold">
-                  {{ pedido.supplier }} · {{ pedido.pedido }}
+                  {{ pedido.supplier }}
+                  <span class="text-sm font-normal text-ink-gray-5">{{
+                    pedido.pedido
+                  }}</span>
                 </h2>
                 <Badge
                   :theme="pedidoTheme(pedido.status)"
@@ -1084,7 +1208,7 @@
                           row.new ? '' : __('ambiguous match', null, 'Surtido'),
                         ]
                           .filter(Boolean)
-                          .join(' · ')
+                          .join(', ')
                       }}
                     </p>
                   </div>
@@ -1194,7 +1318,7 @@
                       {{
                         [line.code, line.model, line.colour, line.item]
                           .filter(Boolean)
-                          .join(' · ')
+                          .join(', ')
                       }}
                     </p>
                     <p v-if="line.note" class="text-xs text-ink-gray-6">
@@ -1348,9 +1472,7 @@
                     </p>
                     <p v-else class="truncate text-xs text-ink-gray-5">
                       {{
-                        [row.section, row.item_group]
-                          .filter(Boolean)
-                          .join(' · ')
+                        [row.section, row.item_group].filter(Boolean).join(', ')
                       }}
                     </p>
                   </div>
@@ -1448,6 +1570,8 @@ import { AppBar, EmptyState } from '@/components/ui'
 import { isMobile } from '@/composables/breakpoint'
 import { BTN } from '@/documentos/tools'
 import ComprasPicker from '@/components/compras/ComprasPicker.vue'
+import CatalogProgress from '@/components/compras/CatalogProgress.vue'
+import { BUSY, progressOf } from '@/utils/catalogProgress'
 import {
   assistantOn,
   loadAssistant,
@@ -1460,7 +1584,9 @@ import {
   lineTone,
   pedidoTone,
   closeSpecs,
+  lineMeta,
   readyRows,
+  skippedText,
 } from '@/utils/surtido'
 import { sendEach, uploadCatalog, uploadPictures } from '@/utils/catalogUpload'
 import { LIST_ACCEPT, dropFiles } from '@/utils/listaPrecios'
@@ -1532,6 +1658,7 @@ const steps = computed(() => [
   },
 ])
 const budgetPct = computed(() => budgetShare(plan.value))
+const skipped = computed(() => skippedText(plan.value?.counts))
 const pendingChanges = computed(() =>
   buildChanges(plan.value, edits.value, adds.value),
 )
@@ -1572,11 +1699,23 @@ const STATUS = {
 }
 const label = (status) => (STATUS[status] ? STATUS[status]() : status || '')
 function catalogStatus(c) {
-  if (c.reading) return __('Reading products', null, 'Surtido')
-  const base = label(c.status)
-  return c.status === 'Indexando' && c.index_progress
-    ? `${base} ${c.index_progress}%`
-    : base
+  return c.reading ? __('Reading products', null, 'Surtido') : label(c.status)
+}
+// A list on its way (indexing, reading, waiting for the owner, stopped) shows
+// its bar and line; a settled one its status.
+const BAR_STAGES = [...BUSY, 'confirm', 'failed']
+const showsBar = (c) => BAR_STAGES.includes(progressOf(c)?.stage)
+function pagesText(c) {
+  const p = progressOf(c)
+  if (p?.stage === 'index' && p.pages) return `${p.indexed || 0}/${p.pages}`
+  return c.page_count || '–'
+}
+function countsText(c) {
+  return __(
+    '{0} pages, {1} products',
+    [c.page_count || 0, c.lines || 0],
+    'Surtido',
+  )
 }
 const pedidoStatus = label
 const lineStatus = label
@@ -1628,7 +1767,7 @@ async function loadBoot() {
 
 // A list still uploading, indexing or being read refreshes itself; a quiet
 // refresh keeps the problem on screen (run() clears it).
-const POLL_MS = 5000
+const POLL_MS = 3000
 let poll = null
 async function refresh() {
   try {
@@ -1639,7 +1778,12 @@ async function refresh() {
   }
 }
 const settling = computed(() =>
-  boot.value.catalogs.some((c) => c.reading || SETTLING.includes(c.status)),
+  boot.value.catalogs.some(
+    (c) =>
+      c.reading ||
+      SETTLING.includes(c.status) ||
+      BUSY.includes(progressOf(c)?.stage),
+  ),
 )
 function schedulePoll() {
   clearTimeout(poll)
@@ -2151,3 +2295,70 @@ onBeforeUnmount(() => {
   clearTimeout(poll)
 })
 </script>
+<style scoped>
+/* The lists read as a table once their own column has room for one. */
+.listas-wrap {
+  container-type: inline-size;
+}
+@container (min-width: 46rem) {
+  .listas {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto minmax(11rem, 17rem) auto;
+    column-gap: 1rem;
+  }
+  .listas-head,
+  .listas-rows,
+  .lista {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
+  }
+  .lista-num {
+    display: block;
+  }
+  .lista-counts {
+    display: none;
+  }
+  .lista-state {
+    order: 0;
+    grid-column: auto;
+  }
+}
+/* The plan lines too: product, pieces, price, total and its two actions. */
+.plan-wrap {
+  container-type: inline-size;
+}
+@container (min-width: 40rem) {
+  .plan {
+    display: grid;
+    grid-template-columns:
+      minmax(0, 1fr) auto minmax(5.5rem, auto) minmax(6.5rem, auto)
+      4.5rem;
+    column-gap: 1rem;
+  }
+  .plan-head,
+  .plan-rows,
+  .plan-line {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
+  }
+  .plan-cell-name {
+    grid-column: auto;
+  }
+  .plan-money {
+    display: contents;
+  }
+  .plan-price {
+    align-self: center;
+    text-align: right;
+    font-size: 0.875rem;
+  }
+  .plan-total {
+    align-self: center;
+  }
+  .plan-times {
+    display: none;
+  }
+}
+</style>

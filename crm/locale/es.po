@@ -27598,13 +27598,8 @@ msgstr "de {0}"
 
 #: frontend/src/pages/CompraSurtido.vue
 msgctxt "Surtido"
-msgid "{0} lines"
-msgstr "{0} líneas"
-
-#: frontend/src/pages/CompraSurtido.vue
-msgctxt "Surtido"
-msgid "{0} left"
-msgstr "quedan {0}"
+msgid "{0} lines, {1} left"
+msgstr "{0} líneas, quedan {1}"
 
 #: frontend/src/pages/CompraSurtido.vue
 msgctxt "Surtido"
@@ -37663,3 +37658,182 @@ msgstr "{0} y {1} están en este pedido"
 msgctxt "Lista"
 msgid "Show more"
 msgstr "Mostrar más"
+#: frontend/src/utils/catalogProgress.js
+msgctxt "Surtido"
+msgid "Indexing: {0} of {1} pages"
+msgstr "Indexando: {0} de {1} páginas"
+
+#: frontend/src/utils/catalogProgress.js
+msgctxt "Surtido"
+msgid "Indexing the list…"
+msgstr "Indexando la lista…"
+
+#: frontend/src/utils/catalogProgress.js
+msgctxt "Surtido"
+msgid "Indexing is free. Its products are read right after."
+msgstr "Indexar no cuesta. Enseguida se leen sus productos."
+
+#: frontend/src/utils/catalogProgress.js
+msgctxt "Surtido"
+msgid "Reading products: {0} of {1} pages, {2} products so far"
+msgstr "Leyendo productos: {0} de {1} páginas, {2} productos hasta ahora"
+
+#: frontend/src/utils/catalogProgress.js
+msgctxt "Surtido"
+msgid "Starting to read the products…"
+msgstr "Empezando a leer los productos…"
+
+#: frontend/src/utils/catalogProgress.js
+msgctxt "Surtido"
+msgid "You can keep working. Muelle tells you in the chat when it is done."
+msgstr "Puedes seguir trabajando. Muelle te avisa en el chat cuando termine."
+
+#: frontend/src/utils/catalogProgress.js
+msgctxt "Surtido"
+msgid "Reading its products uses {0} units of your plan; it waits for your OK"
+msgstr "Leer sus productos usa {0} unidades de tu plan; espera tu confirmación"
+
+#: frontend/src/utils/catalogProgress.js
+msgctxt "Surtido"
+msgid "The list stopped without a reason"
+msgstr "La lista se detuvo sin dar motivo"
+
+#: frontend/src/utils/catalogProgress.js
+msgctxt "Surtido"
+msgid "Ready: {0} products"
+msgstr "Lista: {0} productos"
+
+#: frontend/src/utils/catalogProgress.js
+msgctxt "Surtido"
+msgid "Read, no products with a price"
+msgstr "Leída, sin productos con precio"
+
+#: frontend/src/utils/catalogProgress.js
+msgctxt "Surtido"
+msgid "List"
+msgstr "Lista"
+
+#: frontend/src/utils/catalogProgress.js
+msgctxt "Surtido"
+msgid "Pages"
+msgstr "Páginas"
+
+#: frontend/src/utils/catalogProgress.js
+msgctxt "Surtido"
+msgid "Products"
+msgstr "Productos"
+
+#: frontend/src/utils/catalogProgress.js
+msgctxt "Surtido"
+msgid "State"
+msgstr "Estado"
+
+#: frontend/src/utils/catalogProgress.js
+msgctxt "Surtido"
+msgid "No supplier yet"
+msgstr "Sin proveedor todavía"
+
+#: frontend/src/utils/catalogProgress.js
+msgctxt "Surtido"
+msgid "Open the list {0}"
+msgstr "Abrir la lista {0}"
+
+#: frontend/src/utils/catalogProgress.js
+msgctxt "Surtido"
+msgid "{0} pages, {1} products"
+msgstr "{0} págs., {1} productos"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "{0} with enough stock"
+msgstr "{0} con existencia suficiente"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "{0} without sales in the period"
+msgstr "{0} sin ventas en el periodo"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "{0} new models (not asked for)"
+msgstr "{0} modelos nuevos (no pedidos)"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "{0} at their stock level"
+msgstr "{0} en su nivel de existencia"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "{0} models you already have"
+msgstr "{0} modelos que ya tienes"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "{0} lines of another quality of the same model"
+msgstr "{0} líneas de otra calidad del mismo modelo"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "{0} already on purchase orders"
+msgstr "{0} que ya vienen en órdenes de compra"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "{0} models outside the years asked"
+msgstr "{0} modelos fuera de los años pedidos"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Not proposed: {0}"
+msgstr "No propuestas: {0}"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Nothing to buy with these filters"
+msgstr "Nada que comprar con estos filtros"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Clear «Only what runs low», cover more days, or name the models in «Models first»."
+msgstr "Quita «Solo lo que tiene pocas piezas», cubre más días o escribe los modelos en «Primero estos modelos»."
+
+#: frontend/src/utils/surtido.js
+msgctxt "Surtido"
+msgid "{0} without parts installed in the period"
+msgstr "{0} sin piezas instaladas en el periodo"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Product"
+msgstr "Producto"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Pieces"
+msgstr "Piezas"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Price"
+msgstr "Precio"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Total"
+msgstr "Total"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Change colour"
+msgstr "Cambiar color"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Keep"
+msgstr "Conservar"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Remove"
+msgstr "Quitar"

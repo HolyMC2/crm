@@ -253,17 +253,23 @@ export function withoutLink(text, href) {
   return lines.join('\n').trim()
 }
 
+// «Ver avance» on a supplier list's message: the sheet draws the list's bar
+// instead of the button (Telegram and WhatsApp tap it for a line).
+const CATALOG_PROGRESS = /^imgq:catalog:progress:(.+)$/
+
 /**
  * A reply's buttons split into action cards (they change data and need a
- * confirmation) and plain choices. Two shapes of doco's action buttons:
- * `act:<card>` (one proposal, the text is its label) and the run approvals
- * `agr:<run>:<pid>:a|r` (one row per proposal, its line in the reply text).
+ * confirmation), plain choices and the supplier list whose progress it shows.
+ * Two shapes of doco's action buttons: `act:<card>` (one proposal, the text is
+ * its label) and the run approvals `agr:<run>:<pid>:a|r` (one row per
+ * proposal, its line in the reply text).
  */
 export function splitButtons(message) {
   const rows = Array.isArray(message?.buttons) ? message.buttons : []
   const lines = String(message?.text || '').split('\n')
   const cards = []
   const choices = []
+  let progress = ''
   for (const row of rows) {
     const buttons = (Array.isArray(row) ? row : [row]).filter(
       (button) => button && typeof button.callback_data === 'string',
@@ -292,7 +298,9 @@ export function splitButtons(message) {
       continue
     }
     for (const button of buttons) {
-      if (button.callback_data.startsWith('act:'))
+      const list = CATALOG_PROGRESS.exec(button.callback_data)
+      if (list) progress = list[1]
+      else if (button.callback_data.startsWith('act:'))
         cards.push({
           id: button.callback_data,
           summary: stripEmoji(button.text),
@@ -306,7 +314,7 @@ export function splitButtons(message) {
         })
     }
   }
-  return { cards, choices }
+  return { cards, choices, progress }
 }
 
 const APPROVAL_FRAME = [

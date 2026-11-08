@@ -8,6 +8,7 @@ import {
   budgetShare,
   buildChanges,
   closeSpecs,
+  lineMeta,
   missingGroups,
   readyRows,
 } from '@/utils/surtido'
@@ -54,6 +55,19 @@ describe('surtido plan corrections', () => {
     expect(budgetShare(plan)).toBe(75)
     expect(budgetShare({ budget: 100, total: 130 })).toBe(100)
     expect(budgetShare({ budget: 0, total: 5 })).toBe(0)
+  })
+
+  it('a plan line says its code, model and colour once, with commas', () => {
+    expect(
+      lineMeta({
+        name: 'Display Samsung A16 5G negro',
+        code: 'PF-A165G',
+        model: 'Galaxy A16 5G',
+        colour: 'negro',
+      }),
+    ).toBe('PF-A165G, Galaxy A16 5G')
+    expect(lineMeta({ name: 'PF-IP11', code: 'PF-IP11' })).toBe('')
+    expect(lineMeta({ name: 'Mica', model: 'iPhone 11' })).toBe('iPhone 11')
   })
 
   it('create-items rows need batches and serials said for every row', () => {
