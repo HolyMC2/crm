@@ -168,7 +168,8 @@ _CONNECTION_STATES = {
 	"Needs attention": ("Hay que reconectar", "needs"),
 	"Error": ("No se pudo sincronizar", "needs"),
 	"Institution unavailable": ("El banco no responde", "wait"),
-	"Retired": ("Ya no se puede conectar", "off"),
+	# Syncfy dropped the institution: the login only costs until someone disconnects it.
+	"Retired": ("Ya no se puede conectar", "needs"),
 	"Disconnected": ("Desconectada", "off"),
 }
 _CONNECTION_KINDS = {"Bank": "Banco", "Tax": "SAT", "Wallet": "Monedero", "Other": "Institución"}
@@ -177,8 +178,9 @@ _CONNECTION_KINDS = {"Bank": "Banco", "Tax": "SAT", "Wallet": "Monedero", "Other
 def connection_state(status, is_twofa=False):
 	"""{word, tone, step} of a bank login. ``step`` is what its one filled button does:
 	«sync» (Sincronizar ahora), «code» (open Syncfy for the one-time code), «reconnect»
-	(open Syncfy on the login to fix it), «connect» (connect it again) or None (nothing
-	the person can do: it is working, or the bank is down)."""
+	(open Syncfy on the login to fix it), «connect» (connect it again), «disconnect» (an
+	institution Syncfy no longer supports) or None (nothing the person can do: it is
+	working, or the bank is down)."""
 	word, tone = _CONNECTION_STATES.get(status or "", ("Conectando", "busy"))
 	if status == "Connected":
 		step = "code" if is_twofa else "sync"
@@ -190,6 +192,8 @@ def connection_state(status, is_twofa=False):
 		step = "sync"
 	elif status == "Disconnected":
 		step = "connect"
+	elif status == "Retired":
+		step = "disconnect"
 	else:
 		step = None
 	return {"word": word, "tone": tone, "step": step}
@@ -197,12 +201,14 @@ def connection_state(status, is_twofa=False):
 
 def connection_detail(status, message, word, is_twofa=False):
 	"""The connector's own sentence for this state, already translated, minus
-	what the hero says above it: a working login does not repeat «Conectada.»,
-	and one that asks for a code says so in the shell's own line."""
-	if status != "Connected":
-		return message
-	if is_twofa:
+	what the hero says above it: it does not open with the state word again
+	(«Desconectada. Los movimientos…»), a login that asks for a code on every
+	sync says so in the shell's own line, and a code the bank asks for now is
+	entered with the hero's «Escribir el código», not the connector's «Reconectar»."""
+	if status == "Connected" and is_twofa:
 		return ""
+	if status == "Waiting for code":
+		return "La institución pidió un código de un solo uso."
 	head = f"{word}."
 	return message[len(head) :].strip() if message.startswith(head) else message
 

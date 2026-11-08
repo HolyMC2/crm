@@ -103,7 +103,7 @@ class TestConnectionWords(TestCase):
 			("Error", False): ("No se pudo sincronizar", "needs", "sync"),
 			("Institution unavailable", False): ("El banco no responde", "wait", None),
 			("Connecting", False): ("Conectando", "busy", None),
-			("Retired", False): ("Ya no se puede conectar", "off", None),
+			("Retired", False): ("Ya no se puede conectar", "needs", "disconnect"),
 			("Disconnected", False): ("Desconectada", "off", "connect"),
 		}
 		for (status, twofa), (word, tone, step) in cases.items():
@@ -126,6 +126,16 @@ class TestConnectionWords(TestCase):
 		self.assertEqual(connection_detail("Connected", ok, "Conectada", is_twofa=True), "")
 		refused = "La institución rechazó el acceso."
 		self.assertEqual(connection_detail("Needs attention", refused, "Hay que reconectar"), refused)
+		kept = "Desconectada. Los movimientos descargados y sus documentos se conservan."
+		self.assertEqual(
+			connection_detail("Disconnected", kept, "Desconectada"),
+			"Los movimientos descargados y sus documentos se conservan.",
+		)
+		asked = "La institución pidió un código de un solo uso. Abre Reconectar y escríbelo."
+		self.assertEqual(
+			connection_detail("Waiting for code", asked, "Pide un código"),
+			"La institución pidió un código de un solo uso.",
+		)
 
 	def test_kinds_in_words(self):
 		self.assertEqual(connection_kind("Tax"), "SAT")

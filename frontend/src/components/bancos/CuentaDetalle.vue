@@ -105,7 +105,7 @@
       </RouterLink>
       <div class="mt-3 flex flex-wrap gap-2">
         <Button
-          v-if="feed && feedStep && can.conectar"
+          v-if="feed && feedStep && feed.step !== 'disconnect' && can.conectar"
           class="min-h-11"
           :variant="feed.tone === 'needs' ? 'solid' : 'subtle'"
           :label="feedStep"

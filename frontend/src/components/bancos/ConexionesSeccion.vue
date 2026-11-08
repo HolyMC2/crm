@@ -50,7 +50,7 @@
           >
             <template v-if="c.tone === 'needs' || waiting(c)" #trailing>
               <span
-                class="block max-w-full truncate rounded-full bg-surface-amber-2 px-2 py-0.5 text-xs font-medium text-ink-amber-8"
+                class="block max-w-full rounded-7 bg-surface-amber-2 px-2 py-0.5 text-center text-xs font-medium leading-tight text-ink-amber-8"
                 data-conexion-aviso
                 >{{ c.tone === 'needs' ? c.word : waiting(c) }}</span
               >
@@ -119,7 +119,7 @@ import { useLiveList } from '@/composables/liveList'
 import { bancosApi, errorText } from './bancos'
 import {
   LIVE_CONEXIONES,
-  conexionLine,
+  conexionListLine,
   waitingOf,
   countText,
 } from './conectados'
@@ -164,7 +164,7 @@ function waiting(c) {
   return sin_enlazar ? `${countText(sin_enlazar)} sin enlazar` : ''
 }
 function rowLine(c) {
-  return conexionLine(c)
+  return conexionListLine(c)
 }
 
 let sequence = 0

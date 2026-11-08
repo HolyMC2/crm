@@ -103,7 +103,9 @@ vi.mock('@/components/bancos/syncfyWidget', async (original) => ({
 }))
 
 import {
+  askText,
   conexionLine,
+  conexionListLine,
   jobOf,
   syncfyAccountTitle,
   ledgerLabel,
@@ -212,7 +214,27 @@ describe('bancos conectados words', () => {
     )
     expect(stepLabel({ step: 'reconnect' })).toBe('Reconectar')
     expect(stepLabel({ step: 'connect' })).toBe('Conectar de nuevo')
+    expect(stepLabel({ step: 'disconnect' })).toBe('Desconectar')
     expect(stepLabel({ step: null })).toBe('')
+  })
+
+  it('tells someone without the manager role what to ask for, by step', () => {
+    expect(askText({ step: 'sync', tone: 'ok' })).toBe(
+      'Quien administra Bancos puede sincronizarla.',
+    )
+    expect(askText({ step: 'sync', tone: 'needs' })).toBe(
+      'Pide a quien administra Bancos que la revise.',
+    )
+    expect(askText({ step: 'reconnect', tone: 'needs' })).toBe(
+      'Pide a quien administra Bancos que la reconecte.',
+    )
+    expect(askText({ step: 'connect', tone: 'off' })).toBe(
+      'Quien administra Bancos puede conectarla de nuevo.',
+    )
+    expect(askText({ step: 'disconnect', tone: 'needs' })).toBe(
+      'Pide a quien administra Bancos que la desconecte.',
+    )
+    expect(askText({ step: null })).toBe('')
   })
 
   it('says when Syncfy lets the login sync again, only while it waits', () => {
@@ -222,6 +244,29 @@ describe('bancos conectados words', () => {
     )
     expect(readyText({ ready_at: '2026-11-07 13:55:00' }, now)).toBe('')
     expect(readyText({ ready_at: '' }, now)).toBe('')
+    // Disconnecting or connecting again starts no sync, so the cool-down never holds it.
+    const later = '2026-11-07 14:05:00'
+    expect(readyText({ ready_at: later, step: 'disconnect' }, now)).toBe('')
+    expect(readyText({ ready_at: later, step: 'connect' }, now)).toBe('')
+  })
+
+  it('gives the reason on the list when the chip already shows the state', () => {
+    const now = new Date(2026, 10, 7, 14, 0, 0)
+    const refused = {
+      tone: 'needs',
+      word: 'Hay que reconectar',
+      detail: 'La institución rechazó el acceso.',
+      refreshed_at: '2026-11-07 12:00:00',
+    }
+    expect(conexionListLine(refused, now)).toBe(
+      'La institución rechazó el acceso.',
+    )
+    expect(conexionListLine({ ...refused, detail: '' }, now)).toMatch(
+      /^Actualizada hace 2 h/,
+    )
+    expect(conexionListLine({ tone: 'busy', word: 'Conectando' }, now)).toBe(
+      'Conectando',
+    )
   })
 
   it('reads a working login by its freshness and any other by its state', () => {
@@ -548,13 +593,43 @@ describe('ConexionDetalle', () => {
     expect(row.querySelectorAll('button')).toHaveLength(0)
   })
 
+  it('asks to disconnect an institution Syncfy dropped, from the hero', async () => {
+    const retired = {
+      ...LOGIN,
+      status: 'Retired',
+      word: 'Ya no se puede conectar',
+      tone: 'needs',
+      step: 'disconnect',
+      ready_at: '2099-01-01 00:00:00',
+      detail:
+        'Syncfy ya no soporta esta institución. Desconéctala y usa estados de cuenta.',
+    }
+    mount({ conectados: true, conectar: true }, retired)
+    await flush()
+    const paso = host.querySelector('[data-bancos-conexion-paso]')
+    expect(paso.textContent.trim()).toBe('Desconectar')
+    expect(paso.disabled).toBe(false)
+    expect(
+      host.querySelector('[data-bancos-conexion-acciones]').textContent,
+    ).not.toContain('Cambiar usuario')
+    state.call.mockClear()
+    paso.click()
+    await flush()
+    // It asks first: nothing reaches Syncfy or the connector on the tap itself.
+    expect(state.openSyncfy).not.toHaveBeenCalled()
+    expect(state.call).not.toHaveBeenCalledWith(
+      'syncfy_connector.api.connections.disconnect',
+      expect.anything(),
+    )
+  })
+
   it('tells someone without the manager role who can act', async () => {
     mount({ conectados: true, conectar: false })
     await flush()
     expect(host.querySelector('[data-bancos-conexion-paso]')).toBeNull()
     expect(
       host.querySelector('[data-bancos-conexion-pide]').textContent.trim(),
-    ).toBe('Pide a quien administra Bancos que la revise.')
+    ).toBe('Pide a quien administra Bancos que la reconecte.')
     expect(host.querySelector('[data-bancos-enlazar-abrir]')).toBeNull()
     expect(
       host.querySelector('[data-syncfy-movimiento="mov-1"] button'),

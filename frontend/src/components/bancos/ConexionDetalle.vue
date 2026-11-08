@@ -87,7 +87,11 @@
               :loading="step.busy.value"
               :disabled="!!ready"
               data-bancos-conexion-paso
-              @click="step.run(conexion)"
+              @click="
+                conexion.step === 'disconnect'
+                  ? askDisconnect()
+                  : step.run(conexion)
+              "
             />
             <p v-if="ready" class="text-sm text-ink-gray-6">{{ ready }}</p>
           </template>
@@ -266,7 +270,7 @@
           Más acciones
         </h2>
         <ul class="divide-y divide-outline-gray-1">
-          <li>
+          <li v-if="conexion.status !== 'Retired'">
             <ListRow
               title="Cambiar usuario o contraseña"
               subtitle="Se abre la ventana de Syncfy sobre esta conexión"

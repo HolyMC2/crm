@@ -67,17 +67,26 @@ export function stepLabel(conexion) {
       return 'Reconectar'
     case 'connect':
       return 'Conectar de nuevo'
+    case 'disconnect':
+      return 'Desconectar'
     default:
       return ''
   }
 }
 
-/** What someone without the manager role reads where the button would be. */
+// What someone without the manager role reads where the button would be, by step.
+const ASK = {
+  sync: 'Quien administra Bancos puede sincronizarla.',
+  code: 'Quien administra Bancos puede sincronizarla con el código.',
+  reconnect: 'Pide a quien administra Bancos que la reconecte.',
+  connect: 'Quien administra Bancos puede conectarla de nuevo.',
+  disconnect: 'Pide a quien administra Bancos que la desconecte.',
+}
 export function askText(conexion) {
   if (!conexion?.step) return ''
-  return conexion.tone === 'needs'
-    ? 'Pide a quien administra Bancos que la revise.'
-    : 'Quien administra Bancos puede sincronizarla.'
+  if (conexion.step === 'sync' && conexion.tone === 'needs')
+    return 'Pide a quien administra Bancos que la revise.'
+  return ASK[conexion.step] || ''
 }
 
 // Literal classes per tone, kept here rather than in a shared status module:
@@ -93,8 +102,10 @@ export function toneInk(tone) {
   return TONE_INK[tone] || TONE_INK.ok
 }
 
-/** Syncfy's cool-down after a sync: «Podrás sincronizar a las 14:05», or ''. */
+/** Syncfy's cool-down after a sync: «Syncfy deja sincronizar otra vez a las 14:05.», or ''. */
 export function readyText(conexion, now = new Date()) {
+  // The cool-down holds back a sync; disconnecting or connecting again is no sync.
+  if (conexion?.step === 'disconnect' || conexion?.step === 'connect') return ''
   const at = parseServerDate(conexion?.ready_at)
   if (!at || at <= now) return ''
   return `Syncfy deja sincronizar otra vez a las ${formatTime(at)}.`
@@ -148,6 +159,15 @@ export function conexionLine(conexion, now = new Date()) {
   return line
     ? `Pide código, ${line.charAt(0).toLowerCase()}${line.slice(1)}`
     : 'Pide código'
+}
+
+/**
+ * A login's line in the Bancos list. One that needs the person already shows
+ * its state in the amber chip beside it, so the line gives the reason instead.
+ */
+export function conexionListLine(conexion, now = new Date()) {
+  if (conexion?.tone !== 'needs') return conexionLine(conexion, now)
+  return conexion.detail || refreshedText(conexion, now) || ''
 }
 
 /** Movements that wait for the person on one account or a whole login. */
