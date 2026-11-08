@@ -31,3 +31,7 @@ On a wide screen the login's page opens in the right pane; on a phone it is a fu
 
 - `frontend/tests/unit/bancosConectados.test.js` covers the words, the widget wrapper with a fake `SyncfyWidget`, the step runner, the login's page (manager and not), and the list.
 - Before landing, the screens were shot on the lab mirror through `shell-program/scripts/live-preview.sh`, at 412 and 305 px in light and dark and at 1280 and 1440 px. The shot script only reads: it never taps a step. The states the lab data does not have were shot from real answers rewritten in the browser: needs a person, error, bank down, retired, disconnected, connecting, cool-down, Contador's relink, «Por revisar», SAT, a reader without the manager role, and no logins yet.
+
+## Follow-ups
+
+- «Enlazar» asks «Desde qué día» with the shared `DateField`, whose quick picks are «Hoy», «Mañana» and «En una semana». A day to import from is never in the future, so this field wants past picks. The date is prefilled with the day after the account's last movement, so the picks are rarely needed. The fix is a picks prop in `@muelle/ui` (muelle `workspace/packages/ui`). That package is checked across every app by muelle's vendor-parity gate (`scripts/ci/shell-vendor-parity.mjs`), so it ships as a package release that pins the apps left on the old copy, then crm re-vendors.
