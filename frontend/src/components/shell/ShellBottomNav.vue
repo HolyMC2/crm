@@ -12,34 +12,29 @@
       :key="module.key"
       v-bind="module.app ? { href: module.href } : { to: module.to }"
       :data-sibling="module.app ? module.key : undefined"
-      class="flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium"
-      :class="module.key === active ? 'text-ink-gray-9' : 'text-ink-gray-6'"
+      :class="[
+        TAB,
+        module.key === active ? 'text-ink-gray-9' : 'text-ink-gray-6',
+      ]"
       :aria-current="module.key === active ? 'page' : undefined"
     >
-      <span
-        class="flex h-7 w-12 items-center justify-center rounded-full"
-        :class="module.key === active ? 'bg-surface-gray-3' : ''"
-        aria-hidden="true"
-      >
-        <span :class="[module.icon, 'size-5']" />
+      <span :class="PILL_BOX" aria-hidden="true">
+        <span :class="[PILL, module.key === active ? PILL_ON : PILL_OFF]" />
+        <span :class="[module.icon, 'relative size-5']" />
       </span>
       <span :class="LABEL">{{ module.label }}</span>
     </component>
     <!-- «Más» lights up while the page is a module the bar does not hold: the
          worker reached it from the sheet, so the way back stays visible. -->
     <button
-      class="flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium"
-      :class="moreLit ? 'text-ink-gray-9' : 'text-ink-gray-6'"
+      :class="[TAB, moreLit ? 'text-ink-gray-9' : 'text-ink-gray-6']"
       aria-haspopup="dialog"
       :aria-current="moreLit ? 'page' : undefined"
       @click="$emit('more')"
     >
-      <span
-        class="flex h-7 w-12 items-center justify-center rounded-full"
-        :class="moreLit ? 'bg-surface-gray-3' : ''"
-        aria-hidden="true"
-      >
-        <span class="lucide-menu size-5" />
+      <span :class="PILL_BOX" aria-hidden="true">
+        <span :class="[PILL, moreLit ? PILL_ON : PILL_OFF]" />
+        <span class="lucide-menu relative size-5" />
       </span>
       <span :class="LABEL">Más</span>
     </button>
@@ -62,6 +57,15 @@ const RouterLink = resolveComponent('RouterLink')
 // and truncate's overflow:hidden would shave it («Pendiente» + half an s).
 const LABEL =
   'block max-w-full truncate px-px tracking-tight max-[359px]:text-[10px]'
+const TAB =
+  'press flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium'
+// The active tab's pill grows out from under its icon (Material's nav
+// indicator), so the eye follows the tap to the place it opened.
+const PILL_BOX = 'relative flex h-7 w-12 items-center justify-center'
+const PILL =
+  'absolute inset-0 rounded-full bg-surface-gray-3 transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none'
+const PILL_ON = 'opacity-100'
+const PILL_OFF = 'scale-x-50 opacity-0'
 
 const moreLit = computed(
   () => !!props.active && !props.slots.some((m) => m.key === props.active),

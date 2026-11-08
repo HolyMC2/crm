@@ -36,12 +36,14 @@
         >
       </span>
     </button>
-    <template v-if="open">
-      <div class="fixed inset-0 z-40" @click="open = false" />
+    <div v-if="open" class="fixed inset-0 z-40" @click="open = false" />
+    <!-- It grows from the account row at the rail's foot. -->
+    <Transition name="pop">
       <div
+        v-if="open"
         ref="menu"
         role="menu"
-        class="fixed bottom-3 z-50 w-64 rounded-7 border border-outline-gray-2 bg-surface-base py-1.5 shadow-xl"
+        class="fixed bottom-3 z-50 w-64 origin-bottom-left rounded-7 border border-outline-gray-2 bg-surface-base py-1.5 shadow-xl"
         :style="{ left: `${railWidth + 4}px` }"
       >
         <div class="border-b border-outline-gray-1 px-3.5 pb-2.5 pt-1.5">
@@ -143,7 +145,7 @@
           </button>
         </div>
       </div>
-    </template>
+    </Transition>
   </div>
 </template>
 <script setup>

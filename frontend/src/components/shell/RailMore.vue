@@ -29,13 +29,19 @@
         >
       </template>
     </button>
-    <template v-if="open">
-      <div class="fixed inset-0 z-40" @click="open = false" />
+    <div v-if="open" class="fixed inset-0 z-40" @click="open = false" />
+    <!-- It grows from the row that opened it. -->
+    <Transition name="pop">
       <div
+        v-if="open"
         ref="menu"
         role="menu"
         class="fixed z-50 max-h-[80dvh] w-60 overflow-y-auto rounded-7 border border-outline-gray-2 bg-surface-base py-1.5 shadow-xl"
-        :style="{ left: `${railWidth + 4}px`, top: `${top}px` }"
+        :style="{
+          left: `${railWidth + 4}px`,
+          top: `${top}px`,
+          transformOrigin: `left ${origin}px`,
+        }"
         data-testid="rail-more-menu"
       >
         <template v-if="hidden.length">
@@ -90,7 +96,7 @@
           {{ __('Bar by puesto') }}
         </button>
       </div>
-    </template>
+    </Transition>
   </div>
 </template>
 <script setup>
@@ -110,6 +116,7 @@ const RouterLink = resolveComponent('RouterLink')
 const route = useRoute()
 const open = ref(false)
 const top = ref(0)
+const origin = ref(0)
 const trigger = ref(null)
 const menu = ref(null)
 const arrangesTeam = computed(() => !!shellBoot.value?.user?.arranges_team)
@@ -132,9 +139,11 @@ function toggle() {
   open.value = true
   const box = trigger.value.getBoundingClientRect()
   top.value = box.top
+  origin.value = box.height / 2
   nextTick(() => {
     const height = menu.value?.offsetHeight || 0
     top.value = Math.max(8, Math.min(box.top, window.innerHeight - height - 8))
+    origin.value = box.top + box.height / 2 - top.value
     tabbables(menu.value)[0]?.focus()
   })
 }

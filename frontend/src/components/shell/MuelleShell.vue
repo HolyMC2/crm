@@ -32,7 +32,7 @@
         :title="barTitle"
         :stack="!backTo"
         :bell-active="activeKey === 'avisos'"
-        class="transition-[margin] duration-200"
+        class="transition-[margin] duration-200 ease-out motion-reduce:transition-none"
         :class="backTo ? '' : '!border-b-transparent'"
         :style="headerHidden ? { marginTop: `-${headerHeight}px` } : null"
       >
@@ -65,7 +65,7 @@
         <template v-if="route.meta.ownBottomBar" #actions>
           <button
             type="button"
-            class="flex size-12 flex-none items-center justify-center rounded-full text-ink-gray-7 active:bg-surface-gray-2 [@media(hover:hover)]:hover:bg-surface-gray-2"
+            class="press flex size-12 flex-none items-center justify-center rounded-full text-ink-gray-7 active:bg-surface-gray-2 [@media(hover:hover)]:hover:bg-surface-gray-2"
             :aria-label="__('Search')"
             :title="searchHint"
             :aria-keyshortcuts="searchKeys"
@@ -76,17 +76,19 @@
           </button>
         </template>
       </AppBar>
-      <div
-        v-if="!online"
-        role="status"
-        class="shrink-0 bg-surface-amber-1 px-4 py-2 text-sm text-ink-amber-8"
-      >
-        {{
-          __(
-            'Offline — you see what was last loaded; your changes stay as a draft.',
-          )
-        }}
-      </div>
+      <ExpandTransition>
+        <div
+          v-if="!online"
+          role="status"
+          class="shrink-0 bg-surface-amber-1 px-4 py-2 text-sm text-ink-amber-8"
+        >
+          {{
+            __(
+              'Offline — you see what was last loaded; your changes stay as a draft.',
+            )
+          }}
+        </div>
+      </ExpandTransition>
       <div
         v-if="shellLoading && !shellBoot"
         v-show="!appShown"
@@ -164,7 +166,7 @@
              so the list's own search above stays the only field on screen. -->
         <button
           type="button"
-          class="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full bg-surface-gray-2 pl-3.5 pr-4 text-left text-base text-ink-gray-6 active:bg-surface-gray-3"
+          class="press flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full bg-surface-gray-2 pl-3.5 pr-4 text-left text-base text-ink-gray-6 active:bg-surface-gray-3"
           :aria-label="__('Search or go to…')"
           :title="searchHint"
           :aria-keyshortcuts="searchKeys"
@@ -311,6 +313,7 @@ import {
 import { primaryDock } from '@/components/ui/primaryDock'
 import { pageTitle } from '@/composables/pageTitle'
 import AppBar from '@/components/ui/AppBar.vue'
+import ExpandTransition from '@/components/ui/ExpandTransition.vue'
 import { currentApp, openApps, showShell } from '@/composables/appStrip'
 import AppFrames from './AppFrames.vue'
 import ShellRail from './ShellRail.vue'
@@ -331,7 +334,7 @@ const route = useRoute(),
 const online = useOnline()
 const phone = isMobile
 const COMMAND_ICON =
-  'flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-8 active:bg-surface-gray-2 [@media(hover:hover)]:hover:bg-surface-gray-2'
+  'press flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-8 active:bg-surface-gray-2 [@media(hover:hover)]:hover:bg-surface-gray-2'
 // ui/Fab docks into the command bar while the phone shell shows one.
 watch(phone, (value) => (primaryDock.value = Boolean(value)), {
   immediate: true,

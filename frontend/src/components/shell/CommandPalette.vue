@@ -1,18 +1,19 @@
 <template>
-  <!-- One search dialog, two modes (Muelle keyboard standard): ⌘K / Ctrl+K
-       «Buscar o ir a…» and ⌘G / Ctrl+G «Buscar registros». The other key or
-       chip switches modes here and keeps the typed text. -->
   <div
     ref="dialog"
-    class="fixed inset-0 z-50 flex justify-center sm:items-start sm:pt-[12vh]"
+    class="palette-in fixed inset-0 z-50 flex justify-center sm:items-start sm:pt-[12vh]"
     role="dialog"
     aria-modal="true"
     data-shell-layer="palette"
     :data-mode="activeMode"
     :aria-label="__('Command palette')"
   >
+    <!-- One search dialog, two modes (Muelle keyboard standard): ⌘K / Ctrl+K
+         «Buscar o ir a…» and ⌘G / Ctrl+G «Buscar registros». The other key or
+         chip switches modes here and keeps the typed text. -->
     <div class="absolute inset-0 bg-black/30" @click="close" />
     <div
+      data-palette-panel
       class="relative flex h-full w-full flex-col bg-surface-base sm:h-auto sm:max-h-[70vh] sm:w-[640px] sm:rounded-7 sm:shadow-2xl"
     >
       <div

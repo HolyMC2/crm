@@ -222,6 +222,48 @@ a,
 .route-enter-active {
   animation: page-in 0.2s cubic-bezier(0.21, 1.02, 0.73, 1);
 }
+/* A menu grows from the control that opened it (give it a transform-origin
+   on that side) and shrinks back; while it leaves, taps go through at once. */
+.pop-enter-active {
+  transition:
+    opacity 0.14s ease-out,
+    transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.pop-leave-active {
+  transition:
+    opacity 0.1s ease-in,
+    transform 0.1s ease-in;
+  pointer-events: none;
+}
+.pop-enter-from,
+.pop-leave-to {
+  opacity: 0;
+  transform: scale(0.96);
+}
+/* The command palette fades in with its scrim; the panel rises on a phone
+   and drops into place on a wide screen. Enter only, like a route: a closed
+   palette is gone at once, so the next key goes to the page. */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes palette-drop {
+  from {
+    transform: translateY(-6px) scale(0.98);
+  }
+}
+.palette-in {
+  animation: fade-in 0.18s ease-out;
+}
+.palette-in [data-palette-panel] {
+  animation: page-in 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@media (min-width: 640px) {
+  .palette-in [data-palette-panel] {
+    animation-name: palette-drop;
+  }
+}
 
 /* token-styled checkbox (list views) — native checkboxes render light-mode white
    in dark theme even with color-scheme set, so draw it ourselves off the tokens */
@@ -353,8 +395,14 @@ input[type='checkbox'].rounded-4 {
   .slide-x-enter-active,
   .slide-x-leave-active,
   .icon-swap-enter-active,
-  .icon-swap-leave-active {
+  .icon-swap-leave-active,
+  .pop-enter-active,
+  .pop-leave-active {
     transition: none !important;
+  }
+  /* gentler, not none: the palette still fades */
+  .palette-in [data-palette-panel] {
+    animation: none !important;
   }
   .press {
     transition: none !important;
