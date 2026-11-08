@@ -32,7 +32,8 @@ describe('catalog upload session', () => {
     expect(partTarget(part, 'https://otra-tienda.example')).toBe(
       'https://otra-tienda.example/api/method/doco.docoutils.books.catalogs.uploads.receive_part?token=a&n=1&expires=9&signature=s',
     )
-    const presigned = 'https://s3.storage.example/bucket/key?partNumber=1&X-Amz-Signature=z'
+    const presigned =
+      'https://s3.storage.example/bucket/key?partNumber=1&X-Amz-Signature=z'
     expect(partTarget(presigned, 'https://otra-tienda.example')).toBe(presigned)
   })
 
