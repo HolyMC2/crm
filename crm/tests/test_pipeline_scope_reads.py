@@ -142,7 +142,8 @@ class TestPipelineScopeReads(IntegrationTestCase):
 
 
 class TestDoctypeExists(IntegrationTestCase):
-	def test_same_answer_and_one_read_per_name(self):
+	def test_same_answer_and_one_read_per_transaction(self):
+		# Every DocType name is read in one query on the first ask (crm.utils.doctypes, 2026-11-06).
 		names = ("CRM Deal", "CRM Pipeline", "No Such DocType F19")
 		expected = {name: bool(frappe.db.exists("DocType", name)) for name in names}
 		self.assertEqual(expected, {"CRM Deal": True, "CRM Pipeline": True, "No Such DocType F19": False})
@@ -150,7 +151,7 @@ class TestDoctypeExists(IntegrationTestCase):
 		with reads("DocType") as seen:
 			for _ in range(10):
 				self.assertEqual({name: doctype_exists(name) for name in names}, expected)
-		self.assertEqual(len(seen), len(names))
+		self.assertEqual(len(seen), 1)
 		frappe.db.rollback()
 		with reads("DocType") as seen:
 			self.assertTrue(doctype_exists("CRM Deal"))

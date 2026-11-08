@@ -34,9 +34,13 @@ def get_capabilities() -> dict:
 			"sources": [],
 		}
 	try:
-		# A doco older than the Agenda (crm updated first) leaves the module off, not the shell down.
+		# A doco older than the Agenda (crm updated first) leaves the module off, not the shell down:
+		# that doco may lack the module or only its `sources` (the module import alone succeeds then).
 		import doco.agenda.api as agenda_api
 	except ImportError:
+		agenda_api = None
+	sources = getattr(agenda_api, "sources", None)
+	if not callable(sources):
 		return {
 			"enabled": False,
 			"sales_access": sales,
@@ -44,7 +48,7 @@ def get_capabilities() -> dict:
 			"sources": [],
 		}
 
-	rows = agenda_api.sources()["sources"]
+	rows = sources()["sources"]
 	for row in rows:
 		if row.get("reason"):
 			row["reason"] = _(row["reason"])

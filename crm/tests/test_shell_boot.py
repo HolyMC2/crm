@@ -753,6 +753,27 @@ class TestShellBoot(TestCase):
 		else:
 			self.assertTrue(agenda["reason"])
 
+	def test_a_doco_whose_agenda_has_no_sources_leaves_the_agenda_off_and_the_shell_up(self):
+		# crm updated before doco: doco.agenda.api imports but has no `sources` (CI image, 2026-11-08).
+		self._skip_without_agenda()
+		import doco.agenda.api as agenda_api
+
+		from crm.api.agenda import get_capabilities
+
+		missing = object()
+		saved = agenda_api.__dict__.pop("sources", missing)
+		try:
+			answer = get_capabilities()
+			data = shell.boot()
+		finally:
+			if saved is not missing:
+				agenda_api.sources = saved
+		self.assertFalse(answer["enabled"])
+		self.assertEqual(answer["sources"], [])
+		self.assertTrue(answer["reason"])
+		self.assertFalse(data["modules"]["agenda"]["enabled"])
+		self.assertTrue(data["modules"]["ventas"]["enabled"])
+
 	def test_refused_agenda_carries_its_own_reason_and_leaves_others(self):
 		answer = {"enabled": False, "reason": "Tu cuenta no puede abrir la Agenda.", "sources": []}
 		with patch("crm.api.agenda.get_capabilities", return_value=answer):
