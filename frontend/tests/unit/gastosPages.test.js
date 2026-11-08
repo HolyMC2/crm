@@ -148,6 +148,32 @@ describe('Gastos queue', () => {
       'list=/gastos?chip=semana',
     )
   })
+  it('the bar opens the budget only for whoever reads the plan', async () => {
+    answers.queue = {
+      rows: [],
+      has_more: false,
+      counts: { 'por-pagar': 0, 'por-registrar': 0, vencidas: 0, totals: [] },
+    }
+    answers.board = {
+      label: 'noviembre 2026',
+      lines: [{ key: 'gastos:' }],
+      totals: { expense: { pct: 2, state: 'ok' } },
+    }
+    await mountAt('/gastos')
+    expect(root.querySelector('[data-testid="gastos-presupuesto"]')).toBeNull()
+    expect(calls.some(([m]) => m === 'board')).toBe(false)
+    app.unmount()
+    root.remove()
+    gastosBoot.value = null
+    answers.get_capabilities.capabilities.presupuesto = true
+    await mountAt('/gastos')
+    await flush()
+    const door = root.querySelector('[data-testid="gastos-presupuesto"]')
+    expect(door).toBeTruthy()
+    expect(door.getAttribute('href')).toContain('/gastos/presupuesto')
+    expect(door.textContent).toContain('Budget for noviembre 2026')
+    expect(door.textContent).toContain('2 % used')
+  })
   it('a held bill shows «On hold» in the list', async () => {
     answers.queue = {
       rows: [bill({ on_hold: true })],

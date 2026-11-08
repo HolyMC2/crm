@@ -277,6 +277,7 @@ const TITLES = {
   promedio_diario: 'Daily average',
   tendencia: 'Daily trend',
   meta: 'Monthly goal',
+  presupuesto: 'Budget used',
   margen: 'Margin',
   descuentos: 'Discounts',
   devoluciones: 'Returns',

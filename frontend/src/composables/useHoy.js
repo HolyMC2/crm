@@ -201,6 +201,7 @@ export function sourceLink(url) {
 const SOURCE_ICONS = {
   'doco.compras': 'lucide-shopping-cart',
   'doco.gastos': 'lucide-receipt',
+  'doco.presupuesto': 'lucide-wallet',
   'abordo.primeros_pasos': 'lucide-check-check',
   'doco.archivos': 'lucide-folder',
   'taller.unassigned_repairs': 'lucide-wrench',

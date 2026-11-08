@@ -247,6 +247,7 @@ const ICONS = {
   tratos: 'lucide-handshake',
   tendencia: 'lucide-chart-spline',
   meta: 'lucide-target',
+  presupuesto: 'lucide-wallet',
   margen: 'lucide-percent',
   descuentos: 'lucide-tag',
   devoluciones: 'lucide-undo-2',

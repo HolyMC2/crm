@@ -3,9 +3,9 @@
 import re
 from urllib.parse import urlsplit
 
-# The queue, a supplier bill (`/factura/`), an employee's expense claim (`/gasto/`) and a
-# captured document under review (`/captura/`, ARC-S2.6).
-_GASTOS_PATH = re.compile(r"^/crm/gastos(?:/(?:factura|gasto|captura)/[^/]+)?/*$")
+# The queue, a supplier bill (`/factura/`), an employee's expense claim (`/gasto/`), a
+# captured document under review (`/captura/`, ARC-S2.6) and the month's budget.
+_GASTOS_PATH = re.compile(r"^/crm/gastos(?:/(?:factura|gasto|captura)/[^/]+|/presupuesto)?/*$")
 
 
 def is_gastos_path(path):

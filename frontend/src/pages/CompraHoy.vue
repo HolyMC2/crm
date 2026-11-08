@@ -443,7 +443,8 @@
           </ul>
         </section>
 
-        <!-- budgets -->
+        <!-- budgets: the month's plan per product type, as Gastos › Presupuesto
+             keeps it; here only how far each one has gone. -->
         <section
           :aria-label="__('Monthly budgets', null, 'ComprasHoy')"
           data-testid="hoy-budgets"
@@ -454,12 +455,15 @@
             >
               {{ __('Monthly budgets', null, 'ComprasHoy') }}
             </h2>
-            <Button
-              v-if="board.owner"
-              :label="__('Edit budgets', null, 'ComprasHoy')"
-              class="min-h-11 flex-none sm:min-h-8"
-              @click="openBudgets"
-            />
+            <RouterLink
+              v-if="budgetOn"
+              to="/gastos/presupuesto"
+              class="press flex min-h-11 items-center gap-1.5 rounded-full px-3 text-sm font-medium text-ink-gray-8 active:bg-surface-gray-2 sm:min-h-8 [@media(hover:hover)]:hover:bg-surface-gray-2"
+              data-testid="hoy-budgets-link"
+            >
+              <span class="lucide-wallet size-4" aria-hidden="true" />
+              {{ __('Budget', null, 'ComprasHoy') }}
+            </RouterLink>
           </div>
           <p
             v-if="!board.budgets.length"
@@ -467,7 +471,7 @@
           >
             {{
               __(
-                'No budgets. With one per product type, a buy plan never spends more than what is left this month.',
+                'No budgets. With one per product type in Gastos › Presupuesto, a buy plan never spends more than what is left this month.',
                 null,
                 'ComprasHoy',
               )
@@ -534,68 +538,6 @@
         </div>
       </div>
     </div>
-
-    <BottomSheet
-      v-if="budgetsMounted"
-      v-model:open="budgetsOpen"
-      :title="__('Monthly budgets', null, 'ComprasHoy')"
-      :subtitle="
-        __(
-          'What each product type may commit in purchase orders this month.',
-          null,
-          'ComprasHoy',
-        )
-      "
-      :dismissible="busy !== 'budgets'"
-    >
-      <form class="space-y-3 pb-4" @submit.prevent="saveBudgets">
-        <div
-          v-for="(row, i) in budgetRows"
-          :key="row.key"
-          class="grid grid-cols-[1fr_8rem_auto] items-end gap-2"
-        >
-          <ComprasPicker
-            v-model="row.item_group"
-            :display="row.item_group"
-            :label="__('Product type', null, 'ComprasHoy')"
-            :placeholder="__('Search group', null, 'ComprasHoy')"
-            :load="findGroups"
-          />
-          <FormControl
-            v-model="row.amount"
-            type="number"
-            min="0"
-            :label="__('Per month', null, 'ComprasHoy')"
-          />
-          <button
-            type="button"
-            class="press flex size-11 items-center justify-center rounded-full text-ink-gray-6 active:bg-surface-gray-2 [@media(hover:hover)]:hover:bg-surface-gray-2"
-            :aria-label="__('Remove budget', null, 'ComprasHoy')"
-            :title="__('Remove budget', null, 'ComprasHoy')"
-            @click="budgetRows.splice(i, 1)"
-          >
-            <span class="lucide-trash-2 size-5" aria-hidden="true" />
-          </button>
-        </div>
-        <Button
-          :label="__('Add a budget', null, 'ComprasHoy')"
-          class="min-h-11 sm:min-h-8"
-          @click="addBudget()"
-        />
-        <p v-if="sheetProblem" role="alert" class="text-sm text-ink-red-7">
-          {{ sheetProblem }}
-        </p>
-        <div class="flex justify-end">
-          <Button
-            type="submit"
-            variant="solid"
-            :label="__('Save budgets', null, 'ComprasHoy')"
-            class="min-h-11 sm:min-h-8"
-            :loading="busy === 'budgets'"
-          />
-        </div>
-      </form>
-    </BottomSheet>
 
     <BottomSheet
       v-if="leadsMounted"
@@ -666,7 +608,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
-import { Button, FormControl, toast } from 'frappe-ui'
+import { Button, toast } from 'frappe-ui'
 import {
   AppBar,
   BottomSheet,
@@ -674,14 +616,14 @@ import {
   KpiGrid,
   KpiTile,
 } from '@/components/ui'
-import ComprasPicker from '@/components/compras/ComprasPicker.vue'
 import { isMobile } from '@/composables/breakpoint'
+import { shellBoot } from '@/composables/muelleShell'
 import { comprasApi, money, problemOf } from '@/composables/useCompras'
+import { can } from '@/vendor/muelle-shell/contracts'
 import { formatDate } from '@/utils/display'
 import {
   boardAlerts,
   budgetUse,
-  budgetsPayload,
   leadRows,
   priceChangeRows,
   tonesText,
@@ -830,49 +772,8 @@ async function buildOrder(supplier) {
 }
 
 // ---- budgets ---------------------------------------------------------------
-const budgetsMounted = ref(false)
-const budgetsOpen = ref(false)
-const budgetRows = ref([])
-const sheetProblem = ref('')
-let budgetKey = 0
-
-function addBudget(row = {}) {
-  budgetRows.value.push({
-    key: ++budgetKey,
-    item_group: row.item_group || '',
-    amount: row.amount ?? '',
-  })
-}
-
-function openBudgets() {
-  budgetRows.value = []
-  for (const row of board.value.budgets) addBudget(row)
-  if (!budgetRows.value.length) addBudget()
-  sheetProblem.value = ''
-  budgetsMounted.value = true
-  budgetsOpen.value = true
-}
-
-function findGroups(search) {
-  return comprasApi('doco.workspaces.sourcing.level_groups', { search })
-}
-
-async function saveBudgets() {
-  busy.value = 'budgets'
-  sheetProblem.value = ''
-  try {
-    const rows = await comprasApi(API + 'budgets_save', {
-      rows: budgetsPayload(budgetRows.value),
-    })
-    board.value = { ...board.value, budgets: rows }
-    budgetsOpen.value = false
-    toast.success(__('Budgets saved', null, 'ComprasHoy'))
-  } catch (error) {
-    sheetProblem.value = problemOf(error).detail
-  } finally {
-    busy.value = ''
-  }
-}
+// Gastos › Presupuesto owns the plan; this board only reads it.
+const budgetOn = computed(() => can(shellBoot.value, 'gastos', 'presupuesto'))
 
 // ---- delivery days ---------------------------------------------------------
 const leadsMounted = ref(false)

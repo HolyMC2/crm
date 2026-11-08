@@ -1225,6 +1225,33 @@ describe('Gastos in the shell', () => {
     expect((await places.search(query)).map((i) => i.href)).toContain(
       '/gastos?segment=por-pagar&chip=vencidas',
     )
+    // The budget page needs its own right (Presupuesto's read).
+    expect((await places.search(query)).map((i) => i.href)).not.toContain(
+      '/gastos/presupuesto',
+    )
+    const budget = createShellProviders({
+      boot: ref(
+        boot({
+          modules: {
+            gastos: {
+              ...GASTOS_ON,
+              capabilities: { ...GASTOS_ON.capabilities, presupuesto: true },
+            },
+          },
+        }),
+      ),
+      modules: ref(hostedModules),
+    })
+    const budgetPlaces = budget.find((p) => p.key === 'ir_a')
+    const asked = { ...query, raw: 'presupuesto', text: 'presupuesto' }
+    expect(
+      (await budgetPlaces.search(asked)).find(
+        (i) => i.id === 'gastos.presupuesto',
+      ),
+    ).toMatchObject({
+      title: 'Gastos › Presupuesto',
+      href: '/gastos/presupuesto',
+    })
     const off = createShellProviders({
       boot: ref(
         boot({ modules: { gastos: { ...GASTOS_ON, enabled: false } } }),

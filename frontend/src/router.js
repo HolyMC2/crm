@@ -395,6 +395,14 @@ const routes = [
     },
   },
   {
+    // Gastos › Presupuesto: the month's plan per concept against what it used
+    // (doco.workspaces.presupuesto). Its own bar with the way back to Gastos.
+    path: '/gastos/presupuesto',
+    name: 'Presupuesto',
+    component: () => import('@/pages/Presupuesto.vue'),
+    meta: { app: 'gastos', title: 'Gastos', ownPhoneHeader: true },
+  },
+  {
     path: '/gastos/factura/:name',
     name: 'GastoFactura',
     component: () => import('@/pages/GastoFactura.vue'),

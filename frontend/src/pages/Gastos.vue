@@ -173,6 +173,37 @@
             @click="router.push(door)"
           />
         </header>
+        <!-- The month's budget, one row: how much of it the month has used. -->
+        <RouterLink
+          v-if="budgetOn && !state.po"
+          to="/gastos/presupuesto"
+          class="press mx-4 my-2 flex min-h-11 items-center gap-3 rounded-6 border border-outline-gray-2 px-3 py-2 text-sm active:bg-surface-gray-1 sm:mx-6 [@media(hover:hover)]:hover:bg-surface-gray-1"
+          data-testid="gastos-presupuesto"
+        >
+          <span
+            class="lucide-wallet size-5 flex-none text-ink-gray-6"
+            aria-hidden="true"
+          />
+          <span class="min-w-0 flex-1 truncate text-ink-gray-9">{{
+            budgetDoor.title
+          }}</span>
+          <span
+            v-if="budgetDoor.meta"
+            class="num flex-none tabular-nums"
+            :class="
+              budgetDoor.tone === 'danger'
+                ? 'text-ink-red-7'
+                : budgetDoor.tone === 'warning'
+                  ? 'text-ink-amber-9'
+                  : 'text-ink-gray-6'
+            "
+            >{{ budgetDoor.meta }}</span
+          >
+          <span
+            class="lucide-chevron-right size-4 flex-none text-ink-gray-5"
+            aria-hidden="true"
+          />
+        </RouterLink>
         <CapturasPendientes
           v-if="!state.po"
           :targets="['Purchase Invoice', 'Payment Entry', 'Journal Entry']"
@@ -582,8 +613,8 @@
   </ModuleLayout>
 </template>
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { Button, FormControl, toast } from 'frappe-ui'
 import { Fab, FilterChips } from '@/components/ui'
 import { chipClass } from '@/components/ui/chipClass'
@@ -634,6 +665,7 @@ import LucideDollarSign from '~icons/lucide/dollar-sign'
 import { registrationOf } from '@/composables/gastosRegistrations'
 import { useTableWidth } from '@/composables/useTableWidth'
 import { formatDay } from '@/utils/contactos'
+import { API as PRESUPUESTO_API, gastosDoor } from '@/utils/presupuesto'
 
 // A draft this tab sent to register in the background (the tray follows it).
 const registeringHere = (row) =>
@@ -651,6 +683,21 @@ const approval = reactive({ open: false, name: '', action: '', reason: '' })
 // The URL is the state: list, due-date chip, order, search and focused bill.
 const state = computed(() => queueState(route.query, boot.value))
 const caps = computed(() => boot.value?.capabilities || {})
+// The month's budget page, for whoever reads the plan.
+const budgetOn = computed(() => Boolean(caps.value.presupuesto))
+// The door's figures come after the queue, never before it.
+const budget = ref(null)
+const budgetDoor = computed(() => gastosDoor(budget.value))
+watch(
+  budgetOn,
+  (on) => {
+    if (!on || budget.value) return
+    gastosApi(PRESUPUESTO_API + 'board', {})
+      .then((board) => (budget.value = board))
+      .catch(() => {})
+  },
+  { immediate: true },
+)
 const billSegment = computed(() => state.value.segment !== 'empleados')
 // An order's bills are their own view: no door there (its bill comes from the order).
 const door = computed(() =>
