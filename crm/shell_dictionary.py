@@ -188,7 +188,8 @@ def _store(field: str, current: str, payload: bytes) -> None:
 	try:
 		os.makedirs(os.path.dirname(path), exist_ok=True)
 		tmp = f"{path}.{os.getpid()}.tmp"
-		with open(tmp, "w", encoding="utf-8") as f:
+		# the path is the site folder plus a hash of the field; nothing from a request names it
+		with open(tmp, "w", encoding="utf-8") as f:  # nosemgrep: frappe-security-file-traversal
 			json.dump({"field": field, "version": current, "payload": payload.decode()}, f)
 		os.replace(tmp, path)
 	except OSError:
@@ -198,7 +199,7 @@ def _store(field: str, current: str, payload: bytes) -> None:
 def _restore(field: str) -> tuple[str, bytes] | None:
 	"""The stored set for this field, put back in the cache; None without one."""
 	try:
-		with open(_store_path(field), encoding="utf-8") as f:
+		with open(_store_path(field), encoding="utf-8") as f:  # nosemgrep: frappe-security-file-traversal
 			data = json.load(f)
 	except (OSError, ValueError):
 		return None
