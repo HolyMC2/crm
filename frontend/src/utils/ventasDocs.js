@@ -4,6 +4,7 @@
 // every action it offers.
 
 import { posCollectHref } from '@/utils/posHandoff'
+import { safeReturnPath } from '@/utils/returnPath'
 
 export const SALES_DOCTYPES = Object.freeze([
   'Quotation',
@@ -12,7 +13,6 @@ export const SALES_DOCTYPES = Object.freeze([
   'POS Invoice',
 ])
 const POS_RETURN_DOCTYPES = ['Sales Invoice', 'POS Invoice']
-const RETURN_PREFIXES = ['/crm/']
 
 function groupDefs() {
   return [
@@ -123,39 +123,9 @@ function denied(action, reason) {
   }
 }
 
-/** The receiving app validates `return_to` again; this only refuses to send junk. */
-export function safeReturnPath(path) {
-  if (typeof path !== 'string' || path.length > 2048) return ''
-  if (!RETURN_PREFIXES.some((prefix) => path.startsWith(prefix))) return ''
-  if (
-    path.includes('//') ||
-    path.includes('\\') ||
-    [...path].some((ch) => ch.charCodeAt(0) < 32 || ch.charCodeAt(0) === 127)
-  )
-    return ''
-  const pathname = path.split(/[?#]/)[0]
-  let segments
-  try {
-    // browsers normalize %2e%2e to «..» before navigating: judge decoded segments
-    segments = pathname.split('/').map((segment) => decodeURIComponent(segment))
-  } catch {
-    return ''
-  }
-  if (
-    segments.some(
-      (segment) =>
-        segment === '.' ||
-        segment === '..' ||
-        /[\\/]/.test(segment) ||
-        [...segment].some((ch) => ch.charCodeAt(0) < 32),
-    )
-  )
-    return ''
-  return path
-}
-
 // POS Cobranza with the invoice preselected: one shared link builder (Cobranza uses it too).
 export { posCollectHref }
+export { safeReturnPath }
 
 /** POS «Devolver venta» deep link (posawesome returnFlowContext contract). */
 export function posReturnHref(row) {

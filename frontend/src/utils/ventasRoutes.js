@@ -1,7 +1,7 @@
 // Ventas keeps one list family and one deal record. Legacy CRM routes stay as
 // the native fallback on sites without doco_marketing (crmCapabilities gate);
 // with the addon present they redirect here, preserving query intent.
-import { safeReturnPath } from '@/utils/ventasDocs'
+import { safeReturnPath } from '@/utils/returnPath'
 import { queueReturnLabel, safeQueueReturn } from '@/utils/salesQueueContext'
 
 export const DEAL_TABS = Object.freeze([
