@@ -419,7 +419,7 @@ describe('«Abierto»', () => {
 })
 
 describe('the header', () => {
-  it('counts the open work and switches between chat, conversations and «Abierto»', async () => {
+  it('says on the conversations button that work waits, and «Abierto» leads the list', async () => {
     work = { captures: [capture], proposals: [proposal], count: 2 }
     assistant.open = true
     answers[`${API}.conversations`] = () => ({
@@ -428,15 +428,26 @@ describe('the header', () => {
       archived: 0,
     })
     const { el } = await mount(AssistantHeader)
-    const open = el.querySelector('[data-testid="assistant-open-work"]')
-    expect(open.getAttribute('aria-label')).toBe('Open work (2)')
-    open.click()
-    await flush()
-    expect(sessions.view).toBe('open')
-    el.querySelector('[data-testid="assistant-conversations"]').click()
+    // the header keeps one row: no «Abierto» of its own, a dot instead
+    expect(el.querySelector('[data-testid="assistant-open-work"]')).toBeNull()
+    const list = el.querySelector('[data-testid="assistant-conversations"]')
+    expect(list.getAttribute('aria-label')).toBe('Conversations, Open work (2)')
+    expect(el.querySelector('[data-testid="assistant-waiting"]')).not.toBeNull()
+    list.click()
     await flush()
     expect(sessions.view).toBe('list')
     expect(calls(`${API}.conversations`)).toHaveLength(1)
+    const { el: listEl } = await mount(AssistantConversations)
+    const open = listEl.querySelector('[data-testid="assistant-open-work"]')
+    expect(open.getAttribute('aria-label')).toBe('Open work (2)')
+    expect(open.textContent).toContain('2')
+    open.click()
+    await flush()
+    expect(sessions.view).toBe('open')
+    // back from «Abierto» returns to the list, and from the list to the chat
+    el.querySelector('[data-testid="assistant-back"]').click()
+    await flush()
+    expect(sessions.view).toBe('list')
     el.querySelector('[data-testid="assistant-back"]').click()
     await flush()
     expect(sessions.view).toBe('chat')

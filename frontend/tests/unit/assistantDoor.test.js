@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const call = vi.hoisted(() => vi.fn())
 vi.mock('frappe-ui', () => ({ call }))
+// warmAssistant fetches the sheet's code; its contents are the sheet's tests'
+vi.mock('@/components/assistant/AssistantSheet.vue', () => ({ default: {} }))
 
 import {
   STATUS_FRESH_MS,
@@ -9,7 +11,9 @@ import {
   assistantOn,
   bootAssistantStatus,
   loadAssistantStatus,
+  warmAssistant,
 } from '@/components/assistant/assistantDoor'
+import { _resetAssistant } from '@/components/assistant/useAssistant'
 import { readCachedList, writeCachedList } from '@/utils/listCache'
 
 const router = { isReady: () => Promise.resolve() }
@@ -92,5 +96,24 @@ describe('the assistant doors show from the last answer', () => {
     await loadAssistantStatus({ refresh: true })
     expect(assistantOn.value).toBe(false)
     expect(readCachedList('assistant:status')).toBeNull()
+  })
+})
+
+describe('a door warms the assistant before the click', () => {
+  const HISTORY = 'doco.docoutils.assistant.shell_api.history'
+  const asked = () => call.mock.calls.filter(([m]) => m === HISTORY).length
+
+  it('asks for the conversation once on hover, and not while the doors are off', async () => {
+    _resetAssistant()
+    call.mockResolvedValue([])
+    warmAssistant()
+    await flush()
+    expect(asked()).toBe(0)
+    assistantOn.value = true
+    warmAssistant()
+    warmAssistant()
+    await flush()
+    await flush()
+    expect(asked()).toBe(1)
   })
 })

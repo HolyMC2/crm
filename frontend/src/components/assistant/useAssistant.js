@@ -26,6 +26,11 @@ import {
   loadAssistantStatus,
 } from './assistantDoor'
 import { isImageFile } from './assistantFiles'
+import {
+  dropCachedList,
+  readCachedList,
+  writeCachedList,
+} from '@/utils/listCache'
 import { canvas, onCanvasEvent, takePendingCanvas } from './assistantCanvas'
 
 export { ASSISTANT_API }
@@ -137,6 +142,8 @@ export function retireConversation() {
       before.mids.push(m.mid)
     }
   }
+  // the conversation that ended is not painted again on the next open
+  dropCachedList(HISTORY_CACHE)
   retired.busy =
     retired.busy ||
     assistant.thinking ||
@@ -180,19 +187,61 @@ function isRetired(payload) {
   return Boolean(payload.edit && payload.mid && retired.mids.has(payload.mid))
 }
 
+// The conversation as it was last read, kept with the lists (utils/
+// listCache.js, swept on logout): the sheet opens with it painted while the
+// read runs, and the fresh answer replaces it.
+const HISTORY_CACHE = 'assistant:history'
+const HISTORY_LIMIT = 40
+// A door's hover or press asks before the click lands (prefetchHistory);
+// an ask this young is the open's own.
+const PREFETCH_FRESH_MS = 20000
+let prefetched = null
+
+function askHistory() {
+  return call(`${ASSISTANT_API}.history`, { limit: HISTORY_LIMIT })
+}
+
+/** A door is about to open the sheet: the history is on the wire before the click. */
+export function prefetchHistory() {
+  if (assistant.loaded || assistant.open) return
+  if (prefetched && Date.now() - prefetched.at < PREFETCH_FRESH_MS) return
+  prefetched = { at: Date.now(), generation, rows: askHistory() }
+  // a failure is loadHistory's to show
+  prefetched.rows.catch(() => {})
+}
+
+function paintCachedHistory() {
+  if (assistant.loaded || assistant.messages.length) return
+  const rows = readCachedList(HISTORY_CACHE)
+  if (!Array.isArray(rows) || !rows.length) return
+  assistant.messages = rows
+    .filter((row) => !retired.mids.has(row.mid))
+    .map((row) => ({ ...normalizeRow(row), cached: true }))
+}
+
 export async function loadHistory() {
   const asked = generation
+  const early = prefetched
+  prefetched = null
+  paintCachedHistory()
   try {
-    const rows = await call(`${ASSISTANT_API}.history`, { limit: 40 })
+    const rows = await (early &&
+    early.generation === asked &&
+    Date.now() - early.at < PREFETCH_FRESH_MS
+      ? early.rows
+      : askHistory())
     if (asked !== generation) return
+    writeCachedList(HISTORY_CACHE, rows || [])
+    // the painted copy only held the place: what the server says replaces it
+    const live = assistant.messages.filter((m) => !m.cached)
     const known = mergeHistory(
       (rows || [])
         .filter((row) => !retired.mids.has(row.mid))
         .map(normalizeRow),
-      assistant.messages,
+      live,
     )
     // Sends the server has not logged yet stay at the end.
-    const unsent = assistant.messages.filter(
+    const unsent = live.filter(
       (m) => m.role === 'user' && (m.pending || m.failed),
     )
     assistant.messages = [...known, ...unsent]
@@ -545,6 +594,8 @@ export function _resetAssistant() {
     loaded: false,
   })
   _resetAssistantDoor()
+  prefetched = null
+  dropCachedList(HISTORY_CACHE)
   retired.clients.clear()
   retired.mids.clear()
   retired.busy = false

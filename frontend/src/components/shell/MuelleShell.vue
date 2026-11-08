@@ -193,6 +193,7 @@
           :aria-label="__('Ask Muelle')"
           :title="__('Ask Muelle')"
           data-testid="shell-assistant"
+          @pointerdown="warmAssistant"
           @click="askMuelle"
         >
           <span class="lucide-sparkles size-6" aria-hidden="true" />
@@ -316,6 +317,7 @@ import {
   loadAssistant,
   bootAssistantStatus,
   loadAssistantStatus,
+  warmAssistant,
 } from '@/components/assistant/assistantDoor'
 import { moduleEnabled, moduleMeta } from '@/vendor/muelle-shell/contracts'
 import { warmListsAfterFirstRoute } from '@/utils/listWarmup'

@@ -51,7 +51,10 @@ import {
   send,
   tap,
   useAssistantContext,
+  loadHistory,
+  prefetchHistory,
 } from '@/components/assistant/useAssistant'
+import { readCachedList, writeCachedList } from '@/utils/listCache'
 import { createAssistantProvider } from '@/components/assistant/assistantPalette'
 import ActionCard from '@/components/assistant/ActionCard.vue'
 import AssistantLog from '@/components/assistant/AssistantLog.vue'
@@ -839,5 +842,59 @@ describe('the suggestion rules', async () => {
       contactoSuggestion('Aaron', { ...owed, overdue_amount: 0 }),
     ).toBeNull()
     expect(contactoSuggestion('Aaron', null)).toBeNull()
+  })
+})
+
+describe('the sheet opens fast', () => {
+  const rows = [
+    { kind: 'user', mid: 'u1', message: '¿Cuánto vendimos hoy?' },
+    { kind: 'bot', mid: 'b1', message: 'Hoy van 12,400.' },
+  ]
+  const historyCalls = () =>
+    mocks.call.mock.calls.filter(([m]) => m === `${API}.history`)
+
+  it('paints the last conversation while the read runs, then the server replaces it', async () => {
+    writeCachedList('assistant:history', rows)
+    let reply
+    mocks.call.mockImplementation((method) =>
+      method === `${API}.history`
+        ? new Promise((done) => (reply = done))
+        : answer(method),
+    )
+    const loading = loadHistory()
+    expect(assistant.messages.map((m) => m.mid)).toEqual(['u1', 'b1'])
+    expect(assistant.messages.every((m) => m.cached)).toBe(true)
+    expect(assistant.loaded).toBe(false)
+    const fresh = [...rows, { kind: 'bot', mid: 'b2', message: 'Y 3 cobros.' }]
+    reply(fresh)
+    await loading
+    expect(assistant.messages.map((m) => m.mid)).toEqual(['u1', 'b1', 'b2'])
+    expect(assistant.messages.some((m) => m.cached)).toBe(false)
+    expect(assistant.loaded).toBe(true)
+    expect(readCachedList('assistant:history')).toEqual(fresh)
+  })
+
+  it('a door asks once before the click, and the open uses that answer', async () => {
+    mocks.call.mockImplementation((method) =>
+      method === `${API}.history` ? Promise.resolve(rows) : answer(method),
+    )
+    prefetchHistory()
+    prefetchHistory()
+    expect(historyCalls()).toHaveLength(1)
+    await loadHistory()
+    expect(historyCalls()).toHaveLength(1)
+    expect(assistant.messages.map((m) => m.mid)).toEqual(['u1', 'b1'])
+    // once loaded, a hover asks nothing
+    prefetchHistory()
+    expect(historyCalls()).toHaveLength(1)
+  })
+
+  it('a new conversation forgets the painted copy', async () => {
+    writeCachedList('assistant:history', rows)
+    const { retireConversation } = await import(
+      '@/components/assistant/useAssistant'
+    )
+    retireConversation()
+    expect(readCachedList('assistant:history')).toBeNull()
   })
 })

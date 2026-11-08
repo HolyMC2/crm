@@ -68,6 +68,9 @@
         :data-tip="`${__('Ask Muelle')} (${assistantKey})`"
         :aria-keyshortcuts="assistantKeys"
         data-testid="rail-assistant"
+        @pointerenter="warmAssistant"
+        @pointerdown="warmAssistant"
+        @focus="warmAssistant"
         @click="$emit('assistant')"
       >
         <span class="lucide-sparkles size-[18px]" aria-hidden="true" />
@@ -322,7 +325,10 @@ import {
   keyLabel,
   searchEntryHint,
 } from '@/composables/shellKeyboard'
-import { assistantOn } from '@/components/assistant/assistantDoor'
+import {
+  assistantOn,
+  warmAssistant,
+} from '@/components/assistant/assistantDoor'
 import {
   moduleCount,
   railCounts,

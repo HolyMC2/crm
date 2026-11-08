@@ -37249,3 +37249,6 @@ msgstr "{0} ya estaba en tu catálogo"
 msgctxt "Escaneo"
 msgid "Request sent"
 msgstr "Solicitud enviada"
+#: frontend/src/components/assistant/AssistantLog.vue
+msgid "What shall we do today?"
+msgstr "¿Qué hacemos hoy?"

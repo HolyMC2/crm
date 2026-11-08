@@ -2,10 +2,11 @@
   <!-- The conversation: questions, answers, action cards and choices. -->
   <div
     ref="root"
-    class="space-y-4 py-2"
-    :class="
-      docked ? 'min-h-0 flex-1 overflow-y-auto overscroll-contain px-4' : ''
-    "
+    class="space-y-5 py-2"
+    :class="[
+      docked ? 'min-h-0 flex-1 overflow-y-auto overscroll-contain px-4' : '',
+      empty ? 'flex flex-col' : '',
+    ]"
     aria-live="polite"
     data-testid="assistant-log"
   >
@@ -42,20 +43,32 @@
         )
       }}
     </p>
-    <p
-      v-if="!shown.length && assistant.loaded"
-      class="pt-6 text-center text-sm text-ink-gray-6"
+    <!-- A new conversation: the mark and one question in the middle, a
+         chat app's first screen; the screen's suggestions wait above the
+         composer. -->
+    <div
+      v-if="empty"
+      class="m-auto flex max-w-xs flex-col items-center gap-2 py-10 text-center"
+      data-testid="assistant-empty"
     >
-      {{
-        __(
-          'Ask about your customers, sales and to-dos. Muelle prepares the change and you confirm it.',
-        )
-      }}
-    </p>
+      <span class="text-3xl leading-none text-[var(--brand)]" aria-hidden="true"
+        >✦</span
+      >
+      <p class="title-face text-2xl font-semibold text-ink-gray-9">
+        {{ __('What shall we do today?') }}
+      </p>
+      <p class="text-sm text-ink-gray-6">
+        {{
+          __(
+            'Ask about your customers, sales and to-dos. Muelle prepares the change and you confirm it.',
+          )
+        }}
+      </p>
+    </div>
     <template v-for="message in shown" :key="message.id">
       <div
         v-if="message.role === 'user'"
-        class="ml-auto w-fit max-w-[85%] rounded-8 bg-surface-gray-2 px-3 py-2 text-base text-ink-gray-9"
+        class="ml-auto w-fit max-w-[85%] rounded-8 bg-surface-gray-2 px-4 py-2.5 text-base text-ink-gray-9"
         :class="{ 'opacity-60': message.pending }"
         data-role="user"
       >
@@ -194,7 +207,11 @@
       class="flex items-center gap-2 text-sm text-ink-gray-6"
       data-testid="assistant-thinking"
     >
-      <span class="text-[var(--brand)]" aria-hidden="true">✦</span>
+      <span
+        class="text-[var(--brand)] motion-safe:animate-pulse"
+        aria-hidden="true"
+        >✦</span
+      >
       {{ assistant.progress ? stripEmoji(assistant.progress) : __('Looking…') }}
     </p>
     <p v-if="assistant.error" role="alert" class="text-sm text-ink-red-7">
@@ -264,6 +281,13 @@ const end = ref(null)
 // What the log shows: no unreplayable answers, no progress lines, no outage
 // line a later answer has made old news (visibleMessages).
 const shown = computed(() => visibleMessages(assistant.messages))
+const empty = computed(
+  () =>
+    !shown.value.length &&
+    assistant.loaded &&
+    !assistant.thinking &&
+    !assistant.error,
+)
 const hidden = computed(() => assistant.messages.some((m) => m.stale))
 const settled = computed(() => settledLine(sessions.settled))
 

@@ -57,12 +57,61 @@
     </template>
 
     <template v-else>
-      <label class="block">
+      <!-- What else waits on the assistant, a chat app's first rows: the
+           agenda and «Abierto» (the header's dot says one has something). -->
+      <div v-if="!sessions.query" class="-mx-2 space-y-px">
+        <button
+          v-if="agenda.available"
+          type="button"
+          class="press flex min-h-11 w-full items-center gap-3 rounded-6 px-2 text-left text-ink-gray-9 hover:bg-surface-gray-2"
+          :aria-label="agendaLabel"
+          data-testid="assistant-agenda"
+          @click="showView('agenda')"
+        >
+          <span
+            class="lucide-calendar-clock size-5 flex-none text-ink-gray-6"
+            aria-hidden="true"
+          />
+          <span class="min-w-0 flex-1 truncate">{{ __('Agenda') }}</span>
+          <span
+            v-if="due"
+            class="num min-w-5 rounded-full bg-[var(--muelle-accent)] px-1.5 text-center text-xs font-semibold leading-5 text-[var(--muelle-accent-ink)]"
+            aria-hidden="true"
+            >{{ due > 9 ? '9+' : due }}</span
+          >
+        </button>
+        <button
+          type="button"
+          class="press flex min-h-11 w-full items-center gap-3 rounded-6 px-2 text-left text-ink-gray-9 hover:bg-surface-gray-2"
+          :aria-label="openLabel"
+          data-testid="assistant-open-work"
+          @click="showView('open')"
+        >
+          <span
+            class="lucide-inbox size-5 flex-none text-ink-gray-6"
+            aria-hidden="true"
+          />
+          <span class="min-w-0 flex-1 truncate">{{ __('Open work') }}</span>
+          <span
+            v-if="sessions.work.count"
+            class="num min-w-5 rounded-full bg-[var(--muelle-accent)] px-1.5 text-center text-xs font-semibold leading-5 text-[var(--muelle-accent-ink)]"
+            aria-hidden="true"
+            >{{ sessions.work.count > 9 ? '9+' : sessions.work.count }}</span
+          >
+        </button>
+      </div>
+      <label
+        class="flex min-h-11 items-center gap-2 rounded-full bg-surface-gray-2 px-4 focus-within:ring-2 focus-within:ring-outline-gray-3"
+      >
+        <span
+          class="lucide-search size-4 flex-none text-ink-gray-6"
+          aria-hidden="true"
+        />
         <span class="sr-only">{{ __('Search conversations') }}</span>
         <input
           :value="sessions.query"
           type="search"
-          class="min-h-11 w-full rounded-6 border border-outline-gray-2 bg-surface-white px-3 text-base text-ink-gray-9"
+          class="min-h-11 min-w-0 flex-1 border-0 bg-transparent p-0 text-base text-ink-gray-9 placeholder:text-ink-gray-5 focus:ring-0"
           :placeholder="__('Search conversations')"
           data-testid="assistant-search"
           @input="onSearch($event.target.value)"
@@ -113,7 +162,7 @@
         <button
           v-if="sessions.current?.messages && !sessions.showArchived"
           type="button"
-          class="block min-h-11 w-full rounded-6 border border-outline-gray-2 px-3 py-2 text-left hover:bg-surface-gray-2"
+          class="press -mx-2 block min-h-11 w-[calc(100%+1rem)] rounded-6 bg-surface-gray-2 px-2 py-2 text-left hover:bg-surface-gray-3"
           data-testid="assistant-current"
           @click="openConversation(CURRENT)"
         >
@@ -141,16 +190,18 @@
           }}
         </p>
         <section v-for="group in groups" :key="group.key">
-          <h3 class="mb-1 text-xs font-semibold text-ink-gray-6">
+          <h3 class="mb-1 text-xs font-medium text-ink-gray-6">
             {{ group.label }}
           </h3>
-          <ul class="divide-y divide-outline-gray-1">
+          <ul class="-mx-2">
             <li
               v-for="row in group.rows"
               :key="row.id"
               :data-conversation="row.id"
             >
-              <div class="flex items-center gap-1">
+              <div
+                class="group flex items-center rounded-6 pr-1 hover:bg-surface-gray-2"
+              >
                 <form
                   v-if="renaming === row.id"
                   class="flex min-h-11 flex-1 items-center gap-2 py-1"
@@ -174,7 +225,7 @@
                 <button
                   v-else
                   type="button"
-                  class="block min-h-11 min-w-0 flex-1 py-2 text-left hover:bg-surface-gray-2"
+                  class="block min-h-11 min-w-0 flex-1 rounded-6 px-2 py-2 text-left"
                   @click="openConversation(row.id)"
                 >
                   <span class="flex items-center gap-1.5">
@@ -208,7 +259,7 @@
                 </button>
                 <button
                   type="button"
-                  class="flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-6 hover:bg-surface-gray-2"
+                  class="flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-6 hover:bg-surface-gray-3 sm:size-8 sm:opacity-0 sm:focus-visible:opacity-100 sm:group-focus-within:opacity-100 sm:group-hover:opacity-100"
                   :aria-label="row.pinned ? __('Unpin') : __('Pin')"
                   :title="row.pinned ? __('Unpin') : __('Pin')"
                   @click="pinConversation(row.id, !row.pinned)"
@@ -221,7 +272,7 @@
                 </button>
                 <button
                   type="button"
-                  class="flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-6 hover:bg-surface-gray-2"
+                  class="flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-6 hover:bg-surface-gray-3 sm:size-8 sm:opacity-0 sm:focus-visible:opacity-100 sm:group-focus-within:opacity-100 sm:group-hover:opacity-100"
                   :aria-label="row.archived ? __('Restore') : __('Archive')"
                   :title="row.archived ? __('Restore') : __('Archive')"
                   @click="archiveConversation(row.id, !row.archived)"
@@ -236,7 +287,7 @@
                 </button>
                 <button
                   type="button"
-                  class="flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-6 hover:bg-surface-gray-2"
+                  class="flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-6 hover:bg-surface-gray-3 sm:size-8 sm:opacity-0 sm:focus-visible:opacity-100 sm:group-focus-within:opacity-100 sm:group-hover:opacity-100"
                   :aria-label="__('More actions: {0}', [row.title])"
                   :title="__('More actions')"
                   :aria-expanded="menuFor === row.id ? 'true' : 'false'"
@@ -341,14 +392,26 @@ import {
   renameConversation,
   searchConversations,
   sessions,
+  showView,
   snoozeConversation,
   toggleArchived,
 } from './assistantSessions'
+import { agenda, dueCount } from './assistantAgenda'
 
 defineProps({ docked: { type: Boolean, default: false } })
 defineEmits(['navigate'])
 
 const groups = computed(() => groupConversations(sessions.list))
+// the agenda and «Abierto» lead the list; the header refreshes both
+const due = computed(() => dueCount(agenda.items))
+const agendaLabel = computed(() =>
+  due.value ? __('Agenda ({0} today)', [due.value]) : __('Agenda'),
+)
+const openLabel = computed(() =>
+  sessions.work.count
+    ? __('Open work ({0})', [sessions.work.count])
+    : __('Open work'),
+)
 const transcriptRows = computed(() =>
   visibleMessages(sessions.transcript?.messages || []),
 )

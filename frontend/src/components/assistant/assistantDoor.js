@@ -75,6 +75,7 @@ export function bootAssistantStatus(router) {
 /** Tests only. */
 export function _resetAssistantDoor() {
   statusPromise = null
+  warmed = false
   assistantWanted.value = false
   assistantOn.value = null
   dropCachedList(SAVED)
@@ -84,4 +85,23 @@ let loading = null
 /** useAssistant, loaded on first use. */
 export function loadAssistant() {
   return (loading ||= import('./useAssistant'))
+}
+
+let warmed = false
+/**
+ * A door's hover, focus or press: the sheet's code and the conversation are
+ * fetched while the pointer is still on its way, so the click opens a sheet
+ * with its messages instead of an empty one.
+ */
+export function warmAssistant() {
+  if (assistantOn.value !== true) return
+  if (!warmed) {
+    warmed = true
+    import('./AssistantSheet.vue').catch(() => {
+      warmed = false
+    })
+  }
+  loadAssistant()
+    .then((module) => module.prefetchHistory())
+    .catch(() => {})
 }

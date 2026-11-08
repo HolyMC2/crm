@@ -1,17 +1,63 @@
 <template>
   <!-- The composer: fixed at the bottom of the sheet (#footer) and the dock,
        on the same gutter as the conversation above it (20px in the sheet,
-       16px in the dock). One card holds the text and its tools: a file waiting
-       to go sits above the text, the clip and the mic on the left, the model
-       of the conversation and send on the right. -->
+       16px in the dock). The screen's suggestions sit right above it, in reach
+       of the thumb, while nothing is typed. One card holds the text and its
+       tools: the screen the question is about as a chip, a file waiting to go,
+       the text, then «+» and the mic on the left, the model and send on the
+       right. -->
   <form
-    class="border-t border-outline-gray-1 pb-3 pt-2"
+    class="pb-3 pt-1"
     :class="docked ? 'px-4' : 'px-5'"
     @submit.prevent="submit"
   >
     <div
-      class="rounded-8 border border-outline-gray-2 bg-surface-gray-1 focus-within:ring-2 focus-within:ring-outline-gray-3"
+      v-if="showChips"
+      ref="row"
+      class="mb-2 flex gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none]"
+      :class="docked ? '-mx-4 px-4' : '-mx-5 px-5'"
+      data-testid="assistant-chips"
     >
+      <button
+        v-for="chip in chips"
+        :key="chip.label"
+        type="button"
+        class="press min-h-11 flex-none whitespace-nowrap rounded-full border border-outline-gray-2 bg-surface-base px-4 text-sm text-ink-gray-8 hover:bg-surface-gray-2 disabled:opacity-50 sm:min-h-9"
+        :disabled="assistant.thinking"
+        @click="useChip(chip)"
+      >
+        {{ chip.label }}
+      </button>
+    </div>
+    <div
+      class="rounded-8 border border-outline-gray-2 bg-surface-base shadow-sm focus-within:border-outline-gray-3"
+    >
+      <div
+        v-if="chipTitle"
+        class="flex min-w-0 px-2 pt-2"
+        data-testid="assistant-context"
+      >
+        <span
+          class="flex min-h-8 min-w-0 items-center gap-1.5 rounded-6 bg-surface-gray-2 pl-2.5 text-sm text-ink-gray-8"
+        >
+          <span
+            class="lucide-monitor size-3.5 flex-none text-ink-gray-6"
+            aria-hidden="true"
+          />
+          <span class="min-w-0 truncate">{{
+            __('About: {0}', [chipTitle])
+          }}</span>
+          <button
+            type="button"
+            class="-my-1.5 flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-6 hover:text-ink-gray-9 sm:my-0 sm:size-8"
+            :aria-label="__('Do not use this screen')"
+            :title="__('Do not use this screen')"
+            @click="assistant.contextOn = false"
+          >
+            <span class="lucide-x size-3.5" aria-hidden="true" />
+          </button>
+        </span>
+      </div>
       <AssistantAttachment
         v-if="assistant.attachment"
         :file="assistant.attachment"
@@ -91,7 +137,7 @@
           data-testid="assistant-attach"
           @click="attach"
         >
-          <span class="lucide-paperclip size-5" aria-hidden="true" />
+          <span class="lucide-plus size-5" aria-hidden="true" />
         </button>
         <input
           ref="picker"
@@ -124,6 +170,7 @@
 </template>
 <script setup>
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { chipsFor } from './assistantText'
 import AssistantAttachment from './AssistantAttachment.vue'
 import AssistantMic from './AssistantMic.vue'
 import AssistantModelPicker from './AssistantModelPicker.vue'
@@ -152,6 +199,31 @@ const picker = ref(null)
 const ready = computed(() =>
   canSendDraft(assistant.draft, assistant.attachment),
 )
+// The screen the question is about, and what to ask about it.
+const chipTitle = computed(() =>
+  assistant.contextOn ? assistant.context?.title || '' : '',
+)
+const chips = computed(() =>
+  assistant.contextOn ? chipsFor(assistant.context) : [],
+)
+const showChips = computed(
+  () =>
+    chips.value.length > 0 &&
+    sessions.view === 'chat' &&
+    !assistant.draft.trim() &&
+    !assistant.attachment,
+)
+// A chip that needs a detail fills the composer (which takes the focus);
+// the others ask at once. The row goes back to its first chip.
+const row = ref(null)
+function useChip(chip) {
+  if (chip.fill) {
+    assistant.draft = chip.prompt
+    assistant.focus += 1
+  } else send(chip.prompt)
+  row.value?.scrollTo?.({ left: 0, behavior: 'smooth' })
+}
+
 // Only the owner may send a file (api._can_attach). The clip says why and what
 // to do instead, rather than opening a picker whose file the server would refuse.
 const canAttach = computed(() => Boolean(assistant.status?.can_attach))
