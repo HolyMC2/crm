@@ -124,6 +124,12 @@
             <p class="break-words text-base text-ink-gray-8">
               {{ stateLine }}
             </p>
+            <PresupuestoChip
+              v-if="budgetOn && doc.name"
+              doctype="Purchase Invoice"
+              :name="doc.name"
+              :version="doc.modified"
+            />
             <!-- The background registration was refused: what blocked it and
                  the fix, applied and registered in one step (RegistrationFix). -->
             <RegistrationFix
@@ -572,6 +578,7 @@ import RegistrationFix from '@/components/gastos/RegistrationFix.vue'
 import PayDialog from '@/components/gastos/PayDialog.vue'
 import ApprovalAsk from '@/components/pendientes/ApprovalAsk.vue'
 import { shellBoot } from '@/composables/muelleShell'
+import { can } from '@/vendor/muelle-shell/contracts'
 import { appleKeys, registerPageShortcuts } from '@/composables/shellKeyboard'
 import { completeTo, goTo, ownerReturn } from '@/composables/useAprobaciones'
 import { offerUndo, runUndo } from '@/composables/powerUndo'
@@ -586,6 +593,7 @@ import StageSteps from '@/components/documentos/StageSteps.vue'
 import RecordKit from '@/components/documentos/compras/RecordKit.vue'
 import { useRecordKit } from '@/components/documentos/compras/recordKit'
 import BillAlmacen from '@/components/gastos/BillAlmacen.vue'
+import PresupuestoChip from '@/components/presupuesto/PresupuestoChip.vue'
 import {
   loadBillWarehouse,
   warehouseRows,
@@ -740,6 +748,9 @@ const owed = computed(
     Number(doc.value.outstanding_amount || 0) > 0,
 )
 // Under the amount: what is paid, or what a draft needs.
+// The month's budget this bill draws from, for whoever reads the plan.
+const budgetOn = computed(() => can(shellBoot.value, 'gastos', 'presupuesto'))
+
 const stateLine = computed(() => {
   const docstatus = Number(doc.value.docstatus)
   if (docstatus === 1) return paidLabel(doc.value)

@@ -242,6 +242,9 @@ def _gastos():
 			"claim": expenses and bool(claims.get("file")),
 			"decide": expenses and bool(claims.get("decide")),
 			"reimburse": expenses and bool(claims.get("reimburse")),
+			# The month's budget (Gastos > Presupuesto): Presupuesto's own rights decide.
+			"presupuesto": enabled and bool(capabilities.get("presupuesto")),
+			"presupuesto_edit": enabled and bool(capabilities.get("presupuesto_edit")),
 		},
 	}
 

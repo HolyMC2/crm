@@ -37,6 +37,7 @@ CARD_ORDER = (
 	"tiendas",
 	# Health of the money.
 	"meta",
+	"presupuesto",
 	"margen",
 	"descuentos",
 	"devoluciones",

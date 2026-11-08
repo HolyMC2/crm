@@ -445,7 +445,18 @@ class TestShellBoot(TestCase):
 
 	@staticmethod
 	def _gastos_caps(**on):
-		keys = ("read", "create", "submit", "pay", "claims", "claim", "decide", "reimburse")
+		keys = (
+			"read",
+			"create",
+			"submit",
+			"pay",
+			"claims",
+			"claim",
+			"decide",
+			"reimburse",
+			"presupuesto",
+			"presupuesto_edit",
+		)
 		return {key: bool(on.get(key)) for key in keys}
 
 	def test_gastos_opens_for_an_employee_who_only_files_expenses(self):

@@ -36777,3 +36777,290 @@ msgstr "La sección «{0}» no tiene tipo de producto; indícalo en Compras › 
 msgctxt "Surtido"
 msgid "Give section «{0}» a product type in Compras › Settings before closing."
 msgstr "Da un tipo de producto a la sección «{0}» en Compras › Ajustes antes de cerrar."
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "Budget"
+msgstr "Presupuesto"
+
+#: frontend/src/pages/CompraHoy.vue
+msgctxt "ComprasHoy"
+msgid "No budgets. With one per product type in Gastos › Presupuesto, a buy plan never spends more than what is left this month."
+msgstr "Sin presupuestos. Con uno por tipo de producto en Gastos › Presupuesto, un plan de compra nunca gasta más de lo que queda este mes."
+
+#: frontend/src/pages/Gastos.vue
+msgctxt "Gastos"
+msgid "Budget"
+msgstr "Presupuesto"
+
+#: frontend/src/pages/Presupuesto.vue
+msgctxt "Presupuesto"
+msgid "Account"
+msgstr "Cuenta"
+
+#: frontend/src/pages/Presupuesto.vue
+msgctxt "Presupuesto"
+msgid "Add a product type"
+msgstr "Agregar un tipo de producto"
+
+#: frontend/src/pages/Presupuesto.vue
+msgctxt "Presupuesto"
+msgid "Add an account"
+msgstr "Agregar una cuenta"
+
+#: frontend/src/pages/Presupuesto.vue
+msgctxt "Presupuesto"
+msgid "Budget"
+msgstr "Presupuesto"
+
+#: frontend/src/pages/Presupuesto.vue
+msgctxt "Presupuesto"
+msgid "Budget for {0}"
+msgstr "Presupuesto de {0}"
+
+#: frontend/src/pages/Presupuesto.vue
+msgctxt "Presupuesto"
+msgid "Budget saved"
+msgstr "Presupuesto guardado"
+
+#: frontend/src/pages/Presupuesto.vue
+msgctxt "Presupuesto"
+msgid "Company"
+msgstr "Empresa"
+
+#: frontend/src/pages/Presupuesto.vue
+msgctxt "Presupuesto"
+msgid "Edit the budget"
+msgstr "Editar el presupuesto"
+
+#: frontend/src/pages/Presupuesto.vue
+msgctxt "Presupuesto"
+msgid "Last months"
+msgstr "Últimos meses"
+
+#: frontend/src/pages/Presupuesto.vue
+msgctxt "Presupuesto"
+msgid "Light: the budget of the month. Dark: what it used."
+msgstr "Claro: el presupuesto del mes. Oscuro: lo que usó."
+
+#: frontend/src/pages/Presupuesto.vue
+msgctxt "Presupuesto"
+msgid "Next month"
+msgstr "Mes siguiente"
+
+#: frontend/src/pages/Presupuesto.vue
+msgctxt "Presupuesto"
+msgid "No budget for {0}"
+msgstr "Sin presupuesto para {0}"
+
+#: frontend/src/pages/Presupuesto.vue
+msgctxt "Presupuesto"
+msgid "Nothing used this concept this month yet."
+msgstr "Nada ha usado este concepto este mes todavía."
+
+#: frontend/src/pages/Presupuesto.vue
+msgctxt "Presupuesto"
+msgid "Operating expenses (every account)"
+msgstr "Gastos de operación (todas las cuentas)"
+
+#: frontend/src/pages/Presupuesto.vue
+msgctxt "Presupuesto"
+msgid "Per month"
+msgstr "Al mes"
+
+#: frontend/src/pages/Presupuesto.vue
+msgctxt "Presupuesto"
+msgid "Previous month"
+msgstr "Mes anterior"
+
+#: frontend/src/pages/Presupuesto.vue
+msgctxt "Presupuesto"
+msgid "Product type"
+msgstr "Tipo de producto"
+
+#: frontend/src/pages/Presupuesto.vue
+msgctxt "Presupuesto"
+msgid "Purchase orders and bills without an order count against the type of what they buy. The buy plan takes what is left."
+msgstr "Las órdenes de compra y las facturas sin orden cuentan contra el tipo de lo que compran. El plan de compra toma lo que queda."
+
+#: frontend/src/pages/Presupuesto.vue
+msgctxt "Presupuesto"
+msgid "Reading the budget…"
+msgstr "Leyendo el presupuesto…"
+
+#: frontend/src/pages/Presupuesto.vue
+msgctxt "Presupuesto"
+msgid "Reading the records…"
+msgstr "Leyendo los documentos…"
+
+#: frontend/src/pages/Presupuesto.vue
+msgctxt "Presupuesto"
+msgid "Remove line"
+msgstr "Quitar línea"
+
+#: frontend/src/pages/Presupuesto.vue
+msgctxt "Presupuesto"
+msgid "Sales this month"
+msgstr "Ventas de este mes"
+
+#: frontend/src/pages/Presupuesto.vue
+msgctxt "Presupuesto"
+msgid "Same plan as {0}. Saving a change here keeps a plan of its own for {1}."
+msgstr "Mismo plan que {0}. Al guardar un cambio aquí, {1} queda con su propio plan."
+
+#: frontend/src/pages/Presupuesto.vue
+msgctxt "Presupuesto"
+msgid "Save the budget"
+msgstr "Guardar el presupuesto"
+
+#: frontend/src/pages/Presupuesto.vue
+msgctxt "Presupuesto"
+msgid "Search account"
+msgstr "Buscar cuenta"
+
+#: frontend/src/pages/Presupuesto.vue
+msgctxt "Presupuesto"
+msgid "Search group"
+msgstr "Buscar grupo"
+
+#: frontend/src/pages/Presupuesto.vue
+msgctxt "Presupuesto"
+msgid "Set the budget"
+msgstr "Fijar el presupuesto"
+
+#: frontend/src/pages/Presupuesto.vue
+msgctxt "Presupuesto"
+msgid "Set what each product type and expense account may use this month, and a sales goal. The buy plan, the bills and Hoy follow it."
+msgstr "Fija lo que cada tipo de producto y cada cuenta de gasto puede usar este mes, y una meta de ventas. El plan de compra, las facturas y Hoy lo siguen."
+
+#: frontend/src/pages/Presupuesto.vue
+msgctxt "Presupuesto"
+msgid "The month"
+msgstr "El mes"
+
+#: frontend/src/pages/Presupuesto.vue
+msgctxt "Presupuesto"
+msgid "What each concept may use this month. Empty amounts drop the line."
+msgstr "Lo que cada concepto puede usar este mes. Un monto vacío quita la línea."
+
+#: frontend/src/pages/Presupuesto.vue
+msgctxt "Presupuesto"
+msgid "Whoever manages the accounts sets the budget."
+msgstr "Quien lleva las cuentas fija el presupuesto."
+
+#: frontend/src/pages/Presupuesto.vue
+msgctxt "Presupuesto"
+msgid "{0}: {1} of {2}"
+msgstr "{0}: {1} de {2}"
+
+#: frontend/src/utils/presupuesto.js
+msgctxt "Presupuesto"
+msgid "Over budget"
+msgstr "Excedido"
+
+#: frontend/src/utils/presupuesto.js
+msgctxt "Presupuesto"
+msgid "Near the limit"
+msgstr "Cerca del tope"
+
+#: frontend/src/utils/presupuesto.js
+msgctxt "Presupuesto"
+msgid "Goal met"
+msgstr "Meta cumplida"
+
+#: frontend/src/utils/presupuesto.js
+msgctxt "Presupuesto"
+msgid "Behind pace"
+msgstr "Va atrasada"
+
+#: frontend/src/utils/presupuesto.js
+msgctxt "Presupuesto"
+msgid "Goal met: {0} over it"
+msgstr "Meta cumplida: {0} por encima"
+
+#: frontend/src/utils/presupuesto.js
+msgctxt "Presupuesto"
+msgid "{0} to the goal"
+msgstr "Faltan {0} para la meta"
+
+#: frontend/src/utils/presupuesto.js
+msgctxt "Presupuesto"
+msgid "{0} over"
+msgstr "{0} de más"
+
+#: frontend/src/utils/presupuesto.js
+msgctxt "Presupuesto"
+msgid "No amount set"
+msgstr "Sin monto"
+
+#: frontend/src/utils/presupuesto.js
+msgctxt "Presupuesto"
+msgid "{0} left"
+msgstr "Quedan {0}"
+
+#: frontend/src/utils/presupuesto.js
+msgctxt "Presupuesto"
+msgid "{0} of {1}"
+msgstr "{0} de {1}"
+
+#: frontend/src/utils/presupuesto.js
+msgctxt "Presupuesto"
+msgid "Purchases by product type"
+msgstr "Compras por tipo de producto"
+
+#: frontend/src/utils/presupuesto.js
+msgctxt "Presupuesto"
+msgid "Expenses by account"
+msgstr "Gastos por cuenta"
+
+#: frontend/src/utils/presupuesto.js
+msgctxt "Presupuesto"
+msgid "Sales goal"
+msgstr "Meta de ventas"
+
+#: frontend/src/utils/presupuesto.js
+msgctxt "Presupuesto"
+msgid "Spent"
+msgstr "Gastado"
+
+#: frontend/src/utils/presupuesto.js
+msgctxt "Presupuesto"
+msgid "of {0}"
+msgstr "de {0}"
+
+#: frontend/src/utils/presupuesto.js
+msgctxt "Presupuesto"
+msgid "{0} % of {1}"
+msgstr "{0} % de {1}"
+
+#: frontend/src/utils/presupuesto.js
+msgctxt "Presupuesto"
+msgid "Over budget by"
+msgstr "Excedido por"
+
+#: frontend/src/utils/presupuesto.js
+msgctxt "Presupuesto"
+msgid "Left this month"
+msgstr "Queda este mes"
+
+#: frontend/src/utils/presupuesto.js
+msgctxt "Presupuesto"
+msgid "{0} projected by month end"
+msgstr "{0} proyectado al cierre del mes"
+
+#: frontend/src/utils/presupuesto.js
+msgctxt "Presupuesto"
+msgid "{0} % used"
+msgstr "{0} % usado"
+
+#: frontend/src/composables/useResultados.js
+msgctxt "Resultados"
+msgid "Budget used"
+msgstr "Presupuesto usado"
+
+msgctxt "Presupuesto"
+msgid "Sales"
+msgstr "Ventas"
+
+msgctxt "Presupuesto"
+msgid "{0} % of the {1} goal"
+msgstr "{0} % de la meta de {1}"

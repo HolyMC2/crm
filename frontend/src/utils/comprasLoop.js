@@ -178,20 +178,6 @@ export function settingsPayload(form = {}, exhibitions = []) {
   }
 }
 
-/** The budgets sheet as `budgets_save` takes it: one row per product type, the last
- *  amount of a type repeated; a row without a type is left out. */
-export function budgetsPayload(rows = []) {
-  const out = new Map()
-  for (const r of rows || []) {
-    const group = String(r.item_group || '').trim()
-    if (!group) continue
-    out.set(group, Number(r.amount) || 0)
-  }
-  return JSON.stringify(
-    [...out].map(([item_group, amount]) => ({ item_group, amount })),
-  )
-}
-
 /** A catalogue's price changes with the model they price (the low row whose offer is
  *  that line), so the board names a model, not a supplier's code. */
 export function priceChangeRows(changes = [], low = []) {

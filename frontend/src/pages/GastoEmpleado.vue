@@ -98,6 +98,12 @@
               <span v-if="doc.type_label">{{ doc.type_label }}</span>
               <span v-if="doc.date">{{ formatDay(doc.date) }}</span>
             </p>
+            <PresupuestoChip
+              v-if="budgetOn && doc.name"
+              doctype="Expense Claim"
+              :name="doc.name"
+              :version="doc.modified"
+            />
 
             <template v-if="done">
               <p role="status" class="text-base-medium text-ink-green-8">
@@ -568,6 +574,9 @@ import ClaimSheet from '@/components/gastos/ClaimSheet.vue'
 import DecideSheet from '@/components/gastos/DecideSheet.vue'
 import ReimburseDialog from '@/components/gastos/ReimburseDialog.vue'
 import { ArchivosRegistroPanel } from '@/components/archivos'
+import PresupuestoChip from '@/components/presupuesto/PresupuestoChip.vue'
+import { shellBoot } from '@/composables/muelleShell'
+import { can } from '@/vendor/muelle-shell/contracts'
 import { loadGastosBoot } from '@/composables/useGastos'
 import { useRecordPower } from '@/composables/useRecordPower'
 import {
@@ -609,6 +618,8 @@ const decideKey = computed(() => `decide:${props.name}`)
 const pendingDecide = ref(null)
 
 const doc = computed(() => data.value.document || {})
+// The month's budget this expense draws from, for whoever reads the plan.
+const budgetOn = computed(() => can(shellBoot.value, 'gastos', 'presupuesto'))
 const actions = computed(() => data.value.actions || [])
 const back = computed(() => claimBack(route.query))
 // The engine's shared record parts (Shell SPEC §6 DD2): «⋯», Actividad.

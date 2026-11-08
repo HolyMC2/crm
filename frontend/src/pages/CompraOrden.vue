@@ -261,6 +261,12 @@
             <p v-if="summaryLine" class="break-words text-base text-ink-gray-8">
               {{ summaryLine }}
             </p>
+            <PresupuestoChip
+              v-if="budgetOn && doc.name"
+              doctype="Purchase Order"
+              :name="doc.name"
+              :version="doc.modified"
+            />
             <p
               v-if="primary && !primary.allowed && primary.reason"
               class="break-words text-base text-ink-gray-8"
@@ -863,6 +869,7 @@ import DatosList from '@/components/documentos/DatosList.vue'
 import DocTotals from '@/components/documentos/DocTotals.vue'
 import RecordIsland from '@/components/documentos/RecordIsland.vue'
 import BillAlmacen from '@/components/gastos/BillAlmacen.vue'
+import PresupuestoChip from '@/components/presupuesto/PresupuestoChip.vue'
 import { isMobile } from '@/composables/breakpoint'
 import { etiquetasHref } from '@/composables/useEtiquetas'
 import { recordActionsFor } from '@/documentos/acciones'
@@ -927,6 +934,7 @@ const phone = isMobile
 const isNew = computed(() => !props.name)
 // Supplier bills of this order: for bill readers (an employee filing expenses has Gastos too).
 const gastosOn = computed(() => can(shellBoot.value, 'gastos', 'read'))
+const budgetOn = computed(() => can(shellBoot.value, 'gastos', 'presupuesto'))
 // Files on this record come from Archivos when the worker has it.
 const archivosEnabled = computed(() =>
   moduleEnabled(shellBoot.value, 'archivos'),

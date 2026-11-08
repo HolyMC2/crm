@@ -14,6 +14,7 @@ const state = vi.hoisted(() => ({
   route: null,
   router: null,
   toast: null,
+  boot: null,
 }))
 vi.mock('vue-router', async () => {
   const { reactive } = await import('vue')
@@ -34,6 +35,11 @@ vi.mock('vue-router', async () => {
 vi.mock('@/composables/breakpoint', async () => {
   const { ref } = await import('vue')
   return { isMobile: ref(true) }
+})
+vi.mock('@/composables/muelleShell', async () => {
+  const { ref } = await import('vue')
+  state.boot = ref(null)
+  return { shellBoot: state.boot }
 })
 vi.mock('frappe-ui', async () => {
   const { h } = await import('vue')
@@ -122,7 +128,6 @@ import {
   applyPayload,
   boardAlerts,
   budgetUse,
-  budgetsPayload,
   cajones,
   leadRows,
   mixText,
@@ -297,18 +302,6 @@ describe('the loop’s pure parts', () => {
     ])
   })
 
-  it('sends one budget per type', () => {
-    expect(
-      JSON.parse(
-        budgetsPayload([
-          { item_group: 'Fundas', amount: '500' },
-          { item_group: '', amount: 9 },
-          { item_group: 'Fundas', amount: 800 },
-        ]),
-      ),
-    ).toEqual([{ item_group: 'Fundas', amount: 800 }])
-  })
-
   it('names the model a price change prices', () => {
     const low = [
       { model: 'iPhone 12', offers: [{ catalog: 'CAT-1', code: 'f12 ' }] },
@@ -352,6 +345,7 @@ beforeEach(() => {
   state.api.mockReset()
   state.router.push.mockReset()
   state.toast.success.mockReset()
+  state.boot.value = null
 })
 afterEach(() => {
   app?.unmount()
@@ -509,6 +503,28 @@ describe('Compras › Hoy', () => {
       root.querySelector('[data-tile="Open orders"]').textContent,
     ).toContain('1 late')
     expect(root.textContent).toContain('5 short')
+    // The plan lives in Gastos › Presupuesto: this board only links there.
+    expect(root.querySelector('[data-testid="hoy-budgets-link"]')).toBeNull()
+    expect(root.textContent).toContain('Gastos › Presupuesto')
+  })
+
+  it('links to the budget page for whoever reads the plan', async () => {
+    state.boot.value = {
+      modules: {
+        gastos: { enabled: true, capabilities: { presupuesto: true } },
+      },
+    }
+    state.api.mockResolvedValue({
+      ...board,
+      budgets: [
+        { item_group: 'Fundas', amount: 1000, committed: 250, remaining: 750 },
+      ],
+    })
+    await mount(CompraHoy)
+    expect(root.querySelector('[data-testid="hoy-budgets-link"]')).toBeTruthy()
+    expect(
+      root.querySelector('[data-testid="hoy-budgets"]').textContent,
+    ).toMatch(/250.* of .*1,000/)
   })
 
   it('«Build the order» opens the draft in Surtido', async () => {

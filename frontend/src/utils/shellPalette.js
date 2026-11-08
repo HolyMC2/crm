@@ -100,6 +100,7 @@ const GASTOS_PLACES = [
   ['segment=por-pagar&chip=vencidas', 'Vencidas', 'read'],
   ['segment=por-registrar', 'Por registrar', 'read'],
   ['segment=empleados', 'De empleados', 'claims'],
+  ['presupuesto', 'Presupuesto', 'presupuesto'],
 ]
 const PRODUCTOS_PLACES = [
   ['todos', 'Todos'],
@@ -385,7 +386,10 @@ export function createShellProviders({ boot, modules }) {
               group: 'ir_a',
               title: `Gastos › ${label}`,
               icon: 'lucide-receipt',
-              href: `/gastos?${query}`,
+              href:
+                query === 'presupuesto'
+                  ? '/gastos/presupuesto'
+                  : `/gastos?${query}`,
             })
       if (moduleEnabled(boot.value, 'productos'))
         for (const [view, label] of PRODUCTOS_PLACES)
