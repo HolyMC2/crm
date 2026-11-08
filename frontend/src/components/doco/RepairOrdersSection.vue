@@ -138,7 +138,9 @@
             <dt class="min-w-0 text-ink-gray-6">{{ __('Saldo') }}</dt>
             <dd
               class="num whitespace-nowrap font-semibold"
-              :class="owedAfterDelivery(ro) ? 'text-ink-red-7' : 'text-ink-gray-9'"
+              :class="
+                owedAfterDelivery(ro) ? 'text-ink-red-7' : 'text-ink-gray-9'
+              "
             >
               {{ money(ro.balance_due, ro.currency) }}
             </dd>
