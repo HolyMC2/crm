@@ -28,3 +28,6 @@ AGENTS.md
 .claude-flow/
 .pi
 .patch
+
+# scripts/ci/local.sh: clean clones and logs of the local CI run
+.ci-local/

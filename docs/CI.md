@@ -39,6 +39,36 @@ order payments).
 Payments owns Payment Gateway; Doco Marketing owns Social Shop. Email is muted
 before app setup. Native tests use USD fixtures without calling a live FX service.
 
+## Local gate
+
+GitHub has refused every Actions run on HolyMC2/crm since 2026-11-06 («Actions has
+been disabled for this repository»), so devflow's land gate for crm is
+`scripts/ci/local.sh` on the workstation (`[repos.crm] ci_local` in Muelle's
+`scripts/devflow/repos.toml`), with no GitHub required checks. The workflow files
+stay the source of truth: the script runs their steps through devflow's
+`ci_step.py` where a step has a `run` script, and reads `SHELL_CI_IMAGE`, the
+ruff pin and the `frappe_whatsapp` companion revision from them. `CRM_CI_IMAGE`
+is the repository variable's value, held in the script.
+
+It tests the committed `HEAD` in a clean clone (`.ci-local/`, gitignored) against
+`$DEVFLOW_CI_BASE`, else the merge base with `origin/doco-dev`:
+
+- **Fast tier**, every change, about 4 minutes: Changed scope, the native runner
+  self-tests, Undefined names (ruff), `yarn install --frozen-lockfile`, Pre-commit
+  Checks on all files, ESLint, Oxlint, Production Build with its verify scripts,
+  Unit Tests & Coverage and diff-aware Semgrep Rules. Every check runs and every
+  red one is listed; a red fast tier skips the native tier.
+- **Native tier**, when `changed_scope.py` says Server or Shell APIs is needed,
+  about 30 minutes: Tests (fresh install), the base-to-candidate upgrade with the
+  full suite after it, and Shell APIs, side by side, each through
+  `scripts/ci/run-integration.sh` on its own disposable Docker stack. Coverage is
+  not collected; it only fed Codecov on `develop`.
+
+`scripts/ci/local.sh --fast` runs the fast tier alone and `--native` forces every
+native job. Run it under `heavy`. A failure prints the end of the job's log; the
+full logs stay in `.ci-local/<sha>-<pid>/logs/`. Semantic Commits is not part of
+the gate; it was never a required check.
+
 ## Initialized ERP test fixture
 
 Before taking the migration baseline, the disposable base site creates the
