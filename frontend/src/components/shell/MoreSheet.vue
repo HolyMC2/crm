@@ -451,13 +451,13 @@ const moduleLabel = computed(
   () =>
     props.modules.find((module) => module.key === moduleKeyFor(route))?.label,
 )
-// Escáner goes to the picker with the way back to this page (the same link the
-// bar's scan icon uses), wherever the bar is not showing it.
+// Escáner opens as the app (the warehouse's own screens) wherever the shell
+// reads codes itself; without Productos it stays the bar's picker.
 function withHref(app) {
   return {
     ...app,
     href:
-      app.key === 'scan'
+      app.key === 'scan' && !moduleEnabled(props.boot, 'productos')
         ? scanPickHref(route.fullPath, moduleLabel.value)
         : siblingHref(app, route.fullPath, moduleLabel.value),
   }

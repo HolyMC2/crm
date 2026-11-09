@@ -186,17 +186,20 @@
         >
           <template #actions>
             <!-- On a phone the app bar already carries the scan icon. -->
-            <a
-              v-if="scanHref"
-              :href="scanHref"
-              class="hidden min-h-11 items-center gap-1.5 rounded-5 sm:inline-flex bg-surface-gray-2 px-3 text-base text-ink-gray-8 hover:bg-surface-gray-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-8"
+            <button
+              type="button"
+              class="press hidden min-h-11 items-center gap-1.5 rounded-5 sm:inline-flex bg-surface-gray-2 px-3 text-base text-ink-gray-8 hover:bg-surface-gray-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-8"
               :title="
                 __('Scan a code and open its product (S)', null, 'Productos')
               "
+              data-productos-scan
+              @pointerenter="loadScanSheet"
+              @focus="loadScanSheet"
+              @click="openScan()"
             >
               <span class="lucide-scan-barcode h-4 w-4" aria-hidden="true" />
               {{ __('Scan', null, 'Productos') }}
-            </a>
+            </button>
             <!-- Creating is the list's one primary action (the Fab, or this on
                wide screens); the pack stays a quiet text button. -->
             <Button
@@ -870,7 +873,7 @@ import CatalogFilters from '@/components/productos/CatalogFilters.vue'
 import CatalogItem from '@/components/productos/CatalogItem.vue'
 import PackDialog from '@/components/productos/PackDialog.vue'
 import PriceListsToggle from '@/components/productos/PriceListsToggle.vue'
-import { scanPickHref } from '@/composables/shellRail'
+import { loadScanSheet, openScan } from '@/components/escaneo/scanDoor'
 import { registerPageShortcuts } from '@/composables/shellKeyboard'
 import { hoyLive } from '@/composables/useHoy'
 import { createListCache } from '@/utils/listCache'
@@ -1004,9 +1007,8 @@ const catalog = computed(() => view.value === 'todos')
 const filterChips = computed(() =>
   catalog.value ? activeFilters(state.value) : [],
 )
-// «Escanear» (S): Escáner reads one code and the shell opens its product,
-// with «Volver» to this list. «Armar pack»: this list, as Mercado renders it.
-const scanHref = computed(() => scanPickHref(route.fullPath, 'Productos'))
+// «Escanear» (S): the shell reads one code and opens its product, or creates
+// it (scanDoor.js). «Armar pack»: this list, as Mercado renders it.
 const packOpen = ref(false)
 // «Precios que se muestran», remembered per browser user.
 const shownLists = ref([])
@@ -1670,9 +1672,7 @@ registerPageShortcuts(null, () => [
   { id: 'row.next', keys: ['j', 'arrowdown'], description: 'Next row' },
   { id: 'row.prev', keys: ['k', 'arrowup'], description: 'Previous row' },
   { id: 'row.open', keys: ['enter'], description: 'Open record' },
-  ...(scanHref.value
-    ? [{ id: 'scan', keys: ['s'], description: 'Scan a code' }]
-    : []),
+  { id: 'scan', keys: ['s'], description: 'Scan a code' },
   ...(canCreate.value
     ? [
         {
@@ -1736,7 +1736,7 @@ function onKey(event) {
     x: () => inventory.value && current && toggle(current),
     X: () => inventory.value && current && extendSelection(current),
     Escape: () => selected.value.size && clearSelection(),
-    s: () => scanHref.value && window.location.assign(scanHref.value),
+    s: () => openScan(),
     n: () => canCreate.value && newProduct(),
   }
   const action = actions[event.key]

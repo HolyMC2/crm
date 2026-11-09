@@ -77,6 +77,7 @@
       :model-value="rows"
       :label="items.label || 'Artículos'"
       :fields="items.fields"
+      :doctype="doc.doctype || ''"
       @update:model-value="emit('update:rows', $event)"
     />
   </div>

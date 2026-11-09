@@ -692,3 +692,54 @@ describe('Formularios and Encuestas are one place in the palette (Q7 = B)', () =
     expect(titles).not.toContain('Encuestas › Formularios')
   })
 })
+
+describe('«Scan a code» in the palette', () => {
+  beforeEach(() => {
+    const base = state.call.getMockImplementation()
+    state.call.mockImplementation(async (method, args) => {
+      if (
+        method === 'crm.api.palette.search_deals' ||
+        method === 'crm.api.documentos.search'
+      )
+        return []
+      return base(method, args)
+    })
+  })
+  afterEach(() => {
+    delete window.installed_apps
+  })
+
+  async function scanRow(overrides) {
+    const providers = createShellProviders({
+      boot: ref(boot(overrides)),
+      modules: ref(modules),
+    })
+    const q = query('escanear')
+    const states = await federatedSearch(providersFor(providers, q), q, {
+      signal: new AbortController().signal,
+      onUpdate() {},
+    })
+    return groupPaletteItems(states)
+      .flatMap((section) => section.items)
+      .find((item) => item.id === 'escaner.pick')
+  }
+  const productos = {
+    productos: { key: 'productos', enabled: true, capabilities: {} },
+  }
+
+  it('with Productos it opens the shell scanner, Escáner or not', async () => {
+    const row = await scanRow(productos)
+    expect(row.action).toBe('scan')
+    expect(row.scanPick).toBeUndefined()
+    window.installed_apps = ['scanner_kit']
+    expect((await scanRow(productos)).action).toBe('scan')
+  })
+
+  it("without Productos it keeps Escáner's picker, only where Escáner is installed", async () => {
+    expect(await scanRow()).toBeUndefined()
+    window.installed_apps = ['scanner_kit']
+    const row = await scanRow()
+    expect(row.scanPick).toBe(true)
+    expect(row.action).toBeUndefined()
+  })
+})

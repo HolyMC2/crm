@@ -255,14 +255,18 @@ export function createShellProviders({ boot, modules }) {
       }
       if (looksLikeDocument(query.text)) items.unshift(cameraItem)
       else items.push(cameraItem)
-      if (installedSiblings().some((app) => app.key === 'scan'))
+      // «Escanear un código»: the shell's own scanner where the worker has
+      // Productos (its answer opens a product), else Escáner's picker.
+      const scanInline = moduleEnabled(boot.value, 'productos')
+      if (scanInline || installedSiblings().some((app) => app.key === 'scan'))
         items.push({
           id: 'escaner.pick',
           group: 'acciones',
           title: __('Scan a code'),
-          keywords: 'escanear codigo barras camara scan barcode articulo',
+          keywords:
+            'escanear codigo barras camara scan barcode articulo imei serie alta',
           icon: 'lucide-scan-barcode',
-          scanPick: true,
+          ...(scanInline ? { action: 'scan' } : { scanPick: true }),
           rank: PALETTE_RANK.specific,
         })
       if (

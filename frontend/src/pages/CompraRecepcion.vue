@@ -414,6 +414,7 @@ import {
   watch,
 } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { claimScans } from '@/components/escaneo/scanDoor'
 import { AppBar, EmptyState, StatusChip, isMobile } from '@/components/ui'
 import { BTN } from '@/documentos/tools'
 import { formatMoney, formatQty } from '@/utils/display'
@@ -685,6 +686,10 @@ function onCamera(code) {
   camera.value = false
   if (code) send(String(code))
 }
+
+// The shell's «Escanear» counts here too: a code read from the bar goes
+// against this receipt like one typed in the field.
+claimScans((code) => send(String(code)))
 
 watch(confirmOpen, (open) => {
   if (open) {

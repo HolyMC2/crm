@@ -17,6 +17,7 @@ import Productos from '@/pages/Productos.vue'
 import { productosBoot } from '@/composables/useProductos'
 import { pageShortcuts } from '@/composables/shellKeyboard'
 import { readReturn } from '@/vendor/muelle-shell/contracts'
+import { scan, settleScan } from '@/components/escaneo/scanDoor'
 
 const W = 'Tienda Centro - GD'
 const calls = []
@@ -627,5 +628,25 @@ describe('Productos › catálogo', () => {
     expect(text.indexOf('Funda roja')).toBeLessThan(text.indexOf('Recarga 130'))
     expect(text).toMatch(/150/)
     answers.queue = original
+  })
+})
+
+describe('Productos › Escanear', () => {
+  afterEach(() => {
+    settleScan(null)
+    scan.wanted = false
+  })
+
+  it('the button and S open the shell scanner over the list', async () => {
+    await mountAt(`/productos?vista=sin-cajon&tienda=${encodeURIComponent(W)}`)
+    const button = root.querySelector('[data-productos-scan]')
+    expect(button.tagName).toBe('BUTTON')
+    expect(button.hasAttribute('href')).toBe(false)
+    button.click()
+    expect(scan.open).toBe(true)
+    settleScan(null)
+    press('s')
+    expect(scan.open).toBe(true)
+    expect(pageShortcuts.value.extra.map((s) => s.id)).toContain('scan')
   })
 })

@@ -37064,3 +37064,188 @@ msgstr "Ventas"
 msgctxt "Presupuesto"
 msgid "{0} % of the {1} goal"
 msgstr "{0} % de la meta de {1}"
+
+#: frontend/src/components/escaneo/AltaForm.vue
+msgctxt "Escaneo"
+msgid "Name"
+msgstr "Nombre"
+
+#: frontend/src/components/escaneo/AltaForm.vue
+msgctxt "Escaneo"
+msgid "What it is called on the shelf"
+msgstr "Cómo se llama en el anaquel"
+
+#: frontend/src/components/escaneo/AltaForm.vue
+msgctxt "Escaneo"
+msgid "Group"
+msgstr "Grupo"
+
+#: frontend/src/components/escaneo/AltaForm.vue
+msgctxt "Escaneo"
+msgid "Unit"
+msgstr "Unidad"
+
+#: frontend/src/components/escaneo/AltaForm.vue
+msgctxt "Escaneo"
+msgid "Sale price"
+msgstr "Precio de venta"
+
+#: frontend/src/components/escaneo/AltaForm.vue
+msgctxt "Escaneo"
+msgid "Cost"
+msgstr "Costo"
+
+#: frontend/src/components/escaneo/AltaForm.vue
+msgctxt "Escaneo"
+msgid "{0} is not in your catalog yet. Whoever keeps the catalog will see your request."
+msgstr "{0} todavía no está en tu catálogo. Quien lleva el catálogo verá tu solicitud."
+
+#: frontend/src/components/escaneo/AltaForm.vue
+msgctxt "Escaneo"
+msgid "This product is not in your catalog yet. Whoever keeps the catalog will see your request."
+msgstr "Este producto todavía no está en tu catálogo. Quien lleva el catálogo verá tu solicitud."
+
+#: frontend/src/components/escaneo/AltaForm.vue
+msgctxt "Escaneo"
+msgid "Note (optional)"
+msgstr "Nota (opcional)"
+
+#: frontend/src/components/escaneo/AltaForm.vue
+msgctxt "Escaneo"
+msgid "Already in your catalog"
+msgstr "Ya está en tu catálogo"
+
+#: frontend/src/components/escaneo/AltaForm.vue
+msgctxt "Escaneo"
+msgid "From your shop's code list"
+msgstr "De la lista de códigos de tu tienda"
+
+#: frontend/src/components/escaneo/AltaForm.vue
+msgctxt "Escaneo"
+msgid "From the shared product catalog"
+msgstr "Del catálogo compartido de productos"
+
+#: frontend/src/components/escaneo/AltaForm.vue
+msgctxt "Escaneo"
+msgid "No data for this code: type the name"
+msgstr "Sin datos de este código: escribe el nombre"
+
+#: frontend/src/components/escaneo/ScanSheet.vue
+msgctxt "Escaneo"
+msgid "Code, barcode or IMEI"
+msgstr "Código, código de barras o IMEI"
+
+#: frontend/src/components/escaneo/ScanSheet.vue
+msgctxt "Escaneo"
+msgid "Use"
+msgstr "Usar"
+
+#: frontend/src/components/escaneo/ScanSheet.vue
+msgctxt "Escaneo"
+msgid "Open the camera"
+msgstr "Abrir la cámara"
+
+#: frontend/src/components/escaneo/ScanSheet.vue
+msgctxt "Escaneo"
+msgid "Use Escáner's camera"
+msgstr "Usar la cámara de Escáner"
+
+#: frontend/src/components/escaneo/ScanSheet.vue
+msgctxt "Escaneo"
+msgid "Search Productos"
+msgstr "Buscar en Productos"
+
+#: frontend/src/components/escaneo/ScanSheet.vue
+msgctxt "Escaneo"
+msgid "Looking up «{0}»…"
+msgstr "Buscando «{0}»…"
+
+#: frontend/src/components/escaneo/ScanSheet.vue
+msgctxt "Escaneo"
+msgid "Several products carry «{0}». Which one is it?"
+msgstr "Varios productos tienen «{0}». ¿Cuál es?"
+
+#: frontend/src/components/escaneo/ScanSheet.vue
+msgctxt "Escaneo"
+msgid "Disabled"
+msgstr "Desactivado"
+
+#: frontend/src/components/escaneo/ScanSheet.vue
+msgctxt "Escaneo"
+msgid "Scan another"
+msgstr "Escanear otro"
+
+#: frontend/src/components/escaneo/ScanSheet.vue
+msgctxt "Escaneo"
+msgid "Add product"
+msgstr "Dar de alta"
+
+#: frontend/src/components/escaneo/ScanSheet.vue
+msgctxt "Escaneo"
+msgid "Ask for it"
+msgstr "Pedir alta"
+
+#: frontend/src/components/escaneo/ScanSheet.vue
+msgctxt "Escaneo"
+msgid "New product"
+msgstr "Producto nuevo"
+
+#: frontend/src/components/escaneo/ScanSheet.vue
+msgctxt "Escaneo"
+msgid "Not in your catalog"
+msgstr "No está en tu catálogo"
+
+#: frontend/src/components/escaneo/ScanSheet.vue
+msgctxt "Escaneo"
+msgid "Which product is it?"
+msgstr "¿Cuál producto es?"
+
+#: frontend/src/components/escaneo/ScanSheet.vue
+msgctxt "Escaneo"
+msgid "The product goes on the document."
+msgstr "El producto se agrega al documento."
+
+#: frontend/src/components/escaneo/ScanSheet.vue
+msgctxt "Escaneo"
+msgid "The code goes to this page."
+msgstr "El código va a esta página."
+
+#: frontend/src/components/escaneo/ScanSheet.vue
+msgctxt "Escaneo"
+msgid "Its product opens. Use the camera, type it, or scan it with a scanner gun."
+msgstr "Se abre su producto. Usa la cámara, escríbelo o escanéalo con la pistola lectora."
+
+#: frontend/src/components/escaneo/ScanSheet.vue
+msgctxt "Escaneo"
+msgid "Once added, it goes on the document."
+msgstr "Al darlo de alta se agrega al documento."
+
+#: frontend/src/components/escaneo/ScanSheet.vue
+msgctxt "Escaneo"
+msgid "Once added, its page opens."
+msgstr "Al darlo de alta se abre su página."
+
+#: frontend/src/components/escaneo/ScanSheet.vue
+msgctxt "Escaneo"
+msgid "No connection: «{0}» could not be looked up."
+msgstr "Sin conexión: no se pudo buscar «{0}»."
+
+#: frontend/src/components/escaneo/ScanSheet.vue
+msgctxt "Escaneo"
+msgid "No product has the code «{0}»."
+msgstr "Ningún producto tiene el código «{0}»."
+
+#: frontend/src/components/escaneo/ScanSheet.vue
+msgctxt "Escaneo"
+msgid "{0} added to your catalog"
+msgstr "Se dio de alta {0}"
+
+#: frontend/src/components/escaneo/ScanSheet.vue
+msgctxt "Escaneo"
+msgid "{0} was already in your catalog"
+msgstr "{0} ya estaba en tu catálogo"
+
+#: frontend/src/components/escaneo/ScanSheet.vue
+msgctxt "Escaneo"
+msgid "Request sent"
+msgstr "Solicitud enviada"

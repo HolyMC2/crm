@@ -137,6 +137,8 @@ import {
 import { call } from 'frappe-ui'
 import { ListRow } from '@/components/ui'
 import { looksLikeId, unitLabel as unitWord } from '@/utils/display'
+import { looksLikeCode, resolveScan } from '@/components/escaneo/escaneo'
+import { openScan } from '@/components/escaneo/scanDoor'
 
 const BarcodeCamera = defineAsyncComponent(() => import('./BarcodeCamera.vue'))
 
@@ -146,6 +148,8 @@ const props = defineProps({
   label: { type: String, default: 'Artículos' },
   // Child fields the worker may change (form().items.fields)
   fields: { type: Array, default: () => ['item_code', 'qty'] },
+  // The document's doctype: purchasing staff may create a product on a purchase.
+  doctype: { type: String, default: '' },
 })
 const emit = defineEmits(['update:modelValue'])
 
@@ -245,35 +249,59 @@ async function find(text) {
 }
 watch(search, (text) => {
   clearTimeout(timer)
-  note.value = ''
+  // Emptied by add(): its «Agregado» stays until the worker types again.
+  if (text) note.value = ''
   timer = setTimeout(() => find(text), 250)
 })
 onBeforeUnmount(() => clearTimeout(timer))
 
-async function byBarcode(code) {
+// A code (scanned, or typed like one) asks doco what it is in one call: the
+// product's code, a barcode, an IMEI or a lot. A product nobody has yet, or a
+// code two products share, opens the shell's scan sheet, which hands the
+// product back here as a line.
+async function byCode(code) {
   try {
-    const found = await call('erpnext.stock.utils.scan_barcode', {
-      search_value: code,
-    })
-    return found?.item_code ? found : null
+    return await resolveScan(code, props.doctype)
   } catch {
     return null
   }
+}
+// A model (a template with variants) never goes on a line: its variants are
+// listed instead, and the pending search for the typed code is dropped.
+async function take(answer) {
+  if (!answer.has_variants) return add(answer.item_code, answer.item_name || '')
+  const name = answer.item_name || answer.item_code
+  clearTimeout(timer)
+  await find(name)
+  note.value = `${name} es un modelo: elige su variante.`
+}
+function offer(answer) {
+  openScan({
+    resolved: answer,
+    doctype: props.doctype,
+    onItem: (item) => take(item),
+  })
 }
 // Enter: a scanner gun ends its code with Enter; a code wins over the name search.
 async function onEnter() {
   const text = search.value.trim()
   if (!text) return
-  const hit = await byBarcode(text)
-  if (hit) return add(hit.item_code, hit.item_name || '')
+  if (looksLikeCode(text)) {
+    const answer = await byCode(text)
+    if (answer?.kind === 'item') return take(answer)
+    if (answer?.kind === 'choose') return offer(answer)
+    if (answer?.kind === 'unknown' && !results.value.length)
+      return offer(answer)
+  }
   if (results.value.length === 1)
     return add(results.value[0].value, results.value[0].title)
   await find(text)
 }
 async function onCode(code) {
   scanning.value = false
-  const hit = await byBarcode(code)
-  if (hit) add(hit.item_code, hit.item_name || '')
-  else note.value = `Ningún artículo tiene el código ${code}.`
+  const answer = await byCode(code)
+  if (answer?.kind === 'item') take(answer)
+  else if (answer) offer(answer)
+  else note.value = `No se pudo buscar ${code}. Revisa tu conexión.`
 }
 </script>

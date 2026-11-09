@@ -108,6 +108,7 @@ import {
   parseFicha,
 } from '@/utils/inmobiliariaTipos'
 import { recoveryModule } from '@/utils/shellRoutes'
+import { scan, settleScan } from '@/components/escaneo/scanDoor'
 import Inmobiliaria from '@/pages/Inmobiliaria.vue'
 import InmobiliariaCola from '@/pages/InmobiliariaCola.vue'
 import InmobiliariaDisponibilidad from '@/pages/InmobiliariaDisponibilidad.vue'
@@ -815,6 +816,35 @@ describe('one frame for every route', () => {
       )
       expect(url.searchParams.get('return_label')).toBe('Contactos')
     } finally {
+      delete window.installed_apps
+    }
+  })
+
+  it('phone header «Escanear» reads the code in the shell where the worker has Productos', async () => {
+    state.mobile.value = true
+    window.installed_apps = ['crm', 'scanner_kit']
+    state.call.mockImplementation(async (method) => {
+      if (method === 'crm.api.shell.boot')
+        return boot({
+          modules: {
+            ...boot().modules,
+            productos: { key: 'productos', enabled: true, capabilities: {} },
+          },
+        })
+      throw new Error(`unexpected ${method}`)
+    })
+    try {
+      await mount('/contactos')
+      const button = root.querySelector('[data-testid="shell-scan"]')
+      expect(button.tagName).toBe('BUTTON')
+      expect(button.getAttribute('aria-label')).toBe('Scan a code')
+      expect(button.hasAttribute('href')).toBe(false)
+      button.click()
+      expect(scan.open).toBe(true)
+      expect(scan.options).toEqual({})
+    } finally {
+      settleScan(null)
+      scan.wanted = false
       delete window.installed_apps
     }
   })

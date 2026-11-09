@@ -197,9 +197,23 @@
         >
           <span class="lucide-sparkles size-6" aria-hidden="true" />
         </button>
-        <!-- Escáner is the shell's scanner: scan a code, land on its artículo. -->
+        <!-- «Escanear»: the shell reads the code itself (scanDoor.js) and opens
+             its product, or creates it; without Productos, Escáner's picker. -->
+        <button
+          v-if="scanInline && !backTo"
+          type="button"
+          :class="COMMAND_ICON"
+          :aria-label="__('Scan a code')"
+          :title="__('Scan a code')"
+          data-testid="shell-scan"
+          @pointerenter="loadScanSheet"
+          @focus="loadScanSheet"
+          @click="openScan()"
+        >
+          <span class="lucide-scan-barcode size-6" aria-hidden="true" />
+        </button>
         <a
-          v-if="scanHref && !backTo"
+          v-else-if="scanHref && !backTo"
           :href="scanHref"
           :class="COMMAND_ICON"
           :aria-label="__('Scan a code')"
@@ -238,6 +252,7 @@
          first opens it (assistantDoor.js). -->
     <AssistantSheet v-if="shellBoot && assistantWanted" />
     <CameraSheet v-if="camera.wanted" />
+    <ScanSheet v-if="scan.wanted" />
     <MoreSheet
       v-if="moreOpen"
       v-model="moreOpen"
@@ -310,6 +325,7 @@ import {
   loadCameraSheet,
   openCamera,
 } from '@/components/captura/cameraDoor'
+import { loadScanSheet, openScan, scan } from '@/components/escaneo/scanDoor'
 import { primaryDock } from '@/components/ui/primaryDock'
 import { pageTitle } from '@/composables/pageTitle'
 import AppBar from '@/components/ui/AppBar.vue'
@@ -328,6 +344,7 @@ const AssistantSheet = defineAsyncComponent(
   () => import('@/components/assistant/AssistantSheet.vue'),
 )
 const CameraSheet = defineAsyncComponent(loadCameraSheet)
+const ScanSheet = defineAsyncComponent(loadScanSheet)
 
 const route = useRoute(),
   router = useRouter()
@@ -549,6 +566,9 @@ const { label: searchHint, aria: searchKeys } = searchEntryHint()
 const scanHref = computed(() =>
   scanPickHref(route.fullPath, activeModule.value?.label),
 )
+// A scan opens a product, so the shell reads codes itself wherever the worker
+// has Productos; anyone else keeps Escáner's picker.
+const scanInline = computed(() => moduleEnabled(shellBoot.value, 'productos'))
 // `[` shows or hides the app names of the desktop rail (phone has no rail).
 function toggleSidebar() {
   if (phone.value) return false
