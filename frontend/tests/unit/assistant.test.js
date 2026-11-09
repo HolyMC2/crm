@@ -393,6 +393,17 @@ describe('what a reply says', () => {
       { text: 'Ver ' },
       { href: 'http://x.invalid/desk/captura-contable/CAP-7', label: 'CAP-7' },
     ])
+    // another page of the site reads «Abrir», another site its name
+    expect(textParts('Lista completa: /app/primeros-pasos')[1]).toEqual({
+      href: '/app/primeros-pasos',
+      label: 'Open',
+    })
+    expect(
+      textParts('Detalle: https://www.sat.gob.mx/tramites/factura?x=1')[1],
+    ).toEqual({
+      href: 'https://www.sat.gob.mx/tramites/factura?x=1',
+      label: 'sat.gob.mx',
+    })
   })
 
   it('drops an outage line once a later answer came, with its question', () => {

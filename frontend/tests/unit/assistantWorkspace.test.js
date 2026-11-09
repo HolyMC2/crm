@@ -238,21 +238,31 @@ describe('the desktop workspace', () => {
     return { ...mounted, restore }
   }
 
-  it('puts conversations left, the chat in the middle and the panels right', async () => {
+  it('puts conversations left, the chat in the middle; the panels wait to be asked for', async () => {
     const { app, restore } = await openWorkspace()
     expect(q('[data-testid="assistant-workspace"]')).not.toBeNull()
     expect(q('[data-testid="assistant-dock"]')).toBeNull()
     expect(q('[data-testid="assistant-sidebar"]')).not.toBeNull()
     expect(q('[data-testid="assistant-input"]')).not.toBeNull()
     expect(q('[data-testid="assistant-model"]')).not.toBeNull()
+    expect(q('[data-conversation="C1"]').textContent).toContain(
+      'Factura XMovil',
+    )
+    // a chat app's full screen: no column of panels until one is asked for
+    expect(q('[data-testid="assistant-side-panels"]')).toBeNull()
+    // «Abierto» heads the left column and opens its panel, unfolded
+    expect(q('[data-testid="assistant-sidebar-open"]')).not.toBeNull()
+    q('[data-testid="assistant-sidebar-open"]').click()
+    await flush()
     expect(
       [...document.querySelectorAll('[data-panel]')].map(
         (p) => p.dataset.panel,
       ),
     ).toEqual(['screen', 'open', 'agenda', 'canvas', 'conversation'])
-    expect(q('[data-conversation="C1"]').textContent).toContain(
-      'Factura XMovil',
-    )
+    expect(
+      q('[data-panel="open"] button').getAttribute('aria-expanded'),
+    ).toBe('true')
+    expect(sessions.view).toBe('chat')
     app.unmount()
     restore()
   })
@@ -324,18 +334,26 @@ describe('the desktop workspace', () => {
     q('[data-testid="assistant-toggle-panels"]').click()
     await flush()
     expect(q('[data-testid="assistant-sidebar"]')).toBeNull()
-    expect(q('[data-testid="assistant-side-panels"]')).toBeNull()
+    expect(q('[data-testid="assistant-side-panels"]')).not.toBeNull()
     expect(
-      JSON.parse(localStorage.getItem('muelle-assistant-workspace')),
+      JSON.parse(localStorage.getItem('muelle-assistant-layout')),
     ).toEqual({
       sidebar: false,
-      panels: false,
+      panels: true,
     })
+    // with the column folded, the header keeps a new conversation at hand
+    expect(q('[data-testid="assistant-new"]')).not.toBeNull()
+    q('[data-testid="assistant-toggle-panels"]').click()
+    await flush()
+    expect(q('[data-testid="assistant-side-panels"]')).toBeNull()
     // «/abierto» shows the panels instead of leaving the chat
     showView('open')
     await flush()
     expect(sessions.view).toBe('chat')
     expect(q('[data-testid="assistant-side-panels"]')).not.toBeNull()
+    q('[data-testid="assistant-toggle-sidebar"]').click()
+    await flush()
+    expect(q('[data-testid="assistant-sidebar"]')).not.toBeNull()
 
     q('[data-testid="assistant-minimize"]').click()
     await flush()

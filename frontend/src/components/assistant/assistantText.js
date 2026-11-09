@@ -59,13 +59,20 @@ export function shellPathFor(href) {
   return null
 }
 
-// A Desk record link the shell has no screen for reads as its record name
-// («CAP-2026-00087»), not as a long URL that wraps over three lines.
+// A bare URL never shows whole: it wraps over three lines. A Desk record reads
+// as its record name («CAP-2026-00087»), another page of this site as «Abrir»
+// and another site as its name («sat.gob.mx»).
 function linkLabel(href) {
   try {
     const url = new URL(href, 'https://muelle.invalid')
     const desk = url.pathname.match(/^\/(?:app|desk)\/[^/]+\/([^/]+)\/?$/)
     if (desk) return decodeURIComponent(desk[1])
+    if (
+      url.origin === 'https://muelle.invalid' ||
+      url.host === globalThis.location?.host
+    )
+      return __('Open', null, 'Assistant link')
+    return url.hostname.replace(/^www\./, '')
   } catch {
     // not a URL: shown as written
   }

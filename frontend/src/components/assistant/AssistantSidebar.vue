@@ -1,19 +1,21 @@
 <template>
   <!-- The workspace's left column (Marco 2026-11-05: «leftside sessions/
        threads», as in Claude and T3 Code): a new conversation, search, the
-       live one and the earlier ones, pinned first. The same store and gates
+       agenda, «Abierto» and the Lienzo, then the live conversation and the
+       earlier ones, pinned first, one line each (the date shows on hover). The
+       same store and gates
        as «Conversaciones» (assistantSessions); a row's pin, archive and «⋯»
        show on hover or focus, and «⋯» unfolds the rest under it (resolve,
        snooze, rename, a new title, unread, copy, continue). -->
   <nav
-    class="flex h-full min-h-0 flex-col"
+    class="flex min-h-0 flex-1 flex-col"
     :aria-label="__('Conversations')"
     data-testid="assistant-sidebar"
   >
-    <div class="flex-none space-y-2 px-3 pb-2 pt-3">
+    <div class="flex-none space-y-0.5 px-2 pb-2">
       <button
         type="button"
-        class="press flex min-h-11 w-full items-center gap-2 rounded-6 px-3 text-sm font-medium text-ink-gray-9 hover:bg-surface-gray-3 disabled:opacity-50"
+        class="press flex min-h-9 w-full items-center gap-2.5 rounded-6 px-2.5 text-sm text-ink-gray-9 hover:bg-surface-gray-3 disabled:opacity-50"
         :title="__('New conversation (settles what is finished)')"
         :disabled="sessions.busy"
         data-testid="assistant-sidebar-new"
@@ -22,7 +24,7 @@
         <span class="lucide-square-pen size-4 flex-none" aria-hidden="true" />
         {{ __('New conversation') }}
       </button>
-      <label class="relative block">
+      <label class="relative block py-1">
         <span class="sr-only">{{ __('Search conversations') }}</span>
         <span
           class="lucide-search pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-gray-5"
@@ -31,16 +33,81 @@
         <input
           :value="sessions.query"
           type="search"
-          class="min-h-10 w-full rounded-6 border border-outline-gray-2 bg-surface-base pl-9 pr-3 text-sm text-ink-gray-9"
+          class="min-h-9 w-full rounded-full border border-outline-gray-1 bg-surface-base pl-9 pr-3 text-sm text-ink-gray-9 placeholder:text-ink-gray-5 focus:border-outline-gray-3"
           :placeholder="__('Search conversations')"
           data-testid="assistant-sidebar-search"
           @input="onSearch($event.target.value)"
         />
       </label>
+      <template v-if="!sessions.results && !sessions.showArchived">
+        <button
+          v-if="agenda.available"
+          type="button"
+          class="press flex min-h-9 w-full items-center gap-2.5 rounded-6 px-2.5 text-left text-sm text-ink-gray-9 hover:bg-surface-gray-3"
+          :aria-label="agendaLabel"
+          data-testid="assistant-sidebar-agenda"
+          @click="showView('agenda')"
+        >
+          <span
+            class="lucide-calendar-clock size-4 flex-none text-ink-gray-6"
+            aria-hidden="true"
+          />
+          <span class="min-w-0 flex-1 truncate">{{ __('Agenda') }}</span>
+          <span
+            v-if="due"
+            class="num min-w-5 flex-none rounded-full bg-[var(--muelle-accent)] px-1.5 text-center text-xs font-semibold leading-5 text-[var(--muelle-accent-ink)]"
+            aria-hidden="true"
+            >{{ due > 99 ? '99+' : due }}</span
+          >
+        </button>
+        <button
+          type="button"
+          class="press flex min-h-9 w-full items-center gap-2.5 rounded-6 px-2.5 text-left text-sm text-ink-gray-9 hover:bg-surface-gray-3"
+          :aria-label="openLabel"
+          data-testid="assistant-sidebar-open"
+          @click="showView('open')"
+        >
+          <span
+            class="lucide-inbox size-4 flex-none text-ink-gray-6"
+            aria-hidden="true"
+          />
+          <span class="min-w-0 flex-1 truncate">{{ __('Open work') }}</span>
+          <span
+            v-if="sessions.work.count"
+            class="num min-w-5 flex-none rounded-full bg-[var(--muelle-accent)] px-1.5 text-center text-xs font-semibold leading-5 text-[var(--muelle-accent-ink)]"
+            aria-hidden="true"
+            >{{ sessions.work.count > 99 ? '99+' : sessions.work.count }}</span
+          >
+        </button>
+        <button
+          v-if="canvas.available"
+          type="button"
+          class="press flex min-h-9 w-full items-center gap-2.5 rounded-6 px-2.5 text-left text-sm hover:bg-surface-gray-3"
+          :class="
+            sessions.view === 'canvas'
+              ? 'bg-surface-gray-3 text-ink-gray-9'
+              : 'text-ink-gray-9'
+          "
+          :aria-current="sessions.view === 'canvas' ? 'true' : undefined"
+          data-testid="assistant-sidebar-canvas"
+          @click="showView('canvas')"
+        >
+          <span
+            class="lucide-layout-dashboard size-4 flex-none text-ink-gray-6"
+            aria-hidden="true"
+          />
+          <span class="min-w-0 flex-1 truncate">{{ __('Lienzo') }}</span>
+          <span
+            v-if="canvas.files.length"
+            class="num flex-none text-xs text-ink-gray-5"
+            >{{ canvas.files.length }}</span
+          >
+        </button>
+      </template>
     </div>
 
     <div
-      class="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-3 pb-3"
+      class="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-2 pb-3 pt-2"
     >
       <ul v-if="sessions.results" class="space-y-0.5">
         <li
@@ -75,7 +142,7 @@
         <button
           v-if="!sessions.showArchived"
           type="button"
-          class="flex min-h-11 w-full items-center gap-2 rounded-6 px-3 text-left text-sm"
+          class="flex min-h-9 w-full items-center gap-2 rounded-6 px-2.5 text-left text-sm"
           :class="
             sessions.view === 'transcript'
               ? 'text-ink-gray-8 hover:bg-surface-gray-3'
@@ -108,7 +175,7 @@
           {{ __('No archived conversations.') }}
         </p>
         <section v-for="group in groups" :key="group.key">
-          <h3 class="px-3 pb-1 text-xs font-medium text-ink-gray-5">
+          <h3 class="px-2.5 pb-1 text-xs font-medium text-ink-gray-5">
             {{ group.label }}
           </h3>
           <ul class="space-y-0.5">
@@ -148,9 +215,9 @@
                 <template v-else>
                   <button
                     type="button"
-                    class="block min-h-11 min-w-0 flex-1 px-3 py-1.5 text-left"
+                    class="block min-h-9 min-w-0 flex-1 px-2.5 py-1.5 text-left"
                     :aria-current="openId === row.id ? 'true' : undefined"
-                    :title="row.title"
+                    :title="`${row.title}\n${stamp(row)}`"
                     @click="openConversation(row.id)"
                   >
                     <span class="flex items-center gap-1.5">
@@ -178,9 +245,6 @@
                         >{{ row.title }}</span
                       >
                     </span>
-                    <span class="block truncate text-xs text-ink-gray-5">{{
-                      stamp(row)
-                    }}</span>
                   </button>
                   <!-- the row's island: shown on hover or keyboard focus -->
                   <div
@@ -250,7 +314,7 @@
         "
         data-testid="assistant-sidebar-snoozed"
       >
-        <h3 class="px-3 pb-1 text-xs font-medium text-ink-gray-5">
+        <h3 class="px-2.5 pb-1 text-xs font-medium text-ink-gray-5">
           {{ __('Snoozed') }}
         </h3>
         <ul class="space-y-0.5">
@@ -262,7 +326,7 @@
           >
             <button
               type="button"
-              class="block min-h-11 min-w-0 flex-1 px-3 py-1.5 text-left"
+              class="block min-h-9 min-w-0 flex-1 px-2.5 py-1.5 text-left"
               :title="row.title"
               @click="openConversation(row.id)"
             >
@@ -300,7 +364,7 @@
     <button
       v-if="sessions.archivedCount || sessions.showArchived"
       type="button"
-      class="flex min-h-11 flex-none items-center gap-2 border-t border-outline-gray-1 px-6 text-sm text-ink-gray-7 hover:bg-surface-gray-3"
+      class="flex min-h-11 flex-none items-center gap-2 border-t border-outline-gray-1 px-[1.125rem] text-sm text-ink-gray-7 hover:bg-surface-gray-3"
       data-testid="assistant-sidebar-archived"
       @click="toggleArchived"
     >
@@ -318,6 +382,8 @@ import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { formatDateTime } from '@/utils/display'
 import ExpandTransition from '@/components/ui/ExpandTransition.vue'
 import AssistantConversationActions from './AssistantConversationActions.vue'
+import { agenda, dueCount } from './assistantAgenda'
+import { canvas } from './assistantCanvas'
 import { assistant } from './useAssistant'
 import {
   CURRENT,
@@ -330,9 +396,20 @@ import {
   renameConversation,
   searchConversations,
   sessions,
+  showView,
   snoozeConversation,
   toggleArchived,
 } from './assistantSessions'
+
+const due = computed(() => dueCount(agenda.items))
+const agendaLabel = computed(() =>
+  due.value ? __('Agenda ({0} today)', [due.value]) : __('Agenda'),
+)
+const openLabel = computed(() =>
+  sessions.work.count
+    ? __('Open work ({0})', [sessions.work.count])
+    : __('Open work'),
+)
 
 const groups = computed(() => groupConversations(sessions.list))
 const openId = computed(() =>

@@ -1,10 +1,16 @@
 <template>
   <!-- The workspace's right column (Marco 2026-11-05: «rightside floating
-       windows with cool data and features»): cards beside the conversation,
-       never over it. What the screen is about with its quick questions, the
-       work left open, the agenda, the Lienzo and this conversation's facts.
-       Each card folds; the folds are remembered on this device. -->
-  <div class="space-y-3 p-3" data-testid="assistant-side-panels">
+       windows with cool data and features»): sections beside the
+       conversation, never over it, split by rules. What the screen is about
+       with its quick questions, the work left open, the agenda, the Lienzo
+       and this conversation's facts. Each section folds; the folds are
+       remembered on this device. A row of the left column (or «/abierto»)
+       unfolds its section and brings it into view. -->
+  <div
+    ref="root"
+    class="divide-y divide-outline-gray-1"
+    data-testid="assistant-side-panels"
+  >
     <AssistantPanelCard
       v-if="screenTitle"
       v-model:open="folds.screen"
@@ -12,7 +18,7 @@
       :title="__('This screen')"
       icon="lucide-monitor"
     >
-      <p class="pt-2 text-sm text-ink-gray-9">{{ screenTitle }}</p>
+      <p class="text-sm text-ink-gray-9">{{ screenTitle }}</p>
       <label class="flex min-h-11 items-center gap-2 text-sm text-ink-gray-8">
         <input
           v-model="assistant.contextOn"
@@ -27,7 +33,7 @@
           v-for="chip in chips"
           :key="chip.label"
           type="button"
-          class="press min-h-9 rounded-6 border border-outline-gray-2 px-3 text-sm text-ink-gray-8 hover:bg-surface-gray-2 disabled:opacity-50"
+          class="press min-h-9 rounded-full border border-outline-gray-2 px-3.5 text-sm text-ink-gray-8 hover:bg-surface-gray-2 disabled:opacity-50"
           :disabled="assistant.thinking"
           @click="useChip(chip)"
         >
@@ -68,15 +74,16 @@
       :title="__('Lienzo')"
       icon="lucide-layout-dashboard"
       :count="canvas.files.length"
+      quiet
     >
-      <p v-if="!canvas.files.length" class="pt-2 text-sm text-ink-gray-6">
+      <p v-if="!canvas.files.length" class="text-sm text-ink-gray-6">
         {{ __('Charts and tables Muelle makes for you show up here.') }}
       </p>
-      <ul v-else class="divide-y divide-outline-gray-1">
+      <ul v-else>
         <li v-for="file in recentFiles" :key="file.file">
           <button
             type="button"
-            class="press flex min-h-11 w-full items-center gap-2 py-1.5 text-left text-sm hover:bg-surface-gray-2"
+            class="press -mx-2 flex min-h-11 w-[calc(100%+1rem)] items-center gap-2 rounded-6 px-2 py-1.5 text-left text-sm hover:bg-surface-gray-2"
             :data-canvas="file.file"
             @click="openFile(file)"
           >
@@ -96,7 +103,7 @@
       <button
         v-if="canvas.files.length > recentFiles.length"
         type="button"
-        class="min-h-11 text-sm font-medium text-ink-gray-7 underline"
+        class="press min-h-9 rounded-6 text-sm font-medium text-ink-gray-7 hover:text-ink-gray-9"
         @click="showView('canvas')"
       >
         {{ __('See all ({0})', [canvas.files.length]) }}
@@ -109,7 +116,7 @@
       :title="__('This conversation')"
       icon="lucide-message-square"
     >
-      <dl class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 pt-2 text-sm">
+      <dl class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-sm">
         <template v-if="models.available">
           <dt class="text-ink-gray-6">{{ __('Model') }}</dt>
           <dd class="min-w-0 truncate text-right text-ink-gray-9">
@@ -138,15 +145,15 @@
   </div>
 </template>
 <script setup>
-import { computed, defineAsyncComponent, onMounted, watch } from 'vue'
+import { computed, defineAsyncComponent, nextTick, ref, watch } from 'vue'
 import { useStorage } from '@vueuse/core'
 import { formatDateTime, relativeTime } from '@/utils/display'
 import AssistantOpenWork from './AssistantOpenWork.vue'
 import AssistantPanelCard from './AssistantPanelCard.vue'
-import { agenda, dueCount, loadAgenda } from './assistantAgenda'
-import { canvas, kindLabel, loadCanvas, openInCanvas } from './assistantCanvas'
+import { agenda, dueCount } from './assistantAgenda'
+import { canvas, kindLabel, openInCanvas } from './assistantCanvas'
 import { effortLabel, models, shortLabel } from './assistantModels'
-import { loadOpenWork, sessions, showView } from './assistantSessions'
+import { sessions, showView } from './assistantSessions'
 import { chipsFor, isProgress } from './assistantText'
 import { assistant, send } from './useAssistant'
 
@@ -154,7 +161,12 @@ const AssistantAgenda = defineAsyncComponent(
   () => import('./AssistantAgenda.vue'),
 )
 
+const props = defineProps({
+  /** { name } of the section to unfold and show (a new object each time) */
+  focus: { type: Object, default: null },
+})
 defineEmits(['navigate'])
+const root = ref(null)
 
 /** Which cards are unfolded, on this device. */
 const folds = useStorage('muelle-assistant-panels', {
@@ -165,17 +177,18 @@ const folds = useStorage('muelle-assistant-panels', {
   conversation: true,
 })
 
-function refresh() {
-  loadOpenWork()
-  loadAgenda()
-  loadCanvas()
-}
-onMounted(refresh)
-// an answer may have parked a capture or a proposal, left an encargo on the
-// agenda or written to the Lienzo (the dock's header does the same)
+// what they show loads in the workspace (AssistantWorkspace refresh)
 watch(
-  () => assistant.thinking,
-  (thinking, was) => was && !thinking && refresh(),
+  () => props.focus,
+  async (focus) => {
+    if (!focus?.name) return
+    folds.value[focus.name] = true
+    await nextTick()
+    root.value
+      ?.querySelector(`[data-panel="${focus.name}"]`)
+      ?.scrollIntoView?.({ block: 'nearest' })
+  },
+  { immediate: true },
 )
 
 const screenTitle = computed(() => assistant.context?.title || '')
