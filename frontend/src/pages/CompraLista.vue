@@ -1426,6 +1426,7 @@ import {
   dropFiles,
   filterCounts,
   firstLines,
+  mergeLines,
   FILTERS,
   LIST_ACCEPT,
   nextTier,
@@ -1986,11 +1987,33 @@ function schedulePoll() {
   clearPoll()
   if (!settling.value) return
   poll = setTimeout(async () => {
-    await load({ quiet: true })
+    await follow()
     schedulePoll()
   }, POLL_MS)
 }
-watch(settling, schedulePoll)
+// While a list is indexed and read, only its header and the lines written since
+// the last look come back (lista_precios.avance), not the whole list; the whole
+// list again when the read ends, when the counts disagree, or from a server
+// without the call.
+async function follow() {
+  const cursor = data.value?.cursor
+  if (cursor == null) return load({ quiet: true })
+  try {
+    const out = await call('avance', { catalogo: props.name, desde: cursor })
+    if (!data.value || out?.catalog?.name !== catalog.value.name) return
+    data.value.catalog = out.catalog
+    if (out.promos) data.value.promos = out.promos
+    mergeLines(data.value.sections, out.lines, out.gone)
+    data.value.cursor = out.cursor
+    if (out.count !== lineCount.value) await load({ quiet: true })
+  } catch {
+    await load({ quiet: true })
+  }
+}
+watch(settling, (now, was) => {
+  schedulePoll()
+  if (was && !now) load({ quiet: true })
+})
 
 function applyState(out) {
   if (!out) return

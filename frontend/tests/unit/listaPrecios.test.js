@@ -25,6 +25,7 @@ import {
   historySeries,
   isPicture,
   manualFields,
+  mergeLines,
   nextTier,
   otherGap,
   promoFor,
@@ -243,6 +244,42 @@ describe('a long list', () => {
     expect(names('frontal')).toEqual([])
     line.model = 'Frontal A15'
     expect(names('frontal')).toEqual(['x'])
+  })
+})
+
+describe('a list still being read', () => {
+  const names = (sections) =>
+    sections.map((s) => [s.name, s.lines.map((l) => l.name)])
+
+  it('takes the lines written since the last look into their sections', () => {
+    const sections = [
+      { name: 'Fundas', lines: [{ name: 'f1', section: 'Fundas', price: 1 }] },
+      { name: 'Micas', lines: [{ name: 'm1', section: 'Micas' }] },
+    ]
+    mergeLines(
+      sections,
+      [
+        { name: 'f1', section: 'Fundas', price: 2 },
+        { name: 'f2', section: 'Fundas' },
+        { name: 'c1', section: 'Cables' },
+      ],
+      [],
+    )
+    expect(names(sections)).toEqual([
+      ['Fundas', ['f1', 'f2']],
+      ['Micas', ['m1']],
+      ['Cables', ['c1']],
+    ])
+    expect(sections[0].lines[0].price).toBe(2)
+  })
+
+  it('moves a line whose section changed, drops the gone ones, closes an empty section', () => {
+    const sections = [
+      { name: 'A', lines: [{ name: 'x', section: 'A' }] },
+      { name: 'B', lines: [{ name: 'y', section: 'B' }, { name: 'z' }] },
+    ]
+    mergeLines(sections, [{ name: 'x', section: 'B' }], ['z'])
+    expect(names(sections)).toEqual([['B', ['y', 'x']]])
   })
 })
 

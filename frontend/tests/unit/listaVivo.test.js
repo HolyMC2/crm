@@ -173,6 +173,15 @@ describe('the page wiring', () => {
     expect(page).toContain('useLiveWatch(')
   })
 
+  it('follows a list being read by what changed, not the whole list', () => {
+    expect(page).toContain(
+      "call('avance', { catalogo: props.name, desde: cursor })",
+    )
+    expect(page).toContain(
+      'mergeLines(data.value.sections, out.lines, out.gone)',
+    )
+  })
+
   it('opens and closes the order for presence', () => {
     expect(page).toContain("socket?.emit?.('doc_open', ORDER_DOCTYPE, openDoc)")
     expect(page).toContain(

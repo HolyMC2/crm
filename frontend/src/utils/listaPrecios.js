@@ -243,6 +243,39 @@ export function firstLines(sections = [], limit = Infinity) {
   return out
 }
 
+/** Puts changed lines into the list's sections in place: a known line is replaced
+ *  where it stands or moves to its new section, a new one goes last in its section
+ *  (a new section goes last), the `gone` names leave, and an emptied section
+ *  closes. Lines arrive in the order the list was read. */
+export function mergeLines(sections, lines = [], gone = []) {
+  const incoming = new Map((lines || []).map((line) => [line.name, line]))
+  const drop = new Set(gone || [])
+  for (const s of sections) {
+    for (let i = s.lines.length - 1; i >= 0; i -= 1) {
+      const name = s.lines[i].name
+      const line = incoming.get(name)
+      if (drop.has(name)) s.lines.splice(i, 1)
+      else if (line && (line.section || '') === s.name) {
+        s.lines.splice(i, 1, line)
+        incoming.delete(name)
+      } else if (line) s.lines.splice(i, 1)
+    }
+  }
+  for (const line of incoming.values()) {
+    if (drop.has(line.name)) continue
+    const name = line.section || ''
+    let target = sections.find((s) => s.name === name)
+    if (!target) {
+      target = { name, lines: [] }
+      sections.push(target)
+    }
+    target.lines.push(line)
+  }
+  for (let i = sections.length - 1; i >= 0; i -= 1)
+    if (!sections[i].lines.length) sections.splice(i, 1)
+  return sections
+}
+
 /** How many lines each filter chip would show, over every section. */
 export function filterCounts(sections = [], rows = {}, promos = []) {
   const active = (promos || []).filter((p) => p.active !== false)
