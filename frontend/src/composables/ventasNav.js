@@ -1,4 +1,4 @@
-import { computed, ref, watch } from 'vue'
+import { computed, markRaw, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { createResource } from 'frappe-ui'
 import { navItemAllowed, routeGroup } from '@/composables/navModel'
@@ -9,6 +9,8 @@ import {
   ventasSection,
 } from '@/composables/ventasSections'
 import { usersStore } from '@/stores/users'
+import { moduleLayout, openSectionsSheet } from '@/composables/muelleShell'
+import { arrangeSections } from '@/utils/shellLayout'
 import { userScopedKey } from '@/utils/storageKeys'
 import {
   addonAvailable,
@@ -95,9 +97,48 @@ export function useVentasNav() {
         !(item.desktopOnly && isNarrow.value),
     )
   watch(addonAvailable, (ok) => ok && badges.fetch(), { immediate: true })
-  const primary = computed(() => visible(ventasSection('daily')))
-  const more = computed(() => visible(ventasSection('more')))
+  // The daily lists and «Más» as the worker's layout arranges them (the
+  // owner's per puesto, or their own); «Configuración» stays as it ships.
+  const daily = computed(() => visible(ventasSection('daily')))
+  const lists = computed(() => [
+    ...daily.value,
+    ...visible(ventasSection('more')),
+  ])
+  const arranged = computed(() =>
+    arrangeSections({
+      items: lists.value,
+      top: daily.value.map((item) => item.key),
+      layout: moduleLayout('ventas'),
+    }),
+  )
+  const primary = computed(() => arranged.value.top)
+  const more = computed(() =>
+    arranged.value.rest.filter((item) => !arranged.value.hidden.has(item.key)),
+  )
   const settings = computed(() => visible(ventasSection('settings')))
+  // The part that holds `path` as arranged; Configuración as it ships.
+  function sectionOf(path) {
+    const group = routeGroup(path)
+    if (group && primary.value.some((item) => item.group === group))
+      return 'daily'
+    if (group && arranged.value.rest.some((item) => item.group === group))
+      return 'more'
+    return ventasSectionOf(path)
+  }
+  /** «Ordenar Ventas»: the daily lists and «Más», from the module's title. */
+  function arrange() {
+    openSectionsSheet({
+      module: 'ventas',
+      title: __('Ventas'),
+      items: lists.value.map((item) => ({
+        key: item.key,
+        label: __(item.label),
+        icon: item.icon && markRaw(item.icon),
+      })),
+      top: daily.value.map((item) => item.key),
+      parts: { top: __('Daily lists'), rest: __('Other lists') },
+    })
+  }
   function badgeFor(kind) {
     const data = badges.data || {}
     if (kind === 'unread') return data.unread_messages
@@ -123,15 +164,16 @@ export function useVentasNav() {
     },
     /** Open when chosen, and always while the current page lives in it. */
     isOpen(section, path) {
-      return Boolean(open.value[section]) || ventasSectionOf(path) === section
+      return Boolean(open.value[section]) || sectionOf(path) === section
     },
     /** Whether the section can close here (not while its page is shown). */
     canClose(section, path) {
-      return ventasSectionOf(path) !== section
+      return sectionOf(path) !== section
     },
     toggle(section, path) {
-      if (ventasSectionOf(path) === section) return
+      if (sectionOf(path) === section) return
       setOpen(section, !open.value[section])
     },
+    arrange,
   }
 }

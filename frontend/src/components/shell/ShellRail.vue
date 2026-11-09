@@ -98,7 +98,14 @@
         @click="showShell"
       >
         <span class="relative flex-none" aria-hidden="true">
-          <span :class="[module.icon, 'block size-[18px]']" />
+          <!-- The active icon's second tone: a soft disc of the accent behind
+               it. Depth only; the row's own fill already says «here». -->
+          <span
+            v-if="module.key === active"
+            :class="ACTIVE_TONE"
+            data-rail-tone
+          />
+          <span :class="[module.icon, 'relative block size-[18px]']" />
           <span
             v-if="!expanded && counts[module.key]"
             class="num absolute -right-2.5 -top-2 h-[18px] min-w-[18px] rounded-full px-1 text-center text-[11px] font-semibold leading-[18px] ring-2 ring-[var(--surface-base)]"
@@ -366,6 +373,8 @@ const ROW = Object.freeze({
   icon: 'size-10 justify-center',
   wide: 'h-8 w-full gap-3 px-2.5 text-sm',
 })
+const ACTIVE_TONE =
+  'absolute -inset-1 rounded-full bg-[var(--muelle-accent)] opacity-10'
 // «Buscar o ir a… (Ctrl+K) · Buscar registros (Ctrl+G)», ⌘ on Apple.
 const { label: searchHint, aria: searchKeys } = searchEntryHint()
 const paletteKey = keyLabel('mod+k')

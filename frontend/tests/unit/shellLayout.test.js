@@ -2,7 +2,12 @@
 // order, and the hidden ones. Frappe decides what exists; a layout arranges.
 import { describe, expect, it } from 'vitest'
 import { SHELL_MODULES } from '@/vendor/muelle-shell/contracts'
-import { arrangeShell, barRoom, layoutOf } from '@/utils/shellLayout'
+import {
+  arrangeSections,
+  arrangeShell,
+  barRoom,
+  layoutOf,
+} from '@/utils/shellLayout'
 
 const modules = (...keys) =>
   keys.map((key) => {
@@ -75,6 +80,22 @@ describe('arrangeShell', () => {
     expect(keys(arranged.hidden)).toEqual(['compras'])
   })
 
+  it('a hidden place keeps its spot in Más: Personalizar lists it where it was', () => {
+    const arranged = arrangeShell({
+      role: 'almacen',
+      modules: stock,
+      apps: [scan],
+      layout: {
+        dock: ['inventario', 'pendientes', 'scan'],
+        order: ['productos', 'compras', 'contactos'],
+        hidden: ['compras'],
+      },
+    })
+    expect(keys(arranged.more)).toEqual(['productos', 'contactos'])
+    expect(keys(arranged.hidden)).toEqual(['compras'])
+    expect(keys(arranged.rest)).toEqual(['productos', 'compras', 'contactos'])
+  })
+
   it('a hidden place never fills the bar, and a saved place I lost drops out', () => {
     const arranged = arrangeShell({
       role: 'almacen',
@@ -119,8 +140,70 @@ describe('layoutOf and barRoom', () => {
     ).toEqual({ dock: ['ventas'], order: ['contactos', 'scan'], hidden: [] })
   })
 
+  it('Más keeps hidden places in its order; the flags follow that order', () => {
+    expect(
+      layoutOf({
+        bar: ['hoy', 'ventas'],
+        more: ['contactos', 'compras', 'scan'],
+        hidden: ['scan', 'compras'],
+      }),
+    ).toEqual({
+      dock: ['ventas'],
+      order: ['contactos', 'compras', 'scan'],
+      hidden: ['compras', 'scan'],
+    })
+  })
+
   it('the bar holds three after Hoy, four without it', () => {
     expect(barRoom(modules('hoy', 'ventas'))).toBe(3)
     expect(barRoom(modules('ventas'))).toBe(4)
+  })
+})
+
+describe('arrangeSections', () => {
+  const items = ['deals', 'prospectos', 'inbox', 'leads', 'tasks', 'calls'].map(
+    (key) => ({ key }),
+  )
+  const top = ['deals', 'prospectos', 'inbox']
+
+  it('without a layout the module keeps the order it ships with', () => {
+    const arranged = arrangeSections({ items, top })
+    expect(keys(arranged.top)).toEqual(['deals', 'prospectos', 'inbox'])
+    expect(keys(arranged.rest)).toEqual(['leads', 'tasks', 'calls'])
+    expect([...arranged.hidden]).toEqual([])
+  })
+
+  it('a saved layout moves sections between the parts and hides in place', () => {
+    const arranged = arrangeSections({
+      items,
+      top,
+      layout: {
+        dock: ['inbox', 'tasks'],
+        order: ['calls', 'deals', 'leads'],
+        hidden: ['deals', 'inbox'],
+      },
+    })
+    // Prospectos is not named: it keeps its suggested part, after the saved ones.
+    expect(keys(arranged.top)).toEqual(['inbox', 'tasks', 'prospectos'])
+    expect(keys(arranged.rest)).toEqual(['calls', 'deals', 'leads'])
+    // A leading section is never hidden.
+    expect([...arranged.hidden]).toEqual(['deals'])
+  })
+
+  it('a one-list module (Inmobiliaria homes) orders and hides only', () => {
+    const homes = ['inmobiliaria', 'corretaje', 'cobranza'].map((key) => ({
+      key,
+    }))
+    const arranged = arrangeSections({
+      items: homes,
+      layout: { order: ['cobranza', 'gone'], hidden: ['corretaje', 'gone'] },
+    })
+    expect(arranged.top).toEqual([])
+    expect(keys(arranged.rest)).toEqual([
+      'cobranza',
+      'inmobiliaria',
+      'corretaje',
+    ])
+    expect([...arranged.hidden]).toEqual(['corretaje'])
   })
 })

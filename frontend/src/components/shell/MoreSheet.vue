@@ -59,12 +59,24 @@
            Correo (Shell D12) and Tableros are for everyone: Frappe shows each
            worker only the mail and the numbers they may read. -->
       <section aria-labelledby="more-modules">
-        <h2
-          id="more-modules"
-          class="pb-2 text-sm font-semibold text-ink-gray-7"
-        >
-          {{ __('Modules') }}
-        </h2>
+        <!-- «Personalizar» sits with the places it arranges. -->
+        <div class="flex items-center gap-2 pb-1">
+          <h2
+            id="more-modules"
+            class="flex-1 text-sm font-semibold text-ink-gray-7"
+          >
+            {{ __('Modules') }}
+          </h2>
+          <button
+            type="button"
+            class="press -mr-1 flex min-h-11 items-center gap-1.5 rounded-6 px-2 text-sm text-ink-gray-7 hover:bg-surface-gray-2"
+            data-testid="more-customize"
+            @click="customize('mine')"
+          >
+            <span class="lucide-layout-list size-4" aria-hidden="true" />
+            {{ __('Customize') }}
+          </button>
+        </div>
         <div class="grid grid-cols-3 gap-2">
           <RouterLink
             v-for="module in extraModules"
@@ -164,182 +176,200 @@
       <!-- Ventas on a phone: the daily lists. The rest sits under Configuración. -->
       <VentasSections v-if="ventas" part="daily" @navigate="close" />
 
-      <section aria-labelledby="more-settings" class="space-y-1">
-        <h2
-          id="more-settings"
-          class="pb-1 text-sm font-semibold text-ink-gray-7"
-        >
-          {{ __('Settings') }}
-        </h2>
-        <VentasSections v-if="ventas" part="rest" @navigate="close" />
-
+      <!-- The rarely used block folds, so Más opens on the places; it
+           remembers being open. «Salir» stays outside the fold. -->
+      <section class="space-y-1">
         <button
           type="button"
-          :class="ROW"
-          data-testid="more-customize"
-          @click="customize('mine')"
+          :class="[ROW, 'font-semibold text-ink-gray-7']"
+          :aria-expanded="showSettings"
+          aria-controls="more-settings"
+          data-testid="more-settings"
+          @click="toggleSettings"
         >
-          <span
-            class="lucide-layout-list size-4 text-ink-gray-6"
-            aria-hidden="true"
-          />
-          {{ __('Customize') }}
-        </button>
-        <!-- The owner sets how each puesto's bar and Más start. -->
-        <button
-          v-if="user.arranges_team"
-          type="button"
-          :class="ROW"
-          data-testid="more-team-layout"
-          @click="customize('team')"
-        >
-          <span
-            class="lucide-users size-4 text-ink-gray-6"
-            aria-hidden="true"
-          />
-          {{ __('Bar by puesto') }}
-        </button>
-
-        <div class="flex min-h-11 items-center gap-2.5 px-1 py-1">
-          <span
-            class="lucide-palette size-4 text-ink-gray-6"
-            aria-hidden="true"
-          />
-          <span class="flex-1 text-sm">{{ __('Theme') }}</span>
-          <div class="flex gap-1" role="group" :aria-label="__('Theme')">
-            <button
-              v-for="choice in THEME_CHOICES"
-              :key="choice.value"
-              type="button"
-              class="flex size-11 items-center justify-center rounded-6"
-              :class="theme === choice.value ? 'bg-surface-gray-3' : ''"
-              :aria-label="__(choice.label)"
-              :aria-pressed="theme === choice.value"
-              @click="setTheme(choice.value)"
-            >
-              <span :class="[choice.icon, 'size-4']" aria-hidden="true" />
-            </button>
-          </div>
-        </div>
-
-        <!-- Where Muelle opens (was Hoy's footer): a setting, so it lives here. -->
-        <div
-          class="flex min-h-11 flex-wrap items-center gap-x-2.5 gap-y-1 px-1 py-1"
-        >
-          <span
-            class="lucide-door-open size-4 text-ink-gray-6"
-            aria-hidden="true"
-          />
-          <label for="more-landing" class="flex-1 text-sm">{{
-            __('Open Muelle on')
-          }}</label>
-          <select
-            id="more-landing"
-            class="h-11 w-full basis-full rounded-6 border-0 bg-surface-gray-2 pl-3 pr-8 text-sm"
-            :value="landing"
-            data-testid="more-landing"
-            @change="chooseLanding($event.target.value)"
-          >
-            <option
-              v-for="option in landingChoices"
-              :key="option.value"
-              :value="option.value"
-            >
-              {{ option.label }}
-            </option>
-          </select>
-        </div>
-
-        <button
-          v-if="helpAvailable"
-          type="button"
-          :class="ROW"
-          data-testid="more-help"
-          @click="openHelp"
-        >
-          <span
-            class="lucide-circle-help size-4 text-ink-gray-6"
-            aria-hidden="true"
-          />
-          {{ __('Help') }}
-        </button>
-        <button v-if="ventas" type="button" :class="ROW" @click="openSettings">
           <span
             class="lucide-settings size-4 text-ink-gray-6"
             aria-hidden="true"
           />
-          {{ __('Ventas settings') }}
+          <span class="flex-1">{{ __('Settings') }}</span>
+          <span
+            class="lucide-chevron-down size-4 text-ink-gray-6 transition-transform motion-reduce:transition-none"
+            :class="showSettings ? 'rotate-180' : ''"
+            aria-hidden="true"
+          />
         </button>
-        <!-- Shell D12: the owner's print formats; scripts only at a desk. -->
-        <RouterLink
-          v-if="user.is_admin"
-          to="/impresion"
-          :class="ROW"
-          data-testid="more-impresion"
-          @click="close"
-        >
-          <span
-            class="lucide-file-text size-4 text-ink-gray-6"
-            aria-hidden="true"
-          />
-          Formatos de impresión
-        </RouterLink>
-        <RouterLink
-          v-if="user.is_admin && isWide"
-          to="/scripts"
-          :class="ROW"
-          data-testid="more-scripts"
-          @click="close"
-        >
-          <span class="lucide-code size-4 text-ink-gray-6" aria-hidden="true" />
-          Scripts
-        </RouterLink>
-        <!-- Shell Wave D (DD8): team recipes on business events, for managers. -->
-        <RouterLink
-          v-if="user.is_admin || user.nav_role === 'dueno'"
-          to="/disparadores"
-          :class="ROW"
-          data-testid="more-disparadores"
-          @click="close"
-        >
-          <span class="lucide-zap size-4 text-ink-gray-6" aria-hidden="true" />
-          Disparadores
-        </RouterLink>
-        <!-- Shell Wave D (DD17): the assistant's tools, flags edited by the owner. -->
-        <RouterLink
-          v-if="user.is_admin || user.nav_role === 'dueno'"
-          to="/asistente/herramientas"
-          :class="ROW"
-          data-testid="more-herramientas"
-          @click="close"
-        >
-          <span
-            class="lucide-sliders-horizontal size-4 text-ink-gray-6"
-            aria-hidden="true"
-          />
-          Herramientas del asistente
-        </RouterLink>
-        <button
-          v-if="installAvailable"
-          type="button"
-          :class="ROW"
-          @click="installApp"
-        >
-          <span
-            class="lucide-download size-4 text-ink-gray-6"
-            aria-hidden="true"
-          />
-          {{ __('Install app') }}
-        </button>
-        <!-- SPEC §6.3: Desk opens only from a wide screen; a phone keeps the
+        <ExpandTransition>
+          <div v-if="showSettings" id="more-settings" class="space-y-1">
+            <VentasSections v-if="ventas" part="rest" @navigate="close" />
+
+            <!-- The owner sets how each puesto's bar and Más start. -->
+            <button
+              v-if="user.arranges_team"
+              type="button"
+              :class="ROW"
+              data-testid="more-team-layout"
+              @click="customize('team')"
+            >
+              <span
+                class="lucide-users size-4 text-ink-gray-6"
+                aria-hidden="true"
+              />
+              {{ __('Bar by puesto') }}
+            </button>
+
+            <div class="flex min-h-11 items-center gap-2.5 px-1 py-1">
+              <span
+                class="lucide-palette size-4 text-ink-gray-6"
+                aria-hidden="true"
+              />
+              <span class="flex-1 text-sm">{{ __('Theme') }}</span>
+              <div class="flex gap-1" role="group" :aria-label="__('Theme')">
+                <button
+                  v-for="choice in THEME_CHOICES"
+                  :key="choice.value"
+                  type="button"
+                  class="flex size-11 items-center justify-center rounded-6"
+                  :class="theme === choice.value ? 'bg-surface-gray-3' : ''"
+                  :aria-label="__(choice.label)"
+                  :aria-pressed="theme === choice.value"
+                  @click="setTheme(choice.value)"
+                >
+                  <span :class="[choice.icon, 'size-4']" aria-hidden="true" />
+                </button>
+              </div>
+            </div>
+
+            <!-- Where Muelle opens (was Hoy's footer): a setting, so it lives here. -->
+            <div
+              class="flex min-h-11 flex-wrap items-center gap-x-2.5 gap-y-1 px-1 py-1"
+            >
+              <span
+                class="lucide-door-open size-4 text-ink-gray-6"
+                aria-hidden="true"
+              />
+              <label for="more-landing" class="flex-1 text-sm">{{
+                __('Open Muelle on')
+              }}</label>
+              <select
+                id="more-landing"
+                class="h-11 w-full basis-full rounded-6 border-0 bg-surface-gray-2 pl-3 pr-8 text-sm"
+                :value="landing"
+                data-testid="more-landing"
+                @change="chooseLanding($event.target.value)"
+              >
+                <option
+                  v-for="option in landingChoices"
+                  :key="option.value"
+                  :value="option.value"
+                >
+                  {{ option.label }}
+                </option>
+              </select>
+            </div>
+
+            <button
+              v-if="helpAvailable"
+              type="button"
+              :class="ROW"
+              data-testid="more-help"
+              @click="openHelp"
+            >
+              <span
+                class="lucide-circle-help size-4 text-ink-gray-6"
+                aria-hidden="true"
+              />
+              {{ __('Help') }}
+            </button>
+            <button
+              v-if="ventas"
+              type="button"
+              :class="ROW"
+              @click="openSettings"
+            >
+              <span
+                class="lucide-settings size-4 text-ink-gray-6"
+                aria-hidden="true"
+              />
+              {{ __('Ventas settings') }}
+            </button>
+            <!-- Shell D12: the owner's print formats; scripts only at a desk. -->
+            <RouterLink
+              v-if="user.is_admin"
+              to="/impresion"
+              :class="ROW"
+              data-testid="more-impresion"
+              @click="close"
+            >
+              <span
+                class="lucide-file-text size-4 text-ink-gray-6"
+                aria-hidden="true"
+              />
+              Formatos de impresión
+            </RouterLink>
+            <RouterLink
+              v-if="user.is_admin && isWide"
+              to="/scripts"
+              :class="ROW"
+              data-testid="more-scripts"
+              @click="close"
+            >
+              <span
+                class="lucide-code size-4 text-ink-gray-6"
+                aria-hidden="true"
+              />
+              Scripts
+            </RouterLink>
+            <!-- Shell Wave D (DD8): team recipes on business events, for managers. -->
+            <RouterLink
+              v-if="user.is_admin || user.nav_role === 'dueno'"
+              to="/disparadores"
+              :class="ROW"
+              data-testid="more-disparadores"
+              @click="close"
+            >
+              <span
+                class="lucide-zap size-4 text-ink-gray-6"
+                aria-hidden="true"
+              />
+              Disparadores
+            </RouterLink>
+            <!-- Shell Wave D (DD17): the assistant's tools, flags edited by the owner. -->
+            <RouterLink
+              v-if="user.is_admin || user.nav_role === 'dueno'"
+              to="/asistente/herramientas"
+              :class="ROW"
+              data-testid="more-herramientas"
+              @click="close"
+            >
+              <span
+                class="lucide-sliders-horizontal size-4 text-ink-gray-6"
+                aria-hidden="true"
+              />
+              Herramientas del asistente
+            </RouterLink>
+            <button
+              v-if="installAvailable"
+              type="button"
+              :class="ROW"
+              @click="installApp"
+            >
+              <span
+                class="lucide-download size-4 text-ink-gray-6"
+                aria-hidden="true"
+              />
+              {{ __('Install app') }}
+            </button>
+            <!-- SPEC §6.3: Desk opens only from a wide screen; a phone keeps the
              shell (its settings sit under Configuración). -->
-        <a v-if="user.is_admin && isWide" href="/desk" :class="ROW">
-          <span
-            class="lucide-layout-grid size-4 text-ink-gray-6"
-            aria-hidden="true"
-          />
-          {{ __('Administration') }}
-        </a>
+            <a v-if="user.is_admin && isWide" href="/desk" :class="ROW">
+              <span
+                class="lucide-layout-grid size-4 text-ink-gray-6"
+                aria-hidden="true"
+              />
+              {{ __('Administration') }}
+            </a>
+          </div>
+        </ExpandTransition>
         <button
           type="button"
           :class="[ROW, 'text-ink-red-8']"
@@ -402,6 +432,24 @@ const VentasSections = defineAsyncComponent(
 const session = sessionStore()
 const { theme, setTheme } = useShellTheme()
 const showHidden = ref(false)
+// «Configuración» folded or open, per browser.
+const SETTINGS_OPEN = 'muelle.more.settings'
+function readSettingsOpen() {
+  try {
+    return localStorage.getItem(SETTINGS_OPEN) === '1'
+  } catch {
+    return false
+  }
+}
+const showSettings = ref(readSettingsOpen())
+function toggleSettings() {
+  showSettings.value = !showSettings.value
+  try {
+    localStorage.setItem(SETTINGS_OPEN, showSettings.value ? '1' : '0')
+  } catch {
+    // private mode: the choice lasts for this sheet
+  }
+}
 const RouterLink = resolveComponent('RouterLink')
 const user = computed(() => props.boot?.user || {})
 const ventas = computed(() => moduleEnabled(props.boot, 'ventas'))

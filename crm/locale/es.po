@@ -37837,3 +37837,131 @@ msgstr "Conservar"
 msgctxt "Surtido"
 msgid "Remove"
 msgstr "Quitar"
+
+#: frontend/src/components/shell/LayoutSheet.vue
+msgid "Nothing else: everything is on the bar."
+msgstr "Nada más: todo está en la barra."
+
+#: frontend/src/components/shell/LayoutSheet.vue
+msgid "Every puesto starts with the suggested bar again."
+msgstr "Todos los puestos vuelven a empezar con la barra sugerida."
+
+#: frontend/src/components/shell/SectionsSheet.vue
+msgid "Arrange {0}"
+msgstr "Acomodar {0}"
+
+#: frontend/src/components/shell/SectionsSheet.vue
+msgid "Whose arrangement"
+msgstr "Para quién se acomoda"
+
+#: frontend/src/components/shell/SectionsSheet.vue
+msgid "suggested order"
+msgstr "orden sugerido"
+
+#: frontend/src/components/shell/SectionsSheet.vue
+msgid "Empty: pin a section from below to put it first."
+msgstr "Vacío: fija una sección de abajo para ponerla primero."
+
+#: frontend/src/components/shell/SectionsSheet.vue
+msgid "Hiding does not take access away: a hidden section still opens from the search."
+msgstr "Ocultar no quita el acceso: una sección oculta sigue abriendo desde la búsqueda."
+
+#: frontend/src/components/shell/SectionsSheet.vue
+msgid "Back to my puesto's order"
+msgstr "Volver al orden de mi puesto"
+
+#: frontend/src/components/shell/SectionsSheet.vue
+msgid "By puesto"
+msgstr "Por puesto"
+
+#: frontend/src/components/shell/SectionsSheet.vue
+msgid "How each puesto finds {0}. People can still arrange their own."
+msgstr "Cómo encuentra cada puesto {0}. Cada quien puede acomodar lo suyo."
+
+#: frontend/src/components/shell/SectionsSheet.vue
+msgid "Put first what you open most."
+msgstr "Pon primero lo que más abres."
+
+#: frontend/src/components/shell/SectionsSheet.vue
+msgid "Move {0} to {1}"
+msgstr "Mover {0} a {1}"
+
+#: frontend/src/components/shell/SectionsSheet.vue
+msgid "Put first"
+msgstr "Poner primero"
+
+#: frontend/src/components/shell/SectionsSheet.vue
+msgid "Saved for {0}. Anyone with an order of their own keeps it."
+msgstr "Guardado para {0}. Quien tiene su propio orden lo conserva."
+
+#: frontend/src/components/shell/SectionsSheet.vue
+msgid "Saved. {0} changed."
+msgstr "Guardado. {0} cambió."
+
+#: frontend/src/components/shell/SectionsSheet.vue
+msgid "Back to your puesto's order."
+msgstr "De vuelta al orden de tu puesto."
+
+#: frontend/src/components/shell/SectionsSheet.vue
+msgid "{0} starts with the suggested order again."
+msgstr "{0} vuelve a empezar con el orden sugerido."
+
+#: frontend/src/components/shell/SectionsSheet.vue
+msgid "Every puesto starts with the suggested order again."
+msgstr "Todos los puestos vuelven a empezar con el orden sugerido."
+
+#: frontend/src/components/shell/TeamResets.vue
+msgid "Back to the suggested one"
+msgstr "Volver a lo sugerido"
+
+#: frontend/src/components/shell/TeamResets.vue
+msgid "Only {0}."
+msgstr "Solo {0}."
+
+#: frontend/src/components/shell/TeamResets.vue
+msgid "Yes, reset every puesto"
+msgstr "Sí, restablecer todos los puestos"
+
+#: frontend/src/components/shell/TeamResets.vue
+msgid "Reset every puesto"
+msgstr "Restablecer todos los puestos"
+
+#: frontend/src/components/shell/TeamResets.vue
+msgid "Nobody follows these puestos now: whoever arranged their own keeps it."
+msgstr "Nadie sigue estos puestos ahora: quien acomodó lo suyo lo conserva."
+
+#: frontend/src/components/shell/TeamResets.vue
+msgid "Changes what one person sees. Whoever arranged their own keeps it."
+msgstr "Cambia lo que ve una persona. Quien acomodó lo suyo lo conserva."
+
+#: frontend/src/components/shell/TeamResets.vue
+msgid "Changes what {0} people see. Whoever arranged their own keeps it."
+msgstr "Cambia lo que ven {0} personas. Quien acomodó lo suyo lo conserva."
+
+#: frontend/src/components/shell/VentasSections.vue
+msgid "Arrange"
+msgstr "Acomodar"
+
+#: frontend/src/composables/teamLayouts.js
+msgid "We could not read the arrangements by puesto. Retry in a moment."
+msgstr "No pudimos leer cómo está acomodado cada puesto. Reintenta en un momento."
+
+#: frontend/src/composables/ventasNav.js
+msgid "Daily lists"
+msgstr "Listas diarias"
+
+#: frontend/src/pages/Inmobiliaria.vue
+msgid "One home is hidden: show it again from Inmobiliaria's title."
+msgstr "Un inicio está oculto: muéstralo de nuevo desde el título de Inmobiliaria."
+
+#: frontend/src/pages/Inmobiliaria.vue
+msgid "{0} homes are hidden: show them again from Inmobiliaria's title."
+msgstr "{0} inicios están ocultos: muéstralos de nuevo desde el título de Inmobiliaria."
+
+#: crm/api/shell.py
+msgid "This module has no sections to arrange."
+msgstr "Este módulo no tiene secciones que acomodar."
+
+#: frontend/src/pages/Inmobiliaria.vue
+msgid "Hiding does not take access away: a hidden home shows again from here."
+msgstr "Ocultar no quita el acceso: un inicio oculto se vuelve a mostrar desde aquí."

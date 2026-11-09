@@ -31,6 +31,14 @@ MOBILE_SLOTS_DEFAULT = "muelle_mobile_slots"
 # layout the owner set (global default, by class). Layouts arrange; they never grant.
 LAYOUT_DEFAULT = "muelle_shell_layout"
 TEAM_LAYOUTS_DEFAULT = "muelle_shell_layouts"
+# A module's own sections (Ventas' lists, Inmobiliaria's homes) arrange the same way,
+# one layout per module: the worker's own ({module: layout}) and the owner's per class
+# ({module: {class: layout}}). The module names its keys; the server only keeps them.
+MODULE_LAYOUTS_DEFAULT = "muelle_module_layouts"
+TEAM_MODULE_LAYOUTS_DEFAULT = "muelle_team_module_layouts"
+ARRANGED_MODULES = ("ventas", "inmobiliaria")
+SECTION_KEY_MAX = 64
+SECTIONS_MAX = 64
 # Desktop rail width: «expanded» shows each app's name, «collapsed» only icons.
 RAIL_DEFAULT = "muelle_rail"
 RAIL_STATES = ("expanded", "collapsed")
@@ -63,7 +71,6 @@ SIBLING_KEYS = ("scan", "pos", "taller", "clinica", "mercado")
 # What a layout arranges: every module but Hoy (always first) and Avisos (the bell),
 # then the sibling apps.
 LAYOUT_KEYS = tuple(key for key in MODULE_KEYS if key not in ("hoy", "avisos")) + SIBLING_KEYS
-LAYOUT_PARTS = ("dock", "order", "hidden")
 # Hoy plus three, or four places when the worker has no Hoy (contracts MOBILE_SLOTS).
 DOCK_MAX = 4
 # Bar classes (contracts NavRole); «fallback» is a worker no class matches.
@@ -842,8 +849,16 @@ def _palette():
 	}
 
 
+def _stored(key: str, parent: str | None = None):
+	"""An arrangement as saved: read from the table, not the defaults cache. That cache is
+	shared across processes and may hold another process's older copy right after a save."""
+	return frappe.db.get_value(
+		"DefaultValue", {"parent": parent or frappe.session.user, "defkey": key}, "defvalue"
+	)
+
+
 def _saved_slots():
-	raw = frappe.defaults.get_user_default(MOBILE_SLOTS_DEFAULT)
+	raw = _stored(MOBILE_SLOTS_DEFAULT)
 	try:
 		slots = json.loads(raw) if raw else None
 	except ValueError:
@@ -851,31 +866,65 @@ def _saved_slots():
 	return [key for key in slots if key in MODULE_KEYS] if isinstance(slots, list) else None
 
 
-def _clean_layout(raw) -> dict | None:
-	"""A layout as {dock, order, hidden}: known places only, each in one part, at most
-	DOCK_MAX docked. None when it is not a layout at all."""
+def _json_dict(raw) -> dict | None:
 	if isinstance(raw, str):
 		try:
 			raw = json.loads(raw) if raw else None
 		except ValueError:
 			return None
-	if not isinstance(raw, dict):
+	return raw if isinstance(raw, dict) else None
+
+
+def _bar_key(key) -> bool:
+	return isinstance(key, str) and key in LAYOUT_KEYS
+
+
+def _section_key(key) -> bool:
+	return isinstance(key, str) and 0 < len(key) <= SECTION_KEY_MAX
+
+
+def _layout_keys(raw: dict, part: str, known) -> list:
+	keys = raw.get(part)
+	out = []
+	for key in keys if isinstance(keys, list) else []:
+		if known(key) and key not in out:
+			out.append(key)
+	return out[:SECTIONS_MAX]
+
+
+def _clean_layout(raw, module: str | None = None) -> dict | None:
+	"""A layout as {dock, order, hidden}: the bar's known places (or, for a module, its
+	section keys), each once per part, at most DOCK_MAX docked on the bar. `order` is Más
+	(or the module's other sections) in the worker's order, hidden ones included: hidden is
+	a flag, so a place shown again goes back where it was. A docked place is never hidden.
+	None when it is not a layout at all."""
+	raw = _json_dict(raw)
+	if raw is None:
 		return None
-	seen = set()
-	clean = {}
-	for part in LAYOUT_PARTS:
-		keys = raw.get(part) or []
-		clean[part] = []
-		for key in keys if isinstance(keys, list) else []:
-			if key in LAYOUT_KEYS and key not in seen:
-				seen.add(key)
-				clean[part].append(key)
-	clean["dock"] = clean["dock"][:DOCK_MAX]
-	return clean
+	known = _section_key if module else _bar_key
+	dock = _layout_keys(raw, "dock", known)
+	if not module:
+		dock = dock[:DOCK_MAX]
+	return {
+		"dock": dock,
+		"order": [key for key in _layout_keys(raw, "order", known) if key not in dock],
+		"hidden": [key for key in _layout_keys(raw, "hidden", known) if key not in dock],
+	}
 
 
-def _personal_layout() -> dict | None:
-	layout = _clean_layout(frappe.defaults.get_user_default(LAYOUT_DEFAULT))
+def _module_param(module: str | None) -> str | None:
+	"""None arranges the bar and Más; a module name arranges that module's sections."""
+	if not module:
+		return None
+	if module not in ARRANGED_MODULES:
+		frappe.throw(_("This module has no sections to arrange."))
+	return module
+
+
+def _personal_layout(module: str | None = None) -> dict | None:
+	if module:
+		return _clean_layout((_json_dict(_stored(MODULE_LAYOUTS_DEFAULT)) or {}).get(module), module)
+	layout = _clean_layout(_stored(LAYOUT_DEFAULT))
 	if layout:
 		return layout
 	slots = _saved_slots()
@@ -884,28 +933,118 @@ def _personal_layout() -> dict | None:
 	return None
 
 
-def _team_layouts() -> dict:
-	"""The owner's layout per bar class; a class without one uses the contracts defaults."""
-	raw = frappe.defaults.get_global_default(TEAM_LAYOUTS_DEFAULT)
-	try:
-		data = json.loads(raw) if raw else {}
-	except ValueError:
-		data = {}
-	if not isinstance(data, dict):
+def _set_personal_layout(module: str | None, layout: dict | None):
+	if not module:
+		if layout:
+			frappe.defaults.set_user_default(LAYOUT_DEFAULT, json.dumps(layout))
+		else:
+			frappe.defaults.clear_user_default(LAYOUT_DEFAULT)
+		frappe.defaults.clear_user_default(MOBILE_SLOTS_DEFAULT)
+		return
+	mine = _json_dict(_stored(MODULE_LAYOUTS_DEFAULT)) or {}
+	if layout:
+		mine[module] = layout
+	else:
+		mine.pop(module, None)
+	if mine:
+		frappe.defaults.set_user_default(MODULE_LAYOUTS_DEFAULT, json.dumps(mine))
+	else:
+		frappe.defaults.clear_user_default(MODULE_LAYOUTS_DEFAULT)
+
+
+def _team_layouts(module: str | None = None) -> dict:
+	"""The owner's layout per bar class; a class without one uses the suggested one (the
+	contracts defaults for the bar, the module's own order for its sections)."""
+	data = _json_dict(_stored(TEAM_MODULE_LAYOUTS_DEFAULT if module else TEAM_LAYOUTS_DEFAULT, "__default"))
+	if data and module:
+		data = _json_dict(data.get(module))
+	if not data:
 		return {}
-	return {klass: layout for klass in NAV_CLASSES if (layout := _clean_layout(data.get(klass)))}
+	return {klass: layout for klass in NAV_CLASSES if (layout := _clean_layout(data.get(klass), module))}
 
 
-def _layout(klass: str | None) -> dict:
+def _set_team_layouts(module: str | None, layouts: dict):
+	if not module:
+		frappe.defaults.set_global_default(TEAM_LAYOUTS_DEFAULT, json.dumps(layouts))
+		return
+	every = _json_dict(_stored(TEAM_MODULE_LAYOUTS_DEFAULT, "__default")) or {}
+	if layouts:
+		every[module] = layouts
+	else:
+		every.pop(module, None)
+	frappe.defaults.set_global_default(TEAM_MODULE_LAYOUTS_DEFAULT, json.dumps(every))
+
+
+def _layout(klass: str | None, module: str | None = None) -> dict:
 	"""Where this worker's places sit, and whose choice that is: their own, their class's
-	(the owner's), or the contracts defaults (empty parts)."""
-	personal = _personal_layout()
+	(the owner's), or the suggested one (empty parts)."""
+	personal = _personal_layout(module)
 	if personal:
 		return {**personal, "source": "personal"}
-	team = _team_layouts().get(klass or "fallback")
+	team = _team_layouts(module).get(klass or "fallback")
 	if team:
 		return {**team, "source": "team"}
 	return {"dock": [], "order": [], "hidden": [], "source": "default"}
+
+
+def _module_layouts(klass: str | None) -> dict:
+	"""The modules whose sections someone arranged for this worker (their own or their
+	class's); a module left out keeps its suggested order."""
+	return {
+		module: layout
+		for module in ARRANGED_MODULES
+		if (layout := _layout(klass, module))["source"] != "default"
+	}
+
+
+def _staff_classes() -> dict:
+	"""Each active staff user's bar class from their puesto and roles. A module provider's
+	hint (Inmobiliaria's own workers) needs that worker's session, so here they count under
+	their roles' class."""
+	users = frappe.get_all(
+		"User",
+		filters={"enabled": 1, "user_type": "System User", "name": ("not in", ("Administrator", "Guest"))},
+		pluck="name",
+	)
+	if not users:
+		return {}
+	roles: dict[str, set] = {}
+	for row in frappe.get_all(
+		"Has Role", filters={"parenttype": "User", "parent": ("in", users)}, fields=["parent", "role"]
+	):
+		roles.setdefault(row.parent, set()).add(row.role)
+	puestos = {}
+	if frappe.get_meta("User").has_field("muelle_puesto"):
+		puestos = dict(
+			frappe.get_all(
+				"User", filters={"name": ("in", users)}, fields=["name", "muelle_puesto"], as_list=True
+			)
+		)
+	return {user: nav_role(puestos.get(user), roles.get(user, ())) or "fallback" for user in users}
+
+
+def _arranged_their_own(users, module: str | None) -> set:
+	"""Who among `users` keeps a layout of their own for the bar (or for `module`)."""
+	keys = (MODULE_LAYOUTS_DEFAULT,) if module else (LAYOUT_DEFAULT, MOBILE_SLOTS_DEFAULT)
+	rows = frappe.get_all(
+		"DefaultValue",
+		filters={"defkey": ("in", keys), "parent": ("in", list(users))},
+		fields=["parent", "defvalue"],
+	)
+	if not module:
+		return {row.parent for row in rows if row.defvalue}
+	return {row.parent for row in rows if module in (_json_dict(row.defvalue) or {})}
+
+
+def _following(module: str | None = None) -> dict:
+	"""How many people follow each class's layout: staff of that class without their own."""
+	classes = _staff_classes()
+	own = _arranged_their_own(classes, module) if classes else set()
+	counts: dict[str, int] = {}
+	for user, klass in classes.items():
+		if user not in own:
+			counts[klass] = counts.get(klass, 0) + 1
+	return counts
 
 
 def _may_arrange_team() -> bool:
@@ -966,6 +1105,9 @@ def boot():
 		# the contracts defaults); mobile_slots is its dock for clients older than 0.17.0.
 		"layout": layout,
 		"mobile_slots": layout["dock"] or None,
+		# The modules whose own sections someone arranged for me ({module: layout});
+		# the rest keep the order they ship with.
+		"module_layouts": _module_layouts(klass),
 		"rail": _saved_rail(),
 		# Where Muelle opens for me (Más > Configuración); the client shows
 		# «Automático» when the saved module is no longer one of mine.
@@ -1003,25 +1145,26 @@ def save_mobile_slots(slots: str | list):
 
 
 @frappe.whitelist(methods=["POST"])
-def save_layout(layout: str | dict):
-	"""The worker's own bar, Más order and hidden places (Más > Personalizar)."""
+def save_layout(layout: str | dict, module: str | None = None):
+	"""The worker's own bar, Más order and hidden places (Más > Personalizar), or with
+	`module` that module's own sections."""
 	_signed_in()
-	clean = _clean_layout(layout)
+	module = _module_param(module)
+	clean = _clean_layout(layout, module)
 	if clean is None:
 		frappe.throw(_("We could not read that arrangement. Open Customize again and retry."))
-	frappe.defaults.set_user_default(LAYOUT_DEFAULT, json.dumps(clean))
-	frappe.defaults.clear_user_default(MOBILE_SLOTS_DEFAULT)
+	_set_personal_layout(module, clean)
 	return {**clean, "source": "personal"}
 
 
 @frappe.whitelist(methods=["POST"])
-def reset_layout(nav_class: str | None = None):
+def reset_layout(nav_class: str | None = None, module: str | None = None):
 	"""Drop the worker's own layout: back to their puesto's (the client names its boot class;
 	a layout only arranges, so trusting it grants nothing)."""
 	_signed_in()
-	frappe.defaults.clear_user_default(LAYOUT_DEFAULT)
-	frappe.defaults.clear_user_default(MOBILE_SLOTS_DEFAULT)
-	return _layout(nav_class if nav_class in NAV_CLASSES else None)
+	module = _module_param(module)
+	_set_personal_layout(module, None)
+	return _layout(nav_class if nav_class in NAV_CLASSES else None, module)
 
 
 def _require_team():
@@ -1035,27 +1178,45 @@ def _require_team():
 		)
 
 
+def _team_answer(module: str | None, layouts: dict) -> dict:
+	# `following`: per class, the people whose bar (or module) a change there reaches.
+	return {"layouts": layouts, "following": _following(module)}
+
+
 @frappe.whitelist()
-def team_layouts():
-	"""The owner's layout per bar class (Más > Barra por puesto)."""
+def team_layouts(module: str | None = None):
+	"""The owner's layout per bar class (Más > Barra por puesto), or per class for one
+	module's sections, with how many people follow each."""
 	_require_team()
-	return {"layouts": _team_layouts()}
+	module = _module_param(module)
+	return _team_answer(module, _team_layouts(module))
 
 
 @frappe.whitelist(methods=["POST"])
-def save_team_layout(nav_class: str, layout: str | dict | None = None):
+def save_team_layout(nav_class: str, layout: str | dict | None = None, module: str | None = None):
 	"""Set (or with no layout, drop) one class's layout. Workers who arranged their own keep it."""
 	_require_team()
+	module = _module_param(module)
 	if nav_class not in NAV_CLASSES:
 		frappe.throw(_("Choose a puesto to arrange."))
-	layouts = _team_layouts()
-	clean = _clean_layout(layout) if layout else None
+	layouts = _team_layouts(module)
+	clean = _clean_layout(layout, module) if layout else None
 	if clean and any(clean.values()):
 		layouts[nav_class] = clean
 	else:
 		layouts.pop(nav_class, None)
-	frappe.defaults.set_global_default(TEAM_LAYOUTS_DEFAULT, json.dumps(layouts))
-	return {"layouts": layouts}
+	_set_team_layouts(module, layouts)
+	return _team_answer(module, layouts)
+
+
+@frappe.whitelist(methods=["POST"])
+def reset_team_layouts(module: str | None = None):
+	"""Every class back to the suggested layout (the bar, or one module's sections). Workers
+	who arranged their own keep it."""
+	_require_team()
+	module = _module_param(module)
+	_set_team_layouts(module, {})
+	return _team_answer(module, {})
 
 
 @frappe.whitelist(methods=["POST"])

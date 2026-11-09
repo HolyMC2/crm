@@ -1,11 +1,21 @@
 <template>
   <section>
-    <h2
-      v-if="part === 'daily'"
-      class="pb-2 text-sm font-semibold text-ink-gray-7"
-    >
-      {{ __('Ventas') }}
-    </h2>
+    <!-- The module's title row: «Ordenar» arranges its lists. -->
+    <div v-if="part === 'daily'" class="flex items-center gap-2 pb-1">
+      <h2 class="flex-1 text-sm font-semibold text-ink-gray-7">
+        {{ __('Ventas') }}
+      </h2>
+      <button
+        type="button"
+        class="press -mr-1 flex min-h-11 items-center gap-1.5 rounded-6 px-2 text-sm text-ink-gray-7 hover:bg-surface-gray-2"
+        :aria-label="__('Arrange {0}', [__('Ventas')])"
+        data-testid="ventas-arrange"
+        @click="arrangeLists"
+      >
+        <span class="lucide-arrow-up-down size-4" aria-hidden="true" />
+        {{ __('Arrange') }}
+      </button>
+    </div>
     <template v-for="section in sections" :key="section.key">
       <h3
         v-if="section.label && section.items.length"
@@ -32,7 +42,7 @@
           :aria-current="
             groupOf(route.path) === item.group ? 'page' : undefined
           "
-          @click="$emit('navigate')"
+          @click="emit('navigate')"
         >
           <component
             :is="item.icon"
@@ -101,9 +111,14 @@ import {
 } from '@/composables/push'
 import { addonAvailable } from '@/utils/crmCapabilities'
 
-defineEmits(['navigate'])
+const emit = defineEmits(['navigate'])
 const route = useRoute()
-const { primary, more, settings, groupOf, badgeFor } = useVentasNav()
+const { primary, more, settings, groupOf, badgeFor, arrange } = useVentasNav()
+// Más closes as the arranging sheet opens.
+function arrangeLists() {
+  emit('navigate')
+  arrange()
+}
 // Phone «Más»: `daily` is the three lists a seller works from (Tratos,
 // Prospectos, Bandeja); `rest` is everything else, shown under «Configuración».
 const props = defineProps({

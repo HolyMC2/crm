@@ -1,4 +1,4 @@
-import { computed, ref } from 'vue'
+import { computed, ref, shallowRef } from 'vue'
 import { call } from 'frappe-ui'
 import {
   SHELL_MODULES,
@@ -269,6 +269,51 @@ export async function resetLayout() {
 export const layoutSheet = ref(null)
 export function openLayoutSheet(mode = 'mine') {
   layoutSheet.value = { mode }
+}
+
+// A module's own sections (Ventas' lists, Inmobiliaria's homes), arranged by
+// the same three layers as the bar: what the module ships, the owner's per
+// puesto, the worker's own. The boot carries the layout for the modules
+// someone arranged ({dock, order, hidden, source}); the rest keep their order.
+export function moduleLayout(module) {
+  return shellBoot.value?.module_layouts?.[module] || null
+}
+function applyModuleLayout(module, layout) {
+  if (shellBoot.value) {
+    const layouts = { ...(shellBoot.value.module_layouts || {}) }
+    if (layout && layout.source !== 'default') layouts[module] = layout
+    else delete layouts[module]
+    shellBoot.value = { ...shellBoot.value, module_layouts: layouts }
+  }
+  return layout
+}
+/** Save my own arrangement of a module's sections; the module follows at once. */
+export async function saveModuleLayout(module, layout) {
+  return applyModuleLayout(
+    module,
+    await call('crm.api.shell.save_layout', {
+      layout: JSON.stringify(layout),
+      module,
+    }),
+  )
+}
+/** Drop my arrangement of a module: back to my puesto's (or the suggested). */
+export async function resetModuleLayout(module) {
+  return applyModuleLayout(
+    module,
+    await call('crm.api.shell.reset_layout', {
+      nav_class: shellBoot.value?.user?.nav_role || null,
+      module,
+    }),
+  )
+}
+
+// The sheet that arranges one module's sections, opened from its title:
+// { module, title, items: [{ key, label, icon }], top: [keys], parts, hint }.
+// shallowRef: items may carry icon components. MuelleShell mounts it.
+export const sectionsSheet = shallowRef(null)
+export function openSectionsSheet(options) {
+  sectionsSheet.value = options
 }
 
 // The settings modal lives in the Ventas runtime: enter Ventas first when the

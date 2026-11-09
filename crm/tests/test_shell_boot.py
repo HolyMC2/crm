@@ -129,12 +129,13 @@ class TestShellBoot(TestCase):
 			}
 		)
 		self.assertEqual(saved["dock"], ["inventario", "scan", "compras", "productos"])
-		# A place sits in one part only; Hoy and Avisos are never arranged.
+		# A docked place is in Más and hidden never; Hoy and Avisos are never arranged.
 		self.assertEqual(saved["order"], ["ventas"])
-		self.assertEqual(saved["hidden"], ["encuestas", "pos"])
+		# Hidden is a flag: a hidden place keeps its spot in Más («ventas» stays in order).
+		self.assertEqual(saved["hidden"], ["ventas", "encuestas", "pos"])
 		layout = shell.boot()["layout"]
 		self.assertEqual(layout["source"], "personal")
-		self.assertEqual(layout["hidden"], ["encuestas", "pos"])
+		self.assertEqual(layout["hidden"], ["ventas", "encuestas", "pos"])
 		with self.assertRaises(frappe.ValidationError):
 			shell.save_layout("not a layout")
 
@@ -162,6 +163,62 @@ class TestShellBoot(TestCase):
 		finally:
 			frappe.defaults.set_global_default(shell.TEAM_LAYOUTS_DEFAULT, before or "")
 
+	def test_resetting_every_puesto_drops_each_class_and_keeps_mine(self):
+		before = frappe.defaults.get_global_default(shell.TEAM_LAYOUTS_DEFAULT)
+		try:
+			shell.save_team_layout("dueno", {"dock": ["bancos"]})
+			answer = shell.save_team_layout("cajero", {"dock": ["productos"]})
+			self.assertEqual(set(answer["layouts"]), {"dueno", "cajero"})
+			# Who a change reaches: a count per class, never names.
+			self.assertTrue(all(isinstance(n, int) and n > 0 for n in answer["following"].values()))
+			shell.save_layout({"dock": ["ventas"]})
+			cleared = shell.reset_team_layouts()
+			self.assertEqual(cleared["layouts"], {})
+			self.assertEqual(shell.team_layouts()["layouts"], {})
+			# Whoever arranged their own keeps it.
+			self.assertEqual(shell.boot()["layout"]["dock"], ["ventas"])
+		finally:
+			frappe.defaults.set_global_default(shell.TEAM_LAYOUTS_DEFAULT, before or "")
+
+	def test_following_counts_staff_without_their_own_layout(self):
+		classes = {"a@x.mx": "cajero", "b@x.mx": "cajero", "c@x.mx": "dueno"}
+		with (
+			patch.object(shell, "_staff_classes", return_value=classes),
+			patch.object(shell, "_arranged_their_own", return_value={"b@x.mx"}),
+		):
+			self.assertEqual(shell._following(), {"cajero": 1, "dueno": 1})
+
+	def test_a_module_arranges_its_own_sections_per_class_and_mine_wins(self):
+		before = frappe.defaults.get_global_default(shell.TEAM_MODULE_LAYOUTS_DEFAULT)
+		try:
+			self.assertNotIn("ventas", shell.boot()["module_layouts"])
+			shell.save_team_layout(
+				"dueno",
+				{"dock": ["deals", "inbox"], "order": ["leads", "tasks"], "hidden": ["tasks"]},
+				"ventas",
+			)
+			ventas = shell.boot()["module_layouts"]["ventas"]
+			self.assertEqual((ventas["source"], ventas["dock"]), ("team", ["deals", "inbox"]))
+			self.assertEqual(ventas["hidden"], ["tasks"])
+			# The bar is untouched by a module's layout.
+			self.assertEqual(shell.boot()["layout"]["source"], "default")
+			saved = shell.save_layout({"order": ["cobranza", "", 7, "obra-y-entregas"]}, "inmobiliaria")
+			# A module names its own keys; the server keeps short strings only.
+			self.assertEqual(saved["order"], ["cobranza", "obra-y-entregas"])
+			mine = shell.boot()["module_layouts"]
+			self.assertEqual(mine["inmobiliaria"]["source"], "personal")
+			self.assertEqual(mine["ventas"]["source"], "team")
+			back = shell.reset_layout("dueno", "inmobiliaria")
+			self.assertEqual(back["source"], "default")
+			self.assertNotIn("inmobiliaria", shell.boot()["module_layouts"])
+			shell.reset_team_layouts("ventas")
+			self.assertEqual(shell.boot()["module_layouts"], {})
+			with self.assertRaises(frappe.ValidationError):
+				shell.save_layout({"order": ["x"]}, "compras")
+		finally:
+			frappe.defaults.clear_user_default(shell.MODULE_LAYOUTS_DEFAULT)
+			frappe.defaults.set_global_default(shell.TEAM_MODULE_LAYOUTS_DEFAULT, before or "")
+
 	def test_only_the_owner_arranges_the_team(self):
 		self.assertTrue(shell.boot()["user"]["arranges_team"])
 		with patch.object(shell, "_may_arrange_team", return_value=False):
@@ -169,6 +226,10 @@ class TestShellBoot(TestCase):
 				shell.team_layouts()
 			with self.assertRaises(frappe.PermissionError):
 				shell.save_team_layout("vendedor", {"dock": ["ventas"]})
+			with self.assertRaises(frappe.PermissionError):
+				shell.reset_team_layouts()
+			with self.assertRaises(frappe.PermissionError):
+				shell.team_layouts("ventas")
 
 	def test_layout_places_follow_the_contracts_registry(self):
 		registry = Path(__file__).parents[2] / "frontend/src/vendor/muelle-shell/contracts/registry.ts"

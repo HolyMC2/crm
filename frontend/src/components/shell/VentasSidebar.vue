@@ -8,12 +8,22 @@
     <!-- Below 1024 px (a tablet, or a laptop at 200 % zoom) the sections are
          icons only, with their names as tooltips; the page keeps its width.
          On a wide screen «Solo íconos» at the foot chooses the same. -->
-    <div
+    <!-- The title is a door: it arranges the daily lists and «Más». -->
+    <button
       v-if="wide"
-      class="hidden px-2.5 pb-3 text-base font-semibold lg:block"
+      type="button"
+      class="press group mb-2 hidden min-h-9 items-center gap-1.5 rounded-6 px-2.5 text-left text-base font-semibold hover:bg-surface-gray-2 lg:flex"
+      :aria-label="__('Arrange {0}', [__('Ventas')])"
+      :title="__('Arrange {0}', [__('Ventas')])"
+      data-testid="ventas-arrange"
+      @click="arrange"
     >
-      {{ __('Ventas') }}
-    </div>
+      <span class="min-w-0 flex-1 truncate">{{ __('Ventas') }}</span>
+      <span
+        class="lucide-chevron-down size-4 flex-none text-ink-gray-5 group-hover:text-ink-gray-7"
+        aria-hidden="true"
+      />
+    </button>
     <nav class="flex flex-col gap-0.5" data-ventas-nav="daily">
       <SidebarEntry
         v-for="item in primary"
@@ -134,6 +144,7 @@ const {
   isOpen,
   canClose,
   toggle,
+  arrange,
 } = useVentasNav()
 // Daily lists first; «Más» and «Configuración» (managers) fold away.
 const sections = computed(() => [

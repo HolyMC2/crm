@@ -268,6 +268,7 @@
     />
     <ShortcutSheet v-if="shortcutSheet.open" />
     <LayoutSheet v-if="layoutSheet" :mode="layoutSheet.mode" />
+    <SectionsSheet v-if="sectionsSheet" :options="sectionsSheet" />
   </div>
 </template>
 <script setup>
@@ -291,6 +292,7 @@ import {
   loadShell,
   moduleKeyFor,
   navSlots,
+  sectionsSheet,
   shellBoot,
   shellError,
   shellLayout,
@@ -342,6 +344,7 @@ const loadPalette = () => import('./CommandPalette.vue')
 const CommandPalette = defineAsyncComponent(loadPalette)
 const ShortcutSheet = defineAsyncComponent(() => import('./ShortcutSheet.vue'))
 const LayoutSheet = defineAsyncComponent(() => import('./LayoutSheet.vue'))
+const SectionsSheet = defineAsyncComponent(() => import('./SectionsSheet.vue'))
 const AssistantSheet = defineAsyncComponent(
   () => import('@/components/assistant/AssistantSheet.vue'),
 )

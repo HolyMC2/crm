@@ -1,15 +1,21 @@
 <template>
   <!-- Inmobiliaria's homes in the shell (INMO-SH): each role's queues with the
        same counts as the Desk homes and Hoy (inmobiliaria.api.shell.inicio).
-       Phone: one chip per home, its queues as rows. Desktop: every home as a
-       card. Every row opens the queue in the shell. -->
+       Phone: one chip per home, its queues as rows. Desktop: every home as an
+       open section with its counts aligned; a home with nothing waiting folds.
+       The title arranges the homes (order, hidden) by the same layers as the
+       bar. Every row opens the queue in the shell. -->
   <div
     class="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-surface-base"
   >
     <AppBar
       title="Inmobiliaria"
       :loading="loading && !!data"
+      :picker="arrangeable"
+      :picker-open="sectionsSheet?.module === 'inmobiliaria'"
+      :scope-title="__('Arrange {0}', ['Inmobiliaria'])"
       data-testid="inmo-appbar"
+      @pick="arrange"
     />
     <div class="flex-1 overflow-y-auto pb-24">
       <EmptyState
@@ -118,36 +124,80 @@
         </template>
         <div
           v-else
-          class="grid grid-cols-2 gap-4 px-6 pt-6 xl:grid-cols-3"
-          data-testid="inmo-inicios-grid"
+          class="max-w-3xl space-y-2 px-6 pt-6"
+          data-testid="inmo-inicios"
         >
           <section
-            v-for="i in data.inicios"
+            v-for="i in shownHomes"
             :key="i.key"
-            class="rounded-8 border border-outline-gray-1 py-3"
+            :data-inicio="i.key"
+            :data-folded="isFolded(i) ? '' : undefined"
           >
-            <h2
-              class="title-face px-4 pb-1 text-lg font-semibold text-ink-gray-9"
+            <button
+              type="button"
+              class="flex min-h-12 w-full items-center gap-1 border-b border-outline-gray-1 px-4 text-left hover:bg-surface-gray-1"
+              :aria-expanded="!isFolded(i)"
+              :aria-controls="`inmo-${i.key}`"
+              @click="toggleHome(i)"
             >
-              {{ i.titulo }}
-            </h2>
-            <ListRow
-              v-for="c in i.colas"
-              :key="c.key"
-              :title="c.etiqueta"
-              :to="queueTo(c, i.key)"
-              :strong="c.count > 0"
-              :data-fresh="live.fresh.value.has(c.key) ? '' : undefined"
-            >
-              <template #trailing>
-                <span
-                  class="num text-base font-semibold"
-                  :class="c.count ? 'text-ink-gray-9' : 'text-ink-gray-5'"
-                  >{{ c.count }}</span
+              <h2
+                class="title-face min-w-0 truncate text-lg font-semibold"
+                :class="i.pendientes ? 'text-ink-gray-9' : 'text-ink-gray-6'"
+              >
+                {{ i.titulo }}
+              </h2>
+              <span
+                class="lucide-chevron-down size-4 flex-none text-ink-gray-5 transition-transform motion-reduce:transition-none"
+                :class="isFolded(i) ? '-rotate-90' : ''"
+                aria-hidden="true"
+              />
+              <span class="flex-1" />
+              <span
+                class="num w-12 flex-none text-right text-lg font-semibold"
+                :class="i.pendientes ? 'text-ink-gray-9' : 'text-ink-gray-5'"
+                >{{ i.pendientes }}</span
+              >
+            </button>
+            <ExpandTransition>
+              <div v-if="!isFolded(i)" :id="`inmo-${i.key}`" class="pb-4">
+                <ListRow
+                  v-for="c in i.colas"
+                  :key="c.key"
+                  :title="c.etiqueta"
+                  :to="queueTo(c, i.key)"
+                  :strong="c.count > 0"
+                  :data-cola="c.key"
+                  :data-fresh="live.fresh.value.has(c.key) ? '' : undefined"
                 >
-              </template>
-            </ListRow>
+                  <template #trailing>
+                    <!-- ListRow keeps its trailing on the first line; this
+                         lines the count up with a one-line queue name. -->
+                    <span
+                      class="num mt-1 block w-12 text-right text-md font-semibold leading-snug"
+                      :class="c.count ? 'text-ink-gray-9' : 'text-ink-gray-5'"
+                      >{{ c.count }}</span
+                    >
+                  </template>
+                </ListRow>
+              </div>
+            </ExpandTransition>
           </section>
+          <p
+            v-if="hiddenHomes.length"
+            class="pt-2 text-sm text-ink-gray-6"
+            data-testid="inmo-ocultos"
+          >
+            {{
+              hiddenHomes.length === 1
+                ? __(
+                    "One home is hidden: show it again from Inmobiliaria's title.",
+                  )
+                : __(
+                    "{0} homes are hidden: show them again from Inmobiliaria's title.",
+                    [hiddenHomes.length],
+                  )
+            }}
+          </p>
         </div>
       </template>
     </div>
@@ -168,8 +218,22 @@ import { computed, onMounted, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { Button } from 'frappe-ui'
 import { useWindowSize } from '@vueuse/core'
-import { AppBar, EmptyState, Fab, FilterChips, ListRow } from '@/components/ui'
-import { firstModuleRoute, shellBoot } from '@/composables/muelleShell'
+import {
+  AppBar,
+  EmptyState,
+  ExpandTransition,
+  Fab,
+  FilterChips,
+  ListRow,
+} from '@/components/ui'
+import {
+  firstModuleRoute,
+  moduleLayout,
+  openSectionsSheet,
+  sectionsSheet,
+  shellBoot,
+} from '@/composables/muelleShell'
+import { arrangeSections } from '@/utils/shellLayout'
 import { can } from '@/vendor/muelle-shell/contracts'
 import { useLiveList } from '@/composables/liveList'
 import {
@@ -207,15 +271,30 @@ const current = computed({
   set: (key) =>
     router.replace({ query: { ...route.query, inicio: key || undefined } }),
 })
-// The server orders the homes (everyone's first, administration last) and may
-// name the one to start on; the shell never picks one by its name.
-const defaultHome = computed(() =>
-  isHome(data.value?.predeterminado)
-    ? data.value.predeterminado
-    : data.value?.inicios?.[0]?.key || '',
+// The homes as arranged (the owner's per puesto, or the worker's own): the
+// server's order otherwise. A hidden home leaves the chips and the sections
+// but still opens from a link (?inicio=).
+const layout = computed(() => moduleLayout('inmobiliaria'))
+const arranged = computed(() =>
+  arrangeSections({ items: data.value?.inicios || [], layout: layout.value }),
 )
+const shownHomes = computed(() =>
+  arranged.value.rest.filter((i) => !arranged.value.hidden.has(i.key)),
+)
+const hiddenHomes = computed(() =>
+  arranged.value.rest.filter((i) => arranged.value.hidden.has(i.key)),
+)
+// The server orders the homes (everyone's first, administration last) and may
+// name the one to start on; the shell never picks one by its name. An
+// arrangement starts on its first home.
+const defaultHome = computed(() => {
+  if (layout.value && shownHomes.value.length) return shownHomes.value[0].key
+  return isHome(data.value?.predeterminado)
+    ? data.value.predeterminado
+    : data.value?.inicios?.[0]?.key || ''
+})
 const chips = computed(() =>
-  (data.value?.inicios || []).map((i) => ({
+  shownHomes.value.map((i) => ({
     value: i.key,
     label: i.nombre,
     count: i.pendientes || undefined,
@@ -227,6 +306,34 @@ const home = computed(
     data.value?.inicios?.[0] ||
     null,
 )
+
+// Desktop: a home with nothing waiting starts folded; a tap opens or folds any.
+const toggled = ref(new Set())
+const isFolded = (i) => !i.pendientes !== toggled.value.has(i.key)
+function toggleHome(i) {
+  const next = new Set(toggled.value)
+  if (next.has(i.key)) next.delete(i.key)
+  else next.add(i.key)
+  toggled.value = next
+}
+
+// «Ordenar Inmobiliaria»: the homes' order and which hide, from the title.
+const arrangeable = computed(() => (data.value?.inicios?.length || 0) > 1)
+function arrange() {
+  openSectionsSheet({
+    module: 'inmobiliaria',
+    title: 'Inmobiliaria',
+    items: data.value.inicios.map((i) => ({
+      key: i.key,
+      label: i.nombre,
+      icon: 'lucide-list-checks',
+    })),
+    parts: null,
+    hint: __(
+      'Hiding does not take access away: a hidden home shows again from here.',
+    ),
+  })
+}
 
 function queueTo(cola, inicio = current.value) {
   const to = linkOf(cola.url).to || `/inmobiliaria/cola/${cola.key}`
