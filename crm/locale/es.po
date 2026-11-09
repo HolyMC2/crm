@@ -37374,3 +37374,287 @@ msgstr "Restaurada"
 msgctxt "Lienzo"
 msgid "Converted"
 msgstr "Convertida"
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Lists of {0}"
+msgstr "Listas de {0}"
+
+#: frontend/src/pages/CompraLista.vue frontend/src/components/compras/lista/ListaTipos.vue
+msgctxt "Lista"
+msgid "No type"
+msgstr "Sin tipo"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "{0} pcs, {1}"
+msgstr "{0} pz, {1}"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Product type of this list"
+msgstr "Tipo de producto de esta lista"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Change the type"
+msgstr "Cambiar el tipo"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Set the type"
+msgstr "Poner el tipo"
+
+#: frontend/src/pages/CompraLista.vue frontend/src/components/compras/lista/ListaPedido.vue
+msgctxt "Lista"
+msgid "This list"
+msgstr "Esta lista"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Whole order, {0} pieces"
+msgstr "Pedido completo, {0} piezas"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "The order to {0} already has {1} from its other lists; what you set here adds to it."
+msgstr "El pedido a {0} ya lleva {1} de sus otras listas; lo que pongas aquí se suma."
+
+#: frontend/src/pages/CompraLista.vue frontend/src/components/compras/lista/ListaPedido.vue
+msgctxt "Lista"
+msgid "By product type"
+msgstr "Por tipo de producto"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "The whole order against this month's budget, and what you bought before"
+msgstr "El pedido completo contra el presupuesto del mes, y lo que compraste antes"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Whole order, {0}"
+msgstr "Pedido completo, {0}"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Reading"
+msgstr "Leyendo"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Type saved: {0}"
+msgstr "Tipo guardado: {0}"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "The type will be read from the list"
+msgstr "El tipo se leerá de la lista"
+
+#: frontend/src/pages/CompraLista.vue frontend/src/components/compras/lista/ListaTipo.vue
+msgctxt "Lista"
+msgid "Product type"
+msgstr "Tipo de producto"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Not set"
+msgstr "Sin definir"
+
+#: frontend/src/components/compras/lista/ListaPedido.vue
+msgctxt "Lista"
+msgid "Also in this order"
+msgstr "También en este pedido"
+
+#: frontend/src/components/compras/lista/ListaPedido.vue
+msgctxt "Lista"
+msgid "Whole order"
+msgstr "Pedido completo"
+
+#: frontend/src/components/compras/lista/ListaTipos.vue
+msgctxt "Lista"
+msgid "{0} pcs"
+msgstr "{0} pz"
+
+#: frontend/src/components/compras/lista/ListaTipos.vue
+msgctxt "Lista"
+msgid "{0}, no budget for this type"
+msgstr "{0}, sin presupuesto para este tipo"
+
+#: frontend/src/components/compras/lista/ListaTipos.vue
+msgctxt "Lista"
+msgid "{0}, {1} over the {2} budget"
+msgstr "{0}, {1} arriba del presupuesto de {2}"
+
+#: frontend/src/components/compras/lista/ListaTipos.vue
+msgctxt "Lista"
+msgid "{0}, {1} left of {2} after this order"
+msgstr "{0}, quedan {1} de {2} con este pedido"
+
+#: frontend/src/components/compras/lista/ListaTipos.vue
+msgctxt "Lista"
+msgid "{0}: {1} committed, {2} this order, of {3}"
+msgstr "{0}: {1} comprometido, {2} este pedido, de {3}"
+
+#: frontend/src/components/compras/lista/ListaTipos.vue
+msgctxt "Lista"
+msgid "{0} {1} ({2} from {3})"
+msgstr "{0} {1} ({2} de {3})"
+
+#: frontend/src/components/compras/lista/ListaTipos.vue
+msgctxt "Lista"
+msgid "{0} a month"
+msgstr "{0} al mes"
+
+#: frontend/src/components/compras/lista/ListaTipo.vue
+msgctxt "Lista"
+msgid "What this list sells. Its quantities add up under this type in the order to the supplier, and it is compared with the previous list of the same type."
+msgstr "Lo que vende esta lista. Sus cantidades se suman bajo este tipo en el pedido al proveedor, y se compara con la lista anterior del mismo tipo."
+
+#: frontend/src/components/compras/lista/ListaTipo.vue
+msgctxt "Lista"
+msgid "Search a type"
+msgstr "Buscar un tipo"
+
+#: frontend/src/components/compras/lista/ListaTipo.vue
+msgctxt "Lista"
+msgid "Product types"
+msgstr "Tipos de producto"
+
+#: frontend/src/components/compras/lista/ListaTipo.vue
+msgctxt "Lista"
+msgid "and the types under it"
+msgstr "y los tipos debajo"
+
+#: frontend/src/components/compras/lista/ListaTipo.vue
+msgctxt "Lista"
+msgid "No type has those words."
+msgstr "Ningún tipo tiene esas palabras."
+
+#: frontend/src/components/compras/lista/ListaTipo.vue
+msgctxt "Lista"
+msgid "Read the type from the list again"
+msgstr "Volver a leer el tipo de la lista"
+
+#: frontend/src/components/compras/lista/ListaTipos.vue
+msgctxt "Lista"
+msgid "{0}, counted in the {1} budget above"
+msgstr "{0}, cuenta en el presupuesto de {1} de arriba"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Uploading {0}… {1}%, file {2} of {3}"
+msgstr "Subiendo {0}… {1}%, archivo {2} de {3}"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Whole list"
+msgstr "Toda la lista"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Search the list to add"
+msgstr "Buscar en la lista para agregar"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Search the list"
+msgstr "Buscar en la lista"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Nothing from this list in the order yet"
+msgstr "Nada de esta lista en el pedido todavía"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Search a model to add it, or start from these lines."
+msgstr "Busca un modelo para agregarlo, o empieza por estas líneas."
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Compare"
+msgstr "Comparar"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Someone"
+msgstr "Alguien"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Code {0}"
+msgstr "Código {0}"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "{0} at {1}"
+msgstr "{0} a {1}"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "{0} lists it at {1} ({2})"
+msgstr "{0} lo da a {1} ({2})"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Paid {0}, {1}"
+msgstr "Pagaste {0}, {1}"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "In the shop: {0}"
+msgstr "En tienda: {0}"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Muelle changed {0} lines of the order"
+msgstr "Muelle cambió {0} líneas del pedido"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "{0} changed {1} lines of the order"
+msgstr "{0} cambió {1} líneas del pedido"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "{0} lines of the order changed"
+msgstr "Cambiaron {0} líneas del pedido"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "{0} added it"
+msgstr "{0} lo agregó"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "{0} took it out"
+msgstr "{0} lo quitó"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "{0}, was {1}"
+msgstr "{0}, antes {1}"
+
+#: frontend/src/components/compras/lista/ListaHistoriaMini.vue
+msgctxt "Lista"
+msgid "{0} at {1} ({2})"
+msgstr "{0} a {1} ({2})"
+
+#: frontend/src/components/compras/lista/ListaHistoriaMini.vue
+msgctxt "Lista"
+msgid "you paid {0} ({1})"
+msgstr "pagaste {0} ({1})"
+
+#: frontend/src/components/compras/lista/ListaHistoriaMini.vue
+msgctxt "Lista"
+msgid "between {0} and {1}"
+msgstr "entre {0} y {1}"
+
+#: frontend/src/components/compras/lista/ListaPresencia.vue
+msgctxt "Lista"
+msgid "{0} is in this order"
+msgstr "{0} está en este pedido"
+
+#: frontend/src/components/compras/lista/ListaPresencia.vue
+msgctxt "Lista"
+msgid "{0} and {1} are in this order"
+msgstr "{0} y {1} están en este pedido"

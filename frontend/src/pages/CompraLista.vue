@@ -25,11 +25,12 @@
       :searchable="phone"
       :search="search"
       :search-open="searchOpen"
-      :search-label="__('Search brand, model or code', null, 'Lista')"
+      :search-label="searchLabel"
       @update:search="(value) => (search = value)"
       @update:search-open="(value) => (searchOpen = value)"
     >
       <template #actions>
+        <ListaPresencia v-if="data" :people="people" :bot="botActive" />
         <AccionesMenu
           v-if="data"
           :phone="phone"
@@ -193,12 +194,77 @@
           </p>
         </div>
 
+        <!-- the supplier's lists: one open order adds them up -->
+        <nav
+          v-if="catalog.supplier && supplierTabs.length"
+          class="mx-4 mt-3 flex items-stretch gap-1.5 overflow-x-auto pb-1 sm:mx-6"
+          :aria-label="__('Lists of {0}', [catalog.supplier_name], 'Lista')"
+          data-lista-listas
+        >
+          <RouterLink
+            v-for="list in supplierTabs"
+            :key="list.name"
+            :to="{ name: 'CompraLista', params: { name: list.name } }"
+            :aria-current="list.current ? 'page' : undefined"
+            :title="list.title"
+            class="press flex min-h-11 w-36 flex-none flex-col justify-center rounded-6 border px-3 py-1.5 text-left"
+            :class="
+              list.current
+                ? 'border-outline-gray-4 bg-surface-gray-2'
+                : 'border-outline-gray-2 hover:bg-surface-gray-1'
+            "
+            :data-lista-lista="list.name"
+          >
+            <span class="truncate text-sm font-medium text-ink-gray-9">{{
+              listLabel(list) || __('No type', null, 'Lista')
+            }}</span>
+            <span
+              class="num truncate text-xs tabular-nums"
+              :class="list.lines ? 'text-ink-gray-8' : 'text-ink-gray-5'"
+              >{{
+                list.lines
+                  ? __(
+                      '{0} pcs, {1}',
+                      [list.pieces, money(list.amount, currency)],
+                      'Lista',
+                    )
+                  : tabState(list)
+              }}</span
+            >
+          </RouterLink>
+          <button
+            v-if="data.owner"
+            type="button"
+            class="press flex min-h-11 flex-none items-center gap-1.5 rounded-6 px-3 text-sm text-ink-gray-7 hover:bg-surface-gray-1"
+            :title="__('Product type of this list', null, 'Lista')"
+            :aria-label="__('Product type of this list', null, 'Lista')"
+            data-lista-tipo-abrir
+            @click="openTipo"
+          >
+            <span class="lucide-tag size-4 flex-none" aria-hidden="true" />
+            <span v-if="!phone">{{
+              catalog.item_group
+                ? __('Change the type', null, 'Lista')
+                : __('Set the type', null, 'Lista')
+            }}</span>
+          </button>
+        </nav>
+
         <!-- desktop toolbar: the search and the filters inline -->
         <div
           v-if="!phone && lineCount"
           class="mx-6 mt-4 flex flex-wrap items-center gap-3"
           data-lista-toolbar
         >
+          <div v-if="canOrder" class="flex-none" data-lista-vista>
+            <Segmented
+              :model-value="orderView ? 'pedido' : 'lista'"
+              :options="viewOptions"
+              :label="__('Show', null, 'Lista')"
+              fit="content"
+              @update:model-value="pickView"
+            />
+          </div>
           <label class="relative min-w-[16rem] flex-1 basis-64">
             <span
               class="lucide-search pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-gray-5"
@@ -208,8 +274,8 @@
               v-model="search"
               type="search"
               class="h-10 w-full rounded-full border-0 bg-surface-gray-2 pl-9 pr-4 text-sm text-ink-gray-9 placeholder:text-ink-gray-5 focus:ring-2 focus:ring-outline-gray-3 [&::-webkit-search-cancel-button]:hidden"
-              :placeholder="__('Search brand, model or code', null, 'Lista')"
-              :aria-label="__('Search brand, model or code', null, 'Lista')"
+              :placeholder="searchLabel"
+              :aria-label="searchLabel"
               data-lista-buscar
             />
           </label>
@@ -253,9 +319,23 @@
           }}</span>
         </button>
 
+        <!-- phone: the order or the whole list -->
+        <div
+          v-if="phone && canOrder && lineCount"
+          class="mx-4 mt-3"
+          data-lista-vista
+        >
+          <Segmented
+            :model-value="orderView ? 'pedido' : 'lista'"
+            :options="viewOptions"
+            :label="__('Show', null, 'Lista')"
+            @update:model-value="pickView"
+          />
+        </div>
+
         <!-- phone: the sections as chips -->
         <div
-          v-if="phone && sectionOptions.length > 1"
+          v-if="phone && sectionOptions.length > 1 && !orderView"
           class="mt-3 flex gap-1.5 overflow-x-auto px-4 pb-1"
           role="group"
           :aria-label="__('Section', null, 'Lista')"
@@ -292,7 +372,7 @@
           @action="fileInput?.click()"
         />
         <EmptyState
-          v-else-if="lineCount && !visible.length"
+          v-else-if="lineCount && !visible.length && !orderView"
           :title="__('Nothing matches', null, 'Lista')"
           :message="
             __('Change the words, or clear the filters.', null, 'Lista')
@@ -303,11 +383,16 @@
 
         <div
           v-else-if="lineCount"
-          class="mt-3 lg:mx-6 lg:grid lg:grid-cols-[11rem_minmax(0,1fr)_19rem] lg:items-start lg:gap-6"
+          class="mt-3 lg:mx-6 lg:grid lg:items-start lg:gap-6"
+          :class="
+            orderView
+              ? 'lg:grid-cols-[minmax(0,1fr)_19rem]'
+              : 'lg:grid-cols-[11rem_minmax(0,1fr)_19rem]'
+          "
         >
           <!-- desktop rail: the sections -->
           <nav
-            v-if="!phone"
+            v-if="!phone && !orderView"
             class="hidden lg:sticky lg:top-4 lg:block"
             :aria-label="__('Section', null, 'Lista')"
           >
@@ -350,9 +435,64 @@
 
           <!-- the lines -->
           <div class="min-w-0 overflow-x-auto">
+            <!-- the order view before anything is in it: where to start -->
+            <div
+              v-if="orderView && !visible.length"
+              class="mx-4 rounded-8 border border-outline-gray-2 p-4 lg:mx-0"
+              data-lista-vacio
+            >
+              <p class="text-sm font-medium text-ink-gray-9">
+                {{
+                  __('Nothing from this list in the order yet', null, 'Lista')
+                }}
+              </p>
+              <p class="mt-0.5 text-sm text-ink-gray-6">
+                {{
+                  __(
+                    'Search a model to add it, or start from these lines.',
+                    null,
+                    'Lista',
+                  )
+                }}
+              </p>
+              <div class="mt-3 flex flex-wrap gap-1.5">
+                <button
+                  v-if="phone"
+                  type="button"
+                  :class="[chipClass(false), 'min-h-9']"
+                  @click="searchOpen = true"
+                >
+                  <span class="lucide-search size-3.5" aria-hidden="true" />
+                  {{ __('Search the list', null, 'Lista') }}
+                </button>
+                <button
+                  v-for="o in startOptions"
+                  :key="o.value"
+                  type="button"
+                  :class="[chipClass(false), 'min-h-9']"
+                  :data-lista-empezar="o.value"
+                  @click="filter = o.value"
+                >
+                  {{ o.label }}
+                  <span class="num text-[10px] opacity-70">{{ o.count }}</span>
+                </button>
+                <button
+                  type="button"
+                  :class="[chipClass(false), 'min-h-9']"
+                  data-lista-empezar="lista"
+                  @click="pickView('lista')"
+                >
+                  {{ __('Whole list', null, 'Lista') }}
+                  <span class="num text-[10px] opacity-70">{{
+                    lineCount
+                  }}</span>
+                </button>
+              </div>
+            </div>
+
             <!-- desktop: one dense table, a heading row per section -->
             <table
-              v-if="!phone"
+              v-else-if="!phone"
               class="w-full border-separate border-spacing-0 text-sm"
               data-lista-tabla
             >
@@ -365,20 +505,7 @@
                     {{ __('Price', null, 'Lista') }}
                   </th>
                   <th scope="col" class="py-1.5 pr-3 text-right font-medium">
-                    {{ __('Change', null, 'Lista') }}
-                  </th>
-                  <th
-                    scope="col"
-                    class="hidden py-1.5 pr-3 text-right font-medium min-[1400px]:table-cell"
-                  >
-                    {{ __('Elsewhere', null, 'Lista') }}
-                  </th>
-                  <th
-                    v-if="data.cost_visible"
-                    scope="col"
-                    class="hidden py-1.5 pr-3 text-right font-medium min-[1400px]:table-cell"
-                  >
-                    {{ __('You paid', null, 'Lista') }}
+                    {{ __('Compare', null, 'Lista') }}
                   </th>
                   <th scope="col" class="py-1.5 pr-3 text-right font-medium">
                     {{ __('Stock', null, 'Lista') }}
@@ -396,7 +523,7 @@
                   <th
                     :id="sectionId(s.name)"
                     scope="colgroup"
-                    :colspan="data.cost_visible ? 8 : 7"
+                    colspan="6"
                     class="title-face pb-1 pl-2 pt-5 text-left text-base font-semibold text-ink-gray-9"
                   >
                     {{ s.name || __('No section', null, 'Lista') }}
@@ -409,8 +536,16 @@
                 <tr
                   v-for="line in s.lines"
                   :key="line.name"
-                  :class="qtyOf(line) ? 'bg-surface-gray-1' : ''"
+                  class="transition-colors duration-700"
+                  :class="
+                    flash[line.name]
+                      ? 'bg-surface-amber-1'
+                      : qtyOf(line)
+                        ? 'bg-surface-gray-1'
+                        : ''
+                  "
                   :data-lista-linea="line.name"
+                  :data-lista-cambio="flash[line.name] ? '' : undefined"
                 >
                   <!-- max-w-0 lets the product column give way, so the table fits the desk -->
                   <td
@@ -422,7 +557,7 @@
                       @click="openLine(line)"
                     >
                       <span
-                        class="flex size-9 flex-none items-center justify-center overflow-hidden rounded-5 bg-surface-gray-2"
+                        class="flex size-11 flex-none items-center justify-center overflow-hidden rounded-6 bg-surface-gray-2"
                       >
                         <img
                           v-if="line.photo"
@@ -438,35 +573,55 @@
                         />
                       </span>
                       <span class="min-w-0 flex-1">
-                        <span class="flex items-center gap-1.5">
-                          <span class="truncate font-medium text-ink-gray-9">{{
-                            lineTitle(line)
-                          }}</span>
+                        <span class="flex items-start gap-1.5">
+                          <span
+                            class="line-clamp-2 break-words font-medium leading-snug text-ink-gray-9"
+                            :title="lineTitle(line)"
+                            >{{ lineTitle(line) }}</span
+                          >
                           <span
                             v-if="line.promo"
-                            class="lucide-gift size-3.5 flex-none text-ink-gray-6"
+                            class="lucide-gift mt-0.5 size-3.5 flex-none text-ink-gray-6"
                             :title="line.promo.text"
                             aria-hidden="true"
                           />
                           <span
-                            v-if="line.item"
-                            class="lucide-link size-3.5 flex-none text-ink-gray-5"
-                            :title="line.item_name"
-                            aria-hidden="true"
-                          />
-                          <span
                             v-if="line.edited"
-                            class="lucide-pencil size-3.5 flex-none text-ink-gray-5"
+                            class="lucide-pencil mt-0.5 size-3.5 flex-none text-ink-gray-5"
                             :title="__('Read corrected', null, 'Lista')"
                             aria-hidden="true"
                           />
                         </span>
-                        <span class="block truncate text-xs text-ink-gray-6">
-                          {{
-                            [specParts(line).join(' · '), ...(line.tags || [])]
-                              .filter(Boolean)
-                              .join(' · ')
-                          }}
+                        <span
+                          v-if="line.item_name"
+                          class="flex items-center gap-1 truncate text-xs text-ink-gray-8"
+                          :title="
+                            __('In the shop: {0}', [line.item_name], 'Lista')
+                          "
+                          data-lista-tienda
+                        >
+                          <span
+                            class="lucide-store size-3 flex-none text-ink-gray-5"
+                            aria-hidden="true"
+                          />
+                          <span class="truncate">{{ line.item_name }}</span>
+                        </span>
+                        <span
+                          class="flex items-center gap-1.5 text-xs text-ink-gray-6"
+                        >
+                          <span
+                            v-if="flash[line.name]"
+                            class="inline-flex flex-none items-center gap-1 rounded-full bg-surface-amber-2 px-1.5 text-[11px] font-medium text-ink-amber-8"
+                            data-lista-quien
+                          >
+                            <span
+                              v-if="flash[line.name].bot"
+                              class="lucide-sparkles size-3"
+                              aria-hidden="true"
+                            />
+                            {{ flashLabel(flash[line.name]) }}
+                          </span>
+                          <span class="truncate">{{ codeAndSpecs(line) }}</span>
                         </span>
                       </span>
                     </button>
@@ -494,41 +649,66 @@
                   </td>
                   <td
                     class="border-t border-outline-gray-1 py-1.5 pr-3 text-right"
+                    data-lista-comparar
                   >
-                    <ChangeCell :line="line" />
-                  </td>
-                  <td
-                    class="num hidden border-t border-outline-gray-1 py-1.5 pr-3 text-right text-xs tabular-nums min-[1400px]:table-cell"
-                  >
-                    <template v-if="line.other">
+                    <span class="flex items-center justify-end gap-2">
                       <span
-                        class="block"
-                        :class="
-                          otherGap(line) > 0
-                            ? 'font-medium text-ink-gray-9'
-                            : 'text-ink-gray-6'
-                        "
-                        >{{
-                          money(line.other.price, line.other.currency)
-                        }}</span
+                        class="num flex min-w-0 flex-col items-end gap-0.5 text-xs leading-tight tabular-nums"
                       >
-                      <span class="block truncate text-ink-gray-5">{{
-                        line.other.supplier_name
-                      }}</span>
-                    </template>
-                  </td>
-                  <td
-                    v-if="data.cost_visible"
-                    class="num hidden border-t border-outline-gray-1 py-1.5 pr-3 text-right text-xs tabular-nums min-[1400px]:table-cell"
-                  >
-                    <template v-if="line.paid">
-                      <span class="block text-ink-gray-8">{{
-                        money(line.paid.rate, line.currency)
-                      }}</span>
-                      <span class="block text-ink-gray-5">{{
-                        formatDate(line.paid.date)
-                      }}</span>
-                    </template>
+                        <ChangeCell :line="line" />
+                        <span
+                          v-if="line.other"
+                          class="max-w-[10rem] truncate"
+                          :class="
+                            otherGap(line) > 0
+                              ? 'font-medium text-ink-gray-9'
+                              : 'text-ink-gray-6'
+                          "
+                          :title="
+                            __(
+                              '{0} lists it at {1} ({2})',
+                              [
+                                line.other.supplier_name,
+                                money(line.other.price, line.other.currency),
+                                formatDate(line.other.date, {
+                                  relative: false,
+                                }),
+                              ],
+                              'Lista',
+                            )
+                          "
+                          >{{
+                            __(
+                              '{0} at {1}',
+                              [
+                                line.other.supplier_name,
+                                money(line.other.price, line.other.currency),
+                              ],
+                              'Lista',
+                            )
+                          }}</span
+                        >
+                        <span
+                          v-if="data.cost_visible && line.paid"
+                          class="text-ink-gray-6"
+                          >{{
+                            __(
+                              'Paid {0}, {1}',
+                              [
+                                money(line.paid.rate, line.currency),
+                                formatDate(line.paid.date, { relative: false }),
+                              ],
+                              'Lista',
+                            )
+                          }}</span
+                        >
+                      </span>
+                      <ListaHistoriaMini
+                        v-if="stories[line.name]?.length > 1"
+                        :points="stories[line.name]"
+                        :currency="line.currency || currency"
+                      />
+                    </span>
                   </td>
                   <td
                     class="num border-t border-outline-gray-1 py-1.5 pr-3 text-right text-xs tabular-nums"
@@ -582,9 +762,16 @@
                   <li
                     v-for="line in s.lines"
                     :key="line.name"
-                    class="flex items-center gap-2 py-2 pl-4 pr-3"
-                    :class="qtyOf(line) ? 'bg-surface-gray-1' : ''"
+                    class="flex items-center gap-2 py-2 pl-4 pr-3 transition-colors duration-700"
+                    :class="
+                      flash[line.name]
+                        ? 'bg-surface-amber-1'
+                        : qtyOf(line)
+                          ? 'bg-surface-gray-1'
+                          : ''
+                    "
                     :data-lista-linea="line.name"
+                    :data-lista-cambio="flash[line.name] ? '' : undefined"
                   >
                     <button
                       type="button"
@@ -608,18 +795,40 @@
                         />
                       </span>
                       <span class="min-w-0 flex-1">
-                        <span class="flex items-center gap-1.5">
-                          <span class="truncate font-medium text-ink-gray-9">{{
-                            lineTitle(line)
-                          }}</span>
+                        <span class="flex items-start gap-1.5">
+                          <span
+                            class="line-clamp-2 break-words font-medium leading-snug text-ink-gray-9"
+                            :title="lineTitle(line)"
+                            >{{ lineTitle(line) }}</span
+                          >
                           <span
                             v-if="line.promo"
-                            class="lucide-gift size-3.5 flex-none text-ink-gray-6"
+                            class="lucide-gift mt-0.5 size-3.5 flex-none text-ink-gray-6"
                             aria-hidden="true"
                           />
                         </span>
+                        <span
+                          v-if="flash[line.name]"
+                          class="mt-0.5 inline-flex items-center gap-1 rounded-full bg-surface-amber-2 px-1.5 text-[11px] font-medium text-ink-amber-8"
+                          data-lista-quien
+                        >
+                          <span
+                            v-if="flash[line.name].bot"
+                            class="lucide-sparkles size-3"
+                            aria-hidden="true"
+                          />
+                          {{ flashLabel(flash[line.name]) }}
+                        </span>
+                        <span
+                          v-if="line.item_name"
+                          class="block truncate text-xs text-ink-gray-8"
+                          data-lista-tienda
+                          >{{
+                            __('In the shop: {0}', [line.item_name], 'Lista')
+                          }}</span
+                        >
                         <span class="block truncate text-xs text-ink-gray-6">{{
-                          specParts(line).join(' · ')
+                          codeAndSpecs(line)
                         }}</span>
                         <span
                           class="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs"
@@ -649,6 +858,42 @@
                           </span>
                           <StockCell :line="line" compact />
                         </span>
+                        <span
+                          v-if="line.other || (data.cost_visible && line.paid)"
+                          class="num mt-0.5 block truncate text-xs text-ink-gray-6"
+                          data-lista-comparar
+                          >{{
+                            [
+                              line.other
+                                ? __(
+                                    '{0} at {1}',
+                                    [
+                                      line.other.supplier_name,
+                                      money(
+                                        line.other.price,
+                                        line.other.currency,
+                                      ),
+                                    ],
+                                    'Lista',
+                                  )
+                                : '',
+                              data.cost_visible && line.paid
+                                ? __(
+                                    'Paid {0}, {1}',
+                                    [
+                                      money(line.paid.rate, line.currency),
+                                      formatDate(line.paid.date, {
+                                        relative: false,
+                                      }),
+                                    ],
+                                    'Lista',
+                                  )
+                                : '',
+                            ]
+                              .filter(Boolean)
+                              .join(', ')
+                          }}</span
+                        >
                       </span>
                     </button>
                     <span class="flex flex-none flex-col items-end gap-0.5">
@@ -727,12 +972,45 @@
                     </dd>
                   </template>
                   <dt class="pt-1 text-base font-semibold text-ink-gray-9">
-                    {{ __('Total', null, 'Lista') }}
+                    {{
+                      sharedOrder
+                        ? __('This list', null, 'Lista')
+                        : __('Total', null, 'Lista')
+                    }}
                   </dt>
                   <dd
                     class="num pt-1 text-right text-base font-semibold tabular-nums text-ink-gray-9"
                   >
                     {{ money(shownTotal, currency) }}
+                  </dd>
+                </dl>
+                <dl
+                  v-if="sharedOrder"
+                  class="mt-3 grid grid-cols-[1fr_auto] gap-x-3 gap-y-1 border-t border-outline-gray-1 pt-3 text-sm"
+                  data-lista-pedido-completo
+                >
+                  <template v-for="list in others" :key="list.name">
+                    <dt class="truncate text-ink-gray-6">
+                      <RouterLink
+                        :to="{
+                          name: 'CompraLista',
+                          params: { name: list.name },
+                        }"
+                        class="underline-offset-2 hover:underline"
+                        >{{ listLabel(list) }}</RouterLink
+                      >
+                    </dt>
+                    <dd class="num text-right tabular-nums">
+                      {{ money(list.amount, currency) }}
+                    </dd>
+                  </template>
+                  <dt class="pt-1 font-semibold text-ink-gray-9">
+                    {{ __('Whole order, {0} pieces', [wholePieces], 'Lista') }}
+                  </dt>
+                  <dd
+                    class="num pt-1 text-right font-semibold tabular-nums text-ink-gray-9"
+                  >
+                    {{ money(wholeTotal, currency) }}
                   </dd>
                 </dl>
                 <p
@@ -805,14 +1083,45 @@
               </p>
               <p v-else class="mt-3 text-sm text-ink-gray-6">
                 {{
+                  sharedOrder
+                    ? __(
+                        'The order to {0} already has {1} from its other lists; what you set here adds to it.',
+                        [catalog.supplier_name, money(wholeTotal, currency)],
+                        'Lista',
+                      )
+                    : __(
+                        'Set quantities on the lines and the order builds itself here.',
+                        null,
+                        'Lista',
+                      )
+                }}
+              </p>
+            </div>
+            <section
+              v-if="showTypes"
+              class="mt-4 rounded-8 border border-outline-gray-2 p-4"
+              :aria-label="__('By product type', null, 'Lista')"
+              data-lista-por-tipo
+            >
+              <p class="title-face text-base font-semibold text-ink-gray-9">
+                {{ __('By product type', null, 'Lista') }}
+              </p>
+              <p class="mt-0.5 text-xs text-ink-gray-6">
+                {{
                   __(
-                    'Set quantities on the lines and the order builds itself here.',
+                    "The whole order against this month's budget, and what you bought before",
                     null,
                     'Lista',
                   )
                 }}
               </p>
-            </div>
+              <ListaTipos
+                class="mt-2"
+                :groups="orderTypes"
+                :currency="currency"
+                :supplier-name="catalog.supplier_name"
+              />
+            </section>
             <dl
               class="mt-4 grid grid-cols-[1fr_auto] gap-x-3 gap-y-1 px-1 text-xs text-ink-gray-6"
             >
@@ -885,7 +1194,7 @@
 
         <!-- phone: the sum, at the thumb -->
         <div
-          v-if="phone && draft.lines"
+          v-if="phone && (draft.lines || sharedOrder)"
           class="sticky bottom-0 z-10 mt-4 flex items-center gap-3 border-t border-outline-gray-1 bg-surface-base px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2"
           data-lista-suma
         >
@@ -900,6 +1209,14 @@
             <span
               class="num block text-base font-semibold tabular-nums text-ink-gray-9"
               >{{ money(shownTotal, currency) }}</span
+            >
+            <span
+              v-if="sharedOrder"
+              class="num block text-xs tabular-nums text-ink-gray-6"
+              data-lista-suma-completa
+              >{{
+                __('Whole order, {0}', [money(wholeTotal, currency)], 'Lista')
+              }}</span
             >
             <span
               v-if="totals.over_ceiling"
@@ -997,8 +1314,11 @@
       v-model:open="pedidoOpen"
       :catalog="props.name"
       :pedido="pedido"
-      :totals="totals"
+      :totals="wholeTotals"
       :rows="rows"
+      :others="others"
+      :groups="orderTypes"
+      :order-lines="orderLineCount"
       :lines="linesByName"
       :currency="currency"
       :owner="data.owner"
@@ -1008,6 +1328,7 @@
       @set="setQty"
       @ceiling="setCeiling"
       @line="(name) => openLine(linesByName[name])"
+      @list="openList"
       @sent="onSent"
     />
     <ListaRetiro
@@ -1020,6 +1341,16 @@
       @act="retireAct"
       @refresh="retireRefresh"
     />
+    <ListaTipo
+      v-if="used.tipo && data"
+      v-model:open="tipoOpen"
+      :title="catalog.title"
+      :value="catalog.item_group || ''"
+      :options="data.type_options || []"
+      :busy="busy === 'tipo'"
+      :problem="tipoProblem"
+      @save="saveTipo"
+    />
   </div>
 </template>
 
@@ -1027,6 +1358,7 @@
 import {
   computed,
   defineAsyncComponent,
+  getCurrentInstance,
   h,
   onBeforeUnmount,
   onMounted,
@@ -1036,9 +1368,22 @@ import {
 } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { toast } from 'frappe-ui'
-import { AppBar, ChipGroup, EmptyState, chipClass } from '@/components/ui'
+import {
+  AppBar,
+  ChipGroup,
+  EmptyState,
+  Segmented,
+  chipClass,
+} from '@/components/ui'
 import AccionesMenu from '@/components/documentos/AccionesMenu.vue'
 import ListaStepper from '@/components/compras/lista/ListaStepper.vue'
+import ListaTipos from '@/components/compras/lista/ListaTipos.vue'
+import ListaHistoriaMini from '@/components/compras/lista/ListaHistoriaMini.vue'
+import ListaPresencia from '@/components/compras/lista/ListaPresencia.vue'
+import { liveHub } from '@/composables/liveHub'
+import { sessionStore } from '@/stores/session'
+import { usersStore } from '@/stores/users'
+import { useLiveWatch } from '@/vendor/muelle-shell/live-sync/vue'
 import { isMobile as phone } from '@/composables/breakpoint'
 import { comprasApi, money, problemOf } from '@/composables/useCompras'
 import { BTN } from '@/documentos/tools'
@@ -1069,6 +1414,24 @@ import {
   unitPrice,
   visibleSections,
 } from '@/utils/listaPrecios'
+import {
+  listLabel,
+  otherLists,
+  supplierLists,
+  typeRows,
+} from '@/utils/hojaPedido'
+import {
+  BOT_PRESENT_MS,
+  FLASH_MS,
+  LIVE_EVENT,
+  ORDER_DOCTYPE,
+  changedLines,
+  concerns,
+  editorOf,
+  othersIn,
+  storiesToAsk,
+  viewerName,
+} from '@/utils/listaVivo'
 
 const ListaLinea = defineAsyncComponent(
   () => import('@/components/compras/lista/ListaLinea.vue'),
@@ -1084,6 +1447,9 @@ const ListaPedido = defineAsyncComponent(
 )
 const ListaRetiro = defineAsyncComponent(
   () => import('@/components/compras/lista/ListaRetiro.vue'),
+)
+const ListaTipo = defineAsyncComponent(
+  () => import('@/components/compras/lista/ListaTipo.vue'),
 )
 
 const props = defineProps({
@@ -1110,6 +1476,8 @@ const QTY_WAIT_MS = 400
 const data = ref(null)
 const rows = ref({})
 const totals = ref({})
+const orderTotals = ref({})
+const orderParts = ref({ lists: {}, groups: [] })
 const pedido = ref(null)
 const guard = ref(null)
 const problem = ref(null)
@@ -1162,6 +1530,47 @@ const lineCount = computed(() => Object.keys(linesByName.value).length)
 const activePromos = computed(() =>
   (data.value?.promos || []).filter((p) => p.active !== false),
 )
+// A long list opens on what the order holds: searching, a filter or a section
+// browse the whole list to add from it. A line taken back to 0 stays in the
+// order view until the page opens again, so a slip is one tap to undo.
+const view = ref('pedido')
+const kept = reactive(new Set())
+watch(
+  rows,
+  (next) => {
+    for (const [name, row] of Object.entries(next || {}))
+      if (Number(row?.qty) > 0) kept.add(name)
+  },
+  { deep: true, immediate: true },
+)
+const browsing = computed(() =>
+  Boolean(query.value || filter.value || section.value),
+)
+const orderView = computed(
+  () => canOrder.value && view.value === 'pedido' && !browsing.value,
+)
+const viewOptions = computed(() => [
+  {
+    value: 'pedido',
+    label: __('In the order', null, 'Lista'),
+    count: draft.value.lines,
+  },
+  {
+    value: 'lista',
+    label: __('Whole list', null, 'Lista'),
+    count: lineCount.value,
+  },
+])
+function pickView(value) {
+  if (value === 'pedido') clearFilters()
+  view.value = value
+  scroller.value?.scrollTo?.({ top: 0 })
+}
+const searchLabel = computed(() =>
+  orderView.value
+    ? __('Search the list to add', null, 'Lista')
+    : __('Search brand, model or code', null, 'Lista'),
+)
 const visible = computed(() =>
   data.value
     ? visibleSections(data.value.sections, {
@@ -1170,8 +1579,19 @@ const visible = computed(() =>
         section: section.value,
         rows: rows.value,
         promos: data.value.promos,
+        only: orderView.value ? kept : null,
       })
     : [],
+)
+// Where an empty order view sends the buyer first: the lines the shop runs
+// short of, then what is new, on promo or cheaper.
+const START_FILTERS = ['bajo', 'nuevos', 'promo', 'bajaron']
+const startOptions = computed(() =>
+  START_FILTERS.map((f) => ({
+    value: f,
+    label: FILTER_LABELS[f](),
+    count: counts.value[f] || 0,
+  })).filter((o) => o.count),
 )
 const shownCount = computed(() =>
   visible.value.reduce((n, s) => n + s.lines.length, 0),
@@ -1189,8 +1609,9 @@ const FILTER_LABELS = {
   pedido: () => __('In the order', null, 'Lista'),
   bajo: () => __('Below level', null, 'Lista'),
 }
+// «In the order» is the view switch now, not a filter chip.
 const filterOptions = computed(() =>
-  FILTERS.map((f) => ({
+  FILTERS.filter((f) => f !== 'pedido').map((f) => ({
     value: f,
     label: FILTER_LABELS[f](),
     count: counts.value[f] || 0,
@@ -1291,6 +1712,49 @@ const promoSentences = computed(() => {
     })
   return out
 })
+// The supplier's lists and its one open order (doco.workspaces.hoja_pedido):
+// this list's rows are the page's, the others' show as their sums.
+const sheet = computed(() => data.value?.sheet || null)
+const supplierTabs = computed(() =>
+  supplierLists(sheet.value?.lists, orderParts.value.lists, props.name),
+)
+const others = computed(() => otherLists(supplierTabs.value, props.name))
+const sharedOrder = computed(() => others.value.length > 0)
+const wholeTotals = computed(() =>
+  orderTotals.value.total !== undefined ? orderTotals.value : totals.value,
+)
+const wholeTotal = computed(
+  () =>
+    Number(wholeTotals.value.total || 0) -
+    Number(totals.value.total || 0) +
+    shownTotal.value,
+)
+const wholePieces = computed(() =>
+  others.value.reduce((n, l) => n + l.pieces, draft.value.pieces || 0),
+)
+const orderLineCount = computed(() =>
+  Object.values(orderParts.value.lists || {}).reduce(
+    (n, l) => n + Number(l.lines || 0),
+    0,
+  ),
+)
+const orderTypes = computed(() =>
+  typeRows(orderParts.value.groups, sheet.value?.history),
+)
+const showTypes = computed(() =>
+  orderTypes.value.some(
+    (g) => g.item_group || g.budget || (g.history && g.history.length),
+  ),
+)
+const tabState = (list) =>
+  SETTLING.includes(list.status)
+    ? __('Reading', null, 'Lista')
+    : formatDate(list.date, { relative: false }) || ''
+function openList(name) {
+  pedidoOpen.value = false
+  router.push({ name: 'CompraLista', params: { name } })
+}
+
 const exportUrl = (format) =>
   `${EXPORT}?catalogo=${encodeURIComponent(props.name)}&format=${format}`
 const printUrl = computed(() =>
@@ -1472,6 +1936,8 @@ function applyState(out) {
   if (!out) return
   if ('pedido' in out) pedido.value = out.pedido
   if (out.totals) totals.value = out.totals
+  if (out.order_totals) orderTotals.value = out.order_totals
+  if (out.order) orderParts.value = out.order
   if (out.rows) {
     const next = { ...out.rows }
     for (const [line, qty] of Object.entries(pendingQty)) {
@@ -1568,12 +2034,14 @@ async function flush(lineName) {
   const qty = pendingQty[lineName]
   const n = (seq.get(lineName) || 0) + 1
   seq.set(lineName, n)
+  ownWrites.set(lineName, Date.now())
   try {
     const out = await call('set_qty', {
       catalogo: props.name,
       line: lineName,
       qty,
     })
+    ownWrites.set(lineName, Date.now())
     if (seq.get(lineName) !== n) return
     if (!timers.has(lineName)) delete pendingQty[lineName]
     applyState(out)
@@ -1593,6 +2061,193 @@ async function setCeiling(value) {
   applyState(out)
 }
 
+// ── live: the order as a shared sheet ─────────────────────────────────────
+// Another person, the Desk or Muelle changing this supplier's order shows here
+// at once: the order part is read again (`estado`), the rows they changed are
+// marked with who did it, and whoever has the order open shows beside the bolt.
+const socket = getCurrentInstance()?.appContext.config.globalProperties.$socket
+const session = sessionStore()
+const users = usersStore()
+const OWN_MS = 3000
+const ownWrites = new Map()
+const flash = reactive({})
+const flashTimers = new Map()
+const viewers = ref([])
+const botActive = ref(false)
+let botTimer = null
+let lastEditor = null
+const people = computed(() =>
+  viewers.value.map((user) => ({
+    user,
+    name:
+      viewerName(user, users.getUser(user)?.full_name) ||
+      __('Someone', null, 'Lista'),
+  })),
+)
+const recentOwn = (line) => Date.now() - (ownWrites.get(line) || 0) < OWN_MS
+const wroteJustNow = () =>
+  [...ownWrites.values()].some((at) => Date.now() - at < OWN_MS)
+
+function markChanges(changes) {
+  const theirs = changes.filter((c) => !recentOwn(c.line))
+  if (!theirs.length) return
+  const who =
+    lastEditor && Date.now() - lastEditor.at < FLASH_MS ? lastEditor : null
+  for (const c of theirs) {
+    kept.add(c.line)
+    flash[c.line] = {
+      bot: Boolean(who?.bot),
+      name: who?.name || '',
+      was: c.was,
+      now: c.now,
+    }
+    clearTimeout(flashTimers.get(c.line))
+    flashTimers.set(
+      c.line,
+      setTimeout(() => {
+        delete flash[c.line]
+        flashTimers.delete(c.line)
+      }, FLASH_MS),
+    )
+  }
+  const count = theirs.length
+  toast.info(
+    who?.bot
+      ? __('Muelle changed {0} lines of the order', [count], 'Lista')
+      : who?.name
+        ? __('{0} changed {1} lines of the order', [who.name, count], 'Lista')
+        : __('{0} lines of the order changed', [count], 'Lista'),
+  )
+}
+
+let refreshing = null
+let refreshAgain = false
+function liveRefresh() {
+  if (!data.value || !catalog.value.supplier) return null
+  if (refreshing) {
+    refreshAgain = true
+    return refreshing
+  }
+  refreshing = (async () => {
+    try {
+      do {
+        refreshAgain = false
+        const before = rows.value
+        const out = await call('estado', { catalogo: props.name })
+        applyState(out)
+        markChanges(changedLines(before, rows.value, pendingQty))
+      } while (refreshAgain)
+    } catch {
+      // the next announcement or the hub's resync reads it again
+    } finally {
+      refreshing = null
+    }
+  })()
+  return refreshing
+}
+
+function onOrderEvent(event) {
+  if (!concerns(event, catalog.value.supplier)) return
+  const who = editorOf(event, session.user)
+  if (!who) return
+  lastEditor = {
+    ...who,
+    name: who.bot ? 'Muelle' : who.name,
+    at: Date.now(),
+  }
+  if (who.bot) {
+    botActive.value = true
+    clearTimeout(botTimer)
+    botTimer = setTimeout(() => (botActive.value = false), BOT_PRESENT_MS)
+  }
+  liveRefresh()
+}
+
+useLiveWatch(
+  liveHub(socket),
+  ORDER_DOCTYPE,
+  (batch) => {
+    if (batch.full) return liveRefresh()
+    if (wroteJustNow()) return null
+    const mine = pedido.value?.pedido
+    return mine && batch.names.includes(mine) ? liveRefresh() : null
+  },
+  { minIntervalMs: 1500 },
+)
+
+// presence: Frappe's open-document rooms say who else has the order open
+let openDoc = null
+function openPresence(name) {
+  if (openDoc === (name || null)) return
+  if (openDoc) socket?.emit?.('doc_close', ORDER_DOCTYPE, openDoc)
+  viewers.value = []
+  openDoc = name || null
+  if (openDoc) socket?.emit?.('doc_open', ORDER_DOCTYPE, openDoc)
+}
+function onViewers(event) {
+  if (event?.doctype === ORDER_DOCTYPE && event.docname === openDoc)
+    viewers.value = othersIn(event.users, session.user)
+}
+function reopenPresence() {
+  if (openDoc) socket?.emit?.('doc_open', ORDER_DOCTYPE, openDoc)
+}
+watch(() => pedido.value?.pedido, openPresence)
+onMounted(() => {
+  socket?.on?.(LIVE_EVENT, onOrderEvent)
+  socket?.on?.('doc_viewers', onViewers)
+  socket?.on?.('connect', reopenPresence)
+})
+
+/** «Muelle added it», «Karla, was 3»: who changed a row and from what. */
+function flashLabel(f) {
+  const who = f.bot
+    ? 'Muelle'
+    : String(f.name || '').split(/\s+/u)[0] || __('Someone', null, 'Lista')
+  if (!f.was) return __('{0} added it', [who], 'Lista')
+  if (!f.now) return __('{0} took it out', [who], 'Lista')
+  return __('{0}, was {1}', [who, f.was], 'Lista')
+}
+/** The supplier's code, then what the line says it is. */
+function codeAndSpecs(line) {
+  return [
+    line.code ? __('Code {0}', [line.code], 'Lista') : '',
+    ...specParts(line),
+    ...(line.tags || []),
+  ]
+    .filter(Boolean)
+    .join(', ')
+}
+
+// each shown row's price story on every supplier's lists (desktop table)
+const stories = reactive({})
+let storyTimer = null
+const shownNames = computed(() =>
+  phone.value
+    ? []
+    : visible.value.flatMap((s) => s.lines.map((line) => line.name)),
+)
+watch(
+  shownNames,
+  (names) => {
+    clearTimeout(storyTimer)
+    if (!data.value || !names.length || names.length > 60) return
+    const ask = storiesToAsk(names, stories)
+    if (!ask.length) return
+    storyTimer = setTimeout(async () => {
+      try {
+        const out = await call('historias', {
+          catalogo: props.name,
+          lineas: ask,
+        })
+        for (const name of ask) stories[name] = out?.lines?.[name] || []
+      } catch {
+        for (const name of ask) stories[name] = []
+      }
+    }, 300)
+  },
+  { immediate: true },
+)
+
 // Sheets.
 const used = reactive({
   linea: false,
@@ -1600,6 +2255,7 @@ const used = reactive({
   promos: false,
   pedido: false,
   retiro: false,
+  tipo: false,
 })
 const lineOpen = ref(false)
 const lineName = ref('')
@@ -1701,6 +2357,36 @@ function onSent() {
 
 // Models the list no longer carries (after a receipt against this list's order).
 const retireCount = computed(() => data.value?.retire?.rows?.length || 0)
+const tipoOpen = ref(false)
+const tipoProblem = ref('')
+function openTipo() {
+  tipoProblem.value = ''
+  used.tipo = true
+  tipoOpen.value = true
+}
+async function saveTipo(value) {
+  tipoProblem.value = ''
+  busy.value = 'tipo'
+  try {
+    const out = await call('set_group', {
+      catalogo: props.name,
+      item_group: value || '',
+    })
+    applyState(out)
+    tipoOpen.value = false
+    toast.success(
+      out.item_group
+        ? __('Type saved: {0}', [out.item_group], 'Lista')
+        : __('The type will be read from the list', null, 'Lista'),
+    )
+    await load({ quiet: true })
+  } catch (error) {
+    tipoProblem.value = problemOf(error).detail || ''
+  } finally {
+    busy.value = ''
+  }
+}
+
 const retiroOpen = ref(false)
 const retiroProblem = ref('')
 function openRetiro() {
@@ -2078,6 +2764,14 @@ const actionGroups = computed(() => {
           ),
         },
         {
+          key: 'tipo',
+          label: __('Product type', null, 'Lista'),
+          icon: 'lucide-tag',
+          hint: catalog.value.item_group || __('Not set', null, 'Lista'),
+          allowed: owner,
+          reason: ownerOnly,
+        },
+        {
           key: 'promos',
           label: __('Promos', null, 'Lista'),
           icon: 'lucide-gift',
@@ -2185,6 +2879,9 @@ function onAction({ key }) {
     case 'promos':
       openPromos()
       break
+    case 'tipo':
+      openTipo()
+      break
     case 'retiro':
       openRetiro()
       break
@@ -2228,9 +2925,15 @@ watch(
     data.value = null
     rows.value = {}
     totals.value = {}
+    orderTotals.value = {}
+    orderParts.value = { lists: {}, groups: [] }
     pedido.value = null
     readQuote.value = null
     clearFilters()
+    view.value = 'pedido'
+    kept.clear()
+    for (const key of Object.keys(stories)) delete stories[key]
+    for (const key of Object.keys(flash)) delete flash[key]
     load()
   },
 )
@@ -2238,6 +2941,13 @@ onMounted(load)
 onBeforeUnmount(() => {
   clearPoll()
   clearTimeout(searchTimer)
+  clearTimeout(storyTimer)
+  clearTimeout(botTimer)
+  for (const t of flashTimers.values()) clearTimeout(t)
+  openPresence(null)
+  socket?.off?.(LIVE_EVENT, onOrderEvent)
+  socket?.off?.('doc_viewers', onViewers)
+  socket?.off?.('connect', reopenPresence)
   for (const t of timers.values()) clearTimeout(t)
 })
 </script>

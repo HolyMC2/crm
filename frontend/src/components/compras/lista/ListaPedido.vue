@@ -21,6 +21,9 @@
     </div>
     <div v-else class="space-y-4 pb-2">
       <!-- the rows -->
+      <p v-if="others.length" class="-mb-3 text-xs font-medium text-ink-gray-6">
+        {{ __('This list', null, 'Lista') }}
+      </p>
       <ul
         class="divide-y divide-outline-gray-1"
         :aria-label="__('Order rows', null, 'Lista')"
@@ -57,6 +60,64 @@
         </li>
       </ul>
 
+      <!-- the supplier's other lists in this order -->
+      <section
+        v-if="others.length"
+        :aria-label="__('Also in this order', null, 'Lista')"
+        data-lista-pedido-otras
+      >
+        <p class="mb-1 text-xs font-medium text-ink-gray-6">
+          {{ __('Also in this order', null, 'Lista') }}
+        </p>
+        <ul class="divide-y divide-outline-gray-1">
+          <li v-for="list in others" :key="list.name">
+            <button
+              type="button"
+              class="press flex min-h-11 w-full items-center gap-2 py-1.5 text-left"
+              :data-lista-pedido-otra="list.name"
+              @click="emit('list', list.name)"
+            >
+              <span class="min-w-0 flex-1">
+                <span
+                  class="block truncate text-sm font-medium text-ink-gray-9"
+                  >{{ listLabel(list) }}</span
+                >
+                <span class="block truncate text-xs text-ink-gray-6">{{
+                  __(
+                    '{0} pieces in {1} rows',
+                    [list.pieces, list.lines],
+                    'Lista',
+                  )
+                }}</span>
+              </span>
+              <span
+                class="num w-20 flex-none text-right text-sm tabular-nums text-ink-gray-9"
+                >{{ money(list.amount, currency) }}</span
+              >
+              <span
+                class="lucide-chevron-right size-4 flex-none text-ink-gray-5"
+                aria-hidden="true"
+              />
+            </button>
+          </li>
+        </ul>
+      </section>
+
+      <!-- per product type, when the order holds more than one -->
+      <section
+        v-if="groups.length > 1"
+        :aria-label="__('By product type', null, 'Lista')"
+      >
+        <p class="mb-1 text-xs font-medium text-ink-gray-6">
+          {{ __('By product type', null, 'Lista') }}
+        </p>
+        <ListaTipos
+          :groups="groups"
+          :currency="currency"
+          :supplier-name="supplierName"
+        />
+      </section>
+
       <!-- promos -->
       <div
         v-if="promoLines.length"
@@ -85,7 +146,7 @@
           {{
             __(
               '{0} pieces in {1} rows',
-              [totals.pieces, orderRows.length],
+              [totals.pieces, orderLines || orderRows.length],
               'Lista',
             )
           }}
@@ -110,7 +171,11 @@
           </dd>
         </template>
         <dt class="pt-1 text-base font-semibold text-ink-gray-9">
-          {{ __('Total', null, 'Lista') }}
+          {{
+            others.length
+              ? __('Whole order', null, 'Lista')
+              : __('Total', null, 'Lista')
+          }}
         </dt>
         <dd
           class="num pt-1 text-right text-base font-semibold tabular-nums text-ink-gray-9"
@@ -363,7 +428,9 @@ import { BottomSheet, Segmented } from '@/components/ui'
 import { BTN } from '@/documentos/tools'
 import { comprasApi, money, problemOf } from '@/composables/useCompras'
 import { copyText, rowTotal, specParts } from '@/utils/listaPrecios'
+import { listLabel } from '@/utils/hojaPedido'
 import ListaStepper from './ListaStepper.vue'
+import ListaTipos from './ListaTipos.vue'
 
 const props = defineProps({
   open: { type: Boolean, default: false },
@@ -379,6 +446,12 @@ const props = defineProps({
   owner: { type: Boolean, default: false },
   canOrder: { type: Boolean, default: false },
   supplierName: { type: String, default: '' },
+  /** The supplier's other lists this order holds lines of (otherLists()). */
+  others: { type: Array, default: () => [] },
+  /** The order per product type (typeRows()). */
+  groups: { type: Array, default: () => [] },
+  /** The rows of the whole order, over every list. */
+  orderLines: { type: Number, default: 0 },
 })
 const emit = defineEmits([
   'update:open',
@@ -386,6 +459,7 @@ const emit = defineEmits([
   'set',
   'ceiling',
   'line',
+  'list',
   'sent',
 ])
 

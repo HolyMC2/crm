@@ -204,3 +204,24 @@ export async function uploadPictures(
   }
   if (rest.length) await api(API + 'index_now', { catalogo: catalog })
 }
+
+/**
+ * Lists dropped together, one after the other (a supplier that sends one list
+ * per line of product): `send(file)` resolves false to stop at a problem, so
+ * the worker sees it before the rest go; `onStep` gets {at, of} before each
+ * file of a batch, null for a single file and once the batch ends. Resolves
+ * how many were sent.
+ */
+export async function sendEach(files, send, onStep = () => {}) {
+  let sent = 0
+  try {
+    for (const [i, file] of files.entries()) {
+      onStep(files.length > 1 ? { at: i + 1, of: files.length } : null)
+      if ((await send(file)) === false) break
+      sent += 1
+    }
+  } finally {
+    onStep(null)
+  }
+  return sent
+}

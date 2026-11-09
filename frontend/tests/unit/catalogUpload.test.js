@@ -5,6 +5,7 @@ import {
   mimeOf,
   partRanges,
   partTarget,
+  sendEach,
   tokenOf,
   uploadCatalog,
 } from '@/utils/catalogUpload'
@@ -119,5 +120,60 @@ describe('uploadCatalog', () => {
       uploadCatalog(LINK, new File(['abc'], 'a.pdf'), { api, put }),
     ).rejects.toMatchObject({ uploadFailure: 'part' })
     expect(methods).toEqual(['initiate'])
+  })
+})
+
+describe('lists dropped together', () => {
+  it('sends each file in turn and says which one of the batch it is', async () => {
+    const sent = []
+    const steps = []
+    const n = await sendEach(
+      ['fundas.pdf', 'micas.pdf', 'accesorios.xlsx'],
+      async (file) => {
+        sent.push(file)
+      },
+      (step) => steps.push(step),
+    )
+    expect(n).toBe(3)
+    expect(sent).toEqual(['fundas.pdf', 'micas.pdf', 'accesorios.xlsx'])
+    expect(steps).toEqual([
+      { at: 1, of: 3 },
+      { at: 2, of: 3 },
+      { at: 3, of: 3 },
+      null,
+    ])
+  })
+
+  it('stops at a problem so the rest wait', async () => {
+    const sent = []
+    const n = await sendEach(['a.pdf', 'b.pdf', 'c.pdf'], async (file) => {
+      sent.push(file)
+      return file !== 'b.pdf'
+    })
+    expect(n).toBe(1)
+    expect(sent).toEqual(['a.pdf', 'b.pdf'])
+  })
+
+  it('a single file is no batch, and a failed send still ends it', async () => {
+    const steps = []
+    expect(
+      await sendEach(
+        ['a.pdf'],
+        async () => {},
+        (s) => steps.push(s),
+      ),
+    ).toBe(1)
+    expect(steps).toEqual([null, null])
+    const after = []
+    await expect(
+      sendEach(
+        ['a.pdf', 'b.pdf'],
+        async () => {
+          throw new Error('network')
+        },
+        (s) => after.push(s),
+      ),
+    ).rejects.toThrow('network')
+    expect(after.at(-1)).toBeNull()
   })
 })

@@ -159,11 +159,17 @@
             <div v-if="upload" class="mt-3" role="status">
               <p class="truncate text-sm">
                 {{
-                  __(
-                    'Uploading {0}… {1}%',
-                    [upload.name, upload.pct],
-                    'Surtido',
-                  )
+                  batch
+                    ? __(
+                        'Uploading {0}… {1}%, file {2} of {3}',
+                        [upload.name, upload.pct, batch.at, batch.of],
+                        'Surtido',
+                      )
+                    : __(
+                        'Uploading {0}… {1}%',
+                        [upload.name, upload.pct],
+                        'Surtido',
+                      )
                 }}
               </p>
               <div
@@ -1456,7 +1462,7 @@ import {
   closeSpecs,
   readyRows,
 } from '@/utils/surtido'
-import { uploadCatalog, uploadPictures } from '@/utils/catalogUpload'
+import { sendEach, uploadCatalog, uploadPictures } from '@/utils/catalogUpload'
 import { LIST_ACCEPT, dropFiles } from '@/utils/listaPrecios'
 import { buyText, levelState } from '@/utils/niveles'
 import LucideRefreshCw from '~icons/lucide/refresh-cw'
@@ -1484,6 +1490,8 @@ const newSupplierLabel = ref('')
 const newTitle = ref('')
 const planSupplier = ref('')
 const upload = ref(null)
+// Several files dropped at once upload one after the other: {at, of}.
+const batch = ref(null)
 const dropping = ref(false)
 const readQuote = ref(null)
 // the catalog the owner just dropped or asked to read: picked once it has lines
@@ -1745,12 +1753,23 @@ async function newFromPictures(files) {
   if (out) await sendPictures(out.upload_url, out.catalog, files)
 }
 
-/** A drop or a pick: pictures become one list; a PDF or a sheet, its own. */
-function newFromFiles(list) {
+/**
+ * A drop or a pick: each PDF or sheet becomes its own list (a supplier that
+ * sends one list per line of product drops them all at once), then the
+ * pictures become one list.
+ */
+async function newFromFiles(list) {
   const { pictures, documents } = dropFiles(list)
-  if (pictures.length) return newFromPictures(pictures)
-  if (documents.length) return newFromFile(documents[0])
-  return null
+  if (upload.value || batch.value) return
+  await sendEach(
+    documents,
+    async (file) => {
+      await newFromFile(file)
+      return !problem.value
+    },
+    (step) => (batch.value = step),
+  )
+  if (pictures.length && !problem.value) await newFromPictures(pictures)
 }
 
 function pickCatalog(event) {

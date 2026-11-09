@@ -178,10 +178,18 @@ export function lineText(line) {
 }
 
 /** The sections with the lines the search, the filter and the chosen section
- *  leave; empty sections drop out. `promos` marks the lines a promo names. */
+ *  leave; empty sections drop out. `promos` marks the lines a promo names;
+ *  `only` (a Set of line names) keeps just those lines, as the order view does. */
 export function visibleSections(
   sections = [],
-  { search = '', filter = '', section = '', rows = {}, promos = [] } = {},
+  {
+    search = '',
+    filter = '',
+    section = '',
+    rows = {},
+    promos = [],
+    only = null,
+  } = {},
 ) {
   const active = (promos || []).filter((p) => p.active !== false)
   return (sections || [])
@@ -189,6 +197,7 @@ export function visibleSections(
     .map((s) => ({
       name: s.name,
       lines: s.lines
+        .filter((line) => !only || only.has(line.name))
         .map((line) => ({ ...line, promo: promoFor(line, active) }))
         .filter(
           (line) =>

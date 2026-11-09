@@ -244,6 +244,18 @@ describe('which lines show', () => {
     ).toEqual(['LAPTOPS'])
   })
 
+  it('the order view keeps only the lines it holds, a search still finds among them', () => {
+    const names = (opts) =>
+      visibleSections(sections, opts).flatMap((s) => s.lines.map((l) => l.name))
+    expect(names({ only: new Set(['L3']) })).toEqual(['L3'])
+    expect(
+      visibleSections(sections, { only: new Set(['L3']) }).map((s) => s.name),
+    ).toEqual(['LAPTOPS'])
+    expect(names({ only: new Set(), search: 'realme' })).toEqual([])
+    // without `only` the whole list shows
+    expect(names({})).toHaveLength(3)
+  })
+
   it('counts each filter chip and marks the promo on the line', () => {
     expect(filterCounts(sections, { L1: { qty: 1 } }, promos)).toEqual({
       nuevos: 1,
@@ -637,6 +649,10 @@ describe('lista strings (es-MX)', () => {
     '../../src/components/compras/lista/ListaRetiro.vue',
     '../../src/components/compras/lista/ListaHistoria.vue',
     '../../src/components/compras/lista/ListaStepper.vue',
+    '../../src/components/compras/lista/ListaTipos.vue',
+    '../../src/components/compras/lista/ListaTipo.vue',
+    '../../src/components/compras/lista/ListaHistoriaMini.vue',
+    '../../src/components/compras/lista/ListaPresencia.vue',
   ]
   const page = files
     .map((p) => readFileSync(resolve(here, p), 'utf8'))
@@ -733,6 +749,7 @@ describe('the route and the chunk rules', () => {
       'ListaPromos',
       'ListaPedido',
       'ListaRetiro',
+      'ListaTipo',
     ])
       expect(page).toMatch(
         new RegExp(
