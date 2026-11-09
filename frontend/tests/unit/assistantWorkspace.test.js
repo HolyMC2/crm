@@ -259,9 +259,9 @@ describe('the desktop workspace', () => {
         (p) => p.dataset.panel,
       ),
     ).toEqual(['screen', 'open', 'agenda', 'canvas', 'conversation'])
-    expect(
-      q('[data-panel="open"] button').getAttribute('aria-expanded'),
-    ).toBe('true')
+    expect(q('[data-panel="open"] button').getAttribute('aria-expanded')).toBe(
+      'true',
+    )
     expect(sessions.view).toBe('chat')
     app.unmount()
     restore()
@@ -335,12 +335,12 @@ describe('the desktop workspace', () => {
     await flush()
     expect(q('[data-testid="assistant-sidebar"]')).toBeNull()
     expect(q('[data-testid="assistant-side-panels"]')).not.toBeNull()
-    expect(
-      JSON.parse(localStorage.getItem('muelle-assistant-layout')),
-    ).toEqual({
-      sidebar: false,
-      panels: true,
-    })
+    expect(JSON.parse(localStorage.getItem('muelle-assistant-layout'))).toEqual(
+      {
+        sidebar: false,
+        panels: true,
+      },
+    )
     // with the column folded, the header keeps a new conversation at hand
     expect(q('[data-testid="assistant-new"]')).not.toBeNull()
     q('[data-testid="assistant-toggle-panels"]').click()
