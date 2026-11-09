@@ -541,3 +541,155 @@ describe('IdentityEditor opened from another screen (Registrar cliente)', () => 
     })
   })
 })
+
+describe('IdentityEditor principal phone and email', () => {
+  const chips = () => [...root.querySelectorAll('[role="radio"]')]
+  it('makes another phone the principal with one tap and sends it', async () => {
+    api({
+      get_editor_meta: () => CONTACT_META,
+      get_record: () => contact('v1'),
+      save_record: () => ({ ok: true }),
+    })
+    await mount(IdentityEditor, {
+      source: { doctype: 'Contact', name: 'CONT-1' },
+    })
+    const phones = chips().slice(0, 2)
+    expect(phones.map((el) => el.textContent.trim())).toEqual([
+      'Principal',
+      'Hacer principal',
+    ])
+    expect(root.textContent).toContain(
+      'El principal es el que ven los tratos, las llamadas y WhatsApp.',
+    )
+    phones[1].click()
+    await settle()
+    expect(chips()[1].getAttribute('aria-checked')).toBe('true')
+    expect(chips()[0].textContent.trim()).toBe('Hacer principal')
+    await click('Guardar cambios')
+    const [[, { payload }]] = calls('save_record')
+    expect(payload.fields.phone_nos).toEqual([
+      { phone: '5511111111', is_primary_mobile_no: 0, is_primary_phone: 0 },
+      { phone: '5522222222', is_primary_mobile_no: 1, is_primary_phone: 1 },
+    ])
+    expect(payload.channel_mode).toBe('replace')
+  })
+
+  it('removing the principal hands it to the first number left', async () => {
+    api({
+      get_editor_meta: () => CONTACT_META,
+      get_record: () => contact('v1'),
+      save_record: () => ({ ok: true }),
+    })
+    await mount(IdentityEditor, {
+      source: { doctype: 'Contact', name: 'CONT-1' },
+    })
+    root.querySelector('[aria-label="Quitar teléfono 1"]').click()
+    await settle()
+    await click('Guardar cambios')
+    const [[, { payload }]] = calls('save_record')
+    expect(payload.fields.phone_nos).toEqual([
+      { phone: '5522222222', is_primary_mobile_no: 1, is_primary_phone: 1 },
+    ])
+  })
+
+  it('the first phone added to a contact without one is the principal', async () => {
+    api({
+      get_editor_meta: () => CONTACT_META,
+      get_record: () => contact('v1', { phone_nos: [] }),
+      save_record: () => ({ ok: true }),
+    })
+    await mount(IdentityEditor, {
+      source: { doctype: 'Contact', name: 'CONT-1' },
+    })
+    await click('Añadir teléfono')
+    expect(chips()[0].getAttribute('aria-checked')).toBe('true')
+    await click('Añadir teléfono')
+    expect(chips()[1].getAttribute('aria-checked')).toBe('false')
+  })
+})
+
+describe('IdentityEditor on a customer (Editar datos del cliente)', () => {
+  const CUSTOMER_META = {
+    doctype: 'Customer',
+    can_write: true,
+    fields: [
+      { fieldname: 'customer_name', label: 'Nombre', fieldtype: 'Data' },
+      {
+        fieldname: 'customer_primary_contact',
+        label: 'Contacto principal',
+        fieldtype: 'Link',
+        options: 'Contact',
+      },
+      {
+        fieldname: 'mobile_no',
+        label: 'Móvil',
+        fieldtype: 'Read Only',
+        read_only: true,
+        derived_from: 'customer_primary_contact',
+      },
+    ],
+  }
+  let customerPhone
+  function customer() {
+    return {
+      doctype: 'Customer',
+      name: 'Carlos Morales',
+      source: 'customer',
+      modified: 'c1',
+      fields: {
+        customer_name: 'Carlos Morales',
+        customer_primary_contact: 'CONT-1',
+        mobile_no: customerPhone,
+      },
+    }
+  }
+  beforeEach(() => {
+    customerPhone = '5511111111'
+    api({
+      get_editor_meta: ({ source }) =>
+        source === 'customer' ? CUSTOMER_META : CONTACT_META,
+      get_record: ({ source }) =>
+        source === 'customer' ? customer() : contact('v1'),
+      save_record: ({ payload }) => {
+        if (payload.source === 'contact') customerPhone = '5522222222'
+        return { ok: true }
+      },
+    })
+  })
+
+  it('shows the phone as the contact’s, not as a field that saves and comes back', async () => {
+    const saved = vi.fn()
+    await mount(IdentityEditor, {
+      source: { doctype: 'Customer', name: 'Carlos Morales' },
+      onSaved: saved,
+    })
+    expect(root.querySelector('[data-field="mobile_no"]')).toBeNull()
+    expect(root.textContent).toContain('Móvil')
+    expect(root.textContent).toContain('5511111111')
+    expect(root.textContent).toContain(
+      'Vienen de su contacto principal: cámbialos ahí.',
+    )
+    await click('Editar en el contacto')
+    // The contact opens over the customer with its own phones and principal chips.
+    expect(root.querySelectorAll('[data-label^="Teléfono "]')).toHaveLength(2)
+    root.querySelectorAll('[role="radio"]')[1].click()
+    await settle()
+    const saves = [...root.querySelectorAll('button')].filter((el) =>
+      el.textContent.includes('Guardar cambios'),
+    )
+    saves.at(-1).click()
+    await settle()
+    const [[, { payload }]] = calls('save_record')
+    expect(payload.source).toBe('contact')
+    expect(payload.name).toBe('CONT-1')
+    expect(saved).toHaveBeenCalled()
+    // Back on the customer, the phone is the contact's new principal.
+    expect(root.querySelectorAll('[data-label^="Teléfono "]')).toHaveLength(0)
+    expect(root.textContent).toContain('5522222222')
+    // A customer save never carries the copied phone.
+    await type('[data-field="customer_name"]', 'Carlos Morales R.')
+    await click('Guardar cambios')
+    const customerSave = calls('save_record').at(-1)[1].payload
+    expect(customerSave.fields).toEqual({ customer_name: 'Carlos Morales R.' })
+  })
+})

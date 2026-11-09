@@ -40,9 +40,29 @@
           </div>
           <MetaFields
             v-model="draft.fields"
-            :fields="meta?.fields || []"
+            :fields="ownFields(meta)"
             :disabled="saving"
           />
+          <div v-if="editing && derived.length" class="c-derived">
+            <dl>
+              <div v-for="field in derived" :key="field.fieldname">
+                <dt>{{ field.label }}</dt>
+                <dd>{{ draft.fields[field.fieldname] || 'Sin dato' }}</dd>
+              </div>
+            </dl>
+            <p class="c-muted">
+              {{
+                derivedOwner
+                  ? 'Vienen de su contacto principal: cámbialos ahí.'
+                  : 'Elige su contacto principal para darle teléfono y correo.'
+              }}
+            </p>
+            <Button
+              v-if="derivedOwner"
+              label="Editar en el contacto"
+              @click="ownerOpen = true"
+            />
+          </div>
           <template v-if="draft.source === 'contact'">
             <div class="c-section-heading">
               <h3>Teléfonos</h3>
@@ -50,40 +70,59 @@
                 label="Añadir teléfono"
                 variant="ghost"
                 :disabled="!phoneWritable"
-                @click="
-                  draft.phones.push({
-                    phone: '',
-                    is_primary_phone: 0,
-                    is_primary_mobile_no: 0,
-                  })
-                "
+                @click="addChannel('phones')"
               />
             </div>
-            <div
-              v-for="(phone, index) in draft.phones"
-              :key="index"
-              class="c-channel-row"
+            <p
+              v-if="draft.phones.length"
+              class="c-channel-hint"
+              :class="{ 'is-warn': !hasPrimary('phones') }"
             >
-              <FormControl
-                v-model="phone.phone"
-                :label="`Teléfono ${index + 1}`"
-                type="tel"
-                :disabled="!phoneWritable"
-              />
-              <FormControl
-                type="checkbox"
-                label="Principal"
-                :model-value="!!phone.is_primary_mobile_no"
-                :disabled="!phoneWritable"
-                @update:model-value="primary('phones', index, $event)"
-              />
-              <Button
-                :aria-label="`Quitar teléfono ${index + 1}`"
-                :icon="LucideX"
-                variant="ghost"
-                :disabled="!phoneWritable"
-                @click="draft.phones.splice(index, 1)"
-              />
+              {{
+                hasPrimary('phones')
+                  ? 'El principal es el que ven los tratos, las llamadas y WhatsApp.'
+                  : 'Elige cuál es el principal: es el que ven los tratos, las llamadas y WhatsApp.'
+              }}
+            </p>
+            <div role="radiogroup" aria-label="Teléfono principal">
+              <div
+                v-for="(phone, index) in draft.phones"
+                :key="index"
+                class="c-channel-row"
+              >
+                <FormControl
+                  v-model="phone.phone"
+                  :label="`Teléfono ${index + 1}`"
+                  type="tel"
+                  :disabled="!phoneWritable"
+                />
+                <button
+                  type="button"
+                  role="radio"
+                  class="c-primary-chip press"
+                  :class="{ 'is-on': isPrimary('phones', phone) }"
+                  :aria-checked="isPrimary('phones', phone)"
+                  :title="
+                    isPrimary('phones', phone)
+                      ? 'Este es el teléfono principal'
+                      : 'Usar este teléfono como principal'
+                  "
+                  :disabled="!phoneWritable"
+                  @click="primary('phones', index, true)"
+                >
+                  {{
+                    isPrimary('phones', phone) ? 'Principal' : 'Hacer principal'
+                  }}
+                </button>
+                <Button
+                  :aria-label="`Quitar teléfono ${index + 1}`"
+                  :title="`Quitar teléfono ${index + 1}`"
+                  :icon="LucideX"
+                  variant="ghost"
+                  :disabled="!phoneWritable"
+                  @click="removeChannel('phones', index)"
+                />
+              </div>
             </div>
             <div class="c-section-heading">
               <h3>Correos</h3>
@@ -91,34 +130,62 @@
                 label="Añadir correo"
                 variant="ghost"
                 :disabled="!emailWritable"
-                @click="draft.emails.push({ email_id: '', is_primary: 0 })"
+                @click="addChannel('emails')"
               />
             </div>
-            <div
-              v-for="(email, index) in draft.emails"
-              :key="index"
-              class="c-channel-row"
+            <p
+              v-if="
+                draft.emails.length > 1 ||
+                (draft.emails.length && !hasPrimary('emails'))
+              "
+              class="c-channel-hint"
+              :class="{ 'is-warn': !hasPrimary('emails') }"
             >
-              <FormControl
-                v-model="email.email_id"
-                type="email"
-                :label="`Correo ${index + 1}`"
-                :disabled="!emailWritable"
-              />
-              <FormControl
-                type="checkbox"
-                label="Principal"
-                :model-value="!!email.is_primary"
-                :disabled="!emailWritable"
-                @update:model-value="primary('emails', index, $event)"
-              />
-              <Button
-                :aria-label="`Quitar correo ${index + 1}`"
-                :icon="LucideX"
-                variant="ghost"
-                :disabled="!emailWritable"
-                @click="draft.emails.splice(index, 1)"
-              />
+              {{
+                hasPrimary('emails')
+                  ? 'Al principal le llegan las cotizaciones y facturas.'
+                  : 'Elige cuál es el principal: le llegan las cotizaciones y facturas.'
+              }}
+            </p>
+            <div role="radiogroup" aria-label="Correo principal">
+              <div
+                v-for="(email, index) in draft.emails"
+                :key="index"
+                class="c-channel-row"
+              >
+                <FormControl
+                  v-model="email.email_id"
+                  type="email"
+                  :label="`Correo ${index + 1}`"
+                  :disabled="!emailWritable"
+                />
+                <button
+                  type="button"
+                  role="radio"
+                  class="c-primary-chip press"
+                  :class="{ 'is-on': isPrimary('emails', email) }"
+                  :aria-checked="isPrimary('emails', email)"
+                  :title="
+                    isPrimary('emails', email)
+                      ? 'Este es el correo principal'
+                      : 'Usar este correo como principal'
+                  "
+                  :disabled="!emailWritable"
+                  @click="primary('emails', index, true)"
+                >
+                  {{
+                    isPrimary('emails', email) ? 'Principal' : 'Hacer principal'
+                  }}
+                </button>
+                <Button
+                  :aria-label="`Quitar correo ${index + 1}`"
+                  :title="`Quitar correo ${index + 1}`"
+                  :icon="LucideX"
+                  variant="ghost"
+                  :disabled="!emailWritable"
+                  @click="removeChannel('emails', index)"
+                />
+              </div>
             </div>
           </template>
           <template v-if="!source?.name">
@@ -134,7 +201,7 @@
               <h3>Datos de la cuenta comercial</h3>
               <MetaFields
                 v-model="draft.party_fields"
-                :fields="partyMeta?.fields || []"
+                :fields="ownFields(partyMeta)"
               />
             </div>
             <FormControl
@@ -213,6 +280,12 @@
           </div>
         </template>
       </div>
+      <IdentityEditor
+        v-if="ownerOpen"
+        v-model="ownerOpen"
+        :source="{ doctype: 'Contact', name: derivedOwner }"
+        @saved="ownerSaved"
+      />
     </template>
   </Dialog>
 </template>
@@ -254,11 +327,23 @@ const meta = ref(null),
   error = ref(null),
   matches = ref([]),
   conflict = ref(null),
-  latest = ref(null)
+  latest = ref(null),
+  ownerOpen = ref(false)
 const editing = computed(() => !!props.source?.name)
 // «Datos» edits the record's own fields; the shop's extra ones live in «Más datos».
 const withoutExtra = (value) =>
   value ? { ...value, fields: coreFields(value.fields) } : value
+// A Customer's phone and email are copies of its primary Contact's (doco marks them
+// `derived_from`): they show here read-only and are changed on that Contact.
+const derived = computed(() =>
+  (meta.value?.fields || []).filter((f) => f.derived_from),
+)
+const ownFields = (value) =>
+  (value?.fields || []).filter((f) => !f.derived_from)
+const derivedOwner = computed(() => {
+  const link = derived.value[0]?.derived_from
+  return (link && latest.value?.fields?.[link]) || ''
+})
 const phoneWritable = computed(() =>
   meta.value?.fields?.some((f) => f.fieldname === 'phone_nos' && !f.read_only),
 )
@@ -442,6 +527,40 @@ function primary(collection, index, value) {
       row.is_primary_phone = row.is_primary_mobile_no
     } else row.is_primary = i === index && value ? 1 : 0
   })
+}
+const isPrimary = (collection, row) =>
+  !!(collection === 'phones' ? row.is_primary_mobile_no : row.is_primary)
+const hasPrimary = (collection) =>
+  draft.value[collection].some((row) => isPrimary(collection, row))
+/** A new channel is the principal when there is none yet, so the first one never goes unmarked. */
+function addChannel(collection) {
+  const first = !hasPrimary(collection) ? 1 : 0
+  draft.value[collection].push(
+    collection === 'phones'
+      ? { phone: '', is_primary_phone: first, is_primary_mobile_no: first }
+      : { email_id: '', is_primary: first },
+  )
+}
+/** Removing the principal hands the role to the first one left, never to none. */
+function removeChannel(collection, index) {
+  const wasPrimary = isPrimary(collection, draft.value[collection][index])
+  draft.value[collection].splice(index, 1)
+  if (wasPrimary && draft.value[collection].length) primary(collection, 0, true)
+}
+/** The primary Contact was saved: show its channels here without touching my edits. */
+async function ownerSaved(result) {
+  emit('saved', result)
+  try {
+    const record = await contactosApi('get_record', sourceRef(props.source))
+    for (const { fieldname } of derived.value) {
+      const value = record.fields?.[fieldname] ?? null
+      draft.value.fields[fieldname] = value
+      if (draft.value.base?.fields) draft.value.base.fields[fieldname] = value
+      if (latest.value?.fields) latest.value.fields[fieldname] = value
+    }
+  } catch (e) {
+    error.value = e
+  }
 }
 async function compare() {
   try {
