@@ -33,7 +33,12 @@ integration with its workspace for html graphs and stuff, autocomplete on / cmds
    «Recuérdame mañana a las 9 …», as `comandos.expand`). A typed command is looked up when sent.
 5. **Lienzo.** A file or chart the turn writes to the Lienzo (`canvas.py`; html, png, jpg, pdf)
    shows under the answer it came with, with «Descargar» and «Abrir en Lienzo»; the Lienzo view
-   lists every file and opens one in the same viewer.
+   lists every file and opens one in the same viewer. A file with more than one version shows
+   «Versiones» in its caption (2026-11-08, `AssistantCanvasVersions`): the versions doco keeps
+   (the first and the newest), each with when, who wrote it and its note. A tap opens that version
+   in the viewer; its row then offers «Qué cambió» (`canvas.compare` against the version before
+   it: cells and rows of a table, lines of a text) and, for an earlier version, «Restaurar esta
+   versión» in one tap, since the version it replaces stays in the history.
 
 6. **Model.** The composer's chip («Haiku 5.5 · Medio», beside «Enviar») names the brain of this
    conversation and opens its menu: the models the owner published, the reasoning efforts of the
@@ -80,7 +85,8 @@ integration with its workspace for html graphs and stuff, autocomplete on / cmds
   under the answer of the turn it was written in (the first answer after the person's last
   message before it).
 - **Older servers.** No `liquidar`: the plain reset. No `encargos`: the Agenda button goes away.
-  No Lienzo: no inline files.
+  No Lienzo: no inline files. No `compare` (doco before 2026-11-08): «Qué cambió» says the
+  server's refusal in the row; the list and «Restaurar» still work.
 
 Tests: `tests/unit/assistantSessions.test.js`, `assistantAgenda.test.js`,
 `assistantAutocomplete.test.js`, `assistantCanvas.test.js`; doco

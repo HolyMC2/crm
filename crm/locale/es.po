@@ -37252,3 +37252,125 @@ msgstr "Solicitud enviada"
 #: frontend/src/components/assistant/AssistantLog.vue
 msgid "What shall we do today?"
 msgstr "¿Qué hacemos hoy?"
+#: frontend/src/components/assistant/AssistantCanvasChanges.vue
+msgid "Against version {0}"
+msgstr "Comparada con la versión {0}"
+
+#: frontend/src/components/assistant/AssistantCanvasChanges.vue
+msgid "Against version {0}, sheet {1}"
+msgstr "Comparada con la versión {0}, hoja {1}"
+
+#: frontend/src/components/assistant/AssistantCanvasChanges.vue
+msgid "And {0} more."
+msgstr "Y {0} más."
+
+#: frontend/src/components/assistant/AssistantCanvasChanges.vue
+msgid "Changed cells"
+msgstr "Celdas cambiadas"
+
+#: frontend/src/components/assistant/AssistantCanvasChanges.vue
+msgid "Columns taken out"
+msgstr "Columnas quitadas"
+
+#: frontend/src/components/assistant/AssistantCanvasChanges.vue
+msgid "Lines added: {0}. Lines taken out: {1}."
+msgstr "Líneas nuevas: {0}. Líneas quitadas: {1}."
+
+#: frontend/src/components/assistant/AssistantCanvasChanges.vue
+msgid "New columns"
+msgstr "Columnas nuevas"
+
+#: frontend/src/components/assistant/AssistantCanvasChanges.vue
+msgid "New rows"
+msgstr "Filas nuevas"
+
+#: frontend/src/components/assistant/AssistantCanvasChanges.vue
+msgid "Row {0}"
+msgstr "Fila {0}"
+
+#: frontend/src/components/assistant/AssistantCanvasChanges.vue
+msgid "Rows are matched by {0}."
+msgstr "Las filas se reconocen por {0}."
+
+#: frontend/src/components/assistant/AssistantCanvasChanges.vue
+msgid "Rows are matched by their place in the sheet."
+msgstr "Las filas se comparan por su lugar en la hoja."
+
+#: frontend/src/components/assistant/AssistantCanvasChanges.vue
+msgid "Rows taken out"
+msgstr "Filas quitadas"
+
+#: frontend/src/components/assistant/AssistantCanvasChanges.vue
+msgid "Same content as version {0}."
+msgstr "Mismo contenido que la versión {0}."
+
+#: frontend/src/components/assistant/AssistantCanvasChanges.vue
+msgid "There are more changes than shown here. Download both versions to see them all."
+msgstr "Hay más cambios de los que se ven aquí. Descarga las dos versiones para verlos todos."
+
+#: frontend/src/components/assistant/AssistantCanvasChanges.vue
+msgid "This version is different from version {0}. Open each one to see them."
+msgstr "Esta versión es distinta de la versión {0}. Abre cada una para verlas."
+
+#: frontend/src/components/assistant/AssistantCanvasChanges.vue
+msgctxt "Lienzo"
+msgid "to"
+msgstr "a"
+
+#: frontend/src/components/assistant/AssistantCanvasVersions.vue
+msgctxt "Lienzo"
+msgid "current"
+msgstr "actual"
+
+#: frontend/src/components/assistant/AssistantCanvasVersions.vue
+msgid "Hide changes"
+msgstr "Ocultar cambios"
+
+#: frontend/src/components/assistant/AssistantCanvasVersions.vue
+msgid "Restored as version {0}. Version {1} stays in the history."
+msgstr "Restaurada como versión {0}. La versión {1} sigue en el historial."
+
+#: frontend/src/components/assistant/AssistantCanvasVersions.vue
+msgid "The current version already has this content. Nothing new was saved."
+msgstr "La versión actual ya tiene este contenido. No se guardó otra."
+
+#: frontend/src/components/assistant/AssistantCanvasVersions.vue
+msgid "Version {0}"
+msgstr "Versión {0}"
+
+#: frontend/src/components/assistant/AssistantCanvasVersions.vue
+msgid "Versions of {0}"
+msgstr "Versiones de {0}"
+
+#: frontend/src/components/assistant/AssistantCanvasVersions.vue
+msgid "What changed"
+msgstr "Qué cambió"
+
+#: frontend/src/components/assistant/AssistantCanvasFile.vue
+msgid "version {0}, an earlier one"
+msgstr "versión {0}, una anterior"
+
+#: frontend/src/components/assistant/assistantCanvas.js
+msgctxt "Lienzo"
+msgid "Edited by you"
+msgstr "La editaste tú"
+
+#: frontend/src/components/assistant/assistantCanvas.js
+msgctxt "Lienzo"
+msgid "Made by Muelle"
+msgstr "La hizo Muelle"
+
+#: frontend/src/components/assistant/assistantCanvas.js
+msgctxt "Lienzo"
+msgid "Made by Muelle from your data"
+msgstr "La hizo Muelle con tus datos"
+
+#: frontend/src/components/assistant/assistantCanvas.js
+msgctxt "Lienzo"
+msgid "Restored"
+msgstr "Restaurada"
+
+#: frontend/src/components/assistant/assistantCanvas.js
+msgctxt "Lienzo"
+msgid "Converted"
+msgstr "Convertida"

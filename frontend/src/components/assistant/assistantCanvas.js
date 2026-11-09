@@ -47,6 +47,12 @@ export const canvas = reactive({
   error: '',
 })
 
+/**
+ * A restore made here: the file while the call runs, then `file@version`.
+ * Its event comes back like a turn's and must not go under an answer.
+ */
+const restored = new Set()
+
 export async function loadCanvas() {
   if (!canvas.available) return
   try {
@@ -90,6 +96,19 @@ function facadeError(out) {
   )
 }
 
+/** One facade command: `{ out }`, or `{ error }` in the person's words. */
+async function ask(command, payload) {
+  try {
+    const out = await call(`${CANVAS_API}.facade`, {
+      command,
+      payload: JSON.stringify(payload),
+    })
+    return out?.ok === false ? { error: facadeError(out) } : { out: out || {} }
+  } catch (error) {
+    return { error: facadeError({ message: error?.messages?.[0] }) }
+  }
+}
+
 /**
  * The Lienzo view's copy of one file: a table's first rows (`grid`) or a
  * text file's text (`get`). `{ grid }` | `{ text }` | `{ error }`.
@@ -100,16 +119,58 @@ export async function readFile(file) {
   const payload = { file: file.file }
   if (file.version) payload.version = file.version
   if (tabular) payload.limit = TABLE_ROWS
-  try {
-    const out = await call(`${CANVAS_API}.facade`, {
-      command: tabular ? 'grid' : 'get',
-      payload: JSON.stringify(payload),
-    })
-    if (out?.ok === false) return { error: facadeError(out) }
-    return tabular ? { grid: out.grid || {} } : { text: out.text || '' }
-  } catch (error) {
-    return { error: facadeError({ message: error?.messages?.[0] }) }
-  }
+  const { out, error } = await ask(tabular ? 'grid' : 'get', payload)
+  if (error) return { error }
+  return tabular ? { grid: out.grid || {} } : { text: out.text || '' }
+}
+
+/** «Versiones»: the versions the Lienzo keeps of one file, newest first. */
+export async function loadVersions(file) {
+  const { out, error } = await ask('versions', { file: file.file })
+  return error ? { error } : { versions: out.versions || [] }
+}
+
+/**
+ * What `version` changed against the version before it (doco canvas_diff):
+ * a table by rows and cells, a text by lines, any other file only whether it
+ * changed. `{ changes }` | `{ error }`.
+ */
+export async function compareVersion(file, version) {
+  const { out, error } = await ask('compare', { file: file.file, new: version })
+  if (error) return { error }
+  // the facade answers {ok, compare}; without it the row says so, never blank
+  return out.compare ? { changes: out.compare } : { error: facadeError(out) }
+}
+
+/**
+ * The content of `version` as a new current version of `file` (the current
+ * one), which stays in the history. Content equal to the current one saves
+ * nothing and answers with the current version: `unchanged`.
+ */
+export async function restoreVersion(file, version) {
+  // the event is published on commit: it can arrive before the answer
+  restored.add(file.file)
+  const { out, error } = await ask('restore', { file: file.file, version })
+  restored.delete(file.file)
+  if (error) return { error }
+  const now = out.file || {}
+  restored.add(`${now.file}@${now.version}`)
+  canvas.files = canvas.files.map((f) =>
+    f.file === now.file ? { ...f, ...now } : f,
+  )
+  return { file: now, unchanged: now.version === file.version }
+}
+
+/** Who wrote a version, as the version list says it. */
+export function originLabel(origin) {
+  return (
+    {
+      person: __('Edited by you', null, 'Lienzo'),
+      materialized: __('Made by Muelle from your data', null, 'Lienzo'),
+      restored: __('Restored', null, 'Lienzo'),
+      converted: __('Converted', null, 'Lienzo'),
+    }[origin] || __('Made by Muelle', null, 'Lienzo')
+  )
 }
 
 /** A cell that reads as an amount or a count: a csv brings every cell as text. */
@@ -132,17 +193,9 @@ export function prettyJson(text) {
 
 /** «Borrar» (two taps in place): the file and its versions leave the Lienzo. */
 export async function deleteFile(file) {
-  try {
-    const out = await call(`${CANVAS_API}.facade`, {
-      command: 'delete',
-      payload: JSON.stringify({ file: file.file }),
-    })
-    if (out?.ok === false) {
-      canvas.error = facadeError(out)
-      return false
-    }
-  } catch (error) {
-    canvas.error = facadeError({ message: error?.messages?.[0] })
+  const { error } = await ask('delete', { file: file.file })
+  if (error) {
+    canvas.error = error
     return false
   }
   canvas.files = canvas.files.filter((f) => f.file !== file.file)
@@ -163,7 +216,10 @@ export function onCanvasEvent(payload) {
     canvas.files = canvas.files.filter((f) => f.file !== payload.file)
     return
   }
-  if (INLINE_KINDS.includes(payload.kind))
+  const ours =
+    restored.has(payload.file) ||
+    restored.has(`${payload.file}@${payload.version}`)
+  if (INLINE_KINDS.includes(payload.kind) && !ours)
     canvas.pending = [
       ...canvas.pending.filter((f) => f.file !== payload.file),
       { file: payload.file, version: payload.version, kind: payload.kind },
@@ -222,6 +278,7 @@ export function openInCanvas(file) {
 
 /** Tests only. */
 export function _resetCanvas() {
+  restored.clear()
   Object.assign(canvas, {
     files: [],
     loaded: false,

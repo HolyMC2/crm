@@ -15,6 +15,7 @@ import {
   canvasByAnswer,
   onCanvasEvent,
   previewUrl,
+  restoreVersion,
 } from '@/components/assistant/assistantCanvas'
 import {
   _resetAssistant,
@@ -332,5 +333,251 @@ describe('the Lienzo view (Marco 2026-11-05: «/lienzo is just broken»)', () =>
       ),
     ).not.toBeNull()
     app.unmount()
+  })
+
+  describe('a file’s versions (2026-11-08)', () => {
+    const PRECIOS = { file: 'precios.csv', version: 3, kind: 'csv' }
+    const VERSIONS = [
+      { ...PRECIOS, origin: 'person', note: '', modified: '' },
+      {
+        ...PRECIOS,
+        version: 2,
+        origin: 'assistant',
+        note: 'Precios de octubre',
+      },
+      { ...PRECIOS, version: 1, origin: 'materialized', note: '' },
+    ]
+    // canvas.facade answers {ok, compare: <canvas.compare>}
+    const COMPARE = {
+      file: 'precios.csv',
+      kind: 'csv',
+      old: { ...PRECIOS, version: 1 },
+      new: { ...PRECIOS, version: 2 },
+      same: false,
+      table: {
+        key: 'Código',
+        columns_added: [],
+        columns_removed: [],
+        added: [{ fila: 'A-004', texto: 'Cargador 20W' }],
+        removed: [],
+        changed: [
+          { fila: 'A-002', columna: 'Precio', antes: '95.5', despues: '99' },
+        ],
+        counts: {
+          filas_nuevas: 1,
+          filas_quitadas: 0,
+          celdas_cambiadas: 3,
+          filas_cambiadas: 3,
+        },
+        same: false,
+      },
+    }
+    const payloadOf = (command, n = 0) =>
+      JSON.parse(facade(command)[n][1].payload)
+
+    function answer(overrides = {}) {
+      mocks.call.mockImplementation((method, args) => {
+        const reply = {
+          versions: { ok: true, versions: VERSIONS },
+          grid: { ok: true, grid: { columns: ['Código'], rows: [['A-001']] } },
+          compare: { ok: true, compare: COMPARE },
+          ...overrides,
+        }[args?.command]
+        return Promise.resolve(
+          typeof reply === 'function' ? reply(args) : reply || { ok: true },
+        )
+      })
+    }
+
+    async function openVersions() {
+      canvas.files = [{ ...PRECIOS }]
+      canvas.loaded = true
+      canvas.selected = 'precios.csv'
+      const mounted = mount(AssistantCanvas)
+      await flush()
+      mounted.el.querySelector('[data-testid="canvas-history"]').click()
+      await vi.dynamicImportSettled()
+      await flush()
+      return mounted
+    }
+    const rows = (el) => [...el.querySelectorAll('[data-version]')]
+    const caption = (el) =>
+      el.querySelector('[data-canvas-file] figcaption').textContent
+
+    it('are listed under the file, newest first, with who wrote each', async () => {
+      answer()
+      const { el, app } = await openVersions()
+      expect(payloadOf('versions')).toEqual({ file: 'precios.csv' })
+      const text = rows(el).map((row) => row.textContent.replace(/\s+/g, ' '))
+      expect(text[0]).toContain('Version 3')
+      expect(text[0]).toContain('current')
+      expect(text[0]).toContain('Edited by you')
+      expect(text[1]).toContain('Made by Muelle · Precios de octubre')
+      expect(text[2]).toContain('Made by Muelle from your data')
+      expect(text[1]).not.toContain('current')
+      // the current version can say what it changed but not restore itself
+      expect(el.querySelector('[data-testid="canvas-compare"]')).not.toBeNull()
+      expect(el.querySelector('[data-testid="canvas-restore"]')).toBeNull()
+      app.unmount()
+    })
+
+    it('a file with a single version has no history to open', async () => {
+      answer()
+      canvas.files = [{ ...PRECIOS, version: 1 }]
+      canvas.loaded = true
+      canvas.selected = 'precios.csv'
+      const { el, app } = mount(AssistantCanvas)
+      await flush()
+      expect(el.querySelector('[data-testid="canvas-history"]')).toBeNull()
+      app.unmount()
+    })
+
+    it('an earlier one opens in the viewer and says what it changed', async () => {
+      answer()
+      const { el, app } = await openVersions()
+      rows(el)[1].click()
+      await flush()
+      expect(payloadOf('grid', 1)).toEqual({
+        file: 'precios.csv',
+        version: 2,
+        limit: 200,
+      })
+      expect(caption(el)).toContain('version 2, an earlier one')
+      expect(el.querySelector('a[download]').getAttribute('href')).toContain(
+        'version=2',
+      )
+      el.querySelector('[data-testid="canvas-compare"]').click()
+      await flush()
+      expect(payloadOf('compare')).toEqual({ file: 'precios.csv', new: 2 })
+      const changes = el.querySelector('[data-testid="canvas-changes"]')
+      const said = changes.textContent.replace(/\s+/g, ' ')
+      expect(said).toContain('Against version 1')
+      expect(said).toContain('A-002, Precio: 95.5 → to 99')
+      expect(said).toContain('A-004 Cargador 20W')
+      // three cells changed, one listed
+      expect(
+        changes.querySelector('[data-changes="changed"]').textContent,
+      ).toContain('And 2 more.')
+      expect(said).toContain('Rows are matched by Código.')
+      // the oldest version has nothing before it to compare with
+      rows(el)[2].click()
+      await flush()
+      expect(el.querySelector('[data-testid="canvas-compare"]')).toBeNull()
+      expect(el.querySelector('[data-testid="canvas-restore"]')).not.toBeNull()
+      app.unmount()
+    })
+
+    it('restores an earlier one in one tap, and the replaced one stays', async () => {
+      answer({
+        restore: {
+          ok: true,
+          file: {
+            ...PRECIOS,
+            version: 4,
+            origin: 'restored',
+            note: 'Restaurado de la versión 2',
+          },
+        },
+      })
+      const { el, app } = await openVersions()
+      rows(el)[1].click()
+      await flush()
+      el.querySelector('[data-testid="canvas-restore"]').click()
+      await flush()
+      expect(payloadOf('restore')).toEqual({ file: 'precios.csv', version: 2 })
+      expect(canvas.files[0].version).toBe(4)
+      expect(el.querySelector('[role="status"]').textContent).toContain(
+        'Restored as version 4. Version 3 stays in the history.',
+      )
+      // the viewer is back on the current version, and the list reads again
+      expect(caption(el)).toContain('version 4')
+      expect(caption(el)).not.toContain('earlier')
+      expect(facade('versions')).toHaveLength(2)
+      app.unmount()
+    })
+
+    it('a chart restored here stays out of the chat’s answers', async () => {
+      // the event is published on commit: before the answer or after it
+      const chart = { file: 'ventas.html', kind: 'html' }
+      canvas.files = [{ ...chart, version: 2 }]
+      mocks.call.mockImplementation((method, args) => {
+        if (args?.command !== 'restore') return Promise.resolve({ ok: true })
+        onCanvasEvent({ ...chart, version: 3 })
+        return Promise.resolve({ ok: true, file: { ...chart, version: 3 } })
+      })
+      onMessage({ chat_id: chat, mid: 'b1', text: 'Listo.' })
+      const out = await restoreVersion(canvas.files[0], 1)
+      expect(out.file.version).toBe(3)
+      onCanvasWritten({ ...chart, version: 3 })
+      expect(canvas.pending).toEqual([])
+      expect(assistant.messages[0].canvas).toBeUndefined()
+      // a turn writing the same file later still goes under its answer
+      onCanvasWritten({ ...chart, version: 4 })
+      expect(assistant.messages[0].canvas).toEqual([{ ...chart, version: 4 }])
+    })
+
+    it('says so when the version restored is already the current content', async () => {
+      answer({ restore: { ok: true, file: { ...PRECIOS } } })
+      const { el, app } = await openVersions()
+      rows(el)[1].click()
+      await flush()
+      el.querySelector('[data-testid="canvas-restore"]').click()
+      await flush()
+      expect(canvas.files[0].version).toBe(3)
+      expect(el.querySelector('[role="status"]').textContent).toContain(
+        'The current version already has this content.',
+      )
+      app.unmount()
+    })
+
+    it('a text shows its lines with their sign, and a refusal is said', async () => {
+      answer({
+        compare: {
+          ok: true,
+          compare: {
+            ...COMPARE,
+            kind: 'md',
+            table: undefined,
+            text: {
+              diff: [
+                '@@ -1,2 +1,2 @@',
+                ' # Resumen',
+                '-ventas 100',
+                '+ventas 120',
+              ],
+              added: 1,
+              removed: 1,
+              same: false,
+              truncated: false,
+            },
+          },
+        },
+      })
+      const { el, app } = await openVersions()
+      el.querySelector('[data-testid="canvas-compare"]').click()
+      await flush()
+      const lines = [...el.querySelectorAll('[data-sign]')].map((line) => [
+        line.dataset.sign,
+        line.textContent,
+      ])
+      expect(lines).toEqual([
+        ['@', '⋯'],
+        [' ', ' # Resumen'],
+        ['-', '-ventas 100'],
+        ['+', '+ventas 120'],
+      ])
+      expect(el.textContent).toContain('Lines added: 1. Lines taken out: 1.')
+      app.unmount()
+
+      answer({ compare: { ok: false, message: 'Esa versión ya no está.' } })
+      const again = await openVersions()
+      again.el.querySelector('[data-testid="canvas-compare"]').click()
+      await flush()
+      expect(
+        again.el.querySelector('[data-testid="canvas-versions"] [role="alert"]')
+          .textContent,
+      ).toContain('Esa versión ya no está.')
+      again.app.unmount()
+    })
   })
 })
