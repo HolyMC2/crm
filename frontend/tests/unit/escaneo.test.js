@@ -380,6 +380,25 @@ describe('the scan sheet', () => {
     }
   })
 
+  it('a new request over the open sheet starts from its own code', async () => {
+    state.replies.resolve_scan = (args) => ({
+      kind: 'item',
+      via: 'code',
+      item_code: args.code,
+      item_name: args.code,
+    })
+    const first = openScan()
+    await mount(ScanSheet)
+    const onItem = vi.fn()
+    openScan({ code: 'SKU-9', onItem })
+    await flush()
+    expect(await first).toBeNull()
+    expect(state.calls).toEqual([['resolve_scan', { code: 'SKU-9' }]])
+    expect(onItem).toHaveBeenCalledWith(
+      expect.objectContaining({ item_code: 'SKU-9' }),
+    )
+  })
+
   it('closing the sheet settles the scan with nothing', async () => {
     const done = openScan()
     await mount(ScanSheet)

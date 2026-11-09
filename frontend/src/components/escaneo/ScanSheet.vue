@@ -266,10 +266,11 @@ function start() {
   else focusField()
 }
 
+// Each openScan is a new request (its own resolve), even over an open sheet.
 watch(
-  () => scan.open,
-  (open) => {
-    if (open) start()
+  () => scan.resolve,
+  (resolve) => {
+    if (resolve && scan.open) start()
   },
   { immediate: true },
 )
