@@ -518,7 +518,7 @@
                   </th>
                 </tr>
               </thead>
-              <tbody v-for="s in visible" :key="s.name || '—'">
+              <tbody v-for="s in rendered" :key="s.name || '—'">
                 <tr>
                   <th
                     :id="sectionId(s.name)"
@@ -529,7 +529,7 @@
                     {{ s.name || __('No section', null, 'Lista') }}
                     <span
                       class="num ml-1 text-xs font-normal text-ink-gray-5"
-                      >{{ s.lines.length }}</span
+                      >{{ s.total ?? s.lines.length }}</span
                     >
                   </th>
                 </tr>
@@ -745,7 +745,7 @@
             <!-- phone: rows with the stepper beside each -->
             <template v-else>
               <section
-                v-for="s in visible"
+                v-for="s in rendered"
                 :key="s.name || '—'"
                 :aria-labelledby="sectionId(s.name)"
               >
@@ -755,7 +755,7 @@
                 >
                   {{ s.name || __('No section', null, 'Lista') }}
                   <span class="num text-xs font-normal text-ink-gray-5">{{
-                    s.lines.length
+                    s.total ?? s.lines.length
                   }}</span>
                 </h2>
                 <ul class="divide-y divide-outline-gray-1">
@@ -920,6 +920,29 @@
                 </ul>
               </section>
             </template>
+
+            <!-- a long list draws more rows as the buyer nears its end -->
+            <div
+              v-if="moreToShow"
+              ref="moreRows"
+              class="flex items-center justify-between gap-3 px-4 py-4 text-xs text-ink-gray-6 lg:px-2"
+              data-lista-mas
+            >
+              <span class="num tabular-nums">{{
+                __(
+                  '{0} of {1} lines shown',
+                  [renderedCount, shownCount],
+                  'Lista',
+                )
+              }}</span>
+              <button
+                type="button"
+                :class="[chipClass(false), 'min-h-9']"
+                @click="showMore"
+              >
+                {{ __('Show more', null, 'Lista') }}
+              </button>
+            </div>
           </div>
 
           <!-- desktop: the order at a glance -->
@@ -1360,6 +1383,7 @@ import {
   defineAsyncComponent,
   getCurrentInstance,
   h,
+  nextTick,
   onBeforeUnmount,
   onMounted,
   reactive,
@@ -1401,6 +1425,7 @@ import {
   draftCounts,
   dropFiles,
   filterCounts,
+  firstLines,
   FILTERS,
   LIST_ACCEPT,
   nextTier,
@@ -1596,6 +1621,41 @@ const startOptions = computed(() =>
 const shownCount = computed(() =>
   visible.value.reduce((n, s) => n + s.lines.length, 0),
 )
+// A long list draws its rows a step at a time as the buyer nears the end (and
+// from «Mostrar más»): ten thousand rows drawn at once take seconds, and every
+// tap or keystroke draws them again.
+const moreRows = ref(null)
+const shownLimit = ref(0)
+const rowsStep = () => (phone.value ? 60 : 150)
+const rendered = computed(() =>
+  firstLines(visible.value, shownLimit.value || rowsStep()),
+)
+const renderedCount = computed(() =>
+  rendered.value.reduce((n, s) => n + s.lines.length, 0),
+)
+const moreToShow = computed(() => shownCount.value > renderedCount.value)
+function showMore() {
+  shownLimit.value = (shownLimit.value || rowsStep()) + rowsStep()
+}
+watch([query, filter, section, view, () => props.name], () => {
+  shownLimit.value = 0
+})
+watch(moreRows, (el, _, onCleanup) => {
+  if (!el || typeof IntersectionObserver === 'undefined') return
+  const near = new IntersectionObserver(
+    async (entries) => {
+      if (!entries.some((e) => e.isIntersecting)) return
+      showMore()
+      await nextTick()
+      // short rows can leave the end in reach after a step: look again
+      near.unobserve(el)
+      near.observe(el)
+    },
+    { root: scroller.value, rootMargin: '0px 0px 1200px 0px' },
+  )
+  near.observe(el)
+  onCleanup(() => near.disconnect())
+})
 const counts = computed(() =>
   data.value
     ? filterCounts(data.value.sections, rows.value, data.value.promos)
@@ -2218,32 +2278,40 @@ function codeAndSpecs(line) {
     .join(', ')
 }
 
-// each shown row's price story on every supplier's lists (desktop table)
+// each drawn row's price story on every supplier's lists (desktop table), asked
+// a batch at a time (the server's HISTORY_LINES) as more rows are drawn
 const stories = reactive({})
+const asking = new Set()
 let storyTimer = null
 const shownNames = computed(() =>
   phone.value
     ? []
-    : visible.value.flatMap((s) => s.lines.map((line) => line.name)),
+    : rendered.value.flatMap((s) => s.lines.map((line) => line.name)),
 )
+async function askStories() {
+  const catalogo = props.name
+  const ask = storiesToAsk(
+    shownNames.value.filter((name) => !asking.has(name)),
+    stories,
+  )
+  if (!data.value || !ask.length) return
+  for (const name of ask) asking.add(name)
+  try {
+    const out = await call('historias', { catalogo, lineas: ask })
+    if (catalogo !== props.name) return
+    for (const name of ask) stories[name] = out?.lines?.[name] || []
+  } catch {
+    for (const name of ask) stories[name] = []
+  } finally {
+    for (const name of ask) asking.delete(name)
+  }
+  askStories()
+}
 watch(
   shownNames,
   (names) => {
     clearTimeout(storyTimer)
-    if (!data.value || !names.length || names.length > 60) return
-    const ask = storiesToAsk(names, stories)
-    if (!ask.length) return
-    storyTimer = setTimeout(async () => {
-      try {
-        const out = await call('historias', {
-          catalogo: props.name,
-          lineas: ask,
-        })
-        for (const name of ask) stories[name] = out?.lines?.[name] || []
-      } catch {
-        for (const name of ask) stories[name] = []
-      }
-    }, 300)
+    if (names.length) storyTimer = setTimeout(askStories, 300)
   },
   { immediate: true },
 )

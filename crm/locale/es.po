@@ -37658,3 +37658,8 @@ msgstr "{0} está en este pedido"
 msgctxt "Lista"
 msgid "{0} and {1} are in this order"
 msgstr "{0} y {1} están en este pedido"
+
+#: frontend/src/pages/CompraLista.vue
+msgctxt "Lista"
+msgid "Show more"
+msgstr "Mostrar más"

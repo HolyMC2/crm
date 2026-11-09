@@ -19,6 +19,7 @@ import {
   draftCounts,
   dropFiles,
   filterCounts,
+  firstLines,
   formOf,
   historyModel,
   historySeries,
@@ -212,6 +213,39 @@ describe('what changed and what the shop holds', () => {
   })
 })
 
+describe('a long list', () => {
+  const long = [
+    { name: 'A', lines: [1, 2, 3].map((i) => ({ name: `a${i}` })) },
+    { name: 'B', lines: [1, 2, 3, 4].map((i) => ({ name: `b${i}` })) },
+  ]
+
+  it('draws its first rows, section by section, keeping each cut section’s count', () => {
+    const shown = firstLines(long, 5)
+    expect(shown.map((s) => s.lines.map((l) => l.name))).toEqual([
+      ['a1', 'a2', 'a3'],
+      ['b1', 'b2'],
+    ])
+    expect(shown[0]).toBe(long[0])
+    expect(shown[1].total).toBe(4)
+    expect(firstLines(long, 3)).toHaveLength(1)
+    expect(firstLines(long).flatMap((s) => s.lines)).toHaveLength(7)
+  })
+
+  it('searches without case or accents, and a line edited in place is searched again', () => {
+    const line = { name: 'x', brand: 'Cámara', model: 'Trasera A15' }
+    const sections = [{ name: '', lines: [line] }]
+    const names = (search) =>
+      visibleSections(sections, { search }).flatMap((s) =>
+        s.lines.map((l) => l.name),
+      )
+    expect(names('camara a15')).toEqual(['x'])
+    expect(names('CÁMARA trasera')).toEqual(['x'])
+    expect(names('frontal')).toEqual([])
+    line.model = 'Frontal A15'
+    expect(names('frontal')).toEqual(['x'])
+  })
+})
+
 describe('which lines show', () => {
   it('searches across brand, model, code and marks', () => {
     const names = (out) => out.flatMap((s) => s.lines.map((l) => l.name))
@@ -275,7 +309,7 @@ describe('which lines show', () => {
     ])
     const [first] = visibleSections(sections, { promos })
     expect(first.lines[0].promo.name).toBe('P1')
-    expect(first.lines[1].promo).toBeNull()
+    expect(first.lines[1].promo).toBeFalsy()
   })
 
   it('applies a promo by brand and model as the server does, never one switched off', () => {

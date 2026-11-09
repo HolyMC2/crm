@@ -3,7 +3,7 @@
 // change against the previous list; what the stock reads; the promo sentences'
 // numbers; the files a drop or a paste brings. The rows come from
 // doco.workspaces.lista_precios.workbench; the words stay in the page.
-import { matchTokens } from '@/vendor/muelle-shell/contracts'
+import { normalizeSearch, searchTokens } from '@/vendor/muelle-shell/contracts'
 
 /** The filter chips, in the order the page shows them. */
 export const FILTERS = Object.freeze([
@@ -192,20 +192,55 @@ export function visibleSections(
   } = {},
 ) {
   const active = (promos || []).filter((p) => p.active !== false)
-  return (sections || [])
-    .filter((s) => !section || s.name === section)
-    .map((s) => ({
-      name: s.name,
-      lines: s.lines
-        .filter((line) => !only || only.has(line.name))
-        .map((line) => ({ ...line, promo: promoFor(line, active) }))
-        .filter(
-          (line) =>
-            matchTokens(search, lineText(line)) &&
-            lineFilter(line, filter, rows[line.name]),
-        ),
-    }))
-    .filter((s) => s.lines.length)
+  const words = searchTokens(search || '')
+  const out = []
+  for (const s of sections || []) {
+    if (section && s.name !== section) continue
+    const lines = []
+    for (const line of s.lines) {
+      if (only && !only.has(line.name)) continue
+      if (words.length) {
+        const hay = foldedText(line)
+        if (!words.every((word) => hay.includes(word))) continue
+      }
+      const promo = promoFor(line, active)
+      const shown = promo ? { ...line, promo } : line
+      if (!lineFilter(shown, filter, rows[line.name])) continue
+      lines.push(shown)
+    }
+    if (lines.length) out.push({ name: s.name, lines })
+  }
+  return out
+}
+
+// A line's search text with case and accents folded once per text, not once per
+// search: a long list is searched again on every keystroke.
+const folded = new Map()
+const FOLDED_MAX = 50000
+function foldedText(line) {
+  const text = lineText(line)
+  let hay = folded.get(text)
+  if (hay === undefined) {
+    if (folded.size >= FOLDED_MAX) folded.clear()
+    hay = normalizeSearch(text)
+    folded.set(text, hay)
+  }
+  return hay
+}
+
+/** The first `limit` lines of the shown sections, in order: a long list draws its
+ *  rows as the buyer scrolls, not all at once. A cut section keeps its `total`. */
+export function firstLines(sections = [], limit = Infinity) {
+  const out = []
+  let left = limit
+  for (const s of sections || []) {
+    if (left <= 0) break
+    if (s.lines.length <= left) out.push(s)
+    else
+      out.push({ ...s, lines: s.lines.slice(0, left), total: s.lines.length })
+    left -= s.lines.length
+  }
+  return out
 }
 
 /** How many lines each filter chip would show, over every section. */
@@ -214,9 +249,11 @@ export function filterCounts(sections = [], rows = {}, promos = []) {
   const counts = Object.fromEntries(FILTERS.map((f) => [f, 0]))
   for (const s of sections || [])
     for (const line of s.lines) {
-      const marked = { ...line, promo: promoFor(line, active) }
+      const promo = promoFor(line, active)
+      const row = rows[line.name]
       for (const f of FILTERS)
-        if (lineFilter(marked, f, rows[line.name])) counts[f] += 1
+        if (f === 'promo' ? Boolean(promo) : lineFilter(line, f, row))
+          counts[f] += 1
     }
   return counts
 }
