@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/ui@0.1.0 (7f554d4509b6). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory.
+// Vendored from muelle/workspace/packages/ui@0.1.0 (c0d7e059548a). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory.
 // The arithmetic of a quick photo edit (PhotoEditor): quarter turns, a mirror, a crop and a
 // touch of light, kept as numbers while the worker plays and drawn once when
 // they save (`bakeEdit`). The crop is in fractions (0 to 1) of the picture as

@@ -1,13 +1,13 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (7f554d4509b6). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (c0d7e059548a). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <template>
   <!-- The one full-screen view of photos and videos: tap a picture anywhere and
        it opens here. A swipe (← → on a keyboard, the arrows with a mouse)
        walks the set; two taps, a pinch or the button zoom in and the picture
        pans under the finger; back, Esc, ✕, a tap on the dark or a pull down
        closes it. The screen that opens it puts its own actions at the bottom,
-       in thumb reach (#actions, buttons with `ui-viewer-action`), a state
-       beside the count (#chip), and its editor in place of the pictures while
-       `editing` (#editor). Always dark: a picture reads best on black, in
+       in thumb reach (#actions, buttons with `ui-viewer-action`), what the
+       picture is above them (#caption), a state beside the count (#chip), and
+       its editor in place of the pictures while `editing` (#editor). Always dark: a picture reads best on black, in
        both themes. -->
   <DialogRoot :open="open" @update:open="setOpen">
     <DialogPortal>
@@ -164,6 +164,14 @@
           <footer
             class="flex-none pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2"
           >
+            <!-- What this picture is, in the page's words: one or two lines. -->
+            <div
+              v-if="$slots.caption"
+              class="mx-auto max-w-2xl px-4 pb-2 text-center text-sm text-white/85"
+              data-ui-viewer-caption
+            >
+              <slot name="caption" :item="current" :index="index" />
+            </div>
             <ul
               v-if="items.length > 1"
               ref="strip"

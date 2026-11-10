@@ -138,6 +138,15 @@ describe('MediaViewer', () => {
       expect(button.getAttribute('aria-label')).toBeTruthy()
   })
 
+  it("says what the picture is above the strip, in the page's words", async () => {
+    await mount(
+      MediaViewer,
+      { open: true, items: PHOTOS, index: 1 },
+      { caption: ({ index }) => h('span', `Foto ${index + 1}: Antes`) },
+    )
+    expect(one('[data-ui-viewer-caption]').textContent).toBe('Foto 2: Antes')
+  })
+
   it('paints the small copy until the full picture has loaded', async () => {
     await mount(MediaViewer, { open: true, items: PHOTOS, index: 0 })
     const cell = one('[data-ui-viewer-cell="0"]')
@@ -398,6 +407,10 @@ describe('a picture before it travels', () => {
     const kept = await prepareImage(cutout, tools)
     expect([kept.name, kept.type]).toEqual(['logo.png', 'image/png'])
 
+    // Evidence asks for JPEG whatever came in.
+    const flat = await prepareImage(cutout, { ...tools, keepPng: false })
+    expect([flat.name, flat.type]).toEqual(['logo.jpg', 'image/jpeg'])
+
     // Already small and light: it goes up as it is.
     const small = new File([new Uint8Array(900)], 'chica.jpg', {
       type: 'image/jpeg',
@@ -408,6 +421,15 @@ describe('a picture before it travels', () => {
         decode: async () => ({ source: {}, width: 800, height: 600 }),
       }),
     ).toBe(small)
+    // …unless the screen wants every picture re-encoded (its camera data dropped).
+    const fresh = await prepareImage(small, {
+      ...tools,
+      lightBytes: 0,
+      blobOf: async (canvas, type) => new Blob(['s'], { type }),
+      decode: async () => ({ source: {}, width: 800, height: 600 }),
+    })
+    expect(fresh).not.toBe(small)
+    expect(fresh.type).toBe('image/jpeg')
 
     const clip = new File(['v'], 'demo.mp4', { type: 'video/mp4' })
     expect(await prepareImage(clip, tools)).toBe(clip)

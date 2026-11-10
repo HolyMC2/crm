@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/ui@0.1.0 (7f554d4509b6). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory.
+// Vendored from muelle/workspace/packages/ui@0.1.0 (c0d7e059548a). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory.
 // A picture on the worker's device, before it travels: read it upright, fit it
 // to what a screen shows, and write it back as a file. A 6 MB phone photo goes
 // up as a few hundred KB, so a shelf of products gets its pictures over a
@@ -23,7 +23,8 @@ export function mediaKind(name, type = '') {
 /** The long side a picture is sent at, and the JPEG quality it is saved with. */
 export const MAX_SIDE = 2000
 export const QUALITY = 0.86
-// A JPEG already this light, within MAX_SIDE, goes up as it is.
+// A JPEG already this light, within MAX_SIDE, goes up as it is (`lightBytes`;
+// 0 re-encodes every picture, which also drops its camera data).
 const LIGHT_BYTES = 700 * 1024
 
 /** `width` × `height` scaled down so the long side is at most `max` (never up). */
@@ -115,7 +116,8 @@ function renamed(name, extension) {
 
 /**
  * The file as it should travel. A picture comes back at most `maxSide` on its
- * long side: JPEG for photos, PNG kept as PNG (it may be a cut-out). A video,
+ * long side: JPEG for photos, PNG kept as PNG (it may be a cut-out) unless
+ * `keepPng` is off (evidence, where a screenshot is lighter as JPEG). A video,
  * a GIF, or a picture this browser cannot read goes as it is, and the server
  * says what is wrong with it.
  */
@@ -124,6 +126,8 @@ export async function prepareImage(
   {
     maxSide = MAX_SIDE,
     quality = QUALITY,
+    keepPng = true,
+    lightBytes = LIGHT_BYTES,
     decode = decodeImage,
     blobOf = canvasBlob,
     canvas = canvasOf,
@@ -142,9 +146,9 @@ export async function prepareImage(
   try {
     const size = fitWithin(picture.width, picture.height, maxSide)
     const scaled = size.width !== picture.width
-    const png = type === 'image/png' || /\.png$/i.test(name)
+    const png = keepPng && (type === 'image/png' || /\.png$/i.test(name))
     const jpeg = type === 'image/jpeg' || /\.jpe?g$/i.test(name)
-    if (!scaled && (png || (jpeg && file.size <= LIGHT_BYTES))) return file
+    if (!scaled && (png || (jpeg && file.size <= lightBytes))) return file
     const target = canvas(size.width, size.height)
     const ctx = target.getContext('2d')
     if (!png) {

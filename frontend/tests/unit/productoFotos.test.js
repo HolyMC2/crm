@@ -23,6 +23,8 @@ vi.mock('@/components/ui/imageFiles', async (original) => ({
   prepareImage: async (file) => file,
 }))
 
+// The viewer is its own chunk; a loaded suite must not race its first import.
+import '@/components/ui/MediaViewer.vue'
 import PhotoGallery from '@/components/productos/PhotoGallery.vue'
 import { useProductPhotos } from '@/composables/useProductPhotos'
 
@@ -186,7 +188,9 @@ describe('Producto › fotos', () => {
     answers[SET] = () => new Promise((resolve) => (answer = resolve))
     await mount()
     one('[data-testid="foto-hacer-principal"]').click()
-    await vi.waitFor(() => expect(answer).toBeTypeOf('function'))
+    await vi.waitFor(() => expect(answer).toBeTypeOf('function'), {
+      timeout: 10000,
+    })
     // The server has been asked and has not said anything yet.
     expect(principal()).toBe('/files/b.jpg')
     expect(shown()[0]).toBe('/files/b.jpg')
@@ -406,7 +410,9 @@ describe('Producto › fotos', () => {
     await mount()
     tiles()[1].querySelector('button').click()
     // The viewer is its own chunk: it arrives on the first picture opened.
-    await vi.waitFor(() => expect(one('[data-ui-viewer]')).not.toBeNull())
+    await vi.waitFor(() => expect(one('[data-ui-viewer]')).not.toBeNull(), {
+      timeout: 10000,
+    })
     await flush()
     const viewer = one('[data-ui-viewer]')
     expect(one('[data-ui-viewer-count]').textContent).toBe('2 of 2')
