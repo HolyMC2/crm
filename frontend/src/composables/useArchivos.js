@@ -790,6 +790,28 @@ function csvDelimiter(text) {
   counts.sort((a, b) => b[1] - a[1])
   return counts[0][1] > 0 ? counts[0][0] : ','
 }
+/**
+ * What the full-screen viewer walks when a picture is opened: the pictures of
+ * the list on screen, in its order, starting on `opened`. A picture that is
+ * not in the list (opened from a link, or from a page not loaded yet) shows
+ * alone. Returns { items, index }.
+ */
+export function folderPictures(rows, opened, locale) {
+  const picture = (row) => ({
+    key: row.id,
+    id: row.id,
+    url: row.file_url,
+    kind: 'image',
+    name: displayTitle(row, locale),
+  })
+  const items = (rows || [])
+    .filter((row) => row?.preview === 'image' && row.file_url && row.id)
+    .map(picture)
+  const index = items.findIndex((item) => item.id === opened?.id)
+  if (index >= 0) return { items, index }
+  return opened?.file_url ? { items: [picture(opened)], index: 0 } : null
+}
+
 /** A CSV preview: quoted fields honoured, capped at `maxRows` rows. */
 export function parseCsv(text, maxRows = 200) {
   const source = String(text || '')

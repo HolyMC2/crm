@@ -4,11 +4,11 @@ import { readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
-  VIEWS,
   ageLabel,
   archivosBoot,
   archivosHref,
   bankHandoffUrl,
+  folderPictures,
   kindIcon,
   loadArchivosBoot,
   nextAfter,
@@ -23,6 +23,7 @@ import {
   uploadProblem,
   viewCountLabel,
   viewHint,
+  VIEWS,
   withDone,
 } from '../../src/composables/useArchivos.js'
 import {
@@ -820,5 +821,60 @@ describe('the page explains itself', () => {
     for (const view of VIEWS) strings.push(view.label, view.hint)
     expect(strings.length).toBeGreaterThan(50)
     for (const text of strings) expect(catalog.get(text), text).toBeTruthy()
+  })
+})
+
+describe('a picture opened full screen', () => {
+  const rows = [
+    {
+      id: 'file:F-1',
+      preview: 'image',
+      file_url: '/files/ine.jpg',
+      title: 'ine.jpg',
+    },
+    {
+      id: 'doc:D-1',
+      preview: 'pdf',
+      file_url: '/files/luz.pdf',
+      title: 'luz.pdf',
+    },
+    {
+      id: 'file:F-2',
+      preview: 'image',
+      file_url: '/files/fachada.png',
+      title: 'fachada.png',
+    },
+    {
+      id: 'file:F-3',
+      preview: 'image',
+      file_url: '',
+      title: 'sin archivo.png',
+    },
+  ]
+
+  it('walks the pictures of the list, in its order, from the one opened', () => {
+    const found = folderPictures(rows, rows[2])
+    expect(found.items.map((item) => item.id)).toEqual(['file:F-1', 'file:F-2'])
+    expect(found.index).toBe(1)
+    expect(found.items[1]).toMatchObject({
+      key: 'file:F-2',
+      url: '/files/fachada.png',
+      kind: 'image',
+      name: 'fachada.png',
+    })
+  })
+
+  it('shows a picture that is not in the list alone, and nothing without a file', () => {
+    const lone = {
+      id: 'file:F-9',
+      preview: 'image',
+      file_url: '/files/otra.jpg',
+      title: 'otra.jpg',
+    }
+    const found = folderPictures(rows, lone)
+    expect(found.items.map((item) => item.id)).toEqual(['file:F-9'])
+    expect(found.index).toBe(0)
+    expect(folderPictures(rows, { id: 'file:F-9' })).toBeNull()
+    expect(folderPictures(null, lone).items).toHaveLength(1)
   })
 })

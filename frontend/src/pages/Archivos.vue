@@ -234,6 +234,7 @@
             @classify="openInBandeja"
             @open-id="(id) => patch({ file: id })"
             @redirect="(id) => patch({ file: id })"
+            @view="viewPicture"
           />
           <div
             v-else
@@ -560,10 +561,26 @@
         </div>
       </template>
     </Dialog>
+
+    <!-- A picture full screen; a swipe walks the pictures of the list. -->
+    <MediaViewer
+      v-if="viewer.wanted"
+      v-model:open="viewer.open"
+      v-model:index="viewer.index"
+      :items="viewer.items"
+      :title="viewer.items[viewer.index]?.name || ''"
+    />
   </ModuleLayout>
 </template>
 <script setup>
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import {
+  computed,
+  defineAsyncComponent,
+  onMounted,
+  reactive,
+  ref,
+  watch,
+} from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useDebounceFn } from '@vueuse/core'
 import { Badge, Button, Dialog, FormControl, toast } from 'frappe-ui'
@@ -592,6 +609,7 @@ import {
   archivosBoot as boot,
   canManageItem,
   displayTitle,
+  folderPictures,
   doctypeLabel,
   folderLine,
   formatDay,
@@ -688,6 +706,30 @@ const rows = ref([]),
   lastDone = ref(null),
   pageDragging = ref(false),
   droppedFile = ref(null)
+
+// A picture full screen. The viewer lives here, not in the preview pane: the
+// pane is rebuilt for each file, and the viewer walks the folder's pictures.
+const MediaViewer = defineAsyncComponent(
+  () => import('@/components/ui/MediaViewer.vue'),
+)
+const viewer = reactive({ wanted: false, open: false, items: [], index: 0 })
+function viewPicture(opened) {
+  const found = folderPictures(
+    browseData.value?.items,
+    { ...opened, id: fileId.value },
+    locale,
+  )
+  if (!found) return
+  Object.assign(viewer, { ...found, wanted: true, open: true })
+}
+// Closing lands on the picture the worker ended on.
+watch(
+  () => viewer.open,
+  (open) => {
+    const seen = viewer.items[viewer.index]
+    if (!open && seen && seen.id !== fileId.value) patch({ file: seen.id })
+  },
+)
 
 // Browse state: the folder tree, the counts and one page of files.
 const folders = ref([]),

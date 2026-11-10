@@ -40,14 +40,14 @@
           v-if="item.preview === 'image' && item.file_url"
           class="flex justify-center"
         >
-          <!-- A tap opens it full screen: zoom, pan, and a pull down to come back. -->
+          <!-- A tap opens it full screen, where a swipe walks the folder's pictures. -->
           <button
             type="button"
             class="press cursor-zoom-in"
             :aria-label="__('See the picture full screen')"
             :title="__('See the picture full screen')"
             data-testid="archivo-ver-foto"
-            @click="openViewer"
+            @click="emit('view', item)"
           >
             <img
               class="max-h-[60vh] w-auto rounded-4 object-contain"
@@ -55,12 +55,6 @@
               :alt="item.title"
             />
           </button>
-          <MediaViewer
-            v-if="viewerWanted"
-            v-model:open="viewerOpen"
-            :items="[{ url: item.file_url, kind: 'image', name: item.title }]"
-            :title="displayTitle(item)"
-          />
         </div>
         <iframe
           v-else-if="item.preview === 'pdf' && item.file_url"
@@ -351,7 +345,7 @@
   </section>
 </template>
 <script setup>
-import { computed, defineAsyncComponent, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { Badge, Button, FormControl, toast } from 'frappe-ui'
 import ArchivoGuard from '@/components/archivos/ArchivoGuard.vue'
 import CfdiCard from '@/components/archivos/CfdiCard.vue'
@@ -415,19 +409,17 @@ const emit = defineEmits([
   'classify',
   'open-id',
   'redirect',
+  // «See the picture full screen»: the page owns the viewer, so it stays
+  // open while this pane follows the picture on screen.
+  'view',
 ])
 
-const MediaViewer = defineAsyncComponent(
-  () => import('@/components/ui/MediaViewer.vue'),
-)
 const TEXT_LIMIT = 200 * 1024
 const item = ref(null),
   loading = ref(false),
   problemState = ref(null),
   actionProblem = ref(null),
   busy = ref(''),
-  viewerWanted = ref(false),
-  viewerOpen = ref(false),
   text = ref(''),
   textProblem = ref(''),
   truncated = ref(false),
@@ -450,10 +442,6 @@ const recordLink = computed(() => {
 })
 
 let seq = 0
-function openViewer() {
-  viewerWanted.value = true
-  viewerOpen.value = true
-}
 async function load() {
   const mine = ++seq
   loading.value = true
@@ -461,7 +449,6 @@ async function load() {
   actionProblem.value = null
   renaming.value = false
   showVersions.value = false
-  viewerOpen.value = false
   text.value = ''
   textProblem.value = ''
   truncated.value = false

@@ -613,6 +613,18 @@ describe('the preview pane', () => {
     expect(root.textContent).not.toContain('Send to trash')
   })
 
+  it('a tap on the image asks the page for the full-screen view', async () => {
+    serve(attachment())
+    const seen = []
+    const root = await page.mount(ArchivoPreview, {
+      company: 'Doco MX',
+      id: 'file:F-1',
+      onView: (item) => seen.push(item.file_url),
+    })
+    root.querySelector('[data-testid="archivo-ver-foto"]').click()
+    expect(seen).toEqual(['/private/files/ine.jpg'])
+  })
+
   it('a PDF opens in a frame with its own actions', async () => {
     serve(doc())
     const root = await page.mount(ArchivoPreview, {
