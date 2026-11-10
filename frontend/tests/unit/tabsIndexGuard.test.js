@@ -32,7 +32,9 @@ describe('frappe-ui Tabs items', () => {
     const missing = []
     for (const file of sourceFiles(root)) {
       if (tabsWithoutIndexTabs(fs.readFileSync(file, 'utf8')))
-        missing.push(path.relative(root, file))
+        missing.push(
+          `${path.relative(root, file)} renders <Tabs> without indexTabs: return indexTabs(items) from the computed bound to :tabs (import { indexTabs } from '@/utils/tabs'), so each item carries the value its v-model selects`,
+        )
     }
     expect(missing).toEqual([])
   })
