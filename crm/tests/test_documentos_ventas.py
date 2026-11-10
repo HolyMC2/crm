@@ -252,3 +252,76 @@ class TestVentasChain(IntegrationTestCase):
 		self.assertTrue(draft["route"].startswith("/documentos/cobros/"))
 		with self.assertRaises(frappe.ValidationError):
 			ventas.registrar_cobro(si.name, amount=0)
+
+	def _account(self, name, account_type):
+		found = frappe.db.get_value(
+			"Account", {"company": self.company, "account_name": name, "is_group": 0}, "name"
+		)
+		if found:
+			return found
+		parent = frappe.db.get_value(
+			"Account",
+			{"company": self.company, "root_type": "Asset", "is_group": 1, "parent_account": ["is", "set"]},
+		)
+		return (
+			frappe.get_doc(
+				{
+					"doctype": "Account",
+					"company": self.company,
+					"account_name": name,
+					"parent_account": parent,
+					"account_type": account_type,
+				}
+			)
+			.insert(ignore_permissions=True)
+			.name
+		)
+
+	def _mode(self, name, kind, account):
+		if not frappe.db.exists("Mode of Payment", name):
+			frappe.get_doc({"doctype": "Mode of Payment", "mode_of_payment": name, "type": kind}).insert(
+				ignore_permissions=True
+			)
+		mode = frappe.get_doc("Mode of Payment", name)
+		mode.accounts = [row for row in mode.accounts if row.company != self.company]
+		mode.append("accounts", {"company": self.company, "default_account": account})
+		mode.save(ignore_permissions=True)
+		return name
+
+	def test_a_cash_cobro_goes_to_the_till_and_needs_no_bank_reference(self):
+		q, so, dn, si, pe = self._chain()
+		bank = self._account("Banco D2", "Bank")
+		till = self._account("Caja D2", "Cash")
+		frappe.db.set_value("Company", self.company, "default_bank_account", bank)
+		cash = self._mode("Efectivo D2", "Cash", till)
+		transfer = self._mode("Transferencia D2", "Bank", bank)
+		# the invoice maps to the company's bank account; cash moves it to the till
+		draft = ventas.registrar_cobro(si.name, amount=40, mode_of_payment=cash)
+		pay = frappe.get_doc("Payment Entry", draft["name"])
+		self.assertEqual((pay.docstatus, pay.mode_of_payment, pay.paid_to), (0, cash, till))
+		self.assertEqual(pay.paid_to_account_type, "Cash")
+		self.assertFalse(pay.reference_no)
+		self.assertEqual(flt(pay.paid_amount), 40)
+		# a transfer stays on the bank and still needs its reference
+		with self.assertRaises(frappe.ValidationError):
+			ventas.registrar_cobro(si.name, amount=40, mode_of_payment=transfer)
+		wired = ventas.registrar_cobro(si.name, amount=40, mode_of_payment=transfer, reference_no="SPEI-1")
+		self.assertEqual(frappe.db.get_value("Payment Entry", wired["name"], "paid_to"), bank)
+
+	def test_the_account_the_worker_picked_stays_when_the_way_of_paying_changes(self):
+		from crm.api import documentos
+
+		q, so, dn, si, pe = self._chain()
+		bank = self._account("Banco D2", "Bank")
+		till = self._account("Caja D2", "Cash")
+		other = self._account("Caja chica D2", "Cash")
+		frappe.db.set_value("Company", self.company, "default_bank_account", bank)
+		cash = self._mode("Efectivo D2", "Cash", till)
+		source = {"make": "payment", "doctype": "Sales Invoice", "name": si.name}
+		saved = documentos.save(
+			"Payment Entry", values={"mode_of_payment": cash, "paid_to": other}, source=source
+		)
+		self.assertEqual(frappe.db.get_value("Payment Entry", saved["name"], "paid_to"), other)
+		# the same way of paying saved again moves nothing
+		again = documentos.save("Payment Entry", values={"mode_of_payment": cash}, name=saved["name"])
+		self.assertEqual(frappe.db.get_value("Payment Entry", again["name"], "paid_to"), other)

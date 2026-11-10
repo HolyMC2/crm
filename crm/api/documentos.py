@@ -2321,10 +2321,43 @@ def _apply_rows(doc, table, rows):
 		doc.append(table.fieldname, row)
 
 
+def _payment_account(doc, given, mode_before):
+	"""Desk moves a payment's money account when the way of paying changes (cash to the till,
+	a transfer to the bank). A payment mapped from an invoice carries the company's default
+	bank account, and ERPNext asks a bank account for a reference a cash payment has not."""
+	mode = doc.get("mode_of_payment")
+	if not mode or mode == mode_before or not doc.get("company"):
+		return
+	if doc.get("payment_type") == "Internal Transfer":
+		return
+	side = "paid_from" if doc.get("payment_type") == "Pay" else "paid_to"
+	# the worker picked the account too («Más datos»): theirs stays
+	if side in given:
+		return
+	account = frappe.db.get_value(
+		"Mode of Payment Account", {"parent": mode, "company": doc.company}, "default_account"
+	)
+	current = doc.get(side)
+	if not account or account == current:
+		return
+
+	def currency(name):
+		return frappe.get_cached_value("Account", name, "account_currency")
+
+	# an account in another currency changes the amounts: that one the worker picks
+	if current and currency(account) != currency(current):
+		return
+	doc.set(side, account)
+	# ERPNext fills both from the account when they are empty (set_missing_values)
+	doc.set(f"{side}_account_currency", None)
+	doc.set(f"{side}_account_type", None)
+
+
 def _apply(doc, values):
 	meta = doc.meta
 	table = _items_table(meta)
 	given = values or {}
+	mode_before = doc.get("mode_of_payment")
 	for fieldname, value in given.items():
 		if table and fieldname == table.fieldname:
 			_apply_rows(doc, table, value if isinstance(value, list) else [])
@@ -2357,6 +2390,8 @@ def _apply(doc, values):
 			)
 
 			doc.expense_account = get_difference_account(doc.purpose, doc.company) or doc.expense_account
+	if meta.name == "Payment Entry":
+		_payment_account(doc, given, mode_before)
 	_header_dates(doc)
 	if hasattr(doc, "set_missing_values"):
 		try:
