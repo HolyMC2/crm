@@ -11,6 +11,7 @@
          The phone keeps its call tile below and the focused invoice's
          actions at the thumb. -->
     <AppBar
+      island
       data-cobranza-appbar
       back
       :back-label="backLabel"

@@ -1,5 +1,7 @@
 // A record's bar, WhatsApp-style: llamar, WhatsApp and correo share one
 // island, the bolt holds the steps and the follow-ups, «⋯» the rest.
+import fs from 'node:fs'
+import path from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import { createApp, h } from 'vue'
 import { recordActionsFor } from '@/documentos/acciones'
@@ -125,5 +127,45 @@ describe('the record island', () => {
     )
     reach('mail').click()
     expect(events).toEqual(['mail'])
+  })
+})
+
+// The island follows the name on a desk (ui/AppBar `island`): every bar that
+// carries one has to say so, or a new record page puts it back at the far edge.
+describe('record bars', () => {
+  const src = path.resolve(__dirname, '../../src')
+  const vueFiles = (dir) =>
+    fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+      const p = path.join(dir, entry.name)
+      if (entry.isDirectory()) return vueFiles(p)
+      return entry.name.endsWith('.vue') ? [p] : []
+    })
+  // The opening tag ends at the first `>` outside a quoted attribute value.
+  const openingTag = (text, from) => {
+    let quote = ''
+    for (let i = from; i < text.length; i += 1) {
+      const c = text[i]
+      if (quote) quote = c === quote ? '' : quote
+      else if (c === '"' || c === "'") quote = c
+      else if (c === '>') return text.slice(from, i + 1)
+    }
+    return text.slice(from)
+  }
+  it('pass `island` to the AppBar whenever its actions hold a RecordIsland', () => {
+    const missing = []
+    let bars = 0
+    for (const file of vueFiles(src)) {
+      const text = fs.readFileSync(file, 'utf8')
+      for (const match of text.matchAll(/<AppBar\b/g)) {
+        const end = text.indexOf('</AppBar>', match.index)
+        if (end < 0 || !text.slice(match.index, end).includes('<RecordIsland'))
+          continue
+        bars += 1
+        if (!/\sisland(\s|>|=)/.test(openingTag(text, match.index)))
+          missing.push(path.relative(src, file))
+      }
+    }
+    expect(bars).toBeGreaterThanOrEqual(12)
+    expect(missing).toEqual([])
   })
 })

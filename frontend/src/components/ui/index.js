@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/ui@0.1.0 (680ec7564007). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory.
+// Vendored from muelle/workspace/packages/ui@0.1.0 (7dac385e7a68). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory.
 // The Muelle shell's shared screen kit: the crm shell, Taller and Clínica
 // build their lists, records and sheets from it. Do and don't for each:
 // crm/docs/design/MOBILE_REFERENCES.md «Componentes»; live demo at /crm/_ui.
@@ -21,8 +21,10 @@ export { default as RecentPicks } from './RecentPicks.vue'
 export { default as SearchPanel } from './SearchPanel.vue'
 export { default as Segmented } from './Segmented.vue'
 export { default as StatusChip } from './StatusChip.vue'
+export { default as ToolDock } from './ToolDock.vue'
 export { chipClass, dotBinding } from './chipClass'
 export { primaryDock } from './primaryDock'
+export { pageToolsDocked } from './toolDock'
 export { installSheetHistory } from './sheetHistory'
 export {
   canReturnToReferrer,

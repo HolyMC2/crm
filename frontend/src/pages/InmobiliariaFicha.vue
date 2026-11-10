@@ -6,6 +6,7 @@
     class="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-surface-base"
   >
     <AppBar
+      island
       :title="data?.titulo || TIPOS[tipo]?.etiqueta || ''"
       :back="true"
       :back-label="backLabel"

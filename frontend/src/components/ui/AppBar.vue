@@ -1,9 +1,10 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (680ec7564007). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (7dac385e7a68). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <template>
   <!-- The one phone top app bar (Shell SPEC §2.2.1), grown from PowerAppBar:
        up/back · title (optionally a scope picker) · ≤3 icon actions · bell.
        The title wraps to two lines and never collapses to a letter: when the
-       icons leave it too little room it moves to its own row (M3 medium bar). -->
+       icons leave it too little room it moves to its own row (M3 medium bar).
+       A record's island (`island`) follows the name from 768 px. -->
   <header
     ref="bar"
     class="sticky top-0 z-20 border-b border-outline-gray-1 bg-surface-base pt-[env(safe-area-inset-top)]"
@@ -92,7 +93,11 @@
         >
           <span class="lucide-arrow-left size-6" aria-hidden="true" />
         </UiTag>
-        <div v-if="!stacked" class="flex min-w-0 flex-1">
+        <div
+          v-if="!stacked"
+          class="flex min-w-0 flex-1"
+          :class="island ? 'md:flex-initial' : ''"
+        >
           <slot name="title">
             <AppBarTitle v-bind="titleProps" @pick="pick" />
           </slot>
@@ -104,7 +109,12 @@
           role="status"
           :aria-label="t('Loading')"
         />
-        <div ref="icons" class="flex flex-none items-center">
+        <div
+          ref="icons"
+          class="flex flex-none items-center"
+          :class="island && !stacked ? 'md:mr-auto' : ''"
+          :data-appbar-island="island ? '' : undefined"
+        >
           <slot name="actions" />
           <button
             v-if="searchable"
@@ -285,6 +295,10 @@ const props = defineProps({
    *  record keeps arrow and name on one line, M3 small bar) until the icons
    *  leave it less than TITLE_MIN; then it takes its own row like any title. */
   stack: { type: Boolean, default: true },
+  /** The actions are a record's island (reach, bolt, «⋯»): from 768 px they
+   *  follow the title and the spare width trails them, so on a wide desk they
+   *  stay by the name; the phone keeps them at the edge, in thumb reach. */
+  island: { type: Boolean, default: false },
   /** Extra attributes for the search field (a page's own hook, e.g. data-power-search). */
   searchInputAttrs: { type: Object, default: () => ({}) },
 })
@@ -435,21 +449,32 @@ const titleMin = () => (props.back ? 96 : 152)
 // top-level (large) title, 17px beside a back arrow.
 const charPx = () => (props.back ? 9 : 11.5)
 let observer = null
-function measure() {
-  const width = bar.value?.clientWidth || 0
-  if (!width || !icons.value) return
+// The widths come from the ResizeObserver, whose callback runs after layout
+// (free reads); a prop change reuses them, so the title, count or loading
+// state changing never forces a layout of its own.
+let barWidth = 0
+let iconsWidth = 0
+function fit() {
+  if (!barWidth || !icons.value) return
   const used =
-    icons.value.offsetWidth +
+    iconsWidth +
     (props.back ? 48 : 0) +
     (props.loading ? 24 : 0) +
     40 // the row's padding and gaps, and the title's own padding
-  const room = width - used
+  const room = barWidth - used
   const text = `${props.title} ${props.count ?? ''}`.trim()
   const needed = text.length * charPx() + (pickable.value ? 24 : 0)
   stacked.value = room < titleMin() || (props.stack && needed > room * 2 * 0.9)
 }
+function measure() {
+  barWidth = bar.value?.clientWidth || 0
+  iconsWidth = icons.value?.offsetWidth || 0
+  fit()
+}
 // The icons mount only in the normal mode (not while selecting or
-// searching): observe them whenever they (re)appear.
+// searching): observe them whenever they (re)appear, and measure once now so
+// the first paint has the right rows (one layout per mount; the observer
+// keeps the widths current from then on).
 watch(
   icons,
   (el) => {
@@ -465,12 +490,11 @@ watch(
 )
 watch(
   () => [props.loading, props.back, props.title, props.count, props.stack],
-  measure,
+  fit,
   {
     flush: 'post',
   },
 )
-onMounted(measure)
 onBeforeUnmount(() => {
   observer?.disconnect()
   unwatchKeyboard?.()

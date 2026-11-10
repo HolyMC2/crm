@@ -9,6 +9,7 @@
        desk and below them on a phone. A new or draft order edits in place. -->
   <div class="relative flex h-full min-w-0 flex-1 flex-col overflow-hidden">
     <AppBar
+      island
       :back="true"
       :back-label="backLabel"
       :title="title"

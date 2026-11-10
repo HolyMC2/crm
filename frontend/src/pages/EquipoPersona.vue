@@ -6,6 +6,7 @@
        left and access. Then their week, their requests and Actividad. -->
   <div class="relative flex h-full min-w-0 flex-1 flex-col overflow-hidden">
     <AppBar
+      island
       :back="true"
       :back-label="__('Back to Equipo')"
       :title="person?.full_name || ''"

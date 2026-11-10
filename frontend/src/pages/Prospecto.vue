@@ -5,6 +5,7 @@
        next and offers the one filled step, «Convertir en trato». -->
   <div class="flex h-full flex-col overflow-hidden bg-surface-base">
     <AppBar
+      island
       :back="{ name: 'Prospectos' }"
       back-label="Prospectos"
       :title="doc ? name : ''"

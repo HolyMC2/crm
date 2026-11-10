@@ -11,6 +11,7 @@
     data-testid="claim-record"
   >
     <AppBar
+      island
       :back="true"
       :back-label="backLabel"
       :title="title"

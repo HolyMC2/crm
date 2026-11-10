@@ -1,4 +1,4 @@
-/* Vendored from muelle/workspace/packages/ui@0.1.0 (680ec7564007). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. */
+/* Vendored from muelle/workspace/packages/ui@0.1.0 (7dac385e7a68). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. */
 /* The Muelle shell's type, motion and feel, shared by every app built on
    @muelle/ui. Import it after frappe-ui's style and the @muelle/tokens CSS.
    It needs the frappe-ui Tailwind preset for the colour tokens it names. */
@@ -228,4 +228,126 @@ a,
   font-stretch: 84%;
   font-variant-numeric: tabular-nums lining-nums;
   letter-spacing: -0.01em;
+}
+
+/* A page's tools in the phone command bar (ui/ToolDock). The page puts
+   .dock-pill on its search field's label and .dock-icon on the 44 px icon
+   buttons beside it while the `docked` slot prop is on; .dock-badge on an
+   icon counts the active filters. The panel rises above the bar over the
+   scrim, capped so the bar and the nav stay in reach. */
+.dock-pill {
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 9999px;
+  background: var(--muelle-surface-gray-2);
+}
+.dock-pill:focus-within {
+  box-shadow: 0 0 0 1px var(--muelle-outline-gray-3);
+  outline: 0;
+}
+.dock-pill input {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 15px;
+  color: var(--muelle-ink-gray-9);
+  text-overflow: ellipsis;
+}
+.dock-pill input::placeholder {
+  color: var(--muelle-ink-gray-5);
+  text-overflow: ellipsis;
+}
+.dock-pill input:focus {
+  outline: 0;
+  box-shadow: none;
+}
+.dock-pill input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+}
+.dock-pill kbd {
+  display: none;
+}
+.dock-icon {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 9999px;
+  background: transparent;
+  color: var(--muelle-ink-gray-9);
+}
+.dock-icon:active {
+  background: var(--muelle-surface-gray-2);
+}
+.dock-icon[aria-expanded='true'],
+.dock-icon[aria-pressed='true'] {
+  background: var(--muelle-accent-soft);
+  color: var(--muelle-accent-soft-ink);
+}
+.dock-icon:disabled {
+  color: var(--muelle-ink-gray-4);
+}
+.dock-icon .dock-badge {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--muelle-accent);
+  color: var(--muelle-accent-ink);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 18px;
+  text-align: center;
+}
+.tool-dock-scrim {
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 0.3);
+}
+.tool-dock-panel {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+  max-height: 60dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 12px 12px 8px;
+  border-top: 1px solid var(--muelle-outline-gray-2);
+  background: var(--muelle-surface-base);
+  box-shadow: 0 -12px 30px rgb(0 0 0 / 0.07);
+}
+.tool-scrim-enter-active,
+.tool-scrim-leave-active {
+  transition: opacity 0.16s;
+}
+.tool-scrim-enter-from,
+.tool-scrim-leave-to {
+  opacity: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tool-scrim-enter-active,
+  .tool-scrim-leave-active {
+    transition: none;
+  }
 }

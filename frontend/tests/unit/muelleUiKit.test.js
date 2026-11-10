@@ -270,6 +270,32 @@ describe('AppBar', () => {
     root.querySelector('[aria-label="Clear selection"]').click()
     expect(events.map((e) => e[0])).toEqual(['select-all', 'clear-selection'])
   })
+  it("a record's island follows the name from 768 px; other bars keep their actions at the edge", async () => {
+    const actions = {
+      actions: () => h('button', { 'data-reach': '' }, 'Llamar'),
+    }
+    await mount(
+      AppBar,
+      { title: 'Publico en General', back: true, island: true, bell: false },
+      actions,
+    )
+    const title = root.querySelector('[data-appbar-title]').closest('.flex-1')
+    const row = root.querySelector('[data-appbar-island]')
+    // Sized to the name from md up, and the spare width after the icons.
+    expect(title.classList).toContain('md:flex-initial')
+    expect(row.classList).toContain('md:mr-auto')
+    expect(row.querySelector('[data-reach]')).not.toBeNull()
+    // The phone classes are the same as any bar's: the island stays at the edge there.
+    expect(title.classList).toContain('flex-1')
+    app.unmount()
+    root.remove()
+    await mount(AppBar, { title: 'Compras', back: true, bell: false }, actions)
+    expect(root.querySelector('[data-appbar-island]')).toBeNull()
+    expect(
+      root.querySelector('[data-appbar-title]').closest('.flex-1').classList,
+    ).not.toContain('md:flex-initial')
+    expect(root.querySelector('.md\\:mr-auto')).toBeNull()
+  })
 })
 
 describe('the search panel: typing, the keyboard, the list scrolling', () => {
