@@ -1,4 +1,4 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (7dac385e7a68). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (8c16b232a287). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <template>
   <!-- An es-MX date (and/or 24-hour time): type dd/mm/aaaa, tap Hoy · Mañana ·
        En una semana, or open the month. Never the browser's US mm/dd/yyyy. -->

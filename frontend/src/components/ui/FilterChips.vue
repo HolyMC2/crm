@@ -1,4 +1,4 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (7dac385e7a68). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (8c16b232a287). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <template>
   <!-- One horizontal row of filter chips (Shell SPEC §2.2.4, M3 filter chip),
        never wrapping: it scrolls sideways with a fade at the end. Filters
@@ -142,7 +142,7 @@
           <span
             v-if="chip.count !== undefined && chip.count !== null"
             class="tabular-nums"
-            :class="isOn(chip.value) ? 'text-ink-gray-8' : 'text-ink-gray-6'"
+            :class="isOn(chip.value) ? 'opacity-80' : 'text-ink-gray-6'"
             >{{ chip.count }}</span
           >
         </span>
