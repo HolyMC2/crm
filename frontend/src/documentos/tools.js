@@ -211,7 +211,7 @@ export const BTN = Object.freeze({
   filled:
     'inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-surface-gray-10 px-5 text-base-medium text-ink-base hover:bg-surface-gray-9 disabled:opacity-50',
   danger:
-    'inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-surface-red-7 px-5 text-base-medium text-ink-red-1 hover:opacity-80 disabled:opacity-50',
+    'inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-surface-red-7 px-5 text-base-medium text-white hover:opacity-80 disabled:opacity-50',
   tonal:
     'inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-surface-gray-2 px-5 text-base-medium text-ink-gray-9 hover:bg-surface-gray-3 disabled:opacity-50',
   text: 'inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-4 text-base-medium text-ink-gray-8 hover:bg-surface-gray-2 disabled:opacity-50',

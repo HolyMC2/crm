@@ -37,7 +37,7 @@
       >
       <span
         v-if="label"
-        class="pointer-events-none min-w-4 rounded-full bg-surface-red-7 px-1 text-center text-[10px] font-semibold leading-4 text-ink-red-1"
+        class="pointer-events-none min-w-4 rounded-full bg-surface-red-7 px-1 text-center text-[10px] font-semibold leading-4 text-white"
         :class="rail && expanded ? '' : 'absolute right-0.5 top-0.5'"
         aria-hidden="true"
         >{{ label }}</span

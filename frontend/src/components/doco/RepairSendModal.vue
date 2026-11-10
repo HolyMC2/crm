@@ -154,7 +154,7 @@
               />
               <span
                 v-if="photoSel[ph.name]"
-                class="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-surface-green-7 text-[9px] font-bold text-ink-green-1"
+                class="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-surface-green-7 text-[9px] font-bold text-white"
                 >✓</span
               >
             </button>
