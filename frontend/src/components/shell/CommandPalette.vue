@@ -154,8 +154,17 @@
     </div>
   </div>
 </template>
+<script>
+import { hasStoredReach, loadPaletteReach } from '@/utils/paletteReach'
+
+// This module loads in idle time after the first route (MuelleShell). A
+// browser that keeps no reach yet reads it then, so the first ⌘K already has
+// its lists, reports and Desk rows; later visits open on the kept copy.
+if (!hasStoredReach()) loadPaletteReach()
+</script>
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { toast } from 'frappe-ui'
 import { openAssistant } from '@/components/assistant/useAssistant'
 import { openCamera } from '@/components/captura/cameraDoor'
 import { openScan } from '@/components/escaneo/scanDoor'
@@ -187,10 +196,12 @@ import {
   createShellProviders,
   loadRecent,
   orderPaletteSections,
+  recentWithVisits,
   resolveRecent,
   saveRecent,
   toRecentRef,
 } from '@/utils/shellPalette'
+import { takeVisits } from '@/utils/visited'
 import { useShellTheme } from '@/composables/shellTheme'
 import { runRecordAction } from '@/composables/recordActions'
 import {
@@ -220,7 +231,10 @@ const raw = ref('')
 const cursor = ref(0)
 const states = ref([])
 const searching = ref(false)
-let recentRefs = loadRecent()
+// Recientes: what the palette opened, and the record pages opened since.
+const visits = takeVisits(router.currentRoute.value.path)
+let recentRefs = recentWithVisits(loadRecent(), visits)
+if (visits.length) saveRecent(recentRefs)
 // Shown only once the server confirms read access to each record.
 const recent = ref([])
 resolveRecent(recentRefs, shellBoot.value).then((items) => {
@@ -376,6 +390,8 @@ function choose(item) {
     saveRecent(recentRefs)
   }
   if (item.action === 'theme') setTheme(item.args?.theme)
+  // The calculator's result goes to the clipboard.
+  if (item.action === 'copy') copyText(String(item.args?.text ?? ''))
   const href = item.href && safeReturn(`/crm${item.href}`, ['/crm/'])
   // Sibling apps (Escáner, POS…) open with «Volver a …» back to this page.
   const external = item.scanPick
@@ -402,6 +418,15 @@ function choose(item) {
   if (href) router.push(href.replace(/^\/crm/, ''))
   else if (external) window.location.assign(external)
   else if (desk) window.location.assign(desk)
+}
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text)
+    toast.success(__('Copied'))
+  } catch {
+    // No clipboard here (an insecure page): the result stays on screen to read.
+    toast.info(text)
+  }
 }
 function siblingTarget(path) {
   if (!safeReturn(path)) return null

@@ -10,13 +10,13 @@ reaches»).
 
 | Group | What | Where it opens |
 | --- | --- | --- |
-| Acciones | «Nuevo contacto», «Crear <tipo>» (`tipos`, where the worker may create), theme, shortcuts, «Preguntar a Muelle: «…»» for a question | the shell |
-| Registros | Contactos (seven sources), Ventas deals, Documentos by number or party (`crm.api.documentos.search`), Clínica, Inmobiliaria, Manual | the shell |
+| Acciones | «Nuevo contacto», «Crear <tipo>» (`tipos`, where the worker may create), «Buscar «X» en <lista>», the calculator's result, theme, shortcuts, «Preguntar a Muelle: «…»» for a question | the shell |
+| Registros | Contactos (seven sources), Ventas deals, Documentos by number or party (`crm.api.documentos.search`), Clínica, Inmobiliaria, Manual; then a record of any other type (`otros`, Frappe's global search) and, after `#`, the documents that carry a tag | the shell (a worker without Documentos gets the Desk form) |
 | Ir a | modules, Contactos/Ventas/Documentos places, sibling apps, and «Pregúntale a Muelle» (a door word, the empty palette, a bare `?`) | the shell |
 | Listas | every DocType the worker reads and that has no curated list, by Spanish label or English name (the reach's `lists`), on the generic floor `/documentos/tipo/<DocType>` | the shell |
 | Reportes | the reports the worker may run, as Desk lists them (the reach's `reports`); the report view of a list the term names («Factura de venta · Vista de reporte», two at most) | Desk, this tab, subtitled «Desk» |
 | Desk | the Desk workspaces, pages («Desk · Página») and dashboards («Desk · Tablero») the worker sees (the reach's `workspaces`, `pages`, `dashboards`), minus the ones a shell module already is; then the forms only Desk opens (the reach's `desk_types`): a single's form (Books Assistant Settings, Stock Settings), a tree («Desk · Árbol») and a virtual type's list (RQ Job) | Desk, this tab, subtitled «Desk» |
-| Recientes | the last eight rows chosen with a stable target | as chosen |
+| Recientes | the last eight rows chosen with a stable target, and the record pages opened in the shell since | as chosen |
 
 Shell places always sort above Listas, Reportes and Desk. A Desk row (`desk`, an `/app/…` URL)
 exists only where the shell has no page: never a Desk link for a module or a curated list.
@@ -34,12 +34,17 @@ exists only where the shell has no page: never a Desk link for a module or a cur
 | «Open X» (`page_info`) | Desk group, `pages` |
 | «Open X Workspace» | Desk group, `workspaces` |
 | «X Dashboard» (`dashboards`) | Desk group, `dashboards` |
-| Recent routes | Recientes: the rows chosen in the palette, not every page visited |
-| «Search for X» (global search) | the record providers (Registros): contacts, deals, products, documents, Clínica, Inmobiliaria, Manual. A record of any other type is found from its list |
-| Fuzzy match (letters in order) | the match rule below: every word in any order, initials, one slip |
+| A last word that narrows («sales invoice report») | the same: «… report/reporte», «… list/lista», «… tree/árbol», «… dashboard/tablero» |
+| «Find X in Y» | «juan en clientes», «juan in customer» → «Buscar «juan» en Clientes», first row; opens the list on that search (`?q=`): Contactos and Productos on their own pages, a curated list on its own («juan en facturas»), any other readable type on the generic floor (`buscar_en`) |
+| «Find X in <this list>» | on a list page, «Buscar «X» en <esta lista>» among the generic actions |
+| «Search for X» (global search) | the record providers, then `otros`: `crm.api.shell.search_records` reads Frappe's global search index for the types in Global Search Settings, minus the ones a provider above already searches |
+| `#tag` | after `#`: the documents of the tags the term names (`crm.api.shell.tagged`); the tags come with the reach, so a site without tags asks nothing |
+| Calculator («=» or a sum) | «1250*1.16 = 1,450», first row, ↵ copies it; «1250 + 16%» adds the percentage |
+| Recent pages | Recientes: the rows chosen in the palette and the record pages opened in the shell (`utils/visited.js`) |
+| Fuzzy match (letters in order) | the match rule below: every word in any order, initials, abbreviations, one slip |
+| Lists in the page boot | the reach, kept in this browser between visits (below) |
 
-Not carried over: «Find X in Y», tags (`#` is the documents scope here), the calculator and
-Desk's own commands.
+Not carried over: «Generate Random Password», «Toggle Full Width» and Desk's own page commands.
 
 ## Match (the reach rows)
 
@@ -53,11 +58,26 @@ Listas, Reportes and the Desk group rank their rows by how closely the name answ
    is the **initials** of the whole name («bas», «si»);
 4. every word is **somewhere** in them (the shell's rule, `matchTokens`).
 
-At the same step the shortest name the term was found in comes first. When nothing answers as
-typed, a row **one slip away** does: a letter missing, extra, wrong, or two swapped, in a word of
-four letters or more («boks asistant» → Books Assistant Settings, «slaes invoice»). The term
-needs one word of six letters or more to hold on to, and a slip is never in the first letter or
-the last one typed: «maria» stays a name, not «Marca».
+At the same step the shortest name the term was found in comes first. A plural finds its
+singular («clientes» → Cliente, «almacenes», «invoices»). Then:
+
+5. the term **abbreviates** the whole name, word by word: each piece is the start of its word or
+   its consonants in order, half of them at least, and only small words (de, of, the) are left
+   out: «slsinv» and «sinv» → Sales Invoice, «pymtent» → Payment Entry, «factven» → Factura de
+   venta, «basset» → Books Assistant Settings. Four letters at least. The awesomebar matches any
+   letters in order; held to whole names and whole words, «maria» and «carlos» find nothing,
+   though a four-letter nickname can spell two words («paty» → Party Type);
+6. when nothing answers, a row **one slip away** does: a letter missing, extra, wrong, or two
+   swapped, in a word of four letters or more («boks asistant» → Books Assistant Settings,
+   «slaes invoice»). The term needs one word of six letters or more to hold on to, and a slip is
+   never in the first letter or the last one typed: «maria» stays a name, not «Marca».
+
+A row found by 5 or 6 never counts as named (below): it stays under the worker's own free text.
+
+A curated list is a place («Documentos › Facturas»), matched by the shell's rule on its title
+and keywords. Where that rule misses and this one finds its type («slsinv», «si», «slaes
+invoice», «factura de venta»), the Listas provider adds the place row, so it is never missing
+and never listed twice.
 
 ## Rank (E7b)
 
@@ -83,14 +103,20 @@ stays below the worker's own free text.
 The Desk awesomebar answers from lists in its boot and asks the server at most once per keystroke;
 the palette follows it.
 
-- **Local providers** (`local: true`: actions, Ir a, the assistant, Listas, Reportes, Desk) answer
-  from memory on every keystroke, with no pause. Listas, Reportes and Desk filter the **palette
-  reach** (`frontend/src/utils/paletteReach.js`): one `crm.api.shell.palette_reach` read when the
-  palette opens, kept five minutes, every row's words folded once. They match by the rule above,
-  the reports named by the term before the ones only about its DocType.
-- **Record providers** (Contactos, Ventas, Productos, Documentos, Clínica, Inmobiliaria, Manual)
-  ask the server once the typing pauses for `PALETTE_DEBOUNCE_MS` (150 ms), from the second letter
-  (`asksServer`). While one asks, its rows of the last query stay if the text still matches their
+- **Local providers** (`local: true`: actions, Ir a, the assistant, the calculator, Listas,
+  Reportes, Desk) answer from memory on every keystroke, with no pause. Listas, Reportes and Desk
+  filter the **palette reach** (`frontend/src/utils/paletteReach.js`): one
+  `crm.api.shell.palette_reach` read, kept five minutes, every row's words folded once. They match
+  by the rule above, the reports named by the term before the ones only about its DocType.
+- **The reach is kept in the browser** (localStorage `muelle:palette-reach:<site, worker>`: names
+  of lists, reports, pages and tags, no record data). The awesomebar has its lists in the page
+  boot; the palette answers from the kept copy on the first keystroke of the next visit and reads
+  a new one in the background when the copy is older than five minutes. A browser that keeps
+  none reads it in idle time after the first route, with the palette's module. Only that very
+  first read can leave Listas, Reportes and Desk empty for a moment.
+- **Record providers** (Contactos, Ventas, Productos, Documentos, Clínica, Inmobiliaria, Manual,
+  `otros`, and tags after `#`) ask the server once the typing pauses for `PALETTE_DEBOUNCE_MS`
+  (150 ms), from the second letter (`asksServer`; `otros` from the third, the index's word size). While one asks, its rows of the last query stay if the text still matches their
   title or line, so the list narrows instead of blinking; «Nada coincide» waits for every answer.
 - The palette's module loads in idle time after the first route (`warmAfterFirstRoute`), so the
   first ⌘K opens at once; a phone or a slow line loads it on the first open.
@@ -108,8 +134,15 @@ nothing else answers. Unprefixed text reaches every provider.
 
 ## Server side
 
-- `crm.api.shell.palette_reach()`: `{reports, workspaces, lists, desk_types, pages, dashboards}`,
-  the sets below in full, for the palette to filter as the worker types.
+- `crm.api.shell.palette_reach()`: `{reports, workspaces, lists, desk_types, pages, dashboards,
+  tags}`, the sets below in full, for the palette to filter as the worker types.
+- `tags`: the tag names Desk offers after `#` (`get_tags_list_for_awesomebar`).
+- `crm.api.shell.tagged(tag)`: the documents that carry a tag, read again under the worker's
+  permissions, eight at most.
+- `crm.api.shell.search_records(q)`: Frappe's `__global_search` index, every word of three letters
+  or more as a required prefix, for the types in Global Search Settings the worker reads, minus
+  `SEARCHED_ELSEWHERE` and the curated Documentos types (another provider already finds those).
+  Each row is read again under the worker's permissions, eight at most.
 - `desk_types`: the readable DocTypes only Desk opens, one read of tabDocType: `kind` `single`
   (`/app/<slug>`), `tree` (`/app/<slug>/view/tree`) or `list` (a virtual type, `/app/<slug>`).
 - `pages`: frappe's allowed pages for the user (`frappe.boot.page_info`), minus blocked modules,
@@ -141,6 +174,11 @@ Documentos (both resolved by the server on every open, so revoked access shows n
 label of a place, list, report or workspace (no personal data). Action rows and sibling apps are
 never remembered.
 
+A record page opened in the shell (a contact, a deal, a document, a product) joins them, as the
+awesomebar's recent pages: the shell notes its path in the tab's sessionStorage
+(`utils/visited.js`), and the palette turns the paths into the same references when it opens
+(`recentWithVisits`). The page on screen is left out until the worker moves on.
+
 ## The assistant's doors
 
 Desktop: one rail item «Pregúntale a Muelle» after the modules (sparkle, ⌘J). Phone: the same
@@ -150,4 +188,5 @@ place), the Sugerencia lines, record tools, Compras Surtido. All of them show or
 (`shell-program/design/ASSISTANT.md`).
 
 Tests: `frontend/tests/unit/shellPalette.test.js`, `deskPalette.test.js`, `paletteReach.test.js`
-(the match rule), `muelleShell.test.js` (doors), `crm/tests/test_shell_palette.py`.
+(the match rule and the kept copy), `paletteCalc.test.js`, `visited.test.js`,
+`muelleShell.test.js` (doors), `crm/tests/test_shell_palette.py`.

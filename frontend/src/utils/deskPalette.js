@@ -9,10 +9,12 @@
 import { shellT } from '@/composables/shellKeyboard'
 import {
   REACH_FIT,
+  kindTerm,
   loadPaletteReach,
   namesIt,
   reachMatches,
   reachRanked,
+  reachRankedAs,
 } from '@/utils/paletteReach'
 
 const term = (query) => {
@@ -62,13 +64,17 @@ export function createDeskProviders({ modules }) {
     scopes: [],
     local: true,
     async search(query) {
-      const search = term(query)
-      if (!search) return []
+      if (!term(query)) return []
       const rows = (await loadPaletteReach())?.reports || []
       // A report named by the term («Kárdex de inventario» for «kardex») comes
       // before the many that only report on that DocType, and one a slip away
-      // from it («kardx») only when neither answers.
-      const named = reachRanked(rows, search)
+      // from it («kardx») only when neither answers. «stock ledger report»
+      // is the Stock Ledger report.
+      const { found: named, term: search } = reachRankedAs(
+        rows,
+        term(query),
+        'report',
+      )
       const typed = named.filter(({ fit }) => fit !== REACH_FIT.near)
       const about = reachMatches(rows, search, 'about')
         .filter((row) => !typed.some((entry) => entry.row === row))
@@ -95,8 +101,9 @@ export function createDeskProviders({ modules }) {
     scopes: [],
     local: true,
     async search(query) {
-      const search = term(query)
-      if (!search) return []
+      if (!term(query)) return []
+      // «sales invoice report»: the last word says which row is wanted.
+      const search = kindTerm(term(query), 'report') || term(query)
       const rows = ((await loadPaletteReach())?.lists || []).filter(
         (row) => row.report,
       )
@@ -165,20 +172,23 @@ export function createDeskProviders({ modules }) {
             desk: row.href,
           },
         }))
-      const dashboards = reachRanked(reach?.dashboards || [], search).map(
-        ({ row, fit }) => ({
-          fit,
-          item: {
-            id: `tablero:${row.name}`,
-            group: 'desk',
-            title: row.label,
-            subtitle: subtitle(__('Dashboard', null, 'Palette')),
-            keywords: row.name,
-            icon: 'lucide-layout-dashboard',
-            desk: row.href,
-          },
-        }),
-      )
+      // «stock dashboard»: the last word says which row is wanted.
+      const dashboards = reachRankedAs(
+        reach?.dashboards || [],
+        search,
+        'dashboard',
+      ).found.map(({ row, fit }) => ({
+        fit,
+        item: {
+          id: `tablero:${row.name}`,
+          group: 'desk',
+          title: row.label,
+          subtitle: subtitle(__('Dashboard', null, 'Palette')),
+          keywords: row.name,
+          icon: 'lucide-layout-dashboard',
+          desk: row.href,
+        },
+      }))
       return closest(merged(workspaces, pages, dashboards))
         .slice(0, DESK_ROWS)
         .map(({ item, fit }) => ({
@@ -200,7 +210,17 @@ export function createDeskProviders({ modules }) {
       const search = term(query)
       if (!search) return []
       const rows = (await loadPaletteReach())?.deskTypes || []
-      return reachRanked(rows, search)
+      // «almacén árbol», «warehouse tree»: the last word asks for the tree.
+      const asTree = kindTerm(search, 'tree')
+      const typed = reachRanked(rows, search)
+      const trees =
+        asTree && !typed.some(({ fit }) => fit <= REACH_FIT.short)
+          ? reachRanked(
+              rows.filter((row) => row.kind === 'tree'),
+              asTree,
+            )
+          : []
+      return (trees.length ? trees : typed)
         .slice(0, DESK_ROWS)
         .map(({ row, fit }) => ({
           id: `desk_tipo:${row.kind}:${row.doctype}`,

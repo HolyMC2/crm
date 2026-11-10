@@ -324,6 +324,7 @@ import {
 import { moduleEnabled, moduleMeta } from '@/vendor/muelle-shell/contracts'
 import { warmListsAfterFirstRoute } from '@/utils/listWarmup'
 import { warmAfterFirstRoute } from '@/utils/prefetch'
+import { noteVisit } from '@/utils/visited'
 import {
   camera,
   loadCameraSheet,
@@ -373,6 +374,8 @@ const activeKey = computed(() => moduleKeyFor(route))
 // filter, a refresh) leaves the app on screen.
 const appShown = computed(() => !phone.value && !!currentApp.value)
 watch(() => route.path, showShell)
+// A record page opened here is one of the palette's Recientes (utils/visited).
+watch(() => route.path, noteVisit, { immediate: true })
 const activeModule = computed(() =>
   shellModules.value.find((module) => module.key === activeKey.value),
 )

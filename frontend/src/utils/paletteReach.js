@@ -3,15 +3,53 @@
 // and every form, tree or list only Desk opens, in one read
 // (crm.api.shell.palette_reach). Reportes, Desk and Listas filter it as the
 // worker types, as the Desk awesomebar filters its boot lists: a keystroke
-// asks the server nothing for them.
+// asks the server nothing for them. The awesomebar has its lists in the page
+// boot; the palette keeps the last reach in this browser instead, so its rows
+// are there on the first keystroke of the next visit while a new read runs.
 import { call } from 'frappe-ui'
-import { normalizeSearch, searchTokens } from '@/vendor/muelle-shell/contracts'
+import {
+  bootScope,
+  normalizeSearch,
+  searchTokens,
+} from '@/vendor/muelle-shell/contracts'
 
 // The server keeps its copy five minutes too (crm.api.shell DESK_REACH_TTL).
 export const PALETTE_REACH_TTL_MS = 5 * 60 * 1000
 
-let pending = null
+// The reach in use, when it was read, and the read under way.
+let current = null
 let loadedAt = 0
+let reading = null
+
+// Names only (lists, reports, pages, tags), kept per site and worker like the
+// palette's recents; a worker who signs in on this browser never reads another's.
+function storageKey() {
+  const user = decodeURIComponent(
+    globalThis.document?.cookie
+      ?.split('; ')
+      .find((part) => part.startsWith('user_id='))
+      ?.slice(8) || '',
+  )
+  const site = globalThis.window?.site_name || globalThis.location?.host
+  return `muelle:palette-reach:${bootScope(site, user)}`
+}
+function readStored() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(storageKey()) || 'null')
+    return stored && typeof stored.at === 'number' && stored.reach
+      ? stored
+      : null
+  } catch {
+    return null
+  }
+}
+function writeStored(reach, at) {
+  try {
+    localStorage.setItem(storageKey(), JSON.stringify({ at, reach }))
+  } catch {
+    // No room or no storage: the reach stays in memory for this page only.
+  }
+}
 
 // Each row keeps its words folded once, so a keystroke compares strings and
 // never folds a thousand labels again.
@@ -23,23 +61,22 @@ const spaced = (value) =>
     .trim()
 
 /**
+ * A row ready for reachRanked (the reach's own rows, and any place a
+ * provider wants found the same way).
  * What a row is found by: `words`, everything it may be called, for the
  * shell's rule (every word, anywhere); `names`, each name on its own, for the
  * closer matches (the whole name, its start, its initials).
  */
-function named(row, ...values) {
+export function named(row, ...values) {
   const names = [...new Set(values.map(spaced).filter(Boolean))]
+  const nameWords = names.map((name) => name.split(' '))
   return {
     ...row,
     words: folded(...values),
     names,
+    nameWords,
     starts: ` ${names.join(' ')}`,
-    initials: names.map((name) =>
-      name
-        .split(' ')
-        .map((word) => word[0])
-        .join(''),
-    ),
+    initials: nameWords.map((words) => words.map((word) => word[0]).join('')),
   }
 }
 
@@ -62,23 +99,43 @@ function prepare(reach) {
     dashboards: (reach?.dashboards || []).map((row) =>
       named(row, row.label, row.name),
     ),
+    tags: (reach?.tags || [])
+      .filter((tag) => typeof tag === 'string' && tag)
+      .map((tag) => named({ tag }, tag)),
   }
 }
 
 /**
- * The reach, read once and kept PALETTE_REACH_TTL_MS. A failed read answers
- * null (the groups stay empty) and the next search asks again.
+ * The reach, read once and kept PALETTE_REACH_TTL_MS. Past that it is read
+ * again, and the one in hand (this page's, or the copy this browser kept from
+ * the last visit) answers meanwhile: the rows never wait for the server
+ * twice. With none in hand the search waits for the read; a failed read
+ * answers what there is (null: the groups stay empty) and the next search
+ * asks again.
  */
 export function loadPaletteReach({ now = Date.now() } = {}) {
-  if (pending && now - loadedAt < PALETTE_REACH_TTL_MS) return pending
-  loadedAt = now
-  pending = call('crm.api.shell.palette_reach')
-    .then(prepare)
-    .catch(() => {
-      pending = null
-      return null
-    })
-  return pending
+  if (!current && !reading) {
+    const stored = readStored()
+    if (stored) {
+      current = prepare(stored.reach)
+      loadedAt = stored.at
+    }
+  }
+  if (!reading && now - loadedAt >= PALETTE_REACH_TTL_MS) {
+    const read = call('crm.api.shell.palette_reach')
+      .then((reach) => {
+        current = prepare(reach)
+        loadedAt = now
+        writeStored(reach, now)
+        return current
+      })
+      .catch(() => current)
+      .finally(() => {
+        if (reading === read) reading = null
+      })
+    reading = read
+  }
+  return current ? Promise.resolve(current) : reading
 }
 
 /** The rows whose folded `field` holds every word of the query (matchTokens' rule). */
@@ -98,7 +155,8 @@ export const REACH_FIT = Object.freeze({
   start: 1, // the name starts with it
   words: 2, // every word starts a word of the name, or the query is its initials
   inside: 3, // every word is somewhere in it (the shell's rule)
-  near: 4, // one slip per word: a letter missing, extra, wrong or swapped
+  short: 4, // the query abbreviates the name word by word («slsinv», «pinv»)
+  near: 5, // one slip per word: a letter missing, extra, wrong or swapped
 })
 
 // A slip is only looked for in a word this long; a shorter one must be there
@@ -146,7 +204,56 @@ function nearWord(typed, row) {
     )
 }
 
-function fit(row, query, words) {
+// Words an abbreviation leaves out («factven» → Factura de venta).
+const SMALL_WORDS = new Set(
+  'a and con de del el en for la las los of para por the to y'.split(' '),
+)
+// An abbreviation is this long at least (shorter, only whole initials count:
+// «si») and no longer than a name someone would rather type out.
+const SHORT_MIN = 4
+const SHORT_MAX = 16
+const VOWEL = /[aeiou]/
+const consonants = (word) => word.replace(/[aeiou]/g, '')
+
+/**
+ * The piece stands for the word: its first letter, its start («inv» of
+ * «invoice»), or its consonants in order, half of them at least («sls» of
+ * «sales», «pymt» of «payment», «wrhs» of «warehouse»). Letters that merely
+ * appear in the word in order are chance: «emplado» is not «empleado».
+ */
+function standsFor(piece, word) {
+  if (word.startsWith(piece)) return true
+  if (piece[0] !== word[0] || VOWEL.test(piece.slice(1))) return false
+  const skeleton = word[0] + consonants(word.slice(1))
+  let at = 0
+  for (const letter of piece) {
+    at = skeleton.indexOf(letter, at) + 1
+    if (!at) return false
+  }
+  return piece.length * 2 >= skeleton.length
+}
+
+/**
+ * The letters abbreviate the name: cut into pieces, each piece stands for
+ * one word, every word in order and none left out but the small ones
+ * («slsinv» → Sales Invoice, «pinv» → Purchase Invoice, «factven» → Factura
+ * de venta). The awesomebar matches any letters in order; held to whole
+ * names and whole words, a person's name does not find a report.
+ */
+function abbreviates(letters, words, at = 0, from = 0) {
+  if (at === words.length) return from === letters.length
+  const word = words[at]
+  if (SMALL_WORDS.has(word)) return abbreviates(letters, words, at + 1, from)
+  for (let end = from + 1; end <= letters.length; end += 1)
+    if (
+      standsFor(letters.slice(from, end), word) &&
+      abbreviates(letters, words, at + 1, end)
+    )
+      return true
+  return false
+}
+
+function typed(row, query, words) {
   if (row.names.includes(query)) return REACH_FIT.exact
   if (row.names.some((name) => name.startsWith(query))) return REACH_FIT.start
   if (
@@ -155,6 +262,46 @@ function fit(row, query, words) {
   )
     return REACH_FIT.words
   if (words.every((word) => row.words.includes(word))) return REACH_FIT.inside
+  return null
+}
+
+/**
+ * The query as typed, then with its plurals taken down («clientes» →
+ * «cliente», «almacenes» → «almacen», «invoices» → «invoice»): a list is
+ * named in the singular and asked for in the plural.
+ */
+function forms(query) {
+  const cut = (ending) =>
+    query
+      .split(' ')
+      .map((word) =>
+        word.length > ending.length + 2 && word.endsWith(ending)
+          ? word.slice(0, -ending.length)
+          : word,
+      )
+      .join(' ')
+  return [...new Set([query, cut('s'), cut('es')])].map((form) => ({
+    query: form,
+    words: searchTokens(form),
+  }))
+}
+
+function fit(row, asked) {
+  let best = null
+  for (const form of asked) {
+    const found = typed(row, form.query, form.words)
+    if (found !== null && (best === null || found < best)) best = found
+    if (best === REACH_FIT.exact) break
+  }
+  if (best !== null) return best
+  const [{ query }] = asked
+  const letters = query.replace(/ /g, '')
+  if (
+    letters.length >= SHORT_MIN &&
+    letters.length <= SHORT_MAX &&
+    row.nameWords.some((name) => abbreviates(letters, name))
+  )
+    return REACH_FIT.short
   return null
 }
 
@@ -194,9 +341,10 @@ export function reachRanked(rows, text) {
       .map((entry, index) => ({ ...entry, index, length: length(entry.row) }))
       .sort((a, b) => a.fit - b.fit || a.length - b.length || a.index - b.index)
       .map(({ row, fit: rowFit }) => ({ row, fit: rowFit }))
+  const asked = forms(query)
   const found = []
   for (const row of rows) {
-    const rowFit = fit(row, query, words)
+    const rowFit = fit(row, asked)
     if (rowFit !== null) found.push({ row, fit: rowFit })
   }
   if (found.length) return ordered(found)
@@ -208,8 +356,46 @@ export function reachRanked(rows, text) {
   )
 }
 
-/** Tests: forget the reach so the next search reads it again. */
+// «sales invoice report», «almacén árbol»: a last word that names the kind of
+// row wanted, as the awesomebar narrows by its last word.
+const KIND_WORDS = {
+  list: ['list', 'lista'],
+  report: ['report', 'reporte', 'informe'],
+  tree: ['tree', 'arbol'],
+  dashboard: ['dashboard', 'tablero'],
+}
+
+/** The term without its last word when that word names the kind («stock ledger report» → «stock ledger»), else ''. */
+export function kindTerm(text, kind) {
+  const words = spaced(text).split(' ')
+  return words.length > 1 && KIND_WORDS[kind].includes(words.at(-1))
+    ? words.slice(0, -1).join(' ')
+    : ''
+}
+
+/**
+ * reachRanked for rows of one kind: when the term as typed finds none of
+ * them and ends in the kind's word, the rest of it is the term («customer
+ * list» → the Customer list; «price list» is still Price List). Answers the
+ * rows and the term they were found by.
+ */
+export function reachRankedAs(rows, text, kind) {
+  const found = reachRanked(rows, text)
+  if (found.some(({ fit: rowFit }) => rowFit <= REACH_FIT.short))
+    return { found, term: text }
+  const rest = kindTerm(text, kind)
+  const asKind = rest ? reachRanked(rows, rest) : []
+  return asKind.length ? { found: asKind, term: rest } : { found, term: text }
+}
+
+/** Whether this browser already keeps a reach, however old (the palette's warm-up reads one when not). */
+export function hasStoredReach() {
+  return !!current || !!readStored()
+}
+
+/** Tests: forget the reach in memory so the next search reads it again. */
 export function _resetPaletteReach() {
-  pending = null
+  current = null
+  reading = null
   loadedAt = 0
 }

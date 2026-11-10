@@ -1391,7 +1391,7 @@ def resolve_documents(records: str | list):
 DESK_REACH_TTL = 300
 DESK_REACH_LIMIT = {"reports": 20, "workspaces": 40}
 # Every set the reach caches per user (forget_desk_reach drops them all).
-DESK_REACH_KINDS = ("reports", "workspaces", "desk_types", "pages", "dashboards")
+DESK_REACH_KINDS = ("reports", "workspaces", "desk_types", "pages", "dashboards", "tags")
 # Desk pages no row can open: they need a route argument, or setup already ran.
 DESK_PAGES_SKIPPED = frozenset({"print", "dashboard-view", "setup-wizard"})
 
@@ -1635,4 +1635,138 @@ def palette_reach():
 		"desk_types": _desk_cached("desk_types", _allowed_desk_types),
 		"pages": _desk_cached("pages", _allowed_pages),
 		"dashboards": _desk_cached("dashboards", _allowed_dashboards),
+		"tags": _desk_cached("tags", _known_tags),
 	}
+
+
+def _known_tags():
+	"""The tags the awesomebar offers after «#» (frappe's get_tags_list_for_awesomebar)."""
+	return sorted(frappe.get_list("Tag", pluck="name", order_by=None, limit_page_length=TAGS_LIMIT))
+
+
+# The palette draws five records per provider; a few more are read so unreadable ones can drop out.
+PALETTE_RECORDS = 8
+PALETTE_TITLE = 140
+TAGS_LIMIT = 500
+# Types whose records another palette provider already finds (Contactos, Ventas, Productos and
+# crm.api.documentos.search): the search below leaves them out, or every hit would show twice.
+SEARCHED_ELSEWHERE = frozenset(
+	{
+		"Contact",
+		"Customer",
+		"Supplier",
+		"CRM Organization",
+		"Lead",
+		"CRM Lead",
+		"Address",
+		"CRM Deal",
+		"Item",
+		"Item Price",
+		"Serial No",
+		"Batch",
+		"Stock Entry",
+		"Stock Reconciliation",
+	}
+)
+
+
+def _palette_rows(records):
+	"""Rows for (doctype, name) pairs the worker may read, as resolve_documents builds them,
+	each with its type's label; the rest are left out."""
+	from crm.api import documentos
+
+	blocked = documentos._blocked_modules()
+	rows, seen = [], set()
+	for doctype, name in records:
+		if len(rows) >= PALETTE_RECORDS:
+			break
+		if (doctype, name) in seen or not documentos.readable(doctype, blocked):
+			continue
+		seen.add((doctype, name))
+		if not frappe.db.exists(doctype, name):
+			continue
+		doc = frappe.get_doc(doctype, name)
+		if not doc.has_permission("read"):
+			continue
+		row = documentos._row(doc, documentos._display(doc.meta))
+		row.pop("fields", None)
+		# A task's title is its rich-text description: one plain line of it.
+		row["title"] = " ".join(frappe.utils.strip_html(frappe.utils.cstr(row["title"])).split())[
+			:PALETTE_TITLE
+		]
+		row["doctype"] = doctype
+		row["label"] = _(doctype)
+		rows.append(row)
+	return rows
+
+
+@frappe.whitelist()
+def tagged(tag: str | None = None):
+	"""Palette «#etiqueta»: the documents that carry a tag and that this worker may read, as the
+	awesomebar's tag search lists them."""
+	if frappe.session.user == "Guest":
+		frappe.throw(_("Sign in to open Muelle."), frappe.AuthenticationError)
+	tag = frappe.utils.cstr(tag).strip().lstrip("#").strip()[:140]
+	if not tag:
+		return []
+	links = frappe.get_all(
+		"Tag Link",
+		filters={"tag": tag},
+		fields=["document_type", "document_name"],
+		order_by="modified desc",
+		limit_page_length=PALETTE_RECORDS * 4,
+	)
+	return _palette_rows((link.document_type, link.document_name) for link in links)
+
+
+def _fulltext_term(text):
+	"""Every word of the term as a required prefix for MariaDB's boolean full-text search. Frappe's
+	Match wraps the text as «+text*», so the words are joined to read «+uno* +dos*». Words under
+	three letters are below the index's token size and are dropped; operators never pass."""
+	import re
+
+	words = [word for word in re.findall(r"\w+", frappe.utils.cstr(text)[:80]) if len(word) >= 3]
+	return "* +".join(words[:6])
+
+
+@frappe.whitelist()
+def search_records(q: str | None = None):
+	"""Palette «Registros» of every other type: what the awesomebar's «Search for X» finds in
+	Frappe's global search index (an employee, a task, a project, a warehouse), for the types
+	the site lists in Global Search Settings, minus the ones a palette provider already searches.
+	Each row is read again under the worker's permissions."""
+	if frappe.session.user == "Guest":
+		frappe.throw(_("Sign in to open Muelle."), frappe.AuthenticationError)
+	from frappe.desk.doctype.global_search_settings.global_search_settings import (
+		get_doctypes_for_global_search,
+	)
+
+	from crm.api import documentos
+
+	term = _fulltext_term(q)
+	if not term:
+		return []
+	allowed = set(get_doctypes_for_global_search()) & set(
+		frappe.get_user().get_can_read()
+	) - SEARCHED_ELSEWHERE - set(documentos.DOCUMENTOS_DOCTYPES)
+	if not allowed:
+		return []
+	return _palette_rows(_index_hits(term, sorted(allowed)))
+
+
+def _index_hits(term, doctypes):
+	"""(doctype, name) of the global search index's best matches for the term among the types."""
+	from frappe.query_builder.functions import Match
+
+	index = frappe.qb.Table("__global_search")
+	rank = Match(index.content).Against(term)
+	found = (
+		frappe.qb.from_(index)
+		.select(index.doctype, index.name, rank.as_("rank"))
+		.where(rank)
+		.where(index.doctype.isin(doctypes))
+		.orderby("rank", order=frappe.qb.desc)
+		.limit(PALETTE_RECORDS * 4)
+		.run(as_dict=True)
+	)
+	return [(row.doctype, row.name) for row in found]

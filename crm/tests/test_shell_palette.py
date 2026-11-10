@@ -4,6 +4,7 @@ and the forms only Desk opens, as Desk lists them for this user; Documentos rece
 readable."""
 
 from unittest import TestCase, skipIf
+from unittest.mock import patch
 
 try:
 	import frappe
@@ -72,7 +73,9 @@ class TestDeskReach(TestCase):
 			return {row[key] for row in rows}
 
 		reach = shell.palette_reach()
-		self.assertEqual(set(reach), {"reports", "workspaces", "lists", "desk_types", "pages", "dashboards"})
+		self.assertEqual(
+			set(reach), {"reports", "workspaces", "lists", "desk_types", "pages", "dashboards", "tags"}
+		)
 		self.assertLessEqual(names(shell.reports("")), names(reach["reports"]))
 		self.assertLessEqual(names(shell.workspaces("")), names(reach["workspaces"]))
 		self.assertEqual(reach["lists"], documentos.listable_doctypes())
@@ -200,6 +203,78 @@ class TestDeskReach(TestCase):
 		reach = shell.palette_reach()
 		self.assertNotIn("System Settings", {row["doctype"] for row in reach["desk_types"]})
 		self.assertNotIn("permission-manager", {row["name"] for row in reach["pages"]})
+
+	def _todo(self, description):
+		doc = frappe.get_doc({"doctype": "ToDo", "description": description})
+		doc.insert(ignore_permissions=True)
+		return doc
+
+	def test_a_tag_reaches_the_documents_that_carry_it(self):
+		from frappe.desk.doctype.tag.tag import add_tag
+
+		todo = self._todo('<div class="ql-editor read-mode"><p>E7 llamar   al <b>proveedor</b></p></div>')
+		add_tag("e7-urgente", "ToDo", todo.name)
+		shell.forget_desk_reach("Administrator")
+		self.assertIn("e7-urgente", shell.palette_reach()["tags"])
+		rows = shell.tagged("#e7-urgente")
+		self.assertEqual([(row["doctype"], row["name"]) for row in rows], [("ToDo", todo.name)])
+		self.assertEqual(rows[0]["label"], frappe._("ToDo"))
+		# A rich-text description reads as one plain line.
+		self.assertEqual(rows[0]["title"], "E7 llamar al proveedor")
+		self.assertNotIn("fields", rows[0])
+		self.assertEqual(shell.tagged("e7-no-such-tag"), [])
+		self.assertEqual(shell.tagged(""), [])
+		# A worker who cannot read the document does not get it through its tag.
+		frappe.set_user(self.nobody)
+		frappe.local.user_perms = None
+		self.assertEqual(shell.tagged("e7-urgente"), [])
+		frappe.set_user("Guest")
+		with self.assertRaises(frappe.AuthenticationError):
+			shell.tagged("e7-urgente")
+
+	def test_the_search_term_is_every_word_as_a_required_prefix(self):
+		# Frappe's Match wraps the text as «+text*»: this reads «+pantalla* +samsung*».
+		self.assertEqual(shell._fulltext_term("pantalla samsung"), "pantalla* +samsung")
+		self.assertEqual(shell._fulltext_term("  Karla  "), "Karla")
+		# Operators never pass, and words under three letters are below the index's token size.
+		self.assertEqual(shell._fulltext_term('+juan -"perez" (a5) ~x*'), "juan* +perez")
+		self.assertEqual(shell._fulltext_term("a5 de"), "")
+		self.assertEqual(shell._fulltext_term(None), "")
+
+	def test_records_of_other_types_are_searched_and_read_again_under_the_worker(self):
+		todo = self._todo("E7 revisar la vitrina")
+		listed = ["ToDo", "Customer", "Sales Invoice", "E7 No Such Type"]
+		hits = [("ToDo", todo.name), ("ToDo", todo.name), ("ToDo", "e7-gone"), ("Customer", "E7 X")]
+		with (
+			patch(
+				"frappe.desk.doctype.global_search_settings.global_search_settings.get_doctypes_for_global_search",
+				return_value=listed,
+			),
+			patch.object(shell, "_index_hits", return_value=hits) as index,
+		):
+			rows = shell.search_records("revisar vitrina")
+			# The types another provider searches are never asked for, nor one that is not readable.
+			term, asked = index.call_args.args
+			self.assertEqual(term, "revisar* +vitrina")
+			self.assertEqual(asked, ["ToDo"])
+			# Once each, and only what exists.
+			self.assertEqual([(row["doctype"], row["name"]) for row in rows], [("ToDo", todo.name)])
+			self.assertEqual(rows[0]["label"], frappe._("ToDo"))
+			# Nothing to search for asks the index nothing.
+			index.reset_mock()
+			self.assertEqual(shell.search_records("a5"), [])
+			index.assert_not_called()
+			frappe.set_user(self.nobody)
+			frappe.local.user_perms = None
+			self.assertEqual(shell.search_records("revisar vitrina"), [])
+		frappe.set_user("Guest")
+		with self.assertRaises(frappe.AuthenticationError):
+			shell.search_records("revisar")
+
+	def test_the_index_query_runs(self):
+		# Full-text rows only show once committed, so this checks the query itself.
+		hits = shell._index_hits(shell._fulltext_term("zzz-e7-nothing"), ["ToDo"])
+		self.assertEqual(hits, [])
 
 	def test_the_palette_reach_follows_the_worker(self):
 		if not frappe.db.exists("DocType", "Customer"):

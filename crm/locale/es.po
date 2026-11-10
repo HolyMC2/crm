@@ -38175,3 +38175,11 @@ msgstr "Esa foto ya estaba en este artículo."
 msgctxt "Productos"
 msgid "This photo could not be turned here. Try «Editar»."
 msgstr "No se pudo girar esta foto aquí. Prueba con «Editar»."
+
+#: frontend/src/documentos/palette.js
+msgid "Find «{0}» in {1}"
+msgstr "Buscar «{0}» en {1}"
+
+#: frontend/src/utils/paletteCalc.js
+msgid "Copy the result"
+msgstr "Copiar el resultado"

@@ -10,6 +10,7 @@ import {
   safeReturn,
   DESK_PREFIXES,
   matchTokens,
+  pushRecent,
 } from '@/vendor/muelle-shell/contracts'
 import { shellT } from '@/composables/shellKeyboard'
 import { ventasSection } from '@/composables/ventasSections'
@@ -20,10 +21,24 @@ import { looksLikeDocument } from '@/components/captura/cameraDoor'
 import { recordActions } from '@/composables/recordActions'
 import {
   createDocumentosProvider,
+  createEtiquetasProvider,
+  createOtrosProvider,
   createTiposProvider,
   documentItem,
   documentosPlaces,
+  findIn,
+  findItem,
+  listsToSearch,
 } from '@/documentos/palette'
+import {
+  REACH_FIT,
+  loadPaletteReach,
+  named,
+  reachRanked,
+} from '@/utils/paletteReach'
+import { profileBySlug } from '@/documentos/registry'
+// «1250*1.16»: the awesomebar's calculator.
+import { createCalculatorProvider } from '@/utils/paletteCalc'
 // Manual de la tienda: one self-contained provider (articles, categories, «Nuevo artículo»).
 import { createManualProvider } from '@/utils/manualPalette'
 // «Pregúntale a Muelle»: a question gets «Preguntar a Muelle» first (SHELL-S2).
@@ -85,6 +100,17 @@ const CONTACTOS_PLACES = [
   ['followups', 'Mis seguimientos'],
   ['addresses', 'Direcciones'],
 ]
+// The DocType each Contactos segment lists, for «juan en clientes» and
+// «juan in customer»; the generic floor leaves these types to Contactos.
+const CONTACTOS_TYPES = {
+  people: 'Contact',
+  companies: 'CRM Organization',
+  customers: 'Customer',
+  suppliers: 'Supplier',
+  addresses: 'Address',
+}
+// The lists a «buscar X en Y» offers when Y names several.
+const FIND_ROWS = 3
 const AGENDA_PLACES = [
   ['day', 'Día'],
   ['week', 'Semana'],
@@ -611,6 +637,75 @@ export function createShellProviders({ boot, modules }) {
       return inmobiliariaItems(result)
     },
   }
+  // «juan en clientes», «bateria in item» (the awesomebar's «Find X in Y»):
+  // the list Y names, opened on a search for X. Contactos and Productos are
+  // searched on their own pages, a curated list on its own, any other
+  // readable type on the generic floor.
+  const buscarEn = {
+    key: 'buscar_en',
+    label: 'Search',
+    scopes: ['actions'],
+    local: true,
+    async search(query) {
+      const within = query.kind === 'empty' ? null : findIn(query.text)
+      if (!within) return []
+      const lists = (await loadPaletteReach())?.lists || []
+      // «Work In Progress» is a list's name, not a search in «Progress».
+      if (
+        reachRanked(lists, query.text).some(
+          ({ fit }) => fit <= REACH_FIT.inside,
+        )
+      )
+        return []
+      const labels = new Map(lists.map((row) => [row.doctype, row.label]))
+      const owned = new Set()
+      const places = []
+      if (moduleEnabled(boot.value, 'contactos'))
+        for (const [segment, label] of CONTACTOS_PLACES) {
+          const doctype = CONTACTOS_TYPES[segment]
+          if (!doctype) continue
+          owned.add(doctype)
+          places.push(
+            named(
+              {
+                id: `buscar:contactos.${segment}`,
+                label,
+                path: `/contactos?segment=${segment}`,
+              },
+              label,
+              labels.get(doctype),
+              doctype,
+            ),
+          )
+        }
+      if (moduleEnabled(boot.value, 'productos')) {
+        owned.add('Item')
+        places.push(
+          named(
+            { id: 'buscar:productos', label: 'Productos', path: '/productos' },
+            'Productos',
+            labels.get('Item'),
+            'Item',
+          ),
+        )
+      }
+      places.push(...listsToSearch(boot.value, lists, owned))
+      const items = []
+      for (const { row, fit } of reachRanked(places, within.where)) {
+        if (fit > REACH_FIT.words || items.length >= FIND_ROWS) break
+        items.push(
+          findItem(
+            within.what,
+            row.label,
+            row.path,
+            row.id,
+            PALETTE_RANK.specific,
+          ),
+        )
+      }
+      return items
+    },
+  }
   const manual = createManualProvider({ boot })
   // The assistant's question row lands in Acciones, above every record, so a
   // question still gets «Preguntar a Muelle» first; its place row is in Ir a.
@@ -625,6 +720,11 @@ export function createShellProviders({ boot, modules }) {
     clinica,
     inmobiliaria,
     manual,
+    // After every provider that knows its own records: the rest of them.
+    createOtrosProvider({ boot }),
+    createEtiquetasProvider({ boot }),
+    createCalculatorProvider(),
+    buscarEn,
     ...createDeskProviders({ modules }),
     createAssistantProvider(),
   ]
@@ -833,7 +933,8 @@ const bySureness = (items) =>
 /**
  * The palette's sections (from groupPaletteItems) in display order. A question
  * still gets «Preguntar a Muelle» first (SHELL-S2): that row leads in its own
- * headerless section (`lead`), then the records, then the other actions. A
+ * headerless section (`lead`), as the calculator's result does for a sum
+ * («1250*1.16»), then the records, then the other actions. A
  * section whose best row is generic (PALETTE_RANK) renders after Ir a, so a
  * shell place matching the term outranks «Nuevo contacto «term»» and a
  * DocType's «Crear X» (E7b); and after every list, report or Desk form the
@@ -843,9 +944,12 @@ const bySureness = (items) =>
  */
 export function orderPaletteSections(grouped, { empty = false } = {}) {
   const order = SECTION_ORDER[empty ? 'empty' : 'typed']
-  // The question row (Acciones) leads; the door «Pregúntale a Muelle» (Ir a) stays put.
+  // The question row (Acciones) leads, and so does the answer to a sum; the
+  // door «Pregúntale a Muelle» (Ir a) stays put.
   const asks = (section, item) =>
-    !empty && section.group === 'acciones' && item.action === 'assistant'
+    !empty &&
+    section.group === 'acciones' &&
+    (item.action === 'assistant' || item.lead === true)
   const ask = grouped.flatMap((section) =>
     section.items.filter((item) => asks(section, item)),
   )
@@ -961,6 +1065,57 @@ export function toRecentRef(item) {
     ...(typeof item.href === 'string' ? { href: item.href } : {}),
     ...(typeof item.desk === 'string' ? { desk: item.desk } : {}),
   }
+}
+const decoded = (part) => {
+  try {
+    return decodeURIComponent(part)
+  } catch {
+    return null
+  }
+}
+/**
+ * The reference of a record page opened in the shell (utils/visited): a
+ * contact, a deal, a document on its curated list or the generic floor, a
+ * product. Null for any other page.
+ */
+export function visitedRef(path) {
+  const clean = String(path || '').split(/[?#]/)[0]
+  const parts = clean.split('/').slice(1).map(decoded)
+  if (parts.includes(null) || parts.at(-1) === 'nuevo') return null
+  const [area, second, third, fourth] = parts
+  const ref = (id, record) => ({ id, href: clean, record })
+  if (area === 'contactos' && parts.length === 3 && /^[a-z-]+$/.test(second))
+    return ref(`${second}:${third}`, { source: second, name: third })
+  if (area === 'ventas' && second === 'deal' && parts.length === 3)
+    return ref(`deal:${third}`, { source: 'deal', name: third })
+  if (area === 'productos' && parts.length === 2)
+    return ref(`item:${second}`, { doctype: 'Item', name: second })
+  if (area !== 'documentos' && area !== 'inventario') return null
+  if (area === 'documentos' && second === 'tipo' && parts.length === 4)
+    return ref(`documentos:${third}:${fourth}`, {
+      doctype: third,
+      name: fourth,
+    })
+  const entry = parts.length === 3 && profileBySlug(second, `/${area}`)
+  return entry
+    ? ref(`documentos:${entry.doctype}:${third}`, {
+        doctype: entry.doctype,
+        name: third,
+      })
+    : null
+}
+/**
+ * Recientes with the record pages opened since (oldest first, so the last
+ * one opened leads), as the awesomebar's recent pages: the palette is where
+ * a worker goes back to what they had open, not only to what it opened.
+ */
+export function recentWithVisits(refs, paths) {
+  let next = refs
+  for (const path of paths) {
+    const ref = visitedRef(path)
+    if (ref) next = pushRecent(next, ref).map(toRecentRef).filter(Boolean)
+  }
+  return next
 }
 export function loadRecent() {
   try {

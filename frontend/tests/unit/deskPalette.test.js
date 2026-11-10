@@ -35,6 +35,12 @@ import {
   orderPaletteSections,
 } from '@/utils/shellPalette'
 import { createDeskProviders } from '@/utils/deskPalette'
+import {
+  createEtiquetasProvider,
+  createOtrosProvider,
+  createTiposProvider,
+  findIn,
+} from '@/documentos/palette'
 import { _resetPaletteReach } from '@/utils/paletteReach'
 import { _resetAssistant } from '@/components/assistant/useAssistant'
 
@@ -114,6 +120,27 @@ const doctypes = [
     create: false,
     report: false,
   },
+  {
+    doctype: 'Customer',
+    label: 'Cliente',
+    module: 'Ventas',
+    create: true,
+    report: false,
+  },
+  {
+    doctype: 'Item',
+    label: 'Artículo',
+    module: 'Inventario',
+    create: true,
+    report: false,
+  },
+  {
+    doctype: 'Work In Progress',
+    label: 'Trabajo en curso',
+    module: 'Manufactura',
+    create: false,
+    report: false,
+  },
 ]
 
 beforeEach(() => {
@@ -121,6 +148,9 @@ beforeEach(() => {
     args ? text.replace(/{(\d+)}/g, (_, i) => args[i]) : text
   _resetAssistant()
   _resetPaletteReach()
+  state.tags = []
+  state.records = []
+  state.tagged = {}
   state.call.mockReset()
   state.call.mockImplementation(async (method, args) => {
     if (method.endsWith('shell_api.status')) return state.status
@@ -132,7 +162,10 @@ beforeEach(() => {
         desk_types: deskTypes,
         pages,
         dashboards,
+        tags: state.tags,
       }
+    if (method === 'crm.api.shell.search_records') return state.records
+    if (method === 'crm.api.shell.tagged') return state.tagged[args.tag] || []
     if (
       method === 'crm.api.palette.search_deals' ||
       method === 'crm.api.documentos.search'
@@ -497,5 +530,328 @@ describe('what only Desk opens: settings, trees, pages, dashboards, report views
       'acciones/New contact «assistant»',
       'desk/Books Assistant Settings',
     ])
+  })
+})
+
+describe('parity with the awesomebar: abbreviations, kinds, «X en Y», records, tags, sums', () => {
+  const signal = new AbortController().signal
+  const ids = (items) => items.map((item) => item.id)
+  const desk = () => {
+    const [reportes, places, vistas, tipos] = createDeskProviders({
+      boot: ref(boot()),
+      modules: ref(modules),
+    })
+    return { reportes, places, vistas, tipos }
+  }
+  async function rows(raw, overrides) {
+    const all = createShellProviders({
+      boot: ref(boot(overrides)),
+      modules: ref(modules),
+    })
+    const q = query(raw)
+    const states = await federatedSearch(providersFor(all, q), q, {
+      signal,
+      onUpdate() {},
+    })
+    return orderPaletteSections(groupPaletteItems(states)).flatMap((section) =>
+      section.items.map((item) => `${section.group}/${item.title}`),
+    )
+  }
+
+  it('an abbreviation finds its settings form, its report view and its list', async () => {
+    const { tipos, vistas } = desk()
+    expect(ids(await tipos.search(query('basset')))).toEqual([
+      'desk_tipo:single:Books Assistant Settings',
+    ])
+    expect(ids(await tipos.search(query('stksett')))).toEqual([
+      'desk_tipo:single:Stock Settings',
+    ])
+    // An abbreviation does not name the row: no report view for it.
+    expect(await vistas.search(query('slsinv'))).toEqual([])
+    const listas = createTiposProvider({ boot: ref(boot()) })
+    expect(ids(await listas.search(query('itgrp')))).toEqual([
+      'tipos:Item Group',
+    ])
+  })
+
+  it('a last word names the kind: «… report», «… árbol», «… dashboard», «… list»', async () => {
+    const { reportes, places, vistas, tipos } = desk()
+    expect(ids(await reportes.search(query('stock ledger report')))).toEqual([
+      'reporte:Stock Ledger',
+    ])
+    expect(ids(await vistas.search(query('sales invoice report')))[0]).toBe(
+      'reporte_vista:Sales Invoice',
+    )
+    expect(ids(await tipos.search(query('almacén árbol')))).toEqual([
+      'desk_tipo:tree:Warehouse',
+    ])
+    expect(ids(await tipos.search(query('warehouse tree')))).toEqual([
+      'desk_tipo:tree:Warehouse',
+    ])
+    expect(ids(await places.search(query('stock dashboard')))).toEqual([
+      'tablero:Stock',
+    ])
+    const listas = createTiposProvider({ boot: ref(boot()) })
+    expect(ids(await listas.search(query('item group list')))).toEqual([
+      'tipos:Item Group',
+    ])
+  })
+
+  it('«X en Y» searches that list for X: Contactos, Productos, a curated list, the generic floor', async () => {
+    expect(findIn('juan en clientes')).toEqual({
+      what: 'juan',
+      where: 'clientes',
+    })
+    expect(findIn('funda en uso in item')).toEqual({
+      what: 'funda en uso',
+      where: 'item',
+    })
+    expect(findIn('en clientes')).toBeNull()
+    expect(findIn('juan en')).toBeNull()
+    const buscar = (overrides) =>
+      createShellProviders({
+        boot: ref(boot(overrides)),
+        modules: ref(modules),
+      }).find((provider) => provider.key === 'buscar_en')
+    const found = async (raw, overrides) =>
+      (await buscar(overrides).search(query(raw))).map((item) => [
+        item.title,
+        item.href,
+      ])
+    // Contactos lists the customers: by the segment's name, the type's label or its English name.
+    for (const raw of [
+      'karla en clientes',
+      'karla en cliente',
+      'karla in customer',
+      'karla in customers',
+    ])
+      expect((await found(raw))[0], raw).toEqual([
+        'Find «karla» in Clientes',
+        '/contactos?segment=customers&q=karla',
+      ])
+    expect(
+      (
+        await found('funda en productos', {
+          productos: { key: 'productos', enabled: true, capabilities: {} },
+        })
+      )[0],
+    ).toEqual(['Find «funda» in Productos', '/productos?q=funda'])
+    // A curated list is searched on its own page, by the name the shell gives it.
+    for (const raw of [
+      'juan pérez en facturas',
+      'juan pérez in sales invoice',
+      'juan pérez en factura de venta',
+    ])
+      expect((await found(raw))[0], raw).toEqual([
+        'Find «juan pérez» in Facturas',
+        '/documentos/facturas?q=juan%20p%C3%A9rez',
+      ])
+    // Any other readable type, on the generic floor.
+    expect(await found('telas en grupo de articulos')).toEqual([
+      [
+        'Find «telas» in Grupo de artículos',
+        '/documentos/tipo/Item%20Group?q=telas',
+      ],
+    ])
+    // Without Contactos the customers are a list like any other.
+    expect(
+      (
+        await found('karla en cliente', {
+          contactos: { key: 'contactos', enabled: false, capabilities: {} },
+        })
+      )[0],
+    ).toEqual(['Find «karla» in Cliente', '/documentos/tipo/Customer?q=karla'])
+    // The boot says this worker does not read invoices here: no row for them.
+    const sinFacturas = await found('juan in sales invoice', {
+      documentos: {
+        key: 'documentos',
+        enabled: true,
+        capabilities: { doctypes: [], create: [] },
+      },
+    })
+    expect(sinFacturas.map(([, href]) => href)).not.toContain(
+      '/documentos/facturas?q=juan',
+    )
+    // «en» that names no list is just a word of the term, and a list whose
+    // own name has an «in» is that list.
+    expect(await found('funda en silicon')).toEqual([])
+    expect(await found('work in progress')).toEqual([])
+    // It leads the palette (a longer phrase is first a question for Muelle).
+    expect((await rows('karla en clientes'))[0]).toBe(
+      'acciones/Find «karla» in Clientes',
+    )
+  })
+
+  it('a curated list is found by an abbreviation, initials, a slip or its plural, as its place', async () => {
+    const listas = createTiposProvider({ boot: ref(boot()) })
+    for (const raw of ['slsinv', 'sinv', 'si', 'slaes invoice', 'factven']) {
+      const [place] = await listas.search(query(raw))
+      expect(place, raw).toMatchObject({
+        id: 'documentos.facturas',
+        group: 'ir_a',
+        title: 'Documentos › Facturas',
+        href: '/documentos/facturas',
+      })
+    }
+    // What the shell's own rule already finds is not listed twice.
+    for (const raw of ['sales invoice', 'facturas'])
+      expect(ids(await listas.search(query(raw))), raw).not.toContain(
+        'documentos.facturas',
+      )
+    // By the type's full label too, which the place itself does not carry.
+    for (const raw of ['slsinv', 'facturas', 'factura de venta'])
+      expect(
+        (await rows(raw)).filter((row) => row === 'ir_a/Documentos › Facturas'),
+        raw,
+      ).toHaveLength(1)
+    // A list is named in the singular and asked for in the plural.
+    expect(ids(await listas.search(query('almacenes')))).toContain(
+      'tipos:Warehouse',
+    )
+    expect(ids(await listas.search(query('warehouses')))).toContain(
+      'tipos:Warehouse',
+    )
+  })
+
+  it('on a list, the term can be searched right there', async () => {
+    const listas = createTiposProvider({ boot: ref(boot()) })
+    const before = window.location.pathname
+    try {
+      window.history.replaceState({}, '', '/crm/documentos/tipo/Item%20Group')
+      expect((await listas.search(query('telas')))[0]).toEqual({
+        id: 'buscar.aqui',
+        group: 'acciones',
+        title: 'Find «telas» in Grupo de artículos',
+        icon: 'lucide-search',
+        href: '/documentos/tipo/Item%20Group?q=telas',
+        rank: 2,
+      })
+      window.history.replaceState({}, '', '/crm/documentos/facturas')
+      expect((await listas.search(query('juan')))[0]).toMatchObject({
+        id: 'buscar.aqui',
+        href: '/documentos/facturas?q=juan',
+      })
+      // A record or another page is no list.
+      window.history.replaceState({}, '', '/crm/documentos/facturas/SINV-1')
+      expect(ids(await listas.search(query('juan')))).not.toContain(
+        'buscar.aqui',
+      )
+    } finally {
+      window.history.replaceState({}, '', before)
+    }
+  })
+
+  it('a record of any other type is found and opens where the shell has it', async () => {
+    state.records = [
+      {
+        doctype: 'Employee',
+        label: 'Empleado',
+        name: 'HR-EMP-00007',
+        title: 'Karla Méndez',
+        status: 'Active',
+      },
+      { doctype: 'ToDo', label: 'Tarea', name: 'a1b2c3d4e5', title: '' },
+      { doctype: 'Account', label: 'Cuenta', name: 'Caja Tienda - GD' },
+    ]
+    const otros = createOtrosProvider({ boot: ref(boot()) })
+    const items = await otros.search(query('karla'), signal)
+    expect(state.call).toHaveBeenCalledWith('crm.api.shell.search_records', {
+      q: 'karla',
+    })
+    expect(items[0]).toMatchObject({
+      id: 'registro:Employee:HR-EMP-00007',
+      group: 'registros',
+      title: 'Karla Méndez',
+      href: '/documentos/tipo/Employee/HR-EMP-00007',
+      record: { doctype: 'Employee', name: 'HR-EMP-00007' },
+    })
+    expect(items[0].subtitle).toMatch(/^Empleado · HR-EMP-00007 · /)
+    // A task opens in Pendientes; a record without a title reads as its type,
+    // or as its name when that is one a worker reads.
+    expect(items[1]).toMatchObject({
+      title: 'Tarea',
+      subtitle: 'a1b2c3d4e5',
+      href: '/pendientes/todo/a1b2c3d4e5',
+    })
+    expect(items[2]).toMatchObject({
+      title: 'Caja Tienda - GD',
+      subtitle: 'Cuenta',
+    })
+    // Without Documentos the shell has no page for it: its Desk form.
+    const sinModulo = createOtrosProvider({
+      boot: ref(
+        boot({
+          documentos: { key: 'documentos', enabled: false, capabilities: {} },
+        }),
+      ),
+    })
+    expect((await sinModulo.search(query('karla'), signal))[0]).toMatchObject({
+      desk: '/app/employee/HR-EMP-00007',
+    })
+    // Two letters, a phone or an empty palette ask nothing.
+    state.call.mockClear()
+    for (const raw of ['ka', '6691234567', ''])
+      expect(await otros.search(query(raw), signal)).toEqual([])
+    expect(state.call).not.toHaveBeenCalled()
+    // Ctrl+G reaches it too.
+    const all = createShellProviders({
+      boot: ref(boot()),
+      modules: ref(modules),
+    })
+    expect(
+      providersFor(all, query('karla'), 'contactos', 'records').map(
+        (p) => p.key,
+      ),
+    ).toContain('otros')
+  })
+
+  it('«#etiqueta» lists the documents that carry the tag; a site without tags asks nothing', async () => {
+    const etiquetas = createEtiquetasProvider({ boot: ref(boot()) })
+    expect(await etiquetas.search(query('#urgente'), signal)).toEqual([])
+    expect(state.call).not.toHaveBeenCalledWith(
+      'crm.api.shell.tagged',
+      expect.anything(),
+    )
+    _resetPaletteReach()
+    localStorage.clear()
+    state.tags = ['urgente', 'urgente proveedor', 'vip']
+    state.tagged = {
+      urgente: [
+        {
+          doctype: 'ToDo',
+          label: 'Tarea',
+          name: 'a1b2c3',
+          title: 'Llamar a Juan',
+        },
+      ],
+      'urgente proveedor': [
+        {
+          doctype: 'ToDo',
+          label: 'Tarea',
+          name: 'a1b2c3',
+          title: 'Llamar a Juan',
+        },
+        {
+          doctype: 'Employee',
+          label: 'Empleado',
+          name: 'HR-EMP-00007',
+          title: 'Karla Méndez',
+        },
+      ],
+    }
+    const items = await etiquetas.search(query('#urg'), signal)
+    expect(items.map((item) => [item.title, item.subtitle])).toEqual([
+      ['Llamar a Juan', 'Tarea · a1b2c3 · #urgente'],
+      ['Karla Méndez', 'Empleado · HR-EMP-00007 · #urgente proveedor'],
+    ])
+    // Only after «#»: an unprefixed term is not a tag search.
+    expect(await etiquetas.search(query('urgente'), signal)).toEqual([])
+    expect(await etiquetas.search(query('#zzz'), signal)).toEqual([])
+  })
+
+  it('a sum leads the palette with its result', async () => {
+    const list = await rows('1250*1.16')
+    expect(list[0]).toBe('acciones/1250*1.16 = 1,450')
+    expect(await rows('juan')).not.toContain('acciones/juan = NaN')
   })
 })
