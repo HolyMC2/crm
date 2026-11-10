@@ -102,6 +102,21 @@ yarn test          # watch mode
 
 ---
 
+## Rules and what enforces them
+
+When a correction repeats, fix the enforcement, not just the rule text. A row whose
+status says gap has no check yet.
+
+| Rule | Enforced by | Status |
+|---|---|---|
+| Colour utilities name a token the installed frappe-ui defines (no `text-ink-white`, `bg-surface-modal`, or missing shades) | `frontend/tests/unit/colorTokensGuard.test.js` | enforced |
+| No `text-ink-*-1` on a strong `surface-*-5..9` fill; use `text-white` | `frontend/tests/unit/inkOnStrongFillGuard.test.js` | enforced per line; a label split across lines is not seen |
+| Every file that renders `<Tabs>` maps its items through `indexTabs` (frappe-ui needs `value`) | `frontend/tests/unit/tabsIndexGuard.test.js` | enforced |
+| `src/vendor/**` byte-matches its package | `frontend/scripts/verify-vendor.mjs` (prebuild) | enforced |
+| Prettier 3.2.5 and ruff 0.8.1 layout | `scripts/ci/local.sh` pre-commit step, at land | gap at commit time: the repo's pre-commit hook is not installed in a clone (`.git/hooks` holds only samples), so layout fixups arrive as late `style:` commits |
+| `src/components/ui/**` is the vendored @muelle/ui kit: change the package and re-vendor, never edit here | «DO NOT EDIT» header and the re-vendor practice | no crm check; hand edits stopped when vendoring began (2026-10-28), and a re-vendor re-stamps every file |
+| `nosemgrep` suppressions name a reason | the comment itself | gap: no expiry date or approver recorded |
+
 ## Commit style
 
 ```
