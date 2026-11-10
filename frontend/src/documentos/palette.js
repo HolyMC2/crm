@@ -2,7 +2,7 @@
 // documents provider (a number or a party name → records) and the places of
 // the hubs and each readable list.
 import { call } from 'frappe-ui'
-import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
+import { moduleEnabled, normalizeSearch } from '@/vendor/muelle-shell/contracts'
 import {
   formatDate,
   formatMoney,
@@ -18,7 +18,12 @@ import {
   profileFor,
   readableDoctypes,
 } from './registry'
-import { loadPaletteReach, reachMatches } from '@/utils/paletteReach'
+import {
+  REACH_FIT,
+  loadPaletteReach,
+  namesIt,
+  reachRanked,
+} from '@/utils/paletteReach'
 
 /** One palette row for a found document: party first, kind · number · date as the line. */
 export function documentItem(row, boot) {
@@ -131,15 +136,35 @@ const startsAWord = (term, ...values) =>
 const CREATE_CAP = 3
 // The matching types a query weighs, as many as the server's search answers (60).
 const LIST_ROWS = 60
+// «nuevo almacén», «new warehouse», «crear tarea»: a first word that asks to
+// create, as the awesomebar's «New X».
+const CREATE_WORDS = new Set(['new', 'nuevo', 'nueva', 'crear', 'create'])
+
+/** The words after a create word («nuevo almacén» → «almacén»), or '' when the query asks for none. */
+export function createTerm(text) {
+  const [first, ...rest] = String(text || '')
+    .trim()
+    .split(/\s+/)
+  return rest.length && CREATE_WORDS.has(normalizeSearch(first))
+    ? rest.join(' ')
+    : ''
+}
 
 /**
  * «Listas» (Shell E7, DE9): every DocType this worker reads, by its Spanish
- * label or English name, on the generic floor; «Crear <label>» where the
- * worker may create one, at most CREATE_CAP of them and only where the term
- * starts a word of the label or the name (the list matches any substring).
- * Those rows are generic fan-out (rank 2, utils/shellPalette PALETTE_RANK): a
- * shell place matching the term renders above them. The curated lists are
- * already places (above). The types come from the palette reach, read once
+ * label or English name, on the generic floor, the closest name first
+ * (reachRanked): «employee» lists Employee before the types that mention it.
+ * «Crear <label>» where the worker may create one, at most CREATE_CAP of them
+ * and only where the term starts a word of the label or the name (the list
+ * matches any substring). Those rows are generic fan-out (rank 2,
+ * utils/shellPalette PALETTE_RANK): a shell place matching the term renders
+ * above them, and so does the list the term names (`named`: «almacén»,
+ * «wareh»). A term no list answers still finds the one a slip away
+ * («warehuose»), without its «Crear». «nuevo almacén» asks to create: the
+ * rest of the term finds the lists, and «Crear Almacén» is an action of its
+ * own (rank 1) for the closest of them, so it leads; a worker who may not
+ * create one still gets the list. The curated lists are already places
+ * (above). The types come from the palette reach, read once
  * (utils/paletteReach): a keystroke filters them here.
  */
 export function createTiposProvider({ boot }) {
@@ -151,18 +176,23 @@ export function createTiposProvider({ boot }) {
     async search(query) {
       if (query.kind === 'empty' || !moduleEnabled(boot.value, 'documentos'))
         return []
-      const text = String(query.text || '').trim()
+      const text = String(query.text || '')
+        .trim()
+        .slice(0, 80)
       if (text.length < 2) return []
-      const lists = (await loadPaletteReach())?.lists || []
-      const rows = reachMatches(lists, text.slice(0, 80), 'words').slice(
-        0,
-        LIST_ROWS,
+      const lists = ((await loadPaletteReach())?.lists || []).filter(
+        (row) => !profileFor(row.doctype),
       )
+      // A type called «New …» is still a list: the create word counts only
+      // when the words after it find one.
+      const wanted = createTerm(text)
+      const asked = wanted.length >= 2 ? reachRanked(lists, wanted) : []
+      const term = asked.length ? wanted : text
+      const found = asked.length ? asked : reachRanked(lists, text)
       const items = []
       let creates = 0
-      for (const row of rows) {
-        if (profileFor(row.doctype)) continue
-        const floor = floorRoute(row.doctype).path
+      for (const { row, fit } of found.slice(0, LIST_ROWS)) {
+        const near = fit === REACH_FIT.near
         items.push({
           id: `tipos:${row.doctype}`,
           group: 'listas',
@@ -170,26 +200,31 @@ export function createTiposProvider({ boot }) {
           subtitle: row.module,
           keywords: row.doctype,
           icon: 'lucide-list',
-          href: floor,
+          href: floorRoute(row.doctype).path,
+          ...(namesIt(fit, term) ? { named: true } : {}),
         })
         if (
           row.create &&
+          !near &&
           creates < CREATE_CAP &&
-          startsAWord(text, row.label, row.doctype)
+          startsAWord(term, row.label, row.doctype)
         ) {
           creates += 1
-          items.push({
-            id: `tipos:${row.doctype}:nuevo`,
-            group: 'acciones',
-            title: __('Create {0}', [row.label]),
-            keywords: row.doctype,
-            icon: 'lucide-plus',
-            href: `${floor}/nuevo`,
-            rank: 2,
-          })
+          // Asked for by name («nuevo almacén»): the closest lists' «Crear» leads.
+          const leads = asked.length && fit === found[0].fit
+          items.push({ ...createItem(row), rank: leads ? 1 : 2 })
         }
       }
       return items
     },
   }
 }
+
+const createItem = (row) => ({
+  id: `tipos:${row.doctype}:nuevo`,
+  group: 'acciones',
+  title: __('Create {0}', [row.label]),
+  keywords: row.doctype,
+  icon: 'lucide-plus',
+  href: `${floorRoute(row.doctype).path}/nuevo`,
+})

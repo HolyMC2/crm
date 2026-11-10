@@ -593,38 +593,97 @@ describe('rank (E7b): a shell place matching the term outranks generic fan-out',
       ]),
     )
     const acciones = list.filter((row) => row.startsWith('acciones/'))
+    // The three closest names: the least left untyped after «ventas».
     expect(acciones).toEqual([
       'acciones/New contact «ventas»',
-      'acciones/Create Jerarquía de ventas CRM',
-      'acciones/Create Plantilla de impuestos (ventas)',
+      'acciones/Create Socio de ventas',
       'acciones/Create Pronóstico de ventas',
+      'acciones/Create Jerarquía de ventas CRM',
     ])
+    // No list is called «ventas…»: the free-text actions keep their place above Listas.
     expect(firstOf(list, 'listas')).toBeGreaterThan(firstOf(list, 'acciones'))
-    // «Postventas» is still a list (the term is inside a word); only its «Crear» row needs a word start.
-    expect(list).toContain('listas/Postventas')
+    // «Postventas» is still a list (the term is inside a word), after the
+    // five that have «ventas» as a word; only its «Crear» row needs a word start.
+    const tipos = createTiposProvider({ boot: ref(boot()) })
+    const found = (await tipos.search(query('ventas')))
+      .filter((item) => item.group === 'listas')
+      .map((item) => item.title)
+    expect(found.at(-1)).toBe('Postventas')
+    expect(found).toHaveLength(6)
+    expect(list).not.toContain('listas/Postventas')
   })
 
-  it('«stock ledger»: Inventario › Movimientos sits above the free-text actions, Listas and Reportes after', async () => {
+  it('«stock ledger»: Inventario › Movimientos leads, then the list and the reports it names, the free-text actions last', async () => {
     window.installed_apps = ['scanner_kit']
     const list = await rows('stock ledger')
-    expect(list[0]).toBe('ir_a/Inventario › Movimientos')
-    expect(list.slice(1, 3)).toEqual([
+    // Stock Ledger Entry and the Stock Ledger reports start with the term.
+    expect(list).toEqual([
+      'ir_a/Inventario › Movimientos',
+      'listas/Registro del kárdex',
+      'reportes/Mayor de Inventarios',
+      'reportes/Diferencias del kárdex',
       'acciones/New contact «stock ledger»',
       'acciones/Find «stock ledger» in Escáner',
     ])
-    expect(list).toContain('listas/Registro del kárdex')
-    expect(firstOf(list, 'listas')).toBeGreaterThan(firstOf(list, 'acciones'))
-    expect(firstOf(list, 'reportes')).toBeGreaterThan(firstOf(list, 'listas'))
   })
 
-  it("«almac»: the Inventario hub leads and a DocType's «Crear Almacén» follows it", async () => {
+  it("«almac»: the Inventario hub, the list it names, then «Nuevo contacto» and the DocType's «Crear Almacén»", async () => {
     const list = await rows('almac')
-    expect(list.slice(0, 3)).toEqual([
+    expect(list).toEqual([
       'ir_a/Inventario',
+      'listas/Almacén',
       'acciones/New contact «almac»',
       'acciones/Create Almacén',
     ])
-    expect(list).toContain('listas/Almacén')
+  })
+
+  it('«alm» is still a name being typed: the free-text actions stay above the list', async () => {
+    const list = await rows('alm')
+    expect(list.slice(-3)).toEqual([
+      'acciones/New contact «alm»',
+      'acciones/Create Almacén',
+      'listas/Almacén',
+    ])
+  })
+
+  it('«nuevo almacén», «new warehouse»: the first row creates it, as the awesomebar’s «New X», and its list follows', async () => {
+    for (const raw of ['nuevo almacén', 'new warehouse', 'crear almac']) {
+      const list = await rows(raw)
+      expect(list[0], raw).toBe('acciones/Create Almacén')
+      expect(list, raw).toContain('listas/Almacén')
+    }
+    // Only the closest lists' «Crear» leads: for «nuevo socio de ventas» the
+    // list of that name, while «Tipo de socio de ventas» only mentions it.
+    expect(await rows('nuevo socio de ventas')).toEqual([
+      'acciones/Create Socio de ventas',
+      'acciones/New contact «nuevo socio de ventas»',
+      'acciones/Create Tipo de socio de ventas',
+      'listas/Socio de ventas',
+      'listas/Tipo de socio de ventas',
+    ])
+    // A worker who may not create one still gets the list, first, and no «Crear».
+    const kardex = await rows('nuevo kardex')
+    expect(kardex).toContain('listas/Registro del kárdex')
+    expect(kardex).not.toContain('acciones/Create Registro del kárdex')
+    // A create word alone asks nothing.
+    expect(
+      (await rows('nuevo')).some((row) => row.startsWith('acciones/Create')),
+    ).toBe(false)
+  })
+
+  it('a slip in a long word still finds the list, without its «Crear», below the free-text actions', async () => {
+    const list = await rows('pronsotico ventas')
+    expect(list).toEqual([
+      'acciones/New contact «pronsotico ventas»',
+      'listas/Pronóstico de ventas',
+    ])
+    // A short word has too many neighbours to guess from.
+    expect(
+      (await rows('almaecn')).some((row) => row.startsWith('listas/')),
+    ).toBe(true)
+    expect((await rows('socoi')).some((row) => row.startsWith('listas/'))).toBe(
+      false,
+    )
   })
 
   it("«kardex»: the shell's Movimientos page is the first row, before any Desk report", async () => {
@@ -635,13 +694,13 @@ describe('rank (E7b): a shell place matching the term outranks generic fan-out',
     expect(firstOf(list, 'reportes')).toBeGreaterThan(0)
   })
 
-  it('a hand-written action specific to the term («New Deal») keeps its place above Ir a', async () => {
+  it('a hand-written action specific to the term («New Deal») keeps its place above Ir a and leads its section', async () => {
     const list = await rows('deal')
     expect(list).toContain('ir_a/Ventas › Deals')
     expect(firstOf(list, 'acciones')).toBeLessThan(firstOf(list, 'ir_a'))
     expect(list.filter((row) => row.startsWith('acciones/'))).toEqual([
-      'acciones/New contact «deal»',
       'acciones/New Deal',
+      'acciones/New contact «deal»',
     ])
   })
 })

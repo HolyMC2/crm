@@ -62,7 +62,8 @@ export function explicitQuestion(text) {
  * Row rank (Shell E7b): a shell place or record matching the term is 0 (the
  * default), a hand-written action specific to it 1, generic fan-out 2 («Nuevo
  * contacto «term»», «Buscar «term» en Escáner», a readable DocType's «Crear X»).
- * A group whose best row is generic renders after Ir a (orderPaletteSections).
+ * A group whose best row is generic renders after Ir a, and after the lists,
+ * reports and Desk forms the term names (orderPaletteSections).
  */
 export const PALETTE_RANK = Object.freeze({ place: 0, specific: 1, generic: 2 })
 
@@ -805,6 +806,8 @@ export function clinicaItems(result) {
 // screen (and «Nuevo contacto»), then the modules to go to; a typed query
 // ranks the records (a deal, a customer) above «Nuevo …».
 // Listas, Reportes and Desk (E7) follow the shell's own places, never lead them.
+// The Desk group holds workspaces, pages and dashboards, then the forms only
+// Desk opens (a single's settings, a tree).
 const SECTION_ORDER = {
   empty: ['recientes', 'acciones', 'ir_a', 'registros'],
   typed: [
@@ -818,8 +821,14 @@ const SECTION_ORDER = {
   ],
 }
 
-const bestRank = (items) =>
-  Math.min(...items.map((item) => item.rank ?? PALETTE_RANK.place))
+const rankOf = (item) => item.rank ?? PALETTE_RANK.place
+const bestRank = (items) => Math.min(...items.map(rankOf))
+// The surest rows of a section first, each rank in its providers' order.
+const bySureness = (items) =>
+  items
+    .map((item, index) => ({ item, index }))
+    .sort((a, b) => rankOf(a.item) - rankOf(b.item) || a.index - b.index)
+    .map(({ item }) => item)
 
 /**
  * The palette's sections (from groupPaletteItems) in display order. A question
@@ -827,7 +836,10 @@ const bestRank = (items) =>
  * headerless section (`lead`), then the records, then the other actions. A
  * section whose best row is generic (PALETTE_RANK) renders after Ir a, so a
  * shell place matching the term outranks «Nuevo contacto «term»» and a
- * DocType's «Crear X» (E7b).
+ * DocType's «Crear X» (E7b); and after every list, report or Desk form the
+ * term names (`named`), as the awesomebar leads with its match: «books
+ * assistant settings» opens it on ↵. Inside a section the surest rows come
+ * first: «tratos» lists «Nuevo trato» before «Nuevo contacto «tratos»».
  */
 export function orderPaletteSections(grouped, { empty = false } = {}) {
   const order = SECTION_ORDER[empty ? 'empty' : 'typed']
@@ -840,17 +852,23 @@ export function orderPaletteSections(grouped, { empty = false } = {}) {
   const rest = grouped
     .map((section) => ({
       ...section,
-      items: section.items.filter((item) => !asks(section, item)),
+      items: bySureness(section.items.filter((item) => !asks(section, item))),
     }))
     .filter((section) => section.items.length)
   const afterPlaces = order.indexOf('ir_a') + 0.5
+  const afterNamed = Math.max(
+    afterPlaces,
+    ...rest
+      .filter((section) => section.items.some((item) => item.named))
+      .map((section) => order.indexOf(section.group) + 0.5),
+  )
   const position = (section) => {
     const index = order.indexOf(section.group)
     if (index < 0) return order.length
     return !empty &&
       index < afterPlaces &&
       bestRank(section.items) === PALETTE_RANK.generic
-      ? afterPlaces
+      ? afterNamed
       : index
   }
   const sorted = [...rest].sort((a, b) => position(a) - position(b))

@@ -1386,10 +1386,14 @@ def resolve_documents(records: str | list):
 	return rows
 
 
-# ── E7: the palette reaches what Desk reaches (reports, workspaces) ─────────────
+# ── E7: the palette reaches what Desk reaches (reports, workspaces, forms, pages) ─
 
 DESK_REACH_TTL = 300
 DESK_REACH_LIMIT = {"reports": 20, "workspaces": 40}
+# Every set the reach caches per user (forget_desk_reach drops them all).
+DESK_REACH_KINDS = ("reports", "workspaces", "desk_types", "pages", "dashboards")
+# Desk pages no row can open: they need a route argument, or setup already ran.
+DESK_PAGES_SKIPPED = frozenset({"print", "dashboard-view", "setup-wizard"})
 
 
 def _desk_term(search):
@@ -1429,9 +1433,9 @@ def _desk_cached(kind, build):
 
 
 def forget_desk_reach(user=None):
-	"""Tests and fixtures: drop this user's cached reports and workspaces."""
+	"""Tests and fixtures: drop this user's cached Desk reach."""
 	user = user or frappe.session.user
-	for kind in DESK_REACH_LIMIT:
+	for kind in DESK_REACH_KINDS:
 		frappe.cache.delete_value(f"crm:shell:{kind}:{scope_hash(user)}", user=user)
 
 
@@ -1530,11 +1534,96 @@ def workspaces(search: str | None = None):
 	]
 
 
+def _allowed_desk_types():
+	"""The types this worker reads that only Desk opens, as the awesomebar offers them: a
+	single's form (Books Assistant Settings, Stock Settings), a tree (Warehouse, Item Group)
+	and a virtual type's list (RQ Job). One read of tabDocType."""
+	from unidecode import unidecode
+
+	readable = set(frappe.get_user().get_can_read())
+	if not readable:
+		return []
+	blocked = _desk_blocked()
+	rows = []
+	for row in frappe.get_all(
+		"DocType",
+		filters={"istable": 0},
+		or_filters={"issingle": 1, "is_tree": 1, "is_virtual": 1},
+		fields=["name", "module", "issingle", "is_tree"],
+	):
+		if row.name not in readable or row.module in blocked:
+			continue
+		kind = "single" if row.issingle else "tree" if row.is_tree else "list"
+		slug = _desk_slug(row.name)
+		rows.append(
+			{
+				"doctype": row.name,
+				"label": _(row.name),
+				"module": _(row.module),
+				"kind": kind,
+				"href": f"/app/{slug}/view/tree" if kind == "tree" else f"/app/{slug}",
+			}
+		)
+	rows.sort(key=lambda row: unidecode(row["label"].lower()))
+	return rows
+
+
+def _allowed_pages():
+	"""Desk pages (Role Permissions Manager, Print Format Builder), as frappe.boot.page_info
+	lists them for this worker."""
+	from urllib.parse import quote
+
+	from frappe.desk.desk_views import DeskViews
+	from unidecode import unidecode
+
+	allowed = DeskViews.get_allowed_pages() or {}
+	if not allowed:
+		return []
+	blocked = _desk_blocked()
+	modules = dict(
+		frappe.get_all(
+			"Page", filters={"name": ("in", list(allowed))}, fields=["name", "module"], as_list=True
+		)
+	)
+	rows = []
+	for name, info in allowed.items():
+		title = info.get("title")
+		if not title or name in DESK_PAGES_SKIPPED or modules.get(name) in blocked:
+			continue
+		rows.append({"name": name, "title": title, "label": _(title), "href": f"/app/{quote(name)}"})
+	rows.sort(key=lambda row: (unidecode(row["label"].lower()), row["name"]))
+	return rows
+
+
+def _allowed_dashboards():
+	"""Desk dashboards with a chart or a card this worker may see, as frappe.boot.dashboards."""
+	from urllib.parse import quote
+
+	from frappe.desk.desk_views import DeskViews
+	from unidecode import unidecode
+
+	names = [row["name"] for row in DeskViews.get_allowed_dashboards() or []]
+	if not names:
+		return []
+	blocked = _desk_blocked()
+	modules = dict(
+		frappe.get_all("Dashboard", filters={"name": ("in", names)}, fields=["name", "module"], as_list=True)
+	)
+	rows = [
+		{"name": name, "label": _(name), "href": f"/app/dashboard-view/{quote(name)}"}
+		for name in names
+		if modules.get(name) not in blocked
+	]
+	rows.sort(key=lambda row: unidecode(row["label"].lower()))
+	return rows
+
+
 @frappe.whitelist()
 def palette_reach():
-	"""The palette's Desk reach in one read: every report this worker may run, the Desk workspaces
-	they see and every list they read. The palette filters them as the worker types, the way the
-	Desk awesomebar filters its boot lists, instead of asking three endpoints per keystroke."""
+	"""The palette's Desk reach in one read: every report this worker may run, the Desk workspaces,
+	pages and dashboards they see, every list they read and every form, tree or list only Desk
+	opens. The palette filters them as the worker types, the way the Desk awesomebar filters its
+	boot lists, instead of asking an endpoint per keystroke."""
 	if frappe.session.user == "Guest":
 		frappe.throw(_("Sign in to open Muelle."), frappe.AuthenticationError)
 	from crm.api import documentos
@@ -1543,4 +1632,7 @@ def palette_reach():
 		"reports": _desk_cached("reports", _allowed_reports),
 		"workspaces": _desk_cached("workspaces", _allowed_workspaces),
 		"lists": documentos.listable_doctypes(),
+		"desk_types": _desk_cached("desk_types", _allowed_desk_types),
+		"pages": _desk_cached("pages", _allowed_pages),
+		"dashboards": _desk_cached("dashboards", _allowed_dashboards),
 	}

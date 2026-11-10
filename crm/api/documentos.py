@@ -1043,6 +1043,7 @@ def listable_doctypes():
 	if not readable:
 		return []
 	can_create = set(user.can_create)
+	can_report = set(user.can_get_report)
 	blocked = _blocked_modules()
 	out = []
 	for row in frappe.get_all(
@@ -1059,6 +1060,7 @@ def listable_doctypes():
 				"label": _(row.name),
 				"module": _(row.module),
 				"create": row.name in can_create,
+				"report": row.name in can_report,
 			}
 		)
 	out.sort(key=lambda row: unidecode(row["label"].lower()))

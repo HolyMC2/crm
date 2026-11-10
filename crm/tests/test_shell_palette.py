@@ -1,6 +1,7 @@
 # ci: shell-apis
-"""The palette reaches what Desk reaches (Shell E7, DE9): reports and workspaces as Desk lists
-them for this user, Documentos recents only while readable."""
+"""The palette reaches what Desk reaches (Shell E7, DE9): reports, workspaces, pages, dashboards
+and the forms only Desk opens, as Desk lists them for this user; Documentos recents only while
+readable."""
 
 from unittest import TestCase, skipIf
 
@@ -71,14 +72,14 @@ class TestDeskReach(TestCase):
 			return {row[key] for row in rows}
 
 		reach = shell.palette_reach()
-		self.assertEqual(set(reach), {"reports", "workspaces", "lists"})
+		self.assertEqual(set(reach), {"reports", "workspaces", "lists", "desk_types", "pages", "dashboards"})
 		self.assertLessEqual(names(shell.reports("")), names(reach["reports"]))
 		self.assertLessEqual(names(shell.workspaces("")), names(reach["workspaces"]))
 		self.assertEqual(reach["lists"], documentos.listable_doctypes())
 		self.assertLessEqual(names(documentos.doctypes("ware"), "doctype"), names(reach["lists"], "doctype"))
 		self.assertTrue(reach["lists"])
 		for row in reach["lists"]:
-			self.assertEqual(set(row), {"doctype", "label", "module", "create"})
+			self.assertEqual(set(row), {"doctype", "label", "module", "create", "report"})
 		# Child, single and virtual types are never lists.
 		listed = names(reach["lists"], "doctype")
 		for doctype in frappe.get_all(
@@ -86,6 +87,119 @@ class TestDeskReach(TestCase):
 		) + frappe.get_all("DocType", filters={"issingle": 1}, pluck="name", limit=20):
 			self.assertNotIn(doctype, listed)
 		self.assertIn("ToDo", listed)
+
+	def test_a_single_is_a_desk_form_the_palette_reaches(self):
+		rows = {row["doctype"]: row for row in shell.palette_reach()["desk_types"]}
+		# Every single the Administrator reads, as the awesomebar offers frappe.boot.single_types.
+		singles = set(frappe.get_all("DocType", filters={"issingle": 1, "istable": 0}, pluck="name"))
+		readable = set(frappe.get_user().get_can_read())
+		self.assertEqual({name for name, row in rows.items() if row["kind"] == "single"}, singles & readable)
+		row = rows["System Settings"]
+		self.assertEqual(
+			row,
+			{
+				"doctype": "System Settings",
+				"label": frappe._("System Settings"),
+				"module": frappe._("Core"),
+				"kind": "single",
+				"href": "/app/system-settings",
+			},
+		)
+		# Sorted by label, and never a child table or a type the floor already lists.
+		labels = [unidecode(row["label"].lower()) for row in rows.values()]
+		self.assertEqual(labels, sorted(labels))
+		listed = {row["doctype"] for row in shell.palette_reach()["lists"]}
+		for name, row in rows.items():
+			self.assertEqual(row["kind"] == "tree", name in listed, name)
+
+	def test_a_tree_opens_its_tree_view_and_a_virtual_type_its_desk_list(self):
+		rows = {row["doctype"]: row for row in shell.palette_reach()["desk_types"]}
+		for name in frappe.get_all(
+			"DocType", filters={"is_tree": 1, "issingle": 0, "istable": 0}, pluck="name", limit=5
+		):
+			self.assertEqual(rows[name]["kind"], "tree")
+			self.assertRegex(rows[name]["href"], r"^/app/[a-z0-9-]+/view/tree$")
+		self.assertEqual(rows["RQ Job"]["kind"], "list")
+		self.assertEqual(rows["RQ Job"]["href"], "/app/rq-job")
+
+	def test_desk_types_follow_the_worker(self):
+		frappe.set_user(self.seller)
+		frappe.local.user_perms = None
+		reach = shell.palette_reach()
+		readable = set(frappe.get_user().get_can_read())
+		self.assertLessEqual({row["doctype"] for row in reach["desk_types"]}, readable)
+		self.assertNotIn("System Settings", {row["doctype"] for row in reach["desk_types"]})
+		frappe.set_user(self.nobody)
+		frappe.local.user_perms = None
+		self.assertEqual(shell.palette_reach()["desk_types"], [])
+
+	def test_pages_are_the_desk_pages_the_worker_may_open(self):
+		rows = {row["name"]: row for row in shell.palette_reach()["pages"]}
+		self.assertEqual(
+			rows["permission-manager"],
+			{
+				"name": "permission-manager",
+				"title": "Role Permissions Manager",
+				"label": frappe._("Role Permissions Manager"),
+				"href": "/app/permission-manager",
+			},
+		)
+		# Pages no row can open are left out: they need a route argument, or setup already ran.
+		self.assertFalse(shell.DESK_PAGES_SKIPPED & set(rows))
+		for row in rows.values():
+			self.assertTrue(row["label"])
+			self.assertRegex(row["href"], r"^/app/[^/\s]+$")
+		# Desk's own set for each worker: a page with no role is everyone's, as in frappe.boot.page_info.
+		from frappe.desk.desk_views import DeskViews
+
+		for user in (self.seller, self.nobody):
+			frappe.set_user(user)
+			names = {row["name"] for row in shell.palette_reach()["pages"]}
+			self.assertNotIn("permission-manager", names)
+			allowed = DeskViews.get_allowed_pages()
+			self.assertEqual(
+				names,
+				{
+					name
+					for name, info in allowed.items()
+					if info.get("title") and name not in shell.DESK_PAGES_SKIPPED
+				},
+			)
+
+	def test_dashboards_are_the_ones_desk_boots_with(self):
+		from frappe.desk.desk_views import DeskViews
+
+		rows = shell.palette_reach()["dashboards"]
+		self.assertEqual(
+			{row["name"] for row in rows}, {row["name"] for row in DeskViews.get_allowed_dashboards()}
+		)
+		for row in rows:
+			self.assertEqual(set(row), {"name", "label", "href"})
+			self.assertRegex(row["href"], r"^/app/dashboard-view/[^/\s]+$")
+		frappe.set_user(self.nobody)
+		self.assertEqual(shell.palette_reach()["dashboards"], [])
+
+	def test_a_blocked_module_hides_its_forms_and_pages(self):
+		frappe.set_user("Administrator")
+		user = frappe.get_doc("User", self.seller)
+		user.add_roles("System Manager")
+		frappe.set_user(self.seller)
+		frappe.local.user_perms = None
+		shell.forget_desk_reach(self.seller)
+		reach = shell.palette_reach()
+		self.assertIn("System Settings", {row["doctype"] for row in reach["desk_types"]})
+		self.assertIn("permission-manager", {row["name"] for row in reach["pages"]})
+		frappe.set_user("Administrator")
+		user.reload()
+		user.append("block_modules", {"module": "Core"})
+		user.save(ignore_permissions=True)
+		frappe.clear_cache(user=self.seller)
+		frappe.set_user(self.seller)
+		frappe.local.user_perms = None
+		shell.forget_desk_reach(self.seller)
+		reach = shell.palette_reach()
+		self.assertNotIn("System Settings", {row["doctype"] for row in reach["desk_types"]})
+		self.assertNotIn("permission-manager", {row["name"] for row in reach["pages"]})
 
 	def test_the_palette_reach_follows_the_worker(self):
 		if not frappe.db.exists("DocType", "Customer"):

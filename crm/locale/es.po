@@ -37971,3 +37971,23 @@ msgstr "Este módulo no tiene secciones que acomodar."
 #: frontend/src/pages/Inmobiliaria.vue
 msgid "Hiding does not take access away: a hidden home shows again from here."
 msgstr "Ocultar no quita el acceso: un inicio oculto se vuelve a mostrar desde aquí."
+
+#: frontend/src/utils/deskPalette.js
+msgctxt "Palette"
+msgid "Page"
+msgstr "Página"
+
+#: frontend/src/utils/deskPalette.js
+msgctxt "Palette"
+msgid "Dashboard"
+msgstr "Tablero"
+
+#: frontend/src/utils/deskPalette.js
+msgctxt "Palette"
+msgid "Tree"
+msgstr "Árbol"
+
+#: frontend/src/utils/deskPalette.js
+msgctxt "Palette"
+msgid "Report view"
+msgstr "Vista de reporte"
