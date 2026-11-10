@@ -1764,6 +1764,8 @@
       :rows="data.prices.rows"
       :focus="focusList"
       :requested-unit="unit.mismatch ? unit.requested : ''"
+      :cost="data.cost || null"
+      :history="history.readable ? history.rows : []"
       @saved="priceSaved"
       @refresh="load"
       @request="(proposal) => askPrice(proposal)"

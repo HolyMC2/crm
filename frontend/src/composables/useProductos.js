@@ -272,6 +272,36 @@ export function pricePayload(rows, drafts, acknowledged = {}) {
   return { prices, expected, acknowledged: ack }
 }
 
+/**
+ * What a new price leaves over the cost: the last purchase cost, else the
+ * valuation. Cost is per stock unit, so a list priced per another unit gets
+ * no margin rather than a wrong one.
+ */
+export function priceMargin(row, value, cost) {
+  const base = Number(cost?.last_cost || cost?.valuation_rate || 0)
+  const next = Number(value)
+  if (!base || !Number.isFinite(next) || next <= 0) return null
+  if (row.uom && row.stock_uom && row.uom !== row.stock_uom) return null
+  const amount = next - base
+  return {
+    amount,
+    percent: Math.round((amount / next) * 1000) / 10,
+    basis: cost.last_cost ? 'last_cost' : 'valuation',
+  }
+}
+
+/** The newest selling price changes of one list, in its unit. */
+export function recentPrices(history, row, limit = 3) {
+  return (history || [])
+    .filter(
+      (change) =>
+        change.price_list === row.price_list &&
+        !change.buying &&
+        (!change.uom || !row.uom || change.uom === row.uom),
+    )
+    .slice(0, limit)
+}
+
 /** Lists that still need the worker's OK before saving. */
 export function missingAcks(rows, drafts, acknowledged = {}) {
   return rows

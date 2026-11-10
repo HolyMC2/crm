@@ -15,12 +15,14 @@ import {
   parseDone,
   plain,
   priceCheck,
+  priceMargin,
   pricePayload,
   problemOf,
   priceUnit,
   productRoute,
   purchaseRoute,
   rebaseEdit,
+  recentPrices,
   requestedAction,
   scannerItemUrl,
   stockLabel,
@@ -115,6 +117,43 @@ describe('Cambiar precio', () => {
     expect(
       missingAcks([{ ...row, requires_ack: true }], { Venta: '101' }, {}),
     ).toEqual(['Venta'])
+  })
+})
+
+describe('Cambiar precio shows cost and recent prices', () => {
+  const row = { price_list: 'Venta', uom: 'Nos', stock_uom: 'Nos' }
+  it('margins a price over the last cost, else the valuation', () => {
+    expect(priceMargin(row, '800', { last_cost: 600 })).toEqual({
+      amount: 200,
+      percent: 25,
+      basis: 'last_cost',
+    })
+    expect(priceMargin(row, 500, { valuation_rate: 550 })).toMatchObject({
+      amount: -50,
+      basis: 'valuation',
+    })
+  })
+  it('gives no margin without a cost, a price, or in another unit', () => {
+    expect(priceMargin(row, '800', null)).toBe(null)
+    expect(priceMargin(row, '', { last_cost: 600 })).toBe(null)
+    expect(
+      priceMargin({ ...row, uom: 'Caja' }, '800', { last_cost: 600 }),
+    ).toBe(null)
+  })
+  it('lists the newest selling changes of that list and unit', () => {
+    const history = [
+      { price_list: 'Venta', new_rate: 850, uom: 'Nos' },
+      { price_list: 'Compra', new_rate: 600, buying: 1 },
+      { price_list: 'Venta', new_rate: 90, uom: 'Caja' },
+      { price_list: 'Mayoreo', new_rate: 700 },
+      { price_list: 'Venta', new_rate: 820 },
+      { price_list: 'Venta', new_rate: 800 },
+      { price_list: 'Venta', new_rate: 780 },
+    ]
+    expect(recentPrices(history, row).map((h) => h.new_rate)).toEqual([
+      850, 820, 800,
+    ])
+    expect(recentPrices([], row)).toEqual([])
   })
 })
 

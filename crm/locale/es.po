@@ -37991,3 +37991,22 @@ msgstr "Árbol"
 msgctxt "Palette"
 msgid "Report view"
 msgstr "Vista de reporte"
+#: frontend/src/components/productos/PriceDialog.vue
+msgid "Last cost {0} per {1}"
+msgstr "Costo último {0} por {1}"
+
+#: frontend/src/components/productos/PriceDialog.vue
+msgid "Margin over last cost: {0} ({1}%)"
+msgstr "Margen sobre el costo último: {0} ({1}%)"
+
+#: frontend/src/components/productos/PriceDialog.vue
+msgid "Margin over valuation: {0} ({1}%)"
+msgstr "Margen sobre la valuación: {0} ({1}%)"
+
+#: frontend/src/components/productos/PriceDialog.vue
+msgid "Recent prices"
+msgstr "Precios recientes"
+
+#: frontend/src/components/productos/PriceDialog.vue
+msgid "Valuation {0}"
+msgstr "Valuación {0}"

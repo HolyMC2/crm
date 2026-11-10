@@ -9,6 +9,19 @@
             )
           }}
         </p>
+        <div
+          v-if="costLine"
+          class="flex items-start gap-2 rounded-6 bg-surface-gray-2 p-3 text-sm tabular-nums text-ink-gray-8"
+          data-price-cost
+        >
+          <span
+            class="lucide-lock mt-0.5 size-4 shrink-0 text-ink-gray-5"
+            aria-hidden="true"
+          />
+          <p class="flex flex-wrap gap-x-3 gap-y-1">
+            <span v-for="part in costLine" :key="part">{{ part }}</span>
+          </p>
+        </div>
         <p
           v-if="
             requestedUnit && rows.some((row) => unitOf(row) !== requestedUnit)
@@ -79,6 +92,28 @@
                     ])
               }}
             </p>
+            <p
+              v-if="margins[row.price_list]"
+              class="text-sm tabular-nums"
+              :class="
+                margins[row.price_list].amount < 0
+                  ? 'text-ink-red-7'
+                  : 'text-ink-gray-7'
+              "
+              data-price-margin
+            >
+              {{
+                margins[row.price_list].basis === 'last_cost'
+                  ? __('Margin over last cost: {0} ({1}%)', [
+                      money(margins[row.price_list].amount, row.currency),
+                      margins[row.price_list].percent,
+                    ])
+                  : __('Margin over valuation: {0} ({1}%)', [
+                      money(margins[row.price_list].amount, row.currency),
+                      margins[row.price_list].percent,
+                    ])
+              }}
+            </p>
             <label
               v-if="checks[row.price_list]?.needsAck"
               class="flex min-h-11 items-start gap-2 text-sm text-ink-amber-7"
@@ -103,6 +138,32 @@
               </span>
             </label>
           </template>
+          <div
+            v-if="recent[row.price_list].length"
+            class="border-t border-outline-gray-1 pt-2"
+            data-price-recent
+          >
+            <p class="text-xs font-medium text-ink-gray-6">
+              {{ __('Recent prices') }}
+            </p>
+            <ul class="mt-1 space-y-0.5 text-xs tabular-nums text-ink-gray-7">
+              <li
+                v-for="(change, index) in recent[row.price_list]"
+                :key="index"
+                class="flex flex-wrap gap-x-2"
+              >
+                <span class="text-ink-gray-6">{{ formatDate(change.at) }}</span>
+                <span class="font-medium text-ink-gray-8">{{
+                  change.new_rate === null || change.new_rate === undefined
+                    ? __('Removed')
+                    : money(change.new_rate, change.currency)
+                }}</span>
+                <span v-if="change.by" class="text-ink-gray-6">{{
+                  change.by
+                }}</span>
+              </li>
+            </ul>
+          </div>
         </div>
         <div
           v-if="problem"
@@ -151,15 +212,18 @@
 import { computed, reactive, ref, watch } from 'vue'
 import { Button, Dialog, FormControl } from 'frappe-ui'
 import { priceListLabel } from '@/utils/priceList'
+import { formatDate } from '@/utils/display'
 import {
   missingAcks,
   money,
   outcomeUnknown,
   plain,
   priceCheck,
+  priceMargin,
   pricePayload,
   problemOf,
   productosApi,
+  recentPrices,
   requestId,
 } from '@/composables/useProductos'
 
@@ -172,6 +236,10 @@ const props = defineProps({
   focus: { type: String, default: '' },
   // The unit the link that opened Productos asked for (`uom=`), if any.
   requestedUnit: { type: String, default: '' },
+  // The page's cost block (only for who sees cost) and its price changes,
+  // so the worker prices against what the product cost and what it sold for.
+  cost: { type: Object, default: null },
+  history: { type: Array, default: () => [] },
 })
 const emit = defineEmits(['saved', 'refresh', 'request'])
 const open = defineModel({ type: Boolean, default: false })
@@ -190,6 +258,35 @@ const checks = computed(() =>
     ]),
   ),
 )
+const margins = computed(() =>
+  Object.fromEntries(
+    props.rows.map((row) => [
+      row.price_list,
+      checks.value[row.price_list]?.changed
+        ? priceMargin(row, drafts[row.price_list], props.cost)
+        : priceMargin(row, row.rate, props.cost),
+    ]),
+  ),
+)
+const recent = computed(() =>
+  Object.fromEntries(
+    props.rows.map((row) => [row.price_list, recentPrices(props.history, row)]),
+  ),
+)
+const costLine = computed(() => {
+  const cost = props.cost
+  if (!cost || (!cost.last_cost && !cost.valuation_rate)) return null
+  const currency = cost.currency || props.rows[0]?.currency
+  const unit = props.rows[0]?.stock_uom || ''
+  const parts = []
+  if (cost.last_cost)
+    parts.push(
+      __('Last cost {0} per {1}', [money(cost.last_cost, currency), unit]),
+    )
+  if (cost.valuation_rate)
+    parts.push(__('Valuation {0}', [money(cost.valuation_rate, currency)]))
+  return parts
+})
 const payload = computed(() => pricePayload(props.rows, drafts, acknowledged))
 const ready = computed(
   () =>
