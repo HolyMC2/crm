@@ -171,7 +171,7 @@
           </div>
           <div
             v-if="whatsapp.is_reply"
-            class="mb-1 cursor-pointer rounded-4 border-0 border-l-4 bg-surface-gray-3 p-2 text-ink-gray-5"
+            class="mb-1 cursor-pointer rounded-4 border-0 border-l-4 bg-surface-gray-3 p-2 text-ink-gray-7"
             :class="
               whatsapp.reply_to_type == 'Incoming'
                 ? 'border-green-500'
@@ -183,7 +183,7 @@
               class="mb-1 text-sm-bold"
               :class="
                 whatsapp.reply_to_type == 'Incoming'
-                  ? 'text-ink-green-5'
+                  ? 'text-ink-green-7'
                   : 'text-ink-blue-link'
               "
             >

@@ -301,7 +301,7 @@
         <div class="h-4 w-2/3 animate-pulse rounded-4 bg-surface-gray-2" />
         <div class="h-4 w-1/2 animate-pulse rounded-4 bg-surface-gray-2" />
       </div>
-      <p v-else-if="error" role="alert" class="text-base text-ink-red-4">
+      <p v-else-if="error" role="alert" class="text-base text-ink-red-6">
         {{ error }}
         <Button
           class="ml-2 min-h-11"

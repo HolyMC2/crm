@@ -6,7 +6,7 @@
       </p>
       <div class="h-9 animate-pulse rounded-4 bg-surface-gray-2" />
     </div>
-    <p v-else-if="loadError" role="alert" class="text-base text-ink-red-4">
+    <p v-else-if="loadError" role="alert" class="text-base text-ink-red-6">
       {{ loadError }}
       <Button
         class="ml-2 min-h-11"

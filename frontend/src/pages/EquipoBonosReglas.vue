@@ -423,7 +423,7 @@
               class="press min-h-11 min-w-11 shrink-0 rounded-4 px-2"
               :class="
                 confirmDelete === rule.name
-                  ? 'bg-surface-red-5 text-white'
+                  ? 'bg-surface-red-7 text-white'
                   : 'text-ink-gray-6'
               "
               :aria-label="

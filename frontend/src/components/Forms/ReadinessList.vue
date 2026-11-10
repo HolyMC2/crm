@@ -3,7 +3,7 @@
     <li v-for="item in items" :key="item.key" class="flex items-start gap-2">
       <LucideCircleCheck
         v-if="item.ok && !item.info"
-        class="mt-0.5 size-4 shrink-0 text-ink-green-5"
+        class="mt-0.5 size-4 shrink-0 text-ink-green-7"
         :aria-label="__('Done')"
       />
       <LucideInfo

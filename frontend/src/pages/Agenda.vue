@@ -669,7 +669,7 @@
             <div class="h-9 animate-pulse rounded-4 bg-surface-gray-2" />
           </div>
           <div v-else-if="!form.initial" role="alert" class="space-y-3 py-2">
-            <p class="text-base text-ink-red-4">{{ form.loadError }}</p>
+            <p class="text-base text-ink-red-6">{{ form.loadError }}</p>
             <p class="text-sm text-ink-gray-7">
               {{
                 __(

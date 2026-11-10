@@ -104,7 +104,7 @@
     <p
       v-if="problem"
       role="alert"
-      class="text-sm text-ink-red-4"
+      class="text-sm text-ink-red-6"
       data-scan-alta-problem
     >
       {{ problem }}

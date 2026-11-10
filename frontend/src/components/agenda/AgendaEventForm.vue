@@ -57,7 +57,7 @@
     <p class="-mt-2 text-sm text-ink-gray-6">
       {{ __('Time zone: {0}', [zoneName(timeZone)]) }}
     </p>
-    <p v-if="localError" role="alert" class="-mt-2 text-sm text-ink-red-4">
+    <p v-if="localError" role="alert" class="-mt-2 text-sm text-ink-red-6">
       {{ localError }}
     </p>
 
@@ -114,7 +114,7 @@
             </button>
           </li>
         </ul>
-        <p v-else-if="peopleError" class="mt-1 text-sm text-ink-red-4">
+        <p v-else-if="peopleError" class="mt-1 text-sm text-ink-red-6">
           {{ peopleError }}
         </p>
       </div>

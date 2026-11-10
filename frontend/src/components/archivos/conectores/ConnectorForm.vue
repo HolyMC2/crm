@@ -89,7 +89,7 @@
         "
         @load="emit('load-catalog')"
       />
-      <p v-if="catalogError" role="alert" class="text-sm text-ink-red-4">
+      <p v-if="catalogError" role="alert" class="text-sm text-ink-red-6">
         {{ catalogError }}
       </p>
       <FormControl
@@ -139,7 +139,7 @@
           }}</span>
           <span
             v-if="form.write_back && connector && !connector.writes_allowed"
-            class="mt-1 block text-sm text-ink-amber-3"
+            class="mt-1 block text-sm text-ink-amber-8"
             >{{
               __(
                 'The owner of this Paperless has not allowed Muelle to write yet. Until then Muelle only reads.',
@@ -235,7 +235,7 @@
         :description="__('INBOX is the main inbox.')"
       />
       <MailRulesEditor v-model="form.mail_rules" />
-      <p v-if="shown.mail_rules" role="alert" class="text-sm text-ink-red-4">
+      <p v-if="shown.mail_rules" role="alert" class="text-sm text-ink-red-6">
         {{ shown.mail_rules }}
       </p>
     </template>
@@ -262,7 +262,7 @@
     <div
       v-if="saveError"
       role="alert"
-      class="rounded-6 border border-outline-red-2 bg-surface-red-1 p-3 text-base text-ink-red-4"
+      class="rounded-6 border border-outline-red-2 bg-surface-red-1 p-3 text-base text-ink-red-7"
     >
       {{ saveError }}
     </div>

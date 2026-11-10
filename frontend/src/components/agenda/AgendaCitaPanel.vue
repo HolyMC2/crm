@@ -109,7 +109,7 @@
           {{ dayLabel(row.date) }}
         </option>
       </select>
-      <p v-if="slotsError" role="alert" class="mt-2 text-sm text-ink-red-4">
+      <p v-if="slotsError" role="alert" class="mt-2 text-sm text-ink-red-6">
         {{ slotsError }}
       </p>
       <p v-else-if="!days.length" class="mt-2 text-sm text-ink-gray-7">

@@ -138,7 +138,7 @@ export function chip(status) {
       'Partially Published':
         'bg-surface-amber-1 text-ink-amber-9 dark:bg-amber-300/15 dark:text-amber-200',
       Failed: 'bg-surface-red-1 text-ink-red-8',
-      Cancelado: 'bg-surface-gray-2 text-ink-gray-4 line-through',
+      Cancelado: 'bg-surface-gray-2 text-ink-gray-6 line-through',
     }[status] || 'bg-surface-gray-2 text-ink-gray-6'
   )
 }

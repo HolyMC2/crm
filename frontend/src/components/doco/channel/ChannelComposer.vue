@@ -45,7 +45,7 @@
 
         <p
           v-if="config?.sender_hint"
-          class="rounded-5 bg-surface-blue-1 px-2.5 py-2 text-[12px] text-ink-blue-3"
+          class="rounded-5 bg-surface-blue-1 px-2.5 py-2 text-[12px] text-ink-blue-8"
         >
           {{
             __(
@@ -167,7 +167,7 @@
             :href="blockedUrl"
             target="_blank"
             rel="noopener"
-            class="font-semibold text-ink-blue-3 underline"
+            class="font-semibold text-ink-blue-7 underline"
             >{{ __('Abrir la conversación') }}</a
           >
         </p>

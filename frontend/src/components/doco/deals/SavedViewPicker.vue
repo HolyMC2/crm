@@ -72,7 +72,7 @@
         <template v-for="group in groups" :key="group.key">
           <div v-if="group.rows.length">
             <div
-              class="border-b border-outline-gray-1 bg-surface-gray-1 px-3 py-1 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4"
+              class="border-b border-outline-gray-1 bg-surface-gray-1 px-3 py-1 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-6"
             >
               {{ group.label }}
             </div>
@@ -150,7 +150,7 @@
 
         <div v-if="legacyViews.length">
           <div
-            class="border-b border-outline-gray-1 bg-surface-gray-1 px-3 py-1 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4"
+            class="border-b border-outline-gray-1 bg-surface-gray-1 px-3 py-1 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-6"
           >
             {{ __('Solo en este navegador') }}
           </div>

@@ -268,7 +268,7 @@
           </button>
         </div>
       </div>
-      <p v-if="error" role="alert" class="text-sm text-ink-red-4">
+      <p v-if="error" role="alert" class="text-sm text-ink-red-6">
         {{ error }}
       </p>
       <AgendaGuard

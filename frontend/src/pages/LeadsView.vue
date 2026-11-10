@@ -303,7 +303,7 @@
     <template v-if="view === 'list' && !isMobile">
       <!-- table header -->
       <div
-        class="grid flex-none items-center border-b border-outline-gray-1 bg-surface-gray-1 px-5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4"
+        class="grid flex-none items-center border-b border-outline-gray-1 bg-surface-gray-1 px-5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-6"
         :style="`grid-template-columns:${GRID};height:34px`"
       >
         <input

@@ -148,7 +148,7 @@
                   v-if="
                     section.columns.reduce((n, c) => n + c.fields.length, 0) > 0
                   "
-                  class="text-xs text-ink-gray-4 bg-surface-gray-3 rounded-4 px-1.5 py-0.5 leading-none"
+                  class="text-xs text-ink-gray-7 bg-surface-gray-3 rounded-4 px-1.5 py-0.5 leading-none"
                 >
                   {{ section.columns.reduce((n, c) => n + c.fields.length, 0) }}
                   {{

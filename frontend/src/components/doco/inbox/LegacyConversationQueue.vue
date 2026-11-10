@@ -493,7 +493,7 @@
           >
             <div class="flex items-center gap-2">
               <span
-                class="flex h-[30px] w-[30px] flex-none items-center justify-center rounded-full bg-surface-gray-3 text-ink-gray-5"
+                class="flex h-[30px] w-[30px] flex-none items-center justify-center rounded-full bg-surface-gray-3 text-ink-gray-7"
               >
                 <LucideCheckCheck class="h-3.5 w-3.5" />
               </span>
@@ -584,7 +584,7 @@
           >
             <div class="mb-1 flex items-center gap-2">
               <span
-                class="flex h-[30px] w-[30px] flex-none items-center justify-center rounded-full bg-surface-gray-3 text-ink-gray-5"
+                class="flex h-[30px] w-[30px] flex-none items-center justify-center rounded-full bg-surface-gray-3 text-ink-gray-7"
               >
                 <LucideArchive class="h-3.5 w-3.5" />
               </span>

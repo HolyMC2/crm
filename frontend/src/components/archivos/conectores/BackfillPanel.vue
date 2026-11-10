@@ -151,7 +151,7 @@
     <p
       v-if="actionError"
       role="alert"
-      class="rounded-6 border border-outline-red-2 bg-surface-red-1 p-3 text-base text-ink-red-4"
+      class="rounded-6 border border-outline-red-2 bg-surface-red-1 p-3 text-base text-ink-red-7"
     >
       {{ actionError }}
     </p>

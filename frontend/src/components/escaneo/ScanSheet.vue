@@ -68,7 +68,7 @@
         <p
           v-if="problem"
           role="alert"
-          class="rounded-6 bg-surface-amber-1 px-3 py-2 text-base text-ink-amber-4"
+          class="rounded-6 bg-surface-amber-1 px-3 py-2 text-base text-ink-amber-8"
           data-scan-problem
         >
           {{ problem }}

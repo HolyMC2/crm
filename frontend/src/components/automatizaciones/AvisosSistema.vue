@@ -85,7 +85,7 @@
                 class="min-w-0 break-words"
                 :class="
                   row.a_quien === 'Nadie todavía'
-                    ? 'text-ink-red-4'
+                    ? 'text-ink-red-6'
                     : 'text-ink-gray-8'
                 "
               >

@@ -87,7 +87,7 @@
           </li>
         </ul>
       </section>
-      <p v-if="error" role="alert" class="px-4 pt-2 text-sm text-ink-red-4">
+      <p v-if="error" role="alert" class="px-4 pt-2 text-sm text-ink-red-6">
         {{ error }}
       </p>
     </div>

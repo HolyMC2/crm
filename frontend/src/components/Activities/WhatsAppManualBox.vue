@@ -60,7 +60,7 @@
       class="w-full resize-y rounded-5 border border-outline-gray-2 bg-surface-base px-2.5 py-2 text-base text-ink-gray-8 focus:border-outline-gray-4 focus:outline-none focus:ring-0"
       :placeholder="__('Escribe el mensaje o elige una plantilla')"
     />
-    <p v-if="missing.length" class="mt-1 text-xs text-ink-amber-3">
+    <p v-if="missing.length" class="mt-1 text-xs text-ink-amber-8">
       {{
         __('Faltan datos del registro: {0}. Revisa el texto antes de abrir.', [
           missing.join(', '),
@@ -70,7 +70,7 @@
 
     <p
       v-if="hasHoles"
-      class="mt-1 text-xs text-ink-amber-3"
+      class="mt-1 text-xs text-ink-amber-8"
       data-testid="wa-manual-holes"
     >
       {{

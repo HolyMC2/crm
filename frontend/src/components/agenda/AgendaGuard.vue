@@ -4,8 +4,8 @@
     class="rounded-6 border p-3 text-base"
     :class="
       warning
-        ? 'border-outline-amber-1 bg-surface-amber-1 text-ink-amber-3'
-        : 'border-outline-red-1 bg-surface-red-1 text-ink-red-4'
+        ? 'border-outline-amber-1 bg-surface-amber-1 text-ink-amber-8'
+        : 'border-outline-red-1 bg-surface-red-1 text-ink-red-7'
     "
   >
     <p class="font-semibold">{{ heading }}</p>

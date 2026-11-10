@@ -12,7 +12,7 @@
       <div
         class="mb-1 text-sm-bold"
         :class="
-          reply.type == 'Incoming' ? 'text-ink-green-5' : 'text-ink-blue-link'
+          reply.type == 'Incoming' ? 'text-ink-green-7' : 'text-ink-blue-link'
         "
       >
         {{ reply.from_name || __('You') }}

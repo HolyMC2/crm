@@ -286,7 +286,7 @@
                   @click="emit('ics', 'rotate')"
                 />
               </div>
-              <p v-if="copied" role="status" class="text-sm text-ink-green-3">
+              <p v-if="copied" role="status" class="text-sm text-ink-green-7">
                 {{ copied }}
               </p>
             </div>
@@ -299,7 +299,7 @@
               @click="emit('ics', 'create')"
             />
           </section>
-          <p v-if="error" role="alert" class="text-sm text-ink-red-4">
+          <p v-if="error" role="alert" class="text-sm text-ink-red-6">
             {{ error }}
           </p>
         </div>

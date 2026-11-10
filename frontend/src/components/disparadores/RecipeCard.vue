@@ -45,7 +45,7 @@
           class="inline-flex min-h-8 items-center rounded-full bg-surface-gray-2 px-3 text-sm text-ink-gray-8"
           >{{ chip.label }}</span
         >
-        <span v-if="!chips.length" class="text-sm text-ink-red-4"
+        <span v-if="!chips.length" class="text-sm text-ink-red-6"
           >Nadie todavía</span
         >
         <Button

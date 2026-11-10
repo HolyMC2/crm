@@ -22,9 +22,9 @@
           class="flex items-center gap-2 text-sm"
           :class="
             step.tone === 'error'
-              ? 'text-ink-red-4'
+              ? 'text-ink-red-6'
               : step.tone === 'done'
-                ? 'text-ink-green-3'
+                ? 'text-ink-green-7'
                 : 'text-ink-gray-7'
           "
           :role="step.tone === 'error' ? 'alert' : 'status'"
@@ -51,7 +51,7 @@
     <p v-else-if="status.guard" class="text-sm text-ink-gray-5">
       {{ status.guard }}
     </p>
-    <p v-if="problemText" role="alert" class="text-sm text-ink-red-4">
+    <p v-if="problemText" role="alert" class="text-sm text-ink-red-6">
       {{ problemText }}
     </p>
   </div>

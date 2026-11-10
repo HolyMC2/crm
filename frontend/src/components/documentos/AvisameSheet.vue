@@ -171,7 +171,7 @@
       </section>
 
       <p v-if="note" class="px-4 pt-2 text-sm text-ink-gray-7">{{ note }}</p>
-      <p v-if="error" role="alert" class="px-4 pt-2 text-sm text-ink-red-4">
+      <p v-if="error" role="alert" class="px-4 pt-2 text-sm text-ink-red-6">
         {{ error }}
       </p>
     </div>
