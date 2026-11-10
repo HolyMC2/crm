@@ -59,6 +59,7 @@
 </template>
 
 <script setup>
+import { errorText } from '@/utils/errorText'
 import { useCrmOnboarding } from '@/composables/onboarding'
 import EditIcon from '@/components/Icons/EditIcon.vue'
 import FieldLayout from '@/components/FieldLayout/FieldLayout.vue'
@@ -181,11 +182,11 @@ async function createNewLead() {
       },
       onError(err) {
         isLeadCreating.value = false
-        if (!err.messages) {
-          error.value = err.message
-          return
-        }
-        error.value = err.messages.join('\n')
+        error.value = errorText(
+          err,
+          __('That did not go through. Try again.'),
+          '\n',
+        )
       },
     },
   )

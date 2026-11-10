@@ -159,6 +159,7 @@
 </template>
 
 <script setup>
+import { errorText } from '@/utils/errorText'
 import PipelineSelector from '@/components/Pipeline/PipelineSelector.vue'
 import EditIcon from '@/components/Icons/EditIcon.vue'
 import FieldLayout from '@/components/FieldLayout/FieldLayout.vue'
@@ -437,7 +438,7 @@ async function createDeal(receiveDevice = false) {
         onError(err) {
           toast.error(
             __('Deal created but customer sync failed: {0}', [
-              err.messages?.join('\n') || err.message,
+              errorText(err, '', '\n'),
             ]),
           )
           if (repairRequested) finish()
@@ -446,11 +447,11 @@ async function createDeal(receiveDevice = false) {
     },
     onError(err) {
       isDealCreating.value = false
-      if (!err.messages) {
-        error.value = err.message
-        return
-      }
-      error.value = err.messages.join('\n')
+      error.value = errorText(
+        err,
+        __('That did not go through. Try again.'),
+        '\n',
+      )
     },
   })
 }

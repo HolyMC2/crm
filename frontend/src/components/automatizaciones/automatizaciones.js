@@ -2,6 +2,7 @@
 // Frappe Notification, Assignment Rule, Auto Repeat and Workflow. The calls go
 // to `crm.api.automatizaciones` (Frappe permissions only); the rest is pure
 // wording so the sheets stay thin and the unit test reads the rules.
+import { errorText as sentenceOf } from '@/utils/errorText'
 import { call } from 'frappe-ui'
 import { formatDate, parseServerDate } from '@/utils/display'
 
@@ -22,7 +23,7 @@ export function errorText(
   error,
   fallback = 'Revisa tu conexión e inténtalo de nuevo.',
 ) {
-  const message = error?.messages?.[0] || error?.message || ''
+  const message = sentenceOf(error)
   if (!message || /Traceback|Error \d{3}|^[A-Z][a-zA-Z]+Error/.test(message))
     return fallback
   return message

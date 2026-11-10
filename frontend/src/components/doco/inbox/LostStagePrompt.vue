@@ -59,6 +59,7 @@
 </template>
 
 <script setup>
+import { errorText } from '@/utils/errorText'
 import Link from '@/components/Controls/Link.vue'
 import { createDocument } from '@/composables/document'
 import { Dialog } from 'frappe-ui'
@@ -112,7 +113,7 @@ async function save() {
   try {
     await commitLostStage(lostReason.value, lostNotes.value)
   } catch (e) {
-    error.value = e?.messages?.[0] || e?.message || __('No se pudo guardar.')
+    error.value = errorText(e, __('No se pudo guardar.'))
     saving.value = false
     return
   }

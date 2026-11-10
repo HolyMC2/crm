@@ -1,3 +1,4 @@
+import { errorText } from '@/utils/errorText'
 import { inject, onBeforeUnmount, reactive } from 'vue'
 import { onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router'
 
@@ -177,10 +178,9 @@ export function commerceError(error) {
     return __(
       'You do not have permission for this order action. Check your session or ask your manager for access.',
     )
-  return (
-    error?.messages?.[0] ||
-    error?.message ||
-    __('Orders cannot be reached right now. Try again or check the order.')
+  return errorText(
+    error,
+    __('Orders cannot be reached right now. Try again or check the order.'),
   )
 }
 export function knownRefusal(error) {

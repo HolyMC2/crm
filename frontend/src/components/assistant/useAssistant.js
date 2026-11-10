@@ -4,6 +4,7 @@
 // doco's assistant through its shell adapter (doco.docoutils.assistant.
 // shell_api): same principal and gates as the Desk, staff only. Replies
 // arrive as user-addressed realtime events; history() is the backfill.
+import { errorText as sentenceOf } from '@/utils/errorText'
 import {
   computed,
   getCurrentInstance,
@@ -252,7 +253,7 @@ export async function loadHistory() {
 }
 
 function errorText(error) {
-  const message = error?.messages?.[0] || error?.message || ''
+  const message = sentenceOf(error)
   return message && !/^\s*</.test(message)
     ? String(message)
     : __('Muelle did not answer. Check your connection and try again.')

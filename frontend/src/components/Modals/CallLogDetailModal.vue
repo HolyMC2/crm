@@ -169,6 +169,7 @@
 </template>
 
 <script setup>
+import { errorText } from '@/utils/errorText'
 import { useCrmOnboarding } from '@/composables/onboarding'
 import EditIcon from '@/components/Icons/EditIcon.vue'
 import ArrowUpRightIcon from '@/components/Icons/ArrowUpRightIcon.vue'
@@ -369,7 +370,9 @@ async function createLead() {
     })
     .catch((err) => {
       toast.error(
-        __('Error creating lead: {0}', [err.messages?.[0] || err.message]),
+        __('Error creating lead: {0}', [
+          errorText(err, __('That did not go through. Try again.')),
+        ]),
       )
     })
 }

@@ -4,6 +4,7 @@
 // Those pages keep their own payload and layout; the kit loads the engine's
 // record bundle after the page has painted (A2) and runs the same tools as
 // DocumentoRecord. One composable, two small components (head and body).
+import { errorText as sentenceOf } from '@/utils/errorText'
 import { computed, onMounted, ref, shallowRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { toast } from 'frappe-ui'
@@ -225,7 +226,7 @@ export function useRecordKit(doctype, { name, title, changed, modified } = {}) {
       await uploadAttachment({ doctype, name: recordName.value, file })
       await after('Archivo adjuntado')
     } catch (e) {
-      toast.error(e?.message || 'No se pudo subir el archivo.')
+      toast.error(sentenceOf(e, 'No se pudo subir el archivo.'))
     } finally {
       busy.value = false
     }

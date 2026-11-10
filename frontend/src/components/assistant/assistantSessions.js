@@ -8,6 +8,7 @@
 // in one line what stays open; «Deshacer» brings both back.
 // Thread management (2026-11-05, T3's thread menu): a row's «⋯» resolves,
 // snoozes, marks unread, regenerates the title and copies a conversation.
+import { errorText as sentenceOf } from '@/utils/errorText'
 import { reactive } from 'vue'
 import { call } from 'frappe-ui'
 import { parseServerDate, dayDiff } from '@/utils/display'
@@ -67,7 +68,7 @@ export const sessions = reactive({
 })
 
 function errorText(error) {
-  const message = error?.messages?.[0] || error?.message || ''
+  const message = sentenceOf(error)
   return message && !/^\s*</.test(message)
     ? String(message)
     : __('Muelle did not answer. Check your connection and try again.')

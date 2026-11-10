@@ -1,3 +1,4 @@
+import { errorText } from '@/utils/errorText'
 export function repairMoney(value, currency) {
   if (value === null || value === undefined || value === '') return '—'
   const amount = Number(value)
@@ -85,11 +86,7 @@ export function tallerOrderHref(name, label, here = window.location) {
 }
 
 export function repairError(error) {
-  return (
-    error?.messages?.join('\n') ||
-    error?.message ||
-    'No se pudo completar la solicitud.'
-  )
+  return errorText(error, 'No se pudo completar la solicitud.', '\n')
 }
 
 // Taller owns repair intake. The CRM hands the operator to /taller/intake with the

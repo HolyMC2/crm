@@ -1,5 +1,6 @@
 // Agenda data layer over doco.agenda (sources Event and Turno). Pure helpers are exported
 // for unit tests; the page owns presentation.
+import { errorText as sentenceOf } from '@/utils/errorText'
 import { call } from 'frappe-ui'
 import {
   calendarRange,
@@ -411,10 +412,9 @@ export const requestChange = (event, times, note = '') =>
   })
 
 export function errorText(error) {
-  return (
-    error?.messages?.[0] ||
-    error?.message ||
-    __('We could not reach the server. Check your connection and try again.')
+  return sentenceOf(
+    error,
+    __('We could not reach the server. Check your connection and try again.'),
   )
 }
 

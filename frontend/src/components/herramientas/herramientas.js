@@ -1,6 +1,7 @@
 // «Herramientas del asistente» (Shell Wave D, SPEC §6 DD17): what Pregúntale a
 // Muelle may do, per tool, edited by the owner. The flags live in doco
 // (docoutils/assistant/herramientas); this file only calls them and shapes rows.
+import { errorText as sentenceOf } from '@/utils/errorText'
 import { call } from 'frappe-ui'
 import { matchTokens } from '@/vendor/muelle-shell/contracts/search'
 
@@ -81,13 +82,7 @@ export const EFECTO_LABEL = {
 }
 
 export function errorText(failure, fallback = 'No se pudo guardar.') {
-  const raw =
-    failure?.messages?.[0] ||
-    failure?.exc_type ||
-    failure?.message ||
-    String(failure || '')
-  const text = String(raw)
-    .replace(/<[^>]+>/g, '')
-    .trim()
-  return text && !/^\w+Error$/.test(text) ? text : fallback
+  // An exception class with no sentence from the server has nothing to print.
+  if (failure?.exc_type && !failure?.messages?.length) return fallback
+  return sentenceOf(failure, fallback)
 }

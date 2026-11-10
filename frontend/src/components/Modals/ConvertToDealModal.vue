@@ -174,6 +174,7 @@
   </Dialog>
 </template>
 <script setup>
+import { errorText } from '@/utils/errorText'
 import { useCrmOnboarding } from '@/composables/onboarding'
 import OrganizationsIcon from '@/components/Icons/OrganizationsIcon.vue'
 import ContactsIcon from '@/components/Icons/ContactsIcon.vue'
@@ -358,10 +359,7 @@ async function convertToDeal() {
         request_id: crypto.randomUUID(),
       })
     } catch (err) {
-      error.value =
-        err?.messages?.[0] ||
-        err?.message ||
-        __('Review the required deal fields.')
+      error.value = errorText(err, __('Review the required deal fields.'))
       busy.value = false
       emit('failed', error.value)
       return

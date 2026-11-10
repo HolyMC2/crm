@@ -87,6 +87,7 @@
 </template>
 
 <script setup>
+import { errorText } from '@/utils/errorText'
 import {
   settingsDocumentResource,
   discardSettingsDocument,
@@ -121,7 +122,7 @@ function save() {
       }
     },
     onError: (err) => {
-      toast.error(err.message + ': ' + err.messages[0])
+      toast.error(errorText(err, __('That did not go through. Try again.')))
     },
   })
 }

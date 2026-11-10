@@ -394,6 +394,7 @@
   </div>
 </template>
 <script setup>
+import { errorText } from '@/utils/errorText'
 import { nextTick, reactive, ref } from 'vue'
 import { Button, toast } from 'frappe-ui'
 import AgendaGuard from '@/components/agenda/AgendaGuard.vue'
@@ -456,7 +457,7 @@ async function loadServices(group = '') {
     fillServices(await citaServices(group))
   } catch (error) {
     services.value = null
-    toast.error(error?.messages?.[0] || error?.message || String(error))
+    toast.error(errorText(error, __('That did not go through. Try again.')))
   }
 }
 async function load() {
@@ -467,7 +468,10 @@ async function load() {
     const [data] = await Promise.all([citaSettings(), loadServices()])
     fill(data)
   } catch (error) {
-    loadError.value = error?.messages?.[0] || error?.message || String(error)
+    loadError.value = errorText(
+      error,
+      __('That did not go through. Try again.'),
+    )
   } finally {
     loading.value = false
   }
@@ -524,7 +528,7 @@ async function save() {
     constraints.value = [
       {
         code: 'unavailable',
-        message: error?.messages?.[0] || error?.message || String(error),
+        message: errorText(error, __('That did not go through. Try again.')),
         severity: 'block',
       },
     ]
@@ -549,7 +553,7 @@ async function saveServices() {
     constraints.value = [
       {
         code: 'unavailable',
-        message: error?.messages?.[0] || error?.message || String(error),
+        message: errorText(error, __('That did not go through. Try again.')),
         severity: 'block',
       },
     ]

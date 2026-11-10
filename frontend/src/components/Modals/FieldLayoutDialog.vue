@@ -50,6 +50,7 @@
 </template>
 
 <script setup>
+import { errorText } from '@/utils/errorText'
 import FieldLayout from '@/components/FieldLayout/FieldLayout.vue'
 import { findMissingMandatory } from '@/utils/fieldTransforms'
 import { getMeta } from '@/stores/meta'
@@ -274,7 +275,7 @@ const resolvedActions = computed(() => {
           try {
             await props.onSubmit(data)
           } catch (e) {
-            error.value = e.message || __('An error occurred')
+            error.value = errorText(e, __('An error occurred'))
             return // stay open
           } finally {
             actionLoadingMap[0] = false

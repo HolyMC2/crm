@@ -1,3 +1,4 @@
+import { errorText } from '@/utils/errorText'
 import { computed, ref, shallowRef } from 'vue'
 import { call } from 'frappe-ui'
 import {
@@ -120,10 +121,10 @@ export function loadShell({ refresh = false } = {}) {
         // Offline or a server hiccup: keep working on the saved boot.
         return shellBoot.value
       }
-      shellError.value =
-        error.messages?.[0] ||
-        error.message ||
-        'No pudimos cargar tus permisos. Reintenta o pide acceso al encargado.'
+      shellError.value = errorText(
+        error,
+        'No pudimos cargar tus permisos. Reintenta o pide acceso al encargado.',
+      )
       throw error
     })
     .finally(() => {

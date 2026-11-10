@@ -1,3 +1,4 @@
+import { errorText } from '@/utils/errorText'
 import { toast } from 'frappe-ui'
 
 // «Guardado · Deshacer»: one toast per saved action that the server can
@@ -31,7 +32,7 @@ export async function runUndo(run, { done, describe, reload } = {}) {
     await run()
     if (done) toast.success(done)
   } catch (error) {
-    toast.error(describe ? describe(error) : error?.message || '')
+    toast.error(describe ? describe(error) : errorText(error))
   } finally {
     await reload?.()
   }

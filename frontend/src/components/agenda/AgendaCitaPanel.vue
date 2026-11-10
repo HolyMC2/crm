@@ -211,6 +211,7 @@
   </section>
 </template>
 <script setup>
+import { errorText } from '@/utils/errorText'
 import { computed, ref, watch } from 'vue'
 import { Button } from 'frappe-ui'
 import { recordLink } from '@/composables/useAgenda'
@@ -270,7 +271,10 @@ async function startReschedule() {
     if (data.problems?.length)
       slotsError.value = data.problems.map((row) => row.message).join(' ')
   } catch (error) {
-    slotsError.value = error?.messages?.[0] || error?.message || String(error)
+    slotsError.value = errorText(
+      error,
+      __('That did not go through. Try again.'),
+    )
   } finally {
     loadingSlots.value = false
   }

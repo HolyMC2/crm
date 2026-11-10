@@ -301,6 +301,7 @@
 </template>
 
 <script setup>
+import { errorText } from '@/utils/errorText'
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { toast, createResource } from 'frappe-ui'
@@ -480,7 +481,7 @@ async function onReply(cm) {
       )
     }
   } catch (e) {
-    toast.error(e?.messages?.[0] || e?.message || __('No se pudo enviar'))
+    toast.error(errorText(e, __('No se pudo enviar')))
   } finally {
     busy.value = false
   }

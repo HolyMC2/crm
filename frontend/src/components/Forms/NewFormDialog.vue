@@ -87,6 +87,7 @@
 </template>
 
 <script setup>
+import { errorText } from '@/utils/errorText'
 import {
   Button,
   Dialog,
@@ -215,7 +216,7 @@ async function create() {
     show.value = false
     router.push({ name: 'Form', params: { formId: doc.name } })
   } catch (e) {
-    error.value = e?.messages?.[0] || e?.message || __('Could not create form')
+    error.value = errorText(e, __('Could not create form'))
   } finally {
     creating.value = false
   }

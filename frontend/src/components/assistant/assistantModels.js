@@ -4,6 +4,7 @@
 // conversación». The list is the one the owner published; staff choose only
 // when the owner allows it, and then the picker shows the current model and
 // the reason instead of a menu. A server without the endpoints hides it.
+import { errorText as sentenceOf } from '@/utils/errorText'
 import { reactive } from 'vue'
 import { call } from 'frappe-ui'
 import { ASSISTANT_API } from './assistantDoor'
@@ -61,7 +62,7 @@ function take(out) {
 }
 
 function errorText(error) {
-  const message = error?.messages?.[0] || error?.message || ''
+  const message = sentenceOf(error)
   return message && !/^\s*</.test(message)
     ? String(message)
     : __('Muelle did not answer. Check your connection and try again.')

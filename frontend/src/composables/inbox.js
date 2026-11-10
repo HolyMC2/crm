@@ -2,6 +2,7 @@
 // Module-level reactive singletons (same pattern as composables/settings.js) so the
 // 3-pane tree shares state without prop-drilling. Thin client over the B1 backend:
 // doco_marketing.api.inbox.* — itself a read layer over crm WhatsApp + Communication.
+import { errorText } from '@/utils/errorText'
 import { ref, watch, computed } from 'vue'
 import { createResource, call, toast } from 'frappe-ui'
 import { guardStatusChange } from '@/utils/statusGuard'
@@ -1206,9 +1207,7 @@ export async function setStage(status) {
     })
   } catch (e) {
     undo?.()
-    toast.error(
-      e?.messages?.[0] || e?.message || __('No se pudo cambiar el estado'),
-    )
+    toast.error(errorText(e, __('No se pudo cambiar el estado')))
     return
   }
   scheduleQueueReload()
@@ -1232,9 +1231,7 @@ export async function setStageSilent(status) {
     })
   } catch (e) {
     undo?.()
-    toast.error(
-      e?.messages?.[0] || e?.message || __('No se pudo cambiar el estado'),
-    )
+    toast.error(errorText(e, __('No se pudo cambiar el estado')))
     return
   }
   scheduleQueueReload()
@@ -1280,9 +1277,7 @@ export async function commitLostStage(reason, notes = '') {
     })
   } catch (e) {
     undo?.()
-    toast.error(
-      e?.messages?.[0] || e?.message || __('No se pudo cambiar el estado'),
-    )
+    toast.error(errorText(e, __('No se pudo cambiar el estado')))
     return
   }
   lostStagePrompt.value = null

@@ -246,6 +246,7 @@ import { BottomSheet, Segmented } from '@/components/ui'
 import BagItems from './BagItems.vue'
 import {
   custodyCount,
+  errorText,
   faceLabel,
   facesFor,
   fromMinor,
@@ -334,7 +335,7 @@ async function loadSources() {
     const answer = await props.fetchSources()
     sources.value = { state: 'ready', rows: answer?.accounts || [], error: '' }
   } catch (e) {
-    sources.value = { state: 'error', rows: [], error: e?.message || String(e) }
+    sources.value = { state: 'error', rows: [], error: errorText(e) }
   }
 }
 
@@ -393,7 +394,7 @@ async function confirm() {
     emit('done', result)
     emit('update:open', false)
   } catch (e) {
-    error.value = e?.message || String(e)
+    error.value = errorText(e)
   } finally {
     busy.value = false
   }

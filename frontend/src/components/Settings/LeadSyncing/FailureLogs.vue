@@ -81,6 +81,7 @@
 </template>
 
 <script setup>
+import { errorText } from '@/utils/errorText'
 import { ref, watch } from 'vue'
 import { useDocument } from '@/data/document'
 import {
@@ -132,12 +133,7 @@ watch(selectedLog, () => {
           toast.success(__('Sync successful!'))
         },
         onError(e) {
-          toast.error(
-            e.message ||
-              (e.messages ?? e.messages[0]) ||
-              e.exc_type ||
-              __('Error syncing lead'),
-          )
+          toast.error(errorText(e, __('Error syncing lead')))
         },
       },
     },

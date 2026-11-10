@@ -505,6 +505,7 @@
 </template>
 
 <script setup>
+import { errorText } from '@/utils/errorText'
 import { computed, defineAsyncComponent, reactive, ref, watch } from 'vue'
 import { call, toast } from 'frappe-ui'
 import { BottomSheet, StatusChip } from '@/components/ui'
@@ -696,10 +697,7 @@ async function act(row, fn, done) {
     await load()
   } catch (e) {
     // The server's own reason, verbatim: it names what to do next.
-    error[row.name] =
-      e?.messages?.[0] ||
-      e?.message ||
-      __('That did not go through. Try again.')
+    error[row.name] = errorText(e, __('That did not go through. Try again.'))
   } finally {
     busy.value = false
   }

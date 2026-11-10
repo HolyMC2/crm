@@ -268,7 +268,7 @@ async function newAccount() {
     await load()
     form.drawer_account = account
   } catch (e) {
-    error.value = e?.message || String(e)
+    error.value = errorText(e)
   } finally {
     creatingAccount.value = false
   }
@@ -308,7 +308,7 @@ async function save() {
     emit('saved', result)
     emit('update:open', false)
   } catch (e) {
-    error.value = e?.message || String(e)
+    error.value = errorText(e)
   } finally {
     busy.value = false
   }

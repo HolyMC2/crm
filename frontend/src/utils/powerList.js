@@ -1,3 +1,4 @@
+import { errorText } from '@/utils/errorText'
 import { normalizeCombo } from '@/vendor/muelle-shell/contracts'
 
 // The power worklist's pure parts, shared by Compras, Gastos and Garantías
@@ -159,11 +160,7 @@ export function loadLength({ more, quiet, shown, remembered, page, max }) {
 export async function runBulk(
   items,
   run,
-  {
-    describe = (e) => e?.message || '',
-    unknown = () => false,
-    onProgress,
-  } = {},
+  { describe = (e) => errorText(e), unknown = () => false, onProgress } = {},
 ) {
   const results = []
   for (const item of items) {

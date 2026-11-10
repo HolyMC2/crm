@@ -186,6 +186,7 @@
   </form>
 </template>
 <script setup>
+import { errorText } from '@/utils/errorText'
 import { computed, onMounted, ref } from 'vue'
 import { Button } from 'frappe-ui'
 import AgendaGuard from '@/components/agenda/AgendaGuard.vue'
@@ -260,7 +261,10 @@ async function load() {
     days.value = data.days || []
     day.value = days.value[0]?.date || ''
   } catch (error) {
-    loadError.value = error?.messages?.[0] || error?.message || String(error)
+    loadError.value = errorText(
+      error,
+      __('That did not go through. Try again.'),
+    )
   } finally {
     loading.value = false
   }

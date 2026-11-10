@@ -558,6 +558,7 @@
 </template>
 
 <script setup>
+import { errorText } from '@/utils/errorText'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { Button, Dialog, call } from 'frappe-ui'
 import LucideLoaderCircle from '~icons/lucide/loader-circle'
@@ -649,9 +650,7 @@ const date = (value) =>
     .slice(0, 16)
     .replace('T', ' ')
 const message = (e) =>
-  e.messages?.join('\n') ||
-  e.message ||
-  __('No se pudo completar la operación.')
+  errorText(e, __('No se pudo completar la operación.'), '\n')
 const metrics = [
   { key: 'invoiced', label: __('Facturado') },
   { key: 'paid', label: __('Pagado') },

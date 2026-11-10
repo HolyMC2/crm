@@ -91,6 +91,7 @@
 </template>
 
 <script setup>
+import { errorText } from '@/utils/errorText'
 import {
   Button,
   call,
@@ -158,7 +159,7 @@ async function mutate(method, args, onSuccess) {
     Object.assign(localData, props.data)
     error.value =
       e.exc_type === 'ValidationError'
-        ? e.messages?.[0] || e.message
+        ? errorText(e, settingsErrorMessage(e))
         : settingsErrorMessage(e)
   } finally {
     pending.value = false

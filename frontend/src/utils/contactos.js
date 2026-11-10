@@ -1,3 +1,4 @@
+import { errorText } from '@/utils/errorText'
 import { readListState, writeListState } from './listViewState.js'
 
 export const SOURCE_TYPES = {
@@ -563,7 +564,8 @@ export function errorKind(error) {
 }
 export function recovery(error) {
   const guard = errorGuard(error)
-  const detail = String(
+  // `raw` tells a refusal from a lost connection; only `detail` is printed.
+  const raw = String(
     guard?.message ||
       error?.messages?.join?.(' ') ||
       error?.message ||
@@ -572,6 +574,7 @@ export function recovery(error) {
   )
     .replace(/<[^>]*>/g, ' ')
     .trim()
+  const detail = guard?.message ? raw : errorText(error)
   const kind = errorKind(error)
   if (kind === 'conflict')
     return {
@@ -582,14 +585,15 @@ export function recovery(error) {
     }
   if (
     kind === 'permission' ||
-    (!kind && /Permission|permis|not permitted|403/i.test(detail))
+    (!kind && /Permission|permis|not permitted|403/i.test(raw))
   )
     return {
       kind: 'permission',
       title: 'No tienes permiso para esta acción.',
-      detail: `${detail} Pide acceso al responsable de tu tienda y reintenta permisos. Tu borrador sigue aquí.`,
+      detail:
+        `${detail} Pide acceso al responsable de tu tienda y reintenta permisos. Tu borrador sigue aquí.`.trim(),
     }
-  if (kind === 'session' || (!kind && /401|session|login|sesión/i.test(detail)))
+  if (kind === 'session' || (!kind && /401|session|login|sesión/i.test(raw)))
     return {
       kind: 'session',
       title: 'Tu sesión terminó.',
@@ -598,7 +602,7 @@ export function recovery(error) {
     }
   if (
     kind === 'network' ||
-    /fetch|network|offline|connection/i.test(detail) ||
+    /fetch|network|offline|connection/i.test(raw) ||
     globalThis.navigator?.onLine === false
   )
     return {

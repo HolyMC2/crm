@@ -510,6 +510,7 @@
 </template>
 
 <script setup>
+import { errorText } from '@/utils/errorText'
 import { Button, createResource } from 'frappe-ui'
 import { computed, h, reactive } from 'vue'
 import { useRoute } from 'vue-router'
@@ -743,7 +744,7 @@ function printTicket(roName) {
       )
     },
     onError(err) {
-      const msg = err?.messages?.join('\n') || err?.message || 'Print failed'
+      const msg = errorText(err, 'Print failed', '\n')
       alert(__('Print failed: ') + msg)
     },
   })

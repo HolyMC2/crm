@@ -364,6 +364,7 @@
   />
 </template>
 <script setup>
+import { errorText } from '@/utils/errorText'
 import { useCrmOnboarding } from '@/composables/onboarding'
 import SalesQueueReturn from '@/components/SalesQueueReturn.vue'
 import AutomationLink from '@/components/AutomationLink.vue'
@@ -597,7 +598,7 @@ async function changePipeline(values) {
     await document.save.submit()
   } catch (error) {
     Object.assign(doc.value, previous)
-    toast.error(error.messages?.join(' ') || error.message)
+    toast.error(errorText(error, __('Error updating field')))
   }
 }
 const statuses = computed(() => {

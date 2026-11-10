@@ -511,6 +511,7 @@
 </template>
 
 <script setup>
+import { errorText } from '@/utils/errorText'
 import PipelineSelector from '@/components/Pipeline/PipelineSelector.vue'
 import { defineAsyncComponent, computed, ref, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
@@ -872,7 +873,7 @@ async function changePipeline(values) {
     await dealRes.reload()
     scheduleQueueReload()
   } catch (error) {
-    toast.error(error.messages?.join(' ') || error.message)
+    toast.error(errorText(error, __('That did not go through. Try again.')))
   }
 }
 const statusOpts = computed(() =>

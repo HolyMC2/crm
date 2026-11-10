@@ -7,6 +7,7 @@
 //   snoozeNextStep(deal)              +1 day, with Undo
 //   useNextStepKeys(() => deal)       n · p · r · h while the page is mounted
 //   nextStepChanged                   { deal, state, at } after every save
+import { errorText } from '@/utils/errorText'
 import { onBeforeUnmount, onMounted, reactive, shallowRef } from 'vue'
 import { call, toast } from 'frappe-ui'
 import { registerPageShortcuts } from '@/composables/shellKeyboard'
@@ -39,11 +40,7 @@ export function announceNextStep(deal, state) {
 }
 
 export function nextStepError(error) {
-  return (
-    error?.messages?.[0] ||
-    error?.message ||
-    t('The next step could not be saved. Retry.')
-  )
+  return errorText(error, t('The next step could not be saved. Retry.'))
 }
 
 export async function openNextStep({ deal, mode = 'schedule', reason = '' }) {

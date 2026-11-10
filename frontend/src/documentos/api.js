@@ -1,3 +1,4 @@
+import { errorText as sentenceOf } from '@/utils/errorText'
 import { call } from 'frappe-ui'
 
 const SERVICE = 'crm.api.documentos'
@@ -19,7 +20,7 @@ export function docApi(method, args = {}) {
 
 /** The worker's sentence for a failed call: the server's own message, never a traceback. */
 export function errorText(error) {
-  const message = error?.messages?.[0] || error?.message || ''
+  const message = sentenceOf(error)
   if (!message || /Traceback|Error \d{3}|^[A-Z][a-zA-Z]+Error/.test(message))
     return 'Revisa tu conexión e inténtalo de nuevo.'
   return message

@@ -1,3 +1,4 @@
+import { errorText } from '@/utils/errorText'
 import { callError, errorKind } from '@/utils/contactos'
 import { listKeys, pathWithQuery, textParam } from '@/utils/powerList'
 import {
@@ -324,8 +325,7 @@ export function outcomeUnknown(error) {
 /** Plain, actionable es-MX recovery for a failed call. */
 export function problemOf(error) {
   const kind = errorKind(error)
-  const detail =
-    error?.messages?.join(' ') || error?.message || tr('Something went wrong.')
+  const detail = errorText(error, tr('Something went wrong.'))
   if (outcomeUnknown(error))
     return {
       kind: 'offline',

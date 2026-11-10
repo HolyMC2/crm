@@ -3,6 +3,7 @@
 // single model: `form.fields` (flat Web Form rows) is the source of truth, derived
 // into draggable sections → columns → fields for the canvas and re-flattened
 // after every structural change.
+import { errorText } from '@/utils/errorText'
 import { call, createResource, toast } from 'frappe-ui'
 import { globalStore } from '@/stores/global'
 import { useTelemetry } from '@framework/ui'
@@ -542,7 +543,7 @@ export function useFormBuilder(name) {
       dirty.value = false
       return true
     } catch (e) {
-      toast.error(e?.messages?.[0] || e?.message || __('Could not save'))
+      toast.error(errorText(e, __('Could not save')))
       return false
     } finally {
       saving.value = false

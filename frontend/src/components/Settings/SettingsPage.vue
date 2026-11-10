@@ -79,6 +79,7 @@
   </div>
 </template>
 <script setup>
+import { errorText } from '@/utils/errorText'
 import FieldLayout from '@/components/FieldLayout/FieldLayout.vue'
 import {
   call,
@@ -125,9 +126,7 @@ const data = settingsDocumentResource({
       toast.success(__(props.successMessage))
     },
     onError: (err) => {
-      toast.error(
-        err.messages?.[0] || err.message || __('Settings could not be saved.'),
-      )
+      toast.error(errorText(err, __('Settings could not be saved.')))
     },
   },
 })

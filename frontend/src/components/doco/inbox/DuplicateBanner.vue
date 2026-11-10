@@ -98,6 +98,7 @@
 </template>
 
 <script setup>
+import { errorText } from '@/utils/errorText'
 import { computed, ref, watch } from 'vue'
 import { createResource, Dialog, Button, call, toast } from 'frappe-ui'
 import { formatMovedCounts } from '@/utils/mergeSummary'
@@ -162,9 +163,7 @@ async function doMerge() {
     res.submit({ doctype: props.doctype, name: props.name }) // refresh the strip
     emit('merged', source.doctype, source.name)
   } catch (e) {
-    toast.error(
-      e?.messages?.[0] || e?.message || __('No se pudo fusionar el duplicado'),
-    )
+    toast.error(errorText(e, __('No se pudo fusionar el duplicado')))
   } finally {
     merging.value = false
   }

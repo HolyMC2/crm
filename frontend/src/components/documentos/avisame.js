@@ -2,6 +2,7 @@
 // doco (docoutils/assistant/automation/disparadores.py); this file only calls
 // them. Personal avisos belong to the session user; the server checks that the
 // user can read the record when subscribing and again when the aviso fires.
+import { errorText as sentenceOf } from '@/utils/errorText'
 import { call } from 'frappe-ui'
 
 const API = 'doco.docoutils.assistant.automation.disparadores'
@@ -50,14 +51,9 @@ export function errorText(
   failure,
   fallback = 'No se pudo guardar. Intenta de nuevo.',
 ) {
-  const messages = failure?.messages || failure?.exc_messages
-  if (Array.isArray(messages) && messages.length) return String(messages[0])
-  if (
-    typeof failure?.message === 'string' &&
-    !/^\s*\w+Error\b/.test(failure.message)
-  )
-    return failure.message
-  return fallback
+  if (!failure?.messages && Array.isArray(failure?.exc_messages))
+    return sentenceOf({ messages: failure.exc_messages }, fallback)
+  return sentenceOf(failure, fallback)
 }
 
 /** Today in the browser as YYYY-MM-DD (a date input's min). */

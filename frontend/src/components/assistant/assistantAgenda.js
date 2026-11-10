@@ -3,6 +3,7 @@
 // time, a reminder the same with a «recuérdame», a snooze is «posponer». Rows
 // come grouped hoy (overdue too) / próximos / esperando; each one is put off
 // with a quick pick, cancelled in two taps in place, or marked done.
+import { errorText as sentenceOf } from '@/utils/errorText'
 import { reactive } from 'vue'
 import { call } from 'frappe-ui'
 import { shellPathFor } from './assistantText'
@@ -23,7 +24,7 @@ export const agenda = reactive({
 })
 
 function errorText(error) {
-  const message = error?.messages?.[0] || error?.message || ''
+  const message = sentenceOf(error)
   return message && !/^\s*</.test(message)
     ? String(message)
     : __('Muelle did not answer. Check your connection and try again.')

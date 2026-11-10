@@ -81,6 +81,7 @@
   </Dialog>
 </template>
 <script setup>
+import { errorText } from '@/utils/errorText'
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Button, Dialog, call } from 'frappe-ui'
@@ -117,11 +118,7 @@ let request = requestId()
 const notice = computed(() => preview.value?.notice || null)
 
 function messageOf(error) {
-  return (
-    error?.messages?.[0] ||
-    error?.message ||
-    __('Something went wrong. Try again.')
-  )
+  return errorText(error, __('Something went wrong. Try again.'))
 }
 
 async function load() {

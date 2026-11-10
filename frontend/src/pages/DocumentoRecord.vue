@@ -358,6 +358,7 @@
   </div>
 </template>
 <script setup>
+import { errorText as sentenceOf } from '@/utils/errorText'
 import { computed, defineAsyncComponent, ref, shallowRef, watch } from 'vue'
 import {
   SOURCE_DOCTYPES as LABEL_SOURCES,
@@ -841,7 +842,7 @@ async function onFile(event) {
     toast.success('Archivo adjuntado')
     await load()
   } catch (e) {
-    toast.error(e?.message || 'No se pudo subir el archivo.')
+    toast.error(sentenceOf(e, 'No se pudo subir el archivo.'))
   } finally {
     busy.value = false
   }
@@ -858,7 +859,7 @@ async function takePhoto() {
     })
     if (filed) await load()
   } catch (e) {
-    toast.error(e?.message || 'No se pudo abrir la cámara.')
+    toast.error(sentenceOf(e, 'No se pudo abrir la cámara.'))
   }
 }
 

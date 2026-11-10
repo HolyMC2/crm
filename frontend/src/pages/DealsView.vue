@@ -875,6 +875,7 @@
 </template>
 
 <script setup>
+import { errorText } from '@/utils/errorText'
 import { useLiveList } from '@/composables/liveList'
 import Fab from '@/components/ui/Fab.vue'
 import LayoutHeader from '@/components/LayoutHeader.vue'
@@ -1637,8 +1638,7 @@ async function moveDeal(row, values) {
       fieldname: values,
     })
   } catch (e) {
-    const message =
-      e.messages?.[0] || e.message || __('No se pudo cambiar la etapa')
+    const message = errorText(e, __('No se pudo cambiar la etapa'))
     toast.error(message)
     throw new Error(message, { cause: e })
   }
@@ -1661,7 +1661,7 @@ async function confirmLostDrop(reason, notes) {
     })
     lostDrop.value = null
   } catch (e) {
-    lostError.value = e.message
+    lostError.value = errorText(e, __('No se pudo cambiar la etapa'))
   } finally {
     lostSaving.value = false
   }

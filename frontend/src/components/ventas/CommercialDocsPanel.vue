@@ -381,6 +381,7 @@
 </template>
 
 <script setup>
+import { errorText } from '@/utils/errorText'
 import { computed, nextTick, reactive, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { Badge, Button, Dialog, toast } from 'frappe-ui'
@@ -498,7 +499,7 @@ function createdKey(action, out) {
 
 function explain(error, action) {
   const exc = String(error?.exc_type || '')
-  const detail = (error?.messages || []).join(' ') || error?.message || ''
+  const detail = errorText(error)
   if (exc === 'TimestampMismatchError' || error?.status === 409)
     return {
       title: __('This document changed. Review the current version.'),

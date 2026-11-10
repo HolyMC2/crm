@@ -1,3 +1,4 @@
+import { errorText } from '@/utils/errorText'
 import { call } from 'frappe-ui'
 
 // «Fotos del taller»: the technician uploads an order's photos once in Taller;
@@ -45,10 +46,7 @@ export async function sendTallerPhotos(
       return {
         sent,
         failed: photo.name,
-        error:
-          error?.messages?.[0] ||
-          error?.message ||
-          __('No se pudo enviar la foto.'),
+        error: errorText(error, __('No se pudo enviar la foto.')),
       }
     }
   }

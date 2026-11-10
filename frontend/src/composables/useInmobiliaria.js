@@ -1,6 +1,7 @@
 // Inmobiliaria in the shell (/crm/inmobiliaria, INMO-SH). The app decides what a
 // screen shows (inmobiliaria.api.shell): names, the next action of each state and
 // why a blocked one is blocked. This file only calls it and formats its values.
+import { errorText } from '@/utils/errorText'
 import { h } from 'vue'
 import { call } from 'frappe-ui'
 import { formatDate, formatMoney } from '@/utils/display'
@@ -142,14 +143,14 @@ export const SIN_METODO =
 /** The worker's words for a failed call: the app's own message when it sent one. */
 export function problemText(error) {
   // Frappe's messages may carry markup (<strong>…); the shell shows words only.
-  const messages = (error?.messages || [])
-    .map((m) => String(m || '').replace(/<[^>]*>/g, ''))
-    .filter(Boolean)
-  if (messages.length) return messages.join(' ')
+  const said = errorText({ messages: error?.messages })
+  if (said) return said
   if (/permission/i.test(String(error?.exc_type || error?.message || '')))
     return 'Tu usuario no tiene permiso para esto. Pide acceso a un administrador.'
-  if (error?.message && !/^\w+Error$/.test(error.message)) return error.message
-  return 'No se pudo completar. Revisa tu conexión e inténtalo de nuevo.'
+  return errorText(
+    error,
+    'No se pudo completar. Revisa tu conexión e inténtalo de nuevo.',
+  )
 }
 
 /** Upload a photo or file to a record (private) and answer its file_url. */

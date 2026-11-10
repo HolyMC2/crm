@@ -162,6 +162,7 @@
 </template>
 
 <script setup>
+import { errorText } from '@/utils/errorText'
 import { ref, watch } from 'vue'
 import { call } from 'frappe-ui'
 
@@ -223,7 +224,8 @@ async function loadProducts() {
     result.value = data
     selectAll()
   } catch (e) {
-    if (token === request) error.value = e?.messages?.[0] || e.message
+    if (token === request)
+      error.value = errorText(e, __('That did not go through. Try again.'))
   } finally {
     busy.value = false
   }
@@ -242,7 +244,7 @@ async function generate() {
     })
     emit('created', data)
   } catch (e) {
-    error.value = e?.messages?.[0] || e.message
+    error.value = errorText(e, __('That did not go through. Try again.'))
   } finally {
     creating.value = false
   }

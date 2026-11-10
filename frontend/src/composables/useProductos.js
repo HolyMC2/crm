@@ -1,3 +1,4 @@
+import { errorText } from '@/utils/errorText'
 import { documentRoute } from '@/documentos/registry'
 import { errorKind } from '@/utils/contactos'
 import {
@@ -205,9 +206,7 @@ export function plain(text) {
 /** Plain, actionable recovery for a failed call. */
 export function problemOf(error) {
   const kind = errorKind(error)
-  const detail = plain(
-    error?.messages?.join(' ') || error?.message || tr('Something went wrong.'),
-  )
+  const detail = plain(errorText(error, tr('Something went wrong.')))
   if (outcomeUnknown(error))
     return {
       kind: 'offline',

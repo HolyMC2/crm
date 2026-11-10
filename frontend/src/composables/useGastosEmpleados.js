@@ -1,3 +1,4 @@
+import { errorText } from '@/utils/errorText'
 import { comprasApi, money, outcomeUnknown, requestId } from './useCompras'
 import { errorKind } from '@/utils/contactos'
 import { safeReturn } from '@/vendor/muelle-shell/contracts'
@@ -373,8 +374,7 @@ export async function runOnce(api, method, key, data, { same } = {}) {
 /** Plain, actionable recovery for a failed call (the server's words kept). */
 export function claimProblem(error) {
   const kind = errorKind(error)
-  const detail =
-    error?.messages?.join(' ') || error?.message || tr('Something went wrong.')
+  const detail = errorText(error, tr('Something went wrong.'))
   if (outcomeUnknown(error))
     return {
       kind: 'offline',

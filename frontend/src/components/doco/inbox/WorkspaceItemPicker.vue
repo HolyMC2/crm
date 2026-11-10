@@ -210,6 +210,7 @@
 </template>
 
 <script setup>
+import { errorText } from '@/utils/errorText'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { Button, call } from 'frappe-ui'
 import LucideLoaderCircle from '~icons/lucide/loader-circle'
@@ -293,8 +294,7 @@ async function search() {
   } catch (e) {
     if (id === request) {
       items.value = []
-      error.value =
-        e.messages?.join('\n') || e.message || __('No se pudo buscar.')
+      error.value = errorText(e, __('No se pudo buscar.'), '\n')
     }
   } finally {
     if (id === request) loading.value = false

@@ -3,6 +3,7 @@
 // (doco_marketing.api.form_channels). The page creates this only when the addon
 // is installed; edits save together with the form through the builder's
 // registerSaver hook, while Flow actions (build, publish, check) run at once.
+import { errorText } from '@/utils/errorText'
 import { call, createResource, toast } from 'frappe-ui'
 import { reactive, ref } from 'vue'
 
@@ -71,9 +72,7 @@ export function useFormChannels(form, builder) {
       if (successText) toast.success(successText)
       return res
     } catch (e) {
-      toast.error(
-        e?.messages?.[0] || e?.message || __('WhatsApp did not accept it'),
-      )
+      toast.error(errorText(e, __('WhatsApp did not accept it')))
       return null
     } finally {
       busy.value = ''

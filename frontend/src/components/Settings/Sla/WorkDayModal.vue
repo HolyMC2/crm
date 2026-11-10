@@ -83,6 +83,7 @@
 </template>
 
 <script setup>
+import { errorText } from '@/utils/errorText'
 import { ref, reactive, watch, computed } from 'vue'
 import { Dialog, FormControl, Button, toast } from 'frappe-ui'
 
@@ -262,7 +263,11 @@ function onSave() {
 
     dialog.value.show = false
   } catch (error) {
-    toast.error(__('Failed to save workday: {0}', [error.message || error]))
+    toast.error(
+      __('Failed to save workday: {0}', [
+        errorText(error, __('That did not go through. Try again.')),
+      ]),
+    )
   }
 }
 

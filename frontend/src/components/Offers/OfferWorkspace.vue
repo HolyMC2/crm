@@ -451,6 +451,7 @@
   </section>
 </template>
 <script setup>
+import { errorText as sentenceOf } from '@/utils/errorText'
 import { computed, ref, useId, watch } from 'vue'
 import { call } from 'frappe-ui'
 import OfferDraft from './OfferDraft.vue'
@@ -500,10 +501,9 @@ function errorText(error) {
     return __(
       'You do not have permission for this offer action. Your draft is preserved.',
     )
-  return (
-    error?.messages?.[0] ||
-    error?.message ||
-    __('Unable to complete the action. Your draft is preserved.')
+  return sentenceOf(
+    error,
+    __('Unable to complete the action. Your draft is preserved.'),
   )
 }
 function canSwitch() {

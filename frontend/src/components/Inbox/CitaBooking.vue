@@ -36,6 +36,7 @@
   </section>
 </template>
 <script setup>
+import { errorText } from '@/utils/errorText'
 import { computed, ref, watch } from 'vue'
 import { call } from 'frappe-ui'
 
@@ -99,8 +100,7 @@ async function send() {
     notice.value = __('Saved. Check its status in Sends.')
     emit('queued', result)
   } catch (e) {
-    error.value =
-      e?.messages?.[0] || e?.message || __('It was not sent. Try again.')
+    error.value = errorText(e, __('It was not sent. Try again.'))
   } finally {
     busy.value = false
   }

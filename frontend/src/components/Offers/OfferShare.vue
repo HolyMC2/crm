@@ -135,6 +135,7 @@
   </section>
 </template>
 <script setup>
+import { errorText } from '@/utils/errorText'
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { call } from 'frappe-ui'
 import { offerDecisionTime } from './offerPresentation'
@@ -184,10 +185,7 @@ async function run(method, args = {}) {
     )
     return true
   } catch (e) {
-    error.value =
-      e?.messages?.[0] ||
-      e?.message ||
-      __('Unable to update the customer link.')
+    error.value = errorText(e, __('Unable to update the customer link.'))
     return false
   } finally {
     busy.value = false
@@ -202,7 +200,7 @@ async function load() {
     )
   } catch (e) {
     apply({})
-    error.value = e?.messages?.[0] || e?.message || ''
+    error.value = errorText(e, '')
   } finally {
     loading.value = false
   }

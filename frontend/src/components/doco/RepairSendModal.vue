@@ -244,6 +244,7 @@
 </template>
 
 <script setup>
+import { errorText } from '@/utils/errorText'
 import { ref, reactive, computed, watch } from 'vue'
 import {
   Dialog,
@@ -456,9 +457,7 @@ async function send() {
     loadThread()
     reloadQueue()
   } catch (e) {
-    toast.error(
-      e?.messages?.join('\n') || e?.message || __('No se pudo enviar.'),
-    )
+    toast.error(errorText(e, __('No se pudo enviar.'), '\n'))
   } finally {
     sending.value = false
   }

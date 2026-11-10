@@ -243,7 +243,7 @@ async function save() {
     emit('saved', result)
     emit('update:open', false)
   } catch (e) {
-    error.value = e?.message || String(e)
+    error.value = errorText(e)
   } finally {
     busy.value = false
   }

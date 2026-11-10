@@ -340,6 +340,7 @@
 </template>
 
 <script setup>
+import { errorText } from '@/utils/errorText'
 import { formatMoney, requestId } from '@/utils/contactos'
 import { posSaleHref } from '@/utils/posHandoff'
 import SectionAvailability from '@/components/doco/contact/SectionAvailability.vue'
@@ -432,10 +433,10 @@ async function run(row, fn, done) {
     await resource.reload()
   } catch (e) {
     // The server's own reason, verbatim: it names what to do next.
-    error[row.customer] =
-      e?.messages?.[0] ||
-      e?.message ||
-      __('That did not go through. Try again.')
+    error[row.customer] = errorText(
+      e,
+      __('That did not go through. Try again.'),
+    )
   } finally {
     busy.value = false
   }
@@ -483,7 +484,10 @@ async function openSetup(row) {
     })
     setup.value = { ...out, expense_account: out.expense_accounts?.[0] || '' }
   } catch (e) {
-    error[row.customer] = e?.messages?.[0] || e?.message
+    error[row.customer] = errorText(
+      e,
+      __('That did not go through. Try again.'),
+    )
   }
 }
 function createProgram(row) {

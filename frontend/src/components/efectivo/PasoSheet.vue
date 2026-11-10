@@ -158,7 +158,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import { Button } from 'frappe-ui'
 import { BottomSheet } from '@/components/ui'
 import BagItems from './BagItems.vue'
-import { money } from './efectivo'
+import { errorText, money } from './efectivo'
 
 const props = defineProps({
   open: { type: Boolean, default: false },
@@ -242,7 +242,7 @@ async function confirm() {
     emit('done', result)
     emit('update:open', false)
   } catch (e) {
-    error.value = e?.message || String(e)
+    error.value = errorText(e)
   } finally {
     busy.value = false
     for (const field of props.fields)

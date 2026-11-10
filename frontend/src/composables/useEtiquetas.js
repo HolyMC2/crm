@@ -1,3 +1,4 @@
+import { errorText } from '@/utils/errorText'
 import { comprasApi, outcomeUnknown, requestId } from '@/composables/useCompras'
 import { formatMoney, relativeTime } from '@/utils/display'
 import { SOURCE_DOCTYPES } from './etiquetasLink'
@@ -28,7 +29,7 @@ export function etiquetasApi(method, args = {}) {
 export function problemText(error) {
   if (outcomeUnknown(error))
     return 'Sin conexión. Revisa la red y vuelve a intentar.'
-  const text = (error?.messages || []).join(' ') || error?.message || ''
+  const text = errorText(error)
   return text || 'Algo falló. Vuelve a intentar.'
 }
 

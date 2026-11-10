@@ -1,3 +1,4 @@
+import { errorText } from '@/utils/errorText'
 import { callError, errorKind, requestId } from '@/utils/contactos'
 import { sourceSlugs } from '@/utils/shellRoutes'
 export { legacyTasksRoute } from '@/composables/usePendientesRoutes'
@@ -561,11 +562,7 @@ export async function pendientesApi(method, args = {}) {
 /** A specific reason plus the recovery the screen should offer. */
 export function pendienteError(error) {
   const kind = errorKind(error) || (navigator.onLine === false ? 'network' : '')
-  const detail = String(
-    error?.messages?.join?.(' ') || error?.message || error || '',
-  )
-    .replace(/<[^>]*>/g, ' ')
-    .trim()
+  const detail = errorText(error)
   if (kind === 'conflict')
     return {
       kind,

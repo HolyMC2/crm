@@ -81,6 +81,7 @@
   </main>
 </template>
 <script setup>
+import { errorText } from '@/utils/errorText'
 import { onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { call } from 'frappe-ui'
@@ -110,10 +111,10 @@ async function load() {
     context.value = result
   } catch (e) {
     if (stamp === epoch)
-      error.value =
-        e?.messages?.[0] ||
-        e?.message ||
-        __('The automation service is unavailable. Try again.')
+      error.value = errorText(
+        e,
+        __('The automation service is unavailable. Try again.'),
+      )
   } finally {
     if (stamp === epoch) loading.value = false
   }
