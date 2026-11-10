@@ -2,8 +2,9 @@
   <!-- The workspace's left column (Marco 2026-11-05: «leftside sessions/
        threads», as in Claude and T3 Code): a new conversation, search, the
        agenda, «Abierto» and the Lienzo, then the live conversation and the
-       earlier ones, pinned first, one line each (the date shows on hover). The
-       same store and gates
+       earlier ones, pinned first, two lines each (the title, then when and how
+       long), with room between rows (Marco 2026-11-10: «too dense»). The same
+       store and gates
        as «Conversaciones» (assistantSessions); a row's pin, archive and «⋯»
        show on hover or focus, and «⋯» unfolds the rest under it (resolve,
        snooze, rename, a new title, unread, copy, continue). -->
@@ -107,7 +108,7 @@
     </div>
 
     <div
-      class="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-2 pb-3 pt-2"
+      class="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-2 pb-3 pt-2"
     >
       <ul v-if="sessions.results" class="space-y-0.5">
         <li
@@ -142,7 +143,7 @@
         <button
           v-if="!sessions.showArchived"
           type="button"
-          class="flex min-h-9 w-full items-center gap-2 rounded-6 px-2.5 text-left text-sm"
+          class="flex min-h-11 w-full items-center gap-2 rounded-6 px-3 py-2 text-left text-sm"
           :class="
             sessions.view === 'transcript'
               ? 'text-ink-gray-8 hover:bg-surface-gray-3'
@@ -174,11 +175,18 @@
         >
           {{ __('No archived conversations.') }}
         </p>
+        <p
+          v-if="sessions.showArchived && sessions.archiveDays"
+          class="px-3 text-sm text-ink-gray-6"
+          data-testid="assistant-sidebar-archive-rule"
+        >
+          {{ archiveRuleText(sessions.archiveDays) }}
+        </p>
         <section v-for="group in groups" :key="group.key">
-          <h3 class="px-2.5 pb-1 text-xs font-medium text-ink-gray-5">
+          <h3 class="px-3 pb-1.5 text-xs font-medium text-ink-gray-5">
             {{ group.label }}
           </h3>
-          <ul class="space-y-0.5">
+          <ul class="space-y-1">
             <li
               v-for="row in group.rows"
               :key="row.id"
@@ -215,9 +223,9 @@
                 <template v-else>
                   <button
                     type="button"
-                    class="block min-h-9 min-w-0 flex-1 px-2.5 py-1.5 text-left"
+                    class="block min-h-14 min-w-0 flex-1 px-3 py-2.5 text-left"
                     :aria-current="openId === row.id ? 'true' : undefined"
-                    :title="`${row.title}\n${stamp(row)}`"
+                    :title="row.title"
                     @click="openConversation(row.id)"
                   >
                     <span class="flex items-center gap-1.5">
@@ -234,7 +242,7 @@
                         data-mark="settled"
                       />
                       <span
-                        class="block min-w-0 truncate text-sm"
+                        class="block min-w-0 truncate text-sm leading-5"
                         :class="
                           row.unread
                             ? 'font-semibold text-ink-gray-9'
@@ -245,6 +253,11 @@
                         >{{ row.title }}</span
                       >
                     </span>
+                    <span
+                      class="mt-0.5 block truncate text-xs text-ink-gray-5"
+                      data-testid="assistant-sidebar-stamp"
+                      >{{ stamp(row) }}</span
+                    >
                   </button>
                   <!-- the row's island: shown on hover or keyboard focus -->
                   <div
@@ -317,7 +330,7 @@
         <h3 class="px-2.5 pb-1 text-xs font-medium text-ink-gray-5">
           {{ __('Snoozed') }}
         </h3>
-        <ul class="space-y-0.5">
+        <ul class="space-y-1">
           <li
             v-for="row in sessions.snoozed"
             :key="row.id"
@@ -326,14 +339,14 @@
           >
             <button
               type="button"
-              class="block min-h-9 min-w-0 flex-1 px-2.5 py-1.5 text-left"
+              class="block min-h-14 min-w-0 flex-1 px-3 py-2.5 text-left"
               :title="row.title"
               @click="openConversation(row.id)"
             >
               <span class="block truncate text-sm text-ink-gray-7">{{
                 row.title
               }}</span>
-              <span class="block truncate text-xs text-ink-gray-5">{{
+              <span class="mt-0.5 block truncate text-xs text-ink-gray-5">{{
                 __('Back {0}', [formatDateTime(row.snoozed_until)])
               }}</span>
             </button>
@@ -400,6 +413,7 @@ import {
   snoozeConversation,
   toggleArchived,
 } from './assistantSessions'
+import { archiveRuleText } from './assistantArchive'
 
 const due = computed(() => dueCount(agenda.items))
 const agendaLabel = computed(() =>

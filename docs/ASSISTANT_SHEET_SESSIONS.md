@@ -54,7 +54,7 @@ integration with its workspace for html graphs and stuff, autocomplete on / cmds
    The views that have a column there (`list`, `open`, `agenda`) open it and keep the chat.
    Minimize goes back to the dock, Esc closes. A phone keeps the sheet.
 8. **Managing conversations** (same lane, Marco 2026-11-05 with T3 Code's thread menu). A row's
-   «⋯» (workspace sidebar on hover beside pin and archive; the dock and phone list beside them)
+   «⋯» (workspace sidebar and a desktop list on hover beside pin and archive; a phone row shows only «⋯»)
    unfolds `AssistantConversationActions` in place under the row: Fijar, Marcar como resuelta /
    Reabrir, Posponer… (en 1 hora, en 3 horas, mañana 9:00, el lunes 9:00; the server computes the
    time in site time), Renombrar, Regenerar título (doco's cheap model over the person's own
@@ -63,6 +63,15 @@ integration with its workspace for html graphs and stuff, autocomplete on / cmds
    revisar (unread, with a dot), Hoy, Esta semana, Antes and Resueltas at the foot; snoozed ones
    wait under «Pospuestas» with «Volver a la lista ya» and come back unread when due. Opening a
    conversation reads it. Nothing is deleted: there is no «Borrar».
+9. **Room, and old conversations archive themselves** (lanes `asistente-archivo` crm + doco, Marco
+   2026-11-10: «auto-archive for old sessions … the leftside session menu is too dense»). Every row
+   has two lines (the title, then when and how many messages) and space between rows, in the
+   workspace sidebar, the dock and phone list, and the Desk panel's drawer. A conversation with no
+   activity for 7 days (no new message, no restore, rename or pin since it ended) moves to
+   «Archivadas» the next time the list is read (doco `conversations._archive_idle`); pinned and
+   snoozed ones stay and nothing is deleted. «Archivadas» says the rule and that «Restaurar» brings
+   one back, and a restore keeps it out for another 7 days. The days come back with the list
+   (`archive_days`); site config `assistant_archive_days` changes them, 0 turns it off.
 
 ## Contract
 

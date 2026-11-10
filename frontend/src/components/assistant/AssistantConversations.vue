@@ -2,8 +2,10 @@
   <!-- Earlier conversations: the Desk bubble's sidebar in the sheet. One is
        read-only once closed; «Continue this conversation» starts a new one
        seeded with its questions (doco conversations.continue_from). A row's
-       «⋯» unfolds the rest in place: resolve, snooze, rename, a new title,
-       unread, copy, continue, archive. -->
+       «⋯» unfolds the rest in place: pin, resolve, snooze, rename, a new title,
+       unread, copy, continue, archive. On a phone the row keeps only «⋯», so the
+       title has the width (Marco 2026-11-10: «too dense»); a desktop also shows
+       pin and archive on hover. -->
   <div
     class="space-y-3 py-2"
     :class="
@@ -189,11 +191,18 @@
                 )
           }}
         </p>
+        <p
+          v-if="sessions.showArchived && sessions.archiveDays"
+          class="text-sm text-ink-gray-6"
+          data-testid="assistant-archive-rule"
+        >
+          {{ archiveRuleText(sessions.archiveDays) }}
+        </p>
         <section v-for="group in groups" :key="group.key">
-          <h3 class="mb-1 text-xs font-medium text-ink-gray-6">
+          <h3 class="mb-1.5 text-xs font-medium text-ink-gray-6">
             {{ group.label }}
           </h3>
-          <ul class="-mx-2">
+          <ul class="-mx-2 space-y-1">
             <li
               v-for="row in group.rows"
               :key="row.id"
@@ -225,7 +234,7 @@
                 <button
                   v-else
                   type="button"
-                  class="block min-h-11 min-w-0 flex-1 rounded-6 px-2 py-2 text-left"
+                  class="block min-h-14 min-w-0 flex-1 rounded-6 px-3 py-2.5 text-left"
                   @click="openConversation(row.id)"
                 >
                   <span class="flex items-center gap-1.5">
@@ -253,13 +262,13 @@
                       >{{ row.title }}</span
                     >
                   </span>
-                  <span class="block truncate text-xs text-ink-gray-6">{{
+                  <span class="mt-0.5 block truncate text-xs text-ink-gray-6">{{
                     stamp(row)
                   }}</span>
                 </button>
                 <button
                   type="button"
-                  class="flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-6 hover:bg-surface-gray-3 sm:size-8 sm:opacity-0 sm:focus-visible:opacity-100 sm:group-focus-within:opacity-100 sm:group-hover:opacity-100"
+                  class="hidden size-8 flex-none items-center justify-center rounded-full text-ink-gray-6 opacity-0 hover:bg-surface-gray-3 focus-visible:opacity-100 group-focus-within:opacity-100 group-hover:opacity-100 sm:flex"
                   :aria-label="row.pinned ? __('Unpin') : __('Pin')"
                   :title="row.pinned ? __('Unpin') : __('Pin')"
                   @click="pinConversation(row.id, !row.pinned)"
@@ -272,7 +281,7 @@
                 </button>
                 <button
                   type="button"
-                  class="flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-6 hover:bg-surface-gray-3 sm:size-8 sm:opacity-0 sm:focus-visible:opacity-100 sm:group-focus-within:opacity-100 sm:group-hover:opacity-100"
+                  class="hidden size-8 flex-none items-center justify-center rounded-full text-ink-gray-6 opacity-0 hover:bg-surface-gray-3 focus-visible:opacity-100 group-focus-within:opacity-100 group-hover:opacity-100 sm:flex"
                   :aria-label="row.archived ? __('Restore') : __('Archive')"
                   :title="row.archived ? __('Restore') : __('Archive')"
                   @click="archiveConversation(row.id, !row.archived)"
@@ -397,6 +406,7 @@ import {
   toggleArchived,
 } from './assistantSessions'
 import { agenda, dueCount } from './assistantAgenda'
+import { archiveRuleText } from './assistantArchive'
 
 defineProps({ docked: { type: Boolean, default: false } })
 defineEmits(['navigate'])

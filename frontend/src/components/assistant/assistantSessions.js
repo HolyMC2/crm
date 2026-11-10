@@ -45,6 +45,8 @@ export const sessions = reactive({
   list: [],
   current: null,
   archivedCount: 0,
+  /** Days without activity before a conversation archives itself; 0 = never. */
+  archiveDays: 0,
   /** Snoozed conversations: out of the list until they wake, soonest first. */
   snoozed: [],
   showArchived: false,
@@ -210,6 +212,7 @@ export async function loadConversations() {
   sessions.current = out.current || null
   sessions.list = out.conversations || []
   sessions.archivedCount = out.archived || 0
+  sessions.archiveDays = out.archive_days || 0
   sessions.snoozed = out.snoozed || []
 }
 
@@ -428,6 +431,7 @@ export function _resetSessions() {
     list: [],
     current: null,
     archivedCount: 0,
+    archiveDays: 0,
     snoozed: [],
     showArchived: false,
     available: true,

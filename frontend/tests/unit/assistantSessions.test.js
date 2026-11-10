@@ -37,6 +37,7 @@ import {
 import AssistantHeader from '@/components/assistant/AssistantHeader.vue'
 import AssistantOpenWork from '@/components/assistant/AssistantOpenWork.vue'
 import AssistantConversations from '@/components/assistant/AssistantConversations.vue'
+import AssistantSidebar from '@/components/assistant/AssistantSidebar.vue'
 
 const API = 'doco.docoutils.assistant.shell_api'
 
@@ -366,6 +367,52 @@ describe('earlier conversations', () => {
     })
     // each change reloads the list (once on open, then after each of the three)
     expect(calls(`${API}.conversations`)).toHaveLength(4)
+  })
+})
+
+describe('conversations that archive themselves', () => {
+  const listing = (archived) => () => ({
+    available: true,
+    current: { title: 'Hoy', messages: 2 },
+    conversations: [
+      {
+        id: 'CONV-7',
+        title: 'Compras FixCell',
+        ended_at: '2026-10-20 10:00:00',
+        messages: 4,
+        pinned: false,
+        archived,
+      },
+    ],
+    archived: 1,
+    archive_days: 7,
+  })
+
+  it('says in «Archivadas» why a conversation is there and how to bring it back', async () => {
+    answers[`${API}.conversations`] = listing(true)
+    const { el } = await mount(AssistantConversations)
+    await showView('list')
+    await flush()
+    expect(
+      el.querySelector('[data-testid="assistant-archive-rule"]'),
+    ).toBeNull()
+    el.querySelector('[data-testid="assistant-archived"]').click()
+    await flush()
+    expect(sessions.archiveDays).toBe(7)
+    expect(
+      el.querySelector('[data-testid="assistant-archive-rule"]').textContent,
+    ).toContain('no activity for 7 days')
+  })
+
+  it('gives every sidebar row its title and, under it, when and how long', async () => {
+    answers[`${API}.conversations`] = listing(false)
+    const { el } = await mount(AssistantSidebar)
+    await flush()
+    const row = el.querySelector('[data-conversation="CONV-7"]')
+    expect(row.textContent).toContain('Compras FixCell')
+    expect(
+      row.querySelector('[data-testid="assistant-sidebar-stamp"]').textContent,
+    ).toContain('4 messages')
   })
 })
 
