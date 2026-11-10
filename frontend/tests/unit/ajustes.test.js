@@ -3,8 +3,33 @@
 import { describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick, reactive } from 'vue'
 
-const mocks = vi.hoisted(() => ({ call: vi.fn() }))
+const mocks = vi.hoisted(() => ({ call: vi.fn(), created: null }))
 vi.mock('frappe-ui', () => ({ call: mocks.call }))
+// Contactos' «Nuevo contacto»: shows what it was opened with and saves on a tap.
+vi.mock('@/components/contactos/IdentityEditor.vue', async () => {
+  const { h: render } = await import('vue')
+  return {
+    __esModule: true,
+    default: {
+      props: ['modelValue', 'defaults'],
+      emits: ['saved', 'update:modelValue'],
+      setup(props, { emit }) {
+        return () =>
+          render(
+            'button',
+            {
+              'data-identity-editor': JSON.stringify(props.defaults),
+              onClick: () => {
+                emit('saved', mocks.created)
+                emit('update:modelValue', false)
+              },
+            },
+            'Revisar y crear',
+          )
+      },
+    },
+  }
+})
 
 import {
   RECORD_FIELDS,
@@ -12,11 +37,13 @@ import {
   askPrompts,
   controlKind,
   createPending,
+  createdLink,
   currentValue,
   doctypeFromSlug,
   filterSections,
   fold,
   loadGuide,
+  partyOfLink,
   pendingDisplay,
   saveChanges,
 } from '@/components/ajustes/ajustes'
@@ -353,5 +380,116 @@ describe('a link value', () => {
     expect(el.querySelector('input').value).toBe('Caja')
     expect(mocks.call).not.toHaveBeenCalled()
     app.unmount()
+  })
+})
+
+describe('a link list on the phone', () => {
+  const settle = async () => {
+    for (let i = 0; i < 4; i++) {
+      await new Promise((resolve) => setTimeout(resolve))
+      await nextTick()
+    }
+  }
+  function mountLink(doctype, onPick = () => {}) {
+    mocks.call.mockReset()
+    mocks.call.mockImplementation((method) =>
+      Promise.resolve(
+        method === 'frappe.desk.search.search_link'
+          ? [{ value: 'Abigail Henandez', description: 'Reparaciones' }]
+          : '',
+      ),
+    )
+    const el = document.createElement('div')
+    document.body.appendChild(el)
+    const value = { current: '' }
+    const app = createApp({
+      render: () =>
+        h(AjustesLink, {
+          modelValue: value.current,
+          doctype,
+          'onUpdate:modelValue': (next) => {
+            value.current = next
+            onPick(next)
+          },
+        }),
+    })
+    app.config.globalProperties.__ = globalThis.__
+    app.mount(el)
+    const type = async (text) => {
+      const input = el.querySelector('input')
+      input.value = text
+      input.dispatchEvent(new Event('input'))
+      await new Promise((resolve) => setTimeout(resolve, 250))
+      await settle()
+    }
+    return { el, app, type, value }
+  }
+
+  it('closes on a tap outside and shows the value again', async () => {
+    const outside = document.createElement('p')
+    document.body.appendChild(outside)
+    const { el, app, type } = mountLink('Customer')
+    await type('Abi')
+    expect(el.querySelector('[role="listbox"]')).not.toBe(null)
+    el.querySelector('[role="option"]').dispatchEvent(
+      new Event('pointerdown', { bubbles: true }),
+    )
+    expect(el.querySelector('[role="listbox"]')).not.toBe(null)
+    outside.dispatchEvent(new Event('pointerdown', { bubbles: true }))
+    await nextTick()
+    expect(el.querySelector('[role="listbox"]')).toBe(null)
+    expect(el.querySelector('input').value).toBe('')
+    app.unmount()
+    outside.remove()
+  })
+
+  it('creates a customer from what was typed and picks it', async () => {
+    mocks.created = {
+      touched_refs: [
+        { doctype: 'Contact', name: 'Ana Ruiz' },
+        { doctype: 'Customer', name: 'Ana Ruiz' },
+      ],
+    }
+    const picked = []
+    const { el, app, type } = mountLink('Customer', (v) => picked.push(v))
+    await type('Ana Ruiz')
+    const create = el.querySelector('[data-ajustes-link-create]')
+    expect(create.textContent.trim()).toBe('Crear cliente «Ana Ruiz»')
+    create.click()
+    await settle()
+    expect(el.querySelector('[role="listbox"]')).toBe(null)
+    const editor = el.querySelector('[data-identity-editor]')
+    expect(JSON.parse(editor.dataset.identityEditor)).toMatchObject({
+      source: 'contact',
+      fields: { first_name: 'Ana Ruiz' },
+      party_source: 'customer',
+      party_fields: { customer_name: 'Ana Ruiz' },
+    })
+    editor.click()
+    await settle()
+    expect(picked).toEqual(['Ana Ruiz'])
+    app.unmount()
+  })
+
+  it('offers no create for a link it cannot make in place', async () => {
+    const { el, app, type } = mountLink('UOM')
+    await type('ca')
+    expect(el.querySelector('[data-ajustes-link-create]')).toBe(null)
+    app.unmount()
+  })
+
+  it("reads the new record out of Contactos' answer", () => {
+    expect(partyOfLink('Customer')).toBe('customer')
+    expect(partyOfLink('Supplier')).toBe('supplier')
+    expect(partyOfLink('Lead')).toBe('')
+    expect(
+      createdLink(
+        { touched_refs: [{ doctype: 'Contact', name: 'C-1' }] },
+        'Customer',
+      ),
+    ).toBe('')
+    expect(createdLink({ doctype: 'Customer', name: 'Ana' }, 'Customer')).toBe(
+      'Ana',
+    )
   })
 })

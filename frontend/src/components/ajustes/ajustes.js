@@ -275,6 +275,25 @@ export function loadLinkTitle(doctype, value) {
 }
 
 /** How a pending value reads in the row before it is saved. */
+// Link targets a worker can create in place, through Contactos' «Nuevo
+// contacto»: a person with that role.
+const CREATABLE = { Customer: 'customer', Supplier: 'supplier' }
+export function partyOfLink(doctype) {
+  return CREATABLE[doctype] || ''
+}
+
+/** The record of `doctype` Contactos' create answered with, if it made one. */
+export function createdLink(result, doctype) {
+  const refs = [
+    ...(result?.touched_refs || []),
+    ...(result?.refs || []),
+    ...(result?.doctype
+      ? [{ doctype: result.doctype, name: result.name }]
+      : []),
+  ]
+  return refs.find((ref) => ref?.doctype === doctype && ref.name)?.name || ''
+}
+
 export function pendingDisplay(field, value) {
   if (field.fieldtype === 'Check') return value ? 'Sí' : 'No'
   if (value === null || value === undefined || value === '')

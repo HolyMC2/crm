@@ -1,6 +1,8 @@
 <template>
-  <!-- A Link value: type to search the linked records, pick one. -->
-  <div data-ajustes-link>
+  <!-- A Link value: type to search the linked records, pick one. A tap
+       outside or a Tab away closes the list; a customer or supplier that is
+       not there yet is created in place («Crear cliente …»). -->
+  <div ref="root" data-ajustes-link @focusout="focusLeft">
     <input
       :id="id"
       ref="input"
@@ -57,6 +59,25 @@
         {{ __('No encontré nada con ese texto.') }}
       </p>
     </div>
+    <button
+      v-if="expanded && creatable"
+      type="button"
+      class="press mt-1 flex min-h-11 w-full items-center gap-2 rounded-6 px-3 text-left text-base font-medium text-ink-gray-8 hover:bg-surface-gray-2"
+      data-ajustes-link-create
+      @click="startCreate"
+    >
+      <span class="lucide-plus size-4 shrink-0" aria-hidden="true" />
+      <span class="min-w-0 break-words">{{ createLabel }}</span>
+    </button>
+    <IdentityEditor
+      v-if="creating"
+      v-model="creating"
+      :defaults="createDefaults"
+      @saved="created"
+    />
+    <p v-if="createNote" role="status" class="mt-1 text-sm text-ink-gray-7">
+      {{ createNote }}
+    </p>
     <p v-if="error" role="alert" class="mt-1 text-sm text-ink-red-7">
       {{ __('No pude cargar las opciones.') }}
     </p>
@@ -72,8 +93,28 @@
 </template>
 <script setup>
 import { call } from 'frappe-ui'
-import { onBeforeUnmount, ref, useId, watch } from 'vue'
-import { UOM_ES, fold, linkLabel, loadLinkTitle } from './ajustes'
+import {
+  computed,
+  defineAsyncComponent,
+  onBeforeUnmount,
+  ref,
+  useId,
+  watch,
+} from 'vue'
+import { identityPrefill } from '@/utils/contactos'
+import {
+  UOM_ES,
+  createdLink,
+  fold,
+  linkLabel,
+  loadLinkTitle,
+  partyOfLink,
+} from './ajustes'
+
+// Contactos' «Nuevo contacto», on the first «Crear cliente» only.
+const IdentityEditor = defineAsyncComponent(
+  () => import('@/components/contactos/IdentityEditor.vue'),
+)
 
 const props = defineProps({
   modelValue: { type: String, default: '' },
@@ -91,8 +132,27 @@ const loading = ref(false)
 const error = ref(null)
 const active = ref(-1)
 const listId = `ajustes-link-${useId()}`
+const root = ref(null)
+const creating = ref(false)
+const createDefaults = ref({})
+const createNote = ref('')
 let timer = 0
 let generation = 0
+
+// What the worker typed, when it is a search rather than the current value.
+const typed = computed(() =>
+  query.value.trim() && query.value !== shown.value ? query.value.trim() : '',
+)
+const party = computed(() => partyOfLink(props.doctype))
+const creatable = computed(() => Boolean(party.value))
+const createLabel = computed(() => {
+  const name = typed.value
+  if (party.value === 'supplier')
+    return name
+      ? __('Crear proveedor «{0}»', [name])
+      : __('Crear proveedor nuevo')
+  return name ? __('Crear cliente «{0}»', [name]) : __('Crear cliente nuevo')
+})
 
 // What the box shows for the current value: its title once doco answers.
 const shown = ref('')
@@ -111,8 +171,59 @@ watch(
   { immediate: true },
 )
 
+// The list closes on a tap anywhere else, and the box shows the value again.
+function closeList() {
+  if (!expanded.value) return
+  clearTimeout(timer)
+  generation++
+  loading.value = false
+  expanded.value = false
+  query.value = shown.value
+}
+function outside(event) {
+  if (root.value && !root.value.contains(event.target)) closeList()
+}
+// A Tab to another control; a tap on a row keeps focus here or has none.
+function focusLeft(event) {
+  const next = event.relatedTarget
+  if (next && root.value && !root.value.contains(next)) closeList()
+}
+watch(expanded, (open) => {
+  if (open) document.addEventListener('pointerdown', outside, true)
+  else document.removeEventListener('pointerdown', outside, true)
+})
+
+function startCreate() {
+  createDefaults.value = {
+    ...identityPrefill({ first_name: typed.value, party: party.value }),
+    // Its own draft, apart from a «Nuevo contacto» half-written in Contactos.
+    draft_key: `link:${party.value}:${typed.value}`,
+  }
+  createNote.value = ''
+  closeList()
+  creating.value = true
+}
+// The new customer is the field's value; a contact used instead of a new one
+// that has no such role yet says so, and the field keeps its value.
+function created(result) {
+  const name = createdLink(result, props.doctype)
+  if (name) {
+    emit('update:modelValue', name)
+    return
+  }
+  createNote.value =
+    party.value === 'supplier'
+      ? __(
+          'El contacto se guardó, pero no es proveedor. Búscalo aquí cuando tenga ese rol.',
+        )
+      : __(
+          'El contacto se guardó, pero no es cliente. Búscalo aquí cuando tenga ese rol.',
+        )
+}
+
 function changeQuery(value) {
   query.value = value
+  createNote.value = ''
   expanded.value = true
   clearTimeout(timer)
   generation++
@@ -158,7 +269,7 @@ function choose(option) {
 function keyDown(event) {
   if (event.key === 'Escape' && expanded.value) {
     event.stopPropagation()
-    expanded.value = false
+    closeList()
   } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
     event.preventDefault()
     const step = event.key === 'ArrowDown' ? 1 : -1
@@ -177,5 +288,6 @@ function plain(value) {
 onBeforeUnmount(() => {
   clearTimeout(timer)
   generation++
+  document.removeEventListener('pointerdown', outside, true)
 })
 </script>
