@@ -95,7 +95,7 @@
             <a
               v-else-if="next?.href"
               :href="next.href"
-              class="press flex min-h-11 w-full items-center justify-center rounded-6 bg-surface-gray-9 px-4 text-base font-medium text-ink-white"
+              class="press flex min-h-11 w-full items-center justify-center rounded-6 bg-surface-gray-9 px-4 text-base font-medium text-ink-base"
               data-efectivo-next
               >{{ next.label }}</a
             >

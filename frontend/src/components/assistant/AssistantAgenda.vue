@@ -142,7 +142,7 @@
                 <span class="sr-only">{{ __('Pick a time') }}</span>
                 <input
                   type="datetime-local"
-                  class="min-h-11 rounded-6 border border-outline-gray-2 bg-surface-white px-2 text-base text-ink-gray-9"
+                  class="min-h-11 rounded-6 border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9"
                   :min="minPick"
                   data-testid="encargo-pick-time"
                   @change="

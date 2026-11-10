@@ -75,7 +75,7 @@
               :disabled="!!editing.name"
               required
               :placeholder="__('Weekly repairs bonus')"
-              class="h-11 w-full min-w-0 rounded-4 border border-outline-gray-2 bg-surface-white px-2 text-base text-ink-gray-9 sm:h-9 sm:text-sm"
+              class="h-11 w-full min-w-0 rounded-4 border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9 sm:h-9 sm:text-sm"
               data-testid="bono-name"
             />
           </label>
@@ -423,7 +423,7 @@
               class="press min-h-11 min-w-11 shrink-0 rounded-4 px-2"
               :class="
                 confirmDelete === rule.name
-                  ? 'bg-surface-red-5 text-ink-white'
+                  ? 'bg-surface-red-5 text-white'
                   : 'text-ink-gray-6'
               "
               :aria-label="
@@ -487,7 +487,7 @@ import LucidePlus from '~icons/lucide/plus'
 import LucideTrash2 from '~icons/lucide/trash-2'
 
 const field =
-  'h-11 w-full min-w-0 rounded-4 border border-outline-gray-2 bg-surface-white px-2 text-base text-ink-gray-9 sm:h-9 sm:text-sm'
+  'h-11 w-full min-w-0 rounded-4 border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9 sm:h-9 sm:text-sm'
 const route = useRoute()
 const router = useRouter()
 const data = ref(null)

@@ -37,7 +37,7 @@
         class="pd-ring flex h-5 w-5 items-center justify-center rounded-full border-2"
         :class="
           checked
-            ? 'border-transparent bg-surface-gray-9 text-ink-white'
+            ? 'border-transparent bg-surface-gray-9 text-ink-base'
             : 'border-outline-gray-4 [@media(hover:hover)]:group-hover:border-outline-gray-5'
         "
       >
@@ -171,7 +171,7 @@
                 class="flex size-4 shrink-0 items-center justify-center rounded-full border-2"
                 :class="
                   step.checked
-                    ? 'border-transparent bg-surface-gray-7 text-ink-white'
+                    ? 'border-transparent bg-surface-gray-7 text-ink-base'
                     : 'border-outline-gray-4'
                 "
               >

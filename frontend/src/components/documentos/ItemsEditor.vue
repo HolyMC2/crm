@@ -111,7 +111,7 @@
       </p>
       <ul
         v-if="results.length"
-        class="mt-1 overflow-hidden rounded-7 border border-outline-gray-2 bg-surface-modal shadow"
+        class="mt-1 overflow-hidden rounded-7 border border-outline-gray-2 bg-surface-elevation-2 shadow"
       >
         <li v-for="r in results" :key="r.value">
           <ListRow
