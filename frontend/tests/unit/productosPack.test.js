@@ -1,6 +1,5 @@
-// «Armar pack» and the photo gallery with a mocked transport: the pack takes
-// the list's codes from doco and asks Mercado for the message; the gallery
-// shows the main photo first and offers only what the worker may do.
+// «Armar pack» with a mocked transport: the pack takes the list's codes from
+// doco and asks Mercado for the message. (The photo gallery: productoFotos.)
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick, ref } from 'vue'
 
@@ -10,7 +9,6 @@ vi.mock('frappe-ui', async (importOriginal) => ({
 }))
 
 import PackDialog from '@/components/productos/PackDialog.vue'
-import PhotoGallery from '@/components/productos/PhotoGallery.vue'
 import LabelDialog from '@/components/productos/LabelDialog.vue'
 
 const calls = []
@@ -99,36 +97,6 @@ describe('Productos › Armar pack', () => {
       { item_codes: '["IPN1","IPN2"]', filter_label: 'funda · Fundas' },
     ])
     expect(document.querySelector('textarea').value).toBe('Pack IPN1,IPN2')
-  })
-})
-
-describe('Productos › fotos', () => {
-  it('shows the main photo first and only the actions the worker has', async () => {
-    answers = {
-      'doco.workspaces.product_media.photos': () => ({
-        item: 'IPN1',
-        rows: [
-          { file_url: '/files/a.png', principal: true },
-          { file_url: '/files/b.png', principal: false },
-        ],
-        can_manage: false,
-        can_turn: true,
-        can_share: true,
-        reason: 'Ask whoever keeps the catalogue.',
-      }),
-    }
-    mount(PhotoGallery, () => ({ item: 'IPN1' }))
-    await flush()
-    const text = root.textContent
-    expect(
-      [...root.querySelectorAll('img')].map((i) => i.getAttribute('src')),
-    ).toEqual(['/files/a.png', '/files/b.png'])
-    expect(text).toContain('Main')
-    expect(text).toContain('Ask whoever keeps the catalogue.')
-    expect(text).not.toContain('Make main')
-    expect(text).not.toContain('Add photo')
-    expect(root.querySelectorAll('[aria-label="Turn right"]')).toHaveLength(2)
-    expect(root.querySelector('[aria-label="Delete photo"]')).toBeNull()
   })
 })
 

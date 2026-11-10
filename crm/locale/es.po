@@ -38010,3 +38010,168 @@ msgstr "Precios recientes"
 #: frontend/src/components/productos/PriceDialog.vue
 msgid "Valuation {0}"
 msgstr "Valuación {0}"
+#: frontend/src/components/ui
+msgid "Photos and videos"
+msgstr "Fotos y videos"
+
+#: frontend/src/components/ui
+msgid "Zoom in"
+msgstr "Acercar"
+
+#: frontend/src/components/ui
+msgid "Zoom out"
+msgstr "Alejar"
+
+#: frontend/src/components/ui
+msgid "Previous photo"
+msgstr "Foto anterior"
+
+#: frontend/src/components/ui
+msgid "Next photo"
+msgstr "Foto siguiente"
+
+#: frontend/src/components/ui
+msgid "Photo {0}"
+msgstr "Foto {0}"
+
+#: frontend/src/components/ui
+msgid "Video {0}"
+msgstr "Video {0}"
+
+#: frontend/src/components/ui
+msgid "Edit photo"
+msgstr "Editar foto"
+
+#: frontend/src/components/ui
+msgid "Opening the photo…"
+msgstr "Abriendo la foto…"
+
+#: frontend/src/components/ui
+msgid "Crop area"
+msgstr "Área del recorte"
+
+#: frontend/src/components/ui
+msgid "Crop shape"
+msgstr "Forma del recorte"
+
+#: frontend/src/components/ui
+msgid "Drag the corners to crop."
+msgstr "Arrastra las esquinas para recortar."
+
+#: frontend/src/components/ui
+msgid "Brightness"
+msgstr "Luz"
+
+#: frontend/src/components/ui
+msgid "Turn left"
+msgstr "Girar a la izquierda"
+
+#: frontend/src/components/ui
+msgid "Turn right"
+msgstr "Girar a la derecha"
+
+#: frontend/src/components/ui
+msgid "Mirror photo"
+msgstr "Voltear"
+
+#: frontend/src/components/ui
+msgid "Free crop"
+msgstr "Libre"
+
+#: frontend/src/components/ui
+msgid "Square crop"
+msgstr "Cuadrada"
+
+#: frontend/src/components/ui
+msgid "Save photo"
+msgstr "Guardar foto"
+
+#: frontend/src/components/ui
+msgid "This photo could not be opened for editing."
+msgstr "No se pudo abrir esta foto para editarla."
+
+#: frontend/src/pages/Productos.vue
+msgid "Take the photo of {0}"
+msgstr "Tomar la foto de {0}"
+
+#: frontend/src/pages/Productos.vue
+msgid "The photo of {0} was not saved."
+msgstr "La foto de {0} no se guardó."
+
+#: frontend/src/pages/Producto.vue
+msgid "See the photos"
+msgstr "Ver las fotos"
+
+#: frontend/src/components/archivos/ArchivoPreview.vue
+msgid "See the picture full screen"
+msgstr "Ver la foto en pantalla completa"
+
+#: frontend/src/components/productos/PhotoGallery.vue
+msgctxt "Productos"
+msgid "Uploading…"
+msgstr "Subiendo…"
+
+#: frontend/src/components/productos/PhotoGallery.vue
+msgctxt "Productos"
+msgid "It was not uploaded."
+msgstr "No se subió."
+
+#: frontend/src/components/productos/PhotoGallery.vue
+msgctxt "Productos"
+msgid "Remove"
+msgstr "Quitar"
+
+#: frontend/src/components/productos/PhotoGallery.vue
+msgctxt "Productos"
+msgid "Add photos or videos"
+msgstr "Agregar fotos o videos"
+
+#: frontend/src/components/productos/PhotoGallery.vue
+msgctxt "Productos"
+msgid "Choose from the gallery"
+msgstr "Elegir de la galería"
+
+#: frontend/src/components/productos/PhotoGallery.vue
+msgctxt "Productos"
+msgid "Or drop them here, or paste one you copied."
+msgstr "O suéltalas aquí, o pega una que copiaste."
+
+#: frontend/src/components/productos/PhotoGallery.vue
+msgctxt "Productos"
+msgid "Turn"
+msgstr "Girar"
+
+#: frontend/src/components/productos/PhotoGallery.vue
+msgctxt "Productos"
+msgid "Yes, delete"
+msgstr "Sí, borrar"
+
+#: frontend/src/components/productos/PhotoGallery.vue
+msgctxt "Productos"
+msgid "Open video {0}"
+msgstr "Abrir el video {0}"
+
+#: frontend/src/components/productos/PhotoGallery.vue
+msgctxt "Productos"
+msgid "Open photo {0}"
+msgstr "Abrir la foto {0}"
+
+#: frontend/src/composables/useProductPhotos.js
+msgctxt "Productos"
+msgid "Only photos and videos go here."
+msgstr "Aquí solo van fotos y videos."
+
+#: frontend/src/composables/useProductPhotos.js
+msgctxt "Productos"
+msgid "The video is over {0} MB. Trim it or record it at a lower quality."
+msgstr "El video pesa más de {0} MB. Recórtalo o grábalo en menor calidad."
+
+#: frontend/src/composables/useProductPhotos.js
+msgctxt "Productos"
+msgid "That photo was already on this product."
+msgstr "Esa foto ya estaba en este artículo."
+
+#: frontend/src/composables/useProductPhotos.js
+msgctxt "Productos"
+msgid "This photo could not be turned here. Try «Editar»."
+msgstr "No se pudo girar esta foto aquí. Prueba con «Editar»."

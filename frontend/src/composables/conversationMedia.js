@@ -4,9 +4,8 @@
 // record, so it needs no endpoint of its own.
 import { computed, watch } from 'vue'
 import { createResource, getCachedResource } from 'frappe-ui'
+import { mediaKind } from '@/components/ui/imageFiles'
 
-const IMAGE_EXT = /\.(jpe?g|png|gif|webp|heic|avif|bmp)$/i
-const VIDEO_EXT = /\.(mp4|mov|webm|3gp|m4v)$/i
 const URL_RE = /\bhttps?:\/\/[^\s<>"']+/gi
 
 function ext(name) {
@@ -85,8 +84,8 @@ export function splitConversationMedia(messages = [], files = []) {
     if (!f?.file_url || seen.has(f.file_url)) continue
     const name = f.file_name || fileName(f.file_url)
     const at = f.creation || f.modified || ''
-    if (IMAGE_EXT.test(name) || VIDEO_EXT.test(name)) {
-      const kind = VIDEO_EXT.test(name) ? 'video' : 'image'
+    const kind = mediaKind(name)
+    if (kind) {
       media.push({ key: f.name, url: f.file_url, kind, at })
     } else {
       docs.push({

@@ -13,7 +13,7 @@
     <span class="flex min-w-0 items-start gap-3">
       <ProductThumb
         class="h-14 w-14"
-        :image="row.image || ''"
+        :image="photoOf(row)"
         :title="row.title"
         :tone-key="row.item_group"
         :eager="eager"
@@ -57,7 +57,7 @@
   >
     <ProductThumb
       class="h-10 w-10"
-      :image="row.image || ''"
+      :image="photoOf(row)"
       :title="row.title"
       :tone-key="row.item_group"
       text-class="text-xs"
@@ -112,6 +112,7 @@ import { priceListLabel, priceListNote } from '@/utils/priceList'
 import {
   groupOf,
   money,
+  photoOf,
   stockBadge,
   variantsLabel,
 } from '@/composables/useProductos'

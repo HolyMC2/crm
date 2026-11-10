@@ -32,14 +32,14 @@
       </svg>
     </button>
     <div v-if="split.media.length" class="mt-1 grid grid-cols-4 gap-1.5">
-      <a
+      <button
         v-for="item in split.media.slice(0, 4)"
         :key="item.key"
-        :href="item.url"
-        target="_blank"
-        rel="noopener"
-        class="relative block aspect-square overflow-hidden rounded-8 bg-surface-gray-2"
+        type="button"
+        class="press relative block aspect-square overflow-hidden rounded-8 bg-surface-gray-2"
         :aria-label="item.kind === 'video' ? __('Video') : __('Foto')"
+        data-testid="conversation-media-open"
+        @click="view(item)"
       >
         <img
           v-if="item.kind === 'image'"
@@ -65,7 +65,7 @@
             <polygon points="6 3 20 12 6 21 6 3" />
           </svg>
         </span>
-      </a>
+      </button>
     </div>
   </section>
 
@@ -101,14 +101,14 @@
           {{ month.label }}
         </h3>
         <div v-if="tab === 'media'" class="grid grid-cols-3 gap-0.5">
-          <a
+          <button
             v-for="item in month.items"
             :key="item.key"
-            :href="item.url"
-            target="_blank"
-            rel="noopener"
-            class="relative block aspect-square bg-surface-gray-2"
+            type="button"
+            class="press relative block aspect-square bg-surface-gray-2"
             :aria-label="item.kind === 'video' ? __('Video') : __('Foto')"
+            data-testid="conversation-media-tile"
+            @click="view(item)"
           >
             <img
               v-if="item.kind === 'image'"
@@ -134,7 +134,7 @@
                 <polygon points="6 3 20 12 6 21 6 3" />
               </svg>
             </span>
-          </a>
+          </button>
         </div>
         <template v-else>
           <a
@@ -182,10 +182,19 @@
       </div>
     </template>
   </BottomSheet>
+
+  <!-- A photo or video opens here, and a swipe walks the conversation's. -->
+  <MediaViewer
+    v-if="viewerWanted"
+    v-model:open="viewerOpen"
+    v-model:index="viewerAt"
+    :items="split.media"
+    :title="__('Multimedia')"
+  />
 </template>
 
 <script setup>
-import { computed, ref, toRef } from 'vue'
+import { computed, defineAsyncComponent, ref, toRef } from 'vue'
 import BottomSheet from '@/components/ui/BottomSheet.vue'
 import Segmented from '@/components/ui/Segmented.vue'
 import { useConversationMedia } from '@/composables/conversationMedia'
@@ -204,6 +213,18 @@ const { split, loading } = useConversationMedia(
   toRef(props, 'name'),
 )
 const tab = ref('media')
+// The viewer is its own chunk: it loads on the first photo opened.
+const MediaViewer = defineAsyncComponent(
+  () => import('@/components/ui/MediaViewer.vue'),
+)
+const viewerWanted = ref(false)
+const viewerOpen = ref(false)
+const viewerAt = ref(0)
+function view(item) {
+  viewerAt.value = Math.max(0, split.value.media.indexOf(item))
+  viewerWanted.value = true
+  viewerOpen.value = true
+}
 const total = computed(
   () =>
     split.value.media.length +

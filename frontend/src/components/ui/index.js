@@ -1,8 +1,11 @@
-// Vendored from muelle/workspace/packages/ui@0.1.0 (8c16b232a287). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory.
+// Vendored from muelle/workspace/packages/ui@0.1.0 (7f554d4509b6). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory.
 // The Muelle shell's shared screen kit: the crm shell, Taller and Clínica
 // build their lists, records and sheets from it. Do and don't for each:
 // crm/docs/design/MOBILE_REFERENCES.md «Componentes»; live demo at /crm/_ui.
 // An app wires its translation, statuses and bell once with configureUi.
+// MediaViewer, PhotoEditor and the picture helpers (imageFiles, imageEdit) are
+// not listed here: a screen imports them by path, the two components on
+// demand, so the pages that never open a photo do not carry them.
 export { default as AppBar } from './AppBar.vue'
 export { default as BottomSheet } from './BottomSheet.vue'
 export { default as ChipDrill } from './ChipDrill.vue'

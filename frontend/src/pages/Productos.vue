@@ -764,8 +764,34 @@
               v-for="(row, index) in rows"
               :key="`${row.name}:${row.warehouse || ''}`"
               :data-key="legacyKey(row)"
-              class="min-w-0"
+              class="relative min-w-0"
             >
+              <!-- «Sin foto»: the empty photo is the camera's button; the row
+                 gets its picture without leaving the list. -->
+              <button
+                v-if="photoRun && (!row.image || shots[row.name])"
+                type="button"
+                class="press absolute z-[1] left-[13px] top-[13px] size-14 flex items-center justify-center overflow-hidden rounded-6 bg-surface-gray-2 text-ink-gray-8 ring-1 ring-outline-gray-3"
+                :aria-label="__('Take the photo of {0}', [row.title])"
+                :title="__('Take the photo of {0}', [row.title])"
+                :disabled="Boolean(shots[row.name])"
+                data-testid="fila-tomar-foto"
+                @pointerenter="loadCameraSheet"
+                @click="shootRow(row)"
+              >
+                <template v-if="shots[row.name]">
+                  <img
+                    :src="shots[row.name]"
+                    alt=""
+                    class="size-full object-cover opacity-60"
+                  />
+                  <span
+                    class="lucide-loader-circle absolute size-5 animate-spin"
+                    aria-hidden="true"
+                  />
+                </template>
+                <span v-else class="lucide-camera size-5" aria-hidden="true" />
+              </button>
               <CatalogItem
                 :row="row"
                 layout="tarjetas"
@@ -800,8 +826,39 @@
                 v-for="(row, index) in rows"
                 :key="`${row.name}:${row.warehouse || ''}`"
                 :data-key="legacyKey(row)"
+                class="relative"
                 :class="focusKey === legacyKey(row) ? 'bg-surface-gray-2' : ''"
               >
+                <!-- «Sin foto»: the empty photo is the camera's button; the row
+                   gets its picture without leaving the list. -->
+                <button
+                  v-if="photoRun && (!row.image || shots[row.name])"
+                  type="button"
+                  class="press absolute z-[1] left-3.5 top-1/2 size-11 -translate-y-1/2 sm:left-[22px] flex items-center justify-center overflow-hidden rounded-6 bg-surface-gray-2 text-ink-gray-8 ring-1 ring-outline-gray-3"
+                  :aria-label="__('Take the photo of {0}', [row.title])"
+                  :title="__('Take the photo of {0}', [row.title])"
+                  :disabled="Boolean(shots[row.name])"
+                  data-testid="fila-tomar-foto"
+                  @pointerenter="loadCameraSheet"
+                  @click="shootRow(row)"
+                >
+                  <template v-if="shots[row.name]">
+                    <img
+                      :src="shots[row.name]"
+                      alt=""
+                      class="size-full object-cover opacity-60"
+                    />
+                    <span
+                      class="lucide-loader-circle absolute size-5 animate-spin"
+                      aria-hidden="true"
+                    />
+                  </template>
+                  <span
+                    v-else
+                    class="lucide-camera size-5"
+                    aria-hidden="true"
+                  />
+                </button>
                 <CatalogItem
                   :row="row"
                   :to="productRoute(row, listPath, searching)"
@@ -874,6 +931,8 @@ import CatalogItem from '@/components/productos/CatalogItem.vue'
 import PackDialog from '@/components/productos/PackDialog.vue'
 import PriceListsToggle from '@/components/productos/PriceListsToggle.vue'
 import { loadScanSheet, openScan } from '@/components/escaneo/scanDoor'
+import { loadCameraSheet, openCamera } from '@/components/captura/cameraDoor'
+import { sendProductPhoto, whyNot } from '@/composables/useProductPhotos'
 import { registerPageShortcuts } from '@/composables/shellKeyboard'
 import { hoyLive } from '@/composables/useHoy'
 import { createListCache } from '@/utils/listCache'
@@ -1057,6 +1116,40 @@ const photoChoices = computed(() => [
     value: 'sin',
   },
 ])
+// «Sin foto» is a run: for whoever keeps the catalogue, each empty photo is a
+// camera button. The picture shows on the row at once and goes up behind it.
+const photoRun = computed(
+  () => state.value.photo === 'sin' && Boolean(boot.value?.capabilities?.edit),
+)
+const shots = reactive({}) // product → its picture on this device, while it goes up
+function shootRow(row) {
+  return openCamera({
+    title: row.title,
+    photo: true,
+    onFiles: ([file]) => {
+      sendShot(row, file)
+      return true
+    },
+  })
+}
+async function sendShot(row, file) {
+  const local = URL.createObjectURL(file)
+  shots[row.name] = local
+  try {
+    const answer = await sendProductPhoto(row.name, file, { principal: true })
+    row.image = answer.image || answer.row?.file_url || ''
+    row.media = answer.row?.media
+  } catch (error) {
+    toast.error(
+      [__('The photo of {0} was not saved.', [row.title]), whyNot(error)]
+        .filter(Boolean)
+        .join(' '),
+    )
+  } finally {
+    delete shots[row.name]
+    URL.revokeObjectURL(local)
+  }
+}
 function setLayout(value) {
   layout.value = value
   saveLayout(boot.value?.user, value)

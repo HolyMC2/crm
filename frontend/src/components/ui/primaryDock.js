@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/ui@0.1.0 (8c16b232a287). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory.
+// Vendored from muelle/workspace/packages/ui@0.1.0 (7f554d4509b6). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory.
 import { ref } from 'vue'
 
 // True while the phone shell's command bar is mounted: ui/Fab then teleports

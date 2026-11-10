@@ -92,13 +92,37 @@
             class="grid gap-4 rounded-7 border border-outline-gray-2 bg-surface-base p-4 sm:grid-cols-[auto_minmax(0,1fr)] sm:gap-5 sm:p-5 xl:grid-cols-[auto_minmax(0,1fr)_auto]"
           >
             <div class="flex flex-col items-center gap-2 sm:items-start">
-              <img
-                v-if="product.image && !photoBroken"
-                :src="product.image"
-                :alt="product.item_name || product.name"
-                class="h-36 w-36 rounded-7 object-cover ring-1 ring-outline-gray-2 sm:h-40 sm:w-40"
-                @error="photoBroken = true"
-              />
+              <!-- The photo is the door to all of them: a tap opens it full
+                 screen, where the star, the edit and the bin sit at the thumb. -->
+              <button
+                v-if="heroPhoto"
+                type="button"
+                class="press relative block overflow-hidden rounded-7 ring-1 ring-outline-gray-2"
+                :aria-label="__('See the photos')"
+                :title="__('See the photos')"
+                data-testid="producto-ver-fotos"
+                @click="gallery?.open()"
+              >
+                <img
+                  :src="heroPhoto"
+                  :alt="product.item_name || product.name"
+                  class="h-36 w-36 object-cover sm:h-40 sm:w-40"
+                  @error="photoBroken = true"
+                />
+                <span
+                  v-if="photos.lead.value?.state === 'sending'"
+                  class="absolute inset-x-1.5 top-1.5 rounded-full bg-black/70 px-2 py-0.5 text-center text-xs text-white"
+                  role="status"
+                  >{{ __('Uploading…', null, 'Productos') }}</span
+                >
+                <span
+                  v-if="photos.media.value.length > 1"
+                  class="num absolute bottom-1.5 right-1.5 flex items-center gap-1 rounded-full bg-black/70 px-2 py-0.5 text-xs font-medium text-white"
+                >
+                  <span class="lucide-images size-3.5" aria-hidden="true" />
+                  {{ photos.media.value.length }}
+                </span>
+              </button>
               <div
                 v-else
                 class="flex h-36 w-36 flex-col items-center justify-center gap-1 rounded-7 border border-dashed border-outline-gray-3 bg-surface-gray-1 text-center sm:h-40 sm:w-40"
@@ -115,53 +139,24 @@
                 v-if="data.can_edit"
                 class="flex flex-wrap justify-center gap-2 sm:justify-start"
               >
-                <FileUploader
-                  file-types="image/*"
-                  :upload-args="{
-                    doctype: 'Item',
-                    docname: product.name,
-                    private: false,
-                  }"
-                  @success="photoUploaded"
-                  @failure="photoFailed"
+                <!-- One or several: the first becomes the product's photo. -->
+                <button
+                  type="button"
+                  :class="['press', BTN.tonal]"
+                  data-testid="producto-elegir-foto"
+                  @click="gallery?.pick({ principal: true })"
                 >
-                  <template
-                    #default="{ openFileSelector, uploading, progress }"
-                  >
-                    <button
-                      type="button"
-                      :class="['press', BTN.tonal]"
-                      :disabled="uploading || photoSaving"
-                      @click="openFileSelector"
-                    >
-                      <span
-                        :class="[
-                          uploading || photoSaving
-                            ? 'lucide-loader-circle animate-spin'
-                            : 'lucide-image-plus',
-                          'size-5',
-                        ]"
-                        aria-hidden="true"
-                      />
-                      {{
-                        uploading
-                          ? __('Uploading {0}%', [progress])
-                          : product.image
-                            ? __('Change photo')
-                            : __('Add photo')
-                      }}
-                    </button>
-                  </template>
-                </FileUploader>
+                  <span class="lucide-image-plus size-5" aria-hidden="true" />
+                  {{ product.image ? __('Change photo') : __('Add photo') }}
+                </button>
                 <!-- Shell D7: the shell's camera, one photo as shot (no page crop). -->
                 <button
                   type="button"
                   :class="['press', BTN.tonal]"
-                  :disabled="photoSaving"
                   data-testid="producto-tomar-foto"
                   @pointerenter="loadCameraSheet"
                   @focus="loadCameraSheet"
-                  @click="takePhoto"
+                  @click="gallery?.shoot({ principal: true })"
                 >
                   <span class="lucide-camera size-5" aria-hidden="true" />
                   {{ __('Take photo') }}
@@ -607,8 +602,9 @@
 
               <PhotoGallery
                 ref="gallery"
+                :photos="photos"
                 :item="product.name"
-                @changed="load({ quiet: true })"
+                :title="product.item_name || product.name"
               />
               <section
                 v-if="!isTemplate"
@@ -1848,14 +1844,15 @@ import {
   watch,
 } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Badge, Button, FileUploader, toast } from 'frappe-ui'
+import { Badge, Button, toast } from 'frappe-ui'
 import { AppBar, StatusChip } from '@/components/ui'
 import RecordIsland from '@/components/documentos/RecordIsland.vue'
 import RecordKit from '@/components/documentos/compras/RecordKit.vue'
 import { useRecordKit } from '@/components/documentos/compras/recordKit'
 import { recordActionsFor } from '@/documentos/acciones'
 import { BTN } from '@/documentos/tools'
-import { loadCameraSheet, openCamera } from '@/components/captura/cameraDoor'
+import { loadCameraSheet } from '@/components/captura/cameraDoor'
+import { useProductPhotos } from '@/composables/useProductPhotos'
 import PriceDialog from '@/components/productos/PriceDialog.vue'
 import EditDialog from '@/components/productos/EditDialog.vue'
 import RequestDialog from '@/components/productos/RequestDialog.vue'
@@ -1910,17 +1907,17 @@ import {
   notifyPriceOpener,
   otherRulesLine,
   parseDone,
+  photoOf,
   plain,
   priceUnit,
   problemOf,
   productKind,
-  projectionLine,
   productosApi,
   productosBoot,
+  projectionLine,
   purchaseRoute,
   qty,
   relativeAge,
-  requestId,
   requestedAction,
   scannerBinUrl,
   scannerItemUrl,
@@ -2160,7 +2157,32 @@ async function copyScannerRequest() {
   }
 }
 const photoBroken = ref(false)
-const photoSaving = ref(false)
+// The product's photos and videos: the hero and «Fotos» share them. A change
+// shows on the hero at once and patches the record in place (its picture and
+// its `modified`, which the next save compares): no reload of the page.
+const photos = useProductPhotos(() => product.value.name || props.item, {
+  onChange({ image, modified }) {
+    const item = data.value?.item
+    if (!item) return
+    // The copies were of the picture that just stopped being the principal.
+    if (item.image !== (image || null)) delete item.media
+    item.image = image || null
+    if (modified) item.modified = modified
+    photoBroken.value = false
+  },
+  say: (text) => toast.success(text),
+})
+// The principal as the gallery shows it (its copy on this device while it
+// goes up), else the record's.
+const heroPhoto = computed(() => {
+  const main = photos.lead.value
+  // The 640 px copy where there is one: the same file from the record's
+  // first paint and from the gallery, so the hero never loads twice.
+  const shown = main
+    ? main.local || main.preview || main.thumb || main.file_url
+    : photoOf(product.value, 'detail')
+  return shown && !photoBroken.value ? shown : ''
+})
 const kind = computed(() => productKind(product.value))
 // ERPNext's root group names no group: an item filed there shows none.
 const groupPath = computed(() =>
@@ -2680,59 +2702,6 @@ const facts = computed(() => {
     },
   ].filter(Boolean)
 })
-async function photoUploaded(file) {
-  photoSaving.value = true
-  try {
-    await productosApi('set_photo', {
-      request_id: requestId(),
-      item: product.value.name,
-      file_url: file?.file_url,
-    })
-    photoBroken.value = false
-    toast.success(__('Photo saved'))
-    await load()
-    gallery.value?.refresh()
-  } catch (error) {
-    problem.value = problemOf(error)
-  } finally {
-    photoSaving.value = false
-  }
-}
-// «Tomar foto» (Shell D7): the camera sheet hands back one JPEG; it goes up
-// public on the Item like «Cambiar foto», then the same set_photo.
-function takePhoto() {
-  return openCamera({
-    title: __('Product photo'),
-    photo: true,
-    onFiles: async ([file]) => {
-      const body = new FormData()
-      body.append('file', file, file.name)
-      body.append('is_private', '0')
-      body.append('doctype', 'Item')
-      body.append('docname', product.value.name)
-      const headers = { Accept: 'application/json' }
-      if (window.csrf_token && window.csrf_token !== '{{ csrf_token }}')
-        headers['X-Frappe-CSRF-Token'] = window.csrf_token
-      const response = await fetch('/api/method/upload_file', {
-        method: 'POST',
-        headers,
-        body,
-      })
-      const data = await response.json().catch(() => ({}))
-      if (!response.ok || !data.message?.file_url)
-        throw new Error(__('The photo was not uploaded'))
-      await photoUploaded(data.message)
-      return data.message
-    },
-  })
-}
-function photoFailed(error) {
-  problem.value = {
-    ...problemOf(error),
-    title: __('The photo was not uploaded'),
-  }
-}
-
 // The socket's first connect resyncs every view while (or just after) the
 // first read runs; that read already answers it: one record read per open.
 const readGate = createReadGate()

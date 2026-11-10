@@ -75,13 +75,9 @@ export function putPart(url, bytes, onLoaded = () => {}) {
     xhr.open('PUT', target)
     xhr.timeout = PART_TIMEOUT_MS
     xhr.setRequestHeader('Content-Type', 'application/octet-stream')
-    const sameSite = new URL(target).origin === location.origin
-    if (
-      sameSite &&
-      window.csrf_token &&
-      window.csrf_token !== '{{ csrf_token }}'
-    )
-      xhr.setRequestHeader('X-Frappe-CSRF-Token', window.csrf_token)
+    if (new URL(target).origin === location.origin)
+      for (const [name, value] of Object.entries(csrfHeader()))
+        xhr.setRequestHeader(name, value)
     xhr.upload.onprogress = (event) => onLoaded(event.loaded)
     xhr.onload = () => {
       let etag = xhr.getResponseHeader('ETag') || ''
@@ -131,27 +127,77 @@ export async function uploadCatalog(
   onProgress(100)
 }
 
-/** POST one picture as multipart to a doco method (`add_picture`, `set_photo`). */
+function csrfHeader() {
+  return window.csrf_token && window.csrf_token !== '{{ csrf_token }}'
+    ? { 'X-Frappe-CSRF-Token': window.csrf_token }
+    : {}
+}
+
+/** The same request with its progress: fetch cannot report an upload's. */
+function postWithProgress(url, body, headers, onProgress) {
+  return new Promise((resolve) => {
+    const xhr = new XMLHttpRequest()
+    xhr.open('POST', url)
+    for (const [name, value] of Object.entries(headers))
+      xhr.setRequestHeader(name, value)
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable)
+        onProgress(Math.min(99, Math.round((100 * event.loaded) / event.total)))
+    }
+    xhr.onerror = xhr.ontimeout = () => resolve(null)
+    xhr.onload = () => {
+      let data
+      try {
+        data = JSON.parse(xhr.responseText)
+      } catch {
+        data = {}
+      }
+      resolve({
+        ok: xhr.status >= 200 && xhr.status < 300,
+        status: xhr.status,
+        data,
+      })
+    }
+    xhr.send(body)
+  })
+}
+
+/**
+ * POST one file as multipart to a doco method (`add_picture`, `set_photo`,
+ * `add_photo`). With `onProgress` (0–100) the upload reports how far it is.
+ * A refusal rejects with the server's sentence in `messages`; a request that
+ * never arrived rejects with `offline`.
+ */
 export async function postPicture(
   method,
   args,
   file,
-  { fetcher = fetch } = {},
+  { fetcher = fetch, onProgress = null } = {},
 ) {
   const body = new FormData()
   body.append('file', file, file.name || 'foto.jpg')
-  const headers = { Accept: 'application/json' }
-  if (window.csrf_token && window.csrf_token !== '{{ csrf_token }}')
-    headers['X-Frappe-CSRF-Token'] = window.csrf_token
-  const query = new URLSearchParams(args).toString()
-  const response = await fetcher(`/api/method/${method}?${query}`, {
-    method: 'POST',
-    headers,
-    body,
-  })
-  const data = await response.json().catch(() => ({}))
-  if (!response.ok) throw callError(method, response.status, data)
-  return data.message
+  const headers = { Accept: 'application/json', ...csrfHeader() }
+  const url = `/api/method/${method}?${new URLSearchParams(args).toString()}`
+  let answer
+  if (onProgress)
+    answer = await postWithProgress(url, body, headers, onProgress)
+  else {
+    const response = await fetcher(url, { method: 'POST', headers, body })
+    answer = {
+      ok: response.ok,
+      status: response.status,
+      data: await response.json().catch(() => ({})),
+    }
+  }
+  if (!answer) {
+    const error = new Error(method)
+    error.offline = true
+    error.messages = []
+    throw error
+  }
+  if (!answer.ok) throw callError(method, answer.status, answer.data)
+  onProgress?.(100)
+  return answer.data.message
 }
 
 /** One more picture of a list already created. */

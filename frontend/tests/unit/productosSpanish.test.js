@@ -51,6 +51,7 @@ const FILES = [
   'components/productos/ProductPrices.vue',
   'components/productos/PriceDialog.vue',
   'composables/useProductos.js',
+  'composables/useProductPhotos.js',
 ]
 const strings = new Set()
 for (const file of FILES) {

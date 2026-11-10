@@ -3,6 +3,7 @@
 // pages into ONE PDF the books capture engine reads (it renders up to 8 PDF
 // pages for the vision tier, so the sheet stops at 8). No library: a PDF of
 // JPEG pages is a few objects and a cross-reference table.
+import { canvasBlob, canvasOf, fitWithin } from '@/components/ui/imageFiles'
 
 export const MAX_PAGES = 8
 export const PAGE_MAX_BYTES = 2 * 1024 * 1024
@@ -20,10 +21,7 @@ export function pageBudget(count) {
 
 /** The size that fits `w×h` inside `max` on its long side (never upscales). */
 export function fitSize(w, h, max = MAX_SIDE) {
-  const long = Math.max(w, h)
-  if (!long || long <= max) return { width: w, height: h }
-  const k = max / long
-  return { width: Math.round(w * k), height: Math.round(h * k) }
+  return fitWithin(w, h, max)
 }
 
 /**
@@ -108,21 +106,6 @@ export function pageBox(data, w, h) {
   }
 }
 
-function canvasOf(width, height) {
-  if (typeof OffscreenCanvas !== 'undefined')
-    return new OffscreenCanvas(width, height)
-  const canvas = document.createElement('canvas')
-  canvas.width = width
-  canvas.height = height
-  return canvas
-}
-
-async function toBlob(canvas, quality) {
-  if (canvas.convertToBlob)
-    return canvas.convertToBlob({ type: 'image/jpeg', quality })
-  return new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', quality))
-}
-
 /**
  * One page from a video frame or an image: cropped to the page when `crop`,
  * downscaled, JPEG under `maxBytes`. Returns { blob, width, height, url }.
@@ -159,7 +142,7 @@ export async function makePage(
     ctx.fillStyle = '#fff'
     ctx.fillRect(0, 0, size.width, size.height)
     ctx.drawImage(source, cx, cy, cw, ch, 0, 0, size.width, size.height)
-    const blob = await toBlob(canvas, quality)
+    const blob = await canvasBlob(canvas, 'image/jpeg', quality)
     if (blob && (blob.size <= maxBytes || attempt === 7))
       return {
         blob,

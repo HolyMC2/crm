@@ -1265,6 +1265,19 @@ export function tierLines(row, lists) {
     }))
 }
 
+/**
+ * The picture to paint for a row that carries one (`image`, or a gallery
+ * row's `file_url`): its small copy of `slot` where the server has made one
+ * («card» 320 px for thumbnails, «detail» 640 px for a hero), else the
+ * nearest smaller copy, else the original.
+ */
+export function photoOf(row, slot = 'card') {
+  const copies = row?.media?.variants || {}
+  return (
+    copies[slot]?.url || copies.card?.url || row?.image || row?.file_url || ''
+  )
+}
+
 /** Two letters for a product without a photo: the first two words' initials,
  *  or the first two characters of a single word. */
 export function initials(title) {
