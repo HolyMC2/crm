@@ -95,7 +95,7 @@ yarn test:run      # single run
 yarn test          # watch mode
 ```
 
-- **118 tests · ~250ms** — all must pass before committing
+- All must pass before committing; `npx vitest run tests/unit/<file>` runs one file
 - Location: `frontend/tests/unit/`
 - Only pure utility functions are unit-tested (no Vue component tests yet)
 - Add tests in `tests/unit/` when adding pure logic to `src/utils/`
@@ -110,8 +110,13 @@ status says gap has no check yet.
 | Rule | Enforced by | Status |
 |---|---|---|
 | Colour utilities name a token the installed frappe-ui defines (no `text-ink-white`, `bg-surface-modal`, or missing shades) | `frontend/tests/unit/colorTokensGuard.test.js` | enforced |
-| No `text-ink-*-1` on a strong `surface-*-5..9` fill; use `text-white` | `frontend/tests/unit/inkOnStrongFillGuard.test.js` | enforced per line; a label split across lines is not seen |
-| Every file that renders `<Tabs>` maps its items through `indexTabs` (frappe-ui needs `value`) | `frontend/tests/unit/tabsIndexGuard.test.js` | enforced |
+| Text reads at least 3:1 on what it sits on, in light and dark mode. frappe-ui 1.0 chromatic inks 1–4 are tints, not text: error text is `text-ink-red-6` on the page and `-7` on a red tint; white reads on -6/-7 fills, not on -8/-9 in dark mode | `frontend/tests/unit/labelContrastGuard.test.js` measures the installed tokens; each failure prints both ratios and the class to write | enforced for a class string with one fill and one text colour, and for chromatic text with no fill (measured on surface-base); a fill set on a parent element is not seen. Exceptions go in its `EXCEPTIONS` list with a reason, an expiry and an approver |
+| Every file that renders `<Tabs>` maps its items through `indexTabs` (frappe-ui needs `value`) | `frontend/tests/unit/tabsIndexGuard.test.js`; the failure names the line to write | enforced per file |
+| A failure reaches the screen through `utils/errorText.js`, never `error.message` (frappe-ui's message is the request) | `frontend/tests/unit/errorText.test.js` | enforced |
+| A row that wraps a `<Dropdown>` answers Enter with `.self` | `frontend/tests/unit/dropdownEnterGuard.test.js` | enforced |
+| Checkboxes keep `--radius-1` (`rounded-4` reads as a radio button) | `frontend/tests/unit/checkboxRadiusGuard.test.js` | enforced |
+| An English msgid that needs two Spanish words carries a context with its es.po entry | `frontend/tests/unit/translationCollisions.test.js` | enforced |
+| The daily /crm routes speak es-MX: every `__()` string has a msgstr, no hard-coded English | `frontend/tests/unit/dailySpanish.test.js` | enforced on the daily routes |
 | `src/vendor/**` byte-matches its package | `frontend/scripts/verify-vendor.mjs` (prebuild) | enforced |
 | Prettier 3.2.5 and ruff 0.8.1 layout | `scripts/ci/local.sh` pre-commit step, at land | gap at commit time: the repo's pre-commit hook is not installed in a clone (`.git/hooks` holds only samples), so layout fixups arrive as late `style:` commits |
 | `src/components/ui/**` is the vendored @muelle/ui kit: change the package and re-vendor, never edit here | «DO NOT EDIT» header and the re-vendor practice | no crm check; hand edits stopped when vendoring began (2026-10-28), and a re-vendor re-stamps every file |
