@@ -70,7 +70,7 @@
   </section>
 </template>
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { queryTasks, querySources, rangeFor } from '@/composables/useAgenda'
 import { freeHours, peekItems } from '@/components/pendientes/dayPeek'
 
@@ -134,6 +134,11 @@ watch(
   },
   { immediate: true },
 )
+// A closed sheet reads nothing: its wait ends with it, and a read on the way is dropped.
+onBeforeUnmount(() => {
+  clearTimeout(timer)
+  generation++
+})
 
 const items = computed(() =>
   peekItems(events.value, timeZone.value, props.skipId),

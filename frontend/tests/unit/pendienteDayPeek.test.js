@@ -1,8 +1,10 @@
 // The pendiente editor's day peek: that day's Agenda by hour and the free hours a tap
 // can take; a timed pendiente sits at its hour on the calendar.
 import { describe, expect, it, vi } from 'vitest'
+import { createApp, h } from 'vue'
 vi.mock('frappe-ui', () => ({ call: vi.fn() }))
 import { call } from 'frappe-ui'
+import DayPeek from '@/components/pendientes/DayPeek.vue'
 import { freeHours, peekItems } from '@/components/pendientes/dayPeek'
 import { isBar } from '@/components/agenda/agendaGrid'
 import { moveTaskTo, taskToEvent } from '@/composables/useAgenda'
@@ -64,6 +66,34 @@ describe('the day peek', () => {
         max: 9,
       }),
     ).toEqual(['14:00', '15:00', '16:00', '17:00', '18:00'])
+  })
+})
+
+describe('the day peek in the editor', () => {
+  const open = () => {
+    const app = createApp({ render: () => h(DayPeek, { date: '2026-10-20' }) })
+    app.config.globalProperties.__ = globalThis.__
+    app.mount(document.createElement('div'))
+    return app
+  }
+
+  it('reads the day after a short wait, and nothing when the sheet closed first', async () => {
+    vi.useFakeTimers()
+    try {
+      call.mockReset()
+      call.mockResolvedValue({})
+      const closed = open()
+      closed.unmount()
+      await vi.advanceTimersByTimeAsync(1000)
+      expect(call).not.toHaveBeenCalled()
+
+      const kept = open()
+      await vi.advanceTimersByTimeAsync(1000)
+      expect(call).toHaveBeenCalled()
+      kept.unmount()
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })
 
