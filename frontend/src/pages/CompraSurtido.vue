@@ -101,16 +101,39 @@
             class="mb-4 border-b border-outline-gray-2 pb-4"
             data-testid="surtido-actual"
           >
-            <div class="flex items-start gap-3">
+            <div class="flex items-center gap-3">
+              <button
+                v-if="facets.pages.length"
+                type="button"
+                class="press relative size-14 flex-none overflow-hidden rounded-6 bg-surface-gray-2"
+                :aria-label="__('See the list', null, 'Surtido')"
+                :title="__('See the list', null, 'Surtido')"
+                data-testid="surtido-ver-lista"
+                @click="openPages(0)"
+              >
+                <img
+                  :src="facets.pages[0].thumb"
+                  alt=""
+                  class="size-full object-cover object-top"
+                  loading="lazy"
+                />
+                <span
+                  v-if="facets.pages.length > 1"
+                  class="num absolute bottom-1 right-1 rounded-full bg-surface-gray-9/80 px-1.5 text-xs text-ink-gray-1"
+                  aria-hidden="true"
+                  >{{ facets.pages.length }}</span
+                >
+              </button>
               <span
-                class="mt-0.5 flex size-10 flex-none items-center justify-center rounded-full bg-surface-gray-2 text-ink-gray-7"
+                v-else
+                class="flex size-14 flex-none items-center justify-center rounded-6 bg-surface-gray-2 text-ink-gray-7"
                 aria-hidden="true"
               >
-                <span class="lucide-table size-5" />
+                <span class="lucide-table size-6" />
               </span>
               <div class="min-w-0 flex-1">
                 <p class="truncate text-base font-medium text-ink-gray-9">
-                  {{ listName(current) }}
+                  {{ currentName }}
                 </p>
                 <p class="num truncate text-sm text-ink-gray-6">
                   {{ listLine(current) }}
@@ -407,6 +430,7 @@
             />
             <FormControl
               v-model="ask.focus"
+              class="sm:max-w-md"
               :label="__('These models first', null, 'Surtido')"
               :placeholder="__('A16 2, A27 1', null, 'Surtido')"
               :description="
@@ -709,57 +733,92 @@
                     class="plan-line grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 px-1 py-3"
                     :class="edits[line.line]?.remove ? 'opacity-50' : ''"
                   >
-                    <div class="plan-cell-name col-span-full min-w-0">
-                      <p class="font-medium text-ink-gray-9">
-                        {{ line.name }}
-                        <span
-                          v-if="line.page"
-                          class="ml-1 text-xs font-normal text-ink-gray-5"
-                          >{{ __('p. {0}', [line.page], 'Surtido') }}</span
+                    <div
+                      class="plan-cell-name col-span-full flex min-w-0 gap-3"
+                    >
+                      <button
+                        v-if="line.thumb"
+                        type="button"
+                        class="press size-14 flex-none overflow-hidden rounded-6 bg-surface-gray-2"
+                        :aria-label="__('Photo of {0}', [line.name], 'Surtido')"
+                        @click="openPhotos(line)"
+                      >
+                        <img
+                          :src="line.thumb"
+                          alt=""
+                          class="size-full object-cover"
+                          loading="lazy"
+                        />
+                      </button>
+                      <span
+                        v-else
+                        class="flex size-14 flex-none items-center justify-center rounded-6 bg-surface-gray-2 text-ink-gray-5"
+                        aria-hidden="true"
+                      >
+                        <span class="lucide-package size-6" />
+                      </span>
+                      <div class="min-w-0 flex-1">
+                        <p class="font-medium leading-snug text-ink-gray-9">
+                          {{ line.name }}
+                          <button
+                            v-if="line.page && pageIndex(line.page) >= 0"
+                            type="button"
+                            class="press ml-1 rounded-4 px-1 text-xs font-normal text-ink-gray-6 underline decoration-dotted underline-offset-2 hover:text-ink-gray-8"
+                            :aria-label="
+                              __(
+                                'See page {0} of the list',
+                                [line.page],
+                                'Surtido',
+                              )
+                            "
+                            @click="openPages(pageIndex(line.page))"
+                          >
+                            {{ __('p. {0}', [line.page], 'Surtido') }}
+                          </button>
+                          <span
+                            v-else-if="line.page"
+                            class="ml-1 text-xs font-normal text-ink-gray-5"
+                            >{{ __('p. {0}', [line.page], 'Surtido') }}</span
+                          >
+                        </p>
+                        <p
+                          v-if="printedText(line) || lineMeta(line)"
+                          class="truncate text-sm text-ink-gray-6"
                         >
-                      </p>
-                      <p
-                        v-if="printedText(line) || lineMeta(line)"
-                        class="truncate text-sm text-ink-gray-6"
-                      >
-                        {{
-                          [printedText(line), lineMeta(line)]
-                            .filter(Boolean)
-                            .join(', ')
-                        }}
-                      </p>
-                      <p
-                        v-if="underMinimum(line)"
-                        class="text-sm text-ink-amber-7"
-                      >
-                        {{
-                          __(
-                            'Its price is from {0} pieces',
-                            [line.min_qty],
-                            'Surtido',
-                          )
-                        }}
-                      </p>
-                      <p
-                        v-if="line.reasons?.length"
-                        class="mt-1 flex flex-wrap gap-1"
-                      >
-                        <span
-                          v-for="r in line.reasons"
-                          :key="r"
-                          class="rounded-4 bg-surface-gray-2 px-1.5 py-0.5 text-xs text-ink-gray-7"
-                          >{{ r }}</span
+                          {{
+                            [printedText(line), lineMeta(line)]
+                              .filter(Boolean)
+                              .join(', ')
+                          }}
+                        </p>
+                        <p
+                          v-if="underMinimum(line)"
+                          class="text-sm text-ink-amber-7"
                         >
-                      </p>
+                          {{
+                            __(
+                              'Its price is from {0} pieces',
+                              [line.min_qty],
+                              'Surtido',
+                            )
+                          }}
+                        </p>
+                        <p
+                          v-if="line.reasons?.length"
+                          class="mt-0.5 text-sm text-ink-gray-5"
+                        >
+                          {{ reasonsText(line) }}
+                        </p>
+                      </div>
                     </div>
                     <div
-                      class="plan-qty flex items-center gap-1"
+                      class="plan-qty flex items-center rounded-full ring-1 ring-outline-gray-2"
                       role="group"
                       :aria-label="__('Pieces of {0}', [line.name], 'Surtido')"
                     >
                       <button
                         type="button"
-                        class="press flex size-11 items-center justify-center rounded-full bg-surface-gray-2 text-ink-gray-8 disabled:opacity-40 sm:size-8"
+                        class="press flex size-11 items-center justify-center rounded-full text-ink-gray-8 hover:bg-surface-gray-2 disabled:opacity-30 sm:size-8"
                         :aria-label="
                           __('One less of {0}', [line.name], 'Surtido')
                         "
@@ -779,7 +838,7 @@
                       >
                       <button
                         type="button"
-                        class="press flex size-11 items-center justify-center rounded-full bg-surface-gray-2 text-ink-gray-8 disabled:opacity-40 sm:size-8"
+                        class="press flex size-11 items-center justify-center rounded-full text-ink-gray-8 hover:bg-surface-gray-2 disabled:opacity-30 sm:size-8"
                         :aria-label="
                           __('One more of {0}', [line.name], 'Surtido')
                         "
@@ -1510,6 +1569,16 @@
       </div>
     </div>
 
+    <MediaViewer
+      v-if="viewerMounted"
+      v-model:open="viewer.open"
+      v-model:index="viewer.index"
+      :items="viewer.items"
+      :title="viewer.title"
+    >
+      <template v-if="viewer.caption" #caption>{{ viewer.caption }}</template>
+    </MediaViewer>
+
     <BottomSheet
       v-if="listsMounted"
       v-model:open="listsOpen"
@@ -1670,7 +1739,15 @@
   </div>
 </template>
 <script setup>
-import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import {
+  computed,
+  defineAsyncComponent,
+  onBeforeUnmount,
+  onMounted,
+  reactive,
+  ref,
+  watch,
+} from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Badge, Button, FormControl, toast } from 'frappe-ui'
 import { AppBar, BottomSheet, ChipGroup, EmptyState } from '@/components/ui'
@@ -1710,6 +1787,10 @@ import {
 import LucideRotateCcw from '~icons/lucide/rotate-ccw'
 import LucideX from '~icons/lucide/x'
 import LucideDroplet from '~icons/lucide/droplet'
+
+const MediaViewer = defineAsyncComponent(
+  () => import('@/components/ui/MediaViewer.vue'),
+)
 
 const API = 'doco.workspaces.sourcing.'
 const call = (method, args = {}) => comprasApi(API + method, args)
@@ -1789,6 +1870,62 @@ const markOptions = computed(() => facets.value.marks.map(chip))
 const groupOptions = computed(() =>
   facets.value.groups.map((g) => ({ value: g.name, label: g.name })),
 )
+// the list's pages and the plan's photos open in the kit's viewer
+const viewerMounted = ref(false)
+const viewer = reactive({
+  open: false,
+  index: 0,
+  items: [],
+  title: '',
+  caption: '',
+})
+function openViewer(items, index, title, caption = '') {
+  if (!items.length) return
+  Object.assign(viewer, { items, index, title, caption, open: true })
+  viewerMounted.value = true
+}
+const pageIndex = (n) => facets.value.pages.findIndex((p) => p.n === n)
+function openPages(index) {
+  openViewer(
+    facets.value.pages.map((p) => ({
+      url: p.url,
+      thumb: p.thumb,
+      kind: 'image',
+      key: 'p' + p.n,
+      alt: __('Page {0} of the list', [p.n], 'Surtido'),
+    })),
+    Math.max(0, index),
+    currentName.value,
+  )
+}
+function openPhotos(line) {
+  const shown = (plan.value?.lines || []).filter((l) => l.photo)
+  openViewer(
+    shown.map((l) => ({
+      url: l.photo,
+      thumb: l.thumb,
+      kind: 'image',
+      key: l.line,
+      alt: l.name,
+    })),
+    Math.max(
+      0,
+      shown.findIndex((l) => l.line === line.line),
+    ),
+    __('Products of the plan', null, 'Surtido'),
+  )
+}
+// the list by its supplier, or the one its name says, else its name without the extension
+const currentName = computed(() => {
+  const c = current.value
+  if (!c) return ''
+  if (!c.supplier && facets.value.supplier_guess)
+    return listName({ ...c, supplier: facets.value.supplier_guess })
+  return listName(c)
+})
+// why a line is in the plan, as one quiet sentence
+const reasonsText = (line) =>
+  (line.reasons || []).join(', ').replace(/^./u, (c) => c.toUpperCase())
 // a correction the plan could not apply, unless it is about a model the list does not carry
 const unresolvedShown = computed(() =>
   (plan.value?.unresolved || []).filter(
@@ -1887,7 +2024,12 @@ function listName(c) {
     /\.(jpe?g|png|webp|heic|pdf|xlsx?|csv|ods|docx?)$/iu,
     '',
   )
-  return c?.supplier ? `${c.supplier}, ${title}` : title
+  if (!c?.supplier) return title
+  // a file named after the supplier («perfeccel2-lista-1») says nothing more
+  const flat = (t) => t.toLowerCase().replace(/[^a-z0-9]+/gu, '')
+  return flat(title).includes(flat(c.supplier))
+    ? c.supplier
+    : `${c.supplier}, ${title}`
 }
 function listLine(c) {
   const p = progressOf(c)
@@ -2267,7 +2409,13 @@ function bump(line, delta) {
 
 // the list's own words for the request: its sections, marks and the shop's groups
 async function loadFacets(name) {
-  facets.value = { sections: [], marks: [], groups: [], supplier_guess: null }
+  facets.value = {
+    sections: [],
+    marks: [],
+    groups: [],
+    pages: [],
+    supplier_guess: null,
+  }
   if (!name) return
   try {
     const out = await call('facets', { catalog: name })
@@ -2276,6 +2424,7 @@ async function loadFacets(name) {
         sections: out?.sections || [],
         marks: out?.marks || [],
         groups: out?.groups || [],
+        pages: out?.pages || [],
         supplier_guess: out?.supplier_guess || null,
       }
     // a list that came without its supplier: the one its name says, kept unless changed

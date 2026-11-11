@@ -38403,3 +38403,33 @@ msgstr "{0} págs., la lectura se detuvo"
 msgctxt "Surtido"
 msgid "{0} pages, reading…"
 msgstr "{0} págs., leyendo…"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "See the list"
+msgstr "Ver la lista"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Pages of the list"
+msgstr "Páginas de la lista"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Page {0} of the list"
+msgstr "Página {0} de la lista"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Photo of {0}"
+msgstr "Foto de {0}"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "See page {0} of the list"
+msgstr "Ver la página {0} de la lista"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Products of the plan"
+msgstr "Productos del plan"
