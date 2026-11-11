@@ -38433,3 +38433,348 @@ msgstr "Ver la página {0} de la lista"
 msgctxt "Surtido"
 msgid "Products of the plan"
 msgstr "Productos del plan"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "{0} of {1} products"
+msgstr "{0} de {1} productos"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "{0} over the budget"
+msgstr "{0} arriba del presupuesto"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "{0} products, {1} pieces"
+msgstr "{0} productos, {1} piezas"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "{0} products, {1} pieces, {2}"
+msgstr "{0} productos, {1} piezas, {2}"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "{0} products in the cart, {1}"
+msgstr "{0} productos en el carrito, {1}"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "{0}: the price is from {1} pieces and the order has {2}. Confirm with the supplier whether it counts per model or per order."
+msgstr "{0}: el precio es desde {1} piezas y el pedido lleva {2}. Confirma con el proveedor si cuenta por modelo o por todo el pedido."
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Categories"
+msgstr "Categorías"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Clear the search"
+msgstr "Borrar la búsqueda"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Fills the cart from your sales and stock, with the categories and marks you chose, never passing the budget."
+msgstr "Llena el carrito con tus ventas y tu existencia, con las categorías y marcas que elegiste, sin pasar el presupuesto."
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Fill the cart"
+msgstr "Llenar el carrito"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "from {0} pcs"
+msgstr "desde {0} pz"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Keep shopping"
+msgstr "Seguir comprando"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Like {0}"
+msgstr "Parecidos a {0}"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Marked on the list"
+msgstr "Marcados en la lista"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "My history"
+msgstr "Mi historial"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "New to me"
+msgstr "Nuevos para mí"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "New to you"
+msgstr "Nuevo para ti"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "No product matches"
+msgstr "Ningún producto coincide"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Only the owner creates the order."
+msgstr "Solo el dueño crea el pedido."
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Opening the list…"
+msgstr "Abriendo la lista…"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Products in the order"
+msgstr "Productos del pedido"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Products of the list"
+msgstr "Productos de la lista"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Ran out"
+msgstr "Se me acabó"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Replace the cart with a suggestion"
+msgstr "Cambiar el carrito por una sugerencia"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Search the list"
+msgstr "Buscar en la lista"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Search the list, or /a1[67]/"
+msgstr "Buscar en la lista, o /a1[67]/"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "See the order"
+msgstr "Ver el pedido"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Show every product"
+msgstr "Ver todos los productos"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Show more ({0})"
+msgstr "Ver más ({0})"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Similar"
+msgstr "Similares"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Sold {0}, {1} left"
+msgstr "Vendiste {0}, quedan {1}"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Suggest with my budget"
+msgstr "Sugerir con mi presupuesto"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Take off a chip or search other words. A pattern goes between slashes: /iphone 1[3-5]/."
+msgstr "Quita un filtro o busca otras palabras. Un patrón va entre diagonales: /iphone 1[3-5]/."
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "The cart is empty: add products from the list."
+msgstr "El carrito está vacío: agrega productos de la lista."
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "What I sell"
+msgstr "Lo que vendo"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "You have {0}"
+msgstr "Tienes {0}"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Your order"
+msgstr "Tu pedido"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Your order to {0}"
+msgstr "Tu pedido a {0}"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "This list"
+msgstr "Esta lista"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "{0} at {1}"
+msgstr "{0} en {1}"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Add to the order"
+msgstr "Agregar al pedido"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Cheaper at"
+msgstr "Más barato en"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Down {0}"
+msgstr "Bajó {0}"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "In stock"
+msgstr "En existencia"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Is it your {0}?"
+msgstr "¿Es tu {0}?"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Link to a product of mine"
+msgstr "Ligar a un producto mío"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "margin {0}%"
+msgstr "margen {0}%"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Margin at this price"
+msgstr "Margen a este precio"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "New in the list"
+msgstr "Nuevo en la lista"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "No earlier price of this product."
+msgstr "No hay precios anteriores de este producto."
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Not linked to a product of yours yet. Linked, its next list links itself and the order updates your product."
+msgstr "Aún no está ligado a un producto tuyo. Ligado, su próxima lista se liga sola y el pedido actualiza tu producto."
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Paid at receipt"
+msgstr "Pagado al recibir"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Price over time"
+msgstr "Precio en el tiempo"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Purchase order"
+msgstr "Orden de compra"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Reading the history…"
+msgstr "Leyendo el historial…"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Saved: the supplier calls it «{0}»"
+msgstr "Guardado: el proveedor lo llama «{0}»"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Search my products"
+msgstr "Buscar mis productos"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Since the last list"
+msgstr "Contra la lista anterior"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Sold in 12 months"
+msgstr "Vendidos en 12 meses"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Supplier code {0}"
+msgstr "Código del proveedor {0}"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "The supplier calls it «{0}»"
+msgstr "El proveedor lo llama «{0}»"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Unlink"
+msgstr "Quitar el vínculo"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Up {0}"
+msgstr "Subió {0}"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Yes, this one"
+msgstr "Sí, es este"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "You paid"
+msgstr "Pagaste"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Your product"
+msgstr "Tu producto"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Yours: {0}"
+msgstr "Tuyo: {0}"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "You sell it at"
+msgstr "Lo vendes a"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Filters"
+msgstr "Filtros"

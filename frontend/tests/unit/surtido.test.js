@@ -138,6 +138,9 @@ describe('surtido strings (es-MX)', () => {
   const page = [
     '../../src/pages/CompraSurtido.vue',
     '../../src/pages/Compras.vue',
+    '../../src/components/compras/SurtidoTienda.vue',
+    '../../src/components/compras/SurtidoProducto.vue',
+    '../../src/utils/surtidoShop.js',
   ]
     .map((p) => readFileSync(resolve(here, p), 'utf8'))
     .join('\n')
