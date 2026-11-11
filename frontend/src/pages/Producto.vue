@@ -453,6 +453,13 @@
                 </template>
                 <dd v-else class="mt-0.5 text-sm text-ink-gray-6">—</dd>
               </a>
+              <ProductPlaces
+                v-if="places.length"
+                :places="places"
+                :unit="unitName(product.stock_uom)"
+                :bin-href="scannerWorker ? binUrl : null"
+                :assign-href="scannerWorker ? assignUrl : null"
+              />
             </dl>
           </header>
 
@@ -689,7 +696,7 @@
                   }}
                 </p>
                 <div
-                  v-if="stockSeen && !storeRows.length"
+                  v-if="stockSeen && !loudStores.length"
                   class="m-4 flex flex-wrap items-center gap-3 rounded-6 border border-dashed border-outline-gray-3 p-3 text-sm text-ink-gray-7"
                 >
                   <span
@@ -697,7 +704,7 @@
                     aria-hidden="true"
                   />
                   <span
-                    v-if="minimos"
+                    v-if="minimos && !storeRows.length"
                     class="min-w-0 flex-1"
                     data-minimos-empty
                     >{{
@@ -717,11 +724,11 @@
                   />
                 </div>
                 <ul
-                  v-else-if="storeRows.length && (stockSeen || minimos)"
+                  v-if="listedStores.length && (stockSeen || minimos)"
                   class="divide-y divide-outline-gray-1"
                 >
                   <li
-                    v-for="row in storeRows"
+                    v-for="row in listedStores"
                     :key="row.warehouse"
                     class="flex flex-wrap items-start gap-3 px-4 py-3"
                     :data-minimos-store="
@@ -792,11 +799,11 @@
                           class="mt-1 flex flex-wrap gap-1"
                         >
                           <component
-                            :is="data.inventory?.scanner ? 'a' : 'span'"
+                            :is="scannerWorker ? 'a' : 'span'"
                             v-for="cajon in row.cajones"
                             :key="cajon.ubicacion"
                             :href="
-                              data.inventory?.scanner
+                              scannerWorker
                                 ? binUrl(cajon.ubicacion)
                                 : undefined
                             "
@@ -813,16 +820,19 @@
                                     'Productos',
                                   )
                             "
-                            class="inline-flex h-6 items-center gap-1 rounded-5 bg-surface-gray-2 px-2 text-xs text-ink-gray-8"
+                            class="inline-block max-w-full rounded-5 bg-surface-gray-2 px-2 py-0.5 text-xs leading-5 text-ink-gray-8"
                             :class="
-                              data.inventory?.scanner
-                                ? 'hover:bg-surface-gray-3'
-                                : ''
+                              scannerWorker ? 'hover:bg-surface-gray-3' : ''
                             "
+                            data-store-bin
                             ><span
-                              class="lucide-inbox h-3.5 w-3.5"
+                              class="lucide-inbox mr-1 inline-block h-3.5 w-3.5 align-[-3px]"
                               aria-hidden="true"
-                            />{{ cajon.label || cajon.ubicacion
+                            /><span
+                              v-if="binTrail(cajon)"
+                              class="text-ink-gray-6"
+                              >{{ `${binTrail(cajon)} › ` }}</span
+                            >{{ cajon.label || cajon.ubicacion
                             }}<span class="ml-1 tabular-nums text-ink-gray-6"
                               >·
                               {{
@@ -1090,6 +1100,41 @@
                     </span>
                   </li>
                 </ul>
+                <!-- Stores with nothing to read or do but set a minimum fold
+                   into one line, so the stores that hold it stay in sight. -->
+                <button
+                  v-if="quietStores.length"
+                  type="button"
+                  class="press flex min-h-11 w-full items-center gap-2 border-t border-outline-gray-1 px-4 text-left text-sm text-ink-gray-7 hover:bg-surface-gray-1"
+                  :aria-expanded="quietOpen ? 'true' : 'false'"
+                  data-quiet-stores
+                  @click="quietOpen = !quietOpen"
+                >
+                  <span
+                    class="lucide-chevron-right size-4 shrink-0 transition-transform motion-reduce:transition-none"
+                    :class="quietOpen ? 'rotate-90' : ''"
+                    aria-hidden="true"
+                  />
+                  {{
+                    quietOpen
+                      ? __(
+                          'Hide the stores with no stock or minimum',
+                          null,
+                          'Productos',
+                        )
+                      : quietStores.length === 1
+                        ? __(
+                            '1 store with no stock or minimum',
+                            null,
+                            'Productos',
+                          )
+                        : __(
+                            '{0} stores with no stock or minimum',
+                            [quietStores.length],
+                            'Productos',
+                          )
+                  }}
+                </button>
                 <p
                   v-if="data.stock.hidden"
                   class="border-t border-outline-gray-1 px-4 py-2 text-sm text-ink-gray-6"
@@ -1880,6 +1925,7 @@ const ProductoBar = defineAsyncComponent(
 import MovementRow from '@/components/inventario/MovementRow.vue'
 import ProductInsights from '@/components/productos/ProductInsights.vue'
 import ProductPrices from '@/components/productos/ProductPrices.vue'
+import ProductPlaces from '@/components/productos/ProductPlaces.vue'
 import {
   avisameStock,
   conditionInSentence,
@@ -1910,6 +1956,9 @@ import {
   photoOf,
   plain,
   priceUnit,
+  productPlaces,
+  binTrail,
+  quietStore,
   problemOf,
   productKind,
   productosApi,
@@ -2389,6 +2438,18 @@ const stockSeen = computed(() => {
   const stock = data.value?.stock
   return Boolean(stock?.readable && !stock.unassigned && !stock.service)
 })
+// Escáner is installed and this worker may use it: only then does a cajón
+// open there (Escáner refuses everyone else).
+const scannerWorker = computed(() => {
+  const inventory = data.value?.inventory
+  return Boolean(inventory?.scanner && inventory?.scanner_user)
+})
+// «Dónde está» in the hero: where cajones exist on this site at all.
+const places = computed(() =>
+  data.value?.inventory?.scanner && stockSeen.value && !isTemplate.value
+    ? productPlaces(data.value.stock.rows)
+    : [],
+)
 function stockActions(row) {
   const inventory = data.value?.inventory
   return Boolean(
@@ -2443,6 +2504,20 @@ const storeRows = computed(() => {
       )
   return out
 })
+// Stores that hold none, expect none, keep no minimum, cajón or count:
+// folded under one line («Mínimos por tienda» lists every store in sight).
+const quietStores = computed(() =>
+  stockSeen.value ? storeRows.value.filter(quietStore) : [],
+)
+const loudStores = computed(() =>
+  storeRows.value.filter((row) => !quietStores.value.includes(row)),
+)
+const quietOpen = ref(false)
+const listedStores = computed(() =>
+  quietOpen.value
+    ? [...loudStores.value, ...quietStores.value]
+    : loudStores.value,
+)
 const minimoStore = computed(
   () =>
     reorderStores.value.find((store) => store.warehouse === minimo.warehouse) ||

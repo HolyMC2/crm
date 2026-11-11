@@ -740,6 +740,11 @@ describe('Mínimos por tienda', () => {
     root.querySelector(`[data-minimos-store="${warehouse}"]`)
   const words = (el) => el?.textContent.replace(/\s+/g, ' ').trim()
   const sheet = () => document.querySelector('[data-minimo-sheet]')
+  // Bodega holds none and keeps no minimum: it waits under the fold.
+  const openQuiet = async () => {
+    root.querySelector('[data-quiet-stores]').click()
+    await flush()
+  }
 
   it('one row per store with its minimum, state and watch; «Reordenar» buys what Doco suggests', async () => {
     stocked()
@@ -750,12 +755,20 @@ describe('Mínimos por tienda', () => {
     expect(words(section.querySelector('[data-minimos-story]'))).toBe(
       'How much each store should have. If it drops, I let you know once and take you to order.',
     )
-    // The stores with stock first, then those that hold none yet.
-    expect(
+    // The stores with stock first, then those that hold none yet; a store
+    // with nothing there and no minimum waits under one line.
+    const listed = () =>
       [...section.querySelectorAll('[data-minimos-store]')].map(
         (el) => el.dataset.minimosStore,
-      ),
-    ).toEqual(['Centro - D', 'Bodega - D', 'Norte - D'])
+      )
+    expect(listed()).toEqual(['Centro - D', 'Norte - D'])
+    const fold = section.querySelector('[data-quiet-stores]')
+    expect(words(fold)).toBe('1 store with no stock or minimum')
+    expect(fold.getAttribute('aria-expanded')).toBe('false')
+    await openQuiet()
+    expect(listed()).toEqual(['Centro - D', 'Norte - D', 'Bodega - D'])
+    expect(words(fold)).toBe('Hide the stores with no stock or minimum')
+    expect(fold.getAttribute('aria-expanded')).toBe('true')
 
     const centro = row('Centro - D')
     expect(words(centro.querySelector('[data-minimos-line]'))).toBe(
@@ -912,6 +925,7 @@ describe('Mínimos por tienda', () => {
     )
     serve({ request_options: { candidates: [] } })
     await mountAt('/productos/ABIBMEX000130')
+    await openQuiet()
     // Nothing to set; the store still opens to read.
     expect(row('Bodega - D').querySelector('[data-minimos-set]')).toBeNull()
     row('Bodega - D').querySelector('[data-minimos-open]').click()
@@ -935,6 +949,32 @@ describe('Mínimos por tienda', () => {
     expect(document.body.textContent).toContain(
       'The minimum is set by whoever keeps the catalog.',
     )
+  })
+
+  it('held nowhere: says so, and the stores wait under the fold to set a minimum', async () => {
+    const list = stores().map((store) => ({
+      ...store,
+      actual_qty: 0,
+      reorder_level: 0,
+      reorder_qty: 0,
+      suggested_qty: 0,
+      state: 'sin_minimo',
+      watch: null,
+    }))
+    stocked({ list })
+    record.stock.rows = []
+    record.stock.total = 0
+    serve()
+    await mountAt('/productos/ABIBMEX000130')
+    const section = root.querySelector('#existencias')
+    expect(section.textContent).toContain('None in your stores yet.')
+    expect(section.querySelector('[data-minimos-empty]')).toBeNull()
+    expect(section.querySelector('[data-minimos-store]')).toBeNull()
+    expect(words(section.querySelector('[data-quiet-stores]'))).toBe(
+      '3 stores with no stock or minimum',
+    )
+    await openQuiet()
+    expect(section.querySelectorAll('[data-minimos-set]')).toHaveLength(3)
   })
 
   it('says so when no store is in sight', async () => {
@@ -1065,6 +1105,7 @@ describe('Mínimos por tienda', () => {
     stocked({ list })
     serve()
     await mountAt('/productos/ABIBMEX000130')
+    await openQuiet()
     const centro = row('Centro - D')
     // The main line stays as it is.
     expect(words(centro.querySelector('[data-minimos-line]'))).toBe(
@@ -1275,5 +1316,130 @@ describe('Mínimos por tienda', () => {
       'Esta tienda no tiene mínimo. Pide a quien mantiene el catálogo que lo ponga.',
     )
     expect(document.querySelector('[data-avisame-set-minimum]')).toBeNull()
+  })
+})
+
+describe('Dónde está', () => {
+  const words = (el) => el?.textContent.replace(/\s+/g, ' ').trim()
+  const bin = (n, path = ['Bodega', 'Anaquel C']) => ({
+    ubicacion: `UBI-${n}`,
+    label: `Caja ${n}`,
+    path,
+    qty: n,
+  })
+  const filed = (cajones, more = []) => {
+    record.item.is_stock_item = 1
+    record.stock = {
+      readable: true,
+      hidden: 0,
+      total: 11,
+      service: false,
+      rows: [
+        {
+          warehouse: 'Centro - D',
+          label: 'Centro',
+          actual_qty: 8,
+          projected_qty: 8,
+          reorder_level: null,
+          state: 'ok',
+          cajones,
+        },
+        ...more,
+      ],
+    }
+  }
+  const unfiledStore = {
+    warehouse: 'Norte - D',
+    label: 'Norte',
+    actual_qty: 3,
+    projected_qty: 3,
+    reorder_level: null,
+    state: 'ok',
+    cajones: [],
+  }
+
+  it('names the cajón under the shelf it sits on, and how many are in it', async () => {
+    filed([bin(5)])
+    await mountAt('/productos/ABIBMEX000130')
+    const tile = root.querySelector('[data-places]')
+    expect(words(tile.querySelector('dt'))).toBe('Where it is')
+    const line = tile.querySelector('[data-place-bin]')
+    expect(words(line.querySelector('[data-place-trail]'))).toBe(
+      'Bodega › Anaquel C',
+    )
+    expect(words(line)).toContain('Caja 5')
+    expect(words(line)).toContain('5 ')
+    // One store: no store name over the cajón.
+    expect(tile.querySelector('[data-place-store]')).toBeNull()
+    // An Escáner worker opens the cajón there, with the way back.
+    expect(line.tagName).toBe('A')
+    expect(line.getAttribute('href')).toContain('/scan/bins/UBI-5')
+    // The stock by store says the same place.
+    expect(words(root.querySelector('[data-store-bin]'))).toContain(
+      'Bodega › Anaquel C › Caja 5',
+    )
+  })
+
+  it('a store holding it in no cajón says so, and an Escáner worker files it there', async () => {
+    filed([bin(2)], [unfiledStore])
+    await mountAt('/productos/ABIBMEX000130')
+    const tile = root.querySelector('[data-places]')
+    expect([...tile.querySelectorAll('[data-place-store]')].map(words)).toEqual(
+      ['Centro', 'Norte'],
+    )
+    const unfiled = tile.querySelector('[data-place-unfiled]')
+    expect(words(unfiled)).toContain('Not filed in a bin here')
+    const assign = unfiled.querySelector('a')
+    expect(words(assign)).toBe('Assign bin')
+    expect(assign.getAttribute('href')).toContain('/scan/item/ABIBMEX000130')
+    expect(assign.getAttribute('href')).toContain('warehouse=Norte+-+D')
+    expect(assign.getAttribute('href')).toContain('accion=asignar')
+  })
+
+  it('who cannot use Escáner reads the place but gets no door to it', async () => {
+    filed([bin(2)], [unfiledStore])
+    record.inventory = {
+      scanner: true,
+      scanner_user: false,
+      stock_adjust: false,
+    }
+    await mountAt('/productos/ABIBMEX000130')
+    const tile = root.querySelector('[data-places]')
+    expect(tile.querySelector('[data-place-bin]').tagName).toBe('SPAN')
+    expect(tile.querySelector('[data-place-unfiled] a')).toBeNull()
+    expect(root.querySelector('[data-store-bin]').tagName).toBe('SPAN')
+  })
+
+  it('shows four lines and points to the rest', async () => {
+    filed(
+      [1, 2, 3, 4, 5].map((n) => bin(n)),
+      [unfiledStore],
+    )
+    await mountAt('/productos/ABIBMEX000130')
+    const tile = root.querySelector('[data-places]')
+    expect(tile.querySelectorAll('[data-place-bin]')).toHaveLength(4)
+    expect(tile.querySelector('[data-place-unfiled]')).toBeNull()
+    const more = tile.querySelector('[data-places-more]')
+    expect(words(more)).toBe('2 more')
+    expect(more.getAttribute('href')).toBe('#existencias')
+  })
+
+  it('no tile on a site without cajones, nor for a product held nowhere', async () => {
+    filed([bin(2)])
+    record.inventory = {
+      scanner: false,
+      scanner_user: false,
+      stock_adjust: true,
+    }
+    await mountAt('/productos/ABIBMEX000130')
+    expect(root.querySelector('[data-places]')).toBeNull()
+    app.unmount()
+    root.remove()
+    record = service()
+    filed([])
+    record.stock.rows[0].actual_qty = 0
+    record.stock.total = 0
+    await mountAt('/productos/ABIBMEX000130')
+    expect(root.querySelector('[data-places]')).toBeNull()
   })
 })

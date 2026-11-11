@@ -773,6 +773,48 @@ export function scannerItemUrl(item, { back, warehouse, action } = {}) {
   return withReturn(href, back || { to: recordPath(item), label: 'Productos' })
 }
 
+/** Where the product is, per store whose stock the worker reads: each cajón
+ *  under the places it hangs from («Anaquel C › Nivel 2» over «Caja 1»), and
+ *  a store that holds it in no cajón. A store with neither is left out. */
+export function productPlaces(rows) {
+  return (rows || [])
+    .filter((row) => row.cajones?.length || Number(row.actual_qty) > 0)
+    .map((row) => ({
+      warehouse: row.warehouse,
+      label: row.label || row.warehouse,
+      cajones: (row.cajones || []).map((cajon) => ({
+        ubicacion: cajon.ubicacion,
+        name: cajon.label || cajon.ubicacion,
+        trail: binTrail(cajon),
+        qty: cajon.qty ?? null,
+      })),
+    }))
+}
+
+/** A store row with nothing to read or do there but set a minimum: none on
+ *  hand, reserved or on the way, no minimum or watch, no cajón, no count
+ *  asked. ERPNext's transit and work-in-progress stores are such rows on
+ *  nearly every product. */
+export function quietStore(row) {
+  const none = (value) => !Number(value)
+  const level = row.minimum ? row.minimum.reorder_level : row.reorder_level
+  return (
+    none(row.actual_qty) &&
+    none(row.projected_qty) &&
+    none(row.reserved_qty) &&
+    none(row.ordered_qty) &&
+    none(level) &&
+    !row.minimum?.watch &&
+    !row.cajones?.length &&
+    !row.counts_pending?.length
+  )
+}
+
+/** «Anaquel C › Nivel 2»: what a cajón hangs from, outermost first. */
+export function binTrail(cajon) {
+  return (cajon?.path || []).filter(Boolean).join(' › ')
+}
+
 /** Escáner's page of one cajón (what it holds, move, count). */
 export function scannerBinUrl(ubicacion, back) {
   return withReturn(`/scan/bins/${encodeURIComponent(ubicacion)}`, back)

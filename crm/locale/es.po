@@ -38183,3 +38183,23 @@ msgstr "Buscar «{0}» en {1}"
 #: frontend/src/utils/paletteCalc.js
 msgid "Copy the result"
 msgstr "Copiar el resultado"
+
+#: frontend/src/components/productos/ProductPlaces.vue
+msgctxt "Productos"
+msgid "Where it is"
+msgstr "Dónde está"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "1 store with no stock or minimum"
+msgstr "1 tienda sin existencia ni mínimo"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "{0} stores with no stock or minimum"
+msgstr "{0} tiendas sin existencia ni mínimo"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Hide the stores with no stock or minimum"
+msgstr "Ocultar las tiendas sin existencia ni mínimo"

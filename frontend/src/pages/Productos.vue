@@ -957,6 +957,7 @@ import {
   isInventoryView,
   lastCountedLabel,
   listReturn,
+  binTrail,
   listState,
   loadProductosBoot,
   money,
@@ -1432,7 +1433,11 @@ function rowLines(row) {
     if (row.cajones?.length)
       lines.push({
         text: __('Bins: {0}', [
-          row.cajones.map((c) => c.label || c.ubicacion).join(', '),
+          row.cajones
+            .map((c) =>
+              [binTrail(c), c.label || c.ubicacion].filter(Boolean).join(' › '),
+            )
+            .join(', '),
         ]),
         tone: 'text-ink-gray-6',
       })
