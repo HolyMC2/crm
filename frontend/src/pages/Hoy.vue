@@ -81,6 +81,34 @@
         <Button variant="ghost" :label="__('Retry')" @click="refresh()" />
       </p>
 
+      <!-- Mi cuenta's trial card: the days left and «Activar», which opens the
+           activation sheet (/crm/cuenta?activar=1). A rule above it only: the
+           section under it brings its own. -->
+      <div
+        v-if="trial"
+        class="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-outline-gray-1 pt-3"
+        data-testid="hoy-prueba"
+      >
+        <span
+          class="lucide-clock size-5 flex-none text-ink-gray-6"
+          aria-hidden="true"
+        />
+        <div class="min-w-0 flex-1 basis-48">
+          <p class="text-base font-semibold text-ink-gray-9">
+            {{ trial.title }}
+          </p>
+          <p v-if="trial.detail" class="text-sm text-ink-gray-6">
+            {{ trial.detail }}
+          </p>
+        </div>
+        <Button
+          variant="solid"
+          class="min-h-11 max-sm:w-full"
+          :label="__('Activate', null, 'Cuenta')"
+          data-testid="hoy-activar"
+          @click="openTrial"
+        />
+      </div>
       <!-- Nothing overdue, due today or on the agenda: one line instead of two empty cards. -->
       <p
         v-if="allClear"
@@ -577,6 +605,7 @@ import {
   scanDrafts,
   teamOverdueRows,
   timeText,
+  trialCard,
   withReturn,
 } from '@/composables/useHoy'
 import { usePullRefresh } from '@/composables/usePullRefresh'
@@ -664,6 +693,13 @@ const cards = computed(() =>
       })
     : [],
 )
+const trial = computed(() =>
+  data.value?.continuar?.available ? trialCard(data.value.continuar) : null,
+)
+function openTrial() {
+  if (trial.value?.to) router.push(trial.value.to)
+  else if (trial.value?.href) window.location.assign(trial.value.href)
+}
 const followUps = computed(() => followUpRows(data.value?.seguimiento))
 const followUpQueue = computed(() => followUpQueueLink(data.value?.seguimiento))
 const followUpCount = computed(() => {

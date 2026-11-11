@@ -1,4 +1,11 @@
 import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
+// The shell's own pages outside every module: Mi cuenta (the plan) and Mi perfil
+// (the person). They boot neutral, light no rail item and guard themselves.
+export const ACCOUNT_PAGES = Object.freeze(['cuenta', 'perfil'])
+/** Whether this person may open Mi cuenta (the shell boot's `account.cuenta`). */
+export function cuentaAllowed(boot) {
+  return boot?.account?.cuenta === true
+}
 // Shared shell navigation: native sources stay explicit and URLs stay local.
 export const sourceSlugs = Object.freeze({
   Contact: 'contact',
@@ -78,6 +85,9 @@ const RECOVERY_MODULES = {
   encuestas: 'encuestas',
   equipo: 'equipo',
   manual: 'manual',
+  cuenta: 'cuenta',
+  // Mi perfil opens for every staff account, the same people Hoy opens for.
+  perfil: 'hoy',
   // A refused Inmobiliaria screen recovers into Inmobiliaria, never Ventas.
   inmobiliaria: 'inmobiliaria',
   contactos: 'contactos',
@@ -91,7 +101,7 @@ export function recoveryModule(intended) {
   return RECOVERY_MODULES[head] || 'ventas'
 }
 export function recoveryReady(module, boot) {
-  return moduleEnabled(boot, module)
+  return module === 'cuenta' ? cuentaAllowed(boot) : moduleEnabled(boot, module)
 }
 /**
  * Whether the shell refuses the module a route belongs to, and the provider's
@@ -100,6 +110,9 @@ export function recoveryReady(module, boot) {
  */
 export function moduleRefusal(route, key, { boot, error }) {
   if (route?.meta?.recovery || key === 'ventas') return null
+  // The account pages guard themselves from the boot; a boot that never came
+  // (a refusal or a failed first load) is still the shell's to explain.
+  if (ACCOUNT_PAGES.includes(key)) return error && !boot ? refusal(error) : null
   if (error) return refusal(error)
   if (!boot || moduleEnabled(boot, key)) return null
   const entry = boot.modules?.[key] || {}

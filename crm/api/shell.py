@@ -1113,10 +1113,19 @@ def boot():
 		# «Automático» when the saved module is no longer one of mine.
 		"landing": _saved_landing_key(),
 		"modules": modules,
+		# Mi cuenta's doors and the shell's plan notice: who may open it, and the plan
+		# summary doco keeps on this site (never a platform call per boot).
+		"account": _account(),
 		# Compatibility for the Contactos pages and NotPermitted (one release).
 		"sales_access": bool(modules.get("ventas", {}).get("enabled")),
 		"capabilities": {"directory": bool(modules.get("contactos", {}).get("enabled"))},
 	}
+
+
+def _account() -> dict:
+	from crm.api.cuenta import account
+
+	return account()
 
 
 def _saved_landing_key() -> str:

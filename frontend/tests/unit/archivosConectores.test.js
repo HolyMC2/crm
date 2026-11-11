@@ -604,7 +604,11 @@ describe('the connections page', () => {
       connectors: [],
     })
     const text = root.textContent
-    expect(text).toContain('Activate Documents in your plan')
+    expect(text).toContain('is not part of the plans yet')
+    expect(text).not.toContain('Open my plan')
+    // The guard says why and leads on: tell Muelle, or go back to the files.
+    expect(text).toContain('Copy message for support')
+    expect(text).toContain('Back to Archivos')
     expect(text).toContain('Only an administrator can set up connections')
     expect(text).toContain('Copy request for an administrator')
     expect(text).not.toContain('New connection')
@@ -628,7 +632,7 @@ describe('the connections page', () => {
       ],
     })
     const text = root.textContent
-    expect(text.split('Activate Documents in your plan').length - 1).toBe(1)
+    expect(text.split('is not part of the plans yet').length - 1).toBe(1)
     expect(text).not.toContain('Activa Documentos en tu plan.')
     expect(text).not.toContain('Test connection')
     expect(text).not.toContain('Check now')

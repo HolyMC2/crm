@@ -89,6 +89,42 @@
           }}
         </div>
       </ExpandTransition>
+      <!-- Mi cuenta's one notice, from the plan summary in the boot: an invoice
+           past due or a suspension within days. Not on Mi cuenta itself, nor
+           the trial's on Hoy, whose trial card says it. -->
+      <ExpandTransition>
+        <div
+          v-if="cuentaNotice"
+          role="status"
+          class="flex shrink-0 items-center gap-2 bg-surface-amber-1 pl-4 pr-1 text-sm text-ink-amber-8"
+          data-testid="shell-cuenta-aviso"
+        >
+          <span
+            class="lucide-triangle-alert size-4 flex-none"
+            aria-hidden="true"
+          />
+          <RouterLink
+            :to="cuentaNotice.to"
+            class="flex min-h-11 min-w-0 flex-1 items-center py-1.5 font-medium"
+          >
+            <span class="min-w-0"
+              >{{ cuentaNotice.text }}
+              <span class="whitespace-nowrap underline">{{
+                cuentaNotice.cta
+              }}</span></span
+            >
+          </RouterLink>
+          <button
+            type="button"
+            class="press flex size-11 flex-none items-center justify-center rounded-full active:bg-surface-amber-2"
+            :aria-label="__('Hide until next time', null, 'Cuenta')"
+            :title="__('Hide until next time', null, 'Cuenta')"
+            @click="dismissNotice"
+          >
+            <span class="lucide-x size-4" aria-hidden="true" />
+          </button>
+        </div>
+      </ExpandTransition>
       <div
         v-if="shellLoading && !shellBoot"
         v-show="!appShown"
@@ -339,6 +375,7 @@ import { currentApp, openApps, showShell } from '@/composables/appStrip'
 import AppFrames from './AppFrames.vue'
 import ShellRail from './ShellRail.vue'
 import ShellBottomNav from './ShellBottomNav.vue'
+import { dismissNotice, shellNotice } from './cuentaDoor'
 
 const MoreSheet = defineAsyncComponent(() => import('./MoreSheet.vue'))
 const loadPalette = () => import('./CommandPalette.vue')
@@ -369,6 +406,13 @@ const paletteOpen = ref(false),
   moreOpen = ref(false),
   copied = ref('')
 const activeKey = computed(() => moduleKeyFor(route))
+// One fact in one place: Mi cuenta says it itself, and on Hoy the trial card
+// already asks for «Activar».
+const cuentaNotice = computed(() => {
+  const notice = shellNotice.value
+  if (!notice || activeKey.value === 'cuenta') return null
+  return activeKey.value === 'hoy' && notice.kind === 'trial' ? null : notice
+})
 // An app from the rail is on screen (desktop only). Going to another page
 // comes back to the shell; a hidden page that only rewrites its query (a
 // filter, a refresh) leaves the app on screen.
@@ -422,7 +466,10 @@ const backTo = computed(() => {
 const blockedAsksAccess = computed(
   () => !blocked.value?.code || blocked.value.code === 'permission',
 )
-const blockedLabel = computed(() => moduleMeta(activeKey.value)?.label || '')
+// The account pages are no module: they answer with their own title.
+const blockedLabel = computed(
+  () => moduleMeta(activeKey.value)?.label || headerTitle.value || '',
+)
 const blockedFallback = computed(() =>
   __(
     'You do not have permission to see {0}. Ask your manager for access and try again.',
@@ -502,6 +549,18 @@ const MODULE_REQUESTS = {
   inventario: () =>
     __(
       'I need access to Inventario in Muelle: read permission for Stock Entry and Warehouse in my company.',
+    ),
+  cuenta: () =>
+    __(
+      'I need the «Mi Plan» permission in Muelle to see and pay the shop’s plan (My account).',
+      null,
+      'Cuenta',
+    ),
+  perfil: () =>
+    __(
+      'I need to open my profile in Muelle: please check that my user is an active team account.',
+      null,
+      'Perfil',
     ),
 }
 async function copyText(text) {

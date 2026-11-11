@@ -13,10 +13,13 @@ const { hostedModules, moduleKeyFor } = await import(
   '@/composables/muelleShell'
 )
 const { moduleForPath } = await import('@/vendor/muelle-shell/contracts')
+const { ACCOUNT_PAGES } = await import('@/utils/shellRoutes')
 const { routeGroup } = await import('@/composables/navModel')
 const { ventasSectionOf } = await import('@/composables/ventasNav')
 
 const HOSTED = new Set(hostedModules.map((module) => module.key))
+// The shell's own pages outside every module (Mi cuenta, Mi perfil).
+const ACCOUNT = new Set(ACCOUNT_PAGES)
 // Ventas pages no list leads to (reached from a record, a setting or a link):
 // Ventas is their home on purpose. A new route lands here only by choice.
 const VENTAS_WITHOUT_A_LIST = new Set([
@@ -35,9 +38,14 @@ const VENTAS_WITHOUT_A_LIST = new Set([
 const pages = router.getRoutes().filter((route) => !route.redirect)
 
 describe('every route has exactly one home', () => {
-  it('a route’s own module is one the shell hosts', () => {
+  it('a route’s own module is one the shell hosts, or an account page', () => {
     const strays = pages
-      .filter((route) => route.meta?.app && !HOSTED.has(route.meta.app))
+      .filter(
+        (route) =>
+          route.meta?.app &&
+          !HOSTED.has(route.meta.app) &&
+          !ACCOUNT.has(route.meta.app),
+      )
       .map((route) => `${route.path} → ${route.meta.app}`)
     expect(strays).toEqual([])
   })
@@ -83,5 +91,21 @@ describe('every route has exactly one home', () => {
         : []
     })
     expect(wrong).toEqual([])
+  })
+})
+
+describe('the account pages', () => {
+  it('are one route each, outside every module and every rail item', () => {
+    const account = pages.filter((route) => ACCOUNT.has(route.meta?.app))
+    expect(account.map((route) => [route.path, route.meta.app])).toEqual([
+      ['/cuenta', 'cuenta'],
+      ['/perfil', 'perfil'],
+    ])
+    for (const route of account) {
+      expect(moduleForPath(route.path, hostedModules)).toBeNull()
+      expect(moduleKeyFor({ path: route.path, meta: route.meta })).toBe(
+        route.meta.app,
+      )
+    }
   })
 })

@@ -158,6 +158,17 @@ lacks a feature, ask the Shell S1 owner instead of making a private copy.
   layout follows the page's own width (`useElementSize`), not the window's, because the rail and
   the Ventas column take a varying share: two columns from 1000 px of content, a table from 620
   px, list rows below that, icon buttons in the bar under 760 px.
+- 2026-11-11 · Mi cuenta (`pages/Cuenta.vue`, lane `cuenta-spa`): the owner's account in the shell,
+  one `Segmented` (`fit="content"`, so «Facturación» never hyphenates at 305 px) over Resumen,
+  Facturación and Tienda, each section an async chunk. Facturación lists what is to pay first with
+  one filled «Pagar» per invoice (two taps from a notice), the paid ones with «CFDI PDF/XML» only when
+  Boat stamped the CFDI, «Mi saldo» with its ledger 20 at a time, and the saved cards with the bin
+  then «Borrar» in place; a job the server cannot do yet (adding a card) is one honest line with the
+  way to support, never a dead button. Tienda reads the plans as rows (the current one on the accent
+  chip, the price per cycle, IVA included) and each add-on with a switch; a switch Boat cannot deliver
+  stays off with Boat's reason beside it, and every change opens one confirm `BottomSheet` that
+  names the price, the cycle and when the charge starts (`components/cuenta/ConfirmarSheet.vue`).
+  Every hold and payment state comes from one module (`components/cuenta/pagos.js`).
 - Still to do on Contacto: fold Seguimientos «Hechos/Cancelados» into a collapsed «Completados
   (n)»; grey out an action that does not apply instead of hiding it.
 

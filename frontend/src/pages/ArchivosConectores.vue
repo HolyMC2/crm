@@ -241,23 +241,21 @@ const guards = computed(() => {
         'The connections of Archivos are stopped on my site. Please turn them back on.',
       ),
     })
+  // Documents is not sold in any plan yet (Boat's store does not offer it), so
+  // there is nothing to activate: the guard says so, lets the owner tell
+  // Muelle they want it, and leads back to the files.
   if (!d.automation_enabled)
     out.push({
       code: 'unlicensed',
       message: __(
-        'Activate Documents in your plan to connect your invoice mailbox. Files you already saved stay available.',
+        'Connecting your invoice mailbox or Paperless is not part of the plans yet. Files you already saved stay available.',
       ),
-      actions: d.can_configure
-        ? [
-            {
-              label: __('Open my plan'),
-              kind: 'route',
-              target: '/desk/mi-plan',
-            },
-          ]
-        : [{ label: __('Copy request for an administrator'), kind: 'copy' }],
+      actions: [
+        { label: __('Copy message for support'), kind: 'copy' },
+        { label: __('Back to Archivos'), kind: 'back' },
+      ],
       copyText: __(
-        'Please activate Documents in our Muelle plan so Archivos can connect our archive and invoice mailbox.',
+        'We would like to connect our invoice mailbox or Paperless to Archivos. Please tell us when it is part of the plans.',
       ),
     })
   if (!d.can_configure)

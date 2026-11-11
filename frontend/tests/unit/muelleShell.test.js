@@ -242,6 +242,21 @@ async function mount(path) {
         component: { render: () => h('p', 'Recovery page') },
         meta: { app: 'contactos', title: 'Permisos', recovery: true },
       },
+      {
+        path: '/hoy',
+        component: { render: () => h('p', 'Hoy page') },
+        meta: { app: 'hoy', title: 'Hoy' },
+      },
+      {
+        path: '/cuenta',
+        component: { render: () => h('p', 'Cuenta page') },
+        meta: { app: 'cuenta', title: 'My account' },
+      },
+      {
+        path: '/perfil',
+        component: { render: () => h('p', 'Perfil page') },
+        meta: { app: 'perfil', title: 'My profile' },
+      },
     ],
   })
   await router.push(path)
@@ -4777,4 +4792,174 @@ describe('the bar and Más follow each worker (Personalizar, Barra por puesto)',
     await until(sheet)
     expect(sheet()).not.toBeNull()
   })
+})
+
+describe('Mi cuenta and Mi perfil from the shell', () => {
+  const settle = async () => {
+    for (let i = 0; i < 4; i++) {
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      await nextTick()
+    }
+  }
+  // An accountant with the «Mi Plan» role and no Ventas, and a cashier.
+  const accountant = (plan = { is_trial: true, trial_days_left: 5 }) =>
+    boot({
+      user: { name: 'conta@example.test', full_name: 'Lucía Conta' },
+      modules: {
+        contactos: { key: 'contactos', enabled: true, capabilities: {} },
+      },
+      account: { cuenta: true, plan },
+    })
+  const cashier = () =>
+    boot({
+      user: { name: 'caja@example.test', full_name: 'Pepe Caja' },
+      account: { cuenta: false, plan: null },
+    })
+  const serve = (data) =>
+    state.call.mockImplementation(async (method) =>
+      method === 'crm.api.shell.boot' ? data : null,
+    )
+  beforeEach(() => sessionStorage.clear())
+
+  it('desktop: the account menu opens Mi perfil for everyone and Mi cuenta with its line for the plan’s keeper', async () => {
+    state.mobile.value = false
+    serve(accountant())
+    await mount('/contactos')
+    root.querySelector('[aria-label="Account menu"]').click()
+    await settle()
+    expect(
+      document
+        .querySelector('[data-testid="menu-perfil"]')
+        .getAttribute('href'),
+    ).toBe('/perfil')
+    const cuenta = document.querySelector('[data-testid="menu-cuenta"]')
+    expect(cuenta.getAttribute('href')).toBe('/cuenta')
+    expect(cuenta.textContent).toContain('My account')
+    expect(cuenta.textContent).toContain('Trial: 5 days left')
+  })
+
+  it('desktop: a cashier gets Mi perfil but no Mi cuenta', async () => {
+    state.mobile.value = false
+    serve(cashier())
+    await mount('/contactos')
+    root.querySelector('[aria-label="Account menu"]').click()
+    await settle()
+    expect(document.querySelector('[data-testid="menu-perfil"]')).not.toBeNull()
+    expect(document.querySelector('[data-testid="menu-cuenta"]')).toBeNull()
+  })
+
+  it('phone: Más opens both in one tap, without the settings fold or a wide screen', async () => {
+    state.mobile.value = true
+    serve(accountant())
+    await mount('/contactos')
+    root.querySelector('nav[aria-label="Main navigation"] > button').click()
+    const more = await until(() =>
+      document.querySelector('[data-shell-layer="more"]'),
+    )
+    await settle()
+    expect(
+      more.querySelector('[data-testid="more-cuenta"]').getAttribute('href'),
+    ).toBe('/cuenta')
+    expect(
+      more.querySelector('[data-testid="more-perfil"]').getAttribute('href'),
+    ).toBe('/perfil')
+    expect(
+      more.querySelector('[data-testid="more-cuenta-line"]').textContent,
+    ).toContain('Trial: 5 days left')
+  })
+
+  it('an overdue invoice shows one notice that links to Mi cuenta and hides for the session', async () => {
+    state.mobile.value = false
+    serve(
+      accountant({ overdue_count: 1, overdue_amount: 499, is_trial: false }),
+    )
+    await mount('/contactos')
+    await settle()
+    const notice = () =>
+      root.querySelector('[data-testid="shell-cuenta-aviso"]')
+    expect(notice().textContent).toContain(
+      'You have an overdue invoice. Pay it so you keep the service.',
+    )
+    expect(notice().querySelector('a').getAttribute('href')).toBe(
+      '/cuenta?tab=facturacion',
+    )
+    // The link says where it goes.
+    expect(notice().querySelector('a').textContent).toContain('See invoices')
+    notice().querySelector('button').click()
+    await settle()
+    expect(notice()).toBeNull()
+  })
+
+  it('nobody else reads the plan in the shell', async () => {
+    state.mobile.value = false
+    serve(cashier())
+    await mount('/contactos')
+    await settle()
+    expect(root.querySelector('[data-testid="shell-cuenta-aviso"]')).toBeNull()
+  })
+
+  // Two days left: Boat suspends the day after the end.
+  const ending = {
+    is_trial: true,
+    trial_days_left: 2,
+    suspend_days_left: 3,
+    suspend_at: '2026-11-14',
+  }
+
+  it('a trial in its last days links straight to «Activar», and Hoy leaves it to its card', async () => {
+    state.mobile.value = false
+    serve(accountant(ending))
+    await mount('/contactos')
+    await settle()
+    const notice = () =>
+      root.querySelector('[data-testid="shell-cuenta-aviso"]')
+    expect(notice().textContent).toContain('Your trial ends in 2 days.')
+    expect(notice().querySelector('a').getAttribute('href')).toBe(
+      '/cuenta?activar=1',
+    )
+    expect(notice().querySelector('a').textContent).toContain('Activate')
+    await router.push('/hoy')
+    await settle()
+    expect(notice()).toBeNull()
+    await router.push('/cuenta')
+    await settle()
+    expect(notice()).toBeNull()
+  })
+
+  it('an overdue invoice still speaks on Hoy', async () => {
+    state.mobile.value = false
+    // Not the notice an earlier case hid for this session.
+    serve(
+      accountant({ overdue_count: 2, overdue_amount: 998, is_trial: false }),
+    )
+    await mount('/hoy')
+    await settle()
+    expect(
+      root.querySelector('[data-testid="shell-cuenta-aviso"]'),
+    ).not.toBeNull()
+  })
+
+  for (const [path, title, page] of [
+    ['/cuenta', 'My account', 'Cuenta page'],
+    ['/perfil', 'My profile', 'Perfil page'],
+  ])
+    it(`a first boot that fails on ${path} says so and offers Retry`, async () => {
+      state.mobile.value = false
+      let fail = true
+      state.call.mockImplementation(async (method) => {
+        if (method !== 'crm.api.shell.boot') return null
+        if (fail) throw new Error('Internal Server Error')
+        return accountant()
+      })
+      await mount(path)
+      const alert = await until(() => root.querySelector('[role="alert"]'))
+      expect(alert.textContent).toContain(`We could not open ${title}`)
+      expect(root.textContent).not.toContain(page)
+      fail = false
+      ;[...alert.querySelectorAll('button')]
+        .find((b) => b.textContent.trim().startsWith('Retry'))
+        .click()
+      await settle()
+      expect(root.querySelector('[role="alert"]')).toBeNull()
+    })
 })

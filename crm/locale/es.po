@@ -24917,20 +24917,12 @@ msgid "The connections of Archivos are stopped on my site. Please turn them back
 msgstr "Las conexiones de Archivos están detenidas en mi sitio. Por favor, actívenlas de nuevo."
 
 #: frontend/src/pages/ArchivosConectores.vue
-msgid "Activate Documents in your plan to connect your invoice mailbox. Files you already saved stay available."
-msgstr "Activa Documentos en tu plan para conectar tu correo de facturas. Los archivos que ya guardaste siguen disponibles."
-
-#: frontend/src/pages/ArchivosConectores.vue
-msgid "Open my plan"
-msgstr "Abrir mi plan"
+msgid "Connecting your invoice mailbox or Paperless is not part of the plans yet. Files you already saved stay available."
+msgstr "Conectar tu correo de facturas o Paperless todavía no forma parte de los planes. Los archivos que ya guardaste siguen disponibles."
 
 #: frontend/src/pages/ArchivosConectores.vue
 msgid "Copy request for an administrator"
 msgstr "Copiar solicitud para un administrador"
-
-#: frontend/src/pages/ArchivosConectores.vue
-msgid "Please activate Documents in our Muelle plan so Archivos can connect our archive and invoice mailbox."
-msgstr "Por favor, activa Documentos en nuestro plan de Muelle para que Archivos conecte nuestro archivo y el correo de facturas."
 
 #: frontend/src/pages/ArchivosConectores.vue
 msgid "Only an administrator can set up connections. Ask an administrator of your company to connect the invoice mailbox."
@@ -38778,3 +38770,1716 @@ msgstr "Lo vendes a"
 msgctxt "Surtido"
 msgid "Filters"
 msgstr "Filtros"
+
+#: frontend/src/components/cuenta/pagos.js
+msgctxt "Cuenta"
+msgid "A request is in progress. Wait for it to finish before you continue."
+msgstr "Hay una solicitud en curso. Espera a que termine antes de continuar."
+
+#: frontend/src/components/cuenta/CuentaResumen.vue
+msgctxt "Cuenta"
+msgid "Account notices"
+msgstr "Avisos de la cuenta"
+
+#: frontend/src/components/cuenta/CuentaResumen.vue frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "Activate"
+msgstr "Activar"
+
+#: frontend/src/components/cuenta/ActivarSheet.vue
+msgctxt "Cuenta"
+msgid "Activate plan {0}"
+msgstr "Activar plan {0}"
+
+#: frontend/src/components/cuenta/ActivarSheet.vue
+msgctxt "Cuenta"
+msgid "Activate your plan"
+msgstr "Activar tu plan"
+
+#: frontend/src/components/shell/cuentaDoor.js
+msgctxt "Cuenta"
+msgid "Activate your plan so you keep the service."
+msgstr "Activa tu plan para no perder el servicio."
+
+#: frontend/src/components/cuenta/CuentaResumen.vue
+msgctxt "Cuenta"
+msgid "Activate your plan to keep selling without a stop."
+msgstr "Activa tu plan para seguir vendiendo sin interrupciones."
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "Active users"
+msgstr "Usuarios activos"
+
+#: frontend/src/pages/Perfil.vue
+msgctxt "Perfil"
+msgid "Add a photo"
+msgstr "Agregar foto"
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "All in order"
+msgstr "Todo en orden"
+
+#: frontend/src/components/shell/cuentaDoor.js
+msgctxt "Cuenta"
+msgid "An invoice is overdue"
+msgstr "Una factura vencida"
+
+#: frontend/src/components/cuenta/RecargarSheet.vue
+msgctxt "Cuenta"
+msgid "Another amount"
+msgstr "Otro monto"
+
+#: frontend/src/pages/Cuenta.vue
+msgctxt "Cuenta"
+msgid "Ask for access"
+msgstr "Pedir acceso"
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "Ask for help"
+msgstr "Pedir ayuda"
+
+#: frontend/src/pages/Cuenta.vue
+msgctxt "Cuenta"
+msgid "Ask support for help"
+msgstr "Pedir ayuda a soporte"
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "At this pace the balance lasts 1 day. Top up today."
+msgstr "Al ritmo actual el saldo dura 1 día. Recarga hoy."
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "At this pace the balance lasts {0} days. Top up today."
+msgstr "Al ritmo actual el saldo dura {0} días. Recarga hoy."
+
+#: frontend/src/components/cuenta/RecargarSheet.vue
+msgctxt "Cuenta"
+msgid "Between {0} and {1}."
+msgstr "Entre {0} y {1}."
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "CFDI stamps"
+msgstr "Timbres CFDI"
+
+#: frontend/src/components/cuenta/ActivarSheet.vue frontend/src/components/cuenta/RecargarSheet.vue
+msgctxt "Cuenta"
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: frontend/src/components/perfil/NombreSheet.vue frontend/src/components/perfil/PasswordSheet.vue
+msgctxt "Perfil"
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: frontend/src/components/cuenta/ActivarSheet.vue
+msgctxt "Cuenta"
+msgid "On the payment page"
+msgstr "En la página de pago"
+
+#: frontend/src/pages/Perfil.vue
+msgctxt "Perfil"
+msgid "Change it when you need to."
+msgstr "Cámbiala cuando lo necesites."
+
+#: frontend/src/components/perfil/PasswordSheet.vue
+msgctxt "Perfil"
+msgid "Change password"
+msgstr "Cambiar contraseña"
+
+#: frontend/src/pages/Perfil.vue
+msgctxt "Perfil"
+msgid "Change photo"
+msgstr "Cambiar foto"
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "Charged {0}, {1} IVA included"
+msgstr "Se cobra {0}, {1} IVA incluido"
+
+#: frontend/src/components/cuenta/ActivarSheet.vue frontend/src/components/cuenta/CuentaFacturacion.vue
+msgctxt "Cuenta"
+msgid "Check status"
+msgstr "Revisar estado"
+
+#: frontend/src/components/cuenta/ActivarSheet.vue frontend/src/components/cuenta/CuentaFacturacion.vue
+msgctxt "Cuenta"
+msgid "Check the payment with support"
+msgstr "Revisar pago con soporte"
+
+#: frontend/src/components/cuenta/pagos.js
+msgctxt "Cuenta"
+msgid "Check the request details."
+msgstr "Revisa los datos de la solicitud."
+
+#: frontend/src/components/cuenta/RecargarSheet.vue
+msgctxt "Cuenta"
+msgid "Check the top-up with support"
+msgstr "Revisar recarga con soporte"
+
+#: frontend/src/components/cuenta/pagos.js
+msgctxt "Cuenta"
+msgid "Choose Continue to open the secure top-up payment."
+msgstr "Elige Continuar para abrir el pago seguro de la recarga."
+
+#: frontend/src/components/cuenta/RecargarSheet.vue
+msgctxt "Cuenta"
+msgid "Common amounts"
+msgstr "Montos frecuentes"
+
+#: frontend/src/components/cuenta/RecargarSheet.vue
+msgctxt "Cuenta"
+msgid "Continue"
+msgstr "Continuar"
+
+#: frontend/src/components/cuenta/ActivarSheet.vue frontend/src/components/cuenta/CuentaFacturacion.vue
+msgctxt "Cuenta"
+msgid "Continue the secure payment"
+msgstr "Continuar pago seguro"
+
+#: frontend/src/components/perfil/PasswordSheet.vue
+msgctxt "Perfil"
+msgid "Current password"
+msgstr "Contraseña actual"
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "Due {0}"
+msgstr "Vence {0}"
+
+#: frontend/src/pages/Perfil.vue
+msgctxt "Perfil"
+msgid "Edit your name"
+msgstr "Editar tu nombre"
+
+#: frontend/src/components/cuenta/pagos.js
+msgctxt "Cuenta"
+msgid "Enter a valid amount."
+msgstr "Ingresa un monto válido."
+
+#: frontend/src/components/perfil/NombreSheet.vue
+msgctxt "Perfil"
+msgid "First name"
+msgstr "Nombre"
+
+#: frontend/src/components/shell/MuelleShell.vue
+msgctxt "Cuenta"
+msgid "Hide until next time"
+msgstr "Ocultar hasta la próxima"
+
+#: frontend/src/components/cuenta/ActivarSheet.vue
+msgctxt "Cuenta"
+msgid "How to pay"
+msgstr "Forma de pago"
+
+#: frontend/src/pages/Perfil.vue
+msgctxt "Perfil"
+msgid "How you see times. Business hours and due dates keep the shop’s time zone."
+msgstr "Cómo ves las horas. El horario de la tienda y los vencimientos siguen la zona horaria de la tienda."
+
+#: frontend/src/pages/Cuenta.vue
+msgctxt "Cuenta"
+msgid "I need the «Mi Plan» permission in Muelle to see and pay the shop’s plan (My account)."
+msgstr "Necesito el permiso «Mi Plan» en Muelle para ver y pagar el plan de la tienda (Mi cuenta)."
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "IVA included"
+msgstr "IVA incluido"
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "Invoice"
+msgstr "Factura"
+
+#: frontend/src/pages/Perfil.vue
+msgctxt "Perfil"
+msgid "It applies on this device at once."
+msgstr "Se aplica al instante en este dispositivo."
+
+#: frontend/src/pages/Perfil.vue
+msgctxt "Perfil"
+msgid "Language"
+msgstr "Idioma"
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "Last backup"
+msgstr "Último respaldo"
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "Last check"
+msgstr "Última revisión"
+
+#: frontend/src/components/perfil/NombreSheet.vue
+msgctxt "Perfil"
+msgid "Last name"
+msgstr "Apellidos"
+
+#: frontend/src/pages/Cuenta.vue
+msgctxt "Cuenta"
+msgid "Loading your plan…"
+msgstr "Cargando tu plan…"
+
+#: frontend/src/pages/Perfil.vue
+msgctxt "Perfil"
+msgid "Loading your profile…"
+msgstr "Cargando tu perfil…"
+
+#: frontend/src/components/perfil/perfil.js
+msgctxt "Perfil"
+msgid "Mix lowercase, uppercase, a number and a symbol."
+msgstr "Combina minúsculas, mayúsculas, un número y un símbolo."
+
+#: frontend/src/pages/Perfil.vue
+msgctxt "Perfil"
+msgid "Muelle opens again so the change applies everywhere."
+msgstr "Muelle se vuelve a abrir para aplicar el cambio en todas partes."
+
+#: frontend/src/components/shell/MoreSheet.vue frontend/src/components/shell/UserMenu.vue
+msgid "My account"
+msgstr "Mi cuenta"
+
+#: frontend/src/pages/Cuenta.vue
+msgctxt "Cuenta"
+msgid "My account is not available on this site"
+msgstr "Mi cuenta no está disponible en este sitio"
+
+#: frontend/src/components/shell/MoreSheet.vue frontend/src/components/shell/UserMenu.vue
+msgid "My profile"
+msgstr "Mi perfil"
+
+#: frontend/src/pages/Perfil.vue
+msgctxt "Perfil"
+msgid "Name saved"
+msgstr "Nombre guardado"
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "Needs action today"
+msgstr "Necesita acción hoy"
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "Needs attention"
+msgstr "Requiere atención"
+
+#: frontend/src/components/perfil/PasswordSheet.vue
+msgctxt "Perfil"
+msgid "New password"
+msgstr "Contraseña nueva"
+
+#: frontend/src/components/perfil/PasswordSheet.vue
+msgctxt "Perfil"
+msgid "New password again"
+msgstr "Repite la contraseña nueva"
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "No active plan"
+msgstr "Sin plan activo"
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "No limit"
+msgstr "Sin límite"
+
+#: frontend/src/pages/Perfil.vue
+msgctxt "Perfil"
+msgid "No name yet"
+msgstr "Sin nombre todavía"
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "No plan"
+msgstr "Sin plan"
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "No record"
+msgstr "Sin registro"
+
+#: frontend/src/components/cuenta/ActivarSheet.vue
+msgctxt "Cuenta"
+msgid "On the payment processor’s secure page"
+msgstr "En la página de pago segura del procesador"
+
+#: frontend/src/components/cuenta/pagos.js
+msgctxt "Cuenta"
+msgid "Open Help and choose Report a problem. Tell us this site's name and what you need."
+msgstr "Abre Ayuda y elige Reportar un problema. Dinos el nombre de este sitio y lo que necesitas."
+
+#: frontend/src/components/cuenta/CuentaFacturacion.vue frontend/src/components/cuenta/RecargarSheet.vue
+msgctxt "Cuenta"
+msgid "Opening…"
+msgstr "Abriendo…"
+
+#: frontend/src/pages/Perfil.vue
+msgctxt "Perfil"
+msgid "Password"
+msgstr "Contraseña"
+
+#: frontend/src/pages/Perfil.vue
+msgctxt "Perfil"
+msgid "Password changed"
+msgstr "Contraseña cambiada"
+
+#: frontend/src/components/cuenta/ActivarSheet.vue frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "Pay"
+msgstr "Pagar"
+
+#: frontend/src/components/cuenta/CuentaFacturacion.vue
+msgctxt "Cuenta"
+msgid "Pay {0}"
+msgstr "Pagar {0}"
+
+#: frontend/src/components/cuenta/pagos.js
+msgctxt "Cuenta"
+msgid "Payment received, confirming…"
+msgstr "Pago recibido, confirmando…"
+
+#: frontend/src/pages/Perfil.vue
+msgctxt "Perfil"
+msgid "Photo removed"
+msgstr "Foto quitada"
+
+#: frontend/src/pages/Perfil.vue
+msgctxt "Perfil"
+msgid "Photo saved"
+msgstr "Foto guardada"
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "Plan {0}"
+msgstr "Plan {0}"
+
+#: frontend/src/pages/Perfil.vue
+msgctxt "Perfil"
+msgid "Preferences"
+msgstr "Preferencias"
+
+#: frontend/src/components/cuenta/pagos.js
+msgctxt "Cuenta"
+msgid "Preparing your site needs help from support. Open a report to continue and check the status afterwards."
+msgstr "La preparación de tu sitio necesita ayuda de soporte. Abre un reporte para continuar y revisa el estado después."
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "Registers and branches"
+msgstr "Cajas y sucursales"
+
+#: frontend/src/pages/Perfil.vue
+msgctxt "Perfil"
+msgid "Remove"
+msgstr "Quitar"
+
+#: frontend/src/pages/Perfil.vue
+msgctxt "Perfil"
+msgid "Remove photo"
+msgstr "Quitar foto"
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "Renews in {0} days"
+msgstr "Se renueva en {0} días"
+
+#: frontend/src/pages/Cuenta.vue
+msgctxt "Cuenta"
+msgid "Request copied. Share it with the owner."
+msgstr "Solicitud copiada. Compártela con el dueño."
+
+#: frontend/src/pages/Cuenta.vue
+msgctxt "Cuenta"
+msgid "Retry"
+msgstr "Reintentar"
+
+#: frontend/src/pages/Perfil.vue
+msgctxt "Perfil"
+msgid "Retry"
+msgstr "Reintentar"
+
+#: frontend/src/components/perfil/NombreSheet.vue
+msgctxt "Perfil"
+msgid "Save name"
+msgstr "Guardar nombre"
+
+#: frontend/src/pages/Perfil.vue
+msgctxt "Perfil"
+msgid "Save preferences"
+msgstr "Guardar preferencias"
+
+#: frontend/src/components/cuenta/ActivarSheet.vue
+msgctxt "Cuenta"
+msgid "Saved card"
+msgstr "Tarjeta guardada"
+
+#: frontend/src/pages/Cuenta.vue
+msgctxt "Cuenta"
+msgid "Sections of my account"
+msgstr "Secciones de mi cuenta"
+
+#: frontend/src/pages/Perfil.vue
+msgctxt "Perfil"
+msgid "Security"
+msgstr "Seguridad"
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "Security certificate"
+msgstr "Certificado de seguridad"
+
+#: frontend/src/components/shell/MuelleShell.vue
+msgctxt "Cuenta"
+msgid "See my account"
+msgstr "Ver mi cuenta"
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "See plans"
+msgstr "Ver planes"
+
+#: frontend/src/components/cuenta/CuentaResumen.vue
+msgctxt "Cuenta"
+msgid "Site status"
+msgstr "Estado del sitio"
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "Storage"
+msgstr "Almacenamiento"
+
+#: frontend/src/pages/Cuenta.vue
+msgctxt "Cuenta"
+msgid "Summary"
+msgstr "Resumen"
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "System emails"
+msgstr "Correos del sistema"
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "The balance covers about {0} days."
+msgstr "El saldo alcanza para unos {0} días."
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "The balance is running low. Top up before it runs out."
+msgstr "El saldo va bajo. Recarga antes de que se agote."
+
+#: frontend/src/components/cuenta/pagos.js
+msgctxt "Cuenta"
+msgid "The card was declined."
+msgstr "La tarjeta fue rechazada."
+
+#: frontend/src/components/cuenta/ActivarSheet.vue frontend/src/components/cuenta/CuentaFacturacion.vue
+msgctxt "Cuenta"
+msgid "The charge happens on the payment processor’s secure page. Muelle keeps no card data."
+msgstr "El cobro se hace en la página segura del procesador de pagos. Muelle no guarda los datos de tu tarjeta."
+
+#: frontend/src/components/cuenta/pagos.js
+msgctxt "Cuenta"
+msgid "The connection was lost while sending the payment."
+msgstr "Se perdió la conexión al enviar el pago."
+
+#: frontend/src/components/cuenta/pagos.js
+msgctxt "Cuenta"
+msgid "The maximum amount is {0}."
+msgstr "El monto máximo es {0}."
+
+#: frontend/src/components/cuenta/pagos.js
+msgctxt "Cuenta"
+msgid "The minimum amount is {0}."
+msgstr "El monto mínimo es {0}."
+
+#: frontend/src/components/perfil/perfil.js
+msgctxt "Perfil"
+msgid "The new password must be different from the current one."
+msgstr "La contraseña nueva debe ser distinta de la actual."
+
+#: frontend/src/components/perfil/perfil.js
+msgctxt "Perfil"
+msgid "The new password needs at least 8 characters."
+msgstr "La contraseña nueva necesita al menos 8 caracteres."
+
+#: frontend/src/components/perfil/PasswordSheet.vue
+msgctxt "Perfil"
+msgid "The password did not change. Try again."
+msgstr "La contraseña no cambió. Intenta de nuevo."
+
+#: frontend/src/components/cuenta/pagos.js
+msgctxt "Cuenta"
+msgid "The payment page is ready."
+msgstr "La página de pago está lista."
+
+#: frontend/src/components/perfil/perfil.js frontend/src/pages/Perfil.vue
+msgctxt "Perfil"
+msgid "The photo did not upload. Try another picture."
+msgstr "La foto no se subió. Prueba con otra imagen."
+
+#: frontend/src/pages/Perfil.vue
+msgctxt "Perfil"
+msgid "The photo was not removed. Try again."
+msgstr "La foto no se quitó. Intenta de nuevo."
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "The security certificate renews by itself; it expires in {0} days."
+msgstr "El certificado de seguridad se renueva solo; vence en {0} días."
+
+#: frontend/src/pages/Cuenta.vue
+msgctxt "Cuenta"
+msgid "The shop owner and whoever holds the «Mi Plan» permission see it. Ask the owner for it, then retry."
+msgstr "La ven el dueño de la tienda y quien tenga el permiso «Mi Plan». Pídeselo al dueño y después toca Reintentar."
+
+#: frontend/src/pages/Perfil.vue
+msgctxt "Perfil"
+msgid "The shop’s time zone"
+msgstr "La zona horaria de la tienda"
+
+#: frontend/src/components/perfil/perfil.js
+msgctxt "Perfil"
+msgid "The two new passwords do not match."
+msgstr "Las dos contraseñas nuevas no coinciden."
+
+#: frontend/src/pages/Perfil.vue
+msgctxt "Perfil"
+msgid "Theme"
+msgstr "Tema"
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "This month, no limit"
+msgstr "Este mes, sin límite"
+
+#: frontend/src/pages/Cuenta.vue
+msgctxt "Cuenta"
+msgid "This site has no plan to show here. If you think that is wrong, ask support for help."
+msgstr "Este sitio no tiene un plan que mostrar aquí. Si crees que es un error, pide ayuda a soporte."
+
+#: frontend/src/components/cuenta/CuentaResumen.vue frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "Top up"
+msgstr "Recargar"
+
+#: frontend/src/components/cuenta/RecargarSheet.vue
+msgctxt "Cuenta"
+msgid "Top up the wallet"
+msgstr "Recargar el monedero"
+
+#: frontend/src/components/shell/cuentaDoor.js
+msgctxt "Cuenta"
+msgid "Trial: {0} days left"
+msgstr "Prueba: quedan {0} días"
+
+#: frontend/src/components/perfil/perfil.js
+msgctxt "Perfil"
+msgid "Type the new password."
+msgstr "Escribe la contraseña nueva."
+
+#: frontend/src/components/perfil/perfil.js
+msgctxt "Perfil"
+msgid "Type your current password."
+msgstr "Escribe tu contraseña actual."
+
+#: frontend/src/pages/Perfil.vue
+msgctxt "Perfil"
+msgid "Uploading…"
+msgstr "Subiendo…"
+
+#: frontend/src/components/cuenta/CuentaResumen.vue
+msgctxt "Cuenta"
+msgid "Usage this month"
+msgstr "Uso del mes"
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "Users and registers allowed"
+msgstr "Usuarios y cajas permitidos"
+
+#: frontend/src/components/cuenta/CuentaResumen.vue
+msgctxt "Cuenta"
+msgid "Wallet balance"
+msgstr "Saldo del monedero"
+
+#: frontend/src/components/cuenta/pagos.js
+msgctxt "Cuenta"
+msgid "We are checking the payment status. Wait for it to finish and choose Continue to open your top-up."
+msgstr "Estamos revisando el estado del pago. Espera a que termine y elige Continuar para abrir tu recarga."
+
+#: frontend/src/components/cuenta/pagos.js
+msgctxt "Cuenta"
+msgid "We are checking the payment status. Wait for it to finish or choose Check status."
+msgstr "Estamos consultando el estado del pago. Espera a que termine o elige Revisar estado."
+
+#: frontend/src/components/cuenta/pagos.js
+msgctxt "Cuenta"
+msgid "We are preparing your shop's server. Check the status in a few minutes to continue."
+msgstr "Estamos preparando el servidor de tu tienda. Revisa el estado en unos minutos para continuar."
+
+#: frontend/src/pages/Cuenta.vue
+msgctxt "Cuenta"
+msgid "We are preparing your site"
+msgstr "Estamos preparando tu sitio"
+
+#: frontend/src/components/cuenta/pagos.js
+msgctxt "Cuenta"
+msgid "We are sending the activation. Wait for it to finish before you continue."
+msgstr "Estamos enviando la activación. Espera a que termine antes de continuar."
+
+#: frontend/src/components/cuenta/pagos.js
+msgctxt "Cuenta"
+msgid "We cannot confirm the payment status yet."
+msgstr "Todavía no podemos confirmar el estado del pago."
+
+#: frontend/src/components/cuenta/pagos.js
+msgctxt "Cuenta"
+msgid "We could not check the current state of the plan. Choose Check status or open a report in Help."
+msgstr "No pudimos consultar el estado actual del plan. Elige Revisar estado o abre un reporte en Ayuda."
+
+#: frontend/src/components/cuenta/pagos.js
+msgctxt "Cuenta"
+msgid "We could not check your cards."
+msgstr "No pudimos consultar tus tarjetas."
+
+#: frontend/src/pages/Cuenta.vue
+msgctxt "Cuenta"
+msgid "We could not check your plan"
+msgstr "No pudimos consultar tu plan"
+
+#: frontend/src/components/cuenta/pagos.js
+msgctxt "Cuenta"
+msgid "We could not confirm the payment request."
+msgstr "No pudimos confirmar la solicitud de pago."
+
+#: frontend/src/components/cuenta/pagos.js
+msgctxt "Cuenta"
+msgid "We could not confirm the payment with the platform."
+msgstr "No pudimos confirmar el pago con la plataforma."
+
+#: frontend/src/components/cuenta/pagos.js
+msgctxt "Cuenta"
+msgid "We could not open the payment for this invoice. Choose Check status and confirm whether it went through; if it is still pending, ask support before paying again."
+msgstr "No pudimos abrir el pago de esta factura. Elige Revisar estado y confirma si se aplicó; si sigue pendiente, pide ayuda a soporte antes de volver a pagar."
+
+#: frontend/src/components/cuenta/pagos.js
+msgctxt "Cuenta"
+msgid "We could not open the top-up payment. Check the wallet movements before trying again or ask support."
+msgstr "No pudimos abrir el pago de la recarga. Revisa los movimientos del monedero antes de volver a intentar o pide ayuda a soporte."
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "WhatsApp messages"
+msgstr "Mensajes de WhatsApp"
+
+#: frontend/src/components/cuenta/ActivarSheet.vue
+msgctxt "Cuenta"
+msgid "Working out the amount…"
+msgstr "Calculando el monto…"
+
+#: frontend/src/pages/Perfil.vue
+msgctxt "Perfil"
+msgid "You"
+msgstr "Tú"
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "You are on a trial"
+msgstr "Estás en prueba"
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "You have an invoice to pay."
+msgstr "Tienes una factura por pagar."
+
+#: frontend/src/components/cuenta/cuenta.js frontend/src/components/shell/cuentaDoor.js
+msgctxt "Cuenta"
+msgid "You have an overdue invoice. Pay it so you keep the service."
+msgstr "Tienes una factura vencida. Págala para no perder el servicio."
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "You have {0} invoices to pay."
+msgstr "Tienes {0} facturas por pagar."
+
+#: frontend/src/components/cuenta/cuenta.js frontend/src/components/shell/cuentaDoor.js
+msgctxt "Cuenta"
+msgid "You have {0} overdue invoices. Pay them so you keep the service."
+msgstr "Tienes {0} facturas vencidas. Págalas para no perder el servicio."
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "You reached this month’s stamp limit."
+msgstr "Llegaste al tope de timbres del mes."
+
+#: frontend/src/components/perfil/NombreSheet.vue
+msgctxt "Perfil"
+msgid "Your first name is how the team sees you."
+msgstr "El equipo te ve por tu nombre."
+
+#: frontend/src/components/perfil/NombreSheet.vue
+msgctxt "Perfil"
+msgid "Your name"
+msgstr "Tu nombre"
+
+#: frontend/src/components/perfil/NombreSheet.vue
+msgctxt "Perfil"
+msgid "Your name was not saved. Try again."
+msgstr "Tu nombre no se guardó. Intenta de nuevo."
+
+#: frontend/src/components/cuenta/pagos.js
+msgctxt "Cuenta"
+msgid "Your payment is not complete yet."
+msgstr "Tu pago todavía no se completa."
+
+#: frontend/src/pages/Perfil.vue
+msgctxt "Perfil"
+msgid "Your preferences were not saved. Try again."
+msgstr "Tus preferencias no se guardaron. Intenta de nuevo."
+
+#: frontend/src/pages/Perfil.vue
+msgctxt "Perfil"
+msgid "Your profile could not load. Check your connection and retry."
+msgstr "Tu perfil no cargó. Revisa tu conexión y reintenta."
+
+#: frontend/src/components/shell/cuentaDoor.js
+msgctxt "Cuenta"
+msgid "Your site is suspended in {0} days. Check your account to avoid it."
+msgstr "Tu sitio se suspende en {0} días. Revisa tu cuenta para evitarlo."
+
+#: frontend/src/components/shell/cuentaDoor.js
+msgctxt "Cuenta"
+msgid "Your site is suspended today. Check your account to avoid it."
+msgstr "Tu sitio se suspende hoy. Revisa tu cuenta para evitarlo."
+
+#: frontend/src/pages/Cuenta.vue
+msgctxt "Cuenta"
+msgid "Your site needs help"
+msgstr "Tu sitio necesita ayuda"
+
+#: frontend/src/pages/Perfil.vue
+msgctxt "Perfil"
+msgid "Your time zone"
+msgstr "Tu zona horaria"
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "Your trial ends in {0} days"
+msgstr "Tu prueba termina en {0} días"
+
+#: frontend/src/components/shell/cuentaDoor.js
+msgctxt "Cuenta"
+msgid "Your trial ends in {0} days."
+msgstr "Tu prueba termina en {0} días."
+
+#: frontend/src/components/cuenta/cuenta.js frontend/src/components/shell/cuentaDoor.js
+msgctxt "Cuenta"
+msgid "Your trial ends today"
+msgstr "Tu prueba termina hoy"
+
+#: frontend/src/components/shell/cuentaDoor.js
+msgctxt "Cuenta"
+msgid "Your trial ends today."
+msgstr "Tu prueba termina hoy."
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "Your trial ends tomorrow"
+msgstr "Tu prueba termina mañana"
+
+#: frontend/src/components/shell/cuentaDoor.js
+msgctxt "Cuenta"
+msgid "Your trial ends tomorrow."
+msgstr "Tu prueba termina mañana."
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "a month, IVA included"
+msgstr "al mes, IVA incluido"
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "backups"
+msgstr "respaldos"
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "database"
+msgstr "base de datos"
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "files"
+msgstr "archivos"
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "no limit"
+msgstr "sin límite"
+
+#: frontend/src/components/cuenta/pagos.js
+msgctxt "Cuenta"
+msgid "{0} Ask your bank or try another payment method on the payment page."
+msgstr "{0} Consulta a tu banco o prueba otra forma de pago en la página de pago."
+
+#: frontend/src/components/cuenta/pagos.js
+msgctxt "Cuenta"
+msgid "{0} Choose Check status or ask support for help before paying again."
+msgstr "{0} Elige Revisar estado o pide ayuda a soporte antes de volver a pagar."
+
+#: frontend/src/components/cuenta/pagos.js
+msgctxt "Cuenta"
+msgid "{0} Continue the same payment with the confirmed link or choose Check status."
+msgstr "{0} Continúa el mismo pago con el enlace confirmado o elige Revisar estado."
+
+#: frontend/src/components/cuenta/pagos.js
+msgctxt "Cuenta"
+msgid "{0} Correct the amount and try again."
+msgstr "{0} Corrige el monto y vuelve a intentar."
+
+#: frontend/src/components/cuenta/pagos.js
+msgctxt "Cuenta"
+msgid "{0} Correct the details and try again; if you need help, open a report with support."
+msgstr "{0} Corrige los datos y vuelve a intentar; si necesitas ayuda, abre un reporte con soporte."
+
+#: frontend/src/components/shell/cuentaDoor.js
+msgctxt "Cuenta"
+msgid "{0} invoices are overdue"
+msgstr "{0} facturas vencidas"
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "{0} left this month"
+msgstr "Te quedan {0} este mes"
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "Active"
+msgstr "Activo"
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "Suspended"
+msgstr "Suspendido"
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "Archived"
+msgstr "Archivado"
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "Having problems"
+msgstr "Con problemas"
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "Having faults"
+msgstr "Con fallas"
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "Being prepared"
+msgstr "En preparación"
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "Inactive"
+msgstr "Inactivo"
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "Next invoice {0}"
+msgstr "Próxima factura {0}"
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "Charged {0}, annual fee {1} IVA included"
+msgstr "Se cobra {0}, anualidad {1} IVA incluido"
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "No recent spending to estimate how long it lasts."
+msgstr "Sin consumo reciente para estimar cuánto dura."
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "Your trial ended and the site is suspended. Activate your plan to use it again."
+msgstr "Tu prueba terminó y el sitio está suspendido. Activa tu plan para volver a usarlo."
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "The site is suspended for an overdue invoice. Pay it to reactivate it."
+msgstr "El sitio está suspendido por una factura vencida. Págala para reactivarlo."
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "The site is suspended. Write to us to find out why and reactivate it."
+msgstr "El sitio está suspendido. Escríbenos para saber por qué y reactivarlo."
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "The site is archived. Activate your plan to get it back."
+msgstr "El sitio está archivado. Activa tu plan para recuperarlo."
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "The site is archived. Write to us to get it back."
+msgstr "El sitio está archivado. Escríbenos para recuperarlo."
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "The site has technical faults. If something does not work for you, write to us."
+msgstr "El sitio tiene fallas técnicas. Si algo no te funciona, escríbenos."
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "We are preparing the site. Check the status in a few minutes."
+msgstr "Estamos preparando el sitio. Revisa el estado en unos minutos."
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "The site is {0}. Write to us to check it."
+msgstr "El sitio está {0}. Escríbenos para revisarlo."
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "The wallet is at zero and it pays for the stamps beyond your package and the airtime you sell. Top it up so they do not stop."
+msgstr "El monedero está en ceros y de él se pagan los timbres fuera de tu paquete y las recargas de tiempo aire. Recarga para no interrumpirlos."
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "The wallet is at zero and it pays for the stamps beyond your package. Top it up so they do not stop."
+msgstr "El monedero está en ceros y de él se pagan los timbres fuera de tu paquete. Recarga para no interrumpirlos."
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "The wallet is at zero and it pays for the airtime you sell. Top it up so it does not stop."
+msgstr "El monedero está en ceros y de él se pagan las recargas de tiempo aire. Recarga para no interrumpirlas."
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "The annual fee covers 12 months; the rest covers {0}."
+msgstr "La anualidad cubre 12 meses; lo demás, {0}."
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "The annual fee covers 12 months."
+msgstr "La anualidad cubre 12 meses."
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "Covers {0}."
+msgstr "Cubre {0}."
+
+#: frontend/src/components/cuenta/cuenta.js frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "a year, IVA included"
+msgstr "al año, IVA incluido"
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "It is the plan’s annual fee: it covers 12 months. Extra users and add-ons are added on the invoice."
+msgstr "Es la anualidad del plan: cubre 12 meses. Los usuarios extra y los complementos se suman en la factura."
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "It is the plan’s monthly price. Extra users and add-ons are added on the invoice."
+msgstr "Es el precio mensual del plan. Los usuarios extra y los complementos se suman en la factura."
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "At the pace of the last 30 days it lasts about 1 day."
+msgstr "Al ritmo de los últimos 30 días alcanza para 1 día."
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "At the pace of the last 30 days it lasts about {0} days."
+msgstr "Al ritmo de los últimos 30 días alcanza para unos {0} días."
+
+#: frontend/src/components/cuenta/facturacion.js
+msgctxt "Cuenta"
+msgid "Paid {0}"
+msgstr "Pagada {0}"
+
+#: frontend/src/components/cuenta/facturacion.js frontend/src/components/cuenta/pagos.js
+msgctxt "Cuenta"
+msgid "Paid"
+msgstr "Pagada"
+
+#: frontend/src/components/cuenta/facturacion.js frontend/src/components/cuenta/pagos.js
+msgctxt "Cuenta"
+msgid "Cancelled"
+msgstr "Cancelada"
+
+#: frontend/src/components/cuenta/facturacion.js
+msgctxt "Cuenta"
+msgid "Overdue since {0}"
+msgstr "Vencida desde {0}"
+
+#: frontend/src/components/cuenta/cuenta.js frontend/src/components/cuenta/facturacion.js
+msgctxt "Cuenta"
+msgid "Overdue"
+msgstr "Vencida"
+
+#: frontend/src/components/cuenta/facturacion.js
+msgctxt "Cuenta"
+msgid "To pay"
+msgstr "Por pagar"
+
+#: frontend/src/components/cuenta/facturacion.js
+msgctxt "Cuenta"
+msgid "Charge"
+msgstr "Cargo"
+
+#: frontend/src/components/cuenta/facturacion.js
+msgctxt "Cuenta"
+msgid "Top-up"
+msgstr "Recarga"
+
+#: frontend/src/components/cuenta/facturacion.js
+msgctxt "Cuenta"
+msgid "Refund"
+msgstr "Reembolso"
+
+#: frontend/src/components/cuenta/facturacion.js
+msgctxt "Cuenta"
+msgid "Adjustment"
+msgstr "Ajuste"
+
+#: frontend/src/components/cuenta/facturacion.js
+msgctxt "Cuenta"
+msgid "Movement"
+msgstr "Movimiento"
+
+#: frontend/src/components/cuenta/facturacion.js
+msgctxt "Cuenta"
+msgid "Expires {0}"
+msgstr "Vence {0}"
+
+#: frontend/src/components/cuenta/facturacion.js
+msgctxt "Cuenta"
+msgid "Card"
+msgstr "Tarjeta"
+
+#: frontend/src/components/cuenta/facturacion.js
+msgctxt "Cuenta"
+msgid "The CFDI is not available yet. Ask support to check the stamping."
+msgstr "El CFDI todavía no está disponible. Pide a soporte que revise el timbrado."
+
+#: frontend/src/components/cuenta/facturacion.js
+msgctxt "Cuenta"
+msgid "The CFDI arrived empty. Ask support to check it."
+msgstr "El CFDI llegó vacío. Pide a soporte que lo revise."
+
+#: frontend/src/components/cuenta/facturacion.js
+msgctxt "Cuenta"
+msgid "We could not download the CFDI. Try again in a moment."
+msgstr "No pudimos descargar el CFDI. Intenta de nuevo en un momento."
+
+#: frontend/src/components/cuenta/pagos.js
+msgctxt "Cuenta"
+msgid "{0} Check the status later or ask support."
+msgstr "{0} Revisa el estado más tarde o pide ayuda a soporte."
+
+#: frontend/src/components/cuenta/pagos.js
+msgctxt "Cuenta"
+msgid "The platform refused the top-up."
+msgstr "La plataforma no aceptó la recarga."
+
+#: frontend/src/components/cuenta/pagos.js
+msgctxt "Cuenta"
+msgid "We could not read the wallet movements. Try again in a moment."
+msgstr "No pudimos leer los movimientos del monedero. Intenta de nuevo en un momento."
+
+#: frontend/src/components/cuenta/pagos.js
+msgctxt "Cuenta"
+msgid "We could not remove the card."
+msgstr "No pudimos borrar la tarjeta."
+
+#: frontend/src/components/cuenta/pagos.js
+msgctxt "Cuenta"
+msgid "We could not change the add-on. Try again."
+msgstr "No pudimos cambiar el complemento. Intenta de nuevo."
+
+#: frontend/src/components/cuenta/pagos.js
+msgctxt "Cuenta"
+msgid "We could not send the request. Try again."
+msgstr "No pudimos enviar la solicitud. Intenta de nuevo."
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "1 register and 2 users"
+msgstr "1 caja de cobro y 2 usuarios"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "Point of sale for the counter"
+msgstr "Punto de venta para mostrador"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "Catalog, inventory and cash control"
+msgstr "Catálogo, inventario y control de caja"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "5 GB of storage"
+msgstr "5 GB de almacenamiento"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "Everything in Básico"
+msgstr "Todo lo de Básico"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "3 registers and 5 users"
+msgstr "3 cajas y 5 usuarios"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "Each person with their own user and cash count"
+msgstr "Cada quien su usuario y su corte"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "15 GB of storage"
+msgstr "15 GB de almacenamiento"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "Everything in Pro"
+msgstr "Todo lo de Pro"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "5 registers and 10 users"
+msgstr "5 cajas y 10 usuarios"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "Ready for an online store and CFDI"
+msgstr "Listo para tienda en línea y CFDI"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "40 GB of storage"
+msgstr "40 GB de almacenamiento"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "Everything in Premium"
+msgstr "Todo lo de Premium"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "10 registers and 15 users"
+msgstr "10 cajas y 15 usuarios"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "Cheaper extra users and registers"
+msgstr "Usuarios y cajas extra más baratos"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "100 GB of storage"
+msgstr "100 GB de almacenamiento"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "Bundle {0}"
+msgstr "Paquete {0}"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "You pay 10 months and get 12."
+msgstr "Pagas 10 meses y recibes 12."
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "or {0} a year, 2 months free"
+msgstr "o {0} al año, 2 meses gratis"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "or {0} a year"
+msgstr "o {0} al año"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "stamp"
+msgstr "timbre"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "stamps"
+msgstr "timbres"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "email"
+msgstr "correo"
+
+#: frontend/src/components/cuenta/cuenta.js frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "emails"
+msgstr "correos"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "message"
+msgstr "mensaje"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "messages"
+msgstr "mensajes"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "month"
+msgstr "mes"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "months"
+msgstr "meses"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "GB a month"
+msgstr "GB al mes"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "user a month"
+msgstr "usuario al mes"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "users a month"
+msgstr "usuarios al mes"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "branch a month"
+msgstr "sucursal al mes"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "branches a month"
+msgstr "sucursales al mes"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "100 documents a month"
+msgstr "100 documentos al mes"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "from {0} a month"
+msgstr "desde {0} al mes"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "from {0} per {1}"
+msgstr "desde {0} por {1}"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "Included"
+msgstr "Incluido"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "Platform service"
+msgstr "Servicio de la plataforma"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "Measured per {0}"
+msgstr "Se mide por {0}"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "It will be available on your site soon."
+msgstr "Pronto estará disponible en tu sitio."
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "Turn off {0}"
+msgstr "Desactivar {0}"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "Turn on {0}"
+msgstr "Activar {0}"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "It turns off at the end of the period already paid; the period in progress is not refunded."
+msgstr "Se desactiva al final del periodo ya pagado; el periodo en curso no se reembolsa."
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "Turn off"
+msgstr "Desactivar"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "Includes {0} stamps a month."
+msgstr "Incluye {0} timbres al mes."
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "No additional cost on record."
+msgstr "Sin costo adicional registrado."
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "It is added to your plan when you activate it."
+msgstr "Se suma a tu plan cuando lo actives."
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "What you use is charged from the moment it is ready."
+msgstr "Se cobra lo que uses desde que quede listo."
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "It is charged from the moment it is ready, prorated for the days left in the month."
+msgstr "Se cobra desde que quede listo, proporcional a los días que falten del mes."
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "per {0}, IVA included"
+msgstr "por {0}, IVA incluido"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "Turn on"
+msgstr "Activar"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "Muelle confirms the change and lets you know; until then you keep your plan. Nothing is charged now."
+msgstr "Muelle confirma el cambio y te avisa; mientras tanto sigues con tu plan. No se cobra nada ahora."
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "Change to {0}"
+msgstr "Cambiar a {0}"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "Request the change"
+msgstr "Solicitar el cambio"
+
+#: frontend/src/components/cuenta/ActivarSheet.vue
+msgctxt "Cuenta"
+msgid "Nothing is charged now: your plan activates when you confirm."
+msgstr "No hay cargo por ahora: tu plan se activa al confirmar."
+
+#: frontend/src/components/cuenta/CuentaFacturacion.vue
+msgctxt "Cuenta"
+msgid "Invoices"
+msgstr "Facturas"
+
+#: frontend/src/components/cuenta/CuentaFacturacion.vue
+msgctxt "Cuenta"
+msgid "No invoices yet."
+msgstr "Sin facturas todavía."
+
+#: frontend/src/components/cuenta/CuentaFacturacion.vue
+msgctxt "Cuenta"
+msgid "Fiscal invoice pending"
+msgstr "Factura fiscal pendiente"
+
+#: frontend/src/components/cuenta/CuentaFacturacion.vue
+msgctxt "Cuenta"
+msgid "Check the CFDI with support"
+msgstr "Revisar el CFDI con soporte"
+
+#: frontend/src/components/cuenta/CuentaFacturacion.vue
+msgctxt "Cuenta"
+msgid "Movements"
+msgstr "Movimientos"
+
+#: frontend/src/components/cuenta/CuentaFacturacion.vue
+msgctxt "Cuenta"
+msgid "the top-up"
+msgstr "la recarga"
+
+#: frontend/src/components/cuenta/CuentaFacturacion.vue
+msgctxt "Cuenta"
+msgid "No movements yet."
+msgstr "Sin movimientos todavía."
+
+#: frontend/src/components/cuenta/CuentaFacturacion.vue
+msgctxt "Cuenta"
+msgid "Try again"
+msgstr "Intentar de nuevo"
+
+#: frontend/src/components/cuenta/CuentaFacturacion.vue
+msgctxt "Cuenta"
+msgid "Load more"
+msgstr "Cargar más"
+
+#: frontend/src/components/cuenta/CuentaFacturacion.vue
+msgctxt "Cuenta"
+msgid "Saved cards"
+msgstr "Tarjetas guardadas"
+
+#: frontend/src/components/cuenta/CuentaFacturacion.vue
+msgctxt "Cuenta"
+msgid "Remove the card {0}"
+msgstr "Borrar la tarjeta {0}"
+
+#: frontend/src/components/cuenta/CuentaFacturacion.vue
+msgctxt "Cuenta"
+msgid "Removing…"
+msgstr "Borrando…"
+
+#: frontend/src/components/cuenta/CuentaFacturacion.vue
+msgctxt "Cuenta"
+msgid "Delete"
+msgstr "Borrar"
+
+#: frontend/src/components/cuenta/CuentaFacturacion.vue
+msgctxt "Cuenta"
+msgid "No saved cards. Every payment happens on the processor’s secure page."
+msgstr "No hay tarjetas guardadas. Cada pago se hace en la página segura del procesador."
+
+#: frontend/src/components/cuenta/CuentaFacturacion.vue
+msgctxt "Cuenta"
+msgid "Ask support about my card"
+msgstr "Pedir ayuda con mi tarjeta"
+
+#: frontend/src/components/cuenta/CuentaFacturacion.vue
+msgctxt "Cuenta"
+msgid "Card removed"
+msgstr "Tarjeta borrada"
+
+#: frontend/src/components/cuenta/CuentaTienda.vue
+msgctxt "Cuenta"
+msgid "Plans"
+msgstr "Planes"
+
+#: frontend/src/components/cuenta/CuentaTienda.vue
+msgctxt "Cuenta"
+msgid "You asked for {0}. It applies when Muelle confirms it."
+msgstr "Pediste {0}. Se aplica cuando Muelle lo confirme."
+
+#: frontend/src/components/cuenta/CuentaTienda.vue
+msgctxt "Cuenta"
+msgid "Your plan"
+msgstr "Tu plan"
+
+#: frontend/src/components/cuenta/CuentaTienda.vue
+msgctxt "Cuenta"
+msgid "Most popular"
+msgstr "El más popular"
+
+#: frontend/src/components/cuenta/CuentaTienda.vue
+msgctxt "Cuenta"
+msgid "Change requested"
+msgstr "Cambio solicitado"
+
+#: frontend/src/components/cuenta/CuentaTienda.vue
+msgctxt "Cuenta"
+msgid "Change to this plan"
+msgstr "Cambiar a este plan"
+
+#: frontend/src/components/cuenta/CuentaTienda.vue
+msgctxt "Cuenta"
+msgid "Add-ons"
+msgstr "Complementos"
+
+#: frontend/src/components/cuenta/CuentaTienda.vue
+msgctxt "Cuenta"
+msgid "The store is not available right now."
+msgstr "La tienda no está disponible en este momento."
+
+#: frontend/src/components/cuenta/CuentaTienda.vue
+msgctxt "Cuenta"
+msgid "Check the status in a moment; your plan and add-ons stay as they are."
+msgstr "Revisa el estado en un momento; tu plan y tus complementos siguen igual."
+
+#: frontend/src/components/cuenta/CuentaTienda.vue
+msgctxt "Cuenta"
+msgid "Monthly"
+msgstr "Mensual"
+
+#: frontend/src/components/cuenta/CuentaTienda.vue
+msgctxt "Cuenta"
+msgid "Yearly"
+msgstr "Anual"
+
+#: frontend/src/components/cuenta/CuentaTienda.vue
+msgctxt "Cuenta"
+msgid "Add-on turned off"
+msgstr "Complemento desactivado"
+
+#: frontend/src/components/cuenta/CuentaTienda.vue
+msgctxt "Cuenta"
+msgid "Add-on turned on"
+msgstr "Complemento activado"
+
+#: frontend/src/pages/Cuenta.vue
+msgctxt "Cuenta"
+msgid "Billing"
+msgstr "Facturación"
+
+#: frontend/src/pages/Cuenta.vue
+msgctxt "Cuenta"
+msgid "Store"
+msgstr "Tienda"
+
+#: frontend/src/components/cuenta/CuentaFacturacion.vue
+msgctxt "Cuenta"
+msgid "Download the CFDI {0} of {1}"
+msgstr "Descargar el CFDI {0} de {1}"
+
+
+#: frontend/src/components/shell/cuentaDoor.js
+msgctxt "Cuenta"
+msgid "Your trial ended."
+msgstr "Tu prueba terminó."
+
+#: frontend/src/components/cuenta/cuenta.js frontend/src/components/shell/cuentaDoor.js
+msgctxt "Cuenta"
+msgid "Your trial ended"
+msgstr "Tu prueba terminó"
+
+#: frontend/src/components/shell/cuentaDoor.js
+msgctxt "Cuenta"
+msgid "Trial: 1 day left"
+msgstr "Prueba: queda 1 día"
+
+#: frontend/src/components/shell/cuentaDoor.js
+msgctxt "Cuenta"
+msgid "Your site is suspended tomorrow. Check your account to avoid it."
+msgstr "Tu sitio se suspende mañana. Revisa tu cuenta para evitarlo."
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "See invoices"
+msgstr "Ver facturas"
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "You have {0} invoices to pay, 1 overdue."
+msgstr "Tienes {0} facturas por pagar, 1 vencida."
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "You have {0} invoices to pay, {1} overdue."
+msgstr "Tienes {0} facturas por pagar, {1} vencidas."
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "The security certificate renews by itself; it expires in 1 day."
+msgstr "El certificado de seguridad se renueva solo; vence en 1 día."
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "Renews in 1 day"
+msgstr "Se renueva en 1 día"
+
+#: frontend/src/pages/Cuenta.vue
+msgctxt "Cuenta"
+msgid "The shop’s plan is for the owner"
+msgstr "El plan de la tienda es solo para el dueño"
+
+#: frontend/src/components/cuenta/CuentaTienda.vue
+msgctxt "Cuenta"
+msgid "Ask for the yearly cycle"
+msgstr "Pedir el ciclo anual"
+
+#: frontend/src/components/cuenta/CuentaTienda.vue
+msgctxt "Cuenta"
+msgid "I want to switch my plan {0} to the yearly cycle."
+msgstr "Quiero pasar mi plan {0} al ciclo anual."
+
+#: frontend/src/components/cuenta/FacturaFiscal.vue
+msgctxt "Cuenta"
+msgid "Fiscal invoice"
+msgstr "Factura fiscal"
+
+#: frontend/src/components/cuenta/FacturaFiscal.vue
+msgctxt "Cuenta"
+msgid "Fiscal invoice ({0})"
+msgstr "Factura fiscal ({0})"
+
+#: frontend/src/components/shell/MuelleShell.vue
+msgctxt "Perfil"
+msgid "I need to open my profile in Muelle: please check that my user is an active team account."
+msgstr "Necesito abrir mi perfil en Muelle: revisa que mi usuario sea una cuenta del equipo activa."
+
+#: frontend/src/components/perfil/perfil.js
+msgctxt "Perfil"
+msgid "Your current language"
+msgstr "Tu idioma actual"
+
+#: frontend/src/pages/Perfil.vue
+msgctxt "Perfil"
+msgid "Suggested"
+msgstr "Sugeridas"
+
+#: frontend/src/pages/Perfil.vue
+msgctxt "Perfil"
+msgid "Every time zone"
+msgstr "Todas las zonas horarias"
+
+#: frontend/src/pages/ArchivosConectores.vue
+msgid "We would like to connect our invoice mailbox or Paperless to Archivos. Please tell us when it is part of the plans."
+msgstr "Queremos conectar nuestro correo de facturas o Paperless a Archivos. Avísennos cuando forme parte de los planes."
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "Once activated: {0} a month, IVA included"
+msgstr "Al activarlo: {0} al mes, IVA incluido"
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "Once activated: {0} a year, IVA included"
+msgstr "Al activarlo: {0} al año, IVA incluido"
+
+#: frontend/src/components/cuenta/ActivarSheet.vue
+msgctxt "Cuenta"
+msgid "You pay on the payment processor’s secure page. Muelle keeps no card data."
+msgstr "Pagas en la página segura del procesador de pagos. Muelle no guarda los datos de tu tarjeta."
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "Switch to the yearly cycle: {0} a year, 2 months free."
+msgstr "Cambia al ciclo anual: {0} al año, 2 meses gratis."
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "Switch to the yearly cycle: {0} a year."
+msgstr "Cambia al ciclo anual: {0} al año."
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "{0} a month"
+msgstr "{0} al mes"
+
+#: frontend/src/components/cuenta/CuentaFacturacion.vue
+msgctxt "Cuenta"
+msgid "Adding or replacing a card is not done here yet: support does it for you."
+msgstr "Agregar o cambiar una tarjeta todavía no se hace aquí: soporte lo hace por ti."
+
+#: frontend/src/components/cuenta/CuentaFacturacion.vue
+msgctxt "Cuenta"
+msgid "Wallet"
+msgstr "Monedero"

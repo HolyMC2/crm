@@ -28,6 +28,36 @@
           </div>
         </div>
       </div>
+      <!-- The person's own pages, one tap from Más on every width: everyone's
+           profile and, for the owner or a «Mi Plan» delegate, the account. -->
+      <div class="flex gap-2 pb-2">
+        <RouterLink
+          to="/perfil"
+          :class="PILL"
+          data-testid="more-perfil"
+          @click="close"
+        >
+          <span class="lucide-user-round size-5" aria-hidden="true" />
+          {{ __('My profile') }}
+        </RouterLink>
+        <RouterLink
+          v-if="cuentaOpen"
+          to="/cuenta"
+          :class="PILL"
+          data-testid="more-cuenta"
+          @click="close"
+        >
+          <span class="lucide-credit-card size-5" aria-hidden="true" />
+          {{ __('My account') }}
+        </RouterLink>
+      </div>
+      <p
+        v-if="planLine"
+        class="pb-2 text-sm text-ink-gray-6"
+        data-testid="more-cuenta-line"
+      >
+        {{ planLine }}
+      </p>
     </template>
 
     <div class="space-y-6 pb-2">
@@ -416,6 +446,7 @@ import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
 import { BottomSheet, ExpandTransition } from '@/components/ui'
 import { isWide } from '@/composables/breakpoint'
 import { loadCameraSheet, openCamera } from '@/components/captura/cameraDoor'
+import { cuentaLine, cuentaOpen } from './cuentaDoor'
 
 // Pressing a sibling app (data-sibling) starts fetching its page.
 installLinkPrefetch()
@@ -453,6 +484,9 @@ function toggleSettings() {
 const RouterLink = resolveComponent('RouterLink')
 const user = computed(() => props.boot?.user || {})
 const ventas = computed(() => moduleEnabled(props.boot, 'ventas'))
+const planLine = computed(() =>
+  cuentaOpen.value ? cuentaLine(props.boot?.account) : '',
+)
 // «Abrir Muelle en»: Automático, Hoy, or one of my modules. A saved module I
 // no longer have reads as Automático (the server falls back the same way).
 const landingChoices = computed(() => landingOptions(props.modules))
@@ -569,4 +603,6 @@ const TILE =
   'flex min-h-[72px] flex-col items-center justify-center gap-1.5 rounded-7 bg-surface-gray-1 px-1 text-center text-sm leading-tight'
 const ROW =
   'flex min-h-11 w-full items-center gap-2.5 rounded-6 px-1 text-left text-sm'
+const PILL =
+  'press flex min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-full bg-surface-gray-2 px-3 text-base-medium text-ink-gray-8'
 </script>

@@ -729,6 +729,21 @@ const routes = [
     meta: { app: 'equipo', title: 'Equipo', listParent: 'Equipo' },
   },
   {
+    // Mi cuenta: the plan over doco's Mi plan relays. ?tab= opens a section,
+    // ?activar=1 (Hoy's trial card) the activation sheet.
+    path: '/cuenta',
+    name: 'Cuenta',
+    component: () => import('@/pages/Cuenta.vue'),
+    meta: { app: 'cuenta', title: 'My account', stableKey: true },
+  },
+  {
+    // Mi perfil: everyone's own name, photo, password and preferences.
+    path: '/perfil',
+    name: 'Perfil',
+    component: () => import('@/pages/Perfil.vue'),
+    meta: { app: 'perfil', title: 'My profile' },
+  },
+  {
     path: '/manual',
     name: 'Manual',
     component: () => import('@/pages/Manual.vue'),

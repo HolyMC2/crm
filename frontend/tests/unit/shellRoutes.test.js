@@ -181,4 +181,31 @@ describe('Permission recovery follows the module the worker meant to open', () =
       null,
     )
   })
+  it('the account pages guard themselves, except from a boot that never came', () => {
+    const failed = 'No pudimos cargar tus permisos.'
+    for (const key of ['cuenta', 'perfil']) {
+      const route = { meta: { app: key } }
+      // No module of that name is ever enabled: the page answers for itself.
+      expect(
+        moduleRefusal(route, key, { boot: { modules: {} }, error: '' }),
+      ).toBe(null)
+      expect(moduleRefusal(route, key, { boot: null, error: '' })).toBe(null)
+      expect(moduleRefusal(route, key, { boot: null, error: failed })).toEqual({
+        reason: failed,
+        code: null,
+        retry: true,
+        resolve: null,
+        detail: '',
+      })
+      expect(
+        moduleRefusal(route, key, { boot: { modules: {} }, error: failed }),
+      ).toBe(null)
+    }
+  })
+  it('a refused Mi perfil recovers as a team account, Mi cuenta as the plan', () => {
+    expect(recoveryModule('/perfil')).toBe('hoy')
+    expect(recoveryModule('/cuenta?activar=1')).toBe('cuenta')
+    expect(recoveryReady('cuenta', { account: { cuenta: true } })).toBe(true)
+    expect(recoveryReady('cuenta', { account: { cuenta: false } })).toBe(false)
+  })
 })

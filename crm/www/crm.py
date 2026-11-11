@@ -37,6 +37,7 @@ def _gate(path):
 	from crm.api.cobranza import check_cobranza_permission
 	from crm.api.compras import check_compras_permission
 	from crm.api.contactos import check_contactos_permission, is_contactos_path
+	from crm.api.cuenta import check_cuenta_permission, check_perfil_permission, cuenta_available
 	from crm.api.documentos import check_documentos_permission, check_inventario_permission
 	from crm.api.encuestas import check_encuestas_permission
 	from crm.api.equipo import check_equipo_permission
@@ -54,6 +55,7 @@ def _gate(path):
 	from crm.cobranza_routes import is_cobranza_path
 	from crm.compras_routes import is_compras_path
 	from crm.contactos_routes import is_contactos_recovery_path
+	from crm.cuenta_routes import is_cuenta_path, is_perfil_path
 	from crm.documentos_routes import is_documentos_path, is_inventario_path
 	from crm.encuestas_routes import is_encuestas_path
 	from crm.equipo_routes import is_equipo_path
@@ -83,6 +85,8 @@ def _gate(path):
 	documentos = is_documentos_path(path)
 	inventario = is_inventario_path(path)
 	bancos = is_bancos_path(path)
+	cuenta = is_cuenta_path(path)
+	perfil = is_perfil_path(path)
 	neutral = (
 		recovery
 		or hoy
@@ -102,6 +106,8 @@ def _gate(path):
 		or documentos
 		or inventario
 		or bancos
+		or cuenta
+		or perfil
 		or is_contactos_path(path)
 	)
 	if frappe.session.user == "Guest":
@@ -216,6 +222,20 @@ def _gate(path):
 			check_bancos_permission()
 			or frappe.get_cached_value("User", frappe.session.user, "user_type") == "System User"
 		)
+	elif cuenta:
+		# Without doco the site has no plan to show: the page does not exist here.
+		if not cuenta_available():
+			raise frappe.DoesNotExistError(_("Page not found"))
+		# The owner or a «Mi Plan» delegate opens it with or without Ventas; another work
+		# account gets the page's own guard (who to ask, Reintentar) and no plan data.
+		allowed = (
+			check_cuenta_permission()
+			or frappe.get_cached_value("User", frappe.session.user, "user_type") == "System User"
+		)
+	elif perfil:
+		# Every staff account edits its own profile; the page reads only its own User. A
+		# storefront customer gets the recovery screen, not a shell that cannot boot.
+		allowed = check_perfil_permission()
 	else:
 		allowed = check_contactos_permission() if neutral else check_app_permission()
 	if not recovery and not allowed:
@@ -253,6 +273,8 @@ def _gate(path):
 		("documentos", documentos),
 		("inventario", inventario),
 		("bancos", bancos),
+		("cuenta", cuenta),
+		("perfil", perfil),
 	):
 		if matched:
 			return neutral, key
@@ -280,6 +302,7 @@ def get_shell_context_for_dev(path: str = "/crm"):
 	from crm.cobranza_routes import is_cobranza_path
 	from crm.compras_routes import is_compras_path
 	from crm.contactos_routes import is_contactos_recovery_path
+	from crm.cuenta_routes import is_cuenta_path, is_perfil_path
 	from crm.documentos_routes import is_documentos_path, is_inventario_path
 	from crm.encuestas_routes import is_encuestas_path
 	from crm.equipo_routes import is_equipo_path
@@ -331,6 +354,14 @@ def get_shell_context_for_dev(path: str = "/crm"):
 		return get_boot(neutral=True, module="inventario")
 	if is_bancos_path(path):
 		return get_boot(neutral=True, module="bancos")
+	if is_cuenta_path(path):
+		from crm.api.cuenta import cuenta_available
+
+		if not cuenta_available():
+			frappe.throw(_("Page not found"), frappe.DoesNotExistError)
+		return get_boot(neutral=True, module="cuenta")
+	if is_perfil_path(path):
+		return get_boot(neutral=True, module="perfil")
 	if is_avisos_path(path):
 		from crm.api.avisos import check_avisos_permission
 

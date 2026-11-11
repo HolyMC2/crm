@@ -10,6 +10,7 @@ import {
 } from '@/vendor/muelle-shell/contracts'
 import { installedSiblings, sortSiblings } from '@/composables/siblingApps'
 import { arrangeShell } from '@/utils/shellLayout'
+import { ACCOUNT_PAGES } from '@/utils/shellRoutes'
 
 // One boot call (crm.api.shell.boot → ShellBoot) for every shell route; the
 // cache never crosses site or user.
@@ -197,11 +198,16 @@ export const unavailableModules = computed(() =>
 )
 
 /**
- * Shell modules other than Ventas boot without the CRM runtime (sales stores,
- * Ventas chrome): their routes carry meta.app, a hard refresh window.muelle_module.
+ * Shell modules other than Ventas, and the account pages, boot without the CRM
+ * runtime (sales stores, Ventas chrome): their routes carry meta.app, a hard
+ * refresh window.muelle_module.
  */
 export function isNeutralModule(key) {
-  return key !== 'ventas' && SHELL_MODULES.some((meta) => meta.key === key)
+  return (
+    key !== 'ventas' &&
+    (ACCOUNT_PAGES.includes(key) ||
+      SHELL_MODULES.some((meta) => meta.key === key))
+  )
 }
 
 /**

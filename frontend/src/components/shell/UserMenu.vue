@@ -54,6 +54,43 @@
             {{ user.puesto }}
           </div>
         </div>
+        <!-- The person's own pages: everyone's profile, the owner's account. -->
+        <div class="border-b border-outline-gray-1 py-1">
+          <RouterLink
+            role="menuitem"
+            to="/perfil"
+            class="flex w-full items-center gap-2.5 px-3.5 py-2 text-sm hover:bg-surface-gray-2"
+            data-testid="menu-perfil"
+            @click="open = false"
+          >
+            <span
+              class="lucide-user-round size-4 text-ink-gray-6"
+              aria-hidden="true"
+            />
+            {{ __('My profile') }}
+          </RouterLink>
+          <RouterLink
+            v-if="cuentaOpen"
+            role="menuitem"
+            to="/cuenta"
+            class="flex w-full items-center gap-2.5 px-3.5 py-2 text-sm hover:bg-surface-gray-2"
+            data-testid="menu-cuenta"
+            @click="open = false"
+          >
+            <span
+              class="lucide-credit-card size-4 text-ink-gray-6"
+              aria-hidden="true"
+            />
+            <span class="min-w-0 flex-1">
+              <span class="block">{{ __('My account') }}</span>
+              <span
+                v-if="planLine"
+                class="block truncate text-xs text-ink-gray-6"
+                >{{ planLine }}</span
+              >
+            </span>
+          </RouterLink>
+        </div>
         <div class="px-3.5 pb-1 pt-2 text-xs text-ink-gray-6">
           {{ __('Theme') }}
         </div>
@@ -156,6 +193,7 @@ import { openSalesSettings, shellBoot } from '@/composables/muelleShell'
 import { installApp, installAvailable } from '@/composables/shellInstall'
 import { THEME_CHOICES, useShellTheme } from '@/composables/shellTheme'
 import { railWidth } from '@/composables/shellRail'
+import { cuentaLine, cuentaOpen } from './cuentaDoor'
 import {
   ariaKeys,
   keyLabel,
@@ -173,6 +211,7 @@ const open = ref(false)
 const trigger = ref(null)
 const menu = ref(null)
 const user = computed(() => shellBoot.value?.user || {})
+const planLine = computed(() => cuentaLine(shellBoot.value?.account))
 const initials = computed(() => {
   const parts = String(user.value.full_name || user.value.name || '?')
     .trim()

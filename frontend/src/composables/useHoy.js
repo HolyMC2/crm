@@ -207,6 +207,21 @@ const SOURCE_ICONS = {
   'taller.unassigned_repairs': 'lucide-wrench',
 }
 
+// Mi cuenta's trial card (doco plan_state.hoy_source), for whoever may activate.
+export const TRIAL_SOURCE = 'doco.cuenta'
+/** The trial's days and its «Activar», above the day; null outside a trial. */
+export function trialCard(continuar) {
+  const source = (continuar?.sources || []).find(
+    (s) => s.key === TRIAL_SOURCE && s.count > 0,
+  )
+  if (!source) return null
+  return {
+    title: source.label,
+    detail: source.detail || '',
+    ...sourceLink(source.url || '/crm/cuenta?activar=1'),
+  }
+}
+
 export function greeting(now = new Date(), timeZone) {
   let hour = now.getHours()
   try {
@@ -434,8 +449,11 @@ export function continuarCards(
         rows: [],
       })
   }
-  // A source with nothing to do draws nothing (as on Desk Hoy).
-  for (const source of (continuar?.sources || []).filter((s) => s.count > 0))
+  // A source with nothing to do draws nothing (as on Desk Hoy); the trial
+  // card has its own place above the day (trialCard).
+  for (const source of (continuar?.sources || []).filter(
+    (s) => s.count > 0 && s.key !== TRIAL_SOURCE,
+  ))
     cards.push({
       key: source.key,
       icon: SOURCE_ICONS[source.key] || 'lucide-inbox',

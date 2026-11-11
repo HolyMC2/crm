@@ -77,6 +77,14 @@ const COPY = {
     missing:
       'Tu usuario todavía no es de personal. Comparte la solicitud y reintenta después del ajuste.',
   },
+  cuenta: {
+    reason:
+      'Mi cuenta la ven el dueño de la tienda y quien tenga el permiso «Mi Plan». Pide al dueño que te lo dé; después toca Reintentar permisos.',
+    request:
+      'Necesito el permiso «Mi Plan» en Muelle para ver y pagar el plan de la tienda (Mi cuenta).',
+    missing:
+      'Todavía falta el permiso «Mi Plan». Comparte la solicitud y reintenta después del ajuste.',
+  },
   cobranza: {
     reason:
       'Para abrir Cobranza necesitas permiso de lectura de facturas de venta. Pide al encargado que revise tu usuario; después toca Reintentar permisos.',
