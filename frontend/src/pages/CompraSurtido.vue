@@ -1517,12 +1517,16 @@ const readQuote = ref(null)
 const awaited = ref('')
 // the owner's request in the list's own words (utils/surtidoAsk); the plan follows it
 const ask = reactive({ ...DEFAULT_ASK, marks: [] })
-const facets = ref({
+// A list with no products yet (still reading, or none read) loads no facets:
+// every field the screen reads is here from the start, or it went blank.
+const noFacets = () => ({
   sections: [],
   marks: [],
   groups: [],
+  pages: [],
   supplier_guess: null,
 })
+const facets = ref(noFacets())
 const listsOpen = ref(false)
 const listsMounted = ref(false)
 const plan = ref(null)
@@ -2002,13 +2006,7 @@ async function linkFor(name) {
 
 // the list's own words for the request: its sections, marks and the shop's groups
 async function loadFacets(name) {
-  facets.value = {
-    sections: [],
-    marks: [],
-    groups: [],
-    pages: [],
-    supplier_guess: null,
-  }
+  facets.value = noFacets()
   if (!name) return
   try {
     const out = await call('facets', { catalog: name })
@@ -2043,6 +2041,8 @@ watch(
       suggestNotes.value = []
       catalogRows.value = []
       planSupplier.value = ''
+      // another list's pages and sections never show on this one
+      facets.value = noFacets()
     }
     if (lines && (name !== before || !linesBefore)) {
       loadFacets(name)
