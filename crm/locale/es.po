@@ -38203,3 +38203,203 @@ msgstr "{0} tiendas sin existencia ni mínimo"
 msgctxt "Productos"
 msgid "Hide the stores with no stock or minimum"
 msgstr "Ocultar las tiendas sin existencia ni mínimo"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "List and plan"
+msgstr "Lista y plan"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Change list"
+msgstr "Cambiar lista"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "The read stopped before the end. Read the pages again to plan with them."
+msgstr "La lectura se detuvo antes de terminar. Vuelve a leer las páginas para planear con ellas."
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Read again"
+msgstr "Leer de nuevo"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Reading {0} pages of products uses {1} units of your plan. The plan appears here when they are read."
+msgstr "Leer {0} páginas de productos usa {1} unidades de tu plan. El plan aparece aquí cuando estén leídas."
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Drop the supplier's list"
+msgstr "Suelta la lista del proveedor"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Pictures of the list, a PDF or a spreadsheet. The pictures you send together are one list."
+msgstr "Fotos de la lista, un PDF o una hoja de cálculo. Las fotos que mandas juntas son una sola lista."
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Choose files"
+msgstr "Elegir archivos"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Or pick a saved list"
+msgstr "O elige una lista guardada"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Budget"
+msgstr "Presupuesto"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "41,300"
+msgstr "41,300"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Section of the list"
+msgstr "Sección de la lista"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Only lines marked"
+msgstr "Solo renglones marcados"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Count my sales and stock of"
+msgstr "Contar mis ventas y existencia de"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "These models first"
+msgstr "Primero estos modelos"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "A16 2, A27 1"
+msgstr "A16 2, A27 1"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "A number after the model is the pieces you want."
+msgstr "Un número después del modelo son las piezas que quieres."
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "More settings ({0})"
+msgstr "Más ajustes ({0})"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "More settings"
+msgstr "Más ajustes"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Also what I have none of, even unsold"
+msgstr "También lo que no tengo, aunque no se haya vendido"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Write the budget: the plan appears here and follows every change."
+msgstr "Escribe el presupuesto: el plan aparece aquí y sigue cada cambio."
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "{0} lines, {1} pieces, {2} left"
+msgstr "{0} líneas, {1} piezas, quedan {2}"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "{0}. Confirm with the supplier whether it counts per model or per order."
+msgstr "{0}. Confirma con el proveedor si cuenta por modelo o por todo el pedido."
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "How it was made"
+msgstr "Cómo se armó"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Take off a mark, cover more days in «More settings», or name the models in «These models first»."
+msgstr "Quita una marca, cubre más días en «Más ajustes» o nombra los modelos en «Primero estos modelos»."
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Its price is from {0} pieces"
+msgstr "Su precio es desde {0} piezas"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "One less of {0}"
+msgstr "Una pieza menos de {0}"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "One more of {0}"
+msgstr "Una pieza más de {0}"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "{0} each"
+msgstr "{0} c/u"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Choose the supplier to create the order. A new one? Ask Muelle: it creates it with the order."
+msgstr "Elige el proveedor para crear el pedido. ¿Es nuevo? Pregúntale a Muelle: lo crea con el pedido."
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Create the order"
+msgstr "Crear el pedido"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Add a list"
+msgstr "Agregar una lista"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Updating the plan…"
+msgstr "Actualizando el plan…"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Nothing to order yet"
+msgstr "Aún no hay nada que pedir"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Choose whose list it is to create the order"
+msgstr "Elige de qué proveedor es la lista para crear el pedido"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Confirm the minimum pieces with the supplier"
+msgstr "Confirma con el proveedor el mínimo de piezas"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "{0} lines, {1} pieces, to {2}"
+msgstr "{0} líneas, {1} piezas, a {2}"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "{0} lines, {1} pieces"
+msgstr "{0} líneas, {1} piezas"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "{0} pages, the read stopped"
+msgstr "{0} págs., la lectura se detuvo"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "{0} pages, reading…"
+msgstr "{0} págs., leyendo…"
