@@ -211,6 +211,12 @@ import { takeVisits } from '@/utils/visited'
 import { useShellTheme } from '@/composables/shellTheme'
 import { runRecordAction } from '@/composables/recordActions'
 import {
+  closeSheet,
+  installSheetHistory,
+  openSheet,
+  settle,
+} from '@/components/ui/sheetHistory'
+import {
   ariaKeys,
   keyLabel,
   openShortcutSheet,
@@ -230,6 +236,22 @@ const props = defineProps({
 })
 const emit = defineEmits(['update:modelValue', 'update:mode'])
 const router = useRouter()
+// Back (the phone's button or gesture) closes the palette and stays on the
+// page: like a sheet, the open palette owns one history entry
+// (components/ui/sheetHistory). Without it, back left the page, and an
+// installed app with nothing behind it closed.
+installSheetHistory(router)
+const historyToken = `palette-${Math.random().toString(36).slice(2)}`
+let inHistory = true
+openSheet(historyToken, () => {
+  inHistory = false
+  close()
+})
+function leaveHistory() {
+  if (!inHistory) return
+  inHistory = false
+  closeSheet(historyToken)
+}
 const { setTheme } = useShellTheme()
 const dialog = ref(null)
 const input = ref(null)
@@ -369,7 +391,10 @@ async function run() {
   if (!signal.aborted) searching.value = false
 }
 
+// Closing walks back over the palette's entry at once, so whatever comes next
+// (a route, a sheet, another page) lands after that back, not under it.
 function close() {
+  leaveHistory()
   emit('update:modelValue', false)
 }
 function focusInput() {
@@ -413,8 +438,10 @@ function choose(item) {
   // «Escanear un código»: the shell's scanner opens over this screen.
   if (item.action === 'scan') nextTick(() => openScan())
   if (href) router.push(href.replace(/^\/crm/, ''))
-  else if (external) window.location.assign(external)
-  else if (desk) window.location.assign(desk)
+  // Another page loads once the back over the palette's entry has landed, so
+  // its own back returns here.
+  else if (external || desk)
+    settle().then(() => window.location.assign(external || desk))
 }
 async function copyText(text) {
   try {
@@ -464,6 +491,8 @@ const previousFocus = document.activeElement
 watch(() => props.focusKey, focusInput)
 onMounted(focusInput)
 onBeforeUnmount(() => {
+  // The shell closed it (the help key opens the shortcuts in its place).
+  leaveHistory()
   controller?.abort()
   previousFocus?.focus?.()
 })
