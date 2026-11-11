@@ -11,6 +11,7 @@ import {
   DESK_PREFIXES,
   matchTokens,
   pushRecent,
+  PALETTE_PER_GROUP,
 } from '@/vendor/muelle-shell/contracts'
 import { shellT } from '@/composables/shellKeyboard'
 import { ventasSection } from '@/composables/ventasSections'
@@ -45,6 +46,14 @@ import { createManualProvider } from '@/utils/manualPalette'
 import { createAssistantProvider } from '@/components/assistant/assistantPalette'
 // Reportes and Desk workspaces, as Desk lists them for this worker (E7).
 import { createDeskProviders } from '@/utils/deskPalette'
+// The worker's products on this device: Ctrl+K ranks them on the keystroke.
+import {
+  PRODUCT_ROWS,
+  findProducts,
+  keepProductDetails,
+  noteProductStamp,
+  productDetails,
+} from '@/utils/productIndex'
 import {
   formatDate,
   formatMoney,
@@ -90,6 +99,58 @@ export const PALETTE_RANK = Object.freeze({ place: 0, specific: 1, generic: 2 })
  */
 export function asksServer(query) {
   return query.kind !== 'empty' && String(query.text || '').trim().length >= 2
+}
+
+/**
+ * What each answering provider with `instant` knows of the query before it
+ * asks the server (Productos ranks the device's product list), by provider
+ * key: the rows the palette shows while that provider is still asking, shaped
+ * as federatedSearch shapes an answer (its source, the rows a group shows). A
+ * provider that knows nothing yet has no entry.
+ */
+export function instantRows(providers, query) {
+  const known = new Map()
+  for (const provider of providers) {
+    const items = provider.instant?.(query)
+    if (!items) continue
+    const counts = new Map()
+    known.set(
+      provider.key,
+      items
+        .filter((item) => {
+          const shown = counts.get(item.group) ?? 0
+          counts.set(item.group, shown + 1)
+          return shown < PALETTE_PER_GROUP
+        })
+        .map((item) => ({ ...item, source: provider.key })),
+    )
+  }
+  return known
+}
+
+/**
+ * The provider states the palette shows for an update of federatedSearch.
+ * A provider still asking shows what the device already knows of this text
+ * (`known`, from instantRows), else keeps the rows of the last query (`last`,
+ * the states on screen) that the text still matches: the list narrows as the
+ * worker types instead of blinking empty at every letter. A provider whose
+ * request failed keeps what the device knows too: a product found here is
+ * still there to open, without its price and stock.
+ */
+export function statesToShow(next, last, known, text) {
+  const before = new Map(last.map((state) => [state.key, state]))
+  return next.map((state) => {
+    if (state.status === 'done') return state
+    const rows = known.get(state.key)
+    if (rows) return { ...state, items: rows }
+    if (state.status === 'error') return state
+    return {
+      ...state,
+      items: (before.get(state.key)?.items || []).filter((item) =>
+        matchTokens(text, item.title, item.subtitle),
+      ),
+    }
+  })
 }
 
 const CONTACTOS_PLACES = [
@@ -592,20 +653,47 @@ export function createShellProviders({ boot, modules }) {
   // Productos (doco.workspaces.products.palette): products by the shared item
   // ranker («pan sm a05» finds «Pantalla SM A05»), and a serial number (IMEI)
   // or batch typed or scanned whole says what it is and where.
+  // The device keeps the worker's products (utils/productIndex) and ranks
+  // them itself: `instant` answers on the keystroke, as Taller's parts do,
+  // and `search` then asks only for those rows' price and stock, and for the
+  // serial or batch. Without a list on the device the server searches.
+  const productText = (query) => {
+    if (query.kind === 'empty' || !moduleEnabled(boot.value, 'productos'))
+      return ''
+    const text = query.text.slice(0, 140)
+    return text.length < 2 ? '' : text
+  }
+  const withTaller = () => ({
+    taller: installedSiblings().some((app) => app.key === 'taller'),
+  })
   const productos = {
     key: 'productos',
     label: 'Productos',
     scopes: ['documents'],
+    instant(query) {
+      const text = productText(query)
+      const found = text ? findProducts(text) : null
+      if (!found) return null
+      return productosItems(
+        { items: found.rows.map((row) => productDetails(row.name) || row) },
+        text,
+        withTaller(),
+      )
+    },
     async search(query, signal) {
-      if (query.kind === 'empty' || !moduleEnabled(boot.value, 'productos'))
-        return []
-      const text = query.text.slice(0, 140)
-      if (text.length < 2) return []
-      const result = await call('doco.workspaces.products.palette', { q: text })
+      const text = productText(query)
+      if (!text) return []
+      const found = findProducts(text)
+      const result = await call(
+        'doco.workspaces.products.palette',
+        found
+          ? { q: text, names: found.names, stamp: found.stamp }
+          : { q: text },
+      )
+      keepProductDetails(result?.items)
+      noteProductStamp(result?.stamp)
       if (signal.aborted) return []
-      return productosItems(result, text, {
-        taller: installedSiblings().some((app) => app.key === 'taller'),
-      })
+      return productosItems(result, text, withTaller())
     },
   }
   // Clínica answers for its own records (patients, today's appointments) when its module is on
@@ -777,9 +865,8 @@ export function inmobiliariaItems(result) {
     .filter(Boolean)
 }
 
-// The palette shows this many products (doco PALETTE_ROWS); a full page may
-// have more, so it offers the whole Productos list for the same words.
-const PRODUCT_ROWS = 5
+// A full page of products (PRODUCT_ROWS) may have more, so it offers the
+// whole Productos list for the same words.
 const productHref = (code) => `/productos/${encodeURIComponent(code)}`
 const deviceHistory = (code) =>
   `/taller/imei?identifier=${encodeURIComponent(code)}`

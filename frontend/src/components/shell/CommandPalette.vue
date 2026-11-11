@@ -156,11 +156,20 @@
 </template>
 <script>
 import { hasStoredReach, loadPaletteReach } from '@/utils/paletteReach'
+import { loadProductIndex } from '@/utils/productIndex'
+import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
+import { shellBoot } from '@/composables/muelleShell'
 
 // This module loads in idle time after the first route (MuelleShell). A
 // browser that keeps no reach yet reads it then, so the first ⌘K already has
 // its lists, reports and Desk rows; later visits open on the kept copy.
 if (!hasStoredReach()) loadPaletteReach()
+// The worker's products come to this device the same way, so the first ⌘K
+// already ranks them on the keystroke (utils/productIndex).
+const warmProducts = () => {
+  if (moduleEnabled(shellBoot.value, 'productos')) loadProductIndex()
+}
+warmProducts()
 </script>
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
@@ -178,7 +187,6 @@ import {
   PALETTE_MODE_KEYS,
   federatedSearch,
   groupPaletteItems,
-  matchTokens,
   parsePaletteQuery,
   providersFor,
   SHELL_MODULES,
@@ -186,19 +194,17 @@ import {
   pushRecent,
   safeReturn,
 } from '@/vendor/muelle-shell/contracts'
-import {
-  moduleKeyFor,
-  shellBoot,
-  shellModules,
-} from '@/composables/muelleShell'
+import { moduleKeyFor, shellModules } from '@/composables/muelleShell'
 import { scanPickHref, siblingHref } from '@/composables/shellRail'
 import {
   createShellProviders,
+  instantRows,
   loadRecent,
   orderPaletteSections,
   recentWithVisits,
   resolveRecent,
   saveRecent,
+  statesToShow,
   toRecentRef,
 } from '@/utils/shellPalette'
 import { takeVisits } from '@/utils/visited'
@@ -227,6 +233,8 @@ const router = useRouter()
 const { setTheme } = useShellTheme()
 const dialog = ref(null)
 const input = ref(null)
+// An open palette makes sure the product list is on the device, and current.
+warmProducts()
 const raw = ref('')
 const cursor = ref(0)
 const states = ref([])
@@ -245,7 +253,8 @@ resolveRecent(recentRefs, shellBoot.value).then((items) => {
 })
 // A provider marked `local` (actions, places, Listas, Reportes, Desk) answers
 // from memory on every keystroke; one that asks the server waits until the
-// typing pauses for PALETTE_DEBOUNCE_MS.
+// typing pauses for PALETTE_DEBOUNCE_MS. A provider with `instant` (Productos)
+// shows what the device knows on the keystroke while its `search` asks.
 const pause = (ms, signal) =>
   new Promise((resolve) => {
     const timer = setTimeout(resolve, ms)
@@ -349,23 +358,11 @@ async function run() {
     'contactos',
     activeMode.value,
   )
+  const known = instantRows(answering, current)
   await federatedSearch(answering, current, {
     signal,
     onUpdate(next) {
-      // A provider still asking keeps the rows of the last query that the
-      // text still matches: the list narrows as the worker types instead of
-      // blinking empty at every letter.
-      const last = new Map(states.value.map((state) => [state.key, state]))
-      states.value = next.map((state) =>
-        state.status === 'loading' || state.status === 'slow'
-          ? {
-              ...state,
-              items: (last.get(state.key)?.items || []).filter((item) =>
-                matchTokens(current.text, item.title, item.subtitle),
-              ),
-            }
-          : state,
-      )
+      states.value = statesToShow(next, states.value, known, current.text)
       searching.value = next.some((state) => state.status === 'slow')
     },
   })

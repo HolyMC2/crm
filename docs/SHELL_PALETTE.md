@@ -118,12 +118,45 @@ the palette follows it.
   `otros`, and tags after `#`) ask the server once the typing pauses for `PALETTE_DEBOUNCE_MS`
   (150 ms), from the second letter (`asksServer`; `otros` from the third, the index's word size). While one asks, its rows of the last query stay if the text still matches their
   title or line, so the list narrows instead of blinking; «Nada coincide» waits for every answer.
+- **Productos ranks on the device**, as Taller ranks its parts. `utils/productIndex.js` keeps the
+  worker's products (code, name, group, brand and barcodes of every enabled product they read, in
+  the server's default order; `doco.workspaces.products.palette_index`) in IndexedDB
+  `muelle-palette`, per site and worker, cleared at sign-out. `findProducts` takes the first
+  `PRODUCT_POOL` (200) products the text may mean in that order and ranks them with
+  `utils/itemRank.js`, the port of doco's `rank()` and `term_patterns()` that Taller and Mercado
+  also carry: the same rows `products.palette` answers. The provider's `instant` puts them on
+  screen on the keystroke (`instantRows`, `statesToShow`); its `search` then sends those codes
+  (`names`) with the list's `stamp`, and the server answers their price and stock, each product
+  read again under the worker's permissions, plus the serial or batch lookup. No price or stock
+  is kept on the device beyond a minute in memory.
+  - The list is current while its `stamp` equals the one every `palette` answer carries (the
+    count, last change and codes of the products the worker reads). On another stamp the server
+    ignores `names` and searches itself, so a stale list never hides a new product, and the
+    device reads the list again (at most every 30 s). A list an hour old is read again for its
+    order (on hand, last sold).
+  - No list on the device (the first seconds of a new browser, a read that failed, a catalogue
+    past doco's `PALETTE_INDEX_CAP` of 30,000 products): the server searches, as before.
 - The palette's module loads in idle time after the first route (`warmAfterFirstRoute`), so the
   first ⌘K opens at once; a phone or a slow line loads it on the first open.
 
 On doco-mirror (System Manager, 2026-11-06) the Listas search alone took 0.8–1.4 s warm and
 10.5 s cold per keystroke (a `get_meta` per readable DocType, about a thousand), and the list
 moved for 1.2–2.1 s after the last key while «factura» fired 48 requests.
+
+Products, on doco-mirror (9,556 products, 2026-11-11, three runs each, median). Asked of the
+server: typing «pantalla sm a05» at 80 ms a key, the first product row came 1,950 ms after the
+text had two letters and the final rows 417 ms after the last key; at 200 ms a key, 5,558 ms and
+1,589 ms on a busy lab. Ranked on the device (nine texts, 80 and 200 ms a key): the rows are on
+screen 5–19 ms after the key (44 ms on the first key of the first open) and their price and stock
+279–451 ms after the last key; a text typed again within a minute shows them at once. The list is
+108 KB on the wire, read in 181 ms. For 68 real queries the device and `products.palette` find
+the same products in the same order.
+
+Every pause still sends one request per record provider (about five; «pantalla iphone 11» at
+200 ms a key sent 101), and the server works on each although the palette drops the superseded
+answers. A gate of one request per provider at a time was measured by replay on the lab (final
+answers 0.31–0.42 s after the last key against 0.43–0.66 s) and left out: a request that hangs
+then holds back that provider's next search.
 
 ## Prefixes (scopes)
 

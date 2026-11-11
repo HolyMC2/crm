@@ -32,9 +32,12 @@ import {
 } from '@/vendor/muelle-shell/contracts'
 import {
   createShellProviders,
+  instantRows,
   orderPaletteSections,
   productosItems,
+  statesToShow,
 } from '@/utils/shellPalette'
+import { _resetProductIndex, loadProductIndex } from '@/utils/productIndex'
 
 const screen = {
   name: 'MOD00016',
@@ -60,6 +63,13 @@ beforeEach(() => {
   globalThis.__ = (text, args) =>
     args ? text.replace(/{(\d+)}/g, (_, i) => args[i]) : text
   state.call.mockReset()
+  // No product list on the device unless a test reads one.
+  const kept = new Map()
+  _resetProductIndex({
+    get: async (key) => kept.get(key),
+    set: async (key, value) => void kept.set(key, value),
+    clear: async () => void kept.clear(),
+  })
 })
 
 describe('productosItems', () => {
@@ -187,6 +197,126 @@ describe('the shell palette', () => {
     expect(found[0]).toBe('registros/Pantalla SM A05 ORI')
   })
 
+  describe('with the product list on the device', () => {
+    const modules = {
+      productos: { key: 'productos', enabled: true, capabilities: {} },
+    }
+    const index = {
+      stamp: 's1',
+      complete: true,
+      rows: [
+        ['MOD00016', 'Pantalla SM A05 ORI', 'Pantallas y Displays', 'Samsung'],
+        ['MOD00017', 'Pantalla SM A05S ORI', 'Pantallas y Displays', null],
+        ['IPN000180', 'Case Samsung A05 Rosa', 'Fundas y Carcasas', null],
+      ],
+      barcodes: [],
+    }
+    const server = (palette) =>
+      state.call.mockImplementation(async (method, args) => {
+        if (method === 'doco.workspaces.products.palette_index') return index
+        if (method === 'doco.workspaces.products.palette') return palette(args)
+        return []
+      })
+    const known = (raw) => {
+      const providers = createShellProviders({
+        boot: ref(boot(modules)),
+        modules: ref([]),
+      })
+      const q = parsePaletteQuery(raw)
+      return instantRows(providersFor(providers, q), q)
+    }
+
+    it('the rows are there on the keystroke, before any answer', async () => {
+      server(() => new Promise(() => {}))
+      expect(known('pan sm a05').has('productos')).toBe(false)
+      await loadProductIndex()
+      state.call.mockClear()
+      const rows = known('pan sm a05').get('productos')
+      expect(
+        rows.map((row) => [row.source, row.id, row.title, row.subtitle]),
+      ).toEqual([
+        [
+          'productos',
+          'item:MOD00016',
+          'Pantalla SM A05 ORI',
+          'Producto · Pantallas y Displays',
+        ],
+        [
+          'productos',
+          'item:MOD00017',
+          'Pantalla SM A05S ORI',
+          'Producto · Pantallas y Displays',
+        ],
+      ])
+      expect(rows[0].href).toBe('/productos/MOD00016')
+      expect(state.call).not.toHaveBeenCalled()
+      // Only Productos knows before asking, and one letter is not a search.
+      expect([...known('pan sm a05').keys()]).toEqual(['productos'])
+      expect(known('p').has('productos')).toBe(false)
+      expect(known('').has('productos')).toBe(false)
+    })
+
+    it('the server is asked for those rows only, and its answer stays', async () => {
+      const asked = []
+      server((args) => {
+        asked.push(args)
+        return { items: [screen], units: [], checked: false, stamp: 's1' }
+      })
+      await loadProductIndex()
+      const found = await rows('pan sm a05', modules)
+      expect(asked).toEqual([
+        { q: 'pan sm a05', names: ['MOD00016', 'MOD00017'], stamp: 's1' },
+      ])
+      expect(found[0]).toBe('registros/Pantalla SM A05 ORI')
+      // The next keystroke shows the price and stock just answered, at once.
+      const [row] = known('pan sm a0').get('productos')
+      expect(row.subtitle).toContain('$450')
+      expect(row.subtitle).toContain('in stock')
+    })
+
+    it('a serial number is still looked up when no product matches', async () => {
+      const asked = []
+      server((args) => {
+        asked.push(args)
+        return { items: [], units: [serial], checked: true, stamp: 's1' }
+      })
+      await loadProductIndex()
+      expect(known(serial.name).get('productos')).toEqual([])
+      const found = await rows(serial.name, modules)
+      expect(asked).toEqual([{ q: serial.name, names: [], stamp: 's1' }])
+      expect(found).toContain(`registros/Serial ${serial.name}`)
+    })
+
+    it('an answer with another stamp reads the list again', async () => {
+      server(() => ({ items: [], units: [], checked: false, stamp: 's2' }))
+      await loadProductIndex()
+      state.call.mockClear()
+      await rows('pan sm a05', modules)
+      expect(
+        state.call.mock.calls.filter(
+          ([method]) => method === 'doco.workspaces.products.palette_index',
+        ),
+      ).toHaveLength(1)
+    })
+
+    it('a full page offers the whole Productos list at once', async () => {
+      index.rows = Array.from({ length: 6 }, (_, i) => [
+        `MOD${i}`,
+        `Pantalla SM A0${i}`,
+        'Pantallas',
+        null,
+      ])
+      server(() => new Promise(() => {}))
+      await loadProductIndex()
+      const rows = known('pantalla sm').get('productos')
+      expect(rows.filter((row) => row.group === 'registros')).toHaveLength(5)
+      expect(rows.at(-1)).toMatchObject({
+        group: 'acciones',
+        href: '/productos?q=pantalla%20sm',
+      })
+    })
+  })
+
   it('without Productos the server is not asked', async () => {
     state.call.mockResolvedValue([])
     await rows('pan sm a05', {})
@@ -211,5 +341,56 @@ describe('the shell palette', () => {
     expect(await rows('garantias nuevas', modules)).toContain(
       'ir_a/Garantías › Nuevas',
     )
+  })
+})
+
+describe('statesToShow', () => {
+  const row = (title, subtitle = '') => ({ id: title, title, subtitle })
+  const known = new Map([['productos', [row('Pantalla SM A05 ORI')]]])
+  const last = [
+    { key: 'productos', status: 'done', items: [row('Pantalla vieja')] },
+    {
+      key: 'contactos',
+      status: 'done',
+      items: [row('Pancho López'), row('Ana Ruiz')],
+    },
+  ]
+  const shown = (status, map = known) =>
+    Object.fromEntries(
+      statesToShow(
+        [
+          { key: 'productos', status, items: [] },
+          { key: 'contactos', status, items: [] },
+        ],
+        last,
+        map,
+        'pan',
+      ).map((state) => [state.key, state.items.map((item) => item.title)]),
+    )
+
+  it('a provider still asking shows what the device knows, else what still matches', () => {
+    for (const status of ['loading', 'slow'])
+      expect(shown(status)).toEqual({
+        productos: ['Pantalla SM A05 ORI'],
+        contactos: ['Pancho López'],
+      })
+    // No list on the device: the last rows that still match, as before.
+    expect(shown('loading', new Map()).productos).toEqual(['Pantalla vieja'])
+  })
+
+  it('an answer replaces both', () => {
+    const answered = [
+      { key: 'productos', status: 'done', items: [row('Pantalla SM A05S')] },
+    ]
+    expect(statesToShow(answered, last, known, 'pan')).toEqual(answered)
+    // The device knowing of nothing is an answer while asking too.
+    expect(shown('loading', new Map([['productos', []]])).productos).toEqual([])
+  })
+
+  it('a failed request keeps the rows the device knows, and only those', () => {
+    expect(shown('error')).toEqual({
+      productos: ['Pantalla SM A05 ORI'],
+      contactos: [],
+    })
   })
 })

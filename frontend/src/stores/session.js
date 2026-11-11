@@ -78,6 +78,10 @@ export const sessionStore = defineStore('crm-session', () => {
       await import('@/utils/contactos')
         .then((m) => m.purgeContact360Cache())
         .catch(() => 0)
+      // The product list Ctrl+K ranks on this device (names, groups, barcodes).
+      await import('@/utils/productIndex')
+        .then((m) => m.forgetProductIndex())
+        .catch(() => 0)
       user.value = null
       const intended = safeIntendedRoute(
         window.location.pathname + window.location.search,
