@@ -458,12 +458,24 @@ function onContentScroll(event) {
   const el = event.target
   if (!phone.value || !(el instanceof Element)) return
   const top = el.scrollTop
-  const previous = lastScroll.get(el) ?? 0
-  lastScroll.set(el, top)
-  if (top === previous) return
+  const height = el.clientHeight
+  const previous = lastScroll.get(el) ?? { top: 0, height }
+  lastScroll.set(el, { top, height })
+  if (top === previous.top) return
+  // The header sliding resizes the list and the browser moves its scroll to
+  // fit; that is not the worker scrolling. Reading it as a scroll up brought
+  // the header back, which shrank the list again: the screen shook.
+  if (height !== previous.height) return
   if (top <= HEADER_HEIGHT) headerHidden.value = false
-  else if (top - previous > 6) headerHidden.value = true
-  else if (previous - top > 6) headerHidden.value = false
+  else if (top - previous.top > 6)
+    headerHidden.value = headerHidden.value || keepsScrolling(el)
+  else if (previous.top - top > 6) headerHidden.value = false
+}
+// A list only a little taller than the screen keeps its header: with the
+// header gone it grows by the header's height and could no longer stay
+// scrolled past it.
+function keepsScrolling(el) {
+  return el.scrollHeight - el.clientHeight > 2 * HEADER_HEIGHT
 }
 watch(
   () => route.path,

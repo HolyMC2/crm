@@ -973,25 +973,47 @@ describe('one frame for every route', () => {
     state.mobile.value = true
     await mount('/contactos')
     const header = () => root.querySelector('[data-testid="shell-header"]')
-    const scroller = document.createElement('div')
-    root.querySelector('#muelle-content').append(scroller)
-    const scrollTo = async (top) => {
-      Object.defineProperty(scroller, 'scrollTop', {
-        value: top,
-        configurable: true,
-      })
-      scroller.dispatchEvent(new Event('scroll'))
-      await nextTick()
-    }
-    await scrollTo(200)
-    await scrollTo(400)
+    const scroller = phoneScroller({ client: 500, scroll: 2000 })
+    await scroller.to(200)
+    await scroller.to(400)
     expect(header().style.marginTop).toBe('-56px') // AppBar's height
-    await scrollTo(380)
+    await scroller.to(380)
     expect(header().style.marginTop).toBe('')
-    await scrollTo(600)
+    await scroller.to(600)
     expect(header().style.marginTop).toBe('-56px')
     // near the top the header always shows
-    await scrollTo(20)
+    await scroller.to(20)
+    expect(header().style.marginTop).toBe('')
+  })
+
+  it('phone header: the list resizing under it is not a scroll (no shaking at the bottom)', async () => {
+    state.mobile.value = true
+    await mount('/contactos')
+    const header = () => root.querySelector('[data-testid="shell-header"]')
+    const scroller = phoneScroller({ client: 400, scroll: 1000 })
+    await scroller.to(100)
+    await scroller.to(600)
+    expect(header().style.marginTop).toBe('-56px')
+    // The header slides away, the list grows, the browser pulls its scroll
+    // back to fit: the header stays away.
+    await scroller.to(580, { client: 420 })
+    await scroller.to(544, { client: 456 })
+    expect(header().style.marginTop).toBe('-56px')
+    // The worker's own scroll up still brings it back.
+    await scroller.to(500)
+    expect(header().style.marginTop).toBe('')
+  })
+
+  it('phone header stays on a list only a little taller than the screen', async () => {
+    state.mobile.value = true
+    await mount('/contactos')
+    const header = () => root.querySelector('[data-testid="shell-header"]')
+    // Two sales (Resultados, 2026-11-11): 82 px to scroll; without the header
+    // the list would grow by 56 and could not stay past it.
+    const scroller = phoneScroller({ client: 348, scroll: 430 })
+    await scroller.to(30)
+    await scroller.to(70)
+    await scroller.to(82)
     expect(header().style.marginTop).toBe('')
   })
 
@@ -2096,6 +2118,25 @@ describe('Ventas deals in the palette', () => {
 // Async sheets (Más, the palette) import their modules on first open; on a
 // slow CI runner that takes over the old 40 tries (S1d: Más now loads
 // useAssistant itself, the shell no longer does at boot).
+// A page scroller inside the shell's content: `to(top, { client })` scrolls
+// it (and resizes it, as the header sliding does) and fires its scroll event.
+function phoneScroller({ client, scroll }) {
+  const el = document.createElement('div')
+  root.querySelector('#muelle-content').append(el)
+  const set = (name, value) =>
+    Object.defineProperty(el, name, { value, configurable: true })
+  set('clientHeight', client)
+  set('scrollHeight', scroll)
+  return {
+    async to(top, size = {}) {
+      if (size.client) set('clientHeight', size.client)
+      set('scrollTop', top)
+      el.dispatchEvent(new Event('scroll'))
+      await nextTick()
+    },
+  }
+}
+
 async function until(find, tries = 200) {
   for (let i = 0; i < tries; i++) {
     await Promise.resolve()
