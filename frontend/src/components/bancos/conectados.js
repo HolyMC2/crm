@@ -267,6 +267,15 @@ export function movementsWaiting(n) {
   return n === 1 ? '1 movimiento espera' : `${countText(n)} movimientos esperan`
 }
 
+/** A login's unlinked accounts on the Bancos list: «2 cuentas sin enlazar: 96 movimientos
+ * esperan». A login that synced but feeds no account read as if its sync had failed. */
+export function unlinkedText(conexion, held) {
+  const n = unlinkedAccounts(conexion).length || 1
+  const cuentas =
+    n === 1 ? '1 cuenta sin enlazar' : `${countText(n)} cuentas sin enlazar`
+  return `${cuentas}: ${movementsWaiting(held)}`
+}
+
 /** «Cuentas sin enlazar» first: an account that feeds nothing holds its movements. */
 export function unlinkedAccounts(conexion) {
   return (conexion?.accounts || []).filter((a) => !a.linked && a.type !== 'Tax')

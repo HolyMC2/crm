@@ -120,6 +120,7 @@ import {
   ledgerLabel,
   readyText,
   stepLabel,
+  unlinkedText,
   waitingOf,
   waitingText,
 } from '@/components/bancos/conectados'
@@ -375,6 +376,33 @@ describe('bancos conectados words', () => {
     expect(waitingText({})).toBe('')
     expect(waitingText({ revisar: 1200, sin_enlazar: 7562 })).toBe(
       '1,200 por revisar, 7,562 esperan una cuenta',
+    )
+  })
+
+  it('says on the list how many accounts are unlinked and what they hold back', () => {
+    // doco 2026-11-11: BBVA synced 96 movements into two unlinked accounts and read as broken.
+    const bbva = {
+      accounts: [
+        {
+          name: 'deb',
+          linked: false,
+          type: 'Checking',
+          waiting: { sin_enlazar: 80 },
+        },
+        {
+          name: 'oro',
+          linked: false,
+          type: 'Credit Card',
+          waiting: { sin_enlazar: 16 },
+        },
+        { name: 'sat', linked: false, type: 'Tax' },
+      ],
+    }
+    expect(unlinkedText(bbva, 96)).toBe(
+      '2 cuentas sin enlazar: 96 movimientos esperan',
+    )
+    expect(unlinkedText({ accounts: [bbva.accounts[0]] }, 1)).toBe(
+      '1 cuenta sin enlazar: 1 movimiento espera',
     )
   })
 

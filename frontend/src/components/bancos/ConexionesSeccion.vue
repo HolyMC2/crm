@@ -130,6 +130,7 @@ import {
   conexionName,
   waitingOf,
   countText,
+  unlinkedText,
 } from './conectados'
 
 const ConectarSheet = defineAsyncComponent(() => import('./ConectarSheet.vue'))
@@ -177,7 +178,7 @@ function kindIcon(kind) {
 function waiting(c) {
   const { revisar, sin_enlazar } = waitingOf(c)
   if (revisar) return `${countText(revisar)} por revisar`
-  return sin_enlazar ? `${countText(sin_enlazar)} sin enlazar` : ''
+  return sin_enlazar ? unlinkedText(c, sin_enlazar) : ''
 }
 function rowLine(c) {
   return conexionListLine(c)

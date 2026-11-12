@@ -178,6 +178,9 @@ async function prepare() {
     )
     // Linking again (Contador stopped taking it) keeps the account it feeds.
     if (current) destino.value = current.name
+    // «••4190» → «BBVA Oro 4190»: the one free account with the same last four digits.
+    else if (answer.suggested_bank_account)
+      destino.value = answer.suggested_bank_account
     else if (answer.bank_accounts?.length === 1)
       destino.value = answer.bank_accounts[0].name
     else if (!answer.bank_accounts?.length) destino.value = NUEVA
