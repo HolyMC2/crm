@@ -459,6 +459,24 @@
             <span class="lucide-tag h-4 w-4" aria-hidden="true" />
             Etiquetas
           </RouterLink>
+          <!-- «Importar» sits by the count, phone and desktop alike: the
+               desktop header already holds the page's create and its tools. -->
+          <RouterLink
+            v-if="!returnTo && canImport"
+            to="/productos/importar"
+            class="inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-ink-gray-8 sm:order-last sm:ml-auto sm:min-h-8"
+            :title="
+              __(
+                'Load your products from the Excel you already have',
+                null,
+                'Productos',
+              )
+            "
+            data-productos-importar
+          >
+            <span class="lucide-upload h-4 w-4" aria-hidden="true" />
+            {{ __('Import', null, 'Productos') }}
+          </RouterLink>
           <button
             v-if="
               isPhone &&
@@ -640,6 +658,12 @@
                 class="min-h-11 sm:min-h-8"
                 :label="__('See all products')"
                 @click="selectView('todos')"
+              />
+              <Button
+                v-if="canImport && !search && view === 'todos'"
+                class="min-h-11 sm:min-h-8"
+                :label="__('Import from Excel', null, 'Productos')"
+                @click="router.push('/productos/importar')"
               />
               <Button
                 v-if="canCreate"
@@ -1265,6 +1289,13 @@ const guard = computed(() =>
     : '',
 )
 const canCreate = computed(() => Boolean(boot.value?.capabilities?.create_item))
+// «Importar» opens the sheet importer, which asks the server again and says why
+// when the person may not add products.
+const canImport = computed(() =>
+  Boolean(
+    boot.value?.capabilities?.create_item || boot.value?.capabilities?.edit,
+  ),
+)
 // «Nuevo producto». A search that found nothing becomes the new name (see
 // newItemDraft); the Fab, the header and the `n` key start empty.
 function newProduct(fromSearch = false) {

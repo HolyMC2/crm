@@ -4,7 +4,7 @@ import re
 from urllib.parse import urlsplit
 
 _IDENTITY_PATH = re.compile(
-	r"^/crm/(?:contactos(?:/(?:contact|customer|supplier|organization|lead|crm-lead|address)/[^/]+)?|contacts(?:/view(?:/[^/]+)?|/[^/]+)?|organizations(?:/view(?:/[^/]+)?|/[^/]+)?)/*$"
+	r"^/crm/(?:contactos(?:/importar|/(?:contact|customer|supplier|organization|lead|crm-lead|address)/[^/]+)?|contacts(?:/view(?:/[^/]+)?|/[^/]+)?|organizations(?:/view(?:/[^/]+)?|/[^/]+)?)/*$"
 )
 
 

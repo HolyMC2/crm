@@ -172,6 +172,18 @@ const routes = [
     },
   },
   {
+    // «Importar clientes» from the owner's sheet, the same page as products'.
+    path: '/contactos/importar',
+    name: 'ImportarClientes',
+    component: () => import('@/pages/Importar.vue'),
+    props: { que: 'clientes' },
+    meta: {
+      app: 'contactos',
+      title: 'Importar clientes',
+      ownPhoneHeader: true,
+    },
+  },
+  {
     path: '/contactos/:source/:name',
     name: 'Contacto',
     component: () => import('@/pages/Contacto.vue'),
@@ -436,6 +448,19 @@ const routes = [
     name: 'ProductoNuevo',
     component: () => import('@/pages/ProductoNuevo.vue'),
     meta: { app: 'productos', title: 'Productos', listParent: 'Productos' },
+  },
+  {
+    // «Importar productos» from the owner's sheet (doco's importer). Before `:item`.
+    path: '/productos/importar',
+    name: 'ImportarProductos',
+    component: () => import('@/pages/Importar.vue'),
+    props: { que: 'productos' },
+    meta: {
+      app: 'productos',
+      title: 'Importar productos',
+      listParent: 'Productos',
+      ownPhoneHeader: true,
+    },
   },
   {
     // Etiquetas (Shell-S13): print, jobs and templates. Before `:item`.

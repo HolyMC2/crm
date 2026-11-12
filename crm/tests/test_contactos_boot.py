@@ -26,6 +26,7 @@ class TestContactosPaths(TestCase):
 		for path in (
 			"/crm/contactos",
 			"/crm/contactos/contact/A%2FB",
+			"/crm/contactos/importar",
 			"/crm/contacts",
 			"/crm/contacts/view/list?view=Private",
 			"/crm/contacts/ABC",
@@ -42,6 +43,7 @@ class TestContactosPaths(TestCase):
 			"/crm/deals/X",
 			"/crm/contactos-other",
 			"/crm/contactos/contact/X/extra",
+			"/crm/contactos/importar/extra",
 			"//evil.invalid/crm/contactos",
 			"https://evil.invalid/crm/contactos",
 			"/crm/contacts\\evil",

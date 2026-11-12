@@ -206,6 +206,12 @@ for the native suite.
   Until then it ran with `continue-on-error`, which reports `needs.shell.result`
   as `success`, so the gate never saw a red job. `gate.py` still accepts
   `:advisory` for a job that needs that mode.
+- **Seams a lane adds to doco.** A crm lane that calls a doco seam its own doco
+  lane adds cannot run those tests on any release image until the next release.
+  Its tests skip there and name the missing seams in the skip reason, so the job
+  summary lists them (`crm.tests.test_importar`, roll-20261111 image). They fail
+  where the seams exist and the code still cannot load them. Prove them with
+  `lane test` on the lane's own doco before landing.
 
 ## Gates
 

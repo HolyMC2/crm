@@ -156,9 +156,10 @@ jobs:
         runs-on: ubuntu-24.04
         timeout-minutes: 45
         env:
-            # roll-20261020 release image (tag vall-lanes-20261020-edc87cea3b4a), the first with doco
-            # 6e8b250 (the absences fix).
-            SHELL_CI_IMAGE: ghcr.io/holymc2/doco-bench@sha256:6bedaf579cd71064741eb5796fcd57f9f55161e30b7c88e93c535cef232a3092
+            # roll-20261111 release image (tag vall-lanes-20261111-17db5624be34), the first with doco's
+            # sheet importer (doco.docoutils.importacion, 2026-11-08). crm.tests.test_importar names
+            # the import seams it still lacks in its skip reason until the next release image.
+            SHELL_CI_IMAGE: ghcr.io/holymc2/doco-bench@sha256:9d133151e6770899c1742d2bca1ac44a0cb2500c42260811e1411288d3ee4f77
         steps:
             - uses: actions/checkout@v4
               with:

@@ -22504,6 +22504,290 @@ msgstr "Le quedan {0} días · vencen el {1}"
 msgid "Equipo is not installed. Ask your manager to check the app."
 msgstr "Equipo no está instalado. Pide al encargado que revise la app."
 
+#: crm/api/importar.py
+msgid "Your user cannot add customers. Ask whoever runs Muelle for that permission."
+msgstr "Tu usuario no puede dar de alta clientes. Pide ese permiso a quien administra Muelle."
+
+#: crm/api/importar.py
+msgid "The column choices did not arrive well. Choose them again."
+msgstr "Las columnas elegidas no llegaron bien. Elígelas otra vez."
+
+#: crm/api/importar.py
+msgid "Your user cannot add products. Ask whoever runs Muelle for that permission."
+msgstr "Tu usuario no puede dar de alta productos. Pide ese permiso a quien administra Muelle."
+
+#: crm/api/importar.py
+msgid "To fix"
+msgstr "Por corregir"
+
+#: crm/api/importar.py
+msgid "Importing is not available on this site yet. Ask whoever runs Muelle to update it."
+msgstr "Importar todavía no está disponible en tu sitio. Pide a quien administra Muelle que lo actualice."
+
+#: crm/api/importar.py
+msgid "Choose what to import: products or customers."
+msgstr "Elige qué importar: productos o clientes."
+
+#: crm/api/importar.py
+msgid "Those that already exist take the name, group and barcode of the sheet; price, cost, stock, unit and IVA stay as they are (prices change in Productos)."
+msgstr "Los que ya existen toman el nombre, el grupo y el código de barras de la hoja; precio, costo, existencia, unidad e IVA se quedan como están (los precios se cambian en Productos)."
+
+#: crm/api/importar.py
+msgid "Stock is not recorded: the shop has no default warehouse."
+msgstr "No se registra la existencia: la tienda no tiene un almacén predeterminado."
+
+#: crm/api/importar.py
+msgid "Stock is not recorded: your user cannot create the opening stock."
+msgstr "No se registra la existencia: tu usuario no puede crear el inventario inicial."
+
+#: crm/api/importar.py
+msgid "This review has no rows with errors."
+msgstr "Esta revisión no tiene filas con errores."
+
+#: crm/api/importar.py
+msgid "This review is already being imported."
+msgstr "Esta revisión ya se está importando."
+
+#: crm/api/importar.py
+msgid "That review is someone else's."
+msgstr "Esa revisión es de otra persona."
+
+#: crm/api/importar.py
+msgid "That review cannot be imported. Upload the file again."
+msgstr "Esa revisión no se puede importar. Vuelve a subir el archivo."
+
+#: crm/api/importar.py
+msgid "The file changed since the review. Upload it again."
+msgstr "El archivo cambió desde la revisión. Vuelve a subirlo."
+
+#: crm/api/importar.py
+msgid "What Muelle has for these rows changed since the review (someone added or changed one). Review the file again."
+msgstr "Lo que Muelle tiene para estas filas cambió desde la revisión (alguien dio de alta o cambió alguno). Revisa el archivo otra vez."
+
+#: crm/api/importar.py
+msgid "That import does not exist."
+msgstr "Esa importación no existe."
+
+#: crm/api/importar.py
+msgid "That import is someone else's."
+msgstr "Esa importación es de otra persona."
+
+#: crm/api/importar.py
+msgid "This import was already undone."
+msgstr "Esta importación ya estaba deshecha."
+
+#: crm/api/importar.py
+msgid "The import is still running. Wait for it to finish, then undo it."
+msgstr "La importación sigue en curso. Espera a que termine y luego deshazla."
+
+#: crm/api/importar.py
+msgid "This import cannot be undone from here."
+msgstr "Esta importación no se puede deshacer desde aquí."
+
+#: crm/api/importar.py
+msgid "The opening stock of this import is already confirmed. Cancel it in Inventario first, then undo the import."
+msgstr "El inventario inicial de esta importación ya está confirmado. Cancélalo primero en Inventario y luego deshaz la importación."
+
+#: crm/api/importar.py
+msgid "Each column goes to one field. Choose them again."
+msgstr "Cada columna va a un solo dato. Elígelas otra vez."
+
+#: crm/api/importar.py
+msgid "Those that already exist take the name and RFC of the sheet; phone and email stay as they are."
+msgstr "Los que ya existen toman el nombre y el RFC de la hoja; teléfono y correo se quedan como están."
+
+#: crm/api/importar.py
+msgid "Why it is not imported"
+msgstr "Por qué no se importa"
+
+#: crm/api/importar.py
+msgid "Nothing to import: no row is new or to update."
+msgstr "No hay nada que importar: ninguna fila es nueva ni por actualizar."
+
+#: crm/api/importar.py
+msgid "That review is gone (it lasts 12 hours). Upload the file again."
+msgstr "Esa revisión ya no está (dura 12 horas). Vuelve a subir el archivo."
+
+#: crm/api/importar.py
+msgid "{0} were turned off: they are turned on again with the data of the sheet."
+msgstr "{0} estaban desactivados: se vuelven a activar con los datos de la hoja."
+
+#: crm/api/importar.py
+msgid "{0} and {1} more"
+msgstr "{0} y {1} más"
+
+#: crm/api/importar.py
+msgid "New groups: {0}."
+msgstr "Grupos nuevos: {0}."
+
+#: crm/api/importar.py
+msgid "You cannot create product groups: {0} products go to «{1}»."
+msgstr "No puedes crear grupos de productos: {0} productos van a «{1}»."
+
+#: crm/api/importar.py
+msgid "The unit «{0}» does not exist in Muelle: {1} products take «{2}»."
+msgstr "La unidad «{0}» no existe en Muelle: {1} productos quedan en «{2}»."
+
+#: crm/api/importar.py
+msgid "{0} barcodes already belong to another product: those products are added without them."
+msgstr "{0} códigos de barras ya son de otro producto: esos productos se dan de alta sin ese código."
+
+#: crm/api/importar.py
+msgid "Selling prices are not saved ({0}); they stay pending in Productos."
+msgstr "Los precios de venta no se guardan ({0}); quedan pendientes en Productos."
+
+#: crm/api/importar.py
+msgid "The stock of {0} products goes into a draft opening stock in «{1}» that you check and confirm in Inventario."
+msgstr "La existencia de {0} productos queda en un inventario inicial en borrador en «{1}», que revisas y confirmas en Inventario."
+
+#: crm/api/importar.py
+msgid "{0} products bring stock without a cost: that stock is not recorded."
+msgstr "{0} productos traen existencia sin costo: esa existencia no se registra."
+
+#: crm/api/importar.py
+msgid "Import of «{0}»"
+msgstr "Importación de «{0}»"
+
+#: crm/api/importar.py
+msgid "It could not be undone: {0}"
+msgstr "No se pudo deshacer: {0}"
+
+#: crm/api/importar.py
+msgid "Rows from the sheet «{0}». The file has other sheets with data: {1}."
+msgstr "Filas de la hoja «{0}». El archivo tiene otras hojas con datos: {1}."
+
+#: crm/api/importar.py
+msgid "Hidden sheets are not read: {0}."
+msgstr "Las hojas ocultas no se leen: {0}."
+
+#: crm/api/importar.py
+msgid "There are no rows of data under the titles."
+msgstr "No hay filas con datos debajo de los títulos."
+
+#: crm/api/importar.py
+msgid "The sheet has {0} rows; up to {1} are imported at once. Split it into parts."
+msgstr "La hoja tiene {0} filas; se importan hasta {1} a la vez. Divídela en partes."
+
+#: crm/api/importar.py
+msgid "Excel 97-2003 (.xls) files cannot be read right now. Save it as .xlsx or .csv and upload it again."
+msgstr "Por ahora no se pueden leer archivos de Excel 97-2003 (.xls). Guárdalo como .xlsx o .csv y vuelve a subirlo."
+
+#: crm/api/importar.py
+msgid ".xlsx files cannot be read right now. Save it as .csv and upload it again."
+msgstr "Por ahora no se pueden leer archivos .xlsx. Guárdalo como .csv y vuelve a subirlo."
+
+#: crm/api/importar.py
+msgid "This file cannot be read. Upload it as .xlsx, .xls or .csv."
+msgstr "Este archivo no se puede leer. Súbelo como .xlsx, .xls o .csv."
+
+#: crm/api/importar.py
+msgid "The {0} new products are created with a serial number or IMEI, as you answered."
+msgstr "Los {0} productos nuevos se dan de alta con número de serie o IMEI, como respondiste."
+
+#: crm/api/importar.py
+msgid "The {0} new products are created with lots and expiry dates, as you answered."
+msgstr "Los {0} productos nuevos se dan de alta con lote y caducidad, como respondiste."
+
+#: crm/api/importar.py
+msgid "The {0} new products are created with a serial number or IMEI and with lots and expiry dates, as you answered."
+msgstr "Los {0} productos nuevos se dan de alta con número de serie o IMEI y con lote y caducidad, como respondiste."
+
+#: crm/api/importar.py
+msgid "The stock of {0} of them is not loaded from the sheet: record it with each serial number in Inventario."
+msgstr "La existencia de {0} de ellos no se carga desde la hoja: regístrala con cada número de serie en Inventario."
+
+#: crm/api/importar.py
+msgid "The stock of {0} of them is not loaded from the sheet: record it with its lots in Inventario."
+msgstr "La existencia de {0} de ellos no se carga desde la hoja: regístrala con sus lotes en Inventario."
+
+#: crm/api/importar.py
+msgid "The stock was not recorded: the shop has no default warehouse."
+msgstr "La existencia no se registró: la tienda no tiene un almacén predeterminado."
+
+#: crm/api/importar.py
+msgid "The stock was not recorded: your user cannot create the opening stock."
+msgstr "La existencia no se registró: tu usuario no puede crear el inventario inicial."
+
+#: crm/api/importar.py
+msgid "The stock was not recorded: no product brought a cost."
+msgstr "La existencia no se registró: ningún producto traía costo."
+
+#: crm/api/importar.py
+msgid "The stock was not recorded: the company has no temporary opening account. Ask whoever keeps your books to set it."
+msgstr "La existencia no se registró: la empresa no tiene una cuenta temporal de apertura. Pide a quien lleva tu contabilidad que la configure."
+
+#: crm/api/importar.py
+msgid "The stock was not recorded: {0}"
+msgstr "La existencia no se registró: {0}"
+
+#: crm/api/importar.py
+msgid "Muelle refused it."
+msgstr "Muelle no la aceptó."
+
+#: crm/api/importar.py
+msgid "{0} products brought stock without a cost: that stock was not recorded."
+msgstr "{0} productos traían existencia sin costo: esa existencia no se registró."
+
+#: crm/api/importar.py
+msgid "{0} products have a serial number: record their stock with each serial number in Inventario."
+msgstr "{0} productos llevan número de serie: registra su existencia con cada número de serie en Inventario."
+
+#: crm/api/importar.py
+msgid "{0} products have lots: record their stock with its lots in Inventario."
+msgstr "{0} productos llevan lote: registra su existencia con sus lotes en Inventario."
+
+#: crm/api/importar.py
+msgid "Required. The code you know the product by. If your products have none, leave it empty and choose «My products have no code: use the name» when you upload the sheet."
+msgstr "Obligatorio. El código con el que conoces el producto. Si tus productos no tienen, déjalo vacío y al subir la hoja elige «Mis productos no tienen código: usar el nombre»."
+
+#: crm/api/importar.py
+msgid "Required. The name of the product as you sell it."
+msgstr "Obligatorio. El nombre del producto como lo vendes."
+
+#: crm/api/importar.py
+msgid "The barcode printed on the package."
+msgstr "El código de barras impreso en el empaque."
+
+#: crm/api/importar.py
+msgid "The price you sell it at."
+msgstr "El precio al que lo vendes."
+
+#: crm/api/importar.py
+msgid "What it costs you. Stock is recorded only for products with a cost."
+msgstr "Lo que te cuesta. La existencia solo se registra en productos con costo."
+
+#: crm/api/importar.py
+msgid "How many you have now."
+msgstr "Cuántos tienes ahora."
+
+#: crm/api/importar.py
+msgid "Pieza, kilo, litro, caja… Empty takes your usual unit."
+msgstr "Pieza, kilo, litro, caja… Vacío toma tu unidad de siempre."
+
+#: crm/api/importar.py
+msgid "16, 8, 0 or exento. Empty takes your usual taxes."
+msgstr "16, 8, 0 o exento. Vacío toma tus impuestos de siempre."
+
+#: crm/api/importar.py
+msgid "The group or category. A new one is created when you may create groups."
+msgstr "El grupo o la categoría. Uno nuevo se crea si puedes crear grupos."
+
+#: crm/api/importar.py
+msgid "Required. The customer's name or business name."
+msgstr "Obligatorio. El nombre o la razón social del cliente."
+
+#: crm/api/importar.py
+msgid "The RFC, to invoice them."
+msgstr "El RFC, para facturarle."
+
+#: crm/api/importar.py
+msgid "Their phone or WhatsApp."
+msgstr "Su teléfono o WhatsApp."
+
+#: crm/api/importar.py
+msgid "Their email."
+msgstr "Su correo."
+
 #: crm/api/shell.py
 msgid "Equipo is for the owner and managers of the shop."
 msgstr "Equipo es para el dueño y los encargados del negocio."
@@ -30266,6 +30550,606 @@ msgstr "Mostrar en Hoy"
 msgctxt "Primeros pasos"
 msgid "That did not go through. Try again."
 msgstr "No se pudo. Vuelve a intentarlo."
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "{0} of {1} found"
+msgstr "{0} de {1} encontradas"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "First, how you keep your products. Once you sell, it does not change."
+msgstr "Primero, cómo llevas tus productos. Ya que vendas, no cambia."
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "The answer recommended for your business is already chosen."
+msgstr "Ya está elegida la respuesta recomendada para tu negocio."
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Save answers"
+msgstr "Guardar respuestas"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Choose an answer for each question."
+msgstr "Elige una respuesta para cada pregunta."
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Your answers were not saved. Try again."
+msgstr "Tus respuestas no se guardaron. Inténtalo otra vez."
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Before the first products, the owner answers how the shop keeps them. Ask them to open this screen."
+msgstr "Antes de los primeros productos, el dueño responde cómo lleva la tienda sus productos. Pídele que abra esta pantalla."
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Back to {0}"
+msgstr "Volver a {0}"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Loading…"
+msgstr "Cargando…"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Retry"
+msgstr "Volver a intentar"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "You cannot import here"
+msgstr "No puedes importar aquí"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Importing is not available yet"
+msgstr "Importar todavía no está disponible"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Importing «{0}»…"
+msgstr "Importando «{0}»…"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "You can leave this screen: the import goes on and its result waits here."
+msgstr "Puedes salir de esta pantalla: la importación sigue y su resultado te espera aquí."
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Rows that failed"
+msgstr "Filas que fallaron"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Row {0}"
+msgstr "Fila {0}"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "{0} ({1} rows)"
+msgstr "{0} ({1} filas)"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "The stock went into a draft opening stock. Check it and confirm it so the stock counts."
+msgstr "La existencia quedó en un inventario inicial en borrador. Revísalo y confírmalo para que cuente."
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Check the opening stock"
+msgstr "Revisar el inventario inicial"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Undo the import"
+msgstr "Deshacer la importación"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "What the import added is deleted, or turned off where it is already in use; what it changed goes back to how it was."
+msgstr "Lo que agregó la importación se borra, o se desactiva si ya se usó; lo que cambió regresa a como estaba."
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "{0} rows in «{1}»"
+msgstr "{0} filas en «{1}»"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "{0} rows"
+msgstr "{0} filas"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Checking…"
+msgstr "Revisando…"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "This same file was imported before. The rows that already exist are left as they are."
+msgstr "Este mismo archivo ya se importó antes. Las filas que ya existen se quedan como están."
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Columns"
+msgstr "Columnas"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Each piece of data reads the column chosen for it. Change one if it is wrong."
+msgstr "Cada dato se lee de la columna elegida. Cambia la que esté mal."
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid " (required)"
+msgstr " (obligatorio)"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "For example: {0}"
+msgstr "Por ejemplo: {0}"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "The name is the code"
+msgstr "El nombre es el código"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Choose a code column"
+msgstr "Elegir una columna de código"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "No column says {0}. Choose the one that has it."
+msgstr "Ninguna columna dice {0}. Elige la que lo tiene."
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "My products have no code: use the name"
+msgstr "Mis productos no tienen código: usar el nombre"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "First rows"
+msgstr "Primeras filas"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Already exists: it is updated"
+msgstr "Ya existe: se actualiza"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Review"
+msgstr "Revisión"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Update the name, group and barcode of those that already exist"
+msgstr "Actualizar nombre, grupo y código de barras de los que ya existen"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Update the name and RFC of those that already exist"
+msgstr "Actualizar nombre y RFC de los que ya existen"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Rows with errors"
+msgstr "Filas con errores"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Download the rows with errors"
+msgstr "Descargar las filas con errores"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "These rows are not imported. Fix them in your sheet and upload it again: the rows already in Muelle are left as they are."
+msgstr "Estas filas no se importan. Corrígelas en tu hoja y vuelve a subirla: las que ya están en Muelle se quedan como están."
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "See all {0}"
+msgstr "Ver las {0}"
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "See {0} of {1}"
+msgstr "Ver {0} de {1}"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "The other {0} are in the download of the rows with errors."
+msgstr "Las otras {0} están en la descarga de las filas con error."
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "1 product has no code."
+msgstr "1 producto no tiene código."
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "{0} products have no code."
+msgstr "{0} productos no tienen código."
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Your products sheet"
+msgstr "Tu hoja de productos"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Your customers sheet"
+msgstr "Tu hoja de clientes"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Excel (.xlsx or .xls) or .csv, up to {0} MB and {1} rows. Its columns can be in any order."
+msgstr "Excel (.xlsx o .xls) o .csv, de hasta {0} MB y {1} filas. Las columnas pueden ir en cualquier orden."
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Uploading…"
+msgstr "Subiendo…"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Reading the sheet…"
+msgstr "Leyendo la hoja…"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Choose the file"
+msgstr "Elegir el archivo"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Download the template"
+msgstr "Descargar la plantilla"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "No sheet yet? Fill in the template: one row per {0}."
+msgstr "¿Todavía no tienes hoja? Llena la plantilla: una fila por {0}."
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "product"
+msgstr "producto"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "customer"
+msgstr "cliente"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Your last imports"
+msgstr "Tus últimas importaciones"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Import your customers too"
+msgstr "Importa también tus clientes"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Import your products too"
+msgstr "Importa también tus productos"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "They are imported in the background; you can leave this screen."
+msgstr "Se importan en segundo plano; puedes salir de aquí."
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Choose another file"
+msgstr "Elegir otro archivo"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Keep in mind"
+msgstr "Ten en cuenta"
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "Import"
+msgstr "Importar"
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "Tap «My products have no code: use the name», or fill in the codes in your sheet."
+msgstr "Toca «Mis productos no tienen código: usar el nombre» o llena los códigos en tu hoja."
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Another file"
+msgstr "Otro archivo"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Import another file"
+msgstr "Importar otro archivo"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Import products"
+msgstr "Importar productos"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Import customers"
+msgstr "Importar clientes"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "From the Excel you already have: codes, names, prices, cost and stock."
+msgstr "Desde el Excel que ya tienes: códigos, nombres, precios, costo y existencia."
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "From the Excel you already have: names, RFC, phones and emails."
+msgstr "Desde el Excel que ya tienes: nombres, RFC, teléfonos y correos."
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Products"
+msgstr "Productos"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Contacts"
+msgstr "Contactos"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "See the products"
+msgstr "Ver los productos"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "See the contacts"
+msgstr "Ver los contactos"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Yes, undo 1 row"
+msgstr "Sí, deshacer 1 fila"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Yes, undo {0} rows"
+msgstr "Sí, deshacer {0} filas"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "{0} new products"
+msgstr "{0} productos nuevos"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "{0} new customers"
+msgstr "{0} clientes nuevos"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "The importer did not load."
+msgstr "No se pudo abrir el importador."
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "The sheet could not be read. Try again."
+msgstr "No se pudo leer la hoja. Inténtalo otra vez."
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "The import did not start. Try again."
+msgstr "La importación no empezó. Inténtalo otra vez."
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "That import could not be opened."
+msgstr "No se pudo abrir esa importación."
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Import undone"
+msgstr "Importación deshecha"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "It could not be undone. Try again."
+msgstr "No se pudo deshacer. Inténtalo otra vez."
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "Choose a file."
+msgstr "Elige un archivo."
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "«{0}» is not a spreadsheet. Choose an .xlsx, .xls or .csv file."
+msgstr "«{0}» no es una hoja de cálculo. Elige un archivo .xlsx, .xls o .csv."
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "«{0}» is empty."
+msgstr "«{0}» está vacío."
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "«{0}» is bigger than {1} MB. Split it into smaller files."
+msgstr "«{0}» pesa más de {1} MB. Divídelo en archivos más chicos."
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "The file is too big to upload. Split it into smaller files."
+msgstr "El archivo es demasiado grande para subirlo. Divídelo en archivos más chicos."
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "The file did not upload. Try again."
+msgstr "El archivo no se subió. Inténtalo otra vez."
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "«{0}» (column {1})"
+msgstr "«{0}» (columna {1})"
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "Column {0}"
+msgstr "Columna {0}"
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "Choose a column"
+msgstr "Elige una columna"
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "Is «{0}» {1} or {2}?"
+msgstr "¿«{0}» es {1} o {2}?"
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "Several columns could be {0}. Which one?"
+msgstr "Varias columnas pueden ser {0}. ¿Cuál es?"
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "new products"
+msgstr "productos nuevos"
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "new customers"
+msgstr "clientes nuevos"
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "already exist and are updated"
+msgstr "ya existen y se actualizan"
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "already exist and are left as they are"
+msgstr "ya existen y se quedan como están"
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "repeat an earlier row of the sheet"
+msgstr "repiten una fila anterior de la hoja"
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "have an error and are not imported"
+msgstr "tienen un error y no se importan"
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "Import 1 customer"
+msgstr "Importar 1 cliente"
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "Import {0} customers"
+msgstr "Importar {0} clientes"
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "Import 1 product"
+msgstr "Importar 1 producto"
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "Import {0} products"
+msgstr "Importar {0} productos"
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "Choose the column of {0}."
+msgstr "Elige la columna de {0}."
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "No row is new or to update, so there is nothing to import."
+msgstr "Ninguna fila es nueva ni por actualizar, así que no hay nada que importar."
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "{0} of {1} rows"
+msgstr "{0} de {1} filas"
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "Starting…"
+msgstr "Empezando…"
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "{0} updated"
+msgstr "{0} actualizados"
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "{0} left as they were"
+msgstr "{0} se quedaron como estaban"
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "{0} rows failed"
+msgstr "{0} filas fallaron"
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "The import stopped"
+msgstr "La importación se detuvo"
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "Nothing was imported"
+msgstr "No se importó nada"
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "Imported in part"
+msgstr "Importado en parte"
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "Imported"
+msgstr "Importado"
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "Importing"
+msgstr "Importando"
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "Not imported"
+msgstr "No se importó"
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "Undone"
+msgstr "Deshecho"
 
 #: crm/api/documentos.py
 msgid "That person is not on your team."
@@ -38877,6 +39761,21 @@ msgstr "{0} tiendas sin existencia ni mínimo"
 msgctxt "Productos"
 msgid "Hide the stores with no stock or minimum"
 msgstr "Ocultar las tiendas sin existencia ni mínimo"
+
+#: frontend/src/pages/Productos.vue
+msgctxt "Productos"
+msgid "Import"
+msgstr "Importar"
+
+#: frontend/src/pages/Productos.vue
+msgctxt "Productos"
+msgid "Load your products from the Excel you already have"
+msgstr "Carga tus productos desde el Excel que ya tienes"
+
+#: frontend/src/pages/Productos.vue
+msgctxt "Productos"
+msgid "Import from Excel"
+msgstr "Importar desde Excel"
 
 #: frontend/src/pages/CompraSurtido.vue
 msgctxt "Surtido"

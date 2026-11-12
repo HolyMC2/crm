@@ -182,7 +182,16 @@
         label="Personalizar"
         :icon-left="LucideSlidersVertical"
         @click="openFromMobileMenu('customize')"
-      />
+      /><Button
+        v-if="canImport"
+        label="Importar clientes"
+        data-testid="contactos-importar"
+        @click="router.push('/contactos/importar')"
+      >
+        <template #prefix>
+          <span class="lucide-upload size-4" aria-hidden="true" />
+        </template>
+      </Button>
     </div>
     <div
       v-if="filtersOpen && state.segment !== 'followups'"
@@ -517,6 +526,10 @@
         </p>
         <div class="c-actions">
           <Button label="Limpiar filtros" @click="clearSearch" /><Button
+            v-if="canImport && !state.q && !activeFilters.length"
+            label="Importar clientes"
+            @click="router.push('/contactos/importar')"
+          /><Button
             v-if="capabilities.create && !isPhone"
             label="Nuevo contacto"
             variant="solid"
@@ -841,6 +854,10 @@ useListKeys({
     create: () => !!capabilities.value?.create,
   },
 })
+// «Importar clientes»: the sheet importer, for who may add customers.
+const canImport = computed(
+  () => !!capabilities.value?.sources?.customer?.create,
+)
 const segments = computed(
   () => boot.value?.segments?.rows || boot.value?.segments || [],
 )
@@ -900,6 +917,14 @@ const desktopActions = computed(() =>
           hint: 'Columnas y secciones de la ficha',
           allowed: true,
         },
+        // «Importar clientes» from the owner's sheet (the phone's «⋮» has it too).
+        canImport.value && {
+          key: 'importar',
+          label: 'Importar clientes',
+          icon: 'lucide-upload',
+          hint: 'Desde el Excel que ya tienes',
+          allowed: true,
+        },
       ].filter(Boolean),
     },
   ].filter(Boolean),
@@ -908,6 +933,7 @@ function onDesktopAction({ key }) {
   if (key.startsWith('vista:')) selectSegment(key.slice(6))
   else if (key === 'guardar') segmentOpen.value = true
   else if (key === 'personalizar') customize.value = true
+  else if (key === 'importar') router.push('/contactos/importar')
 }
 const segmentOptions = computed(() => [
   ...Object.entries(names).map(([value, label]) => ({ value, label })),

@@ -26,6 +26,7 @@ const PAGES = [
   'pages/Contacto.vue',
   'pages/Inbox.vue',
   'pages/Pendientes.vue',
+  'pages/Importar.vue', // «Importar productos» / «Importar clientes»
 ]
 const DIRS = [
   'components/shell',
