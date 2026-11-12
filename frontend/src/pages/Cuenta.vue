@@ -287,8 +287,17 @@ const TABS = [
 ]
 // «Historial» only where Boat lists the account's changes (capability «history»).
 const HISTORY_TAB = { value: 'historial', label: __('History', null, 'Cuenta') }
-// The next steps this page opens from a notice.
-const ACTIONS = ['activate', 'pay', 'topup', 'support', 'plans']
+// The next steps this page opens from a notice or a health finding.
+const ACTIONS = [
+  'activate',
+  'pay',
+  'topup',
+  'support',
+  'plans',
+  'seats',
+  'addons',
+  'card',
+]
 
 const route = useRoute()
 const router = useRouter()
@@ -374,14 +383,20 @@ function closeTopup() {
   door.closeTopup()
   dropQuery('recargar')
 }
-// «Ver planes» and «Ver usuarios y cajas» land on their section. With Boat's
+// «Ver planes», «Ver usuarios y cajas», «Ver complementos» and «Ver
+// tarjetas» land on their section. With Boat's
 // self-service on, Tienda opens on users and apps, and those blocks grow as
 // Boat answers (seconds on a slow line), and a closing sheet hands focus
 // back to the control that opened it, which scrolls to it: while the page's
 // content changes size or takes that focus, the section is put back under
 // the bar, for 8 s at most, and the owner's first touch, wheel or key lets go
 // of it.
-const SECTION = { plans: 'cuenta-planes', seats: 'cuenta-usuarios' }
+const SECTION = {
+  plans: 'cuenta-planes',
+  seats: 'cuenta-usuarios',
+  addons: 'cuenta-complementos',
+  card: 'cuenta-tarjetas',
+}
 const content = ref(null)
 let stopReveal = null
 function revealSection(id) {
@@ -424,7 +439,10 @@ onBeforeUnmount(() => stopReveal?.())
 function act(key) {
   if (key === 'activate') return openActivation()
   if (key === 'pay') openTab('facturacion')
-  else if (key === 'plans' || key === 'seats') {
+  else if (key === 'card') {
+    openTab('facturacion')
+    revealSection(SECTION.card)
+  } else if (key === 'plans' || key === 'seats' || key === 'addons') {
     openTab('tienda')
     revealSection(SECTION[key])
   } else if (key === 'resume') openTab('resumen')

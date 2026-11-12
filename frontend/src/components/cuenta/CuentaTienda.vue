@@ -216,7 +216,7 @@
     >
       <h2
         id="cuenta-complementos"
-        class="title-face pb-1 text-xl font-semibold text-ink-gray-9"
+        class="title-face scroll-mt-16 pb-1 text-xl font-semibold text-ink-gray-9"
       >
         {{ __('Add-ons', null, 'Cuenta') }}
       </h2>

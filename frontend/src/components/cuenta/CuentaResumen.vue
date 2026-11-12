@@ -1,8 +1,8 @@
 <template>
   <!-- Resumen: where the plan stands, a Muelle outage, what would interrupt
-       selling and its next step, then the meters and the site's own health,
-       and at the foot a copy of the data, the reports to support and the
-       cancel. Rows and rules. -->
+       selling and its next step, «Salud de tu sistema», then the meters and
+       the site's own health, and at the foot a copy of the data, the reports
+       to support and the cancel. Rows and rules. -->
   <div class="space-y-6">
     <section
       aria-labelledby="cuenta-plan"
@@ -161,6 +161,9 @@
       />
     </section>
 
+    <!-- «Salud de tu sistema» where Boat offers it (capability «health»). -->
+    <SaludSistema :door="door" :actions="actions" @act="act" />
+
     <div class="grid gap-6 lg:grid-cols-2 lg:gap-10">
       <section aria-labelledby="cuenta-uso">
         <h2 id="cuenta-uso" class="pb-1 text-sm font-semibold text-ink-gray-7">
@@ -288,6 +291,7 @@ import { Button } from 'frappe-ui'
 import { StatusChip } from '@/components/ui'
 import ExportarDatos from './ExportarDatos.vue'
 import Incidentes from './Incidentes.vue'
+import SaludSistema from './SaludSistema.vue'
 import { subscriptionView } from './suscripcion'
 import {
   accountAlerts,
@@ -305,7 +309,7 @@ const Suscripcion = defineAsyncComponent(() => import('./Suscripcion.vue'))
 const props = defineProps({
   /** The page's payment door (pagos.js createPagos). */
   door: { type: Object, required: true },
-  /** The next steps the page can open: activate, pay, topup, support, plans. */
+  /** The next steps the page can open (Cuenta.vue ACTIONS). */
   actions: { type: Array, default: () => [] },
 })
 const emit = defineEmits(['act'])

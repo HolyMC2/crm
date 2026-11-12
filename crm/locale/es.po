@@ -39603,6 +39603,381 @@ msgctxt "Cuenta"
 msgid "It lasted about {0} hours."
 msgstr "Duró alrededor de {0} horas."
 
+#: frontend/src/components/cuenta/SaludSistema.vue frontend/src/components/cuenta/SaludSheet.vue
+msgctxt "Cuenta"
+msgid "Your system’s health"
+msgstr "Salud de tu sistema"
+
+#: frontend/src/components/cuenta/SaludSistema.vue
+msgctxt "Cuenta"
+msgid "Checking your system…"
+msgstr "Revisando tu sistema…"
+
+#: frontend/src/components/cuenta/SaludSistema.vue
+msgctxt "Cuenta"
+msgid "We could not read your system’s health."
+msgstr "No pudimos leer la salud de tu sistema."
+
+#: frontend/src/components/cuenta/SaludSistema.vue
+msgctxt "Cuenta"
+msgid "Try once more"
+msgstr "Volver a intentar"
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "Working well"
+msgstr "Funcionando bien"
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "Slow today"
+msgstr "Lento hoy"
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "Failing now"
+msgstr "Con falla ahora"
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "Your system is not answering right now."
+msgstr "Tu sistema no responde en este momento."
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "Some pages take longer than usual today."
+msgstr "Hoy algunas páginas tardan más de lo normal."
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "We are still measuring your system"
+msgstr "Aún medimos tu sistema"
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "We need a few more days of checks to give you a figure."
+msgstr "Necesitamos unos días más de revisiones para darte una cifra."
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "Available {0} in the last {1} days"
+msgstr "Disponible {0} en los últimos {1} días"
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "Counted on the {0} days we checked."
+msgstr "Contado en los {0} días que revisamos."
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "Most pages open in under {0}"
+msgstr "La mayoría de las páginas abren en menos de {0}"
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "That is how 95 of every 100 pages opened in the last {0} days, measured in ranges."
+msgstr "Así abrieron 95 de cada 100 páginas en los últimos {0} días, medido por rangos."
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "Many pages take more than {0} to open"
+msgstr "Muchas páginas tardan más de {0} en abrir"
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "More than 5 of every 100 pages took that long in the last {0} days."
+msgstr "Más de 5 de cada 100 páginas tardaron eso en los últimos {0} días."
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "Not enough visits yet to measure the speed"
+msgstr "Aún no hay suficientes visitas para medir la velocidad"
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "a tenth of a second"
+msgstr "una décima de segundo"
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "a quarter of a second"
+msgstr "un cuarto de segundo"
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "half a second"
+msgstr "medio segundo"
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "1 second"
+msgstr "1 segundo"
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "{0} seconds"
+msgstr "{0} segundos"
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "Fine"
+msgstr "Bien"
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "Slow"
+msgstr "Lento"
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "With a failure"
+msgstr "Con falla"
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "No data"
+msgstr "Sin datos"
+
+#: frontend/src/components/cuenta/SaludDias.vue
+msgctxt "Cuenta"
+msgid "Today"
+msgstr "Hoy"
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "Last {0} days: {1}"
+msgstr "Últimos {0} días: {1}"
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "1 day fine"
+msgstr "1 día bien"
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "{0} days fine"
+msgstr "{0} días bien"
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "1 slow"
+msgstr "1 lento"
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "{0} slow"
+msgstr "{0} lentos"
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "1 with a failure"
+msgstr "1 con falla"
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "{0} with a failure"
+msgstr "{0} con falla"
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "1 without data"
+msgstr "1 sin datos"
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "{0} without data"
+msgstr "{0} sin datos"
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "Today at {0}"
+msgstr "Hoy a las {0}"
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "Today at 1:{0}"
+msgstr "Hoy a la 1:{0}"
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "{0} at {1}"
+msgstr "{0} a las {1}"
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "{0} at 1:{1}"
+msgstr "{0} a la 1:{1}"
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "We are working on it."
+msgstr "Estamos atendiéndola."
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "{0} GB, no limit"
+msgstr "{0} GB, sin límite"
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "{0} of {1} GB"
+msgstr "{0} de {1} GB"
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "Scheduled maintenance: {0}. Your system shows a maintenance page for a few minutes; your data stays as it is."
+msgstr "Mantenimiento programado: {0}. Tu sistema mostrará una página de mantenimiento unos minutos; tus datos quedan igual."
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "An invoice of {0} is overdue."
+msgstr "Una factura de {0} está vencida."
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "{0} invoices are overdue, {1} in total."
+msgstr "{0} facturas están vencidas, {1} en total."
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "Your balance ({0}) does not cover the next stamp beyond your package ({1})."
+msgstr "Tu saldo ({0}) no alcanza para el siguiente timbre fuera de tu paquete ({1})."
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "Your balance no longer covers the airtime you sell."
+msgstr "Tu saldo ya no alcanza para las recargas que vendes."
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "At this pace your balance covers 1 more day of airtime."
+msgstr "A este ritmo tu saldo alcanza para 1 día más de recargas."
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "At this pace your balance covers {0} more days of airtime."
+msgstr "A este ritmo tu saldo alcanza para {0} días más de recargas."
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "Your storage is at {0} of what your plan includes."
+msgstr "Tu almacenamiento va en {0} de lo que incluye tu plan."
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "You use the one user of your plan."
+msgstr "Usas el único usuario de tu plan."
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "You use all {0} users of your plan."
+msgstr "Usas los {0} usuarios de tu plan."
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "You use the one register of your plan."
+msgstr "Usas la única caja de tu plan."
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "You use all {0} registers of your plan."
+msgstr "Usas las {0} cajas de tu plan."
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "Your card ending in {0} expires this month."
+msgstr "Tu tarjeta terminada en {0} vence este mes."
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "Your card ending in {0} expires next month."
+msgstr "Tu tarjeta terminada en {0} vence el próximo mes."
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "Your card ending in {0} has expired."
+msgstr "Tu tarjeta terminada en {0} ya venció."
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "See cards"
+msgstr "Ver tarjetas"
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "You have used {0} of the {1} stamps in your package this month."
+msgstr "Llevas {0} de los {1} timbres de tu paquete este mes."
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "See add-ons"
+msgstr "Ver complementos"
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "You have 1 thing to review"
+msgstr "Tienes 1 cosa para revisar"
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "You have {0} things to review"
+msgstr "Tienes {0} cosas para revisar"
+
+#: frontend/src/components/cuenta/SaludSheet.vue
+msgctxt "Cuenta"
+msgid "Last {0} days"
+msgstr "Últimos {0} días"
+
+#: frontend/src/components/cuenta/SaludSheet.vue
+msgctxt "Cuenta"
+msgid "Availability"
+msgstr "Disponibilidad"
+
+#: frontend/src/components/cuenta/SaludSheet.vue
+msgctxt "Cuenta"
+msgid "Speed"
+msgstr "Velocidad"
+
+#: frontend/src/components/cuenta/SaludSheet.vue
+msgctxt "Cuenta"
+msgid "Failures in the last {0} days"
+msgstr "Fallas en los últimos {0} días"
+
+#: frontend/src/components/cuenta/SaludSheet.vue
+msgctxt "Cuenta"
+msgid "There were no failures."
+msgstr "No hubo fallas."
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "Our checks found failures on 1 day."
+msgstr "Nuestras revisiones encontraron fallas en 1 día."
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "Our checks found failures on {0} days."
+msgstr "Nuestras revisiones encontraron fallas en {0} días."
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "Our checks also found failures on 1 more day."
+msgstr "Nuestras revisiones también encontraron fallas en 1 día más."
+
+#: frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "Our checks also found failures on {0} more days."
+msgstr "Nuestras revisiones también encontraron fallas en {0} días más."
+
+#: frontend/src/components/cuenta/SaludSheet.vue
+msgctxt "Cuenta"
+msgid "To review"
+msgstr "Para revisar"
+
+#: frontend/src/components/cuenta/SaludSheet.vue
+msgctxt "Cuenta"
+msgid "Nothing to review."
+msgstr "Nada que revisar."
+
 #: frontend/src/components/cuenta/CuentaResumen.vue
 msgctxt "Cuenta"
 msgid "Your reports to support"

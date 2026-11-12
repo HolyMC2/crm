@@ -67,6 +67,8 @@ const SELF_SERVICE = new Set([
   // Reads: one invoice in detail and the account's «Historial».
   'invoice_detail',
   'my_history',
+  // A read: «Salud de tu sistema» in Resumen.
+  'site_health',
 ])
 
 function walk(dir, keep) {
