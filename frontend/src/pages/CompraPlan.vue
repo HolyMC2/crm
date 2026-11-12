@@ -450,7 +450,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import { toast } from 'frappe-ui'
 import { AppBar, BottomSheet, EmptyState, chipClass } from '@/components/ui'
 import { isMobile } from '@/composables/breakpoint'
@@ -484,7 +484,6 @@ const BTN_SM = Object.freeze({
 const SAVE_PAUSE = 450
 
 const router = useRouter()
-const route = useRoute()
 const phone = isMobile
 const ready = ref(false)
 const guard = ref(null)
@@ -572,8 +571,8 @@ function show(next) {
     warehouses: [],
     ...next,
   }
-  if (next.id !== props.id)
-    router.replace({ name: 'CompraPlan', params: { id: next.id } })
+  if (next.id && next.id !== props.id)
+    router.replace({ name: 'CompraSurtido', query: { plan: next.id } })
 }
 
 async function start() {
@@ -709,7 +708,7 @@ function onBack(event) {
 }
 
 watch(
-  () => route.params.id,
+  () => props.id,
   (id, old) => {
     if (id && old && id !== plan.value?.id) start()
   },

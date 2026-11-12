@@ -1,8 +1,13 @@
 <template>
   <!-- Surtido: a supplier list → a buy plan within budget → the supplier's
        reply. The page owns its bar (the way back to Compras, «Pregúntale a
-       Muelle» beside the title); the three steps sit under it as chips. -->
-  <div class="relative flex h-full min-w-0 flex-1 flex-col overflow-hidden">
+       Muelle» beside the title); the three steps sit under it as chips.
+       `?plan=` opens the assistant's buy plan whole instead (CompraPlan). -->
+  <CompraPlan v-if="planId" :id="planId" />
+  <div
+    v-else
+    class="relative flex h-full min-w-0 flex-1 flex-col overflow-hidden"
+  >
     <AppBar
       :back="true"
       :back-label="__('Compras', null, 'Compras')"
@@ -1454,6 +1459,7 @@ import CatalogProgress from '@/components/compras/CatalogProgress.vue'
 import SurtidoTienda from '@/components/compras/SurtidoTienda.vue'
 import SurtidoInicio from '@/components/compras/SurtidoInicio.vue'
 import { formatDay } from '@/utils/contactos'
+const CompraPlan = defineAsyncComponent(() => import('@/pages/CompraPlan.vue'))
 const SurtidoProducto = defineAsyncComponent(
   () => import('@/components/compras/SurtidoProducto.vue'),
 )
@@ -1500,6 +1506,8 @@ const API = 'doco.workspaces.sourcing.'
 const call = (method, args = {}) => comprasApi(API + method, args)
 
 const route = useRoute()
+// the assistant's plan (sourcing.page_url): its own view, the lists wait until it closes
+const planId = computed(() => String(route.query.plan || ''))
 const router = useRouter()
 const phone = isMobile
 const ready = ref(false)
@@ -2497,7 +2505,12 @@ function goBack() {
   router.push({ name: 'Compras' })
 }
 
-onMounted(() => start().then(schedulePoll))
+onMounted(() => {
+  if (!planId.value) start().then(schedulePoll)
+})
+watch(planId, (id) => {
+  if (!id && !ready.value && !guard.value) start().then(schedulePoll)
+})
 onBeforeUnmount(() => {
   dropContext?.()
   clearTimeout(poll)

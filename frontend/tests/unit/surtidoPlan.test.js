@@ -102,15 +102,9 @@ async function mount() {
         name: 'CompraSurtido',
         component: { render: () => null },
       },
-      {
-        path: '/compras/surtido/plan/:id',
-        name: 'CompraPlan',
-        component: CompraPlan,
-        props: true,
-      },
     ],
   })
-  router.push('/compras/surtido/plan/sp-1')
+  router.push('/compras/surtido?plan=sp-1')
   await router.isReady()
   root = document.createElement('div')
   document.body.appendChild(root)
@@ -187,6 +181,6 @@ describe('Buy plan page', () => {
       plan: 'sp-1',
       changes: JSON.stringify([{ op: 'qty', line: 'm:a58', qty: 7 }]),
     })
-    expect(router.currentRoute.value.params.id).toBe('sp-2')
+    expect(router.currentRoute.value.query.plan).toBe('sp-2')
   })
 })

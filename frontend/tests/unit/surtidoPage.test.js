@@ -14,6 +14,8 @@ vi.mock('@/composables/useCompras', async (importOriginal) => {
       state.calls.push([method, args])
       if (method.endsWith('.bootstrap'))
         return { enabled: true, catalogs: state.catalogs, pedidos: [] }
+      if (method.endsWith('.plan_page'))
+        return { id: args.plan, lines: [], total: 0, owner: false }
       return {}
     }),
   }
@@ -85,6 +87,23 @@ describe('Surtido page', () => {
     expect(root.textContent).toContain('Restock from a list')
     // no facets asked for a list with nothing to read
     expect(state.calls.some(([method]) => method.endsWith('.facets'))).toBe(
+      false,
+    )
+  })
+
+  it("?plan= opens the assistant's buy plan instead of the lists", async () => {
+    window.__ = (text) => text
+    const errors = await mount('?plan=sp-1')
+    // the plan view is its own chunk: wait for its first read
+    await vi.waitFor(
+      () =>
+        expect(state.calls.map(([method]) => method)).toContain(
+          'doco.workspaces.surtido_plan.plan_page',
+        ),
+      { timeout: 15000 },
+    )
+    expect(errors).toEqual([])
+    expect(state.calls.some(([method]) => method.endsWith('.bootstrap'))).toBe(
       false,
     )
   })

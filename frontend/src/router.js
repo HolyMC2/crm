@@ -293,20 +293,12 @@ const routes = [
   },
   {
     // Surtido: supplier price list → budgeted buy plan → supplier reply
-    // (doco.workspaces.sourcing). Query `?pedido=` reopens a Pedido Catalogo.
+    // (doco.workspaces.sourcing). Query `?pedido=` reopens a Pedido Catalogo;
+    // `?plan=` opens the assistant's buy plan whole (CompraPlan, no route of
+    // its own: a route record grows the entry chunk).
     path: '/compras/surtido',
     name: 'CompraSurtido',
     component: () => import('@/pages/CompraSurtido.vue'),
-    meta: { app: 'compras', title: 'Compras', ownPhoneHeader: true },
-  },
-  {
-    // The assistant's buy plan, line by line, corrected here or in the chat and
-    // turned into its draft (doco.workspaces.surtido_plan). The id changes with
-    // each correction; the page replaces it in place.
-    path: '/compras/surtido/plan/:id',
-    name: 'CompraPlan',
-    component: () => import('@/pages/CompraPlan.vue'),
-    props: true,
     meta: { app: 'compras', title: 'Compras', ownPhoneHeader: true },
   },
   {
