@@ -43824,6 +43824,302 @@ msgctxt "Surtido"
 msgid "Order deleted"
 msgstr "Pedido eliminado"
 
+# The assistant's buy plan: frontend/src/pages/CompraPlan.vue, utils/surtidoPlan.js
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "Surtido"
+msgstr "Surtido"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "Buy plan"
+msgstr "Plan de compra"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "Opening the plan…"
+msgstr "Abriendo el plan…"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "Purchase order {0} is a draft. Changes here update it."
+msgstr "La orden de compra {0} está en borrador. Lo que cambies aquí la actualiza."
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "Order {0} is a draft. Changes here update it."
+msgstr "El pedido {0} está en borrador. Lo que cambies aquí lo actualiza."
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "Open"
+msgstr "Abrir"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "{0} lines, {1} pieces, {2}"
+msgstr "{0} líneas, {1} piezas, {2}"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "saving…"
+msgstr "guardando…"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "{0} lines have no price and are not in the total; the supplier quotes them."
+msgstr "{0} líneas no tienen precio y no suman al total; el proveedor las cotiza."
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "Show"
+msgstr "Mostrar"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "Model years"
+msgstr "Años de los modelos"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "{0} or newer"
+msgstr "{0} o más nuevos"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "Every year"
+msgstr "Todos los años"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "You still have at least what the period used of these."
+msgstr "De estas todavía tienes al menos lo que se usó en el periodo."
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "Remove these {0}"
+msgstr "Quitar estas {0}"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "Model"
+msgstr "Modelo"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "Year"
+msgstr "Año"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "On hand"
+msgstr "Hay"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "Used"
+msgstr "Usadas"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "Sold"
+msgstr "Vendidas"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "Order"
+msgstr "Pedir"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "After"
+msgstr "Quedarían"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "No line of the plan is in this filter."
+msgstr "Ninguna línea del plan cae en este filtro."
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "Lines of the plan"
+msgstr "Líneas del plan"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "{0} on hand, {1} after"
+msgstr "Hay {0}, quedarían {1}"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "One less"
+msgstr "Una menos"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "One more"
+msgstr "Una más"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "the supplier quotes it"
+msgstr "lo cotiza el proveedor"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "Left out"
+msgstr "Quedaron fuera"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "{0} {1}"
+msgstr "{0} {1}"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "{0} pieces"
+msgstr "{0} piezas"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "The owner turns the plan into an order."
+msgstr "El dueño convierte el plan en pedido."
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "Create the purchase order"
+msgstr "Crear la orden de compra"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "Where it goes in"
+msgstr "A qué almacén entra"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "You cannot use any warehouse of the company. Ask the owner for access in the Desk."
+msgstr "No puedes usar ningún almacén de la empresa. Pide acceso al dueño en el Desk."
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "The one you bought from last time"
+msgstr "Al que le compraste la última vez"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "All"
+msgstr "Todas"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "None left"
+msgstr "Se acabaron"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "Running low"
+msgstr "Quedan pocas"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "Enough for now"
+msgstr "Te alcanzan"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "Update the draft"
+msgstr "Actualizar el borrador"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "No price: the supplier quotes it"
+msgstr "Sin precio: lo cotiza el proveedor"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "{0} ({1}), {2}"
+msgstr "{0} ({1}), {2}"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "{0}, {1}"
+msgstr "{0}, {1}"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "{0} on {1}"
+msgstr "{0} el {1}"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "Bought before: {0}"
+msgstr "Compras anteriores: {0}"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "Could not open the plan"
+msgstr "No se pudo abrir el plan"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "Purchase order {0} saved as a draft"
+msgstr "Orden de compra {0} guardada en borrador"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "Order {0} saved as a draft"
+msgstr "Pedido {0} guardado en borrador"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "In this buy plan, "
+msgstr "En este plan de compra, "
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "Used {0}"
+msgstr "Usadas {0}"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "Sold {0}"
+msgstr "Vendidas {0}"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "last purchase"
+msgstr "última compra"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "stock cost"
+msgstr "costo en inventario"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "style price"
+msgstr "precio del estilo"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "Supplier to be chosen"
+msgstr "Proveedor por definir"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "{0}, installed in repairs {1} to {2}"
+msgstr "{0}, instaladas en reparaciones del {1} al {2}"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "{0}, sales of {1} months"
+msgstr "{0}, ventas de {1} meses"
+
 #: frontend/src/components/compras/SurtidoInicio.vue
 msgid "Its products by section, with prices, tiers and stock."
 msgstr "Sus productos por sección, con precios, escalas y existencias."

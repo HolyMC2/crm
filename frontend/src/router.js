@@ -300,6 +300,16 @@ const routes = [
     meta: { app: 'compras', title: 'Compras', ownPhoneHeader: true },
   },
   {
+    // The assistant's buy plan, line by line, corrected here or in the chat and
+    // turned into its draft (doco.workspaces.surtido_plan). The id changes with
+    // each correction; the page replaces it in place.
+    path: '/compras/surtido/plan/:id',
+    name: 'CompraPlan',
+    component: () => import('@/pages/CompraPlan.vue'),
+    props: true,
+    meta: { app: 'compras', title: 'Compras', ownPhoneHeader: true },
+  },
+  {
     // The price-list workbench: one supplier list, its lines by section with
     // tiers, changes, other suppliers and stock, and the order built in place
     // (doco.workspaces.lista_precios). Lazy: its sheets load on first open.
