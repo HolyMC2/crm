@@ -1196,7 +1196,10 @@ async function send(file) {
     archivo.value = await uploadSheet(file)
   } catch (error) {
     busy.value = ''
-    problem.value = error.message
+    problem.value = errorText(
+      error,
+      __('The file did not upload. Try again.', null, CTX),
+    )
     return
   }
   choices.value = {}

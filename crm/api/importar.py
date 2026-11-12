@@ -769,6 +769,8 @@ def importar(vista: str) -> dict:
 	_allowed(data["entity"])
 	_catalog_gate(data["entity"])
 	claim = frappe.cache.make_key(CLAIM_KEY.format(data["pid"]))
+	# The claim is already site-prefixed by make_key; set_value has no nx, which the claim needs.
+	# nosemgrep: frappe-cache-breaks-multitenancy
 	if not frappe.cache.set(claim, 1, nx=True, ex=600):
 		frappe.throw(_("This review is already being imported."))
 	try:

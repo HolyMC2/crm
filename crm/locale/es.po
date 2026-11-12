@@ -31001,7 +31001,7 @@ msgctxt "Importar"
 msgid "The file is too big to upload. Split it into smaller files."
 msgstr "El archivo es demasiado grande para subirlo. Divídelo en archivos más chicos."
 
-#: frontend/src/components/importar/importar.js
+#: frontend/src/components/importar/importar.js frontend/src/pages/Importar.vue
 msgctxt "Importar"
 msgid "The file did not upload. Try again."
 msgstr "El archivo no se subió. Inténtalo otra vez."
