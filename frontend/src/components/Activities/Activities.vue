@@ -14,7 +14,7 @@
   />
   <FadedScrollableDiv class="flex flex-col h-full overflow-y-auto">
     <div
-      v-if="all_activities?.loading"
+      v-if="firstLoading"
       class="flex flex-1 flex-col items-center justify-center gap-3 text-2xl-medium text-ink-gray-4"
     >
       <LoadingIndicator class="h-6 w-6" />
@@ -721,7 +721,11 @@ import { globalStore } from '@/stores/global'
 import { isMobile } from '@/composables/breakpoint'
 import { usersStore } from '@/stores/users'
 import { useTimelinePreferences } from '@/composables/useTimelinePreferences'
-import { whatsappEnabled, whatsappManual } from '@/composables/whatsapp'
+import {
+  whatsappEnabled,
+  whatsappManual,
+  whatsappModeKnown,
+} from '@/composables/whatsapp'
 import { addonAvailable } from '@/utils/crmCapabilities'
 import { THREAD_RELOAD } from '@/utils/atencion'
 import { useDocument } from '@/data/document'
@@ -729,6 +733,7 @@ import { useTelemetry } from '@framework/ui'
 import { Button, Tooltip, createResource, toast } from 'frappe-ui'
 import { useElementVisibility, useStorage } from '@vueuse/core'
 import { scrollWithin } from '@/utils/scrollWithin'
+import { afterThread, threadLoaded } from '@/utils/threadGate'
 import {
   ref,
   computed,
@@ -915,20 +920,24 @@ watch(
   () => [props.docname, addonAvailable.value],
   () => {
     unifiedThread.value = false
+    const name = props.docname
     if (
       addonAvailable.value &&
-      props.docname &&
+      name &&
       ['CRM Deal', 'CRM Lead'].includes(props.doctype)
-    ) {
-      contactRefs.submit({
-        reference_doctype: props.doctype,
-        reference_name: props.docname,
+    )
+      // after the conversation's messages (utils/threadGate)
+      afterThread(() => {
+        if (name !== props.docname) return
+        contactRefs.submit({
+          reference_doctype: props.doctype,
+          reference_name: name,
+        })
+        catalogSuggest.submit({
+          reference_doctype: props.doctype,
+          reference_name: name,
+        })
       })
-      catalogSuggest.submit({
-        reference_doctype: props.doctype,
-        reference_name: props.docname,
-      })
-    }
   },
   { immediate: true },
 )
@@ -997,28 +1006,50 @@ const whatsappMessages = createResource({
   },
   auto: false,
   transform: (data) => sortByCreation(data),
-  onSuccess: () =>
+  onSuccess: () => {
+    threadLoaded() // the extras around the conversation load now
     nextTick(() => {
       if (_waSuppressScroll) {
         _waSuppressScroll = false
         return
       }
       scroll()
-    }),
+    })
+  },
   // A failed reload must not leave the suppress latch stuck true (it would swallow the
   // next own-send scroll).
   onError: () => {
+    threadLoaded()
     _waSuppressScroll = false
   },
 })
 
+// The spinner covers the first read only; a reload keeps what is on screen.
+// The WhatsApp tab waits for its messages (and a Messenger-only thread for its
+// own), not for the activity log, whose comments and notes join when they come.
+const firstLoading = computed(() => {
+  if (title.value !== 'WhatsApp')
+    return !!all_activities.loading && !all_activities.data
+  if (whatsappMessages.loading && !whatsappMessages.data) return true
+  return (
+    !(whatsappMessages.data || []).length &&
+    !!messengerThread.loading &&
+    !messengerThread.data
+  )
+})
+
 watch(
-  () => whatsappEnabled.value && title.value === 'WhatsApp',
-  (enabled) => {
+  () => [
+    whatsappEnabled.value,
+    whatsappModeKnown.value,
+    title.value === 'WhatsApp',
+  ],
+  ([enabled, known, onWhatsapp]) => {
+    if (!onWhatsapp) return
     if (enabled) {
       whatsappMessages.fetch()
       whatsappContacts.fetch()
-    }
+    } else if (known) threadLoaded() // no WhatsApp messages to wait for
   },
   { immediate: true },
 )
@@ -1311,8 +1342,10 @@ watch(
 watch(
   () => [title.value, props.docname, addonAvailable.value],
   () => {
-    if (addonAvailable.value && title.value === 'WhatsApp' && props.docname)
-      messengerThread.fetch()
+    const name = props.docname
+    if (addonAvailable.value && title.value === 'WhatsApp' && name)
+      // after the WhatsApp messages (utils/threadGate)
+      afterThread(() => name === props.docname && messengerThread.fetch())
   },
   { immediate: true },
 )
@@ -1668,5 +1701,12 @@ function scroll(hash) {
   }, 500)
 }
 
-defineExpose({ emailBox, all_activities, changeTabTo })
+// A pane kept mounted (the Bandeja's tabs) refreshes quietly when it shows again.
+function refresh() {
+  all_activities.reload()
+  if (title.value === 'WhatsApp' && whatsappEnabled.value)
+    whatsappMessages.reload()
+}
+
+defineExpose({ emailBox, all_activities, changeTabTo, refresh })
 </script>

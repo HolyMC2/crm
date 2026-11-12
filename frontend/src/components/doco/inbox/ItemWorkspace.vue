@@ -895,4 +895,6 @@ onBeforeUnmount(() => {
   detailRequest++
   linkRequest++
 })
+// The Bandeja keeps this pane mounted and refreshes it quietly on return.
+defineExpose({ refresh })
 </script>

@@ -511,6 +511,7 @@ import LucideVideo from '~icons/lucide/video'
 import LucidePen from '~icons/lucide/pen'
 import LucideTrash2 from '~icons/lucide/trash-2'
 import LucidePlus from '~icons/lucide/plus'
+import { afterThread } from '@/utils/threadGate'
 
 const props = defineProps({
   doctype: { type: String, default: '' },
@@ -622,13 +623,19 @@ const sendLabel = computed(() =>
 // ── quick replies (team-shared) + templates ───────────────────────
 const quickReplies = createResource({
   url: 'crm.api.whatsapp.get_quick_replies',
-  auto: true,
+  cache: 'whatsapp_quick_replies',
 })
 
 const quickTemplates = createResource({
   url: 'crm.api.whatsapp.get_quick_templates',
   params: { reference_doctype: props.doctype },
-  auto: true,
+  cache: ['whatsapp_quick_templates', props.doctype],
+})
+// after the conversation's messages (utils/threadGate); a revisit shows the
+// cached chips at once while they refresh
+afterThread(() => {
+  quickReplies.fetch()
+  quickTemplates.fetch()
 })
 
 // Track a quick reply dropped into an empty composer, so a verbatim send can be

@@ -15,7 +15,35 @@ async function load() {
 }
 
 describe('site WhatsApp channel mode', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => {
+    vi.clearAllMocks()
+    localStorage.clear()
+  })
+
+  it('starts from the mode this browser last saw, and the server corrects it', async () => {
+    let wa = await load()
+    expect([wa.whatsappMode.value, wa.whatsappModeKnown.value]).toEqual([
+      'off',
+      false,
+    ])
+    h.resources['frappe_whatsapp.channel.get_channel'].options.onSuccess({
+      mode: 'api',
+    })
+    expect(wa.whatsappModeKnown.value).toBe(true)
+
+    // a reload opens a conversation's messages before any lookup answers
+    wa = await load()
+    expect([wa.whatsappEnabled.value, wa.whatsappModeKnown.value]).toEqual([
+      true,
+      true,
+    ])
+    h.resources['frappe_whatsapp.channel.get_channel'].options.onSuccess({
+      mode: 'off',
+    })
+    expect(wa.whatsappEnabled.value).toBe(false)
+    wa = await load()
+    expect(wa.whatsappMode.value).toBe('off')
+  })
 
   it('reads the one channel from frappe_whatsapp with a GET once it is installed', async () => {
     await load()

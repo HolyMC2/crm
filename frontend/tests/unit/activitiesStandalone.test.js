@@ -14,6 +14,7 @@ vi.mock('@/utils/crmCapabilities', () => ({ addonAvailable: h.addon }))
 vi.mock('@/composables/whatsapp', () => ({
   whatsappEnabled: h.whatsapp,
   whatsappManual: h.manual,
+  whatsappModeKnown: { value: true },
 }))
 vi.mock('@/composables/inbox', () => ({
   catalogOpen: false,

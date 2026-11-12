@@ -64,13 +64,22 @@
         />
       </div>
 
+      <!-- Each tab stays mounted once opened for this record, so going back to it
+           shows it at once and refreshes it quietly instead of loading it again. -->
       <DealOverview
-        v-if="activeTab === 'overview' && activeDealDoctype === 'CRM Deal'"
+        v-if="kept.overview && activeDealDoctype === 'CRM Deal'"
+        v-show="activeTab === 'overview'"
         :key="activeDeal"
+        ref="overviewPane"
         :name="activeDeal"
         @navigate="activeTab = $event"
       />
-      <template v-else-if="activeTab === 'conversation'">
+      <div
+        v-if="kept.conversation"
+        v-show="activeTab === 'conversation'"
+        class="flex min-h-0 flex-1 flex-col"
+        data-testid="pane-conversation"
+      >
         <!-- Phone: the 🧠 chip and the linked-conversations line share ONE row so
              the thread keeps the screen (an open summary takes the full row). -->
         <div
@@ -120,6 +129,7 @@
           </button>
           <Activities
             :key="'wa-' + activeDealDoctype + activeDeal"
+            ref="convoActivities"
             v-model:showWhatsappTemplates="convoTemplateOpen"
             :doctype="activeDealDoctype"
             :docname="activeDeal"
@@ -138,12 +148,14 @@
             <LucideChevronDown class="h-5 w-5" />
           </button>
         </div>
-      </template>
+      </div>
 
       <!-- Actividad = full upstream Activities (timeline/emails/comments/calls/tasks/notes) -->
       <div
-        v-else-if="activeTab === 'activity'"
+        v-if="kept.activity"
+        v-show="activeTab === 'activity'"
         class="flex min-h-0 flex-1 flex-col"
+        data-testid="pane-activity"
       >
         <Tabs
           v-model="activityTabIndex"
@@ -154,6 +166,7 @@
           <template #tab-panel>
             <Activities
               :key="activeDeal"
+              ref="timelineActivities"
               v-model:tabIndex="activityTabIndex"
               :doctype="activeDealDoctype"
               :docname="activeDeal"
@@ -165,11 +178,13 @@
 
       <!-- Persistent ERP item lines and chronological sales documents. -->
       <div
-        v-else-if="activeTab === 'items'"
+        v-if="kept.items"
+        v-show="activeTab === 'items'"
         class="flex min-h-0 flex-1 flex-col"
       >
         <ItemWorkspace
           :key="activeDealDoctype + activeDeal"
+          ref="itemsPane"
           :deal="activeDeal"
           :doctype="activeDealDoctype"
           :enabled="salesDocsEnabled"
@@ -180,10 +195,11 @@
       </div>
 
       <div
-        v-else-if="activeTab === 'repair' && hasTaller"
+        v-if="kept.repair && hasTaller"
+        v-show="activeTab === 'repair'"
         class="scb flex-1 overflow-y-auto p-3 sm:p-5"
       >
-        <RepairOrdersSection :docname="activeDeal" chat />
+        <RepairOrdersSection ref="repairPane" :docname="activeDeal" chat />
       </div>
     </template>
 
@@ -205,6 +221,7 @@
 <script setup>
 import {
   ref,
+  reactive,
   computed,
   watch,
   nextTick,
@@ -214,6 +231,7 @@ import {
 } from 'vue'
 import { Tabs } from 'frappe-ui'
 import { indexTabs } from '@/utils/tabs'
+import { holdForThread } from '@/utils/threadGate'
 import LucideMessagesSquare from '~icons/lucide/messages-square'
 import LucideChevronDown from '~icons/lucide/chevron-down'
 import LucideSearch from '~icons/lucide/search'
@@ -273,6 +291,51 @@ const Activities = defineAsyncComponent(
 )
 
 const activityTabIndex = ref(0)
+
+// Panes kept mounted for the open record (see the template). A new record
+// starts with only the tab on screen, so nothing hidden loads for it; opening
+// its conversation holds the extras around it until its messages are in
+// (utils/threadGate).
+const kept = reactive({
+  overview: false,
+  conversation: false,
+  activity: false,
+  items: false,
+  repair: false,
+})
+watch(
+  activeDeal,
+  () => {
+    for (const tab in kept) kept[tab] = false
+  },
+  { flush: 'sync' },
+)
+watch(
+  [activeDeal, activeTab],
+  ([deal, tab]) => {
+    if (!deal || !(tab in kept) || kept[tab]) return
+    if (tab === 'conversation') holdForThread()
+    kept[tab] = true
+  },
+  { immediate: true, flush: 'sync' },
+)
+// Back on a kept tab of the same record: it shows as it was and refreshes
+// quietly (what changed elsewhere, such as a comment or a stage, comes in).
+const overviewPane = ref(null),
+  convoActivities = ref(null),
+  timelineActivities = ref(null),
+  itemsPane = ref(null),
+  repairPane = ref(null)
+const panes = {
+  overview: overviewPane,
+  conversation: convoActivities,
+  activity: timelineActivities,
+  items: itemsPane,
+  repair: repairPane,
+}
+watch(activeTab, (tab, before) => {
+  if (tab !== before) panes[tab]?.value?.refresh?.()
+})
 const threadSearch = ref(null)
 // the ⋮ menu's «Buscar»: the search bar mounts with the conversation tab, so
 // the request waits for it

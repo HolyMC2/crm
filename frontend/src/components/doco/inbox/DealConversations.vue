@@ -118,6 +118,7 @@ import { onMounted, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { call } from 'frappe-ui'
 import { relativeAge } from '@/utils/reviewCardFormat'
+import { afterThread } from '@/utils/threadGate'
 
 // Rows come from conversation_threads.list_for_reference: a materialized
 // conversation (name set) opens directly; a thread only implied by the record's
@@ -131,7 +132,8 @@ const props = defineProps({
 const router = useRouter()
 const items = ref([]),
   cursor = ref(null),
-  loading = ref(false),
+  // loading from mount: the first read waits for the thread (utils/threadGate)
+  loading = ref(true),
   error = ref(''),
   opening = ref('')
 
@@ -143,8 +145,10 @@ const conversationRoute = (name) => ({
 })
 const age = (ts) => relativeAge(ts, Date.now(), { now: __('ahora') })
 
+let inFlight = false
 async function load() {
-  if (loading.value) return
+  if (inFlight) return
+  inFlight = true
   loading.value = true
   error.value = ''
   try {
@@ -159,6 +163,7 @@ async function load() {
       'No se pudieron cargar las conversaciones. Reintenta o revisa tu acceso a la cuenta.',
     )
   } finally {
+    inFlight = false
     loading.value = false
   }
 }
@@ -182,5 +187,5 @@ async function open(item) {
     opening.value = ''
   }
 }
-onMounted(load)
+onMounted(() => afterThread(load)) // after the conversation's messages (utils/threadGate)
 </script>

@@ -70,7 +70,7 @@
 <script setup>
 import { createListResource } from 'frappe-ui'
 import { TextEditor } from '@/components/Controls/lazyTextEditor'
-import { ref, computed, nextTick, watch, onMounted } from 'vue'
+import { ref, computed, nextTick, watch } from 'vue'
 
 const props = defineProps({
   doctype: { type: String, default: '' },
@@ -93,11 +93,15 @@ const templates = createListResource({
   pageLength: 99999,
 })
 
-onMounted(() => {
-  if (templates.data == null) {
-    templates.fetch()
-  }
-})
+// The list loads when the picker opens: it stays mounted, closed, beside every
+// conversation, and loading it there slowed the conversation's own messages.
+watch(
+  show,
+  (open) => {
+    if (open && templates.data == null) templates.fetch()
+  },
+  { immediate: true },
+)
 
 const filteredTemplates = computed(() => {
   return (

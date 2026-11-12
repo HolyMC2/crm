@@ -20,6 +20,7 @@ vi.mock('frappe-ui', async () => {
     createResource: () => ({
       data: [],
       loading: false,
+      fetch: vi.fn(),
       reload: vi.fn(),
       submit: vi.fn(),
     }),

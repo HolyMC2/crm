@@ -32,6 +32,7 @@ import { ref, computed, watch } from 'vue'
 import { call } from 'frappe-ui'
 import { aiEnabled } from '@/composables/inbox'
 import { chipForIntent } from '@/utils/intentActions'
+import { afterThread } from '@/utils/threadGate'
 
 const props = defineProps({
   doctype: { type: String, default: 'CRM Deal' },
@@ -59,6 +60,8 @@ async function load() {
   // Never call the endpoint on an AI-off tenant, and nothing to classify without a record.
   if (!aiEnabled.value || !props.name) return
   const myReq = ++reqId
+  await afterThread() // the conversation's messages load first (utils/threadGate)
+  if (myReq !== reqId) return
   try {
     const out = await call('doco_marketing.api.intent.detect_intent', {
       doctype: props.doctype,

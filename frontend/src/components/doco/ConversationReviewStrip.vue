@@ -40,6 +40,7 @@ import WhatsAppReviewCard from '@/components/doco/WhatsAppReviewCard.vue'
 import { createResource } from 'frappe-ui'
 import { computed, watch } from 'vue'
 import LucideClock from '~icons/lucide/clock'
+import { afterThread } from '@/utils/threadGate'
 
 const props = defineProps({
   referenceDoctype: { type: String, default: '' },
@@ -69,10 +70,11 @@ function reload() {
   if (props.referenceName || props.phone) queue.reload()
 }
 
-// fetch when the conversation changes (deal switch in the inbox, contact switch)
+// fetch when the conversation changes (deal switch in the inbox, contact switch),
+// after its messages (utils/threadGate)
 watch(
   () => [props.referenceName, props.phone],
-  () => reload(),
+  () => afterThread(reload),
   { immediate: true },
 )
 

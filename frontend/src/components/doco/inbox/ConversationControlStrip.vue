@@ -67,6 +67,7 @@ import { RouterLink } from 'vue-router'
 import { call, toast } from 'frappe-ui'
 import { globalStore } from '@/stores/global'
 import { controlView, needsReason } from '@/utils/conversationControl'
+import { afterThread } from '@/utils/threadGate'
 
 const props = defineProps({
   referenceDoctype: { type: String, required: true },
@@ -157,7 +158,7 @@ watch(
 )
 const { $socket } = globalStore()
 onMounted(() => {
-  load()
+  afterThread(load) // after the conversation's messages (utils/threadGate)
   $socket?.on('crm_conversation_updated', onUpdated)
 })
 onBeforeUnmount(() => $socket?.off('crm_conversation_updated', onUpdated))

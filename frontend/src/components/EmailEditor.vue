@@ -254,7 +254,7 @@ import {
   useComposerCommands,
   renderTemplate,
 } from '@/composables/composerCommands'
-import { FileUploader, call, FormControl } from 'frappe-ui'
+import { FileUploader, call, createResource, FormControl } from 'frappe-ui'
 import {
   ComposerEditor,
   ComposerToolbar,
@@ -262,9 +262,8 @@ import {
   EditorTableMenu,
 } from '@/components/editor/lazy'
 import { useTelemetry } from '@framework/ui'
-import { useDocument } from '@/data/document'
 import { validateEmail, submitShortcutLabel } from '@/utils'
-import { ref, computed, nextTick, inject, watch } from 'vue'
+import { ref, computed, nextTick, watch } from 'vue'
 
 const props = defineProps({
   placeholder: { type: String, default: null },
@@ -285,8 +284,6 @@ const attachments = defineModel('attachments', {
 const content = defineModel('content', { type: String, default: '' })
 
 const { capture } = useTelemetry()
-const { user: sessionUser } = inject('session')
-const { document: user } = useDocument('User', sessionUser)
 
 const textEditor = ref(null)
 // The editor core mounts the first time the composer opens and stays, so the
@@ -298,6 +295,14 @@ watch(
     if (editable) opened.value = true
   },
 )
+// The «From» accounts load when the composer first opens. The whole User
+// record it read before carries every login (active_sessions, 3.8 MB on a busy
+// account), and Actividad waited for it.
+const senders = createResource({
+  url: 'crm.api.session.get_sender_emails',
+  cache: 'crm_sender_emails',
+})
+watch(opened, (isOpen) => isOpen && senders.fetch(), { immediate: true })
 const cc = ref(false)
 const bcc = ref(false)
 const emoji = ref('')
@@ -310,19 +315,12 @@ const bccEmails = ref([])
 const ccInput = ref(null)
 const bccInput = ref(null)
 
-const from = computed(() => {
-  if (!user.doc || !user.doc.user_emails?.length) return []
-  let emails = user.doc.user_emails.map((e) => {
-    return {
-      label: e.email_account + ' <' + e.email_id + '>',
-      value: e.email_id,
-    }
-  })
-
-  if (emails.length == 1 && emails[0].email_id === sessionUser) return []
-
-  return emails
-})
+const from = computed(() =>
+  (senders.data || []).map((e) => ({
+    label: e.email_account + ' <' + e.email_id + '>',
+    value: e.email_id,
+  })),
+)
 
 watch(
   from,

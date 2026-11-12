@@ -135,6 +135,21 @@ def get_users(include_all: bool = False):
 
 
 @frappe.whitelist()
+def get_sender_emails():
+	"""The signed-in user's own email accounts, for the composer's «From».
+
+	The composer read the whole User record for these rows, and that record
+	carries every login as active_sessions (3.8 MB for a busy account), so the
+	Actividad tab waited on it."""
+	return frappe.get_all(
+		"User Email",
+		filters={"parent": frappe.session.user, "parenttype": "User"},
+		fields=["email_account", "email_id"],
+		order_by="idx asc",
+	)
+
+
+@frappe.whitelist()
 def get_user_info(users: str | list):
 	"""Resolve display info for a batch of User names.
 

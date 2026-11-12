@@ -749,4 +749,6 @@ function printTicket(roName) {
     },
   })
 }
+// The Bandeja keeps this pane mounted and refreshes it quietly on return.
+defineExpose({ refresh })
 </script>

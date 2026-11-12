@@ -408,4 +408,6 @@ watch(hasTaller, (enabled) => {
 })
 // Repair Orders received in taller Intake show up once the operator is back.
 useReloadOnReturn(() => hasTaller.value && repairs.fetch())
+// The Bandeja keeps this pane mounted and refreshes it quietly on return.
+defineExpose({ refresh })
 </script>
