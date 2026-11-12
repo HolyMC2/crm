@@ -665,3 +665,19 @@ def add_default_deal_queues():
 	from crm.api.deal_queues import ensure_default_queues
 
 	ensure_default_queues()
+
+
+def align_currency_with_company(_args=None) -> str | None:
+	"""CRM money (deal values, reports) reads FCRM Settings.currency. A site installs crm
+	before its setup wizard picks the country, so the field keeps ERPNext's install-time
+	default (INR on Muelle's warm and fresh sites, 2026-11-12). Once the default company
+	exists, take its currency, but only while no deal exists: deals already priced keep
+	the currency they were priced in. Returns the currency set, or None."""
+	company = frappe.defaults.get_global_default("company")
+	target = frappe.get_cached_value("Company", company, "default_currency") if company else None
+	if not target or frappe.db.get_single_value("FCRM Settings", "currency") == target:
+		return None
+	if frappe.db.count("CRM Deal"):
+		return None
+	frappe.db.set_single_value("FCRM Settings", "currency", target)
+	return target

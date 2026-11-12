@@ -40,3 +40,4 @@ crm.patches.v1_0.unpack_deal_list_views
 crm.patches.v1_0.plain_custom_field_texts
 crm.patches.v1_0.mark_crm_owner_assignment_todos # 05-10-2026
 crm.patches.v1_0.ensure_message_provenance_fields # 12-11-2026
+crm.patches.v1_0.align_crm_currency_with_company # 12-11-2026
