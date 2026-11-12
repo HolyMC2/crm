@@ -13306,6 +13306,10 @@ msgstr "Este borrador no se puede abrir desde aquí."
 msgid "Capture discarded"
 msgstr "Captura descartada"
 
+#: frontend/src/components/captura/CapturasPendientes.vue
+msgid "Discard capture from {0}"
+msgstr "Descartar la captura de {0}"
+
 #: frontend/src/components/captura/CapturarDocumentoButton.vue
 msgid "Upload the quote, invoice, ticket or transfer receipt. We read it and you review a draft before anything is recorded."
 msgstr "Sube la cotización, factura, ticket o comprobante de transferencia. Lo leemos y revisas un borrador antes de registrar nada."

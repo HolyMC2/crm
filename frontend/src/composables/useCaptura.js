@@ -261,6 +261,11 @@ export async function loadPendingCaptures(targets) {
   return Array.isArray(rows) ? rows : []
 }
 
+/** Close a capture from its list row (the server refuses one still being read). */
+export function discardCapture(name) {
+  return capturaApi('discard', { name })
+}
+
 /** A pending capture's badge: still reading, could not read, or to finish. */
 export function pendingCaptureStatus(row) {
   if (row?.processing) return { label: tr('Reading'), theme: 'blue' }

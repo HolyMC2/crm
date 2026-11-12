@@ -12,6 +12,7 @@ import {
   capturaRoute,
   captureProblem,
   captureStatus,
+  discardCapture,
   draftTarget,
   lineStateLabel,
   lineStateTheme,
@@ -319,6 +320,35 @@ describe('pending captures', () => {
       label: 'To finish',
       theme: 'amber',
     })
+  })
+  it('closes one from its row through the discard service', async () => {
+    const fetch = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({ message: { name: 'CAP-9', status: 'Descartado' } }),
+    }))
+    vi.stubGlobal('fetch', fetch)
+    await expect(discardCapture('CAP-9')).resolves.toMatchObject({
+      status: 'Descartado',
+    })
+    const [url, init] = fetch.mock.calls[0]
+    expect(url).toBe('/api/method/doco.docoutils.books.shell_capture.discard')
+    expect(JSON.parse(init.body)).toEqual({ name: 'CAP-9' })
+  })
+  it('a row offers ✕ then «Descartar» in place, only when the server allows it', () => {
+    const list = source('components/captura/CapturasPendientes.vue')
+    // the ✕ sits beside the row's link, never inside it
+    expect(list).toMatch(
+      /<\/RouterLink>\s*<!--[^>]*-->\s*<button\s+v-if="armed === row\.name"/,
+    )
+    expect(list).toMatch(
+      /v-else-if="row\.can_discard"[\s\S]*?@click="arm\(row\)"/,
+    )
+    expect(list).toMatch(/@click="discard\(row\)"\s+@blur="disarm\(row\)"/)
+    // the row leaves on the tap and comes back on a refusal
+    expect(list).toMatch(
+      /rows\.value = rows\.value\.filter\(\(r\) => r\.name !== row\.name\)\s*try \{\s*await discardCapture\(row\.name\)/,
+    )
+    expect(list).toContain('toast.error(capturaMessage(error))')
   })
   it('Compras and Gastos list the captures they draft', () => {
     expect(source('pages/Compras.vue')).toMatch(
