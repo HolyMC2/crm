@@ -728,6 +728,7 @@ import { useDocument } from '@/data/document'
 import { useTelemetry } from '@framework/ui'
 import { Button, Tooltip, createResource, toast } from 'frappe-ui'
 import { useElementVisibility, useStorage } from '@vueuse/core'
+import { scrollWithin } from '@/utils/scrollWithin'
 import {
   ref,
   computed,
@@ -1658,8 +1659,11 @@ function scroll(hash) {
       el = document.getElementById(hash)
     }
     if (el && !useElementVisibility(el).value) {
-      el.scrollIntoView({ behavior: 'smooth' })
-      el.focus()
+      // Only the activity list scrolls: scrollIntoView also moved the shell's
+      // page and the document, lifting the whole inbox off the screen. The
+      // latest of an oldest-first list shows its end, as a chat does.
+      scrollWithin(el, { block: hash || isNewestFirst.value ? 'start' : 'end' })
+      el.focus({ preventScroll: true })
     }
   }, 500)
 }

@@ -425,6 +425,7 @@
 
 <script setup>
 import IconPicker from '@/components/IconPicker.vue'
+import { scrollWithin } from '@/utils/scrollWithin'
 import CheckIcon from '@/components/Icons/CheckIcon.vue'
 import DoubleCheckIcon from '@/components/Icons/DoubleCheckIcon.vue'
 import DocumentIcon from '@/components/Icons/DocumentIcon.vue'
@@ -703,7 +704,9 @@ function messageOptions(message) {
 
 function scrollToMessage(name) {
   const element = document.getElementById(name)
-  element.scrollIntoView({ behavior: 'smooth' })
+  if (!element) return
+  // the thread scrolls, never the page around it (utils/scrollWithin)
+  scrollWithin(element)
 
   // Highlight the message
   element.classList.add('bg-yellow-100')
