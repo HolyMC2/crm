@@ -121,6 +121,10 @@ export function createPagos({
   const topupOpen = ref(false)
   const topupAmount = ref('')
   const topupError = ref('')
+  // Boat refused this top-up before minting ({ok: false}: suspended, rail
+  // off): «Continuar» waits until the amount changes, since asking again only
+  // repeats the refusal.
+  const topupRefused = ref(false)
   const invoiceErrors = ref({})
   const cards = ref([])
   const cardError = ref('')
@@ -203,7 +207,9 @@ export function createPagos({
         )
       : busy.value
         ? paymentActionReason.value
-        : t('Choose Continue to open the secure top-up payment.'),
+        : topupRefused.value
+          ? ''
+          : t('Choose Continue to open the secure top-up payment.'),
   )
 
   // Where the processor sends the owner back: this panel and, when known, its
@@ -290,6 +296,7 @@ export function createPagos({
       topupOpen.value = false
       topupAmount.value = ''
       topupError.value = ''
+      topupRefused.value = false
     }
     activationCheckoutUrl.value = safeContinuation(state)
     const status = state?.status
@@ -750,7 +757,9 @@ export function createPagos({
   }
 
   function setTopupAmount(value) {
-    topupAmount.value = String(value ?? '')
+    const next = String(value ?? '')
+    if (next !== topupAmount.value) topupRefused.value = false
+    topupAmount.value = next
   }
 
   function closeTopup() {
@@ -761,12 +770,14 @@ export function createPagos({
     if (paymentActionsBlocked()) return false
     topupAmount.value = ''
     topupError.value = ''
+    topupRefused.value = false
     topupOpen.value = true
     return true
   }
 
   async function topup({ min, max, money } = {}) {
-    if (paymentActionsBlocked() || paymentReading.value) return
+    if (paymentActionsBlocked() || paymentReading.value || topupRefused.value)
+      return
     const v = validateTopup(topupAmount.value, min, max, money)
     topupError.value = v.error
       ? t('{0} Correct the amount and try again.', [v.error])
@@ -775,16 +786,26 @@ export function createPagos({
     busy.value = 'topup'
     try {
       // The relay returns the processor's checkout; payment happens there.
+      // With «wallet_return» this page reads the way back (?recarga=), so it
+      // asks Boat to bring the owner here; otherwise Boat's own return page.
       const out = await mutate('topup_checkout', {
         amount: Number(topupAmount.value),
         panel,
+        ...(capable(boot.value, 'wallet_return') ? { wallet_return: 1 } : {}),
       })
       if (followCheckout(out)) return
-      // Boat refused before minting anything (portal_store._topup_payment_state:
-      // the site or the wallet's service is not delivered yet): its words.
-      if (typeof out?.message === 'string' && out.message.trim())
+      // Boat refused before minting anything, in its words (as text, never
+      // markup): with «wallet_return», {ok: false, reason: suspended |
+      // rail_off, message} says why and that is all; otherwise a state that
+      // clears by itself (portal_store._topup_payment_state: the site or the
+      // wallet's service is not delivered yet).
+      const said = errorText({ messages: [out?.message] })
+      if (said && out?.ok === false) {
+        topupError.value = said
+        topupRefused.value = true
+      } else if (said)
         topupError.value = t('{0} Check the status later or ask support.', [
-          out.message.trim(),
+          said,
         ])
       else throw new Error('checkout unavailable')
     } catch (e) {
@@ -923,6 +944,7 @@ export function createPagos({
     topupOpen,
     topupAmount,
     topupError,
+    topupRefused,
     invoiceErrors,
     cards,
     cardError,

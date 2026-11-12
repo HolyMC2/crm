@@ -152,10 +152,17 @@ function walletState(meters) {
   }
 }
 
-/** What the wallet holds, or null when this site has none. */
+/**
+ * What the wallet holds, or null when this site cannot hold saldo. Before its
+ * first movement Boat sends no meter; with «wallet_return» on, bootstrap's
+ * `wallet` says the site can hold saldo and the wallet reads $0.00.
+ */
 export function walletView(data) {
   const wallet = walletState(data?.meters)
-  if (wallet.balance == null) return null
+  if (wallet.balance == null) {
+    if (data?.wallet?.holds_saldo !== true) return null
+    wallet.balance = num(data.wallet.balance_mxn)
+  }
   let pace = ''
   if (wallet.sellsAirtime)
     pace =
@@ -633,5 +640,38 @@ export function topupChoices(store) {
     min: lo,
     max: hi,
     quick: [200, 500, 1000, 2000].filter((v) => v >= lo && v <= hi),
+  }
+}
+
+/**
+ * «¿Para qué sirve?»: what the saldo pays on this site and how to top it up.
+ * The stamps beyond the plan and the package always draw on it (Boat's prepaid
+ * cfdi_stamp), with their price where Boat shows it (IVA included); airtime
+ * only where this site sells it. Nothing about expiry: Boat's policy says none.
+ */
+export function walletHelp(data) {
+  const cfdi = (data?.store?.addons || []).find(
+    (addon) => addon?.service_key === 'cfdi_timbres',
+  )
+  const price = cfdi?.extra_stamp_price_mxn
+  const pays = [
+    typeof price === 'number' && price > 0
+      ? t(
+          'The stamps you issue beyond the ones your plan and package include: {0} each, IVA included.',
+          [money(price)],
+        )
+      : t(
+          'The stamps you issue beyond the ones your plan and package include.',
+        ),
+  ]
+  if (walletState(data?.meters).sellsAirtime)
+    pays.push(t('The airtime you sell.'))
+  const { min, max } = topupChoices(data?.store)
+  return {
+    pays,
+    topUp: t(
+      'To add balance, tap Top up, choose an amount from {0} to {1} and pay on the secure payment page. You will see it here once the payment arrives.',
+      [money(min), money(max)],
+    ),
   }
 }

@@ -80,6 +80,8 @@ const SELF_SERVICE = new Set([
   // «Almacenamiento»: Boat's space and its price, then the purchase or reduction.
   'storage_quote',
   'set_storage',
+  // A read: one top-up's state for «Recarga acreditada» after paying it.
+  'topup_state',
 ])
 
 function walk(dir, keep) {

@@ -1,6 +1,7 @@
 <template>
   <!-- Top-up: common amounts as chips, any other in the field, one «Continuar»
-       that opens the processor's page. -->
+       that opens the processor's page. Why a top-up did not open sits on top,
+       where the narrowest phone still shows it above the actions. -->
   <BottomSheet
     :open="open"
     :title="__('Top up the wallet', null, 'Cuenta')"
@@ -16,6 +17,15 @@
             'Cuenta',
           )
         }}
+      </p>
+      <p
+        v-if="door.topupError.value"
+        id="cuenta-recarga-error"
+        role="alert"
+        class="text-sm text-ink-red-7"
+        data-testid="recarga-error"
+      >
+        {{ door.topupError.value }}
       </p>
       <div
         v-if="bounds.quick.length"
@@ -54,10 +64,8 @@
           @keyup.enter="submit"
         />
       </label>
-      <p v-if="door.topupError.value" class="text-sm text-ink-red-7">
-        {{ door.topupError.value }}
-      </p>
       <p
+        v-if="door.topupActionReason.value"
         id="cuenta-recarga-motivo"
         class="text-sm text-ink-gray-6"
         role="status"
@@ -85,8 +93,16 @@
             ? __('Opening…', null, 'Cuenta')
             : __('Continue', null, 'Cuenta')
         "
-        :disabled="door.paymentActionsBlocked() || door.paymentReading.value"
-        aria-describedby="cuenta-recarga-motivo"
+        :disabled="
+          door.paymentActionsBlocked() ||
+          door.paymentReading.value ||
+          door.topupRefused.value
+        "
+        :aria-describedby="
+          door.topupRefused.value
+            ? 'cuenta-recarga-error'
+            : 'cuenta-recarga-motivo'
+        "
         data-testid="recarga-continuar"
         @click="submit"
       />

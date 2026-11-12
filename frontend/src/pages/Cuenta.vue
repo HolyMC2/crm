@@ -187,6 +187,25 @@
             />
           </div>
         </div>
+        <!-- Back from paying a top-up (?recarga=): what Boat says of it. -->
+        <p
+          v-if="recarga.view.value"
+          role="status"
+          class="mb-4 flex items-center gap-2 text-base"
+          :class="
+            recarga.view.value.tone === 'credited'
+              ? 'text-ink-green-8'
+              : 'text-ink-gray-8'
+          "
+          data-testid="cuenta-recarga-estado"
+        >
+          <span
+            :class="RETURN_ICON[recarga.view.value.tone]"
+            class="size-5 flex-none"
+            aria-hidden="true"
+          />
+          <span class="min-w-0">{{ recarga.view.value.text }}</span>
+        </p>
         <!-- Three views of one account, and «Contactos» and «Historial» where
              Boat lists them. -->
         <Segmented
@@ -264,7 +283,11 @@ import CuentaResumen from '@/components/cuenta/CuentaResumen.vue'
 import { capable } from '@/components/cuenta/autoservicio'
 import { planView } from '@/components/cuenta/cuenta'
 import { createPagos } from '@/components/cuenta/pagos'
-import { mutate, read } from '@/components/cuenta/api'
+import {
+  createRecargaReturn,
+  topupReference,
+} from '@/components/cuenta/recarga'
+import { mutate, read, seam } from '@/components/cuenta/api'
 import { isMobile } from '@/composables/breakpoint'
 import { loadShell, shellBoot } from '@/composables/muelleShell'
 import { usePullRefresh } from '@/composables/usePullRefresh'
@@ -334,6 +357,24 @@ const door = createPagos({
   tab: () => tab.value,
 })
 onBeforeUnmount(door.dispose)
+
+// Back from a top-up's payment page (capability «wallet_return»): Boat's word
+// on that one top-up; once the money is in, the plan and the movements are
+// read again. The address drops ?recarga= when the last word is said.
+const RETURN_ICON = {
+  checking: 'lucide-loader-circle animate-spin',
+  credited: 'lucide-circle-check',
+  processing: 'lucide-clock',
+}
+const recarga = createRecargaReturn({
+  read: (reference) => seam('topup_state', { reference }),
+  onCredited: async () => {
+    await refresh()
+    door.loadTxns({ reset: true })
+  },
+  onDone: () => dropQuery('recarga'),
+})
+onBeforeUnmount(recarga.dispose)
 
 // An older boot has no `account`, and a site without a platform link has no
 // plan to read (`available: false`): nothing to open there.
@@ -481,8 +522,8 @@ function act(key) {
 }
 
 // The first read once the boot says this person may open the account, then
-// Hoy's «Activar» (?activar=1) or Boat's top-up link (?recargar=1) opens its
-// sheet when nothing holds payments.
+// the way back from a top-up (?recarga=), and Hoy's «Activar» (?activar=1) or
+// Boat's top-up link (?recargar=1) opens its sheet when nothing holds payments.
 let started = false
 watch(
   allowed,
@@ -491,6 +532,11 @@ watch(
     started = true
     await refresh()
     if (!site.value || door.error.value) return
+    if (capable(door.boot.value, 'wallet_return')) {
+      const reference = topupReference(route.query)
+      if (reference) recarga.start(reference)
+      else dropQuery('recarga')
+    }
     if (route.query.activar !== undefined) openActivation()
     else if (route.query.recargar !== undefined) act('topup')
   },

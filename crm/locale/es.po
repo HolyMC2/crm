@@ -41630,6 +41630,61 @@ msgctxt "Cuenta"
 msgid "Wallet balance"
 msgstr "Saldo del monedero"
 
+#: frontend/src/components/cuenta/CuentaFacturacion.vue
+msgctxt "Cuenta"
+msgid "What is it for?"
+msgstr "¿Para qué sirve?"
+
+#: frontend/src/components/cuenta/SaldoSheet.vue
+msgctxt "Cuenta"
+msgid "What is the balance for?"
+msgstr "¿Para qué sirve el saldo?"
+
+#: frontend/src/components/cuenta/SaldoSheet.vue
+msgctxt "Cuenta"
+msgid "With your balance you pay for:"
+msgstr "Con tu saldo pagas:"
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "The stamps you issue beyond the ones your plan and package include."
+msgstr "Los timbres que emites además de los que incluyen tu plan y tu paquete."
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "The stamps you issue beyond the ones your plan and package include: {0} each, IVA included."
+msgstr "Los timbres que emites además de los que incluyen tu plan y tu paquete: {0} cada uno, IVA incluido."
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "The airtime you sell."
+msgstr "Las recargas de tiempo aire que vendes."
+
+#: frontend/src/components/cuenta/cuenta.js
+msgctxt "Cuenta"
+msgid "To add balance, tap Top up, choose an amount from {0} to {1} and pay on the secure payment page. You will see it here once the payment arrives."
+msgstr "Para agregar saldo, toca Recargar, elige un monto de {0} a {1} y paga en la página segura de pago. Lo verás aquí en cuanto llegue el pago."
+
+#: frontend/src/components/cuenta/recarga.js
+msgctxt "Cuenta"
+msgid "Checking your top-up…"
+msgstr "Revisando tu recarga…"
+
+#: frontend/src/components/cuenta/recarga.js
+msgctxt "Cuenta"
+msgid "Top-up credited: {0}"
+msgstr "Recarga acreditada: {0}"
+
+#: frontend/src/components/cuenta/recarga.js
+msgctxt "Cuenta"
+msgid "Your payment is being processed; we will let you know when it arrives."
+msgstr "Tu pago está en proceso; te avisamos cuando llegue."
+
+#: frontend/src/components/cuenta/recarga.js
+msgctxt "Cuenta"
+msgid "Your payment is being processed; you will see it in your balance when it arrives."
+msgstr "Tu pago está en proceso; lo verás en tu saldo cuando llegue."
+
 #: frontend/src/components/cuenta/pagos.js
 msgctxt "Cuenta"
 msgid "We are checking the payment status. Wait for it to finish and choose Continue to open your top-up."

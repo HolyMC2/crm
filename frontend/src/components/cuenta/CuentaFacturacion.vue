@@ -2,7 +2,10 @@
   <!-- Facturación: the invoices to pay first, each with its own «Pagar» (or the
        same payment to continue) and, when Boat keeps it shut, why and the way
        on; then the paid ones with their CFDI, the saved cards, and the wallet
-       with its ledger last (the long list). Where Boat offers them: payment
+       (at $0.00 before its first movement where Boat says the site can hold
+       saldo, and «¿Para qué sirve?», both with Boat's wallet_return) with its
+       ledger last (the long list).
+       Where Boat offers them: payment
        receipts on paid rows, Datos fiscales after the invoices, «Agregar
        tarjeta», and an invoice's detail in a sheet from a tap on its row.
        Rows and rules. -->
@@ -334,6 +337,26 @@
       <p v-if="wallet.pace" class="text-sm text-ink-gray-6">
         {{ wallet.pace }}
       </p>
+      <!-- What the saldo pays and how to top it up, in a sheet (with Boat's
+           wallet_return, which also brings the owner back here after paying). -->
+      <button
+        v-if="caps.walletReturn"
+        type="button"
+        class="press -ml-2 inline-flex min-h-11 items-center gap-1.5 rounded-full px-2 text-sm font-medium text-ink-gray-7 active:bg-surface-gray-2 [@media(hover:hover)]:hover:bg-surface-gray-2"
+        aria-haspopup="dialog"
+        data-testid="saldo-para-que"
+        @click="openHelp"
+      >
+        <span class="lucide-circle-help size-4" aria-hidden="true" />
+        {{ __('What is it for?', null, 'Cuenta') }}
+      </button>
+      <SaldoSheet
+        v-if="helpMounted"
+        :door="door"
+        :open="helpOpen"
+        @close="helpOpen = false"
+        @topup="topupFromHelp"
+      />
       <h3 class="pb-1 pt-4 text-sm font-semibold text-ink-gray-7">
         {{ __('Movements', null, 'Cuenta') }}
       </h3>
@@ -466,8 +489,9 @@ import { safeContinuation } from './pagos'
 // Only where Boat offers them: Datos fiscales, and the card sheet on its first open.
 const DatosFiscales = defineAsyncComponent(() => import('./DatosFiscales.vue'))
 const TarjetaSheet = defineAsyncComponent(() => import('./TarjetaSheet.vue'))
-// An invoice's detail sheet mounts on its first open.
+// An invoice's detail sheet mounts on its first open, and so does «¿Para qué sirve?».
 const FacturaSheet = defineAsyncComponent(() => import('./FacturaSheet.vue'))
+const SaldoSheet = defineAsyncComponent(() => import('./SaldoSheet.vue'))
 
 const props = defineProps({
   /** The page's payment door (pagos.js createPagos). */
@@ -475,7 +499,7 @@ const props = defineProps({
   /** Saves a downloaded file; the browser's download when left out. */
   saveFile: { type: Function, default: null },
 })
-defineEmits(['act'])
+const emit = defineEmits(['act'])
 
 const data = computed(() => props.door.boot.value)
 const groups = computed(() => invoiceGroups(data.value))
@@ -500,10 +524,24 @@ const caps = computed(() => ({
   cardSetup: capable(data.value, 'card_setup'),
   receipts: capable(data.value, 'receipts'),
   detail: capable(data.value, 'invoice_detail'),
+  walletReturn: capable(data.value, 'wallet_return'),
 }))
 // The invoice whose detail is open, and whether the sheet was ever opened.
 const detailFor = ref(null)
 const detailMounted = ref(false)
+// «¿Para qué sirve?» and whether it was ever opened.
+const helpOpen = ref(false)
+const helpMounted = ref(false)
+function openHelp() {
+  helpMounted.value = true
+  helpOpen.value = true
+}
+// Its «Recargar» opens the top-up once it is closed: one sheet at a time.
+async function topupFromHelp() {
+  helpOpen.value = false
+  await nextTick()
+  if (!props.door.paymentActionsBlocked()) emit('act', 'topup')
+}
 // The oldest invoice due that nothing holds: its «Pagar» is the filled one.
 const firstToPay = computed(
   () =>
