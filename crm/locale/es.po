@@ -22389,6 +22389,19 @@ msgstr "Solicitudes de vacaciones"
 msgid "No vacation requests yet. They ask from Asistencia."
 msgstr "Todavía no hay solicitudes de vacaciones. Se piden en Asistencia."
 
+#: frontend/src/pages/EquipoPersona.vue
+msgctxt "Equipo"
+msgid "Billing"
+msgstr "Facturación"
+
+#: frontend/src/pages/EquipoPersona.vue
+msgid "Can see billing"
+msgstr "Puede ver facturación"
+
+#: frontend/src/pages/EquipoPersona.vue
+msgid "Sees the plan and the invoices, and pays; changes nothing else."
+msgstr "Ve el plan, las facturas y paga; no cambia nada más."
+
 #: frontend/src/pages/EquipoVacaciones.vue
 msgid "Vacation days by law for each year of service. Each person gets this year’s days; nothing is assigned backwards."
 msgstr "Días de vacaciones que da la ley por cada año de antigüedad. Cada persona recibe los días de este año; no se asigna nada hacia atrás."
@@ -41474,6 +41487,36 @@ msgctxt "Cuenta"
 msgid "Add 1 extra {0}"
 msgstr "Agregar 1 {0} extra"
 
+#: frontend/src/components/cuenta/seatStep.js
+msgctxt "Cuenta"
+msgid "Add 1 {0} for {1} a month, IVA included"
+msgstr "Agregar 1 {0} por {1} al mes, IVA incluido"
+
+#: frontend/src/components/cuenta/seatStep.js
+msgctxt "Cuenta"
+msgid "Ask the owner to add a user."
+msgstr "Pide al dueño que agregue un usuario."
+
+#: frontend/src/components/cuenta/seatStep.js
+msgctxt "Cuenta"
+msgid "Ask the owner to add a register."
+msgstr "Pide al dueño que agregue una caja."
+
+#: frontend/src/components/cuenta/seatStep.js
+msgctxt "Cuenta"
+msgid "Your plan already has one more user; it takes a moment to reach this system."
+msgstr "Tu plan ya tiene un usuario más; tarda un momento en llegar a este sistema."
+
+#: frontend/src/components/cuenta/seatStep.js
+msgctxt "Cuenta"
+msgid "Your plan already has one more register; it takes a moment to reach this system."
+msgstr "Tu plan ya tiene una caja más; tarda un momento en llegar a este sistema."
+
+#: frontend/src/components/cuenta/seatStep.js
+msgctxt "Cuenta"
+msgid "See plans in My account"
+msgstr "Ver planes en Mi cuenta"
+
 #: frontend/src/components/cuenta/CuentaFacturacion.vue frontend/src/components/cuenta/TarjetaSheet.vue
 msgctxt "Cuenta"
 msgid "Add a card"
@@ -41569,7 +41612,7 @@ msgctxt "Cuenta"
 msgid "Change plan"
 msgstr "Cambiar de plan"
 
-#: frontend/src/components/cuenta/UsuariosCajas.vue
+#: frontend/src/components/cuenta/SeatStepSheet.vue frontend/src/components/cuenta/UsuariosCajas.vue
 msgctxt "Cuenta"
 msgid "Change saved"
 msgstr "Cambio guardado"
@@ -42114,7 +42157,7 @@ msgctxt "Cuenta"
 msgid "Your plan changes today."
 msgstr "Tu plan cambia hoy."
 
-#: frontend/src/components/cuenta/UsuariosCajas.vue
+#: frontend/src/components/cuenta/UsuariosCajas.vue frontend/src/components/cuenta/seatStep.js
 msgctxt "Cuenta"
 msgid "Your plan does not sell extra ones; another plan may include more."
 msgstr "Tu plan no vende extras; otro plan puede incluir más."

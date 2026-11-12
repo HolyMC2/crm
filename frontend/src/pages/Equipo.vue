@@ -293,10 +293,18 @@
         @click="openAlta"
       />
     </div>
+    <SeatStepSheet v-if="seatStep" :step="seatStep" />
   </ModuleLayout>
 </template>
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import {
+  computed,
+  defineAsyncComponent,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  watch,
+} from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { Avatar, Badge, Button } from 'frappe-ui'
 import { Fab, PageHeader } from '@/components/ui'
@@ -305,6 +313,7 @@ import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import {
   equipoApi,
   equipoBoot,
+  lazySeatStep,
   loadEquipoBoot,
   loadSheet,
   normalizeSegment,
@@ -321,6 +330,13 @@ import LucideUserPlus from '~icons/lucide/user-plus'
 import LucideWallet from '~icons/lucide/wallet'
 import { createListCache } from '@/utils/listCache'
 import { useLiveList } from '@/composables/liveList'
+import { shellBoot } from '@/composables/muelleShell'
+import { cuentaAllowed } from '@/utils/shellRoutes'
+
+// Mi cuenta's quote sheet, on the first alta the plan's cap refuses.
+const SeatStepSheet = defineAsyncComponent(
+  () => import('@/components/cuenta/SeatStepSheet.vue'),
+)
 
 const route = useRoute()
 const router = useRouter()
@@ -351,6 +367,16 @@ const focus = computed(() =>
   typeof route.query.focus === 'string' ? route.query.focus : '',
 )
 let ticket = 0
+// A full plan in the alta: the owner adds one user in place (seatStep.js).
+const {
+  step: seatStep,
+  offer: seatOffer,
+  dispose: disposeSeatStep,
+} = lazySeatStep({
+  allowed: () => cuentaAllowed(shellBoot.value),
+  navigate: (to) => router.push(to),
+})
+onBeforeUnmount(disposeSeatStep)
 
 const entries = computed(() =>
   segmentsFor(Boolean(caps.value.hr)).map((s) => ({
@@ -478,6 +504,7 @@ function openAlta() {
   sheet((s) =>
     s.openAlta({
       draftKey: 'crm:equipo',
+      seatStep: seatOffer,
       onDone: () => {
         notice.value = __('Person added. They appear in the team list.')
         load()
@@ -487,7 +514,14 @@ function openAlta() {
   )
 }
 function openPerson(row) {
-  sheet((s) => s.openPerson({ user: row.user, onChange: load, onClose: load }))
+  sheet((s) =>
+    s.openPerson({
+      user: row.user,
+      seatStep: seatOffer,
+      onChange: load,
+      onClose: load,
+    }),
+  )
 }
 function openShift(row) {
   sheet((s) =>

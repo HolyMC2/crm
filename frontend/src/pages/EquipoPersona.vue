@@ -349,6 +349,72 @@
         </div>
 
         <aside class="flex min-w-0 flex-col gap-5 pt-5 lg:pt-4">
+          <!-- «Puede ver facturación»: the owner's switch for the «Mi Plan» role. -->
+          <section
+            v-if="person.billing"
+            class="px-4"
+            aria-labelledby="equipo-facturacion"
+            data-testid="equipo-facturacion"
+          >
+            <h2
+              id="equipo-facturacion"
+              class="pb-1 text-base font-semibold text-ink-gray-9"
+            >
+              {{ __('Billing', null, 'Equipo') }}
+            </h2>
+            <div class="flex min-h-14 items-center gap-3 py-2">
+              <label
+                for="equipo-facturacion-switch"
+                class="flex min-w-0 flex-1 flex-col"
+              >
+                <span class="text-base text-ink-gray-9">{{
+                  __('Can see billing')
+                }}</span>
+                <span class="text-sm text-ink-gray-6">{{
+                  __(
+                    'Sees the plan and the invoices, and pays; changes nothing else.',
+                  )
+                }}</span>
+              </label>
+              <AjustesSwitch
+                id="equipo-facturacion-switch"
+                :model-value="person.billing.on"
+                :label="__('Can see billing')"
+                :disabled="!person.billing.can_change || billingBusy"
+                :aria-describedby="
+                  person.billing.reason
+                    ? 'equipo-facturacion-motivo'
+                    : undefined
+                "
+                @update:model-value="setBilling"
+              />
+            </div>
+            <p
+              v-if="person.billing.reason"
+              id="equipo-facturacion-motivo"
+              class="text-sm text-ink-gray-6"
+            >
+              {{ person.billing.reason }}
+            </p>
+            <!-- The switch's answer stays beside it: on the phone the page's
+                 own notice is a screen away. -->
+            <p
+              v-if="billingSaid?.error"
+              role="alert"
+              class="text-sm text-ink-red-7"
+              data-testid="equipo-facturacion-dicho"
+            >
+              {{ billingSaid.text }}
+            </p>
+            <p
+              v-else
+              aria-live="polite"
+              class="text-sm text-ink-green-8"
+              data-testid="equipo-facturacion-dicho"
+            >
+              {{ billingSaid?.text }}
+            </p>
+          </section>
           <section
             v-if="person.hr"
             class="px-4"
@@ -407,13 +473,22 @@
         </aside>
       </div>
     </div>
+    <SeatStepSheet v-if="seatStep" :step="seatStep" />
   </div>
 </template>
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import {
+  computed,
+  defineAsyncComponent,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  watch,
+} from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { FormControl } from 'frappe-ui'
 import { AppBar, EmptyState, StatusChip } from '@/components/ui'
+import AjustesSwitch from '@/components/ajustes/AjustesSwitch.vue'
 import RecordIsland from '@/components/documentos/RecordIsland.vue'
 import RecordKit from '@/components/documentos/compras/RecordKit.vue'
 import { useRecordKit } from '@/components/documentos/compras/recordKit'
@@ -427,6 +502,7 @@ import {
   decisions,
   equipoApi,
   equipoBoot,
+  lazySeatStep,
   lftLabel,
   lftTheme,
   liftAction,
@@ -440,6 +516,13 @@ import {
   weekTheme,
 } from '@/composables/useEquipo'
 import { isMobile as isPhone } from '@/composables/breakpoint'
+import { shellBoot } from '@/composables/muelleShell'
+import { cuentaAllowed } from '@/utils/shellRoutes'
+
+// Mi cuenta's quote sheet, on the first alta the plan's cap refuses.
+const SeatStepSheet = defineAsyncComponent(
+  () => import('@/components/cuenta/SeatStepSheet.vue'),
+)
 
 // The week's and the law row's Badge themes, as StatusChip tones.
 const TONE = {
@@ -467,6 +550,19 @@ const rejecting = ref(false)
 const note = ref('')
 const confirmingLift = ref(false)
 const lifting = ref(false)
+const billingBusy = ref(false)
+// The billing switch's last answer, said beside it: {text, error}.
+const billingSaid = ref(null)
+// A full plan in «Completar alta»: the owner adds one user in place.
+const {
+  step: seatStep,
+  offer: seatOffer,
+  dispose: disposeSeatStep,
+} = lazySeatStep({
+  allowed: () => cuentaAllowed(shellBoot.value),
+  navigate: (to) => router.push(to),
+})
+onBeforeUnmount(disposeSeatStep)
 // One key per decision the worker makes; a retry of the same click reuses it.
 let decisionKey = null
 
@@ -713,6 +809,7 @@ async function openPersonSheet() {
     sheet.openPerson({
       user: person.value?.user,
       employee: props.employee,
+      seatStep: seatOffer,
       onChange: load,
       onClose: load,
     })
@@ -726,6 +823,31 @@ async function openShift(date) {
     sheet.openShift({ employee: props.employee, date, onDone: load })
   } catch (error) {
     problem.value = { message: problemOf(error).detail }
+  }
+}
+// The switch moves on the tap; a refusal puts it back and says why.
+async function setBilling(allow) {
+  const billing = person.value?.billing
+  if (!billing?.can_change || billingBusy.value) return
+  const before = billing.on
+  billing.on = allow
+  billingBusy.value = true
+  billingSaid.value = null
+  try {
+    const answer = await equipoApi(
+      'doco.erp_experience.equipo.set_billing_access',
+      {
+        user: person.value.user,
+        allow: allow ? 1 : 0,
+      },
+    )
+    if (answer?.billing) person.value.billing = answer.billing
+    billingSaid.value = { text: answer?.message || '', error: false }
+  } catch (error) {
+    billing.on = before
+    billingSaid.value = { text: problemOf(error).detail, error: true }
+  } finally {
+    billingBusy.value = false
   }
 }
 async function askHr() {

@@ -1,3 +1,4 @@
+import { shallowRef } from 'vue'
 import { comprasApi } from '@/composables/useCompras'
 import { money } from '@/utils/numberFormat'
 import { createModuleBoot } from '@/utils/moduleBoot'
@@ -210,6 +211,26 @@ export function advancesText(advances, format = money) {
   return advances
     .map((a) => `${format(a.pending, a.currency)} (${a.count})`)
     .join(' · ')
+}
+
+/**
+ * The way past a full plan in the alta (doco's sheet option `seatStep`): Mi
+ * cuenta's seat step (components/cuenta/seatStep.js), loaded with the first
+ * refusal that asks for it. `step` holds it for the page's SeatStepSheet.
+ */
+export function lazySeatStep(options) {
+  const step = shallowRef(null)
+  let pending = null
+  async function offer(key) {
+    pending ??= import('@/components/cuenta/seatStep')
+      .then(({ createSeatStep }) => (step.value = createSeatStep(options)))
+      .catch((error) => {
+        pending = null
+        throw error
+      })
+    return (await pending).offer(key)
+  }
+  return { step, offer, dispose: () => step.value?.dispose() }
 }
 
 // One load of Doco's shared Equipo sheet (alta, puesto, one-day turno) per page.
