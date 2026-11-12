@@ -155,3 +155,23 @@ export function sourceRows(data) {
     }))
     .sort((a, b) => b.leads - a.leads)
 }
+
+// The visit tags get_origin_funnel groups by, in the order the card offers them.
+export const ORIGIN_GROUPS = [
+  { value: 'utm_source', label: () => __('Fuente') },
+  { value: 'utm_campaign', label: () => __('Campaña') },
+  { value: 'utm_medium', label: () => __('Medio') },
+]
+
+export function originParams(filters, group) {
+  const known = ORIGIN_GROUPS.some((option) => option.value === group)
+  return { ...marketingFilters(filters), group: known ? group : 'utm_source' }
+}
+
+// Rows of get_origin_funnel; the row without a tag gets its own label.
+export function originRows(data) {
+  return (data?.rows || []).map((row) => ({
+    ...row,
+    label: row.is_empty ? __('Sin etiqueta de origen') : row.origin,
+  }))
+}

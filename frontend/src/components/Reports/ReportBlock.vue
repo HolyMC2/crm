@@ -8,6 +8,7 @@
     <p v-if="description" class="mt-1 text-sm leading-relaxed text-ink-gray-6">
       {{ description }}
     </p>
+    <div v-if="$slots.actions" class="mt-3"><slot name="actions" /></div>
     <div v-if="loading" role="status" class="mt-4 space-y-3">
       <span class="sr-only">{{ __('Loading report…') }}</span>
       <div

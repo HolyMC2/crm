@@ -32,6 +32,7 @@
         @retry="attribution.reload"
       />
     </div>
+    <MarketingOrigin :filters="filters" @drill="forward" />
     <details class="rounded-7 border border-outline-gray-2 bg-surface-base p-4">
       <summary class="cursor-pointer text-base-medium text-ink-gray-9">
         {{ __('Detalle de canales y atribución') }}
@@ -190,6 +191,7 @@ import { useRouter } from 'vue-router'
 import ReportBlock from './ReportBlock.vue'
 import ReportChart from './ReportChart.vue'
 import MarketingTable from './MarketingTable.vue'
+import MarketingOrigin from './MarketingOrigin.vue'
 import MarketingScorecards from './MarketingScorecards.vue'
 import MarketingOperations from './MarketingOperations.vue'
 import MarketingReactivation from './MarketingReactivation.vue'

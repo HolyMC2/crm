@@ -13,6 +13,9 @@ import {
   sourceRows,
   useMarketingResource,
   marketingError,
+  ORIGIN_GROUPS,
+  originParams,
+  originRows,
 } from '../../src/components/Reports/MarketingData'
 
 const leadDrill = {
@@ -202,5 +205,41 @@ describe('isolated marketing requests', () => {
   })
   it('identifies actual permission errors', () => {
     expect(marketingError({ exc_type: 'PermissionError' })).toContain('permiso')
+  })
+})
+
+describe('origin funnel card', () => {
+  it('sends the shared filters and a known group, else the source', () => {
+    const filters = {
+      from_date: '2026-11-01',
+      owner: 'a@x.test',
+      company: 'Doco',
+    }
+    expect(originParams(filters, 'utm_campaign')).toEqual({
+      from_date: '2026-11-01',
+      owner: 'a@x.test',
+      group: 'utm_campaign',
+    })
+    expect(originParams(filters, 'landing').group).toBe('utm_source')
+    expect(ORIGIN_GROUPS.map((option) => option.value)).toEqual([
+      'utm_source',
+      'utm_campaign',
+      'utm_medium',
+    ])
+  })
+  it('labels the untagged row and keeps every number and drill', () => {
+    const drills = { leads: leadDrill, deals: null, won: null }
+    expect(
+      originRows({
+        rows: [
+          { origin: 'facebook', is_empty: false, leads: 2, won: 1, drills },
+          { origin: 'No origin', is_empty: true, leads: 5, drills },
+        ],
+      }).map(({ label, leads, drills: d }) => [label, leads, d.leads]),
+    ).toEqual([
+      ['facebook', 2, leadDrill],
+      ['Sin etiqueta de origen', 5, leadDrill],
+    ])
+    expect(originRows(null)).toEqual([])
   })
 })
