@@ -898,6 +898,7 @@
       :groups="countDialog.groups"
       :store="store"
       :task="countDialog.task"
+      :suggested-name="countName"
       @sent="countSent"
     />
   </ModuleLayout>
@@ -1461,6 +1462,22 @@ function rowLines(row) {
       ]),
       tone: 'text-ink-gray-6',
     })
+    if (row.autopilot)
+      lines.push(
+        row.in_recount
+          ? {
+              text: __(
+                'Being recounted: someone else counts it again, and the stock is fixed on its own when both agree.',
+              ),
+              tone: 'text-ink-blue-7',
+            }
+          : {
+              text: __(
+                'The autopilot could not settle it: confirm the count or reject it.',
+              ),
+              tone: 'text-ink-amber-7',
+            },
+      )
   } else if (row.kind === 'reconciliation') {
     lines.push({
       text: __('{0} products · {1}', [
@@ -1474,6 +1491,11 @@ function rowLines(row) {
     })
   } else if (row.kind === 'task') {
     const age = daysSince(row.assigned_date, today)
+    if (row.label)
+      lines.push({
+        text: __('List «{0}»', [row.label]),
+        tone: 'text-ink-gray-8',
+      })
     lines.push({
       text:
         age > 0
@@ -1523,9 +1545,26 @@ function openCount(list) {
   countDialog.groups = groups
   countDialog.open = true
 }
+// The list name offered for a count of the selection: what found it.
+const countName = computed(() =>
+  [state.value.search?.trim(), state.value.group, state.value.brand]
+    .filter(Boolean)
+    .join(' · ')
+    .slice(0, 140),
+)
 async function countSent(result) {
   if (result.kind === 'reassign') {
     notice.value = __('Count reassigned to {0}.', [result.assigned_to_name])
+  } else if (result.kind === 'count' && result.label) {
+    const next = new Set(selected.value)
+    for (const item of result.done || [])
+      next.delete(`${item}|${result.warehouse}`)
+    selected.value = next
+    saveSelection()
+    notice.value = __('List «{0}» asked of {1}.', [
+      result.label,
+      result.assigned_to_name,
+    ])
   } else {
     const done = result.kind === 'ask' ? result.items : result.done
     const next = new Set(selected.value)

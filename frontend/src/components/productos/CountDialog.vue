@@ -110,6 +110,27 @@
             {{ __('{0}: {1}', [row.full_name, row.reason]) }}
           </p>
           <template v-if="!task">
+            <template v-if="asList">
+              <FormControl
+                v-model="listName"
+                type="text"
+                :maxlength="options.list.label_max"
+                :label="__('List name')"
+                :placeholder="__('E.g. iPhone screens')"
+                :description="
+                  __(
+                    'One count with this name: it lands in their Pendientes and you hear when it is sent. Leave it empty to ask a recount of each product instead.',
+                  )
+                "
+              />
+              <FormControl
+                v-if="listName.trim()"
+                v-model="repeat"
+                type="select"
+                :label="__('Repeat')"
+                :options="repeatOptions"
+              />
+            </template>
             <FormControl
               v-model="day"
               type="date"
@@ -171,7 +192,9 @@ import {
 
 // «Pedir conteo a…» for one or many products of a store: Escáner's own
 // recount (its manager gate, counter rules and drift guard), optionally for a
-// later day. A worker who cannot assign counts asks the store's conteo
+// later day. Several products with a list name go as ONE list count by that
+// name (repeated every 7, 14 or 30 days when asked), with the counter's
+// Pendiente on it. A worker who cannot assign counts asks the store's conteo
 // manager instead (a ToDo on the store). With `task`, «Reasignar» an open
 // count. The review in Escáner turns a count into a Stock Reconciliation.
 const props = defineProps({
@@ -180,6 +203,8 @@ const props = defineProps({
   store: { type: String, default: '' },
   // { task, warehouse, warehouse_label, assigned_to } to reassign it
   task: { type: Object, default: null },
+  // The list name to offer for several products (the filter that found them).
+  suggestedName: { type: String, default: '' },
 })
 const emit = defineEmits(['sent'])
 const open = defineModel({ type: Boolean, default: false })
@@ -190,6 +215,8 @@ const sending = ref(false)
 const assignee = ref('')
 const note = ref('')
 const day = ref('')
+const listName = ref('')
+const repeat = ref('0')
 const problem = ref('')
 const sent = ref(null)
 let rid = requestId()
@@ -198,6 +225,27 @@ const group = computed(() =>
   props.groups.find((g) => g.warehouse === warehouse.value),
 )
 const items = computed(() => group.value?.items || [])
+// Several products a manager assigns go as one named list count.
+const asList = computed(
+  () =>
+    !props.task &&
+    options.value?.mode === 'assign' &&
+    Boolean(options.value?.list) &&
+    items.value.length > 1,
+)
+function repeatLabel(days) {
+  if (days === 0) return __('Only once')
+  if (days === 7) return __('Every week')
+  if (days === 14) return __('Every two weeks')
+  if (days === 30) return __('Every month')
+  return __('Every {0} days', [days])
+}
+const repeatOptions = computed(() =>
+  (options.value?.list?.repeat_days || [0]).map((days) => ({
+    label: repeatLabel(days),
+    value: String(days),
+  })),
+)
 const storeLabel = computed(
   () =>
     group.value?.label || props.task?.warehouse_label || warehouse.value || '',
@@ -245,6 +293,8 @@ watch(open, (value) => {
   if (!value) return
   sent.value = null
   problem.value = ''
+  listName.value = props.suggestedName || ''
+  repeat.value = '0'
   rid = requestId()
   const preferred = props.task?.warehouse || props.store
   warehouse.value = props.groups.some((g) => g.warehouse === preferred)
@@ -317,6 +367,7 @@ async function send() {
       }
       emit('sent', { ...result, kind: 'ask' })
     } else {
+      const label = asList.value ? listName.value.trim() : ''
       const result = await productosApi('request_counts', {
         request_id: rid,
         warehouse: warehouse.value,
@@ -324,10 +375,21 @@ async function send() {
         assignee: assignee.value,
         note: note.value,
         date: day.value === options.value.today ? '' : day.value,
+        label,
+        repeat: label ? Number(repeat.value) : 0,
       })
       sent.value = {
-        text:
-          result.date === options.value.today
+        text: result.label
+          ? result.existing
+            ? __(
+                '{0} already has the list «{1}» that day; it stays as it was.',
+                [result.assigned_to_name, result.label],
+              )
+            : __(
+                'List «{0}» asked of {1}: {2} product(s), in their Pendientes.',
+                [result.label, result.assigned_to_name, result.done.length],
+              )
+          : result.date === options.value.today
             ? __('Count of {0} product(s) asked of {1} for today.', [
                 result.done.length,
                 result.assigned_to_name,

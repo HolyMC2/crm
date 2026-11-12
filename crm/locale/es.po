@@ -40873,3 +40873,51 @@ msgstr "Pedido eliminado"
 #: frontend/src/components/compras/SurtidoInicio.vue
 msgid "Its products by section, with prices, tiers and stock."
 msgstr "Sus productos por sección, con precios, escalas y existencias."
+
+#: frontend/src/components/productos/CountDialog.vue
+msgid "List name"
+msgstr "Nombre de la lista"
+
+#: frontend/src/components/productos/CountDialog.vue
+msgid "E.g. iPhone screens"
+msgstr "Ej. pantallas de iPhone"
+
+#: frontend/src/components/productos/CountDialog.vue
+msgid "One count with this name: it lands in their Pendientes and you hear when it is sent. Leave it empty to ask a recount of each product instead."
+msgstr "Un solo conteo con este nombre: le llega a sus Pendientes y te avisamos cuando lo envíe. Déjalo vacío para pedir un reconteo de cada producto."
+
+#: frontend/src/components/productos/CountDialog.vue
+msgid "Only once"
+msgstr "Solo una vez"
+
+#: frontend/src/components/productos/CountDialog.vue
+msgid "Every two weeks"
+msgstr "Cada dos semanas"
+
+#: frontend/src/components/productos/CountDialog.vue
+msgid "Every {0} days"
+msgstr "Cada {0} días"
+
+#: frontend/src/components/productos/CountDialog.vue
+msgid "{0} already has the list «{1}» that day; it stays as it was."
+msgstr "{0} ya tiene la lista «{1}» ese día; se queda como estaba."
+
+#: frontend/src/components/productos/CountDialog.vue
+msgid "List «{0}» asked of {1}: {2} product(s), in their Pendientes."
+msgstr "Lista «{0}» pedida a {1}: {2} producto(s), en sus Pendientes."
+
+#: frontend/src/pages/Productos.vue
+msgid "List «{0}» asked of {1}."
+msgstr "Lista «{0}» pedida a {1}."
+
+#: frontend/src/pages/Productos.vue
+msgid "List «{0}»"
+msgstr "Lista «{0}»"
+
+#: frontend/src/pages/Productos.vue
+msgid "Being recounted: someone else counts it again, and the stock is fixed on its own when both agree."
+msgstr "En reconteo: otra persona lo vuelve a contar y, si los dos coinciden, el inventario se corrige solo."
+
+#: frontend/src/pages/Productos.vue
+msgid "The autopilot could not settle it: confirm the count or reject it."
+msgstr "El piloto automático no lo resolvió: confirma el conteo o recházalo."
