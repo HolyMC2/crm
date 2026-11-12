@@ -69,6 +69,12 @@ const SELF_SERVICE = new Set([
   'my_history',
   // A read: «Salud de tu sistema» in Resumen.
   'site_health',
+  // «Contactos»: who else receives Muelle's emails, each new address verified by a code.
+  'contacts_get',
+  'contacts_add',
+  'contacts_verify',
+  'contacts_remove',
+  'contacts_toggle',
 ])
 
 function walk(dir, keep) {

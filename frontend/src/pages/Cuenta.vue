@@ -187,7 +187,8 @@
             />
           </div>
         </div>
-        <!-- Three views of one account, and «Historial» where Boat lists it. -->
+        <!-- Three views of one account, and «Contactos» and «Historial» where
+             Boat lists them. -->
         <Segmented
           class="mb-4"
           fit="content"
@@ -208,6 +209,7 @@
           @act="act"
         />
         <CuentaTienda v-else-if="tab === 'tienda'" :door="door" @act="act" />
+        <CuentaContactos v-else-if="tab === 'contactos'" :door="door" />
         <CuentaHistorial v-else-if="tab === 'historial'" :door="door" />
         <Button
           v-if="phone"
@@ -278,6 +280,9 @@ const CuentaTienda = defineAsyncComponent(
 const CuentaHistorial = defineAsyncComponent(
   () => import('@/components/cuenta/CuentaHistorial.vue'),
 )
+const CuentaContactos = defineAsyncComponent(
+  () => import('@/components/cuenta/CuentaContactos.vue'),
+)
 
 // ?tab= opens one (the keys of Mi plan's tabs, so its links and returns map 1:1).
 const TABS = [
@@ -285,6 +290,11 @@ const TABS = [
   { value: 'facturacion', label: __('Billing', null, 'Cuenta') },
   { value: 'tienda', label: __('Store', null, 'Cuenta') },
 ]
+// «Contactos» only where Boat takes more recipients (capability «contacts»).
+const CONTACTS_TAB = {
+  value: 'contactos',
+  label: __('Contacts', null, 'Cuenta'),
+}
 // «Historial» only where Boat lists the account's changes (capability «history»).
 const HISTORY_TAB = { value: 'historial', label: __('History', null, 'Cuenta') }
 // The next steps this page opens from a notice or a health finding.
@@ -335,9 +345,11 @@ onMounted(() =>
 )
 const tabs = computed(() => {
   void fontsReady.value
-  return capable(door.boot.value, 'history')
-    ? [...TABS, HISTORY_TAB]
-    : [...TABS]
+  return [
+    ...TABS,
+    ...(capable(door.boot.value, 'contacts') ? [CONTACTS_TAB] : []),
+    ...(capable(door.boot.value, 'history') ? [HISTORY_TAB] : []),
+  ]
 })
 const tab = computed(() =>
   tabs.value.some((item) => item.value === route.query.tab)

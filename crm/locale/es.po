@@ -41596,6 +41596,187 @@ msgctxt "Cuenta"
 msgid "Loading your history…"
 msgstr "Cargando tu historial…"
 
+#: frontend/src/components/cuenta/CuentaContactos.vue
+#: frontend/src/pages/Cuenta.vue
+msgctxt "Cuenta"
+msgid "Contacts"
+msgstr "Contactos"
+
+#: frontend/src/components/cuenta/CuentaContactos.vue
+msgctxt "Cuenta"
+msgid "Who else receives Muelle’s emails about your account."
+msgstr "Quién más recibe los correos de Muelle sobre tu cuenta."
+
+#: frontend/src/components/cuenta/CuentaContactos.vue
+msgctxt "Cuenta"
+msgid "You receive all of them at {0}."
+msgstr "Tú los recibes todos en {0}."
+
+#: frontend/src/components/cuenta/CuentaContactos.vue
+msgctxt "Cuenta"
+msgid "Loading your contacts…"
+msgstr "Cargando tus contactos…"
+
+#: frontend/src/components/cuenta/CuentaContactos.vue
+msgctxt "Cuenta"
+msgid "{0}: send to these contacts too"
+msgstr "{0}: enviar también a estos contactos"
+
+#: frontend/src/components/cuenta/CuentaContactos.vue
+msgctxt "Cuenta"
+msgid "Send to these contacts too"
+msgstr "Enviar también a estos contactos"
+
+#: frontend/src/components/cuenta/CuentaContactos.vue
+msgctxt "Cuenta"
+msgid "Paused: they stay on the list and receive nothing until you turn it back on."
+msgstr "En pausa: siguen en la lista y no reciben nada hasta que lo vuelvas a prender."
+
+#: frontend/src/components/cuenta/CuentaContactos.vue
+msgctxt "Cuenta"
+msgid "Type the code"
+msgstr "Escribir el código"
+
+#: frontend/src/components/cuenta/CuentaContactos.vue
+msgctxt "Cuenta"
+msgid "Send a new code"
+msgstr "Enviar un código nuevo"
+
+#: frontend/src/components/cuenta/CuentaContactos.vue
+msgctxt "Cuenta"
+msgid "Only you receive these."
+msgstr "Solo tú los recibes."
+
+#: frontend/src/components/cuenta/CuentaContactos.vue
+msgctxt "Cuenta"
+msgid "Add an email"
+msgstr "Agregar correo"
+
+#: frontend/src/components/cuenta/CuentaContactos.vue
+msgctxt "Cuenta"
+msgid "Up to {0} emails here. Remove one to add another."
+msgstr "Hasta {0} correos aquí. Quita uno para agregar otro."
+
+#: frontend/src/components/cuenta/CuentaContactos.vue
+msgctxt "Cuenta"
+msgid "{0} no longer receives these notices"
+msgstr "{0} ya no recibe estos avisos"
+
+#: frontend/src/components/cuenta/contactos.js
+msgctxt "Cuenta"
+msgid "Invoices, payment receipts, CFDI, payment reminders and card notices."
+msgstr "Facturas, comprobantes de pago, CFDI, recordatorios de pago y avisos de tu tarjeta."
+
+#: frontend/src/components/cuenta/contactos.js
+msgctxt "Cuenta"
+msgid "Technical notices"
+msgstr "Avisos técnicos"
+
+#: frontend/src/components/cuenta/contactos.js
+msgctxt "Cuenta"
+msgid "Outages, backups and maintenance."
+msgstr "Fallas, respaldos y mantenimientos."
+
+#: frontend/src/components/cuenta/contactos.js
+msgctxt "Cuenta"
+msgid "Account"
+msgstr "Cuenta"
+
+#: frontend/src/components/cuenta/contactos.js
+msgctxt "Cuenta"
+msgid "Trial ending, cancellation and reactivation. Always sent."
+msgstr "Fin de la prueba, cancelación y reactivación. Siempre se envían."
+
+#: frontend/src/components/cuenta/contactos.js
+msgctxt "Cuenta"
+msgid "Receives these notices"
+msgstr "Recibe estos avisos"
+
+#: frontend/src/components/cuenta/contactos.js
+msgctxt "Cuenta"
+msgid "Paused"
+msgstr "En pausa"
+
+#: frontend/src/components/cuenta/contactos.js
+msgctxt "Cuenta"
+msgid "Waiting for the code"
+msgstr "Esperando el código"
+
+#: frontend/src/components/cuenta/contactos.js
+msgctxt "Cuenta"
+msgid "Its code no longer works"
+msgstr "Su código ya no sirve"
+
+#: frontend/src/components/cuenta/contactos.js
+msgctxt "Cuenta"
+msgid "Type the email."
+msgstr "Escribe el correo."
+
+#: frontend/src/components/cuenta/contactos.js
+msgctxt "Cuenta"
+msgid "Check the email: it looks incomplete."
+msgstr "Revisa el correo: parece incompleto."
+
+#: frontend/src/components/cuenta/contactos.js
+msgctxt "Cuenta"
+msgid "That is your email: it already receives everything."
+msgstr "Ese es tu correo: ya recibe todo."
+
+#: frontend/src/components/cuenta/contactos.js
+msgctxt "Cuenta"
+msgid "Type the {0}-digit code."
+msgstr "Escribe el código de {0} dígitos."
+
+#: frontend/src/components/cuenta/ContactoSheet.vue
+msgctxt "Cuenta"
+msgid "Add an email to {0}"
+msgstr "Agregar un correo a {0}"
+
+#: frontend/src/components/cuenta/ContactoSheet.vue
+msgctxt "Cuenta"
+msgid "Confirm an email for {0}"
+msgstr "Confirmar un correo de {0}"
+
+#: frontend/src/components/cuenta/ContactoSheet.vue
+msgctxt "Cuenta"
+msgid "Email"
+msgstr "Correo"
+
+#: frontend/src/components/cuenta/ContactoSheet.vue
+msgctxt "Cuenta"
+msgid "We will send a code to that email. Ask whoever uses it for the code and type it here."
+msgstr "Enviaremos un código a ese correo. Pídeselo a quien lo usa y escríbelo aquí."
+
+#: frontend/src/components/cuenta/ContactoSheet.vue
+msgctxt "Cuenta"
+msgid "Code"
+msgstr "Código"
+
+#: frontend/src/components/cuenta/ContactoSheet.vue
+msgctxt "Cuenta"
+msgid "Send another code"
+msgstr "Enviar otro código"
+
+#: frontend/src/components/cuenta/ContactoSheet.vue
+msgctxt "Cuenta"
+msgid "Send code"
+msgstr "Enviar código"
+
+#: frontend/src/components/cuenta/ContactoSheet.vue
+msgctxt "Cuenta"
+msgid "We sent a code to {0}. It expires in {1} minutes."
+msgstr "Enviamos un código a {0}. Vence en {1} minutos."
+
+#: frontend/src/components/cuenta/ContactoSheet.vue
+msgctxt "Cuenta"
+msgid "{0} now receives these notices"
+msgstr "{0} ya recibe estos avisos"
+
+#: frontend/src/components/cuenta/ContactoSheet.vue
+msgctxt "Cuenta"
+msgid "{0} is confirmed. These notices are paused: it receives nothing until you turn them back on."
+msgstr "Confirmamos {0}. Estos avisos están en pausa: no recibe nada hasta que los vuelvas a prender."
+
 #: frontend/src/components/cuenta/CuentaFacturacion.vue
 msgctxt "Cuenta"
 msgid "Saved cards"
