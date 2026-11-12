@@ -206,8 +206,14 @@ class TestSatLoginStep(TestCase):
 		emc = types.ModuleType("syncfy_connector.integrations.emc")
 		emc.fiscal_lane_available = lambda: available
 		root.integrations, integrations.emc = integrations, emc
-		return patch.dict(sys.modules, {"syncfy_connector": root, "syncfy_connector.integrations": integrations,
-										"syncfy_connector.integrations.emc": emc})
+		return patch.dict(
+			sys.modules,
+			{
+				"syncfy_connector": root,
+				"syncfy_connector.integrations": integrations,
+				"syncfy_connector.integrations.emc": emc,
+			},
+		)
 
 	def test_an_invoice_login_offers_contador_where_it_is_on(self):
 		with self._emc(True):
