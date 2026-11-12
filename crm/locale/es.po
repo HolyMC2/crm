@@ -44033,7 +44033,12 @@ msgstr "Te alcanzan"
 #: frontend/src/pages/CompraPlan.vue
 msgctxt "Surtido"
 msgid "Update the draft"
-msgstr "Actualizar el borrador"
+msgstr "Actualizar borrador"
+
+#: frontend/src/pages/CompraPlan.vue
+msgctxt "Surtido"
+msgid "Create order"
+msgstr "Crear orden"
 
 #: frontend/src/pages/CompraPlan.vue
 msgctxt "Surtido"

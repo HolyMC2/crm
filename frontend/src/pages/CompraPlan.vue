@@ -45,7 +45,7 @@
         :title="__('Opening the plan…', null, 'Surtido')"
       />
 
-      <div v-else class="mx-auto w-full max-w-5xl px-4 pt-3 sm:px-6">
+      <div v-else class="plan-caja mx-auto w-full max-w-5xl px-4 pt-3 sm:px-6">
         <div
           v-if="problem"
           role="alert"
@@ -178,8 +178,7 @@
         </div>
 
         <div
-          class="mt-3 hidden gap-x-3 border-b border-outline-gray-2 px-3 pb-2 text-xs font-medium text-ink-gray-6 md:grid"
-          :class="GRID"
+          class="plan-cabeza mt-3 gap-x-3 border-b border-outline-gray-2 px-3 pb-2 text-xs font-medium text-ink-gray-6"
           aria-hidden="true"
         >
           <span>{{ __('Model', null, 'Surtido') }}</span>
@@ -204,15 +203,15 @@
         </p>
         <ul
           v-else
-          class="mt-2 divide-y divide-outline-gray-1 md:mt-0"
+          class="plan-lista mt-2 divide-y divide-outline-gray-1"
           :aria-label="__('Lines of the plan', null, 'Surtido')"
           data-testid="plan-lineas"
         >
           <li
             v-for="line in shown"
             :key="line.line"
-            class="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 py-3 md:items-center md:px-3"
-            :class="[GRID, qtyOf(line) ? '' : 'opacity-50']"
+            class="plan-fila grid items-start gap-x-3 py-3"
+            :class="qtyOf(line) ? '' : 'opacity-50'"
             :data-testid="'plan-linea-' + line.line"
           >
             <div class="min-w-0">
@@ -220,11 +219,11 @@
                 {{ line.model || line.name }}
                 <span
                   v-if="line.year"
-                  class="num ml-1.5 font-normal text-ink-gray-5 md:hidden"
+                  class="plan-angosto num ml-1.5 font-normal text-ink-gray-5"
                   >{{ line.year }}</span
                 >
               </p>
-              <p class="num text-sm text-ink-gray-7 md:hidden">
+              <p class="plan-angosto num text-sm text-ink-gray-7">
                 {{
                   __(
                     '{0} on hand, {1} after',
@@ -234,7 +233,7 @@
                 }}
                 · {{ movedText(line) }}
               </p>
-              <p class="num text-sm text-ink-gray-7 md:hidden">
+              <p class="plan-angosto num text-sm text-ink-gray-7">
                 {{ priceText(line) }}
               </p>
               <p v-if="line.reasons.length" class="text-xs text-ink-gray-6">
@@ -244,20 +243,17 @@
                 {{ historyText(line) }}
               </p>
             </div>
-            <span
-              class="num hidden text-right text-sm text-ink-gray-7 md:block"
-              >{{ line.year || '—' }}</span
-            >
-            <span
-              class="num hidden text-right text-base text-ink-gray-8 md:block"
-              >{{ line.stock }}</span
-            >
-            <span
-              class="num hidden text-right text-base text-ink-gray-8 md:block"
-              >{{ line.moved }}</span
-            >
+            <span class="plan-ancho num text-right text-sm text-ink-gray-7">{{
+              line.year || '—'
+            }}</span>
+            <span class="plan-ancho num text-right text-base text-ink-gray-8">{{
+              line.stock
+            }}</span>
+            <span class="plan-ancho num text-right text-base text-ink-gray-8">{{
+              line.moved
+            }}</span>
             <div
-              class="flex items-center justify-end gap-1 md:justify-center"
+              class="plan-pasos flex items-center justify-end gap-1"
               role="group"
               :aria-label="
                 __('Pieces of {0}', [line.model || line.name], 'Surtido')
@@ -266,7 +262,7 @@
               <button
                 v-if="plan.owner"
                 type="button"
-                class="press flex size-11 items-center justify-center rounded-full bg-surface-gray-2 text-ink-gray-8 hover:bg-surface-gray-3 disabled:opacity-40 md:size-9"
+                class="press flex size-11 items-center justify-center rounded-full bg-surface-gray-2 text-ink-gray-8 hover:bg-surface-gray-3 disabled:opacity-40"
                 :aria-label="__('One less', null, 'Surtido')"
                 :title="__('One less', null, 'Surtido')"
                 :disabled="!qtyOf(line)"
@@ -282,7 +278,7 @@
               <button
                 v-if="plan.owner"
                 type="button"
-                class="press flex size-11 items-center justify-center rounded-full bg-surface-gray-2 text-ink-gray-8 hover:bg-surface-gray-3 md:size-9"
+                class="press flex size-11 items-center justify-center rounded-full bg-surface-gray-2 text-ink-gray-8 hover:bg-surface-gray-3"
                 :aria-label="__('One more', null, 'Surtido')"
                 :title="__('One more', null, 'Surtido')"
                 @click="step(line, 1)"
@@ -290,11 +286,10 @@
                 <span class="lucide-plus size-4" aria-hidden="true" />
               </button>
             </div>
-            <span
-              class="num hidden text-right text-base text-ink-gray-8 md:block"
-              >{{ afterOf(line) }}</span
-            >
-            <span class="hidden text-right md:block">
+            <span class="plan-ancho num text-right text-base text-ink-gray-8">{{
+              afterOf(line)
+            }}</span>
+            <span class="plan-ancho text-right">
               <span class="num block text-base text-ink-gray-8">{{
                 line.price ? money(line.price, plan.currency) : '—'
               }}</span>
@@ -305,7 +300,7 @@
               }}</span>
             </span>
             <span
-              class="num hidden text-right text-base font-medium text-ink-gray-9 md:block"
+              class="plan-ancho num text-right text-base font-medium text-ink-gray-9"
               >{{
                 line.price
                   ? money(line.price * qtyOf(line), plan.currency)
@@ -364,7 +359,10 @@
           data-testid="plan-crear"
           @click="startOrder"
         >
-          <span class="lucide-file-plus size-5" aria-hidden="true" />
+          <span
+            class="lucide-file-plus hidden size-5 min-[360px]:inline-block"
+            aria-hidden="true"
+          />
           {{ orderLabel }}
         </button>
         <p v-else class="max-w-48 text-sm text-ink-gray-6">
@@ -479,9 +477,6 @@ const props = defineProps({ id: { type: String, required: true } })
 
 const API = 'doco.workspaces.surtido_plan.'
 const call = (method, args = {}) => comprasApi(API + method, args)
-// model | year | on hand | used | order | after | price | total
-const GRID =
-  'md:grid-cols-[minmax(0,1fr)_3.5rem_4rem_4rem_8.5rem_4rem_6.5rem_6.5rem]'
 const BTN_SM = Object.freeze({
   tonal:
     'inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-surface-gray-2 px-4 text-sm font-medium text-ink-gray-9 hover:bg-surface-gray-3 disabled:opacity-50 sm:min-h-9',
@@ -540,7 +535,7 @@ const leftOut = computed(() => {
 const orderLabel = computed(() => {
   if (plan.value?.draft) return __('Update the draft', null, 'Surtido')
   return plan.value?.source === 'tienda'
-    ? __('Create the purchase order', null, 'Surtido')
+    ? __('Create order', null, 'Surtido')
     : __('Create the order', null, 'Surtido')
 })
 
@@ -725,3 +720,45 @@ onBeforeUnmount(() => {
   clearTimeout(saveTimer)
 })
 </script>
+
+<style scoped>
+/* The lines read as a table only where their own box holds every column
+   (model at least 12rem): rows on the phone, a tablet and a narrow pane. */
+.plan-caja {
+  container-type: inline-size;
+}
+.plan-fila {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+.plan-cabeza,
+.plan-ancho {
+  display: none;
+}
+@container (min-width: 54rem) {
+  .plan-cabeza,
+  .plan-fila {
+    display: grid;
+    /* model | year | on hand | used | order | after | price | total */
+    grid-template-columns: minmax(12rem, 1fr) 3.5rem 3.5rem 4rem 7.5rem 4rem 6.5rem 6.5rem;
+    align-items: center;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+  .plan-lista {
+    margin-top: 0;
+  }
+  .plan-ancho {
+    display: block;
+  }
+  .plan-angosto {
+    display: none;
+  }
+  .plan-pasos {
+    justify-content: center;
+  }
+  .plan-pasos button {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+}
+</style>
