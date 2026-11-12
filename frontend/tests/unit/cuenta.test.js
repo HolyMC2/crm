@@ -10,6 +10,8 @@ const state = vi.hoisted(() => ({
   read: vi.fn(),
   mutate: vi.fn(),
   call: vi.fn(),
+  // «Una copia de tus datos» reads doco's export status with Resumen.
+  exportStatus: vi.fn(async () => ({ export: null, can_request: true })),
 }))
 vi.mock('frappe-ui', async () => {
   const { h } = await import('vue')
@@ -57,6 +59,10 @@ vi.mock('@/components/ui', async (importOriginal) => {
 vi.mock('@/components/cuenta/api', () => ({
   read: (...args) => state.read(...args),
   mutate: (...args) => state.mutate(...args),
+  seam: vi.fn(),
+  exportStatus: (...args) => state.exportStatus(...args),
+  requestExport: vi.fn(),
+  exportDownloadPath: (name) => `/zip/${name}`,
 }))
 
 import {

@@ -1,9 +1,25 @@
 // Mi cuenta's only way to the plan: doco's Mi plan relays (doco.docoutils.miplan),
 // gated to the owner or the «Mi Plan» role and relayed to Boat as this site. The
-// browser never talks to the platform and no endpoint here is new.
-import { call } from 'frappe-ui'
+// browser never talks to the platform and no endpoint here is new. «Exportar mis
+// datos» is doco's own (doco.docoutils.data_export, the same roles): it reaches
+// no platform seam and moves no money.
+import { call, frappeRequest } from 'frappe-ui'
 
 const RELAY = 'doco.docoutils.miplan.'
+const EXPORT = 'doco.docoutils.data_export.'
+
+/** The latest export and whether a new one may start (GET only). */
+export const exportStatus = () =>
+  frappeRequest({ url: EXPORT + 'export_status', method: 'GET' })
+
+/** Starts an export of every section (POST); one already running is answered. */
+export const requestExport = () => call(EXPORT + 'request_export')
+
+/** The zip of one ready export (GET, a file). */
+export function exportDownloadPath(name) {
+  const query = new URLSearchParams({ export: String(name) })
+  return `/api/method/${EXPORT}download?${query}`
+}
 
 export const read = (fn, params = {}) => call(RELAY + fn, params)
 export const mutate = (fn, params = {}) => call(RELAY + fn, params)

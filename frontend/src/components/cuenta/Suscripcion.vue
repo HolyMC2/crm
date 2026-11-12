@@ -39,7 +39,7 @@
         </p>
       </div>
     </div>
-    <!-- No export tool in the panel yet: the copy of the data is asked of support. -->
+    <!-- The copy of the data is the export block on Resumen («export»). -->
     <div v-if="view.state !== 'active'" class="flex flex-wrap gap-2 pt-1">
       <Button
         v-if="view.canResume"
@@ -53,9 +53,9 @@
       />
       <Button
         class="min-h-11 max-sm:w-full"
-        :label="__('Ask support for a copy of my data', null, 'Cuenta')"
+        :label="__('Ask for my data', null, 'Cuenta')"
         data-testid="suscripcion-datos"
-        @click="askData"
+        @click="$emit('act', 'export')"
       />
     </div>
     <!-- A payment hold does not hold a cancel: Boat's cancel_quote answers for
@@ -130,26 +130,17 @@ function openCancel() {
   cancelling.value = true
 }
 // The sheet closes first, then its next step: support's own dialog never opens
-// under the modal sheet, which takes every tap outside it.
+// under the modal sheet, which takes every tap outside it, and the export
+// block it scrolls to is not behind it.
 async function leave(key) {
   cancelling.value = false
   await nextTick()
-  if (key === 'data') askData()
-  else emit('act', key)
+  emit('act', key)
 }
 async function cancelled() {
   cancelling.value = false
   toast.success(__('Your cancellation is recorded', null, 'Cuenta'))
   await props.door.load()
-}
-function askData() {
-  props.door.contactSupport(
-    __(
-      'I want a copy of my system’s data before my subscription ends.',
-      null,
-      'Cuenta',
-    ),
-  )
 }
 async function resume() {
   if (resuming.value) return

@@ -2,10 +2,11 @@
 // (capability «cancel»): one quiet «Cancelar suscripción» at the foot opens a
 // sheet with Boat's dates and reasons, an optional note and a retention line
 // that never blocks, and asks for the password again; once recorded, Resumen
-// leads with «Tu suscripción termina el …» and «Reanudar». Support opens only
-// once the sheet is closed; «¿Olvidaste tu contraseña?» sits under the
-// password; a payment hold does not hold the cancel. Without the capability,
-// or on a trial, nothing of it shows.
+// leads with «Tu suscripción termina el …» and «Reanudar». «Pedir mis datos»
+// (in the sheet and in a recorded cancel) asks Resumen's export block for the
+// copy, once the sheet is closed, with no detour through support; «¿Olvidaste
+// tu contraseña?» sits under the password; a payment hold does not hold the
+// cancel. Without the capability, or on a trial, nothing of it shows.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick } from 'vue'
 
@@ -17,6 +18,10 @@ const state = vi.hoisted(() => ({
   support: [],
   // Whether a sheet was still on screen when support opened.
   sheetAtSupport: [],
+  exportStatus: vi.fn(),
+  requestExport: vi.fn(),
+  // Whether the cancel sheet was still on screen when the copy was asked for.
+  sheetAtExport: [],
 }))
 vi.mock('frappe-ui', async () => {
   const { h } = await import('vue')
@@ -65,6 +70,13 @@ vi.mock('@/components/cuenta/api', async (importOriginal) => ({
   ...(await importOriginal()),
   seam: (...args) => state.seam(...args),
   mutate: (...args) => state.mutate(...args),
+  exportStatus: (...args) => state.exportStatus(...args),
+  requestExport: (...args) => {
+    state.sheetAtExport.push(
+      Boolean(document.querySelector('[data-testid="cancelar"]')),
+    )
+    return state.requestExport(...args)
+  },
 }))
 
 import { createPagos } from '@/components/cuenta/pagos'
@@ -87,6 +99,15 @@ const QUOTE = {
     { value: 'closing', label: 'Cierro o vendo el negocio' },
   ],
   message: 'Tu servicio sigue hasta el 30 de noviembre de 2026.',
+}
+
+const RUNNING = {
+  name: 'EXP-0001',
+  status: 'En proceso',
+  running: true,
+  ready: false,
+  expired: false,
+  failed: false,
 }
 
 let app, root
@@ -121,6 +142,17 @@ beforeEach(() => {
   state.toast.mockReset()
   state.support.length = 0
   state.sheetAtSupport.length = 0
+  state.sheetAtExport.length = 0
+  state.exportStatus.mockReset()
+  state.exportStatus.mockResolvedValue({ export: null, can_request: true })
+  state.requestExport.mockReset()
+  state.requestExport.mockImplementation(async () => {
+    state.exportStatus.mockResolvedValue({
+      export: RUNNING,
+      can_request: false,
+    })
+    return { export: RUNNING, already_running: false }
+  })
   window.__ = (text, values) =>
     String(text).replace(/{(\d+)}/g, (m, i) => values?.[i] ?? m)
 })
@@ -244,8 +276,9 @@ describe('Tu suscripción', () => {
     expect(dates.textContent).toContain('30 de diciembre')
     expect(dates.textContent).toContain('31 de diciembre')
     expect(sheet.textContent).toContain(
-      'Before you go, ask for a copy of your data: write to support.',
+      'Before you go, download a copy of your data',
     )
+    expect(sheet.textContent).not.toContain('support')
     const confirm = document.querySelector('[data-testid="cancelar-confirmar"]')
     expect(confirm.disabled).toBe(true)
     expect(confirm.dataset.theme).toBe('red')
@@ -315,10 +348,13 @@ describe('Tu suscripción', () => {
     expect(block.textContent).toContain(
       'You can ask for a copy of your data until',
     )
-    button('Ask support for a copy of my data', block).click()
-    expect(state.support).toEqual([
-      'I want a copy of my system’s data before my subscription ends.',
-    ])
+    button('Ask for my data', block).click()
+    await flush()
+    expect(state.requestExport).toHaveBeenCalledTimes(1)
+    expect(state.support).toEqual([])
+    expect(
+      root.querySelector('[data-testid="cuenta-datos"]').dataset.state,
+    ).toBe('running')
     block.querySelector('[data-testid="suscripcion-reanudar"]').click()
     await flush()
     expect(state.seam).toHaveBeenCalledWith('resume_subscription')
@@ -328,7 +364,7 @@ describe('Tu suscripción', () => {
     expect(state.read).toHaveBeenCalledWith('bootstrap', { require_fresh: 1 })
   })
 
-  it('«Escribir a soporte» closes the sheet first, then asks support for the copy', async () => {
+  it('«Pedir mis datos» closes the sheet, then Resumen’s export block asks for the copy', async () => {
     state.seam.mockResolvedValue(QUOTE)
     mount(readyDoor(boot(['cancel'])))
     const block = await find('[data-testid="cuenta-suscripcion"]')
@@ -336,14 +372,93 @@ describe('Tu suscripción', () => {
     button('Cancel subscription', block).click()
     const sheet = await find('[data-testid="cancelar"]')
     await flush()
-    button('Write to support', sheet).click()
+    sheet.querySelector('[data-testid="cancelar-datos"]').click()
     await flush()
-    expect(state.support).toEqual([
-      'I want a copy of my system’s data before my subscription ends.',
-    ])
-    // Support's dialog never opens under the modal sheet.
-    expect(state.sheetAtSupport).toEqual([false])
+    expect(state.requestExport).toHaveBeenCalledTimes(1)
+    // Asked once the sheet is gone; support is never the way to the copy.
+    expect(state.sheetAtExport).toEqual([false])
+    expect(state.support).toEqual([])
     expect(document.querySelector('[data-testid="cancelar"]')).toBeNull()
+    const exportBlock = root.querySelector('[data-testid="cuenta-datos"]')
+    expect(exportBlock.dataset.state).toBe('running')
+    expect(exportBlock.textContent).toContain('Preparing…')
+  })
+
+  it('«Pedir mis datos» sits above the reasons; the reason and the note wait for the way back, the password never', async () => {
+    state.seam.mockResolvedValue(QUOTE)
+    mount(readyDoor(boot(['cancel'])))
+    const block = await find('[data-testid="cuenta-suscripcion"]')
+    await flush()
+    button('Cancel subscription', block).click()
+    let sheet = await find('[data-testid="cancelar"]')
+    await flush()
+    // Under Boat's dates, before anything is typed.
+    const ask = sheet.querySelector('[data-testid="cancelar-datos"]')
+    const reasons = sheet.querySelector('[data-testid="cancelar-motivos"]')
+    expect(
+      ask.compareDocumentPosition(reasons) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+    button('Es muy caro', sheet).click()
+    type(sheet.querySelector('[data-testid="cancelar-nota"]'), 'Por ahora')
+    type(sheet.querySelector('[data-testid="cancelar-password"]'), 'secreto')
+    await flush()
+    sheet.querySelector('[data-testid="cancelar-datos"]').click()
+    await flush()
+    expect(document.querySelector('[data-testid="cancelar"]')).toBeNull()
+    expect(state.requestExport).toHaveBeenCalledTimes(1)
+
+    // Back to the cancel: what was chosen and written is still there.
+    button('Cancel subscription', block).click()
+    sheet = await find('[data-testid="cancelar"]')
+    await flush()
+    expect(button('Es muy caro', sheet).getAttribute('aria-pressed')).toBe(
+      'true',
+    )
+    expect(sheet.querySelector('[data-testid="cancelar-nota"]').value).toBe(
+      'Por ahora',
+    )
+    expect(sheet.querySelector('[data-testid="cancelar-password"]').value).toBe(
+      '',
+    )
+
+    // «Seguir con mi suscripción» lets it go: the next cancel starts over.
+    button('Keep my subscription').click()
+    await flush()
+    expect(document.querySelector('[data-testid="cancelar"]')).toBeNull()
+    button('Cancel subscription', block).click()
+    sheet = await find('[data-testid="cancelar"]')
+    await flush()
+    expect(button('Es muy caro', sheet).getAttribute('aria-pressed')).toBe(
+      'false',
+    )
+    expect(sheet.querySelector('[data-testid="cancelar-nota"]').value).toBe('')
+  })
+
+  it('«Pedir mis datos» with a copy ready shows it and asks for nothing', async () => {
+    state.seam.mockResolvedValue(QUOTE)
+    state.exportStatus.mockResolvedValue({
+      export: {
+        name: 'EXP-0002',
+        status: 'Lista',
+        running: false,
+        ready: true,
+        size_label: '2.4 MB',
+        expires_label: '18 de noviembre de 2026, 14:30',
+      },
+      can_request: true,
+    })
+    mount(readyDoor(boot(['cancel'])))
+    const block = await find('[data-testid="cuenta-suscripcion"]')
+    await flush()
+    button('Cancel subscription', block).click()
+    const sheet = await find('[data-testid="cancelar"]')
+    await flush()
+    sheet.querySelector('[data-testid="cancelar-datos"]').click()
+    await flush()
+    expect(state.requestExport).not.toHaveBeenCalled()
+    const exportBlock = root.querySelector('[data-testid="cuenta-datos"]')
+    expect(exportBlock.dataset.state).toBe('ready')
+    expect(exportBlock.textContent).toContain('Download (zip)')
   })
 
   it('Boat keeps the data after the archive: the sheet says until when', async () => {

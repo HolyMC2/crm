@@ -38786,6 +38786,156 @@ msgctxt "Cuenta"
 msgid "Account notices"
 msgstr "Avisos de la cuenta"
 
+#: frontend/src/components/cuenta/ExportarDatos.vue
+msgctxt "Cuenta"
+msgid "A copy of your data"
+msgstr "Una copia de tus datos"
+
+#: frontend/src/components/cuenta/ExportarDatos.vue
+msgctxt "Cuenta"
+msgid "Checking your copy…"
+msgstr "Revisando tu copia…"
+
+#: frontend/src/components/cuenta/ExportarDatos.vue
+msgctxt "Cuenta"
+msgid "Download (zip)"
+msgstr "Descargar (zip)"
+
+#: frontend/src/components/cuenta/ExportarDatos.vue
+msgctxt "Cuenta"
+msgid "Preparing…"
+msgstr "Preparando…"
+
+#: frontend/src/components/cuenta/exportar.js frontend/src/components/cuenta/Suscripcion.vue frontend/src/components/cuenta/CancelarSheet.vue
+msgctxt "Cuenta"
+msgid "Ask for my data"
+msgstr "Pedir mis datos"
+
+#: frontend/src/components/cuenta/exportar.js
+msgctxt "Cuenta"
+msgid "Ask for a new copy"
+msgstr "Pedir una copia nueva"
+
+#: frontend/src/components/cuenta/exportar.js
+msgctxt "Cuenta"
+msgid "Everything your business has in the system, in one zip of spreadsheet files (CSV)."
+msgstr "Todo lo de tu negocio en el sistema, en un zip con archivos de hoja de cálculo (CSV)."
+
+#: frontend/src/components/cuenta/exportar.js
+msgctxt "Cuenta"
+msgid "It can take a few minutes. You can keep working; it shows here when it is ready."
+msgstr "Puede tardar unos minutos. Puedes seguir trabajando; aquí aparece cuando esté lista."
+
+#: frontend/src/components/cuenta/exportar.js
+msgctxt "Cuenta"
+msgid "Ready: {0}. You can download it until {1}."
+msgstr "Lista: {0}. Puedes descargarla hasta el {1}."
+
+#: frontend/src/components/cuenta/exportar.js
+msgctxt "Cuenta"
+msgid "Your copy is ready."
+msgstr "Tu copia está lista."
+
+#: frontend/src/components/cuenta/exportar.js
+msgctxt "Cuenta"
+msgid "We could not prepare your copy. Ask for it again."
+msgstr "No pudimos preparar tu copia. Pídela de nuevo."
+
+#: frontend/src/components/cuenta/exportar.js
+msgctxt "Cuenta"
+msgid "Your last copy is no longer available. Ask for a new one."
+msgstr "Tu última copia ya no está disponible. Pide una nueva."
+
+#: frontend/src/components/cuenta/exportar.js
+msgctxt "Cuenta"
+msgid "We could not check your copy of the data. Try again."
+msgstr "No pudimos revisar tu copia de los datos. Intenta de nuevo."
+
+#: frontend/src/components/cuenta/exportar.js
+msgctxt "Cuenta"
+msgid "We could not ask for your copy. Try again in a moment."
+msgstr "No pudimos pedir tu copia. Intenta de nuevo en un momento."
+
+#: frontend/src/components/cuenta/CancelarSheet.vue
+msgctxt "Cuenta"
+msgid "Before you go, download a copy of your data: one zip with your sales, customers, products and more."
+msgstr "Antes de irte, descarga una copia de tus datos: un zip con tus ventas, clientes, productos y más."
+
+#: frontend/src/components/cuenta/Incidentes.vue
+msgctxt "Cuenta"
+msgid "Service notices"
+msgstr "Avisos del servicio"
+
+#: frontend/src/components/cuenta/incidentes.js
+msgctxt "Cuenta"
+msgid "Since {0}"
+msgstr "Desde las {0}"
+
+#: frontend/src/components/cuenta/incidentes.js
+msgctxt "Cuenta"
+msgid "Since 1:{0}"
+msgstr "Desde la 1:{0}"
+
+#: frontend/src/components/cuenta/incidentes.js
+msgctxt "Cuenta"
+msgid "Since {0} at {1}"
+msgstr "Desde el {0} a las {1}"
+
+#: frontend/src/components/cuenta/incidentes.js
+msgctxt "Cuenta"
+msgid "Since {0} at 1:{1}"
+msgstr "Desde el {0} a la 1:{1}"
+
+#: frontend/src/components/cuenta/incidentes.js
+msgctxt "Cuenta"
+msgid "Fixed: your system works normally again."
+msgstr "Ya quedó: tu sistema funciona con normalidad."
+
+#: frontend/src/components/cuenta/incidentes.js
+msgctxt "Cuenta"
+msgid "You do not need to do anything; we tell you when it is fixed."
+msgstr "No necesitas hacer nada; te avisamos en cuanto quede."
+
+#: frontend/src/components/cuenta/incidentes.js
+msgctxt "Cuenta"
+msgid "It lasted less than a minute."
+msgstr "Duró menos de un minuto."
+
+#: frontend/src/components/cuenta/incidentes.js
+msgctxt "Cuenta"
+msgid "It lasted about a minute."
+msgstr "Duró alrededor de 1 minuto."
+
+#: frontend/src/components/cuenta/incidentes.js
+msgctxt "Cuenta"
+msgid "It lasted about {0} minutes."
+msgstr "Duró alrededor de {0} minutos."
+
+#: frontend/src/components/cuenta/incidentes.js
+msgctxt "Cuenta"
+msgid "It lasted about an hour."
+msgstr "Duró alrededor de 1 hora."
+
+#: frontend/src/components/cuenta/incidentes.js
+msgctxt "Cuenta"
+msgid "It lasted about {0} hours."
+msgstr "Duró alrededor de {0} horas."
+
+#: frontend/src/components/cuenta/CuentaResumen.vue
+msgctxt "Cuenta"
+msgid "Your reports to support"
+msgstr "Tus reportes a soporte"
+
+#: frontend/src/components/cuenta/CuentaResumen.vue
+msgctxt "Cuenta"
+msgid "Their state and support’s answer."
+msgstr "Su estado y la respuesta de soporte."
+
+#: frontend/src/components/cuenta/CuentaResumen.vue
+msgctxt "Cuenta"
+msgid "See my reports"
+msgstr "Ver mis reportes"
+
 #: frontend/src/components/cuenta/CuentaResumen.vue frontend/src/components/cuenta/cuenta.js
 msgctxt "Cuenta"
 msgid "Activate"
@@ -40488,6 +40638,7 @@ msgstr "Agregar o cambiar una tarjeta todavía no se hace aquí: soporte lo hace
 msgctxt "Cuenta"
 msgid "Wallet"
 msgstr "Monedero"
+
 #: frontend/src/pages/CompraOrden.vue
 msgid "Supplier confirmation"
 msgstr "Confirmación del proveedor"
@@ -40997,20 +41148,10 @@ msgctxt "Cuenta"
 msgid "App turned on"
 msgstr "Aplicación activada"
 
-#: frontend/src/components/cuenta/Suscripcion.vue
-msgctxt "Cuenta"
-msgid "Ask support for a copy of my data"
-msgstr "Pedir a soporte una copia de mis datos"
-
 #: frontend/src/components/cuenta/DatosFiscalesSheet.vue
 msgctxt "Cuenta"
 msgid "As they appear on your tax certificate (constancia de situación fiscal)."
 msgstr "Como aparecen en tu constancia de situación fiscal."
-
-#: frontend/src/components/cuenta/CancelarSheet.vue
-msgctxt "Cuenta"
-msgid "Before you go, ask for a copy of your data: write to support."
-msgstr "Antes de irte, pide una copia de tus datos: escríbenos a soporte."
 
 #: frontend/src/components/cuenta/CambioPlanSheet.vue
 msgctxt "Cuenta"
@@ -41161,11 +41302,6 @@ msgstr "Se instala en unos minutos; aquí ves el avance y mientras sigues trabaj
 msgctxt "Cuenta"
 msgid "It is not available for your system yet."
 msgstr "Todavía no está disponible para tu sistema."
-
-#: frontend/src/components/cuenta/CancelarSheet.vue frontend/src/components/cuenta/Suscripcion.vue
-msgctxt "Cuenta"
-msgid "I want a copy of my system’s data before my subscription ends."
-msgstr "Quiero una copia de los datos de mi sistema antes de que termine mi suscripción."
 
 #: frontend/src/components/cuenta/DatosFiscales.vue
 msgctxt "Cuenta"
@@ -41531,11 +41667,6 @@ msgstr "¿Por qué te vas?"
 msgctxt "Cuenta"
 msgid "With sample data"
 msgstr "Con datos de ejemplo"
-
-#: frontend/src/components/cuenta/CancelarSheet.vue
-msgctxt "Cuenta"
-msgid "Write to support"
-msgstr "Escribir a soporte"
 
 #: frontend/src/components/cuenta/suscripcion.js
 msgctxt "Cuenta"

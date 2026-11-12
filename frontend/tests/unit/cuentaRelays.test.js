@@ -6,7 +6,9 @@
 // each shown only where Boat names it in
 // bootstrap's capabilities; only components/cuenta/api.js names the relay
 // module, and crm's Python reaches no platform seam of its own. doco pins the
-// relays themselves in tests/test_cuenta_money_seams.py.
+// relays themselves in tests/test_cuenta_money_seams.py. «Exportar mis datos»
+// is doco's own data_export (no platform seam, no money): its three methods,
+// named in api.js alone.
 import { describe, expect, it } from 'vitest'
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { dirname, relative, resolve } from 'node:path'
@@ -61,6 +63,7 @@ const SELF_SERVICE = new Set([
   'cancel_quote',
   'cancel_subscription',
   'resume_subscription',
+  'my_incidents',
 ])
 
 function walk(dir, keep) {
@@ -139,6 +142,32 @@ describe('Mi cuenta reaches the plan only through Mi plan’s relays', () => {
       'download_receipt',
       'download_topup_cfdi',
     ])
+  })
+
+  it('the data export is doco’s data_export, its three methods, named in api.js alone', () => {
+    const naming = sources
+      .filter((path) =>
+        /doco\.docoutils\.data_export/.test(readFileSync(path, 'utf8')),
+      )
+      .map((path) => relative(SRC, path))
+    expect(naming).toEqual(['components/cuenta/api.js'])
+    const api = readFileSync(resolve(SRC, 'components/cuenta/api.js'), 'utf8')
+    const named = new Set(
+      [
+        ...api.matchAll(
+          /EXPORT \+ '(\w+)'|\$\{EXPORT\}(\w+)|data_export\.(\w+)/g,
+        ),
+      ].map((m) => m[1] || m[2] || m[3]),
+    )
+    expect([...named].sort()).toEqual([
+      'download',
+      'export_status',
+      'request_export',
+    ])
+    // The status is a read: GET, as doco whitelists it.
+    expect(api).toMatch(
+      /frappeRequest\(\{ url: EXPORT \+ 'export_status', method: 'GET' \}\)/,
+    )
   })
 
   it('crm’s Python whitelists nothing for the account and calls no platform seam', () => {

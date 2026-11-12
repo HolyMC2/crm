@@ -1,6 +1,8 @@
 <template>
-  <!-- Resumen: where the plan stands, what would interrupt selling and its next
-       step, then the meters and the site's own health. Rows and rules. -->
+  <!-- Resumen: where the plan stands, a Muelle outage, what would interrupt
+       selling and its next step, then the meters and the site's own health,
+       and at the foot a copy of the data, the reports to support and the
+       cancel. Rows and rules. -->
   <div class="space-y-6">
     <section
       aria-labelledby="cuenta-plan"
@@ -22,7 +24,9 @@
         </div>
         <StatusChip :label="plan.status.label" :tone="plan.status.tone" />
       </div>
+      <!-- «Todo en orden» never sits over an outage that is on now. -->
       <p
+        v-if="judgement.tone !== 'ok' || !outage"
         class="mt-3 flex items-center gap-2 text-base font-medium"
         :class="VERDICT_INK[judgement.tone]"
         data-testid="cuenta-verdict"
@@ -35,11 +39,14 @@
       </p>
     </section>
 
+    <!-- A Muelle outage on this site, while it lasts and a day after. -->
+    <Incidentes :door="door" @open="(open) => (outage = open)" />
+
     <!-- A recorded cancel is what the owner reads first after the plan. -->
     <Suscripcion
       v-if="subscription && subscription.state !== 'active'"
       :door="door"
-      @act="(key) => $emit('act', key)"
+      @act="act"
     />
 
     <!-- The trial's days and the way out of it, under the thumb. -->
@@ -229,6 +236,41 @@
       </section>
     </div>
 
+    <!-- A copy of the business data, a zip the owner downloads here. -->
+    <ExportarDatos
+      ref="exportBlock"
+      class="border-t border-outline-gray-1 pt-4"
+    />
+
+    <!-- doco's «Mis reportes» (the Ayuda dialog), where the shell has it. -->
+    <section
+      v-if="reportsOn"
+      aria-labelledby="cuenta-reportes"
+      class="flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-outline-gray-1 pt-4"
+      data-testid="cuenta-reportes"
+    >
+      <span
+        class="lucide-bug size-5 flex-none text-ink-gray-6"
+        aria-hidden="true"
+      />
+      <div class="min-w-0 flex-1 basis-48">
+        <h2
+          id="cuenta-reportes"
+          class="text-base font-semibold text-ink-gray-9"
+        >
+          {{ __('Your reports to support', null, 'Cuenta') }}
+        </h2>
+        <p class="text-sm text-ink-gray-6">
+          {{ __('Their state and support’s answer.', null, 'Cuenta') }}
+        </p>
+      </div>
+      <Button
+        class="min-h-11 max-sm:w-full"
+        :label="__('See my reports', null, 'Cuenta')"
+        @click="openReports"
+      />
+    </section>
+
     <!-- Cancelling is one quiet button at the foot (capability «cancel»):
          Mi cuenta opens on Resumen, so the button is two taps from the
          account menu. -->
@@ -236,14 +278,16 @@
       v-if="subscription && subscription.state === 'active'"
       class="border-t border-outline-gray-1 pt-4"
       :door="door"
-      @act="(key) => $emit('act', key)"
+      @act="act"
     />
   </div>
 </template>
 <script setup>
-import { computed, defineAsyncComponent } from 'vue'
+import { computed, defineAsyncComponent, ref } from 'vue'
 import { Button } from 'frappe-ui'
 import { StatusChip } from '@/components/ui'
+import ExportarDatos from './ExportarDatos.vue'
+import Incidentes from './Incidentes.vue'
 import { subscriptionView } from './suscripcion'
 import {
   accountAlerts,
@@ -264,7 +308,20 @@ const props = defineProps({
   /** The next steps the page can open: activate, pay, topup, support, plans. */
   actions: { type: Array, default: () => [] },
 })
-defineEmits(['act'])
+const emit = defineEmits(['act'])
+
+const exportBlock = ref(null)
+// A Muelle outage on now (Incidentes): the plan's «Todo en orden» steps aside.
+const outage = ref(false)
+// «Pedir mis datos» in «Tu suscripción» and the cancel sheet opens the block
+// here; every other step is the page's.
+function act(key) {
+  if (key === 'export') exportBlock.value?.reveal()
+  else emit('act', key)
+}
+// doco's support script (support_workflow.js) carries «Mis reportes».
+const reportsOn = typeof window.docoSupport?.openReports === 'function'
+const openReports = () => window.docoSupport.openReports()
 
 // The next steps that open a payment sheet; the others only switch the tab.
 const PAYING_ACTS = ['activate', 'topup']
