@@ -38776,6 +38776,11 @@ msgctxt "Cuenta"
 msgid "A request is in progress. Wait for it to finish before you continue."
 msgstr "Hay una solicitud en curso. Espera a que termine antes de continuar."
 
+#: frontend/src/components/cuenta/usuarios.js
+msgctxt "Cuenta"
+msgid "{0} a month for each extra {1}, IVA included"
+msgstr "{0} al mes por cada {1} extra, IVA incluido"
+
 #: frontend/src/components/cuenta/CuentaResumen.vue
 msgctxt "Cuenta"
 msgid "Account notices"
@@ -40921,3 +40926,888 @@ msgstr "En reconteo: otra persona lo vuelve a contar y, si los dos coinciden, el
 #: frontend/src/pages/Productos.vue
 msgid "The autopilot could not settle it: confirm the count or reject it."
 msgstr "El piloto automático no lo resolvió: confirma el conteo o recházalo."
+
+#: frontend/src/components/cuenta/UsuariosCajas.vue frontend/src/components/cuenta/UsuariosSheet.vue
+msgctxt "Cuenta"
+msgid "{0} extra"
+msgstr "{0} extra"
+
+#: frontend/src/components/cuenta/usuarios.js
+msgctxt "Cuenta"
+msgid "{0} in use"
+msgstr "{0} en uso"
+
+#: frontend/src/components/cuenta/usuarios.js
+msgctxt "Cuenta"
+msgid "Add {0}"
+msgstr "Agregar {0}"
+
+#: frontend/src/components/cuenta/UsuariosCajas.vue frontend/src/components/cuenta/UsuariosSheet.vue
+msgctxt "Cuenta"
+msgid "Add 1 extra {0}"
+msgstr "Agregar 1 {0} extra"
+
+#: frontend/src/components/cuenta/CuentaFacturacion.vue frontend/src/components/cuenta/TarjetaSheet.vue
+msgctxt "Cuenta"
+msgid "Add a card"
+msgstr "Agregar tarjeta"
+
+#: frontend/src/components/cuenta/cambioPlan.js frontend/src/components/cuenta/usuarios.js
+msgctxt "Cuenta"
+msgid "Added to this month’s invoice, IVA included"
+msgstr "Se suma a tu factura de este mes, IVA incluido"
+
+#: frontend/src/components/cuenta/cambioPlan.js
+msgctxt "Cuenta"
+msgid "Added to your next invoice for the rest of the period, IVA included"
+msgstr "Se suma a tu próxima factura por lo que falta del periodo, IVA incluido"
+
+#: frontend/src/components/cuenta/usuarios.js
+msgctxt "Cuenta"
+msgid "Added to your next invoice for the rest of this month, IVA included"
+msgstr "Se suma a tu próxima factura por los días que faltan de este mes, IVA incluido"
+
+#: frontend/src/components/cuenta/tarjeta.js
+msgctxt "Cuenta"
+msgid "Adding a card is not available right now. Ask support and we will help you."
+msgstr "Agregar tarjeta no está disponible por ahora. Escríbenos a soporte y te ayudamos."
+
+#: frontend/src/components/cuenta/DatosFiscales.vue
+msgctxt "Cuenta"
+msgid "Add tax details"
+msgstr "Agregar datos fiscales"
+
+#: frontend/src/components/cuenta/fiscal.js
+msgctxt "Cuenta"
+msgid "Add your tax details so we can issue your CFDI."
+msgstr "Agrega tus datos fiscales para que podamos emitir tu CFDI."
+
+#: frontend/src/components/cuenta/CancelarSheet.vue
+msgctxt "Cuenta"
+msgid "Anything else you want to tell us (optional)"
+msgstr "¿Algo más que quieras contarnos? (opcional)"
+
+#: frontend/src/components/cuenta/Aplicaciones.vue
+msgctxt "Cuenta"
+msgid "App turned off"
+msgstr "Aplicación desactivada"
+
+#: frontend/src/components/cuenta/Aplicaciones.vue
+msgctxt "Cuenta"
+msgid "App turned on"
+msgstr "Aplicación activada"
+
+#: frontend/src/components/cuenta/Suscripcion.vue
+msgctxt "Cuenta"
+msgid "Ask support for a copy of my data"
+msgstr "Pedir a soporte una copia de mis datos"
+
+#: frontend/src/components/cuenta/DatosFiscalesSheet.vue
+msgctxt "Cuenta"
+msgid "As they appear on your tax certificate (constancia de situación fiscal)."
+msgstr "Como aparecen en tu constancia de situación fiscal."
+
+#: frontend/src/components/cuenta/CancelarSheet.vue
+msgctxt "Cuenta"
+msgid "Before you go, ask for a copy of your data: write to support."
+msgstr "Antes de irte, pide una copia de tus datos: escríbenos a soporte."
+
+#: frontend/src/components/cuenta/CambioPlanSheet.vue
+msgctxt "Cuenta"
+msgid "Billing cycle"
+msgstr "Ciclo de pago"
+
+#: frontend/src/components/cuenta/fiscal.js
+msgctxt "Cuenta"
+msgid "business name"
+msgstr "razón social"
+
+#: frontend/src/components/cuenta/DatosFiscalesSheet.vue frontend/src/components/cuenta/fiscal.js
+msgctxt "Cuenta"
+msgid "Business name"
+msgstr "Razón social"
+
+#: frontend/src/components/cuenta/CancelarSheet.vue frontend/src/components/cuenta/Suscripcion.vue
+msgctxt "Cuenta"
+msgid "Cancel subscription"
+msgstr "Cancelar suscripción"
+
+#: frontend/src/components/cuenta/cambioPlan.js
+msgctxt "Cuenta"
+msgid "Cancel the scheduled change"
+msgstr "Cancelar el cambio programado"
+
+#: frontend/src/components/cuenta/CuentaFacturacion.vue
+msgctxt "Cuenta"
+msgid "Card saved"
+msgstr "Tarjeta guardada"
+
+#: frontend/src/components/cuenta/DatosFiscalesSheet.vue frontend/src/components/cuenta/fiscal.js
+msgctxt "Cuenta"
+msgid "CFDI use"
+msgstr "Uso del CFDI"
+
+#: frontend/src/components/cuenta/cambioPlan.js
+msgctxt "Cuenta"
+msgid "Change plan"
+msgstr "Cambiar de plan"
+
+#: frontend/src/components/cuenta/UsuariosCajas.vue
+msgctxt "Cuenta"
+msgid "Change saved"
+msgstr "Cambio guardado"
+
+#: frontend/src/components/cuenta/UsuariosCajas.vue
+msgctxt "Cuenta"
+msgid "Change scheduled"
+msgstr "Cambio programado"
+
+#: frontend/src/components/cuenta/Aplicaciones.vue
+msgctxt "Cuenta"
+msgid "Checking your apps…"
+msgstr "Revisando tus aplicaciones…"
+
+#: frontend/src/components/cuenta/CancelarSheet.vue
+msgctxt "Cuenta"
+msgid "Checking your dates…"
+msgstr "Revisando tus fechas…"
+
+#: frontend/src/components/cuenta/DatosFiscales.vue
+msgctxt "Cuenta"
+msgid "Checking your tax details…"
+msgstr "Revisando tus datos fiscales…"
+
+#: frontend/src/components/cuenta/UsuariosCajas.vue
+msgctxt "Cuenta"
+msgid "Checking your users and registers…"
+msgstr "Revisando tus usuarios y cajas…"
+
+#: frontend/src/components/cuenta/fiscal.js
+msgctxt "Cuenta"
+msgid "Check your tax regime: it must match your RFC type, as on your tax certificate."
+msgstr "Revisa tu régimen fiscal: debe corresponder a tu tipo de RFC, como en tu constancia de situación fiscal."
+
+#: frontend/src/components/cuenta/suscripcion.js
+msgctxt "Cuenta"
+msgid "Choose a reason."
+msgstr "Elige un motivo."
+
+#: frontend/src/components/cuenta/suscripcion.js
+msgctxt "Cuenta"
+msgid "Choose a reason and type your password to confirm."
+msgstr "Elige un motivo y escribe tu contraseña para confirmar."
+
+#: frontend/src/components/cuenta/DatosFiscalesSheet.vue
+msgctxt "Cuenta"
+msgid "Choose your tax regime"
+msgstr "Elige tu régimen fiscal"
+
+#: frontend/src/components/cuenta/CuentaFacturacion.vue
+msgctxt "Cuenta"
+msgid "Download the payment receipt of {0}"
+msgstr "Descargar el comprobante de pago de {0}"
+
+#: frontend/src/components/cuenta/DatosFiscales.vue
+msgctxt "Cuenta"
+msgid "Edit tax details"
+msgstr "Editar datos fiscales"
+
+#: frontend/src/components/cuenta/fiscal.js
+msgctxt "Cuenta"
+msgid "Fill in {0}."
+msgstr "Completa {0}."
+
+#: frontend/src/components/cuenta/usuarios.js
+msgctxt "Cuenta"
+msgid "Goes down to {0} extra at the end of the period"
+msgstr "Baja a {0} extra al cerrar el periodo"
+
+#: frontend/src/components/cuenta/usuarios.js
+msgctxt "Cuenta"
+msgid "Goes down to {0} extra on {1}"
+msgstr "Baja a {0} extra el {1}"
+
+#: frontend/src/components/cuenta/autoservicio.js
+msgctxt "Cuenta"
+msgid "Go to your subscription"
+msgstr "Ir a tu suscripción"
+
+#: frontend/src/components/cuenta/AplicacionSheet.vue
+msgctxt "Cuenta"
+msgid "How it starts"
+msgstr "Cómo empieza"
+
+#: frontend/src/components/cuenta/suscripcion.js
+msgctxt "Cuenta"
+msgid "If it is the price, a cheaper plan may fit you."
+msgstr "Si es por el precio, un plan más económico te puede convenir."
+
+#: frontend/src/components/cuenta/suscripcion.js
+msgctxt "Cuenta"
+msgid "If you cancel, the service runs to the end of the period you paid and nothing is charged afterwards."
+msgstr "Si cancelas, tu servicio sigue hasta el final del periodo que pagaste y después ya no se cobra nada."
+
+#: frontend/src/components/cuenta/aplicaciones.js
+msgctxt "Cuenta"
+msgid "Installing"
+msgstr "Instalando"
+
+#: frontend/src/components/cuenta/AplicacionSheet.vue
+msgctxt "Cuenta"
+msgid "It installs in a few minutes; you follow it here and keep working meanwhile."
+msgstr "Se instala en unos minutos; aquí ves el avance y mientras sigues trabajando."
+
+#: frontend/src/components/cuenta/aplicaciones.js
+msgctxt "Cuenta"
+msgid "It is not available for your system yet."
+msgstr "Todavía no está disponible para tu sistema."
+
+#: frontend/src/components/cuenta/CancelarSheet.vue frontend/src/components/cuenta/Suscripcion.vue
+msgctxt "Cuenta"
+msgid "I want a copy of my system’s data before my subscription ends."
+msgstr "Quiero una copia de los datos de mi sistema antes de que termine mi suscripción."
+
+#: frontend/src/components/cuenta/DatosFiscales.vue
+msgctxt "Cuenta"
+msgid "I want to add my tax details for invoicing."
+msgstr "Quiero registrar mis datos fiscales para facturar."
+
+#: frontend/src/components/cuenta/CancelarSheet.vue
+msgctxt "Cuenta"
+msgid "Keep my subscription"
+msgstr "Seguir con mi suscripción"
+
+#: frontend/src/components/cuenta/usuarios.js
+msgctxt "Cuenta"
+msgid "less a month, IVA included"
+msgstr "menos al mes, IVA incluido"
+
+#: frontend/src/components/cuenta/usuarios.js
+msgctxt "Cuenta"
+msgid "more a month, IVA included"
+msgstr "más al mes, IVA incluido"
+
+#: frontend/src/components/cuenta/usuarios.js
+msgctxt "Cuenta"
+msgid "No changes."
+msgstr "Sin cambios."
+
+#: frontend/src/components/cuenta/usuarios.js
+msgctxt "Cuenta"
+msgid "No limit on your plan"
+msgstr "Sin límite en tu plan"
+
+#: frontend/src/components/cuenta/CambioPlanSheet.vue
+msgctxt "Cuenta"
+msgid "Nothing is charged today."
+msgstr "Hoy no se cobra nada."
+
+#: frontend/src/components/cuenta/TarjetaSheet.vue
+msgctxt "Cuenta"
+msgid "Opening the secure card form…"
+msgstr "Abriendo el formulario seguro de tarjeta…"
+
+#: frontend/src/components/cuenta/CuentaTienda.vue
+msgctxt "Cuenta"
+msgid "Pay monthly"
+msgstr "Pagar cada mes"
+
+#: frontend/src/components/cuenta/CuentaTienda.vue
+msgctxt "Cuenta"
+msgid "Pay once a year instead of every month; you see the amount before you confirm."
+msgstr "Paga una vez al año en lugar de cada mes; ves el monto antes de confirmar."
+
+#: frontend/src/components/cuenta/CuentaTienda.vue
+msgctxt "Cuenta"
+msgid "Pay yearly"
+msgstr "Pagar por año"
+
+#: frontend/src/components/cuenta/cambioPlan.js
+msgctxt "Cuenta"
+msgid "Plan changed"
+msgstr "Plan cambiado"
+
+#: frontend/src/components/cuenta/cambioPlan.js
+msgctxt "Cuenta"
+msgid "Plan change scheduled"
+msgstr "Cambio de plan programado"
+
+#: frontend/src/components/cuenta/fiscal.js
+msgctxt "Cuenta"
+msgid "postal code"
+msgstr "código postal"
+
+#: frontend/src/components/cuenta/DatosFiscalesSheet.vue frontend/src/components/cuenta/fiscal.js
+msgctxt "Cuenta"
+msgid "Postal code"
+msgstr "Código postal"
+
+#: frontend/src/components/cuenta/Aplicaciones.vue
+msgctxt "Cuenta"
+msgid "Read its manual"
+msgstr "Ver su manual"
+
+#: frontend/src/components/cuenta/fiscal.js
+msgctxt "Cuenta"
+msgid "Ready to invoice"
+msgstr "Listo para facturar"
+
+#: frontend/src/components/cuenta/CuentaFacturacion.vue
+msgctxt "Cuenta"
+msgid "Receipt (PDF)"
+msgstr "Comprobante (PDF)"
+
+#: frontend/src/components/cuenta/usuarios.js
+msgctxt "Cuenta"
+msgid "register"
+msgstr "caja"
+
+#: frontend/src/components/cuenta/cuenta.js frontend/src/components/cuenta/usuarios.js
+msgctxt "Cuenta"
+msgid "registers"
+msgstr "cajas"
+
+#: frontend/src/components/cuenta/usuarios.js
+msgctxt "Cuenta"
+msgid "Registers"
+msgstr "Cajas"
+
+#: frontend/src/components/cuenta/UsuariosCajas.vue frontend/src/components/cuenta/UsuariosSheet.vue
+msgctxt "Cuenta"
+msgid "Remove 1 extra {0}"
+msgstr "Quitar 1 {0} extra"
+
+#: frontend/src/components/cuenta/Suscripcion.vue
+msgctxt "Cuenta"
+msgid "Resume my subscription"
+msgstr "Reanudar mi suscripción"
+
+#: frontend/src/components/cuenta/DatosFiscalesSheet.vue frontend/src/components/cuenta/fiscal.js
+msgctxt "Cuenta"
+msgid "RFC"
+msgstr "RFC"
+
+#: frontend/src/components/cuenta/TarjetaSheet.vue
+msgctxt "Cuenta"
+msgid "Save card"
+msgstr "Guardar tarjeta"
+
+#: frontend/src/components/cuenta/DatosFiscalesSheet.vue
+msgctxt "Cuenta"
+msgid "Save tax details"
+msgstr "Guardar datos fiscales"
+
+#: frontend/src/components/cuenta/cambioPlan.js
+msgctxt "Cuenta"
+msgid "Scheduled change cancelled"
+msgstr "Cambio programado cancelado"
+
+#: frontend/src/components/cuenta/cambioPlan.js
+msgctxt "Cuenta"
+msgid "Schedule the change"
+msgstr "Programar el cambio"
+
+#: frontend/src/components/cuenta/autoservicio.js
+msgctxt "Cuenta"
+msgid "See users and registers"
+msgstr "Ver usuarios y cajas"
+
+#: frontend/src/components/cuenta/DatosFiscales.vue frontend/src/components/cuenta/DatosFiscalesSheet.vue
+msgctxt "Cuenta"
+msgid "Tax details"
+msgstr "Datos fiscales"
+
+#: frontend/src/components/cuenta/DatosFiscales.vue
+msgctxt "Cuenta"
+msgid "Tax details saved"
+msgstr "Datos fiscales guardados"
+
+#: frontend/src/components/cuenta/fiscal.js
+msgctxt "Cuenta"
+msgid "tax regime"
+msgstr "régimen fiscal"
+
+#: frontend/src/components/cuenta/DatosFiscalesSheet.vue frontend/src/components/cuenta/fiscal.js
+msgctxt "Cuenta"
+msgid "Tax regime"
+msgstr "Régimen fiscal"
+
+#: frontend/src/components/cuenta/suscripcion.js
+msgctxt "Cuenta"
+msgid "Tell us in the note what you are missing; we read every one."
+msgstr "Cuéntanos en la nota qué te falta; leemos cada una."
+
+#: frontend/src/components/cuenta/TarjetaSheet.vue
+msgctxt "Cuenta"
+msgid "The bank did not accept the card. Check it or try another one."
+msgstr "El banco no aceptó la tarjeta. Revísala o prueba con otra."
+
+#: frontend/src/components/cuenta/suscripcion.js
+msgctxt "Cuenta"
+msgid "The changes you had scheduled to your plan are cancelled too."
+msgstr "También se cancelan los cambios que tenías programados en tu plan."
+
+#: frontend/src/components/cuenta/tarjeta.js
+msgctxt "Cuenta"
+msgid "The connection dropped while we checked your card. Try again."
+msgstr "Se cortó la conexión mientras revisábamos tu tarjeta. Intenta de nuevo."
+
+#: frontend/src/components/cuenta/usuarios.js
+msgctxt "Cuenta"
+msgid "The decrease applies on {0}, when the period ends."
+msgstr "La baja aplica el {0}, al cerrar el periodo."
+
+#: frontend/src/components/cuenta/usuarios.js
+msgctxt "Cuenta"
+msgid "The decrease applies today."
+msgstr "La baja aplica hoy."
+
+#: frontend/src/components/cuenta/usuarios.js
+msgctxt "Cuenta"
+msgid "The decrease applies when the period ends."
+msgstr "La baja aplica al cerrar el periodo."
+
+#: frontend/src/components/cuenta/usuarios.js
+msgctxt "Cuenta"
+msgid "The increase applies today."
+msgstr "Lo que agregas aplica hoy."
+
+#: frontend/src/components/cuenta/cambioPlan.js
+msgctxt "Cuenta"
+msgid "Then {0} a month, IVA included"
+msgstr "Después, {0} al mes, IVA incluido"
+
+#: frontend/src/components/cuenta/cambioPlan.js
+msgctxt "Cuenta"
+msgid "Then {0} a year, IVA included"
+msgstr "Después, {0} al año, IVA incluido"
+
+#: frontend/src/components/cuenta/autoservicio.js
+msgctxt "Cuenta"
+msgid "The platform did not accept the change. Try again in a moment."
+msgstr "La plataforma no aceptó el cambio. Intenta de nuevo en un momento."
+
+#: frontend/src/components/cuenta/fiscal.js
+msgctxt "Cuenta"
+msgid "The postal code has five digits."
+msgstr "El código postal tiene cinco dígitos."
+
+#: frontend/src/components/cuenta/Aplicaciones.vue
+msgctxt "Cuenta"
+msgid "There are no apps to turn on yet."
+msgstr "Todavía no hay aplicaciones para activar."
+
+#: frontend/src/components/cuenta/facturacion.js
+msgctxt "Cuenta"
+msgid "The receipt arrived empty. Try again or ask support."
+msgstr "El comprobante llegó vacío. Intenta de nuevo o pide ayuda a soporte."
+
+#: frontend/src/components/cuenta/facturacion.js
+msgctxt "Cuenta"
+msgid "The receipt is not available right now. Try again or ask support."
+msgstr "El comprobante no está disponible por ahora. Intenta de nuevo o pide ayuda a soporte."
+
+#: frontend/src/components/cuenta/fiscal.js
+msgctxt "Cuenta"
+msgid "The RFC has 13 characters for a person or 12 for a company."
+msgstr "El RFC tiene 13 caracteres si es de persona física o 12 si es de empresa."
+
+#: frontend/src/components/cuenta/Aplicaciones.vue
+msgctxt "Cuenta"
+msgid "They come with your plan at no extra cost."
+msgstr "Vienen con tu plan, sin costo extra."
+
+#: frontend/src/components/cuenta/aplicaciones.js
+msgctxt "Cuenta"
+msgid "To try it before you use it with your own data."
+msgstr "Para probarla antes de usarla con tus datos."
+
+#: frontend/src/components/cuenta/Aplicaciones.vue
+msgctxt "Cuenta"
+msgid "Turning off…"
+msgstr "Desactivando…"
+
+#: frontend/src/components/cuenta/DatosFiscalesSheet.vue
+msgctxt "Cuenta"
+msgid "Type your password to change the RFC."
+msgstr "Escribe tu contraseña para cambiar el RFC."
+
+#: frontend/src/components/cuenta/suscripcion.js
+msgctxt "Cuenta"
+msgid "Type your password to confirm."
+msgstr "Escribe tu contraseña para confirmar."
+
+#: frontend/src/components/cuenta/suscripcion.js
+msgctxt "Cuenta"
+msgid "Until then everything keeps working, and nothing is charged afterwards."
+msgstr "Hasta entonces todo sigue funcionando, y después ya no se cobra nada."
+
+#: frontend/src/components/cuenta/usuarios.js
+msgctxt "Cuenta"
+msgid "user"
+msgstr "usuario"
+
+#: frontend/src/components/cuenta/cuenta.js frontend/src/components/cuenta/usuarios.js
+msgctxt "Cuenta"
+msgid "users"
+msgstr "usuarios"
+
+#: frontend/src/components/cuenta/UsuariosCajas.vue frontend/src/components/cuenta/usuarios.js
+msgctxt "Cuenta"
+msgid "Users and registers"
+msgstr "Usuarios y cajas"
+
+#: frontend/src/components/cuenta/suscripcion.js
+msgctxt "Cuenta"
+msgid "We archive your system on"
+msgstr "Archivamos tu sistema el"
+
+#: frontend/src/components/cuenta/Aplicaciones.vue
+msgctxt "Cuenta"
+msgid "We are installing it; it takes a few minutes."
+msgstr "La estamos instalando; tarda unos minutos."
+
+#: frontend/src/components/cuenta/cambioPlan.js
+msgctxt "Cuenta"
+msgid "We are installing your new plan’s apps."
+msgstr "Estamos instalando las aplicaciones de tu nuevo plan."
+
+#: frontend/src/components/cuenta/CancelarSheet.vue
+msgctxt "Cuenta"
+msgid "We could not check your dates. Try again."
+msgstr "No pudimos revisar tus fechas. Intenta de nuevo."
+
+#: frontend/src/components/cuenta/facturacion.js
+msgctxt "Cuenta"
+msgid "We could not download the receipt. Try again in a moment."
+msgstr "No pudimos descargar el comprobante. Intenta de nuevo en un momento."
+
+#: frontend/src/components/cuenta/tarjeta.js
+msgctxt "Cuenta"
+msgid "We could not load the secure card form. Check your connection or an ad blocker and try again."
+msgstr "No pudimos cargar el formulario seguro de tarjeta. Revisa tu conexión o un bloqueador de anuncios e intenta de nuevo."
+
+#: frontend/src/components/cuenta/autoservicio.js
+msgctxt "Cuenta"
+msgid "We could not reach the platform. Check your connection and try again."
+msgstr "No pudimos comunicarnos con la plataforma. Revisa tu conexión e intenta de nuevo."
+
+#: frontend/src/components/cuenta/DatosFiscales.vue
+msgctxt "Cuenta"
+msgid "We could not read your tax details."
+msgstr "No pudimos leer tus datos fiscales."
+
+#: frontend/src/components/cuenta/UsuariosCajas.vue
+msgctxt "Cuenta"
+msgid "We could not read your users and registers."
+msgstr "No pudimos leer tus usuarios y cajas."
+
+#: frontend/src/components/cuenta/CancelarSheet.vue
+msgctxt "Cuenta"
+msgid "We could not record the cancellation. Try again."
+msgstr "No pudimos registrar la cancelación. Intenta de nuevo."
+
+#: frontend/src/components/cuenta/TarjetaSheet.vue
+msgctxt "Cuenta"
+msgid "We could not save the card. Try again."
+msgstr "No pudimos guardar la tarjeta. Intenta de nuevo."
+
+#: frontend/src/components/cuenta/DatosFiscalesSheet.vue
+msgctxt "Cuenta"
+msgid "We could not save your tax details. Try again."
+msgstr "No pudimos guardar tus datos fiscales. Intenta de nuevo."
+
+#: frontend/src/components/cuenta/Aplicaciones.vue
+msgctxt "Cuenta"
+msgid "We could not turn the app off. Try again."
+msgstr "No pudimos desactivar la aplicación. Intenta de nuevo."
+
+#: frontend/src/components/cuenta/CancelarSheet.vue
+msgctxt "Cuenta"
+msgid "Why are you leaving?"
+msgstr "¿Por qué te vas?"
+
+#: frontend/src/components/cuenta/aplicaciones.js
+msgctxt "Cuenta"
+msgid "With sample data"
+msgstr "Con datos de ejemplo"
+
+#: frontend/src/components/cuenta/CancelarSheet.vue
+msgctxt "Cuenta"
+msgid "Write to support"
+msgstr "Escribir a soporte"
+
+#: frontend/src/components/cuenta/suscripcion.js
+msgctxt "Cuenta"
+msgid "You can ask for a copy of your data until"
+msgstr "Puedes pedir una copia de tus datos hasta el"
+
+#: frontend/src/components/cuenta/suscripcion.js
+msgctxt "Cuenta"
+msgid "You can ask for a copy of your data until {0}."
+msgstr "Puedes pedir una copia de tus datos hasta el {0}."
+
+#: frontend/src/components/cuenta/UsuariosCajas.vue
+msgctxt "Cuenta"
+msgid "You cancelled your subscription. Resume it to change users or registers."
+msgstr "Cancelaste tu suscripción. Reanúdala para cambiar usuarios o cajas."
+
+#: frontend/src/components/cuenta/suscripcion.js
+msgctxt "Cuenta"
+msgid "You have {0} to pay; it stays owed even if you cancel."
+msgstr "Tienes {0} por pagar; sigue pendiente aunque canceles."
+
+#: frontend/src/components/cuenta/DatosFiscales.vue
+msgctxt "Cuenta"
+msgid "Your billing account is not ready to keep tax details yet. Ask support and we will set it up."
+msgstr "Tu cuenta de cobro todavía no puede guardar datos fiscales. Escríbenos a soporte y la preparamos."
+
+#: frontend/src/components/cuenta/cambioPlan.js
+msgctxt "Cuenta"
+msgid "Your billing cycle changes on {0}."
+msgstr "Tu ciclo de pago cambia el {0}."
+
+#: frontend/src/components/cuenta/cambioPlan.js
+msgctxt "Cuenta"
+msgid "Your billing cycle changes today."
+msgstr "Tu ciclo de pago cambia hoy."
+
+#: frontend/src/components/cuenta/suscripcion.js
+msgctxt "Cuenta"
+msgid "Your cancellation is already recorded."
+msgstr "Tu cancelación ya está registrada."
+
+#: frontend/src/components/cuenta/Suscripcion.vue
+msgctxt "Cuenta"
+msgid "Your cancellation is recorded"
+msgstr "Registramos tu cancelación"
+
+#: frontend/src/components/cuenta/suscripcion.js
+msgctxt "Cuenta"
+msgid "Your paid period already ended: your service ends today."
+msgstr "Tu periodo pagado ya terminó: tu servicio termina hoy."
+
+#: frontend/src/components/cuenta/DatosFiscalesSheet.vue
+msgctxt "Cuenta"
+msgid "Your password, to change the RFC"
+msgstr "Tu contraseña, para cambiar el RFC"
+
+#: frontend/src/components/cuenta/CancelarSheet.vue
+msgctxt "Cuenta"
+msgid "Your password, to confirm"
+msgstr "Tu contraseña, para confirmar"
+
+#: frontend/src/components/cuenta/cambioPlan.js
+msgctxt "Cuenta"
+msgid "Your plan changes on {0}."
+msgstr "Tu plan cambia el {0}."
+
+#: frontend/src/components/cuenta/cambioPlan.js
+msgctxt "Cuenta"
+msgid "Your plan changes today."
+msgstr "Tu plan cambia hoy."
+
+#: frontend/src/components/cuenta/UsuariosCajas.vue
+msgctxt "Cuenta"
+msgid "Your plan does not sell extra ones; another plan may include more."
+msgstr "Tu plan no vende extras; otro plan puede incluir más."
+
+#: frontend/src/components/cuenta/usuarios.js
+msgctxt "Cuenta"
+msgid "Your plan includes {0}"
+msgstr "Tu plan incluye {0}"
+
+#: frontend/src/components/cuenta/usuarios.js
+msgctxt "Cuenta"
+msgid "Your plan includes {0}, plus {1} extra"
+msgstr "Tu plan incluye {0}, más {1} extra"
+
+#: frontend/src/components/cuenta/suscripcion.js
+msgctxt "Cuenta"
+msgid "Your service runs until"
+msgstr "Tu servicio sigue hasta el"
+
+#: frontend/src/components/cuenta/suscripcion.js
+msgctxt "Cuenta"
+msgid "Your subscription"
+msgstr "Tu suscripción"
+
+#: frontend/src/components/cuenta/Suscripcion.vue
+msgctxt "Cuenta"
+msgid "Your subscription continues"
+msgstr "Tu suscripción sigue activa"
+
+#: frontend/src/components/cuenta/suscripcion.js
+msgctxt "Cuenta"
+msgid "Your subscription ended"
+msgstr "Tu suscripción terminó"
+
+#: frontend/src/components/cuenta/suscripcion.js
+msgctxt "Cuenta"
+msgid "Your subscription ended on {0}"
+msgstr "Tu suscripción terminó el {0}"
+
+#: frontend/src/components/cuenta/suscripcion.js
+msgctxt "Cuenta"
+msgid "Your subscription ends at the end of the paid period"
+msgstr "Tu suscripción termina al final del periodo pagado"
+
+#: frontend/src/components/cuenta/suscripcion.js
+msgctxt "Cuenta"
+msgid "Your subscription ends on {0}"
+msgstr "Tu suscripción termina el {0}"
+
+#: frontend/src/components/cuenta/aplicaciones.js
+msgctxt "Cuenta"
+msgid "You start with your own data."
+msgstr "Empiezas con tus propios datos."
+
+#: frontend/src/components/cuenta/TarjetaSheet.vue
+msgctxt "Cuenta"
+msgid "You type the card in the payment processor’s secure form. Muelle keeps no card data and charges nothing now."
+msgstr "Escribes tu tarjeta en el formulario seguro del procesador de pagos. Muelle no guarda los datos de tu tarjeta y no cobra nada ahora."
+
+#: frontend/src/components/cuenta/aplicaciones.js
+msgctxt "Cuenta"
+msgid "Empty"
+msgstr "Vacía"
+
+#: frontend/src/components/cuenta/Aplicaciones.vue
+msgctxt "Cuenta"
+msgid "Apps"
+msgstr "Aplicaciones"
+
+#: frontend/src/components/cuenta/usuarios.js
+msgctxt "Cuenta"
+msgid "Remove {0}"
+msgstr "Quitar {0}"
+
+#: frontend/src/components/cuenta/aplicaciones.js
+msgctxt "Cuenta"
+msgid "Active app"
+msgstr "Activa"
+
+#: frontend/src/components/cuenta/CuentaTienda.vue
+msgctxt "Cuenta"
+msgid "I want to switch my plan {0} to the monthly cycle."
+msgstr "Quiero cambiar mi plan {0} al ciclo mensual."
+
+#: frontend/src/components/cuenta/UsuariosSheet.vue
+msgctxt "Cuenta"
+msgid "Confirm"
+msgstr "Confirmar"
+
+#: frontend/src/components/cuenta/cambioPlan.js
+msgctxt "Cuenta"
+msgid "Until then you keep {0}."
+msgstr "Hasta entonces sigues en {0}."
+
+#: frontend/src/components/cuenta/cambioPlan.js
+msgctxt "Cuenta"
+msgid "We install the plan’s apps; it takes a few minutes."
+msgstr "Instalamos las aplicaciones del plan; tarda unos minutos."
+
+#: frontend/src/components/cuenta/tarjeta.js
+msgctxt "Cuenta"
+msgid "Your bank’s check did not finish. Try again, and keep its window open until it closes by itself."
+msgstr "La verificación de tu banco no terminó. Intenta de nuevo y deja abierta su ventana hasta que se cierre sola."
+
+#: frontend/src/components/cuenta/OlvidoContrasena.vue
+msgctxt "Cuenta"
+msgid "Sending the link…"
+msgstr "Enviando el enlace…"
+
+#: frontend/src/components/cuenta/OlvidoContrasena.vue
+msgctxt "Cuenta"
+msgid "Forgot your password?"
+msgstr "¿Olvidaste tu contraseña?"
+
+#: frontend/src/components/cuenta/OlvidoContrasena.vue
+msgctxt "Cuenta"
+msgid "We sent you an email with a link to set a new password."
+msgstr "Te enviamos un correo con un enlace para crear una contraseña nueva."
+
+#: frontend/src/components/cuenta/OlvidoContrasena.vue
+msgctxt "Cuenta"
+msgid "We could not send you the link. Ask support for help."
+msgstr "No pudimos enviarte el enlace. Pide ayuda a soporte."
+
+#: frontend/src/components/cuenta/usuarios.js
+msgctxt "Cuenta"
+msgid "Go down to {0} extra"
+msgstr "Bajar a {0} extra"
+
+#: frontend/src/components/cuenta/usuarios.js
+msgctxt "Cuenta"
+msgid "Cancel the scheduled decrease"
+msgstr "Cancelar la baja programada"
+
+#: frontend/src/components/cuenta/usuarios.js
+msgctxt "Cuenta"
+msgid "You added {0}"
+msgstr "Agregaste {0}"
+
+#: frontend/src/components/cuenta/usuarios.js
+msgctxt "Cuenta"
+msgid "Schedule the decrease"
+msgstr "Programar la baja"
+
+#: frontend/src/components/cuenta/usuarios.js
+msgctxt "Cuenta"
+msgid "Decrease scheduled"
+msgstr "Baja programada"
+
+#: frontend/src/components/cuenta/usuarios.js
+msgctxt "Cuenta"
+msgid "You removed {0}"
+msgstr "Quitaste {0}"
+
+#: frontend/src/components/cuenta/usuarios.js
+msgctxt "Cuenta"
+msgid "Scheduled decrease cancelled"
+msgstr "Baja programada cancelada"
+
+#: frontend/src/components/cuenta/cambioPlan.js
+msgctxt "Cuenta"
+msgid "You have a change to your plan scheduled."
+msgstr "Tienes un cambio programado en tu plan."
+
+#: frontend/src/components/cuenta/cambioPlan.js
+msgctxt "Cuenta"
+msgid "You switch to {0} and pay yearly from {1}."
+msgstr "Cambias a {0} y pagas cada año desde el {1}."
+
+#: frontend/src/components/cuenta/cambioPlan.js
+msgctxt "Cuenta"
+msgid "You switch to {0} and pay monthly from {1}."
+msgstr "Cambias a {0} y pagas cada mes desde el {1}."
+
+#: frontend/src/components/cuenta/cambioPlan.js
+msgctxt "Cuenta"
+msgid "You switch to {0} on {1}."
+msgstr "Cambias a {0} el {1}."
+
+#: frontend/src/components/cuenta/cambioPlan.js
+msgctxt "Cuenta"
+msgid "You pay yearly from {0}."
+msgstr "Pagas cada año desde el {0}."
+
+#: frontend/src/components/cuenta/cambioPlan.js
+msgctxt "Cuenta"
+msgid "You pay monthly from {0}."
+msgstr "Pagas cada mes desde el {0}."
+
+#: frontend/src/components/cuenta/CuentaTienda.vue
+msgctxt "Cuenta"
+msgid "Scheduled for {0}"
+msgstr "Programado para el {0}"
+
+#: frontend/src/components/cuenta/suscripcion.js
+msgctxt "Cuenta"
+msgid "We keep your information until"
+msgstr "Conservamos tu información hasta el"
+
+#: frontend/src/components/cuenta/TarjetaSheet.vue
+msgctxt "Cuenta"
+msgid "Saving your card…"
+msgstr "Guardando tu tarjeta…"

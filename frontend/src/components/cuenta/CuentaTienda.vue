@@ -4,12 +4,27 @@
        the yearly cycle, which a plan request cannot carry) and the add-ons,
        each switch with its price and, when Boat cannot deliver it, why it
        stays off. Every change opens one confirm sheet that names the price
-       and its cycle. Rows and rules. -->
-  <div v-if="store" class="space-y-8">
-    <section aria-labelledby="cuenta-planes">
+       and its cycle. Where Boat offers them (bootstrap capabilities): users
+       and cajas and the free apps on top, and a plan or cycle change that
+       reads Boat's quote and applies at once. Rows and rules. -->
+  <div class="space-y-8">
+    <!-- What Boat lets the owner change alone (capabilities «seats», «apps»):
+         the quick jobs first, then the plans and add-ons. -->
+    <UsuariosCajas
+      v-if="caps.seats"
+      :door="door"
+      @act="(key) => $emit('act', key)"
+    />
+    <Aplicaciones
+      v-if="caps.apps"
+      :door="door"
+      @act="(key) => $emit('act', key)"
+    />
+    <section v-if="store" aria-labelledby="cuenta-planes">
+      <!-- «Ver planes» scrolls here: clear of the phone's bar. -->
       <h2
         id="cuenta-planes"
-        class="title-face pb-1 text-xl font-semibold text-ink-gray-9"
+        class="title-face scroll-mt-16 pb-1 text-xl font-semibold text-ink-gray-9"
       >
         {{ __('Plans', null, 'Cuenta') }}
       </h2>
@@ -76,16 +91,59 @@
           <p v-if="plan.note" class="mt-1 text-sm text-ink-gray-6">
             {{ plan.note }}
           </p>
-          <!-- The yearly cycle for the plan this site pays monthly: Muelle
-               switches it, so the step is a support request written for them. -->
+          <!-- A change Boat scheduled for the period's end, under the plan it
+               leaves, with the way to keep this one. -->
           <div
-            v-if="plan.yearly"
+            v-if="plan.current && scheduled"
+            role="status"
+            class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2"
+            data-testid="plan-programado"
+          >
+            <div class="min-w-0 flex-1 basis-48">
+              <p class="text-base text-ink-gray-8">{{ scheduled.text }}</p>
+              <p v-if="scheduled.waits" class="text-sm text-ink-gray-6">
+                {{ scheduled.waits }}
+              </p>
+            </div>
+            <Button
+              variant="subtle"
+              class="min-h-11 max-sm:w-full"
+              :label="__('Cancel the scheduled change', null, 'Cuenta')"
+              :disabled="blocked"
+              data-testid="plan-programado-cancelar"
+              @click="askChange(plan, cycle, { undo: true })"
+            />
+          </div>
+          <!-- The yearly cycle for the plan this site pays monthly: Boat
+               switches it when it offers plan changes; else Muelle does, so
+               the step is a support request written for them. -->
+          <div
+            v-if="plan.yearly && !(caps.planChange && scheduled?.cycle)"
             class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2"
           >
+            <!-- Boat quotes the yearly price in the sheet; no figure of ours. -->
             <p class="min-w-0 flex-1 basis-48 text-sm text-ink-gray-7">
-              {{ plan.yearly }}
+              {{
+                caps.planChange
+                  ? __(
+                      'Pay once a year instead of every month; you see the amount before you confirm.',
+                      null,
+                      'Cuenta',
+                    )
+                  : plan.yearly
+              }}
             </p>
             <Button
+              v-if="caps.planChange"
+              variant="subtle"
+              class="min-h-11 max-sm:w-full"
+              :label="__('Pay yearly', null, 'Cuenta')"
+              :disabled="blocked"
+              data-testid="plan-anual"
+              @click="askChange(plan, 'Anual')"
+            />
+            <Button
+              v-else
               variant="subtle"
               class="min-h-11 max-sm:w-full"
               :label="__('Ask for the yearly cycle', null, 'Cuenta')"
@@ -94,18 +152,51 @@
             />
           </div>
           <p
-            v-if="plan.yearly && door.supportError.value"
+            v-if="plan.yearly && !caps.planChange && door.supportError.value"
             class="mt-2 text-sm text-ink-red-7"
             role="alert"
           >
             {{ door.supportError.value }}
           </p>
+          <Button
+            v-if="
+              caps.planChange && plan.current && annual && !scheduled?.cycle
+            "
+            variant="subtle"
+            class="mt-3 min-h-11 max-sm:w-full"
+            :label="__('Pay monthly', null, 'Cuenta')"
+            :disabled="blocked"
+            data-testid="plan-mensual"
+            @click="askChange(plan, 'Mensual')"
+          />
           <p
             v-if="plan.requested"
             class="mt-2 text-sm font-medium text-ink-gray-8"
           >
             {{ __('Change requested', null, 'Cuenta') }}
           </p>
+          <p
+            v-else-if="caps.planChange && scheduled?.plan === plan.name"
+            class="mt-2 text-sm font-medium text-ink-gray-8"
+            data-testid="plan-programado-destino"
+          >
+            {{
+              scheduled.on
+                ? __('Scheduled for {0}', [scheduled.on], 'Cuenta')
+                : __('Change scheduled', null, 'Cuenta')
+            }}
+          </p>
+          <!-- With Boat's plan change, Boat's quote and an instant change;
+               without it, a request Muelle confirms. -->
+          <Button
+            v-else-if="!plan.current && caps.planChange"
+            variant="subtle"
+            class="mt-3 min-h-11 max-sm:w-full"
+            :label="__('Change to this plan', null, 'Cuenta')"
+            :disabled="blocked"
+            data-testid="plan-cambiar"
+            @click="askChange(plan, cycle)"
+          />
           <Button
             v-else-if="!plan.current"
             variant="subtle"
@@ -119,7 +210,10 @@
       </ul>
     </section>
 
-    <section v-if="addons.length" aria-labelledby="cuenta-complementos">
+    <section
+      v-if="store && addons.length"
+      aria-labelledby="cuenta-complementos"
+    >
       <h2
         id="cuenta-complementos"
         class="title-face pb-1 text-xl font-semibold text-ink-gray-9"
@@ -169,11 +263,20 @@
     </section>
 
     <p
-      v-if="blocked && !door.loading.value"
+      v-if="store && blocked && !door.loading.value"
       class="text-sm text-ink-gray-6"
       role="status"
     >
       {{ door.paymentActionReason.value }}
+    </p>
+    <!-- Support asked from a block above (Boat's «pide ayuda» step) without a
+         support window on this site; the yearly row says it in place. -->
+    <p
+      v-if="door.supportError.value && !yearlyAsks"
+      class="text-sm text-ink-red-7"
+      role="alert"
+    >
+      {{ door.supportError.value }}
     </p>
 
     <ConfirmarSheet
@@ -187,27 +290,42 @@
       @close="close"
       @confirm="run"
     />
+    <CambioPlanSheet
+      v-if="changeMounted"
+      :door="door"
+      :open="
+        Boolean(changing) && !door.loading.value && !door.paymentHold.value
+      "
+      :target="changing"
+      @close="changing = null"
+      @act="actFromSheet"
+      @request="requestInstead"
+      @done="changed"
+    />
+    <EmptyState
+      v-if="!store"
+      state="empty"
+      :title="__('The store is not available right now.', null, 'Cuenta')"
+      :message="
+        __(
+          'Check the status in a moment; your plan and add-ons stay as they are.',
+          null,
+          'Cuenta',
+        )
+      "
+      :action="__('Check status', null, 'Cuenta')"
+      @action="door.load()"
+    />
   </div>
-  <EmptyState
-    v-else
-    state="empty"
-    :title="__('The store is not available right now.', null, 'Cuenta')"
-    :message="
-      __(
-        'Check the status in a moment; your plan and add-ons stay as they are.',
-        null,
-        'Cuenta',
-      )
-    "
-    :action="__('Check status', null, 'Cuenta')"
-    @action="door.load()"
-  />
 </template>
 <script setup>
 import { computed, defineAsyncComponent, ref, watch } from 'vue'
 import { Button, toast } from 'frappe-ui'
 import { EmptyState, StatusChip } from '@/components/ui'
 import AjustesSwitch from '@/components/ajustes/AjustesSwitch.vue'
+import { seam } from './api'
+import { capable } from './autoservicio'
+import { planDoneText, scheduledPlanView } from './cambioPlan'
 import { planView } from './cuenta'
 import {
   addonConfirm,
@@ -217,15 +335,22 @@ import {
   requestedName,
 } from './tienda'
 
-// The confirm sheet mounts on its first open.
+// The confirm sheets mount on their first open; the self-service blocks only
+// where Boat offers them.
 const ConfirmarSheet = defineAsyncComponent(
   () => import('./ConfirmarSheet.vue'),
 )
+const CambioPlanSheet = defineAsyncComponent(
+  () => import('./CambioPlanSheet.vue'),
+)
+const UsuariosCajas = defineAsyncComponent(() => import('./UsuariosCajas.vue'))
+const Aplicaciones = defineAsyncComponent(() => import('./Aplicaciones.vue'))
 
 const props = defineProps({
   /** The page's payment door (pagos.js createPagos). */
   door: { type: Object, required: true },
 })
+const emit = defineEmits(['act'])
 
 // The prices of the cycle this site pays (meters.billing.billing_cycle): a plan
 // request carries the plan, never the cycle.
@@ -237,6 +362,52 @@ const plans = computed(() => planRows(store.value, { annual: annual.value }))
 const addons = computed(() => addonRows(store.value))
 const requested = computed(() => requestedName(store.value))
 const blocked = computed(() => props.door.paymentActionsBlocked())
+// What Boat has on for this site (bootstrap.capabilities); none on an older Boat.
+const caps = computed(() => {
+  const data = props.door.boot.value
+  return {
+    seats: capable(data, 'seats'),
+    apps: capable(data, 'apps'),
+    // Boat's plan change refuses a trial (activation comes first): a trial
+    // keeps the request it always had.
+    planChange: capable(data, 'plan_change') && !isTrial.value,
+  }
+})
+const cycle = computed(() => (annual.value ? 'Anual' : 'Mensual'))
+// The yearly row of a site without Boat's plan change shows support's error itself.
+const yearlyAsks = computed(
+  () => !caps.value.planChange && plans.value.some((plan) => plan.yearly),
+)
+
+// A plan or cycle change Boat scheduled (a cheaper plan, a cycle switch): Boat
+// has no read of it alone; its quote for today's plan and cycle names it, and
+// that quote is also the way to cancel it.
+const scheduled = ref(null)
+let scheduleTurn = 0
+async function readScheduled() {
+  const mine = ++scheduleTurn
+  const current = plans.value.find((plan) => plan.current)
+  if (!caps.value.planChange || !current) {
+    scheduled.value = null
+    return
+  }
+  try {
+    const out = await seam('plan_change_quote', {
+      target_plan: current.name,
+      cycle: cycle.value,
+    })
+    if (mine === scheduleTurn)
+      scheduled.value = scheduledPlanView(out, plans.value)
+  } catch {
+    // Only the line goes; the plans and their buttons stay.
+    if (mine === scheduleTurn) scheduled.value = null
+  }
+}
+watch(
+  () => props.door.boot.value,
+  (boot) => boot && readScheduled(),
+  { immediate: true },
+)
 
 const sheetMounted = ref(false)
 const pending = ref(null)
@@ -258,6 +429,46 @@ function askYearly(plan) {
       'Cuenta',
     ),
   )
+}
+// Boat's quote for a plan or cycle, then the change itself (plan_change).
+const changeMounted = ref(false)
+const changing = ref(null)
+// `undo`: today's plan and cycle, which Boat answers by cancelling what it scheduled.
+function askChange(plan, inCycle, { undo = false } = {}) {
+  if (props.door.paymentActionsBlocked()) return
+  changeMounted.value = true
+  changing.value = {
+    plan: plan.name,
+    display: plan.display,
+    cycle: inCycle,
+    undo,
+  }
+}
+async function changed(out) {
+  changing.value = null
+  toast.success(planDoneText(out))
+  await props.door.load()
+}
+function actFromSheet(key) {
+  changing.value = null
+  emit('act', key)
+}
+// Boat sends this change to Muelle (request_plan): the request it always was.
+// A request carries the plan, never the cycle: the cycle goes to support.
+function requestInstead(target) {
+  changing.value = null
+  const plan = plans.value.find((row) => row.name === target?.plan)
+  if (!plan) return
+  if (!plan.current) ask(planConfirm(plan))
+  else if (target.cycle === 'Anual') askYearly(plan)
+  else
+    props.door.contactSupport(
+      __(
+        'I want to switch my plan {0} to the monthly cycle.',
+        [plan.display],
+        'Cuenta',
+      ),
+    )
 }
 function ask(confirm) {
   if (props.door.paymentActionsBlocked()) return

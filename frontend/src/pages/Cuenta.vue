@@ -15,6 +15,7 @@
       />
     </div>
     <div
+      ref="content"
       class="mx-auto w-full max-w-3xl px-4 pb-24 pt-1 sm:px-6 sm:pb-10 sm:pt-6"
     >
       <!-- On a phone the shell's bar carries the title. -->
@@ -206,7 +207,7 @@
           :door="door"
           @act="act"
         />
-        <CuentaTienda v-else-if="tab === 'tienda'" :door="door" />
+        <CuentaTienda v-else-if="tab === 'tienda'" :door="door" @act="act" />
         <Button
           v-if="phone"
           variant="ghost"
@@ -350,10 +351,60 @@ function closeTopup() {
   door.closeTopup()
   dropQuery('recargar')
 }
+// «Ver planes» and «Ver usuarios y cajas» land on their section. With Boat's
+// self-service on, Tienda opens on users and apps, and those blocks grow as
+// Boat answers (seconds on a slow line), and a closing sheet hands focus
+// back to the control that opened it, which scrolls to it: while the page's
+// content changes size or takes that focus, the section is put back under
+// the bar, for 8 s at most, and the owner's first touch, wheel or key lets go
+// of it.
+const SECTION = { plans: 'cuenta-planes', seats: 'cuenta-usuarios' }
+const content = ref(null)
+let stopReveal = null
+function revealSection(id) {
+  stopReveal?.()
+  const place = () =>
+    document.getElementById(id)?.scrollIntoView?.({ block: 'start' })
+  const box = scroller.value
+  const events = ['pointerdown', 'wheel', 'keydown']
+  let observer = null
+  let poll = 0
+  let timer = 0
+  // The browser scrolls to a focused control after its focus events.
+  const refocus = () => setTimeout(place, 0)
+  const stop = () => {
+    observer?.disconnect()
+    clearInterval(poll)
+    clearTimeout(timer)
+    box?.removeEventListener('focusin', refocus)
+    for (const name of events) {
+      box?.removeEventListener(name, stop)
+      window.removeEventListener(name, stop)
+    }
+    if (stopReveal === stop) stopReveal = null
+  }
+  stopReveal = stop
+  box?.addEventListener('focusin', refocus)
+  for (const name of events) {
+    box?.addEventListener(name, stop, { passive: true })
+    if (name === 'keydown') window.addEventListener(name, stop)
+  }
+  if (typeof ResizeObserver === 'function' && content.value) {
+    observer = new ResizeObserver(place)
+    observer.observe(content.value)
+  } else poll = setInterval(place, 150)
+  // Already on Tienda nothing may change size: place it once anyway.
+  setTimeout(place, 0)
+  timer = setTimeout(stop, 8000)
+}
+onBeforeUnmount(() => stopReveal?.())
 function act(key) {
   if (key === 'activate') return openActivation()
   if (key === 'pay') openTab('facturacion')
-  else if (key === 'plans') openTab('tienda')
+  else if (key === 'plans' || key === 'seats') {
+    openTab('tienda')
+    revealSection(SECTION[key])
+  } else if (key === 'resume') openTab('resumen')
   else if (key === 'topup') {
     mounted.recargar = true
     door.openTopup()

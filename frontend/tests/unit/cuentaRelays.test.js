@@ -1,9 +1,12 @@
 // Mi cuenta adds no money endpoint, checked by reading the source. Every call it
 // makes is one of doco's Mi plan relays as develop had them when the lane began
-// (doco 9318c0b, docoutils/miplan.py) plus the read-only activation_quote; only
-// components/cuenta/api.js names the relay module, and crm's Python reaches no
-// platform seam of its own. doco pins the relays themselves in
-// tests/test_cuenta_money_seams.py.
+// (doco 9318c0b, docoutils/miplan.py) plus the read-only activation_quote, or
+// one of the self-service seams doco's miplan.call allowlists (its RELAYED
+// table, lane cuenta-autoservicio), or doco's password reset link (no seam),
+// each shown only where Boat names it in
+// bootstrap's capabilities; only components/cuenta/api.js names the relay
+// module, and crm's Python reaches no platform seam of its own. doco pins the
+// relays themselves in tests/test_cuenta_money_seams.py.
 import { describe, expect, it } from 'vitest'
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { dirname, relative, resolve } from 'node:path'
@@ -40,6 +43,25 @@ const BASE_WRITES = new Set([
   'remove_payment_method',
 ])
 const ADDED_READS = new Set(['activation_quote'])
+// Not a relay: the password step-up's way on, Frappe's own reset link mailed to
+// the session user (doco miplan.password_reset, POST); it reaches no Boat seam.
+const ACCOUNT_HELP = new Set(['password_reset'])
+// doco miplan.RELAYED, the seams `call` relays (download_receipt downloads on its own).
+const SELF_SERVICE = new Set([
+  'my_apps',
+  'activate_app',
+  'deactivate_app',
+  'seats_quote',
+  'set_seats',
+  'plan_change_quote',
+  'change_plan',
+  'billing_profile',
+  'set_billing_profile',
+  'confirm_card_setup',
+  'cancel_quote',
+  'cancel_subscription',
+  'resume_subscription',
+])
 
 function walk(dir, keep) {
   const out = []
@@ -83,28 +105,38 @@ describe('Mi cuenta reaches the plan only through Mi plan’s relays', () => {
       expect(BASE_RELAYS.has(name) || ADDED_READS.has(name), name).toBe(true)
   })
 
-  it('every write is one Mi plan already had', () => {
+  it('every write is one Mi plan already had, or the reset link', () => {
     const writes = calls(/\bmutate\(\s*'(\w+)'/g)
     expect([...writes].sort()).toEqual(
       [
         'activate_plan',
+        'password_reset',
         'pay_invoice',
         'remove_payment_method',
         'request_plan',
+        'start_card_setup',
         'toggle_addon',
         'topup_checkout',
       ].sort(),
     )
-    for (const name of writes) expect(BASE_WRITES.has(name), name).toBe(true)
+    for (const name of writes)
+      expect(BASE_WRITES.has(name) || ACCOUNT_HELP.has(name), name).toBe(true)
   })
 
-  it('downloads use the existing CFDI relays', () => {
+  it('every self-service seam goes through miplan.call and its table', () => {
+    const seams = calls(/\bseam\(\s*'(\w+)'/g)
+    expect([...seams].sort()).toEqual([...SELF_SERVICE].sort())
+    // `call` is the one relay a seam reaches; the payload never names it.
     const api = readFileSync(resolve(SRC, 'components/cuenta/api.js'), 'utf8')
-    const named = new Set(
-      [...api.matchAll(/'(download_\w+)'/g)].map((m) => m[1]),
-    )
+    expect(api).toMatch(/call\(RELAY \+ 'call', params\)/)
+  })
+
+  it('downloads use the existing CFDI relays and the receipt relay', () => {
+    const api = readFileSync(resolve(SRC, 'components/cuenta/api.js'), 'utf8')
+    const named = new Set([...api.matchAll(/(download_\w+)/g)].map((m) => m[1]))
     expect([...named].sort()).toEqual([
       'download_invoice_cfdi',
+      'download_receipt',
       'download_topup_cfdi',
     ])
   })

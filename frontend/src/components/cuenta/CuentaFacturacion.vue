@@ -2,7 +2,9 @@
   <!-- Facturación: the invoices to pay first, each with its own «Pagar» (or the
        same payment to continue) and, when Boat keeps it shut, why and the way
        on; then the paid ones with their CFDI, the saved cards, and the wallet
-       with its ledger last (the long list). Rows and rules. -->
+       with its ledger last (the long list). Where Boat offers them: payment
+       receipts on paid rows, Datos fiscales after the invoices, and «Agregar
+       tarjeta». Rows and rules. -->
   <div class="space-y-8">
     <section aria-labelledby="cuenta-facturas">
       <h2
@@ -72,7 +74,7 @@
               <Button
                 class="min-h-11"
                 :label="__('Check the payment with support', null, 'Cuenta')"
-                @click="door.contactSupport()"
+                @click="askSupport('invoices')"
               />
             </div>
           </div>
@@ -96,18 +98,64 @@
               inv.amount
             }}</span>
           </div>
-          <FacturaFiscal
-            v-if="inv.cfdi.length"
-            class="mt-1"
-            :kinds="inv.cfdi"
-            :what="inv.title"
-            :busy="busyKind(inv.name)"
-            :disabled="Boolean(downloading)"
-            @download="(kind) => download('invoice', inv.name, kind)"
-          />
-          <p v-else-if="inv.fiscalPending" class="mt-1 text-sm text-ink-gray-6">
+          <p
+            v-if="!inv.cfdi.length && inv.fiscalPending"
+            class="mt-1 text-sm text-ink-gray-6"
+          >
             {{ __('Fiscal invoice pending', null, 'Cuenta') }}
           </p>
+          <!-- The CFDI and the payment receipt: one row of quiet actions under
+               the figures, wrapping on a narrow phone. -->
+          <div
+            v-if="inv.cfdi.length || (caps.receipts && inv.receipt === true)"
+            class="mt-1 flex flex-wrap items-start gap-x-3"
+          >
+            <FacturaFiscal
+              v-if="inv.cfdi.length"
+              :kinds="inv.cfdi"
+              :what="inv.title"
+              :busy="busyKind(inv.name)"
+              :disabled="Boolean(downloading)"
+              @download="(kind) => download('invoice', inv.name, kind)"
+            />
+            <!-- The payment receipt (not a CFDI), where Boat serves it. -->
+            <button
+              v-if="caps.receipts && inv.receipt === true"
+              type="button"
+              class="press -ml-2 inline-flex min-h-11 items-center gap-1.5 rounded-full px-2 text-sm font-medium text-ink-gray-7 active:bg-surface-gray-2 disabled:opacity-50 [@media(hover:hover)]:hover:bg-surface-gray-2"
+              :aria-label="
+                __('Download the payment receipt of {0}', [inv.title], 'Cuenta')
+              "
+              :disabled="Boolean(downloading)"
+              data-testid="factura-comprobante"
+              @click="receipt('invoice', inv.name)"
+            >
+              <span
+                :class="
+                  downloading === `${inv.name}:receipt`
+                    ? 'lucide-loader-circle animate-spin'
+                    : 'lucide-receipt'
+                "
+                class="size-4"
+                aria-hidden="true"
+              />
+              {{ __('Receipt (PDF)', null, 'Cuenta') }}
+            </button>
+          </div>
+          <!-- A failed receipt says so under the row that was tapped. -->
+          <div
+            v-if="receiptFailed('invoice', inv.name)"
+            role="alert"
+            class="mt-1 space-y-2"
+            data-testid="comprobante-error"
+          >
+            <p class="text-sm text-ink-red-7">{{ receiptError.text }}</p>
+            <Button
+              class="min-h-11"
+              :label="__('Ask support for help', null, 'Cuenta')"
+              @click="askSupport('invoices')"
+            />
+          </div>
         </li>
       </ul>
       <div v-if="downloadError" role="alert" class="mt-2 space-y-2">
@@ -115,10 +163,13 @@
         <Button
           class="min-h-11"
           :label="__('Check the CFDI with support', null, 'Cuenta')"
-          @click="door.contactSupport()"
+          @click="askSupport('invoices')"
         />
       </div>
-      <p v-if="door.supportError.value" class="pt-2 text-sm text-ink-red-7">
+      <p
+        v-if="door.supportError.value && supportAt === 'invoices'"
+        class="pt-2 text-sm text-ink-red-7"
+      >
         {{ door.supportError.value }}
       </p>
       <p class="pt-2 text-sm text-ink-gray-6">
@@ -131,6 +182,9 @@
         }}
       </p>
     </section>
+
+    <!-- Datos fiscales where Boat takes them from the panel (capability «billing_profile»). -->
+    <DatosFiscales v-if="caps.billingProfile" :door="door" />
 
     <section aria-labelledby="cuenta-tarjetas" data-testid="cuenta-tarjetas">
       <h2
@@ -202,22 +256,60 @@
       >
         {{ door.cardError.value }}
       </p>
-      <!-- Boat has no card capture wired in the panel (start_card_setup hands
-           back a rail handshake only), and a hosted payment does not keep the
-           card: adding one goes through support. -->
-      <p class="pt-2 text-sm text-ink-gray-6" data-testid="tarjeta-agregar">
-        {{
-          __(
-            'Adding or replacing a card is not done here yet: support does it for you.',
-            null,
-            'Cuenta',
-          )
-        }}
+      <!-- With Boat's card setup (capability «card_setup»), the card goes in
+           Stripe's own field in a sheet. Without it Boat has no card capture
+           wired in the panel (start_card_setup hands back a rail handshake
+           only), and a hosted payment does not keep the card: adding one goes
+           through support. -->
+      <template v-if="caps.cardSetup">
+        <Button
+          variant="subtle"
+          class="mt-2 min-h-11"
+          :label="__('Add a card', null, 'Cuenta')"
+          :disabled="door.paymentActionsBlocked()"
+          data-testid="tarjeta-agregar"
+          @click="addCard"
+        >
+          <template #prefix>
+            <span class="lucide-plus size-4" aria-hidden="true" />
+          </template>
+        </Button>
+        <p
+          v-if="door.paymentActionsBlocked() && !door.loading.value"
+          class="pt-1 text-sm text-ink-gray-6"
+          role="status"
+        >
+          {{ door.paymentActionReason.value }}
+        </p>
+      </template>
+      <template v-else>
+        <p class="pt-2 text-sm text-ink-gray-6" data-testid="tarjeta-agregar">
+          {{
+            __(
+              'Adding or replacing a card is not done here yet: support does it for you.',
+              null,
+              'Cuenta',
+            )
+          }}
+        </p>
+        <Button
+          class="mt-2 min-h-11"
+          :label="__('Ask support about my card', null, 'Cuenta')"
+          @click="askSupport('cards')"
+        />
+      </template>
+      <p
+        v-if="door.supportError.value && supportAt === 'cards'"
+        class="pt-2 text-sm text-ink-red-7"
+      >
+        {{ door.supportError.value }}
       </p>
-      <Button
-        class="mt-2 min-h-11"
-        :label="__('Ask support about my card', null, 'Cuenta')"
-        @click="door.contactSupport()"
+      <TarjetaSheet
+        v-if="cardMounted"
+        :open="addingCard && !door.loading.value"
+        @close="addingCard = false"
+        @act="cardAct"
+        @saved="cardSaved"
       />
     </section>
     <section
@@ -268,17 +360,65 @@
             >
           </div>
           <p class="text-sm text-ink-gray-6">{{ row.when }}</p>
-          <FacturaFiscal
-            v-if="row.receipts.length"
-            :kinds="row.receipts"
-            :what="__('the top-up', null, 'Cuenta')"
-            :busy="busyKind(row.name)"
-            :disabled="Boolean(downloading)"
-            @download="(kind) => download('topup', row.name, kind)"
-          />
-          <p v-else-if="row.receiptPending" class="text-sm text-ink-gray-6">
+          <p
+            v-if="!row.receipts.length && row.receiptPending"
+            class="text-sm text-ink-gray-6"
+          >
             {{ __('Fiscal invoice pending', null, 'Cuenta') }}
           </p>
+          <div
+            v-if="row.receipts.length || (caps.receipts && row.paidTopup)"
+            class="flex flex-wrap items-start gap-x-3"
+          >
+            <FacturaFiscal
+              v-if="row.receipts.length"
+              :kinds="row.receipts"
+              :what="__('the top-up', null, 'Cuenta')"
+              :busy="busyKind(row.name)"
+              :disabled="Boolean(downloading)"
+              @download="(kind) => download('topup', row.name, kind)"
+            />
+            <button
+              v-if="caps.receipts && row.paidTopup"
+              type="button"
+              class="press -ml-2 inline-flex min-h-11 items-center gap-1.5 rounded-full px-2 text-sm font-medium text-ink-gray-7 active:bg-surface-gray-2 disabled:opacity-50 [@media(hover:hover)]:hover:bg-surface-gray-2"
+              :aria-label="
+                __(
+                  'Download the payment receipt of {0}',
+                  [__('the top-up', null, 'Cuenta')],
+                  'Cuenta',
+                )
+              "
+              :disabled="Boolean(downloading)"
+              data-testid="recarga-comprobante"
+              @click="receipt('topup', row.name)"
+            >
+              <span
+                :class="
+                  downloading === `${row.name}:receipt`
+                    ? 'lucide-loader-circle animate-spin'
+                    : 'lucide-receipt'
+                "
+                class="size-4"
+                aria-hidden="true"
+              />
+              {{ __('Receipt (PDF)', null, 'Cuenta') }}
+            </button>
+          </div>
+          <!-- A failed receipt says so under the row that was tapped. -->
+          <div
+            v-if="receiptFailed('topup', row.name)"
+            role="alert"
+            class="mt-1 space-y-2"
+            data-testid="comprobante-error"
+          >
+            <p class="text-sm text-ink-red-7">{{ receiptError.text }}</p>
+            <Button
+              class="min-h-11"
+              :label="__('Ask support for help', null, 'Cuenta')"
+              @click="askSupport('wallet')"
+            />
+          </div>
         </li>
       </ul>
       <p
@@ -286,6 +426,12 @@
         class="py-2 text-base text-ink-gray-7"
       >
         {{ __('No movements yet.', null, 'Cuenta') }}
+      </p>
+      <p
+        v-if="door.supportError.value && supportAt === 'wallet'"
+        class="pt-2 text-sm text-ink-red-7"
+      >
+        {{ door.supportError.value }}
       </p>
       <div v-if="door.txnsError.value" role="alert" class="space-y-2 py-2">
         <p class="text-sm text-ink-red-7">{{ door.txnsError.value }}</p>
@@ -307,18 +453,24 @@
   </div>
 </template>
 <script setup>
-import { computed, nextTick, onMounted, ref } from 'vue'
+import { computed, defineAsyncComponent, nextTick, onMounted, ref } from 'vue'
 import { Button, toast } from 'frappe-ui'
+import { capable } from './autoservicio'
 import { walletView } from './cuenta'
 import FacturaFiscal from './FacturaFiscal.vue'
 import {
   cardRows,
   downloadCfdi,
+  downloadReceipt,
   invoiceGroups,
   serviceNames,
   txnRows,
 } from './facturacion'
 import { safeContinuation } from './pagos'
+
+// Only where Boat offers them: Datos fiscales, and the card sheet on its first open.
+const DatosFiscales = defineAsyncComponent(() => import('./DatosFiscales.vue'))
+const TarjetaSheet = defineAsyncComponent(() => import('./TarjetaSheet.vue'))
 
 const props = defineProps({
   /** The page's payment door (pagos.js createPagos). */
@@ -339,6 +491,18 @@ const arming = ref('')
 const confirmButton = ref(null)
 const downloading = ref('')
 const downloadError = ref('')
+// The receipt that failed ({type, name}) and why: said under its own row.
+const receiptError = ref({ type: '', name: '', text: '' })
+// Where the last support ask came from: its error shows there.
+const supportAt = ref('invoices')
+const cardMounted = ref(false)
+const addingCard = ref(false)
+// What Boat has on for this site (bootstrap.capabilities); none on an older Boat.
+const caps = computed(() => ({
+  billingProfile: capable(data.value, 'billing_profile'),
+  cardSetup: capable(data.value, 'card_setup'),
+  receipts: capable(data.value, 'receipts'),
+}))
 // The oldest invoice due that nothing holds: its «Pagar» is the filled one.
 const firstToPay = computed(
   () =>
@@ -375,6 +539,43 @@ async function download(type, name, kind) {
   const options = props.saveFile ? { save: props.saveFile } : {}
   downloadError.value = await downloadCfdi({ type, name, kind }, options)
   downloading.value = ''
+}
+
+async function receipt(type, name) {
+  if (downloading.value) return
+  downloading.value = `${name}:receipt`
+  receiptError.value = { type: '', name: '', text: '' }
+  const options = props.saveFile ? { save: props.saveFile } : {}
+  const text = await downloadReceipt({ type, name }, options)
+  receiptError.value = { type, name, text }
+  downloading.value = ''
+}
+function receiptFailed(type, name) {
+  const failed = receiptError.value
+  return Boolean(failed.text) && failed.type === type && failed.name === name
+}
+
+function askSupport(where, description = '') {
+  supportAt.value = where
+  props.door.contactSupport(description)
+}
+
+function addCard() {
+  if (props.door.paymentActionsBlocked()) return
+  cardMounted.value = true
+  addingCard.value = true
+}
+// The card sheet's next step (support) once the sheet is closed: support's
+// own dialog never opens under the modal sheet.
+async function cardAct(key) {
+  addingCard.value = false
+  await nextTick()
+  if (key === 'support') askSupport('cards')
+}
+async function cardSaved() {
+  addingCard.value = false
+  toast.success(__('Card saved', null, 'Cuenta'))
+  await props.door.loadCards()
 }
 
 async function arm(id) {

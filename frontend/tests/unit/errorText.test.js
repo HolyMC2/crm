@@ -105,6 +105,7 @@ const READS_MESSAGE = new Set([
   'utils/contactos.js', // classifies
   'components/assistant/assistantAgenda.js', // classifies
   'components/Telephony/TwilioCallUI.vue', // the Twilio SDK's errors
+  'components/cuenta/TarjetaSheet.vue', // Stripe.js's own sentences about the card
   'components/bancos/syncfyWidget.js', // the bank widget's error
   'components/productos/LabelDialog.vue', // an Error the file raises itself
   'composables/telemetry.js', // window error events

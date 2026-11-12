@@ -15,7 +15,8 @@
           >
             {{ plan.title }}
           </h2>
-          <p v-if="plan.next" class="text-sm text-ink-gray-6">
+          <!-- A recorded cancel bills no next period: no next charge to name. -->
+          <p v-if="plan.next && !cancelled" class="text-sm text-ink-gray-6">
             {{ plan.next }}
           </p>
         </div>
@@ -33,6 +34,13 @@
         {{ judgement.text }}
       </p>
     </section>
+
+    <!-- A recorded cancel is what the owner reads first after the plan. -->
+    <Suscripcion
+      v-if="subscription && subscription.state !== 'active'"
+      :door="door"
+      @act="(key) => $emit('act', key)"
+    />
 
     <!-- The trial's days and the way out of it, under the thumb. -->
     <section
@@ -220,12 +228,23 @@
         </dl>
       </section>
     </div>
+
+    <!-- Cancelling is one quiet button at the foot (capability «cancel»):
+         Mi cuenta opens on Resumen, so the button is two taps from the
+         account menu. -->
+    <Suscripcion
+      v-if="subscription && subscription.state === 'active'"
+      class="border-t border-outline-gray-1 pt-4"
+      :door="door"
+      @act="(key) => $emit('act', key)"
+    />
   </div>
 </template>
 <script setup>
-import { computed } from 'vue'
+import { computed, defineAsyncComponent } from 'vue'
 import { Button } from 'frappe-ui'
 import { StatusChip } from '@/components/ui'
+import { subscriptionView } from './suscripcion'
 import {
   accountAlerts,
   healthRows,
@@ -235,6 +254,9 @@ import {
   verdict,
   walletView,
 } from './cuenta'
+
+// «Tu suscripción» loads only where Boat offers the cancel.
+const Suscripcion = defineAsyncComponent(() => import('./Suscripcion.vue'))
 
 const props = defineProps({
   /** The page's payment door (pagos.js createPagos). */
@@ -281,4 +303,8 @@ const trialLine = computed(() =>
 const wallet = computed(() => walletView(data.value))
 const usage = computed(() => usageRows(data.value))
 const health = computed(() => healthRows(data.value))
+const subscription = computed(() => subscriptionView(data.value))
+const cancelled = computed(
+  () => Boolean(subscription.value) && subscription.value.state !== 'active',
+)
 </script>

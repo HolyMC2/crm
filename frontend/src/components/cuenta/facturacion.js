@@ -9,7 +9,7 @@ import {
   formatDateTime,
   formatMoney,
 } from '@/utils/display'
-import { downloadPath } from './api'
+import { downloadPath, receiptPath } from './api'
 
 const t = (text, replace) => __(text, replace, 'Cuenta')
 const MXN = 'MXN'
@@ -124,6 +124,8 @@ export function txnRows(txns, names = {}) {
       label,
       when: formatDateTime(txn.creation),
       credit,
+      // A paid top-up: Boat serves its payment receipt (capability «receipts»).
+      paidTopup: topup && credit && Boolean(txn.name),
       amount: `${credit ? '+' : '−'}${money(Math.abs(value))}`,
       receipts: topup ? receiptKinds(txn) : [],
       receiptPending: topup && 'has_receipt' in txn && txn.has_receipt !== true,
@@ -204,5 +206,41 @@ export async function downloadCfdi(
     return ''
   } catch {
     return t('We could not download the CFDI. Try again in a moment.')
+  }
+}
+
+/**
+ * The payment receipt of a paid invoice or a top-up (a PDF that says it is not
+ * a CFDI) through the receipt relay, saved from the browser so a refusal stays
+ * on the page. Resolves to '' or to what to tell the owner.
+ */
+export async function downloadReceipt(
+  { type, name },
+  { fetcher = (...args) => fetch(...args), save = saveBlob } = {},
+) {
+  try {
+    const response = await fetcher(receiptPath(type, name), {
+      credentials: 'same-origin',
+      headers: { 'X-Frappe-CSRF-Token': window.csrf_token || '' },
+    })
+    const contentType = response.headers?.get?.('Content-Type') || ''
+    if (!response.ok || !contentType.includes('pdf')) {
+      const body = await response.json().catch(() => ({}))
+      const said = serverMessage(body)
+        .replace(/<[^>]+>/g, '')
+        .trim()
+      return (
+        said ||
+        t('The receipt is not available right now. Try again or ask support.')
+      )
+    }
+    const blob = await response.blob()
+    if (!blob.size)
+      return t('The receipt arrived empty. Try again or ask support.')
+    const safe = String(name).replace(/[^a-zA-Z0-9_-]/g, '_')
+    save(blob, `Comprobante-${safe}.pdf`)
+    return ''
+  } catch {
+    return t('We could not download the receipt. Try again in a moment.')
   }
 }

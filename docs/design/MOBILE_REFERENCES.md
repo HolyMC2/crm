@@ -169,6 +169,22 @@ lacks a feature, ask the Shell S1 owner instead of making a private copy.
   stays off with Boat's reason beside it, and every change opens one confirm `BottomSheet` that
   names the price, the cycle and when the charge starts (`components/cuenta/ConfirmarSheet.vue`).
   Every hold and payment state comes from one module (`components/cuenta/pagos.js`).
+- 2026-11-11 · Mi cuenta self-service (lane `cuenta-autoservicio`): each block shows only when Boat
+  names its capability in bootstrap (`components/cuenta/autoservicio.js` `capable`), so an older
+  Boat or a flag left off keeps the page as it was. Tienda puts the quick jobs on top: «Usuarios y
+  cajas» (what the plan includes, the extras, in use, a stepper; a tap opens Boat's quote in a
+  sheet, «Confirmar» applies it: two taps) and «Aplicaciones» (free, no price line; «Activar», empty
+  or with sample data, «Activar»: three taps, then the row follows the install; «Desactivar» is two
+  taps in place with Boat's note). A plan's button reads Boat's quote (today's amount and its
+  invoice, the new price in its cycle, when it applies) instead of sending a request. Facturación
+  adds «Datos fiscales» (one line: «Listo para facturar» or what is missing; the pencil opens the
+  form, the régimenes follow the RFC's persona type, the password again only to replace an RFC on
+  file), «Agregar tarjeta» (Stripe's own field, loaded only then; Muelle gets the SetupIntent id) and
+  «Comprobante (PDF)» on paid rows, never called «factura». «Tu suscripción» sits at the foot of
+  Resumen, where Mi cuenta opens («Cancelar suscripción», a reason chip, the password: four taps from
+  the account menu), and moves under the plan once a cancel is recorded, with «Reanudar». A Boat
+  refusal is its sentence plus the button for its next step (`nextStep`: Equipo, the invoices,
+  «Activar», support).
 - Still to do on Contacto: fold Seguimientos «Hechos/Cancelados» into a collapsed «Completados
   (n)»; grey out an action that does not apply instead of hiding it.
 
