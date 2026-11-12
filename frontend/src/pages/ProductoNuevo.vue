@@ -45,15 +45,7 @@
       <h1 class="text-xl font-semibold">
         {{ __('You cannot add products here', null, 'Productos') }}
       </h1>
-      <p class="text-base text-ink-gray-7">
-        {{
-          __(
-            'Ask your manager for permission to add products.',
-            null,
-            'Productos',
-          )
-        }}
-      </p>
+      <p class="text-base text-ink-gray-7">{{ refusal }}</p>
       <div class="flex flex-wrap gap-2">
         <Button
           :label="__('Copy request', null, 'Productos')"
@@ -103,7 +95,7 @@
               type="text"
               inputmode="decimal"
               required
-              :label="__('Selling price (MXN)', null, 'Productos')"
+              :label="priceLabel"
               :description="priceHint"
               :error="problems.rate"
             />
@@ -247,7 +239,9 @@ import {
   money,
   newItemDraft,
   newItemPayload,
+  newItemPriceLabel,
   newItemProblems,
+  newItemRefusal,
   outcomeUnknown,
   parseRate,
   productRoute,
@@ -282,9 +276,16 @@ const guard = computed(() =>
     : '',
 )
 const canCreate = computed(() => Boolean(boot.value?.capabilities?.create_item))
+// The server says why the page is closed and whom to ask, and which currency
+// the shop's default selling list is in.
+const refusal = computed(() => newItemRefusal(boot.value))
+const currency = computed(() => boot.value?.default_currency || '')
+const priceLabel = computed(() => newItemPriceLabel(currency.value))
 const priceHint = computed(() => {
   const rate = parseRate(form.rate)
-  return rate > 0 ? __('Sells at {0}', [money(rate)], 'Productos') : ''
+  return rate > 0
+    ? __('Sells at {0}', [money(rate, currency.value)], 'Productos')
+    : ''
 })
 
 // Opened with the shell's return protocol (Hoy's «Agregar producto»): «Cancelar»

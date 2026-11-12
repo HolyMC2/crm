@@ -227,7 +227,7 @@ import {
   requestId,
 } from '@/composables/useProductos'
 
-// «Cambiar precio»: Mercado's owner path through Productos. The worker sees
+// «Cambiar precio»: the price owner's path through Productos. The worker sees
 // old → new per list and acknowledges large or multi-unit changes; a retry
 // after a lost answer reuses the same request id.
 const props = defineProps({

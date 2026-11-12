@@ -23851,10 +23851,15 @@ msgctxt "Productos"
 msgid "For example: pink silicone case"
 msgstr "Por ejemplo: funda de silicón rosa"
 
-#: frontend/src/pages/ProductoNuevo.vue
+#: frontend/src/composables/useProductos.js
 msgctxt "Productos"
-msgid "Selling price (MXN)"
-msgstr "Precio de venta (MXN)"
+msgid "Selling price ({0})"
+msgstr "Precio de venta ({0})"
+
+#: frontend/src/composables/useProductos.js
+msgctxt "Productos"
+msgid "Selling price"
+msgstr "Precio de venta"
 
 #: frontend/src/pages/ProductoNuevo.vue
 msgctxt "Productos"

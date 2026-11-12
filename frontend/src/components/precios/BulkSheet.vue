@@ -70,7 +70,7 @@
             :key="name"
             :value="name"
           >
-            {{ name }}
+            {{ priceListLabel(name) }}
           </option>
         </select>
       </label>
@@ -90,7 +90,7 @@
             :aria-pressed="name === target"
             @click="target = name"
           >
-            {{ name }}
+            {{ priceListLabel(name) }}
           </button>
         </div>
       </div>
@@ -174,6 +174,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { BottomSheet, chipClass } from '@/components/ui'
+import { priceListLabel } from '@/utils/priceList'
 import {
   ROUNDINGS,
   RULES,

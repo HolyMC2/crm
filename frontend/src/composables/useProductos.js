@@ -20,7 +20,8 @@ import { createModuleBoot } from '@/utils/moduleBoot'
 
 // Productos: a product's price and stock. Native Item, Item Price, Bin and
 // Stock Ledger Entry stay the records; Doco's products service owns every
-// read and write, Mercado's owner path every price change and Escáner every
+// read and write, the price owner every price change (Mercado where it is
+// installed, Doco's native Item Price path elsewhere) and Escáner every
 // count. Pure helpers live here so the pages and tests share them.
 
 function tr(message, replace, context = null) {
@@ -509,6 +510,22 @@ export function newItemProblems(form) {
   if (barcode && !/^[\w.-]{3,40}$/.test(barcode))
     problems.barcode = tr('The barcode has only letters and numbers.')
   return problems
+}
+
+/** The price field's label, in the currency of the shop's default list. */
+export function newItemPriceLabel(currency) {
+  return currency
+    ? tr('Selling price ({0})', [currency], CTX)
+    : tr('Selling price', null, CTX)
+}
+
+/** Why «Nuevo producto» is closed to this worker: the server says why and
+ *  whom to ask (no item permission, no price permission, no selling list). */
+export function newItemRefusal(boot) {
+  return (
+    plain(boot?.create_reason) ||
+    tr('Ask your manager for permission to add products.', null, CTX)
+  )
 }
 
 /** The `create_item` call: the trimmed form, the price as a number, and the

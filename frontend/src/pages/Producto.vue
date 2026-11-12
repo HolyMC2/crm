@@ -545,10 +545,14 @@
                 id="precios"
                 class="scroll-mt-4 rounded-7 border border-outline-gray-2 bg-surface-base"
               >
+                <!-- The title keeps its width; a long action («Pedir cambio de
+                     precio» at 305 px) goes under it instead of squeezing it. -->
                 <header
                   class="flex flex-wrap items-center gap-2 border-b border-outline-gray-1 px-4 py-3"
                 >
-                  <h2 class="flex-1 text-base font-semibold text-ink-gray-9">
+                  <h2
+                    class="shrink-0 grow text-base font-semibold text-ink-gray-9"
+                  >
                     {{ __('Price lists') }}
                     <span
                       v-if="data.prices.rows.length"
@@ -2957,7 +2961,10 @@ async function priceSaved(result) {
   toast.success(__('Price saved'))
   notice.value = {
     priced: true,
-    text: __('New price saved in {0}.', [result.price_lists.join(', ')]),
+    // The lists as the shop reads them («Precio de venta»), never their stored names.
+    text: __('New price saved in {0}.', [
+      result.price_lists.map(priceListLabel).join(', '),
+    ]),
   }
   notifyPriceOpener(route.query, boot.value?.user, product.value.name)
   await load()

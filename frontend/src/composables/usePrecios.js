@@ -1,9 +1,16 @@
 // Precios (Productos › Precios, `/productos/precios`): many products' selling
 // prices against what they cost. The server is doco.workspaces.precios; every
-// write goes through Mercado's owner path there. This file holds the words and
+// write goes through the price owner there (Mercado where it is installed,
+// Doco's native Item Price path elsewhere). This file holds the words and
 // the arithmetic the page shows (margins, suggestions, rounding, bulk rules,
 // CSV, the chart), so they are tested without a browser.
-import { productosApi, money, priceCheck, requestId } from './useProductos'
+import {
+  productosApi,
+  money,
+  plain,
+  priceCheck,
+  requestId,
+} from './useProductos'
 import { SOURCE_DOCTYPES } from './preciosLink'
 
 export { money, requestId }
@@ -38,6 +45,15 @@ export const VIEWS = Object.freeze([
 ])
 export function viewLabel(value) {
   return VIEWS.find((view) => view.value === value)?.label || ''
+}
+
+/** The line over a read-only workbench: the server's reason and whom to ask
+ *  where Doco owns prices, else the page's own line. «Exportar» works either way. */
+export function readOnlyNote(boot) {
+  const reason = plain(boot?.write_reason)
+  return reason
+    ? `${reason} Mientras, «Exportar» te deja llevarte la lista.`
+    : 'Puedes ver precios y costos. Para cambiarlos pide al encargado permiso de precios; mientras, «Exportar» te deja llevarte la lista.'
 }
 
 /** The page's query → where it starts: a document, a list of codes or a view. */

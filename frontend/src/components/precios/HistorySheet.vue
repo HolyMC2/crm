@@ -150,7 +150,7 @@
             >
               <div class="min-w-0 flex-1">
                 <p class="truncate text-base text-ink-gray-9">
-                  {{ change.price_list }}
+                  {{ priceListLabel(change.price_list) }}
                 </p>
                 <p class="truncate text-sm text-ink-gray-6">
                   {{ formatDate(change.at)
@@ -203,6 +203,7 @@ import PriceChart from './PriceChart.vue'
 import { documentRoute } from '@/documentos/registry'
 import { shellBoot } from '@/composables/muelleShell'
 import { formatDate } from '@/utils/display'
+import { priceListLabel } from '@/utils/priceList'
 import {
   RANGES,
   cellOf,

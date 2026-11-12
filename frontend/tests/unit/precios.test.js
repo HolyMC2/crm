@@ -15,6 +15,7 @@ import {
   parseCsv,
   pendingLine,
   preciosHref,
+  readOnlyNote,
   roundPrice,
   rulePrice,
   savePayload,
@@ -339,5 +340,27 @@ describe('the history chart', () => {
         10,
       ),
     ).toBe('M2.0,8.0L18.0,2.0')
+  })
+})
+
+describe('a workbench that only reads', () => {
+  it('says the server’s reason and whom to ask where Doco owns prices', () => {
+    const reason =
+      'Tu puesto no cambia precios de venta. Pídeselo a Ana López: puede cambiarlo o darte el permiso «cambiar precios de venta».'
+    expect(readOnlyNote({ can_write: false, write_reason: reason })).toBe(
+      `${reason} Mientras, «Exportar» te deja llevarte la lista.`,
+    )
+    // Text only, never the server's markup.
+    expect(
+      readOnlyNote({ can_write: false, write_reason: '<b>Ana</b> lo cambia.' }),
+    ).toBe('Ana lo cambia. Mientras, «Exportar» te deja llevarte la lista.')
+  })
+
+  it('keeps the page’s own line where Mercado owns prices (no reason sent)', () => {
+    const own =
+      'Puedes ver precios y costos. Para cambiarlos pide al encargado permiso de precios; mientras, «Exportar» te deja llevarte la lista.'
+    expect(readOnlyNote({ can_write: false, write_reason: null })).toBe(own)
+    expect(readOnlyNote({ can_write: false })).toBe(own)
+    expect(readOnlyNote(null)).toBe(own)
   })
 })

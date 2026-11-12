@@ -18,7 +18,7 @@
           :aria-pressed="name === list"
           @click="emit('update:list', name)"
         >
-          {{ name }}
+          {{ priceListLabel(name) }}
         </button>
       </div>
       <label
@@ -51,6 +51,7 @@
 <script setup>
 import { chipClass } from '@/components/ui'
 import FilterLink from '@/components/documentos/FilterLink.vue'
+import { priceListLabel } from '@/utils/priceList'
 
 defineProps({
   lists: { type: Array, default: () => [] },

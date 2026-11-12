@@ -102,7 +102,7 @@
         <div class="flex items-center gap-3">
           <div class="min-w-0 flex-1">
             <p class="truncate text-sm font-medium text-ink-gray-8">
-              {{ cell.price_list }}
+              {{ priceListLabel(cell.price_list) }}
             </p>
             <p class="num text-sm text-ink-gray-6">
               <template v-if="cell.rate === null || cell.rate === undefined"
@@ -111,7 +111,7 @@
               <template v-else>
                 Hoy {{ money(cell.rate, cell.currency || currency) }}
                 <template v-if="cell.margin !== null">
-                  · margen {{ cell.margin }} %</template
+                  · margen&nbsp;{{ cell.margin }}&nbsp;%</template
                 >
               </template>
             </p>
@@ -119,7 +119,7 @@
           <label class="relative w-32 flex-none sm:w-36">
             <span class="sr-only"
               >Precio nuevo de {{ row.item_name }} en
-              {{ cell.price_list }}</span
+              {{ priceListLabel(cell.price_list) }}</span
             >
             <span
               class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-base text-ink-gray-5"
@@ -153,7 +153,11 @@
           </label>
         </div>
         <p
-          v-if="!cell.can_write && cell.blocked_reason"
+          v-if="
+            !cell.can_write &&
+            cell.blocked_reason &&
+            plain(cell.blocked_reason) !== pageReason
+          "
           class="text-sm text-ink-gray-6"
         >
           {{ plain(cell.blocked_reason) }}
@@ -167,7 +171,7 @@
             {{ cell.delta > 0 ? '▲' : '▼' }} {{ Math.abs(cell.delta) }} %
           </template>
           <template v-if="cell.nextMargin !== null">
-            · margen {{ cell.nextMargin }} %</template
+            · margen&nbsp;{{ cell.nextMargin }}&nbsp;%</template
           >
         </p>
         <button
@@ -268,6 +272,7 @@ import { RouterLink } from 'vue-router'
 import { chipClass } from '@/components/ui'
 import ProductThumb from '@/components/productos/ProductThumb.vue'
 import { plain } from '@/composables/useProductos'
+import { priceListLabel } from '@/utils/priceList'
 import {
   ackText,
   changePct,
@@ -297,6 +302,8 @@ const props = defineProps({
   rounding: { type: String, default: 'centavos' },
   /** The last save's answer for this product, if any. */
   result: { type: Object, default: null },
+  /** The reason the page already says over the list: a cell does not repeat it. */
+  pageReason: { type: String, default: '' },
 })
 const emit = defineEmits([
   'draft',

@@ -63,10 +63,11 @@
                 <p class="truncate text-base text-ink-gray-9">
                   {{ entry.name }}
                 </p>
-                <p class="truncate text-sm text-ink-gray-6">
-                  {{ entry.list
+                <!-- The list and margin wrap at 305 px; only the name truncates. -->
+                <p class="break-words text-sm text-ink-gray-6">
+                  {{ priceListLabel(entry.list)
                   }}<template v-if="entry.margin !== null">
-                    · margen {{ entry.margin }} %</template
+                    · margen&nbsp;{{ entry.margin }}&nbsp;%</template
                   >
                 </p>
               </div>
@@ -181,6 +182,7 @@ import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { BottomSheet } from '@/components/ui'
 import { money, pendingLine } from '@/composables/usePrecios'
+import { priceListLabel } from '@/utils/priceList'
 
 const props = defineProps({
   open: { type: Boolean, default: false },

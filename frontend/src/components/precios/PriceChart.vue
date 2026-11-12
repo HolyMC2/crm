@@ -127,6 +127,7 @@
 import { computed, ref } from 'vue'
 import { useElementSize } from '@vueuse/core'
 import { chartModel, marginPct, money } from '@/composables/usePrecios'
+import { priceListLabel } from '@/utils/priceList'
 
 const props = defineProps({
   history: { type: Object, required: true },
@@ -155,7 +156,7 @@ const lastStep = computed(
 const summary = computed(() => {
   const m = model.value
   if (m.empty) return 'Sin datos'
-  const bits = [`Precio en ${props.list}`]
+  const bits = [`Precio en ${priceListLabel(props.list)}`]
   if (m.points.length)
     bits.push(
       `${m.points.length} compras, de ${money(Math.min(...m.points.map((p) => p.value)), props.currency)} a ${money(Math.max(...m.points.map((p) => p.value)), props.currency)}`,

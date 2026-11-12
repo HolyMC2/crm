@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest'
 import {
   newItemDraft,
   newItemPayload,
+  newItemPriceLabel,
   newItemProblems,
+  newItemRefusal,
   parseRate,
 } from '../../src/composables/useProductos'
 
@@ -138,5 +140,33 @@ describe('Nuevo producto: the create call', () => {
       'item_name',
       'rate',
     ])
+  })
+})
+
+describe('Nuevo producto: what the worker reads', () => {
+  it('asks the price in the currency of the shop’s default list', () => {
+    expect(newItemPriceLabel('MXN')).toBe('Selling price (MXN)')
+    expect(newItemPriceLabel('USD')).toBe('Selling price (USD)')
+    expect(newItemPriceLabel('')).toBe('Selling price')
+    expect(newItemPriceLabel(undefined)).toBe('Selling price')
+  })
+
+  it('a closed page says the server’s reason and whom to ask', () => {
+    const reason =
+      'Tu puesto no cambia precios de venta. Pídeselo a Ana: puede cambiarlo o darte el permiso «cambiar precios de venta».'
+    expect(newItemRefusal({ create_reason: reason })).toBe(reason)
+    // The page shows text, never the server's markup.
+    expect(newItemRefusal({ create_reason: '<b>Ana</b> lo cambia' })).toBe(
+      'Ana lo cambia',
+    )
+  })
+
+  it('without a reason from the server, it asks for permission to add products', () => {
+    expect(newItemRefusal({ create_reason: null })).toBe(
+      'Ask your manager for permission to add products.',
+    )
+    expect(newItemRefusal(null)).toBe(
+      'Ask your manager for permission to add products.',
+    )
   })
 })

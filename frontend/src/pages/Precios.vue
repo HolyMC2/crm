@@ -204,8 +204,7 @@
           class="rounded-6 bg-surface-gray-1 p-3 text-sm text-ink-gray-7"
           data-precios-solo-ver
         >
-          Puedes ver precios y costos. Para cambiarlos pide al encargado permiso
-          de precios; mientras, «Exportar» te deja llevarte la lista.
+          {{ readOnlyNote(boot) }}
         </p>
 
         <p
@@ -348,6 +347,7 @@
             :selected="seleccion.isSelected(row.item_code)"
             :rounding="rounding"
             :result="results.get(row.item_code) || null"
+            :page-reason="pageReason"
             @draft="onDraft"
             @keep="onKeep"
             @ack="onAck"
@@ -491,6 +491,7 @@ import { formatDate } from '@/utils/display'
 import { etiquetasHref } from '@/composables/useEtiquetas'
 import {
   outcomeUnknown,
+  plain,
   problemOf,
   safeReturn,
 } from '@/composables/useProductos'
@@ -501,6 +502,7 @@ import {
   parseCsv,
   pendingLine,
   preciosApi,
+  readOnlyNote,
   requestId,
   reviewEntries,
   savePayload,
@@ -509,6 +511,7 @@ import {
   toCsv,
   viewLabel,
 } from '@/composables/usePrecios'
+import { priceListLabel } from '@/utils/priceList'
 
 const HistorySheet = defineAsyncComponent(
   () => import('@/components/precios/HistorySheet.vue'),
@@ -672,7 +675,7 @@ const activeChips = computed(() => {
   if (activeList.value && activeList.value !== boot.value?.default_price_list)
     chips.push({
       key: 'lista',
-      label: activeList.value,
+      label: priceListLabel(activeList.value),
       remove: () => setList(boot.value.default_price_list),
     })
   if (supplier.value)
@@ -1106,6 +1109,10 @@ function setRounding(value) {
 const exporting = ref(false)
 const fileInput = ref(null)
 const canWrite = computed(() => Boolean(boot.value?.can_write))
+// Said once over the list (readOnlyNote), so the rows do not repeat it.
+const pageReason = computed(() =>
+  canWrite.value ? '' : plain(boot.value?.write_reason),
+)
 const actionGroups = computed(() => [
   {
     key: 'precios',
