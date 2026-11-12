@@ -6,22 +6,31 @@
   Data via doco_marketing.api.inbox.* (B1). Realtime refresh on thread_update + WA events.
 -->
 <template>
-  <!-- desktop: all three panes side-by-side (unchanged) -->
-  <div v-if="!isMobile" class="flex min-h-0 w-full flex-1">
-    <LegacyConversationQueue v-if="!queueCollapsed" />
-    <button
-      v-else
-      class="flex w-7 flex-none items-center justify-center border-r border-outline-gray-1 text-ink-gray-4 hover:bg-surface-gray-2"
-      :aria-label="__('Mostrar bandeja')"
-      :title="__('Mostrar bandeja')"
-      @click="queueCollapsed = false"
-    >
-      ⟩
-    </button>
+  <!-- desktop: the three panes side by side where the thread keeps a reading
+       width; narrower, the data pane folds to a strip (utils/inboxPanes) -->
+  <div v-if="!isMobile" ref="paneRow" class="flex min-h-0 w-full flex-1">
+    <LegacyConversationQueue v-if="panes.queue" />
+    <PaneFold v-else :label="__('Mostrar bandeja')" @click="showQueue" />
     <UnassignedWorkspace v-if="activeUnassigned" />
     <CommentWorkspace v-else-if="activeCommentPost" />
     <DealWorkspace v-else />
-    <DealContextPanel v-if="activeDeal" />
+    <template v-if="activeDeal">
+      <PaneFold
+        v-if="panes.fold"
+        side="right"
+        :open="panes.panel"
+        :label="
+          panes.panel
+            ? __('Ocultar datos')
+            : activeDealDoctype === 'CRM Deal'
+              ? __('Datos del trato')
+              : __('Datos del cliente')
+        "
+        data-testid="context-fold"
+        @click="panelChoice = !panes.panel"
+      />
+      <DealContextPanel v-if="panes.panel" />
+    </template>
   </div>
 
   <!-- mobile: one pane at a time. v-show (not v-if) keeps panes mounted so the
@@ -57,11 +66,13 @@
 <script setup>
 import { defineAsyncComponent, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { useElementSize } from '@vueuse/core'
 import { globalStore } from '@/stores/global'
 import { isMobile } from '@/composables/breakpoint'
 import { swipeBackHandlers } from '@/composables/swipeBack'
 import LegacyConversationQueue from '@/components/doco/inbox/LegacyConversationQueue.vue'
 import DealWorkspace from '@/components/doco/inbox/DealWorkspace.vue'
+import PaneFold from '@/components/doco/inbox/PaneFold.vue'
 import LedgerModal from '@/components/doco/inbox/LedgerModal.vue'
 import PostCallSheet from '@/components/doco/inbox/PostCallSheet.vue'
 import { shouldPingWa, shouldPingMessenger } from '@/utils/pingLogic'
@@ -73,7 +84,11 @@ import {
   activeCommentPost,
   activeUnassignedChannel,
   queue,
-  queueCollapsed,
+  ROOM_W,
+  panes,
+  paneRoom,
+  panelChoice,
+  showQueue,
   mobileView,
   lastSendAt,
   initInbox,
@@ -110,6 +125,17 @@ const CommentWorkspace = defineAsyncComponent(
 )
 const DealContextPanel = defineAsyncComponent(
   () => import('@/components/doco/inbox/DealContextPanel.vue'),
+)
+
+// Before the first measurement (and where nothing is measured) all panes show.
+const paneRow = ref(null)
+const { width: paneRowWidth } = useElementSize(paneRow)
+watch(
+  paneRowWidth,
+  (w) => {
+    paneRoom.value = !w || w >= ROOM_W
+  },
+  { immediate: true },
 )
 
 const { $socket } = globalStore()

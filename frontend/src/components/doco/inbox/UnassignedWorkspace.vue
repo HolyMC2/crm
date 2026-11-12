@@ -115,7 +115,7 @@
            always-visible form); the capture form moved to a bottom sheet -->
       <div
         class="flex min-h-0 flex-col border-outline-gray-1"
-        :class="isMobile ? 'flex-1' : 'flex-1 border-r'"
+        :class="isMobile || panes.fold ? 'flex-1' : 'flex-1 border-r'"
       >
         <!-- Messenger orphans render through MessengerArea (reactions + referral chip +
              inline image attachments, identical to the assigned conversation). -->
@@ -251,9 +251,25 @@
         class="fixed inset-0 z-40 bg-black/40"
         @click="captureOpen = false"
       />
+      <!-- desktop without room for thread and form side by side: the form
+           folds to a strip, and opening it folds the queue (utils/inboxPanes) -->
+      <PaneFold
+        v-if="!isMobile && panes.fold"
+        side="right"
+        :open="panes.panel"
+        :label="
+          panes.panel
+            ? __('Ocultar datos')
+            : boundContact
+              ? __('Crear Trato')
+              : __('Capturar y convertir')
+        "
+        data-testid="capture-fold"
+        @click="panelChoice = !panes.panel"
+      />
       <!-- capture form: docked 300px panel on desktop; bottom sheet on mobile -->
       <div
-        v-show="!isMobile || captureOpen"
+        v-show="isMobile ? captureOpen : panes.panel"
         :role="isMobile && captureOpen ? 'dialog' : undefined"
         :aria-modal="isMobile && captureOpen ? 'true' : undefined"
         :aria-label="isMobile ? __('Capturar y convertir') : undefined"
@@ -654,7 +670,10 @@ import {
   forecastingEnabled,
   catalogOpen,
   openCatalog,
+  panes,
+  panelChoice,
 } from '@/composables/inbox'
+import PaneFold from '@/components/doco/inbox/PaneFold.vue'
 import LucideImage from '~icons/lucide/image'
 import LucideVideo from '~icons/lucide/video'
 import LucideFile from '~icons/lucide/file'

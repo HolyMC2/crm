@@ -10,6 +10,10 @@ import { userScopedKey } from '@/utils/storageKeys'
 import { ADDON_APP, hasApp, loadCapabilities } from '@/utils/crmCapabilities'
 import { installNetworkRecovery } from '@/utils/networkRecovery'
 import { REPLY_TAB, nextReplyRow } from '@/utils/atencion'
+// inboxPanes reaches the panes only through here, so it rides this chunk
+// instead of splitting a file off every route that loads the inbox state.
+import { inboxPanes, ROOM_W } from '@/utils/inboxPanes'
+export { ROOM_W }
 
 // ── shared UI state ──────────────────────────────────────────────────────────
 export const activeDeal = ref(null) // selected record name (CRM Deal OR CRM Lead)
@@ -23,6 +27,21 @@ export const queueChannel = ref(null) // null = Todas
 export const queueSearch = ref('')
 export const lastSendAt = ref(0) // epoch ms of our last outgoing send (suppress self-ping)
 export const queueCollapsed = ref(false) // hide the left queue pane for a wider workspace
+// Desktop panes (utils/inboxPanes): where queue, thread and data don't fit side
+// by side, the data pane folds and opening it folds the queue instead.
+export const paneRoom = ref(true) // measured by ConversationLegacyWorkspace
+export const panelChoice = ref(null) // the worker's open/fold of the data pane without room
+export const panes = computed(() =>
+  inboxPanes({
+    room: paneRoom.value,
+    queueFolded: queueCollapsed.value,
+    panelChoice: panelChoice.value,
+  }),
+)
+export function showQueue() {
+  queueCollapsed.value = false
+  if (!paneRoom.value) panelChoice.value = false
+}
 
 // ── mobile single-pane stack (ignored on desktop, which shows all panes) ───────
 // WhatsApp-style drill-down: list (queue) → thread (workspace) → context (deal/
