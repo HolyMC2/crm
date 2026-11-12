@@ -77,7 +77,7 @@
         maxlength="4000"
         enterkeyhint="enter"
         class="max-h-40 min-h-11 flex-1 resize-none rounded-[22px] border border-outline-gray-2 bg-surface-base px-4 py-2.5 text-base leading-snug text-ink-gray-9 placeholder:text-ink-gray-5"
-        placeholder="Escribe un comentario para tu equipo…"
+        placeholder="Comenta a tu equipo…"
         data-testid="record-activity-text"
         @input="grow"
         @keydown.enter.ctrl.prevent="send"

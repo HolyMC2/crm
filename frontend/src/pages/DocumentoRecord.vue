@@ -74,7 +74,10 @@
         </button>
       </template>
     </AppBar>
-    <div ref="scroller" class="min-h-0 flex-1 overflow-y-auto pb-10">
+    <div
+      ref="scroller"
+      class="documento-scroll min-h-0 flex-1 overflow-y-auto pb-10"
+    >
       <EmptyState
         v-if="error"
         :state="denied ? 'denied' : 'error'"
@@ -90,10 +93,8 @@
       <EmptyState v-else-if="!record" state="loading" title="Abriendo…" />
       <div
         v-else
-        class="mx-auto grid w-full max-w-6xl gap-x-6"
-        :class="
-          pane ? 'documento-grid-pane' : 'lg:grid-cols-[minmax(0,1fr)_22rem]'
-        "
+        class="documento-grid mx-auto grid w-full max-w-6xl gap-x-6"
+        :class="{ 'documento-grid-pane': pane }"
       >
         <div class="flex min-w-0 flex-col gap-5 pt-4">
           <section
@@ -1075,7 +1076,18 @@ watch(
 )
 </script>
 <style scoped>
-@media (min-width: 1536px) {
+/* The activity column sits beside Datos only when the record's own column has
+   room for both; the window's width says nothing once the list, the rail and
+   the assistant share it. Below that, activity follows Datos. */
+.documento-scroll {
+  container-type: inline-size;
+}
+@container (min-width: 54rem) {
+  .documento-grid {
+    grid-template-columns: minmax(0, 1fr) 22rem;
+  }
+}
+@container (min-width: 52rem) {
   .documento-grid-pane {
     grid-template-columns: minmax(0, 1fr) 20rem;
   }
