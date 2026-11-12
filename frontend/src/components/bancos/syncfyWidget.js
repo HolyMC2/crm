@@ -51,9 +51,10 @@ export function loadWidget(doc = document, win = window) {
 // one visit threw on `nextSibling` and never showed until a reload. Every
 // window gets a new element.
 // Syncfy's «Estableciendo conexión» can run for minutes with no sign of
-// progress. This note sits above its modal (z-index 1000) from the moment the
-// login is sent until the institution answers, asks for a code (410) or the
-// window closes. Inline styles: nothing of it ships in the CSS.
+// progress. This note sits above its modal (z-index 1000) and the shell's
+// floating buttons, taking no clicks, from the moment the login is sent until
+// the institution answers, asks for a code (410) or the window closes. Inline
+// styles: nothing of it ships in the CSS.
 function waitingNote(doc) {
   doc.getElementById(NOTE_ID)?.remove()
   const note = doc.createElement('div')
@@ -67,7 +68,7 @@ function waitingNote(doc) {
     left: '50%',
     bottom: 'calc(24px + env(safe-area-inset-bottom, 0px))',
     transform: 'translateX(-50%)',
-    zIndex: '1001',
+    zIndex: '2000000000',
     width: 'max-content',
     maxWidth: 'min(28rem, calc(100% - 32px))',
     padding: '12px 16px',
