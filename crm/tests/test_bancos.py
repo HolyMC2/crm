@@ -2,6 +2,7 @@
 """Bancos y catálogo de cuentas (Shell D11): worker words, the entry gate, permissions."""
 
 from unittest import TestCase, skipIf
+from unittest.mock import patch
 
 from crm.bancos_routes import is_bancos_path
 from crm.bancos_words import (
@@ -185,6 +186,37 @@ class TestBancosPaths(TestCase):
 		):
 			with self.subTest(path=path):
 				self.assertFalse(is_bancos_path(path))
+
+
+@skipIf(not HAS_FRAPPE, "Frappe integration dependency is not installed")
+class TestSatLoginStep(TestCase):
+	"""«Enviar sus facturas a Contador» only where Contador downloads CFDIs and the login brings them."""
+
+	def _doc(self, kind="Tax", product=None):
+		return frappe._dict(kind=kind, tax_product=product)
+
+	def _emc(self, available):
+		import sys
+		import types
+
+		module = types.ModuleType("syncfy_connector.integrations.emc")
+		module.fiscal_lane_available = lambda: available
+		return patch.dict(sys.modules, {"syncfy_connector.integrations.emc": module})
+
+	def test_an_invoice_login_offers_contador_where_it_is_on(self):
+		with self._emc(True):
+			self.assertTrue(bancos._sends_invoices(self._doc()))
+			self.assertTrue(bancos._sends_invoices(self._doc(product="Invoices")))
+
+	def test_no_contador_no_step(self):
+		with self._emc(False):
+			self.assertFalse(bancos._sends_invoices(self._doc()))
+
+	def test_tax_returns_and_banks_never_go_to_contador_as_cfdis(self):
+		with self._emc(True):
+			self.assertFalse(bancos._sends_invoices(self._doc(product="Tax returns")))
+			self.assertFalse(bancos._sends_invoices(self._doc(product="Documents")))
+			self.assertFalse(bancos._sends_invoices(self._doc(kind="Bank")))
 
 
 @skipIf(not HAS_FRAPPE, "Frappe integration dependency is not installed")

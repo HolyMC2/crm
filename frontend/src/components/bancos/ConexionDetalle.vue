@@ -110,9 +110,14 @@
           </p>
         </div>
 
-        <!-- The SAT login: its invoices go to Contador once, by choice. -->
+        <!-- The SAT login: its invoices go to Contador once, by choice, where Contador
+             is on this site and the login brings CFDIs (not tax returns). -->
         <div
-          v-if="conexion.kind === 'Tax' && conexion.status === 'Connected'"
+          v-if="
+            conexion.kind === 'Tax' &&
+            conexion.status === 'Connected' &&
+            (conexion.feeds_contador || conexion.to_contador)
+          "
           class="mt-3 flex flex-wrap items-center gap-2"
           data-bancos-conexion-sat
         >

@@ -738,10 +738,24 @@ def conexion(conexion: str) -> dict:
 	# A movement Contador held is reviewed there, by someone with its fiscal role.
 	held_by_contador = any(r["contador"] and not r["removed"] for r in revisar)
 	return {
-		"conexion": _connection_row(row, accounts),
+		"conexion": {**_connection_row(row, accounts), "to_contador": _sends_invoices(doc)},
 		"revisar": revisar,
 		"can": {**can, "contador": bool(held_by_contador and _fiscal_role())},
 	}
+
+
+def _sends_invoices(doc):
+	"""Whether «Enviar sus facturas a Contador» applies: a SAT login that brings CFDIs (not
+	tax returns or documents), on a site where Contador downloads CFDIs. Bancos conectados
+	runs without Contador too; there the login keeps its CFDIs and offers no such step."""
+	if doc.kind != "Tax" or (doc.get("tax_product") or "Invoices") != "Invoices":
+		return False
+	try:
+		from syncfy_connector.integrations import emc
+
+		return bool(emc.fiscal_lane_available())
+	except Exception:
+		return False
 
 
 def _feed_of(bank_account):
