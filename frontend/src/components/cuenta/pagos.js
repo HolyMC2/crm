@@ -6,11 +6,36 @@
 // browser, so a reload always asks Boat again.
 import { computed, ref } from 'vue'
 import { errorText } from '@/utils/errorText'
+import { CYCLES, activatedText, sameChoice } from './activarPlan'
+import { capable } from './autoservicio'
+import { planView, validQuote } from './cuenta'
 
 export const POLL_MS = 5000
 // One page of wallet movements (miplan.wallet_txns); Mi plan reads 20 at a time.
 export const TXN_PAGE = 20
 const PENDING = ['captured_unsettled', 'in_flight']
+// Boat's answers to a chosen plan and cycle (activation_choice) that change
+// nothing: the sheet says Boat's sentence and the owner chooses again.
+const CHOICE_REFUSALS = [
+  'quote_changed',
+  'choice_changed',
+  'plan_unavailable',
+  'support_only',
+  'seats_over_plan',
+  'seats_in_use',
+  'storage_over_plan',
+  'usage_unknown',
+  'capacity',
+  'cycle_unavailable',
+  'invalid',
+  'invalid_cycle',
+  'not_choosable',
+  'not_quotable',
+  'no_plan',
+  'disabled',
+  'fiscal_issued',
+  'payment_open',
+]
 const t = (text, replace) => __(text, replace, 'Cuenta')
 
 /** A checkout URL Boat handed back, only when it is plain https. */
@@ -102,6 +127,20 @@ export function createPagos({
   const supportError = ref('')
   const quote = ref(null)
   const quoteLoading = ref(false)
+  // The plan and cycle chosen in «Activar plan» (capability activation_choice):
+  // Boat's plans for this trial, the choice the quote prices, the one its
+  // unpaid invoice was made for, and Boat's sentence when it refuses one.
+  const choiceOptions = ref([])
+  const activationChoice = ref(null)
+  const pendingChoice = ref(null)
+  const choiceMessage = ref('')
+  // The choice's total could not be read (no answer, or Boat could not count
+  // the seats yet): the sheet offers «Volver a intentar».
+  const choiceRetry = ref(false)
+  // «Se activó tu plan Pro anual»: a chosen plan paid with the saved card and
+  // the site no longer a trial; the sheet closes and the page says it once.
+  const activated = ref('')
+  let quoteTurn = 0
   const txns = ref([])
   const txnsDone = ref(false)
   const txnsLoaded = ref(false)
@@ -116,6 +155,17 @@ export function createPagos({
   let readPromise = null
   let disposed = false
 
+  const choiceOn = computed(() => capable(boot.value, 'activation_choice'))
+  // A payment page is open for the earlier choice and the owner picked another:
+  // Boat closes that page and voids its invoice before charging the new one.
+  const choiceDiffers = computed(
+    () =>
+      choiceOn.value &&
+      Boolean(activationCheckoutUrl.value) &&
+      Boolean(pendingChoice.value) &&
+      Boolean(activationChoice.value) &&
+      !sameChoice(activationChoice.value, pendingChoice.value),
+  )
   const isProvisioning = computed(
     () => paymentState.value?.status === 'provisioning',
   )
@@ -367,8 +417,11 @@ export function createPagos({
   }
 
   // The amount «Activar» charges, IVA included (miplan.activation_quote). A Boat
-  // without it, or any refusal, leaves the plan price on screen instead.
+  // without it, or any refusal, leaves the plan price on screen instead. With
+  // the choice on, it prices the chosen plan and cycle, and only the answer to
+  // the latest choice counts.
   async function loadQuote() {
+    if (choiceOn.value) return loadChoiceQuote()
     quoteLoading.value = true
     try {
       const out = await read('activation_quote')
@@ -380,12 +433,119 @@ export function createPagos({
     }
   }
 
+  const choiceFailed = () => t('We could not work out the amount. Try again.')
+  // Boat answers these when reading again may change the answer.
+  const RETRYABLE = ['usage_unknown', 'unavailable']
+
+  // Boat no longer offers the choice (switched off while the sheet was open):
+  // the account is read again and the sheet becomes today's, with its quote.
+  async function leaveChoice() {
+    await load()
+    if (choiceOn.value) {
+      choiceRetry.value = true
+      return
+    }
+    choiceOptions.value = []
+    activationChoice.value = null
+    pendingChoice.value = null
+    choiceMessage.value = ''
+    choiceRetry.value = false
+    if (activationOpen.value) await loadQuote()
+  }
+
+  async function loadChoiceQuote() {
+    const turn = ++quoteTurn
+    const asked = activationChoice.value
+    quoteLoading.value = true
+    choiceMessage.value = ''
+    choiceRetry.value = false
+    try {
+      const out = await read(
+        'activation_quote',
+        asked
+          ? { plan: asked.plan, billing_cycle: asked.cycle, choose: 1 }
+          : { choose: 1 },
+      )
+      if (turn !== quoteTurn) return
+      if (
+        out?.reason === 'disabled' ||
+        (out?.ok === true && !out.choice && !Array.isArray(out.options))
+      ) {
+        quoteLoading.value = false
+        await leaveChoice()
+        return
+      }
+      if (Array.isArray(out?.options)) choiceOptions.value = out.options
+      const priced = out?.choice
+      const choice =
+        priced?.plan && CYCLES.includes(priced.billing_cycle)
+          ? { plan: priced.plan, cycle: priced.billing_cycle }
+          : null
+      if (out?.ok === true && choice && (!asked || sameChoice(asked, choice))) {
+        quote.value = out
+        activationChoice.value = choice
+        if (priced.pending === true && !pendingChoice.value)
+          pendingChoice.value = choice
+      } else {
+        quote.value = null
+        const said =
+          out?.ok !== true && typeof out?.message === 'string' && out.message
+        choiceMessage.value = said || choiceFailed()
+        choiceRetry.value = !said || RETRYABLE.includes(out?.reason)
+      }
+    } catch {
+      if (turn !== quoteTurn) return
+      quote.value = null
+      choiceMessage.value = choiceFailed()
+      choiceRetry.value = true
+    } finally {
+      if (turn === quoteTurn) quoteLoading.value = false
+    }
+  }
+
+  /** «Volver a intentar»: the same choice (or Boat's default) asked again. */
+  function retryQuote() {
+    if (busy.value || !choiceOn.value || quoteLoading.value) return
+    quote.value = null
+    loadChoiceQuote()
+  }
+
+  /** Another plan (keeping the cycle when the plan is paid yearly). */
+  function choosePlan(plan) {
+    if (busy.value || !choiceOn.value) return
+    const option = choiceOptions.value.find((row) => row?.plan === plan)
+    if (!option || option.available !== true) return
+    const yearly = Number(option.yearly_price_mxn) > 0
+    const cycle =
+      activationChoice.value?.cycle === 'Anual' && yearly ? 'Anual' : 'Mensual'
+    if (sameChoice(activationChoice.value, { plan, cycle })) return
+    activationChoice.value = { plan, cycle }
+    quote.value = null
+    loadChoiceQuote()
+  }
+
+  /** Mensual or Anual for the chosen plan. */
+  function chooseCycle(cycle) {
+    const plan = activationChoice.value?.plan
+    if (busy.value || !choiceOn.value || !plan || !CYCLES.includes(cycle))
+      return
+    if (activationChoice.value.cycle === cycle) return
+    activationChoice.value = { plan, cycle }
+    quote.value = null
+    loadChoiceQuote()
+  }
+
   async function openActivation() {
     if (paymentActionsBlocked()) return false
     // A fresh quote every time: the sheet says it is working the amount out
     // instead of flashing an older figure or the plan price first.
     quote.value = null
     quoteLoading.value = true
+    choiceOptions.value = []
+    activationChoice.value = null
+    pendingChoice.value = null
+    choiceMessage.value = ''
+    choiceRetry.value = false
     activationOpen.value = true
     activationMethod.value = 'hosted'
     activationMessage.value = activationLocked.value
@@ -424,10 +584,15 @@ export function createPagos({
     if (
       paymentActionsBlocked() ||
       paymentReading.value ||
-      activationLocked.value
+      (activationLocked.value && !choiceDiffers.value)
     )
       return
+    // With the choice on, Boat charges only the total on screen for the plan
+    // and cycle on screen; without a quote there is nothing to pay yet.
+    const chosen = choiceOn.value ? activationChoice.value : null
+    if (choiceOn.value && (!chosen || !validQuote(quote.value))) return
     busy.value = 'activate'
+    activated.value = ''
     activationMessage.value = ''
     activationCheckoutUrl.value = ''
     setActivationLock(true)
@@ -435,13 +600,37 @@ export function createPagos({
       'We are sending the activation. Wait for it to finish before you continue.',
     )
     let refresh = false
+    let choiceGone = false
+    let converted = false
     try {
       const out = await mutate('activate_plan', {
         use_saved_card: activationMethod.value === 'saved' ? 1 : 0,
         ...returnTo(),
+        ...(chosen
+          ? {
+              plan: chosen.plan,
+              billing_cycle: chosen.cycle,
+              amount_mxn: String(quote.value.amount_mxn),
+            }
+          : {}),
       })
       const code = out?.code || out?.reason || out?.status
-      if (out?.card_declined || ['card_declined', 'declined'].includes(code)) {
+      if (chosen && out?.ok === false && CHOICE_REFUSALS.includes(code)) {
+        // Nothing was charged: a new total to read, or a choice to change.
+        // The payment door goes back to what Boat last said about it.
+        resolvePaymentState(paymentState.value)
+        if (code === 'quote_changed' && validQuote(out.quote))
+          quote.value = out.quote
+        choiceGone = code === 'disabled'
+        choiceMessage.value = choiceGone
+          ? ''
+          : typeof out.message === 'string' && out.message
+            ? out.message
+            : t('The total changed. Check it before paying.')
+      } else if (
+        out?.card_declined ||
+        ['card_declined', 'declined'].includes(code)
+      ) {
         setActivationLock(false)
         activationMessage.value = t(
           '{0} Ask your bank or try another payment method on the payment page.',
@@ -463,6 +652,9 @@ export function createPagos({
           message: t('The payment page is ready.'),
         })
         activationCheckoutUrl.value = checkoutUrl(out.checkout_url)
+        // The page is for this choice: another one picked before it is paid
+        // is a new choice (Boat closes this page first), never this page.
+        if (chosen) pendingChoice.value = { ...chosen }
         resumeActivationAfterResponse()
       } else if (out?.ok === false) {
         if (['validation_error', 'invalid_request'].includes(code)) {
@@ -478,6 +670,7 @@ export function createPagos({
           })
       } else {
         refresh = true
+        converted = Boolean(chosen) && out?.converted === true
       }
     } catch {
       resolvePaymentState({
@@ -487,7 +680,16 @@ export function createPagos({
     } finally {
       busy.value = ''
     }
-    if (refresh) await load()
+    if (choiceGone) await leaveChoice()
+    else if (refresh) await load()
+    // Paid and converted: Boat's account says so before the sheet closes.
+    if (converted && boot.value && !planView(boot.value).isTrial) {
+      activated.value = activatedText(
+        choiceOptions.value.find((row) => row?.plan === chosen.plan),
+        chosen,
+      )
+      activationOpen.value = false
+    }
   }
 
   async function payInvoice(inv) {
@@ -727,6 +929,14 @@ export function createPagos({
     supportError,
     quote,
     quoteLoading,
+    choiceOn,
+    choiceOptions,
+    activationChoice,
+    pendingChoice,
+    choiceMessage,
+    choiceRetry,
+    activated,
+    choiceDiffers,
     txns,
     txnsDone,
     txnsLoaded,
@@ -753,6 +963,9 @@ export function createPagos({
     openActivation,
     closeActivation,
     chooseMethod,
+    choosePlan,
+    chooseCycle,
+    retryQuote,
     resumeActivation,
     activatePlan,
     payInvoice,

@@ -40902,6 +40902,116 @@ msgctxt "Cuenta"
 msgid "Activate plan {0}"
 msgstr "Activar plan {0}"
 
+#: frontend/src/components/cuenta/activarPlan.js
+msgctxt "Cuenta"
+msgid "1 user"
+msgstr "1 usuario"
+
+#: frontend/src/components/cuenta/activarPlan.js
+msgctxt "Cuenta"
+msgid "{0} users"
+msgstr "{0} usuarios"
+
+#: frontend/src/components/cuenta/activarPlan.js
+msgctxt "Cuenta"
+msgid "1 register"
+msgstr "1 caja"
+
+#: frontend/src/components/cuenta/activarPlan.js
+msgctxt "Cuenta"
+msgid "{0} registers"
+msgstr "{0} cajas"
+
+#: frontend/src/components/cuenta/activarPlan.js
+msgctxt "Cuenta"
+msgid "Unlimited users"
+msgstr "Usuarios sin límite"
+
+#: frontend/src/components/cuenta/activarPlan.js
+msgctxt "Cuenta"
+msgid "Unlimited registers"
+msgstr "Cajas sin límite"
+
+#: frontend/src/components/cuenta/activarPlan.js
+msgctxt "Cuenta"
+msgid "{0}, {1} and {2} GB"
+msgstr "{0}, {1} y {2} GB"
+
+#: frontend/src/components/cuenta/activarPlan.js
+msgctxt "Cuenta"
+msgid "{0} and {1}"
+msgstr "{0} y {1}"
+
+#: frontend/src/components/cuenta/activarPlan.js
+msgctxt "Cuenta"
+msgid "Includes {0}"
+msgstr "Incluye {0}"
+
+#: frontend/src/components/cuenta/activarPlan.js
+msgctxt "Cuenta"
+msgid "This plan is not available for your system."
+msgstr "Este plan no está disponible para tu sistema."
+
+#: frontend/src/components/cuenta/activarPlan.js
+msgctxt "Cuenta"
+msgid "This plan is paid monthly only."
+msgstr "Este plan solo se paga por mes."
+
+#: frontend/src/components/cuenta/activarPlan.js
+msgctxt "Cuenta"
+msgid "{0} a year, IVA included. You save {1} compared with paying monthly."
+msgstr "{0} al año, IVA incluido. Ahorras {1} contra pagar mes a mes."
+
+#: frontend/src/components/cuenta/activarPlan.js
+msgctxt "Cuenta"
+msgid "{0} a year, IVA included."
+msgstr "{0} al año, IVA incluido."
+
+#: frontend/src/components/cuenta/activarPlan.js
+msgctxt "Cuenta"
+msgid "Paying yearly: {0}, IVA included; you save {1}."
+msgstr "Si pagas por año: {0}, IVA incluido; ahorras {1}."
+
+#: frontend/src/components/cuenta/activarPlan.js
+msgctxt "Cuenta"
+msgid "Your plan {0} is active, paid yearly."
+msgstr "Se activó tu plan {0} anual"
+
+#: frontend/src/components/cuenta/activarPlan.js
+msgctxt "Cuenta"
+msgid "Your plan {0} is active, paid monthly."
+msgstr "Se activó tu plan {0} mensual"
+
+#: frontend/src/components/cuenta/activarPlan.js
+msgctxt "Cuenta"
+msgid "Paying yearly: {0}, IVA included."
+msgstr "Si pagas por año: {0}, IVA incluido."
+
+#: frontend/src/components/cuenta/pagos.js
+msgctxt "Cuenta"
+msgid "We could not work out the amount. Try again."
+msgstr "No pudimos calcular el total. Vuelve a intentar."
+
+#: frontend/src/components/cuenta/pagos.js
+msgctxt "Cuenta"
+msgid "The total changed. Check it before paying."
+msgstr "El total cambió. Revísalo antes de pagar."
+
+#: frontend/src/components/cuenta/ActivarSheet.vue
+msgctxt "Cuenta"
+msgid "Choose your plan"
+msgstr "Elige tu plan"
+
+#: frontend/src/components/cuenta/ActivarSheet.vue
+msgctxt "Cuenta"
+msgid "Your trial plan"
+msgstr "Tu plan de prueba"
+
+#: frontend/src/components/cuenta/ActivarSheet.vue
+msgctxt "Cuenta"
+msgid "When you pay, we close the payment left open for your earlier choice; nothing is charged twice."
+msgstr "Al pagar, cerramos el pago que quedó abierto para tu elección anterior; no se cobra dos veces."
+
 #: frontend/src/components/cuenta/ActivarSheet.vue
 msgctxt "Cuenta"
 msgid "Activate your plan"
