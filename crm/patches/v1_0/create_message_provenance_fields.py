@@ -11,8 +11,27 @@ from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
 
 
 def execute():
-	if not frappe.db.exists("DocType", "WhatsApp Message"):
+	if not ensure_fields():
 		return
+
+	# Light backfill — existing rows have NULL. We can't recover the exact trigger
+	# of old automatic sends, so attribute everything to its creator as Human
+	# (the honest floor). New rows are stamped at the send points going forward.
+	frappe.db.sql(
+		"""UPDATE `tabWhatsApp Message`
+		      SET doco_sent_by_type = 'Human',
+		          doco_actor_user = owner
+		    WHERE doco_sent_by_type IS NULL OR doco_sent_by_type = ''"""
+	)
+
+
+def ensure_fields() -> bool:
+	"""Create the provenance fields when WhatsApp Message exists; idempotent. Also
+	called from crm's after_install and when frappe_whatsapp is installed later: a
+	new site marks every patch done without running it, so a field made only here
+	never reached sites built after this patch (reports then read a missing column)."""
+	if not frappe.db.exists("DocType", "WhatsApp Message"):
+		return False
 
 	create_custom_fields(
 		{
@@ -70,13 +89,4 @@ def execute():
 		},
 		ignore_validate=True,
 	)
-
-	# Light backfill — existing rows have NULL. We can't recover the exact trigger
-	# of old automatic sends, so attribute everything to its creator as Human
-	# (the honest floor). New rows are stamped at the send points going forward.
-	frappe.db.sql(
-		"""UPDATE `tabWhatsApp Message`
-		      SET doco_sent_by_type = 'Human',
-		          doco_actor_user = owner
-		    WHERE doco_sent_by_type IS NULL OR doco_sent_by_type = ''"""
-	)
+	return True

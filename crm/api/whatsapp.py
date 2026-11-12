@@ -937,6 +937,9 @@ def after_app_install(app_name):
 	# opposite order; both use the same tenant-customizable native role defaults.
 	if app_name == "frappe_whatsapp":
 		add_roles()
+		from crm.patches.v1_0.create_message_provenance_fields import ensure_fields
+
+		ensure_fields()
 
 
 def add_roles():
