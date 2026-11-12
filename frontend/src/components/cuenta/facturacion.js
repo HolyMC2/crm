@@ -41,13 +41,29 @@ export function cfdiKinds(inv) {
   return inv.cfdi_pdf === false ? ['xml'] : ['pdf', 'xml']
 }
 
-/** «Factura fiscal pendiente» when Boat says the invoice has no stamped CFDI yet. */
+/**
+ * «Factura fiscal pendiente» when Boat says the invoice has no stamped CFDI yet
+ * and one will come: not where Boat answers not_applicable (no CFDI is stamped
+ * for it, as for a month covered by credit).
+ */
 export function fiscalPending(inv) {
-  return Boolean(inv) && 'cfdi_state' in inv && inv.cfdi_state !== 'stamped'
+  return (
+    Boolean(inv) &&
+    'cfdi_state' in inv &&
+    !['stamped', 'not_applicable'].includes(inv.cfdi_state)
+  )
 }
+
+/** Boat answered an amount, and it is $0. */
+export const zeroAmount = (inv) =>
+  inv?.amount_mxn != null &&
+  inv.amount_mxn !== '' &&
+  Number(inv.amount_mxn) === 0
 
 function invoiceLine(inv) {
   const overdue = OVERDUE.includes(inv.status)
+  // A $0 month Boat closes as Paid (a credit covered it): nothing was paid.
+  if (inv.status === 'Paid' && zeroAmount(inv)) return t('No charge')
   if (inv.status === 'Paid')
     return inv.payment_date
       ? t('Paid {0}', [formatDate(inv.payment_date)])

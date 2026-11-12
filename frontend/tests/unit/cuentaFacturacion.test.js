@@ -136,6 +136,26 @@ describe('the invoices in the owner’s words', () => {
     expect(monthTitle('')).toBe('Invoice')
   })
 
+  it('a $0 month Boat closed as Paid reads as no charge, not as paid', () => {
+    const { done } = invoiceGroups({
+      invoices: [
+        {
+          name: 'INV-12',
+          status: 'Paid',
+          period_start: '2026-09-01',
+          amount_mxn: 0,
+          payment_date: '2026-09-01',
+          cfdi_state: 'not_applicable',
+        },
+        { name: 'INV-13', status: 'Paid', period_start: '2026-08-01' },
+      ],
+    })
+    expect(done.map((r) => [r.line, r.amount])).toEqual([
+      ['No charge', '$0.00'],
+      ['Paid', '$0.00'],
+    ])
+  })
+
   it('offers a CFDI only when Boat stamped it, the PDF only when attached', () => {
     expect(cfdiKinds({ cfdi_state: 'stamped' })).toEqual(['pdf', 'xml'])
     expect(cfdiKinds({ cfdi_state: 'stamped', cfdi_pdf: false })).toEqual([
@@ -146,6 +166,8 @@ describe('the invoices in the owner’s words', () => {
     expect(cfdiKinds({})).toEqual([])
     expect(fiscalPending({ cfdi_state: 'none' })).toBe(true)
     expect(fiscalPending({})).toBe(false)
+    // Boat says no CFDI will be stamped (a month covered by credit).
+    expect(fiscalPending({ cfdi_state: 'not_applicable' })).toBe(false)
     const { done } = invoiceGroups(boot())
     expect(done.map((r) => [r.cfdi, r.fiscalPending])).toEqual([
       [['pdf', 'xml'], false],

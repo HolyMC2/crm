@@ -40491,6 +40491,16 @@ msgctxt "Cuenta"
 msgid "Paid"
 msgstr "Pagada"
 
+#: frontend/src/components/cuenta/facturacion.js frontend/src/components/cuenta/facturaDetalle.js
+msgctxt "Cuenta"
+msgid "No charge"
+msgstr "Sin cargo"
+
+#: frontend/src/components/cuenta/facturaDetalle.js
+msgctxt "Cuenta"
+msgid "No charge: your credit covered it"
+msgstr "Sin cargo: la cubrió tu crédito"
+
 #: frontend/src/components/cuenta/facturacion.js frontend/src/components/cuenta/pagos.js
 msgctxt "Cuenta"
 msgid "Cancelled"
@@ -40910,6 +40920,146 @@ msgstr "Intentar de nuevo"
 msgctxt "Cuenta"
 msgid "Load more"
 msgstr "Cargar más"
+
+#: frontend/src/components/cuenta/facturaDetalle.js
+msgctxt "Cuenta"
+msgid "Paid on {0}"
+msgstr "Pagada el {0}"
+
+#: frontend/src/components/cuenta/facturaDetalle.js
+msgctxt "Cuenta"
+msgid "Paid on {0} with {1}"
+msgstr "Pagada el {0} con {1}"
+
+#: frontend/src/components/cuenta/facturaDetalle.js
+msgctxt "Cuenta"
+msgid "Due on {0}"
+msgstr "Vence el {0}"
+
+#: frontend/src/components/cuenta/facturaDetalle.js
+msgctxt "Cuenta"
+msgid "Unpaid since {0}"
+msgstr "Vencida desde el {0}"
+
+#: frontend/src/components/cuenta/facturaDetalle.js
+msgctxt "Cuenta"
+msgid "Fiscal invoice in process"
+msgstr "Factura fiscal en proceso"
+
+#: frontend/src/components/cuenta/facturaDetalle.js
+msgctxt "Cuenta"
+msgid "Partner discount"
+msgstr "Descuento de socio"
+
+#: frontend/src/components/cuenta/facturaDetalle.js
+msgctxt "Cuenta"
+msgid "Refund of {0}"
+msgstr "Reembolso del {0}"
+
+#: frontend/src/components/cuenta/facturaDetalle.js
+msgctxt "Cuenta"
+msgid "IVA included: {0}"
+msgstr "IVA incluido: {0}"
+
+#: frontend/src/components/cuenta/facturaDetalle.js
+msgctxt "Cuenta"
+msgid "Scheduled"
+msgstr "Programado"
+
+#: frontend/src/components/cuenta/facturaDetalle.js
+msgctxt "Cuenta"
+msgid "Being applied"
+msgstr "Se está aplicando"
+
+#: frontend/src/components/cuenta/facturaDetalle.js
+msgctxt "Cuenta"
+msgid "It did not go through"
+msgstr "No se pudo aplicar"
+
+#: frontend/src/components/cuenta/facturaDetalle.js
+msgctxt "Cuenta"
+msgid "Dropped before it took effect"
+msgstr "Se canceló antes de aplicarse"
+
+#: frontend/src/components/cuenta/facturaDetalle.js
+msgctxt "Cuenta"
+msgid "{0} on your {1} invoice"
+msgstr "{0} en tu factura de {1}"
+
+#: frontend/src/components/cuenta/facturaDetalle.js
+msgctxt "Cuenta"
+msgid "{0} off your {1} invoice"
+msgstr "{0} menos en tu factura de {1}"
+
+#: frontend/src/components/cuenta/facturaDetalle.js
+msgctxt "Cuenta"
+msgid "Charge of {0}"
+msgstr "Cargo de {0}"
+
+#: frontend/src/components/cuenta/facturaDetalle.js
+msgctxt "Cuenta"
+msgid "Credit of {0}"
+msgstr "Crédito de {0}"
+
+#: frontend/src/components/cuenta/facturaDetalle.js
+msgctxt "Cuenta"
+msgid "Prorated charge: {0}"
+msgstr "Cargo proporcional: {0}"
+
+#: frontend/src/components/cuenta/FacturaFila.vue
+msgctxt "Cuenta"
+msgid "See the detail of {0}"
+msgstr "Ver el detalle de {0}"
+
+#: frontend/src/components/cuenta/FacturaSheet.vue
+msgctxt "Cuenta"
+msgid "Loading the invoice…"
+msgstr "Cargando la factura…"
+
+#: frontend/src/components/cuenta/FacturaSheet.vue
+msgctxt "Cuenta"
+msgid "What you pay for"
+msgstr "Qué pagas"
+
+#: frontend/src/components/cuenta/FacturaSheet.vue
+msgctxt "Cuenta"
+msgid "Subtotal"
+msgstr "Subtotal"
+
+#: frontend/src/components/cuenta/FacturaSheet.vue
+msgctxt "Cuenta"
+msgid "Total"
+msgstr "Total"
+
+#: frontend/src/components/cuenta/FacturaSheet.vue
+msgctxt "Cuenta"
+msgid "Refunds"
+msgstr "Reembolsos"
+
+#: frontend/src/components/cuenta/FacturaSheet.vue
+msgctxt "Cuenta"
+msgid "Documents"
+msgstr "Documentos"
+
+#: frontend/src/components/cuenta/CuentaHistorial.vue
+msgctxt "Cuenta"
+msgid "History"
+msgstr "Historial"
+
+#: frontend/src/components/cuenta/CuentaHistorial.vue
+msgctxt "Cuenta"
+msgid "What was bought or changed in your account, newest first."
+msgstr "Lo que se compró o cambió en tu cuenta, lo más reciente primero."
+
+#: frontend/src/components/cuenta/CuentaHistorial.vue
+msgctxt "Cuenta"
+msgid "No changes yet."
+msgstr "Sin cambios todavía."
+
+#: frontend/src/components/cuenta/CuentaHistorial.vue
+msgctxt "Cuenta"
+msgid "Loading your history…"
+msgstr "Cargando tu historial…"
 
 #: frontend/src/components/cuenta/CuentaFacturacion.vue
 msgctxt "Cuenta"

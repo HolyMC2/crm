@@ -64,6 +64,9 @@ const SELF_SERVICE = new Set([
   'cancel_subscription',
   'resume_subscription',
   'my_incidents',
+  // Reads: one invoice in detail and the account's «Historial».
+  'invoice_detail',
+  'my_history',
 ])
 
 function walk(dir, keep) {

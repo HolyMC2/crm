@@ -187,12 +187,12 @@
             />
           </div>
         </div>
-        <!-- Three views of one account. -->
+        <!-- Three views of one account, and «Historial» where Boat lists it. -->
         <Segmented
           class="mb-4"
           fit="content"
           :model-value="tab"
-          :options="TABS"
+          :options="tabs"
           :label="__('Sections of my account', null, 'Cuenta')"
           @update:model-value="openTab"
         />
@@ -208,6 +208,7 @@
           @act="act"
         />
         <CuentaTienda v-else-if="tab === 'tienda'" :door="door" @act="act" />
+        <CuentaHistorial v-else-if="tab === 'historial'" :door="door" />
         <Button
           v-if="phone"
           variant="ghost"
@@ -243,6 +244,7 @@ import {
   computed,
   defineAsyncComponent,
   onBeforeUnmount,
+  onMounted,
   reactive,
   ref,
   watch,
@@ -251,6 +253,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { Button } from 'frappe-ui'
 import { EmptyState, Segmented } from '@/components/ui'
 import CuentaResumen from '@/components/cuenta/CuentaResumen.vue'
+import { capable } from '@/components/cuenta/autoservicio'
 import { planView } from '@/components/cuenta/cuenta'
 import { createPagos } from '@/components/cuenta/pagos'
 import { mutate, read } from '@/components/cuenta/api'
@@ -272,6 +275,9 @@ const CuentaFacturacion = defineAsyncComponent(
 const CuentaTienda = defineAsyncComponent(
   () => import('@/components/cuenta/CuentaTienda.vue'),
 )
+const CuentaHistorial = defineAsyncComponent(
+  () => import('@/components/cuenta/CuentaHistorial.vue'),
+)
 
 // ?tab= opens one (the keys of Mi plan's tabs, so its links and returns map 1:1).
 const TABS = [
@@ -279,6 +285,8 @@ const TABS = [
   { value: 'facturacion', label: __('Billing', null, 'Cuenta') },
   { value: 'tienda', label: __('Store', null, 'Cuenta') },
 ]
+// «Historial» only where Boat lists the account's changes (capability «history»).
+const HISTORY_TAB = { value: 'historial', label: __('History', null, 'Cuenta') }
 // The next steps this page opens from a notice.
 const ACTIONS = ['activate', 'pay', 'topup', 'support', 'plans']
 
@@ -307,8 +315,23 @@ const available = computed(
 )
 const allowed = computed(() => cuentaAllowed(shellBoot.value))
 const site = computed(() => door.boot.value?.site || null)
+// The tab track scrolls on a narrow phone and brings the chosen tab into
+// sight when its options change; the web font landing after that widens the
+// segments, so the options are handed over again once the fonts are ready.
+const fontsReady = ref(0)
+onMounted(() =>
+  document.fonts?.ready.then(() => {
+    fontsReady.value += 1
+  }),
+)
+const tabs = computed(() => {
+  void fontsReady.value
+  return capable(door.boot.value, 'history')
+    ? [...TABS, HISTORY_TAB]
+    : [...TABS]
+})
 const tab = computed(() =>
-  TABS.some((item) => item.value === route.query.tab)
+  tabs.value.some((item) => item.value === route.query.tab)
     ? route.query.tab
     : 'resumen',
 )

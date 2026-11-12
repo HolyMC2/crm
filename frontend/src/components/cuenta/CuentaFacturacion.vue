@@ -3,8 +3,9 @@
        same payment to continue) and, when Boat keeps it shut, why and the way
        on; then the paid ones with their CFDI, the saved cards, and the wallet
        with its ledger last (the long list). Where Boat offers them: payment
-       receipts on paid rows, Datos fiscales after the invoices, and «Agregar
-       tarjeta». Rows and rules. -->
+       receipts on paid rows, Datos fiscales after the invoices, «Agregar
+       tarjeta», and an invoice's detail in a sheet from a tap on its row.
+       Rows and rules. -->
   <div class="space-y-8">
     <section aria-labelledby="cuenta-facturas">
       <h2
@@ -25,24 +26,12 @@
         data-testid="cuenta-por-pagar"
       >
         <li v-for="inv in groups.due" :key="inv.name" class="py-3">
-          <div class="flex items-start gap-3">
-            <div class="min-w-0 flex-1">
-              <p class="text-base font-medium text-ink-gray-9">
-                {{ inv.title }}
-              </p>
-              <p
-                class="text-sm"
-                :class="inv.overdue ? 'text-ink-red-7' : 'text-ink-gray-6'"
-              >
-                {{ inv.line }}
-              </p>
-            </div>
-            <span
-              class="num shrink-0 text-base font-semibold"
-              :class="inv.overdue ? 'text-ink-red-7' : 'text-ink-gray-9'"
-              >{{ inv.amount }}</span
-            >
-          </div>
+          <FacturaFila
+            :inv="inv"
+            due
+            :tappable="caps.detail"
+            @open="openDetail(inv)"
+          />
           <!-- One filled «Pagar»: the oldest invoice that can be paid now. -->
           <Button
             :variant="inv.name === firstToPay ? 'solid' : 'subtle'"
@@ -87,17 +76,11 @@
         data-testid="cuenta-facturas-pagadas"
       >
         <li v-for="inv in groups.done" :key="inv.name" class="py-3">
-          <div class="flex items-start gap-3">
-            <div class="min-w-0 flex-1">
-              <p class="text-base font-medium text-ink-gray-9">
-                {{ inv.title }}
-              </p>
-              <p class="text-sm text-ink-gray-6">{{ inv.line }}</p>
-            </div>
-            <span class="num shrink-0 text-base text-ink-gray-9">{{
-              inv.amount
-            }}</span>
-          </div>
+          <FacturaFila
+            :inv="inv"
+            :tappable="caps.detail"
+            @open="openDetail(inv)"
+          />
           <p
             v-if="!inv.cfdi.length && inv.fiscalPending"
             class="mt-1 text-sm text-ink-gray-6"
@@ -181,6 +164,17 @@
           )
         }}
       </p>
+      <!-- One invoice in detail, where Boat serves it (capability «invoice_detail»). -->
+      <FacturaSheet
+        v-if="detailMounted"
+        :open="Boolean(detailFor) && !door.loading.value"
+        :invoice="detailFor"
+        :receipts="caps.receipts"
+        :pay-label="detailPayLabel"
+        :save-file="saveFile"
+        @close="detailFor = null"
+        @pay="payFromDetail"
+      />
     </section>
 
     <!-- Datos fiscales where Boat takes them from the panel (capability «billing_profile»). -->
@@ -457,6 +451,7 @@ import { computed, defineAsyncComponent, nextTick, onMounted, ref } from 'vue'
 import { Button, toast } from 'frappe-ui'
 import { capable } from './autoservicio'
 import { walletView } from './cuenta'
+import FacturaFila from './FacturaFila.vue'
 import FacturaFiscal from './FacturaFiscal.vue'
 import {
   cardRows,
@@ -471,6 +466,8 @@ import { safeContinuation } from './pagos'
 // Only where Boat offers them: Datos fiscales, and the card sheet on its first open.
 const DatosFiscales = defineAsyncComponent(() => import('./DatosFiscales.vue'))
 const TarjetaSheet = defineAsyncComponent(() => import('./TarjetaSheet.vue'))
+// An invoice's detail sheet mounts on its first open.
+const FacturaSheet = defineAsyncComponent(() => import('./FacturaSheet.vue'))
 
 const props = defineProps({
   /** The page's payment door (pagos.js createPagos). */
@@ -502,7 +499,11 @@ const caps = computed(() => ({
   billingProfile: capable(data.value, 'billing_profile'),
   cardSetup: capable(data.value, 'card_setup'),
   receipts: capable(data.value, 'receipts'),
+  detail: capable(data.value, 'invoice_detail'),
 }))
+// The invoice whose detail is open, and whether the sheet was ever opened.
+const detailFor = ref(null)
+const detailMounted = ref(false)
 // The oldest invoice due that nothing holds: its «Pagar» is the filled one.
 const firstToPay = computed(
   () =>
@@ -523,6 +524,23 @@ function payLabel(inv) {
   return safeContinuation(props.door.invoiceState(inv))
     ? __('Continue the secure payment', null, 'Cuenta')
     : __('Pay {0}', [inv.amount], 'Cuenta')
+}
+
+function openDetail(inv) {
+  detailMounted.value = true
+  detailFor.value = inv
+}
+// «Pagar» in the sheet: only for an invoice to pay that nothing holds, the
+// same payment its row's button starts.
+const detailPayLabel = computed(() => {
+  const inv = detailFor.value
+  return inv?.payable && !props.door.invoiceBlocked(inv) ? payLabel(inv) : ''
+})
+async function payFromDetail() {
+  const inv = detailFor.value
+  detailFor.value = null
+  await nextTick()
+  if (inv && !props.door.invoiceBlocked(inv)) props.door.payInvoice(inv)
 }
 
 function busyKind(name) {
