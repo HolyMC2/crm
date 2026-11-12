@@ -447,6 +447,7 @@ describe('openSyncfy', () => {
       if (method.endsWith('.widget_session')) return { token: 't-1' }
       if (method.endsWith('.register'))
         return { name: 'cred-9', status: 'Connecting' }
+      if (method.endsWith('.job_started')) return { watching: true }
     })
   })
   afterEach(() => {
@@ -483,6 +484,30 @@ describe('openSyncfy', () => {
         id_credential: 'cred-9',
         id_job: '5e1f0c2a9d1b4c3a2f1e0d9c',
       },
+    )
+  })
+
+  it('follows a SAT document job, which keeps no login', async () => {
+    const { openSyncfy } = await vi.importActual(
+      '@/components/bancos/syncfyWidget',
+    )
+    const done = openSyncfy({ company: 'Grupo Doco', types: ['Government'] })
+    await flush()
+    // The opinión de cumplimiento: Syncfy answers with the job alone.
+    instances[0].emit('success', {
+      id_job: '6af5c50e07ef001873394708',
+      id_job_uuid: '6af5c50e07ef001873394709',
+      status:
+        'https://sync.paybook.com/v1/jobs/6af5c50e07ef001873394708/status',
+    })
+    instances[0].emit('closed')
+    expect(await done).toEqual({ documents: true })
+    expect(state.call).toHaveBeenCalledWith(
+      'syncfy_connector.api.documents.job_started',
+      { company: 'Grupo Doco', id_job: '6af5c50e07ef001873394708' },
+    )
+    expect(state.call.mock.calls.some(([m]) => m.endsWith('.register'))).toBe(
+      false,
     )
   })
 

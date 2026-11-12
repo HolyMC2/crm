@@ -95,6 +95,9 @@ function hostElement(doc) {
 
 /**
  * Open Syncfy for one company.
+ * A document from the SAT (opinión de cumplimiento, constancia) keeps no
+ * login: Syncfy reports only its job, and this resolves `{documents: true}`
+ * once the connector is following it.
  *  - `credential`: re-sync that login now (it asks for the one-time code, or
  *    lets the person fix what the bank refused);
  *  - `update`: change the user or password of that login;
@@ -155,7 +158,18 @@ export async function openSyncfy(
         )
         .catch((failure) => finish(failure, true))
     }
-    widget.on('success', (reported) => register(reported))
+    const followDocument = (reported) => {
+      const job = jobOf(reported)
+      if (settled || registering || reported?.id_credential || !job) return
+      registering = syncfy
+        .documentJob(company, job)
+        .then(() => finish({ documents: true }))
+        .catch((failure) => finish(failure, true))
+    }
+    widget.on('success', (reported) => {
+      register(reported)
+      followDocument(reported)
+    })
     widget.on('error', (reported, error) => register(reported, error))
     widget.on('401', async () => {
       const next = await syncfy.widgetSession(company)

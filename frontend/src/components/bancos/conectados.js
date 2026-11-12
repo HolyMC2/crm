@@ -7,6 +7,7 @@ import { formatTime, parseServerDate, relativeTime } from '@/utils/display'
 // which checks the manager roles and the company again.
 const CONNECT = 'syncfy_connector.api.connect'
 const CONNECTIONS = 'syncfy_connector.api.connections'
+const DOCUMENTS = 'syncfy_connector.api.documents'
 
 // What changes a login's state, its accounts or the movements that wait.
 export const LIVE_CONEXIONES = Object.freeze([
@@ -34,6 +35,10 @@ export const syncfy = {
       id_credential: idCredential,
       id_job: idJob,
     }),
+  // The SAT's opinión de cumplimiento and constancia keep no login: Syncfy
+  // reports only the job, and the connector keeps the files it leaves.
+  documentJob: (company, idJob) =>
+    connector(`${DOCUMENTS}.job_started`, { company, id_job: idJob }),
   syncNow: (name) => connector(`${CONNECTIONS}.sync_now`, { name }),
   pull: (name) => connector(`${CONNECTIONS}.pull`, { name }),
   disconnect: (name) => connector(`${CONNECTIONS}.disconnect`, { name }),
@@ -283,6 +288,7 @@ export function unlinkedAccounts(conexion) {
 
 /** The job id the widget reports in `credential.status` («…/jobs/<id>/status»). */
 export function jobOf(credential) {
+  if (/^[a-f0-9]{24}$/.test(credential?.id_job || '')) return credential.id_job
   const found = /jobs\/([a-f0-9]{24})\/status/.exec(credential?.status || '')
   return found ? found[1] : null
 }
@@ -295,7 +301,7 @@ export function ledgerLabel(name) {
 // Syncfy organization types per «what do you connect» chip.
 export const QUE_CONECTAS = Object.freeze([
   { value: 'banco', label: 'Banco o tarjeta', types: ['Bank'] },
-  { value: 'sat', label: 'SAT (facturas)', types: ['Government'] },
+  { value: 'sat', label: 'SAT', types: ['Government'] },
   { value: 'monedero', label: 'Monedero', types: ['Digital Wallet'] },
   { value: 'todo', label: 'Otra institución', types: [] },
 ])

@@ -88,8 +88,8 @@ const sentence = computed(() => {
       : 'Sus movimientos llegan solos cada día a Bancos, listos para conciliar.'
   if (kind.value === 'sat')
     return ctx.value?.fiscal_available
-      ? 'Entras con tu RFC y tu CIEC o e.firma. Las facturas que emites y recibes llegan a Contador.'
-      : 'Entras con tu RFC y tu CIEC o e.firma. Las facturas llegan a Muelle.'
+      ? 'Entras con tu RFC y tu CIEC o e.firma. Tus facturas, tu opinión de cumplimiento, tu constancia y tus declaraciones llegan a Contador.'
+      : 'Entras con tu RFC y tu CIEC o e.firma. Tus facturas, tu opinión de cumplimiento, tu constancia y tus declaraciones llegan a Muelle.'
   if (kind.value === 'monedero')
     return `Entras a tu monedero (Mercado Pago, PayPal…). ${lane}`
   if (kind.value === 'todo')
@@ -144,6 +144,12 @@ async function connect() {
       types,
       context: ctx.value,
     })
+    if (result?.documents) {
+      toast.success(
+        'Syncfy está leyendo tu documento en el SAT. Llega en unos minutos.',
+      )
+      return
+    }
     if (!result?.connection) return
     if (result.error) toast.warning(result.error)
     else
