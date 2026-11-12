@@ -77,6 +77,9 @@ const SELF_SERVICE = new Set([
   'contacts_verify',
   'contacts_remove',
   'contacts_toggle',
+  // «Almacenamiento»: Boat's space and its price, then the purchase or reduction.
+  'storage_quote',
+  'set_storage',
 ])
 
 function walk(dir, keep) {

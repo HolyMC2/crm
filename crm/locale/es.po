@@ -44722,6 +44722,156 @@ msgctxt "Cuenta"
 msgid "Users and registers"
 msgstr "Usuarios y cajas"
 
+#: frontend/src/components/cuenta/almacenamiento.js
+msgctxt "Cuenta"
+msgid "Goes down to {0} GB today"
+msgstr "Baja a {0} GB hoy"
+
+#: frontend/src/components/cuenta/almacenamiento.js
+msgctxt "Cuenta"
+msgid "Goes down to {0} GB on {1}"
+msgstr "Se reduce a {0} GB el {1}"
+
+#: frontend/src/components/cuenta/almacenamiento.js
+msgctxt "Cuenta"
+msgid "Goes down to {0} GB when the period ends"
+msgstr "Se reduce a {0} GB al cerrar el periodo"
+
+#: frontend/src/components/cuenta/almacenamiento.js
+msgctxt "Cuenta"
+msgid "You have {0} of {1} GB"
+msgstr "Tienes {0} de {1} GB"
+
+#: frontend/src/components/cuenta/almacenamiento.js
+msgctxt "Cuenta"
+msgid "Your plan includes {0} GB, plus {1} GB extra"
+msgstr "Tu plan incluye {0} GB, más {1} GB extra"
+
+#: frontend/src/components/cuenta/almacenamiento.js
+msgctxt "Cuenta"
+msgid "Your plan includes {0} GB"
+msgstr "Tu plan incluye {0} GB"
+
+#: frontend/src/components/cuenta/almacenamiento.js
+msgctxt "Cuenta"
+msgid "+{0} GB for {1} a month, IVA included"
+msgstr "+{0} GB por {1} al mes, IVA incluido"
+
+#: frontend/src/components/cuenta/almacenamiento.js
+msgctxt "Cuenta"
+msgid "More space is not available yet."
+msgstr "Más espacio aún no está disponible."
+
+#: frontend/src/components/cuenta/almacenamiento.js frontend/src/components/cuenta/Almacenamiento.vue frontend/src/components/cuenta/AlmacenamientoSheet.vue
+msgctxt "Cuenta"
+msgid "Add {0} GB"
+msgstr "Agregar {0} GB"
+
+#: frontend/src/components/cuenta/almacenamiento.js
+msgctxt "Cuenta"
+msgid "Go down to {0} GB extra"
+msgstr "Bajar a {0} GB extra"
+
+#: frontend/src/components/cuenta/almacenamiento.js frontend/src/components/cuenta/AlmacenamientoSheet.vue
+msgctxt "Cuenta"
+msgid "Remove {0} GB"
+msgstr "Quitar {0} GB"
+
+#: frontend/src/components/cuenta/almacenamiento.js frontend/src/components/cuenta/Almacenamiento.vue
+msgctxt "Cuenta"
+msgid "Cancel the scheduled reduction"
+msgstr "Cancelar la reducción programada"
+
+#: frontend/src/components/cuenta/almacenamiento.js frontend/src/components/cuenta/AlmacenamientoSheet.vue
+msgctxt "Cuenta"
+msgid "Extra space"
+msgstr "Espacio extra"
+
+#: frontend/src/components/cuenta/almacenamiento.js
+msgctxt "Cuenta"
+msgid "You added {0} GB"
+msgstr "Agregaste {0} GB"
+
+#: frontend/src/components/cuenta/almacenamiento.js
+msgctxt "Cuenta"
+msgid "Schedule the reduction"
+msgstr "Programar la reducción"
+
+#: frontend/src/components/cuenta/almacenamiento.js
+msgctxt "Cuenta"
+msgid "Reduction scheduled"
+msgstr "Reducción programada"
+
+#: frontend/src/components/cuenta/almacenamiento.js
+msgctxt "Cuenta"
+msgid "You removed {0} GB"
+msgstr "Quitaste {0} GB"
+
+#: frontend/src/components/cuenta/almacenamiento.js
+msgctxt "Cuenta"
+msgid "Scheduled reduction cancelled"
+msgstr "Reducción programada cancelada"
+
+#: frontend/src/components/cuenta/almacenamiento.js
+msgctxt "Cuenta"
+msgid "More space applies today: {0} GB in total."
+msgstr "El espacio nuevo aplica hoy: {0} GB en total."
+
+#: frontend/src/components/cuenta/almacenamiento.js
+msgctxt "Cuenta"
+msgid "Your extra space: {0} a month, IVA included"
+msgstr "Tu espacio extra: {0} al mes, IVA incluido"
+
+#: frontend/src/components/cuenta/almacenamiento.js
+msgctxt "Cuenta"
+msgid "When you confirm, you agree to pay {0} a month, IVA included, while you keep this space. You can reduce it whenever you like; it applies when the period ends."
+msgstr "Al confirmar aceptas pagar {0} al mes, IVA incluido, mientras tengas este espacio. Puedes reducirlo cuando quieras; aplica al cerrar el periodo."
+
+#: frontend/src/components/cuenta/almacenamiento.js
+msgctxt "Cuenta"
+msgid "It goes down to {0} GB today."
+msgstr "Baja a {0} GB desde hoy."
+
+#: frontend/src/components/cuenta/almacenamiento.js
+msgctxt "Cuenta"
+msgid "You keep {0} GB until {1}; from {2} you have {3} GB."
+msgstr "Sigues con {0} GB hasta el {1}; desde el {2} tienes {3} GB."
+
+#: frontend/src/components/cuenta/almacenamiento.js
+msgctxt "Cuenta"
+msgid "You save {0} a month, IVA included"
+msgstr "Ahorras {0} al mes, IVA incluido"
+
+#: frontend/src/components/cuenta/Almacenamiento.vue
+msgctxt "Cuenta"
+msgid "Checking your storage…"
+msgstr "Revisando tu espacio…"
+
+#: frontend/src/components/cuenta/Almacenamiento.vue
+msgctxt "Cuenta"
+msgid "Remove space"
+msgstr "Quitar espacio"
+
+#: frontend/src/components/cuenta/Almacenamiento.vue
+msgctxt "Cuenta"
+msgid "You cancelled your subscription. Resume it to change your storage."
+msgstr "Cancelaste tu suscripción. Reanúdala para cambiar tu espacio."
+
+#: frontend/src/components/cuenta/Almacenamiento.vue
+msgctxt "Cuenta"
+msgid "We could not read your storage."
+msgstr "No pudimos revisar tu espacio."
+
+#: frontend/src/components/cuenta/AlmacenamientoSheet.vue
+msgctxt "Cuenta"
+msgid "{0} GB"
+msgstr "{0} GB"
+
+#: frontend/src/components/cuenta/CuentaResumen.vue frontend/src/components/cuenta/salud.js
+msgctxt "Cuenta"
+msgid "Get more space"
+msgstr "Comprar más espacio"
+
 #: frontend/src/components/cuenta/suscripcion.js
 msgctxt "Cuenta"
 msgid "We archive your system on"

@@ -199,6 +199,16 @@
             <p v-if="item.sub" class="mt-0.5 text-sm text-ink-gray-6">
               {{ item.sub }}
             </p>
+            <!-- Boat sells storage blocks (capability «storage_blocks»): the
+                 meter's own way to more space, two taps with «Confirmar». -->
+            <Button
+              v-if="item.key === 'storage' && storageCta"
+              variant="subtle"
+              class="mt-2 min-h-11 max-sm:w-full"
+              :label="__('Get more space', null, 'Cuenta')"
+              data-testid="cuenta-uso-espacio"
+              @click="$emit('act', 'storage')"
+            />
           </li>
         </ul>
       </section>
@@ -292,6 +302,7 @@ import { StatusChip } from '@/components/ui'
 import ExportarDatos from './ExportarDatos.vue'
 import Incidentes from './Incidentes.vue'
 import SaludSistema from './SaludSistema.vue'
+import { capable } from './autoservicio'
 import { subscriptionView } from './suscripcion'
 import {
   accountAlerts,
@@ -363,6 +374,14 @@ const trialLine = computed(() =>
 )
 const wallet = computed(() => walletView(data.value))
 const usage = computed(() => usageRows(data.value))
+// Only where Boat can sell a block now and the plan has a ceiling to grow.
+const storageCta = computed(
+  () =>
+    props.actions.includes('storage') &&
+    capable(data.value, 'storage_blocks') &&
+    data.value?.storage_blocks?.can_add === true &&
+    Boolean(data.value?.meters?.storage?.allowance),
+)
 const health = computed(() => healthRows(data.value))
 const subscription = computed(() => subscriptionView(data.value))
 const cancelled = computed(

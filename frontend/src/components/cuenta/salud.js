@@ -322,13 +322,14 @@ const FINDINGS = {
     act: 'topup',
     cta: t('Top up'),
   }),
-  storage_high: (f) => ({
+  // With Boat's storage blocks the step buys more space (two taps).
+  storage_high: (f, caps) => ({
     level: 'warn',
     text: t('Your storage is at {0} of what your plan includes.', [
       percentText(f.pct),
     ]),
-    act: 'plans',
-    cta: t('See plans'),
+    act: caps.storage ? 'storage' : 'plans',
+    cta: caps.storage ? t('Get more space') : t('See plans'),
   }),
   seats_full: (f, caps) => ({
     level: 'warn',
@@ -371,7 +372,12 @@ const FINDINGS = {
 
 /** What the owner can fix, the serious ones first; a kind this panel does not know is left out. */
 export function findingRows(findings, data) {
-  const caps = { seats: capable(data, 'seats') }
+  const caps = {
+    seats: capable(data, 'seats'),
+    // Only where Boat can sell a block now (else the plans are the way).
+    storage:
+      capable(data, 'storage_blocks') && data?.storage_blocks?.can_add === true,
+  }
   const rows = (Array.isArray(findings) ? findings : [])
     .filter((f) => f && Object.hasOwn(FINDINGS, f.kind))
     .map((f, index) => ({

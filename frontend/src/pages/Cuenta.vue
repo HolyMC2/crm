@@ -208,7 +208,13 @@
           :door="door"
           @act="act"
         />
-        <CuentaTienda v-else-if="tab === 'tienda'" :door="door" @act="act" />
+        <CuentaTienda
+          v-else-if="tab === 'tienda'"
+          :door="door"
+          :open-storage="storageAsk"
+          @act="act"
+          @storage-handled="storageAsk = 0"
+        />
         <CuentaContactos v-else-if="tab === 'contactos'" :door="door" />
         <CuentaHistorial v-else-if="tab === 'historial'" :door="door" />
         <Button
@@ -305,6 +311,7 @@ const ACTIONS = [
   'support',
   'plans',
   'seats',
+  'storage',
   'addons',
   'card',
 ]
@@ -315,6 +322,9 @@ const phone = isMobile
 const scroller = ref(null)
 const copied = ref('')
 const mounted = reactive({ activar: false, recargar: false })
+// A «Comprar más espacio» tap waiting for Tienda's Almacenamiento, which
+// answers it once and hands it back (0), so a later visit opens nothing.
+const storageAsk = ref(0)
 
 // The processor returns the owner to this panel and the section they paid from.
 const door = createPagos({
@@ -395,8 +405,8 @@ function closeTopup() {
   door.closeTopup()
   dropQuery('recargar')
 }
-// «Ver planes», «Ver usuarios y cajas», «Ver complementos» and «Ver
-// tarjetas» land on their section. With Boat's
+// «Ver planes», «Ver usuarios y cajas», «Comprar más espacio», «Ver
+// complementos» and «Ver tarjetas» land on their section. With Boat's
 // self-service on, Tienda opens on users and apps, and those blocks grow as
 // Boat answers (seconds on a slow line), and a closing sheet hands focus
 // back to the control that opened it, which scrolls to it: while the page's
@@ -406,6 +416,7 @@ function closeTopup() {
 const SECTION = {
   plans: 'cuenta-planes',
   seats: 'cuenta-usuarios',
+  storage: 'cuenta-almacenamiento',
   addons: 'cuenta-complementos',
   card: 'cuenta-tarjetas',
 }
@@ -457,6 +468,11 @@ function act(key) {
   } else if (key === 'plans' || key === 'seats' || key === 'addons') {
     openTab('tienda')
     revealSection(SECTION[key])
+  } else if (key === 'storage') {
+    // «Comprar más espacio»: Almacenamiento opens its sheet on one more block.
+    openTab('tienda')
+    revealSection(SECTION.storage)
+    storageAsk.value += 1
   } else if (key === 'resume') openTab('resumen')
   else if (key === 'topup') {
     mounted.recargar = true

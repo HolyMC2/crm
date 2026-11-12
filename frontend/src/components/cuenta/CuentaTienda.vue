@@ -10,12 +10,20 @@
        a plan or cycle change that reads Boat's quote and applies at once.
        Rows and rules. -->
   <div class="space-y-8">
-    <!-- What Boat lets the owner change alone (capabilities «seats», «apps»):
-         the quick jobs first, then the plans and add-ons. -->
+    <!-- What Boat lets the owner change alone (capabilities «seats»,
+         «storage_blocks», «apps»): the quick jobs first, then the plans and
+         add-ons. -->
     <UsuariosCajas
       v-if="caps.seats"
       :door="door"
       @act="(key) => $emit('act', key)"
+    />
+    <Almacenamiento
+      v-if="caps.storage"
+      :door="door"
+      :open-request="openStorage"
+      @act="(key) => $emit('act', key)"
+      @handled="$emit('storage-handled')"
     />
     <Aplicaciones
       v-if="caps.apps"
@@ -370,13 +378,21 @@ const CambioPlanSheet = defineAsyncComponent(
   () => import('./CambioPlanSheet.vue'),
 )
 const UsuariosCajas = defineAsyncComponent(() => import('./UsuariosCajas.vue'))
+const Almacenamiento = defineAsyncComponent(
+  () => import('./Almacenamiento.vue'),
+)
 const Aplicaciones = defineAsyncComponent(() => import('./Aplicaciones.vue'))
 
 const props = defineProps({
   /** The page's payment door (pagos.js createPagos). */
   door: { type: Object, required: true },
+  /**
+   * Raised by the page to open «Almacenamiento»'s sheet on one more block;
+   * «storage-handled» says it was answered, so the page drops it.
+   */
+  openStorage: { type: Number, default: 0 },
 })
-const emit = defineEmits(['act'])
+const emit = defineEmits(['act', 'storage-handled'])
 
 // The prices of the cycle this site pays (meters.billing.billing_cycle): a plan
 // request carries the plan, never the cycle.
@@ -395,6 +411,7 @@ const caps = computed(() => {
   const data = props.door.boot.value
   return {
     seats: capable(data, 'seats'),
+    storage: capable(data, 'storage_blocks'),
     apps: capable(data, 'apps'),
     // Boat's plan change refuses a trial (activation comes first): a trial
     // keeps the request it always had.
