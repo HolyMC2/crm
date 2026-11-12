@@ -44,15 +44,9 @@
         @mousedown.prevent="pick(option)"
       >
         <span class="font-medium text-ink-gray-9">{{ option.label }}</span>
-        <span
-          v-if="option.label !== option.value || option.hint"
-          class="text-xs text-ink-gray-5"
-          >{{
-            [option.value !== option.label ? option.value : '', option.hint]
-              .filter(Boolean)
-              .join(' · ')
-          }}</span
-        >
+        <span v-if="optionNote(option)" class="text-xs text-ink-gray-5">{{
+          optionNote(option)
+        }}</span>
       </button>
       <p
         v-if="!loading && !options.length"
@@ -80,8 +74,16 @@ const props = defineProps({
   invalid: Boolean,
   clearOnPick: Boolean,
   load: { type: Function, required: true },
+  /** false: an option's code never shows under its name (a contact's or an
+   *  address's record name means nothing to the worker). */
+  codes: { type: Boolean, default: true },
 })
 const emit = defineEmits(['update:modelValue', 'pick'])
+// Under an option's name: its code (when it says something else) and its hint.
+function optionNote(option) {
+  const code = props.codes && option.value !== option.label ? option.value : ''
+  return [code, option.hint].filter(Boolean).join(' · ')
+}
 const inputId = useId()
 const listId = useId()
 const query = ref(props.display || props.modelValue || '')

@@ -164,6 +164,111 @@
           </button>
         </div>
 
+        <!-- Desk's order data: who at the supplier, where it goes and who is
+             billed, in what money and list, on what project. -->
+        <template v-for="group in groups" :key="group.key">
+          <h3
+            class="pt-2 text-sm font-semibold text-ink-gray-8 sm:col-span-2"
+            :data-mas-grupo="group.key"
+          >
+            {{ group.title }}
+          </h3>
+          <template v-if="group.key === 'moneda'">
+            <div>
+              <ComprasPicker
+                :model-value="values.currency"
+                :display="values.currency"
+                :label="__('Currency')"
+                :placeholder="__('Search currency')"
+                :empty-text="__('No enabled currency matches.')"
+                :load="(q) => options('currency', q)"
+                @update:model-value="changeCurrency"
+              />
+              <p class="mt-1 text-sm text-ink-gray-6">
+                {{
+                  values.currency
+                    ? __('Prices on this purchase are in {0}.', [
+                        values.currency,
+                      ])
+                    : __('The supplier’s currency, when you save.')
+                }}
+              </p>
+            </div>
+            <div v-if="foreign">
+              <FormControl
+                v-model="conversionRate"
+                type="number"
+                :label="__('Exchange rate')"
+                :placeholder="__('The day’s rate, when you save')"
+                min="0"
+                step="any"
+              />
+              <p class="mt-1 text-sm text-ink-gray-6">
+                {{
+                  Number(values.conversion_rate)
+                    ? __('1 {0} = {1}', [
+                        values.currency,
+                        money(values.conversion_rate, values.company_currency),
+                      ])
+                    : __('Empty: the rate of the purchase date is looked up.')
+                }}
+              </p>
+            </div>
+          </template>
+          <div
+            v-for="pick in group.picks"
+            :key="pick.key"
+            :data-mas-campo="pick.key"
+          >
+            <p
+              v-if="values.restricted?.includes(pick.key)"
+              class="text-base text-ink-gray-7"
+            >
+              <span class="mb-1.5 block text-xs text-ink-gray-5">{{
+                pick.label
+              }}</span>
+              {{ __('Set to one you cannot see; it stays as it is.') }}
+            </p>
+            <template v-else>
+              <ComprasPicker
+                :model-value="values[pick.key]"
+                :display="values[`${pick.key}_label`]"
+                :label="pick.label"
+                :placeholder="pick.placeholder"
+                :empty-text="pick.empty"
+                :disabled="Boolean(pick.waiting)"
+                :codes="false"
+                :load="(q) => options(pick.kind, q)"
+                @update:model-value="(v) => set({ [pick.key]: v })"
+                @pick="(o) => set({ [`${pick.key}_label`]: o.label })"
+              />
+              <p v-if="pick.waiting" class="mt-1 text-sm text-ink-gray-6">
+                {{ pick.waiting }}
+              </p>
+              <p v-else-if="pick.note" class="mt-1 text-sm text-ink-gray-6">
+                {{ pick.note }}
+              </p>
+              <button
+                v-if="values[pick.key] && !pick.waiting"
+                type="button"
+                class="press mt-1 min-h-11 text-sm text-ink-blue-link underline sm:min-h-0"
+                @click="set({ [pick.key]: '', [`${pick.key}_label`]: '' })"
+              >
+                {{ pick.clear }}
+              </button>
+            </template>
+          </div>
+          <!-- Desk asks the place only once there is an incoterm. -->
+          <FormControl
+            v-if="group.key === 'entrega' && values.incoterm"
+            v-model="namedPlace"
+            type="text"
+            :label="__('Incoterm place')"
+            :placeholder="__('Port, city or warehouse')"
+            maxlength="140"
+          />
+        </template>
+
         <div class="sm:col-span-2">
           <template v-if="values.terms_rich">
             <span class="mb-1.5 block text-xs text-ink-gray-5">{{
@@ -241,6 +346,10 @@ const props = defineProps({
   canIgnore: { type: Boolean, default: false },
   // Buyers pick a shipping rule with «select» on it (bootstrap `shipping`).
   canShip: { type: Boolean, default: false },
+  // The supplier the contact and its address belong to.
+  supplier: { type: String, default: '' },
+  // The supplier changed in this edit: its contact and address come on save.
+  supplierChanged: { type: Boolean, default: false },
 })
 const emit = defineEmits(['patch'])
 const open = ref(false)
@@ -262,6 +371,137 @@ const discountOn = field('apply_discount_on')
 const paymentTerms = field('payment_terms_template')
 const terms = field('terms')
 const ignoreRules = field('ignore_pricing_rule')
+const namedPlace = field('named_place')
+const conversionRate = field('conversion_rate')
+
+// A currency other than the company's has its rate; a new currency clears the
+// old one so the day's rate is looked up unless the worker types another.
+const foreign = computed(
+  () =>
+    Boolean(props.values.currency) &&
+    Boolean(props.values.company_currency) &&
+    props.values.currency !== props.values.company_currency,
+)
+function changeCurrency(value) {
+  if (value === props.values.currency) return
+  set({ currency: value, conversion_rate: '' })
+}
+
+function options(kind, search) {
+  return comprasApi('more_options', {
+    kind,
+    company: props.company,
+    supplier: props.supplier,
+    search,
+  })
+}
+// Desk's order data in four groups, each picker with what it waits for.
+const groups = computed(() => {
+  const noSupplier = !props.supplier
+    ? __('Choose the supplier first.')
+    : props.supplierChanged
+      ? __('The new supplier’s contact and address come when you save.')
+      : ''
+  const noCompany = !props.company ? __('Choose the company first.') : ''
+  return [
+    {
+      key: 'proveedor',
+      title: __('With the supplier'),
+      picks: [
+        {
+          key: 'contact_person',
+          kind: 'contact',
+          label: __('Supplier contact'),
+          placeholder: __('Search contact'),
+          empty: __('This supplier has no contact you can use.'),
+          clear: __('No contact'),
+          waiting: noSupplier,
+        },
+        {
+          key: 'supplier_address',
+          kind: 'supplier_address',
+          label: __('Supplier address'),
+          placeholder: __('Search address'),
+          empty: __('This supplier has no address you can use.'),
+          clear: __('No address'),
+          waiting: noSupplier,
+        },
+      ],
+    },
+    {
+      key: 'entrega',
+      title: __('Delivery and billing'),
+      picks: [
+        {
+          key: 'shipping_address',
+          kind: 'company_address',
+          label: __('Deliver to'),
+          placeholder: __('Search address'),
+          empty: __('The company has no address you can use.'),
+          clear: __('No address'),
+          waiting: noCompany,
+        },
+        {
+          key: 'billing_address',
+          kind: 'company_address',
+          label: __('Bill to'),
+          placeholder: __('Search address'),
+          empty: __('The company has no address you can use.'),
+          clear: __('No address'),
+          waiting: noCompany,
+        },
+        {
+          key: 'incoterm',
+          kind: 'incoterm',
+          label: __('Incoterm'),
+          placeholder: __('Search incoterm'),
+          empty: __('No incoterm matches.'),
+          clear: __('No incoterm'),
+        },
+      ],
+    },
+    {
+      key: 'moneda',
+      title: __('Currency and prices'),
+      picks: [
+        {
+          key: 'buying_price_list',
+          kind: 'price_list',
+          label: __('Price list'),
+          placeholder: __('Search price list'),
+          empty: __('No buying price list matches.'),
+          clear: __('No price list'),
+          note: __('A new list prices the lines it has when you save.'),
+        },
+      ],
+    },
+    {
+      key: 'cuentas',
+      title: __('Accounting'),
+      picks: [
+        {
+          key: 'project',
+          kind: 'project',
+          label: __('Project'),
+          placeholder: __('Search project'),
+          empty: __('No open project of this company matches.'),
+          clear: __('No project'),
+          waiting: noCompany,
+        },
+        {
+          key: 'cost_center',
+          kind: 'cost_center',
+          label: __('Cost center'),
+          placeholder: __('Search cost center'),
+          empty: __('No cost center of this company matches.'),
+          clear: __('No cost center'),
+          waiting: noCompany,
+          note: __('Lines without their own follow it.'),
+        },
+      ],
+    },
+  ]
+})
 
 async function loadShipping(search) {
   const rows = await comprasApi('shipping_rules', {
@@ -324,6 +564,11 @@ const summary = computed(() => {
   if (String(m.terms || '').trim())
     parts.push(__('with notes', null, 'Compras'))
   if (m.ignore_pricing_rule) parts.push(__('no automatic discounts'))
+  if (m.contact_person_label) parts.push(m.contact_person_label)
+  if (foreign.value) parts.push(m.currency)
+  if (m.buying_price_list_label) parts.push(m.buying_price_list_label)
+  if (m.project_label) parts.push(m.project_label)
+  if (m.cost_center_label) parts.push(m.cost_center_label)
   return parts.join(', ')
 })
 </script>

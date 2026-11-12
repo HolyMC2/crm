@@ -40483,3 +40483,307 @@ msgstr "Agregar o cambiar una tarjeta todavía no se hace aquí: soporte lo hace
 msgctxt "Cuenta"
 msgid "Wallet"
 msgstr "Monedero"
+#: frontend/src/pages/CompraOrden.vue
+msgid "Supplier confirmation"
+msgstr "Confirmación del proveedor"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "one you cannot see"
+msgstr "no tienes acceso"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "Supplier contact"
+msgstr "Contacto del proveedor"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "Supplier address"
+msgstr "Dirección del proveedor"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "Deliver to"
+msgstr "Entregar en"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "Bill to"
+msgstr "Facturar a"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "Incoterm"
+msgstr "Incoterm"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "{0}, 1 {0} = {1}"
+msgstr "{0}, 1 {0} = {1}"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "Cost center"
+msgstr "Centro de costos"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "The purchase is on hold."
+msgstr "La compra quedó en espera."
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "The purchase is open again."
+msgstr "La compra está abierta otra vez."
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "The purchase is closed."
+msgstr "La compra quedó cerrada."
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "Items changed. Tell the supplier."
+msgstr "Artículos cambiados. Avísale al proveedor."
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "Search currency"
+msgstr "Busca la moneda"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "No enabled currency matches."
+msgstr "Ninguna moneda activa coincide."
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "Prices on this purchase are in {0}."
+msgstr "Los precios de esta compra están en {0}."
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "The supplier’s currency, when you save."
+msgstr "La moneda del proveedor, al guardar."
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "Exchange rate"
+msgstr "Tipo de cambio"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "The day’s rate, when you save"
+msgstr "El tipo del día, al guardar"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "1 {0} = {1}"
+msgstr "1 {0} = {1}"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "Empty: the rate of the purchase date is looked up."
+msgstr "Vacío: se busca el tipo de cambio de la fecha de la compra."
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "Set to one you cannot see; it stays as it is."
+msgstr "Tiene uno al que no tienes acceso; se queda como está."
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "Incoterm place"
+msgstr "Lugar del incoterm"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "Port, city or warehouse"
+msgstr "Puerto, ciudad o bodega"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "Choose the supplier first."
+msgstr "Primero elige el proveedor."
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "The new supplier’s contact and address come when you save."
+msgstr "El contacto y la dirección del nuevo proveedor llegan al guardar."
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "Choose the company first."
+msgstr "Primero elige la empresa."
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "With the supplier"
+msgstr "Con el proveedor"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "Search contact"
+msgstr "Busca el contacto"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "This supplier has no contact you can use."
+msgstr "Este proveedor no tiene un contacto que puedas usar."
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "No contact"
+msgstr "Sin contacto"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "Search address"
+msgstr "Busca la dirección"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "This supplier has no address you can use."
+msgstr "Este proveedor no tiene una dirección que puedas usar."
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "No address"
+msgstr "Sin dirección"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "Delivery and billing"
+msgstr "Entrega y facturación"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "The company has no address you can use."
+msgstr "La empresa no tiene una dirección que puedas usar."
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "Search incoterm"
+msgstr "Busca el incoterm"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "No incoterm matches."
+msgstr "Ningún incoterm coincide."
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "No incoterm"
+msgstr "Sin incoterm"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "Currency and prices"
+msgstr "Moneda y precios"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "Search price list"
+msgstr "Busca la lista de precios"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "No buying price list matches."
+msgstr "Ninguna lista de precios de compra coincide."
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "No price list"
+msgstr "Sin lista de precios"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "A new list prices the lines it has when you save."
+msgstr "Una lista nueva pone sus precios en los artículos que tiene al guardar."
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "Accounting"
+msgstr "Contabilidad"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "Search project"
+msgstr "Busca el proyecto"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "No open project of this company matches."
+msgstr "Ningún proyecto abierto de esta empresa coincide."
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "No project"
+msgstr "Sin proyecto"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "Search cost center"
+msgstr "Busca el centro de costos"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "No cost center"
+msgstr "Sin centro de costos"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "Lines without their own follow it."
+msgstr "Los artículos sin uno propio lo siguen."
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "Change items"
+msgstr "Cambiar artículos"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "The supplier already has this purchase: tell them what changed after you save."
+msgstr "El proveedor ya tiene esta compra: avísale qué cambió después de guardar."
+
+#: frontend/src/pages/CompraOrden.vue
+msgctxt "Compras"
+msgid "Price"
+msgstr "Precio"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "New subtotal: {0}"
+msgstr "Nuevo subtotal: {0}"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "New line"
+msgstr "Artículo nuevo"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "{0} arrived: it cannot go under that."
+msgstr "Llegaron {0}: no puede bajar de eso."
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "Billed {0}: it stays."
+msgstr "Facturado {0}: se queda."
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "Nothing arrived yet"
+msgstr "Aún no llega nada"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "Put a quantity above zero."
+msgstr "Pon una cantidad mayor que cero."
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "{0} already arrived: put at least that."
+msgstr "Ya llegaron {0}: pon al menos eso."
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "Put its price: a confirmed purchase does not look it up."
+msgstr "Pon su precio: una compra confirmada no lo busca sola."
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "The discount goes from 0 to 100 %."
+msgstr "El descuento va de 0 a 100 %."
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "Confirmation and delivery"
+msgstr "Confirmación y entrega"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "What the supplier answered: their order number, its date, and when it arrives."
+msgstr "Lo que contestó el proveedor: su número de pedido, su fecha y cuándo llega."
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "Supplier confirmation no."
+msgstr "Número de confirmación del proveedor"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "Their order or quote number"
+msgstr "Su número de pedido o cotización"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "Confirmation date"
+msgstr "Fecha de confirmación"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "Lines that had the old date take the new one."
+msgstr "Los artículos que tenían la fecha anterior toman la nueva."
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "Put on hold"
+msgstr "Poner en espera"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "Receiving and billing wait until you resume it. Say why, for whoever opens it next."
+msgstr "La recepción y la facturación esperan hasta que la reanudes. Di por qué, para quien la abra después."
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "Why it waits"
+msgstr "Por qué espera"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "The supplier is out of stock, prices under review…"
+msgstr "El proveedor no tiene existencias, precios en revisión…"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "Close purchase"
+msgstr "Cerrar compra"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "What has not arrived is no longer expected: the purchase leaves To receive. You can reopen it later."
+msgstr "Lo que no ha llegado ya no se espera: la compra sale de Por recibir. Puedes reabrirla después."
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "The rest is not coming, we bought it elsewhere…"
+msgstr "Lo demás no llegará, lo compramos en otro lado…"

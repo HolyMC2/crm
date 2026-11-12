@@ -319,13 +319,14 @@
                 :empty-text="__('No supplier you can use matches.')"
                 :invalid="showMissing && missing.includes('supplier')"
                 :load="(q) => comprasApi('suppliers', { search: q })"
-                @pick="(o) => (form.supplier_label = o.label)"
+                @pick="pickSupplier"
               />
               <FormControl
-                v-model="form.company"
+                :model-value="form.company"
                 type="select"
                 :label="__('Company', null, 'Compras')"
                 :options="companyOptions"
+                @update:model-value="pickCompany"
               />
               <ComprasPicker
                 v-model="form.set_warehouse"
@@ -519,6 +520,8 @@
                   : Boolean(doc.can_ignore_pricing_rule)
               "
               :can-ship="Boolean(boot?.capabilities?.shipping)"
+              :supplier="form.supplier"
+              :supplier-changed="supplierChanged"
               @patch="(patch) => Object.assign(form, patch)"
             />
             <div
@@ -844,6 +847,34 @@
       :reason="handoff.reason"
       @sent="load"
     />
+
+    <!-- A confirmed purchase: its lines, the supplier's confirmation and the
+         delivery date, and its state (Desk's «Update Items» and «Estado»). -->
+    <OrdenCambiarLineas
+      v-if="!isNew"
+      v-model:open="linesOpen"
+      :rows="rows"
+      :currency="doc.currency || 'MXN'"
+      :busy="busy"
+      :error="sheetError"
+      @save="saveLines"
+    />
+    <OrdenConfirmacion
+      v-if="!isNew"
+      v-model:open="detailsOpen"
+      :document="doc"
+      :busy="busy"
+      :error="sheetError"
+      @save="saveDetails"
+    />
+    <OrdenEstado
+      v-if="!isNew"
+      v-model:open="estado.open"
+      :mode="estado.mode"
+      :busy="busy"
+      :error="sheetError"
+      @confirm="(reason) => setStatus(estado.mode, reason)"
+    />
   </div>
 </template>
 <script setup>
@@ -864,6 +895,9 @@ import ComprasPicker from '@/components/compras/ComprasPicker.vue'
 import HandoffDialog from '@/components/compras/HandoffDialog.vue'
 import OrdenDescuentos from '@/components/compras/OrdenDescuentos.vue'
 import OrdenMasDatos from '@/components/compras/OrdenMasDatos.vue'
+import OrdenCambiarLineas from '@/components/compras/OrdenCambiarLineas.vue'
+import OrdenConfirmacion from '@/components/compras/OrdenConfirmacion.vue'
+import OrdenEstado from '@/components/compras/OrdenEstado.vue'
 import ApprovalAsk from '@/components/pendientes/ApprovalAsk.vue'
 import ConfirmSheet from '@/components/documentos/ConfirmSheet.vue'
 import DatosList from '@/components/documentos/DatosList.vue'
@@ -890,6 +924,7 @@ import RecordKit from '@/components/documentos/compras/RecordKit.vue'
 import { useRecordKit } from '@/components/documentos/compras/recordKit'
 import { documentRoute } from '@/documentos/registry'
 import {
+  CHANGE_ICONS,
   MISSING_LABELS,
   RECORD_KEYS,
   billRoute,
@@ -898,6 +933,8 @@ import {
   comprasBoot,
   createOrder,
   followDestination,
+  forgetCompanyData,
+  forgetSupplierData,
   loadComprasBoot,
   loadDraft,
   loadWholeOrder,
@@ -957,7 +994,31 @@ const doneNotice = ref('')
 const draftNotice = ref('')
 const companies = ref([])
 const handoff = reactive({ open: false, action: '', title: '', reason: '' })
-const pending = { save: null, confirm: null, receive: null, bill: null }
+const pending = {
+  save: null,
+  confirm: null,
+  receive: null,
+  bill: null,
+  lines: null,
+  details: null,
+  status: null,
+}
+// A confirmed purchase's sheets: its lines, its confirmation and delivery, its state.
+const linesOpen = ref(false)
+const detailsOpen = ref(false)
+const estado = reactive({ open: false, mode: 'hold' })
+const sheetOpen = computed(
+  () => linesOpen.value || detailsOpen.value || estado.open,
+)
+// A refusal shows in the open sheet, beside what the worker typed.
+const sheetError = computed(() =>
+  sheetOpen.value && problem.value
+    ? [problem.value.title, problem.value.detail].filter(Boolean).join('. ')
+    : '',
+)
+watch(sheetOpen, (open) => {
+  if (!open && problem.value?.kind !== 'offline') problem.value = null
+})
 let lastCall = null
 let rowKey = 0
 
@@ -1018,6 +1079,17 @@ const secondary = computed(() =>
       action.key === 'bill' &&
       (action.allowed || action.resolve),
   ),
+)
+// What a confirmed purchase still lets change (service `changes`).
+const changes = computed(() => data.value.changes || [])
+// The supplier picked in this edit is not the saved one: its contact and
+// address come with the save.
+const supplierChanged = computed(
+  () =>
+    editing.value &&
+    !isNew.value &&
+    Boolean(form.supplier) &&
+    form.supplier !== (doc.value.supplier || ''),
 )
 // The queue this order was opened from, kept through Escáner and Gastos.
 const listQuery = computed(() =>
@@ -1117,6 +1189,15 @@ const nextSteps = computed(() => {
       busy: true,
       run: () => (action.allowed ? runAction(action) : resolve(action)),
     })
+  const lines = changes.value.find((change) => change.key === 'lines')
+  if (lines?.allowed)
+    out.push({
+      key: 'lines',
+      label: lines.label,
+      icon: CHANGE_ICONS.lines,
+      testid: 'orden-cambiar-lineas',
+      run: () => runChange(lines),
+    })
   if (canEdit.value && p?.resolve?.kind !== 'edit')
     out.push({
       key: 'edit',
@@ -1163,6 +1244,25 @@ const DATOS_SHOWN = [
   'status',
   'per_received',
   'per_billed',
+  'order_confirmation_no',
+  'order_confirmation_date',
+  'contact_person',
+  'contact_display',
+  'contact_email',
+  'contact_mobile',
+  'supplier_address',
+  'address_display',
+  'shipping_address',
+  'shipping_address_display',
+  'billing_address',
+  'billing_address_display',
+  'currency',
+  'conversion_rate',
+  'buying_price_list',
+  'project',
+  'cost_center',
+  'incoterm',
+  'named_place',
 ]
 const facts = computed(() => {
   const d = doc.value
@@ -1181,6 +1281,16 @@ const facts = computed(() => {
       label: __('Delivery date', null, 'Compras'),
       value: formatDay(d.schedule_date),
     })
+  if (d.order_confirmation_no || d.order_confirmation_date)
+    out.push({
+      key: 'confirmacion',
+      icon: 'lucide-badge-check',
+      label: __('Supplier confirmation'),
+      value: [d.order_confirmation_no, formatDay(d.order_confirmation_date)]
+        .filter(Boolean)
+        .join(', '),
+    })
+  for (const fact of orderDataFacts(d)) out.push(fact)
   if (data.value.requests?.length)
     out.push({
       key: 'solicitudes',
@@ -1258,6 +1368,121 @@ const facts = computed(() => {
     })
   return out
 })
+// Desk's order data as rows: who at the supplier, where it goes, the money, the accounts.
+function orderDataFacts(d) {
+  const labels = d.labels || {}
+  const restricted = d.restricted || []
+  const shown = (key) =>
+    restricted.includes(key) ? __('one you cannot see') : labels[key] || d[key]
+  const out = []
+  const add = (key, icon, label, field) => {
+    if (d[field] || restricted.includes(field))
+      out.push({ key, icon, label, value: shown(field) })
+  }
+  add('contacto', 'lucide-contact', __('Supplier contact'), 'contact_person')
+  add(
+    'dir-proveedor',
+    'lucide-map-pin',
+    __('Supplier address'),
+    'supplier_address',
+  )
+  add('entregar-en', 'lucide-warehouse', __('Deliver to'), 'shipping_address')
+  add('facturar-a', 'lucide-building-2', __('Bill to'), 'billing_address')
+  if (d.incoterm)
+    out.push({
+      key: 'incoterm',
+      icon: 'lucide-ship',
+      label: __('Incoterm'),
+      value: [d.incoterm, d.named_place].filter(Boolean).join(', '),
+    })
+  if (d.currency && d.company_currency && d.currency !== d.company_currency)
+    out.push({
+      key: 'moneda',
+      icon: 'lucide-coins',
+      label: __('Currency'),
+      value: __('{0}, 1 {0} = {1}', [
+        d.currency,
+        money(d.conversion_rate, d.company_currency),
+      ]),
+    })
+  add('lista', 'lucide-list', __('Price list'), 'buying_price_list')
+  add('proyecto', 'lucide-folder-kanban', __('Project'), 'project')
+  add('centro', 'lucide-landmark', __('Cost center'), 'cost_center')
+  return out
+}
+
+// ── a confirmed purchase: its lines, its confirmation, its state ─────────
+const STATUS_DONE = {
+  hold: () => __('The purchase is on hold.'),
+  resume: () => __('The purchase is open again.'),
+  close: () => __('The purchase is closed.'),
+  reopen: () => __('The purchase is open again.'),
+}
+function runChange(change) {
+  if (!change.allowed) return resolve(change)
+  problem.value = null
+  if (change.key === 'lines') linesOpen.value = true
+  else if (change.key === 'details') detailsOpen.value = true
+  else if (change.key === 'hold' || change.key === 'close')
+    Object.assign(estado, { open: true, mode: change.key })
+  // Resume and re-open are undone as easily as they are done: one tap.
+  else setStatus(change.key)
+}
+async function saveLines(items) {
+  try {
+    await call('lines', 'update_lines', {
+      name: doc.value.name,
+      modified: doc.value.modified,
+      items,
+    })
+  } catch {
+    return
+  }
+  linesOpen.value = false
+  toast.success(__('Items changed. Tell the supplier.'))
+  await load()
+}
+async function saveDetails(values) {
+  try {
+    await call('details', 'save_confirmed', {
+      name: doc.value.name,
+      modified: doc.value.modified,
+      data: values,
+    })
+  } catch {
+    return
+  }
+  detailsOpen.value = false
+  toast.success(__('Purchase saved'))
+  await load()
+}
+async function setStatus(change, reason = '') {
+  try {
+    await call('status', 'change_status', {
+      name: doc.value.name,
+      modified: doc.value.modified,
+      change,
+      reason,
+    })
+  } catch {
+    return
+  }
+  estado.open = false
+  toast.success(STATUS_DONE[change]?.() || __('Purchase saved'))
+  await load()
+}
+
+// The editor's supplier and company: what belonged to the previous one goes.
+function pickSupplier(option) {
+  form.supplier_label = option.label
+  if (option.value !== (doc.value.supplier || '')) forgetSupplierData(form)
+}
+function pickCompany(value) {
+  if (value === form.company) return
+  form.company = value
+  forgetCompanyData(form)
+}
+
 // A line's discount on the saved purchase, with the supplier discount that set it.
 function rowDiscount(row) {
   const off = __('{0} % off', [qty(row.discount_percentage)])
@@ -1334,6 +1559,16 @@ const almacenRows = computed(() => {
 // ── the bolt: the hero's steps and labels; «⋯» keeps print, share, mail ──
 const boltSteps = computed(() => {
   const out = nextSteps.value.filter((step) => step.key !== 'edit')
+  // The confirmed purchase's other changes; one not the worker's asks someone.
+  for (const change of changes.value) {
+    if (out.some((step) => step.key === change.key)) continue
+    out.push({
+      key: change.key,
+      label: change.allowed ? change.label : change.resolve?.label,
+      icon: change.allowed ? CHANGE_ICONS[change.key] : 'lucide-send',
+      run: () => runChange(change),
+    })
+  }
   if (almacenRows.value.some((row) => row.labels))
     out.push({
       label: __('Print labels'),
@@ -1623,6 +1858,18 @@ function retryLast() {
   if (lastCall.kind === 'confirm') return confirm()
   if (lastCall.kind === 'receive') return receive()
   if (lastCall.kind === 'bill') return startBill()
+  if (['lines', 'details', 'status'].includes(lastCall.kind))
+    return comprasApi(lastCall.method, {
+      request_id: pending[lastCall.kind],
+      ...lastCall.args,
+    })
+      .then(() => {
+        pending[lastCall.kind] = null
+        linesOpen.value = detailsOpen.value = estado.open = false
+        problem.value = null
+        return load()
+      })
+      .catch((error) => (problem.value = problemOf(error)))
 }
 
 async function save() {
@@ -2065,6 +2312,7 @@ useLiveWatch(
   () => {
     // Never under the worker's hands: the editor and open dialogs keep their input.
     if (isNew.value || editing.value || busy.value || reviewOpen.value) return
+    if (sheetOpen.value) return
     if (handoff.open || conflict.value || problem.value) return
     load()
   },

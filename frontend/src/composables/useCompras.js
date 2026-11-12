@@ -391,6 +391,51 @@ export function moreFrom(document = {}) {
     terms: document.terms || '',
     terms_rich: Boolean(document.terms_rich),
     ignore_pricing_rule: Boolean(document.ignore_pricing_rule),
+    ...orderDataFrom(document),
+  }
+}
+
+/** Desk's order data the shell picks from a list: the field and what the worker reads. */
+export const ORDER_PICKS = [
+  'contact_person',
+  'supplier_address',
+  'shipping_address',
+  'billing_address',
+  'buying_price_list',
+  'project',
+  'cost_center',
+  'incoterm',
+]
+
+function orderDataFrom(document = {}) {
+  const labels = document.labels || {}
+  const out = {}
+  for (const key of ORDER_PICKS) {
+    out[key] = document[key] || ''
+    out[`${key}_label`] = labels[key] || document[key] || ''
+  }
+  return {
+    ...out,
+    currency: document.currency || '',
+    company_currency: document.company_currency || '',
+    conversion_rate: Number(document.conversion_rate) || '',
+    named_place: document.named_place || '',
+    // Set to something this worker cannot open: shown as restricted, never sent.
+    restricted: [...(document.restricted || [])],
+  }
+}
+
+/** The order data the service takes, for what the form holds. */
+function orderDataValues(form) {
+  const restricted = form.restricted || []
+  const out = {}
+  for (const key of ORDER_PICKS)
+    out[key] = restricted.includes(key) ? undefined : form[key] || null
+  return {
+    ...out,
+    currency: form.currency || null,
+    conversion_rate: Number(form.conversion_rate) || null,
+    named_place: String(form.named_place || '').trim() || null,
   }
 }
 
@@ -409,7 +454,47 @@ export function moreValues(form) {
     // Formatted notes are Desk's: never sent from here.
     terms: form.terms_rich ? undefined : String(form.terms || '').trim(),
     ignore_pricing_rule: form.ignore_pricing_rule ? 1 : 0,
+    ...orderDataValues(form),
   }
+}
+
+/** A new supplier brings its own contact and address when the purchase is saved: the
+ *  previous supplier's are dropped from the form and never sent. */
+export function forgetSupplierData(form) {
+  for (const key of ['contact_person', 'supplier_address']) {
+    form[key] = ''
+    form[`${key}_label`] = ''
+  }
+  form.more_base = {
+    ...(form.more_base || {}),
+    contact_person: null,
+    supplier_address: null,
+  }
+}
+
+/** Another company: its addresses, project and cost center are the old company's, so they
+ *  go (and the save clears them). */
+export function forgetCompanyData(form) {
+  for (const key of [
+    'shipping_address',
+    'billing_address',
+    'project',
+    'cost_center',
+  ]) {
+    if ((form.restricted || []).includes(key)) continue
+    form[key] = ''
+    form[`${key}_label`] = ''
+  }
+}
+
+/** The hero and the bolt's changes of a confirmed purchase, from the service's `changes`. */
+export const CHANGE_ICONS = {
+  lines: 'lucide-pencil',
+  details: 'lucide-calendar-check',
+  hold: 'lucide-pause',
+  resume: 'lucide-play',
+  close: 'lucide-lock',
+  reopen: 'lucide-lock-open',
 }
 
 /** Only the «Más datos» the worker changed travel, so a save never puts back
