@@ -10,6 +10,8 @@ vi.mock('frappe-ui', async () => {
   state.theme = ref('light')
   return {
     call: (...args) => state.call(...args),
+    // Seguridad's reads are GETs; without doco they fail and the rows hide.
+    frappeRequest: ({ url, params }) => state.call(url, params),
     toast: { success: vi.fn(), error: vi.fn() },
     useColorScheme: () => ({
       colorScheme: state.theme,

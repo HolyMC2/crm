@@ -4,6 +4,7 @@ from frappe import _
 from frappe.core.api.file import get_max_file_size
 from frappe.rate_limiter import rate_limit
 from frappe.translate import get_all_translations
+from frappe.twofactor import should_run_2fa
 from frappe.utils import cstr, split_emails, validate_email_address
 
 from crm.utils import is_frappe_version
@@ -104,6 +105,7 @@ def _module_permission_incident():
 		frappe.logger("crm").warning("CRM module inventory unavailable; access denied")
 
 
+# nosemgrep: guest-whitelisted-method (the invitation key is the credential; rate limited)
 @frappe.whitelist(allow_guest=True)
 @rate_limit(limit=10, seconds=60 * 60)
 def accept_invitation(key: str | None = None):
@@ -127,6 +129,10 @@ def accept_invitation(key: str | None = None):
 			# which logs them in and redirects to /crm once the password is set
 			user = frappe.get_doc("User", invitation.email)
 			frappe.local.response["location"] = user._reset_password()
+		elif should_run_2fa(invitation.email):
+			# login_as never asks for the second factor: a person who signs in with a code from
+			# their app does it on the sign-in page, which then opens the CRM.
+			frappe.local.response["location"] = "/login?redirect-to=%2Fcrm"
 		else:
 			frappe.local.login_manager.login_as(invitation.email)
 			frappe.local.response["location"] = "/crm"

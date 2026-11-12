@@ -132,6 +132,26 @@
             data-testid="perfil-password-row"
             @click="passwordOpen = true"
           />
+          <!-- Only where doco offers it, or for someone who already has it on. -->
+          <ListRow
+            v-if="seguridad?.two_step"
+            class="-mx-4"
+            icon="lucide-shield-check"
+            :title="__('Two-step verification', null, 'Perfil')"
+            :subtitle="twoStepLine(seguridad.two_step)"
+            :subtitle-lines="2"
+            data-testid="perfil-dos-pasos-row"
+            @click="twoStepOpen = true"
+          />
+          <ListRow
+            v-if="seguridad?.sessions"
+            class="-mx-4"
+            icon="lucide-monitor-smartphone"
+            :title="__('Devices signed in', null, 'Perfil')"
+            :subtitle="sessionsLine(seguridad.sessions)"
+            data-testid="perfil-sesiones-row"
+            @click="sessionsOpen = true"
+          />
         </section>
 
         <section aria-labelledby="perfil-preferencias" class="space-y-4">
@@ -267,6 +287,20 @@
       @close="passwordOpen = false"
       @saved="afterPassword"
     />
+    <TwoStepSheet
+      v-if="twoStepOpen || twoStepMounted"
+      :open="twoStepOpen"
+      :status="seguridad?.two_step || null"
+      :other-devices="Math.max(0, Number(seguridad?.sessions?.count || 0) - 1)"
+      @close="twoStepOpen = false"
+      @changed="afterTwoStep"
+    />
+    <SesionesSheet
+      v-if="sessionsOpen || sessionsMounted"
+      :open="sessionsOpen"
+      @close="sessionsOpen = false"
+      @changed="loadSecurity"
+    />
   </div>
 </template>
 <script setup>
@@ -286,10 +320,13 @@ import {
   languageLabel,
   loadLanguages,
   loadProfile,
+  loadSeguridad,
   loadTimezones,
   nameOf,
   saveProfile,
+  sessionsLine,
   timezoneGroups,
+  twoStepLine,
   uploadPhoto,
   zoneLabel,
 } from '@/components/perfil/perfil'
@@ -304,6 +341,12 @@ const NombreSheet = defineAsyncComponent(
 )
 const PasswordSheet = defineAsyncComponent(
   () => import('@/components/perfil/PasswordSheet.vue'),
+)
+const TwoStepSheet = defineAsyncComponent(
+  () => import('@/components/perfil/TwoStepSheet.vue'),
+)
+const SesionesSheet = defineAsyncComponent(
+  () => import('@/components/perfil/SesionesSheet.vue'),
 )
 // An avatar is shown small: 512 px keeps a phone photo light.
 const PHOTO_SIDE = 512
@@ -335,8 +378,17 @@ const nameOpen = ref(false)
 const nameMounted = ref(false)
 const passwordOpen = ref(false)
 const passwordMounted = ref(false)
+const twoStepOpen = ref(false)
+const twoStepMounted = ref(false)
+const sessionsOpen = ref(false)
+const sessionsMounted = ref(false)
+// Seguridad's rows past the password: doco's two-step verification and
+// sessions. null while loading or where the site has neither.
+const seguridad = ref(null)
 watch(nameOpen, (open) => open && (nameMounted.value = true))
 watch(passwordOpen, (open) => open && (passwordMounted.value = true))
+watch(twoStepOpen, (open) => open && (twoStepMounted.value = true))
+watch(sessionsOpen, (open) => open && (sessionsMounted.value = true))
 
 const user = computed(() => shellBoot.value?.user?.name || '')
 // The shop's zone leads the list (window.timezone.system from the page boot).
@@ -390,6 +442,7 @@ async function load() {
       ),
     )
   }
+  loadSecurity()
   loadLanguages()
     .then((rows) => (languages.value = rows))
     .catch(() => {})
@@ -399,6 +452,18 @@ async function load() {
 }
 watch(user, load, { immediate: true })
 
+function loadSecurity() {
+  return loadSeguridad()
+    .then((answer) => (seguridad.value = answer || null))
+    .catch(() => (seguridad.value = null))
+}
+
+function afterTwoStep(status) {
+  if (status && seguridad.value)
+    seguridad.value = { ...seguridad.value, two_step: status }
+  loadSecurity()
+}
+
 async function saveName(values) {
   keep(await saveProfile(user.value, values))
 }
@@ -406,9 +471,18 @@ function afterName() {
   nameOpen.value = false
   toast.success(__('Name saved', null, 'Perfil'))
 }
-function afterPassword() {
+function afterPassword(signedOutOthers) {
   passwordOpen.value = false
-  toast.success(__('Password changed', null, 'Perfil'))
+  toast.success(
+    signedOutOthers
+      ? __(
+          'Password changed. Your other devices are signed out.',
+          null,
+          'Perfil',
+        )
+      : __('Password changed', null, 'Perfil'),
+  )
+  if (signedOutOthers) loadSecurity()
 }
 
 async function pickPhoto(event) {

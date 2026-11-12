@@ -20,6 +20,15 @@
           :autocomplete="field.autocomplete"
         />
       </label>
+      <label class="flex min-h-11 items-center gap-3 text-base text-ink-gray-8">
+        <input
+          v-model="logoutOthers"
+          type="checkbox"
+          class="size-5 rounded-4"
+          data-testid="perfil-password-cerrar-otras"
+        />
+        {{ __('Sign out of the other devices', null, 'Perfil') }}
+      </label>
       <p
         v-if="problem"
         class="text-sm text-ink-red-7"
@@ -64,7 +73,7 @@ import { passwordProblem } from './perfil'
 
 const props = defineProps({
   open: { type: Boolean, default: false },
-  /** (current, next) => Promise: crm.api.user.change_password. */
+  /** (current, next, logoutOthers) => Promise: crm.api.user.change_password. */
   submit: { type: Function, required: true },
 })
 const emit = defineEmits(['close', 'saved'])
@@ -87,6 +96,7 @@ const FIELDS = [
   },
 ]
 const values = reactive({ current: '', next: '', confirm: '' })
+const logoutOthers = ref(false)
 const saving = ref(false)
 const problem = ref('')
 watch(
@@ -94,6 +104,7 @@ watch(
   (open) => {
     if (!open) return
     Object.assign(values, { current: '', next: '', confirm: '' })
+    logoutOthers.value = false
     problem.value = ''
   },
 )
@@ -113,8 +124,8 @@ async function save() {
   if (hint.value || saving.value) return
   saving.value = true
   try {
-    await props.submit(values.current, values.next)
-    emit('saved')
+    await props.submit(values.current, values.next, logoutOthers.value)
+    emit('saved', logoutOthers.value)
   } catch (error) {
     problem.value = errorText(
       error,

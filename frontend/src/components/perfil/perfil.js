@@ -2,7 +2,7 @@
 // person the shell admits, with or without Ventas. The same reads and writes
 // Ventas' Profile and Preferences settings make (frappe.client on User,
 // crm.api.user.change_password, the timezone list), on phone-first screens.
-import { call } from 'frappe-ui'
+import { call, frappeRequest } from 'frappe-ui'
 import { LOCALE } from '@/utils/display'
 
 const t = (text, replace) => __(text, replace, 'Perfil')
@@ -20,11 +20,113 @@ export function saveProfile(user, values) {
   })
 }
 
-export function changePassword(oldPassword, newPassword) {
+/** `logoutOthers`: also sign out every other device (this one stays signed in). */
+export function changePassword(oldPassword, newPassword, logoutOthers = false) {
   return call('crm.api.user.change_password', {
     old_password: oldPassword,
     new_password: newPassword,
+    ...(logoutOthers ? { logout_others: 1 } : {}),
   })
+}
+
+// Seguridad: doco's two-step verification (doco.docoutils.two_step) and
+// sessions (doco.docoutils.sesiones). A site without them answers an error and
+// the rows stay hidden.
+const TWO_STEP = 'doco.docoutils.two_step.api.'
+const SESSIONS = 'doco.docoutils.sesiones.'
+const read = (method) => frappeRequest({ url: method, method: 'GET' })
+
+/** { two_step: status | null, sessions: { count, current_device, current_kind } } */
+export function loadSeguridad() {
+  return read(`${TWO_STEP}seguridad`)
+}
+
+/** { uri, qr, key, issuer, expires_in }: a new key for the phone app. */
+export function startTwoStep() {
+  return call(`${TWO_STEP}empezar`)
+}
+
+/** { codes, status }: on, with its recovery codes shown this once. */
+export function confirmTwoStep(code, password) {
+  return call(`${TWO_STEP}confirmar`, { code, password })
+}
+
+export function newRecoveryCodes(password, code) {
+  return call(`${TWO_STEP}nuevos_codigos`, { password, code })
+}
+
+export function turnOffTwoStep(password, code) {
+  return call(`${TWO_STEP}desactivar`, { password, code })
+}
+
+/** { sessions: [{ id, device, kind, current, support, last_active, started }], trusted_devices } */
+export function loadSessions() {
+  return read(`${SESSIONS}sesiones`)
+}
+
+/** { closed, sesiones }: every other device signs out; this one stays. */
+export function closeOtherSessions() {
+  return call(`${SESSIONS}cerrar_otras`)
+}
+
+/** One other device signs out (Frappe's own, by the session's id). */
+export function closeSession(id) {
+  return call('frappe.core.doctype.user.user.clear_session', { sid_hash: id })
+}
+
+/** What the two-step row says under its title. */
+export function twoStepLine(status) {
+  if (!status) return ''
+  if (status.enrolled && !status.asked)
+    return t(
+      'Signing in is not asking for your code. Open it to set it up again.',
+    )
+  if (!status.on)
+    return t(
+      'Off. Turn it on and signing in also asks for a code from your phone.',
+    )
+  const left = Number(status.codes_left || 0)
+  if (!left) return t('On. You have no recovery codes left: make new ones.')
+  return left === 1
+    ? t('On. 1 recovery code left.')
+    : t('On. {0} recovery codes left.', [left])
+}
+
+/** What the sessions row says under its title. */
+export function sessionsLine(summary) {
+  const count = Number(summary?.count || 0)
+  if (count <= 1) return t('Only this device')
+  return t('{0} devices, this one included', [count])
+}
+
+/** The recovery codes as a text file a person keeps. */
+export function codesText(codes, issuer) {
+  return [
+    issuer ? t('Recovery codes for {0}', [issuer]) : t('Your recovery codes'),
+    t('Each code works once, to sign in without your phone.'),
+    '',
+    ...(codes || []),
+    '',
+  ].join('\n')
+}
+
+/** Copy text; false when the browser refuses (no clipboard on plain http). */
+export async function copyText(
+  text,
+  clipboard = globalThis.navigator?.clipboard,
+) {
+  if (!text || typeof clipboard?.writeText !== 'function') return false
+  try {
+    await clipboard.writeText(text)
+    return true
+  } catch {
+    return false
+  }
+}
+
+/** The app's six digits or a recovery code, the way the person typed it. */
+export function cleanCode(value) {
+  return String(value || '').trim()
 }
 
 export async function loadLanguages() {

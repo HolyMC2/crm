@@ -255,6 +255,19 @@
                       theme="blue"
                       :label="row.state_label"
                     />
+                    <!-- Read-only, for the owner: who signs in with a code. -->
+                    <Badge
+                      v-if="row.two_step"
+                      theme="gray"
+                      :label="__('Two-step verification', null, 'Equipo')"
+                    >
+                      <template #prefix>
+                        <span
+                          class="lucide-shield-check size-3"
+                          aria-hidden="true"
+                        />
+                      </template>
+                    </Badge>
                   </span>
                   <span
                     v-if="row.problem"

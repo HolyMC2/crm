@@ -107,6 +107,28 @@ class TestCRMInvitation(FrappeTestCase):
 		login_manager.login_as.assert_called_once_with("existing-invitee@example.com")
 		self.assertEqual(frappe.local.response["location"], "/crm")
 
+	def test_accept_invitation_sends_a_two_step_user_to_the_sign_in_page(self):
+		"""login_as never asks for the second factor, so a person with a code signs in on /login."""
+		from crm.api import accept_invitation
+
+		frappe.get_doc(
+			doctype="User",
+			user_type="System User",
+			email="two-step-invitee@example.com",
+			send_welcome_email=0,
+			first_name="Two Step Invitee",
+		).insert(ignore_permissions=True)
+		invitation = self.make_invitation(email="two-step-invitee@example.com")
+
+		with (
+			patch("crm.api.should_run_2fa", return_value=True),
+			patch.object(frappe.local, "login_manager", create=True) as login_manager,
+		):
+			accept_invitation(key=invitation.key)
+
+		login_manager.login_as.assert_not_called()
+		self.assertEqual(frappe.local.response["location"], "/login?redirect-to=%2Fcrm")
+
 	def test_desk_accept_mails_new_user_a_set_password_link(self):
 		invitation = self.make_invitation(email="desk-invitee@example.com")
 

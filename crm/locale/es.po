@@ -22218,6 +22218,11 @@ msgid "Suspended"
 msgstr "Suspendido"
 
 #: frontend/src/pages/Equipo.vue
+msgctxt "Equipo"
+msgid "Two-step verification"
+msgstr "Verificación en dos pasos"
+
+#: frontend/src/pages/Equipo.vue
 msgid "No employee record"
 msgstr "Sin ficha de empleado"
 
@@ -40594,6 +40599,377 @@ msgstr "Sugeridas"
 msgctxt "Perfil"
 msgid "Every time zone"
 msgstr "Todas las zonas horarias"
+
+#: frontend/src/components/perfil/SesionesSheet.vue
+msgctxt "Perfil"
+msgid "{0} browsers stay signed in without your password; signing out the other devices ends them."
+msgstr "{0} navegadores entran sin tu contraseña; al cerrar la sesión en los demás dispositivos dejan de hacerlo."
+
+#: frontend/src/components/perfil/perfil.js
+msgctxt "Perfil"
+msgid "{0} devices, this one included"
+msgstr "{0} dispositivos, incluido este"
+
+#: frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "{0} recovery codes left."
+msgstr "Te quedan {0} códigos de recuperación."
+
+#: frontend/src/components/perfil/SesionesSheet.vue
+msgctxt "Perfil"
+msgid "1 browser stays signed in without your password; signing out the other devices ends it."
+msgstr "1 navegador entra sin tu contraseña; al cerrar la sesión en los demás dispositivos deja de hacerlo."
+
+#: frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "1 recovery code left."
+msgstr "Te queda 1 código de recuperación."
+
+#: frontend/src/components/perfil/SesionesSheet.vue
+msgctxt "Perfil"
+msgid "Active {0}"
+msgstr "Activo {0}"
+
+#: frontend/src/components/perfil/SesionesSheet.vue
+msgctxt "Perfil"
+msgid "Active {0}, since {1}"
+msgstr "Activo {0}, desde el {1}"
+
+#: frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "Add your account to your authenticator app."
+msgstr "Agrega tu cuenta a tu app de autenticación."
+
+#: frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "Code from your app"
+msgstr "Código de tu app"
+
+#: frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "Code from your app or a recovery code"
+msgstr "Código de tu app o un código de recuperación"
+
+#: frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "Codes copied"
+msgstr "Códigos copiados"
+
+#: frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "Copy it by hand: tap and hold the key."
+msgstr "Cópiala a mano: mantén presionada la clave."
+
+#: frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "Copy key"
+msgstr "Copiar clave"
+
+#: frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "Copy them by hand: tap and hold each code."
+msgstr "Cópialos a mano: mantén presionado cada código."
+
+#: frontend/src/pages/Perfil.vue frontend/src/components/perfil/SesionesSheet.vue
+msgctxt "Perfil"
+msgid "Devices signed in"
+msgstr "Dispositivos con sesión abierta"
+
+#: frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "Done: your other devices are signed out."
+msgstr "Listo: se cerró la sesión en tus otros dispositivos."
+
+#: frontend/src/components/perfil/perfil.js
+msgctxt "Perfil"
+msgid "Each code works once, to sign in without your phone."
+msgstr "Cada código sirve una sola vez para entrar sin tu teléfono."
+
+#: frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "Get a new key"
+msgstr "Pedir una clave nueva"
+
+#: frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "If the code does not work, set the time on your phone to automatic."
+msgstr "Si el código no funciona, pon la hora de tu teléfono en automático."
+
+#: frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "I saved them"
+msgstr "Ya los guardé"
+
+#: frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "Keep these codes somewhere other than your phone. Each one signs you in once when you do not have your phone."
+msgstr "Guarda estos códigos fuera de tu teléfono. Cada uno te deja entrar una vez cuando no tengas tu teléfono."
+
+#: frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "Key copied"
+msgstr "Clave copiada"
+
+#: frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "Make new codes"
+msgstr "Hacer códigos nuevos"
+
+#: frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "Make new recovery codes"
+msgstr "Hacer códigos de recuperación nuevos"
+
+#: frontend/src/components/perfil/perfil.js
+msgctxt "Perfil"
+msgid "Off. Turn it on and signing in also asks for a code from your phone."
+msgstr "Desactivada. Actívala y al entrar también se te pedirá un código de tu teléfono."
+
+#: frontend/src/components/perfil/perfil.js
+msgctxt "Perfil"
+msgid "On. {0} recovery codes left."
+msgstr "Activa. Te quedan {0} códigos de recuperación."
+
+#: frontend/src/components/perfil/perfil.js
+msgctxt "Perfil"
+msgid "On. 1 recovery code left."
+msgstr "Activa. Te queda 1 código de recuperación."
+
+#: frontend/src/components/perfil/perfil.js
+msgctxt "Perfil"
+msgid "Only this device"
+msgstr "Solo este dispositivo"
+
+#: frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "On. Signing in asks for a code from your app."
+msgstr "Activa. Al entrar se pide un código de tu app."
+
+#: frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "On since {0}. Signing in asks for a code from your app."
+msgstr "Activa desde el {0}. Al entrar se pide un código de tu app."
+
+#: frontend/src/components/perfil/perfil.js
+msgctxt "Perfil"
+msgid "On. You have no recovery codes left: make new ones."
+msgstr "Activa. Ya no te quedan códigos de recuperación: haz unos nuevos."
+
+#: frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "Once it is off, signing in asks only for your password."
+msgstr "Al desactivarla, al entrar solo se pedirá tu contraseña."
+
+#: frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "Open in my authenticator app"
+msgstr "Abrir en mi app de autenticación"
+
+#: frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "Or type this key in the app"
+msgstr "O escribe esta clave en la app"
+
+#: frontend/src/pages/Perfil.vue
+msgctxt "Perfil"
+msgid "Password changed. Your other devices are signed out."
+msgstr "Contraseña cambiada. Se cerró la sesión en tus otros dispositivos."
+
+#: frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "Picture to scan with your authenticator app"
+msgstr "Imagen para escanear con tu app de autenticación"
+
+#: frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "recovery-codes"
+msgstr "codigos-de-recuperacion"
+
+#: frontend/src/components/perfil/perfil.js
+msgctxt "Perfil"
+msgid "Recovery codes for {0}"
+msgstr "Códigos de recuperación de {0}"
+
+#: frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "Scan this picture with your authenticator app."
+msgstr "Escanea esta imagen con tu app de autenticación."
+
+#: frontend/src/components/perfil/SesionesSheet.vue
+msgctxt "Perfil"
+msgid "Signed out of {0}"
+msgstr "Se cerró la sesión en {0}"
+
+#: frontend/src/components/perfil/SesionesSheet.vue
+msgctxt "Perfil"
+msgid "Signed out of {0} other devices"
+msgstr "Se cerró la sesión en {0} dispositivos más"
+
+#: frontend/src/components/perfil/SesionesSheet.vue
+msgctxt "Perfil"
+msgid "Signed out of 1 other device"
+msgstr "Se cerró la sesión en 1 dispositivo más"
+
+#: frontend/src/components/perfil/perfil.js
+msgctxt "Perfil"
+msgid "Signing in is not asking for your code. Open it to set it up again."
+msgstr "Al entrar no se está pidiendo tu código. Ábrela para activarla otra vez."
+
+#: frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "Signing in is not asking for your code right now. Turn it off and on again to fix it."
+msgstr "Ahora mismo al entrar no se pide tu código. Desactívala y actívala otra vez para arreglarlo."
+
+#: frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "Signing in will ask for your password and a 6-digit code from an app on your phone."
+msgstr "Al entrar se te pedirá tu contraseña y un código de 6 dígitos de una app en tu teléfono."
+
+# A device row's button, next to its name: short, so a 305 px phone keeps the name on one line.
+#: frontend/src/components/perfil/SesionesSheet.vue
+msgctxt "Perfil"
+msgid "Sign out"
+msgstr "Cerrar"
+
+#: frontend/src/components/perfil/PasswordSheet.vue frontend/src/components/perfil/SesionesSheet.vue frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "Sign out of the other devices"
+msgstr "Cerrar sesión en los demás dispositivos"
+
+#: frontend/src/components/perfil/SesionesSheet.vue
+msgctxt "Perfil"
+msgid "Support"
+msgstr "Soporte"
+
+#: frontend/src/components/perfil/SesionesSheet.vue
+msgctxt "Perfil"
+msgid "That device was not signed out. Try again."
+msgstr "No se cerró la sesión en ese dispositivo. Intenta de nuevo."
+
+#: frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "That did not work. Check the code and your password."
+msgstr "No funcionó. Revisa el código y tu contraseña."
+
+#: frontend/src/components/perfil/SesionesSheet.vue frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "The other devices were not signed out. Try again."
+msgstr "No se cerró la sesión en los otros dispositivos. Intenta de nuevo."
+
+#: frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "The recovery codes you have now will stop working."
+msgstr "Los códigos de recuperación que tienes ahora dejarán de servir."
+
+#: frontend/src/components/perfil/SesionesSheet.vue
+msgctxt "Perfil"
+msgid "This device"
+msgstr "Este dispositivo"
+
+#: frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "To scan it from another phone"
+msgstr "Para escanearla desde otro teléfono"
+
+#: frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "Turn off"
+msgstr "Desactivar"
+
+#: frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "Turn on"
+msgstr "Activar"
+
+#: frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "Turn on two-step verification"
+msgstr "Activar verificación en dos pasos"
+
+#: frontend/src/pages/Perfil.vue frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "Two-step verification"
+msgstr "Verificación en dos pasos"
+
+#: frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "Two-step verification did not start. Try again."
+msgstr "La verificación en dos pasos no se pudo iniciar. Intenta de nuevo."
+
+#: frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "Two-step verification is off"
+msgstr "Verificación en dos pasos desactivada"
+
+#: frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "Two-step verification is on"
+msgstr "Verificación en dos pasos activada"
+
+#: frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "Type the 6 digits from your app."
+msgstr "Escribe los 6 dígitos de tu app."
+
+#: frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "Type the 6 digits your app shows for your account."
+msgstr "Escribe los 6 dígitos que muestra tu app para tu cuenta."
+
+#: frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "Type the code from your app or a recovery code."
+msgstr "Escribe el código de tu app o un código de recuperación."
+
+#: frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "Type your password."
+msgstr "Escribe tu contraseña."
+
+#: frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "Use the authenticator app you prefer: Google Authenticator, Microsoft Authenticator or another one."
+msgstr "Usa la app de autenticación que prefieras: Google Authenticator, Microsoft Authenticator u otra."
+
+#: frontend/src/components/perfil/SesionesSheet.vue
+msgctxt "Perfil"
+msgid "Yes, sign out"
+msgstr "Sí, cerrar"
+
+#: frontend/src/components/perfil/SesionesSheet.vue
+msgctxt "Perfil"
+msgid "Yes, sign out the other devices"
+msgstr "Sí, cerrar sesión en los demás"
+
+#: frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "Your access requires it, so it cannot be turned off here. Ask the shop owner about it."
+msgstr "Tu acceso la pide, así que no se puede desactivar aquí. Pregúntale al dueño del negocio."
+
+#: frontend/src/components/perfil/SesionesSheet.vue
+msgctxt "Perfil"
+msgid "Your devices could not load. Check your connection and retry."
+msgstr "Tus dispositivos no cargaron. Revisa tu conexión e intenta de nuevo."
+
+#: frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "Your old recovery codes no longer work."
+msgstr "Tus códigos de recuperación anteriores ya no sirven."
+
+#: frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "Your other devices stay signed in. Sign them out so they ask for the code too."
+msgstr "Tus otros dispositivos siguen con la sesión abierta. Ciérrala para que también te pidan el código."
+
+#: frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "Your password"
+msgstr "Tu contraseña"
+
+#: frontend/src/components/perfil/perfil.js frontend/src/components/perfil/TwoStepSheet.vue
+msgctxt "Perfil"
+msgid "Your recovery codes"
+msgstr "Tus códigos de recuperación"
 
 #: frontend/src/pages/ArchivosConectores.vue
 msgid "We would like to connect our invoice mailbox or Paperless to Archivos. Please tell us when it is part of the plans."
