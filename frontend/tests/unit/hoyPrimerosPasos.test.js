@@ -184,7 +184,9 @@ describe('the Primeros pasos card on Hoy', () => {
     )
     // A step that waits on another is text, not a dead link.
     expect(row('Haz tu primera venta').tagName).toBe('DIV')
-  })
+    // The first test pays Hoy's cold import and the sheet's lazy chunk; on a loaded
+    // CI host that alone passed the default 5 s.
+  }, 20000)
 
   it('«Ocultar» sits beside the row and runs the provider’s action', async () => {
     await mount()
