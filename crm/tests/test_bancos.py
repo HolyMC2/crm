@@ -196,12 +196,18 @@ class TestSatLoginStep(TestCase):
 		return frappe._dict(kind=kind, tax_product=product)
 
 	def _emc(self, available):
+		"""syncfy_connector's emc check, whether or not the app is installed here (CI has no
+		syncfy_connector): the whole package chain is stood in for the test's length."""
 		import sys
 		import types
 
-		module = types.ModuleType("syncfy_connector.integrations.emc")
-		module.fiscal_lane_available = lambda: available
-		return patch.dict(sys.modules, {"syncfy_connector.integrations.emc": module})
+		root = types.ModuleType("syncfy_connector")
+		integrations = types.ModuleType("syncfy_connector.integrations")
+		emc = types.ModuleType("syncfy_connector.integrations.emc")
+		emc.fiscal_lane_available = lambda: available
+		root.integrations, integrations.emc = integrations, emc
+		return patch.dict(sys.modules, {"syncfy_connector": root, "syncfy_connector.integrations": integrations,
+										"syncfy_connector.integrations.emc": emc})
 
 	def test_an_invoice_login_offers_contador_where_it_is_on(self):
 		with self._emc(True):
