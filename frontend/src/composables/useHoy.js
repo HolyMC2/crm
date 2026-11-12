@@ -6,6 +6,7 @@ import { can, moduleEnabled } from '@/vendor/muelle-shell/contracts'
 import { contactScope, contactStorage } from '@/utils/contactos'
 import { sourceSlugs } from '@/utils/shellRoutes'
 import { takeHoy } from '@/utils/hoyPrefetch'
+import { hojaOf } from '@/components/primeros/primerosPasos'
 
 // English source strings; the es-MX catalog (crm/locale/es.po) translates them.
 const t = (text, replace) =>
@@ -186,12 +187,22 @@ export function shellLink(path) {
 }
 
 const SHELL_BASE = '/crm'
+
+/** One of Hoy's own sheets a source links to (`/crm/hoy?paso=negocio`), or ''. */
+export function hojaLink(url) {
+  if (typeof url !== 'string' || !url.startsWith(`${HOY_HOME}?`)) return ''
+  return hojaOf(new URLSearchParams(url.slice(HOY_HOME.length + 1)).get('paso'))
+}
+
 /**
- * A source's link with the return to Hoy: a router location when it is a page
- * of this app (`/crm/…`, no reload), else a page URL in its own app.
+ * A source's link with the return to Hoy: one of Hoy's own sheets (`hoja`,
+ * opened in place), a router location when it is a page of this app
+ * (`/crm/…`, no reload), else a page URL in its own app.
  */
 export function sourceLink(url) {
   if (!url) return { href: '' }
+  const hoja = hojaLink(url)
+  if (hoja) return { hoja }
   if (url === SHELL_BASE || url.startsWith(`${SHELL_BASE}/`))
     return { to: withReturn(url.slice(SHELL_BASE.length) || '/') }
   return { href: withReturn(url) }
@@ -202,9 +213,18 @@ const SOURCE_ICONS = {
   'doco.compras': 'lucide-shopping-cart',
   'doco.gastos': 'lucide-receipt',
   'doco.presupuesto': 'lucide-wallet',
-  'abordo.primeros_pasos': 'lucide-check-check',
+  'abordo.primeros_pasos': 'lucide-circle',
   'doco.archivos': 'lucide-folder',
   'taller.unassigned_repairs': 'lucide-wrench',
+}
+
+// «Primeros pasos» reads as the checklist it is, as in its whole list: an open
+// step is an empty circle (a tick would say it is done) and a step that waits
+// on another, which has no link, is a lock.
+const CHECKLIST_SOURCE = 'abordo.primeros_pasos'
+function rowIcon(source, row) {
+  if (source.key !== CHECKLIST_SOURCE) return ''
+  return row.url ? 'lucide-circle' : 'lucide-lock'
 }
 
 // Mi cuenta's trial card (doco plan_state.hoy_source), for whoever may activate.
@@ -466,6 +486,7 @@ export function continuarCards(
         name: row.name,
         title: row.title || row.name,
         detail: row.detail,
+        icon: rowIcon(source, row),
         ...sourceLink(row.url),
         modified: row.modified,
         group: row.group,

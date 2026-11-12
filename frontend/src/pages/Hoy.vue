@@ -399,23 +399,43 @@
                     class="lucide-chevron-right ml-0.5 size-4"
                     aria-hidden="true"
                 /></a>
+                <button
+                  v-else-if="card.hoja && card.action"
+                  type="button"
+                  :class="MORE_LINK"
+                  @click="openHoja(card.hoja)"
+                >
+                  {{ card.action
+                  }}<span
+                    class="lucide-chevron-right ml-0.5 size-4"
+                    aria-hidden="true"
+                  />
+                </button>
               </div>
-              <ListRow
+              <!-- A row with the provider's action: the row opens its record
+                   and the action sits beside it (never inside the link). -->
+              <div
                 v-for="row in card.rows"
                 :key="card.key + row.key"
-                :title="row.title"
-                :subtitle="rowSubtitle(card, row)"
-                :meta="rowReference(card, row)"
-                :subtitle-lines="2"
-                :icon="card.icon"
-                :to="card.source?.action ? undefined : row.to"
-                :href="card.source?.action ? '' : row.href"
+                class="flex items-center"
               >
-                <template v-if="card.source?.action" #trailing>
+                <div class="min-w-0 flex-1">
+                  <ListRow
+                    :title="row.title"
+                    :subtitle="rowSubtitle(card, row)"
+                    :meta="rowReference(card, row)"
+                    :subtitle-lines="2"
+                    :icon="row.icon || card.icon"
+                    :to="row.to"
+                    :href="row.href"
+                    v-on="row.hoja ? { click: () => openHoja(row.hoja) } : {}"
+                  />
+                </div>
+                <template v-if="card.source?.action">
                   <Button
                     v-if="choicesFor(card, row)"
                     variant="subtle"
-                    class="min-h-11"
+                    class="mr-4 min-h-11 shrink-0 sm:mr-5"
                     :label="card.source.action.label"
                     :disabled="!choicesFor(card, row).length"
                     @click="openAssign(card, row)"
@@ -423,13 +443,13 @@
                   <Button
                     v-else
                     variant="subtle"
-                    class="min-h-11"
+                    class="mr-4 min-h-11 shrink-0 sm:mr-5"
                     :label="card.source.action.label"
                     :loading="busy.has(card.key + row.key)"
                     @click="sourceAction(card, row)"
                   />
                 </template>
-              </ListRow>
+              </div>
               <!-- A card without documents is itself the row: it opens its app. -->
               <ListRow
                 v-if="!card.rows.length"
@@ -439,6 +459,7 @@
                 :icon="card.icon"
                 :to="card.to"
                 :href="card.to ? '' : card.href"
+                v-on="card.hoja ? { click: () => openHoja(card.hoja) } : {}"
               />
             </template>
           </div>
@@ -544,6 +565,33 @@
       </div>
       <!-- «Abrir Muelle en» lives in Más › Configuración (SHELL-S1.2), not on a work screen. -->
     </div>
+    <!-- «Primeros pasos» sheets (abordo): ?paso=<key> or a row opens one in place. -->
+    <NegocioSheet
+      v-if="hojasMounted.has('negocio')"
+      :open="hoja === 'negocio'"
+      @close="closeHoja"
+      @saved="afterHoja(__('Details saved', null, 'Primeros pasos'))"
+    />
+    <ProductoSheet
+      v-if="hojasMounted.has('producto')"
+      :open="hoja === 'producto'"
+      @close="closeHoja"
+      @saved="afterHoja(__('Product saved', null, 'Primeros pasos'))"
+    />
+    <InvitarSheet
+      v-if="hojasMounted.has('invitar')"
+      :open="hoja === 'invitar'"
+      @close="closeHoja"
+      @invited="refresh({ quiet: true })"
+      @tecnico="router.push(withReturn('/equipo?alta=tecnico'))"
+    />
+    <PrimerosPasosSheet
+      v-if="hojasMounted.has('todos')"
+      :open="hoja === 'todos'"
+      @close="closeHoja"
+      @hoja="openHoja"
+      @changed="refresh({ quiet: true })"
+    />
     <CompleteDialog
       v-if="completeMounted"
       v-model="completeOpen"
@@ -582,6 +630,7 @@ import AvisosList from '@/components/avisos/AvisosList.vue'
 import { isMobile } from '@/composables/breakpoint'
 import { pageTitle } from '@/composables/pageTitle'
 import { BottomSheet, ListRow } from '@/components/ui'
+import { hojaOf } from '@/components/primeros/primerosPasos'
 import { currentScope, shellBoot } from '@/composables/muelleShell'
 import {
   HOY_HOME,
@@ -754,6 +803,50 @@ const CompleteDialog = defineAsyncComponent(
 )
 const completeMounted = ref(false)
 
+// «Primeros pasos»: the owner's first-hour steps finish here instead of the
+// Desk wizard. Each sheet loads on its first open.
+const NegocioSheet = defineAsyncComponent(
+  () => import('@/components/primeros/NegocioSheet.vue'),
+)
+const ProductoSheet = defineAsyncComponent(
+  () => import('@/components/primeros/ProductoSheet.vue'),
+)
+const InvitarSheet = defineAsyncComponent(
+  () => import('@/components/primeros/InvitarSheet.vue'),
+)
+const PrimerosPasosSheet = defineAsyncComponent(
+  () => import('@/components/primeros/PrimerosPasosSheet.vue'),
+)
+const hoja = ref('')
+const hojasMounted = reactive(new Set())
+function openHoja(key) {
+  if (!hojaOf(key)) return
+  hojasMounted.add(key)
+  hoja.value = key
+}
+function closeHoja() {
+  hoja.value = ''
+}
+// Saved: the sheet closes on Hoy and the card re-reads, so the step ticks.
+function afterHoja(message) {
+  closeHoja()
+  toast.success(message)
+  refresh({ quiet: true })
+}
+// A link from elsewhere (the assistant, a notice) opens the sheet and leaves
+// the URL clean, so back and a reload do not open it again. The URL is cleaned
+// first: the kit closes every open sheet on a navigation (sheetHistory), so a
+// sheet opened before the replace would close at once.
+async function followHoja() {
+  const key = hojaOf(route.query.paso)
+  if (!key) return
+  const query = { ...route.query }
+  for (const name of ['paso', 'return_to', 'return_label']) delete query[name]
+  await router.replace({ query }).catch(() => {})
+  openHoja(key)
+}
+watch(() => route.query.paso, followHoja)
+
 const summary = computed(() => {
   if (!data.value) return ''
   const parts = []
@@ -883,6 +976,7 @@ onMounted(() => {
   startAvisosLive(socket)
   refresh({ fresh: false })
   handleDone()
+  followHoja()
   // «Ahora» and «Siguiente» move with the clock.
   clock = setInterval(() => (now.value = Date.now()), 60000)
 })

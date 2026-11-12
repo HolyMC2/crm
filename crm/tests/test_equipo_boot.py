@@ -8,6 +8,7 @@ from crm.equipo_routes import is_equipo_path
 try:
 	import frappe
 
+	from crm.api import equipo as equipo_api
 	from crm.api.equipo import check_equipo_permission
 
 	HAS_FRAPPE = True
@@ -61,3 +62,29 @@ class TestEquipoPaths(TestCase):
 			patch.object(frappe, "get_installed_apps", return_value=["crm"]),
 		):
 			self.assertFalse(check_equipo_permission())
+
+	@skipIf(not HAS_FRAPPE, "Frappe integration dependency is not installed")
+	def test_the_owner_may_invite_where_abordo_is_installed(self):
+		boot = {"enabled": True, "capabilities": {"read": True, "hire": False}}
+		for apps, roles, invite in (
+			(["crm", "doco", "abordo"], ["System Manager"], True),
+			(["crm", "doco"], ["System Manager"], False),
+			(["crm", "doco", "abordo"], ["Sales User"], False),
+		):
+			with (
+				self.subTest(apps=apps, roles=roles),
+				patch.object(frappe, "get_installed_apps", return_value=apps),
+				patch.object(frappe, "get_roles", return_value=roles),
+				patch.object(equipo_api, "_bootstrap", return_value=lambda: boot),
+			):
+				answer = equipo_api.get_capabilities()
+				self.assertEqual(answer["capabilities"], {"read": True, "hire": False, "invite": invite})
+
+	@skipIf(not HAS_FRAPPE, "Frappe integration dependency is not installed")
+	def test_a_closed_equipo_gets_no_invite(self):
+		closed = {"enabled": False, "reason": "No.", "capabilities": {}}
+		with (
+			patch.object(frappe, "get_installed_apps", return_value=["crm", "doco", "abordo"]),
+			patch.object(equipo_api, "_bootstrap", return_value=lambda: closed),
+		):
+			self.assertEqual(equipo_api.get_capabilities(), closed)

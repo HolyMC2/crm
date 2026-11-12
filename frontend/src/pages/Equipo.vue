@@ -53,7 +53,13 @@
             </p>
           </div>
           <template
-            v-if="caps.hr || caps.configure || caps.hire || caps.bonos"
+            v-if="
+              caps.hr ||
+              caps.configure ||
+              caps.hire ||
+              caps.bonos ||
+              caps.invite
+            "
             #actions
           >
             <Button
@@ -77,13 +83,24 @@
               class="min-h-11 sm:min-h-8"
               @click="router.push({ name: 'EquipoVacaciones' })"
             />
+            <!-- Every puesto but a technician: Abordo's invitation. On a phone
+                 without «Agregar técnico» it is the page's one FAB instead. -->
+            <Button
+              v-if="caps.invite && (caps.hire || !isPhone)"
+              :variant="caps.hire ? 'subtle' : 'solid'"
+              :icon-left="LucideUserPlus"
+              :label="__('Invite someone', null, 'Equipo')"
+              class="min-h-11 sm:min-h-8"
+              data-testid="equipo-invitar"
+              @click="openInvite"
+            />
             <Button
               v-if="caps.hire && !isPhone"
               variant="solid"
               :icon-left="LucideUserPlus"
               :label="__('Add a person', null, 'Equipo')"
               class="min-h-11 sm:min-h-8"
-              @click="openAlta"
+              @click="openAlta()"
             />
           </template>
         </PageHeader>
@@ -288,12 +305,23 @@
       </div>
       <Fab
         v-if="fab"
-        :label="__('Add a person', null, 'Equipo')"
+        :label="
+          caps.hire
+            ? __('Add a person', null, 'Equipo')
+            : __('Invite someone', null, 'Equipo')
+        "
         icon="lucide-user-plus"
-        @click="openAlta"
+        @click="caps.hire ? openAlta() : openInvite()"
       />
     </div>
     <SeatStepSheet v-if="seatStep" :step="seatStep" />
+    <InvitarSheet
+      v-if="inviteMounted"
+      :open="inviteOpen"
+      @close="inviteOpen = false"
+      @invited="afterInvite"
+      @tecnico="tecnicoFromInvite"
+    />
   </ModuleLayout>
 </template>
 <script setup>
@@ -331,11 +359,16 @@ import LucideWallet from '~icons/lucide/wallet'
 import { createListCache } from '@/utils/listCache'
 import { useLiveList } from '@/composables/liveList'
 import { shellBoot } from '@/composables/muelleShell'
+import { safeReturnPath } from '@/utils/returnPath'
 import { cuentaAllowed } from '@/utils/shellRoutes'
 
 // Mi cuenta's quote sheet, on the first alta the plan's cap refuses.
 const SeatStepSheet = defineAsyncComponent(
   () => import('@/components/cuenta/SeatStepSheet.vue'),
+)
+// Abordo's invitation, for every puesto but a technician; mounts on its first open.
+const InvitarSheet = defineAsyncComponent(
+  () => import('@/components/primeros/InvitarSheet.vue'),
 )
 
 const route = useRoute()
@@ -355,8 +388,13 @@ const limit = ref(null)
 const noAccess = ref(false)
 // Without access to the team the banner is the whole answer: no FAB.
 const fab = computed(
-  () => isPhone.value && Boolean(caps.value.hire) && !noAccess.value,
+  () =>
+    isPhone.value &&
+    Boolean(caps.value.hire || caps.value.invite) &&
+    !noAccess.value,
 )
+const inviteMounted = ref(false)
+const inviteOpen = ref(false)
 const confirmingLift = ref(false)
 const lifting = ref(false)
 const segment = computed(() =>
@@ -500,18 +538,51 @@ async function sheet(open) {
     problem.value = problemOf(error)
   }
 }
-function openAlta() {
+// `back`: the screen that sent the worker here (Hoy's «Agregar técnico»). The
+// sheet's receipt carries the access link to share, so the way back waits for
+// «Listo» (the sheet's close), and says the alta is done when it is.
+function openAlta(back = '') {
+  let added = false
   sheet((s) =>
     s.openAlta({
       draftKey: 'crm:equipo',
       seatStep: seatOffer,
       onDone: () => {
+        added = true
+        if (back) return
         notice.value = __('Person added. They appear in the team list.')
         load()
       },
-      onClose: load,
+      onClose: () => {
+        if (!back) return load()
+        const url = new URL(back, 'https://muelle.invalid')
+        if (added) url.searchParams.set('done', 'tecnico')
+        router.replace(url.pathname.slice(4) + url.search)
+      },
     }),
   )
+}
+function openInvite() {
+  inviteMounted.value = true
+  inviteOpen.value = true
+}
+function afterInvite() {
+  notice.value = __('Invitation ready. They appear in the team list.')
+  load()
+}
+function tecnicoFromInvite() {
+  inviteOpen.value = false
+  if (caps.value.hire) openAlta()
+}
+// ?alta=tecnico (Hoy's «Agregar técnico»): the alta opens at once, and the
+// query leaves so a reload or back does not open it again.
+function followAlta() {
+  if (route.query.alta !== 'tecnico') return
+  const back = safeReturnPath(route.query.return_to)
+  const query = { ...route.query }
+  for (const name of ['alta', 'return_to', 'return_label']) delete query[name]
+  router.replace({ query })
+  if (caps.value.hire) openAlta(back.startsWith('/crm/') ? back : '')
 }
 function openPerson(row) {
   sheet((s) =>
@@ -599,6 +670,7 @@ onMounted(async () => {
     delete query.notice
     router.replace({ query })
   }
+  followAlta()
   load()
 })
 </script>

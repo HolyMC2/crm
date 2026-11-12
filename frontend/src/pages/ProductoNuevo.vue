@@ -287,7 +287,15 @@ const priceHint = computed(() => {
   return rate > 0 ? __('Sells at {0}', [money(rate)], 'Productos') : ''
 })
 
-function leave() {
+// Opened with the shell's return protocol (Hoy's «Agregar producto»): «Cancelar»
+// and the saved product both go back there. Loaded on the tap: the page itself
+// does not carry the return helpers.
+const returns = () => import('@/composables/useAprobaciones')
+
+async function leave() {
+  const { goTo, ownerReturn } = await returns()
+  const back = ownerReturn(route.query)
+  if (back) return goTo(router, back.to)
   router.push({ name: 'Productos' })
 }
 
@@ -347,7 +355,14 @@ async function save() {
   sentKey = key
   saving.value = true
   try {
+    // Before the create: a failed load must not follow a product already made.
+    const { completeTo, goTo, ownerReturn } = await returns()
     const created = await productosApi('create_item', newItemPayload(form, rid))
+    const back = ownerReturn(route.query)
+    if (back)
+      return goTo(router, completeTo(back.to, 'Item', created.name), {
+        replace: true,
+      })
     // The record opens with a notice and the next step, creating another.
     router.replace({
       name: 'Producto',

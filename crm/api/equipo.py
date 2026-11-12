@@ -20,6 +20,12 @@ def check_equipo_permission() -> bool:
 	return bool(bootstrap and bootstrap().get("enabled"))
 
 
+def can_invite() -> bool:
+	"""Abordo's invitation (every puesto but a technician, who is added in Equipo):
+	the owner, where Abordo is installed. `abordo.api.invitar_usuario` checks again."""
+	return "abordo" in frappe.get_installed_apps() and "System Manager" in frappe.get_roles()
+
+
 @frappe.whitelist()
 def get_capabilities() -> dict:
 	"""Equipo capability for the shell; the doco services re-check every request."""
@@ -30,4 +36,7 @@ def get_capabilities() -> dict:
 			"reason": _("Equipo is not installed. Ask your manager to check the app."),
 			"capabilities": {},
 		}
-	return bootstrap()
+	boot = bootstrap()
+	if not boot.get("enabled"):
+		return boot
+	return {**boot, "capabilities": {**(boot.get("capabilities") or {}), "invite": can_invite()}}

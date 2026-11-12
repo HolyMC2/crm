@@ -239,7 +239,9 @@ async function save() {
       values,
       source: source.value || undefined,
     })
-    if (back.value)
+    // ?abrir=1 (Hoy's «Nueva venta»): the draft still needs «Confirmar», so it
+    // opens on its record; the record's back arrow is the way back.
+    if (back.value && route.query.abrir !== '1')
       return goTo(
         router,
         completeTo(back.value.to, saved.doctype, saved.name),

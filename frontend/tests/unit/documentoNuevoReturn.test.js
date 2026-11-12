@@ -131,6 +131,18 @@ describe('a new draft opened from a queue', () => {
     )
   })
 
+  it('with ?abrir=1 (Hoy’s «Nueva venta») the draft opens on its record to be confirmed there', async () => {
+    const router = await mount(
+      '/documentos/facturas-proveedor/nuevo?abrir=1&return_to=%2Fcrm%2Fhoy&return_label=Hoy',
+    )
+    const create = await createButton()
+    create.click()
+    await flush()
+    expect(router.currentRoute.value.path).toBe(
+      '/gastos/factura/ACC-PINV-2026-00009',
+    )
+  })
+
   it('ignores a return target outside the shell', async () => {
     const router = await mount(
       '/documentos/facturas-proveedor/nuevo?return_to=https%3A%2F%2Fevil.invalid%2Fx&return_label=Gastos',

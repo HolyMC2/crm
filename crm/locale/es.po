@@ -22295,6 +22295,10 @@ msgid "Person added. They appear in the team list."
 msgstr "Persona dada de alta. Ya aparece en el equipo."
 
 #: frontend/src/pages/Equipo.vue
+msgid "Invitation ready. They appear in the team list."
+msgstr "Invitación lista. Ya aparece en el equipo."
+
+#: frontend/src/pages/Equipo.vue
 msgid "Shift assigned to {0}."
 msgstr "Turno asignado a {0}."
 
@@ -22567,6 +22571,141 @@ msgstr "Sin fecha de ingreso"
 msgctxt "Equipo"
 msgid "Not accepted"
 msgstr "No aceptado"
+
+#: frontend/src/components/primeros/InvitarSheet.vue
+msgctxt "Equipo"
+msgid "Invite someone"
+msgstr "Invitar a alguien"
+
+#: frontend/src/components/primeros/InvitarSheet.vue
+msgctxt "Equipo"
+msgid "Invitation ready"
+msgstr "Invitación lista"
+
+#: frontend/src/components/primeros/InvitarSheet.vue
+msgctxt "Equipo"
+msgid "The link works once and expires within 24 hours. Share it only with this person."
+msgstr "El enlace funciona una sola vez y vence en 24 horas. Compártelo solo con esta persona."
+
+#: frontend/src/components/primeros/InvitarSheet.vue
+msgctxt "Equipo"
+msgid "We sent the invitation to their email."
+msgstr "Le enviamos la invitación a su correo."
+
+#: frontend/src/components/primeros/InvitarSheet.vue
+msgctxt "Equipo"
+msgid "The email did not go out: send them the link or show them the QR."
+msgstr "No pudimos enviar el correo: mándale el enlace o enséñale el QR."
+
+#: frontend/src/components/primeros/InvitarSheet.vue
+msgctxt "Equipo"
+msgid "Send them the link or show them the QR."
+msgstr "Mándale el enlace o enséñale el QR."
+
+#: frontend/src/components/primeros/InvitarSheet.vue
+msgctxt "Equipo"
+msgid "Send by WhatsApp"
+msgstr "Enviar por WhatsApp"
+
+#: frontend/src/components/primeros/InvitarSheet.vue
+msgctxt "Equipo"
+msgid "Copy link"
+msgstr "Copiar enlace"
+
+#: frontend/src/components/primeros/InvitarSheet.vue
+msgctxt "Equipo"
+msgid "Link copied."
+msgstr "Enlace copiado."
+
+#: frontend/src/components/primeros/InvitarSheet.vue
+msgctxt "Equipo"
+msgid "Your phone did not let us copy it. Share it by WhatsApp or the QR."
+msgstr "Tu teléfono no nos dejó copiarlo. Compártelo por WhatsApp o con el QR."
+
+#: frontend/src/components/primeros/InvitarSheet.vue
+msgctxt "Equipo"
+msgid "Invitation QR code"
+msgstr "Código QR de la invitación"
+
+#: frontend/src/components/primeros/InvitarSheet.vue
+msgctxt "Equipo"
+msgid "Loading the puestos…"
+msgstr "Cargando los puestos…"
+
+#: frontend/src/components/primeros/InvitarSheet.vue
+msgctxt "Equipo"
+msgid "The puestos did not load. Retry."
+msgstr "No se cargaron los puestos. Vuelve a intentar."
+
+#: frontend/src/components/primeros/InvitarSheet.vue
+msgctxt "Equipo"
+msgid "Name"
+msgstr "Nombre"
+
+#: frontend/src/components/primeros/InvitarSheet.vue
+msgctxt "Equipo"
+msgid "Email"
+msgstr "Correo"
+
+#: frontend/src/components/primeros/InvitarSheet.vue
+msgctxt "Equipo"
+msgid "They sign in with it."
+msgstr "Con él entra a su cuenta."
+
+#: frontend/src/components/primeros/InvitarSheet.vue
+msgctxt "Equipo"
+msgid "Phone (optional)"
+msgstr "Teléfono (opcional)"
+
+#: frontend/src/components/primeros/InvitarSheet.vue
+msgctxt "Equipo"
+msgid "To send it by WhatsApp. Include the country code if it is abroad."
+msgstr "Para enviarla por WhatsApp. Incluye la clave del país si es del extranjero."
+
+#: frontend/src/components/primeros/InvitarSheet.vue
+msgctxt "Equipo"
+msgid "Puesto"
+msgstr "Puesto"
+
+#: frontend/src/components/primeros/InvitarSheet.vue
+msgctxt "Equipo"
+msgid "A technician is added in Equipo, with their laboratorio."
+msgstr "Un técnico se agrega en Equipo, con su laboratorio."
+
+#: frontend/src/components/primeros/InvitarSheet.vue
+msgctxt "Equipo"
+msgid "Add a technician"
+msgstr "Agregar técnico"
+
+#: frontend/src/components/primeros/InvitarSheet.vue
+msgctxt "Equipo"
+msgid "Register they sell at"
+msgstr "Caja donde cobra"
+
+#: frontend/src/components/primeros/InvitarSheet.vue
+msgctxt "Equipo"
+msgid "Send the invitation by"
+msgstr "Enviar la invitación por"
+
+#: frontend/src/components/primeros/InvitarSheet.vue
+msgctxt "Equipo"
+msgid "Link and QR"
+msgstr "Enlace y QR"
+
+#: frontend/src/components/primeros/InvitarSheet.vue
+msgctxt "Equipo"
+msgid "Send invitation"
+msgstr "Enviar invitación"
+
+#: frontend/src/components/primeros/InvitarSheet.vue
+msgctxt "Equipo"
+msgid "The invitation was not sent. Try again."
+msgstr "La invitación no se envió. Vuelve a intentarlo."
+
+#: frontend/src/components/primeros/InvitarSheet.vue
+msgctxt "Equipo"
+msgid "Done"
+msgstr "Listo"
 
 #: frontend/src/pages/Equipo.vue
 msgid "Your user permission limited to your own employee record will be removed. Continue?"
@@ -29602,6 +29741,371 @@ msgstr "Aún no hay ventas hoy."
 #: frontend/src/composables/useHoy.js
 msgid "Yesterday {0}"
 msgstr "Ayer {0}"
+
+#: frontend/src/components/primeros/primerosPasos.js
+msgctxt "Primeros pasos"
+msgid "Write an email like nombre@negocio.com."
+msgstr "Escribe un correo como nombre@negocio.com."
+
+#: frontend/src/components/primeros/primerosPasos.js
+msgctxt "Primeros pasos"
+msgid "Write the street and number: the address needs them."
+msgstr "Escribe la calle y el número: la dirección los necesita."
+
+#: frontend/src/components/primeros/primerosPasos.js
+msgctxt "Primeros pasos"
+msgid "Write the city: the address needs it."
+msgstr "Escribe la ciudad: la dirección la necesita."
+
+#: frontend/src/components/primeros/primerosPasos.js
+msgctxt "Primeros pasos"
+msgid "logo"
+msgstr "logo"
+
+#: frontend/src/components/primeros/primerosPasos.js
+msgctxt "Primeros pasos"
+msgid "phone"
+msgstr "teléfono"
+
+#: frontend/src/components/primeros/primerosPasos.js
+msgctxt "Primeros pasos"
+msgid "email"
+msgstr "correo"
+
+#: frontend/src/components/primeros/primerosPasos.js
+msgctxt "Primeros pasos"
+msgid "address"
+msgstr "dirección"
+
+#: frontend/src/components/primeros/primerosPasos.js
+msgctxt "Primeros pasos"
+msgid "The logo did not upload. Try another picture."
+msgstr "El logo no se subió. Prueba con otra foto."
+
+#: frontend/src/components/primeros/primerosPasos.js
+msgctxt "Primeros pasos"
+msgid "Write the name of the person."
+msgstr "Escribe el nombre de la persona."
+
+#: frontend/src/components/primeros/primerosPasos.js
+msgctxt "Primeros pasos"
+msgid "Write their email: it is how they sign in."
+msgstr "Escribe su correo: con él entra a su cuenta."
+
+#: frontend/src/components/primeros/primerosPasos.js
+msgctxt "Primeros pasos"
+msgid "Write their phone to send it by WhatsApp."
+msgstr "Escribe su teléfono para enviarla por WhatsApp."
+
+#: frontend/src/components/primeros/primerosPasos.js
+msgctxt "Primeros pasos"
+msgid "Choose their puesto."
+msgstr "Elige su puesto."
+
+#: frontend/src/components/primeros/NegocioSheet.vue
+msgctxt "Primeros pasos"
+msgid "Your business details"
+msgstr "Datos de tu negocio"
+
+#: frontend/src/components/primeros/NegocioSheet.vue
+msgctxt "Primeros pasos"
+msgid "Loading your business…"
+msgstr "Cargando tu negocio…"
+
+#: frontend/src/components/primeros/NegocioSheet.vue
+msgctxt "Primeros pasos"
+msgid "Your business details did not load. Retry."
+msgstr "No se cargaron los datos de tu negocio. Vuelve a intentar."
+
+#: frontend/src/components/primeros/NegocioSheet.vue
+msgctxt "Primeros pasos"
+msgid "Retry"
+msgstr "Reintentar"
+
+#: frontend/src/components/primeros/NegocioSheet.vue
+msgctxt "Primeros pasos"
+msgid "They print on your tickets, quotes and invoices. Missing: {0}."
+msgstr "Salen en tus tickets, cotizaciones y facturas. Falta: {0}."
+
+#: frontend/src/components/primeros/NegocioSheet.vue
+msgctxt "Primeros pasos"
+msgid "Your logo"
+msgstr "Tu logo"
+
+#: frontend/src/components/primeros/NegocioSheet.vue
+msgctxt "Primeros pasos"
+msgid "Add your logo"
+msgstr "Agregar tu logo"
+
+#: frontend/src/components/primeros/NegocioSheet.vue
+msgctxt "Primeros pasos"
+msgid "Change logo"
+msgstr "Cambiar logo"
+
+#: frontend/src/components/primeros/NegocioSheet.vue
+msgctxt "Primeros pasos"
+msgid "Take or choose a photo"
+msgstr "Tomar o elegir una foto"
+
+#: frontend/src/components/primeros/NegocioSheet.vue
+msgctxt "Primeros pasos"
+msgid "A square picture reads best on a ticket."
+msgstr "Una imagen cuadrada se ve mejor en el ticket."
+
+#: frontend/src/components/primeros/NegocioSheet.vue
+msgctxt "Primeros pasos"
+msgid "Ready. It is saved with your details."
+msgstr "Listo. Se guarda con tus datos."
+
+#: frontend/src/components/primeros/NegocioSheet.vue
+msgctxt "Primeros pasos"
+msgid "Choose a picture for your logo."
+msgstr "Elige una imagen para tu logo."
+
+#: frontend/src/components/primeros/NegocioSheet.vue
+msgctxt "Primeros pasos"
+msgid "That picture did not open. Try another one."
+msgstr "Esa imagen no abrió. Prueba con otra."
+
+#: frontend/src/components/primeros/NegocioSheet.vue
+msgctxt "Primeros pasos"
+msgid "Crop"
+msgstr "Recortar"
+
+#: frontend/src/components/primeros/NegocioSheet.vue
+msgctxt "Primeros pasos"
+msgid "Use this photo"
+msgstr "Usar esta foto"
+
+#: frontend/src/components/primeros/NegocioSheet.vue
+msgctxt "Primeros pasos"
+msgid "Phone"
+msgstr "Teléfono"
+
+#: frontend/src/components/primeros/NegocioSheet.vue
+msgctxt "Primeros pasos"
+msgid "Email"
+msgstr "Correo"
+
+#: frontend/src/components/primeros/NegocioSheet.vue
+msgctxt "Primeros pasos"
+msgid "Address"
+msgstr "Dirección"
+
+#: frontend/src/components/primeros/NegocioSheet.vue
+msgctxt "Primeros pasos"
+msgid "Street and number"
+msgstr "Calle y número"
+
+#: frontend/src/components/primeros/NegocioSheet.vue
+msgctxt "Primeros pasos"
+msgid "Neighborhood"
+msgstr "Colonia"
+
+#: frontend/src/components/primeros/NegocioSheet.vue
+msgctxt "Primeros pasos"
+msgid "City"
+msgstr "Ciudad"
+
+#: frontend/src/components/primeros/NegocioSheet.vue
+msgctxt "Primeros pasos"
+msgid "State"
+msgstr "Estado"
+
+#: frontend/src/components/primeros/NegocioSheet.vue
+msgctxt "Primeros pasos"
+msgid "Postal code"
+msgstr "Código postal"
+
+#: frontend/src/components/primeros/NegocioSheet.vue
+msgctxt "Primeros pasos"
+msgid "RFC"
+msgstr "RFC"
+
+#: frontend/src/components/primeros/NegocioSheet.vue
+msgctxt "Primeros pasos"
+msgid "RFC (optional)"
+msgstr "RFC (opcional)"
+
+#: frontend/src/components/primeros/NegocioSheet.vue
+msgctxt "Primeros pasos"
+msgid "It goes on your invoices."
+msgstr "Sale en tus facturas."
+
+#: frontend/src/components/primeros/NegocioSheet.vue
+msgctxt "Primeros pasos"
+msgid "Your RFC goes with your invoice stamping: it changes where you turn stamping on."
+msgstr "Tu RFC va con el timbrado de tus facturas: se cambia donde activas el timbrado."
+
+#: frontend/src/components/primeros/NegocioSheet.vue
+msgctxt "Primeros pasos"
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: frontend/src/components/primeros/NegocioSheet.vue
+msgctxt "Primeros pasos"
+msgid "Save details"
+msgstr "Guardar datos"
+
+#: frontend/src/components/primeros/NegocioSheet.vue
+msgctxt "Primeros pasos"
+msgid "Your details were not saved. Try again."
+msgstr "Tus datos no se guardaron. Vuelve a intentarlo."
+
+#: frontend/src/pages/Hoy.vue
+msgctxt "Primeros pasos"
+msgid "Details saved"
+msgstr "Datos guardados"
+
+#: frontend/src/pages/Hoy.vue
+msgctxt "Primeros pasos"
+msgid "Product saved"
+msgstr "Producto guardado"
+
+#: frontend/src/components/primeros/ProductoSheet.vue
+msgctxt "Primeros pasos"
+msgid "Add a product"
+msgstr "Agregar producto"
+
+#: frontend/src/components/primeros/ProductoSheet.vue
+msgctxt "Primeros pasos"
+msgid "Its name and price are enough to sell it. Photos and stock come later."
+msgstr "Con su nombre y su precio ya lo vendes. Las fotos y las existencias, después."
+
+#: frontend/src/components/primeros/ProductoSheet.vue
+msgctxt "Primeros pasos"
+msgid "Name"
+msgstr "Nombre"
+
+#: frontend/src/components/primeros/ProductoSheet.vue
+msgctxt "Primeros pasos"
+msgid "Selling price"
+msgstr "Precio de venta"
+
+#: frontend/src/components/primeros/ProductoSheet.vue
+msgctxt "Primeros pasos"
+msgid "Barcode (optional)"
+msgstr "Código de barras (opcional)"
+
+#: frontend/src/components/primeros/ProductoSheet.vue
+msgctxt "Primeros pasos"
+msgid "If it is printed on the package."
+msgstr "Si viene impreso en el empaque."
+
+#: frontend/src/components/primeros/ProductoSheet.vue
+msgctxt "Primeros pasos"
+msgid "Write the product name."
+msgstr "Escribe el nombre del producto."
+
+#: frontend/src/components/primeros/ProductoSheet.vue
+msgctxt "Primeros pasos"
+msgid "Write its selling price."
+msgstr "Escribe su precio de venta."
+
+#: frontend/src/components/primeros/ProductoSheet.vue
+msgctxt "Primeros pasos"
+msgid "Save product"
+msgstr "Guardar producto"
+
+#: frontend/src/components/primeros/ProductoSheet.vue
+msgctxt "Primeros pasos"
+msgid "The product was not saved. Try again."
+msgstr "El producto no se guardó. Vuelve a intentarlo."
+
+#: frontend/src/components/primeros/ProductoSheet.vue
+msgctxt "Primeros pasos"
+msgid "First, how you keep your products. Once you sell, it does not change."
+msgstr "Primero, cómo llevas tus productos. Ya que vendas, no cambia."
+
+#: frontend/src/components/primeros/ProductoSheet.vue
+msgctxt "Primeros pasos"
+msgid "Loading…"
+msgstr "Cargando…"
+
+#: frontend/src/components/primeros/ProductoSheet.vue
+msgctxt "Primeros pasos"
+msgid "The answer recommended for your business is already chosen."
+msgstr "Ya está elegida la respuesta recomendada para tu negocio."
+
+#: frontend/src/components/primeros/ProductoSheet.vue
+msgctxt "Primeros pasos"
+msgid "Save answers"
+msgstr "Guardar respuestas"
+
+#: frontend/src/components/primeros/ProductoSheet.vue
+msgctxt "Primeros pasos"
+msgid "Choose an answer for each question."
+msgstr "Elige una respuesta para cada pregunta."
+
+#: frontend/src/components/primeros/ProductoSheet.vue
+msgctxt "Primeros pasos"
+msgid "Your answers were not saved. Try again."
+msgstr "Tus respuestas no se guardaron. Vuelve a intentarlo."
+
+#: frontend/src/components/primeros/PrimerosPasosSheet.vue
+msgctxt "Primeros pasos"
+msgid "First steps"
+msgstr "Primeros pasos"
+
+#: frontend/src/components/primeros/PrimerosPasosSheet.vue
+msgctxt "Primeros pasos"
+msgid "{0} of {1} done"
+msgstr "{0} de {1} listos"
+
+#: frontend/src/components/primeros/PrimerosPasosSheet.vue
+msgctxt "Primeros pasos"
+msgid "Loading your steps…"
+msgstr "Cargando tus pasos…"
+
+#: frontend/src/components/primeros/PrimerosPasosSheet.vue
+msgctxt "Primeros pasos"
+msgid "Your steps did not load. Retry."
+msgstr "No se cargaron tus pasos. Vuelve a intentar."
+
+#: frontend/src/components/primeros/PrimerosPasosSheet.vue
+msgctxt "Primeros pasos"
+msgid "Done"
+msgstr "Listos"
+
+#: frontend/src/components/primeros/PrimerosPasosSheet.vue
+msgctxt "Primeros pasos"
+msgid "Hidden"
+msgstr "Ocultos"
+
+#: frontend/src/components/primeros/PrimerosPasosSheet.vue
+msgctxt "Primeros pasos"
+msgid "Show"
+msgstr "Mostrar"
+
+#: frontend/src/components/primeros/PrimerosPasosSheet.vue
+msgctxt "Primeros pasos"
+msgid "Hide"
+msgstr "Ocultar"
+
+#: frontend/src/components/primeros/PrimerosPasosSheet.vue
+msgctxt "Primeros pasos"
+msgid "The card shows on Hoy until every step is done."
+msgstr "La tarjeta sale en Hoy hasta que termines todos los pasos."
+
+#: frontend/src/components/primeros/PrimerosPasosSheet.vue
+msgctxt "Primeros pasos"
+msgid "The card does not show on Hoy."
+msgstr "La tarjeta no sale en Hoy."
+
+#: frontend/src/components/primeros/PrimerosPasosSheet.vue
+msgctxt "Primeros pasos"
+msgid "Hide from Hoy"
+msgstr "Ocultar de Hoy"
+
+#: frontend/src/components/primeros/PrimerosPasosSheet.vue
+msgctxt "Primeros pasos"
+msgid "Show on Hoy"
+msgstr "Mostrar en Hoy"
+
+#: frontend/src/components/primeros/PrimerosPasosSheet.vue
+msgctxt "Primeros pasos"
+msgid "That did not go through. Try again."
+msgstr "No se pudo. Vuelve a intentarlo."
 
 #: crm/api/documentos.py
 msgid "That person is not on your team."

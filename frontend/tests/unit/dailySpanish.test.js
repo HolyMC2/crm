@@ -32,6 +32,7 @@ const DIRS = [
   'components/doco/inbox', // Inbox and the Deal 360 workspace/context panel
   'components/doco/deals',
   'components/hoy',
+  'components/primeros', // Hoy's «Primeros pasos» sheets (the owner's first hour)
   'components/contactos',
   'components/pendientes',
   'components/ui', // the shared phone primitives (Shell S1.1)
