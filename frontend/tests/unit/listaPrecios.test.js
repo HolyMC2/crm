@@ -796,8 +796,13 @@ describe('lista strings (es-MX)', () => {
       resolve(here, '../../src/pages/CompraSurtido.vue'),
       'utf8',
     )
-    expect(surtido).toContain(
-      ':to="{ name: \'CompraLista\', params: { name: c.name } }"',
+    // Each list's row on Surtido's start opens its page (SurtidoInicio).
+    const start = readFileSync(
+      resolve(here, '../../src/components/compras/SurtidoInicio.vue'),
+      'utf8',
+    )
+    expect(start).toContain(
+      "to: { name: 'CompraLista', params: { name: row.name } }",
     )
     expect(surtido).toContain(':accept="LIST_ACCEPT"')
   })

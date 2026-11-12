@@ -40787,3 +40787,89 @@ msgstr "Lo que no ha llegado ya no se espera: la compra sale de Por recibir. Pue
 #: frontend/src/pages/CompraOrden.vue
 msgid "The rest is not coming, we bought it elsewhere…"
 msgstr "Lo demás no llegará, lo compramos en otro lado…"
+
+#: frontend/src/components/compras/SurtidoInicio.vue
+msgctxt "Surtido"
+msgid "More for {0}"
+msgstr "Más para {0}"
+
+#: frontend/src/components/compras/SurtidoInicio.vue
+msgctxt "Surtido"
+msgid "Orders to suppliers"
+msgstr "Pedidos a proveedores"
+
+#: frontend/src/components/compras/SurtidoInicio.vue
+msgctxt "Surtido"
+msgid "Continue"
+msgstr "Continuar"
+
+#: frontend/src/components/compras/SurtidoInicio.vue
+msgctxt "Surtido"
+msgid "Duplicate"
+msgstr "Duplicar"
+
+#: frontend/src/components/compras/SurtidoInicio.vue
+msgid "Another order from the same list: nothing is uploaded or read again."
+msgstr "Otro pedido de la misma lista: no se sube ni se lee nada otra vez."
+
+#: frontend/src/components/compras/SurtidoInicio.vue
+msgid "A new draft with the same products and pieces."
+msgstr "Un borrador nuevo con los mismos productos y piezas."
+
+#: frontend/src/components/compras/SurtidoInicio.vue
+msgctxt "Surtido"
+msgid "Delete"
+msgstr "Eliminar"
+
+#: frontend/src/components/compras/SurtidoInicio.vue
+msgid "Delete the list {0}"
+msgstr "Eliminar la lista {0}"
+
+#: frontend/src/components/compras/SurtidoInicio.vue
+msgid "Its pages, the products read from them and its draft order are deleted. This cannot be undone."
+msgstr "Se borran sus páginas, los productos leídos de ellas y su borrador de pedido. No se puede deshacer."
+
+#: frontend/src/components/compras/SurtidoInicio.vue
+msgid "Delete the list"
+msgstr "Eliminar la lista"
+
+#: frontend/src/components/compras/SurtidoInicio.vue
+msgid "Delete the order for {0}"
+msgstr "Eliminar el pedido a {0}"
+
+#: frontend/src/components/compras/SurtidoInicio.vue
+msgid "The draft and its products are deleted. The list stays. This cannot be undone."
+msgstr "Se borran el borrador y sus productos. La lista se queda. No se puede deshacer."
+
+#: frontend/src/components/compras/SurtidoInicio.vue
+msgid "Delete the order"
+msgstr "Eliminar el pedido"
+
+#: frontend/src/components/compras/SurtidoInicio.vue
+msgctxt "Surtido"
+msgid "All lists"
+msgstr "Todas las listas"
+
+#: frontend/src/components/compras/SurtidoInicio.vue
+msgctxt "Surtido"
+msgid "{0} is ready"
+msgstr "{0} está lista"
+
+#: frontend/src/components/compras/SurtidoInicio.vue
+msgctxt "Surtido"
+msgid "List deleted"
+msgstr "Lista eliminada"
+
+#: frontend/src/components/compras/SurtidoInicio.vue
+msgctxt "Surtido"
+msgid "A new draft order is ready"
+msgstr "El borrador nuevo está listo"
+
+#: frontend/src/components/compras/SurtidoInicio.vue
+msgctxt "Surtido"
+msgid "Order deleted"
+msgstr "Pedido eliminado"
+
+#: frontend/src/components/compras/SurtidoInicio.vue
+msgid "Its products by section, with prices, tiers and stock."
+msgstr "Sus productos por sección, con precios, escalas y existencias."

@@ -143,9 +143,9 @@
                 type="button"
                 class="press inline-flex min-h-11 flex-none items-center rounded-full bg-surface-gray-2 px-4 text-base text-ink-gray-8 hover:bg-surface-gray-3 sm:min-h-9 sm:text-sm"
                 data-testid="surtido-cambiar"
-                @click="openLists"
+                @click="goHome"
               >
-                {{ __('Change list', null, 'Surtido') }}
+                {{ __('All lists', null, 'Surtido') }}
               </button>
             </div>
             <div v-if="showsBar(current)" class="mt-3">
@@ -319,18 +319,9 @@
                 @change="pickCatalog"
               />
             </label>
-            <p v-if="boot.catalogs.length" class="mt-3">
-              <button
-                type="button"
-                class="press text-sm font-medium text-ink-gray-8 underline"
-                @click="openLists"
-              >
-                {{ __('Or pick a saved list', null, 'Surtido') }}
-              </button>
-            </p>
           </div>
           <p
-            v-else-if="!current"
+            v-else-if="!current && !boot.catalogs.length"
             class="mb-4 text-sm text-ink-gray-6"
             role="status"
           >
@@ -368,6 +359,88 @@
             </div>
           </div>
 
+          <!-- Surtido's start: no list open. The drop above starts one; the
+               saved lists and the orders below continue, copy or delete one. -->
+          <template v-if="!current">
+            <details>
+              <summary
+                class="fold-summary press flex min-h-11 cursor-pointer list-none items-center gap-2 text-sm font-medium text-ink-gray-8"
+              >
+                <span
+                  class="lucide-chevron-right size-4 transition-transform"
+                  aria-hidden="true"
+                />
+                {{ __('Upload from another device', null, 'Surtido') }}
+              </summary>
+              <p class="mt-1 text-sm text-ink-gray-6">
+                {{
+                  __(
+                    'A link for your phone or the supplier, with the supplier chosen above if any. It lasts one day.',
+                    null,
+                    'Surtido',
+                  )
+                }}
+              </p>
+              <div class="mt-3 space-y-3">
+                <ComprasPicker
+                  v-model="newSupplier"
+                  :display="newSupplierLabel"
+                  :label="__('Supplier (optional)', null, 'Surtido')"
+                  :placeholder="__('Search supplier', null, 'Surtido')"
+                  :load="(q) => call('suppliers', { search: q })"
+                  @pick="(o) => (newSupplierLabel = o.label)"
+                />
+                <FormControl
+                  v-model="newTitle"
+                  :label="__('Name of the list', null, 'Surtido')"
+                  :placeholder="__('October cases', null, 'Surtido')"
+                />
+                <button
+                  type="button"
+                  :class="['press', BTN.filled]"
+                  :disabled="
+                    !(newSupplier || newTitle.trim()) || busy === 'catalog'
+                  "
+                  @click="createCatalog"
+                >
+                  <span
+                    :class="[
+                      busy === 'catalog'
+                        ? 'lucide-loader-circle animate-spin'
+                        : 'lucide-upload',
+                      'size-5',
+                    ]"
+                    aria-hidden="true"
+                  />
+                  {{ __('Create and get the upload link', null, 'Surtido') }}
+                </button>
+                <p v-if="uploadUrl" class="text-sm">
+                  <a
+                    :href="uploadUrl"
+                    target="_blank"
+                    rel="noopener"
+                    class="font-medium text-ink-blue-7 underline"
+                    >{{ __('Open the upload page', null, 'Surtido') }}</a
+                  >
+                </p>
+              </div>
+            </details>
+            <SurtidoInicio
+              class="mt-2"
+              :lists="homeLists"
+              :orders="homeOrders"
+              :owner="boot.owner"
+              :busy="busy"
+              :error="problem?.detail || ''"
+              @open-list="(name) => openList(name)"
+              @open-order="openOrder"
+              @duplicate-list="duplicateList"
+              @delete-list="deleteList"
+              @duplicate-order="duplicateOrder"
+              @delete-order="deleteOrder"
+            />
+          </template>
+
           <!-- the list as a shop: browse, search, add to the cart -->
           <SurtidoTienda
             v-if="current?.lines"
@@ -386,7 +459,7 @@
         </section>
 
         <!-- 3 · the supplier reply ------------------------------------------------ -->
-        <section v-else :aria-label="steps[2].label">
+        <section v-else :aria-label="steps[1].label">
           <div v-if="!pedido" class="text-sm text-ink-gray-6">
             {{
               __(
@@ -1284,164 +1357,6 @@
         </button>
       </template>
     </BottomSheet>
-
-    <BottomSheet
-      v-if="listsMounted"
-      v-model:open="listsOpen"
-      :title="__('Supplier lists', null, 'Surtido')"
-      flush
-    >
-      <ul class="divide-y divide-outline-gray-1" data-testid="surtido-listas">
-        <li v-for="c in boot.catalogs" :key="c.name" class="flex items-center">
-          <button
-            type="button"
-            class="press flex min-h-16 min-w-0 flex-1 items-center gap-3 px-4 py-2 text-left hover:bg-surface-gray-1"
-            :aria-current="catalog === c.name ? 'true' : undefined"
-            data-testid="surtido-lista"
-            @click="pickList(c.name)"
-          >
-            <span
-              class="flex size-5 flex-none items-center justify-center"
-              aria-hidden="true"
-            >
-              <span
-                v-if="catalog === c.name"
-                class="lucide-check size-5 text-ink-gray-9"
-              />
-            </span>
-            <span class="min-w-0 flex-1">
-              <span class="block truncate font-medium">{{ listName(c) }}</span>
-              <span class="num block truncate text-sm text-ink-gray-6">{{
-                listLine(c)
-              }}</span>
-            </span>
-          </button>
-          <RouterLink
-            :to="{ name: 'CompraLista', params: { name: c.name } }"
-            class="press mr-2 inline-flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-7 hover:bg-surface-gray-2"
-            :aria-label="__('Open the list {0}', [listName(c)], 'Surtido')"
-            :title="__('Open the list', null, 'Surtido')"
-            data-testid="surtido-abrir-lista"
-          >
-            <span class="lucide-table size-5" aria-hidden="true" />
-          </RouterLink>
-        </li>
-      </ul>
-      <div v-if="boot.owner" class="space-y-3 px-4 py-4">
-        <label
-          class="press flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-6 border border-dashed border-outline-gray-3 text-base text-ink-gray-8 hover:bg-surface-gray-1"
-          :class="upload ? 'pointer-events-none opacity-50' : ''"
-        >
-          <span class="lucide-upload size-5" aria-hidden="true" />
-          {{ __('Add a list', null, 'Surtido') }}
-          <input
-            type="file"
-            class="sr-only"
-            multiple
-            :accept="LIST_ACCEPT"
-            :disabled="!!upload"
-            @change="pickCatalogFromSheet"
-          />
-        </label>
-        <details>
-          <summary
-            class="fold-summary press flex min-h-11 cursor-pointer list-none items-center gap-2 text-sm font-medium text-ink-gray-8"
-          >
-            <span
-              class="lucide-chevron-right size-4 transition-transform"
-              aria-hidden="true"
-            />
-            {{ __('Upload from another device', null, 'Surtido') }}
-          </summary>
-          <p class="mt-1 text-sm text-ink-gray-6">
-            {{
-              __(
-                'A link for your phone or the supplier, with the supplier chosen above if any. It lasts one day.',
-                null,
-                'Surtido',
-              )
-            }}
-          </p>
-          <div class="mt-3 space-y-3">
-            <ComprasPicker
-              v-model="newSupplier"
-              :display="newSupplierLabel"
-              :label="__('Supplier (optional)', null, 'Surtido')"
-              :placeholder="__('Search supplier', null, 'Surtido')"
-              :load="(q) => call('suppliers', { search: q })"
-              @pick="(o) => (newSupplierLabel = o.label)"
-            />
-            <FormControl
-              v-model="newTitle"
-              :label="__('Name of the list', null, 'Surtido')"
-              :placeholder="__('October cases', null, 'Surtido')"
-            />
-            <button
-              type="button"
-              :class="['press', BTN.filled]"
-              :disabled="
-                !(newSupplier || newTitle.trim()) || busy === 'catalog'
-              "
-              @click="createCatalog"
-            >
-              <span
-                :class="[
-                  busy === 'catalog'
-                    ? 'lucide-loader-circle animate-spin'
-                    : 'lucide-upload',
-                  'size-5',
-                ]"
-                aria-hidden="true"
-              />
-              {{ __('Create and get the upload link', null, 'Surtido') }}
-            </button>
-            <p v-if="uploadUrl" class="text-sm">
-              <a
-                :href="uploadUrl"
-                target="_blank"
-                rel="noopener"
-                class="font-medium text-ink-blue-7 underline"
-                >{{ __('Open the upload page', null, 'Surtido') }}</a
-              >
-            </p>
-          </div>
-        </details>
-      </div>
-      <div
-        v-if="boot.pedidos.length"
-        class="border-t border-outline-gray-2 pt-2"
-      >
-        <p class="px-4 py-2 text-sm font-medium text-ink-gray-7">
-          {{ __('Recent orders to suppliers', null, 'Surtido') }}
-        </p>
-        <ul class="divide-y divide-outline-gray-1">
-          <li v-for="p in boot.pedidos" :key="p.name">
-            <button
-              type="button"
-              class="press flex min-h-14 w-full items-center gap-3 px-4 py-2 text-left hover:bg-surface-gray-1"
-              @click="openPedidoFromSheet(p.name)"
-            >
-              <span class="min-w-0 flex-1">
-                <span class="block truncate font-medium">{{ p.supplier }}</span>
-                <span class="num block truncate text-sm text-ink-gray-6">
-                  {{ p.name
-                  }}<template v-if="p.ceiling"
-                    >,
-                    {{
-                      __('budget {0}', [money(p.ceiling)], 'Surtido')
-                    }}</template
-                  >
-                </span>
-              </span>
-              <Badge
-                :theme="pedidoTheme(p.status)"
-                :label="pedidoStatus(p.status)"
-              />
-            </button>
-          </li>
-        </ul>
-      </div>
-    </BottomSheet>
   </div>
 </template>
 <script setup>
@@ -1462,6 +1377,8 @@ import { BTN } from '@/documentos/tools'
 import ComprasPicker from '@/components/compras/ComprasPicker.vue'
 import CatalogProgress from '@/components/compras/CatalogProgress.vue'
 import SurtidoTienda from '@/components/compras/SurtidoTienda.vue'
+import SurtidoInicio from '@/components/compras/SurtidoInicio.vue'
+import { formatDay } from '@/utils/contactos'
 const SurtidoProducto = defineAsyncComponent(
   () => import('@/components/compras/SurtidoProducto.vue'),
 )
@@ -1527,8 +1444,6 @@ const noFacets = () => ({
   supplier_guess: null,
 })
 const facets = ref(noFacets())
-const listsOpen = ref(false)
-const listsMounted = ref(false)
 const plan = ref(null)
 const pedido = ref(null)
 const sharedFile = ref(null)
@@ -1683,21 +1598,125 @@ function listLine(c) {
   return countsText(c)
 }
 const stalled = (c) => progressOf(c)?.stage === 'stalled'
-function openLists() {
-  listsMounted.value = true
-  listsOpen.value = true
-}
-function pickList(name) {
+// ── the start: a list or an order is open only by the address, so back
+// returns to the start; nothing opens by itself ────────────────────────────
+function openList(name, { replace = false } = {}) {
   catalog.value = name
-  listsOpen.value = false
+  if (route.query.catalogo === name && !route.query.pedido) return
+  router[replace ? 'replace' : 'push']({ query: { catalogo: name } })
 }
-function pickCatalogFromSheet(event) {
-  listsOpen.value = false
-  pickCatalog(event)
+function openOrder(name) {
+  router.push({ query: { paso: 'respuesta', pedido: name } })
 }
-function openPedidoFromSheet(name) {
-  listsOpen.value = false
-  openPedido(name)
+function goHome() {
+  router.push({ query: {} })
+}
+// Back (the phone's or the bar's) and links follow the address.
+watch(
+  () => [route.query.catalogo, route.query.pedido],
+  ([list, order]) => {
+    if (!ready.value) return
+    if (typeof order === 'string' && order) {
+      if (order !== pedido.value?.pedido) openPedido(order)
+      return
+    }
+    if (step.value === 'respuesta') {
+      step.value = 'plan'
+      pedido.value = null
+    }
+    const name = typeof list === 'string' ? list : ''
+    if (name !== catalog.value) catalog.value = name
+  },
+)
+const homeLists = computed(() =>
+  boot.value.catalogs.map((c) => {
+    const order = c.orders?.[0]
+    // The list's own name: two lists of one supplier (a month, a copy) differ by it.
+    const title = String(c.title || c.name).replace(
+      /\.(jpe?g|png|webp|heic|pdf|xlsx?|csv|ods|docx?)$/iu,
+      '',
+    )
+    const supplier =
+      c.supplier && !title.toLowerCase().includes(c.supplier.toLowerCase())
+        ? c.supplier
+        : ''
+    return {
+      name: c.name,
+      title,
+      line: [
+        supplier,
+        listLine(c),
+        formatDay(String(c.modified || '').slice(0, 10)),
+      ]
+        .filter(Boolean)
+        .join(', '),
+      order: order
+        ? {
+            label: pedidoStatus(order.status),
+            theme: pedidoTheme(order.status),
+          }
+        : null,
+      blocks: c.blocks || {},
+    }
+  }),
+)
+const homeOrders = computed(() =>
+  boot.value.pedidos.map((p) => ({
+    name: p.name,
+    title: p.supplier || __('No supplier yet', null, 'Surtido'),
+    line: [
+      __('{0} products', [p.lines || 0], 'Surtido'),
+      p.ceiling ? __('budget {0}', [money(p.ceiling)], 'Surtido') : '',
+      formatDay(String(p.modified || '').slice(0, 10)),
+    ]
+      .filter(Boolean)
+      .join(', '),
+    status: {
+      label: pedidoStatus(p.status),
+      theme: pedidoTheme(p.status),
+    },
+    blocks: p.blocks || {},
+  })),
+)
+// A copy of a list carries its cart, product by product.
+async function duplicateList(name) {
+  const out = await run(`dup:${name}`, () =>
+    call('duplicate_catalog', { catalog: name }),
+  )
+  if (!out) return
+  const copied = {}
+  for (const [line, pieces] of Object.entries(savedCart(name)))
+    if (out.lines?.[line]) copied[out.lines[line]] = pieces
+  saveCart(out.catalog, copied)
+  toast.success(__('{0} is ready', [out.title], 'Surtido'))
+  await loadBoot()
+}
+async function deleteList(name, done) {
+  const out = await run(`del:${name}`, () =>
+    call('delete_catalog', { catalog: name }),
+  )
+  if (!out) return
+  saveCart(name, {})
+  done?.()
+  toast.success(__('List deleted', null, 'Surtido'))
+  await loadBoot()
+}
+async function duplicateOrder(name) {
+  const out = await run(`dup:${name}`, () =>
+    call('duplicate_pedido', { pedido: name }),
+  )
+  if (!out) return
+  toast.success(__('A new draft order is ready', null, 'Surtido'))
+  await loadBoot()
+}
+async function deleteOrder(name, done) {
+  const out = await run(`del:${name}`, () =>
+    call('delete_pedido', { pedido: name }),
+  )
+  if (!out) return
+  done?.()
+  toast.success(__('Order deleted', null, 'Surtido'))
+  await loadBoot()
 }
 function countsText(c) {
   return __(
@@ -1817,7 +1836,7 @@ async function sendCatalog(link, name, file) {
       onProgress: (pct) => (upload.value = { name: file.name, pct }),
     })
     awaited.value = name
-    catalog.value = name
+    openList(name)
     toast.success(
       __('{0} uploaded; it reads itself now', [file.name], 'Surtido'),
     )
@@ -1852,7 +1871,7 @@ async function sendPictures(link, name, files) {
       ),
     )
     opened = true
-    catalog.value = name
+    openList(name)
     awaited.value = name
     await refresh()
     schedulePoll()
@@ -1969,13 +1988,8 @@ async function start() {
     return
   }
   const q = route.query
-  if (typeof q.catalogo === 'string') catalog.value = q.catalogo
-  else
-    catalog.value =
-      boot.value.catalogs.find((c) => READABLE.includes(c.status) && c.lines)
-        ?.name ||
-      boot.value.catalogs[0]?.name ||
-      ''
+  // Surtido opens on its start: a list opens only when the address names it.
+  catalog.value = typeof q.catalogo === 'string' ? q.catalogo : ''
   step.value = 'plan'
   ready.value = true
   if (typeof q.pedido === 'string' && q.pedido) await openPedido(q.pedido)
@@ -2390,6 +2404,7 @@ function onBack(event) {
   goBack()
 }
 function goBack() {
+  if (catalog.value || route.query.pedido) return goHome()
   router.push({ name: 'Compras' })
 }
 
