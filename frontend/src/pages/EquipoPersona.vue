@@ -9,35 +9,50 @@
       island
       :back="true"
       :back-label="__('Back to Equipo')"
-      :title="person?.full_name || ''"
+      :title="person ? shownName : ''"
       :bell="isPhone"
       @back="onBack"
     >
       <template v-if="person" #title>
-        <div class="flex min-h-12 min-w-0 flex-col justify-center px-3">
+        <!-- Name, then the state chip with the job title, then the company on
+             its own line: each wraps, none is cut to «Grupo …». -->
+        <div class="flex min-h-12 min-w-0 flex-col justify-center px-3 py-1.5">
           <span
             class="title-face line-clamp-2 break-words text-xl font-semibold leading-tight [text-wrap:balance]"
             data-appbar-title
-            >{{ person.full_name }}</span
+            >{{ shownName }}</span
           >
-          <span class="flex min-w-0 items-center gap-2 pt-0.5">
+          <span
+            v-if="chip || kindLines.length"
+            class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 pt-0.5"
+          >
             <StatusChip
               v-if="chip"
               :label="chip.label"
               :tone="chip.tone"
               data-testid="equipo-status"
             />
-            <span class="truncate text-sm leading-tight text-ink-gray-6">{{
-              kindLine
-            }}</span>
+            <span
+              v-if="kindLines[0]"
+              class="min-w-0 break-words text-sm leading-tight text-ink-gray-6"
+              data-testid="equipo-kind"
+              >{{ kindLines[0] }}</span
+            >
           </span>
+          <span
+            v-for="line in kindLines.slice(1)"
+            :key="line"
+            class="min-w-0 break-words text-sm leading-tight text-ink-gray-6"
+            data-testid="equipo-kind"
+            >{{ line }}</span
+          >
         </div>
       </template>
       <template #actions>
         <RecordIsland
           v-if="person"
           :reach="kit.record.value?.header?.reach || {}"
-          :who="person.full_name || ''"
+          :who="shownName"
           :groups="boltGroups"
           :phone="isPhone"
           :subtitle="kit.scopeTitle.value"
@@ -188,13 +203,22 @@
                   vacationLine || __('No vacation days assigned for this year.')
                 }}
               </p>
+              <!-- Their time here, then the next anniversary on its own line
+                   (never «A · B» wrapping mid-phrase). -->
               <p
                 v-if="vacation?.year !== undefined"
                 class="text-base text-ink-gray-7"
+                data-testid="equipo-service"
+              >
+                {{ serviceLine }}
+              </p>
+              <p
+                v-if="vacation?.next_anniversary"
+                class="text-base text-ink-gray-7"
+                data-testid="equipo-anniversary"
               >
                 {{
-                  __('{0} years of service · next anniversary {1}: {2} days', [
-                    vacation.year,
+                  __('Next anniversary {0}: {1} days', [
                     dayLabel(vacation.next_anniversary),
                     vacation.next_days,
                   ])
@@ -465,11 +489,7 @@
             </ul>
           </section>
           <!-- Shell SPEC §6 DD2: Actividad of their Employee record and the «⋯» sheets. -->
-          <RecordKit
-            :kit="kit"
-            :title="person.full_name || props.employee"
-            :cadena="false"
-          />
+          <RecordKit :kit="kit" :title="shownName" :cadena="false" />
         </aside>
       </div>
     </div>
@@ -569,26 +589,44 @@ let decisionKey = null
 const employee = computed(() => props.employee)
 const vacation = computed(() => person.value?.vacation || null)
 const vacationLine = computed(() => balanceLine(vacation.value))
+// «Menos de un año de antigüedad», «1 año…», «3 años…»: never «0 años».
+const serviceLine = computed(() => {
+  const years = Number(vacation.value?.year) || 0
+  if (years < 1) return __('Less than a year of service')
+  if (years === 1) return __('1 year of service')
+  return __('{0} years of service', [years])
+})
 const canAssign = computed(() => person.value?.asistencia?.can_assign !== false)
+// An account nobody named yet reads «Sin nombre», never its login.
+const shownName = computed(
+  () => person.value?.full_name || __('No name', null, 'Equipo'),
+)
 // The engine's «⋯» tools, Conexiones and Actividad of their Employee record.
 const kit = useRecordKit('Employee', {
   name: () => props.employee,
-  title: () => person.value?.full_name || '',
+  title: () => (person.value ? shownName.value : ''),
   changed: () => load(),
 })
 
 // ── the bar: their name, whether they can work, their puesto ─────────────
+// The employee record's state in the owner's words, never the stored status.
+function employmentLabel(status) {
+  if (status === 'Suspended') return __('Suspended', null, 'Equipo')
+  if (status === 'Left') return __('No longer works here', null, 'Equipo')
+  return __('Inactive', null, 'Equipo')
+}
 const chip = computed(() => {
   const p = person.value || {}
   if (p.user && !p.enabled)
     return { label: __('No access', null, 'Equipo'), tone: 'warning' }
   if (p.employment && p.employment !== 'Active')
-    return { label: p.employment, tone: 'warning' }
+    return { label: employmentLabel(p.employment), tone: 'warning' }
   return p.puesto ? { label: p.puesto, tone: 'neutral' } : null
 })
-const kindLine = computed(() => {
+// The job title and the company, each on its own line (never «A · B» cut short).
+const kindLines = computed(() => {
   const p = person.value || {}
-  return [p.designation, p.company].filter(Boolean).join(' · ')
+  return [p.designation, p.company].filter(Boolean)
 })
 
 // ── the hero's steps: the decision (filled), then access and the law's days

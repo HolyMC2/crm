@@ -19,6 +19,7 @@ from frappe import _
 from frappe.model.workflow import get_workflow_name
 from frappe.utils import cint, cstr, flt, get_fullname, getdate, nowdate, strip_html
 
+from crm.api import documentos_pasos
 from crm.utils.doctypes import doctype_exists
 
 # The module each curated doctype lights in the shell (SPEC §6 DD3). Order is the hub order.
@@ -1668,6 +1669,9 @@ def _diff_side(df, value):
 		return "text", ""
 	if df.fieldtype == "Check":
 		return "text", _("Yes") if cint(value) else _("No")
+	# A User link holds a login: the ledger names the person instead.
+	if df.fieldtype == "Link" and df.options == "User":
+		return "text", _person(value)
 	if df.fieldtype in ("Currency", "Float", "Int", "Percent"):
 		number = _as_number(value)
 		if number is not None:
@@ -1924,6 +1928,12 @@ def _version_event(doc, row):
 	# A save that writes null over 0.00 («Importe reclamado: $0.00 → —») changed nothing.
 	changed = [c for c in changed if not (len(c) >= 3 and _reset_noise(c[1], c[2]))]
 	fields = _diff_fields(doc)
+	# A person's record (Equipo's Employee) reads as the steps the owner took, not a ledger.
+	read_steps = documentos_pasos.reader(doc.doctype)
+	if read_steps:
+		rows = _row_diff(doc, fields, data)[0]
+		steps = read_steps(changed, fields, rows)
+		return {"kind": "edit", "steps": steps} if steps else None
 	labels = []
 	for field, _old, _new in changed:
 		df = fields.get(cstr(field))
@@ -1988,6 +1998,8 @@ def _timeline(doc):
 					"at": cstr(c.creation),
 					"who": _person(c.owner),
 					"text": strip_html(cstr(c.content))[:300],
+					# A file taken off the record says so («quitó el archivo …»).
+					**({"removed": True} if c.get("comment_type") == "Attachment Removed" else {}),
 				}
 			)
 	events.sort(key=lambda e: e["at"], reverse=True)

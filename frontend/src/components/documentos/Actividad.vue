@@ -223,6 +223,9 @@ function sentence(event) {
     case 'cancel':
       return `${who} canceló ${props.noun}`
     case 'edit': {
+      // A person's record (Equipo) names the steps the owner took, in their words:
+      // «Karla M. le dio acceso y cambió su cargo a Vendedor». No ledger under it.
+      if (event.steps?.length) return `${who} ${list(event.steps)}`
       // A newer server sends the diff itself (`changes`, `items`): the lines under the
       // sentence say WHAT changed, so the sentence only names the record.
       if (hasDiff(event)) return `${who} cambió ${props.noun}`
@@ -238,6 +241,14 @@ function sentence(event) {
     }
     case 'comment':
       return `${who} comentó`
+    case 'attachment': {
+      // The step, with the file's name: «Marco adjuntó «INE frente.jpeg»».
+      const file = String(event.text || '').trim()
+      if (!file) return `${who} cambió los archivos`
+      return event.removed
+        ? `${who} quitó el archivo «${file}»`
+        : `${who} adjuntó «${file}»`
+    }
     case 'email':
       return event.direction === 'recibido'
         ? `Llegó un correo de ${who}`

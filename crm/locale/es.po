@@ -22212,10 +22212,20 @@ msgctxt "Equipo"
 msgid "See everyone"
 msgstr "Ver a todo el equipo"
 
-#: frontend/src/pages/Equipo.vue
+#: frontend/src/pages/Equipo.vue frontend/src/pages/EquipoPersona.vue
 msgctxt "Equipo"
 msgid "Suspended"
 msgstr "Suspendido"
+
+#: frontend/src/pages/EquipoPersona.vue
+msgctxt "Equipo"
+msgid "No longer works here"
+msgstr "Dado de baja"
+
+#: frontend/src/pages/EquipoPersona.vue
+msgctxt "Equipo"
+msgid "Inactive"
+msgstr "Inactivo"
 
 #: frontend/src/pages/Equipo.vue
 msgctxt "Equipo"
@@ -22225,6 +22235,15 @@ msgstr "Verificación en dos pasos"
 #: frontend/src/pages/Equipo.vue
 msgid "No employee record"
 msgstr "Sin ficha de empleado"
+
+#: frontend/src/pages/Equipo.vue frontend/src/pages/EquipoPersona.vue
+msgctxt "Equipo"
+msgid "No name"
+msgstr "Sin nombre"
+
+#: frontend/src/pages/Equipo.vue
+msgid "They can write their name in My profile."
+msgstr "Puede escribir su nombre en Mi perfil."
 
 #: frontend/src/pages/Equipo.vue
 msgid "Assign shift"
@@ -22365,8 +22384,20 @@ msgid "No vacation days assigned for this year."
 msgstr "No tiene días de vacaciones asignados este año."
 
 #: frontend/src/pages/EquipoPersona.vue
-msgid "{0} years of service · next anniversary {1}: {2} days"
-msgstr "{0} años de antigüedad · próximo aniversario {1}: {2} días"
+msgid "Less than a year of service"
+msgstr "Menos de un año de antigüedad"
+
+#: frontend/src/pages/EquipoPersona.vue
+msgid "1 year of service"
+msgstr "1 año de antigüedad"
+
+#: frontend/src/pages/EquipoPersona.vue
+msgid "{0} years of service"
+msgstr "{0} años de antigüedad"
+
+#: frontend/src/pages/EquipoPersona.vue
+msgid "Next anniversary {0}: {1} days"
+msgstr "Próximo aniversario {0}: {1} días"
 
 #: frontend/src/pages/EquipoPersona.vue
 msgid "{0} days carried from last year, until {1}"
@@ -28407,6 +28438,126 @@ msgstr "No se pudieron leer los filtros."
 #: crm/api/documentos.py
 msgid "Someone"
 msgstr "Alguien"
+
+#: crm/api/documentos_pasos.py
+msgid "marked their record as active"
+msgstr "marcó su ficha como activa"
+
+#: crm/api/documentos_pasos.py
+msgid "marked their record as inactive"
+msgstr "marcó su ficha como inactiva"
+
+#: crm/api/documentos_pasos.py
+msgid "suspended their record"
+msgstr "suspendió su ficha"
+
+#: crm/api/documentos_pasos.py
+msgid "recorded that they left"
+msgstr "registró su baja"
+
+#: crm/api/documentos_pasos.py
+msgid "changed their status"
+msgstr "cambió su estado"
+
+#: crm/api/documentos_pasos.py
+msgid "gave them access"
+msgstr "le dio acceso"
+
+#: crm/api/documentos_pasos.py
+msgid "removed their access"
+msgstr "le quitó el acceso"
+
+#: crm/api/documentos_pasos.py
+msgid "changed their access"
+msgstr "cambió su acceso"
+
+#: crm/api/documentos_pasos.py
+msgid "changed their job title to {0}"
+msgstr "cambió su cargo a {0}"
+
+#: crm/api/documentos_pasos.py
+msgid "removed their job title"
+msgstr "quitó su cargo"
+
+#: crm/api/documentos_pasos.py
+msgid "moved them to {0}"
+msgstr "cambió su empresa a {0}"
+
+#: crm/api/documentos_pasos.py
+msgid "changed their area to {0}"
+msgstr "cambió su área a {0}"
+
+#: crm/api/documentos_pasos.py
+msgid "removed their area"
+msgstr "quitó su área"
+
+#: crm/api/documentos_pasos.py
+msgid "changed their branch to {0}"
+msgstr "cambió su sucursal a {0}"
+
+#: crm/api/documentos_pasos.py
+msgid "removed their branch"
+msgstr "quitó su sucursal"
+
+#: crm/api/documentos_pasos.py
+msgid "changed their usual shift to {0}"
+msgstr "cambió su turno habitual a {0}"
+
+#: crm/api/documentos_pasos.py
+msgid "removed their usual shift"
+msgstr "quitó su turno habitual"
+
+#: crm/api/documentos_pasos.py
+msgid "changed their days off"
+msgstr "cambió sus días de descanso"
+
+#: crm/api/documentos_pasos.py
+msgid "removed who they report to"
+msgstr "quitó a quién reporta"
+
+#: crm/api/documentos_pasos.py
+msgid "changed who they report to: {0}"
+msgstr "cambió a quién reporta: {0}"
+
+#: crm/api/documentos_pasos.py
+msgid "changed who they report to"
+msgstr "cambió a quién reporta"
+
+#: crm/api/documentos_pasos.py
+msgid "changed their start date"
+msgstr "cambió su fecha de ingreso"
+
+#: crm/api/documentos_pasos.py
+msgid "set their leaving date"
+msgstr "registró su fecha de salida"
+
+#: crm/api/documentos_pasos.py
+msgid "removed their leaving date"
+msgstr "quitó su fecha de salida"
+
+#: crm/api/documentos_pasos.py
+msgid "changed their date of birth"
+msgstr "cambió su fecha de nacimiento"
+
+#: crm/api/documentos_pasos.py
+msgid "changed their name"
+msgstr "cambió su nombre"
+
+#: crm/api/documentos_pasos.py
+msgid "changed their email"
+msgstr "cambió su correo"
+
+#: crm/api/documentos_pasos.py
+msgid "changed their mobile number"
+msgstr "cambió su celular"
+
+#: crm/api/documentos_pasos.py
+msgid "changed their photo"
+msgstr "cambió su foto"
+
+#: crm/api/documentos_pasos.py
+msgid "updated their details"
+msgstr "actualizó sus datos"
 
 #: crm/api/documentos.py
 msgid "Your user does not have this permission."

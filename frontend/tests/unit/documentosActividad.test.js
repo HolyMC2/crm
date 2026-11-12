@@ -257,3 +257,57 @@ describe('Actividad edit diff', () => {
     expect(lines).toEqual([])
   })
 })
+
+// ── A person's record (Equipo): the steps the owner took, never a field or a login ──
+
+describe('Actividad on a person', () => {
+  it('says the steps in one sentence, with no ledger under it', async () => {
+    const { sentences, lines } = await ledger(
+      [
+        {
+          kind: 'edit',
+          who: 'Sistema',
+          at: '2026-11-11 12:00:00',
+          steps: ['le dio acceso', 'cambió su cargo a Vendedor'],
+        },
+        {
+          kind: 'edit',
+          who: 'Karla M.',
+          at: '2026-11-11 11:00:00',
+          steps: ['actualizó sus datos'],
+        },
+      ],
+      { noun: 'la persona del equipo' },
+    )
+    expect(sentences).toEqual([
+      'Sistema le dio acceso y cambió su cargo a Vendedor',
+      'Karla M. actualizó sus datos',
+    ])
+    expect(lines).toEqual([])
+    for (const text of sentences) expect(text).not.toMatch(/@|→|ID de/)
+  })
+})
+
+describe('Actividad files', () => {
+  it('says a file was attached or taken off, never «Name: file»', async () => {
+    const { sentences } = await ledger([
+      {
+        kind: 'attachment',
+        who: 'Marco Ponce',
+        text: 'INE frente.jpeg ',
+        at: '2026-11-11 12:00:00',
+      },
+      {
+        kind: 'attachment',
+        who: 'Marco Ponce',
+        text: 'INE vieja.jpeg',
+        removed: true,
+        at: '2026-11-11 11:00:00',
+      },
+    ])
+    expect(sentences).toEqual([
+      'Marco Ponce adjuntó «INE frente.jpeg»',
+      'Marco Ponce quitó el archivo «INE vieja.jpeg»',
+    ])
+  })
+})

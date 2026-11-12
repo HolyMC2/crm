@@ -238,17 +238,28 @@
                 @click="row.employee ? null : openPerson(row)"
                 @keydown.enter="row.employee ? null : openPerson(row)"
               >
-                <Avatar
-                  :label="row.full_name || row.employee_name"
-                  :image="row.image"
-                  size="lg"
-                />
+                <!-- Nobody named it: a person icon, not the «S» of «Sin nombre». -->
+                <Avatar :label="rowName(row)" :image="row.image" size="lg">
+                  <template v-if="!hasName(row)" #default>
+                    <span class="lucide-user-round size-4" aria-hidden="true" />
+                  </template>
+                </Avatar>
                 <span class="min-w-0 flex-1">
-                  <span class="block truncate font-medium text-ink-gray-9">
-                    {{ row.full_name || row.employee_name }}
+                  <span
+                    class="block truncate font-medium text-ink-gray-9"
+                    data-testid="equipo-row-name"
+                  >
+                    {{ rowName(row) }}
                   </span>
                   <span class="block truncate text-sm text-ink-gray-6">
                     {{ rowDetail(row) }}
+                  </span>
+                  <span
+                    v-if="!hasName(row)"
+                    class="block text-sm text-ink-gray-6"
+                    data-testid="equipo-row-unnamed"
+                  >
+                    {{ __('They can write their name in My profile.') }}
                   </span>
                   <span class="mt-1 flex flex-wrap gap-1">
                     <Badge
@@ -466,6 +477,13 @@ const emptyBody = computed(
     })[segment.value],
 )
 
+// A person by name; an account nobody named yet reads «Sin nombre», never its login.
+function hasName(row) {
+  return Boolean(row.full_name || row.employee_name)
+}
+function rowName(row) {
+  return row.full_name || row.employee_name || __('No name', null, 'Equipo')
+}
 function rowDetail(row) {
   if (row.today)
     return [
@@ -599,7 +617,7 @@ function openShift(row) {
     s.openShift({
       employee: row.employee,
       onDone: () => {
-        notice.value = __('Shift assigned to {0}.', [row.full_name])
+        notice.value = __('Shift assigned to {0}.', [rowName(row)])
         load()
       },
     }),

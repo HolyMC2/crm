@@ -1,6 +1,7 @@
 // Equipo (/crm/equipo) for the owner's first hour: «Invitar a alguien» for every
 // puesto where there is no «Agregar técnico», and Hoy's «Agregar técnico»
 // (?alta=tecnico) opens the alta at once and comes back to Hoy when it closes.
+// An account nobody named reads «Sin nombre» with how to fix it, never its login.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick } from 'vue'
 import { createMemoryHistory, createRouter } from 'vue-router'
@@ -62,6 +63,7 @@ async function mount(path, capabilities) {
     routes: [
       { path: '/equipo', name: 'Equipo', component: Equipo },
       { path: '/hoy', name: 'Hoy', component: page },
+      { path: '/equipo/:employee', name: 'EquipoPersona', component: page },
     ],
   })
   router.push(path)
@@ -143,5 +145,42 @@ describe('Hoy’s «Agregar técnico»', () => {
   it('a site without technicians opens nothing', async () => {
     await mount(FROM_HOY, { read: true, hire: false, invite: true })
     expect(alta.opts).toBeNull()
+  })
+})
+
+describe('an account nobody named', () => {
+  it('reads «No name» with how to fix it, never its login', async () => {
+    state.api.mockResolvedValue({
+      rows: [
+        {
+          employee: null,
+          user: 'caja@example.test',
+          full_name: null,
+          status: 'no_employee',
+          puesto: '',
+        },
+        {
+          employee: 'HR-EMP-00007',
+          user: 'lucia@example.test',
+          full_name: 'Lucía Herrera Soto',
+          designation: 'Tecnico de celulares',
+          company: 'Grupo Doco',
+          status: 'Active',
+          puesto: '',
+        },
+      ],
+      counts: { todos: 2 },
+    })
+    await mount('/equipo?segment=todos', { read: true })
+    const names = [
+      ...root.querySelectorAll('[data-testid="equipo-row-name"]'),
+    ].map((n) => n.textContent.trim())
+    expect(names).toEqual(['No name', 'Lucía Herrera Soto'])
+    const hints = root.querySelectorAll('[data-testid="equipo-row-unnamed"]')
+    expect(hints).toHaveLength(1)
+    expect(hints[0].textContent.trim()).toBe(
+      'They can write their name in My profile.',
+    )
+    expect(root.textContent).not.toMatch(/@/)
   })
 })

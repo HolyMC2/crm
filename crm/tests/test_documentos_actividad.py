@@ -360,3 +360,73 @@ class TestDocumentosActividadEndToEnd(IntegrationTestCase):
 		self.assertEqual(change["from"], "Llamar al proveedor")
 		self.assertEqual(change["to"], "Llamar al proveedor el lunes")
 		self.assertNotIn("@", edit["who"])
+
+
+def _employee(fields, read_permlevels=(0,)):
+	doc = _FakeDoc(fields, read_permlevels=read_permlevels)
+	doc.doctype = "Employee"
+	return doc
+
+
+@skipIf(not HAS_FRAPPE, "Frappe integration dependency is not installed")
+class TestDocumentosActividadPersona(TestCase):
+	"""A person's record (Equipo) reads as the owner's steps: never a field label, an arrow, a
+	login or an ID (muelle-ui: activity lines name the step)."""
+
+	USER = _field("user_id", "User ID", fieldtype="Link", options="User")
+	PERMISSION = _field("create_user_permission", "Create User Permission", fieldtype="Check")
+
+	def test_access_given_is_one_step_without_the_login(self):
+		doc = _employee([self.USER, self.PERMISSION])
+		event = _event(
+			doc,
+			{"changed": [["user_id", None, "lucia.herrera@example.com"], ["create_user_permission", 0, 1]]},
+		)
+		self.assertEqual(event, {"kind": "edit", "steps": ["gave them access"]})
+		self.assertNotIn("@", json.dumps(event))
+		removed = _event(doc, {"changed": [["user_id", "lucia.herrera@example.com", None]]})
+		self.assertEqual(removed["steps"], ["removed their access"])
+
+	def test_bookkeeping_alone_makes_no_event(self):
+		doc = _employee([self.USER, self.PERMISSION])
+		self.assertIsNone(_event(doc, {"changed": [["create_user_permission", 1, 0]]}))
+
+	def test_job_title_and_status_read_as_the_owners_steps(self):
+		doc = _employee(
+			[
+				_field("designation", "Designation", fieldtype="Link", options="Designation"),
+				_field("status", "Status", fieldtype="Select"),
+			]
+		)
+		event = _event(doc, {"changed": [["designation", "", "Vendedor"], ["status", "Active", "Left"]]})
+		self.assertEqual(event["steps"], ["changed their job title to Vendedor", "recorded that they left"])
+		self.assertNotIn("changes", event)
+
+	def test_who_they_report_to_is_a_name_never_an_id(self):
+		doc = _employee([_field("reports_to", "Reports to", fieldtype="Link", options="Employee")])
+		with patch("crm.api.documentos_pasos.frappe.db.get_value", return_value="Karla Méndez"):
+			event = _event(doc, {"changed": [["reports_to", None, "HR-EMP-00003"]]})
+		self.assertEqual(event["steps"], ["changed who they report to: Karla Méndez"])
+		self.assertNotIn("HR-EMP", json.dumps(event))
+
+	def test_other_fields_fold_into_one_step_and_unreadable_ones_make_none(self):
+		doc = _employee(
+			[
+				_field("gender", "Gender", fieldtype="Link", options="Gender"),
+				_field("marital_status", "Marital Status", fieldtype="Select"),
+				_field("ctc", "Cost to Company", fieldtype="Currency", permlevel=1),
+			]
+		)
+		event = _event(doc, {"changed": [["gender", "", "Female"], ["marital_status", "", "Single"]]})
+		self.assertEqual(event["steps"], ["updated their details"])
+		self.assertIsNone(_event(doc, {"changed": [["ctc", 1000, 2000]]}))
+
+	def test_a_user_link_in_the_ledger_names_the_person(self):
+		doc = _FakeDoc([_field("approver", "Approver", fieldtype="Link", options="User")])
+		with patch("crm.api.documentos.get_fullname", return_value="Lucía Herrera Soto"):
+			event = _event(doc, {"changed": [["approver", None, "lucia.herrera@example.com"]]})
+		self.assertEqual(
+			event["changes"],
+			[{"label": "Approver", "type": "text", "from": "", "to": "Lucía Herrera Soto"}],
+		)
+		self.assertNotIn("@", json.dumps(event))

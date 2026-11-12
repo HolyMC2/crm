@@ -227,6 +227,75 @@ describe('Equipo persona on a phone (F12-1, F12-2)', () => {
     expect(name.classList).toContain('line-clamp-2')
   })
 
+  it('puts the job title and the company on lines that wrap, never «A · B» cut short', async () => {
+    const root = await mount((await page()).default, {
+      employee: 'HR-EMP-00007',
+    })
+    const lines = [...root.querySelectorAll('[data-testid="equipo-kind"]')]
+    // The title as the data spells it: the display never rewrites a puesto.
+    expect(lines.map((l) => l.textContent.trim())).toEqual([
+      'Tecnico de celulares',
+      'Grupo Doco',
+    ])
+    for (const line of lines) {
+      expect(line.className).not.toMatch(/\btruncate\b|whitespace-nowrap/)
+      expect(line.classList).toContain('break-words')
+      expect(line.textContent).not.toContain(' · ')
+    }
+  })
+
+  it.each([
+    [0, 'Less than a year of service'],
+    [1, '1 year of service'],
+    [4, '4 years of service'],
+  ])(
+    'says %i years of service on its own line and the next anniversary on the next',
+    async (year, service) => {
+      state.person = {
+        ...state.person,
+        vacation: { year, next_anniversary: '2027-03-10', next_days: 12 },
+      }
+      const root = await mount((await page()).default, {
+        employee: 'HR-EMP-00007',
+      })
+      const said = root.querySelector('[data-testid="equipo-service"]')
+      expect(said.textContent.trim()).toBe(service)
+      const next = root.querySelector('[data-testid="equipo-anniversary"]')
+      expect(next.textContent.trim()).toMatch(/^Next anniversary .+: 12 days$/)
+      expect(said.textContent + next.textContent).not.toContain(' · ')
+    },
+  )
+
+  it('names an account nobody named «No name», never its login or ID', async () => {
+    state.person = {
+      ...state.person,
+      full_name: null,
+      user: 'caja@example.test',
+    }
+    const root = await mount((await page()).default, {
+      employee: 'HR-EMP-00007',
+    })
+    const name = root.querySelector('[data-appbar-title]')
+    expect(name.textContent.trim()).toBe('No name')
+    expect(root.textContent).not.toMatch(/caja@example\.test|HR-EMP-00007/)
+  })
+
+  it.each([
+    ['Suspended', 'Suspended'],
+    ['Left', 'No longer works here'],
+    ['Inactive', 'Inactive'],
+  ])(
+    'says an employee record %s in the owner’s words, never the stored status',
+    async (stored, shown) => {
+      state.person = { ...state.person, enabled: true, employment: stored }
+      const root = await mount((await page()).default, {
+        employee: 'HR-EMP-00007',
+      })
+      const chip = root.querySelector('[data-testid="equipo-status"]')
+      expect(chip.textContent.trim()).toBe(shown)
+    },
+  )
+
   it('offers «Access and puesto» among the hero steps, not beside the name', async () => {
     const root = await mount((await page()).default, {
       employee: 'HR-EMP-00007',
