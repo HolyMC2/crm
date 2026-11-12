@@ -4,7 +4,7 @@
 // registers what Syncfy reports even when the window closes; and someone
 // without the manager role reads who can act instead of a button.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { createApp, h, nextTick } from 'vue'
+import { createApp, defineComponent, h, nextTick, ref } from 'vue'
 
 const state = vi.hoisted(() => ({
   call: vi.fn(),
@@ -471,6 +471,67 @@ describe('openSyncfy', () => {
     expect(state.call.mock.calls.some(([m]) => m.endsWith('.register'))).toBe(
       false,
     )
+  })
+
+  it('draws the window again on a second «Conectar» without a reload', async () => {
+    // Syncfy's bundle is a Vue app mounted on the element it is given
+    // (createApp(root).mount(element)). On a reused, emptied element Vue
+    // patched the first window's detached tree, so the second window opened
+    // nowhere until the page was reloaded (doco, 2026-11-11).
+    const Root = defineComponent({
+      setup(_, { expose }) {
+        const visible = ref(false)
+        expose({
+          open: () => (visible.value = true),
+          close: () => (visible.value = false),
+        })
+        // A fragment root with the modal shown on open, as Syncfy's widget draws.
+        return () => [
+          h('span'),
+          visible.value
+            ? h('div', { class: 'syncfy-modal', 'data-open': 'true' })
+            : null,
+        ]
+      },
+    })
+    window.SyncfyWidget = class {
+      constructor(options) {
+        this.handlers = {}
+        this.app = createApp(Root).mount(options.element)
+        instances.push(this)
+      }
+      on(event, fn) {
+        this.handlers[event] = fn
+      }
+      open() {
+        this.app.open()
+      }
+      close() {
+        this.app.close()
+      }
+      emit(event, ...args) {
+        return this.handlers[event]?.(...args)
+      }
+    }
+    const { openSyncfy } = await vi.importActual(
+      '@/components/bancos/syncfyWidget',
+    )
+    const open = () => document.querySelectorAll('.syncfy-modal[data-open="true"]')
+    const first = openSyncfy({ company: 'Grupo Doco' })
+    await flush()
+    expect(open()).toHaveLength(1)
+    instances[0].emit('closed')
+    expect(await first).toBeNull()
+    await flush()
+    expect(open()).toHaveLength(0)
+
+    const second = openSyncfy({ company: 'Grupo Doco' })
+    await flush()
+    expect(instances).toHaveLength(2)
+    expect(open()).toHaveLength(1)
+    expect(document.querySelectorAll('#syncfy-widget-host')).toHaveLength(1)
+    instances[1].emit('closed')
+    expect(await second).toBeNull()
   })
 })
 

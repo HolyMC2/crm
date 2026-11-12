@@ -42,14 +42,16 @@ export function loadWidget(doc = document, win = window) {
   return loading
 }
 
+// Syncfy's bundle mounts a Vue app on this element and has no way to unmount
+// it. Vue keeps that app's tree on the element, so mounting again on the same
+// element, even emptied, patched the old detached tree: the second window in
+// one visit threw on `nextSibling` and never showed until a reload. Every
+// window gets a new element.
 function hostElement(doc) {
-  let host = doc.getElementById(HOST_ID)
-  if (!host) {
-    host = doc.createElement('div')
-    host.id = HOST_ID
-    doc.body.appendChild(host)
-  }
-  host.replaceChildren()
+  doc.getElementById(HOST_ID)?.remove()
+  const host = doc.createElement('div')
+  host.id = HOST_ID
+  doc.body.appendChild(host)
   return host
 }
 
@@ -97,7 +99,7 @@ export async function openSyncfy(
       } catch {
         // already closed by the person
       }
-      host.replaceChildren()
+      host.remove()
       if (failed) reject(value)
       else resolve(value)
     }
