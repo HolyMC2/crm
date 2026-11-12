@@ -978,6 +978,15 @@
                             data-producto-ajustar
                             @click="askAdjust(row)"
                           />
+                          <!-- «Registrar merma» on this store's pieces. -->
+                          <Button
+                            v-if="mermaAction?.enabled && row.actual_qty > 0"
+                            class="min-h-11 sm:min-h-7"
+                            label="Merma"
+                            :title="MERMA_HINT"
+                            data-producto-merma
+                            @click="openMerma(row)"
+                          />
                         </template>
                       </span>
                       <span
@@ -1846,6 +1855,22 @@
       :row="ajustarRow"
       @saved="adjusted"
     />
+    <!-- «Registrar merma»: loaded on first open. -->
+    <MermaSheet
+      v-if="data && mermaMounted"
+      v-model:open="mermaOpen"
+      :item="product.name"
+      :item-name="product.item_name || product.name"
+      :uom="product.stock_uom || ''"
+      :rows="data.stock?.rows || []"
+      :store="mermaStore"
+      :action="mermaAction"
+      :units="data.units || null"
+      :serial="Boolean(product.has_serial_no)"
+      :lots="Boolean(product.has_batch_no)"
+      @saved="mermaSaved"
+      @refresh="load({ quiet: true })"
+    />
     <!-- «Avísame cuando baje» (Shell D5, DD8): the store's minimum, from
          «Mínimos por tienda»; loaded on first open. -->
     <AvisameSheet
@@ -1908,6 +1933,9 @@ import LabelDialog from '@/components/productos/LabelDialog.vue'
 const AjustarSheet = defineAsyncComponent(
   () => import('@/components/productos/AjustarSheet.vue'),
 )
+const MermaSheet = defineAsyncComponent(
+  () => import('@/components/productos/MermaSheet.vue'),
+)
 const AvisameSheet = defineAsyncComponent(
   () => import('@/components/documentos/AvisameSheet.vue'),
 )
@@ -1922,6 +1950,7 @@ const MinimoSheet = defineAsyncComponent(
 const ProductoBar = defineAsyncComponent(
   () => import('@/components/productos/ProductoBar.vue'),
 )
+import { mermaDone } from '@/components/productos/merma'
 import MovementRow from '@/components/inventario/MovementRow.vue'
 import ProductInsights from '@/components/productos/ProductInsights.vue'
 import ProductPrices from '@/components/productos/ProductPrices.vue'
@@ -2190,6 +2219,27 @@ function adjusted({ name }) {
     router.push({ path: `/inventario/ajustes/${encodeURIComponent(name)}` })
 }
 
+// «Registrar merma»: pieces that broke, expired or went missing leave a
+// store's stock (doco product_merma). The sheet mounts on its first open, on
+// the store whose row asked for it, else the one with most pieces.
+const MERMA_HINT = 'Piezas dañadas, caducadas o perdidas salen del inventario'
+const mermaOpen = ref(false)
+const mermaMounted = ref(false)
+const mermaStore = ref('')
+const mermaAction = computed(() => action('merma') || null)
+function openMerma(row = null) {
+  mermaStore.value = row?.warehouse || ''
+  mermaMounted.value = true
+  mermaOpen.value = true
+}
+async function mermaSaved(result) {
+  const said = mermaDone(result)
+  toast.success(said.toast)
+  const opens = documentLink('Stock Entry', result.entry)
+  notice.value = { text: said.text, to: opens?.to, link: said.link }
+  await load()
+}
+
 function askCount(row) {
   countStore.value = row.warehouse
   countOpen.value = true
@@ -2272,6 +2322,7 @@ const ACTION_ICONS = {
   labels: 'printer',
   variants: 'layers',
   avisame: 'bell',
+  merma: 'package-x',
 }
 // The record's actions, primary first, and «Imprimir etiqueta» in Mercado.
 // Phone quick actions (Records 3): equal tonal pills, the label under each.
@@ -2301,6 +2352,7 @@ const heroActions = computed(() => {
   const list = orderedActions.value.map((entry) => ({
     ...entry,
     icon: ACTION_ICONS[entry.key] || 'circle',
+    ...(entry.key === 'merma' && entry.enabled ? { title: MERMA_HINT } : {}),
   }))
   if (canQuote.value)
     list.push({
@@ -2367,6 +2419,22 @@ const kit = useRecordKit('Item', {
   name: () => product.value.name || props.item,
   title: () => product.value.item_name || '',
   changed: () => load(),
+  // «Registrar merma» is also a tool of the product, with its reason when
+  // this worker cannot.
+  pageTools: () =>
+    mermaAction.value
+      ? [
+          {
+            key: 'merma',
+            label: mermaAction.value.label,
+            icon: BOLT_ICONS.merma,
+            allowed: Boolean(mermaAction.value.enabled),
+            reason: mermaAction.value.reason || '',
+            hint: MERMA_HINT,
+          },
+        ]
+      : [],
+  onPageTool: () => run(mermaAction.value),
 })
 // ── the bar: its name, whether it sells, its code and group (the kind
 // stays in the hero) ─────────────────────────────────────────────────────
@@ -2393,6 +2461,7 @@ const BOLT_ICONS = {
   variants: 'lucide-layers',
   avisame: 'lucide-bell',
   quote: 'lucide-file-text',
+  merma: 'lucide-package-x',
 }
 const boltSteps = computed(() =>
   heroActions.value.map((entry) => ({
@@ -2843,6 +2912,7 @@ function run(entry) {
     countStore.value = ''
     countOpen.value = true
   } else if (entry.key === 'labels') labelOpen.value = true
+  else if (entry.key === 'merma') openMerma()
   else if (entry.key === 'avisame') openAvisame()
   else if (entry.key === 'variants')
     document
@@ -3036,6 +3106,7 @@ useLiveWatch(
       editOpen.value ||
       countOpen.value ||
       ajustarOpen.value ||
+      mermaOpen.value ||
       avisameOpen.value ||
       minimo.open ||
       request.open

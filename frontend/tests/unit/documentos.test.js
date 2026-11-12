@@ -303,6 +303,17 @@ describe('documentos profiles', () => {
         },
       }).title,
     ).toBe('Consumo · Taller')
+    // A salida registered as merma on a product says so.
+    expect(
+      stockEntry.row({
+        ...base,
+        fields: {
+          purpose: 'Material Issue',
+          stock_entry_type: 'Merma',
+          from_warehouse: 'Centro - D',
+        },
+      }).title,
+    ).toBe('Merma · Centro')
     // Unknown purpose and no server title: the kind, never MAT-STE-…
     const bare = stockEntry.row({ ...base, title: '', fields: {} })
     expect(bare.title).toBe('Movimiento de inventario')

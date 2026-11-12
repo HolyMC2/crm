@@ -610,6 +610,116 @@ describe('Producto', () => {
     )
   })
 
+  it('«Registrar merma» sits with the actions and on the store; it writes the pieces off and says what is left', async () => {
+    record.item.is_stock_item = 1
+    record.stock = {
+      readable: true,
+      hidden: 0,
+      total: 4,
+      service: false,
+      rows: [
+        {
+          warehouse: 'Centro - D',
+          label: 'Centro',
+          actual_qty: 4,
+          reserved_qty: 0,
+          projected_qty: 4,
+          ordered_qty: 0,
+          reorder_level: null,
+          state: 'ok',
+          cajones: [],
+          last_counted: null,
+          counts_pending: [],
+          can_request_count: true,
+          negative: false,
+        },
+      ],
+    }
+    const merma = {
+      key: 'merma',
+      label: 'Registrar merma',
+      enabled: false,
+      reason: 'Las mermas las registra quien lleva el inventario.',
+      mode: 'draft',
+      reasons: [{ key: 'danado', label: 'Dañado' }],
+    }
+    record.actions.push(merma)
+    const heroButton = () => root.querySelector('[data-action="merma"]')
+    const storeButton = () => root.querySelector('[data-producto-merma]')
+    // Who cannot: the action keeps its place and says why; no button on the store.
+    await mountAt('/productos/ABIBMEX000130')
+    expect(heroButton().textContent).toContain('Registrar merma')
+    expect(heroButton().title).toBe(merma.reason)
+    expect(storeButton()).toBeNull()
+    heroButton().click()
+    await flush()
+    expect(document.querySelector('[data-merma-sheet]')).toBeNull()
+    expect(root.textContent).toContain(merma.reason)
+    app.unmount()
+    root.remove()
+
+    Object.assign(merma, { enabled: true, reason: null, mode: 'confirm' })
+    const sent = []
+    fetch.mockImplementation(async (url, init) => {
+      const method = String(url).split('.').pop()
+      if (method === 'register') sent.push(JSON.parse(init.body))
+      const message =
+        method === 'record'
+          ? record
+          : method === 'register'
+            ? {
+                entry: 'MAT-STE-0009',
+                confirmed: true,
+                qty: 1,
+                uom: 'Nos',
+                warehouse: 'Centro - D',
+                store: 'Centro',
+                left: 3,
+              }
+            : null
+      return {
+        ok: !!message,
+        status: message ? 200 : 404,
+        json: async () => ({ message }),
+      }
+    })
+    const router = await mountAt('/productos/ABIBMEX000130')
+    router.addRoute({
+      path: '/inventario/entradas/:name',
+      name: 'Entrada',
+      component: { render: () => null },
+    })
+    expect(heroButton().title).toBe(
+      'Piezas dañadas, caducadas o perdidas salen del inventario',
+    )
+    storeButton().click()
+    // The sheet loads on first open.
+    await vi.waitFor(() =>
+      expect(document.querySelector('[data-merma-sheet]')).not.toBeNull(),
+    )
+    expect(
+      document.querySelector('[data-merma-efecto]').textContent.trim(),
+    ).toBe('Sale del inventario ahora. Quedan 3 pzas en Centro.')
+    document.querySelector('[data-merma-guardar]').click()
+    await flush()
+    expect(sent).toHaveLength(1)
+    expect(sent[0]).toMatchObject({
+      item: 'ABIBMEX000130',
+      warehouse: 'Centro - D',
+      qty: 1,
+      reason: 'danado',
+    })
+    const said = root.querySelector('[role="status"]')
+    expect(said.textContent).toContain(
+      'Merma registrada: 1 pza menos en Centro. Quedan 3.',
+    )
+    const link = said.querySelector('a')
+    expect(link.textContent).toBe('Ver la salida')
+    expect(link.getAttribute('href')).toBe(
+      '/crm/inventario/entradas/MAT-STE-0009',
+    )
+  })
+
   it('cost and margin only when the server sends them', async () => {
     record.cost = {
       last_cost: 80,

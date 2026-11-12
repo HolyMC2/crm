@@ -29,7 +29,7 @@ afterEach(() => {
   delete globalThis.requestIdleCallback
 })
 
-async function mountKit() {
+async function mountKit(options = {}) {
   let kit
   const router = createRouter({
     history: createMemoryHistory(),
@@ -39,7 +39,7 @@ async function mountKit() {
   document.body.appendChild(root)
   app = createApp({
     setup() {
-      kit = useRecordKit('Item', { name: () => 'IPN005415' })
+      kit = useRecordKit('Item', { name: () => 'IPN005415', ...options })
       return () => h('div')
     },
   })
@@ -63,6 +63,28 @@ describe('«⋯» on a record page', () => {
     await kit.openTools()
     expect(kit.open.value).toBe('tools')
     expect(errors).toEqual([])
+  })
+
+  it('lists the tools of the page itself and hands their tap back to it', async () => {
+    answers.push(bundle)
+    const ran = []
+    const kit = await mountKit({
+      pageTools: () => [
+        {
+          key: 'merma',
+          label: 'Registrar merma',
+          icon: 'lucide-package-x',
+          allowed: true,
+        },
+      ],
+      onPageTool: (key) => ran.push(key),
+    })
+    const keys = kit.tools.value.map((tool) => tool.key)
+    expect(keys).toContain('merma')
+    // With the engine's own, before the ones that copy or delete.
+    expect(keys.indexOf('merma')).toBeLessThan(keys.indexOf('duplicate'))
+    await kit.onTool('merma')
+    expect(ran).toEqual(['merma'])
   })
 
   it('says why when the record still does not load', async () => {

@@ -38,9 +38,14 @@ const ASSISTANT = import.meta.glob('../../assistant/useAssistant.js')
  * `doctype`: the record's doctype; `name`: a getter of its name; `title`: a
  * getter of the party or name the worker reads; `changed`: what to run after a
  * tool changed the document (the page reloads its own payload); `modified`: a
- * getter of the page's own `modified`, so the kit follows the page's saves.
+ * getter of the page's own `modified`, so the kit follows the page's saves;
+ * `pageTools`: a getter of the page's own tools for «⋯» (toolsFor entries:
+ * { key, label, icon, allowed, reason, hint }), run by `onPageTool(key)`.
  */
-export function useRecordKit(doctype, { name, title, changed, modified } = {}) {
+export function useRecordKit(
+  doctype,
+  { name, title, changed, modified, pageTools, onPageTool } = {},
+) {
   const route = useRoute()
   const router = useRouter()
   const record = ref(null)
@@ -75,7 +80,7 @@ export function useRecordKit(doctype, { name, title, changed, modified } = {}) {
   )
 
   const extra = computed(() => {
-    const out = []
+    const out = [...(pageTools?.() || [])]
     if (ajustes.value)
       out.push({
         key: 'ajustes',
@@ -238,6 +243,8 @@ export function useRecordKit(doctype, { name, title, changed, modified } = {}) {
   }
 
   async function onTool(key) {
+    if ((pageTools?.() || []).some((tool) => tool.key === key))
+      return onPageTool?.(key)
     const nuevo = (query) => {
       const to = documentRoute(doctype, 'nuevo', { hint: record.value?.doc })
       router.push({

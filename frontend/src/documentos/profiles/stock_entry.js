@@ -43,6 +43,14 @@ const MOVES = {
   Disassemble: ['Desarmado', 'move', 'lucide-factory'],
 }
 
+// «Registrar merma» on a product (doco product_merma) writes a salida of the
+// type «Merma»: it reads by that word wherever a salida names its kind.
+const MERMA = 'Merma'
+const wordOf = (doc = {}) =>
+  doc.stock_entry_type === MERMA && doc.purpose === 'Material Issue'
+    ? MERMA
+    : MOVES[doc.purpose]?.[0] || ''
+
 const purposes = (kind) =>
   Object.keys(MOVES).filter((p) => MOVES[p][0] === kind)
 const IN = purposes('Entrada')
@@ -62,10 +70,10 @@ export function movedWhere(doc = {}) {
 
 /** «Traspaso · Centro → Bodega», «Entrada · Centro», «Salida»; '' when the purpose is unknown. */
 export function moveTitle(doc = {}) {
-  const move = MOVES[doc.purpose]
-  if (!move) return ''
+  const word = wordOf(doc)
+  if (!word) return ''
   const where = movedWhere(doc)
-  return where ? `${move[0]} · ${where}` : move[0]
+  return where ? `${word} · ${where}` : word
 }
 
 /** The header stores, else the first item row's: lab and imported entries keep them on the rows. */
@@ -159,7 +167,7 @@ export default {
       // Kind, state and date before the store: a long store name truncates
       // the end of the line, never the date.
       subtitle: [
-        move?.[0],
+        wordOf(fields),
         unusualState(state),
         formatDate(row.date),
         transfer ? things : where,
@@ -221,8 +229,8 @@ export default {
     return {
       ...view,
       ...confirmState(h),
-      title: where || move?.[0] || view.title,
-      kind: where && move ? move[0] : view.kind,
+      title: where || wordOf(doc) || view.title,
+      kind: where && move ? wordOf(doc) : view.kind,
       amount: amountOf(h.amount, h.currency),
     }
   },
