@@ -3,6 +3,7 @@
 // and when the charge starts, from the bootstrap's `store` (Boat
 // portal_store._store_options_core). Pure. Prices include IVA.
 import { formatMoney } from '@/utils/display'
+import { shortDay } from './salud'
 
 const t = (text, replace) => __(text, replace, 'Cuenta')
 const MXN = 'MXN'
@@ -130,6 +131,16 @@ function unitWord(unit, n = 1) {
 }
 const monthly = (unit) => !unit || unit === 'month'
 
+/**
+ * An add-on turned off that still runs through the month it paid (Boat's
+ * capability «addon_keeps_cycle»): its last day as «30 nov» (the calendar day
+ * Boat sends, read the same in any browser zone: salud.shortDay), else ''.
+ */
+export function keptUntil(addon) {
+  if (addon?.active || !addon?.can_resume) return ''
+  return shortDay(addon.service_until)
+}
+
 /** Boat marks an add-on it cannot deliver yet (`status`, `unavailable_reason`). */
 export function addonAvailable(addon) {
   return (
@@ -160,27 +171,35 @@ function addonMeter(addon) {
   return t('Measured per {0}', [unitWord(addon.meter_unit)])
 }
 
-/** The add-ons Boat offers this site, each with its switch and why it is off. */
-export function addonRows(store) {
+/**
+ * The add-ons Boat offers this site, each with its switch and why it is off.
+ * With `resume` (capability «addon_keeps_cycle») one turned off that still
+ * runs says when it turns off and offers «Reanudar» instead of its switch.
+ */
+export function addonRows(store, { resume = false } = {}) {
   return (store?.addons || [])
     .filter((addon) => addon?.service_key)
     .map((addon) => {
       const available = addonAvailable(addon)
+      const endsOn = resume ? keptUntil(addon) : ''
       return {
         key: addon.service_key,
         addon,
         name: addon.service_name || '',
         meter: addonMeter(addon),
-        price: addonPrice(addon),
+        price: endsOn ? t('Turns off on {0}', [endsOn]) : addonPrice(addon),
         active: Boolean(addon.active),
         available,
-        reason: available
-          ? ''
-          : addon.unavailable_reason ||
-            t('It will be available on your site soon.'),
+        endsOn,
+        reason:
+          available || endsOn
+            ? ''
+            : addon.unavailable_reason ||
+              t('It will be available on your site soon.'),
         switchLabel: addon.active
           ? t('Turn off {0}', [addon.service_name])
           : t('Turn on {0}', [addon.service_name]),
+        resumeLabel: endsOn ? t('Resume {0}', [addon.service_name]) : '',
       }
     })
 }
@@ -190,9 +209,36 @@ export function addonRows(store) {
  * cycle and when the charge starts. Boat bills a flat add-on once it is
  * delivered, prorated for the rest of that month, then monthly
  * (billing_engine.on_service_delivered); on a trial it rides the plan's first
- * invoice.
+ * invoice. With `resume`, an add-on turned off that still runs reads back
+ * «Reanudar»: no charge now, the next invoice bills it as before. With
+ * `keepsCycle` (Boat's «addon_keeps_cycle») a trial's turn-off says it ends
+ * today, as Boat does.
  */
-export function addonConfirm(addon, { isTrial = false } = {}) {
+export function addonConfirm(
+  addon,
+  { isTrial = false, resume = false, keepsCycle = false } = {},
+) {
+  const endsOn = resume ? keptUntil(addon) : ''
+  if (endsOn) {
+    // Boat's own monthly price for it (its package), IVA included.
+    const cost = Number(addon.monthly_price_mxn) || 0
+    return {
+      kind: 'addon',
+      action: 'resume',
+      addon,
+      title: t('Resume {0}', [addon.service_name]),
+      amount: cost ? price(cost) : '',
+      per: cost ? t('a month, IVA included') : '',
+      lines: [
+        t(
+          'It keeps working after {0} and your next invoice charges it as always. Nothing is charged now.',
+          [endsOn],
+        ),
+      ],
+      verb: t('Resume'),
+      danger: false,
+    }
+  }
   if (addon.active)
     return {
       kind: 'addon',
@@ -202,9 +248,12 @@ export function addonConfirm(addon, { isTrial = false } = {}) {
       amount: '',
       per: '',
       lines: [
-        t(
-          'It turns off at the end of the period already paid; the period in progress is not refunded.',
-        ),
+        // With «addon_keeps_cycle» Boat ends a trial's add-on that night.
+        keepsCycle && isTrial
+          ? t('It turns off today; nothing is charged during your trial.')
+          : t(
+              'It turns off at the end of the period already paid; the period in progress is not refunded.',
+            ),
       ],
       verb: t('Turn off'),
       danger: true,

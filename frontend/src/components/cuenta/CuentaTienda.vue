@@ -3,10 +3,12 @@
        a change is a request Muelle confirms; a monthly plan asks support for
        the yearly cycle, which a plan request cannot carry) and the add-ons,
        each switch with its price and, when Boat cannot deliver it, why it
-       stays off. Every change opens one confirm sheet that names the price
-       and its cycle. Where Boat offers them (bootstrap capabilities): users
-       and cajas and the free apps on top, and a plan or cycle change that
-       reads Boat's quote and applies at once. Rows and rules. -->
+       stays off; one turned off that still runs through the month it paid
+       says when it turns off, with «Reanudar». Every change opens one confirm
+       sheet that names the price and its cycle. Where Boat offers them
+       (bootstrap capabilities): users and cajas and the free apps on top, and
+       a plan or cycle change that reads Boat's quote and applies at once.
+       Rows and rules. -->
   <div class="space-y-8">
     <!-- What Boat lets the owner change alone (capabilities «seats», «apps»):
          the quick jobs first, then the plans and add-ons. -->
@@ -234,6 +236,9 @@
             <p
               class="text-sm"
               :class="row.active ? 'text-ink-green-8' : 'text-ink-gray-8'"
+              :data-testid="
+                row.endsOn ? `complemento-se-apaga-${row.key}` : undefined
+              "
             >
               {{ row.price }}
             </p>
@@ -248,7 +253,21 @@
               {{ row.reason }}
             </p>
           </div>
+          <!-- Turned off, still running through the month it paid (Boat's
+               «addon_keeps_cycle»): «Se apaga el 30 nov», and «Reanudar»
+               where its switch was. -->
+          <Button
+            v-if="row.endsOn"
+            variant="subtle"
+            class="min-h-11 shrink-0"
+            :label="__('Resume', null, 'Cuenta')"
+            :aria-label="row.resumeLabel"
+            :disabled="blocked"
+            :data-testid="`complemento-reanudar-${row.key}`"
+            @click="ask(addonConfirm(row.addon, { isTrial, resume: true }))"
+          />
           <AjustesSwitch
+            v-else
             :model-value="row.active"
             :label="row.switchLabel"
             :disabled="blocked || !row.available"
@@ -256,7 +275,14 @@
               row.reason ? `cuenta-complemento-${row.key}` : undefined
             "
             :data-testid="`complemento-${row.key}`"
-            @update:model-value="ask(addonConfirm(row.addon, { isTrial }))"
+            @update:model-value="
+              ask(
+                addonConfirm(row.addon, {
+                  isTrial,
+                  keepsCycle: caps.keepsCycle,
+                }),
+              )
+            "
           />
         </li>
       </ul>
@@ -324,7 +350,7 @@ import { Button, toast } from 'frappe-ui'
 import { EmptyState, StatusChip } from '@/components/ui'
 import AjustesSwitch from '@/components/ajustes/AjustesSwitch.vue'
 import { seam } from './api'
-import { capable } from './autoservicio'
+import { capable, failureText, refusalView } from './autoservicio'
 import { planDoneText, scheduledPlanView } from './cambioPlan'
 import { planView } from './cuenta'
 import {
@@ -359,7 +385,9 @@ const annual = computed(() => site.value.annual)
 const store = computed(() => props.door.boot.value?.store || null)
 const isTrial = computed(() => site.value.isTrial)
 const plans = computed(() => planRows(store.value, { annual: annual.value }))
-const addons = computed(() => addonRows(store.value))
+const addons = computed(() =>
+  addonRows(store.value, { resume: caps.value.keepsCycle }),
+)
 const requested = computed(() => requestedName(store.value))
 const blocked = computed(() => props.door.paymentActionsBlocked())
 // What Boat has on for this site (bootstrap.capabilities); none on an older Boat.
@@ -371,6 +399,8 @@ const caps = computed(() => {
     // Boat's plan change refuses a trial (activation comes first): a trial
     // keeps the request it always had.
     planChange: capable(data, 'plan_change') && !isTrial.value,
+    // An add-on turned off keeps running through the month it paid; «Reanudar».
+    keepsCycle: capable(data, 'addon_keeps_cycle'),
   }
 })
 const cycle = computed(() => (annual.value ? 'Anual' : 'Mensual'))
@@ -489,17 +519,58 @@ async function run() {
   const out =
     confirm.kind === 'plan'
       ? await props.door.requestPlan(confirm.target)
-      : await props.door.toggleAddon(confirm.addon, confirm.action)
+      : confirm.action === 'resume'
+        ? await resumeAddon(confirm.addon)
+        : await props.door.toggleAddon(confirm.addon, confirm.action)
   running.value = false
   if (!out.ok) {
     error.value = out.error || ''
+    if (confirm.action === 'resume') pending.value = afterRefusedResume(confirm)
     return
   }
   pending.value = null
   toast.success(out.note || doneText(confirm))
 }
+// Boat's «Reanudar» (resume_addon): the add-on is on again, nothing charged
+// now; the account is read again, after a refusal too (one that already
+// ended comes back with its switch). Same answer shape as door.toggleAddon.
+async function resumeAddon(addon) {
+  if (props.door.paymentActionsBlocked() || !addon?.service_key)
+    return { ok: false }
+  try {
+    const out = await seam('resume_addon', { service_key: addon.service_key })
+    if (out?.ok !== true) {
+      const refused = refusalView(out).text
+      await props.door.load()
+      return { ok: false, error: refused }
+    }
+    await props.door.load()
+    return {
+      ok: true,
+      note: typeof out.message === 'string' ? out.message : '',
+    }
+  } catch (failure) {
+    return { ok: false, error: failureText(failure) }
+  }
+}
+// A «Reanudar» Boat refused because the add-on's last day passed: the account
+// read again shows it off with its switch, so the sheet becomes that switch's
+// «Activar» (a new activation, its price read back) under Boat's words. One
+// still running (refused for another reason, such as the invoice run) keeps
+// its «Reanudar» to try again.
+function afterRefusedResume(confirm) {
+  const fresh = addons.value.find(
+    (row) => row.key === confirm.addon?.service_key,
+  )
+  if (!fresh || fresh.endsOn || fresh.active || !fresh.available) return confirm
+  return addonConfirm(fresh.addon, {
+    isTrial: isTrial.value,
+    keepsCycle: caps.value.keepsCycle,
+  })
+}
 function doneText(confirm) {
   if (confirm.kind === 'plan') return __('Change requested', null, 'Cuenta')
+  if (confirm.action === 'resume') return __('Add-on resumed', null, 'Cuenta')
   return confirm.action === 'cancel'
     ? __('Add-on turned off', null, 'Cuenta')
     : __('Add-on turned on', null, 'Cuenta')

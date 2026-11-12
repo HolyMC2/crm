@@ -42357,8 +42357,33 @@ msgstr "Activar {0}"
 
 #: frontend/src/components/cuenta/tienda.js
 msgctxt "Cuenta"
+msgid "Turns off on {0}"
+msgstr "Se apaga el {0}"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "Resume {0}"
+msgstr "Reanudar {0}"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "It keeps working after {0} and your next invoice charges it as always. Nothing is charged now."
+msgstr "Sigue funcionando después del {0} y tu próxima factura lo cobra como siempre. Hoy no se cobra nada."
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "Resume"
+msgstr "Reanudar"
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
 msgid "It turns off at the end of the period already paid; the period in progress is not refunded."
 msgstr "Se desactiva al final del periodo ya pagado; el periodo en curso no se reembolsa."
+
+#: frontend/src/components/cuenta/tienda.js
+msgctxt "Cuenta"
+msgid "It turns off today; nothing is charged during your trial."
+msgstr "Se apaga hoy; en tu prueba no se cobra nada."
 
 #: frontend/src/components/cuenta/tienda.js
 msgctxt "Cuenta"
@@ -42885,6 +42910,11 @@ msgstr "Complemento desactivado"
 msgctxt "Cuenta"
 msgid "Add-on turned on"
 msgstr "Complemento activado"
+
+#: frontend/src/components/cuenta/CuentaTienda.vue
+msgctxt "Cuenta"
+msgid "Add-on resumed"
+msgstr "Complemento reanudado"
 
 #: frontend/src/pages/Cuenta.vue
 msgctxt "Cuenta"

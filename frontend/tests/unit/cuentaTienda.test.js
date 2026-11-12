@@ -58,6 +58,7 @@ vi.mock('@/components/ui', async (importOriginal) => {
 import {
   addonConfirm,
   addonRows,
+  keptUntil,
   planConfirm,
   planRows,
   price,
@@ -243,6 +244,100 @@ describe('the add-ons in the owner’s words', () => {
       true,
     ])
     expect(off.lines[0]).toMatch(/not refunded/)
+    // A trial's turn-off ends that night where Boat keeps the paid month
+    // («addon_keeps_cycle»); without it the sheet reads as before.
+    expect(
+      addonConfirm(STORE.addons[3], { isTrial: true, keepsCycle: true }).lines,
+    ).toEqual(['It turns off today; nothing is charged during your trial.'])
+    expect(addonConfirm(STORE.addons[3], { isTrial: true }).lines).toEqual(
+      off.lines,
+    )
+    expect(addonConfirm(STORE.addons[3], { keepsCycle: true }).lines).toEqual(
+      off.lines,
+    )
+  })
+})
+
+// CFDI turned off on the 16th: Boat keeps it through the month it paid.
+const KEPT = {
+  ...STORE,
+  addons: STORE.addons.map((addon) =>
+    addon.service_key === 'cfdi_timbres'
+      ? {
+          ...addon,
+          active: false,
+          service_until: '2026-11-30',
+          can_resume: true,
+          monthly_price_mxn: 149,
+        }
+      : addon,
+  ),
+}
+
+describe('an add-on turned off that still runs (addon_keeps_cycle)', () => {
+  it('says when it turns off and offers «Reanudar» instead of its switch', () => {
+    const [cfdi, ...rest] = addonRows(KEPT, { resume: true })
+    expect([cfdi.price, cfdi.endsOn, cfdi.resumeLabel, cfdi.reason]).toEqual([
+      'Turns off on 30 nov',
+      '30 nov',
+      'Resume Timbres CFDI',
+      '',
+    ])
+    expect(rest.map((row) => row.endsOn)).toEqual(['', '', ''])
+    // Without the capability the row reads as it always did.
+    expect(addonRows(KEPT)[0]).toMatchObject({
+      price: 'from $99 a month',
+      endsOn: '',
+      resumeLabel: '',
+    })
+  })
+
+  it('«Reanudar» reads back Boat’s monthly price and charges nothing now', () => {
+    const resume = addonConfirm(KEPT.addons[0], { resume: true })
+    expect([
+      resume.action,
+      resume.title,
+      resume.amount,
+      resume.per,
+      resume.verb,
+      resume.danger,
+    ]).toEqual([
+      'resume',
+      'Resume Timbres CFDI',
+      '$149',
+      'a month, IVA included',
+      'Resume',
+      false,
+    ])
+    expect(resume.lines).toEqual([
+      'It keeps working after 30 nov and your next invoice charges it as always. Nothing is charged now.',
+    ])
+    // Without the capability it is a new activation, as before.
+    expect(addonConfirm(KEPT.addons[0]).action).toBe('activate')
+  })
+
+  it('reads the calendar day as sent, whatever the browser’s zone', () => {
+    const kept = (day) => ({
+      active: false,
+      can_resume: true,
+      service_until: day,
+    })
+    const zone = process.env.TZ
+    try {
+      // Node re-reads TZ on assignment: a zone behind UTC and one 14 h ahead.
+      for (const tz of ['America/Mazatlan', 'Pacific/Kiritimati']) {
+        process.env.TZ = tz
+        expect(new Date(2026, 10, 30).getTimezoneOffset()).not.toBe(0)
+        expect(keptUntil(kept('2026-11-30'))).toBe('30 nov')
+        expect(keptUntil(kept('2026-12-01'))).toBe('1 dic')
+      }
+    } finally {
+      if (zone === undefined) delete process.env.TZ
+      else process.env.TZ = zone
+    }
+    expect(keptUntil(kept(''))).toBe('')
+    expect(keptUntil(kept('30/11/2026'))).toBe('')
+    expect(keptUntil({ ...kept('2026-11-30'), can_resume: false })).toBe('')
   })
 })
 
@@ -476,6 +571,159 @@ describe('CuentaTienda', () => {
       'Este sitio no usa la tienda ni facturación de la plataforma.',
     )
     expect(state.toast).not.toHaveBeenCalled()
+  })
+
+  it('«Reanudar» asks first, then resumes through Boat’s seam and reads the account again', async () => {
+    const { call } = await import('frappe-ui')
+    call.mockReset()
+    call.mockResolvedValue({
+      ok: true,
+      changed: true,
+      message: 'Listo: Timbres CFDI sigue activo.',
+    })
+    state.read.mockResolvedValue(boot(STORE))
+    mount(readyDoor(boot(KEPT, { capabilities: ['addon_keeps_cycle'] })))
+    await flush()
+    expect(
+      root
+        .querySelector('[data-testid="complemento-se-apaga-cfdi_timbres"]')
+        .textContent.trim(),
+    ).toBe('Turns off on 30 nov')
+    expect(
+      root.querySelector('[data-testid="complemento-cfdi_timbres"]'),
+    ).toBeNull()
+    root
+      .querySelector('[data-testid="complemento-reanudar-cfdi_timbres"]')
+      .click()
+    const confirm = await sheet()
+    expect(
+      confirm
+        .querySelector('[data-testid="confirmar-monto"]')
+        .textContent.trim(),
+    ).toBe('$149')
+    expect(call).not.toHaveBeenCalled()
+    document.querySelector('[data-testid="confirmar-hacer"]').click()
+    await flush()
+    expect(call).toHaveBeenCalledWith('doco.docoutils.miplan.call', {
+      method: 'resume_addon',
+      payload: { service_key: 'cfdi_timbres' },
+    })
+    expect(state.mutate).not.toHaveBeenCalled()
+    expect(state.read).toHaveBeenCalled()
+    expect(state.toast).toHaveBeenCalledWith(
+      'Listo: Timbres CFDI sigue activo.',
+    )
+  })
+
+  it('a refused «Reanudar» stays in the sheet in Boat’s words', async () => {
+    const { call } = await import('frappe-ui')
+    call.mockReset()
+    call.mockResolvedValue({
+      ok: false,
+      reason: 'ended',
+      message: 'Este complemento ya se apagó. Actívalo de nuevo en Tienda.',
+    })
+    mount(readyDoor(boot(KEPT, { capabilities: ['addon_keeps_cycle'] })))
+    await flush()
+    root
+      .querySelector('[data-testid="complemento-reanudar-cfdi_timbres"]')
+      .click()
+    await sheet()
+    document.querySelector('[data-testid="confirmar-hacer"]').click()
+    await flush()
+    expect(document.querySelector('[role="alert"]').textContent).toContain(
+      'Este complemento ya se apagó.',
+    )
+    expect(state.toast).not.toHaveBeenCalled()
+  })
+
+  it('a refused «Reanudar» reads the account again: one that ended gets its switch back', async () => {
+    const { call } = await import('frappe-ui')
+    call.mockReset()
+    call.mockResolvedValue({
+      ok: false,
+      reason: 'ended',
+      message: 'Este complemento ya se apagó. Actívalo de nuevo en Tienda.',
+    })
+    // Boat no longer reports it as kept.
+    state.read.mockResolvedValue(
+      boot(STORE, { capabilities: ['addon_keeps_cycle'] }),
+    )
+    mount(readyDoor(boot(KEPT, { capabilities: ['addon_keeps_cycle'] })))
+    await flush()
+    root
+      .querySelector('[data-testid="complemento-reanudar-cfdi_timbres"]')
+      .click()
+    await sheet()
+    document.querySelector('[data-testid="confirmar-hacer"]').click()
+    await flush()
+    expect(state.read).toHaveBeenCalledWith('bootstrap', { require_fresh: 1 })
+    expect(document.querySelector('[role="alert"]').textContent).toContain(
+      'Este complemento ya se apagó.',
+    )
+    expect(
+      root.querySelector('[data-testid="complemento-reanudar-cfdi_timbres"]'),
+    ).toBeNull()
+    expect(
+      root.querySelector('[data-testid="complemento-cfdi_timbres"]'),
+    ).not.toBeNull()
+    // The sheet no longer offers a «Reanudar» that can only fail again: it is
+    // the add-on's «Activar», its price read back, under Boat's words.
+    expect(document.querySelector('[role="dialog"] h2').textContent).toBe(
+      'Turn on Timbres CFDI',
+    )
+    expect(
+      document
+        .querySelector('[data-testid="confirmar-monto"]')
+        .textContent.trim(),
+    ).toBe('$99')
+    expect(
+      document.querySelector('[data-testid="confirmar-hacer"]').textContent,
+    ).toContain('Turn on')
+    expect(document.querySelector('[role="alert"]').textContent).toContain(
+      'Actívalo de nuevo en Tienda.',
+    )
+    expect(call).toHaveBeenCalledTimes(1)
+    expect(state.mutate).not.toHaveBeenCalled()
+  })
+
+  it('a «Reanudar» refused while it still runs keeps the sheet to try again', async () => {
+    const { call } = await import('frappe-ui')
+    call.mockReset()
+    call.mockResolvedValue({
+      ok: false,
+      reason: 'invoice_run',
+      message:
+        'Estamos generando las facturas del mes. Intenta de nuevo en un rato.',
+    })
+    state.read.mockResolvedValue(
+      boot(KEPT, { capabilities: ['addon_keeps_cycle'] }),
+    )
+    mount(readyDoor(boot(KEPT, { capabilities: ['addon_keeps_cycle'] })))
+    await flush()
+    root
+      .querySelector('[data-testid="complemento-reanudar-cfdi_timbres"]')
+      .click()
+    await sheet()
+    document.querySelector('[data-testid="confirmar-hacer"]').click()
+    await flush()
+    expect(document.querySelector('[role="dialog"] h2').textContent).toBe(
+      'Resume Timbres CFDI',
+    )
+    expect(document.querySelector('[role="alert"]').textContent).toContain(
+      'Estamos generando las facturas del mes.',
+    )
+  })
+
+  it('without the capability a kept add-on keeps its switch', async () => {
+    mount(readyDoor(boot(KEPT)))
+    await flush()
+    expect(
+      root.querySelector('[data-testid="complemento-reanudar-cfdi_timbres"]'),
+    ).toBeNull()
+    expect(
+      root.querySelector('[data-testid="complemento-cfdi_timbres"]'),
+    ).not.toBeNull()
   })
 
   it('without a store the page says so and offers «Revisar estado»', async () => {

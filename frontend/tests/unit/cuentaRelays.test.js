@@ -63,6 +63,8 @@ const SELF_SERVICE = new Set([
   'cancel_quote',
   'cancel_subscription',
   'resume_subscription',
+  // Tienda's «Reanudar»: an add-on turned off that still runs through the month it paid.
+  'resume_addon',
   'my_incidents',
   // Reads: one invoice in detail and the account's «Historial».
   'invoice_detail',
