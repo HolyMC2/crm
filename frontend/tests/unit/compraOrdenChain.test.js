@@ -112,6 +112,12 @@ async function mountAt(path) {
         component: CompraOrden,
         props: true,
       },
+      { path: '/compras/nueva', name: 'CompraNueva', component: CompraOrden },
+      {
+        path: '/contactos',
+        name: 'Contactos',
+        component: { render: () => null },
+      },
       {
         path: '/gastos/factura/:name',
         name: 'GastoFactura',
@@ -212,5 +218,47 @@ describe('purchase order chain', () => {
       'Nothing left to receive on this purchase.',
     )
     expect(calls.some(([m]) => m === 'start_receipt')).toBe(false)
+  })
+
+  it('a new purchase asks no company when there is one, and its lines add up as they are typed', async () => {
+    answers.get_capabilities = {
+      ...answers.get_capabilities,
+      default_company: 'Tienda',
+      capabilities: { create: true },
+    }
+    answers.companies = [{ label: 'Tienda', value: 'Tienda' }]
+    answers.items = [
+      {
+        value: 'FUN-A16',
+        label: 'Funda A16',
+        uom: 'Pieza',
+        uoms: [{ uom: 'Pieza', factor: 1 }],
+      },
+    ]
+    await mountAt('/compras/nueva')
+    expect(root.querySelector('[data-testid="compra-empresa"]')).toBeNull()
+    const add = root.querySelector(
+      'input[placeholder="Search item, code or barcode"]',
+    )
+    add.dispatchEvent(new Event('focus'))
+    await flush()
+    root
+      .querySelector('[role="option"]')
+      .dispatchEvent(new MouseEvent('mousedown', { bubbles: true }))
+    await flush()
+    const line = root.querySelector('[data-compra-linea="FUN-A16"]')
+    const [qty, rate] = line.querySelectorAll('input[type="number"]')
+    qty.value = '12'
+    qty.dispatchEvent(new Event('input'))
+    rate.value = '35.5'
+    rate.dispatchEvent(new Event('input'))
+    await flush()
+    expect(line.textContent).toContain('$426.00')
+    expect(
+      root.querySelector('[data-testid="compra-total"]').textContent,
+    ).toContain('$426.00')
+    expect(
+      root.querySelector('[data-testid="compra-resumen"]').textContent,
+    ).toContain('12 pieces')
   })
 })

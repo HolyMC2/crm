@@ -1,29 +1,35 @@
 <template>
   <section
     v-if="rows.length"
-    class="mx-4 mb-3 rounded-6 border border-outline-gray-2 bg-surface-gray-1 p-3 sm:mx-6"
+    class="mx-4 mb-2 border-b border-outline-gray-2 pb-2 sm:mx-6"
     data-capturas-pendientes
     :aria-label="__('Captures to finish')"
   >
-    <h2 class="mb-2 text-sm font-semibold text-ink-gray-8">
+    <h2
+      class="flex items-center gap-2 pb-1 text-sm font-medium text-ink-gray-8"
+    >
+      <span
+        class="lucide-file-plus size-4 text-ink-gray-5"
+        aria-hidden="true"
+      />
       {{ __('Captures to finish ({0})', [rows.length]) }}
     </h2>
     <ul class="divide-y divide-outline-gray-1">
       <li v-for="row in rows" :key="row.name" class="flex items-center gap-1">
         <RouterLink
           :to="reviewRoute(row)"
-          class="flex min-h-11 min-w-0 flex-1 items-center gap-3 py-2 text-sm hover:bg-surface-gray-2"
+          class="flex min-h-11 min-w-0 flex-1 items-center gap-3 rounded-6 py-1.5 text-sm [@media(hover:hover)]:hover:bg-surface-gray-1"
           :data-captura="row.name"
         >
           <span class="min-w-0 flex-1">
-            <span class="block truncate font-medium text-ink-gray-9">
+            <span class="block truncate text-base text-ink-gray-9">
               {{ rowTitle(row) }}
             </span>
             <span class="block truncate text-ink-gray-6">
               {{
                 [row.doc_label, row.invoice_no, relativeTime(row.received_at)]
                   .filter(Boolean)
-                  .join(' · ')
+                  .join(', ')
               }}
             </span>
           </span>
@@ -31,17 +37,19 @@
           <span
             class="flex shrink-0 flex-col items-end gap-0.5 sm:flex-row sm:items-center sm:gap-3"
           >
-            <span v-if="row.total" class="tabular-nums text-ink-gray-8">{{
+            <span v-if="row.total" class="num text-ink-gray-8">{{
               money(row.total, row.currency)
             }}</span>
-            <Badge
-              :theme="pendingCaptureStatus(row).theme"
+            <StatusChip
               :label="pendingCaptureStatus(row).label"
+              :tone="CHIP_TONE[pendingCaptureStatus(row).theme] || 'neutral'"
             />
           </span>
-          <span class="hidden shrink-0 text-ink-blue-link sm:inline">{{
-            __('Continue')
-          }}</span>
+          <span
+            class="hidden shrink-0 items-center gap-1 font-medium text-ink-gray-8 sm:inline-flex"
+            >{{ __('Continue') }}
+            <span class="lucide-chevron-right size-4" aria-hidden="true"
+          /></span>
         </RouterLink>
         <!-- Closing one is two taps in place: the ✕, then «Descartar» where it was. -->
         <button
@@ -76,7 +84,8 @@
 <script setup>
 import { nextTick, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { Badge, toast } from 'frappe-ui'
+import { toast } from 'frappe-ui'
+import { StatusChip } from '@/components/ui'
 import {
   capturaMessage,
   capturaRoute,
@@ -92,6 +101,8 @@ import { relativeTime } from '@/utils/display'
 // capture where only the chat can reach it. Each row reopens the review and
 // comes back here, or closes from the list with ✕ then «Descartar». Hidden
 // when there are none or the list cannot be read (the page keeps working).
+// pendingCaptureStatus speaks frappe-ui themes; the kit chip speaks tones
+const CHIP_TONE = { blue: 'info', red: 'danger', amber: 'warning' }
 const props = defineProps({
   /** Doctypes this page drafts; the server lists only those captures. */
   targets: { type: Array, required: true },

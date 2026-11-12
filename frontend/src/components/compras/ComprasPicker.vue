@@ -1,28 +1,42 @@
 <template>
   <div class="relative">
-    <label :for="inputId" class="mb-1.5 block text-xs text-ink-gray-5">{{
-      label
-    }}</label>
-    <input
-      :id="inputId"
-      v-model="query"
-      type="search"
-      autocomplete="off"
-      role="combobox"
-      :aria-controls="listId"
-      :aria-expanded="open"
-      :aria-invalid="invalid || undefined"
-      :disabled="disabled"
-      :placeholder="placeholder"
-      class="form-input block min-h-11 w-full rounded-6 text-base sm:min-h-8 sm:text-sm"
-      :class="invalid ? 'border-outline-red-3' : ''"
-      @focus="show"
-      @keydown.down.prevent="move(1)"
-      @keydown.up.prevent="move(-1)"
-      @keydown.enter.prevent="pick(options[active])"
-      @keydown.esc="close"
-      @blur="onBlur"
-    />
+    <label
+      :for="inputId"
+      class="mb-1 block text-sm text-ink-gray-7"
+      :class="bare ? 'sr-only' : ''"
+      >{{ label }}</label
+    >
+    <div class="relative">
+      <span
+        :class="[
+          loading && open
+            ? 'lucide-loader-circle animate-spin'
+            : 'lucide-search',
+          'pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-gray-5',
+        ]"
+        aria-hidden="true"
+      />
+      <input
+        :id="inputId"
+        v-model="query"
+        type="search"
+        autocomplete="off"
+        role="combobox"
+        :aria-controls="listId"
+        :aria-expanded="open"
+        :aria-invalid="invalid || undefined"
+        :disabled="disabled"
+        :placeholder="placeholder"
+        class="block h-11 w-full rounded-6 border bg-surface-gray-2 pl-9 pr-3 text-base text-ink-gray-9 placeholder:text-ink-gray-5 focus:border-outline-gray-4 focus:bg-surface-base focus:outline-none focus:ring-0 disabled:opacity-60 sm:h-10 sm:text-sm"
+        :class="invalid ? 'border-outline-red-3' : 'border-transparent'"
+        @focus="show"
+        @keydown.down.prevent="move(1)"
+        @keydown.up.prevent="move(-1)"
+        @keydown.enter.prevent="pick(options[active])"
+        @keydown.esc="close"
+        @blur="onBlur"
+      />
+    </div>
     <div
       v-if="open"
       :id="listId"
@@ -77,6 +91,8 @@ const props = defineProps({
   /** false: an option's code never shows under its name (a contact's or an
    *  address's record name means nothing to the worker). */
   codes: { type: Boolean, default: true },
+  /** The label for screen readers only: the field closes a list it names. */
+  bare: Boolean,
 })
 const emit = defineEmits(['update:modelValue', 'pick'])
 // Under an option's name: its code (when it says something else) and its hint.

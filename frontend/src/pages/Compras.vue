@@ -3,6 +3,7 @@
     title="Compras"
     :entries="entries"
     :active-key="state.segment"
+    :aside="false"
     @select="selectSegment"
   >
     <section
@@ -141,113 +142,148 @@
             >
           </template>
         </PowerAppBar>
-        <header
-          v-else
-          class="flex flex-wrap items-center gap-3 px-4 pb-2 pt-4 sm:px-6 sm:pt-6"
-        >
-          <!-- The title keeps 16 rem; the actions move under it as one row
-               when they do not fit beside it. -->
-          <div class="min-w-0 flex-1 basis-64">
-            <h1 class="truncate text-xl font-semibold text-ink-gray-9">
-              {{ segmentLabel(state.segment) }}
-            </h1>
-            <p class="text-sm text-ink-gray-6">{{ subtitle }}</p>
-          </div>
-          <div class="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              class="text-sm text-ink-gray-6 hover:text-ink-gray-8"
-              :aria-keyshortcuts="'Alt+H'"
-              @click="openShortcutSheet()"
-            >
-              <kbd
-                class="rounded-4 border border-outline-gray-2 px-1.5 py-0.5 text-xs"
-                >?</kbd
+        <!-- Desktop: no section column; the queues are the tab row beside the
+             search, so the list keeps the width. One filled button (Nueva
+             compra), Surtir tonal, the rest as icons on one island. -->
+        <header v-else class="px-4 pb-3 pt-5 sm:px-6" data-compras-encabezado>
+          <div class="flex flex-wrap items-center gap-x-4 gap-y-3">
+            <div class="min-w-0 flex-1 basis-56">
+              <h1
+                class="title-face truncate text-3xl font-semibold leading-tight text-ink-gray-9"
               >
-              {{ __('Keyboard shortcuts') }}
-            </button>
-            <CapturarDocumentoButton
-              :targets="['Purchase Order', 'Purchase Invoice']"
-              return-label="Compras"
-            />
-            <Button
-              :icon-left="LucideLayers"
-              :label="__('Restock from a list', null, 'Surtido')"
-              class="min-h-11 sm:min-h-8"
-              @click="router.push({ name: 'CompraSurtido' })"
-            />
-            <!-- The purchasing manager's rules share one menu (the header keeps
-               its width); a worker with one of them gets its own button. -->
-            <Dropdown
-              v-if="caps.discounts && caps.shipping_rules"
-              :options="rulesMenu"
-            >
-              <Button
-                :label="__('Discounts and shipping')"
-                class="min-h-11 sm:min-h-8"
-                data-compras-reglas
+                {{ __('Compras', null, 'Compras') }}
+              </h1>
+              <p class="truncate text-sm text-ink-gray-6" :title="subtitle">
+                {{ subtitle }}
+              </p>
+            </div>
+            <div class="flex flex-none items-center gap-2">
+              <div
+                class="flex items-center gap-0.5 rounded-full bg-surface-gray-2 p-0.5"
+                data-compras-isla
               >
-                <template #prefix>
+                <CapturarDocumentoButton
+                  variant="island"
+                  :targets="['Purchase Order', 'Purchase Invoice']"
+                  return-label="Compras"
+                />
+                <!-- The purchasing manager's rules share one menu; a worker
+                     with one of them gets its own icon. -->
+                <Dropdown
+                  v-if="caps.discounts && caps.shipping_rules"
+                  :options="rulesMenu"
+                  align="end"
+                >
+                  <button
+                    type="button"
+                    :class="ISLAND_ICON"
+                    :aria-label="__('Discounts and shipping')"
+                    :title="__('Discounts and shipping')"
+                    data-compras-reglas
+                  >
+                    <span
+                      class="lucide-badge-percent size-5"
+                      aria-hidden="true"
+                    />
+                  </button>
+                </Dropdown>
+                <button
+                  v-else-if="caps.discounts"
+                  type="button"
+                  :class="ISLAND_ICON"
+                  :aria-label="__('Supplier discounts')"
+                  :title="__('Supplier discounts')"
+                  data-compras-descuentos
+                  @click="router.push({ name: 'CompraDescuentos' })"
+                >
                   <span
-                    class="lucide-badge-percent size-4"
+                    class="lucide-badge-percent size-5"
                     aria-hidden="true"
                   />
-                </template>
-                <template #suffix>
-                  <span class="lucide-chevron-down size-4" aria-hidden="true" />
-                </template>
-              </Button>
-            </Dropdown>
-            <Button
-              v-else-if="caps.discounts"
-              :label="__('Supplier discounts')"
-              class="min-h-11 sm:min-h-8"
-              data-compras-descuentos
-              @click="router.push({ name: 'CompraDescuentos' })"
+                </button>
+                <button
+                  v-else-if="caps.shipping_rules"
+                  type="button"
+                  :class="ISLAND_ICON"
+                  :aria-label="__('Shipping rules')"
+                  :title="__('Shipping rules')"
+                  data-compras-envios
+                  @click="router.push({ name: 'CompraEnvios' })"
+                >
+                  <span class="lucide-truck size-5" aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  :class="ISLAND_ICON"
+                  :aria-label="__('Keyboard shortcuts')"
+                  :title="`${__('Keyboard shortcuts')} (?)`"
+                  :aria-keyshortcuts="'Alt+H'"
+                  @click="openShortcutSheet()"
+                >
+                  <span class="lucide-keyboard size-5" aria-hidden="true" />
+                </button>
+              </div>
+              <button
+                type="button"
+                :class="['press', BTN_SM.tonal]"
+                data-compras-surtido
+                @click="router.push({ name: 'CompraSurtido' })"
+              >
+                <LucideLayers class="size-4" aria-hidden="true" />
+                {{ __('Restock from a list', null, 'Surtido') }}
+              </button>
+              <button
+                v-if="boot?.capabilities?.create"
+                type="button"
+                :class="['press', BTN_SM.filled]"
+                data-compras-nueva
+                @click="newPurchase"
+              >
+                <LucidePlus class="size-4" aria-hidden="true" />
+                {{ __('New purchase') }}
+              </button>
+            </div>
+          </div>
+          <div class="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+            <div class="w-fit max-w-full">
+              <Segmented
+                :model-value="state.segment"
+                :options="tabs"
+                :label="__('Purchases', null, 'Compras')"
+                fit="content"
+                data-compras-colas
+                @update:model-value="selectSegment"
+              />
+            </div>
+            <label
+              class="ml-auto flex h-10 min-w-0 flex-1 items-center gap-2 rounded-full bg-surface-gray-2 px-3.5 focus-within:ring-2 focus-within:ring-outline-gray-4 sm:max-w-xs"
             >
-              <template #prefix>
-                <span class="lucide-badge-percent size-4" aria-hidden="true" />
-              </template>
-            </Button>
-            <Button
-              v-else-if="caps.shipping_rules"
-              :label="__('Shipping rules')"
-              class="min-h-11 sm:min-h-8"
-              data-compras-envios
-              @click="router.push({ name: 'CompraEnvios' })"
-            >
-              <template #prefix>
-                <span class="lucide-truck size-4" aria-hidden="true" />
-              </template>
-            </Button>
-            <Button
-              v-if="boot?.capabilities?.create"
-              variant="solid"
-              :icon-left="LucidePlus"
-              :label="__('New purchase')"
-              class="min-h-11 sm:min-h-8"
-              @click="newPurchase"
-            />
+              <span
+                :class="[
+                  list.loading.value && list.search.value
+                    ? 'lucide-loader-circle animate-spin'
+                    : 'lucide-search',
+                  'size-4 flex-none text-ink-gray-5',
+                ]"
+                aria-hidden="true"
+              />
+              <input
+                v-model="list.search.value"
+                type="search"
+                enterkeyhint="search"
+                class="min-w-0 flex-1 border-0 bg-transparent p-0 text-sm text-ink-gray-9 placeholder:text-ink-gray-5 focus:ring-0"
+                :placeholder="__('Search supplier or document')"
+                :aria-label="__('Search supplier or document')"
+                :aria-keyshortcuts="'/'"
+                data-power-search
+              />
+            </label>
           </div>
         </header>
         <CapturasPendientes
           :targets="['Purchase Order', 'Purchase Invoice']"
           return-label="Compras"
         />
-        <div
-          v-if="!list.phone.value"
-          class="flex flex-wrap items-center gap-2 px-4 pb-3 sm:px-6"
-        >
-          <FormControl
-            v-model="list.search.value"
-            class="min-w-0 flex-1 sm:max-w-xs"
-            type="search"
-            :placeholder="__('Search supplier or document')"
-            :aria-label="__('Search supplier or document')"
-            :aria-keyshortcuts="'/'"
-            data-power-search
-          />
-        </div>
         <div
           v-if="notice"
           role="status"
@@ -329,7 +365,7 @@
             v-if="rows.length"
             :ref="(el) => (list.listbox.value = el)"
             tabindex="0"
-            class="divide-y divide-outline-gray-1 focus:outline-none"
+            class="divide-y divide-outline-gray-1 text-base focus:outline-none"
             role="listbox"
             :aria-label="segmentLabel(state.segment)"
             :aria-multiselectable="true"
@@ -377,7 +413,8 @@
                 >
                   <span class="min-w-0">
                     <span
-                      class="block truncate font-medium text-ink-gray-9"
+                      class="block truncate text-base font-medium text-ink-gray-9"
+                      :class="row.party ? '' : 'text-ink-gray-7'"
                       :title="partyOf(row)"
                       >{{ partyOf(row) }}</span
                     >
@@ -421,7 +458,7 @@
                     >
                   </span>
                   <span
-                    class="num text-right text-base font-semibold text-ink-gray-9"
+                    class="num text-right text-md font-semibold text-ink-gray-9"
                     >{{
                       row.grand_total !== undefined && row.grand_total !== null
                         ? money(row.grand_total, row.currency)
@@ -448,12 +485,15 @@
                     class="mt-0.5 h-4 w-4 shrink-0 text-ink-gray-5"
                   />
                   <span class="min-w-0 flex-1">
-                    <span class="block truncate font-medium text-ink-gray-9">
+                    <span
+                      class="block truncate text-base font-medium"
+                      :class="row.party ? 'text-ink-gray-9' : 'text-ink-gray-7'"
+                    >
                       {{ partyOf(row) }}
                     </span>
                     <!-- One meta line: status · delivery · what is pending. The
                        delivery date never gets cut off: the status truncates first. -->
-                    <span class="flex min-w-0 text-[13px] text-ink-gray-6">
+                    <span class="flex min-w-0 text-sm text-ink-gray-6">
                       <span class="min-w-0 truncate">{{
                         statusLabel(row)
                       }}</span>
@@ -464,10 +504,10 @@
                           lateDays(row) ? 'font-medium text-ink-red-7' : ''
                         "
                         data-testid="compras-entrega"
-                        ><span aria-hidden="true">&nbsp;·&nbsp;</span
+                        ><span aria-hidden="true">,&nbsp;</span
                         >{{ __('Delivery {0}', [formatDay(row.due_date)])
-                        }}<template v-if="lateDays(row)">
-                          · {{ __('late', null, 'Compras') }}</template
+                        }}<template v-if="lateDays(row)"
+                          >, {{ __('late', null, 'Compras') }}</template
                         ></span
                       >
                     </span>
@@ -477,7 +517,7 @@
                         row.in_receipt ||
                         billPending(row)
                       "
-                      class="block truncate text-[13px] text-ink-gray-8"
+                      class="block truncate text-sm text-ink-gray-8"
                     >
                       <template
                         v-if="
@@ -490,7 +530,7 @@
                             row.kind === 'orden' && Number(row.docstatus) === 1
                           "
                           aria-hidden="true"
-                          >&nbsp;·&nbsp;</span
+                          >,&nbsp;</span
                         ><span class="text-ink-amber-8">{{
                           __('Receipt in progress')
                         }}</span></template
@@ -502,7 +542,7 @@
                             row.in_receipt
                           "
                           aria-hidden="true"
-                          >&nbsp;·&nbsp;</span
+                          >,&nbsp;</span
                         ><span class="text-ink-blue-7">{{
                           __('Bill pending')
                         }}</span></template
@@ -513,7 +553,7 @@
                     v-if="
                       row.grand_total !== undefined && row.grand_total !== null
                     "
-                    class="num shrink-0 text-right text-base font-semibold text-ink-gray-9"
+                    class="num shrink-0 text-right text-md font-semibold text-ink-gray-9"
                     >{{ money(row.grand_total, row.currency) }}</span
                   >
                 </a>
@@ -528,20 +568,27 @@
                 class="flex flex-wrap justify-end gap-1 px-4 pb-2"
                 data-row-actions
               >
-                <Button
+                <button
                   v-for="action in rowActions(row)"
                   :key="action.key"
-                  size="sm"
-                  variant="ghost"
-                  :label="`${action.label} · ${action.hint}`"
+                  type="button"
+                  class="press inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-sm font-medium text-ink-gray-8 hover:bg-surface-gray-3 disabled:opacity-50"
                   :aria-keyshortcuts="action.hint"
-                  :loading="busyRow === `${action.key}:${row.name}`"
+                  :disabled="busyRow === `${action.key}:${row.name}`"
                   @click="runVerb(action.key, row)"
                 >
-                  <template #prefix>
-                    <Icon :icon="action.icon" class="h-4 w-4" />
-                  </template>
-                </Button>
+                  <span
+                    v-if="busyRow === `${action.key}:${row.name}`"
+                    class="lucide-loader-circle size-4 animate-spin"
+                    aria-hidden="true"
+                  />
+                  <Icon v-else :icon="action.icon" class="h-4 w-4" />
+                  {{ action.label }}
+                  <kbd
+                    class="num rounded-4 bg-surface-gray-2 px-1.5 text-xs leading-5 text-ink-gray-6"
+                    >{{ action.hint }}</kbd
+                  >
+                </button>
               </div>
             </li>
           </ul>
@@ -623,12 +670,12 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Button, Dropdown, FormControl, toast } from 'frappe-ui'
+import { Button, Dropdown, toast } from 'frappe-ui'
 import { formatDay } from '@/utils/contactos'
 import { dayDiff, parseServerDate } from '@/utils/display'
 import { useTableWidth } from '@/composables/useTableWidth'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
-import { Fab } from '@/components/ui'
+import { Fab, Segmented } from '@/components/ui'
 import BulkConfirmSheet from '@/components/compras/BulkConfirmSheet.vue'
 import CapturarDocumentoButton from '@/components/captura/CapturarDocumentoButton.vue'
 import CapturasPendientes from '@/components/captura/CapturasPendientes.vue'
@@ -693,6 +740,15 @@ const pending = {}
 // The URL is the state: list, search and focused purchase.
 const state = computed(() => queueState(route.query))
 const caps = computed(() => boot.value?.capabilities || {})
+// The desktop header's controls: one island of icons, one tonal, one filled.
+const ISLAND_ICON =
+  'press flex size-9 items-center justify-center rounded-full text-ink-gray-7 hover:bg-surface-gray-3 hover:text-ink-gray-9'
+const BTN_SM = Object.freeze({
+  filled:
+    'inline-flex h-10 items-center gap-2 rounded-full bg-surface-gray-10 px-4 text-sm font-medium text-ink-base hover:bg-surface-gray-9 disabled:opacity-50',
+  tonal:
+    'inline-flex h-10 items-center gap-2 rounded-full bg-surface-gray-2 px-4 text-sm font-medium text-ink-gray-9 hover:bg-surface-gray-3 disabled:opacity-50',
+})
 const rulesMenu = computed(() => [
   {
     label: __('Supplier discounts'),
@@ -769,6 +825,14 @@ const entries = computed(() =>
       countLabel(s.value) !== undefined
         ? `${segmentLabel(s.value)} · ${countLabel(s.value)}`
         : segmentLabel(s.value),
+  })),
+)
+// The queues as the desktop's tab row, each with its count.
+const tabs = computed(() =>
+  SEGMENTS.map((s) => ({
+    value: s.value,
+    label: segmentLabel(s.value),
+    count: countLabel(s.value),
   })),
 )
 const phoneEntries = computed(() =>

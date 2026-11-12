@@ -53,7 +53,11 @@
         :title="__('Loading supplier lists…', null, 'Surtido')"
       />
 
-      <div v-else class="mx-auto w-full max-w-5xl px-4 pt-4 sm:px-6">
+      <div
+        v-else
+        class="mx-auto w-full px-4 pt-4 sm:px-6"
+        :class="current || step === 'respuesta' ? 'max-w-5xl' : 'max-w-3xl'"
+      >
         <ol
           v-if="pedido"
           class="mb-4 flex gap-2 overflow-x-auto pb-1"
@@ -183,10 +187,14 @@
                   @change="(e) => pickInto(current.name, e)"
                 />
               </label>
-              <Button
-                :label="__('Upload link', null, 'Surtido')"
+              <button
+                type="button"
+                :class="['press', BTN_SM.tonal]"
                 @click="linkFor(current.name)"
-              />
+              >
+                <span class="lucide-link size-4" aria-hidden="true" />
+                {{ __('Upload link', null, 'Surtido') }}
+              </button>
               <a
                 v-if="uploadUrl"
                 :href="uploadUrl"
@@ -239,10 +247,13 @@
                   }}
                 </p>
                 <div class="mt-2 flex flex-wrap justify-end gap-2">
-                  <Button
-                    :label="__('Not now', null, 'Surtido')"
+                  <button
+                    type="button"
+                    :class="['press', BTN.text]"
                     @click="readQuote = null"
-                  />
+                  >
+                    {{ __('Not now', null, 'Surtido') }}
+                  </button>
                   <button
                     type="button"
                     :class="['press', BTN.filled]"
@@ -277,7 +288,7 @@
           <!-- no list yet, or the owner is adding one: the drop is the first thing -->
           <div
             v-if="!current && boot.owner"
-            class="mb-4 rounded-7 border border-dashed border-outline-gray-3 p-5 text-center"
+            class="mb-3 flex flex-wrap items-center gap-x-4 gap-y-3 rounded-7 border border-dashed border-outline-gray-3 px-4 py-3"
             :class="dropping ? 'bg-surface-gray-2' : ''"
             data-testid="surtido-drop"
             @dragover.prevent="dropping = true"
@@ -285,24 +296,28 @@
             @drop.prevent="dropCatalog"
           >
             <span
-              class="lucide-upload mx-auto block size-7 text-ink-gray-6"
+              class="flex size-10 flex-none items-center justify-center rounded-full bg-surface-gray-2 text-ink-gray-7"
               aria-hidden="true"
-            />
-            <p class="mt-2 text-base font-medium">
-              {{ __("Drop the supplier's list", null, 'Surtido') }}
-            </p>
-            <p class="mt-1 text-sm text-ink-gray-6">
-              {{
-                __(
-                  'Pictures of the list, a PDF or a spreadsheet. The pictures you send together are one list.',
-                  null,
-                  'Surtido',
-                )
-              }}
-            </p>
+            >
+              <span class="lucide-upload size-5" />
+            </span>
+            <div class="min-w-0 flex-1 basis-48">
+              <p class="text-base font-medium text-ink-gray-9">
+                {{ __("Drop the supplier's list", null, 'Surtido') }}
+              </p>
+              <p class="text-sm text-ink-gray-6">
+                {{
+                  __(
+                    'Pictures of the list, a PDF or a spreadsheet. The pictures you send together are one list.',
+                    null,
+                    'Surtido',
+                  )
+                }}
+              </p>
+            </div>
             <label
               :class="[
-                'press mt-3 cursor-pointer',
+                'press flex-none cursor-pointer max-sm:w-full',
                 BTN.filled,
                 upload ? 'pointer-events-none opacity-50' : '',
               ]"
@@ -390,11 +405,17 @@
                   :load="(q) => call('suppliers', { search: q })"
                   @pick="(o) => (newSupplierLabel = o.label)"
                 />
-                <FormControl
-                  v-model="newTitle"
-                  :label="__('Name of the list', null, 'Surtido')"
-                  :placeholder="__('October cases', null, 'Surtido')"
-                />
+                <label class="block">
+                  <span class="mb-1 block text-sm text-ink-gray-7">{{
+                    __('Name of the list', null, 'Surtido')
+                  }}</span>
+                  <input
+                    v-model="newTitle"
+                    type="text"
+                    class="h-11 w-full rounded-6 border border-transparent bg-surface-gray-2 px-3 text-base text-ink-gray-9 placeholder:text-ink-gray-5 focus:border-outline-gray-4 focus:bg-surface-base focus:outline-none focus:ring-0 sm:h-10 sm:text-sm"
+                    :placeholder="__('October cases', null, 'Surtido')"
+                  />
+                </label>
                 <button
                   type="button"
                   :class="['press', BTN.filled]"
@@ -470,27 +491,32 @@
             }}
           </div>
           <template v-else>
-            <div class="mb-4 rounded-7 border border-outline-gray-2 p-4">
-              <div class="flex flex-wrap items-center gap-2">
-                <h2 class="min-w-0 flex-1 truncate text-lg font-semibold">
+            <div class="mb-4 border-b border-outline-gray-2 pb-4">
+              <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <h2
+                  class="title-face min-w-0 flex-1 truncate text-2xl font-semibold text-ink-gray-9"
+                >
                   {{ pedido.supplier }}
-                  <span class="text-sm font-normal text-ink-gray-5">{{
-                    pedido.pedido
-                  }}</span>
                 </h2>
-                <Badge
-                  :theme="pedidoTheme(pedido.status)"
+                <StatusChip
                   :label="pedidoStatus(pedido.status)"
+                  :tone="CHIP_TONE[pedidoTheme(pedido.status)] || 'neutral'"
                 />
               </div>
-              <p class="mt-1 text-sm text-ink-gray-7">
-                {{ __('Total {0}', [money(pedido.total)], 'Surtido') }}
-                <template v-if="pedido.ceiling">
-                  ·
-                  {{
-                    __('budget {0}', [money(pedido.ceiling)], 'Surtido')
-                  }}</template
-                >
+              <p class="mt-1 text-sm text-ink-gray-6">
+                <span class="num text-md font-semibold text-ink-gray-9">{{
+                  money(pedido.total)
+                }}</span>
+                {{
+                  [
+                    pedido.ceiling
+                      ? __('of {0}', [money(pedido.ceiling)], 'Surtido')
+                      : '',
+                    pedido.pedido,
+                  ]
+                    .filter(Boolean)
+                    .join(', ')
+                }}
               </p>
               <p v-if="pedido.over_ceiling" class="mt-1 text-sm text-ink-red-7">
                 {{
@@ -504,18 +530,24 @@
                     name: 'CompraOrden',
                     params: { name: pedido.purchase_order },
                   }"
-                  class="font-medium text-ink-blue-7 underline"
+                  class="inline-flex items-center gap-1 font-medium text-ink-gray-9 hover:underline"
                   >{{
-                    __('Draft purchase {0}', [pedido.purchase_order], 'Surtido')
-                  }}</RouterLink
-                >
+                    __(
+                      'Draft purchase {0}',
+                      [pedido.purchase_order],
+                      'Surtido',
+                    )
+                  }}<span
+                    class="lucide-chevron-right size-4"
+                    aria-hidden="true"
+                /></RouterLink>
               </p>
             </div>
 
             <!-- send to the supplier -->
             <div
               v-if="pedido.owner && pedido.status === 'Borrador'"
-              class="mb-4 flex flex-wrap items-center gap-2 rounded-6 bg-surface-gray-1 p-3"
+              class="mb-4 flex flex-wrap items-center gap-2"
             >
               <p class="min-w-0 flex-1 text-sm">
                 {{
@@ -526,16 +558,31 @@
                   )
                 }}
               </p>
-              <Button
-                :label="__('Spreadsheet', null, 'Surtido')"
-                :loading="busy === 'xlsx'"
-                @click="share('xlsx')"
-              />
-              <Button
-                :label="__('PDF', null, 'Surtido')"
-                :loading="busy === 'pdf'"
-                @click="share('pdf')"
-              />
+              <button
+                v-for="kind in ['xlsx', 'pdf']"
+                :key="kind"
+                type="button"
+                :class="['press', BTN_SM.tonal]"
+                :disabled="busy === kind"
+                @click="share(kind)"
+              >
+                <span
+                  :class="[
+                    busy === kind
+                      ? 'lucide-loader-circle animate-spin'
+                      : kind === 'pdf'
+                        ? 'lucide-file-text'
+                        : 'lucide-sheet',
+                    'size-4',
+                  ]"
+                  aria-hidden="true"
+                />
+                {{
+                  kind === 'pdf'
+                    ? __('PDF', null, 'Surtido')
+                    : __('Spreadsheet', null, 'Surtido')
+                }}
+              </button>
             </div>
             <p v-if="sharedFile" class="mb-4 text-sm">
               <a
@@ -579,9 +626,8 @@
                 }}
               </p>
               <div class="mt-2 flex flex-wrap items-center gap-2">
-                <label
-                  class="inline-flex min-h-9 cursor-pointer items-center rounded-4 bg-surface-gray-2 px-3 text-sm hover:bg-surface-gray-3"
-                >
+                <label :class="['press cursor-pointer', BTN_SM.tonal]">
+                  <span class="lucide-upload size-4" aria-hidden="true" />
                   {{ __('Choose file', null, 'Surtido') }}
                   <input
                     type="file"
@@ -601,18 +647,21 @@
               <textarea
                 v-model="replyText"
                 rows="3"
-                class="mt-2 w-full rounded-4 border border-outline-gray-2 p-2 text-sm"
+                class="mt-2 w-full rounded-6 border border-transparent bg-surface-gray-2 p-3 text-base text-ink-gray-9 placeholder:text-ink-gray-5 focus:border-outline-gray-4 focus:bg-surface-base focus:outline-none focus:ring-0 sm:text-sm"
                 :aria-label="__('Paste the reply', null, 'Surtido')"
                 :placeholder="
                   __('Or paste what the supplier wrote…', null, 'Surtido')
                 "
               />
-              <div class="flex justify-end">
-                <Button
-                  :label="__('Read pasted reply', null, 'Surtido')"
+              <div class="mt-2 flex justify-end">
+                <button
+                  type="button"
+                  :class="['press', BTN_SM.tonal]"
                   :disabled="!replyText.trim() || busy === 'reply'"
                   @click="attachReply({ text: replyText })"
-                />
+                >
+                  {{ __('Read pasted reply', null, 'Surtido') }}
+                </button>
               </div>
             </div>
 
@@ -637,12 +686,12 @@
                 }}
               </p>
               <ul
-                class="divide-y divide-outline-gray-1 rounded-6 border border-outline-gray-2"
+                class="divide-y divide-outline-gray-1 border-y border-outline-gray-2"
               >
                 <li
                   v-for="row in pedido.pending_rows"
                   :key="row.index"
-                  class="flex flex-wrap items-center gap-3 p-3"
+                  class="flex flex-wrap items-center gap-3 py-2.5"
                 >
                   <input
                     v-model="rowPick[row.index]"
@@ -652,7 +701,7 @@
                     "
                   />
                   <div class="min-w-0 flex-1 basis-56">
-                    <p class="truncate font-medium">
+                    <p class="truncate text-base font-medium text-ink-gray-9">
                       {{ row.description || row.code }}
                     </p>
                     <p class="truncate text-xs text-ink-gray-5">
@@ -675,7 +724,7 @@
                     {{ __('Batches', null, 'Surtido') }}
                     <select
                       :value="rowBatch[row.index] ?? ''"
-                      class="h-8 rounded-4 border border-outline-gray-2 text-sm"
+                      class="h-9 rounded-6 border-0 bg-surface-gray-2 pl-3 pr-8 text-sm text-ink-gray-9 focus:ring-2 focus:ring-outline-gray-4"
                       @change="
                         rowBatch = {
                           ...rowBatch,
@@ -694,7 +743,7 @@
                     {{ __('Serials', null, 'Surtido') }}
                     <select
                       :value="rowSerial[row.index] ?? ''"
-                      class="h-8 rounded-4 border border-outline-gray-2 text-sm"
+                      class="h-9 rounded-6 border-0 bg-surface-gray-2 pl-3 pr-8 text-sm text-ink-gray-9 focus:ring-2 focus:ring-outline-gray-4"
                       @change="
                         rowSerial = {
                           ...rowSerial,
@@ -715,12 +764,18 @@
                 v-if="pedido.owner"
                 class="mt-2 flex flex-wrap justify-end gap-2"
               >
-                <Button
-                  :label="__('Omit chosen', null, 'Surtido')"
-                  :disabled="!picked.length || pedido.status !== 'Cotizado'"
-                  :loading="busy === 'omit'"
+                <button
+                  type="button"
+                  :class="['press', BTN.tonal]"
+                  :disabled="
+                    !picked.length ||
+                    pedido.status !== 'Cotizado' ||
+                    busy === 'omit'
+                  "
                   @click="omit"
-                />
+                >
+                  {{ __('Omit chosen', null, 'Surtido') }}
+                </button>
                 <button
                   type="button"
                   :class="['press', BTN.filled]"
@@ -759,15 +814,15 @@
                 {{ __('Order lines ({0})', [pedido.lines.length], 'Surtido') }}
               </h3>
               <ul
-                class="divide-y divide-outline-gray-1 rounded-6 border border-outline-gray-2"
+                class="divide-y divide-outline-gray-1 border-y border-outline-gray-2"
               >
                 <li
                   v-for="line in pedido.lines"
                   :key="line.line"
-                  class="flex flex-wrap items-center gap-3 p-3"
+                  class="flex flex-wrap items-center gap-3 py-2.5"
                 >
                   <div class="min-w-0 flex-1 basis-56">
-                    <p class="truncate font-medium">
+                    <p class="truncate text-base font-medium text-ink-gray-9">
                       {{ line.name || line.code }}
                     </p>
                     <p class="truncate text-xs text-ink-gray-5">
@@ -781,30 +836,37 @@
                       {{ line.note }}
                     </p>
                   </div>
-                  <Badge
-                    :theme="lineTheme(line.status)"
+                  <StatusChip
                     :label="lineStatus(line.status)"
+                    :tone="CHIP_TONE[lineTheme(line.status)] || 'neutral'"
                   />
                   <template v-if="pedido.owner && pedido.status === 'Borrador'">
                     <input
                       type="number"
                       min="1"
-                      class="h-9 w-20 rounded-4 border border-outline-gray-2 px-2 text-right tabular-nums"
+                      inputmode="numeric"
+                      class="num h-10 w-20 rounded-6 border border-transparent bg-surface-gray-2 px-3 text-right text-base focus:border-outline-gray-4 focus:outline-none focus:ring-0"
                       :aria-label="
                         __('Pieces of {0}', [line.name || line.code], 'Surtido')
                       "
                       :value="line.qty"
                       @change="updateQty(line, Number($event.target.value))"
                     />
-                    <Button
-                      :icon="LucideX"
+                    <button
+                      type="button"
+                      class="press flex size-10 items-center justify-center rounded-full text-ink-gray-6 [@media(hover:hover)]:hover:bg-surface-gray-2 [@media(hover:hover)]:hover:text-ink-gray-9"
                       :aria-label="
                         __('Remove {0}', [line.name || line.code], 'Surtido')
                       "
+                      :title="
+                        __('Remove {0}', [line.name || line.code], 'Surtido')
+                      "
                       @click="removeLine(line)"
-                    />
+                    >
+                      <span class="lucide-trash-2 size-5" aria-hidden="true" />
+                    </button>
                   </template>
-                  <span v-else class="text-sm tabular-nums">
+                  <span v-else class="num text-sm">
                     {{
                       line.quoted_qty
                         ? __(
@@ -835,12 +897,12 @@
                 }}
               </h3>
               <ul
-                class="divide-y divide-outline-gray-1 rounded-6 border border-outline-gray-2"
+                class="divide-y divide-outline-gray-1 border-y border-outline-gray-2"
               >
                 <li
                   v-for="m in pedido.missing"
                   :key="m.line"
-                  class="flex items-center gap-3 p-3 text-sm"
+                  class="flex items-center gap-3 py-2.5 text-sm"
                 >
                   <input
                     v-model="missingPick[m.line]"
@@ -862,14 +924,16 @@
                 </li>
               </ul>
               <div v-if="pedido.owner" class="mt-2 flex justify-end">
-                <Button
-                  :label="
-                    __('Send to a material request (draft)', null, 'Surtido')
-                  "
-                  :disabled="!missingPicked.length"
-                  :loading="busy === 'mr'"
+                <button
+                  type="button"
+                  :class="['press', BTN.tonal]"
+                  :disabled="!missingPicked.length || busy === 'mr'"
                   @click="materialRequest"
-                />
+                >
+                  {{
+                    __('Send to a material request (draft)', null, 'Surtido')
+                  }}
+                </button>
               </div>
               <p v-if="lastRequest" class="mt-1 text-right text-sm">
                 {{ __('Draft material request {0}', [lastRequest], 'Surtido') }}
@@ -905,15 +969,17 @@
                 }}
               </p>
               <ul
-                class="divide-y divide-outline-gray-1 rounded-6 border border-outline-gray-2"
+                class="divide-y divide-outline-gray-1 border-y border-outline-gray-2"
               >
                 <li
                   v-for="row in pedido.new_items"
                   :key="row.catalogo_linea"
-                  class="flex flex-wrap items-center gap-3 p-3"
+                  class="flex flex-wrap items-center gap-3 py-2.5"
                 >
                   <div class="min-w-0 flex-1 basis-56">
-                    <p class="truncate font-medium">{{ row.name }}</p>
+                    <p class="truncate text-base font-medium text-ink-gray-9">
+                      {{ row.name }}
+                    </p>
                     <p
                       v-if="row.group_missing"
                       class="truncate text-xs text-ink-amber-9"
@@ -936,7 +1002,7 @@
                     {{ __('Batches', null, 'Surtido') }}
                     <select
                       :value="newBatch[row.catalogo_linea] ?? '0'"
-                      class="h-8 rounded-4 border border-outline-gray-2 text-sm"
+                      class="h-9 rounded-6 border-0 bg-surface-gray-2 pl-3 pr-8 text-sm text-ink-gray-9 focus:ring-2 focus:ring-outline-gray-4"
                       @change="
                         newBatch = {
                           ...newBatch,
@@ -957,7 +1023,7 @@
                         newSerial[row.catalogo_linea] ??
                         (row.has_serial_default ? '1' : '0')
                       "
-                      class="h-8 rounded-4 border border-outline-gray-2 text-sm"
+                      class="h-9 rounded-6 border-0 bg-surface-gray-2 pl-3 pr-8 text-sm text-ink-gray-9 focus:ring-2 focus:ring-outline-gray-4"
                       @change="
                         newSerial = {
                           ...newSerial,
@@ -1222,7 +1288,7 @@
                 __('Budget', null, 'Surtido')
               }}</span>
               <span
-                class="flex h-12 items-center gap-1 rounded-6 bg-surface-gray-2 px-3 focus-within:ring-2 focus-within:ring-outline-gray-4"
+                class="flex h-12 items-center gap-1 rounded-6 border border-transparent bg-surface-gray-2 px-3 focus-within:border-outline-gray-4 focus-within:bg-surface-base"
               >
                 <span class="num text-lg text-ink-gray-5" aria-hidden="true"
                   >$</span
@@ -1238,11 +1304,17 @@
                 />
               </span>
             </label>
-            <FormControl
-              v-model="ask.focus"
-              :label="__('These models first', null, 'Surtido')"
-              :placeholder="__('A16 2, A27 1', null, 'Surtido')"
-            />
+            <label class="block">
+              <span class="mb-1 block text-sm text-ink-gray-7">{{
+                __('These models first', null, 'Surtido')
+              }}</span>
+              <input
+                v-model="ask.focus"
+                type="text"
+                class="h-12 w-full rounded-6 border border-transparent bg-surface-gray-2 px-3 text-base text-ink-gray-9 placeholder:text-ink-gray-5 focus:border-outline-gray-4 focus:bg-surface-base focus:outline-none focus:ring-0"
+                :placeholder="__('A16 2, A27 1', null, 'Surtido')"
+              />
+            </label>
           </div>
           <div
             v-if="cartBudget"
@@ -1332,10 +1404,13 @@
         </p>
       </div>
       <template #actions>
-        <Button
-          :label="__('Keep shopping', null, 'Surtido')"
+        <button
+          type="button"
+          :class="['press', BTN.tonal]"
           @click="cartOpen = false"
-        />
+        >
+          {{ __('Keep shopping', null, 'Surtido') }}
+        </button>
         <button
           v-if="boot.owner"
           type="button"
@@ -1370,8 +1445,8 @@ import {
   watch,
 } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Badge, Button, FormControl, toast } from 'frappe-ui'
-import { AppBar, BottomSheet, EmptyState } from '@/components/ui'
+import { toast } from 'frappe-ui'
+import { AppBar, BottomSheet, EmptyState, StatusChip } from '@/components/ui'
 import { isMobile } from '@/composables/breakpoint'
 import { BTN } from '@/documentos/tools'
 import ComprasPicker from '@/components/compras/ComprasPicker.vue'
@@ -1401,12 +1476,26 @@ import {
   savedCart,
   setPieces,
 } from '@/utils/surtidoShop'
-import LucideX from '~icons/lucide/x'
 
 const MediaViewer = defineAsyncComponent(
   () => import('@/components/ui/MediaViewer.vue'),
 )
 
+// utils/surtido speaks frappe-ui themes; the kit chip speaks tones
+const CHIP_TONE = {
+  gray: 'neutral',
+  blue: 'info',
+  green: 'success',
+  orange: 'warning',
+  amber: 'warning',
+  yellow: 'warning',
+  red: 'danger',
+}
+// Compact buttons where a row holds several (the reply's file kinds).
+const BTN_SM = Object.freeze({
+  tonal:
+    'inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-surface-gray-2 px-4 text-sm font-medium text-ink-gray-9 hover:bg-surface-gray-3 disabled:opacity-50 sm:min-h-9',
+})
 const API = 'doco.workspaces.sourcing.'
 const call = (method, args = {}) => comprasApi(API + method, args)
 

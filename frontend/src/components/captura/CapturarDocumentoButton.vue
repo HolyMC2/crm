@@ -1,17 +1,23 @@
 <template>
   <template v-if="allowed.length">
     <template v-if="trigger">
+      <!-- an icon in a bar ('appbar') or on a page's island ('island') -->
       <button
-        v-if="variant === 'appbar'"
+        v-if="variant === 'appbar' || variant === 'island'"
         type="button"
-        class="flex size-12 items-center justify-center rounded-full text-ink-gray-7"
+        class="flex items-center justify-center rounded-full"
+        :class="
+          variant === 'island'
+            ? 'press size-9 text-ink-gray-7 hover:bg-surface-gray-3 hover:text-ink-gray-9'
+            : 'size-12 text-ink-gray-7'
+        "
         :aria-label="buttonLabel"
         :title="buttonLabel"
         v-bind="$attrs"
         data-capturar-documento
         @click="show"
       >
-        <LucideFilePlus class="h-6 w-6" />
+        <LucideFilePlus :class="variant === 'island' ? 'size-5' : 'h-6 w-6'" />
       </button>
       <!-- a shortcut chip in a search panel (ui/chipClass) -->
       <button

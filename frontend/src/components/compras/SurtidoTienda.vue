@@ -271,7 +271,7 @@
           </div>
           <button
             type="button"
-            class="press self-start text-xs text-ink-gray-6 underline decoration-dotted underline-offset-2 hover:text-ink-gray-8"
+            class="press self-start text-xs text-ink-gray-5 hover:text-ink-gray-8 hover:underline"
             @click="patch({ similarTo: row })"
           >
             {{ __('Similar', null, 'Surtido') }}
@@ -289,7 +289,7 @@
       <li
         v-for="row in visible"
         :key="row.line"
-        class="flex items-center gap-3 py-3"
+        class="flex items-center gap-3 py-2.5"
         data-testid="tienda-producto"
       >
         <button
@@ -319,7 +319,7 @@
             <button
               v-if="row.page"
               type="button"
-              class="press ml-1 text-xs font-normal text-ink-gray-6 underline decoration-dotted underline-offset-2"
+              class="press ml-1.5 text-xs font-normal text-ink-gray-5 hover:text-ink-gray-8 hover:underline"
               :aria-label="
                 __('See page {0} of the list', [row.page], 'Surtido')
               "
@@ -328,55 +328,64 @@
               {{ __('p. {0}', [row.page], 'Surtido') }}
             </button>
           </p>
-          <ul v-if="badges(row).length" class="mt-1 flex flex-wrap gap-1">
-            <li
-              v-for="b in badges(row)"
-              :key="b.label"
-              class="rounded-full px-1.5 text-xs leading-5"
-              :class="
-                b.on
-                  ? 'bg-surface-green-2 text-ink-green-8'
-                  : 'bg-surface-gray-2 text-ink-gray-7'
-              "
-            >
-              {{ b.label }}
-            </li>
-          </ul>
+
           <p v-if="ours(row)" class="mt-0.5 truncate text-xs text-ink-gray-6">
             {{ __('Yours: {0}', [ours(row)], 'Surtido') }}
           </p>
           <p v-if="productLine(row)" class="mt-0.5 text-xs text-ink-gray-6">
             {{ productLine(row) }}
           </p>
-          <p class="mt-1 text-xs text-ink-gray-6">
-            {{ historyText(row) }}
-            <button
-              type="button"
-              class="press ml-1 underline decoration-dotted underline-offset-2 hover:text-ink-gray-8"
-              @click="patch({ similarTo: row })"
-            >
-              {{ __('Similar', null, 'Surtido') }}
-            </button>
-          </p>
-        </div>
-        <div class="flex flex-none flex-col items-end gap-1.5">
-          <p class="num text-base font-semibold text-ink-gray-9">
-            {{ money(row.price) }}
-          </p>
-          <p
-            v-if="row.min_qty > 1"
-            class="text-xs"
-            :class="
-              cart[row.line] && cart[row.line] < row.min_qty
-                ? 'text-ink-amber-7'
-                : 'text-ink-gray-6'
-            "
+          <div
+            class="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-ink-gray-6"
           >
-            {{ __('from {0} pcs', [row.min_qty], 'Surtido') }}
-          </p>
+            <ul v-if="badges(row).length" class="flex flex-wrap gap-1">
+              <li
+                v-for="b in badges(row)"
+                :key="b.label"
+                class="rounded-full px-1.5 text-xs leading-5"
+                :class="
+                  b.on
+                    ? 'bg-surface-green-2 text-ink-green-8'
+                    : 'bg-surface-gray-2 text-ink-gray-7'
+                "
+              >
+                {{ b.label }}
+              </li>
+            </ul>
+            <span
+              >{{ historyText(row) }}
+              <button
+                type="button"
+                class="press ml-1.5 text-ink-gray-5 hover:text-ink-gray-8 hover:underline"
+                @click="patch({ similarTo: row })"
+              >
+                {{ __('Similar', null, 'Surtido') }}
+              </button></span
+            >
+          </div>
+        </div>
+        <div
+          class="flex flex-none flex-col items-end gap-1.5 sm:flex-row sm:items-center sm:gap-4"
+        >
+          <div class="text-right sm:w-28">
+            <p class="num text-md font-semibold text-ink-gray-9">
+              {{ money(row.price) }}
+            </p>
+            <p
+              v-if="row.min_qty > 1"
+              class="text-xs"
+              :class="
+                cart[row.line] && cart[row.line] < row.min_qty
+                  ? 'text-ink-amber-7'
+                  : 'text-ink-gray-6'
+              "
+            >
+              {{ __('from {0} pcs', [row.min_qty], 'Surtido') }}
+            </p>
+          </div>
           <div
             v-if="cart[row.line]"
-            class="flex items-center rounded-full ring-1 ring-outline-gray-3"
+            class="flex items-center justify-between rounded-full ring-1 ring-outline-gray-3 sm:w-32"
             role="group"
             :aria-label="__('Pieces of {0}', [row.name], 'Surtido')"
           >
@@ -411,7 +420,7 @@
           <button
             v-else
             type="button"
-            class="press flex min-h-10 items-center gap-1 rounded-full bg-surface-gray-2 px-4 text-sm font-medium text-ink-gray-9 hover:bg-surface-gray-3"
+            class="press flex min-h-10 items-center justify-center gap-1 rounded-full bg-surface-gray-2 px-4 text-sm font-medium text-ink-gray-9 hover:bg-surface-gray-3 sm:w-32"
             data-testid="tienda-agregar"
             @click="emit('pieces', row.line, 1)"
           >

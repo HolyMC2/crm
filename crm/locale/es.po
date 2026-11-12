@@ -43175,3 +43175,27 @@ msgstr "Conservamos tu información hasta el"
 msgctxt "Cuenta"
 msgid "Saving your card…"
 msgstr "Guardando tu tarjeta…"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "{0} is not an item you can buy."
+msgstr "{0} no es un artículo que puedas comprar."
+
+#: frontend/src/pages/CompraOrden.vue
+msgctxt "Compras"
+msgid "1 piece"
+msgstr "1 pieza"
+
+#: frontend/src/pages/CompraOrden.vue
+msgctxt "Compras"
+msgid "{0} pieces"
+msgstr "{0} piezas"
+
+#: frontend/src/pages/CompraOrden.vue
+msgctxt "Compras"
+msgid "Item"
+msgstr "Artículo"
+
+#: frontend/src/pages/CompraOrden.vue
+msgctxt "Compras"
+msgid "Scan a code"
+msgstr "Escanear un código"

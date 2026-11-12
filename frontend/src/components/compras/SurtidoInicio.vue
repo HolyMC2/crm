@@ -4,10 +4,7 @@
        while it is a draft. New lists come from the drop above. -->
   <div class="flex max-w-3xl flex-col gap-5" data-testid="surtido-inicio">
     <section v-if="lists.length" aria-labelledby="inicio-listas">
-      <h2
-        id="inicio-listas"
-        class="pb-1 text-base font-semibold text-ink-gray-9"
-      >
+      <h2 id="inicio-listas" class="pb-1 text-sm font-medium text-ink-gray-6">
         {{ __('Supplier lists', null, 'Surtido') }}
       </h2>
       <ul class="divide-y divide-outline-gray-1">
@@ -19,29 +16,24 @@
         >
           <button
             type="button"
-            class="press flex min-h-16 min-w-0 flex-1 items-center gap-3 rounded-6 py-2 text-left [@media(hover:hover)]:hover:bg-surface-gray-1"
+            class="press flex min-h-14 min-w-0 flex-1 items-center gap-3 rounded-6 py-2 text-left [@media(hover:hover)]:hover:bg-surface-gray-1"
             data-testid="inicio-abrir"
             @click="emit('open-list', row.name)"
           >
-            <span
-              class="flex size-10 flex-none items-center justify-center rounded-full bg-surface-gray-2 text-ink-gray-7"
-              aria-hidden="true"
-            >
-              <span class="lucide-table size-5" />
-            </span>
             <span class="min-w-0 flex-1">
-              <span class="block truncate text-base text-ink-gray-9">{{
-                row.title
-              }}</span>
+              <span
+                class="block truncate text-base font-medium text-ink-gray-9"
+                >{{ row.title }}</span
+              >
               <span class="num block truncate text-sm text-ink-gray-6">{{
                 row.line
               }}</span>
             </span>
-            <Badge
+            <StatusChip
               v-if="row.order"
               class="flex-none"
-              :theme="row.order.theme"
               :label="row.order.label"
+              :tone="CHIP_TONE[row.order.theme] || 'neutral'"
             />
           </button>
           <button
@@ -60,10 +52,7 @@
     </section>
 
     <section v-if="orders.length" aria-labelledby="inicio-pedidos">
-      <h2
-        id="inicio-pedidos"
-        class="pb-1 text-base font-semibold text-ink-gray-9"
-      >
+      <h2 id="inicio-pedidos" class="pb-1 text-sm font-medium text-ink-gray-6">
         {{ __('Orders to suppliers', null, 'Surtido') }}
       </h2>
       <ul class="divide-y divide-outline-gray-1">
@@ -75,28 +64,23 @@
         >
           <button
             type="button"
-            class="press flex min-h-16 min-w-0 flex-1 items-center gap-3 rounded-6 py-2 text-left [@media(hover:hover)]:hover:bg-surface-gray-1"
+            class="press flex min-h-14 min-w-0 flex-1 items-center gap-3 rounded-6 py-2 text-left [@media(hover:hover)]:hover:bg-surface-gray-1"
             data-testid="inicio-abrir"
             @click="emit('open-order', row.name)"
           >
-            <span
-              class="flex size-10 flex-none items-center justify-center rounded-full bg-surface-gray-2 text-ink-gray-7"
-              aria-hidden="true"
-            >
-              <span class="lucide-shopping-cart size-5" />
-            </span>
             <span class="min-w-0 flex-1">
-              <span class="block truncate text-base text-ink-gray-9">{{
-                row.title
-              }}</span>
+              <span
+                class="block truncate text-base font-medium text-ink-gray-9"
+                >{{ row.title }}</span
+              >
               <span class="num block truncate text-sm text-ink-gray-6">{{
                 row.line
               }}</span>
             </span>
-            <Badge
+            <StatusChip
               class="flex-none"
-              :theme="row.status.theme"
               :label="row.status.label"
+              :tone="CHIP_TONE[row.status.theme] || 'neutral'"
             />
           </button>
           <button
@@ -187,9 +171,17 @@
 </template>
 <script setup>
 import { computed, ref } from 'vue'
-import { Badge } from 'frappe-ui'
-import { BottomSheet } from '@/components/ui'
+import { BottomSheet, StatusChip } from '@/components/ui'
 import ConfirmSheet from '@/components/documentos/ConfirmSheet.vue'
+
+// the rows speak frappe-ui themes (utils/surtido); the kit chip speaks tones
+const CHIP_TONE = {
+  gray: 'neutral',
+  blue: 'info',
+  green: 'success',
+  amber: 'warning',
+  red: 'danger',
+}
 
 defineProps({
   // [{ name, title, line, order: {label, theme} | null, blocks: {delete, duplicate} }]

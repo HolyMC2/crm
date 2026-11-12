@@ -3,12 +3,12 @@
        the store and the lines. Folded under one row that says what is set;
        only what the worker changes here is saved (useCompras morePayload). -->
   <section
-    class="rounded-6 border border-outline-gray-2"
+    class="border-y border-outline-gray-2"
     data-testid="compra-mas-datos"
   >
     <button
       type="button"
-      class="press flex min-h-14 w-full items-center gap-3 px-3 py-2 text-left"
+      class="press flex min-h-14 w-full items-center gap-3 py-2 text-left"
       :aria-expanded="open"
       :aria-controls="panelId"
       @click="open = !open"
@@ -31,7 +31,7 @@
       <div
         v-if="open"
         :id="panelId"
-        class="compra-mas grid gap-4 border-t border-outline-gray-1 p-3 sm:grid-cols-2"
+        class="compra-mas grid gap-4 border-t border-outline-gray-1 py-3 sm:grid-cols-2"
       >
         <FormControl
           v-model="transactionDate"

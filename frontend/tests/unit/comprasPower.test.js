@@ -254,6 +254,23 @@ describe('Compras list as a power app', () => {
     expect(cells[4]).toBe(money(500, 'MXN'))
   })
 
+  it('a desk shows the queues as tabs with their counts beside the search, no section column', async () => {
+    mount()
+    await flush()
+    const tabs = root.querySelector('[data-compras-colas]')
+    expect(
+      [...tabs.querySelectorAll('[role="radio"]')].map((b) =>
+        [...b.children].map((part) => part.textContent.trim()).join(' '),
+      ),
+    ).toEqual(['To buy 2', 'To receive 1', 'To bill 1', 'History'])
+    expect(root.querySelector('[data-power-search]')).toBeTruthy()
+    tabs.querySelectorAll('[role="radio"]')[1].click()
+    await flush()
+    expect(state.router.push).toHaveBeenCalledWith({
+      query: expect.objectContaining({ segment: 'por-recibir' }),
+    })
+  })
+
   it('j/k move a focus the URL keeps; Enter opens the purchase with a return to the same row', async () => {
     mount()
     await flush()

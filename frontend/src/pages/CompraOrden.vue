@@ -71,7 +71,10 @@
 
       <div
         v-else-if="loaded"
-        class="mx-auto grid w-full max-w-6xl gap-x-6 lg:grid-cols-[minmax(0,1fr)_22rem]"
+        class="mx-auto grid w-full gap-x-6"
+        :class="
+          isNew ? 'max-w-4xl' : 'max-w-6xl lg:grid-cols-[minmax(0,1fr)_22rem]'
+        "
       >
         <div class="flex min-w-0 flex-col gap-5 pt-4">
           <!-- What was asked of me on this purchase (Pendientes «Por aprobar»).
@@ -313,6 +316,7 @@
             <div class="compra-fields grid gap-3 sm:grid-cols-2">
               <ComprasPicker
                 v-model="form.supplier"
+                class="sm:col-span-2"
                 :display="form.supplier_label"
                 :label="__('Supplier', null, 'Compras')"
                 :placeholder="__('Search supplier')"
@@ -320,13 +324,6 @@
                 :invalid="showMissing && missing.includes('supplier')"
                 :load="(q) => comprasApi('suppliers', { search: q })"
                 @pick="pickSupplier"
-              />
-              <FormControl
-                :model-value="form.company"
-                type="select"
-                :label="__('Company', null, 'Compras')"
-                :options="companyOptions"
-                @update:model-value="pickCompany"
               />
               <ComprasPicker
                 v-model="form.set_warehouse"
@@ -344,12 +341,42 @@
                     })
                 "
               />
-              <FormControl
-                v-model="form.schedule_date"
-                type="date"
-                :placeholder="__('Elige la fecha', null, 'Compras')"
-                :label="__('Delivery date', null, 'Compras')"
-              />
+              <!-- One company to buy for: nothing to choose, so no field. -->
+              <label v-if="companies.length > 1 || !form.company" class="block">
+                <span class="mb-1 block text-sm text-ink-gray-7">{{
+                  __('Company', null, 'Compras')
+                }}</span>
+                <span class="relative block">
+                  <select
+                    :value="form.company"
+                    class="compra-campo w-full appearance-none pr-9"
+                    data-testid="compra-empresa"
+                    @change="pickCompany($event.target.value)"
+                  >
+                    <option
+                      v-for="option in companyOptions"
+                      :key="option.value"
+                      :value="option.value"
+                    >
+                      {{ option.label }}
+                    </option>
+                  </select>
+                  <span
+                    class="lucide-chevron-down pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-ink-gray-5"
+                    aria-hidden="true"
+                  />
+                </span>
+              </label>
+              <div class="sm:col-span-2">
+                <span class="mb-1 block text-sm text-ink-gray-7">{{
+                  __('Delivery date', null, 'Compras')
+                }}</span>
+                <DateField
+                  v-model="form.schedule_date"
+                  mode="date"
+                  :label="__('Delivery date', null, 'Compras')"
+                />
+              </div>
             </div>
             <p
               v-if="missing.length && showMissing"
@@ -384,33 +411,64 @@
               </button>
             </p>
 
+            <!-- The lines as a table: one header from 640 px, a label per
+                 field on the phone; the add field and scan close it. -->
             <div>
-              <h2 class="pb-1 text-base font-semibold text-ink-gray-9">
-                {{ __('Items ({0})', [form.items.length]) }}
-              </h2>
-              <ul
-                class="divide-y divide-outline-gray-1 rounded-6 border border-outline-gray-2"
+              <h2
+                class="flex items-baseline gap-2 pb-1 text-base font-semibold text-ink-gray-9"
               >
+                <span class="flex-1">{{
+                  __('Items ({0})', [form.items.length])
+                }}</span>
+                <span
+                  v-if="formTotal"
+                  class="num text-md font-semibold text-ink-gray-9"
+                  data-testid="compra-total"
+                  >{{ money(formTotal, doc.currency) }}</span
+                >
+              </h2>
+              <div
+                v-if="form.items.length"
+                class="compra-linea hidden border-b border-outline-gray-2 py-1.5 text-sm text-ink-gray-6 sm:grid"
+                aria-hidden="true"
+              >
+                <span>{{ __('Item', null, 'Compras') }}</span>
+                <span class="text-right">{{
+                  __('Quantity', null, 'Compras')
+                }}</span>
+                <span>{{ __('Unit', null, 'Compras') }}</span>
+                <span class="text-right">{{ __('Price (optional)') }}</span>
+                <span class="text-right">{{
+                  __('% disc.', null, 'Compras')
+                }}</span>
+                <span class="text-right">{{
+                  __('Total', null, 'Compras')
+                }}</span>
+                <span />
+              </div>
+              <ul class="divide-y divide-outline-gray-1">
                 <li
                   v-for="(row, index) in form.items"
                   :key="row.key"
-                  class="relative grid grid-cols-2 gap-2 p-3 sm:grid-cols-[1fr_5.5rem_7.5rem_7.5rem_5.5rem_auto] sm:items-end"
+                  class="compra-linea relative grid grid-cols-2 gap-2 py-3 sm:items-center sm:py-2"
                   :data-compra-linea="row.item_code"
                 >
                   <div class="col-span-2 min-w-0 pr-11 sm:col-span-1 sm:pr-0">
-                    <p class="break-words font-medium">
+                    <p
+                      class="break-words text-base font-medium text-ink-gray-9"
+                    >
                       {{ row.item_label || row.item_code }}
                     </p>
                     <p class="break-words text-sm text-ink-gray-6">
                       {{ row.item_code
                       }}<template v-if="row.material_request">
-                        · {{ __('from {0}', [row.material_request]) }}</template
+                        , {{ __('from {0}', [row.material_request]) }}</template
                       ><template
                         v-if="
                           row.warehouse && row.warehouse !== form.set_warehouse
                         "
                       >
-                        · {{ __('to {0}', [row.warehouse]) }}
+                        , {{ __('to {0}', [row.warehouse]) }}
                         <button
                           type="button"
                           class="underline"
@@ -419,7 +477,7 @@
                           {{ __('use destination') }}
                         </button></template
                       ><template v-if="row.tracked">
-                        ·
+                        ,
                         {{ __('serial/batch: reviewed on receipt') }}</template
                       >
                     </p>
@@ -434,46 +492,87 @@
                       {{ row.note }}
                     </p>
                   </div>
-                  <FormControl
-                    v-model="row.qty"
-                    type="number"
-                    :label="__('Quantity', null, 'Compras')"
-                    min="0"
-                    step="any"
-                  />
-                  <FormControl
-                    v-model="row.uom"
-                    type="select"
-                    :label="__('Unit', null, 'Compras')"
-                    :options="
-                      (row.uoms || []).map((u) => ({
-                        label:
+                  <label class="block min-w-0">
+                    <span
+                      class="mb-1 block text-xs text-ink-gray-6 sm:sr-only"
+                      >{{ __('Quantity', null, 'Compras') }}</span
+                    >
+                    <input
+                      v-model="row.qty"
+                      type="number"
+                      inputmode="decimal"
+                      min="0"
+                      step="any"
+                      class="compra-campo num w-full text-right"
+                    />
+                  </label>
+                  <label class="block min-w-0">
+                    <span
+                      class="mb-1 block text-xs text-ink-gray-6 sm:sr-only"
+                      >{{ __('Unit', null, 'Compras') }}</span
+                    >
+                    <select
+                      v-model="row.uom"
+                      class="compra-campo w-full truncate"
+                      :disabled="(row.uoms || []).length < 2"
+                    >
+                      <option
+                        v-for="u in row.uoms?.length
+                          ? row.uoms
+                          : [{ uom: row.uom }]"
+                        :key="u.uom"
+                        :value="u.uom"
+                      >
+                        {{
                           u.factor && u.factor !== 1
                             ? `${u.uom} (×${u.factor})`
-                            : u.uom,
-                        value: u.uom,
-                      }))
-                    "
-                  />
-                  <FormControl
-                    v-model="row.rate"
-                    type="number"
-                    :label="__('Price (optional)')"
-                    min="0"
-                    step="any"
-                  />
-                  <FormControl
-                    v-model="row.discount_percentage"
-                    type="number"
-                    :label="__('% disc.', null, 'Compras')"
-                    :disabled="ruleLocked(row, form)"
-                    min="0"
-                    max="100"
-                    step="any"
-                  />
+                            : u.uom
+                        }}
+                      </option>
+                    </select>
+                  </label>
+                  <label class="block min-w-0">
+                    <span
+                      class="mb-1 block text-xs text-ink-gray-6 sm:sr-only"
+                      >{{ __('Price (optional)') }}</span
+                    >
+                    <input
+                      v-model="row.rate"
+                      type="number"
+                      inputmode="decimal"
+                      min="0"
+                      step="any"
+                      class="compra-campo num w-full text-right"
+                    />
+                  </label>
+                  <label class="block min-w-0">
+                    <span
+                      class="mb-1 block text-xs text-ink-gray-6 sm:sr-only"
+                      >{{ __('% disc.', null, 'Compras') }}</span
+                    >
+                    <input
+                      v-model="row.discount_percentage"
+                      type="number"
+                      inputmode="decimal"
+                      min="0"
+                      max="100"
+                      step="any"
+                      :disabled="ruleLocked(row, form)"
+                      class="compra-campo num w-full text-right"
+                    />
+                  </label>
+                  <p
+                    class="num col-span-2 self-center text-right text-base font-semibold text-ink-gray-9 sm:col-span-1"
+                  >
+                    {{
+                      lineAmount(row) === null
+                        ? ''
+                        : money(lineAmount(row), doc.currency)
+                    }}
+                  </p>
                   <button
                     type="button"
-                    class="press absolute right-2 top-2 flex size-11 items-center justify-center rounded-full text-ink-gray-7 sm:static sm:self-end [@media(hover:hover)]:hover:bg-surface-gray-2"
+                    class="press absolute right-0 top-2 flex size-11 items-center justify-center rounded-full text-ink-gray-6 sm:static sm:size-9 [@media(hover:hover)]:hover:bg-surface-gray-2 [@media(hover:hover)]:hover:text-ink-gray-9"
                     :aria-label="
                       __('Remove {0}', [row.item_label || row.item_code])
                     "
@@ -484,7 +583,7 @@
                   </button>
                   <p
                     v-if="linePriceNote(row)"
-                    class="col-span-2 break-words text-sm sm:col-span-6"
+                    class="col-span-2 break-words text-sm sm:col-span-7"
                     :class="
                       ruleLocked(row, form)
                         ? 'text-ink-green-8'
@@ -494,9 +593,11 @@
                     {{ linePriceNote(row) }}
                   </p>
                 </li>
-                <li class="p-3">
+                <li class="flex items-end gap-2 pt-3">
                   <ComprasPicker
+                    class="min-w-0 flex-1"
                     model-value=""
+                    bare
                     :label="__('Add item')"
                     :placeholder="__('Search item, code or barcode')"
                     :empty-text="
@@ -506,6 +607,19 @@
                     :load="(q) => comprasApi('items', { search: q })"
                     @pick="addItem"
                   />
+                  <button
+                    type="button"
+                    class="press flex size-11 flex-none items-center justify-center rounded-full bg-surface-gray-2 text-ink-gray-8 sm:size-10 [@media(hover:hover)]:hover:bg-surface-gray-3"
+                    :aria-label="__('Scan a code', null, 'Compras')"
+                    :title="__('Scan a code', null, 'Compras')"
+                    data-testid="compra-escanear"
+                    @click="scanItem"
+                  >
+                    <span
+                      class="lucide-scan-barcode size-5"
+                      aria-hidden="true"
+                    />
+                  </button>
                 </li>
               </ul>
             </div>
@@ -525,11 +639,31 @@
               @patch="(patch) => Object.assign(form, patch)"
             />
             <div
-              class="fixed inset-x-0 bottom-0 z-20 flex gap-2 border-t border-outline-gray-2 bg-surface-base p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:static sm:border-0 sm:p-0"
+              class="fixed inset-x-0 bottom-0 z-20 flex items-center gap-3 border-t border-outline-gray-2 bg-surface-base p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:static sm:border-0 sm:p-0 sm:pt-1"
             >
+              <p
+                v-if="form.items.length"
+                class="min-w-0 flex-1 truncate text-sm text-ink-gray-6 sm:hidden"
+                data-testid="compra-resumen"
+              >
+                <span
+                  v-if="formTotal"
+                  class="num block text-md font-semibold text-ink-gray-9"
+                  >{{ money(formTotal, doc.currency) }}</span
+                >
+                {{
+                  formPieces === '1'
+                    ? __('1 piece', null, 'Compras')
+                    : __('{0} pieces', [formPieces], 'Compras')
+                }}
+              </p>
               <button
                 type="button"
-                :class="['press flex-1 sm:flex-none', BTN.filled]"
+                :class="[
+                  'press sm:flex-none',
+                  form.items.length ? '' : 'flex-1',
+                  BTN.filled,
+                ]"
                 :disabled="busy"
                 data-testid="compra-guardar"
                 @click="save"
@@ -888,9 +1022,9 @@ import {
   watch,
 } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
-import { FormControl, toast } from 'frappe-ui'
+import { toast } from 'frappe-ui'
 import { ArchivosRegistroPanel } from '@/components/archivos'
-import { AppBar, EmptyState, StatusChip } from '@/components/ui'
+import { AppBar, DateField, EmptyState, StatusChip } from '@/components/ui'
 import ComprasPicker from '@/components/compras/ComprasPicker.vue'
 import HandoffDialog from '@/components/compras/HandoffDialog.vue'
 import OrdenDescuentos from '@/components/compras/OrdenDescuentos.vue'
@@ -909,6 +1043,7 @@ import { isMobile } from '@/composables/breakpoint'
 import { etiquetasHref } from '@/composables/useEtiquetas'
 import { recordActionsFor } from '@/documentos/acciones'
 import { BTN } from '@/documentos/tools'
+import { openScan } from '@/components/escaneo/scanDoor'
 import { shellBoot } from '@/composables/muelleShell'
 import { appleKeys, registerPageShortcuts } from '@/composables/shellKeyboard'
 import { hoyLive } from '@/composables/useHoy'
@@ -1806,6 +1941,38 @@ function cancelEditing() {
   editing.value = false
   Object.assign(form, formFrom(data.value))
 }
+// What a line comes to with its price and discount; null without a price.
+function lineAmount(row) {
+  if (row.rate === '' || row.rate === null || row.rate === undefined)
+    return null
+  return netRate(row.rate, row.discount_percentage) * (Number(row.qty) || 0)
+}
+const formTotal = computed(() =>
+  form.items.reduce((sum, row) => sum + (lineAmount(row) || 0), 0),
+)
+const formPieces = computed(() =>
+  formatQty(form.items.reduce((sum, row) => sum + (Number(row.qty) || 0), 0)),
+)
+// A code read by the camera or a gun: the purchasable item with that code.
+function scanItem() {
+  openScan({
+    doctype: 'Purchase Order',
+    onItem: async (item) => {
+      const code = item?.item_code
+      if (!code) return
+      try {
+        const options = await comprasApi('items', { search: code })
+        const hit = (options || []).find((o) => o.value === code)
+        if (hit) return addItem(hit)
+        toast.error(
+          __('{0} is not an item you can buy.', [item.item_name || code]),
+        )
+      } catch (error) {
+        toast.error(problemOf(error).detail)
+      }
+    },
+  })
+}
 function addItem(option) {
   const existing = form.items.find(
     (row) => row.item_code === option.value && !row.name,
@@ -2320,13 +2487,52 @@ useLiveWatch(
 )
 </script>
 <style scoped>
-/* 44 px company and date fields on a phone, like the pickers beside them. */
-@media (max-width: 639px) {
-  .compra-fields :deep(select),
-  .compra-fields :deep([role='combobox']),
-  .compra-fields :deep(input) {
-    min-height: 44px;
-    font-size: 1rem;
+/* The editor's fields: the shell's filled field, 44 px on a phone, 40 on a desk. */
+.compra-campo {
+  height: 2.75rem;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  background: var(--surface-gray-2);
+  padding: 0 0.75rem;
+  font-size: 1rem;
+  color: var(--ink-gray-9);
+}
+.compra-campo:focus {
+  outline: none;
+  border-color: var(--outline-gray-4);
+  background: var(--surface-base, transparent);
+}
+.compra-campo:disabled {
+  opacity: 0.6;
+}
+/* The kit's date field, filled like the fields beside it; the chosen day on the accent. */
+.compra-fields :deep([data-ui-date-field] input),
+.compra-fields :deep([data-ui-date-field] button) {
+  border-color: transparent;
+  background: var(--surface-gray-2);
+}
+.compra-fields :deep([data-ui-date-field] button[aria-pressed='true']) {
+  background: var(--muelle-accent);
+  color: var(--muelle-accent-ink);
+}
+@media (min-width: 640px) {
+  .compra-fields :deep([data-ui-date-field] input),
+  .compra-fields :deep([data-ui-date-field] button) {
+    height: 2.5rem;
+    min-height: 2.5rem;
+    font-size: 0.875rem;
+  }
+  .compra-fields :deep([data-ui-date-field] button:not([aria-expanded])) {
+    padding: 0 0.875rem;
+  }
+  .compra-campo {
+    height: 2.5rem;
+    font-size: 0.875rem;
+  }
+  /* item, quantity, unit, price, % off, line total, remove */
+  .compra-linea {
+    grid-template-columns: minmax(0, 1fr) 4.5rem 6.5rem 6.5rem 4.5rem 6.5rem 2.25rem;
+    column-gap: 0.75rem;
   }
 }
 </style>
