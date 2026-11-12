@@ -13,6 +13,9 @@ const WIDGET_JS = 'https://syncfy.com/widget/v3/syncfy-authentication-widget.js'
 const WIDGET_CSS =
   'https://syncfy.com/widget/v3/syncfy-authentication-widget.css'
 const HOST_ID = 'syncfy-widget-host'
+const NOTE_ID = 'syncfy-waiting-note'
+export const WAITING_TEXT =
+  'Esto puede tardar unos minutos. Deja esta ventana abierta: guardamos la conexión en cuanto la institución conteste.'
 
 let loading = null
 
@@ -47,6 +50,40 @@ export function loadWidget(doc = document, win = window) {
 // element, even emptied, patched the old detached tree: the second window in
 // one visit threw on `nextSibling` and never showed until a reload. Every
 // window gets a new element.
+// Syncfy's «Estableciendo conexión» can run for minutes with no sign of
+// progress. This note sits above its modal (z-index 1000) from the moment the
+// login is sent until the institution answers, asks for a code (410) or the
+// window closes. Inline styles: nothing of it ships in the CSS.
+function waitingNote(doc) {
+  doc.getElementById(NOTE_ID)?.remove()
+  const note = doc.createElement('div')
+  note.id = NOTE_ID
+  note.setAttribute('role', 'status')
+  note.setAttribute('aria-live', 'polite')
+  note.textContent = WAITING_TEXT
+  note.hidden = true
+  Object.assign(note.style, {
+    position: 'fixed',
+    left: '50%',
+    bottom: 'calc(24px + env(safe-area-inset-bottom, 0px))',
+    transform: 'translateX(-50%)',
+    zIndex: '1001',
+    width: 'max-content',
+    maxWidth: 'min(28rem, calc(100% - 32px))',
+    padding: '12px 16px',
+    borderRadius: '12px',
+    background: 'rgba(23, 23, 23, 0.92)',
+    color: '#fff',
+    fontSize: '14px',
+    lineHeight: '1.4',
+    textAlign: 'center',
+    pointerEvents: 'none',
+    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.25)',
+  })
+  doc.body.appendChild(note)
+  return note
+}
+
 function hostElement(doc) {
   doc.getElementById(HOST_ID)?.remove()
   const host = doc.createElement('div')
@@ -72,6 +109,7 @@ export async function openSyncfy(
   const session = await syncfy.widgetSession(company)
   const SyncfyWidget = await loadWidget(doc, win)
   const host = hostElement(doc)
+  const note = waitingNote(doc)
   const entrypoint = {}
   if (ctx?.country) entrypoint.country = ctx.country
   if (credential) entrypoint.credential = credential
@@ -100,6 +138,7 @@ export async function openSyncfy(
         // already closed by the person
       }
       host.remove()
+      note.remove()
       if (failed) reject(value)
       else resolve(value)
     }
@@ -124,6 +163,13 @@ export async function openSyncfy(
     widget.on('closed', () => {
       if (!registering) finish(null)
     })
+    widget.on('submitted', () => (note.hidden = false))
+    widget.on('status', (status) => {
+      const code = Number(status?.code)
+      if (code === 410 || code >= 200) note.hidden = true
+    })
+    widget.on('success', () => (note.hidden = true))
+    widget.on('error', () => (note.hidden = true))
     widget.open()
   })
 }

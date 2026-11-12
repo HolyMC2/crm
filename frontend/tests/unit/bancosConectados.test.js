@@ -400,7 +400,7 @@ describe('openSyncfy', () => {
         instances.push(this)
       }
       on(event, fn) {
-        this.handlers[event] = fn
+        ;(this.handlers[event] ||= []).push(fn)
       }
       open() {}
       close() {
@@ -410,7 +410,7 @@ describe('openSyncfy', () => {
         this.token = token
       }
       emit(event, ...args) {
-        return this.handlers[event]?.(...args)
+        return (this.handlers[event] || []).map((fn) => fn(...args))[0]
       }
     }
     state.call.mockImplementation(async (method) => {
@@ -424,6 +424,7 @@ describe('openSyncfy', () => {
   afterEach(() => {
     delete window.SyncfyWidget
     document.getElementById('syncfy-widget-host')?.remove()
+    document.getElementById('syncfy-waiting-note')?.remove()
   })
 
   it('opens on the login and registers what Syncfy reports', async () => {
@@ -473,6 +474,32 @@ describe('openSyncfy', () => {
     )
   })
 
+  it('asks for patience while the institution answers, not while it waits on the person', async () => {
+    const { openSyncfy, WAITING_TEXT } = await vi.importActual(
+      '@/components/bancos/syncfyWidget',
+    )
+    const done = openSyncfy({ company: 'Grupo Doco' })
+    await flush()
+    const widget = instances[0]
+    const note = () => document.getElementById('syncfy-waiting-note')
+    expect(note().hidden).toBe(true)
+    widget.emit('submitted')
+    expect(note().hidden).toBe(false)
+    expect(note().textContent).toBe(WAITING_TEXT)
+    expect(note().getAttribute('role')).toBe('status')
+    widget.emit('status', { code: 101 })
+    expect(note().hidden).toBe(false)
+    // The bank asks for a one-time code: the person has to act.
+    widget.emit('status', { code: 410 })
+    expect(note().hidden).toBe(true)
+    widget.emit('submitted')
+    expect(note().hidden).toBe(false)
+    widget.emit('success', { id_credential: 'cred-9' })
+    expect(note().hidden).toBe(true)
+    expect((await done).connection.name).toBe('cred-9')
+    expect(note()).toBeNull()
+  })
+
   it('draws the window again on a second «Conectar» without a reload', async () => {
     // Syncfy's bundle is a Vue app mounted on the element it is given
     // (createApp(root).mount(element)). On a reused, emptied element Vue
@@ -516,7 +543,8 @@ describe('openSyncfy', () => {
     const { openSyncfy } = await vi.importActual(
       '@/components/bancos/syncfyWidget',
     )
-    const open = () => document.querySelectorAll('.syncfy-modal[data-open="true"]')
+    const open = () =>
+      document.querySelectorAll('.syncfy-modal[data-open="true"]')
     const first = openSyncfy({ company: 'Grupo Doco' })
     await flush()
     expect(open()).toHaveLength(1)
