@@ -220,7 +220,7 @@
                 {{ line.model || line.name }}
                 <span
                   v-if="line.year"
-                  class="num font-normal text-ink-gray-5 md:hidden"
+                  class="num ml-1.5 font-normal text-ink-gray-5 md:hidden"
                   >{{ line.year }}</span
                 >
               </p>
@@ -237,7 +237,7 @@
               <p class="num text-sm text-ink-gray-7 md:hidden">
                 {{ priceText(line) }}
               </p>
-              <p class="text-xs text-ink-gray-6">
+              <p v-if="line.reasons.length" class="text-xs text-ink-gray-6">
                 {{ line.reasons.join('; ') }}
               </p>
               <p v-if="line.history.length" class="num text-xs text-ink-gray-5">
