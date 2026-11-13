@@ -41232,6 +41232,121 @@ msgctxt "Cuenta"
 msgid "Last backup"
 msgstr "Último respaldo"
 
+#: frontend/src/components/cuenta/Respaldos.vue
+msgctxt "Cuenta"
+msgid "Backups"
+msgstr "Respaldos"
+
+#: frontend/src/components/cuenta/Respaldos.vue
+msgctxt "Cuenta"
+msgid "Download"
+msgstr "Descargar"
+
+#: frontend/src/components/cuenta/Respaldos.vue
+msgctxt "Cuenta"
+msgid "A copy of your whole system, made every day."
+msgstr "Una copia de todo tu sistema, hecha cada día."
+
+#: frontend/src/components/cuenta/Respaldos.vue
+msgctxt "Cuenta"
+msgid "Reading your backups…"
+msgstr "Leyendo tus respaldos…"
+
+#: frontend/src/components/cuenta/Respaldos.vue
+msgctxt "Cuenta"
+msgid "There is no backup to download yet."
+msgstr "Todavía no hay un respaldo para descargar."
+
+#: frontend/src/components/cuenta/Respaldos.vue
+msgctxt "Cuenta"
+msgid "Meanwhile you can ask for a copy of your data: one zip with your sales, customers, products and more."
+msgstr "Mientras tanto, puedes pedir una copia de tus datos: un zip con tus ventas, clientes, productos y más."
+
+#: frontend/src/components/cuenta/Respaldos.vue
+msgctxt "Cuenta"
+msgid "Download backup"
+msgstr "Descargar respaldo"
+
+#: frontend/src/components/cuenta/Respaldos.vue
+msgctxt "Cuenta"
+msgid "It holds all of your system’s data. Keep it somewhere safe."
+msgstr "Tiene todos los datos de tu sistema. Guárdalo en un lugar seguro."
+
+#: frontend/src/components/cuenta/respaldos.js
+msgctxt "Cuenta"
+msgid "Your download is ready. The link works for 5 minutes, until {0}."
+msgstr "Tu descarga está lista. El enlace sirve 5 minutos, hasta las {0}."
+
+#: frontend/src/components/cuenta/respaldos.js
+msgctxt "Cuenta"
+msgid "Your download is ready. The link works for 5 minutes, until 1:{0}."
+msgstr "Tu descarga está lista. El enlace sirve 5 minutos, hasta la 1:{0}."
+
+#: frontend/src/components/cuenta/respaldos.js
+msgctxt "Cuenta"
+msgid "Only the account owner can download a backup."
+msgstr "Solo el dueño de la cuenta puede descargar un respaldo."
+
+#: frontend/src/components/cuenta/Respaldos.vue
+msgctxt "Cuenta"
+msgid "The link stopped working. Ask for another one."
+msgstr "El enlace ya no sirve. Pide otro."
+
+#: frontend/src/components/cuenta/Respaldos.vue
+msgctxt "Cuenta"
+msgid "Ask for another link"
+msgstr "Pedir otro enlace"
+
+#: frontend/src/components/cuenta/Respaldos.vue
+msgctxt "Cuenta"
+msgid "Back to backups"
+msgstr "Volver a los respaldos"
+
+#: frontend/src/components/cuenta/respaldos.js
+msgctxt "Cuenta"
+msgid "Your newest backup is from {0} days ago; we are already looking into it."
+msgstr "Tu respaldo más reciente es de hace {0} días; ya lo estamos revisando."
+
+#: frontend/src/components/cuenta/respaldos.js
+msgctxt "Cuenta"
+msgid "We are checking your backups. You can download them again as soon as we finish."
+msgstr "Estamos revisando tus respaldos. Podrás descargarlos de nuevo en cuanto terminemos."
+
+#: frontend/src/components/cuenta/respaldos.js
+msgctxt "Cuenta"
+msgid "We could not read your backups right now."
+msgstr "No pudimos leer tus respaldos en este momento."
+
+#: frontend/src/components/cuenta/respaldos.js
+msgctxt "Cuenta"
+msgid "Late; we are already looking into it"
+msgstr "Atrasada; ya lo estamos revisando"
+
+#: frontend/src/components/cuenta/respaldos.js
+msgctxt "Cuenta"
+msgid "Backups are not available for your system yet."
+msgstr "Los respaldos todavía no están disponibles para tu sistema."
+
+#: frontend/src/components/cuenta/respaldos.js
+msgctxt "Cuenta"
+msgid "Newest backup"
+msgstr "Respaldo más reciente"
+
+#: frontend/src/components/cuenta/respaldos.js
+msgctxt "Cuenta"
+msgid "Next backup"
+msgstr "Siguiente respaldo"
+
+#: frontend/src/components/cuenta/respaldos.js
+msgctxt "Cuenta"
+msgid "Copy kept off site"
+msgstr "Copia externa"
+
+#: frontend/src/components/cuenta/respaldos.js
+msgctxt "Cuenta"
+msgid "We could not prepare the download. Try again."
+msgstr "No pudimos preparar la descarga. Intenta de nuevo."
+
 #: frontend/src/components/cuenta/cuenta.js
 msgctxt "Cuenta"
 msgid "Last check"

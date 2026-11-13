@@ -91,6 +91,10 @@ const SELF_SERVICE = new Set([
   'storefront_address_connect',
   // «Enciende tu tienda»: the store's name buyers see (Boat's branding).
   'storefront_shop_name',
+  // «Respaldos»: a read of the site's copies, then one copy's 5-minute link after
+  // the password (doco's step-up); no money moves.
+  'my_backups',
+  'download_backup',
 ])
 
 function walk(dir, keep) {

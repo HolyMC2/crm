@@ -1,8 +1,9 @@
 <template>
   <!-- Resumen: where the plan stands, a Muelle outage, what would interrupt
        selling and its next step, «Salud de tu sistema», then the meters and
-       the site's own health, and at the foot a copy of the data, the reports
-       to support and the cancel. Rows and rules. -->
+       the site's own health (its backup row opens «Respaldos»), and at the
+       foot a copy of the data, the reports to support and the cancel. Rows
+       and rules. -->
   <div class="space-y-6">
     <section
       aria-labelledby="cuenta-plan"
@@ -220,34 +221,74 @@
         >
           {{ __('Site status', null, 'Cuenta') }}
         </h2>
-        <dl class="divide-y divide-outline-gray-1" data-testid="cuenta-sitio">
-          <div
-            v-for="item in health"
-            :key="item.key"
-            class="flex items-center gap-3 py-2.5"
-          >
-            <span
-              :class="
-                item.warn
-                  ? 'lucide-triangle-alert text-ink-amber-8'
-                  : 'lucide-shield-check text-ink-gray-6'
-              "
-              class="size-5 flex-none"
-              aria-hidden="true"
-            />
-            <dt class="min-w-0 flex-1 text-base text-ink-gray-8">
-              {{ item.label }}
-            </dt>
-            <dd
-              class="num shrink-0 text-base"
-              :class="item.warn ? 'text-ink-amber-8' : 'text-ink-gray-9'"
+        <ul class="divide-y divide-outline-gray-1" data-testid="cuenta-sitio">
+          <li v-for="item in health" :key="item.key">
+            <!-- Where Boat offers «Respaldos» (capability «backups»), the
+                 backup row opens the copies and their download. -->
+            <button
+              v-if="item.key === 'backup' && backupsOpen"
+              type="button"
+              class="press flex w-full items-center gap-3 py-2.5 text-left"
+              aria-haspopup="dialog"
+              data-testid="cuenta-respaldos-abrir"
+              @click="openBackups"
             >
-              {{ item.value }}
-            </dd>
-          </div>
-        </dl>
+              <span
+                :class="
+                  item.warn
+                    ? 'lucide-triangle-alert text-ink-amber-8'
+                    : 'lucide-shield-check text-ink-gray-6'
+                "
+                class="size-5 flex-none"
+                aria-hidden="true"
+              />
+              <span class="min-w-0 flex-1 text-base text-ink-gray-8">
+                {{ item.label }}
+              </span>
+              <span
+                class="num shrink-0 text-base"
+                :class="item.warn ? 'text-ink-amber-8' : 'text-ink-gray-9'"
+              >
+                {{ item.value }}
+              </span>
+              <span
+                class="lucide-chevron-right size-5 flex-none text-ink-gray-5"
+                aria-hidden="true"
+              />
+            </button>
+            <div v-else class="flex items-center gap-3 py-2.5">
+              <span
+                :class="
+                  item.warn
+                    ? 'lucide-triangle-alert text-ink-amber-8'
+                    : 'lucide-shield-check text-ink-gray-6'
+                "
+                class="size-5 flex-none"
+                aria-hidden="true"
+              />
+              <span class="min-w-0 flex-1 text-base text-ink-gray-8">
+                {{ item.label }}
+              </span>
+              <span
+                class="num shrink-0 text-base"
+                :class="item.warn ? 'text-ink-amber-8' : 'text-ink-gray-9'"
+              >
+                {{ item.value }}
+              </span>
+            </div>
+          </li>
+        </ul>
       </section>
     </div>
+
+    <!-- «Respaldos» mounts on its first open (capability «backups»). -->
+    <Respaldos
+      v-if="backupsMounted"
+      :open="backupsSheet"
+      :owner="backupOwner(data)"
+      @close="backupsSheet = false"
+      @act="backupsAct"
+    />
 
     <!-- A copy of the business data, a zip the owner downloads here. -->
     <ExportarDatos
@@ -303,6 +344,7 @@ import ExportarDatos from './ExportarDatos.vue'
 import Incidentes from './Incidentes.vue'
 import SaludSistema from './SaludSistema.vue'
 import { capable } from './autoservicio'
+import { backupOwner, backupsOn, withBackupCopy } from './respaldos'
 import { subscriptionView } from './suscripcion'
 import {
   accountAlerts,
@@ -316,6 +358,8 @@ import {
 
 // «Tu suscripción» loads only where Boat offers the cancel.
 const Suscripcion = defineAsyncComponent(() => import('./Suscripcion.vue'))
+// «Respaldos» loads on its first open, only where Boat offers it.
+const Respaldos = defineAsyncComponent(() => import('./Respaldos.vue'))
 
 const props = defineProps({
   /** The page's payment door (pagos.js createPagos). */
@@ -382,7 +426,23 @@ const storageCta = computed(
     data.value?.storage_blocks?.can_add === true &&
     Boolean(data.value?.meters?.storage?.allowance),
 )
-const health = computed(() => healthRows(data.value))
+// The backup row reads the copy «Respaldos» lists where Boat offers it.
+const health = computed(() =>
+  withBackupCopy(healthRows(data.value), data.value),
+)
+// The backup row opens «Respaldos» where Boat lists the capability.
+const backupsOpen = computed(() => backupsOn(data.value))
+const backupsMounted = ref(false)
+const backupsSheet = ref(false)
+function openBackups() {
+  backupsMounted.value = true
+  backupsSheet.value = true
+}
+// The sheet closes for the step it asked for («Pedir mis datos», support).
+function backupsAct(key) {
+  backupsSheet.value = false
+  act(key)
+}
 const subscription = computed(() => subscriptionView(data.value))
 const cancelled = computed(
   () => Boolean(subscription.value) && subscription.value.state !== 'active',
