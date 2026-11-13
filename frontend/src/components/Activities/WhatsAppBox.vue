@@ -32,7 +32,7 @@
   <!-- single scrollable line on mobile (was wrapping into two rows) -->
   <div
     v-if="!replyOnly"
-    class="flex items-center gap-2 overflow-x-auto px-3 pt-2 sm:flex-wrap sm:px-10 sm:pt-2.5"
+    class="flex items-center gap-2 overflow-x-auto px-3 pt-2 sm:px-10 sm:pt-2.5"
   >
     <button
       v-for="m in modes"
@@ -49,121 +49,52 @@
       {{ m.icon }} {{ __(m.label)
       }}{{ m.value === 'reply' ? ` · ${channelLabel}` : '' }}
     </button>
-    <!-- phone: the templates toggle rides on this same line -->
-    <button
-      v-if="isMobile && mode === 'reply' && !quickBarOpen"
-      type="button"
-      class="flex-none whitespace-nowrap rounded-full bg-surface-gray-2 px-2.5 py-1 text-xs-medium text-ink-gray-7"
-      @click="quickBarOpen = true"
+    <!-- Enter sends a reply, as in WhatsApp; only a comment needs the hint -->
+    <span
+      v-if="mode === 'comment'"
+      class="ml-auto hidden flex-none text-xs text-ink-gray-4 sm:inline"
     >
-      ⚡ {{ __('Plantillas y respuestas') }} ▾
-    </button>
-    <span class="ml-auto hidden text-xs text-ink-gray-4 sm:inline">
-      {{
-        mode === 'comment' ? __('Ctrl/⌘+Enter to send') : __('Enter to send')
-      }}
+      {{ __('Ctrl/⌘+Enter to send') }}
     </span>
   </div>
 
-  <!-- quick replies + templates (reply mode only). Collapsed on mobile to reclaim
-       vertical space — one toggle expands/hides the whole chip set. -->
+  <!-- Saved replies and templates live in the «/» menu (the «Respuestas y
+       plantillas» button opens it). Where that menu is not available (no
+       addon, an unknown number's thread) the same button opens this panel. -->
   <div
-    v-if="mode === 'reply' && (!isMobile || quickBarOpen || replyOnly)"
-    class="px-3 pt-2 sm:px-10"
+    v-if="mode === 'reply' && quickBarOpen && !slashEnabled"
+    class="flex flex-wrap items-center gap-1.5 px-3 pt-2 sm:px-10"
+    data-testid="quick-panel"
   >
     <button
-      v-if="isMobile && !quickBarOpen"
+      v-for="(qr, i) in quickReplies.data || []"
+      :key="`qr-${i}`"
       type="button"
-      class="rounded-full bg-surface-gray-2 px-2.5 py-1 text-xs-medium text-ink-gray-7"
-      @click="quickBarOpen = true"
+      class="press max-w-full truncate rounded-5 bg-surface-gray-2 px-2 py-1 text-xs-medium text-ink-gray-7 hover:bg-surface-gray-3"
+      :title="qr.text"
+      @click="insertQuickReply(qr), (quickBarOpen = false)"
     >
-      ⚡ {{ __('Plantillas y respuestas') }} ▾
+      {{ qr.label }}
     </button>
-    <div
-      v-show="!isMobile || quickBarOpen"
-      class="flex flex-wrap items-center gap-1.5"
+    <button
+      v-for="t in replyOnly ? [] : quickTemplates.data || []"
+      :key="`tpl-${t.name}`"
+      type="button"
+      class="press max-w-full truncate rounded-5 border border-outline-gray-2 px-2 py-1 text-xs-medium text-ink-gray-7 hover:bg-surface-gray-2"
+      :title="t.template"
+      @click="emit('pickTemplate', t.name), (quickBarOpen = false)"
     >
-      <button
-        v-if="addonAvailable"
-        type="button"
-        class="press rounded-5 bg-surface-green-2 px-2 py-1 text-xs-semibold text-ink-green-8 hover:bg-surface-green-7"
-        :title="__('Buscar y enviar artículos del catálogo (o escribe /cat)')"
-        @click="emit('catalog', '')"
-      >
-        📦 {{ __('Catálogo') }}
-      </button>
-      <button
-        v-if="tallerPhotosOn"
-        type="button"
-        class="press rounded-5 border border-outline-gray-2 px-2 py-1 text-xs-semibold text-ink-gray-7 hover:bg-surface-gray-2"
-        :title="__('Enviar las fotos que el técnico subió a la orden')"
-        data-testid="taller-photos-chip"
-        @click="openTallerPhotos()"
-      >
-        📷 {{ __('Fotos del taller') }}
-      </button>
-      <!-- ✨ AI suggested replies (spec 5.1) — fetch on demand, operator edits+sends -->
-      <button
-        v-if="
-          aiEnabled && !replyOnly && ['CRM Deal', 'CRM Lead'].includes(doctype)
-        "
-        type="button"
-        class="press rounded-5 bg-surface-violet-2 px-2 py-1 text-xs-semibold text-ink-violet-8 hover:opacity-80 disabled:opacity-50"
-        :disabled="suggestLoading"
-        :title="__('Sugerir respuestas con IA (local)')"
-        @click="fetchSuggestions"
-      >
-        ✨ {{ suggestLoading ? __('Pensando…') : __('Sugerir') }}
-      </button>
-      <!-- mobile hides the ActivityHeader (its Send Template button) — keep the
-         full template modal reachable from the composer -->
-      <button
-        v-if="isMobile && !replyOnly"
-        type="button"
-        class="press rounded-5 border border-outline-gray-2 px-2 py-1 text-xs-semibold text-ink-gray-7 hover:bg-surface-gray-2"
-        :title="__('Enviar plantilla de WhatsApp')"
-        @click="emit('openTemplates')"
-      >
-        📋 {{ __('Plantilla') }}
-      </button>
-      <button
-        v-for="(qr, i) in quickReplies.data || []"
-        :key="`qr-${i}`"
-        type="button"
-        class="rounded-5 bg-surface-gray-2 px-2 py-1 text-xs-medium text-ink-gray-7 hover:bg-surface-gray-3"
-        :title="qr.text"
-        @click="insertQuickReply(qr)"
-      >
-        ⚡ {{ qr.label }}
-      </button>
-      <button
-        v-for="t in replyOnly ? [] : quickTemplates.data || []"
-        :key="`tpl-${t.name}`"
-        type="button"
-        class="rounded-5 border border-outline-gray-2 px-2 py-1 text-xs-medium text-ink-gray-7 hover:bg-surface-gray-2"
-        :title="t.template"
-        @click="emit('pickTemplate', t.name)"
-      >
-        📄 {{ t.name }}
-      </button>
-      <button
-        type="button"
-        class="rounded-5 px-1.5 py-1 text-xs text-ink-gray-5 hover:bg-surface-gray-2"
-        :title="__('Edit quick replies')"
-        @click="openEditor"
-      >
-        <LucidePen class="size-3.5" />
-      </button>
-      <button
-        v-if="isMobile"
-        type="button"
-        class="rounded-full px-2 py-1 text-xs text-ink-gray-5 hover:bg-surface-gray-2"
-        :title="__('Ocultar')"
-        @click="quickBarOpen = false"
-      >
-        ▴
-      </button>
-    </div>
+      {{ templateLabel(t.name) }}
+    </button>
+    <button
+      type="button"
+      class="press flex size-7 items-center justify-center rounded-5 text-ink-gray-5 hover:bg-surface-gray-2"
+      :title="__('Edit quick replies')"
+      :aria-label="__('Edit quick replies')"
+      @click="openEditor"
+    >
+      <LucidePen class="size-3.5" />
+    </button>
   </div>
 
   <!-- pending attach (catálogo photo etc.) — sent together with the edited text -->
@@ -236,8 +167,10 @@
       :reference-doctype="doctype"
       :reference-name="doc.name || ''"
       channel="whatsapp"
+      :manage-label="__('Edit quick replies')"
       @hover="setSlashIndex"
       @pick="(item) => slash.pick(item)"
+      @manage="slash.close(), openEditor()"
     />
     <div
       v-if="mode === 'reply' && !recording"
@@ -271,7 +204,7 @@
         @update:modelValue="
           () => {
             content += emoji
-            $refs.textareaRef.el.focus()
+            composerEl()?.focus()
             capture('whatsapp_emoji_added')
           }
         "
@@ -292,6 +225,41 @@
         @click="startRecording"
       >
         <LucideMic class="size-4.5" />
+      </button>
+      <button
+        v-if="hasReplies"
+        type="button"
+        class="press flex size-4.5 items-center justify-center text-ink-gray-5 hover:text-ink-gray-8"
+        :title="__('Respuestas y plantillas (o escribe /)')"
+        :aria-label="__('Respuestas y plantillas')"
+        :aria-expanded="slashOpen || quickBarOpen"
+        data-testid="replies-button"
+        @mousedown.prevent
+        @click="openReplies"
+      >
+        <span class="lucide-message-square-text size-4.5" aria-hidden="true" />
+      </button>
+      <!-- ✨ AI suggested replies (spec 5.1) — fetched on demand, the worker edits and sends -->
+      <button
+        v-if="
+          aiEnabled && !replyOnly && ['CRM Deal', 'CRM Lead'].includes(doctype)
+        "
+        type="button"
+        class="press flex size-4.5 items-center justify-center text-ink-violet-7 hover:text-ink-violet-9 disabled:opacity-50"
+        :disabled="suggestLoading"
+        :title="
+          suggestLoading
+            ? __('Pensando…')
+            : __('Sugerir respuestas con IA (local)')
+        "
+        :aria-label="__('Sugerir respuestas con IA (local)')"
+        @click="fetchSuggestions"
+      >
+        <span
+          class="lucide-sparkles size-4.5"
+          :class="suggestLoading && 'animate-pulse'"
+          aria-hidden="true"
+        />
       </button>
     </div>
     <!-- recording bar replaces the textarea while capturing -->
@@ -465,7 +433,12 @@ import SlashCommandMenu from '@/components/Composer/SlashCommandMenu.vue'
 import SendDocumentDialog from '@/components/Composer/SendDocumentDialog.vue'
 import SaveTemplateDialog from '@/components/Composer/SaveTemplateDialog.vue'
 import TemplateHoles from '@/components/Composer/TemplateHoles.vue'
-import { useSlashMenu, stripSlash, fillHole } from '@/composables/slashCommands'
+import {
+  useSlashMenu,
+  stripSlash,
+  fillHole,
+  templateLabel,
+} from '@/composables/slashCommands'
 import {
   useComposerCommands,
   renderTemplate,
@@ -511,6 +484,7 @@ import LucideVideo from '~icons/lucide/video'
 import LucidePen from '~icons/lucide/pen'
 import LucideTrash2 from '~icons/lucide/trash-2'
 import LucidePlus from '~icons/lucide/plus'
+import LucidePackage from '~icons/lucide/package'
 import { afterThread } from '@/utils/threadGate'
 
 const props = defineProps({
@@ -559,8 +533,13 @@ const { capture } = useTelemetry()
 
 const rows = ref(1)
 const textareaRef = ref(null)
+// frappe-ui's Textarea exposes its element as `inputElement` (it was `el`): every
+// focus and caret read here went to undefined, so the composer never took the
+// focus back after a quick reply, a template or an emoji (the emoji one threw).
+const composerEl = () =>
+  textareaRef.value?.inputElement ?? textareaRef.value?.el ?? null
 const emoji = ref('')
-// composer quick-reply/template chips — collapsed on mobile (isMobile), always shown on desktop
+// The saved replies' panel, for composers without the «/» menu (see openReplies).
 const quickBarOpen = ref(false)
 
 const content = ref('')
@@ -650,7 +629,7 @@ function insertQuickReply(qr) {
     : text
   lastCanned.value =
     wasEmpty && typeof qr !== 'string' ? { label: qr.label, text } : null
-  nextTick(() => textareaRef.value?.el?.focus())
+  nextTick(() => composerEl()?.focus())
   capture('whatsapp_quick_reply_used')
 }
 // Drop the canned tag the moment the agent edits the inserted text — so a sent
@@ -660,6 +639,22 @@ watch(content, (v) => {
     lastCanned.value = null
   if (!v) holes.value = []
 })
+
+// «Respuestas y plantillas»: the «/» menu where it exists (saved replies,
+// templates and commands in one searchable list), else the replies' panel.
+// Always offered while replying: it is also where the saved replies are edited.
+const hasReplies = computed(() => mode.value === 'reply')
+function openReplies() {
+  if (!slashEnabled.value) {
+    quickBarOpen.value = !quickBarOpen.value
+    return
+  }
+  if (slashOpen.value) return slash.close()
+  if (!content.value.startsWith('/'))
+    content.value = content.value ? `/ ${content.value}` : '/'
+  focusComposer(1)
+  nextTick(() => syncSlash(composerEl()))
+}
 
 // ── / command palette (doco_marketing addon only) ─────────────────────────────
 // `/` at the start of the message opens commands, templates and quick replies.
@@ -712,7 +707,7 @@ function onSlashKeydown(e) {
 
 function focusComposer(caret) {
   nextTick(() => {
-    const el = textareaRef.value?.el
+    const el = composerEl()
     el?.focus()
     if (caret != null) el?.setSelectionRange?.(caret, caret)
   })
@@ -806,7 +801,7 @@ function saveQuickReplies() {
 
 // ── send ──────────────────────────────────────────────────────────
 function show() {
-  nextTick(() => textareaRef.value.el.focus())
+  nextTick(() => composerEl()?.focus())
 }
 
 function uploadFile(file) {
@@ -962,7 +957,7 @@ watch(composerDraft, (d) => {
   }
   if (d.canned && d.text) lastCanned.value = { label: d.canned, text: d.text }
   composerDraft.value = null
-  nextTick(() => textareaRef.value?.el?.focus())
+  nextTick(() => composerEl()?.focus())
 })
 
 // ✨ suggested replies (spec 5.1) — on-demand local-AI drafts; inserting one
@@ -992,7 +987,7 @@ function useSuggestion(text) {
   content.value = text
   lastCanned.value = { label: 'ai', text }
   suggestions.value = []
-  nextTick(() => textareaRef.value?.el?.focus())
+  nextTick(() => composerEl()?.focus())
   capture('whatsapp_ai_suggest_used')
 }
 
@@ -1033,7 +1028,7 @@ function sendTextMessage() {
   content.value = ''
   // Keep the cursor in the box: operators fire several messages in a row, and
   // the old blur() forced a click back into the field after every Enter.
-  nextTick(() => textareaRef.value?.el?.focus())
+  nextTick(() => composerEl()?.focus())
   capture('whatsapp_send_message')
 }
 
@@ -1198,6 +1193,15 @@ function uploadOptions(openFileSelector) {
             label: __('Fotos del taller'),
             icon: LucideImage,
             onClick: () => openTallerPhotos(),
+          },
+        ]
+      : []),
+    ...(addonAvailable.value
+      ? [
+          {
+            label: __('Catálogo'),
+            icon: LucidePackage,
+            onClick: () => emit('catalog', ''),
           },
         ]
       : []),

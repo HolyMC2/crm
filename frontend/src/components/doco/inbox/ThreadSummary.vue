@@ -1,6 +1,6 @@
 <!--
-  Resumen AI del hilo (spec 5.2). A collapsed "🧠 Resumen" chip that expands to a
-  card with a 3-4 sentence brief of the active conversation (situación / qué espera
+  Resumen AI del hilo (spec 5.2). A «Resumir» button in the conversation's bar
+  that opens a card (over the thread's top) with a 3-4 sentence brief of the active conversation (situación / qué espera
   el cliente / siguiente paso). On-demand — fetched only when opened, like the
   suggested-replies chip. Refresh forces a fresh generation (force=1). The whole
   component hides when AI is off site-wide (aiEnabled) or the backend reports
@@ -9,31 +9,40 @@
   Assistive only: the summary is rendered as plain text (no v-html).
 -->
 <template>
-  <div
-    v-if="!hidden"
-    class="flex-none border-b border-outline-gray-1 px-3 py-1.5"
-    :class="expanded ? 'basis-full' : ''"
-  >
-    <!-- collapsed chip -->
+  <!-- In the conversation's bar: a «Resumir» button; the summary opens as a
+       card over the top of the thread, so the messages never move. -->
+  <div v-if="!hidden" class="flex-none" @keydown.esc="expanded = false">
     <button
-      v-if="!expanded"
       type="button"
-      class="press inline-flex items-center gap-1.5 rounded-full border border-outline-gray-2 bg-surface-gray-1 px-2.5 py-1 text-[12px] font-medium text-ink-gray-7 hover:bg-surface-gray-2"
+      class="press inline-flex h-8 items-center gap-1.5 rounded-6 px-2 text-xs font-medium text-ink-gray-7 hover:bg-surface-gray-2"
+      :class="expanded && 'bg-surface-gray-2 text-ink-gray-9'"
+      :aria-expanded="expanded"
+      :title="__('Resumir el chat con IA')"
+      data-testid="summary-toggle"
       @click="toggle"
     >
-      <span>🧠</span>{{ __('Resumen') }}
+      <span
+        class="lucide-sparkles size-4 text-ink-violet-7"
+        aria-hidden="true"
+      />
+      <span class="max-sm:sr-only">{{ __('Resumir') }}</span>
     </button>
 
-    <!-- expanded card -->
     <div
-      v-else
-      class="rounded-7 border border-outline-gray-2 bg-surface-gray-1 p-3"
+      v-if="expanded"
+      class="absolute inset-x-2 top-full z-30 mt-1 rounded-7 border border-outline-gray-2 bg-surface-base p-3 shadow-lg sm:inset-x-4"
+      role="region"
+      :aria-label="__('Resumen del chat')"
     >
       <div class="mb-1.5 flex items-center justify-between gap-2">
         <div
           class="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-ink-gray-8"
         >
-          <span>🧠</span>{{ __('Resumen del hilo') }}
+          <span
+            class="lucide-sparkles size-3.5 text-ink-violet-7"
+            aria-hidden="true"
+          />
+          {{ __('Resumen del chat') }}
         </div>
         <div class="flex items-center gap-1">
           <button

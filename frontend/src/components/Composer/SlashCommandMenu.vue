@@ -92,9 +92,21 @@
         </li>
       </ul>
       <div
-        class="hidden border-t border-outline-gray-1 px-2.5 py-1 text-[11px] text-ink-gray-4 sm:block"
+        class="flex items-center gap-2 border-t border-outline-gray-1 px-2.5 py-1 text-[11px] text-ink-gray-4"
+        :class="manageLabel ? '' : 'max-sm:hidden'"
       >
-        {{ __('↑↓ para moverte · Enter o Tab para elegir · Esc para cerrar') }}
+        <span class="min-w-0 flex-1 truncate max-sm:hidden">{{
+          __('↑↓ para moverte · Enter o Tab para elegir · Esc para cerrar')
+        }}</span>
+        <button
+          v-if="manageLabel"
+          type="button"
+          class="press flex-none rounded-4 px-1.5 py-0.5 text-ink-gray-6 underline-offset-2 hover:text-ink-gray-9 hover:underline max-sm:min-h-9"
+          data-testid="slash-manage"
+          @click="emit('manage')"
+        >
+          {{ manageLabel }}
+        </button>
       </div>
     </div>
 
@@ -201,8 +213,17 @@ const props = defineProps({
   referenceDoctype: { type: String, default: '' },
   referenceName: { type: String, default: '' },
   channel: { type: String, default: 'whatsapp' },
+  /** A footer action beside the keys' hint (the composer: edit saved replies). */
+  manageLabel: { type: String, default: '' },
 })
-const emit = defineEmits(['pick', 'hover', 'update:query', 'keydown', 'blur'])
+const emit = defineEmits([
+  'pick',
+  'hover',
+  'update:query',
+  'keydown',
+  'blur',
+  'manage',
+])
 
 const uid = `slash-${Math.random().toString(36).slice(2, 8)}`
 const listId = `${uid}-list`

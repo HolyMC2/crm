@@ -14,6 +14,7 @@ import {
   fillHole,
   textToHtml,
   useSlashMenu,
+  templateLabel,
 } from '@/composables/slashCommands'
 
 const CATALOG = {
@@ -160,7 +161,10 @@ describe('buildItems', () => {
       type: 'template',
       shortcut: 'horario',
     })
-    expect(byId['meta:welcome_msg'].type).toBe('meta')
+    expect(byId['meta:welcome_msg']).toMatchObject({
+      type: 'meta',
+      label: 'Welcome msg', // its stored name, read as words
+    })
     expect(byId['quick:0']).toMatchObject({
       type: 'quick',
       payload: { text: 'Gracias por tu compra' },
@@ -409,5 +413,14 @@ describe('template holes', () => {
     expect(textToHtml('<b>hola</b>\n& adiós')).toBe(
       '&lt;b&gt;hola&lt;/b&gt;<br>&amp; adiós',
     )
+  })
+})
+
+describe('templateLabel', () => {
+  it('reads a WhatsApp template key as words and leaves a title alone', () => {
+    expect(templateLabel('volvio_stock-es_MX')).toBe('Volvio stock')
+    expect(templateLabel('equipo_listo-')).toBe('Equipo listo')
+    expect(templateLabel('hello_world')).toBe('Hello world')
+    expect(templateLabel('Horario de atención')).toBe('Horario de atención')
   })
 })

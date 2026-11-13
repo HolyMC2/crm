@@ -4,7 +4,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick } from 'vue'
 
-const mounts = vi.hoisted(() => ({ activities: 0, refresh: vi.fn(), by: {} }))
+const mounts = vi.hoisted(() => ({
+  activities: 0,
+  refresh: vi.fn(),
+  by: {},
+  canSendTemplate: true,
+}))
 const stub = vi.hoisted(() => (attr, onMount = () => {}) => ({
   __esModule: true,
   default: {
@@ -12,7 +17,10 @@ const stub = vi.hoisted(() => (attr, onMount = () => {}) => ({
     setup(_, { expose }) {
       onMount()
       mounts.by[attr] = (mounts.by[attr] || 0) + 1
-      expose({ refresh: () => mounts.refresh(attr) })
+      expose({
+        refresh: () => mounts.refresh(attr),
+        canSendTemplate: mounts.canSendTemplate,
+      })
       return () => h('div', { [attr]: '' })
     },
   },
@@ -176,6 +184,29 @@ describe('DealWorkspace tabs', () => {
     expect(el.querySelector('[data-repair]').parentElement.style.display).toBe(
       '',
     )
+  })
+
+  it('puts the summary, the template and search in one bar over the thread', async () => {
+    inbox.activeDeal.value = 'CRM-DEAL-1'
+    const el = await mount()
+    const bar = el.querySelector('[data-testid="convo-bar"]')
+    expect(bar.querySelector('[data-summary]')).not.toBeNull()
+    expect(bar.querySelector('[data-threads]')).not.toBeNull()
+    bar.querySelector('[data-testid="convo-template"]').click()
+    await flush()
+    expect(inbox.convoTemplateOpen.value).toBe(true)
+    inbox.convoTemplateOpen.value = false
+  })
+
+  it('leaves «Plantilla» out where the thread cannot send one', async () => {
+    mounts.canSendTemplate = false
+    try {
+      inbox.activeDeal.value = 'CRM-DEAL-1'
+      const el = await mount()
+      expect(el.querySelector('[data-testid="convo-template"]')).toBeNull()
+    } finally {
+      mounts.canSendTemplate = true
+    }
   })
 
   it('holds the extras while a conversation opens', async () => {

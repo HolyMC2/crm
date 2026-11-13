@@ -1,11 +1,26 @@
 /* eslint-disable vue/one-component-per-file -- Test-local UI boundary doubles. */
 // The composer's «Fotos del taller»: offered on a deal or lead conversation of a
-// tenant with Taller (chip and «+» menu), never on an unassigned thread; the
+// tenant with Taller (the «+» menu), never on an unassigned thread; the
 // Reparación tab's «Enviar al chat» opens it on that same deal's conversation.
+// And its saved replies and templates: one button, never rows of chips.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, defineComponent, h, nextTick, reactive } from 'vue'
 
-const api = vi.hoisted(() => ({ inbox: null, capture: vi.fn() }))
+const api = vi.hoisted(() => ({
+  inbox: null,
+  capture: vi.fn(),
+  addon: null,
+  commandsEnabled: null,
+  data: {
+    'crm.api.whatsapp.get_quick_replies': [
+      { label: 'Horario', text: 'Abrimos de 10 a 7.' },
+    ],
+    'crm.api.whatsapp.get_quick_templates': [
+      { name: 'volvio_stock-es_MX', template: 'Ya tenemos tu producto.' },
+      { name: 'equipo_listo-', template: 'Tu equipo está listo.' },
+    ],
+  },
+}))
 vi.mock('frappe-ui', async () => {
   const { defineComponent, h } = await import('vue')
   const passthrough = (tag) =>
@@ -17,8 +32,8 @@ vi.mock('frappe-ui', async () => {
           h(tag, slots.default?.()),
     })
   return {
-    createResource: () => ({
-      data: [],
+    createResource: (options) => ({
+      data: api.data[options?.url] || [],
       loading: false,
       fetch: vi.fn(),
       reload: vi.fn(),
@@ -76,7 +91,8 @@ vi.mock('@/composables/inbox', async () => {
 })
 vi.mock('@/utils/crmCapabilities', async () => {
   const { ref } = await import('vue')
-  return { addonAvailable: ref(false) }
+  api.addon = ref(false)
+  return { addonAvailable: api.addon }
 })
 vi.mock('@/composables/outbox', () => ({ enqueueOutbox: vi.fn() }))
 vi.mock('@/composables/composerCommands', async () => {
@@ -89,14 +105,16 @@ vi.mock('@/composables/composerCommands', async () => {
       loadCatalog: vi.fn(),
       docDialog: reactive({ open: false, doctype: '' }),
       saveDialog: reactive({ open: false, body: '' }),
-      enabled: ref(false),
+      enabled: (api.commandsEnabled ||= ref(false)),
       items: ref([]),
     }),
   }
 })
 vi.mock('@/composables/slashCommands', async () => {
   const { ref } = await import('vue')
+  const { templateLabel } = await vi.importActual('@/composables/slashCommands')
   return {
+    templateLabel,
     stripSlash: (t) => t,
     fillHole: (t) => t,
     useSlashMenu: () => ({
@@ -164,7 +182,6 @@ const settle = async () => {
     await nextTick()
   }
 }
-const chip = () => root.querySelector('[data-testid="taller-photos-chip"]')
 const menuItem = () =>
   [...root.querySelectorAll('[data-testid="attach-menu"] button')].find(
     (b) => b.textContent.trim() === 'Fotos del taller',
@@ -207,11 +224,10 @@ afterEach(() => {
 })
 
 describe('WhatsApp composer «Fotos del taller»', () => {
-  it('is offered on a deal and a lead conversation, from the chip and the «+» menu', async () => {
+  it('is offered on a deal and a lead conversation, from the «+» menu', async () => {
     await mount({ whatsappAccount: 'Taller Centro' })
-    expect(chip()).toBeTruthy()
     expect(menuItem()).toBeTruthy()
-    chip().click()
+    menuItem().click()
     await settle()
     expect(sheet().dataset).toMatchObject({
       doctype: 'CRM Deal',
@@ -225,7 +241,6 @@ describe('WhatsApp composer «Fotos del taller»', () => {
       { doctype: 'CRM Lead' },
       { name: 'LEAD-1', mobile_no: '521555' },
     )
-    expect(chip()).toBeTruthy()
     menuItem().click()
     await settle()
     expect(sheet().dataset.name).toBe('LEAD-1')
@@ -234,13 +249,11 @@ describe('WhatsApp composer «Fotos del taller»', () => {
   it('is not offered without Taller or on an unassigned thread', async () => {
     api.inbox.hasTaller.value = false
     await mount()
-    expect(chip()).toBeNull()
     expect(menuItem()).toBeUndefined()
     app.unmount()
     root.remove()
     api.inbox.hasTaller.value = true
     await mount({ doctype: '', replyOnly: true, toOverride: '521555' })
-    expect(chip()).toBeNull()
     expect(menuItem()).toBeUndefined()
   })
 
@@ -261,5 +274,44 @@ describe('WhatsApp composer «Fotos del taller»', () => {
     await settle()
     expect(sheet().dataset.order).toBe('RO-7')
     expect(api.inbox.tallerPhotosRequest.value).toBeNull()
+  })
+})
+
+describe('WhatsApp composer replies and templates', () => {
+  const button = () => root.querySelector('[data-testid="replies-button"]')
+  const panel = () => root.querySelector('[data-testid="quick-panel"]')
+  afterEach(() => {
+    api.addon.value = false
+    api.commandsEnabled.value = false
+  })
+
+  it('keeps them behind one button, templates by name instead of their key', async () => {
+    await mount()
+    expect(panel()).toBeNull()
+    expect(root.textContent).not.toContain('volvio_stock')
+    button().click()
+    await settle()
+    expect(panel().textContent).toContain('Horario')
+    expect(panel().textContent).toContain('Volvio stock')
+    expect(panel().textContent).toContain('Equipo listo')
+    expect(panel().textContent).not.toContain('volvio_stock-es_MX')
+    expect(button().getAttribute('aria-label')).toBe('Respuestas y plantillas')
+  })
+
+  it('opens the «/» menu instead where the composer has it', async () => {
+    api.commandsEnabled.value = true
+    await mount()
+    button().click()
+    await settle()
+    expect(panel()).toBeNull()
+  })
+
+  it('offers the catálogo in the «+» menu, not as a chip', async () => {
+    api.addon.value = true
+    await mount()
+    const items = [
+      ...root.querySelectorAll('[data-testid="attach-menu"] button'),
+    ].map((b) => b.textContent.trim())
+    expect(items).toContain('Catálogo')
   })
 })

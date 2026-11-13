@@ -1713,5 +1713,21 @@ function refresh() {
     whatsappMessages.reload()
 }
 
-defineExpose({ emailBox, all_activities, changeTabTo, refresh })
+// Whether «Enviar plantilla» applies here (the Bandeja's bar shows it instead of
+// this component's header): a WhatsApp API thread, not a Messenger one.
+const canSendTemplate = computed(
+  () =>
+    title.value === 'WhatsApp' &&
+    whatsappEnabled.value &&
+    !whatsappManual.value &&
+    activeChannelTab.value !== 'messenger',
+)
+
+defineExpose({
+  emailBox,
+  all_activities,
+  changeTabTo,
+  refresh,
+  canSendTemplate,
+})
 </script>

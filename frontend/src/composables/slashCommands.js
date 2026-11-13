@@ -53,6 +53,21 @@ export function slugify(s) {
     .slice(0, 40)
 }
 
+// A WhatsApp template's stored name («volvio_stock-es_MX», «equipo_listo-») read
+// as words («Volvio stock», «Equipo listo»). A title that already reads as words
+// is left alone.
+const TEMPLATE_KEY = /^[a-z0-9_]+(-[a-z]{2}(_[A-Z]{2})?)?-?$/
+export function templateLabel(name) {
+  const raw = String(name || '')
+  if (!TEMPLATE_KEY.test(raw)) return raw
+  const words = raw
+    .replace(/-[a-z]{2}(_[A-Z]{2})?$/, '')
+    .replace(/-+$/, '')
+    .replace(/_+/g, ' ')
+    .trim()
+  return words ? words[0].toUpperCase() + words.slice(1) : raw
+}
+
 // ── items ─────────────────────────────────────────────────────────────────────
 
 function excerpt(text, n = 80) {
@@ -131,7 +146,7 @@ export function buildItems(
     items.push({
       id: `${meta ? 'meta' : 'tpl'}:${t.id}`,
       type: meta ? 'meta' : 'template',
-      label: t.title || t.id,
+      label: meta ? templateLabel(t.title || t.id) : t.title || t.id,
       hint: excerpt(t.body),
       keywords: [t.shortcut, t.title].filter(Boolean).map(normalize),
       shortcut: t.shortcut || '',

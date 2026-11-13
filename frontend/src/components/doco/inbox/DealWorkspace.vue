@@ -80,16 +80,24 @@
         class="flex min-h-0 flex-1 flex-col"
         data-testid="pane-conversation"
       >
-        <!-- Phone: the 🧠 chip and the linked-conversations line share ONE row so
-             the thread keeps the screen (an open summary takes the full row). -->
+        <!-- One bar over the thread (it was three rows: the summary chip, the
+             linked conversations, the «WhatsApp» title with «Enviar plantilla»).
+             Left: the record's conversations and the intent chip; right:
+             «Resumir», «Plantilla» and search. The summary opens over the
+             thread's top, so the messages never move. -->
         <div
-          class="flex flex-none flex-wrap items-center max-sm:border-b max-sm:border-outline-gray-1 max-sm:[&>*]:border-b-0 max-sm:[&>nav]:min-w-0 max-sm:[&>nav]:flex-1 sm:block"
+          class="relative flex flex-none flex-wrap items-center gap-x-2 gap-y-1 border-b border-outline-gray-1 px-3 py-1 sm:px-4"
+          data-testid="convo-bar"
         >
-          <!-- 🧠 resumen AI del hilo (P2 S3 / spec 5.2) — hides itself when AI is off -->
-          <ThreadSummary />
-
-          <!-- 💡 intent → action chips (P2 S10 / spec 5.3) — ≤1 one-tap chip; hides itself
-             when AI is off / confidence < 0.6. Chips NEVER send / NEVER auto-charge. -->
+          <!-- the record's native conversation threads; hidden when none -->
+          <DealConversations
+            :key="activeDealDoctype + activeDeal"
+            compact
+            :doctype="activeDealDoctype"
+            :name="activeDeal"
+          />
+          <!-- 💡 intent → one action chip (P2 S10 / spec 5.3); hides itself when AI
+               is off or unsure. Chips NEVER send / NEVER auto-charge. -->
           <IntentChips
             :doctype="activeDealDoctype"
             :name="activeDeal"
@@ -98,14 +106,31 @@
             @factura="onIntentFactura"
             @taller="onIntentTaller"
           />
-
-          <!-- the record's native conversation threads, one line; hidden when none -->
-          <DealConversations
-            :key="activeDealDoctype + activeDeal"
-            compact
-            :doctype="activeDealDoctype"
-            :name="activeDeal"
-          />
+          <div class="ml-auto flex flex-none items-center gap-0.5">
+            <!-- AI summary of the thread (P2 S3 / spec 5.2); hides itself when AI is off -->
+            <ThreadSummary />
+            <button
+              v-if="canSendTemplate"
+              type="button"
+              class="press inline-flex h-8 items-center gap-1.5 rounded-6 px-2 text-xs font-medium text-ink-gray-7 hover:bg-surface-gray-2"
+              :title="__('Enviar plantilla de WhatsApp')"
+              data-testid="convo-template"
+              @click="convoTemplateOpen = true"
+            >
+              <span class="lucide-file-text size-4" aria-hidden="true" />
+              <span class="max-sm:sr-only">{{ __('Plantilla') }}</span>
+            </button>
+            <!-- phone: «Buscar» lives in the chat's ⋮ menu, as in WhatsApp -->
+            <button
+              type="button"
+              class="press flex size-8 items-center justify-center rounded-6 text-ink-gray-6 hover:bg-surface-gray-2 max-sm:hidden"
+              :title="__('Buscar en la conversación')"
+              :aria-label="__('Buscar en la conversación')"
+              @click="threadSearch?.toggle()"
+            >
+              <LucideSearch class="size-4" aria-hidden="true" />
+            </button>
+          </div>
         </div>
 
         <!-- Conversación = the real WhatsApp (WhatsAppArea + WhatsAppBox): private notes,
@@ -118,15 +143,6 @@
         >
           <!-- 🔎 búsqueda en el hilo (spec 2.7) — over the LOADED messages -->
           <ThreadSearch ref="threadSearch" :container="convoRef" />
-          <!-- phone: «Buscar» lives in the chat's ⋮ menu, as in WhatsApp -->
-          <button
-            class="press absolute right-3 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-outline-gray-2 bg-surface-base text-ink-gray-6 shadow-sm hover:bg-surface-gray-2 max-sm:hidden"
-            :title="__('Buscar en la conversación')"
-            :aria-label="__('Buscar en la conversación')"
-            @click="threadSearch?.toggle()"
-          >
-            <LucideSearch class="size-4" aria-hidden="true" />
-          </button>
           <Activities
             :key="'wa-' + activeDealDoctype + activeDeal"
             ref="convoActivities"
@@ -326,6 +342,8 @@ const overviewPane = ref(null),
   timelineActivities = ref(null),
   itemsPane = ref(null),
   repairPane = ref(null)
+// «Plantilla» in the bar follows Activities: a WhatsApp API thread, not Messenger.
+const canSendTemplate = computed(() => !!convoActivities.value?.canSendTemplate)
 const panes = {
   overview: overviewPane,
   conversation: convoActivities,
@@ -511,17 +529,10 @@ const convoTabs = [{ name: 'WhatsApp', label: 'WhatsApp', icon: WhatsAppIcon }]
   display: none;
 }
 
-/* Mobile: the "WhatsApp" title + Send Template row eats ~48px of a small screen
-   and duplicates what DealHeader/tab already say. Templates stay reachable via
-   the 📋 chip in the composer quick bar (WhatsAppBox → open-templates). */
-@media (max-width: 639px) {
-  .doco-convo :deep(.activity-header) {
-    display: none;
-  }
-  /* Pinned notes keep clear of the 🔎 button floating at the top right. */
-  .doco-convo :deep(.wa-pins) {
-    margin-right: 3.25rem;
-  }
+/* The "WhatsApp" title + «Send Template» row repeats what the tab and the
+   conversation bar say; the bar carries «Plantilla» instead. */
+.doco-convo :deep(.activity-header) {
+  display: none;
 }
 
 /* The sticky pinned notes sit at the top of the scroller; its edge fade would
