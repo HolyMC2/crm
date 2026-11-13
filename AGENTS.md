@@ -133,6 +133,7 @@ docs: short description
 ```
 
 Multiple logical commits per PR — one commit per coherent change, not one giant commit.
+Every lane adds a CHANGELOG entry at the top of `CHANGELOG.md` (union-merged; never hand-resolve it).
 Pre-commit hooks run prettier + eslint + oxlint automatically. If they modify a file,
 `git add` the file again and re-commit.
 

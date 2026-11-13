@@ -1,3 +1,6 @@
 # Every lane appends translations to the end of the catalog; keep both sides
 # instead of conflicting. scripts/ci/check_po_duplicates.py rejects duplicates.
 crm/locale/*.po merge=union
+# Every lane adds its entry at the top of the changelog: keep both sides of a
+# conflicting hunk (ours first) instead of conflicting on every rebase.
+CHANGELOG.md merge=union
