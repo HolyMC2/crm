@@ -11,7 +11,7 @@ import {
 import { installedSiblings, sortSiblings } from '@/composables/siblingApps'
 import { arrangeShell } from '@/utils/shellLayout'
 import { ACCOUNT_PAGES } from '@/utils/shellRoutes'
-import { sessionEnded, sessionLost } from '@/utils/sessionGuard'
+import { sessionBack, sessionEnded, sessionLost } from '@/utils/sessionGuard'
 
 // One boot call (crm.api.shell.boot → ShellBoot) for every shell route; the
 // cache never crosses site or user.
@@ -110,6 +110,13 @@ export function loadShell({ refresh = false } = {}) {
   shellError.value = ''
   pending = call('crm.api.shell.boot')
     .then((data) => {
+      if (sessionEnded.value) {
+        // The server answered as a signed-in person again (a sign-in in
+        // another tab): this boot is theirs, and refusals are permission
+        // answers once more.
+        sessionBack()
+        scope = key
+      }
       if (scope === key) {
         shellBoot.value = data
         shellBootStale.value = false

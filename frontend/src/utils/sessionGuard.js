@@ -28,29 +28,52 @@ export function refusalKind(error) {
   return null
 }
 
+/** How long the shell waits for that answer before it keeps the permission path. */
+export const PROBE_TIMEOUT_MS = 5000
+
 /**
  * Who the server says this browser is: the user, 'Guest', or null when it
- * could not answer (offline, a restart). A GET needs no CSRF token, and
- * get_logged_user refuses Guest (403), so any refusal here means Guest.
+ * could not answer in time (offline, a restart, a stalled connection). A GET
+ * needs no CSRF token, and get_logged_user refuses Guest (403), so any
+ * refusal here means Guest.
  */
-export async function askLoggedUser(fetchImpl = globalThis.fetch) {
+export async function askLoggedUser(
+  fetchImpl = globalThis.fetch,
+  timeoutMs = PROBE_TIMEOUT_MS,
+) {
+  const controller = new AbortController()
+  let timer
+  const late = new Promise((resolve) => {
+    timer = setTimeout(() => {
+      controller.abort()
+      resolve(null)
+    }, timeoutMs)
+  })
+  const probe = (async () => {
+    try {
+      const response = await fetchImpl(
+        '/api/method/frappe.auth.get_logged_user',
+        {
+          method: 'GET',
+          credentials: 'same-origin',
+          headers: { Accept: 'application/json' },
+          signal: controller.signal,
+        },
+      )
+      if ([401, 403].includes(response.status)) return 'Guest'
+      if (!response.ok) return null
+      const body = await response.json()
+      return typeof body?.message === 'string' && body.message
+        ? body.message
+        : null
+    } catch {
+      return null
+    }
+  })()
   try {
-    const response = await fetchImpl(
-      '/api/method/frappe.auth.get_logged_user',
-      {
-        method: 'GET',
-        credentials: 'same-origin',
-        headers: { Accept: 'application/json' },
-      },
-    )
-    if ([401, 403].includes(response.status)) return 'Guest'
-    if (!response.ok) return null
-    const body = await response.json()
-    return typeof body?.message === 'string' && body.message
-      ? body.message
-      : null
-  } catch {
-    return null
+    return await Promise.race([probe, late])
+  } finally {
+    clearTimeout(timer)
   }
 }
 
@@ -67,6 +90,11 @@ export async function sessionLost(error, fetchImpl) {
   const user = await asking
   if (user === 'Guest') sessionEnded.value = true
   return sessionEnded.value
+}
+
+/** A shell boot succeeded: the session is live again (signed in from another tab). */
+export function sessionBack() {
+  sessionEnded.value = false
 }
 
 /** /login, back to the same /crm route (a router fullPath) after signing in. */

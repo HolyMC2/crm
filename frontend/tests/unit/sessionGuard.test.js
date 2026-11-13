@@ -83,6 +83,7 @@ import {
   shellError,
 } from '@/composables/muelleShell'
 import {
+  PROBE_TIMEOUT_MS,
   askLoggedUser,
   refusalKind,
   resetSessionGuardForTests,
@@ -196,6 +197,33 @@ describe('the refusal classifier', () => {
     ).toBeNull()
   })
 
+  it('a probe that hangs gives up and keeps the permission path', async () => {
+    let signal
+    const hang = vi.fn((url, init) => {
+      signal = init.signal
+      return new Promise(() => {})
+    })
+    expect(await askLoggedUser(hang, 10)).toBeNull()
+    expect(signal.aborted).toBe(true)
+    vi.useFakeTimers()
+    try {
+      const lost = sessionLost(refusal(), hang)
+      await vi.advanceTimersByTimeAsync(PROBE_TIMEOUT_MS)
+      expect(await lost).toBe(false)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('once the session ended, Contactos reads every refusal as the session', () => {
+    sessionEnded.value = true
+    expect(errorKind(refusal())).toBe('session')
+    expect(errorKind(new TypeError('Failed to fetch'))).toBeNull()
+    expect(errorKind({ exc_type: 'TimestampMismatchError', status: 403 })).toBe(
+      'conflict',
+    )
+  })
+
   it('only a refusal answered by Guest is an ended session', async () => {
     expect(await sessionLost(refusal(), asUser())).toBe(false)
     expect(sessionEnded.value).toBe(false)
@@ -267,6 +295,27 @@ describe('the shell boot after a refusal', () => {
     document.cookie = 'user_id=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/'
   })
 
+  it('signed in again from another tab: a boot that works ends the session prompt, and refusals are permission answers again', async () => {
+    saveBoot()
+    vi.stubGlobal('fetch', asGuest())
+    state.call.mockRejectedValue(refusal())
+    await loadShell({ refresh: true }).catch(() => null)
+    expect(sessionEnded.value).toBe(true)
+    // Bea signs in from another tab: the cookie and the boot are hers now.
+    document.cookie = 'user_id=bea%40example.test; path=/'
+    const hers = { ...boot(), user: { name: 'bea@example.test' } }
+    state.call.mockResolvedValue(hers)
+    await loadShell({ refresh: true })
+    expect(sessionEnded.value).toBe(false)
+    expect(shellBoot.value?.user?.name).toBe('bea@example.test')
+    vi.stubGlobal('fetch', asUser())
+    state.call.mockRejectedValue(refusal())
+    await loadShell({ refresh: true }).catch(() => null)
+    expect(sessionEnded.value).toBe(false)
+    expect(shellError.value).not.toBe('Your session ended')
+    document.cookie = 'user_id=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/'
+  })
+
   it('still signed in: a refusal drops the saved boot, as before', async () => {
     saveBoot()
     vi.stubGlobal('fetch', asUser())
@@ -292,6 +341,15 @@ describe('what the worker sees', () => {
           path: '/compras/orden/:name',
           component: { render: () => h('p', 'Compras record') },
           meta: { app: 'compras', title: 'Compras', listParent: 'Compras' },
+        },
+        {
+          path: '/deals',
+          component: { render: () => h('p', 'Deals page') },
+        },
+        {
+          path: '/cuenta',
+          component: { render: () => h('p', 'Cuenta page') },
+          meta: { app: 'cuenta', title: 'My account' },
         },
       ],
     })
@@ -348,6 +406,19 @@ describe('what the worker sees', () => {
       expect(assign).toHaveBeenCalledWith(
         '/login?redirect-to=' + encodeURIComponent('/crm' + path),
       )
+    })
+  }
+
+  for (const path of ['/deals', '/cuenta']) {
+    it(`${path}, a page the saved boot still opens, also waits behind the sign-in`, async () => {
+      saveBoot()
+      vi.stubGlobal('fetch', asGuest())
+      state.call.mockRejectedValue(refusal())
+      await loadShell({ refresh: true }).catch(() => null)
+      await mountShell(path)
+      await until(() => root.querySelector('[data-testid="session-ended"]'))
+      expect(root.textContent).not.toMatch(/Deals page|Cuenta page/)
+      expect(labels()).toContain('Sign in')
     })
   }
 

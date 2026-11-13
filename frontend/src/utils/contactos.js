@@ -1,6 +1,6 @@
 import { errorText } from '@/utils/errorText'
 import { readListState, writeListState } from './listViewState.js'
-import { refusalKind } from '@/utils/sessionGuard'
+import { refusalKind, sessionEnded } from '@/utils/sessionGuard'
 
 export const SOURCE_TYPES = {
   contact: 'Contact',
@@ -552,8 +552,10 @@ export function errorKind(error) {
     status === 409
   )
     return 'conflict'
-  // The shell's classifier (utils/sessionGuard.js) reads exception and status.
+  // The shell's classifier (utils/sessionGuard.js) reads exception and status;
+  // once the shell knows the session ended, every refusal means signing in.
   const refusal = refusalKind(error)
+  if (refusal && sessionEnded.value) return 'session'
   if (code === 'permission' || refusal === 'permission') return 'permission'
   if (code === 'session' || refusal === 'session') return 'session'
   if (code === 'network') return 'network'

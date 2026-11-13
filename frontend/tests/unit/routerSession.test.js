@@ -1,6 +1,6 @@
-// PROD-4-a: the router's refusal branch (a Ventas route on a refused shell boot)
-// asks the server who this browser is before it routes to Not Permitted, so
-// that screen can offer sign-in instead of «Pedir acceso».
+// PROD-4-a: a Ventas route on a refused shell boot goes to Not Permitted, which
+// offers sign-in instead of «Pedir acceso» when the server said Guest; once it
+// did, every route waits there.
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const state = vi.hoisted(() => ({ call: vi.fn() }))
@@ -68,6 +68,31 @@ describe('the router after a refused shell boot', () => {
     await router.push('/leads?view=list')
     expect(router.currentRoute.value.name).toBe('Not Permitted')
     expect(sessionEnded.value).toBe(false)
+  })
+
+  it('once the session ended, every route waits behind the sign-in, with no boot call', async () => {
+    const fetch = vi.fn()
+    vi.stubGlobal('fetch', fetch)
+    sessionEnded.value = true
+    await router.push('/hoy')
+    expect(router.currentRoute.value.name).toBe('Not Permitted')
+    expect(router.currentRoute.value.query.intended).toBe('/hoy')
+    await router.push('/deals?view=group_by')
+    expect(router.currentRoute.value.query.intended).toBe(
+      '/deals?view=group_by',
+    )
+    expect(state.call).not.toHaveBeenCalled()
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
+  it('a signed-in refusal asks who this browser is once', async () => {
+    const fetch = vi.fn(async () =>
+      answer(200, { message: 'ana@example.test' }),
+    )
+    vi.stubGlobal('fetch', fetch)
+    await router.push('/leads?view=kanban')
+    expect(router.currentRoute.value.name).toBe('Not Permitted')
+    expect(fetch).toHaveBeenCalledTimes(1)
   })
 
   it('a server blip is no refusal: the route goes on and nobody asks', async () => {

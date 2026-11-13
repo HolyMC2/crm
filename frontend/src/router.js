@@ -19,7 +19,7 @@ import {
 } from '@/utils/crmCapabilities'
 import { legacyDealRedirect, legacyVentasRoute } from '@/utils/ventasRoutes'
 import { legacyIdentityRoute, safeIntendedRoute } from '@/utils/shellRoutes'
-import { sessionLost } from '@/utils/sessionGuard'
+import { sessionEnded } from '@/utils/sessionGuard'
 import { legacyTasksRoute } from '@/composables/usePendientesRoutes'
 import { prefetchHoy } from '@/utils/hoyPrefetch'
 import { bootPersonaCaptured } from '@/utils/personaBoot'
@@ -1386,6 +1386,11 @@ router.beforeEach(async (to, from, next) => {
       encodeURIComponent(safeIntendedRoute('/crm' + to.fullPath))
     return
   }
+  // The server already said this browser is Guest (utils/sessionGuard.js):
+  // every route waits behind «Tu sesión terminó» and its sign-in, which comes
+  // back here, instead of opening a page whose calls all fail.
+  if (sessionEnded.value && to.name !== 'Not Permitted')
+    return next({ name: 'Not Permitted', query: { intended: to.fullPath } })
   // Back from Escáner's «Escanear» picker: the scanned artículo opens in
   // Productos before any page reads `done` as its own.
   if (to.query[SCAN_PICK_PARAM] !== undefined) {
@@ -1412,12 +1417,10 @@ router.beforeEach(async (to, from, next) => {
     } catch (error) {
       // Only a refusal is a permission answer. A server blip (a deploy or a
       // restart) is not: go on, every Ventas API rechecks the permission.
-      // An ended session also lands there: the screen then asks the worker
-      // to sign in and come back to this route (utils/sessionGuard.js).
-      if (shellRefused(error)) {
-        await sessionLost(error)
+      // An ended session also lands there (loadShell asked the server): the
+      // screen then asks the worker to sign in and come back to this route.
+      if (shellRefused(error))
         return next({ name: 'Not Permitted', query: { intended: to.fullPath } })
-      }
     }
   }
   const { usersStore } = await import('@/stores/users')

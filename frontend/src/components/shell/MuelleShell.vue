@@ -133,8 +133,11 @@
       >
         {{ __('Opening Muelle…') }}
       </div>
+      <!-- Every route but the recovery screen (which says it itself): the
+           saved boot stays, so a Ventas or account page would otherwise open
+           on calls that all fail. -->
       <SessionEnded
-        v-else-if="blocked && sessionEnded"
+        v-else-if="sessionEnded && !route.meta.recovery"
         v-show="!appShown"
         class="min-h-0 flex-1 overflow-y-auto"
         :back="route.fullPath"
