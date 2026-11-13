@@ -43448,6 +43448,226 @@ msgctxt "Perfil"
 msgid "Your recovery codes"
 msgstr "Tus códigos de recuperación"
 
+#: frontend/src/components/perfil/correo.js
+msgctxt "Perfil"
+msgid "We could not read how the change is going."
+msgstr "No pudimos saber cómo va el cambio."
+
+#: frontend/src/components/perfil/correo.js
+msgctxt "Perfil"
+msgid "Type the new email."
+msgstr "Escribe el correo nuevo."
+
+#: frontend/src/components/perfil/correo.js
+msgctxt "Perfil"
+msgid "Type a valid email, for example nombre@negocio.mx."
+msgstr "Escribe un correo válido, por ejemplo nombre@negocio.mx."
+
+#: frontend/src/components/perfil/correo.js
+msgctxt "Perfil"
+msgid "That is already the email you sign in with."
+msgstr "Ese ya es el correo con el que entras."
+
+#: frontend/src/components/perfil/correo.js
+msgctxt "Perfil"
+msgid "Type the 6 digits of the code."
+msgstr "Escribe los 6 dígitos del código."
+
+#: frontend/src/components/perfil/correo.js frontend/src/components/perfil/CorreoSheet.vue
+msgctxt "Perfil"
+msgid "Changing your email…"
+msgstr "Cambiando tu correo…"
+
+#: frontend/src/components/perfil/CorreoSheet.vue
+msgctxt "Perfil"
+msgid "When it ends, you sign in with {0} and the same password."
+msgstr "Al terminar, entras con {0} y la misma contraseña."
+
+#: frontend/src/components/perfil/CorreoSheet.vue
+msgctxt "Perfil"
+msgid "Your session ended. Sign in again with that email."
+msgstr "Tu sesión se cerró. Vuelve a entrar con ese correo."
+
+#: frontend/src/components/perfil/correo.js
+msgctxt "Perfil"
+msgid "1 try left."
+msgstr "Te queda 1 intento."
+
+#: frontend/src/components/perfil/correo.js
+msgctxt "Perfil"
+msgid "{0} tries left."
+msgstr "Te quedan {0} intentos."
+
+#: frontend/src/components/perfil/correo.js
+msgctxt "Perfil"
+msgid "Your code still needs typing"
+msgstr "Falta escribir tu código"
+
+#: frontend/src/components/perfil/correo.js
+msgctxt "Perfil"
+msgid "Muelle still uses your old email"
+msgstr "Muelle aún usa tu correo anterior"
+
+#: frontend/src/components/perfil/correo.js
+msgctxt "Perfil"
+msgid "Muelle’s invoices and notices will reach it too."
+msgstr "Las facturas y avisos de Muelle también llegarán ahí."
+
+#: frontend/src/components/perfil/correo.js
+msgctxt "Perfil"
+msgid "Muelle’s invoices and notices still go to {0}. Sign in and report it from your profile so we move them."
+msgstr "Las facturas y avisos de Muelle siguen llegando a {0}. Entra y repórtalo desde tu perfil para que los cambiemos."
+
+#: frontend/src/pages/Perfil.vue
+msgctxt "Perfil"
+msgid "Email"
+msgstr "Correo"
+
+#: frontend/src/components/perfil/CorreoSheet.vue
+msgctxt "Perfil"
+msgid "Change email"
+msgstr "Cambiar correo"
+
+#: frontend/src/components/perfil/CorreoSheet.vue
+msgctxt "Perfil"
+msgid "Report a problem"
+msgstr "Reportar problema"
+
+#: frontend/src/components/perfil/CorreoSheet.vue
+msgctxt "Perfil"
+msgid "You sign in with {0}."
+msgstr "Entras con {0}."
+
+#: frontend/src/components/perfil/CorreoSheet.vue
+msgctxt "Perfil"
+msgid "New email"
+msgstr "Correo nuevo"
+
+#: frontend/src/components/perfil/CorreoSheet.vue
+msgctxt "Perfil"
+msgid "We send a code to the new email. You keep signing in with this one until you type the code here."
+msgstr "Enviamos un código al correo nuevo. Sigues entrando con este hasta que escribas el código aquí."
+
+#: frontend/src/components/perfil/CorreoSheet.vue
+msgctxt "Perfil"
+msgid "Code"
+msgstr "Código"
+
+#: frontend/src/components/perfil/CorreoSheet.vue
+msgctxt "Perfil"
+msgid "When you confirm, every device signs out, this one too. You sign in again with the new email and the same password."
+msgstr "Al confirmar se cierra la sesión en todos tus dispositivos, también en este. Vuelves a entrar con el correo nuevo y la misma contraseña."
+
+#: frontend/src/components/perfil/CorreoSheet.vue
+msgctxt "Perfil"
+msgid "Send another code"
+msgstr "Enviar otro código"
+
+#: frontend/src/components/perfil/CorreoSheet.vue
+msgctxt "Perfil"
+msgid "Use another email"
+msgstr "Usar otro correo"
+
+#: frontend/src/components/perfil/CorreoSheet.vue
+msgctxt "Perfil"
+msgid "This is taking longer than usual. You can close this screen: you will sign in with the new email once it ends, or with your current one if it does not."
+msgstr "Está tardando más de lo normal. Puedes cerrar esta pantalla: entrarás con el correo nuevo cuando termine, o con el de siempre si no termina."
+
+#: frontend/src/components/perfil/CorreoSheet.vue
+msgctxt "Perfil"
+msgid "Done. You now sign in with {0}."
+msgstr "Listo. Ahora entras con {0}."
+
+#: frontend/src/components/perfil/CorreoSheet.vue
+msgctxt "Perfil"
+msgid "Your session ended. Sign in with your new email."
+msgstr "Tu sesión terminó. Entra con tu correo nuevo."
+
+#: frontend/src/components/perfil/CorreoSheet.vue
+msgctxt "Perfil"
+msgid "We could not change your email. You still sign in with {0}."
+msgstr "No pudimos cambiar tu correo. Sigues entrando con {0}."
+
+#: frontend/src/components/perfil/CorreoSheet.vue
+msgctxt "Perfil"
+msgid "I could not change the email I sign in with."
+msgstr "No pude cambiar el correo con el que entro."
+
+#: frontend/src/components/perfil/CorreoSheet.vue
+msgctxt "Perfil"
+msgid "Sending the link…"
+msgstr "Enviando el enlace…"
+
+#: frontend/src/components/perfil/CorreoSheet.vue
+msgctxt "Perfil"
+msgid "Forgot your password?"
+msgstr "¿Olvidaste tu contraseña?"
+
+#: frontend/src/components/perfil/CorreoSheet.vue
+msgctxt "Perfil"
+msgid "Send code"
+msgstr "Enviar código"
+
+#: frontend/src/components/perfil/CorreoSheet.vue
+msgctxt "Perfil"
+msgid "Sign in"
+msgstr "Entrar"
+
+#: frontend/src/components/perfil/CorreoSheet.vue
+msgctxt "Perfil"
+msgid "Close"
+msgstr "Cerrar"
+
+#: frontend/src/components/perfil/CorreoSheet.vue
+msgctxt "Perfil"
+msgid "Muelle’s invoices and notices still go to {0}."
+msgstr "Las facturas y avisos de Muelle siguen llegando a {0}."
+
+#: frontend/src/components/perfil/CorreoSheet.vue
+msgctxt "Perfil"
+msgid "My sign-in email changed, and Muelle’s invoices and notices still go to my old email."
+msgstr "Cambié mi correo de acceso y las facturas y avisos de Muelle siguen llegando a mi correo anterior."
+
+#: frontend/src/components/perfil/correo.js
+msgctxt "Perfil"
+msgid "The code we sent to {0} expired. Ask for another."
+msgstr "El código que enviamos a {0} venció. Pide otro."
+
+#: frontend/src/components/perfil/correo.js
+msgctxt "Perfil"
+msgid "We sent a code to {0}. It expires in {1} minutes."
+msgstr "Enviamos un código a {0}. Vence en {1} minutos."
+
+#: frontend/src/components/perfil/correo.js
+msgctxt "Perfil"
+msgid "We sent a code to {0}. It expires in less than a minute."
+msgstr "Enviamos un código a {0}. Vence en menos de un minuto."
+
+#: frontend/src/components/perfil/CorreoSheet.vue
+msgctxt "Perfil"
+msgid "We could not send the code. Try again."
+msgstr "No pudimos enviar el código. Intenta de nuevo."
+
+#: frontend/src/components/perfil/CorreoSheet.vue
+msgctxt "Perfil"
+msgid "We could not confirm the code. Try again."
+msgstr "No pudimos confirmar el código. Intenta de nuevo."
+
+#: frontend/src/components/perfil/CorreoSheet.vue
+msgctxt "Perfil"
+msgid "Open Help and choose Report a problem. Tell us what happened with your email."
+msgstr "Abre Ayuda y elige Reportar problema. Cuéntanos qué pasó con tu correo."
+
+#: frontend/src/components/perfil/CorreoSheet.vue
+msgctxt "Perfil"
+msgid "We sent you an email with a link to set a new password. Set it there, then come back here."
+msgstr "Te enviamos un correo con un enlace para crear una contraseña nueva. Créala ahí y vuelve aquí."
+
+#: frontend/src/components/perfil/CorreoSheet.vue
+msgctxt "Perfil"
+msgid "We could not send you the link. Ask whoever runs the system for help."
+msgstr "No pudimos enviarte el enlace. Pide ayuda a quien administra el sistema."
+
 #: frontend/src/pages/ArchivosConectores.vue
 msgid "We would like to connect our invoice mailbox or Paperless to Archivos. Please tell us when it is part of the plans."
 msgstr "Queremos conectar nuestro correo de facturas o Paperless a Archivos. Avísennos cuando forme parte de los planes."

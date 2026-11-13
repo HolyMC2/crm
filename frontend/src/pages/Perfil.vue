@@ -124,6 +124,17 @@
             {{ __('Security', null, 'Perfil') }}
           </h2>
           <!-- -mx-4: the row's own padding, so its icon lines up with the headings. -->
+          <!-- «Correo»: only where doco offers changing the sign-in email. -->
+          <ListRow
+            v-if="seguridad?.email_change"
+            class="-mx-4"
+            icon="lucide-mail"
+            :title="__('Email', null, 'Perfil')"
+            :subtitle="emailRowLine(seguridad.email_change)"
+            :subtitle-lines="2"
+            data-testid="perfil-correo-row"
+            @click="emailOpen = true"
+          />
           <ListRow
             class="-mx-4"
             icon="lucide-key-round"
@@ -295,6 +306,13 @@
       @close="twoStepOpen = false"
       @changed="afterTwoStep"
     />
+    <CorreoSheet
+      v-if="emailOpen || emailMounted"
+      :open="emailOpen"
+      :change="seguridad?.email_change || null"
+      @close="emailOpen = false"
+      @changed="loadSecurity"
+    />
     <SesionesSheet
       v-if="sessionsOpen || sessionsMounted"
       :open="sessionsOpen"
@@ -330,6 +348,7 @@ import {
   uploadPhoto,
   zoneLabel,
 } from '@/components/perfil/perfil'
+import { rowLine as emailRowLine } from '@/components/perfil/correo'
 import { isMobile } from '@/composables/breakpoint'
 import { shellBoot } from '@/composables/muelleShell'
 import { THEME_CHOICES, useShellTheme } from '@/composables/shellTheme'
@@ -347,6 +366,9 @@ const TwoStepSheet = defineAsyncComponent(
 )
 const SesionesSheet = defineAsyncComponent(
   () => import('@/components/perfil/SesionesSheet.vue'),
+)
+const CorreoSheet = defineAsyncComponent(
+  () => import('@/components/perfil/CorreoSheet.vue'),
 )
 // An avatar is shown small: 512 px keeps a phone photo light.
 const PHOTO_SIDE = 512
@@ -382,13 +404,16 @@ const twoStepOpen = ref(false)
 const twoStepMounted = ref(false)
 const sessionsOpen = ref(false)
 const sessionsMounted = ref(false)
-// Seguridad's rows past the password: doco's two-step verification and
-// sessions. null while loading or where the site has neither.
+const emailOpen = ref(false)
+const emailMounted = ref(false)
+// Seguridad's rows: doco's sign-in email change («Correo»), two-step
+// verification and sessions. null while loading or where the site has none.
 const seguridad = ref(null)
 watch(nameOpen, (open) => open && (nameMounted.value = true))
 watch(passwordOpen, (open) => open && (passwordMounted.value = true))
 watch(twoStepOpen, (open) => open && (twoStepMounted.value = true))
 watch(sessionsOpen, (open) => open && (sessionsMounted.value = true))
+watch(emailOpen, (open) => open && (emailMounted.value = true))
 
 const user = computed(() => shellBoot.value?.user?.name || '')
 // The shop's zone leads the list (window.timezone.system from the page boot).
