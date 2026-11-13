@@ -4,9 +4,9 @@ Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` i
 
 ## 2026-11-13 — Twilio noise, an expired session, HEIC photos, a clean build and this changelog (lane arreglos-tenant, with doco; not deployed)
 
-- **Twilio (SHIP-18 B, F-26):** a dialled leg's bare HTTP 400 on the live-status push goes to the `crm.twilio` log file instead of the Error Log; a call log save that lost a race (MariaDB 1020, a deadlock, a timestamp mismatch) rolls back, reads the log again and saves once more. Only a second failure is logged.
-- **Expired session (PROD-4-a):** after a refusal the shell asks `frappe.auth.get_logged_user` by GET; Guest gets «Tu sesión terminó» with «Iniciar sesión» back to the same /crm route, never «Pedir acceso», and the saved boot stays.
-- **HEIC (PROD-9-a):** `.heic` left the capture's accept list (iOS then converts to JPEG); a HEIC that still arrives goes up as a JPEG when the browser can read it.
+- **Twilio (SHIP-18 B, F-26):** a dialled leg's bare HTTP 400 on the live-status push goes to the `crm.twilio` log file (INFO lines kept) instead of the Error Log; a call log save that lost a race (MariaDB 1020, a deadlock, a timestamp mismatch) rolls back, asks Twilio for the call again, reads the log again and saves once more, never moving a finished call back to an earlier status. Only a second failure is logged.
+- **Expired session (PROD-4-a):** after a refusal the shell asks `frappe.auth.get_logged_user` by GET (5 s at most); Guest gets «Tu sesión terminó» with «Iniciar sesión» back to the same /crm route on every route, never «Pedir acceso», and the saved boot stays; a boot that works again (a sign-in in another tab) clears it.
+- **HEIC (PROD-9-a):** a HEIC picked as a file in the capture sheet goes up as a JPEG when the browser can read it; doco refuses any other HEIC at the door with how to send it. The crm file inputs already ask for `image/*`, which iOS hands over as JPEG; `.heic` also left `captureProblem`'s fallback list.
 - **Build (PROD-12-a):** `frontend/auto-imports.d.ts` is untracked and ignored like `components.d.ts`; builds no longer leave mainline dirty.
 - **Changelog (F-33):** this file, seeded below from the commits past the roll-20261112 pin.
 
