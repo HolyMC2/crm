@@ -1,5 +1,4 @@
 import { call } from 'frappe-ui'
-import { telemetryPlugin } from '@framework/ui'
 
 export async function installTelemetry(app) {
   try {
@@ -27,6 +26,10 @@ export async function installTelemetry(app) {
 
     // This is the sole startup installer. Vue app.use does not await plugins;
     // await the native installer so optional client failures remain contained.
+    // Loaded only when telemetry is on, from its own module: the
+    // `@framework/ui` barrel also carries Onboarding's stores, and the entry
+    // chunk (every first load) is at its 180 KB budget.
+    const { telemetryPlugin } = await import('@framework/ui/telemetry')
     await telemetryPlugin.install(app, {
       app_name: 'crm',
       enabled: true,
