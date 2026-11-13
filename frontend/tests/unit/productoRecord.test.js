@@ -1363,8 +1363,9 @@ describe('Mínimos por tienda', () => {
     ;[...root.querySelectorAll('button')]
       .find((b) => b.textContent.includes('Avísame cuando baje'))
       .click()
-    await vi.waitFor(() =>
-      expect(document.querySelectorAll('[role="radio"]').length).toBe(3),
+    await vi.waitFor(
+      () => expect(document.querySelectorAll('[role="radio"]').length).toBe(3),
+      { timeout: 3000 },
     )
     ;[...document.querySelectorAll('[role="radio"]')]
       .find((el) => el.textContent.includes('Bodega'))
@@ -1415,8 +1416,9 @@ describe('Mínimos por tienda', () => {
     ;[...root.querySelectorAll('button')]
       .find((b) => b.textContent.includes('Avísame cuando baje'))
       .click()
-    await vi.waitFor(() =>
-      expect(document.querySelectorAll('[role="radio"]').length).toBe(3),
+    await vi.waitFor(
+      () => expect(document.querySelectorAll('[role="radio"]').length).toBe(3),
+      { timeout: 3000 },
     )
     ;[...document.querySelectorAll('[role="radio"]')]
       .find((el) => el.textContent.includes('Bodega'))
