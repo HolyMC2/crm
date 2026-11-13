@@ -44448,6 +44448,11 @@ msgstr "{0}: aplicar los {1} seguros"
 
 #: frontend/src/components/productos/RevisarDeck.vue
 msgctxt "Revisar"
+msgid "{0}: apply the sure one"
+msgstr "{0}: aplicar el seguro"
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
 msgid "The first changes are on their way"
 msgstr "Los primeros cambios vienen en camino"
 

@@ -111,11 +111,13 @@
           {{
             confirming === kind.grupo
               ? __('Yes, apply {0}', [kind.seguras], 'Revisar')
-              : __(
-                  '{0}: apply the {1} sure ones',
-                  [kind.label, kind.seguras],
-                  'Revisar',
-                )
+              : kind.seguras === 1
+                ? __('{0}: apply the sure one', [kind.label], 'Revisar')
+                : __(
+                    '{0}: apply the {1} sure ones',
+                    [kind.label, kind.seguras],
+                    'Revisar',
+                  )
           }}
         </button>
       </div>
@@ -128,7 +130,7 @@
         {{ problem }}
       </div>
 
-      <div class="relative mt-4 min-h-[22rem] flex-1">
+      <div class="relative mt-4 min-h-[22rem] flex-1 sm:max-h-[32rem]">
         <EmptyState
           v-if="!cards.length"
           :title="
@@ -165,13 +167,13 @@
         >
           <div
             v-if="i === 0 && drag.active && drag.hint"
-            class="pointer-events-none absolute right-4 top-4 z-10 rounded-full px-3 py-1 text-sm font-semibold"
+            class="pointer-events-none absolute top-4 z-10 rounded-full px-3 py-1 text-sm font-semibold"
             :class="
               drag.hint === 'apply'
-                ? 'bg-surface-green-2 text-ink-green-8'
+                ? 'left-4 bg-surface-green-2 text-ink-green-8'
                 : drag.hint === 'skip'
-                  ? 'bg-surface-gray-3 text-ink-gray-8'
-                  : 'bg-surface-amber-2 text-ink-amber-8'
+                  ? 'right-4 bg-surface-gray-3 text-ink-gray-8'
+                  : 'left-1/2 -translate-x-1/2 bg-surface-amber-2 text-ink-amber-8'
             "
             :style="{ opacity: drag.progress }"
           >
