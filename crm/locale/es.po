@@ -44400,6 +44400,217 @@ msgctxt "Surtido"
 msgid "{0}, sales of {1} months"
 msgstr "{0}, ventas de {1} meses"
 
+# «Cambios propuestos» (Enriquecer's deck): frontend/src/components/productos/RevisarDeck.vue, utils/revisar.js
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "Proposed changes"
+msgstr "Cambios propuestos"
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "Back to products"
+msgstr "Volver a productos"
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "Undo the last one"
+msgstr "Deshacer el último"
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "Opening the changes…"
+msgstr "Abriendo los cambios…"
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "{0} of {1} reviewed"
+msgstr "{0} de {1} revisados"
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "still reading products: {0} of {1}"
+msgstr "todavía leyendo productos: {0} de {1}"
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "Apply the sure ones"
+msgstr "Aplicar los seguros"
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "Yes, apply {0}"
+msgstr "Sí, aplicar {0}"
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "{0}: apply the {1} sure ones"
+msgstr "{0}: aplicar los {1} seguros"
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "The first changes are on their way"
+msgstr "Los primeros cambios vienen en camino"
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "Nothing left to review"
+msgstr "No queda nada por revisar"
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "They show here as soon as they are ready."
+msgstr "Aparecen aquí en cuanto estén listos."
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "Every proposed change of this job is decided."
+msgstr "Ya decidiste todos los cambios de este trabajo."
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "Review more products"
+msgstr "Revisar más productos"
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "Now"
+msgstr "Ahora"
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "(empty)"
+msgstr "(vacío)"
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "Proposed"
+msgstr "Propuesto"
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "Skip"
+msgstr "Saltar"
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "Skip (←)"
+msgstr "Saltar (←)"
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "Edit before applying"
+msgstr "Editar antes de aplicar"
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "Edit before applying (↑)"
+msgstr "Editar antes de aplicar (↑)"
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "Apply"
+msgstr "Aplicar"
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "Apply (→)"
+msgstr "Aplicar (→)"
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "The owner applies these changes."
+msgstr "El dueño aplica estos cambios."
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "Apply with my change"
+msgstr "Aplicar con mi cambio"
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "Jobs"
+msgstr "Trabajos"
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "Pick a group: I read up to 200 of its products and propose a full title, a description, the models they fit and the group when it is wrong. Nothing changes until you apply it."
+msgstr "Elige un grupo: leo hasta 200 de sus productos y propongo título completo, descripción, los modelos que les quedan y el grupo cuando está mal. Nada cambia hasta que lo apliques."
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "{0} waiting"
+msgstr "{0} por revisar"
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "Start"
+msgstr "Empezar"
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "Could not open the changes"
+msgstr "No se pudieron abrir los cambios"
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "«{0}» changed after the proposal; I left it as it is."
+msgstr "«{0}» cambió después de la propuesta; lo dejé como estaba."
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "{0} could not be applied: {1}"
+msgstr "{0} no se pudieron aplicar: {1}"
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "Edit"
+msgstr "Editar"
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "Very sure"
+msgstr "Muy seguro"
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "Fairly sure"
+msgstr "Bastante seguro"
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "Check it"
+msgstr "Revísalo"
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "Your products"
+msgstr "Tus productos"
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "Supplier list"
+msgstr "Lista del proveedor"
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "Taller models"
+msgstr "Modelos de Taller"
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "Internet"
+msgstr "Internet"
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "Rule"
+msgstr "Regla"
+
 #: frontend/src/components/compras/SurtidoInicio.vue
 msgid "Its products by section, with prices, tiers and stock."
 msgstr "Sus productos por sección, con precios, escalas y existencias."

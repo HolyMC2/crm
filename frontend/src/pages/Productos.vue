@@ -1,5 +1,14 @@
 <template>
+  <!-- `?revisar=<job>`: the deck of the changes «Enriquecer» proposed
+       (RevisarDeck), in place of the lists until it closes. -->
+  <RevisarDeck
+    v-if="revisar !== null"
+    :lote="revisar"
+    @close="closeRevisar"
+    @lote="(lote) => router.replace({ query: { revisar: lote } })"
+  />
   <ModuleLayout
+    v-else
     title="Productos"
     :entries="entries"
     :saved-entries="inventoryEntries"
@@ -930,6 +939,7 @@
 <script setup>
 import {
   computed,
+  defineAsyncComponent,
   getCurrentInstance,
   nextTick,
   onBeforeUnmount,
@@ -1020,6 +1030,17 @@ const LIVE_DOCTYPES = [
 const CATALOG_LIVE_DOCTYPES = ['Item', 'Item Price', 'Stock Ledger Entry']
 const route = useRoute()
 const router = useRouter()
+const RevisarDeck = defineAsyncComponent(
+  () => import('@/components/productos/RevisarDeck.vue'),
+)
+// the deck of proposed changes (doco.workspaces.revisar), opened by the bot's link
+const revisar = computed(() =>
+  typeof route.query.revisar === 'string' ? route.query.revisar : null,
+)
+let started = false
+function closeRevisar() {
+  router.replace({ query: {} })
+}
 const boot = productosBoot
 const rows = ref([])
 const counts = ref({})
@@ -1868,6 +1889,7 @@ registerPageShortcuts(null, () => [
 ])
 let lastKey = { key: '', at: 0 }
 function onKey(event) {
+  if (revisar.value !== null) return
   const previous = lastKey
   lastKey = { key: event.key, at: Date.now() }
   if (event.metaKey || event.ctrlKey || event.altKey || event.defaultPrevented)
@@ -2053,7 +2075,16 @@ onMounted(async () => {
   // The last answer shows before the boot and the read even start.
   paintCached()
   await loadProductosBoot()
-  if (boot.value?.enabled) start()
+  if (boot.value?.enabled && revisar.value === null) {
+    started = true
+    start()
+  }
+})
+watch(revisar, (value) => {
+  if (value === null && !started && boot.value?.enabled) {
+    started = true
+    start()
+  }
 })
 // Tarjetas and Lista load the next page as it comes into view; the button stays.
 let observer = null
