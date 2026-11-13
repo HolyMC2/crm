@@ -173,9 +173,9 @@ class TestUpdateCallLogWriteConflict(unittest.TestCase):
 
 	def setUp(self):
 		self.addCleanup(frappe.db.rollback)
-		twilio = MagicMock()
-		twilio.get_call_info.return_value = _call_details()
-		self.enterContext(patch.object(api.Twilio, "connect", return_value=twilio))
+		self.twilio = MagicMock()
+		self.twilio.get_call_info.return_value = _call_details()
+		self.enterContext(patch.object(api.Twilio, "connect", return_value=self.twilio))
 		self.enterContext(patch.object(api.frappe.db, "exists", return_value=True))
 		self.rollback = self.enterContext(patch.object(api.frappe.db, "rollback"))
 		self.enterContext(patch.object(api.frappe.db, "commit"))
@@ -210,3 +210,56 @@ class TestUpdateCallLogWriteConflict(unittest.TestCase):
 		self.assertEqual(save.call_count, 1)
 		self.rollback.assert_not_called()
 		self.logged.assert_called_once()
+
+	def test_the_retry_saves_what_twilio_says_now_not_the_first_fetch(self):
+		stale = _call_details()
+		fresh = frappe._dict(status="completed", duration="57", start_time=None, end_time=None)
+		self.twilio.get_call_info.side_effect = [stale, fresh]
+		saved = frappe._dict(name="CAfictional")
+		save = self._saves(frappe.QueryDeadlockError("1020"), saved)
+		api.update_call_log("CAfictional", status="in-progress")
+		first, retry = save.call_args_list
+		self.assertIs(first.args[1], stale)
+		self.assertFalse(first.kwargs.get("keep_final_status"))
+		self.assertIs(retry.args[1], fresh)
+		self.assertEqual(retry.args[2], "in-progress")
+		self.assertTrue(retry.kwargs["keep_final_status"])
+
+
+class TestSaveCallDetails(unittest.TestCase):
+	"""What a save writes on the CRM Call Log, the first time and after a conflict."""
+
+	def setUp(self):
+		self.addCleanup(frappe.db.rollback)
+		self.log = MagicMock(status="Completed", duration="57")
+		self.enterContext(patch.object(api.frappe, "get_doc", return_value=self.log))
+		self.enterContext(patch.object(api.frappe.db, "commit"))
+
+	def test_a_retry_never_moves_a_finished_call_back(self):
+		api._save_call_details("CAfictional", _call_details(), "in-progress", keep_final_status=True)
+		self.assertEqual(self.log.status, "Completed")
+		self.assertEqual(self.log.duration, "12")
+		self.log.save.assert_called_once_with(ignore_permissions=True)
+
+	def test_a_retry_still_writes_a_final_status(self):
+		self.log.status = "In Progress"
+		api._save_call_details("CAfictional", _call_details(), "completed", keep_final_status=True)
+		self.assertEqual(self.log.status, "Completed")
+
+	def test_a_retry_moves_one_final_status_to_another(self):
+		api._save_call_details("CAfictional", _call_details(), "no-answer", keep_final_status=True)
+		self.assertEqual(self.log.status, "No Answer")
+
+	def test_the_first_save_writes_the_callback_status_as_before(self):
+		api._save_call_details("CAfictional", _call_details(), "in-progress")
+		self.assertEqual(self.log.status, "In Progress")
+
+
+class TestTwilioLogFile(unittest.TestCase):
+	def test_info_lines_reach_the_log_file_outside_the_dev_server(self):
+		import logging
+
+		logger = logging.getLogger("crm.twilio-fictional-site")
+		logger.setLevel(logging.ERROR)
+		with patch.object(api.frappe, "logger", return_value=logger):
+			self.assertTrue(api._twilio_log().isEnabledFor(logging.INFO))

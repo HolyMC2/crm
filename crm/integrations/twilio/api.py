@@ -200,26 +200,39 @@ def update_call_log(call_sid, status=None):
 		return
 
 	try:
-		call_details = twilio.get_call_info(call_sid)
 		try:
-			return _save_call_details(call_sid, call_details, status)
+			return _save_call_details(call_sid, twilio.get_call_info(call_sid), status)
 		except Exception as exc:
 			if not _is_write_conflict(exc):
 				raise
 			# Twilio sends one call's callbacks (each leg, each status) close together,
 			# so another request may have saved this log after this one read it
-			# (MariaDB 1020 under snapshot isolation). Drop the stale read view, read
-			# the log again and save once more; only a second failure is an error.
+			# (MariaDB 1020 under snapshot isolation). The winner may hold newer call
+			# details than this request's fetch: drop the stale read view, ask Twilio
+			# again, read the log again and save once more, never moving a finished
+			# call back to an earlier status. Only a second failure is an error.
 			frappe.db.rollback()
-			return _save_call_details(call_sid, call_details, status)
+			return _save_call_details(
+				call_sid, twilio.get_call_info(call_sid), status, keep_final_status=True
+			)
 	except Exception:
 		frappe.log_error(title="Error while updating call record")
 		frappe.db.commit()
 
 
-def _save_call_details(call_sid, call_details, status=None):
+# CRM Call Log statuses after which a call does not change any more.
+_FINAL_CALL_STATUSES = frozenset({"Completed", "Failed", "Busy", "No Answer", "Canceled"})
+
+
+def _save_call_details(call_sid, call_details, status=None, keep_final_status=False):
 	call_log = frappe.get_doc("CRM Call Log", call_sid)
-	call_log.status = TwilioCallDetails.get_call_status(status or call_details.status)
+	new_status = TwilioCallDetails.get_call_status(status or call_details.status)
+	if not (
+		keep_final_status
+		and call_log.status in _FINAL_CALL_STATUSES
+		and new_status not in _FINAL_CALL_STATUSES
+	):
+		call_log.status = new_status
 	call_log.duration = call_details.duration
 	call_log.start_time = get_datetime_from_timestamp(call_details.start_time)
 	call_log.end_time = get_datetime_from_timestamp(call_details.end_time)
@@ -294,10 +307,18 @@ def _is_child_leg(callback) -> bool:
 	return bool(callback.get("ParentCallSid")) and callback.get("Direction") == _CHILD_LEG_DIRECTION
 
 
+def _twilio_log():
+	"""The crm.twilio log file, with its INFO lines kept: outside the dev server Frappe
+	sets every logger to ERROR, which would drop them without a trace."""
+	logger = frappe.logger("crm.twilio")
+	logger.setLevel(logging.INFO)
+	return logger
+
+
 def _note_expected_status_push_refusal(exc, call_sid):
 	"""An ordinary refusal goes to the crm.twilio log file, not the Error Log."""
 	try:
-		frappe.logger("crm.twilio").info(
+		_twilio_log().info(
 			"status push refused as expected: Twilio code=%s HTTP status=%s call=%s",
 			getattr(exc, "code", None),
 			getattr(exc, "status", None),
