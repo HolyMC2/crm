@@ -19,7 +19,7 @@
       <p class="mb-4 text-sm text-ink-gray-6">
         {{
           __(
-            'Days worked, vacations and open advances per person, before paying. Nothing here changes payroll.',
+            'Days and hours worked, vacations and open advances per person, before paying. Nothing here changes payroll.',
           )
         }}
       </p>
@@ -143,7 +143,7 @@
         >
           <table
             class="w-full text-left text-sm"
-            :class="answer.bonuses ? 'min-w-[50rem]' : 'min-w-[44rem]'"
+            :class="answer.bonuses ? 'min-w-[56rem]' : 'min-w-[50rem]'"
           >
             <thead class="border-b border-outline-gray-2 text-ink-gray-6">
               <tr>
@@ -152,6 +152,9 @@
                 </th>
                 <th scope="col" class="p-3 text-right font-medium">
                   {{ __('Days present') }}
+                </th>
+                <th scope="col" class="p-3 text-right font-medium">
+                  {{ __('Hours worked') }}
                 </th>
                 <th scope="col" class="p-3 text-right font-medium">
                   {{ __('Absent days') }}
@@ -204,6 +207,18 @@
                     }}</span
                   >
                 </td>
+                <td
+                  class="p-3 text-right tabular-nums text-ink-gray-9"
+                  :data-hours="row.employee"
+                >
+                  {{ hoursText(row.hours) }}
+                  <span
+                    v-for="line in overtimeLines(row.hours)"
+                    :key="line"
+                    class="block text-xs text-ink-gray-6"
+                    >{{ line }}</span
+                  >
+                </td>
                 <td class="p-3 text-right tabular-nums text-ink-gray-9">
                   {{ daysText(row.days_absent) }}
                 </td>
@@ -253,6 +268,13 @@
                 <td class="p-3 text-right tabular-nums">
                   {{ daysText(answer.totals.days_present) }}
                 </td>
+                <td class="p-3 text-right tabular-nums">
+                  {{
+                    answer.totals.hours_worked === undefined
+                      ? '—'
+                      : hoursText({ worked: answer.totals.hours_worked })
+                  }}
+                </td>
                 <td class="p-3" />
                 <td class="p-3 text-right tabular-nums">
                   {{ daysText(answer.totals.leave_days) }}
@@ -294,7 +316,9 @@ import {
   advancesText,
   daysText,
   equipoApi,
+  hoursText,
   liftAction,
+  overtimeLines,
   periodFromQuery,
   periodQuery,
   periodRange,

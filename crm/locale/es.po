@@ -29765,8 +29765,8 @@ msgid "Pre-payroll"
 msgstr "Pre-nómina"
 
 #: frontend/src/pages/EquipoPrenomina.vue
-msgid "Days worked, vacations and open advances per person, before paying. Nothing here changes payroll."
-msgstr "Días trabajados, vacaciones y adelantos abiertos por persona, antes de pagar. Aquí nada cambia la nómina."
+msgid "Days and hours worked, vacations and open advances per person, before paying. Nothing here changes payroll."
+msgstr "Días y horas trabajadas, vacaciones y adelantos abiertos por persona, antes de pagar. Aquí nada cambia la nómina."
 
 #: frontend/src/pages/EquipoPrenomina.vue
 msgid "Pay period"
@@ -29775,6 +29775,10 @@ msgstr "Periodo de pago"
 #: frontend/src/pages/EquipoPrenomina.vue
 msgid "Days present"
 msgstr "Días trabajados"
+
+#: frontend/src/pages/EquipoPrenomina.vue
+msgid "Hours worked"
+msgstr "Horas trabajadas"
 
 #: frontend/src/pages/EquipoPrenomina.vue
 msgid "Absent days"

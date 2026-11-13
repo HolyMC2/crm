@@ -1,8 +1,13 @@
+import { readFileSync } from 'node:fs'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import {
   PRENOMINA,
   advancesText,
   daysText,
+  hoursText,
+  overtimeLines,
   periodFromQuery,
   periodQuery,
   periodRange,
@@ -53,10 +58,34 @@ describe('pre-nómina cells', () => {
       ),
     ).toBe('MXN 750 (2) · USD 20 (1)')
   })
+  it('shows worked hours and only the overtime tiers that have hours', () => {
+    expect(hoursText(null)).toBe('—')
+    expect(hoursText({ worked: 47.5 })).toBe('47.5 h')
+    expect(
+      overtimeLines({
+        tiers: [
+          { label: 'Dobles', multiplier: 2, hours: 9 },
+          { label: 'Triples', multiplier: 3, hours: 0 },
+        ],
+      }),
+    ).toEqual(['Dobles ×2: 9 h'])
+    expect(overtimeLines(null)).toEqual([])
+  })
   it('spells the period as a date range', () => {
     expect(periodRange({ start: '2026-10-19', end: '2026-10-25' })).toMatch(
       /19.*25/,
     )
     expect(periodRange(null)).toBe('')
+  })
+})
+
+describe('pre-nómina hours in Spanish', () => {
+  it('has es-MX entries for the hours column and the subtitle', () => {
+    const here = dirname(fileURLToPath(import.meta.url))
+    const po = readFileSync(resolve(here, '../../../crm/locale/es.po'), 'utf8')
+    expect(po).toMatch(/msgid "Hours worked"\nmsgstr "Horas trabajadas"/)
+    expect(po).toMatch(
+      /msgid "Days and hours worked, vacations and open advances per person, before paying\. Nothing here changes payroll\."\nmsgstr "Días y horas trabajadas/,
+    )
   })
 })

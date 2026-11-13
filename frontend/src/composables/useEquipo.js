@@ -204,6 +204,22 @@ export function daysText(days) {
   return days === null || days === undefined ? '—' : String(Number(days))
 }
 
+/** Worked hours from the registro de jornada; a dash when unreadable. */
+export function hoursText(hours) {
+  if (!hours) return '—'
+  return `${Number(Number(hours.worked || 0).toFixed(2))} h`
+}
+
+/** Overtime by the company's work-hour rules: «Dobles ×2: 9 h» per tier with hours. */
+export function overtimeLines(hours) {
+  return (hours?.tiers || [])
+    .filter((tier) => Number(tier.hours) > 0)
+    .map(
+      (tier) =>
+        `${tier.label} ×${Number(tier.multiplier)}: ${Number(Number(tier.hours).toFixed(2))} h`,
+    )
+}
+
 /** Open advances per currency with their count; a dash when unreadable. */
 export function advancesText(advances, format = money) {
   if (!advances) return '—'
