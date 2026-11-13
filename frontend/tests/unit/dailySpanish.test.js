@@ -21,7 +21,8 @@ const PAGES = [
   'pages/DealsView.vue',
   'pages/Deal360.vue',
   'pages/Deal.vue',
-  'pages/LeadsView.vue',
+  'pages/Prospectos.vue',
+  'pages/Prospecto.vue',
   'pages/Contactos.vue',
   'pages/Contacto.vue',
   'pages/Inbox.vue',
@@ -43,6 +44,13 @@ const EXTRA = [
   'components/doco/StageStepper.vue',
   'components/doco/NextActivityChip.vue',
   'components/doco/ScoreExplainPopover.vue',
+  // Tratos' layouts and filters (lane ventas-parejo: the funnel's footnote
+  // had slipped through in English)
+  'components/doco/FunnelView.vue',
+  'components/doco/BoardView.vue',
+  'components/doco/ColumnPicker.vue',
+  'components/doco/leads/FilterPopover.vue',
+  'components/Kanban/BoardLostPrompt.vue',
   'components/ventas/DealCommercialDocs.vue',
   'utils/shellPalette.js',
   'composables/shellKeyboard.js',

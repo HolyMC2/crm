@@ -151,7 +151,7 @@
             >
               {{
                 getUser(doc.deal_owner)?.full_name ||
-                doc.deal_owner ||
+                ownerWord(doc.deal_owner) ||
                 __('Sin asignar')
               }}
             </dd>
@@ -178,7 +178,7 @@
                 {{ __('Trabajo de reparación') }}
               </h3>
               <button
-                class="-my-2.5 min-h-11 text-sm font-medium text-ink-green-8 underline sm:my-0 sm:min-h-0"
+                class="-my-2.5 min-h-11 text-sm font-medium text-ink-gray-9 underline sm:my-0 sm:min-h-0"
                 @click="$emit('navigate', 'repair')"
               >
                 {{ __('Gestionar reparaciones') }}
@@ -210,11 +210,11 @@
                 <div class="flex flex-wrap items-center justify-between gap-2">
                   <a
                     :href="orderHref(ro.name)"
-                    class="font-semibold text-ink-green-8 underline"
+                    class="font-semibold text-ink-gray-9 underline"
                     >{{ ro.device_model || ro.name }}</a
                   ><span
                     class="rounded-4 bg-surface-gray-2 px-2 py-1 text-xs font-medium"
-                    >{{ ro.status }}</span
+                    >{{ __(ro.status) }}</span
                   >
                 </div>
                 <!-- a phone reads what it is; the folio stays for desk lookups -->
@@ -250,7 +250,7 @@
                 {{ __('Documentos y cobros') }}
               </h3>
               <button
-                class="-my-2.5 min-h-11 text-sm font-medium text-ink-green-8 underline sm:my-0 sm:min-h-0"
+                class="-my-2.5 min-h-11 text-sm font-medium text-ink-gray-9 underline sm:my-0 sm:min-h-0"
                 @click="$emit('navigate', 'items')"
               >
                 {{ __('Preparar cotización') }}
@@ -311,6 +311,11 @@ const orderHref = (name) =>
   )
 const { getUser } = usersStore(),
   stages = statusesStore()
+// Someone the users list does not know: their name before the «@», never the
+// e-mail itself (the shell never shows a login).
+function ownerWord(owner) {
+  return owner ? String(owner).split('@')[0] : ''
+}
 const record = createResource({
   url: 'frappe.client.get_value',
   params: {

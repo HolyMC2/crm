@@ -1,5 +1,13 @@
 # Deals list unification: one list, tenant-customizable
 
+> **Superseded for the frontend (Marco, 2026-11-13, crm lane `ventas-parejo`).** The shell's look
+> (LOOK.md, 2026-10-28) went the other way: `/deals` stays on `pages/DealsView.vue`, now on the
+> shell's list look (Compras, Prospectos): the title with its count, the follow-up queues as the
+> tab row beside the search, the filters as one row of pills, a table whose chosen columns fit the
+> list's width (`utils/fitColumns.js`), ListRow rows on the phone. The upstream list stays the
+> «Vista clásica». The backend half below landed and stays in use (tokens, virtual columns, seeded
+> queues, export); the route switch to the upstream list and deleting DealsView will not happen.
+
 Approved by Marco on 2026-09-28. The decision was made by Codex Astra, with evidence from a
 read-only Opus audit. Complaint: the custom `/deals` page (`frontend/src/pages/DealsView.vue`) is
 weaker than upstream, with few filters, views and columns and almost no tenant customization.

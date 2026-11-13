@@ -15,33 +15,36 @@
 <template>
   <div class="relative inline-block">
     <button
-      class="flex items-center gap-1 rounded-6 border px-3 py-[7px] text-[12px] font-medium"
+      type="button"
+      class="press inline-flex h-8 items-center gap-1 rounded-full px-3 text-sm"
       :class="
         selectedView
-          ? 'border-outline-green-3 bg-surface-green-2 text-ink-green-8'
-          : 'border-outline-gray-2 text-ink-gray-7'
+          ? 'bg-surface-green-2 text-ink-green-8'
+          : 'bg-surface-gray-2 text-ink-gray-8 hover:bg-surface-gray-3'
       "
+      ref="trigger"
       :aria-expanded="open"
       aria-haspopup="menu"
-      @click="open = !open"
+      @click="toggleOpen"
     >
       {{ __('Vistas')
-      }}<span v-if="selectedView"> · {{ selectedView.label }}</span> ⌄
+      }}<span v-if="selectedView">: {{ selectedView.label }}</span>
+      <span class="lucide-chevron-down size-4" aria-hidden="true" />
     </button>
 
     <template v-if="open">
       <div class="fixed inset-0 z-[90]" @click="open = false" />
       <div
-        class="absolute right-0 z-[100] mt-1 max-h-[70vh] w-[320px] overflow-y-auto rounded-[10px] border border-outline-gray-2 bg-surface-base text-ink-gray-8"
+        :class="openLeft ? 'right-0' : 'left-0'"
+        class="absolute z-[100] mt-1 max-h-[70vh] w-[320px] overflow-y-auto rounded-[10px] border border-outline-gray-2 bg-surface-base text-ink-gray-8"
         style="box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12)"
       >
         <div
           class="flex items-center justify-between border-b border-outline-gray-1 px-3 py-2"
         >
-          <span
-            class="text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4"
-            >{{ __('Vistas guardadas') }}</span
-          >
+          <span class="text-sm font-medium text-ink-gray-7">{{
+            __('Vistas guardadas')
+          }}</span>
           <button
             v-if="selectedView"
             class="text-[11.5px] text-ink-gray-5 hover:text-ink-gray-8"
@@ -241,6 +244,17 @@ const { isManager } = usersStore()
 const canPublish = computed(() => isManager())
 const open = ref(false)
 const busy = ref(false)
+// The panel is 320 px: it opens toward the side of the trigger with room
+// (the picker sits in Tratos' filter row, which wraps).
+const trigger = ref(null)
+const openLeft = ref(false)
+function toggleOpen() {
+  if (!open.value) {
+    const rect = trigger.value?.getBoundingClientRect()
+    openLeft.value = Boolean(rect && rect.left + 320 > window.innerWidth - 16)
+  }
+  open.value = !open.value
+}
 
 // Announced once, on the first load: the page decides whether to open on the
 // default view. A later reload (after a save or a pin) must not move the worker.

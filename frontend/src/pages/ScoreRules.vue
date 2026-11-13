@@ -14,7 +14,7 @@
       <div class="flex items-center gap-2">
         <button
           class="text-[13px] text-ink-gray-5 hover:text-ink-gray-9"
-          @click="$router.push('/leads')"
+          @click="$router.push('/prospectos')"
         >
           ← {{ __('Leads') }}
         </button>

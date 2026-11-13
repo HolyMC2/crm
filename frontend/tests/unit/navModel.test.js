@@ -75,10 +75,11 @@ describe('navModel: funnel entry', () => {
     expect(routeGroup('/pipeline-analysis/')).toBe('funnel')
   })
 
-  it('leaves the other leads-family routes on the leads group', () => {
-    expect(routeGroup('/leads')).toBe('leads')
-    expect(routeGroup('/pipeline')).toBe('leads')
-    expect(routeGroup('/stage-scripts')).toBe('leads')
-    expect(routeGroup('/enrichment')).toBe('leads')
+  it('lights Prospectos on the leads-family routes («Lista de leads» is retired into it)', () => {
+    expect(routeGroup('/leads')).toBe('prospectos')
+    expect(routeGroup('/leads/CRM-LEAD-1')).toBe('prospectos')
+    expect(routeGroup('/pipeline')).toBe('prospectos')
+    expect(routeGroup('/stage-scripts')).toBe('prospectos')
+    expect(routeGroup('/enrichment')).toBe('prospectos')
   })
 })

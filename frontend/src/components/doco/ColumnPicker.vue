@@ -6,12 +6,16 @@
 -->
 <template>
   <div class="relative inline-block">
+    <!-- An icon on the list header's island (Tratos). -->
     <button
-      class="flex items-center gap-1 rounded-6 border border-outline-gray-2 px-3 py-[7px] text-[12px] font-medium text-ink-gray-7"
+      type="button"
+      class="press flex size-9 items-center justify-center rounded-full text-ink-gray-7 hover:bg-surface-gray-3 hover:text-ink-gray-9"
       :title="__('Columnas')"
+      :aria-label="__('Columnas')"
+      :aria-expanded="open"
       @click="open = !open"
     >
-      ⋮⋮ {{ __('Columnas') }}
+      <span class="lucide-columns-3 size-5" aria-hidden="true" />
     </button>
 
     <template v-if="open">
@@ -21,7 +25,7 @@
         style="box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12)"
       >
         <div
-          class="border-b border-outline-gray-1 px-3 py-2 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4"
+          class="border-b border-outline-gray-1 px-3 py-2 text-sm font-medium text-ink-gray-7"
         >
           {{ __('Columnas') }}
         </div>

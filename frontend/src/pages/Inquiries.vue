@@ -121,7 +121,10 @@
           <ul class="space-y-2">
             <li v-for="item in items" :key="item.name">
               <router-link
-                :to="{ name: 'Inquiries', query: { name: item.name } }"
+                :to="{
+                  name: 'Inquiries',
+                  query: { name: item.name, list: route.query.list },
+                }"
                 :aria-current="selectedName === item.name ? 'page' : undefined"
                 class="block space-y-1 rounded-6 border p-3"
                 :class="
@@ -326,7 +329,11 @@ function created(value) {
     'Consulta guardada. Selecciona a cada persona antes de crear o vincular un prospecto.'
   showCapture.value = false
   void loadList()
-  void router.push({ name: 'Inquiries', query: { name: value.name } })
+  // the way back (?list=, from Prospectos) stays with the record
+  void router.push({
+    name: 'Inquiries',
+    query: { name: value.name, list: route.query.list },
+  })
 }
 </script>
 

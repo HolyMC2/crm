@@ -44,7 +44,8 @@ export function dealTab(value) {
 const LAYOUTS = { kanban: 'board', list: 'list', group_by: 'list' }
 const LEGACY_LISTS = {
   Deals: 'Deals List',
-  Leads: 'Leads List',
+  // «Lista de leads» is retired into Prospectos (lane ventas-parejo).
+  Leads: 'Prospectos',
   'Call Logs': 'Calls List',
 }
 
@@ -74,6 +75,12 @@ export function legacyVentasRoute(to, available, from = null) {
   }
   const list = LEGACY_LISTS[to.name]
   if (!list || wantsClassicList(to, from)) return null
+  // Prospectos has no board and its own filters: only the search carries over.
+  if (list === 'Prospectos')
+    return {
+      name: list,
+      query: typeof query.q === 'string' ? { q: query.q } : {},
+    }
   const layout = LAYOUTS[to.params?.viewType]
   if (to.name !== 'Call Logs' && layout && layout !== 'list')
     query.layout = layout

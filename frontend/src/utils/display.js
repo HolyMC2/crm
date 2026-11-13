@@ -534,6 +534,12 @@ const STATUS_IN = {
     completed: ['Hecha', 'success'],
     open: ['Pendiente', 'neutral'],
   },
+  // An inquiry is «una consulta»: the same words as Consultas (utils/inquiries).
+  inquiry: {
+    new: ['Nueva', 'info'],
+    'in progress': ['En seguimiento', 'info'],
+    closed: ['Cerrada', 'neutral'],
+  },
 }
 
 /** The [label, tone] of a known status, or null (an unknown text is not a status). */

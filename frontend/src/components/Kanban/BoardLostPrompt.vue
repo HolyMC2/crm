@@ -7,7 +7,7 @@
 <template>
   <Dialog
     v-model="open"
-    :title="__('Motivo de cancelación')"
+    :title="__('Motivo de pérdida')"
     @close="emit('cancel')"
   >
     <template #default>

@@ -5,18 +5,11 @@ import { navItems, navItemsBottom } from '@/composables/navModel'
 // reads it without the Ventas runtime.
 
 // Keys of navModel entries, in order. «Prospectos» (CRM-S3.4, D4) is leads and
-// inquiries in one list; their own lists stay under «Más».
+// inquiries in one list, at every width: the old «Lista de leads» is retired
+// into it (lane ventas-parejo), and /leads opens it.
 export const VENTAS_SECTIONS = Object.freeze({
   daily: ['deals', 'prospectos', 'inbox', 'fidelidad'],
-  more: [
-    'dashboard',
-    'leads',
-    'tasks',
-    'calls',
-    'reports',
-    'funnel',
-    'workload',
-  ],
+  more: ['dashboard', 'tasks', 'calls', 'reports', 'funnel', 'workload'],
   settings: [
     'campaigns',
     'forms',
@@ -30,18 +23,15 @@ export const VENTAS_SECTIONS = Object.freeze({
 // Labels that differ from navModel's (English source, es-MX in crm/locale/es.po).
 // Inbox keeps «Bandeja de entrada», the page's own title: its «Conversaciones»
 // tab is one of the two spaces inside it.
-// «Leads» reads «Prospectos» in es-MX, the daily list's name: the old leads
-// list under «Más» says «Lista de leads».
-const LABELS = { leads: 'Lead list' }
+const LABELS = {}
 // Manager views besides the whole «Configuración» section.
 const MANAGER_ONLY = new Set(['workload', ...VENTAS_SECTIONS.settings])
 // Screens built for a desk (Shell SPEC D3, an explicit list: not a section):
 // below 768px Más leaves them out and their routes show «Ábrelo en una
-// computadora». Dashboard's numbers fold into Resultados on a phone; «Lista
-// de leads» opens Prospectos there (SHELL-S4.3). The Forms list stays on a
-// phone (S4 reworked it); only its builder (/forms/:formId) is desk-only.
+// computadora». Dashboard's numbers fold into Resultados on a phone. The
+// Forms list stays on a phone (S4 reworked it); only its builder
+// (/forms/:formId) is desk-only.
 export const DESKTOP_ONLY = new Set([
-  'leads',
   'dashboard',
   'campaigns',
   'social',

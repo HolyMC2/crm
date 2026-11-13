@@ -71,9 +71,20 @@ describe('legacyVentasRoute', () => {
         true,
       ),
     ).toEqual({ name: 'Deals List', query: { owner: 'me', layout: 'board' } })
+    // «Lista de leads» is retired into Prospectos: only the search carries over
     expect(
       legacyVentasRoute({ name: 'Leads', params: { viewType: 'list' } }, true),
-    ).toEqual({ name: 'Leads List', query: {} })
+    ).toEqual({ name: 'Prospectos', query: {} })
+    expect(
+      legacyVentasRoute(
+        {
+          name: 'Leads',
+          params: { viewType: 'kanban' },
+          query: { q: 'ana', status: 'New' },
+        },
+        true,
+      ),
+    ).toEqual({ name: 'Prospectos', query: { q: 'ana' } })
     expect(
       legacyVentasRoute({ name: 'Call Logs', params: {}, query: {} }, true),
     ).toEqual({ name: 'Calls List', query: {} })

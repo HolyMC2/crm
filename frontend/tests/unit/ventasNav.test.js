@@ -76,7 +76,7 @@ describe('Ventas navigation (S5.1)', () => {
   it('knows which section a page lives in, so its section opens', () => {
     expect(ventasSectionOf('/deals/view/list')).toBe('daily')
     expect(ventasSectionOf('/prospectos')).toBe('daily')
-    expect(ventasSectionOf('/leads')).toBe('more')
+    expect(ventasSectionOf('/leads')).toBe('daily')
     expect(ventasSectionOf('/inbox')).toBe('daily')
     expect(ventasSectionOf('/dashboard')).toBe('more')
     expect(ventasSectionOf('/whatsapp-queue')).toBe('daily')
@@ -99,7 +99,6 @@ describe('Ventas navigation (S5.1)', () => {
       .filter((label) => !spanishSource.has(label))
     const missing = labels.filter((label) => !catalog.get(label))
     expect(missing).toEqual([])
-    expect(catalog.get('Lead list')).toBe('Lista de leads')
     expect(catalog.get('Deals')).toBe('Tratos')
   })
 })
@@ -119,7 +118,6 @@ describe('legacy screens (Shell D3, S1.3)', () => {
       .map((item) => item.key)
     expect(flagged).toEqual([
       'dashboard',
-      'leads',
       'campaigns',
       'social',
       'automations',
@@ -127,14 +125,14 @@ describe('legacy screens (Shell D3, S1.3)', () => {
       'webshop',
     ])
     // Pinned to SPEC D3: Dashboard, Campaigns, Social, Automations, Chatflows,
-    // Score rules, Webshop, the Form builder (route only) and «Lista de leads».
+    // Score rules, Webshop and the Form builder (route only); «Lista de leads»
+    // is retired into Prospectos.
     expect([...DESKTOP_ONLY].sort()).toEqual(
       [
         'automations',
         'campaigns',
         'chatflows',
         'dashboard',
-        'leads',
         'score-rules',
         'social',
         'webshop',

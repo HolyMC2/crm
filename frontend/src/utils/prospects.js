@@ -1,5 +1,6 @@
 // «Prospectos» (CRM-S3.4, decision D4): one capture list for leads and inquiries.
 // Pure helpers for pages/Prospectos.vue; the server (crm.api.prospects) owns the data.
+import { formatPhone } from '@/composables/crmFormat'
 
 export const KIND_LABELS = { lead: 'Prospecto', inquiry: 'Consulta' }
 
@@ -9,47 +10,48 @@ export const KIND_CHIPS = [
   { value: 'inquiry', label: 'Consultas' },
 ]
 
-// frappe-ui Badge themes: gray, blue, green, orange, red, violet (others render nothing).
-const SOURCE_THEMES = {
-  whatsapp: 'green',
-  facebook: 'blue',
-  instagram: 'violet',
-  tienda: 'violet',
-  web: 'blue',
-  mostrador: 'orange',
-  llamada: 'orange',
-  correo: 'gray',
-  referido: 'green',
-  manual: 'gray',
-  otro: 'gray',
-}
-
-export function sourceTheme(key) {
-  return SOURCE_THEMES[key] || 'gray'
-}
-
-/** Where a row opens: the lead page, or the inquiry in Consultas. On a phone a
- * lead opens the prospect record (Shell D4), which reads like a contact. */
-export function prospectRoute(row, { phone = false } = {}) {
+/** Where a row opens, at every width: a lead opens the prospect record (it
+ * reads like a contact, Shell D4); an inquiry opens in Consultas, whose back
+ * arrow returns to the list it came from (`list`). */
+export function prospectRoute(row, { list = '/prospectos' } = {}) {
   if (row.kind === 'inquiry')
-    return { name: 'Inquiries', query: { name: row.name } }
-  if (phone) return { name: 'Prospecto', params: { leadId: row.name } }
-  return { name: 'Lead', params: { leadId: row.name } }
+    return { name: 'Inquiries', query: { name: row.name, list } }
+  return { name: 'Prospecto', params: { leadId: row.name } }
 }
 
 // A name the system made up («Prospecto 67a3f…», «CRM-LEAD-2026-…») is not a name.
 const GENERATED = /^(prospecto|lead)\s+[0-9a-f]{3,}|^crm-lead-/i
 
-/** The prospect's name, else its phone or e-mail; never a generated id. */
+/** The prospect's name, else its phone (written the way the list writes
+ * phones) or e-mail; never a generated id. */
 export function prospectName(row = {}) {
+  // The server falls back to the record's id when it has no name: that is
+  // no name either.
+  const title = row.title && row.title !== row.name ? row.title : ''
   const name = String(
-    row.title ||
+    title ||
       row.lead_name ||
       [row.first_name, row.last_name].filter(Boolean).join(' ') ||
       '',
   ).trim()
   if (name && !GENERATED.test(name)) return name
-  return row.phone || row.mobile_no || row.email || 'Prospecto sin nombre'
+  const phone = row.phone || row.mobile_no
+  if (phone) return formatPhone(phone)
+  if (row.email) return row.email
+  return row.kind === 'inquiry' ? 'Consulta sin título' : 'Prospecto sin nombre'
+}
+
+/** A name that is really a way to reach them (a phone or an e-mail). */
+export function nameIsContact(row = {}) {
+  const name = prospectName(row)
+  return /^[+\d\s()-]+$|@/.test(name)
+}
+
+/** Where the prospect came from, in the list's words. «Otro» says nothing on
+ * its own: an unknown source shows its own name, and no source shows nothing. */
+export function sourceWord(row = {}) {
+  if (row.source && row.source !== 'otro') return row.source_label || ''
+  return sourceText(row.source_raw)
 }
 
 /** «Sitio web», «WhatsApp»: a lead source in the worker's words. */

@@ -11,9 +11,13 @@
   phone rows, where the line is already full.
 -->
 <template>
-  <span v-if="state === 'none'" class="truncate text-[11px] text-ink-gray-5">{{
-    emptyLabel
-  }}</span>
+  <!-- a table cell reads at the row's size; a board card or phone row is tight -->
+  <span
+    v-if="state === 'none'"
+    class="truncate"
+    :class="compact ? 'text-[11px] text-ink-gray-5' : 'text-sm text-ink-gray-6'"
+    >{{ emptyLabel }}</span
+  >
   <span
     v-else
     class="inline-flex min-w-0 max-w-full items-center gap-1 rounded-5 px-1.5 py-[2px] text-[11px] font-semibold"

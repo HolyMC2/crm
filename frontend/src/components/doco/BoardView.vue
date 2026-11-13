@@ -20,10 +20,8 @@
         <div
           class="flex items-center gap-2 text-[12.5px] font-semibold text-ink-gray-8"
         >
-          <span
-            class="h-2 w-2 rounded-full"
-            :style="`background:${g.color || 'var(--outline-gray-2)'}`"
-          />
+          <!-- a stage's colour is an ink class (statuses store), not a hex -->
+          <span v-bind="dotBinding(g.color || 'text-ink-gray-4')" />
           {{ g.label }}
           <span
             class="rounded-full bg-surface-gray-2 px-1.5 text-[11px] font-medium text-ink-gray-6"
@@ -69,6 +67,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import { dotBinding } from '@/components/ui/chipClass'
 
 const props = defineProps({
   rows: { type: Array, default: () => [] },

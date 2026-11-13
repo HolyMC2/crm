@@ -13,11 +13,9 @@
   <template v-if="isDeal">
     <button
       v-if="!hideTrigger"
-      class="press flex h-[34px] w-[34px] items-center justify-center rounded-6 border border-outline-gray-2"
+      class="press flex size-9 items-center justify-center rounded-full hover:bg-surface-gray-3"
       :class="
-        active
-          ? 'bg-surface-violet-2 text-ink-violet-8'
-          : 'bg-surface-gray-2 text-ink-gray-7 hover:bg-surface-gray-3'
+        active ? 'text-ink-violet-8' : 'text-ink-gray-7 hover:text-ink-gray-9'
       "
       :title="
         active

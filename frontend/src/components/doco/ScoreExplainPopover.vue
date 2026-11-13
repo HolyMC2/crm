@@ -15,10 +15,14 @@
     v-if="grade"
     ref="triggerRef"
     type="button"
-    class="press cursor-pointer text-white"
-    :class="triggerClass"
-    :style="`background:${bg}`"
-    :aria-label="__('Explicar puntaje')"
+    class="press cursor-pointer"
+    :class="[triggerClass, variant === 'quiet' ? '' : 'text-white']"
+    :style="variant === 'quiet' ? undefined : `background:${bg}`"
+    :aria-label="
+      variant === 'quiet'
+        ? __('Puntaje {0} ({1}): ver por qué', [score, grade])
+        : __('Explicar puntaje')
+    "
     :aria-expanded="open"
     @click.stop="toggle"
   >
@@ -196,6 +200,7 @@ const props = defineProps({
   score: { type: [Number, String], default: '' },
   grade: { type: String, default: '' },
   // 'chip' (leads table cell) | 'card' (board card) | 'header' (deal header)
+  // | 'quiet' (a grey figure: Prospectos, where colour means state)
   variant: { type: String, default: 'chip' },
 })
 
@@ -221,6 +226,8 @@ const triggerClass = computed(
       header: 'flex-none rounded-4 px-[7px] py-px text-[11px] font-bold',
       card: 'flex-none rounded-4 px-[5px] py-px text-[9px] font-bold',
       chip: 'rounded-[3px] px-[5px] py-px text-[9px] font-bold',
+      quiet:
+        'num inline-flex min-h-8 items-center gap-1 rounded-full bg-surface-gray-2 px-2.5 text-sm text-ink-gray-8 hover:bg-surface-gray-3',
     })[props.variant] || 'rounded-[3px] px-[5px] py-px text-[9px] font-bold',
 )
 

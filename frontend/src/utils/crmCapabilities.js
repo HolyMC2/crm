@@ -89,7 +89,6 @@ export const addonAvailable = computed(() => hasApp(ADDON_APP))
 // addon-only surfaces go Home (which itself resolves to the native Leads list).
 const HOME = { name: 'Home' }
 export const GATED_ROUTES = Object.freeze({
-  'Leads List': { name: 'Leads' },
   'Deals List': { name: 'Deals' },
   'Tasks List': { name: 'Tasks' },
   'Calls List': { name: 'Call Logs' },

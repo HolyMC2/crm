@@ -146,7 +146,6 @@ describe('crmCapabilities: route gates', () => {
   it('without the addon: custom lists fall back to the upstream list routes', async () => {
     const m = await fresh({ boot: DEMO_SITE })
     await m.loadCapabilities()
-    expect(m.gateRoute({ name: 'Leads List' })).toEqual({ name: 'Leads' })
     expect(m.gateRoute({ name: 'Deals List' })).toEqual({ name: 'Deals' })
     expect(m.gateRoute({ name: 'Tasks List' })).toEqual({ name: 'Tasks' })
     expect(m.gateRoute({ name: 'Calls List' })).toEqual({ name: 'Call Logs' })
@@ -225,7 +224,7 @@ describe('crmCapabilities: navigation visibility', () => {
     expect(m.navItemVisible('Inbox')).toBe(true)
     expect(m.navItemVisible('Campaigns')).toBe(false)
     expect(m.navItemVisible('Score Rules')).toBe(false)
-    expect(m.navItemVisible('Leads List')).toBe(true)
+    expect(m.navItemVisible('Prospectos')).toBe(true)
     expect(m.navItemVisible('Calls List')).toBe(true)
     expect(m.navItemVisible('Dashboard')).toBe(true)
     expect(m.navItemVisible('Calendar')).toBe(true)
@@ -234,7 +233,7 @@ describe('crmCapabilities: navigation visibility', () => {
   it('shows everything with the addon, and hides addon-only entries while pending', async () => {
     const m = await fresh({ apps: WITH_ADDON })
     expect(m.navItemVisible('Inbox')).toBe(true) // native Inbox is available even while addon state is pending
-    expect(m.navItemVisible('Leads List')).toBe(true)
+    expect(m.navItemVisible('Prospectos')).toBe(true)
     await m.loadCapabilities()
     expect(m.navItemVisible('Inbox')).toBe(true)
     expect(m.navItemVisible('Score Rules')).toBe(true)

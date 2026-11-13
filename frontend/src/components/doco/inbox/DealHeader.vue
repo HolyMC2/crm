@@ -18,13 +18,15 @@
       </button>
       <!-- identity: on mobile this whole block opens the customer/deal data pane
            (view 4), exactly like tapping the contact name in WhatsApp. -->
+      <!-- grey initials, as every avatar in the shell; nothing while the name
+           loads (never «?») -->
       <span
-        class="flex size-10 flex-none items-center justify-center rounded-full text-sm-semibold sm:size-[38px]"
+        class="flex size-10 flex-none items-center justify-center rounded-full bg-surface-gray-2 text-sm-semibold text-ink-gray-7 sm:size-[38px]"
         :class="isMobile ? 'cursor-pointer' : ''"
-        :style="`background:${avatarColor(name)[0]};color:${avatarColor(name)[1]}`"
+        aria-hidden="true"
         @click="isMobile && openContext()"
       >
-        {{ initials(name) }}
+        {{ name ? initials(name) : '' }}
       </span>
       <div
         class="flex min-w-0 flex-1 flex-col justify-center self-stretch overflow-hidden"
@@ -35,10 +37,12 @@
         @keydown.enter="isMobile && openContext()"
       >
         <div class="flex min-w-0 items-center gap-2 sm:flex-wrap">
+          <!-- the record's name owns the header; never its id (CRM-DEAL-…),
+               not even while it loads -->
           <span
-            class="truncate text-base-bold text-ink-gray-9 max-sm:text-[16px]"
+            class="title-face truncate text-lg font-semibold text-ink-gray-9 max-sm:text-[16px]"
             data-testid="deal-header-name"
-            >{{ name || activeDeal || '—' }}</span
+            >{{ name }}</span
           >
           <ScoreExplainPopover
             v-if="grade"
@@ -48,10 +52,6 @@
             :grade="grade"
             variant="header"
           />
-          <span
-            class="hidden whitespace-nowrap text-[11.5px] text-ink-gray-5 sm:inline"
-            >{{ activeDeal }}</span
-          >
         </div>
         <!-- meta row wraps on narrow screens (was clipping the WA/saldo chips) -->
         <div
@@ -126,8 +126,7 @@
           :title="__('Responsable') + ': ' + responsible.name"
         >
           <span
-            class="flex h-[26px] w-[26px] flex-none items-center justify-center rounded-full text-[10px] font-semibold"
-            :style="`background:${avatarColor(responsible.name)[0]};color:${avatarColor(responsible.name)[1]}`"
+            class="flex h-[26px] w-[26px] flex-none items-center justify-center rounded-full bg-surface-gray-2 text-[10px] font-semibold text-ink-gray-7"
           >
             {{ initials(responsible.name) }}
           </span>
@@ -143,15 +142,16 @@
              Short label beside the other actions (the name keeps its room in the
              three-pane layout); the full «Resolver y siguiente» on wide screens and
              in the sheet's confirm button. -->
+        <!-- the shell's buttons: filled when it is the next step, tonal when a
+             due chip says something else comes first -->
         <button
           v-if="canResolve && !isMobile"
-          class="press flex h-[34px] flex-none items-center gap-1.5 whitespace-nowrap rounded-6 px-3 text-[12.5px] font-semibold"
+          class="press flex h-9 flex-none items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 text-sm font-medium"
           :class="
             due
-              ? 'border border-outline-gray-2 bg-surface-gray-2 text-ink-gray-8 hover:bg-surface-gray-3'
-              : 'text-white'
+              ? 'bg-surface-gray-2 text-ink-gray-9 hover:bg-surface-gray-3'
+              : 'bg-surface-gray-10 text-ink-base hover:bg-surface-gray-9'
           "
-          :style="due ? '' : 'background: var(--brand)'"
           :title="headerResolveLabel(nextMode)"
           :aria-label="headerResolveLabel(nextMode)"
           data-testid="header-resolve"
@@ -181,71 +181,105 @@
             {{ stageLabel(row.status, LEAD_STATUS) || __('Estado') }} ⌄
           </button>
         </Dropdown>
-        <!-- 🏷 etiquetas (spec 2.2) -->
-        <button
+        <!-- The record's tools share one island (the shell's record header):
+             tags, snooze, cadence and the log; a tool that holds a state wears
+             its colour. -->
+        <div
           v-if="!isMobile"
-          class="press flex h-[34px] w-[34px] items-center justify-center rounded-6 border border-outline-gray-2"
-          :class="
-            (row.tags || []).length
-              ? 'bg-surface-violet-2 text-ink-violet-8'
-              : 'bg-surface-gray-2 text-ink-gray-7 hover:bg-surface-gray-3'
-          "
-          :title="__('Etiquetas')"
-          :aria-label="__('Etiquetas')"
-          @click="openTags"
+          class="flex flex-none items-center gap-0.5 rounded-full bg-surface-gray-2 p-0.5"
+          data-deal-tools
         >
-          <LucideTag class="h-4 w-4" />
-        </button>
-        <!-- 💤 snooze/recordar (spec 2.1) -->
-        <Dropdown v-if="!isMobile" :options="snoozeOptions">
+          <!-- 🏷 etiquetas (spec 2.2) -->
           <button
-            class="press flex h-[34px] w-[34px] items-center justify-center rounded-6 border border-outline-gray-2"
+            class="press flex size-9 items-center justify-center rounded-full hover:bg-surface-gray-3"
             :class="
-              isSnoozed
-                ? 'bg-surface-violet-2 text-ink-violet-8'
-                : 'bg-surface-gray-2 text-ink-gray-7 hover:bg-surface-gray-3'
+              (row.tags || []).length
+                ? 'text-ink-violet-8'
+                : 'text-ink-gray-7 hover:text-ink-gray-9'
             "
-            :title="
-              isSnoozed
-                ? __('Pospuesta — reaparece sola')
-                : __('Posponer conversación')
-            "
-            :aria-label="__('Posponer')"
+            :title="__('Etiquetas')"
+            :aria-label="__('Etiquetas')"
+            @click="openTags"
           >
-            <LucideAlarmClock class="h-4 w-4" />
+            <LucideTag class="h-4 w-4" />
           </button>
-        </Dropdown>
-        <!-- 📅 cadencia de seguimiento (spec 4.2) — self-hides for non-deals -->
-        <!-- phone: no trigger chip; the ⋯ menu opens its dialog -->
+          <!-- 💤 snooze/recordar (spec 2.1) -->
+          <Dropdown :options="snoozeOptions">
+            <button
+              class="press flex size-9 items-center justify-center rounded-full hover:bg-surface-gray-3"
+              :class="
+                isSnoozed
+                  ? 'text-ink-violet-8'
+                  : 'text-ink-gray-7 hover:text-ink-gray-9'
+              "
+              :title="
+                isSnoozed
+                  ? __('Pospuesta — reaparece sola')
+                  : __('Posponer conversación')
+              "
+              :aria-label="__('Posponer')"
+            >
+              <LucideAlarmClock class="h-4 w-4" />
+            </button>
+          </Dropdown>
+          <!-- 📅 cadencia de seguimiento (spec 4.2) — self-hides for non-deals -->
+          <!-- phone: no trigger chip; the ⋯ menu opens its dialog -->
+          <CadencePicker
+            ref="cadence"
+            :doctype="activeDealDoctype"
+            :name="activeDeal"
+          />
+          <button
+            class="press flex size-9 items-center justify-center rounded-full hover:bg-surface-gray-3 text-ink-gray-7 hover:text-ink-gray-9"
+            :title="__('Bitácora — historial en todos los canales')"
+            :aria-label="__('Bitácora')"
+            @click="openLedger"
+          >
+            <LucideScrollText class="h-4 w-4" />
+          </button>
+        </div>
+        <!-- CadencePicker draws its own trigger: on a phone it is hidden and
+             the ⋯ menu opens its dialog -->
         <CadencePicker
+          v-if="isMobile"
           ref="cadence"
           :doctype="activeDealDoctype"
           :name="activeDeal"
-          :hide-trigger="isMobile"
+          hide-trigger
         />
-        <button
-          v-if="!isMobile"
-          class="press flex h-[34px] w-[34px] items-center justify-center rounded-6 border border-outline-gray-2 bg-surface-gray-2 text-ink-gray-7 hover:bg-surface-gray-3"
-          :title="__('Bitácora — historial en todos los canales')"
-          :aria-label="__('Bitácora')"
-          @click="openLedger"
+        <!-- The ways to reach the person, on their own island (the record
+             header's reach island): a call (the device's dialler when the shop
+             has no phone integration) and a message. -->
+        <div
+          v-if="row.mobile_no"
+          class="flex flex-none items-center gap-0.5 rounded-full p-0.5"
+          :class="isMobile ? '' : 'bg-surface-gray-2'"
+          data-deal-reach
         >
-          <LucideScrollText class="h-4 w-4" />
-        </button>
-        <button
-          class="press flex size-11 items-center justify-center text-[15px]"
-          :class="
-            isMobile
-              ? 'rounded-full text-ink-gray-8 hover:bg-surface-gray-2'
-              : 'rounded-6 text-white sm:size-[34px]'
-          "
-          :style="isMobile ? undefined : 'background: var(--brand)'"
-          :title="__('Llamar')"
-          :aria-label="__('Llamar')"
-          @click="call"
-        >
-          <LucidePhone :class="isMobile ? 'size-5' : 'h-4 w-4'" />
-        </button>
+          <button
+            class="press flex items-center justify-center rounded-full text-ink-gray-8"
+            :class="
+              isMobile
+                ? 'size-11 hover:bg-surface-gray-2'
+                : 'size-9 hover:bg-surface-gray-3'
+            "
+            :title="__('Llamar')"
+            :aria-label="__('Llamar')"
+            data-testid="deal-header-call"
+            @click="call"
+          >
+            <LucidePhone :class="isMobile ? 'size-5' : 'h-4 w-4'" />
+          </button>
+          <button
+            v-if="!isMobile"
+            class="press flex size-9 items-center justify-center rounded-full text-ink-gray-8 hover:bg-surface-gray-3"
+            :title="__('Enviar mensaje')"
+            :aria-label="__('Enviar mensaje')"
+            @click="composerOpen = true"
+          >
+            <span class="lucide-message-circle size-4" aria-hidden="true" />
+          </button>
+        </div>
         <Dropdown v-if="isMobile" :options="mobileMenu" align="end">
           <button
             class="press -mr-2 flex size-11 items-center justify-center rounded-full text-ink-gray-8 hover:bg-surface-gray-2"
@@ -487,7 +521,6 @@ import {
   mobileBack,
   mobileBackOr,
   mobileView,
-  avatarColor,
   initials,
   timeAgo,
   salesDocsEnabled,

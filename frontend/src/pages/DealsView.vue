@@ -1,63 +1,41 @@
 <!--
-  Deals list — doco redesign, mirror of LeadsView for CRM Deal. Dense table +
-  Status/Source/Owner filters + live search + List/Board/Funnel (inline, 1-click)
-  + bulk select + New Deal modal. "Vista clásica" jumps to the upstream
-  /deals/view (full filters on every field / group-by). New page; upstream
-  Deals.vue untouched for rebase-cleanliness. Data via createListResource.
+  Tratos: the deals list on the shell's list look (Compras, Prospectos; lane
+  ventas-parejo). Desktop: the title with its count, one filled button and an
+  island of icons; the follow-up queues as the tab row beside the search; the
+  filters as one row of pills; a table whose columns fit the list's width.
+  Phone: the shell's large title, the search panel and ListRow rows. Board
+  and Funnel are layouts of the same list. «Vista clásica» jumps to the
+  upstream /deals/view (full filters on every field / group-by). Data via
+  createListResource.
 -->
 <template>
   <div class="relative flex min-h-0 w-full flex-1 flex-col bg-surface-base">
-    <!-- ── mobile toolbar ──────────────────────────────────────────────────
-         The desktop bar wrapped into three rows at 390px and pushed Export /
-         New Deal off-screen. Phone shape: title + overflow menu, a full-width
-         search, then ONE scrollable pill row (vistas + Filtros). Creating a
-         deal moves to the FAB, where a thumb reaches it. -->
-    <!-- Phone: title, count and ⋯ ride in the shell's one header row. -->
-    <LayoutHeader v-if="isMobile">
-      <div class="flex h-12 min-w-0 items-center gap-2">
-        <!-- the view switch rides in the title (Lista / Tablero / Embudo) -->
-        <Dropdown :options="viewTitleMenu">
-          <button
-            type="button"
-            class="press -ml-1 flex min-h-11 min-w-0 items-center gap-1.5 rounded-6 px-1"
-            :aria-label="__('Cambiar vista')"
-            data-testid="deals-view-switch"
-          >
-            <h1 class="truncate text-lg font-semibold text-ink-gray-9">
-              {{ __('Tratos') }}
-            </h1>
-            <span class="truncate text-sm text-ink-gray-5">{{
-              currentViewLabel
-            }}</span>
-            <LucideChevronDown
-              class="size-4 flex-none text-ink-gray-5"
-              aria-hidden="true"
-            />
-          </button>
-        </Dropdown>
-        <div class="flex-1" />
-        <Dropdown :options="mobileMenu">
-          <button
-            class="press flex size-11 items-center justify-center rounded-6 text-[16px] text-ink-gray-5"
-            :aria-label="__('Más opciones')"
-          >
-            ⋯
-          </button>
-        </Dropdown>
-      </div>
-    </LayoutHeader>
-    <!-- Phone: the shared search panel (ui/SearchPanel, as in the Inbox).
-         Seguimiento, embudo, etapa and the longer filters live in the panel;
-         closed, only what narrows the list shows as removable chips. -->
+    <!-- Phone: the shell's large title names the list (as in Prospectos); the
+         shared search panel holds the queues and the filters, and «⋯» beside
+         the pill holds the layouts, Vista clásica and Exportar. Closed, only
+         what narrows the list shows as removable chips. -->
     <SearchPanel
       v-if="isMobile"
       v-model:open="searchOpen"
-      class="flex-none border-b border-outline-gray-1"
+      class="flex-none"
       :query="search"
       :placeholder="__('Buscar cliente, equipo…')"
       :label="__('Buscar tratos')"
       @update:query="onSearch"
     >
+      <template #trailing>
+        <Dropdown :options="mobileMenu" align="end">
+          <button
+            type="button"
+            class="press flex size-11 items-center justify-center rounded-full text-ink-gray-7 active:bg-surface-gray-2"
+            :aria-label="__('Más opciones')"
+            :title="__('Más opciones')"
+            data-testid="deals-more"
+          >
+            <span class="lucide-ellipsis-vertical size-5" aria-hidden="true" />
+          </button>
+        </Dropdown>
+      </template>
       <template v-if="activeChips.length" #active>
         <div class="flex flex-wrap items-center gap-1.5">
           <button
@@ -73,7 +51,7 @@
           </button>
           <button
             type="button"
-            class="min-h-11 px-2 text-xs text-ink-gray-5 underline"
+            class="min-h-11 px-2 text-sm text-ink-gray-6 underline"
             @click="clearAll"
           >
             {{ __('Limpiar') }}
@@ -101,76 +79,147 @@
         :options="pipelineOptions"
       />
       <ChipDrill :label="__('Más filtros')" :sections="drillSections" />
-      <p v-if="pipelines.error" role="alert" class="text-sm text-ink-red-5">
+      <p v-if="pipelines.error" role="alert" class="text-sm text-ink-red-7">
         {{ __('Pipelines could not load') }}
       </p>
     </SearchPanel>
 
-    <div
-      v-if="!isMobile"
-      class="flex flex-wrap items-center gap-2 border-b border-outline-gray-1 px-4 py-2"
-    >
-      <label for="deal-pipeline" class="text-sm text-ink-gray-6">{{
-        __('Sales pipeline')
-      }}</label>
-      <select
-        id="deal-pipeline"
-        v-model="pipelineF"
-        class="min-h-11 max-w-full rounded-4 border border-outline-gray-2 bg-surface-base px-3 text-sm"
-      >
-        <option value="">{{ __('All pipelines') }}</option>
-        <option
-          v-for="pipeline in pipelines.data || []"
-          :key="pipeline.name"
-          :value="pipeline.name"
-        >
-          {{ pipelineLabel(pipeline)
-          }}{{ pipeline.archived ? ' · ' + __('Archived') : '' }}
-        </option>
-      </select>
-      <span
-        v-if="pipelines.error"
-        role="alert"
-        class="text-sm text-ink-red-5"
-        >{{ __('Pipelines could not load') }}</span
-      >
-    </div>
-    <!-- toolbar -->
-    <div
-      v-if="!isMobile"
-      class="flex min-h-[52px] flex-none flex-wrap items-center justify-between gap-y-1.5 border-b border-outline-gray-1 px-5 py-1.5"
-    >
-      <div class="flex flex-wrap items-center gap-2">
-        <span class="text-[15px] font-bold text-ink-gray-9">{{
-          __('Tratos')
-        }}</span>
-        <span
-          class="rounded-full px-[9px] py-0.5 text-[11.5px] font-semibold text-ink-gray-6"
-          style="background: #f1f2f4"
-        >
-          {{ count }}
-        </span>
-        <div class="mx-1 h-[18px] w-px bg-outline-gray-2" />
-        <div
-          class="flex overflow-hidden rounded-6 border border-outline-gray-2"
-        >
-          <button
-            v-for="(v, i) in views"
-            :key="v.key"
-            class="inline-flex items-center gap-1 px-[11px] py-[5px] text-[12px]"
-            :class="[
-              i ? 'border-l border-outline-gray-2' : '',
-              v.key === view
-                ? 'bg-surface-gray-3 text-ink-gray-9 font-semibold'
-                : 'bg-surface-base text-ink-gray-6',
-            ]"
-            :aria-pressed="v.key === view"
-            @click="selectView(v)"
+    <!-- Desktop: the shell's list header (Compras, Prospectos): the title with
+         its count and what the queue holds, one filled button and one island
+         of icons; the queues as the tab row beside the search; the filters as
+         one row of pills with what narrows the list after them. -->
+    <header v-else class="flex-none px-4 pb-3 pt-5 sm:px-6" data-deals-header>
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-3">
+        <div class="min-w-0 flex-1 basis-56">
+          <h1
+            class="title-face truncate text-3xl font-semibold leading-tight text-ink-gray-9"
           >
-            {{ v.label }}
+            {{ __('Tratos')
+            }}<span
+              class="num ml-2 font-normal text-ink-gray-5"
+              data-testid="deals-count"
+              >{{ count }}</span
+            >
+          </h1>
+          <p class="truncate text-sm text-ink-gray-6" :title="queueDescription">
+            {{ queueDescription }}
+          </p>
+        </div>
+        <div class="flex flex-none items-center gap-2">
+          <div class="w-fit">
+            <Segmented
+              :model-value="view"
+              :options="layoutTabs"
+              :label="__('Mostrar como')"
+              fit="content"
+              data-testid="deals-layouts"
+              @update:model-value="(key) => selectView({ key })"
+            />
+          </div>
+          <div
+            class="flex items-center gap-0.5 rounded-full bg-surface-gray-2 p-0.5"
+            data-deals-island
+          >
+            <ColumnPicker
+              v-if="view === 'list'"
+              :columns="availableColumns"
+              :selected="activeCols"
+              @update:selected="setCols"
+              @reset="resetCols"
+            />
+            <button
+              type="button"
+              :class="ISLAND_ICON"
+              :aria-label="__('Exportar a Excel')"
+              :title="__('Exportar a Excel')"
+              @click="exportDeals"
+            >
+              <span class="lucide-download size-5" aria-hidden="true" />
+            </button>
+            <Dropdown :options="viewMenu" align="end">
+              <button
+                type="button"
+                :class="ISLAND_ICON"
+                :aria-label="__('Más opciones')"
+                :title="__('Más opciones')"
+              >
+                <span class="lucide-ellipsis size-5" aria-hidden="true" />
+              </button>
+            </Dropdown>
+          </div>
+          <button
+            type="button"
+            :class="['press', BTN_FILLED]"
+            data-testid="deals-new"
+            @click="showDealModal = true"
+          >
+            <span class="lucide-plus size-4" aria-hidden="true" />
+            {{ __('New Deal') }}
           </button>
         </div>
-        <div class="mx-1 h-[18px] w-px bg-outline-gray-2" />
+      </div>
+      <div class="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2">
+        <div class="w-fit max-w-full">
+          <Segmented
+            :model-value="followUp"
+            :options="queueTabs"
+            :label="__('Colas de seguimiento')"
+            fit="content"
+            data-testid="deals-queues"
+            @update:model-value="selectFollowUp"
+          />
+        </div>
+        <label
+          class="ml-auto flex h-10 min-w-48 flex-1 items-center gap-2 rounded-full bg-surface-gray-2 px-3.5 focus-within:ring-2 focus-within:ring-outline-gray-4 sm:max-w-xs"
+        >
+          <span
+            :class="[
+              deals.loading && search
+                ? 'lucide-loader-circle animate-spin'
+                : 'lucide-search',
+              'size-4 flex-none text-ink-gray-5',
+            ]"
+            aria-hidden="true"
+          />
+          <input
+            :value="search"
+            type="search"
+            enterkeyhint="search"
+            data-list-search
+            class="min-w-0 flex-1 border-0 bg-transparent p-0 text-sm text-ink-gray-9 placeholder:text-ink-gray-5 focus:ring-0"
+            :aria-label="__('Buscar tratos')"
+            :placeholder="__('Buscar cliente, equipo…')"
+            @input="onSearch($event.target.value)"
+          />
+        </label>
+      </div>
+      <div class="mt-3 flex flex-wrap items-center gap-1.5" data-deals-filters>
+        <label
+          v-if="(pipelines.data || []).length > 1 || pipelineF"
+          class="press inline-flex h-8 items-center gap-1 rounded-full px-3 text-sm"
+          :class="
+            pipelineF
+              ? 'bg-surface-green-2 text-ink-green-8'
+              : 'bg-surface-gray-2 text-ink-gray-8 hover:bg-surface-gray-3'
+          "
+        >
+          <span class="sr-only">{{ __('Sales pipeline') }}</span>
+          <select
+            v-model="pipelineF"
+            class="h-8 max-w-[14rem] cursor-pointer border-0 bg-transparent py-0 pl-0 pr-6 text-sm text-inherit focus:ring-0"
+            data-testid="deals-pipeline"
+          >
+            <option value="">{{ __('All pipelines') }}</option>
+            <option
+              v-for="pipeline in pipelines.data || []"
+              :key="pipeline.name"
+              :value="pipeline.name"
+            >
+              {{ pipelineLabel(pipeline)
+              }}{{ pipeline.archived ? ', ' + __('Archived') : '' }}
+            </option>
+          </select>
+        </label>
         <FilterPopover
           :label="__('Stage')"
           :options="stageOptions"
@@ -189,32 +238,19 @@
           :selected="ownerF"
           @update:selected="ownerF = $event"
         />
-      </div>
-      <div class="flex items-center gap-2">
-        <div
-          class="flex items-center gap-1.5 rounded-6 border border-outline-gray-2 px-2.5 py-1.5 focus-within:border-outline-gray-4 focus-within:ring-1 focus-within:ring-outline-gray-3"
-        >
-          <LucideSearch class="h-3.5 w-3.5 text-ink-gray-4" />
-          <input
-            :value="search"
-            data-list-search
-            :aria-label="__('Buscar tratos')"
-            :placeholder="__('Buscar tratos…')"
-            class="w-[140px] border-0 bg-transparent text-[12px] text-ink-gray-9 placeholder:text-ink-gray-4 focus:outline-none focus:ring-0"
-            @input="onSearch($event.target.value)"
-          />
-        </div>
         <Dropdown v-if="view === 'list'" :options="groupByMenu">
           <button
-            class="rounded-6 border px-3 py-[7px] text-[12px] font-medium"
+            type="button"
+            class="press inline-flex h-8 items-center gap-1 rounded-full px-3 text-sm"
             :class="
               grouped
-                ? 'border-outline-green-3 bg-surface-green-2 text-ink-green-8'
-                : 'border-outline-gray-2 text-ink-gray-7'
+                ? 'bg-surface-green-2 text-ink-green-8'
+                : 'bg-surface-gray-2 text-ink-gray-8 hover:bg-surface-gray-3'
             "
           >
             {{ __('Agrupar')
-            }}<span v-if="grouped"> · {{ __(groupByLabel(groupBy)) }}</span> ⌄
+            }}<span v-if="grouped">: {{ __(groupByLabel(groupBy)) }}</span>
+            <span class="lucide-chevron-down size-4" aria-hidden="true" />
           </button>
         </Dropdown>
         <SavedViewPicker
@@ -226,299 +262,236 @@
           @delete-legacy="deleteView"
           @default-view="onDefaultView"
         />
-        <ColumnPicker
-          v-if="view === 'list'"
-          :columns="availableColumns"
-          :selected="activeCols"
-          @update:selected="setCols"
-          @reset="resetCols"
-        />
-        <button
-          class="rounded-6 border border-outline-gray-2 px-3 py-[7px] text-[12px] font-medium text-ink-gray-7"
-          :title="__('Exportar a Excel')"
-          @click="exportDeals"
+        <span
+          v-if="pipelines.error"
+          role="alert"
+          class="inline-flex h-8 items-center gap-2 text-sm text-ink-red-7"
         >
-          ⭳ {{ __('Export') }}
-        </button>
-        <button
-          class="rounded-6 px-3.5 py-[7px] text-[12.5px] font-semibold text-white"
-          style="background: var(--brand)"
-          @click="showDealModal = true"
-        >
-          + {{ __('New Deal') }}
-        </button>
-        <Dropdown :options="viewMenu">
+          {{ __('Pipelines could not load') }}
           <button
-            class="rounded-6 border border-outline-gray-2 px-2 py-[7px] text-[12px] text-ink-gray-6"
-            :aria-label="__('Más opciones')"
+            type="button"
+            class="font-medium text-ink-gray-9 underline"
+            @click="pipelines.reload()"
           >
-            ⋯
+            {{ __('Reintentar') }}
           </button>
-        </Dropdown>
-      </div>
-    </div>
-
-    <section
-      v-if="!isMobile"
-      class="flex-none border-b border-outline-gray-1 px-5 py-2"
-      aria-label="Colas de seguimiento"
-    >
-      <div class="flex gap-2 overflow-x-auto pb-1">
-        <button
-          v-for="q in followUpQueues"
-          :key="q.key"
-          :aria-pressed="followUp === q.key"
-          class="min-h-11 flex-none whitespace-nowrap rounded-6 border px-3 py-2 text-xs font-medium sm:min-h-0"
-          :class="
-            followUp === q.key
-              ? 'border-outline-green-3 bg-surface-green-2 text-ink-green-9'
-              : 'border-outline-gray-2 text-ink-gray-6 hover:bg-surface-gray-2'
-          "
-          @click="selectFollowUp(q.key)"
-        >
-          {{ __(q.label) }}
-          <span
-            v-if="q.key !== 'all' && queueCounts[q.key] != null"
-            class="ml-1 rounded-full bg-surface-gray-2 px-1.5 tabular-nums text-ink-gray-7"
-            >{{ queueCounts[q.key] }}</span
+        </span>
+        <template v-if="chips.length">
+          <span class="mx-1 h-5 w-px bg-outline-gray-2" aria-hidden="true" />
+          <button
+            v-for="c in chips"
+            :key="c.key"
+            type="button"
+            class="press inline-flex h-8 items-center gap-1 rounded-full bg-surface-green-2 px-3 text-sm text-ink-green-8"
+            :aria-label="__('Quitar filtro') + ' ' + c.label"
+            @click="removeChip(c)"
           >
-        </button>
+            {{ c.label }}
+            <LucideX class="size-3" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            class="h-8 px-2 text-sm text-ink-gray-6 underline hover:text-ink-gray-9"
+            @click="clearAll"
+          >
+            {{ __('Limpiar todo') }}
+          </button>
+        </template>
       </div>
-      <p v-if="!isMobile" class="mt-1 text-xs text-ink-gray-5">
-        {{ __(followUpQueues.find((q) => q.key === followUp).description) }}
-      </p>
-    </section>
+    </header>
 
-    <!-- active filter chips -->
-    <div
-      v-if="chips.length && !isMobile"
-      class="flex flex-none flex-wrap items-center gap-2 border-b border-outline-gray-1 px-5 py-2"
-    >
-      <span
-        v-for="c in chips"
-        :key="c.key"
-        class="inline-flex items-center gap-1.5 rounded-[7px] border px-2 py-1 text-[11.5px] font-medium"
-        style="
-          color: var(--brand);
-          background: var(--brand-soft);
-          border-color: #c7ecd5;
-        "
-      >
-        {{ c.label }}
-        <button
-          class="text-[13px] leading-none"
-          :aria-label="__('Quitar filtro') + ' ' + c.label"
-          @click="removeChip(c)"
-        >
-          ×
-        </button>
-      </span>
-      <button class="text-[11.5px] text-ink-gray-5" @click="clearAll">
-        {{ __('Limpiar todo') }}
-      </button>
-    </div>
-
+    <!-- A failed read keeps the filters and says what to do. -->
     <div
       v-if="deals.error"
       role="alert"
-      class="flex flex-none items-center gap-3 border-b border-outline-gray-1 px-5 py-3 text-sm text-ink-red-8"
+      class="mx-4 mb-2 flex flex-none flex-wrap items-center gap-x-3 gap-y-1 rounded-6 bg-surface-red-1 px-3 py-2 text-sm text-ink-red-7 sm:mx-6"
     >
-      {{
+      <span class="min-w-0 flex-1">{{
         __('No se pudieron cargar los tratos. Tus filtros siguen guardados.')
-      }}
+      }}</span>
       <button
-        class="font-semibold underline"
+        type="button"
+        class="press min-h-11 rounded-full px-3 font-medium text-ink-gray-9 hover:bg-surface-red-2 sm:min-h-8"
         @click="applyFilters({ force: true })"
       >
         {{ __('Reintentar') }}
       </button>
     </div>
-    <!-- bulk bar -->
-    <div
-      v-if="selectedRows.length"
-      class="flex flex-none items-center gap-3 border-b border-outline-gray-1 bg-surface-gray-1 px-5 py-2"
-    >
-      <span class="text-[12.5px] font-semibold text-ink-gray-8"
-        >{{ selectedRows.length }} {{ __('seleccionados') }}</span
-      >
-      <button
-        class="rounded-5 bg-surface-gray-10 px-2.5 py-1 text-[12px] font-semibold text-ink-base hover:bg-surface-gray-9"
-        :aria-keyshortcuts="'n'"
-        @click="bulkSchedule"
-      >
-        {{ __('Programar seguimiento') }}
-        <kbd class="ml-1 opacity-70">N</kbd>
-      </button>
-      <button
-        class="rounded-5 px-2.5 py-1 text-[12px] font-medium text-ink-red-8 hover:bg-surface-red-1"
-        @click="bulkDelete"
-      >
-        {{ __('Eliminar') }}
-      </button>
-      <button class="text-[12px] text-ink-gray-5" @click="selectedRows = []">
-        {{ __('Deseleccionar') }}
-      </button>
-    </div>
 
-    <!-- list view. Header + rows share ONE scroller so the wider column set (cliente,
-         teléfono, equipo, RO…) side-scrolls with its header attached instead of
-         squeezing every cell to nothing on a narrow laptop. -->
-    <!-- ── mobile list: cards, not a squeezed table ──────────────────────── -->
+    <!-- ── phone list: the shell's rows (ui/ListRow), as in Prospectos ─────── -->
     <div
       v-if="view === 'list' && isMobile"
+      ref="listScroller"
       class="scb min-h-0 flex-1 overflow-y-auto pb-20"
     >
       <div
         v-if="deals.loading && !rows.length"
-        class="py-10 text-center text-xs text-ink-gray-5"
+        class="px-4 py-3 text-sm text-ink-gray-6"
+        role="status"
       >
-        {{ __('Cargando…') }}
+        {{ __('Cargando tratos…') }}
       </div>
       <div
         v-else-if="!rows.length && !deals.error"
-        class="py-10 text-center text-xs text-ink-gray-5"
+        class="px-4 py-10 text-center text-sm text-ink-gray-6"
       >
-        {{ __('Sin tratos') }}
+        {{ __('Ningún trato coincide con estos filtros.') }}
       </div>
-      <MobileRecordCard
+      <div
         v-for="r in rows"
         :key="r.name"
-        :title="cardTitle(r)"
-        :subtitle="mobileSubtitle(r)"
+        class="flex items-start"
+        :data-deal="r.name"
         :data-fresh="live.fresh.value.has(r.name) || undefined"
-        :time="relativeTime(r.modified)"
-        :menu="rowMenu(r)"
-        @open="openDeal(r.name)"
       >
-        <template #chips>
-          <span
-            v-if="r.status"
-            class="rounded-5 px-1.5 py-[2px] text-[11px] font-semibold"
-            :style="statusChip(r.status)"
-          >
-            {{ stageLabel(r.status) }}
-          </span>
-          <span
-            v-if="extra(r).repair_status"
-            class="rounded-5 px-1.5 py-[2px] text-[11px] font-semibold"
-            :style="repairChip(extra(r).repair_status)"
-          >
-            🔧 {{ sentenceCase(extra(r).repair_status) }}
-          </span>
-          <span
-            v-if="displayValue(r, getDealStatus(r.status))"
-            class="ml-auto flex-none text-[12px] font-semibold text-ink-gray-8"
-          >
-            {{
-              formatMXN(displayValue(r, getDealStatus(r.status)), r.currency)
-            }}
-          </span>
-          <!-- own line: the due label plus the task title needs the full width -->
-          <div v-if="r.next_activity_task" class="w-full">
-            <NextActivityChip
-              :at="r.next_activity_at"
-              :title="r.next_activity_title"
-              :type="r.next_activity_type"
-              :empty-label="__('Pendiente sin fecha')"
-            />
-          </div>
-        </template>
-      </MobileRecordCard>
-      <div v-if="deals.hasNextPage" class="px-3.5 py-3">
-        <button
-          class="press h-11 w-full rounded-[10px] border border-outline-gray-2 text-[13px] font-medium text-ink-gray-7"
-          @click="deals.next()"
+        <ListRow
+          class="min-w-0 flex-1 !pr-1"
+          :avatar="cardTitle(r)"
+          :title="cardTitle(r)"
+          :meta="amountOf(r)"
+          data-testid="deal-row"
+          @click="openDeal(r.name)"
         >
-          {{ __('Cargar más') }}
-        </button>
+          <template #subtitle>
+            <span class="inline-flex min-w-0 items-center gap-1.5">
+              <span v-if="r.status" v-bind="stageDot(r.status)" />
+              <span class="truncate">{{ phoneLine(r) }}</span>
+            </span>
+          </template>
+          <template #trailing>
+            <span
+              class="whitespace-nowrap text-sm"
+              :class="
+                followUpOverdue(r)
+                  ? 'font-medium text-ink-red-7'
+                  : 'text-ink-gray-6'
+              "
+              >{{ followUpWords(r) }}</span
+            >
+          </template>
+        </ListRow>
+        <Dropdown :options="rowMenu(r)" align="end">
+          <button
+            type="button"
+            class="press mr-1 mt-1.5 flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-6 active:bg-surface-gray-2"
+            :aria-label="__('Más acciones') + ' ' + cardTitle(r)"
+          >
+            <span class="lucide-ellipsis-vertical size-5" aria-hidden="true" />
+          </button>
+        </Dropdown>
       </div>
-      <div class="h-16" aria-hidden="true" />
+      <button
+        v-if="deals.hasNextPage && rows.length"
+        type="button"
+        class="flex min-h-12 w-full items-center justify-center text-base-medium text-ink-gray-8"
+        :disabled="deals.loading"
+        @click="deals.next()"
+      >
+        {{ deals.loading ? __('Cargando…') : __('Cargar más') }}
+      </button>
     </div>
 
     <template v-if="view === 'list' && !isMobile">
+      <!-- One header, a column per fact. The columns the worker chose that do
+           not fit the list's width step aside, last-chosen first, and the
+           header says how many (never a sideways scroll). -->
       <div ref="listScroller" class="scb min-h-0 flex-1 overflow-auto">
-        <div :style="isMobile ? '' : `min-width:${MIN_W}px`">
+        <div>
           <!-- table header -->
           <div
-            class="sticky top-0 z-[5] grid items-center border-b border-outline-gray-1 bg-surface-gray-1 px-5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-5"
-            :style="`grid-template-columns:${GRID};height:34px`"
+            class="sticky top-0 z-[5] grid items-center gap-x-4 border-b border-outline-gray-1 bg-surface-base px-4 text-sm text-ink-gray-6 sm:px-6"
+            :style="`grid-template-columns:${GRID};min-height:40px`"
+            data-deals-columns
           >
             <input
-              v-if="!isMobile"
               type="checkbox"
               data-select-page
-              class="cb-token"
+              class="h-5 w-5 rounded-4"
               :checked="allSelected"
+              :indeterminate.prop="selectedRows.length > 0 && !allSelected"
               :aria-label="__('Seleccionar todo')"
               @change="toggleAll"
             />
-            <button class="text-left uppercase" @click="sortBy('deal_name')">
+            <button class="text-left" @click="sortBy('deal_name')">
               {{ __('Trato') }}{{ sortArrow('deal_name') }}
             </button>
             <div v-if="col('customer')">{{ __('Cliente') }}</div>
             <button
               v-if="col('phone')"
-              class="text-left uppercase"
+              class="text-left"
               @click="sortBy('mobile_no')"
             >
               {{ __('Teléfono') }}{{ sortArrow('mobile_no') }}
             </button>
             <div v-if="col('device')">{{ __('Equipo') }}</div>
             <div v-if="col('repair_type')">{{ __('Reparación') }}</div>
-            <div v-if="col('ro')">{{ __('RO') }}</div>
-            <button
-              v-if="col('value')"
-              class="text-left uppercase"
-              @click="sortBy('deal_value')"
-            >
-              {{ __('Valor') }}{{ sortArrow('deal_value') }}
-            </button>
-            <button
-              v-if="col('expected_value')"
-              class="text-left uppercase"
-              @click="sortBy('expected_deal_value')"
-            >
-              {{ __('Valor esperado') }}{{ sortArrow('expected_deal_value') }}
-            </button>
-            <button
-              v-if="col('close_date')"
-              class="text-left uppercase"
-              @click="sortBy('expected_closure_date')"
-            >
-              {{ __('Cierre') }}{{ sortArrow('expected_closure_date') }}
-            </button>
+            <div v-if="col('ro')">{{ __('Orden de reparación') }}</div>
+            <div v-if="col('stage')">{{ __('Stage') }}</div>
             <button
               v-if="col('next_activity')"
-              class="text-left uppercase"
+              class="text-left"
               @click="sortBy('next_activity_at')"
             >
               {{ __('Próximo paso') }}{{ sortArrow('next_activity_at') }}
             </button>
-            <div v-if="col('stage')">{{ __('Stage') }}</div>
+            <button
+              v-if="col('close_date')"
+              class="text-left"
+              @click="sortBy('expected_closure_date')"
+            >
+              {{ __('Cierre') }}{{ sortArrow('expected_closure_date') }}
+            </button>
             <div v-if="col('source')">{{ __('Source') }}</div>
             <button
               v-if="col('modified')"
-              class="text-left uppercase"
+              class="text-left"
               @click="sortBy('modified')"
             >
               {{ __('Última act.') }}{{ sortArrow('modified') }}
             </button>
             <div v-if="col('owner')">{{ __('Owner') }}</div>
-            <div />
+            <button
+              v-if="col('expected_value')"
+              class="text-right"
+              @click="sortBy('expected_deal_value')"
+            >
+              {{ __('Valor esperado') }}{{ sortArrow('expected_deal_value') }}
+            </button>
+            <button
+              v-if="col('value')"
+              class="text-right"
+              @click="sortBy('deal_value')"
+            >
+              {{ __('Valor') }}{{ sortArrow('deal_value') }}
+            </button>
+            <div
+              class="text-right text-xs"
+              :title="
+                hiddenCols.length
+                  ? __('Sin espacio para: {0}', [
+                      hiddenCols.map((c) => c.label).join(', '),
+                    ])
+                  : undefined
+              "
+              data-testid="deals-hidden-columns"
+            >
+              {{ hiddenCols.length ? `+${hiddenCols.length}` : '' }}
+            </div>
           </div>
 
           <!-- rows -->
           <div
             v-if="deals.loading && !rows.length"
-            class="py-10 text-center text-xs text-ink-gray-5"
+            class="px-4 py-3 text-sm text-ink-gray-6 sm:px-6"
+            role="status"
           >
-            {{ __('Cargando…') }}
+            {{ __('Cargando tratos…') }}
           </div>
           <div
             v-else-if="!rows.length && !deals.error"
-            class="py-10 text-center text-xs text-ink-gray-5"
+            class="px-4 py-10 text-center text-sm text-ink-gray-6"
           >
-            {{ __('Sin tratos') }}
+            {{ __('Ningún trato coincide con estos filtros.') }}
           </div>
 
           <template v-for="g in renderGroups" :key="g.key">
@@ -540,8 +513,9 @@
               data-key-row
               :data-row-current="r.name === lastOpened || undefined"
               :data-fresh="live.fresh.value.has(r.name) || undefined"
-              class="grid cursor-pointer items-center border-b border-outline-gray-1 px-5 hover:bg-surface-gray-1"
-              :style="`grid-template-columns:${GRID};min-height:50px`"
+              class="grid cursor-pointer items-center gap-x-4 border-b border-outline-gray-1 px-4 hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:px-6"
+              :class="selectedRows.includes(r.name) ? 'bg-surface-blue-1' : ''"
+              :style="`grid-template-columns:${GRID};min-height:56px`"
               :data-deal="r.name"
               :aria-keyshortcuts="'n p r h'"
               @click="openDeal(r.name)"
@@ -549,91 +523,136 @@
               @keydown="onRowKey($event, r)"
             >
               <input
-                v-if="!isMobile"
                 type="checkbox"
                 data-row-check
-                class="cb-token"
+                class="h-5 w-5 rounded-4"
                 :checked="selectedRows.includes(r.name)"
-                :aria-label="__('Seleccionar') + ' ' + label(r)"
+                :aria-label="__('Seleccionar') + ' ' + cardTitle(r)"
                 @click.stop="toggleRow(r.name)"
               />
-              <div class="flex items-center gap-2">
+              <div class="flex min-w-0 items-center gap-2.5">
                 <span
-                  class="flex h-7 w-7 flex-none items-center justify-center rounded-full text-[11px] font-semibold"
-                  :style="`background:${avatarColor(label(r))[0]};color:${avatarColor(label(r))[1]}`"
+                  class="flex size-8 flex-none items-center justify-center rounded-full bg-surface-gray-2 text-xs font-semibold text-ink-gray-7"
+                  aria-hidden="true"
                 >
-                  {{ initials(label(r)) }}
+                  {{ initials(cardTitle(r)) }}
                 </span>
                 <div class="min-w-0">
                   <div
-                    class="truncate text-[13px] font-semibold text-ink-gray-9"
+                    class="truncate text-base font-medium text-ink-gray-9"
+                    :title="cardTitle(r)"
                   >
-                    {{ label(r) }}
+                    {{ cardTitle(r) }}
                   </div>
-                  <!-- second line = the customer, so the identity is visible even with the
-                 Cliente column hidden (and on phones, where only 2 columns fit) -->
-                  <div class="truncate text-[11px] text-ink-gray-5">
-                    {{ customerOf(r) || formatPhone(phoneOf(r)) }}
+                  <!-- second line = the customer, so the identity is visible
+                       even with the Cliente column hidden -->
+                  <div class="truncate text-sm text-ink-gray-6">
+                    {{ secondLine(r) }}
                   </div>
                 </div>
               </div>
               <div
                 v-if="col('customer')"
-                class="truncate text-[12.5px] text-ink-gray-8"
+                class="truncate text-sm text-ink-gray-8"
+                :title="customerOf(r) || ''"
               >
-                {{ customerOf(r) || '—' }}
+                {{ customerOf(r) }}
               </div>
               <div
                 v-if="col('phone')"
-                class="truncate text-[12px] text-ink-gray-6"
+                class="num truncate text-sm text-ink-gray-8"
               >
-                {{ formatPhone(phoneOf(r)) }}
+                {{ phoneOf(r) ? formatPhone(phoneOf(r)) : '' }}
               </div>
               <div
                 v-if="col('device')"
-                class="truncate text-[12px] text-ink-gray-6"
+                class="truncate text-sm text-ink-gray-8"
                 :title="deviceOf(r) || ''"
               >
-                {{ deviceOf(r) || '—' }}
+                {{ deviceOf(r) }}
               </div>
               <div
                 v-if="col('repair_type')"
-                class="truncate text-[12px] text-ink-gray-6"
+                class="truncate text-sm text-ink-gray-8"
                 :title="repairTypeOf(r) || ''"
               >
-                {{ repairTypeOf(r) || '—' }}
+                {{ repairTypeOf(r) }}
               </div>
-              <div v-if="col('ro')" class="min-w-0">
-                <div
-                  v-if="extra(r).repair_order"
-                  class="flex items-center gap-1.5"
-                >
-                  <span
-                    class="truncate text-[11.5px] font-medium text-ink-gray-7"
-                    >{{ extra(r).repair_order }}</span
+              <div v-if="col('ro')" class="min-w-0 text-sm">
+                <template v-if="extra(r).repair_order">
+                  <span class="num block truncate text-ink-gray-8"
+                    >{{ extra(r).repair_order
+                    }}<span
+                      v-if="extra(r).repair_count > 1"
+                      class="text-ink-gray-5"
+                    >
+                      +{{ extra(r).repair_count - 1 }}</span
+                    ></span
                   >
                   <span
                     v-if="extra(r).repair_status"
-                    class="flex-none rounded-4 px-1.5 py-px text-[10.5px] font-semibold"
-                    :style="repairChip(extra(r).repair_status)"
+                    class="block truncate text-ink-gray-6"
+                    >{{ sentenceCase(__(extra(r).repair_status)) }}</span
                   >
-                    {{ extra(r).repair_status }}
-                  </span>
-                  <span
-                    v-if="extra(r).repair_count > 1"
-                    class="flex-none text-[10px] text-ink-gray-5"
-                    >+{{ extra(r).repair_count - 1 }}</span
-                  >
-                </div>
-                <span v-else class="text-[12px] text-ink-gray-5">—</span>
+                </template>
+              </div>
+              <div
+                v-if="col('stage')"
+                class="flex min-w-0 items-center gap-1.5 text-sm text-ink-gray-8"
+              >
+                <template v-if="r.status">
+                  <span v-bind="stageDot(r.status)" />
+                  <span class="truncate">{{ stageLabel(r.status) }}</span>
+                </template>
+              </div>
+              <FollowUpCell
+                v-if="col('next_activity')"
+                :row="r"
+                :today="siteToday"
+                @saved="onFollowUpSaved(r, $event)"
+              />
+              <div v-if="col('close_date')" class="text-sm text-ink-gray-8">
+                {{
+                  r.expected_closure_date
+                    ? formatDate(r.expected_closure_date)
+                    : ''
+                }}
+              </div>
+              <div
+                v-if="col('source')"
+                class="truncate text-sm text-ink-gray-8"
+              >
+                {{ r.source ? __(r.source) : '' }}
+              </div>
+              <div v-if="col('modified')" class="text-sm text-ink-gray-6">
+                {{ relativeTime(r.modified) }}
+              </div>
+              <div v-if="col('owner')">
+                <span
+                  v-if="r.deal_owner"
+                  class="flex size-7 items-center justify-center rounded-full bg-surface-gray-2 text-[11px] font-semibold text-ink-gray-7"
+                  :title="ownerName(r.deal_owner)"
+                >
+                  {{ initials(ownerName(r.deal_owner)) }}
+                </span>
+              </div>
+              <div
+                v-if="col('expected_value')"
+                class="num text-right text-sm text-ink-gray-8"
+              >
+                {{
+                  Number(r.expected_deal_value)
+                    ? formatMXN(r.expected_deal_value, r.currency)
+                    : ''
+                }}
               </div>
               <div
                 v-if="col('value')"
-                class="text-[12.5px] font-semibold"
+                class="num text-right text-sm font-medium"
                 :class="
                   isOutlier(r, metricsContract)
                     ? 'text-ink-amber-9'
-                    : 'text-ink-gray-8'
+                    : 'text-ink-gray-9'
                 "
                 :title="
                   isOutlier(r, metricsContract)
@@ -643,84 +662,71 @@
                     : undefined
                 "
               >
-                {{
-                  formatMXN(
-                    displayValue(r, getDealStatus(r.status)),
-                    r.currency,
-                  )
+                {{ amountOf(r)
                 }}<span v-if="isOutlier(r, metricsContract)"> ⚠</span>
               </div>
-              <div
-                v-if="col('expected_value')"
-                class="text-[12.5px] text-ink-gray-7"
-              >
-                {{ formatMXN(r.expected_deal_value, r.currency) }}
-              </div>
-              <div v-if="col('close_date')" class="text-[12px] text-ink-gray-6">
-                {{ formatDate(r.expected_closure_date) }}
-              </div>
-              <FollowUpCell
-                v-if="col('next_activity')"
-                :row="r"
-                :today="siteToday"
-                @saved="onFollowUpSaved(r, $event)"
-              />
-              <div v-if="col('stage')">
-                <span
-                  v-if="r.status"
-                  class="rounded-5 px-2 py-[3px] text-[11.5px] font-semibold"
-                  :style="statusChip(r.status)"
-                >
-                  {{ stageLabel(r.status) }}
-                </span>
-              </div>
-              <div
-                v-if="col('source')"
-                class="flex items-center gap-1.5 text-[12px] text-ink-gray-6"
-              >
-                <span
-                  v-if="r.source"
-                  class="h-[7px] w-[7px] flex-none rounded-full"
-                  :style="`background:${sourceDot(r.source)}`"
-                />
-                <span class="truncate">{{
-                  r.source ? __(r.source) : '—'
-                }}</span>
-              </div>
-              <div v-if="col('modified')" class="text-[12px] text-ink-gray-5">
-                {{ timeAgo(r.modified) }}
-              </div>
-              <div v-if="col('owner')">
-                <span
-                  v-if="r.deal_owner"
-                  class="flex h-[26px] w-[26px] items-center justify-center rounded-full text-[10px] font-semibold"
-                  :style="`background:${avatarColor(r.deal_owner)[0]};color:${avatarColor(r.deal_owner)[1]}`"
-                  :title="r.deal_owner"
-                >
-                  {{ initials(ownerName(r.deal_owner)) }}
-                </span>
-              </div>
-              <Dropdown :options="rowMenu(r)" @click.stop>
+              <Dropdown :options="rowMenu(r)" align="end" @click.stop>
                 <button
-                  class="text-[14px] text-ink-gray-5"
+                  type="button"
+                  class="press flex size-8 items-center justify-center rounded-full text-ink-gray-6 hover:bg-surface-gray-2"
                   :aria-label="__('Más acciones')"
                   @click.stop
                 >
-                  ···
+                  <span class="lucide-ellipsis size-4" aria-hidden="true" />
                 </button>
               </Dropdown>
             </div>
           </template>
 
-          <div v-if="deals.hasNextPage" class="py-3 text-center">
-            <button
-              class="rounded-6 border border-outline-gray-2 px-4 py-1.5 text-[12px] font-medium text-ink-gray-7"
-              @click="deals.next()"
-            >
-              {{ __('Cargar más') }}
-            </button>
-          </div>
+          <button
+            v-if="deals.hasNextPage && rows.length"
+            type="button"
+            class="flex min-h-12 w-full items-center justify-center text-base-medium text-ink-gray-8 hover:bg-surface-gray-1"
+            :disabled="deals.loading"
+            @click="deals.next()"
+          >
+            {{ deals.loading ? __('Cargando…') : __('Cargar más') }}
+          </button>
         </div>
+      </div>
+      <!-- The selection's actions, under the list (PowerBulkBar's place). -->
+      <div
+        v-if="selectedRows.length"
+        class="sticky bottom-0 z-20 flex flex-none flex-wrap items-center gap-2 border-t border-outline-gray-2 bg-surface-base px-4 py-3 shadow-lg sm:px-6"
+        role="region"
+        :aria-label="__('Tratos seleccionados')"
+        data-deals-bulkbar
+      >
+        <p class="min-w-0 flex-1 text-sm font-medium text-ink-gray-9">
+          {{
+            selectedRows.length === 1
+              ? __('1 trato seleccionado')
+              : __('{0} tratos seleccionados', [selectedRows.length])
+          }}
+        </p>
+        <button
+          type="button"
+          :class="['press', BTN_FILLED]"
+          :aria-keyshortcuts="'n'"
+          @click="bulkSchedule"
+        >
+          {{ __('Programar seguimiento') }}
+          <kbd class="text-xs opacity-70">N</kbd>
+        </button>
+        <button
+          type="button"
+          class="press inline-flex h-10 items-center rounded-full px-4 text-sm font-medium text-ink-red-7 hover:bg-surface-red-1"
+          @click="bulkDelete"
+        >
+          {{ __('Eliminar') }}
+        </button>
+        <button
+          type="button"
+          class="press inline-flex h-10 items-center rounded-full px-4 text-sm text-ink-gray-7 hover:bg-surface-gray-2"
+          @click="selectedRows = []"
+        >
+          {{ __('Quitar selección') }}
+        </button>
       </div>
     </template>
 
@@ -785,12 +791,10 @@
               class="min-w-0 flex-1 truncate text-[12.5px] font-semibold text-ink-gray-9"
               >{{ cardTitle(row) }}</span
             >
-            <span class="flex-none text-[11px] font-semibold text-ink-gray-7">{{
-              formatMXN(
-                displayValue(row, getDealStatus(row.status)),
-                row.currency,
-              )
-            }}</span>
+            <span
+              class="num flex-none text-[11px] font-semibold text-ink-gray-7"
+              >{{ amountOf(row) }}</span
+            >
           </div>
           <div class="mt-0.5 flex items-center justify-between gap-2">
             <span class="min-w-0 flex-1 truncate text-[11px] text-ink-gray-5">
@@ -822,13 +826,17 @@
               :at="row.next_activity_at"
               :title="row.next_activity_title"
               :type="row.next_activity_type"
+              :empty-label="
+                row.next_activity_task
+                  ? __('Pendiente sin fecha')
+                  : __('Sin seguimiento')
+              "
               compact
             />
             <div class="ml-auto flex flex-none items-center gap-1.5">
               <span
                 v-if="row.deal_owner"
-                class="flex h-[18px] w-[18px] items-center justify-center rounded-full text-[9px] font-semibold"
-                :style="`background:${avatarColor(row.deal_owner)[0]};color:${avatarColor(row.deal_owner)[1]}`"
+                class="flex h-[18px] w-[18px] items-center justify-center rounded-full bg-surface-gray-2 text-[9px] font-semibold text-ink-gray-7"
                 :title="ownerName(row.deal_owner)"
               >
                 {{ initials(ownerName(row.deal_owner)) }}
@@ -836,7 +844,7 @@
               <span
                 class="text-[10px] text-ink-gray-5"
                 :title="__('Antigüedad')"
-                >{{ timeAgo(row.creation) }}</span
+                >{{ relativeTime(row.creation) }}</span
               >
             </div>
           </div>
@@ -878,8 +886,10 @@
 import { errorText } from '@/utils/errorText'
 import { useLiveList } from '@/composables/liveList'
 import Fab from '@/components/ui/Fab.vue'
-import LayoutHeader from '@/components/LayoutHeader.vue'
+import ListRow from '@/components/ui/ListRow.vue'
+import Segmented from '@/components/ui/Segmented.vue'
 import { computed, defineAsyncComponent, nextTick, ref, watch } from 'vue'
+import { useElementSize } from '@vueuse/core'
 import { useRoute, useRouter } from 'vue-router'
 import {
   Dropdown,
@@ -891,7 +901,6 @@ import {
   getConfig,
 } from 'frappe-ui'
 import { confirmDialog } from '@/utils/dialogs'
-import LucideSearch from '~icons/lucide/search'
 import { statusesStore } from '@/stores/statuses'
 import { usersStore } from '@/stores/users'
 import FilterPopover from '@/components/doco/leads/FilterPopover.vue'
@@ -903,14 +912,12 @@ import { boardStages, stageMove } from '@/utils/pipelineStages'
 import { guardStatusChange } from '@/utils/statusGuard'
 import { requestNextStep } from '@/composables/useNextStep'
 import FunnelView from '@/components/doco/FunnelView.vue'
-import MobileRecordCard from '@/components/doco/MobileRecordCard.vue'
 import SearchPanel from '@/components/ui/SearchPanel.vue'
 import ChipGroup from '@/components/ui/ChipGroup.vue'
 import ChipDrill from '@/components/ui/ChipDrill.vue'
 import RecentPicks from '@/components/ui/RecentPicks.vue'
-import { chipClass } from '@/components/ui/chipClass'
+import { chipClass, dotBinding } from '@/components/ui/chipClass'
 import { useRecentPicks } from '@/composables/useRecentPicks'
-import LucideChevronDown from '~icons/lucide/chevron-down'
 import LucideX from '~icons/lucide/x'
 import NextActivityChip from '@/components/doco/NextActivityChip.vue'
 import FollowUpCell from '@/components/doco/deals/FollowUpCell.vue'
@@ -933,13 +940,9 @@ import SavedViewPicker from '@/components/doco/deals/SavedViewPicker.vue'
 import { isMobile } from '@/composables/breakpoint'
 import { useListKeys } from '@/composables/pageKeys'
 import { hasTaller, reloadQueue } from '@/composables/inbox'
-import {
-  avatarColor,
-  initials,
-  timeAgo,
-  formatPhone,
-  CHANNEL_META,
-} from '@/composables/crmFormat'
+import { initials, formatPhone } from '@/composables/crmFormat'
+import { formatDay } from '@/utils/contactos'
+import { fitColumns } from '@/utils/fitColumns'
 import { money } from '@/utils/numberFormat'
 import {
   displayValue,
@@ -1005,9 +1008,12 @@ if (typeof route.query.follow_up === 'string') {
   })
   hadRemembered = true
 }
-// A legacy /deals/view/kanban link (router redirect) lands on its layout.
-if (['list', 'board', 'funnel'].includes(route.query.layout))
-  remembered = { ...remembered, view: route.query.layout }
+// A legacy /deals/view/kanban link (router redirect) lands on its layout,
+// and keeps it when the worker's default view opens (onDefaultView).
+const linkLayout = ['list', 'board', 'funnel'].includes(route.query.layout)
+  ? route.query.layout
+  : ''
+if (linkLayout) remembered = { ...remembered, view: linkLayout }
 
 // ── column config (per-browser show/hide) ─────────────────────────────────────
 // trato (contact) is fixed (1fr); checkbox + row-menu are structural. The rest toggle.
@@ -1021,7 +1027,7 @@ const DEAL_COLUMNS = [
   { key: 'phone', label: __('Teléfono') },
   { key: 'device', label: __('Equipo') },
   { key: 'repair_type', label: __('Reparación') },
-  { key: 'ro', label: __('RO') },
+  { key: 'ro', label: __('Orden de reparación') },
   { key: 'value', label: __('Valor') },
   { key: 'expected_value', label: __('Valor esperado') },
   { key: 'close_date', label: __('Cierre') },
@@ -1031,36 +1037,54 @@ const DEAL_COLUMNS = [
   { key: 'modified', label: __('Última act.') },
   { key: 'owner', label: __('Owner') },
 ]
+// The table's order: who, what the shop has of theirs, where the deal stands
+// and what comes next, then the rest; the amount closes the row.
 const COL_ORDER = [
   'customer',
   'phone',
   'device',
   'repair_type',
   'ro',
-  'value',
-  'expected_value',
-  'close_date',
-  'next_activity',
   'stage',
+  'next_activity',
+  'close_date',
   'source',
   'modified',
   'owner',
+  'expected_value',
+  'value',
 ]
 const COL_WIDTH = {
   customer: '150px',
-  phone: '130px',
+  phone: '140px',
   device: '140px',
   repair_type: '130px',
-  ro: '150px',
+  ro: '140px',
   value: '110px',
   expected_value: '120px',
   close_date: '100px',
   next_activity: '170px',
-  stage: '125px',
+  stage: '130px',
   source: '110px',
   modified: '100px',
-  owner: '50px',
+  owner: '44px',
 }
+// What steps aside first when the list is narrower than the chosen columns.
+const DROP_ORDER = [
+  'close_date',
+  'expected_value',
+  'repair_type',
+  'source',
+  'owner',
+  'modified',
+  'device',
+  'customer',
+  'ro',
+  'phone',
+  'stage',
+  'next_activity',
+  'value',
+]
 const DEFAULT_COLS = [
   'customer',
   'phone',
@@ -1105,23 +1129,42 @@ const REPAIR_COLS = ['device', 'repair_type', 'ro']
 const availableColumns = computed(() =>
   DEAL_COLUMNS.filter((c) => hasTaller.value || !REPAIR_COLS.includes(c.key)),
 )
+// The chosen columns this tenant has (no repair columns without taller).
+const chosenCols = computed(() =>
+  COL_ORDER.filter(
+    (key) =>
+      activeCols.value.includes(key) &&
+      (hasTaller.value || !REPAIR_COLS.includes(key)),
+  ),
+)
+// The list's own width decides how many fit (not the window: the rail and
+// Ventas' sections take their share). Before the first measurement all show.
+const { width: listWidth } = useElementSize(listScroller)
+// checkbox + the deal (at least 220) + the row menu + the gutters, and the
+// two 16 px gaps around the fixed tracks (each chosen column adds its own)
+const FIXED_W = 40 + 220 + 32 + 48 + 2 * 16
+const fittedCols = computed(() =>
+  fitColumns(chosenCols.value, {
+    widths: COL_WIDTH,
+    dropOrder: DROP_ORDER,
+    room: listWidth.value,
+    fixed: FIXED_W,
+    gap: 16,
+  }),
+)
+// Said in the header («+2», with the names on hover), never dropped silently.
+const hiddenCols = computed(() =>
+  chosenCols.value
+    .filter((key) => !fittedCols.value.has(key))
+    .map((key) => DEAL_COLUMNS.find((c) => c.key === key)),
+)
 function col(key) {
-  // phone: contact + stage only — full column set side-scrolled (07-25)
-  if (isMobile.value) return key === 'contact' || key === 'stage'
-  if (!hasTaller.value && REPAIR_COLS.includes(key)) return false
-  return key === 'contact' || activeCols.value.includes(key)
+  return key === 'contact' || fittedCols.value.has(key)
 }
-// Width the grid needs before it starts squeezing cells — drives the side-scroll.
-const MIN_W = computed(() => {
-  let w = 28 + 180 + 26 // checkbox + contact min + row menu
-  for (const key of COL_ORDER) if (col(key)) w += parseInt(COL_WIDTH[key], 10)
-  return w + 40 // px-5 gutters
-})
 const GRID = computed(() => {
-  if (isMobile.value) return '1fr 112px 26px' // contact + stage + menu
-  const parts = ['28px', 'minmax(180px,1fr)'] // checkbox + contact (always)
+  const parts = ['40px', 'minmax(220px,1fr)'] // checkbox + the deal (always)
   for (const key of COL_ORDER) if (col(key)) parts.push(COL_WIDTH[key])
-  parts.push('26px') // row menu
+  parts.push('32px') // row menu
   return parts.join(' ')
 })
 // NOTE: read the visible-stage list THROUGH the store (`statusStore.visible…`).
@@ -1356,30 +1399,69 @@ const REPAIR_CHIP = {
   Entregado: '#6b7280',
   Cancelado: '#dc2626',
 }
-function repairChip(status) {
-  const c = REPAIR_CHIP[status] || '#5b6472'
-  return `color:${c};background:${c}1a`
-}
 
 // ── mobile shell ─────────────────────────────────────────────────────────────
 // Phone search panel (ui/SearchPanel) and the deals opened lately on this device.
 const searchOpen = ref(false)
 const recentDeals = useRecentPicks('muelle:deals-recent')
-// Folio + phone under the customer's name: the two things a shop reads aloud.
-// When there's no customer the card title IS the folio, so don't repeat it.
-function mobileSubtitle(r) {
-  const parts = []
-  // Never the deal ID (CRM-DEAL-…): the equipo the customer brought in instead.
-  if (customerOf(r) && deviceOf(r)) parts.push(deviceOf(r))
-  const ph = phoneOf(r)
-  if (ph) parts.push(formatPhone(ph))
-  return parts.join(' · ')
+// What the shop reads aloud under the name: the stage, then the equipo or
+// the phone (never the deal's id, never the title twice).
+function phoneLine(r) {
+  const title = cardTitle(r)
+  const reach = [deviceOf(r), phoneOf(r) && formatPhone(phoneOf(r))].find(
+    (part) => part && part !== title,
+  )
+  return [r.status && stageLabel(r.status), reach].filter(Boolean).join(' · ')
 }
-// Toolbar actions a phone can't fit inline. Column picking is desktop-only (the
-// card layout has no columns to pick).
+// The table's second line: the customer when the deal has its own title,
+// else how to reach them.
+function secondLine(r) {
+  const title = cardTitle(r)
+  const customer = customerOf(r)
+  if (customer && customer !== title) return customer
+  const phone = phoneOf(r) && formatPhone(phoneOf(r))
+  return phone && phone !== title ? phone : deviceOf(r) || ''
+}
+// The row's figure: the deal's amount, nothing when it has none.
+function amountOf(r) {
+  const value = displayValue(r, getDealStatus(r.status))
+  return Number(value) ? formatMXN(value, r.currency) : ''
+}
+// A stage's colour as a dot beside its name (the statuses store holds an ink
+// class, `!text-green-700`, not a hex: dotBinding paints either).
+function stageDot(status) {
+  return dotBinding(getDealStatus(status)?.color || 'text-ink-gray-5')
+}
+// The phone row's trailing words: the next step when there is one (red when
+// late), else how long since the deal last changed, as Prospectos does.
+function followUpOverdue(r) {
+  return Boolean(
+    r.next_activity_at &&
+      String(r.next_activity_at).slice(0, 10) < siteToday.value,
+  )
+}
+function followUpWords(r) {
+  if (r.next_activity_at) return relativeDay(r.next_activity_at)
+  if (r.next_activity_task) return __('Sin fecha')
+  return relativeTime(r.modified)
+}
+// «Hoy», «Mañana», «Ayer», «hace 3 días», «en 3 días» for a due date.
+function relativeDay(value) {
+  const day = String(value).slice(0, 10)
+  const days = dayjs(day).diff(dayjs(siteToday.value), 'day')
+  if (days === 0) return __('Hoy')
+  if (days === 1) return __('Mañana')
+  if (days === -1) return __('Ayer')
+  return days < 0 ? __('hace {0} días', [-days]) : __('en {0} días', [days])
+}
+// The phone's «⋯» beside the search pill: the layouts, then the rest.
 const mobileMenu = computed(() => [
+  ...views.map((v) => ({
+    label: v.key === view.value ? `${v.label} ✓` : v.label,
+    onClick: () => selectView(v),
+  })),
   ...viewMenu.value,
-  { label: '⭳ ' + __('Export'), onClick: exportDeals },
+  { label: __('Exportar a Excel'), onClick: exportDeals },
 ])
 const followUpOptions = computed(() =>
   followUpQueues.map((q) => ({
@@ -1452,25 +1534,39 @@ const activeChips = computed(() => [
     : []),
   ...chips.value.map((c) => ({ ...c, remove: () => removeChip(c) })),
 ])
-const viewTitleMenu = computed(() =>
-  views.map((v) => ({
-    label: v.label + (v.key === view.value ? ' ✓' : ''),
-    onClick: () => selectView(v),
+// The title's count: the server's total under these filters; until it
+// arrives, what is loaded («50+»), never «0» while it reads.
+const count = computed(() => {
+  if (countsLoaded.value)
+    return String(
+      Object.values(groupCounts.value).reduce(
+        (n, stage) => n + Number(stage.count || 0),
+        0,
+      ),
+    )
+  if (!deals.data) return ''
+  return `${deals.data.length}${deals.hasNextPage ? '+' : ''}`
+})
+// The desktop header: the queues as the tab row, each with its count; the
+// layouts beside them; what the open queue holds under the title.
+const queueTabs = computed(() =>
+  followUpQueues.map((q) => ({
+    value: q.key,
+    label: __(q.label),
+    count: q.key !== 'all' ? queueCounts.value[q.key] : undefined,
   })),
 )
-const currentViewLabel = computed(
-  () => views.find((v) => v.key === view.value)?.label || '',
+const layoutTabs = computed(() =>
+  views.map((v) => ({ value: v.key, label: v.label })),
 )
-const count = computed(() =>
-  countsLoaded.value
-    ? String(
-        Object.values(groupCounts.value).reduce(
-          (n, stage) => n + Number(stage.count || 0),
-          0,
-        ),
-      )
-    : `${deals.data?.length ?? 0}${deals.hasNextPage ? '+' : ''} ${__('cargados')}`,
+const queueDescription = computed(() =>
+  __(followUpQueues.find((q) => q.key === followUp.value)?.description || ''),
 )
+// The header's controls: one island of icons, one filled button (Compras).
+const ISLAND_ICON =
+  'press flex size-9 items-center justify-center rounded-full text-ink-gray-7 hover:bg-surface-gray-3 hover:text-ink-gray-9'
+const BTN_FILLED =
+  'inline-flex h-10 items-center gap-2 rounded-full bg-surface-gray-10 px-4 text-sm font-medium text-ink-base hover:bg-surface-gray-9 disabled:opacity-50'
 
 const SEARCH_FIELDS = [
   'deal_name',
@@ -1743,14 +1839,23 @@ function deleteView(label) {
 function onDefaultView({ name, context }) {
   if (hadRemembered || viewName.value) return
   viewName.value = name
-  applyViewContext(context)
+  // ?layout=board asked for the board: the view's filters apply on it.
+  applyViewContext(linkLayout ? { ...context, view: linkLayout } : context)
+  if (linkLayout === 'board' && deals.pageLength < 200) {
+    deals.pageLength = 200
+    deals.reload()
+  }
 }
 watch(viewName, (name) => {
   if (!name) viewCols.value = null
 })
 const viewMenu = computed(() => [
   {
-    label: '↗ ' + __('Vista clásica (todos los filtros)'),
+    label: __('Ver en la agenda'),
+    onClick: () => router.push('/agenda'),
+  },
+  {
+    label: __('Vista clásica (todos los filtros)'),
     onClick: () =>
       router.push({ path: '/deals/view', query: { classic: '1' } }),
   },
@@ -1953,7 +2058,10 @@ function removeChip(c) {
   const ref_ = { status: statusF, source: sourceF, owner: ownerF }[c.type]
   ref_.value = ref_.value.filter((x) => x !== c.value)
 }
+// «Limpiar» clears everything that narrows the list, the pipeline included
+// (its chip used to stay behind); the search stays, it has its own ×.
 function clearAll() {
+  pipelineF.value = ''
   createdFrom.value = ''
   createdTo.value = ''
   followUp.value = 'all'
@@ -1983,22 +2091,7 @@ const views = [
   { key: 'list', label: __('Lista') },
   { key: 'board', label: __('Tablero') },
   { key: 'funnel', label: __('Embudo') },
-  { key: 'cal', label: __('Agenda'), to: '/agenda' },
 ]
-function label(r) {
-  return r.deal_name || r.organization || r.lead_name || r.name
-}
-function statusChip(status) {
-  const c = getDealStatus(status)?.color || '#5b6472'
-  return `color:${c};background:${c}1a`
-}
-function sourceDot(source) {
-  const key = String(source || '').toLowerCase()
-  for (const k of Object.keys(CHANNEL_META))
-    if (key.includes(k) || key.includes(CHANNEL_META[k][0].toLowerCase()))
-      return CHANNEL_META[k][1]
-  return '#9aa2ae'
-}
 function ownerName(email) {
   return getUser(email)?.full_name || email
 }
@@ -2008,19 +2101,24 @@ function formatMXN(v, currency = metricsCurrency.value) {
   if (!n) return '—'
   return money(n, currency || metricsCurrency.value)
 }
+// «jue 15 de oct», as the other queues write a day (never the browser's
+// locale: the shell page is lang="en").
 function formatDate(v) {
-  if (!v) return '—'
-  const d = new Date(String(v).replace(' ', 'T'))
-  return isNaN(d.getTime()) ? '—' : d.toLocaleDateString()
+  return v ? formatDay(v) : ''
 }
 // Card headline: the deal's own title when the tenant has one, else the customer,
 // else whatever identifies the row. RO-generated deals have no title, which is why
 // the upstream kanban reads "No Title".
 // A card is named for the customer or the deal, never its ID («CRM-DEAL-…»).
 function cardTitle(r) {
-  const name = r.deal_name || customerOf(r) || label(r)
+  const name =
+    r.deal_name || customerOf(r) || r.organization || r.lead_name || r.name
   if (name && !looksLikeId(name)) return name
-  return deviceOf(r) || formatPhone(phoneOf(r)) || __('Trato sin cliente')
+  return (
+    deviceOf(r) ||
+    (phoneOf(r) && formatPhone(phoneOf(r))) ||
+    __('Trato sin cliente')
+  )
 }
 // Local on purpose: importing utils/display adds a chunk to /crm/deals, which
 // sits at its 60-file budget.

@@ -19,11 +19,8 @@
         aria-hidden="true"
         >{{ collapsed ? '▸' : '▾' }}</span
       >
-      <span
-        v-if="color"
-        class="h-2 w-2 flex-none rounded-full"
-        :style="`background:${color}`"
-      />
+      <!-- a stage's colour is an ink class, a repair state's a hex -->
+      <span v-if="color" v-bind="dotBinding(color)" />
       <span class="truncate text-[12px] font-semibold text-ink-gray-8">{{
         label || emptyLabel
       }}</span>
@@ -39,6 +36,8 @@
 </template>
 
 <script setup>
+import { dotBinding } from '@/components/ui/chipClass'
+
 defineProps({
   label: { type: String, default: '' },
   emptyLabel: { type: String, default: () => __('Sin asignar') },

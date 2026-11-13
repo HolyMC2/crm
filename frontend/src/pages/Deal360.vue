@@ -16,14 +16,23 @@
     >
       <RouterLink
         :to="back.to"
-        class="rounded-4 px-1 py-1 font-medium text-ink-gray-6 hover:text-ink-gray-9"
-        >← {{ back.label }}</RouterLink
+        class="press inline-flex h-9 items-center gap-1.5 rounded-full px-2 font-medium text-ink-gray-7 hover:bg-surface-gray-2 hover:text-ink-gray-9"
+        ><span class="lucide-arrow-left size-4" aria-hidden="true" />{{
+          back.label
+        }}</RouterLink
       >
       <button
-        class="rounded-6 border border-outline-gray-2 px-3 py-1.5 text-ink-gray-7 hover:bg-surface-gray-2"
+        type="button"
+        class="press inline-flex h-9 items-center gap-1.5 rounded-full px-3.5 font-medium"
+        :class="
+          showContext
+            ? 'bg-surface-gray-3 text-ink-gray-9'
+            : 'bg-surface-gray-2 text-ink-gray-8 hover:bg-surface-gray-3'
+        "
         :aria-expanded="isMobile ? mobileView === 'context' : showContext"
         @click="isMobile ? openContext() : (showContext = !showContext)"
       >
+        <span class="lucide-panel-right size-4" aria-hidden="true" />
         {{ __('Datos y contacto') }}
       </button>
     </nav>

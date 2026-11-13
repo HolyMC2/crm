@@ -7,7 +7,7 @@
 const HOT_CHUNKS = [
   () => import('@/pages/Inbox.vue'),
   () => import('@/pages/Deal360.vue'),
-  () => import('@/pages/LeadsView.vue'),
+  () => import('@/pages/Prospectos.vue'),
   () => import('@/pages/DealsView.vue'),
   () => import('@/components/Activities/Activities.vue'),
 ]

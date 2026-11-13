@@ -2,19 +2,21 @@
 <template>
   <div class="relative inline-block">
     <button
-      class="flex items-center gap-1 rounded-[7px] border px-[9px] py-1 text-[12px] font-medium"
+      type="button"
+      class="press inline-flex h-8 items-center gap-1 rounded-full px-3 text-sm"
       :class="
         selected.length
-          ? 'border-outline-green-4 bg-surface-green-2 text-ink-green-8'
-          : 'border-outline-gray-2 bg-surface-gray-2 text-ink-gray-8'
+          ? 'bg-surface-green-2 text-ink-green-8'
+          : 'bg-surface-gray-2 text-ink-gray-8 hover:bg-surface-gray-3'
       "
+      :aria-expanded="open"
       @click="open = !open"
     >
       {{ label }}
-      <span v-if="selected.length" class="font-semibold"
-        >· {{ selected.length }}</span
-      >
-      ⌄
+      <span v-if="selected.length" class="num font-semibold">{{
+        selected.length
+      }}</span>
+      <span class="lucide-chevron-down size-4" aria-hidden="true" />
     </button>
 
     <template v-if="open">
@@ -24,7 +26,7 @@
         style="box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12)"
       >
         <div
-          class="border-b border-outline-gray-1 px-3 py-2 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4"
+          class="border-b border-outline-gray-1 px-3 py-2 text-sm font-medium text-ink-gray-7"
         >
           {{ label }}
         </div>
@@ -40,11 +42,8 @@
               style="accent-color: var(--brand)"
               @change="toggle(o.value)"
             />
-            <span
-              v-if="o.color"
-              class="h-2 w-2 rounded-full"
-              :style="`background:${o.color}`"
-            />
+            <!-- a stage's colour is an ink class, a score's a hex -->
+            <span v-if="o.color" v-bind="dotBinding(o.color)" />
             {{ o.label }}
           </label>
         </div>
@@ -54,11 +53,12 @@
           <button class="text-[12px] text-ink-gray-5" @click="clear">
             {{ __('Limpiar') }}
           </button>
+          <!-- each tick filters at once: this only closes the list -->
           <button
-            class="text-[12px] font-semibold text-ink-green-7"
+            class="text-[12px] font-semibold text-ink-gray-9"
             @click="open = false"
           >
-            {{ __('Aplicar') }}
+            {{ __('Listo') }}
           </button>
         </div>
       </div>
@@ -68,6 +68,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import { dotBinding } from '@/components/ui/chipClass'
 
 const props = defineProps({
   label: { type: String, required: true },

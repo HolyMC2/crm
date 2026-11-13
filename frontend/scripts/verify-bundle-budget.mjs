@@ -34,7 +34,6 @@ export const DAILY_ROUTES = {
   '/crm/pendientes': [...SHELL, 'Pendientes'],
   '/crm/contactos': [...SHELL, 'Contactos'],
   '/crm/deals': [...VENTAS, 'DealsView'],
-  '/crm/leads': [...VENTAS, 'LeadsView'],
   '/crm/prospectos': [...VENTAS, 'Prospectos'],
   '/crm/inbox': [...VENTAS, 'Inbox'],
   '/crm/dashboard': [...VENTAS, 'Dashboard'],

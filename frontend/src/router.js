@@ -1039,11 +1039,17 @@ const routes = [
         ? true
         : { path: '/prospectos', query: { tipo: 'inquiry' }, replace: true },
     component: () => import('@/pages/Inquiries.vue'),
-    meta: { navLabel: 'Consultas', title: 'Consultas' },
+    // listParent: the phone bar's back arrow, to the list it came from (?list=).
+    meta: {
+      navLabel: 'Consultas',
+      title: 'Consultas',
+      listParent: 'Prospectos',
+    },
   },
   {
-    // FCRM redesign owns /leads (LeadsView.vue); upstream list stays reachable
-    // at /leads/view/:viewType for the kanban/calendar view system.
+    // Prospectos is the leads list (/leads redirects there); the upstream list
+    // stays reachable at /leads/view/:viewType for the kanban/calendar view
+    // system (a saved view, «Vista clásica»).
     path: '/leads/view/:viewType?',
     name: 'Leads',
     component: () => import('@/pages/Leads.vue'),
@@ -1168,10 +1174,14 @@ const routes = [
     meta: { navLabel: 'Inbox', title: 'Inbox', stableKey: true },
   },
   {
+    // «Lista de leads» is retired into Prospectos (lane ventas-parejo): one
+    // leads list at every width. Old links keep their search.
     path: '/leads',
     name: 'Leads List',
-    component: () => import('@/pages/LeadsView.vue'),
-    meta: { navLabel: 'Leads', title: 'Leads' },
+    redirect: (to) => ({
+      name: 'Prospectos',
+      query: typeof to.query?.q === 'string' ? { q: to.query.q } : {},
+    }),
   },
   {
     path: '/deals',

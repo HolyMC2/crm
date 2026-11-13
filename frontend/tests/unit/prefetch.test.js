@@ -5,7 +5,7 @@ const loaded = []
 const CHUNKS = {
   '@/pages/Inbox.vue': 'Inbox',
   '@/pages/Deal360.vue': 'Deal360',
-  '@/pages/LeadsView.vue': 'LeadsView',
+  '@/pages/Prospectos.vue': 'Prospectos',
   '@/pages/DealsView.vue': 'DealsView',
   '@/components/Activities/Activities.vue': 'Activities',
   '@/components/doco/inbox/DealContextPanel.vue': 'DealContextPanel',
@@ -87,7 +87,7 @@ describe('prefetchHotChunks', () => {
     expect(loaded).toEqual([
       'Inbox',
       'Deal360',
-      'LeadsView',
+      'Prospectos',
       'DealsView',
       'Activities',
     ])

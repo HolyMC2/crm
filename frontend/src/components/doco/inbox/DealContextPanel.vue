@@ -47,12 +47,12 @@
         class="flex size-20 items-center justify-center rounded-full bg-surface-gray-2 text-[26px] font-semibold text-ink-gray-7"
         aria-hidden="true"
       >
-        {{ initials(name) }}
+        {{ name ? initials(name) : '' }}
       </span>
       <h2
-        class="mt-3 max-w-full truncate text-[22px] font-semibold leading-tight text-ink-gray-9"
+        class="title-face mt-3 max-w-full truncate text-[22px] font-semibold leading-tight text-ink-gray-9"
       >
-        {{ name || activeDeal }}
+        {{ name }}
       </h2>
       <p v-if="row.mobile_no" class="num mt-1 text-[15px] text-ink-gray-6">
         {{ formatPhone(row.mobile_no) }}
@@ -68,8 +68,7 @@
         >
           <component
             :is="tile.icon"
-            class="size-5"
-            style="color: var(--brand)"
+            class="size-5 text-ink-gray-7"
             aria-hidden="true"
           />
           {{ tile.label }}
@@ -89,10 +88,9 @@
     <!-- acciones -->
     <div class="flex-none border-b border-outline-gray-1 p-3.5">
       <div class="mb-2.5 flex items-center justify-between">
-        <span
-          class="text-[11px] font-bold uppercase tracking-[.08em] text-ink-gray-4"
-          >{{ __('Acciones') }}</span
-        >
+        <span class="text-sm font-medium text-ink-gray-7">{{
+          __('Acciones')
+        }}</span>
         <!-- on the 360° page → jump to the inbox conversation; in the inbox → open 360° -->
         <button
           v-if="onDeal360"
@@ -116,12 +114,13 @@
         </button>
       </div>
       <button
-        v-if="!isMobile"
-        class="w-full rounded-6 px-2.5 py-1.5 text-[11.5px] font-semibold text-white"
-        style="background: var(--brand)"
+        v-if="!isMobile && row.mobile_no"
+        type="button"
+        class="press flex h-9 w-full items-center justify-center gap-2 rounded-full bg-surface-gray-2 text-sm font-medium text-ink-gray-9 hover:bg-surface-gray-3"
         @click="call"
       >
-        ☎ {{ __('Llamar') }}
+        <LucidePhone class="size-4" aria-hidden="true" />
+        {{ __('Llamar') }}
       </button>
 
       <template v-if="isDeal">
@@ -221,9 +220,7 @@
 
         <!-- macros rápidas: one-click status flip + open the WhatsApp template to review -->
         <div class="mt-3 border-t border-outline-gray-1 pt-2.5">
-          <div
-            class="mb-1.5 text-[10px] font-bold uppercase tracking-wide text-ink-gray-4"
-          >
+          <div class="mb-1.5 text-sm font-medium text-ink-gray-7">
             {{ __('Macros rápidas') }}
           </div>
           <div class="flex flex-col gap-1">
@@ -269,9 +266,7 @@
 
     <!-- deal summary: read-only key facts of the trato -->
     <div v-if="isDeal" class="flex-none border-b border-outline-gray-1 p-3.5">
-      <div
-        class="mb-2 text-[11px] font-bold uppercase tracking-[.08em] text-ink-gray-4"
-      >
+      <div class="mb-2 text-sm font-medium text-ink-gray-7">
         {{ __('Resumen del trato') }}
       </div>
       <div class="flex flex-col gap-1.5 text-[12px]">
@@ -388,9 +383,7 @@
 
     <!-- score (doco-specific; not in the upstream sidepanel) -->
     <div v-if="grade" class="flex-none border-b border-outline-gray-1 p-3.5">
-      <div
-        class="mb-2.5 text-[11px] font-bold uppercase tracking-[.08em] text-ink-gray-4"
-      >
+      <div class="mb-2.5 text-sm font-medium text-ink-gray-7">
         {{ __('Score') }} · {{ name }}
       </div>
       <div
@@ -481,7 +474,7 @@
       class="flex-none border-b border-outline-gray-1"
     >
       <button
-        class="flex w-full items-center justify-between px-3.5 py-2.5 text-[11px] font-bold uppercase tracking-[.08em] text-ink-gray-4 hover:bg-surface-gray-2"
+        class="flex w-full items-center justify-between px-3.5 py-2.5 text-sm font-medium text-ink-gray-7 hover:bg-surface-gray-2"
         :aria-expanded="showAllFields"
         @click="showAllFields = !showAllFields"
       >
@@ -533,7 +526,8 @@ import LucideChevronLeft from '~icons/lucide/chevron-left'
 import LucidePhone from '~icons/lucide/phone'
 import LucideMessageCircle from '~icons/lucide/message-circle'
 import LucideSearch from '~icons/lucide/search'
-import { formatPhone } from '@/composables/crmFormat'
+import { formatMoney, formatPhone } from '@/composables/crmFormat'
+import { formatDay } from '@/utils/contactos'
 import SidePanelLayout from '@/components/SidePanelLayout.vue'
 import { ArchivosRegistroPanel } from '@/components/archivos'
 import DealContactsSection from '@/components/doco/inbox/DealContactsSection.vue'
@@ -776,23 +770,17 @@ const dealBalance = computed(
     ) || null,
 )
 
+// The shell's day and money (es-MX, the shop's currency), as in the header
+// and Resumen: the browser's own locale wrote «11/13/2026» and «MX$1,800».
 function fmtDate(ts) {
-  if (!ts) return '—'
-  const d = new Date(String(ts).replace(' ', 'T'))
-  return isNaN(d.getTime()) ? '—' : d.toLocaleDateString()
+  return ts ? formatDay(ts) : '—'
 }
-function money(v, currency = 'MXN') {
+function money(v, currency) {
   const n = Number(v)
-  return n
-    ? n.toLocaleString(undefined, {
-        style: 'currency',
-        currency: currency || 'MXN',
-        maximumFractionDigits: 0,
-      })
-    : null
+  return n ? formatMoney(n, currency) : null
 }
 function contractSummary(amounts, quoted) {
-  const currency = amounts?.currency || 'MXN'
+  const currency = amounts?.currency
   // a flagged outlier still shows its own amount here, marked
   const own = amounts?.outlier ? amounts.size : amounts?.commercial_value
   const value = money(own, currency)
@@ -811,11 +799,7 @@ function contractSummary(amounts, quoted) {
   }
 }
 function money0(currency) {
-  return (0).toLocaleString(undefined, {
-    style: 'currency',
-    currency,
-    maximumFractionDigits: 0,
-  })
+  return formatMoney(0, currency)
 }
 const dealSummary = computed(() => {
   const m = dealRes.data || {}
@@ -845,10 +829,14 @@ const heroTiles = computed(() => [
     run: call,
   },
   {
+    // back to the thread on its conversation, not on whichever tab was open
     key: 'chat',
     label: __('Mensaje'),
     icon: LucideMessageCircle,
-    run: mobileBack,
+    run: () => {
+      activeTab.value = 'conversation'
+      mobileBack()
+    },
   },
   {
     key: 'search',

@@ -57,13 +57,6 @@ export const navItems = [
     group: 'fidelidad',
   },
   {
-    key: 'leads',
-    icon: LeadsIcon,
-    label: 'Leads',
-    to: '/leads',
-    group: 'leads',
-  },
-  {
     key: 'inbox',
     icon: InboxIcon,
     label: 'Inbox',
@@ -193,7 +186,9 @@ export function routeGroup(path) {
   if (/^\/(contactos|contacts|organizations)(\/|$)/.test(path))
     return 'contactos'
   if (/^\/automations(\/|$)/.test(path)) return 'automations'
-  // An inquiry opens from Prospectos (the list is retired, Shell D3).
+  // An inquiry opens from Prospectos (the list is retired, Shell D3), and so
+  // does a lead: «Lista de leads» is retired into Prospectos, so a lead's
+  // page and the leads tools light it.
   if (/^\/(prospectos|inquiries)(\/|$)/.test(path)) return 'prospectos'
   if (/^\/ventas\/fidelidad(\/|$)/.test(path)) return 'fidelidad'
   if (/^\/inbox(\/|$)/.test(path)) return 'inbox'
@@ -205,10 +200,10 @@ export function routeGroup(path) {
   if (/^\/social(\/|$)/.test(path)) return 'social'
   if (/^\/(calendar|agenda)(\/|$)/.test(path)) return 'calendar'
   // Ordered before the /leads rule: /pipeline-analysis is its own nav entry now,
-  // and the broader pattern below would otherwise swallow it back into 'leads'.
+  // and the broader pattern below would otherwise swallow it.
   if (/^\/pipeline-analysis(\/|$)/.test(path)) return 'funnel'
   if (/^\/(leads|pipeline|stage-scripts|enrichment)(\/|$)/.test(path))
-    return 'leads'
+    return 'prospectos'
   if (/^\/dashboard(\/|$)/.test(path)) return 'dashboard'
   if (/^\/call-logs(\/|$)/.test(path)) return 'calls'
   if (/^\/tasks(\/|$)/.test(path)) return 'tasks'

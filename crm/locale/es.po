@@ -46389,3 +46389,6 @@ msgstr "Mis cajeros usaban SICAR: poner sus teclas en mi caja (F2 buscar, F5 can
 msgctxt "Importar"
 msgid "My cashiers used SICAR: give my {0} registers its keys (F2 search, F5 quantity, Esc charge)"
 msgstr "Mis cajeros usaban SICAR: poner sus teclas en mis {0} cajas (F2 buscar, F5 cantidad, Esc cobrar)"
+#: frontend/src/components/doco/FunnelView.vue
+msgid "Current stage distribution; percentages are shares of the total, not conversion rates."
+msgstr "Cómo se reparten hoy los tratos entre las etapas; cada porcentaje es la parte del total, no una tasa de conversión."

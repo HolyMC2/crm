@@ -49,7 +49,7 @@
           class="press flex h-11 items-center justify-center whitespace-nowrap px-[11px] transition-colors duration-150 max-sm:min-w-0 max-sm:flex-1 max-sm:px-1 max-sm:text-[12.5px] sm:flex-none"
           :class="
             activeTab === t.key
-              ? 'font-semibold text-ink-green-7'
+              ? 'font-semibold text-ink-gray-9'
               : 'text-ink-gray-5'
           "
           @click="activeTab = t.key"
@@ -58,7 +58,7 @@
           <span class="max-sm:hidden">{{ t.label }}</span>
         </button>
         <span
-          class="pointer-events-none absolute bottom-[-1px] left-0 h-0.5 rounded-full bg-surface-green-7 transition-[transform,width] duration-200 ease-out motion-reduce:transition-none"
+          class="pointer-events-none absolute bottom-[-1px] left-0 h-0.5 rounded-full bg-[var(--muelle-accent)] transition-[transform,width] duration-200 ease-out motion-reduce:transition-none"
           :style="indicator"
           aria-hidden="true"
         />
