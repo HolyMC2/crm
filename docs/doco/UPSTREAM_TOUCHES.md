@@ -66,7 +66,8 @@ LIGHT files usually auto-merge — verify the doco lines survived, nothing more.
 crm/hooks.py (+2: CRM Call Log perm hooks), crm/patches.txt (+2: provenance patch),
 fcrm_settings.json (+quick_replies), crm_telephony_agent.py, crm_twilio_settings.py,
 frontend/index.html (viewport comma fix — do NOT lose), frontend/package.json,
-frontend/auto-imports.d.ts, frontend/src/translation.js, DesktopLayout.vue,
+frontend/auto-imports.d.ts (untracked and gitignored since 2026-11-13, like components.d.ts:
+the build writes it; on an upstream merge keep it deleted), frontend/src/translation.js, DesktopLayout.vue,
 CallLogDetailModal.vue, LeadModal.vue, CallArea/CommentArea/EmailArea/NoteArea/
 ActivityHeader.vue (activity-header class, ±3), pages/Deal.vue, Deals.vue, Lead.vue,
 stores/settings.js (brand_color boot), utils/index.js, utils/numberFormat.js,
