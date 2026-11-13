@@ -14,6 +14,8 @@ import {
   captureStatus,
   discardCapture,
   draftTarget,
+  heicAsJpeg,
+  isHeic,
   lineStateLabel,
   lineStateTheme,
   loadCapturaBoot,
@@ -206,7 +208,7 @@ describe('boot-driven helpers', () => {
     },
     labels: { 'Purchase Order': 'Orden de compra' },
     max_mb: 10,
-    accept: '.pdf,.png,.jpg,.jpeg,.webp,.heic,.xml',
+    accept: '.pdf,.png,.jpg,.jpeg,.webp,.xml',
   }
   it('offers only targets the user may create, in caller order', () => {
     expect(
@@ -223,7 +225,14 @@ describe('boot-driven helpers', () => {
     expect(captureProblem({ name: 'cotizacion.PDF', size: 1000 }, boot)).toBe(
       '',
     )
-    expect(captureProblem({ name: 'IMG_1.heic', size: 1000 }, boot)).toBe('')
+    expect(captureProblem({ name: 'IMG_1.heic', size: 1000 }, boot)).toMatch(
+      /JPG, PNG or WEBP/,
+    )
+    // Without a boot the shell's own list has no HEIC either.
+    expect(captureProblem({ name: 'IMG_1.HEIC', size: 1000 }, {})).toMatch(
+      /PDF/,
+    )
+    expect(captureProblem({ name: 'IMG_1.jpg', size: 1000 }, {})).toBe('')
     expect(captureProblem({ name: 'notes.txt', size: 10 }, boot)).toMatch(/PDF/)
     expect(
       captureProblem({ name: 'big.pdf', size: 11 * 1024 * 1024 }, boot),
@@ -232,6 +241,80 @@ describe('boot-driven helpers', () => {
   it('polls every 2.5 s for up to 4 minutes', () => {
     expect(POLL_MS).toBe(2500)
     expect(POLL_LIMIT_MS).toBe(240000)
+  })
+})
+
+describe('a HEIC photo goes up as JPEG (PROD-9-a)', () => {
+  const heic = (name = 'IMG_0001.HEIC', type = 'image/heic') =>
+    new File([new Uint8Array([0, 0, 0, 24])], name, { type })
+  function kit({ width = 4032, height = 3024, decodes = true } = {}) {
+    const drawn = []
+    return {
+      drawn,
+      decode: vi.fn(async () => {
+        if (!decodes) throw new Error('this browser cannot read HEIC')
+        return { source: 'bitmap', width, height, close: vi.fn() }
+      }),
+      canvas: (w, h) => ({
+        width: w,
+        height: h,
+        getContext: () => ({
+          fillRect: () => {},
+          drawImage: (src, x, y, w2, h2) => drawn.push([w2, h2]),
+        }),
+      }),
+      blobOf: vi.fn(
+        async (canvas, type) => new Blob([new Uint8Array(9)], { type }),
+      ),
+    }
+  }
+
+  it('knows a HEIC by its type or its name', () => {
+    expect(isHeic(heic())).toBe(true)
+    expect(isHeic(heic('foto.heif', ''))).toBe(true)
+    expect(isHeic(heic('foto', 'image/heif'))).toBe(true)
+    expect(isHeic(heic('foto.jpg', 'image/jpeg'))).toBe(false)
+    expect(isHeic(undefined)).toBe(false)
+  })
+
+  it('a decoded HEIC becomes a JPEG at most 2000 px on its long side', async () => {
+    const tools = kit()
+    const out = await heicAsJpeg(heic(), tools)
+    expect(out.name).toBe('IMG_0001.jpg')
+    expect(out.type).toBe('image/jpeg')
+    expect(tools.drawn).toEqual([[2000, 1500]])
+    expect(tools.blobOf).toHaveBeenCalledWith(
+      expect.anything(),
+      'image/jpeg',
+      expect.any(Number),
+    )
+  })
+
+  it('a small HEIC is converted too, even when its JPEG is heavier', async () => {
+    const out = await heicAsJpeg(heic(), kit({ width: 800, height: 600 }))
+    expect(out.type).toBe('image/jpeg')
+    expect(out.size).toBe(9)
+  })
+
+  it('a browser that cannot read it keeps the file for the server to explain', async () => {
+    const file = heic()
+    expect(await heicAsJpeg(file, kit({ decodes: false }))).toBe(file)
+  })
+
+  it('any other file goes as it is, without decoding', async () => {
+    const tools = kit()
+    const pdf = new File(['%PDF'], 'cotizacion.pdf', {
+      type: 'application/pdf',
+    })
+    expect(await heicAsJpeg(pdf, tools)).toBe(pdf)
+    expect(tools.decode).not.toHaveBeenCalled()
+  })
+
+  it('the camera converts a picked HEIC before it travels', () => {
+    const sheet = source('components/captura/CameraSheet.vue')
+    expect(sheet).toMatch(
+      /async function fromFile\(event\) \{[\s\S]{0,240}await heicAsJpeg\(event\.target\.files\?\.\[0\]\)/,
+    )
   })
 })
 

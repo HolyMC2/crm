@@ -613,6 +613,7 @@ import {
 import {
   capturaBoot,
   capturaMessage,
+  heicAsJpeg,
   loadCapturaBoot,
 } from '@/composables/useCaptura'
 import Icon from '@/components/Icon.vue'
@@ -971,8 +972,10 @@ async function fromGallery(event) {
   }
 }
 
-function fromFile(event) {
-  const file = event.target.files?.[0]
+async function fromFile(event) {
+  // The picker asks for PDF or XML, but a HEIC photo can still come through:
+  // it goes up as a JPEG the capture reads (useCaptura.heicAsJpeg).
+  const file = await heicAsJpeg(event.target.files?.[0])
   event.target.value = ''
   if (!file) return
   const max = (capturaBoot.value?.max_mb || 10) * 1024 * 1024

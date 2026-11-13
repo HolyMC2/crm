@@ -13073,8 +13073,8 @@ msgid "Already paid by transfer? Upload the receipt"
 msgstr "¿Ya pagaste por transferencia? Sube el comprobante"
 
 #: frontend/src/composables/useCaptura.js
-msgid "Send a PDF, a photo (JPG, PNG, WEBP or HEIC) or an XML invoice."
-msgstr "Envía un PDF, una foto (JPG, PNG, WEBP o HEIC) o una factura XML."
+msgid "Send a PDF, a photo (JPG, PNG or WEBP) or an XML invoice."
+msgstr "Envía un PDF, una foto (JPG, PNG o WEBP) o una factura XML."
 
 #: frontend/src/composables/useCaptura.js
 msgid "Purchase order"

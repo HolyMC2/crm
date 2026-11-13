@@ -5,6 +5,14 @@ import {
   sanitizeReturnLabel,
 } from '@/vendor/muelle-shell/contracts'
 import { createModuleBoot } from '@/utils/moduleBoot'
+import {
+  MAX_SIDE,
+  QUALITY,
+  canvasBlob,
+  canvasOf,
+  decodeImage,
+  fitWithin,
+} from '@/components/ui/imageFiles'
 
 // «Capturar documento» (ARC-S2.6): a worker drops a quote, invoice, ticket or
 // transfer receipt; the books capture pipeline reads it and the shell review
@@ -120,14 +128,64 @@ export function captureProblem(file, boot) {
     return tr('This file is larger than {0} MB. Send a lighter photo or PDF.', [
       limit,
     ])
-  const accept = String(boot?.accept || '.pdf,.png,.jpg,.jpeg,.webp,.heic,.xml')
+  // No .heic: the books capture cannot read HEIC, and without it in an accept
+  // list iOS hands over a JPEG.
+  const accept = String(boot?.accept || '.pdf,.png,.jpg,.jpeg,.webp,.xml')
     .split(',')
     .map((ext) => ext.trim().toLowerCase())
     .filter(Boolean)
   const name = String(file.name || '').toLowerCase()
   return accept.some((ext) => name.endsWith(ext))
     ? ''
-    : tr('Send a PDF, a photo (JPG, PNG, WEBP or HEIC) or an XML invoice.')
+    : tr('Send a PDF, a photo (JPG, PNG or WEBP) or an XML invoice.')
+}
+
+/** An iPhone HEIC/HEIF photo, by its type or its name. */
+export function isHeic(file) {
+  return (
+    /^image\/hei[cf]/i.test(String(file?.type || '')) ||
+    /\.(heic|heif)$/i.test(String(file?.name || ''))
+  )
+}
+
+/**
+ * A HEIC photo that still arrives goes up as the JPEG the capture reads: the
+ * kit's canvas steps (imageFiles: upright, at most MAX_SIDE on its long side).
+ * Not prepareImage itself, which keeps the original when the JPEG is not
+ * lighter: a small HEIC would travel as HEIC. A browser that cannot decode it
+ * keeps the file, and the server says how to send it.
+ */
+export async function heicAsJpeg(
+  file,
+  { decode = decodeImage, canvas = canvasOf, blobOf = canvasBlob } = {},
+) {
+  if (!isHeic(file)) return file
+  let picture
+  try {
+    picture = await decode(file)
+  } catch {
+    return file
+  }
+  try {
+    const size = fitWithin(picture.width, picture.height, MAX_SIDE)
+    const target = canvas(size.width, size.height)
+    const ctx = target.getContext('2d')
+    ctx.fillStyle = '#fff'
+    ctx.fillRect(0, 0, size.width, size.height)
+    ctx.imageSmoothingQuality = 'high'
+    ctx.drawImage(picture.source, 0, 0, size.width, size.height)
+    const blob = await blobOf(target, 'image/jpeg', QUALITY)
+    if (!blob || (blob.type && blob.type !== 'image/jpeg')) return file
+    const stem = String(file.name || '').replace(/\.[a-z0-9]{1,5}$/i, '')
+    return new File([blob], `${stem || 'foto'}.jpg`, {
+      type: 'image/jpeg',
+      lastModified: file.lastModified || Date.now(),
+    })
+  } catch {
+    return file
+  } finally {
+    picture.close?.()
+  }
 }
 
 /**
