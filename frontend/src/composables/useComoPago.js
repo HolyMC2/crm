@@ -99,8 +99,12 @@ export function visibleQuestions(values = {}, show = {}) {
   return {
     dia_pago: values.frecuencia === SEMANAL,
     origen_caja: Boolean(show.caja) || on(values.origen_caja),
+    // doco also accepts a back-office cash account the chart names, so
+    // that account alone is enough to offer the chip.
     origen_caja_fuerte:
-      Boolean(show.caja_fuerte) || on(values.origen_caja_fuerte),
+      Boolean(show.caja_fuerte) ||
+      on(values.origen_caja_fuerte) ||
+      Boolean(values.cuenta_caja_fuerte),
     quien_entrega: entrega,
     cajero_ve_montos: entrega && values.quien_entrega !== YO,
     calcula: calcular,
@@ -124,8 +128,19 @@ export function visibleQuestions(values = {}, show = {}) {
   }
 }
 
-/** What the owner still has to answer before «Guardar», in order. */
-export function missingAnswers(values = {}, level = null) {
+/** The answers after one question changes. Turning receipts off also turns
+ *  off stamping them: doco refuses `cfdi_nomina` without `recibos`, and its
+ *  switch hides with the receipts. */
+export function withAnswer(values, field, value) {
+  const next = { ...values, [field]: value }
+  if (field === 'recibos' && !on(value)) next.cfdi_nomina = 0
+  return next
+}
+
+/** What the owner still has to answer before «Guardar», in order. `weekdays`
+ *  are the server's weekly pay days: a fortnight's or a month's stored day
+ *  («15 y fin de mes», «Último día») does not answer «qué día» for a week. */
+export function missingAnswers(values = {}, level = null, weekdays = []) {
   const out = []
   if (!level)
     out.push({
@@ -134,7 +149,11 @@ export function missingAnswers(values = {}, level = null) {
     })
   if (!values.frecuencia)
     out.push({ key: 'frecuencia', message: 'Elige cada cuándo pagas.' })
-  else if (values.frecuencia === SEMANAL && !values.dia_pago)
+  else if (
+    values.frecuencia === SEMANAL &&
+    (!values.dia_pago ||
+      (weekdays.length > 0 && !weekdays.includes(values.dia_pago)))
+  )
     out.push({ key: 'dia_pago', message: 'Elige qué día pagas.' })
   if (!ORIGEN_FIELDS.some((field) => on(values[field])))
     out.push({ key: 'origen', message: 'Elige de dónde sale el dinero.' })

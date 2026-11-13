@@ -25,6 +25,7 @@ import {
   prenominaDoor,
   setOrigenes,
   visibleQuestions,
+  withAnswer,
 } from '../../src/composables/useComoPago.js'
 
 const here = dirname(fileURLToPath(import.meta.url))
@@ -413,5 +414,38 @@ describe('the page', () => {
   })
   it('does not ask how much each person earns (lane pay-field privacy)', () => {
     expect(src('pages/EquipoComoPago.vue')).not.toMatch(/set_sueldo|doco_pago_/)
+  })
+})
+
+describe('answers that follow from another', () => {
+  it('turning receipts off also stops stamping them', () => {
+    const todo = { ...DEFAULTS, recibos: 1, cfdi_nomina: 1 }
+    const off = withAnswer(todo, 'recibos', 0)
+    expect(off).toMatchObject({ recibos: 0, cfdi_nomina: 0 })
+    expect(withAnswer(todo, 'recibos', 1).cfdi_nomina).toBe(1)
+    expect(withAnswer(todo, 'ptu', 0).cfdi_nomina).toBe(1)
+  })
+
+  it('a fortnight or month pay day does not answer a weekly one', () => {
+    const weekdays = ['Lunes', 'Sábado']
+    const was = {
+      ...DEFAULTS,
+      frecuencia: 'Semanal',
+      dia_pago: '15 y fin de mes',
+    }
+    expect(missingAnswers(was, SOLO, weekdays)[0].key).toBe('dia_pago')
+    expect(
+      missingAnswers({ ...was, dia_pago: 'Sábado' }, SOLO, weekdays),
+    ).toEqual([])
+  })
+
+  it('offers the caja fuerte where the chart has its account', () => {
+    expect(visibleQuestions(DEFAULTS, {}).origen_caja_fuerte).toBe(false)
+    expect(
+      visibleQuestions(
+        { ...DEFAULTS, cuenta_caja_fuerte: 'Caja fuerte - D' },
+        {},
+      ).origen_caja_fuerte,
+    ).toBe(true)
   })
 })

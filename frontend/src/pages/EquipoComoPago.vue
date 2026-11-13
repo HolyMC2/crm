@@ -582,6 +582,7 @@ import {
   answersKey,
   levelOf,
   missingAnswers,
+  withAnswer,
   origenOptions,
   origenesOn,
   payloadOf,
@@ -622,7 +623,12 @@ const receipt = ref(null)
 
 const show = computed(() => answer.value?.show || {})
 const visible = computed(() => visibleQuestions(values.value, show.value))
-const missing = computed(() => missingAnswers(values.value, level.value))
+const weekdays = computed(() =>
+  (answer.value?.options?.dia_pago || []).map((o) => o.value),
+)
+const missing = computed(() =>
+  missingAnswers(values.value, level.value, weekdays.value),
+)
 const origenChips = computed(() =>
   origenOptions(answer.value?.options, values.value, show.value).map((o) => ({
     value: o.field,
@@ -639,7 +645,7 @@ const stopper = computed(() => {
 
 const flag = (field) => Boolean(Number(values.value[field]))
 function set(field, value) {
-  values.value = { ...values.value, [field]: value }
+  values.value = withAnswer(values.value, field, value)
 }
 function replace(next) {
   values.value = next
