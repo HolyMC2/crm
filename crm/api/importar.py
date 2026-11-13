@@ -479,8 +479,12 @@ def _review(eng, plan, summary, header, samples, to_write, *, vista, earlier, ar
 		"nombre_como_codigo": name_as_code,
 		# products refused for want of a code: the screen offers the name as the code
 		"sin_codigo": cuentas["sin_codigo"],
-		# A file that cannot be read at all; a missing column is `faltan`, answered on the screen.
-		"bloqueos": [_blocker(eng, text) for text in plan.blockers] if plan.header_row is None else [],
+		# A file that cannot be read at all, or a recognized export that cannot go in (a SICAR export
+		# uploaded as the other kind, a tax rate it does not give); a missing column is `faltan`,
+		# answered on the screen.
+		"bloqueos": [_blocker(eng, text) for text in plan.blockers]
+		if plan.header_row is None or getattr(plan, "source", None)
+		else [],
 		"cuentas": {
 			"nuevas": cuentas["crear"],
 			"actualizar": cuentas["actualizar"],

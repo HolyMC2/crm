@@ -304,6 +304,39 @@ class TestImportar(IntegrationTestCase):
 		first = {item["campo"]: item["valor"] for item in review["muestra"][0]["valores"]}
 		self.assertEqual(first["customer_name"], f"{PREFIX} revision Uno")
 
+	def test_a_sicar_export_uploaded_as_the_other_kind_says_which_import_it_is(self):
+		import importlib.util
+
+		if importlib.util.find_spec("doco.docoutils.tabular.sicar") is None:
+			self.skipTest("this doco does not recognize SICAR exports yet")
+		header = "\t".join(
+			(
+				"CLAVE",
+				"CLAVE ALTERNA",
+				"DESCRIPCION",
+				"SERVICIO (S/N)",
+				"PRECIO COMPRA",
+				"PRECIO 1",
+				"EXIST.",
+				"DEPARTAMENTO",
+				"GRANEL (S/N)",
+				"IMPUESTO (S/N)",
+			)
+		)
+		row = "\t".join(
+			("SICAR-1", "", "Aceite", "false", "10.000", "12.000000", "1.0000", "ABARROTES", "N", "N")
+		)
+		archivo = self._file("articulosExportados.xls", f"{header}\n{row}\n")
+		review = importar.revisar(archivo=archivo, que="clientes")
+		self.assertEqual(len(review["bloqueos"]), 1)
+		self.assertIn("impórtalo como productos", review["bloqueos"][0])
+		with patch.object(importar, "_catalog_pending", return_value=0):
+			review = importar.revisar(archivo=archivo, que="productos")
+		self.assertEqual(review["bloqueos"], [])
+		self.assertIn(
+			"This is SICAR's products export: its columns are read as SICAR writes them.", review["avisos"]
+		)
+
 	def test_the_rows_with_errors_download_as_a_sheet_with_the_reason(self):
 		review = importar.revisar(archivo=self._customers_sheet("descarga"), que="clientes")
 		importar.filas_con_error(review["vista"])
