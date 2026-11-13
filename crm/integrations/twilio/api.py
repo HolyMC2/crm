@@ -237,7 +237,9 @@ def _save_call_details(call_sid, call_details, status=None, keep_final_status=Fa
 	call_log.start_time = get_datetime_from_timestamp(call_details.start_time)
 	call_log.end_time = get_datetime_from_timestamp(call_details.end_time)
 	call_log.save(ignore_permissions=True)
-	frappe.db.commit()
+	# Twilio's webhook: the log is committed before the browser push that may fail
+	# after it, and a retry starts from a rollback of this request only.
+	frappe.db.commit()  # nosemgrep: frappe-manual-commit
 	return call_log
 
 
@@ -354,7 +356,8 @@ def _report_status_push_failure(exc, call_sid):
 			pass
 
 
-@frappe.whitelist(allow_guest=True)
+# Twilio calls it as Guest; validate_twilio_request checks Twilio's signature first.
+@frappe.whitelist(allow_guest=True)  # nosemgrep: guest-whitelisted-method
 def update_call_status_info(**kwargs):
 	args = frappe._dict(kwargs)
 	validate_twilio_request(args)
