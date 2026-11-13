@@ -82,6 +82,9 @@ const SELF_SERVICE = new Set([
   'set_storage',
   // A read: one top-up's state for «Recarga acreditada» after paying it.
   'topup_state',
+  // CFDI's «Cambiar paquete»: a read of Boat's packages and quote; the change is
+  // toggle_addon, a base write.
+  'stamp_package_quote',
 ])
 
 function walk(dir, keep) {

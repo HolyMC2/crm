@@ -8,7 +8,9 @@
        sheet that names the price and its cycle. Where Boat offers them
        (bootstrap capabilities): users and cajas and the free apps on top, and
        a plan or cycle change that reads Boat's quote and applies at once.
-       Rows and rules. -->
+       With «stamp_packages» the CFDI row says its package and this month's
+       stamps, «Cambiar paquete» opens Boat's packages and quote, and turning
+       CFDI on opens that same sheet. Rows and rules. -->
   <div class="space-y-8">
     <!-- What Boat lets the owner change alone (capabilities «seats»,
          «storage_blocks», «apps»): the quick jobs first, then the plans and
@@ -250,9 +252,54 @@
             >
               {{ row.price }}
             </p>
-            <p v-if="row.meter" class="text-sm text-ink-gray-6">
+            <!-- CFDI sold as a package says its package instead of «Se mide
+                 por timbre». -->
+            <p
+              v-if="row.meter && !stampsFor(row)"
+              class="text-sm text-ink-gray-6"
+            >
               {{ row.meter }}
             </p>
+            <!-- CFDI with Boat's stamp packages: the package, this month's
+                 stamps, a smaller one scheduled, and «Cambiar paquete». -->
+            <template v-if="stampsFor(row)">
+              <p
+                v-if="stampsFor(row).package"
+                class="text-sm text-ink-gray-8"
+                data-testid="timbres-paquete"
+              >
+                {{ stampsFor(row).package }}
+              </p>
+              <p
+                v-if="stampsFor(row).use"
+                class="text-sm"
+                :class="
+                  stampsFor(row).warn ? 'text-ink-amber-8' : 'text-ink-gray-6'
+                "
+                data-testid="timbres-uso-mes"
+              >
+                {{ stampsFor(row).use }}
+              </p>
+              <p
+                v-if="stampsFor(row).scheduled"
+                class="text-sm text-ink-gray-7"
+                data-testid="timbres-programado"
+              >
+                {{ stampsFor(row).scheduled }}
+              </p>
+              <p v-if="stampsFor(row).waits" class="text-sm text-ink-gray-6">
+                {{ stampsFor(row).waits }}
+              </p>
+              <Button
+                v-if="stampsFor(row).held"
+                variant="subtle"
+                class="mt-2 min-h-11 max-sm:w-full"
+                :label="__('Change package', null, 'Cuenta')"
+                :disabled="blocked"
+                data-testid="timbres-cambiar"
+                @click="askStamps()"
+              />
+            </template>
             <p
               v-if="row.reason"
               :id="`cuenta-complemento-${row.key}`"
@@ -283,14 +330,7 @@
               row.reason ? `cuenta-complemento-${row.key}` : undefined
             "
             :data-testid="`complemento-${row.key}`"
-            @update:model-value="
-              ask(
-                addonConfirm(row.addon, {
-                  isTrial,
-                  keepsCycle: caps.keepsCycle,
-                }),
-              )
-            "
+            @update:model-value="toggle(row)"
           />
         </li>
       </ul>
@@ -323,6 +363,16 @@
       :error="error"
       @close="close"
       @confirm="run"
+    />
+    <TimbresSheet
+      v-if="stampsMounted"
+      :door="door"
+      :open="stampsOpen && !door.loading.value && !door.paymentHold.value"
+      :debounce-ms="debounceMs"
+      @close="stampsOpen = false"
+      @act="stampsAct"
+      @done="stampsDone"
+      @off="stampsOpen = false"
     />
     <CambioPlanSheet
       v-if="changeMounted"
@@ -368,6 +418,7 @@ import {
   planRows,
   requestedName,
 } from './tienda'
+import { STAMPS_ADDON, stampsRow } from './timbres'
 
 // The confirm sheets mount on their first open; the self-service blocks only
 // where Boat offers them.
@@ -382,6 +433,7 @@ const Almacenamiento = defineAsyncComponent(
   () => import('./Almacenamiento.vue'),
 )
 const Aplicaciones = defineAsyncComponent(() => import('./Aplicaciones.vue'))
+const TimbresSheet = defineAsyncComponent(() => import('./TimbresSheet.vue'))
 
 const props = defineProps({
   /** The page's payment door (pagos.js createPagos). */
@@ -391,6 +443,8 @@ const props = defineProps({
    * «storage-handled» says it was answered, so the page drops it.
    */
   openStorage: { type: Number, default: 0 },
+  /** How long the stamp package sheet waits after a choice before asking Boat. */
+  debounceMs: { type: Number, default: 300 },
 })
 const emit = defineEmits(['act', 'storage-handled'])
 
@@ -418,8 +472,45 @@ const caps = computed(() => {
     planChange: capable(data, 'plan_change') && !isTrial.value,
     // An add-on turned off keeps running through the month it paid; «Reanudar».
     keepsCycle: capable(data, 'addon_keeps_cycle'),
+    // CFDI's stamp package: «Cambiar paquete» and turning it on over Boat's quote.
+    stampPackages: capable(data, 'stamp_packages'),
   }
 })
+// The CFDI row's package and this month's stamps (bootstrap.stamp_packages).
+const stampsState = computed(() =>
+  caps.value.stampPackages
+    ? stampsRow(props.door.boot.value?.stamp_packages)
+    : null,
+)
+const stampsFor = (row) => (row.key === STAMPS_ADDON ? stampsState.value : null)
+const stampsMounted = ref(false)
+const stampsOpen = ref(false)
+function askStamps() {
+  if (props.door.paymentActionsBlocked()) return
+  stampsMounted.value = true
+  stampsOpen.value = true
+}
+// Turning CFDI on with Boat's packages is the package sheet; every other
+// switch is the confirm it always was.
+function toggle(row) {
+  if (caps.value.stampPackages && row.key === STAMPS_ADDON && !row.active)
+    return askStamps()
+  ask(
+    addonConfirm(row.addon, {
+      isTrial: isTrial.value,
+      keepsCycle: caps.value.keepsCycle,
+    }),
+  )
+}
+function stampsAct(key) {
+  stampsOpen.value = false
+  emit('act', key)
+}
+async function stampsDone(out, said = '') {
+  stampsOpen.value = false
+  toast.success(said || out?.note || __('Change saved', null, 'Cuenta'))
+  await props.door.load()
+}
 const cycle = computed(() => (annual.value ? 'Anual' : 'Mensual'))
 // The yearly row of a site without Boat's plan change shows support's error itself.
 const yearlyAsks = computed(

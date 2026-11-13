@@ -45213,6 +45213,211 @@ msgctxt "Cuenta"
 msgid "Users and registers"
 msgstr "Usuarios y cajas"
 
+#: frontend/src/components/cuenta/timbres.js
+msgctxt "Cuenta"
+msgid "Goes down to {0} stamps a month today"
+msgstr "Baja a {0} timbres al mes hoy"
+
+#: frontend/src/components/cuenta/timbres.js
+msgctxt "Cuenta"
+msgid "Goes down to {0} stamps a month on {1}"
+msgstr "Baja a {0} timbres al mes el {1}"
+
+#: frontend/src/components/cuenta/timbres.js
+msgctxt "Cuenta"
+msgid "Goes down to {0} stamps a month when the period ends"
+msgstr "Baja a {0} timbres al mes al cerrar el periodo"
+
+#: frontend/src/components/cuenta/timbres.js
+msgctxt "Cuenta"
+msgid "Package of {0} stamps a month"
+msgstr "Paquete de {0} timbres al mes"
+
+#: frontend/src/components/cuenta/timbres.js frontend/src/components/cuenta/TimbresSheet.vue
+msgctxt "Cuenta"
+msgid "{0} of {1} stamps this month"
+msgstr "{0} de {1} timbres este mes"
+
+#: frontend/src/components/cuenta/timbres.js
+msgctxt "Cuenta"
+msgid "{0} stamps a month"
+msgstr "{0} timbres al mes"
+
+#: frontend/src/components/cuenta/timbres.js
+msgctxt "Cuenta"
+msgid "{0} per stamp"
+msgstr "{0} por timbre"
+
+#: frontend/src/components/cuenta/timbres.js
+msgctxt "Cuenta"
+msgid "Turn on CFDI"
+msgstr "Activar CFDI"
+
+#: frontend/src/components/cuenta/timbres.js frontend/src/components/cuenta/CuentaTienda.vue
+msgctxt "Cuenta"
+msgid "Change package"
+msgstr "Cambiar paquete"
+
+#: frontend/src/components/cuenta/TimbresSheet.vue
+msgctxt "Cuenta"
+msgid "Choose a package"
+msgstr "Elige un paquete"
+
+#: frontend/src/components/cuenta/TimbresSheet.vue
+msgctxt "Cuenta"
+msgid "Choose another package"
+msgstr "Elige otro paquete"
+
+#: frontend/src/components/cuenta/timbres.js
+msgctxt "Cuenta"
+msgid "CFDI turned on"
+msgstr "CFDI activado"
+
+#: frontend/src/components/cuenta/timbres.js
+msgctxt "Cuenta"
+msgid "Resume CFDI"
+msgstr "Reanudar CFDI"
+
+#: frontend/src/components/cuenta/timbres.js
+msgctxt "Cuenta"
+msgid "Go up to {0} stamps"
+msgstr "Subir a {0} timbres"
+
+#: frontend/src/components/cuenta/timbres.js
+msgctxt "Cuenta"
+msgid "You went up to {0} stamps a month"
+msgstr "Subiste a {0} timbres al mes"
+
+#: frontend/src/components/cuenta/timbres.js
+msgctxt "Cuenta"
+msgid "Go down to {0} stamps"
+msgstr "Bajar a {0} timbres"
+
+#: frontend/src/components/cuenta/timbres.js
+msgctxt "Cuenta"
+msgid "You went down to {0} stamps a month"
+msgstr "Bajaste a {0} timbres al mes"
+
+#: frontend/src/components/cuenta/timbres.js
+msgctxt "Cuenta"
+msgid "When you confirm, you agree to pay {0} a month, IVA included, while CFDI stays on. You can change the package or turn CFDI off whenever you like."
+msgstr "Al confirmar, aceptas pagar {0} al mes, IVA incluido, mientras CFDI siga activo. Puedes cambiar el paquete o apagar CFDI cuando quieras."
+
+#: frontend/src/components/cuenta/timbres.js
+msgctxt "Cuenta"
+msgid "Nothing is charged during your trial; when you activate your plan, your invoice includes {0} a month, IVA included."
+msgstr "En tu prueba no se cobra nada; al activar tu plan, tu factura incluye {0} al mes, IVA incluido."
+
+#: frontend/src/components/cuenta/timbres.js
+msgctxt "Cuenta"
+msgid "The month it is ready is charged whole, {0}, because its stamps count whole that month."
+msgstr "El mes en que quede listo se cobra completo, {0}, porque sus timbres cuentan completos ese mes."
+
+#: frontend/src/components/cuenta/timbres.js
+msgctxt "Cuenta"
+msgid "Then {0} a month, IVA included."
+msgstr "Después, {0} al mes, IVA incluido."
+
+#: frontend/src/components/cuenta/timbres.js
+msgctxt "Cuenta"
+msgid "Added to your next invoice: this month’s difference, IVA included"
+msgstr "Se suma a tu próxima factura: la diferencia de este mes, IVA incluido"
+
+#: frontend/src/components/cuenta/timbres.js
+msgctxt "Cuenta"
+msgid "{0} stamps a month from today; the ones you already used this month count."
+msgstr "{0} timbres al mes desde hoy, contando los que ya usaste este mes."
+
+#: frontend/src/components/cuenta/timbres.js
+msgctxt "Cuenta"
+msgid "It is charged the month it is ready."
+msgstr "Se cobra el mes en que quede listo."
+
+#: frontend/src/components/cuenta/timbres.js
+msgctxt "Cuenta"
+msgid "From {0}: {1} a month, IVA included."
+msgstr "Desde el {0}: {1} al mes, IVA incluido."
+
+#: frontend/src/components/cuenta/timbres.js
+msgctxt "Cuenta"
+msgid "You keep {0} stamps until {1}; from {2} you have {3} a month."
+msgstr "Sigues con {0} timbres hasta el {1}; desde el {2} tienes {3} al mes."
+
+#: frontend/src/components/cuenta/timbres.js
+msgctxt "Cuenta"
+msgid "It goes down to {0} stamps a month today."
+msgstr "Baja a {0} timbres al mes desde hoy."
+
+#: frontend/src/components/cuenta/timbres.js
+msgctxt "Cuenta"
+msgid "The month in progress is not refunded."
+msgstr "El mes en curso no se reembolsa."
+
+#: frontend/src/components/cuenta/TimbresSheet.vue
+msgctxt "Cuenta"
+msgid "Checking your stamps…"
+msgstr "Revisando tus timbres…"
+
+#: frontend/src/components/cuenta/TimbresSheet.vue
+msgctxt "Cuenta"
+msgid "Stamps a month"
+msgstr "Timbres al mes"
+
+#: frontend/src/components/cuenta/TimbresSheet.vue
+msgctxt "Cuenta"
+msgid "Your package"
+msgstr "Tu paquete"
+
+#: frontend/src/components/cuenta/TimbresSheet.vue
+msgctxt "Cuenta"
+msgid "How stamps are counted"
+msgstr "Cómo se cuentan los timbres"
+
+#: frontend/src/components/cuenta/TimbresSheet.vue
+msgctxt "Cuenta"
+msgid "CFDI"
+msgstr "CFDI"
+
+#: frontend/src/components/cuenta/TimbresSheet.vue
+msgctxt "Cuenta"
+msgid "We could not read your stamps."
+msgstr "No pudimos leer tus timbres."
+
+#: frontend/src/components/cuenta/timbres.js
+msgctxt "Cuenta"
+msgid "Resume with {0} stamps"
+msgstr "Reanudar con {0} timbres"
+
+#: frontend/src/components/cuenta/timbres.js
+msgctxt "Cuenta"
+msgid "CFDI resumed with {0} stamps a month"
+msgstr "CFDI reanudado con {0} timbres al mes"
+
+#: frontend/src/components/cuenta/timbres.js
+msgctxt "Cuenta"
+msgid "Keep {0} stamps"
+msgstr "Seguir con {0} timbres"
+
+#: frontend/src/components/cuenta/timbres.js
+msgctxt "Cuenta"
+msgid "CFDI turns back on: it no longer turns off on {0}."
+msgstr "CFDI vuelve a encenderse: ya no se apaga el {0}."
+
+#: frontend/src/components/cuenta/timbres.js
+msgctxt "Cuenta"
+msgid "CFDI turns back on."
+msgstr "CFDI vuelve a encenderse."
+
+#: frontend/src/components/cuenta/timbres.js
+msgctxt "Cuenta"
+msgid "We return {0} to your saldo: {1} extra stamps already charged this month now fall inside your package."
+msgstr "Te regresamos {0} a tu saldo: {1} timbres extra que ya se cobraron este mes ahora entran en tu paquete."
+
+#: frontend/src/components/cuenta/timbres.js
+msgctxt "Cuenta"
+msgid "Extra stamps charged to your saldo when stamped that now fall inside your package come back when the month closes."
+msgstr "Los timbres extra que se cobraron de tu saldo al timbrar y ahora entran en tu paquete te los regresamos al cerrar el mes."
+
 #: frontend/src/components/cuenta/almacenamiento.js
 msgctxt "Cuenta"
 msgid "Goes down to {0} GB today"
