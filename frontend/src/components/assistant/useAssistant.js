@@ -33,6 +33,7 @@ import {
   writeCachedList,
 } from '@/utils/listCache'
 import { canvas, onCanvasEvent, takePendingCanvas } from './assistantCanvas'
+import { answeredLocally, cardKey } from './decisionCardState'
 
 export { ASSISTANT_API }
 // A turn that stays silent this long gets an honest line and a history check.
@@ -58,6 +59,8 @@ export const assistant = reactive({
   cards: {},
   /** The card whose receipt is the next reply. */
   awaitingReceipt: null,
+  /** decision card (sid:di) → { state: 'sending' | 'failed', error } */
+  decisions: {},
   loaded: false,
 })
 
@@ -156,6 +159,7 @@ export function retireConversation() {
   Object.assign(assistant, {
     messages: [],
     cards: {},
+    decisions: {},
     awaitingReceipt: null,
     thinking: false,
     progress: '',
@@ -436,6 +440,56 @@ export async function tap(data, cardId = null) {
   }
 }
 
+/**
+ * An answer on a decision card (DecisionCard.vue): applied inline through
+ * doco's decision_apply, the same resolvers and gates as a tap, so a refusal
+ * shows on the card itself. The card closes at once; doco's edit of the
+ * message follows with the result it rebuilt. Resolves true when applied.
+ */
+export async function answerCard(card, choice) {
+  const key = cardKey(card)
+  const mark = (value) => {
+    const next = { ...assistant.decisions }
+    if (value) next[key] = value
+    else delete next[key]
+    assistant.decisions = next
+  }
+  mark({ state: 'sending' })
+  try {
+    const result = await call(`${ASSISTANT_API}.decision_apply`, {
+      session_id: card.sid,
+      choices: JSON.stringify([choice]),
+    })
+    if (!result?.ok) {
+      mark({
+        state: 'failed',
+        error:
+          result?.reason === 'expired'
+            ? __(
+                'This question is closed. Send the document again if something is missing.',
+              )
+            : __('It was not applied. Try again.'),
+      })
+      return false
+    }
+    if (result.errors?.length) {
+      mark({ state: 'failed', error: String(result.errors[0].summary || '') })
+      return false
+    }
+    if (result.applied) {
+      const done = answeredLocally(card, result.rows?.[0])
+      assistant.messages = assistant.messages.map((m) =>
+        m.card && cardKey(m.card) === key ? { ...m, card: done } : m,
+      )
+    }
+    mark(null)
+    return true
+  } catch (error) {
+    mark({ state: 'failed', error: errorText(error) })
+    return false
+  }
+}
+
 // --- realtime -------------------------------------------------------------------
 
 function ours(payload) {
@@ -591,6 +645,7 @@ export function _resetAssistant() {
     context: null,
     contextOn: true,
     cards: {},
+    decisions: {},
     awaitingReceipt: null,
     loaded: false,
   })

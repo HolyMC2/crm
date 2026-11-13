@@ -172,6 +172,11 @@
             {{ line }}
           </p>
         </template>
+        <DecisionCard
+          v-if="view(message).decision"
+          :card="view(message).decision"
+          @navigate="$emit('navigate')"
+        />
         <ActionCard
           v-for="card in view(message).cards"
           :key="card.id"
@@ -267,6 +272,7 @@ import {
   visibleMessages,
   withoutLink,
 } from './assistantText'
+import { cardOf, leadOf } from './decisionCardState'
 import { assistant, retry, retryAnswer, tap } from './useAssistant'
 
 // docked: the log scrolls itself; in the sheet the sheet's body scrolls.
@@ -279,6 +285,8 @@ const AssistantChart = defineAsyncComponent(
 const AddToBoard = defineAsyncComponent(
   () => import('@/components/tableros/AddToBoard.vue'),
 )
+// A question about a document, drawn whole, loads with the first one.
+const DecisionCard = defineAsyncComponent(() => import('./DecisionCard.vue'))
 // A supplier list's bar loads with the first message that carries one.
 const CatalogProgress = defineAsyncComponent(
   () => import('@/components/compras/CatalogProgress.vue'),
@@ -325,10 +333,28 @@ const views = new WeakMap()
 function view(message) {
   const cached = views.get(message)
   if (cached) return cached
+  // A decision card carries its own line, choices and actions: the message
+  // shows only what heads it (the document the questions are about).
+  const decision = cardOf(message)
+  if (decision) {
+    const out = {
+      decision,
+      cards: [],
+      choices: [],
+      progress: '',
+      prose: leadOf(message).split('\n').map(stripEmoji).join('\n'),
+      chart: null,
+      insights: [],
+      stats: [],
+    }
+    views.set(message, out)
+    return out
+  }
   const { cards, choices, progress } = splitButtons(message)
   const chart = chartOf(message.answer)
   const report = Boolean(chart && message.answer.spec)
   const out = {
+    decision: null,
     cards,
     choices,
     progress,

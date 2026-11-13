@@ -46392,3 +46392,135 @@ msgstr "Mis cajeros usaban SICAR: poner sus teclas en mis {0} cajas (F2 buscar, 
 #: frontend/src/components/doco/FunnelView.vue
 msgid "Current stage distribution; percentages are shares of the total, not conversion rates."
 msgstr "Cómo se reparten hoy los tratos entre las etapas; cada porcentaje es la parte del total, no una tasa de conversión."
+
+#: frontend/src/components/assistant/decisionCards.js
+msgid "Question {0} of {1}"
+msgstr "Pregunta {0} de {1}"
+
+#: frontend/src/components/assistant/decisionCards.js
+msgid "1 answered"
+msgstr "1 resuelta"
+
+#: frontend/src/components/assistant/decisionCards.js
+msgid "{0} answered"
+msgstr "{0} resueltas"
+
+#: frontend/src/components/assistant/decisionCards.js
+msgid "last paid {0}"
+msgstr "última compra a {0}"
+
+#: frontend/src/components/assistant/DecisionCard.vue
+msgid "code {0}"
+msgstr "código {0}"
+
+#: frontend/src/components/assistant/DecisionCard.vue
+msgid "Serial numbers on the paper"
+msgstr "Números de serie en el papel"
+
+#: frontend/src/components/assistant/DecisionCard.vue
+msgid "Existing articles"
+msgstr "Artículos que ya tienes"
+
+#: frontend/src/components/assistant/DecisionCard.vue
+msgid "Is it this one?"
+msgstr "¿Es este?"
+
+#: frontend/src/components/assistant/DecisionCard.vue
+msgctxt "Decision card"
+msgid "Link"
+msgstr "Vincular"
+
+#: frontend/src/components/assistant/DecisionCard.vue
+msgid "Search another article"
+msgstr "Buscar otro artículo"
+
+#: frontend/src/components/assistant/DecisionCard.vue
+msgid "Name or code"
+msgstr "Nombre o código"
+
+#: frontend/src/components/assistant/DecisionCard.vue
+msgid "No article you can use matches."
+msgstr "Ningún artículo que puedas usar coincide."
+
+#: frontend/src/components/assistant/DecisionCard.vue
+msgid "Not one of these? Create it"
+msgstr "¿No es ninguno? Créalo"
+
+#: frontend/src/components/assistant/DecisionCard.vue
+msgid "Not in the catalog yet. Create it"
+msgstr "Todavía no está en el catálogo. Créalo"
+
+#: frontend/src/components/assistant/DecisionCard.vue
+msgid "Photo of the new article"
+msgstr "Foto del artículo nuevo"
+
+#: frontend/src/components/assistant/DecisionCard.vue
+msgid "Remove photo"
+msgstr "Quitar foto"
+
+#: frontend/src/components/assistant/DecisionCard.vue
+msgid "Tracks serial numbers (IMEI)"
+msgstr "Con número de serie (IMEI)"
+
+#: frontend/src/components/assistant/DecisionCard.vue
+msgid "Create article"
+msgstr "Crear artículo"
+
+#: frontend/src/components/assistant/DecisionCard.vue
+msgid "Write the name of the new article to create it."
+msgstr "Escribe el nombre del artículo nuevo para crearlo."
+
+#: frontend/src/components/assistant/DecisionCard.vue
+msgctxt "Decision card"
+msgid "Choose"
+msgstr "Elegir"
+
+#: frontend/src/components/assistant/DecisionCard.vue
+msgid "Or write the supplier"
+msgstr "O escribe el proveedor"
+
+#: frontend/src/components/assistant/DecisionCard.vue
+msgid "Or write the warehouse"
+msgstr "O escribe el almacén"
+
+#: frontend/src/components/assistant/DecisionCard.vue
+msgctxt "Decision card"
+msgid "Use"
+msgstr "Usar"
+
+#: frontend/src/components/assistant/DecisionCard.vue
+msgid "Create supplier «{0}»"
+msgstr "Crear proveedor «{0}»"
+
+#: frontend/src/components/assistant/DecisionCard.vue
+msgctxt "Decision card"
+msgid "Skip"
+msgstr "Omitir"
+
+#: frontend/src/components/assistant/DecisionCard.vue
+msgid "Decide all at once ({0})"
+msgstr "Decidir en lote ({0})"
+
+#: frontend/src/components/assistant/DecisionCard.vue
+msgid "Question about «{0}»"
+msgstr "Pregunta sobre «{0}»"
+
+#: frontend/src/components/assistant/DecisionCard.vue
+msgid "The photo did not upload. Try again."
+msgstr "La foto no se subió. Intenta de nuevo."
+
+#: frontend/src/components/assistant/useAssistant.js
+msgid "This question is closed. Send the document again if something is missing."
+msgstr "Esta pregunta ya se cerró. Manda el documento otra vez si falta algo."
+
+#: frontend/src/components/assistant/decisionCards.js
+msgid "None in stock"
+msgstr "Sin existencia"
+
+#: frontend/src/components/assistant/DecisionCard.vue
+msgid "Made as"
+msgstr "Se crea como"
+
+#: frontend/src/components/assistant/DecisionCard.vue
+msgid "Your inventory does not track serial numbers. Turn on «Activar serie / lote» in the inventory settings to track IMEIs."
+msgstr "Tu inventario no lleva números de serie. Activa «Activar serie / lote» en los ajustes de inventario para guardar los IMEI."

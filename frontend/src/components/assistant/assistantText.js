@@ -443,7 +443,7 @@ export function newClientId() {
  * without buttons. It is proof of work, not the answer (the bubble's rule).
  */
 export function isProgress(message) {
-  if (message?.buttons?.length || message?.answer) return false
+  if (message?.buttons?.length || message?.answer || message?.card) return false
   const text = String(message?.text || '').trim()
   return !text.includes('\n') && /(…|\.\.\.)\s*(\([^()]*\))?\s*$/.test(text)
 }
@@ -519,6 +519,9 @@ export function normalizeRow(row) {
     text,
     buttons: bot ? row.buttons || [] : [],
     answer: (bot && row.answer) || null,
+    // a question about a document drawn whole (DecisionCard.vue); doco
+    // rebuilds it from the decision session on every read
+    card: (bot && row.card) || null,
     at: row.creation || null,
     stale: bot && isNotReplayed(text),
     down: bot && isServiceDown(text),
