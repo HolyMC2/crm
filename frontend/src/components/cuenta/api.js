@@ -7,6 +7,16 @@ import { call, frappeRequest } from 'frappe-ui'
 
 const RELAY = 'doco.docoutils.miplan.'
 const EXPORT = 'doco.docoutils.data_export.'
+// «Enciende tu tienda» is doco's own (doco.docoutils.storefront_readiness, Mi
+// plan's roles): this site's checklist, and turning the shop on, which asks
+// Boat to publish it. It moves no money.
+const STORE = 'doco.docoutils.storefront_readiness.'
+
+/** The store's checklist and whether it is on (POST: a live address is saved as its domain). */
+export const storeReadiness = () => call(STORE + 'readiness')
+
+/** Turns the store on when every step passes (POST, the shop's administrator only). */
+export const turnOnStore = () => call(STORE + 'turn_on')
 
 /** The latest export and whether a new one may start (GET only). */
 export const exportStatus = () =>

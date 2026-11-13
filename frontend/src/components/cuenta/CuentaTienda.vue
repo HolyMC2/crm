@@ -13,8 +13,8 @@
        CFDI on opens that same sheet. Rows and rules. -->
   <div class="space-y-8">
     <!-- What Boat lets the owner change alone (capabilities «seats»,
-         «storage_blocks», «apps»): the quick jobs first, then the plans and
-         add-ons. -->
+         «storage_blocks», «apps», «storefront_address»): the quick jobs
+         first, then the plans and add-ons. -->
     <UsuariosCajas
       v-if="caps.seats"
       :door="door"
@@ -30,6 +30,12 @@
     <Aplicaciones
       v-if="caps.apps"
       :door="door"
+      @act="(key) => $emit('act', key)"
+    />
+    <!-- The online store's address and «Enciende tu tienda» (capability
+         «storefront_address»). -->
+    <TiendaEnLinea
+      v-if="caps.storefrontAddress"
       @act="(key) => $emit('act', key)"
     />
     <section v-if="store" aria-labelledby="cuenta-planes">
@@ -434,6 +440,7 @@ const Almacenamiento = defineAsyncComponent(
 )
 const Aplicaciones = defineAsyncComponent(() => import('./Aplicaciones.vue'))
 const TimbresSheet = defineAsyncComponent(() => import('./TimbresSheet.vue'))
+const TiendaEnLinea = defineAsyncComponent(() => import('./TiendaEnLinea.vue'))
 
 const props = defineProps({
   /** The page's payment door (pagos.js createPagos). */
@@ -474,6 +481,8 @@ const caps = computed(() => {
     keepsCycle: capable(data, 'addon_keeps_cycle'),
     // CFDI's stamp package: «Cambiar paquete» and turning it on over Boat's quote.
     stampPackages: capable(data, 'stamp_packages'),
+    // The online store's address, then «Enciende tu tienda».
+    storefrontAddress: capable(data, 'storefront_address'),
   }
 })
 // The CFDI row's package and this month's stamps (bootstrap.stamp_packages).

@@ -85,6 +85,12 @@ const SELF_SERVICE = new Set([
   // CFDI's «Cambiar paquete»: a read of Boat's packages and quote; the change is
   // toggle_addon, a base write.
   'stamp_package_quote',
+  // «Dirección de tu tienda»: the address and its state, a name's check, then connecting it.
+  'storefront_address_state',
+  'storefront_address_check',
+  'storefront_address_connect',
+  // «Enciende tu tienda»: the store's name buyers see (Boat's branding).
+  'storefront_shop_name',
 ])
 
 function walk(dir, keep) {
@@ -189,6 +195,22 @@ describe('Mi cuenta reaches the plan only through Mi plan’s relays', () => {
     expect(api).toMatch(
       /frappeRequest\(\{ url: EXPORT \+ 'export_status', method: 'GET' \}\)/,
     )
+  })
+
+  it('«Enciende tu tienda» is doco’s storefront_readiness, its two methods, named in api.js alone', () => {
+    const naming = sources
+      .filter((path) =>
+        /doco\.docoutils\.storefront_readiness/.test(
+          readFileSync(path, 'utf8'),
+        ),
+      )
+      .map((path) => relative(SRC, path))
+    expect(naming).toEqual(['components/cuenta/api.js'])
+    const api = readFileSync(resolve(SRC, 'components/cuenta/api.js'), 'utf8')
+    const named = new Set(
+      [...api.matchAll(/STORE \+ '(\w+)'/g)].map((m) => m[1]),
+    )
+    expect([...named].sort()).toEqual(['readiness', 'turn_on'])
   })
 
   it('crm’s Python whitelists nothing for the account and calls no platform seam', () => {

@@ -919,6 +919,20 @@ describe('the Cuenta page', () => {
     expect(router.currentRoute.value.query.recargar).toBeUndefined()
   })
 
+  it('Diseño del sitio’s «Elegir mi dirección» (?seccion=direccion) opens Tienda on the store’s address', async () => {
+    answers(trialBoot())
+    const ids = vi.spyOn(document, 'getElementById')
+    const router = await page('/cuenta?tab=tienda&seccion=direccion', {
+      cuenta: true,
+      plan: null,
+    })
+    await flush()
+    expect(router.currentRoute.value.query.tab).toBe('tienda')
+    expect(router.currentRoute.value.query.seccion).toBeUndefined()
+    expect(ids).toHaveBeenCalledWith('cuenta-direccion')
+    ids.mockRestore()
+  })
+
   it('a plan the platform cannot answer offers «Revisar estado» and help', async () => {
     state.read.mockRejectedValue(new Error('down'))
     await page('/cuenta', { cuenta: true, plan: null })

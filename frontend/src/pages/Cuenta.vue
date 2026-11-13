@@ -460,6 +460,9 @@ const SECTION = {
   storage: 'cuenta-almacenamiento',
   addons: 'cuenta-complementos',
   card: 'cuenta-tarjetas',
+  // «Dirección de tu tienda» (TiendaEnLinea): Diseño del sitio's «Elegir mi
+  // dirección» links here as ?tab=tienda&seccion=direccion.
+  direccion: 'cuenta-direccion',
 }
 const content = ref(null)
 let stopReveal = null
@@ -506,7 +509,12 @@ function act(key) {
   else if (key === 'card') {
     openTab('facturacion')
     revealSection(SECTION.card)
-  } else if (key === 'plans' || key === 'seats' || key === 'addons') {
+  } else if (
+    key === 'plans' ||
+    key === 'seats' ||
+    key === 'addons' ||
+    key === 'direccion'
+  ) {
     openTab('tienda')
     revealSection(SECTION[key])
   } else if (key === 'storage') {
@@ -539,6 +547,11 @@ watch(
     }
     if (route.query.activar !== undefined) openActivation()
     else if (route.query.recargar !== undefined) act('topup')
+    else if (route.query.seccion === 'direccion') {
+      // Diseño del sitio's «Elegir mi dirección»: the block, then a clean address.
+      act('direccion')
+      dropQuery('seccion')
+    }
   },
   { immediate: true },
 )

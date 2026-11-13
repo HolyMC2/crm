@@ -45918,6 +45918,171 @@ msgctxt "Cuenta"
 msgid "Saving your card…"
 msgstr "Guardando tu tarjeta…"
 
+#: frontend/src/components/cuenta/tiendaEnLinea.js
+msgctxt "Cuenta"
+msgid "Working"
+msgstr "Funcionando"
+
+#: frontend/src/components/cuenta/tiendaEnLinea.js
+msgctxt "Cuenta"
+msgid "Connecting…"
+msgstr "Conectando…"
+
+#: frontend/src/components/cuenta/tiendaEnLinea.js
+msgctxt "Cuenta"
+msgid "Not opening"
+msgstr "No abre"
+
+#: frontend/src/components/cuenta/tiendaEnLinea.js
+msgctxt "Cuenta"
+msgid "Your store’s address does not open now. Muelle is checking it."
+msgstr "La dirección de tu tienda no abre ahora. Muelle ya la está revisando."
+
+#: frontend/src/components/cuenta/TiendaEnLinea.vue
+msgctxt "Cuenta"
+msgid "Your store’s name"
+msgstr "Nombre de tu tienda"
+
+#: frontend/src/components/cuenta/TiendaEnLinea.vue
+msgctxt "Cuenta"
+msgid "Name saved"
+msgstr "Nombre guardado"
+
+#: frontend/src/components/cuenta/tiendaEnLinea.js
+msgctxt "Cuenta"
+msgid "Buyers open your store at this address."
+msgstr "Tus clientes abren tu tienda en esta dirección."
+
+#: frontend/src/components/cuenta/tiendaEnLinea.js
+msgctxt "Cuenta"
+msgid "Muelle is connecting it. It takes a few minutes; you do not have to stay here."
+msgstr "Muelle la está conectando. Tarda unos minutos; no tienes que quedarte aquí."
+
+#: frontend/src/components/cuenta/tiendaEnLinea.js
+msgctxt "Cuenta"
+msgid "Choose the name buyers type to reach your store."
+msgstr "Elige el nombre que tus clientes escriben para llegar a tu tienda."
+
+#: frontend/src/components/cuenta/tiendaEnLinea.js
+msgctxt "Cuenta"
+msgid "We could not check that name. Try again in a moment."
+msgstr "No pudimos revisar ese nombre. Vuelve a intentar en un momento."
+
+#: frontend/src/components/cuenta/tiendaEnLinea.js
+msgctxt "Cuenta"
+msgid "Available"
+msgstr "Disponible"
+
+#: frontend/src/components/cuenta/tiendaEnLinea.js
+msgctxt "Cuenta"
+msgid "Taken"
+msgstr "Ocupada"
+
+#: frontend/src/components/cuenta/tiendaEnLinea.js
+msgctxt "Cuenta"
+msgid "Not valid"
+msgstr "No válida"
+
+#: frontend/src/components/cuenta/tiendaEnLinea.js
+msgctxt "Cuenta"
+msgid "Buyers will open your store at {0}."
+msgstr "Tus clientes abrirán tu tienda en {0}."
+
+#: frontend/src/components/cuenta/tiendaEnLinea.js
+msgctxt "Cuenta"
+msgid "Only whoever runs the system can turn the store on."
+msgstr "Solo quien administra el sistema puede encender la tienda."
+
+#: frontend/src/components/cuenta/tiendaEnLinea.js
+msgctxt "Cuenta"
+msgid "Complete the steps above to turn it on."
+msgstr "Completa los pasos de arriba para encenderla."
+
+#: frontend/src/components/cuenta/tiendaEnLinea.js
+msgctxt "Cuenta"
+msgid "The store did not turn on. Try again in a moment."
+msgstr "La tienda no se encendió. Vuelve a intentar en un momento."
+
+#: frontend/src/components/cuenta/TiendaEnLinea.vue
+msgctxt "Cuenta"
+msgid "Your online store"
+msgstr "Tu tienda en línea"
+
+#: frontend/src/components/cuenta/TiendaEnLinea.vue
+msgctxt "Cuenta"
+msgid "Checking your online store…"
+msgstr "Revisando tu tienda en línea…"
+
+#: frontend/src/components/cuenta/TiendaEnLinea.vue
+msgctxt "Cuenta"
+msgid "Your store’s address"
+msgstr "Dirección de tu tienda"
+
+#: frontend/src/components/cuenta/TiendaEnLinea.vue
+msgctxt "Cuenta"
+msgid "Choose address"
+msgstr "Elegir dirección"
+
+#: frontend/src/components/cuenta/TiendaEnLinea.vue
+msgctxt "Cuenta"
+msgid "We could not check the address. Try again in a moment."
+msgstr "No pudimos revisar la dirección. Vuelve a intentar en un momento."
+
+#: frontend/src/components/cuenta/TiendaEnLinea.vue
+msgctxt "Cuenta"
+msgid "Turn on your store"
+msgstr "Enciende tu tienda"
+
+#: frontend/src/components/cuenta/TiendaEnLinea.vue
+msgctxt "Cuenta"
+msgid "Your store is online."
+msgstr "Tu tienda está en línea."
+
+#: frontend/src/components/cuenta/TiendaEnLinea.vue
+msgctxt "Cuenta"
+msgid "See my store"
+msgstr "Ver mi tienda"
+
+#: frontend/src/components/cuenta/TiendaEnLinea.vue
+msgctxt "Cuenta"
+msgid "Turn on store"
+msgstr "Encender tienda"
+
+#: frontend/src/components/cuenta/TiendaEnLinea.vue
+msgctxt "Cuenta"
+msgid "Connecting your address"
+msgstr "Conectando tu dirección"
+
+#: frontend/src/components/cuenta/DireccionSheet.vue
+msgctxt "Cuenta"
+msgid "Choose your store’s address"
+msgstr "Elige la dirección de tu tienda"
+
+#: frontend/src/components/cuenta/DireccionSheet.vue
+msgctxt "Cuenta"
+msgid "Name"
+msgstr "Nombre"
+
+#: frontend/src/components/cuenta/DireccionSheet.vue
+msgctxt "Cuenta"
+msgid "Checking…"
+msgstr "Revisando…"
+
+#: frontend/src/components/cuenta/DireccionSheet.vue
+msgctxt "Cuenta"
+msgid "Type a name to check it."
+msgstr "Escribe un nombre para revisarlo."
+
+#: frontend/src/components/cuenta/DireccionSheet.vue
+msgctxt "Cuenta"
+msgid "You choose it once; to change it later, write to us from Help."
+msgstr "La eliges una vez; para cambiarla después, escríbenos desde Ayuda."
+
+#: frontend/src/components/cuenta/DireccionSheet.vue
+msgctxt "Cuenta"
+msgid "Connect"
+msgstr "Conectar"
+
 #: frontend/src/pages/CompraOrden.vue
 msgid "{0} is not an item you can buy."
 msgstr "{0} no es un artículo que puedas comprar."

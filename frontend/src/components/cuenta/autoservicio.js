@@ -40,6 +40,8 @@ const NEXT = {
   request_plan: () => ['request', t('Request the change')],
   resume_subscription: () => ['resume', t('Go to your subscription')],
   seats: () => ['seats', t('See users and registers')],
+  // «Primero activa tu tienda en línea en Complementos» (the shop's address).
+  addons: () => ['addons', t('See add-ons')],
   // «Desactiva 2 para bajar a 3»: no screen of the panel turns a login or a
   // caja off yet (Equipo invites and sets puestos only), so support does it.
   deactivate: () => ['support', t('Ask support for help')],
