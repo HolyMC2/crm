@@ -213,7 +213,7 @@
             class="plan-fila grid items-start gap-x-3 py-3 transition-colors duration-700 motion-reduce:transition-none"
             :class="[
               qtyOf(line) ? '' : 'opacity-50',
-              changed.has(line.line) ? 'bg-surface-gray-2' : '',
+              changed.has(line.line) ? 'bg-surface-amber-1' : '',
             ]"
             :data-testid="'plan-linea-' + line.line"
             :data-cambio="changed.has(line.line) || null"
