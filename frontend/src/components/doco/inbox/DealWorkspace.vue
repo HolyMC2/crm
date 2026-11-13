@@ -248,6 +248,9 @@ import {
 import { Tabs } from 'frappe-ui'
 import { indexTabs } from '@/utils/tabs'
 import { holdForThread } from '@/utils/threadGate'
+import { whenIdle } from '@/utils/idleWarm'
+import { constrainedLine } from '@/utils/prefetch'
+import { isMobile } from '@/composables/breakpoint'
 import LucideMessagesSquare from '~icons/lucide/messages-square'
 import LucideChevronDown from '~icons/lucide/chevron-down'
 import LucideSearch from '~icons/lucide/search'
@@ -323,6 +326,7 @@ watch(
   activeDeal,
   () => {
     for (const tab in kept) kept[tab] = false
+    warmed.conversation = false
   },
   { flush: 'sync' },
 )
@@ -351,9 +355,46 @@ const panes = {
   items: itemsPane,
   repair: repairPane,
 }
+// A pane mounted behind another tab (the warm conversation below) has fresh
+// data when first shown: it only needs to show its newest message.
+const warmed = reactive({ conversation: false })
 watch(activeTab, (tab, before) => {
-  if (tab !== before) panes[tab]?.value?.refresh?.()
+  if (tab === before) return
+  const pane = panes[tab]?.value
+  if (!pane) return
+  if (warmed[tab]) {
+    warmed[tab] = false
+    nextTick(() => pane.toLatest?.())
+  } else pane.refresh?.()
 })
+
+// Desktop opens a deal on Resumen. Once it has been open a moment, its
+// conversation mounts behind it in idle time, so «Conversación» shows at once
+// instead of loading its code and messages on the click (Marco 2026-11-12:
+// the conversation was the slowest tab). Phones open on the chat already.
+const WARM_AFTER_MS = 1200
+let warmTimer = null
+watch(
+  [activeDeal, activeTab],
+  ([deal, tab]) => {
+    clearTimeout(warmTimer)
+    if (!deal || tab === 'conversation' || kept.conversation) return
+    if (isMobile.value || constrainedLine()) return
+    warmTimer = setTimeout(
+      () =>
+        whenIdle(() => {
+          if (activeDeal.value !== deal || kept.conversation) return
+          if (activeTab.value === 'conversation') return
+          holdForThread()
+          warmed.conversation = true
+          kept.conversation = true
+        }),
+      WARM_AFTER_MS,
+    )
+  },
+  { immediate: true },
+)
+onBeforeUnmount(() => clearTimeout(warmTimer))
 const threadSearch = ref(null)
 // the ⋮ menu's «Buscar»: the search bar mounts with the conversation tab, so
 // the request waits for it

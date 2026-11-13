@@ -77,6 +77,7 @@ import LedgerModal from '@/components/doco/inbox/LedgerModal.vue'
 import PostCallSheet from '@/components/doco/inbox/PostCallSheet.vue'
 import { shouldPingWa, shouldPingMessenger } from '@/utils/pingLogic'
 import { RESOLVE_PARAM, withoutParam } from '@/utils/atencion'
+import { warmChunks } from '@/utils/idleWarm'
 import {
   activeDeal,
   activeDealDoctype,
@@ -261,6 +262,27 @@ function onVisibility() {
   }
 }
 
+// The deal pane's code loads while the worker reads the list, so the first
+// conversation they open does not wait for ~75 files (2026-11-12: its header
+// waited ~0.6 s and its messages ~2 s on doco-mirror). Desktop only; same
+// specifiers as DealWorkspace and this file use.
+let stopWarm = () => {}
+onMounted(() => {
+  if (!isMobile.value)
+    stopWarm = warmChunks([
+      () => import('@/components/doco/inbox/DealHeader.vue'),
+      () => import('@/components/doco/inbox/DealOverview.vue'),
+      () => import('@/components/doco/inbox/DealContextPanel.vue'),
+      () => import('@/components/Activities/Activities.vue'),
+      () => import('@/components/doco/inbox/ThreadSummary.vue'),
+      () => import('@/components/doco/inbox/IntentChips.vue'),
+      () => import('@/components/doco/inbox/DealConversations.vue'),
+      () => import('@/components/doco/inbox/ThreadSearch.vue'),
+      () => import('@/components/doco/inbox/LostStagePrompt.vue'),
+      () => import('@/components/doco/inbox/UnassignedWorkspace.vue'),
+    ])
+})
+onUnmounted(() => stopWarm())
 onMounted(() => {
   mounting = true
   paneEpoch = Date.now() // new epoch per mount — invalidates stale depth tags (M1)

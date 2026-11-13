@@ -506,6 +506,7 @@ import { formatMoney, formatPhone } from '@/composables/crmFormat'
 import { useRecordActions } from '@/composables/recordActions'
 import { dealRecordActions } from '@/utils/dealRecordActions'
 import { openNextStep } from '@/composables/useNextStep'
+import { dealRepairs, loadDealRepairs } from '@/composables/dealRepairs'
 
 // the sheet and its icons load on first use, not with every route that
 // mounts the inbox
@@ -691,26 +692,21 @@ const visibleStages = computed(
       : statusStore.visibleLeadStatuses) ||
     [],
 )
-const repairOrders = createResource({ url: 'frappe.client.get_list' })
+// Shared with Resumen's list (composables/dealRepairs): one read per deal.
 watch(
   [activeDeal, isDeal, hasTaller],
   () => {
-    if (!activeDeal.value || !isDeal.value || !hasTaller.value) {
-      repairOrders.data = null
-      return
-    }
-    repairOrders.submit({
-      doctype: 'Repair Order',
-      filters: { crm_deal: activeDeal.value },
-      fields: ['name', 'status'],
-      order_by: 'creation desc',
-      limit_page_length: 3,
-    })
+    if (activeDeal.value && isDeal.value && hasTaller.value)
+      loadDealRepairs(activeDeal.value)
   },
   { immediate: true },
 )
 const repairChips = computed(() =>
-  (repairOrders.data || []).filter((ro) => ro.status),
+  activeDeal.value && isDeal.value && hasTaller.value
+    ? (dealRepairs(activeDeal.value).data || [])
+        .filter((ro) => ro.status)
+        .slice(0, 3)
+    : [],
 )
 
 // Lead stage dropdown (deals use the stepper above; same requestStage path).

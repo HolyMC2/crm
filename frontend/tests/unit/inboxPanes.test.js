@@ -15,6 +15,7 @@ vi.mock('vue-router', () => ({
   useRoute: () => ({ query: {}, name: 'Inbox' }),
 }))
 vi.mock('@/stores/global', () => ({ globalStore: () => ({ $socket: null }) }))
+vi.mock('@/utils/idleWarm', () => ({ warmChunks: () => () => {} }))
 vi.mock('@/composables/breakpoint', async () => {
   const { ref } = await import('vue')
   return { isMobile: ref(false) }

@@ -9,6 +9,7 @@ const mounts = vi.hoisted(() => ({
   refresh: vi.fn(),
   by: {},
   canSendTemplate: true,
+  toLatest: vi.fn(),
 }))
 const stub = vi.hoisted(() => (attr, onMount = () => {}) => ({
   __esModule: true,
@@ -20,6 +21,7 @@ const stub = vi.hoisted(() => (attr, onMount = () => {}) => ({
       expose({
         refresh: () => mounts.refresh(attr),
         canSendTemplate: mounts.canSendTemplate,
+        toLatest: () => mounts.toLatest(attr),
       })
       return () => h('div', { [attr]: '' })
     },
@@ -109,6 +111,7 @@ describe('DealWorkspace tabs', () => {
     cleanups.splice(0).forEach((cleanup) => cleanup())
     mounts.activities = 0
     mounts.refresh.mockClear()
+    mounts.toLatest.mockClear()
     mounts.by = {}
     inbox.activeDeal.value = null
     inbox.activeTab.value = 'conversation'
@@ -208,6 +211,37 @@ describe('DealWorkspace tabs', () => {
       mounts.canSendTemplate = true
     }
   })
+
+  it('warms the conversation behind Resumen, so «Conversación» shows at once', async () => {
+    inbox.activeTab.value = 'overview'
+    inbox.activeDeal.value = 'CRM-DEAL-1'
+    const el = await mount()
+    expect(shown(el, 'conversation')).toBeNull()
+    // a moment on the deal, then an idle slot
+    await new Promise((resolve) => setTimeout(resolve, 1700))
+    await flush()
+    expect(shown(el, 'conversation')).toBe(false) // mounted, hidden
+    expect(mounts.activities).toBe(1)
+
+    inbox.activeTab.value = 'conversation'
+    await flush()
+    expect(shown(el, 'conversation')).toBe(true)
+    expect(mounts.activities).toBe(1)
+    // fresh from the warm-up: no second read, only its newest message
+    expect(mounts.refresh).not.toHaveBeenCalled()
+    expect(mounts.toLatest).toHaveBeenCalledOnce()
+  }, 10000)
+
+  it('does not warm a deal the worker left at once', async () => {
+    inbox.activeTab.value = 'overview'
+    inbox.activeDeal.value = 'CRM-DEAL-1'
+    const el = await mount()
+    inbox.activeDeal.value = null
+    await new Promise((resolve) => setTimeout(resolve, 1700))
+    await flush()
+    expect(mounts.activities).toBe(0)
+    expect(el.querySelector('[data-testid="pane-conversation"]')).toBeNull()
+  }, 10000)
 
   it('holds the extras while a conversation opens', async () => {
     inbox.activeDeal.value = 'CRM-DEAL-1'

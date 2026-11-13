@@ -8,6 +8,8 @@ const mocks = vi.hoisted(() => ({
   resources: [],
   reload: vi.fn(),
   hasTaller: { value: false },
+  repairs: [],
+  loadRepairs: vi.fn(),
 }))
 vi.mock('frappe-ui', () => ({
   call: mocks.call,
@@ -33,7 +35,15 @@ vi.mock('@/composables/inbox', () => ({
   salesDocsEnabled: { value: false },
   reloadQueue: mocks.reload,
 }))
-vi.mock('@/composables/salesDocs', () => ({ reloadSalesSummary: vi.fn() }))
+vi.mock('@/composables/salesDocs', () => ({
+  ensureSalesSummary: vi.fn(),
+  reloadSalesSummary: vi.fn(),
+}))
+// The deal's Repair Orders are one read shared with the deal header.
+vi.mock('@/composables/dealRepairs', () => ({
+  dealRepairs: () => ({ data: mocks.repairs, loading: false, error: null }),
+  loadDealRepairs: mocks.loadRepairs,
+}))
 vi.mock('@/components/doco/NextActivityChip.vue', () => ({
   default: { template: '<span />' },
 }))
@@ -56,9 +66,9 @@ async function mount(doc = {}, repairs = [], amounts = null) {
     fetch: vi.fn(),
     loading: false,
   })
+  mocks.repairs = repairs
   mocks.resources = [
     record,
-    reactive({ data: repairs, fetch: vi.fn() }),
     // crm.pipeline.api.get_deal_amounts (metric contract v2)
     reactive({ data: amounts, fetch: vi.fn() }),
   ]

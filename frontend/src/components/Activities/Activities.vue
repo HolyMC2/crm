@@ -12,7 +12,10 @@
     :whatsappBox="whatsappBox"
     :modalRef="modalRef"
   />
-  <FadedScrollableDiv class="flex flex-col h-full overflow-y-auto">
+  <FadedScrollableDiv
+    ref="listRef"
+    class="flex flex-col h-full overflow-y-auto"
+  >
     <div
       v-if="firstLoading"
       class="flex flex-1 flex-col items-center justify-center gap-3 text-2xl-medium text-ink-gray-4"
@@ -991,7 +994,7 @@ function unpinNote(note) {
 // Own sends + initial load are unaffected (they leave the flag false → scroll runs).
 let _waSuppressScroll = false
 function _waAtBottom() {
-  const e = document.getElementsByClassName('activity')
+  const e = ownActivities()
   const el = e[e.length - 1]
   if (!el) return true
   return el.getBoundingClientRect().top < window.innerHeight + 160
@@ -1681,6 +1684,26 @@ watch([reload, reload_email], ([reload_value, reload_email_value]) => {
   }
 })
 
+// This list's own entries: the Bandeja keeps a conversation and an Actividad
+// (each an Activities) mounted side by side, so a page-wide lookup found the
+// other one's last entry.
+const listRef = ref(null)
+function ownActivities() {
+  const root = listRef.value?.$el ?? listRef.value
+  return root?.querySelectorAll ? root.querySelectorAll('.activity') : []
+}
+// The newest entry at once, for a list that mounted hidden (the Bandeja warms
+// a deal's conversation behind its Resumen) and has just been shown.
+function toLatest() {
+  const e = ownActivities()
+  const el = isNewestFirst.value ? e[0] : e[e.length - 1]
+  if (el)
+    scrollWithin(el, {
+      block: isNewestFirst.value ? 'start' : 'end',
+      behavior: 'instant',
+    })
+}
+
 // One pending scroll at a time, dropped with the component: a timer that
 // outlived it scrolled a list that was gone (and threw where no document was).
 let scrollTimer = null
@@ -1691,7 +1714,7 @@ function scroll(hash) {
   scrollTimer = setTimeout(() => {
     let el
     if (!hash) {
-      let e = document.getElementsByClassName('activity')
+      const e = ownActivities()
       el = isNewestFirst.value ? e[0] : e[e.length - 1]
     } else {
       el = document.getElementById(hash)
@@ -1729,5 +1752,6 @@ defineExpose({
   changeTabTo,
   refresh,
   canSendTemplate,
+  toLatest,
 })
 </script>

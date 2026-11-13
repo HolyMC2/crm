@@ -290,7 +290,8 @@ import {
   snoozeNextStep,
 } from '@/composables/useNextStep'
 import { hasTaller, salesDocsEnabled, reloadQueue } from '@/composables/inbox'
-import { reloadSalesSummary } from '@/composables/salesDocs'
+import { ensureSalesSummary, reloadSalesSummary } from '@/composables/salesDocs'
+import { dealRepairs, loadDealRepairs } from '@/composables/dealRepairs'
 import { formatMoney } from '@/composables/crmFormat'
 import { useReloadOnReturn } from '@/composables/reloadOnReturn'
 import NextActivityChip from '@/components/doco/NextActivityChip.vue'
@@ -329,16 +330,8 @@ const record = createResource({
     ],
   },
 })
-const repairs = createResource({
-  url: 'frappe.client.get_list',
-  params: {
-    doctype: 'Repair Order',
-    filters: { crm_deal: props.name },
-    fields: ['name', 'device_model', 'status', 'quote_amount', 'balance_due'],
-    order_by: 'creation desc',
-    limit_page_length: 20,
-  },
-})
+// Shared with the deal header's chips (composables/dealRepairs): one read per deal.
+const repairs = computed(() => dealRepairs(props.name))
 const amounts = createResource({
   url: 'crm.pipeline.api.get_deal_amounts',
   params: { names: [props.name] },
@@ -374,11 +367,15 @@ function dateLabel(value) {
       })
     : __('Sin fecha')
 }
-function refresh() {
+// The first read leaves alone what the deal header already asked for (the
+// sales summary, the repair orders); a refresh asks again.
+function refresh({ first = false } = {}) {
   record.fetch()
   amounts.fetch()
-  if (hasTaller.value) repairs.fetch()
-  if (salesDocsEnabled.value) reloadSalesSummary(props.name)
+  if (hasTaller.value) loadDealRepairs(props.name, { force: !first })
+  if (!salesDocsEnabled.value) return
+  if (first) ensureSalesSummary(props.name)
+  else reloadSalesSummary(props.name)
 }
 // One next-step path (crm.api.next_step) for this card, the list and the keys.
 function schedule() {
@@ -402,12 +399,14 @@ watch(nextStepChanged, (change) => {
   record.fetch()
   reloadQueue()
 })
-onMounted(refresh)
+onMounted(() => refresh({ first: true }))
 watch(hasTaller, (enabled) => {
-  if (enabled && record.data) repairs.fetch()
+  if (enabled && record.data) loadDealRepairs(props.name)
 })
 // Repair Orders received in taller Intake show up once the operator is back.
-useReloadOnReturn(() => hasTaller.value && repairs.fetch())
+useReloadOnReturn(
+  () => hasTaller.value && loadDealRepairs(props.name, { force: true }),
+)
 // The Bandeja keeps this pane mounted and refreshes it quietly on return.
 defineExpose({ refresh })
 </script>
