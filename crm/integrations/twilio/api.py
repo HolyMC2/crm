@@ -201,17 +201,41 @@ def update_call_log(call_sid, status=None):
 
 	try:
 		call_details = twilio.get_call_info(call_sid)
-		call_log = frappe.get_doc("CRM Call Log", call_sid)
-		call_log.status = TwilioCallDetails.get_call_status(status or call_details.status)
-		call_log.duration = call_details.duration
-		call_log.start_time = get_datetime_from_timestamp(call_details.start_time)
-		call_log.end_time = get_datetime_from_timestamp(call_details.end_time)
-		call_log.save(ignore_permissions=True)
-		frappe.db.commit()
-		return call_log
+		try:
+			return _save_call_details(call_sid, call_details, status)
+		except Exception as exc:
+			if not _is_write_conflict(exc):
+				raise
+			# Twilio sends one call's callbacks (each leg, each status) close together,
+			# so another request may have saved this log after this one read it
+			# (MariaDB 1020 under snapshot isolation). Drop the stale read view, read
+			# the log again and save once more; only a second failure is an error.
+			frappe.db.rollback()
+			return _save_call_details(call_sid, call_details, status)
 	except Exception:
 		frappe.log_error(title="Error while updating call record")
 		frappe.db.commit()
+
+
+def _save_call_details(call_sid, call_details, status=None):
+	call_log = frappe.get_doc("CRM Call Log", call_sid)
+	call_log.status = TwilioCallDetails.get_call_status(status or call_details.status)
+	call_log.duration = call_details.duration
+	call_log.start_time = get_datetime_from_timestamp(call_details.start_time)
+	call_log.end_time = get_datetime_from_timestamp(call_details.end_time)
+	call_log.save(ignore_permissions=True)
+	frappe.db.commit()
+	return call_log
+
+
+def _is_write_conflict(exc) -> bool:
+	"""The log moved under this request: 1020 «Record has changed since last read»
+	(Frappe raises QueryDeadlockError), a 1213 deadlock, or Frappe's own
+	«modified after you opened it» check."""
+	if isinstance(exc, frappe.QueryDeadlockError | frappe.TimestampMismatchError):
+		return True
+	args = getattr(exc, "args", None) or ()
+	return bool(args) and args[0] in (1020, 1213)
 
 
 def get_twilio_settings():
@@ -240,19 +264,48 @@ def update_recording_info(**kwargs):
 # Twilio refuses a user-defined message when the parent call is no longer in
 # progress (21220) and when the parent leg is PSTN, which has no Client SDK
 # listener to receive it. A status callback routinely arrives in both states.
+# A child leg's callback (Direction outbound-dial, with a ParentCallSid) is refused
+# with a bare HTTP 400 that carries no Twilio error code of its own (the SDK then
+# reports code 400), on ordinary calls (initiated, ringing, in-progress).
 CALL_NOT_IN_EXPECTED_STATE = 21220
 _PSTN_HAS_NO_CLIENT_LISTENER = "client message not supported for pstn calls"
+_CHILD_LEG_DIRECTION = "outbound-dial"
+_BARE_BAD_REQUEST = 400
 
 
-def is_expected_user_message_rejection(exc) -> bool:
+def is_expected_user_message_rejection(exc, callback=None) -> bool:
 	"""True when Twilio refused the live-status push for an ordinary reason."""
 	from twilio.base.exceptions import TwilioRestException
 
 	if not isinstance(exc, TwilioRestException):
 		return False
-	if getattr(exc, "code", None) == CALL_NOT_IN_EXPECTED_STATE:
+	code = getattr(exc, "code", None)
+	if code == CALL_NOT_IN_EXPECTED_STATE:
 		return True
-	return _PSTN_HAS_NO_CLIENT_LISTENER in f"{getattr(exc, 'msg', '') or exc}".lower()
+	if _PSTN_HAS_NO_CLIENT_LISTENER in f"{getattr(exc, 'msg', '') or exc}".lower():
+		return True
+	bare_bad_request = getattr(exc, "status", None) == _BARE_BAD_REQUEST and code in (None, _BARE_BAD_REQUEST)
+	return bare_bad_request and _is_child_leg(callback)
+
+
+def _is_child_leg(callback) -> bool:
+	if not callback:
+		return False
+	return bool(callback.get("ParentCallSid")) and callback.get("Direction") == _CHILD_LEG_DIRECTION
+
+
+def _note_expected_status_push_refusal(exc, call_sid):
+	"""An ordinary refusal goes to the crm.twilio log file, not the Error Log."""
+	try:
+		frappe.logger("crm.twilio").info(
+			"status push refused as expected: Twilio code=%s HTTP status=%s call=%s",
+			getattr(exc, "code", None),
+			getattr(exc, "status", None),
+			call_sid,
+		)
+	except Exception:
+		# A log file that cannot be written must not fail a webhook that succeeded.
+		pass
 
 
 def _report_status_push_failure(exc, call_sid):
@@ -302,13 +355,16 @@ def update_call_status_info(**kwargs):
 	# Best effort. The authoritative work — the CRM Call Log update above — is
 	# already committed, so a refused live-status push must not fail this
 	# callback: answering 500 only makes Twilio retry a webhook that already
-	# succeeded. Twilio refuses the message in two ordinary situations, and
-	# neither is a shop problem. Anything else is still recorded for a human.
+	# succeeded. Twilio refuses the message in three ordinary situations, and
+	# none is a shop problem: those go to the crm.twilio log file. Anything else
+	# is still recorded in the Error Log for a human.
 	try:
 		client = Twilio.get_twilio_client()
 		client.calls(args.ParentCallSid).user_defined_messages.create(content=json.dumps(call_info))
 	except Exception as exc:
-		if not is_expected_user_message_rejection(exc):
+		if is_expected_user_message_rejection(exc, args):
+			_note_expected_status_push_refusal(exc, parent_call_sid)
+		else:
 			_report_status_push_failure(exc, parent_call_sid)
 
 
