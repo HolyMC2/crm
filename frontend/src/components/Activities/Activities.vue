@@ -1681,9 +1681,14 @@ watch([reload, reload_email], ([reload_value, reload_email_value]) => {
   }
 })
 
+// One pending scroll at a time, dropped with the component: a timer that
+// outlived it scrolled a list that was gone (and threw where no document was).
+let scrollTimer = null
+onBeforeUnmount(() => clearTimeout(scrollTimer))
 function scroll(hash) {
   if (['tasks', 'notes', 'events'].includes(route.hash?.slice(1))) return
-  setTimeout(() => {
+  clearTimeout(scrollTimer)
+  scrollTimer = setTimeout(() => {
     let el
     if (!hash) {
       let e = document.getElementsByClassName('activity')
