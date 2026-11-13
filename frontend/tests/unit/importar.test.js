@@ -20,6 +20,10 @@ import {
   questions,
   sampleRows,
   summaryOf,
+  keysLabel,
+  noIvaChoices,
+  noIvaQuestion,
+  taxLine,
 } from '@/components/importar/importar'
 
 const state = vi.hoisted(() => ({
@@ -405,6 +409,104 @@ describe('the helpers', () => {
   })
 })
 
+describe('a SICAR products export', () => {
+  const SICAR = {
+    impuestos: { archivo: null },
+    sin_iva: { productos: 621, respuesta: null },
+    teclas: { cajas: 3 },
+  }
+
+  it('says where the rates come from, asks about IVA and offers the keys', () => {
+    expect(taxLine({ sicar: SICAR })).toContain('Add ImpuestosExportados.xls')
+    expect(
+      taxLine({
+        sicar: { ...SICAR, impuestos: { archivo: 'ImpuestosExportados.xls' } },
+      }),
+    ).toBe('The tax rates come from «ImpuestosExportados.xls».')
+    expect(noIvaQuestion({ sicar: SICAR })).toBe(
+      '621 products carry no IVA in SICAR. How do they go in?',
+    )
+    expect(noIvaQuestion({ sicar: { ...SICAR, sin_iva: null } })).toBe('')
+    expect(noIvaChoices().map((c) => c.value)).toEqual(['', '0', 'exento'])
+    expect(keysLabel({ sicar: SICAR })).toContain(
+      'give my 3 registers its keys',
+    )
+    expect(keysLabel({ sicar: { ...SICAR, teclas: { cajas: 1 } } })).toContain(
+      'give my register its keys',
+    )
+    expect(keysLabel({ sicar: { ...SICAR, teclas: null } })).toBe('')
+  })
+
+  it('the answers go to the review and the keys to the import', async () => {
+    state.upload
+      .mockResolvedValueOnce('file-1')
+      .mockResolvedValueOnce('file-taxes')
+    state.api.mockImplementation(async (method, args) => {
+      if (method === 'opciones') return { ...OPCIONES }
+      if (method === 'revisar')
+        return review({
+          sicar: {
+            ...SICAR,
+            impuestos: {
+              archivo: args.impuestos ? 'ImpuestosExportados.xls' : null,
+            },
+            sin_iva: { productos: 621, respuesta: args.sin_iva || null },
+          },
+        })
+      if (method === 'importar') return { ...RUNNING }
+      return {}
+    })
+    await mount()
+    await pick(sheet('articulosExportados.xls'))
+    const block = root.querySelector('[data-importar-sicar]')
+    expect(block.textContent).toContain('621 products carry no IVA in SICAR')
+    expect(
+      block
+        .querySelector('[data-sin-iva="empresa"]')
+        .getAttribute('aria-pressed'),
+    ).toBe('true')
+
+    const taxes = root.querySelector('[data-importar-impuestos]')
+    Object.defineProperty(taxes, 'files', {
+      value: [sheet('ImpuestosExportados.xls')],
+      configurable: true,
+    })
+    taxes.dispatchEvent(new Event('change'))
+    await flush()
+    expect(calls('revisar').at(-1)[1]).toMatchObject({
+      impuestos: 'file-taxes',
+      sin_iva: '',
+    })
+    expect(root.textContent).toContain(
+      'The tax rates come from «ImpuestosExportados.xls».',
+    )
+
+    root.querySelector('[data-sin-iva="exento"]').click()
+    await flush()
+    expect(calls('revisar').at(-1)[1]).toMatchObject({
+      impuestos: 'file-taxes',
+      sin_iva: 'exento',
+    })
+
+    const keys = root.querySelector('[data-importar-teclas]')
+    keys.checked = true
+    keys.dispatchEvent(new Event('change'))
+    await flush()
+    root.querySelector('[data-importar-importar]').click()
+    await flush()
+    expect(calls('importar')[0][1]).toEqual({
+      vista: 'im-review1',
+      teclas_sicar: 'si',
+    })
+  })
+
+  it('a file of another system shows no SICAR block', async () => {
+    await mount()
+    await pick(sheet())
+    expect(root.querySelector('[data-importar-sicar]')).toBeNull()
+  })
+})
+
 describe('the page', () => {
   it('starts with the file, the template and the way back', async () => {
     await mount()
@@ -434,6 +536,8 @@ describe('the page', () => {
       que: 'productos',
       columnas: '',
       existentes: 'omitir',
+      impuestos: '',
+      sin_iva: '',
     })
     expect(root.querySelector('[data-importar-revision]')).not.toBeNull()
     // every required column found: the columns wait folded under the review
@@ -615,7 +719,10 @@ describe('the page', () => {
     await pick(sheet())
     root.querySelector('[data-importar-importar]').click()
     await flush()
-    expect(calls('importar')[0][1]).toEqual({ vista: 'im-review1' })
+    expect(calls('importar')[0][1]).toEqual({
+      vista: 'im-review1',
+      teclas_sicar: '',
+    })
     expect(root.textContent).toContain('30 of 80 rows')
     await vi.advanceTimersByTimeAsync(1500)
     await flush()

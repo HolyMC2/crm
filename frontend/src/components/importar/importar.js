@@ -380,3 +380,47 @@ export function summaryOf(estado) {
         : t('Imported')
   return { titulo, lineas }
 }
+
+// ── A SICAR products export (crm.api.importar `sicar`) ─────────────────────
+
+/** What the products that carry no IVA in SICAR may take; '' keeps the company's. */
+export function noIvaChoices() {
+  return [
+    { value: '', label: t("Your company's IVA, as today") },
+    { value: '0', label: t('IVA 0%') },
+    { value: 'exento', label: t('Exempt') },
+  ]
+}
+
+/** Where the tax rates come from, in one sentence. */
+export function taxLine(review) {
+  const file = review?.sicar?.impuestos?.archivo
+  return file
+    ? t('The tax rates come from «{0}».', [file])
+    : t(
+        'SICAR keeps its prices without tax. Add ImpuestosExportados.xls to take its exact rates; without it they are read from the prices.',
+      )
+}
+
+/** The question about the products that carry no IVA in SICAR, or '' when there are none. */
+export function noIvaQuestion(review) {
+  const n = Number(review?.sicar?.sin_iva?.productos) || 0
+  if (!n) return ''
+  return n === 1
+    ? t('1 product carries no IVA in SICAR. How does it go in?')
+    : t('{0} products carry no IVA in SICAR. How do they go in?', [n])
+}
+
+/** The keys checkbox's label, or '' when the shop's registers cannot take them. */
+export function keysLabel(review) {
+  const n = Number(review?.sicar?.teclas?.cajas) || 0
+  if (!n) return ''
+  return n === 1
+    ? t(
+        'My cashiers used SICAR: give my register its keys (F2 search, F5 quantity, Esc charge)',
+      )
+    : t(
+        'My cashiers used SICAR: give my {0} registers its keys (F2 search, F5 quantity, Esc charge)',
+        [n],
+      )
+}

@@ -46313,3 +46313,79 @@ msgstr "Todavía no se importa: {0}."
 #: crm/api/importar.py
 msgid "{0} have more than one email: the first one is used."
 msgstr "{0} tienen más de un correo: se usa el primero."
+
+#: crm/api/importar.py
+msgid "«{0}» ({1} products)"
+msgstr "«{0}» ({1} productos)"
+
+#: crm/api/importar.py
+msgid "PRECIO 2, 3 and 4 go in, with their taxes, as selling price lists: {0}."
+msgstr "PRECIO 2, 3 y 4 entran, con sus impuestos, como listas de precios de venta: {0}."
+
+#: crm/api/importar.py
+msgid "In {0} products with MAYOREO, that price is charged only from the quantity SICAR says."
+msgstr "En {0} productos con MAYOREO, ese precio se cobra solo desde la cantidad que dice SICAR."
+
+#: crm/api/importar.py
+msgid "{0} customers use another SICAR price: it becomes their price list."
+msgstr "{0} clientes usan otro precio de SICAR: queda como su lista de precios."
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "From SICAR"
+msgstr "De SICAR"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Change the tax file"
+msgstr "Cambiar el archivo de impuestos"
+
+#: frontend/src/pages/Importar.vue
+msgctxt "Importar"
+msgid "Add ImpuestosExportados.xls"
+msgstr "Agregar ImpuestosExportados.xls"
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "Your company's IVA, as today"
+msgstr "El IVA de tu empresa, como hoy"
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "IVA 0%"
+msgstr "IVA 0%"
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "Exempt"
+msgstr "Exento"
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "The tax rates come from «{0}»."
+msgstr "Las tasas de impuestos salen de «{0}»."
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "SICAR keeps its prices without tax. Add ImpuestosExportados.xls to take its exact rates; without it they are read from the prices."
+msgstr "SICAR guarda sus precios sin impuestos. Agrega ImpuestosExportados.xls para tomar sus tasas exactas; sin él, se leen de los precios."
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "1 product carries no IVA in SICAR. How does it go in?"
+msgstr "1 producto no lleva IVA en SICAR. ¿Cómo entra?"
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "{0} products carry no IVA in SICAR. How do they go in?"
+msgstr "{0} productos no llevan IVA en SICAR. ¿Cómo entran?"
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "My cashiers used SICAR: give my register its keys (F2 search, F5 quantity, Esc charge)"
+msgstr "Mis cajeros usaban SICAR: poner sus teclas en mi caja (F2 buscar, F5 cantidad, Esc cobrar)"
+
+#: frontend/src/components/importar/importar.js
+msgctxt "Importar"
+msgid "My cashiers used SICAR: give my {0} registers its keys (F2 search, F5 quantity, Esc charge)"
+msgstr "Mis cajeros usaban SICAR: poner sus teclas en mis {0} cajas (F2 buscar, F5 cantidad, Esc cobrar)"

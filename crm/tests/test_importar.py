@@ -169,6 +169,48 @@ class TestImportarHelpers(TestCase):
 		)
 		self.assertEqual(importar._source_note(type("Plan", (), {})()), [])
 
+	def test_a_sicar_products_export_gets_its_block_and_nothing_else_does(self):
+		answers = frappe._dict(taxes_from=None, teclas=None)
+		source = {
+			"sistema": "sicar",
+			"exportacion": "articulos",
+			"hechos": [{"codigo": "sicar_sin_impuesto", "productos": 621, "respuesta": "exento"}],
+		}
+		plan = frappe._dict(entity="productos", source=source)
+		summary = {"hechos": [{"codigo": "sicar_teclas", "cajas": 3}]}
+		tax_file = frappe._dict(file_name="ImpuestosExportados.xls")
+		self.assertEqual(
+			importar._sicar_block(answers, plan, summary, tax_file),
+			{
+				"impuestos": {"archivo": "ImpuestosExportados.xls"},
+				"sin_iva": {"productos": 621, "respuesta": "exento"},
+				"teclas": {"cajas": 3},
+			},
+		)
+		blocked = frappe._dict(entity="productos", source={**source, "hechos": []})
+		self.assertEqual(
+			importar._sicar_block(answers, blocked, {"hechos": []}, None),
+			{"impuestos": {"archivo": None}, "sin_iva": None, "teclas": None},
+		)
+		for other in (
+			frappe._dict(entity="clientes", source=source),
+			frappe._dict(entity="productos", source={**source, "exportacion": "clientes"}),
+			frappe._dict(entity="productos", source=None),
+		):
+			self.assertIsNone(importar._sicar_block(answers, other, summary, None))
+		self.assertIsNone(importar._sicar_block(None, plan, summary, None))
+		self.assertIn(
+			"«Precio 2» (2868 products)",
+			importar._fact(
+				{
+					"codigo": "sicar_niveles",
+					"listas": [{"lista": "Precio 2", "productos": 2868}],
+					"mayoreo": 9,
+				},
+				"productos",
+			),
+		)
+
 
 @skipIf(SKIP is not None, SKIP or "")
 class TestImportar(IntegrationTestCase):

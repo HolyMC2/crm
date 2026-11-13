@@ -325,6 +325,77 @@
             />
           </div>
 
+          <!-- A SICAR products export: its tax file (also the way past a rate
+               the prices do not give), its products without IVA and the
+               registers' keys. -->
+          <div v-if="review.sicar" class="space-y-4" data-importar-sicar>
+            <h2 class="text-base font-semibold">
+              {{ __('From SICAR', null, CTX) }}
+            </h2>
+            <div class="space-y-2">
+              <p class="text-sm text-ink-gray-7">{{ taxLine(review) }}</p>
+              <label
+                :class="[
+                  'press cursor-pointer',
+                  BTN.tonal,
+                  busy ? 'pointer-events-none opacity-50' : '',
+                ]"
+              >
+                <span
+                  class="lucide-file-spreadsheet size-5"
+                  aria-hidden="true"
+                />
+                {{
+                  review.sicar.impuestos.archivo
+                    ? __('Change the tax file', null, CTX)
+                    : __('Add ImpuestosExportados.xls', null, CTX)
+                }}
+                <input
+                  type="file"
+                  class="sr-only"
+                  :accept="ACCEPT"
+                  :disabled="!!busy"
+                  data-importar-impuestos
+                  @change="onTaxPick"
+                />
+              </label>
+            </div>
+            <div
+              v-if="review.sicar.sin_iva"
+              class="space-y-2"
+              data-importar-sin-iva
+            >
+              <p class="text-base font-medium">{{ noIvaQuestion(review) }}</p>
+              <div class="flex flex-wrap gap-2">
+                <button
+                  v-for="option in noIvaChoices()"
+                  :key="option.value"
+                  type="button"
+                  :class="chipClass(sinIva === option.value)"
+                  :aria-pressed="sinIva === option.value"
+                  :disabled="!!busy"
+                  :data-sin-iva="option.value || 'empresa'"
+                  @click="chooseNoIva(option.value)"
+                >
+                  {{ option.label }}
+                </button>
+              </div>
+            </div>
+            <label
+              v-if="review.sicar.teclas"
+              class="flex min-h-11 cursor-pointer items-center gap-3 text-base sm:min-h-8"
+            >
+              <input
+                v-model="teclas"
+                type="checkbox"
+                class="size-5 shrink-0 rounded-4 sm:size-4"
+                :disabled="!!busy"
+                data-importar-teclas
+              />
+              {{ keysLabel(review) }}
+            </label>
+          </div>
+
           <div
             v-if="review.bloqueos.length"
             role="alert"
@@ -939,8 +1010,11 @@ import {
   importBlocker,
   importLabel,
   importarApi,
+  keysLabel,
   moreErrorsLabel,
   nameAsCode,
+  noIvaChoices,
+  noIvaQuestion,
   offersNameAsCode,
   plantillaHref,
   progressOf,
@@ -948,6 +1022,7 @@ import {
   sampleRows,
   statusLabel,
   summaryOf,
+  taxLine,
   uploadSheet,
 } from '@/components/importar/importar'
 import {
@@ -973,6 +1048,11 @@ const review = ref(null)
 const choices = ref({})
 const existentes = ref('omitir')
 const archivo = ref('')
+// A SICAR products export: its ImpuestosExportados (an uploaded file), the
+// answer for its products without IVA and whether the registers take its keys.
+const impuestos = ref('')
+const sinIva = ref('')
+const teclas = ref(false)
 const estado = ref(null)
 const busy = ref('')
 const problem = ref('')
@@ -1205,7 +1285,36 @@ async function send(file) {
   choices.value = {}
   existentes.value = 'omitir'
   allErrors.value = false
+  impuestos.value = ''
+  sinIva.value = ''
+  teclas.value = false
   await check()
+}
+
+async function onTaxPick(event) {
+  const file = event.target.files?.[0]
+  event.target.value = ''
+  if (busy.value || !file) return
+  problem.value = fileProblem(file, opciones.value)
+  if (problem.value) return
+  busy.value = 'subir'
+  try {
+    impuestos.value = await uploadSheet(file)
+  } catch (error) {
+    busy.value = ''
+    problem.value = errorText(
+      error,
+      __('The file did not upload. Try again.', null, CTX),
+    )
+    return
+  }
+  await check()
+}
+
+function chooseNoIva(value) {
+  if (sinIva.value === value) return
+  sinIva.value = value
+  check()
 }
 
 async function check() {
@@ -1220,6 +1329,8 @@ async function check() {
         ? JSON.stringify(choices.value)
         : '',
       existentes: existentes.value,
+      impuestos: impuestos.value,
+      sin_iva: sinIva.value,
     })
     if (mine !== ticket) return
     review.value = answer
@@ -1260,6 +1371,9 @@ function startOver() {
   review.value = null
   estado.value = null
   archivo.value = ''
+  impuestos.value = ''
+  sinIva.value = ''
+  teclas.value = false
   choices.value = {}
   problem.value = ''
   busy.value = ''
@@ -1279,7 +1393,10 @@ async function runImport() {
   busy.value = 'importar'
   problem.value = ''
   try {
-    const answer = await importarApi('importar', { vista: review.value.vista })
+    const answer = await importarApi('importar', {
+      vista: review.value.vista,
+      teclas_sicar: review.value.sicar?.teclas && teclas.value ? 'si' : '',
+    })
     show(answer)
     router.replace({ query: { ...route.query, registro: answer.registro } })
   } catch (error) {

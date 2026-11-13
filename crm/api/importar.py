@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import hashlib
 import importlib
+import inspect
 import io
 import json
 import re
@@ -294,17 +295,35 @@ def _send_book(book, filename: str) -> None:
 
 
 @frappe.whitelist(methods=["POST"])
-def revisar(archivo: str, que: str, columnas: str | None = None, existentes: str | None = None) -> dict:
+def revisar(
+	archivo: str,
+	que: str,
+	columnas: str | None = None,
+	existentes: str | None = None,
+	impuestos: str | None = None,
+	sin_iva: str | None = None,
+) -> dict:
 	"""The uploaded sheet as the screen shows it, written nowhere. `columnas` is the owner's
-	choice as JSON, {field: column index from 0}; `existentes` is «omitir» or «actualizar»."""
+	choice as JSON, {field: column index from 0}; `existentes` is «omitir» or «actualizar». For a
+	SICAR products export (`_sicar_answers`): `impuestos` is its ImpuestosExportados, uploaded as
+	another file, and `sin_iva` the owner's answer for its products without IVA («0», «exento»;
+	empty keeps the company's)."""
 	eng = _need()
 	entity = _entity(que)
 	_allowed(entity)
 	_catalog_gate(entity)
 	user = frappe.session.user
+	answers = _sicar_answers(eng)
+	taxes, tax_file, tax_sha, no_iva = None, None, None, None
 	try:
 		on_existing = eng.validators.on_existing(existentes)
 		fdoc, content = eng.validators.source_file(archivo, user)
+		if answers and impuestos:
+			tax_file, tax_content = eng.validators.source_file(impuestos, user)
+			taxes = answers.taxes_from(tax_content, tax_file.file_name)
+			tax_sha = hashlib.sha256(tax_content).hexdigest()
+		if answers:
+			no_iva = eng.validators.no_iva(sin_iva)
 	except ValueError as error:
 		frappe.throw(_sentence(error))
 	overrides = _overrides(eng, entity, columnas)
@@ -313,7 +332,10 @@ def revisar(archivo: str, que: str, columnas: str | None = None, existentes: str
 		ctx = eng.context.build(entity, company, user, on_existing=on_existing)
 	except ValueError as error:
 		frappe.throw(_sentence(error))
-	plan = eng.prepare.plan_for(content, fdoc.file_name, entity, on_existing=on_existing, overrides=overrides)
+	extra = {"taxes": taxes, "no_iva": no_iva} if answers else {}
+	plan = eng.prepare.plan_for(
+		content, fdoc.file_name, entity, on_existing=on_existing, overrides=overrides, **extra
+	)
 	limit = int(eng.constants.MAX_ROWS)
 	if not plan.blocked and len(plan.rows) > limit:
 		frappe.throw(
@@ -342,16 +364,20 @@ def revisar(archivo: str, que: str, columnas: str | None = None, existentes: str
 				"file_name": fdoc.file_name,
 				"file_url": fdoc.file_url,
 				"sha256": sha,
+				"impuestos_id": tax_file.name if tax_file else None,
+				"impuestos_sha256": tax_sha,
+				"sin_iva": no_iva,
 				"digest": plan.digest(),
 				"blocked": plan.blocked,
 				"counts": eng.counts(plan, ()),
 			}
 		)
 	earlier = bool(eng.queries.earlier_imports(sha, entity))
-	return _review(
+	summary = eng.prepare.review(plan, ctx)
+	out = _review(
 		eng,
 		plan,
-		eng.prepare.review(plan, ctx),
+		summary,
 		header,
 		samples,
 		to_write,
@@ -360,6 +386,46 @@ def revisar(archivo: str, que: str, columnas: str | None = None, existentes: str
 		archivo=fdoc,
 		ctx=ctx,
 	)
+	out["sicar"] = _sicar_block(answers, plan, summary, tax_file)
+	if out["sicar"]:
+		# the block's own controls say these two; the notes would say them twice
+		asked = (_sicar_fact({"codigo": "sicar_sin_impuesto", **(out["sicar"]["sin_iva"] or {})}),)
+		out["avisos"] = [line for line in out["avisos"] if line not in asked]
+	return out
+
+
+def _sicar_answers(eng):
+	"""doco's SICAR module where its importer takes the owner's SICAR answers (the tax file, the
+	products without IVA, the registers' keys: doco ≥ sicar-respuestas), else None."""
+	try:
+		sicar = importlib.import_module("doco.docoutils.tabular.sicar")
+		teclas = importlib.import_module("doco.docoutils.importacion.teclas")
+	except ImportError:
+		return None
+	takes = inspect.signature(eng.prepare.plan_for).parameters
+	if "no_iva" not in takes or not hasattr(eng.validators, "keys_answer"):
+		return None
+	return frappe._dict(taxes_from=sicar.taxes_from, teclas=teclas)
+
+
+def _sicar_block(answers, plan, summary, tax_file) -> dict | None:
+	"""What the screen asks about a SICAR products export: its tax file, the products that carry no
+	IVA in SICAR and the registers' keys. None for any other file."""
+	source = getattr(plan, "source", None) or {}
+	if not answers or source.get("sistema") != "sicar" or source.get("exportacion") != "articulos":
+		return None
+	if plan.entity != "productos":
+		return None
+	facts = {fact.get("codigo"): fact for fact in [*(source.get("hechos") or []), *summary["hechos"]]}
+	no_iva = facts.get("sicar_sin_impuesto")
+	keys = facts.get("sicar_teclas")
+	return {
+		"impuestos": {"archivo": tax_file.file_name if tax_file else None},
+		"sin_iva": {"productos": no_iva["productos"], "respuesta": no_iva.get("respuesta")}
+		if no_iva
+		else None,
+		"teclas": {"cajas": keys["cajas"]} if keys and keys.get("cajas") else None,
+	}
 
 
 def _overrides(eng, entity: str, columnas) -> dict | None:
@@ -704,6 +770,21 @@ def _sicar_fact(fact: dict) -> str:
 		return _(
 			"{0} {1}% ({2} products): the price includes it, but Muelle does not show it apart on the ticket or the invoice yet."
 		).format(fact.get("impuesto"), f"{fact.get('tasa') or 0:g}", fact.get("productos"))
+	if code == "sicar_niveles":
+		lists = ", ".join(
+			_("«{0}» ({1} products)").format(item.get("lista"), item.get("productos"))
+			for item in fact.get("listas") or []
+		)
+		line = _("PRECIO 2, 3 and 4 go in, with their taxes, as selling price lists: {0}.").format(lists)
+		if fact.get("mayoreo"):
+			line += " " + _(
+				"In {0} products with MAYOREO, that price is charged only from the quantity SICAR says."
+			).format(fact["mayoreo"])
+		return line
+	if code == "sicar_listas_de_clientes":
+		return _("{0} customers use another SICAR price: it becomes their price list.").format(
+			fact.get("filas")
+		)
 	if code == "sicar_otros_precios":
 		parts = [
 			_("{0} ({1} products)").format(label, fact[key])
@@ -861,14 +942,22 @@ def filas_con_error(vista: str) -> None:
 
 
 @frappe.whitelist(methods=["POST"])
-def importar(vista: str) -> dict:
+def importar(vista: str, teclas_sicar: str | None = None) -> dict:
 	"""The reviewed rows into Muelle, as the person, through doco's own confirmation
 	(apply.confirm): the file must be the one reviewed and the plan, built again now, the reviewed
 	one. A few rows are written in this request; more go to doco's background job, which commits
-	as it goes so «Deshacer» finds every row."""
+	as it goes so «Deshacer» finds every row. `teclas_sicar` «si» also gives the company's registers
+	SICAR's keys, for a SICAR products export (undone with the import)."""
 	eng = _need()
 	user = frappe.session.user
 	data = _preview(eng, vista)
+	answers = _sicar_answers(eng)
+	if answers and data.get("entity") == "productos":
+		try:
+			keys = eng.validators.keys_answer(teclas_sicar)
+		except ValueError as error:
+			frappe.throw(_sentence(error))
+		data["teclas"] = answers.teclas.PACK if keys and answers.teclas.available() else None
 	_allowed(data["entity"])
 	_catalog_gate(data["entity"])
 	claim = frappe.cache.make_key(CLAIM_KEY.format(data["pid"]))
