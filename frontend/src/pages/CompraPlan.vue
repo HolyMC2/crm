@@ -210,9 +210,13 @@
           <li
             v-for="line in shown"
             :key="line.line"
-            class="plan-fila grid items-start gap-x-3 py-3"
-            :class="qtyOf(line) ? '' : 'opacity-50'"
+            class="plan-fila grid items-start gap-x-3 py-3 transition-colors duration-700 motion-reduce:transition-none"
+            :class="[
+              qtyOf(line) ? '' : 'opacity-50',
+              changed.has(line.line) ? 'bg-surface-gray-2' : '',
+            ]"
             :data-testid="'plan-linea-' + line.line"
+            :data-cambio="changed.has(line.line) || null"
           >
             <div class="min-w-0">
               <p class="truncate text-base font-medium text-ink-gray-9">
@@ -449,7 +453,14 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import {
+  computed,
+  getCurrentInstance,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  watch,
+} from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { toast } from 'frappe-ui'
 import { AppBar, BottomSheet, EmptyState, chipClass } from '@/components/ui'
@@ -463,8 +474,10 @@ import { BTN } from '@/documentos/tools'
 import { formatDate } from '@/utils/display'
 import {
   FILTERS,
+  changedLines,
   changesOf,
   filterCounts,
+  followsEvent,
   movedText,
   planScope,
   priceSourceText,
@@ -482,6 +495,9 @@ const BTN_SM = Object.freeze({
     'inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-surface-gray-2 px-4 text-sm font-medium text-ink-gray-9 hover:bg-surface-gray-3 disabled:opacity-50 sm:min-h-9',
 })
 const SAVE_PAUSE = 450
+// doco sourcing.PLAN_EVENT: {chain, id} of each new plan, to the plan's person
+const PLAN_EVENT = 'surtido_plan'
+const MARK_MS = 1600
 
 const router = useRouter()
 const phone = isMobile
@@ -495,6 +511,9 @@ const filter = ref('todas')
 const edits = ref({})
 const years = yearChips()
 let saveTimer = null
+let markTimer = null
+const changed = ref(new Set())
+const socket = getCurrentInstance()?.appContext.config.globalProperties.$socket
 let dropContext = null
 
 const lines = computed(() => plan.value?.lines || [])
@@ -563,7 +582,12 @@ function historyText(line) {
   return __('Bought before: {0}', [bits.join(', ')], 'Surtido')
 }
 
-function show(next) {
+function show(next, { mark = false } = {}) {
+  if (mark && plan.value) {
+    changed.value = changedLines(plan.value.lines, next.lines || [])
+    clearTimeout(markTimer)
+    markTimer = setTimeout(() => (changed.value = new Set()), MARK_MS)
+  }
   plan.value = {
     lines: [],
     left_out: [],
@@ -609,7 +633,42 @@ async function correct(args) {
     return false
   } finally {
     saving.value = false
+    catchUp()
   }
+}
+
+// ---- live: the chat (or another tab) corrects the same plan ----------------
+// The server publishes each new plan of the chain; the page takes it in place and
+// marks the lines that changed. A correction of its own is answered by the request.
+let heard = ''
+
+async function follow(id) {
+  if (!ready.value) return
+  if (saving.value || busy.value) {
+    heard = id
+    return
+  }
+  try {
+    show(await call('plan_page', { plan: id || plan.value.id }), {
+      mark: true,
+    })
+  } catch {
+    // the next event, reconnect or visit reads it again
+  }
+}
+
+function catchUp() {
+  const id = heard
+  heard = ''
+  if (id && id !== plan.value?.id) follow(id)
+}
+
+function onPlanEvent(payload) {
+  if (followsEvent(plan.value, payload)) follow(payload.id)
+}
+
+function onReturn() {
+  if (document.visibilityState !== 'hidden') follow(plan.value?.id)
 }
 
 async function save() {
@@ -713,10 +772,19 @@ watch(
     if (id && old && id !== plan.value?.id) start()
   },
 )
-onMounted(start)
+onMounted(() => {
+  start()
+  socket?.on(PLAN_EVENT, onPlanEvent)
+  window.addEventListener('socket:reconnected', onReturn)
+  document.addEventListener('visibilitychange', onReturn)
+})
 onBeforeUnmount(() => {
   dropContext?.()
   clearTimeout(saveTimer)
+  clearTimeout(markTimer)
+  socket?.off(PLAN_EVENT, onPlanEvent)
+  window.removeEventListener('socket:reconnected', onReturn)
+  document.removeEventListener('visibilitychange', onReturn)
 })
 </script>
 

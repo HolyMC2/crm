@@ -88,3 +88,24 @@ export function planScope(plan = {}, formatDay = (d) => d) {
   if (plan.catalog_title) return `${who}, ${plan.catalog_title}`
   return plan.months ? tr('{0}, sales of {1} months', [who, plan.months]) : who
 }
+
+/** The realtime event of the plan's chain (doco sourcing.PLAN_EVENT) that the page
+ *  should follow: a newer plan of the chain it shows. */
+export function followsEvent(plan, payload) {
+  return Boolean(
+    plan?.chain &&
+      payload?.id &&
+      payload.chain === plan.chain &&
+      payload.id !== plan.id,
+  )
+}
+
+/** The lines a newer plan added or whose pieces it changed, to mark for a moment. */
+export function changedLines(before = [], after = []) {
+  const had = new Map(before.map((line) => [line.line, Number(line.qty)]))
+  const out = new Set()
+  for (const line of after)
+    if (!had.has(line.line) || had.get(line.line) !== Number(line.qty))
+      out.add(line.line)
+  return out
+}

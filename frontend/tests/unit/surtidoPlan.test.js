@@ -4,8 +4,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, nextTick } from 'vue'
 import { createMemoryHistory, createRouter } from 'vue-router'
 import {
+  changedLines,
   changesOf,
   filterCounts,
+  followsEvent,
   movedText,
   planScope,
   priceSourceText,
@@ -48,6 +50,22 @@ describe('surtidoPlan helpers', () => {
     expect(removals(LINES.slice(0, 1))).toEqual({ 'm:a58': 0 })
   })
 
+  it('follows a newer plan of its own chain only, and marks what changed', () => {
+    const plan = { id: 'sp-2', chain: 'sp-1' }
+    expect(followsEvent(plan, { chain: 'sp-1', id: 'sp-3' })).toBe(true)
+    expect(followsEvent(plan, { chain: 'sp-1', id: 'sp-2' })).toBe(false)
+    expect(followsEvent(plan, { chain: 'sp-9', id: 'sp-10' })).toBe(false)
+    expect(followsEvent({ id: 'sp-2' }, { chain: 'sp-1', id: 'sp-3' })).toBe(
+      false,
+    )
+    const after = [
+      { line: 'm:a58', qty: 6 },
+      { line: 'm:a05', qty: 2 },
+      { line: 'm:new', qty: 1 },
+    ]
+    expect([...changedLines(LINES, after)]).toEqual(['m:a05', 'm:new'])
+  })
+
   it('offers every year, then the last six, four and two', () => {
     expect(yearChips(new Date(2026, 10, 12))).toEqual([0, 2020, 2022, 2024])
   })
@@ -73,6 +91,12 @@ vi.mock('@/composables/useCompras', async (importOriginal) => {
     ...actual,
     comprasApi: vi.fn(async (method, args) => {
       state.calls.push([method, args])
+      if (method.endsWith('.plan_page') && args.plan === 'sp-3')
+        return {
+          ...state.plan,
+          id: 'sp-3',
+          lines: [{ ...state.plan.lines[0], qty: 3 }],
+        }
       if (method.endsWith('.plan_change'))
         return {
           ...state.plan,
@@ -109,6 +133,16 @@ async function mount() {
   root = document.createElement('div')
   document.body.appendChild(root)
   app = createApp(CompraPlan, { id: 'sp-1' })
+  state.socket = {
+    handlers: {},
+    on(event, fn) {
+      this.handlers[event] = fn
+    },
+    off(event) {
+      delete this.handlers[event]
+    },
+  }
+  app.config.globalProperties.$socket = state.socket
   app.config.globalProperties.__ = (text, args) =>
     String(text).replace(/\{(\d+)\}/g, (_, i) => args?.[i] ?? '')
   app.use(router)
@@ -123,6 +157,53 @@ afterEach(() => {
 })
 
 describe('Buy plan page', () => {
+  it("takes the chat's newer plan of its chain in place and marks the line", async () => {
+    window.__ = (text, args) =>
+      String(text).replace(/\{(\d+)\}/g, (_, i) => args?.[i] ?? '')
+    state.plan = {
+      id: 'sp-1',
+      chain: 'sp-1',
+      source: 'tienda',
+      total: 100,
+      owner: true,
+      lines: [
+        {
+          line: 'm:a58',
+          model: 'OPPO A58 4G',
+          stock: 7,
+          moved: 6,
+          qty: 6,
+          price: 10,
+          reasons: [],
+          history: [],
+        },
+      ],
+      left_out: [],
+      notes: [],
+      warehouses: [],
+    }
+    await mount()
+    // another plan's chain is not this page's
+    state.socket.handlers.surtido_plan({ chain: 'sp-9', id: 'sp-10' })
+    await settle()
+    expect(state.calls.filter(([m]) => m.endsWith('.plan_page'))).toHaveLength(
+      1,
+    )
+    state.socket.handlers.surtido_plan({ chain: 'sp-1', id: 'sp-3' })
+    await settle()
+    expect(state.calls.at(-1)).toEqual([
+      'doco.workspaces.surtido_plan.plan_page',
+      { plan: 'sp-3' },
+    ])
+    expect(router.currentRoute.value.query.plan).toBe('sp-3')
+    const row = root.querySelector('[data-testid="plan-linea-m:a58"]')
+    expect(row.dataset.cambio).toBe('true')
+    expect(row.textContent).toContain('10 after')
+    app.unmount()
+    app = null
+    expect(state.socket.handlers.surtido_plan).toBeUndefined()
+  })
+
   it('shows each line with its year, stock and reasons, and a + corrects the plan', async () => {
     window.__ = (text, args) =>
       String(text).replace(/\{(\d+)\}/g, (_, i) => args?.[i] ?? '')
