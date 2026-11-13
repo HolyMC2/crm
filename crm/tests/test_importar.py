@@ -124,6 +124,51 @@ class TestImportarHelpers(TestCase):
 		self.assertEqual(importar._fact({"codigo": "precios_en", "lista": "X"}, "productos"), "")
 		self.assertIn("phone and email", importar._fact({"codigo": "actualiza", "filas": 1}, "clientes"))
 
+	def test_sicar_facts_read_in_the_screens_words(self):
+		"""doco's `sicar_…` facts (tabular.sicar): prices with their taxes, what is not imported yet."""
+		prices = importar._fact(
+			{
+				"codigo": "sicar_precios_mas_impuestos",
+				"impuestos": [
+					{"impuesto": "I.V.A.", "tasa": 16.0, "origen": "archivo", "productos": 3191},
+					{
+						"impuesto": "IEPS",
+						"tasa": 8.0,
+						"origen": "precios",
+						"productos": 990,
+						"redondos": 958,
+						"probados": 990,
+					},
+					{"impuesto": "I.V.A 0", "tasa": 0.0, "origen": "archivo", "productos": 3193},
+				],
+			},
+			"productos",
+		)
+		self.assertIn("PRECIO 1 plus I.V.A. 16% (3191 products), IEPS 8% (990 products).", prices)
+		self.assertNotIn("I.V.A 0", prices)
+		self.assertIn("The rate of IEPS is not in the file: at 8%, 958 of 990 prices", prices)
+		levels = importar._fact(
+			{"codigo": "sicar_otros_precios", "precio_2": 2868, "precio_3": 0, "precio_4": 8, "mayoreo": 15},
+			"productos",
+		)
+		self.assertEqual(
+			levels,
+			"Not imported yet: PRECIO 2 (2868 products), PRECIO 4 (8 products), wholesale prices (15 products). "
+			"Only PRECIO 1 becomes the selling price.",
+		)
+		parties = importar._fact(
+			{"codigo": "sicar_datos_sin_importar", "credito": 8, "domicilio": 2, "correos": 1}, "clientes"
+		)
+		self.assertIn("address (2), credit limit and days (8)", parties)
+		self.assertIn("the first one is used", parties)
+		self.assertEqual(importar._fact({"codigo": "sicar_algo_nuevo"}, "productos"), "")
+		plan = type("Plan", (), {"source": {"sistema": "sicar", "exportacion": "articulos"}})()
+		self.assertEqual(
+			importar._source_note(plan),
+			["This is SICAR's products export: its columns are read as SICAR writes them."],
+		)
+		self.assertEqual(importar._source_note(type("Plan", (), {})()), [])
+
 
 @skipIf(SKIP is not None, SKIP or "")
 class TestImportar(IntegrationTestCase):

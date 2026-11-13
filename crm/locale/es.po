@@ -46229,3 +46229,87 @@ msgstr "Artículo"
 msgctxt "Compras"
 msgid "Scan a code"
 msgstr "Escanear un código"
+
+#: crm/api/importar.py
+msgid "This is SICAR's products export: its columns are read as SICAR writes them."
+msgstr "Es la exportación de productos de SICAR: sus columnas se leen como SICAR las escribe."
+
+#: crm/api/importar.py
+msgid "This is SICAR's customers export: its columns are read as SICAR writes them."
+msgstr "Es la exportación de clientes de SICAR: sus columnas se leen como SICAR las escribe."
+
+#: crm/api/importar.py
+msgid "This is SICAR's suppliers export: its columns are read as SICAR writes them."
+msgstr "Es la exportación de proveedores de SICAR: sus columnas se leen como SICAR las escribe."
+
+#: crm/api/importar.py
+msgid "{0} {1}% ({2} products)"
+msgstr "{0} {1}% ({2} productos)"
+
+#: crm/api/importar.py
+msgid "SICAR keeps prices without tax and Muelle keeps them with tax: the selling price is PRECIO 1 plus {0}."
+msgstr "SICAR guarda los precios sin impuestos y Muelle con impuestos: el precio de venta es PRECIO 1 más {0}."
+
+#: crm/api/importar.py
+msgid "The rate of {0} is not in the file: at {1}%, {2} of {3} prices land on a whole or half peso."
+msgstr "La tasa de {0} no viene en el archivo: con {1}%, {2} de {3} precios quedan en peso cerrado o medio peso."
+
+#: crm/api/importar.py
+msgid "{0} products carry no IVA in SICAR: they take your company's IVA. Check them with your accountant."
+msgstr "{0} productos no llevan IVA en SICAR: toman el IVA de tu empresa. Revísalos con tu contador."
+
+#: crm/api/importar.py
+msgid "{0} products have two IVA rates marked: the higher one is used."
+msgstr "{0} productos traen marcadas dos tasas de IVA: se usa la más alta."
+
+#: crm/api/importar.py
+msgid "{0} {1}% ({2} products): the price includes it, but Muelle does not show it apart on the ticket or the invoice yet."
+msgstr "{0} {1}% ({2} productos): el precio ya lo incluye, pero Muelle todavía no lo desglosa en el ticket ni en la factura."
+
+#: crm/api/importar.py
+msgid "wholesale prices ({0} products)"
+msgstr "precios de mayoreo ({0} productos)"
+
+#: crm/api/importar.py
+msgid "Not imported yet: {0}. Only PRECIO 1 becomes the selling price."
+msgstr "Todavía no se importa: {0}. Solo PRECIO 1 es el precio de venta."
+
+#: crm/api/importar.py
+msgid "In {0} products a PRECIO 2, 3 or 4 looks like a code, not a price ({1}). Fix it in SICAR before those prices are imported."
+msgstr "En {0} productos, PRECIO 2, 3 o 4 parece un código y no un precio ({1}). Corrígelo en SICAR antes de importar esos precios."
+
+#: crm/api/importar.py
+msgid "{0} products are sold loose («a granel») in SICAR: they keep your usual unit. In Productos, change the unit of those sold by the kilo or the litre."
+msgstr "{0} productos se venden a granel en SICAR: quedan con tu unidad de siempre. En Productos, cambia la unidad de los que se venden por kilo o por litro."
+
+#: crm/api/importar.py
+msgid "{0} products have a CLAVE ALTERNA that is not added as a barcode ({1})."
+msgstr "{0} productos tienen una CLAVE ALTERNA que no entra como código de barras ({1})."
+
+#: crm/api/importar.py
+msgid "a contact person other than the name ({0})"
+msgstr "un representante distinto del nombre ({0})"
+
+#: crm/api/importar.py
+msgid "alias ({0})"
+msgstr "alias ({0})"
+
+#: crm/api/importar.py
+msgid "address ({0})"
+msgstr "domicilio ({0})"
+
+#: crm/api/importar.py
+msgid "credit limit and days ({0})"
+msgstr "límite y días de crédito ({0})"
+
+#: crm/api/importar.py
+msgid "a price level other than 1 ({0})"
+msgstr "un número de precio distinto de 1 ({0})"
+
+#: crm/api/importar.py
+msgid "Not imported yet: {0}."
+msgstr "Todavía no se importa: {0}."
+
+#: crm/api/importar.py
+msgid "{0} have more than one email: the first one is used."
+msgstr "{0} tienen más de un correo: se usa el primero."

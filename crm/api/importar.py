@@ -513,7 +513,8 @@ def _review(eng, plan, summary, header, samples, to_write, *, vista, earlier, ar
 			for row in skipped[:SHOWN_SKIPPED]
 		],
 		"notas": _row_notes(eng, to_write, name_as_code),
-		"avisos": _sheet_notes(plan)
+		"avisos": _source_note(plan)
+		+ _sheet_notes(plan)
 		+ [line for fact in summary["hechos"] if (line := _fact(fact, plan.entity))],
 		"ya_importado": earlier,
 	}
@@ -630,6 +631,8 @@ def _fact(fact: dict, entity: str) -> str:
 				)
 			)
 		return " ".join(lines)
+	if str(code or "").startswith("sicar_"):
+		return _sicar_fact(fact)
 	if code == "actualiza":
 		if entity == "productos":
 			return _(
@@ -638,6 +641,102 @@ def _fact(fact: dict, entity: str) -> str:
 		return _(
 			"Those that already exist take the name and RFC of the sheet; phone and email stay as they are."
 		)
+	return ""
+
+
+def _source_note(plan) -> list[str]:
+	"""The system a file came from, when doco recognized it (`Plan.source`, doco ≥ sicar-import)."""
+	source = getattr(plan, "source", None) or {}
+	if source.get("sistema") != "sicar":
+		return []
+	export = source.get("exportacion")
+	if export == "articulos":
+		return [_("This is SICAR's products export: its columns are read as SICAR writes them.")]
+	if export == "clientes":
+		return [_("This is SICAR's customers export: its columns are read as SICAR writes them.")]
+	if export == "proveedores":
+		return [_("This is SICAR's suppliers export: its columns are read as SICAR writes them.")]
+	return []
+
+
+def _sicar_fact(fact: dict) -> str:
+	"""doco's `sicar_…` facts (tabular.sicar) in the screen's words, or '' for an unknown one."""
+	code = fact.get("codigo")
+	if code == "sicar_precios_mas_impuestos":
+		taxes = [item for item in fact.get("impuestos") or [] if item.get("tasa") and item.get("productos")]
+		added = ", ".join(
+			_("{0} {1}% ({2} products)").format(
+				item.get("impuesto") or "IVA", f"{item['tasa']:g}", item["productos"]
+			)
+			for item in taxes
+		)
+		lines = [
+			_(
+				"SICAR keeps prices without tax and Muelle keeps them with tax: the selling price is PRECIO 1 plus {0}."
+			).format(added)
+		]
+		for item in fact.get("impuestos") or []:
+			if item.get("origen") == "precios":
+				lines.append(
+					_(
+						"The rate of {0} is not in the file: at {1}%, {2} of {3} prices land on a whole or half peso."
+					).format(
+						item.get("impuesto") or "IVA",
+						f"{item['tasa']:g}",
+						item.get("redondos"),
+						item.get("probados"),
+					)
+				)
+		return " ".join(lines)
+	if code == "sicar_sin_impuesto":
+		return _(
+			"{0} products carry no IVA in SICAR: they take your company's IVA. Check them with your accountant."
+		).format(fact.get("productos"))
+	if code == "sicar_iva_doble":
+		return _("{0} products have two IVA rates marked: the higher one is used.").format(
+			fact.get("productos")
+		)
+	if code == "sicar_impuesto_sin_desglose":
+		return _(
+			"{0} {1}% ({2} products): the price includes it, but Muelle does not show it apart on the ticket or the invoice yet."
+		).format(fact.get("impuesto"), f"{fact.get('tasa') or 0:g}", fact.get("productos"))
+	if code == "sicar_otros_precios":
+		parts = [
+			_("{0} ({1} products)").format(label, fact[key])
+			for key, label in (("precio_2", "PRECIO 2"), ("precio_3", "PRECIO 3"), ("precio_4", "PRECIO 4"))
+			if fact.get(key)
+		]
+		if fact.get("mayoreo"):
+			parts.append(_("wholesale prices ({0} products)").format(fact["mayoreo"]))
+		return _("Not imported yet: {0}. Only PRECIO 1 becomes the selling price.").format(", ".join(parts))
+	if code == "sicar_precios_raros":
+		return _(
+			"In {0} products a PRECIO 2, 3 or 4 looks like a code, not a price ({1}). Fix it in SICAR before those prices are imported."
+		).format(fact.get("productos"), ", ".join((fact.get("claves") or [])[:5]))
+	if code == "sicar_granel":
+		return _(
+			"{0} products are sold loose («a granel») in SICAR: they keep your usual unit. In Productos, change the unit of those sold by the kilo or the litre."
+		).format(fact.get("productos"))
+	if code == "sicar_claves_alternas":
+		return _("{0} products have a CLAVE ALTERNA that is not added as a barcode ({1}).").format(
+			fact.get("productos"), ", ".join((fact.get("claves") or [])[:5])
+		)
+	if code == "sicar_datos_sin_importar":
+		parts = [
+			label.format(fact[key])
+			for key, label in (
+				("representante", _("a contact person other than the name ({0})")),
+				("alias", _("alias ({0})")),
+				("domicilio", _("address ({0})")),
+				("credito", _("credit limit and days ({0})")),
+				("precio", _("a price level other than 1 ({0})")),
+			)
+			if fact.get(key)
+		]
+		lines = [_("Not imported yet: {0}.").format(", ".join(parts))] if parts else []
+		if fact.get("correos"):
+			lines.append(_("{0} have more than one email: the first one is used.").format(fact["correos"]))
+		return " ".join(lines)
 	return ""
 
 
