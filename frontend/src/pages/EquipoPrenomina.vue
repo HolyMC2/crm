@@ -24,6 +24,38 @@
         }}
       </p>
 
+      <!-- «¿Cómo pagas a tu equipo?»: only where doco offers the setup and to
+           whom may save it (prenominaDoor); otherwise nothing renders here. -->
+      <RouterLink
+        v-if="door === 'card'"
+        :to="comoPagoTo"
+        class="press mb-4 flex min-h-16 items-center gap-3 rounded-8 border border-outline-gray-2 p-3 hover:bg-surface-gray-1"
+        data-testid="prenomina-como-pago-card"
+      >
+        <span class="min-w-0 flex-1">
+          <span class="block text-base font-semibold text-ink-gray-9">{{
+            __('¿Cómo pagas a tu equipo?')
+          }}</span>
+          <span class="block text-sm text-ink-gray-6">{{
+            __(
+              'Contesta 4 preguntas para que Muelle te diga cuánto le toca a cada quien.',
+            )
+          }}</span>
+        </span>
+        <span
+          class="lucide-chevron-right size-5 flex-none text-ink-gray-5"
+          aria-hidden="true"
+        />
+      </RouterLink>
+      <RouterLink
+        v-else-if="door === 'link'"
+        :to="comoPagoTo"
+        class="press mb-3 flex min-h-11 w-fit items-center text-sm font-medium text-ink-gray-7 hover:text-ink-gray-9 sm:min-h-8"
+        data-testid="prenomina-como-pago-link"
+      >
+        {{ __('Cómo pagas a tu equipo') }}
+      </RouterLink>
+
       <div class="mb-4 flex flex-wrap items-center gap-3">
         <div v-if="periodOptions.length" class="w-full sm:w-64">
           <Segmented
@@ -326,6 +358,12 @@ import {
   problemOf,
 } from '@/composables/useEquipo'
 import { bonosPeriodQuery } from '@/composables/useBonos'
+import { comprasApi } from '@/composables/useCompras'
+import {
+  AJUSTES_GET,
+  COMO_PAGO_ROUTE,
+  prenominaDoor,
+} from '@/composables/useComoPago'
 import { money } from '@/utils/numberFormat'
 import LucideArrowLeft from '~icons/lucide/arrow-left'
 import LucideChevronLeft from '~icons/lucide/chevron-left'
@@ -386,6 +424,17 @@ async function liftLimit() {
     lifting.value = false
   }
 }
+
+// The pay setup's door: a site without doco.nomina, or a refusal, leaves it null.
+const ajustes = ref(null)
+const door = computed(() => prenominaDoor(ajustes.value))
+const comoPagoTo = computed(() => ({
+  ...COMO_PAGO_ROUTE,
+  query: { list: route.fullPath },
+}))
+comprasApi(AJUSTES_GET)
+  .then((next) => (ajustes.value = next))
+  .catch(() => (ajustes.value = null))
 
 watch(wanted, load, { immediate: true, deep: true })
 </script>

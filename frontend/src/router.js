@@ -744,6 +744,14 @@ const routes = [
     meta: { app: 'equipo', title: 'Equipo', listParent: 'Equipo' },
   },
   {
+    // «¿Cómo pagas a tu equipo?»: doco.nomina's one-time pay setup. The back
+    // arrow returns to Prenómina through `list` (Prenómina passes it).
+    path: '/equipo/como-pago',
+    name: 'EquipoComoPago',
+    component: () => import('@/pages/EquipoComoPago.vue'),
+    meta: { app: 'equipo', title: 'Equipo', listParent: 'Equipo' },
+  },
+  {
     path: '/equipo/bonos',
     name: 'EquipoBonos',
     component: () => import('@/pages/EquipoBonos.vue'),

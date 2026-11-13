@@ -2,6 +2,13 @@
 
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
+## 2026-11-13 — «¿Cómo pagas a tu equipo?» in the shell (lane nomina-ajustes-spa; not deployed)
+
+Wave 2 «Pago a tu equipo», lane 3. Frontend over doco.nomina's `ajustes_get` / `ajustes_preview` / `ajustes_apply` (doco lane nomina-ajustes).
+
+- **/crm/equipo/como-pago.** The one-time setup: three cards («Solo anoto lo que pago», «Muelle me dice cuánto le toca», «Muelle lleva todo») that only set switches, then «¿Cada cuándo pagas?» and «¿Qué día?» (weekly only), «¿De dónde sale el dinero?», «¿Quién lo entrega?» and the cashier privacy switch where the shop has a register, and «¿Cómo les pagas casi siempre?» only while Muelle calculates. Folds: «Más detalles del cálculo», «Lo que pide la ley» (only for a Mexican company; «Lleva todo» ticks each piece the site allows, for review), «Para tu equipo», «Cuentas (contador)» (read-only). «Guardar» sits in the thumb's reach with the reason it waits beside it; doco's preview says what changes before the tap and the receipt says what changed. Taps from Prenómina: «Solo anoto» 5, «Lleva todo» 6. No salary per person here.
+- **Prenómina's first-run card.** «¿Cómo pagas a tu equipo?» shows to the owner before the first save, and a quiet link after it. Dark by default: where doco has no setup, refuses, or the viewer cannot save, Prenómina is unchanged.
+
 ## 2026-11-13 — Tratos, Prospectos and the deal record read alike (lane ventas-parejo; not deployed)
 
 Marco: «deals, leads and prospects all have really different ui… tighter ui so it's kinda similar». Frontend only.
