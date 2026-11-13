@@ -133,6 +133,12 @@
       >
         {{ __('Opening Muelle…') }}
       </div>
+      <SessionEnded
+        v-else-if="blocked && sessionEnded"
+        v-show="!appShown"
+        class="min-h-0 flex-1 overflow-y-auto"
+        :back="route.fullPath"
+      />
       <section
         v-else-if="blocked"
         v-show="!appShown"
@@ -348,6 +354,7 @@ import { scanPickHref, siblingHref, toggleRail } from '@/composables/shellRail'
 import { createTargetFor } from '@/utils/shellCreate'
 import { applyShellAppearance } from '@/utils/shellAppearance'
 import { moduleRefusal } from '@/utils/shellRoutes'
+import { sessionEnded } from '@/utils/sessionGuard'
 import { shellTitle } from '@/utils/shellTitle'
 import {
   assistantOn,
@@ -375,6 +382,7 @@ import { currentApp, openApps, showShell } from '@/composables/appStrip'
 import AppFrames from './AppFrames.vue'
 import ShellRail from './ShellRail.vue'
 import ShellBottomNav from './ShellBottomNav.vue'
+import SessionEnded from './SessionEnded.vue'
 import { dismissNotice, shellNotice } from './cuentaDoor'
 
 const MoreSheet = defineAsyncComponent(() => import('./MoreSheet.vue'))

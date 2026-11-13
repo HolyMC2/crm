@@ -11,6 +11,7 @@ import {
 import { installedSiblings, sortSiblings } from '@/composables/siblingApps'
 import { arrangeShell } from '@/utils/shellLayout'
 import { ACCOUNT_PAGES } from '@/utils/shellRoutes'
+import { sessionEnded, sessionLost } from '@/utils/sessionGuard'
 
 // One boot call (crm.api.shell.boot → ShellBoot) for every shell route; the
 // cache never crosses site or user.
@@ -94,7 +95,10 @@ export function currentScope() {
 
 export function loadShell({ refresh = false } = {}) {
   const key = currentScope()
-  if (key !== scope) {
+  // After the session ended the server's Guest answer resets the user_id
+  // cookie, so the scope would read Guest: keep the signed-in person's boot on
+  // screen until they sign in again (a full page load).
+  if (key !== scope && !sessionEnded.value) {
     shellBoot.value = readCachedBoot(key)
     shellBootStale.value = !!shellBoot.value
     scope = key
@@ -113,7 +117,16 @@ export function loadShell({ refresh = false } = {}) {
       }
       return data
     })
-    .catch((error) => {
+    .catch(async (error) => {
+      if (refused(error) && (await sessionLost(error))) {
+        // Signed out (an expired sid answers as Guest), not refused: the saved
+        // boot stays (also when a call in the meantime read the Guest scope),
+        // and the shell asks the worker to sign in instead of asking for access.
+        scope = key
+        shellBoot.value ||= readCachedBoot(key)
+        shellError.value = __('Your session ended')
+        throw error
+      }
       if (scope === key && refused(error)) {
         dropCachedBoot(key)
         shellBoot.value = null

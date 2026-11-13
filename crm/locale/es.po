@@ -12999,6 +12999,10 @@ msgstr "Tu sesión terminó. Inicia sesión otra vez para continuar aquí."
 msgid "Sign in"
 msgstr "Iniciar sesión"
 
+#: frontend/src/components/shell/SessionEnded.vue
+msgid "Sign in again and you come back to this same screen."
+msgstr "Inicia sesión otra vez y vuelves a esta misma pantalla."
+
 #: frontend/src/pages/Archivos.vue
 msgid "You do not have permission for this. Ask your manager for access."
 msgstr "No tienes permiso para esto. Pide acceso al encargado."

@@ -39,6 +39,7 @@ beforeEach(() => {
   resetShellForTests()
   state.call.mockReset()
 })
+afterEach(() => vi.unstubAllGlobals())
 
 describe('the shell boots from the saved boot, then the fresh one', () => {
   it('a reload paints the saved modules at once and swaps in the fresh boot', async () => {
@@ -73,6 +74,15 @@ describe('the shell boots from the saved boot, then the fresh one', () => {
 
   it('a refusal from the server drops the saved boot and shows the reason', async () => {
     save(fresh())
+    // Still signed in (utils/sessionGuard asks who this browser is after a refusal).
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        status: 200,
+        ok: true,
+        json: async () => ({ message: 'ana@example.test' }),
+      })),
+    )
     const error = Object.assign(new Error('nope'), {
       status: 403,
       exc_type: 'PermissionError',

@@ -19,6 +19,7 @@ import {
 } from '@/utils/crmCapabilities'
 import { legacyDealRedirect, legacyVentasRoute } from '@/utils/ventasRoutes'
 import { legacyIdentityRoute, safeIntendedRoute } from '@/utils/shellRoutes'
+import { sessionLost } from '@/utils/sessionGuard'
 import { legacyTasksRoute } from '@/composables/usePendientesRoutes'
 import { prefetchHoy } from '@/utils/hoyPrefetch'
 import { bootPersonaCaptured } from '@/utils/personaBoot'
@@ -1411,8 +1412,12 @@ router.beforeEach(async (to, from, next) => {
     } catch (error) {
       // Only a refusal is a permission answer. A server blip (a deploy or a
       // restart) is not: go on, every Ventas API rechecks the permission.
-      if (shellRefused(error))
+      // An ended session also lands there: the screen then asks the worker
+      // to sign in and come back to this route (utils/sessionGuard.js).
+      if (shellRefused(error)) {
+        await sessionLost(error)
         return next({ name: 'Not Permitted', query: { intended: to.fullPath } })
+      }
     }
   }
   const { usersStore } = await import('@/stores/users')

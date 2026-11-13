@@ -1,5 +1,6 @@
 import { errorText } from '@/utils/errorText'
 import { readListState, writeListState } from './listViewState.js'
+import { refusalKind } from '@/utils/sessionGuard'
 
 export const SOURCE_TYPES = {
   contact: 'Contact',
@@ -551,14 +552,10 @@ export function errorKind(error) {
     status === 409
   )
     return 'conflict'
-  if (code === 'permission' || exc === 'PermissionError' || status === 403)
-    return 'permission'
-  if (
-    code === 'session' ||
-    ['AuthenticationError', 'SessionExpired', 'CSRFTokenError'].includes(exc) ||
-    status === 401
-  )
-    return 'session'
+  // The shell's classifier (utils/sessionGuard.js) reads exception and status.
+  const refusal = refusalKind(error)
+  if (code === 'permission' || refusal === 'permission') return 'permission'
+  if (code === 'session' || refusal === 'session') return 'session'
   if (code === 'network') return 'network'
   return null
 }

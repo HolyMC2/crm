@@ -1,5 +1,9 @@
 <template>
-  <section class="mx-auto w-full max-w-lg space-y-4 p-6">
+  <SessionEnded
+    v-if="sessionEnded"
+    :back="String(route.query.intended || '/')"
+  />
+  <section v-else class="mx-auto w-full max-w-lg space-y-4 p-6">
     <h1 class="text-xl font-semibold">
       {{
         failed && !asksAccess
@@ -48,6 +52,8 @@ import {
   recoveryReady,
   safeIntendedRoute,
 } from '@/utils/shellRoutes'
+import { sessionEnded } from '@/utils/sessionGuard'
+import SessionEnded from '@/components/shell/SessionEnded.vue'
 const route = useRoute(),
   router = useRouter(),
   message = ref(''),
@@ -293,7 +299,9 @@ async function retry() {
 }
 onMounted(async () => {
   await loadShell().catch(() => null)
-  // The boot opens what the worker asked for: go on, no detour.
-  if (reopen.value) router.replace(reopen.value.to)
+  // The boot opens what the worker asked for: go on, no detour. Not after the
+  // session ended: the saved boot still lists the module, but only signing in
+  // opens it again.
+  if (reopen.value && !sessionEnded.value) router.replace(reopen.value.to)
 })
 </script>
