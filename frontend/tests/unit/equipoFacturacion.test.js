@@ -135,7 +135,9 @@ describe('Puede ver facturación', () => {
       'Lupita Técnica now sees the plan and the invoices, and can pay.',
     )
     expect(said(root).getAttribute('aria-live')).toBe('polite')
-  })
+    // The first test pays the Equipo page's cold import; on a loaded CI host that
+    // alone passed the default 5 s (5,042-5,110 ms on 2026-11-12, mainline too).
+  }, 20000)
 
   it('a refusal puts the switch back and says why', async () => {
     state.person.billing.on = true
