@@ -213,11 +213,7 @@
         <div
           class="min-w-0 space-y-4 md:col-start-1 md:row-span-2 md:row-start-1"
         >
-          <section
-            ref="searchSection"
-            aria-label="Qué etiquetar"
-            class="scroll-mt-2 space-y-2"
-          >
+          <section aria-label="Qué etiquetar" class="scroll-mt-2 space-y-2">
             <label class="relative flex items-center">
               <span
                 class="lucide-search pointer-events-none absolute left-3.5 size-4 text-ink-gray-5"
@@ -1026,7 +1022,6 @@ const searchBox = ref(null)
 const suggestions = ref([])
 let suggested = false
 const panelOpen = computed(() => !!query.value.trim() || searchFocused.value)
-const searchSection = ref(null)
 let searchTicket = 0
 // The text the last finished search answered: until the debounced search
 // answers what is typed now, the panel says «Buscando…», never «ninguno».
