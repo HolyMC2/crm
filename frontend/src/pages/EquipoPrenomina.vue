@@ -287,6 +287,15 @@
                   </dd>
                 </template>
               </dl>
+              <button
+                v-if="pagarPersonaShown(pagar, row.employee)"
+                type="button"
+                class="press flex min-h-11 w-full items-center justify-center rounded-8 bg-surface-gray-2 px-4 text-base font-medium text-ink-gray-9 hover:bg-surface-gray-3"
+                data-testid="prenomina-pagar-persona"
+                @click="openPagar(row.employee)"
+              >
+                {{ __('Pagar') }}
+              </button>
               <p class="text-xs text-ink-gray-6">
                 {{ workedLine(row) }}
               </p>
@@ -473,6 +482,15 @@
                     data-testid="prenomina-le-falta"
                   >
                     {{ falta(row).text }}
+                    <button
+                      v-if="pagarPersonaShown(pagar, row.employee)"
+                      type="button"
+                      class="press mt-1 inline-flex min-h-8 items-center rounded-6 bg-surface-gray-2 px-3 text-sm font-medium text-ink-gray-9 hover:bg-surface-gray-3"
+                      data-testid="prenomina-pagar-persona"
+                      @click="openPagar(row.employee)"
+                    >
+                      {{ __('Pagar') }}
+                    </button>
                   </td>
                   <td class="p-3">
                     <ul v-if="row.faltantes.length" class="space-y-1">
@@ -599,13 +617,36 @@
               </li>
             </ul>
           </section>
+
+          <!-- «Pagar lo que falta»: only when doco's pay preview offers it. -->
+          <div
+            v-if="pagarShown(pagar)"
+            class="sticky bottom-0 z-10 -mx-4 mt-4 border-t border-outline-gray-1 bg-surface-base px-4 pb-3 pt-2 sm:static sm:mx-0 sm:border-0 sm:px-0"
+          >
+            <Button
+              variant="solid"
+              size="lg"
+              class="min-h-12 w-full sm:w-auto"
+              :label="pagarButtonLabel(pagar)"
+              data-testid="prenomina-pagar"
+              @click="openPagar(null)"
+            />
+          </div>
         </template>
       </template>
     </div>
+    <PagarSheet
+      v-if="pagarOpened"
+      v-model:open="pagarOpen"
+      :preview="pagar"
+      :employee="pagarFor"
+      @applied="onPaid"
+      @stale="onPagarStale"
+    />
   </div>
 </template>
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Button } from 'frappe-ui'
 import { Segmented } from '@/components/ui'
@@ -613,6 +654,10 @@ import { isMobile as isPhone } from '@/composables/breakpoint'
 import {
   PRENOMINA,
   AJUSTES_GET,
+  PAGAR_PREVIEW,
+  pagarButtonLabel,
+  pagarPersonaShown,
+  pagarShown,
   COMO_PAGO_ROUTE,
   advancesText,
   daysText,
@@ -641,6 +686,10 @@ import {
 } from '@/composables/useEquipo'
 import { bonosPeriodQuery } from '@/composables/useBonos'
 import AguinaldoCard from '@/components/equipo/AguinaldoCard.vue'
+// The pay sheet mounts on its first open.
+const PagarSheet = defineAsyncComponent(
+  () => import('@/components/equipo/PagarSheet.vue'),
+)
 import { money } from '@/utils/numberFormat'
 import LucideArrowLeft from '~icons/lucide/arrow-left'
 import LucideChevronLeft from '~icons/lucide/chevron-left'
@@ -768,6 +817,49 @@ const comoPagoTo = computed(() => ({
 equipoApi(AJUSTES_GET)
   .then((next) => (ajustes.value = next))
   .catch(() => (ajustes.value = null))
+
+// «Pagar lo que falta»: asked only for a company with a saved pay setup, on the
+// period on screen. A refusal (someone who may not pay) or an old doco leaves it
+// null, and the page shows no button.
+const pagar = ref(null)
+const pagarOpen = ref(false)
+const pagarOpened = ref(false)
+const pagarFor = ref(null)
+let pagarAsked = 0
+async function loadPagar() {
+  const ticket = ++pagarAsked
+  const setup = ajustes.value
+  const period = answer.value?.period?.start
+  if (!setup?.available || !setup.configured || !period) {
+    pagar.value = null
+    return
+  }
+  try {
+    const next = await equipoApi(PAGAR_PREVIEW, {
+      company: setup.company,
+      period,
+    })
+    if (ticket === pagarAsked) pagar.value = next
+  } catch {
+    if (ticket === pagarAsked) pagar.value = null
+  }
+}
+watch([ajustes, () => answer.value?.period?.start], loadPagar)
+function openPagar(employee) {
+  pagarFor.value = employee
+  pagarOpened.value = true
+  pagarOpen.value = true
+}
+function onPagarStale(next) {
+  if (next && typeof next === 'object') {
+    pagarAsked++
+    pagar.value = next
+  } else loadPagar()
+}
+function onPaid() {
+  load()
+  loadPagar()
+}
 
 watch(wanted, load, { immediate: true, deep: true })
 </script>

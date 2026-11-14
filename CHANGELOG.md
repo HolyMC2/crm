@@ -6,6 +6,14 @@ Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` i
 
 - **What:** `/crm/contactos/telefonos`, opened from Contactos' menu («En los teléfonos», owner or encargado only). One switch, which contacts go (each kind with how many have a phone), what to add to the name with a live «Así se ve al llamar», the phones with when each last synced, «Agregar teléfono» (name, iPhone / Android / Otro) with the QR code, the DAVx⁵ links or the CardDAV data shown once, «Volver a generar» and «Quitar» (two taps in place). A worker without the role reads whether it is on and whom to ask.
 - **Backend:** doco `doco.contactos.telefonos.api` (same lane). `telefonosApi` in `composables/useContactos.js`; words in `utils/contactosTelefonos.js`, tested in `tests/unit/contactosTelefonos.test.js`.
+## 2026-11-14 — «Pagar lo que falta» on Prenómina (lane pagar-la-semana-spa; not deployed)
+
+Wave 2 «Pago a tu equipo», lane 8 (crm half). Frontend over doco.nomina's `pagar_preview` / `pagar_apply` (doco lane pagar-la-semana; land them together with `land --train`).
+
+- **Button.** «Pagar lo que falta · $X · N personas», docked at the bottom on a phone, only when the preview answers `on`, `calcular` is on and doco suggests at least one line. Each person with a suggested line also gets «Pagar» on their row (phone card and desktop table) that opens the sheet for that person alone.
+- **Sheet.** Per person the suggested amount (editable), «Le falta» and what already waits at the register, the concepto (the setup's concepts), and origin chips in the setup's order: «Dejar para la caja», «Caja fuerte», «Lo pongo yo», «Transferencia» (a bank picker when the company has more than one bank account). A greyed origin says doco's reason on tap instead of being picked. «Repartir» adds a second line for the same person from another origin; a person can be left out with the checkbox.
+- **Review, then pay.** The review lists every line, the total, the amount per origin and anyone paid past what is missing. «Pagar $X» sends the lines with the preview's `token` and one `request_id` kept across a retry after a lost answer (doco replays the first receipt). The receipt lists what was booked as paid and what was left for the register. A stale answer writes nothing: the sheet shows «Algo cambió…», loads the fresh preview into the lines and the page keeps its button.
+- **Dark.** A company without a saved pay setup, a site without doco.nomina, a refusal (someone who may not pay) or a shop that only notes never shows the button; without a saved setup the preview is not even asked (asserted in `tests/unit/equipoPagar.test.js`). Helpers in `useEquipo.js`; the sheet loads on first open.
 
 ## 2026-11-14 — Aguinaldo card and sheet on Prenómina (lane aguinaldo-tarjeta; not deployed)
 

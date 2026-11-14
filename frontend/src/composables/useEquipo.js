@@ -569,3 +569,288 @@ export function loadSheet() {
   })
   return sheetPending
 }
+
+// «Pagar lo que falta» (doco.nomina pagar preview / apply). Prenómina asks for the
+// preview only for a company with a pay setup; doco answers `on: false` without
+// one, and refuses someone who may not pay the team, so either way no button shows.
+export const PAGAR_PREVIEW = 'doco.nomina.api.pagar_preview'
+export const PAGAR_APPLY = 'doco.nomina.api.pagar_apply'
+// The concepts that make up «Le toca» (doco nomina constants CONCEPTOS_LE_TOCA):
+// only these count when the sheet warns about paying more than what is missing.
+const LE_TOCA_CONCEPTS = Object.freeze([
+  'Sueldo',
+  'A cuenta',
+  'Bono o comisión',
+])
+// The pay origins in the owner's words while paying; «Caja» from Muelle always
+// leaves the money waiting at the register, never takes it out of a drawer.
+const PAGAR_ORIGEN_WORDS = Object.freeze({
+  Caja: 'Dejar para la caja',
+  'Caja fuerte': 'Caja fuerte',
+  'Lo pongo yo': 'Lo pongo yo',
+  Transferencia: 'Transferencia',
+})
+
+/** The chip's words for an origin while paying; an origin doco adds later shows its label. */
+export function pagarOrigenLabel(origen) {
+  const value = origen?.value ?? origen
+  if (PAGAR_ORIGEN_WORDS[value]) return tr(PAGAR_ORIGEN_WORDS[value], null, CTX)
+  return origen?.label || value || ''
+}
+
+/**
+ * True when Prenómina offers «Pagar lo que falta»: doco answered the preview,
+ * the shop has Muelle calculate, and there is a suggested line to pay.
+ */
+export function pagarShown(preview) {
+  return Boolean(
+    preview?.on === true &&
+      preview.calcular === true &&
+      Array.isArray(preview.filas) &&
+      Array.isArray(preview.lineas) &&
+      preview.lineas.length > 0,
+  )
+}
+
+/** True when a person's row offers its own «Pagar». */
+export function pagarPersonaShown(preview, employee) {
+  return (
+    pagarShown(preview) &&
+    preview.lineas.some((linea) => linea?.employee === employee)
+  )
+}
+
+/** The bottom button's words: «Pagar lo que falta · $5,200 · 4 personas». */
+export function pagarButtonLabel(preview, format = money) {
+  const lineas = preview?.lineas || []
+  const people = new Set(lineas.map((l) => l.employee)).size
+  const total = lineas.reduce((acc, l) => acc + Number(l.monto || 0), 0)
+  return people === 1
+    ? tr('Pagar lo que falta · {0} · 1 persona', [format(total)], CTX)
+    : tr(
+        'Pagar lo que falta · {0} · {1} personas',
+        [format(total), people],
+        CTX,
+      )
+}
+
+/** An amount the owner typed, in pesos with at most two decimals; null when it is not one. */
+export function pagarMonto(text) {
+  const clean = String(text ?? '')
+    .replace(/[\s$,]/g, '')
+    .trim()
+  if (!/^\d+(\.\d{1,2})?$/.test(clean)) return null
+  const value = Number(clean)
+  return value > 0 ? value : null
+}
+
+let draftSeq = 0
+function draftLine(fila, extra) {
+  return {
+    key: `l${++draftSeq}`,
+    employee: fila.employee,
+    nombre: fila.employee_name || fila.employee,
+    incluir: true,
+    monto: '',
+    origen: null,
+    concepto: null,
+    cuenta: null,
+    ...extra,
+  }
+}
+
+/**
+ * The editable lines of the sheet from doco's suggested ones: the whole team,
+ * or one person when `employee` is given. Amounts are text, as typed.
+ */
+export function pagarDraft(preview, employee = null) {
+  const filas = new Map((preview?.filas || []).map((f) => [f.employee, f]))
+  return (preview?.lineas || [])
+    .filter((linea) => filas.has(linea.employee))
+    .filter((linea) => !employee || linea.employee === employee)
+    .map((linea) =>
+      draftLine(filas.get(linea.employee), {
+        monto: String(linea.monto),
+        origen: linea.origen,
+        concepto: linea.concepto || preview.concepto || 'Sueldo',
+      }),
+    )
+}
+
+/**
+ * «Repartir»: a second line for the same person right after `key`, empty, on
+ * the next origin that can pay (the same one when it is the only one).
+ */
+export function pagarSplit(lines, key, preview) {
+  const index = lines.findIndex((line) => line.key === key)
+  if (index < 0) return lines
+  const line = lines[index]
+  const fila = (preview?.filas || []).find((f) => f.employee === line.employee)
+  const usable = (preview?.origenes || []).filter((o) => o.available)
+  const other = usable.find((o) => o.value !== line.origen) || usable[0]
+  const next = draftLine(
+    fila || { employee: line.employee, employee_name: line.nombre },
+    {
+      origen: other?.value || line.origen,
+      concepto: line.concepto,
+    },
+  )
+  return [...lines.slice(0, index + 1), next, ...lines.slice(index + 1)]
+}
+
+/** The lines without `key`; the last line of a person is never removed, only left out. */
+export function pagarRemove(lines, key) {
+  const line = lines.find((l) => l.key === key)
+  if (!line) return lines
+  const siblings = lines.filter((l) => l.employee === line.employee)
+  return siblings.length > 1 ? lines.filter((l) => l.key !== key) : lines
+}
+
+/**
+ * What apply would send, and why it cannot yet: each included line needs an
+ * amount and an origin that can pay. `lineas` is doco's apply shape.
+ */
+export function pagarPlan(lines, preview) {
+  const origenes = new Map((preview?.origenes || []).map((o) => [o.value, o]))
+  const lineas = []
+  const problemas = []
+  for (const line of lines || []) {
+    if (!line.incluir) continue
+    const monto = pagarMonto(line.monto)
+    if (monto === null) {
+      problemas.push(tr('Escribe cuánto le das a {0}.', [line.nombre], CTX))
+      continue
+    }
+    const origen = origenes.get(line.origen)
+    if (!origen?.available) {
+      problemas.push(
+        tr('Elige de dónde sale el pago de {0}.', [line.nombre], CTX),
+      )
+      continue
+    }
+    const out = {
+      employee: line.employee,
+      monto,
+      origen: line.origen,
+      concepto: line.concepto || preview?.concepto || 'Sueldo',
+    }
+    if (line.origen === 'Transferencia' && line.cuenta) out.cuenta = line.cuenta
+    lineas.push(out)
+  }
+  if (!lineas.length && !problemas.length)
+    problemas.push(tr('Elige a quién le pagas.', null, CTX))
+  return { lineas, problemas }
+}
+
+function cents(value) {
+  return Math.round(Number(value || 0) * 100)
+}
+
+/**
+ * The review of a plan: total, people, the amount per origin in chip order, and
+ * each person paid past what is missing (pay concepts only, like doco's `de_mas`).
+ */
+export function pagarResumen(lineas, preview) {
+  const filas = new Map((preview?.filas || []).map((f) => [f.employee, f]))
+  const porOrigen = new Map()
+  const porPersona = new Map()
+  let total = 0
+  for (const linea of lineas || []) {
+    total += cents(linea.monto)
+    porOrigen.set(
+      linea.origen,
+      (porOrigen.get(linea.origen) || 0) + cents(linea.monto),
+    )
+    if (LE_TOCA_CONCEPTS.includes(linea.concepto))
+      porPersona.set(
+        linea.employee,
+        (porPersona.get(linea.employee) || 0) + cents(linea.monto),
+      )
+  }
+  const order = (preview?.origenes || []).map((o) => o.value)
+  const deMas = []
+  for (const [employee, paid] of porPersona) {
+    const fila = filas.get(employee)
+    if (!fila || fila.sugerido === null || fila.sugerido === undefined) continue
+    const excess = paid - cents(fila.sugerido)
+    if (excess > 0)
+      deMas.push({
+        employee,
+        nombre: fila.employee_name || employee,
+        monto: excess / 100,
+      })
+  }
+  return {
+    total: total / 100,
+    personas: new Set((lineas || []).map((l) => l.employee)).size,
+    porOrigen: [...porOrigen.entries()]
+      .sort(([a], [b]) => order.indexOf(a) - order.indexOf(b))
+      .map(([origen, value]) => ({
+        origen,
+        label: pagarOrigenLabel(origen),
+        monto: value / 100,
+      })),
+    deMas,
+  }
+}
+
+/** True when apply wrote nothing because the preview changed since the review. */
+export function pagarStale(result) {
+  return Boolean(result && (result.applied === false || result.stale === true))
+}
+
+/**
+ * The receipt after paying: doco's words, the rows booked as paid and the ones
+ * left for the register. Null for a stale answer, which wrote nothing.
+ */
+export function pagarReceipt(result, format = money) {
+  if (!result || pagarStale(result)) return null
+  const filas = Array.isArray(result.filas) ? result.filas : []
+  const pagados = filas.filter((f) => f.estado === 'Pagado')
+  const porEntregar = filas.filter((f) => f.estado === 'Por entregar')
+  let message = typeof result.message === 'string' ? result.message : ''
+  if (!message) {
+    const parts = []
+    if (pagados.length)
+      parts.push(tr('Pagaste {0}.', [format(Number(result.pagado || 0))], CTX))
+    if (porEntregar.length)
+      parts.push(
+        tr(
+          'Quedan {0} por entregar en la caja.',
+          [format(Number(result.por_entregar || 0))],
+          CTX,
+        ),
+      )
+    message = parts.join(' ')
+  }
+  return {
+    message,
+    replay: Boolean(result.replay),
+    pagados,
+    porEntregar,
+    deMas: Array.isArray(result.de_mas) ? result.de_mas : [],
+  }
+}
+
+/**
+ * The company's bank accounts for «Transferencia», by their name in the chart;
+ * an empty list when the reader cannot see them, so the setup's bank stays.
+ */
+export async function pagarBancos(company) {
+  if (!company) return []
+  try {
+    const rows = await equipoApi('frappe.client.get_list', {
+      doctype: 'Account',
+      filters: { company, account_type: 'Bank', is_group: 0, disabled: 0 },
+      fields: ['name', 'account_name'],
+      order_by: 'account_name asc',
+      limit_page_length: 50,
+    })
+    return (Array.isArray(rows) ? rows : []).map((row) => ({
+      value: row.name,
+      label: row.account_name || row.name,
+    }))
+  } catch {
+    return []
+  }
+}
