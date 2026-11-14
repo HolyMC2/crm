@@ -142,6 +142,7 @@
                     : 'border-outline-gray-2'
               "
               :data-precio-input="cell.price_list"
+              @focus="$event.target.select()"
               @input="
                 emit('draft', {
                   code: row.item_code,

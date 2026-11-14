@@ -1,14 +1,18 @@
 <template>
-  <!-- What narrows Precios: the price list it works on, whether the other
-       lists show too, and who the products are bought from or their group.
-       The same block sits in the phone's search panel and the desktop sheet. -->
+  <!-- What narrows Precios: the price list the views and the cost line
+       follow, and who the products are bought from or their group. Which
+       other lists show is the chip row on the page. The same block sits in
+       the phone's search panel and the desktop sheet. -->
   <div class="space-y-3" data-precios-filtros>
     <div v-if="lists.length > 1">
-      <p class="mb-1 text-sm font-medium text-ink-gray-8">Lista de precios</p>
+      <p class="text-sm font-medium text-ink-gray-8">Lista principal</p>
+      <p class="mb-1 text-sm text-ink-gray-6">
+        Con ella se arman las vistas y se compara el costo.
+      </p>
       <div
         class="flex flex-wrap gap-2"
         role="group"
-        aria-label="Lista de precios"
+        aria-label="Lista principal"
       >
         <button
           v-for="name in lists"
@@ -21,17 +25,6 @@
           {{ priceListLabel(name) }}
         </button>
       </div>
-      <label
-        class="mt-2 flex min-h-11 items-center gap-3 text-base text-ink-gray-8"
-      >
-        <input
-          type="checkbox"
-          class="size-5 rounded"
-          :checked="allLists"
-          @change="emit('update:allLists', $event.target.checked)"
-        />
-        Ver también las otras listas
-      </label>
     </div>
     <FilterLink
       v-if="supplierShown"
@@ -56,16 +49,10 @@ import { priceListLabel } from '@/utils/priceList'
 defineProps({
   lists: { type: Array, default: () => [] },
   list: { type: String, default: '' },
-  allLists: { type: Boolean, default: false },
   supplier: { type: String, default: '' },
   /** A document already says who sold it: no supplier filter there. */
   supplierShown: { type: Boolean, default: true },
   group: { type: String, default: '' },
 })
-const emit = defineEmits([
-  'update:list',
-  'update:allLists',
-  'update:supplier',
-  'update:group',
-])
+const emit = defineEmits(['update:list', 'update:supplier', 'update:group'])
 </script>

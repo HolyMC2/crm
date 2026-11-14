@@ -1041,6 +1041,8 @@ import BillAlmacen from '@/components/gastos/BillAlmacen.vue'
 import PresupuestoChip from '@/components/presupuesto/PresupuestoChip.vue'
 import { isMobile } from '@/composables/breakpoint'
 import { etiquetasHref } from '@/composables/useEtiquetas'
+import { preciosHref, sourceName } from '@/composables/preciosLink'
+import { pricesRow } from '@/components/gastos/billAlmacen'
 import { recordActionsFor } from '@/documentos/acciones'
 import { BTN } from '@/documentos/tools'
 import { openScan } from '@/components/escaneo/scanDoor'
@@ -1657,6 +1659,19 @@ function billState(b) {
 
 // ── the warehouse side: receipts open in Recepción with the way back; labels
 const labelsOn = computed(() => moduleEnabled(shellBoot.value, 'productos'))
+// «Revisar precios» on what the order buys, before it arrives or after.
+const pricesTo = computed(() =>
+  labelsOn.value &&
+  !isNew.value &&
+  doc.value.name &&
+  Number(doc.value.docstatus) !== 2
+    ? preciosHref({
+        desde: `Purchase Order:${doc.value.name}`,
+        returnTo: `/crm${route.fullPath}`,
+        returnLabel: sourceName('Purchase Order'),
+      })
+    : '',
+)
 const almacenRows = computed(() => {
   if (isNew.value || !doc.value.name) return []
   const out = (data.value.receipts?.rows || []).map((receipt) => ({
@@ -1680,6 +1695,7 @@ const almacenRows = computed(() => {
       title: __('Receipts', null, 'Compras'),
       reason: __('Nothing received yet.'),
     })
+  if (pricesTo.value) out.push(pricesRow(pricesTo.value))
   if (labelsOn.value && Number(doc.value.docstatus) === 1)
     out.push({
       key: 'etiquetas',
@@ -1691,7 +1707,7 @@ const almacenRows = computed(() => {
   return out
 })
 
-// ── the bolt: the hero's steps and labels; «⋯» keeps print, share, mail ──
+// ── the bolt: the hero's steps, prices and labels; «⋯» keeps print, share, mail ──
 const boltSteps = computed(() => {
   const out = nextSteps.value.filter((step) => step.key !== 'edit')
   // The confirmed purchase's other changes; one not the worker's asks someone.
@@ -1704,6 +1720,12 @@ const boltSteps = computed(() => {
       run: () => runChange(change),
     })
   }
+  if (pricesTo.value)
+    out.push({
+      label: __('Review prices'),
+      icon: 'lucide-percent',
+      run: () => router.push(pricesTo.value),
+    })
   if (almacenRows.value.some((row) => row.labels))
     out.push({
       label: __('Print labels'),

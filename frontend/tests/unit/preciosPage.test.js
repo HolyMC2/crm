@@ -316,6 +316,130 @@ describe('Precios from a receipt', () => {
   })
 })
 
+describe('typing prices one after another', () => {
+  const key = (input, name, extra = {}) =>
+    input.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: name,
+        bubbles: true,
+        cancelable: true,
+        ...extra,
+      }),
+    )
+
+  it('Tab, Enter and the arrows go from price to price, skipping the buttons', async () => {
+    await mountAt('/productos/precios?desde=Purchase%20Receipt:MAT-PRE-7')
+    priceInput('A').focus()
+    key(priceInput('A'), 'Tab')
+    expect(document.activeElement).toBe(priceInput('B'))
+    key(priceInput('B'), 'ArrowUp')
+    expect(document.activeElement).toBe(priceInput('A'))
+    key(priceInput('A'), 'Enter')
+    expect(document.activeElement).toBe(priceInput('B'))
+    key(priceInput('B'), 'Tab', { shiftKey: true })
+    expect(document.activeElement).toBe(priceInput('A'))
+  })
+
+  it('Enter on the last price goes to «Revisar y guardar»', async () => {
+    await mountAt('/productos/precios?desde=Purchase%20Receipt:MAT-PRE-7')
+    await type(priceInput('A'), '400')
+    priceInput('B').focus()
+    key(priceInput('B'), 'Enter')
+    expect(document.activeElement?.textContent).toContain('Revisar y guardar')
+  })
+
+  it('a price marked «Sigue igual» is skipped', async () => {
+    await mountAt('/productos/precios?desde=Purchase%20Receipt:MAT-PRE-7')
+    root.querySelector('[data-precio-row="A"] footer button').click()
+    await flush()
+    priceInput('B').focus()
+    key(priceInput('B'), 'ArrowUp')
+    expect(document.activeElement).toBe(priceInput('B'))
+  })
+})
+
+describe('choosing the lists on screen', () => {
+  const PAYJOY = 'Precios Payjoy'
+  const TECNICOS = 'Tecnicos Celular'
+  beforeEach(() => {
+    answers.bootstrap.price_lists = [LIST, PAYJOY, TECNICOS].map((name) => ({
+      name,
+      currency: 'MXN',
+    }))
+    const withLists = (row) => ({
+      ...row,
+      prices: {
+        ...row.prices,
+        [PAYJOY]: cell({ price_list: PAYJOY, rate: 600, cost_at_price: 200 }),
+        [TECNICOS]: cell({ price_list: TECNICOS, rate: null }),
+      },
+    })
+    const plain = answers.rows
+    answers.rows = (args) => {
+      const answer = plain(args)
+      return { ...answer, rows: answer.rows.map(withLists) }
+    }
+  })
+  const field = (code, list) =>
+    root.querySelector(
+      `[data-precio-row="${code}"] [data-precio-input="${list}"]`,
+    )
+  const chip = (list) =>
+    root.querySelector(`[data-precios-listas] [data-precios-lista="${list}"]`)
+
+  it('shows a list with its own chip and remembers it', async () => {
+    await mountAt('/productos/precios?desde=Purchase%20Receipt:MAT-PRE-7')
+    expect(field('A', PAYJOY)).toBeNull()
+    chip(PAYJOY).click()
+    await flush()
+    expect(field('A', PAYJOY)).not.toBeNull()
+    expect(field('A', TECNICOS)).toBeNull()
+    expect(chip(PAYJOY).getAttribute('aria-pressed')).toBe('true')
+    expect(JSON.parse(localStorage.getItem('muelle:precios:listas'))).toEqual([
+      LIST,
+      PAYJOY,
+    ])
+    // Tab runs through both lists of a product before the next product.
+    field('A', LIST).focus()
+    field('A', LIST).dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'Tab',
+        bubbles: true,
+        cancelable: true,
+      }),
+    )
+    expect(document.activeElement).toBe(field('A', PAYJOY))
+    // Payjoy's price was set at today's cost: only Menudeo offers a new one.
+    const keepers = [
+      ...root.querySelectorAll('[data-precio-row="A"] [data-precio-lista]'),
+    ].filter((box) => box.textContent.includes('Mantener margen'))
+    expect(keepers.map((box) => box.dataset.precioLista)).toEqual([LIST])
+    app.unmount()
+    root.remove()
+    await mountAt('/productos/precios?desde=Purchase%20Receipt:MAT-PRE-7')
+    expect(field('B', PAYJOY)).not.toBeNull()
+  })
+
+  it('hiding the main list hands its place to the next one shown', async () => {
+    localStorage.setItem(
+      'muelle:precios:listas',
+      JSON.stringify([LIST, PAYJOY]),
+    )
+    await mountAt('/productos/precios?desde=Purchase%20Receipt:MAT-PRE-7')
+    calls.length = 0
+    chip(LIST).click()
+    await flush()
+    expect(field('A', LIST)).toBeNull()
+    expect(field('A', PAYJOY)).not.toBeNull()
+    const rows = calls.find(([method]) => method === 'rows')[1]
+    expect(rows.price_list).toBe(PAYJOY)
+    // The last list on screen stays.
+    chip(PAYJOY).click()
+    await flush()
+    expect(field('A', PAYJOY)).not.toBeNull()
+  })
+})
+
 describe('Precios standalone', () => {
   it('opens on the view whose costs moved, with the views and their counts', async () => {
     await mountAt('/productos/precios')

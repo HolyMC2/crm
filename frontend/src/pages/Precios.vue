@@ -56,12 +56,10 @@
         <PreciosFiltros
           :lists="listNames"
           :list="activeList"
-          :all-lists="allLists"
           :supplier="supplier"
           :supplier-shown="mode.kind !== 'source'"
           :group="group"
           @update:list="setList"
-          @update:all-lists="(value) => (allLists = value)"
           @update:supplier="(value) => (supplier = value)"
           @update:group="(value) => (group = value)"
         />
@@ -158,12 +156,10 @@
             <PreciosFiltros
               :lists="listNames"
               :list="activeList"
-              :all-lists="allLists"
               :supplier="supplier"
               :supplier-shown="mode.kind !== 'source'"
               :group="group"
               @update:list="setList"
-              @update:all-lists="(value) => (allLists = value)"
               @update:supplier="(value) => (supplier = value)"
               @update:group="(value) => (group = value)"
             />
@@ -182,7 +178,8 @@
             class="lucide-receipt size-4 flex-none text-ink-gray-6"
             aria-hidden="true"
           />
-          <span class="min-w-0 flex-1">{{ originLine }}</span>
+          <!-- Its own line on a phone; the links wrap under it. -->
+          <span class="min-w-0 flex-1 basis-60">{{ originLine }}</span>
           <RouterLink
             v-if="sourceRoute"
             :to="sourceRoute"
@@ -198,6 +195,45 @@
             Ver todos los precios
           </button>
         </section>
+
+        <!-- The lists that show as fields on every product: the ones this
+             purchase is priced in, not every list the shop has. -->
+        <div
+          v-if="listNames.length > 1"
+          class="flex flex-wrap items-center gap-2"
+          role="group"
+          aria-label="Listas que se ven"
+          data-precios-listas
+        >
+          <span class="text-sm text-ink-gray-6">Listas</span>
+          <button
+            v-for="name in listChips"
+            :key="name"
+            type="button"
+            :class="chipClass(rowLists.includes(name))"
+            :aria-pressed="rowLists.includes(name)"
+            :title="
+              rowLists.includes(name)
+                ? `Quitar ${priceListLabel(name)} de la pantalla`
+                : `Ver ${priceListLabel(name)}`
+            "
+            :data-precios-lista="name"
+            @click="toggleList(name)"
+          >
+            <span
+              v-if="rowLists.includes(name)"
+              class="lucide-check size-3.5 flex-none"
+              aria-hidden="true"
+            />
+            {{ priceListLabel(name) }}
+          </button>
+          <span
+            v-if="!phone && canWrite"
+            class="ml-auto text-sm text-ink-gray-6"
+            data-precios-teclas
+            >Tab o Enter pasa al siguiente precio</span
+          >
+        </div>
 
         <p
           v-if="boot && !boot.can_write"
@@ -333,6 +369,7 @@
           v-else
           class="grid items-start gap-3 lg:grid-cols-2"
           data-precios-filas
+          @keydown="onPriceKey"
         >
           <PrecioRow
             v-for="row in shownRows"
@@ -405,6 +442,7 @@
           {{ confirmDiscard ? 'Descartar todo' : 'Descartar' }}
         </button>
         <button
+          ref="reviewButton"
           type="button"
           class="press inline-flex min-h-11 flex-none items-center rounded-6 bg-[var(--muelle-accent)] px-4 text-base font-medium text-[var(--muelle-accent-ink)]"
           data-precios-revisar
@@ -430,7 +468,7 @@
       v-model:open="historyOpen"
       :item="historyItem"
       :list="activeList"
-      :lists="listNames"
+      :lists="rowLists"
       :currency="currency"
     />
     <BulkSheet
@@ -527,6 +565,7 @@ const route = useRoute()
 const router = useRouter()
 const DRAFT_KEY = 'muelle:precios:borrador'
 const ROUNDING_KEY = 'muelle:precios:redondeo'
+const LISTS_KEY = 'muelle:precios:listas'
 const MAX_FETCH_PAGES = 20
 const MAX_IMPORT = 300
 
@@ -650,7 +689,8 @@ const search = ref('')
 const searchOpen = ref(false)
 const supplier = ref('')
 const group = ref('')
-const allLists = ref(false)
+// The other lists shown beside the active one (remembered on this device).
+const alsoLists = ref([])
 
 const shownViews = computed(() =>
   VIEWS.filter((entry) => (boot.value?.views || []).includes(entry.value)),
@@ -705,7 +745,9 @@ function setView(value) {
 }
 function setList(name) {
   if (!name || name === activeList.value) return
+  alsoLists.value = alsoLists.value.filter((other) => other !== name)
   activeList.value = name
+  rememberLists()
   router.replace({
     query: {
       ...route.query,
@@ -725,14 +767,96 @@ function leaveOrigin() {
   load()
   loadCounts()
 }
-const rowLists = computed(() =>
-  allLists.value
-    ? [
-        activeList.value,
-        ...listNames.value.filter((name) => name !== activeList.value),
-      ]
-    : [activeList.value],
-)
+const rowLists = computed(() => [
+  activeList.value,
+  ...listNames.value.filter(
+    (name) => name !== activeList.value && alsoLists.value.includes(name),
+  ),
+])
+// The chips in the fields' order: the main list first, then the shop's order.
+const listChips = computed(() => [
+  activeList.value,
+  ...listNames.value.filter((name) => name !== activeList.value),
+])
+function rememberLists() {
+  try {
+    localStorage.setItem(LISTS_KEY, JSON.stringify(rowLists.value))
+  } catch {
+    // Just not remembered.
+  }
+}
+// A chip shows or hides a list. Hiding the active one hands its place to the
+// next list on screen (views and the cost line follow it); the last one stays.
+function toggleList(name) {
+  if (name === activeList.value) {
+    const next = rowLists.value.find((other) => other !== name)
+    if (next) setList(next)
+    return
+  }
+  alsoLists.value = alsoLists.value.includes(name)
+    ? alsoLists.value.filter((other) => other !== name)
+    : [...alsoLists.value, name]
+  rememberLists()
+}
+
+// ── typing prices in a row ────────────────────────────────────────────
+// In a price field, Tab, Enter and ↓ go to the next price on the page and
+// Shift+Tab, Shift+Enter and ↑ to the one before, skipping the buttons
+// between them. Enter on the last one goes to «Revisar y guardar».
+const reviewButton = ref(null)
+const reducedMotion = () =>
+  typeof window !== 'undefined' &&
+  window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
+function reveal(el) {
+  const box = scroller.value
+  if (!box?.getBoundingClientRect) return
+  const area = box.getBoundingClientRect()
+  const bar =
+    box.querySelector('[data-precios-pendientes]')?.getBoundingClientRect()
+      ?.height || 0
+  const rect = el.getBoundingClientRect()
+  const bottom = area.bottom - bar - 12
+  if (rect.top >= area.top + 12 && rect.bottom <= bottom) return
+  const top =
+    box.scrollTop +
+    rect.top -
+    area.top -
+    (area.height - bar) / 2 +
+    rect.height / 2
+  box.scrollTo?.({
+    top: Math.max(0, top),
+    behavior: reducedMotion() ? 'auto' : 'smooth',
+  })
+}
+function onPriceKey(event) {
+  const input = event.target
+  if (!input?.matches?.('[data-precio-input]') || event.isComposing) return
+  if (event.altKey || event.ctrlKey || event.metaKey) return
+  const forward =
+    (event.key === 'Tab' || event.key === 'Enter') && !event.shiftKey
+      ? true
+      : (event.key === 'Tab' || event.key === 'Enter') && event.shiftKey
+        ? false
+        : event.key === 'ArrowDown'
+          ? true
+          : event.key === 'ArrowUp'
+            ? false
+            : null
+  if (forward === null) return
+  const fields = [
+    ...event.currentTarget.querySelectorAll('[data-precio-input]'),
+  ].filter((field) => !field.disabled)
+  const next = fields[fields.indexOf(input) + (forward ? 1 : -1)]
+  if (next) {
+    event.preventDefault()
+    next.focus({ preventScroll: true })
+    next.select?.()
+    reveal(next)
+  } else if (event.key === 'Enter' && forward && reviewButton.value) {
+    event.preventDefault()
+    reviewButton.value.focus()
+  }
+}
 
 // ── rows ──────────────────────────────────────────────────────────────
 // Every product the page has read stays known (code → row), so a draft on a
@@ -1420,6 +1544,16 @@ async function start() {
   activeList.value = listNames.value.includes(wanted)
     ? wanted
     : boot.value.default_price_list || listNames.value[0]
+  try {
+    const saved = JSON.parse(localStorage.getItem(LISTS_KEY) || '[]')
+    alsoLists.value = Array.isArray(saved)
+      ? saved.filter(
+          (name) => listNames.value.includes(name) && name !== activeList.value,
+        )
+      : []
+  } catch {
+    alsoLists.value = []
+  }
   const from = startFrom(route.query)
   const views = boot.value.views || []
   view.value = views.includes(from.view) ? from.view : views[0] || 'todos'

@@ -1,15 +1,24 @@
 <template>
   <!-- What a product cost and sold for over time, on one money axis: each
-       purchase a dot (cost per unit, joined by a line), the price on one list
-       as steps. Drag or hover to read any day; the purchases list under the
-       chart is its table view. -->
+       purchase a dot (cost per unit, joined by a line), the price on each
+       list shown as steps, the chosen list's the strongest. Drag or hover to
+       read any day; the purchases list under the chart is its table view. -->
   <figure class="precios-chart m-0" data-precios-chart>
     <figcaption
       class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-ink-gray-7"
     >
-      <span class="inline-flex items-center gap-1.5">
-        <span class="legend-line legend-price" aria-hidden="true" />
-        Precio {{ list }}
+      <span
+        v-for="(one, index) in legend"
+        :key="one.list"
+        class="inline-flex items-center gap-1.5"
+        :data-chart-lista="one.list"
+      >
+        <span
+          class="legend-line"
+          :class="SERIES[index % SERIES.length]"
+          aria-hidden="true"
+        />
+        {{ priceListLabel(one.list) }}
       </span>
       <span v-if="model.points.length" class="inline-flex items-center gap-1.5">
         <span class="legend-dot legend-cost" aria-hidden="true" />
@@ -62,7 +71,17 @@
           </text>
         </g>
         <path v-if="model.costPath" :d="model.costPath" class="cost-line" />
-        <path v-if="model.pricePath" :d="model.pricePath" class="price-line" />
+        <!-- The other lists under the chosen one, which is drawn last. -->
+        <path
+          v-for="one in drawn"
+          :key="one.list"
+          :d="one.path"
+          class="price-line"
+          :class="[
+            SERIES[one.index % SERIES.length],
+            one.list === list ? 'is-main' : '',
+          ]"
+        />
         <circle
           v-for="(point, index) in model.points"
           :key="index"
@@ -74,13 +93,14 @@
         />
         <!-- Direct labels at the right end: where each line ends today. -->
         <text
-          v-if="lastStep"
+          v-for="label in endLabels"
+          :key="label.list"
           :x="width - model.pad.right"
-          :y="lastStep.y - 8"
+          :y="label.y"
           text-anchor="end"
           class="end-label price-ink num"
         >
-          {{ money(lastStep.value, currency) }}
+          {{ money(label.value, currency) }}
         </text>
         <template v-if="hover">
           <line
@@ -105,8 +125,13 @@
         role="status"
       >
         <p class="font-medium text-ink-gray-9">{{ dayLabel(hover.t) }}</p>
-        <p v-if="hover.price !== null" class="num text-ink-gray-8">
-          Precio {{ money(hover.price, currency) }}
+        <p
+          v-for="one in hover.prices"
+          :key="one.list"
+          class="num text-ink-gray-8"
+        >
+          {{ hover.prices.length > 1 ? priceListLabel(one.list) : 'Precio' }}
+          {{ money(one.value, currency) }}
         </p>
         <template v-if="hover.point">
           <p class="num text-ink-gray-8">
@@ -132,6 +157,8 @@ import { priceListLabel } from '@/utils/priceList'
 const props = defineProps({
   history: { type: Object, required: true },
   list: { type: String, required: true },
+  /** Other lists drawn with it. */
+  lists: { type: Array, default: () => [] },
   currency: { type: String, default: 'MXN' },
   unit: { type: String, default: 'pieza' },
 })
@@ -142,16 +169,43 @@ const box = ref(null)
 const { width } = useElementSize(box)
 const hover = ref(null)
 
+// One colour per list in the page's order, so a list keeps its colour when
+// another is chosen.
+const SERIES = ['series-1', 'series-2', 'series-3', 'series-4']
+const ordered = computed(() => [
+  ...new Set([...props.lists, props.list].filter(Boolean)),
+])
 const model = computed(() =>
   chartModel(props.history, {
     list: props.list,
+    lists: props.lists,
     width: Math.max(240, Math.round(width.value || 0)),
     height: HEIGHT,
   }),
 )
-const lastStep = computed(
-  () => model.value.steps?.[model.value.steps.length - 1] || null,
+const legend = computed(() =>
+  ordered.value
+    .map((name) => (model.value.series || []).find((one) => one.list === name))
+    .filter(Boolean),
 )
+const drawn = computed(() =>
+  legend.value
+    .map((one) => ({ ...one, index: legend.value.indexOf(one) }))
+    .sort((a, b) => (a.list === props.list) - (b.list === props.list)),
+)
+// Each list's price today at the right end, 14 px apart when they meet.
+const endLabels = computed(() => {
+  const out = legend.value
+    .map((one) => {
+      const last = one.steps[one.steps.length - 1]
+      return last ? { list: one.list, value: last.value, y: last.y - 8 } : null
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.y - b.y)
+  for (let i = 1; i < out.length; i++)
+    if (out[i].y - out[i - 1].y < 14) out[i].y = out[i - 1].y + 14
+  return out
+})
 
 const summary = computed(() => {
   const m = model.value
@@ -214,6 +268,7 @@ function scrub(event) {
     t,
     point,
     price,
+    prices: m.pricesAt(t),
     margin: point && price ? marginPct(price, point.value) : null,
   }
 }
@@ -227,12 +282,18 @@ const tipStyle = computed(() => {
 </script>
 <style scoped>
 .precios-chart {
-  --chart-price: #1d4ed8;
   --chart-cost: #ea580c;
+  --chart-1: #1d4ed8;
+  --chart-2: #7c3aed;
+  --chart-3: #0f766e;
+  --chart-4: #be185d;
 }
 :global([data-theme='dark']) .precios-chart {
-  --chart-price: #3b82f6;
   --chart-cost: #ea580c;
+  --chart-1: #3b82f6;
+  --chart-2: #a78bfa;
+  --chart-3: #2dd4bf;
+  --chart-4: #f472b6;
 }
 .grid-lines line {
   stroke: var(--outline-gray-1, #ededed);
@@ -244,9 +305,26 @@ const tipStyle = computed(() => {
 }
 .price-line {
   fill: none;
-  stroke: var(--chart-price);
-  stroke-width: 2;
+  stroke: var(--chart-line);
+  stroke-width: 1.5;
+  stroke-opacity: 0.7;
   stroke-linejoin: round;
+}
+.price-line.is-main {
+  stroke-width: 2.5;
+  stroke-opacity: 1;
+}
+.series-1 {
+  --chart-line: var(--chart-1);
+}
+.series-2 {
+  --chart-line: var(--chart-2);
+}
+.series-3 {
+  --chart-line: var(--chart-3);
+}
+.series-4 {
+  --chart-line: var(--chart-4);
 }
 .cost-line {
   fill: none;
@@ -287,8 +365,11 @@ const tipStyle = computed(() => {
   height: 8px;
   border-radius: 9999px;
 }
-.legend-price {
-  background: var(--chart-price);
+.legend-line.series-1,
+.legend-line.series-2,
+.legend-line.series-3,
+.legend-line.series-4 {
+  background: var(--chart-line);
 }
 .legend-cost {
   background: var(--chart-cost);

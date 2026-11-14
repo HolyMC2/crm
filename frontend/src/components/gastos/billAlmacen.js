@@ -51,10 +51,14 @@ export function inboundState(inbound) {
 /**
  * The rows of «En el almacén», in the order the work happens: receive (or the
  * receiving already started), the receipts that brought the goods, Escáner's
- * open tasks, then labels. Each row is
+ * open tasks, the prices (`prices`: the Precios link, before the labels that
+ * print them), then labels. Each row is
  * { key, icon, title, subtitle, href?, to?, action?, reason? }.
  */
-export function warehouseRows(data, { bill, back, labels = false } = {}) {
+export function warehouseRows(
+  data,
+  { bill, back, labels = false, prices = '' } = {},
+) {
   if (!data?.stock) return []
   const rows = []
   const open = !!(data.scanner && data.can_open)
@@ -146,6 +150,7 @@ export function warehouseRows(data, { bill, back, labels = false } = {}) {
         ? scannerHref(`/tasks/${encodeURIComponent(task.name)}`, {}, back)
         : '',
     })
+  if (prices) rows.push(pricesRow(prices))
   if (labels)
     rows.push({
       key: 'etiquetas',
@@ -155,4 +160,18 @@ export function warehouseRows(data, { bill, back, labels = false } = {}) {
       labels: true,
     })
   return rows
+}
+
+/**
+ * «Revisar precios»: what the document's products cost against what they sell
+ * for, in Productos › Precios (`to` from preciosHref, with the way back).
+ */
+export function pricesRow(to) {
+  return {
+    key: 'precios',
+    icon: 'lucide-percent',
+    title: tr('Review prices'),
+    subtitle: tr('What it cost against what you sell it for'),
+    to,
+  }
 }

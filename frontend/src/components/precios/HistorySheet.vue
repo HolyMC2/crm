@@ -34,7 +34,7 @@
           :aria-pressed="name === shownList"
           @click="shownList = name"
         >
-          {{ name }}
+          {{ priceListLabel(name) }}
         </button>
       </div>
 
@@ -65,6 +65,7 @@
         <PriceChart
           :history="history"
           :list="shownList"
+          :lists="listNames"
           :currency="shownCurrency"
           :unit="unitWord"
         />

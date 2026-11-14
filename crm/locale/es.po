@@ -46524,3 +46524,11 @@ msgstr "Se crea como"
 #: frontend/src/components/assistant/DecisionCard.vue
 msgid "Your inventory does not track serial numbers. Turn on «Activar serie / lote» in the inventory settings to track IMEIs."
 msgstr "Tu inventario no lleva números de serie. Activa «Activar serie / lote» en los ajustes de inventario para guardar los IMEI."
+
+#: frontend/src/components/gastos/billAlmacen.js
+msgid "Review prices"
+msgstr "Revisar precios"
+
+#: frontend/src/components/gastos/billAlmacen.js
+msgid "What it cost against what you sell it for"
+msgstr "Lo que costó contra lo que lo vendes"

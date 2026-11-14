@@ -122,6 +122,16 @@ describe('bill warehouse rows', () => {
     })
   })
 
+  it('prices come before the labels that print them, only when asked for', () => {
+    const list = rows({}, { labels: true, prices: '/productos/precios?x=1' })
+    expect(list.slice(-2).map((r) => r.key)).toEqual(['precios', 'etiquetas'])
+    expect(list.at(-2)).toMatchObject({
+      title: 'Review prices',
+      to: '/productos/precios?x=1',
+    })
+    expect(rows().some((r) => r.key === 'precios')).toBe(false)
+  })
+
   it('labels come last, only when asked for', () => {
     expect(rows({}, { labels: true }).at(-1)).toMatchObject({
       key: 'etiquetas',

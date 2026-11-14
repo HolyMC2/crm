@@ -102,11 +102,21 @@ export function costFor(row, cell) {
   return cost * factorOf(row, cell)
 }
 
-/** The cost when the price was set, in the price's unit. */
+/**
+ * The cost when this list's price was set, in the price's unit. Each list
+ * carries its own (`cost_at_price`); a server without it gives the active
+ * list's for every cell.
+ */
 export function costAtPrice(row, cell) {
-  const cost = Number(row?.cost?.at_price)
+  const own = cell && 'cost_at_price' in cell
+  const cost = Number(own ? cell.cost_at_price : row?.cost?.at_price)
   if (!Number.isFinite(cost) || cost <= 0) return null
   return cost * factorOf(row, cell)
+}
+
+/** Two costs a centavo or less apart are the same cost on screen. */
+export function sameCost(a, b) {
+  return Math.abs(Number(a) - Number(b)) < 0.01
 }
 
 /** Gross margin over the price, in percent (one decimal), or null. */
@@ -170,7 +180,7 @@ export function keepMarginPrice(row, cell, rounding = 'centavos') {
   const now = costFor(row, cell)
   const then = costAtPrice(row, cell)
   const price = Number(cell?.rate)
-  if (!now || !then || !(price > 0) || Math.abs(now - then) < 1e-9) return null
+  if (!now || !then || !(price > 0) || sameCost(now, then)) return null
   return roundPrice((price * now) / then, rounding)
 }
 
@@ -290,7 +300,7 @@ export function costLine(row, cell, currency) {
   const bits = [
     `${row.line?.cost ? 'Costo aquí' : 'Costo'} ${money(now, currency)}`,
   ]
-  if (then && Math.abs(now - then) > 1e-9)
+  if (then && !sameCost(now, then))
     bits.push(`al poner el precio ${money(then, currency)}`)
   return bits.join(' · ')
 }
@@ -651,12 +661,13 @@ function monthTicks(x0, x1) {
 
 /**
  * The chart's geometry in a `width` × `height` box: purchase points (cost per
- * stock unit, in the price's unit), the price's steps on one list from the
- * opening price through each change, and the axis ticks.
+ * stock unit, in `list`'s unit), the price's steps on each of `lists` (`list`
+ * first) from the opening price through each change, and the axis ticks.
+ * `steps`, `pricePath` and `priceAt` are `list`'s; `series` holds every list.
  */
 export function chartModel(
   history,
-  { list, width = 340, height = 200, pad = {} } = {},
+  { list, lists = [], width = 340, height = 200, pad = {} } = {},
 ) {
   const p = { top: 16, right: 12, bottom: 24, left: 48, ...pad }
   const since = dayOf(history?.since)
@@ -669,21 +680,37 @@ export function chartModel(
     t: dayOf(pur.date),
     value: Number(pur.rate) * factor,
   }))
-  const steps = []
-  const opening = history?.opening?.[list]
-  if (opening) steps.push({ t: since, value: Number(opening) })
-  for (const change of history?.changes || []) {
-    if (change.price_list !== list || change.new_rate === null) continue
-    steps.push({ t: dayOf(change.at), value: Number(change.new_rate), change })
+  const names = [list, ...lists.filter((name) => name && name !== list)]
+  const stepsOf = (name) => {
+    const steps = []
+    const opening = history?.opening?.[name]
+    if (opening) steps.push({ t: since, value: Number(opening) })
+    for (const change of history?.changes || []) {
+      if (change.price_list !== name || change.new_rate === null) continue
+      steps.push({
+        t: dayOf(change.at),
+        value: Number(change.new_rate),
+        change,
+      })
+    }
+    const rate = cellOf(row, name)?.rate
+    if (!steps.length && rate) steps.push({ t: since, value: Number(rate) })
+    return steps.sort((a, b) => a.t - b.t)
   }
-  if (!steps.length && cell?.rate)
-    steps.push({ t: since, value: Number(cell.rate) })
+  const raw = names.map((name) => ({ list: name, steps: stepsOf(name) }))
   const values = [
     ...purchases.map((x) => x.value),
-    ...steps.map((s) => s.value),
+    ...raw.flatMap((one) => one.steps.map((step) => step.value)),
   ]
   if (!values.length)
-    return { empty: true, points: [], steps: [], ticks: [], months: [] }
+    return {
+      empty: true,
+      points: [],
+      steps: [],
+      series: [],
+      ticks: [],
+      months: [],
+    }
   const ticks = niceTicks(Math.min(...values) * 0.9, Math.max(...values) * 1.05)
   const lo = ticks[0]
   const hi = ticks[ticks.length - 1]
@@ -693,14 +720,27 @@ export function chartModel(
   const sy = (v) =>
     p.top + (1 - (v - lo) / (hi - lo || 1)) * (height - p.top - p.bottom)
   const points = purchases.map((x) => ({ ...x, x: sx(x.t), y: sy(x.value) }))
-  const stepPoints = steps
-    .sort((a, b) => a.t - b.t)
-    .map((s) => ({ ...s, x: sx(Math.max(s.t, x0)), y: sy(s.value) }))
-  let pricePath = ''
-  stepPoints.forEach((s, i) => {
-    pricePath += i === 0 ? `M${s.x},${s.y}` : `H${s.x}V${s.y}`
-  })
-  if (stepPoints.length) pricePath += `H${sx(x1)}`
+  const series = raw
+    .filter((one) => one.list === list || one.steps.length)
+    .map((one) => {
+      const steps = one.steps.map((s) => ({
+        ...s,
+        x: sx(Math.max(s.t, x0)),
+        y: sy(s.value),
+      }))
+      let path = ''
+      steps.forEach((s, i) => {
+        path += i === 0 ? `M${s.x},${s.y}` : `H${s.x}V${s.y}`
+      })
+      if (steps.length) path += `H${sx(x1)}`
+      return { list: one.list, steps, path }
+    })
+  const at = (steps, t) => {
+    let found = null
+    for (const s of steps) if (s.t <= t) found = s
+    return found ? found.value : null
+  }
+  const primary = series[0]
   const costPath = points
     .map((pt, i) => `${i ? 'L' : 'M'}${pt.x},${pt.y}`)
     .join('')
@@ -714,15 +754,20 @@ export function chartModel(
     x0,
     x1,
     points,
-    steps: stepPoints,
-    pricePath,
+    steps: primary.steps,
+    pricePath: primary.path,
+    series,
     costPath,
     ticks: ticks.map((v) => ({ value: v, y: sy(v) })),
     months: monthTicks(x0, x1).map((t) => ({ t, x: sx(t) })),
     priceAt(t) {
-      let found = null
-      for (const s of stepPoints) if (s.t <= t) found = s
-      return found ? found.value : null
+      return at(primary.steps, t)
+    },
+    /** Every list's price on day `t`, `list` first. */
+    pricesAt(t) {
+      return series
+        .map((one) => ({ list: one.list, value: at(one.steps, t) }))
+        .filter((one) => one.value !== null)
     },
     timeAt(x) {
       return x0 + ((x - p.left) / (width - p.left - p.right)) * (x1 - x0)

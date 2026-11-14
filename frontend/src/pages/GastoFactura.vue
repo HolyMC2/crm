@@ -601,6 +601,7 @@ import {
 } from '@/components/gastos/billAlmacen'
 import { isMobile } from '@/composables/breakpoint'
 import { etiquetasHref } from '@/composables/useEtiquetas'
+import { preciosHref, sourceName } from '@/composables/preciosLink'
 import { recordActionsFor } from '@/documentos/acciones'
 import { localToday } from '@/documentos/profiles/_compras'
 import { BTN } from '@/documentos/tools'
@@ -888,11 +889,22 @@ const canPrint = computed(() => !!kit.record.value?.actions?.print?.allowed)
 // «En el almacén»: Escáner's side of the bill, loaded after the page.
 const almacen = ref(null)
 const labelsOn = computed(() => moduleEnabled(shellBoot.value, 'productos'))
+// «Revisar precios» on what the bill brought (not a return, not cancelled).
+const pricesTo = computed(() =>
+  labelsOn.value && !doc.value.is_return && Number(doc.value.docstatus) !== 2
+    ? preciosHref({
+        desde: `Purchase Invoice:${props.name}`,
+        returnTo: `/crm${route.fullPath}`,
+        returnLabel: sourceName('Purchase Invoice'),
+      })
+    : '',
+)
 const almacenRows = computed(() =>
   warehouseRows(almacen.value, {
     bill: props.name,
     back: { to: `/crm${route.fullPath}`, label: 'Gastos' },
     labels: labelsOn.value && !doc.value.is_return,
+    prices: pricesTo.value,
   }),
 )
 async function loadAlmacen() {
@@ -904,8 +916,8 @@ async function loadAlmacen() {
   }
 }
 
-// The bolt: the hero's steps, Escáner's receive and labels, «Editar», then
-// what keeps the bill in sight; «⋯» keeps print, share, mail and the rest.
+// The bolt: the hero's steps, Escáner's receive, prices and labels, «Editar»,
+// then what keeps the bill in sight; «⋯» keeps print, share, mail and the rest.
 const boltSteps = computed(() => {
   const out = [...nextSteps.value]
   if (canCapture.value)
@@ -919,6 +931,12 @@ const boltSteps = computed(() => {
       label: row.title,
       icon: row.icon,
       run: () => window.location.assign(row.href),
+    })
+  if (pricesTo.value)
+    out.push({
+      label: __('Review prices'),
+      icon: 'lucide-percent',
+      run: () => router.push(pricesTo.value),
     })
   if (almacenRows.value.some((r) => r.labels))
     out.push({

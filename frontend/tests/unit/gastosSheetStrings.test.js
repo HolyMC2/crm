@@ -37,6 +37,12 @@ describe('the expense sheet reads in Spanish', () => {
     ],
     ['New bill', 'Nueva factura'],
     ['Back to {0}', 'Volver a {0}'],
+    // «Revisar precios» on a bill or an order (bolt and «En el almacén»).
+    ['Review prices', 'Revisar precios'],
+    [
+      'What it cost against what you sell it for',
+      'Lo que costó contra lo que lo vendes',
+    ],
   ])('«%s»', (msgid, spanish) => {
     expect(entry(msgid)).toBe(spanish)
   })

@@ -106,6 +106,27 @@ describe('margin and cost', () => {
     expect(costLine(row({ cost: null }), cell(), 'MXN')).toBe('')
   })
 
+  it('compares each list with the cost its own price was set on', () => {
+    // Mayoreo's 300 was set when the cost was 190: keeping its margin at 200.
+    const mayoreo = cell({
+      price_list: 'Mayoreo',
+      rate: 300,
+      cost_at_price: 190,
+    })
+    expect(keepMarginPrice(row(), mayoreo)).toBe(315.79)
+    expect(costLine(row(), mayoreo, 'MXN')).toMatch(/al poner el precio .*190/)
+    // A server without it: every list takes the active one's.
+    expect(
+      keepMarginPrice(row(), cell({ price_list: 'Mayoreo', rate: 300 })),
+    ).toBe(375)
+  })
+
+  it('does not call a centavo of rounding a new cost', () => {
+    const noisy = row({ cost: { new: 1188.8, at_price: 1188.7962 } })
+    expect(costLine(noisy, cell(), 'MXN')).not.toMatch(/al poner el precio/)
+    expect(keepMarginPrice(noisy, cell({ rate: 1800 }))).toBeNull()
+  })
+
   it('suggests the price that keeps the margin it had', () => {
     // 350 at a cost of 160 → the same margin at 200 is 437.50
     expect(keepMarginPrice(row(), cell())).toBe(437.5)
@@ -307,6 +328,24 @@ describe('the history chart', () => {
     expect(model.priceAt(Date.UTC(2026, 6, 1))).toBe(350)
     expect(model.priceAt(Date.UTC(2026, 2, 1))).toBe(300)
     expect(model.months.length).toBeGreaterThan(1)
+  })
+
+  it('draws every list shown, the chosen one first', () => {
+    const model = chartModel(history, {
+      list: LIST,
+      lists: [LIST, 'Mayoreo', 'Sin cambios'],
+      width: 300,
+      height: 200,
+    })
+    expect(model.series.map((one) => one.list)).toEqual([LIST, 'Mayoreo'])
+    expect(model.series[1].steps.map((s) => s.value)).toEqual([300])
+    expect(model.pricesAt(Date.UTC(2026, 6, 1))).toEqual([
+      { list: LIST, value: 350 },
+      { list: 'Mayoreo', value: 300 },
+    ])
+    expect(model.pricesAt(Date.UTC(2026, 2, 1))).toEqual([
+      { list: LIST, value: 300 },
+    ])
   })
 
   it('is empty without purchases or prices', () => {
