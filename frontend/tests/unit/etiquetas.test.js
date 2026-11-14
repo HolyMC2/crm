@@ -34,6 +34,7 @@ const {
   printLabel,
   keptScroll,
   previewStale,
+  rowHidden,
   searchState,
   sendPdf,
   sizeText,
@@ -360,6 +361,27 @@ describe('helpers', () => {
     expect(
       previewStale({ drawn: [keyA], rows: [A, B], index: 1, view: 'todas' }),
     ).toBe(false)
+  })
+  it('tells a row out of sight from one in sight, the bars taken off', () => {
+    const view = { top: 0, bottom: 800 }
+    const pads = { padTop: 56, padBottom: 90 }
+    expect(rowHidden({ row: { top: 300, bottom: 360 }, view, ...pads })).toBe(
+      false,
+    )
+    // Under the print bar, or under the sticky header.
+    expect(rowHidden({ row: { top: 680, bottom: 740 }, view, ...pads })).toBe(
+      true,
+    )
+    expect(rowHidden({ row: { top: 30, bottom: 90 }, view, ...pads })).toBe(
+      true,
+    )
+    // Below and above the scroller.
+    expect(rowHidden({ row: { top: 900, bottom: 960 }, view })).toBe(true)
+    expect(rowHidden({ row: { top: -90, bottom: -30 }, view })).toBe(true)
+    // Not laid out: cannot tell.
+    expect(
+      rowHidden({ row: { top: 0, bottom: 0 }, view: { top: 0, bottom: 0 } }),
+    ).toBeNull()
   })
   it('opens at the top unless the worker comes back to where it left', () => {
     const saved = { at: 4, top: 320 }
@@ -1022,7 +1044,7 @@ describe('Etiquetas › on a phone', () => {
     expect(scrolled.find(([el]) => el === row)[1].block).toBe('end')
   })
 
-  it('a pick moves the page once, after its label is drawn', async () => {
+  it('a pick moves the page once, as it lands: the drawing does not move it', async () => {
     answers.candidates = (args) =>
       args.query ? { rows: [ROWS.B] } : { rows: [] }
     const drawing = []
@@ -1039,15 +1061,50 @@ describe('Etiquetas › on a phone', () => {
     await flush()
     button('Funda', root.querySelector('[data-etq-results]')).click()
     await settle()
-    // Asked for the drawing, not answered: the page has not moved.
+    // Asked for the drawing, not answered: the row is already in sight.
     expect(drawing.length).toBe(1)
     const rowsScrolled = () =>
       scrolled.filter(([el]) => el.matches('[data-etq-row]'))
-    expect(rowsScrolled()).toEqual([])
-    drawing.splice(0).forEach((done) => done())
-    await flush()
     expect(rowsScrolled().length).toBe(1)
     expect(rowsScrolled()[0][0].dataset.etqKey).toBe(etq.rowKey(ROWS.B))
+    // The drawing lands: nothing it brings pushed the row away, so the page
+    // stays (a row that cannot be measured is not moved twice).
+    drawing.splice(0).forEach((done) => done())
+    await flush()
+    await flush()
+    expect(rowsScrolled().length).toBe(1)
+  })
+
+  it('a row already in sight is not scrolled; one under the print bar is', async () => {
+    answers.candidates = (args) =>
+      args.query ? { rows: [ROWS.B] } : { rows: [] }
+    await mountAt('/productos/etiquetas?codigos=A')
+    await settle()
+    const scroller = root.querySelector('[data-etiquetas]')
+    const rect = (top, bottom) => () => ({ top, bottom, height: bottom - top })
+    scroller.getBoundingClientRect = rect(0, 800)
+    const pick = async () => {
+      search().dispatchEvent(new Event('focus'))
+      type(search(), 'Funda')
+      await new Promise((resolve) => setTimeout(resolve, 300))
+      await flush()
+      button('Funda', root.querySelector('[data-etq-results]')).click()
+      await settle()
+    }
+    const rowsScrolled = () =>
+      scrolled.filter(([el]) => el.matches('[data-etq-row]'))
+    const proto = Element.prototype.getBoundingClientRect
+    try {
+      Element.prototype.getBoundingClientRect = rect(300, 360)
+      await pick()
+      expect(rowsScrolled()).toEqual([])
+      Element.prototype.getBoundingClientRect = rect(900, 960)
+      await pick()
+      expect(rowsScrolled().length).toBeGreaterThan(0)
+      expect(rowsScrolled()[0][1].block).toBe('end')
+    } finally {
+      Element.prototype.getBoundingClientRect = proto
+    }
   })
 
   it('the stage never shows the sample under the product just picked', async () => {

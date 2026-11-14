@@ -166,6 +166,7 @@ import {
   MAX_COPIES,
   rowKey,
   rowLine,
+  rowHidden,
   rowPrice,
 } from '@/composables/useEtiquetas'
 
@@ -179,17 +180,31 @@ const emit = defineEmits(['qty', 'remove', 'rename', 'pieces', 'show'])
 const open = ref('')
 const list = ref(null)
 
-// Scrolls a row to sit just above the print bar: the page calls it for a
-// product just added. Aligning its end (not «nearest») also brings back
-// what sits above a row already in sight, so the label is not left under
-// the sticky header.
-function reveal(key) {
+// Scrolls a row out of sight to sit just above the print bar: the page
+// calls it for a product just added. A row already in sight stays where it
+// is, so the page does not move under the thumb. Aligning its end (not
+// «nearest») brings back what sits above a row hidden above, so the label
+// is not left under the sticky header. `scroller`: the page's scroller,
+// whose scroll padding is the bars; `recheck`: only a row measured out of
+// sight moves (one the browser cannot measure stays).
+function reveal(key, { scroller = null, recheck = false } = {}) {
   const row = [...(list.value?.children || [])].find(
     (el) => el.dataset?.etqKey === key,
   )
   if (!row?.scrollIntoView) return
+  const hidden = scroller ? outOfSight(row, scroller) : null
+  if (hidden === false || (hidden === null && recheck)) return
   const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
   row.scrollIntoView({ block: 'end', behavior: still ? 'auto' : 'smooth' })
+}
+function outOfSight(row, scroller) {
+  const style = getComputedStyle(scroller)
+  return rowHidden({
+    row: row.getBoundingClientRect(),
+    view: scroller.getBoundingClientRect(),
+    padTop: parseFloat(style.scrollPaddingTop) || 0,
+    padBottom: parseFloat(style.scrollPaddingBottom) || 0,
+  })
 }
 defineExpose({ reveal })
 function tap(row, position) {

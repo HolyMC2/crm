@@ -416,6 +416,19 @@ export function previewStale({
 }
 
 /**
+ * Whether a row is out of sight in its scroller: above the top or under
+ * the bottom of what shows, the scroll padding (the sticky header and the
+ * print bar) taken off. `row` and `view` are client rects; null when the
+ * scroller has no size to tell (not laid out).
+ */
+export function rowHidden({ row, view, padTop = 0, padBottom = 0 } = {}) {
+  if (!row || !view || !(view.bottom - view.top > 0)) return null
+  const top = view.top + padTop
+  const bottom = view.bottom - padBottom
+  return row.top < top - 0.5 || row.bottom > bottom + 0.5
+}
+
+/**
  * Where the page opens: at the top, unless the worker comes back (the
  * browser's back) to the history entry the kept scroll was left from.
  * `saved` is `{ at, top }`; `state` is `history.state`.

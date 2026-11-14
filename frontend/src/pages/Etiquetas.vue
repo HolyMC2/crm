@@ -110,8 +110,15 @@
             :title="stageTitle"
             :empty="previewProblem || 'Elige una medida para ver la etiqueta.'"
           />
-          <div class="flex items-baseline justify-between gap-3 px-1 text-sm">
-            <p class="min-w-0 break-words text-ink-gray-8" data-etq-caption>
+          <!-- Room for two caption lines on a phone, so the sample's longer
+               line giving way to a product's never moves what is below. -->
+          <div
+            class="flex items-baseline justify-between gap-3 px-1 text-sm leading-5"
+          >
+            <p
+              class="min-h-10 min-w-0 break-words text-ink-gray-8 lg:min-h-0"
+              data-etq-caption
+            >
               {{ caption }}
             </p>
             <p v-if="rows.length" class="num flex-none text-ink-gray-6">
@@ -766,11 +773,13 @@ const sourceRoute = computed(() =>
 const recent = useRecentPicks('muelle:etiquetas-recent')
 
 // Rows land on the list (a product already there adds its copies) and the
-// first of them shows on the stage. A product added by hand is scrolled
-// into sight above the print bar, its copies at the thumb, once its label
-// is drawn (what the drawing brings above it, warnings and notes, has
-// landed by then, so the page moves once); what the page opens with stays
-// put, so the page opens at its top with the label.
+// first of them shows on the stage. A product added by hand and out of
+// sight is scrolled above the print bar, its copies at the thumb, as it
+// lands (once the search panel has folded), so the page moves with the
+// pick and never later: the stage and its caption keep their box while the
+// label draws. Only if what the drawing brings (warnings, notes) pushes the
+// row out of sight again does it move once more. What the page opens with
+// stays put, so the page opens at its top with the label.
 let starting = false
 function land(incoming, { replace = false } = {}) {
   rows.value = mergeRows(replace ? [] : rows.value, incoming)
@@ -782,8 +791,7 @@ function land(incoming, { replace = false } = {}) {
   showRow(first)
   if (replace || starting) return
   revealKey = rowKey(incoming[0])
-  // No label to draw: nothing comes to move it, show it now.
-  if (!layout.value) reveal(revealKey)
+  reveal(revealKey)
 }
 
 // ── where the page opens ──────────────────────────────────────────────
@@ -843,12 +851,27 @@ useResizeObserver(headEl, () => {
 watch(headEl, (el) => {
   headRoom.value = Math.ceil(el?.offsetHeight || 0)
 })
-// The row to bring into sight once its label is drawn.
+// The row just added: brought into sight as it lands, checked again once
+// its label is drawn.
 let revealKey = ''
 async function reveal(key) {
-  revealKey = ''
   await nextTick()
-  rowList.value?.reveal(key)
+  await folded()
+  rowList.value?.reveal(key, { scroller: scroller.value })
+}
+async function recheckReveal() {
+  const key = revealKey
+  revealKey = ''
+  if (!key) return
+  await nextTick()
+  rowList.value?.reveal(key, { scroller: scroller.value, recheck: true })
+}
+// The search panel folds as a product is picked: wait for it, so the row
+// is measured where it ends up.
+async function folded() {
+  const panel = scroller.value?.querySelector('[data-etq-results]')
+  const running = panel?.getAnimations?.() || []
+  await Promise.all(running.map((anim) => anim.finished.catch(() => null)))
 }
 
 async function load(args, { replace = false } = {}) {
@@ -1217,7 +1240,7 @@ const drawPreview = useDebounceFn(async () => {
     previewHtml.value = ''
     drawnKeys.value = null
     warnings.value = []
-    if (revealKey) reveal(revealKey)
+    recheckReveal()
     return
   }
   const mine = ++previewTicket
@@ -1253,7 +1276,7 @@ const drawPreview = useDebounceFn(async () => {
   } finally {
     if (mine === previewTicket) {
       previewing.value = false
-      if (revealKey) reveal(revealKey)
+      recheckReveal()
     }
   }
 }, 250)
