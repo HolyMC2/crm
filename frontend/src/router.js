@@ -173,6 +173,18 @@ const routes = [
     },
   },
   {
+    // «Contactos en los teléfonos»: the shop's phones get Contactos as a
+    // read-only address book (doco.contactos.telefonos), set up by the owner.
+    path: '/contactos/telefonos',
+    name: 'ContactosTelefonos',
+    component: () => import('@/pages/ContactosTelefonos.vue'),
+    meta: {
+      app: 'contactos',
+      title: 'Contactos en los teléfonos',
+      ownPhoneHeader: true,
+    },
+  },
+  {
     // «Importar clientes» from the owner's sheet, the same page as products'.
     path: '/contactos/importar',
     name: 'ImportarClientes',

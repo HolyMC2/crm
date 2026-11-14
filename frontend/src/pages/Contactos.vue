@@ -190,6 +190,15 @@
       >
         <template #prefix>
           <span class="lucide-upload size-4" aria-hidden="true" />
+        </template> </Button
+      ><Button
+        v-if="capabilities.manager"
+        label="En los teléfonos"
+        data-testid="contactos-telefonos"
+        @click="router.push('/contactos/telefonos')"
+      >
+        <template #prefix>
+          <span class="lucide-smartphone size-4" aria-hidden="true" />
         </template>
       </Button>
     </div>
@@ -925,6 +934,14 @@ const desktopActions = computed(() =>
           hint: 'Desde el Excel que ya tienes',
           allowed: true,
         },
+        // «Contactos en los teléfonos»: the owner or encargado sets it up.
+        capabilities.value?.manager && {
+          key: 'telefonos',
+          label: 'En los teléfonos',
+          icon: 'lucide-smartphone',
+          hint: 'Quién llama, en los teléfonos de la tienda',
+          allowed: true,
+        },
       ].filter(Boolean),
     },
   ].filter(Boolean),
@@ -934,6 +951,7 @@ function onDesktopAction({ key }) {
   else if (key === 'guardar') segmentOpen.value = true
   else if (key === 'personalizar') customize.value = true
   else if (key === 'importar') router.push('/contactos/importar')
+  else if (key === 'telefonos') router.push('/contactos/telefonos')
 }
 const segmentOptions = computed(() => [
   ...Object.entries(names).map(([value, label]) => ({ value, label })),

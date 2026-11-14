@@ -41,6 +41,10 @@ export async function contactosApi(method, args = {}) {
   if (!READS.has(method)) contactosReads.clear()
   return message
 }
+/** «Contactos en los teléfonos»: the phones' address book (doco.contactos.telefonos). */
+export function telefonosApi(method, args = {}) {
+  return postMethod(`doco.contactos.telefonos.api.${method}`, args)
+}
 /** «Personalizar» (the shop's extra fields): a change also refreshes Contactos' reads. */
 export async function personalizarApi(method, args = {}) {
   const message = await postMethod(`doco.personalizar.api.${method}`, args)

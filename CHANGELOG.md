@@ -2,6 +2,11 @@
 
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
+## 2026-11-14 — «Contactos en los teléfonos» screen (lane contactos-telefonos; not deployed)
+
+- **What:** `/crm/contactos/telefonos`, opened from Contactos' menu («En los teléfonos», owner or encargado only). One switch, which contacts go (each kind with how many have a phone), what to add to the name with a live «Así se ve al llamar», the phones with when each last synced, «Agregar teléfono» (name, iPhone / Android / Otro) with the QR code, the DAVx⁵ links or the CardDAV data shown once, «Volver a generar» and «Quitar» (two taps in place). A worker without the role reads whether it is on and whom to ask.
+- **Backend:** doco `doco.contactos.telefonos.api` (same lane). `telefonosApi` in `composables/useContactos.js`; words in `utils/contactosTelefonos.js`, tested in `tests/unit/contactosTelefonos.test.js`.
+
 ## 2026-11-14 — Aguinaldo card and sheet on Prenómina (lane aguinaldo-tarjeta; not deployed)
 
 Wave 2 «Pago a tu equipo», lane 9 (crm half). Frontend over doco.nomina's `aguinaldo_preview` (landed) and `aguinaldo_apply` (doco lane aguinaldo-pagar, in parallel).
