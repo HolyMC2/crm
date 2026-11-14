@@ -198,6 +198,22 @@ describe('when Prenómina offers to pay', () => {
     expect(pagarPersonaShown(one, 'E2')).toBe(false)
     expect(pagarPersonaShown(preview({ calcular: false }), 'E1')).toBe(false)
   })
+  it('shows nothing when the preview pays another period than the one on screen', () => {
+    const week = { start: '2026-11-08', end: '2026-11-14' }
+    const quincena = preview({
+      periodo: { inicio: '2026-11-01', fin: '2026-11-15', label: 'Quincena' },
+    })
+    expect(pagarShown(preview(), week)).toBe(true)
+    expect(pagarPersonaShown(preview(), 'E1', week)).toBe(true)
+    expect(pagarShown(quincena, week)).toBe(false)
+    expect(pagarPersonaShown(quincena, 'E1', week)).toBe(false)
+    // A weekly payer on a month view: doco answers the first week only.
+    const month = { start: '2026-11-01', end: '2026-11-30' }
+    const firstWeek = preview({
+      periodo: { inicio: '2026-11-01', fin: '2026-11-07', label: 'Semana' },
+    })
+    expect(pagarShown(firstWeek, month)).toBe(false)
+  })
   it('says the total and the people on the button', () => {
     expect(pagarButtonLabel(preview(), fmt)).toBe(
       'Pagar lo que falta · $2600 · 2 personas',
@@ -444,6 +460,25 @@ describe('Prenómina without «Pagar lo que falta» (dark)', () => {
     root.remove()
     await mount({ pagar: preview({ calcular: false }) })
     expect(q('prenomina-pagar')).toBeNull()
+  })
+})
+
+describe('Prenómina on another period than the pay calendar', () => {
+  it('a fortnight payer on the default week view gets no «Pagar»', async () => {
+    await mount({
+      pagar: preview({
+        periodo: {
+          inicio: '2026-11-01',
+          fin: '2026-11-15',
+          label: 'Quincena del 1 al 15 nov',
+        },
+      }),
+    })
+    expect(calls(PAGAR_PREVIEW)).toHaveLength(1)
+    expect(q('prenomina-pagar')).toBeNull()
+    expect(q('prenomina-pagar-persona')).toBeNull()
+    // The week's rows still say what is owed.
+    expect(all('prenomina-le-falta').length).toBeGreaterThan(0)
   })
 })
 

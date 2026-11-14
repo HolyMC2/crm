@@ -288,7 +288,7 @@
                 </template>
               </dl>
               <button
-                v-if="pagarPersonaShown(pagar, row.employee)"
+                v-if="pagarPersonaShown(pagar, row.employee, answer?.period)"
                 type="button"
                 class="press flex min-h-11 w-full items-center justify-center rounded-8 bg-surface-gray-2 px-4 text-base font-medium text-ink-gray-9 hover:bg-surface-gray-3"
                 data-testid="prenomina-pagar-persona"
@@ -483,7 +483,9 @@
                   >
                     {{ falta(row).text }}
                     <button
-                      v-if="pagarPersonaShown(pagar, row.employee)"
+                      v-if="
+                        pagarPersonaShown(pagar, row.employee, answer?.period)
+                      "
                       type="button"
                       class="press mt-1 inline-flex min-h-8 items-center rounded-6 bg-surface-gray-2 px-3 text-sm font-medium text-ink-gray-9 hover:bg-surface-gray-3"
                       data-testid="prenomina-pagar-persona"
@@ -620,7 +622,7 @@
 
           <!-- «Pagar lo que falta»: only when doco's pay preview offers it. -->
           <div
-            v-if="pagarShown(pagar)"
+            v-if="pagarShown(pagar, answer?.period)"
             class="sticky bottom-0 z-10 -mx-4 mt-4 border-t border-outline-gray-1 bg-surface-base px-4 pb-3 pt-2 sm:static sm:mx-0 sm:border-0 sm:px-0"
           >
             <Button
@@ -820,7 +822,8 @@ equipoApi(AJUSTES_GET)
 
 // «Pagar lo que falta»: asked only for a company with a saved pay setup, on the
 // period on screen. A refusal (someone who may not pay) or an old doco leaves it
-// null, and the page shows no button.
+// null, and the page shows no button; so does a preview for another period
+// (doco follows the company's pay calendar, the page may show another kind).
 const pagar = ref(null)
 const pagarOpen = ref(false)
 const pagarOpened = ref(false)

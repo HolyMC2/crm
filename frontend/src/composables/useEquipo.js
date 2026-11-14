@@ -599,12 +599,29 @@ export function pagarOrigenLabel(origen) {
 }
 
 /**
- * True when Prenómina offers «Pagar lo que falta»: doco answered the preview,
- * the shop has Muelle calculate, and there is a suggested line to pay.
+ * True when the preview pays the period on screen. doco answers for the
+ * company's pay calendar, so a week view of a fortnight payer (or a month view
+ * of a weekly payer) gets another period back. No period given: no check.
  */
-export function pagarShown(preview) {
+export function pagarSamePeriod(preview, period) {
+  if (period == null) return true
+  const periodo = preview?.periodo
   return Boolean(
-    preview?.on === true &&
+    periodo?.inicio &&
+      periodo.inicio === period.start &&
+      periodo.fin === period.end,
+  )
+}
+
+/**
+ * True when Prenómina offers «Pagar lo que falta»: doco answered the preview
+ * for the period on screen, the shop has Muelle calculate, and there is a
+ * suggested line to pay.
+ */
+export function pagarShown(preview, period) {
+  return Boolean(
+    pagarSamePeriod(preview, period) &&
+      preview?.on === true &&
       preview.calcular === true &&
       Array.isArray(preview.filas) &&
       Array.isArray(preview.lineas) &&
@@ -613,9 +630,9 @@ export function pagarShown(preview) {
 }
 
 /** True when a person's row offers its own «Pagar». */
-export function pagarPersonaShown(preview, employee) {
+export function pagarPersonaShown(preview, employee, period) {
   return (
-    pagarShown(preview) &&
+    pagarShown(preview, period) &&
     preview.lineas.some((linea) => linea?.employee === employee)
   )
 }
