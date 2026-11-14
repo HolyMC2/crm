@@ -1,6 +1,9 @@
 <template>
   <div class="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
-    <div class="mx-auto w-full max-w-5xl px-4 pb-28 pt-4 sm:px-6 sm:pb-10">
+    <div
+      class="mx-auto w-full px-4 pb-28 pt-4 sm:px-6 sm:pb-10"
+      :class="paid ? 'max-w-7xl' : 'max-w-5xl'"
+    >
       <!-- On a phone the shell's app bar has the back arrow (meta.listParent). -->
       <nav v-if="!isPhone" class="mb-3">
         <button
@@ -16,7 +19,18 @@
       >
         {{ __('Pre-payroll') }}
       </h1>
-      <p class="mb-4 text-sm text-ink-gray-6">
+      <p
+        v-if="paid"
+        class="mb-4 text-sm text-ink-gray-6"
+        data-testid="prenomina-subtitulo"
+      >
+        {{
+          __(
+            'Lo que trabajó cada quien en el periodo, lo que ya se le dio y lo que falta.',
+          )
+        }}
+      </p>
+      <p v-else class="mb-4 text-sm text-ink-gray-6">
         {{
           __(
             'Days and hours worked, vacations and open advances per person, before paying. Nothing here changes payroll.',
@@ -169,170 +183,420 @@
         >
           {{ __('No active people to show.') }}
         </p>
-        <div
-          v-else-if="answer.rows.length"
-          class="overflow-x-auto rounded-6 border border-outline-gray-2"
-        >
-          <table
-            class="w-full text-left text-sm"
-            :class="answer.bonuses ? 'min-w-[56rem]' : 'min-w-[50rem]'"
+        <template v-else-if="answer.rows.length">
+          <dl
+            v-if="paid"
+            class="mb-4 flex flex-wrap gap-x-6 gap-y-2"
+            data-testid="prenomina-totales"
           >
-            <thead class="border-b border-outline-gray-2 text-ink-gray-6">
-              <tr>
-                <th scope="col" class="p-3 font-medium">
-                  {{ __('Person') }}
-                </th>
-                <th scope="col" class="p-3 text-right font-medium">
-                  {{ __('Days present') }}
-                </th>
-                <th scope="col" class="p-3 text-right font-medium">
-                  {{ __('Hours worked') }}
-                </th>
-                <th scope="col" class="p-3 text-right font-medium">
-                  {{ __('Absent days') }}
-                </th>
-                <th scope="col" class="p-3 text-right font-medium">
-                  {{ __('Vacation days') }}
-                </th>
-                <th scope="col" class="p-3 text-right font-medium">
-                  {{ __('Open advances') }}
-                </th>
-                <th
-                  v-if="answer.bonuses"
-                  scope="col"
-                  class="p-3 text-right font-medium"
+            <div v-if="owed" data-testid="prenomina-total-le-toca">
+              <dt class="text-sm text-ink-gray-6">{{ __('Le toca') }}</dt>
+              <dd class="text-xl font-semibold tabular-nums text-ink-gray-9">
+                {{ money(totals.le_toca) }}
+              </dd>
+            </div>
+            <div data-testid="prenomina-total-pagado">
+              <dt class="text-sm text-ink-gray-6">{{ __('Ya se le dio') }}</dt>
+              <dd class="text-xl font-semibold tabular-nums text-ink-gray-9">
+                {{ money(totals.pagado) }}
+              </dd>
+              <dd class="text-xs text-ink-gray-6">
+                {{
+                  totals.pagos === 1
+                    ? __('1 pago')
+                    : __('{0} pagos', [totals.pagos])
+                }}
+              </dd>
+            </div>
+            <div v-if="owed" data-testid="prenomina-total-le-falta">
+              <dt class="text-sm text-ink-gray-6">{{ __('Le falta') }}</dt>
+              <dd class="text-xl font-semibold tabular-nums text-ink-gray-9">
+                {{ money(totals.le_falta) }}
+              </dd>
+            </div>
+          </dl>
+
+          <!-- Phone with «Ya se le dio»: one person per row, the money first. -->
+          <ul
+            v-if="paid && isPhone"
+            class="divide-y divide-outline-gray-1 rounded-6 border border-outline-gray-2"
+            data-testid="prenomina-personas"
+          >
+            <li
+              v-for="row in answer.rows"
+              :key="row.employee"
+              class="space-y-2 p-3"
+              data-testid="prenomina-persona"
+              :data-employee="row.employee"
+            >
+              <div>
+                <RouterLink
+                  :to="personRoute(row.employee, { list: route.fullPath })"
+                  class="block text-base font-medium text-ink-gray-9 hover:underline"
+                  >{{ row.employee_name }}</RouterLink
                 >
-                  <RouterLink
-                    :to="{ name: 'EquipoBonos', query: bonosQuery }"
-                    class="underline"
-                    >{{ __('Bonuses') }}</RouterLink
-                  >
-                </th>
-                <th scope="col" class="p-3 font-medium">
-                  {{ __('Missing to pay') }}
-                </th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-outline-gray-1">
-              <tr
-                v-for="row in answer.rows"
-                :key="row.employee"
-                class="align-top"
-              >
-                <th scope="row" class="p-3 font-normal">
-                  <RouterLink
-                    :to="personRoute(row.employee, { list: route.fullPath })"
-                    class="block font-medium text-ink-gray-9 hover:underline"
-                    >{{ row.employee_name }}</RouterLink
-                  >
-                  <span v-if="row.designation" class="block text-ink-gray-6">{{
-                    row.designation
-                  }}</span>
-                </th>
-                <td class="p-3 text-right tabular-nums text-ink-gray-9">
-                  {{ daysText(row.days_present) }}
-                  <span
-                    v-if="row.days_from_checkins"
-                    class="block text-xs text-ink-gray-6"
-                    >{{
-                      __('{0} from check-ins', [row.days_from_checkins])
-                    }}</span
-                  >
-                </td>
-                <td
-                  class="p-3 text-right tabular-nums text-ink-gray-9"
-                  :data-hours="row.employee"
+                <span
+                  v-if="row.designation"
+                  class="block text-sm text-ink-gray-6"
+                  >{{ row.designation }}</span
                 >
-                  {{ hoursText(row.hours) }}
-                  <span
-                    v-for="line in overtimeLines(row.hours)"
+              </div>
+              <dl class="grid grid-cols-[1fr_auto] gap-x-3 gap-y-1 text-sm">
+                <template v-if="rowAmount(row, 'le_toca') !== null">
+                  <dt class="text-ink-gray-7">{{ __('Le toca') }}</dt>
+                  <dd
+                    class="text-right tabular-nums text-ink-gray-9"
+                    data-testid="prenomina-le-toca"
+                  >
+                    {{ money(row.le_toca) }}
+                  </dd>
+                  <dd
+                    v-for="line in reasons(row)"
                     :key="line"
-                    class="block text-xs text-ink-gray-6"
-                    >{{ line }}</span
+                    class="col-span-2 text-xs text-ink-gray-6"
                   >
-                </td>
-                <td class="p-3 text-right tabular-nums text-ink-gray-9">
-                  {{ daysText(row.days_absent) }}
-                </td>
-                <td class="p-3 text-right tabular-nums text-ink-gray-9">
-                  {{ daysText(row.leave_days) }}
-                </td>
-                <td class="p-3 text-right tabular-nums text-ink-gray-9">
-                  {{ advancesText(row.advances) }}
-                </td>
-                <td
-                  v-if="answer.bonuses"
-                  class="p-3 text-right tabular-nums text-ink-gray-9"
-                  :data-bonus="row.employee"
+                    {{ line }}
+                  </dd>
+                </template>
+                <dt class="text-ink-gray-7">{{ __('Ya se le dio') }}</dt>
+                <dd
+                  class="text-right tabular-nums text-ink-gray-9"
+                  data-testid="prenomina-pagado"
                 >
-                  {{ money(row.bonus?.amount || 0) }}
-                  <span
-                    v-for="bono in row.bonus?.bonos || []"
-                    :key="`${bono.bono_name}-${bono.start}`"
-                    class="block text-xs text-ink-gray-6"
-                    >{{ bono.bono_name }}: {{ money(bono.amount) }}</span
+                  {{ money(row.pagado || 0) }}
+                </dd>
+                <dd
+                  v-for="pago in row.pagos || []"
+                  :key="pago.name"
+                  class="col-span-2 text-xs text-ink-gray-6"
+                >
+                  {{ conceptoLabel(pago.concepto) }}: {{ pagoLine(pago) }}
+                </dd>
+                <template v-if="rowAmount(row, 'le_falta') !== null">
+                  <dt class="font-medium text-ink-gray-8">
+                    {{ __('Le falta') }}
+                  </dt>
+                  <dd
+                    class="text-right font-semibold tabular-nums"
+                    :class="FALTA_TONE[falta(row).tone]"
+                    data-testid="prenomina-le-falta"
                   >
-                </td>
-                <td class="p-3">
-                  <ul v-if="row.faltantes.length" class="space-y-1">
-                    <li
-                      v-for="item in row.faltantes"
-                      :key="item.key"
-                      class="text-ink-amber-8"
-                    >
-                      <span class="font-medium">{{ item.label }}</span>
-                      <span class="block text-xs text-ink-gray-6">{{
-                        item.detalle
-                      }}</span>
-                    </li>
-                  </ul>
-                  <span v-else class="text-ink-green-8">{{
-                    __('Nothing missing')
+                    {{ falta(row).text }}
+                  </dd>
+                </template>
+              </dl>
+              <p class="text-xs text-ink-gray-6">
+                {{ workedLine(row) }}
+              </p>
+              <ul v-if="row.faltantes.length" class="space-y-1 text-sm">
+                <li
+                  v-for="item in row.faltantes"
+                  :key="item.key"
+                  class="text-ink-amber-8"
+                >
+                  <span class="font-medium">{{ item.label }}</span>
+                  <span class="block text-xs text-ink-gray-6">{{
+                    item.detalle
                   }}</span>
-                </td>
-              </tr>
-            </tbody>
-            <tfoot class="border-t border-outline-gray-2 text-ink-gray-8">
-              <tr>
-                <th scope="row" class="p-3 font-medium">
-                  {{ __('Total') }}
-                </th>
-                <td class="p-3 text-right tabular-nums">
-                  {{ daysText(answer.totals.days_present) }}
-                </td>
-                <td class="p-3 text-right tabular-nums">
-                  {{
-                    answer.totals.hours_worked === undefined
-                      ? '—'
-                      : hoursText({ worked: answer.totals.hours_worked })
-                  }}
-                </td>
-                <td class="p-3" />
-                <td class="p-3 text-right tabular-nums">
-                  {{ daysText(answer.totals.leave_days) }}
-                </td>
-                <td class="p-3 text-right tabular-nums">
-                  {{ advancesText(answer.totals.advances) }}
-                </td>
-                <td
-                  v-if="answer.bonuses"
-                  class="p-3 text-right tabular-nums"
-                  data-testid="prenomina-bonus-total"
+                </li>
+              </ul>
+            </li>
+          </ul>
+
+          <div
+            v-else
+            class="overflow-x-auto rounded-6 border border-outline-gray-2"
+            data-testid="prenomina-tabla"
+          >
+            <table class="w-full text-left text-sm" :class="tableWidth">
+              <thead class="border-b border-outline-gray-2 text-ink-gray-6">
+                <tr>
+                  <th scope="col" class="p-3 font-medium">
+                    {{ __('Person') }}
+                  </th>
+                  <th scope="col" class="p-3 text-right font-medium">
+                    {{ __('Days present') }}
+                  </th>
+                  <th scope="col" class="p-3 text-right font-medium">
+                    {{ __('Hours worked') }}
+                  </th>
+                  <th scope="col" class="p-3 text-right font-medium">
+                    {{ __('Absent days') }}
+                  </th>
+                  <th scope="col" class="p-3 text-right font-medium">
+                    {{ __('Vacation days') }}
+                  </th>
+                  <th scope="col" class="p-3 text-right font-medium">
+                    {{ __('Open advances') }}
+                  </th>
+                  <th
+                    v-if="answer.bonuses"
+                    scope="col"
+                    class="p-3 text-right font-medium"
+                  >
+                    <RouterLink
+                      :to="{ name: 'EquipoBonos', query: bonosQuery }"
+                      class="underline"
+                      >{{ __('Bonuses') }}</RouterLink
+                    >
+                  </th>
+                  <th
+                    v-if="owed"
+                    scope="col"
+                    class="p-3 text-right font-medium"
+                    data-testid="prenomina-col-le-toca"
+                  >
+                    {{ __('Le toca') }}
+                  </th>
+                  <th
+                    v-if="paid"
+                    scope="col"
+                    class="p-3 text-right font-medium"
+                    data-testid="prenomina-col-pagado"
+                  >
+                    {{ __('Ya se le dio') }}
+                  </th>
+                  <th
+                    v-if="owed"
+                    scope="col"
+                    class="p-3 text-right font-medium"
+                    data-testid="prenomina-col-le-falta"
+                  >
+                    {{ __('Le falta') }}
+                  </th>
+                  <th scope="col" class="p-3 font-medium">
+                    {{ paid ? __('Por revisar') : __('Missing to pay') }}
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-outline-gray-1">
+                <tr
+                  v-for="row in answer.rows"
+                  :key="row.employee"
+                  class="align-top"
+                  data-testid="prenomina-fila"
+                  :data-employee="row.employee"
                 >
-                  {{ money(answer.totals.bonus || 0) }}
-                </td>
-                <td class="p-3">
-                  {{
-                    __('{0} of {1} people with something missing', [
-                      answer.totals.with_faltantes,
-                      answer.totals.people,
-                    ])
-                  }}
-                </td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
+                  <th scope="row" class="p-3 font-normal">
+                    <RouterLink
+                      :to="personRoute(row.employee, { list: route.fullPath })"
+                      class="block font-medium text-ink-gray-9 hover:underline"
+                      >{{ row.employee_name }}</RouterLink
+                    >
+                    <span
+                      v-if="row.designation"
+                      class="block text-ink-gray-6"
+                      >{{ row.designation }}</span
+                    >
+                  </th>
+                  <td class="p-3 text-right tabular-nums text-ink-gray-9">
+                    {{ daysText(row.days_present) }}
+                    <span
+                      v-if="row.days_from_checkins"
+                      class="block text-xs text-ink-gray-6"
+                      >{{
+                        __('{0} from check-ins', [row.days_from_checkins])
+                      }}</span
+                    >
+                  </td>
+                  <td
+                    class="p-3 text-right tabular-nums text-ink-gray-9"
+                    :data-hours="row.employee"
+                  >
+                    {{ hoursText(row.hours) }}
+                    <span
+                      v-for="line in overtimeLines(row.hours)"
+                      :key="line"
+                      class="block text-xs text-ink-gray-6"
+                      >{{ line }}</span
+                    >
+                  </td>
+                  <td class="p-3 text-right tabular-nums text-ink-gray-9">
+                    {{ daysText(row.days_absent) }}
+                  </td>
+                  <td class="p-3 text-right tabular-nums text-ink-gray-9">
+                    {{ daysText(row.leave_days) }}
+                  </td>
+                  <td class="p-3 text-right tabular-nums text-ink-gray-9">
+                    {{ advancesText(row.advances) }}
+                  </td>
+                  <td
+                    v-if="answer.bonuses"
+                    class="p-3 text-right tabular-nums text-ink-gray-9"
+                    :data-bonus="row.employee"
+                  >
+                    {{ money(row.bonus?.amount || 0) }}
+                    <span
+                      v-for="bono in row.bonus?.bonos || []"
+                      :key="`${bono.bono_name}-${bono.start}`"
+                      class="block text-xs text-ink-gray-6"
+                      >{{ bono.bono_name }}: {{ money(bono.amount) }}</span
+                    >
+                  </td>
+                  <td
+                    v-if="owed"
+                    class="p-3 text-right tabular-nums text-ink-gray-9"
+                    data-testid="prenomina-le-toca"
+                  >
+                    {{
+                      rowAmount(row, 'le_toca') === null
+                        ? '—'
+                        : money(row.le_toca)
+                    }}
+                    <span
+                      v-for="line in reasons(row)"
+                      :key="line"
+                      class="block whitespace-nowrap text-xs text-ink-gray-6"
+                      >{{ line }}</span
+                    >
+                  </td>
+                  <td
+                    v-if="paid"
+                    class="p-3 text-right tabular-nums text-ink-gray-9"
+                    data-testid="prenomina-pagado"
+                  >
+                    {{ money(row.pagado || 0) }}
+                    <span
+                      v-for="pago in row.pagos || []"
+                      :key="pago.name"
+                      class="block whitespace-nowrap text-xs text-ink-gray-6"
+                      >{{ pagoLine(pago) }}</span
+                    >
+                  </td>
+                  <td
+                    v-if="owed"
+                    class="p-3 text-right font-semibold tabular-nums"
+                    :class="FALTA_TONE[falta(row).tone] || 'text-ink-gray-9'"
+                    data-testid="prenomina-le-falta"
+                  >
+                    {{ falta(row).text }}
+                  </td>
+                  <td class="p-3">
+                    <ul v-if="row.faltantes.length" class="space-y-1">
+                      <li
+                        v-for="item in row.faltantes"
+                        :key="item.key"
+                        class="text-ink-amber-8"
+                      >
+                        <span class="font-medium">{{ item.label }}</span>
+                        <span class="block text-xs text-ink-gray-6">{{
+                          item.detalle
+                        }}</span>
+                      </li>
+                    </ul>
+                    <span v-else class="text-ink-green-8">{{
+                      __('Nothing missing')
+                    }}</span>
+                  </td>
+                </tr>
+              </tbody>
+              <tfoot class="border-t border-outline-gray-2 text-ink-gray-8">
+                <tr>
+                  <th scope="row" class="p-3 font-medium">
+                    {{ __('Total') }}
+                  </th>
+                  <td class="p-3 text-right tabular-nums">
+                    {{ daysText(answer.totals.days_present) }}
+                  </td>
+                  <td class="p-3 text-right tabular-nums">
+                    {{
+                      answer.totals.hours_worked === undefined
+                        ? '—'
+                        : hoursText({ worked: answer.totals.hours_worked })
+                    }}
+                  </td>
+                  <td class="p-3" />
+                  <td class="p-3 text-right tabular-nums">
+                    {{ daysText(answer.totals.leave_days) }}
+                  </td>
+                  <td class="p-3 text-right tabular-nums">
+                    {{ advancesText(answer.totals.advances) }}
+                  </td>
+                  <td
+                    v-if="answer.bonuses"
+                    class="p-3 text-right tabular-nums"
+                    data-testid="prenomina-bonus-total"
+                  >
+                    {{ money(answer.totals.bonus || 0) }}
+                  </td>
+                  <td v-if="owed" class="p-3 text-right tabular-nums">
+                    {{ money(totals.le_toca) }}
+                  </td>
+                  <td v-if="paid" class="p-3 text-right tabular-nums">
+                    {{ money(totals.pagado) }}
+                  </td>
+                  <td v-if="owed" class="p-3 text-right tabular-nums">
+                    {{ money(totals.le_falta) }}
+                  </td>
+                  <td class="p-3">
+                    {{
+                      __('{0} of {1} people with something missing', [
+                        answer.totals.with_faltantes,
+                        answer.totals.people,
+                      ])
+                    }}
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <section
+            v-if="paid"
+            class="mt-6 max-w-3xl"
+            aria-labelledby="prenomina-pagos-titulo"
+            data-testid="prenomina-pagos"
+          >
+            <h2
+              id="prenomina-pagos-titulo"
+              class="mb-2 text-lg font-semibold text-ink-gray-9"
+            >
+              {{ paymentsTitle(answer.period?.kind) }}
+            </h2>
+            <p
+              v-if="!payments.length"
+              class="text-sm text-ink-gray-6"
+              data-testid="prenomina-pagos-vacio"
+            >
+              {{
+                __(
+                  'Aquí aparecen los pagos de la caja, la caja fuerte y Muelle desde que contestaste «¿Cómo pagas a tu equipo?». Lo que pagaste antes no se cuenta.',
+                )
+              }}
+            </p>
+            <ul
+              v-else
+              class="divide-y divide-outline-gray-1 rounded-6 border border-outline-gray-2"
+            >
+              <li
+                v-for="pago in payments"
+                :key="pago.name"
+                class="flex items-start gap-3 p-3 text-sm"
+                data-testid="prenomina-pago"
+                :data-employee="pago.employee"
+              >
+                <span class="min-w-0 flex-1">
+                  <span class="block font-medium text-ink-gray-9">{{
+                    pago.employee_name
+                  }}</span>
+                  <span class="block text-ink-gray-6"
+                    >{{ conceptoLabel(pago.concepto) }},
+                    {{ origenLabel(pago.origen) }}</span
+                  >
+                </span>
+                <span class="flex-none text-right">
+                  <span
+                    class="block font-medium tabular-nums text-ink-gray-9"
+                    >{{ money(pago.monto) }}</span
+                  >
+                  <span class="block text-ink-gray-6">{{
+                    payDay(pago.fecha)
+                  }}</span>
+                </span>
+              </li>
+            </ul>
+          </section>
+        </template>
       </template>
     </div>
   </div>
@@ -352,7 +616,18 @@ import {
   equipoApi,
   hoursText,
   liftAction,
+  conceptoLabel,
+  faltaText,
+  origenLabel,
   overtimeLines,
+  owedShown,
+  pagoLine,
+  paidShown,
+  payDay,
+  payTotals,
+  paymentsTitle,
+  periodPayments,
+  rowAmount,
   periodFromQuery,
   periodQuery,
   periodRange,
@@ -387,6 +662,60 @@ const lift = computed(() => liftAction(answer.value?.guard))
 const bonosQuery = computed(() =>
   bonosPeriodQuery(wanted.value.period, answer.value?.period?.start || null),
 )
+
+// «Ya se le dio» and «Le toca / Le falta»: only when doco's read carries them.
+const paid = computed(() => paidShown(answer.value))
+const owed = computed(() => paid.value && owedShown(answer.value))
+const totals = computed(() => payTotals(answer.value))
+const payments = computed(() =>
+  paid.value ? periodPayments(answer.value.rows) : [],
+)
+// Literal classes so the build keeps them: one step per extra column. With the
+// money columns the page widens to max-w-7xl, so four extra still fit at 1280 px.
+const WIDTHS = [
+  'min-w-[50rem]',
+  'min-w-[56rem]',
+  'min-w-[61rem]',
+  'min-w-[66rem]',
+  'min-w-[71rem]',
+]
+const tableWidth = computed(() => {
+  const extra =
+    (answer.value?.bonuses ? 1 : 0) +
+    (paid.value ? 1 : 0) +
+    (owed.value ? 2 : 0)
+  return WIDTHS[extra]
+})
+const FALTA_TONE = {
+  due: 'text-ink-gray-9',
+  done: 'text-ink-green-8',
+  over: 'text-ink-amber-8',
+}
+function falta(row) {
+  return faltaText(rowAmount(row, 'le_falta'))
+}
+/** The «porque» lines behind «Le toca», when doco sends them. */
+function reasons(row) {
+  return Array.isArray(row.porque)
+    ? row.porque.filter((line) => typeof line === 'string' && line)
+    : []
+}
+/** The phone row's second line: what the table's other columns say. */
+function workedLine(row) {
+  const parts = []
+  if (row.days_present !== null && row.days_present !== undefined)
+    parts.push(window.__('{0} días', [daysText(row.days_present)]))
+  if (row.hours) parts.push(hoursText(row.hours))
+  if (Number(row.days_absent) > 0)
+    parts.push(window.__('{0} de falta', [daysText(row.days_absent)]))
+  if (Number(row.leave_days) > 0)
+    parts.push(window.__('{0} de vacaciones', [daysText(row.leave_days)]))
+  if (row.advances?.length)
+    parts.push(window.__('adelantos {0}', [advancesText(row.advances)]))
+  if (answer.value?.bonuses && row.bonus?.amount)
+    parts.push(window.__('bonos {0}', [money(row.bonus.amount)]))
+  return parts.join(', ')
+}
 
 function go(period, start) {
   router.replace({ query: periodQuery(period, start) })

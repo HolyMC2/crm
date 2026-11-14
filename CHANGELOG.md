@@ -2,6 +2,15 @@
 
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
+## 2026-11-14 — Prenómina shows «Ya se le dio» and «Le toca / Le falta» (lane prenomina-ya-se-le-dio; not deployed)
+
+Wave 2 «Pago a tu equipo», lane 7. Frontend over the `pagado` and `pagos[]` doco's `prenomina.get_period` carries for a company with a pay setup (doco lane prenomina-pagado), and over `le_toca` / `le_falta` / `porque` when the setup calculates (doco lane le-toca; rendered only when present).
+
+- **Per person.** A «Ya se le dio» column with each payment under it (day, amount, origin; the owner's own money reads «Lo pusiste tú»); with «Le toca» present, «Le toca» with its reasons and «Le falta» («Nada» at zero, «Se le dio $X de más» over). On a phone each person is a row with the money first instead of the table; the faltantes column reads «Por revisar» beside the money columns.
+- **Totals and «Pagos de la semana».** The period's «Le toca», «Ya se le dio» (with the count of payments) and «Le falta» above the people, and one list of the period's payments (person, concepto, origen, monto, fecha); titled by period (semana, quincena, mes). An empty list says payments count from the pay setup on.
+- **The read-only line goes** («Nothing here changes payroll») when `pagado` is present. A payload without it renders the page as before: same subtitle, columns, width (asserted in `tests/unit/equipoPrenominaPagado.test.js`).
+- `data-testid` anchors for the guide tool (GT-3): `prenomina-tabla`, `prenomina-fila`, `prenomina-personas`/`prenomina-persona`, `prenomina-col-*`, `prenomina-pagado`, `prenomina-le-toca`, `prenomina-le-falta`, `prenomina-totales`, `prenomina-total-*`, `prenomina-pagos`, `prenomina-pago`. No pay entry here (lane 8).
+
 ## 2026-11-13 — «¿Cómo pagas a tu equipo?» in the shell (lane nomina-ajustes-spa; not deployed)
 
 Wave 2 «Pago a tu equipo», lane 3. Frontend over doco.nomina's `ajustes_get` / `ajustes_preview` / `ajustes_apply` (doco lane nomina-ajustes).

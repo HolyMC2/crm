@@ -244,6 +244,141 @@ export function advancesText(advances, format = money) {
     .join(' · ')
 }
 
+// «Ya se le dio» and «Le toca / Le falta» on Prenómina. doco adds `pagado` and
+// `pagos` (Pago a Persona) only for a company with a pay setup, and `le_toca` /
+// `le_falta` only when that setup calculates; without them the page is the
+// read-only summary it always was.
+
+/** True when the period read carries what each person was already given. */
+export function paidShown(answer) {
+  if (!answer) return false
+  if (answer.totals && answer.totals.pagado !== undefined) return true
+  return (answer.rows || []).some((row) => row.pagado !== undefined)
+}
+
+function isAmount(value) {
+  return typeof value === 'number' && Number.isFinite(value)
+}
+
+/** True when any row carries what it is owed («Le toca»). */
+export function owedShown(answer) {
+  return (answer?.rows || []).some((row) => isAmount(row.le_toca))
+}
+
+/** The row's «Le toca» or «Le falta» amount, or null when the payload has none. */
+export function rowAmount(row, key) {
+  return isAmount(row?.[key]) ? row[key] : null
+}
+
+/**
+ * «Le falta» in words: the amount, «Nada» at zero, or what was given beyond
+ * «Le toca». `tone` is the state it reads in: due, done or over.
+ */
+export function faltaText(value, format = money) {
+  if (!isAmount(value)) return { text: '—', tone: null }
+  if (value > 0) return { text: format(value), tone: 'due' }
+  if (value === 0) return { text: tr('Nada', null, CTX), tone: 'done' }
+  return {
+    text: tr('Se le dio {0} de más', [format(-value)], CTX),
+    tone: 'over',
+  }
+}
+
+// «Pago a Persona» origins in the owner's words; an origin doco adds later
+// shows as stored.
+const ORIGEN_WORDS = Object.freeze({
+  Caja: 'Caja',
+  'Caja fuerte': 'Caja fuerte',
+  'Lo pongo yo': 'Lo pusiste tú',
+  Transferencia: 'Transferencia',
+  'Sin efectivo': 'Sin efectivo',
+})
+export function origenLabel(origen) {
+  return ORIGEN_WORDS[origen]
+    ? tr(ORIGEN_WORDS[origen], null, CTX)
+    : origen || ''
+}
+export function conceptoLabel(concepto) {
+  return concepto ? tr(concepto, null, CTX) : ''
+}
+
+/** «mar 11 nov» from an ISO day, without a time zone shift. */
+export function payDay(iso) {
+  if (!iso) return ''
+  const [y, m, d] = String(iso).slice(0, 10).split('-').map(Number)
+  if (!y || !m || !d) return ''
+  return new Date(y, m - 1, d)
+    .toLocaleDateString('es-MX', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+    })
+    .replace(/[.,]/g, '')
+}
+
+/** One payment under a person: «mar 11 nov · $500 · Caja». */
+export function pagoLine(pago, format = money) {
+  return [payDay(pago.fecha), format(pago.monto), origenLabel(pago.origen)]
+    .filter(Boolean)
+    .join(' · ')
+}
+
+/**
+ * «Pagos de la semana»: every person's payments in one list, oldest first, each
+ * with the person's name.
+ */
+export function periodPayments(rows) {
+  const list = []
+  for (const row of rows || []) {
+    for (const pago of row.pagos || []) {
+      list.push({
+        ...pago,
+        employee: row.employee,
+        employee_name: row.employee_name,
+      })
+    }
+  }
+  return list.sort((a, b) =>
+    String(a.fecha || '').localeCompare(String(b.fecha || '')),
+  )
+}
+
+const PAYMENTS_TITLE = Object.freeze({
+  week: 'Pagos de la semana',
+  fortnight: 'Pagos de la quincena',
+  month: 'Pagos del mes',
+})
+/** The list's heading for the period kind the server answered. */
+export function paymentsTitle(kind) {
+  return tr(PAYMENTS_TITLE[kind] || 'Pagos del periodo', null, CTX)
+}
+
+/** The period's totals for the money line: given, and owed and missing when present. */
+export function payTotals(answer) {
+  const totals = answer?.totals || {}
+  const rows = answer?.rows || []
+  const owed = owedShown(answer)
+  const sum = (key) =>
+    rows.reduce((acc, row) => acc + (rowAmount(row, key) || 0), 0)
+  return {
+    pagado: Number(totals.pagado || 0),
+    pagos: rows.reduce((acc, row) => acc + (row.pagos || []).length, 0),
+    le_toca: owed
+      ? isAmount(totals.le_toca)
+        ? totals.le_toca
+        : sum('le_toca')
+      : null,
+    le_falta: owed
+      ? isAmount(totals.le_falta)
+        ? totals.le_falta
+        : rows.reduce(
+            (acc, row) => acc + Math.max(rowAmount(row, 'le_falta') || 0, 0),
+            0,
+          )
+      : null,
+  }
+}
+
 /**
  * The way past a full plan in the alta (doco's sheet option `seatStep`): Mi
  * cuenta's seat step (components/cuenta/seatStep.js), loaded with the first
