@@ -108,7 +108,7 @@ const CALCULA = payload(
       pagos: [pago('P1', '2026-11-11', 800, 'A cuenta')],
       le_toca: 2400,
       le_falta: 1600,
-      porque: ['6 días × $300'],
+      le_toca_lineas: [{ clave: 'base', monto: 1800, porque: '6 días × $300' }],
     }),
     row('E2', {
       pagado: 1000,

@@ -696,10 +696,12 @@ const FALTA_TONE = {
 function falta(row) {
   return faltaText(rowAmount(row, 'le_falta'))
 }
-/** The «porque» lines behind «Le toca», when doco sends them. */
+/** The «porque» of each line behind «Le toca» (doco's `le_toca_lineas`). */
 function reasons(row) {
-  return Array.isArray(row.porque)
-    ? row.porque.filter((line) => typeof line === 'string' && line)
+  return Array.isArray(row.le_toca_lineas)
+    ? row.le_toca_lineas
+        .map((line) => line?.porque)
+        .filter((text) => typeof text === 'string' && text)
     : []
 }
 /** The phone row's second line: what the table's other columns say. */
