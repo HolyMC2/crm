@@ -810,7 +810,7 @@ function keepScroll() {
 }
 onBeforeRouteLeave(keepScroll)
 async function placeScroll() {
-  let saved = null
+  let saved
   try {
     saved = JSON.parse(sessionStorage.getItem(SCROLL_KEY) || 'null')
   } catch {
