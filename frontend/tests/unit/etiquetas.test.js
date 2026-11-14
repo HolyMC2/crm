@@ -955,18 +955,31 @@ describe('Etiquetas › on a phone', () => {
     expect(parts.className).not.toContain('truncate')
   })
 
-  it('while searching the label steps aside, and comes back after the pick', async () => {
+  it('focusing and typing in the search leave the label and the field in place', async () => {
     answers.candidates = (args) =>
       args.query ? { rows: [ROWS.A] } : { rows: [ROWS.B] }
     await mountAt('/productos/etiquetas')
-    expect(preview().style.display).not.toBe('none')
+    await settle()
+    const scroller = root.querySelector('[data-etiquetas]')
+    const before = scroller.scrollTop
+    scrolled.length = 0
     search().dispatchEvent(new Event('focus'))
     await flush()
-    expect(preview().style.display).toBe('none')
+    // Focus alone neither hides the label nor scrolls anything: the field
+    // stays under the thumb that tapped it, the results open below it.
+    expect(preview().style.display).not.toBe('none')
     expect(root.querySelector('[data-etq-results]')).toBeTruthy()
-    type(search(), 'Carga')
+    expect(
+      preview().compareDocumentPosition(
+        root.querySelector('[data-etq-results]'),
+      ) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+    type(search(), 'Fu')
     await new Promise((resolve) => setTimeout(resolve, 300))
     await flush()
+    expect(preview().style.display).not.toBe('none')
+    expect(scrolled).toEqual([])
+    expect(scroller.scrollTop).toBe(before)
     button('Cargador rápido', root.querySelector('[data-etq-results]')).click()
     await flush()
     expect(preview().style.display).not.toBe('none')

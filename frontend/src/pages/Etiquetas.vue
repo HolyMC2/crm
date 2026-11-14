@@ -87,12 +87,10 @@
         class="grid flex-1 grid-cols-1 items-start gap-4 px-4 pb-4 sm:px-6 md:grid-cols-2 lg:grid-cols-[minmax(18rem,22rem)_minmax(0,1fr)_minmax(17rem,20rem)] lg:gap-6"
         data-etq-imprimir
       >
-        <!-- The label as it prints. -->
-        <!-- Phone: while the search is open the label steps aside, so the
-             search, its results and the keyboard share the screen whole
-             instead of a label cut at the top. -->
+        <!-- The label as it prints. It stays in place while the search is
+             open, so the field never moves under the thumb that tapped it;
+             the results open below the field. -->
         <section
-          v-show="!stageAside"
           class="min-w-0 space-y-2 md:col-start-2 md:row-start-1 lg:sticky lg:top-4"
           aria-label="Así sale"
           data-etq-preview
@@ -1029,14 +1027,6 @@ const suggestions = ref([])
 let suggested = false
 const panelOpen = computed(() => !!query.value.trim() || searchFocused.value)
 const searchSection = ref(null)
-const stageAside = computed(() => phone.value && panelOpen.value)
-// The label folding away moves the search up; a scroller already scrolled
-// down brings it back into sight.
-watch(stageAside, async (aside) => {
-  if (!aside) return
-  await nextTick()
-  searchSection.value?.scrollIntoView?.({ block: 'nearest' })
-})
 let searchTicket = 0
 // The text the last finished search answered: until the debounced search
 // answers what is typed now, the panel says «Buscando…», never «ninguno».
