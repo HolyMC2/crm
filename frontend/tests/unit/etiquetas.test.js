@@ -27,6 +27,7 @@ const {
   layoutGroups,
   mergeRows,
   parsePasted,
+  partsSummary,
   partsText,
   pdfFile,
   printBlock,
@@ -290,6 +291,20 @@ describe('helpers', () => {
     expect(partsText({ parts: ['name', 'qr', 'batch'] }, PARTS)).toBe(
       'Nombre, QR, Lote y caducidad',
     )
+  })
+
+  it('sums up a long design in one short line for the phone', () => {
+    expect(partsSummary({ parts: DEFAULT_PARTS }, PARTS)).toBe(
+      'Tienda, Nombre, Precio y 4 más',
+    )
+    expect(partsSummary({ parts: ['name', 'price', 'sku'] }, PARTS)).toBe(
+      'Nombre, Precio y Código',
+    )
+    expect(partsSummary({ parts: ['name', 'price'] }, PARTS)).toBe(
+      'Nombre y Precio',
+    )
+    expect(partsSummary({ parts: ['name'] }, PARTS)).toBe('Nombre')
+    expect(partsSummary({ parts: [] }, PARTS)).toBe('')
   })
   it('reads codes pasted from a sheet or a message, with their copies', () => {
     expect(
@@ -858,6 +873,95 @@ describe('Etiquetas › the label and its design', () => {
     expect(result).toContain('PDF guardado')
     expect(result).toContain('1 etiqueta, una por página.')
     expect(etq.printHtml).not.toHaveBeenCalled()
+  })
+})
+
+describe('Etiquetas › on a phone', () => {
+  let scrolled
+  beforeEach(() => {
+    window.innerWidth = 412
+    window.dispatchEvent(new Event('resize'))
+    scrolled = []
+    Element.prototype.scrollIntoView = function (options) {
+      scrolled.push([this, options])
+    }
+  })
+  afterEach(() => {
+    delete Element.prototype.scrollIntoView
+    window.innerWidth = 1024
+    window.dispatchEvent(new Event('resize'))
+  })
+  const preview = () => root.querySelector('[data-etq-preview]')
+  const search = () => root.querySelector('[data-etq-search]')
+
+  it('the design line says the parts in short instead of cutting them', async () => {
+    await mountAt('/productos/etiquetas?codigos=A')
+    await settle()
+    const parts = root.querySelector('[data-etq-layout-parts]')
+    expect(parts.textContent.trim()).toBe('Tienda, Nombre, Precio y 4 más')
+    expect(parts.className).not.toContain('truncate')
+  })
+
+  it('while searching the label steps aside, and comes back after the pick', async () => {
+    answers.candidates = (args) =>
+      args.query ? { rows: [ROWS.A] } : { rows: [ROWS.B] }
+    await mountAt('/productos/etiquetas')
+    expect(preview().style.display).not.toBe('none')
+    search().dispatchEvent(new Event('focus'))
+    await flush()
+    expect(preview().style.display).toBe('none')
+    expect(root.querySelector('[data-etq-results]')).toBeTruthy()
+    type(search(), 'Carga')
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    await flush()
+    button('Cargador rápido', root.querySelector('[data-etq-results]')).click()
+    await flush()
+    expect(preview().style.display).not.toBe('none')
+  })
+
+  it('a product just added scrolls into sight above the print bar', async () => {
+    await mountAt('/productos/etiquetas?codigos=A')
+    const scroller = root.querySelector('[data-etiquetas]')
+    expect(scroller.style.getPropertyValue('--etq-bar')).toMatch(/^\d+px$/)
+    const row = root.querySelector('[data-etq-row]')
+    expect(row.className).toContain(
+      'scroll-mb-[calc(var(--etq-bar,0px)+0.5rem)]',
+    )
+    expect(scrolled.map(([el]) => el)).toContain(row)
+    expect(scrolled.find(([el]) => el === row)[1].block).toBe('nearest')
+  })
+
+  it('a document that replaces the list does not jump to its first row', async () => {
+    answers.rows = () => ({
+      rows: [ROWS.A, ROWS.C],
+      unknown: [],
+      source: { doctype: 'Purchase Receipt', name: 'PR-1', title: 'PR-1' },
+    })
+    await mountAt('/productos/etiquetas?desde=Purchase%20Receipt:PR-1')
+    expect(root.querySelectorAll('[data-etq-row]').length).toBe(2)
+    expect(scrolled.filter(([el]) => el.matches('[data-etq-row]'))).toEqual([])
+  })
+})
+
+describe('Etiquetas › on a computer (unchanged)', () => {
+  it('the label stays in place while searching and nothing scrolls', async () => {
+    const calls = []
+    Element.prototype.scrollIntoView = function () {
+      calls.push(this)
+    }
+    try {
+      await mountAt('/productos/etiquetas?codigos=A')
+      const search = root.querySelector('[data-etq-search]')
+      search.dispatchEvent(new Event('focus'))
+      await flush()
+      expect(root.querySelector('[data-etq-preview]').style.display).not.toBe(
+        'none',
+      )
+      expect(root.querySelector('[data-etq-layout]')).toBeNull()
+      expect(calls.filter((el) => el.matches('[data-etq-search]'))).toEqual([])
+    } finally {
+      delete Element.prototype.scrollIntoView
+    }
   })
 })
 

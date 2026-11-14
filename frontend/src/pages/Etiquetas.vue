@@ -2,6 +2,7 @@
   <div
     ref="scroller"
     class="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto"
+    :style="{ '--etq-bar': `${barRoom}px` }"
     data-etiquetas
   >
     <!-- Phone: the page's own bar (route meta.ownPhoneHeader), back to Productos. -->
@@ -81,7 +82,11 @@
         data-etq-imprimir
       >
         <!-- The label as it prints. -->
+        <!-- Phone: while the search is open the label steps aside, so the
+             search, its results and the keyboard share the screen whole
+             instead of a label cut at the top. -->
         <section
+          v-show="!stageAside"
           class="min-w-0 space-y-2 md:col-start-2 md:row-start-1 lg:sticky lg:top-4"
           aria-label="Así sale"
           data-etq-preview
@@ -102,7 +107,7 @@
             :empty="previewProblem || 'Elige una medida para ver la etiqueta.'"
           />
           <div class="flex items-baseline justify-between gap-3 px-1 text-sm">
-            <p class="min-w-0 truncate text-ink-gray-8" data-etq-caption>
+            <p class="min-w-0 break-words text-ink-gray-8" data-etq-caption>
               {{ caption }}
             </p>
             <p v-if="rows.length" class="num flex-none text-ink-gray-6">
@@ -151,12 +156,19 @@
           >
             <Icon icon="sliders-horizontal" class="size-5 text-ink-gray-7" />
             <span class="min-w-0 flex-1">
-              <span class="block truncate text-base text-ink-gray-9">{{
-                layoutName(currentLayout) || 'Elige la medida'
-              }}</span>
-              <span class="block truncate text-sm text-ink-gray-6">{{
-                isSize ? partsText(design, designMeta.parts) : 'Diseño propio'
-              }}</span>
+              <span
+                class="block break-words text-base leading-snug text-ink-gray-9"
+                >{{ layoutName(currentLayout) || 'Elige la medida' }}</span
+              >
+              <span
+                class="block break-words text-sm leading-snug text-ink-gray-6"
+                data-etq-layout-parts
+                >{{
+                  isSize
+                    ? partsSummary(design, designMeta.parts)
+                    : 'Diseño propio'
+                }}</span
+              >
             </span>
             <span class="text-sm font-medium text-ink-gray-8">Diseño</span>
           </button>
@@ -197,7 +209,11 @@
         <div
           class="min-w-0 space-y-4 md:col-start-1 md:row-span-2 md:row-start-1"
         >
-          <section aria-label="Qué etiquetar" class="space-y-2">
+          <section
+            ref="searchSection"
+            aria-label="Qué etiquetar"
+            class="scroll-mt-20 space-y-2"
+          >
             <label class="relative flex items-center">
               <span
                 class="lucide-search pointer-events-none absolute left-3.5 size-4 text-ink-gray-5"
@@ -405,6 +421,7 @@
             </div>
             <EtqRows
               v-else
+              ref="rowList"
               :rows="rows"
               :shown="stageView === 'todas' ? -1 : shownIndex"
               @qty="setQty"
@@ -436,6 +453,7 @@
         <!-- Phone and tablet: the print at the thumb, over the list. -->
         <div
           v-if="!wide"
+          ref="printBar"
           class="sticky bottom-0 z-10 -mx-4 space-y-2 border-t border-outline-gray-1 bg-surface-base px-4 pb-3 pt-2 sm:-mx-6 sm:px-6 md:col-span-2"
         >
           <EtqPrintBar
@@ -515,10 +533,17 @@
   </div>
 </template>
 <script setup>
-import { computed, defineAsyncComponent, onMounted, ref, watch } from 'vue'
+import {
+  computed,
+  defineAsyncComponent,
+  nextTick,
+  onMounted,
+  ref,
+  watch,
+} from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Button } from 'frappe-ui'
-import { useDebounceFn } from '@vueuse/core'
+import { useDebounceFn, useResizeObserver } from '@vueuse/core'
 import {
   AppBar,
   EmptyState,
@@ -548,7 +573,7 @@ import {
   labelsText,
   layoutName,
   mergeRows,
-  partsText,
+  partsSummary,
   pdfFile,
   printBlock,
   printHtml,
@@ -729,14 +754,38 @@ const sourceRoute = computed(() =>
 const recent = useRecentPicks('muelle:etiquetas-recent')
 
 // Rows land on the list (a product already there adds its copies) and the
-// first of them shows on the stage.
+// first of them shows on the stage. A product added by hand is scrolled
+// into sight above the print bar, its copies at the thumb.
 function land(incoming, { replace = false } = {}) {
   rows.value = mergeRows(replace ? [] : rows.value, incoming)
   if (!incoming.length) return
   const first = rows.value.findIndex(
     (row) => rowKey(row) === rowKey(incoming[0]),
   )
-  if (first >= 0) showRow(first)
+  if (first < 0) return
+  showRow(first)
+  if (!replace) reveal(rowKey(incoming[0]))
+}
+
+// ── the print bar's room ──────────────────────────────────────────────
+// The sticky bar covers the bottom of the scroller: its height reaches the
+// rows as `--etq-bar` (their scroll margin), so a revealed row stops above it.
+const printBar = ref(null)
+const rowList = ref(null)
+const barRoom = ref(0)
+useResizeObserver(printBar, () => {
+  barRoom.value = Math.ceil(printBar.value?.offsetHeight || 0)
+})
+watch(printBar, (el) => {
+  barRoom.value = Math.ceil(el?.offsetHeight || 0)
+})
+// The row to keep in sight until the label above it is drawn: the preview's
+// warnings and notes can push it down once more.
+let revealKey = ''
+async function reveal(key) {
+  revealKey = key
+  await nextTick()
+  rowList.value?.reveal(key)
 }
 
 async function load(args, { replace = false } = {}) {
@@ -910,6 +959,15 @@ const searchBox = ref(null)
 const suggestions = ref([])
 let suggested = false
 const panelOpen = computed(() => !!query.value.trim() || searchFocused.value)
+const searchSection = ref(null)
+const stageAside = computed(() => phone.value && panelOpen.value)
+// The label folding away moves the search up; a scroller already scrolled
+// down brings it back into sight.
+watch(stageAside, async (aside) => {
+  if (!aside) return
+  await nextTick()
+  searchSection.value?.scrollIntoView?.({ block: 'nearest' })
+})
 let searchTicket = 0
 const search = useDebounceFn(async () => {
   const text = query.value.trim()
@@ -1102,7 +1160,15 @@ const drawPreview = useDebounceFn(async () => {
       warnings.value = []
     }
   } finally {
-    if (mine === previewTicket) previewing.value = false
+    if (mine === previewTicket) {
+      previewing.value = false
+      if (revealKey) {
+        const key = revealKey
+        revealKey = ''
+        await nextTick()
+        rowList.value?.reveal(key)
+      }
+    }
   }
 }, 250)
 // The stage says it is drawing from the change on, not from the request.

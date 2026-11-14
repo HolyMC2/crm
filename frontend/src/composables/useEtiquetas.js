@@ -216,8 +216,25 @@ export function cleanDesign(value, meta = {}) {
 
 /** «Nombre, Precio, QR»: the parts of a design in the worker's words. */
 export function partsText(design, fields = []) {
+  return partNames(design, fields).join(', ')
+}
+
+/**
+ * The design's parts for a one-glance line on a phone: the first `max` and
+ * how many more («Tienda, Nombre, Precio y 4 más»). The whole list lives in
+ * the design sheet.
+ */
+export function partsSummary(design, fields = [], max = 3) {
+  const names = partNames(design, fields)
+  if (names.length <= 1) return names.join('')
+  if (names.length <= max)
+    return `${names.slice(0, -1).join(', ')} y ${names.at(-1)}`
+  return `${names.slice(0, max).join(', ')} y ${names.length - max} más`
+}
+
+function partNames(design, fields) {
   const names = new Map(fields.map((field) => [field.key, field.label]))
-  return (design?.parts || []).map((key) => names.get(key) || key).join(', ')
+  return (design?.parts || []).map((key) => names.get(key) || key)
 }
 
 // ── rows ──────────────────────────────────────────────────────────────

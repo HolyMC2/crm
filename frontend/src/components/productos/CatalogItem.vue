@@ -63,10 +63,14 @@
       text-class="text-xs"
       :eager="eager"
     />
+    <!-- A long name wraps to two lines instead of an ellipsis on a phone. -->
     <span class="min-w-0">
-      <span class="block truncate text-sm font-medium text-ink-gray-9">{{
-        row.title
-      }}</span>
+      <span
+        class="line-clamp-2 break-words text-sm font-medium leading-snug text-ink-gray-9"
+        :title="row.title"
+        data-catalog-title
+        >{{ row.title }}</span
+      >
       <span v-if="!hideCode" class="block truncate text-xs text-ink-gray-6">
         <span class="font-mono">{{ row.name }}</span>
         <span v-if="groupOf(row)" class="lg:hidden"> · {{ groupOf(row) }}</span>

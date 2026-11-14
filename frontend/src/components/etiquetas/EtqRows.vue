@@ -3,13 +3,18 @@
        a tap opens the rest (the name the label prints, its pieces, the
        product). The row on the stage is marked, and a tap shows its label. -->
   <ul
+    ref="list"
     class="divide-y divide-outline-gray-1 overflow-hidden rounded-8 border border-outline-gray-2"
     data-etq-rows
   >
+    <!-- The scroll margin is the print bar's height (`--etq-bar`, set by the
+         page): a revealed row stops above the bar, never under it. -->
     <li
       v-for="(row, position) in rows"
       :key="rowKey(row)"
+      class="scroll-mb-[calc(var(--etq-bar,0px)+0.5rem)]"
       :class="position === shown ? 'bg-surface-gray-1' : ''"
+      :data-etq-key="rowKey(row)"
       data-etq-row
     >
       <div
@@ -171,6 +176,19 @@ defineProps({
 const emit = defineEmits(['qty', 'remove', 'rename', 'pieces', 'show'])
 
 const open = ref('')
+const list = ref(null)
+
+// Scrolls a row into sight (it stops above the print bar): the page calls
+// it for a product just added.
+function reveal(key) {
+  const row = [...(list.value?.children || [])].find(
+    (el) => el.dataset?.etqKey === key,
+  )
+  if (!row?.scrollIntoView) return
+  const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+  row.scrollIntoView({ block: 'nearest', behavior: still ? 'auto' : 'smooth' })
+}
+defineExpose({ reveal })
 function tap(row, position) {
   const key = rowKey(row)
   open.value = open.value === key ? '' : key

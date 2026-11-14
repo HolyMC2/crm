@@ -719,9 +719,10 @@
                     class="block rounded-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
                     @click="leaveFor(row)"
                   >
-                    <span class="block truncate font-medium text-ink-gray-9">{{
-                      row.title
-                    }}</span>
+                    <span
+                      class="line-clamp-2 break-words font-medium leading-snug text-ink-gray-9"
+                      >{{ row.title }}</span
+                    >
                     <span class="block truncate text-sm text-ink-gray-6">{{
                       [row.name, groupOf(row), row.warehouse_label]
                         .filter(Boolean)
