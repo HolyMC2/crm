@@ -6,11 +6,16 @@
 // never stored: each card only sets switches, and the level shown is read back
 // from them.
 
+import {
+  AJUSTES_GET,
+  COMO_PAGO_ROUTE,
+  prenominaDoor,
+} from '@/composables/useEquipo'
+
+export { AJUSTES_GET, COMO_PAGO_ROUTE, prenominaDoor }
 const API = 'doco.nomina.api'
-export const AJUSTES_GET = `${API}.ajustes_get`
 export const AJUSTES_PREVIEW = `${API}.ajustes_preview`
 export const AJUSTES_APPLY = `${API}.ajustes_apply`
-export const COMO_PAGO_ROUTE = { name: 'EquipoComoPago' }
 
 // Stored option values (doco.nomina.constants); labels come from the server.
 export const SEMANAL = 'Semanal'
@@ -187,17 +192,6 @@ export function payloadOf(values = {}, crearAportacion = false) {
     ...values,
     crear_aportacion_dueno: crearAportacion && visible.crear_aportacion ? 1 : 0,
   }
-}
-
-/**
- * Prenómina's door to the setup, or null. It shows only where doco answers
- * ajustes_get with `available` (the dark default: a site without the setup,
- * or a refusal, keeps Prenómina as it was) and to whom may save it: the
- * first-run card before the first save, a quiet link after it.
- */
-export function prenominaDoor(answer) {
-  if (!answer?.available || !answer.can_edit) return null
-  return answer.configured ? 'link' : 'card'
 }
 
 /** A stable key for «did the answers change since the last preview». */

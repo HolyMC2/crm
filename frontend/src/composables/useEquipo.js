@@ -11,6 +11,21 @@ import { createModuleBoot } from '@/utils/moduleBoot'
 
 export { outcomeUnknown, problemOf, requestId } from '@/composables/useCompras'
 
+// «¿Cómo pagas a tu equipo?» door on Prenómina. The setup page's own rules stay in
+// useComoPago; these live here because Prenómina and that page both already load
+// this module, so no new module is shared between the two lazy chunks.
+export const AJUSTES_GET = 'doco.nomina.api.ajustes_get'
+export const COMO_PAGO_ROUTE = { name: 'EquipoComoPago' }
+
+/**
+ * What Prenómina shows for the pay setup: null when the site has no setup or the
+ * user may not save it, a first-run card before the first save, a quiet link after it.
+ */
+export function prenominaDoor(answer) {
+  if (!answer?.available || !answer.can_edit) return null
+  return answer.configured ? 'link' : 'card'
+}
+
 function tr(message, replace, context = null) {
   if (typeof window !== 'undefined' && typeof window.__ === 'function')
     return window.__(message, replace, context)

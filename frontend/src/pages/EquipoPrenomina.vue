@@ -345,6 +345,8 @@ import { Segmented } from '@/components/ui'
 import { isMobile as isPhone } from '@/composables/breakpoint'
 import {
   PRENOMINA,
+  AJUSTES_GET,
+  COMO_PAGO_ROUTE,
   advancesText,
   daysText,
   equipoApi,
@@ -355,15 +357,10 @@ import {
   periodQuery,
   periodRange,
   personRoute,
+  prenominaDoor,
   problemOf,
 } from '@/composables/useEquipo'
 import { bonosPeriodQuery } from '@/composables/useBonos'
-import { comprasApi } from '@/composables/useCompras'
-import {
-  AJUSTES_GET,
-  COMO_PAGO_ROUTE,
-  prenominaDoor,
-} from '@/composables/useComoPago'
 import { money } from '@/utils/numberFormat'
 import LucideArrowLeft from '~icons/lucide/arrow-left'
 import LucideChevronLeft from '~icons/lucide/chevron-left'
@@ -432,7 +429,7 @@ const comoPagoTo = computed(() => ({
   ...COMO_PAGO_ROUTE,
   query: { list: route.fullPath },
 }))
-comprasApi(AJUSTES_GET)
+equipoApi(AJUSTES_GET)
   .then((next) => (ajustes.value = next))
   .catch(() => (ajustes.value = null))
 

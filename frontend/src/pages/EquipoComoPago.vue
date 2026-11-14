@@ -571,7 +571,7 @@ import { useRoute } from 'vue-router'
 import { ChipGroup } from '@/components/ui'
 import AjustesSwitch from '@/components/ajustes/AjustesSwitch.vue'
 import { isMobile as isPhone } from '@/composables/breakpoint'
-import { comprasApi, requestId } from '@/composables/useCompras'
+import { equipoApi, requestId } from '@/composables/useEquipo'
 import {
   AJUSTES_APPLY,
   AJUSTES_GET,
@@ -742,7 +742,7 @@ const cuentaRows = computed(() => [
 async function load() {
   failure.value = ''
   try {
-    const next = await comprasApi(AJUSTES_GET)
+    const next = await equipoApi(AJUSTES_GET)
     values.value = { ...(next.values || {}) }
     level.value = levelOf(next.values, next.configured)
     answer.value = next
@@ -759,7 +759,7 @@ function runPreview() {
   const key = answersKey(values.value, crearAportacion.value)
   if (previewing && previewKey === key) return previewing
   previewKey = key
-  const ask = comprasApi(AJUSTES_PREVIEW, {
+  const ask = equipoApi(AJUSTES_PREVIEW, {
     company: answer.value.company,
     values: payloadOf(values.value, crearAportacion.value),
   })
@@ -803,7 +803,7 @@ async function save() {
     const key = answersKey(values.value, crearAportacion.value)
     // The same answers retried after a lost reply replay the same receipt.
     if (applyRequest.key !== key) applyRequest = { key, id: requestId() }
-    const done = await comprasApi(AJUSTES_APPLY, {
+    const done = await equipoApi(AJUSTES_APPLY, {
       company: answer.value.company,
       values: payloadOf(values.value, crearAportacion.value),
       token: plan.token,
