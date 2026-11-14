@@ -61,6 +61,7 @@
     :preview="preview"
     :can-apply="canApply"
     @applied="load"
+    @stale="onStale"
   />
 </template>
 <script setup>
@@ -107,14 +108,36 @@ const comoPagoTo = computed(() => ({
 const summaryLine = computed(() => {
   const c = card.value
   if (!c) return ''
-  const amount =
-    c.conMonto === 1
-      ? window.__('{0} para 1 persona', [money(c.importe)])
-      : window.__('{0} para {1} personas', [money(c.importe), c.conMonto])
+  const amount = c.falta === null ? grossLine(c) : owedLine(c)
   return c.fechaLimite
     ? window.__('{0}; vence el {1}', [amount, dayLabel(c.fechaLimite)])
     : amount
 })
+function grossLine(c) {
+  return c.conMonto === 1
+    ? window.__('{0} para 1 persona', [money(c.importe)])
+    : window.__('{0} para {1} personas', [money(c.importe), c.conMonto])
+}
+/** What is still due once doco counts what was paid or left at the register. */
+function owedLine(c) {
+  if (c.falta > 0)
+    return c.faltaPersonas === 1
+      ? window.__('Te falta pagar {0} a 1 persona', [money(c.falta)])
+      : window.__('Te falta pagar {0} a {1} personas', [
+          money(c.falta),
+          c.faltaPersonas,
+        ])
+  if (c.porEntregar > 0)
+    return window.__('{0} por entregar en la caja', [money(c.porEntregar)])
+  if (c.pagado > 0) return window.__('Ya se pagó {0}', [money(c.pagado)])
+  return grossLine(c)
+}
+function onStale(next) {
+  if (next && typeof next === 'object') {
+    asked++
+    preview.value = next
+  } else load()
+}
 
 let asked = 0
 async function load() {

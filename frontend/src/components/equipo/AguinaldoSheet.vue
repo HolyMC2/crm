@@ -23,6 +23,14 @@
         {{ problem }}
       </p>
       <p
+        v-if="notice"
+        role="status"
+        class="rounded-6 bg-surface-amber-1 p-3 text-sm text-ink-amber-8"
+        data-testid="aguinaldo-aviso"
+      >
+        {{ notice }}
+      </p>
+      <p
         v-for="warning in preview?.warnings || []"
         :key="warning.code"
         role="status"
@@ -61,6 +69,31 @@
             </dd>
           </div>
         </template>
+        <template v-if="owed">
+          <div>
+            <dt class="text-sm text-ink-gray-6">{{ __('Ya se le dio') }}</dt>
+            <dd class="text-base font-medium tabular-nums text-ink-gray-9">
+              {{ money(totales.pagado || 0) }}
+            </dd>
+          </div>
+          <div v-if="totales.por_entregar">
+            <dt class="text-sm text-ink-gray-6">
+              {{ __('Por entregar en la caja') }}
+            </dt>
+            <dd class="text-base font-medium tabular-nums text-ink-gray-9">
+              {{ money(totales.por_entregar) }}
+            </dd>
+          </div>
+          <div>
+            <dt class="text-sm text-ink-gray-6">{{ __('Le falta') }}</dt>
+            <dd
+              class="text-base font-medium tabular-nums text-ink-gray-9"
+              data-testid="aguinaldo-falta"
+            >
+              {{ money(totales.falta || 0) }}
+            </dd>
+          </div>
+        </template>
       </dl>
 
       <ul
@@ -84,6 +117,13 @@
               >{{ fila.importe === null ? '—' : money(fila.importe) }}</span
             >
           </div>
+          <p
+            v-if="pagos(fila)"
+            class="text-sm text-ink-gray-7 tabular-nums"
+            data-testid="aguinaldo-pagos"
+          >
+            {{ pagos(fila) }}
+          </p>
           <p class="text-sm text-ink-gray-7" data-testid="aguinaldo-datos">
             {{ datos(fila) }}
           </p>
@@ -110,6 +150,14 @@
         </li>
       </ul>
 
+      <p
+        v-for="message in blockers"
+        :key="message"
+        class="text-sm text-ink-gray-6"
+        data-testid="aguinaldo-bloqueo"
+      >
+        {{ message }}
+      </p>
       <p
         v-if="!canApply && preview?.pago?.message"
         class="text-sm text-ink-gray-6"
@@ -145,8 +193,10 @@ import { Button } from 'frappe-ui'
 import { BottomSheet } from '@/components/ui'
 import {
   AGUINALDO_APPLY,
+  aguinaldoBlockers,
   aguinaldoFaltante,
   aguinaldoReceipt,
+  aguinaldoStale,
   dayLabel,
   equipoApi,
   outcomeUnknown,
@@ -160,11 +210,13 @@ const props = defineProps({
   preview: { type: Object, default: null },
   canApply: { type: Boolean, default: false },
 })
-const emit = defineEmits(['update:open', 'applied'])
+const emit = defineEmits(['update:open', 'applied', 'stale'])
 
 const saving = ref(false)
 const receipt = ref('')
 const problem = ref('')
+// A stale review: doco wrote nothing and sent the fresh preview.
+const notice = ref('')
 // One request id per attempt at the same preview: a retry after a lost answer
 // replays it, and doco returns the first result instead of a second set.
 let request = null
@@ -178,11 +230,22 @@ watch(
 watch(
   () => props.open,
   (value) => {
-    if (value) receipt.value = ''
+    if (value) receipt.value = notice.value = ''
   },
 )
 
 const totales = computed(() => props.preview?.totales || {})
+const owed = computed(
+  () => totales.value.falta !== undefined && totales.value.falta !== null,
+)
+// The pay index's own message already shows as pago.message.
+const blockers = computed(() =>
+  props.canApply
+    ? []
+    : aguinaldoBlockers(props.preview).filter(
+        (message) => message !== props.preview?.pago?.message,
+      ),
+)
 const subtitle = computed(() =>
   props.preview?.fecha_limite
     ? window.__('Se paga a más tardar el {0}', [
@@ -213,10 +276,23 @@ function datos(fila) {
   return parts.join(', ')
 }
 
+/** «Le toca $X · Ya se le dio $Y · Por entregar $Z · Le falta $W» when doco counts it. */
+function pagos(fila) {
+  if (fila.falta === undefined || fila.a_pagar === undefined) return ''
+  if (fila.a_pagar === null) return ''
+  const parts = [window.__('Le toca {0}', [money(fila.a_pagar)])]
+  if (fila.pagado)
+    parts.push(window.__('Ya se le dio {0}', [money(fila.pagado)]))
+  if (fila.por_entregar)
+    parts.push(window.__('Por entregar {0}', [money(fila.por_entregar)]))
+  parts.push(window.__('Le falta {0}', [money(fila.falta || 0)]))
+  return parts.join(' · ')
+}
+
 async function apply() {
   if (!props.canApply || saving.value) return
   saving.value = true
-  problem.value = ''
+  problem.value = notice.value = ''
   request ??= requestId()
   try {
     const result = await equipoApi(AGUINALDO_APPLY, {
@@ -225,8 +301,17 @@ async function apply() {
       token: props.preview.token,
       request_id: request,
     })
-    receipt.value = aguinaldoReceipt(result, props.preview)
     request = null
+    if (aguinaldoStale(result)) {
+      notice.value =
+        result.message ||
+        window.__(
+          'Algo cambió desde la revisión. Revisa el aguinaldo otra vez.',
+        )
+      emit('stale', result.preview || null)
+      return
+    }
+    receipt.value = aguinaldoReceipt(result, props.preview)
     emit('applied', result)
   } catch (error) {
     const found = problemOf(error)

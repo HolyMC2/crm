@@ -427,6 +427,9 @@ export function aguinaldoCard(preview, { canEdit = false } = {}) {
     return preview.mexico === true && canEdit ? { kind: 'offer' } : null
   if (preview.on !== true || !Array.isArray(preview.filas)) return null
   const totales = preview.totales || {}
+  // Paid / for the register / still due arrive with doco's «Dejar en la caja»;
+  // without them the card shows the gross amount only.
+  const owed = totales.falta !== undefined && totales.falta !== null
   return {
     kind: 'summary',
     year: preview.year,
@@ -435,6 +438,12 @@ export function aguinaldoCard(preview, { canEdit = false } = {}) {
     faltanDatos: Number(totales.faltan_datos || 0),
     importe: Number(totales.importe || 0),
     fechaLimite: preview.fecha_limite || null,
+    falta: owed ? Number(totales.falta || 0) : null,
+    faltaPersonas: owed
+      ? preview.filas.filter((fila) => Number(fila?.falta || 0) > 0).length
+      : null,
+    pagado: owed ? Number(totales.pagado || 0) : null,
+    porEntregar: owed ? Number(totales.por_entregar || 0) : null,
   }
 }
 
@@ -454,25 +463,59 @@ export function aguinaldoFaltante(item) {
   return words ? tr(words, null, CTX) : tr('Falta un dato', null, CTX)
 }
 
-/** «Dejar listo para pagar»: the owner, a payment index in doco, and an amount. */
+/** Why «Dejar listo para pagar» cannot run: doco's blocker messages. */
+export function aguinaldoBlockers(preview) {
+  if (!Array.isArray(preview?.blockers)) return []
+  return preview.blockers
+    .map((blocker) => blocker?.message)
+    .filter((message) => typeof message === 'string' && message)
+}
+
+/**
+ * «Dejar listo para pagar»: the owner, a payment index in doco, no blocker, and
+ * someone still to leave at the register (`por_dejar`; `con_monto` from a doco
+ * that does not count it).
+ */
 export function aguinaldoCanApply(preview, { canEdit = false } = {}) {
+  const totales = preview?.totales || {}
   return Boolean(
     canEdit &&
       preview?.on === true &&
       preview.pago?.available === true &&
-      Number(preview.totales?.con_monto || 0) > 0,
+      aguinaldoBlockers(preview).length === 0 &&
+      Number(totales.por_dejar ?? totales.con_monto ?? 0) > 0,
   )
 }
 
-/** The receipt after «Dejar listo para pagar»: doco's words, else the totals. */
+/** True when apply wrote nothing because the preview changed since the review. */
+export function aguinaldoStale(result) {
+  return Boolean(result && (result.applied === false || result.stale === true))
+}
+
+/**
+ * The receipt after «Dejar listo para pagar»: doco's words, else the rows it
+ * wrote. Null for an answer that wrote nothing (a stale review).
+ */
 export function aguinaldoReceipt(result, preview, format = money) {
+  if (aguinaldoStale(result)) return null
   if (typeof result?.message === 'string' && result.message)
     return result.message
-  const totales = result?.totales || preview?.totales || {}
+  const totales = preview?.totales || {}
   const personas = Number(
-    result?.personas ?? totales.con_monto ?? totales.personas ?? 0,
+    (Array.isArray(result?.filas) ? result.filas.length : null) ??
+      result?.personas ??
+      totales.por_dejar ??
+      totales.con_monto ??
+      totales.personas ??
+      0,
   )
-  const importe = Number(result?.importe ?? totales.importe ?? 0)
+  const importe = Number(
+    result?.total ??
+      result?.importe ??
+      totales.por_dejar_importe ??
+      totales.importe ??
+      0,
+  )
   return personas === 1
     ? tr(
         'Quedó listo para pagar el aguinaldo de 1 persona por {0}.',

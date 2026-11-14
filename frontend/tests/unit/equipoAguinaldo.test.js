@@ -22,6 +22,7 @@ import EquipoPrenomina from '@/pages/EquipoPrenomina.vue'
 import {
   AGUINALDO_APPLY,
   AGUINALDO_PREVIEW,
+  aguinaldoBlockers,
   aguinaldoCanApply,
   aguinaldoCard,
   aguinaldoFaltante,
@@ -133,6 +134,37 @@ function on(
     pago,
   }
 }
+// The preview from doco's aguinaldo-pagar: paid, pending and due per row.
+function pagar(extra = {}) {
+  const base = on({ available: true, message: null })
+  base.filas[0] = {
+    ...base.filas[0],
+    a_pagar: 2268.49,
+    pagado: 500,
+    por_entregar: 500,
+    falta: 1268.49,
+    activo: true,
+    omitido: null,
+  }
+  base.filas[1] = {
+    ...base.filas[1],
+    a_pagar: null,
+    pagado: 0,
+    por_entregar: 0,
+    falta: null,
+    activo: true,
+    omitido: { key: 'faltan_datos', label: 'Completa sus datos.' },
+  }
+  base.totales = {
+    ...base.totales,
+    pagado: 500,
+    por_entregar: 500,
+    falta: 1268.49,
+    por_dejar: 1,
+    por_dejar_importe: 1268.49,
+  }
+  return { ...base, blockers: [], token: 'tok', ...extra }
+}
 const OWNER = { available: true, configured: true, can_edit: true }
 const MANAGER = { available: true, configured: true, can_edit: false }
 
@@ -167,6 +199,19 @@ describe('what the card shows', () => {
       faltanDatos: 1,
       importe: 2268.49,
       fechaLimite: '2026-12-20',
+      falta: null,
+      faltaPersonas: null,
+      pagado: null,
+      porEntregar: null,
+    })
+  })
+  it('counts what is still due when doco sends paid and pending', () => {
+    const card = aguinaldoCard(pagar(), { canEdit: false })
+    expect(card).toMatchObject({
+      falta: 1268.49,
+      faltaPersonas: 1,
+      pagado: 500,
+      porEntregar: 500,
     })
   })
   it('names a faltante by the server label, else its key', () => {
@@ -195,6 +240,17 @@ describe('what the card shows', () => {
     ).toBe(false)
     expect(aguinaldoCanApply(OFF_MX, { canEdit: true })).toBe(false)
   })
+  it('does not offer apply with a blocker or nobody left to leave at the register', () => {
+    expect(aguinaldoCanApply(pagar(), { canEdit: true })).toBe(true)
+    const blocked = pagar({
+      blockers: [{ code: 'sin_caja', message: 'Activa «Caja».' }],
+    })
+    expect(aguinaldoCanApply(blocked, { canEdit: true })).toBe(false)
+    expect(aguinaldoBlockers(blocked)).toEqual(['Activa «Caja».'])
+    const done = pagar()
+    done.totales.por_dejar = 0
+    expect(aguinaldoCanApply(done, { canEdit: true })).toBe(false)
+  })
   it('writes the receipt from doco or from the totals', () => {
     expect(aguinaldoReceipt({ message: 'Hecho.' }, on(), fmt)).toBe('Hecho.')
     expect(aguinaldoReceipt({}, on(), fmt)).toBe(
@@ -203,6 +259,17 @@ describe('what the card shows', () => {
     expect(aguinaldoReceipt({ personas: 3, importe: 900 }, on(), fmt)).toBe(
       'Quedó listo para pagar el aguinaldo de 3 personas por $900.',
     )
+    expect(
+      aguinaldoReceipt(
+        { applied: true, filas: [{}, {}], total: 700 },
+        on(),
+        fmt,
+      ),
+    ).toBe('Quedó listo para pagar el aguinaldo de 2 personas por $700.')
+  })
+  it('writes no receipt for a stale answer', () => {
+    const stale = { applied: false, stale: true, message: 'Algo cambió.' }
+    expect(aguinaldoReceipt(stale, on(), fmt)).toBeNull()
   })
 })
 
@@ -374,5 +441,56 @@ describe('Prenómina, aguinaldo on', () => {
     )
     expect(q('aguinaldo-aplicar')).toBeNull()
     expect(calls(AGUINALDO_PREVIEW).length).toBeGreaterThan(1)
+  })
+  it('shows what is still due on the card and per person in the sheet', async () => {
+    await mount({ today: '2026-11-20', preview: pagar() })
+    expect(q('aguinaldo-tarjeta-resumen').textContent).toMatch(
+      /Te falta pagar .*1,?268 a 1 persona; vence el/,
+    )
+    await openSheet()
+    const line = all('aguinaldo-pagos')
+    expect(line).toHaveLength(1)
+    expect(line[0].textContent).toMatch(
+      /Le toca .*2,?268 · Ya se le dio .*500 · Por entregar .*500 · Le falta .*1,?268/,
+    )
+    expect(q('aguinaldo-falta').textContent).toMatch(/1,?268/)
+  })
+  it("shows doco's blocker and no apply button", async () => {
+    await mount({
+      today: '2026-11-20',
+      preview: pagar({
+        blockers: [{ code: 'sin_caja', message: 'Activa «Caja».' }],
+      }),
+    })
+    await openSheet()
+    expect(q('aguinaldo-aplicar')).toBeNull()
+    expect(q('aguinaldo-bloqueo').textContent).toMatch(/Activa «Caja»/)
+  })
+  it('a stale answer is a notice, loads the fresh preview and keeps the button', async () => {
+    const fresh = pagar({ token: 'tok2' })
+    const apply = vi.fn(() => ({
+      applied: false,
+      stale: true,
+      message: 'Algo cambió desde la revisión.',
+      preview: fresh,
+    }))
+    await mount({ today: '2026-11-20', preview: pagar(), apply })
+    await openSheet()
+    const before = calls(AGUINALDO_PREVIEW).length
+    q('aguinaldo-aplicar').click()
+    await flush()
+    expect(q('aguinaldo-recibo')).toBeNull()
+    expect(q('aguinaldo-aviso').textContent).toBe(
+      'Algo cambió desde la revisión.',
+    )
+    expect(q('aguinaldo-aplicar')).not.toBeNull()
+    expect(calls(AGUINALDO_PREVIEW)).toHaveLength(before)
+    q('aguinaldo-aplicar').click()
+    await flush()
+    expect(apply).toHaveBeenCalledTimes(2)
+    expect(apply.mock.calls[1][0].token).toBe('tok2')
+    expect(apply.mock.calls[1][0].request_id).not.toBe(
+      apply.mock.calls[0][0].request_id,
+    )
   })
 })
