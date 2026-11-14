@@ -2,12 +2,18 @@
   <div
     ref="scroller"
     class="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto"
-    :style="{ '--etq-bar': `${barRoom}px` }"
+    :style="{
+      '--etq-bar': `${barRoom}px`,
+      '--etq-head': `${headRoom}px`,
+      scrollPaddingTop: `${headRoom}px`,
+      scrollPaddingBottom: `${barRoom}px`,
+    }"
     data-etiquetas
   >
     <!-- Phone: the page's own bar (route meta.ownPhoneHeader), back to Productos. -->
     <AppBar
       v-if="phone"
+      ref="appBar"
       :back="{ name: 'Productos' }"
       back-label="Volver a Productos"
       context="Productos"
@@ -95,13 +101,13 @@
             v-model:index="shownIndex"
             v-model:view="stageView"
             class="h-64 sm:h-72 lg:h-[min(28rem,calc(100dvh-15rem))]"
-            :html="previewHtml"
+            :html="stageHtml"
             :size="previewSize"
             :designed="isSize"
             :count="previewShown"
             :offset="previewOffset"
             :total="rows.length"
-            :loading="previewing"
+            :loading="previewing || stale"
             :label="layoutName(currentLayout)"
             :title="stageTitle"
             :empty="previewProblem || 'Elige una medida para ver la etiqueta.'"
@@ -212,7 +218,7 @@
           <section
             ref="searchSection"
             aria-label="Qué etiquetar"
-            class="scroll-mt-20 space-y-2"
+            class="scroll-mt-2 space-y-2"
           >
             <label class="relative flex items-center">
               <span
@@ -263,8 +269,17 @@
                     </ListRow>
                   </li>
                   <li
-                    v-if="!results.length && !searching"
+                    v-if="panelState === 'searching'"
+                    role="status"
                     class="px-4 py-3 text-sm text-ink-gray-6"
+                    data-etq-searching
+                  >
+                    Buscando…
+                  </li>
+                  <li
+                    v-else-if="panelState === 'none'"
+                    class="px-4 py-3 text-sm text-ink-gray-6"
+                    data-etq-none
                   >
                     Ningún producto se llama así. Si es un código, presiona
                     Enter para buscarlo como serie o lote.
@@ -510,13 +525,13 @@
       :dropped="droppedKeys"
       :rows="rows"
       :price-list="boot?.price_list || ''"
-      :html="previewHtml"
+      :html="stageHtml"
       :size="previewSize"
       :designed="isSize"
       :count="previewShown"
       :offset="previewOffset"
       :total="rows.length"
-      :loading="previewing"
+      :loading="previewing || stale"
     />
     <EtqSourceSheet
       v-if="sourceMounted"
@@ -541,7 +556,7 @@ import {
   ref,
   watch,
 } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { Button } from 'frappe-ui'
 import { useDebounceFn, useResizeObserver } from '@vueuse/core'
 import {
@@ -575,6 +590,7 @@ import {
   mergeRows,
   partsSummary,
   pdfFile,
+  previewStale,
   printBlock,
   printHtml,
   PREVIEW_ROWS,
@@ -588,6 +604,8 @@ import {
   requestId,
   rowKey,
   rowPrice,
+  keptScroll,
+  searchState,
   sendPdf,
   startFrom,
   startLayout,
@@ -755,7 +773,11 @@ const recent = useRecentPicks('muelle:etiquetas-recent')
 
 // Rows land on the list (a product already there adds its copies) and the
 // first of them shows on the stage. A product added by hand is scrolled
-// into sight above the print bar, its copies at the thumb.
+// into sight above the print bar, its copies at the thumb, once its label
+// is drawn (what the drawing brings above it, warnings and notes, has
+// landed by then, so the page moves once); what the page opens with stays
+// put, so the page opens at its top with the label.
+let starting = false
 function land(incoming, { replace = false } = {}) {
   rows.value = mergeRows(replace ? [] : rows.value, incoming)
   if (!incoming.length) return
@@ -764,12 +786,46 @@ function land(incoming, { replace = false } = {}) {
   )
   if (first < 0) return
   showRow(first)
-  if (!replace) reveal(rowKey(incoming[0]))
+  if (replace || starting) return
+  revealKey = rowKey(incoming[0])
+  // No label to draw: nothing comes to move it, show it now.
+  if (!layout.value) reveal(revealKey)
+}
+
+// ── where the page opens ──────────────────────────────────────────────
+// At the top; back from a product («ponle precio») it returns to where
+// the worker was.
+const SCROLL_KEY = 'muelle:etiquetas:scroll'
+const scroller = ref(null)
+let entry = null
+function keepScroll() {
+  try {
+    sessionStorage.setItem(
+      SCROLL_KEY,
+      JSON.stringify({ at: entry, top: scroller.value?.scrollTop || 0 }),
+    )
+  } catch {
+    // Private mode: the page opens at the top.
+  }
+}
+onBeforeRouteLeave(keepScroll)
+async function placeScroll() {
+  let saved = null
+  try {
+    saved = JSON.parse(sessionStorage.getItem(SCROLL_KEY) || 'null')
+  } catch {
+    saved = null
+  }
+  const top = keptScroll(saved, window.history.state)
+  await nextTick()
+  if (scroller.value) scroller.value.scrollTop = top
 }
 
 // ── the print bar's room ──────────────────────────────────────────────
-// The sticky bar covers the bottom of the scroller: its height reaches the
-// rows as `--etq-bar` (their scroll margin), so a revealed row stops above it.
+// The sticky bar covers the bottom of the scroller: its height is the
+// scroller's bottom scroll padding (and `--etq-bar`), so whatever is
+// scrolled into sight (a row just added, a focused field) stops above it,
+// from any scroll position.
 const printBar = ref(null)
 const rowList = ref(null)
 const barRoom = ref(0)
@@ -779,11 +835,24 @@ useResizeObserver(printBar, () => {
 watch(printBar, (el) => {
   barRoom.value = Math.ceil(el?.offsetHeight || 0)
 })
-// The row to keep in sight until the label above it is drawn: the preview's
-// warnings and notes can push it down once more.
+// The phone's sticky bar covers the top the same way: its height is the
+// top scroll padding (and `--etq-head`), so nothing revealed hides under it.
+const appBar = ref(null)
+const headRoom = ref(0)
+// (AppBar renders a comment before its header: find the header itself.)
+const headEl = computed(() =>
+  appBar.value ? scroller.value?.querySelector('[data-appbar]') || null : null,
+)
+useResizeObserver(headEl, () => {
+  headRoom.value = Math.ceil(headEl.value?.offsetHeight || 0)
+})
+watch(headEl, (el) => {
+  headRoom.value = Math.ceil(el?.offsetHeight || 0)
+})
+// The row to bring into sight once its label is drawn.
 let revealKey = ''
 async function reveal(key) {
-  revealKey = key
+  revealKey = ''
   await nextTick()
   rowList.value?.reveal(key)
 }
@@ -969,10 +1038,22 @@ watch(stageAside, async (aside) => {
   searchSection.value?.scrollIntoView?.({ block: 'nearest' })
 })
 let searchTicket = 0
+// The text the last finished search answered: until the debounced search
+// answers what is typed now, the panel says «Buscando…», never «ninguno».
+const answered = ref('')
+const panelState = computed(() =>
+  searchState({
+    query: query.value,
+    answered: answered.value,
+    searching: searching.value,
+    count: results.value.length,
+  }),
+)
 const search = useDebounceFn(async () => {
   const text = query.value.trim()
   if (!text) {
     results.value = []
+    answered.value = ''
     return
   }
   const mine = ++searchTicket
@@ -986,7 +1067,10 @@ const search = useDebounceFn(async () => {
   } catch {
     if (mine === searchTicket) results.value = []
   } finally {
-    if (mine === searchTicket) searching.value = false
+    if (mine === searchTicket) {
+      answered.value = text
+      searching.value = false
+    }
   }
 }, 250)
 watch(query, search)
@@ -1079,6 +1163,20 @@ const previewShown = ref(0)
 const previewOffset = ref(0)
 const previewSize = ref({ w_mm: 0, h_mm: 0 })
 const previewProblem = ref('')
+// The row keys the drawing on the stage is of ([]: the sample).
+const drawnKeys = ref(null)
+const stale = computed(() =>
+  previewStale({
+    drawn: drawnKeys.value,
+    rows: rows.value,
+    index: shownIndex.value,
+    offset: previewOffset.value,
+    view: stageView.value,
+  }),
+)
+// What the stage shows: never the sample (or another product) under the
+// caption of the product picked; while that one draws, «Dibujando…».
+const stageHtml = computed(() => (stale.value ? '' : previewHtml.value))
 const warnings = ref([])
 const fit = ref({ dropped: [], text: '', notes: [] })
 const shownIndex = ref(0)
@@ -1128,8 +1226,9 @@ let previewTicket = 0
 const drawPreview = useDebounceFn(async () => {
   if (!layout.value) {
     previewHtml.value = ''
+    drawnKeys.value = null
     warnings.value = []
-    revealKey = ''
+    if (revealKey) reveal(revealKey)
     return
   }
   const mine = ++previewTicket
@@ -1145,6 +1244,7 @@ const drawPreview = useDebounceFn(async () => {
     if (mine !== previewTicket) return
     previewProblem.value = ''
     previewHtml.value = answer?.html || ''
+    drawnKeys.value = drawn.map(rowKey)
     previewShown.value = answer?.shown || 0
     previewOffset.value = drawn.length ? start : 0
     previewSize.value = answer?.size || {
@@ -1156,6 +1256,7 @@ const drawPreview = useDebounceFn(async () => {
   } catch (error) {
     if (mine === previewTicket) {
       previewHtml.value = ''
+      drawnKeys.value = null
       previewProblem.value = problemText(error)
       fit.value = { dropped: [], text: '', notes: [] }
       warnings.value = []
@@ -1163,12 +1264,7 @@ const drawPreview = useDebounceFn(async () => {
   } finally {
     if (mine === previewTicket) {
       previewing.value = false
-      if (revealKey) {
-        const key = revealKey
-        revealKey = ''
-        await nextTick()
-        rowList.value?.reveal(key)
-      }
+      if (revealKey) reveal(revealKey)
     }
   }
 }, 250)
@@ -1302,10 +1398,16 @@ async function start() {
   design.value = cleanDesign(rememberedDesign(), designMeta.value)
   if (!boot.value.capabilities?.print) return
   const from = startFrom(route.query)
-  if (route.query.trabajo) await fromJob(String(route.query.trabajo))
-  else if (from.doctype) await addFrom(from)
-  else if (from.items.length) await addItems(from.items)
-  else await restore()
+  starting = true
+  try {
+    if (route.query.trabajo) await fromJob(String(route.query.trabajo))
+    else if (from.doctype) await addFrom(from)
+    else if (from.items.length) await addItems(from.items)
+    else await restore()
+  } finally {
+    starting = false
+  }
+  await placeScroll()
   // The start is done: a reload must not add the same products again.
   if (route.query.codigos || route.query.desde || route.query.trabajo) {
     const query = { ...route.query }
@@ -1315,5 +1417,8 @@ async function start() {
     router.replace({ query })
   }
 }
-onMounted(start)
+onMounted(() => {
+  entry = window.history.state?.position ?? null
+  start()
+})
 </script>

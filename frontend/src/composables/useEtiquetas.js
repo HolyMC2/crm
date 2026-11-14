@@ -373,6 +373,60 @@ export function parsePasted(text = '') {
 }
 
 /**
+ * What the search panel shows for the text typed: `idle` (nothing typed),
+ * `results`, `searching` (the debounced search has not answered this text
+ * yet) or `none` (it answered this text with nothing). «No product» is only
+ * said for a search that finished.
+ */
+export function searchState({
+  query = '',
+  answered = '',
+  searching = false,
+  count = 0,
+} = {}) {
+  const text = String(query).trim()
+  if (!text) return 'idle'
+  if (count) return 'results'
+  if (searching || answered !== text) return 'searching'
+  return 'none'
+}
+
+/**
+ * Whether the drawing on the stage is of something else than the list: the
+ * sample while products are listed, products after the list was emptied,
+ * or another product where the one on the stage should be. Until the next
+ * drawing lands the stage says it is drawing instead.
+ * `drawn` is the row keys of the drawing (`[]`: the sample; `null`: nothing
+ * drawn yet), `offset` where it starts in the list, `index` the row on the
+ * stage.
+ */
+export function previewStale({
+  drawn = null,
+  rows = [],
+  index = 0,
+  offset = 0,
+  view = 'una',
+} = {}) {
+  if (!Array.isArray(drawn)) return false
+  if (!rows.length) return drawn.length > 0
+  if (!drawn.length) return true
+  if (view === 'todas') return false
+  const row = rows[index]
+  return !row || drawn[index - offset] !== rowKey(row)
+}
+
+/**
+ * Where the page opens: at the top, unless the worker comes back (the
+ * browser's back) to the history entry the kept scroll was left from.
+ * `saved` is `{ at, top }`; `state` is `history.state`.
+ */
+export function keptScroll(saved, state) {
+  if (!saved || !state || state.position == null) return 0
+  if (saved.at !== state.position || !state.forward) return 0
+  return Math.max(0, Number(saved.top) || 0)
+}
+
+/**
  * The page's query → what to load first: `?codigos=A,B` (a selection, a
  * product), `?desde=Purchase Receipt:MAT-PRE-1` (a document) or nothing.
  */

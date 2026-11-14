@@ -32,6 +32,9 @@ const {
   pdfFile,
   printBlock,
   printLabel,
+  keptScroll,
+  previewStale,
+  searchState,
   sendPdf,
   sizeText,
   startFrom,
@@ -318,6 +321,56 @@ describe('helpers', () => {
       { code: 'E', qty: 200 },
     ])
     expect(parsePasted('  \n')).toEqual([])
+  })
+  it('says «no product» only for a search that answered the text typed', () => {
+    expect(searchState({ query: '  ' })).toBe('idle')
+    // Typed, the debounced search not run yet: still searching.
+    expect(searchState({ query: 'fun', answered: '' })).toBe('searching')
+    expect(searchState({ query: 'funda', answered: 'fun' })).toBe('searching')
+    expect(
+      searchState({ query: 'funda', answered: 'funda', searching: true }),
+    ).toBe('searching')
+    expect(searchState({ query: 'funda ', answered: 'funda' })).toBe('none')
+    expect(searchState({ query: 'funda', answered: 'f', count: 2 })).toBe(
+      'results',
+    )
+  })
+  it('knows when the drawing on the stage is of something else than the list', () => {
+    const A = { item_code: 'A', qty: 1 }
+    const B = { item_code: 'B', qty: 1 }
+    const keyA = etq.rowKey(A)
+    const keyB = etq.rowKey(B)
+    // Nothing drawn yet: nothing stale to hide.
+    expect(previewStale({ drawn: null, rows: [A] })).toBe(false)
+    // The sample while a product is listed, and products after emptying.
+    expect(previewStale({ drawn: [], rows: [A] })).toBe(true)
+    expect(previewStale({ drawn: [], rows: [] })).toBe(false)
+    expect(previewStale({ drawn: [keyA], rows: [] })).toBe(true)
+    // The product on the stage must be the one drawn at its place.
+    expect(previewStale({ drawn: [keyA], rows: [A], index: 0 })).toBe(false)
+    expect(previewStale({ drawn: [keyA], rows: [A, B], index: 1 })).toBe(true)
+    expect(previewStale({ drawn: [keyB, keyA], rows: [A, B], index: 0 })).toBe(
+      true,
+    )
+    // A later window: its offset places the row.
+    expect(
+      previewStale({ drawn: [keyB], rows: [A, B], index: 1, offset: 1 }),
+    ).toBe(false)
+    // «Ver todas» shows the drawing as it is until the next one.
+    expect(
+      previewStale({ drawn: [keyA], rows: [A, B], index: 1, view: 'todas' }),
+    ).toBe(false)
+  })
+  it('opens at the top unless the worker comes back to where it left', () => {
+    const saved = { at: 4, top: 320 }
+    expect(keptScroll(saved, { position: 4, forward: '/productos/A' })).toBe(
+      320,
+    )
+    // A new visit (no page ahead) or another entry opens at the top.
+    expect(keptScroll(saved, { position: 4, forward: null })).toBe(0)
+    expect(keptScroll(saved, { position: 6, forward: '/x' })).toBe(0)
+    expect(keptScroll(null, { position: 4, forward: '/x' })).toBe(0)
+    expect(keptScroll(saved, null)).toBe(0)
   })
   it('shares the PDF on a phone and saves it on a computer', async () => {
     const file = pdfFile(btoa('%PDF-1.4'), 'LPJ-9.pdf')
@@ -919,16 +972,143 @@ describe('Etiquetas › on a phone', () => {
     expect(preview().style.display).not.toBe('none')
   })
 
-  it('a product just added scrolls into sight above the print bar', async () => {
+  it('opens at the top: the products it opens with do not scroll the page', async () => {
+    await mountAt('/productos/etiquetas?codigos=A,B')
+    await settle()
+    expect(root.querySelectorAll('[data-etq-row]').length).toBe(2)
+    expect(scrolled.filter(([el]) => el.matches('[data-etq-row]'))).toEqual([])
+    expect(root.querySelector('[data-etiquetas]').scrollTop).toBe(0)
+  })
+
+  it('a product just added sits just above the print bar, clear of the header', async () => {
+    answers.candidates = (args) =>
+      args.query ? { rows: [ROWS.B] } : { rows: [] }
     await mountAt('/productos/etiquetas?codigos=A')
     const scroller = root.querySelector('[data-etiquetas]')
     expect(scroller.style.getPropertyValue('--etq-bar')).toMatch(/^\d+px$/)
-    const row = root.querySelector('[data-etq-row]')
-    expect(row.className).toContain(
-      'scroll-mb-[calc(var(--etq-bar,0px)+0.5rem)]',
+    expect(scroller.style.getPropertyValue('--etq-head')).toMatch(/^\d+px$/)
+    search().dispatchEvent(new Event('focus'))
+    type(search(), 'Funda')
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    await flush()
+    button('Funda', root.querySelector('[data-etq-results]')).click()
+    await flush()
+    const rows = [...root.querySelectorAll('[data-etq-row]')]
+    expect(rows.length).toBe(2)
+    const row = rows.find((el) => el.dataset.etqKey === etq.rowKey(ROWS.B))
+    // The scroller pads its scroll by the bar and the header, so a row
+    // brought into sight from any scroll position stops clear of both.
+    expect(scroller.style.scrollPaddingBottom).toBe(
+      scroller.style.getPropertyValue('--etq-bar'),
     )
+    expect(scroller.style.scrollPaddingTop).toBe(
+      scroller.style.getPropertyValue('--etq-head'),
+    )
+    await settle()
     expect(scrolled.map(([el]) => el)).toContain(row)
-    expect(scrolled.find(([el]) => el === row)[1].block).toBe('nearest')
+    expect(scrolled.find(([el]) => el === row)[1].block).toBe('end')
+  })
+
+  it('a pick moves the page once, after its label is drawn', async () => {
+    answers.candidates = (args) =>
+      args.query ? { rows: [ROWS.B] } : { rows: [] }
+    const drawing = []
+    const draw = answers.preview
+    answers.preview = (args) =>
+      new Promise((resolve) => drawing.push(() => resolve(draw(args))))
+    await mountAt('/productos/etiquetas?codigos=A')
+    await settle()
+    drawing.splice(0).forEach((done) => done())
+    await flush()
+    search().dispatchEvent(new Event('focus'))
+    type(search(), 'Funda')
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    await flush()
+    button('Funda', root.querySelector('[data-etq-results]')).click()
+    await settle()
+    // Asked for the drawing, not answered: the page has not moved.
+    expect(drawing.length).toBe(1)
+    const rowsScrolled = () =>
+      scrolled.filter(([el]) => el.matches('[data-etq-row]'))
+    expect(rowsScrolled()).toEqual([])
+    drawing.splice(0).forEach((done) => done())
+    await flush()
+    expect(rowsScrolled().length).toBe(1)
+    expect(rowsScrolled()[0][0].dataset.etqKey).toBe(etq.rowKey(ROWS.B))
+  })
+
+  it('the stage never shows the sample under the product just picked', async () => {
+    answers.candidates = (args) =>
+      args.query ? { rows: [ROWS.B] } : { rows: [] }
+    const drawing = []
+    answers.preview = (args) => {
+      const rows = JSON.parse(args.rows || '[]')
+      const html = rows.length
+        ? `<html><head></head><body>${rows.map((r) => `<div class="doco-label">${r.item_name}</div>`).join('')}</body></html>`
+        : '<html><head></head><body><div class="doco-label">Producto de ejemplo</div></body></html>'
+      const answer = {
+        html,
+        shown: rows.length || 1,
+        size: sizeOf(args.layout),
+        fit: { dropped: [], text: '', notes: [] },
+        warnings: [],
+      }
+      return new Promise((resolve) => drawing.push(() => resolve(answer)))
+    }
+    await mountAt('/productos/etiquetas')
+    await settle()
+    drawing.splice(0).forEach((done) => done())
+    await flush()
+    const stage = () =>
+      root.querySelector('[data-etq-preview] [data-etq-stage]')
+    const frame = () => stage().querySelector('iframe')
+    const caption = () =>
+      root.querySelector('[data-etq-caption]').textContent.trim()
+    expect(frame().getAttribute('srcdoc')).toContain('Producto de ejemplo')
+    expect(caption()).toContain('Producto de ejemplo')
+    search().dispatchEvent(new Event('focus'))
+    type(search(), 'Funda')
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    await flush()
+    button('Funda', root.querySelector('[data-etq-results]')).click()
+    await flush()
+    // The caption names the product; the stage says it is drawing it.
+    expect(caption()).toContain(ROWS.B.item_name)
+    expect(frame()).toBeNull()
+    expect(stage().textContent).toContain('Dibujando las etiquetas…')
+    await settle()
+    drawing.splice(0).forEach((done) => done())
+    await flush()
+    expect(frame().getAttribute('srcdoc')).toContain(ROWS.B.item_name)
+    expect(frame().getAttribute('srcdoc')).not.toContain('Producto de ejemplo')
+  })
+
+  it('while the search runs it says «Buscando…», and «ninguno» only after it answered', async () => {
+    let answer
+    answers.candidates = (args) =>
+      args.query ? new Promise((resolve) => (answer = resolve)) : { rows: [] }
+    await mountAt('/productos/etiquetas')
+    const results = () => root.querySelector('[data-etq-results]')
+    search().dispatchEvent(new Event('focus'))
+    type(search(), 'zz')
+    await flush()
+    // Debounce pending: no verdict yet.
+    expect(results().querySelector('[data-etq-searching]')).toBeTruthy()
+    expect(results().textContent).not.toContain('Ningún producto')
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    await flush()
+    // Asked, not answered.
+    expect(results().querySelector('[data-etq-searching]')).toBeTruthy()
+    expect(results().textContent).not.toContain('Ningún producto')
+    answer({ rows: [] })
+    await flush()
+    expect(results().querySelector('[data-etq-searching]')).toBeNull()
+    expect(results().textContent).toContain('Ningún producto se llama así')
+    // A new letter: back to searching until its answer.
+    type(search(), 'zzz')
+    await flush()
+    expect(results().textContent).not.toContain('Ningún producto')
+    expect(results().querySelector('[data-etq-searching]')).toBeTruthy()
   })
 
   it('a document that replaces the list does not jump to its first row', async () => {
