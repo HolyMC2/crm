@@ -1052,6 +1052,10 @@ const panelState = computed(() =>
 const search = useDebounceFn(async () => {
   const text = query.value.trim()
   if (!text) {
+    // Retire any search still in flight so its answer cannot fill the
+    // cleared field.
+    ++searchTicket
+    searching.value = false
     results.value = []
     answered.value = ''
     return
