@@ -323,6 +323,26 @@ export function pagoLine(pago, format = money) {
     .join(' · ')
 }
 
+// The concepts doco adds into `pagado` (doco nomina constants CONCEPTOS_PAGO).
+// A loan or its discount is listed in `pagos` but is not pay; it stays out of
+// «Ya se le dio» and shows under the period's payments with its concept.
+const PAY_CONCEPTS = Object.freeze([
+  'Sueldo',
+  'A cuenta',
+  'Bono o comisión',
+  'Aguinaldo',
+  'Prima vacacional',
+  'PTU',
+  'Finiquito',
+])
+
+/** The row's payments that make up its «Ya se le dio». */
+export function paidPagos(row) {
+  return (row?.pagos || []).filter((pago) =>
+    PAY_CONCEPTS.includes(pago.concepto),
+  )
+}
+
 /**
  * «Pagos de la semana»: every person's payments in one list, oldest first, each
  * with the person's name.
@@ -362,7 +382,7 @@ export function payTotals(answer) {
     rows.reduce((acc, row) => acc + (rowAmount(row, key) || 0), 0)
   return {
     pagado: Number(totals.pagado || 0),
-    pagos: rows.reduce((acc, row) => acc + (row.pagos || []).length, 0),
+    pagos: rows.reduce((acc, row) => acc + paidPagos(row).length, 0),
     le_toca: owed
       ? isAmount(totals.le_toca)
         ? totals.le_toca

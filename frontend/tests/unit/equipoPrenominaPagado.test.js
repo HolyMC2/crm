@@ -25,6 +25,7 @@ import {
   pagoLine,
   paidShown,
   payDay,
+  paidPagos,
   payTotals,
   paymentsTitle,
   periodPayments,
@@ -119,7 +120,31 @@ const CALCULA = payload(
   { pagado: 1800 },
 )
 
+const PRESTAMO = payload(
+  [
+    row('E1', {
+      pagado: 500,
+      pagos: [
+        pago('P1', '2026-11-11', 500, 'A cuenta'),
+        pago('P4', '2026-11-12', 2000, 'Préstamo'),
+        pago('P5', '2026-11-13', 200, 'Descuento de préstamo'),
+      ],
+    }),
+  ],
+  { pagado: 500 },
+)
+
 describe('what the payload carries', () => {
+  it('keeps a loan and its discount out of «Ya se le dio»', () => {
+    expect(paidPagos(PRESTAMO.rows[0]).map((p) => p.name)).toEqual(['P1'])
+    expect(paidPagos({})).toEqual([])
+    expect(payTotals(PRESTAMO).pagos).toBe(1)
+    expect(periodPayments(PRESTAMO.rows).map((p) => p.name)).toEqual([
+      'P1',
+      'P4',
+      'P5',
+    ])
+  })
   it('shows «Ya se le dio» only when doco sends pagado', () => {
     expect(paidShown(null)).toBe(false)
     expect(paidShown(DARK)).toBe(false)
@@ -266,6 +291,20 @@ describe('Prenómina without a pay setup (dark)', () => {
 })
 
 describe('Prenómina, «Solo anoto»', () => {
+  for (const phone of [false, true]) {
+    it(`lists a loan only under the period's payments, with its concept (${phone ? 'phone' : 'desktop'})`, async () => {
+      await mount(PRESTAMO, { phone })
+      const paid = q('prenomina-pagado')
+      const cell = phone ? paid.parentElement : paid
+      expect(cell.textContent).toMatch(/A cuenta: /)
+      expect(cell.textContent).not.toMatch(/Préstamo/)
+      expect(q('prenomina-total-pagado').textContent).toMatch(/1 pago/)
+      const items = all('prenomina-pago')
+      expect(items).toHaveLength(3)
+      expect(items[1].textContent).toMatch(/Préstamo, Caja/)
+    })
+  }
+
   it('adds «Ya se le dio» and the week’s payments, and drops the read-only line', async () => {
     await mount(SOLO)
     expect(root.textContent).not.toContain('Nothing here changes payroll.')

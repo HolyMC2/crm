@@ -266,7 +266,7 @@
                   {{ money(row.pagado || 0) }}
                 </dd>
                 <dd
-                  v-for="pago in row.pagos || []"
+                  v-for="pago in paidPagos(row)"
                   :key="pago.name"
                   class="col-span-2 text-xs text-ink-gray-6"
                 >
@@ -457,10 +457,11 @@
                   >
                     {{ money(row.pagado || 0) }}
                     <span
-                      v-for="pago in row.pagos || []"
+                      v-for="pago in paidPagos(row)"
                       :key="pago.name"
                       class="block whitespace-nowrap text-xs text-ink-gray-6"
-                      >{{ pagoLine(pago) }}</span
+                      >{{ conceptoLabel(pago.concepto) }}:
+                      {{ pagoLine(pago) }}</span
                     >
                   </td>
                   <td
@@ -622,6 +623,7 @@ import {
   overtimeLines,
   owedShown,
   pagoLine,
+  paidPagos,
   paidShown,
   payDay,
   payTotals,
