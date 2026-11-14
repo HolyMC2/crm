@@ -69,6 +69,8 @@
       >
         {{ __('Cómo pagas a tu equipo') }}
       </RouterLink>
+      <!-- Aguinaldo: from 15 Nov to 20 Dec, only where doco answers its preview. -->
+      <AguinaldoCard :ajustes="ajustes" />
 
       <div class="mb-4 flex flex-wrap items-center gap-3">
         <div v-if="periodOptions.length" class="w-full sm:w-64">
@@ -638,6 +640,7 @@ import {
   problemOf,
 } from '@/composables/useEquipo'
 import { bonosPeriodQuery } from '@/composables/useBonos'
+import AguinaldoCard from '@/components/equipo/AguinaldoCard.vue'
 import { money } from '@/utils/numberFormat'
 import LucideArrowLeft from '~icons/lucide/arrow-left'
 import LucideChevronLeft from '~icons/lucide/chevron-left'

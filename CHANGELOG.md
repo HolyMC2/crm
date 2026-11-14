@@ -2,6 +2,15 @@
 
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
+## 2026-11-14 — Aguinaldo card and sheet on Prenómina (lane aguinaldo-tarjeta; not deployed)
+
+Wave 2 «Pago a tu equipo», lane 9 (crm half). Frontend over doco.nomina's `aguinaldo_preview` (landed) and `aguinaldo_apply` (doco lane aguinaldo-pagar, in parallel).
+
+- **Card, 15 Nov to 20 Dec only.** On Prenómina, under the pay-setup door. A Mexican company with the aguinaldo switch off shows the owner «¿Quieres que Muelle calcule el aguinaldo?», one tap to /crm/equipo/como-pago. With it on: «Aguinaldo 2026», the total for N people, the deadline, and how many people are missing a piece of data.
+- **Sheet.** Per person: ingreso (and baja), días trabajados, días de aguinaldo, salario diario (marked «sugerido» for a commission average), importe or «—», the server's `porque` lines and its faltantes in es-MX (`sin_ingreso`, `sin_sueldo`, `sin_promedio`, `sin_baja`, `sin_isr`). Totals (importe, people with an amount; ISR and neto only with `retenciones`) and doco's warnings.
+- **«Dejar listo para pagar».** Owner only (`ajustes_get.can_edit`) and only when the preview says `pago.available`; otherwise the sheet shows the preview and doco's `pago.message`. It sends `company`, `year`, `token` (when the preview carries one) and one `request_id` kept across a retry, then shows a receipt (doco's `message`, else the totals) and reloads the preview.
+- **Dark.** Outside the season nothing is asked; a site without doco.nomina, a refusal, or a company outside Mexico renders Prenómina unchanged (asserted in `tests/unit/equipoAguinaldo.test.js`). Helpers in `useEquipo.js`; the sheet loads on first open.
+
 ## 2026-11-14 — Prenómina shows «Ya se le dio» and «Le toca / Le falta» (lane prenomina-ya-se-le-dio; not deployed)
 
 Wave 2 «Pago a tu equipo», lane 7. Frontend over the `pagado` and `pagos[]` doco's `prenomina.get_period` carries for a company with a pay setup (doco lane prenomina-pagado), and over `le_toca` / `le_falta` / `porque` when the setup calculates (doco lane le-toca; rendered only when present).

@@ -399,6 +399,93 @@ export function payTotals(answer) {
   }
 }
 
+// Aguinaldo (doco.nomina aguinaldo preview / apply). The card lives on Prenómina
+// only in its season and only when doco answers the preview; a site without
+// doco.nomina, a non-Mexican company or a refused read leaves it null, and
+// outside the season nothing is even asked.
+export const AGUINALDO_PREVIEW = 'doco.nomina.api.aguinaldo_preview'
+export const AGUINALDO_APPLY = 'doco.nomina.api.aguinaldo_apply'
+// LFT 87: the card opens on 15 Nov and closes after the 20 Dec deadline.
+const AGUINALDO_FROM = [11, 15]
+const AGUINALDO_UNTIL = [12, 20]
+
+/** True from 15 Nov to 20 Dec (both included) on the device's calendar day. */
+export function aguinaldoSeason(today = new Date()) {
+  const md = [today.getMonth() + 1, today.getDate()]
+  const after = (a, b) => a[0] > b[0] || (a[0] === b[0] && a[1] >= b[1])
+  return after(md, AGUINALDO_FROM) && after(AGUINALDO_UNTIL, md)
+}
+
+/**
+ * What the card shows for a preview answer: null (nothing), `offer` for a
+ * Mexican company with the switch off and someone who may turn it on, or
+ * `summary` with the year's people, amount and what is missing.
+ */
+export function aguinaldoCard(preview, { canEdit = false } = {}) {
+  if (!preview || typeof preview !== 'object') return null
+  if (preview.on === false)
+    return preview.mexico === true && canEdit ? { kind: 'offer' } : null
+  if (preview.on !== true || !Array.isArray(preview.filas)) return null
+  const totales = preview.totales || {}
+  return {
+    kind: 'summary',
+    year: preview.year,
+    personas: Number(totales.personas ?? preview.filas.length),
+    conMonto: Number(totales.con_monto || 0),
+    faltanDatos: Number(totales.faltan_datos || 0),
+    importe: Number(totales.importe || 0),
+    fechaLimite: preview.fecha_limite || null,
+  }
+}
+
+// doco aguinaldo faltante keys; the server sends its own label, these cover a
+// row that arrives without one.
+const AGUINALDO_FALTANTES = Object.freeze({
+  sin_ingreso: 'Falta su fecha de ingreso',
+  sin_sueldo: 'Escribe cuánto gana',
+  sin_promedio: 'Escribe su salario diario',
+  sin_baja: 'Falta la fecha de baja',
+  sin_isr: 'No se pudo calcular el ISR',
+})
+/** A faltante in the owner's words: the server's label, else the known key's. */
+export function aguinaldoFaltante(item) {
+  if (item?.label) return item.label
+  const words = AGUINALDO_FALTANTES[item?.key]
+  return words ? tr(words, null, CTX) : tr('Falta un dato', null, CTX)
+}
+
+/** «Dejar listo para pagar»: the owner, a payment index in doco, and an amount. */
+export function aguinaldoCanApply(preview, { canEdit = false } = {}) {
+  return Boolean(
+    canEdit &&
+      preview?.on === true &&
+      preview.pago?.available === true &&
+      Number(preview.totales?.con_monto || 0) > 0,
+  )
+}
+
+/** The receipt after «Dejar listo para pagar»: doco's words, else the totals. */
+export function aguinaldoReceipt(result, preview, format = money) {
+  if (typeof result?.message === 'string' && result.message)
+    return result.message
+  const totales = result?.totales || preview?.totales || {}
+  const personas = Number(
+    result?.personas ?? totales.con_monto ?? totales.personas ?? 0,
+  )
+  const importe = Number(result?.importe ?? totales.importe ?? 0)
+  return personas === 1
+    ? tr(
+        'Quedó listo para pagar el aguinaldo de 1 persona por {0}.',
+        [format(importe)],
+        CTX,
+      )
+    : tr(
+        'Quedó listo para pagar el aguinaldo de {0} personas por {1}.',
+        [personas, format(importe)],
+        CTX,
+      )
+}
+
 /**
  * The way past a full plan in the alta (doco's sheet option `seatStep`): Mi
  * cuenta's seat step (components/cuenta/seatStep.js), loaded with the first
