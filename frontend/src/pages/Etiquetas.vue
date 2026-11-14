@@ -1129,6 +1129,7 @@ const drawPreview = useDebounceFn(async () => {
   if (!layout.value) {
     previewHtml.value = ''
     warnings.value = []
+    revealKey = ''
     return
   }
   const mine = ++previewTicket
