@@ -2,7 +2,15 @@
 // saved lists and the orders made from them. A row continues it, «⋯» copies it
 // to start another order (the cart goes with a list's copy) or deletes it while
 // it is a draft; what cannot be done says why. Nothing opens by itself.
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import {
+  afterAll,
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 import { createApp, nextTick } from 'vue'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
@@ -21,6 +29,7 @@ vi.mock('@/composables/useCompras', async (importOriginal) => {
 })
 
 import CompraSurtido from '@/pages/CompraSurtido.vue'
+import { loadAssistant } from '@/components/assistant/assistantDoor'
 import { saveCart, savedCart } from '@/utils/surtidoShop'
 
 const READ = {
@@ -81,6 +90,10 @@ beforeEach(() => {
     }),
   }
 })
+// CompraSurtido hands its screen to the assistant through a lazy import: the
+// file waits for it, so it never loads after the environment is torn down
+afterAll(() => loadAssistant().catch(() => {}))
+
 afterEach(() => {
   app?.unmount()
   root?.remove()
