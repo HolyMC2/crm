@@ -8,6 +8,12 @@ Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` i
 - **Rest days:** a site without a list of rest days no longer goes to `/app/holiday-list/new`: «¿Qué días cierras?» chips and «Guardar días de descanso» (doco `citas.api.rest_days_save`, same lane) make the list and pick it; «Abrir en Desk» stays as a secondary link from 1024 px.
 - **Who can fix it:** one name «Ana puede configurarlo.», several «Ana y Beto pueden configurarlo.» (`Intl.ListFormat` in the person's language, msgctxt «several»), none «Un administrador puede configurarlo.»
 - **Tests:** `tests/unit/citasSetupProblems.test.js` (5). Rollback = revert with the doco half.
+## 2026-11-15 — The deal and the Taller order name their projects (lane shell-f14-proyectos, Shell F14c; not deployed)
+
+- **Deal overview:** a «Pendientes» block (`RecordPendientes` on the CRM Deal) and `components/proyectos/RecordProyectos.vue`: each project that holds a pendiente on the deal («Motor Tsuru · 4 de 9 hechos»), opening its plan with `return_to` back to the deal; «Crear un proyecto para esto» opens the project sheet named after the deal, then the first pendiente on the deal. Both load after the overview paints (`defineAsyncComponent`).
+- **Every record's pendientes** (`RecordPendientes`: Contacto, Garantía, Producto, the deal) name the project of a row.
+- **Taller's handoff:** `/crm/proyectos?nuevo=1&ref_type=…&ref_name=…&return_to=…` opens the new-project sheet named after the record; once saved, the plan opens the first pendiente on that record (`utils/proyectoHandoff.js`), and the plan's way back goes to the shell route or, for Taller, a plain link.
+- **Tests:** `tests/unit/recordProyectos.test.js` (9). Doco `proyectos.api.de_registro` is the endpoint (same lane). Rollback = revert.
 
 ## 2026-11-14 — «En los teléfonos»: Android steps as DAVx⁵ shows them (lane telefonos-basic; not deployed)
 

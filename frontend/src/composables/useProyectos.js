@@ -128,6 +128,14 @@ export function metaOf(row) {
   return row?.total ? `${percentOf(row)} %` : ''
 }
 
+/** A record page's project line (F14c): its progress, and its state when it is not running. */
+export function recordProyectoLine(row) {
+  if (!row) return ''
+  const parts = [progressText(row)]
+  if (row.status && row.status !== 'Open') parts.push(statusLabel(row.status))
+  return parts.join(' · ')
+}
+
 export function proyectoRoute(name, query = {}) {
   return { name: 'Proyecto', params: { name: String(name) }, query }
 }

@@ -64,6 +64,16 @@
               <span v-if="stateChip(row)" class="font-medium">{{
                 stateChip(row).label
               }}</span>
+              <!-- the plan it belongs to (Proyectos), by its name -->
+              <span
+                v-if="row.project_name"
+                class="inline-flex min-w-0 items-center gap-1"
+                data-record-pendiente-proyecto
+                ><span
+                  class="lucide-folder-kanban size-3.5 flex-none"
+                  aria-hidden="true"
+                /><span class="truncate">{{ row.project_name }}</span></span
+              >
             </span>
           </span>
         </RouterLink>

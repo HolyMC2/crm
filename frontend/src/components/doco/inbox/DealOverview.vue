@@ -271,6 +271,22 @@
             </p>
           </section>
         </div>
+        <!-- Shell F14c: the deal's pendientes (everyone's this worker reads) and
+             the projects they belong to, with the door to start one here. -->
+        <section class="min-w-0 space-y-2" data-deal-pendientes>
+          <RecordPendientes
+            reference-type="CRM Deal"
+            :reference-name="name"
+            :reference-label="dealLabel"
+            :return-label="__('the deal')"
+          />
+          <RecordProyectos
+            reference-type="CRM Deal"
+            :reference-name="name"
+            :reference-label="dealLabel"
+            :return-label="__('the deal')"
+          />
+        </section>
         <div class="rounded-6 border border-outline-gray-2 bg-surface-base">
           <DealConversations :doctype="'CRM Deal'" :name="name" />
         </div>
@@ -280,7 +296,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, onMounted, ref, watch } from 'vue'
 import { createResource } from 'frappe-ui'
 import { usersStore } from '@/stores/users'
 import { statusesStore } from '@/stores/statuses'
@@ -299,6 +315,13 @@ import { repairOrderHref } from '@/utils/repairOrders'
 import { stageLabel } from '@/utils/stageLabel'
 import DealConversations from './DealConversations.vue'
 import DealCommercialDocs from '@/components/ventas/DealCommercialDocs.vue'
+// The deal's pendientes and projects load after the overview paints.
+const RecordPendientes = defineAsyncComponent(
+  () => import('@/components/pendientes/RecordPendientes.vue'),
+)
+const RecordProyectos = defineAsyncComponent(
+  () => import('@/components/proyectos/RecordProyectos.vue'),
+)
 
 const props = defineProps({ name: { type: String, required: true } })
 defineEmits(['navigate'])
@@ -343,6 +366,8 @@ const amounts = createResource({
   onError: () => {},
 })
 const doc = computed(() => record.data || {})
+// The deal in words, for the pendiente and project it hands off (never its ID alone).
+const dealLabel = computed(() => doc.value.deal_name || props.name)
 // The contract's value; before it answers (or if it cannot), the deal's own
 // expected amount, so the card never goes blank.
 const value = computed(() => {

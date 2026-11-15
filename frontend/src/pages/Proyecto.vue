@@ -39,6 +39,16 @@
           backLabel
         }}
       </RouterLink>
+      <a
+        v-if="away?.href"
+        :href="away.href"
+        class="press inline-flex min-h-11 items-center gap-1 rounded-6 text-sm text-ink-gray-6 hover:text-ink-gray-9 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-8"
+        data-proyecto-return
+      >
+        <span class="lucide-arrow-left size-4" aria-hidden="true" />{{
+          __('Return to {0}', [away.label])
+        }}
+      </a>
       <EmptyState
         v-if="problem"
         state="error"
@@ -238,6 +248,11 @@ import {
   viewLabel,
 } from '@/composables/useProyectos'
 import { requestId } from '@/utils/contactos'
+import {
+  handoffFrom,
+  returnFrom,
+  withoutHandoff,
+} from '@/utils/proyectoHandoff'
 
 // The board, the timeline and the sheets load with their first view.
 const PendientesBoard = defineAsyncComponent(
@@ -278,25 +293,44 @@ const viewOptions = VIEWS.map((value) => ({ value, label: viewLabel(value) }))
 const sections = computed(() => sectionsOf(rows.value, today.value))
 // Up goes to the list it came from; a pendiente opened from here comes back here.
 const listScope = computed(() => normalizeScope(route.query.list))
-const backTarget = computed(() => ({
+const listTarget = computed(() => ({
   name: 'Proyectos',
   query: listScope.value === 'open' ? {} : { list: listScope.value },
 }))
-const backLabel = computed(() => __('Back to Proyectos'))
+// Opened from a record (a deal, a Taller order): back goes there, with its words.
+const away = computed(() => returnFrom(route.query))
+const backTarget = computed(() =>
+  away.value?.route ? away.value.route : listTarget.value,
+)
+const backLabel = computed(() =>
+  away.value?.route
+    ? __('Return to {0}', [away.value.label])
+    : __('Back to Proyectos'),
+)
 const returnQuery = computed(() => ({
   return_to: `/crm/proyectos/${encodeURIComponent(props.name)}`,
   return_label: String(project.value?.project_name || 'Proyectos').slice(0, 40),
 }))
+// The record that made this project names its first pendiente (once, then the URL forgets it).
+const handoff = ref(
+  route.query.nuevo_pendiente === '1' ? handoffFrom(route.query) : null,
+)
 const prefill = computed(() =>
   project.value
     ? {
         project: project.value.name,
         project_name: project.value.project_name,
+        ...(handoff.value || {}),
       }
     : null,
 )
 
-let generation = 0
+let generation = 0,
+  handoffShown = false
+// The record's first pendiente is offered once; a later «Nuevo pendiente» starts blank.
+watch(createOpen, (open) => {
+  if (!open && handoffShown) handoff.value = null
+})
 async function load() {
   const current = ++generation
   loading.value = true
@@ -308,6 +342,11 @@ async function load() {
     rows.value = answer?.rows || []
     today.value = answer?.today || ''
     pendientesAllowed.value = Boolean(answer?.capabilities?.pendientes)
+    if (handoff.value && canCreate.value && !handoffShown) {
+      handoffShown = true
+      createOpen.value = true
+      router.replace({ query: withoutHandoff(route.query) })
+    }
   } catch (error) {
     if (current !== generation) return
     problem.value = proyectoError(error)

@@ -119,7 +119,12 @@
         @click="createOpen = true"
       />
     </div>
-    <ProyectoSheet v-model="createOpen" :today="today" @saved="afterCreate" />
+    <ProyectoSheet
+      v-model="createOpen"
+      :today="today"
+      :initial-name="handoff?.reference_label || ''"
+      @saved="afterCreate"
+    />
   </ModuleLayout>
 </template>
 <script setup>
@@ -143,6 +148,7 @@ import {
   scopeDescription,
   scopeLabel,
 } from '@/composables/useProyectos'
+import { handoffFrom, handoffQuery } from '@/utils/proyectoHandoff'
 
 // The sheet mounts on its first open.
 const ProyectoSheet = defineAsyncComponent(
@@ -158,6 +164,8 @@ const guard = computed(() =>
     : '',
 )
 const canCreate = computed(() => Boolean(boot.value?.capabilities?.create))
+// «Crear proyecto para esta orden» (Taller) arrives with ?nuevo=1 and the record.
+const handoff = computed(() => handoffFrom(route.query))
 // The URL is the state: the scope and the search.
 const scope = computed(() => normalizeScope(route.query.list))
 const listQuery = computed(() =>
@@ -253,7 +261,11 @@ async function retryBoot() {
   if (boot.value?.enabled) load()
 }
 function afterCreate(project) {
-  router.push(proyectoRoute(project.name, listQuery.value))
+  // Made from a record: its plan opens the first pendiente on that record.
+  const next = handoff.value
+    ? { ...handoffQuery(route.query), nuevo_pendiente: '1' }
+    : {}
+  router.push(proyectoRoute(project.name, { ...listQuery.value, ...next }))
 }
 watch(scope, () => load())
 watch(search, (value) => {
@@ -271,6 +283,13 @@ watch(search, (value) => {
 onMounted(() => {
   if (!guard.value) load()
 })
+watch(
+  canCreate,
+  (may) => {
+    if (may && route.query.nuevo === '1') createOpen.value = true
+  },
+  { immediate: true },
+)
 // A teammate's project, or a pendiente that moves its progress, shows
 // without a reload; a new project is marked for a moment.
 const live = useLiveList(

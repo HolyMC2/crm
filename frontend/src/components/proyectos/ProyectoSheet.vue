@@ -102,6 +102,8 @@ const props = defineProps({
   /** Edit this project (the record's projection) instead of creating one. */
   project: { type: Object, default: null },
   today: { type: String, default: '' },
+  /** A new project's suggested name (the record it is made from). */
+  initialName: { type: String, default: '' },
 })
 const emit = defineEmits(['update:modelValue', 'saved'])
 
@@ -141,7 +143,10 @@ watch(
     problem.value = null
     if (editing.value) fill(props.project)
     else {
-      Object.assign(form, blank(), { expected_start_date: props.today })
+      Object.assign(form, blank(), {
+        expected_start_date: props.today,
+        project_name: String(props.initialName || '').slice(0, 140),
+      })
       initial = { ...form }
     }
     await nextTick()
