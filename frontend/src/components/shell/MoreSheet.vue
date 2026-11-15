@@ -137,6 +137,16 @@
             <span class="lucide-layout-dashboard size-5" aria-hidden="true" />
             Tableros
           </RouterLink>
+          <!-- Hojas (doco docs/HOJAS.md): every desk user's live spreadsheets. -->
+          <RouterLink
+            to="/hojas"
+            :class="TILE"
+            data-testid="more-hojas"
+            @click="close"
+          >
+            <span class="lucide-sheet size-5" aria-hidden="true" />
+            Hojas
+          </RouterLink>
         </div>
       </section>
 

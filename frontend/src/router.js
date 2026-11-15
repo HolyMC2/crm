@@ -957,6 +957,25 @@ const routes = [
     },
   },
   {
+    // Más › Hojas (doco docs/HOJAS.md): live spreadsheets the person and Muelle
+    // edit together, on Univer. Every desk user has them, like Tableros.
+    path: '/hojas',
+    name: 'Hojas',
+    component: () => import('@/pages/Hojas.vue'),
+    meta: { app: 'avisos', title: 'Hojas', ownPhoneHeader: true },
+  },
+  {
+    path: '/hojas/:name',
+    name: 'Hoja',
+    component: () => import('@/pages/Hoja.vue'),
+    meta: {
+      app: 'avisos',
+      title: 'Hoja',
+      ownPhoneHeader: true,
+      listParent: 'Hojas',
+    },
+  },
+  {
     // Más › Configuración › Disparadores (Shell Wave D, DD8): team recipes on
     // business events. Lights Avisos, where their avisos land.
     path: '/disparadores',

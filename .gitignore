@@ -31,3 +31,4 @@ AGENTS.md
 
 # scripts/ci/local.sh: clean clones and logs of the local CI run
 .ci-local/
+crm/public/univer

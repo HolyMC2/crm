@@ -510,6 +510,15 @@ export function createShellProviders({ boot, modules }) {
         icon: 'lucide-layout-dashboard',
         href: '/tableros',
       })
+      // Hojas: every desk user's live spreadsheets (Más › Hojas).
+      items.push({
+        id: 'hojas',
+        group: 'ir_a',
+        title: 'Hojas',
+        keywords: 'hoja de calculo excel presupuesto proyeccion escenario',
+        icon: 'lucide-sheet',
+        href: '/hojas',
+      })
       // Bancos (Shell D11): its places besides the module itself.
       if (moduleEnabled(boot.value, 'bancos'))
         for (const [path, label, keywords] of [
