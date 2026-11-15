@@ -46557,6 +46557,7 @@ msgstr "Elegir los días que cierras"
 #: frontend/src/components/agenda/AgendaCitasSettings.vue
 msgid "Rest days saved"
 msgstr "Días de descanso guardados"
+
 #: frontend/src/components/proyectos/RecordProyectos.vue
 msgid "Projects"
 msgstr "Proyectos"
@@ -46572,6 +46573,7 @@ msgstr "Crear un proyecto para esto"
 #: frontend/src/components/doco/inbox/DealOverview.vue
 msgid "the deal"
 msgstr "el trato"
+
 #: frontend/src/pages/FormBuilder.vue
 msgctxt "Form builder"
 msgid "Questions"

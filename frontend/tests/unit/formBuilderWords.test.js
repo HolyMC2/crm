@@ -9,18 +9,20 @@ const here = dirname(fileURLToPath(import.meta.url))
 const po = readFileSync(resolve(here, '../../../crm/locale/es.po'), 'utf8')
 const src = (path) => readFileSync(resolve(here, '../../src', path), 'utf8')
 
+// One entry's msgstr, read line by line: union merges can drop the blank line
+// between two lanes' appended entries.
 function entry(msgid, msgctxt = null) {
-  const blocks = po.split(/\n\n+/)
-  const found = blocks.find((block) => {
-    const lines = block.split('\n')
-    const ctx = lines.find((line) => line.startsWith('msgctxt '))
-    return (
-      lines.includes(`msgid ${JSON.stringify(msgid)}`) &&
-      (msgctxt === null ? !ctx : ctx === `msgctxt ${JSON.stringify(msgctxt)}`)
-    )
-  })
-  const line = found?.split('\n').find((row) => row.startsWith('msgstr '))
-  return line ? JSON.parse(line.slice(7)) : undefined
+  const lines = po.split('\n')
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i] !== `msgid ${JSON.stringify(msgid)}`) continue
+    const ctx = lines[i - 1]?.startsWith('msgctxt ') ? lines[i - 1] : null
+    const wanted =
+      msgctxt === null ? null : `msgctxt ${JSON.stringify(msgctxt)}`
+    if (ctx !== wanted) continue
+    const str = lines[i + 1]
+    if (str?.startsWith('msgstr ')) return JSON.parse(str.slice(7))
+  }
+  return undefined
 }
 
 describe('the form builder words', () => {
