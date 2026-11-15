@@ -17,6 +17,7 @@ Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` i
 ## 2026-11-15 — Everyone lands on Hoy (lane shell-f17-hoy, Shell F17 / SPEC Q1; not deployed)
 
 - `/` (and `/ventas`, which redirects there) opens Hoy for every worker, with or without doco_marketing. It used to open the Inbox (with the add-on) or the native Leads list. The Inbox stays in the bar for sellers.
+- Hoy loses its desktop «Actualizar» button: the page already follows its records live (`useLiveWatch`) and pulls to refresh on a phone.
 - `utils/crmCapabilities.gateRoute`; tests `crmCapabilities.test.js`; the wiki's landing note. Rollback = revert.
 
 ## 2026-11-14 — «En los teléfonos»: Android steps as DAVx⁵ shows them (lane telefonos-basic; not deployed)

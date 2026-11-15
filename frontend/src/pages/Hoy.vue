@@ -48,17 +48,7 @@
             </template>
           </p>
         </div>
-        <Button
-          v-if="!phone"
-          variant="subtle"
-          :loading="refreshing"
-          :label="__('Refresh')"
-          @click="refresh()"
-        >
-          <template #prefix>
-            <span class="lucide-refresh-cw size-4" aria-hidden="true" />
-          </template>
-        </Button>
+        <!-- No «Actualizar»: the page follows its records live (useLiveWatch). -->
       </header>
 
       <div
