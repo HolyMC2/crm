@@ -158,6 +158,13 @@ async function submit(label, redirect) {
   )
 }
 
+// Taller Intake reads the deal and the shell's return_to (never the legacy `return`).
+function intakeParams(href) {
+  const url = new URL(href, 'https://crm.invalid')
+  const params = Object.fromEntries(url.searchParams)
+  return { path: url.pathname, ...params }
+}
+
 describe('DealModal hands repair intake to taller', () => {
   it('offers «Crear y recibir equipo» only when taller runs on the tenant', async () => {
     await mount()
@@ -181,10 +188,11 @@ describe('DealModal hands repair intake to taller', () => {
     sync.onSuccess()
     await settle()
     expect(api.assign).toHaveBeenCalledOnce()
-    expect(api.assign).toHaveBeenCalledWith(
-      '/taller/intake?deal=DEAL%20NEW%2F1&return=' +
-        encodeURIComponent('/crm/deals/DEAL%20NEW%2F1'),
-    )
+    expect(intakeParams(api.assign.mock.calls[0][0])).toEqual({
+      path: '/taller/intake',
+      deal: 'DEAL NEW/1',
+      return_to: '/crm/deals/DEAL%20NEW%2F1',
+    })
     expect(api.push).not.toHaveBeenCalled()
     expect(
       api.resources.some((row) => /repair_orders\.create/.test(row.url)),
@@ -196,10 +204,11 @@ describe('DealModal hands repair intake to taller', () => {
     sync.onError({ messages: ['ERP offline'] })
     await settle()
     expect(api.toast).toHaveBeenCalledOnce()
-    expect(api.assign).toHaveBeenCalledWith(
-      '/taller/intake?deal=DEAL%20NEW%2F1&return=' +
-        encodeURIComponent('/crm/deal/DEAL%20NEW%2F1'),
-    )
+    expect(intakeParams(api.assign.mock.calls[0][0])).toEqual({
+      path: '/taller/intake',
+      deal: 'DEAL NEW/1',
+      return_to: '/crm/deal/DEAL%20NEW%2F1',
+    })
   })
 
   it('keeps plain «Create» on the immediate deal redirect', async () => {

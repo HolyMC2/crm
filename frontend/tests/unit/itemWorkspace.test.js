@@ -206,9 +206,9 @@ describe('Inbox item workspace', () => {
     const url = new URL(link.href)
     expect(url.pathname).toBe('/taller/intake')
     expect(url.searchParams.get('deal')).toBe('D1')
-    expect(url.searchParams.get('return')).toMatch(/^\/crm\/inbox\?/)
+    expect(url.searchParams.get('return_to')).toMatch(/^\/crm\/inbox\?/)
     expect(
-      new URL(url.searchParams.get('return'), url).searchParams.get('deal'),
+      new URL(url.searchParams.get('return_to'), url).searchParams.get('deal'),
     ).toBe('D1')
     expect(root.querySelector('[role="dialog"]')).toBeNull()
     app.unmount()

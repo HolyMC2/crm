@@ -124,7 +124,7 @@ describe('CRM repair panel (real component, API doubles)', () => {
     const url = new URL(link.href)
     expect(url.pathname).toBe('/taller/intake')
     expect(url.searchParams.get('deal')).toBe('DEAL-1')
-    expect(url.searchParams.get('return')).toBe(
+    expect(url.searchParams.get('return_to')).toBe(
       '/crm/deals/DEAL-1?returnTo=%2Fdeals%3Fowner%3Dme#activity',
     )
     expect(root.querySelector('input, select, textarea, fieldset')).toBeNull()

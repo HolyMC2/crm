@@ -2,6 +2,7 @@
 // and the owner's settings, over doco.citas.api. Every call returns data or { constraints }.
 import { call } from 'frappe-ui'
 import { safeReturn } from '@/composables/useAgenda'
+import { withReturn } from '@/vendor/muelle-shell/contracts'
 
 export const CITAS_API = 'doco.citas.api'
 // Pseudo calendar: the Event rows that are citas (kind "cita").
@@ -84,10 +85,9 @@ export function visibleFor(events, calendars) {
 // «Recibir equipo»: Taller Intake prefilled from the cita, back to this Agenda view after.
 export function receiveUrl(cita, returnTo) {
   const back = safeReturn(returnTo) || '/crm/agenda?view=list&cal=citas'
-  const url = new URL('/taller/intake', window.location.origin)
-  url.searchParams.set('cita', cita.name)
-  url.searchParams.set('return', back)
-  return `${url.pathname}${url.search}`
+  return withReturn(`/taller/intake?cita=${encodeURIComponent(cita.name)}`, {
+    to: back,
+  })
 }
 
 // Taller's return: ?done=Appointment:<name>

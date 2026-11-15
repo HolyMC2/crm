@@ -149,22 +149,18 @@ describe('taller Intake handoff URL', () => {
       'DEAL 1/ñ&x=1',
       '/deals/DEAL%201%2F%C3%B1%26x%3D1?returnTo=%2Fdeals%3Fowner%3Dme#repair',
     )
-    expect(href).toBe(
-      '/taller/intake?deal=' +
-        encodeURIComponent('DEAL 1/ñ&x=1') +
-        '&return=' +
-        encodeURIComponent(
-          '/crm/deals/DEAL%201%2F%C3%B1%26x%3D1?returnTo=%2Fdeals%3Fowner%3Dme#repair',
-        ),
-    )
     const url = parse(href)
     expect(url.pathname).toBe('/taller/intake')
-    expect([...url.searchParams.keys()]).toEqual(['deal', 'return'])
+    // The shell's return protocol: `return_to`, never the legacy `return`.
+    expect([...url.searchParams.keys()]).toEqual(['deal', 'return_to'])
     expect(url.searchParams.get('deal')).toBe('DEAL 1/ñ&x=1')
+    expect(url.searchParams.get('return_to')).toBe(
+      '/crm/deals/DEAL%201%2F%C3%B1%26x%3D1?returnTo=%2Fdeals%3Fowner%3Dme#repair',
+    )
   })
   it('keeps the return inside /crm/ and falls back to the Deal page otherwise', () => {
     const back = (path) =>
-      parse(tallerIntakeHref('DEAL-1', path)).searchParams.get('return')
+      parse(tallerIntakeHref('DEAL-1', path)).searchParams.get('return_to')
     expect(back('/crm/deal/DEAL-1')).toBe('/crm/deal/DEAL-1')
     expect(back('/inbox?owner=me')).toMatch(/^\/crm\/inbox\?/)
     for (const invalid of [

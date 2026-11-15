@@ -5,6 +5,10 @@ Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` i
 ## 2026-11-14 — «En los teléfonos»: Android steps as DAVx⁵ shows them (lane telefonos-basic; not deployed)
 
 - **What:** the Android steps after «Agregar teléfono» follow DAVx⁵ 4.5 as set up on the first shop phone (Galaxy A35, 11-14): «Registrar», the shop's name as the account name, «Finalizar», then switch the address book on and «Sincronizar ahora» (DAVx⁵ leaves it off), and accept removing battery saving (Samsung had DAVx⁵ in deep sleep). Copy only.
+## 2026-11-15 — Links into Taller Intake carry `return_to` (lane shell-f4-vendor; not deployed)
+
+- **What:** «Recibir equipo» from a trato (`tallerIntakeHref`, `utils/repairOrders.js`) and from a cita (`receiveUrl`, `composables/useCitas.js`) now build the link with the shell's `withReturn`, so Taller gets `return_to` instead of the legacy `return`. Taller's Intake reads it from the same lane (taller `crmReturnFrom`), so both halves ride the same roll; the way back to the trato or the agenda is unchanged for the worker.
+- **Tests:** `repairOrders.test.js`, `dealModalRepairIntake.test.js`, `citas.test.js`, `repairOrdersSection.test.js`, `itemWorkspace.test.js` read `return_to` and check that no `return` is sent. Rollback = revert with the taller half.
 
 ## 2026-11-14 — «Contactos en los teléfonos» screen (lane contactos-telefonos; not deployed)
 

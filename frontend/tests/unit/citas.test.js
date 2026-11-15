@@ -55,15 +55,16 @@ describe('«Recibir equipo» hand-off', () => {
     const parsed = new URL(url, 'https://shop.example')
     expect(parsed.pathname).toBe('/taller/intake')
     expect(parsed.searchParams.get('cita')).toBe('APMT-Ana-0001')
-    expect(parsed.searchParams.get('return')).toBe(
+    expect(parsed.searchParams.get('return_to')).toBe(
       '/crm/agenda?view=day&event=Event:EV-2',
     )
+    expect(parsed.searchParams.has('return')).toBe(false)
   })
 
   it('never returns to a foreign address', () => {
     const url = receiveUrl({ name: 'A' }, 'https://evil.example/x')
     expect(
-      new URL(url, 'https://shop.example').searchParams.get('return'),
+      new URL(url, 'https://shop.example').searchParams.get('return_to'),
     ).toBe('/crm/agenda?view=list&cal=citas')
   })
 

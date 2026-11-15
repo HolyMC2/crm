@@ -1,4 +1,5 @@
 import { errorText } from '@/utils/errorText'
+import { withReturn } from '@/vendor/muelle-shell/contracts'
 export function repairMoney(value, currency) {
   if (value === null || value === undefined || value === '') return '—'
   const amount = Number(value)
@@ -90,12 +91,14 @@ export function repairError(error) {
 }
 
 // Taller owns repair intake. The CRM hands the operator to /taller/intake with the
-// Deal and a CRM-only return path; taller prefills from the Deal server-side, links
-// the new Repair Order and offers «Volver al trato».
+// Deal and a CRM-only return path (the shell's `return_to`); taller prefills from the
+// Deal server-side, links the new Repair Order and offers «Volver al trato».
 export function tallerIntakeHref(deal, fullPath) {
   if (typeof deal !== 'string' || !deal) return null
   const back = repairReturnPath(deal, fullPath)
-  return `/taller/intake?deal=${encodeURIComponent(deal)}&return=${encodeURIComponent(back)}`
+  return withReturn(`/taller/intake?deal=${encodeURIComponent(deal)}`, {
+    to: back,
+  })
 }
 
 // Same tab (assign keeps the CRM page in history so Back returns to it).
