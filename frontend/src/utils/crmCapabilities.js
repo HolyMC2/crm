@@ -116,7 +116,8 @@ export function isAddonOnlyRoute(routeName) {
 // `available` defaults to the live answer; tests pass it explicitly.
 export function gateRoute(to, available = hasApp(ADDON_APP)) {
   const name = to?.name
-  if (name === 'Home') return available ? { name: 'Inbox' } : { name: 'Leads' }
+  // Everyone lands on Hoy (Shell SPEC Q1); the Inbox stays in the bar for sellers.
+  if (name === 'Home') return { name: 'Hoy' }
   const fallback = GATED_ROUTES[name]
   if (!fallback || available) return null
   const target = typeof fallback === 'function' ? fallback(to) : { ...fallback }

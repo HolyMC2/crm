@@ -48,7 +48,7 @@ describe('crmCapabilities: source', () => {
     await vi.advanceTimersByTimeAsync(m.CAPABILITIES_TIMEOUT_MS)
     await waiting
     expect(m.capabilitiesState.value).toBe('unknown')
-    expect(m.gateRoute({ name: 'Home' })).toEqual({ name: 'Leads' })
+    expect(m.gateRoute({ name: 'Home' })).toEqual({ name: 'Hoy' })
     finish({ installed_apps: WITH_ADDON })
     await Promise.resolve()
     expect(m.hasApp('doco_marketing')).toBe(false)
@@ -128,19 +128,19 @@ describe('crmCapabilities: route gates', () => {
       query: { view: 'My deals' },
     })
   })
-  it('with the addon: Home lands in Inbox and every surface proceeds', async () => {
+  it('with the addon: Home lands on Hoy and every surface proceeds', async () => {
     const m = await fresh({ boot: WITH_ADDON })
     await m.loadCapabilities()
-    expect(m.gateRoute({ name: 'Home' })).toEqual({ name: 'Inbox' })
+    expect(m.gateRoute({ name: 'Home' })).toEqual({ name: 'Hoy' })
     for (const name of Object.keys(m.GATED_ROUTES)) {
       expect(m.gateRoute({ name, params: { dealId: 'D-1' } })).toBeNull()
     }
   })
 
-  it('without the addon: Home lands in the native Leads list', async () => {
+  it('without the addon: Home lands on Hoy too', async () => {
     const m = await fresh({ boot: DEMO_SITE })
     await m.loadCapabilities()
-    expect(m.gateRoute({ name: 'Home' })).toEqual({ name: 'Leads' })
+    expect(m.gateRoute({ name: 'Home' })).toEqual({ name: 'Hoy' })
   })
 
   it('without the addon: custom lists fall back to the upstream list routes', async () => {
@@ -205,7 +205,7 @@ describe('crmCapabilities: route gates', () => {
       throw new Error('boom')
     }
     await m.loadCapabilities()
-    expect(m.gateRoute({ name: 'Home' })).toEqual({ name: 'Leads' })
+    expect(m.gateRoute({ name: 'Home' })).toEqual({ name: 'Hoy' })
     expect(m.gateRoute({ name: 'Deals List' })).toEqual({ name: 'Deals' })
     expect(m.gateRoute({ name: 'Inbox' })).toBeNull()
   })

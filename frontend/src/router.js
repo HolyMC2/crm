@@ -1516,8 +1516,8 @@ router.beforeEach(async (to, from, next) => {
   if (isLoggedIn && to.name !== 'Not Permitted' && usersKnown && !isCrmUser()) {
     next({ name: 'Not Permitted' })
   } else if (to.name === 'Home' && isLoggedIn) {
-    // FCRM redesign: the omnichannel Inbox is the default landing (handoff §5.1)
-    // when doco_marketing is installed; otherwise the native Leads list.
+    // Every logged-in worker lands on Hoy, with or without doco_marketing
+    // (Shell SPEC Q1); /ventas redirects here too.
     next(gateRoute(to))
   } else if (!isLoggedIn) {
     window.location.href = '/login?redirect-to=/crm'

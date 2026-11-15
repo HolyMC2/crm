@@ -14,6 +14,10 @@ Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` i
 - **Every record's pendientes** (`RecordPendientes`: Contacto, Garantía, Producto, the deal) name the project of a row.
 - **Taller's handoff:** `/crm/proyectos?nuevo=1&ref_type=…&ref_name=…&return_to=…` opens the new-project sheet named after the record; once saved, the plan opens the first pendiente on that record (`utils/proyectoHandoff.js`), and the plan's way back goes to the shell route or, for Taller, a plain link.
 - **Tests:** `tests/unit/recordProyectos.test.js` (9). Doco `proyectos.api.de_registro` is the endpoint (same lane). Rollback = revert.
+## 2026-11-15 — Everyone lands on Hoy (lane shell-f17-hoy, Shell F17 / SPEC Q1; not deployed)
+
+- `/` (and `/ventas`, which redirects there) opens Hoy for every worker, with or without doco_marketing. It used to open the Inbox (with the add-on) or the native Leads list. The Inbox stays in the bar for sellers.
+- `utils/crmCapabilities.gateRoute`; tests `crmCapabilities.test.js`; the wiki's landing note. Rollback = revert.
 
 ## 2026-11-14 — «En los teléfonos»: Android steps as DAVx⁵ shows them (lane telefonos-basic; not deployed)
 

@@ -48,11 +48,11 @@ las de upstream.
 
 ```js
 } else if (to.name === 'Home' && isLoggedIn) {
-  // FCRM redesign: the omnichannel Inbox is the default landing (handoff §5.1).
+  // Every worker lands on Hoy (Shell SPEC Q1, 2026-11-15); the Inbox stays in the bar.
 ```
 
 La ruta `/` no declara componente; el guard `beforeEach` manda al usuario
-autenticado a la bandeja. Sin sesión, redirige a
+autenticado a Hoy (antes era la bandeja). Sin sesión, redirige a
 `/login?redirect-to=/crm`.
 
 ### 1.3 Selección móvil de componente — dos mecanismos distintos
