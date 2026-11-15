@@ -25,6 +25,8 @@ vi.mock('vue-router', async () => {
     useRouter: () => ({ push: go('push'), replace: go('replace') }),
   }
 })
+// live refresh rides the app socket; its own unit covers it
+vi.mock('@/composables/liveList', () => ({ useLiveList: () => ({}) }))
 import WorkloadView from '@/pages/WorkloadView.vue'
 const cleanups = []
 beforeEach(() => {

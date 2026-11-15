@@ -10,12 +10,6 @@
         <h1 v-if="!isMobile" class="text-xl font-semibold">
           {{ selfView ? __('Tu carga de trabajo') : __('Carga de trabajo') }}
         </h1>
-        <p v-if="data.as_of && !loading" class="text-xs text-ink-gray-5">
-          {{ __('Actualizado') }} {{ asTime || asOfText }}
-          <span v-if="refreshing" role="status">
-            · {{ __('Actualizando…') }}</span
-          >
-        </p>
       </div>
       <div v-if="!loadError" class="flex flex-wrap items-end gap-2">
         <label class="text-xs text-ink-gray-6"
@@ -54,14 +48,6 @@
             </option>
           </select>
         </label>
-        <button
-          type="button"
-          class="wl-btn"
-          :disabled="loading || moving || refreshing"
-          @click="refresh"
-        >
-          {{ __('Actualizar') }}
-        </button>
       </div>
     </header>
 
@@ -433,13 +419,14 @@ import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { call } from 'frappe-ui'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import WorkloadPeople from '@/components/Workload/WorkloadPeople.vue'
+import { useLiveList } from '@/composables/liveList'
+import { useReloadOnReturn } from '@/composables/reloadOnReturn'
 import { isMobile } from '@/composables/breakpoint'
 import WorkloadQueue from '@/components/Workload/WorkloadQueue.vue'
 import WorkloadBulkBar from '@/components/Workload/WorkloadBulkBar.vue'
 import {
   decodeWorkloadQuery,
   encodeWorkloadQuery,
-  formatSiteDate,
   rankCandidates,
   retainFailedSelection,
   safeWorkloadState,
@@ -520,13 +507,6 @@ const companies = computed(
       ),
     ],
 )
-const asOfText = computed(() => formatSiteDate(data.value.as_of, dateFormat))
-// «Actualizado 12:11» (today) — the site's timezone name is not for workers.
-const asTime = computed(() => {
-  const at = String(data.value.as_of || '')
-  const today = new Date().toISOString().slice(0, 10)
-  return at.startsWith(today) ? at.slice(11, 16) : ''
-})
 const selectedKeys = computed(() => selected.value.map(workItemKey))
 const succeeded = computed(() => results.value.filter((row) => row.ok))
 const failed = computed(() => results.value.filter((row) => !row.ok))
@@ -707,6 +687,16 @@ async function loadItems() {
   }
 }
 
+// No «Actualizar»: a saved deal, lead or task, or coming back to the tab,
+// refreshes the numbers quietly (the rows on screen stay while it reads).
+useLiveList(
+  ['CRM Deal', 'CRM Lead', 'CRM Task'],
+  () => !moving.value && refresh(),
+  {
+    minIntervalMs: 5000,
+  },
+)
+useReloadOnReturn(() => !moving.value && refresh(), { minIntervalMs: 5000 })
 async function refresh() {
   const scroll = scroller.value?.scrollTop ?? state.value.scroll
   await Promise.all([load({ quiet: true }), loadItems()])

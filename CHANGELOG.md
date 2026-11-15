@@ -19,6 +19,12 @@ Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` i
 - `/` (and `/ventas`, which redirects there) opens Hoy for every worker, with or without doco_marketing. It used to open the Inbox (with the add-on) or the native Leads list. The Inbox stays in the bar for sellers.
 - Hoy loses its desktop «Actualizar» button: the page already follows its records live (`useLiveWatch`) and pulls to refresh on a phone.
 - `utils/crmCapabilities.gateRoute`; tests `crmCapabilities.test.js`; the wiki's landing note. Rollback = revert.
+## 2026-11-15 — Carga de trabajo keeps itself current; the form builder says «Campos» (lane shell-f15-pulido, Shell F15/F13; not deployed)
+
+- **Carga de trabajo:** the «Actualizar» button and the «Actualizado HH:MM» stamp are gone; the numbers refresh quietly when a deal, lead or task is saved (`useLiveList`) and when you come back to the tab (`useReloadOnReturn`), at most every 5 s, never while a reassignment runs.
+- **Form builder:** «Preguntas» → «Campos» and «Agregar una pregunta» → «Agregar un campo» through msgctxt «Form builder», so the Facebook lead form keeps «Preguntas».
+- **Not in this lane:** moving Reportes and Embudo onto the shell's `FilterChips` pushed `/crm/deals` to 61 script files (budget 60) through rollup's small-chunk merge; it waits for a lane that frees deal-list files first.
+- **Tests:** `formBuilderWords.test.js`; the workload tests stub the live list. Rollback = revert.
 
 ## 2026-11-14 — «En los teléfonos»: Android steps as DAVx⁵ shows them (lane telefonos-basic; not deployed)
 

@@ -133,7 +133,7 @@
                     <Button
                       class="!h-8 w-full !bg-surface-elevation-2"
                       variant="outline"
-                      :label="__('Add a question')"
+                      :label="__('Add a question', null, 'Form builder')"
                       :icon-left="LucidePlus"
                       @click="
                         !pickerOpen && (b.expanded.value = null),

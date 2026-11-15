@@ -393,7 +393,11 @@ function setTab(key) {
   router.replace({ query: { ...route.query, tab: key } })
 }
 const tabs = computed(() => [
-  { key: 'questions', label: __('Questions'), icon: LucideListChecks },
+  {
+    key: 'questions',
+    label: __('Questions', null, 'Form builder'),
+    icon: LucideListChecks,
+  },
   { key: 'messages', label: __('Messages'), icon: LucideMessageSquare },
   { key: 'after', label: __('After someone submits'), icon: LucideWorkflow },
   { key: 'share', label: __('Share'), icon: LucideShare2 },

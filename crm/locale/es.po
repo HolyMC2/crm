@@ -46572,3 +46572,12 @@ msgstr "Crear un proyecto para esto"
 #: frontend/src/components/doco/inbox/DealOverview.vue
 msgid "the deal"
 msgstr "el trato"
+#: frontend/src/pages/FormBuilder.vue
+msgctxt "Form builder"
+msgid "Questions"
+msgstr "Campos"
+
+#: frontend/src/components/Forms/FormCanvas.vue
+msgctxt "Form builder"
+msgid "Add a question"
+msgstr "Agregar un campo"
