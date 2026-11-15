@@ -199,6 +199,15 @@
       >
         <template #prefix>
           <span class="lucide-smartphone size-4" aria-hidden="true" />
+        </template> </Button
+      ><Button
+        v-if="capabilities.manager"
+        label="Importar del teléfono"
+        data-testid="contactos-importar-telefono"
+        @click="router.push('/contactos/importar/telefono')"
+      >
+        <template #prefix>
+          <span class="lucide-contact size-4" aria-hidden="true" />
         </template>
       </Button>
     </div>
@@ -934,6 +943,14 @@ const desktopActions = computed(() =>
           hint: 'Desde el Excel que ya tienes',
           allowed: true,
         },
+        // «Importar del teléfono»: a phone's contacts that Contactos lacks.
+        capabilities.value?.manager && {
+          key: 'importar-telefono',
+          label: 'Importar del teléfono',
+          icon: 'lucide-contact',
+          hint: 'Los contactos guardados en un celular',
+          allowed: true,
+        },
         // «Contactos en los teléfonos»: the owner or encargado sets it up.
         capabilities.value?.manager && {
           key: 'telefonos',
@@ -951,6 +968,8 @@ function onDesktopAction({ key }) {
   else if (key === 'guardar') segmentOpen.value = true
   else if (key === 'personalizar') customize.value = true
   else if (key === 'importar') router.push('/contactos/importar')
+  else if (key === 'importar-telefono')
+    router.push('/contactos/importar/telefono')
   else if (key === 'telefonos') router.push('/contactos/telefonos')
 }
 const segmentOptions = computed(() => [

@@ -17,10 +17,16 @@ Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` i
 - **What:** «Recibir equipo» from a trato (`tallerIntakeHref`, `utils/repairOrders.js`) and from a cita (`receiveUrl`, `composables/useCitas.js`) now build the link with the shell's `withReturn`, so Taller gets `return_to` instead of the legacy `return`. Taller's Intake reads it from the same lane (taller `crmReturnFrom`), so both halves ride the same roll; the way back to the trato or the agenda is unchanged for the worker.
 - **Tests:** `repairOrders.test.js`, `dealModalRepairIntake.test.js`, `citas.test.js`, `repairOrdersSection.test.js`, `itemWorkspace.test.js` read `return_to` and check that no `return` is sent. Rollback = revert with the taller half.
 
+## 2026-11-15 — Contactos: «Importar del teléfono» (lane contactos-importar; not deployed)
+
+- **What:** `/crm/contactos/importar/telefono`, from Contactos («Importar del teléfono», owner or encargado) and from «Importar clientes» («¿Los tienes guardados en un celular?»). How to export by phone (Android, iPhone, Google), choose the .vcf, then the review: how many came, are new, are already in Contactos or have no number; search; «Marcar todos como» Cliente / Otro / No; a choice per row (native select, dims «No agregar»); «Agregar N» in batches of 100 with progress; the result with the rows that failed and why.
+- **Backend:** doco `doco.contactos.api.import_preview` / `import_contacts` (same lane). Words and batching in `utils/contactosImportar.js`, tested in `tests/unit/contactosImportar.test.js`. Shots: 305/412/1280, light and dark (lane `.scratch/proof`).
+
 ## 2026-11-14 — «Contactos en los teléfonos» screen (lane contactos-telefonos; not deployed)
 
 - **What:** `/crm/contactos/telefonos`, opened from Contactos' menu («En los teléfonos», owner or encargado only). One switch, which contacts go (each kind with how many have a phone), what to add to the name with a live «Así se ve al llamar», the phones with when each last synced, «Agregar teléfono» (name, iPhone / Android / Otro) with the QR code, the DAVx⁵ links or the CardDAV data shown once, «Volver a generar» and «Quitar» (two taps in place). A worker without the role reads whether it is on and whom to ask.
 - **Backend:** doco `doco.contactos.telefonos.api` (same lane). `telefonosApi` in `composables/useContactos.js`; words in `utils/contactosTelefonos.js`, tested in `tests/unit/contactosTelefonos.test.js`.
+
 ## 2026-11-14 — «Pagar lo que falta» on Prenómina (lane pagar-la-semana-spa; not deployed)
 
 Wave 2 «Pago a tu equipo», lane 8 (crm half). Frontend over doco.nomina's `pagar_preview` / `pagar_apply` (doco lane pagar-la-semana; land them together with `land --train`).
@@ -55,6 +61,7 @@ Wave 2 «Pago a tu equipo», lane 3. Frontend over doco.nomina's `ajustes_get` /
 
 - **/crm/equipo/como-pago.** The one-time setup: three cards («Solo anoto lo que pago», «Muelle me dice cuánto le toca», «Muelle lleva todo») that only set switches, then «¿Cada cuándo pagas?» and «¿Qué día?» (weekly only), «¿De dónde sale el dinero?», «¿Quién lo entrega?» and the cashier privacy switch where the shop has a register, and «¿Cómo les pagas casi siempre?» only while Muelle calculates. Folds: «Más detalles del cálculo», «Lo que pide la ley» (only for a Mexican company; «Lleva todo» ticks each piece the site allows, for review), «Para tu equipo», «Cuentas (contador)» (read-only). «Guardar» sits in the thumb's reach with the reason it waits beside it; doco's preview says what changes before the tap and the receipt says what changed. Taps from Prenómina: «Solo anoto» 5, «Lleva todo» 6. No salary per person here.
 - **Prenómina's first-run card.** «¿Cómo pagas a tu equipo?» shows to the owner before the first save, and a quiet link after it. Dark by default: where doco has no setup, refuses, or the viewer cannot save, Prenómina is unchanged.
+
 ## 2026-11-13 — A document's questions are full cards in the assistant (lane asi-tarjeta-articulo, with doco; not deployed)
 
 Marco: «for some most used actions we need special UI, like for crear items, so a full component with the data, picture, etc». The questions doco asks about a captured document (which article a line is, which warehouse, which supplier) were prose with pill buttons in «Pregúntale a Muelle».

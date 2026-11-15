@@ -32,6 +32,19 @@
     <div class="min-h-0 flex-1 overflow-y-auto px-4 pb-6 sm:px-6">
       <div class="mx-auto w-full max-w-2xl space-y-6">
         <p v-if="phone" class="pt-1 text-sm text-ink-gray-6">{{ subtitle }}</p>
+        <p
+          v-if="que === 'clientes'"
+          class="text-sm text-ink-gray-6"
+          data-importar-telefono
+        >
+          {{ __('¿Los tienes guardados en un celular?') }}
+          <RouterLink
+            to="/contactos/importar/telefono"
+            class="font-medium text-ink-gray-9 underline"
+          >
+            {{ __('Importa los contactos del teléfono') }}
+          </RouterLink>
+        </p>
 
         <p
           v-if="!opciones && !loadProblem"

@@ -185,6 +185,17 @@ const routes = [
     },
   },
   {
+    // «Importar del teléfono»: a phone's .vcf export, reviewed row by row.
+    path: '/contactos/importar/telefono',
+    name: 'ContactosImportarTelefono',
+    component: () => import('@/pages/ContactosImportarTelefono.vue'),
+    meta: {
+      app: 'contactos',
+      title: 'Importar del teléfono',
+      ownPhoneHeader: true,
+    },
+  },
+  {
     // «Importar clientes» from the owner's sheet, the same page as products'.
     path: '/contactos/importar',
     name: 'ImportarClientes',
