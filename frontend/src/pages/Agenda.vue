@@ -1726,6 +1726,8 @@ const panelHandlers = {
   'cita-action': (id) => runCitaAction(id),
   'cita-move': (slot) => doMove(selectedEvent.value, slot),
   'cita-message': (purpose) => openCitaMessage(purpose),
+  // a reschedule that hits a setup problem opens the settings at its section
+  'cita-settings': (section) => openCitaSettings(section),
   'follow-up': () => followUp(selectedEvent.value),
 }
 // Who an event can go to: the other doctors of the clinic, or (for a workshop manager,

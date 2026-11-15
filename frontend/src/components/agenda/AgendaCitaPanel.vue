@@ -109,7 +109,27 @@
           {{ dayLabel(row.date) }}
         </option>
       </select>
-      <p v-if="slotsError" role="alert" class="mt-2 text-sm text-ink-red-6">
+      <!-- F15b: setup problems carry their fix here too, like the form and the sheet. -->
+      <div
+        v-if="problems.length"
+        role="alert"
+        class="mt-2 rounded-6 border border-outline-gray-2 p-3"
+      >
+        <p class="text-base-medium text-ink-gray-9">
+          {{ __('Online appointments need a little setup first.') }}
+        </p>
+        <CitasSetupProblems
+          class="mt-1"
+          :problems="problems"
+          :fixers="fixers"
+          @fix="(section) => emit('open-settings', section)"
+        />
+      </div>
+      <p
+        v-else-if="slotsError"
+        role="alert"
+        class="mt-2 text-sm text-ink-red-6"
+      >
         {{ slotsError }}
       </p>
       <p v-else-if="!days.length" class="mt-2 text-sm text-ink-gray-7">
@@ -215,6 +235,7 @@ import { errorText } from '@/utils/errorText'
 import { computed, ref, watch } from 'vue'
 import { Button } from 'frappe-ui'
 import { recordLink } from '@/composables/useAgenda'
+import CitasSetupProblems from '@/components/agenda/CitasSetupProblems.vue'
 import {
   citaOptions,
   receiveUrl,
@@ -232,12 +253,14 @@ const props = defineProps({
   busy: { type: Boolean, default: false },
   returnTo: { type: String, default: '' },
 })
-const emit = defineEmits(['action', 'move', 'message'])
+const emit = defineEmits(['action', 'move', 'message', 'open-settings'])
 
 const confirmCancel = ref(false)
 const rescheduling = ref(false)
 const loadingSlots = ref(false)
 const slotsError = ref('')
+const problems = ref([])
+const fixers = ref([])
 const days = ref([])
 const day = ref('')
 const dayId = `cita-day-${Math.random().toString(36).slice(2, 8)}`
@@ -264,12 +287,13 @@ async function startReschedule() {
   rescheduling.value = true
   loadingSlots.value = true
   slotsError.value = ''
+  problems.value = []
   try {
     const data = await citaOptions()
     days.value = data.days || []
     day.value = days.value[0]?.date || ''
-    if (data.problems?.length)
-      slotsError.value = data.problems.map((row) => row.message).join(' ')
+    problems.value = data.problems || []
+    fixers.value = data.fixers || []
   } catch (error) {
     slotsError.value = errorText(
       error,

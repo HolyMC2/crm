@@ -2,6 +2,13 @@
 
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
+## 2026-11-15 — Citas: one list of setup problems with their fix, rest days in the sheet (lane shell-f15b-citas, Shell F15b; not deployed)
+
+- **One renderer:** `components/agenda/CitasSetupProblems.vue` is the list the new-cita form, the settings sheet and now a reschedule show: each problem with its fix button when this person may fix it (in the sheet, every section), otherwise who can, with «Pedir configuración». A reschedule that hits a setup problem used to print the messages as one line; its fix now opens the settings at that section (`AgendaCitaPanel` → `AgendaEventPanel` `cita-settings` → `Agenda.vue`).
+- **Rest days:** a site without a list of rest days no longer goes to `/app/holiday-list/new`: «¿Qué días cierras?» chips and «Guardar días de descanso» (doco `citas.api.rest_days_save`, same lane) make the list and pick it; «Abrir en Desk» stays as a secondary link from 1024 px.
+- **Who can fix it:** one name «Ana puede configurarlo.», several «Ana y Beto pueden configurarlo.» (`Intl.ListFormat` in the person's language, msgctxt «several»), none «Un administrador puede configurarlo.»
+- **Tests:** `tests/unit/citasSetupProblems.test.js` (5). Rollback = revert with the doco half.
+
 ## 2026-11-14 — «En los teléfonos»: Android steps as DAVx⁵ shows them (lane telefonos-basic; not deployed)
 
 - **What:** the Android steps after «Agregar teléfono» follow DAVx⁵ 4.5 as set up on the first shop phone (Galaxy A35, 11-14): «Registrar», the shop's name as the account name, «Finalizar», then switch the address book on and «Sincronizar ahora» (DAVx⁵ leaves it off), and accept removing battery saving (Samsung had DAVx⁵ in deep sleep). Copy only.

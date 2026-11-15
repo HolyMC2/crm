@@ -321,6 +321,7 @@
         @action="(id) => emit('cita-action', id)"
         @move="(slot) => emit('cita-move', slot)"
         @message="(purpose) => emit('cita-message', purpose)"
+        @open-settings="(section) => emit('cita-settings', section)"
       />
       <dl
         v-else-if="panelFields.length"
@@ -578,6 +579,7 @@ const emit = defineEmits([
   'cita-action',
   'cita-move',
   'cita-message',
+  'cita-settings',
   'follow-up',
 ])
 const confirmCancel = ref(false)

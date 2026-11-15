@@ -1,6 +1,7 @@
 // Citas en línea inside Agenda: the cita panel actions, staff bookings («Cita con cliente»)
 // and the owner's settings, over doco.citas.api. Every call returns data or { constraints }.
 import { call } from 'frappe-ui'
+import { LOCALE } from '@/utils/display'
 import { safeReturn } from '@/composables/useAgenda'
 import { withReturn } from '@/vendor/muelle-shell/contracts'
 
@@ -31,13 +32,30 @@ export const SETUP_REQUEST = Object.freeze({
   what: 'citas',
   label: 'Ask for it to be set up',
 })
-export function setupGuard(fixers) {
+/** «Ana», «Ana y Beto», «Ana, Beto y Carla» in the person's language. */
+export function namesList(names, locale) {
+  const lang =
+    locale || globalThis.document?.documentElement?.lang || LOCALE || 'es-MX'
+  try {
+    return new Intl.ListFormat(lang, {
+      style: 'long',
+      type: 'conjunction',
+    }).format(names)
+  } catch {
+    return names.join(', ')
+  }
+}
+export function setupGuard(fixers, locale) {
   const names = (fixers || []).filter(Boolean)
   return {
     code: 'setup',
-    message: names.length
-      ? __('{0} can set this up.', [names.join(', ')])
-      : __('An administrator can set this up.'),
+    // One person «puede»; several «pueden» (a context of its own in es.po).
+    message:
+      names.length > 1
+        ? __('{0} can set this up.', [namesList(names, locale)], 'several')
+        : names.length
+          ? __('{0} can set this up.', [names[0]])
+          : __('An administrator can set this up.'),
     actions: [{ ...SETUP_REQUEST, label: __(SETUP_REQUEST.label) }],
   }
 }
@@ -54,6 +72,9 @@ export const citaSettings = () => call(`${CITAS_API}.settings_get`)
 export const saveCitaSettings = (payload) =>
   call(`${CITAS_API}.settings_save`, { payload: JSON.stringify(payload) })
 export const createCitaFlow = () => call(`${CITAS_API}.create_flow`)
+// F15b: the weekly days the shop is closed → one list of rest days (doco citas.api).
+export const saveRestDays = (days) =>
+  call(`${CITAS_API}.rest_days_save`, { payload: JSON.stringify({ days }) })
 export const citaMessageLink = (name, purpose) =>
   call(`${CITAS_API}.message_link`, { name, purpose })
 

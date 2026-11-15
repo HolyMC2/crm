@@ -46532,3 +46532,28 @@ msgstr "Revisar precios"
 #: frontend/src/components/gastos/billAlmacen.js
 msgid "What it cost against what you sell it for"
 msgstr "Lo que costó contra lo que lo vendes"
+
+#: frontend/src/composables/useCitas.js
+msgctxt "several"
+msgid "{0} can set this up."
+msgstr "{0} pueden configurarlo."
+
+#: frontend/src/components/agenda/AgendaCitasSettings.vue
+msgid "Which days are you closed?"
+msgstr "¿Qué días cierras?"
+
+#: frontend/src/components/agenda/AgendaCitasSettings.vue
+msgid "Save rest days"
+msgstr "Guardar días de descanso"
+
+#: frontend/src/components/agenda/AgendaCitasSettings.vue
+msgid "Tap the days you are closed."
+msgstr "Toca los días que cierras."
+
+#: frontend/src/components/agenda/AgendaCitasSettings.vue
+msgid "Choose the days you are closed"
+msgstr "Elegir los días que cierras"
+
+#: frontend/src/components/agenda/AgendaCitasSettings.vue
+msgid "Rest days saved"
+msgstr "Días de descanso guardados"

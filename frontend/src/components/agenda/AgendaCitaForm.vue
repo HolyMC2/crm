@@ -15,24 +15,13 @@
       <p v-if="loadError" class="mt-1 text-sm text-ink-gray-7">
         {{ loadError }}
       </p>
-      <ul class="mt-1 space-y-2">
-        <li
-          v-for="row in problems"
-          :key="row.code"
-          class="flex flex-wrap items-center justify-between gap-2 text-sm text-ink-gray-7"
-          :data-code="row.code"
-        >
-          <span class="flex-1 basis-48">{{ row.message }}</span>
-          <Button
-            v-if="row.can_fix && SETUP_SECTIONS[row.code]"
-            class="min-h-11"
-            variant="solid"
-            :label="__(SETUP_SECTIONS[row.code].label)"
-            @click="emit('open-settings', SETUP_SECTIONS[row.code].section)"
-          />
-        </li>
-      </ul>
-      <ClaimGuard v-if="needsHelp" class="mt-2" :guard="setupGuard(fixers)" />
+      <CitasSetupProblems
+        class="mt-1"
+        :problems="problems"
+        :fixers="fixers"
+        solid
+        @fix="emit('open-settings', $event)"
+      />
       <Button
         v-if="retryable"
         class="mt-2 min-h-11"
@@ -190,14 +179,9 @@ import { errorText } from '@/utils/errorText'
 import { computed, onMounted, ref } from 'vue'
 import { Button } from 'frappe-ui'
 import AgendaGuard from '@/components/agenda/AgendaGuard.vue'
-import ClaimGuard from '@/components/gastos/ClaimGuard.vue'
+import CitasSetupProblems from '@/components/agenda/CitasSetupProblems.vue'
 import { searchPeople } from '@/composables/useAgenda'
-import {
-  SETUP_SECTIONS,
-  citaOptions,
-  setupGuard,
-  slotsOn,
-} from '@/composables/useCitas'
+import { SETUP_SECTIONS, citaOptions, slotsOn } from '@/composables/useCitas'
 
 const props = defineProps({
   initial: { type: Object, default: () => ({}) },
@@ -233,10 +217,6 @@ const notes = ref(props.initial.notes || '')
 
 const dirty = computed(() =>
   Boolean(start.value || notes.value || service.value),
-)
-// A problem this user cannot fix: name who can and offer «Pedir configuración».
-const needsHelp = computed(() =>
-  problems.value.some((row) => SETUP_SECTIONS[row.code] && !row.can_fix),
 )
 // Only a failed load or a problem nothing in the shell fixes is worth retrying.
 const retryable = computed(

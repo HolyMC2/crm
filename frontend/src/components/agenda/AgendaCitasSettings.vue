@@ -30,22 +30,12 @@
         <p class="text-base-medium text-ink-gray-9">
           {{ __('To take appointments online:') }}
         </p>
-        <ul class="mt-1 space-y-2">
-          <li
-            v-for="row in settings.problems"
-            :key="row.code"
-            class="flex flex-wrap items-center justify-between gap-2 text-sm text-ink-gray-7"
-          >
-            <span class="flex-1 basis-48">{{ row.message }}</span>
-            <Button
-              v-if="SETUP_SECTIONS[row.code]"
-              class="min-h-11"
-              variant="subtle"
-              :label="__(SETUP_SECTIONS[row.code].label)"
-              @click="focusSection(SETUP_SECTIONS[row.code].section)"
-            />
-          </li>
-        </ul>
+        <CitasSetupProblems
+          class="mt-1"
+          :problems="settings.problems"
+          in-settings
+          @fix="focusSection"
+        />
       </section>
 
       <fieldset data-section="hours scheduling">
@@ -156,9 +146,10 @@
         </div>
       </fieldset>
 
-      <label class="text-sm text-ink-gray-7" data-section="rest_days">
-        {{ __('Rest days and holidays') }}
+      <div class="text-sm text-ink-gray-7" data-section="rest_days">
+        <label :for="restDaysId">{{ __('Rest days and holidays') }}</label>
         <select
+          :id="restDaysId"
           v-model="form.holidayList"
           class="mt-1 min-h-11 w-full rounded-4 border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9"
         >
@@ -182,17 +173,58 @@
             @click="form.holidayList = settings.suggestedHolidayList"
           />
         </span>
-        <span v-else-if="!settings.holidayLists.length" class="mt-1 block">
-          {{ __('Create your rest days first.') }}
-          <a
-            class="underline"
-            href="/app/holiday-list/new"
-            target="_blank"
-            rel="noopener"
-            >{{ __('New list of rest days') }}</a
-          >
-        </span>
-      </label>
+        <!-- F15b: the days the shop is closed, chosen here; doco keeps them as
+             one list of rest days for this year and the next. -->
+        <div
+          v-if="restOpen || !settings.holidayLists.length"
+          class="mt-2"
+          data-rest-days
+        >
+          <p>{{ __('Which days are you closed?') }}</p>
+          <div class="mt-1 flex flex-wrap gap-2">
+            <button
+              v-for="day in WEEKDAYS"
+              :key="day"
+              type="button"
+              :class="chipClass(restDays.includes(day))"
+              :aria-pressed="restDays.includes(day)"
+              :data-rest-day="day"
+              @click="toggleRestDay(day)"
+            >
+              {{ __(day) }}
+            </button>
+          </div>
+          <div class="mt-2 flex flex-wrap items-center gap-2">
+            <Button
+              class="min-h-11"
+              variant="subtle"
+              :loading="restBusy"
+              :disabled="!restDays.length"
+              :label="__('Save rest days')"
+              data-rest-days-save
+              @click="saveRestDays"
+            />
+            <span v-if="!restDays.length" class="text-sm text-ink-gray-6">{{
+              __('Tap the days you are closed.')
+            }}</span>
+          </div>
+        </div>
+        <Button
+          v-else
+          class="mt-1 min-h-11"
+          variant="ghost"
+          :label="__('Choose the days you are closed')"
+          @click="restOpen = true"
+        />
+        <!-- On a desk the full Desk list stays one link away (dates, half days). -->
+        <a
+          class="mt-1 hidden min-h-11 items-center text-sm text-ink-gray-6 underline lg:inline-flex"
+          href="/app/holiday-list"
+          target="_blank"
+          rel="noopener"
+          >{{ __('Open in Desk') }}</a
+        >
+      </div>
 
       <fieldset v-if="settings.profiles.length">
         <legend class="text-base font-semibold text-ink-gray-9">
@@ -399,6 +431,8 @@ import { nextTick, reactive, ref } from 'vue'
 import { Button, toast } from 'frappe-ui'
 import AgendaGuard from '@/components/agenda/AgendaGuard.vue'
 import ClaimGuard from '@/components/gastos/ClaimGuard.vue'
+import CitasSetupProblems from '@/components/agenda/CitasSetupProblems.vue'
+import { chipClass } from '@/components/ui/chipClass'
 import {
   SETUP_SECTIONS,
   WEEKDAYS,
@@ -408,6 +442,7 @@ import {
   saveCitaServices,
   saveCitaSettings,
   setupGuard,
+  saveRestDays as saveCitaRestDays,
   validHours,
 } from '@/composables/useCitas'
 import LucideX from '~icons/lucide/x'
@@ -427,6 +462,36 @@ const constraints = ref([])
 const root = ref(null)
 const services = ref(null)
 const servicesForm = reactive({ group: '', published: [] })
+const restDaysId = `citas-rest-${Math.random().toString(36).slice(2, 8)}`
+const restOpen = ref(false),
+  restBusy = ref(false),
+  restDays = ref(['Sunday'])
+function toggleRestDay(day) {
+  restDays.value = restDays.value.includes(day)
+    ? restDays.value.filter((value) => value !== day)
+    : [...restDays.value, day]
+}
+// One tap makes (or updates) the list of rest days and picks it; «Guardar» keeps it.
+async function saveRestDays() {
+  if (!restDays.value.length || restBusy.value) return
+  restBusy.value = true
+  try {
+    const answer = await saveCitaRestDays(restDays.value)
+    if (answer?.constraints?.length) {
+      toast.error(answer.constraints[0].message)
+      return
+    }
+    settings.value.holidayLists =
+      answer.holidayLists || settings.value.holidayLists
+    form.value.holidayList = answer.holidayList
+    restOpen.value = false
+    toast.success(__('Rest days saved'))
+  } catch (error) {
+    toast.error(errorText(error, __('That did not go through. Try again.')))
+  } finally {
+    restBusy.value = false
+  }
+}
 
 function fill(data) {
   settings.value = data
