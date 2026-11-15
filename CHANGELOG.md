@@ -2,6 +2,10 @@
 
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
+## 2026-11-14 — «En los teléfonos»: Android steps as DAVx⁵ shows them (lane telefonos-basic; not deployed)
+
+- **What:** the Android steps after «Agregar teléfono» follow DAVx⁵ 4.5 as set up on the first shop phone (Galaxy A35, 11-14): «Registrar», the shop's name as the account name, «Finalizar», then switch the address book on and «Sincronizar ahora» (DAVx⁵ leaves it off), and accept removing battery saving (Samsung had DAVx⁵ in deep sleep). Copy only.
+
 ## 2026-11-14 — «Contactos en los teléfonos» screen (lane contactos-telefonos; not deployed)
 
 - **What:** `/crm/contactos/telefonos`, opened from Contactos' menu («En los teléfonos», owner or encargado only). One switch, which contacts go (each kind with how many have a phone), what to add to the name with a live «Así se ve al llamar», the phones with when each last synced, «Agregar teléfono» (name, iPhone / Android / Otro) with the QR code, the DAVx⁵ links or the CardDAV data shown once, «Volver a generar» and «Quitar» (two taps in place). A worker without the role reads whether it is on and whom to ask.

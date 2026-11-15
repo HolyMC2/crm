@@ -296,7 +296,25 @@
             <li>
               {{ __('Abre la cámara del teléfono y apunta a este código.') }}
             </li>
-            <li>{{ __('En DAVx⁵ toca Entrar y elige los contactos.') }}</li>
+            <li>
+              {{
+                __(
+                  'En DAVx⁵ toca Registrar, escribe el nombre de la tienda como nombre de cuenta y toca Finalizar.',
+                )
+              }}
+            </li>
+            <li>
+              {{
+                __('Activa la libreta de contactos y toca Sincronizar ahora.')
+              }}
+            </li>
+            <li>
+              {{
+                __(
+                  'Si el teléfono pide quitar el ahorro de batería para DAVx⁵, acéptalo: así los contactos siguen al día.',
+                )
+              }}
+            </li>
           </ol>
         </template>
         <img
