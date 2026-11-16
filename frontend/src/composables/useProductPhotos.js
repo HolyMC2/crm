@@ -7,6 +7,7 @@ import { mediaKind } from '@/components/ui/imageFiles'
 import { openImage, prepareImage } from '@/components/ui/imageFiles'
 import { bakeEdit, newEdit, turnEdit } from '@/components/ui/imageEdit'
 import { postPicture } from '@/utils/catalogUpload'
+import { openCamera } from '@/components/captura/cameraDoor'
 import {
   CTX,
   photoOf,
@@ -54,6 +55,81 @@ export async function sendProductPhoto(
   const args = { request_id: request, item }
   if (principal) args.principal = 1
   return post(`${MEDIA}.add_photo`, args, ready, { onProgress })
+}
+
+/** An edit or a retake takes the place of `fileUrl` on the product (doco's
+ * replace_photo: its spot in the gallery, the principal, the storefront). */
+export function replaceProductPhoto(
+  item,
+  fileUrl,
+  file,
+  { onProgress, post = postPicture } = {},
+) {
+  return post(
+    `${MEDIA}.replace_photo`,
+    { request_id: requestId(), item, file_url: fileUrl },
+    file,
+    { onProgress },
+  )
+}
+
+/**
+ * «Tomar fotos»: `products` ([{ key: item code, title, detail? }]) under the
+ * camera one after another. Each photo goes up behind the shutter as the
+ * product's principal (they have none); «Repetir» replaces the one it took.
+ * `onSaved(product, answer)` as each lands, `onFailed(product, error)` when
+ * one is refused. Resolves once every photo has its answer:
+ * { shot, skipped, left, saved, failed, closed? }.
+ */
+export async function shootProducts(
+  products,
+  {
+    onSaved = () => {},
+    onFailed = () => {},
+    open = openCamera,
+    send = sendProductPhoto,
+    replace = replaceProductPhoto,
+    prepare = prepareImage,
+  } = {},
+) {
+  const latest = new Map()
+  const tasks = []
+  const saved = new Set()
+  const failed = new Set()
+  function onShot(product, file, { retake = false } = {}) {
+    const before = retake ? latest.get(product.key) : null
+    const task = (
+      before ? before.catch(() => null) : Promise.resolve(null)
+    ).then(async (previous) =>
+      previous?.row?.file_url
+        ? replace(product.key, previous.row.file_url, await prepare(file))
+        : send(product.key, file, { principal: true }),
+    )
+    latest.set(product.key, task)
+    tasks.push(
+      task.then(
+        (answer) => {
+          saved.add(product.key)
+          failed.delete(product.key)
+          onSaved(product, answer)
+        },
+        (error) => {
+          failed.add(product.key)
+          onFailed(product, error)
+        },
+      ),
+    )
+  }
+  const walk = await open({ photo: true, run: { items: products, onShot } })
+  await Promise.all(tasks)
+  return {
+    shot: 0,
+    skipped: 0,
+    left: products.length,
+    ...(walk || {}),
+    saved: saved.size,
+    failed: [...failed].filter((key) => !saved.has(key)).length,
+  }
 }
 
 /** Run `task` over `entries`, at most `limit` at a time, in order. */
@@ -355,12 +431,9 @@ export function useProductPhotos(
     const stem = (tile.name || 'foto').replace(/\.[a-z0-9]{1,5}$/i, '')
     const file = new File([blob], `${stem}.${extension}`, { type: blob.type })
     try {
-      const answer = await postPicture(
-        `${MEDIA}.replace_photo`,
-        { request_id: requestId(), item: item(), file_url: tile.file_url },
-        file,
-        { onProgress: (done) => (tile.progress = done) },
-      )
+      const answer = await replaceProductPhoto(item(), tile.file_url, file, {
+        onProgress: (done) => (tile.progress = done),
+      })
       if (!alive) return
       Object.assign(tile, {
         file_url: answer.row.file_url,

@@ -38,9 +38,18 @@
             aria-hidden="true"
           />
         </button>
-        <h2 class="min-w-0 flex-1 text-lg font-semibold leading-snug">
-          {{ stepTitle }}
-        </h2>
+        <div class="min-w-0 flex-1">
+          <h2 class="text-lg font-semibold leading-snug">
+            {{ stepTitle }}
+          </h2>
+          <p
+            v-if="runLine && step === 'camera'"
+            class="truncate text-sm text-white/75"
+            data-testid="camera-run-position"
+          >
+            {{ runLine }}
+          </p>
+        </div>
         <button
           v-if="step === 'camera' && torchAvailable"
           type="button"
@@ -145,6 +154,31 @@
             >
           </button>
         </div>
+        <div
+          v-if="runMode && lastShot"
+          class="flex flex-none items-center gap-3 px-4 pt-3"
+          role="status"
+          data-testid="camera-run-last"
+        >
+          <img
+            :src="lastShot.url"
+            alt=""
+            class="size-12 flex-none rounded-5 border border-white/40 object-cover"
+          />
+          <span class="min-w-0 flex-1 truncate text-sm text-white/90">{{
+            __('Saved: {0}', [lastShot.title], 'Fotos')
+          }}</span>
+          <button
+            v-if="!runRetakingNow"
+            type="button"
+            class="flex min-h-11 flex-none items-center gap-1 rounded-full bg-white/15 px-4 text-base text-white"
+            data-testid="camera-run-retake"
+            @click="runRetakeNow"
+          >
+            <LucideRotateCcw class="size-4" aria-hidden="true" />
+            {{ __('Retake', null, 'Fotos') }}
+          </button>
+        </div>
         <footer class="grid flex-none grid-cols-3 items-center px-4 pb-6 pt-3">
           <button
             type="button"
@@ -170,7 +204,17 @@
             <span class="size-14 rounded-full bg-white" aria-hidden="true" />
           </button>
           <button
-            v-if="pages.length"
+            v-if="runMode"
+            type="button"
+            class="flex min-h-12 items-center gap-1 justify-self-end rounded-full bg-white/15 px-4 text-base-medium text-white"
+            data-testid="camera-run-skip"
+            @click="runSkipNow"
+          >
+            {{ __('Skip', null, 'Fotos') }}
+            <LucideArrowRight class="size-4" aria-hidden="true" />
+          </button>
+          <button
+            v-else-if="pages.length"
             type="button"
             class="flex min-h-12 items-center gap-1 justify-self-end rounded-full bg-white px-4 text-base-medium text-black"
             data-testid="camera-done"
@@ -591,6 +635,17 @@ import { useRoute, useRouter } from 'vue-router'
 import { Button, FormControl, toast } from 'frappe-ui'
 import { camera, settleCamera } from './cameraDoor'
 import {
+  createRun,
+  current as runCurrent,
+  finished as runFinished,
+  position as runPosition,
+  retake as runRetake,
+  retaking as runRetaking,
+  shoot as runShoot,
+  skip as runSkip,
+  summary as runSummary,
+} from './photoRun'
+import {
   MAX_PAGES,
   cameraProblem,
   initialKind,
@@ -669,14 +724,30 @@ const recordQuery = ref('')
 const recordRows = ref([])
 let stream = null
 let startToken = 0
+// «Tomar fotos» (options.run): products one after another; the shutter files
+// the one on screen (the caller uploads it) and the next one comes up.
+const run = ref(null)
+const lastShot = ref(null)
 
 const options = computed(() => camera.options || {})
+const runMode = computed(() => Boolean(run.value))
+const runItem = computed(() => (run.value ? runCurrent(run.value) : null))
+const runRetakingNow = computed(() =>
+  Boolean(run.value && runRetaking(run.value)),
+)
+const runLine = computed(() => {
+  if (!run.value || !runItem.value) return ''
+  const { at, of } = runPosition(run.value)
+  const where = __('{0} of {1}', [at, of], 'Fotos')
+  return runItem.value.detail ? `${where} · ${runItem.value.detail}` : where
+})
 const recordMode = computed(() => Boolean(options.value.record?.doctype))
 // «Tomar foto» of a thing (Producto): one photo as shot, no page crop, no PDF.
 const photoMode = computed(() => Boolean(options.value.photo))
 const maxPages = computed(() => (photoMode.value ? 1 : MAX_PAGES))
 const title = computed(
   () =>
+    runItem.value?.title ||
     options.value.title ||
     (recordMode.value ? __('Take photo') : __('Scan document')),
 )
@@ -887,6 +958,7 @@ async function shoot() {
       crop: !photoMode.value,
       maxBytes: pageBudget(count),
     })
+    if (runMode.value) return runTake(page)
     placePage(page)
     if (photoMode.value) step.value = 'pages'
   } catch {
@@ -907,6 +979,28 @@ function placePage(page) {
   } else if (pages.value.length < maxPages.value) {
     pages.value = [...pages.value, page]
   }
+}
+
+// ------------------------------------------------------------- the run
+/** The photo of the product on screen goes to the caller; on to the next one. */
+function runTake(page) {
+  const item = runItem.value
+  if (!item) return URL.revokeObjectURL(page.url)
+  const file = new File([page.blob], scanName(new Date(), 'jpg'), {
+    type: 'image/jpeg',
+  })
+  options.value.run?.onShot?.(item, file, { retake: runRetakingNow.value })
+  if (lastShot.value) URL.revokeObjectURL(lastShot.value.url)
+  lastShot.value = { url: page.url, title: item.title }
+  runShoot(run.value)
+  if (runFinished(run.value)) finish(runSummary(run.value))
+}
+function runSkipNow() {
+  runSkip(run.value)
+  if (runFinished(run.value)) finish(runSummary(run.value))
+}
+function runRetakeNow() {
+  runRetake(run.value)
 }
 
 // ------------------------------------------------------------- pages
@@ -953,6 +1047,12 @@ async function fromGallery(event) {
   busy.value = true
   problem.value = ''
   try {
+    if (runMode.value) {
+      const img = await loadImage(files[0])
+      return runTake(
+        await makePage(img, { crop: false, maxBytes: pageBudget(1) }),
+      )
+    }
     for (const file of files) {
       if (retakeIndex.value === null && pages.value.length >= maxPages.value)
         break
@@ -1132,6 +1232,9 @@ function reset() {
   stopCamera()
   pages.value.forEach((p) => URL.revokeObjectURL(p.url))
   pages.value = []
+  if (lastShot.value) URL.revokeObjectURL(lastShot.value.url)
+  lastShot.value = null
+  run.value = null
   single.value = null
   retakeIndex.value = null
   pickOpen.value = false
@@ -1152,7 +1255,8 @@ function finish(result) {
 
 function dismiss() {
   if (busy.value) return
-  finish(null)
+  // A walk closed early still says what it shot: those photos are going up.
+  finish(run.value ? { ...runSummary(run.value), closed: true } : null)
 }
 
 function back() {
@@ -1186,6 +1290,8 @@ watch(
   async (open) => {
     if (!open) return reset()
     reset()
+    const items = camera.options?.run?.items
+    if (items?.length) run.value = createRun(items)
     loadCapturaBoot()
     await nextTick()
     dialog.value?.focus?.()

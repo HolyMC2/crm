@@ -559,6 +559,68 @@
             @click="notice = ''"
           />
         </div>
+        <!-- «Llegaron sin foto»: the walk over the list, and the owner's switch
+             for asking after every receipt (Fotos de lo que llega). -->
+        <section
+          v-if="arrivalView && !reason"
+          class="mx-4 mb-3 flex flex-col gap-3 rounded-7 bg-surface-gray-1 p-3 sm:mx-6"
+          data-productos-llegada
+        >
+          <div class="flex flex-wrap items-center gap-3">
+            <p class="min-w-0 flex-1 text-base text-ink-gray-8">
+              {{
+                __(
+                  'What came in during the last {0} days and still has no photo, newest first.',
+                  [arrival?.days || 30],
+                  'Fotos',
+                )
+              }}
+            </p>
+            <Button
+              v-if="photoRun && walk.length"
+              variant="solid"
+              class="min-h-11 sm:min-h-8"
+              :label="__('Take photos ({0})', [walk.length], 'Fotos')"
+              data-productos-tomar-fotos
+              @pointerenter="loadCameraSheet"
+              @click="shootAll"
+            />
+          </div>
+          <div
+            v-if="arrival?.can_configure"
+            class="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-outline-gray-2 pt-3"
+          >
+            <label
+              class="flex min-h-11 min-w-0 flex-1 items-center gap-3 text-base text-ink-gray-9"
+            >
+              <input
+                type="checkbox"
+                class="size-5 flex-none accent-[var(--muelle-accent)]"
+                :checked="arrival.enabled"
+                :disabled="arrivalBusy"
+                data-productos-llegada-switch
+                @change="saveArrival({ enabled: $event.target.checked })"
+              />
+              <span class="min-w-0">
+                {{ __('Ask for the photos of what arrives', null, 'Fotos') }}
+                <span class="block text-sm text-ink-gray-6">{{
+                  arrivalHelp
+                }}</span>
+              </span>
+            </label>
+            <FormControl
+              v-if="arrival.enabled"
+              class="w-full sm:w-64"
+              type="select"
+              :label="__('Who is asked', null, 'Fotos')"
+              :model-value="arrival.notify_user || ''"
+              :options="arrivalPeople"
+              :disabled="arrivalBusy"
+              data-productos-llegada-persona
+              @update:model-value="(value) => saveArrival({ user: value })"
+            />
+          </div>
+        </section>
         <div
           v-if="problem"
           role="alert"
@@ -834,7 +896,7 @@
                 :no-store="Boolean(boot?.unassigned)"
                 :focused="focusKey === legacyKey(row)"
                 :eager="index < 12"
-                :detail="row.warehouse ? stockLabel(row) : ''"
+                :detail="rowDetail(row)"
                 @click="leaveFor(row)"
               />
             </li>
@@ -899,7 +961,7 @@
                   :tiers="catalog ? tierLines(row, shownLists) : []"
                   :no-store="Boolean(boot?.unassigned)"
                   :eager="index < 12"
-                  :detail="row.warehouse ? stockLabel(row) : ''"
+                  :detail="rowDetail(row)"
                   @click="leaveFor(row)"
                 />
               </li>
@@ -968,7 +1030,11 @@ import PackDialog from '@/components/productos/PackDialog.vue'
 import PriceListsToggle from '@/components/productos/PriceListsToggle.vue'
 import { loadScanSheet, openScan } from '@/components/escaneo/scanDoor'
 import { loadCameraSheet, openCamera } from '@/components/captura/cameraDoor'
-import { sendProductPhoto, whyNot } from '@/composables/useProductPhotos'
+import {
+  sendProductPhoto,
+  shootProducts,
+  whyNot,
+} from '@/composables/useProductPhotos'
 import { registerPageShortcuts } from '@/composables/shellKeyboard'
 import { hoyLive } from '@/composables/useHoy'
 import { createListCache } from '@/utils/listCache'
@@ -984,6 +1050,10 @@ import {
   saveShownLists,
   tierLines,
   VIEWS,
+  ARRIVAL_VIEW,
+  arrivalApi,
+  arrivedLine,
+  walkOf,
   daysSince,
   encodeSelection,
   escanerDone,
@@ -1166,9 +1236,123 @@ const photoChoices = computed(() => [
 ])
 // «Sin foto» is a run: for whoever keeps the catalogue, each empty photo is a
 // camera button. The picture shows on the row at once and goes up behind it.
+const arrivalView = computed(() => view.value === ARRIVAL_VIEW)
 const photoRun = computed(
-  () => state.value.photo === 'sin' && Boolean(boot.value?.capabilities?.edit),
+  () =>
+    (state.value.photo === 'sin' || arrivalView.value) &&
+    Boolean(boot.value?.capabilities?.edit),
 )
+/** The camera walk over the list: its products that still have no photo. */
+const walk = computed(() =>
+  walkOf(rows.value).filter((product) => !shots[product.key]),
+)
+function rowDetail(row) {
+  if (row.arrived) return arrivedLine(row.arrived)
+  return row.warehouse ? stockLabel(row) : ''
+}
+/** «Tomar fotos»: the list's products under the camera, one after another. */
+async function shootAll() {
+  const byName = new Map(rows.value.map((row) => [row.name, row]))
+  const result = await shootProducts(walk.value, {
+    onSaved: (product, answer) => {
+      const row = byName.get(product.key)
+      if (!row) return
+      row.image = answer.image || answer.row?.file_url || ''
+      row.media = answer.row?.media
+    },
+    onFailed: (product, error) =>
+      toast.error(
+        [__('The photo of {0} was not saved.', [product.title]), whyNot(error)]
+          .filter(Boolean)
+          .join(' '),
+      ),
+  })
+  if (result.saved)
+    toast.success(
+      result.saved === 1
+        ? __('1 photo saved', null, 'Fotos')
+        : __('{0} photos saved', [result.saved], 'Fotos'),
+    )
+  if (result.saved) loadCounts({ fresh: true })
+}
+
+// The owner's switch: after each receipt, ask for the photos of what came
+// without one (the assistant's note, the step after confirming, Hoy).
+const arrival = ref(null)
+const arrivalBusy = ref(false)
+const people = ref([])
+watch(
+  () => boot.value?.arrival_photos,
+  (value) => {
+    if (value) arrival.value = { ...value }
+  },
+  { immediate: true },
+)
+const arrivalHelp = computed(() => {
+  if (!arrival.value?.enabled)
+    return __(
+      'Off: nobody is asked; this list still shows them.',
+      null,
+      'Fotos',
+    )
+  return arrival.value.notify_label
+    ? __(
+        'After each receipt Muelle asks {0} for them, by the assistant and on Hoy.',
+        [arrival.value.notify_label],
+        'Fotos',
+      )
+    : __(
+        'After each receipt Muelle asks whoever received for them, by the assistant and on Hoy.',
+        null,
+        'Fotos',
+      )
+})
+const arrivalPeople = computed(() => {
+  const choices = [
+    { label: __('Whoever received', null, 'Fotos'), value: '' },
+    ...people.value,
+  ]
+  const chosen = arrival.value?.notify_user
+  if (chosen && !choices.some((choice) => choice.value === chosen))
+    choices.push({ label: arrival.value.notify_label || chosen, value: chosen })
+  return choices
+})
+async function loadArrivalPeople() {
+  if (people.value.length || !arrival.value?.can_configure) return
+  try {
+    people.value = await arrivalApi('people')
+  } catch {
+    people.value = []
+  }
+}
+watch(
+  () => [arrivalView.value, arrival.value?.enabled],
+  ([shown, on]) => {
+    if (shown && on) loadArrivalPeople()
+  },
+  { immediate: true },
+)
+async function saveArrival({
+  enabled = arrival.value?.enabled,
+  user = arrival.value?.notify_user || '',
+}) {
+  if (!arrival.value || arrivalBusy.value) return
+  const before = { ...arrival.value }
+  arrival.value = { ...arrival.value, enabled, notify_user: user || null }
+  arrivalBusy.value = true
+  try {
+    arrival.value = await arrivalApi('settings_save', {
+      enabled: enabled ? 1 : 0,
+      notify_user: user || '',
+    })
+    if (boot.value) boot.value.arrival_photos = { ...arrival.value }
+  } catch (error) {
+    arrival.value = before
+    toast.error(whyNot(error))
+  } finally {
+    arrivalBusy.value = false
+  }
+}
 const shots = reactive({}) // product → its picture on this device, while it goes up
 function shootRow(row) {
   return openCamera({
@@ -1376,7 +1560,9 @@ const emptyBody = computed(() =>
     ? __('Try another name, code or barcode.')
     : view.value === 'todos'
       ? __('Products appear here once they are created.')
-      : __('Nothing to do in this list right now.'),
+      : arrivalView.value
+        ? __('Everything that came in lately has its photo.', null, 'Fotos')
+        : __('Nothing to do in this list right now.'),
 )
 
 // ── selection ────────────────────────────────────────────────────────────
@@ -2026,6 +2212,19 @@ watch(
       if (now[2] !== before?.[2] || !filterOptions.value.groups.length)
         loadFilters()
     }
+  },
+)
+// The assistant's note links «…&fotos=1»: the walk starts once the list is in.
+let walkAsked = route.query.fotos === '1'
+watch(
+  () => [loading.value, rows.value.length, boot.value?.enabled],
+  ([busy, , ready]) => {
+    if (!walkAsked || busy || !ready || !arrivalView.value) return
+    walkAsked = false
+    const query = { ...route.query }
+    delete query.fotos
+    router.replace({ query })
+    if (photoRun.value && walk.value.length) shootAll()
   },
 )
 watch(

@@ -46751,3 +46751,122 @@ msgstr "Tu puesto no puede conciliar."
 #: crm/api/bancos_cuadre.py
 msgid "It is no longer proposed for this movement."
 msgstr "Ya no se propone para este movimiento."
+#: frontend/src/pages/Productos.vue
+msgctxt "Fotos"
+msgid "What came in during the last {0} days and still has no photo, newest first."
+msgstr "Lo que llegó en los últimos {0} días y todavía no tiene foto, lo más reciente primero."
+
+#: frontend/src/pages/Productos.vue
+msgctxt "Fotos"
+msgid "Take photos ({0})"
+msgstr "Tomar fotos ({0})"
+
+#: frontend/src/pages/Productos.vue
+msgctxt "Fotos"
+msgid "Ask for the photos of what arrives"
+msgstr "Pedir fotos de lo que llega"
+
+#: frontend/src/pages/Productos.vue
+msgctxt "Fotos"
+msgid "Who is asked"
+msgstr "A quién se le piden"
+
+#: frontend/src/pages/Productos.vue
+msgctxt "Fotos"
+msgid "Off: nobody is asked; this list still shows them."
+msgstr "Apagado: no se le piden a nadie; esta lista los sigue mostrando."
+
+#: frontend/src/pages/Productos.vue
+msgctxt "Fotos"
+msgid "After each receipt Muelle asks {0} for them, by the assistant and on Hoy."
+msgstr "Después de cada recepción, Muelle se las pide a {0} por el asistente y en Hoy."
+
+#: frontend/src/pages/Productos.vue
+msgctxt "Fotos"
+msgid "After each receipt Muelle asks whoever received for them, by the assistant and on Hoy."
+msgstr "Después de cada recepción, Muelle se las pide a quien recibió, por el asistente y en Hoy."
+
+#: frontend/src/pages/Productos.vue
+msgctxt "Fotos"
+msgid "Whoever received"
+msgstr "Quien recibió"
+
+#: frontend/src/pages/Productos.vue
+msgctxt "Fotos"
+msgid "1 photo saved"
+msgstr "1 foto guardada"
+
+#: frontend/src/pages/Productos.vue
+msgctxt "Fotos"
+msgid "{0} photos saved"
+msgstr "{0} fotos guardadas"
+
+#: frontend/src/pages/Productos.vue
+msgctxt "Fotos"
+msgid "Everything that came in lately has its photo."
+msgstr "Todo lo que llegó en estos días ya tiene foto."
+
+#: frontend/src/composables/useProductos.js
+msgctxt "Productos"
+msgid "Arrived without photo"
+msgstr "Llegaron sin foto"
+
+#: frontend/src/composables/useProductos.js
+msgctxt "Fotos"
+msgid "stock entry"
+msgstr "entrada de almacén"
+
+#: frontend/src/composables/useProductos.js
+msgctxt "Fotos"
+msgid "Arrived {0} · {1}"
+msgstr "Llegó {0} · {1}"
+
+#: frontend/src/composables/useProductos.js
+msgctxt "Fotos"
+msgid "Arrived {0}"
+msgstr "Llegó {0}"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgctxt "Fotos"
+msgid "Saved: {0}"
+msgstr "Guardada: {0}"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgctxt "Fotos"
+msgid "Retake"
+msgstr "Repetir"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgctxt "Fotos"
+msgid "Skip"
+msgstr "Saltar"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgctxt "Fotos"
+msgid "{0} of {1}"
+msgstr "{0} de {1}"
+
+#: frontend/src/pages/CompraOrden.vue
+msgctxt "Fotos"
+msgid "1 product arrived without a photo."
+msgstr "1 artículo llegó sin foto."
+
+#: frontend/src/pages/CompraOrden.vue
+msgctxt "Fotos"
+msgid "{0} products arrived without a photo."
+msgstr "{0} artículos llegaron sin foto."
+
+#: frontend/src/pages/CompraOrden.vue
+msgctxt "Fotos"
+msgid "Take photos"
+msgstr "Tomar fotos"
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "Take the photo of {0}"
+msgstr "Tomar la foto de {0}"
+
+#: frontend/src/pages/CompraRecepcion.vue
+msgctxt "Recepción"
+msgid "The photo of {0} was not saved."
+msgstr "La foto de {0} no se guardó."

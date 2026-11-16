@@ -128,6 +128,34 @@
                 {{ __('Apply to this purchase') }}
               </button>
             </div>
+            <!-- Fotos de lo que llega: the receipt just confirmed brought
+                 products without a photo; the camera walks them now. -->
+            <div
+              v-if="arrivalWalk.length"
+              role="status"
+              class="flex flex-wrap items-center gap-2 rounded-6 bg-surface-gray-2 p-3 text-base text-ink-gray-8"
+              data-testid="orden-fotos-llegada"
+            >
+              <span class="lucide-camera size-5 flex-none" aria-hidden="true" />
+              <span class="min-w-0 flex-1">{{
+                arrivalWalk.length === 1
+                  ? __('1 product arrived without a photo.', null, 'Fotos')
+                  : __(
+                      '{0} products arrived without a photo.',
+                      [arrivalWalk.length],
+                      'Fotos',
+                    )
+              }}</span>
+              <button
+                type="button"
+                :class="['press', BTN.filled]"
+                data-testid="orden-tomar-fotos"
+                @pointerenter="loadCameraSheet"
+                @click="shootArrivals"
+              >
+                {{ __('Take photos', null, 'Fotos') }}
+              </button>
+            </div>
             <div
               v-if="draftNotice"
               role="status"
@@ -1060,6 +1088,9 @@ import StageSteps from '@/components/documentos/StageSteps.vue'
 import RecordKit from '@/components/documentos/compras/RecordKit.vue'
 import { useRecordKit } from '@/components/documentos/compras/recordKit'
 import { documentRoute } from '@/documentos/registry'
+import { loadCameraSheet } from '@/components/captura/cameraDoor'
+import { arrivalApi } from '@/composables/useProductos'
+import { shootProducts, whyNot } from '@/composables/useProductPhotos'
 import {
   CHANGE_ICONS,
   MISSING_LABELS,
@@ -2367,9 +2398,51 @@ function goBack() {
   router.push({ name: 'Compras' })
 }
 
+// Fotos de lo que llega: the products the confirmed receipt brought without a
+// photo, while the shop asks for them and this worker may take them.
+const arrivalWalk = ref([])
+async function offerPhotos(receipt) {
+  arrivalWalk.value = []
+  try {
+    const answer = await arrivalApi('for_document', {
+      doctype: 'Purchase Receipt',
+      name: receipt,
+    })
+    if (answer?.enabled && answer.can_photo)
+      arrivalWalk.value = (answer.rows || []).map((row) => ({
+        key: row.name,
+        title: row.title || row.name,
+      }))
+  } catch {
+    // The receipt is confirmed either way; the photos wait in Productos and Hoy.
+  }
+}
+async function shootArrivals() {
+  const result = await shootProducts(arrivalWalk.value, {
+    onSaved: (product) => {
+      arrivalWalk.value = arrivalWalk.value.filter(
+        (row) => row.key !== product.key,
+      )
+    },
+    onFailed: (product, error) =>
+      toast.error(
+        [__('The photo of {0} was not saved.', [product.title]), whyNot(error)]
+          .filter(Boolean)
+          .join(' '),
+      ),
+  })
+  if (result.saved)
+    toast.success(
+      result.saved === 1
+        ? __('1 photo saved', null, 'Fotos')
+        : __('{0} photos saved', [result.saved], 'Fotos'),
+    )
+}
+
 async function handleDone() {
   const done = parseDone(route.query.done)
   if (!done) return
+  if (done.doctype === 'Purchase Receipt') offerPhotos(done.name)
   doneBill.value = done.doctype === 'Purchase Invoice' ? done.name : ''
   doneRule.value = done.doctype === 'Pricing Rule'
   // A bill comes back with `done` only once paid in full (registering goes

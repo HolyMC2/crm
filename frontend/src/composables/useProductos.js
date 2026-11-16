@@ -1,4 +1,5 @@
 import { errorText } from '@/utils/errorText'
+import { formatDate } from '@/utils/display'
 import { documentRoute } from '@/documentos/registry'
 import { errorKind } from '@/utils/contactos'
 import {
@@ -74,6 +75,12 @@ export const VIEWS = Object.freeze([
   { value: 'precio-revisar', label: 'Price to review', icon: 'alert-triangle' },
   { value: 'faltan', label: 'Out of stock', icon: 'alert-octagon' },
   { value: 'bajo-minimo', label: 'Below minimum', icon: 'trending-down' },
+  // «Fotos de lo que llega»: what came in lately and has no photo yet.
+  {
+    value: 'llegaron-sin-foto',
+    label: 'Arrived without photo',
+    icon: 'camera',
+  },
   // «Inventario»: where the stock is wrong, and who fixes it.
   { value: 'sin-cajon', label: 'No bin', icon: 'inbox', inventory: true },
   { value: 'sin-contar', label: 'Not counted', icon: 'clock', inventory: true },
@@ -117,6 +124,38 @@ export function viewLabel(value) {
 }
 export function normalizeView(value) {
   return VIEWS.some((v) => v.value === value) ? value : 'todos'
+}
+
+export const ARRIVAL_VIEW = 'llegaron-sin-foto'
+const ARRIVALS = 'doco.workspaces.arrival_photos'
+
+/** «Fotos de lo que llega»: the shop's switch, the people asked, a document's products. */
+export const arrivalApi = (method, args = {}) =>
+  productosApi(`${ARRIVALS}.${method}`, args)
+
+/** «Llegó hoy · XMovil»: when a product came in and what brought it. */
+export function arrivedLine(arrived, { now = new Date() } = {}) {
+  if (!arrived?.date) return ''
+  const day = formatDate(arrived.date, { now })
+  const from =
+    arrived.party ||
+    (arrived.doctype === 'Stock Entry'
+      ? tr('stock entry', null, 'Fotos')
+      : arrived.name || '')
+  return from
+    ? tr('Arrived {0} · {1}', [day, from], 'Fotos')
+    : tr('Arrived {0}', [day], 'Fotos')
+}
+
+/** The camera walk's products: the rows of a list that still have no photo. */
+export function walkOf(rows = [], { now = new Date() } = {}) {
+  return rows
+    .filter((row) => !row.image)
+    .map((row) => ({
+      key: row.name,
+      title: row.title || row.name,
+      detail: arrivedLine(row.arrived, { now }),
+    }))
 }
 
 /** The product record, remembering the list it was opened from; a template

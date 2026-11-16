@@ -4,7 +4,9 @@
        a typed code or a name (it filters the lines as the worker types); each
        line has a stepper. Taps answer at once and reach the server in order.
        Confirming adds the stock and goes back to the order. Serials, lotes and
-       odd units go to Escáner, which resolves them. -->
+       odd units go to Escáner, which resolves them. Each line shows its
+       product's photo; one without a photo is the camera, while the piece is
+       in hand (Fotos de lo que llega). -->
   <div
     class="relative flex h-full min-w-0 flex-1 flex-col overflow-hidden"
     data-recepcion
@@ -215,11 +217,45 @@
               "
               data-recepcion-linea
             >
-              <p
-                class="line-clamp-2 break-words text-base leading-snug text-ink-gray-9"
-              >
-                {{ line.item_name || line.item_code }}
-              </p>
+              <div class="flex items-start gap-3">
+                <img
+                  v-if="linePhoto(line)"
+                  :src="linePhoto(line)"
+                  alt=""
+                  class="size-11 flex-none rounded-6 bg-surface-gray-2 object-cover"
+                  :class="shots[line.row] ? 'opacity-60' : ''"
+                  loading="lazy"
+                />
+                <button
+                  v-else-if="canPhoto"
+                  type="button"
+                  class="press flex size-11 flex-none items-center justify-center rounded-6 bg-surface-gray-2 text-ink-gray-8 ring-1 ring-outline-gray-3"
+                  :aria-label="
+                    __(
+                      'Take the photo of {0}',
+                      [line.item_name || line.item_code],
+                      'Recepción',
+                    )
+                  "
+                  :title="
+                    __(
+                      'Take the photo of {0}',
+                      [line.item_name || line.item_code],
+                      'Recepción',
+                    )
+                  "
+                  data-recepcion-foto
+                  @pointerenter="loadCameraSheet"
+                  @click="shootLine(line)"
+                >
+                  <span class="lucide-camera size-5" aria-hidden="true" />
+                </button>
+                <p
+                  class="line-clamp-2 min-w-0 flex-1 break-words pt-0.5 text-base leading-snug text-ink-gray-9"
+                >
+                  {{ line.item_name || line.item_code }}
+                </p>
+              </div>
               <div class="flex items-center gap-2 pt-1.5">
                 <p
                   class="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1"
@@ -410,11 +446,16 @@ import {
   defineAsyncComponent,
   nextTick,
   onBeforeUnmount,
+  reactive,
   ref,
   watch,
 } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { toast } from 'frappe-ui'
 import { claimScans } from '@/components/escaneo/scanDoor'
+import { loadCameraSheet, openCamera } from '@/components/captura/cameraDoor'
+import { photoOf } from '@/composables/useProductos'
+import { sendProductPhoto, whyNot } from '@/composables/useProductPhotos'
 import { AppBar, EmptyState, StatusChip, isMobile } from '@/components/ui'
 import { BTN } from '@/documentos/tools'
 import { formatMoney, formatQty } from '@/utils/display'
@@ -470,6 +511,9 @@ const pending = ref(0)
 const syncing = computed(() => pending.value > 0)
 const canCamera = typeof window !== 'undefined' && 'BarcodeDetector' in window
 let flashTimer = 0
+// A line's photo taken here, on screen while it goes up (row → picture).
+const shots = reactive({})
+const canPhoto = computed(() => Boolean(doc.value?.can_photo))
 
 const draft = computed(() => Number(doc.value?.docstatus) === 0)
 const lines = computed(() => doc.value?.lines || [])
@@ -513,6 +557,51 @@ const emptyReason = computed(() =>
 const ambiguousLines = computed(() =>
   lines.value.filter((line) => ambiguous.value?.rows.includes(line.row)),
 )
+
+function linePhoto(line) {
+  return shots[line.row] || photoOf(line)
+}
+
+function shootLine(line) {
+  const name = line.item_name || line.item_code
+  return openCamera({
+    title: name,
+    photo: true,
+    onFiles: ([file]) => {
+      sendLinePhoto(line, name, file)
+      return true
+    },
+  })
+}
+
+/** The picture shows on the line at once and goes up behind it; every line of
+ * the same product shows it (the photo is the product's). */
+async function sendLinePhoto(line, name, file) {
+  const local = URL.createObjectURL(file)
+  shots[line.row] = local
+  try {
+    const answer = await sendProductPhoto(line.item_code, file, {
+      principal: true,
+    })
+    for (const row of lines.value)
+      if (row.item_code === line.item_code) {
+        row.image = answer.image || answer.row?.file_url || ''
+        row.media = answer.row?.media
+      }
+  } catch (error) {
+    toast.error(
+      [
+        __('The photo of {0} was not saved.', [name], 'Recepción'),
+        whyNot(error),
+      ]
+        .filter(Boolean)
+        .join(' '),
+    )
+  } finally {
+    delete shots[line.row]
+    URL.revokeObjectURL(local)
+  }
+}
 
 function qty(value, uom) {
   const n = Number(value) || 0
