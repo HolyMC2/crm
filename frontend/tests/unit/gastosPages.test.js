@@ -450,6 +450,31 @@ describe('Gastos bill record', () => {
     expect(document.body.querySelector('[role="dialog"]')).toBeNull()
   })
 
+  it('a bill opened from its order goes back to the order once registered', async () => {
+    answers.invoice = draft()
+    answers.submit_bill = { name: 'PI-1', docstatus: 0, queued: true }
+    const router = await mountAt(
+      '/gastos/factura/PI-1?return_to=%2Fcrm%2Fcompras%2Forden%2FPO-1&return_label=Compras',
+    )
+    await press('Review and register')
+    await press('Register')
+    expect(router.currentRoute.value.path).toBe('/compras/orden/PO-1')
+  })
+
+  it('a bill drafted from a capture stays on screen once registered', async () => {
+    // Captured from Compras: that list shows orders, never this bill.
+    answers.invoice = draft()
+    answers.submit_bill = { name: 'PI-1', docstatus: 0, queued: true }
+    const router = await mountAt(
+      '/gastos/factura/PI-1?return_to=%2Fcrm%2Fcompras&return_label=Compras&captura=CAP-2026-00056',
+    )
+    await press('Review and register')
+    await press('Register')
+    expect(router.currentRoute.value.path).toBe('/gastos/factura/PI-1')
+    expect(root.textContent).toContain('Registering…')
+    expect(root.textContent).toContain('Back to Compras')
+  })
+
   const refused = (fix, message = 'Supplier Renta Local is disabled') =>
     draft({ registration: { state: 'failed', message, fix } })
 

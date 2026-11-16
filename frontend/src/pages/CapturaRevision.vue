@@ -1244,6 +1244,7 @@ async function openDraft(created) {
   const target = draftTarget(created, {
     returnTo: route.query.return_to,
     returnLabel: route.query.return_label,
+    capture: props.name,
   })
   if (!target) {
     problem.value = __('This draft cannot be opened from here.')

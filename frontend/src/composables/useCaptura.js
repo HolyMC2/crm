@@ -225,10 +225,12 @@ export function capturaReturn(query = {}) {
 /**
  * Where the created draft opens. Shell routes (`/crm/…`) become a router
  * location without the `/crm` base, carrying the original return_to/label so
- * the worker can go back; Desk routes (`/app/…`) a full URL for
- * window.location. Anything else: null.
+ * the worker can go back, and the capture it came from (`captura`): the record
+ * then stays put after its own decisions instead of returning to a page that
+ * does not list it. Desk routes (`/app/…`) a full URL for window.location.
+ * Anything else: null.
  */
-export function draftTarget(created, { returnTo, returnLabel } = {}) {
+export function draftTarget(created, { returnTo, returnLabel, capture } = {}) {
   const route = typeof created?.route === 'string' ? created.route : ''
   if (!route.startsWith('/') || route.startsWith('//')) return null
   if (route.startsWith('/crm/')) {
@@ -241,6 +243,8 @@ export function draftTarget(created, { returnTo, returnLabel } = {}) {
       const label = sanitizeReturnLabel(returnLabel)
       if (label) query.return_label = label
     }
+    if (typeof capture === 'string' && /^[\w.-]{1,140}$/.test(capture))
+      query.captura = capture
     return { kind: 'router', to: { path, query } }
   }
   if (route.startsWith('/app/') && !/[\\\s]/.test(route))

@@ -805,6 +805,12 @@ const listPath = computed(() =>
 // Opened from another list (Pendientes «Por aprobar», Hoy): back goes there,
 // and a decision taken here goes back with `done=Purchase Invoice:<name>`.
 const back = computed(() => ownerReturn(route.query))
+// A bill drafted from a capture (`captura`) keeps «Back to …» where the capture
+// started, but registering or paying it stays here: that page (Compras, a
+// supplier) does not list the bill, and the worker would lose it.
+const backAfterDecision = computed(() =>
+  route.query.captura ? null : back.value,
+)
 const backLabel = computed(() =>
   back.value ? __('Back to {0}', [back.value.label]) : __('Back to Gastos'),
 )
@@ -1008,7 +1014,7 @@ async function submitBill() {
     await registerInBackground({ ...doc.value, name: props.name })
     reviewOpen.value = false
     // From a queue (Pendientes, Hoy): back to it, the next item is waiting.
-    if (back.value) return goBack()
+    if (backAfterDecision.value) return goBack()
   } catch (error) {
     reviewOpen.value = false
     problem.value = problemOf(error)
@@ -1065,7 +1071,8 @@ async function paid(result) {
   }
   if (!result?.can_cancel) toast.success(__('Bill paid'))
   // From «Por aprobar»: the list shows it settled and moves on to the next request.
-  if (back.value) return decided()
+  // A captured bill stays here, paid, instead of opening another bill.
+  if (back.value || route.query.captura) return decided()
   const next = await nextBill()
   if (next)
     return router.replace({
@@ -1112,7 +1119,7 @@ function goBack(done = false) {
 // A decision on this bill (paid, registered, not approved): back to the list it
 // came from with `done`; without one, the bill shows its new state.
 function decided() {
-  if (back.value) return goBack(true)
+  if (backAfterDecision.value) return goBack(true)
   askBanner.value?.reload()
   return load()
 }

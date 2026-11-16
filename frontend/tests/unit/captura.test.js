@@ -101,6 +101,24 @@ describe('draftTarget', () => {
       },
     })
   })
+  it('names the capture it came from, so the record stays after its decisions', () => {
+    expect(
+      draftTarget(
+        { route: '/crm/gastos/factura/ACC-PINV-2026-00066' },
+        { ...back, capture: 'CAP-2026-00056' },
+      ).to.query,
+    ).toEqual({
+      return_to: '/crm/compras?segment=x',
+      return_label: 'Compras',
+      captura: 'CAP-2026-00056',
+    })
+    expect(
+      draftTarget(
+        { route: '/crm/gastos/factura/ACC-PINV-1' },
+        { capture: '../x?y=1' },
+      ).to.query,
+    ).toEqual({})
+  })
   it('omits an unsafe return', () => {
     expect(
       draftTarget(
