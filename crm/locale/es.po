@@ -23727,6 +23727,25 @@ msgid "For: {0}"
 msgstr "Para: {0}"
 
 #: frontend/src (Manual de la tienda)
+msgid "The goals are examples: change them to your shop’s. A photo of your own shop works best: paste it over the picture."
+msgstr "Las metas son un ejemplo: cámbialas por las de tu tienda. Una foto de tu propia tienda funciona mejor: pégala encima del dibujo."
+
+#: frontend/src (Manual de la tienda)
+msgctxt "Manual"
+msgid "Other"
+msgstr "Otras"
+
+#: frontend/src (Manual de la tienda)
+msgctxt "Manual"
+msgid "Choose all"
+msgstr "Elegir todas"
+
+#: frontend/src (Manual de la tienda)
+msgctxt "Manual"
+msgid "Choose none"
+msgstr "Quitar todas"
+
+#: frontend/src (Manual de la tienda)
 msgid "See the article"
 msgstr "Ver el artículo"
 

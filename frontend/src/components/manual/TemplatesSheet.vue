@@ -25,29 +25,62 @@
     >
       {{ __('For: {0}', [field.label], 'Manual') }}
     </p>
-    <ul class="space-y-2" data-testid="manual-templates-list">
-      <li v-for="template in templates" :key="template.key">
-        <label
-          class="flex min-h-11 cursor-pointer items-start gap-3 rounded-6 border border-outline-gray-2 p-3"
-        >
-          <input
-            v-model="chosen"
-            type="checkbox"
-            :value="template.key"
-            class="mt-1 size-4"
-            :data-template="template.key"
-          />
-          <span class="min-w-0 flex-1">
-            <span class="block font-medium text-ink-gray-9">{{
-              template.title
-            }}</span>
-            <span class="block text-sm text-ink-gray-6">{{
-              template.summary
-            }}</span>
-          </span>
-        </label>
-      </li>
-    </ul>
+    <p class="mb-3 text-sm text-ink-gray-7">
+      {{
+        __(
+          'The goals are examples: change them to your shop’s. A photo of your own shop works best: paste it over the picture.',
+        )
+      }}
+    </p>
+    <div class="space-y-4" data-testid="manual-templates-list">
+      <section
+        v-for="group in groups"
+        :key="group.name"
+        :aria-label="group.name || __('Other', null, 'Manual')"
+        :data-group="group.name"
+      >
+        <div class="mb-2 flex items-center gap-2">
+          <h3 class="min-w-0 flex-1 text-sm font-semibold text-ink-gray-8">
+            {{ group.name || __('Other', null, 'Manual') }}
+          </h3>
+          <button
+            type="button"
+            class="min-h-11 px-2 text-sm font-medium text-ink-gray-7 underline sm:min-h-0"
+            data-testid="manual-templates-group"
+            @click="toggleGroup(group)"
+          >
+            {{
+              allChosen(group)
+                ? __('Choose none', null, 'Manual')
+                : __('Choose all', null, 'Manual')
+            }}
+          </button>
+        </div>
+        <ul class="space-y-2">
+          <li v-for="template in group.items" :key="template.key">
+            <label
+              class="flex min-h-11 cursor-pointer items-start gap-3 rounded-6 border border-outline-gray-2 p-3"
+            >
+              <input
+                v-model="chosen"
+                type="checkbox"
+                :value="template.key"
+                class="mt-1 size-4"
+                :data-template="template.key"
+              />
+              <span class="min-w-0 flex-1">
+                <span class="block font-medium text-ink-gray-9">{{
+                  template.title
+                }}</span>
+                <span class="block text-sm text-ink-gray-6">{{
+                  template.summary
+                }}</span>
+              </span>
+            </label>
+          </li>
+        </ul>
+      </section>
+    </div>
     <p v-if="problem" role="alert" class="mt-3 text-sm text-ink-red-7">
       <strong>{{ problem.title }}.</strong> {{ problem.detail }}
     </p>
@@ -91,6 +124,27 @@ const props = defineProps({
 })
 const emit = defineEmits(['close', 'done'])
 const chosen = ref(props.templates.map((template) => template.key))
+// Grouped by category, in the order the server lists them.
+const groups = computed(() => {
+  const byName = new Map()
+  for (const template of props.templates) {
+    const name = template.category || ''
+    if (!byName.has(name)) byName.set(name, { name, items: [] })
+    byName.get(name).items.push(template)
+  }
+  return [...byName.values()]
+})
+
+function allChosen(group) {
+  return group.items.every((template) => chosen.value.includes(template.key))
+}
+
+function toggleGroup(group) {
+  const keys = group.items.map((template) => template.key)
+  chosen.value = allChosen(group)
+    ? chosen.value.filter((key) => !keys.includes(key))
+    : [...new Set([...chosen.value, ...keys])]
+}
 const company = ref(newArticleCompany(props.boot))
 const field = computed(() => companyField(props.boot, company.value))
 const busy = ref(false)

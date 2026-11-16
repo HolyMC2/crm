@@ -2,6 +2,11 @@
 
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
+## 2026-11-16 — Manual de la tienda: «Empezar con plantillas» grouped by category (lane manual-equipo; not deployed)
+
+- **Sheet:** the starter cards come in groups: Empieza aquí, Mostrador, Caja, Taller, Orden y limpieza, Guías de Muelle and more. «Elegir todas» / «Quitar todas» picks or drops a whole group. A line says the goals are examples and that a photo of the shop's own counter works best (`components/manual/TemplatesSheet.vue`). The cards themselves come from doco (lane manual-equipo).
+- **Tests:** `tests/unit/manualTemplates.test.js` (3). Rollback = revert.
+
 ## 2026-11-16 — Personalizar: the grip drags on a phone (lane arrastre-acomodar; not deployed)
 
 - **Grip:** a finger on a row's grip (⠿) in Personalizar, Barra por puesto and a module's sections now drags as soon as it moves. It used to need a 0.4 s hold first, and a finger that moved at once was taken as a scroll, so the drag never started. The rest of the row still needs the hold, so a swipe there scrolls the sheet (`composables/useReorder.js`).
