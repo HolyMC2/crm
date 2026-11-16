@@ -1086,12 +1086,12 @@ function newPurchase() {
 function handleDone() {
   const done = parseDone(route.query.done)
   if (!done) return
+  // A bill comes back with `done` only once paid in full (registering goes
+  // back without it: it finishes in the background).
   notice.value =
     done.doctype === 'Purchase Invoice'
       ? {
-          text: __('Bill {0} registered. Pay it from Gastos when it is due.', [
-            done.name,
-          ]),
+          text: __('Bill {0} paid.', [done.name]),
           to: {
             name: 'GastoFactura',
             params: { name: done.name },

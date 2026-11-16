@@ -2372,6 +2372,8 @@ async function handleDone() {
   if (!done) return
   doneBill.value = done.doctype === 'Purchase Invoice' ? done.name : ''
   doneRule.value = done.doctype === 'Pricing Rule'
+  // A bill comes back with `done` only once paid in full (registering goes
+  // back without it: it finishes in the background).
   doneNotice.value =
     done.doctype === 'Pricing Rule'
       ? __(
@@ -2383,9 +2385,7 @@ async function handleDone() {
             [done.name],
           )
         : done.doctype === 'Purchase Invoice'
-          ? __('Bill {0} registered. Pay it from Gastos when it is due.', [
-              done.name,
-            ])
+          ? __('Bill {0} paid.', [done.name])
           : __('{0} saved.', [done.name])
   const query = { ...route.query }
   delete query.done

@@ -46704,3 +46704,18 @@ msgstr "Escribo la respuesta"
 #: frontend/src/components/assistant/AssistantWork.vue
 msgid "Thinking about the next step"
 msgstr "Pienso el siguiente paso"
+
+#: frontend/src/pages/Compras.vue
+#: frontend/src/pages/CompraOrden.vue
+msgid "Bill {0} paid."
+msgstr "Factura {0} pagada."
+
+#: frontend/src/composables/useCaptura.js
+msgctxt "Captura"
+msgid "Other charges"
+msgstr "Otros cargos"
+
+#: frontend/src/composables/useCaptura.js
+msgctxt "Captura"
+msgid "Pending, as the document says"
+msgstr "Pendiente, como dice el documento"

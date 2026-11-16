@@ -171,7 +171,7 @@ describe('purchase order chain', () => {
     })
   })
 
-  it('back from Gastos says the bill is registered and links it', async () => {
+  it('back from Gastos paid in full says the bill is paid and links it', async () => {
     answers.order = order({ per_received: 100, per_billed: 100 }, [])
     answers.order.bills = [
       {
@@ -183,7 +183,7 @@ describe('purchase order chain', () => {
       },
     ]
     await mountAt('/compras/orden/PO-2?done=Purchase%20Invoice%3APINV-7')
-    expect(root.textContent).toContain('Bill PINV-7 registered')
+    expect(root.textContent).toContain('Bill PINV-7 paid.')
     expect(router.currentRoute.value.query.done).toBeUndefined()
     expect(root.querySelector('[data-order-bills]').textContent).toContain(
       'F-1',

@@ -743,7 +743,7 @@
               >
                 <dt class="text-ink-gray-6">{{ __('Draft total') }}</dt>
                 <dd class="tabular-nums font-medium text-ink-gray-9">
-                  {{ money(totals.draft, totals.currency) }}
+                  {{ money(totals.draft, totals.draftCurrency) }}
                 </dd>
               </div>
               <!-- A decided payment is a fact here, not a check. -->
@@ -1031,7 +1031,7 @@ function hostOf(url) {
 
 function priceFacts(line) {
   return linePriceFacts(line, {
-    format: (n) => money(n, totals.value.currency),
+    format: (n, currency) => money(n, currency || totals.value.currency),
     day: shortDay,
   })
 }

@@ -288,6 +288,7 @@ export function totalsSummary(totals) {
   const t = totals || {}
   const lines = round2(t.lines)
   const shipping = round2(t.shipping)
+  const charges = round2(t.charges)
   const tax = round2(t.tax)
   const discount = round2(t.discount)
   const document = round2(t.document)
@@ -296,11 +297,18 @@ export function totalsSummary(totals) {
   ]
   if (shipping)
     rows.push({ key: 'shipping', label: tr('Shipping'), amount: shipping })
+  // handling, card fee: the draft books each as its own row
+  if (charges)
+    rows.push({
+      key: 'charges',
+      label: tr('Other charges', null, 'Captura'),
+      amount: charges,
+    })
   if (tax) rows.push({ key: 'tax', label: tr('Tax'), amount: tax })
   // the supplier's own discount: the draft books it on the grand total
   if (discount)
     rows.push({ key: 'discount', label: tr('Discount'), amount: -discount })
-  const sum = round2(lines + shipping + tax - discount)
+  const sum = round2(lines + shipping + charges + tax - discount)
   let verdict
   if (t.matches === true) verdict = { label: tr('Matches'), theme: 'green' }
   else if (t.matches === false)
@@ -315,19 +323,24 @@ export function totalsSummary(totals) {
     verdict,
     currency: t.currency || 'MXN',
     draft: t.draft === null || t.draft === undefined ? null : round2(t.draft),
+    // a dollar document may become a peso draft: the draft says its own
+    draftCurrency: t.draft_currency || t.currency || 'MXN',
   }
 }
 
 /**
  * A decided payment as one plain fact beside the totals (not a check): pending
- * because the worker said so, in the note or with «No», or paid. '' otherwise.
+ * because the worker said so (in the note or with «No») or the paper does, or
+ * paid. '' otherwise.
  */
 export function settlementText(settlement, format = (n) => String(n)) {
   const s = settlement || {}
-  if (s.state === 'pending')
-    return s.answered
-      ? tr('Pending, as you answered', null, 'Captura')
+  if (s.state === 'pending') {
+    if (s.answered) return tr('Pending, as you answered', null, 'Captura')
+    return s.source === 'document'
+      ? tr('Pending, as the document says', null, 'Captura')
       : tr('Pending, as your note says', null, 'Captura')
+  }
   if (s.state !== 'paid') return ''
   const paid = s.account
     ? tr('Paid from {0}', [s.account], 'Captura')
@@ -338,7 +351,9 @@ export function settlementText(settlement, format = (n) => String(n)) {
 /**
  * What Surtir shows of a product, beside an assigned line: what the shop paid
  * last (and how far this price is from it) and what it sells for, with the
- * margin at this price. Null when the line has neither.
+ * margin at this price. Both are in the company's currency
+ * (`line.prices_currency`); a document in another one (`line.compare` false)
+ * shows them without a change or a margin. Null when the line has neither.
  */
 export function linePriceFacts(
   line,
@@ -346,13 +361,15 @@ export function linePriceFacts(
 ) {
   const paid = line?.paid
   const selling = Number(line?.selling) || 0
-  const rate = Number(line?.rate) || 0
+  const compare = line?.compare !== false
+  const rate = compare ? Number(line?.rate) || 0 : 0
+  const own = (n) => format(n, line?.prices_currency || '')
   if (!paid && !selling) return null
   let last = null
   if (paid?.rate > 0) {
     const change = rate ? Math.round(((rate - paid.rate) / paid.rate) * 100) : 0
     last = {
-      text: tr('Last paid {0}', [format(paid.rate)], 'Captura'),
+      text: tr('Last paid {0}', [own(paid.rate)], 'Captura'),
       when: [paid.date ? day(paid.date) : '', paid.supplier]
         .filter(Boolean)
         .join(' · '),
@@ -365,7 +382,7 @@ export function linePriceFacts(
     const margin =
       rate > 0 ? Math.round(((selling - rate) / selling) * 100) : null
     sells = {
-      text: tr('Sells at {0}', [format(selling)], 'Captura'),
+      text: tr('Sells at {0}', [own(selling)], 'Captura'),
       margin: margin === null ? '' : tr('{0}% margin', [margin], 'Captura'),
       thin: margin !== null && margin < 15,
     }

@@ -381,7 +381,7 @@ describe('Compras list as a power app', () => {
     expect(root.querySelector('input[type="checkbox"]')).toBeNull()
   })
 
-  it('back from Gastos says the bill is registered, and the URL forgets it', async () => {
+  it('back from Gastos paid in full says the bill is paid, and the URL forgets it', async () => {
     state.route.query = {
       segment: 'por-facturar',
       foco: 'PO-2',
@@ -389,7 +389,7 @@ describe('Compras list as a power app', () => {
     }
     mount()
     await flush()
-    expect(root.textContent).toContain('Bill PINV-7 registered')
+    expect(root.textContent).toContain('Bill PINV-7 paid.')
     expect(state.route.query).toEqual({ segment: 'por-facturar', foco: 'PO-2' })
     expect(
       root.querySelector('[data-row-key="Purchase Order:PO-2"]').className,

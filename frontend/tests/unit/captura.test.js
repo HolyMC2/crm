@@ -230,6 +230,25 @@ describe('totalsSummary', () => {
     expect(t.difference).toBe(0)
     expect(t.verdict.label).toBe('Matches')
   })
+  it('counts the extra charges and keeps the draft in its own currency', () => {
+    const t = totalsSummary({
+      lines: 10,
+      charges: 5,
+      document: 15,
+      currency: 'USD',
+      matches: true,
+      draft: 270,
+      draft_currency: 'MXN',
+    })
+    expect(t.rows.map((r) => [r.key, r.amount])).toEqual([
+      ['lines', 10],
+      ['charges', 5],
+    ])
+    expect(t.sum).toBe(15)
+    expect(t.difference).toBe(0)
+    expect([t.currency, t.draftCurrency]).toEqual(['USD', 'MXN'])
+    expect(totalsSummary({ currency: 'USD' }).draftCurrency).toBe('USD')
+  })
   it('has nothing to compare without a document total', () => {
     const t = totalsSummary(null)
     expect(t.matches).toBeNull()
@@ -247,6 +266,9 @@ describe('settlementText', () => {
     expect(settlementText({ state: 'pending', answered: false })).toBe(
       'Pending, as your note says',
     )
+    expect(
+      settlementText({ state: 'pending', answered: false, source: 'document' }),
+    ).toBe('Pending, as the document says')
   })
   it('says where a paid one came from', () => {
     expect(
@@ -302,6 +324,28 @@ describe('linePriceFacts', () => {
       text: 'Sells at MX420',
       margin: '6% margin',
       thin: true,
+    })
+  })
+  it('a dollar document shows the peso prices without a change or a margin', () => {
+    const facts = linePriceFacts(
+      {
+        rate: 10,
+        compare: false,
+        prices_currency: 'MXN',
+        paid: { rate: 216, date: '', supplier: '', unusual: false },
+        selling: 450,
+      },
+      { format: (n, currency) => `${currency} ${n}` },
+    )
+    expect(facts.last).toMatchObject({
+      text: 'Last paid MXN 216',
+      change: '',
+      unusual: false,
+    })
+    expect(facts.sells).toEqual({
+      text: 'Sells at MXN 450',
+      margin: '',
+      thin: false,
     })
   })
   it('is null when nothing is known of the item', () => {
