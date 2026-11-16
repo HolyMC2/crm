@@ -114,6 +114,9 @@ function tap(item) {
     unfolded.value = unfolded.value === item.key ? '' : item.key
     return
   }
-  emit('pick', { key: item.key })
+  emit(
+    'pick',
+    item.href ? { key: item.key, href: item.href } : { key: item.key },
+  )
 }
 </script>

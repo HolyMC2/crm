@@ -933,11 +933,7 @@ const boltSteps = computed(() => {
       run: () => (captureOpen.value = true),
     })
   for (const row of almacenRows.value.filter((r) => r.step))
-    out.push({
-      label: row.title,
-      icon: row.icon,
-      run: () => window.location.assign(row.href),
-    })
+    out.push({ label: row.title, icon: row.icon, href: row.href })
   if (pricesTo.value)
     out.push({
       label: __('Review prices'),

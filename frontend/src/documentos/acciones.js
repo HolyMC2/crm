@@ -3,9 +3,10 @@
 // groups and runs what comes back.
 //
 // A group is { key, title, items, tiles? }. An item is
-//   { key, label, icon, hint, allowed, reason, to?, options? }
-// with `to` a route the item opens, `options` a dropdown that unfolds in place
-// ({ value, label, selected }), and neither a command the page runs by key.
+//   { key, label, icon, hint, allowed, reason, to?, href?, options? }
+// with `to` a route the item opens, `href` another app's page the menu loads in
+// this tab, `options` a dropdown that unfolds in place ({ value, label,
+// selected }), and none of them a command the page runs by key.
 //
 // A profile adds its own:
 //   createOptions(ctx) → [{ key, label, icon, hint, query }]: kinds of new
@@ -109,13 +110,22 @@ export const FOLLOW_UP = ['pendiente', 'avisame', 'repetir', 'preguntar']
 /**
  * The bolt's groups for one record: its steps (the profile's next step and the
  * other steps of this state, then «Editar» on a draft the worker may change),
- * then what keeps it in sight. A step picks as `paso:<i>` in the order given.
- * @param steps  [{ label, icon }] (DocumentoRecord's `step` then `altSteps`)
+ * then what keeps it in sight. A step picks as `paso:<i>` in the order given;
+ * a step with `href` (another app's page, in this tab) is loaded by the menu
+ * itself (AccionesMenu) and never picks. An `external` step opens its own tab
+ * from the page's pick.
+ * @param steps  [{ label, icon, href?, external? }] (DocumentoRecord's `step`
+ *   then `altSteps`)
  * @param tools  documentos/tools.js toolsFor entries
  */
 export function recordActionsFor({ steps = [], canEdit = false, tools = [] }) {
   const next = steps.map((s, i) =>
-    ok({ key: `paso:${i}`, label: s.label, icon: s.icon || 'lucide-check' }),
+    ok({
+      key: `paso:${i}`,
+      label: s.label,
+      icon: s.icon || 'lucide-check',
+      ...(s.href && !s.external ? { href: s.href } : {}),
+    }),
   )
   if (canEdit)
     next.push(

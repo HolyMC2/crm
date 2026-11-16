@@ -439,9 +439,7 @@ const boltSteps = computed(() =>
     step.key === 'prepare' && !supplier.value
       ? // No supplier yet: the bolt takes the worker to the picker.
         { ...step, run: focusSupplier }
-      : step.href
-        ? { ...step, run: () => window.location.assign(step.href) }
-        : step,
+      : step,
   ),
 )
 const boltGroups = computed(() =>

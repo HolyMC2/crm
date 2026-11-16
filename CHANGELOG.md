@@ -7,6 +7,11 @@ Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` i
 - **Sheet:** the starter cards come in groups: Empieza aquí, Mostrador, Caja, Taller, Orden y limpieza, Guías de Muelle and more. «Elegir todas» / «Quitar todas» picks or drops a whole group. A line says the goals are examples and that a photo of the shop's own counter works best (`components/manual/TemplatesSheet.vue`). The cards themselves come from doco (lane manual-equipo).
 - **Tests:** `tests/unit/manualTemplates.test.js` (3). Rollback = revert.
 
+## 2026-11-16 — The ⚡ sheet opens Escáner and other apps on a phone (lane bolt-sheet-navega; not deployed)
+
+- **Bug:** on a phone, «Verificar y acomodar» in a supplier bill's ⚡ sheet did nothing. The step started loading Escáner, then the sheet closed and stepped back over its history entry, and that late back cancelled the load. The same hit every ⚡ step that loads another page in the tab: «Abrir orden de reparación» on a Garantía, a Solicitud de compra's Desk step, a Producto step with a link, an Encuesta step.
+- **Fix:** a ⚡ step can carry `href` (`documentos/acciones.js recordActionsFor`); `AccionesMenu` closes the sheet, waits for its back to land (`sheetHistory.settle`, as the command palette does), then loads the page. Pages pass `href` instead of a `run` that assigns the location (GastoFactura, CompraSolicitud, Encuesta, Producto, Garantía). Steps that stay in /crm or open a new tab still run inside the tap.
+- **Tests:** `tests/unit/accionesMenuLeave.test.js` (3). Rollback = revert.
 ## 2026-11-16 — Personalizar: the grip drags on a phone (lane arrastre-acomodar; not deployed)
 
 - **Grip:** a finger on a row's grip (⠿) in Personalizar, Barra por puesto and a module's sections now drags as soon as it moves. It used to need a 0.4 s hold first, and a finger that moved at once was taken as a scroll, so the drag never started. The rest of the row still needs the hold, so a swipe there scrolls the sheet (`composables/useReorder.js`).

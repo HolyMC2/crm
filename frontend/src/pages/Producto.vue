@@ -2479,8 +2479,7 @@ const boltGroups = computed(() =>
 function onBolt({ key }) {
   if (!key.startsWith('paso:')) return kit.onTool(key)
   const entry = heroActions.value[Number(key.slice(5))]
-  if (entry?.href) window.location.assign(entry.href)
-  else if (entry) run(entry)
+  if (entry) run(entry)
 }
 function onBack(event) {
   event?.preventDefault?.()

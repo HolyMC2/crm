@@ -1034,6 +1034,7 @@ const nextSteps = computed(() => {
         id: `garantia-repair-${c.repair.open}`,
         text: __('Repair order {0}', [c.repair.open]),
       },
+      href: tallerOrderUrl(c.repair.open, c.name),
       run: () => openTaller(c.repair.open),
     })
   else if (p?.kind === 'pick_source')

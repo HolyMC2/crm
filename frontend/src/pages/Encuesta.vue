@@ -570,14 +570,8 @@ const facts = computed(() => {
 // ── the bolt: the hero's steps; «⋯» keeps print, share and the rest ──────
 const boltSteps = computed(() =>
   nextSteps.value.map((step) =>
-    step.href
-      ? {
-          ...step,
-          run: () =>
-            step.external
-              ? window.open(step.href, '_blank', 'noopener')
-              : window.location.assign(step.href),
-        }
+    step.external
+      ? { ...step, run: () => window.open(step.href, '_blank', 'noopener') }
       : step,
   ),
 )
