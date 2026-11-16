@@ -105,6 +105,34 @@
       @action="load"
     />
     <EmptyState v-else-if="opening" state="loading" title="Abriendo la hoja…" />
+    <!-- Who else is on the sheet, and what Muelle just changed (docs/HOJAS.md §8). -->
+    <div
+      v-if="sheet && !problem && !opening && (others.length || note)"
+      class="flex flex-wrap items-center gap-2 border-b border-outline-gray-1 px-4 py-2 text-sm"
+      aria-live="polite"
+      data-testid="sheet-presence"
+    >
+      <span
+        v-for="p in others"
+        :key="p.cliente"
+        class="inline-flex min-h-7 items-center gap-1.5 rounded-full bg-surface-gray-2 px-3 text-ink-gray-8"
+        :data-presence="p.cliente"
+      >
+        <span
+          class="size-2 rounded-full bg-[var(--muelle-accent)]"
+          aria-hidden="true"
+        />
+        {{ p.name }} · {{ p.celda }}
+      </span>
+      <span
+        v-if="note"
+        class="inline-flex min-h-7 items-center gap-1.5 rounded-full bg-surface-blue-1 px-3 text-ink-blue-8"
+        data-testid="sheet-bot-note"
+      >
+        <span class="lucide-sparkles size-3.5" aria-hidden="true" />
+        {{ note }}
+      </span>
+    </div>
     <div
       v-show="sheet && !problem && !opening"
       ref="host"
@@ -214,9 +242,12 @@ import {
   excelUrl,
   hojasApi,
   loadEditor,
-  isNewer,
+  botNote,
+  liveStep,
+  presenceRows,
   sheetContext,
 } from '@/hojas/hoja'
+import { movesCells } from '@/hojas/moves'
 
 const ShareSheet = defineAsyncComponent(
   () => import('@/components/documentos/ShareSheet.vue'),
@@ -242,6 +273,19 @@ let editor = null
 let timer = null
 let dirty = false
 let inFlight = null
+// This page among the others open on the sheet: its saves come back as events it skips.
+const cliente =
+  globalThis.crypto?.randomUUID?.() || Math.random().toString(36).slice(2)
+// Revisions already replayed here (an event and a save's answer may both bring one).
+const seen = new Set()
+// Save edits as mutations; off after the server could not replay one (whole sheet then).
+let live = true
+const presence = ref({})
+const now = ref(Date.now())
+const others = computed(() => presenceRows(presence.value, now.value))
+const note = ref('')
+let noteTimer = null
+let clock = null
 // The editor's files start downloading with the page, alongside the sheet itself.
 loadEditor().catch(() => {})
 const mounting = ref(false)
@@ -269,6 +313,7 @@ async function mount() {
     if (!host.value || !sheet.value) return
     editor = mountSheet(host.value, bookOf(sheet.value), {
       onEdit,
+      onSelect,
       dark: dark.value,
       phone: phone.value,
       readOnly: !sheet.value.can_write,
@@ -295,7 +340,71 @@ async function save() {
   if (!dirty || !editor || !sheet.value?.can_write) return
   if (inFlight) return inFlight.then(save)
   dirty = false
-  const text = editor.changes()
+  if (live) {
+    const batch = editor.takeMutations()
+    if (batch.length) return saveLive(batch)
+  }
+  return saveWhole()
+}
+
+// The edits as mutations on the revision this page has: they land on top of whatever
+// others changed meanwhile, and the answer brings those changes to replay here.
+async function saveLive(batch) {
+  saving.value = true
+  inFlight = hojasApi('guardar_cambios', {
+    name: sheet.value.name,
+    base: sheet.value.revision,
+    mutaciones: JSON.stringify(batch),
+    cliente,
+  })
+  try {
+    const out = await inFlight
+    if (out.necesita_hoja) {
+      live = false
+      inFlight = null
+      dirty = true
+      return saveWhole()
+    }
+    const theirs = (out.ajenas || []).filter((a) => !seen.has(a.revision))
+    if (theirs.length && editor) {
+      if (theirs.some((a) => !a.mutations) || movesCells(batch)) {
+        inFlight = null
+        await load({ quiet: true })
+        return
+      }
+      for (const a of theirs) {
+        editor.applyRemote(a.mutations, batch)
+        seen.add(a.revision)
+      }
+    }
+    seen.add(out.revision)
+    Object.assign(sheet.value, {
+      revision: out.revision,
+      cambios: out.cambios,
+      modified: out.modified,
+    })
+    if (editor && !editor.hasPending()) editor.markSaved(editor.snapshotText())
+  } catch (error) {
+    if (error?.exc_type === 'Conflict') {
+      toast.info(
+        'Alguien más movió filas o columnas; se abrió con sus cambios.',
+      )
+      inFlight = null
+      await load({ quiet: true })
+    } else {
+      editor?.putBack(batch)
+      dirty = true
+      toast.error(problemOf(error).detail)
+    }
+  } finally {
+    inFlight = null
+    saving.value = false
+  }
+}
+
+async function saveWhole() {
+  editor?.takeMutations()
+  const text = editor?.changes()
   if (!text) return
   saving.value = true
   inFlight = hojasApi('guardar', {
@@ -459,14 +568,69 @@ async function ask() {
   if (!opened) toast.error('El asistente no está disponible para tu usuario.')
 }
 
-// --- live: Muelle's (or a coworker's) change reloads the sheet ---------------------
+// --- live: Muelle's (or a coworker's) change, replayed in place ----------------------
+// (docs/HOJAS.md §8). A gap or a change too big to travel opens the sheet again.
 const socket = getCurrentInstance()?.appContext.config.globalProperties.$socket
 async function onRemote(event) {
-  if (!isNewer(event, sheet.value)) return
-  if (inFlight) await inFlight.catch(() => {})
-  if (!isNewer(event, sheet.value)) return
+  let step = liveStep(event, { sheet: sheet.value, cliente, seen, inFlight })
+  if (step === 'wait') {
+    await inFlight?.catch(() => {})
+    step = liveStep(event, { sheet: sheet.value, cliente, seen, inFlight })
+  }
+  if (step === 'ignore') return
+  showNote(botNote(event))
+  if (step === 'apply' && editor) {
+    if (editor.pendingMovesCells()) {
+      // The person just moved rows or columns: save first; the answer brings this change.
+      await save()
+      return
+    }
+    editor.applyRemote(event.mutations)
+    seen.add(event.revision)
+    sheet.value.revision = event.revision
+    if (!editor.hasPending()) editor.markSaved(editor.snapshotText())
+    return
+  }
   await save()
   await load({ quiet: true })
+}
+
+function showNote(text) {
+  if (!text) return
+  note.value = text
+  clearTimeout(noteTimer)
+  noteTimer = setTimeout(() => (note.value = ''), 12000)
+}
+
+// --- presence: where everyone is ----------------------------------------------------
+let lastCell = null
+let presenceTimer = null
+function onSelect(celda) {
+  lastCell = celda
+  if (presenceTimer) return
+  presenceTimer = setTimeout(() => {
+    presenceTimer = null
+    tellWhere(lastCell)
+  }, 1500)
+}
+function tellWhere(celda) {
+  if (!sheet.value) return
+  hojasApi('presente', { name: sheet.value.name, celda, cliente }).catch(
+    () => {},
+  )
+}
+function onPresence(event) {
+  if (!sheet.value || event?.name !== sheet.value.name) return
+  if (event.cliente === cliente || !event.cliente) return
+  const next = { ...presence.value }
+  if (event.celda)
+    next[event.cliente] = {
+      user_name: event.user_name,
+      celda: event.celda,
+      at: Date.now(),
+    }
+  else delete next[event.cliente]
+  presence.value = next
 }
 
 function flush() {
@@ -475,13 +639,20 @@ function flush() {
 
 onMounted(() => {
   socket?.on?.('doco_hoja', onRemote)
+  socket?.on?.('doco_hoja_presencia', onPresence)
   window.addEventListener('pagehide', flush)
+  clock = setInterval(() => (now.value = Date.now()), 15000)
 })
 onBeforeUnmount(() => {
   flush()
+  if (lastCell) tellWhere(null)
   socket?.off?.('doco_hoja', onRemote)
+  socket?.off?.('doco_hoja_presencia', onPresence)
   window.removeEventListener('pagehide', flush)
   clearTimeout(timer)
+  clearTimeout(noteTimer)
+  clearTimeout(presenceTimer)
+  clearInterval(clock)
   editor?.dispose()
   editor = null
 })

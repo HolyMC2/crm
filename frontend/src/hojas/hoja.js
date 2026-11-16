@@ -74,10 +74,49 @@ export function excelUrl(name) {
   return `/api/method/${SERVICE}.exportar?name=${encodeURIComponent(name)}`
 }
 
-/** A realtime `doco_hoja` event that should reload the open sheet. */
-export function isNewer(event, sheet) {
-  if (!sheet || event?.name !== sheet.name) return false
-  return (event.revision || 0) > (sheet.revision || 0)
+/**
+ * What the open page does with a `doco_hoja` event (docs/HOJAS.md §8):
+ * 'ignore' (another sheet, this page's own save, or already replayed),
+ * 'wait' (this page's save is on its way: its answer brings the change),
+ * 'apply' (the next revision, with its mutations: replay it in place) or
+ * 'reload' (a gap, or a change too big to travel: open the sheet again).
+ */
+export function liveStep(event, { sheet, cliente, seen, inFlight }) {
+  if (!sheet || event?.name !== sheet.name) return 'ignore'
+  const revision = event.revision || 0
+  if (event.cliente && event.cliente === cliente) return 'ignore'
+  if (seen?.has(revision) || revision <= (sheet.revision || 0)) return 'ignore'
+  if (inFlight) return 'wait'
+  if (event.mutations?.length && revision === (sheet.revision || 0) + 1)
+    return 'apply'
+  return 'reload'
+}
+
+/** How long a person's place on the sheet shows after their last move. */
+export const PRESENCE_MS = 60000
+
+/**
+ * The others on the sheet, newest first: «Ana · Ventas!B4».
+ * `seen` maps a page id to {user_name, celda, at}.
+ */
+export function presenceRows(seen, now = Date.now()) {
+  return Object.entries(seen || {})
+    .filter(([, p]) => p?.celda && now - (p.at || 0) < PRESENCE_MS)
+    .sort(([, a], [, b]) => (b.at || 0) - (a.at || 0))
+    .map(([cliente, p]) => ({
+      cliente,
+      name: p.user_name || 'Alguien',
+      celda: p.celda,
+    }))
+}
+
+/** The note a change by Muelle leaves above the sheet. */
+export function botNote(event) {
+  if (event?.by !== 'bot') return ''
+  const what = event.resumen
+    ? `Muelle cambió ${event.resumen}`
+    : 'Muelle cambió la hoja'
+  return event.porque ? `${what}: ${event.porque}` : what
 }
 
 /** Who made a change, as «Cambios» says it. */

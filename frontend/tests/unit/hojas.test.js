@@ -4,20 +4,80 @@ import {
   bookOf,
   changeAuthor,
   changeRows,
+  botNote,
   excelUrl,
-  isNewer,
+  liveStep,
   loadEditor,
+  presenceRows,
   prefetchEditor,
   sheetContext,
 } from '@/hojas/hoja'
 
 describe('Hojas', () => {
-  it('reloads only for a newer revision of the open sheet', () => {
-    const sheet = { name: 'h1', revision: 4 }
-    expect(isNewer({ name: 'h1', revision: 5 }, sheet)).toBe(true)
-    expect(isNewer({ name: 'h1', revision: 4 }, sheet)).toBe(false)
-    expect(isNewer({ name: 'h2', revision: 9 }, sheet)).toBe(false)
-    expect(isNewer({ name: 'h1', revision: 9 }, null)).toBe(false)
+  it('replays the next change in place, reloads on a gap, skips its own', () => {
+    const state = {
+      sheet: { name: 'h1', revision: 4 },
+      cliente: 'yo',
+      seen: new Set(),
+    }
+    const m = [{ id: 'sheet.mutation.set-range-values', params: {} }]
+    expect(liveStep({ name: 'h1', revision: 5, mutations: m }, state)).toBe(
+      'apply',
+    )
+    expect(liveStep({ name: 'h1', revision: 5 }, state)).toBe('reload') // too big to travel
+    expect(liveStep({ name: 'h1', revision: 7, mutations: m }, state)).toBe(
+      'reload',
+    ) // a gap
+    expect(
+      liveStep({ name: 'h1', revision: 5, mutations: m, cliente: 'yo' }, state),
+    ).toBe('ignore')
+    expect(liveStep({ name: 'h1', revision: 4, mutations: m }, state)).toBe(
+      'ignore',
+    )
+    expect(liveStep({ name: 'h2', revision: 5, mutations: m }, state)).toBe(
+      'ignore',
+    )
+    expect(
+      liveStep({ name: 'h1', revision: 5 }, { ...state, inFlight: {} }),
+    ).toBe('wait')
+    expect(
+      liveStep(
+        { name: 'h1', revision: 5, mutations: m },
+        { ...state, seen: new Set([5]) },
+      ),
+    ).toBe('ignore')
+    expect(
+      liveStep({ name: 'h1', revision: 9 }, { ...state, sheet: null }),
+    ).toBe('ignore')
+  })
+
+  it('shows where the others are, newest first, until they go quiet', () => {
+    const now = 100000
+    const rows = presenceRows(
+      {
+        a: { user_name: 'Ana', celda: 'Ventas!B4', at: now - 1000 },
+        b: { user_name: 'Beto', celda: 'Gastos!A1', at: now - 500 },
+        c: { user_name: 'Caro', celda: 'Gastos!C9', at: now - 70000 },
+        d: { user_name: 'Dani', celda: null, at: now },
+      },
+      now,
+    )
+    expect(rows.map((r) => `${r.name} · ${r.celda}`)).toEqual([
+      'Beto · Gastos!A1',
+      'Ana · Ventas!B4',
+    ])
+  })
+
+  it('says what Muelle changed and why', () => {
+    expect(
+      botNote({
+        by: 'bot',
+        resumen: '3 celdas: Gastos!B2:B4',
+        porque: 'Faltaba la luz',
+      }),
+    ).toBe('Muelle cambió 3 celdas: Gastos!B2:B4: Faltaba la luz')
+    expect(botNote({ by: 'bot' })).toBe('Muelle cambió la hoja')
+    expect(botNote({ by: 'page', resumen: 'x' })).toBe('')
   })
 
   it('says who made each change, Muelle for the bot', () => {

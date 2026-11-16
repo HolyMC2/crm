@@ -10,6 +10,12 @@ Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` i
 - **Post diario del taller (managers):** «🔧 Post diario» in Redes: switch, hours, who reviews, «Sale sola al aprobarla» or «La publican a mano», «Dar acceso y guardar» for people without Redes, «Preparar el de hoy» (`TallerDailySheet`).
 - **Tests:** `tests/unit/socialDaily.test.js`, `hoy.test.js` (Redes event link), `ventasNav.test.js` (Social off the desk-only list).
 
+## 2026-11-16 — Hojas: edits travel live, the others' changes replay in place, presence (lane hoja-juntos; not deployed)
+
+- **Saves:** the editor (`hojas/univer.js`) collects the workbook's own mutations as the person types (not the cell editor's document, not the formula engine's local write-backs) and `Hoja.vue` saves them with `guardar_cambios` on the revision it has; the whole-sheet save stays as the fallback.
+- **Live:** a `doco_hoja` event one revision ahead with mutations is replayed in place (`applyRemote`), then recalculated; the person's unsent edits go again on top, so a cell both touched keeps theirs, as on the server. A gap, a change too big to travel or a row or column moved under an edit reloads as before (`hoja.js` `liveStep`, `moves.js`).
+- **Presence:** «Ana · Ventas!B4» chips above the sheet for 60 s after each move, and «Muelle cambió Gastos!B3: Subieron los sueldos» for 12 s after a change by Muelle.
+- **Tests:** `tests/unit/hojas.test.js` (liveStep, presence rows, Muelle's note). Two-browser proof on a lease in `.scratch/proof/`. Rollback = revert with the doco half.
 ## 2026-11-16 — More buttons that load another app from a sheet now work on a phone (lane sheet-navega-resto; not deployed)
 
 - **Bug:** the same one as «Verificar y acomodar» (lane bolt-sheet-navega): a tap that closes a sheet and loads another app's page in this tab had that load aborted (`net::ERR_ABORTED`) when the sheet's back over its history entry landed. Only real taps on a phone hit it. Found by an audit of every page load in the shell: Producto ⚡ «Ver en Escáner»; Inmobiliaria's ⚡ actions that link outside /crm, «Abrir en escritorio» in Herramientas and an action whose answer opens another app's page; Cuenta «Pagar» from an invoice's sheet while its checkout is in progress; Gastos de empleado «Siguiente» from the decision sheet when the way back is another app.
