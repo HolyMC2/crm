@@ -110,7 +110,7 @@
   </div>
 </template>
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, useId } from 'vue'
 import ExpandTransition from '@/components/ui/ExpandTransition.vue'
 import {
   durationText,
@@ -147,24 +147,18 @@ const receipt = computed(
   () => props.usage || work.usage[turn.value?.id || props.turnId] || null,
 )
 
-// --- open or folded: kept per turn, so the steps opened while it ran stay
-// open over its answer
-const opened = ref(false)
-const key = computed(() => turn.value?.id || (props.live ? '' : props.turnId))
+// --- open or folded. The steps watched while it ran fold when the answer
+// lands, so the answer is what the person reads first (on a phone the open
+// list pushed it below the fold); an answer's steps stay as the person left
+// them while the sheet closes and opens again.
+const watching = ref(false)
 const open = computed(() =>
-  key.value && key.value in work.open
-    ? work.open[key.value]
-    : props.live && opened.value,
+  props.live ? watching.value : Boolean(work.open[props.turnId]),
 )
 function toggle() {
-  const next = !open.value
-  opened.value = next
-  if (key.value) work.open = { ...work.open, [key.value]: next }
+  if (props.live) watching.value = !watching.value
+  else work.open = { ...work.open, [props.turnId]: !open.value }
 }
-watch(key, (id) => {
-  if (props.live && id && opened.value && !(id in work.open))
-    work.open = { ...work.open, [id]: true }
-})
 
 // --- the live line's clock, star and words ----------------------------------
 const now = ref(Date.now())

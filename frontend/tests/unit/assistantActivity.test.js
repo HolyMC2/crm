@@ -224,7 +224,8 @@ describe('the conversation shows the work', () => {
     expect(steps[2].querySelector('code').textContent).toBe('query_records')
     expect(steps[3].textContent).toContain('Thinking about the next step')
 
-    // the answer lands: the line goes, the turn's summary heads the answer, still open
+    // the answer lands: the line goes, the turn's summary heads the answer,
+    // folded so the answer reads first; a tap shows how it got there
     BUILT_IN.slice(5).forEach(onActivityEvent)
     onMessage({
       chat_id: CHAT,
@@ -237,6 +238,10 @@ describe('the conversation shows the work', () => {
     expect(el.querySelector('[data-testid="assistant-thinking"]')).toBe(null)
     const summary = el.querySelector('[data-testid="assistant-work"]')
     expect(summary.textContent).toContain('Worked for 4.1 s in 4 steps')
+    expect(summary.querySelector('[data-testid="assistant-steps"]')).toBe(null)
+    expect(el.textContent).toContain('Ana debe $775.')
+    summary.querySelector('button').click()
+    await nextTick()
     expect(summary.textContent).toContain('Writing the answer')
     app.unmount()
   })
