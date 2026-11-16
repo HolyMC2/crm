@@ -1,7 +1,7 @@
 <template>
   <!-- One list of an arrangement (Personalizar, Barra por puesto, a module's
-       sections): drag a row (long-press on the phone, the grip on desktop,
-       or the grip and the arrow keys). A hidden row keeps its place, dimmed
+       sections): drag a row by its grip (the finger or the mouse), hold the
+       rest of the row on the phone, or use the grip and the arrow keys. A hidden row keeps its place, dimmed
        with the eye crossed, so showing it again puts it back where it was.
        The parent runs useReorder over the scroller that holds the lists. -->
   <ul ref="root" class="space-y-1" :data-reorder-list="list">

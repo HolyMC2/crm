@@ -2,6 +2,11 @@
 
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
+## 2026-11-16 — Personalizar: the grip drags on a phone (lane arrastre-acomodar; not deployed)
+
+- **Grip:** a finger on a row's grip (⠿) in Personalizar, Barra por puesto and a module's sections now drags as soon as it moves. It used to need a 0.4 s hold first, and a finger that moved at once was taken as a scroll, so the drag never started. The rest of the row still needs the hold, so a swipe there scrolls the sheet (`composables/useReorder.js`).
+- **Long lists:** a row held near the top or bottom of the sheet scrolls the sheet and rides along. Before, the scroll ran on the wrong box (the list's wrapper, not the sheet's body) and only while the finger moved. A row held against the end of the list now lands last; before, it landed second to last.
+- **Tests:** `tests/unit/useReorder.test.js` (8). Touch walks on the real sheet at 412 px (dark) and 305 px (light) against doco-mirror. Rollback = revert.
 ## 2026-11-15 — Citas: one list of setup problems with their fix, rest days in the sheet (lane shell-f15b-citas, Shell F15b; not deployed)
 
 - **One renderer:** `components/agenda/CitasSetupProblems.vue` is the list the new-cita form, the settings sheet and now a reschedule show: each problem with its fix button when this person may fix it (in the sheet, every section), otherwise who can, with «Pedir configuración». A reschedule that hits a setup problem used to print the messages as one line; its fix now opens the settings at that section (`AgendaCitaPanel` → `AgendaEventPanel` `cita-settings` → `Agenda.vue`).
