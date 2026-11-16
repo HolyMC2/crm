@@ -1379,7 +1379,8 @@ const routes = [
     name: 'Social',
     component: () => import('@/pages/SocialCalendar.vue'),
     // On a phone too: the day's taller post is reviewed and published from the shop floor.
-    meta: { navLabel: 'Social', title: 'Social' },
+    // stableKey: ?post= opens a post and is cleaned off the URL without remounting the page.
+    meta: { navLabel: 'Social', title: 'Social', stableKey: true },
   },
   {
     path: '/social/evergreen',
