@@ -58,6 +58,7 @@
               caps.configure ||
               caps.hire ||
               caps.bonos ||
+              caps.metas ||
               caps.invite
             "
             #actions
@@ -68,6 +69,14 @@
               :label="__('Pre-payroll')"
               class="min-h-11 sm:min-h-8"
               @click="router.push({ name: 'EquipoPrenomina' })"
+            />
+            <Button
+              v-if="caps.metas"
+              :icon-left="LucideTarget"
+              :label="__('Goals', null, 'Equipo')"
+              class="min-h-11 sm:min-h-8"
+              data-testid="equipo-metas"
+              @click="router.push({ name: 'EquipoMetas' })"
             />
             <Button
               v-if="caps.bonos"
@@ -365,6 +374,7 @@ import {
 } from '@/composables/useEquipo'
 import LucideCalendar from '~icons/lucide/calendar'
 import LucideGift from '~icons/lucide/gift'
+import LucideTarget from '~icons/lucide/target'
 import LucideUserPlus from '~icons/lucide/user-plus'
 import LucideWallet from '~icons/lucide/wallet'
 import { createListCache } from '@/utils/listCache'

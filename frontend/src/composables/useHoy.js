@@ -216,6 +216,8 @@ const SOURCE_ICONS = {
   'abordo.primeros_pasos': 'lucide-circle',
   'doco.archivos': 'lucide-folder',
   'taller.unassigned_repairs': 'lucide-wrench',
+  // «Mis metas» (doco.metas.hoy): the person's own goals and score.
+  'doco.metas': 'lucide-target',
 }
 
 // «Primeros pasos» reads as the checklist it is, as in its whole list: an open

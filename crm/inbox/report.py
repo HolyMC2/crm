@@ -43,9 +43,15 @@ def _json_state(raw, field):
 
 def performance(from_date=None, to_date=None, department=None):
 	"""Rows per person plus a team total for the period (site time, both days included)."""
+	require_manager()
+	return measure(from_date, to_date, department)
+
+
+def measure(from_date=None, to_date=None, department=None):
+	"""performance() without the manager check, for callers that check their own reader
+	(doco's Metas reads it for Equipo's managers and for each person's own card)."""
 	from crm.inbox import settings as inbox_settings
 
-	require_manager()
 	start, end = _period(from_date, to_date)
 	targets = inbox_settings()
 	frt_target = cint(targets.get("first_response_minutes")) * 60

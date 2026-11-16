@@ -781,6 +781,13 @@ const routes = [
     meta: { app: 'equipo', title: 'Equipo', listParent: 'Equipo' },
   },
   {
+    // Equipo › Metas: each person's goals and score (doco.metas).
+    path: '/equipo/metas',
+    name: 'EquipoMetas',
+    component: () => import('@/pages/EquipoMetas.vue'),
+    meta: { app: 'equipo', title: 'Equipo', listParent: 'Equipo' },
+  },
+  {
     path: '/equipo/bonos/reglas',
     name: 'EquipoBonosReglas',
     component: () => import('@/pages/EquipoBonosReglas.vue'),

@@ -142,7 +142,10 @@
                   {{ option.label }}
                 </label>
               </template>
-              <label class="grid min-w-0 gap-1 text-ink-gray-8"
+              <!-- A source of pieces without money (goals met) has no minimum. -->
+              <label
+                v-if="!source?.counts_only"
+                class="grid min-w-0 gap-1 text-ink-gray-8"
                 >{{ __('Minimum amount of each one') }}
                 <input
                   v-model.number="editing.min_amount"
@@ -208,7 +211,7 @@
                   <option :value="COUNT">
                     {{ __('How many ({0})', [source?.many || '']) }}
                   </option>
-                  <option :value="AMOUNT">
+                  <option v-if="!source?.counts_only" :value="AMOUNT">
                     {{ __('How much they add up to ($)') }}
                   </option>
                 </select>
@@ -234,7 +237,7 @@
                   <option :value="PER_PIECE">
                     {{ __('An amount per {0}', [source?.one || '']) }}
                   </option>
-                  <option :value="PERCENT">
+                  <option v-if="!source?.counts_only" :value="PERCENT">
                     {{ __('A percentage of the amount') }}
                   </option>
                   <option :value="FIXED">
@@ -548,6 +551,11 @@ function defaults(about) {
 }
 function resetOptions() {
   editing.value.options = defaults(source.value)
+  // Pieces without money: counted and paid per piece or at the goal, never by amount.
+  if (source.value?.counts_only) {
+    editing.value.goal_in = COUNT
+    if (editing.value.pays === PERCENT) editing.value.pays = FIXED
+  }
 }
 function cancel() {
   editing.value = null

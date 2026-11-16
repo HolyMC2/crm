@@ -27,6 +27,23 @@ Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` i
 - **Productos «Llegaron sin foto»:** a new list with the line «Llegó hoy · XMovil» under each product, the camera on each empty photo, «Tomar fotos (N)» for the whole list, and `?fotos=1` (the assistant's link) starts the walk. The owner turns «Pedir fotos de lo que llega» on there and picks who is asked.
 - **Recepción:** each line shows its product's photo; a line without one is the camera. **Compra:** after a receipt is confirmed, «N artículos llegaron sin foto · Tomar fotos» walks exactly those (while the shop asks for them).
 - **Tests:** `photoRun.test.js` (5), `shootProducts.test.js` (4), `fotosLlegada.test.js` (3); es.po strings under the «Fotos» context. Server side in doco and scanner_kit (lane fotos-llegada). Rollback = revert.
+## 2026-11-16 — Equipo › Metas: goals, score, inbox and deal measures (lane metas; not deployed)
+
+- **Page:** Equipo › Metas (`/equipo/metas`, `pages/EquipoMetas.vue`).
+  - Period switcher.
+  - Team goals with bars.
+  - Each person with a score chip (green / amber / red); tapping them shows a bar, «80 % de 90 % · faltan 10 puntos» and what was judged, per goal.
+  - The owner's list of the period's goals to edit.
+  - «Agregar meta» (`components/metas/GoalSheet.vue`: measure grouped by area, target with its unit and direction, period, each person or the team, puestos or people, weight, active).
+  - «Metas sugeridas» (`SuggestedSheet.vue`).
+  - The Equipo header has a «Metas» button; Hoy's «Mis metas» card uses the target icon.
+- **Measures (`crm/metas.py`, hook `doco_metas_indicadores`):**
+  - from the inbox report (`crm.inbox.report.measure`, which is performance() without the manager check): first reply in time, average first reply, conversations closed in time, customer rating, replies sent;
+  - deals won (how many, how much, by owner and closed_date);
+  - new deals and new leads answered in time (response SLA);
+  - leads turned into deals.
+- **Bonos rules:** a source that counts pieces only (Metas cumplidas) hides the minimum amount, «How much they add up to» and the percentage pay.
+- **Tests:** `tests/unit/metas.test.js` (6), `crm/tests/test_metas.py` (3). Rollback = revert.
 
 ## 2026-11-16 — Manual de la tienda: «Empezar con plantillas» grouped by category (lane manual-equipo; not deployed)
 

@@ -46870,3 +46870,272 @@ msgstr "Tomar la foto de {0}"
 msgctxt "Recepción"
 msgid "The photo of {0} was not saved."
 msgstr "La foto de {0} no se guardó."
+#: frontend/src (Metas)
+msgid "A goal measures sales, replies on WhatsApp, deals, repairs or tasks on time, for each person or the whole team. Start with the suggested ones: they come from your shop’s own numbers."
+msgstr "Una meta mide ventas, respuestas en WhatsApp, tratos, reparaciones o tareas a tiempo, de cada quien o de todo el equipo. Empieza con las sugeridas: salen de los números de tu tienda."
+
+#: frontend/src (Metas)
+msgid "A usual service bar"
+msgstr "Una meta usual de servicio"
+
+#: frontend/src (Metas)
+msgid "Add a goal"
+msgstr "Agregar meta"
+
+#: frontend/src (Metas)
+msgid "Add {0} goals"
+msgstr "Agregar {0} metas"
+
+#: frontend/src (Metas)
+msgid "At least"
+msgstr "Al menos"
+
+#: frontend/src (Metas)
+msgid "At most"
+msgstr "Como máximo"
+
+#: frontend/src (Metas)
+msgid "Average first reply"
+msgstr "Primera respuesta promedio"
+
+#: frontend/src (Metas)
+msgid "Conversations closed in time"
+msgstr "Conversaciones cerradas a tiempo"
+
+#: frontend/src (Metas)
+msgid "Conversations closed inside the inbox's closing goal."
+msgstr "Conversaciones cerradas dentro de la meta de cierre de la bandeja."
+
+#: frontend/src (Metas)
+msgid "Conversations whose first reply came inside the inbox's reply goal."
+msgstr "Conversaciones cuya primera respuesta llegó dentro de la meta de respuesta de la bandeja."
+
+#: frontend/src (Metas)
+msgid "Could not open the goal."
+msgstr "No se pudo abrir la meta."
+
+#: frontend/src (Metas)
+msgid "Customer rating"
+msgstr "Calificación del cliente"
+
+#: frontend/src (Metas)
+msgid "Customer service"
+msgstr "Atención a clientes"
+
+#: frontend/src (Metas)
+msgid "Deals created from a lead in the period, for the deal's owner."
+msgstr "Tratos creados desde un prospecto en el periodo, para el dueño del trato."
+
+#: frontend/src (Metas)
+msgid "Deals whose owner closed them won in the period."
+msgstr "Tratos que su dueño cerró como ganados en el periodo."
+
+#: frontend/src (Metas)
+msgid "Deals won"
+msgstr "Tratos ganados"
+
+#: frontend/src (Metas)
+msgid "Each person"
+msgstr "Cada quien"
+
+#: frontend/src (Metas)
+msgid "Edit the goal"
+msgstr "Editar la meta"
+
+#: frontend/src (Metas)
+msgid "First reply in time"
+msgstr "Primera respuesta a tiempo"
+
+#: frontend/src (Metas)
+msgid "For whom"
+msgstr "Para quién"
+
+#: frontend/src (Metas)
+msgid "From your shop’s last four weeks"
+msgstr "De las últimas cuatro semanas de tu tienda"
+
+#: frontend/src (Metas)
+msgid "Goal period"
+msgstr "Periodo de las metas"
+
+#: frontend/src (Metas)
+msgid "Goals"
+msgstr "Metas"
+
+#: frontend/src (Metas)
+msgid "Goals in money or pieces start from each person’s usual week in your shop, plus 10 %. Service goals start at 90 %. You can change any of them later."
+msgstr "Las metas en dinero o piezas parten de la semana normal de cada quien en tu tienda, más 10 %. Las de servicio empiezan en 90 %. Puedes cambiar cualquiera después."
+
+#: frontend/src (Metas)
+msgid "How far each person is from the shop’s goals, and their score from 0 to 100. Each person sees their own in Hoy."
+msgstr "Qué tan cerca está cada quien de las metas de la tienda, y su puntaje de 0 a 100. Cada quien ve las suyas en Hoy."
+
+#: frontend/src (Metas)
+msgid "Leads turned into deals"
+msgstr "Prospectos que se volvieron tratos"
+
+#: frontend/src (Metas)
+msgid "Messages the person sent to customers."
+msgstr "Mensajes que la persona mandó a clientes."
+
+#: frontend/src (Metas)
+msgid "Met ✓"
+msgstr "Cumplida ✓"
+
+#: frontend/src (Metas)
+msgid "Minutes from the customer's message to the first reply, on average."
+msgstr "Minutos del mensaje del cliente a la primera respuesta, en promedio."
+
+#: frontend/src (Metas)
+msgid "Money from deals won"
+msgstr "Dinero de tratos ganados"
+
+#: frontend/src (Metas)
+msgid "New deals answered in time"
+msgstr "Tratos nuevos atendidos a tiempo"
+
+#: frontend/src (Metas)
+msgid "New deals whose first answer came by the time the response SLA gives."
+msgstr "Tratos nuevos cuya primera respuesta llegó dentro del tiempo que da el acuerdo de respuesta."
+
+#: frontend/src (Metas)
+msgid "New goal"
+msgstr "Nueva meta"
+
+#: frontend/src (Metas)
+msgid "New leads answered in time"
+msgstr "Prospectos nuevos atendidos a tiempo"
+
+#: frontend/src (Metas)
+msgid "New leads whose first answer came by the time the response SLA gives."
+msgstr "Prospectos nuevos cuya primera respuesta llegó dentro del tiempo que da el acuerdo de respuesta."
+
+#: frontend/src (Metas)
+msgid "No puesto or person chosen: everybody with data for it is judged."
+msgstr "Sin puesto ni persona: se mide a todos los que tengan datos."
+
+#: frontend/src (Metas)
+msgid "Nobody has data for these goals in this period yet."
+msgstr "Nadie tiene datos para estas metas en este periodo todavía."
+
+#: frontend/src (Metas)
+msgid "Only some people"
+msgstr "Solo algunas personas"
+
+#: frontend/src (Metas)
+msgid "Replies sent"
+msgstr "Respuestas enviadas"
+
+#: frontend/src (Metas)
+msgid "Save goal"
+msgstr "Guardar meta"
+
+#: frontend/src (Metas)
+msgid "See suggested goals"
+msgstr "Ver metas sugeridas"
+
+#: frontend/src (Metas)
+msgid "Suggested goals"
+msgstr "Metas sugeridas"
+
+#: frontend/src (Metas)
+msgid "Team goals"
+msgstr "Metas del equipo"
+
+#: frontend/src (Metas)
+msgid "The customers' average rating of the conversations the person closed (1 to 5)."
+msgstr "El promedio con que los clientes calificaron las conversaciones que la persona cerró (1 a 5)."
+
+#: frontend/src (Metas)
+msgid "The goals of this period"
+msgstr "Las metas de este periodo"
+
+#: frontend/src (Metas)
+msgid "The owner sets the goals."
+msgstr "El dueño pone las metas."
+
+#: frontend/src (Metas)
+msgid "The whole team"
+msgstr "Todo el equipo"
+
+#: frontend/src (Metas)
+msgid "There are no goals for this period yet."
+msgstr "Todavía no hay metas para este periodo."
+
+#: frontend/src (Metas)
+msgid "Weight in the score"
+msgstr "Peso en el puntaje"
+
+#: frontend/src (Metas)
+msgid "What it measures"
+msgstr "Qué mide"
+
+#: frontend/src (Metas)
+msgid "What the deals won in the period are worth, for their owner."
+msgstr "Lo que valen los tratos ganados en el periodo, para su dueño."
+
+#: frontend/src (Metas)
+msgid "Whose work counts"
+msgstr "De quién cuenta"
+
+#: frontend/src (Metas)
+msgid "Yes, delete it"
+msgstr "Sí, bórrala"
+
+#: frontend/src (Metas)
+msgid "You already have every suggested goal, or your shop has no history yet for the rest."
+msgstr "Ya tienes todas las metas sugeridas, o tu tienda todavía no tiene historia para las demás."
+
+#: frontend/src (Metas)
+msgid "how many"
+msgstr "cuántas"
+
+#: frontend/src (Metas)
+msgid "of 5"
+msgstr "de 5"
+
+#: frontend/src (Metas)
+msgid "pesos"
+msgstr "pesos"
+
+#: frontend/src (Metas)
+msgid "weight {0}"
+msgstr "peso {0}"
+
+#: frontend/src (Metas)
+msgid "{0} conversations"
+msgstr "{0} conversaciones"
+
+#: frontend/src (Metas)
+msgid "{0} deals"
+msgstr "{0} tratos"
+
+#: frontend/src (Metas)
+msgid "{0} of {1} goals met"
+msgstr "{0} de {1} metas cumplidas"
+
+#: frontend/src (Metas)
+msgid "{0} of {1} in time"
+msgstr "{0} de {1} a tiempo"
+
+#: frontend/src (Metas)
+msgid "{0} people chosen"
+msgstr "{0} personas elegidas"
+
+#: frontend/src (Metas)
+msgid "{0} ratings"
+msgstr "{0} calificaciones"
+
+#: frontend/src (Metas)
+msgid "{0}: this system can no longer measure it."
+msgstr "{0}: este sistema ya no puede medirla."
+
+#: frontend/src (Metas)
+msgctxt "Equipo"
+msgid "Goals"
+msgstr "Metas"
+
+#: frontend/src (Metas)
+msgctxt "Equipo"
+msgid "Delete"
+msgstr "Borrar"

@@ -465,6 +465,10 @@ doco_tablero_sources = ["crm.tableros.catalogo"]
 # (contract: doco.pendientes.aprobaciones). Warranty Claim stays with doco Garantías.
 doco_approval_sources = ["crm.api.automatizaciones.flujo_aprobaciones"]
 
+# Metas (doco.metas, Equipo's Metas): the inbox's reply and closing goals and the
+# deals and leads a person won or answered in time (contract: doco.metas.indicadores).
+doco_metas_indicadores = ["crm.metas.indicators"]
+
 after_migrate = [
 	"crm.fcrm.doctype.fcrm_settings.fcrm_settings.after_migrate",
 	"crm.pipeline.services.configuration.sync_legacy_statuses",
