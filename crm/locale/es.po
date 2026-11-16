@@ -46583,3 +46583,42 @@ msgstr "Campos"
 msgctxt "Form builder"
 msgid "Add a question"
 msgstr "Agregar un campo"
+
+#: frontend/src/composables/useCaptura.js
+msgctxt "Captura"
+msgid "Pending, as you answered"
+msgstr "Pendiente, como respondiste"
+
+#: frontend/src/composables/useCaptura.js
+msgctxt "Captura"
+msgid "Pending, as your note says"
+msgstr "Pendiente, como dice tu nota"
+
+#: frontend/src/composables/useCaptura.js
+msgctxt "Captura"
+msgid "Paid from {0}"
+msgstr "Pagado con {0}"
+
+#: frontend/src/composables/useCaptura.js
+msgctxt "Captura"
+msgid "Paid"
+msgstr "Pagado"
+
+#: frontend/src/composables/useCaptura.js
+msgctxt "Captura"
+msgid "Last paid {0}"
+msgstr "Última vez pagaste {0}"
+
+#: frontend/src/composables/useCaptura.js
+msgctxt "Captura"
+msgid "Sells at {0}"
+msgstr "Lo vendes a {0}"
+
+#: frontend/src/composables/useCaptura.js
+msgctxt "Captura"
+msgid "{0}% margin"
+msgstr "{0}% de margen"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "Price history of {0}"
+msgstr "Historial de precio de {0}"

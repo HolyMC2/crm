@@ -276,8 +276,8 @@ function round2(value) {
   return Math.round((Number(value) || 0) * 100) / 100
 }
 /**
- * The totals check in plain words: lines + shipping + tax against what the
- * document says. `matches` comes from the server (it tolerates $1 and totals
+ * The totals check in plain words: lines + shipping + tax - discount against
+ * what the document says. `matches` comes from the server (it tolerates $1 and totals
  * written without tax); null means there was no document total to compare.
  */
 export function totalsSummary(totals) {
@@ -285,6 +285,7 @@ export function totalsSummary(totals) {
   const lines = round2(t.lines)
   const shipping = round2(t.shipping)
   const tax = round2(t.tax)
+  const discount = round2(t.discount)
   const document = round2(t.document)
   const rows = [
     { key: 'lines', label: tr('Lines', null, 'Captura'), amount: lines },
@@ -292,7 +293,10 @@ export function totalsSummary(totals) {
   if (shipping)
     rows.push({ key: 'shipping', label: tr('Shipping'), amount: shipping })
   if (tax) rows.push({ key: 'tax', label: tr('Tax'), amount: tax })
-  const sum = round2(lines + shipping + tax)
+  // the supplier's own discount: the draft books it on the grand total
+  if (discount)
+    rows.push({ key: 'discount', label: tr('Discount'), amount: -discount })
+  const sum = round2(lines + shipping + tax - discount)
   let verdict
   if (t.matches === true) verdict = { label: tr('Matches'), theme: 'green' }
   else if (t.matches === false)
@@ -308,6 +312,61 @@ export function totalsSummary(totals) {
     currency: t.currency || 'MXN',
     draft: t.draft === null || t.draft === undefined ? null : round2(t.draft),
   }
+}
+
+/**
+ * A decided payment as one plain fact beside the totals (not a check): pending
+ * because the worker said so, in the note or with «No», or paid. '' otherwise.
+ */
+export function settlementText(settlement, format = (n) => String(n)) {
+  const s = settlement || {}
+  if (s.state === 'pending')
+    return s.answered
+      ? tr('Pending, as you answered', null, 'Captura')
+      : tr('Pending, as your note says', null, 'Captura')
+  if (s.state !== 'paid') return ''
+  const paid = s.account
+    ? tr('Paid from {0}', [s.account], 'Captura')
+    : tr('Paid', null, 'Captura')
+  return s.amount ? `${paid} · ${format(s.amount)}` : paid
+}
+
+/**
+ * What Surtir shows of a product, beside an assigned line: what the shop paid
+ * last (and how far this price is from it) and what it sells for, with the
+ * margin at this price. Null when the line has neither.
+ */
+export function linePriceFacts(
+  line,
+  { format = (n) => String(n), day = (d) => String(d).slice(0, 10) } = {},
+) {
+  const paid = line?.paid
+  const selling = Number(line?.selling) || 0
+  const rate = Number(line?.rate) || 0
+  if (!paid && !selling) return null
+  let last = null
+  if (paid?.rate > 0) {
+    const change = rate ? Math.round(((rate - paid.rate) / paid.rate) * 100) : 0
+    last = {
+      text: tr('Last paid {0}', [format(paid.rate)], 'Captura'),
+      when: [paid.date ? day(paid.date) : '', paid.supplier]
+        .filter(Boolean)
+        .join(' · '),
+      change: change ? `${change > 0 ? '+' : '−'}${Math.abs(change)}%` : '',
+      unusual: Boolean(paid.unusual),
+    }
+  }
+  let sells = null
+  if (selling > 0) {
+    const margin =
+      rate > 0 ? Math.round(((selling - rate) / selling) * 100) : null
+    sells = {
+      text: tr('Sells at {0}', [format(selling)], 'Captura'),
+      margin: margin === null ? '' : tr('{0}% margin', [margin], 'Captura'),
+      thin: margin !== null && margin < 15,
+    }
+  }
+  return { last, sells }
 }
 
 /**

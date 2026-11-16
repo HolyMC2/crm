@@ -396,6 +396,67 @@
                     @click="startChange(line)"
                   />
                 </div>
+                <!-- Surtir's facts beside the line: what it cost last time
+                     (its history one tap away) and what it sells for. -->
+                <div
+                  v-if="
+                    line.state === 'mapped' &&
+                    !changing[line.idx] &&
+                    priceFacts(line)
+                  "
+                  class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm"
+                  data-testid="captura-line-prices"
+                >
+                  <button
+                    v-if="priceFacts(line).last"
+                    type="button"
+                    class="press inline-flex min-h-11 items-center gap-1.5 text-left sm:min-h-0"
+                    :class="
+                      priceFacts(line).last.unusual
+                        ? 'text-ink-amber-8'
+                        : 'text-ink-gray-6'
+                    "
+                    :title="
+                      __('Price history of {0}', [
+                        line.item_name || line.item_code,
+                      ])
+                    "
+                    @click="openHistory(line)"
+                  >
+                    <LucideHistory class="h-3.5 w-3.5 flex-none" />
+                    <span
+                      class="tabular-nums underline decoration-dotted underline-offset-2"
+                    >
+                      {{ priceFacts(line).last.text }}
+                    </span>
+                    <span
+                      v-if="priceFacts(line).last.change"
+                      class="tabular-nums"
+                      :class="
+                        priceFacts(line).last.unusual ? 'font-semibold' : ''
+                      "
+                      >({{ priceFacts(line).last.change }})</span
+                    >
+                    <span
+                      v-if="priceFacts(line).last.when"
+                      class="text-ink-gray-5"
+                      >{{ priceFacts(line).last.when }}</span
+                    >
+                  </button>
+                  <span
+                    v-if="priceFacts(line).sells"
+                    class="tabular-nums text-ink-gray-6"
+                  >
+                    {{ priceFacts(line).sells.text }}
+                    <span
+                      v-if="priceFacts(line).sells.margin"
+                      :class="
+                        priceFacts(line).sells.thin ? 'text-ink-amber-8' : ''
+                      "
+                      >· {{ priceFacts(line).sells.margin }}</span
+                    >
+                  </span>
+                </div>
 
                 <!-- Waiting (or changing): candidates, create, search. -->
                 <div
@@ -685,6 +746,15 @@
                   {{ money(totals.draft, totals.currency) }}
                 </dd>
               </div>
+              <!-- A decided payment is a fact here, not a check. -->
+              <div
+                v-if="settlement"
+                class="flex justify-between gap-3 border-t border-outline-gray-1 pt-1"
+                data-testid="captura-settlement"
+              >
+                <dt class="text-ink-gray-6">{{ __('Payment') }}</dt>
+                <dd class="text-right text-ink-gray-9">{{ settlement }}</dd>
+              </div>
             </dl>
           </section>
 
@@ -839,10 +909,22 @@
         </template>
       </template>
     </div>
+    <HistorySheet
+      v-if="historyItem"
+      v-model:open="historyOpen"
+      :item="historyItem"
+    />
   </div>
 </template>
 <script setup>
-import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
+import {
+  computed,
+  defineAsyncComponent,
+  onBeforeUnmount,
+  reactive,
+  ref,
+  watch,
+} from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Badge, Button, FormControl, toast } from 'frappe-ui'
 import ComprasPicker from '@/components/compras/ComprasPicker.vue'
@@ -855,20 +937,28 @@ import {
   capturaReturn,
   captureStatus,
   draftTarget,
+  linePriceFacts,
   lineStateLabel,
   lineStateTheme,
   pendingLines,
+  settlementText,
   totalsSummary,
 } from '@/composables/useCaptura'
 import { shellRoute } from '@/components/captura/scanApi'
 import LucideArrowLeft from '~icons/lucide/arrow-left'
 import LucideExternalLink from '~icons/lucide/external-link'
+import LucideHistory from '~icons/lucide/history'
 import LucideLoader from '~icons/lucide/loader'
 import LucidePackage from '~icons/lucide/package'
 import LucidePlus from '~icons/lucide/plus'
 import LucideRotateCcw from '~icons/lucide/rotate-ccw'
 import LucideX from '~icons/lucide/x'
 import LucideCircleAlert from '~icons/lucide/circle-alert'
+
+// Precios' «Historial» of one product, the same sheet its own page opens.
+const HistorySheet = defineAsyncComponent(
+  () => import('@/components/precios/HistorySheet.vue'),
+)
 
 // «Capturar documento» review: what the books pipeline read from the paper,
 // fixed by the worker, then one draft record (never submitted).
@@ -906,6 +996,13 @@ const backLabel = computed(() =>
 const duplicate = computed(() => route.query.duplicate === '1')
 const status = computed(() => captureStatus(review.value))
 const totals = computed(() => totalsSummary(review.value?.totals))
+const settlement = computed(() =>
+  settlementText(review.value?.settlement, (n) =>
+    money(n, totals.value.currency),
+  ),
+)
+const historyItem = ref('')
+const historyOpen = ref(false)
 const pending = computed(() => pendingLines(review.value?.lines))
 const isPurchase = computed(() =>
   ['Purchase Order', 'Purchase Invoice'].includes(review.value?.doc_type),
@@ -930,6 +1027,29 @@ function hostOf(url) {
   } catch {
     return url
   }
+}
+
+function priceFacts(line) {
+  return linePriceFacts(line, {
+    format: (n) => money(n, totals.value.currency),
+    day: shortDay,
+  })
+}
+
+function shortDay(value) {
+  const day = new Date(`${String(value).slice(0, 10)}T12:00:00`)
+  return Number.isNaN(day.getTime())
+    ? ''
+    : day.toLocaleDateString(undefined, {
+        day: 'numeric',
+        month: 'short',
+        year: '2-digit',
+      })
+}
+
+function openHistory(line) {
+  historyItem.value = line.item_code
+  historyOpen.value = true
 }
 
 function searchFor(kind, txt) {

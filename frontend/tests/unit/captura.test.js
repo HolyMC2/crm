@@ -16,6 +16,7 @@ import {
   draftTarget,
   heicAsJpeg,
   isHeic,
+  linePriceFacts,
   lineStateLabel,
   lineStateTheme,
   loadCapturaBoot,
@@ -23,6 +24,7 @@ import {
   pendingCaptureStatus,
   pendingLines,
   targetLabel,
+  settlementText,
   totalsSummary,
 } from '../../src/composables/useCaptura.js'
 
@@ -191,11 +193,102 @@ describe('totalsSummary', () => {
     expect(t.verdict.label).toBe('Does not match')
     expect(t.draft).toBe(116)
   })
+  it('subtracts the supplier discount, so a discounted invoice matches', () => {
+    // CAP-2026-00056: 12,783 + 279 - 383.49 = 12,678.51
+    const t = totalsSummary({
+      lines: 12783,
+      shipping: 279,
+      discount: 383.49,
+      document: 12678.51,
+      matches: true,
+      draft: null,
+    })
+    expect(t.rows.map((r) => [r.key, r.amount])).toEqual([
+      ['lines', 12783],
+      ['shipping', 279],
+      ['discount', -383.49],
+    ])
+    expect(t.sum).toBe(12678.51)
+    expect(t.difference).toBe(0)
+    expect(t.verdict.label).toBe('Matches')
+  })
   it('has nothing to compare without a document total', () => {
     const t = totalsSummary(null)
     expect(t.matches).toBeNull()
     expect(t.difference).toBeNull()
     expect(t.currency).toBe('MXN')
+  })
+})
+
+describe('settlementText', () => {
+  const format = (n) => 'MX' + n
+  it('says a pending payment the worker decided, without a warning', () => {
+    expect(settlementText({ state: 'pending', answered: true })).toBe(
+      'Pending, as you answered',
+    )
+    expect(settlementText({ state: 'pending', answered: false })).toBe(
+      'Pending, as your note says',
+    )
+  })
+  it('says where a paid one came from', () => {
+    expect(
+      settlementText(
+        { state: 'paid', account: 'Caja Tienda - GD', amount: 200 },
+        format,
+      ),
+    ).toBe('Paid from Caja Tienda - GD · MX200')
+    expect(settlementText({ state: 'paid' })).toBe('Paid')
+  })
+  it('says nothing while it is asked or unknown', () => {
+    expect(settlementText(null)).toBe('')
+    expect(settlementText({ state: 'asked' })).toBe('')
+  })
+})
+
+describe('linePriceFacts', () => {
+  const opts = { format: (n) => 'MX' + n, day: (d) => 'day ' + d }
+  it('compares the price with the last one paid and flags an unusual one', () => {
+    const facts = linePriceFacts(
+      {
+        rate: 28,
+        paid: {
+          rate: 216,
+          date: '2026-10-01',
+          supplier: 'XMovil',
+          unusual: true,
+        },
+        selling: 450,
+      },
+      opts,
+    )
+    expect(facts.last).toEqual({
+      text: 'Last paid MX216',
+      when: 'day 2026-10-01 · XMovil',
+      change: '\u221287%',
+      unusual: true,
+    })
+    expect(facts.sells).toEqual({
+      text: 'Sells at MX450',
+      margin: '94% margin',
+      thin: false,
+    })
+  })
+  it('marks a thin margin and leaves out an unchanged price', () => {
+    const facts = linePriceFacts(
+      { rate: 393, paid: { rate: 393, date: '' }, selling: 420 },
+      opts,
+    )
+    expect(facts.last.change).toBe('')
+    expect(facts.last.when).toBe('')
+    expect(facts.sells).toEqual({
+      text: 'Sells at MX420',
+      margin: '6% margin',
+      thin: true,
+    })
+  })
+  it('is null when nothing is known of the item', () => {
+    expect(linePriceFacts({ rate: 10 })).toBeNull()
+    expect(linePriceFacts({ rate: 10, paid: null, selling: null })).toBeNull()
   })
 })
 
