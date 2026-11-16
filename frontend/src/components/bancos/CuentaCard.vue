@@ -35,6 +35,17 @@
         · {{ balanceWhen(card.bank_balance.at) }}</span
       >
       <span
+        v-if="card.diferencia !== null && card.diferencia !== undefined"
+        class="text-sm"
+        :class="
+          Math.abs(Number(card.diferencia)) < 0.005
+            ? 'text-ink-green-7'
+            : 'font-medium text-ink-amber-8'
+        "
+        data-bancos-card-cuadre
+        >{{ differenceText(card.diferencia, card.currency) }}</span
+      >
+      <span
         v-if="card.pending"
         class="mt-1 inline-flex min-h-6 w-fit items-center whitespace-nowrap rounded-full bg-surface-amber-2 px-2 text-xs font-medium text-ink-amber-8"
         data-bancos-card-pending
@@ -57,6 +68,7 @@
 import { computed } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { balanceWhen, cardContext, money } from './bancos'
+import { differenceText } from './cuadre'
 
 const props = defineProps({
   card: { type: Object, required: true },

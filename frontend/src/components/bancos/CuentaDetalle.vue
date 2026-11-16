@@ -74,6 +74,21 @@
         }}</span>
         · {{ balanceWhen(header.bank_balance.at) }}
       </p>
+      <!-- Cuadre: does the book balance agree with the bank, and why not. -->
+      <button
+        v-if="header.reconcilable && can.saldos"
+        type="button"
+        class="press mt-2 flex min-h-11 w-full items-center gap-2 rounded-6 text-left text-sm hover:bg-surface-gray-1"
+        data-bancos-cuadre-abrir
+        @click="cuadreOpen = true"
+      >
+        <span :class="[cuadreIcon, 'size-4 flex-none']" aria-hidden="true" />
+        <span class="min-w-0 flex-1" :class="cuadreTone">{{ cuadreLine }}</span>
+        <span
+          class="lucide-chevron-right size-5 flex-none text-ink-gray-5"
+          aria-hidden="true"
+        />
+      </button>
       <!-- Bancos conectados: the login that feeds this account, how fresh
            it is, and its step right here (Sincronizar ahora). -->
       <RouterLink
@@ -255,6 +270,14 @@
       :movement="current"
       @changed="onChanged"
     />
+    <CuadreSheet
+      v-if="header?.reconcilable"
+      v-model:open="cuadreOpen"
+      :cuenta="cuenta"
+      :label="header.label"
+      @ver="verDesdeCuadre"
+      @changed="reload"
+    />
   </div>
 </template>
 <script setup>
@@ -286,11 +309,13 @@ import {
   waitingOf,
   waitingText,
 } from './conectados'
+import { differenceText } from './cuadre'
 import { useConexionStep } from './useConexionStep'
 
 const ConciliarSheet = defineAsyncComponent(
   () => import('./ConciliarSheet.vue'),
 )
+const CuadreSheet = defineAsyncComponent(() => import('./CuadreSheet.vue'))
 
 const props = defineProps({
   cuenta: { type: String, required: true },
@@ -314,6 +339,7 @@ const loading = ref(false)
 const loadError = ref('')
 const sheetOpen = ref(false)
 const current = ref(null)
+const cuadreOpen = ref(route.query.cuadre === '1')
 
 const companyQuery = computed(() =>
   route.query.empresa ? { empresa: route.query.empresa } : {},
@@ -340,8 +366,37 @@ const chips = computed(() => {
       label: 'Sin conciliar',
       count: header.value.pending || undefined,
     })
+  // Book entries the bank does not show (Cuadre's «registros sin movimiento del banco»).
+  if (header.value?.reconcilable && state.value.vista === 'libros')
+    base.push({ value: 'sin_banco', label: 'Sin banco' })
   return base
 })
+const cuadreLine = computed(() => {
+  const diff = header.value?.diferencia
+  if (diff === null || diff === undefined)
+    return header.value?.kind === 'tarjeta'
+      ? '¿Cuadra con tu banco? Compara lo que debes'
+      : '¿Cuadra con tu banco? Compara su saldo'
+  return differenceText(diff, header.value.currency)
+})
+const cuadreAgrees = computed(() => {
+  const diff = header.value?.diferencia
+  return diff !== null && diff !== undefined && Math.abs(Number(diff)) < 0.005
+})
+const cuadreIcon = computed(() =>
+  header.value?.diferencia === null || header.value?.diferencia === undefined
+    ? 'lucide-circle-help text-ink-gray-6'
+    : cuadreAgrees.value
+      ? 'lucide-check-check text-ink-green-7'
+      : 'lucide-triangle-alert text-ink-amber-8',
+)
+const cuadreTone = computed(() =>
+  header.value?.diferencia === null || header.value?.diferencia === undefined
+    ? 'text-ink-gray-8'
+    : cuadreAgrees.value
+      ? 'text-ink-green-8'
+      : 'font-medium text-ink-amber-8',
+)
 const groups = computed(() => groupByDay(rows.value))
 const empty = computed(() => {
   if (list.value && !list.value.readable)
@@ -368,6 +423,10 @@ function navigate(next) {
   const query = { ...route.query, ...next }
   for (const key of Object.keys(query)) if (!query[key]) delete query[key]
   router.replace({ query })
+}
+function verDesdeCuadre({ vista, filtro }) {
+  cuadreOpen.value = false
+  navigate({ vista, filtro, q: '' })
 }
 function setFilter(value) {
   navigate({ filtro: value === state.value.filtro ? '' : value })

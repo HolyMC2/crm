@@ -30,6 +30,7 @@ import frappe
 from frappe import _
 from frappe.utils import add_months, cint, flt, get_first_day, get_last_day, getdate, today
 
+from crm import bancos_cuadre as cuadre_math
 from crm.bancos_words import (
 	REVIEW_STATES,
 	UNLINKED_STATE,
@@ -297,6 +298,17 @@ def _bank_side_balances(names):
 	return out
 
 
+def _bank_figure(synced, card):
+	"""The bank's balance for the screen (a card's as what is owed) and bank - books."""
+	if not synced:
+		return None
+	return {**synced, "amount": cuadre_math.bank_figure(synced.get("amount"), bool(card))}
+
+
+def _difference(bank_balance, balance):
+	return cuadre_math.difference(bank_balance["amount"] if bank_balance else None, balance)
+
+
 def _pending_counts(names):
 	"""{bank account: {n, last}} of movements still to reconcile; None when unreadable."""
 	if not frappe.has_permission("Bank Transaction", "read"):
@@ -353,6 +365,7 @@ def cuentas(company: str | None = None) -> dict:
 		) or currency
 		if row.is_credit_card and balance is not None:
 			balance = -balance  # a card shows what is owed on it
+		bank_balance = _bank_figure(synced.get(row.name), row.is_credit_card)
 		cards.append(
 			{
 				"cuenta": row.name,
@@ -363,7 +376,8 @@ def cuentas(company: str | None = None) -> dict:
 				"ledger": row.account,
 				"currency": account_currency,
 				"balance": balance,
-				"bank_balance": synced.get(row.name),
+				"bank_balance": bank_balance,
+				"diferencia": _difference(bank_balance, balance),
 				"pending": (pending.get(row.name) or {}).get("n", 0) if pending is not None else None,
 				"reconcilable": True,
 			}
@@ -384,6 +398,7 @@ def cuentas(company: str | None = None) -> dict:
 				"currency": row.account_currency or currency,
 				"balance": balance,
 				"bank_balance": None,
+				"diferencia": None,
 				"pending": None,
 				"reconcilable": False,
 			}
@@ -450,7 +465,9 @@ def _header(bank, ledger):
 		balance = -balance
 	counts = _pending_counts([bank.name]) if bank else None
 	pending = (counts.get(bank.name) or {}).get("n", 0) if counts is not None else None
-	synced = _bank_side_balances([bank.name]).get(bank.name) if bank else None
+	synced = (
+		_bank_figure(_bank_side_balances([bank.name]).get(bank.name), bank.is_credit_card) if bank else None
+	)
 	feed = _feed_of(bank.name) if bank else None
 	return {
 		"cuenta": bank.name if bank else ledger,
@@ -468,6 +485,7 @@ def _header(bank, ledger):
 		"currency": (account.account_currency if account else None) or _currency(company),
 		"balance": balance,
 		"bank_balance": synced,
+		"diferencia": _difference(synced, balance),
 		"pending": pending,
 		"reconcilable": bool(bank),
 		"conexion": feed,
@@ -798,7 +816,7 @@ def movimientos(
 	start, limit = max(0, cint(start)), min(max(1, cint(limit) or PAGE), 100)
 	if vista == "banco" and bank:
 		return _bank_movements(bank, filtro, q, start, limit)
-	return _book_movements(ledger, filtro, q, start, limit)
+	return _book_movements(ledger, filtro, q, start, limit, bank=bank)
 
 
 def _bank_movements(bank, filtro, q, start, limit):
@@ -908,7 +926,7 @@ def _bank_movements(bank, filtro, q, start, limit):
 	return {"rows": out, "next": start + limit if more else None, "readable": True, "vista": "banco"}
 
 
-def _book_movements(ledger, filtro, q, start, limit):
+def _book_movements(ledger, filtro, q, start, limit, bank=None):
 	if not ledger or not frappe.has_permission("GL Entry", "read"):
 		return {"rows": [], "next": None, "readable": False, "vista": "libros"}
 	frappe.has_permission("Account", "read", ledger, throw=True)
@@ -917,6 +935,13 @@ def _book_movements(ledger, filtro, q, start, limit):
 		filters.append(["debit_in_account_currency", ">", 0])
 	elif filtro == "salidas":
 		filters.append(["credit_in_account_currency", ">", 0])
+	elif filtro == "sin_banco" and bank and frappe.has_permission("Bank Transaction", "read"):
+		# Book entries since the bank's movements run unbroken, linked to none of them (Cuadre).
+		from crm.api.bancos_cuadre import unlinked_vouchers
+
+		names = unlinked_vouchers(ledger, bank.name)
+		if names is not None:
+			filters.append(["voucher_no", "in", names or [""]])
 	q = (q or "").strip()
 	or_filters = None
 	if q:

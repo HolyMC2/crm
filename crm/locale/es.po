@@ -46719,3 +46719,35 @@ msgstr "Otros cargos"
 msgctxt "Captura"
 msgid "Pending, as the document says"
 msgstr "Pendiente, como dice el documento"
+
+#: crm/api/bancos_cuadre.py
+msgid "This account has no ledger account."
+msgstr "Esta cuenta no tiene cuenta contable."
+
+#: crm/api/bancos_cuadre.py
+msgid "Ask your manager for access to the account balances."
+msgstr "Pide a tu encargado acceso a los saldos contables."
+
+#: crm/api/bancos_cuadre.py
+msgid "Type the balance as a number, for example 4663.09."
+msgstr "Escribe el saldo como número, por ejemplo 4663.09."
+
+#: crm/api/bancos_cuadre.py
+msgid "Choose the movements to link."
+msgstr "Elige qué movimientos ligar."
+
+#: crm/api/bancos_cuadre.py
+msgid "Only bank and card accounts have movements to link."
+msgstr "Solo las cuentas de banco o tarjeta tienen movimientos que ligar."
+
+#: crm/api/bancos_cuadre.py
+msgid "It belongs to another account."
+msgstr "Es de otra cuenta."
+
+#: crm/api/bancos_cuadre.py
+msgid "Your role cannot reconcile bank movements."
+msgstr "Tu puesto no puede conciliar."
+
+#: crm/api/bancos_cuadre.py
+msgid "It is no longer proposed for this movement."
+msgstr "Ya no se propone para este movimiento."
