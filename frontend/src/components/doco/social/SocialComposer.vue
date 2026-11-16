@@ -122,6 +122,29 @@
           :editable="canCancel"
           @changed="refreshPost"
         />
+        <!-- what goes out, big enough to judge: the picture and the reel, before the form -->
+        <div
+          v-if="form.name && heroMedia.length"
+          class="mb-4 flex gap-2 overflow-x-auto"
+          data-testid="post-hero"
+        >
+          <template v-for="m in heroMedia" :key="m.media_file">
+            <video
+              v-if="m.media_type === 'Video'"
+              :src="m.media_file"
+              class="max-h-72 flex-none rounded-7 bg-surface-gray-2"
+              controls
+              playsinline
+              preload="metadata"
+            />
+            <img
+              v-else
+              :src="m.media_file"
+              :alt="m.alt_text || ''"
+              class="max-h-72 flex-none rounded-7 bg-surface-gray-2 object-contain"
+            />
+          </template>
+        </div>
 
         <label class="mb-1 block text-[11px] font-semibold text-ink-gray-6">{{
           __('Título')
@@ -207,7 +230,7 @@
           <span class="text-[10px] font-mono text-ink-gray-5">{{ c }}</span>
           <textarea
             v-model="form.captions[c]"
-            rows="2"
+            :rows="form.name ? 5 : 3"
             :disabled="!canCancel"
             class="fld w-full rounded-5 border border-outline-gray-2 px-2 py-1.5 text-[13px] disabled:opacity-60"
             :placeholder="__('Caption…')"
@@ -278,7 +301,9 @@
 
         <!-- owner feedback → AI rewrites the caption (same items/voice/facts) -->
         <div
-          v-if="form.name && canCancel"
+          v-if="
+            form.name && canCancel && !form.taller_photos && !form.daily_key
+          "
           class="mb-3 rounded-5 border border-outline-gray-2 bg-surface-gray-1 p-2"
         >
           <label class="mb-1 block text-[11px] font-semibold text-ink-gray-6">{{
@@ -676,6 +701,9 @@ const showTallerPhotos = computed(
     (Boolean(form.value.daily_key) ||
       Boolean(form.value.taller_photos) ||
       !hasPicture.value),
+)
+const heroMedia = computed(() =>
+  (form.value.media || []).filter((m) => m.media_file).slice(0, 3),
 )
 const mainCaption = computed(() => {
   const caps = form.value.captions || {}

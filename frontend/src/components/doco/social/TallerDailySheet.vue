@@ -214,9 +214,13 @@
           >
             <p class="mb-2">
               {{
-                __('{0} no tiene acceso a Redes. ¿Se lo damos?', [
-                  needsAccess.map((p) => p.full_name).join(', '),
-                ])
+                needsAccess.length === 1
+                  ? __('{0} no tiene acceso a Redes. ¿Se lo damos?', [
+                      needsAccess[0].full_name,
+                    ])
+                  : __('{0} no tienen acceso a Redes. ¿Se lo damos?', [
+                      needsAccess.map((p) => p.full_name).join(', '),
+                    ])
               }}
             </p>
             <p v-if="!data.can_grant" class="text-[12px]">
@@ -385,11 +389,16 @@ async function load() {
   }
 }
 
-watch(open, (on) => {
-  if (!on) return
-  shop.value = props.initialShop || props.shopOptions[0]?.name || ''
-  load()
-})
+// The sheet mounts on its first open, already open: read the shop then too.
+watch(
+  open,
+  (on) => {
+    if (!on) return
+    shop.value = props.initialShop || props.shopOptions[0]?.name || ''
+    load()
+  },
+  { immediate: true },
+)
 
 async function save(grant) {
   busy.value = true
