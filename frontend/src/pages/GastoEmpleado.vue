@@ -580,6 +580,7 @@ import { shellBoot } from '@/composables/muelleShell'
 import { can } from '@/vendor/muelle-shell/contracts'
 import { loadGastosBoot } from '@/composables/useGastos'
 import { useRecordPower } from '@/composables/useRecordPower'
+import { leaveTo } from '@/composables/leavePage'
 import {
   advanceText,
   claimBack,
@@ -983,7 +984,7 @@ function openNextOrBack() {
 }
 function goBack() {
   if (back.value.route) return router.push(back.value.route)
-  window.location.assign(back.value.href)
+  leaveTo(back.value.href)
 }
 
 // Esc back to the same row of the list; a decision or reimbursement made

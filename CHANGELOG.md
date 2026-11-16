@@ -2,6 +2,11 @@
 
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
+## 2026-11-16 — More buttons that load another app from a sheet now work on a phone (lane sheet-navega-resto; not deployed)
+
+- **Bug:** the same one as «Verificar y acomodar» (lane bolt-sheet-navega): a tap that closes a sheet and loads another app's page in this tab had that load aborted (`net::ERR_ABORTED`) when the sheet's back over its history entry landed. Only real taps on a phone hit it. Found by an audit of every page load in the shell: Producto ⚡ «Ver en Escáner»; Inmobiliaria's ⚡ actions that link outside /crm, «Abrir en escritorio» in Herramientas and an action whose answer opens another app's page; Cuenta «Pagar» from an invoice's sheet while its checkout is in progress; Gastos de empleado «Siguiente» from the decision sheet when the way back is another app.
+- **Fix:** one helper, `composables/leavePage.js` `leaveTo(href)`: it waits for the sheet's back (`sheetHistory.settle`), then loads the page, and loads at once when no sheet is closing. `AccionesMenu` uses it too. Checked and unaffected: «⋯» tools (router or a new tab), the avisos panel (no history entry), Cobranza's payment sheet (frappe-ui sheet, no history entry), list ⚡ menus, the command palette (already waits), and plain links inside a sheet.
+- **Tests:** `tests/unit/leavePage.test.js` (2). Rollback = revert.
 ## 2026-11-16 — Manual de la tienda: «Empezar con plantillas» grouped by category (lane manual-equipo; not deployed)
 
 - **Sheet:** the starter cards come in groups: Empieza aquí, Mostrador, Caja, Taller, Orden y limpieza, Guías de Muelle and more. «Elegir todas» / «Quitar todas» picks or drops a whole group. A line says the goals are examples and that a photo of the shop's own counter works best (`components/manual/TemplatesSheet.vue`). The cards themselves come from doco (lane manual-equipo).

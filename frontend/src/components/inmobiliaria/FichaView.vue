@@ -371,6 +371,7 @@ import { toast } from 'frappe-ui'
 import { ListRow, StatusChip } from '@/components/ui'
 import AccionSheet from '@/components/inmobiliaria/AccionSheet.vue'
 import RecordIsland from '@/components/documentos/RecordIsland.vue'
+import { leaveTo } from '@/composables/leavePage'
 import {
   NativeButton,
   SIN_METODO,
@@ -566,7 +567,7 @@ function run(accion) {
     if (external.href) return window.open(external.href, '_blank', 'noopener')
     const link = linkOf(accion.url)
     if (link.to) return router.push(withCarry(link.to))
-    if (link.href) return window.location.assign(link.href)
+    if (link.href) return leaveTo(link.href)
     return
   }
   act(accion)
@@ -623,8 +624,7 @@ async function onTool({ key }) {
   toolsOpen.value = false
   if (key === 'actualizar') return refreshFicha()
   if (key === 'correo') return writeMail()
-  if (key === 'escritorio' && props.ficha.desk)
-    return window.location.assign(props.ficha.desk)
+  if (key === 'escritorio' && props.ficha.desk) return leaveTo(props.ficha.desk)
   if (key === 'enlace') {
     try {
       await navigator.clipboard.writeText(window.location.href)
@@ -688,7 +688,7 @@ function done({ accion, answer }) {
   if (next) {
     const link = linkOf(next)
     if (link.to) return router.push(withCarry(link.to))
-    if (link.href) return window.location.assign(link.href)
+    if (link.href) return leaveTo(link.href)
   }
   emit('changed')
 }

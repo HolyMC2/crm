@@ -1927,6 +1927,7 @@ import { recordActionsFor } from '@/documentos/acciones'
 import { BTN } from '@/documentos/tools'
 import { loadCameraSheet } from '@/components/captura/cameraDoor'
 import { useProductPhotos } from '@/composables/useProductPhotos'
+import { leaveTo } from '@/composables/leavePage'
 import PriceDialog from '@/components/productos/PriceDialog.vue'
 import EditDialog from '@/components/productos/EditDialog.vue'
 import RequestDialog from '@/components/productos/RequestDialog.vue'
@@ -2922,9 +2923,7 @@ function run(entry) {
       .getElementById('variantes')
       ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   else if (entry.key === 'scanner')
-    window.location.assign(
-      scannerItemUrl(product.value.name, { back: recordBack.value }),
-    )
+    leaveTo(scannerItemUrl(product.value.name, { back: recordBack.value }))
 }
 function ask(kind, reason = '', proposal = {}) {
   const fallback = action(kind === 'data' ? 'edit' : 'price')

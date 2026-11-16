@@ -56,7 +56,7 @@
 <script setup>
 import { nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { BottomSheet } from '@/components/ui'
-import { settle } from '@/components/ui/sheetHistory'
+import { leaveTo } from '@/composables/leavePage'
 import AccionesPanel from './AccionesPanel.vue'
 import { menuPlace, roomFor } from './menuPlace'
 
@@ -111,14 +111,11 @@ watch(openState, async (on) => {
 })
 onBeforeUnmount(() => listen(false))
 
-async function pick(action) {
+function pick(action) {
   openState.value = false
-  if (!action.href) return emit('pick', action)
-  // Another page loads only once the sheet's back over its history entry has
-  // landed: that back, landing later, would cancel the load.
-  await nextTick()
-  await settle()
-  window.location.assign(action.href)
+  // Another app's page loads once the sheet has left history (leavePage.js).
+  if (action.href) return leaveTo(action.href)
+  emit('pick', action)
 }
 </script>
 <style>

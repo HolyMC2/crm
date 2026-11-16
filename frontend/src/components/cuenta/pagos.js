@@ -9,6 +9,7 @@ import { errorText } from '@/utils/errorText'
 import { CYCLES, activatedText, sameChoice } from './activarPlan'
 import { capable } from './autoservicio'
 import { planView, validQuote } from './cuenta'
+import { leaveTo } from '@/composables/leavePage'
 
 export const POLL_MS = 5000
 // One page of wallet movements (miplan.wallet_txns); Mi plan reads 20 at a time.
@@ -97,7 +98,7 @@ function defaultSupport(description = '') {
 export function createPagos({
   read,
   mutate,
-  navigate = (url) => window.location.assign(url),
+  navigate = (url) => leaveTo(url),
   openSupport = defaultSupport,
   // Wrapped: a browser's setTimeout called as `timers.set()` throws «Illegal invocation».
   timers = {
