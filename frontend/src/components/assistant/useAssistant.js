@@ -37,6 +37,7 @@ import { answeredLocally, cardKey } from './decisionCardState'
 import {
   _resetActivity,
   loadActivity,
+  missingSteps,
   onActivity,
   onUsage,
   resetActivity,
@@ -583,7 +584,22 @@ export function onCanvasWritten(payload) {
 /** A step of a turn (doco_assistant_activity): the thinking line's detail. */
 export function onActivityEvent(payload) {
   if (!ours(payload) || retired.clients.has(payload.client_id)) return
-  onActivity(payload)
+  const turn = onActivity(payload)
+  if (turn && missingSteps(turn)) healSteps(turn)
+}
+
+// A step the socket lost comes back from doco's snapshot: once per turn, after
+// a moment for an event that is only late (it may still arrive on its own).
+export const HEAL_MS = 400
+const healed = new Set()
+function healSteps(turn) {
+  if (healed.has(turn)) return
+  healed.add(turn)
+  const asked = generation
+  setTimeout(() => {
+    if (asked === generation && missingSteps(turn))
+      loadActivity(() => asked === generation)
+  }, HEAL_MS)
 }
 
 /** A turn's receipt (doco_assistant_usage): its model calls and tokens. */
@@ -679,6 +695,7 @@ export function _resetAssistant() {
   })
   _resetAssistantDoor()
   _resetActivity()
+  healed.clear()
   prefetched = null
   dropCachedList(HISTORY_CACHE)
   retired.clients.clear()

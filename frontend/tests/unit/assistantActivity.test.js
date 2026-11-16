@@ -17,6 +17,7 @@ import {
   work,
 } from '@/components/assistant/assistantActivity'
 import {
+  HEAL_MS,
   _resetAssistant,
   assistant,
   loadHistory,
@@ -277,6 +278,34 @@ describe('the conversation shows the work', () => {
       el.querySelector('[data-testid="assistant-usage"]').textContent,
     ).toContain('3 model calls, 12,400 tokens')
     app.unmount()
+  })
+
+  it('brings back a step the socket lost, once, and waits for one that is only late', async () => {
+    vi.useFakeTimers()
+    try {
+      const asked = () =>
+        mocks.call.mock.calls.filter(([m]) => m === `${API}.activity`).length
+      // late: seq 2 first, seq 1 right after; nothing is fetched
+      onActivityEvent(BUILT_IN[1])
+      onActivityEvent(BUILT_IN[0])
+      await vi.advanceTimersByTimeAsync(HEAL_MS + 10)
+      expect(asked()).toBe(0)
+      // lost: the turn's first step never comes; the snapshot fills it in
+      onActivityEvent({ ...BUILT_IN[1], turn_id: 'T5' })
+      onActivityEvent({ ...BUILT_IN[2], turn_id: 'T5' })
+      mocks.call.mockImplementationOnce(() =>
+        Promise.resolve({
+          chat_id: CHAT,
+          events: BUILT_IN.slice(0, 3).map((e) => ({ ...e, turn_id: 'T5' })),
+        }),
+      )
+      await vi.advanceTimersByTimeAsync(HEAL_MS + 10)
+      expect(asked()).toBe(1)
+      expect(work.turns.T5.events.map((e) => e.seq)).toEqual([1, 2, 3])
+      expect(stepsOf(work.turns.T5).steps[0].kind).toBe('prepare')
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('backfills the latest steps on open and forgets them with the conversation', async () => {

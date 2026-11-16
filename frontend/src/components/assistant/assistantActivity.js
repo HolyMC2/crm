@@ -38,7 +38,10 @@ function ms(value) {
 
 const TOOL = /^[A-Za-z0-9_]{1,100}$/
 
-/** One live or backfilled activity event; a repeat of a known step is ignored. */
+/**
+ * One live or backfilled activity event; a repeat of a known step is ignored.
+ * Returns the turn it belongs to ('' when it is not a step).
+ */
 export function onActivity(payload) {
   const id = clip(payload?.turn_id || payload?.run_id, 140)
   const seq = Number(payload?.seq)
@@ -49,14 +52,14 @@ export function onActivity(payload) {
     !PHASES.has(payload.phase) ||
     !STATUSES.has(payload.status)
   )
-    return
+    return ''
   const turn = work.turns[id] || {
     id,
     clientId: '',
     order: ++arrival,
     events: [],
   }
-  if (turn.events.some((event) => event.seq === seq)) return
+  if (turn.events.some((event) => event.seq === seq)) return id
   const tool = TOOL.test(payload.tool || '') ? payload.tool : ''
   const event = {
     seq,
@@ -83,6 +86,23 @@ export function onActivity(payload) {
     .sort((a, b) => a.order - b.order)
     .slice(-MAX_TURNS)
   work.turns = Object.fromEntries(kept.map((t) => [t.id, t]))
+  return id
+}
+
+/**
+ * A turn whose numbering has a hole: a step the socket never delivered (a
+ * reconnect as the question went out lost the first one on the lab walk).
+ * A turn longer than the kept events starts past 1 on purpose.
+ */
+export function missingSteps(id) {
+  const events = work.turns[id]?.events || []
+  if (!events.length || events.length >= MAX_EVENTS) return false
+  let expected = 1
+  for (const event of events) {
+    if (event.seq !== expected) return true
+    expected += 1
+  }
+  return false
 }
 
 /** A turn's usage receipt (doco_assistant_usage): its model calls and tokens. */
