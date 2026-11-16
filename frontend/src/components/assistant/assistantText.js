@@ -522,6 +522,11 @@ export function normalizeRow(row) {
     // a question about a document drawn whole (DecisionCard.vue); doco
     // rebuilds it from the decision session on every read
     card: (bot && row.card) || null,
+    // the turn that wrote it and that turn's receipt (model calls, tokens):
+    // the «Trabajó …» line over the answer (AssistantWork.vue)
+    turnId: (bot && typeof row.turn_id === 'string' && row.turn_id) || null,
+    usage:
+      (bot && row.usage && typeof row.usage === 'object' && row.usage) || null,
     at: row.creation || null,
     stale: bot && isNotReplayed(text),
     down: bot && isServiceDown(text),

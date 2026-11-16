@@ -46641,3 +46641,66 @@ msgstr "{0}% de margen"
 #: frontend/src/pages/CapturaRevision.vue
 msgid "Price history of {0}"
 msgstr "Historial de precio de {0}"
+#: frontend/src/components/assistant/AssistantWork.vue
+msgid "Muelle is working"
+msgstr "Muelle está trabajando"
+
+#: frontend/src/components/assistant/AssistantWork.vue
+msgid "See how Muelle is working"
+msgstr "Ver cómo trabaja Muelle"
+
+#: frontend/src/components/assistant/AssistantWork.vue
+msgid "Hide the steps"
+msgstr "Ocultar los pasos"
+
+#: frontend/src/components/assistant/AssistantWork.vue
+msgid "The first step shows here as soon as it starts."
+msgstr "El primer paso aparece aquí en cuanto empieza."
+
+#: frontend/src/components/assistant/AssistantWork.vue
+msgid "1 step"
+msgstr "1 paso"
+
+#: frontend/src/components/assistant/AssistantWork.vue
+msgid "{0} steps"
+msgstr "{0} pasos"
+
+#: frontend/src/components/assistant/AssistantWork.vue
+msgid "Stopped after {0}"
+msgstr "Se detuvo a los {0}"
+
+#: frontend/src/components/assistant/AssistantWork.vue
+msgid "Worked for {0}"
+msgstr "Trabajó {0}"
+
+#: frontend/src/components/assistant/AssistantWork.vue
+msgid "Worked for {0} in 1 step"
+msgstr "Trabajó {0} en 1 paso"
+
+#: frontend/src/components/assistant/AssistantWork.vue
+msgid "Worked for {0} in {1} steps"
+msgstr "Trabajó {0} en {1} pasos"
+
+#: frontend/src/components/assistant/AssistantWork.vue
+msgid "1 model call, {0} tokens"
+msgstr "1 llamada al modelo, {0} tokens"
+
+#: frontend/src/components/assistant/AssistantWork.vue
+msgid "{0} model calls, {1} tokens"
+msgstr "{0} llamadas al modelo, {1} tokens"
+
+#: frontend/src/components/assistant/AssistantWork.vue
+msgid "Reading your question"
+msgstr "Leo tu pregunta"
+
+#: frontend/src/components/assistant/AssistantWork.vue
+msgid "Using a tool"
+msgstr "Uso una herramienta"
+
+#: frontend/src/components/assistant/AssistantWork.vue
+msgid "Writing the answer"
+msgstr "Escribo la respuesta"
+
+#: frontend/src/components/assistant/AssistantWork.vue
+msgid "Thinking about the next step"
+msgstr "Pienso el siguiente paso"

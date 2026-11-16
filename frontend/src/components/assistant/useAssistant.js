@@ -34,6 +34,15 @@ import {
 } from '@/utils/listCache'
 import { canvas, onCanvasEvent, takePendingCanvas } from './assistantCanvas'
 import { answeredLocally, cardKey } from './decisionCardState'
+import {
+  _resetActivity,
+  loadActivity,
+  onActivity,
+  onUsage,
+  resetActivity,
+  restoreActivity,
+  snapshotActivity,
+} from './assistantActivity'
 
 export { ASSISTANT_API }
 // A turn that stays silent this long gets an honest line and a history check.
@@ -135,6 +144,7 @@ export function retireConversation() {
     busy: retired.busy,
     clients: [],
     mids: [],
+    work: snapshotActivity(),
   }
   for (const m of assistant.messages) {
     if (m.role === 'user' && m.id && !retired.clients.has(m.id)) {
@@ -156,6 +166,7 @@ export function retireConversation() {
   clearTimeout(silence)
   // what the old turn wrote to the Lienzo stays there, not under a new answer
   canvas.pending = []
+  resetActivity()
   Object.assign(assistant, {
     messages: [],
     cards: {},
@@ -181,6 +192,7 @@ export function restoreConversation(before) {
     thinking: before.thinking,
     progress: before.progress,
   })
+  restoreActivity(before.work)
   armWatchdog()
 }
 
@@ -251,6 +263,8 @@ export async function loadHistory() {
     )
     assistant.messages = [...known, ...unsent]
     assistant.loaded = true
+    // the latest turns' steps: a running turn's line and the answers' «Trabajó …»
+    loadActivity(() => asked === generation)
   } catch (error) {
     assistant.error = errorText(error)
   }
@@ -566,6 +580,18 @@ export function onCanvasWritten(payload) {
   ]
 }
 
+/** A step of a turn (doco_assistant_activity): the thinking line's detail. */
+export function onActivityEvent(payload) {
+  if (!ours(payload) || retired.clients.has(payload.client_id)) return
+  onActivity(payload)
+}
+
+/** A turn's receipt (doco_assistant_usage): its model calls and tokens. */
+export function onUsageEvent(payload) {
+  if (!ours(payload) || retired.clients.has(payload.client_id)) return
+  onUsage(payload)
+}
+
 export function onTyping(payload) {
   if (!ours(payload) || retired.busy) return
   assistant.thinking = true
@@ -592,6 +618,8 @@ export function bindSocket(socket) {
   socket.on('doco_assistant_typing', onTyping)
   socket.on('doco_assistant_reset', onReset)
   socket.on('doco_assistant_canvas', onCanvasWritten)
+  socket.on('doco_assistant_activity', onActivityEvent)
+  socket.on('doco_assistant_usage', onUsageEvent)
   window.addEventListener('socket:reconnected', onReconnected)
 }
 
@@ -650,6 +678,7 @@ export function _resetAssistant() {
     loaded: false,
   })
   _resetAssistantDoor()
+  _resetActivity()
   prefetched = null
   dropCachedList(HISTORY_CACHE)
   retired.clients.clear()

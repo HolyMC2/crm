@@ -132,6 +132,12 @@
         </button>
       </div>
       <div v-else class="space-y-2" data-role="bot">
+        <!-- how the turn was worked, once, over its first answer -->
+        <AssistantWork
+          v-if="workOf(message)"
+          :turn-id="message.turnId"
+          :usage="message.usage"
+        />
         <AssistantProse
           v-if="prose(message)"
           :text="prose(message)"
@@ -212,19 +218,11 @@
         </div>
       </div>
     </template>
-    <p
+    <AssistantWork
       v-if="assistant.thinking"
-      role="status"
-      class="flex items-center gap-2 text-sm text-ink-gray-6"
-      data-testid="assistant-thinking"
-    >
-      <span
-        class="text-[var(--brand)] motion-safe:animate-pulse"
-        aria-hidden="true"
-        >✦</span
-      >
-      {{ assistant.progress ? stripEmoji(assistant.progress) : __('Looking…') }}
-    </p>
+      live
+      :progress="stripEmoji(assistant.progress)"
+    />
     <p v-if="assistant.error" role="alert" class="text-sm text-ink-red-7">
       {{ assistant.error }}
     </p>
@@ -251,6 +249,8 @@ import {
 import ActionCard from './ActionCard.vue'
 import AssistantCanvasFile from './AssistantCanvasFile.vue'
 import AssistantProse from './AssistantProse.vue'
+import AssistantWork from './AssistantWork.vue'
+import { stepsOf, work } from './assistantActivity'
 import { chartOf } from './assistantChart'
 import {
   canvas,
@@ -367,6 +367,22 @@ function view(message) {
   }
   views.set(message, out)
   return out
+}
+
+// «Trabajó 9 s en 4 pasos» heads a turn's first answer once that turn has
+// ended (its steps) or has a receipt (an answer read back from history).
+const firstOfTurn = computed(() => {
+  const out = new Map()
+  for (const m of shown.value)
+    if (m.role === 'bot' && m.turnId && !out.has(m.turnId)) out.set(m.turnId, m)
+  return out
+})
+function workOf(message) {
+  const id = message.turnId
+  if (!id || firstOfTurn.value.get(id) !== message) return false
+  if (message.usage || work.usage[id]) return true
+  const turn = work.turns[id]
+  return Boolean(turn && stepsOf(turn).ended)
 }
 
 // A list's bar shows once, under the newest message about that list.
