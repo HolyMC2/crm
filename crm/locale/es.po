@@ -46828,8 +46828,8 @@ msgstr "Llegó {0}"
 
 #: frontend/src/components/captura/CameraSheet.vue
 msgctxt "Fotos"
-msgid "Saved: {0}"
-msgstr "Guardada: {0}"
+msgid "Taken: {0}"
+msgstr "Tomada: {0}"
 
 #: frontend/src/components/captura/CameraSheet.vue
 msgctxt "Fotos"

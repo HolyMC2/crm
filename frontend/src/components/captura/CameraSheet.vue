@@ -166,7 +166,7 @@
             class="size-12 flex-none rounded-5 border border-white/40 object-cover"
           />
           <span class="min-w-0 flex-1 truncate text-sm text-white/90">{{
-            __('Saved: {0}', [lastShot.title], 'Fotos')
+            __('Taken: {0}', [lastShot.title], 'Fotos')
           }}</span>
           <button
             v-if="!runRetakingNow"
