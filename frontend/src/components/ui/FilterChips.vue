@@ -1,4 +1,4 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (b818ee2ed986). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (78e759f7d2ee). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <template>
   <!-- One horizontal row of filter chips (Shell SPEC §2.2.4, M3 filter chip).
        On a touch screen it scrolls sideways with a fade at the end; with a
@@ -183,7 +183,7 @@ import { t } from './host'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { Button } from 'frappe-ui'
 import BottomSheet from './BottomSheet.vue'
-import { allFirst, chipClass as panelChip } from './chipClass'
+import { chipClass as panelChip } from './chipClass'
 
 const props = defineProps({
   /** The chosen value; an array with `multiple`. '' means «all». */
@@ -207,6 +207,11 @@ const emit = defineEmits([
   'clear-filters',
   'apply-filters',
 ])
+// «Todas» ('') leads: the way back from any view is never past the edge.
+const allFirst = (list, all = '') => {
+  const at = list.findIndex((o) => o.value === all)
+  return at > 0 ? [list[at], ...list.slice(0, at), ...list.slice(at + 1)] : list
+}
 const sheet = ref(false)
 const row = ref(null)
 const fade = ref(false)
@@ -219,7 +224,7 @@ function chipClass(on) {
       : 'border-outline-gray-2 text-ink-gray-8',
   ]
 }
-// '' is «all»: it leads the row, and is never a chip to remove
+// '' is «all»: it leads the row (allFirst), and is never a chip to remove
 const ordered = computed(() => allFirst(props.chips))
 const onChips = computed(() =>
   props.chips.filter((chip) => chip.value !== '' && isOn(chip.value)),

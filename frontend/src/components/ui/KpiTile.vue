@@ -1,4 +1,4 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (b818ee2ed986). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (78e759f7d2ee). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <template>
   <!-- One KPI tile (Shell SPEC §2.2, MOBILE_REFERENCES pattern 7): a
        sentence-case label over a large value that wraps instead of clipping.

@@ -1,4 +1,4 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (b818ee2ed986). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (78e759f7d2ee). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <!-- Height + fade for content that opens in place (search panels, filter
      rows): the rows below slide instead of jumping. Respects reduced motion. -->
 <template>

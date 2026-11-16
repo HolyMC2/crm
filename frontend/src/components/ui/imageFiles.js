@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/ui@0.1.0 (b818ee2ed986). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory.
+// Vendored from muelle/workspace/packages/ui@0.1.0 (78e759f7d2ee). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory.
 // A picture on the worker's device, before it travels: read it upright, fit it
 // to what a screen shows, and write it back as a file. A 6 MB phone photo goes
 // up as a few hundred KB, so a shelf of products gets its pictures over a

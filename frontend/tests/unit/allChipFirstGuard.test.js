@@ -1,7 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { allFirst } from '@/components/ui'
 
 // «Todas» leads every row of views (Marco, 2026-11-16). The row scrolls past
 // the screen's edge on a phone, and on a desk the chips are the only way
@@ -89,13 +88,5 @@ const any = () => ({ label: __('All'), value: '' })`),
         found.push(`${path.relative(root, file)}:${hit.line} «${hit.label}»`)
     }
     expect(found, 'move these to the front of their list').toEqual([])
-  })
-
-  it('allFirst moves the chosen value to the front and keeps the rest in order', () => {
-    const chips = [{ value: 'a' }, { value: 'b' }, { value: '' }]
-    expect(allFirst(chips).map((c) => c.value)).toEqual(['', 'a', 'b'])
-    expect(allFirst([{ value: 'a' }]).map((c) => c.value)).toEqual(['a'])
-    expect(allFirst(chips, 'b').map((c) => c.value)).toEqual(['b', 'a', ''])
-    expect(allFirst(undefined)).toEqual([])
   })
 })

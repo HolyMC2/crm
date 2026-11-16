@@ -1,4 +1,4 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (b818ee2ed986). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (78e759f7d2ee). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <template>
   <!-- A status in es-MX words (utils/display statusLabel), coloured only when
        the worker must act. Put it on a row only when it changes what the

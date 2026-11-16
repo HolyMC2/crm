@@ -1,4 +1,4 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (b818ee2ed986). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (78e759f7d2ee). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <!-- One labelled row of toggle chips for a search panel: 44 px pills that
      wrap, never scroll sideways. `multiple` toggles values in an array;
      otherwise one value is picked (tapping it again picks `clearValue`).
@@ -45,7 +45,7 @@
 <script setup>
 import { t } from './host'
 import { computed, ref } from 'vue'
-import { allFirst, chipClass, dotBinding } from './chipClass'
+import { chipClass, dotBinding } from './chipClass'
 
 const props = defineProps({
   label: { type: String, default: '' },
@@ -61,6 +61,11 @@ const props = defineProps({
 })
 const model = defineModel({ type: [Array, String, Number, null] })
 
+// «Todas» ('') leads: the way back from any view is never past the edge.
+const allFirst = (list, all = '') => {
+  const at = list.findIndex((o) => o.value === all)
+  return at > 0 ? [list[at], ...list.slice(0, at), ...list.slice(at + 1)] : list
+}
 const expanded = ref(false)
 const ordered = computed(() => allFirst(props.options, props.clearValue))
 const shown = computed(() => {
