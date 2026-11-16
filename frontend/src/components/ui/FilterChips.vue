@@ -1,9 +1,13 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (c0d7e059548a). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (b818ee2ed986). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <template>
-  <!-- One horizontal row of filter chips (Shell SPEC §2.2.4, M3 filter chip),
-       never wrapping: it scrolls sideways with a fade at the end. Filters
-       that do not fit as chips go in the «Filtros» sheet (the #filters slot),
-       whose chip shows how many are on. -->
+  <!-- One horizontal row of filter chips (Shell SPEC §2.2.4, M3 filter chip).
+       On a touch screen it scrolls sideways with a fade at the end; with a
+       mouse, which cannot swipe, it wraps so every chip stays in reach (on a
+       desk the chips are the only way between views once a record fills the
+       pane beside the list). The «all» chip ('') always leads, right after
+       «Filtros»: it is the way back from any view, never the one past the
+       edge. Filters that do not fit as chips go in the «Filtros» sheet (the
+       #filters slot), whose chip shows how many are on. -->
   <!-- In a search panel (`inline`): the chips wrap and the «Filtros» content
        sits in place under them, no sheet. -->
   <div v-if="inline" class="space-y-3" data-ui-filter-chips>
@@ -13,7 +17,7 @@
       </p>
       <div class="flex flex-wrap gap-1.5">
         <button
-          v-for="chip in chips"
+          v-for="chip in ordered"
           :key="chip.value"
           type="button"
           :class="panelChip(isOn(chip.value))"
@@ -87,7 +91,7 @@
       ref="row"
       role="group"
       :aria-label="label || t('Filters')"
-      class="flex flex-nowrap items-center gap-2 overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      class="ui-chips-row flex items-center gap-2 overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       :class="fade ? 'ui-chips-fade' : ''"
       @scroll.passive="updateFade"
     >
@@ -119,7 +123,7 @@
         </span>
       </button>
       <button
-        v-for="chip in chips"
+        v-for="chip in ordered"
         :key="chip.value"
         type="button"
         class="flex min-h-11 flex-none items-center"
@@ -179,7 +183,7 @@ import { t } from './host'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { Button } from 'frappe-ui'
 import BottomSheet from './BottomSheet.vue'
-import { chipClass as panelChip } from './chipClass'
+import { allFirst, chipClass as panelChip } from './chipClass'
 
 const props = defineProps({
   /** The chosen value; an array with `multiple`. '' means «all». */
@@ -215,7 +219,8 @@ function chipClass(on) {
       : 'border-outline-gray-2 text-ink-gray-8',
   ]
 }
-// '' is «all»: the default view, never a chip to remove
+// '' is «all»: it leads the row, and is never a chip to remove
+const ordered = computed(() => allFirst(props.chips))
 const onChips = computed(() =>
   props.chips.filter((chip) => chip.value !== '' && isOn(chip.value)),
 )
@@ -286,5 +291,13 @@ watch(
 <style>
 .ui-chips-fade {
   mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
+}
+/* A mouse cannot swipe a row sideways: there it wraps (the 44 px tap boxes
+   already space the lines). */
+@media (hover: hover) and (pointer: fine) {
+  .ui-chips-row {
+    flex-wrap: wrap;
+    row-gap: 0;
+  }
 }
 </style>

@@ -139,12 +139,12 @@ export const cobranzaBoot = cobranzaBootCache.boot
 export const loadCobranzaBoot = cobranzaBootCache.load
 
 export const SEGMENTS = Object.freeze([
+  { value: 'todas', label: 'All', icon: 'list' },
   { value: 'vencidas', label: 'Overdue', icon: 'alert-circle' },
   { value: 'hoy', label: 'Due soon', icon: 'clock' },
   { value: 'promesas', label: 'Promises', icon: 'calendar' },
   // The customers the worker is the collector of (a ToDo on the Customer).
   { value: 'mios', label: 'My customers', icon: 'user' },
-  { value: 'todas', label: 'All', icon: 'list' },
   // The automatic reminders a person sends today (from their phone, or after a review).
   { value: 'recordar', label: "Today's reminders", icon: 'send' },
 ])

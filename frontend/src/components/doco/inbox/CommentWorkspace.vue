@@ -333,9 +333,9 @@ const sort = ref('relevant')
 const search = ref('')
 
 const sortOptions = [
+  { id: 'all', label: __('Todos') },
   { id: 'relevant', label: __('Relevantes') },
   { id: 'recent', label: __('Recientes') },
-  { id: 'all', label: __('Todos') },
 ]
 
 // post preview (FB/IG card) — server-cached 5 min

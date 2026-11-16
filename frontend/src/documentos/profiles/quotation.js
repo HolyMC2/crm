@@ -21,6 +21,7 @@ export const WORDS = {
 export default {
   fields: ['_items', 'quotation_to', 'party_name'],
   chips: [
+    { value: '', label: 'Todas', filters: null },
     {
       value: 'abiertas',
       label: 'Abiertas',
@@ -49,7 +50,6 @@ export default {
       label: 'Perdidas',
       filters: [['status', '=', 'Lost']],
     },
-    { value: '', label: 'Todas', filters: null },
   ],
   defaultChip: 'abiertas',
   filterFields: [

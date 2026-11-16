@@ -176,11 +176,11 @@ describe('documentos list state', () => {
     expect(filters).toContainEqual(['x', '=', 1])
     const counts = chipCountFilters(profile, { chip: 'vencidas', filters: {} })
     expect(Object.keys(counts)).toEqual([
+      'todos',
       'por-cobrar',
       'vencidas',
       'borradores',
       'pagadas',
-      'todos',
     ])
     expect(counts.todos).toEqual([['payment_type', '=', 'Receive']])
   })
@@ -371,11 +371,11 @@ describe('documentos profiles', () => {
   it('a movimiento chip filters by purpose and the header names the kind', () => {
     const chip = (v) => stockEntry.chips.find((c) => c.value === v)
     expect(stockEntry.chips.map((c) => c.label)).toEqual([
+      'Todas',
       'Borradores',
       'Entradas',
       'Salidas',
       'Traspasos',
-      'Todas',
     ])
     expect(chip('traspasos').filters[1][2]).toContain(
       'Material Transfer for Manufacture',
@@ -440,9 +440,9 @@ describe('documentos profiles', () => {
       }).title,
     ).toBe('Ajuste de inventario')
     expect(stockReconciliation.chips.map((c) => c.label)).toEqual([
+      'Todos',
       'Borradores',
       'Confirmados',
-      'Todos',
     ])
     expect(stockReconciliation.editFields).toEqual(['purpose', 'set_warehouse'])
     expect(
@@ -481,7 +481,11 @@ describe('documentos profiles', () => {
       expect(inv.slug).toBe(slug)
       expect(inv.base).toBe('/inventario')
       expect(inv.defaultChip).toBe('')
-      expect(inv.chips[0].value).toBe('borradores')
+      // «Todas» leads the row, and is the default view of both
+      expect(inv.chips.map((c) => c.value).slice(0, 2)).toEqual([
+        '',
+        'borradores',
+      ])
     }
     const floor = await loadProfile({ doctype: 'ToDo' })
     expect(floor.slug).toBeNull()

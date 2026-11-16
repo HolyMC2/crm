@@ -447,10 +447,10 @@ const TYPE_EMOJI = {
   Reseña: '⭐',
 }
 const FILTERS = [
+  { v: '', label: 'Todas' },
   { v: 'Nuevo', label: 'Nuevas' },
   { v: 'Atendido', label: 'Atendidas' },
   { v: 'Descartado', label: 'Descartadas' },
-  { v: '', label: 'Todas' },
 ]
 
 function typeLabel(t) {

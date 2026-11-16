@@ -30,6 +30,7 @@ export default {
     },
   },
   chips: [
+    { value: '', label: 'Todas', filters: null },
     {
       value: 'enviadas',
       label: 'Enviadas',
@@ -43,7 +44,6 @@ export default {
       label: 'Borradores',
       filters: [['docstatus', '=', 0]],
     },
-    { value: '', label: 'Todas', filters: null },
   ],
   defaultChip: 'enviadas',
   filterFields: [

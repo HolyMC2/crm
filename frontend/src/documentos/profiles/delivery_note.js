@@ -18,6 +18,7 @@ export const WORDS = {
 export default {
   fields: ['_items', 'customer', 'is_return'],
   chips: [
+    { value: '', label: 'Todas', filters: null },
     {
       value: 'por-facturar',
       label: 'Por facturar',
@@ -41,7 +42,6 @@ export default {
       label: 'Devoluciones',
       filters: [['is_return', '=', 1]],
     },
-    { value: '', label: 'Todas', filters: null },
   ],
   defaultChip: 'por-facturar',
   filterFields: [CLIENTE, VENDEDOR, fechas('posting_date')],

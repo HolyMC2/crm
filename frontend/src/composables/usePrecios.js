@@ -26,6 +26,7 @@ export const preciosApi = (method, args = {}) =>
   productosApi(`${API}.${method}`, args)
 
 export const VIEWS = Object.freeze([
+  { value: 'todos', label: 'Todos', hint: 'Todos los productos' },
   {
     value: 'costo',
     label: 'Costo cambió',
@@ -41,7 +42,6 @@ export const VIEWS = Object.freeze([
     label: 'Cambiaron',
     hint: 'Precios cambiados en los últimos 7 días',
   },
-  { value: 'todos', label: 'Todos', hint: 'Todos los productos' },
 ])
 export function viewLabel(value) {
   return VIEWS.find((view) => view.value === value)?.label || ''

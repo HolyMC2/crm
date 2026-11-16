@@ -26,6 +26,7 @@ export default {
     },
   ],
   chips: [
+    { value: '', label: 'Todas', filters: null },
     {
       value: 'vigentes',
       label: 'Vigentes',
@@ -49,7 +50,6 @@ export default {
       label: 'Vencidas',
       filters: [['status', '=', 'Expired']],
     },
-    { value: '', label: 'Todas', filters: null },
   ],
   defaultChip: 'vigentes',
   filterFields: [

@@ -32,6 +32,7 @@ export default {
     },
   },
   chips: [
+    { value: '', label: 'Todas', filters: null },
     {
       value: 'por-recibir',
       label: 'Por recibir',
@@ -65,7 +66,6 @@ export default {
       label: 'Borradores',
       filters: [['docstatus', '=', 0]],
     },
-    { value: '', label: 'Todas', filters: null },
   ],
   defaultChip: 'por-recibir',
   filterFields: [

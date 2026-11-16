@@ -20,6 +20,7 @@ export default {
   fields: ['material_request_type', 'set_warehouse', '_items'],
   panels: [CADENA_PANEL],
   chips: [
+    { value: '', label: 'Todas', filters: null },
     {
       value: 'pendientes',
       label: 'Por pedir',
@@ -43,7 +44,6 @@ export default {
       label: 'Recibidas',
       filters: [['status', '=', 'Received']],
     },
-    { value: '', label: 'Todas', filters: null },
   ],
   defaultChip: 'pendientes',
   filterFields: [

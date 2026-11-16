@@ -1,7 +1,8 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (c0d7e059548a). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (b818ee2ed986). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <!-- One labelled row of toggle chips for a search panel: 44 px pills that
      wrap, never scroll sideways. `multiple` toggles values in an array;
-     otherwise one value is picked (tapping it again picks `clearValue`). -->
+     otherwise one value is picked (tapping it again picks `clearValue`).
+     The option worth `clearValue` («Todos») leads, never behind «+N más». -->
 <template>
   <section :aria-label="label">
     <p v-if="label" class="mb-1.5 text-xs font-medium text-ink-gray-6">
@@ -44,7 +45,7 @@
 <script setup>
 import { t } from './host'
 import { computed, ref } from 'vue'
-import { chipClass, dotBinding } from './chipClass'
+import { allFirst, chipClass, dotBinding } from './chipClass'
 
 const props = defineProps({
   label: { type: String, default: '' },
@@ -61,10 +62,11 @@ const props = defineProps({
 const model = defineModel({ type: [Array, String, Number, null] })
 
 const expanded = ref(false)
+const ordered = computed(() => allFirst(props.options, props.clearValue))
 const shown = computed(() => {
-  if (expanded.value || props.options.length <= props.max) return props.options
-  const head = props.options.slice(0, props.max)
-  const picked = props.options.filter((o) => isOn(o.value) && !head.includes(o))
+  if (expanded.value || ordered.value.length <= props.max) return ordered.value
+  const head = ordered.value.slice(0, props.max)
+  const picked = ordered.value.filter((o) => isOn(o.value) && !head.includes(o))
   return [...head, ...picked]
 })
 const overflow = computed(() => props.options.length > props.max)

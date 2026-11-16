@@ -120,18 +120,18 @@ describe('rows: the customer, what they carry, when, the amount', () => {
 })
 
 describe('chips and «Filtros» per queue', () => {
-  it('Pedidos: Por entregar · Por facturar · Atrasados · Todos', async () => {
+  it('Pedidos: Todos · Por entregar · Por facturar · Atrasados', async () => {
     const profile = await loadProfile({
       doctype: 'Sales Order',
       entry: profileFor('Sales Order'),
     })
     expect(profile.chips.map((c) => c.label)).toEqual([
+      'Todos',
       'Por entregar',
       'Por facturar',
       'Atrasados',
       'Borradores',
       'Completados',
-      'Todos',
     ])
     expect(profile.defaultChip).toBe('por-entregar')
     const late = profile.chips.find((c) => c.value === 'atrasados').filters

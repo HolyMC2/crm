@@ -20,6 +20,7 @@ export default {
     },
   },
   chips: [
+    { value: '', label: 'Todas', filters: null },
     {
       value: 'por-facturar',
       label: 'Por facturar',
@@ -38,7 +39,6 @@ export default {
       label: 'Facturadas',
       filters: [['status', '=', 'Completed']],
     },
-    { value: '', label: 'Todas', filters: null },
   ],
   defaultChip: 'por-facturar',
   filterFields: [

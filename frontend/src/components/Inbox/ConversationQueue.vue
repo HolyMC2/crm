@@ -195,9 +195,9 @@ import { openInboxSettings } from './inboxSettings'
 const labelOnly = (item) => ['Webchat', 'API'].includes(item?.provider)
 
 const VIEWS = [
+  { id: 'all', label: 'Todas' },
   { id: 'mine', label: 'Mías' },
   { id: 'unassigned', label: 'Sin asignar' },
-  { id: 'all', label: 'Todas' },
   { id: 'snoozed', label: 'Pospuestas' },
   { id: 'account', label: 'Por cuenta' },
 ]

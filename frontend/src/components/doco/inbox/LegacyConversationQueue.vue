@@ -1752,13 +1752,13 @@ const inboxTabs = computed(() => [
 ])
 // Comentarios status sub-filter chips (review answered comments).
 const commentStatusChips = computed(() => [
+  { id: 'all', label: __('Todos'), count: commentCounts.data?.all },
   { id: 'New', label: __('Nuevos'), count: commentCounts.data?.new },
   {
     id: 'answered',
     label: __('Respondidos'),
     count: commentCounts.data?.answered,
   },
-  { id: 'all', label: __('Todos'), count: commentCounts.data?.all },
 ])
 
 function chColor(key) {

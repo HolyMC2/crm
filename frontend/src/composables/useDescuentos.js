@@ -22,6 +22,7 @@ export function descuentosApi(method, args = {}) {
 // `label` names the scope (es «Activos», context Descuentos), `chip` one rule
 // (es «Activo», context Descuento), `title` the list in that scope.
 export const STATES = Object.freeze([
+  { value: '', label: 'All', chip: '', title: 'All discounts' },
   {
     value: 'activo',
     label: 'Active',
@@ -46,7 +47,6 @@ export const STATES = Object.freeze([
     chip: 'Turned off',
     title: 'Turned-off discounts',
   },
-  { value: '', label: 'All', chip: '', title: 'All discounts' },
 ])
 const STATE_TONES = {
   activo: 'success',

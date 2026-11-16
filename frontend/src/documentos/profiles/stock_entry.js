@@ -102,6 +102,7 @@ export default {
     '_items',
   ],
   chips: [
+    { value: '', label: 'Todas', filters: null },
     {
       value: 'borradores',
       label: 'Borradores',
@@ -131,7 +132,6 @@ export default {
         ['purpose', 'in', TRANSFERS],
       ],
     },
-    { value: '', label: 'Todas', filters: null },
   ],
   defaultChip: '',
   sorts: [

@@ -120,11 +120,11 @@ import { isMobile } from '@/composables/breakpoint'
 import LucideArrowLeft from '~icons/lucide/arrow-left'
 
 const filters = [
+  { label: 'Todos', value: 'Todos' },
   { label: 'Pendiente', value: 'Pendiente' },
   { label: 'Fallido', value: 'Fallido' },
   { label: 'Enviado', value: 'Enviado' },
   { label: 'Cancelado', value: 'Cancelado' },
-  { label: 'Todos', value: 'Todos' },
 ]
 const route = useRoute()
 const router = useRouter()

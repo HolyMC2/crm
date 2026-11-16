@@ -46,6 +46,7 @@ const OWED = [
 export default {
   fields: ['_items', 'is_return', 'customer', 'pos_profile'],
   chips: [
+    { value: '', label: 'Todas', filters: null },
     {
       value: 'por-cobrar',
       label: 'Por cobrar',
@@ -68,7 +69,6 @@ export default {
       filters: [['docstatus', '=', 0]],
     },
     { value: 'pagadas', label: 'Pagadas', filters: [['status', '=', 'Paid']] },
-    { value: '', label: 'Todas', filters: null },
   ],
   defaultChip: 'por-cobrar',
   owedLabel: 'Por cobrar',

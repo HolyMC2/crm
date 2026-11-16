@@ -61,6 +61,7 @@ export default {
   fields: ['_items', 'customer', 'per_delivered', 'per_billed'],
   get chips() {
     return [
+      { value: '', label: 'Todos', filters: null },
       {
         value: 'por-entregar',
         label: 'Por entregar',
@@ -96,7 +97,6 @@ export default {
         label: 'Completados',
         filters: [['status', '=', 'Completed']],
       },
-      { value: '', label: 'Todos', filters: null },
     ]
   },
   defaultChip: 'por-entregar',

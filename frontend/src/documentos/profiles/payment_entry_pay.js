@@ -21,6 +21,7 @@ export default {
     labels: { 'Bank and Cash Payment Voucher': 'Comprobante de pago' },
   },
   chips: [
+    { value: '', label: 'Todos', filters: null },
     {
       value: 'hechos',
       label: 'Hechos',
@@ -31,7 +32,6 @@ export default {
       label: 'Por confirmar',
       filters: [['docstatus', '=', 0]],
     },
-    { value: '', label: 'Todos', filters: null },
   ],
   defaultChip: '',
   filterFields: [

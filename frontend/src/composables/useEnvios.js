@@ -21,6 +21,7 @@ export function enviosApi(method, args = {}) {
 // `label` names the scope (es «Activas», context Envios), `chip` one rule
 // (es «Activa», context Envio), `title` the list in that scope.
 export const STATES = Object.freeze([
+  { value: '', label: 'All', chip: '', title: 'All shipping rules' },
   {
     value: 'activo',
     label: 'Active',
@@ -33,7 +34,6 @@ export const STATES = Object.freeze([
     chip: 'Turned off',
     title: 'Turned-off shipping rules',
   },
-  { value: '', label: 'All', chip: '', title: 'All shipping rules' },
 ])
 export function stateChip(state) {
   const found = STATES.find((s) => s.value === state && s.chip)

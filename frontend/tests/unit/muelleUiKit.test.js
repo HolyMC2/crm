@@ -27,6 +27,7 @@ import { statusLabel, statusTone } from '@/utils/display'
 import {
   AppBar,
   BottomSheet,
+  ChipGroup,
   EmptyState,
   Fab,
   FilterChips,
@@ -824,6 +825,41 @@ describe('FilterChips', () => {
   it('no «Filtros» chip without a filters slot', async () => {
     await mount(FilterChips, { modelValue: '', chips })
     expect(root.querySelector('[data-ui-filters-chip]')).toBeNull()
+  }) // The way back to everything is never the chip past the edge of the row.
+  for (const inline of [false, true])
+    it(`«Todas» ('') leads, wherever the list put it${inline ? ' (search panel)' : ''}`, async () => {
+      await mount(FilterChips, {
+        modelValue: 'por-pagar',
+        inline,
+        chips: [
+          { value: 'por-pagar', label: 'Por pagar' },
+          { value: 'pagadas', label: 'Pagadas' },
+          { value: '', label: 'Todas' },
+        ],
+      })
+      const order = [...root.querySelectorAll('[data-chip]')].map(
+        (chip) => chip.dataset.chip,
+      )
+      expect(order).toEqual(['', 'por-pagar', 'pagadas'])
+    })
+})
+
+describe('ChipGroup', () => {
+  it('«Todos» leads and is never folded behind «+N más»', async () => {
+    const options = [
+      ...Array.from({ length: 9 }, (_, n) => ({
+        value: `t${n}`,
+        label: `Tienda ${n}`,
+      })),
+      { value: '', label: 'Todos' },
+    ]
+    await mount(ChipGroup, { modelValue: 't1', options, max: 8 })
+    const labels = [...root.querySelectorAll('button')].map((b) =>
+      b.textContent.trim(),
+    )
+    expect(labels[0]).toBe('Todos')
+    expect(labels).toHaveLength(9)
+    expect(labels.at(-1)).toMatch(/2/)
   })
 })
 

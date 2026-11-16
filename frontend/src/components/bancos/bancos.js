@@ -111,10 +111,10 @@ export function balanceWhen(value) {
 }
 
 export const PERIODOS = [
+  { value: 'todo', label: 'Todo' },
   { value: 'mes', label: 'Este mes' },
   { value: 'mes-pasado', label: 'Mes pasado' },
   { value: 'anio', label: 'Este año' },
-  { value: 'todo', label: 'Todo' },
 ]
 
 /** Where a voucher opens in the shell (documentos engine), or null. */

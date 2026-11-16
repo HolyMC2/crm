@@ -63,6 +63,7 @@ const origen = () =>
 export default {
   fields: ['purpose', 'set_warehouse', '_items'],
   chips: [
+    { value: '', label: 'Todos', filters: null },
     {
       value: 'borradores',
       label: 'Borradores',
@@ -73,7 +74,6 @@ export default {
       label: 'Confirmados',
       filters: [['docstatus', '=', 1]],
     },
-    { value: '', label: 'Todos', filters: null },
   ],
   defaultChip: '',
   sections: ['items', 'datos', 'conexiones', 'actividad', 'archivos'],

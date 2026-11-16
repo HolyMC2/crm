@@ -35,6 +35,7 @@ export default {
     },
   },
   chips: [
+    { value: '', label: 'Todas', filters: null },
     {
       value: 'por-pagar',
       label: 'Por pagar',
@@ -57,7 +58,6 @@ export default {
       filters: [['docstatus', '=', 0]],
     },
     { value: 'pagadas', label: 'Pagadas', filters: [['status', '=', 'Paid']] },
-    { value: '', label: 'Todas', filters: null },
   ],
   defaultChip: 'por-pagar',
   filterFields: [
