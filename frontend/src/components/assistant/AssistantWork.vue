@@ -3,6 +3,7 @@
        and the time so far; over an answer: «Trabajó 9 s en 4 pasos». A tap
        unfolds the real steps: what each did, the tool it ran, how long. -->
   <div
+    ref="root"
     class="text-sm"
     :data-testid="live ? 'assistant-thinking' : 'assistant-work'"
   >
@@ -110,8 +111,9 @@
   </div>
 </template>
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, useId } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue'
 import ExpandTransition from '@/components/ui/ExpandTransition.vue'
+import { scrollParent, scrollWithin } from '@/utils/scrollWithin'
 import {
   durationText,
   liveTurn,
@@ -158,7 +160,32 @@ const open = computed(() =>
 function toggle() {
   if (props.live) watching.value = !watching.value
   else work.open = { ...work.open, [props.turnId]: !open.value }
+  if (open.value) reveal()
 }
+
+// The steps unfold downward, under the composer on a phone: once the panel
+// has grown (ExpandTransition's 220 ms), the log scrolls just enough to show
+// it, and keeps the newest live step in view while it stays open.
+const REVEAL_MS = 240
+const root = ref(null)
+let revealing = null
+function reveal() {
+  clearTimeout(revealing)
+  revealing = setTimeout(() => {
+    const el = root.value
+    const box = el && scrollParent(el)
+    if (!box) return
+    const bottom = el.getBoundingClientRect().bottom
+    if (bottom <= box.getBoundingClientRect().bottom) return
+    scrollWithin(el, {
+      block: el.offsetHeight > box.clientHeight ? 'start' : 'end',
+    })
+  }, REVEAL_MS)
+}
+watch(
+  () => model.value.steps.length,
+  () => props.live && open.value && reveal(),
+)
 
 // --- the live line's clock, star and words ----------------------------------
 const now = ref(Date.now())
@@ -176,7 +203,10 @@ onMounted(() => {
   timers.push(setInterval(() => (phraseAt.value += 1), PHRASE_MS))
   if (!still) timers.push(setInterval(() => (frame.value += 1), FRAME_MS))
 })
-onBeforeUnmount(() => timers.forEach(clearInterval))
+onBeforeUnmount(() => {
+  timers.forEach(clearInterval)
+  clearTimeout(revealing)
+})
 
 const glyph = computed(() =>
   still ? '✦' : FRAMES[frame.value % FRAMES.length],
