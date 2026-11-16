@@ -217,6 +217,7 @@ export function buildPayload(form, status) {
     cta_type: form.cta_type,
     cta_link: form.cta_type === 'None' ? '' : form.cta_link,
     first_comment: form.first_comment || '',
+    manual_publish: form.manual_publish ? 1 : 0,
     channels: form.channels.map((c) => ({
       channel: c,
       caption: form.captions[c] || '',

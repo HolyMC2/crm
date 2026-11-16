@@ -29,7 +29,14 @@
         @dragleave="mediaOver = mediaOver === i ? -1 : mediaOver"
         @drop.prevent="onMediaDrop(i)"
       >
-        <img :src="m.media_file" class="size-full object-cover" alt="" />
+        <video
+          v-if="m.media_type === 'Video'"
+          :src="m.media_file"
+          class="size-full object-cover"
+          muted
+          preload="metadata"
+        />
+        <img v-else :src="m.media_file" class="size-full object-cover" alt="" />
         <span
           v-if="media.length > 1"
           class="absolute bottom-0 left-0 rounded-tr-4 bg-black/50 px-1 text-[9px] font-bold text-white"
@@ -91,7 +98,15 @@
         :key="'alt-' + m.media_file + ':' + i"
         class="mb-1.5 flex items-center gap-2"
       >
+        <video
+          v-if="m.media_type === 'Video'"
+          :src="m.media_file"
+          class="size-8 flex-none rounded-4 object-cover"
+          muted
+          preload="metadata"
+        />
         <img
+          v-else
           :src="m.media_file"
           class="size-8 flex-none rounded-4 object-cover"
           alt=""

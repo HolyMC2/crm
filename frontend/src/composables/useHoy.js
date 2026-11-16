@@ -315,7 +315,15 @@ export function agendaPlan(events = [], now = Date.now()) {
 }
 
 /** Opens the event in Agenda's day view, with the calendars Hoy read. */
+// A calendar whose events are another module's records opens that record instead of
+// the Agenda: a post goes to Redes (its composer, with the way back to Hoy).
+const EVENT_RECORDS = Object.freeze({
+  Redes: (event) => `/social?post=${encodeURIComponent(String(event.id))}`,
+})
+
 export function eventLink(event, today, sources = []) {
+  if (event && EVENT_RECORDS[event.source])
+    return withReturn(EVENT_RECORDS[event.source](event))
   const query = new URLSearchParams({ view: 'day' })
   if (DAY.test(today || '')) query.set('date', today)
   if (event) query.set('event', `${event.source}:${event.id}`)

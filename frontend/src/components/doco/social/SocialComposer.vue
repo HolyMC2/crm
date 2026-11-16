@@ -89,18 +89,39 @@
         class="overflow-y-auto p-4"
         :class="isMobile ? 'min-h-0 flex-1' : 'max-h-[68vh]'"
       >
-        <!-- approval hint: an AI/pending draft only publishes once approved; unapproved → auto-cancel at slot -->
-        <div
-          v-if="isPending"
-          class="mb-3 flex items-start gap-2 rounded-5 bg-surface-amber-1 px-2.5 py-2 text-[11.5px] text-ink-amber-9 dark:bg-amber-300/10 dark:text-amber-200"
+        <!-- the one next step of a saved post (post diario: fotos → texto → aprobar / a mano) -->
+        <p
+          v-if="step && step.key !== 'hecho'"
+          class="mb-3 flex items-start gap-2 rounded-6 px-3 py-2 text-[12.5px]"
+          :class="
+            step.key === 'texto'
+              ? 'bg-surface-red-1 text-ink-red-7'
+              : 'bg-surface-amber-1 text-ink-amber-9 dark:bg-amber-300/10 dark:text-amber-200'
+          "
+          role="status"
+          data-testid="next-step"
         >
-          <span class="flex-none">⏳</span>
-          <span>{{
+          <span class="font-semibold">{{ __('Siguiente:') }}</span>
+          <span>{{ step.text }}</span>
+        </p>
+        <p
+          v-if="isPending && !form.manual_publish"
+          class="-mt-2 mb-3 text-[11px] text-ink-gray-5"
+        >
+          {{
             __(
-              'Requiere aprobación. Pulsa «Aprobar» para publicarla. Si nadie la aprueba antes de la hora programada, se cancela automáticamente.',
+              'Si nadie la aprueba antes de la hora programada, se cancela sola.',
             )
-          }}</span>
-        </div>
+          }}
+        </p>
+        <ReviewPanel
+          v-if="form.name"
+          :post-name="form.name"
+          :shop="form.shop"
+          :review="form.review"
+          :editable="canCancel"
+          @changed="refreshPost"
+        />
 
         <label class="mb-1 block text-[11px] font-semibold text-ink-gray-6">{{
           __('Título')
@@ -166,6 +187,13 @@
           }}</span>
         </p>
 
+        <TallerPhotosPanel
+          v-if="showTallerPhotos"
+          :post-name="form.name"
+          :has-photos="Boolean(form.taller_photos)"
+          @changed="refreshPost"
+        />
+
         <label class="mb-1 block text-[11px] font-semibold text-ink-gray-6">{{
           __('Texto por canal')
         }}</label>
@@ -219,6 +247,24 @@
 
         <!-- S8 media — photo tiles (add/remove/reorder) + per-photo alt text -->
         <MediaEditor v-model:media="form.media" :can-cancel="canCancel" />
+        <MusicPanel
+          v-if="form.name && canCancel && hasPicture"
+          :post-name="form.name"
+          :shop="form.shop"
+          :track-name="form.music_track_name || ''"
+          :reel="hasReel(form.media)"
+          :manual="Boolean(form.manual_publish)"
+          @changed="refreshPost"
+          @manual="setManual"
+        />
+        <ManualPublishPanel
+          v-if="form.name && form.manual_publish && canCancel"
+          :post-name="form.name"
+          :media="form.media"
+          :caption="mainCaption"
+          @changed="refreshPost"
+          @manual="setManual"
+        />
         <p
           v-if="form.source === 'AI Auto' && !form.media.length"
           class="mb-3 rounded-5 bg-surface-amber-1 px-2 py-1.5 text-[11px] text-ink-amber-9"
@@ -418,17 +464,16 @@
           {{ __('Cancelar publicación') }}
         </button>
         <button
-          v-if="isPending"
-          class="rounded-6 px-3 py-1.5 text-[12px] font-semibold text-white"
-          style="background: #2563eb"
+          v-if="isPending && canApprove && !form.manual_publish"
+          class="press min-h-10 rounded-6 bg-surface-gray-10 px-3 text-[12.5px] font-semibold text-ink-base"
           :disabled="busy"
           @click="approvePost"
         >
           {{ __('Aprobar') }}
         </button>
         <button
-          v-if="isPending"
-          class="rounded-6 border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-red-7"
+          v-if="isPending && canApprove"
+          class="press min-h-10 rounded-6 border border-outline-gray-2 px-3 text-[12.5px] font-semibold text-ink-red-7"
           :disabled="busy"
           @click="rejectPost"
         >
@@ -442,15 +487,39 @@
         >
           {{ __('Cerrar') }}
         </button>
+        <template v-else-if="reviewerOnly">
+          <!-- a reviewer of a post that needs a manager: save and leave it for approval -->
+          <button
+            class="press min-h-10 rounded-6 border border-outline-gray-2 px-3 text-[12.5px] font-semibold text-ink-gray-7 disabled:opacity-50"
+            :disabled="busy"
+            @click="save(keepStatus)"
+          >
+            {{ __('Guardar') }}
+          </button>
+          <button
+            v-if="!form.manual_publish"
+            class="press min-h-10 rounded-6 bg-surface-gray-10 px-3 text-[12.5px] font-semibold text-ink-base disabled:opacity-50"
+            :disabled="busy || !hasPicture"
+            data-testid="send-for-approval"
+            @click="save('Pending Approval')"
+          >
+            {{ __('Guardar y enviar a aprobar') }}
+          </button>
+        </template>
         <template v-else>
           <button
             class="rounded-6 border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 disabled:opacity-50"
             :disabled="busy"
-            @click="save('Draft')"
+            @click="save(keepStatus)"
           >
-            {{ __('Guardar borrador') }}
+            {{
+              keepStatus === 'Pending Approval'
+                ? __('Guardar')
+                : __('Guardar borrador')
+            }}
           </button>
           <button
+            v-if="!form.manual_publish"
             class="rounded-6 border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 disabled:opacity-50"
             :disabled="busy"
             @click="save('Scheduled')"
@@ -458,6 +527,7 @@
             {{ __('Programar') }}
           </button>
           <button
+            v-if="!form.manual_publish && canApprove"
             class="rounded-6 px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-50"
             style="background: var(--brand)"
             :disabled="busy"
@@ -480,6 +550,11 @@ import FbPostCard from '@/components/doco/social/FbPostCard.vue'
 import VariantsPanel from '@/components/doco/social/composer/VariantsPanel.vue'
 import SuggestTimeButton from '@/components/doco/social/composer/SuggestTimeButton.vue'
 import MediaEditor from '@/components/doco/social/composer/MediaEditor.vue'
+import ReviewPanel from '@/components/doco/social/composer/ReviewPanel.vue'
+import TallerPhotosPanel from '@/components/doco/social/composer/TallerPhotosPanel.vue'
+import MusicPanel from '@/components/doco/social/composer/MusicPanel.vue'
+import ManualPublishPanel from '@/components/doco/social/composer/ManualPublishPanel.vue'
+import { hasReel, nextStep } from '@/composables/socialDaily'
 import {
   chip,
   chLabel,
@@ -569,6 +644,77 @@ const isPending = computed(
 const isLive = computed(() =>
   ['Published', 'Partially Published'].includes(form.value.status),
 )
+// Post diario: who may approve (the server's answer), the post's next step, its picture.
+const canApprove = computed(() =>
+  form.value.name ? Boolean(form.value.can_approve) : props.isManager,
+)
+const hasPicture = computed(() =>
+  (form.value.media || []).some((m) => (m.media_type || 'Image') === 'Image'),
+)
+const step = computed(() =>
+  nextStep(form.value, {
+    canApprove: canApprove.value,
+    issues: form.value.caption_issues || [],
+  }),
+)
+// «Guardar» keeps a post that waits for approval waiting; anything else stays a draft.
+const keepStatus = computed(() =>
+  form.value.status === 'Pending Approval' ? 'Pending Approval' : 'Draft',
+)
+// A post the system or the assistant drafted needs a manager's «Aprobar»: someone who
+// cannot approve saves it and sends it for approval instead of scheduling it.
+const reviewerOnly = computed(
+  () =>
+    Boolean(form.value.name) &&
+    !canApprove.value &&
+    (form.value.source === 'AI Auto' || Boolean(form.value.daily_key)),
+)
+const showTallerPhotos = computed(
+  () =>
+    Boolean(form.value.name) &&
+    canCancel.value &&
+    (Boolean(form.value.daily_key) ||
+      Boolean(form.value.taller_photos) ||
+      !hasPicture.value),
+)
+const mainCaption = computed(() => {
+  const caps = form.value.captions || {}
+  return (
+    caps['FB Feed'] ||
+    caps['IG Feed'] ||
+    Object.values(caps).find(Boolean) ||
+    ''
+  )
+})
+async function refreshPost() {
+  if (!form.value.name) return
+  await openEdit({ name: form.value.name })
+  emit('reload')
+}
+async function setManual(on) {
+  if (!form.value.name) return
+  busy.value = true
+  try {
+    await frappeCall('doco_marketing.api.social.save_post', {
+      payload: JSON.stringify(
+        buildPayload(
+          { ...form.value, manual_publish: on ? 1 : 0 },
+          keepStatus.value,
+        ),
+      ),
+    })
+    toast.success(
+      on
+        ? __('Se publicará a mano en la app')
+        : __('Saldrá sola a su hora al aprobarla'),
+    )
+    await refreshPost()
+  } catch (e) {
+    toast.error(e?.messages?.[0] || __('No se pudo cambiar'))
+  } finally {
+    busy.value = false
+  }
+}
 // Cancelado excluded to mirror set_evergreen's own refusal, not just to hide a dead button
 const showEvergreen = computed(
   () =>
@@ -702,6 +848,13 @@ async function openEdit(p) {
     source: doc.source,
     selected_products: doc.selected_products || [],
     evergreen: !!doc.evergreen,
+    manual_publish: doc.manual_publish ? 1 : 0,
+    daily_key: doc.daily_key || '',
+    taller_photos: doc.taller_photos || '',
+    music_track_name: doc.music_track_name || '',
+    review: doc.review || [],
+    can_approve: Boolean(doc.can_approve),
+    caption_issues: doc.caption_issues || [],
     // per-channel publish state (permalink/status/error) so the composer can link
     // the live FB post + surface a failure instead of hiding the outcome.
     channelStates: (doc.channels || []).map((c) => ({

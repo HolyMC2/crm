@@ -119,14 +119,14 @@ describe('legacy screens (Shell D3, S1.3)', () => {
     expect(flagged).toEqual([
       'dashboard',
       'campaigns',
-      'social',
       'automations',
       'score-rules',
       'webshop',
     ])
-    // Pinned to SPEC D3: Dashboard, Campaigns, Social, Automations, Chatflows,
-    // Score rules, Webshop and the Form builder (route only); «Lista de leads»
-    // is retired into Prospectos.
+    // Pinned to SPEC D3: Dashboard, Campaigns, Automations, Chatflows, Score
+    // rules, Webshop and the Form builder (route only); «Lista de leads» is
+    // retired into Prospectos. Social's calendar left the list on 2026-11-16:
+    // the day's taller post is reviewed and published from a phone.
     expect([...DESKTOP_ONLY].sort()).toEqual(
       [
         'automations',
@@ -134,14 +134,21 @@ describe('legacy screens (Shell D3, S1.3)', () => {
         'chatflows',
         'dashboard',
         'score-rules',
-        'social',
         'webshop',
       ].sort(),
     )
     // D3 keeps these on a phone, reworked.
-    for (const key of ['forms', 'reports', 'funnel', 'workload', 'calls'])
+    for (const key of [
+      'forms',
+      'reports',
+      'funnel',
+      'workload',
+      'calls',
+      'social',
+    ])
       expect(DESKTOP_ONLY.has(key), key).toBe(false)
     expect(routeBlock('/forms')).not.toMatch(/desktopOnly/)
+    expect(routeBlock('/social')).not.toMatch(/desktopOnly/)
     expect(ventasSection('daily').some((item) => item.desktopOnly)).toBe(false)
     for (const path of [
       '/dashboard',
@@ -152,7 +159,6 @@ describe('legacy screens (Shell D3, S1.3)', () => {
       '/automations',
       '/score-rules',
       '/webshop',
-      '/social',
       '/social/evergreen',
       '/social/mentions',
     ])

@@ -96,6 +96,20 @@ describe('links back to Hoy', () => {
     })
     expect(eventLink(null, '2026-10-08', ['Event'])).not.toContain('cal=')
   })
+
+  it('opens a post (Redes) in its composer, with the way back to Hoy', () => {
+    const link = eventLink({ source: 'Redes', id: 'SP-00042' }, '2026-11-16', [
+      'Event',
+      'Redes',
+    ])
+    const url = new URL(link, 'https://x.invalid')
+    expect(url.pathname).toBe('/social')
+    expect(Object.fromEntries(url.searchParams)).toEqual({
+      post: 'SP-00042',
+      return_to: '/crm/hoy',
+      return_label: 'Hoy',
+    })
+  })
 })
 
 describe('Para ahora', () => {

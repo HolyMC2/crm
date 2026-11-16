@@ -61,6 +61,7 @@
         </select>
         <template v-if="view === 'calendar'">
           <div
+            v-if="!isMobile"
             class="flex overflow-hidden rounded-6 border border-outline-gray-2 text-[11px] font-semibold"
           >
             <button
@@ -115,6 +116,15 @@
         <button
           v-if="isManager"
           class="rounded-6 border border-outline-gray-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2"
+          :title="__('Un post del taller cada día, revisado por tu equipo')"
+          data-testid="open-taller-daily"
+          @click="openDaily"
+        >
+          🔧 {{ __('Post diario') }}
+        </button>
+        <button
+          v-if="isManager"
+          class="rounded-6 border border-outline-gray-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2"
           :title="__('Asignar empleados a sucursales')"
           @click="openShops"
         >
@@ -147,6 +157,25 @@
       </div>
     </div>
 
+    <!-- posts in my Pendientes (post diario, «Pedir revisión») — what I do first -->
+    <div
+      v-if="myReviews.length"
+      class="flex flex-none flex-wrap items-center gap-1.5 border-b border-outline-gray-1 bg-surface-base px-4 py-2"
+      role="status"
+      data-testid="my-reviews"
+    >
+      <span class="text-[12px] font-bold text-ink-gray-9"
+        >{{ __('Te toca') }} ({{ myReviews.length }}):</span
+      >
+      <button
+        v-for="p in myReviews.slice(0, 6)"
+        :key="p.name"
+        class="press min-h-8 max-w-[220px] truncate rounded-6 bg-surface-gray-2 px-2.5 text-[12px] font-medium text-ink-gray-8"
+        @click="openEditPost(p)"
+      >
+        {{ p.title || p.name }}
+      </button>
+    </div>
     <!-- ⏳ pendientes de aprobación — surfaced instead of buried in the grid -->
     <div
       v-if="pendingPosts.length"
@@ -265,7 +294,7 @@
       :posts-by-day="postsByDay"
       :agenda-days="agendaDays"
       :drafts="visibleDrafts"
-      :cal-view="calView"
+      :cal-view="effectiveView"
       :season-by-day="seasonByDay"
       :today-key="todayKey"
       @open-new="openNewPost"
@@ -585,6 +614,15 @@
       </div>
     </component>
 
+    <TallerDailySheet
+      v-if="dailyMounted"
+      v-model:open="showDaily"
+      :shop-options="shopOptions"
+      :initial-shop="shop"
+      @saved="cal.reload()"
+      @open-post="(name) => openEditPost({ name })"
+    />
+
     <!-- composer modal (create/edit) -->
     <SocialComposer
       ref="composerRef"
@@ -704,7 +742,15 @@
 
 <script setup>
 import SocialCatalogGenerator from '@/components/doco/social/SocialCatalogGenerator.vue'
-import { ref, computed } from 'vue'
+import {
+  ref,
+  computed,
+  defineAsyncComponent,
+  nextTick,
+  onMounted,
+  watch,
+} from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import {
   BottomSheet,
   Dialog,
@@ -760,6 +806,38 @@ const {
   shop,
   onShopChange,
 } = sc
+
+// On a phone the month grid has no room: the agenda list is the calendar there.
+const effectiveView = computed(() => (isMobile.value ? 'list' : calView.value))
+// Posts in my Pendientes (post diario, «Pedir revisión»), any date.
+const myReviews = computed(() => cal.data?.mine || [])
+
+// «Post diario del taller» settings (managers); the sheet loads on its first open.
+const TallerDailySheet = defineAsyncComponent(
+  () => import('@/components/doco/social/TallerDailySheet.vue'),
+)
+const showDaily = ref(false)
+const dailyMounted = ref(false)
+function openDaily() {
+  dailyMounted.value = true
+  showDaily.value = true
+}
+
+// ?post=SP-… (Hoy, Pendientes, the Agenda, a notice) opens that post, then leaves
+// the URL clean so back and a reload do not open it again.
+const route = useRoute()
+const router = useRouter()
+async function followPost() {
+  const name = route.query.post
+  if (typeof name !== 'string' || !name) return
+  const query = { ...route.query }
+  delete query.post
+  await router.replace({ query }).catch(() => {})
+  await nextTick()
+  openEditPost({ name })
+}
+onMounted(followPost)
+watch(() => route.query.post, followPost)
 
 // calendar sub-view toggle + filter-chip helpers (only surface values with posts)
 const CAL_VIEWS = [

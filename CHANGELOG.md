@@ -2,6 +2,14 @@
 
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
+## 2026-11-16 — Redes: Hoy shows the day's posts, the post diario del taller and a composer that says what's next (lane redes-diario; not deployed)
+
+- **Hoy:** «Agenda de hoy» lists today's posts (calendar «Redes», read from doco_marketing) with their state; a tap opens the post in Redes with the way back to Hoy (`useHoy.eventLink`). Continuar shows a «Redes» card (posts I review, posts waiting for approval, today's posts). A Pendiente on a post opens it in Redes (`usePendientes.referenceTarget`).
+- **Redes on the phone:** `/social` is no longer desk-only (D3 list updated); on a phone the calendar is the list. A «Te toca» strip lists the posts in my Pendientes; `?post=SP-…` opens a post (Hoy, Pendientes, the Agenda, notices).
+- **Composer:** one «Siguiente:» line per saved post (fotos → texto → aprobar / publicar a mano, `composables/socialDaily.js`); who has it and «Pedir revisión» (`ReviewPanel`); «Fotos del taller» to pick before and after and approve them in place (`TallerPhotosPanel`); «Música»: a Reel with a song the shop has rights to, or «La publico a mano con música de la app» (`MusicPanel`); «Publicar a mano»: download, copy the text, paste the link, «Ya lo publiqué» (`ManualPublishPanel`). Someone who cannot approve gets «Guardar y enviar a aprobar» instead of Programar/Publicar ahora.
+- **Post diario del taller (managers):** «🔧 Post diario» in Redes: switch, hours, who reviews, «Sale sola al aprobarla» or «La publican a mano», «Dar acceso y guardar» for people without Redes, «Preparar el de hoy» (`TallerDailySheet`).
+- **Tests:** `tests/unit/socialDaily.test.js`, `hoy.test.js` (Redes event link), `ventasNav.test.js` (Social off the desk-only list).
+
 ## 2026-11-16 — More buttons that load another app from a sheet now work on a phone (lane sheet-navega-resto; not deployed)
 
 - **Bug:** the same one as «Verificar y acomodar» (lane bolt-sheet-navega): a tap that closes a sheet and loads another app's page in this tab had that load aborted (`net::ERR_ABORTED`) when the sheet's back over its history entry landed. Only real taps on a phone hit it. Found by an audit of every page load in the shell: Producto ⚡ «Ver en Escáner»; Inmobiliaria's ⚡ actions that link outside /crm, «Abrir en escritorio» in Herramientas and an action whose answer opens another app's page; Cuenta «Pagar» from an invoice's sheet while its checkout is in progress; Gastos de empleado «Siguiente» from the decision sheet when the way back is another app.

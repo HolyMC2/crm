@@ -345,6 +345,9 @@ export function referenceTarget(row) {
     return {
       to: { name: MODULE_RECORDS[doctype], params: { name: String(name) } },
     }
+  // A social post (post diario del taller, «Pedir revisión») opens in Redes' composer.
+  if (doctype === 'Social Post')
+    return { to: { name: 'Social', query: { post: String(name) } } }
   if (doctype === 'Leave Application')
     return {
       href: `/app/asistencia?v=ausencias&request=${encodeURIComponent(String(name))}`,

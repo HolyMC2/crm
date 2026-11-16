@@ -1378,7 +1378,8 @@ const routes = [
     path: '/social',
     name: 'Social',
     component: () => import('@/pages/SocialCalendar.vue'),
-    meta: { desktopOnly: true, navLabel: 'Social', title: 'Social' },
+    // On a phone too: the day's taller post is reviewed and published from the shop floor.
+    meta: { navLabel: 'Social', title: 'Social' },
   },
   {
     path: '/social/evergreen',

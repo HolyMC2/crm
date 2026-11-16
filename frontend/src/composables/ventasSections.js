@@ -34,7 +34,6 @@ const MANAGER_ONLY = new Set(['workload', ...VENTAS_SECTIONS.settings])
 export const DESKTOP_ONLY = new Set([
   'dashboard',
   'campaigns',
-  'social',
   'automations',
   'chatflows',
   'score-rules',

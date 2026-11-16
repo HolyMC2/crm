@@ -1078,6 +1078,8 @@ function afterComplete(response) {
 // ── Agenda ─────────────────────────────────────────────────────────────────
 
 function eventMeta(event) {
+  // A post (Redes) says where it stands: «Por aprobar», «Programada · a mano».
+  if (event.kind === 'social') return event.status || ''
   return [
     event.appointmentType,
     event.practitionerName,
