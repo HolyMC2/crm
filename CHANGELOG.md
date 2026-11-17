@@ -2,6 +2,11 @@
 
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
+## 2026-11-17 — Twilio: a call log retried after a write conflict locks the log first (lane twilio-call-log-1020; not deployed)
+
+- **Bug:** Twilio fires one call's callbacks close together. The save that lost the race (MariaDB 1020) rolled back and retried, but asked Twilio for the call before locking the log, so callbacks committing during that fetch failed the retry with 1020 again: «Error while updating call record» twice per pair on docomexico (11-14, 11-15).
+- **Fix:** after the rollback the retry's first statement locks the log (`_lock_call_log`), then fetches and saves; the other callbacks wait for the lock instead of conflicting.
+- **Tests:** `crm/tests/test_twilio_status_callback.py` (+1: rollback, lock, then fetch). Rollback = revert.
 ## 2026-11-17 — Bancos › Colchón: months of expenses kept, when it is full, and the month's plan (lane colchon; not deployed)
 
 - **Page `/bancos/colchon` (`pages/Colchon.vue`, served by the «Tu dinero» route with Deudas and ¿A dónde va?):** «Tu meta: 3 meses de gastos fijos», what the savings accounts hold against it with a bar marked per month, and how many months it already covers; «1 Primero tus deudas … libre en jul 2027 · 2 Colchón completo en feb 2028» with a chip for each month of expenses reached; «Tus cuentas de ahorro» (bank or books figure) and «Elegir» (checkboxes over the book's bank and cash accounts); «Plan del mes» in the owner's order (fixed costs, what varies, the card minimums, the extra to the first card, the cushion, goods) down to «Te queda para retirar», and «¿Cuánto quieres retirar este mes?» says whether it fits and what it would come out of; «Ajustes del colchón»: 1–12 months and the monthly amount while debt is paid (with the two-week starter cushion as a hint).

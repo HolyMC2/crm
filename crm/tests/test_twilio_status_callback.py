@@ -192,6 +192,20 @@ class TestUpdateCallLogWriteConflict(unittest.TestCase):
 		self.rollback.assert_called_once()
 		self.logged.assert_not_called()
 
+	def test_the_retry_locks_the_log_before_asking_twilio_again(self):
+		"""Its read view must open under the lock, or the callbacks committing
+		during the Twilio fetch make the retry fail with 1020 too."""
+		order = MagicMock()
+		lock = self.enterContext(patch.object(api, "_lock_call_log"))
+		order.attach_mock(self.rollback, "rollback")
+		order.attach_mock(lock, "lock")
+		order.attach_mock(self.twilio.get_call_info, "fetch")
+		self._saves(frappe.QueryDeadlockError("1020"), frappe._dict(name="CAfictional"))
+		api.update_call_log("CAfictional", status="ringing")
+		names = [c[0] for c in order.mock_calls]
+		self.assertEqual(names, ["fetch", "rollback", "lock", "fetch"])
+		lock.assert_called_once_with("CAfictional")
+
 	def test_a_raw_driver_1020_is_also_retried(self):
 		saved = frappe._dict(name="CAfictional")
 		self._saves(Exception(1020, "Record has changed since last read"), saved)

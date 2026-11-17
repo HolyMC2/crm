@@ -211,13 +211,22 @@ def update_call_log(call_sid, status=None):
 			# details than this request's fetch: drop the stale read view, ask Twilio
 			# again, read the log again and save once more, never moving a finished
 			# call back to an earlier status. Only a second failure is an error.
+			# The retry locks the log first: its read view then opens under the lock,
+			# so the callbacks that commit during the Twilio fetch wait instead of
+			# making this save fail with 1020 again.
 			frappe.db.rollback()
+			_lock_call_log(call_sid)
 			return _save_call_details(
 				call_sid, twilio.get_call_info(call_sid), status, keep_final_status=True
 			)
 	except Exception:
 		frappe.log_error(title="Error while updating call record")
 		frappe.db.commit()
+
+
+def _lock_call_log(call_sid):
+	"""The first statement of a fresh transaction: lock the log row."""
+	frappe.db.sql("SELECT name FROM `tabCRM Call Log` WHERE name = %s FOR UPDATE", call_sid)
 
 
 # CRM Call Log statuses after which a call does not change any more.
