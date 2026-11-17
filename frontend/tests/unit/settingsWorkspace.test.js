@@ -57,6 +57,8 @@ vi.mock('@/utils/crmCapabilities', async () => {
           ? 'present'
           : 'missing'
         : state.loaded,
+    hasApp: (app) =>
+      state.loaded === 'resolved' && state.installed.includes(app),
     loadCapabilities: vi.fn(),
   }
 })

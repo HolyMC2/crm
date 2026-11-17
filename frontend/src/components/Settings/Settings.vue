@@ -183,6 +183,7 @@ import { useRouter } from 'vue-router'
 import {
   addonAvailable,
   appState,
+  hasApp,
   loadCapabilities,
 } from '@/utils/crmCapabilities'
 import {
@@ -199,6 +200,9 @@ const InboxSettingsPage = defineAsyncComponent(
 )
 const AutomationsPage = defineAsyncComponent(
   () => import('./Automations/AutomationsPage.vue'),
+)
+const AssistantSettings = defineAsyncComponent(
+  () => import('./AssistantSettings.vue'),
 )
 
 const { isAdmin, isManager, getUser } = usersStore()
@@ -264,6 +268,14 @@ const tabs = computed(() => {
           label: __('Calendar'),
           icon: CalendarIcon,
           component: markRaw(CalendarSettings),
+        },
+        {
+          // doco's Books Assistant Settings: default model and the money path.
+          // The doctype grants write to System Manager only.
+          label: __('Assistant'),
+          icon: 'cpu',
+          component: markRaw(AssistantSettings),
+          condition: () => isAdmin() && hasApp('doco'),
         },
       ],
       condition: () => isManager(),

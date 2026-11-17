@@ -34045,6 +34045,58 @@ msgstr "Muy alto"
 msgid "Maximum"
 msgstr "Máximo"
 
+#: frontend/src/components/Settings/AssistantSettings.vue
+msgid "Assistant"
+msgstr "Asistente"
+
+#: frontend/src/components/Settings/AssistantSettings.vue
+msgid "The model the assistant thinks with. Money questions and mail (invoices, payments, banks, taxes, cash) use their own model."
+msgstr "Con qué modelo piensa el asistente. Lo de dinero (facturas, pagos, bancos, impuestos, caja) usa su propio modelo."
+
+#: frontend/src/components/Settings/AssistantSettings.vue
+msgid "Default model"
+msgstr "Modelo por defecto"
+
+#: frontend/src/components/Settings/AssistantSettings.vue
+msgid "Every new conversation and mail reading use it."
+msgstr "Lo usan toda conversación nueva y la lectura de correos."
+
+#: frontend/src/components/Settings/AssistantSettings.vue
+msgid "Default effort"
+msgstr "Esfuerzo por defecto"
+
+#: frontend/src/components/Settings/AssistantSettings.vue
+msgid "How much it reasons before it answers."
+msgstr "Cuánto razona antes de contestar."
+
+#: frontend/src/components/Settings/AssistantSettings.vue
+msgid "Money path"
+msgstr "Ruta de dinero"
+
+#: frontend/src/components/Settings/AssistantSettings.vue
+msgid "Money questions and mail use the money model, even when the conversation picked another one."
+msgstr "Las preguntas y los correos de dinero usan el modelo de dinero, aunque la conversación haya elegido otro."
+
+#: frontend/src/components/Settings/AssistantSettings.vue
+msgid "Money model"
+msgstr "Modelo de dinero"
+
+#: frontend/src/components/Settings/AssistantSettings.vue
+msgid "Recommended: the strongest model."
+msgstr "Recomendado: el modelo más fuerte."
+
+#: frontend/src/components/Settings/AssistantSettings.vue
+msgid "Money effort"
+msgstr "Esfuerzo en dinero"
+
+#: frontend/src/components/Settings/AssistantSettings.vue
+msgid "Recommended: high."
+msgstr "Recomendado: alto."
+
+#: frontend/src/components/Settings/AssistantSettings.vue
+msgid "Same as the assistant"
+msgstr "El mismo del asistente"
+
 #: frontend/src/components/assistant/AssistantWorkspace.vue
 msgid "Hide conversations"
 msgstr "Ocultar conversaciones"
