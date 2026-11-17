@@ -211,6 +211,23 @@ def unlinked_vouchers(ledger, bank_name):
 	return [row["name"] for row in _book_since(ledger, bank_name, start, today())]
 
 
+def unlinked_entries(bank_name):
+	"""The book entries on a bank account's ledger since its feed run started that no bank
+	movement links, with their words (doco Por explicar's «Ya está en tus libros»). Amounts move
+	as the ledger does (a deposit is positive); `matchable` ones the site's engine can link.
+	[] when the person may not read them or the account has no movements."""
+	can = bancos._require()
+	ledger = frappe.db.get_value("Bank Account", bank_name, "account")
+	if not ledger or not can.get("saldos") or not bancos._may("Bank Transaction"):
+		return []
+	start = math.feed_run(_months(bank_name), today())["start"]
+	if not start:
+		return []
+	rows = _book_since(ledger, bank_name, start, today())
+	labels = bancos._voucher_labels({(row["doctype"], row["name"]) for row in rows})
+	return [{**row, "ledger": ledger} for row in _book_rows(rows, labels)]
+
+
 @frappe.whitelist()
 def cuadre(cuenta: str, saldo_banco: str | None = None) -> dict:
 	"""Why this account's books and its bank differ, line by line, with what to do."""

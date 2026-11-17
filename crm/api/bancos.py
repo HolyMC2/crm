@@ -1172,8 +1172,25 @@ def _native_candidates(doc, scope):
 	return out
 
 
+ROUNDING = 1.0  # how far ERPNext's rounded total may sit from the exact one
+
+
+def _owed_matches(row, remaining):
+	"""What the invoice still owes is this movement's amount, or the invoice was rounded and its
+	exact total is (a card or a transfer moves money to the cent)."""
+	owed = flt(row.outstanding_amount, 2)
+	if abs(owed - remaining) < 0.005:
+		return True
+	return bool(
+		flt(row.rounding_adjustment)
+		and abs(owed - flt(row.rounded_total, 2)) < 0.005
+		and abs(flt(row.grand_total, 2) - remaining) < 0.005
+	)
+
+
 def _open_invoices(doc, remaining):
-	"""Open invoices for exactly this amount: register their payment from here (a draft)."""
+	"""Open invoices for exactly this amount (or a rounded invoice whose exact total it is):
+	register their payment from here (a draft)."""
 	if remaining <= 0 or not frappe.has_permission("Payment Entry", "create"):
 		return []
 	direction = "deposit" if flt(doc.deposit) > 0 else "withdrawal"
@@ -1186,11 +1203,21 @@ def _open_invoices(doc, remaining):
 		filters={
 			"company": doc.company,
 			"docstatus": 1,
-			"outstanding_amount": ["between", [remaining - 0.005, remaining + 0.005]],
+			"outstanding_amount": ["between", [remaining - ROUNDING - 0.005, remaining + ROUNDING + 0.005]],
 		},
-		fields=["name", party + " as party", "due_date", "posting_date", "outstanding_amount", "currency"],
+		fields=[
+			"name",
+			party + " as party",
+			"due_date",
+			"posting_date",
+			"outstanding_amount",
+			"currency",
+			"grand_total",
+			"rounded_total",
+			"rounding_adjustment",
+		],
 		order_by="due_date asc",
-		limit_page_length=5,
+		limit_page_length=20,
 	)
 	return [
 		{
@@ -1202,7 +1229,32 @@ def _open_invoices(doc, remaining):
 			"currency": row.currency,
 		}
 		for row in rows
-	]
+		if _owed_matches(row, remaining)
+	][:5]
+
+
+def _to_the_cent(pe, moved):
+	"""A payment of a rounded invoice moves what the bank moved, to the cent; the rounding goes to
+	the company's round-off account, so the invoice ends paid and the payment matches the movement."""
+	owed = flt(pe.paid_amount if pe.payment_type == "Pay" else pe.received_amount, 2)
+	diff = flt(moved - owed, 2)
+	if not diff or abs(diff) > ROUNDING:
+		return
+	round_off, cost_center = frappe.get_cached_value(
+		"Company", pe.company, ["round_off_account", "round_off_cost_center"]
+	)
+	if not round_off:
+		return
+	pe.paid_amount = pe.received_amount = moved
+	pe.base_paid_amount = pe.base_received_amount = moved
+	pe.append(
+		"deductions",
+		{
+			"account": round_off,
+			"cost_center": cost_center or frappe.get_cached_value("Company", pe.company, "cost_center"),
+			"amount": diff if pe.payment_type == "Pay" else -diff,
+		},
+	)
 
 
 @frappe.whitelist()
@@ -1435,6 +1487,7 @@ def crear_pago(bank_transaction: str, invoice_doctype: str, invoice: str) -> dic
 	pe.reference_no = doc.reference_number or doc.name
 	pe.reference_date = doc.date
 	pe.bank_account = doc.bank_account
+	_to_the_cent(pe, remaining)
 	pe.insert()
 	return {"doctype": "Payment Entry", "name": pe.name, "payment_type": pe.payment_type}
 

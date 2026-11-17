@@ -17,6 +17,14 @@ Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` i
 - **Bolt:** «Imprimir o descargar el ticket», «Hacer la factura (CFDI)» and «Mandar al cliente el enlace para facturar» (Contador's self-billing link, only where the shop turned on public invoicing), «Devolver en caja» while the return window is open, «Abrir la reparación», «Abrir la venta en Ventas».
 - **Server:** `crm.api.resultados_ticket` adds `customer`, `cfdi`, `register` and the `muelle_resultados_ticket` blocks (one per app, a failing block left out) to `resultados.document`. Shared: `documentos/recordWhatsapp.js` (DocumentoRecord uses it too), `posReturnHref` moved to `utils/posHandoff.js`, `shareLink` in `documentos/tools.js`.
 - **Tests:** `tests/unit/resultadosTicket.test.js` (24, incl. every string in es.po), `crm/tests/test_resultados.py` (+3). Full vitest, build, bundle budget and translation keys green. Shots at 305, 412 (light, dark) and 1280. Rollback = revert the three lanes' commits together.
+## 2026-11-17 — Por explicar: «Ya están en tus libros» and «Facturas por pagar» (lane ya-registrado; not deployed)
+## 2026-11-17 — Por explicar: «Ya están en tus libros», «Facturas por pagar» and money tags (lane ya-registrado; not deployed)
+
+- **Nothing is booked twice:** movements whose entry is already in the books (a capture by chat, Gastos' «Pagar», an entry by hand) appear in «Ya están en tus libros» with what they pair with («Póliza · JV-30»); «Ligar los N» links them. Sales or purchases the site cannot link yet say «Ya está en tus libros: no lo registres otra vez».
+- **«Facturas por pagar»:** a charge for exactly what an open invoice owes («Factura de Gasolinera Sur · PINV-7»); «Registrar los N pagos» records each payment from that account and links it. «Deshacer» unlinks (and cancels the payments made).
+- `crm/api/bancos_cuadre.unlinked_entries(bank_name)`: Cuadre's unlinked entries of an account, for doco.
+- **Etiquetas:** a group shows its suggested tags («Muelle (software)»), «Sí, es eso» books them; the «¿Qué fue?» sheet and «Gasté en efectivo» take tags (chips, suggested ones chosen, «Nueva etiqueta»); the tag icon in the bar opens the catalog by kind with «Sugeridas para tu negocio» («Crear N etiquetas») and a new tag with the words that suggest it.
+- **Tests:** `tests/unit/porExplicar.test.js` (+4). Rollback = revert with the doco half.
 
 ## 2026-11-17 — Por explicar: «Gasté en efectivo», «Contar caja» and the daily reminder (lane efectivo; not deployed)
 

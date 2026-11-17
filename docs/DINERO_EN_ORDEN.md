@@ -167,7 +167,38 @@ bell) and Hoy's «Por explicar» card. Settings in «Plan de Dinero» (on by def
 negocio» (a person the owner keeps the money from gets none of them). Transfers may go to a
 liability, so a card's deferred-purchase plan («Meses en automático») has a home.
 
-Next: the bot reads `por_explicar` on every site (today `banco_por_explicar` needs Contador). Setup on Marco's shops after the roll: explain the backlog
+Lane 3 `ya-registrado` (doco + crm), Marco 2026-11-17: «make sure if i send the expense and
+ticket/factura/transferencia it picks it up and handles it accordingly, the accounts reconcile with
+syncfy and other input methods». Every way money reaches the books (a chat or Desk capture, Gastos'
+«Pagar», the till's sales, an entry typed by hand) now meets the bank movement before anything is
+booked:
+- «Ya están en tus libros»: a movement whose entry is already on its ledger and linked to no
+  movement (crm Cuadre's `unlinked_entries`, same amount, at most 7 days apart, closest first) leaves
+  the merchant groups; «Ligar los N» links them through the site's engine (Cuadre's `ligar`).
+  Sales and purchases the engine cannot link yet show «no lo registres otra vez» (lane 2 above).
+- «Facturas por pagar»: a charge for exactly what an open supplier invoice still owes (or a deposit
+  for a customer's), the invoice dated up to 90 days before or 3 after: «Registrar los N pagos»
+  makes the payment from that account (crm `crear_pago` + `confirmar_pago`) and links it. A
+  factura sent by chat is that open invoice until its charge arrives.
+- One view (`por_explicar.vista`) feeds the page, the reminder («N ya están en tus libros o pagan
+  una factura: un toque los liga») and Hoy. Undo unlinks, and cancels the payments it made.
+
+Etiquetas (same lane; Marco: «add other good tags for a business erp and my context … so the agents
+organize the shop better»): a tag says what the money was for (the account says what it was): a part
+of the business, a project or the owner's own. Doctype «Etiqueta de Dinero» (kind, the words that
+suggest it); the entries carry the native Frappe tag (Tag Link), so Desk filters and reports read it.
+Suggested per group from the merchant's past tags on that account, then from the words; the explain
+sheet and «Gasté en efectivo» take tags (a new one typed joins the catalog); the tag icon in Por
+explicar lists them and offers a starter set from the tenant's own records (its stores or till
+profiles, Taller where the repair module is, Recargas where Saldo is, Remodelación, Equipo y
+mobiliario, Publicidad, Vehículo, Viajes de trabajo, Casa). The assistant reads `por_etiqueta`
+(«¿cuánto llevo en la remodelación?»). Marco's own set with words from his charges is a kit:
+`~/muelle-releases/etiquetas-doco-20261117/`.
+
+Next: ¿A dónde va? by tag; «Adjuntar ticket o factura» from a movement (the capture runs with the movement as
+context, so its entry lands on the right account); the chat answers a confirmed capture with the
+movement it matches; the bot reads `por_explicar` on every site (today `banco_por_explicar` needs
+Contador). Setup on Marco's shops after the roll: explain the backlog
 since 08-01 on doco prod with the page (his taps), count the safe, then let the reminder run.
 
 ## 4. Settings and the owner's switches

@@ -154,6 +154,7 @@
           placeholder="Tortas para el equipo, pintura, renta…"
         />
       </div>
+      <EtiquetasPicker v-model="form.tags" :options="data?.etiquetas || []" />
       <p v-if="form.problem" role="alert" class="text-sm text-ink-red-7">
         {{ form.problem }}
       </p>
@@ -183,6 +184,7 @@
 import { computed, reactive, watch } from 'vue'
 import { Button } from 'frappe-ui'
 import { BottomSheet } from '@/components/ui'
+import EtiquetasPicker from '@/components/dinero/EtiquetasPicker.vue'
 import { errorText } from '@/components/bancos/bancos'
 import { parseAmount } from '@/components/dinero/colchon'
 import {
@@ -209,6 +211,7 @@ const form = reactive({
   cash: '',
   day: 'hoy',
   note: '',
+  tags: [],
   searching: false,
   query: '',
   busy: false,
@@ -241,6 +244,7 @@ watch(
       cash: cash.value[0]?.account || '',
       day: 'hoy',
       note: '',
+      tags: [],
       searching: false,
       query: '',
       busy: false,
@@ -267,6 +271,7 @@ async function save() {
       caja: form.cash,
       fecha: dayOf(form.day),
       nota: form.note.trim(),
+      etiquetas: form.tags.length ? form.tags : undefined,
     })
     emit('done', done)
     emit('update:open', false)

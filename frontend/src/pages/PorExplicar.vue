@@ -14,8 +14,20 @@
       back-label="Volver a Bancos"
       :loading="loading && !!data"
     >
-      <template v-if="data?.can_set" #actions>
+      <template v-if="data?.can_set || data?.can_explain" #actions>
         <button
+          v-if="data.can_explain"
+          type="button"
+          class="press grid size-10 place-items-center rounded-full text-ink-gray-7"
+          aria-label="Etiquetas"
+          title="Etiquetas"
+          data-por-explicar-etiquetas
+          @click="sheets.tags = true"
+        >
+          <span class="lucide-tags size-5" aria-hidden="true" />
+        </button>
+        <button
+          v-if="data.can_set"
           type="button"
           class="press grid size-10 place-items-center rounded-full text-ink-gray-7"
           aria-label="Recordatorio"
@@ -159,6 +171,25 @@
         permiso de contabilidad.
       </p>
 
+      <ListaPareada
+        v-if="data.ya?.length"
+        kind="ya"
+        :rows="data.ya"
+        :currency="data.currency"
+        :can-act="data.can_explain"
+        :busy="busy === 'ya'"
+        @act="link"
+      />
+      <ListaPareada
+        v-if="data.facturas?.length"
+        kind="facturas"
+        :rows="data.facturas"
+        :currency="data.currency"
+        :can-act="data.can_explain"
+        :busy="busy === 'facturas'"
+        @act="pay"
+      />
+
       <EmptyState
         v-if="!data.summary.count"
         class="py-10"
@@ -207,6 +238,20 @@
               {{ whyText(g.guess, names) }}
             </p>
           </template>
+          <p
+            v-if="g.tags?.length"
+            class="mt-2 flex flex-wrap gap-1.5"
+            :aria-label="`Etiquetas: ${g.tags.join(', ')}`"
+            data-por-explicar-grupo-etiquetas
+          >
+            <span
+              v-for="t in g.tags"
+              :key="t"
+              class="inline-flex min-h-6 items-center gap-1 rounded-full bg-surface-gray-2 px-2 text-xs text-ink-gray-8"
+            >
+              <span class="lucide-tag size-3" aria-hidden="true" />{{ t }}
+            </span>
+          </p>
 
           <div class="mt-3 flex flex-wrap gap-2">
             <Button
@@ -216,7 +261,7 @@
               label="Sí, es eso"
               :loading="busy === g.id"
               data-por-explicar-si
-              @click="explain(g, g.guess.kind, g.guess.account)"
+              @click="explain(g, g.guess.kind, g.guess.account, null, g.tags)"
             />
             <Button
               v-if="data.can_explain"
@@ -351,6 +396,12 @@
             </li>
           </ul>
         </div>
+        <EtiquetasPicker
+          v-if="sheet.kind"
+          v-model="sheet.tags"
+          :options="data?.etiquetas || []"
+          :suggested="sheet.group?.tags || []"
+        />
         <p v-if="sheet.problem" role="alert" class="text-sm text-ink-red-7">
           {{ sheet.problem }}
         </p>
@@ -369,7 +420,9 @@
             :disabled="!sheet.kind || !sheet.account"
             :loading="busy === sheet.group?.id"
             data-por-explicar-guardar
-            @click="explain(sheet.group, sheet.kind, sheet.account, sheet)"
+            @click="
+              explain(sheet.group, sheet.kind, sheet.account, sheet, sheet.tags)
+            "
           />
         </div>
       </template>
@@ -385,6 +438,11 @@
       :data="data"
       @done="data = $event"
     />
+    <EtiquetasSheet
+      v-model:open="sheets.tags"
+      :data="data"
+      @done="data = $event"
+    />
   </div>
 </template>
 
@@ -395,7 +453,10 @@ import { Button } from 'frappe-ui'
 import { AppBar, BottomSheet, EmptyState } from '@/components/ui'
 import { errorText, money } from '@/components/bancos/bancos'
 import ConteoCajaSheet from '@/components/dinero/ConteoCajaSheet.vue'
+import EtiquetasPicker from '@/components/dinero/EtiquetasPicker.vue'
+import EtiquetasSheet from '@/components/dinero/EtiquetasSheet.vue'
 import GastoEfectivoSheet from '@/components/dinero/GastoEfectivoSheet.vue'
+import ListaPareada from '@/components/dinero/ListaPareada.vue'
 import RecordatorioSheet from '@/components/dinero/RecordatorioSheet.vue'
 import {
   accountNames,
@@ -419,8 +480,21 @@ const loading = ref(false)
 const error = ref('')
 const busy = ref('')
 const open = reactive(new Set())
-const receipt = reactive({ text: '', journals: [], cash: false, busy: false })
-const sheets = reactive({ spent: false, count: false, reminder: false })
+// what «Deshacer» takes back: entries (journals), cash, or links (pairs, with the payments made)
+const receipt = reactive({
+  text: '',
+  journals: [],
+  cash: false,
+  pairs: [],
+  cancel: false,
+  busy: false,
+})
+const sheets = reactive({
+  spent: false,
+  count: false,
+  reminder: false,
+  tags: false,
+})
 const sheet = reactive({
   open: false,
   group: null,
@@ -428,6 +502,7 @@ const sheet = reactive({
   account: '',
   query: '',
   problem: '',
+  tags: [],
 })
 
 const companyQuery = computed(() =>
@@ -491,6 +566,7 @@ function openSheet(g) {
     group: g,
     kind: g.guess?.kind || '',
     account: g.guess?.account || '',
+    tags: [...(g.tags || [])],
     query: '',
     problem: '',
   })
@@ -517,7 +593,7 @@ async function load() {
   }
 }
 
-async function explain(g, kind, account, from = null) {
+async function explain(g, kind, account, from = null, tags = []) {
   if (!g || busy.value) return
   busy.value = g.id
   if (from) from.problem = ''
@@ -527,11 +603,13 @@ async function explain(g, kind, account, from = null) {
       movimientos: shownRows(g).map((r) => r.name),
       tipo: kind,
       cuenta: account,
+      etiquetas: tags?.length ? tags : undefined,
     })
     data.value = done.estado
     receipt.text = receiptText(done, g.label)
     receipt.journals = journalsOf(done)
     receipt.cash = false
+    receipt.pairs = []
     if (from) from.open = false
   } catch (e) {
     if (from) from.problem = errorText(e)
@@ -549,6 +627,7 @@ function spent(done) {
   receipt.text = `Listo: ${fmt(done.amount)} en efectivo, en tus libros.`
   receipt.journals = [done.journal]
   receipt.cash = true
+  receipt.pairs = []
 }
 
 function counted(done) {
@@ -559,14 +638,73 @@ function counted(done) {
     : 'Listo: conteo guardado.'
   receipt.journals = done.journal ? [done.journal] : []
   receipt.cash = true
+  receipt.pairs = []
 }
+
+function pairsOf(rows, done, doctype) {
+  const ok = new Map(
+    (done.results || []).filter((r) => r.ok).map((r) => [r.name, r]),
+  )
+  return rows
+    .filter((r) => ok.has(r.name))
+    .map((r) => ({
+      movimiento: r.name,
+      doctype: doctype || r.entry.doctype,
+      name: doctype ? ok.get(r.name).payment : r.entry.name,
+    }))
+}
+
+async function linkOrPay(rows, method, key) {
+  if (busy.value) return
+  busy.value = key
+  try {
+    const pares = rows.map((r) => ({
+      movimiento: r.name,
+      doctype: key === 'ya' ? r.entry.doctype : r.invoice.doctype,
+      name: key === 'ya' ? r.entry.name : r.invoice.name,
+    }))
+    const done = await porExplicarApi(method, {
+      company: data.value.company,
+      pares,
+    })
+    data.value = done.estado
+    const n = done.explained || 0
+    const failed = (done.results || []).find((r) => !r.ok)
+    receipt.text =
+      (key === 'ya'
+        ? `Listo: ${countText(n)} ligado${n === 1 ? '' : 's'} con lo que ya estaba en tus libros.`
+        : `Listo: ${n === 1 ? '1 pago registrado' : `${n} pagos registrados`} y ligado${n === 1 ? '' : 's'}.`) +
+      (failed ? ` Uno no se pudo: ${failed.message}` : '')
+    receipt.pairs = pairsOf(rows, done, key === 'ya' ? null : 'Payment Entry')
+    receipt.cancel = key === 'facturas'
+    receipt.journals = receipt.pairs.map((p) => p.name)
+    receipt.cash = false
+  } catch (e) {
+    receipt.text = errorText(e)
+    receipt.journals = []
+    receipt.pairs = []
+  } finally {
+    busy.value = ''
+  }
+}
+
+const link = (rows) => linkOrPay(rows, 'ligar', 'ya')
+const pay = (rows) => linkOrPay(rows, 'pagar', 'facturas')
 
 async function undo() {
   if (receipt.busy) return
   receipt.busy = true
   try {
     let page = null
-    if (receipt.cash) {
+    if (receipt.pairs.length) {
+      page = await porExplicarApi('deshacer_ligados', {
+        company: data.value.company,
+        pares: receipt.pairs,
+        cancelar: receipt.cancel ? 1 : 0,
+      })
+      receipt.text = 'Deshecho: esos movimientos vuelven a estar por explicar.'
+      receipt.pairs = []
+    } else if (receipt.cash) {
       page = await porExplicarApi('deshacer_efectivo', {
         company: data.value.company,
         poliza: receipt.journals[0],

@@ -471,4 +471,203 @@ describe('PorExplicar page', () => {
     )
     expect(args).toMatchObject({ activo: 1, hora: 21, contar_cada: 14 })
   })
+
+  const YA = [
+    {
+      name: 'BT20',
+      date: '2026-11-06',
+      description: 'PETROPLAZAS 4711',
+      amount: 480,
+      direction: 'Withdrawal',
+      bank_label: 'Amex Platinum',
+      entry: {
+        doctype: 'Journal Entry',
+        name: 'JV-30',
+        word: 'Póliza',
+        party: '',
+        ligable: true,
+      },
+    },
+    {
+      name: 'BT21',
+      date: '2026-11-07',
+      description: 'SPEI RECIBIDO',
+      amount: 900,
+      direction: 'Deposit',
+      bank_label: 'BBVA Débito',
+      entry: {
+        doctype: 'Sales Invoice',
+        name: 'SINV-4',
+        word: 'Venta',
+        party: 'Mostrador',
+        ligable: false,
+      },
+    },
+  ]
+  const FACTURAS = [
+    {
+      name: 'BT22',
+      date: '2026-11-05',
+      description: 'GASOLINERA',
+      amount: 615,
+      direction: 'Withdrawal',
+      bank_label: 'Amex Platinum',
+      invoice: {
+        doctype: 'Purchase Invoice',
+        name: 'PINV-7',
+        party: 'Gasolinera Sur',
+      },
+    },
+  ]
+
+  it('links what is already in the books and never books it again', async () => {
+    state.call.mockImplementation(async (method) => {
+      if (method.endsWith('.estado')) return { ...estado([]), ya: YA }
+      if (method.endsWith('.ligar'))
+        return {
+          results: [{ name: 'BT20', ok: true }],
+          explained: 1,
+          estado: { ...estado([]), ya: [YA[1]] },
+        }
+      if (method.endsWith('.deshacer_ligados'))
+        return { estado: { ...estado([]), ya: YA } }
+      throw new Error(method)
+    })
+    await mount()
+    const list = host.querySelector('[data-lista-pareada="ya"]')
+    expect(list.textContent).toContain('Ya están en tus libros')
+    expect(list.textContent).toContain('no lo registres otra vez') // the sale
+    host.querySelector('[data-lista-pareada-accion="ya"]').click()
+    await flush()
+    const [, args] = state.call.mock.calls.find(([m]) => m.endsWith('.ligar'))
+    expect(JSON.parse(args.pares)).toEqual([
+      { movimiento: 'BT20', doctype: 'Journal Entry', name: 'JV-30' },
+    ])
+    expect(
+      host.querySelector('[data-por-explicar-recibo]').textContent,
+    ).toContain('1 movimiento ligado')
+    button('Deshacer').click()
+    await flush()
+    const undo = state.call.mock.calls.find(([m]) =>
+      m.endsWith('.deshacer_ligados'),
+    )
+    expect(JSON.parse(undo[1].pares)[0].name).toBe('JV-30')
+    expect(undo[1].cancelar).toBe(0)
+  })
+
+  it('pays an open invoice from the charge and undoes the payment', async () => {
+    state.call.mockImplementation(async (method) => {
+      if (method.endsWith('.estado'))
+        return { ...estado([]), facturas: FACTURAS }
+      if (method.endsWith('.pagar'))
+        return {
+          results: [{ name: 'BT22', ok: true, payment: 'PE-5' }],
+          explained: 1,
+          estado: estado([]),
+        }
+      if (method.endsWith('.deshacer_ligados'))
+        return { estado: { ...estado([]), facturas: FACTURAS } }
+      throw new Error(method)
+    })
+    await mount()
+    expect(
+      host.querySelector('[data-lista-pareada="facturas"]').textContent,
+    ).toContain('Factura de Gasolinera Sur · PINV-7')
+    host.querySelector('[data-lista-pareada-accion="facturas"]').click()
+    await flush()
+    const [, args] = state.call.mock.calls.find(([m]) => m.endsWith('.pagar'))
+    expect(JSON.parse(args.pares)).toEqual([
+      { movimiento: 'BT22', doctype: 'Purchase Invoice', name: 'PINV-7' },
+    ])
+    button('Deshacer').click()
+    await flush()
+    const undo = state.call.mock.calls.find(([m]) =>
+      m.endsWith('.deshacer_ligados'),
+    )
+    expect(JSON.parse(undo[1].pares)).toEqual([
+      { movimiento: 'BT22', doctype: 'Payment Entry', name: 'PE-5' },
+    ])
+    expect(undo[1].cancelar).toBe(1)
+  })
+
+  const TAGS = [
+    { label: 'Muelle (software)', grupo: 'Business' },
+    { label: 'Remodelación', grupo: 'Project' },
+  ]
+
+  it('books a group with its suggested tags, and a tag typed in the sheet', async () => {
+    const tagged = { ...ANTHROPIC, tags: ['Muelle (software)'] }
+    state.call.mockImplementation(async (method) => {
+      if (method.endsWith('.estado'))
+        return { ...estado([tagged, PETRO]), etiquetas: TAGS }
+      if (method.endsWith('.explicar'))
+        return {
+          results: [{ name: 'BT7', ok: true, journal: 'JV-8', twin: null }],
+          explained: 1,
+          estado: { ...estado([tagged, PETRO]), etiquetas: TAGS },
+        }
+      throw new Error(method)
+    })
+    await mount()
+    expect(
+      host.querySelector('[data-por-explicar-grupo-etiquetas]').textContent,
+    ).toContain('Muelle (software)')
+    button('Sí, es eso').click()
+    await flush()
+    const first = state.call.mock.calls.find(([m]) => m.endsWith('.explicar'))
+    expect(JSON.parse(first[1].etiquetas)).toEqual(['Muelle (software)'])
+
+    button('¿Qué fue?').click() // PETRO: no guess, no tags
+    await flush()
+    host.querySelector('[data-por-explicar-tipo="gasto"]').click()
+    await flush()
+    host.querySelector('[data-etiqueta="Remodelación"]').click()
+    await type('[data-etiqueta-nueva]', 'Taller')
+    host
+      .querySelector('[data-etiqueta-nueva]')
+      .form.dispatchEvent(new Event('submit'))
+    await flush()
+    host.querySelector('[data-por-explicar-guardar]').click()
+    await flush()
+    const second = state.call.mock.calls.filter(([m]) =>
+      m.endsWith('.explicar'),
+    )[1]
+    expect(JSON.parse(second[1].etiquetas)).toEqual(['Remodelación', 'Taller'])
+  })
+
+  it('creates the starter tags for this business in one tap', async () => {
+    state.call.mockImplementation(async (method, args) => {
+      if (method.endsWith('.estado')) return { ...estado([]), etiquetas: [] }
+      if (method.endsWith('.etiquetas_sugeridas'))
+        return [
+          { label: 'Taller', grupo: 'Business', palabras: [] },
+          { label: 'Casa', grupo: 'Personal', palabras: [] },
+        ]
+      if (method.endsWith('.etiquetas_crear'))
+        return {
+          ...estado([]),
+          etiquetas: JSON.parse(args.etiquetas_nuevas).map((t) => ({
+            label: t.label,
+            grupo: t.grupo,
+          })),
+        }
+      throw new Error(method)
+    })
+    await mount()
+    host.querySelector('[data-por-explicar-etiquetas]').click()
+    await flush()
+    host.querySelector('[data-etiqueta-sugerida="Casa"]').click() // not this one
+    await flush()
+    host.querySelector('[data-etiquetas-crear-sugeridas]').click()
+    await flush()
+    const [, args] = state.call.mock.calls.find(([m]) =>
+      m.endsWith('.etiquetas_crear'),
+    )
+    expect(JSON.parse(args.etiquetas_nuevas).map((t) => t.label)).toEqual([
+      'Taller',
+    ])
+    expect(host.querySelector('[data-etiquetas-sheet]').textContent).toContain(
+      'Del negocio',
+    )
+  })
 })
