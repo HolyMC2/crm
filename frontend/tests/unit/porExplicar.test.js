@@ -31,7 +31,13 @@ vi.mock('frappe-ui', async () => {
 vi.mock('@/components/ui', async () => {
   const { h } = await import('vue')
   return {
-    AppBar: { props: ['title'], setup: (p) => () => h('h1', p.title) },
+    AppBar: {
+      props: ['title'],
+      setup:
+        (p, { slots }) =>
+        () =>
+          h('div', [h('h1', p.title), slots.actions?.()]),
+    },
     EmptyState: {
       props: ['title', 'message'],
       setup: (p) => () => h('p', { 'data-empty': '' }, p.title),
@@ -59,8 +65,13 @@ import {
   accountNames,
   accountsFor,
   answerText,
+  dayOf,
+  differenceText,
+  everyText,
+  hourText,
   journalsOf,
   kindsFor,
+  lastCountText,
   rangeText,
   receiptText,
   whyText,
@@ -104,6 +115,17 @@ function estado(groups) {
     truncated: false,
     groups,
     choices: CHOICES,
+    efectivo: [
+      {
+        account: 'Caja Fuerte - E',
+        label: 'Caja fuerte',
+        balance: 12000,
+        last_count: null,
+      },
+    ],
+    can_book: true,
+    recordatorio: { remind: 1, hour: 20, every: 7 },
+    can_set: true,
   }
 }
 
@@ -213,6 +235,28 @@ describe('porExplicar helpers', () => {
     )
     expect(journalsOf(done)).toEqual(['JV-1'])
     expect(rangeText('2026-11-06', '2026-11-06')).not.toContain('al')
+  })
+})
+
+describe('cash and reminder helpers', () => {
+  const fmt = (n) => `$${n.toFixed(2)}`
+  it('says the hour, the days and the difference in words', () => {
+    expect(hourText(20)).toBe('8 de la noche')
+    expect(hourText(18)).toBe('6 de la tarde')
+    expect(everyText(7)).toBe('Cada 7 días')
+    expect(everyText(0)).toBe('Nunca')
+    expect(differenceText(-1200, fmt)).toBe('Faltan $1200.00')
+    expect(differenceText(200, fmt)).toBe('Sobran $200.00')
+    expect(differenceText(0, fmt)).toBe('Cuadra con tus libros')
+  })
+
+  it('says when the cash was counted and which day was picked', () => {
+    const today = new Date('2026-11-17T10:00:00')
+    expect(lastCountText(null, today)).toBe('Nunca contada')
+    expect(lastCountText('2026-11-17', today)).toBe('Contada hoy')
+    expect(lastCountText('2026-11-08', today)).toBe('Contada hace 9 días')
+    expect(dayOf('hoy', today)).toBe('2026-11-17')
+    expect(dayOf('ayer', today)).toBe('2026-11-16')
   })
 })
 
@@ -328,5 +372,103 @@ describe('PorExplicar page', () => {
     expect(host.querySelector('[data-por-explicar-solo-ver]')).not.toBeNull()
     expect(button('Sí, es eso')).toBeUndefined()
     expect(button('Ver movimientos')).toBeDefined()
+  })
+
+  const type = async (selector, value) => {
+    const input = host.querySelector(selector)
+    input.value = value
+    input.dispatchEvent(new Event('input'))
+    await flush()
+  }
+
+  it('books cash spent in three taps and undoes it', async () => {
+    state.call.mockImplementation(async (method) => {
+      if (method.endsWith('.estado')) return estado([])
+      if (method.endsWith('.gaste'))
+        return { journal: 'JV-9', amount: 350, estado: estado([]) }
+      if (method.endsWith('.deshacer_efectivo')) return { estado: estado([]) }
+      throw new Error(method)
+    })
+    await mount()
+    expect(
+      host.querySelector('[data-por-explicar-efectivo]').textContent,
+    ).toContain('Nunca contada')
+    button('Gasté en efectivo').click()
+    await flush()
+    await type('[data-gasto-monto]', '350')
+    host.querySelector('[data-gasto-cuenta="Gasolina - E"]').click()
+    await flush()
+    host.querySelector('[data-gasto-guardar]').click()
+    await flush()
+    const [, args] = state.call.mock.calls.find(([m]) => m.endsWith('.gaste'))
+    expect(args).toMatchObject({
+      company: 'Mi Empresa',
+      monto: 350,
+      cuenta: 'Gasolina - E',
+      caja: 'Caja Fuerte - E',
+    })
+    expect(
+      host.querySelector('[data-por-explicar-recibo]').textContent,
+    ).toContain('en efectivo, en tus libros')
+    button('Deshacer').click()
+    await flush()
+    const undo = state.call.mock.calls.find(([m]) =>
+      m.endsWith('.deshacer_efectivo'),
+    )
+    expect(undo[1].poliza).toBe('JV-9')
+  })
+
+  it('counts the safe, says what is missing and books the answer', async () => {
+    state.call.mockImplementation(async (method) => {
+      if (method.endsWith('.estado')) return estado([])
+      if (method.endsWith('.ajustar'))
+        return { journal: 'JV-10', difference: -1000, estado: estado([]) }
+      throw new Error(method)
+    })
+    await mount()
+    button('Contar caja').click()
+    await flush()
+    await type('[data-conteo-monto]', '11,000')
+    expect(
+      host.querySelector('[data-conteo-diferencia]').textContent,
+    ).toContain('Faltan')
+    const save = host.querySelector('[data-conteo-guardar]')
+    expect(save.disabled).toBe(true)
+    host.querySelector('[data-conteo-tipo="personal"]').click()
+    await flush()
+    expect(save.disabled).toBe(false)
+    save.click()
+    await flush()
+    const [, args] = state.call.mock.calls.find(([m]) => m.endsWith('.ajustar'))
+    expect(args).toMatchObject({
+      caja: 'Caja Fuerte - E',
+      contado: 11000,
+      tipo: 'personal',
+      cuenta: 'Retiros - E',
+    })
+  })
+
+  it('saves the reminder from the bell', async () => {
+    state.call.mockImplementation(async (method) => {
+      if (method.endsWith('.estado')) return estado([])
+      if (method.endsWith('.recordatorio_guardar'))
+        return {
+          ...estado([]),
+          recordatorio: { remind: 1, hour: 21, every: 14 },
+        }
+      throw new Error(method)
+    })
+    await mount()
+    host.querySelector('[data-por-explicar-recordatorio]').click()
+    await flush()
+    host.querySelector('[data-recordatorio-hora="21"]').click()
+    host.querySelector('[data-recordatorio-cada="14"]').click()
+    await flush()
+    host.querySelector('[data-recordatorio-guardar]').click()
+    await flush()
+    const [, args] = state.call.mock.calls.find(([m]) =>
+      m.endsWith('.recordatorio_guardar'),
+    )
+    expect(args).toMatchObject({ activo: 1, hora: 21, contar_cada: 14 })
   })
 })

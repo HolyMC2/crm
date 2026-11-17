@@ -157,8 +157,17 @@ cash or card account, or one already used that way, e.g. a deferred-purchase pla
 doctype and no setting: the memory is the books themselves. Page `/bancos/por-explicar` (in the
 «Tu dinero» route); the Bancos chip «N movimientos por explicar» and a Tu dinero row open it.
 
-Next: lane 2 (cash and the reminder), then the bot reads `por_explicar` on every site (today
-`banco_por_explicar` needs Contador). Setup on Marco's shops after the roll: explain the backlog
+Lane 2 `efectivo` (doco + crm): «Tu efectivo» on the same page (each cash account, its book
+balance, the last count), «Gasté en efectivo» (amount, what, which cash, today or yesterday: one
+entry) and «Contar caja» (the difference booked with the person's answer, so the books say what is
+there); the daily reminder (doco `books/recordatorio.py`, hourly, once a day from the owner's hour:
+the movements still unexplained and the cash not counted in N days, in the owners' chat and the
+bell) and Hoy's «Por explicar» card. Settings in «Plan de Dinero» (on by default, 20 h, count every
+7 days), set from the bell in the page's bar. The money pages now follow «Ve el dinero del
+negocio» (a person the owner keeps the money from gets none of them). Transfers may go to a
+liability, so a card's deferred-purchase plan («Meses en automático») has a home.
+
+Next: the bot reads `por_explicar` on every site (today `banco_por_explicar` needs Contador). Setup on Marco's shops after the roll: explain the backlog
 since 08-01 on doco prod with the page (his taps), count the safe, then let the reminder run.
 
 ## 4. Settings and the owner's switches

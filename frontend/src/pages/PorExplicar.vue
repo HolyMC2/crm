@@ -13,7 +13,28 @@
       :back="{ name: 'Bancos', query: companyQuery }"
       back-label="Volver a Bancos"
       :loading="loading && !!data"
-    />
+    >
+      <template v-if="data?.can_set" #actions>
+        <button
+          type="button"
+          class="press grid size-10 place-items-center rounded-full text-ink-gray-7"
+          aria-label="Recordatorio"
+          title="Recordatorio"
+          data-por-explicar-recordatorio
+          @click="sheets.reminder = true"
+        >
+          <span
+            :class="[
+              data.recordatorio?.remind
+                ? 'lucide-alarm-clock'
+                : 'lucide-alarm-clock-off',
+              'size-5',
+            ]"
+            aria-hidden="true"
+          />
+        </button>
+      </template>
+    </AppBar>
 
     <p
       v-if="error"
@@ -59,6 +80,51 @@
           <span class="lucide-sparkles size-4" aria-hidden="true" />
           {{ countText(data.summary.guessed) }} con respuesta sugerida
         </p>
+      </section>
+
+      <!-- The cash: what the books say each one holds, when it was counted. -->
+      <section
+        v-if="data.efectivo?.length"
+        class="mx-4 mt-3 flex-none rounded-7 border border-outline-gray-2 p-4"
+        aria-label="Tu efectivo"
+        data-por-explicar-efectivo
+      >
+        <h2 class="text-sm font-semibold text-ink-gray-7">Tu efectivo</h2>
+        <ul class="mt-2 space-y-2">
+          <li
+            v-for="c in data.efectivo"
+            :key="c.account"
+            class="flex items-start justify-between gap-3 text-sm"
+          >
+            <span class="min-w-0">
+              <span class="block break-words text-ink-gray-9">{{
+                c.label
+              }}</span>
+              <span class="block text-ink-gray-6">{{
+                lastCountText(c.last_count)
+              }}</span>
+            </span>
+            <span class="num whitespace-nowrap text-ink-gray-9">{{
+              fmt(c.balance)
+            }}</span>
+          </li>
+        </ul>
+        <div v-if="data.can_book" class="mt-3 flex flex-wrap gap-2">
+          <Button
+            class="min-h-11"
+            variant="solid"
+            label="Gasté en efectivo"
+            data-por-explicar-gaste
+            @click="sheets.spent = true"
+          />
+          <Button
+            class="min-h-11"
+            variant="subtle"
+            label="Contar caja"
+            data-por-explicar-contar
+            @click="sheets.count = true"
+          />
+        </div>
       </section>
 
       <!-- What the last tap did, with its undo. -->
@@ -308,6 +374,17 @@
         </div>
       </template>
     </BottomSheet>
+    <GastoEfectivoSheet
+      v-model:open="sheets.spent"
+      :data="data"
+      @done="spent"
+    />
+    <ConteoCajaSheet v-model:open="sheets.count" :data="data" @done="counted" />
+    <RecordatorioSheet
+      v-model:open="sheets.reminder"
+      :data="data"
+      @done="data = $event"
+    />
   </div>
 </template>
 
@@ -317,6 +394,9 @@ import { useRoute } from 'vue-router'
 import { Button } from 'frappe-ui'
 import { AppBar, BottomSheet, EmptyState } from '@/components/ui'
 import { errorText, money } from '@/components/bancos/bancos'
+import ConteoCajaSheet from '@/components/dinero/ConteoCajaSheet.vue'
+import GastoEfectivoSheet from '@/components/dinero/GastoEfectivoSheet.vue'
+import RecordatorioSheet from '@/components/dinero/RecordatorioSheet.vue'
 import {
   accountNames,
   accountsFor,
@@ -324,6 +404,7 @@ import {
   countText,
   journalsOf,
   kindsFor,
+  lastCountText,
   porExplicarApi,
   rangeText,
   receiptText,
@@ -338,7 +419,8 @@ const loading = ref(false)
 const error = ref('')
 const busy = ref('')
 const open = reactive(new Set())
-const receipt = reactive({ text: '', journals: [], busy: false })
+const receipt = reactive({ text: '', journals: [], cash: false, busy: false })
+const sheets = reactive({ spent: false, count: false, reminder: false })
 const sheet = reactive({
   open: false,
   group: null,
@@ -449,6 +531,7 @@ async function explain(g, kind, account, from = null) {
     data.value = done.estado
     receipt.text = receiptText(done, g.label)
     receipt.journals = journalsOf(done)
+    receipt.cash = false
     if (from) from.open = false
   } catch (e) {
     if (from) from.problem = errorText(e)
@@ -461,16 +544,42 @@ async function explain(g, kind, account, from = null) {
   }
 }
 
+function spent(done) {
+  data.value = done.estado
+  receipt.text = `Listo: ${fmt(done.amount)} en efectivo, en tus libros.`
+  receipt.journals = [done.journal]
+  receipt.cash = true
+}
+
+function counted(done) {
+  data.value = done.estado
+  const left = data.value.efectivo?.find((c) => c.label === done.label)
+  receipt.text = left
+    ? `Listo: ${done.label} queda en ${fmt(left.balance)}.`
+    : 'Listo: conteo guardado.'
+  receipt.journals = done.journal ? [done.journal] : []
+  receipt.cash = true
+}
+
 async function undo() {
   if (receipt.busy) return
   receipt.busy = true
   try {
-    const page = await porExplicarApi('deshacer', {
-      company: data.value.company,
-      polizas: receipt.journals,
-    })
+    let page = null
+    if (receipt.cash) {
+      page = await porExplicarApi('deshacer_efectivo', {
+        company: data.value.company,
+        poliza: receipt.journals[0],
+      })
+      receipt.text = 'Deshecho: el efectivo vuelve a como estaba.'
+    } else {
+      page = await porExplicarApi('deshacer', {
+        company: data.value.company,
+        polizas: receipt.journals,
+      })
+      receipt.text = 'Deshecho: esos movimientos vuelven a estar por explicar.'
+    }
     data.value = page.estado
-    receipt.text = 'Deshecho: esos movimientos vuelven a estar por explicar.'
     receipt.journals = []
   } catch (e) {
     receipt.text = errorText(e)

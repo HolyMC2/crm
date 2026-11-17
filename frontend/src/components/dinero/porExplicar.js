@@ -160,3 +160,60 @@ export function rangeText(first, last) {
   if (!last || first === last) return fmt(first)
   return `del ${fmt(first)} al ${fmt(last)}`
 }
+
+// ---------------------------------------------------------------- cash and the reminder
+
+/** The hours the reminder offers, in the evening after closing. */
+export const REMIND_HOURS = Object.freeze([18, 19, 20, 21, 22])
+
+/** Days between «¿cuánto hay en la caja?»; 0 never asks. */
+export const COUNT_EVERY = Object.freeze([7, 14, 30, 0])
+
+/** «8 de la noche», «6 de la tarde». */
+export function hourText(hour) {
+  const h = Number(hour)
+  if (!Number.isFinite(h)) return ''
+  const twelve = h % 12 === 0 ? 12 : h % 12
+  if (h < 12) return `${twelve} de la mañana`
+  if (h < 19) return `${twelve} de la tarde`
+  return `${twelve} de la noche`
+}
+
+/** «Cada 7 días», «Nunca». */
+export function everyText(days) {
+  const n = Number(days)
+  if (!n) return 'Nunca'
+  return n === 1 ? 'Cada día' : `Cada ${n} días`
+}
+
+/** A count against the books: «Cuadra», «Faltan $1,200.00», «Sobran $200.00». */
+export function differenceText(difference, fmt) {
+  const d = Math.round(Number(difference || 0) * 100) / 100
+  if (!d) return 'Cuadra con tus libros'
+  return d < 0 ? `Faltan ${fmt(-d)}` : `Sobran ${fmt(d)}`
+}
+
+/** The side a difference books like a bank movement: missing money left the cash. */
+export function differenceSide(difference) {
+  return Number(difference) < 0 ? 'Withdrawal' : 'Deposit'
+}
+
+/** «Contada hoy», «Contada hace 9 días», «Nunca contada». */
+export function lastCountText(day, today = new Date()) {
+  if (!day) return 'Nunca contada'
+  const then = new Date(`${day}T12:00:00`)
+  const now = new Date(today)
+  now.setHours(12, 0, 0, 0)
+  const days = Math.round((now - then) / 86400000)
+  if (days <= 0) return 'Contada hoy'
+  if (days === 1) return 'Contada ayer'
+  return `Contada hace ${days} días`
+}
+
+/** The day picked for cash spent: today or yesterday, as YYYY-MM-DD. */
+export function dayOf(which, today = new Date()) {
+  const d = new Date(today)
+  if (which === 'ayer') d.setDate(d.getDate() - 1)
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}

@@ -2,6 +2,12 @@
 
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
+## 2026-11-17 — Por explicar: «Gasté en efectivo», «Contar caja» and the daily reminder (lane efectivo; not deployed)
+
+- **«Tu efectivo» on `/bancos/por-explicar`:** each cash account with what the books say it holds and when it was last counted («Nunca contada», «Contada hace 9 días»); «Gasté en efectivo» (how much, what it was among the most used expenses or «Retiros del dueño», which cash, today or yesterday, a note: one entry, with «Deshacer») and «Contar caja» (what is there against the books, «Faltan $X» / «Sobran $X» with «¿en qué se fue?» / «¿de dónde salió?»; the button leaves the books at the counted amount).
+- **The bell in the page's bar: «Recordatorio»:** on or off, the hour (6 de la tarde … 10 de la noche) and how often to ask to count the cash (7, 14, 30 days or never). Saved in the company's «Plan de Dinero».
+- **Tests:** `tests/unit/porExplicar.test.js` (+5: the helpers' words, cash spent and undone, a count with its answer, the reminder). Rollback = revert with the doco half.
+
 ## 2026-11-17 — Bancos › Por explicar: say what each bank and card movement was, a merchant at a time (lane por-explicar; not deployed)
 
 - **Page `/bancos/por-explicar` (`pages/PorExplicar.vue`, in the «Tu dinero» route):** how many movements the books do not explain, their total and since when, and how many come with an answer suggested; one card per merchant and account («ANTHROPIC · Amex · 2 movimientos · −$7,275.29») with «Parece: Gasto del negocio · Software — Así lo explicaste las últimas 3 veces», «Sí, es eso» (books the whole group), «Otra cosa» / «¿Qué fue?» (the answer for that side: gasto, personal, entre mis cuentas, ingreso; then the account, searchable, most used first) and «Ver movimientos»; the receipt says what went through and offers «Deshacer». Without the rights to book entries the page shows what waits and says who books it.
