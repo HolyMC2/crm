@@ -3,7 +3,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick } from 'vue'
 
-const state = vi.hoisted(() => ({ call: vi.fn(), replace: vi.fn(), query: {} }))
+const state = vi.hoisted(() => ({
+  call: vi.fn(),
+  replace: vi.fn(),
+  query: {},
+  params: {},
+}))
 vi.mock('frappe-ui', async () => {
   const { h } = await import('vue')
   return {
@@ -66,7 +71,7 @@ vi.mock('vue-router', async () => {
         () =>
           h('a', attrs, slots.default?.()),
     },
-    useRoute: () => ({ query: state.query }),
+    useRoute: () => ({ query: state.query, params: state.params }),
     useRouter: () => ({ replace: state.replace }),
   }
 })
@@ -79,6 +84,12 @@ import {
   shiftMonth,
 } from '@/components/dinero/aDondeVa'
 import ADondeVa from '@/pages/ADondeVa.vue'
+import TuDinero from '@/pages/TuDinero.vue'
+
+vi.mock('@/pages/Deudas.vue', async () => {
+  const { h } = await import('vue')
+  return { default: { setup: () => () => h('div', { 'data-deudas': '' }) } }
+})
 
 const flush = async () => {
   for (let i = 0; i < 8; i++) {
@@ -261,5 +272,24 @@ describe('ADondeVa page', () => {
     expect(next.disabled).toBe(true)
     host.querySelector('[aria-label="Mes anterior"]').click()
     expect(state.replace).toHaveBeenCalled()
+  })
+})
+
+describe('Tu dinero route', () => {
+  it('shows the page its path names', async () => {
+    state.call.mockResolvedValue(month())
+    const host = document.createElement('div')
+    state.params = { dinero: 'a-donde-va' }
+    let app = createApp({ render: () => h(TuDinero) })
+    app.mount(host)
+    await flush()
+    expect(host.querySelector('[data-adondeva-resumen]')).not.toBeNull()
+    app.unmount()
+    state.params = { dinero: 'deudas' }
+    app = createApp({ render: () => h(TuDinero) })
+    app.mount(host)
+    await flush()
+    expect(host.querySelector('[data-deudas]')).not.toBeNull()
+    app.unmount()
   })
 })

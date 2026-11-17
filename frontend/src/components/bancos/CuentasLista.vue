@@ -136,7 +136,11 @@
               title="¿A dónde va el dinero?"
               subtitle="Lo que entró y salió del mes, por destino, y tus gastos fijos"
               icon="lucide-chart-pie"
-              :to="{ name: 'ADondeVa', query: companyQuery }"
+              :to="{
+                name: 'TuDinero',
+                params: { dinero: 'a-donde-va' },
+                query: companyQuery,
+              }"
             >
               <template #trailing>
                 <span
@@ -151,7 +155,11 @@
               title="Deudas y plan de pago"
               :subtitle="deudasLine"
               icon="lucide-trending-down"
-              :to="{ name: 'BancoDeudas', query: companyQuery }"
+              :to="{
+                name: 'TuDinero',
+                params: { dinero: 'deudas' },
+                query: companyQuery,
+              }"
             >
               <template #trailing>
                 <span
