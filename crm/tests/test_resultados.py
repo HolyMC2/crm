@@ -300,8 +300,67 @@ class TestResultadosBoard(TestCase):
 		self.assertEqual(out["query"]["tipo"], "ventas")
 		ticket = resultados.document("Sales Invoice", sale.name)
 		self.assertEqual(ticket["name"], sale.name)
+		# A ticket also says where it can be returned and what the other apps add.
+		self.assertIn("pos", ticket["register"])
+		self.assertIsInstance(ticket["blocks"], dict)
+		self.assertIn("customer", ticket)
 		with self.assertRaises(frappe.PermissionError):
 			resultados.document("User", "Administrator")
 		frappe.set_user(fixtures.CASHIER)
 		with self.assertRaises(frappe.PermissionError):
 			resultados.documents(tipo="ventas")
+
+
+def ticket_block(ctx):
+	return {"seen": ctx["cost_visible"]}
+
+
+def empty_block(ctx):
+	return None
+
+
+@skipIf(not HAS_FRAPPE, "Frappe integration dependency is not installed")
+class TestResultadosTicket(TestCase):
+	"""What crm adds to a ticket: app blocks that fail alone, no history for the walk-in customer."""
+
+	def test_each_app_block_is_named_after_its_function_and_fails_alone(self):
+		from crm.api import resultados_ticket
+
+		paths = [
+			"crm.tests.test_resultados.ticket_block",
+			"crm.tests.test_resultados.failing_card",
+			"crm.tests.test_resultados.empty_block",
+		]
+		with (
+			patch.object(resultados_ticket.frappe, "get_hooks", return_value=paths),
+			patch.object(resultados_ticket.frappe, "log_error") as logged,
+		):
+			out = resultados_ticket.blocks("Sales Invoice", "SINV-1", cost_visible=True)
+		self.assertEqual(out, {"ticket_block": {"seen": True}})
+		logged.assert_called_once()
+
+	def test_the_walk_in_customer_has_no_history(self):
+		from crm.api import resultados_ticket
+
+		walk_in = {"customer": "General", "customer_name": "Publico en General"}
+		self.assertTrue(resultados_ticket.is_walk_in(walk_in))
+		self.assertIsNone(resultados_ticket.customer_summary(walk_in, "SINV-1"))
+		self.assertTrue(resultados_ticket.is_walk_in({"customer": ""}))
+		with patch.object(resultados_ticket.frappe.db, "get_value", return_value="General"):
+			self.assertTrue(
+				resultados_ticket.is_walk_in(
+					{"customer": "General", "customer_name": "Mostrador", "pos_profile": "Caja"}
+				)
+			)
+		with patch.object(resultados_ticket.frappe.db, "get_value", return_value="General"):
+			self.assertFalse(
+				resultados_ticket.is_walk_in(
+					{"customer": "Ana López", "customer_name": "Ana López", "pos_profile": "Caja"}
+				)
+			)
+
+	def test_a_cash_closing_stays_as_the_selling_app_sent_it(self):
+		from crm.api import resultados_ticket
+
+		closing = {"doctype": "POS Closing Shift", "name": "C-1"}
+		self.assertEqual(resultados_ticket.compose("POS Closing Shift", "C-1", dict(closing)), closing)

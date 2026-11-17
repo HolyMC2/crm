@@ -317,6 +317,10 @@ def documents(
 @frappe.whitelist(methods=["GET", "POST"])
 def document(doctype: str, name: str):
 	"""One ticket or cash closing of the lens; the document's own read
-	permission decides."""
+	permission decides. A ticket also carries its customer, its CFDI and what
+	other apps say about it (crm.api.resultados_ticket)."""
 	_require_user()
-	return _delegate("muelle_resultados_document", _text(doctype), str(name or "")[:MAX_TEXT])
+	doctype, name = _text(doctype), str(name or "")[:MAX_TEXT]
+	from crm.api.resultados_ticket import compose
+
+	return compose(doctype, name, _delegate("muelle_resultados_document", doctype, name))

@@ -47258,3 +47258,338 @@ msgstr "Metas"
 msgctxt "Equipo"
 msgid "Delete"
 msgstr "Borrar"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "1 item"
+msgstr "1 artículo"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "On credit with {0}"
+msgstr "A crédito con {0}"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "On credit"
+msgstr "A crédito"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Invoiced (CFDI)"
+msgstr "Facturada (CFDI)"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "No invoice yet"
+msgstr "Sin factura"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Returnable until {0}"
+msgstr "Devolución hasta el {0}"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Return window closed"
+msgstr "Ya no admite devolución"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "{0} off the list price"
+msgstr "{0} menos que el precio de lista"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Cost {0} · profit {1}"
+msgstr "Costo {0} · ganancia {1}"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Before the discount"
+msgstr "Antes del descuento"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Discount, {0} %"
+msgstr "Descuento, {0} %"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Discount"
+msgstr "Descuento"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Taxes"
+msgstr "Impuestos"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Includes {0} the credit provider pays."
+msgstr "Incluye {0} que paga la financiera."
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "The credit price was never captured, so what the provider pays is left out."
+msgstr "Nunca se capturó el precio a crédito, así que falta lo que paga la financiera."
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "No cost to compare"
+msgstr "Sin costo para comparar"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Nothing on this ticket has a cost (labour or services)."
+msgstr "Nada en este ticket tiene costo (mano de obra o servicios)."
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Plus {0} of labour or services, which have no cost."
+msgstr "Más {0} de mano de obra o servicios, que no tienen costo."
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Profit {0} · {1} %"
+msgstr "Ganancia {0} · {1} %"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Sold, without tax"
+msgstr "Vendido, sin impuestos"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "What it cost"
+msgstr "Lo que costó"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Profit"
+msgstr "Ganancia"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "{0} purchases · {1}"
+msgstr "{0} compras · {1}"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "First purchase"
+msgstr "Primera compra"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Previous visit {0}"
+msgstr "Visita anterior: {0}"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Customer since {0}"
+msgstr "Cliente desde {0}"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "{0} repairs · {1} open"
+msgstr "{0} reparaciones · {1} abiertas"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "1 repair"
+msgstr "1 reparación"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "{0} repairs"
+msgstr "{0} reparaciones"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Received by {0}"
+msgstr "Recibió {0}"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Repaired by {0}"
+msgstr "Reparó {0}"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Delivered by {0}"
+msgstr "Entregó {0}"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "In {0}"
+msgstr "Entró {0}"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Out {0}"
+msgstr "Salió {0}"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Warranty until {0}"
+msgstr "Garantía hasta el {0}"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Warranty ended {0}"
+msgstr "La garantía venció el {0}"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "{0} days of warranty from delivery"
+msgstr "{0} días de garantía desde la entrega"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Device"
+msgstr "Equipo"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Reported"
+msgstr "Falla reportada"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Work done"
+msgstr "Trabajo realizado"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "This was a warranty claim"
+msgstr "Fue un reclamo de garantía"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Folio"
+msgstr "Folio"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Register"
+msgstr "Caja"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Rung up by"
+msgstr "Cobró"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Sold by"
+msgstr "Vendió"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Pieces"
+msgstr "Piezas"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Due"
+msgstr "Vence"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Collect at the register"
+msgstr "Cobrar en caja"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Print or download the ticket"
+msgstr "Imprimir o descargar el ticket"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Make the invoice (CFDI)"
+msgstr "Hacer la factura (CFDI)"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Send the customer the invoicing link"
+msgstr "Mandar al cliente el enlace para facturar"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Your invoice"
+msgstr "Tu factura"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Get the invoice for your purchase here:"
+msgstr "Saca la factura de tu compra aquí:"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Return at the register"
+msgstr "Devolver en caja"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Open the repair"
+msgstr "Abrir la reparación"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Open the sale in Ventas"
+msgstr "Abrir la venta en Ventas"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Repair"
+msgstr "Reparación"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Parts used"
+msgstr "Refacciones usadas"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Customer"
+msgstr "Cliente"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Details"
+msgstr "Detalles"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Copy the folio"
+msgstr "Copiar el folio"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Send the ticket by WhatsApp"
+msgstr "Enviar el ticket por WhatsApp"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Link copied: paste it to the customer"
+msgstr "Enlace copiado: pégalo en el chat del cliente"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Could not share the link"
+msgstr "No se pudo compartir el enlace"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "This ticket cannot be sent by email."
+msgstr "Este ticket no se puede enviar por correo."
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Folio copied"
+msgstr "Folio copiado"
+
+#: frontend/src/composables/resultadosTicket.js
+msgctxt "Resultados"
+msgid "Could not copy the folio"
+msgstr "No se pudo copiar el folio"

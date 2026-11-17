@@ -282,6 +282,24 @@ export async function shareDocument({
   return (await copyText(url)) ? 'copied' : 'failed'
 }
 
+/**
+ * A link for someone else (the customer's invoicing link): the phone's share
+ * sheet with a line of text, else the link copied.
+ * Returns 'shared' | 'copied' | 'cancelled' | 'failed'.
+ */
+export async function shareLink({ title, text, url }) {
+  const nav = globalThis.navigator
+  if (nav?.share) {
+    try {
+      await nav.share({ title, text, url })
+      return 'shared'
+    } catch (e) {
+      if (e?.name === 'AbortError') return 'cancelled'
+    }
+  }
+  return (await copyText(url)) ? 'copied' : 'failed'
+}
+
 /** Adjuntar: upload one file to the record (private by default). */
 export async function uploadAttachment({
   doctype,

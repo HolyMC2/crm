@@ -371,7 +371,7 @@ import {
   sourceName,
 } from '@/composables/preciosLink'
 import { useRoute, useRouter } from 'vue-router'
-import { call, toast } from 'frappe-ui'
+import { toast } from 'frappe-ui'
 import { AppBar, EmptyState, StatusChip } from '@/components/ui'
 import Conexiones from '@/components/documentos/Conexiones.vue'
 import StageSteps from '@/components/documentos/StageSteps.vue'
@@ -392,6 +392,7 @@ import { shellBoot } from '@/composables/muelleShell'
 import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
 import { FOLLOW_UP, recordActionsFor } from '@/documentos/acciones'
 import { docApi, errorText } from '@/documentos/api'
+import { useRecordWhatsapp } from '@/documentos/recordWhatsapp'
 import { makeTarget } from '@/documentos/form'
 import { loadProfile } from '@/documentos/profiles'
 import {
@@ -713,45 +714,19 @@ function onBolt({ key }) {
   } else onTool(key)
 }
 const composerOn = computed(() => moduleEnabled(shellBoot.value, 'ventas'))
-const composerOpen = ref(false)
-const sendSheet = ref(false)
-const sendOpen = ref(false)
-let whatsappAsking = false
-async function openWhatsapp() {
-  if (whatsappAsking) return
-  whatsappAsking = true
-  try {
-    const next = await call('crm.api.whatsapp_channel.record_whatsapp', {
-      doctype: doctype.value,
-      name: name.value,
-      phone: record.value?.header?.reach?.phone || '',
-    })
-    if (next?.action === 'composer') composerOpen.value = true
-    else if (next?.action === 'send') {
-      sendSheet.value = true
-      sendOpen.value = true
-    } else if (next?.action === 'thread')
-      router.push({
-        name: 'Inbox',
-        query: {
-          deal: next.name,
-          doctype: next.doctype,
-          return_to: route.fullPath,
-          return_label: view.value?.title || undefined,
-        },
-      })
-    else if (next?.action === 'conversation')
-      router.push({
-        name: 'Inbox',
-        query: { workspace: 'conversations', conversation: next.name },
-      })
-    else toast.error(next?.message || 'No se puede abrir WhatsApp aquí.')
-  } catch (e) {
-    toast.error(errorText(e))
-  } finally {
-    whatsappAsking = false
-  }
-}
+const {
+  composerOpen,
+  sendSheet,
+  sendOpen,
+  open: openWhatsapp,
+} = useRecordWhatsapp({
+  doctype: () => doctype.value,
+  name: () => name.value,
+  phone: () => record.value?.header?.reach?.phone || '',
+  title: () => view.value?.title || '',
+  returnTo: () => route.fullPath,
+  router,
+})
 function mail() {
   const action = record.value?.actions?.email
   if (action?.allowed) onTool('correo')

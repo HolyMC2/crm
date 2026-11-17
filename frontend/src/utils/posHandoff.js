@@ -42,3 +42,11 @@ export function posSaleHref(
   }
   return `/posapp/pos?${params.toString()}`
 }
+
+const POS_RETURN_DOCTYPES = ['Sales Invoice', 'POS Invoice']
+
+/** POS «Devolver venta» deep link (posawesome returnFlowContext contract). */
+export function posReturnHref(row) {
+  if (!POS_RETURN_DOCTYPES.includes(row.doctype) || !row.name) return ''
+  return `/posapp?return_sale=${encodeURIComponent(row.name)}&return_doctype=${encodeURIComponent(row.doctype)}`
+}

@@ -595,6 +595,7 @@ const routes = [
       app: 'resultados',
       title: 'Resultados',
       listParent: 'ResultadosDocumentos',
+      ownPhoneHeader: true,
     },
   },
   // Bancos y catálogo de cuentas (Shell SPEC §6 DD19, contracts 0.13.0

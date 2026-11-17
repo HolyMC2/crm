@@ -3,7 +3,7 @@
 // ficha, legacy vertical slot). Pure: the panel renders it, the server re-checks
 // every action it offers.
 
-import { posCollectHref } from '@/utils/posHandoff'
+import { posCollectHref, posReturnHref } from '@/utils/posHandoff'
 import { safeReturnPath } from '@/utils/returnPath'
 
 export const SALES_DOCTYPES = Object.freeze([
@@ -12,7 +12,6 @@ export const SALES_DOCTYPES = Object.freeze([
   'Sales Invoice',
   'POS Invoice',
 ])
-const POS_RETURN_DOCTYPES = ['Sales Invoice', 'POS Invoice']
 
 function groupDefs() {
   return [
@@ -127,11 +126,7 @@ function denied(action, reason) {
 export { posCollectHref }
 export { safeReturnPath }
 
-/** POS «Devolver venta» deep link (posawesome returnFlowContext contract). */
-export function posReturnHref(row) {
-  if (!POS_RETURN_DOCTYPES.includes(row.doctype) || !row.name) return ''
-  return `/posapp?return_sale=${encodeURIComponent(row.name)}&return_doctype=${encodeURIComponent(row.doctype)}`
-}
+export { posReturnHref }
 
 function orderPending(row) {
   return row.docstatus === 1 && row.perBilled < 100

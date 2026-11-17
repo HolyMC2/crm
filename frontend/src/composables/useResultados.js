@@ -11,7 +11,7 @@ import {
 // compute every card (crm.api.resultados composes them); this file keeps the
 // URL state, the formatting and the drill links pure so tests share them.
 
-function tr(message, replace, context = null) {
+export function tr(message, replace, context = null) {
   if (typeof window !== 'undefined' && typeof window.__ === 'function')
     return window.__(message, replace, context)
   return message.replace(/{(\d+)}/g, (match, n) =>
