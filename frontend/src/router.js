@@ -1138,7 +1138,8 @@ const routes = [
   {
     path: '/leads/:leadId',
     name: 'Lead',
-    component: () => import(`@/pages/${handleMobileView('Lead')}.vue`),
+    component: () =>
+      isPhone() ? import('@/pages/MobileLead.vue') : import('@/pages/Lead.vue'),
     props: true,
     meta: { title: 'Lead' },
   },
@@ -1153,7 +1154,8 @@ const routes = [
   {
     path: '/deals/:dealId',
     name: 'Deal',
-    component: () => import(`@/pages/${handleMobileView('Deal')}.vue`),
+    component: () =>
+      isPhone() ? import('@/pages/MobileDeal.vue') : import('@/pages/Deal.vue'),
     props: true,
     meta: { title: 'Deal' },
   },
@@ -1459,9 +1461,9 @@ const routes = [
   },
 ]
 
-const handleMobileView = (componentName) => {
-  return window.innerWidth < 768 ? `Mobile${componentName}` : componentName
-}
+// The phone or desktop record page, as two literal imports: a template-string
+// import makes the build embed a loader for every page in the entry chunk.
+const isPhone = () => window.innerWidth < 768
 
 let router = createRouter({
   history: createWebHistory('/crm'),
