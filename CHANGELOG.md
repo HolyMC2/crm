@@ -9,6 +9,11 @@ Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` i
 - **Settings › Email › Accounts › a mailbox:** «Who reads it»: «Only me» or «My team» with a people picker; each change saves at once (`crm/api/correo_buzones.py`, written straight to the scope fields so no IMAP/SMTP login is retried). A reader also gets «Inbox User» (Frappe's role for reading mail; their «User Emails» still decide which mailboxes). The list shows a «Personal» badge.
 - **Migration:** two custom fields on Email Account (`crm_alcance` default Shared, `crm_dueno`), added by patch `v1_0.email_account_scope_fields`; existing mailboxes stay Shared, so nothing changes until someone chooses «Only me».
 - **Tests:** `crm/tests/test_correo_privado.py` (8: lists, open, settings list, auto-links, vincular, defaults, who reads it, who may change it); `test_d12_correo` still passes. Lease walk through the live preview: Shared → «Only me» (owner set) → Personal badge → «My team» with a seller. Rollback = revert; personal mailboxes go back to Frappe's rule.
+## 2026-11-16 — Redes: the taller post takes one after photo, with its repair type (lane repair-card; not deployed)
+
+- «Foto del taller» in the composer lists the repairs with a photo after the repair, each with its repair type and device, and picks one photo («Usar esta foto»); the card is drawn on the server (doco_marketing `repair_card`). A line reminds the reviewer that no face, name or price may show. `socialDaily.pickPhoto` replaces the before/after pair pick.
+- Tests: `tests/unit/socialDaily.test.js`.
+
 ## 2026-11-16 — Ventas opens again from the desktop rail (lane ventas-rail; not deployed)
 
 - **Fix:** the rail's Ventas tile links to `/ventas`, which redirected to Home; since «everyone lands on Hoy» (051a91d29, 11-15) that meant Hoy, which has no Ventas sidebar, so on a desktop Ventas did not open (the phone reaches its lists from «Más» and was fine). `/ventas` now opens the Inbox (the native Leads list without doco_marketing), as it did before 11-15 (`gateRoute`). «Configuración de ventas» opened from another module enters Ventas through `/ventas` too, and now finds its runtime.

@@ -83,29 +83,18 @@ describe('reviewLine and initials', () => {
 })
 
 describe('the photo pick', () => {
-  const antes1 = { name: 'RPH-1', type: 'Antes' }
-  const antes2 = { name: 'RPH-2', type: 'Antes' }
-  const despues = { name: 'RPH-3', type: 'Después' }
+  const one = { name: 'RPH-3', type: 'Después' }
+  const other = { name: 'RPH-4', type: 'Después' }
 
-  it('keeps one before and one after: a second «Antes» replaces the first', async () => {
-    const { togglePhoto } = await load()
-    let pick = togglePhoto([], antes1)
-    pick = togglePhoto(pick, despues)
-    pick = togglePhoto(pick, antes2)
-    expect(pick.map((p) => p.name).sort()).toEqual(['RPH-2', 'RPH-3'])
+  it('one photo after the repair: a new tap replaces it', async () => {
+    const { pickPhoto } = await load()
+    expect(pickPhoto(null, one)).toBe(one)
+    expect(pickPhoto(one, other)).toBe(other)
   })
 
-  it('a second tap takes a photo out', async () => {
-    const { togglePhoto } = await load()
-    expect(togglePhoto([antes1], antes1)).toEqual([])
-  })
-
-  it('the card draws before first', async () => {
-    const { pickOrder } = await load()
-    expect(pickOrder([despues, antes1]).map((p) => p.name)).toEqual([
-      'RPH-1',
-      'RPH-3',
-    ])
+  it('a second tap takes it out', async () => {
+    const { pickPhoto } = await load()
+    expect(pickPhoto(one, one)).toBeNull()
   })
 })
 

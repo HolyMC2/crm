@@ -30,7 +30,7 @@ export function nextStep(post, { canApprove = false, issues = [] } = {}) {
   if (post.status === 'Cancelado')
     return { key: 'hecho', text: __('Cancelada. No se publica.') }
   if (!hasImage(post.media))
-    return { key: 'fotos', text: __('Elige las fotos del taller.') }
+    return { key: 'fotos', text: __('Elige la foto de después del taller.') }
   if (issues.length)
     return {
       key: 'texto',
@@ -91,24 +91,11 @@ export function initials(name) {
 }
 
 /**
- * Toggle a photo in the pick (at most one before and one after, or two others):
- * picking a second «Antes» replaces the first, so the pair stays a pair.
+ * The card shows one photo, the one after the repair (Marco 2026-11-16: «just the after
+ * repair with the repair types»): a tap picks it, a second tap on it takes it out.
  */
-export function togglePhoto(selected, photo, max = 2) {
-  const list = selected || []
-  if (list.some((p) => p.name === photo.name))
-    return list.filter((p) => p.name !== photo.name)
-  if (photo.type === 'Antes' || photo.type === 'Después') {
-    const kept = list.filter((p) => p.type !== photo.type)
-    return [...kept, photo].slice(-max)
-  }
-  return [...list, photo].slice(-max)
-}
-
-/** The pick in the order the card draws it: before first. */
-export function pickOrder(selected) {
-  const rank = (p) => (p.type === 'Antes' ? 0 : p.type === 'Después' ? 1 : 2)
-  return [...(selected || [])].sort((a, b) => rank(a) - rank(b))
+export function pickPhoto(selected, photo) {
+  return selected?.name === photo?.name ? null : photo
 }
 
 /** «Facebook» / «Instagram» for a pasted link, else ''. */
