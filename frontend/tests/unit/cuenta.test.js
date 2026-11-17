@@ -556,6 +556,15 @@ function readyDoor(boot = trialBoot()) {
 }
 
 describe('CuentaResumen', () => {
+  // The page reads the trial against today: pin today to the fixtures' NOW.
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(NOW)
+  })
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   it('shows the plan, the trial strip and the meters; «Activar» asks for the sheet', async () => {
     const door = readyDoor()
     const events = mount(CuentaResumen, { door, actions: ['activate', 'pay'] })
