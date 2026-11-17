@@ -75,7 +75,7 @@
           <p class="-mt-2 text-[12px] text-ink-gray-6">
             {{
               __(
-                'Se arma con la reparación más reciente que tenga fotos de antes y después aprobadas y no se haya publicado. Si no hay, la tarea es elegirlas.',
+                'Se arma con la reparación más reciente que tenga foto de después aprobada y no se haya publicado: la foto, el tipo de reparación y el equipo. Si no hay, la tarea es elegirla.',
               )
             }}
           </p>
