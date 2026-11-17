@@ -293,7 +293,11 @@ def _propios():
 
 def _visible(comm_name):
 	"""A Communication the worker may open: in their queue (Frappe's User Email rule) or on a
-	record they can read (Desk's timeline rule)."""
+	record they can read (Desk's timeline rule). Someone else's personal mailbox is never visible."""
+	from crm.permissions import correo as privado
+
+	if frappe.db.get_value("Communication", comm_name, "email_account") in privado.hidden_from():
+		return False
 	if frappe.get_list("Communication", filters={"name": comm_name}, pluck="name", limit_page_length=1):
 		return True
 	ref = frappe.db.get_value(
@@ -1317,7 +1321,10 @@ def marcar_leido(name: str, leido: int | str = 1):
 def vincular(name: str, doctype: str, docname: str):
 	"""Link a received email to a record (reference + timeline link) so it shows in the record's
 	Actividad; returns the record's route."""
+	from crm.permissions import correo as privado
+
 	comm = _require_mensaje(name)
+	privado.refuse_link(comm.email_account)
 	if not frappe.has_permission("Communication", "write", comm):
 		frappe.throw(_("Your user cannot change this email."), frappe.PermissionError)
 	target = _documento(doctype, docname)

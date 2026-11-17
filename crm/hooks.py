@@ -150,9 +150,14 @@ permission_query_conditions = {
 	"CRM Deal": "crm.permissions.org_hierarchy.get_deal_permission_query_conditions",
 	"CRM Call Log": "crm.permissions.org_hierarchy.get_call_log_permission_query_conditions",
 	"CRM Notification": "crm.fcrm.doctype.crm_notification.crm_notification.get_permission_query_conditions",
+	# personal mailboxes: only their owner reads them (ANDed with Frappe's own condition)
+	"Communication": "crm.permissions.correo.communication_query",
+	"Email Account": "crm.permissions.correo.email_account_query",
 }
 
 has_permission = {
+	"Communication": "crm.permissions.correo.communication_permission",
+	"Email Account": "crm.permissions.correo.email_account_permission",
 	"WhatsApp Message": "crm.permissions.whatsapp_read.message_permission",
 	"CRM Offer": "crm.offers.permissions.has_permission",
 	"CRM Pipeline": "crm.pipeline.services.configuration.pipeline_permission",
@@ -235,12 +240,18 @@ doc_events = {
 	"Notification Log": {
 		"before_insert": ["crm.extends.notification_log.before_insert"],
 	},
+	"Email Account": {
+		"validate": ["crm.permissions.correo.email_account_validate"],
+		"on_update": ["crm.permissions.correo.email_account_changed"],
+		"on_trash": ["crm.permissions.correo.email_account_changed"],
+	},
 	"ToDo": {
 		"before_insert": ["crm.owner_assignment.mark"],
 		"after_insert": ["crm.api.todo.after_insert"],
 		"on_update": ["crm.api.todo.on_update"],
 	},
 	"Communication": {
+		"validate": ["crm.permissions.correo.communication_validate"],
 		"after_insert": ["crm.utils.on_communication_insert"],
 		"on_update": ["crm.utils.on_communication_update"],
 	},

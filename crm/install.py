@@ -23,6 +23,7 @@ def after_install(force=False):
 	add_property_setter()
 	add_email_template_custom_fields()
 	add_email_account_custom_field()
+	add_email_account_scope_fields()
 	add_web_form_custom_fields()
 	add_default_industries()
 	add_default_lead_sources()
@@ -333,6 +334,35 @@ def add_email_account_custom_field():
 			}
 		)
 
+		frappe.clear_cache(doctype="Email Account")
+
+
+def add_email_account_scope_fields():
+	"""«Who reads it» on Email Account: a Personal mailbox is read only by its owner
+	(crm.permissions.correo). Missing fields are added; existing ones are left alone."""
+	fields = [
+		{
+			"default": "Shared",
+			"fieldname": "crm_alcance",
+			"fieldtype": "Select",
+			"label": "Who reads it",
+			"options": "Shared\nPersonal",
+			"description": "Personal: only its owner reads its mail, and it never links itself to contacts, leads or deals.",
+			"insert_after": "create_lead_from_incoming_email",
+		},
+		{
+			"depends_on": "eval:doc.crm_alcance=='Personal'",
+			"fieldname": "crm_dueno",
+			"fieldtype": "Link",
+			"label": "Owner",
+			"options": "User",
+			"insert_after": "crm_alcance",
+		},
+	]
+	meta = frappe.get_meta("Email Account")
+	missing = [f for f in fields if not meta.has_field(f["fieldname"])]
+	if missing:
+		create_custom_fields({"Email Account": missing})
 		frappe.clear_cache(doctype="Email Account")
 
 

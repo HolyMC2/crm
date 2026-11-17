@@ -23833,6 +23833,44 @@ msgstr "Dónde se hace"
 msgid "Who reads it"
 msgstr "Quién lo lee"
 
+#: frontend/src/components/Settings/EmailAudience.vue
+msgid "Personal"
+msgstr "Personal"
+
+#: frontend/src/components/Settings/EmailAudience.vue
+msgid "My team"
+msgstr "Mi equipo"
+
+#: frontend/src/components/Settings/EmailAudience.vue
+#: crm/api/correo_buzones.py
+msgid "Only its owner can change a personal mailbox."
+msgstr "Solo su dueño puede cambiar un buzón personal."
+
+#: frontend/src/components/Settings/EmailAudience.vue
+#: crm/api/correo_buzones.py
+msgid "Ask an administrator to change who reads this mailbox."
+msgstr "Pide a un administrador que cambie quién lee este buzón."
+
+#: frontend/src/components/Settings/EmailAudience.vue
+msgid "Only you read it. It never links itself to contacts, leads or deals, and the shop never sends from it."
+msgstr "Solo tú lo lees. Nunca se liga a contactos, prospectos ni tratos, y la tienda nunca envía desde él."
+
+#: frontend/src/components/Settings/EmailAudience.vue
+msgid "The people you choose read it. Administrators also read every shared mailbox."
+msgstr "Lo leen las personas que elijas. Los administradores también leen todos los buzones compartidos."
+
+#: frontend/src/components/Settings/EmailAudience.vue
+msgid "Could not save. Try again."
+msgstr "No se pudo guardar. Vuelve a intentar."
+
+#: crm/api/correo_buzones.py
+msgid "This mailbox does not exist or you cannot see it."
+msgstr "Este buzón no existe o no lo puedes ver."
+
+#: crm/permissions/correo.py
+msgid "This email is in a personal mailbox, which only its owner reads. Forward it to a shared mailbox to link it to a record."
+msgstr "Este correo está en un buzón personal, que solo lee su dueño. Reenvíalo a un buzón compartido para ligarlo a un registro."
+
 #: frontend/src (Manual de la tienda)
 msgid "Write a title and the article before publishing it."
 msgstr "Escribe el título y el artículo antes de publicarlo."

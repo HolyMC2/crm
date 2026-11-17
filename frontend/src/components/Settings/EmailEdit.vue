@@ -61,6 +61,7 @@
         </template>
       </div>
       <ErrorMessage v-if="error" class="ml-1" :message="error" />
+      <EmailAudience :account="accountData.email_account_name" />
     </div>
     <!-- action buttons -->
     <div class="flex justify-between mt-auto">
@@ -86,6 +87,7 @@ import { useSettingsDraft } from '@/composables/settingsSession'
 import { computed, reactive, ref } from 'vue'
 import { call, toast } from 'frappe-ui'
 import EmailProviderIcon from './EmailProviderIcon.vue'
+import EmailAudience from './EmailAudience.vue'
 import {
   emailIcon,
   services,
