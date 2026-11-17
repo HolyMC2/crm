@@ -1875,6 +1875,21 @@
       @saved="mermaSaved"
       @refresh="load({ quiet: true })"
     />
+    <!-- «Usar en la tienda»: loaded on first open. -->
+    <EquipoSheet
+      v-if="data && equipoMounted"
+      v-model:open="equipoOpen"
+      :item="product.name"
+      :item-name="product.item_name || product.name"
+      :uom="product.stock_uom || ''"
+      :rows="data.stock?.rows || []"
+      :action="equipoAction"
+      :units="data.units || null"
+      :serial="Boolean(product.has_serial_no)"
+      :lots="Boolean(product.has_batch_no)"
+      @saved="equipoSaved"
+      @refresh="load({ quiet: true })"
+    />
     <!-- «Avísame cuando baje» (Shell D5, DD8): the store's minimum, from
          «Mínimos por tienda»; loaded on first open. -->
     <AvisameSheet
@@ -1941,6 +1956,9 @@ const AjustarSheet = defineAsyncComponent(
 const MermaSheet = defineAsyncComponent(
   () => import('@/components/productos/MermaSheet.vue'),
 )
+const EquipoSheet = defineAsyncComponent(
+  () => import('@/components/productos/EquipoSheet.vue'),
+)
 const AvisameSheet = defineAsyncComponent(
   () => import('@/components/documentos/AvisameSheet.vue'),
 )
@@ -1956,6 +1974,7 @@ const ProductoBar = defineAsyncComponent(
   () => import('@/components/productos/ProductoBar.vue'),
 )
 import { mermaDone } from '@/components/productos/merma'
+import { EQUIPO_HINT, equipoDone } from '@/components/productos/equipo'
 import MovementRow from '@/components/inventario/MovementRow.vue'
 import ProductInsights from '@/components/productos/ProductInsights.vue'
 import ProductPrices from '@/components/productos/ProductPrices.vue'
@@ -2245,6 +2264,27 @@ async function mermaSaved(result) {
   await load()
 }
 
+// «Usar en la tienda»: pieces the shop keeps for its own work leave the stock
+// as its equipment (doco product_equipo), never rung up as a sale.
+const equipoOpen = ref(false)
+const equipoMounted = ref(false)
+const equipoAction = computed(() => action('equipo') || null)
+function openEquipo() {
+  equipoMounted.value = true
+  equipoOpen.value = true
+}
+async function equipoSaved(result) {
+  const said = equipoDone(result)
+  toast.success(said.toast)
+  const opens = said.asset ? documentLink('Asset', said.asset) : null
+  notice.value = {
+    text: said.text,
+    to: opens?.to,
+    link: opens?.to ? said.link : '',
+  }
+  await load()
+}
+
 function askCount(row) {
   countStore.value = row.warehouse
   countOpen.value = true
@@ -2328,6 +2368,7 @@ const ACTION_ICONS = {
   variants: 'layers',
   avisame: 'bell',
   merma: 'package-x',
+  equipo: 'store',
 }
 // The record's actions, primary first, and «Imprimir etiqueta» in Mercado.
 // Phone quick actions (Records 3): equal tonal pills, the label under each.
@@ -2358,6 +2399,7 @@ const heroActions = computed(() => {
     ...entry,
     icon: ACTION_ICONS[entry.key] || 'circle',
     ...(entry.key === 'merma' && entry.enabled ? { title: MERMA_HINT } : {}),
+    ...(entry.key === 'equipo' && entry.enabled ? { title: EQUIPO_HINT } : {}),
   }))
   if (canQuote.value)
     list.push({
@@ -2424,22 +2466,26 @@ const kit = useRecordKit('Item', {
   name: () => product.value.name || props.item,
   title: () => product.value.item_name || '',
   changed: () => load(),
-  // «Registrar merma» is also a tool of the product, with its reason when
-  // this worker cannot.
+  // «Registrar merma» and «Usar en la tienda» are also tools of the product,
+  // with their reason when this worker cannot.
   pageTools: () =>
-    mermaAction.value
-      ? [
-          {
-            key: 'merma',
-            label: mermaAction.value.label,
-            icon: BOLT_ICONS.merma,
-            allowed: Boolean(mermaAction.value.enabled),
-            reason: mermaAction.value.reason || '',
-            hint: MERMA_HINT,
-          },
-        ]
-      : [],
-  onPageTool: () => run(mermaAction.value),
+    [
+      [mermaAction.value, MERMA_HINT],
+      [equipoAction.value, EQUIPO_HINT],
+    ]
+      .filter(([entry]) => entry)
+      .map(([entry, hint]) => ({
+        key: entry.key,
+        label: entry.label,
+        icon: BOLT_ICONS[entry.key],
+        allowed: Boolean(entry.enabled),
+        reason: entry.reason || '',
+        hint,
+      })),
+  onPageTool: (key) => {
+    const entry = action(key)
+    if (entry) run(entry)
+  },
 })
 // ── the bar: its name, whether it sells, its code and group (the kind
 // stays in the hero) ─────────────────────────────────────────────────────
@@ -2467,6 +2513,7 @@ const BOLT_ICONS = {
   avisame: 'lucide-bell',
   quote: 'lucide-file-text',
   merma: 'lucide-package-x',
+  equipo: 'lucide-store',
 }
 const boltSteps = computed(() =>
   heroActions.value.map((entry) => ({
@@ -2917,6 +2964,7 @@ function run(entry) {
     countOpen.value = true
   } else if (entry.key === 'labels') labelOpen.value = true
   else if (entry.key === 'merma') openMerma()
+  else if (entry.key === 'equipo') openEquipo()
   else if (entry.key === 'avisame') openAvisame()
   else if (entry.key === 'variants')
     document

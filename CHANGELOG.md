@@ -20,6 +20,11 @@ Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` i
 - **Bancos:** «Tu dinero › Deudas y plan de pago» with «Debes $X · libre en mes año». Gate `bancos_routes` accepts `/crm/bancos/deudas`.
 - **Plan doc:** `docs/DINERO_EN_ORDEN.md` §3c, the same plan for every tenant (two books, who sees what, any bank, a few taps, safe, the assistant).
 - **Tests:** `tests/unit/deudas.test.js` (7), `crm/tests/test_bancos.py` (the path). Shots at 412 px light, 305 px dark and 1280 px on a lease (`.scratch/proof/`). Rollback = revert with the doco half.
+## 2026-11-16 — «Usar en la tienda» on the product page (lane equipo-tienda; not deployed)
+
+- **What:** the product's actions and «⋯» tools offer «Usar en la tienda» (doco `product_equipo`): a sheet asks the store, the serial number from the box (or how many), who uses it and what for, says what stays for sale, and sends one request a retry repeats with the same id. The answer says the piece left as the shop's equipment, not as a sale, and links its asset.
+- **Files:** `components/productos/EquipoSheet.vue`, `equipo.js`, `pages/Producto.vue`.
+- **Tests:** `tests/unit/productoEquipo.test.js` (8); `productoMerma`, `productoRecord`, `productosSpanish`, `recordKitTools` unchanged and green.
 ## 2026-11-16 — Ventas opens again from the desktop rail (lane ventas-rail; not deployed)
 
 - **Fix:** the rail's Ventas tile links to `/ventas`, which redirected to Home; since «everyone lands on Hoy» (051a91d29, 11-15) that meant Hoy, which has no Ventas sidebar, so on a desktop Ventas did not open (the phone reaches its lists from «Más» and was fine). `/ventas` now opens the Inbox (the native Leads list without doco_marketing), as it did before 11-15 (`gateRoute`). «Configuración de ventas» opened from another module enters Ventas through `/ventas` too, and now finds its runtime.
