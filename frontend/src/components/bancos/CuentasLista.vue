@@ -125,20 +125,20 @@
         @needs="needs = $event"
       />
 
-      <!-- Tu dinero: the debts and the plan to pay them (Deudas.vue). -->
+      <!-- Tu dinero, in the plan's order: the debts, the cushion, where the money goes (pages/TuDinero.vue). -->
       <section v-if="data.can?.saldos" class="mt-6" aria-label="Tu dinero">
         <h2 class="px-4 pb-1 text-sm font-semibold text-ink-gray-7">
           Tu dinero
         </h2>
         <ul class="divide-y divide-outline-gray-1">
-          <li data-bancos-adondeva>
+          <li data-bancos-deudas>
             <ListRow
-              title="¿A dónde va el dinero?"
-              subtitle="Lo que entró y salió del mes, por destino, y tus gastos fijos"
-              icon="lucide-chart-pie"
+              title="Deudas y plan de pago"
+              :subtitle="deudasLine"
+              icon="lucide-trending-down"
               :to="{
                 name: 'TuDinero',
-                params: { dinero: 'a-donde-va' },
+                params: { dinero: 'deudas' },
                 query: companyQuery,
               }"
             >
@@ -150,14 +150,33 @@
               </template>
             </ListRow>
           </li>
-          <li data-bancos-deudas>
+          <li data-bancos-colchon>
             <ListRow
-              title="Deudas y plan de pago"
-              :subtitle="deudasLine"
-              icon="lucide-trending-down"
+              title="Colchón"
+              subtitle="Meses de gastos que tienes guardados"
+              icon="lucide-piggy-bank"
               :to="{
                 name: 'TuDinero',
-                params: { dinero: 'deudas' },
+                params: { dinero: 'colchon' },
+                query: companyQuery,
+              }"
+            >
+              <template #trailing>
+                <span
+                  class="lucide-chevron-right size-5 text-ink-gray-5"
+                  aria-hidden="true"
+                />
+              </template>
+            </ListRow>
+          </li>
+          <li data-bancos-adondeva>
+            <ListRow
+              title="¿A dónde va el dinero?"
+              subtitle="Lo que entró y salió del mes, por destino, y tus gastos fijos"
+              icon="lucide-chart-pie"
+              :to="{
+                name: 'TuDinero',
+                params: { dinero: 'a-donde-va' },
                 query: companyQuery,
               }"
             >

@@ -81,6 +81,11 @@ Lanes (in this order):
 | D4 | Colchón | Savings goal in months of essential expenses (from D3), savings accounts marked, progress and monthly contribution; Presupuesto gains kinds «Deuda» and «Ahorro» so the month's plan reads: fixed costs → card minimums → extra to the priority card → cushion → inventory → withdrawals | D3, Presupuesto |
 | D5 | Metas de dinero | Goals reached (a card at zero, each month of cushion): notice in chat and bell, the payment rolls to the next goal, a proposal for the next one; money never moves by itself; the morning money brief (§3 lane 9) carries progress | Presupuesto alerts, lane 9 |
 
+State on 2026-11-17: D1–D3 landed (not deployed); D4 built in lane `colchon`. D4 reads the month's
+plan from «Plan de Dinero» (the debt's and the cushion's monthly amounts) and this month's Presupuesto
+(goods) instead of adding «Deuda» and «Ahorro» kinds to Presupuesto: each amount has one home, and the
+budget keeps measuring purchases, expenses and sales.
+
 Settings: each card's rate, minimum and days; the payoff order; the cushion's months (default 3)
 and which accounts count as savings; category per account. All per tenant; the bot can fill them
 from a statement the owner shares.

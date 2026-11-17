@@ -168,6 +168,7 @@ class TestBancosPaths(TestCase):
 			"/crm/bancos/balanza?periodo=mes",
 			"/crm/bancos/deudas",
 			"/crm/bancos/a-donde-va",
+			"/crm/bancos/colchon",
 		):
 			with self.subTest(path=path):
 				self.assertTrue(is_bancos_path(path))

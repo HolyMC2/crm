@@ -2,6 +2,12 @@
 
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
+## 2026-11-17 — Bancos › Colchón: months of expenses kept, when it is full, and the month's plan (lane colchon; not deployed)
+
+- **Page `/bancos/colchon` (`pages/Colchon.vue`, served by the «Tu dinero» route with Deudas and ¿A dónde va?):** «Tu meta: 3 meses de gastos fijos», what the savings accounts hold against it with a bar marked per month, and how many months it already covers; «1 Primero tus deudas … libre en jul 2027 · 2 Colchón completo en feb 2028» with a chip for each month of expenses reached; «Tus cuentas de ahorro» (bank or books figure) and «Elegir» (checkboxes over the book's bank and cash accounts); «Plan del mes» in the owner's order (fixed costs, what varies, the card minimums, the extra to the first card, the cushion, goods) down to «Te queda para retirar», and «¿Cuánto quieres retirar este mes?» says whether it fits and what it would come out of; «Ajustes del colchón»: 1–12 months and the monthly amount while debt is paid (with the two-week starter cushion as a hint).
+- Bancos › Tu dinero now reads in the plan's order (Deudas, Colchón, ¿A dónde va?); ¿A dónde va? uses the plan's months and links to the cushion. Gate `bancos_routes` accepts `/crm/bancos/colchon`.
+- **Tests:** `tests/unit/colchon.test.js` (7), `crm/tests/test_bancos.py` (the path). Shots at 412 px light, 305 px dark and 1280 px on a seeded lease (`.scratch/proof/`). Rollback = revert with the doco half.
+
 ## 2026-11-16 — Bancos › ¿A dónde va el dinero? (lane a-donde-va; not deployed)
 
 - **Page `/bancos/a-donde-va` (`pages/ADondeVa.vue`):** the month (‹ ›, never past this one): «Entró / Salió / Te quedó»; «Tus gastos fijos al mes» (average of the three months before) and the 3-month cushion it asks for; «En qué se fue»: each destination with its bar, share of what came in and «+16 % vs tu promedio», «fijo» chips; a destination opens its accounts, and «Cambiar» moves one to another destination and says whether it is fixed (two taps); the bank movements still unexplained, with the way to Bancos; six months of in and out.

@@ -127,11 +127,22 @@
               ? `Promedio de los tres meses anteriores; este mes van ${money(data.fixed, data.currency)}.`
               : 'Lo de este mes; con más meses en tus libros sale un promedio.'
           }}
-          Un colchón de 3 meses serían
+          Un colchón de {{ cushionMonths }}
+          {{ cushionMonths === 1 ? 'mes' : 'meses' }} serían
           <span class="font-medium tabular-nums text-ink-gray-8">{{
-            money(cushion(data, 3), data.currency)
+            money(cushion(data, cushionMonths), data.currency)
           }}</span
           >.
+          <RouterLink
+            :to="{
+              name: 'TuDinero',
+              params: { dinero: 'colchon' },
+              query: companyQuery,
+            }"
+            class="font-medium text-ink-gray-8 underline"
+            data-adondeva-colchon
+            >Ver tu colchón</RouterLink
+          >
         </p>
       </section>
 
@@ -411,6 +422,7 @@ const companyQuery = computed(() =>
   route.query.empresa ? { empresa: route.query.empresa } : {},
 )
 const widths = computed(() => barWidths(data.value?.lines || []))
+const cushionMonths = computed(() => data.value?.cushion_months ?? 3)
 const choosable = computed(() => data.value?.destinos || [])
 const trendMax = computed(() =>
   Math.max(1, ...(data.value?.trend || []).flatMap((m) => [m.income, m.out])),
