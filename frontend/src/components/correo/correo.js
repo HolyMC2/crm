@@ -11,6 +11,7 @@ import {
   parseServerDate,
   relativeTime,
 } from '@/utils/display'
+import { money } from '@/utils/numberFormat'
 
 export { errorText }
 
@@ -274,4 +275,46 @@ export function scrollSheetToTop(anchor) {
     null
   if (scroller) scroller.scrollTop = 0
   return scroller
+}
+
+/**
+ * The assistant's buckets (doco's correo agent), in the order the queue shows
+ * them: what needs the worker first, noise last.
+ */
+export const CUBETAS = [
+  { value: 'action', label: 'Te necesita' },
+  { value: 'money', label: 'Dinero' },
+  { value: 'agenda', label: 'Agenda' },
+  { value: 'papers', label: 'Papeles' },
+  { value: 'waiting', label: 'Esperando' },
+  { value: 'security', label: 'Seguridad' },
+  { value: 'later', label: 'Leer luego' },
+  { value: 'noise', label: 'Ruido' },
+]
+
+export function cubetaLabel(value) {
+  return CUBETAS.find((c) => c.value === value)?.label || ''
+}
+
+/** Chips for the buckets that have mail, «Todo» first; [] when nothing was sorted. */
+export function cubetaChips(counts = {}) {
+  const chips = CUBETAS.filter((c) => counts[c.value]).map((c) => ({
+    ...c,
+    count: counts[c.value],
+  }))
+  return chips.length ? [{ value: '', label: 'Todo' }, ...chips] : []
+}
+
+/**
+ * The line a sorted mail shows under its subject: the bucket, then the money
+ * (amount and due date) when there is some, then what to do or the summary.
+ */
+export function triajeLine(triaje, { now = new Date() } = {}) {
+  if (!triaje) return ''
+  const parts = [cubetaLabel(triaje.cubeta)]
+  // the shop's currency unless the mail said another (utils/numberFormat.money)
+  if (triaje.monto) parts.push(money(triaje.monto, triaje.moneda || null, 2))
+  if (triaje.vence) parts.push(`vence ${shortWhen(triaje.vence, { now })}`)
+  const text = triaje.accion || triaje.resumen
+  return [parts.filter(Boolean).join(' · '), text].filter(Boolean).join(' — ')
 }

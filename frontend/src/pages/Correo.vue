@@ -53,6 +53,14 @@
         testid="correo-cuenta"
         @update:model-value="setQuery({ cuenta: $event })"
       />
+      <ChipGroup
+        v-if="cubetas.length"
+        label="Ordenado"
+        :options="cubetas.filter((c) => c.value)"
+        :model-value="state.cubeta"
+        testid="correo-cubeta"
+        @update:model-value="setQuery({ cubeta: $event })"
+      />
     </SearchPanel>
     <div class="flex min-h-0 flex-1">
       <div
@@ -98,6 +106,14 @@
             :chips="cuentaChips"
             label="Cuenta"
             @update:model-value="setQuery({ cuenta: $event })"
+          />
+          <FilterChips
+            v-if="cubetas.length && !state.categoria && !isPhone"
+            :model-value="state.cubeta"
+            :chips="cubetas"
+            label="Ordenado"
+            data-testid="correo-cubetas"
+            @update:model-value="setQuery({ cubeta: $event })"
           />
           <div
             v-if="state.categoria"
@@ -207,7 +223,13 @@
                   "
                   >{{ row.asunto }}</span
                 >
-                <span v-if="row.snippet" class="block truncate">{{
+                <span
+                  v-if="row.triaje"
+                  class="block truncate text-ink-gray-7"
+                  data-testid="correo-triaje"
+                  >{{ triajeLine(row.triaje) }}</span
+                >
+                <span v-else-if="row.snippet" class="block truncate">{{
                   row.snippet
                 }}</span>
                 <span
@@ -292,6 +314,8 @@ import { useLiveList } from '@/composables/liveList'
 import {
   bandeja,
   categoryLabel,
+  cubetaChips,
+  cubetaLabel,
   documentChip,
   emptyCopy,
   errorText,
@@ -299,6 +323,7 @@ import {
   rowWho,
   senderName,
   shortWhen,
+  triajeLine,
 } from '@/components/correo/correo'
 
 const CorreoMensaje = defineAsyncComponent(
@@ -326,6 +351,7 @@ const state = computed(() => ({
   buscar: String(route.query.q || ''),
   cuenta: String(route.query.cuenta || ''),
   categoria: String(route.query.categoria || ''),
+  cubeta: String(route.query.cubeta || ''),
   m: String(route.query.m || ''),
 }))
 const term = ref(state.value.buscar)
@@ -346,6 +372,8 @@ const cuentaChips = computed(() => [
     count: c.sin_leer || undefined,
   })),
 ])
+// The assistant's buckets (doco's correo agent); none until a mailbox is sorted.
+const cubetas = computed(() => cubetaChips(conteos.value.cubetas || {}))
 const categoriaTitle = computed(() => {
   if (state.value.categoria === 'sistema') return 'Avisos del sistema'
   return categoriaTitulo.value || 'Correos repetidos'
@@ -388,6 +416,15 @@ const activeChips = computed(() => [
         },
       ]
     : []),
+  ...(state.value.cubeta
+    ? [
+        {
+          key: 'cubeta',
+          label: cubetaLabel(state.value.cubeta) || state.value.cubeta,
+          patch: { cubeta: '' },
+        },
+      ]
+    : []),
 ])
 const debouncedSearch = useDebounceFn(() => runSearch(), 350)
 function runSearch() {
@@ -401,6 +438,7 @@ function args(inicio = 0, limite = 30) {
     buscar: state.value.buscar,
     cuenta: state.value.cuenta,
     categoria: state.value.categoria,
+    cubeta: state.value.cubeta,
     inicio,
     limite,
   }
@@ -411,7 +449,12 @@ function args(inicio = 0, limite = 30) {
 const listCache = createListCache('correo', () =>
   state.value.buscar
     ? null
-    : [state.value.vista, state.value.cuenta, state.value.categoria],
+    : [
+        state.value.vista,
+        state.value.cuenta,
+        state.value.categoria,
+        state.value.cubeta,
+      ],
 )
 function showTray(out) {
   rows.value = out.filas || []

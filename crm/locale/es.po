@@ -23841,6 +23841,18 @@ msgstr "Personal"
 msgid "My team"
 msgstr "Mi equipo"
 
+#: frontend/src/components/Settings/EmailAgent.vue
+msgid "Sort with the assistant"
+msgstr "Ordenar con el asistente"
+
+#: frontend/src/components/Settings/EmailAgent.vue
+msgid "The assistant reads each new mail and sorts it: what needs you, money, agenda, noise. Every morning you get the summary. Nothing changes in the mailbox itself."
+msgstr "El asistente lee cada correo nuevo y lo ordena: lo que te necesita, dinero, agenda, ruido. Cada mañana te llega el resumen. En el buzón no cambia nada."
+
+#: frontend/src/components/Settings/EmailAgent.vue
+msgid "The assistant is sorting the last two days of mail."
+msgstr "El asistente está ordenando el correo de los últimos dos días."
+
 #: frontend/src/components/Settings/EmailAudience.vue
 #: crm/api/correo_buzones.py
 msgid "Only its owner can change a personal mailbox."

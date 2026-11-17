@@ -61,6 +61,8 @@ MAX_SUGERENCIAS = 8
 MAX_ASUNTO = 240
 MAX_CUERPO = 20000
 VENTANA = 1000  # newest Communications the queue classifies at once
+# the assistant's buckets that stay out of the folded alert rows (doco's correo agent)
+SIN_PLEGAR = frozenset({"action", "money", "agenda", "papers", "waiting"})
 LIMITE_PAGINA = 50
 SNIPPET = 140
 UMBRAL_REPETIDOS = 3
@@ -979,7 +981,39 @@ def _cuentas(rows):
 	]
 
 
-def _fila_bandeja(row, nombres, docs, snippets, adjuntos):
+def _triajes(names):
+	"""The assistant's sorting (doco's Correo Triaje) of mail this worker already reads: `names`
+	come from the permission-aware list. {} without doco or before anything was sorted."""
+	if not names or "doco" not in frappe.get_installed_apps():
+		return {}
+	try:
+		from doco.docoutils.correo.api import for_rows
+	except ImportError:
+		return {}
+	return for_rows(names)
+
+
+def _cubetas(triajes):
+	counts = {}
+	for row in triajes.values():
+		counts[row.bucket] = counts.get(row.bucket, 0) + 1
+	return counts
+
+
+def _triaje(row):
+	if not row:
+		return None
+	return {
+		"cubeta": row.bucket,
+		"resumen": cstr(row.resumen),
+		"accion": cstr(row.accion),
+		"vence": cstr(row.vence) if row.vence else None,
+		"monto": flt(row.monto) or None,
+		"moneda": cstr(row.moneda) or None,
+	}
+
+
+def _fila_bandeja(row, nombres, docs, snippets, adjuntos, triajes=None):
 	de = _remitente(row, nombres)
 	recibido = row.get("sent_or_received") == "Received"
 	para = separar_correos(row.get("recipients") or "")
@@ -996,6 +1030,7 @@ def _fila_bandeja(row, nombres, docs, snippets, adjuntos):
 		"leido": (not recibido) or bool(cint(row.seen)),
 		"documento": docs.get(key) if key[0] else None,
 		"adjuntos": adjuntos.get(row.name, 0) or (1 if cint(row.has_attachment) else 0),
+		"triaje": _triaje((triajes or {}).get(row.name)),
 	}
 
 
@@ -1037,10 +1072,12 @@ def bandeja(
 	categoria: str | None = None,
 	inicio: int | str = 0,
 	limite: int | str = 30,
+	cubeta: str | None = None,
 ):
 	"""The Correo queue: emails this worker can read (Frappe's own visibility), newest first, with
 	alerts and repeated subjects folded into category rows on the first page. `categoria` opens one
-	of those rows as a plain list."""
+	of those rows as a plain list. `cubeta` keeps the mail the assistant sorted into one bucket
+	(doco's correo agent; `conteos.cubetas` counts them)."""
 	vista = vista if vista in VISTAS else "recibidos"
 	inicio = max(0, cint(inicio))
 	limite = max(1, min(cint(limite) or 30, LIMITE_PAGINA))
@@ -1069,18 +1106,27 @@ def bandeja(
 		limit_page_length=VENTANA,
 	)
 	propios = _propios()
+	triajes = _triajes([r.name for r in window if r.sent_or_received == "Received"])
 	conteos = {
 		"recibidos": sum(1 for r in window if _en_vista(r, "recibidos")),
 		"enviados": sum(1 for r in window if _en_vista(r, "enviados")),
 		"sin_leer": sum(1 for r in window if r.sent_or_received == "Received" and not cint(r.seen)),
+		"cubetas": _cubetas(triajes),
 	}
 	rows = [r for r in window if _en_vista(r, vista)]
+	cubeta = cstr(cubeta).strip()
+	if cubeta:
+		rows = [r for r in rows if (triajes.get(r.name) or {}).get("bucket") == cubeta]
+	# mail the assistant sorted as needing the worker never hides in a folded alerts row
+	keep = {name for name, t in triajes.items() if t.bucket in SIN_PLEGAR}
 	if categoria:
-		categorias, filas = [], en_categoria(rows, categoria, propios)
-	elif term:
-		categorias, filas = [], rows  # a search shows every match, alerts included
+		categorias, filas = [], en_categoria([r for r in rows if r.name not in keep], categoria, propios)
+	elif term or cubeta:
+		categorias, filas = [], rows  # a search or a bucket shows every match, alerts included
 	else:
-		categorias, filas = agrupar(rows, propios)
+		categorias, sueltas = agrupar([r for r in rows if r.name not in keep], propios)
+		sueltas = {r.name for r in sueltas}
+		filas = [r for r in rows if r.name in keep or r.name in sueltas]
 	page = filas[inicio : inicio + limite]
 
 	nombres = _nombres(
@@ -1110,7 +1156,7 @@ def bandeja(
 			else None
 		),
 		"categorias": [_fila_categoria(c, nombres, vista) for c in categorias] if inicio == 0 else [],
-		"filas": [_fila_bandeja(r, nombres, docs, snippets, adjuntos) for r in page],
+		"filas": [_fila_bandeja(r, nombres, docs, snippets, adjuntos, triajes) for r in page],
 		"inicio": inicio,
 		"siguiente": inicio + limite if len(filas) > inicio + limite else None,
 		"total": len(filas),
