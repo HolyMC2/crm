@@ -2,13 +2,15 @@
 
 /crm/bancos (cards), /crm/bancos/cuenta/<cuenta> (one account), /crm/bancos/conexion/<conexion>
 (one bank login, Bancos conectados), /crm/bancos/catalogo[/<cuenta>] (the account tree, one
-account's ledger) and /crm/bancos/balanza.
+account's ledger), /crm/bancos/balanza and /crm/bancos/deudas (the money plan's debts).
 """
 
 import re
 from urllib.parse import urlsplit
 
-_BANCOS_PATH = re.compile(r"^/crm/bancos(?:/cuenta/[^/]+|/conexion/[^/]+|/catalogo(?:/[^/]+)?|/balanza)?/*$")
+_BANCOS_PATH = re.compile(
+	r"^/crm/bancos(?:/cuenta/[^/]+|/conexion/[^/]+|/catalogo(?:/[^/]+)?|/balanza|/deudas)?/*$"
+)
 
 
 def is_bancos_path(path):

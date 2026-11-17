@@ -90,6 +90,40 @@ Nu and Mercado Pago credit (from their statements); connect the Mercado Pago wal
 accounts are savings. Until Cuadre's lanes 2–4 explain the bank movements, D3's expense figure
 will run low.
 
+## 3c. For every tenant, not only Marco (Marco, 2026-11-16: «for me and my tenants, so make it great»)
+
+The same plan serves a phone repair shop in Culiacán, a clinic, a real-estate office and Marco.
+What makes it work for all of them:
+
+- **Two books, one plan.** A business's debts, budget and cushion live in its company. The
+  owner's own (a personal card, a car loan) live in their Libro Personal (doco
+  `books/personal_book.py`: a separate company only its holder reads). «Mi dinero» shows both,
+  each labelled; the business's numbers never include the personal ones. Where there is no
+  personal book, the plan is the business's only, and «Separar lo personal» offers to make one.
+- **Who sees what.** The business plan follows the Accounts roles; the personal one only its
+  holder (the existing fence). Workers never see the owner's debt or cushion. The team's goals
+  (doco `metas`, Equipo › Metas) are a different thing and stay there.
+- **Any bank, any country.**
+  - A connected bank (Syncfy, Muelle's account) gives the balance by itself. Without one, a
+    statement photo or PDF, or a number typed in, does.
+  - Labels come from the country: «CAT» in Mexico, «tasa anual» elsewhere.
+  - Amounts are in the book's currency.
+- **Ready in a few taps («Pon en orden tu dinero»).**
+  1. The cards and loans Muelle already sees are listed. The owner adds the rest, or shares a
+     statement and the assistant fills rate, minimum, cut day and due day.
+  2. The order: highest rate first (recommended, with the interest it saves next to it) or
+     smallest first.
+  3. How much goes to debt each month: suggested from last months' income minus fixed costs.
+  4. The cushion: 3 months by default.
+- **Safe by default.** Nothing moves money. Notices go to the owner only, in chat and the bell.
+  Every number says where it comes from (the bank, the books, typed).
+- **The assistant is a full door** (Bots: one door). Tools `deudas`, `plan_de_pago`,
+  `a_donde_va`, `colchon` (reads) and `fijar_deuda`, `fijar_plan` (cards for the owner to
+  confirm), with worked examples and the playbook `money-plan.md`: «¿cuándo termino de pagar si
+  abono 15 mil?», «¿puedo retirar 10 mil este mes?», «¿en qué se me fue el dinero en octubre?».
+- **Numbers the owner keeps:** the debt-free date, the interest saved against paying minimums,
+  months of cushion, and where each peso of income went (percent per category).
+
 ## 4. Settings and the owner's switches
 
 - Cuadre needs no setting: it reads Bancos' own permissions. «Ligar» follows the reconciliation engine

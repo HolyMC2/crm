@@ -14,6 +14,12 @@ Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` i
 - «Foto del taller» in the composer lists the repairs with a photo after the repair, each with its repair type and device, and picks one photo («Usar esta foto»); the card is drawn on the server (doco_marketing `repair_card`). A line reminds the reviewer that no face, name or price may show. `socialDaily.pickPhoto` replaces the before/after pair pick.
 - Tests: `tests/unit/socialDaily.test.js`.
 
+## 2026-11-16 — Bancos › Deudas: the debts, the monthly amount and order, the date the owner is free (lane deudas; not deployed)
+
+- **Page `/bancos/deudas` (`pages/Deudas.vue`):** what is owed and where each figure comes from, «Libre de deudas en ago 2027 (9 meses)», the interest and what the plan saves against paying only the minimums; «¿Cuánto abonas al mes?» recomputes as it is typed (`simular`), chips «Salir en 12 / 24 meses» set the amount, «Tasa más alta primero» / «La más chica primero» with the other order's numbers beside it, «Guardar plan»; the debts in the order they get paid with their payoff month; cards Muelle sees added in one tap; a debt opens `DeudaSheet.vue` (rate, tax on interest, minimum, cut and due day, the typed balance only when nothing else knows it, «Ya la terminé de pagar»). A personal book switches in with the book chips.
+- **Bancos:** «Tu dinero › Deudas y plan de pago» with «Debes $X · libre en mes año». Gate `bancos_routes` accepts `/crm/bancos/deudas`.
+- **Plan doc:** `docs/DINERO_EN_ORDEN.md` §3c, the same plan for every tenant (two books, who sees what, any bank, a few taps, safe, the assistant).
+- **Tests:** `tests/unit/deudas.test.js` (7), `crm/tests/test_bancos.py` (the path). Shots at 412 px light, 305 px dark and 1280 px on a lease (`.scratch/proof/`). Rollback = revert with the doco half.
 ## 2026-11-16 — Ventas opens again from the desktop rail (lane ventas-rail; not deployed)
 
 - **Fix:** the rail's Ventas tile links to `/ventas`, which redirected to Home; since «everyone lands on Hoy» (051a91d29, 11-15) that meant Hoy, which has no Ventas sidebar, so on a desktop Ventas did not open (the phone reaches its lists from «Más» and was fine). `/ventas` now opens the Inbox (the native Leads list without doco_marketing), as it did before 11-15 (`gateRoute`). «Configuración de ventas» opened from another module enters Ventas through `/ventas` too, and now finds its runtime.

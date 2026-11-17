@@ -658,6 +658,17 @@ const routes = [
     },
   },
   {
+    // Deudas y plan de pago (crm docs/DINERO_EN_ORDEN.md §3b-§3c): doco.workspaces.deudas.
+    path: '/bancos/deudas',
+    name: 'BancoDeudas',
+    component: () => import('@/pages/Deudas.vue'),
+    meta: {
+      app: 'bancos',
+      title: 'Deudas',
+      ownPhoneHeader: true,
+    },
+  },
+  {
     path: '/bancos/balanza',
     name: 'Balanza',
     component: () => import('@/pages/Balanza.vue'),

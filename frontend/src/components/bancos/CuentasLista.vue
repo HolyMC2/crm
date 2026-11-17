@@ -125,6 +125,30 @@
         @needs="needs = $event"
       />
 
+      <!-- Tu dinero: the debts and the plan to pay them (Deudas.vue). -->
+      <section v-if="data.can?.saldos" class="mt-6" aria-label="Tu dinero">
+        <h2 class="px-4 pb-1 text-sm font-semibold text-ink-gray-7">
+          Tu dinero
+        </h2>
+        <ul class="divide-y divide-outline-gray-1">
+          <li data-bancos-deudas>
+            <ListRow
+              title="Deudas y plan de pago"
+              :subtitle="deudasLine"
+              icon="lucide-trending-down"
+              :to="{ name: 'BancoDeudas', query: companyQuery }"
+            >
+              <template #trailing>
+                <span
+                  class="lucide-chevron-right size-5 text-ink-gray-5"
+                  aria-hidden="true"
+                />
+              </template>
+            </ListRow>
+          </li>
+        </ul>
+      </section>
+
       <section v-if="data.can?.catalogo" class="mt-6" aria-label="Contabilidad">
         <h2 class="px-4 pb-1 text-sm font-semibold text-ink-gray-7">
           Contabilidad
@@ -176,6 +200,7 @@ import { LIVE_DOCTYPES, bancosApi, errorText, money } from './bancos'
 import { useLiveList } from '@/composables/liveList'
 import { createListCache } from '@/utils/listCache'
 import { needsChipText } from './conectados'
+import { deudasApi, monthLabel } from '@/components/deudas/deudas'
 
 // Bancos conectados (syncfy_connector): its own chunk, only where it is on.
 const ConexionesSeccion = defineAsyncComponent(
@@ -249,6 +274,28 @@ function openNeeds() {
     ?.scrollIntoView({ block: 'start', behavior: still ? 'auto' : 'smooth' })
 }
 
+// «Deudas y plan de pago»: what is owed and when it ends, read after the cards.
+const deudas = ref(null)
+const deudasLine = computed(() => {
+  const b = deudas.value
+  if (!b || !b.debts?.length)
+    return 'Cuándo terminas de pagar tus tarjetas y préstamos'
+  const owed = `Debes ${money(b.owed, b.currency || data.value?.currency)}`
+  return b.plan?.finished
+    ? `${owed} · libre en ${monthLabel(b.plan.free_on)}`
+    : owed
+})
+async function loadDeudas() {
+  if (!data.value?.can?.saldos) return
+  try {
+    deudas.value = await deudasApi('board', {
+      company: route.query.empresa || undefined,
+    })
+  } catch {
+    deudas.value = null // the row still opens the page, which says why
+  }
+}
+
 function pickCompany(value) {
   router.replace({ query: { ...route.query, empresa: value } })
 }
@@ -274,6 +321,7 @@ async function load({ quiet = false } = {}) {
     if (mine !== sequence) return
     data.value = result
     listCache.save(listAt, result)
+    if (!quiet) loadDeudas()
   } catch (error) {
     if (mine === sequence && !quiet) loadError.value = errorText(error)
   }
