@@ -151,8 +151,8 @@
         >
           {{
             header.pending === 1
-              ? '1 sin conciliar'
-              : `${header.pending} sin conciliar`
+              ? '1 por explicar'
+              : `${header.pending} por explicar`
           }}
         </button>
         <span

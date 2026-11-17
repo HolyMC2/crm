@@ -10,8 +10,14 @@ import { useRoute } from 'vue-router'
 import ADondeVa from '@/pages/ADondeVa.vue'
 import Colchon from '@/pages/Colchon.vue'
 import Deudas from '@/pages/Deudas.vue'
+import PorExplicar from '@/pages/PorExplicar.vue'
 
-const PAGES = { deudas: Deudas, 'a-donde-va': ADondeVa, colchon: Colchon }
+const PAGES = {
+  deudas: Deudas,
+  'a-donde-va': ADondeVa,
+  colchon: Colchon,
+  'por-explicar': PorExplicar,
+}
 const route = useRoute()
 const page = computed(() => PAGES[route.params.dinero] || Deudas)
 </script>

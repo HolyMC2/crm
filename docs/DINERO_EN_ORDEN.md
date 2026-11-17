@@ -129,6 +129,38 @@ What makes it work for all of them:
 - **Numbers the owner keeps:** the debt-free date, the interest saved against paying minimums,
   months of cushion, and where each peso of income went (percent per category).
 
+## 3d. Por explicar: the books catch up with the bank, and Muelle asks for cash (Marco, 2026-11-17)
+
+Marco: «lets reconcile and make better tooling and make the system bug me for expenses, now with
+syncfy it would be way easier, i just need to register cash». On doco the books said the house safe
+held $125,556; it held $11,000. The shop's cash bags reached the safe in the books, but what left it
+never did: 17 cash deposits at BBVA since 09-01 ($134,950) and the owner's cash spending (food,
+travel, parts, payroll, a remodel). Since 08-01 Syncfy brought 53 BBVA withdrawals ($150.5k) and
+150 Amex charges ($157.6k) that nobody explained.
+
+| Job | Today (steps) | Target |
+|---|---|---|
+| Say what a card or bank charge was | Contador › Bancos: open the month, the movement, pick the use, the expense account, prepare the draft, register it (≈6 taps each; 220 waiting ≈ 1,300 taps). Not in the SPA; elsewhere only the Desk | Bancos › Por explicar: grouped by merchant with the answer suggested; «Sí, es eso» books the whole group (1 tap per merchant). The next charges of that merchant arrive with the same answer suggested |
+| A card paid from the bank | Two movements to explain by hand, one per account | Seen as one pair (same amount, leaving one own account and arriving at another within 5 days): one tap books both with one entry |
+| Cash taken to the bank | Not possible without the Desk | Suggested «Entre mis cuentas» from the off-site cash account of the safes (posawesome `POS Cash Safe.offsite_cash_account`) |
+| Register cash spent | Gastos takes supplier bills; a cash expense without a bill needs the Desk or the books bot | Lane 2: «Gasté en efectivo» (amount, what, done: 3 taps) |
+| Know the safe is right | Nobody counts it; the books drifted $114k | Lane 2: «Cuenta tu caja fuerte»: the count, the difference, «¿en qué se fue?» |
+| Be reminded | Nothing reminds | Lane 2: an evening notice to the owner (bell and chat): «12 movimientos por explicar · $3,000 de efectivo sin explicar» → the page |
+
+Lane 1 `por-explicar` (doco + crm): pure `books/explicar.py` (groups, pairs, the guess from how the
+same merchant was explained before, the journal lines); `books/por_explicar.py` books one submitted
+Journal Entry per movement (one per pair) with the person's rights and links it through the site's
+engine: Contador's classify + audited link where it owns bank review, ERPNext's
+`reconcile_vouchers` elsewhere; a refused movement rolls back alone; «Deshacer» unlinks and cancels.
+Answers: gasto (expense account), personal (equity: the owner's account), traspaso (an own bank,
+cash or card account, or one already used that way, e.g. a deferred-purchase plan), ingreso. No new
+doctype and no setting: the memory is the books themselves. Page `/bancos/por-explicar` (in the
+«Tu dinero» route); the Bancos chip «N movimientos por explicar» and a Tu dinero row open it.
+
+Next: lane 2 (cash and the reminder), then the bot reads `por_explicar` on every site (today
+`banco_por_explicar` needs Contador). Setup on Marco's shops after the roll: explain the backlog
+since 08-01 on doco prod with the page (his taps), count the safe, then let the reminder run.
+
 ## 4. Settings and the owner's switches
 
 - Cuadre needs no setting: it reads Bancos' own permissions. «Ligar» follows the reconciliation engine

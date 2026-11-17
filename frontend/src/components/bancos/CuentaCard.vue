@@ -49,7 +49,7 @@
         v-if="card.pending"
         class="mt-1 inline-flex min-h-6 w-fit items-center whitespace-nowrap rounded-full bg-surface-amber-2 px-2 text-xs font-medium text-ink-amber-8"
         data-bancos-card-pending
-        >{{ card.pending }} sin conciliar</span
+        >{{ card.pending }} por explicar</span
       >
     </span>
     <span class="flex flex-none flex-col items-end text-right">

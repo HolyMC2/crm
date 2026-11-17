@@ -1044,7 +1044,7 @@ describe('CuentasLista', () => {
     mount([LOGIN])
     await settle()
     expect(host.querySelector('[data-bancos-pending]').textContent).toContain(
-      '3 movimientos sin conciliar',
+      '3 movimientos por explicar',
     )
     const chip = host.querySelector('[data-bancos-conexion-aviso]')
     expect(chip.textContent.trim()).toBe('BBVA: hay que reconectar')

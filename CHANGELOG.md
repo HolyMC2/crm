@@ -2,6 +2,12 @@
 
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
+## 2026-11-17 — Bancos › Por explicar: say what each bank and card movement was, a merchant at a time (lane por-explicar; not deployed)
+
+- **Page `/bancos/por-explicar` (`pages/PorExplicar.vue`, in the «Tu dinero» route):** how many movements the books do not explain, their total and since when, and how many come with an answer suggested; one card per merchant and account («ANTHROPIC · Amex · 2 movimientos · −$7,275.29») with «Parece: Gasto del negocio · Software — Así lo explicaste las últimas 3 veces», «Sí, es eso» (books the whole group), «Otra cosa» / «¿Qué fue?» (the answer for that side: gasto, personal, entre mis cuentas, ingreso; then the account, searchable, most used first) and «Ver movimientos»; the receipt says what went through and offers «Deshacer». Without the rights to book entries the page shows what waits and says who books it.
+- Bancos: the hero chip now reads «N movimientos por explicar» and opens the page (the account cards and the account page say «por explicar» too); Tu dinero starts with «Por explicar». Gate `bancos_routes` accepts `/crm/bancos/por-explicar`.
+- **Tests:** `tests/unit/porExplicar.test.js` (7), `tests/unit/bancosConectados.test.js` (the chip's words), `crm/tests/test_bancos.py` (the path). Shots at 412 px light, 305 px dark and 1280 px on a seeded lease (`.scratch/proof/`). Rollback = revert with the doco half.
+
 ## 2026-11-17 — Twilio: a call log retried after a write conflict locks the log first (lane twilio-call-log-1020; not deployed)
 
 - **Bug:** Twilio fires one call's callbacks close together. The save that lost the race (MariaDB 1020) rolled back and retried, but asked Twilio for the call before locking the log, so callbacks committing during that fetch failed the retry with 1020 again: «Error while updating call record» twice per pair on docomexico (11-14, 11-15).

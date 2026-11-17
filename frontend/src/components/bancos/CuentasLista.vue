@@ -62,13 +62,19 @@
           v-if="data.pending || needs.length"
           class="mt-3 flex flex-wrap items-center gap-2"
         >
-          <p
+          <!-- What waits to be explained opens Por explicar (pages/PorExplicar.vue). -->
+          <RouterLink
             v-if="data.pending"
-            class="inline-flex min-h-8 items-center gap-1.5 rounded-full bg-surface-amber-2 px-3 text-sm font-medium text-ink-amber-8"
+            :to="porExplicar"
+            class="press inline-flex min-h-8 items-center gap-1 rounded-full bg-surface-amber-2 py-1 pl-3 pr-2 text-sm font-medium text-ink-amber-8"
             data-bancos-pending
           >
             {{ pendingText(data.pending) }}
-          </p>
+            <span
+              class="lucide-chevron-right size-4 flex-none"
+              aria-hidden="true"
+            />
+          </RouterLink>
           <!-- A bank login that needs the person sits far below the cards;
                the chip brings it up here and opens it (several: the list). -->
           <button
@@ -125,12 +131,31 @@
         @needs="needs = $event"
       />
 
-      <!-- Tu dinero, in the plan's order: the debts, the cushion, where the money goes (pages/TuDinero.vue). -->
+      <!-- Tu dinero, in the plan's order: what waits to be explained, the debts, the cushion, where the money goes (pages/TuDinero.vue). -->
       <section v-if="data.can?.saldos" class="mt-6" aria-label="Tu dinero">
         <h2 class="px-4 pb-1 text-sm font-semibold text-ink-gray-7">
           Tu dinero
         </h2>
         <ul class="divide-y divide-outline-gray-1">
+          <li data-bancos-por-explicar>
+            <ListRow
+              title="Por explicar"
+              :subtitle="
+                data.pending
+                  ? `${pendingText(data.pending)}: di qué fueron`
+                  : 'Lo que traen el banco y tus tarjetas, explicado'
+              "
+              icon="lucide-list-checks"
+              :to="porExplicar"
+            >
+              <template #trailing>
+                <span
+                  class="lucide-chevron-right size-5 text-ink-gray-5"
+                  aria-hidden="true"
+                />
+              </template>
+            </ListRow>
+          </li>
           <li data-bancos-deudas>
             <ListRow
               title="Deudas y plan de pago"
@@ -234,7 +259,7 @@
 </template>
 <script setup>
 import { computed, defineAsyncComponent, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { Button } from 'frappe-ui'
 import { AppBar, EmptyState, ListRow } from '@/components/ui'
 import CuentaCard from './CuentaCard.vue'
@@ -293,10 +318,14 @@ const groups = computed(() => {
   return out
 })
 
+const porExplicar = computed(() => ({
+  name: 'TuDinero',
+  params: { dinero: 'por-explicar' },
+  query: companyQuery.value,
+}))
+
 function pendingText(n) {
-  return n === 1
-    ? '1 movimiento sin conciliar'
-    : `${n} movimientos sin conciliar`
+  return n === 1 ? '1 movimiento por explicar' : `${n} movimientos por explicar`
 }
 
 // Logins that need the person, reported by «Conexiones con tu banco».
