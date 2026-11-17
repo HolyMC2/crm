@@ -143,6 +143,16 @@ describe('crmCapabilities: route gates', () => {
     expect(m.gateRoute({ name: 'Home' })).toEqual({ name: 'Hoy' })
   })
 
+  // The desktop rail's Ventas tile is /ventas: it must open Ventas, not Hoy.
+  it('Ventas opens the Inbox, or the native Leads list without the addon', async () => {
+    const withAddon = await fresh({ boot: WITH_ADDON })
+    await withAddon.loadCapabilities()
+    expect(withAddon.gateRoute({ name: 'Ventas' })).toEqual({ name: 'Inbox' })
+    const demo = await fresh({ boot: DEMO_SITE })
+    await demo.loadCapabilities()
+    expect(demo.gateRoute({ name: 'Ventas' })).toEqual({ name: 'Leads' })
+  })
+
   it('without the addon: custom lists fall back to the upstream list routes', async () => {
     const m = await fresh({ boot: DEMO_SITE })
     await m.loadCapabilities()

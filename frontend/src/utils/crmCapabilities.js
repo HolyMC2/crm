@@ -86,7 +86,7 @@ export const addonAvailable = computed(() => hasApp(ADDON_APP))
 // Route NAME → where to send the user when the addon is missing. Native lists
 // keep their URL semantics through the upstream `/…/view/:viewType?` routes; the
 // Deal 360° page falls back to the upstream Deal page for the same record;
-// addon-only surfaces go Home (which itself resolves to the native Leads list).
+// addon-only surfaces go Home (which itself resolves to Hoy).
 const HOME = { name: 'Home' }
 export const GATED_ROUTES = Object.freeze({
   'Deals List': { name: 'Deals' },
@@ -118,6 +118,10 @@ export function gateRoute(to, available = hasApp(ADDON_APP)) {
   const name = to?.name
   // Everyone lands on Hoy (Shell SPEC Q1); the Inbox stays in the bar for sellers.
   if (name === 'Home') return { name: 'Hoy' }
+  // Ventas (the rail's tile, /ventas) opens on the Inbox, or on the native
+  // Leads list without the addon: Hoy is a module of its own, with no Ventas.
+  if (name === 'Ventas')
+    return available ? { name: 'Inbox' } : { name: 'Leads' }
   const fallback = GATED_ROUTES[name]
   if (!fallback || available) return null
   const target = typeof fallback === 'function' ? fallback(to) : { ...fallback }

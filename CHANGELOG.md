@@ -2,6 +2,11 @@
 
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
+## 2026-11-16 — Ventas opens again from the desktop rail (lane ventas-rail; not deployed)
+
+- **Fix:** the rail's Ventas tile links to `/ventas`, which redirected to Home; since «everyone lands on Hoy» (051a91d29, 11-15) that meant Hoy, which has no Ventas sidebar, so on a desktop Ventas did not open (the phone reaches its lists from «Más» and was fine). `/ventas` now opens the Inbox (the native Leads list without doco_marketing), as it did before 11-15 (`gateRoute`). «Configuración de ventas» opened from another module enters Ventas through `/ventas` too, and now finds its runtime.
+- **Tests:** `tests/unit/routerVentas.test.js` (through the real router: `/ventas` → Inbox, `/` → Hoy; fails on the old router with «expected 'Hoy' to be 'Inbox'»), `crmCapabilities.test.js`.
+
 ## 2026-11-16 — Redes: Hoy shows the day's posts, the post diario del taller and a composer that says what's next (lane redes-diario; not deployed)
 
 - **Hoy:** «Agenda de hoy» lists today's posts (calendar «Redes», read from doco_marketing) with their state; a tap opens the post in Redes with the way back to Hoy (`useHoy.eventLink`). Continuar shows a «Redes» card (posts I review, posts waiting for approval, today's posts). A Pendiente on a post opens it in Redes (`usePendientes.referenceTarget`).

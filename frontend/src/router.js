@@ -131,8 +131,9 @@ function reglasMeta(kind) {
 const d12 = (meta) => ({ ownPhoneHeader: true, ...meta })
 
 const routes = [
-  // Ventas module home in the Muelle shell (contracts basePath).
-  { path: '/ventas', name: 'Ventas', redirect: { name: 'Home' } },
+  // Ventas module home in the Muelle shell (contracts basePath). Like Home it
+  // has no page: the guard sends it to Ventas' landing list (gateRoute).
+  { path: '/ventas', name: 'Ventas' },
   {
     path: '/hoy',
     name: 'Hoy',
@@ -1543,9 +1544,9 @@ router.beforeEach(async (to, from, next) => {
   const usersKnown = Array.isArray(users.data?.crmUsers)
   if (isLoggedIn && to.name !== 'Not Permitted' && usersKnown && !isCrmUser()) {
     next({ name: 'Not Permitted' })
-  } else if (to.name === 'Home' && isLoggedIn) {
+  } else if (['Home', 'Ventas'].includes(to.name) && isLoggedIn) {
     // Every logged-in worker lands on Hoy, with or without doco_marketing
-    // (Shell SPEC Q1); /ventas redirects here too.
+    // (Shell SPEC Q1); /ventas opens Ventas' own landing list.
     next(gateRoute(to))
   } else if (!isLoggedIn) {
     window.location.href = '/login?redirect-to=/crm'
