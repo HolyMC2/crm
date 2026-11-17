@@ -9,14 +9,27 @@ vi.mock('frappe-ui', async () => {
   return {
     call: (...args) => state.call(...args),
     Button: {
-      props: ['label', 'variant', 'loading', 'disabled', 'type', 'theme', 'icon'],
+      props: [
+        'label',
+        'variant',
+        'loading',
+        'disabled',
+        'type',
+        'theme',
+        'icon',
+      ],
       emits: ['click'],
       setup:
         (props, { emit, attrs }) =>
         () =>
           h(
             'button',
-            { ...attrs, type: 'button', disabled: props.disabled, onClick: () => emit('click') },
+            {
+              ...attrs,
+              type: 'button',
+              disabled: props.disabled,
+              onClick: () => emit('click'),
+            },
             props.label,
           ),
     },
@@ -25,39 +38,80 @@ vi.mock('frappe-ui', async () => {
 vi.mock('@/components/ui', async () => {
   const { h } = await import('vue')
   const slotDiv = (name) => ({
-    props: ['open', 'title', 'label', 'value', 'hint', 'tone', 'pressed', 'chips', 'modelValue', 'options', 'state', 'message'],
+    props: [
+      'open',
+      'title',
+      'label',
+      'value',
+      'hint',
+      'tone',
+      'pressed',
+      'chips',
+      'modelValue',
+      'options',
+      'state',
+      'message',
+    ],
     emits: ['click', 'update:modelValue'],
     setup:
       (p, { slots, attrs, emit }) =>
       () =>
-        h('div', { ...attrs, [`data-stub-${name}`]: '', onClick: () => emit('click') }, [
-          p.title ? h('h2', p.title) : null,
-          p.label ? h('span', p.label) : null,
-          p.value !== undefined ? h('span', String(p.value)) : null,
-          p.hint ? h('span', p.hint) : null,
-          p.message ? h('p', p.message) : null,
-          ...(p.chips || []).map((c) =>
-            h('button', { 'data-chip': c.value, onClick: (e) => (e.stopPropagation(), emit('update:modelValue', c.value)) }, `${c.label}${c.count ? ` ${c.count}` : ''}`),
-          ),
-          slots.default?.(),
-          slots.actions?.(),
-        ]),
+        h(
+          'div',
+          { ...attrs, [`data-stub-${name}`]: '', onClick: () => emit('click') },
+          [
+            p.title ? h('h2', p.title) : null,
+            p.label ? h('span', p.label) : null,
+            p.value !== undefined ? h('span', String(p.value)) : null,
+            p.hint ? h('span', p.hint) : null,
+            p.message ? h('p', p.message) : null,
+            ...(p.chips || []).map((c) =>
+              h(
+                'button',
+                {
+                  'data-chip': c.value,
+                  onClick: (e) => (
+                    e.stopPropagation(), emit('update:modelValue', c.value)
+                  ),
+                },
+                `${c.label}${c.count ? ` ${c.count}` : ''}`,
+              ),
+            ),
+            slots.default?.(),
+            slots.actions?.(),
+          ],
+        ),
   })
   return {
-    AppBar: { props: ['title'], setup: (p, { slots }) => () => h('header', [h('h1', p.title), slots.actions?.()]) },
+    AppBar: {
+      props: ['title'],
+      setup:
+        (p, { slots }) =>
+        () =>
+          h('header', [h('h1', p.title), slots.actions?.()]),
+    },
     BottomSheet: {
       props: ['open', 'title', 'subtitle'],
       setup:
         (p, { slots }) =>
         () =>
-          p.open ? h('div', { 'data-sheet': p.title }, [h('h2', p.title), slots.default?.(), slots.actions?.()]) : null,
+          p.open
+            ? h('div', { 'data-sheet': p.title }, [
+                h('h2', p.title),
+                slots.default?.(),
+                slots.actions?.(),
+              ])
+            : null,
     },
     EmptyState: slotDiv('empty'),
     Fab: slotDiv('fab'),
     FilterChips: slotDiv('chips'),
     KpiTile: slotDiv('kpi'),
     Segmented: slotDiv('segmented'),
-    StatusChip: { props: ['label', 'tone'], setup: (p) => () => h('span', { 'data-chip-estado': p.tone }, p.label) },
+    StatusChip: {
+      props: ['label', 'tone'],
+      setup: (p) => () => h('span', { 'data-chip-estado': p.tone }, p.label),
+    },
   }
 })
 vi.mock('@/components/ui/imageFiles', () => ({ prepareImage: async (f) => f }))
@@ -96,7 +150,14 @@ const SETUP = {
   politica: 'dejar',
   avisar: true,
   ve_todas: true,
-  cuentas: [{ bank_account: 'BBVA Debito', nombre: 'BBVA Débito', banco: 'BBVA MEXICO', ultimos: '•9775' }],
+  cuentas: [
+    {
+      bank_account: 'BBVA Debito',
+      nombre: 'BBVA Débito',
+      banco: 'BBVA MEXICO',
+      ultimos: '•9775',
+    },
+  ],
   sin_clabe: [],
   bancos: [
     { codigo: '40012', nombre: 'BBVA MEXICO', comun: true },
@@ -129,21 +190,43 @@ function check(over = {}) {
 describe('helpers', () => {
   it('reads periods, days and people the way the counter says them', () => {
     const today = new Date(2026, 10, 17)
-    expect(rango('hoy', today)).toEqual({ desde: '2026-11-17', hasta: '2026-11-17' })
-    expect(rango('7', today)).toEqual({ desde: '2026-11-11', hasta: '2026-11-17' })
+    expect(rango('hoy', today)).toEqual({
+      desde: '2026-11-17',
+      hasta: '2026-11-17',
+    })
+    expect(rango('7', today)).toEqual({
+      desde: '2026-11-11',
+      hasta: '2026-11-17',
+    })
     expect(diaTexto('2026-11-17', today)).toBe('Hoy')
     expect(diaTexto('2026-11-16', today)).toBe('Ayer')
     expect(diaTexto('2026-11-11', today)).toBe('mié 11 nov')
-    expect(titleCase('JOEL EDUARDO MEDINA DE LA ROSA')).toBe('Joel Eduardo Medina de la Rosa')
-    expect(quienTexto({ ordenante: '', estado: 'Searching' })).toBe('Aún sin nombre')
-    const fila = { banco_emisor: 'BANAMEX', cuenta: { banco: 'BBVA MEXICO', ultimos: '•9775' } }
+    expect(titleCase('JOEL EDUARDO MEDINA DE LA ROSA')).toBe(
+      'Joel Eduardo Medina de la Rosa',
+    )
+    expect(quienTexto({ ordenante: '', estado: 'Searching' })).toBe(
+      'Aún sin nombre',
+    )
+    const fila = {
+      banco_emisor: 'BANAMEX',
+      cuenta: { banco: 'BBVA MEXICO', ultimos: '•9775' },
+    }
     expect(rutaTexto(fila)).toBe('Banamex → BBVA •9775')
     expect(rutaTexto(fila, { unaCuenta: true })).toBe('Banamex')
     expect(bancoCorto('Mercado Pago W')).toBe('Mercado Pago')
-    expect(ventaTexto({ estado: 'Arrived', venta: null, propia: false })).toBe('Sin venta')
-    expect(ventaTexto({ estado: 'Arrived', venta: null, propia: true })).toBe('Entre tus cuentas')
+    expect(ventaTexto({ estado: 'Arrived', venta: null, propia: false })).toBe(
+      'Sin venta',
+    )
+    expect(ventaTexto({ estado: 'Arrived', venta: null, propia: true })).toBe(
+      'Entre tus cuentas',
+    )
     expect(ventaTexto({ estado: 'Not found' })).toBe('No aparece')
-    expect(transcurrido('2026-11-17 12:00:00', new Date('2026-11-17T12:01:20').getTime())).toBe('1 min 20 s')
+    expect(
+      transcurrido(
+        '2026-11-17 12:00:00',
+        new Date('2026-11-17T12:01:20').getTime(),
+      ),
+    ).toBe('1 min 20 s')
   })
 
   it('groups rows by day and leads the views with «Todas»', () => {
@@ -157,10 +240,29 @@ describe('helpers', () => {
   it('says what a check still needs before Banxico', () => {
     expect(faltaParaRevisar({ monto: '' })).toMatch('monto')
     expect(faltaParaRevisar({ monto: 5, banco_emisor: '' })).toMatch('banco')
-    expect(faltaParaRevisar({ monto: 5, banco_emisor: '40002' })).toMatch('clave de rastreo')
-    expect(faltaParaRevisar({ monto: 5, banco_emisor: '40002', clave_rastreo: 'AB-1' })).toMatch('letras y números')
-    expect(faltaParaRevisar({ monto: 5, banco_emisor: '40002', referencia: '0190926' })).toBe('')
-    expect(faltaParaRevisar({ monto: 5, banco_emisor: '40012' }, { mismoBanco: true })).toBe('')
+    expect(faltaParaRevisar({ monto: 5, banco_emisor: '40002' })).toMatch(
+      'clave de rastreo',
+    )
+    expect(
+      faltaParaRevisar({
+        monto: 5,
+        banco_emisor: '40002',
+        clave_rastreo: 'AB-1',
+      }),
+    ).toMatch('letras y números')
+    expect(
+      faltaParaRevisar({
+        monto: 5,
+        banco_emisor: '40002',
+        referencia: '0190926',
+      }),
+    ).toBe('')
+    expect(
+      faltaParaRevisar(
+        { monto: 5, banco_emisor: '40012' },
+        { mismoBanco: true },
+      ),
+    ).toBe('')
   })
 
   it('checks a CLABE digit by digit', () => {
@@ -190,10 +292,22 @@ describe('the check sheet', () => {
     state.call.mockImplementation(async (method) => {
       if (method.endsWith('.revisar')) return check()
       if (method.endsWith('.ver'))
-        return check({ estado: 'Arrived', ordenante: 'ANA LOPEZ RUIZ', hora: '12:01:02', motivo: 'Llegó: Banxico la registra de ANA LOPEZ RUIZ.' })
+        return check({
+          estado: 'Arrived',
+          ordenante: 'ANA LOPEZ RUIZ',
+          hora: '12:01:02',
+          motivo: 'Llegó: Banxico la registra de ANA LOPEZ RUIZ.',
+        })
       throw new Error(method)
     })
-    app = createApp({ render: () => h(RevisarTransferenciaSheet, { open: true, setup: SETUP, onRevisada: revisada }) })
+    app = createApp({
+      render: () =>
+        h(RevisarTransferenciaSheet, {
+          open: true,
+          setup: SETUP,
+          onRevisada: revisada,
+        }),
+    })
     app.mount(host)
     await flush()
     const monto = host.querySelector('[data-revisar-monto]')
@@ -214,29 +328,41 @@ describe('the check sheet', () => {
       clave_rastreo: 'mban01002611170099',
       bank_account: 'BBVA Debito',
     })
-    expect(host.querySelector('[data-revisar-estado]').textContent).toContain('Buscando en Banxico')
+    expect(host.querySelector('[data-revisar-estado]').textContent).toContain(
+      'Buscando en Banxico',
+    )
     vi.advanceTimersByTime(3000)
     await flush()
     const done = host.querySelector('[data-revisar-estado]')
     expect(done.dataset.estado).toBe('Arrived')
     expect(done.textContent).toContain('Llegó')
     expect(done.textContent).toContain('Ana Lopez Ruiz')
-    expect(revisada).toHaveBeenLastCalledWith(expect.objectContaining({ estado: 'Arrived' }))
+    expect(revisada).toHaveBeenLastCalledWith(
+      expect.objectContaining({ estado: 'Arrived' }),
+    )
   })
 
   it('a transfer between two accounts of the same bank waits for the bank, no key asked', async () => {
-    app = createApp({ render: () => h(RevisarTransferenciaSheet, { open: true, setup: SETUP }) })
+    app = createApp({
+      render: () => h(RevisarTransferenciaSheet, { open: true, setup: SETUP }),
+    })
     app.mount(host)
     await flush()
     host.querySelector('[data-revisar-banco="40012"]').click()
     await flush()
-    expect(host.querySelector('[data-revisar-mismo-banco]').textContent).toContain('no pasa por')
+    expect(
+      host.querySelector('[data-revisar-mismo-banco]').textContent,
+    ).toContain('no pasa por')
     expect(host.querySelector('[data-revisar-clave]')).toBeNull()
-    expect(host.querySelector('[data-revisar-enviar]').textContent).toBe('Revisar en el banco')
+    expect(host.querySelector('[data-revisar-enviar]').textContent).toBe(
+      'Revisar en el banco',
+    )
   })
 
   it('tells what is missing instead of calling Banxico', async () => {
-    app = createApp({ render: () => h(RevisarTransferenciaSheet, { open: true, setup: SETUP }) })
+    app = createApp({
+      render: () => h(RevisarTransferenciaSheet, { open: true, setup: SETUP }),
+    })
     app.mount(host)
     await flush()
     host.querySelector('[data-revisar-enviar]').click()
@@ -266,21 +392,56 @@ describe('the page', () => {
         return {
           filas: [
             {
-              name: 'TRF-1', estado: 'Arrived', monto: 2290, fecha: '2026-11-17', hora: '16:02',
-              ordenante: 'MARCO ANTONIO PONCE VALDEZ', banco_emisor: 'Mercado Pago W', cuenta: SETUP.cuentas[0],
-              venta: null, propia: true, sin_venta: false, revisada_por: '',
+              name: 'TRF-1',
+              estado: 'Arrived',
+              monto: 2290,
+              fecha: '2026-11-17',
+              hora: '16:02',
+              ordenante: 'MARCO ANTONIO PONCE VALDEZ',
+              banco_emisor: 'Mercado Pago W',
+              cuenta: SETUP.cuentas[0],
+              venta: null,
+              propia: true,
+              sin_venta: false,
+              revisada_por: '',
             },
             {
-              name: 'TRF-2', estado: 'Arrived', monto: 150.1, fecha: '2026-11-17', hora: '13:24',
-              ordenante: 'JOEL EDUARDO MEDINA LOPEZ', banco_emisor: 'BANAMEX', cuenta: SETUP.cuentas[0],
-              venta: null, propia: false, sin_venta: true, revisada_por: 'Tere',
+              name: 'TRF-2',
+              estado: 'Arrived',
+              monto: 150.1,
+              fecha: '2026-11-17',
+              hora: '13:24',
+              ordenante: 'JOEL EDUARDO MEDINA LOPEZ',
+              banco_emisor: 'BANAMEX',
+              cuenta: SETUP.cuentas[0],
+              venta: null,
+              propia: false,
+              sin_venta: true,
+              revisada_por: 'Tere',
             },
             {
-              name: 'TRF-3', estado: 'Searching', monto: 500, fecha: '2026-11-17', hora: '17:40',
-              ordenante: '', banco_emisor: 'BANAMEX', cuenta: SETUP.cuentas[0], venta: null, revisada_por: 'Tere',
+              name: 'TRF-3',
+              estado: 'Searching',
+              monto: 500,
+              fecha: '2026-11-17',
+              hora: '17:40',
+              ordenante: '',
+              banco_emisor: 'BANAMEX',
+              cuenta: SETUP.cuentas[0],
+              venta: null,
+              revisada_por: 'Tere',
             },
           ],
-          resumen: { llegaron: 2, llegaron_total: 2440.1, buscando: 1, no_coinciden: 0, no_aparecen: 0, sin_venta: 1, sin_venta_total: 150.1, propias: 1 },
+          resumen: {
+            llegaron: 2,
+            llegaron_total: 2440.1,
+            buscando: 1,
+            no_coinciden: 0,
+            no_aparecen: 0,
+            sin_venta: 1,
+            sin_venta_total: 150.1,
+            propias: 1,
+          },
           ve_todas: true,
           currency: 'MXN',
         }
@@ -290,7 +451,9 @@ describe('the page', () => {
     app.mount(host)
     await flush()
     expect(host.querySelector('h1').textContent).toBe('Transferencias')
-    const resumen = host.querySelector('[data-transferencias-resumen]').textContent
+    const resumen = host.querySelector(
+      '[data-transferencias-resumen]',
+    ).textContent
     expect(resumen).toContain('$2,440.10')
     expect(resumen).toContain('1 sin cobrar')
     const rows = host.querySelectorAll('[data-transferencia-fila]')

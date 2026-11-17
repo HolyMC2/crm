@@ -48,7 +48,11 @@
       </p>
       <p class="mt-1 text-sm text-ink-gray-6">
         Con ella Muelle pregunta a Banxico si una transferencia llegó.
-        {{ setup.ve_todas ? 'Agrégala en un minuto.' : 'Pídele al dueño que la agregue.' }}
+        {{
+          setup.ve_todas
+            ? 'Agrégala en un minuto.'
+            : 'Pídele al dueño que la agregue.'
+        }}
       </p>
       <Button
         v-if="setup.ve_todas"
@@ -80,7 +84,9 @@
         <KpiTile
           label="Llegaron"
           :value="fmt(data.resumen.llegaron_total)"
-          :hint="countText(data.resumen.llegaron, 'transferencia', 'transferencias')"
+          :hint="
+            countText(data.resumen.llegaron, 'transferencia', 'transferencias')
+          "
           :pressed="filtro === 'Arrived'"
           @click="toggle('Arrived')"
         />
@@ -96,15 +102,27 @@
           label="Sin venta"
           :value="fmt(data.resumen.sin_venta_total)"
           :tone="data.resumen.sin_venta ? 'warning' : 'neutral'"
-          :hint="data.resumen.sin_venta ? countText(data.resumen.sin_venta, 'sin cobrar', 'sin cobrar') : 'Todo tiene venta'"
+          :hint="
+            data.resumen.sin_venta
+              ? countText(data.resumen.sin_venta, 'sin cobrar', 'sin cobrar')
+              : 'Todo tiene venta'
+          "
           :pressed="filtro === 'sin_venta'"
           @click="toggle('sin_venta')"
         />
         <KpiTile
           label="No llegan"
           :value="String(data.resumen.no_aparecen + data.resumen.no_coinciden)"
-          :tone="data.resumen.no_aparecen + data.resumen.no_coinciden ? 'danger' : 'neutral'"
-          :hint="data.resumen.no_coinciden ? `${data.resumen.no_coinciden} no coinciden` : 'Ni Banxico ni el banco'"
+          :tone="
+            data.resumen.no_aparecen + data.resumen.no_coinciden
+              ? 'danger'
+              : 'neutral'
+          "
+          :hint="
+            data.resumen.no_coinciden
+              ? `${data.resumen.no_coinciden} no coinciden`
+              : 'Ni Banxico ni el banco'
+          "
           :pressed="filtro === 'Not found'"
           @click="toggle('Not found')"
         />
@@ -145,17 +163,30 @@
       />
 
       <div v-else class="trf-list mt-3 pb-28" data-transferencias-lista>
-        <section v-for="g in grupos" :key="g.fecha" :aria-label="diaTexto(g.fecha)">
+        <section
+          v-for="g in grupos"
+          :key="g.fecha"
+          :aria-label="diaTexto(g.fecha)"
+        >
           <h2
             class="sticky top-0 z-10 flex items-baseline justify-between gap-3 bg-surface-base px-4 py-2 text-sm"
           >
-            <span class="font-semibold text-ink-gray-8">{{ diaTexto(g.fecha) }}</span>
+            <span class="font-semibold text-ink-gray-8">{{
+              diaTexto(g.fecha)
+            }}</span>
             <span class="num text-ink-gray-6">{{ dayTotal(g) }}</span>
           </h2>
-          <div class="trf-head px-4 pb-1 text-xs text-ink-gray-6" aria-hidden="true">
-            <span>Hora</span><span>Quién envió</span><span class="trf-col-ruta">{{ unaCuenta ? 'Banco' : 'Banco y cuenta' }}</span
+          <div
+            class="trf-head px-4 pb-1 text-xs text-ink-gray-6"
+            aria-hidden="true"
+          >
+            <span>Hora</span><span>Quién envió</span
+            ><span class="trf-col-ruta">{{
+              unaCuenta ? 'Banco' : 'Banco y cuenta'
+            }}</span
             ><span class="text-right">Monto</span><span>Estado</span
-            ><span class="trf-col-venta">Venta</span><span class="trf-col-quien">Revisó</span>
+            ><span class="trf-col-venta">Venta</span
+            ><span class="trf-col-quien">Revisó</span>
           </div>
           <ul class="divide-y divide-outline-gray-1">
             <li v-for="f in g.filas" :key="f.name">
@@ -166,28 +197,52 @@
                 :data-estado="f.estado"
                 @click="openDetail(f.name)"
               >
-                <span class="trf-hora num text-sm text-ink-gray-6">{{ f.hora || '—' }}</span>
+                <span class="trf-hora num text-sm text-ink-gray-6">{{
+                  f.hora || '—'
+                }}</span>
                 <span class="trf-quien min-w-0">
                   <span
                     class="block break-words text-base"
                     :class="f.ordenante ? 'text-ink-gray-9' : 'text-ink-gray-6'"
                     >{{ quienTexto(f) }}</span
                   >
-                  <span class="trf-sub block truncate text-sm text-ink-gray-6">{{ rutaTexto(f, { unaCuenta }) }}</span>
+                  <span
+                    class="trf-sub block truncate text-sm text-ink-gray-6"
+                    >{{ rutaTexto(f, { unaCuenta }) }}</span
+                  >
                 </span>
-                <span class="trf-col-ruta truncate text-sm text-ink-gray-7">{{ rutaTexto(f, { unaCuenta }) }}</span>
+                <span class="trf-col-ruta truncate text-sm text-ink-gray-7">{{
+                  rutaTexto(f, { unaCuenta })
+                }}</span>
                 <span class="trf-monto text-right">
-                  <span class="num block text-base font-medium text-ink-gray-9">{{ fmt(f.monto) }}</span>
-                  <span class="trf-sub trf-venta block truncate text-sm" :class="ventaTono(f)">{{
-                    ventaTexto(f)
-                  }}</span>
+                  <span
+                    class="num block text-base font-medium text-ink-gray-9"
+                    >{{ fmt(f.monto) }}</span
+                  >
+                  <span
+                    class="trf-sub trf-venta block truncate text-sm"
+                    :class="ventaTono(f)"
+                    >{{ ventaTexto(f) }}</span
+                  >
                 </span>
                 <span class="trf-estado">
-                  <StatusChip :label="estadoDe(f.estado).label" :tone="estadoDe(f.estado).tone" />
+                  <StatusChip
+                    :label="estadoDe(f.estado).label"
+                    :tone="estadoDe(f.estado).tone"
+                  />
                 </span>
-                <span class="trf-col-venta truncate text-sm" :class="ventaTono(f)">{{
-                  f.venta?.name || (f.propia ? 'Entre tus cuentas' : f.sin_venta ? 'Sin venta' : '—')
-                }}</span>
+                <span
+                  class="trf-col-venta truncate text-sm"
+                  :class="ventaTono(f)"
+                  >{{
+                    f.venta?.name ||
+                    (f.propia
+                      ? 'Entre tus cuentas'
+                      : f.sin_venta
+                        ? 'Sin venta'
+                        : '—')
+                  }}</span
+                >
                 <span class="trf-col-quien truncate text-sm text-ink-gray-7">{{
                   f.revisada_por || 'El banco'
                 }}</span>
@@ -226,7 +281,15 @@
 </template>
 
 <script setup>
-import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import {
+  computed,
+  defineAsyncComponent,
+  onBeforeUnmount,
+  onMounted,
+  reactive,
+  ref,
+  watch,
+} from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Button } from 'frappe-ui'
 import {
@@ -274,7 +337,11 @@ const periodo = ref(String(route.query.periodo || 'hoy'))
 const filtro = ref(String(route.query.ver || ''))
 const q = ref('')
 const detalle = ref('')
-const sheets = reactive({ revisar: route.query.revisar === '1', detalle: false, ajustes: false })
+const sheets = reactive({
+  revisar: route.query.revisar === '1',
+  detalle: false,
+  ajustes: false,
+})
 let timer = null
 let searchTimer = null
 
@@ -287,7 +354,11 @@ const fmt = (amount) => money(amount, data.value?.currency || 'MXN')
 const unaCuenta = computed(() => (setup.value?.cuentas?.length || 0) <= 1)
 
 const emptyTitle = computed(() =>
-  filtro.value ? 'Nada en esta vista' : periodo.value === 'hoy' ? 'Hoy no hay transferencias' : 'Sin transferencias en estos días',
+  filtro.value
+    ? 'Nada en esta vista'
+    : periodo.value === 'hoy'
+      ? 'Hoy no hay transferencias'
+      : 'Sin transferencias en estos días',
 )
 const emptyMessage = computed(() =>
   setup.value?.cuentas?.length
@@ -413,7 +484,12 @@ onBeforeUnmount(() => {
   .trf-head,
   .trf-row {
     display: grid;
-    grid-template-columns: 3.5rem minmax(10rem, 1.4fr) minmax(9rem, 1fr) 7.5rem 7.5rem minmax(7rem, 0.8fr) minmax(6rem, 0.7fr);
+    grid-template-columns:
+      3.5rem minmax(10rem, 1.4fr) minmax(9rem, 1fr) 7.5rem 7.5rem minmax(
+        7rem,
+        0.8fr
+      )
+      minmax(6rem, 0.7fr);
     grid-template-areas: none;
     column-gap: 1rem;
     align-items: center;

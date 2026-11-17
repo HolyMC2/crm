@@ -6,7 +6,11 @@
     :open="open"
     :title="check ? '' : '¿Ya llegó la transferencia?'"
     :aria-label="check ? 'Revisión de la transferencia' : ''"
-    :subtitle="check ? '' : 'Con la foto del comprobante o sus datos, Muelle la busca en Banxico.'"
+    :subtitle="
+      check
+        ? ''
+        : 'Con la foto del comprobante o sus datos, Muelle la busca en Banxico.'
+    "
     :dismissible="!busy"
     layer="transferencia-revisar"
     @update:open="emit('update:open', $event)"
@@ -39,7 +43,11 @@
       <p class="num mt-1 text-3xl font-semibold text-ink-gray-9">
         {{ money(check.monto, check.currency) }}
       </p>
-      <p v-if="quienYDesde" class="mt-1 break-words text-base text-ink-gray-8" data-revisar-quien>
+      <p
+        v-if="quienYDesde"
+        class="mt-1 break-words text-base text-ink-gray-8"
+        data-revisar-quien
+      >
         {{ quienYDesde }}
       </p>
       <p
@@ -55,19 +63,28 @@
         data-revisar-motivo
       >
         <span class="lucide-landmark size-4" aria-hidden="true" />
-        {{ check.via === 'Bank movement' ? 'Está en los movimientos del banco' : 'Banxico la confirma' }}
+        {{
+          check.via === 'Bank movement'
+            ? 'Está en los movimientos del banco'
+            : 'Banxico la confirma'
+        }}
       </p>
       <dl
         class="mt-4 grid w-full max-w-sm grid-cols-2 gap-x-4 gap-y-2 rounded-7 bg-surface-gray-1 p-3 text-left text-sm"
       >
         <div v-if="check.clave_rastreo" class="col-span-2 min-w-0">
           <dt class="text-ink-gray-6">Clave de rastreo</dt>
-          <dd class="num break-all text-ink-gray-9">{{ check.clave_rastreo }}</dd>
+          <dd class="num break-all text-ink-gray-9">
+            {{ check.clave_rastreo }}
+          </dd>
         </div>
         <div class="min-w-0">
-          <dt class="text-ink-gray-6">{{ check.estado === 'Arrived' ? 'Llegó a' : 'Llegaría a' }}</dt>
+          <dt class="text-ink-gray-6">
+            {{ check.estado === 'Arrived' ? 'Llegó a' : 'Llegaría a' }}
+          </dt>
           <dd class="break-words text-ink-gray-9">
-            {{ bancoCorto(check.cuenta?.banco) || check.cuenta?.nombre }} {{ check.cuenta?.ultimos }}
+            {{ bancoCorto(check.cuenta?.banco) || check.cuenta?.nombre }}
+            {{ check.cuenta?.ultimos }}
           </dd>
         </div>
         <div class="min-w-0">
@@ -151,14 +168,19 @@
           :key="a"
           class="flex gap-2 rounded-6 bg-surface-amber-1 px-3 py-2 text-sm text-ink-amber-9"
         >
-          <span class="lucide-triangle-alert mt-0.5 size-4 flex-none" aria-hidden="true" />
+          <span
+            class="lucide-triangle-alert mt-0.5 size-4 flex-none"
+            aria-hidden="true"
+          />
           {{ a }}
         </li>
       </ul>
 
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="block text-sm font-medium text-ink-gray-7" for="trf-monto"
+          <label
+            class="block text-sm font-medium text-ink-gray-7"
+            for="trf-monto"
             >Monto</label
           >
           <input
@@ -172,7 +194,9 @@
           />
         </div>
         <div>
-          <label class="block text-sm font-medium text-ink-gray-7" for="trf-fecha"
+          <label
+            class="block text-sm font-medium text-ink-gray-7"
+            for="trf-fecha"
             >Fecha</label
           >
           <input
@@ -187,7 +211,9 @@
       </div>
 
       <div>
-        <p class="text-sm font-medium text-ink-gray-7">¿Desde qué banco o app?</p>
+        <p class="text-sm font-medium text-ink-gray-7">
+          ¿Desde qué banco o app?
+        </p>
         <div
           class="mt-2 flex flex-wrap gap-2"
           role="radiogroup"
@@ -281,11 +307,21 @@
           v-model="form.bank_account"
           class="mt-2"
           label="¿A qué cuenta?"
-          :options="cuentas.map((c) => ({ value: c.bank_account, label: `${bancoCorto(c.banco)} ${c.ultimos}` }))"
+          :options="
+            cuentas.map((c) => ({
+              value: c.bank_account,
+              label: `${bancoCorto(c.banco)} ${c.ultimos}`,
+            }))
+          "
         />
       </div>
 
-      <p v-if="problem" role="alert" class="text-sm text-ink-red-7" data-revisar-problema>
+      <p
+        v-if="problem"
+        role="alert"
+        class="text-sm text-ink-red-7"
+        data-revisar-problema
+      >
         {{ problem }}
       </p>
       <p v-else-if="falta && touched" class="text-sm text-ink-gray-6">
@@ -320,7 +356,9 @@
         <Button
           class="min-h-11 flex-1"
           variant="solid"
-          :label="check.estado === 'Searching' ? 'Seguir en segundo plano' : 'Listo'"
+          :label="
+            check.estado === 'Searching' ? 'Seguir en segundo plano' : 'Listo'
+          "
           data-revisar-listo
           @click="emit('update:open', false)"
         />
@@ -378,7 +416,9 @@ const own = ref(null)
 const setupData = computed(() => props.setup || own.value)
 const cuentas = computed(() => setupData.value?.cuentas || [])
 const bancos = computed(() => setupData.value?.bancos || [])
-const bancosVisibles = computed(() => bancos.value.filter((b) => b.comun).slice(0, 8))
+const bancosVisibles = computed(() =>
+  bancos.value.filter((b) => b.comun).slice(0, 8),
+)
 
 const fileInput = ref(null)
 const form = reactive(blank())
@@ -407,7 +447,10 @@ function blank() {
 }
 
 const cuentaElegida = computed(
-  () => cuentas.value.find((c) => c.bank_account === form.bank_account) || cuentas.value[0] || null,
+  () =>
+    cuentas.value.find((c) => c.bank_account === form.bank_account) ||
+    cuentas.value[0] ||
+    null,
 )
 const bancoReceptor = computed(() => {
   const name = cuentaElegida.value?.banco
@@ -416,7 +459,9 @@ const bancoReceptor = computed(() => {
 const mismoBanco = computed(
   () => Boolean(form.banco_emisor) && form.banco_emisor === bancoReceptor.value,
 )
-const falta = computed(() => faltaParaRevisar(form, { mismoBanco: mismoBanco.value }))
+const falta = computed(() =>
+  faltaParaRevisar(form, { mismoBanco: mismoBanco.value }),
+)
 const estado = computed(() => estadoDe(check.value?.estado))
 const tone = computed(() => estado.value.tone)
 const elapsed = computed(() => transcurrido(check.value?.creada, now.value))
@@ -430,7 +475,10 @@ const quienYDesde = computed(() => {
 })
 /** The «Otro…» picker shows a bank only when it is not one of the chips. */
 const otroBanco = computed({
-  get: () => (bancosVisibles.value.some((b) => b.codigo === form.banco_emisor) ? '' : form.banco_emisor),
+  get: () =>
+    bancosVisibles.value.some((b) => b.codigo === form.banco_emisor)
+      ? ''
+      : form.banco_emisor,
   set: (value) => {
     if (value) form.banco_emisor = value
   },
@@ -438,14 +486,18 @@ const otroBanco = computed({
 const headline = computed(() => {
   const state = check.value?.estado
   if (state === 'Searching')
-    return check.value.mismo_banco ? 'Esperando a tu banco' : 'Buscando en Banxico'
+    return check.value.mismo_banco
+      ? 'Esperando a tu banco'
+      : 'Buscando en Banxico'
   return estado.value.label
 })
 
 async function loadSetup() {
   if (props.setup || own.value) return
   try {
-    own.value = await transferenciasApi('inicio', { company: props.company || undefined })
+    own.value = await transferenciasApi('inicio', {
+      company: props.company || undefined,
+    })
   } catch (e) {
     problem.value = errorText(e)
   }
@@ -461,9 +513,14 @@ watch(
   },
   { immediate: true },
 )
-watch(cuentas, (list) => {
-  if (!form.bank_account && list.length) form.bank_account = list[0].bank_account
-}, { immediate: true })
+watch(
+  cuentas,
+  (list) => {
+    if (!form.bank_account && list.length)
+      form.bank_account = list[0].bank_account
+  },
+  { immediate: true },
+)
 
 function readAsDataUrl(file) {
   return new Promise((resolve, reject) => {
@@ -484,13 +541,19 @@ async function onFile(event) {
   try {
     const light = await prepareImage(file, { keepPng: false })
     photo.data = await readAsDataUrl(light)
-    photo.preview = light.type?.startsWith('image/') ? URL.createObjectURL(light) : ''
+    photo.preview = light.type?.startsWith('image/')
+      ? URL.createObjectURL(light)
+      : ''
     photo.filename = light.name || file.name || 'comprobante.jpg'
-    const read = await transferenciasApi('leer', { foto: photo.data, filename: photo.filename })
+    const read = await transferenciasApi('leer', {
+      foto: photo.data,
+      filename: photo.filename,
+    })
     const c = read.campos || {}
     if (c.monto) form.monto = String(c.monto)
     if (c.fecha) form.fecha = String(c.fecha).slice(0, 10)
-    if (c.banco_emisor && /^\d{4,5}$/.test(String(c.banco_emisor))) form.banco_emisor = String(c.banco_emisor)
+    if (c.banco_emisor && /^\d{4,5}$/.test(String(c.banco_emisor)))
+      form.banco_emisor = String(c.banco_emisor)
     if (c.clave_rastreo) {
       form.clave_rastreo = String(c.clave_rastreo)
       form.usarReferencia = false
@@ -569,7 +632,9 @@ function stop() {
 async function reintentar() {
   busy.value = true
   try {
-    check.value = await transferenciasApi('reintentar', { name: check.value.name })
+    check.value = await transferenciasApi('reintentar', {
+      name: check.value.name,
+    })
     follow()
   } catch (e) {
     problem.value = errorText(e)
@@ -586,7 +651,9 @@ function corregir() {
 function reset() {
   stop()
   check.value = null
-  Object.assign(form, blank(), { bank_account: cuentas.value[0]?.bank_account || '' })
+  Object.assign(form, blank(), {
+    bank_account: cuentas.value[0]?.bank_account || '',
+  })
   if (photo.preview) URL.revokeObjectURL(photo.preview)
   Object.assign(photo, { preview: '', data: '', filename: '' })
   avisos.value = []

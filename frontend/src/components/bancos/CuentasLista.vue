@@ -132,13 +132,19 @@
       />
 
       <!-- What customers say they transferred, checked with Banxico (§3e). -->
-      <section v-if="data.can?.saldos" class="mt-6" aria-label="Cobros por transferencia">
+      <section
+        v-if="data.can?.saldos"
+        class="mt-6"
+        aria-label="Cobros por transferencia"
+      >
         <ul class="divide-y divide-outline-gray-1">
           <li data-bancos-transferencias>
             <ListRow
               title="Transferencias de clientes"
               :subtitle="transferenciasLine"
-              :subtitle-tone="transferencias?.resumen?.no_aparecen ? 'danger' : ''"
+              :subtitle-tone="
+                transferencias?.resumen?.no_aparecen ? 'danger' : ''
+              "
               icon="lucide-badge-check"
               :to="{
                 name: 'TuDinero',
@@ -389,9 +395,13 @@ const transferenciasLine = computed(() => {
   const r = transferencias.value?.resumen
   if (!r) return 'Revisa con Banxico si una transferencia llegó'
   const parts = []
-  if (r.llegaron) parts.push(`${r.llegaron} ${r.llegaron === 1 ? 'llegó' : 'llegaron'} hoy`)
+  if (r.llegaron)
+    parts.push(`${r.llegaron} ${r.llegaron === 1 ? 'llegó' : 'llegaron'} hoy`)
   if (r.buscando) parts.push(`${r.buscando} buscando`)
-  if (r.no_aparecen) parts.push(`${r.no_aparecen} no ${r.no_aparecen === 1 ? 'aparece' : 'aparecen'}`)
+  if (r.no_aparecen)
+    parts.push(
+      `${r.no_aparecen} no ${r.no_aparecen === 1 ? 'aparece' : 'aparecen'}`,
+    )
   if (r.sin_venta) parts.push(`${r.sin_venta} sin venta`)
   return parts.length ? parts.join(', ') : 'Hoy no hay transferencias revisadas'
 })

@@ -17,9 +17,21 @@ export function transferenciasApi(method, args = {}) {
 export const ESTADOS = Object.freeze({
   Searching: { label: 'Buscando', tone: 'warning', icon: 'lucide-landmark' },
   Arrived: { label: 'Llegó', tone: 'success', icon: 'lucide-circle-check' },
-  'Does not match': { label: 'No coincide', tone: 'danger', icon: 'lucide-circle-x' },
-  'Not found': { label: 'No aparece', tone: 'danger', icon: 'lucide-circle-alert' },
-  Discarded: { label: 'Descartada', tone: 'neutral', icon: 'lucide-circle-minus' },
+  'Does not match': {
+    label: 'No coincide',
+    tone: 'danger',
+    icon: 'lucide-circle-x',
+  },
+  'Not found': {
+    label: 'No aparece',
+    tone: 'danger',
+    icon: 'lucide-circle-alert',
+  },
+  Discarded: {
+    label: 'Descartada',
+    tone: 'neutral',
+    icon: 'lucide-circle-minus',
+  },
 })
 
 export function estadoDe(value) {
@@ -30,11 +42,31 @@ export function estadoDe(value) {
 export function filtroChips(resumen = {}) {
   return [
     { value: '', label: 'Todas' },
-    { value: 'Searching', label: 'Buscando', count: resumen.buscando || undefined },
-    { value: 'Arrived', label: 'Llegaron', count: resumen.llegaron || undefined },
-    { value: 'sin_venta', label: 'Sin venta', count: resumen.sin_venta || undefined },
-    { value: 'Not found', label: 'No aparecen', count: resumen.no_aparecen || undefined },
-    { value: 'Does not match', label: 'No coinciden', count: resumen.no_coinciden || undefined },
+    {
+      value: 'Searching',
+      label: 'Buscando',
+      count: resumen.buscando || undefined,
+    },
+    {
+      value: 'Arrived',
+      label: 'Llegaron',
+      count: resumen.llegaron || undefined,
+    },
+    {
+      value: 'sin_venta',
+      label: 'Sin venta',
+      count: resumen.sin_venta || undefined,
+    },
+    {
+      value: 'Not found',
+      label: 'No aparecen',
+      count: resumen.no_aparecen || undefined,
+    },
+    {
+      value: 'Does not match',
+      label: 'No coinciden',
+      count: resumen.no_coinciden || undefined,
+    },
   ]
 }
 
@@ -60,14 +92,28 @@ export function hoyIso(now = new Date()) {
 /** {desde, hasta} for a period, from the device's today (the site's day for the person there). */
 export function rango(periodo, today = new Date()) {
   const day = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-  const back = (n) => new Date(day.getFullYear(), day.getMonth(), day.getDate() - n)
+  const back = (n) =>
+    new Date(day.getFullYear(), day.getMonth(), day.getDate() - n)
   if (periodo === 'ayer') return { desde: iso(back(1)), hasta: iso(back(1)) }
   if (periodo === '7') return { desde: iso(back(6)), hasta: iso(day) }
   if (periodo === '30') return { desde: iso(back(29)), hasta: iso(day) }
   return { desde: iso(day), hasta: iso(day) }
 }
 
-const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
+const MESES = [
+  'ene',
+  'feb',
+  'mar',
+  'abr',
+  'may',
+  'jun',
+  'jul',
+  'ago',
+  'sep',
+  'oct',
+  'nov',
+  'dic',
+]
 
 /** «Hoy», «Ayer», «mar 11 nov». */
 export function diaTexto(value, today = new Date()) {
@@ -153,7 +199,8 @@ export function ventaTexto(fila) {
 
 /** Its colour: amber while it waits or lacks a sale, red when it did not arrive. */
 export function ventaTono(fila) {
-  if (fila.estado === 'Not found' || fila.estado === 'Does not match') return 'text-ink-red-7'
+  if (fila.estado === 'Not found' || fila.estado === 'Does not match')
+    return 'text-ink-red-7'
   if (fila.estado === 'Searching' || fila.sin_venta) return 'text-ink-amber-8'
   return 'text-ink-gray-6'
 }
@@ -180,7 +227,8 @@ export function faltaParaRevisar(form, { mismoBanco = false } = {}) {
     return 'Falta la clave de rastreo (o la referencia numérica) del comprobante.'
   if (clave && !/^[A-Za-z0-9]{1,30}$/.test(clave))
     return 'La clave de rastreo solo lleva letras y números.'
-  if (!clave && ref.length > 7) return 'La referencia numérica tiene hasta 7 dígitos.'
+  if (!clave && ref.length > 7)
+    return 'La referencia numérica tiene hasta 7 dígitos.'
   return ''
 }
 
@@ -196,6 +244,8 @@ export function clabeValida(value) {
 
 /** «0127 4401 5234 3697 75» while typing a CLABE. */
 export function clabeEnGrupos(value) {
-  const digits = String(value || '').replace(/\D/g, '').slice(0, 18)
+  const digits = String(value || '')
+    .replace(/\D/g, '')
+    .slice(0, 18)
   return digits.replace(/(\d{4})(?=\d)/g, '$1 ')
 }
