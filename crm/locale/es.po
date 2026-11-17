@@ -29170,6 +29170,10 @@ msgstr "La cámara del teléfono"
 msgid "Scan document"
 msgstr "Escanear documento"
 
+#: frontend/src/utils/shellPalette.js
+msgid "Check a transfer"
+msgstr "Revisar una transferencia"
+
 #: frontend/src/components/captura/CameraSheet.vue
 msgid "Pages ({0})"
 msgstr "Páginas ({0})"

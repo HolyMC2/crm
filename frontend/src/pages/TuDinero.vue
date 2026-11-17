@@ -11,12 +11,14 @@ import ADondeVa from '@/pages/ADondeVa.vue'
 import Colchon from '@/pages/Colchon.vue'
 import Deudas from '@/pages/Deudas.vue'
 import PorExplicar from '@/pages/PorExplicar.vue'
+import Transferencias from '@/pages/Transferencias.vue'
 
 const PAGES = {
   deudas: Deudas,
   'a-donde-va': ADondeVa,
   colchon: Colchon,
   'por-explicar': PorExplicar,
+  transferencias: Transferencias,
 }
 const route = useRoute()
 const page = computed(() => PAGES[route.params.dinero] || Deudas)

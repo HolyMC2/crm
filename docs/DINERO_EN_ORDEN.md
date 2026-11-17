@@ -201,6 +201,54 @@ movement it matches; the bot reads `por_explicar` on every site (today `banco_po
 Contador). Setup on Marco's shops after the roll: explain the backlog
 since 08-01 on doco prod with the page (his taps), count the safe, then let the reminder run.
 
+## 3e. «¿Ya llegó?»: a customer's transfer, checked with Banxico (Marco, 2026-11-17)
+
+Marco: «each time i get a spei transfer employees tell me about it and ask for confirmation».
+Today the cashier messages the owner, the owner opens the bank app, looks, and answers: two
+people and about five steps per transfer, the sale waiting, and a doctored receipt passes a glance.
+RO-00706's $500 transfer was recorded nowhere.
+
+| Job | Today (steps) | Target |
+|---|---|---|
+| Know a transfer arrived before handing over | Message the owner, wait, the owner checks the bank app (2 people, ≈5 steps, minutes) | Register: photo of the receipt (or its tracking key and bank), Banxico answers in seconds (1 person, 1 to 3 taps) |
+| A fake or wrong receipt | Caught only if the owner looks closely | «No coincide» (sent to another account) or «No aparece» after 30 minutes, with the owner told in the bell |
+| The same receipt shown twice | Nothing stops it | One tracking key pays one sale: the second sale is refused |
+| BBVA to BBVA (not SPEI) | Same as above | Syncfy is asked for the account's movements at once; the deposit settles the check |
+| A deposit nobody charged | Found weeks later, if ever | Bancos › Transferencias «Sin venta»: each incoming SPEI with the payer's name, from Banxico |
+
+How it works (doco `docoutils/spei/`, endpoints `doco.workspaces.transferencias`):
+- Banxico's CEP (`cep.py`) is asked the way its public form asks: date, tracking key (or the 7-digit
+  numeric reference), both banks, the shop's CLABE and the amount. Proven 2026-11-17 on two real
+  incoming transfers into doco's BBVA débito; no captcha (Banxico's `overrideCaptcha` is read every
+  day and the check falls back to the bank when it turns on). Banxico answers about ten queries in a
+  burst and then refuses for some 20 seconds per address, so the bench keeps a shared budget
+  (20 a minute, bank movements last) and pauses every site after a refusal.
+- A check («Transferencia Recibida») is a state machine (`estado.py`): Buscando → Llegó, No
+  coincide (another account or amount), No aparece (30 minutes; the owner is told; it keeps looking
+  every hour for 72 hours and a late arrival tells the owner too). Banxico is asked at 0, 8, 16, 25…
+  seconds while the customer waits. The owner may confirm by hand, retry or discard.
+- The receiving account is any company Bank Account with a valid CLABE (its CLABE field, or an
+  18-digit account number); a register method maps to it through its Mode of Payment's account.
+- A bank deposit (`Bank Transaction` on submit) settles the check it fits: BBVA's «SPEI RECIBIDO…
+  / folio, sender bank, reference» line by reference, otherwise one amount within the dates. An
+  incoming SPEI no one checked is read at Banxico (payer, RFC, account, tracking key) and kept as an
+  arrived check «Sin venta»; the payer's name also goes on the movement for reconciliation.
+- A register sale names its checks (`doco_transferencias` on Sales Invoice and POS Invoice); the
+  sale's submit refuses a check that pays another sale; cancelling the sale frees it. A Payment
+  Entry is linked after the charge and keeps the tracking key in `posa_bank_reference`.
+- Books' captured receipts use the same client (EMC's `fiscal/banking/cep.py` is no longer read);
+  a masked account resolves to the one CLABE Muelle already keeps that fits it.
+
+Screens: the register's «¿Ya llegó la transferencia?» panel under the tenders (posawesome
+`CobroTransferCheck.vue`; its reason joins the one charge rule) and, at the corte, «Banxico confirmó
+$X (n)» under each transfer method with «Usar» to count it; crm Bancos › Transferencias
+(`/bancos/transferencias`, in the Tu dinero route) with the period's totals, views, the list as a
+table on desktop, a check's detail with the sale it paid or the ones it could, and the settings;
+«Revisar una transferencia» in the ⌘K palette (`?revisar=1`); Hoy's «Transferencias» card when one
+waits, did not arrive or has no sale. Who the owner keeps the money from sees only the checks they
+made. A shop with no bank account adds the one customers pay into from the settings (name and
+CLABE: the ledger, the Bank Account, and the register's bank methods that pay nowhere yet).
+
 ## 4. Settings and the owner's switches
 
 - Cuadre needs no setting: it reads Bancos' own permissions. «Ligar» follows the reconciliation engine
@@ -208,6 +256,9 @@ since 08-01 on doco prod with the page (his taps), count the safe, then let the 
 - The bot's write tools (`conciliar`, `explicar_movimientos`, `registrar_conocidos`) stay off by default
   (DD17). The owner switches them on in «Herramientas del asistente».
 - Lane 3 adds one setting: the opening-balance account, chosen once.
+- «Ajustes de Transferencias» (§3e), on by default: check transfers; if one has not arrived when
+  the register charges, «Cobrar y avisarme» (default) or «Esperar a que llegue»; tell the owner
+  when one does not arrive. The CLABE of each receiving account is added in the same sheet.
 
 ## 5. Setup on Marco's shops (each prod step is a kit for his go)
 
@@ -217,6 +268,9 @@ since 08-01 on doco prod with the page (his taps), count the safe, then let the 
    (the Amex plan in `~/muelle-releases/amex-books-20261111/README.md` already waits on the same answer);
    upload BBVA Débito statements for May–August 2026; connect the Mercado Pago wallet through Syncfy.
 4. Switch on the bot's bank write tools on doco if he wants the assistant to do the linking.
+5. «¿Ya llegó?» (§3e) on doco after the roll: nothing to set. BBVA Débito already carries its
+   CLABE and «Wire Transfer» and «Transferencia SPEI» pay into it, so the register asks for the
+   receipt on those tenders. Kit `~/muelle-releases/ya-llego-20261117/` reads the setup back.
 
 ## 6. Manuals
 

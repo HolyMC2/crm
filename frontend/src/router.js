@@ -660,9 +660,9 @@ const routes = [
   },
   {
     // Tu dinero (crm docs/DINERO_EN_ORDEN.md §3b-§3c): Deudas y plan de pago, ¿A
-    // dónde va el dinero?, Colchón and Por explicar, one record (pages/TuDinero.vue picks the
-    // page) so the router in the entry chunk carries one route for all of them.
-    path: '/bancos/:dinero(deudas|a-donde-va|colchon|por-explicar)',
+    // dónde va el dinero?, Colchón, Por explicar and Transferencias (§3e), one record
+    // (pages/TuDinero.vue picks the page) so the router in the entry chunk carries one route.
+    path: '/bancos/:dinero(deudas|a-donde-va|colchon|por-explicar|transferencias)',
     name: 'TuDinero',
     component: () => import('@/pages/TuDinero.vue'),
     meta: { app: 'bancos', title: 'Tu dinero', ownPhoneHeader: true },

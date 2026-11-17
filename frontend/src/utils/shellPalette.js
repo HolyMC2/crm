@@ -329,6 +329,18 @@ export function createShellProviders({ boot, modules }) {
           href: '/deals?create=1',
           rank: PALETTE_RANK.specific,
         })
+      // «¿Ya llegó?» (crm docs/DINERO_EN_ORDEN.md §3e): anyone on the team checks
+      // a customer's transfer with Banxico; the page shows them what they checked.
+      items.push({
+        id: 'transferencias.revisar',
+        group: 'acciones',
+        title: __('Check a transfer'),
+        keywords:
+          'ya llego transferencia spei revisar confirmar deposito pago cliente banxico cep clave de rastreo comprobante',
+        icon: 'lucide-badge-check',
+        href: '/bancos/transferencias?revisar=1',
+        rank: PALETTE_RANK.specific,
+      })
       // «Escanear documento» (Shell D7): first when the words say «ticket»,
       // «factura», «foto»… (cameraDoor.looksLikeDocument).
       const cameraItem = {

@@ -131,6 +131,32 @@
         @needs="needs = $event"
       />
 
+      <!-- What customers say they transferred, checked with Banxico (§3e). -->
+      <section v-if="data.can?.saldos" class="mt-6" aria-label="Cobros por transferencia">
+        <ul class="divide-y divide-outline-gray-1">
+          <li data-bancos-transferencias>
+            <ListRow
+              title="Transferencias de clientes"
+              :subtitle="transferenciasLine"
+              :subtitle-tone="transferencias?.resumen?.no_aparecen ? 'danger' : ''"
+              icon="lucide-badge-check"
+              :to="{
+                name: 'TuDinero',
+                params: { dinero: 'transferencias' },
+                query: companyQuery,
+              }"
+            >
+              <template #trailing>
+                <span
+                  class="lucide-chevron-right size-5 text-ink-gray-5"
+                  aria-hidden="true"
+                />
+              </template>
+            </ListRow>
+          </li>
+        </ul>
+      </section>
+
       <!-- Tu dinero, in the plan's order: what waits to be explained, the debts, the cushion, where the money goes (pages/TuDinero.vue). -->
       <section v-if="data.can?.saldos" class="mt-6" aria-label="Tu dinero">
         <h2 class="px-4 pb-1 text-sm font-semibold text-ink-gray-7">
@@ -268,6 +294,7 @@ import { useLiveList } from '@/composables/liveList'
 import { createListCache } from '@/utils/listCache'
 import { needsChipText } from './conectados'
 import { deudasApi, monthLabel } from '@/components/deudas/deudas'
+import { hoyIso, transferenciasApi } from '@/components/dinero/transferencias'
 
 // Bancos conectados (syncfy_connector): its own chunk, only where it is on.
 const ConexionesSeccion = defineAsyncComponent(
@@ -356,6 +383,32 @@ const deudasLine = computed(() => {
     ? `${owed} · libre en ${monthLabel(b.plan.free_on)}`
     : owed
 })
+// «Transferencias de clientes»: today's checks in one line.
+const transferencias = ref(null)
+const transferenciasLine = computed(() => {
+  const r = transferencias.value?.resumen
+  if (!r) return 'Revisa con Banxico si una transferencia llegó'
+  const parts = []
+  if (r.llegaron) parts.push(`${r.llegaron} ${r.llegaron === 1 ? 'llegó' : 'llegaron'} hoy`)
+  if (r.buscando) parts.push(`${r.buscando} buscando`)
+  if (r.no_aparecen) parts.push(`${r.no_aparecen} no ${r.no_aparecen === 1 ? 'aparece' : 'aparecen'}`)
+  if (r.sin_venta) parts.push(`${r.sin_venta} sin venta`)
+  return parts.length ? parts.join(', ') : 'Hoy no hay transferencias revisadas'
+})
+async function loadTransferencias() {
+  if (!data.value?.can?.saldos) return
+  try {
+    const today = hoyIso()
+    transferencias.value = await transferenciasApi('lista', {
+      company: route.query.empresa || undefined,
+      desde: today,
+      hasta: today,
+    })
+  } catch {
+    transferencias.value = null // the row still opens the page, which says why
+  }
+}
+
 async function loadDeudas() {
   if (!data.value?.can?.saldos) return
   try {
@@ -392,7 +445,10 @@ async function load({ quiet = false } = {}) {
     if (mine !== sequence) return
     data.value = result
     listCache.save(listAt, result)
-    if (!quiet) loadDeudas()
+    if (!quiet) {
+      loadDeudas()
+      loadTransferencias()
+    }
   } catch (error) {
     if (mine === sequence && !quiet) loadError.value = errorText(error)
   }

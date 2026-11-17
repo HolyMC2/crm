@@ -7,6 +7,11 @@ Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` i
 
 - **Change:** `scripts/ci/integration-compose.yml` gives the throwaway `database` service a 4 GB tmpfs datadir and turns off crash durability (`--innodb-flush-log-at-trx-commit=0`, `--innodb-doublewrite=0`, `--sync-binlog=0`), so `scripts/ci/local.sh` runs stop writing their databases to the workstation's SSD.
 - **Rollback:** revert.
+## 2026-11-17 — Bancos › Transferencias and «¿Ya llegó?»: check a customer's transfer with Banxico (lane ya-llego, with doco and posawesome; not deployed)
+
+- **Why:** Marco's employees asked him to confirm every SPEI a customer sent (docs/DINERO_EN_ORDEN.md §3e).
+- **Change:** `/bancos/transferencias` (in the TuDinero route): the period's totals as filters (Llegaron, Buscando, Sin venta, No llegan), Hoy / Ayer / 7 / 30 días, views led by «Todas», search, the list by day (rows on a phone, a table from 720 px), a check's sheet (what Banxico says, who sent it, the sale it paid or the sales of the same amount to link, «Sí llegó», «Volver a intentar», discard in two taps), and the owner's settings (on/off, «Cobrar y avisarme» / «Esperar a que llegue», the notice, each account's CLABE checked digit by digit). «¿Ya llegó la transferencia?» sheet: the receipt's photo (read by the server) or amount, bank chips and tracking key or numeric reference; it follows the check live. Bancos gains the «Transferencias de clientes» row; ⌘K «Revisar una transferencia» opens the sheet. Who the owner keeps the money from sees only their checks.
+- **Tests:** `tests/unit/transferencias.test.js`.
 
 ## 2026-11-17 — The Resultados ticket reads like a record: the repair, the customer, the profit and its actions (lane ticket-detalle, with mercado and taller; not deployed)
 
