@@ -22445,6 +22445,23 @@ msgstr "Puede ver facturación"
 msgid "Sees the plan and the invoices, and pays; changes nothing else."
 msgstr "Ve el plan, las facturas y paga; no cambia nada más."
 
+#: frontend/src/pages/EquipoPersona.vue
+msgctxt "Equipo"
+msgid "Money"
+msgstr "Dinero"
+
+#: frontend/src/pages/EquipoPersona.vue
+msgid "Sees the money of the business"
+msgstr "Ve el dinero del negocio"
+
+#: frontend/src/pages/EquipoPersona.vue
+msgid "Bancos, Resultados, the sales of the day and costs. Off, they keep selling, buying and changing prices."
+msgstr "Bancos, Resultados, las ventas del día y los costos. Apagado, sigue vendiendo, comprando y cambiando precios."
+
+#: crm/api/money.py
+msgid "The owner does not share the business's money with you. Ask them if you need it."
+msgstr "El dueño no comparte contigo el dinero del negocio. Pídeselo si lo necesitas."
+
 #: frontend/src/pages/EquipoVacaciones.vue
 msgid "Vacation days by law for each year of service. Each person gets this year’s days; nothing is assigned backwards."
 msgstr "Días de vacaciones que da la ley por cada año de antigüedad. Cada persona recibe los días de este año; no se asigna nada hacia atrás."

@@ -25,6 +25,8 @@ import json
 import frappe
 from frappe import _
 
+from crm.api import money
+
 # The bar order saved before layouts (0.17.0): read as a personal dock, cleared on save.
 MOBILE_SLOTS_DEFAULT = "muelle_mobile_slots"
 # Where each place sits: the worker's own layout (user default) or their class's
@@ -792,7 +794,7 @@ def _module_nav_hint(modules: dict) -> str | None:
 
 def scope_hash(user: str | None = None) -> str:
 	"""Short hash of what shapes this user's shell: roles, puesto, blocked modules, User
-	Permissions and the site's permission rules. The client keys its boot copy by it, so a
+	Permissions, the site's permission rules and whether the owner keeps the money from them. The client keys its boot copy by it, so a
 	role or permission change never paints the old shell (DD18). Never raises: it runs on
 	every /crm page render."""
 	user = user or frappe.session.user
@@ -820,6 +822,8 @@ def scope_hash(user: str | None = None) -> str:
 				)
 			),
 			frappe.db.sql("select max(modified) from `tabCustom DocPerm`")[0][0],
+			# The owner's «Ve el dinero del negocio» (Bancos, Resultados) for this person.
+			money.hidden(user),
 		]
 	except Exception:
 		return ""

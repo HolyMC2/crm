@@ -160,9 +160,10 @@ def _sales_today():
 	never disagree. A worker the card does not apply to, or who may not read
 	it, gets no section; its shop and company scope is the card's.
 	"""
-	from crm.api import resultados
+	from crm.api import money, resultados
 
-	if SALES_CARD not in (key for key, _path in resultados._providers()):
+	# Nobody the owner keeps the business's money from sees today's sales.
+	if money.hidden() or SALES_CARD not in (key for key, _path in resultados._providers()):
 		return {"available": False, "reason": None}
 	answer = resultados.board(periodo="hoy", compara="anterior", card=SALES_CARD)
 	card = next(iter(answer["cards"]), None)

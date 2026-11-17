@@ -16,13 +16,16 @@ sale, cash closing or repair order moves after commit.
 
 Hoy reads the Ventas card for today through `board` (crm.api.hoy._sales_today:
 value, prev, facts, attention, drill), so a change to that card's shape is a
-change to Hoy too.
+change to Hoy too. Nobody the owner keeps the money from (crm.api.money) opens
+Resultados, nor Hoy's card.
 """
 
 import re
 
 import frappe
 from frappe import _
+
+from crm.api import money
 
 CARD_ORDER = (
 	# Headline numbers, one small card each.
@@ -150,6 +153,9 @@ def _blocked(key, reason, retry=False):
 def _require_user():
 	if frappe.session.user == "Guest":
 		frappe.throw(_("Sign in to open Muelle."), frappe.AuthenticationError)
+	if money.hidden():
+		# The owner keeps the money from this person (Equipo); Hoy's sales card reads here too.
+		frappe.throw(money.reason(), frappe.PermissionError)
 
 
 def _call(key, path, ctx):
@@ -174,6 +180,8 @@ def get_capabilities():
 		return None
 	if frappe.session.user == "Guest":
 		return {"enabled": False, "reason": _("Sign in to open Muelle.")}
+	if money.hidden():
+		return {"enabled": False, "reason": money.reason()}
 	ctx = {"user": frappe.session.user, "check": 1, **query()}
 	reason = None
 	for key, path in providers:

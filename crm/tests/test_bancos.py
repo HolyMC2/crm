@@ -274,6 +274,19 @@ class TestBancosAccess(IntegrationTestCase):
 		with self.assertRaises(frappe.PermissionError):
 			bancos.catalogo()
 
+	def test_a_manager_the_owner_keeps_the_money_from_is_refused(self):
+		"""Equipo «Ve el dinero del negocio» off closes Bancos on every endpoint, whatever the roles."""
+		from crm.api import money
+
+		with patch.object(money, "hidden", return_value=True):
+			answer = bancos.get_capabilities()
+			self.assertFalse(answer["enabled"])
+			self.assertEqual(answer["reason"], money.reason())
+			self.assertEqual(answer["capabilities"], {})
+			with self.assertRaises(frappe.PermissionError):
+				bancos.cuentas()
+		self.assertTrue(bancos.get_capabilities()["enabled"])
+
 	def test_seller_reading_account_names_is_still_refused(self):
 		"""ERPNext lets a Sales User read Account (pickers); that alone does not open Bancos."""
 		user = frappe.get_doc("User", self.USER)

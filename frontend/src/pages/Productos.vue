@@ -1659,7 +1659,10 @@ function rowLines(row) {
   if (row.kind === 'stock') {
     lines.push({
       text: [
-        __('Value {0}', [money(row.stock_value)]),
+        // No value when the owner keeps the business's money from this person.
+        row.stock_value == null
+          ? ''
+          : __('Value {0}', [money(row.stock_value)]),
         row.reserved_qty ? __('Reserved {0}', [qty(row.reserved_qty)]) : '',
         row.ordered_qty ? __('{0} on order', [qty(row.ordered_qty)]) : '',
       ]
@@ -1691,7 +1694,7 @@ function rowLines(row) {
       text: __('Expected {0} · counted {1} · {2}', [
         qty(row.expected_qty),
         row.observed_qty === null ? '—' : qty(row.observed_qty),
-        money(row.value),
+        row.value == null ? '—' : money(row.value),
       ]),
     })
     lines.push({

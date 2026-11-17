@@ -31,6 +31,7 @@ from frappe import _
 from frappe.utils import add_months, cint, flt, get_first_day, get_last_day, getdate, today
 
 from crm import bancos_cuadre as cuadre_math
+from crm.api import money
 from crm.bancos_words import (
 	REVIEW_STATES,
 	UNLINKED_STATE,
@@ -90,6 +91,9 @@ def get_capabilities():
 		return {"enabled": False, "reason": "Este sitio no lleva contabilidad.", "capabilities": {}}
 	if frappe.session.user == "Guest" or _blocked():
 		return {"enabled": False, "reason": "Pide a tu encargado acceso a Bancos.", "capabilities": {}}
+	if money.hidden():
+		# The owner keeps the money from this person (Equipo): every endpoint here refuses.
+		return {"enabled": False, "reason": money.reason(), "capabilities": {}}
 	bancos = _may("Bank Account")
 	saldos = _may("GL Entry")
 	# ERPNext lets sellers and cashiers read Account (for their pickers); the catalog with

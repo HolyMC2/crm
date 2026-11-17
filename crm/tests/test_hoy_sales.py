@@ -67,6 +67,30 @@ class TestHoySales(IntegrationTestCase):
 		ANSWER["card"] = None
 		self.assertEqual(hoy._sales_today(), {"available": False, "reason": None})
 
+	def test_no_section_and_no_resultados_when_the_owner_keeps_the_money(self):
+		"""Equipo «Ve el dinero del negocio» off: no «Ventas de hoy», no Resultados, not even by URL."""
+		from crm.api import money
+
+		ANSWER["card"] = CARD
+		with patch.object(money, "hidden", return_value=True):
+			self.assertEqual(hoy._sales_today(), {"available": False, "reason": None})
+			self.assertNotIn("ctx", ANSWER)
+			answer = resultados.get_capabilities()
+			self.assertFalse(answer["enabled"])
+			self.assertEqual(answer["reason"], money.reason())
+			self.assertFalse(resultados.check_resultados_permission())
+			with self.assertRaises(frappe.PermissionError):
+				resultados.board(periodo="hoy")
+		self.assertTrue(hoy._sales_today()["available"])
+
+	def test_a_failing_money_hook_hides_the_money(self):
+		from crm.api import money
+
+		with patch.object(frappe, "get_hooks", return_value=["crm.tests.test_hoy_sales.no_such_hook"]):
+			self.assertTrue(money.hidden("someone@example.com"))
+		with patch.object(frappe, "get_hooks", return_value=[]):
+			self.assertFalse(money.hidden("someone@example.com"))
+
 	def test_no_section_without_a_ventas_provider(self):
 		with patch.object(resultados, "_providers", return_value=[]):
 			self.assertEqual(hoy._sales_today(), {"available": False, "reason": None})

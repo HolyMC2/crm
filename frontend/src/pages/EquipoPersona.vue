@@ -439,6 +439,69 @@
               {{ billingSaid?.text }}
             </p>
           </section>
+          <!-- «Ve el dinero del negocio»: the owner's switch; off closes
+               Bancos, Resultados, Hoy's sales and every cost for this person. -->
+          <section
+            v-if="person.dinero"
+            class="px-4"
+            aria-labelledby="equipo-dinero"
+            data-testid="equipo-dinero"
+          >
+            <h2
+              id="equipo-dinero"
+              class="pb-1 text-base font-semibold text-ink-gray-9"
+            >
+              {{ __('Money', null, 'Equipo') }}
+            </h2>
+            <div class="flex min-h-14 items-center gap-3 py-2">
+              <label
+                for="equipo-dinero-switch"
+                class="flex min-w-0 flex-1 flex-col"
+              >
+                <span class="text-base text-ink-gray-9">{{
+                  __('Sees the money of the business')
+                }}</span>
+                <span class="text-sm text-ink-gray-6">{{
+                  __(
+                    'Bancos, Resultados, the sales of the day and costs. Off, they keep selling, buying and changing prices.',
+                  )
+                }}</span>
+              </label>
+              <AjustesSwitch
+                id="equipo-dinero-switch"
+                :model-value="person.dinero.on"
+                :label="__('Sees the money of the business')"
+                :disabled="!person.dinero.can_change || moneyBusy"
+                :aria-describedby="
+                  person.dinero.reason ? 'equipo-dinero-motivo' : undefined
+                "
+                @update:model-value="setMoney"
+              />
+            </div>
+            <p
+              v-if="person.dinero.reason"
+              id="equipo-dinero-motivo"
+              class="text-sm text-ink-gray-6"
+            >
+              {{ person.dinero.reason }}
+            </p>
+            <p
+              v-if="moneySaid?.error"
+              role="alert"
+              class="text-sm text-ink-red-7"
+              data-testid="equipo-dinero-dicho"
+            >
+              {{ moneySaid.text }}
+            </p>
+            <p
+              v-else
+              aria-live="polite"
+              class="text-sm text-ink-green-8"
+              data-testid="equipo-dinero-dicho"
+            >
+              {{ moneySaid?.text }}
+            </p>
+          </section>
           <section
             v-if="person.hr"
             class="px-4"
@@ -573,6 +636,9 @@ const lifting = ref(false)
 const billingBusy = ref(false)
 // The billing switch's last answer, said beside it: {text, error}.
 const billingSaid = ref(null)
+const moneyBusy = ref(false)
+// The money switch's last answer, said beside it: {text, error}.
+const moneySaid = ref(null)
 // A full plan in «Completar alta»: the owner adds one user in place.
 const {
   step: seatStep,
@@ -886,6 +952,30 @@ async function setBilling(allow) {
     billingSaid.value = { text: problemOf(error).detail, error: true }
   } finally {
     billingBusy.value = false
+  }
+}
+async function setMoney(allow) {
+  const dinero = person.value?.dinero
+  if (!dinero?.can_change || moneyBusy.value) return
+  const before = dinero.on
+  dinero.on = allow
+  moneyBusy.value = true
+  moneySaid.value = null
+  try {
+    const answer = await equipoApi(
+      'doco.erp_experience.equipo.set_money_access',
+      {
+        user: person.value.user,
+        allow: allow ? 1 : 0,
+      },
+    )
+    if (answer?.dinero) person.value.dinero = answer.dinero
+    moneySaid.value = { text: answer?.message || '', error: false }
+  } catch (error) {
+    dinero.on = before
+    moneySaid.value = { text: problemOf(error).detail, error: true }
+  } finally {
+    moneyBusy.value = false
   }
 }
 async function askHr() {
