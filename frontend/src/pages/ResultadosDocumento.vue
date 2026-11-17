@@ -240,7 +240,9 @@
                 >
                   <li class="mb-1 flex justify-between text-ink-gray-6">
                     <span>{{ __('Parts used', null, CTX) }}</span>
-                    <span class="num">{{ repair.partsCost }}</span>
+                    <span v-if="repair.partsCost" class="num">{{
+                      repair.partsCost
+                    }}</span>
                   </li>
                   <li
                     v-for="(part, i) in repair.parts"
@@ -299,10 +301,19 @@
                       <span class="lucide-package size-5" />
                     </span>
                     <span class="min-w-0 flex-1">
+                      <!-- The amount sits beside the name while both fit and
+                           drops under it on a narrow phone. -->
                       <span
-                        class="line-clamp-2 break-words font-medium text-ink-gray-9"
-                        >{{ line.title }}</span
+                        class="flex flex-wrap items-start justify-between gap-x-3"
                       >
+                        <span
+                          class="line-clamp-2 min-w-0 flex-[1_1_9rem] break-words font-medium text-ink-gray-9"
+                          >{{ line.title }}</span
+                        >
+                        <span class="num shrink-0 font-semibold">{{
+                          line.amount
+                        }}</span>
+                      </span>
                       <span
                         v-if="line.detail"
                         class="num mt-0.5 block text-sm text-ink-gray-6"
@@ -329,9 +340,6 @@
                         >{{ line.cost }}</span
                       >
                     </span>
-                    <span class="num shrink-0 pt-0.5 font-semibold">{{
-                      line.amount
-                    }}</span>
                     <span
                       v-if="line.to"
                       class="lucide-chevron-right mt-1 size-4 shrink-0 text-ink-gray-4"
@@ -755,9 +763,7 @@ const customer = computed(() =>
   ticketCustomer(doc.value?.customer, repairBlock.value, docCurrency.value),
 )
 const details = computed(() =>
-  doc.value && isTicket
-    ? ticketDetails(doc.value, { personName: (p) => personName(p) })
-    : [],
+  doc.value && isTicket ? ticketDetails(doc.value) : [],
 )
 
 const canOpenProducts = computed(() =>

@@ -2,6 +2,17 @@
 
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
+
+## 2026-11-17 — The Resultados ticket reads like a record: the repair, the customer, the profit and its actions (lane ticket-detalle, with mercado and taller; not deployed)
+
+- **Why:** Marco, from a ticket on his phone: more data, a more modern page, the repair and CRM data, and the actions a sale needs. The page showed the lines, the payments and «Reprints and returns are made at the register».
+- **Bar:** the customer's name with the state and folio; the island calls or WhatsApps them (the ticket's PDF on the official account), the bolt holds the ticket's steps and «⋯» every Documentos tool (print, share, comment, assign, tag, pendiente, cancel…) through `useRecordKit`.
+- **Hero:** the amount, how it was paid, «Sin factura» / «Facturada (CFDI)», «Devolución hasta…», a credit sale's provider and, for whom sees margin, «Ganancia $X · N %». Money owed leads with «Cobrar en caja».
+- **Sections:** the repair the ticket charged (Taller: device, IMEI, reported fault, work done, who received, repaired and delivered it, warranty, parts and their cost for whom sees cost), each line with its photo, list-price discount and cost, the payment with discount and taxes, the profit (costed lines, their cost, labour left out), the customer (purchases and total, previous visit, since when, repairs, what they owe; never the walk-in customer), details (folio to copy, sellers, pieces) and Actividad y comentarios.
+- **Bolt:** «Imprimir o descargar el ticket», «Hacer la factura (CFDI)» and «Mandar al cliente el enlace para facturar» (Contador's self-billing link, only where the shop turned on public invoicing), «Devolver en caja» while the return window is open, «Abrir la reparación», «Abrir la venta en Ventas».
+- **Server:** `crm.api.resultados_ticket` adds `customer`, `cfdi`, `register` and the `muelle_resultados_ticket` blocks (one per app, a failing block left out) to `resultados.document`. Shared: `documentos/recordWhatsapp.js` (DocumentoRecord uses it too), `posReturnHref` moved to `utils/posHandoff.js`, `shareLink` in `documentos/tools.js`.
+- **Tests:** `tests/unit/resultadosTicket.test.js` (24, incl. every string in es.po), `crm/tests/test_resultados.py` (+3). Full vitest, build, bundle budget and translation keys green. Shots at 305, 412 (light, dark) and 1280. Rollback = revert the three lanes' commits together.
+
 ## 2026-11-17 — Por explicar: «Gasté en efectivo», «Contar caja» and the daily reminder (lane efectivo; not deployed)
 
 - **«Tu efectivo» on `/bancos/por-explicar`:** each cash account with what the books say it holds and when it was last counted («Nunca contada», «Contada hace 9 días»); «Gasté en efectivo» (how much, what it was among the most used expenses or «Retiros del dueño», which cash, today or yesterday, a note: one entry, with «Deshacer») and «Contar caja» (what is there against the books, «Faltan $X» / «Sobran $X» with «¿en qué se fue?» / «¿de dónde salió?»; the button leaves the books at the counted amount).

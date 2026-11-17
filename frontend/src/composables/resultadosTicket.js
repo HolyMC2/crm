@@ -291,29 +291,23 @@ export function ticketRepair(repair, currency, today = localDay()) {
           : part.item_name,
       cost: money(part.cost, currency),
     })),
+    // One part's cost is its own line; the sum reads only over several.
     partsCost:
-      repair.parts_cost !== undefined ? money(repair.parts_cost, currency) : '',
+      repair.parts_cost !== undefined && (repair.parts || []).length > 1
+        ? money(repair.parts_cost, currency)
+        : '',
   }
 }
 
-/** The ticket's facts that are not on screen yet, as label and value. */
-export function ticketDetails(doc, { personName = (p) => p } = {}) {
+/** The ticket's facts the hero does not show (it names the register and
+ * who rang it up), as label and value. */
+export function ticketDetails(doc) {
   const h = doc?.header || {}
   const sellers = (doc?.sales_team || [])
     .map((row) => row.sales_person)
     .filter(Boolean)
   return [
     { key: 'folio', label: t('Folio'), value: doc?.name || '', copy: true },
-    h.pos_profile && {
-      key: 'shop',
-      label: t('Register'),
-      value: h.pos_profile,
-    },
-    doc?.owner && {
-      key: 'owner',
-      label: t('Rung up by'),
-      value: personName(doc.owner),
-    },
     sellers.length && {
       key: 'sellers',
       label: t('Sold by'),

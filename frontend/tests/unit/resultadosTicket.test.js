@@ -306,7 +306,21 @@ describe('the customer and the repair', () => {
     expect(r.warrantyOn).toBe(true)
     expect(r.warranty).toMatch(/^Warranty until /)
     expect(r.parts).toEqual([{ name: 'Centro de carga', cost: money(140) }])
-    expect(r.partsCost).toBe(money(140))
+    // One part is its own total.
+    expect(r.partsCost).toBe('')
+    const two = ticketRepair(
+      {
+        parts: [
+          { item_name: 'Pantalla', qty: 1, cost: 900 },
+          { item_name: 'Tornillos', qty: 4, cost: 20 },
+        ],
+        parts_cost: 920,
+      },
+      'MXN',
+      TODAY,
+    )
+    expect(two.partsCost).toBe(money(920))
+    expect(two.parts[1].name).toBe('Tornillos × 4')
   })
 
   it('an expired warranty and one counted from delivery', () => {
@@ -320,15 +334,12 @@ describe('the customer and the repair', () => {
 })
 
 describe('the ticket details', () => {
-  it('lists the folio to copy, the register, who rang it and who sold it', () => {
+  it('lists the folio to copy, who sold it and the pieces, never what the hero says', () => {
     const rows = ticketDetails(
       ticket({ sales_team: [{ sales_person: 'Jessica' }] }),
-      { personName: (p) => p.toUpperCase() },
     )
     expect(rows.map((r) => [r.key, r.value])).toEqual([
       ['folio', 'ACC-SINV-2026-03526'],
-      ['shop', 'Doco Ventas'],
-      ['owner', 'JEYDICI'],
       ['sellers', 'Jessica'],
       ['qty', '1'],
     ])
