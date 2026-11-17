@@ -2,6 +2,11 @@
 
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
+## 2026-11-16 — Bancos › ¿A dónde va el dinero? (lane a-donde-va; not deployed)
+
+- **Page `/bancos/a-donde-va` (`pages/ADondeVa.vue`):** the month (‹ ›, never past this one): «Entró / Salió / Te quedó»; «Tus gastos fijos al mes» (average of the three months before) and the 3-month cushion it asks for; «En qué se fue»: each destination with its bar, share of what came in and «+16 % vs tu promedio», «fijo» chips; a destination opens its accounts, and «Cambiar» moves one to another destination and says whether it is fixed (two taps); the bank movements still unexplained, with the way to Bancos; six months of in and out.
+- Gate `bancos_routes` accepts `/crm/bancos/a-donde-va`.
+- **Tests:** `tests/unit/aDondeVa.test.js` (6), `crm/tests/test_bancos.py` (the path). Shots at 412 px light, 305 px dark and 1280 px on a seeded lease (`.scratch/proof/`). Rollback = revert with the doco half.
 ## 2026-11-16 — Personal mailboxes and «Who reads it» (lane correo-buzones; not deployed)
 
 - **Why:** correo program lane 2 (`~/muelle-host/correo-program/PLAN.md`). Marco connects his personal Gmail and Hotmail next to the shop's mailboxes; tenants will too. Frappe lets every System Manager read every mailbox, and a mail linked to a record shows on its timeline to whoever reads the record.

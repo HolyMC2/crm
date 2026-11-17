@@ -669,6 +669,17 @@ const routes = [
     },
   },
   {
+    // ¿A dónde va el dinero? (crm docs/DINERO_EN_ORDEN.md §3b D3): doco.workspaces.a_donde_va.
+    path: '/bancos/a-donde-va',
+    name: 'ADondeVa',
+    component: () => import('@/pages/ADondeVa.vue'),
+    meta: {
+      app: 'bancos',
+      title: '¿A dónde va el dinero?',
+      ownPhoneHeader: true,
+    },
+  },
+  {
     path: '/bancos/balanza',
     name: 'Balanza',
     component: () => import('@/pages/Balanza.vue'),

@@ -131,6 +131,21 @@
           Tu dinero
         </h2>
         <ul class="divide-y divide-outline-gray-1">
+          <li data-bancos-adondeva>
+            <ListRow
+              title="¿A dónde va el dinero?"
+              subtitle="Lo que entró y salió del mes, por destino, y tus gastos fijos"
+              icon="lucide-chart-pie"
+              :to="{ name: 'ADondeVa', query: companyQuery }"
+            >
+              <template #trailing>
+                <span
+                  class="lucide-chevron-right size-5 text-ink-gray-5"
+                  aria-hidden="true"
+                />
+              </template>
+            </ListRow>
+          </li>
           <li data-bancos-deudas>
             <ListRow
               title="Deudas y plan de pago"

@@ -9,7 +9,7 @@ import re
 from urllib.parse import urlsplit
 
 _BANCOS_PATH = re.compile(
-	r"^/crm/bancos(?:/cuenta/[^/]+|/conexion/[^/]+|/catalogo(?:/[^/]+)?|/balanza|/deudas)?/*$"
+	r"^/crm/bancos(?:/cuenta/[^/]+|/conexion/[^/]+|/catalogo(?:/[^/]+)?|/balanza|/deudas|/a-donde-va)?/*$"
 )
 
 
