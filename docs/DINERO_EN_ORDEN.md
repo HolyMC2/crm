@@ -48,6 +48,48 @@ parts: the general code, its setting (if it needs one) in the /crm SPA, and the 
 | 8 | Presupuesto con bancos | Budget consumption fed by explained bank movements (`explicar_movimientos` classifications), so the month's budget reflects real spending | planned (extends `doco/books/presupuesto.py`) |
 | 9 | Resumen del dinero | Morning digest: what does not agree, what waits to be explained, budgets at risk, card payments due; review-gated sends | planned |
 
+## 3b. Debt first, then three months of expenses (Marco, 2026-11-16)
+
+Marco: «First i need to pay my debt, its higher that my savings, them save 3 months at least of
+expenses». Then: budgets, savings, «donde va cada dinero», and what happens «cuando se llega a
+las metas». The order below follows his: debt, then the cushion, then everything else.
+
+What doco shows today (read-only, 11-16 09:37):
+- The connected cards owe $110,195 (Amex $103,547, BBVA Oro $6,648).
+- BBVA Débito holds $4,663. The Mercado Pago wallet and the cash boxes aren't connected, and their
+  book balances can't be trusted until Cuadre lanes 2–4 are done.
+- No Presupuesto is set yet.
+- Monthly expenses are unknown: most bank movements are still unexplained. «Three months of
+  expenses» needs the categories (D3) first.
+
+| Job (the owner's words) | Today | Target |
+|---|---|---|
+| «¿Cuánto debo y a quién?» | Read each card in Bancos | One «Deudas» list: what each card or loan owes (the bank's figure), rate, minimum, cut and due day |
+| «¿En cuánto tiempo la pago si abono X?» | A spreadsheet by hand | A payoff plan: monthly amount → payoff date per card, the interest paid and saved, highest rate first by default (or smallest first, the owner chooses) |
+| «Pagar la tarjeta» | A transfer in the bank app, then a journal entry by hand | The transfer from the bank movement is recognised as a card payment (Registrar traspaso), and counts toward the plan |
+| «¿A dónde se va el dinero?» | Not possible; most movements unexplained | Every peso out in a category (fixed costs, inventory, payroll, debt interest, debt principal, taxes, personal withdrawals), month by month, business vs personal |
+| «Un colchón de 3 meses» | Nothing | A savings goal of N months (default 3) of essential expenses, from the categories, with the accounts the owner marks as savings and a monthly contribution |
+| «Cuando se llega a la meta» | Nothing | A card at zero: a notice, and its payment rolls to the next card. Each month of cushion reached: a notice. Last goal reached: the plan proposes the next one, never moves money by itself |
+
+Lanes (in this order):
+
+| # | Lane | What | Builds on |
+|---|---|---|---|
+| D1 | Deudas | Settings per card or loan (rate as CAT, minimum, cut day, due day, months-without-interest plans) on its Bank Account; a «Deudas» view in Bancos: owed (bank figure), next payment, interest last month; bot read `deudas` | Cuadre's bank figure, Syncfy |
+| D2 | Plan de pago | Monthly amount → schedule per card (avalanche default, snowball option), payoff dates, interest saved; a card payment found in the bank counts toward the plan; bot «¿cuándo termino si abono X?» | D1, Hojas forecasts (§9 of docs/HOJAS.md) |
+| D3 | ¿A dónde va el dinero? | Categories on accounts (fixed, variable, inventory, payroll, debt, taxes, personal), a monthly view and trend, business vs personal; fed by explained bank movements (`explicar_movimientos`) and expenses | Cuadre lanes 2–4, Presupuesto |
+| D4 | Colchón | Savings goal in months of essential expenses (from D3), savings accounts marked, progress and monthly contribution; Presupuesto gains kinds «Deuda» and «Ahorro» so the month's plan reads: fixed costs → card minimums → extra to the priority card → cushion → inventory → withdrawals | D3, Presupuesto |
+| D5 | Metas de dinero | Goals reached (a card at zero, each month of cushion): notice in chat and bell, the payment rolls to the next goal, a proposal for the next one; money never moves by itself; the morning money brief (§3 lane 9) carries progress | Presupuesto alerts, lane 9 |
+
+Settings: each card's rate, minimum and days; the payoff order; the cushion's months (default 3)
+and which accounts count as savings; category per account. All per tenant; the bot can fill them
+from a statement the owner shares.
+
+Setup on Marco's shops: enter the rate (CAT), minimum, cut and due day for Amex, BBVA Oro, Ualá,
+Nu and Mercado Pago credit (from their statements); connect the Mercado Pago wallet; mark which
+accounts are savings. Until Cuadre's lanes 2–4 explain the bank movements, D3's expense figure
+will run low.
+
 ## 4. Settings and the owner's switches
 
 - Cuadre needs no setting: it reads Bancos' own permissions. «Ligar» follows the reconciliation engine
