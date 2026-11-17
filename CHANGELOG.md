@@ -3,6 +3,11 @@
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
 
+## 2026-11-17 — Local CI's MariaDB runs in RAM (lane ssd-ci-tmpfs-crm; CI only)
+
+- **Change:** `scripts/ci/integration-compose.yml` gives the throwaway `database` service a 4 GB tmpfs datadir and turns off crash durability (`--innodb-flush-log-at-trx-commit=0`, `--innodb-doublewrite=0`, `--sync-binlog=0`), so `scripts/ci/local.sh` runs stop writing their databases to the workstation's SSD.
+- **Rollback:** revert.
+
 ## 2026-11-17 — The Resultados ticket reads like a record: the repair, the customer, the profit and its actions (lane ticket-detalle, with mercado and taller; not deployed)
 
 - **Why:** Marco, from a ticket on his phone: more data, a more modern page, the repair and CRM data, and the actions a sale needs. The page showed the lines, the payments and «Reprints and returns are made at the register».
