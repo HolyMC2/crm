@@ -143,7 +143,7 @@ describe('salesToday', () => {
     expect(credit.label).toBe('Credit sales')
     expect(credit.total).toBe('$3,041.00')
     expect(credit.totalLabel).toBe('Payjoy pays later')
-    expect(credit.facts).toEqual(['Sales 2', 'Down payments $769.00'])
+    expect(credit.facts).toEqual(['Down payments $769.00'])
     expect(credit.rows).toEqual([
       {
         name: 'ACC-SINV-2026-04095',

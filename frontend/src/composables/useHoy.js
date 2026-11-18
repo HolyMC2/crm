@@ -199,7 +199,9 @@ export function creditToday(section) {
     label: section.label || t('Credit sales'),
     total: section.format === 'money' ? money(section.value, currency) : '',
     totalLabel: section.value_label || '',
+    // The header already counts the sales; the facts say the money.
     facts: (section.facts || [])
+      .filter((fact) => fact.format !== 'count')
       .map((fact) => factText(fact, currency))
       .filter(Boolean),
     rows,
