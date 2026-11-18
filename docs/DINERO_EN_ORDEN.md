@@ -195,7 +195,18 @@ mobiliario, Publicidad, Vehículo, Viajes de trabajo, Casa). The assistant reads
 («¿cuánto llevo en la remodelación?»). Marco's own set with words from his charges is a kit:
 `~/muelle-releases/etiquetas-doco-20261117/`.
 
-Next: ¿A dónde va? by tag; «Adjuntar ticket o factura» from a movement (the capture runs with the movement as
+Lane 4 `ligar-capturas` (Marco 2026-11-18: «go do them all»): a document meets its movement.
+«Adjuntar ticket o factura» (the paperclip on a movement in Por explicar) sends the file through the
+ONE capture engine with the movement it explains (Captura Contable `intent_bank_transaction`): the
+draft pays from that movement's account (a factura stays an open invoice), and when its entry is
+submitted doco `books/ligar_aviso.py` links it (a factura: the payment from that account, linked).
+A capture sent by chat whose entry is submitted, or a new bank movement whose capture is already
+booked, gets a card in the owner's chat only when exactly one movement fits («Este documento parece
+ser el cargo PETROPLAZAS por $479.80 del jue 6 nov en Amex Platinum. ¿Lo ligo?»: «Sí, lígalo» /
+«No, ese no»; system cards in books/action_cards, 3 days to answer). Anything else waits in Por
+explicar.
+
+Next: ¿A dónde va? by tag from a movement (the capture runs with the movement as
 context, so its entry lands on the right account); the chat answers a confirmed capture with the
 movement it matches; the bot reads `por_explicar` on every site (today `banco_por_explicar` needs
 Contador). Setup on Marco's shops after the roll: explain the backlog

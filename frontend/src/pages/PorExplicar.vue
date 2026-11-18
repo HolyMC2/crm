@@ -290,7 +290,7 @@
               :key="r.name"
               class="flex items-start justify-between gap-3 py-2 text-sm"
             >
-              <span class="min-w-0">
+              <span class="min-w-0 flex-1">
                 <span class="block text-ink-gray-6">{{ dayText(r.date) }}</span>
                 <span class="block break-words text-ink-gray-8">{{
                   r.description
@@ -299,6 +299,17 @@
               <span class="num whitespace-nowrap text-ink-gray-9">{{
                 fmt(r.amount)
               }}</span>
+              <button
+                v-if="data.can_explain"
+                type="button"
+                class="press -my-1 grid size-10 flex-none place-items-center rounded-full text-ink-gray-7"
+                aria-label="Adjuntar ticket o factura"
+                title="Adjuntar ticket o factura"
+                :data-por-explicar-adjuntar="r.name"
+                @click="attach.row = r"
+              >
+                <span class="lucide-paperclip size-5" aria-hidden="true" />
+              </button>
             </li>
             <li
               v-if="g.count > g.rows.length"
@@ -438,6 +449,13 @@
       :data="data"
       @done="data = $event"
     />
+    <AdjuntarSheet
+      :open="!!attach.row"
+      :row="attach.row"
+      :company="data?.company || ''"
+      :currency="data?.currency"
+      @update:open="(v) => !v && (attach.row = null)"
+    />
     <EtiquetasSheet
       v-model:open="sheets.tags"
       :data="data"
@@ -452,6 +470,7 @@ import { useRoute } from 'vue-router'
 import { Button } from 'frappe-ui'
 import { AppBar, BottomSheet, EmptyState } from '@/components/ui'
 import { errorText, money } from '@/components/bancos/bancos'
+import AdjuntarSheet from '@/components/dinero/AdjuntarSheet.vue'
 import ConteoCajaSheet from '@/components/dinero/ConteoCajaSheet.vue'
 import EtiquetasPicker from '@/components/dinero/EtiquetasPicker.vue'
 import EtiquetasSheet from '@/components/dinero/EtiquetasSheet.vue'
@@ -489,6 +508,7 @@ const receipt = reactive({
   cancel: false,
   busy: false,
 })
+const attach = reactive({ row: null })
 const sheets = reactive({
   spent: false,
   count: false,

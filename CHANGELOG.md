@@ -3,6 +3,11 @@
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
 
+## 2026-11-18 — Por explicar: «Adjuntar ticket o factura» on a movement (lane ligar-capturas; not deployed)
+
+- **The paperclip on each movement** (in «Ver movimientos») opens «Adjuntar ticket o factura»: Ticket / Factura / Comprobante (a CFDI's XML picks Factura), a photo or a file, a note; «Leer y registrar» sends it through the capture engine with the movement it explains and opens its review, which comes back to Por explicar. When the draft is confirmed, it is linked to the movement by itself (doco `books/ligar_aviso`).
+- **Tests:** `tests/unit/porExplicar.test.js` (+1). Shots at 412 px light and 305 px dark (`.scratch/proof/`). Rollback = revert with the doco half.
+
 ## 2026-11-17 — Hoy: «Today's sales» is what the tickets charged; new «Credit sales» section (lane hoy-credito, with mercado; not deployed)
 
 - **Why:** Marco, 11-17 16:14: «Today's sales IS wrong». Hoy said $5,695; the 12 tickets charged $2,654. The other $3,041 was what Payjoy pays later for one phone (Resultados counts a credit sale at what the shop gets, his 10-29 rule). He chose: tickets only on Hoy, and a section for the Payjoy credits.

@@ -4,7 +4,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick } from 'vue'
 
-const state = vi.hoisted(() => ({ call: vi.fn(), query: {} }))
+const state = vi.hoisted(() => ({ call: vi.fn(), query: {}, push: vi.fn() }))
 vi.mock('frappe-ui', async () => {
   const { h } = await import('vue')
   return {
@@ -59,6 +59,7 @@ vi.mock('@/components/ui', async () => {
 })
 vi.mock('vue-router', () => ({
   useRoute: () => ({ query: state.query, params: {} }),
+  useRouter: () => ({ push: state.push }),
 }))
 
 import {
@@ -669,5 +670,47 @@ describe('PorExplicar page', () => {
     expect(host.querySelector('[data-etiquetas-sheet]').textContent).toContain(
       'Del negocio',
     )
+  })
+
+  it('attaches a ticket to a movement and opens its review', async () => {
+    state.push.mockReset()
+    state.call.mockImplementation(async (method, args) => {
+      if (method.endsWith('.estado')) return estado([PETRO])
+      if (method.endsWith('.adjuntar'))
+        return { open_url: '/crm/captura/CAP-9?return_to=x', duplicate: false }
+      throw new Error(method + JSON.stringify(args))
+    })
+    await mount()
+    button('Ver movimientos').click()
+    await flush()
+    host.querySelector('[data-por-explicar-adjuntar="BT7"]').click()
+    await flush()
+    const input = host.querySelector('[data-adjuntar-archivo]')
+    const file = new File(['<cfdi/>'], 'factura.xml', { type: 'text/xml' })
+    Object.defineProperty(input, 'files', { value: [file] })
+    input.dispatchEvent(new Event('change'))
+    await flush()
+    // a CFDI's XML is a factura
+    expect(
+      host
+        .querySelector('[data-adjuntar-tipo="factura"]')
+        .getAttribute('aria-checked'),
+    ).toBe('true')
+    host.querySelector('[data-adjuntar-enviar]').click()
+    // the file reader answers on a later task, not a microtask
+    for (let i = 0; i < 4; i++) {
+      await new Promise((resolve) => setTimeout(resolve, 10))
+      await flush()
+    }
+    const [, args] = state.call.mock.calls.find(([m]) =>
+      m.endsWith('.adjuntar'),
+    )
+    expect(args).toMatchObject({
+      movimiento: 'BT7',
+      tipo: 'factura',
+      file_name: 'factura.xml',
+    })
+    expect(args.content_b64.length).toBeGreaterThan(0)
+    expect(state.push).toHaveBeenCalledWith('/captura/CAP-9?return_to=x')
   })
 })
