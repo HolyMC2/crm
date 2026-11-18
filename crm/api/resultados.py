@@ -48,6 +48,8 @@ CARD_ORDER = (
 	"efectivo",
 	"clientes",
 	"por_cobrar",
+	# Sales on a provider's credit (Payjoy): what the providers pay later.
+	"credito",
 	"reparaciones",
 	# What customers say: Encuestas' recommendation number.
 	"encuestas",

@@ -47597,3 +47597,42 @@ msgstr "Folio copiado"
 msgctxt "Resultados"
 msgid "Could not copy the folio"
 msgstr "No se pudo copiar el folio"
+
+#: frontend/src/pages/Hoy.vue frontend/src/composables/useHoy.js
+msgid "Credit sales"
+msgstr "Ventas a crédito"
+
+#: frontend/src/composables/useResultados.js
+#: frontend/src/pages/ResultadosDocumentos.vue
+msgctxt "Resultados"
+msgid "Credit sales"
+msgstr "Ventas a crédito"
+
+#: frontend/src/pages/ResultadosDocumentos.vue
+msgctxt "Resultados"
+msgid "Down payments"
+msgstr "Enganches"
+
+#: frontend/src/pages/Hoy.vue
+msgid "No credit sales today."
+msgstr "Sin ventas a crédito hoy."
+
+#: frontend/src/pages/Hoy.vue frontend/src/pages/ResultadosDocumentos.vue
+msgid "No credit price"
+msgstr "Sin precio de crédito"
+
+#: frontend/src/composables/useHoy.js
+msgid "Price {0}"
+msgstr "Precio {0}"
+
+#: frontend/src/composables/useHoy.js
+msgid "Down payment {0}"
+msgstr "Enganche {0}"
+
+#: frontend/src/pages/ResultadosDocumentos.vue
+msgid "{0} pays {1}"
+msgstr "{0} paga {1}"
+
+#: frontend/src/pages/ResultadosDocumentos.vue
+msgid "Credit provider"
+msgstr "Financiera"

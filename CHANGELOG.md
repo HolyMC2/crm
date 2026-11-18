@@ -3,6 +3,12 @@
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
 
+## 2026-11-17 — Hoy: «Today's sales» is what the tickets charged; new «Credit sales» section (lane hoy-credito, with mercado; not deployed)
+
+- **Why:** Marco, 11-17 16:14: «Today's sales IS wrong». Hoy said $5,695; the 12 tickets charged $2,654. The other $3,041 was what Payjoy pays later for one phone (Resultados counts a credit sale at what the shop gets, his 10-29 rule). He chose: tickets only on Hoy, and a section for the Payjoy credits.
+- **Change:** `hoy._sales_today` shows the Ventas card's `charged` (what the tickets charged, its net and yesterday's). New section `credito` (`hoy._credit_today`, Resultados' new «Credit sales» card for today): what the provider pays later, the down payments, one row per sale (customer, provider, credit price, down payment, the provider's part or «No credit price») opening the ticket, and a link to the sales missing their credit price. Off for whom the owner keeps the money from, for whom the card is blocked, and on sites without an enabled Credit Provider. Hoy writes money as the shell does («$5,695.00», not the phone's «5695,00 MXN»). The Resultados lens lists credit sales (`tipo=credito`) with the provider's part; its picker offers that list only while it is open.
+- **Tests:** `crm/tests/test_hoy_sales.py` (+2), `tests/unit/hoySales.test.js` (+4). Rollback: revert; the section falls off on a Mercado without the card.
+
 ## 2026-11-17 — Local CI's MariaDB runs in RAM (lane ssd-ci-tmpfs-crm; CI only)
 
 - **Change:** `scripts/ci/integration-compose.yml` gives the throwaway `database` service a 4 GB tmpfs datadir and turns off crash durability (`--innodb-flush-log-at-trx-commit=0`, `--innodb-doublewrite=0`, `--sync-binlog=0`), so `scripts/ci/local.sh` runs stop writing their databases to the workstation's SSD.

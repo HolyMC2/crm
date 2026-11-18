@@ -1,7 +1,9 @@
 # Copyright (c) 2026, Doco and contributors
 # For license information, please see license.txt
 
-"""Hoy «Ventas de hoy»: Resultados' own Ventas card for today, in the one Hoy read."""
+"""Hoy «Ventas de hoy» and «Credit sales»: Resultados' own Ventas and Credito
+cards for today, in the one Hoy read. Today's sales are what the tickets
+charged; a provider's later payment is the credit section's."""
 
 from unittest.mock import patch
 
@@ -11,6 +13,7 @@ from frappe.tests import IntegrationTestCase
 from crm.api import hoy, resultados
 
 CARD_PATH = "crm.tests.test_hoy_sales.ventas"
+CREDIT_PATH = "crm.tests.test_hoy_sales.credito"
 ANSWER = {}
 
 
@@ -20,6 +23,12 @@ def ventas(ctx):
 	if "raise" in ANSWER:
 		raise ANSWER["raise"]
 	return dict(ANSWER["card"]) if ANSWER.get("card") is not None else None
+
+
+def credito(ctx):
+	"""A stand-in Credito provider answering ANSWER["credit"]."""
+	ANSWER["credit_ctx"] = ctx
+	return dict(ANSWER["credit"]) if ANSWER.get("credit") is not None else None
 
 
 CARD = {
@@ -34,6 +43,53 @@ CARD = {
 	],
 	"attention": {"label": "1 cancelled · $200.00", "drill": {"path": "/crm/resultados/documentos"}},
 	"drill": {"label": "See sales", "path": "/crm/resultados/documentos", "query": {"periodo": "hoy"}},
+}
+# Resultados counts a Payjoy phone at 3510 (469 down + 3041 Payjoy pays later);
+# the tickets charged 2654.
+SPLIT = {
+	**CARD,
+	"value": 5695.0,
+	"prev": 4280.0,
+	"charged": {
+		"value": 2654.0,
+		"prev": 4280.0,
+		"facts": [
+			{"label": "Without VAT", "value": 2287.93, "format": "money"},
+			{"label": "Tickets", "value": 12, "format": "count"},
+		],
+	},
+}
+CREDIT = {
+	"key": "credito",
+	"label": "Credit sales",
+	"format": "money",
+	"value": 3041.0,
+	"value_label": "Payjoy pays later",
+	"facts": [
+		{"label": "Sales", "value": 1, "format": "count"},
+		{"label": "Down payments", "value": 469.0, "format": "money"},
+	],
+	"items": [
+		{
+			"name": "ACC-SINV-1",
+			"label": "Valeria · Payjoy",
+			"value": 3041.0,
+			"format": "money",
+			"href": "/crm/resultados/documento/Sales%20Invoice/ACC-SINV-1",
+			"provider": "Payjoy",
+			"customer": "Valeria",
+			"price": 3900.0,
+			"charged": 469.0,
+			"pays": 3041.0,
+			"missing_price": False,
+		}
+	],
+	"attention": None,
+	"drill": {
+		"label": "See credit sales",
+		"path": "/crm/resultados/documentos",
+		"query": {"tipo": "credito"},
+	},
 }
 
 
@@ -59,6 +115,38 @@ class TestHoySales(IntegrationTestCase):
 		self.assertEqual(section["attention"], CARD["attention"])
 		# A percentage against a day still running is not shown on Hoy.
 		self.assertNotIn("delta_pct", section)
+
+	def test_todays_sales_are_what_the_tickets_charged(self):
+		ANSWER["card"] = SPLIT
+		section = hoy._sales_today()
+		self.assertEqual((section["value"], section["prev"]), (2654.0, 4280.0))
+		self.assertEqual(section["facts"], SPLIT["charged"]["facts"])
+
+	def test_credit_section_is_the_credito_card_for_today(self):
+		providers = [("ventas", CARD_PATH), ("credito", CREDIT_PATH)]
+		with patch.object(resultados, "_providers", return_value=providers):
+			ANSWER["credit"] = CREDIT
+			section = hoy._credit_today()
+			self.assertEqual(ANSWER["credit_ctx"]["periodo"], "hoy")
+			self.assertTrue(section["available"])
+			self.assertEqual(
+				{key: section[key] for key in ("label", "format", "value", "value_label", "facts", "items", "drill")},
+				{key: CREDIT[key] for key in ("label", "format", "value", "value_label", "facts", "items", "drill")},
+			)
+			# A site without credit providers: the card does not apply, no section.
+			frappe.cache.incr(frappe.cache.make_key(resultados.GEN_KEY))
+			ANSWER["credit"] = None
+			self.assertEqual(hoy._credit_today(), {"available": False, "reason": None})
+			frappe.cache.incr(frappe.cache.make_key(resultados.GEN_KEY))
+			ANSWER["credit"] = CREDIT
+			from crm.api import money
+
+			with patch.object(money, "hidden", return_value=True):
+				self.assertEqual(hoy._credit_today(), {"available": False, "reason": None})
+			with patch.object(hoy, "check_hoy_permission", return_value=True):
+				self.assertTrue(hoy.page()["credito"]["available"])
+		# Without a Credito provider (an older Mercado) there is no section.
+		self.assertEqual(hoy._credit_today(), {"available": False, "reason": None})
 
 	def test_no_section_when_the_card_is_blocked_or_does_not_apply(self):
 		ANSWER["card"] = {"key": "ventas", "blocked_reason": "Managers only"}

@@ -241,6 +241,23 @@
                     "
                     >{{ money(row.amount, currency) }}</span
                   >
+                  <!-- A credit sale: the ticket is the down payment; the
+                       provider pays the rest later. -->
+                  <span
+                    v-if="row.credit?.missing_price"
+                    class="text-xs font-medium text-ink-amber-8"
+                    >{{ __('No credit price') }}</span
+                  >
+                  <span
+                    v-else-if="row.credit?.pays != null"
+                    class="num text-xs text-ink-gray-6"
+                    >{{
+                      __('{0} pays {1}', [
+                        row.credit.provider || __('Credit provider'),
+                        money(row.credit.pays, currency),
+                      ])
+                    }}</span
+                  >
                   <span
                     v-if="Number(row.outstanding) > 0.005"
                     class="num text-sm text-ink-red-7"
@@ -374,8 +391,12 @@ let ticket = 0
 
 const state = computed(() => readLensQuery(route.query))
 const currency = computed(() => shellBoot.value?.currency || '')
+// Credit sales open from their card (or Hoy): a shop that sells on no
+// provider's credit never meets them in the picker.
 const entries = computed(() =>
-  TIPOS.map((t) => ({
+  TIPOS.filter(
+    (t) => t.value !== 'credito' || state.value.tipo === 'credito',
+  ).map((t) => ({
     value: t.value,
     label: tipoLabel(t.value),
     icon: 'list',
@@ -414,6 +435,7 @@ const ROW_ICONS = {
   devoluciones: 'lucide-undo-2',
   cierres: 'lucide-wallet',
   clientes: 'lucide-user-round',
+  credito: 'lucide-hand-coins',
 }
 const rowIcon = computed(() => ROW_ICONS[state.value.tipo] || 'lucide-file')
 const total = computed(() =>
@@ -428,6 +450,7 @@ const SUMMARY = {
   devoluciones: ['Returned', 'Returns'],
   cierres: ['Cash difference', 'Closings'],
   clientes: ['Bought', 'Customers'],
+  credito: ['Down payments', 'Credit sales'],
 }
 const totalLabel = computed(() =>
   __((SUMMARY[state.value.tipo] || SUMMARY.ventas)[0], null, CTX),

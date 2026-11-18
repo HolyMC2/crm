@@ -48,6 +48,7 @@ export const TIPOS = Object.freeze([
   { value: 'devoluciones', label: 'Returns' },
   { value: 'cierres', label: 'Cash closings' },
   { value: 'clientes', label: 'Customers' },
+  { value: 'credito', label: 'Credit sales' },
 ])
 export const periodLabel = (v) =>
   tr(PERIODS.find((p) => p.value === v)?.label || 'This month', null, CTX)

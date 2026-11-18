@@ -2,7 +2,7 @@
 
 Doco answers the worker's day (pendientes, agenda, work in other apps); this
 adds the avisos that ask for action, the seller's and team's follow-ups, and
-today's sales for the managers who follow them. Every section is guarded on its own, so a
+today's sales and credit sales for the managers who follow them. Every section is guarded on its own, so a
 missing app or permission turns that section off with a reason, never the page.
 """
 
@@ -21,6 +21,7 @@ TEAM_ROLES = ("Sales Manager", "System Manager")
 TEAM_LIMIT = 5
 TEAM_CAP = 2000
 SALES_CARD = "ventas"
+CREDIT_CARD = "credito"
 
 
 def check_hoy_permission(user: str | None = None) -> bool:
@@ -152,32 +153,76 @@ def _team_overdue():
 	}
 
 
-def _sales_today():
-	"""For the managers who follow sales: today's sales so far.
+# Resultados could not compute a card Hoy shows: the section offers a retry.
+FAILED = {"available": False, "failed": True}
 
-	The number is Resultados' own «Ventas» card for Hoy (Mercado's board, with
-	the board's per-user cache and generation counter), so Hoy and Resultados
-	never disagree. A worker the card does not apply to, or who may not read
-	it, gets no section; its shop and company scope is the card's.
-	"""
+
+def _resultados_card(key):
+	"""Resultados' own card `key` for today (Mercado's board, with the board's
+	per-user cache and generation counter) and the currency: (card, currency),
+	(None, None) when the worker may not read it or it does not apply, and
+	(FAILED, None) when the card failed."""
 	from crm.api import money, resultados
 
-	# Nobody the owner keeps the business's money from sees today's sales.
-	if money.hidden() or SALES_CARD not in (key for key, _path in resultados._providers()):
-		return {"available": False, "reason": None}
-	answer = resultados.board(periodo="hoy", compara="anterior", card=SALES_CARD)
+	# Nobody the owner keeps the business's money from sees these numbers.
+	if money.hidden() or key not in (card for card, _path in resultados._providers()):
+		return None, None
+	answer = resultados.board(periodo="hoy", compara="anterior", card=key)
 	card = next(iter(answer["cards"]), None)
 	if card and card.get("retry"):
-		return {"available": False, "failed": True}
+		return FAILED, None
 	if not card or card.get("blocked_reason"):
+		return None, None
+	return card, answer.get("currency")
+
+
+def _sales_today():
+	"""For the managers who follow sales: what today's tickets charged so far.
+
+	The number is Resultados' own «Ventas» card for Hoy, so its scope and
+	cache are Resultados'. Hoy shows what the tickets charged (`charged`):
+	the till's number. A credit sale's later payment from its provider is
+	Hoy's «Credit sales», never part of today's sales.
+	"""
+	card, currency = _resultados_card(SALES_CARD)
+	if card is FAILED:
+		return dict(FAILED)
+	if not card:
+		return {"available": False, "reason": None}
+	# A Mercado older than the split answers only its own total.
+	charged = card.get("charged") or {}
+	return {
+		"available": True,
+		"currency": currency,
+		"value": charged.get("value", card.get("value")),
+		# Yesterday's whole day: context, not a percentage against a day still running.
+		"prev": charged.get("prev", card.get("prev")),
+		"facts": charged.get("facts") or card.get("facts") or [],
+		"attention": card.get("attention"),
+		"drill": card.get("drill"),
+	}
+
+
+def _credit_today():
+	"""For the same managers: today's sales on a credit provider's credit
+	(Payjoy and the like), what each provider pays the shop later and the
+	sales still missing their credit price. Resultados' «Credit sales» card;
+	a site that sells on no provider's credit has no section.
+	"""
+	card, currency = _resultados_card(CREDIT_CARD)
+	if card is FAILED:
+		return dict(FAILED)
+	if not card:
 		return {"available": False, "reason": None}
 	return {
 		"available": True,
-		"currency": answer.get("currency"),
+		"currency": currency,
+		"label": card.get("label"),
+		"format": card.get("format"),
 		"value": card.get("value"),
-		# Yesterday's whole day: context, not a percentage against a day still running.
-		"prev": card.get("prev"),
+		"value_label": card.get("value_label"),
 		"facts": card.get("facts") or [],
+		"items": card.get("items") or [],
 		"attention": card.get("attention"),
 		"drill": card.get("drill"),
 	}
@@ -216,6 +261,7 @@ def page() -> dict:
 	day["seguimiento"] = _section(_follow_up)
 	day["equipo"] = _section(_team_overdue)
 	day["ventas"] = _section(_sales_today)
+	day["credito"] = _section(_credit_today)
 	day["landing"] = frappe.defaults.get_user_default(LANDING_DEFAULT) or ""
 	return day
 

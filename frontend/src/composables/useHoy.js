@@ -2,6 +2,7 @@
 // every action runs through the owning module's own endpoint. Pure helpers are
 // exported for unit tests; the page owns presentation.
 import { call } from 'frappe-ui'
+import { formatMoney } from '@/utils/display'
 import { can, moduleEnabled } from '@/vendor/muelle-shell/contracts'
 import { contactScope, contactStorage } from '@/utils/contactos'
 import { sourceSlugs } from '@/utils/shellRoutes'
@@ -106,16 +107,8 @@ export function followUpQueueLink(section) {
 
 // ── Ventas de hoy ───────────────────────────────────────────────────────────
 
-function money(value, currency) {
-  try {
-    return new Intl.NumberFormat(undefined, {
-      style: 'currency',
-      currency: currency || 'MXN',
-    }).format(Number(value))
-  } catch {
-    return `${Number(value).toLocaleString('es-MX')} ${currency || ''}`.trim()
-  }
-}
+// «$1,350.00», as the rest of the shell writes money, whatever the phone's locale.
+const money = (value, currency) => formatMoney(value, currency || 'MXN')
 
 function factText(fact, currency) {
   if (fact?.value === null || fact?.value === undefined) return ''
@@ -159,6 +152,57 @@ export function salesToday(section) {
           .map((fact) => factText(fact, currency))
           .filter(Boolean),
     yesterday: prev ? t('Yesterday {0}', [money(prev, currency)]) : '',
+    attention: section.attention?.label
+      ? {
+          label: section.attention.label,
+          to: drillLink(section.attention.drill),
+        }
+      : null,
+    to: drillLink(section.drill),
+  }
+}
+
+/** A shell path (`/crm/…`) as a router location back to Hoy; anything else is dropped. */
+function shellHref(href) {
+  const path = String(href || '')
+  return path.startsWith('/crm/') ? withReturn(path.slice(4)) : null
+}
+
+/**
+ * «Credit sales» (managers): Resultados' Credito card for today. The sales a
+ * credit provider (Payjoy…) financed, with what the provider pays the shop
+ * later: the part «Today's sales» leaves out. `total` is that money (absent
+ * for whom margin is hidden); each row opens the ticket. Null when off.
+ */
+export function creditToday(section) {
+  if (!section?.available) return null
+  const currency = section.currency
+  const rows = (section.items || []).map((item) => ({
+    name: item.name,
+    title: item.customer || item.label || item.name,
+    detail: [
+      item.provider,
+      item.price ? t('Price {0}', [money(item.price, currency)]) : '',
+      t('Down payment {0}', [money(item.charged, currency)]),
+    ]
+      .filter(Boolean)
+      .join(' · '),
+    pays:
+      item.pays === null || item.pays === undefined
+        ? ''
+        : money(item.pays, currency),
+    missing: Boolean(item.missing_price),
+    to: shellHref(item.href),
+  }))
+  return {
+    empty: !rows.length,
+    label: section.label || t('Credit sales'),
+    total: section.format === 'money' ? money(section.value, currency) : '',
+    totalLabel: section.value_label || '',
+    facts: (section.facts || [])
+      .map((fact) => factText(fact, currency))
+      .filter(Boolean),
+    rows,
     attention: section.attention?.label
       ? {
           label: section.attention.label,

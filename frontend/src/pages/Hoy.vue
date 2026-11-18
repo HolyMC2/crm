@@ -189,6 +189,82 @@
               </RouterLink>
             </div>
           </HoySection>
+          <!-- 2a′ · Ventas a crédito (managers): what Payjoy and the like pay later -->
+          <HoySection
+            v-if="data?.credito?.available || data?.credito?.failed"
+            id="credito"
+            :title="credit?.label || __('Credit sales')"
+            icon="lucide-hand-coins"
+            :count="credit && !credit.empty ? credit.rows.length : null"
+            :more="credit?.to ? { label: __('See all'), to: credit.to } : null"
+            :collapsed="credit?.empty ? __('No credit sales today.') : ''"
+            :failed="Boolean(data?.credito?.failed)"
+            @retry="refresh()"
+          >
+            <div v-if="credit && !credit.empty">
+              <div class="px-4 pb-2 sm:px-5">
+                <p
+                  v-if="credit.total"
+                  class="text-2xl font-semibold tabular-nums text-ink-gray-9"
+                  data-testid="hoy-credito-total"
+                >
+                  {{ credit.total }}
+                  <span
+                    v-if="credit.totalLabel"
+                    class="text-sm font-normal text-ink-gray-6"
+                    >{{ credit.totalLabel }}</span
+                  >
+                </p>
+                <p
+                  v-if="credit.facts.length"
+                  class="mt-0.5 text-sm tabular-nums text-ink-gray-6"
+                >
+                  {{ credit.facts.join(' · ') }}
+                </p>
+              </div>
+              <ul :aria-label="credit.label">
+                <li v-for="row in credit.rows" :key="row.name">
+                  <component
+                    :is="row.to ? 'RouterLink' : 'div'"
+                    :to="row.to || undefined"
+                    class="flex min-h-12 items-center gap-3 px-4 py-1.5 hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink-blue-link sm:px-5"
+                  >
+                    <span class="min-w-0 flex-1">
+                      <span
+                        class="block text-base text-ink-gray-9 [text-wrap:balance]"
+                        >{{ row.title }}</span
+                      >
+                      <span
+                        class="line-clamp-2 block text-sm tabular-nums text-ink-gray-6"
+                        >{{ row.detail }}</span
+                      >
+                    </span>
+                    <span
+                      v-if="row.missing"
+                      class="shrink-0 rounded-full bg-surface-amber-1 px-2 py-0.5 text-sm font-medium text-ink-amber-8"
+                      >{{ __('No credit price') }}</span
+                    >
+                    <span
+                      v-else-if="row.pays"
+                      class="shrink-0 text-base font-medium tabular-nums text-ink-gray-9"
+                      >{{ row.pays }}</span
+                    >
+                  </component>
+                </li>
+              </ul>
+            </div>
+            <RouterLink
+              v-if="credit?.attention?.to"
+              :to="credit.attention.to"
+              class="mx-4 mt-1 flex min-h-11 items-center gap-2 text-sm font-medium text-ink-amber-8 hover:text-ink-gray-9 sm:mx-5 sm:min-h-8"
+            >
+              <span
+                class="lucide-triangle-alert size-4 shrink-0"
+                aria-hidden="true"
+              />
+              {{ credit.attention.label }}
+            </RouterLink>
+          </HoySection>
           <!-- 2b · Tratos sin seguimiento (sellers only) -->
           <HoySection
             v-if="data?.seguimiento?.available || data?.seguimiento?.failed"
@@ -629,6 +705,7 @@ import {
   agendaPlan,
   continuarCards,
   countLabel,
+  creditToday,
   createReadGate,
   dayTitle,
   dueMore,
@@ -753,6 +830,7 @@ const followUpCollapsed = computed(() => {
     : __('Every open deal of yours has a next step.')
 })
 const sales = computed(() => salesToday(data.value?.ventas))
+const credit = computed(() => creditToday(data.value?.credito))
 const teamRows = computed(() => teamOverdueRows(data.value?.equipo))
 const teamQueue = withReturn('/deals?follow_up=overdue')
 const teamCount = computed(() => {
