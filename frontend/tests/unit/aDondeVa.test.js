@@ -273,6 +273,35 @@ describe('ADondeVa page', () => {
     host.querySelector('[aria-label="Mes anterior"]').click()
     expect(state.replace).toHaveBeenCalled()
   })
+
+  it('narrows the month to a money tag and says so', async () => {
+    state.replace.mockReset()
+    state.query = { etiqueta: 'Remodelación' }
+    state.call.mockResolvedValue({
+      ...month(),
+      etiquetas: ['Remodelación', 'Taller'],
+      etiqueta: 'Remodelación',
+    })
+    mount()
+    await flush()
+    expect(state.call).toHaveBeenCalledWith(
+      'doco.workspaces.a_donde_va.mes',
+      expect.objectContaining({ etiqueta: 'Remodelación' }),
+    )
+    expect(host.querySelector('[data-adondeva-filtro]').textContent).toContain(
+      '«Remodelación»',
+    )
+    expect(host.querySelector('[data-adondeva-fijos]')).toBeNull() // one tag says nothing about the cushion
+    expect(
+      host
+        .querySelector('[data-adondeva-etiqueta="Remodelación"]')
+        .getAttribute('aria-checked'),
+    ).toBe('true')
+    host.querySelector('[data-adondeva-etiqueta="todo"]').click()
+    expect(state.replace).toHaveBeenCalledWith({
+      query: { etiqueta: undefined },
+    })
+  })
 })
 
 describe('Tu dinero route', () => {

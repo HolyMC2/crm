@@ -7,6 +7,10 @@ Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` i
 
 - **The paperclip on each movement** (in «Ver movimientos») opens «Adjuntar ticket o factura»: Ticket / Factura / Comprobante (a CFDI's XML picks Factura), a photo or a file, a note; «Leer y registrar» sends it through the capture engine with the movement it explains and opens its review, which comes back to Por explicar. When the draft is confirmed, it is linked to the movement by itself (doco `books/ligar_aviso`).
 - **Tests:** `tests/unit/porExplicar.test.js` (+1). Shots at 412 px light and 305 px dark (`.scratch/proof/`). Rollback = revert with the doco half.
+## 2026-11-18 — ¿A dónde va? by money tag (lane adonde-etiquetas; not deployed)
+
+- **Chips under the month:** «Todo» and each money tag; a tag shows only what carries it («Solo lo que lleva la etiqueta «Remodelación»: lo demás no cuenta aquí»), with its destinations, its months and what came in; the fixed-expenses card hides (one tag says nothing about the cushion). The tag rides the address (`?etiqueta=`).
+- **Tests:** `tests/unit/aDondeVa.test.js` (+1). Shot at 412 px (`.scratch/proof/`). Rollback = revert with the doco half.
 
 ## 2026-11-17 — Hoy: «Today's sales» is what the tickets charged; new «Credit sales» section (lane hoy-credito, with mercado; not deployed)
 

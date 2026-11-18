@@ -43,6 +43,41 @@
       </button>
     </div>
 
+    <!-- Money tags (books/etiquetas): only what carries the tag counts. -->
+    <div
+      v-if="data?.etiquetas?.length"
+      class="flex flex-none gap-2 overflow-x-auto px-4 pt-2"
+      role="radiogroup"
+      aria-label="Etiqueta"
+      data-adondeva-etiquetas
+    >
+      <button
+        v-for="t in ['', ...data.etiquetas]"
+        :key="t || 'todo'"
+        type="button"
+        role="radio"
+        class="press min-h-10 flex-none rounded-full px-3 text-sm"
+        :class="
+          (tag || '') === t
+            ? 'bg-[var(--muelle-accent)] text-[var(--muelle-accent-ink)]'
+            : 'border border-outline-gray-2 text-ink-gray-8'
+        "
+        :aria-checked="(tag || '') === t"
+        :data-adondeva-etiqueta="t || 'todo'"
+        @click="pickTag(t)"
+      >
+        {{ t || 'Todo' }}
+      </button>
+    </div>
+    <p
+      v-if="data?.etiqueta"
+      class="mx-4 mt-2 flex-none text-sm text-ink-gray-6"
+      data-adondeva-filtro
+    >
+      Solo lo que lleva la etiqueta «{{ data.etiqueta }}»: lo demás no cuenta
+      aquí.
+    </p>
+
     <p
       v-if="error"
       role="alert"
@@ -111,8 +146,10 @@
         >
       </p>
 
-      <!-- The essential expenses: what the cushion is measured in. -->
+      <!-- The essential expenses: what the cushion is measured in (the whole
+           month only: one tag's share says nothing about the cushion). -->
       <section
+        v-if="!data.etiqueta"
         class="flex-none mx-4 mt-3 rounded-7 border border-outline-gray-2 p-4"
         aria-label="Gastos fijos"
         data-adondeva-fijos
@@ -418,6 +455,7 @@ const sheet = reactive({
 })
 
 const month = computed(() => String(route.query.mes || '') || currentMonth())
+const tag = computed(() => String(route.query.etiqueta || ''))
 const companyQuery = computed(() =>
   route.query.empresa ? { empresa: route.query.empresa } : {},
 )
@@ -439,6 +477,7 @@ async function load() {
     data.value = await dineroApi('mes', {
       company: route.query.empresa || undefined,
       month: month.value,
+      etiqueta: tag.value || undefined,
     })
   } catch (e) {
     error.value = errorText(e)
@@ -453,6 +492,10 @@ function go(delta) {
   router.replace({
     query: { ...route.query, mes: next === currentMonth() ? undefined : next },
   })
+}
+
+function pickTag(t) {
+  router.replace({ query: { ...route.query, etiqueta: t || undefined } })
 }
 
 function choose(account, line) {
@@ -484,5 +527,9 @@ async function saveChoice() {
   }
 }
 
-watch(() => [route.query.empresa, route.query.mes], load, { immediate: true })
+watch(
+  () => [route.query.empresa, route.query.mes, route.query.etiqueta],
+  load,
+  { immediate: true },
+)
 </script>

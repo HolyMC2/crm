@@ -206,9 +206,12 @@ ser el cargo PETROPLAZAS por $479.80 del jue 6 nov en Amex Platinum. ¿Lo ligo?�
 «No, ese no»; system cards in books/action_cards, 3 days to answer). Anything else waits in Por
 explicar.
 
-Next: ¿A dónde va? by tag from a movement (the capture runs with the movement as
-context, so its entry lands on the right account); the chat answers a confirmed capture with the
-movement it matches; the bot reads `por_explicar` on every site (today `banco_por_explicar` needs
+Lane 5 `adonde-etiquetas`: ¿A dónde va? by money tag: chips under the month («Todo», then the
+catalog); a tag keeps only the entries carrying it (doco `a_donde_va.mes(tag=…)`, a Tag Link
+condition on the month's queries; the averages the cushion reads stay whole) and says so; the
+fixed-expenses card hides while a tag is chosen.
+
+Next: D5 money goals; the bot reads `por_explicar` on every site (today `banco_por_explicar` needs
 Contador). Setup on Marco's shops after the roll: explain the backlog
 since 08-01 on doco prod with the page (his taps), count the safe, then let the reminder run.
 
