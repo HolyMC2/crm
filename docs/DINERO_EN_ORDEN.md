@@ -191,7 +191,7 @@ Suggested per group from the merchant's past tags on that account, then from the
 sheet and «Gasté en efectivo» take tags (a new one typed joins the catalog); the tag icon in Por
 explicar lists them and offers a starter set from the tenant's own records (its stores or till
 profiles, Taller where the repair module is, Recargas where Saldo is, Remodelación, Equipo y
-mobiliario, Publicidad, Vehículo, Viajes de trabajo, Casa). The assistant reads `por_etiqueta`
+mobiliario, Publicidad, Vehículo, Viajes de trabajo, Casa). The assistant reads `para_que_fue_el_dinero`
 («¿cuánto llevo en la remodelación?»). Marco's own set with words from his charges is a kit:
 `~/muelle-releases/etiquetas-doco-20261117/`.
 
