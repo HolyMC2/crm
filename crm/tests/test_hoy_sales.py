@@ -130,8 +130,14 @@ class TestHoySales(IntegrationTestCase):
 			self.assertEqual(ANSWER["credit_ctx"]["periodo"], "hoy")
 			self.assertTrue(section["available"])
 			self.assertEqual(
-				{key: section[key] for key in ("label", "format", "value", "value_label", "facts", "items", "drill")},
-				{key: CREDIT[key] for key in ("label", "format", "value", "value_label", "facts", "items", "drill")},
+				{
+					key: section[key]
+					for key in ("label", "format", "value", "value_label", "facts", "items", "drill")
+				},
+				{
+					key: CREDIT[key]
+					for key in ("label", "format", "value", "value_label", "facts", "items", "drill")
+				},
 			)
 			# A site without credit providers: the card does not apply, no section.
 			frappe.cache.incr(frappe.cache.make_key(resultados.GEN_KEY))
