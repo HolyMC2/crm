@@ -199,6 +199,29 @@
         </ul>
       </section>
 
+      <!-- Goals reached (doco books/metas_dinero): a card at zero, each month of
+           cushion; told in the chat and the bell the morning after. -->
+      <section
+        v-if="data.logros?.length"
+        class="mx-4 mt-4 flex-none rounded-7 bg-surface-green-1 p-4"
+        aria-label="Tus logros"
+        data-colchon-logros
+      >
+        <h2 class="text-sm font-semibold text-ink-green-8">Tus logros</h2>
+        <ul class="mt-2 space-y-2">
+          <li
+            v-for="(l, i) in data.logros.slice(0, 5)"
+            :key="i"
+            class="text-sm text-ink-gray-8"
+          >
+            <span class="block">{{ l.text }}</span>
+            <span class="block text-xs text-ink-gray-6">{{
+              dayLabel(l.on)
+            }}</span>
+          </li>
+        </ul>
+      </section>
+
       <!-- Where the cushion is kept. -->
       <section
         class="mt-4 flex-none"
@@ -563,6 +586,14 @@ const deudasLink = computed(() => ({
   query: companyQuery.value,
 }))
 const fmt = (amount) => money(amount, data.value?.currency)
+const dayLabel = (day) =>
+  day
+    ? new Date(`${day}T12:00:00`).toLocaleDateString('es-MX', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      })
+    : ''
 const full = computed(() =>
   fullness(data.value?.have || 0, data.value?.reach?.need || 0),
 )

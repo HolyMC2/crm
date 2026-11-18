@@ -229,6 +229,26 @@ describe('Colchon page', () => {
     expect(
       host.querySelector('[data-plan-linea="free"]').textContent,
     ).toContain('$8,000.00')
+    expect(host.querySelector('[data-colchon-logros]')).toBeNull() // nothing reached yet
+  })
+
+  it('lists the goals reached', async () => {
+    state.call.mockResolvedValue({
+      ...estado(),
+      logros: [
+        {
+          kind: 'deuda_pagada',
+          text: '🎉 Amex está en cero. Lo que le pagabas cada mes ahora va a BBVA Oro.',
+          on: '2026-11-18',
+        },
+      ],
+    })
+    mount()
+    await flush()
+    const logros = host.querySelector('[data-colchon-logros]').textContent
+    expect(logros).toContain('Tus logros')
+    expect(logros).toContain('Amex está en cero')
+    expect(logros).toContain('2026')
   })
 
   it('says what is missing when there are no fixed expenses yet', async () => {

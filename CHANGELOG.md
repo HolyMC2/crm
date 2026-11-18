@@ -3,6 +3,11 @@
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
 
+## 2026-11-18 — Colchón: «Tus logros» (lane metas-dinero; not deployed)
+
+- A green card on `/bancos/colchon` lists the money goals reached (a card at zero, each month of cushion, the cushion full) with their day, newest first; the owner also hears each one in the chat and the bell (doco `books/metas_dinero`).
+- **Tests:** `tests/unit/colchon.test.js` (+1). Rollback = revert with the doco half.
+
 ## 2026-11-18 — Por explicar: «Adjuntar ticket o factura» on a movement (lane ligar-capturas; not deployed)
 
 - **The paperclip on each movement** (in «Ver movimientos») opens «Adjuntar ticket o factura»: Ticket / Factura / Comprobante (a CFDI's XML picks Factura), a photo or a file, a note; «Leer y registrar» sends it through the capture engine with the movement it explains and opens its review, which comes back to Por explicar. When the draft is confirmed, it is linked to the movement by itself (doco `books/ligar_aviso`).
