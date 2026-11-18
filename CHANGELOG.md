@@ -11,6 +11,11 @@ Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` i
 
 - **Chips under the month:** «Todo» and each money tag; a tag shows only what carries it («Solo lo que lleva la etiqueta «Remodelación»: lo demás no cuenta aquí»), with its destinations, its months and what came in; the fixed-expenses card hides (one tag says nothing about the cushion). The tag rides the address (`?etiqueta=`).
 - **Tests:** `tests/unit/aDondeVa.test.js` (+1). Shot at 412 px (`.scratch/proof/`). Rollback = revert with the doco half.
+## 2026-11-18 — Transferencias settings: where the register charges each account, and what a second bank buys (lane cruzar-bancos, with doco and posawesome; not deployed)
+
+- **Why:** with accounts at two banks the register sends each customer to the other bank's account, so every transfer goes through Banxico (doco CHANGELOG 2026-11-18).
+- **Change:** `TransferenciasAjustesSheet`: each receiving account names the register methods that charge into it, with «Cobrar en caja» when none does; under the accounts, one line says what a same-bank transfer costs (one bank) or that the register crosses banks (two). Helpers `cruceTexto`, `enCajaTexto`.
+- **Tests:** `tests/unit/transferencias.test.js` (+1). Rollback: revert.
 
 ## 2026-11-17 — Hoy: «Today's sales» is what the tickets charged; new «Credit sales» section (lane hoy-credito, with mercado; not deployed)
 
