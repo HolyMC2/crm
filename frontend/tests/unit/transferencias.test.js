@@ -124,7 +124,9 @@ import {
   bancoCorto,
   clabeEnGrupos,
   clabeValida,
+  cruceTexto,
   diaTexto,
+  enCajaTexto,
   faltaParaRevisar,
   filtroChips,
   porDia,
@@ -270,6 +272,23 @@ describe('helpers', () => {
     expect(clabeValida('012744015234369776')).toBe(false)
     expect(clabeValida('0127')).toBe(false)
     expect(clabeEnGrupos('012744015234')).toBe('0127 4401 5234')
+  })
+
+  it('says what a second bank buys and where the register charges', () => {
+    const bbva = {
+      banco: 'BBVA MEXICO',
+      codigo: '40012',
+      en_caja: ['Wire Transfer'],
+    }
+    const mp = { banco: 'Mercado Pago W', codigo: '90722', en_caja: [] }
+    expect(cruceTexto([])).toBe('')
+    expect(cruceTexto([bbva])).toMatch(
+      /de BBVA a BBVA no pasa por Banxico.*otro banco/,
+    )
+    expect(cruceTexto([bbva, mp])).toMatch('la cuenta del otro banco')
+    expect(enCajaTexto(bbva)).toBe('La caja cobra con Wire Transfer')
+    expect(enCajaTexto(mp)).toBe('La caja aún no cobra a esta cuenta.')
+    expect(enCajaTexto({ banco: 'BBVA MEXICO' })).toBe('')
   })
 })
 

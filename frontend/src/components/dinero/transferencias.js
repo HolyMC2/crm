@@ -242,6 +242,29 @@ export function clabeValida(value) {
   return (10 - (sum % 10)) % 10 === Number(digits[17])
 }
 
+/**
+ * The line under the receiving accounts. Between two accounts of one bank a transfer never reaches
+ * Banxico; with accounts at two banks the register gives each customer the other bank's account.
+ */
+export function cruceTexto(cuentas = []) {
+  if (!cuentas.length) return ''
+  const bancos = new Set(
+    cuentas.map((c) => c.codigo || c.banco).filter(Boolean),
+  )
+  if (bancos.size > 1)
+    return 'La caja le da a cada cliente la cuenta del otro banco: así toda transferencia pasa por Banxico y se confirma al momento.'
+  const banco = bancoCorto(cuentas[0].banco) || 'tu banco'
+  return `Una transferencia de ${banco} a ${banco} no pasa por Banxico y tarda unos minutos en confirmarse. Agrega una cuenta en otro banco y la caja se la da a esos clientes.`
+}
+
+/** Which register methods charge into the account; '' when the server does not say. */
+export function enCajaTexto(cuenta) {
+  if (!Array.isArray(cuenta?.en_caja)) return ''
+  return cuenta.en_caja.length
+    ? `La caja cobra con ${cuenta.en_caja.join(', ')}`
+    : 'La caja aún no cobra a esta cuenta.'
+}
+
 /** «0127 4401 5234 3697 75» while typing a CLABE. */
 export function clabeEnGrupos(value) {
   const digits = String(value || '')

@@ -117,9 +117,23 @@
                 c.nombre
               }}</span>
               <span class="block text-sm text-ink-gray-6"
-                >{{ c.banco }} · CLABE {{ c.ultimos }}</span
+                >{{ bancoCorto(c.banco) }}, CLABE {{ c.ultimos }}</span
+              >
+              <span
+                v-if="enCajaTexto(c)"
+                class="block text-sm text-ink-gray-6"
+                :data-ajustes-en-caja="c.bank_account"
+                >{{ enCajaTexto(c) }}</span
               >
             </span>
+            <Button
+              v-if="Array.isArray(c.en_caja) && !c.en_caja.length"
+              class="min-h-10 flex-none"
+              label="Cobrar en caja"
+              :loading="busy"
+              :data-ajustes-cobrar="c.bank_account"
+              @click="chargeAtRegister(c.bank_account)"
+            />
           </li>
           <li
             v-for="c in setup?.sin_clabe || []"
@@ -187,6 +201,13 @@
             </form>
           </li>
         </ul>
+        <p
+          v-if="cruceTexto(setup?.cuentas || [])"
+          class="mt-2 text-sm text-ink-gray-6"
+          data-ajustes-cruce
+        >
+          {{ cruceTexto(setup?.cuentas || []) }}
+        </p>
         <p
           v-if="!(setup?.cuentas || []).length"
           class="mt-2 text-sm text-ink-gray-6"
@@ -273,8 +294,11 @@ import { Button } from 'frappe-ui'
 import { BottomSheet, Segmented } from '@/components/ui'
 import { errorText } from '@/components/bancos/bancos'
 import {
+  bancoCorto,
   clabeEnGrupos,
   clabeValida,
+  cruceTexto,
+  enCajaTexto,
   transferenciasApi,
 } from '@/components/dinero/transferencias'
 
@@ -356,6 +380,21 @@ async function save(changes) {
   problem.value = ''
   try {
     emit('update:setup', await transferenciasApi('guardar_ajustes', changes))
+  } catch (e) {
+    problem.value = errorText(e)
+  } finally {
+    busy.value = false
+  }
+}
+
+async function chargeAtRegister(bankAccount) {
+  busy.value = true
+  problem.value = ''
+  try {
+    emit(
+      'update:setup',
+      await transferenciasApi('cobrar_en_caja', { bank_account: bankAccount }),
+    )
   } catch (e) {
     problem.value = errorText(e)
   } finally {
