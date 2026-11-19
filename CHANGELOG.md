@@ -3,6 +3,12 @@
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
 
+## 2026-11-19 — Más offers places other apps open outside the shell: Asistencia first (lane asistencia-puerta-crm, with doco asistencia-puerta; not deployed)
+
+- **`muelle_more_places`** (`crm.api.shell.more_places`, boot `places`): each provider returns `{key, label, icon, href}` or None; only this site's Desk and app paths pass, a module key or a repeat is dropped, at most six, and a failing provider costs only its place.
+- **Más** shows them with the modules as links with the way back (`shellRail.placeHref`); doco's Asistencia (`/desk/asistencia`) is the first. Hoy's card from doco's Asistencia source gets the clock icon.
+- **Tests:** `crm/tests/test_shell_more_places.py` (new), `tests/unit/shellSiblingHref.test.js` (+2). Rollback: revert with the doco half.
+
 ## 2026-11-19 — The Messenger reply-window and answered/waiting work, on WhatsApp too (lane origen-canales, with doco_marketing; not deployed)
 
 - **«Sin asignar» WhatsApp rows** get the chip: «Esperando 3 h · quedan 21 h», «Sin respuesta · 2 d» past 24 h (WhatsApp then takes only an approved template), or «Respondido · CRM/Bot/Celular».

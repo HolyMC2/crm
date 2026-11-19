@@ -1120,10 +1120,52 @@ def boot():
 		# Mi cuenta's doors and the shell's plan notice: who may open it, and the plan
 		# summary doco keeps on this site (never a platform call per boot).
 		"account": _account(),
+		# Places other apps offer in Más that open outside this SPA (`muelle_more_places`).
+		"places": more_places(),
 		# Compatibility for the Contactos pages and NotPermitted (one release).
 		"sales_access": bool(modules.get("ventas", {}).get("enabled")),
 		"capabilities": {"directory": bool(modules.get("contactos", {}).get("enabled"))},
 	}
+
+
+MORE_PLACES_HOOK = "muelle_more_places"
+# A place opens a Desk page or another app of this site, never another site.
+MORE_PLACE_PREFIXES = ("/desk/", "/app/", "/taller/", "/posapp/", "/clinica/", "/mercado/", "/scan/")
+MORE_PLACE_LIMIT = 6
+
+
+def more_places() -> list[dict]:
+	"""The places other apps offer this worker in Más, as `{key, label, icon, href}`.
+
+	An app lists providers in its hooks.py (`muelle_more_places = ["myapp.shell.place"]`); each
+	returns None when the place is not for this worker. A place opens a page outside this SPA
+	(a Desk page, another app), so it is a link, not a module: no screen here, no bar slot. A
+	provider that fails or answers something else costs its place, never the boot."""
+	places, seen = [], set()
+	for path in frappe.get_hooks(MORE_PLACES_HOOK) or []:
+		try:
+			place = _clean_place(frappe.get_attr(path)())
+		except Exception:
+			frappe.logger("crm.shell").exception(f"Más place {path} failed")
+			continue
+		if place and place["key"] not in seen and place["key"] not in MODULE_KEYS:
+			seen.add(place["key"])
+			places.append(place)
+	return places[:MORE_PLACE_LIMIT]
+
+
+def _clean_place(place) -> dict | None:
+	if not isinstance(place, dict):
+		return None
+	key, label, href = (str(place.get(field) or "").strip() for field in ("key", "label", "href"))
+	icon = str(place.get("icon") or "").strip()
+	if not key or not label or len(label) > 40:
+		return None
+	if not href.startswith(MORE_PLACE_PREFIXES) or "//" in href or "\\" in href:
+		return None
+	if not icon.startswith("lucide-"):
+		icon = "lucide-external-link"
+	return {"key": key, "label": label, "icon": icon, "href": href}
 
 
 def _account() -> dict:

@@ -147,6 +147,18 @@
             <span class="lucide-sheet size-5" aria-hidden="true" />
             Hojas
           </RouterLink>
+          <!-- What other apps offer outside this SPA (boot.places), e.g.
+               doco's Asistencia on the Desk: a link with the way back. -->
+          <a
+            v-for="place in places"
+            :key="place.key"
+            :href="place.href"
+            :data-place="place.key"
+            :class="TILE"
+          >
+            <span :class="[place.icon, 'size-5']" aria-hidden="true" />
+            {{ place.label }}
+          </a>
         </div>
       </section>
 
@@ -448,7 +460,7 @@ import {
   shellBoot,
   shellLayout,
 } from '@/composables/muelleShell'
-import { scanPickHref, siblingHref } from '@/composables/shellRail'
+import { placeHref, scanPickHref, siblingHref } from '@/composables/shellRail'
 import { installApp, installAvailable } from '@/composables/shellInstall'
 import { installLinkPrefetch } from '@/utils/speculate'
 import { THEME_CHOICES, useShellTheme } from '@/composables/shellTheme'
@@ -556,6 +568,12 @@ function withHref(app) {
 }
 const siblings = computed(() =>
   shellLayout.value.more.filter((place) => place.app).map(withHref),
+)
+const places = computed(() =>
+  (props.boot?.places || []).map((place) => ({
+    ...place,
+    href: placeHref(place, route.fullPath, moduleLabel.value),
+  })),
 )
 const hiddenPlaces = computed(() =>
   shellLayout.value.hidden.map((place) =>

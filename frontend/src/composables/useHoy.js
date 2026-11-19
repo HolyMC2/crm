@@ -264,6 +264,8 @@ const SOURCE_ICONS = {
   'taller.unassigned_repairs': 'lucide-wrench',
   // «Mis metas» (doco.metas.hoy): the person's own goals and score.
   'doco.metas': 'lucide-target',
+  // The entrada or salida due now (doco.docoutils.hr.asistencia_navigation).
+  'doco.asistencia': 'lucide-clock',
 }
 
 // «Primeros pasos» reads as the checklist it is, as in its whole list: an open

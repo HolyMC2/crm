@@ -9,6 +9,7 @@ import {
   sortSiblings,
 } from '@/composables/siblingApps'
 import {
+  RETURN_PREFIXES_WITH_DESK,
   defaultReturnLabel,
   readDone,
   safeReturn,
@@ -171,6 +172,24 @@ export function siblingHref(app, fullPath, label) {
     })
   } catch {
     return entry
+  }
+}
+
+/**
+ * A place another app offers in Más (boot.places: a Desk page such as
+ * Asistencia, or another app's page) with the same way back as a sibling.
+ * The server only lets through hrefs of this site's Desk and apps.
+ */
+export function placeHref(place, fullPath, label) {
+  const back = `/crm${fullPath && fullPath !== '/' ? fullPath : '/'}`
+  try {
+    return withReturn(
+      place.href,
+      { to: back, label: label || defaultReturnLabel(back) },
+      RETURN_PREFIXES_WITH_DESK,
+    )
+  } catch {
+    return place.href
   }
 }
 
