@@ -13,6 +13,9 @@ Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` i
 - **Chat (`MessengerArea`):** each reply says who sent it: the teammate, «Bot», «Desde Meta» (Business Suite or the Messenger app) or «Automático de Meta». The last one is drawn outlined: Meta's greeting and opt-in card, which do not count as an answer. Ticks: ✓ sent, ✓✓ delivered, blue ✓✓ seen. The last line says until when Meta lets us answer: 24 h after the customer's last message, then «Agente humano» up to 7 days, then nothing. Conversaciones asks doco_marketing for the senders (`get_messenger_origins`).
 - **«Sin asignar» Messenger rows:** «Esperando 17 h · quedan 6 h», «Sin respuesta · 1 d» once the window closed, or «Respondido · Meta/CRM/Bot»; an answered row's preview starts with ↪. Helpers in `utils/messengerOrigin.js`.
 - **Tests:** `tests/unit/messengerOrigin.test.js` (11). Shots in the lane's `.scratch/proof/`. Rollback: revert with the doco_marketing half.
+## 2026-11-19 — Local CI builds in RAM (lane ci-local-ram; CI only)
+
+- `scripts/ci/local.sh` keeps its clones, venvs, `node_modules` and builds in `$CRM_CI_SCRATCH` (default `$TMPDIR`, else `/tmp`, a tmpfs on the workstation), linked as `.ci-local/<sha>-<pid>/trees`; only the logs stay in `.ci-local/`. A run wrote ~34 MB/min to the NVMe while it built (2026-11-19). A killed run's scratch goes after 6 hours. `docs/CI.md` «Local gate». Rollback: revert.
 
 ## 2026-11-18 — Colchón: «Tus logros» (lane metas-dinero; not deployed)
 

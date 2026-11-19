@@ -18,7 +18,9 @@
 #
 # The base is $DEVFLOW_CI_BASE (devflow sets it to the merge base with doco-dev), else the merge
 # base with origin/doco-dev. Committed code only: uncommitted changes are not in the clone.
-# Logs stay in .ci-local/<sha>-<pid>/ (gitignored); the clones are removed when the run ends.
+# Logs stay in .ci-local/<sha>-<pid>/ (gitignored). The clones, venvs, node_modules and builds go to
+# $CRM_CI_SCRATCH (default $TMPDIR, else /tmp: a tmpfs on the workstation, so a run writes its
+# gigabytes to RAM, not the NVMe); .ci-local/<sha>-<pid>/trees links there; all removed when the run ends.
 set -uo pipefail
 
 usage() { sed -n '2,10p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2; }
@@ -54,6 +56,12 @@ run="$work/${sha:0:12}-$$"
 logs="$run/logs"
 mkdir -p "$logs"
 find "$work" -mindepth 1 -maxdepth 1 -type d -mtime +2 -exec rm -rf {} + 2>/dev/null
+scratch_root=${CRM_CI_SCRATCH:-${TMPDIR:-/tmp}}
+# A killed run (its cleanup never ran) leaves its scratch; no run lives 6 hours.
+find "$scratch_root" -mindepth 1 -maxdepth 1 -type d -name 'crm-ci-*' -user "$(id -u)" -mmin +360 \
+	-exec rm -rf {} + 2>/dev/null
+scratch=$(mktemp -d "$scratch_root/crm-ci-${sha:0:12}-XXXXXX") || { echo "local ci: cannot write $scratch_root" >&2; exit 2; }
+mkdir -p "$scratch/trees" && ln -s "$scratch/trees" "$run/trees" || exit 2
 failed=()
 native_pids=()
 
@@ -62,7 +70,7 @@ cleanup() {
 	# Each native job's run-integration.sh takes its Docker stack down on the way out.
 	[ "${#native_pids[@]}" -gt 0 ] && kill -TERM "${native_pids[@]}" 2>/dev/null
 	wait 2>/dev/null
-	rm -rf "$run/trees" "$run"/venv.*
+	rm -rf "$scratch" "$run/trees"
 }
 trap cleanup EXIT
 trap 'exit 143' INT TERM
@@ -96,7 +104,7 @@ ci_step() {  # ci_step <workflow> <step name> [packages...]: the step's run scri
 	# in uv run's layered environment.
 	local workflow=$1 name=$2 venv
 	shift 2
-	venv=$(mktemp -d "$run/venv.XXXXXX") || return 2
+	venv=$(mktemp -d "$scratch/venv.XXXXXX") || return 2
 	uv venv --quiet --python 3.14 "$venv" && uv pip install --quiet --python "$venv/bin/python" pyyaml "$@" || return 2
 	PATH="$venv/bin:$PATH" VIRTUAL_ENV="$venv" PYTHONDONTWRITEBYTECODE=1 \
 		"$venv/bin/python" "$tools/ci_step.py" ".github/workflows/$workflow" "$name"

@@ -50,6 +50,10 @@ stay the source of truth: the script runs their steps through devflow's
 ruff pin and the `frappe_whatsapp` companion revision from them. `CRM_CI_IMAGE`
 is the repository variable's value, held in the script.
 
+The clones, venvs, `node_modules` and builds of a run live in `$CRM_CI_SCRATCH` (default `$TMPDIR`,
+else `/tmp`, a tmpfs on the workstation), linked as `.ci-local/<sha>-<pid>/trees`: a run writes its
+gigabytes to RAM instead of the NVMe, and only its logs stay on disk.
+
 It tests the committed `HEAD` in a clean clone (`.ci-local/`, gitignored) against
 `$DEVFLOW_CI_BASE`, else the merge base with `origin/doco-dev`:
 
