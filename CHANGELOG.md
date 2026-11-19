@@ -3,6 +3,12 @@
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
 
+## 2026-11-19 — Pregúntale a Muelle: several files in one message (lane sheet-multi-files, with doco; not deployed)
+
+- **Why:** Marco, 11-19: the sheet took one file at a time; he wanted to send an order's three pictures (the order, its shipping, its payment) in one go.
+- **Change:** «+» opens the picker with several files (up to five, as the Desk composer and doco `workspace_turns.submit` take). One file keeps its chip; several show as square tiles, each with its ×, all in view on a 305 px phone; a sixth is left out with «Un mensaje lleva hasta 5 archivos. Quita uno para agregar otro.». They go as one message: each uploaded once as a private File, then sent as the Desk composer's attachments («auto»: the server reads each one with the message's words). A failed upload keeps the ones that went up, so «Reintentar» uploads only the rest. The bubble shows several photos as thumbnails.
+- **Tests:** `tests/unit/assistantFiles.test.js` (+5), `tests/unit/assistantComposer.test.js` (+2). Shots at 412 and 305 px, light and dark (lane `.scratch/shots/`). Rollback = revert with the doco half.
+
 ## 2026-11-18 — Colchón: «Tus logros» (lane metas-dinero; not deployed)
 
 - A green card on `/bancos/colchon` lists the money goals reached (a card at zero, each month of cushion, the cushion full) with their day, newest first; the owner also hears each one in the chat and the bell (doco `books/metas_dinero`).
