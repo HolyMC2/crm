@@ -440,8 +440,12 @@ describe('customer workspace for Instagram', () => {
     expect(
       methods.filter((m) => m === 'crm.api.outbox.queue_message'),
     ).toHaveLength(1)
+    // Reading who sent each bubble (MessengerArea's sender labels) is not a send.
+    const sends = methods.filter(
+      (m) => m !== 'doco_marketing.api.inbox.get_messenger_origins',
+    )
     expect(
-      methods.some((m) => /messenger|whatsapp_message|send_text/i.test(m)),
+      sends.some((m) => /messenger|whatsapp_message|send_text/i.test(m)),
     ).toBe(false)
   })
 })

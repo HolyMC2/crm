@@ -8,6 +8,11 @@ Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` i
 - **Why:** Marco, 11-19: the sheet took one file at a time; he wanted to send an order's three pictures (the order, its shipping, its payment) in one go.
 - **Change:** «+» opens the picker with several files (up to five, as the Desk composer and doco `workspace_turns.submit` take). One file keeps its chip; several show as square tiles, each with its ×, all in view on a 305 px phone; a sixth is left out with «Un mensaje lleva hasta 5 archivos. Quita uno para agregar otro.». They go as one message: each uploaded once as a private File, then sent as the Desk composer's attachments («auto»: the server reads each one with the message's words). A failed upload keeps the ones that went up, so «Reintentar» uploads only the rest. The bubble shows several photos as thumbnails.
 - **Tests:** `tests/unit/assistantFiles.test.js` (+5), `tests/unit/assistantComposer.test.js` (+2). Shots at 412 and 305 px, light and dark (lane `.scratch/shots/`). Rollback = revert with the doco half.
+## 2026-11-19 — Messenger: who sent each reply, Meta's reply window, «Sin asignar» answered or waiting (lane messenger-origen, with doco_marketing; not deployed)
+
+- **Chat (`MessengerArea`):** each reply says who sent it: the teammate, «Bot», «Desde Meta» (Business Suite or the Messenger app) or «Automático de Meta». The last one is drawn outlined: Meta's greeting and opt-in card, which do not count as an answer. Ticks: ✓ sent, ✓✓ delivered, blue ✓✓ seen. The last line says until when Meta lets us answer: 24 h after the customer's last message, then «Agente humano» up to 7 days, then nothing. Conversaciones asks doco_marketing for the senders (`get_messenger_origins`).
+- **«Sin asignar» Messenger rows:** «Esperando 17 h · quedan 6 h», «Sin respuesta · 1 d» once the window closed, or «Respondido · Meta/CRM/Bot»; an answered row's preview starts with ↪. Helpers in `utils/messengerOrigin.js`.
+- **Tests:** `tests/unit/messengerOrigin.test.js` (11). Shots in the lane's `.scratch/proof/`. Rollback: revert with the doco_marketing half.
 
 ## 2026-11-18 — Colchón: «Tus logros» (lane metas-dinero; not deployed)
 

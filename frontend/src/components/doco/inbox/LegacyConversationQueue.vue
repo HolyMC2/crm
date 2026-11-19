@@ -428,13 +428,26 @@
             /><span v-if="u.last_message" class="sr-only">{{
               chName(u.last_channel || 'whatsapp')
             }}</span>
-            <span v-if="u.last_message" class="truncate">{{
-              lastMessageText(u.last_message)
-            }}</span>
+            <span v-if="u.last_message" class="truncate"
+              >{{ u.last_direction === 'out' ? '↪ ' : ''
+              }}{{ lastMessageText(u.last_message) }}</span
+            >
             <span
               v-if="u.count > 1"
               class="flex-none text-[10px] text-ink-gray-4"
               >· {{ u.count }}</span
+            >
+          </div>
+          <!-- Messenger: answered (and from where: CRM, bot or Meta's apps) or how
+               long the customer has waited and how much of Meta's 24 h is left.
+               Meta's automatic greeting is not an answer (utils/messengerOrigin). -->
+          <div v-if="orphanChip(u)" class="mt-1 flex">
+            <span
+              class="rounded-4 px-1.5 py-px text-[11px] font-semibold"
+              :class="ORIGIN_CHIP_CLASS[orphanChip(u).tone]"
+              :title="orphanChip(u).title"
+              data-testid="orphan-chip"
+              >{{ orphanChip(u).text }}</span
             >
           </div>
         </button>
@@ -622,9 +635,10 @@
               /><span v-if="u.last_message" class="sr-only">{{
                 chName(u.last_channel || 'whatsapp')
               }}</span>
-              <span v-if="u.last_message" class="truncate">{{
-                lastMessageText(u.last_message)
-              }}</span>
+              <span v-if="u.last_message" class="truncate"
+                >{{ u.last_direction === 'out' ? '↪ ' : ''
+                }}{{ lastMessageText(u.last_message) }}</span
+              >
             </div>
           </button>
         </div>
@@ -1154,6 +1168,7 @@ import {
 } from '@/composables/push'
 import { isMobile } from '@/composables/breakpoint'
 import { lastMessageText } from '@/utils/inboxMessage'
+import { ORIGIN_CHIP_CLASS, orphanChip } from '@/utils/messengerOrigin'
 import { filtersHideUnstatused, orphansForFilters } from '@/utils/inboxOrphans'
 import { formatMoney } from '@/composables/crmFormat'
 import { useListKeys } from '@/composables/pageKeys'

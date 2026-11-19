@@ -4,6 +4,8 @@
   in = left/grey, out = left-blue (#0084ff). Shows message_reactions as an emoji badge
   on the bubble + a CTWA/ad referral chip (which ad/link drove the DM). Attachments
   shown as a link. Mirrors the slot WhatsAppArea occupies.
+  Each reply says who sent it (teammate · Bot · Desde Meta · Automático de Meta, see
+  utils/messengerOrigin) with its ticks, and the last line says until when Meta lets us answer.
 -->
 <template>
   <div
@@ -39,9 +41,11 @@
       <div
         class="relative max-w-[78%] rounded-8 px-3 py-2 text-[13px] leading-snug"
         :class="[
-          m.direction === 'out'
-            ? 'bg-[#0084ff] text-white'
-            : 'bg-surface-gray-2 text-ink-gray-8 dark:bg-surface-gray-3',
+          m.direction !== 'out'
+            ? 'bg-surface-gray-2 text-ink-gray-8 dark:bg-surface-gray-3'
+            : solidOut(m)
+              ? 'bg-[#0084ff] text-white'
+              : 'border border-dashed border-[#0084ff] bg-[#0084ff]/10 text-ink-gray-8',
           m._optimistic ? 'opacity-60' : '',
         ]"
       >
@@ -65,7 +69,7 @@
           target="_blank"
           rel="noopener"
           class="block break-all underline"
-          :class="m.direction === 'out' ? 'text-white' : 'text-ink-blue-9'"
+          :class="solidOut(m) ? 'text-white' : 'text-ink-blue-9'"
         >
           {{ attachLabel(m.content_type) }}
         </a>
@@ -103,8 +107,24 @@
         >
           {{ m.content }}
         </div>
-        <div class="mt-0.5 text-right text-[10px] opacity-60">
-          {{ fmtTime(m.timestamp) }}
+        <div
+          class="mt-0.5 flex items-center justify-end gap-1 text-[10px] opacity-70"
+        >
+          <span
+            v-if="originOf(m)"
+            class="font-semibold"
+            :title="originOf(m).title"
+            data-testid="messenger-origin"
+            >{{ originOf(m).text }} ·</span
+          >
+          <span>{{ fmtTime(m.timestamp) }}</span>
+          <span
+            v-if="statusTick(m)"
+            :title="statusTick(m).title"
+            :class="tickClass(m)"
+            data-testid="messenger-tick"
+            >{{ statusTick(m).text }}</span
+          >
         </div>
         <!-- message_reaction: the emoji the customer tapped on this message -->
         <span
@@ -116,12 +136,29 @@
         </span>
       </div>
     </div>
+    <!-- Meta's reply window: free replies 24 h after the customer's last message,
+         then only with the «Agente humano» tag up to 7 days. -->
+    <div
+      v-if="notice"
+      class="mx-auto mt-1 max-w-[92%] rounded-6 px-2.5 py-1 text-center text-[11px] leading-snug"
+      :class="ORIGIN_CHIP_CLASS[notice.tone]"
+      data-testid="messenger-window"
+    >
+      {{ notice.text }}
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, watch, nextTick, computed } from 'vue'
-import { Dropdown } from 'frappe-ui'
+import { ref, watch, nextTick, computed, onBeforeUnmount } from 'vue'
+import { Dropdown, call } from 'frappe-ui'
+import {
+  ORIGIN_CHIP_CLASS,
+  originLabel,
+  replyWindow,
+  statusTick,
+  windowNotice,
+} from '@/utils/messengerOrigin'
 import { archivosHref } from '@/composables/useArchivos'
 import { shellBoot } from '@/composables/muelleShell'
 import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
@@ -143,6 +180,72 @@ const props = defineProps({
 })
 
 const scrollEl = ref(null)
+
+// Only Meta chats get labels and the window line: Conversaciones also renders
+// WhatsApp and Webchat histories here.
+const isMetaChat = computed(() =>
+  props.conversation
+    ? ['Messenger', 'Instagram'].includes(props.conversation.provider)
+    : props.messages.every((m) => !m.channel || m.channel === 'messenger'),
+)
+
+// Conversaciones' history (crm) carries no sender: ask doco_marketing for the
+// outgoing rows on screen. Labels are a nicety, so a failed call leaves them off.
+const origins = ref({})
+watch(
+  () => [props.messages, props.conversation?.provider],
+  async () => {
+    if (!props.conversation || !isMetaChat.value) return
+    const names = props.messages
+      .filter(
+        (m) =>
+          m.direction === 'out' &&
+          m.id &&
+          m.sent_via === undefined &&
+          !(m.id in origins.value),
+      )
+      .map((m) => m.id)
+    if (!names.length) return
+    try {
+      const found = await call(
+        'doco_marketing.api.inbox.get_messenger_origins',
+        {
+          names,
+        },
+      )
+      origins.value = { ...origins.value, ...(found || {}) }
+    } catch {
+      // the bubbles still render, just without who sent them
+    }
+  },
+  { immediate: true },
+)
+
+function originOf(m) {
+  if (!isMetaChat.value) return null
+  return originLabel(
+    m.sent_via === undefined ? { ...m, ...origins.value[m.id] } : m,
+  )
+}
+
+// Meta's automatic replies are drawn outlined, not as our solid blue bubble.
+function solidOut(m) {
+  return m.direction === 'out' && !originOf(m)?.auto
+}
+
+function tickClass(m) {
+  if (!statusTick(m)?.read) return ''
+  return solidOut(m) ? 'font-bold text-[#bae6fd]' : 'font-bold text-[#0084ff]'
+}
+
+const now = ref(Date.now())
+const ticker = setInterval(() => (now.value = Date.now()), 60 * 1000)
+onBeforeUnmount(() => clearInterval(ticker))
+const notice = computed(() =>
+  isMetaChat.value
+    ? windowNotice(replyWindow(props.messages, now.value), now.value)
+    : null,
+)
 
 // «Guardar en Archivos» / «Vincular a…» (ARC-S2.3), gated the same way the
 // rest of the shell reads the Archivos module flag.
