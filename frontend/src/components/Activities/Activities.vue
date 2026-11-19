@@ -1259,9 +1259,14 @@ function onWaCatalog(q) {
       to: activeWhatsappContact.value?.phone || doc.value.mobile_no,
       whatsapp_account:
         activeWhatsappContact.value?.whatsapp_account || undefined,
+      customer_name: catalogCustomerName(),
     },
     q,
   )
+}
+// {{nombre}} in a catalog template: the person's first name when the record has one.
+function catalogCustomerName() {
+  return doc.value?.first_name || doc.value?.lead_name || ''
 }
 function onMsgrCatalog(q) {
   if (!addonAvailable.value) return
@@ -1271,6 +1276,7 @@ function onMsgrCatalog(q) {
       reference_name: props.docname,
       channel: 'messenger',
       to: null,
+      customer_name: catalogCustomerName(),
     },
     q,
   )

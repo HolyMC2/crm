@@ -691,6 +691,7 @@ import LucideImage from '~icons/lucide/image'
 import LucideVideo from '~icons/lucide/video'
 import LucideFile from '~icons/lucide/file'
 import LucidePlus from '~icons/lucide/plus'
+import LucidePackage from '~icons/lucide/package'
 import LucideLoader from '~icons/lucide/loader'
 
 const isMessenger = computed(
@@ -707,6 +708,20 @@ function onWaCatalog(q) {
       reference_name: '',
       channel: 'whatsapp',
       to: activeUnassigned.value || '',
+      customer_name: boundContact.value?.name || prefillName.value || '',
+    },
+    q,
+  )
+}
+// 📦 in the Messenger orphan bar: the same picker, sent to this PSID.
+function onMsgrCatalog(q) {
+  openCatalog(
+    {
+      reference_doctype: '',
+      reference_name: '',
+      channel: 'messenger',
+      to: activeUnassigned.value || '',
+      customer_name: prefillName.value || '',
     },
     q,
   )
@@ -788,6 +803,11 @@ function msgrUploadOptions(openFileSelector) {
       icon: LucideFile,
       onClick: () => openFileSelector(),
     },
+    {
+      label: __('Catálogo'),
+      icon: LucidePackage,
+      onClick: () => onMsgrCatalog(''),
+    },
   ]
 }
 async function onMsgrFile(file) {
@@ -802,8 +822,16 @@ async function onMsgrFile(file) {
     busy.value = false
   }
 }
+// «/cat fundas 15 pro max» typed in the Messenger bar opens the picker with that search,
+// as it does in the WhatsApp box.
+const MSGR_CAT_RE = /^\/(cat|cat[aá]logo)\b\s*/i
 async function sendMsgr() {
   if (busy.value || !msgrReply.value.trim()) return
+  if (MSGR_CAT_RE.test(msgrReply.value.trim())) {
+    onMsgrCatalog(msgrReply.value.trim().replace(MSGR_CAT_RE, ''))
+    msgrReply.value = ''
+    return
+  }
   busy.value = true
   try {
     await sendUnassignedMessenger(msgrReply.value.trim())

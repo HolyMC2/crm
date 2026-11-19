@@ -24,6 +24,12 @@ Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` i
 ## 2026-11-19 — Local CI builds in RAM (lane ci-local-ram; CI only)
 
 - `scripts/ci/local.sh` keeps its clones, venvs, `node_modules` and builds in `$CRM_CI_SCRATCH` (default `$TMPDIR`, else `/tmp`, a tmpfs on the workstation), linked as `.ci-local/<sha>-<pid>/trees`; only the logs stay in `.ci-local/`. A run wrote ~34 MB/min to the NVMe while it built (2026-11-19). A killed run's scratch goes after 6 hours. `docs/CI.md` «Local gate». Rollback: revert.
+## 2026-11-19 — Catálogo en el chat: filtros, ofertas, plantillas, revisar antes de enviar, enlace a la tienda (lane catalogo-chat, with doco_marketing; not deployed)
+
+- **Picker (`CatalogPicker`):** chips for in stock, on sale, price range, brand and the results' groups; cards show the sale price with the list price struck through and the percent off. A template selector in the footer; «Enviar» sends with it.
+- **«Revisar»:** quick replies, the message before the items with a preview, the format of each item's text with variable chips, each item's price for this message and its own editable text, «Enlace a la tienda con esta búsqueda» (a short link), the message after, «Guardar como plantilla» (saved for every channel). It says when the channel shows the plain words. Helpers in `utils/catalogMessage.js` (mirror of doco_marketing `catalog_message.py`).
+- **Messenger «Sin asignar»** gains «Catálogo» in its «+» menu and `/cat` in its reply bar. {{nombre}} comes from the record or the chat's profile.
+- **Tests:** `tests/unit/catalogPicker.test.js` (9). Shots in the lane's `.scratch/proof/`. Rollback: revert with the doco_marketing half.
 
 ## 2026-11-18 — Colchón: «Tus logros» (lane metas-dinero; not deployed)
 

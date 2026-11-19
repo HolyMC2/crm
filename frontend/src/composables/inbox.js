@@ -3,7 +3,7 @@
 // 3-pane tree shares state without prop-drilling. Thin client over the B1 backend:
 // doco_marketing.api.inbox.* — itself a read layer over crm WhatsApp + Communication.
 import { errorText } from '@/utils/errorText'
-import { ref, watch, computed } from 'vue'
+import { ref, reactive, watch, computed } from 'vue'
 import { createResource, call, toast } from 'frappe-ui'
 import { guardStatusChange } from '@/utils/statusGuard'
 import { userScopedKey } from '@/utils/storageKeys'
@@ -539,15 +539,39 @@ export const contactCard = createResource({
 // catalogCtx carries the conversation target; the picker reads catalogResults.
 export const catalogOpen = ref(false)
 export const catalogCtx = ref(null) // { reference_doctype, reference_name, channel, to } OR { comment_name } for a FB comment DM
+// browse → { items, groups, brands, store, offers }: items with sale price, «Quedan N»
+// and their storefront link; groups/brands are the chips over the query's best matches.
 export const catalogResults = createResource({
-  url: 'doco_marketing.api.catalog.search',
+  url: 'doco_marketing.api.catalog.browse',
   auto: false,
 })
 export const catalogQuery = ref('')
+function emptyCatalogFilters() {
+  return {
+    group: '',
+    brand: '',
+    inStock: true,
+    onSale: false,
+    priceMin: '',
+    priceMax: '',
+  }
+}
+export const catalogFilters = reactive(emptyCatalogFilters())
+// Catalog templates (Canned Reply «Catálogo») for the open conversation's channel.
+export const catalogTemplates = createResource({
+  url: 'doco_marketing.api.catalog.templates',
+  auto: false,
+})
+export function catalogChannel(ctx = catalogCtx.value) {
+  if (!ctx) return 'whatsapp'
+  return ctx.comment_name ? 'messenger' : ctx.channel || 'whatsapp'
+}
 export function openCatalog(ctx, initialQuery = '') {
   catalogCtx.value = ctx
   catalogQuery.value = initialQuery || ''
+  Object.assign(catalogFilters, emptyCatalogFilters())
   catalogOpen.value = true
+  catalogTemplates.submit({ channel: catalogChannel(ctx) })
   runCatalogSearch()
 }
 export function closeCatalog() {
@@ -560,18 +584,50 @@ export function onCatalogQuery(q) {
   _catTimer = setTimeout(runCatalogSearch, 300)
 }
 export function runCatalogSearch() {
-  catalogResults.submit({ query: catalogQuery.value || '', limit: 24 })
+  const f = catalogFilters
+  catalogResults.submit({
+    query: catalogQuery.value || '',
+    in_stock_only: f.inStock ? 1 : 0,
+    item_group: f.group || undefined,
+    brand: f.brand || undefined,
+    on_sale: f.onSale ? 1 : 0,
+    price_min: f.priceMin === '' ? undefined : f.priceMin,
+    price_max: f.priceMax === '' ? undefined : f.priceMax,
+    limit: 24,
+  })
+}
+// A short link to the store's catalog with the picker's search and filters set.
+export async function catalogStoreLink() {
+  const c = catalogCtx.value || {}
+  const f = catalogFilters
+  return call('doco_marketing.api.catalog.store_link', {
+    query: catalogQuery.value || '',
+    item_group: f.group || undefined,
+    brand: f.brand || undefined,
+    price_min: f.priceMin === '' ? undefined : f.priceMin,
+    price_max: f.priceMax === '' ? undefined : f.priceMax,
+    channel: catalogChannel(c),
+    reference_doctype: c.reference_name ? c.reference_doctype : undefined,
+    reference_name: c.reference_name || undefined,
+  })
 }
 // Send the picked items into the active conversation (one media message per item).
-export async function sendCatalogItems(itemCodes) {
+// texts: { captions: {item_code: text}, intro, closing } — what the picker shows.
+export async function sendCatalogItems(itemCodes, texts = {}) {
   const c = catalogCtx.value
   if (!c || !itemCodes?.length) return { sent_count: 0 }
+  const words = {
+    captions: texts.captions ? JSON.stringify(texts.captions) : undefined,
+    intro: texts.intro || undefined,
+    closing: texts.closing || undefined,
+  }
   // A FB comment target sends as a PRIVATE DM (opens it if needed); a conversation target
   // sends into the existing thread. Both reuse the same per-item card send server-side.
   const res = c.comment_name
     ? await call('doco_marketing.api.catalog.send_to_comment', {
         comment_name: c.comment_name,
         item_codes: JSON.stringify(itemCodes),
+        ...words,
       })
     : await call('doco_marketing.api.catalog.send_items', {
         reference_doctype: c.reference_doctype,
@@ -580,6 +636,7 @@ export async function sendCatalogItems(itemCodes) {
         item_codes: JSON.stringify(itemCodes),
         to: c.to || undefined,
         whatsapp_account: c.whatsapp_account || undefined,
+        ...words,
       })
   lastSendAt.value = Date.now()
   return res
