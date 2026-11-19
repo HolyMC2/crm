@@ -47636,3 +47636,12 @@ msgstr "{0} paga {1}"
 #: frontend/src/pages/ResultadosDocumentos.vue
 msgid "Credit provider"
 msgstr "Financiera"
+
+#: frontend/src/components/assistant/AssistantComposer.vue
+msgid "Attach files"
+msgstr "Adjuntar archivos"
+
+#: frontend/src/components/assistant/AssistantComposer.vue
+#: frontend/src/components/assistant/useAssistant.js
+msgid "A message takes up to {0} files. Remove one to add another."
+msgstr "Un mensaje lleva hasta {0} archivos. Quita uno para agregar otro."

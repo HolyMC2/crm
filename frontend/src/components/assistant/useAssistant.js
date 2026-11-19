@@ -26,7 +26,7 @@ import {
   assistantWanted,
   loadAssistantStatus,
 } from './assistantDoor'
-import { isImageFile } from './assistantFiles'
+import { ASSISTANT_MAX_FILES, isImageFile } from './assistantFiles'
 import {
   dropCachedList,
   readCachedList,
@@ -59,8 +59,9 @@ export const assistant = reactive({
   progress: '',
   error: '',
   draft: '',
-  /** The file waiting in the composer: { blob, name, size, type, previewUrl, url }. */
-  attachment: null,
+  /** The files waiting in the composer, in the order picked:
+   *  { id, blob, name, size, type, previewUrl, fileId, url }. */
+  attachments: [],
   focus: 0,
   /** The screen the sheet is about; null when the worker removed the chip. */
   context: null,
@@ -292,14 +293,17 @@ function armWatchdog() {
   }, SILENCE_MS)
 }
 
-/** A file in the composer or in a sent message; `url` is set once it is uploaded. */
+/** A file in the composer or in a sent message; `fileId` and `url` are set
+ *  once it is uploaded, so a retry sends the same File, not a second copy. */
 function sentFile(file) {
   return {
+    id: file.id || newClientId(),
     blob: file.blob,
     name: file.name,
     size: file.size,
     type: file.type,
     previewUrl: file.previewUrl || '',
+    fileId: file.fileId || '',
     url: file.url || '',
   }
 }
@@ -310,34 +314,56 @@ function objectUrl(blob) {
     : ''
 }
 
-/** Puts a picked file in the composer until it goes with the next message. */
-export function attachFile(blob) {
-  clearAttachment()
-  assistant.attachment = {
-    blob,
-    name: blob.name || __('File'),
-    size: blob.size,
-    type: blob.type || '',
-    previewUrl: isImageFile(blob) ? objectUrl(blob) : '',
-    url: '',
-  }
+function revokePreview(file) {
+  if (file?.previewUrl) URL.revokeObjectURL(file.previewUrl)
 }
 
-export function clearAttachment() {
-  const previous = assistant.attachment
-  assistant.attachment = null
-  if (previous?.previewUrl) URL.revokeObjectURL(previous.previewUrl)
+/** Puts picked files in the composer until they go with the next message.
+ *  Past ASSISTANT_MAX_FILES the rest stay out and the sheet says so. */
+export function attachFiles(blobs) {
+  const picked = Array.from(blobs || [])
+  const room = ASSISTANT_MAX_FILES - assistant.attachments.length
+  const kept = picked.slice(0, Math.max(0, room))
+  assistant.attachments = [
+    ...assistant.attachments,
+    ...kept.map((blob) =>
+      sentFile({
+        blob,
+        name: blob.name || __('File'),
+        size: blob.size,
+        type: blob.type || '',
+        previewUrl: isImageFile(blob) ? objectUrl(blob) : '',
+      }),
+    ),
+  ]
+  if (picked.length > kept.length)
+    assistant.error = __(
+      'A message takes up to {0} files. Remove one to add another.',
+      [ASSISTANT_MAX_FILES],
+    )
 }
 
-/** The composer hands its file to the message it goes with; the bubble keeps the preview. */
-export function takeAttachment() {
-  const file = assistant.attachment
-  assistant.attachment = null
-  return file
+export function removeAttachment(file) {
+  assistant.attachments = assistant.attachments.filter((f) => f.id !== file.id)
+  revokePreview(file)
 }
 
-/** Uploads a picked file as private, as the Desk's clip does; resolves to its file_url. */
-export async function uploadAssistantFile(blob) {
+export function clearAttachments() {
+  const previous = assistant.attachments
+  assistant.attachments = []
+  previous.forEach(revokePreview)
+}
+
+/** The composer hands its files to the message they go with; the bubble keeps the previews. */
+export function takeAttachments() {
+  const files = assistant.attachments
+  assistant.attachments = []
+  return files
+}
+
+/** Uploads a picked file as private, as the Desk's clip does; resolves to the
+ *  File's { name, file_url }. */
+async function uploadPrivateFile(blob) {
   const form = new FormData()
   form.append('file', blob)
   form.append('is_private', '1')
@@ -348,8 +374,8 @@ export async function uploadAssistantFile(blob) {
       credentials: 'same-origin',
       headers: { 'X-Frappe-CSRF-Token': window.csrf_token || '' },
     })
-    const url = response.ok ? (await response.json())?.message?.file_url : ''
-    if (url) return url
+    const doc = response.ok ? (await response.json())?.message : null
+    if (doc?.name && doc?.file_url) return doc
   } catch {
     // a dropped connection fails the same way a refused file does, below
   }
@@ -360,24 +386,53 @@ export async function uploadAssistantFile(blob) {
   )
 }
 
-/** The file's url; uploads it first only when this message has not yet. */
-async function uploadedUrl(id, file) {
-  if (file.url) return file.url
-  const url = await uploadAssistantFile(file.blob)
-  patchMessage(id, { file: { ...file, url } })
-  return url
+/** A private upload's file_url (the decision card's photo). */
+export async function uploadAssistantFile(blob) {
+  return (await uploadPrivateFile(blob)).file_url
 }
 
-export async function send(text, { context = undefined, file = null } = {}) {
+/** Uploads the message's files together, each only once: the ones that went up
+ *  keep their File when another fails, so «Reintentar» sends just the rest. */
+async function uploadedFiles(id, files) {
+  const results = await Promise.allSettled(
+    files.map(async (file) => {
+      if (file.fileId) return file
+      const doc = await uploadPrivateFile(file.blob)
+      return { ...file, fileId: doc.name, url: doc.file_url }
+    }),
+  )
+  const done = results.map((r, i) =>
+    r.status === 'fulfilled' ? r.value : files[i],
+  )
+  patchMessage(id, { files: done })
+  const failed = results.find((r) => r.status === 'rejected')
+  if (failed) throw failed.reason
+  return done
+}
+
+/** The files as the Desk composer submits them (doco workspace_turns.submit):
+ *  each its own File and send id, «Automático» so the server picks what each
+ *  one is (a receipt, a price list, a product photo) with the message's words. */
+function attachmentsOf(files) {
+  return files.map((file) => ({
+    file_id: file.fileId,
+    attachment_id: file.id,
+    owning_intent_id: '',
+    purpose: 'auto',
+    caption: '',
+  }))
+}
+
+export async function send(text, { context = undefined, files = [] } = {}) {
   const value = String(text || '').trim()
-  if (!value && !file) return
+  if (!value && !files.length) return
   const clientId = newClientId()
   const message = {
     id: clientId,
     role: 'user',
     text: value,
     pending: true,
-    file: file ? sentFile(file) : null,
+    files: files.map(sentFile),
   }
   assistant.messages = [...assistant.messages, message]
   assistant.error = ''
@@ -392,14 +447,16 @@ export async function send(text, { context = undefined, file = null } = {}) {
         ? assistant.context
         : { route: assistant.context?.route || '' }
   try {
-    const fileUrl = message.file
-      ? await uploadedUrl(clientId, message.file)
-      : ''
+    const uploaded = message.files.length
+      ? await uploadedFiles(clientId, message.files)
+      : []
     await call(`${ASSISTANT_API}.say`, {
       text: value,
       context: JSON.stringify(ctx || {}),
       client_id: clientId,
-      file_url: fileUrl || undefined,
+      attachments: uploaded.length
+        ? JSON.stringify(attachmentsOf(uploaded))
+        : undefined,
     })
     patchMessage(clientId, { pending: false })
   } catch (error) {
@@ -412,7 +469,7 @@ export async function send(text, { context = undefined, file = null } = {}) {
 
 export function retry(message) {
   assistant.messages = assistant.messages.filter((m) => m.id !== message.id)
-  return send(message.text, { file: message.file || null })
+  return send(message.text, { files: message.files || [] })
 }
 
 /** «Reintentar» on a reply that failed: ask the question before it again. */
@@ -424,7 +481,7 @@ export function retryAnswer(message) {
     .find((m) => m.role === 'user')
   if (!question) return
   assistant.messages = assistant.messages.filter((m) => m.id !== message.id)
-  return send(question.text, { file: question.file || null })
+  return send(question.text, { files: question.files || [] })
 }
 
 function patchMessage(id, patch) {
@@ -684,7 +741,7 @@ export function _resetAssistant() {
     progress: '',
     error: '',
     draft: '',
-    attachment: null,
+    attachments: [],
     focus: 0,
     context: null,
     contextOn: true,

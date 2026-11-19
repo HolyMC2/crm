@@ -72,23 +72,35 @@
         :class="{ 'opacity-60': message.pending }"
         data-role="user"
       >
+        <!-- The files it went with: one photo large, several as square
+             thumbnails, a PDF or XML by its name. -->
         <div
-          v-if="message.file"
-          class="mb-1 flex items-center gap-2 text-sm"
-          data-testid="assistant-sent-file"
+          v-if="message.files?.length"
+          class="mb-1 flex flex-wrap gap-1.5 text-sm"
+          data-testid="assistant-sent-files"
         >
-          <img
-            v-if="message.file.previewUrl"
-            :src="message.file.previewUrl"
-            :alt="message.file.name"
-            class="max-h-48 max-w-full rounded-6 object-cover"
-          />
-          <template v-else>
-            <span
-              class="lucide-file-text size-4 flex-none text-ink-gray-7"
-              aria-hidden="true"
+          <template v-for="file in message.files" :key="file.id">
+            <img
+              v-if="file.previewUrl"
+              :src="file.previewUrl"
+              :alt="file.name"
+              class="rounded-6 object-cover"
+              :class="
+                message.files.length > 1 ? 'size-16' : 'max-h-48 max-w-full'
+              "
+              data-testid="assistant-sent-file"
             />
-            <span class="min-w-0 truncate">{{ message.file.name }}</span>
+            <span
+              v-else
+              class="flex w-full min-w-0 items-center gap-2"
+              data-testid="assistant-sent-file"
+            >
+              <span
+                class="lucide-file-text size-4 flex-none text-ink-gray-7"
+                aria-hidden="true"
+              />
+              <span class="min-w-0 truncate">{{ file.name }}</span>
+            </span>
           </template>
         </div>
         <p v-if="message.text" class="whitespace-pre-line break-words">

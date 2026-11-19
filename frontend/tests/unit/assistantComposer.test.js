@@ -9,7 +9,7 @@ import AssistantComposer from '@/components/assistant/AssistantComposer.vue'
 import {
   _resetAssistant,
   assistant,
-  attachFile,
+  attachFiles,
 } from '@/components/assistant/useAssistant'
 
 const SAY = 'doco.docoutils.assistant.shell_api.say'
@@ -49,6 +49,8 @@ describe('the composer', () => {
     const picker = mounted.el.querySelector('[data-testid="assistant-file"]')
     expect(picker.getAttribute('accept')).toContain('image/*')
     expect(picker.getAttribute('accept')).toContain('.xml')
+    // the phone's gallery lets the owner pick several photos at once
+    expect(picker.multiple).toBe(true)
 
     const pick = vi.spyOn(picker, 'click').mockImplementation(() => {})
     mounted.el.querySelector('[data-testid="assistant-attach"]').click()
@@ -76,7 +78,7 @@ describe('the composer', () => {
     const send = mounted.el.querySelector('[data-testid="assistant-send"]')
     expect(send.disabled).toBe(true)
 
-    attachFile(new File(['x'], 'print.jpg', { type: 'image/jpeg' }))
+    attachFiles([new File(['x'], 'print.jpg', { type: 'image/jpeg' })])
     await nextTick()
 
     expect(send.disabled).toBe(false)
@@ -85,19 +87,64 @@ describe('the composer', () => {
     ).not.toBeNull()
   })
 
-  it('sends the picked file with its note and clears the composer', async () => {
+  it('shows each picked file and takes one off with its ×', async () => {
+    assistant.status = { enabled: true, can_attach: true }
+    mounted = mount()
+    attachFiles([
+      new File(['x'], 'pedido.jpg', { type: 'image/jpeg' }),
+      new File(['y'], 'envio.jpg', { type: 'image/jpeg' }),
+      new File(['z'], 'pago.pdf', { type: 'application/pdf' }),
+    ])
+    await nextTick()
+
+    const chips = () =>
+      Array.from(
+        mounted.el.querySelectorAll('[data-testid="assistant-attachment"]'),
+      ).map((chip) => chip.getAttribute('title'))
+    expect(chips()).toEqual(['pedido.jpg', 'envio.jpg', 'pago.pdf'])
+
+    mounted.el
+      .querySelectorAll('[data-testid="assistant-attachment-remove"]')[1]
+      .click()
+    await nextTick()
+    expect(chips()).toEqual(['pedido.jpg', 'pago.pdf'])
+  })
+
+  it('with five files waiting, «+» says a message is full instead of opening the picker', async () => {
+    assistant.status = { enabled: true, can_attach: true }
+    mounted = mount()
+    attachFiles(
+      Array.from({ length: 5 }, (_, i) => new File(['x'], `f${i}.jpg`)),
+    )
+    await nextTick()
+    const picker = mounted.el.querySelector('[data-testid="assistant-file"]')
+    const pick = vi.spyOn(picker, 'click').mockImplementation(() => {})
+
+    mounted.el.querySelector('[data-testid="assistant-attach"]').click()
+
+    expect(pick).not.toHaveBeenCalled()
+    expect(assistant.error).toMatch(/A message takes up to/)
+  })
+
+  it('sends the picked files with the note in one message and clears the composer', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn(async () => ({
-        ok: true,
-        json: async () => ({
-          message: { file_url: '/private/files/factura.xml' },
-        }),
-      })),
+      vi.fn(async (_, init) => {
+        const name = init.body.get('file').name
+        return {
+          ok: true,
+          json: async () => ({
+            message: { name: `F-${name}`, file_url: `/private/files/${name}` },
+          }),
+        }
+      }),
     )
     assistant.status = { enabled: true, can_attach: true }
     mounted = mount()
-    attachFile(new File(['<cfdi/>'], 'factura.xml', { type: 'text/xml' }))
+    attachFiles([
+      new File(['<cfdi/>'], 'factura.xml', { type: 'text/xml' }),
+      new File(['x'], 'ticket.jpg', { type: 'image/jpeg' }),
+    ])
     assistant.draft = 'Regístrala como gasto'
     await nextTick()
 
@@ -105,18 +152,15 @@ describe('the composer', () => {
     await flush()
     await flush()
 
-    expect(fetch).toHaveBeenCalledWith(
-      '/api/method/upload_file',
-      expect.anything(),
-    )
-    expect(mocks.call).toHaveBeenCalledWith(
-      SAY,
-      expect.objectContaining({
-        text: 'Regístrala como gasto',
-        file_url: '/private/files/factura.xml',
-      }),
-    )
+    expect(fetch).toHaveBeenCalledTimes(2)
+    const says = mocks.call.mock.calls.filter(([method]) => method === SAY)
+    expect(says).toHaveLength(1)
+    expect(says[0][1].text).toBe('Regístrala como gasto')
+    expect(JSON.parse(says[0][1].attachments).map((f) => f.file_id)).toEqual([
+      'F-factura.xml',
+      'F-ticket.jpg',
+    ])
     expect(assistant.draft).toBe('')
-    expect(assistant.attachment).toBeNull()
+    expect(assistant.attachments).toEqual([])
   })
 })

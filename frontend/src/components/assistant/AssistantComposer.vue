@@ -3,7 +3,7 @@
        on the same gutter as the conversation above it (20px in the sheet,
        16px in the dock). The screen's suggestions sit right above it, in reach
        of the thumb, while nothing is typed. One card holds the text and its
-       tools: the screen the question is about as a chip, a file waiting to go,
+       tools: the screen the question is about as a chip, the files waiting to go,
        the text, then «+» and the mic on the left, the model and send on the
        right. -->
   <form
@@ -58,11 +58,26 @@
           </button>
         </span>
       </div>
+      <!-- One file is a chip; several are a row of tiles, each with its ×
+           (room above and between them for the × to stay in reach). -->
       <AssistantAttachment
-        v-if="assistant.attachment"
-        :file="assistant.attachment"
-        @remove="clearAttachment"
+        v-if="assistant.attachments.length === 1"
+        :file="assistant.attachments[0]"
+        @remove="removeAttachment(assistant.attachments[0])"
       />
+      <div
+        v-else-if="assistant.attachments.length"
+        class="flex gap-3 overflow-x-auto px-3 pt-3 [scrollbar-width:none]"
+        data-testid="assistant-attachments"
+      >
+        <AssistantAttachment
+          v-for="file in assistant.attachments"
+          :key="file.id"
+          :file="file"
+          compact
+          @remove="removeAttachment(file)"
+        />
+      </div>
       <!-- «/» commands and «@» coworkers: above the text, so a phone
            keyboard never covers them; a tap picks (mousedown keeps focus). -->
       <ul
@@ -132,8 +147,8 @@
         <button
           type="button"
           class="flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-7 hover:bg-surface-gray-2"
-          :aria-label="__('Attach a file')"
-          :title="__('Attach a file')"
+          :aria-label="__('Attach files')"
+          :title="__('Attach files')"
           data-testid="assistant-attach"
           @click="attach"
         >
@@ -145,6 +160,7 @@
           class="sr-only"
           tabindex="-1"
           aria-hidden="true"
+          multiple
           :accept="ASSISTANT_FILE_ACCEPT"
           data-testid="assistant-file"
           @change="picked"
@@ -174,7 +190,11 @@ import { chipsFor } from './assistantText'
 import AssistantAttachment from './AssistantAttachment.vue'
 import AssistantMic from './AssistantMic.vue'
 import AssistantModelPicker from './AssistantModelPicker.vue'
-import { ASSISTANT_FILE_ACCEPT, canSendDraft } from './assistantFiles'
+import {
+  ASSISTANT_FILE_ACCEPT,
+  ASSISTANT_MAX_FILES,
+  canSendDraft,
+} from './assistantFiles'
 import {
   closeComplete,
   complete,
@@ -186,10 +206,10 @@ import {
 import { runCommand, sessions } from './assistantSessions'
 import {
   assistant,
-  attachFile,
-  clearAttachment,
+  attachFiles,
+  removeAttachment,
   send,
-  takeAttachment,
+  takeAttachments,
 } from './useAssistant'
 
 defineProps({ docked: { type: Boolean, default: false } })
@@ -197,7 +217,7 @@ defineProps({ docked: { type: Boolean, default: false } })
 const input = ref(null)
 const picker = ref(null)
 const ready = computed(() =>
-  canSendDraft(assistant.draft, assistant.attachment),
+  canSendDraft(assistant.draft, assistant.attachments),
 )
 // The screen the question is about, and what to ask about it.
 const chipTitle = computed(() =>
@@ -211,7 +231,7 @@ const showChips = computed(
     chips.value.length > 0 &&
     sessions.view === 'chat' &&
     !assistant.draft.trim() &&
-    !assistant.attachment,
+    !assistant.attachments.length,
 )
 // A chip that needs a detail fills the composer (which takes the focus);
 // the others ask at once. The row goes back to its first chip.
@@ -224,21 +244,21 @@ function useChip(chip) {
   row.value?.scrollTo?.({ left: 0, behavior: 'smooth' })
 }
 
-// Only the owner may send a file (api._can_attach). The clip says why and what
-// to do instead, rather than opening a picker whose file the server would refuse.
+// Only the owner may send files (api._can_attach). The clip says why and what
+// to do instead, rather than opening a picker whose files the server would refuse.
 const canAttach = computed(() => Boolean(assistant.status?.can_attach))
 
 async function submit() {
   if (!ready.value) return
   closeComplete()
   const text = assistant.draft
-  const file = takeAttachment()
+  const files = takeAttachments()
   assistant.draft = ''
   // «/recuerdame mañana…» goes out as «Recuérdame mañana…»; «/nueva» runs here
-  const command = file ? null : await resolveCommand(text)
+  const command = files.length ? null : await resolveCommand(text)
   if (command?.action) return runCommand(command.action)
   toChat()
-  send(command?.text || text, { file })
+  send(command?.text || text, { files })
 }
 
 // asked from the Lienzo: the answer shows in the chat
@@ -307,13 +327,20 @@ function attach() {
     )
     return
   }
+  if (assistant.attachments.length >= ASSISTANT_MAX_FILES) {
+    assistant.error = __(
+      'A message takes up to {0} files. Remove one to add another.',
+      [ASSISTANT_MAX_FILES],
+    )
+    return
+  }
   picker.value?.click()
 }
 
 function picked(event) {
-  const [file] = event.target.files || []
+  const files = Array.from(event.target.files || [])
   event.target.value = '' // the same photo twice in a row still fires
-  if (file) attachFile(file)
+  if (files.length) attachFiles(files)
 }
 
 function heard(text) {

@@ -3,6 +3,9 @@
 // PICK_ACCEPT): photos, PDFs and the XML of a CFDI invoice.
 export const ASSISTANT_FILE_ACCEPT =
   'image/*,application/pdf,.pdf,text/xml,application/xml,.xml'
+// One message takes up to five files, as the Desk composer's does
+// (doco workspace_turns.submit refuses a sixth).
+export const ASSISTANT_MAX_FILES = 5
 
 export function isImageFile(file) {
   return String(file?.type || '').startsWith('image/')
@@ -15,7 +18,7 @@ export function fileSizeText(bytes) {
   return `${(size / (1024 * 1024)).toFixed(1)} MB`
 }
 
-/** A message goes with a note, a file, or both; an empty note with no file does not go. */
-export function canSendDraft(draft, file) {
-  return Boolean(String(draft || '').trim() || file)
+/** A message goes with a note, files, or both; an empty note with no file does not go. */
+export function canSendDraft(draft, files = []) {
+  return Boolean(String(draft || '').trim() || files?.length)
 }

@@ -46,7 +46,7 @@
             class="ml-auto w-fit max-w-[85%] whitespace-pre-line break-words rounded-8 bg-surface-gray-2 px-3 py-2 text-base text-ink-gray-9"
             data-role="user"
           >
-            {{ message.text || message.file?.name }}
+            {{ message.text || message.files?.[0]?.name }}
           </p>
           <AssistantProse
             v-else-if="proseOf(message, splitButtons(message).cards)"
