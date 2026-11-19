@@ -62,7 +62,7 @@
 
       <!-- Messenger (PSID) conversation -->
       <div v-if="title == 'WhatsApp' && activeChannelTab === 'messenger'">
-        <MessengerArea :messages="messengerThreadItems" />
+        <MessengerArea :messages="messengerThreadItems" :window="false" />
       </div>
       <div v-else-if="title == 'WhatsApp'">
         <!-- Multi-Contact tab strip: one tab per Contact attached to the Deal/Lead.

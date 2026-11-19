@@ -81,11 +81,13 @@ export function statusTick(m) {
 }
 
 /**
- * Meta's reply window from the customer's last message: free replies for 24 h, then only
- * with the Human Agent tag up to 7 days, then none.
- * { state: 'open' | 'human_agent' | 'closed' | 'none', lastIn, closesAt, tagUntil } (ms).
+ * Meta's reply window from the customer's last message: free replies for 24 h, then on
+ * Messenger only with the Human Agent tag up to 7 days, on WhatsApp only an approved
+ * template, until the customer writes again.
+ * { state: 'open' | 'human_agent' | 'template' | 'closed' | 'none', lastIn, closesAt,
+ *   tagUntil } (ms).
  */
-export function replyWindow(messages, now = Date.now()) {
+export function replyWindow(messages, now = Date.now(), channel = 'messenger') {
   let lastIn = NaN
   for (const m of messages || []) {
     if (m?.direction !== 'in') continue
@@ -95,6 +97,13 @@ export function replyWindow(messages, now = Date.now()) {
   if (Number.isNaN(lastIn))
     return { state: 'none', lastIn: null, closesAt: null, tagUntil: null }
   const closesAt = lastIn + WINDOW_MS
+  if (channel === 'whatsapp')
+    return {
+      state: now < closesAt ? 'open' : 'template',
+      lastIn,
+      closesAt,
+      tagUntil: null,
+    }
   const tagUntil = lastIn + HUMAN_AGENT_MS
   const state =
     now < closesAt ? 'open' : now < tagUntil ? 'human_agent' : 'closed'
@@ -102,9 +111,13 @@ export function replyWindow(messages, now = Date.now()) {
 }
 
 /** The same window from the server's reply_window dict (the «Sin asignar» rows). */
-export function windowFromServer(w, now = Date.now()) {
+export function windowFromServer(w, now = Date.now(), channel = 'messenger') {
   const last = w?.last_incoming
-  return replyWindow(last ? [{ direction: 'in', timestamp: last }] : [], now)
+  return replyWindow(
+    last ? [{ direction: 'in', timestamp: last }] : [],
+    now,
+    channel,
+  )
 }
 
 function clock(ms) {
@@ -129,6 +142,13 @@ export function windowNotice(win, now = Date.now()) {
       ]),
     }
   }
+  if (win.state === 'template')
+    return {
+      tone: 'amber',
+      text: tr(
+        'Pasaron más de 24 h desde su último mensaje: WhatsApp solo deja enviarle una plantilla aprobada hasta que vuelva a escribir.',
+      ),
+    }
   if (win.state === 'human_agent')
     return {
       tone: 'amber',
@@ -149,33 +169,47 @@ const VIA_SHORT = {
   crm: 'CRM',
   bot: 'Bot',
   meta: 'Meta',
+  phone: 'Celular',
+}
+
+function answeredTitle(row) {
+  if (row.last_sent_via === 'meta')
+    return tr(
+      'La última respuesta salió desde Business Suite o la app de Messenger.',
+    )
+  if (row.last_sent_via === 'phone')
+    return tr(
+      'La última respuesta salió desde WhatsApp Business en el celular.',
+    )
+  return row.last_sent_by
+    ? tr('Respondió {0}', [row.last_sent_by])
+    : tr('La última palabra fue nuestra.')
 }
 
 /**
- * The chip of a Messenger «Sin asignar» row: answered (and from where) or how long the
- * customer has waited. { tone, text, title } or null (WhatsApp rows, older servers).
+ * The chip of a «Sin asignar» row (Messenger or WhatsApp): answered (and from where) or
+ * how long the customer has waited and how much of the 24 h is left.
+ * { tone, text, title } or null (a row from an older server).
  */
 export function orphanChip(row, now = Date.now()) {
-  if (!row || row.last_channel !== 'messenger' || !row.last_direction)
+  const channel = row?.last_channel
+  if (
+    !row ||
+    !['messenger', 'whatsapp'].includes(channel) ||
+    !row.last_direction
+  )
     return null
   if (row.last_direction === 'out') {
     const via = VIA_SHORT[row.last_sent_via]
     return {
       tone: 'green',
       text: via ? tr('Respondido · {0}', [via]) : tr('Respondido'),
-      title:
-        row.last_sent_via === 'meta'
-          ? tr(
-              'La última respuesta salió desde Business Suite o la app de Messenger.',
-            )
-          : row.last_sent_by
-            ? tr('Respondió {0}', [row.last_sent_by])
-            : tr('La última palabra fue nuestra.'),
+      title: answeredTitle(row),
     }
   }
   const since = tsMs(row.waiting_since)
   if (Number.isNaN(since)) return null
-  const win = windowFromServer(row.reply_window, now)
+  const win = windowFromServer(row.reply_window, now, channel)
   const closed = win.state !== 'open'
   const left = win.state === 'open' ? win.closesAt - now : 0
   return {
@@ -187,11 +221,15 @@ export function orphanChip(row, now = Date.now()) {
           span(left / 1000),
         ]),
     title: closed
-      ? tr(
-          'Nadie le respondió y ya pasaron las 24 h que Meta da para contestar.',
-        )
+      ? channel === 'whatsapp'
+        ? tr(
+            'Nadie le respondió y ya pasaron 24 h: WhatsApp solo deja enviarle una plantilla aprobada.',
+          )
+        : tr(
+            'Nadie le respondió y ya pasaron las 24 h que Meta da para contestar.',
+          )
       : tr(
-          'Nadie le ha respondido. Meta deja contestar 24 h después de su último mensaje.',
+          'Nadie le ha respondido. Se puede contestar libremente 24 h después de su último mensaje.',
         ),
   }
 }

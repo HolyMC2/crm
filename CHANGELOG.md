@@ -3,6 +3,14 @@
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
 
+## 2026-11-19 — The Messenger reply-window and answered/waiting work, on WhatsApp too (lane origen-canales, with doco_marketing; not deployed)
+
+- **«Sin asignar» WhatsApp rows** get the chip: «Esperando 3 h · quedan 21 h», «Sin respuesta · 2 d» past 24 h (WhatsApp then takes only an approved template), or «Respondido · CRM/Bot/Celular».
+- **WhatsApp orphan chat:** a line above the reply bar says until when one can answer, and past 24 h that only a template goes out and the lead or deal must be created to send it (this reply bar has no templates).
+- **`MessengerArea`** takes `window` (default on); the deal view turns it off, where `MessengerBox` already says it.
+- `utils/messengerOrigin.js`: `replyWindow`/`windowFromServer` take the channel (WhatsApp: 24 h, then `template`).
+- **Tests:** `tests/unit/messengerOrigin.test.js` (+3). Rollback: revert.
+
 ## 2026-11-19 — Pregúntale a Muelle: several files in one message (lane sheet-multi-files, with doco; not deployed)
 
 - **Why:** Marco, 11-19: the sheet took one file at a time; he wanted to send an order's three pictures (the order, its shipping, its payment) in one go.

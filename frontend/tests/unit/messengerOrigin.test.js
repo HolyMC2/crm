@@ -145,11 +145,43 @@ describe('«Sin asignar» Messenger chip', () => {
     ).toBe('Respondió Tere')
   })
 
-  it('stays off WhatsApp rows and rows from an older server', () => {
+  it('gives WhatsApp rows WhatsApp’s rule: 24 h, then only a template', () => {
+    const wa = { ...row, last_channel: 'whatsapp' }
+    expect(orphanChip(wa, NOW).text).toBe('Esperando 17 h · quedan 6 h')
+    const late = orphanChip(wa, at('2026-11-21 10:00:00'))
+    expect(late.text.startsWith('Sin respuesta')).toBe(true)
+    expect(late.title).toContain('plantilla')
+    expect(
+      orphanChip(
+        {
+          last_channel: 'whatsapp',
+          last_direction: 'out',
+          last_sent_via: 'phone',
+        },
+        NOW,
+      ),
+    ).toMatchObject({ text: 'Respondido · Celular' })
+  })
+
+  it('stays off rows from an older server', () => {
     expect(
       orphanChip({ last_channel: 'whatsapp', last_direction: 'in' }),
     ).toBeNull()
     expect(orphanChip({ last_channel: 'messenger' })).toBeNull()
+    expect(
+      orphanChip({ last_channel: 'email', last_direction: 'in' }),
+    ).toBeNull()
+  })
+})
+
+describe('WhatsApp’s reply window', () => {
+  const chat = [{ direction: 'in', timestamp: '2026-11-18 15:36:49' }]
+  it('has no human-agent days: past 24 h only a template goes out', () => {
+    expect(replyWindow(chat, NOW, 'whatsapp').state).toBe('open')
+    const late = at('2026-11-26 09:00:00')
+    const win = replyWindow(chat, late, 'whatsapp')
+    expect(win.state).toBe('template')
+    expect(windowNotice(win, late).text).toContain('plantilla aprobada')
   })
 })
 
@@ -244,6 +276,24 @@ describe('MessengerArea', () => {
       ['doco_marketing.api.inbox.get_messenger_origins', { names: ['MM-2'] }],
     ])
     expect(texts(root, 'messenger-origin')).toEqual(['Desde Meta ·'])
+  })
+
+  it('leaves the window line to the composer when asked', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(NOW)
+    const root = await render({
+      window: false,
+      messages: [
+        {
+          id: 'a',
+          channel: 'messenger',
+          direction: 'in',
+          content: 'hola',
+          timestamp: '2026-11-18 15:36:49',
+        },
+      ],
+    })
+    expect(texts(root, 'messenger-window')).toEqual([])
   })
 
   it('leaves WhatsApp and Webchat histories alone', async () => {

@@ -177,6 +177,9 @@ const props = defineProps({
   // WhatsApp Message name the save endpoint accepts. ConversationWorkspace.vue
   // passes it as `:conversation="state.conversation"`.
   conversation: { type: Object, default: null },
+  // The «until when can we answer» line. Off where the composer already says it
+  // (MessengerBox in the deal view).
+  window: { type: Boolean, default: true },
 })
 
 const scrollEl = ref(null)
@@ -242,7 +245,7 @@ const now = ref(Date.now())
 const ticker = setInterval(() => (now.value = Date.now()), 60 * 1000)
 onBeforeUnmount(() => clearInterval(ticker))
 const notice = computed(() =>
-  isMetaChat.value
+  props.window && isMetaChat.value
     ? windowNotice(replyWindow(props.messages, now.value), now.value)
     : null,
 )

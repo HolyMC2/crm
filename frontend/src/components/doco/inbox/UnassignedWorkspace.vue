@@ -166,6 +166,18 @@
              you convert, then assign_unassigned re-points every message to the new
              record. replyOnly hides notes/comments/templates (no reference doc yet). -->
         <div class="flex-none border-t border-outline-gray-1">
+          <!-- WhatsApp's 24 h: past it only an approved template goes out, and this
+               reply bar (no record yet) has none, so it says what to do. -->
+          <div
+            v-if="!isMessenger && waNotice"
+            class="px-3 pt-2 text-[11.5px] leading-snug"
+            :class="
+              waNotice.tone === 'gray' ? 'text-ink-gray-5' : 'text-ink-amber-9'
+            "
+            data-testid="wa-window"
+          >
+            {{ waNotice.text }}
+          </div>
           <WhatsAppBox
             v-if="!isMessenger"
             v-model="unassignedDoc"
@@ -639,7 +651,8 @@
 </template>
 
 <script setup>
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
+import { replyWindow, windowNotice } from '@/utils/messengerOrigin'
 import { toast, call, FileUploader, Dropdown } from 'frappe-ui'
 import LucideMessageCircleQuestion from '~icons/lucide/message-circle-question'
 import LucideChevronLeft from '~icons/lucide/chevron-left'
@@ -882,6 +895,30 @@ watch(activeUnassigned, () => {
 })
 const showFiscal = ref(false)
 const messages = computed(() => unassignedThread.data?.messages || [])
+
+// The WhatsApp orphan's reply window (utils/messengerOrigin, WhatsApp rules).
+const waNow = ref(Date.now())
+const waTicker = setInterval(() => (waNow.value = Date.now()), 60 * 1000)
+onBeforeUnmount(() => clearInterval(waTicker))
+const waNotice = computed(() => {
+  if (isMessenger.value) return null
+  const win = replyWindow(
+    messages.value.map((m) => ({
+      direction: m.type === 'Incoming' ? 'in' : 'out',
+      timestamp: m.creation,
+    })),
+    waNow.value,
+    'whatsapp',
+  )
+  if (win.state === 'template')
+    return {
+      tone: 'amber',
+      text: __(
+        'Pasaron más de 24 h desde su último mensaje: WhatsApp solo deja enviarle una plantilla aprobada. Crea el lead o el trato para enviársela.',
+      ),
+    }
+  return windowNotice(win, waNow.value)
+})
 // The ERPNext Customer/Contact/Address fields «+ Cliente» sends as `customer`
 // (doco_marketing orphans._customer_fields writes only the ones the site has).
 const CUSTOMER_KEYS = [
