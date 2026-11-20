@@ -69,7 +69,7 @@
 
         <ul
           v-if="rows.length"
-          class="grid grid-cols-2 gap-3 sm:grid-cols-3"
+          class="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 sm:grid-cols-3"
           :aria-label="__('New products', null, CTX)"
         >
           <li v-for="row in rows" :key="row.name">

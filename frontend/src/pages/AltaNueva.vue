@@ -82,7 +82,7 @@
               />
               <button
                 type="button"
-                class="press absolute right-1 top-1 flex size-9 items-center justify-center rounded-full bg-surface-white/90 text-ink-gray-8"
+                class="press absolute right-1 top-1 flex size-9 items-center justify-center rounded-full bg-surface-gray-1 text-ink-gray-8 shadow ring-1 ring-outline-gray-2"
                 :aria-label="__('Remove photo', null, CTX)"
                 :title="__('Remove photo', null, CTX)"
                 @click="removePhoto(index)"
