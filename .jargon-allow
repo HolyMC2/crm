@@ -15,6 +15,11 @@ msg::Login to Frappe Cloud?
 msg::Are you sure you want to login to your Frappe Cloud dashboard?
 # Frappe Mail is the name of an email provider the admin picks, like Gmail.
 msg::Frappe Mail Site
+msg::Setting up Frappe Mail requires you to have an API key and API secret for your email account. Read more
+# The About dialog credits the open-source project the app is built on (its license
+# notice) and links to that project's documentation: the name is the attribution.
+msg::Built on Frappe CRM.
+msg::Upstream Documentation
 
 # Form Scripts editor (developers write the class there): the field name
 # «trigger» clashes with the script's own trigger() method; the word is literal.
