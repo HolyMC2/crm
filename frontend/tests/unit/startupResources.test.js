@@ -43,8 +43,15 @@ vi.mock('frappe-ui', async () => {
 vi.mock('@/utils/silentUpdate', () => ({ installSilentUpdate: () => null }))
 vi.mock('lucide-static/sprite.svg?raw', () => ({ default: '<svg></svg>' }))
 vi.mock('@/socket', () => ({ initSocket: () => ({}) }))
-vi.mock('@/router', () => ({ default: { install() {} } }))
-vi.mock('@/translation', () => ({ default: { install() {} } }))
+vi.mock('@/router', () => ({
+  default: { install() {}, beforeEach() {}, isReady: () => Promise.resolve() },
+}))
+vi.mock('@/translation', () => ({
+  default: { install() {} },
+  dictionaryRevision: { value: 0 },
+  noteMisses() {},
+  takeMisses: () => null,
+}))
 vi.mock('@/utils/dialogs', () => ({ createDialog: vi.fn() }))
 vi.mock('@/utils/pushNavigate', () => ({ listenForPushNavigation: vi.fn() }))
 vi.mock('@/utils/startupTelemetry', () => ({ installTelemetry: vi.fn() }))

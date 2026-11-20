@@ -10,7 +10,13 @@ const fixture = vi.hoisted(() => ({
   cachedList: vi.fn(),
   pushNavigation: vi.fn(),
   dialog: vi.fn(),
-  router: { install: vi.fn() },
+  // main.js registers the dictionary guard and loads the whole dictionary
+  // once the first route is in (utils/translationsReady.js).
+  router: {
+    install: vi.fn(),
+    beforeEach: vi.fn(),
+    isReady: vi.fn(() => Promise.resolve()),
+  },
   translation: { install: vi.fn() },
   sprite: '<svg></svg>',
   startupTelemetry: vi.fn(),
@@ -64,7 +70,12 @@ vi.mock('@/utils/startupTelemetry', () => ({
 vi.mock('@/utils/silentUpdate', () => ({ installSilentUpdate: () => null }))
 vi.mock('lucide-static/sprite.svg?raw', () => ({ default: fixture.sprite }))
 vi.mock('@/router', () => ({ default: fixture.router }))
-vi.mock('@/translation', () => ({ default: fixture.translation }))
+vi.mock('@/translation', () => ({
+  default: fixture.translation,
+  dictionaryRevision: { value: 0 },
+  noteMisses: vi.fn(),
+  takeMisses: vi.fn(() => null),
+}))
 vi.mock('@/utils/dialogs', () => ({ createDialog: fixture.dialog }))
 vi.mock('@/utils/pushNavigate', () => ({
   listenForPushNavigation: fixture.pushNavigation,
