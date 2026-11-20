@@ -66,8 +66,8 @@ year.
 
 The whole set is about 320 KB gzip, more than the app's entry. On a cold load over Slow 4G it came
 in last and held the mount (go-live audit 11-19, finding 79). So every built set also carries a
-**first part**: the shipped keys the first screen can render, 24 KB gzip and 1,923 keys on the lab
-(2026-11-20) against 320 KB and 18,759 for the whole set.
+**first part**: the shipped keys the first screen can render, 30 KB gzip and 2,292 keys on the lab
+(2026-11-20, «Primeros pasos» sheets included) against 320 KB and 18,871 for the whole set.
 
 - **Build.** `translation-keys.json` also lists `first`: the literals of the modules of the entry
   chunk, of the chunks that hold a `FIRST_ROUTE` module (`translation-keys.mjs`: the shell, the
