@@ -6,10 +6,13 @@ import {
   MAX_WAIT_MS,
   applyNewer,
   dictionaryStore,
+  fullSource,
   keptVersions,
   linkedVersion,
+  loadWholeDictionary,
   mountWhenTranslated,
   translationsReady,
+  wholeDictionaryFor,
 } from '@/utils/translationsReady'
 
 const SRC = '/api/method/crm.www.crm.translations?v=abc'
@@ -24,11 +27,13 @@ function addScript(src = SRC) {
 beforeEach(() => {
   vi.useFakeTimers()
   delete window.translated_messages
+  delete window.translated_messages_first
   document.body.innerHTML = ''
 })
 afterEach(() => {
   vi.useRealTimers()
   delete window.translated_messages
+  delete window.translated_messages_first
 })
 
 describe('the mount waits for the dictionary script', () => {
@@ -335,5 +340,199 @@ describe('a dictionary this browser kept spares the wait after a deploy', () => 
     applyNewer(fresh)
     expect(getConfig('translatedMessages')).toBe(fresh)
     expect(dictionaryRevision.value).toBe(before + 1)
+  })
+})
+
+const FIRST = 'c'.repeat(16)
+
+describe('the landing route mounts with the first part, the whole set follows', () => {
+  beforeEach(() => {
+    vi.stubGlobal('requestIdleCallback', (fn) => setTimeout(fn, 0))
+  })
+  afterEach(() => vi.unstubAllGlobals())
+
+  // The page's script is the first part; data-full names the whole set.
+  function addFirst(full = `v=${NEW}`) {
+    const script = addScript(
+      `/api/method/crm.www.crm.translations?part=first&v=${FIRST}`,
+    )
+    script.setAttribute('data-full', full)
+    return script
+  }
+  function runFirst(script, messages) {
+    window.translated_messages_first = messages
+    script.dispatchEvent(new Event('load'))
+  }
+  // loadScript stands in for the <script> the module appends.
+  function fakeLoader() {
+    const element = document.createElement('i')
+    const loadScript = vi.fn(() => element)
+    const run = (messages) => {
+      window.translated_messages = messages
+      element.dispatchEvent(new Event('load'))
+    }
+    return { loadScript, run, element }
+  }
+  const versionsNoting = (noted = {}) => ({
+    get: vi.fn((key) => noted[key] ?? null),
+    set: vi.fn((key, version) => (noted[key] = version)),
+  })
+  const opts = (extra = {}) => ({
+    store: fakeStore(null),
+    versions: versionsNoting(),
+    onNewer: vi.fn(),
+    lang: 'es-MX',
+    site: 'tienda.example',
+    ...extra,
+  })
+
+  it('reads the whole set from data-full, and only a versioned one', () => {
+    addFirst()
+    expect(fullSource()).toBe(`/api/method/crm.www.crm.translations?v=${NEW}`)
+    expect(linkedVersion()).toBe(NEW)
+    document.body.innerHTML = ''
+    addFirst('{{ translations_full_query }}')
+    expect(fullSource()).toBe('')
+    expect(linkedVersion()).toBe('')
+    document.body.innerHTML = ''
+    addScript(versioned(NEW))
+    expect(fullSource()).toBe('')
+  })
+
+  it('mounts with the first part and loads the whole set only when asked', async () => {
+    const script = addFirst()
+    const loader = fakeLoader()
+    const o = opts({ loadScript: loader.loadScript })
+    const mount = vi.fn()
+    const result = mountWhenTranslated(mount, o)
+    const first = { Hoy: 'Hoy' }
+    runFirst(script, first)
+    await result
+    expect(mount).toHaveBeenCalledOnce()
+    expect(window.translated_messages).toBe(first)
+    expect(loader.loadScript).not.toHaveBeenCalled()
+
+    const loading = loadWholeDictionary()
+    expect(loader.loadScript).toHaveBeenCalledWith(
+      `/api/method/crm.www.crm.translations?v=${NEW}`,
+    )
+    expect(loadWholeDictionary()).toBe(loading)
+    const whole = { Hoy: 'Hoy', Tratos: 'Tratos' }
+    loader.run(whole)
+    await loading
+    expect(o.onNewer).toHaveBeenCalledWith(whole)
+    await vi.advanceTimersByTimeAsync(0)
+    expect(o.store.set).toHaveBeenCalledWith('tienda.example|es-MX', {
+      version: NEW,
+      messages: whole,
+    })
+    expect(loadWholeDictionary()).toBeNull()
+  })
+
+  it('a route the first part covers never waits; another waits for the whole set', async () => {
+    const script = addFirst()
+    const loader = fakeLoader()
+    mountWhenTranslated(vi.fn(), opts({ loadScript: loader.loadScript }))
+    runFirst(script, { Hoy: 'Hoy' })
+    expect(wholeDictionaryFor({ name: 'Hoy' })).toBeUndefined()
+    const guard = wholeDictionaryFor({ name: 'Deals' })
+    expect(guard).toBeInstanceOf(Promise)
+    expect(loader.loadScript).toHaveBeenCalledOnce()
+    const settled = vi.fn()
+    guard.then(settled)
+    await Promise.resolve()
+    expect(settled).not.toHaveBeenCalled()
+    loader.run({ Hoy: 'Hoy', Tratos: 'Tratos' })
+    await guard
+    expect(settled).toHaveBeenCalledWith(undefined)
+    expect(wholeDictionaryFor({ name: 'Deals' })).toBeUndefined()
+  })
+
+  it('a whole set that never arrives holds a navigation no longer than the cap', async () => {
+    const script = addFirst()
+    const loader = fakeLoader()
+    mountWhenTranslated(vi.fn(), opts({ loadScript: loader.loadScript }))
+    runFirst(script, { Hoy: 'Hoy' })
+    const settled = vi.fn()
+    wholeDictionaryFor({ name: 'Inbox' }).then(settled)
+    await vi.advanceTimersByTimeAsync(MAX_WAIT_MS - 1)
+    expect(settled).not.toHaveBeenCalled()
+    await vi.advanceTimersByTimeAsync(1)
+    expect(settled).toHaveBeenCalledOnce()
+  })
+
+  it('a kept whole set mounts at once and the first part does not replace it', async () => {
+    const script = addFirst()
+    const loader = fakeLoader()
+    const kept = { Hoy: 'Hoy (anterior)', Tratos: 'Tratos' }
+    const o = opts({
+      loadScript: loader.loadScript,
+      store: fakeStore({ version: OLD, messages: kept }),
+    })
+    const mount = vi.fn()
+    mountWhenTranslated(mount, o)
+    await vi.advanceTimersByTimeAsync(0)
+    expect(mount).toHaveBeenCalledOnce()
+    runFirst(script, { Hoy: 'Hoy' })
+    expect(window.translated_messages).toBe(kept)
+    const whole = { Hoy: 'Hoy', Tratos: 'Tratos' }
+    const loading = loadWholeDictionary()
+    loader.run(whole)
+    await loading
+    expect(o.onNewer).toHaveBeenCalledWith(whole)
+  })
+
+  it('a kept set of this very version mounts and nothing repaints', async () => {
+    const script = addFirst()
+    const loader = fakeLoader()
+    const kept = { Hoy: 'Hoy', Tratos: 'Tratos' }
+    const o = opts({
+      loadScript: loader.loadScript,
+      store: fakeStore({ version: NEW, messages: kept }),
+    })
+    mountWhenTranslated(vi.fn(), o)
+    await vi.advanceTimersByTimeAsync(0)
+    runFirst(script, { Hoy: 'Hoy' })
+    const loading = loadWholeDictionary()
+    loader.run({ ...kept })
+    await loading
+    await vi.advanceTimersByTimeAsync(0)
+    expect(o.onNewer).not.toHaveBeenCalled()
+    expect(o.store.set).not.toHaveBeenCalled()
+  })
+
+  it('a first part that fails starts the whole set at once', async () => {
+    const script = addFirst()
+    const loader = fakeLoader()
+    const mount = vi.fn()
+    const result = mountWhenTranslated(
+      mount,
+      opts({ loadScript: loader.loadScript }),
+    )
+    script.dispatchEvent(new Event('error'))
+    await result
+    expect(mount).toHaveBeenCalledOnce()
+    expect(loader.loadScript).toHaveBeenCalledOnce()
+  })
+
+  it('a first part that already ran is adopted without waiting, and the whole set follows', () => {
+    addFirst()
+    const first = { Hoy: 'Hoy' }
+    window.translated_messages_first = first
+    const loader = fakeLoader()
+    const mount = vi.fn(() => 'app')
+    expect(
+      mountWhenTranslated(mount, opts({ loadScript: loader.loadScript })),
+    ).toBe('app')
+    expect(window.translated_messages).toBe(first)
+    expect(wholeDictionaryFor({ name: 'Deals' })).toBeInstanceOf(Promise)
+    expect(loader.loadScript).toHaveBeenCalledOnce()
+  })
+
+  it('a page with one script keeps the guard idle', () => {
+    addScript(versioned(NEW))
+    mountWhenTranslated(vi.fn(), opts())
+    expect(wholeDictionaryFor({ name: 'Deals' })).toBeUndefined()
+    expect(loadWholeDictionary()).toBeNull()
   })
 })

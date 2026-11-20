@@ -7,10 +7,20 @@ const main = readFileSync(resolve(__dirname, '../../src/main.js'), 'utf8')
 
 describe('the language dictionary is its own script, loaded beside the app', () => {
   it('a classic deferred script fetches it from the whitelisted endpoint, versioned', () => {
-    // ?v= is the payload hash (crm/shell_dictionary.py): that URL is immutable.
+    // The query is ?v=<payload hash> (crm/shell_dictionary.py), or on the
+    // landing route ?part=first&v=<its hash> with data-full naming the whole
+    // set (crm/www/crm.py): those URLs are immutable.
     expect(html).toMatch(
-      /<script\s+defer\s+src="\/api\/method\/crm\.www\.crm\.translations\?v=\{\{ translations_version \}\}"\s*><\/script>/,
+      /<script\s+defer\s+src="\/api\/method\/crm\.www\.crm\.translations\?\{\{ translations_query \}\}"\s+data-full="\{\{ translations_full_query \}\}"\s*><\/script>/,
     )
+  })
+
+  it('a route the first part does not cover waits for the whole set', () => {
+    expect(main).toMatch(/router\.beforeResolve\(wholeDictionaryFor\)/)
+    expect(
+      main.indexOf('router.beforeResolve(wholeDictionaryFor)'),
+    ).toBeLessThan(main.indexOf('app.use(router)'))
+    expect(main).toMatch(/router\.isReady\(\)\)\.then\(loadWhole, loadWhole\)/)
   })
 
   it('it comes after the module entry, so the entry evaluates while it downloads', () => {

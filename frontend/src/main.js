@@ -13,7 +13,11 @@ import { initSocket } from './socket'
 import router from './router'
 import { listenForPushNavigation } from './utils/pushNavigate'
 import { installTelemetry } from './utils/startupTelemetry'
-import { mountWhenTranslated } from './utils/translationsReady'
+import {
+  loadWholeDictionary,
+  mountWhenTranslated,
+  wholeDictionaryFor,
+} from './utils/translationsReady'
 import { loadShell } from './composables/muelleShell'
 import translationPlugin from './translation'
 import App from './App.vue'
@@ -75,6 +79,11 @@ let pinia = createPinia()
 
 let app = createApp(App)
 
+// The landing route mounts with the dictionary's first part: a route it does
+// not cover waits for the whole set (utils/translationsReady.js). Registered
+// before the router starts its first navigation.
+router.beforeResolve(wholeDictionaryFor)
+
 // frappe-ui 1.0 opens no socket and installs no v1 `resources` option API
 // (crm uses neither); the boot-aware socket is created below and set as $socket.
 app.use(FrappeUI)
@@ -123,6 +132,11 @@ if (import.meta.env.DEV) {
   // script, which the page loads after this entry so both come in parallel,
   // or mounts at once with the dictionary this browser kept from its last load.
   mountWhenTranslated(() => app.mount('#app'))
+  // On the landing route that script is the first part: the whole set loads
+  // once the first route's chunks are in, not beside them.
+  const loadWhole = () => loadWholeDictionary()
+  Promise.resolve(router.isReady()).then(loadWhole, loadWhole)
+  setTimeout(loadWhole, 10000)
 }
 
 if (import.meta.env.DEV) {

@@ -23,10 +23,12 @@
     <script type="module" src="/src/main.js"></script>
     <!-- The translations this build uses (crm/shell_dictionary.py); immutable per version.
          After the module entry, so the app evaluates while this downloads; main.js waits for
-         it before mounting (utils/translationsReady.js). -->
+         it before mounting (utils/translationsReady.js). On the landing route it is the set's
+         small first part and data-full names the whole set, loaded after the first route. -->
     <script
       defer
-      src="/api/method/crm.www.crm.translations?v={{ translations_version }}"
+      src="/api/method/crm.www.crm.translations?{{ translations_query }}"
+      data-full="{{ translations_full_query }}"
     ></script>
   </body>
 </html>

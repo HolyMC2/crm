@@ -25,6 +25,14 @@ Values are copied as they are, so every shipped key translates exactly as before
 a key outside the set falls back to its English source in translate().
 Without a translation-keys.json (vite dev server, an unbuilt tree) the whole
 dictionary is shipped.
+
+Each built set also carries a first part, the page's first dictionary on the
+landing route: the shipped keys among the build's `first` literals (the modules
+of the entry, the shell and Hoy, and the chunks they import statically) and the
+record names above (a deal's stage on Hoy). It is a few kilobytes where the
+whole set is hundreds, so a cold load mounts after it and fetches the whole set
+once the first route is up (frontend/src/utils/translationsReady.js). It sets
+window.translated_messages_first, never window.translated_messages.
 """
 
 import ast
@@ -66,7 +74,10 @@ QUEUED_SECONDS = 300
 TARGET_FIELDTYPES = ("Link", "Table", "Table MultiSelect")
 SKIP_DIRS = ("public", "node_modules", "__pycache__", "tests", "patches")
 
-_listing: dict[str, tuple[int, str, frozenset[str]]] = {}
+# The first part's global (frontend/src/utils/translationsReady.js reads it).
+FIRST_VARIABLE = "translated_messages_first"
+
+_listing: dict[str, tuple[int, str, frozenset[str], frozenset[str] | None]] = {}
 _warned_missing: set[str] = set()
 
 
@@ -78,31 +89,62 @@ def build_literals() -> tuple[str, frozenset[str] | None]:
 	except OSError:
 		_warn_missing(path)
 		return "full", None
-	cached = _listing.get(path)
-	if cached and cached[0] == mtime:
-		return cached[1], cached[2]
-	# The path is the app's own build output under get_app_path, never request input.
-	with open(path, "rb") as f:  # nosemgrep: frappe-security-file-traversal
-		raw = f.read()
-	entry = (mtime, hashlib.sha1(raw).hexdigest()[:16], frozenset(json.loads(raw)["literals"]))
-	_listing[path] = entry
+	entry = _read_listing(path, mtime)
 	return entry[1], entry[2]
 
 
-def script() -> tuple[str, bytes]:
+def build_first_literals() -> frozenset[str] | None:
+	"""The literals of the first screen's modules; None without a build or in a build that does
+	not list them."""
+	path = frappe.get_app_path(APP, *KEYS_FILE)
+	try:
+		mtime = os.stat(path).st_mtime_ns
+	except OSError:
+		return None
+	return _read_listing(path, mtime)[3]
+
+
+def _read_listing(path: str, mtime: int) -> tuple[int, str, frozenset[str], frozenset[str] | None]:
+	cached = _listing.get(path)
+	if cached and cached[0] == mtime:
+		return cached
+	# The path is the app's own build output under get_app_path, never request input.
+	with open(path, "rb") as f:  # nosemgrep: frappe-security-file-traversal
+		raw = f.read()
+	listing = json.loads(raw)
+	first = listing.get("first")
+	entry = (
+		mtime,
+		hashlib.sha1(raw).hexdigest()[:16],
+		frozenset(listing["literals"]),
+		frozenset(first) if isinstance(first, list) else None,
+	)
+	_listing[path] = entry
+	return entry
+
+
+def script(part: str = "") -> tuple[str, bytes]:
 	"""(version, classic script setting window.translated_messages) for the session language.
 
 	While the set for this build is being built (a few seconds after a deploy, a meta change or a
 	Translation edit) it is the last set stored for the language, under its own version; only a
 	language with no stored set yet gets the whole dictionary under version "", which no page
 	links.
+
+	part="first" is the set's first part, setting window.translated_messages_first; a set built
+	before first parts existed (or a pending build) answers with the whole set under version "",
+	which the page also reads as a first dictionary.
 	"""
 	field = _field()
 	entry = _entry(field)
 	if entry is None:
 		_queue_build(field)
 		return "", _payload(_dictionary(frappe.local.lang))
-	return entry
+	if part == "first":
+		if entry[2]:
+			return entry[2], entry[3]
+		return "", entry[1]
+	return entry[0], entry[1]
 
 
 def version() -> str:
@@ -118,23 +160,46 @@ def version() -> str:
 	return entry[0]
 
 
-def _entry(field: str) -> tuple[str, bytes] | None:
-	"""The set to serve for this field: its own build, or while that is pending the last set stored
-	for its language (queuing the build); None when the language has no set yet."""
+def first_version() -> str:
+	"""The version of the set's first part; "" when it has none (no build listing, a set built
+	before first parts existed, a language never built)."""
+	field = _field()
+	# A small field of its own: the page asks on every load, and "p|" holds the whole payload.
+	current = frappe.cache.hget(CACHE_KEY, "fv|" + field)
+	if current is not None:
+		return current
+	entry = _entry(field)
+	if entry is None:
+		return ""
+	return entry[2]
+
+
+def _entry(field: str) -> tuple[str, bytes, str, bytes] | None:
+	"""(version, payload, first version, first payload) of the set to serve for this field: its own
+	build, or while that is pending the last set stored for its language (queuing the build); None
+	when the language has no set yet. A set without a first part has "" and b"" there."""
 	cached = frappe.cache.hget(CACHE_KEY, "p|" + field)
 	if cached is not None:
 		if frappe.cache.hget(CACHE_KEY, "v|" + field) is None:
 			# A set served while its build runs: queue again if that job was lost (the marker lapsed).
 			_queue_build(field)
-		return tuple(cached[:2])
+		return _with_first(cached)
 	restored = _restore(field)
 	if restored is None:
 		return None
-	current, payload, fresh = restored
-	_cache(field, current, payload, fresh=fresh)
+	current, payload, fresh, first = restored
+	_cache(field, current, payload, fresh=fresh, first=first)
 	if not fresh:
 		_queue_build(field)
-	return current, payload
+	return current, payload, first[0], first[1]
+
+
+def _with_first(cached) -> tuple[str, bytes, str, bytes]:
+	# A tuple cached before first parts existed has two items.
+	cached = tuple(cached)
+	if len(cached) >= 4:
+		return cached[0], cached[1], cached[2] or "", cached[3] or b""
+	return cached[0], cached[1], "", b""
 
 
 def build(lang: str, field: str) -> None:
@@ -144,11 +209,14 @@ def build(lang: str, field: str) -> None:
 	try:
 		# A failed load raises here, so it is never cached: pages keep the last stored set (or
 		# the whole dictionary) and the next page load queues the build again.
-		payload = _payload(shipped_messages(_dictionary(lang, strict=True), build_literals()[1]))
+		literals = build_literals()[1]
+		messages = shipped_messages(_dictionary(lang, strict=True), literals)
+		payload = _payload(messages)
 		current = hashlib.sha256(payload).hexdigest()[:16]
-		_store(field, current, payload, built)
+		first = _first_part(messages, literals)
+		_store(field, current, payload, built, first=first)
 		# A meta change while this ran: the set is served, but built again.
-		_cache(field, current, payload, fresh=_changed_at() <= built)
+		_cache(field, current, payload, fresh=_changed_at() <= built, first=first)
 	finally:
 		frappe.cache.delete(_queued_key(field))
 
@@ -194,8 +262,31 @@ def clear(*_args) -> None:
 				pass
 
 
-def _cache(field: str, current: str, payload: bytes, fresh: bool = True) -> None:
-	frappe.cache.hset(CACHE_KEY, "p|" + field, (current, payload))
+def _first_part(messages: dict[str, str], literals: frozenset[str] | None) -> tuple[str, bytes]:
+	"""(version, payload) of the set's first part; ("", b"") without a build listing of it."""
+	first = build_first_literals()
+	if literals is None or first is None:
+		return "", b""
+	payload = _payload(first_messages(messages, first | record_keys(literals)), FIRST_VARIABLE)
+	return hashlib.sha256(payload).hexdigest()[:16], payload
+
+
+def first_messages(shipped: dict[str, str], keys: frozenset[str] | set[str]) -> dict[str, str]:
+	"""The shipped keys the first screen can ask for: a key among `keys`, or `message:context`
+	whose message is (the shipped set already checked its context)."""
+	first = {}
+	for key, value in shipped.items():
+		message, sep, _context = key.rpartition(":")
+		if key in keys or (sep and message in keys):
+			first[key] = value
+	return first
+
+
+def _cache(
+	field: str, current: str, payload: bytes, fresh: bool = True, first: tuple[str, bytes] = ("", b"")
+) -> None:
+	frappe.cache.hset(CACHE_KEY, "p|" + field, (current, payload, first[0], first[1]))
+	frappe.cache.hset(CACHE_KEY, "fv|" + field, first[0])
 	if fresh:
 		frappe.cache.hset(CACHE_KEY, "v|" + field, current)
 	else:
@@ -245,10 +336,20 @@ def _write_atomic(path: str, text: str) -> None:
 	os.replace(tmp, path)
 
 
-def _store(field: str, current: str, payload: bytes, built: float) -> None:
+def _store(
+	field: str, current: str, payload: bytes, built: float, first: tuple[str, bytes] = ("", b"")
+) -> None:
 	lang = field.partition("|")[0]
 	path = _store_path(field)
-	data = {"field": field, "lang": lang, "version": current, "built": built, "payload": payload.decode()}
+	data = {
+		"field": field,
+		"lang": lang,
+		"version": current,
+		"built": built,
+		"payload": payload.decode(),
+		"first_version": first[0],
+		"first_payload": first[1].decode(),
+	}
 	try:
 		_write_atomic(path, json.dumps(data))
 	except OSError:
@@ -296,14 +397,21 @@ def _changed_at() -> float:
 		return 0.0
 
 
-def _restore(field: str) -> tuple[str, bytes, bool] | None:
-	"""(version, payload, current) of the stored set for this field, else the newest stored set of
-	its language (never current); None without one."""
+def _stored_first(data: dict) -> tuple[str, bytes]:
+	# A file stored before first parts existed has none.
+	if data.get("first_version") and data.get("first_payload"):
+		return data["first_version"], data["first_payload"].encode()
+	return "", b""
+
+
+def _restore(field: str) -> tuple[str, bytes, bool, tuple[str, bytes]] | None:
+	"""(version, payload, current, (first version, first payload)) of the stored set for this
+	field, else the newest stored set of its language (never current); None without one."""
 	data = _read(_store_path(field))
 	if data and data.get("field") == field:
 		built = float(data.get("built") or 0)
 		current = built >= _changed_at() and time.time() - built < CACHE_SECONDS
-		return data["version"], data["payload"].encode(), current
+		return data["version"], data["payload"].encode(), current, _stored_first(data)
 	lang = field.partition("|")[0]
 	tag = _lang_tag(lang)
 	newest = []
@@ -317,7 +425,7 @@ def _restore(field: str) -> tuple[str, bytes, bool] | None:
 	for _mtime, path in sorted(newest, reverse=True):
 		data = _read(path)
 		if data and data.get("lang") == lang:
-			return data["version"], data["payload"].encode(), False
+			return data["version"], data["payload"].encode(), False, _stored_first(data)
 	return None
 
 
@@ -363,14 +471,14 @@ def _field() -> str:
 	return f"{lang}|{build_literals()[0]}|{_user_translations_fingerprint(lang)}"
 
 
-def _payload(messages: dict[str, str]) -> bytes:
+def _payload(messages: dict[str, str], variable: str = "translated_messages") -> bytes:
 	# The dictionary travels as one string literal for JSON.parse: an engine parses a quarter
 	# megabyte that way in one pass, where an object literal is code to tokenise. The JSON
 	# text has no raw control characters, so a doubled backslash and an escaped apostrophe
 	# make it a valid single-quoted literal.
 	body = frappe.as_json(messages, indent=None, separators=(",", ":"), ensure_ascii=False)
 	literal = body.replace("\\", "\\\\").replace("'", "\\'")
-	return f"window.translated_messages = JSON.parse('{literal}');".encode()
+	return f"window.{variable} = JSON.parse('{literal}');".encode()
 
 
 def shipped_messages(dictionary: dict[str, str], literals: frozenset[str] | None) -> dict[str, str]:
@@ -397,7 +505,26 @@ def runtime_keys(literals: frozenset[str]) -> set[str]:
 	keys = {name for name, row in doctypes.items() if not row.istable}
 	for doctype in named | targets:
 		keys |= _doctype_strings(doctype)
-	translated = set(get_translated_doctypes()) & (named | targets)
+	keys |= _record_names(doctypes, named, set(get_translated_doctypes()) & (named | targets))
+	keys |= python_literals(APP)
+	return keys
+
+
+def record_keys(literals: frozenset[str]) -> set[str]:
+	"""The first part's record names: those of the small DocTypes the build names (a deal's stage,
+	a lead source). Translated DocTypes' records (every DocType name, countries, units) stay in the
+	whole set only."""
+	doctypes = {
+		row.name: row
+		for row in frappe.get_all("DocType", fields=["name", "istable", "issingle", "is_virtual"])
+	}
+	named = {name for name in doctypes if name in literals}
+	return _record_names(doctypes, named, translated=set())
+
+
+def _record_names(doctypes: dict, named: set[str], translated: set[str]) -> set[str]:
+	"""Record names of the small DocTypes among `named` and of every DocType in `translated`."""
+	names_found = set()
 	small = {name for name in named if not (doctypes[name].istable or doctypes[name].issingle)}
 	for doctype in translated | small:
 		row = doctypes.get(doctype)
@@ -405,9 +532,8 @@ def runtime_keys(literals: frozenset[str]) -> set[str]:
 			continue
 		names = frappe.get_all(doctype, pluck="name", limit=0 if doctype in translated else RECORD_LIMIT + 1)
 		if doctype in translated or len(names) <= RECORD_LIMIT:
-			keys.update(names)
-	keys |= python_literals(APP)
-	return keys
+			names_found.update(names)
+	return names_found
 
 
 def _targets(doctype: str) -> set[str]:

@@ -13,7 +13,7 @@ from werkzeug.test import EnvironBuilder
 from werkzeug.wrappers import Request
 
 from crm import shell_dictionary
-from crm.www.crm import _translations_version, get_boot, translations
+from crm.www.crm import _translations_queries, _translations_version, get_boot, translations
 
 FULL = ("full", None)
 
@@ -37,6 +37,10 @@ class TestTranslationsScript(IntegrationTestCase):
 			os.remove(name)
 		with suppress(FileNotFoundError):
 			os.remove(shell_dictionary._changed_path())
+		# The site's real build output lists no first part here unless a test names one.
+		first = patch("crm.shell_dictionary.build_first_literals", return_value=None)
+		first.start()
+		self.addCleanup(first.stop)
 
 	def patched(self, messages, listing=FULL, user_translations=None, enqueue=_build_now):
 		return (
@@ -46,10 +50,10 @@ class TestTranslationsScript(IntegrationTestCase):
 			patch("frappe.enqueue", side_effect=enqueue),
 		)
 
-	def serve(self, messages, v=None, headers=None, **kwargs):
+	def serve(self, messages, v=None, headers=None, part=None, **kwargs):
 		a, b, c, d = self.patched(messages, **kwargs)
 		with a, b, c, d, patch("frappe.request", _request(headers)):
-			return translations(v)
+			return translations(v, part)
 
 	def run_queued(self, job, messages, **kwargs):
 		# The worker runs the queued job later, with the same dictionary and build.
@@ -431,3 +435,129 @@ class TestTranslationsScript(IntegrationTestCase):
 		logger.warning.assert_called_once()
 		self.assertIn("translation-keys.json", logger.warning.call_args[0][0])
 		shell_dictionary._warned_missing.clear()
+
+	def first_part(self, first, records=frozenset()):
+		return (
+			patch("crm.shell_dictionary.build_first_literals", return_value=first),
+			patch("crm.shell_dictionary.record_keys", return_value=set(records)),
+			patch("crm.shell_dictionary.runtime_keys", return_value=set(records)),
+		)
+
+	def test_the_first_part_is_the_first_screens_keys_under_its_own_immutable_version(self):
+		dictionary = {
+			"Hoy": "Hoy",
+			"Deals": "Tratos",
+			"Open": "Abrir",
+			"Open:Hoy": "Abrir hoy",
+			"Won": "Ganado",
+			"Unused": "Sin uso",
+		}
+		listing = ("abc", frozenset({"Hoy", "Deals", "Open"}))
+		a, b, c = self.first_part(frozenset({"Hoy", "Open"}), records={"Won"})
+		with a, b, c:
+			self.page_version(dictionary, listing=listing)
+			v = self.page_version(dictionary, listing=listing)
+			x, y, z, w = self.patched(dictionary, listing=listing)
+			with x, y, z, w:
+				first = shell_dictionary.first_version()
+			self.assertEqual(len(first), 16)
+			self.assertNotEqual(first, v)
+			response = self.serve(dictionary, v=first, part="first", listing=listing)
+			self.assertEqual(response.headers["Cache-Control"], "private, max-age=31536000, immutable")
+			# Its own global, so it never stands in for the whole set; a stage name the server sends
+			# (a record) is in it, a route's words are not.
+			self.assertEqual(
+				response.get_data(as_text=True),
+				'window.translated_messages_first = JSON.parse(\'{"Hoy":"Hoy","Open":"Abrir",'
+				'"Open:Hoy":"Abrir hoy","Won":"Ganado"}\');',
+			)
+			whole = self.serve(dictionary, v=v, listing=listing).get_data(as_text=True)
+			self.assertTrue(whole.startswith("window.translated_messages = "))
+			self.assertIn('"Deals":"Tratos"', whole)
+			# Another version of the first part revalidates instead of pinning old content.
+			stale = self.serve(dictionary, v="0" * 16, part="first", listing=listing)
+			self.assertEqual(stale.headers["Cache-Control"], "private, no-cache")
+
+	def test_the_landing_route_links_the_first_part_and_any_other_path_the_whole_set(self):
+		listing = ("abc", frozenset({"Hoy"}))
+		a, b, c = self.first_part(frozenset({"Hoy"}))
+		with a, b, c:
+			self.page_version({"Hoy": "Hoy"}, listing=listing)
+			v = self.page_version({"Hoy": "Hoy"}, listing=listing)
+			x, y, z, w = self.patched({"Hoy": "Hoy"}, listing=listing)
+			with x, y, z, w:
+				first = shell_dictionary.first_version()
+				for path in ("/crm", "/crm/", "/crm/hoy", "/crm/hoy?x=1"):
+					self.assertEqual(
+						_translations_queries(path, v), (f"part=first&v={first}", f"v={v}"), path
+					)
+				for path in ("/crm/deals/CRM-DEAL-1", "/crm/inbox", "/crm/hoyx", ""):
+					self.assertEqual(_translations_queries(path, v), (f"v={v}", ""), path)
+				# No built set yet: the whole dictionary under the empty version, as before.
+				self.assertEqual(_translations_queries("/crm", ""), ("v=", ""))
+
+	def test_a_set_without_a_first_part_links_the_whole_set_and_answers_part_first_with_it(self):
+		# No build listing (vite dev, an unbuilt tree): no first part at all.
+		messages = {"Hoy": "Hoy"}
+		self.page_version(messages)
+		v = self.page_version(messages)
+		x, y, z, w = self.patched(messages)
+		with x, y, z, w:
+			self.assertEqual(shell_dictionary.first_version(), "")
+			self.assertEqual(_translations_queries("/crm", v), (f"v={v}", ""))
+		# A tuple cached by the code before first parts: read as a set without one.
+		with x, y, z, w:
+			field = shell_dictionary._field()
+		frappe.cache.hset(shell_dictionary.CACHE_KEY, "p|" + field, (v, b"window.translated_messages = {};"))
+		frappe.cache.hdel(shell_dictionary.CACHE_KEY, "fv|" + field)
+		with x, y, z, w:
+			self.assertEqual(shell_dictionary.first_version(), "")
+			self.assertEqual(shell_dictionary.script("first"), ("", b"window.translated_messages = {};"))
+		response = self.serve(messages, v="", part="first")
+		self.assertEqual(response.headers["Cache-Control"], "private, no-cache")
+
+	def test_a_cache_clear_restores_the_first_part_from_the_site_store(self):
+		dictionary = {"Hoy": "Hoy", "Deals": "Tratos"}
+		listing = ("abc", frozenset({"Hoy", "Deals"}))
+		a, b, c = self.first_part(frozenset({"Hoy"}))
+		with a, b, c:
+			self.page_version(dictionary, listing=listing)
+			self.page_version(dictionary, listing=listing)
+			x, y, z, w = self.patched(dictionary, listing=listing)
+			with x, y, z, w:
+				first = shell_dictionary.first_version()
+			frappe.cache.delete_value(shell_dictionary.CACHE_KEY)
+			frappe.local.cache.pop(frappe.cache.make_key(shell_dictionary.CACHE_KEY), None)
+
+			def never(method, **kwargs):
+				self.fail("a stored set needs no build")
+
+			x, y, z, w = self.patched(dictionary, listing=listing, enqueue=never)
+			with x, y, z, w:
+				self.assertEqual(shell_dictionary.first_version(), first)
+			body = self.serve(dictionary, v=first, part="first", listing=listing, enqueue=never)
+			self.assertEqual(body.headers["Cache-Control"], "private, max-age=31536000, immutable")
+			self.assertNotIn("Tratos", body.get_data(as_text=True))
+		# A file the code before first parts stored has none.
+		data = shell_dictionary._read(shell_dictionary._stored_files()[0])
+		data.pop("first_version")
+		data.pop("first_payload")
+		self.assertEqual(shell_dictionary._stored_first(data), ("", b""))
+
+	def test_first_messages_keep_a_context_key_whose_message_is_on_the_first_screen(self):
+		shipped = {"Open": "Abrir", "Open:Compras": "Abrir pedido", "Close:Compras": "Cerrar", "Hoy": "Hoy"}
+		self.assertEqual(
+			shell_dictionary.first_messages(shipped, {"Open", "Hoy"}),
+			{"Open": "Abrir", "Open:Compras": "Abrir pedido", "Hoy": "Hoy"},
+		)
+
+	def test_record_keys_are_the_record_names_among_the_runtime_keys(self):
+		if not frappe.db.exists("CRM Deal Status", "Won"):
+			frappe.get_doc({"doctype": "CRM Deal Status", "deal_status": "Won"}).insert(
+				ignore_permissions=True
+			)
+		named = frozenset({"CRM Deal", "CRM Deal Status"})
+		records = shell_dictionary.record_keys(named)
+		self.assertIn("Won", records)
+		self.assertNotIn("ToDo", records)
+		self.assertTrue(records <= shell_dictionary.runtime_keys(named))

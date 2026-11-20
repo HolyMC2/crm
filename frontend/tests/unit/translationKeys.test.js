@@ -3,7 +3,11 @@
 // (scripts/verify-translation-keys.mjs). These pin both halves.
 import { describe, expect, it } from 'vitest'
 import { parseAst } from 'vite'
-import { stringLiterals } from '../../scripts/translation-keys.mjs'
+import {
+  FIRST_ROUTE,
+  firstChunks,
+  stringLiterals,
+} from '../../scripts/translation-keys.mjs'
 import {
   callEnd,
   missingKeys,
@@ -35,6 +39,66 @@ describe('stringLiterals', () => {
 
   it('throws on code it cannot parse, so the plugin can report the module', () => {
     expect(() => stringLiterals(parseAst('const a = "unterminated'))).toThrow()
+  })
+})
+
+describe('firstChunks', () => {
+  const root = '/app/frontend'
+  const chunk = (fileName, extra = {}) => ({
+    type: 'chunk',
+    fileName,
+    imports: [],
+    isEntry: false,
+    facadeModuleId: null,
+    ...extra,
+  })
+  const bundle = {
+    'index.js': chunk('index.js', { isEntry: true, imports: ['vue.js'] }),
+    'vue.js': chunk('vue.js'),
+    'Hoy.js': chunk('Hoy.js', {
+      facadeModuleId: `${root}/src/pages/Hoy.vue`,
+      imports: ['HoySection.js', 'vue.js'],
+    }),
+    'HoySection.js': chunk('HoySection.js', { imports: ['shared.js'] }),
+    'shared.js': chunk('shared.js'),
+    'Deal360.js': chunk('Deal360.js', {
+      facadeModuleId: `${root}/src/pages/Deal360.vue`,
+      imports: ['shared.js', 'deal.js'],
+    }),
+    'deal.js': chunk('deal.js'),
+    // A dynamic entry sharing its chunk has no facade module (MuelleShell).
+    'Shell.js': chunk('Shell.js', {
+      moduleIds: [
+        `${root}/src/components/shell/ShellRail.vue`,
+        `${root}/src/components/shell/MuelleShell.vue`,
+      ],
+    }),
+    'style.css': { type: 'asset', fileName: 'style.css' },
+  }
+
+  it('is the entry, the first route chunks and what they import statically', () => {
+    const files = firstChunks(bundle, root)
+      .map((c) => c.fileName)
+      .sort()
+    expect(files).toEqual([
+      'Hoy.js',
+      'HoySection.js',
+      'Shell.js',
+      'index.js',
+      'shared.js',
+      'vue.js',
+    ])
+  })
+
+  it('leaves out every other route, even one that shares a chunk', () => {
+    const files = firstChunks(bundle, root).map((c) => c.fileName)
+    expect(files).not.toContain('Deal360.js')
+    expect(files).not.toContain('deal.js')
+  })
+
+  it('names the landing page and the shell', () => {
+    expect(FIRST_ROUTE).toContain('src/pages/Hoy.vue')
+    expect(FIRST_ROUTE).toContain('src/components/shell/MuelleShell.vue')
   })
 })
 

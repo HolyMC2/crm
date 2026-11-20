@@ -38,11 +38,12 @@ year.
 
 ## Serving and caching
 
-- `crm.html` loads `/api/method/crm.www.crm.translations?v=<version>` as a `defer` script placed
-  after the module entry, so the entry evaluates while the dictionary downloads; `main.js` waits for
-  the script (`utils/translationsReady.js`, 10 s cap) before mounting, so the first render reads it.
-  The version is the first 16 hex characters of the payload's sha256 and comes from
-  `context.translations_version`.
+- `crm.html` loads `/api/method/crm.www.crm.translations?<query>` as a `defer` script placed after
+  the module entry, so the entry evaluates while the dictionary downloads; `main.js` waits for the
+  script (`utils/translationsReady.js`, 10 s cap) before mounting, so the first render reads it.
+  The query is `v=<version>` (`context.translations_query`), or on the landing route the first part
+  (below). The version is the first 16 hex characters of the payload's sha256
+  (`context.translations_version`).
 - A matching `v` is answered with `private, max-age=31536000, immutable`. Any other `v` (an old tab,
   or `""`) gets `private, no-cache` with an ETag.
 - The server cache is the redis hash `crm_shell_dictionary`. Its fields are keyed by
@@ -60,6 +61,37 @@ year.
 - A queued build sets a marker that expires after 300 s (`QUEUED_SECONDS`), and the marker is
   removed when the job ends or `frappe.enqueue` raises. A lost job or a down queue delays the
   reduced set by five minutes at most, never by hours.
+
+## The first part: the landing route does not wait for the whole set
+
+The whole set is about 320 KB gzip, more than the app's entry. On a cold load over Slow 4G it came
+in last and held the mount (go-live audit 11-19, finding 79). So every built set also carries a
+**first part**: the shipped keys the first screen can render, 24 KB gzip and 1,923 keys on the lab
+(2026-11-20) against 320 KB and 18,759 for the whole set.
+
+- **Build.** `translation-keys.json` also lists `first`: the literals of the modules of the entry
+  chunk, of the chunks that hold a `FIRST_ROUTE` module (`translation-keys.mjs`: the shell, the
+  desktop rail's bell and Hoy, the page every worker lands on; matched by module, since a dynamic
+  entry that shares its chunk has no facade module) and of every chunk they import statically.
+  Sheets and routes they load on demand are not in it.
+- **Server.** `shell_dictionary.build` keeps, from the shipped set, the keys among `first` plus the
+  record names of the small DocTypes the build names (`record_keys`: a deal's stage on Hoy; not the
+  records of translated DocTypes such as every DocType name, countries or units, which tripled it),
+  and a `message:context` key whose message is among them. It is stored and cached with the set (`p|` holds both, `fv|` the first part's
+  version, the site file `first_version`/`first_payload`) and served by
+  `translations?part=first&v=<its version>`, immutable like the whole set. Its script sets
+  `window.translated_messages_first`, never `window.translated_messages`. A set cached or stored by
+  the code before first parts has none: the page then links the whole set as before, and a
+  `part=first` request gets the whole set revalidating.
+- **Page.** `crm.py` links the first part only for `/crm` and `/crm/hoy` (`FIRST_ROUTE_PATHS`), as
+  `?part=first&v=…` with `data-full="v=<whole version>"`; any other path, a deep link from a push
+  for instance, links the whole set with an empty `data-full`, as before.
+- **Client.** `utils/translationsReady.js` mounts once the first part has run (or at once with a
+  whole set this browser kept), then loads the whole set as a script when the router's first route
+  is in (`main.js`, at most 10 s later), makes it the config and repaints (`applyNewer`), and keeps
+  it in IndexedDB. A navigation to a route outside `FIRST_ROUTE_NAMES` before it has run waits for it
+  (`router.beforeResolve(wholeDictionaryFor)`, 10 s cap), so no screen shows English while it loads.
+  A first part that fails starts the whole set at once.
 
 ## Fallbacks
 

@@ -21,6 +21,9 @@ def get_context():
 	context = frappe._dict()
 	context.boot = get_boot(neutral=neutral, module=module)
 	context.translations_version = _translations_version()
+	context.translations_query, context.translations_full_query = _translations_queries(
+		path, context.translations_version
+	)
 	if frappe.session.user != "Guest" and not neutral:
 		capture("active_site", "crm")
 	return context
@@ -407,9 +410,10 @@ def get_boot(neutral=False, module="contactos"):
 
 
 @frappe.whitelist(methods=["GET"])
-def translations(v: str | None = None):
+def translations(v: str | None = None, part: str | None = None):
 	"""The translations this build uses (crm.shell_dictionary) as a classic script that sets
-	window.translated_messages.
+	window.translated_messages, or with part=first its small first part, which sets
+	window.translated_messages_first.
 
 	The page links it as ?v=<version>; that URL never changes content, so the browser keeps it
 	for a year and warm loads make no request. Any other v (a tab opened before a deploy or a
@@ -418,7 +422,7 @@ def translations(v: str | None = None):
 	"""
 	from crm import shell_dictionary
 
-	current, payload = shell_dictionary.script()
+	current, payload = shell_dictionary.script("first" if part == "first" else "")
 	response = Response(payload, mimetype="application/javascript")
 	if current and v == current:
 		response.headers["Cache-Control"] = "private, max-age=31536000, immutable"
@@ -436,6 +440,33 @@ def _translations_version() -> str:
 		return shell_dictionary.version()
 	except Exception:
 		frappe.log_error("crm translations version")
+		return ""
+
+
+# The paths that open the landing route (the router sends / to Hoy): the pages whose first screen
+# the first part covers (frontend/scripts/translation-keys.mjs FIRST_ROUTE).
+FIRST_ROUTE_PATHS = ("/crm", "/crm/hoy")
+
+
+def _translations_queries(path: str, version: str) -> tuple[str, str]:
+	"""The page's dictionary script query and its data-full query. The landing route mounts with
+	the set's small first part and loads the whole set after its first route
+	(frontend/src/utils/translationsReady.js); any other path links the whole set, as before."""
+	first = _translations_first_version(path) if version else ""
+	if first:
+		return f"part=first&v={first}", f"v={version}"
+	return f"v={version}", ""
+
+
+def _translations_first_version(path: str) -> str:
+	if (path or "").split("?", 1)[0].split("#", 1)[0].rstrip("/") not in FIRST_ROUTE_PATHS:
+		return ""
+	from crm import shell_dictionary
+
+	try:
+		return shell_dictionary.first_version()
+	except Exception:
+		frappe.log_error("crm translations first version")
 		return ""
 
 
