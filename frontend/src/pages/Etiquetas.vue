@@ -138,15 +138,27 @@
               @pdf="pdf"
               @retry="retry"
               @download="download"
+              @dialog="printWithDialog"
               @again="sendAgain"
               @job="openJob"
               @clear="clearList(true)"
               @dismiss="result = null"
             />
-            <p class="flex items-start gap-2 px-1 text-xs text-ink-gray-6">
+            <div
+              class="flex items-start gap-2 px-1 text-xs text-ink-gray-6"
+              data-etq-printer-line
+            >
               <Icon icon="printer" class="mt-0.5 size-4 flex-none" />
-              {{ printerText }}
-            </p>
+              <p class="min-w-0 flex-1">{{ printerText }}</p>
+              <button
+                type="button"
+                class="press -my-2 min-h-9 flex-none rounded-6 px-2 font-medium text-ink-gray-8 hover:bg-surface-gray-2"
+                data-etq-printer-change
+                @click="printersOpen = true"
+              >
+                {{ labelPrinter ? 'Cambiar' : 'Elegir impresora' }}
+              </button>
+            </div>
           </div>
           <ul
             v-if="fit.text || fit.notes?.length"
@@ -483,6 +495,7 @@
             @pdf="pdf"
             @retry="retry"
             @download="download"
+            @dialog="printWithDialog"
             @again="sendAgain"
             @job="openJob"
             @clear="clearList(true)"
@@ -546,6 +559,12 @@
       :row="piecesRow"
       @pick="pickPieces"
     />
+    <EtqPrinterSheet
+      v-if="printersMounted"
+      v-model:open="printersOpen"
+      :current="labelPrinter"
+      @pick="chooseLabelPrinter"
+    />
   </div>
 </template>
 <script setup>
@@ -578,6 +597,12 @@ import {
   isWide as wide,
 } from '@/composables/breakpoint'
 import { useRecentPicks } from '@/composables/useRecentPicks'
+import {
+  chooseLabelPrinter,
+  labelPrinter,
+  printDirect,
+  printsDirect,
+} from '@/composables/etiquetasDirecto'
 import { documentRoute } from '@/documentos/registry'
 import {
   SOURCES,
@@ -631,6 +656,9 @@ const EtqSourceSheet = defineAsyncComponent(
 const EtqUnitsSheet = defineAsyncComponent(
   () => import('@/components/etiquetas/EtqUnitsSheet.vue'),
 )
+const EtqPrinterSheet = defineAsyncComponent(
+  () => import('@/components/etiquetas/EtqPrinterSheet.vue'),
+)
 
 const route = useRoute()
 const router = useRouter()
@@ -662,6 +690,10 @@ const designMeta = computed(() => {
 })
 const printerText = computed(() => {
   const size = currentLayout.value?.size
+  if (direct.value)
+    return `Salen directo en «${labelPrinter.value}», sin diálogo.`
+  if (labelPrinter.value)
+    return 'Esta plantilla no dice su medida: sale con el diálogo de impresión.'
   const base =
     boot.value?.printer?.text ||
     'Imprime con la impresora que elijas en el diálogo de impresión.'
@@ -1310,12 +1342,27 @@ function printArgs(output) {
   }
 }
 
+// This computer's label printer, through Muelle QZ, when it has one and the
+// label says its size; the browser's dialog otherwise.
+const printersOpen = ref(false)
+const printersMounted = ref(false)
+watch(printersOpen, (open) => open && (printersMounted.value = true))
+const direct = computed(() =>
+  printsDirect({
+    printer: labelPrinter.value,
+    layout: currentLayout.value,
+    phone: phone.value,
+  }),
+)
+
 async function print() {
   if (blocked.value) return
   busy.value = 'print'
   result.value = null
   try {
-    await send(await etiquetasApi('print_labels', printArgs('html')))
+    if (direct.value)
+      await sendDirect(await etiquetasApi('print_labels', printArgs('pdf')))
+    else await send(await etiquetasApi('print_labels', printArgs('html')))
   } catch (error) {
     result.value = { ok: false, reason: problemText(error) }
   } finally {
@@ -1326,7 +1373,11 @@ async function print() {
 // The browser prints; the job learns how it went.
 async function send(answer) {
   const outcome = await printHtml(answer?.html || '')
-  let job = answer?.job
+  await finish(answer?.job, outcome, { html: answer?.html })
+}
+
+// Marks the job with what the print saw and shows it beside the button.
+async function finish(job, outcome, { html = '', printer = '' } = {}) {
   try {
     const marked = await etiquetasApi('mark', {
       job: job?.name,
@@ -1338,8 +1389,8 @@ async function send(answer) {
     // The labels went to the printer; the job's state catches up later.
   }
   result.value = outcome.ok
-    ? { ok: true, job }
-    : { ok: false, reason: outcome.reason, job, html: answer?.html }
+    ? { ok: true, job, printer }
+    : { ok: false, reason: outcome.reason, job, html, printer }
   counts.value = {
     ...counts.value,
     today: (counts.value.today || 0) + 1,
@@ -1347,8 +1398,37 @@ async function send(answer) {
   }
 }
 
+// QZ sends the PDF to the printer with no dialog; the job learns how it went.
+async function sendDirect(answer) {
+  const printer = labelPrinter.value
+  const outcome = await printDirect(answer?.pdf || '', {
+    printer,
+    layout: currentLayout.value,
+    title: answer?.job?.title,
+  })
+  await finish(answer?.job, outcome, { printer })
+}
+
 async function retry() {
   if (!result.value?.job) return print()
+  const again = !!result.value.printer && direct.value
+  busy.value = 'print'
+  try {
+    const answer = await etiquetasApi('reprint', {
+      job: result.value.job.name,
+      output: again ? 'pdf' : 'html',
+    })
+    if (again) await sendDirect(answer)
+    else await send(answer)
+  } catch (error) {
+    result.value = { ...result.value, reason: problemText(error) }
+  } finally {
+    busy.value = ''
+  }
+}
+// The way on when the direct print fails: the same labels, with the dialog.
+async function printWithDialog() {
+  if (!result.value?.job) return
   busy.value = 'print'
   try {
     await send(await etiquetasApi('reprint', { job: result.value.job.name }))

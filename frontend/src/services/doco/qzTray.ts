@@ -32,6 +32,9 @@ const SIGN_ENDPOINT = 'doco.docoutils.printing.qz.sign_message'
 const SETUP_ENDPOINT = 'doco.docoutils.printing.qz.setup_qz_certificate'
 const DOWNLOAD_ENDPOINT = 'doco.docoutils.printing.qz.get_certificate_download'
 
+/** The error every QZ call throws when QZ Tray does not answer on this computer. */
+export const QZ_UNAVAILABLE = 'QZ Tray is not available.'
+
 export const qzConnected = ref(false)
 export const qzConnecting = ref(false)
 export const qzCertStatus = ref<QzCertStatus>('unknown')
@@ -423,7 +426,7 @@ export async function printHtmlViaQz(
 
   if (!qz.websocket.isActive()) {
     const connected = await connectQzTray()
-    if (!connected) throw new Error('QZ Tray is not available.')
+    if (!connected) throw new Error(QZ_UNAVAILABLE)
   }
 
   let printer =
@@ -451,6 +454,52 @@ export async function printHtmlViaQz(
   const data = [{ type: 'pixel', format: 'html', flavor: 'plain', data: html }]
 
   await qz.print(config, data)
+}
+
+export interface QzLabelPdfOptions {
+  printerName: string
+  widthMm: number
+  heightMm: number
+  jobName?: string
+}
+
+/**
+ * QZ config for a PDF of labels, one label a page: the label's size in mm,
+ * no margins and no orientation. QZ hands an orientation to the printer as a
+ * job option, which turns the page on the label; without a size it takes the
+ * printer's paper and can print the label upside down.
+ */
+export function labelPdfConfig(options: QzLabelPdfOptions) {
+  return {
+    size: { width: options.widthMm, height: options.heightMm },
+    units: 'mm',
+    margins: 0,
+    scaleContent: true,
+    colorType: 'blackwhite',
+    jobName: options.jobName || null,
+  }
+}
+
+/** The printers QZ sees on this computer. Unlike findQzPrinters it selects none. */
+export async function listQzPrinters(): Promise<string[]> {
+  if (!(await connectQzTray())) throw new Error(QZ_UNAVAILABLE)
+  const result = await qz.printers.find()
+  if (Array.isArray(result)) return result.map(String)
+  return result ? [String(result)] : []
+}
+
+/** Sends a PDF (base64) of labels to a printer, with no print dialog. */
+export async function printLabelPdfViaQz(
+  base64: string,
+  options: QzLabelPdfOptions,
+) {
+  if (!base64) throw new Error('Nothing to print.')
+  if (!options.printerName) throw new Error('No QZ printer selected.')
+  if (!(await connectQzTray())) throw new Error(QZ_UNAVAILABLE)
+  const config = qz.configs.create(options.printerName, labelPdfConfig(options))
+  await qz.print(config, [
+    { type: 'pixel', format: 'pdf', flavor: 'base64', data: base64 },
+  ])
 }
 
 export async function printDocumentViaQz(options: QzPrintDocumentOptions) {

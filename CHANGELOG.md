@@ -3,6 +3,13 @@
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
 
+## 2026-11-20 — Etiquetas prints straight to the computer's label printer through Muelle QZ, with no print dialog (lane etiquetas-qz; not deployed)
+
+- **Why:** shops printed labels as a PDF and then from a PDF app, because the browser's dialog was flaky on label paper. A kiosk Chrome (`--kiosk-printing`) sends `window.print()` to its last printer, usually the ticket one.
+- **Change:** «Elegir impresora» beside the print button (from 1024 px) opens «Impresora de etiquetas»: the browser's dialog or a printer Muelle QZ sees on this computer, kept in this browser (`muelle:etiquetas:impresora`). With one picked, «Imprimir» asks doco for the PDF (`print_labels(output="pdf")`, one label a page at its size) and QZ prints it with no dialog (`printLabelPdfViaQz`: the label's size in mm, no margins, no orientation). The job is marked as before. If QZ is closed or the printer is gone, it says why, and offers «Volver a intentar» (QZ again) and «Imprimir con el diálogo». A computer without QZ sees the installers the site offers. A template without a size, and phones, keep the dialog.
+- **Proved:** QZ 2.2.5's own `PrintPDF` sent a lab 38 × 25 PDF to a stopped CUPS queue with the Phomemo M110 driver: with a size and no orientation, every page is an upright 38 × 25 label; without a size, QZ prints it upside down. Shots at 1280 and 1440, light and dark, against doco-mirror.
+- **Tests:** `tests/unit/etiquetasDirecto.test.js` (9: the QZ config, the base64 PDF, listing without choosing the ticket printer, the worker's words), `tests/unit/etiquetas.test.js` (+5: picking the printer, a direct print, QZ closed with the dialog fallback, the retry, a computer without QZ).
+
 ## 2026-11-20 — A phone's first /crm load mounts with a 30 KB first dictionary; the whole set follows (lane golive-crm-es; not deployed)
 
 - **Why:** go-live audit 11-19 (finding 79): the mount waits for the translations script, about 320 KB gzip, bigger than the app's entry. On a phone's first /crm load over Slow 4G it ended last and first paint waited for it. Lane golive-crm covered the load after a deploy (the kept dictionary); a browser's very first load still waited.

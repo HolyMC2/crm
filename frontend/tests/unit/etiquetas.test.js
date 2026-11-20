@@ -10,7 +10,15 @@ vi.mock('@/composables/useEtiquetas', async (original) => ({
   printHtml: vi.fn(async () => ({ ok: true })),
 }))
 
+// Muelle QZ, the way labels go straight to this computer's label printer.
+const qzClient = vi.hoisted(() => ({
+  listQzPrinters: vi.fn(async () => ['M110S', 'EPSON-TM-T20IIIL']),
+  printLabelPdfViaQz: vi.fn(async () => {}),
+}))
+vi.mock('@/services/doco/qzTray', () => qzClient)
+
 import * as etq from '@/composables/useEtiquetas'
+import { chooseLabelPrinter } from '@/composables/etiquetasDirecto'
 import Etiquetas from '@/pages/Etiquetas.vue'
 import EtiquetasTrabajo from '@/pages/EtiquetasTrabajo.vue'
 import TagSheet from '@/components/documentos/TagSheet.vue'
@@ -468,7 +476,9 @@ function stubApi() {
   vi.stubGlobal(
     'fetch',
     vi.fn(async (url, init) => {
-      const method = String(url).split('doco.workspaces.labels.')[1]
+      const method =
+        String(url).split('doco.workspaces.labels.')[1] ??
+        String(url).split('/api/method/')[1]
       const args = JSON.parse(init?.body || '{}')
       calls.push([method, args])
       const answer = answers[method]
@@ -780,6 +790,129 @@ describe('Etiquetas › Imprimir', () => {
     await mountAt('/productos/etiquetas')
     expect(text()).toContain('Aún no hay plantillas de etiqueta')
     expect(text()).toContain('Pide al encargado')
+  })
+})
+
+describe('Etiquetas › straight to the label printer', () => {
+  beforeEach(() => {
+    qzClient.listQzPrinters.mockClear()
+    qzClient.printLabelPdfViaQz.mockReset()
+    answers.print_labels = (args) => ({
+      job: { ...JOB, name: 'LPJ-9', status: 'Rendered', label_count: 1 },
+      ...(args.output === 'pdf'
+        ? { pdf: 'JVBERi0x', filename: 'LPJ-9.pdf' }
+        : { html: '<html><body>labels</body></html>' }),
+    })
+  })
+  afterEach(() => chooseLabelPrinter(''))
+  const line = () => root.querySelector('[data-etq-printer-line]').textContent
+  // The sheet is its own chunk: it shows once its import resolves.
+  async function sheet(selector) {
+    for (let i = 0; i < 20; i++) {
+      const found = document.body.querySelector(selector)
+      if (found) return found
+      await flush()
+    }
+    return null
+  }
+
+  it('picks this computer’s printer from the ones Muelle QZ sees', async () => {
+    await mountAt('/productos/etiquetas?codigos=A')
+    expect(line()).toContain('Imprime con la impresora que elijas.')
+    button('Elegir impresora').click()
+    const printers = await sheet('[data-etq-printer="M110S"]')
+    const list = document.body.querySelector('[data-etq-printers]')
+    expect(list.textContent).toContain('Diálogo del navegador')
+    expect(list.textContent).toContain('EPSON-TM-T20IIIL')
+    printers.click()
+    await flush()
+    expect(localStorage.getItem('muelle:etiquetas:impresora')).toBe('M110S')
+    expect(line()).toContain('Salen directo en «M110S», sin diálogo.')
+    expect(button('Cambiar')).toBeTruthy()
+  })
+
+  it('prints the PDF on it with no dialog and says where it went', async () => {
+    chooseLabelPrinter('M110S')
+    await mountAt('/productos/etiquetas?codigos=A')
+    root.querySelector('[data-etq-print] button').click()
+    await flush()
+    expect(lastCall('print_labels').output).toBe('pdf')
+    expect(qzClient.printLabelPdfViaQz).toHaveBeenCalledWith('JVBERi0x', {
+      printerName: 'M110S',
+      widthMm: 50,
+      heightMm: 30,
+      jobName: 'Cambios de precio',
+    })
+    expect(etq.printHtml).not.toHaveBeenCalled()
+    expect(lastCall('mark')).toMatchObject({ job: 'LPJ-9', outcome: 'printed' })
+    const result = root.querySelector('[data-etq-result]').textContent
+    expect(result).toContain('Enviada a la impresora')
+    expect(result).toContain('a «M110S»')
+  })
+
+  it('with Muelle QZ closed it marks the job and offers the dialog', async () => {
+    qzClient.printLabelPdfViaQz.mockRejectedValueOnce(
+      new Error('QZ Tray is not available.'),
+    )
+    chooseLabelPrinter('M110S')
+    await mountAt('/productos/etiquetas?codigos=A')
+    root.querySelector('[data-etq-print] button').click()
+    await flush()
+    expect(lastCall('mark')).toMatchObject({
+      outcome: 'failed',
+      error:
+        'Muelle QZ no está abierto en este equipo. Ábrelo y vuelve a intentar, o imprime con el diálogo.',
+    })
+    expect(root.querySelector('[data-etq-result]').textContent).toContain(
+      'No se imprimió',
+    )
+    expect(button('Volver a intentar')).toBeTruthy()
+    root.querySelector('[data-etq-dialog]').click()
+    await flush()
+    expect(lastCall('reprint')).toMatchObject({ job: 'LPJ-9' })
+    expect(etq.printHtml).toHaveBeenCalledWith('<html>again</html>')
+  })
+
+  it('a retry goes to the printer again', async () => {
+    qzClient.printLabelPdfViaQz.mockRejectedValueOnce(new Error('boom'))
+    answers.reprint = { job: { ...JOB, status: 'Rendered' }, pdf: 'JVBERi0y' }
+    chooseLabelPrinter('M110S')
+    await mountAt('/productos/etiquetas?codigos=A')
+    root.querySelector('[data-etq-print] button').click()
+    await flush()
+    button('Volver a intentar').click()
+    await flush()
+    expect(lastCall('reprint')).toMatchObject({ job: 'LPJ-9', output: 'pdf' })
+    expect(qzClient.printLabelPdfViaQz).toHaveBeenLastCalledWith(
+      'JVBERi0y',
+      expect.objectContaining({ printerName: 'M110S' }),
+    )
+    expect(root.querySelector('[data-etq-result]').textContent).toContain(
+      'Enviada a la impresora',
+    )
+  })
+
+  it('a computer without Muelle QZ says how to get it', async () => {
+    qzClient.listQzPrinters.mockRejectedValueOnce(
+      new Error('QZ Tray is not available.'),
+    )
+    answers['doco.docoutils.printing.bundles.get_bundle_info'] = {
+      available: true,
+      platforms: { win: { present: true }, linux: { present: false } },
+    }
+    await mountAt('/productos/etiquetas?codigos=A')
+    button('Elegir impresora').click()
+    await sheet('[data-etq-qz-installer]')
+    const missing = document.body.querySelector('[data-etq-qz-missing]')
+    expect(missing.textContent).toContain('necesita Muelle QZ abierto')
+    expect(
+      missing
+        .querySelector('[data-etq-qz-installer="win"]')
+        .getAttribute('href'),
+    ).toBe(
+      '/api/method/doco.docoutils.printing.bundles.download_bundle?platform=win',
+    )
+    expect(missing.querySelector('[data-etq-qz-installer="linux"]')).toBeNull()
   })
 })
 

@@ -1,7 +1,8 @@
 <template>
   <!-- The print, at the thumb: how the last one went (with the way on), why
-       it cannot run yet, and the two ways out: the browser's print dialog or
-       a PDF (one label a page) to share or keep. -->
+       it cannot run yet, and the two ways out: the print (straight to this
+       computer's label printer, or the browser's dialog) or a PDF (one label
+       a page) to share or keep. -->
   <div class="space-y-2">
     <section
       v-if="result"
@@ -35,6 +36,13 @@
           label="Volver a intentar"
           :loading="!!busy"
           @click="emit('retry')"
+        />
+        <Button
+          v-if="!result.ok && result.printer"
+          class="press min-h-11"
+          label="Imprimir con el diálogo"
+          data-etq-dialog
+          @click="emit('dialog')"
         />
         <Button
           v-if="!result.ok && result.html"
@@ -118,7 +126,8 @@ const props = defineProps({
   blocked: { type: String, default: '' },
   // '' | 'print' | 'pdf'
   busy: { type: String, default: '' },
-  // How the last print went: { ok, reason?, job?, html?, pdf?: 'saved' | 'shared', size? }
+  // How the last print went: { ok, reason?, job?, html?, printer?, pdf?: 'saved' | 'shared' }
+  // (`printer`: it went straight to that printer, with no dialog).
   result: { type: Object, default: null },
   // A phone shares the PDF; a computer saves it.
   share: { type: Boolean, default: false },
@@ -131,6 +140,7 @@ const emit = defineEmits([
   'pdf',
   'retry',
   'download',
+  'dialog',
   'again',
   'job',
   'clear',
@@ -152,6 +162,8 @@ const body = computed(() => {
   const count = labelsText(result.job?.label_count)
   if (result.pdf)
     return `${count}, una por página. Imprímelo a tamaño real (100 %) y sin márgenes, en la impresora de etiquetas.`
+  if (result.printer)
+    return `${count} en ${result.job?.layout_label}, a «${result.printer}». Si no salió, revisa que esté encendida y con etiquetas, y vuelve a imprimir.`
   return `${count} en ${result.job?.layout_label}. Si no salió, revisa que elegiste la impresora de etiquetas en el diálogo y vuelve a imprimir.`
 })
 </script>
