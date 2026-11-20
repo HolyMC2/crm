@@ -1,6 +1,6 @@
 // The es-MX copy checks' shared reader: the es.po parser, the English
 // detector and the source scanners (dailySpanish.test.js for the daily
-// routes, spanishRatchet.test.js for the whole app). Pure node, no SFC compile.
+// routes, spanishCatalog.test.js for the whole app). Pure node, no SFC compile.
 
 // Same in English and Spanish UI, or a product name: never "English" alone.
 export const SAME_IN_BOTH = new Set([
