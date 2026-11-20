@@ -52,9 +52,13 @@
       >
         <p v-if="review" class="mb-4 text-sm text-ink-gray-6">
           {{
-            __(
-              'Review the person and organization before converting. A shared email or phone does not prove identity.',
-            )
+            companies
+              ? __(
+                  'Review the person and organization before converting. A shared email or phone does not prove identity.',
+                )
+              : __(
+                  'Review the person before converting. A shared email or phone does not prove identity.',
+                )
           }}
         </p>
         <div v-if="review?.contacts?.length" class="mb-4 space-y-2">
@@ -69,7 +73,11 @@
             {{ contact.full_name || contact.name }}
           </button>
         </div>
-        <div v-if="review?.organizations?.length" class="mb-4 space-y-2">
+        <!-- A shop that sells to people only (the Prospectos settings) converts without one. -->
+        <div
+          v-if="companies && review?.organizations?.length"
+          class="mb-4 space-y-2"
+        >
           <p>{{ __('Possible organizations') }}</p>
           <button
             v-for="organization in review.organizations"
@@ -81,11 +89,14 @@
             {{ organization.organization_name || organization.name }}
           </button>
         </div>
-        <div class="mb-4 flex items-center gap-2 text-ink-gray-5">
+        <div
+          v-if="companies"
+          class="mb-4 flex items-center gap-2 text-ink-gray-5"
+        >
           <OrganizationsIcon class="h-4 w-4" />
           <label class="block text-base">{{ __('Organization') }}</label>
         </div>
-        <div class="ml-6 text-ink-gray-9">
+        <div v-if="companies" class="ml-6 text-ink-gray-9">
           <div class="flex items-center justify-between text-base">
             <div>{{ __('Choose Existing') }}</div>
             <Switch v-model="existingOrganizationChecked" />
@@ -107,7 +118,10 @@
           </div>
         </div>
 
-        <div class="mb-4 mt-6 flex items-center gap-2 text-ink-gray-5">
+        <div
+          class="mb-4 flex items-center gap-2 text-ink-gray-5"
+          :class="{ 'mt-6': companies }"
+        >
           <ContactsIcon class="h-4 w-4" />
           <label class="block text-base">{{ __('Contact') }}</label>
         </div>
@@ -189,6 +203,7 @@ import { usersStore } from '@/stores/users'
 import { sessionStore } from '@/stores/session'
 import { statusesStore } from '@/stores/statuses'
 import { stageLabel } from '@/utils/stageLabel'
+import { shopProspectSettings } from '@/utils/prospects'
 import { getMeta } from '@/stores/meta'
 import { showQuickEntryModal, quickEntryProps } from '@/composables/modals'
 import { isMobileView } from '@/composables/settings'
@@ -202,6 +217,8 @@ const props = defineProps({
 })
 
 const show = defineModel({ type: Boolean })
+// «Vendo a empresas» (the Prospectos settings): off, the form asks for no organization.
+const companies = shopProspectSettings().companies
 
 const router = useRouter(),
   route = useRoute()

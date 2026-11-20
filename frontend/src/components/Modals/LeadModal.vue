@@ -94,16 +94,24 @@ const { capture } = useTelemetry()
 
 const leadStatuses = computed(() => statusOptions('lead'))
 
+// `entry`: the form the shop set up (the Prospectos settings): no organization for a
+// shop that sells to people, the phone required, only its own origins.
 const tabs = createResource({
   url: 'crm.fcrm.doctype.crm_fields_layout.crm_fields_layout.get_fields_layout',
-  cache: ['QuickEntry', 'CRM Lead'],
-  params: { doctype: 'CRM Lead', type: 'Quick Entry' },
+  cache: ['QuickEntry', 'CRM Lead', 'entry'],
+  params: { doctype: 'CRM Lead', type: 'Quick Entry', entry: 1 },
   auto: true,
   transform: (_tabs) => {
     return _tabs.forEach((tab) => {
       tab.sections.forEach((section) => {
         section.columns.forEach((column) => {
           column.fields.forEach((field) => {
+            // Asked only where the form has it (a shop that sells to companies).
+            if (
+              field.fieldname === 'no_of_employees' &&
+              lead.doc.no_of_employees == null
+            )
+              lead.doc.no_of_employees = '1-10'
             if (field.fieldname == 'status') {
               field.fieldtype = 'Select'
               field.options = leadStatuses.value
@@ -143,6 +151,11 @@ async function createNewLead() {
         error.value = null
         if (!lead.doc.first_name) {
           error.value = __('First Name is mandatory')
+          return error.value
+        }
+        const phone = requiredPhone(tabs.data)
+        if (phone && !String(lead.doc[phone] || '').trim()) {
+          error.value = __('Add their phone so the team can reach them.')
           return error.value
         }
         if (lead.doc.annual_revenue) {
@@ -192,6 +205,17 @@ async function createNewLead() {
   )
 }
 
+// The phone field the shop requires («Pedir teléfono»), when the form has one.
+function requiredPhone(layout) {
+  for (const tab of layout || [])
+    for (const section of tab.sections || [])
+      for (const column of section.columns || [])
+        for (const field of column.fields || [])
+          if (['mobile_no', 'phone'].includes(field.fieldname) && field.reqd)
+            return field.fieldname
+  return ''
+}
+
 function openQuickEntryModal() {
   showQuickEntryModal.value = true
   quickEntryProps.value = { doctype: 'CRM Lead' }
@@ -199,7 +223,6 @@ function openQuickEntryModal() {
 }
 
 onMounted(() => {
-  lead.doc.no_of_employees = '1-10'
   if (lead.doc.mobile_is_whatsapp == null) lead.doc.mobile_is_whatsapp = 1
   Object.assign(lead.doc, props.defaults)
 

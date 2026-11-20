@@ -267,34 +267,16 @@ watch(
   },
 )
 
-// Doco customization: org-less workflow. Hide every organization-related
-// field + section so the Deal quick view stays focused on the contact.
-const HIDDEN_DEAL_FIELDS = [
-  'website',
-  'annual_revenue',
-  'organization',
-  'organization_name',
-  'no_of_employees',
-  'industry',
-]
-const HIDDEN_DEAL_SECTIONS = [
-  'organization_section',
-  'organization_details_section',
-]
-
+// `entry`: the form the shop set up (the Prospectos settings): a shop that sells to
+// people only gets no organization sections, so the form stays on the contact.
 const tabs = createResource({
   url: 'crm.fcrm.doctype.crm_fields_layout.crm_fields_layout.get_fields_layout',
-  cache: ['QuickEntry', 'CRM Deal'],
-  params: { doctype: 'CRM Deal', type: 'Quick Entry' },
+  cache: ['QuickEntry', 'CRM Deal', 'entry'],
+  params: { doctype: 'CRM Deal', type: 'Quick Entry', entry: 1 },
   auto: true,
   transform: (_tabs) => {
     hasOrganizationSections.value = false
     _tabs.forEach((tab) => {
-      tab.sections = tab.sections.filter(
-        (section) =>
-          !repairAvailable.value ||
-          !HIDDEN_DEAL_SECTIONS.includes(section.name),
-      )
       tab.sections.forEach((section) => {
         if (
           ['organization_section', 'organization_details_section'].includes(
@@ -311,11 +293,6 @@ const tabs = createResource({
           ) {
             hasContactSections.value = true
           }
-          column.fields = column.fields.filter(
-            (field) =>
-              !repairAvailable.value ||
-              !HIDDEN_DEAL_FIELDS.includes(field.fieldname),
-          )
           column.fields.forEach((field) => {
             if (field.fieldname == 'status') {
               field.fieldtype = 'Select'

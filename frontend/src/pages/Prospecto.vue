@@ -220,7 +220,11 @@ import { recordActionsFor } from '@/documentos/acciones'
 import { BTN } from '@/documentos/tools'
 import { formatDate, formatDue, statusLabel } from '@/utils/display'
 import { formatPhone } from '@/composables/crmFormat'
-import { prospectName, sourceText } from '@/utils/prospects'
+import {
+  prospectName,
+  shopProspectSettings,
+  sourceText,
+} from '@/utils/prospects'
 
 const ConvertToDealModal = defineAsyncComponent(
   () => import('@/components/Modals/ConvertToDealModal.vue'),
@@ -244,6 +248,8 @@ const deal = createResource({
   }),
 })
 const doc = computed(() => lead.data || null)
+// A shop that sells to people only (the Prospectos settings) shows no «Empresa».
+const companies = shopProspectSettings().companies
 const convertOpen = ref(false)
 const phone = computed(() => doc.value?.mobile_no || doc.value?.phone || '')
 const name = computed(() => prospectName(doc.value || {}))
@@ -336,11 +342,12 @@ const details = computed(() => {
       icon: 'lucide-phone',
     },
     d.email && { label: 'Correo', value: d.email, icon: 'lucide-mail' },
-    d.organization && {
-      label: 'Empresa',
-      value: d.organization,
-      icon: 'lucide-building-2',
-    },
+    companies &&
+      d.organization && {
+        label: 'Empresa',
+        value: d.organization,
+        icon: 'lucide-building-2',
+      },
     d.status && {
       label: 'Estado',
       value: statusLabel(d.status, 'lead'),

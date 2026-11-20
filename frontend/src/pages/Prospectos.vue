@@ -33,7 +33,7 @@
         @clear="recent.clear()"
       />
       <ChipGroup
-        v-if="inquiriesEnabled"
+        v-if="showKinds"
         label="Tipo"
         :options="kindOptions"
         :model-value="kind"
@@ -47,6 +47,14 @@
         :model-value="source"
         testid="prospects-source"
         @update:model-value="setSource"
+      />
+      <ListRow
+        v-if="canSetUp"
+        icon="lucide-settings-2"
+        title="Cómo registras prospectos"
+        subtitle="Lo que pide el alta, consultas, seguimiento y orígenes"
+        data-testid="prospects-settings"
+        @click="openSettings"
       />
     </SearchPanel>
     <!-- Desktop: the shell's list header (Compras): the title with its count,
@@ -86,7 +94,7 @@
             </Dropdown>
           </div>
           <button
-            v-if="inquiriesEnabled"
+            v-if="inquiriesCapture"
             type="button"
             :class="['press', BTN.tonal]"
             data-testid="prospects-new-inquiry"
@@ -112,7 +120,7 @@
         </div>
       </div>
       <div class="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
-        <div v-if="inquiriesEnabled" class="w-fit max-w-full">
+        <div v-if="showKinds" class="w-fit max-w-full">
           <Segmented
             :model-value="kind"
             :options="kindOptions"
@@ -404,6 +412,12 @@
       />
     </BottomSheet>
     <LeadModal v-if="showLeadModal" v-model="showLeadModal" />
+    <ProspectosAjustesSheet
+      v-if="settingsMounted"
+      v-model:open="settingsOpen"
+      :inquiries-available="inquiriesEnabled"
+      @changed="load(0)"
+    />
     <ConvertToDealModal
       v-if="converting"
       :key="converting.name"
@@ -485,6 +499,10 @@ const LeadModal = defineAsyncComponent(
 const ConvertToDealModal = defineAsyncComponent(
   () => import('@/components/Modals/ConvertToDealModal.vue'),
 )
+// How the shop registers prospects; mounts on its first open.
+const ProspectosAjustesSheet = defineAsyncComponent(
+  () => import('@/components/ventas/ProspectosAjustesSheet.vue'),
+)
 // Only where the shop scores its leads (doco_marketing).
 const ScoreExplainPopover = defineAsyncComponent(
   () => import('@/components/doco/ScoreExplainPopover.vue'),
@@ -492,15 +510,42 @@ const ScoreExplainPopover = defineAsyncComponent(
 const showLeadModal = ref(false)
 const createOpen = ref(false)
 // The upstream leads list keeps what this one does not: the stage filters,
-// the board, Excel and delete (as Tratos' «Vista clásica»).
-const moreMenu = [
+// the board, Excel and delete (as Tratos' «Vista clásica»). Whoever may
+// change how prospects are registered finds it here too.
+const moreMenu = computed(() => [
+  ...(canSetUp.value
+    ? [
+        {
+          label: 'Cómo registras prospectos',
+          onClick: openSettings,
+        },
+      ]
+    : []),
   {
     label: 'Vista clásica (todos los filtros)',
     onClick: () =>
       router.push({ path: '/leads/view', query: { classic: '1' } }),
   },
-]
+])
 const inquiriesEnabled = ref(false)
+// «Registrar consultas» off: no door to register one (Consultas that arrive by
+// themselves still list, with their kind tab while there are any).
+const inquiriesCapture = ref(false)
+const showKinds = computed(
+  () =>
+    inquiriesEnabled.value &&
+    (inquiriesCapture.value ||
+      counts.value.inquiry > 0 ||
+      kind.value === 'inquiry'),
+)
+const canSetUp = ref(false)
+const settingsOpen = ref(false)
+const settingsMounted = ref(false)
+function openSettings() {
+  searchOpen.value = false
+  settingsMounted.value = true
+  settingsOpen.value = true
+}
 
 const scroller = ref(null)
 const wide = useTableWidth(scroller)
@@ -597,7 +642,7 @@ function rowMeta(row) {
   return waitingLabel(row.modified)
 }
 function createNew() {
-  if (inquiriesEnabled.value) createOpen.value = true
+  if (inquiriesCapture.value) createOpen.value = true
   else showLeadModal.value = true
 }
 function newLead() {
@@ -668,6 +713,9 @@ async function load(at = 0, { append = false, quiet = false } = {}) {
       : page.rows || []
     sources.value = page.sources || []
     inquiriesEnabled.value = !!page.inquiries_enabled
+    // A server without the setting: Consultas keeps its door.
+    inquiriesCapture.value = page.inquiries_capture ?? inquiriesEnabled.value
+    canSetUp.value = !!page.can_change_settings
     counts.value = page.counts || { lead: 0, inquiry: 0 }
     hasMore.value = !!page.has_more
     loaded.value = true

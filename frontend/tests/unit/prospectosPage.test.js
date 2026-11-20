@@ -25,10 +25,15 @@ vi.mock('frappe-ui', async () => {
           h('button', attrs, props.label),
     },
     Dropdown: {
+      props: ['options'],
       setup:
-        (_, { slots }) =>
-        () =>
+        (p, { slots }) =>
+        () => [
           slots.default?.(),
+          ...(p.options || []).map((o) =>
+            h('button', { 'data-menu': o.label, onClick: o.onClick }, o.label),
+          ),
+        ],
     },
     call: (...args) => state.call(...args),
     toast: state.toast,
@@ -55,6 +60,17 @@ vi.mock('@/components/Modals/LeadModal.vue', () => ({
   __esModule: true,
   default: { render: () => null },
 }))
+vi.mock('@/components/ventas/ProspectosAjustesSheet.vue', async () => {
+  const { h } = await import('vue')
+  return {
+    __esModule: true,
+    default: {
+      props: ['open', 'inquiriesAvailable'],
+      setup: (p) => () =>
+        p.open ? h('div', { 'data-testid': 'settings-sheet' }) : null,
+    },
+  }
+})
 vi.mock('@/components/doco/ScoreExplainPopover.vue', async () => {
   const { h } = await import('vue')
   return {
@@ -288,6 +304,42 @@ describe('Prospectos on a desk', () => {
       'Puntaje',
     )
     expect($$('[data-testid=prospect-row]')[0].textContent).toContain('82')
+  })
+})
+
+describe('Prospectos follows how the shop registers them', () => {
+  it('with «Registrar consultas» off, offers no door to a new one', async () => {
+    state.call.mockResolvedValue({
+      ...PAGE,
+      rows: ROWS.slice(0, 2),
+      counts: { lead: 2, inquiry: 0 },
+      inquiries_capture: false,
+    })
+    await mount()
+    expect($('[data-testid=prospects-new-inquiry]')).toBeNull()
+    expect($('[data-testid=prospects-kind]')).toBeNull()
+  })
+
+  it('keeps the Consultas that arrived by themselves, with their tab', async () => {
+    state.call.mockResolvedValue({ ...PAGE, inquiries_capture: false })
+    await mount()
+    expect($('[data-testid=prospects-new-inquiry]')).toBeNull()
+    expect($('[data-testid=prospects-kind]')).toBeTruthy()
+    expect($$('[data-testid=prospect-row]')).toHaveLength(3)
+  })
+
+  it('shows the settings door only to whoever may change them', async () => {
+    state.call.mockResolvedValue({ ...PAGE, can_change_settings: false })
+    await mount()
+    expect($('[data-menu="Cómo registras prospectos"]')).toBeNull()
+  })
+
+  it('opens the settings from the «⋯» menu', async () => {
+    state.call.mockResolvedValue({ ...PAGE, can_change_settings: true })
+    await mount()
+    $('[data-menu="Cómo registras prospectos"]').click()
+    await flush()
+    expect($('[data-testid=settings-sheet]')).toBeTruthy()
   })
 })
 

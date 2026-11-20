@@ -81,6 +81,47 @@ export function isOverdue(row, now = Date.now()) {
   return !Number.isNaN(at) && at < now
 }
 
+// How the shop registers prospects (crm.lead.settings). The page boot carries them;
+// a server without them keeps the upstream forms.
+const PROSPECT_DEFAULTS = Object.freeze({
+  companies: true,
+  inquiries: true,
+  phone_required: false,
+  first_follow_up: 'none',
+  ask_salutation: true,
+  ask_gender: true,
+})
+
+/** The shop's prospect settings, as the page boot or the last save left them. */
+export function shopProspectSettings() {
+  const boot = globalThis.prospect_settings
+  return {
+    ...PROSPECT_DEFAULTS,
+    ...(boot && typeof boot === 'object' ? boot : {}),
+  }
+}
+
+/** After a save: what the forms and pages read next. */
+export function rememberProspectSettings(values) {
+  if (values && typeof values === 'object')
+    globalThis.prospect_settings = { ...values }
+}
+
+export const FOLLOW_UP_OPTIONS = [
+  { value: 'none', label: 'No agendar' },
+  { value: '2h', label: 'En 2 horas' },
+  { value: 'tomorrow', label: 'Mañana' },
+]
+
+/** What happens to a new prospect under each «Primer seguimiento». */
+export function followUpSentence(choice) {
+  if (choice === '2h')
+    return 'Cada prospecto nuevo llega con «Dar seguimiento» para su vendedor, 2 horas después.'
+  if (choice === 'tomorrow')
+    return 'Cada prospecto nuevo llega con «Dar seguimiento» para su vendedor, al día siguiente a la misma hora.'
+  return 'Muelle no agenda nada; el vendedor decide cuándo.'
+}
+
 /** Query string state ↔ request args; empty values are dropped. */
 export function prospectArgs({ kind, source, q, start = 0, pageLength = 30 }) {
   const args = { start, page_length: pageLength }
