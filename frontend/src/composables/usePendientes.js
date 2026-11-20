@@ -452,6 +452,7 @@ export function stateChip(row) {
 export const REPEATS = Object.freeze([
   'Daily',
   'Weekdays',
+  'Shift days',
   'Weekly',
   'Monthly',
   'Yearly',
@@ -462,6 +463,7 @@ export function repeatLabel(repeat) {
     {
       Daily: t('Every day'),
       Weekdays: t('Monday to Friday'),
+      'Shift days': t('On shift days'),
       Weekly: t('Every week'),
       Monthly: t('Every month'),
       Yearly: t('Every year'),

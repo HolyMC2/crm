@@ -134,6 +134,11 @@ function rules(today) {
     },
     {
       kind: 'repeat',
+      re: '(?:cada turno|en cada turno|los dias de turno|cuando trabaje)',
+      read: () => ({ repeat: 'Shift days' }),
+    },
+    {
+      kind: 'repeat',
       re: '(?:entre semana|de lunes a viernes|dias habiles|cada dia habil)',
       read: () => ({ repeat: 'Weekdays' }),
     },

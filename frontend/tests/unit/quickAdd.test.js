@@ -62,6 +62,8 @@ describe('quick add in es-MX words', () => {
       repeat: 'Weekly',
     })
     expect(parse('Corte de caja de lunes a viernes').repeat).toBe('Weekdays')
+    expect(parse('Contestar WhatsApp cada turno').repeat).toBe('Shift days')
+    expect(parse('Barrer la tienda cada turno').title).toBe('Barrer la tienda')
     expect(parse('Pagar luz cada mes').repeat).toBe('Monthly')
   })
 

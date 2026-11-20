@@ -29609,6 +29609,10 @@ msgid "Monday to Friday"
 msgstr "De lunes a viernes"
 
 #: frontend/src/composables/usePendientes.js
+msgid "On shift days"
+msgstr "Los días que le toca turno"
+
+#: frontend/src/composables/usePendientes.js
 msgid "That day at 9:00"
 msgstr "Ese día a las 9:00"
 
