@@ -50208,3 +50208,58 @@ msgstr "Omitir"
 #: frontend/src/components/EventNotificationPopup.vue
 msgid "Event Notification"
 msgstr "Aviso de evento"
+
+#: frontend/src/components/IconPicker.vue
+msgctxt "Emoji"
+msgid "Smileys & Emotion"
+msgstr "Caritas y emociones"
+
+#: frontend/src/components/IconPicker.vue
+msgctxt "Emoji"
+msgid "People & Body"
+msgstr "Personas y cuerpo"
+
+#: frontend/src/components/IconPicker.vue
+msgctxt "Emoji"
+msgid "Animals & Nature"
+msgstr "Animales y naturaleza"
+
+#: frontend/src/components/IconPicker.vue
+msgctxt "Emoji"
+msgid "Food & Drink"
+msgstr "Comida y bebida"
+
+#: frontend/src/components/IconPicker.vue
+msgctxt "Emoji"
+msgid "Travel & Places"
+msgstr "Viajes y lugares"
+
+#: frontend/src/components/IconPicker.vue
+msgctxt "Emoji"
+msgid "Activities"
+msgstr "Actividades"
+
+#: frontend/src/components/IconPicker.vue
+msgctxt "Emoji"
+msgid "Objects"
+msgstr "Objetos"
+
+#: frontend/src/components/IconPicker.vue
+msgctxt "Emoji"
+msgid "Symbols"
+msgstr "Símbolos"
+
+#: frontend/src/components/IconPicker.vue
+msgctxt "Emoji"
+msgid "Flags"
+msgstr "Banderas"
+
+#: frontend/src/components/IconPicker.vue
+msgctxt "Emoji"
+msgid "No results"
+msgstr "Sin resultados"
+
+#: frontend/src/components/IconPicker.vue
+msgctxt "Emoji"
+msgid "Random"
+msgstr "Al azar"

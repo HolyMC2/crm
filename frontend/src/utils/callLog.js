@@ -58,16 +58,36 @@ export function getCallLogDetail(row, log, columns = []) {
   return log[row]
 }
 
+// Getters: each label translates when it renders, with the dictionary in use
+// then (a table filled when the module loads keeps the words of that moment).
 export const statusLabelMap = {
-  Completed: __('Completed'),
-  Initiated: __('Initiated'),
-  Busy: __('Declined'),
-  Failed: __('Failed'),
-  Queued: __('Queued'),
-  Canceled: __('Canceled'),
-  Ringing: __('Ringing'),
-  'No Answer': __('Missed Call'),
-  'In Progress': __('In Progress'),
+  get Completed() {
+    return __('Completed')
+  },
+  get Initiated() {
+    return __('Initiated')
+  },
+  get Busy() {
+    return __('Declined')
+  },
+  get Failed() {
+    return __('Failed')
+  },
+  get Queued() {
+    return __('Queued')
+  },
+  get Canceled() {
+    return __('Canceled')
+  },
+  get Ringing() {
+    return __('Ringing')
+  },
+  get 'No Answer'() {
+    return __('Missed Call')
+  },
+  get 'In Progress'() {
+    return __('In Progress')
+  },
 }
 
 export const statusColorMap = {

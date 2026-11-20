@@ -1,9 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick } from 'vue'
 import { getConfig, setConfig } from 'frappe-ui'
-import translationPlugin, { dictionaryRevision } from '@/translation'
+import translationPlugin, {
+  dictionaryRevision,
+  noteMisses,
+  takeMisses,
+} from '@/translation'
 import {
+  FIRST_ROUTE_NAMES,
   MAX_WAIT_MS,
+  afterWholeDictionary,
   applyNewer,
   dictionaryStore,
   fullSource,
@@ -12,6 +18,7 @@ import {
   loadWholeDictionary,
   mountWhenTranslated,
   translationsReady,
+  whenWholeDictionary,
   wholeDictionaryFor,
 } from '@/utils/translationsReady'
 
@@ -420,7 +427,10 @@ describe('the landing route mounts with the first part, the whole set follows', 
     const whole = { Hoy: 'Hoy', Tratos: 'Tratos' }
     loader.run(whole)
     await loading
-    expect(o.onNewer).toHaveBeenCalledWith(whole)
+    expect(o.onNewer).toHaveBeenCalledOnce()
+    expect(o.onNewer.mock.calls[0][0]).toBe(whole)
+    // The keys renders missed in the first part: the repaint needs one.
+    expect(o.onNewer.mock.calls[0][1]).toBeInstanceOf(Set)
     await vi.advanceTimersByTimeAsync(0)
     expect(o.store.set).toHaveBeenCalledWith('tienda.example|es-MX', {
       version: NEW,
@@ -534,5 +544,162 @@ describe('the landing route mounts with the first part, the whole set follows', 
     mountWhenTranslated(vi.fn(), opts())
     expect(wholeDictionaryFor({ name: 'Deals' })).toBeUndefined()
     expect(loadWholeDictionary()).toBeNull()
+    expect(whenWholeDictionary()).toBeNull()
+  })
+
+  it('Home, which the router sends to Hoy, never waits', () => {
+    const script = addFirst()
+    mountWhenTranslated(vi.fn(), opts({ loadScript: fakeLoader().loadScript }))
+    runFirst(script, { Hoy: 'Hoy' })
+    expect(FIRST_ROUTE_NAMES.has('Home')).toBe(true)
+    expect(wholeDictionaryFor({ name: 'Home' })).toBeUndefined()
+  })
+
+  it('a sheet the first screen loads on a tap evaluates after the whole set', async () => {
+    const script = addFirst()
+    const loader = fakeLoader()
+    mountWhenTranslated(vi.fn(), opts({ loadScript: loader.loadScript }))
+    runFirst(script, { Hoy: 'Hoy' })
+    const sheet = { default: 'ScanSheet' }
+    const load = vi.fn(() => Promise.resolve(sheet))
+    const opened = vi.fn()
+    afterWholeDictionary(load)().then(opened)
+    await vi.advanceTimersByTimeAsync(0)
+    expect(loader.loadScript).toHaveBeenCalledOnce()
+    expect(load).not.toHaveBeenCalled()
+    loader.run({ Hoy: 'Hoy', 'Add product': 'Agregar producto' })
+    await vi.advanceTimersByTimeAsync(0)
+    expect(load).toHaveBeenCalledOnce()
+    expect(opened).toHaveBeenCalledWith(sheet)
+    // Once it is in, a sheet loads at once.
+    const again = vi.fn(() => Promise.resolve(sheet))
+    await afterWholeDictionary(again)()
+    expect(again).toHaveBeenCalledOnce()
+  })
+
+  it('a sheet whose whole set never comes opens after the cap, in English', async () => {
+    const script = addFirst()
+    mountWhenTranslated(vi.fn(), opts({ loadScript: fakeLoader().loadScript }))
+    runFirst(script, { Hoy: 'Hoy' })
+    const load = vi.fn(() => Promise.resolve({}))
+    afterWholeDictionary(load)()
+    await vi.advanceTimersByTimeAsync(MAX_WAIT_MS - 1)
+    expect(load).not.toHaveBeenCalled()
+    await vi.advanceTimersByTimeAsync(1)
+    expect(load).toHaveBeenCalledOnce()
+  })
+
+  it('with a kept whole set shown, no route and no sheet waits for the new one', async () => {
+    const script = addFirst()
+    const loader = fakeLoader()
+    mountWhenTranslated(
+      vi.fn(),
+      opts({
+        loadScript: loader.loadScript,
+        store: fakeStore({ version: OLD, messages: { Hoy: 'Hoy' } }),
+      }),
+    )
+    await vi.advanceTimersByTimeAsync(0)
+    runFirst(script, { Hoy: 'Hoy' })
+    expect(wholeDictionaryFor({ name: 'Deals' })).toBeUndefined()
+    expect(whenWholeDictionary()).toBeNull()
+    const load = vi.fn(() => Promise.resolve({}))
+    await afterWholeDictionary(load)()
+    expect(load).toHaveBeenCalledOnce()
+    expect(loader.loadScript).not.toHaveBeenCalled()
+  })
+
+  it('a kept whole set that answers after the first part mounted still replaces it', async () => {
+    const script = addFirst()
+    const loader = fakeLoader()
+    let answer
+    const kept = { Hoy: 'Hoy', Tratos: 'Tratos (anterior)' }
+    const store = {
+      get: vi.fn(() => new Promise((resolve) => (answer = resolve))),
+      set: vi.fn(() => Promise.resolve()),
+    }
+    const o = opts({ loadScript: loader.loadScript, store })
+    const mount = vi.fn()
+    mountWhenTranslated(mount, o)
+    runFirst(script, { Hoy: 'Hoy' })
+    await vi.advanceTimersByTimeAsync(0)
+    expect(mount).toHaveBeenCalledOnce()
+    expect(whenWholeDictionary()).toBeInstanceOf(Promise)
+    answer({ version: OLD, messages: kept })
+    await vi.advanceTimersByTimeAsync(0)
+    expect(window.translated_messages).toBe(kept)
+    expect(o.onNewer.mock.calls[0][0]).toBe(kept)
+    expect(whenWholeDictionary()).toBeNull()
+    // The new set still replaces it when it arrives.
+    const whole = { Hoy: 'Hoy', Tratos: 'Tratos' }
+    const loading = loadWholeDictionary()
+    loader.run(whole)
+    await loading
+    expect(o.onNewer).toHaveBeenLastCalledWith(whole)
+  })
+})
+
+describe('the whole set repaints only what the first part missed', () => {
+  const stub = { global: globalThis.__, window: window.__ }
+  beforeEach(() => {
+    const app = { config: { globalProperties: {} } }
+    translationPlugin(app)
+    globalThis.__ = window.__ = app.config.globalProperties.__
+  })
+  afterEach(() => {
+    takeMisses()
+    globalThis.__ = stub.global
+    window.__ = stub.window
+  })
+
+  it('notes the keys a render does not find, with and without context', () => {
+    setConfig('translatedMessages', {
+      Hoy: 'Hoy',
+      'Lines:Captura': 'Renglones',
+    })
+    noteMisses()
+    window.__('Hoy')
+    window.__('Lines', null, 'Captura')
+    window.__('Mark done')
+    window.__('Next', null, 'Pendientes')
+    expect([...takeMisses()].sort()).toEqual([
+      'Mark done',
+      'Next',
+      'Next:Pendientes',
+    ])
+    expect(takeMisses()).toBeNull()
+  })
+
+  it('skips the repaint when the whole set translates none of them', () => {
+    const before = dictionaryRevision.value
+    const whole = { Hoy: 'Hoy', Tratos: 'Tratos' }
+    applyNewer(whole, new Set(['Acme SA de CV']))
+    expect(getConfig('translatedMessages')).toBe(whole)
+    expect(dictionaryRevision.value).toBe(before)
+    applyNewer(whole, new Set())
+    expect(dictionaryRevision.value).toBe(before)
+  })
+
+  it('repaints when the whole set translates one', () => {
+    const before = dictionaryRevision.value
+    applyNewer({ 'Mark done': 'Marcar hecho' }, new Set(['x', 'Mark done']))
+    expect(dictionaryRevision.value).toBe(before + 1)
+  })
+
+  it('a table a module keeps translates when it renders', async () => {
+    vi.doMock('@/stores/meta', () => ({ getMeta: () => ({}) }))
+    vi.doMock('@/composables/useTimelinePreferences', () => ({
+      timestampCell: () => '',
+    }))
+    vi.doMock('@/utils', () => ({ formatDate: (d) => d }))
+    const { statusLabelMap } = await import('@/utils/callLog')
+    setConfig('translatedMessages', {})
+    expect(statusLabelMap['No Answer']).toBe('Missed Call')
+    setConfig('translatedMessages', { 'Missed Call': 'Llamada perdida' })
+    expect(statusLabelMap['No Answer']).toBe('Llamada perdida')
+    expect(statusLabelMap.Busy).toBe('Declined')
+    vi.doUnmock('@/stores/meta')
+    vi.doUnmock('@/composables/useTimelinePreferences')
+    vi.doUnmock('@/utils')
   })
 })

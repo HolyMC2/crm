@@ -738,6 +738,7 @@ import {
 import { formatDay } from '@/utils/contactos'
 import { readCachedHoy, writeCachedHoy } from '@/utils/hoyCache'
 import { useLiveWatch } from '@/vendor/muelle-shell/live-sync/vue'
+import { afterWholeDictionary } from '@/utils/translationsReady'
 
 const route = useRoute()
 const router = useRouter()
@@ -865,14 +866,19 @@ function askMuelle() {
 }
 
 // «Completar» and its form widgets (about a third of this page's closure)
-// load on the first tap that needs them, not with the page.
+// load on the first tap that needs them, not with the page; on a cold load,
+// once the whole dictionary is in (its words are not in the first part).
 const CompleteDialog = defineAsyncComponent(
-  () => import('@/components/pendientes/CompleteDialog.vue'),
+  afterWholeDictionary(
+    () => import('@/components/pendientes/CompleteDialog.vue'),
+  ),
 )
 const completeMounted = ref(false)
 
 // «Primeros pasos»: the owner's first-hour steps finish here instead of the
-// Desk wizard. Each sheet loads on its first open.
+// Desk wizard. Each sheet loads on its first open; /crm/hoy?paso=… opens one
+// on the first screen, so their words are in the dictionary's first part
+// (scripts/translation-keys.mjs FIRST_ROUTE).
 const NegocioSheet = defineAsyncComponent(
   () => import('@/components/primeros/NegocioSheet.vue'),
 )

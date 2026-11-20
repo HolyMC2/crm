@@ -40,14 +40,16 @@
                 :debounce="300"
               />
             </div>
-            <Button @click="setRandom">Random</Button>
+            <Button @click="setRandom">{{
+              __('Random', null, 'Emoji')
+            }}</Button>
           </div>
           <div class="w-96"></div>
           <div v-for="(emojis, group) in emojiGroups" :key="group" class="px-3">
             <div
               class="sticky top-0 bg-surface-elevation-2 pb-2 pt-3 text-sm text-ink-gray-7"
             >
-              {{ group }}
+              {{ groupLabel(group) }}
             </div>
             <div class="grid w-96 grid-cols-12 place-items-center">
               <button
@@ -96,6 +98,22 @@ function showAll() {
   reaction.value = false
   loadTable()
 }
+
+// gemoji's category names, the picker's section titles (context Emoji: Desk
+// translates the bare words its own way).
+const GROUP_LABELS = {
+  'Smileys & Emotion': () => __('Smileys & Emotion', null, 'Emoji'),
+  'People & Body': () => __('People & Body', null, 'Emoji'),
+  'Animals & Nature': () => __('Animals & Nature', null, 'Emoji'),
+  'Food & Drink': () => __('Food & Drink', null, 'Emoji'),
+  'Travel & Places': () => __('Travel & Places', null, 'Emoji'),
+  Activities: () => __('Activities', null, 'Emoji'),
+  Objects: () => __('Objects', null, 'Emoji'),
+  Symbols: () => __('Symbols', null, 'Emoji'),
+  Flags: () => __('Flags', null, 'Emoji'),
+  'No results': () => __('No results', null, 'Emoji'),
+}
+const groupLabel = (group) => GROUP_LABELS[group]?.() ?? group
 
 const emojiGroups = computed(() => {
   let groups = {}

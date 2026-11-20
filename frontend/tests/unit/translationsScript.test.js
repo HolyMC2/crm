@@ -16,10 +16,13 @@ describe('the language dictionary is its own script, loaded beside the app', () 
   })
 
   it('a route the first part does not cover waits for the whole set', () => {
-    expect(main).toMatch(/router\.beforeResolve\(wholeDictionaryFor\)/)
-    expect(
-      main.indexOf('router.beforeResolve(wholeDictionaryFor)'),
-    ).toBeLessThan(main.indexOf('app.use(router)'))
+    // beforeEach: the wait comes before the route's chunk loads and evaluates
+    // (beforeResolve runs after it).
+    expect(main).toMatch(/router\.beforeEach\(wholeDictionaryFor\)/)
+    expect(main).not.toMatch(/router\.beforeResolve\(wholeDictionaryFor\)/)
+    expect(main.indexOf('router.beforeEach(wholeDictionaryFor)')).toBeLessThan(
+      main.indexOf('app.use(router)'),
+    )
     expect(main).toMatch(/router\.isReady\(\)\)\.then\(loadWhole, loadWhole\)/)
   })
 

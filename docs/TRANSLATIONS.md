@@ -71,9 +71,11 @@ in last and held the mount (go-live audit 11-19, finding 79). So every built set
 
 - **Build.** `translation-keys.json` also lists `first`: the literals of the modules of the entry
   chunk, of the chunks that hold a `FIRST_ROUTE` module (`translation-keys.mjs`: the shell, the
-  desktop rail's bell and Hoy, the page every worker lands on; matched by module, since a dynamic
-  entry that shares its chunk has no facade module) and of every chunk they import statically.
-  Sheets and routes they load on demand are not in it.
+  desktop rail's bell, Hoy, the page every worker lands on, and the four «Primeros pasos» sheets
+  abordo's welcome opens on Hoy with `/crm/hoy?paso=…`; matched by module, since a dynamic entry
+  that shares its chunk has no facade module) and of every chunk they import statically. Other
+  sheets and routes they load on demand are not in it. The build fails when a `FIRST_ROUTE`
+  module is in no chunk, so a rename cannot silently empty the part.
 - **Server.** `shell_dictionary.build` keeps, from the shipped set, the keys among `first` plus the
   record names of the small DocTypes the build names (`record_keys`: a deal's stage on Hoy; not the
   records of translated DocTypes such as every DocType name, countries or units, which tripled it),
@@ -88,9 +90,21 @@ in last and held the mount (go-live audit 11-19, finding 79). So every built set
   for instance, links the whole set with an empty `data-full`, as before.
 - **Client.** `utils/translationsReady.js` mounts once the first part has run (or at once with a
   whole set this browser kept), then loads the whole set as a script when the router's first route
-  is in (`main.js`, at most 10 s later), makes it the config and repaints (`applyNewer`), and keeps
-  it in IndexedDB. A navigation to a route outside `FIRST_ROUTE_NAMES` before it has run waits for it
-  (`router.beforeResolve(wholeDictionaryFor)`, 10 s cap), so no screen shows English while it loads.
+  is in (`main.js`, at most 10 s later), makes it the config and keeps it in IndexedDB. It repaints
+  (`applyNewer`) only when a render asked for a key the first part lacks and the whole set has
+  (`translation.js` notes those misses while the first part is the config), so a warm load whose
+  screen the first part covers does not repaint. Until the whole set is in, code the first part
+  does not cover waits for it (10 s cap):
+  - a navigation to a route outside `FIRST_ROUTE_NAMES` (`router.beforeEach(wholeDictionaryFor)`,
+    so the route's chunk loads and evaluates after it, and a table a module translates once, such
+    as `utils/callLog.js` `statusLabelMap`, reads the whole set; that table now translates on
+    access anyway);
+  - a sheet or dialog the first screen loads on a tap (`afterWholeDictionary` wraps the
+    `defineAsyncComponent` loaders of `MuelleShell.vue`: Más, the palette, Escanear, the camera,
+    the assistant, the layout and sections sheets; of `Hoy.vue`'s «Completar»; and of the bell's
+    Ventas panel) and the idle warm-up of route chunks (`utils/prefetch.js`).
+  A whole set this browser kept (after a deploy) is a whole set: nothing waits for the new one,
+  which repaints when it arrives, also when IndexedDB answers after the first part already ran.
   A first part that fails starts the whole set at once.
 
 ## Fallbacks

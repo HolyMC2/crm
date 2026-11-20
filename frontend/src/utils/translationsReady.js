@@ -9,9 +9,12 @@
 // few kilobytes with the words of the entry, the shell and Hoy (it sets
 // window.translated_messages_first), and its data-full names the whole set
 // (about 300 KB gzip). The mount waits for the first part only; the whole set
-// loads once the first route is up (loadWholeDictionary), becomes the config
-// and repaints. A navigation to any other route before it is in waits for it
-// (wholeDictionaryFor, a router guard), so no screen shows its English.
+// loads once the first route is up (loadWholeDictionary) and becomes the
+// config; the app repaints only when a render missed a key the whole set has
+// (translation.js noteMisses). Until it is in, code the first part does not
+// cover waits for it: a navigation to any other route (wholeDictionaryFor, a
+// router.beforeEach guard, so the route's chunk evaluates after it) and a
+// sheet or dialog the first screen loads on demand (afterWholeDictionary).
 //
 // After a deploy the page links a new version, which the browser has not
 // cached yet. The last whole dictionary this browser loaded is kept in
@@ -21,7 +24,7 @@
 // the kept version, so a load whose linked version is the kept one (the script
 // is in the HTTP cache) never reads the megabyte back.
 import { setConfig } from 'frappe-ui'
-import { dictionaryRevision } from '@/translation'
+import { dictionaryRevision, noteMisses, takeMisses } from '@/translation'
 
 const SCRIPT = 'script[src*="crm.www.crm.translations"]'
 export const MAX_WAIT_MS = 10000
@@ -33,8 +36,9 @@ const DATABASE = 'crm-translations'
 const STORE = 'dictionary'
 const KEPT_VERSION = 'crm-translations-version|'
 // The routes whose screen the first part covers (frontend/scripts/
-// translation-keys.mjs FIRST_ROUTE): any other waits for the whole set.
-export const FIRST_ROUTE_NAMES = new Set(['Hoy'])
+// translation-keys.mjs FIRST_ROUTE): any other waits for the whole set. Home
+// has no page: the router sends it to Hoy.
+export const FIRST_ROUTE_NAMES = new Set(['Home', 'Hoy'])
 
 const ran = () =>
   globalThis.translated_messages || globalThis.translated_messages_first
@@ -152,9 +156,15 @@ export function keptVersions(storage = globalThis.localStorage) {
   }
 }
 
-/** The newer dictionary replaces the one the first render used: every translated render repaints. */
-export function applyNewer(messages) {
+/**
+ * The newer dictionary replaces the one the first render used and every
+ * translated render repaints; given `misses` (the keys renders did not find
+ * in the first part, which the whole set repeats word for word) only when it
+ * translates one of them.
+ */
+export function applyNewer(messages, misses = null) {
   setConfig('translatedMessages', messages)
+  if (misses && ![...misses].some((key) => messages[key])) return
   dictionaryRevision.value++
 }
 
@@ -179,6 +189,9 @@ function appendScript(src, doc) {
 
 // The whole set while only the first part is in: { load() → promise }, or null.
 let whole = null
+// A whole set the browser kept is the config: nothing waits for the new one,
+// which repaints when it arrives (as after a deploy before first parts).
+let keptShown = false
 
 /**
  * Starts the whole set's download (once) when the page mounted with the first
@@ -189,10 +202,32 @@ export function loadWholeDictionary() {
   return whole ? whole.load() : null
 }
 
-/** Router guard: a route the first part does not cover waits for the whole set. */
+/**
+ * What the first part does not cover waits on this: a promise that settles
+ * once the whole set is in (or failed, or took MAX_WAIT_MS), starting its
+ * download; null when nothing needs to wait (no first part on the page, the
+ * whole set already in, or a kept whole set is the config).
+ */
+export function whenWholeDictionary() {
+  return whole && !keptShown ? whole.load() : null
+}
+
+/** Router guard (beforeEach): a route the first part does not cover waits for the whole set. */
 export function wholeDictionaryFor(to) {
-  if (!whole || FIRST_ROUTE_NAMES.has(to?.name)) return undefined
-  return whole.load().then(() => undefined)
+  if (FIRST_ROUTE_NAMES.has(to?.name)) return undefined
+  return whenWholeDictionary()?.then(() => undefined)
+}
+
+/**
+ * A lazy loader (defineAsyncComponent's) whose module loads and evaluates once
+ * the whole set is in: a sheet the first screen opens on demand never shows
+ * the words the first part lacks, nor keeps them in a module-level table.
+ */
+export function afterWholeDictionary(load) {
+  return () => {
+    const pending = whenWholeDictionary()
+    return pending ? pending.then(() => load()) : load()
+  }
 }
 
 /**
@@ -207,12 +242,17 @@ export function wholeDictionaryFor(to) {
  */
 export function mountWhenTranslated(mount, options = {}) {
   whole = null
+  keptShown = false
+  takeMisses()
   const doc = options.doc ?? globalThis.document
   const wait = translationsReady(options)
   const full = fullSource(doc)
+  // Mounting with the first part: true when it became the dictionary.
   const adoptFirst = () => {
-    if (!globalThis.translated_messages && globalThis.translated_messages_first)
-      globalThis.translated_messages = globalThis.translated_messages_first
+    if (globalThis.translated_messages || !globalThis.translated_messages_first)
+      return false
+    globalThis.translated_messages = globalThis.translated_messages_first
+    return true
   }
   if (!wait && !full) {
     adoptFirst()
@@ -227,10 +267,19 @@ export function mountWhenTranslated(mount, options = {}) {
   let mounted = false
   let shown = null
   let kept = undefined
+  // Mounted on a first-part page without a whole set (the first part, or
+  // nothing when it failed): the whole set replaces it when it arrives.
+  let partial = false
+  const show = (entry) => {
+    globalThis.translated_messages = entry.messages
+    shown = entry
+    keptShown = true
+  }
   const go = () => {
     if (mounted) return
     mounted = true
-    adoptFirst()
+    if (adoptFirst() && full) noteMisses()
+    partial = !!full && !shown && !!whole
     return mount()
   }
   let store = null
@@ -251,10 +300,17 @@ export function mountWhenTranslated(mount, options = {}) {
         (entry) => {
           kept = usable(entry) ? entry.version : null
           if (kept === version) versions.set(key, version)
-          if (mounted || globalThis.translated_messages || !kept) return
-          globalThis.translated_messages = entry.messages
-          shown = entry
-          go()
+          if (!kept) return
+          if (!mounted && !globalThis.translated_messages) {
+            show(entry)
+            go()
+          } else if (mounted && partial && whole) {
+            // The first part ran before IndexedDB answered: the kept whole set
+            // still replaces it, so nothing waits for the new one.
+            partial = false
+            show(entry)
+            onNewer(entry.messages, takeMisses())
+          }
         },
         () => {
           kept = null
@@ -262,12 +318,12 @@ export function mountWhenTranslated(mount, options = {}) {
       )
   }
   // The whole set ran: it replaces what the first render used, and is kept.
-  const arrived = (fresh, first) => {
+  const arrived = (fresh) => {
     if (!fresh || typeof fresh !== 'object') return
-    if (
-      first ||
-      (shown && fresh !== shown.messages && shown.version !== version)
-    )
+    if (partial) {
+      partial = false
+      onNewer(fresh, takeMisses())
+    } else if (shown && fresh !== shown.messages && shown.version !== version)
       onNewer(fresh)
     if (!store) return
     whenIdle(() => {
@@ -291,8 +347,7 @@ export function mountWhenTranslated(mount, options = {}) {
             () => {
               const fresh = globalThis.translated_messages
               whole = null
-              // Mounted with the first part (not a kept whole set): repaint.
-              arrived(fresh, !shown)
+              arrived(fresh)
             },
             { once: true },
           )
@@ -312,7 +367,7 @@ export function mountWhenTranslated(mount, options = {}) {
   } else {
     script.addEventListener(
       'load',
-      () => arrived(globalThis.translated_messages, false),
+      () => arrived(globalThis.translated_messages),
       { once: true },
     )
   }

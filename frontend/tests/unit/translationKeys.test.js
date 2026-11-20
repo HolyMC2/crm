@@ -1,13 +1,19 @@
 // The build lists the strings it can translate (scripts/translation-keys.mjs) and
 // the verifier fails the build when a __() key in the sources is not listed
 // (scripts/verify-translation-keys.mjs). These pin both halves.
+import { existsSync, readFileSync } from 'node:fs'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { parseAst } from 'vite'
 import {
   FIRST_ROUTE,
   firstChunks,
+  missingFirstRoute,
   stringLiterals,
 } from '../../scripts/translation-keys.mjs'
+import { FIRST_ROUTE_NAMES } from '@/utils/translationsReady'
+import { gateRoute } from '@/utils/crmCapabilities'
 import {
   callEnd,
   missingKeys,
@@ -99,6 +105,41 @@ describe('firstChunks', () => {
   it('names the landing page and the shell', () => {
     expect(FIRST_ROUTE).toContain('src/pages/Hoy.vue')
     expect(FIRST_ROUTE).toContain('src/components/shell/MuelleShell.vue')
+  })
+
+  it('names the module of no chunk, so the build can fail on a rename', () => {
+    const chunks = firstChunks(bundle, root)
+    expect(
+      missingFirstRoute(chunks, root, [
+        'src/pages/Hoy.vue',
+        'src/components/shell/MuelleShell.vue',
+      ]),
+    ).toEqual([])
+    expect(
+      missingFirstRoute(chunks, root, [
+        'src/pages/Hoy.vue',
+        'src/pages/HoyRenamed.vue',
+      ]),
+    ).toEqual(['src/pages/HoyRenamed.vue'])
+  })
+})
+
+describe('the first route, named three times', () => {
+  const frontend = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
+
+  it('every FIRST_ROUTE module exists', () => {
+    for (const path of FIRST_ROUTE)
+      expect(existsSync(resolve(frontend, path)), path).toBe(true)
+  })
+
+  it('the route a worker lands on is one the first part covers', () => {
+    expect(FIRST_ROUTE_NAMES.has('Home')).toBe(true)
+    expect(FIRST_ROUTE_NAMES.has(gateRoute({ name: 'Home' }).name)).toBe(true)
+  })
+
+  it('crm.py links the first part on the landing paths only', () => {
+    const source = readFileSync(resolve(frontend, '../crm/www/crm.py'), 'utf8')
+    expect(source).toContain('FIRST_ROUTE_PATHS = ("/crm", "/crm/hoy")')
   })
 })
 

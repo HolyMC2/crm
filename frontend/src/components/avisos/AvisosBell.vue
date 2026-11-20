@@ -58,6 +58,7 @@ import { useRouter } from 'vue-router'
 import AvisosPanel from '@/components/avisos/AvisosPanel.vue'
 import { shellBoot } from '@/composables/muelleShell'
 import { afterFirstRoute } from '@/utils/prefetch'
+import { afterWholeDictionary } from '@/utils/translationsReady'
 import {
   avisosBadge,
   avisosPanelOpen,
@@ -75,7 +76,7 @@ const props = defineProps({
   active: Boolean,
 })
 const VentasNotifications = defineAsyncComponent(
-  () => import('@/components/Notifications.vue'),
+  afterWholeDictionary(() => import('@/components/Notifications.vue')),
 )
 // Ventas' panel (calendar reminders) mounts after the first page is up, or at
 // once when the bell is opened sooner (SPEC §4 first-route budget).

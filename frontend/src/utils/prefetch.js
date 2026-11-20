@@ -3,6 +3,9 @@
 // the heavy chunks during browser idle time, one per idle slot so the prefetch
 // never competes with user interaction (429 history).
 // Import specifiers MUST match router.js exactly — same specifier = same chunk.
+// On a page that mounted with the dictionary's first part a warm-up waits for
+// the whole set, like the router's guard: a route chunk evaluates after it.
+import { whenWholeDictionary } from './translationsReady'
 
 const HOT_CHUNKS = [
   () => import('@/pages/Inbox.vue'),
@@ -84,7 +87,8 @@ export function prefetchHotChunks(router, { delay = PREFETCH_DELAY_MS } = {}) {
     if (i >= chunks.length) return
     const load = chunks[i++]
     // failures are irrelevant — the router will import for real on navigation
-    load()
+    Promise.resolve(whenWholeDictionary())
+      .then(load)
       .catch(() => {})
       .finally(() => idle(next))
   }

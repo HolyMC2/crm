@@ -97,9 +97,8 @@ const ENGLISH = new Set(
   webshop calendar desk preview go now yet still already more less see all collapse expand minimize maximize
   something went wrong try again unknown invalid missing not available success successfully saved
   click tap press enter type choose pick drag drop here there anyone someone everyone
-  limit limits timezone restriction restrictions line lines unavailable`.split(
-    /\s+/,
-  ),
+  limit limits timezone restriction restrictions line lines unavailable
+  document documents random default`.split(/\s+/),
 )
 const SPANISH_WORDS = new Set(
   `de del la las el los y o en con para por un una unos unas al que es son su sus tu tus sin se lo le les

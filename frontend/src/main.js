@@ -80,9 +80,11 @@ let pinia = createPinia()
 let app = createApp(App)
 
 // The landing route mounts with the dictionary's first part: a route it does
-// not cover waits for the whole set (utils/translationsReady.js). Registered
-// before the router starts its first navigation.
-router.beforeResolve(wholeDictionaryFor)
+// not cover waits for the whole set (utils/translationsReady.js) before its
+// chunk loads, so the page and any table its modules translate once are in
+// the worker's language. Registered after router.js's own guard (which sends
+// Home to Hoy) and before the router starts its first navigation.
+router.beforeEach(wholeDictionaryFor)
 
 // frappe-ui 1.0 opens no socket and installs no v1 `resources` option API
 // (crm uses neither); the boot-aware socket is created below and set as $socket.

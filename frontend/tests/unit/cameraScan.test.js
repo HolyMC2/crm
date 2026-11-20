@@ -205,7 +205,9 @@ describe('camera door', () => {
   })
   it('every door opens the same lazy sheet (no static import of it)', () => {
     const shell = source('components/shell/MuelleShell.vue')
-    expect(shell).toContain('defineAsyncComponent(loadCameraSheet)')
+    // lazySheet: defineAsyncComponent(afterWholeDictionary(load)).
+    expect(shell).toContain('lazySheet(loadCameraSheet)')
+    expect(shell).toContain('defineAsyncComponent(afterWholeDictionary(load))')
     expect(shell).not.toMatch(/import CameraSheet/)
     expect(shell).toMatch(
       /data-testid="shell-camera"[\s\S]*?@click="openCamera\(\)"/,

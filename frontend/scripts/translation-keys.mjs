@@ -10,7 +10,9 @@
 // the landing page every worker opens on, Hoy) and of every chunk they import
 // statically. The server ships those keys as a small first dictionary the page
 // mounts with; the whole one follows after the first route is up
-// (utils/translationsReady.js).
+// (utils/translationsReady.js). A sheet the first screen loads on a tap waits
+// for the whole set instead (afterWholeDictionary). The build fails when a
+// FIRST_ROUTE module is in no chunk (a rename would silently empty the part).
 import { relative } from 'node:path'
 
 export const KEYS_FILE = 'translation-keys.json'
@@ -22,6 +24,12 @@ export const FIRST_ROUTE = [
   // The desktop rail's bell, which the rail loads on its own.
   'src/components/avisos/AvisosBell.vue',
   'src/pages/Hoy.vue',
+  // «Primeros pasos»: abordo's welcome sends a new owner to /crm/hoy?paso=…,
+  // and Hoy opens the sheet on its first screen.
+  'src/components/primeros/PrimerosPasosSheet.vue',
+  'src/components/primeros/NegocioSheet.vue',
+  'src/components/primeros/ProductoSheet.vue',
+  'src/components/primeros/InvitarSheet.vue',
 ]
 
 const POSITION = new Set(['type', 'start', 'end', 'loc', 'range'])
@@ -78,6 +86,18 @@ export function firstChunks(bundle, root, roots = FIRST_ROUTE) {
   return [...found]
 }
 
+/** The FIRST_ROUTE modules none of `chunks` holds: a renamed or moved file. */
+export function missingFirstRoute(chunks, root, roots = FIRST_ROUTE) {
+  const held = new Set()
+  for (const chunk of chunks)
+    for (const id of [
+      chunk.facadeModuleId,
+      ...(chunk.moduleIds || Object.keys(chunk.modules || {})),
+    ])
+      if (id) held.add(relative(root, id.split('?')[0]))
+  return roots.filter((path) => !held.has(path))
+}
+
 // Vite plugin: emits translation-keys.json next to the bundle. It reads each
 // module's transformed code (before tree-shaking drops unused exports), so
 // the list is a superset of what the chunks contain.
@@ -113,7 +133,14 @@ export function translationKeys() {
       const literals = new Set()
       for (const set of perModule.values()) for (const s of set) literals.add(s)
       const first = new Set()
-      for (const chunk of firstChunks(bundle, root))
+      const chunks = firstChunks(bundle, root)
+      const missing = missingFirstRoute(chunks, root)
+      if (missing.length) {
+        this.error(
+          `translation-keys: FIRST_ROUTE names modules no chunk holds (renamed or moved?): ${missing.join(', ')}`,
+        )
+      }
+      for (const chunk of chunks)
         for (const id of chunk.moduleIds || Object.keys(chunk.modules || {}))
           for (const s of perModule.get(id) || []) first.add(s)
       this.emitFile({

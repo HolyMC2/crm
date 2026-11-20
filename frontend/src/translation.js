@@ -7,6 +7,23 @@ import { getConfig } from 'frappe-ui'
 // one repaints with the new words.
 export const dictionaryRevision = ref(0)
 
+// While the app runs on the dictionary's first part, the keys a render asked
+// for and did not find: when the whole set arrives the app repaints only if it
+// translates one of them (utils/translationsReady.js applyNewer).
+let misses = null
+
+/** Starts noting the keys renders do not find. */
+export function noteMisses() {
+  misses = new Set()
+}
+
+/** The keys noted since noteMisses (null when none were noted), and stops noting. */
+export function takeMisses() {
+  const noted = misses
+  misses = null
+  return noted
+}
+
 export default function translationPlugin(app) {
   app.config.globalProperties.__ = translate
   window.__ = translate
@@ -29,11 +46,14 @@ function translate(message, replace, context = null) {
     let key = `${message}:${context}`
     if (translatedMessages[key]) {
       translatedMessage = translatedMessages[key]
+    } else {
+      misses?.add(key)
     }
   }
 
   if (!translatedMessage) {
     translatedMessage = translatedMessages[message] || message
+    if (misses && !translatedMessages[message]) misses.add(message)
   }
 
   const hasPlaceholders = /{\d+}/.test(message)

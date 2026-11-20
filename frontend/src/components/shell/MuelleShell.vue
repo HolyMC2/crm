@@ -370,6 +370,7 @@ import {
 import { moduleEnabled, moduleMeta } from '@/vendor/muelle-shell/contracts'
 import { warmListsAfterFirstRoute } from '@/utils/listWarmup'
 import { warmAfterFirstRoute } from '@/utils/prefetch'
+import { afterWholeDictionary } from '@/utils/translationsReady'
 import { noteVisit } from '@/utils/visited'
 import {
   camera,
@@ -388,17 +389,20 @@ import ShellBottomNav from './ShellBottomNav.vue'
 import SessionEnded from './SessionEnded.vue'
 import { dismissNotice, shellNotice } from './cuentaDoor'
 
-const MoreSheet = defineAsyncComponent(() => import('./MoreSheet.vue'))
+// The shell's sheets are not in the dictionary's first part: on a cold load
+// each one opens once the whole set is in (utils/translationsReady.js).
+const lazySheet = (load) => defineAsyncComponent(afterWholeDictionary(load))
+const MoreSheet = lazySheet(() => import('./MoreSheet.vue'))
 const loadPalette = () => import('./CommandPalette.vue')
-const CommandPalette = defineAsyncComponent(loadPalette)
-const ShortcutSheet = defineAsyncComponent(() => import('./ShortcutSheet.vue'))
-const LayoutSheet = defineAsyncComponent(() => import('./LayoutSheet.vue'))
-const SectionsSheet = defineAsyncComponent(() => import('./SectionsSheet.vue'))
-const AssistantSheet = defineAsyncComponent(
+const CommandPalette = lazySheet(loadPalette)
+const ShortcutSheet = lazySheet(() => import('./ShortcutSheet.vue'))
+const LayoutSheet = lazySheet(() => import('./LayoutSheet.vue'))
+const SectionsSheet = lazySheet(() => import('./SectionsSheet.vue'))
+const AssistantSheet = lazySheet(
   () => import('@/components/assistant/AssistantSheet.vue'),
 )
-const CameraSheet = defineAsyncComponent(loadCameraSheet)
-const ScanSheet = defineAsyncComponent(loadScanSheet)
+const CameraSheet = lazySheet(loadCameraSheet)
+const ScanSheet = lazySheet(loadScanSheet)
 
 const route = useRoute(),
   router = useRouter()
