@@ -49463,3 +49463,480 @@ msgstr "No tienes eventos programados"
 #: frontend/src/components/Settings/LeadSyncing/LeadSyncSources.vue
 msgid "Add and manage your lead sources here."
 msgstr "Agrega y administra aquí tus orígenes de prospectos."
+
+# Altas: «Registrar algo nuevo» / «Altas por revisar» (doco.workspaces.altas)
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "To sell"
+msgstr "Para vender"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "It goes on the counter or online"
+msgstr "Se vende en el mostrador o en línea"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Used in the workshop"
+msgstr "Se usa en el taller"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "It is spent on repairs"
+msgstr "Se gasta en las reparaciones"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Tool or equipment"
+msgstr "Herramienta o equipo"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "It stays in the shop"
+msgstr "Se queda en la tienda"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "{0} piece"
+msgstr "{0} pieza"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "{0} pieces"
+msgstr "{0} piezas"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "To review"
+msgstr "Por revisar"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Created"
+msgstr "Dada de alta"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Added to a product"
+msgstr "Sumada a un producto"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Not created"
+msgstr "No se dio de alta"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Something new"
+msgstr "Algo nuevo"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "New products"
+msgstr "Altas"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Register something new"
+msgstr "Registrar algo nuevo"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Sent"
+msgstr "Enviado"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "The assistant reads the label and whoever creates products decides. You will get a pendiente to print its label."
+msgstr "El asistente lee la etiqueta y quien da de alta productos decide. Te llegará un pendiente para imprimir su etiqueta."
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Register another"
+msgstr "Registrar otro"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "See my registrations"
+msgstr "Ver mis altas"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Photos of the piece and of its label"
+msgstr "Fotos de la pieza y de su etiqueta"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Photo {0}"
+msgstr "Foto {0}"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Remove photo"
+msgstr "Quitar foto"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Take photo"
+msgstr "Tomar foto"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Choose from the gallery"
+msgstr "Elegir de la galería"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "What is it? (optional)"
+msgstr "¿Qué es? (opcional)"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "E.g. charging connector A26"
+msgstr "Ej. conector de carga A26"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "How many are there?"
+msgstr "¿Cuántos hay?"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "One less"
+msgstr "Uno menos"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "One more"
+msgstr "Uno más"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Where does it go?"
+msgstr "¿Dónde va?"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Change"
+msgstr "Cambiar"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Search the drawer or shelf"
+msgstr "Busca el cajón o el anaquel"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Without a place it goes to your usual store; the drawer can be set later."
+msgstr "Sin lugar se queda en tu almacén de siempre; el cajón se pone después."
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "What is it for?"
+msgstr "¿Para qué es?"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Code on the label (optional)"
+msgstr "Código de la etiqueta (opcional)"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Notes (optional)"
+msgstr "Notas (opcional)"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Sending…"
+msgstr "Enviando…"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Send to review"
+msgstr "Enviar para dar de alta"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Take a photo or write what it is."
+msgstr "Toma una foto o escribe qué es."
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Write how many there are."
+msgstr "Escribe cuántos hay."
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Products"
+msgstr "Productos"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "List"
+msgstr "Lista"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "What the team found that is not in the system. The assistant proposes the name; you decide."
+msgstr "Lo que el equipo encontró y no está en el sistema. El asistente propone el nombre; tú decides."
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Loading…"
+msgstr "Cargando…"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "The list did not load"
+msgstr "No se cargó la lista"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Try again"
+msgstr "Volver a intentar"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Looks like it already exists"
+msgstr "Parece que ya existe"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Mine"
+msgstr "Mías"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Decided"
+msgstr "Decididas"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Nothing to review"
+msgstr "Nada por revisar"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "You have nothing waiting"
+msgstr "No tienes nada esperando"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Nothing decided yet"
+msgstr "Nada decidido todavía"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "When someone finds a piece that is not in the system, they register it with «Register something new»."
+msgstr "Cuando alguien encuentra una pieza que no está en el sistema, la registra con «Registrar algo nuevo»."
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "New product"
+msgstr "Alta"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "This registration did not open"
+msgstr "No se abrió esta alta"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Open photo {0}"
+msgstr "Abrir foto {0}"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "They wrote"
+msgstr "Escribió"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "For"
+msgstr "Para"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "How many"
+msgstr "Cuántos"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Where"
+msgstr "Dónde"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Label code"
+msgstr "Código de la etiqueta"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Notes"
+msgstr "Notas"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "What the assistant proposes"
+msgstr "Lo que propone el asistente"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "The assistant is reading the photos…"
+msgstr "El asistente está leyendo las fotos…"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Name"
+msgstr "Nombre"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Group"
+msgstr "Grupo"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Fits"
+msgstr "Le queda a"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "The label says"
+msgstr "La etiqueta dice"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "{0} in stock there"
+msgstr "{0} en existencia ahí"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Decided by {0}."
+msgstr "Lo decidió {0}."
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Open the product"
+msgstr "Abrir el producto"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Whoever creates products decides it. You will hear back here and in Avisos."
+msgstr "La decide quien da de alta productos. Te avisamos aquí y en Avisos."
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Create it"
+msgstr "Dar de alta"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "It is the same as…"
+msgstr "Es el mismo que…"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "No"
+msgstr "No"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Create the product"
+msgstr "Dar de alta el producto"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Choose the group"
+msgstr "Elige el grupo"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Code to scan (optional)"
+msgstr "Código para escanear (opcional)"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Selling price (optional)"
+msgstr "Precio de venta (opcional)"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Cost per piece (optional)"
+msgstr "Costo por pieza (opcional)"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "It enters with its photos, {0} in its place, and the person who found it gets a pendiente to label it."
+msgstr "Entra con sus fotos y {0} en su lugar, y quien lo encontró recibe un pendiente para ponerle su etiqueta."
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Creating…"
+msgstr "Dando de alta…"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Search the product"
+msgstr "Busca el producto"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Product"
+msgstr "Producto"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "How the count goes"
+msgstr "Cómo va la cuenta"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Add to the product"
+msgstr "Sumar al producto"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Do not create it"
+msgstr "No darla de alta"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Why? The person who found it reads it."
+msgstr "¿Por qué? Lo lee quien lo encontró."
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Add {0}"
+msgstr "Sumar {0}"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "{0} in total"
+msgstr "{0} en total"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Not created. The person who found it was told why."
+msgstr "No se dio de alta. Le avisamos a quien lo encontró por qué."
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "{0} is in. A pendiente to label it went to who found it."
+msgstr "{0} ya está dado de alta. Quien lo encontró tiene un pendiente para ponerle su etiqueta."
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Pieces the team registered, to create or not"
+msgstr "Lo que el equipo registró, para dar de alta o no"
+
+#: frontend/src/pages/ProductosAltas.vue
+msgctxt "Altas"
+msgid "Register a piece that is not in the system"
+msgstr "Registra una pieza que no está en el sistema"

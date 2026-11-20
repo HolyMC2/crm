@@ -527,6 +527,41 @@ const routes = [
     },
   },
   {
+    // «Altas por revisar» and «Registrar algo nuevo» (doco.workspaces.altas). Before `:item`.
+    path: '/productos/altas',
+    name: 'ProductosAltas',
+    component: () => import('@/pages/ProductosAltas.vue'),
+    meta: {
+      app: 'productos',
+      title: 'Altas',
+      listParent: 'Productos',
+      ownPhoneHeader: true,
+    },
+  },
+  {
+    path: '/productos/altas/nueva',
+    name: 'AltaNueva',
+    component: () => import('@/pages/AltaNueva.vue'),
+    meta: {
+      app: 'productos',
+      title: 'Altas',
+      listParent: 'Productos',
+      ownPhoneHeader: true,
+    },
+  },
+  {
+    path: '/productos/altas/:name',
+    name: 'Alta',
+    component: () => import('@/pages/Alta.vue'),
+    props: true,
+    meta: {
+      app: 'productos',
+      title: 'Altas',
+      listParent: 'Productos',
+      ownPhoneHeader: true,
+    },
+  },
+  {
     path: '/productos/:item',
     name: 'Producto',
     component: () => import('@/pages/Producto.vue'),

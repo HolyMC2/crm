@@ -180,7 +180,7 @@
       <div
         ref="scroller"
         class="min-h-0 flex-1 overflow-y-auto"
-        :class="isPhone && canCreate ? 'pb-24' : 'pb-6'"
+        :class="isPhone && (canCreate || altas?.propose) ? 'pb-24' : 'pb-6'"
         data-productos-scroller
         @scroll.passive="rememberScroll"
       >
@@ -226,6 +226,35 @@
             >
               <span class="lucide-percent h-4 w-4" aria-hidden="true" />
               Precios
+            </RouterLink>
+            <!-- «Altas»: what the team found that is not in the system; who
+                 may not create products registers it there. -->
+            <RouterLink
+              v-if="altas"
+              to="/productos/altas"
+              class="inline-flex min-h-11 items-center gap-1.5 rounded-5 px-3 text-base text-ink-gray-8 hover:bg-surface-gray-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-8"
+              :title="
+                altas.decide
+                  ? __(
+                      'Pieces the team registered, to create or not',
+                      null,
+                      'Altas',
+                    )
+                  : __(
+                      'Register a piece that is not in the system',
+                      null,
+                      'Altas',
+                    )
+              "
+              data-productos-altas
+            >
+              <span class="lucide-package-plus h-4 w-4" aria-hidden="true" />
+              {{ __('New products', null, 'Altas') }}
+              <span
+                v-if="altas.por_revisar"
+                class="num rounded-full bg-[var(--muelle-accent)] px-1.5 text-xs text-[var(--muelle-accent-ink)]"
+                >{{ altas.por_revisar }}</span
+              >
             </RouterLink>
             <RouterLink
               to="/productos/etiquetas"
@@ -988,6 +1017,13 @@
         :label="__('New product', null, 'Productos')"
         :to="{ name: 'ProductoNuevo' }"
       />
+      <!-- Who may not create products registers what they find instead. -->
+      <Fab
+        v-else-if="isPhone && altas?.propose"
+        :label="__('Register something new', null, 'Altas')"
+        icon="lucide-camera"
+        :to="{ name: 'AltaNueva' }"
+      />
     </div>
     <CountDialog
       v-model="countDialog.open"
@@ -1495,6 +1531,8 @@ const guard = computed(() =>
     : '',
 )
 const canCreate = computed(() => Boolean(boot.value?.capabilities?.create_item))
+// «Altas»: who may register a piece that is not in the system, and how many wait.
+const altas = computed(() => boot.value?.capabilities?.altas || null)
 // «Importar» opens the sheet importer, which asks the server again and says why
 // when the person may not add products.
 const canImport = computed(() =>
