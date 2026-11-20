@@ -49940,3 +49940,271 @@ msgstr "Lo que el equipo registró, para dar de alta o no"
 msgctxt "Altas"
 msgid "Register a piece that is not in the system"
 msgstr "Registra una pieza que no está en el sistema"
+#: frontend/src/components/Activities/Activities.vue
+msgid "No Activities Found"
+msgstr "Sin actividad"
+
+#: frontend/src/components/Activities/Activities.vue
+msgid "No Emails Found"
+msgstr "Sin correos"
+
+#: frontend/src/components/Activities/Activities.vue
+msgid "No Comments Found"
+msgstr "Sin comentarios"
+
+#: frontend/src/components/Activities/Activities.vue
+msgid "No Data Fields Added Yet"
+msgstr "Aún no hay campos"
+
+#: frontend/src/components/Activities/Activities.vue
+msgid "No Call History"
+msgstr "Sin llamadas"
+
+#: frontend/src/components/Activities/Activities.vue
+msgid "No Notes Found"
+msgstr "Sin notas"
+
+#: frontend/src/components/Activities/Activities.vue
+msgid "No Tasks Found"
+msgstr "Sin tareas"
+
+#: frontend/src/components/Activities/Activities.vue
+msgid "No Attachments Found"
+msgstr "Sin archivos adjuntos"
+
+#: frontend/src/components/Activities/Activities.vue
+msgid "No WhatsApp Messages Found"
+msgstr "Sin mensajes de WhatsApp"
+
+#: frontend/src/components/Activities/Activities.vue
+msgid "There are no activities to display here. Go ahead and make some changes."
+msgstr "Aquí aparece todo lo que pase con este registro."
+
+#: frontend/src/components/Activities/Activities.vue
+msgid "No emails found in your inbox. New messages will appear here soon."
+msgstr "Aún no hay correos. Los nuevos aparecen aquí."
+
+#: frontend/src/components/Activities/Activities.vue
+msgid "Be the first to add one."
+msgstr "Escribe el primero."
+
+#: frontend/src/components/Activities/Activities.vue
+msgid "No data fields have been added yet."
+msgstr "Aún no se agrega ningún campo."
+
+#: frontend/src/components/Activities/Activities.vue
+msgid "No recent calls to display. Log a call or call someone now!"
+msgstr "No hay llamadas recientes. Registra una o llama ahora."
+
+#: frontend/src/components/Activities/Activities.vue
+msgid "Nothing here for now. Add a note to keep track of things."
+msgstr "Aún no hay notas. Agrega una para no olvidar nada."
+
+#: frontend/src/components/Activities/Activities.vue
+msgid "Nothing to do at the moment. Start organizing by adding one here."
+msgstr "No hay tareas por ahora. Agrega una aquí."
+
+#: frontend/src/components/Activities/Activities.vue
+msgid "No files have been attached yet. Upload files to see them here."
+msgstr "Aún no hay archivos. Súbelos para verlos aquí."
+
+#: frontend/src/components/Activities/Activities.vue
+msgid "Start a conversation now!"
+msgstr "Empieza la conversación."
+
+#: frontend/src/components/Activities/EventArea.vue
+msgid "has created an event"
+msgstr "creó un evento"
+
+#: frontend/src/components/FilesUploader/FilesUploader.vue
+msgid "Error Uploading File"
+msgstr "No se pudo subir el archivo"
+
+#: frontend/src/components/Controls/TableMultiselectInput.vue
+msgid "Table MultiSelect requires a Table with atleast one Link field"
+msgstr "Esta tabla necesita al menos un campo que enlace a otro registro."
+
+#: frontend/src/components/Controls/TableMultiselectInput.vue
+msgid "Value already exists"
+msgstr "Ese valor ya está en la lista"
+
+#: frontend/src/components/Settings/AssignmentRules/AssigneeRules.vue
+msgid "Auto-rotate"
+msgstr "Por turnos"
+
+#: frontend/src/components/Settings/AssignmentRules/AssigneeRules.vue
+msgid "Assign by workload"
+msgstr "Según la carga de trabajo"
+
+#: frontend/src/components/Settings/AssignmentRules/AssignmentRuleView.vue
+msgid "Low-Medium"
+msgstr "Medio-bajo"
+
+#: frontend/src/components/Settings/AssignmentRules/AssignmentRuleView.vue
+msgid "Medium-High"
+msgstr "Medio-alto"
+
+#: frontend/src/components/Settings/InviteUserPage.vue
+msgid "Can manage all aspects of the CRM, including user management, customizations and settings."
+msgstr "Puede administrar todo: usuarios, personalización y ajustes."
+
+#: frontend/src/components/Settings/InviteUserPage.vue
+msgid "Can manage and invite new users, and create public & private views (reports)."
+msgstr "Puede invitar y administrar usuarios, y crear vistas públicas y privadas."
+
+#: frontend/src/components/Settings/InviteUserPage.vue
+msgid "Can work with leads and deals and create private views (reports)."
+msgstr "Puede trabajar con prospectos y tratos, y crear vistas privadas."
+
+#: frontend/src/utils/pipelineConfiguration.js
+msgctxt "Etapa"
+msgid "Archived"
+msgstr "Archivada"
+
+#: frontend/src/components/EventNotificationsArea.vue
+msgid "Starting now"
+msgstr "Empiezan ahora"
+
+#: frontend/src/components/EventNotificationsArea.vue
+msgid "Ongoing events"
+msgstr "Eventos en curso"
+
+#: frontend/src/components/EventNotificationsArea.vue
+msgid "Upcoming events"
+msgstr "Próximos eventos"
+
+#: frontend/src/components/Settings/ERPNextSettings.vue
+msgid "No CRM Products"
+msgstr "Sin productos"
+
+#: frontend/src/components/Settings/ERPNextSettings.vue
+msgid "Failed Logs"
+msgstr "Con error"
+
+#: frontend/src/components/Settings/ERPNextSettings.vue
+msgid "No failed syncs"
+msgstr "Ninguna sincronización falló"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "In Person"
+msgstr "En persona"
+
+#: frontend/src/components/Modals/DoctypeModal.vue
+msgid "Could not create document"
+msgstr "No se pudo crear el registro"
+
+#: frontend/src/components/Modals/DoctypeModal.vue
+msgid "Could not update document"
+msgstr "No se pudo guardar el registro"
+
+#: frontend/src/utils/listRouteQuery.js
+msgid "Pipeline analysis"
+msgstr "Análisis del embudo"
+
+#: frontend/src/framework-ui/components/Onboarding/HelpModal.vue
+msgid "Getting started"
+msgstr "Primeros pasos"
+
+#: frontend/src/framework-ui/components/Onboarding/HelpModal.vue
+msgid "Help center"
+msgstr "Centro de ayuda"
+
+#: frontend/src/framework-ui/components/Onboarding/HelpModal.vue
+msgid "Reset onboarding steps"
+msgstr "Reiniciar los primeros pasos"
+
+#: frontend/src/framework-ui/components/Onboarding/HelpModal.vue
+msgid "Maximize"
+msgstr "Maximizar"
+
+#: frontend/src/framework-ui/components/Onboarding/HelpCenter.vue
+msgid "Search articles..."
+msgstr "Buscar artículos…"
+
+#: frontend/src/framework-ui/components/Onboarding/HelpCenter.vue
+msgid "All articles"
+msgstr "Todos los artículos"
+
+#: frontend/src/framework-ui/components/Onboarding/HelpCenter.vue
+msgid "Open docs"
+msgstr "Abrir la ayuda"
+
+#: frontend/src/framework-ui/components/SignupBanner/SignupBanner.vue
+msgid "Loved the demo?"
+msgstr "¿Te gustó la demostración?"
+
+#: frontend/src/framework-ui/components/SignupBanner/SignupBanner.vue
+msgid "Try {0} for free with a 14-day trial."
+msgstr "Prueba {0} gratis durante 14 días."
+
+#: frontend/src/framework-ui/components/SignupBanner/SignupBanner.vue
+msgid "Sign up now"
+msgstr "Regístrate"
+
+#: frontend/src/framework-ui/components/Onboarding/IntermediateStepModal.vue
+msgid "Your browser does not support the video tag."
+msgstr "Tu navegador no puede reproducir este video."
+
+#: frontend/src/framework-ui/components/Onboarding/OnboardingSteps.vue
+msgid "{0}/{1} steps completed"
+msgstr "{0} de {1} pasos listos"
+
+#: frontend/src/framework-ui/components/Onboarding/OnboardingSteps.vue
+msgid "{0}% completed"
+msgstr "{0}% listo"
+
+#: frontend/src/framework-ui/components/Onboarding/OnboardingSteps.vue
+msgid "Skip all"
+msgstr "Omitir todo"
+
+#: frontend/src/framework-ui/components/Onboarding/OnboardingSteps.vue
+msgid "You need to complete \"{0}\" first."
+msgstr "Primero completa «{0}»."
+
+#: frontend/src/framework-ui/components/Onboarding/GettingStartedBanner.vue
+msgid "{0}/{1} steps"
+msgstr "{0} de {1} pasos"
+
+#: frontend/src/framework-ui/components/Onboarding/GettingStartedBanner.vue
+msgid "You are all set"
+msgstr "Todo listo"
+
+#: frontend/src/framework-ui/components/Onboarding/GettingStartedBanner.vue
+msgid "All steps are completed successfully"
+msgstr "Completaste todos los pasos"
+
+#: frontend/src/framework-ui/components/Onboarding/GettingStartedBanner.vue
+msgid "Start now"
+msgstr "Empezar"
+
+#: frontend/src/framework-ui/components/TrialBanner/TrialBanner.vue
+msgid "Upgrade plan"
+msgstr "Cambiar de plan"
+
+#: frontend/src/framework-ui/components/TrialBanner/TrialBanner.vue
+msgid "Trial ends in {0} days"
+msgstr "Tu prueba termina en {0} días"
+
+#: frontend/src/framework-ui/components/TrialBanner/TrialBanner.vue
+msgid "Trial ends tomorrow"
+msgstr "Tu prueba termina mañana"
+
+#: frontend/src/framework-ui/components/TrialBanner/TrialBanner.vue
+msgid "Upgrade to a paid plan for uninterrupted services"
+msgstr "Contrata un plan para seguir sin interrupciones."
+
+#: frontend/src/framework-ui/components/Onboarding/OnboardingSteps.vue
+msgid "Welcome to {0}"
+msgstr "Bienvenido a {0}"
+
+#: frontend/src/framework-ui/components/Onboarding/OnboardingSteps.vue
+msgid "Reset all"
+msgstr "Restablecer todo"
+
+#: frontend/src/framework-ui/components/Onboarding/OnboardingSteps.vue
+msgid "Skip"
+msgstr "Omitir"
+
+#: frontend/src/components/EventNotificationPopup.vue
+msgid "Event Notification"
+msgstr "Aviso de evento"

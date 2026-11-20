@@ -5,9 +5,10 @@
 // literal, a constant of the module, a constant it imports, or the default of
 // the module's own tr() helper. No component passes English as a static
 // placeholder / aria-label / title / label / alt / tooltip / description
-// attribute either (dailySpanish.test.js also checks the daily routes' text).
-// A failure lists `file → string`: add the es-MX msgstr to crm/locale/es.po,
-// or bind the attribute to __() (src/vendor/** is checked by its own package).
+// attribute or writes it as template text either, the vendored framework-ui
+// included. A failure lists `file → string`: add the es-MX msgstr to
+// crm/locale/es.po, or bind the attribute or text to __() (src/vendor/** is
+// checked by its own package).
 import { describe, expect, it } from 'vitest'
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
@@ -75,6 +76,16 @@ const NOT_COPY = new Set([
   'INBOX', // the IMAP folder's name
 ])
 
+// Template text that reads the same for every language: a URL path shown as
+// typed, product names, the upstream license notice.
+const NOT_COPY_TEXT = new Set([
+  '/crm-form/', // the public form's path (Forms)
+  '/crm-form/ ·',
+  'Google Calendar',
+  'Webshop', // the social channel's name (SocialComposer)
+  '© Frappe Technologies Pvt. Ltd. and contributors', // AboutModal license notice
+])
+
 /** `file → attr="value"` for each English static attribute of a component. */
 export function hardCodedAttributesIn(path, src) {
   return templateLiterals(src)
@@ -86,6 +97,16 @@ export function hardCodedAttributesIn(path, src) {
       ({ kind, value }) =>
         `${relative(SRC, path)} → ${kind}=${JSON.stringify(value)}`,
     )
+}
+
+/** `file → "text"` for each English text node of a component's template. */
+export function hardCodedTextIn(path, src) {
+  return templateLiterals(src)
+    .filter(
+      ({ kind, value }) =>
+        kind === 'text' && !NOT_COPY_TEXT.has(value) && looksEnglish(value),
+    )
+    .map(({ value }) => `${relative(SRC, path)} → ${JSON.stringify(value)}`)
 }
 
 /** `file → "msgid" [context]` for each English string without a msgstr. */
@@ -129,13 +150,10 @@ describe('the whole /crm SPA speaks Spanish', () => {
   })
 
   it('passes no English as a static attribute', () => {
-    // src/framework-ui is frappe's @framework/ui as vendored (SOURCE.json).
+    // src/framework-ui (frappe's @framework/ui as vendored) is checked too: its
+    // copy goes through __() as a recorded local change (SOURCE.json).
     const hardCoded = sources
-      .filter(
-        (path) =>
-          path.endsWith('.vue') &&
-          !relative(SRC, path).startsWith('framework-ui/'),
-      )
+      .filter((path) => path.endsWith('.vue'))
       .flatMap((path) =>
         hardCodedAttributesIn(path, readFileSync(path, 'utf8')),
       )
@@ -149,6 +167,22 @@ describe('the whole /crm SPA speaks Spanish', () => {
         '<template>\n  <EmptyState description="Add one to get started." placeholder="INBOX" />\n</template>',
       ),
     ).toEqual(['X.vue → description="Add one to get started."'])
+  })
+
+  it('writes no English text in a template', () => {
+    const hardCoded = sources
+      .filter((path) => path.endsWith('.vue'))
+      .flatMap((path) => hardCodedTextIn(path, readFileSync(path, 'utf8')))
+    expect(
+      hardCoded,
+      "wrap this text in {{ __('…') }} with an es-MX msgstr in crm/locale/es.po",
+    ).toEqual([])
+    expect(
+      hardCodedTextIn(
+        join(SRC, 'X.vue'),
+        "<template><p>Loved the demo?</p><p>{{ __('Sign up now') }}</p></template>\n<script setup>\nconst a = 'Open the list'\n</script>",
+      ),
+    ).toEqual(['X.vue → "Loved the demo?"'])
   })
 
   it('reads the context a call gets from an import or its tr() helper', () => {

@@ -31,6 +31,11 @@
     "index.ts": ["crm-authored root barrel limited to the vendored pieces"],
     "lint": [
       "crm eslint errors fixed in place: HelpModal.vue footer v-for :key and headingTitle returns '' when neither heading applies; pulse.ts empty catch blocks carry a comment; session.ts let -> const"
+    ],
+    "i18n": [
+      "every visible string of HelpModal, HelpCenter, OnboardingSteps, GettingStartedBanner, IntermediateStepModal, SignupBanner and TrialBanner (text, label, placeholder, aria-label, the computed headings and menu labels) goes through crm's global __() with its es-MX msgstr in crm/locale/es.po; strings built by concatenation or template literals became __() with {0} placeholders",
+      "TrialBanner's trialMessage is a computed, so a newer dictionary repaints it",
+      "HelpModal's footer item reads «Help center» like its heading (upstream spells it «Help centre»)"
     ]
   },
   "tests": "frontend/tests/unit/crmOnboarding.test.js and startupTelemetry.test.js exercise the vendored files through the alias"

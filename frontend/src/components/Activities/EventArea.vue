@@ -28,7 +28,7 @@
             <span class="font-medium text-ink-gray-8 ml-1">
               {{ event.owner.label }}
             </span>
-            <span>{{ 'has created an event' }}</span>
+            <span>{{ __('has created an event') }}</span>
           </div>
           <div class="ml-auto flex items-center gap-3 whitespace-nowrap">
             <RouterLink

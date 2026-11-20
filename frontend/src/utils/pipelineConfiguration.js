@@ -23,7 +23,9 @@ export function pipelineStageOptions(pipeline, currentStatus = '') {
   return (pipeline?.stages || [])
     .filter((stage) => !stage.archived || stage.name === currentStatus)
     .map((stage) => ({
-      label: stage.name + (stage.archived ? ' · Archived' : ''),
+      label:
+        stage.name +
+        (stage.archived ? ` · ${__('Archived', null, 'Etapa')}` : ''),
       value: stage.name,
       disabled: Boolean(stage.archived),
     }))

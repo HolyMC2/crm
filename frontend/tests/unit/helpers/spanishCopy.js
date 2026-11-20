@@ -230,7 +230,10 @@ export function templateLiterals(sfc) {
   const open = sfc.match(/^<template[^>]*>/m)
   if (!open) return []
   const start = open.index + open[0].length
-  const end = sfc.lastIndexOf('\n</template>')
+  // A one-line `<template>…</template>` (a redirect page) has no closing tag
+  // on its own line: it ends at its last `</template>`, never at the script.
+  let end = sfc.lastIndexOf('\n</template>')
+  if (end <= start) end = sfc.lastIndexOf('</template>')
   const tpl = sfc.slice(start, end > start ? end : undefined)
   const out = []
   let text = ''
