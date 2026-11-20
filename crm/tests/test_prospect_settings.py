@@ -246,8 +246,13 @@ class FollowUpTests(TestCase):
 			patch.object(follow_up.follow_up, "upsert") as upsert,
 		):
 			follow_up.on_lead_insert(self.lead(converted=1))
-			with patch.object(frappe.flags, "in_import", True, create=True):
+			# frappe.flags is a _dict (no __dict__ for patch.object): set it and put it back.
+			before = frappe.flags.in_import
+			frappe.flags.in_import = True
+			try:
 				follow_up.on_lead_insert(self.lead())
+			finally:
+				frappe.flags.in_import = before
 		upsert.assert_not_called()
 
 	def test_a_failed_follow_up_never_costs_the_prospect(self):
@@ -306,3 +311,20 @@ class ProspectChipTests(TestCase):
 		self.assertTrue(out["inquiries_enabled"])
 		self.assertFalse(out["inquiries_capture"])
 		self.assertFalse(out["can_change_settings"])
+
+
+class ApiTests(TestCase):
+	def test_a_save_answers_with_what_it_wrote(self):
+		saved = {**OFF, "companies": True}
+		with (
+			patch("crm.api.check_app_permission", return_value=True),
+			patch.object(prospect_settings, "save", return_value=saved) as save,
+			patch.object(prospect_settings, "get", side_effect=AssertionError("re-read")),
+			patch.object(prospect_settings, "sources", return_value=[]),
+			patch.object(prospect_settings, "can_change", return_value=True),
+		):
+			from crm.api import prospect_settings as api
+
+			out = api.save_settings('{"companies": 1}')
+		save.assert_called_once_with({"companies": 1})
+		self.assertEqual(out["settings"], saved)

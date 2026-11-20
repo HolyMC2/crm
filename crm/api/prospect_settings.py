@@ -17,9 +17,9 @@ def _require_member():
 		frappe.throw(_("Ventas is not available for your role."), frappe.PermissionError)
 
 
-def _state():
+def _state(settings=None):
 	return {
-		"settings": prospect_settings.get(),
+		"settings": settings or prospect_settings.get(),
 		"sources": prospect_settings.sources(),
 		"can_change": prospect_settings.can_change(),
 	}
@@ -39,8 +39,7 @@ def save_settings(changes: dict | str):
 			changes = json.loads(changes)
 		except ValueError:
 			frappe.throw(_("Choose a setting to change."))
-	prospect_settings.save(changes)
-	return _state()
+	return _state(prospect_settings.save(changes))
 
 
 @frappe.whitelist(methods=["POST"])

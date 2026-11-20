@@ -41,8 +41,12 @@ def defaults() -> dict:
 
 def get() -> dict:
 	"""The shop's prospect settings: its choices over the defaults."""
+	return _over_defaults(_stored())
+
+
+def _over_defaults(stored: dict) -> dict:
 	values = defaults()
-	for key, value in _stored().items():
+	for key, value in stored.items():
 		if key in values and _valid(key, value):
 			values[key] = value
 	return values
@@ -71,7 +75,8 @@ def save(changes: dict) -> dict:
 	stored = _stored()
 	stored.update(clean)
 	frappe.db.set_single_value("FCRM Settings", FIELD, json.dumps(stored, sort_keys=True))
-	return get()
+	# From what was written, not a new read: the request's single-value cache may be older.
+	return _over_defaults(stored)
 
 
 def sources() -> list[dict]:
