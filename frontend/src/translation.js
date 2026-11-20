@@ -1,4 +1,11 @@
+import { ref } from 'vue'
 import { getConfig } from 'frappe-ui'
+
+// Moves when a newer dictionary replaces the one the first render used
+// (utils/translationsReady.js mounts with the browser's last dictionary while
+// a new version downloads): every render that translated reads it, so each
+// one repaints with the new words.
+export const dictionaryRevision = ref(0)
 
 export default function translationPlugin(app) {
   app.config.globalProperties.__ = translate
@@ -14,6 +21,7 @@ function format(message, replace) {
 }
 
 function translate(message, replace, context = null) {
+  void dictionaryRevision.value
   let translatedMessages = getConfig('translatedMessages') || {}
   let translatedMessage = ''
 

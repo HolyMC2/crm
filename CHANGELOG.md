@@ -3,6 +3,12 @@
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
 
+## 2026-11-19 — After a deploy, /crm mounts with the dictionary the browser kept instead of waiting for the new one (lane golive-crm; not deployed)
+
+- **Why:** go-live audit 11-19 (finding 79): the mount waits for the translations script (312 KB gzip); on Slow 4G it ended at 4.2 s, after the entry (2.3 s), and first paint came at 4.5 s. Warm loads hit the immutable HTTP cache, but each deploy that changes the words links a new version, so every person's first load after a roll waited for the download again.
+- **Change:** `utils/translationsReady.js` keeps the last built dictionary in IndexedDB (`crm-translations`, key site and language, only content-hashed versions). When the page links a version the browser has not run yet, the mount uses the kept one at once; when the new script arrives it becomes frappe-ui's dictionary and `translation.js`'s `dictionaryRevision` moves, so every translated render repaints with the new words, and the new one is kept at idle. A browser with nothing kept, an unversioned page, or no IndexedDB waits for the script as before (10 s cap).
+- **Tests:** `tests/unit/translationsReady.test.js` (+11: early mount and repaint, same version no repaint or write, nothing kept, the script first, unversioned page, failing store, bad entry, no IndexedDB, a mounted screen repaints). Real Chromium (Playwright): mounted 1.2 ms after the call from the kept set while the script was held back, repainted when it ran, kept the new version (lane `.scratch/proof/idb-proof.json`). Build: entry JS 176.9 KB gzip (budget 180). Rollback: revert.
+
 ## 2026-11-19 — After a deploy or a cache clear, the first /crm load gets the trimmed dictionary, not the whole 1 MB one (lane golive-crm; not deployed)
 
 - **Why:** go-live audit 11-19 (finding 80): the lab's first /crm load after a migrate linked `translations?v=` (empty) and got the whole dictionary, 3.5 MB raw, 1.08 MB gzip, uncacheable. crm's after_migrate rebuild ran, but every app after crm re-saves its custom fields in its own after_migrate, and each save (`clear()`) deleted the stored sets.

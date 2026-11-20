@@ -120,7 +120,8 @@ if (import.meta.env.DEV) {
   connectAfterFirstRoute(socket)
   startShell()
   // The first render reads the dictionary (App.vue): the mount waits for its
-  // script, which the page loads after this entry so both come in parallel.
+  // script, which the page loads after this entry so both come in parallel,
+  // or mounts at once with the dictionary this browser kept from its last load.
   mountWhenTranslated(() => app.mount('#app'))
 }
 
