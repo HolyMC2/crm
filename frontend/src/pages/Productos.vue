@@ -1240,7 +1240,7 @@ const arrivalView = computed(() => view.value === ARRIVAL_VIEW)
 const photoRun = computed(
   () =>
     (state.value.photo === 'sin' || arrivalView.value) &&
-    Boolean(boot.value?.capabilities?.edit),
+    Boolean(boot.value?.capabilities?.photo ?? boot.value?.capabilities?.edit),
 )
 /** The camera walk over the list: its products that still have no photo. */
 const walk = computed(() =>

@@ -22451,8 +22451,21 @@ msgid "Money"
 msgstr "Dinero"
 
 #: frontend/src/pages/EquipoPersona.vue
+msgctxt "Equipo"
+msgid "Products"
+msgstr "Productos"
+
+#: frontend/src/pages/EquipoPersona.vue
 msgid "Sees the money of the business"
 msgstr "Ve el dinero del negocio"
+
+#: frontend/src/pages/EquipoPersona.vue
+msgid "Takes product photos"
+msgstr "Toma fotos de productos"
+
+#: frontend/src/pages/EquipoPersona.vue
+msgid "Adds and changes the photos of products, without editing the products or their prices."
+msgstr "Agrega y cambia las fotos de los productos, sin editar los productos ni sus precios."
 
 #: frontend/src/pages/EquipoPersona.vue
 msgid "Bancos, Resultados, the sales of the day and costs. Off, they keep selling, buying and changing prices."

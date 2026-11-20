@@ -502,6 +502,69 @@
               {{ moneySaid?.text }}
             </p>
           </section>
+          <!-- «Toma fotos de productos»: the owner's switch; on lets this
+               person add and change product photos without editing products. -->
+          <section
+            v-if="person.fotos"
+            class="px-4"
+            aria-labelledby="equipo-fotos"
+            data-testid="equipo-fotos"
+          >
+            <h2
+              id="equipo-fotos"
+              class="pb-1 text-base font-semibold text-ink-gray-9"
+            >
+              {{ __('Products', null, 'Equipo') }}
+            </h2>
+            <div class="flex min-h-14 items-center gap-3 py-2">
+              <label
+                for="equipo-fotos-switch"
+                class="flex min-w-0 flex-1 flex-col"
+              >
+                <span class="text-base text-ink-gray-9">{{
+                  __('Takes product photos')
+                }}</span>
+                <span class="text-sm text-ink-gray-6">{{
+                  __(
+                    'Adds and changes the photos of products, without editing the products or their prices.',
+                  )
+                }}</span>
+              </label>
+              <AjustesSwitch
+                id="equipo-fotos-switch"
+                :model-value="person.fotos.on"
+                :label="__('Takes product photos')"
+                :disabled="!person.fotos.can_change || photosBusy"
+                :aria-describedby="
+                  person.fotos.reason ? 'equipo-fotos-motivo' : undefined
+                "
+                @update:model-value="setPhotos"
+              />
+            </div>
+            <p
+              v-if="person.fotos.reason"
+              id="equipo-fotos-motivo"
+              class="text-sm text-ink-gray-6"
+            >
+              {{ person.fotos.reason }}
+            </p>
+            <p
+              v-if="photosSaid?.error"
+              role="alert"
+              class="text-sm text-ink-red-7"
+              data-testid="equipo-fotos-dicho"
+            >
+              {{ photosSaid.text }}
+            </p>
+            <p
+              v-else
+              aria-live="polite"
+              class="text-sm text-ink-green-8"
+              data-testid="equipo-fotos-dicho"
+            >
+              {{ photosSaid?.text }}
+            </p>
+          </section>
           <section
             v-if="person.hr"
             class="px-4"
@@ -639,6 +702,9 @@ const billingSaid = ref(null)
 const moneyBusy = ref(false)
 // The money switch's last answer, said beside it: {text, error}.
 const moneySaid = ref(null)
+const photosBusy = ref(false)
+// The photos switch's last answer, said beside it: {text, error}.
+const photosSaid = ref(null)
 // A full plan in «Completar alta»: the owner adds one user in place.
 const {
   step: seatStep,
@@ -976,6 +1042,30 @@ async function setMoney(allow) {
     moneySaid.value = { text: problemOf(error).detail, error: true }
   } finally {
     moneyBusy.value = false
+  }
+}
+async function setPhotos(allow) {
+  const fotos = person.value?.fotos
+  if (!fotos?.can_change || photosBusy.value) return
+  const before = fotos.on
+  fotos.on = allow
+  photosBusy.value = true
+  photosSaid.value = null
+  try {
+    const answer = await equipoApi(
+      'doco.erp_experience.equipo.set_photo_access',
+      {
+        user: person.value.user,
+        allow: allow ? 1 : 0,
+      },
+    )
+    if (answer?.fotos) person.value.fotos = answer.fotos
+    photosSaid.value = { text: answer?.message || '', error: false }
+  } catch (error) {
+    fotos.on = before
+    photosSaid.value = { text: problemOf(error).detail, error: true }
+  } finally {
+    photosBusy.value = false
   }
 }
 async function askHr() {
