@@ -33,6 +33,8 @@ import hashlib
 import io
 import json
 import os
+import re
+import time
 import tokenize
 
 import frappe
@@ -50,8 +52,14 @@ KEYS_FILE = ("public", "frontend", "translation-keys.json")
 # CRM Lead Source); larger ones hold data, not vocabulary.
 RECORD_LIMIT = 500
 CACHE_SECONDS = 24 * 3600
-# The site folder that keeps each built set across cache clears.
+# The site folder that keeps each built set across cache clears, deploys and meta changes.
 STORE_DIR = "crm-shell-dictionary"
+# In STORE_DIR: when a DocType, Custom Field or Property Setter last changed. A set built before
+# it is still served (its labels are at most that change behind) while its rebuild runs.
+CHANGED_FILE = "changed"
+# Built sets kept per language: the current one and the one before it.
+KEEP_PER_LANGUAGE = 2
+STORED_NAME = re.compile(r"^(?P<lang>[0-9a-f]{8})-[0-9a-f]{24}\.json$")
 # A queued build that never ran (the worker was killed, the job lost) is queued again after this.
 QUEUED_SECONDS = 300
 # The DocTypes a named DocType links to, whose labels open in "create new" dialogs.
@@ -84,45 +92,63 @@ def build_literals() -> tuple[str, frozenset[str] | None]:
 def script() -> tuple[str, bytes]:
 	"""(version, classic script setting window.translated_messages) for the session language.
 
-	Until the background build has run (a few seconds after a deploy, a build or a
-	Translation edit) it is the whole dictionary under version "", which no page links.
+	While the set for this build is being built (a few seconds after a deploy, a meta change or a
+	Translation edit) it is the last set stored for the language, under its own version; only a
+	language with no stored set yet gets the whole dictionary under version "", which no page
+	links.
 	"""
 	field = _field()
-	cached = frappe.cache.hget(CACHE_KEY, "p|" + field) or _restore(field)
-	if cached is None:
+	entry = _entry(field)
+	if entry is None:
 		_queue_build(field)
 		return "", _payload(_dictionary(frappe.local.lang))
-	return cached
+	return entry
 
 
 def version() -> str:
-	"""The version the page links the script with; "" while the build is pending."""
+	"""The version the page links the script with; "" while a language's first build is pending."""
 	field = _field()
 	current = frappe.cache.hget(CACHE_KEY, "v|" + field)
-	if current is None:
-		stored = _restore(field)
-		if stored is not None:
-			return stored[0]
+	if current is not None:
+		return current
+	entry = _entry(field)
+	if entry is None:
 		_queue_build(field)
 		return ""
-	return current
+	return entry[0]
+
+
+def _entry(field: str) -> tuple[str, bytes] | None:
+	"""The set to serve for this field: its own build, or while that is pending the last set stored
+	for its language (queuing the build); None when the language has no set yet."""
+	cached = frappe.cache.hget(CACHE_KEY, "p|" + field)
+	if cached is not None:
+		if frappe.cache.hget(CACHE_KEY, "v|" + field) is None:
+			# A set served while its build runs: queue again if that job was lost (the marker lapsed).
+			_queue_build(field)
+		return tuple(cached[:2])
+	restored = _restore(field)
+	if restored is None:
+		return None
+	current, payload, fresh = restored
+	_cache(field, current, payload, fresh=fresh)
+	if not fresh:
+		_queue_build(field)
+	return current, payload
 
 
 def build(lang: str, field: str) -> None:
 	"""Background job: the key set reads DocType meta and the app's Python, seconds cold, so it
 	never runs in a page request."""
+	built = time.time()
 	try:
-		# A failed load raises here, so it is never cached: pages keep the whole dictionary
-		# and the next page load queues the build again.
+		# A failed load raises here, so it is never cached: pages keep the last stored set (or
+		# the whole dictionary) and the next page load queues the build again.
 		payload = _payload(shipped_messages(_dictionary(lang, strict=True), build_literals()[1]))
 		current = hashlib.sha256(payload).hexdigest()[:16]
-		_cache(field, current, payload)
-		_store(field, current, payload)
-		# The whole hash lives a day from its first field, so record names (a new stage or lead
-		# source) join the set within a day, or at the next deploy (bench migrate clears the
-		# cache) or Translation save, and fields of past builds do not pile up.
-		if frappe.cache.ttl(frappe.cache.make_key(CACHE_KEY)) < 0:
-			frappe.cache.expire_key(CACHE_KEY, CACHE_SECONDS)
+		_store(field, current, payload, built)
+		# A meta change while this ran: the set is served, but built again.
+		_cache(field, current, payload, fresh=_changed_at() <= built)
 	finally:
 		frappe.cache.delete(_queued_key(field))
 
@@ -153,26 +179,53 @@ def _queued_key(field: str) -> str:
 
 def clear(*_args) -> None:
 	"""A DocType, Custom Field or Property Setter change: labels, options and DocType names may
-	have moved, so the next page load builds the set again."""
+	have moved, so the next page load builds the set again. The stored sets stay and are served
+	meanwhile: during a migrate every app's hooks save custom fields after crm's rebuild, and
+	without them each first page after a deploy would ship the whole dictionary."""
 	frappe.cache.delete_value(CACHE_KEY)
-	for name in _stored_files():
-		try:
-			os.remove(name)
-		except OSError:
-			pass
+	try:
+		_write_atomic(_changed_path(), repr(time.time()))
+	except OSError:
+		# Without the mark a stored set would look current: drop them as before.
+		for name in _stored_files():
+			try:
+				os.remove(name)
+			except OSError:
+				pass
 
 
-def _cache(field: str, current: str, payload: bytes) -> None:
+def _cache(field: str, current: str, payload: bytes, fresh: bool = True) -> None:
 	frappe.cache.hset(CACHE_KEY, "p|" + field, (current, payload))
-	frappe.cache.hset(CACHE_KEY, "v|" + field, current)
+	if fresh:
+		frappe.cache.hset(CACHE_KEY, "v|" + field, current)
+	else:
+		frappe.cache.hdel(CACHE_KEY, "v|" + field)
+	# The whole hash lives a day from its first field, so record names (a new stage or lead
+	# source) join the set within a day, or at the next deploy (bench migrate clears the cache)
+	# or Translation save, and fields of past builds do not pile up.
+	if frappe.cache.ttl(frappe.cache.make_key(CACHE_KEY)) < 0:
+		frappe.cache.expire_key(CACHE_KEY, CACHE_SECONDS)
 
 
-# The built set also lives in a site file: a cache clear (bench clear-cache after a deploy,
-# a worker restart) empties the hash, and without the file every page until the queued
-# build runs would ship the whole dictionary. The field names the build (language, keys
-# file, translation edits), so a stored set is current whenever its field is asked for.
+# The built sets also live in site files, one per field (language, keys file, translation
+# edits), at most KEEP_PER_LANGUAGE per language. A cache clear (bench clear-cache after a
+# deploy, a worker restart) empties the hash; the file puts the set back. A set is current when
+# it was built after the last meta change and within CACHE_SECONDS; an older one, or the
+# language's last set when its field has none (a new build's keys, a Translation edit), is
+# served while the page load's queued build runs, so a page never waits for the whole
+# dictionary once its language was built.
+def _lang_tag(lang: str) -> str:
+	return hashlib.sha1(lang.encode()).hexdigest()[:8]
+
+
 def _store_path(field: str) -> str:
-	return frappe.get_site_path(STORE_DIR, hashlib.sha1(field.encode()).hexdigest()[:24] + ".json")
+	lang = field.partition("|")[0]
+	name = f"{_lang_tag(lang)}-{hashlib.sha1(field.encode()).hexdigest()[:24]}.json"
+	return frappe.get_site_path(STORE_DIR, name)
+
+
+def _changed_path() -> str:
+	return frappe.get_site_path(STORE_DIR, CHANGED_FILE)
 
 
 def _stored_files() -> list[str]:
@@ -183,31 +236,89 @@ def _stored_files() -> list[str]:
 		return []
 
 
-def _store(field: str, current: str, payload: bytes) -> None:
+def _write_atomic(path: str, text: str) -> None:
+	os.makedirs(os.path.dirname(path), exist_ok=True)
+	tmp = f"{path}.{os.getpid()}.tmp"
+	# the path is the site folder plus a fixed name or a hash of the field; nothing from a request names it
+	with open(tmp, "w", encoding="utf-8") as f:  # nosemgrep: frappe-security-file-traversal
+		f.write(text)
+	os.replace(tmp, path)
+
+
+def _store(field: str, current: str, payload: bytes, built: float) -> None:
+	lang = field.partition("|")[0]
 	path = _store_path(field)
+	data = {"field": field, "lang": lang, "version": current, "built": built, "payload": payload.decode()}
 	try:
-		os.makedirs(os.path.dirname(path), exist_ok=True)
-		tmp = f"{path}.{os.getpid()}.tmp"
-		# the path is the site folder plus a hash of the field; nothing from a request names it
-		with open(tmp, "w", encoding="utf-8") as f:  # nosemgrep: frappe-security-file-traversal
-			json.dump({"field": field, "version": current, "payload": payload.decode()}, f)
-		os.replace(tmp, path)
+		_write_atomic(path, json.dumps(data))
 	except OSError:
 		frappe.log_error("crm shell dictionary store")
+		return
+	_prune(lang, path)
 
 
-def _restore(field: str) -> tuple[str, bytes] | None:
-	"""The stored set for this field, put back in the cache; None without one."""
+def _prune(lang: str, keep: str) -> None:
+	"""Keep this language's newest sets and drop files of the older naming."""
+	tag = _lang_tag(lang)
+	mine = []
+	for path in _stored_files():
+		match = STORED_NAME.match(os.path.basename(path))
+		try:
+			if not match:
+				os.remove(path)
+			elif match["lang"] == tag and path != keep:
+				mine.append((os.stat(path).st_mtime, path))
+		except OSError:
+			continue
+	for _mtime, path in sorted(mine, reverse=True)[KEEP_PER_LANGUAGE - 1 :]:
+		try:
+			os.remove(path)
+		except OSError:
+			pass
+
+
+def _read(path: str) -> dict | None:
 	try:
-		with open(_store_path(field), encoding="utf-8") as f:  # nosemgrep: frappe-security-file-traversal
+		with open(path, encoding="utf-8") as f:  # nosemgrep: frappe-security-file-traversal
 			data = json.load(f)
 	except (OSError, ValueError):
 		return None
-	if data.get("field") != field or not data.get("version") or not data.get("payload"):
+	if not isinstance(data, dict) or not data.get("version") or not data.get("payload"):
 		return None
-	entry = (data["version"], data["payload"].encode())
-	_cache(field, *entry)
-	return entry
+	return data
+
+
+def _changed_at() -> float:
+	try:
+		with open(_changed_path(), encoding="utf-8") as f:  # nosemgrep: frappe-security-file-traversal
+			return float(f.read().strip() or 0)
+	except (OSError, ValueError):
+		return 0.0
+
+
+def _restore(field: str) -> tuple[str, bytes, bool] | None:
+	"""(version, payload, current) of the stored set for this field, else the newest stored set of
+	its language (never current); None without one."""
+	data = _read(_store_path(field))
+	if data and data.get("field") == field:
+		built = float(data.get("built") or 0)
+		current = built >= _changed_at() and time.time() - built < CACHE_SECONDS
+		return data["version"], data["payload"].encode(), current
+	lang = field.partition("|")[0]
+	tag = _lang_tag(lang)
+	newest = []
+	for path in _stored_files():
+		match = STORED_NAME.match(os.path.basename(path))
+		if match and match["lang"] == tag:
+			try:
+				newest.append((os.stat(path).st_mtime, path))
+			except OSError:
+				continue
+	for _mtime, path in sorted(newest, reverse=True):
+		data = _read(path)
+		if data and data.get("lang") == lang:
+			return data["version"], data["payload"].encode(), False
+	return None
 
 
 def rebuild(*_args) -> None:

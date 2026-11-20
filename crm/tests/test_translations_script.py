@@ -3,6 +3,8 @@
 
 import json
 import os
+import time
+from contextlib import suppress
 from unittest.mock import MagicMock, patch
 
 import frappe
@@ -30,9 +32,11 @@ class TestTranslationsScript(IntegrationTestCase):
 		# The hash and the queued-build markers next to it.
 		frappe.cache.delete_keys(shell_dictionary.CACHE_KEY)
 		frappe.local.cache.pop(frappe.cache.make_key(shell_dictionary.CACHE_KEY), None)
-		# And the site store the build writes next to the cache.
+		# And the site store the build writes next to the cache, with its meta-change mark.
 		for name in shell_dictionary._stored_files():
 			os.remove(name)
+		with suppress(FileNotFoundError):
+			os.remove(shell_dictionary._changed_path())
 
 	def patched(self, messages, listing=FULL, user_translations=None, enqueue=_build_now):
 		return (
@@ -46,6 +50,12 @@ class TestTranslationsScript(IntegrationTestCase):
 		a, b, c, d = self.patched(messages, **kwargs)
 		with a, b, c, d, patch("frappe.request", _request(headers)):
 			return translations(v)
+
+	def run_queued(self, job, messages, **kwargs):
+		# The worker runs the queued job later, with the same dictionary and build.
+		a, b, c, d = self.patched(messages, **kwargs)
+		with a, b, c, d:
+			shell_dictionary.build(job["lang"], job["field"])
 
 	def page_version(self, messages, **kwargs):
 		a, b, c, d = self.patched(messages, **kwargs)
@@ -161,14 +171,115 @@ class TestTranslationsScript(IntegrationTestCase):
 		self.assertIn('"Ventas":"Sales"', body)
 		self.assertNotIn("Not shipped", body)
 
-	def test_a_meta_change_drops_the_stored_set_too(self):
+	def test_a_meta_change_serves_the_stored_set_while_it_rebuilds(self):
 		queued = []
 		messages = {"Ventas": "Sales"}
 		self.page_version(messages)
+		v = self.page_version(messages)
+		self.assertEqual(len(v), 16)
 		self.assertTrue(shell_dictionary._stored_files())
+		# A Custom Field saved by another app's after_migrate, after crm's rebuild.
 		shell_dictionary.clear()
-		self.assertEqual(shell_dictionary._stored_files(), [])
-		self.assertEqual(self.page_version(messages, enqueue=lambda method, **kw: queued.append(kw)), "")
+		self.assertTrue(shell_dictionary._stored_files())
+		later = {"Ventas": "Revenue"}
+		capture = lambda method, **kw: queued.append(kw)  # noqa: E731
+		self.assertEqual(self.page_version(later, enqueue=capture), v)
+		self.assertEqual(self.page_version(later, enqueue=capture), v)
+		# The page's versioned URL is still the immutable set, never the whole dictionary.
+		response = self.serve(later, v=v, enqueue=capture)
+		self.assertEqual(response.headers["Cache-Control"], "private, max-age=31536000, immutable")
+		self.assertIn('"Ventas":"Sales"', response.get_data(as_text=True))
+		self.assertEqual(len(queued), 1)
+		# The queued build replaces it.
+		self.run_queued(queued[0], later)
+		fresh = self.page_version(later)
+		self.assertNotEqual(fresh, v)
+		self.assertIn('"Ventas":"Revenue"', self.serve(later, v=fresh).get_data(as_text=True))
+
+	def test_a_new_build_serves_the_last_set_of_its_language_while_it_builds(self):
+		messages = {"Ventas": "Sales", "zz key of the new build": "New"}
+		old = ("k1", frozenset({"Ventas"}))
+		self.page_version(messages, listing=old)
+		v = self.page_version(messages, listing=old)
+		self.assertEqual(len(v), 16)
+		# A deploy: the build names other keys, so the field is new and has no set yet.
+		frappe.cache.delete_value(shell_dictionary.CACHE_KEY)
+		frappe.local.cache.pop(frappe.cache.make_key(shell_dictionary.CACHE_KEY), None)
+		queued = []
+		new = ("k2", frozenset({"Ventas", "zz key of the new build"}))
+		self.assertEqual(
+			self.page_version(messages, listing=new, enqueue=lambda m, **kw: queued.append(kw)), v
+		)
+		self.assertEqual(len(queued), 1)
+		self.run_queued(queued[0], messages, listing=new)
+		built = self.page_version(messages, listing=new)
+		self.assertNotEqual(built, v)
+		body = self.serve(messages, v=built, listing=new).get_data(as_text=True)
+		self.assertIn('"zz key of the new build":"New"', body)
+
+	def test_another_language_never_borrows_a_set(self):
+		self.page_version({"Ventas": "Sales"})
+		self.assertTrue(self.page_version({"Ventas": "Sales"}))
+		lang = frappe.local.lang
+		frappe.local.lang = "fr" if lang != "fr" else "de"
+		try:
+			queued = []
+			self.assertEqual(
+				self.page_version({"Ventas": "Ventes"}, enqueue=lambda m, **kw: queued.append(kw)), ""
+			)
+			self.assertEqual(len(queued), 1)
+		finally:
+			frappe.local.lang = lang
+
+	def test_each_language_keeps_its_two_newest_sets_and_old_names_go(self):
+		folder = frappe.get_site_path(shell_dictionary.STORE_DIR)
+		os.makedirs(folder, exist_ok=True)
+		legacy = os.path.join(folder, "0" * 24 + ".json")
+		with open(legacy, "w") as f:
+			f.write("{}")
+		lang = frappe.local.lang
+		paths = []
+		for n in range(3):
+			field = f"{lang}|k{n}|fp"
+			shell_dictionary._store(field, f"{n:016d}", b"window.translated_messages = {};", time.time())
+			paths.append(shell_dictionary._store_path(field))
+			# Distinct mtimes, newest last.
+			os.utime(paths[-1], (time.time() + n, time.time() + n))
+		other = f"{'fr' if lang != 'fr' else 'de'}|k0|fp"
+		shell_dictionary._store(other, "f" * 16, b"window.translated_messages = {};", time.time())
+		left = set(shell_dictionary._stored_files())
+		self.assertNotIn(legacy, left)
+		self.assertNotIn(paths[0], left)
+		self.assertIn(paths[1], left)
+		self.assertIn(paths[2], left)
+		self.assertIn(shell_dictionary._store_path(other), left)
+
+	def test_a_set_older_than_a_day_is_served_and_built_again(self):
+		messages = {"Ventas": "Sales"}
+		a, b, c, d = self.patched(messages)
+		with a, b, c, d:
+			field = shell_dictionary._field()
+		old = time.time() - shell_dictionary.CACHE_SECONDS - 60
+		shell_dictionary._store(field, "a" * 16, b"window.translated_messages = {};", old)
+		queued = []
+		self.assertEqual(self.page_version(messages, enqueue=lambda m, **kw: queued.append(kw)), "a" * 16)
+		self.assertEqual(len(queued), 1)
+
+	def test_a_meta_change_during_the_build_keeps_the_set_but_builds_again(self):
+		messages = {"Ventas": "Sales"}
+		a, b, c, d = self.patched(messages)
+
+		def change_meta_midway(lang, strict=False):
+			shell_dictionary.clear()
+			return messages
+
+		with a, b, c, d, patch("crm.shell_dictionary._dictionary", side_effect=change_meta_midway):
+			field = shell_dictionary._field()
+			shell_dictionary.build(frappe.local.lang, field)
+		self.assertIsNone(frappe.cache.hget(shell_dictionary.CACHE_KEY, "v|" + field))
+		queued = []
+		v = self.page_version(messages, enqueue=lambda m, **kw: queued.append(kw))
+		self.assertEqual(len(v), 16)
 		self.assertEqual(len(queued), 1)
 
 	def test_the_versioned_url_is_immutable_and_any_other_revalidates(self):
@@ -250,6 +361,18 @@ class TestTranslationsScript(IntegrationTestCase):
 		self.assertIn("CRM Territory", {f.options for f in frappe.get_meta("CRM Deal").fields})
 		keys = shell_dictionary.runtime_keys(frozenset({"CRM Deal"}))
 		self.assertIn(frappe.get_meta("CRM Territory").get_field("territory_manager").label, keys)
+
+	def test_after_migrate_hooks_of_later_apps_keep_the_trimmed_set(self):
+		a, b, c, d = self.patched({"Ventas": "Sales"}, enqueue=lambda m, **kw: None)
+		with a, b, c, d:
+			shell_dictionary.rebuild()
+			version = _translations_version()
+			# doco's after_migrate re-saves its custom fields, then bench clears the cache.
+			shell_dictionary.clear()
+			frappe.local.cache.pop(frappe.cache.make_key(shell_dictionary.CACHE_KEY), None)
+			self.assertEqual(_translations_version(), version)
+			response = translations(version)
+		self.assertEqual(response.headers["Cache-Control"], "private, max-age=31536000, immutable")
 
 	def test_migrate_rebuilds_the_set_for_the_site_languages_at_once(self):
 		self.assertIn("crm.shell_dictionary.rebuild", frappe.get_hooks("after_migrate"))

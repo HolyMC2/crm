@@ -3,6 +3,12 @@
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
 
+## 2026-11-19 — After a deploy or a cache clear, the first /crm load gets the trimmed dictionary, not the whole 1 MB one (lane golive-crm; not deployed)
+
+- **Why:** go-live audit 11-19 (finding 80): the lab's first /crm load after a migrate linked `translations?v=` (empty) and got the whole dictionary, 3.5 MB raw, 1.08 MB gzip, uncacheable. crm's after_migrate rebuild ran, but every app after crm re-saves its custom fields in its own after_migrate, and each save (`clear()`) deleted the stored sets.
+- **Change (`crm/shell_dictionary.py`):** a DocType, Custom Field or Property Setter change now marks the stored sets stale (`crm-shell-dictionary/changed`) instead of deleting them. A stale set, a set older than a day, or, for a field with no set yet (a new build's keys, a Translation edit), the newest set of the same language is served under its own content-hashed version (immutable for a year) while the page load's queued build runs; a meta change during a build serves that build and queues another. Only a language that was never built gets the whole dictionary. Each language keeps its two newest sets; files of the old naming are removed.
+- **Tests:** `crm/tests/test_translations_script.py` (+6, one rewritten: a meta change serves the stored set while it rebuilds; later apps' after_migrate keeps the trimmed set; a new build borrows its language's last set, never another language's; two sets per language; a day-old set is rebuilt; a meta change mid-build). Rollback: revert (the old code ignores the new file names and builds again).
+
 ## 2026-11-19 — The whole /crm speaks es-MX: 437 English strings get their Spanish (lane golive-crm; not deployed)
 
 - **Why:** go-live audit 11-19 (findings 31 and 36): a deal's Orders tab (sales orders, payment links, the register handoff), Offers, the conversion review and Ajustes showed English copy about money and permissions to a Spanish-speaking owner or seller.
