@@ -64,17 +64,21 @@ vi.mock('vue-router', () => ({
 
 import {
   accountNames,
+  accountState,
   accountsFor,
   answerText,
   dayOf,
   differenceText,
+  effectLines,
   everyText,
   hourText,
   journalsOf,
   kindsFor,
   lastCountText,
+  ownBalances,
   rangeText,
   receiptText,
+  stillWaiting,
   whyText,
 } from '@/components/dinero/porExplicar'
 import PorExplicar from '@/pages/PorExplicar.vue'
@@ -261,6 +265,96 @@ describe('cash and reminder helpers', () => {
   })
 })
 
+describe('what a tap does, and where each account lands', () => {
+  const fmt = (n) =>
+    `$${Number(n).toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+  const DEPOSITOS = {
+    id: 'BBVA|Deposit|DEPOSITO EFECTIVO',
+    bank_account: 'BBVA',
+    bank_label: 'BBVA Débito',
+    direction: 'Deposit',
+    label: 'DEPOSITO EFECTIVO',
+    count: 3,
+    total: 900,
+    rows: [
+      { name: 'BT30', amount: 500 },
+      { name: 'BT31', amount: 300 },
+    ],
+    guess: { kind: 'traspaso', account: 'Caja Fuerte - E', why: 'efectivo' },
+  }
+  const ctx = {
+    fmt,
+    names: accountNames(CHOICES),
+    own: ownBalances(
+      [
+        {
+          cuenta: 'Amex',
+          label: 'Amex Platinum',
+          kind: 'tarjeta',
+          ledger: 'Amex - E',
+          balance: 20000,
+        },
+      ],
+      [{ account: 'Caja Fuerte - E', label: 'Caja fuerte', balance: 12000 }],
+    ),
+  }
+
+  it('says where the money goes and where the other account lands', () => {
+    expect(effectLines(DEPOSITOS, 'traspaso', 'Caja Fuerte - E', ctx)).toEqual([
+      'Pasan $800.00 de Caja fuerte a BBVA Débito.',
+      'Caja fuerte queda en $11,200.00 en tus libros.',
+      'Toma los 2 más recientes; el otro sigue aquí.',
+    ])
+    const pago = {
+      ...DEPOSITOS,
+      direction: 'Withdrawal',
+      count: 1,
+      rows: [{ name: 'BT32', amount: 5000 }],
+    }
+    expect(effectLines(pago, 'traspaso', 'Amex - E', ctx)).toEqual([
+      'Se pagan $5,000.00 de Amex Platinum desde BBVA Débito.',
+      'Tu deuda de Amex Platinum queda en $15,000.00 en tus libros.',
+    ])
+    expect(effectLines(pago, 'personal', 'Retiros - E', ctx, true)).toEqual([
+      'Salió $5,000.00 de BBVA Débito como dinero tuyo (Retiros del dueño), no como gasto.',
+    ])
+  })
+
+  it('tells whether explaining what waits makes the account agree with its bank', () => {
+    const bank = { kind: 'banco', diferencia: 800 }
+    expect(accountState(bank, { count: 2, net: 800 }, fmt)).toMatchObject({
+      known: true,
+      agrees: false,
+      figure: '$800.00',
+      line: '2 movimientos por explicar: al explicarlos, cuadra con el banco.',
+    })
+    expect(accountState(bank, { count: 2, net: 300 }, fmt).line).toBe(
+      '2 movimientos por explicar. Al explicarlos quedan $500.00 sin cuadrar: toca para ver por qué.',
+    )
+    // a card: what waits is a charge (the ledger owes more), the bank says it is owed
+    const card = { kind: 'tarjeta', diferencia: 400 }
+    expect(accountState(card, { count: 1, net: -400 }, fmt).line).toContain(
+      'cuadra con el banco',
+    )
+    expect(
+      accountState({ kind: 'banco', diferencia: 0 }, null, fmt),
+    ).toMatchObject({
+      agrees: true,
+      figure: 'Cuadra',
+      line: 'Cuadra con el banco.',
+    })
+    expect(accountState(null, { count: 3, net: 0 }, fmt).known).toBe(false)
+  })
+
+  it('finds which movements still wait after a call that never answered', () => {
+    const page = {
+      groups: [{ rows: [{ name: 'BT1' }] }],
+      facturas: [{ name: 'BT9' }],
+    }
+    expect(stillWaiting(page, ['BT1', 'BT2', 'BT9'])).toEqual(['BT1', 'BT9'])
+  })
+})
+
 describe('PorExplicar page', () => {
   let app
   let host
@@ -316,9 +410,15 @@ describe('PorExplicar page', () => {
         cuenta: 'Software - E',
       },
     )
+    // the result stays where the group was, with what it booked
+    const hecho = host.querySelector('[data-por-explicar-hecho]')
+    expect(hecho.textContent).toContain('ANTHROPIC: 2 movimientos explicados')
+    expect(hecho.textContent).toContain(
+      'Salió $7,275.29 de Amex Platinum como gasto en Software.',
+    )
     expect(
-      host.querySelector('[data-por-explicar-recibo]').textContent,
-    ).toContain('Listo: 2 movimientos de ANTHROPIC explicados.')
+      host.querySelector('[data-por-explicar-grupos] li').contains(hecho),
+    ).toBe(true)
     expect(
       host.querySelector('[data-por-explicar-grupo="ANTHROPIC"]'),
     ).toBeNull()
@@ -573,7 +673,7 @@ describe('PorExplicar page', () => {
     await mount()
     expect(
       host.querySelector('[data-lista-pareada="facturas"]').textContent,
-    ).toContain('Factura de Gasolinera Sur · PINV-7')
+    ).toContain('Pago de la factura de Gasolinera Sur')
     host.querySelector('[data-lista-pareada-accion="facturas"]').click()
     await flush()
     const [, args] = state.call.mock.calls.find(([m]) => m.endsWith('.pagar'))
@@ -589,6 +689,99 @@ describe('PorExplicar page', () => {
       { movimiento: 'BT22', doctype: 'Payment Entry', name: 'PE-5' },
     ])
     expect(undo[1].cancelar).toBe(1)
+  })
+
+  it('shows each account against its bank and where it lands', async () => {
+    state.push.mockReset()
+    state.call.mockImplementation(async (method) => {
+      if (method.endsWith('por_explicar.estado'))
+        return {
+          ...estado([ANTHROPIC]),
+          cuentas: [
+            {
+              bank_account: 'Amex',
+              label: 'Amex Platinum',
+              ledger: 'Amex - E',
+              count: 2,
+              net: -7275.29,
+            },
+          ],
+        }
+      if (method === 'crm.api.bancos.cuentas')
+        return {
+          cards: [
+            {
+              cuenta: 'Amex',
+              label: 'Amex Platinum',
+              kind: 'tarjeta',
+              ledger: 'Amex - E',
+              balance: 10000,
+              bank_balance: { amount: 17275.29 },
+              diferencia: 7275.29,
+            },
+          ],
+        }
+      throw new Error(method)
+    })
+    await mount()
+    const row = host.querySelector('[data-cuenta-contra-banco="Amex"]')
+    expect(row.textContent).toContain('$7,275.29')
+    expect(row.textContent).toContain(
+      '2 movimientos por explicar: al explicarlos, cuadra con el banco.',
+    )
+    row.click()
+    expect(state.push).toHaveBeenCalledWith({
+      name: 'BancoCuenta',
+      params: { cuenta: 'Amex' },
+      query: { cuadre: '1' },
+    })
+  })
+
+  it('reads the page again when a payment never answers, and says it was kept', async () => {
+    let paid = false
+    state.call.mockImplementation(async (method) => {
+      if (method.endsWith('.estado'))
+        return { ...estado([]), facturas: paid ? [] : FACTURAS }
+      if (method.endsWith('.pagar')) {
+        paid = true // the server kept it; the phone lost the answer
+        throw new Error('NetworkError when attempting to fetch resource.')
+      }
+      throw new Error(method)
+    })
+    await mount()
+    host.querySelector('[data-lista-pareada-accion="facturas"]').click()
+    await flush()
+    const list = host.querySelector('[data-lista-pareada="facturas"]')
+    expect(
+      list.querySelector('[data-lista-pareada-fila="BT22"]').textContent,
+    ).toContain('La respuesta no llegó, pero quedó guardado.')
+    expect(
+      host.querySelector('[data-lista-pareada-accion="facturas"]'),
+    ).toBeNull()
+  })
+
+  it('says a payment made by an earlier tap was not made twice', async () => {
+    state.call.mockImplementation(async (method) => {
+      if (method.endsWith('.estado'))
+        return { ...estado([]), facturas: FACTURAS }
+      if (method.endsWith('.pagar'))
+        return {
+          results: [{ name: 'BT22', ok: true, payment: 'PE-5', already: true }],
+          explained: 1,
+          estado: estado([]),
+        }
+      throw new Error(method)
+    })
+    await mount()
+    host.querySelector('[data-lista-pareada-accion="facturas"]').click()
+    await flush()
+    expect(
+      host.querySelector('[data-lista-pareada-fila="BT22"]').textContent,
+    ).toContain('Ya estaba registrado: no se hizo otro pago.')
+    const list = host.querySelector('[data-lista-pareada="facturas"]')
+    expect(list.textContent).toContain('Uno ya estaba hecho')
+    expect(list.textContent).not.toContain('pagos registrados')
+    expect(button('Deshacer')).toBeUndefined() // not this tap's payment
   })
 
   const TAGS = [

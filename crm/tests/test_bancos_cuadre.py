@@ -391,6 +391,38 @@ class TestCuadreSite(IntegrationTestCase):
 		)
 		self.assertRegex(first, r"^[A-Za-z0-9-]{8,64}$")
 
+	def test_a_link_lost_with_the_transaction_reads_as_refused(self):
+		# The engine rolled the whole transaction back (a deadlock): what this call linked
+		# before is gone too, so nothing reads as linked.
+		from unittest.mock import patch
+
+		pairs = [
+			{"movimiento": self.b1, "doctype": "Journal Entry", "name": self.je2},
+			{"movimiento": self.b2, "doctype": "Journal Entry", "name": self.je3},
+		]
+		answers = iter([{"ok": True, "state": "Reconciled"}, {"ok": False, "message": "cambió"}])
+		detail = {"can": {"conciliar": True}, "scope": "near"}
+
+		def movimiento(name):
+			wanted = self.je2 if name == self.b1 else self.je3
+			return {**detail, "candidates": [{"doctype": "Journal Entry", "name": wanted}]}
+
+		def rollback(save_point=None, **kwargs):
+			if save_point:
+				raise RuntimeError("(1305, SAVEPOINT does not exist)")
+
+		with (
+			patch.object(bancos, "movimiento", movimiento),
+			patch.object(bancos, "conciliar", lambda *a, **k: next(answers)),
+			patch.object(frappe.db, "rollback", rollback),
+		):
+			answer = bancos_cuadre.ligar(self.bank_account, pairs)
+		self.assertEqual(answer["ligados"], [])
+		self.assertTrue(answer["perdido"])
+		self.assertEqual(
+			sorted(row["movimiento"] for row in answer["rechazados"]), sorted([self.b1, self.b2])
+		)
+
 	def test_a_pair_from_another_account_is_refused(self):
 		answer = bancos_cuadre.ligar(
 			self.bank_account,

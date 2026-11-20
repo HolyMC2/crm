@@ -50263,3 +50263,7 @@ msgstr "Sin resultados"
 msgctxt "Emoji"
 msgid "Random"
 msgstr "Al azar"
+
+#: crm/api/bancos_cuadre.py
+msgid "Someone else changed these movements at the same time. Nothing was saved; try again."
+msgstr "Otra persona o proceso cambió estos movimientos al mismo tiempo. No se guardó nada; vuelve a intentar."

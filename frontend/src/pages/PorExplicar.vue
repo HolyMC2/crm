@@ -67,60 +67,88 @@
       <div class="h-24 animate-pulse rounded-7 bg-surface-gray-2" />
     </div>
 
-    <template v-else>
+    <div v-else class="mx-auto w-full max-w-3xl flex-none">
       <!-- How much waits, and how much takes one tap. -->
       <section
-        class="mx-4 mt-2 flex-none rounded-8 bg-surface-gray-1 p-4"
+        class="mx-4 mt-2 flex-none"
         aria-label="Lo que falta explicar"
         data-por-explicar-hero
       >
         <p class="text-sm text-ink-gray-6">
           Movimientos del banco que tus libros no explican
         </p>
-        <p class="num mt-1 break-words text-3xl font-semibold text-ink-gray-9">
+        <p
+          class="num mt-0.5 break-words text-3xl font-semibold text-ink-gray-9"
+        >
           {{ countText(data.summary.count) }}
         </p>
-        <p v-if="data.summary.count" class="mt-1 text-sm text-ink-gray-6">
-          {{ fmt(data.summary.total) }} en total, desde el
-          {{ dayText(data.summary.oldest) }}.
-        </p>
-        <p
-          v-if="data.summary.guessed"
-          class="mt-3 inline-flex min-h-8 items-center gap-1.5 rounded-full bg-surface-green-2 px-3 text-sm font-medium text-ink-green-8"
-          data-por-explicar-listos
-        >
-          <span class="lucide-sparkles size-4" aria-hidden="true" />
-          {{ countText(data.summary.guessed) }} con respuesta sugerida
+        <p v-if="data.summary.count" class="mt-0.5 text-sm text-ink-gray-6">
+          {{ fmt(data.summary.total) }} desde el
+          {{ dayText(data.summary.oldest)
+          }}<template v-if="data.summary.guessed"
+            >; {{ data.summary.guessed }} con respuesta sugerida</template
+          >.
         </p>
       </section>
+
+      <CuentasContraBanco
+        v-if="data.cuentas?.length"
+        :rows="data.cuentas"
+        :cards="cards"
+        :currency="data.currency"
+        @abrir="openAccount"
+      />
 
       <!-- The cash: what the books say each one holds, when it was counted. -->
       <section
         v-if="data.efectivo?.length"
-        class="mx-4 mt-3 flex-none rounded-7 border border-outline-gray-2 p-4"
+        class="mx-4 mt-6 flex-none"
         aria-label="Tu efectivo"
         data-por-explicar-efectivo
       >
-        <h2 class="text-sm font-semibold text-ink-gray-7">Tu efectivo</h2>
-        <ul class="mt-2 space-y-2">
+        <h2 class="text-sm font-medium text-ink-gray-7">Tu efectivo</h2>
+        <ul
+          class="mt-1 divide-y divide-outline-gray-1 border-y border-outline-gray-1"
+        >
           <li
             v-for="c in data.efectivo"
             :key="c.account"
-            class="flex items-start justify-between gap-3 text-sm"
+            class="flex items-start justify-between gap-3 py-3 text-sm"
           >
             <span class="min-w-0">
-              <span class="block break-words text-ink-gray-9">{{
+              <span class="block break-words text-base text-ink-gray-9">{{
                 c.label
               }}</span>
-              <span class="block text-ink-gray-6">{{
-                lastCountText(c.last_count)
-              }}</span>
+              <span class="block text-ink-gray-6"
+                >En tus libros · {{ lastCountText(c.last_count) }}</span
+              >
             </span>
-            <span class="num whitespace-nowrap text-ink-gray-9">{{
+            <span class="num whitespace-nowrap text-base text-ink-gray-9">{{
               fmt(c.balance)
             }}</span>
           </li>
         </ul>
+        <div
+          v-if="cash.text"
+          role="status"
+          class="mt-3 flex items-center gap-3"
+          data-por-explicar-recibo
+        >
+          <span
+            class="lucide-check-circle-2 size-5 flex-none text-ink-green-7"
+            aria-hidden="true"
+          />
+          <p class="min-w-0 flex-1 text-sm text-ink-gray-8">{{ cash.text }}</p>
+          <Button
+            v-if="cash.journal"
+            class="min-h-11"
+            variant="subtle"
+            label="Deshacer"
+            :loading="cash.busy"
+            data-por-explicar-deshacer
+            @click="undoCash()"
+          />
+        </div>
         <div v-if="data.can_book" class="mt-3 flex flex-wrap gap-2">
           <Button
             class="min-h-11"
@@ -139,32 +167,9 @@
         </div>
       </section>
 
-      <!-- What the last tap did, with its undo. -->
-      <section
-        v-if="receipt.text"
-        role="status"
-        class="mx-4 mt-3 flex flex-none items-center gap-3 rounded-7 border border-outline-gray-2 p-3"
-        data-por-explicar-recibo
-      >
-        <span
-          class="lucide-check-circle-2 size-5 flex-none text-ink-green-7"
-          aria-hidden="true"
-        />
-        <p class="min-w-0 flex-1 text-sm text-ink-gray-8">{{ receipt.text }}</p>
-        <Button
-          v-if="receipt.journals.length"
-          class="min-h-11"
-          variant="subtle"
-          label="Deshacer"
-          :loading="receipt.busy"
-          data-por-explicar-deshacer
-          @click="undo()"
-        />
-      </section>
-
       <p
         v-if="!data.can_explain && data.summary.count"
-        class="mx-4 mt-3 flex-none rounded-6 bg-surface-amber-1 p-3 text-sm text-ink-amber-8"
+        class="mx-4 mt-4 flex-none rounded-6 bg-surface-amber-1 p-3 text-sm text-ink-amber-8"
         data-por-explicar-solo-ver
       >
         Puedes ver lo que falta, pero registrar pólizas lo hace quien tenga
@@ -172,22 +177,18 @@
       </p>
 
       <ListaPareada
-        v-if="data.ya?.length"
-        kind="ya"
-        :rows="data.ya"
+        v-for="key in LISTS"
+        v-show="data[key]?.length || lists[key].done.length"
+        :key="key"
+        :kind="key"
+        :rows="data[key] || []"
+        :done="lists[key].done"
+        :result="lists[key]"
         :currency="data.currency"
         :can-act="data.can_explain"
-        :busy="busy === 'ya'"
-        @act="link"
-      />
-      <ListaPareada
-        v-if="data.facturas?.length"
-        kind="facturas"
-        :rows="data.facturas"
-        :currency="data.currency"
-        :can-act="data.can_explain"
-        :busy="busy === 'facturas'"
-        @act="pay"
+        :busy="busy === key"
+        @act="(rows) => linkOrPay(rows, key)"
+        @undo="undoList(key)"
       />
 
       <EmptyState
@@ -198,131 +199,52 @@
         message="Cuando el banco o tus tarjetas traigan movimientos nuevos, aparecen aquí para que digas qué fueron."
       />
 
-      <ul v-else class="mt-4 flex-none space-y-3 px-4" data-por-explicar-grupos>
-        <li
-          v-for="g in data.groups"
-          :key="g.id"
-          class="rounded-7 border border-outline-gray-2 p-4"
-          :data-por-explicar-grupo="g.label"
+      <section
+        v-if="items.length"
+        class="mx-4 mt-6 flex-none"
+        aria-label="Por comercio"
+      >
+        <h2 class="text-base font-medium text-ink-gray-9">Por comercio</h2>
+        <p class="mt-0.5 text-sm text-ink-gray-6">
+          Confirma lo que parece o di qué fue. Cada respuesta queda en tus
+          libros y se puede deshacer.
+        </p>
+        <ul
+          class="mt-1 divide-y divide-outline-gray-1 border-b border-outline-gray-1"
+          data-por-explicar-grupos
         >
-          <div class="flex items-start justify-between gap-3">
-            <p
-              class="min-w-0 break-words text-base font-medium text-ink-gray-9"
-            >
-              {{ g.label }}
-            </p>
-            <p
-              class="num whitespace-nowrap text-base font-semibold"
-              :class="
-                g.direction === 'Deposit'
-                  ? 'text-ink-green-7'
-                  : 'text-ink-gray-9'
+          <li v-for="item in items" :key="item.key">
+            <HechoPorExplicar
+              v-if="item.hecho"
+              :item="item.hecho"
+              @undo="undo(item.hecho)"
+            />
+            <GrupoPorExplicar
+              v-else
+              :group="item.group"
+              :ctx="ctx"
+              :can-explain="data.can_explain"
+              :busy="busy === item.group.id"
+              :open="open.has(item.group.id)"
+              :problem="problems[item.group.id] || ''"
+              @si="
+                explain(
+                  item.group,
+                  item.group.guess.kind,
+                  item.group.guess.account,
+                  null,
+                  item.group.tags,
+                )
               "
-            >
-              {{ g.direction === 'Deposit' ? '+' : '−' }}{{ fmt(g.total) }}
-            </p>
-          </div>
-          <p class="mt-0.5 text-sm text-ink-gray-6">
-            {{ g.bank_label }} · {{ countText(g.count) }} ·
-            {{ rangeText(g.first, g.last) }}
-          </p>
-
-          <template v-if="g.guess">
-            <p class="mt-3 text-sm text-ink-gray-9">
-              <span class="text-ink-gray-6">Parece:</span>
-              {{
-                answerText(g.guess.kind, g.guess.account, g.direction, names)
-              }}
-            </p>
-            <p class="mt-0.5 text-sm text-ink-gray-6">
-              {{ whyText(g.guess, names) }}
-            </p>
-          </template>
-          <p
-            v-if="g.tags?.length"
-            class="mt-2 flex flex-wrap gap-1.5"
-            :aria-label="`Etiquetas: ${g.tags.join(', ')}`"
-            data-por-explicar-grupo-etiquetas
-          >
-            <span
-              v-for="t in g.tags"
-              :key="t"
-              class="inline-flex min-h-6 items-center gap-1 rounded-full bg-surface-gray-2 px-2 text-xs text-ink-gray-8"
-            >
-              <span class="lucide-tag size-3" aria-hidden="true" />{{ t }}
-            </span>
-          </p>
-
-          <div class="mt-3 flex flex-wrap gap-2">
-            <Button
-              v-if="g.guess && data.can_explain"
-              class="min-h-11"
-              variant="solid"
-              label="Sí, es eso"
-              :loading="busy === g.id"
-              data-por-explicar-si
-              @click="explain(g, g.guess.kind, g.guess.account, null, g.tags)"
+              @otra="openSheet(item.group)"
+              @toggle="toggle(item.group.id)"
+              @adjuntar="(r) => (attach.row = r)"
             />
-            <Button
-              v-if="data.can_explain"
-              class="min-h-11"
-              :variant="g.guess ? 'subtle' : 'solid'"
-              :label="g.guess ? 'Otra cosa' : '¿Qué fue?'"
-              data-por-explicar-que-fue
-              @click="openSheet(g)"
-            />
-            <Button
-              class="min-h-11"
-              variant="ghost"
-              :label="open.has(g.id) ? 'Ocultar' : 'Ver movimientos'"
-              :aria-expanded="open.has(g.id)"
-              @click="toggle(g.id)"
-            />
-          </div>
-
-          <ul
-            v-if="open.has(g.id)"
-            class="mt-2 divide-y divide-outline-gray-1"
-            :aria-label="`Movimientos de ${g.label}`"
-          >
-            <li
-              v-for="r in g.rows"
-              :key="r.name"
-              class="flex items-start justify-between gap-3 py-2 text-sm"
-            >
-              <span class="min-w-0 flex-1">
-                <span class="block text-ink-gray-6">{{ dayText(r.date) }}</span>
-                <span class="block break-words text-ink-gray-8">{{
-                  r.description
-                }}</span>
-              </span>
-              <span class="num whitespace-nowrap text-ink-gray-9">{{
-                fmt(r.amount)
-              }}</span>
-              <button
-                v-if="data.can_explain"
-                type="button"
-                class="press -my-1 grid size-10 flex-none place-items-center rounded-full text-ink-gray-7"
-                aria-label="Adjuntar ticket o factura"
-                title="Adjuntar ticket o factura"
-                :data-por-explicar-adjuntar="r.name"
-                @click="attach.row = r"
-              >
-                <span class="lucide-paperclip size-5" aria-hidden="true" />
-              </button>
-            </li>
-            <li
-              v-if="g.count > g.rows.length"
-              class="py-2 text-sm text-ink-gray-6"
-            >
-              Y {{ countText(g.count - g.rows.length) }} más: aparecen al
-              explicar estos.
-            </li>
-          </ul>
-        </li>
-      </ul>
+          </li>
+        </ul>
+      </section>
       <div class="h-24 flex-none lg:h-10" aria-hidden="true" />
-    </template>
+    </div>
 
     <!-- «¿Qué fue?»: the answer, then the account. -->
     <BottomSheet
@@ -407,6 +329,17 @@
             </li>
           </ul>
         </div>
+        <ul
+          v-if="sheetEffect.length"
+          class="space-y-0.5 rounded-6 bg-surface-gray-1 p-3 text-sm text-ink-gray-8"
+          aria-label="Al guardar"
+          data-por-explicar-sheet-efecto
+        >
+          <li v-for="(line, i) in sheetEffect" :key="i">
+            <span v-if="i === 0" class="text-ink-gray-6">Al guardar: </span
+            >{{ line }}
+          </li>
+        </ul>
         <EtiquetasPicker
           v-if="sheet.kind"
           v-model="sheet.tags"
@@ -466,48 +399,50 @@
 
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { Button } from 'frappe-ui'
 import { AppBar, BottomSheet, EmptyState } from '@/components/ui'
-import { errorText, money } from '@/components/bancos/bancos'
+import { bancosApi, errorText, money } from '@/components/bancos/bancos'
 import AdjuntarSheet from '@/components/dinero/AdjuntarSheet.vue'
 import ConteoCajaSheet from '@/components/dinero/ConteoCajaSheet.vue'
+import CuentasContraBanco from '@/components/dinero/CuentasContraBanco.vue'
 import EtiquetasPicker from '@/components/dinero/EtiquetasPicker.vue'
 import EtiquetasSheet from '@/components/dinero/EtiquetasSheet.vue'
 import GastoEfectivoSheet from '@/components/dinero/GastoEfectivoSheet.vue'
+import GrupoPorExplicar from '@/components/dinero/GrupoPorExplicar.vue'
+import HechoPorExplicar from '@/components/dinero/HechoPorExplicar.vue'
 import ListaPareada from '@/components/dinero/ListaPareada.vue'
 import RecordatorioSheet from '@/components/dinero/RecordatorioSheet.vue'
 import {
   accountNames,
+  accountState,
   accountsFor,
-  answerText,
   countText,
+  effectLines,
   journalsOf,
   kindsFor,
   lastCountText,
+  ownBalances,
   porExplicarApi,
-  rangeText,
-  receiptText,
-  whyText,
+  stillWaiting,
 } from '@/components/dinero/porExplicar'
 
 const SHOWN_ACCOUNTS = 40
+const LISTS = ['ya', 'facturas']
 
 const route = useRoute()
+const router = useRouter()
 const data = ref(null)
+const cards = ref([])
 const loading = ref(false)
 const error = ref('')
 const busy = ref('')
 const open = reactive(new Set())
-// what «Deshacer» takes back: entries (journals), cash, or links (pairs, with the payments made)
-const receipt = reactive({
-  text: '',
-  journals: [],
-  cash: false,
-  pairs: [],
-  cancel: false,
-  busy: false,
-})
+// what each tap did, kept where the worker tapped (groups) or in its list
+const hechos = reactive([])
+const problems = reactive({})
+const lists = reactive(Object.fromEntries(LISTS.map((k) => [k, emptyList()])))
+const cash = reactive({ text: '', journal: '', busy: false })
 const attach = reactive({ row: null })
 const sheets = reactive({
   spent: false,
@@ -524,12 +459,18 @@ const sheet = reactive({
   problem: '',
   tags: [],
 })
+let seq = 0
 
 const companyQuery = computed(() =>
   route.query.empresa ? { empresa: route.query.empresa } : {},
 )
 const names = computed(() => accountNames(data.value?.choices))
 const fmt = (amount) => money(amount, data.value?.currency)
+const ctx = computed(() => ({
+  fmt,
+  names: names.value,
+  own: ownBalances(cards.value, data.value?.efectivo),
+}))
 const kinds = computed(() => kindsFor(sheet.group?.direction))
 const shownAccounts = computed(() =>
   accountsFor(data.value?.choices, sheet.kind, sheet.query).slice(
@@ -541,6 +482,11 @@ const sheetSubtitle = computed(() => {
   const g = sheet.group
   return g ? `${countText(g.count)} · ${fmt(g.total)} · ${g.bank_label}` : ''
 })
+const sheetEffect = computed(() =>
+  sheet.kind && sheet.account
+    ? effectLines(sheet.group, sheet.kind, sheet.account, ctx.value)
+    : [],
+)
 const accountQuestion = computed(() => {
   switch (sheet.kind) {
     case 'gasto':
@@ -561,6 +507,29 @@ const sheetAction = computed(() => {
   const n = shownRows(sheet.group).length
   return n === 1 ? 'Explicar 1 movimiento' : `Explicar ${n} movimientos`
 })
+
+// The groups as shown: each tap's result sits where its group was.
+const items = computed(() => {
+  const list = (data.value?.groups || []).map((g) => ({ key: g.id, group: g }))
+  for (const h of [...hechos].sort((a, b) => a.at - b.at))
+    list.splice(Math.min(h.at, list.length), 0, {
+      key: h.key,
+      hecho: withAccount(h),
+    })
+  return list
+})
+
+function emptyList() {
+  return {
+    done: [],
+    text: '',
+    problem: '',
+    pairs: [],
+    cancel: false,
+    canUndo: false,
+    busy: false,
+  }
+}
 
 function dayText(day) {
   if (!day) return ''
@@ -599,6 +568,34 @@ function pickKind(kind) {
   sheet.query = ''
 }
 
+function openAccount(cuenta) {
+  router.push({
+    name: 'BancoCuenta',
+    params: { cuenta },
+    query: { ...companyQuery.value, cuadre: '1' },
+  })
+}
+
+// How the account stands now, under what a tap did (live: the balances refresh after it).
+function withAccount(h) {
+  const row = data.value?.cuentas?.find((a) => a.bank_account === h.account)
+  if (!row) return h
+  const card = cards.value.find((c) => c.cuenta === h.account) || null
+  const now = accountState(card, row, fmt).line
+  return { ...h, lines: [...h.lines, `${row.label} ahora: ${now}`] }
+}
+
+async function refreshCards() {
+  const company = data.value?.company
+  if (!company) return
+  try {
+    const answer = await bancosApi('cuentas', { company })
+    cards.value = Array.isArray(answer?.cards) ? answer.cards : []
+  } catch {
+    // the balances are a help; the page works without them
+  }
+}
+
 async function load() {
   loading.value = true
   error.value = ''
@@ -606,6 +603,7 @@ async function load() {
     data.value = await porExplicarApi('estado', {
       company: route.query.empresa || undefined,
     })
+    refreshCards()
   } catch (e) {
     error.value = errorText(e)
   } finally {
@@ -613,138 +611,310 @@ async function load() {
   }
 }
 
+// After a call whose answer never came (the connection dropped, the server failed): read the
+// page again and say what the books kept. → the names still waiting, or null when unreadable.
+async function reread(sent) {
+  try {
+    data.value = await porExplicarApi('estado', { company: data.value.company })
+  } catch {
+    return null
+  }
+  refreshCards()
+  return stillWaiting(data.value, sent)
+}
+
+function addHecho(g, at, okNames, journals, note = '') {
+  const done = g.rows.filter((r) => okNames.has(r.name))
+  const n = done.length
+  const kind = g.answer?.kind
+  const lines = kind
+    ? effectLines(
+        { ...g, rows: done, count: n },
+        kind,
+        g.answer.account,
+        ctx.value,
+        true,
+      )
+    : []
+  if (note) lines.push(note)
+  hechos.push({
+    key: `hecho-${++seq}`,
+    at,
+    account: g.bank_account,
+    title: `${g.label}: ${n === 1 ? '1 movimiento explicado' : `${n} movimientos explicados`}`,
+    lines,
+    journals,
+    canUndo: journals.length > 0,
+    busy: false,
+    problem: '',
+  })
+}
+
 async function explain(g, kind, account, from = null, tags = []) {
   if (!g || busy.value) return
   busy.value = g.id
+  delete problems[g.id]
   if (from) from.problem = ''
+  const sent = shownRows(g).map((r) => r.name)
+  const at = Math.max(
+    0,
+    items.value.findIndex((i) => i.key === g.id),
+  )
+  const answered = { ...g, answer: { kind, account } }
   try {
     const done = await porExplicarApi('explicar', {
       company: data.value.company,
-      movimientos: shownRows(g).map((r) => r.name),
+      movimientos: sent,
       tipo: kind,
       cuenta: account,
       etiquetas: tags?.length ? tags : undefined,
     })
     data.value = done.estado
-    receipt.text = receiptText(done, g.label)
-    receipt.journals = journalsOf(done)
-    receipt.cash = false
-    receipt.pairs = []
-    if (from) from.open = false
+    const results = done.results || []
+    const ok = new Set(
+      results.filter((r) => r.ok).flatMap((r) => [r.name, r.twin]),
+    )
+    const gone = results.filter((r) => r.gone)
+    const failed = results.filter((r) => !r.ok && !r.gone)
+    if (ok.size)
+      addHecho(
+        answered,
+        at,
+        ok,
+        journalsOf(done),
+        gone.length
+          ? `${countText(gone.length)} ya estaba${gone.length === 1 ? '' : 'n'} explicado${gone.length === 1 ? '' : 's'}.`
+          : '',
+      )
+    else if (gone.length)
+      addHecho(
+        answered,
+        at,
+        new Set(gone.map((r) => r.name)),
+        [],
+        'Ya estaban explicados: no se registró nada otra vez.',
+      )
+    if (failed.length) {
+      const why = `${failed.length === 1 ? '1 no se pudo' : `${failed.length} no se pudieron`}: ${failed[0].message}`
+      if (from && !ok.size) from.problem = why
+      else problems[g.id] = why
+    }
+    if (from && (ok.size || !failed.length)) from.open = false
+    refreshCards()
   } catch (e) {
-    if (from) from.problem = errorText(e)
-    else {
-      receipt.text = errorText(e)
-      receipt.journals = []
+    const left = await reread(sent)
+    if (left === null) {
+      if (from) from.problem = errorText(e)
+      else problems[g.id] = errorText(e)
+      return
+    }
+    const kept = new Set(sent.filter((n) => !left.includes(n)))
+    if (kept.size) {
+      addHecho(
+        answered,
+        at,
+        kept,
+        [],
+        'La respuesta no llegó, pero quedó guardado. Para deshacerlo, ábrelo desde su cuenta.',
+      )
+      if (from) from.open = false
+    }
+    if (left.length) {
+      const why = kept.size
+        ? `${countText(left.length)} no se guardaron: ${errorText(e)}`
+        : errorText(e)
+      if (from && !kept.size) from.problem = why
+      else problems[g.id] = why
     }
   } finally {
     busy.value = ''
+  }
+}
+
+async function undo(h) {
+  if (h.busy) return
+  const entry = hechos.find((x) => x.key === h.key)
+  entry.busy = true
+  entry.problem = ''
+  try {
+    const page = await porExplicarApi('deshacer', {
+      company: data.value.company,
+      polizas: entry.journals,
+    })
+    data.value = page.estado
+    hechos.splice(hechos.indexOf(entry), 1)
+    refreshCards()
+  } catch (e) {
+    entry.problem = errorText(e)
+  } finally {
+    entry.busy = false
   }
 }
 
 function spent(done) {
   data.value = done.estado
-  receipt.text = `Listo: ${fmt(done.amount)} en efectivo, en tus libros.`
-  receipt.journals = [done.journal]
-  receipt.cash = true
-  receipt.pairs = []
+  cash.text = `Listo: ${fmt(done.amount)} en efectivo, en tus libros.`
+  cash.journal = done.journal
+  refreshCards()
 }
 
 function counted(done) {
   data.value = done.estado
   const left = data.value.efectivo?.find((c) => c.label === done.label)
-  receipt.text = left
+  cash.text = left
     ? `Listo: ${done.label} queda en ${fmt(left.balance)}.`
     : 'Listo: conteo guardado.'
-  receipt.journals = done.journal ? [done.journal] : []
-  receipt.cash = true
-  receipt.pairs = []
+  cash.journal = done.journal || ''
+  refreshCards()
 }
 
-function pairsOf(rows, done, doctype) {
-  const ok = new Map(
-    (done.results || []).filter((r) => r.ok).map((r) => [r.name, r]),
-  )
-  return rows
-    .filter((r) => ok.has(r.name))
-    .map((r) => ({
-      movimiento: r.name,
-      doctype: doctype || r.entry.doctype,
-      name: doctype ? ok.get(r.name).payment : r.entry.name,
-    }))
+async function undoCash() {
+  if (cash.busy) return
+  cash.busy = true
+  try {
+    const page = await porExplicarApi('deshacer_efectivo', {
+      company: data.value.company,
+      poliza: cash.journal,
+    })
+    data.value = page.estado
+    cash.text = 'Deshecho: el efectivo vuelve a como estaba.'
+    cash.journal = ''
+    refreshCards()
+  } catch (e) {
+    cash.text = errorText(e)
+  } finally {
+    cash.busy = false
+  }
 }
 
-async function linkOrPay(rows, method, key) {
+function pairOf(r, key) {
+  return {
+    movimiento: r.name,
+    doctype: key === 'ya' ? r.entry.doctype : r.invoice.doctype,
+    name: key === 'ya' ? r.entry.name : r.invoice.name,
+  }
+}
+
+function noteOf(result, key) {
+  if (key === 'ya')
+    return result.already
+      ? 'Ya estaba ligado.'
+      : 'Ligado: tus saldos no cambian.'
+  return result.already
+    ? 'Ya estaba registrado: no se hizo otro pago.'
+    : 'Pago registrado y ligado.'
+}
+
+async function linkOrPay(rows, key) {
   if (busy.value) return
   busy.value = key
+  const list = lists[key]
+  Object.assign(list, emptyList(), { done: list.done })
+  const pares = rows.map((r) => pairOf(r, key))
   try {
-    const pares = rows.map((r) => ({
-      movimiento: r.name,
-      doctype: key === 'ya' ? r.entry.doctype : r.invoice.doctype,
-      name: key === 'ya' ? r.entry.name : r.invoice.name,
-    }))
-    const done = await porExplicarApi(method, {
+    const done = await porExplicarApi(key === 'ya' ? 'ligar' : 'pagar', {
       company: data.value.company,
       pares,
     })
     data.value = done.estado
-    const n = done.explained || 0
-    const failed = (done.results || []).find((r) => !r.ok)
-    receipt.text =
-      (key === 'ya'
-        ? `Listo: ${countText(n)} ligado${n === 1 ? '' : 's'} con lo que ya estaba en tus libros.`
-        : `Listo: ${n === 1 ? '1 pago registrado' : `${n} pagos registrados`} y ligado${n === 1 ? '' : 's'}.`) +
-      (failed ? ` Uno no se pudo: ${failed.message}` : '')
-    receipt.pairs = pairsOf(rows, done, key === 'ya' ? null : 'Payment Entry')
-    receipt.cancel = key === 'facturas'
-    receipt.journals = receipt.pairs.map((p) => p.name)
-    receipt.cash = false
+    const results = new Map((done.results || []).map((r) => [r.name, r]))
+    const ok = rows.filter((r) => results.get(r.name)?.ok)
+    const failed = [...results.values()].filter((r) => !r.ok)
+    list.done = [
+      ...list.done,
+      ...ok.map((row) => ({ row, note: noteOf(results.get(row.name), key) })),
+    ]
+    // a row an earlier tap (or someone else) already did is reported, never undone from here
+    const made = ok.filter((r) => !results.get(r.name).already)
+    const n = made.length
+    const before = ok.length - n
+    const parts = []
+    if (n)
+      parts.push(
+        key === 'ya'
+          ? `Listo: ${countText(n)} ligado${n === 1 ? '' : 's'}.`
+          : `Listo: ${n === 1 ? '1 pago registrado' : `${n} pagos registrados`}. Las facturas quedan pagadas y los movimientos explicados.`,
+      )
+    if (before)
+      parts.push(
+        before === 1
+          ? 'Uno ya estaba hecho: no se registró otra vez.'
+          : `${before} ya estaban hechos: no se registraron otra vez.`,
+      )
+    list.text = parts.join(' ')
+    if (failed.length)
+      list.problem = `${failed.length === 1 ? '1 no se pudo' : `${failed.length} no se pudieron`}: ${failed[0].message}`
+    list.pairs = made.map((r) =>
+      key === 'ya'
+        ? pairOf(r, key)
+        : {
+            movimiento: r.name,
+            doctype: 'Payment Entry',
+            name: results.get(r.name).payment,
+          },
+    )
+    list.cancel = key === 'facturas'
+    list.canUndo = list.pairs.length > 0
+    refreshCards()
   } catch (e) {
-    receipt.text = errorText(e)
-    receipt.journals = []
-    receipt.pairs = []
+    const sent = rows.map((r) => r.name)
+    const left = await reread(sent)
+    if (left === null) {
+      list.problem = errorText(e)
+      return
+    }
+    const kept = rows.filter((r) => !left.includes(r.name))
+    list.done = [
+      ...list.done,
+      ...kept.map((row) => ({
+        row,
+        note: 'La respuesta no llegó, pero quedó guardado.',
+      })),
+    ]
+    if (left.length) list.problem = errorText(e)
   } finally {
     busy.value = ''
   }
 }
 
-const link = (rows) => linkOrPay(rows, 'ligar', 'ya')
-const pay = (rows) => linkOrPay(rows, 'pagar', 'facturas')
-
-async function undo() {
-  if (receipt.busy) return
-  receipt.busy = true
+async function undoList(key) {
+  const list = lists[key]
+  if (list.busy) return
+  list.busy = true
+  list.problem = ''
   try {
-    let page = null
-    if (receipt.pairs.length) {
-      page = await porExplicarApi('deshacer_ligados', {
-        company: data.value.company,
-        pares: receipt.pairs,
-        cancelar: receipt.cancel ? 1 : 0,
-      })
-      receipt.text = 'Deshecho: esos movimientos vuelven a estar por explicar.'
-      receipt.pairs = []
-    } else if (receipt.cash) {
-      page = await porExplicarApi('deshacer_efectivo', {
-        company: data.value.company,
-        poliza: receipt.journals[0],
-      })
-      receipt.text = 'Deshecho: el efectivo vuelve a como estaba.'
-    } else {
-      page = await porExplicarApi('deshacer', {
-        company: data.value.company,
-        polizas: receipt.journals,
-      })
-      receipt.text = 'Deshecho: esos movimientos vuelven a estar por explicar.'
-    }
+    const page = await porExplicarApi('deshacer_ligados', {
+      company: data.value.company,
+      pares: list.pairs,
+      cancelar: list.cancel ? 1 : 0,
+    })
     data.value = page.estado
-    receipt.journals = []
+    const undone = new Set(list.pairs.map((p) => p.movimiento))
+    Object.assign(list, emptyList(), {
+      done: list.done.filter((d) => !undone.has(d.row.name)),
+      text: 'Deshecho: esos movimientos vuelven a estar por explicar.',
+    })
+    refreshCards()
   } catch (e) {
-    receipt.text = errorText(e)
+    list.problem = errorText(e)
   } finally {
-    receipt.busy = false
+    list.busy = false
   }
 }
 
-watch(() => route.query.empresa, load, { immediate: true })
+function reset() {
+  hechos.splice(0)
+  for (const k of Object.keys(problems)) delete problems[k]
+  for (const key of LISTS) Object.assign(lists[key], emptyList())
+  Object.assign(cash, { text: '', journal: '', busy: false })
+}
+
+watch(
+  () => route.query.empresa,
+  () => {
+    reset()
+    load()
+  },
+  { immediate: true },
+)
 </script>

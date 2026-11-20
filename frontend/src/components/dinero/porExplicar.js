@@ -112,6 +112,146 @@ function normalize(text) {
     .trim()
 }
 
+const CENT = 0.005
+
+/** The rows a tap on the group takes, as their ledger moves: a deposit adds, a withdrawal takes. */
+export function netOf(group) {
+  const sign = group?.direction === WITHDRAWAL ? -1 : 1
+  return (
+    sign * (group?.rows || []).reduce((n, r) => n + Number(r.amount || 0), 0)
+  )
+}
+
+/** {ledger: {label, balance, card}} of the own-money accounts the page knows a balance of:
+ * the bank and card accounts (crm Bancos, a card's as what is owed) and the cash. */
+export function ownBalances(cards, efectivo) {
+  const out = new Map()
+  for (const c of cards || []) {
+    if (c.ledger && c.balance !== null && c.balance !== undefined)
+      out.set(c.ledger, {
+        label: c.label,
+        balance: Number(c.balance),
+        card: c.kind === 'tarjeta',
+      })
+  }
+  for (const c of efectivo || []) {
+    if (!out.has(c.account))
+      out.set(c.account, {
+        label: c.label,
+        balance: Number(c.balance),
+        card: false,
+      })
+  }
+  return out
+}
+
+/** What one answer does in the books, in the person's words: the sentence, then where the
+ * other own account lands, then the rows left for later. `done` says it in the past. */
+export function effectLines(group, kind, account, ctx = {}, done = false) {
+  if (!group || !kind) return []
+  const fmt = ctx.fmt || ((n) => String(n))
+  const net = netOf(group)
+  const amount = fmt(Math.abs(net))
+  const bank = group.bank_label
+  const other = ctx.names?.get(account) || account || ''
+  const own = ctx.own?.get(account)
+  const out = group.direction === WITHDRAWAL
+  const v = (now, then) => (done ? then : now)
+  let sentence
+  switch (kind) {
+    case 'traspaso':
+      if (!out)
+        sentence = `${v('Pasan', 'Pasaron')} ${amount} de ${other} a ${bank}.`
+      else if (own?.card)
+        sentence = `${v('Se pagan', 'Se pagaron')} ${amount} de ${other} desde ${bank}.`
+      else
+        sentence = `${v('Pasan', 'Pasaron')} ${amount} de ${bank} a ${other}.`
+      break
+    case 'gasto':
+      sentence = out
+        ? `${v('Sale', 'Salió')} ${amount} de ${bank} como gasto en ${other}.`
+        : `${v('Entra', 'Entró')} ${amount} a ${bank} y ${v('baja', 'bajó')} el gasto en ${other}.`
+      break
+    case 'personal':
+      sentence = out
+        ? `${v('Sale', 'Salió')} ${amount} de ${bank} como dinero tuyo (${other}), no como gasto.`
+        : `${v('Entra', 'Entró')} ${amount} a ${bank} como dinero que tú pusiste (${other}).`
+      break
+    case 'ingreso':
+      sentence = `${v('Entra', 'Entró')} ${amount} a ${bank} como ingreso en ${other}.`
+      break
+    default:
+      sentence = ''
+  }
+  const lines = [sentence]
+  if (!done && kind === 'traspaso' && own) {
+    // the other account moves the opposite way; a card's figure is what is owed on it
+    const after = own.card ? own.balance + net : own.balance - net
+    lines.push(
+      own.card
+        ? `Tu deuda de ${own.label} queda en ${fmt(after)} en tus libros.`
+        : `${own.label} queda en ${fmt(after)} en tus libros.`,
+    )
+  }
+  const left = Number(group.count || 0) - (group.rows || []).length
+  if (!done && left > 0)
+    lines.push(
+      `Toma los ${group.rows.length} más recientes; ${left === 1 ? 'el otro sigue' : `los otros ${left} siguen`} aquí.`,
+    )
+  return lines.filter(Boolean)
+}
+
+/** One account against its bank: the difference today and where it lands once everything
+ * waiting on it is explained. `card` is crm Bancos' account (null when unknown), `waiting`
+ * the page's {count, net} (net as the ledger moves). */
+export function accountState(card, waiting, fmt) {
+  const count = Number(waiting?.count || 0)
+  const n = countText(count)
+  const diff = card?.diferencia
+  if (diff === null || diff === undefined)
+    return {
+      known: false,
+      agrees: false,
+      figure: '',
+      line: count
+        ? `${n} por explicar. Sin saldo del banco para comparar.`
+        : 'Sin saldo del banco para comparar.',
+    }
+  const moves =
+    card.kind === 'tarjeta'
+      ? -Number(waiting?.net || 0)
+      : Number(waiting?.net || 0)
+  const after = Number(diff) - moves
+  const agrees = Math.abs(Number(diff)) < CENT
+  let line
+  if (!count) {
+    line = agrees
+      ? 'Cuadra con el banco.'
+      : 'Nada por explicar aquí: la diferencia viene de antes. Toca para ver por qué.'
+  } else if (Math.abs(after) < CENT) {
+    line = `${n} por explicar: al explicarlos, cuadra con el banco.`
+  } else {
+    line = `${n} por explicar. Al explicarlos quedan ${fmt(Math.abs(after))} sin cuadrar: toca para ver por qué.`
+  }
+  return {
+    known: true,
+    agrees,
+    figure: agrees ? 'Cuadra' : fmt(Math.abs(Number(diff))),
+    line,
+  }
+}
+
+/** After a call that did not answer (the connection dropped, the server failed): which of the
+ * movements sent are still waiting on the fresh page. */
+export function stillWaiting(page, names) {
+  const waiting = new Set()
+  for (const g of page?.groups || [])
+    for (const r of g.rows || []) waiting.add(r.name)
+  for (const r of [...(page?.ya || []), ...(page?.facturas || [])])
+    waiting.add(r.name)
+  return names.filter((n) => waiting.has(n))
+}
+
 /** The receipt after explaining: what went through and what did not. */
 export function receiptText(done, label) {
   const results = done?.results || []

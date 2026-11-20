@@ -363,7 +363,8 @@ def ligar(cuenta: str, pares: str | list) -> dict:
 	if not bank:
 		frappe.throw(_("Only bank and card accounts have movements to link."))
 	done, refused = [], []
-	for movement, doctype, name in _pairs_arg(pares):
+	pairs = _pairs_arg(pares)
+	for i, (movement, doctype, name) in enumerate(pairs):
 		if frappe.db.get_value("Bank Transaction", movement, "bank_account") != bank.name:
 			refused.append(
 				{"movimiento": movement, "name": name, "message": _("It belongs to another account.")}
@@ -410,14 +411,39 @@ def ligar(cuenta: str, pares: str | list) -> dict:
 				scope=detail.get("scope") or "near",
 			)
 		except frappe.ValidationError as exc:
-			frappe.db.rollback(save_point=savepoint)
-			frappe.clear_messages()
+			if not _back_to(savepoint):
+				return _lost(done, refused, pairs[i:])
 			refused.append(
 				{"movimiento": movement, "name": name, "message": frappe.utils.strip_html(str(exc))}
 			)
 			continue
 		if answer.get("ok") is False:
+			# the engine answers a lock conflict by rolling back, the whole transaction when a
+			# deadlock ended it: then what this call linked before is gone too
+			if not _back_to(savepoint):
+				return _lost(done, refused, pairs[i:])
 			refused.append({"movimiento": movement, "name": name, "message": answer.get("message") or ""})
 		else:
 			done.append({"movimiento": movement, "name": name, "state": answer.get("state")})
 	return {"ligados": done, "rechazados": refused}
+
+
+def _back_to(savepoint) -> bool:
+	"""Roll back to `savepoint`; False when the database had already ended the transaction (then
+	everything is rolled back)."""
+	try:
+		frappe.db.rollback(save_point=savepoint)
+	except Exception:
+		frappe.db.rollback()
+		frappe.clear_messages()
+		return False
+	frappe.clear_messages()
+	return True
+
+
+def _lost(done, refused, rest):
+	"""Nothing of this call was kept: every pair reads as refused, with the reason."""
+	message = _("Someone else changed these movements at the same time. Nothing was saved; try again.")
+	gone = [{"movimiento": row["movimiento"], "name": row["name"], "message": message} for row in done]
+	gone += [{"movimiento": movement, "name": name, "message": message} for movement, _d, name in rest]
+	return {"ligados": [], "rechazados": refused + gone, "perdido": True}
