@@ -78,6 +78,7 @@ describe('IconPicker emoji table', () => {
     })
     app.component('Button', { template: '<button><slot /></button>' })
     app.component('FormControl', { template: '<input />' })
+    app.config.globalProperties.__ = (text) => text
     app.mount(root)
     await flush()
     expect(state.tableLoads).toBe(0)

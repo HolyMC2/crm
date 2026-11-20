@@ -3,6 +3,13 @@
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
 
+## 2026-11-19 — The whole /crm speaks es-MX: 437 English strings get their Spanish (lane golive-crm; not deployed)
+
+- **Why:** go-live audit 11-19 (findings 31 and 36): a deal's Orders tab (sales orders, payment links, the register handoff), Offers, the conversion review and Ajustes showed English copy about money and permissions to a Spanish-speaking owner or seller.
+- **Change:** `crm/locale/es.po` gains the es-MX msgstr of the 377 English msgids the detector found outside the daily routes, 54 short English labels it does not catch («Billing», «Outstanding», «Taxes», «Register handoff»…) and 6 template literals now wrapped in `__()` (SLA and assignment-rule empty states, the lead-sync form, the icon search). Wording keeps the catalog's terms (trato, prospecto, embudo, caja, enlace de pago, orden de venta) and the other apps' msgstr where they already translated the same msgid, so Desk keeps its words. «The order status is incomplete» now says «Try again» (es «Vuelve a intentar») instead of asking for a refresh; retry buttons say «Volver a intentar».
+- **Guard:** `tests/unit/spanishCatalog.test.js` fails when any English string a module passes to `__()` / `tr()` / `shellT()` has no es-MX msgstr, anywhere in `src/` (the daily-route check, `dailySpanish.test.js`, keeps its template scan). It reads contexts from imports and from a module's own `tr()` default. The shared reader moved to `tests/unit/helpers/spanishCopy.js`.
+- **Tests:** `spanishCatalog.test.js` (new: red on the old catalog with 405 strings, green now), `dailySpanish.test.js`, `translationCollisions.test.js`, `iconPicker.test.js` (provides `__`). Rollback: revert.
+
 ## 2026-11-19 — Más offers places other apps open outside the shell: Asistencia first (lane asistencia-puerta-crm, with doco asistencia-puerta; not deployed)
 
 - **`muelle_more_places`** (`crm.api.shell.more_places`, boot `places`): each provider returns `{key, label, icon, href}` or None; only this site's Desk and app paths pass, a module key or a repeat is dropped, at most six, and a failing provider costs only its place.

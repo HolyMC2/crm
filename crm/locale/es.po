@@ -47645,3 +47645,1751 @@ msgstr "Adjuntar archivos"
 #: frontend/src/components/assistant/useAssistant.js
 msgid "A message takes up to {0} files. Remove one to add another."
 msgstr "Un mensaje lleva hasta {0} archivos. Quita uno para agregar otro."
+
+#: frontend/src/components/Activities/Activities.vue
+msgid "Failed to load activities"
+msgstr "No se pudieron cargar las actividades"
+
+#: frontend/src/components/Activities/AttachmentArea.vue
+msgid "Are you sure you want to make this attachment {0}?"
+msgstr "¿Seguro que quieres volver {0} este archivo adjunto?"
+
+#: frontend/src/components/AssignTo.vue
+msgid "Since you added a new assignee, the {0} has been set to {1}."
+msgstr "Como agregaste a un nuevo asignado, {0} ahora es {1}."
+
+#: frontend/src/components/BulkDeleteLinkedDocModal.vue
+msgid "Are you sure you want to delete {0} items?"
+msgstr "¿Seguro que quieres eliminar {0} elementos?"
+
+#: frontend/src/components/BulkDeleteLinkedDocModal.vue
+msgid "Are you sure you want to delete {0} linked doc(s)?"
+msgstr "¿Seguro que quieres eliminar {0} documento(s) vinculado(s)?"
+
+#: frontend/src/components/BulkDeleteLinkedDocModal.vue
+msgid "Are you sure you want to unlink {0} linked doc(s)?"
+msgstr "¿Seguro que quieres desvincular {0} documento(s) vinculado(s)?"
+
+#: frontend/src/components/Commerce/DealOrders.vue
+msgid "Continue the linked sales order through a reviewed register handoff or payment link. Invoicing, payment and delivery are separate outcomes."
+msgstr "Sigue la orden de venta vinculada con un envío a caja o un enlace de pago revisados. Facturar, cobrar y entregar son pasos distintos."
+
+#: frontend/src/components/Commerce/DealOrders.vue
+msgid "Linked sales orders"
+msgstr "Órdenes de venta vinculadas"
+
+#: frontend/src/components/Commerce/DealOrders.vue
+msgid "Loading linked orders…"
+msgstr "Cargando pedidos vinculados…"
+
+#: frontend/src/components/Commerce/DealOrders.vue
+msgid "Open linked sales orders"
+msgstr "Abrir las órdenes de venta vinculadas"
+
+#: frontend/src/components/Commerce/DealOrders.vue
+msgid "Orders and payments"
+msgstr "Pedidos y pagos"
+
+#: frontend/src/components/Commerce/DealOrders.vue
+msgid "Retry loading orders"
+msgstr "Volver a intentar"
+
+#: frontend/src/components/Commerce/DealOrders.vue
+msgid "Showing the 20 most recently updated permitted orders. Open the Sales Order list for older linked orders."
+msgstr "Se muestran los 20 pedidos que puedes ver con cambios más recientes. Abre la lista de órdenes de venta para ver los anteriores."
+
+#: frontend/src/components/Commerce/DealOrders.vue
+msgid "The order list is incomplete. Try again."
+msgstr "La lista de pedidos llegó incompleta. Intenta de nuevo."
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "An active or unresolved payment link blocks a new collection. Check its status or complete its cancellation before starting another action."
+msgstr "Un enlace de pago activo o sin resolver impide un nuevo cobro. Revisa su estado o termina de cancelarlo antes de iniciar otra acción."
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "An order, an invoice, a payment and a delivery have separate states. A payment link does not prove payment or delivery."
+msgstr "El pedido, la factura, el pago y la entrega tienen estados distintos. Un enlace de pago no prueba que se pagó ni que se entregó."
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Applied advance"
+msgstr "Anticipo aplicado"
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Back to order"
+msgstr "Volver al pedido"
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Billing"
+msgstr "Facturación"
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Cancel payment link…"
+msgstr "Cancelar enlace de pago…"
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Cancel this payment link? Cancellation must be confirmed by the payment service. It does not cancel the sales order or reverse a payment."
+msgstr "¿Cancelar este enlace de pago? El servicio de pagos tiene que confirmar la cancelación. No cancela la orden de venta ni devuelve un pago."
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Cancellation is pending. The link is not confirmed cancelled yet."
+msgstr "La cancelación está pendiente. Aún no se confirma que el enlace quedó cancelado."
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Check payment status"
+msgstr "Revisar estado del pago"
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Choose an allowed register profile"
+msgstr "Elige un perfil de caja permitido"
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Confirm cancellation"
+msgstr "Confirmar cancelación"
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Confirm link cancellation"
+msgstr "Confirmar cancelación del enlace"
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Confirming this action submits the draft sales order using its reviewed terms. Submission is a separate action from payment."
+msgstr "Al confirmar, la orden de venta en borrador se confirma con las condiciones revisadas. Confirmar la orden es un paso distinto del pago."
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Continue in register"
+msgstr "Seguir en caja"
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Continue sales order"
+msgstr "Seguir la orden de venta"
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Continue the existing register handoff before starting another collection."
+msgstr "Termina el envío a caja que ya está abierto antes de iniciar otro cobro."
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Creating a link does not send it to the customer. Review the amount and order submission first."
+msgstr "Crear el enlace no se lo envía al cliente. Revisa primero el monto y la confirmación del pedido."
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Delivery"
+msgstr "Entrega"
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "I reviewed these terms and authorize this order action."
+msgstr "Revisé estas condiciones y autorizo esta acción del pedido."
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Keep link"
+msgstr "Conservar enlace"
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Loading order status…"
+msgstr "Cargando estado del pedido…"
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "No linked invoices are visible with your permissions."
+msgstr "Con tus permisos no se ve ninguna factura vinculada."
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "No payment link receipts are visible for this order."
+msgstr "No se ve ningún comprobante de enlace de pago para este pedido."
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Open payment entry"
+msgstr "Abrir el pago registrado"
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Open payment link"
+msgstr "Abrir enlace de pago"
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Open payment request"
+msgstr "Abrir solicitud de pago"
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Open register invoice"
+msgstr "Abrir el ticket de caja"
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Open sales order"
+msgstr "Abrir la orden de venta"
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Order actions are unavailable until its current status can be checked."
+msgstr "Las acciones del pedido no están disponibles hasta que se pueda revisar su estado actual."
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Order reconciliation"
+msgstr "Conciliación del pedido"
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Order status"
+msgstr "Estado del pedido"
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Order total"
+msgstr "Total del pedido"
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Outstanding"
+msgstr "Saldo pendiente"
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Payment link amount"
+msgstr "Monto del enlace de pago"
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Payment links"
+msgstr "Enlaces de pago"
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Provider fees and net settlement are not available here."
+msgstr "Aquí no se ven las comisiones del proveedor ni el depósito neto."
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Refresh order status"
+msgstr "Revisar estado del pedido"
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Register checkout needs an allowed profile and permission to update this order."
+msgstr "Cobrar en caja necesita un perfil permitido y permiso para cambiar este pedido."
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Register handoff"
+msgstr "Envío a caja"
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Register profile"
+msgstr "Perfil de caja"
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Remaining order balance"
+msgstr "Saldo pendiente del pedido"
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Request reviewed payment link"
+msgstr "Pedir el enlace de pago revisado"
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Retry the same order action"
+msgstr "Volver a intentar la misma acción"
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Review order action"
+msgstr "Revisar acción del pedido"
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Review payment link"
+msgstr "Revisar enlace de pago"
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Review register handoff"
+msgstr "Revisar envío a caja"
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Send reviewed order to register"
+msgstr "Enviar el pedido revisado a caja"
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Submit order and request payment link"
+msgstr "Confirmar el pedido y pedir enlace de pago"
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Submit order and send to register"
+msgstr "Confirmar el pedido y enviarlo a caja"
+
+#: frontend/src/components/Commerce/OrderContinuation.vue frontend/src/components/Settings/Automations/AutomationConnection.vue
+msgid "Submitted"
+msgstr "Confirmado"
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Taxes"
+msgstr "Impuestos"
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "The order action was recorded. Check its current status below."
+msgstr "Se registró la acción del pedido. Revisa abajo su estado actual."
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "The order status is incomplete. Try again before continuing."
+msgstr "El estado del pedido llegó incompleto. Vuelve a intentar antes de seguir."
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "The payment outcome is unknown. Check the existing request; do not create another link."
+msgstr "No se sabe cómo terminó el pago. Revisa la solicitud que ya existe; no crees otro enlace."
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "The payment response is incomplete. Check the existing request."
+msgstr "La respuesta del pago llegó incompleta. Revisa la solicitud que ya existe."
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "The payment service is processing this request. Its outcome is not confirmed."
+msgstr "El servicio de pagos está procesando esta solicitud. Aún no se confirma el resultado."
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "The register response is incomplete. Retry the same request."
+msgstr "La respuesta de la caja llegó incompleta. Vuelve a intentar la misma solicitud."
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "The request is queued. A customer link is not ready yet."
+msgstr "La solicitud está en cola. El enlace para el cliente aún no está listo."
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "The review is incomplete. Review this order again."
+msgstr "La revisión llegó incompleta. Vuelve a revisar este pedido."
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "This order action has no confirmed response. Retry the same request to recover its result. Do not start another payment."
+msgstr "Esta acción del pedido no tiene respuesta confirmada. Vuelve a intentar la misma solicitud para recuperar el resultado. No inicies otro cobro."
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "This payment needs review in the payment service before another collection."
+msgstr "Este pago necesita revisarse en el servicio de pagos antes de otro cobro."
+
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgid "Your role cannot submit this draft order. Ask an authorized person to review and submit it before collection."
+msgstr "Tu puesto no puede confirmar este pedido en borrador. Pide a una persona autorizada que lo revise y lo confirme antes de cobrar."
+
+#: frontend/src/components/Commerce/commerceState.js
+msgid "Cannot preserve the reviewed action. Reload your CRM session before continuing."
+msgstr "No se pudo guardar la acción revisada. Vuelve a abrir Muelle antes de seguir."
+
+#: frontend/src/components/Commerce/commerceState.js
+msgid "Order checkout is not installed on this site."
+msgstr "El cobro de pedidos no está instalado en este sistema."
+
+#: frontend/src/components/Commerce/commerceState.js
+msgid "Payment links are not installed on this site."
+msgstr "Los enlaces de pago no están instalados en este sistema."
+
+#: frontend/src/components/Commerce/commerceState.js
+msgid "Payment links need configuration before they can be requested."
+msgstr "Los enlaces de pago necesitan configurarse antes de pedirlos."
+
+#: frontend/src/components/Commerce/commerceState.js
+msgid "This action is unavailable. Check the order configuration or contact your manager."
+msgstr "Esta acción no está disponible. Revisa la configuración del pedido o habla con tu encargado."
+
+#: frontend/src/components/Commerce/commerceState.js
+msgid "You do not have permission for this order action. Check your session or ask your manager for access."
+msgstr "No tienes permiso para esta acción del pedido. Revisa tu sesión o pide acceso a tu encargado."
+
+#: frontend/src/components/Commerce/commerceState.js
+msgid "Your role cannot request payment links for this order."
+msgstr "Tu puesto no puede pedir enlaces de pago para este pedido."
+
+#: frontend/src/components/CommunicationArea.vue
+msgid "Hi John, \n\nCan you please provide more details on this..."
+msgstr "Hola Juan,\n\n¿Me puedes dar más detalles sobre esto?..."
+
+#: frontend/src/components/Dashboard/DashboardItem.vue
+msgid "Metric unavailable"
+msgstr "Indicador no disponible"
+
+#: frontend/src/components/DeleteLinkedDocModal.vue
+msgid "Are you sure you want to delete {0} - {1}?"
+msgstr "¿Seguro que quieres eliminar {0} - {1}?"
+
+#: frontend/src/components/FieldLayoutEditor.vue
+msgid "Remove and move columns to {0} section"
+msgstr "Quitar y mover las columnas a la sección {0}"
+
+#: frontend/src/components/FilesUploader/FilesUploaderArea.vue
+msgid "File \"{0}\" was skipped because size exceeds {1} MB"
+msgstr "Se omitió el archivo «{0}» porque pesa más de {1} MB"
+
+#: frontend/src/components/Filter.vue
+msgid "Document ID, not the full name"
+msgstr "Folio del documento, no el nombre completo"
+
+#: frontend/src/components/Layouts/AppSidebar.vue
+msgid "CRM mobile"
+msgstr "Muelle en el celular"
+
+#: frontend/src/components/Layouts/CrmRuntime.vue
+msgid "Onboarding progress is unavailable. Retry setup to synchronize pending progress."
+msgstr "No se pudo leer tu avance de configuración. Vuelve a intentar para guardar lo pendiente."
+
+#: frontend/src/components/ListBulkActions.vue
+msgid "Are you sure you want to clear assignment for {0} item(s)?"
+msgstr "¿Seguro que quieres quitar la asignación de {0} elemento(s)?"
+
+#: frontend/src/components/ListBulkActions.vue
+msgid "Are you sure you want to convert {0} lead(s) to deal(s)?"
+msgstr "¿Seguro que quieres convertir {0} prospecto(s) en trato(s)?"
+
+#: frontend/src/components/Modals/AboutModal.vue
+msgid "Built on Frappe CRM."
+msgstr "Hecho con Frappe CRM."
+
+#: frontend/src/components/Modals/AboutModal.vue
+msgid "Upstream Documentation"
+msgstr "Documentación de Frappe CRM"
+
+#: frontend/src/components/Modals/CallLogDetailModal.vue
+msgid "Recording not available"
+msgstr "La grabación no está disponible"
+
+#: frontend/src/components/Modals/ConvertToDealModal.vue
+msgid "A new person will be created; existing contacts will not be merged"
+msgstr "Se creará una persona nueva; los contactos que ya existen no se combinan"
+
+#: frontend/src/components/Modals/ConvertToDealModal.vue
+msgid "An organization is created only when the lead has organization details."
+msgstr "Solo se crea una organización cuando el prospecto tiene datos de una organización."
+
+#: frontend/src/components/Modals/ConvertToDealModal.vue
+msgid "Check conversion"
+msgstr "Revisar conversión"
+
+#: frontend/src/components/Modals/ConvertToDealModal.vue
+msgid "Conversion was refused. Review the lead, identities and permissions."
+msgstr "No se pudo convertir. Revisa el prospecto, sus identidades y los permisos."
+
+#: frontend/src/components/Modals/ConvertToDealModal.vue
+msgid "Could not load conversion review. Retry before converting."
+msgstr "No se pudo cargar la revisión de la conversión. Vuelve a intentar antes de convertir."
+
+#: frontend/src/components/Modals/ConvertToDealModal.vue
+msgid "Edit deal's mandatory fields layout"
+msgstr "Editar el diseño de los campos obligatorios del trato"
+
+#: frontend/src/components/Modals/ConvertToDealModal.vue
+msgid "Lead converted to {0}. Existing history and open tasks remain linked."
+msgstr "El prospecto se convirtió en {0}. Su historial y sus tareas abiertas siguen vinculados."
+
+#: frontend/src/components/Modals/ConvertToDealModal.vue
+msgid "Loading conversion review…"
+msgstr "Cargando revisión de la conversión…"
+
+#: frontend/src/components/Modals/ConvertToDealModal.vue
+msgid "Open deal"
+msgstr "Abrir trato"
+
+#: frontend/src/components/Modals/ConvertToDealModal.vue
+msgid "Possible contacts"
+msgstr "Posibles contactos"
+
+#: frontend/src/components/Modals/ConvertToDealModal.vue
+msgid "Possible organizations"
+msgstr "Posibles organizaciones"
+
+#: frontend/src/components/Modals/ConvertToDealModal.vue
+msgid "Retry review"
+msgstr "Volver a intentar"
+
+#: frontend/src/components/Modals/ConvertToDealModal.vue
+msgid "Review the person and organization before converting. A shared email or phone does not prove identity."
+msgstr "Revisa la persona y la organización antes de convertir. Compartir correo o teléfono no prueba que sea la misma."
+
+#: frontend/src/components/Modals/ConvertToDealModal.vue
+msgid "Review the required deal fields."
+msgstr "Revisa los campos obligatorios del trato."
+
+#: frontend/src/components/Modals/ConvertToDealModal.vue
+msgid "Schedule next step"
+msgstr "Programar el siguiente paso"
+
+#: frontend/src/components/Modals/ConvertToDealModal.vue
+msgid "The conversion response did not arrive. Check the same request before continuing."
+msgstr "No llegó la respuesta de la conversión. Revisa la misma solicitud antes de seguir."
+
+#: frontend/src/components/Modals/ConvertToDealModal.vue
+msgid "The lead changed. Retry the review; your draft is preserved."
+msgstr "El prospecto cambió. Vuelve a revisarlo; tu borrador se conserva."
+
+#: frontend/src/components/Modals/ConvertToDealModal.vue
+msgid "The result is not confirmed. Check the same conversion before leaving; your choices are preserved."
+msgstr "El resultado no está confirmado. Revisa la misma conversión antes de salir; tus elecciones se conservan."
+
+#: frontend/src/components/Modals/DealModal.vue
+msgid "Address Line 1"
+msgstr "Dirección línea 1"
+
+#: frontend/src/components/Modals/DealModal.vue
+msgid "Birthday"
+msgstr "Cumpleaños"
+
+#: frontend/src/components/Modals/DealModal.vue
+msgid "City"
+msgstr "Ciudad"
+
+#: frontend/src/components/Modals/DealModal.vue
+msgid "Customer Details"
+msgstr "Detalles del cliente"
+
+#: frontend/src/components/Modals/DealModal.vue
+msgid "Customer Group"
+msgstr "Categoría de cliente"
+
+#: frontend/src/components/Modals/DealModal.vue
+msgid "Deal created but customer sync failed: {0}"
+msgstr "Se creó el trato, pero no se pudo sincronizar el cliente: {0}"
+
+#: frontend/src/components/Modals/DealModal.vue frontend/src/components/Modals/LeadModal.vue
+msgid "Mobile number should be a number"
+msgstr "El celular debe ser un número"
+
+#: frontend/src/components/Modals/DealModal.vue
+msgid "RFC / Tax ID"
+msgstr "RFC / ID fiscal"
+
+#: frontend/src/components/Modals/DealModal.vue
+msgid "Select group"
+msgstr "Elegir grupo"
+
+#: frontend/src/components/Modals/DealModal.vue
+msgid "Select territory"
+msgstr "Elegir territorio"
+
+#: frontend/src/components/Modals/DealModal.vue
+msgid "Street address"
+msgstr "Calle y número"
+
+#: frontend/src/components/Modals/LostReasonModal.vue
+msgid "Please provide a reason for marking this {0} as lost"
+msgstr "Escribe un motivo para marcar este {0} como perdido"
+
+#: frontend/src/components/Modals/ViewModal.vue
+msgid "Current icon"
+msgstr "Ícono actual"
+
+#: frontend/src/components/Modals/ViewModal.vue
+msgid "Replace with an icon..."
+msgstr "Reemplazar con un ícono..."
+
+#: frontend/src/components/Modals/ViewModal.vue
+msgid "Select an icon..."
+msgstr "Elegir un ícono..."
+
+#: frontend/src/components/Offers/OfferDraft.vue
+msgid "Add product or service"
+msgstr "Agregar producto o servicio"
+
+#: frontend/src/components/Offers/OfferDraft.vue
+msgid "Amounts are recalculated when saved. A service may be entered without a product code."
+msgstr "Los montos se recalculan al guardar. Un servicio se puede capturar sin código de producto."
+
+#: frontend/src/components/Offers/OfferDraft.vue
+msgid "Discount (%)"
+msgstr "Descuento (%)"
+
+#: frontend/src/components/Offers/OfferDraft.vue
+msgid "Offer title"
+msgstr "Título de la oferta"
+
+#: frontend/src/components/Offers/OfferDraft.vue
+msgid "Product (optional)"
+msgstr "Producto (opcional)"
+
+#: frontend/src/components/Offers/OfferDraft.vue
+msgid "Product or service description"
+msgstr "Descripción del producto o servicio"
+
+#: frontend/src/components/Offers/OfferDraft.vue
+msgid "Remove line {0}"
+msgstr "Quitar renglón {0}"
+
+#: frontend/src/components/Offers/OfferDraft.vue
+msgid "Terms"
+msgstr "Condiciones"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "A proposal records offered terms and customer decisions. It does not reserve stock or record an invoice or payment."
+msgstr "Una oferta registra las condiciones ofrecidas y lo que decide el cliente. No aparta existencias ni registra una factura o un pago."
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "Commercial offers"
+msgstr "Ofertas comerciales"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "Create draft ERP quotation"
+msgstr "Crear cotización en borrador en el ERP"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "Create new revision"
+msgstr "Crear nueva revisión"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "Decision channel"
+msgstr "Medio de la decisión"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "Decision evidence"
+msgstr "Constancia de la decisión"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "Decision recorded by {0} on {1} via {2}"
+msgstr "Decisión registrada por {0} el {1} por {2}"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "Discard unsaved changes to this offer draft?"
+msgstr "¿Descartar los cambios sin guardar de este borrador de oferta?"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "ERP net subtotal"
+msgstr "Subtotal neto en el ERP"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "ERP payable amount"
+msgstr "Monto a pagar en el ERP"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "ERP quotation review"
+msgstr "Revisión de la cotización del ERP"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "ERP taxes and charges"
+msgstr "Impuestos y cargos en el ERP"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "ERP total including taxes"
+msgstr "Total con impuestos en el ERP"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "Expire offer"
+msgstr "Vencer oferta"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "Explain approval of the changed ERP figures"
+msgstr "Explica por qué se aprueban las cifras que cambiaron en el ERP"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "Issue saved offer"
+msgstr "Emitir la oferta guardada"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "Load more offers"
+msgstr "Cargar más ofertas"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "Loading offers…"
+msgstr "Cargando ofertas…"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "New offer"
+msgstr "Nueva oferta"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "No expiry date"
+msgstr "Sin fecha de vencimiento"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "No offers yet. Create a draft from this deal’s products or services."
+msgstr "Aún no hay ofertas. Crea un borrador con los productos o servicios de este trato."
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "Not recorded"
+msgstr "Sin registrar"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "Offer ID: {0}"
+msgstr "Folio de la oferta: {0}"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "Offer preview"
+msgstr "Vista previa de la oferta"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "Offer revisions"
+msgstr "Revisiones de la oferta"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "Offered amount"
+msgstr "Monto ofrecido"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "Open ERP quotation"
+msgstr "Abrir la cotización del ERP"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "Payable difference from offered amount"
+msgstr "Diferencia a pagar contra el monto ofrecido"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "Preview / export"
+msgstr "Vista previa / exportar"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "Previous revision"
+msgstr "Revisión anterior"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "Print / save PDF"
+msgstr "Imprimir / guardar PDF"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "Print or save this preview as PDF using your browser."
+msgstr "Imprime o guarda esta vista previa como PDF desde tu navegador."
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "Record acceptance"
+msgstr "Registrar aceptación"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "Record customer acceptance"
+msgstr "Registrar que el cliente aceptó"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "Record customer rejection"
+msgstr "Registrar que el cliente rechazó"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "Record rejection"
+msgstr "Registrar rechazo"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "Record the customer’s decision on this exact revision. This does not mark the deal paid."
+msgstr "Registra la decisión del cliente sobre esta misma revisión. Esto no marca el trato como pagado."
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "Recorded actor: {0}"
+msgstr "Registró: {0}"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "Recorded actor: {0} · Recorded time: {1}"
+msgstr "Registró: {0} · Hora registrada: {1}"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "Refresh saved version; keep my draft"
+msgstr "Traer la versión guardada y conservar mi borrador"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "Retry loading offers"
+msgstr "Volver a intentar"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "Retry same action"
+msgstr "Volver a intentar la misma acción"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "Review ERP quotation"
+msgstr "Revisar la cotización del ERP"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "Review draft ERP quotation"
+msgstr "Revisar la cotización en borrador del ERP"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "Rounded ERP payable amount"
+msgstr "Monto a pagar redondeado en el ERP"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "Save customer decision"
+msgstr "Guardar la decisión del cliente"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "Saved version refreshed. Your local draft is retained; compare the preview before saving."
+msgstr "Ya tienes la versión guardada. Tu borrador sigue aquí; compara la vista previa antes de guardar."
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "The ERP preview is incomplete. Refresh the review before creating a quotation."
+msgstr "La vista previa del ERP llegó incompleta. Vuelve a revisarla antes de crear la cotización."
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "The ERP quotation needs its own customer approval if terms differ. Creating it does not record an order, invoice or payment."
+msgstr "Si las condiciones cambian, la cotización del ERP necesita su propia aprobación del cliente. Crearla no registra un pedido, una factura ni un pago."
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "The result is unconfirmed. Retry the same action before leaving."
+msgstr "El resultado no está confirmado. Vuelve a intentar la misma acción antes de salir."
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "The saved version changed. Refresh it and compare the preview before saving your retained draft."
+msgstr "La versión guardada cambió. Tráela y compara la vista previa antes de guardar tu borrador."
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "This offer is no longer editable. Your local draft is retained; copy it into a new revision after reviewing the saved version."
+msgstr "Esta oferta ya no se puede editar. Tu borrador sigue aquí; cópialo a una nueva revisión después de revisar la versión guardada."
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "This revision remains in the history. Continue with the current revision for new actions."
+msgstr "Esta revisión se queda en el historial. Para acciones nuevas, sigue con la revisión actual."
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "Unable to complete the action. Your draft is preserved."
+msgstr "No se pudo completar la acción. Tu borrador se conserva."
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "Unknown user"
+msgstr "Usuario desconocido"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "Untitled offer"
+msgstr "Oferta sin título"
+
+#: frontend/src/components/Offers/OfferWorkspace.vue
+msgid "You do not have permission for this offer action. Your draft is preserved."
+msgstr "No tienes permiso para esta acción de la oferta. Tu borrador se conserva."
+
+#: frontend/src/components/Offers/offerPresentation.js
+msgid "Recorded time unavailable"
+msgstr "Sin hora registrada"
+
+#: frontend/src/components/Offers/offerState.js
+msgid "Leave this unsaved offer draft?"
+msgstr "¿Salir de este borrador de oferta sin guardar?"
+
+#: frontend/src/components/PrimaryDropdownItem.vue
+msgid "Could not save, try again"
+msgstr "No se pudo guardar, intenta de nuevo"
+
+#: frontend/src/components/Reports/MarketingData.js
+msgid "pipeline"
+msgstr "embudo"
+
+#: frontend/src/components/Settings/AssignmentRules/AssigneeRules.vue
+msgid "Assignment routing"
+msgstr "Reparto de asignaciones"
+
+#: frontend/src/components/Settings/AssignmentRules/AssigneeRules.vue
+msgid "Choose how {0} are assigned among the selected assignees."
+msgstr "Elige cómo se reparten {0} entre los asignados elegidos."
+
+#: frontend/src/components/Settings/AssignmentRules/AssigneeRules.vue
+msgid "{0} routing"
+msgstr "Reparto de {0}"
+
+#: frontend/src/components/Settings/AssignmentRules/AssignmentRuleListItem.vue
+msgid "Assignment actions"
+msgstr "Acciones de la asignación"
+
+#: frontend/src/components/Settings/AssignmentRules/AssignmentRuleListItem.vue
+msgid "Assignment priority"
+msgstr "Prioridad de asignación"
+
+#: frontend/src/components/Settings/AssignmentRules/AssignmentRuleListItem.vue
+msgid "Assignment rule deleted"
+msgstr "Regla de asignación eliminada"
+
+#: frontend/src/components/Settings/AssignmentRules/AssignmentRuleListItem.vue
+msgid "Assignment rule duplicated"
+msgstr "Regla de asignación duplicada"
+
+#: frontend/src/components/Settings/AssignmentRules/AssignmentRuleListItem.vue
+msgid "Assignment rule {0} updated"
+msgstr "Regla de asignación {0} actualizada"
+
+#: frontend/src/components/Settings/AssignmentRules/AssignmentRuleView.vue
+msgid "Assign condition is required"
+msgstr "La condición de asignación es obligatoria"
+
+#: frontend/src/components/Settings/AssignmentRules/AssignmentRuleView.vue
+msgid "Assign conditions are invalid"
+msgstr "Las condiciones de asignación no son válidas"
+
+#: frontend/src/components/Settings/AssignmentRules/AssignmentRuleView.vue
+msgid "Assignment rule created"
+msgstr "Regla de asignación creada"
+
+#: frontend/src/components/Settings/AssignmentRules/AssignmentRuleView.vue
+msgid "Assignment rule updated"
+msgstr "Regla de asignación actualizada"
+
+#: frontend/src/components/Settings/AssignmentRules/AssignmentRuleView.vue
+msgid "Choose which {0} are affected by this assignment rule."
+msgstr "Elige a qué {0} se aplica esta regla de asignación."
+
+#: frontend/src/components/Settings/AssignmentRules/AssignmentRuleView.vue frontend/src/components/Settings/Sla/SlaPolicyView.vue
+msgid "I understand, add conditions"
+msgstr "Entiendo, agregar condiciones"
+
+#: frontend/src/components/Settings/AssignmentRules/AssignmentRuleView.vue
+msgid "Saving this assignment rule requires additional permission."
+msgstr "Guardar esta regla de asignación necesita un permiso adicional."
+
+#: frontend/src/components/Settings/AssignmentRules/AssignmentRuleView.vue
+msgid "Unassign conditions are invalid"
+msgstr "Las condiciones para quitar la asignación no son válidas"
+
+#: frontend/src/components/Settings/AssignmentRules/AssignmentRules.vue
+msgid "Creating an assignment rule requires additional permission."
+msgstr "Crear una regla de asignación necesita un permiso adicional."
+
+#: frontend/src/components/Settings/Automations/AutomationConnection.vue
+msgid "Base URL"
+msgstr "URL base"
+
+#: frontend/src/components/Settings/Automations/AutomationConnection.vue
+msgid "Connection"
+msgstr "Conexión"
+
+#: frontend/src/components/Settings/Automations/AutomationConnection.vue
+msgid "Deleted"
+msgstr "Eliminado"
+
+#: frontend/src/components/Settings/Automations/AutomationConnection.vue
+msgid "Delivered"
+msgstr "Entregado"
+
+#: frontend/src/components/Settings/BrandSettings.vue
+msgid "Configure your brand name, logo and favicon"
+msgstr "Configura el nombre, el logotipo y el ícono de tu marca"
+
+#: frontend/src/components/Settings/CalendarSettings.vue
+msgid "Configure your calendar settings, including the default view and event notifications"
+msgstr "Configura tu calendario, con la vista predeterminada y los avisos de eventos"
+
+#: frontend/src/components/Settings/DashboardSettings.vue
+msgid "Access key for {0}. Required for fetching exchange rates."
+msgstr "Clave de acceso de {0}. Se necesita para traer los tipos de cambio."
+
+#: frontend/src/components/Settings/DashboardSettings.vue
+msgid "Configure the exchange rate provider for your CRM"
+msgstr "Configura el proveedor de tipos de cambio"
+
+#: frontend/src/components/Settings/DashboardSettings.vue
+msgid "Please enter the {0} access key."
+msgstr "Escribe la clave de acceso de {0}."
+
+#: frontend/src/components/Settings/DashboardSettings.vue
+msgid "You can get your access key from "
+msgstr "Puedes obtener tu clave de acceso en "
+
+#: frontend/src/components/Settings/ERPNextSettings.vue
+msgid " and "
+msgstr " y "
+
+#: frontend/src/components/Settings/ERPNextSettings.vue
+msgid "Bidirectional Product Sync"
+msgstr "Sincronización bidireccional de productos"
+
+#: frontend/src/components/Settings/ERPNextSettings.vue
+msgid "Invalid site URL"
+msgstr "La URL del sitio no es válida"
+
+#: frontend/src/components/Settings/ERPNextSettings.vue
+msgid "Item Group"
+msgstr "Grupo de artículos"
+
+#: frontend/src/components/Settings/ERPNextSettings.vue
+msgid "Manual Sync"
+msgstr "Sincronización manual"
+
+#: frontend/src/components/Settings/ERPNextSettings.vue
+msgid "Product sync started."
+msgstr "Sincronización de productos iniciada."
+
+#: frontend/src/components/Settings/ERPNextSettings.vue
+msgid "item"
+msgstr "artículo"
+
+#: frontend/src/components/Settings/ERPNextSettings.vue
+msgid "items"
+msgstr "artículos"
+
+#: frontend/src/components/Settings/ERPNextSettings.vue
+msgid "product"
+msgstr "producto"
+
+#: frontend/src/components/Settings/ERPNextSettings.vue
+msgid "products"
+msgstr "productos"
+
+#: frontend/src/components/Settings/ERPNextSettings.vue
+msgid "{0} not yet synced"
+msgstr "{0} aún sin sincronizar"
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "All CRM sales roles; native record access still applies"
+msgstr "Todos los puestos de ventas; el acceso propio de cada registro sigue aplicando"
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Assignment rules independently use site weekdays and record conditions. They do not inherit SLA working hours or holidays. Capacity and routing stay in their owning services."
+msgstr "Las reglas de asignación usan por su cuenta los días hábiles del sistema y las condiciones del registro. No toman el horario ni los días festivos del SLA. La capacidad y el reparto se quedan en su propio servicio."
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Assignment weekday candidates"
+msgstr "Días de asignación que pueden aplicar"
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "CRM reporting and exchange conversion use this source. A pipeline currency fills an empty deal currency; it does not replace an explicit deal currency."
+msgstr "Los reportes de ventas y la conversión de moneda usan este origen. La moneda del embudo llena la de un trato que no tiene; no reemplaza la que el trato ya tiene."
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "CRM reporting currency"
+msgstr "Moneda de los reportes de ventas"
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Changing this preference changes your display, not business hours or assignment weekdays."
+msgstr "Cambiar esta preferencia cambia lo que ves tú, no el horario del negocio ni los días de asignación."
+
+#: frontend/src/components/Settings/EffectiveSettings.vue frontend/src/components/Settings/PipelineSettings.vue
+msgid "Company scope (optional)"
+msgstr "Empresa (opcional)"
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Configuration could not be loaded. Your selection is preserved; retry the review."
+msgstr "No se pudo cargar la configuración. Tu selección se conserva; vuelve a intentar la revisión."
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Configuration unavailable."
+msgstr "Configuración no disponible."
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Currency when a deal has none"
+msgstr "Moneda cuando el trato no tiene"
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Date format"
+msgstr "Formato de fecha"
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Default for the reviewed company scope"
+msgstr "Predeterminado para la empresa revisada"
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Default pipeline"
+msgstr "Embudo predeterminado"
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Entry requirements apply; open the pipeline to review them."
+msgstr "Hay requisitos de entrada; abre el embudo para revisarlos."
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Explicit deal probabilities are preserved. A missing probability takes the configured stage value."
+msgstr "Las probabilidades que un trato ya tiene se conservan. Si falta, se usa la de su etapa."
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Explicit default"
+msgstr "Predeterminado elegido"
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Explicitly selected pipeline"
+msgstr "Embudo elegido a mano"
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Global"
+msgstr "Global"
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Global fallback"
+msgstr "General, por omisión"
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Global scope"
+msgstr "Todas las empresas"
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Global; the record company still applies"
+msgstr "General; la empresa del registro sigue aplicando"
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Historical probabilities are preserved. New records without a positive probability take the configured stage value."
+msgstr "Las probabilidades anteriores se conservan. Los registros nuevos sin probabilidad positiva toman la de su etapa."
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Holiday exceptions"
+msgstr "Días festivos"
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Loading configuration…"
+msgstr "Cargando configuración…"
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Marked as a default policy; native applicability still decides the record policy."
+msgstr "Marcada como política predeterminada; la política de cada registro la siguen decidiendo sus propias reglas."
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Native task dates, SLA calculations and assignment weekdays use site time. This does not combine their separate schedule rules."
+msgstr "Las fechas de tareas, los cálculos del SLA y los días de asignación usan la hora del sistema. Esto no junta sus reglas de horario, que siguen separadas."
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "No holiday dates in this list."
+msgstr "Esta lista no tiene días festivos."
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "No personal override. Site timezone is not readable with this role."
+msgstr "Sin ajuste personal. Con este puesto no se puede leer la zona horaria del sistema."
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "No personal override; inherits the site timezone."
+msgstr "Sin ajuste personal; usa la zona horaria del sistema."
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "No readable configuration is saved for this source."
+msgstr "No hay configuración guardada que puedas leer para este origen."
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "No site timezone is saved. The framework fallback shown here is currently in effect; configure the intended business timezone in System Settings."
+msgstr "No hay zona horaria guardada en el sistema. Ahora aplica la que se muestra aquí por omisión; configura la zona horaria de tu negocio en la configuración del sistema."
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "No working hours are configured in this policy."
+msgstr "Esta política no tiene horario configurado."
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Not configured"
+msgstr "No configurado"
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Not configured in this pipeline"
+msgstr "No configurado en este embudo"
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Only eligible pipeline in that scope"
+msgstr "Único embudo disponible para esa empresa"
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Open source"
+msgstr "Abrir origen"
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Open the pipeline to review this probability policy."
+msgstr "Abre el embudo para revisar esta política de probabilidad."
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Pipeline and defaults"
+msgstr "Embudo y valores predeterminados"
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Pipeline choices are restricted by your permissions."
+msgstr "Tus permisos limitan los embudos que puedes elegir."
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Pipeline choices could not be loaded. Retry the configuration review."
+msgstr "No se pudieron cargar los embudos. Vuelve a intentar la revisión."
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Pipeline company"
+msgstr "Empresa del embudo"
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Pipeline resolved from the scope default"
+msgstr "Embudo tomado del predeterminado de la empresa"
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Pipeline role access"
+msgstr "Puestos con acceso al embudo"
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Pipeline stages"
+msgstr "Etapas del embudo"
+
+#: frontend/src/components/Settings/EffectiveSettings.vue frontend/src/components/Settings/PipelineSettings.vue
+msgid "Probability policy"
+msgstr "Política de probabilidad"
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Record conditions apply"
+msgstr "Aplican las condiciones del registro"
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Reporting-tree visibility is additional to role, company, pipeline and native record permissions."
+msgstr "Lo que deja ver la jerarquía de ventas se suma a los permisos de puesto, empresa, embudo y registro."
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Resolve the scope default"
+msgstr "Usar el predeterminado de la empresa"
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Review saved configuration"
+msgstr "Revisar configuración guardada"
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Review saved settings and their sources for this sales scope. Explicit record values and native permissions still apply. Unsaved editor drafts are not included."
+msgstr "Revisa la configuración guardada y de dónde viene para esta área de ventas. Los valores propios de cada registro y sus permisos siguen aplicando. No incluye borradores sin guardar."
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "SLA schedule candidates"
+msgstr "Horarios de SLA que pueden aplicar"
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Sales hierarchy"
+msgstr "Jerarquía de ventas"
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Scope default"
+msgstr "Predeterminado de la empresa"
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Showing saved scope"
+msgstr "Mostrando la configuración guardada de"
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Showing the first 100 dates; open the holiday list for all exceptions."
+msgstr "Se muestran las primeras 100 fechas; abre la lista de días festivos para verlas todas."
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "System currency setting"
+msgstr "Moneda del sistema"
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "System defaults"
+msgstr "Valores predeterminados del sistema"
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "The pipeline list is limited. Narrow the company scope or open Sales pipelines for more records."
+msgstr "La lista de embudos está recortada. Elige una empresa o abre Embudos de ventas para ver más."
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "These are readable CRM policies, not a schedule selected for this pipeline. Native record type, dates, communication priority and conditions decide applicability. Hours and holiday exceptions belong to each policy."
+msgstr "Estas son las políticas que puedes leer, no un horario elegido para este embudo. Cuál aplica lo deciden el tipo de registro, las fechas, la prioridad de la comunicación y las condiciones. Cada política tiene su horario y sus días festivos."
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "These are site defaults. Record metadata and explicit values can override them; CRM reporting currency is a separate setting."
+msgstr "Estos son los valores predeterminados del sistema. Los datos y valores propios de cada registro pueden cambiarlos; la moneda de los reportes de ventas es otra configuración."
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "This assignment summary is incomplete or limited. Open Assignment Rules for permitted details and retry failed reads."
+msgstr "Este resumen de asignaciones está incompleto o recortado. Abre Reglas de asignación para ver lo que tienes permitido y vuelve a intentar lo que falló."
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "This configuration source could not be read. Retry or ask your administrator."
+msgstr "No se pudo leer este origen de configuración. Vuelve a intentar o pregunta a tu administrador."
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Time format"
+msgstr "Formato de hora"
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Weekly off"
+msgstr "Descanso semanal"
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "You cannot review this configuration scope. Check your session and permissions."
+msgstr "No puedes revisar esta configuración. Revisa tu sesión y tus permisos."
+
+#: frontend/src/components/Settings/EffectiveSettings.vue frontend/src/components/Settings/PreferencesSettings.vue
+msgid "Your display timezone"
+msgstr "Tu zona horaria"
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Your permissions do not allow reading this configuration."
+msgstr "Tus permisos no te dejan leer esta configuración."
+
+#: frontend/src/components/Settings/EmailAdd.vue
+msgid "Choose the email service provider you want to configure."
+msgstr "Elige el proveedor de correo que quieres configurar."
+
+#: frontend/src/components/Settings/EmailAdd.vue
+msgid "Email account created successfully"
+msgstr "Cuenta de correo creada"
+
+#: frontend/src/components/Settings/EmailAdd.vue
+msgid "Failed to create email account: invalid credentials"
+msgstr "No se pudo crear la cuenta de correo: los datos de acceso no son válidos"
+
+#: frontend/src/components/Settings/EmailEdit.vue
+msgid "Email account updated successfully"
+msgstr "Cuenta de correo actualizada"
+
+#: frontend/src/components/Settings/EmailEdit.vue
+msgid "Failed to update email account: invalid credentials"
+msgstr "No se pudo actualizar la cuenta de correo: los datos de acceso no son válidos"
+
+#: frontend/src/components/Settings/EmailTemplate/EmailTemplates.vue
+msgid "Template deleted successfully"
+msgstr "Plantilla eliminada"
+
+#: frontend/src/components/Settings/GeneralSettings.vue
+msgid "Automatically sets communication status to “Open” for the lead or deal when a new communication is created. Applies only when SLA is enabled"
+msgstr "Pone automáticamente el estado de comunicación en «Abierto» en el prospecto o trato cuando se crea una nueva comunicación. Solo aplica cuando el SLA está activado"
+
+#: frontend/src/components/Settings/GeneralSettings.vue
+msgid "Automatically sets communication status to “Replied” for the lead or deal when a response is received. Applies only when SLA is enabled"
+msgstr "Pone automáticamente el estado de comunicación en «Respondido» en el prospecto o trato cuando se recibe una respuesta. Solo aplica cuando el SLA está activado"
+
+#: frontend/src/components/Settings/Hierarchy/Hierarchy.vue
+msgid "Are you sure you want to remove {0} from the hierarchy?"
+msgstr "¿Seguro que quieres quitar a {0} de la jerarquía?"
+
+#: frontend/src/components/Settings/Hierarchy/Hierarchy.vue
+msgid "Sales hierarchy disabled"
+msgstr "Jerarquía de ventas desactivada"
+
+#: frontend/src/components/Settings/Hierarchy/Hierarchy.vue
+msgid "Sales hierarchy enabled"
+msgstr "Jerarquía de ventas activada"
+
+#: frontend/src/components/Settings/Inbox/InboxLabels.vue
+msgid "Cyan"
+msgstr "Cian"
+
+#: frontend/src/components/Settings/Inbox/InboxLabels.vue
+msgid "Gray"
+msgstr "Gris"
+
+#: frontend/src/components/Settings/Inbox/InboxLabels.vue
+msgid "Green"
+msgstr "Verde"
+
+#: frontend/src/components/Settings/Inbox/InboxLabels.vue
+msgid "Pink"
+msgstr "Rosa"
+
+#: frontend/src/components/Settings/Inbox/InboxLabels.vue
+msgid "Red"
+msgstr "Rojo"
+
+#: frontend/src/components/Settings/Inbox/InboxMacros.vue
+msgid "Steps"
+msgstr "Pasos"
+
+#: frontend/src/components/Settings/Inbox/InboxMacros.vue frontend/src/components/Settings/Inbox/InboxPeople.vue
+msgid "Support"
+msgstr "Soporte"
+
+#: frontend/src/components/Settings/Inbox/InboxMacros.vue
+msgid "Team"
+msgstr "Equipo"
+
+#: frontend/src/components/Settings/Inbox/InboxPeople.vue
+msgid "Limit"
+msgstr "Límite"
+
+#: frontend/src/components/Settings/Inbox/WeekHours.vue
+msgid "Closed"
+msgstr "Cerrado"
+
+#: frontend/src/components/Settings/InviteUserPage.vue
+msgid "User with email {0} already exists"
+msgstr "Ya existe un usuario con el correo {0}"
+
+#: frontend/src/components/Settings/InviteUserPage.vue
+msgid "User with email {0} already invited"
+msgstr "Ya se invitó a un usuario con el correo {0}"
+
+#: frontend/src/components/Settings/LeadSyncing/FailureLogs.vue
+msgid "Error syncing lead"
+msgstr "No se pudo sincronizar el prospecto"
+
+#: frontend/src/components/Settings/LeadSyncing/FailureLogs.vue
+msgid "Sync successful!"
+msgstr "¡Sincronización lista!"
+
+#: frontend/src/components/Settings/LeadSyncing/LeadSyncSourceForm.vue
+msgid "Error creating lead sync source"
+msgstr "No se pudo crear el origen de sincronización de prospectos"
+
+#: frontend/src/components/Settings/LeadSyncing/LeadSyncSourceForm.vue
+msgid "Error updating lead sync source"
+msgstr "No se pudo actualizar el origen de sincronización de prospectos"
+
+#: frontend/src/components/Settings/LeadSyncing/LeadSyncSourceForm.vue
+msgid "Lead sync source created successfully"
+msgstr "Origen de sincronización de prospectos creado"
+
+#: frontend/src/components/Settings/PipelineSettings.vue
+msgid "Add stage"
+msgstr "Agregar etapa"
+
+#: frontend/src/components/Settings/PipelineSettings.vue
+msgid "Allowed previous stages (empty allows all)"
+msgstr "Etapas anteriores permitidas (vacío permite todas)"
+
+#: frontend/src/components/Settings/PipelineSettings.vue
+msgid "Archived — keep existing records"
+msgstr "Archivada: conserva los registros que ya tiene"
+
+#: frontend/src/components/Settings/PipelineSettings.vue
+msgid "Choose stages, probability and access for each sales process. Archive stages to keep historical records readable."
+msgstr "Elige las etapas, la probabilidad y el acceso de cada proceso de venta. Archiva etapas para que los registros anteriores se sigan viendo."
+
+#: frontend/src/components/Settings/PipelineSettings.vue
+msgid "Compatibility mapping preview"
+msgstr "Vista previa de la equivalencia"
+
+#: frontend/src/components/Settings/PipelineSettings.vue
+msgid "Default currency"
+msgstr "Moneda predeterminada"
+
+#: frontend/src/components/Settings/PipelineSettings.vue
+msgid "Default for this company scope"
+msgstr "Predeterminado para esta empresa"
+
+#: frontend/src/components/Settings/PipelineSettings.vue
+msgid "Discard this unsaved pipeline draft?"
+msgstr "¿Descartar este borrador de embudo sin guardar?"
+
+#: frontend/src/components/Settings/PipelineSettings.vue
+msgid "Loading pipeline…"
+msgstr "Cargando embudo…"
+
+#: frontend/src/components/Settings/PipelineSettings.vue
+msgid "Mapping preserves stages, repair links, activity history and existing values."
+msgstr "La equivalencia conserva las etapas, los vínculos con reparaciones, el historial y los valores que ya existen."
+
+#: frontend/src/components/Settings/PipelineSettings.vue
+msgid "Missing historical stages"
+msgstr "Etapas anteriores que faltan"
+
+#: frontend/src/components/Settings/PipelineSettings.vue
+msgid "New pipeline"
+msgstr "Nuevo embudo"
+
+#: frontend/src/components/Settings/PipelineSettings.vue
+msgid "Permitted roles — empty allows all CRM sales roles"
+msgstr "Puestos permitidos (vacío permite todos los de ventas)"
+
+#: frontend/src/components/Settings/PipelineSettings.vue
+msgid "Pipeline name"
+msgstr "Nombre del embudo"
+
+#: frontend/src/components/Settings/PipelineSettings.vue
+msgid "Pipeline saved"
+msgstr "Embudo guardado"
+
+#: frontend/src/components/Settings/PipelineSettings.vue
+msgid "Preview existing records"
+msgstr "Ver los registros que ya existen"
+
+#: frontend/src/components/Settings/PipelineSettings.vue
+msgid "Probability (%)"
+msgstr "Probabilidad (%)"
+
+#: frontend/src/components/Settings/PipelineSettings.vue
+msgid "Reload settings"
+msgstr "Volver a intentar"
+
+#: frontend/src/components/Settings/PipelineSettings.vue
+msgid "Required fields"
+msgstr "Campos obligatorios"
+
+#: frontend/src/components/Settings/PipelineSettings.vue
+msgid "Roles allowed to enter (empty allows all permitted roles)"
+msgstr "Puestos que pueden entrar (vacío permite todos los permitidos)"
+
+#: frontend/src/components/Settings/PipelineSettings.vue
+msgid "Save pipeline"
+msgstr "Guardar embudo"
+
+#: frontend/src/components/Settings/PipelineSettings.vue
+msgid "Select stage"
+msgstr "Elegir etapa"
+
+#: frontend/src/components/Settings/PipelineSettings.vue
+msgid "Stage requirements and transitions"
+msgstr "Requisitos y pasos entre etapas"
+
+#: frontend/src/components/Settings/PipelineSettings.vue
+msgid "records without a pipeline"
+msgstr "registros sin embudo"
+
+#: frontend/src/components/Settings/PreferencesSettings.vue
+msgid "Changes your display preference. Business hours, task dates and assignment weekdays use the site timezone."
+msgstr "Cambia lo que ves tú. El horario del negocio, las fechas de tareas y los días de asignación usan la zona horaria del sistema."
+
+#: frontend/src/components/Settings/PreferencesSettings.vue
+msgid "Preferences updated successfully"
+msgstr "Preferencias guardadas"
+
+#: frontend/src/components/Settings/Profile/ProfileSettings.vue
+msgid "Profile updated successfully"
+msgstr "Perfil guardado"
+
+#: frontend/src/components/Settings/SettingsPage.vue
+msgid "Loading settings"
+msgstr "Cargando configuración"
+
+#: frontend/src/components/Settings/SettingsPage.vue
+msgid "Settings could not be saved."
+msgstr "No se pudo guardar la configuración."
+
+#: frontend/src/components/Settings/SettingsPage.vue
+msgid "You can view these settings. Saving requires additional permission."
+msgstr "Puedes ver esta configuración. Para guardarla necesitas un permiso adicional."
+
+#: frontend/src/components/Settings/Sla/EditResponseResolutionModal.vue
+msgid "Please select a priority"
+msgstr "Elige una prioridad"
+
+#: frontend/src/components/Settings/Sla/EditResponseResolutionModal.vue
+msgid "Response time is required"
+msgstr "El tiempo de respuesta es obligatorio"
+
+#: frontend/src/components/Settings/Sla/SlaPolicyList.vue frontend/src/components/Settings/Sla/SlaPolicyView.vue
+msgid "An SLA set as default cannot be disabled"
+msgstr "El SLA predeterminado no se puede desactivar"
+
+#: frontend/src/components/Settings/Sla/SlaPolicyList.vue
+msgid "SLA policy deleted"
+msgstr "Política de SLA eliminada"
+
+#: frontend/src/components/Settings/Sla/SlaPolicyList.vue
+msgid "SLA policy duplicated"
+msgstr "Política de SLA duplicada"
+
+#: frontend/src/components/Settings/Sla/SlaPolicyList.vue
+msgid "SLA policy status updated"
+msgstr "Estado de la política de SLA actualizado"
+
+#: frontend/src/components/Settings/Sla/SlaPolicyView.vue
+msgid "SLA policy created"
+msgstr "Política de SLA creada"
+
+#: frontend/src/components/Settings/Sla/SlaPolicyView.vue
+msgid "SLA policy updated"
+msgstr "Política de SLA actualizada"
+
+#: frontend/src/components/Settings/Sla/SlaPolicyView.vue
+msgid "Some error occurred while creating SLA policy"
+msgstr "Algo falló al crear la política de SLA"
+
+#: frontend/src/components/Settings/Sla/WorkDayModal.vue
+msgid "End time is required"
+msgstr "La hora de fin es obligatoria"
+
+#: frontend/src/components/Settings/Sla/WorkDayModal.vue
+msgid "End time must be after start time"
+msgstr "La hora de fin debe ser después de la de inicio"
+
+#: frontend/src/components/Settings/Sla/WorkDayModal.vue
+msgid "Start time is required"
+msgstr "La hora de inicio es obligatoria"
+
+#: frontend/src/components/Settings/Sla/utils.js
+msgid "At least one valid workday with a day, start time, and end time is required"
+msgstr "Se necesita al menos un día hábil con día, hora de inicio y hora de fin"
+
+#: frontend/src/components/Settings/Sla/utils.js
+msgid "End date cannot be before start date"
+msgstr "La fecha de finalización no puede ser anterior a la fecha de inicio"
+
+#: frontend/src/components/Settings/Sla/utils.js
+msgid "End time must be after start time for: {0}"
+msgstr "La hora de fin debe ser después de la de inicio en: {0}"
+
+#: frontend/src/components/Settings/Sla/utils.js
+msgid "Priority {0}: priority name is required"
+msgstr "Prioridad {0}: el nombre de la prioridad es obligatorio"
+
+#: frontend/src/components/Settings/Sla/utils.js
+msgid "Priority {0}: response time is required"
+msgstr "Prioridad {0}: el tiempo de respuesta es obligatorio"
+
+#: frontend/src/components/Settings/Sla/utils.js
+msgid "SLA policy name is required"
+msgstr "El nombre de la política de SLA es obligatorio"
+
+#: frontend/src/components/Settings/Sla/utils.js
+msgid "Start date cannot be after end date"
+msgstr "La fecha de inicio no puede ser posterior a la de fin"
+
+#: frontend/src/components/Settings/Telephony/TelephonySettings.vue
+msgid "Configure telephony settings for your CRM"
+msgstr "Configura la telefonía"
+
+#: frontend/src/components/Settings/Telephony/TelephonySettings.vue
+msgid "Configure your Exotel telephony integration settings here"
+msgstr "Configura aquí la integración de telefonía con Exotel"
+
+#: frontend/src/components/Settings/Telephony/TelephonySettings.vue
+msgid "Configure your Twilio telephony integration settings here"
+msgstr "Configura aquí la integración de telefonía con Twilio"
+
+#: frontend/src/components/Settings/Telephony/TelephonySettings.vue
+msgid "Default calling medium for logged-in user"
+msgstr "Medio de llamada predeterminado para tu usuario"
+
+#: frontend/src/components/Settings/Telephony/TelephonySettings.vue
+msgid "Enter Personal Mobile Number"
+msgstr "Escribe tu celular personal"
+
+#: frontend/src/components/Settings/Telephony/TelephonySettings.vue
+msgid "Personal Mobile Number"
+msgstr "Celular personal"
+
+#: frontend/src/components/Settings/Telephony/TwilioSettings.vue
+msgid "Select a Twilio app for your CRM"
+msgstr "Elige una app de Twilio"
+
+#: frontend/src/components/Settings/Users.vue
+msgid "{0} has been granted {1} access"
+msgstr "{0} ahora tiene acceso de {1}"
+
+#: frontend/src/components/Settings/emailConfig.js
+msgid "Setting up Frappe Mail requires you to have an API key and API secret for your email account. Read more"
+msgstr "Para configurar Frappe Mail necesitas la clave y el secreto de API de tu cuenta de correo. Más información"
+
+#: frontend/src/components/ViewControls.vue
+msgid "Are you sure you want to delete \"{0}\" view?"
+msgstr "¿Seguro que quieres eliminar la vista «{0}»?"
+
+#: frontend/src/components/ViewControls.vue
+msgid "Export failed, please try again"
+msgstr "No se pudo exportar, intenta de nuevo"
+
+#: frontend/src/components/ViewControls.vue
+msgid "You do not have permission to export these records"
+msgstr "No tienes permiso para exportar estos registros"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Outcome"
+msgstr "Resultado"
+
+#: frontend/src/components/archivos/ArchivoPreview.vue
+msgid "Linked records"
+msgstr "Registros vinculados"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "Purchase"
+msgstr "Compra"
+
+#: frontend/src/components/assistant/AssistantSidePanels.vue
+msgid "See all ({0})"
+msgstr "Ver todo ({0})"
+
+#: frontend/src/components/avisos/AvisosPrefs.vue
+msgid "Mentions and assignments always stay in your list. Email delivery is set in your system notification settings."
+msgstr "Las menciones y asignaciones siempre se quedan en tu lista. El envío por correo se configura en las notificaciones del sistema."
+
+#: frontend/src/components/doco/ComingSoon.vue
+msgid "Coming in Phase {0}"
+msgstr "Llega en la fase {0}"
+
+#: frontend/src/components/doco/DealsSearchBox.vue
+msgid "Search deals, devices, ROs…"
+msgstr "Buscar tratos, equipos, órdenes de reparación…"
+
+#: frontend/src/components/doco/ProviderWorkspace.vue
+msgid "Demonstration"
+msgstr "Demostración"
+
+#: frontend/src/components/doco/ProviderWorkspace.vue
+msgid "Open workspace"
+msgstr "Abrir espacio de trabajo"
+
+#: frontend/src/components/doco/RepairOrdersSection.vue
+msgid "Print Ticket"
+msgstr "Imprimir ticket"
+
+#: frontend/src/components/doco/RepairOrdersSection.vue
+msgid "Print failed: "
+msgstr "No se pudo imprimir: "
+
+#: frontend/src/components/doco/contact/ContactConnectionsTab.vue frontend/src/components/fidelidad/GruposLista.vue
+msgid "Customers"
+msgstr "Clientes"
+
+#: frontend/src/components/doco/flows/StepCardList.vue
+msgid "Enviar Email"
+msgstr "Enviar correo"
+
+#: frontend/src/components/doco/flows/StepCardList.vue
+msgid "Si score ≥"
+msgstr "Si la puntuación ≥"
+
+#: frontend/src/components/doco/social/MetricsPanel.vue
+msgid "Leads WA"
+msgstr "Prospectos WA"
+
+#: frontend/src/components/doco/social/SocialComposer.vue
+msgid "Caption…"
+msgstr "Texto de la publicación…"
+
+#: frontend/src/composables/onboarding.js
+msgid "The CRM session changed. Reload before continuing."
+msgstr "Tu sesión cambió. Vuelve a abrir Muelle antes de seguir."
+
+#: frontend/src/composables/onboarding.js
+msgid "Your CRM role could not be loaded. Retry onboarding setup."
+msgstr "No se pudo leer tu puesto. Vuelve a intentar la configuración inicial."
+
+#: frontend/src/composables/onboarding.js
+msgid "Your onboarding status could not be loaded. Retry onboarding setup."
+msgstr "No se pudo leer tu avance de configuración. Vuelve a intentar la configuración inicial."
+
+#: frontend/src/composables/onboarding.js
+msgid "Your onboarding status is invalid. Retry onboarding setup."
+msgstr "Tu avance de configuración no es válido. Vuelve a intentar la configuración inicial."
+
+#: frontend/src/composables/settingsSession.js
+msgid "Settings could not be loaded. Your work is preserved. Try again."
+msgstr "No se pudo cargar la configuración. Tu trabajo se conserva. Intenta de nuevo."
+
+#: frontend/src/composables/settingsSession.js
+msgid "These settings are not configured on this site."
+msgstr "Esta configuración no está disponible en este sistema."
+
+#: frontend/src/composables/settingsSession.js
+msgid "You do not have permission to access these settings."
+msgstr "No tienes permiso para ver esta configuración."
+
+#: frontend/src/composables/useContactFields.ts
+msgid "Email address added"
+msgstr "Correo agregado"
+
+#: frontend/src/composables/useContactFields.ts
+msgid "Email address removed"
+msgstr "Correo quitado"
+
+#: frontend/src/composables/useContactFields.ts
+msgid "Email address updated"
+msgstr "Correo cambiado"
+
+#: frontend/src/composables/useContactFields.ts
+msgid "Mobile number added"
+msgstr "Celular agregado"
+
+#: frontend/src/composables/useContactFields.ts
+msgid "Mobile number removed"
+msgstr "Celular quitado"
+
+#: frontend/src/composables/useContactFields.ts
+msgid "Mobile number updated"
+msgstr "Celular cambiado"
+
+#: frontend/src/composables/useContactFields.ts
+msgid "Please enter a valid email address"
+msgstr "Escribe un correo válido"
+
+#: frontend/src/composables/useContactFields.ts
+msgid "Please enter a valid phone number"
+msgstr "Escribe un teléfono válido"
+
+#: frontend/src/composables/useContactFields.ts
+msgid "Primary email address updated"
+msgstr "Correo principal cambiado"
+
+#: frontend/src/composables/useContactFields.ts
+msgid "Primary mobile number updated"
+msgstr "Celular principal cambiado"
+
+#: frontend/src/pages/CampaignDetail.vue
+msgid "Score ≥"
+msgstr "Puntuación ≥"
+
+#: frontend/src/pages/Deals.vue
+msgid "Deal owner"
+msgstr "Responsable del trato"
+
+#: frontend/src/pages/PersonaForm.vue
+msgid "How many people will use CRM?"
+msgstr "¿Cuántas personas usarán Muelle?"
+
+#: frontend/src/pages/PersonaForm.vue
+msgid "Welcome to CRM"
+msgstr "Te damos la bienvenida a Muelle"
+
+#: frontend/src/pages/ScoreRules.vue
+msgid "Campo (p.ej. source)"
+msgstr "Campo (p. ej. origen)"
+
+#: frontend/src/pages/SocialCalendar.vue
+msgid "Elegir Marketing User…"
+msgstr "Elegir a alguien de marketing…"
+
+#: frontend/src/components/EventNotificationsArea.vue
+msgid "No Upcoming Events"
+msgstr "No hay próximos eventos"
+
+#: frontend/src/components/IconPicker.vue
+msgid "Search by keyword"
+msgstr "Buscar por palabra"
+
+#: frontend/src/components/Settings/AssignmentRules/AssignmentRulesList.vue
+msgid "No Assignment Rules Found"
+msgstr "No hay reglas de asignación"
+
+#: frontend/src/components/Settings/LeadSyncing/LeadSyncSourceForm.vue
+msgid "Lead Form"
+msgstr "Formulario de prospectos"
+
+#: frontend/src/components/Settings/Profile/UserEmailSettings.vue
+msgid "Type something..."
+msgstr "Escribe algo…"
+
+#: frontend/src/components/Settings/Sla/SlaPolicyList.vue
+msgid "No SLA Policies Found"
+msgstr "No hay políticas de SLA"

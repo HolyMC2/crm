@@ -569,7 +569,7 @@ async function load() {
     if (stamp !== epoch) return
     if (!validContext(result))
       throw new Error(
-        __('The order status is incomplete. Refresh before continuing.'),
+        __('The order status is incomplete. Try again before continuing.'),
       )
     state.context = result
     if (!state.pending) state.handoff = null
