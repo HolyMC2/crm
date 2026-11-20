@@ -806,14 +806,17 @@ describe('Etiquetas › straight to the label printer', () => {
   })
   afterEach(() => chooseLabelPrinter(''))
   const line = () => root.querySelector('[data-etq-printer-line]').textContent
-  // The sheet is its own chunk: it shows once its import resolves.
-  async function sheet(selector) {
-    for (let i = 0; i < 20; i++) {
-      const found = document.body.querySelector(selector)
-      if (found) return found
-      await flush()
-    }
-    return null
+  // The sheet is its own chunk: it shows once its import resolves (a cold
+  // import compiles the component first).
+  function sheet(selector) {
+    return vi.waitFor(
+      () => {
+        const found = document.body.querySelector(selector)
+        if (!found) throw new Error(`no ${selector} yet`)
+        return found
+      },
+      { timeout: 5000, interval: 20 },
+    )
   }
 
   it('picks this computer’s printer from the ones Muelle QZ sees', async () => {

@@ -39,12 +39,15 @@ export function printsDirect({ printer = '', layout = null, phone = false }) {
   return !!printer && !phone && layout?.w_mm > 0 && layout?.h_mm > 0
 }
 
+// Whether QZ's error says this (it is classified, never shown).
+const says = (error, pattern) =>
+  pattern.test(String(error?.message ?? error ?? ''))
+
 /** What a QZ failure means for the worker, with the way on. */
 export function directProblem(error, printer) {
-  const text = String(error?.message || error || '')
-  if (/QZ Tray is not available/i.test(text))
+  if (says(error, /QZ Tray is not available/i))
     return 'Muelle QZ no está abierto en este equipo. Ábrelo y vuelve a intentar, o imprime con el diálogo.'
-  if (/cannot find printer/i.test(text))
+  if (says(error, /cannot find printer/i))
     return `Este equipo ya no tiene la impresora «${printer}». Elige otra en «Cambiar» o imprime con el diálogo.`
   return `La impresora «${printer}» no recibió las etiquetas. Revisa que esté encendida y vuelve a intentar, o imprime con el diálogo.`
 }
