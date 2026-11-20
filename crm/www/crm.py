@@ -405,8 +405,16 @@ def get_boot(neutral=False, module="contactos"):
 			"shell_scope": _shell_scope(),
 			# The router's first route decides on the persona wizard from here, without a call.
 			"persona_captured": cint(frappe.db.get_single_value("FCRM Settings", "persona_captured")),
+			# How the shop registers prospects (the Prospectos settings): the forms and pages read it here.
+			"prospect_settings": _prospect_settings(),
 		}
 	)
+
+
+def _prospect_settings():
+	from crm.lead import settings as prospect_settings
+
+	return prospect_settings.get()
 
 
 @frappe.whitelist(methods=["GET"])

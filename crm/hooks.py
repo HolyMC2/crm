@@ -247,7 +247,7 @@ doc_events = {
 	},
 	"ToDo": {
 		"before_insert": ["crm.owner_assignment.mark"],
-		"after_insert": ["crm.api.todo.after_insert"],
+		"after_insert": ["crm.api.todo.after_insert", "crm.lead.follow_up.on_todo_insert"],
 		"on_update": ["crm.api.todo.on_update"],
 	},
 	"Communication": {
@@ -316,7 +316,8 @@ doc_events = {
 	# Integration webhooks: producers only queue a delivery; payloads are built later as the
 	# connection's user (crm.integrations.events). A disconnected n8n never blocks these saves.
 	"CRM Lead": {
-		"after_insert": ["crm.integrations.events.on_record_insert"],
+		# The first follow-up the shop asks for (the Prospectos settings, crm.lead.follow_up).
+		"after_insert": ["crm.integrations.events.on_record_insert", "crm.lead.follow_up.on_lead_insert"],
 		"on_update": ["crm.integrations.events.on_record_update"],
 	},
 	"CRM Inquiry": {"after_insert": ["crm.integrations.events.on_inquiry_insert"]},

@@ -12,9 +12,14 @@ to a lead in Consultas, and both keep their history (see crm.lead.conversion).
 import frappe
 from frappe import _
 
+from crm.lead import settings as prospect_settings
+
 OPEN_LEAD_TYPES = ("Open", "Ongoing", "On Hold")
 OPEN_INQUIRY = ("New", "In Progress")
 MAX_PAGE = 100
+# A lead source the vocabulary does not know (one the shop added, «TikTok») is its own chip.
+OWN_SOURCE = "origen:"
+MAX_SOURCE_KEY = len(OWN_SOURCE) + 140
 
 # Source chips: one small vocabulary over CRM Lead Source names and inquiry source types.
 SOURCE_LABELS = {
@@ -55,6 +60,18 @@ def source_key(value):
 	return "otro"
 
 
+def lead_chip(value):
+	"""The chip a lead's source sits under: the vocabulary's, else the source itself."""
+	key = source_key(value)
+	if key == "otro" and str(value or "").strip():
+		return OWN_SOURCE + str(value).strip()
+	return key
+
+
+def chip_label(key):
+	return SOURCE_LABELS.get(key) or _(key[len(OWN_SOURCE) :])
+
+
 def _open_lead_statuses():
 	if not frappe.db.exists("DocType", "CRM Lead Status"):
 		return None
@@ -64,7 +81,7 @@ def _open_lead_statuses():
 	return frappe.get_all("CRM Lead Status", filters={"type": ["in", OPEN_LEAD_TYPES]}, pluck="name")
 
 
-def _lead_filters(q):
+def _lead_filters(q, companies=True):
 	filters = [["CRM Lead", "converted", "=", 0]]
 	statuses = _open_lead_statuses()
 	if statuses is not None:
@@ -83,7 +100,7 @@ def _lead_filters(q):
 				"mobile_no",
 				"phone",
 			)
-			if frappe.get_meta("CRM Lead").has_field(field)
+			if frappe.get_meta("CRM Lead").has_field(field) and (companies or field != "organization")
 		]
 	return filters, or_filters
 
@@ -98,8 +115,8 @@ def _inquiries_available():
 	)
 
 
-def _lead_rows(q, limit, sources=None):
-	filters, or_filters = _lead_filters(q)
+def _lead_rows(q, limit, sources=None, companies=True):
+	filters, or_filters = _lead_filters(q, companies)
 	if sources is not None:
 		filters.append(["CRM Lead", "source", "in", sources or ["__none__"]])
 	meta = frappe.get_meta("CRM Lead")
@@ -129,19 +146,19 @@ def _lead_rows(q, limit, sources=None):
 	out = []
 	for row in rows:
 		person = " ".join(part for part in (row.get("first_name"), row.get("last_name")) if part)
-		key = source_key(row.get("source"))
+		key = lead_chip(row.get("source"))
 		out.append(
 			{
 				"kind": "lead",
 				"name": row.name,
 				"title": row.get("lead_name") or person or row.get("organization") or row.name,
 				"detail": row.get("organization")
-				if row.get("organization") != row.get("lead_name")
+				if companies and row.get("organization") != row.get("lead_name")
 				else None,
 				"phone": row.get("mobile_no"),
 				"email": row.get("email"),
 				"source": key,
-				"source_label": SOURCE_LABELS[key],
+				"source_label": chip_label(key),
 				"source_raw": row.get("source"),
 				"status": row.status,
 				"status_label": _(row.status) if row.status else None,
@@ -243,7 +260,9 @@ def list_prospects(
 		frappe.throw(_("Ventas is not available for your role."), frappe.PermissionError)
 	if kind not in (None, "", "lead", "inquiry"):
 		frappe.throw(_("Choose leads or inquiries."))
-	if source and source not in SOURCE_LABELS:
+	if source and not (
+		source in SOURCE_LABELS or (source.startswith(OWN_SOURCE) and len(source) <= MAX_SOURCE_KEY)
+	):
 		frappe.throw(_("Choose a valid source."))
 	try:
 		start = int(start or 0)
@@ -253,29 +272,34 @@ def list_prospects(
 	if start < 0 or start > 100000 or not 1 <= page_length <= MAX_PAGE:
 		frappe.throw(_("Choose a valid page between 1 and 100 records."))
 	q = (q or "").strip()[:120] if isinstance(q, str) else ""
+	shop = prospect_settings.get()
+	companies = shop["companies"]
 	want_leads = kind in (None, "", "lead")
 	want_inquiries = kind in (None, "", "inquiry") and _inquiries_available()
 	# Kind chips count both kinds whatever kind is on («Consultas» on read
 	# «Todos 0 · Prospectos 0» with 46 leads); source chips stay within the kind.
 	# Permission-scoped counts per raw source, folded into the small vocabulary.
-	all_lead_sources = _grouped("CRM Lead", "source", *_lead_filters(q))
+	all_lead_sources = _grouped("CRM Lead", "source", *_lead_filters(q, companies))
 	all_inquiry_sources = _grouped_inquiries(q) if _inquiries_available() else {}
 	lead_sources = all_lead_sources if want_leads else {}
 	inquiry_sources = all_inquiry_sources if want_inquiries else {}
 	chips = {}
-	for raw, n in [*lead_sources.items(), *inquiry_sources.items()]:
-		chips[source_key(raw)] = chips.get(source_key(raw), 0) + n
+	for key, n in [
+		*((lead_chip(raw), n) for raw, n in lead_sources.items()),
+		*((source_key(raw), n) for raw, n in inquiry_sources.items()),
+	]:
+		chips[key] = chips.get(key, 0) + n
 	lead_filter = inquiry_filter = None
 	if source:
-		lead_filter = [raw for raw in lead_sources if source_key(raw) == source and raw is not None]
+		lead_filter = [raw for raw in lead_sources if lead_chip(raw) == source and raw is not None]
 		inquiry_filter = [raw for raw in inquiry_sources if source_key(raw) == source and raw is not None]
 		if source == "otro" and None in lead_sources:
 			lead_filter.append("")  # an empty source is «otro» too
 	scan = start + page_length + 1
-	leads = _lead_rows(q, scan, lead_filter) if want_leads else []
+	leads = _lead_rows(q, scan, lead_filter, companies) if want_leads else []
 	found = _inquiry_rows(q, scan, inquiry_filter) if want_inquiries else []
 	if source == "otro" and want_leads and None in lead_sources:
-		leads += [row for row in _lead_rows(q, scan) if not row["source_raw"]]
+		leads += [row for row in _lead_rows(q, scan, companies=companies) if not row["source_raw"]]
 		leads = list({row["name"]: row for row in leads}.values())
 	rows = sorted(leads + found, key=lambda row: row["modified"], reverse=True)
 	return {
@@ -283,8 +307,13 @@ def list_prospects(
 		"has_more": len(rows) > start + page_length,
 		"counts": {"lead": sum(all_lead_sources.values()), "inquiry": sum(all_inquiry_sources.values())},
 		"sources": [
-			{"key": key, "label": SOURCE_LABELS[key], "count": n}
+			{"key": key, "label": chip_label(key), "count": n}
 			for key, n in sorted(chips.items(), key=lambda item: (-item[1], item[0]))
 		],
 		"inquiries_enabled": bool(_inquiries_available()),
+		# «Usar Consultas» off: no door to register one; those that arrive by themselves
+		# (comments and referrals from the shop's social accounts) still show.
+		"inquiries_capture": bool(shop["inquiries"] and _inquiries_available()),
+		# The door to the Prospectos settings shows to whoever may change them.
+		"can_change_settings": prospect_settings.can_change(),
 	}

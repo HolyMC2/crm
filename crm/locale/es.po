@@ -50267,3 +50267,56 @@ msgstr "Al azar"
 #: crm/api/bancos_cuadre.py
 msgid "Someone else changed these movements at the same time. Nothing was saved; try again."
 msgstr "Otra persona o proceso cambió estos movimientos al mismo tiempo. No se guardó nada; vuelve a intentar."
+
+#: crm/lead/settings.py
+msgid "Choose a setting to change."
+msgstr "Elige qué ajuste cambiar."
+
+#: crm/lead/settings.py
+msgid "Choose when the first follow-up is scheduled."
+msgstr "Elige cuándo se agenda el primer seguimiento."
+
+#: crm/lead/settings.py
+msgid "Unknown prospect setting: {0}"
+msgstr "Ese ajuste de prospectos no existe: {0}"
+
+#: crm/lead/settings.py
+msgid "Write the origin's name."
+msgstr "Escribe el nombre del origen."
+
+#: crm/lead/settings.py
+msgid "Write an origin of at most {0} characters."
+msgstr "Escribe un origen de máximo {0} letras."
+
+#: crm/lead/settings.py
+msgid "That origin no longer exists."
+msgstr "Ese origen ya no existe."
+
+#: crm/lead/settings.py
+msgid "Only the owner or a sales manager changes how prospects are registered."
+msgstr "Solo el dueño o un gerente de ventas cambia cómo se registran los prospectos."
+
+#: crm/lead/settings.py
+msgid "Turn the setting on or off."
+msgstr "Prende o apaga el ajuste."
+
+#. Label of the prospect_settings (Code) field in DocType 'FCRM Settings'
+#: crm/fcrm/doctype/fcrm_settings/fcrm_settings.json
+msgid "Prospect Settings"
+msgstr "Ajustes de prospectos"
+
+#: crm/api/prospects.py
+msgid "Choose a valid source."
+msgstr "Elige un origen válido."
+
+#: crm/api/prospects.py
+msgid "Choose leads or inquiries."
+msgstr "Elige prospectos o consultas."
+
+#: frontend/src/components/Modals/ConvertToDealModal.vue
+msgid "Review the person before converting. A shared email or phone does not prove identity."
+msgstr "Revisa a la persona antes de convertir. Compartir un correo o teléfono no prueba que sea la misma."
+
+#: frontend/src/components/Modals/LeadModal.vue
+msgid "Add their phone so the team can reach them."
+msgstr "Agrega su teléfono para que el equipo pueda contactarlo."

@@ -6,7 +6,7 @@ import json
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import random_string
+from frappe.utils import cint, random_string
 
 
 class CRMFieldsLayout(Document):
@@ -27,7 +27,11 @@ class CRMFieldsLayout(Document):
 
 
 @frappe.whitelist()
-def get_fields_layout(doctype: str, type: str, parent_doctype: str | None = None):
+def get_fields_layout(
+	doctype: str, type: str, parent_doctype: str | None = None, entry: int | str | None = None
+):
+	"""`entry`: the layout a form shows, with the shop's prospect settings applied
+	(crm.lead.fields). The layout editors leave it out and read the whole layout."""
 	tabs = []
 	layout = None
 
@@ -106,6 +110,11 @@ def get_fields_layout(doctype: str, type: str, parent_doctype: str | None = None
 			}
 		)
 
+	if tabs and cint(entry):
+		from crm.lead import fields as prospect_fields
+
+		tabs = prospect_fields.apply(doctype, type, tabs)
+
 	return tabs or []
 
 
@@ -143,7 +152,10 @@ def get_sidepanel_sections(doctype: str):
 	for field in fields:
 		fields_meta[field.fieldname] = field
 
-	return layout
+	# Display only (its editor reads get_fields_layout), so the shop's settings always apply.
+	from crm.lead import fields as prospect_fields
+
+	return prospect_fields.apply_sections(doctype, layout)
 
 
 def handle_perm_level_restrictions(field, doctype, parent_doctype=None):
