@@ -219,6 +219,26 @@ catalog); a tag keeps only the entries carrying it (doco `a_donde_va.mes(tag=…
 condition on the month's queries; the averages the cushion reads stay whole) and says so; the
 fixed-expenses card hides while a tag is chosen.
 
+Lane `por-explicar-claro` (Marco 2026-11-20: «the tool should enable us to reach the final state, our
+accounts reflect the real accounts from the banks»; «the ui is ugly and doesn't explain what's
+happening»). Two of his payments had gone through while the screen said «Revisa tu conexión», so he
+stopped for fear of booking twice.
+- The goal on top: «Tus cuentas contra el banco», per bank and card account, the bank's balance, the
+  books', the difference, and where it lands once what waits is explained (`estado.cuentas` from
+  doco `explicar.per_account`: what waits moves the ledger by its net; a movement already in the
+  books moves nothing). «Al explicarlos, cuadra» or «quedan $X sin cuadrar: toca para ver por qué»
+  (the account's Cuadre).
+- Every answer says what it books before the tap: «Al confirmar: Pasan $85,900 de Caja Fuerte Casa a
+  BBVA Debito. Caja Fuerte Casa queda en $39,656 en tus libros.» The «¿Qué fue?» sheet says the same
+  for the answer picked.
+- What a tap did stays where the worker tapped, with its undo and the account's state after it. A
+  call whose answer never arrives reads the page again and says what the books kept.
+- Never twice: doco `pagar` answers a payment already linked to the movement as done
+  («Ya estaba registrado», never undone from here); a link already made the same. Contador rolls
+  back the whole transaction on a deadlock, so a lost transaction (or a raw 1020/1205/1213) runs
+  the tap once more from fresh rows and refuses on a second loss; crm Cuadre `ligar` reports
+  nothing as linked when the transaction was lost.
+
 Next: D5 money goals; the bot reads `por_explicar` on every site (today `banco_por_explicar` needs
 Contador). Setup on Marco's shops after the roll: explain the backlog
 since 08-01 on doco prod with the page (his taps), count the safe, then let the reminder run.
