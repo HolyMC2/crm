@@ -295,7 +295,7 @@
               <dd>
                 {{
                   sections.system_defaults.values.currency ||
-                  __('Not configured')
+                  __('Not configured', null, 'Ajustes')
                 }}
               </dd>
             </div>
@@ -304,16 +304,16 @@
               <dd>
                 {{
                   sections.system_defaults.values.date_format ||
-                  __('Not configured')
+                  __('Not configured', null, 'Ajustes')
                 }}
               </dd>
             </div>
             <div>
-              <dt>{{ __('Time format') }}</dt>
+              <dt>{{ __('Time format', null, 'Ajustes') }}</dt>
               <dd>
                 {{
                   sections.system_defaults.values.time_format ||
-                  __('Not configured')
+                  __('Not configured', null, 'Ajustes')
                 }}
               </dd>
             </div>

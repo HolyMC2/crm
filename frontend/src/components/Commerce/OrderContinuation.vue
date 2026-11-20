@@ -78,7 +78,9 @@
             </dd>
           </div>
           <div>
-            <dt class="text-ink-gray-6">{{ __('Delivery') }}</dt>
+            <dt class="text-ink-gray-6">
+              {{ __('Delivery', null, 'Pedido') }}
+            </dt>
             <dd>
               {{ __(order.delivery.state) }} · {{ order.delivery.percent }}%
             </dd>
@@ -112,7 +114,8 @@
               >{{ invoice.name }}</a
             >
             <span v-else>{{ invoice.name }}</span>
-            · {{ documentStatus(invoice.docstatus) }} · {{ __('Outstanding') }}:
+            · {{ documentStatus(invoice.docstatus) }} ·
+            {{ __('Outstanding', null, 'Pedido') }}:
             {{ invoice.outstanding_amount }} {{ invoice.currency }}
           </li>
         </ul>
@@ -512,7 +515,7 @@ function documentStatus(status) {
   return status === 0
     ? __('Draft')
     : status === 1
-      ? __('Submitted')
+      ? __('Submitted', null, 'Pedido')
       : __('Cancelled')
 }
 function paymentStateText(state) {

@@ -9,7 +9,9 @@
 // cached yet (about 300 KB gzip). The last dictionary this browser loaded is
 // kept in IndexedDB per site and language: the mount uses it at once, and when
 // the new script arrives the app re-renders with it (applyNewer). Only a
-// browser that never loaded a dictionary waits for the script.
+// browser that never loaded a dictionary waits for the script. A note in
+// localStorage names the kept version, so a load whose linked version is the
+// kept one (the script is in the HTTP cache) never reads the megabyte back.
 import { setConfig } from 'frappe-ui'
 import { dictionaryRevision } from '@/translation'
 
@@ -20,6 +22,7 @@ export const MAX_WAIT_MS = 10000
 const VERSION = /^[0-9a-f]{16}$/
 const DATABASE = 'crm-translations'
 const STORE = 'dictionary'
+const KEPT_VERSION = 'crm-translations-version|'
 
 /**
  * null when nothing is left to wait for (no dictionary script on the page, or
@@ -93,6 +96,30 @@ export function dictionaryStore(idb = globalThis.indexedDB) {
   }
 }
 
+/**
+ * The version of the kept dictionary per site and language, in localStorage:
+ * { get(key) → version | null, set(key, version) }. Never throws: without
+ * localStorage nothing is noted and IndexedDB is always read.
+ */
+export function keptVersions(storage = globalThis.localStorage) {
+  return {
+    get(key) {
+      try {
+        return storage?.getItem(KEPT_VERSION + key) ?? null
+      } catch {
+        return null
+      }
+    },
+    set(key, version) {
+      try {
+        storage?.setItem(KEPT_VERSION + key, version)
+      } catch {
+        // full or blocked: the next load reads IndexedDB, as without the note
+      }
+    },
+  }
+}
+
 /** The newer dictionary replaces the one the first render used: every translated render repaints. */
 export function applyNewer(messages) {
   setConfig('translatedMessages', messages)
@@ -115,7 +142,9 @@ const whenIdle = (fn) =>
  * Runs `mount` once the dictionary is in: now when there is nothing to wait
  * for, with the browser's last dictionary when it keeps one, after the script
  * otherwise. A newer script then replaces the kept one (`onNewer`) and is kept
- * for the next load.
+ * for the next load. When the kept one is already the linked version (a load
+ * between two deploys) the script comes from the HTTP cache: IndexedDB is not
+ * read.
  */
 export function mountWhenTranslated(mount, options = {}) {
   const wait = translationsReady(options)
@@ -143,12 +172,16 @@ export function mountWhenTranslated(mount, options = {}) {
       store = null
     }
   }
-  if (store) {
+  const versions = key ? options.versions ?? keptVersions() : null
+  if (store && versions.get(key) === version) {
+    kept = version
+  } else if (store) {
     Promise.resolve()
       .then(() => store.get(key))
       .then(
         (entry) => {
           kept = usable(entry) ? entry.version : null
+          if (kept === version) versions.set(key, version)
           if (mounted || globalThis.translated_messages || !kept) return
           globalThis.translated_messages = entry.messages
           shown = entry
@@ -169,7 +202,10 @@ export function mountWhenTranslated(mount, options = {}) {
       if (!store) return
       whenIdle(() => {
         if (kept === version) return
-        store.set(key, { version, messages: fresh }).catch(() => {})
+        store
+          .set(key, { version, messages: fresh })
+          .then(() => versions.set(key, version))
+          .catch(() => {})
       })
     },
     { once: true },

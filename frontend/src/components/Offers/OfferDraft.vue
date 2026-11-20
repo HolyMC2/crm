@@ -116,7 +116,7 @@
         {{ __('Add product or service') }}
       </button>
       <label class="block space-y-1"
-        >{{ __('Terms')
+        >{{ __('Terms', null, 'Oferta')
         }}<textarea
           v-model="draft.terms"
           rows="5"

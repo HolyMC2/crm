@@ -86,7 +86,7 @@
           -->
           <div v-if="erpSyncAvailable" class="mt-5 border-t pt-5">
             <p class="mb-3 text-sm font-semibold text-ink-gray-8">
-              {{ __('Customer Details') }}
+              {{ __('Customer Details', null, 'Trato') }}
               <span class="ml-1 text-xs font-normal text-ink-gray-5">
                 {{ __('(for the customer record)') }}
               </span>
@@ -125,7 +125,7 @@
               <Link
                 doctype="Customer Group"
                 v-model="customerDetails.customer_group"
-                :label="__('Customer Group')"
+                :label="__('Customer Group', null, 'Trato')"
                 :placeholder="__('Select group')"
               />
             </div>

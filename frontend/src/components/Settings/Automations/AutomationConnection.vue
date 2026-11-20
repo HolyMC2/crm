@@ -99,7 +99,10 @@
             <p class="text-p-base-medium">
               {{ __('3. API access for n8n (HTTP Request credential)') }}
             </p>
-            <CopyLine :label="__('Base URL')" :value="origin" />
+            <CopyLine
+              :label="__('Base URL', null, 'Automatizaciones')"
+              :value="origin"
+            />
             <CopyLine
               :label="__('Check the credential with')"
               :value="`GET ${origin}/api/method/crm.api.integration.whoami`"
@@ -533,12 +536,12 @@ const GROUPS = [
 const DOCUMENT_WORDS = {
   'document.created': __('Created'),
   'document.updated': __('Changed'),
-  'document.submitted': __('Submitted'),
+  'document.submitted': __('Submitted', null, 'Automatizaciones'),
   'document.cancelled': __('Cancelled'),
   'document.deleted': __('Deleted'),
 }
 const STATUS = {
-  Delivered: __('Delivered'),
+  Delivered: __('Delivered', null, 'Automatizaciones'),
   Pending: __('Waiting to send'),
   Sending: __('Waiting to send'),
   Failed: __('Retrying'),

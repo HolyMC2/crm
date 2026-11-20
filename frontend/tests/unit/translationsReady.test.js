@@ -6,6 +6,7 @@ import {
   MAX_WAIT_MS,
   applyNewer,
   dictionaryStore,
+  keptVersions,
   linkedVersion,
   mountWhenTranslated,
   translationsReady,
@@ -113,9 +114,14 @@ describe('a dictionary this browser kept spares the wait after a deploy', () => 
   })
   afterEach(() => vi.unstubAllGlobals())
 
-  const options = (store, onNewer = vi.fn()) => ({
+  const fakeVersions = (noted = {}) => ({
+    get: vi.fn((key) => noted[key] ?? null),
+    set: vi.fn((key, version) => (noted[key] = version)),
+  })
+  const options = (store, onNewer = vi.fn(), versions = fakeVersions()) => ({
     store,
     onNewer,
+    versions,
     lang: 'es-MX',
     site: 'tienda.example',
   })
@@ -155,6 +161,61 @@ describe('a dictionary this browser kept spares the wait after a deploy', () => 
       version: NEW,
       messages: fresh,
     })
+    expect(opts.versions.set).toHaveBeenCalledWith('tienda.example|es-MX', NEW)
+  })
+
+  it('the noted version is the linked one: IndexedDB is not read', async () => {
+    const script = addScript(versioned(NEW))
+    const store = fakeStore({ version: NEW, messages: { Hoy: 'Hoy' } })
+    const versions = fakeVersions({ 'tienda.example|es-MX': NEW })
+    const opts = options(store, vi.fn(), versions)
+    const mount = vi.fn()
+    const result = mountWhenTranslated(mount, opts)
+    await vi.advanceTimersByTimeAsync(0)
+    expect(store.get).not.toHaveBeenCalled()
+    expect(mount).not.toHaveBeenCalled()
+    run(script, { Hoy: 'Hoy' })
+    await result
+    await vi.advanceTimersByTimeAsync(0)
+    expect(mount).toHaveBeenCalledOnce()
+    expect(opts.onNewer).not.toHaveBeenCalled()
+    expect(store.set).not.toHaveBeenCalled()
+  })
+
+  it('an older noted version still reads the kept dictionary', async () => {
+    addScript(versioned(NEW))
+    const kept = { Hoy: 'Hoy (anterior)' }
+    const store = fakeStore({ version: OLD, messages: kept })
+    const versions = fakeVersions({ 'tienda.example|es-MX': OLD })
+    const mount = vi.fn()
+    mountWhenTranslated(mount, options(store, vi.fn(), versions))
+    await vi.advanceTimersByTimeAsync(0)
+    expect(store.get).toHaveBeenCalledOnce()
+    expect(mount).toHaveBeenCalledOnce()
+    expect(window.translated_messages).toBe(kept)
+  })
+
+  it('the version note lives in localStorage and never throws', () => {
+    const memory = new Map()
+    const storage = {
+      getItem: (k) => memory.get(k) ?? null,
+      setItem: (k, v) => memory.set(k, v),
+    }
+    const versions = keptVersions(storage)
+    expect(versions.get('s|es')).toBeNull()
+    versions.set('s|es', NEW)
+    expect(versions.get('s|es')).toBe(NEW)
+    const broken = keptVersions({
+      getItem: () => {
+        throw new Error('blocked')
+      },
+      setItem: () => {
+        throw new Error('quota')
+      },
+    })
+    expect(broken.get('s|es')).toBeNull()
+    expect(() => broken.set('s|es', NEW)).not.toThrow()
+    expect(keptVersions(undefined).get('s|es')).toBeNull()
   })
 
   it('the kept one is this version: no repaint and no write', async () => {

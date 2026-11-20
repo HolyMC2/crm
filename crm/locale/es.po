@@ -47771,6 +47771,7 @@ msgid "Creating a link does not send it to the customer. Review the amount and o
 msgstr "Crear el enlace no se lo envía al cliente. Revisa primero el monto y la confirmación del pedido."
 
 #: frontend/src/components/Commerce/OrderContinuation.vue
+msgctxt "Pedido"
 msgid "Delivery"
 msgstr "Entrega"
 
@@ -47831,6 +47832,7 @@ msgid "Order total"
 msgstr "Total del pedido"
 
 #: frontend/src/components/Commerce/OrderContinuation.vue
+msgctxt "Pedido"
 msgid "Outstanding"
 msgstr "Saldo pendiente"
 
@@ -47898,7 +47900,13 @@ msgstr "Confirmar el pedido y pedir enlace de pago"
 msgid "Submit order and send to register"
 msgstr "Confirmar el pedido y enviarlo a caja"
 
-#: frontend/src/components/Commerce/OrderContinuation.vue frontend/src/components/Settings/Automations/AutomationConnection.vue
+#: frontend/src/components/Commerce/OrderContinuation.vue
+msgctxt "Pedido"
+msgid "Submitted"
+msgstr "Confirmado"
+
+#: frontend/src/components/Settings/Automations/AutomationConnection.vue
+msgctxt "Automatizaciones"
 msgid "Submitted"
 msgstr "Confirmado"
 
@@ -48115,10 +48123,12 @@ msgid "City"
 msgstr "Ciudad"
 
 #: frontend/src/components/Modals/DealModal.vue
+msgctxt "Trato"
 msgid "Customer Details"
 msgstr "Detalles del cliente"
 
 #: frontend/src/components/Modals/DealModal.vue
+msgctxt "Trato"
 msgid "Customer Group"
 msgstr "Categoría de cliente"
 
@@ -48191,6 +48201,7 @@ msgid "Remove line {0}"
 msgstr "Quitar renglón {0}"
 
 #: frontend/src/components/Offers/OfferDraft.vue
+msgctxt "Oferta"
 msgid "Terms"
 msgstr "Condiciones"
 
@@ -48507,6 +48518,7 @@ msgid "Creating an assignment rule requires additional permission."
 msgstr "Crear una regla de asignación necesita un permiso adicional."
 
 #: frontend/src/components/Settings/Automations/AutomationConnection.vue
+msgctxt "Automatizaciones"
 msgid "Base URL"
 msgstr "URL base"
 
@@ -48519,6 +48531,7 @@ msgid "Deleted"
 msgstr "Eliminado"
 
 #: frontend/src/components/Settings/Automations/AutomationConnection.vue
+msgctxt "Automatizaciones"
 msgid "Delivered"
 msgstr "Entregado"
 
@@ -48559,6 +48572,7 @@ msgid "Invalid site URL"
 msgstr "La URL del sitio no es válida"
 
 #: frontend/src/components/Settings/ERPNextSettings.vue
+msgctxt "ERPNext"
 msgid "Item Group"
 msgstr "Grupo de artículos"
 
@@ -48719,6 +48733,7 @@ msgid "No working hours are configured in this policy."
 msgstr "Esta política no tiene horario configurado."
 
 #: frontend/src/components/Settings/EffectiveSettings.vue
+msgctxt "Ajustes"
 msgid "Not configured"
 msgstr "No configurado"
 
@@ -48839,6 +48854,7 @@ msgid "This configuration source could not be read. Retry or ask your administra
 msgstr "No se pudo leer este origen de configuración. Vuelve a intentar o pregunta a tu administrador."
 
 #: frontend/src/components/Settings/EffectiveSettings.vue
+msgctxt "Ajustes"
 msgid "Time format"
 msgstr "Formato de hora"
 
@@ -49219,6 +49235,7 @@ msgid "Outcome"
 msgstr "Resultado"
 
 #: frontend/src/components/archivos/ArchivoPreview.vue
+msgctxt "Archivos"
 msgid "Linked records"
 msgstr "Registros vinculados"
 
@@ -49364,7 +49381,7 @@ msgstr "Te damos la bienvenida a Muelle"
 
 #: frontend/src/pages/ScoreRules.vue
 msgid "Campo (p.ej. source)"
-msgstr "Campo (p. ej. origen)"
+msgstr "Campo (p. ej. source)"
 
 #: frontend/src/pages/SocialCalendar.vue
 msgid "Elegir Marketing User…"
@@ -49393,3 +49410,39 @@ msgstr "Escribe algo…"
 #: frontend/src/components/Settings/Sla/SlaPolicyList.vue
 msgid "No SLA Policies Found"
 msgstr "No hay políticas de SLA"
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "Site business timezone"
+msgstr "Zona horaria del negocio"
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "No start limit"
+msgstr "Sin fecha de inicio"
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "No end limit"
+msgstr "Sin fecha de fin"
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "No additional condition expression"
+msgstr "Sin condición adicional"
+
+#: frontend/src/components/Settings/EffectiveSettings.vue
+msgid "No weekday restriction"
+msgstr "Todos los días de la semana"
+
+#: frontend/src/components/Offers/OfferDraft.vue
+msgid "Line {0}"
+msgstr "Renglón {0}"
+
+#: frontend/src/components/Offers/offerPresentation.js
+msgid "Timezone unavailable"
+msgstr "Zona horaria no disponible"
+
+#: frontend/src/components/EventNotificationsArea.vue
+msgid "You have no events scheduled"
+msgstr "No tienes eventos programados"
+
+#: frontend/src/components/Settings/LeadSyncing/LeadSyncSources.vue
+msgid "Add and manage your lead sources here."
+msgstr "Agrega y administra aquí tus orígenes de prospectos."

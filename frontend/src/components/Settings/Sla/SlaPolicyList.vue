@@ -52,7 +52,7 @@
             !slaPolicyListResource.list.data?.length
           "
           :title="__('No SLA Policies Found')"
-          description="Add one to get started."
+          :description="__('Add one to get started.')"
           :icon="ShieldCheck"
         />
         <div v-else class="-ml-2">

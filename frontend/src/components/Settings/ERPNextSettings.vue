@@ -396,7 +396,8 @@
                           v-if="getSyncRowGroup(row)"
                           class="text-p-sm text-ink-gray-5"
                         >
-                          {{ __('Item Group') }}: {{ getSyncRowGroup(row) }}
+                          {{ __('Item Group', null, 'ERPNext') }}:
+                          {{ getSyncRowGroup(row) }}
                         </span>
                         <span class="text-p-sm text-ink-gray-5">
                           {{ __('ID') }}: {{ getSyncRowId(row) }}

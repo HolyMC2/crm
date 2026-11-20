@@ -328,7 +328,9 @@
         </div>
       </dl>
       <div v-if="item.links?.length" class="px-4 pb-4">
-        <p class="mb-1 text-sm text-ink-gray-5">{{ __('Linked records') }}</p>
+        <p class="mb-1 text-sm text-ink-gray-5">
+          {{ __('Linked records', null, 'Archivos') }}
+        </p>
         <ul class="flex flex-wrap gap-2">
           <li v-for="link in item.links" :key="link.doctype + link.name">
             <a
