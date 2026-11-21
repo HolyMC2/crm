@@ -565,6 +565,53 @@
               {{ photosSaid?.text }}
             </p>
           </section>
+          <!-- «Límites»: how far this person goes on their own (the discount at
+               the register…), from the apps that enforce them; owner only. -->
+          <section
+            v-if="person.limites?.rows?.length"
+            class="px-4"
+            aria-labelledby="equipo-limites"
+            data-testid="equipo-limites"
+          >
+            <h2
+              id="equipo-limites"
+              class="pb-1 text-base font-semibold text-ink-gray-9"
+            >
+              {{ __('Limits', null, 'Equipo') }}
+            </h2>
+            <div
+              v-for="row in person.limites.rows"
+              :key="row.provider + row.key"
+              class="py-2"
+              :data-limite="row.key"
+            >
+              <ChipGroup
+                :model-value="row.value"
+                :label="row.label"
+                :options="row.choices"
+                :clear-value="row.value"
+                :testid="`equipo-limite-${row.key}`"
+                @update:model-value="(value) => setLimit(row, value)"
+              />
+              <p class="mt-1 text-sm text-ink-gray-6">{{ row.said }}</p>
+            </div>
+            <p
+              v-if="limitSaid?.error"
+              role="alert"
+              class="text-sm text-ink-red-7"
+              data-testid="equipo-limites-dicho"
+            >
+              {{ limitSaid.text }}
+            </p>
+            <p
+              v-else
+              aria-live="polite"
+              class="text-sm text-ink-green-8"
+              data-testid="equipo-limites-dicho"
+            >
+              {{ limitSaid?.text }}
+            </p>
+          </section>
           <section
             v-if="person.hr"
             class="px-4"
@@ -633,7 +680,7 @@ import {
 } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { FormControl } from 'frappe-ui'
-import { AppBar, EmptyState, StatusChip } from '@/components/ui'
+import { AppBar, ChipGroup, EmptyState, StatusChip } from '@/components/ui'
 import AjustesSwitch from '@/components/ajustes/AjustesSwitch.vue'
 import RecordIsland from '@/components/documentos/RecordIsland.vue'
 import RecordKit from '@/components/documentos/compras/RecordKit.vue'
@@ -705,6 +752,9 @@ const moneySaid = ref(null)
 const photosBusy = ref(false)
 // The photos switch's last answer, said beside it: {text, error}.
 const photosSaid = ref(null)
+const limitBusy = ref(false)
+// The limits' last answer, said under them: {text, error}.
+const limitSaid = ref(null)
 // A full plan in «Completar alta»: the owner adds one user in place.
 const {
   step: seatStep,
@@ -1066,6 +1116,28 @@ async function setPhotos(allow) {
     photosSaid.value = { text: problemOf(error).detail, error: true }
   } finally {
     photosBusy.value = false
+  }
+}
+async function setLimit(row, value) {
+  if (limitBusy.value || value === row.value) return
+  const before = row.value
+  row.value = value
+  limitBusy.value = true
+  limitSaid.value = null
+  try {
+    const answer = await equipoApi('doco.erp_experience.equipo.set_limit', {
+      user: person.value.user,
+      provider: row.provider,
+      key: row.key,
+      value,
+    })
+    if (answer?.limites) person.value.limites = answer.limites
+    limitSaid.value = { text: answer?.message || '', error: false }
+  } catch (error) {
+    row.value = before
+    limitSaid.value = { text: problemOf(error).detail, error: true }
+  } finally {
+    limitBusy.value = false
   }
 }
 async function askHr() {

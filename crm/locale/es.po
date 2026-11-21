@@ -50446,3 +50446,6 @@ msgstr "Qué pasó: {0}"
 
 msgid "Call them"
 msgstr "Llamar"
+msgctxt "Equipo"
+msgid "Limits"
+msgstr "Límites"
