@@ -1,7 +1,7 @@
 """«Resumen de ayer»: what yesterday left, for the owner, each morning and in Hoy.
 
 At the hour the owner chose (Hoy's settings, default 8:00 site time) every
-owner and manager gets one notice («Resumen de ayer: ventas $12,400 · 3
+owner and manager who sees the business's money gets one notice («Resumen de ayer: ventas $12,400 · 3
 cosas que atender»). It opens Hoy's «Resumen de ayer» sheet, where each row
 has its button. The sheet reads the figures live, as the person who opens it,
 so they always match the screen the button opens.
@@ -184,15 +184,28 @@ def hour() -> int:
 
 
 def recipients() -> list[str]:
+	"""The owners and managers: a manager role, signed in at least once (an account only an
+	integration uses never is), and the business's money shared with them (staff the owner
+	keeps it from are not who the summary is for)."""
+	from crm.api import money
+
 	users = frappe.get_all(
 		"Has Role", filters={"role": ["in", RECIPIENT_ROLES], "parenttype": "User"}, pluck="parent"
 	)
 	users = sorted(set(users) - {"Administrator", "Guest"})
 	if not users:
 		return []
-	return frappe.get_all(
-		"User", filters={"name": ["in", users], "enabled": 1, "user_type": "System User"}, pluck="name"
+	people = frappe.get_all(
+		"User",
+		filters={
+			"name": ["in", users],
+			"enabled": 1,
+			"user_type": "System User",
+			"last_login": ["is", "set"],
+		},
+		pluck="name",
 	)
+	return [user for user in people if not money.hidden(user)]
 
 
 def send_due() -> None:

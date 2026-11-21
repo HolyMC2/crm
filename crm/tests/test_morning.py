@@ -37,7 +37,7 @@ class TestMorning(IntegrationTestCase):
 			frappe.delete_doc("User", user, force=True, ignore_missing=True)
 		super().tearDown()
 
-	def owner(self):
+	def owner(self, signed_in=True):
 		email = f"zz-manana-{frappe.generate_hash(length=6)}@example.invalid"
 		doc = frappe.get_doc(
 			{
@@ -50,8 +50,20 @@ class TestMorning(IntegrationTestCase):
 		)
 		doc.flags.no_welcome_mail = True
 		doc.insert(ignore_permissions=True)
+		if signed_in:
+			frappe.db.set_value("User", email, "last_login", frappe.utils.now(), update_modified=False)
 		self.users.append(email)
 		return email
+
+	def test_it_goes_to_managers_who_sign_in_and_see_the_money(self):
+		owner = self.owner()
+		integration = self.owner(signed_in=False)
+		staff = self.owner()
+		with patch("crm.api.money.hidden", side_effect=lambda user=None: user == staff):
+			found = morning.recipients()
+		self.assertIn(owner, found)
+		self.assertNotIn(integration, found)
+		self.assertNotIn(staff, found)
 
 	def test_a_provider_that_fails_costs_only_its_rows(self):
 		def broken(day):

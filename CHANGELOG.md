@@ -3,6 +3,11 @@
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
 
+## 2026-11-21 — «Autorizaciones del encargado» per register; «Resumen de ayer» only for those who see the money (lane limites-caja, with posawesome; not deployed)
+
+- **Hub:** a switch an app reads and writes itself may carry `args` (a dict) to its `get` and `set`, so an app lists one switch per record. posawesome uses it for «Autorizaciones del encargado en <caja>», the register's guided identity. That switch is what lets a supervisor approve above a person's limit.
+- **Resumen de ayer:** the morning notice goes to managers who have signed in at least once and see the business's money. Before, it also reached staff with Sales Manager whose money the owner hides, and accounts only integrations use.
+
 ## 2026-11-20 — «Resumen de ayer»: what yesterday left, each morning on the owner's phone (lane resumen-manana, with taller and posawesome; not deployed)
 
 - **Why:** owners are often away from the counter and had nothing like a morning brief: yesterday's sales, who dropped follow-ups, the cash count, late repairs and what waits for their approval were each on a different screen.
