@@ -502,6 +502,106 @@
               {{ moneySaid?.text }}
             </p>
           </section>
+          <!-- «Tienda»: the shops this person works in and at what level
+               (doco get_person `tiendas`, owner only, on a tenant with
+               shops). Without a shop they read no stock and no prices. -->
+          <section
+            v-if="person.tiendas"
+            class="px-4"
+            aria-labelledby="equipo-tienda"
+            data-testid="equipo-tienda"
+          >
+            <h2
+              id="equipo-tienda"
+              class="pb-1 text-base font-semibold text-ink-gray-9"
+            >
+              {{ __('Shop', null, 'Equipo') }}
+            </h2>
+            <div class="flex min-h-14 items-center gap-3 py-2">
+              <ul
+                v-if="tiendaGrants.length"
+                class="flex min-w-0 flex-1 flex-col gap-2"
+                data-testid="equipo-tienda-actual"
+              >
+                <li
+                  v-for="g in tiendaGrants"
+                  :key="g.shop"
+                  class="flex min-w-0 flex-col"
+                  :data-tienda="g.shop"
+                >
+                  <span
+                    class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5"
+                  >
+                    <span
+                      class="break-words text-base text-ink-gray-9"
+                      data-tienda-nombre
+                      >{{ g.shop_label || g.shop }}</span
+                    >
+                    <StatusChip
+                      v-if="g.is_default"
+                      :label="__('Main', null, 'Equipo')"
+                      tone="neutral"
+                      data-testid="equipo-tienda-principal"
+                    />
+                  </span>
+                  <span class="text-sm text-ink-gray-6" data-tienda-nivel>{{
+                    shopLevelLabel(g.level)
+                  }}</span>
+                </li>
+              </ul>
+              <span
+                v-else-if="tiendaRegions.length"
+                class="min-w-0 flex-1 break-words text-base text-ink-gray-9"
+                data-testid="equipo-tienda-actual"
+                >{{
+                  __('Runs the region {0}', [
+                    tiendaRegions.map((r) => r.label).join(', '),
+                  ])
+                }}</span
+              >
+              <span
+                v-else-if="person.tiendas.can_change || !person.tiendas.reason"
+                class="min-w-0 flex-1 break-words text-base text-ink-gray-9"
+                data-testid="equipo-tienda-actual"
+                >{{ __('No shop: does not see stock or prices') }}</span
+              >
+              <button
+                v-if="person.tiendas.can_change"
+                type="button"
+                class="press flex size-10 flex-none items-center justify-center rounded-full bg-surface-gray-2 text-ink-gray-8 [@media(hover:hover)]:hover:bg-surface-gray-3"
+                :aria-label="tiendaAction"
+                :title="tiendaAction"
+                :aria-describedby="
+                  person.tiendas.reason ? 'equipo-tienda-motivo' : undefined
+                "
+                data-testid="equipo-tienda-cambiar"
+                @click="openTienda"
+              >
+                <span
+                  :class="[
+                    tiendaGrants.length ? 'lucide-pencil' : 'lucide-plus',
+                    'size-5',
+                  ]"
+                  aria-hidden="true"
+                />
+              </button>
+            </div>
+            <p
+              v-if="person.tiendas.reason"
+              id="equipo-tienda-motivo"
+              class="text-sm text-ink-gray-6"
+            >
+              {{ person.tiendas.reason }}
+            </p>
+            <!-- The sheet's answer stays beside the row it changed. -->
+            <p
+              aria-live="polite"
+              class="text-sm text-ink-green-8"
+              data-testid="equipo-tienda-dicho"
+            >
+              {{ tiendaSaid }}
+            </p>
+          </section>
           <!-- «Toma fotos de productos»: the owner's switch; on lets this
                person add and change product photos without editing products. -->
           <section
@@ -667,6 +767,14 @@
       </div>
     </div>
     <SeatStepSheet v-if="seatStep" :step="seatStep" />
+    <TiendaSheet
+      v-if="tiendaOpened && person?.tiendas"
+      v-model:open="tiendaOpen"
+      :user="person.user"
+      :who="shownName"
+      :tiendas="person.tiendas"
+      @saved="onTiendaSaved"
+    />
   </div>
 </template>
 <script setup>
@@ -705,6 +813,9 @@ import {
   personRoute,
   problemOf,
   requestId,
+  shopGrants,
+  shopRegions,
+  shopLevelLabel,
   weekLabel,
   weekTheme,
 } from '@/composables/useEquipo'
@@ -715,6 +826,10 @@ import { cuentaAllowed } from '@/utils/shellRoutes'
 // Mi cuenta's quote sheet, on the first alta the plan's cap refuses.
 const SeatStepSheet = defineAsyncComponent(
   () => import('@/components/cuenta/SeatStepSheet.vue'),
+)
+// «Tienda»'s sheet mounts on its first open.
+const TiendaSheet = defineAsyncComponent(
+  () => import('@/components/equipo/TiendaSheet.vue'),
 )
 
 // The week's and the law row's Badge themes, as StatusChip tones.
@@ -755,6 +870,10 @@ const photosSaid = ref(null)
 const limitBusy = ref(false)
 // The limits' last answer, said under them: {text, error}.
 const limitSaid = ref(null)
+const tiendaOpened = ref(false)
+const tiendaOpen = ref(false)
+// The shop sheet's last answer, said under the «Tienda» row.
+const tiendaSaid = ref('')
 // A full plan in «Completar alta»: the owner adds one user in place.
 const {
   step: seatStep,
@@ -779,6 +898,14 @@ const serviceLine = computed(() => {
   return __('{0} years of service', [years])
 })
 const canAssign = computed(() => person.value?.asistencia?.can_assign !== false)
+// «Tienda»: the shops they are in, the default first.
+const tiendaGrants = computed(() => shopGrants(person.value?.tiendas))
+const tiendaRegions = computed(() => shopRegions(person.value?.tiendas))
+const tiendaAction = computed(() =>
+  tiendaGrants.value.length
+    ? __('Change shop', null, 'Equipo')
+    : __('Add to a shop', null, 'Equipo'),
+)
 // An account nobody named yet reads «Sin nombre», never its login.
 const shownName = computed(
   () => person.value?.full_name || __('No name', null, 'Equipo'),
@@ -1139,6 +1266,17 @@ async function setLimit(row, value) {
   } finally {
     limitBusy.value = false
   }
+}
+function openTienda() {
+  if (!person.value?.tiendas?.can_change) return
+  tiendaSaid.value = ''
+  tiendaOpened.value = true
+  tiendaOpen.value = true
+}
+// The server's view replaces the row; its message is said beside it.
+function onTiendaSaved(answer) {
+  if (answer?.tiendas !== undefined) person.value.tiendas = answer.tiendas
+  tiendaSaid.value = answer?.message || ''
 }
 async function askHr() {
   try {

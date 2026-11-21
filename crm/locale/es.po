@@ -50690,3 +50690,104 @@ msgstr "Terminada"
 #: frontend/src/composables/fidelidad.js
 msgid "Applies by itself at the register and in the online store"
 msgstr "Se aplica sola en caja y en la tienda en línea"
+#: frontend/src/pages/EquipoPersona.vue
+msgctxt "Equipo"
+msgid "Shop"
+msgstr "Tienda"
+
+#: frontend/src/pages/EquipoPersona.vue
+msgctxt "Equipo"
+msgid "Main"
+msgstr "Principal"
+
+#: frontend/src/pages/EquipoPersona.vue
+msgid "No shop: does not see stock or prices"
+msgstr "Sin tienda: no ve existencias ni precios"
+
+msgid "Runs the region {0}"
+msgstr "Encarga la región {0}"
+
+#: frontend/src/pages/EquipoPersona.vue
+msgctxt "Equipo"
+msgid "Change shop"
+msgstr "Cambiar tienda"
+
+#: frontend/src/pages/EquipoPersona.vue
+msgctxt "Equipo"
+msgid "Add to a shop"
+msgstr "Agregar a una tienda"
+
+#: frontend/src/components/equipo/TiendaSheet.vue
+msgctxt "Equipo"
+msgid "Shop of {0}"
+msgstr "Tienda de {0}"
+
+#: frontend/src/components/equipo/TiendaSheet.vue
+msgctxt "Equipo"
+msgid "Which shop"
+msgstr "En qué tienda"
+
+#: frontend/src/components/equipo/TiendaSheet.vue
+msgctxt "Equipo"
+msgid "There are no shops yet."
+msgstr "Todavía no hay tiendas."
+
+#: frontend/src/components/equipo/TiendaSheet.vue
+msgctxt "Equipo"
+msgid "What they do there"
+msgstr "Qué hace ahí"
+
+#: frontend/src/components/equipo/TiendaSheet.vue
+msgctxt "Equipo"
+msgid "Remove from the shop"
+msgstr "Quitar de la tienda"
+
+#: frontend/src/components/equipo/TiendaSheet.vue
+msgctxt "Equipo"
+msgid "They stop seeing the stock and prices of {0}."
+msgstr "Deja de ver las existencias y los precios de {0}."
+
+#: frontend/src/components/equipo/TiendaSheet.vue
+msgctxt "Equipo"
+msgid "Yes, remove from the shop"
+msgstr "Sí, quitar de la tienda"
+
+#: frontend/src/components/equipo/TiendaSheet.vue
+msgctxt "Equipo"
+msgid "Try again"
+msgstr "Volver a intentar"
+
+#: frontend/src/components/equipo/TiendaSheet.vue
+msgctxt "Equipo"
+msgid "Choose a shop."
+msgstr "Elige una tienda."
+
+#: frontend/src/composables/useEquipo.js
+msgctxt "Equipo"
+msgid "Sells and charges"
+msgstr "Vende y cobra"
+
+#: frontend/src/composables/useEquipo.js
+msgctxt "Equipo"
+msgid "Runs the shop"
+msgstr "Encarga la tienda"
+
+#: frontend/src/composables/useEquipo.js
+msgctxt "Equipo"
+msgid "Runs the region"
+msgstr "Encarga la región"
+
+#: frontend/src/composables/useEquipo.js
+msgctxt "Equipo"
+msgid "Sees the shop’s stock and prices."
+msgstr "Ve las existencias y los precios de la tienda."
+
+#: frontend/src/composables/useEquipo.js
+msgctxt "Equipo"
+msgid "Also runs the shop, as far as their puesto allows."
+msgstr "Además lleva la tienda, hasta donde su puesto lo permite."
+
+#: frontend/src/composables/useEquipo.js
+msgctxt "Equipo"
+msgid "Runs the shops of their region."
+msgstr "Lleva las tiendas de su región."

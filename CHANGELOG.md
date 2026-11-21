@@ -2,6 +2,12 @@
 
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
+## 2026-11-21 — Equipo › a person's «Tienda»: the owner puts them in a shop and picks what they do there (lane costo-permisos-crm, with doco and mercado; not deployed)
+
+- **Why:** on a tenant with shops, a person who is in no shop sees no stock and no prices. Where a shop shows cost to its managers only, their level there is also part of who sees the cost. Equipo showed neither.
+- **Change:** `pages/EquipoPersona.vue` shows a «Tienda» row when doco's `get_person` sends `tiendas`. doco sends it only to the owner, on a tenant that uses shops. The row lists the shops the person is in, the default marked «Principal», each with its level in words: «Vende y cobra» (User), «Encarga la tienda» (Shop Manager), «Encarga la región» (Region Manager). With no shop it reads «Sin tienda: no ve existencias ni precios». When `can_change` is on, the pencil (or «+» with no shop) opens `components/equipo/TiendaSheet.vue`, a kit `BottomSheet` that loads on its first open. In the sheet the owner picks the shop (the only one, or the person's default, comes picked) and the level («Vende y cobra», «Encarga la tienda»; a level set elsewhere stays offered). «Quitar de la tienda» takes the person out in two taps. Each change posts `doco.erp_experience.equipo.set_shop_access(user, shop, level, enabled)`. The row then shows the `tiendas` view the server sends back, with its message under it. A refusal stays in the sheet and its button reads «Volver a intentar». When `can_change` is off the row shows `reason`. A doco that sends no `tiendas` shows no row. The helpers are in `composables/useEquipo.js` (`SHOP_ACCESS`, `shopLevelLabel`, `shopGrants`, `shopPreselect`, …), and es-MX is in `crm/locale/es.po`.
+- **Tests:** `frontend/tests/unit/equipoTienda.test.js` (10).
+
 
 ## 2026-11-21 — Fidelidad's promotions read whole on a phone; a promotion's end is a day (lane promos-filas, with lane promos-en-todo; not deployed)
 

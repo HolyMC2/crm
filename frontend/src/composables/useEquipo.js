@@ -871,3 +871,81 @@ export async function pagarBancos(company) {
     return []
   }
 }
+
+// «Tienda» on a person (doco get_person `tiendas`: the owner's view, only on a
+// tenant with shops): the shops they work in and at what level. A shop grant is
+// what lets them read its stock and prices; the level decides how much of the
+// shop they run, within what their puesto allows.
+export const SHOP_ACCESS = 'doco.erp_experience.equipo.set_shop_access'
+// The levels handed out from here. A grant made at another level elsewhere
+// still reads in words and keeps it until the owner picks one of these.
+export const SHOP_LEVELS = Object.freeze(['User', 'Shop Manager'])
+
+/** A shop level in the owner's words; a level doco adds later shows as sent. */
+export function shopLevelLabel(level) {
+  if (level === 'User') return tr('Sells and charges', null, CTX)
+  if (level === 'Shop Manager') return tr('Runs the shop', null, CTX)
+  if (level === 'Region Manager') return tr('Runs the region', null, CTX)
+  return level || ''
+}
+
+/** What a level opens, under its name in the sheet. */
+export function shopLevelHint(level) {
+  if (level === 'User')
+    return tr('Sees the shop’s stock and prices.', null, CTX)
+  if (level === 'Shop Manager')
+    return tr('Also runs the shop, as far as their puesto allows.', null, CTX)
+  if (level === 'Region Manager')
+    return tr('Runs the shops of their region.', null, CTX)
+  return ''
+}
+
+/** The grants that are on, the default shop first. */
+export function shopGrants(tiendas) {
+  return (tiendas?.grants || [])
+    .filter((grant) => grant.enabled)
+    .sort(
+      (a, b) => Number(Boolean(b.is_default)) - Number(Boolean(a.is_default)),
+    )
+}
+
+/** One shop's grant (the one that is on, else any), or null. */
+export function shopGrant(tiendas, shop) {
+  if (!shop) return null
+  const grants = (tiendas?.grants || []).filter((grant) => grant.shop === shop)
+  return grants.find((grant) => grant.enabled) || grants[0] || null
+}
+
+/** The shop the sheet opens on: their default or first shop that can be chosen, else the only one. */
+export function shopPreselect(tiendas) {
+  const shops = tiendas?.shops || []
+  const open = new Set(shops.map((shop) => shop.name))
+  const first = shopGrants(tiendas).find((grant) => open.has(grant.shop))
+  if (first) return first.shop
+  return shops.length === 1 ? shops[0].name : ''
+}
+
+/** The level offered first for a shop: a grant's that is on (or one handed out here), else «Vende y cobra». */
+export function shopLevelFor(tiendas, shop) {
+  const grant = shopGrant(tiendas, shop)
+  if (grant && (grant.enabled || SHOP_LEVELS.includes(grant.level))) return grant.level || 'User'
+  return 'User'
+}
+
+/** Territory-wide grants that are on (a region manager sees every shop of the region). */
+export function shopRegions(tiendas) {
+  return (tiendas?.regions || []).filter((region) => region.enabled)
+}
+
+/** The levels to pick from: the two handed out here, plus a grant's other one. */
+export function shopLevelChoices(current) {
+  return !current || SHOP_LEVELS.includes(current)
+    ? [...SHOP_LEVELS]
+    : [...SHOP_LEVELS, current]
+}
+
+/** Whether saving changes anything: a shop that is off, or another level. */
+export function shopChanged(tiendas, shop, level) {
+  const grant = shopGrant(tiendas, shop)
+  return !grant?.enabled || grant.level !== level
+}
