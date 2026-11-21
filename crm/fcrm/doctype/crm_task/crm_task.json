@@ -25,7 +25,8 @@
   "automation_occurrence",
   "automation_source_doctype",
   "automation_source_name",
-  "automation_values"
+  "automation_values",
+  "no_answer_count"
  ],
  "fields": [
   {
@@ -109,18 +110,18 @@
    "label": "System Details"
   },
   {
-   "hidden": 1,
    "fieldname": "automation_slot",
    "fieldtype": "Data",
+   "hidden": 1,
    "label": "Automation Slot",
    "no_copy": 1,
    "read_only": 1,
    "search_index": 1
   },
   {
-   "hidden": 1,
    "fieldname": "automation_occurrence",
    "fieldtype": "Data",
+   "hidden": 1,
    "label": "Automation Occurrence",
    "no_copy": 1,
    "read_only": 1
@@ -143,17 +144,28 @@
    "read_only": 1
   },
   {
-   "hidden": 1,
    "fieldname": "automation_values",
    "fieldtype": "Small Text",
+   "hidden": 1,
    "label": "Automation Values",
    "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "description": "Times the customer did not answer this follow-up (Hoy «No contestó»).",
+   "fieldname": "no_answer_count",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "No Answer Count",
+   "no_copy": 1,
+   "non_negative": 1,
    "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-09-15 10:00:00.000000",
+ "modified": "2026-11-20 18:00:00.000000",
  "modified_by": "shariq@frappe.io",
  "module": "FCRM",
  "name": "CRM Task",

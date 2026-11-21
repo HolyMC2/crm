@@ -90,6 +90,8 @@ const PROSPECT_DEFAULTS = Object.freeze({
   first_follow_up: 'none',
   ask_salutation: true,
   ask_gender: true,
+  retry_after: 'tomorrow',
+  follow_up_message: '',
 })
 
 /** The shop's prospect settings, as the page boot or the last save left them. */
@@ -121,6 +123,31 @@ export function followUpSentence(choice) {
     return 'Cada prospecto nuevo llega con «Dar seguimiento» para su vendedor, al día siguiente a la misma hora.'
   return 'Muelle no agenda nada; el vendedor decide cuándo.'
 }
+
+/** «No contestó»: when the follow-up comes back. */
+export const RETRY_OPTIONS = [
+  { value: '2h', label: 'En 2 horas' },
+  { value: 'tomorrow', label: 'Mañana' },
+  { value: '2d', label: 'En 2 días' },
+]
+
+export function retrySentence(choice) {
+  if (choice === '2h')
+    return 'Al tocar «No contestó», el seguimiento vuelve a aparecer 2 horas después.'
+  if (choice === '2d')
+    return 'Al tocar «No contestó», el seguimiento vuelve a aparecer en 2 días, a la misma hora.'
+  return 'Al tocar «No contestó», el seguimiento vuelve a aparecer mañana, a la misma hora.'
+}
+
+/** The words a follow-up message may carry, filled with the prospect's data. */
+export const MESSAGE_TOKENS = [
+  { token: '{nombre}', label: 'Nombre del cliente' },
+  { token: '{vendedor}', label: 'Tu nombre' },
+  { token: '{negocio}', label: 'Tu negocio' },
+]
+
+export const DEFAULT_FOLLOW_UP_MESSAGE =
+  'Hola {nombre}, soy {vendedor} de {negocio}. Te escribo para dar seguimiento a lo que platicamos: ¿tienes alguna duda?'
 
 /** Query string state ↔ request args; empty values are dropped. */
 export function prospectArgs({ kind, source, q, start = 0, pageLength = 30 }) {

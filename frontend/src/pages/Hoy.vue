@@ -141,6 +141,7 @@
               @complete="complete"
               @complete-next="openComplete"
               @reschedule="reschedule"
+              @outcome="openOutcome"
             />
             <RouterLink
               v-if="moreTasks"
@@ -667,6 +668,13 @@
       @done="afterComplete"
       @reload="refresh()"
     />
+    <OutcomeSheet
+      v-if="outcomeRow"
+      :open="outcomeOpen"
+      :row="outcomeRow"
+      @close="outcomeOpen = false"
+      @done="refresh({ quiet: true })"
+    />
   </div>
 </template>
 <script setup>
@@ -874,6 +882,17 @@ const CompleteDialog = defineAsyncComponent(
   ),
 )
 const completeMounted = ref(false)
+
+// «Resultado» on a follow-up: loads on its first tap, not with the page.
+const OutcomeSheet = defineAsyncComponent(
+  afterWholeDictionary(() => import('@/components/hoy/OutcomeSheet.vue')),
+)
+const outcomeRow = ref(null)
+const outcomeOpen = ref(false)
+function openOutcome(row) {
+  outcomeRow.value = row
+  outcomeOpen.value = true
+}
 
 // «Primeros pasos»: the owner's first-hour steps finish here instead of the
 // Desk wizard. Each sheet loads on its first open; /crm/hoy?paso=… opens one

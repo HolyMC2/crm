@@ -362,6 +362,7 @@
                     @reschedule="reschedule"
                     @star="toggleStar"
                     @step="tickStep"
+                    @outcome="openOutcome"
                   />
                 </TransitionGroup>
                 <div v-if="sections[group]?.has_more" class="px-4 py-2 sm:px-6">
@@ -422,6 +423,7 @@
                     @reschedule="reschedule"
                     @star="toggleStar"
                     @step="tickStep"
+                    @outcome="openOutcome"
                   />
                 </TransitionGroup>
               </section>
@@ -548,6 +550,15 @@
       @done="afterComplete"
       @reload="reloadAfterConflict"
     />
+    <OutcomeSheet
+      v-if="outcomeRow"
+      :open="outcomeOpen"
+      :row="outcomeRow"
+      return-to="/crm/pendientes"
+      return-label="Pendientes"
+      @close="outcomeOpen = false"
+      @done="load(0, { quiet: true })"
+    />
     <CreateDialog
       v-model="createOpen"
       :today="today"
@@ -641,6 +652,16 @@ const PendienteDetail = defineAsyncComponent(
 const PendientesBoard = defineAsyncComponent(
   () => import('@/components/pendientes/PendientesBoard.vue'),
 )
+// «¿Qué pasó?» on a follow-up: loaded on its first tap.
+const OutcomeSheet = defineAsyncComponent(
+  () => import('@/components/hoy/OutcomeSheet.vue'),
+)
+const outcomeRow = ref(null)
+const outcomeOpen = ref(false)
+function openOutcome(row) {
+  outcomeRow.value = row
+  outcomeOpen.value = true
+}
 // CRM's own wired CRM Task editor, loaded only for workers who create sales tasks.
 const DoctypeModals = defineAsyncComponent(
   () => import('@/components/Modals/DoctypeModals.vue'),

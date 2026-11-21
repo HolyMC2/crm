@@ -64,6 +64,20 @@
         >
       </p>
     </RouterLink>
+    <Button
+      v-if="followUp"
+      variant="subtle"
+      class="min-h-11 min-w-11 shrink-0 sm:min-h-8 sm:min-w-0"
+      :disabled="busy"
+      :aria-label="__('What happened: {0}', [row.description])"
+      data-hoy-outcome
+      @click="$emit('outcome', row)"
+    >
+      <template #prefix>
+        <span class="lucide-message-circle-more size-4" aria-hidden="true" />
+      </template>
+      <span class="hidden sm:inline">{{ __('Outcome') }}</span>
+    </Button>
     <Dropdown v-if="row.status === 'Open'" :options="menu" align="end">
       <Button
         variant="ghost"
@@ -89,6 +103,8 @@ import {
   priorityLabel,
 } from '@/composables/usePendientes'
 import { HOY_HOME } from '@/composables/useHoy'
+
+const FOLLOW_UP_RECORDS = ['CRM Lead', 'CRM Deal']
 import LucideCalendar from '~icons/lucide/calendar'
 import LucideCircleCheckBig from '~icons/lucide/circle-check-big'
 
@@ -99,7 +115,14 @@ const props = defineProps({
   today: { type: String, default: '' },
   busy: { type: Boolean, default: false },
 })
-const emit = defineEmits(['complete', 'completeNext', 'reschedule'])
+const emit = defineEmits(['complete', 'completeNext', 'reschedule', 'outcome'])
+// A call or a message owed to a prospect or a deal: «Resultado» says how it went in one tap.
+const followUp = computed(
+  () =>
+    props.row.status === 'Open' &&
+    props.row.doctype === 'CRM Task' &&
+    FOLLOW_UP_RECORDS.includes(props.row.reference_type),
+)
 const to = computed(() =>
   pendienteRoute(props.row, { return_to: HOY_HOME, return_label: 'Hoy' }),
 )

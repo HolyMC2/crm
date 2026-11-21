@@ -56,6 +56,8 @@ const SETTINGS = {
   first_follow_up: 'none',
   ask_salutation: false,
   ask_gender: false,
+  retry_after: 'tomorrow',
+  follow_up_message: '',
 }
 const STATE = {
   settings: SETTINGS,
@@ -216,5 +218,46 @@ describe('the shop settings the pages read', () => {
     expect(followUpSentence('2h')).toContain('2 horas después')
     expect(followUpSentence('tomorrow')).toContain('al día siguiente')
     expect(followUpSentence('none')).toContain('no agenda nada')
+  })
+
+  it('saves when a follow-up nobody answered comes back', async () => {
+    state.call.mockResolvedValueOnce(STATE)
+    await mount()
+    expect($('[data-ajustes-reintento]').textContent).toContain('mañana')
+    state.call.mockResolvedValueOnce({
+      ...STATE,
+      settings: { ...SETTINGS, retry_after: '2h' },
+    })
+    $('[data-ajuste="retry_after"] [data-segment="2h"]').click()
+    await flush()
+    expect(state.call).toHaveBeenLastCalledWith(
+      'crm.api.prospect_settings.save_settings',
+      { changes: { retry_after: '2h' } },
+    )
+    expect($('[data-ajustes-reintento]').textContent).toContain('2 horas')
+  })
+
+  it('writes the follow-up message with the tapped words and saves it', async () => {
+    state.call.mockResolvedValueOnce(STATE)
+    await mount()
+    const box = $('[data-ajuste="follow_up_message"]')
+    expect($('[data-ajustes-guardar-mensaje]')).toBeNull()
+    box.value = 'Hola'
+    box.dispatchEvent(new Event('input'))
+    box.setSelectionRange(4, 4)
+    $('[data-ajustes-token="{nombre}"]').click()
+    await flush()
+    expect(box.value).toBe('Hola {nombre}')
+    state.call.mockResolvedValueOnce({
+      ...STATE,
+      settings: { ...SETTINGS, follow_up_message: 'Hola {nombre}' },
+    })
+    $('[data-ajustes-guardar-mensaje]').click()
+    await flush()
+    expect(state.call).toHaveBeenLastCalledWith(
+      'crm.api.prospect_settings.save_settings',
+      { changes: { follow_up_message: 'Hola {nombre}' } },
+    )
+    expect($('[data-ajustes-guardar-mensaje]')).toBeNull()
   })
 })

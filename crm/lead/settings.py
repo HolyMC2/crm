@@ -24,6 +24,9 @@ MANAGER_ROLES = frozenset({"System Manager", "Sales Manager"})
 COMPANY_GIROS = frozenset({"refacciones", "laboratorio_dental"})
 
 FOLLOW_UPS = ("none", "2h", "tomorrow")
+# «No contestó»: when the follow-up comes back (crm.pipeline.services.outcomes).
+RETRIES = ("2h", "tomorrow", "2d")
+MAX_MESSAGE = 500
 BOOLEAN_KEYS = ("companies", "inquiries", "phone_required", "ask_salutation", "ask_gender")
 MAX_SOURCE = 60
 
@@ -36,6 +39,9 @@ def defaults() -> dict:
 		"first_follow_up": "none",
 		"ask_salutation": False,
 		"ask_gender": False,
+		"retry_after": "tomorrow",
+		# Empty: the follow-up sheet writes its own words (outcomes.default_message).
+		"follow_up_message": "",
 	}
 
 
@@ -70,6 +76,12 @@ def save(changes: dict) -> dict:
 			if value not in FOLLOW_UPS:
 				frappe.throw(_("Choose when the first follow-up is scheduled."))
 			clean[key] = value
+		elif key == "retry_after":
+			if value not in RETRIES:
+				frappe.throw(_("Choose when a follow-up nobody answered comes back."))
+			clean[key] = value
+		elif key == "follow_up_message":
+			clean[key] = _message(value)
 		else:
 			frappe.throw(_("Unknown prospect setting: {0}").format(cstr(key)[:40]))
 	stored = _stored()
@@ -142,9 +154,22 @@ def _boolean(value) -> bool:
 	frappe.throw(_("Turn the setting on or off."))
 
 
+def _message(value) -> str:
+	if not isinstance(value, str):
+		frappe.throw(_("Write the follow-up message as text."))
+	value = value.strip()
+	if len(value) > MAX_MESSAGE:
+		frappe.throw(_("Write a follow-up message of at most {0} characters.").format(MAX_MESSAGE))
+	return value
+
+
 def _valid(key, value) -> bool:
 	if key == "first_follow_up":
 		return value in FOLLOW_UPS
+	if key == "retry_after":
+		return value in RETRIES
+	if key == "follow_up_message":
+		return isinstance(value, str) and len(value) <= MAX_MESSAGE
 	return isinstance(value, bool)
 
 

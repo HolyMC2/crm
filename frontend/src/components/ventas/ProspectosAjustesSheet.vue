@@ -84,6 +84,83 @@
           </p>
         </section>
 
+        <section aria-labelledby="prospectos-ajustes-reintento">
+          <h3
+            id="prospectos-ajustes-reintento"
+            class="text-sm font-semibold text-ink-gray-7"
+          >
+            Si no contesta
+          </h3>
+          <Segmented
+            class="mt-2"
+            label="Si no contesta"
+            :model-value="values.retry_after"
+            :options="RETRY_OPTIONS"
+            data-ajuste="retry_after"
+            @update:model-value="save({ retry_after: $event })"
+          />
+          <p class="mt-2 text-sm text-ink-gray-6" data-ajustes-reintento>
+            {{ retrySentence(values.retry_after) }}
+          </p>
+        </section>
+
+        <section aria-labelledby="prospectos-ajustes-mensaje">
+          <h3
+            id="prospectos-ajustes-mensaje"
+            class="text-sm font-semibold text-ink-gray-7"
+          >
+            Mensaje de seguimiento
+          </h3>
+          <p class="text-sm text-ink-gray-6">
+            Lo que queda escrito en WhatsApp al dar seguimiento a un prospecto o
+            un trato. Quien lo envía lo revisa antes.
+          </p>
+          <textarea
+            ref="messageInput"
+            v-model="message"
+            rows="3"
+            maxlength="500"
+            class="mt-2 w-full rounded-6 border-0 bg-surface-gray-2 px-3 py-2 text-base text-ink-gray-9 placeholder:text-ink-gray-5 focus:ring-2 focus:ring-outline-gray-4"
+            :placeholder="DEFAULT_FOLLOW_UP_MESSAGE"
+            aria-label="Mensaje de seguimiento"
+            data-ajuste="follow_up_message"
+          />
+          <div class="mt-1 flex flex-wrap items-center gap-2">
+            <button
+              v-for="item in MESSAGE_TOKENS"
+              :key="item.token"
+              type="button"
+              class="press flex min-h-9 items-center gap-1 rounded-full bg-surface-gray-2 px-3 text-sm text-ink-gray-8"
+              :data-ajustes-token="item.token"
+              @click="insertToken(item.token)"
+            >
+              <span class="lucide-plus size-3.5" aria-hidden="true" />
+              {{ item.label }}
+            </button>
+          </div>
+          <div
+            v-if="messageChanged"
+            class="mt-3 flex flex-wrap justify-end gap-2"
+          >
+            <button
+              type="button"
+              :class="['press', BTN.text]"
+              @click="message = values.follow_up_message || ''"
+            >
+              Descartar
+            </button>
+            <button
+              type="button"
+              :class="['press', BTN.filled]"
+              :disabled="busy"
+              data-ajustes-guardar-mensaje
+              @click="save({ follow_up_message: message.trim() })"
+            >
+              Guardar mensaje
+            </button>
+          </div>
+        </section>
+
         <section aria-labelledby="prospectos-ajustes-origenes">
           <h3
             id="prospectos-ajustes-origenes"
@@ -175,9 +252,13 @@ import AjustesSwitch from '@/components/ajustes/AjustesSwitch.vue'
 import { BTN } from '@/documentos/tools'
 import { errorText } from '@/utils/errorText'
 import {
+  DEFAULT_FOLLOW_UP_MESSAGE,
   FOLLOW_UP_OPTIONS,
+  MESSAGE_TOKENS,
+  RETRY_OPTIONS,
   followUpSentence,
   rememberProspectSettings,
+  retrySentence,
 } from '@/utils/prospects'
 
 const props = defineProps({
@@ -232,8 +313,34 @@ const switches = computed(() =>
   SWITCHES.filter((row) => row.key !== 'inquiries' || props.inquiriesAvailable),
 )
 
+const message = ref('')
+const messageInput = ref(null)
+const messageChanged = computed(
+  () =>
+    values.value &&
+    message.value.trim() !== (values.value.follow_up_message || ''),
+)
+
+// A word tapped in goes where the cursor is, or at the end.
+async function insertToken(token) {
+  const input = messageInput.value
+  const text = message.value
+  const at = input ? input.selectionStart : text.length
+  const end = input ? input.selectionEnd : text.length
+  const before = text.slice(0, at)
+  const spaced = before && !/\s$/.test(before) ? ` ${token}` : token
+  message.value = before + spaced + text.slice(end)
+  await nextTick()
+  input?.focus({ preventScroll: true })
+  const cursor = (before + spaced).length
+  input?.setSelectionRange(cursor, cursor)
+}
+
 function take(state) {
+  // A message being written survives a tap on another setting.
+  const editing = messageChanged.value
   values.value = { ...state.settings }
+  if (!editing) message.value = state.settings?.follow_up_message || ''
   sources.value = state.sources || []
   rememberProspectSettings(state.settings)
 }

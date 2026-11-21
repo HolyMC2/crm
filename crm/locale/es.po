@@ -50320,3 +50320,129 @@ msgstr "Revisa a la persona antes de convertir. Compartir un correo o teléfono 
 #: frontend/src/components/Modals/LeadModal.vue
 msgid "Add their phone so the team can reach them."
 msgstr "Agrega su teléfono para que el equipo pueda contactarlo."
+
+msgid "In 2 hours"
+msgstr "En 2 horas"
+
+msgid "In 2 days"
+msgstr "En 2 días"
+
+msgid "Nothing else"
+msgstr "Ya no sigue nada"
+
+msgid "Someone changed this follow-up a moment ago. Open it again to see it."
+msgstr "Alguien cambió este seguimiento hace un momento. Ábrelo de nuevo para verlo."
+
+msgid "This follow-up is already closed."
+msgstr "Este seguimiento ya está cerrado."
+
+msgid "That outcome is not available for this follow-up."
+msgstr "Esa opción no está disponible para este seguimiento."
+
+msgid "It comes back in 2 hours."
+msgstr "Vuelve en 2 horas."
+
+msgid "It comes back tomorrow."
+msgstr "Vuelve mañana."
+
+msgid "It comes back in 2 days."
+msgstr "Vuelve en 2 días."
+
+msgid "{0}: no answer (try {1})."
+msgstr "{0}: no contestó (intento {1})."
+
+msgid "Noted. {0}"
+msgstr "Anotado. {0}"
+
+msgid "Hi {name}, this is {seller} from {business}. Following up on what we talked about: any questions?"
+msgstr "Hola {name}, soy {seller} de {business}. Te escribo para dar seguimiento a lo que platicamos: ¿tienes alguna duda?"
+
+msgid "Already bought"
+msgstr "Ya compró"
+
+msgid "Does not want it"
+msgstr "Ya no quiere"
+
+msgid "{0}: answered."
+msgstr "{0}: contestó."
+
+msgid "Done. Next follow-up: {0}."
+msgstr "Listo. Siguiente seguimiento: {0}."
+
+msgid "{0}: already bought."
+msgstr "{0}: ya compró."
+
+msgid "{0}: does not want it."
+msgstr "{0}: ya no quiere."
+
+msgid "Great, marked as won."
+msgstr "¡Bien! Quedó como ganado."
+
+msgid "Noted: closed as lost."
+msgstr "Anotado: quedó como perdido."
+
+msgid "This follow-up no longer exists."
+msgstr "Este seguimiento ya no existe."
+
+msgid "You cannot change this follow-up. Ask its owner or your manager."
+msgstr "No puedes cambiar este seguimiento. Pídeselo a su responsable o a tu encargado."
+
+msgid "Outcomes are for follow-ups of prospects and deals."
+msgstr "Los resultados son para seguimientos de prospectos y tratos."
+
+msgid "The record of this follow-up no longer exists."
+msgstr "El registro de este seguimiento ya no existe."
+
+msgid "Choose when the next follow-up is."
+msgstr "Elige cuándo es el siguiente seguimiento."
+
+msgid "Choose why they do not want it."
+msgstr "Elige por qué ya no quiere."
+
+msgid "Choose when a follow-up nobody answered comes back."
+msgstr "Elige cuándo vuelve un seguimiento que nadie contestó."
+
+msgid "Write the follow-up message as text."
+msgstr "Escribe el mensaje de seguimiento como texto."
+
+msgid "Write a follow-up message of at most {0} characters."
+msgstr "Escribe un mensaje de seguimiento de máximo {0} caracteres."
+
+msgid "Open the chat"
+msgstr "Abrir el chat"
+
+msgid "This follow-up is someone else’s. Ask them or your manager."
+msgstr "Este seguimiento es de otra persona. Pídeselo a ella o a tu encargado."
+
+msgid "What happened?"
+msgstr "¿Qué pasó?"
+
+msgid "1 try without an answer"
+msgstr "1 intento sin respuesta"
+
+msgid "{0} tries without an answer"
+msgstr "{0} intentos sin respuesta"
+
+msgid "Why not?"
+msgstr "¿Por qué no?"
+
+msgid "When is the next follow-up?"
+msgstr "¿Cuándo es el siguiente seguimiento?"
+
+msgid "When?"
+msgstr "¿Cuándo?"
+
+msgid "This follow-up could not open. Try again."
+msgstr "No se pudo abrir este seguimiento. Vuelve a intentar."
+
+msgid "It was not saved. Try again."
+msgstr "No se guardó. Vuelve a intentar."
+
+msgid "Message copied: paste it in the chat."
+msgstr "Mensaje copiado: pégalo en el chat."
+
+msgid "What happened: {0}"
+msgstr "Qué pasó: {0}"
+
+msgid "Call them"
+msgstr "Llamar"

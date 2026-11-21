@@ -267,6 +267,7 @@ import LucideCircleCheckBig from '~icons/lucide/circle-check-big'
 import LucideCalendar from '~icons/lucide/calendar'
 import LucideEllipsis from '~icons/lucide/ellipsis'
 import LucideStar from '~icons/lucide/star'
+import LucideMessageCircleMore from '~icons/lucide/message-circle-more'
 
 const props = defineProps({
   row: { type: Object, required: true },
@@ -290,6 +291,7 @@ const emit = defineEmits([
   'reschedule',
   'star',
   'step',
+  'outcome',
 ])
 const key = computed(() => `${props.row.doctype}:${props.row.name}`)
 const to = computed(() => props.link || pendienteRoute(props.row, props.query))
@@ -348,7 +350,24 @@ const referenceText = computed(() => {
   const kind = kindLabel(props.row.reference_type)
   return kind && kind !== name ? `${kind} · ${name}` : name
 })
+// A call or a message owed to a prospect or a deal: «Resultado» says how it went.
+const followUp = computed(
+  () =>
+    actionable.value &&
+    props.row.status === 'Open' &&
+    props.row.doctype === 'CRM Task' &&
+    ['CRM Lead', 'CRM Deal'].includes(props.row.reference_type),
+)
 const menu = computed(() => [
+  ...(followUp.value
+    ? [
+        {
+          label: __('What happened?'),
+          icon: LucideMessageCircleMore,
+          onClick: () => emit('outcome', props.row),
+        },
+      ]
+    : []),
   {
     label: __('Done and schedule next'),
     icon: LucideCircleCheckBig,
