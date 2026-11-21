@@ -40,7 +40,8 @@
   "quick_replies",
   "persona_captured",
   "deal_queue_seeds_done",
-  "prospect_settings"
+  "prospect_settings",
+  "hoy_settings"
  ],
  "fields": [
   {
@@ -270,12 +271,21 @@
    "label": "Prospect Settings",
    "options": "JSON",
    "read_only": 1
+  },
+  {
+   "description": "The shop's choices for Hoy, changed in the SPA (crm.handover): only what the owner changed; a missing key reads its default.",
+   "fieldname": "hoy_settings",
+   "fieldtype": "Code",
+   "hidden": 1,
+   "label": "Hoy Settings",
+   "options": "JSON",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-11-20 18:00:00.000000",
+ "modified": "2026-11-20 22:00:00.000000",
  "modified_by": "Administrator",
  "module": "FCRM",
  "name": "FCRM Settings",

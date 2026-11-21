@@ -1,0 +1,96 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2026-11-20 22:00:00.000000",
+ "description": "A shift handed over from Hoy: the closing person's note and what was still open (crm.handover).",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "handed_by",
+  "handed_at",
+  "column_break_turno",
+  "note",
+  "sections",
+  "seen_by"
+ ],
+ "fields": [
+  {
+   "fieldname": "handed_by",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Handed By",
+   "options": "User",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "handed_at",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Handed At",
+   "read_only": 1,
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "column_break_turno",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "note",
+   "fieldtype": "Small Text",
+   "label": "Note",
+   "read_only": 1
+  },
+  {
+   "description": "What Hoy showed when the shift was handed over: the open work, as JSON.",
+   "fieldname": "sections",
+   "fieldtype": "Code",
+   "label": "Sections",
+   "options": "JSON",
+   "read_only": 1
+  },
+  {
+   "description": "Who said «Enterado», as a JSON list of users.",
+   "fieldname": "seen_by",
+   "fieldtype": "Small Text",
+   "hidden": 1,
+   "label": "Seen By",
+   "read_only": 1
+  }
+ ],
+ "in_create": 1,
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-11-20 22:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "FCRM",
+ "name": "CRM Shift Note",
+ "naming_rule": "Random",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "role": "System Manager"
+  },
+  {
+   "read": 1,
+   "report": 1,
+   "print": 1,
+   "role": "Sales Manager"
+  },
+  {
+   "read": 1,
+   "role": "Desk User"
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "handed_at",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "handed_by",
+ "track_changes": 0
+}

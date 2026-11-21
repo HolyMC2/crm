@@ -228,6 +228,13 @@ def _credit_today():
 	}
 
 
+def _handover():
+	"""«Entrega de turno»: the handover waiting for me and the last one given (crm.handover)."""
+	from crm import handover
+
+	return handover.hoy_state()
+
+
 def _section(build):
 	try:
 		return build()
@@ -262,6 +269,7 @@ def page() -> dict:
 	day["equipo"] = _section(_team_overdue)
 	day["ventas"] = _section(_sales_today)
 	day["credito"] = _section(_credit_today)
+	day["turno"] = _section(_handover)
 	day["landing"] = frappe.defaults.get_user_default(LANDING_DEFAULT) or ""
 	return day
 

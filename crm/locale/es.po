@@ -50517,3 +50517,83 @@ msgstr "Apagado: {0}"
 
 msgid "Other settings"
 msgstr "Otros ajustes"
+msgid "Hand over the shift"
+msgstr "Entregar turno"
+
+msgid "What stays open, for whoever comes next."
+msgstr "Lo que queda abierto, para quien sigue."
+
+msgid "Nothing open to hand over. You can still leave a note."
+msgstr "No queda nada abierto. Igual puedes dejar una nota."
+
+msgid "And {0} more"
+msgstr "Y {0} más"
+
+msgid "and {0} more"
+msgstr "y {0} más"
+
+msgid "Note for the next shift"
+msgstr "Nota para el siguiente turno"
+
+msgid "For example: the supplier comes at 11 to collect"
+msgstr "Por ejemplo: el proveedor viene a las 11 a cobrar"
+
+msgid "The shift handover is off in this shop."
+msgstr "La entrega de turno está apagada en este negocio."
+
+msgid "Ask for the shift handover"
+msgstr "Pedir la entrega de turno"
+
+msgid "Hoy offers «Hand over the shift» and shows it to the next person."
+msgstr "Hoy ofrece «Entregar turno» y se lo muestra a quien sigue."
+
+msgid "Nobody is asked to hand over the shift."
+msgstr "Nadie entrega turno."
+
+msgid "Last handover: {0}, {1}"
+msgstr "Última entrega: {0}, {1}"
+
+msgid "The handover could not open. Try again."
+msgstr "No se pudo abrir la entrega de turno. Vuelve a intentar."
+
+msgid "The handover was not saved. Try again."
+msgstr "No se guardó la entrega de turno. Vuelve a intentar."
+
+msgid "From the last shift"
+msgstr "Del turno anterior"
+
+msgid "{0} handed it over {1}"
+msgstr "{0} lo entregó {1}"
+
+msgid "Got it"
+msgstr "Enterado"
+
+msgid "Closing? Leave the next shift what stays open."
+msgstr "¿Ya cierras? Deja al siguiente turno lo que queda abierto."
+
+msgid "Only the owner or a manager changes Hoy."
+msgstr "Solo el dueño o un encargado cambia Hoy."
+
+msgid "Choose a Hoy setting to change."
+msgstr "Elige qué cambiar de Hoy."
+
+msgid "Your pendientes still open"
+msgstr "Tus pendientes sin terminar"
+
+msgid "Follow-ups for tomorrow"
+msgstr "Seguimientos de mañana"
+
+msgid "Shift handed over. The next person sees it on their Hoy."
+msgstr "Turno entregado. Quien sigue lo ve en su Hoy."
+
+msgid "Write a note of at most {0} characters."
+msgstr "Escribe una nota de máximo {0} caracteres."
+
+msgid "This handover no longer exists."
+msgstr "Esta entrega de turno ya no existe."
+
+msgid "today at {0}"
+msgstr "hoy a las {0}"
+
+msgid "yesterday at {0}"
+msgstr "ayer a las {0}"

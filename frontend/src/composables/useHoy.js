@@ -32,6 +32,8 @@ export const LIVE_DOCTYPES = Object.freeze([
   'Patient Appointment',
   'POS Opening Shift',
   'Repair Order',
+  // «Del turno anterior»: a handover given on another device shows at once.
+  'CRM Shift Note',
 ])
 
 /** The page's one read: the prefetch started with the boot, else a fresh call. */

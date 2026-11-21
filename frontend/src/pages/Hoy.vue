@@ -99,6 +99,61 @@
           @click="openTrial"
         />
       </div>
+      <!-- «Del turno anterior» (crm.handover): the last shift's note and what it
+           left open, until this person says «Enterado». -->
+      <section
+        v-if="handover"
+        class="mb-4 rounded-7 border border-outline-amber-2 bg-surface-amber-1 px-4 py-3 sm:px-5"
+        aria-labelledby="hoy-turno-anterior"
+        data-testid="hoy-turno-anterior"
+      >
+        <h2
+          id="hoy-turno-anterior"
+          class="flex items-center gap-2 text-base font-semibold text-ink-gray-9"
+        >
+          <span
+            class="lucide-arrow-right-left size-5 shrink-0 text-ink-amber-8"
+            aria-hidden="true"
+          />
+          {{ __('From the last shift') }}
+        </h2>
+        <p class="mt-0.5 text-sm text-ink-gray-7">
+          {{ __('{0} handed it over {1}', [handover.by_name, handover.when]) }}
+        </p>
+        <p
+          v-if="handover.note"
+          class="mt-2 whitespace-pre-line text-base text-ink-gray-9"
+          data-testid="hoy-turno-nota"
+        >
+          {{ handover.note }}
+        </p>
+        <ul
+          v-if="handover.sections?.length"
+          class="mt-2 space-y-1 text-sm text-ink-gray-8"
+        >
+          <li v-for="section in handover.sections" :key="section.key">
+            <span class="font-medium">{{ section.title }}:</span>
+            {{
+              section.rows
+                .slice(0, 3)
+                .map((row) => row.title)
+                .join(' · ')
+            }}<span v-if="section.count > 3">
+              · {{ __('and {0} more', [section.count - 3]) }}</span
+            >
+          </li>
+        </ul>
+        <div class="mt-3 flex justify-end">
+          <Button
+            variant="solid"
+            class="min-h-11"
+            :label="__('Got it')"
+            :loading="busy.has('turno')"
+            data-testid="hoy-turno-enterado"
+            @click="acknowledgeHandover"
+          />
+        </div>
+      </section>
       <!-- Nothing overdue, due today or on the agenda: one line instead of two empty cards. -->
       <p
         v-if="allClear"
@@ -609,6 +664,22 @@
             shortcuts.length ? '' : __('No quick actions for your puesto yet.')
           "
         >
+          <!-- «Entregar turno»: the closing person hands over what stays open. -->
+          <div
+            v-if="data?.turno?.available"
+            class="mx-4 mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-6 border border-outline-gray-2 px-3 py-2 sm:mx-5"
+            data-testid="hoy-turno"
+          >
+            <span class="min-w-0 flex-1 basis-40 text-sm text-ink-gray-7">{{
+              lastHandoverText
+            }}</span>
+            <Button
+              class="min-h-11 sm:min-h-8"
+              :label="__('Hand over the shift')"
+              data-testid="hoy-entregar-turno"
+              @click="handoverOpen = true"
+            />
+          </div>
           <div
             class="grid grid-cols-2 gap-2 px-4 pb-2 pt-1 sm:grid-cols-3 sm:px-5"
           >
@@ -659,6 +730,13 @@
       @hoja="openHoja"
       @changed="refresh({ quiet: true })"
     />
+    <HandoverSheet
+      v-if="handoverOpen || handoverMounted"
+      :open="handoverOpen"
+      @close="handoverOpen = false"
+      @done="refresh({ quiet: true })"
+      @changed="refresh({ quiet: true })"
+    />
     <CompleteDialog
       v-if="completeMounted"
       v-model="completeOpen"
@@ -689,7 +767,7 @@ import {
   watch,
 } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
-import { Button, toast } from 'frappe-ui'
+import { Button, call, toast } from 'frappe-ui'
 import HoySection from '@/components/hoy/HoySection.vue'
 import HoyTask from '@/components/hoy/HoyTask.vue'
 import { hoySuggestion } from '@/components/assistant/suggestions'
@@ -744,6 +822,7 @@ import {
   requestId,
 } from '@/composables/usePendientes'
 import { formatDay } from '@/utils/contactos'
+import { errorText } from '@/utils/errorText'
 import { readCachedHoy, writeCachedHoy } from '@/utils/hoyCache'
 import { useLiveWatch } from '@/vendor/muelle-shell/live-sync/vue'
 import { afterWholeDictionary } from '@/utils/translationsReady'
@@ -892,6 +971,37 @@ const outcomeOpen = ref(false)
 function openOutcome(row) {
   outcomeRow.value = row
   outcomeOpen.value = true
+}
+
+// «Entrega de turno»: the sheet loads on its first open, not with the page.
+const HandoverSheet = defineAsyncComponent(
+  afterWholeDictionary(() => import('@/components/hoy/HandoverSheet.vue')),
+)
+const handoverOpen = ref(false)
+const handoverMounted = ref(false)
+watch(handoverOpen, (open) => open && (handoverMounted.value = true))
+const handover = computed(() => data.value?.turno?.pending || null)
+const lastHandoverText = computed(() => {
+  const last = data.value?.turno?.last
+  if (!last) return __('Closing? Leave the next shift what stays open.')
+  return __('Last handover: {0}, {1}', [last.by_name, last.when])
+})
+async function acknowledgeHandover() {
+  const name = handover.value?.name
+  if (!name || busy.has('turno')) return
+  busy.add('turno')
+  try {
+    await call('crm.api.handover.acknowledge', { name })
+    data.value = {
+      ...data.value,
+      turno: { ...data.value.turno, pending: null },
+    }
+    refresh({ quiet: true })
+  } catch (error) {
+    toast.error(errorText(error, __('The handover was not saved. Try again.')))
+  } finally {
+    busy.delete('turno')
+  }
 }
 
 // «Primeros pasos»: the owner's first-hour steps finish here instead of the
