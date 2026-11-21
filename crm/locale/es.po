@@ -50449,3 +50449,24 @@ msgstr "Llamar"
 msgctxt "Equipo"
 msgid "Limits"
 msgstr "Límites"
+
+msgid "Facts by person"
+msgstr "Datos por persona"
+
+msgid "Choose facts"
+msgstr "Elegir datos"
+
+msgid "To praise or correct with facts: what each person did in this period, whether or not there is a goal for it."
+msgstr "Para felicitar o corregir con datos: lo que hizo cada persona en este periodo, haya o no una meta para eso."
+
+msgid "Nobody has figures for these facts in this period."
+msgstr "Nadie tiene cifras de estos datos en este periodo."
+
+msgid "Up to 8. Your choice; each manager keeps their own."
+msgstr "Hasta 8. Es tu elección; cada encargado tiene la suya."
+
+msgid "Show these facts"
+msgstr "Mostrar estos datos"
+
+msgid "These facts could not load."
+msgstr "No se pudieron cargar estos datos."

@@ -270,6 +270,8 @@
             </ul>
           </section>
         </template>
+        <!-- Facts to coach with, goal or no goal (doco.metas.acompanar). -->
+        <PorPersona :period="wanted.period" :start="wanted.start || null" />
       </template>
     </div>
 
@@ -318,6 +320,10 @@ const GoalSheet = defineAsyncComponent(
 )
 const SuggestedSheet = defineAsyncComponent(
   () => import('@/components/metas/SuggestedSheet.vue'),
+)
+// «Datos por persona» reads on its own, under the goals.
+const PorPersona = defineAsyncComponent(
+  () => import('@/components/metas/PorPersona.vue'),
 )
 
 const route = useRoute()
