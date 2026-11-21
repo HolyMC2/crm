@@ -43,7 +43,7 @@
    "read_only": 1
   },
   {
-   "description": "What Hoy showed when the shift was handed over: the open work, as JSON.",
+   "description": "What Hoy showed when the shift was handed over: the work still open.",
    "fieldname": "sections",
    "fieldtype": "Code",
    "label": "Sections",
