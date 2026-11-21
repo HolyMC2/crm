@@ -195,7 +195,12 @@
               : __('Escribe para buscar en el catálogo.')
           }}
         </div>
-        <div v-else class="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+        <div
+          v-else
+          class="grid grid-cols-2 gap-2.5 transition-opacity sm:grid-cols-3"
+          :class="catalogResults.loading ? 'opacity-60' : ''"
+          :aria-busy="catalogResults.loading ? 'true' : undefined"
+        >
           <button
             v-for="r in rows"
             :key="r.item_code"
@@ -214,12 +219,15 @@
               class="relative aspect-square w-full bg-surface-gray-2 dark:bg-surface-gray-3"
             >
               <img
-                v-if="r.image_url && !failed.has(r.item_code)"
-                :src="r.image_url"
+                v-if="photo(r).src && !failed.has(r.item_code)"
+                :src="photo(r).src"
+                :srcset="photo(r).srcset || undefined"
+                sizes="(min-width: 640px) 200px, 50vw"
                 :alt="r.item_name"
                 class="h-full w-full object-cover"
                 loading="lazy"
-                @error="failed.add(r.item_code)"
+                decoding="async"
+                @error="onPhotoError(r)"
               />
               <div
                 v-else
@@ -395,10 +403,12 @@
             class="flex gap-2.5"
           >
             <img
-              v-if="item.image_url && !failed.has(item.item_code)"
-              :src="item.image_url"
+              v-if="photo(item).src && !failed.has(item.item_code)"
+              :src="photo(item).src"
               :alt="item.item_name"
               class="size-14 flex-none rounded-6 object-cover"
+              decoding="async"
+              @error="onPhotoError(item)"
             />
             <div
               v-else
@@ -609,6 +619,7 @@ import {
 } from '@/composables/inbox'
 import { addItemsToQuotation } from '@/composables/salesDocs'
 import { chipClass } from '@/components/ui/chipClass'
+import { catalogPhoto, originalPhoto } from '@/utils/catalogPhoto'
 import {
   DEFAULT_CAPTION,
   closingWithStore,
@@ -666,7 +677,20 @@ const storeAvailable = computed(() => !!result.value.store)
 const selected = reactive(new Set())
 const picked = reactive(new Map()) // item_code → the item as shown when picked
 const failed = reactive(new Set()) // item_codes whose image 404'd → show the placeholder
+const originals = reactive(new Set()) // item_codes whose small copy failed → paint the original
 const busy = ref(false)
+
+// The grid paints the photo's small copy (utils/catalogPhoto); a send attaches image_url.
+function photo(item) {
+  return originals.has(item.item_code)
+    ? originalPhoto(item)
+    : catalogPhoto(item)
+}
+function onPhotoError(item) {
+  const shown = photo(item).src
+  if (item.image_url && shown !== item.image_url) originals.add(item.item_code)
+  else failed.add(item.item_code)
+}
 const searchRef = ref(null)
 const introRef = ref(null)
 const captionRef = ref(null)

@@ -259,6 +259,46 @@ describe('CatalogPicker', () => {
     )
   })
 
+  it('paints the small copy of a photo and falls back to the original', async () => {
+    const s = inbox.state
+    s.catalogResults.data = {
+      items: [
+        {
+          ...SALE,
+          image_url: 'https://ventas.test/files/funda.jpg',
+          media: {
+            variants: {
+              card: { url: '/files/doco-media/v1/ab/ab-card.webp', width: 240 },
+              detail: {
+                url: '/files/doco-media/v1/ab/ab-detail.webp',
+                width: 480,
+              },
+            },
+          },
+        },
+        { ...PLAIN, image_url: 'https://ventas.test/files/mica.jpg' },
+      ],
+    }
+    const root = await mount()
+    const [funda, mica] = cards(root).map((c) => c.querySelector('img'))
+    expect(funda.getAttribute('src')).toBe(
+      '/files/doco-media/v1/ab/ab-card.webp',
+    )
+    expect(funda.getAttribute('srcset')).toContain('ab-detail.webp 480w')
+    expect(mica.getAttribute('src')).toBe('https://ventas.test/files/mica.jpg')
+    expect(mica.hasAttribute('srcset')).toBe(false)
+    funda.dispatchEvent(new Event('error'))
+    await flush()
+    const again = cards(root)[0].querySelector('img')
+    expect(again.getAttribute('src')).toBe(
+      'https://ventas.test/files/funda.jpg',
+    )
+    expect(again.hasAttribute('srcset')).toBe(false)
+    again.dispatchEvent(new Event('error'))
+    await flush()
+    expect(cards(root)[0].querySelector('img')).toBeNull()
+  })
+
   it('sends straight from the grid with the chosen template', async () => {
     const root = await mount()
     await click(cards(root)[0])

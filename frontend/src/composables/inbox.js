@@ -10,6 +10,7 @@ import { userScopedKey } from '@/utils/storageKeys'
 import { ADDON_APP, hasApp, loadCapabilities } from '@/utils/crmCapabilities'
 import { installNetworkRecovery } from '@/utils/networkRecovery'
 import { REPLY_TAB, nextReplyRow } from '@/utils/atencion'
+import { answerCache } from '@/utils/answerCache'
 // inboxPanes reaches the panes only through here, so it rides this chunk
 // instead of splitting a file off every route that loads the inbox state.
 import { inboxPanes, ROOM_W } from '@/utils/inboxPanes'
@@ -539,12 +540,20 @@ export const contactCard = createResource({
 // catalogCtx carries the conversation target; the picker reads catalogResults.
 export const catalogOpen = ref(false)
 export const catalogCtx = ref(null) // { reference_doctype, reference_name, channel, to } OR { comment_name } for a FB comment DM
-// browse → { items, groups, brands, store, offers }: items with sale price, «Quedan N»
-// and their storefront link; groups/brands are the chips over the query's best matches.
-export const catalogResults = createResource({
-  url: 'doco_marketing.api.catalog.browse',
-  auto: false,
+// browse → { items, groups, brands, store, offers }: items with sale price, «Quedan N»,
+// their storefront link and the small copies of their photo (utils/catalogPhoto);
+// groups/brands are the chips over the query's best matches.
+// A search already answered paints at once from memory (a word erased, a filter toggled
+// back, the picker opened again); one older than CATALOG_FRESH_MS is asked again and
+// its fresh answer replaces it. A late answer never paints over a newer search.
+export const catalogResults = reactive({
+  data: null,
+  loading: false,
+  error: null,
 })
+const CATALOG_FRESH_MS = 60_000
+const catalogAnswers = answerCache({ max: 40, keepMs: 10 * 60_000 })
+let catalogAsked = 0
 export const catalogQuery = ref('')
 function emptyCatalogFilters() {
   return {
@@ -581,11 +590,13 @@ let _catTimer = null
 export function onCatalogQuery(q) {
   catalogQuery.value = q
   clearTimeout(_catTimer)
+  // An answer in memory needs no pause for the next key.
+  if (catalogAnswers.get(catalogKey(catalogParams()))) return runCatalogSearch()
   _catTimer = setTimeout(runCatalogSearch, 300)
 }
-export function runCatalogSearch() {
+function catalogParams() {
   const f = catalogFilters
-  catalogResults.submit({
+  return {
     query: catalogQuery.value || '',
     in_stock_only: f.inStock ? 1 : 0,
     item_group: f.group || undefined,
@@ -594,7 +605,40 @@ export function runCatalogSearch() {
     price_min: f.priceMin === '' ? undefined : f.priceMin,
     price_max: f.priceMax === '' ? undefined : f.priceMax,
     limit: 24,
-  })
+  }
+}
+function catalogKey(params) {
+  return JSON.stringify({ ...params, query: params.query.trim().toLowerCase() })
+}
+export function runCatalogSearch() {
+  clearTimeout(_catTimer)
+  const params = catalogParams()
+  const key = catalogKey(params)
+  const kept = catalogAnswers.get(key)
+  const asked = ++catalogAsked
+  if (kept) {
+    catalogResults.data = kept.data
+    catalogResults.error = null
+  }
+  if (kept && kept.age < CATALOG_FRESH_MS) {
+    catalogResults.loading = false
+    return
+  }
+  catalogResults.loading = true
+  call('doco_marketing.api.catalog.browse', params).then(
+    (data) => {
+      catalogAnswers.set(key, data)
+      if (asked !== catalogAsked) return
+      catalogResults.data = data
+      catalogResults.loading = false
+    },
+    (error) => {
+      if (asked !== catalogAsked) return
+      catalogResults.loading = false
+      // A kept answer stays on screen; with none, the picker offers «Reintentar».
+      if (!kept) catalogResults.error = error
+    },
+  )
 }
 // A short link to the store's catalog with the picker's search and filters set.
 export async function catalogStoreLink() {

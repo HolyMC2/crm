@@ -2,6 +2,13 @@
 
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
+## 2026-11-21 — Inbox /cat: the photos load small and a search you already ran shows at once (lane cat-fotos-rapidas, with doco_marketing; not deployed)
+
+- **Why:** the catalog picker (`/cat`, the composer's «Catálogo») loaded each item's original phone photo: about 0.8 MB each on doco prod, 24 per search, about 18 MB per search on a shop's phone connection. Every keystroke after the pause asked the server again, even for a search just shown, and a slow answer to an older search could paint over a newer one.
+- **Change:** `components/doco/inbox/CatalogPicker.vue` paints the small copy the server sends (`media.variants`: `card` about 320 px, `detail` about 640 px for sharp phone screens, through `srcset`; `utils/catalogPhoto.js`). These are webp files the browser keeps for a year. When a copy fails to load, the tile falls back to the original, and only then to the empty-photo icon. What gets sent is still the original photo. `composables/inbox.js` keeps each answered search in memory for 10 minutes (`utils/answerCache.js`, 40 searches): a search repeated within a minute shows at once with no call (erasing a word skips the 300 ms pause), an older one shows at once and is asked again. A late answer to an older search no longer paints over a newer one, and while a new search loads the grid dims instead of keeping the old results looking current.
+- **Measured** on doco-mirror, 2026-11-21 14:30 Mazatlán, as playwright-bot in the phone picker (390×844 at 3×): «funda» 6,233 KB → 135 KB, with all 16 photos loaded from the small copies.
+- **Tests:** `frontend/tests/unit/catalogSearch.test.js` (7: the cache's cap and age, the photo picked, a repeated search paints with no call, a stale one is asked again, a late answer never paints over a newer one, a failure shows only when nothing is kept), `catalogPicker.test.js` (+1: the grid paints the copy, falls back to the original, then to the icon).
+
 ## 2026-11-21 — Etiquetas: «Imprimir con el diálogo del sistema» stays open (lane etq-dialogo-sistema; not deployed)
 
 - **Why:** Etiquetas prints its labels from a hidden frame and removed that frame 1.5 s after the browser's print window closed. Chromium's «Print using system dialog» (Chrome, Brave, Edge) closes its preview first and then opens the system dialog for the same frame, so the system dialog closed on its own about a second later. Seen 2026-11-21 in Brave on Windows with a Phomemo M110.
