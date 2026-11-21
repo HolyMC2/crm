@@ -654,10 +654,11 @@ class TestSalesMetrics(IntegrationTestCase):
 		):
 			self.skipTest("ERP invoices are not linked to deals on this site")
 		deal = self.deal("Won", value=800, closed_date="2040-02-20")
+		other = self.deal("Won", value=50, closed_date="2040-02-21")
 		company = frappe.db.get_value("Company", {"default_currency": "USD"}, "name")
 		if not company:
 			self.skipTest("No company in the CRM base currency")
-		for grand_total, outstanding in ((500, 200), (300, 0)):
+		for crm_deal, grand_total, outstanding in ((deal, 500, 200), (deal, 300, 0), (other, 50, 50)):
 			frappe.get_doc(
 				{
 					"doctype": "Sales Invoice",
@@ -665,7 +666,7 @@ class TestSalesMetrics(IntegrationTestCase):
 					"currency": "USD",
 					"party_account_currency": "USD",
 					"conversion_rate": 1,
-					"crm_deal": deal.name,
+					"crm_deal": crm_deal.name,
 					"docstatus": 1,
 					"base_grand_total": grand_total,
 					"grand_total": grand_total,
@@ -677,5 +678,9 @@ class TestSalesMetrics(IntegrationTestCase):
 		amounts = get_deal_amounts([deal.name])["deals"][deal.name]
 		self.assertEqual(amounts.invoiced_value, 800)
 		self.assertEqual(amounts.collected_value, 600)
+		# A page reads only its own deals' invoices, and each deal keeps its own amounts.
+		both = get_deal_amounts([deal.name, other.name])["deals"]
+		self.assertEqual((both[deal.name].invoiced_value, both[deal.name].collected_value), (800, 600))
+		self.assertEqual((both[other.name].invoiced_value, both[other.name].collected_value), (50, 0))
 		row = self.metrics()[self.statuses["Won"]]
-		self.assertEqual((row.invoiced_value, row.collected_value), (800, 600))
+		self.assertEqual((row.invoiced_value, row.collected_value), (850, 600))

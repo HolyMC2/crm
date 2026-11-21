@@ -113,7 +113,7 @@ def _compute_outlier_threshold() -> float | None:
 	return float(p95) * OUTLIER_FACTOR if p95 else None
 
 
-def _erp_amounts_table(base_currency):
+def _erp_amounts_table(base_currency, deals=None):
 	"""Submitted invoices per deal in the company currency, when ERP links deals.
 
 	Invoiced = submitted Sales Invoices with ``crm_deal`` plus POS Invoices with
@@ -121,6 +121,10 @@ def _erp_amounts_table(base_currency):
 	invoiced minus outstanding. Only companies whose currency is the CRM base
 	currency count; other amounts are unavailable rather than mixed.
 	Returns None when ERP is absent or the user may not read invoices.
+
+	``deals`` limits every part of the union to those deals. MariaDB cannot push
+	the outer join's deal into a UNION, so without it the table aggregates every
+	invoice of the tenant on each call.
 	"""
 	parts = []
 	for doctype in ("Sales Invoice", "POS Invoice"):
@@ -149,11 +153,15 @@ def _erp_amounts_table(base_currency):
 				(invoice.base_grand_total - outstanding).as_("collected"),
 			)
 			.where(invoice.docstatus == 1)
-			.where(Coalesce(invoice.crm_deal, "") != "")
+			# Bare comparisons, not COALESCE: MariaDB reads only the linked invoices
+			# from the (crm_deal, docstatus) index when the column is compared as is.
+			.where(invoice.crm_deal.notnull() & (invoice.crm_deal != ""))
 			.where(company.default_currency == base_currency)
 		)
 		if doctype == "POS Invoice":
 			part = part.where(Coalesce(invoice.consolidated_invoice, "") == "")
+		if deals is not None:
+			part = part.where(invoice.crm_deal.isin(deals))
 		parts.append(part)
 	if not parts:
 		return None
@@ -282,8 +290,11 @@ def permitted_deals(filters=None, or_filters=None, amounts=False):
 	)
 
 
-def metric_query(*, include_eligibility=False, in_deal_currency=False, per_deal=False):
-	"""Join the selected pipeline policy and ERP amounts when their schema is available."""
+def metric_query(*, include_eligibility=False, in_deal_currency=False, per_deal=False, deals=None):
+	"""Join the selected pipeline policy and ERP amounts when their schema is available.
+
+	``deals`` names every deal the caller will select, so the ERP amounts read only theirs.
+	"""
 	deal, status = DocType("CRM Deal"), DocType("CRM Deal Status")
 	query = frappe.qb.from_(deal).left_join(status).on(deal.status == status.name)
 	pipeline_stage = pipeline = None
@@ -294,7 +305,7 @@ def metric_query(*, include_eligibility=False, in_deal_currency=False, per_deal=
 			(pipeline_stage.parent == deal.pipeline) & (pipeline_stage.status == deal.status)
 		)
 		query = query.left_join(pipeline).on(pipeline.name == deal.pipeline)
-	erp = _erp_amounts_table(_base_currency())
+	erp = _erp_amounts_table(_base_currency(), deals)
 	if erp is not None:
 		query = query.left_join(erp).on(erp.deal == deal.name)
 	return (
@@ -346,7 +357,9 @@ def deal_amounts(names, *, in_deal_currency=True) -> dict[str, dict]:
 	names = [name for name in (names or []) if isinstance(name, str) and name][:500]
 	if not names:
 		return {}
-	query, deal, _status, expressions = metric_query(in_deal_currency=in_deal_currency, per_deal=True)
+	query, deal, _status, expressions = metric_query(
+		in_deal_currency=in_deal_currency, per_deal=True, deals=names
+	)
 	rows = (
 		query.select(deal.name, deal.currency)
 		.select(*(expression.as_(name) for name, expression in expressions.items()))

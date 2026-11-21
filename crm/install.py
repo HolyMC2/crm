@@ -25,6 +25,7 @@ def after_install(force=False):
 	add_email_account_custom_field()
 	add_email_account_scope_fields()
 	add_web_form_custom_fields()
+	add_invoice_deal_indexes()
 	add_default_industries()
 	add_default_lead_sources()
 	add_default_lost_reasons()
@@ -364,6 +365,20 @@ def add_email_account_scope_fields():
 	if missing:
 		create_custom_fields({"Email Account": missing})
 		frappe.clear_cache(doctype="Email Account")
+
+
+def add_invoice_deal_indexes():
+	"""Index Sales Invoice and POS Invoice on (crm_deal, docstatus) where ERP links deals.
+
+	A page of deals reads its invoices by deal (crm.pipeline.queries.stages); without
+	this each read scans every invoice. ``crm_deal`` is a custom field another app may
+	add after crm is installed, so this runs after every migrate; ``add_index`` skips an
+	index that exists. Two columns because Frappe's schema sync drops a single-column
+	index on a field without ``search_index``.
+	"""
+	for doctype in ("Sales Invoice", "POS Invoice"):
+		if frappe.db.table_exists(doctype) and frappe.db.has_column(doctype, "crm_deal"):
+			frappe.db.add_index(doctype, ["crm_deal", "docstatus"])
 
 
 def add_web_form_custom_fields():
