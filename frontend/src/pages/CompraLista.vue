@@ -560,8 +560,8 @@
                         class="flex size-11 flex-none items-center justify-center overflow-hidden rounded-6 bg-surface-gray-2"
                       >
                         <img
-                          v-if="line.photo"
-                          :src="line.photo"
+                          v-if="line.thumb || line.photo"
+                          :src="line.thumb || line.photo"
                           alt=""
                           class="size-full object-cover"
                           loading="lazy"
@@ -782,8 +782,8 @@
                         class="flex size-11 flex-none items-center justify-center overflow-hidden rounded-6 bg-surface-gray-2 max-[359px]:hidden"
                       >
                         <img
-                          v-if="line.photo"
-                          :src="line.photo"
+                          v-if="line.thumb || line.photo"
+                          :src="line.thumb || line.photo"
                           alt=""
                           class="size-full object-cover"
                           loading="lazy"

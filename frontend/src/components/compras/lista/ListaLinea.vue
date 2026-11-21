@@ -505,7 +505,7 @@ const originalText = computed(() =>
 const photoUrl = computed(() => {
   if (!props.line) return ''
   if (shown.value) return candidateUrl(shown.value)
-  return props.line.photo || ''
+  return props.line.thumb || props.line.photo || ''
 })
 
 function candidateUrl(key) {

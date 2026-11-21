@@ -2,6 +2,12 @@
 
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
+## 2026-11-21 — Precios and the supplier lists paint the small copy of each photo (lane compras-precios-fotos, with doco; not deployed)
+
+- **Why:** Precios' rows and Compras › a supplier list's lines painted the full product photo in a 44 px box.
+- **Change:** `components/precios/PrecioRow.vue` paints `row.thumb || row.image`; `pages/CompraLista.vue` and `components/compras/lista/ListaLinea.vue` paint `line.thumb || line.photo`. doco sends `thumb` (its media layer's «card» copy). Measured on doco-mirror: a Precios page for «iphone» 8.1 MB → 106 KB (details in doco's CHANGELOG).
+- **Tests:** the lists' and Precios' unit tests are unchanged and pass; doco's tests cover `thumb`.
+
 ## 2026-11-21 — Inbox /cat: the photos load small and a search you already ran shows at once (lane cat-fotos-rapidas, with doco_marketing; not deployed)
 
 - **Why:** the catalog picker (`/cat`, the composer's «Catálogo») loaded each item's original phone photo: about 0.8 MB each on doco prod, 24 per search, about 18 MB per search on a shop's phone connection. Every keystroke after the pause asked the server again, even for a search just shown, and a slow answer to an older search could paint over a newer one.

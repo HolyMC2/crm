@@ -26,7 +26,11 @@
           @change="emit('select', row.item_code)"
         />
       </label>
-      <ProductThumb :image="row.image" :title="row.item_name" class="size-11" />
+      <ProductThumb
+        :image="row.thumb || row.image"
+        :title="row.item_name"
+        class="size-11"
+      />
       <div class="min-w-0 flex-1">
         <RouterLink
           :to="{ name: 'Producto', params: { item: row.item_code } }"
