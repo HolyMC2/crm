@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 import frappe
 from frappe.tests import IntegrationTestCase
-from frappe.utils import add_days, getdate, nowdate
+from frappe.utils import add_days, getdate, now_datetime, nowdate
 
 from crm import handover
 
@@ -123,7 +123,7 @@ class TestHandingOver(HandoverCase):
 			"CRM Shift Note",
 			given["last"]["name"],
 			"handed_at",
-			datetime.datetime.now() - datetime.timedelta(hours=handover.VISIBLE_HOURS + 1),
+			now_datetime() - datetime.timedelta(hours=handover.VISIBLE_HOURS + 1),
 		)
 		frappe.set_user(self.next)
 		self.assertIsNone(handover.hoy_state()["pending"])
