@@ -129,6 +129,14 @@ class TestOutcomeOptions(OutcomeCase):
 		finally:
 			frappe.delete_doc("CRM Task", task.name, force=True)
 
+	def test_a_phone_in_the_name_field_is_not_said_as_a_name(self):
+		deal = self.make_deal()
+		frappe.db.set_value("CRM Deal", deal, "first_name", "6951199223")
+		record = frappe.get_doc("CRM Deal", deal)
+		with patch("crm.forms.settings.business_name", return_value="Doco"):
+			text = outcomes.fill("Hola {nombre}, soy {vendedor} de {negocio}.", record, {"seller": "Karla"})
+		self.assertEqual(text, "Hola, soy Karla de Doco.")
+
 	def test_the_shop_message_fills_english_and_spanish_words(self):
 		deal = self.make_deal()
 		frappe.db.set_value("CRM Deal", deal, "first_name", "Rosa")

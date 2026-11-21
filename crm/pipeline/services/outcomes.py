@@ -86,7 +86,7 @@ def options(name: str) -> dict:
 		"kind": task.activity_type or "Task",
 		"open": task.status in OPEN_TASK_STATUSES,
 		"attempts": cint(task.get("no_answer_count")),
-		"who": who(record),
+		"who": who(record) or _label(record),
 		"detail": offer.get("detail") or "",
 		"record": {"doctype": record.doctype, "name": record.name, "label": _label(record)},
 		"reach": _reach(record, message),
@@ -137,19 +137,29 @@ def record(
 # ── helpers a provider uses ─────────────────────────────────────────────────
 
 
+# A «name» that is really a phone or an ID («6951199223», «CRM-DEAL-2026-00012»).
+_PHONEISH = re.compile(r"^[+\d\s().-]{7,}$")
+_IDLIKE = re.compile(r"^(?:[A-Z][A-Z0-9]*-)+[\d-]+$|^\d+$", re.I)
+
+
+def _wordy(value) -> str:
+	value = cstr(value).strip()
+	return "" if not value or _PHONEISH.match(value) or _IDLIKE.match(value) else value
+
+
 def who(record) -> str:
-	"""The person the record is about, in words (never an ID or a phone)."""
+	"""The person the record is about, in words (never an ID or a phone); empty when unknown."""
 	person = " ".join(
-		cstr(record.get(field)).strip() for field in ("first_name", "last_name") if record.get(field)
+		_wordy(record.get(field)) for field in ("first_name", "last_name") if _wordy(record.get(field))
 	)
 	for value in (person, record.get("lead_name"), record.get("deal_name"), record.get("organization")):
-		if cstr(value).strip():
-			return cstr(value).strip()
-	return _label(record)
+		if _wordy(value):
+			return _wordy(value)
+	return ""
 
 
 def first_name(record) -> str:
-	return cstr(record.get("first_name")).strip() or who(record).split(" ")[0]
+	return _wordy(record.get("first_name")) or (who(record).split(" ") or [""])[0]
 
 
 def own_action(key: str) -> dict:
@@ -234,7 +244,11 @@ def fill(text: str, record, values: dict | None = None) -> str:
 	}
 	for key, aliases in _TOKENS.items():
 		for alias in aliases:
-			text = text.replace("{" + alias + "}", cstr(values.get(key)))
+			token = "{" + alias + "}"
+			# No name to say: «Hola {nombre}, soy…» reads «Hola, soy…».
+			if not cstr(values.get(key)):
+				text = text.replace(" " + token, "")
+			text = text.replace(token, cstr(values.get(key)))
 	return re.sub(r"[ \t]{2,}", " ", text).strip()
 
 
