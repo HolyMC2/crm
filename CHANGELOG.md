@@ -3,6 +3,11 @@
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
 
+## 2026-11-20 — «Datos por persona» under the goals in Equipo › Metas (lane acompanar, with doco, taller and posawesome; not deployed)
+
+- **Change:** `components/metas/PorPersona.vue` (loaded with the page's goals, its own read) shows each person's figure for the chosen facts in the period: a table at a desk, a card per person on a phone, «—» where the person was not judged. «Elegir datos» picks up to 8 facts by group; the choice is each manager's own.
+- **Tests:** `frontend/tests/unit/metasPorPersona.test.js` (5).
+
 ## 2026-11-20 — Por explicar updates by itself: counts, groups, accounts and cash follow every change, from any phone (lane por-explicar-vivo; not deployed)
 
 - **Why:** Marco: «I want qty and fields to update auto on RT». Bancos and an account's page already followed changes; Por explicar read its numbers only on open and after its own taps, so the bank's import, a teammate or his other phone left it stale.
