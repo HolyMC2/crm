@@ -213,11 +213,13 @@ def send(user: str, day: datetime.date) -> bool:
 	if frappe.cache.get_value(key):
 		return False
 	previous = frappe.session.user
+	# The scheduler reads each person's own figures, in their permissions (as
+	# taller's daily digest does); the session is put back right after.
 	try:
-		frappe.set_user(user)
+		frappe.set_user(user)  # nosemgrep: frappe-setuser
 		found = rows(day)
 	finally:
-		frappe.set_user(previous)
+		frappe.set_user(previous)  # nosemgrep: frappe-setuser
 	attention = sum(1 for row in found if row.get("attention"))
 	sales = next((row for row in found if row.get("key") == "ventas" and row.get("amount")), None)
 	if not attention and not sales:
