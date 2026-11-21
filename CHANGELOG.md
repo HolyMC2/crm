@@ -16,6 +16,10 @@ Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` i
 - **Settings:** «Cómo registras prospectos» gains «Si no contesta» (En 2 horas / Mañana / En 2 días, default Mañana) and «Mensaje de seguimiento» (`{nombre}`, `{vendedor}`, `{negocio}` tapped in; empty = Muelle's own words), stored in `FCRM Settings.prospect_settings`.
 - **Proved:** doco-mirror (lab push gen 3632): `options` on a real person task answered «Contestó» and «No contestó» only (a repair deal: taller owns its status), WhatsApp as the Bandeja thread (Doco's official account), a call link and the default message; the first draft said «Hola 6951199223» because the deal's first name is a phone, now fixed. The mirror has no automated repair tasks, so «Ya le avisé» and «Viene a recoger» were proved on a lease only.
 - **Tests:** `crm/tests/test_follow_up_outcomes.py` (15), `frontend/tests/unit/outcomeSheet.test.js` (6), `prospectosAjustes.test.js` (+2).
+## 2026-11-20 — «Límites» on a person in Equipo (lane limites-caja, with posawesome and doco; not deployed)
+
+- **Change:** `EquipoPersona.vue` shows the limits the enforcing apps report (doco's `doco_equipo_limits`) as chips under «Límites», with what the current one means; a tap saves through `doco.erp_experience.equipo.set_limit`, the answer is said under the rows and a refusal puts the chip back. Owner only.
+- **Tests:** `frontend/tests/unit/equipoLimites.test.js` (4).
 
 ## 2026-11-20 — Etiquetas prints straight to the computer's label printer through Muelle QZ, with no print dialog (lane etiquetas-qz; not deployed)
 
