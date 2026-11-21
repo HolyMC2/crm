@@ -9,6 +9,7 @@ const CHUNKS = {
   '@/pages/DealsView.vue': 'DealsView',
   '@/components/Activities/Activities.vue': 'Activities',
   '@/components/doco/inbox/DealContextPanel.vue': 'DealContextPanel',
+  '@/components/doco/inbox/DealHeader.vue': 'DealHeader',
 }
 
 // A fresh module registry and fresh mocks per test, so every dynamic import
@@ -101,12 +102,12 @@ describe('prefetchHotChunks', () => {
     expect(loaded).toEqual(['Deal360'])
   })
 
-  it('warms only the deal panel a phone opens from Inbox', async () => {
+  it('warms the conversation a phone opens from Inbox, not «Datos y contacto»', async () => {
     vi.useFakeTimers()
     phone(true)
     prefetchHotChunks(on('Inbox'), { delay: 10 })
     await vi.advanceTimersByTimeAsync(30000)
-    expect(loaded).toEqual(['DealContextPanel'])
+    expect(loaded).toEqual(['DealHeader', 'Activities'])
   })
 
   it('warms nothing on a phone elsewhere', async () => {
