@@ -1056,7 +1056,12 @@ const routes = [
     path: '/negocio',
     name: 'AjustesNegocio',
     component: () => import('@/pages/AjustesNegocio.vue'),
-    meta: { title: 'Ajustes del negocio' },
+    // The owner's own page beside Mi cuenta; its bar carries the search.
+    meta: {
+      app: 'negocio',
+      title: 'Ajustes del negocio',
+      ownPhoneHeader: true,
+    },
   },
   {
     path: '/impresion',

@@ -97,7 +97,10 @@ def _resolve(row, provider) -> dict | None:
 			doctype=row["doctype"],
 			field=row["field"],
 			value=bool(cint(frappe.db.get_single_value(row["doctype"], row["field"]))),
-			can_change=bool(frappe.has_permission(row["doctype"], "write")),
+			# A flag for the switch; set_switch checks write again before saving.
+			can_change=bool(
+				frappe.has_permission(row["doctype"], "write")
+			),  # nosemgrep: unchecked-frappe-permission-call
 		)
 		return out
 	if row.get("get") and row.get("set"):
@@ -130,7 +133,10 @@ def advanced(skip: set | None = None) -> list[dict]:
 		if not frappe.has_permission(single.name, "read"):
 			continue
 		meta = frappe.get_meta(single.name)
-		writable = bool(frappe.has_permission(single.name, "write"))
+		# A flag for the switches; set_switch checks write again before saving.
+		writable = bool(
+			frappe.has_permission(single.name, "write")
+		)  # nosemgrep: unchecked-frappe-permission-call
 		values = None
 		for field in meta.fields:
 			if (

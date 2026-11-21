@@ -1,7 +1,8 @@
 import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
 // The shell's own pages outside every module: Mi cuenta (the plan) and Mi perfil
 // (the person). They boot neutral, light no rail item and guard themselves.
-export const ACCOUNT_PAGES = Object.freeze(['cuenta', 'perfil'])
+// Mi cuenta, Mi perfil and the owner's «Ajustes del negocio»: outside every module.
+export const ACCOUNT_PAGES = Object.freeze(['cuenta', 'perfil', 'negocio'])
 /** Whether this person may open Mi cuenta (the shell boot's `account.cuenta`). */
 export function cuentaAllowed(boot) {
   return boot?.account?.cuenta === true

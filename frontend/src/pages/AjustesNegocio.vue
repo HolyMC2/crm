@@ -10,7 +10,6 @@
       :title="__('Business settings')"
       searchable
       :search-label="__('Search a setting')"
-      :bell="false"
     />
     <div class="min-h-0 flex-1 overflow-y-auto">
       <div class="mx-auto w-full max-w-3xl px-4 pb-10 pt-4 lg:px-6">

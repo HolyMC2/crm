@@ -100,6 +100,7 @@ describe('the account pages', () => {
     expect(account.map((route) => [route.path, route.meta.app])).toEqual([
       ['/cuenta', 'cuenta'],
       ['/perfil', 'perfil'],
+      ['/negocio', 'negocio'],
     ])
     for (const route of account) {
       expect(moduleForPath(route.path, hostedModules)).toBeNull()

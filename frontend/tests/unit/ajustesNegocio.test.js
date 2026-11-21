@@ -151,7 +151,9 @@ describe('Ajustes del negocio', () => {
     expect(switchOf('scanner.conteo_ui').getAttribute('aria-checked')).toBe(
       'true',
     )
-    expect(state.toast).toHaveBeenCalledWith('Turned on: Conteo del día en Escáner')
+    expect(state.toast).toHaveBeenCalledWith(
+      'Turned on: Conteo del día en Escáner',
+    )
   })
 
   it('puts the switch back when the server refuses', async () => {

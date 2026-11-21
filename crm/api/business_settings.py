@@ -21,6 +21,6 @@ def page() -> dict:
 
 
 @frappe.whitelist(methods=["POST"])
-def set_switch(key: str, value) -> dict:
+def set_switch(key: str, value: int | str) -> dict:
 	_require()
 	return service.set_switch(key, value)
