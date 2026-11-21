@@ -69,7 +69,7 @@
           </a>
           <RouterLink :to="recordTo" :class="REACH" data-outcome-record>
             <span class="lucide-external-link size-5" aria-hidden="true" />
-            {{ __('Open') }}
+            {{ __('Open record') }}
           </RouterLink>
         </div>
         <p
