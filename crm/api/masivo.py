@@ -689,7 +689,9 @@ def deshacer(token: str):
 	if token.startswith(TOKEN_PREFIX):
 		return _deshacer_cache(token)
 	acciones = _d9()
-	if acciones and token and frappe.db.exists(ACTION_LOG, token):
+	# only this page's own bulk actions: any other action log row undoes through its own door
+	# (the assistant's «deshacer», which keeps its owner gate)
+	if acciones and token and frappe.db.get_value(ACTION_LOG, token, "herramienta") == "masivo":
 		return _deshacer_d9(acciones, token)
 	frappe.throw(
 		_("Ya no se puede deshacer: pasaron más de 24 horas o ya se deshizo."), frappe.ValidationError

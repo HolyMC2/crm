@@ -81,6 +81,27 @@ class TestMasivo(IntegrationTestCase):
 		else:
 			self.assertEqual(masivo.deshacer(result["deshacer"])["revertidos"], 0)
 
+	def test_undo_refuses_an_action_that_is_not_a_bulk_edit(self):
+		# another door's action (an assistant tool's, with its own owner gate) never undoes here
+		acciones = masivo._d9()
+		if not acciones:
+			self.skipTest("doco's action log is not installed")
+		name = self._note("D12 prueba otra puerta")
+		token = acciones.registrar(
+			"Otra herramienta",
+			[
+				{
+					"doctype": "Note",
+					"name": name,
+					"undo": {"kind": "delete", "doctype": "Note", "name": name},
+				}
+			],
+			herramienta="editar_campos",
+		)
+		with self.assertRaises(frappe.ValidationError):
+			masivo.deshacer(token)
+		self.assertTrue(frappe.db.exists("Note", name))
+
 	def test_an_unchanged_value_is_not_logged(self):
 		name = self._note("D12 prueba igual")
 		result = masivo.aplicar("Note", [name], "campo", {"campo": "title", "valor": "D12 prueba igual"})
