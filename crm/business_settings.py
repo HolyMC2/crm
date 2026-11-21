@@ -7,7 +7,9 @@ Two kinds of rows:
   ``{"key", "area", "kind", "label", "on", "off" | "help", …}``.
   ``kind="switch"`` is either a Single's Check (``doctype`` + ``field``) or
   read and written by the app itself (``get`` / ``set``, dotted paths that take
-  and return a bool), so its own rules apply. ``kind="screen"`` opens the app's
+  and return a bool), so its own rules apply. ``args`` (a dict) goes to both as
+  keyword arguments, for one switch per record (a register, a shop).
+  ``kind="screen"`` opens the app's
   own settings screen (``to``, a /crm route, or ``href``).
 * **Every other switch** — the Check fields of the settings Singles of the
   installed Muelle apps (Frappe and ERPNext stay in Desk), with their own label
@@ -101,8 +103,11 @@ def _resolve(row, provider) -> dict | None:
 		)
 		return out
 	if row.get("get") and row.get("set"):
+		args = row.get("args") or {}
+		if not isinstance(args, dict):
+			return None
 		try:
-			value = bool(frappe.get_attr(row["get"])())
+			value = bool(frappe.get_attr(row["get"])(**args))
 		except Exception:
 			frappe.logger("crm.business_settings").exception(f"Setting {out['key']} could not be read")
 			frappe.clear_last_message()
@@ -206,8 +211,9 @@ def set_switch(key: str, value) -> dict:
 			),
 			None,
 		)
-		frappe.get_attr(raw["set"])(value)
-		return {"key": key, "value": bool(frappe.get_attr(raw["get"])())}
+		args = raw.get("args") or {}
+		frappe.get_attr(raw["set"])(value, **args)
+		return {"key": key, "value": bool(frappe.get_attr(raw["get"])(**args))}
 	if row and row.get("doctype"):
 		doctype, field = row["doctype"], row["field"]
 	else:

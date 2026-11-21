@@ -10,7 +10,7 @@ from frappe.tests import IntegrationTestCase
 
 from crm import business_settings as hub
 
-STATE = {"value": False}
+STATE = {"value": False, "registers": {}}
 
 
 def stand_in_rows():
@@ -42,6 +42,25 @@ def stand_in_rows():
 			"field": "auto_mark_replied_on_response",
 		},
 		{"key": "demo.broken", "label": "Sin destino", "kind": "screen"},
+		*(
+			{
+				"key": f"demo.register.{register}",
+				"area": "caja",
+				"kind": "switch",
+				"label": f"Caja {register}",
+				"get": "crm.tests.test_business_settings.stand_in_register_get",
+				"set": "crm.tests.test_business_settings.stand_in_register_set",
+				"args": {"register": register},
+			}
+			for register in ("Norte", "Sur")
+		),
+		{
+			"key": "demo.bad_args",
+			"label": "Argumentos que no son un dict",
+			"get": "crm.tests.test_business_settings.stand_in_get",
+			"set": "crm.tests.test_business_settings.stand_in_set",
+			"args": ["Norte"],
+		},
 	]
 
 
@@ -53,11 +72,20 @@ def stand_in_set(value):
 	STATE["value"] = bool(value)
 
 
+def stand_in_register_get(register):
+	return STATE["registers"].get(register, False)
+
+
+def stand_in_register_set(value, register):
+	STATE["registers"][register] = bool(value)
+
+
 class TestBusinessSettings(IntegrationTestCase):
 	def setUp(self):
 		super().setUp()
 		frappe.set_user("Administrator")
 		STATE["value"] = False
+		STATE["registers"] = {}
 		self.original = frappe.db.get_single_value("FCRM Settings", "auto_mark_replied_on_response")
 		paths = patch.object(hub, "_paths", return_value=["demo.rows"])
 		load = patch.object(hub, "_load", return_value=stand_in_rows)
@@ -72,7 +100,10 @@ class TestBusinessSettings(IntegrationTestCase):
 
 	def test_curated_rows_resolve_their_values_and_drop_what_cannot_work(self):
 		rows = {row["key"]: row for row in hub.curated()}
-		self.assertEqual(set(rows), {"demo.screen", "demo.custom", "demo.single"})
+		self.assertEqual(
+			set(rows),
+			{"demo.screen", "demo.custom", "demo.single", "demo.register.Norte", "demo.register.Sur"},
+		)
 		self.assertEqual(rows["demo.screen"]["to"], "/demo")
 		self.assertFalse(rows["demo.custom"]["value"])
 		# An unknown area reads «Otros».
@@ -97,6 +128,14 @@ class TestBusinessSettings(IntegrationTestCase):
 		answer = hub.set_switch("demo.custom", 1)
 		self.assertTrue(answer["value"])
 		self.assertTrue(STATE["value"])
+
+	def test_one_switch_per_record_carries_its_arguments(self):
+		answer = hub.set_switch("demo.register.Sur", 1)
+		self.assertTrue(answer["value"])
+		self.assertEqual(STATE["registers"], {"Sur": True})
+		rows = {row["key"]: row for row in hub.curated()}
+		self.assertTrue(rows["demo.register.Sur"]["value"])
+		self.assertFalse(rows["demo.register.Norte"]["value"])
 
 	def test_a_single_check_is_written_through_its_document(self):
 		answer = hub.set_switch("demo.single", 0)
