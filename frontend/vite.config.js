@@ -6,13 +6,16 @@ import { VitePWA } from 'vite-plugin-pwa'
 import { retainPreviousBuilds } from './scripts/retain-builds.mjs'
 import { lucideSubset } from './scripts/lucide-subset.mjs'
 import { translationKeys } from './scripts/translation-keys.mjs'
+import { versionJson } from './scripts/version-json.mjs'
+
+const STYLES = /\.(css|scss|sass|less|styl|stylus|pcss|postcss|sss)(\?|$)/
 
 // https://vitejs.dev/config/
 export default defineConfig(async () => {
   // Deploy-safe chunks: keep the previous builds' assets (scripts/retain-builds.mjs).
   const retain = retainPreviousBuilds()
-  // Silent update: version.json names the entry chunk of this build; open
-  // tabs compare it with the entry they booted from (@muelle/live-sync bundle
+  // Silent update: version.json names the chunk main.js runs from; open tabs
+  // compare it with the one they booted from (@muelle/live-sync bundle
   // watcher in main.js) and move to a new build at a safe moment.
   const config = {
     plugins: [
@@ -23,20 +26,7 @@ export default defineConfig(async () => {
       translationKeys(),
       // virtual:lucide-subset: the icons the source names, cut from the sprite.
       lucideSubset(),
-      {
-        name: 'emit-version-json',
-        apply: 'build',
-        generateBundle(_, bundle) {
-          const entry = Object.values(bundle).find(
-            (chunk) => chunk.type === 'chunk' && chunk.isEntry,
-          )
-          this.emitFile({
-            type: 'asset',
-            fileName: 'version.json',
-            source: JSON.stringify({ entry: entry?.fileName || null }),
-          })
-        },
-      },
+      versionJson(path.resolve(__dirname, 'src/main.js')),
       VitePWA({
         registerType: 'autoUpdate',
         // The service-worker registration inline in the page, not one more
@@ -174,17 +164,22 @@ export default defineConfig(async () => {
       ],
     },
     build: {
-      rollupOptions: {
+      rolldownOptions: {
         output: {
-          // Merge chunks under 2 KB (icons, stores, tiny composables) into
-          // their importers: a first route fetched 70+ files, most under 2 KB
-          // (SPEC §4: ≤ 60 scripts on a daily route).
-          experimentalMinChunkSize: 2 * 1024,
-          // The emoji table is a chunk of its own that only the picker loads.
-          // Left to the small-chunk merge, rollup folded a shared helper into
-          // it and every record page downloaded 244 KB of emoji.
-          manualChunks(id) {
-            if (id.includes('/node_modules/gemoji/')) return 'gemoji'
+          codeSplitting: {
+            // Everything the entry imports statically ships as one chunk.
+            // Automatic splitting cuts out each module the entry shares with
+            // a lazy page, and the first load pays gzip once per file.
+            groups: [{ name: 'boot', tags: ['$initial'] }],
+            // Shared chunks under 8 KB of transformed source are copied into
+            // the chunks that import them instead of loading as files of
+            // their own (SPEC §4: ≤ 60 scripts on a daily route). Rolldown's
+            // runtime keeps one instance of each copied module and turns on
+            // strict execution order. Styles stay out so no rule ships twice.
+            experimentalInlineCommonChunks: {
+              maxSize: 8 * 1024,
+              exclude: STYLES,
+            },
           },
         },
       },

@@ -54,7 +54,10 @@ export default {
   // «no all-caps labels»). Not generating the utility retires the 131 sites
   // (table heads, eyebrows, legacy FCRM chips) and frappe-ui's own in one
   // place; text that must read in capitals is written in capitals.
-  blocklist: ['prose-xl', 'prose-2xl', 'uppercase'],
+  // `[-:T]`: the regex /[-:T]/g in composables/useArchivos.js reads to the
+  // extractor as an arbitrary property, and Lightning CSS (Vite's CSS
+  // minifier) rejects the invalid `-:T` declaration it would generate.
+  blocklist: ['prose-xl', 'prose-2xl', 'uppercase', '[-:T]'],
   theme: {
     extend: {
       // frappe-ui 1.0 dropped the named radius aliases (ADR-0006) and kept
