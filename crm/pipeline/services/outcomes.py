@@ -268,8 +268,10 @@ def _own_offer(task, record) -> dict:
 		if record.doctype == "CRM Deal" and _terminal_stage(record, "Won"):
 			offered.append(actions[WON])
 		if _terminal_stage(record, "Lost"):
+			# Leads and deals ask why (their lost reason is required); a record
+			# without the field closes in one tap.
 			lost = dict(actions[LOST])
-			if record.doctype == "CRM Deal":
+			if record.meta.has_field("lost_reason"):
 				reasons = _lost_reasons()
 				if not reasons:
 					lost = None
@@ -298,7 +300,7 @@ def _apply_own(task, record, action, values) -> dict:
 	if action in (WON, LOST):
 		stage = _terminal_stage(record, "Won" if action == WON else "Lost")
 		record.status = stage
-		if action == LOST and record.doctype == "CRM Deal":
+		if action == LOST and values.get("reason"):
 			record.lost_reason = values["reason"]
 		record.save()
 		close(task)

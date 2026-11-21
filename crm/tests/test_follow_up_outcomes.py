@@ -109,13 +109,15 @@ class TestOutcomeOptions(OutcomeCase):
 		self.assertEqual([row["key"] for row in state["whens"]], list(outcomes.WHENS))
 		self.assertTrue(state["reasons"])
 
-	def test_a_prospect_offers_no_purchase_and_needs_no_reason(self):
+	def test_a_prospect_offers_no_purchase_and_asks_why_it_is_lost(self):
 		lead = self.make_lead()
+		self.lost_reason()
 		state = api.options(self.make_task("CRM Lead", lead))
 		keys = [row["key"] for row in state["actions"]]
 		self.assertNotIn("won", keys)
 		lost = next(row for row in state["actions"] if row["key"] == "lost")
-		self.assertNotIn("ask", lost)
+		self.assertEqual(lost["ask"], "reason")
+		self.assertTrue(state["reasons"])
 
 	def test_a_task_on_anything_else_is_refused(self):
 		task = frappe.get_doc(
@@ -195,8 +197,9 @@ class TestOutcomeRecord(OutcomeCase):
 
 	def test_does_not_want_it_loses_the_deal_with_the_reason_tapped(self):
 		deal = self.make_deal()
-		reason = self.lost_reason()
+		self.lost_reason()
 		task = self.make_task("CRM Deal", deal)
+		reason = api.options(task)["reasons"][0]["value"]
 		with self.assertRaises(frappe.ValidationError):
 			api.record(task, "lost", reason="Inventado")
 		api.record(task, "lost", reason=reason)
@@ -206,9 +209,13 @@ class TestOutcomeRecord(OutcomeCase):
 
 	def test_a_prospect_that_does_not_want_it_moves_to_a_lost_status(self):
 		lead = self.make_lead()
-		api.record(self.make_task("CRM Lead", lead), "lost")
-		status = frappe.db.get_value("CRM Lead", lead, "status")
-		self.assertEqual(frappe.db.get_value("CRM Lead Status", status, "type"), "Lost")
+		self.lost_reason()
+		task = self.make_task("CRM Lead", lead)
+		reason = api.options(task)["reasons"][0]["value"]
+		api.record(task, "lost", reason=reason)
+		row = frappe.db.get_value("CRM Lead", lead, ["status", "lost_reason"], as_dict=True)
+		self.assertEqual(frappe.db.get_value("CRM Lead Status", row.status, "type"), "Lost")
+		self.assertEqual(row.lost_reason, reason)
 
 	def test_a_stale_or_closed_task_is_refused(self):
 		deal = self.make_deal()
