@@ -309,10 +309,11 @@ onMounted(() => {
   let inView = null
   observer = new IntersectionObserver(
     (entries) => {
-      const seen = entries.some((entry) => entry.isIntersecting)
-      const reached = inView === false && seen
-      inView = seen
-      if (reached && !props.full) emit('more')
+      for (const entry of entries) {
+        const reached = inView === false && entry.isIntersecting
+        inView = entry.isIntersecting
+        if (reached && !props.full) emit('more')
+      }
     },
     { rootMargin: '400px 0px' },
   )
