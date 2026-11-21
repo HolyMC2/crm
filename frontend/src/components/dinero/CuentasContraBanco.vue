@@ -13,7 +13,11 @@
     <ul
       class="mt-1 divide-y divide-outline-gray-1 border-y border-outline-gray-1"
     >
-      <li v-for="a in shown" :key="a.bank_account">
+      <li
+        v-for="a in shown"
+        :key="a.bank_account"
+        :data-fresh="fresh.has(accountKey(a)) ? '' : undefined"
+      >
         <button
           type="button"
           class="press flex min-h-14 w-full items-start gap-3 py-3 text-left"
@@ -62,7 +66,7 @@
 <script setup>
 import { computed } from 'vue'
 import { money } from '@/components/bancos/bancos'
-import { accountState } from '@/components/dinero/porExplicar'
+import { accountKey, accountState } from '@/components/dinero/porExplicar'
 
 const props = defineProps({
   /** The page's accounts: {bank_account, label, count, net}. */
@@ -70,6 +74,8 @@ const props = defineProps({
   /** crm Bancos' accounts (balances and difference), when readable. */
   cards: { type: Array, default: () => [] },
   currency: { type: String, default: 'MXN' },
+  /** Keys a live read just changed (porExplicar.liveKeys), marked a moment. */
+  fresh: { type: Set, default: () => new Set() },
 })
 const emit = defineEmits(['abrir'])
 

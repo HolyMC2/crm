@@ -239,6 +239,15 @@ stopped for fear of booking twice.
   the tap once more from fresh rows and refuses on a second loss; crm Cuadre `ligar` reports
   nothing as linked when the transaction was lost.
 
+Lane `por-explicar-vivo` (Marco 2026-11-20: «I want qty and fields to update auto on RT»): the page
+is live like Bancos and the account page. A Bank Transaction, Payment Entry, Journal Entry or Sales
+Invoice saved anywhere (the bank's import, a teammate, this person's other phone) reads `estado`
+again in place, about a second later and at most every 5 s (`useLiveList`, `me: () => ''` so the
+same person's other phone counts too). Each tap's result stays where it was; groups and accounts
+whose count or amount changed are marked a moment (`porExplicar.liveKeys`). A read that started
+before a tap's answer never paints over it (`paint` counts every write). An open «¿Qué fue?» follows
+its group; when the group was explained elsewhere it says so and only offers «Cerrar».
+
 Next: D5 money goals; the bot reads `por_explicar` on every site (today `banco_por_explicar` needs
 Contador). Setup on Marco's shops after the roll: explain the backlog
 since 08-01 on doco prod with the page (his taps), count the safe, then let the reminder run.

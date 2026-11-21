@@ -96,6 +96,7 @@
         :rows="data.cuentas"
         :cards="cards"
         :currency="data.currency"
+        :fresh="live.fresh.value"
         @abrir="openAccount"
       />
 
@@ -213,7 +214,15 @@
           class="mt-1 divide-y divide-outline-gray-1 border-b border-outline-gray-1"
           data-por-explicar-grupos
         >
-          <li v-for="item in items" :key="item.key">
+          <li
+            v-for="item in items"
+            :key="item.key"
+            :data-fresh="
+              item.group && live.fresh.value.has(groupKey(item.group))
+                ? ''
+                : undefined
+            "
+          >
             <HechoPorExplicar
               v-if="item.hecho"
               :item="item.hecho"
@@ -254,6 +263,14 @@
       layer="por-explicar"
     >
       <div class="space-y-4 pb-2" data-por-explicar-sheet>
+        <p
+          v-if="sheet.gone"
+          role="status"
+          class="rounded-6 bg-surface-gray-1 p-3 text-sm text-ink-gray-8"
+          data-por-explicar-sheet-hecho
+        >
+          Ya no queda nada por explicar aquí: se explicó desde otro lado.
+        </p>
         <div role="radiogroup" aria-label="¿Qué fue?" class="space-y-2">
           <button
             v-for="k in kinds"
@@ -354,10 +371,11 @@
         <div class="flex gap-2">
           <Button
             class="min-h-11 flex-1"
-            label="Cancelar"
+            :label="sheet.gone ? 'Cerrar' : 'Cancelar'"
             @click="sheet.open = false"
           />
           <Button
+            v-if="!sheet.gone"
             class="min-h-11 flex-1"
             variant="solid"
             :label="sheetAction"
@@ -380,7 +398,7 @@
     <RecordatorioSheet
       v-model:open="sheets.reminder"
       :data="data"
-      @done="data = $event"
+      @done="paint"
     />
     <AdjuntarSheet
       :open="!!attach.row"
@@ -389,11 +407,7 @@
       :currency="data?.currency"
       @update:open="(v) => !v && (attach.row = null)"
     />
-    <EtiquetasSheet
-      v-model:open="sheets.tags"
-      :data="data"
-      @done="data = $event"
-    />
+    <EtiquetasSheet v-model:open="sheets.tags" :data="data" @done="paint" />
   </div>
 </template>
 
@@ -402,7 +416,12 @@ import { computed, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Button } from 'frappe-ui'
 import { AppBar, BottomSheet, EmptyState } from '@/components/ui'
-import { bancosApi, errorText, money } from '@/components/bancos/bancos'
+import {
+  LIVE_DOCTYPES,
+  bancosApi,
+  errorText,
+  money,
+} from '@/components/bancos/bancos'
 import AdjuntarSheet from '@/components/dinero/AdjuntarSheet.vue'
 import ConteoCajaSheet from '@/components/dinero/ConteoCajaSheet.vue'
 import CuentasContraBanco from '@/components/dinero/CuentasContraBanco.vue'
@@ -419,13 +438,16 @@ import {
   accountsFor,
   countText,
   effectLines,
+  groupKey,
   journalsOf,
   kindsFor,
   lastCountText,
+  liveKeys,
   ownBalances,
   porExplicarApi,
   stillWaiting,
 } from '@/components/dinero/porExplicar'
+import { useLiveList } from '@/composables/liveList'
 
 const SHOWN_ACCOUNTS = 40
 const LISTS = ['ya', 'facturas']
@@ -458,6 +480,7 @@ const sheet = reactive({
   query: '',
   problem: '',
   tags: [],
+  gone: false,
 })
 let seq = 0
 
@@ -558,6 +581,7 @@ function openSheet(g) {
     tags: [...(g.tags || [])],
     query: '',
     problem: '',
+    gone: false,
   })
 }
 
@@ -585,24 +609,74 @@ function withAccount(h) {
   return { ...h, lines: [...h.lines, `${row.label} ahora: ${now}`] }
 }
 
+let cardsRead = 0
 async function refreshCards() {
   const company = data.value?.company
   if (!company) return
+  const mine = ++cardsRead
   try {
     const answer = await bancosApi('cuentas', { company })
+    if (mine !== cardsRead) return // a later read is on its way
     cards.value = Array.isArray(answer?.cards) ? answer.cards : []
   } catch {
     // the balances are a help; the page works without them
   }
 }
 
+// Every write of the page goes through here: a live read that started before
+// a tap's answer never paints over it, and an open «¿Qué fue?» follows its group.
+let painted = 0
+function paint(page) {
+  painted++
+  data.value = page
+  followSheet()
+}
+
+// The sheet's group as the page reads again: its movements may have changed
+// meanwhile, or been explained from another phone (then nothing is left to save).
+function followSheet() {
+  if (!sheet.open || !sheet.group) return
+  const now = data.value?.groups?.find((g) => g.id === sheet.group.id)
+  if (now) sheet.group = now
+  else if (busy.value !== sheet.group.id) sheet.gone = true // not this sheet's own save
+}
+
+// A change made anywhere else (the bank's import, a teammate, this person's
+// other phone) reads the page again in place: each tap's result stays where it
+// is, and the groups and accounts whose count or amount changed are marked a
+// moment. A failed live read keeps the page as it is.
+async function refresh() {
+  if (!data.value || loading.value) return
+  const at = painted
+  let page
+  try {
+    page = await porExplicarApi('estado', { company: data.value.company })
+  } catch {
+    return
+  }
+  if (at !== painted) return // a tap's answer, newer than this read, is on screen
+  const before = liveKeys(data.value)
+  paint(page)
+  live.mark(before, liveKeys(page))
+  refreshCards()
+}
+
+// Saves by this same person count too: they may come from their other phone.
+// The price is one more read after a tap here, at most every 5 s.
+const live = useLiveList(LIVE_DOCTYPES, refresh, {
+  minIntervalMs: 5000,
+  me: () => '',
+})
+
 async function load() {
   loading.value = true
   error.value = ''
   try {
-    data.value = await porExplicarApi('estado', {
-      company: route.query.empresa || undefined,
-    })
+    paint(
+      await porExplicarApi('estado', {
+        company: route.query.empresa || undefined,
+      }),
+    )
     refreshCards()
   } catch (e) {
     error.value = errorText(e)
@@ -615,7 +689,7 @@ async function load() {
 // page again and say what the books kept. → the names still waiting, or null when unreadable.
 async function reread(sent) {
   try {
-    data.value = await porExplicarApi('estado', { company: data.value.company })
+    paint(await porExplicarApi('estado', { company: data.value.company }))
   } catch {
     return null
   }
@@ -669,7 +743,7 @@ async function explain(g, kind, account, from = null, tags = []) {
       cuenta: account,
       etiquetas: tags?.length ? tags : undefined,
     })
-    data.value = done.estado
+    paint(done.estado)
     const results = done.results || []
     const ok = new Set(
       results.filter((r) => r.ok).flatMap((r) => [r.name, r.twin]),
@@ -741,7 +815,7 @@ async function undo(h) {
       company: data.value.company,
       polizas: entry.journals,
     })
-    data.value = page.estado
+    paint(page.estado)
     hechos.splice(hechos.indexOf(entry), 1)
     refreshCards()
   } catch (e) {
@@ -752,14 +826,14 @@ async function undo(h) {
 }
 
 function spent(done) {
-  data.value = done.estado
+  paint(done.estado)
   cash.text = `Listo: ${fmt(done.amount)} en efectivo, en tus libros.`
   cash.journal = done.journal
   refreshCards()
 }
 
 function counted(done) {
-  data.value = done.estado
+  paint(done.estado)
   const left = data.value.efectivo?.find((c) => c.label === done.label)
   cash.text = left
     ? `Listo: ${done.label} queda en ${fmt(left.balance)}.`
@@ -776,7 +850,7 @@ async function undoCash() {
       company: data.value.company,
       poliza: cash.journal,
     })
-    data.value = page.estado
+    paint(page.estado)
     cash.text = 'Deshecho: el efectivo vuelve a como estaba.'
     cash.journal = ''
     refreshCards()
@@ -816,7 +890,7 @@ async function linkOrPay(rows, key) {
       company: data.value.company,
       pares,
     })
-    data.value = done.estado
+    paint(done.estado)
     const results = new Map((done.results || []).map((r) => [r.name, r]))
     const ok = rows.filter((r) => results.get(r.name)?.ok)
     const failed = [...results.values()].filter((r) => !r.ok)
@@ -888,7 +962,7 @@ async function undoList(key) {
       pares: list.pairs,
       cancelar: list.cancel ? 1 : 0,
     })
-    data.value = page.estado
+    paint(page.estado)
     const undone = new Set(list.pairs.map((p) => p.movimiento))
     Object.assign(list, emptyList(), {
       done: list.done.filter((d) => !undone.has(d.row.name)),

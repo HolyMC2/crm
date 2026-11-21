@@ -3,6 +3,13 @@
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
 
+## 2026-11-20 — Por explicar updates by itself: counts, groups, accounts and cash follow every change, from any phone (lane por-explicar-vivo; not deployed)
+
+- **Why:** Marco: «I want qty and fields to update auto on RT». Bancos and an account's page already followed changes; Por explicar read its numbers only on open and after its own taps, so the bank's import, a teammate or his other phone left it stale.
+- **Change:** `pages/PorExplicar.vue` follows Bank Transaction, Payment Entry, Journal Entry and Sales Invoice (`useLiveList`, at most every 5 s) and reads `estado` and the balances again in place, with no reload and no button. Saves by the same person count too (`me: () => ''`): they may come from their other phone. What each tap did stays where it was; a group or account whose count or amount changed is marked a moment (`porExplicar.liveKeys`, `data-fresh`). Every write goes through `paint`, so a live read that started before a tap's answer never paints over it; the balances' reads keep only the latest. An open «¿Qué fue?» follows its group (its count and button follow); when the group was explained elsewhere the sheet says «Ya no queda nada por explicar aquí: se explicó desde otro lado.» and offers only «Cerrar». A failed live read keeps the page.
+- **Proved:** on the lab through the lane's live preview, two phones as the same person: phone B explained «SAT …» (answer in 0.9 s); phone A, never reloaded, went 287 → 286 movimientos 2.2 s after the tap, the group left and BBVA Debito (24 → 23) was marked; B's «Deshacer» brought A back to 287 in 4.9 s. Two live reads, no reload.
+- **Tests:** `tests/unit/porExplicar.test.js` (+5: the doctypes and same-person saves, a read in place that keeps the tap's result and marks what changed, a stale read never painting over a tap, the sheet following its group and saying when it was explained elsewhere, a failed read keeping the page); removing the stale-read guard or the sheet's follow fails them. Rollback: revert.
+
 ## 2026-11-20 — Etiquetas prints straight to the computer's label printer through Muelle QZ, with no print dialog (lane etiquetas-qz; not deployed)
 
 - **Why:** shops printed labels as a PDF and then from a PDF app, because the browser's dialog was flaky on label paper. A kiosk Chrome (`--kiosk-printing`) sends `window.print()` to its last printer, usually the ticket one.

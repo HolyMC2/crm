@@ -243,6 +243,24 @@ export function accountState(card, waiting, fmt) {
 
 /** After a call that did not answer (the connection dropped, the server failed): which of the
  * movements sent are still waiting on the fresh page. */
+/** A group as a live read compares it: a new count or total reads as new. */
+export function groupKey(g) {
+  return `g:${g.id}|${g.count}|${g.total}`
+}
+
+/** An account of «Tus cuentas contra el banco» as a live read compares it. */
+export function accountKey(a) {
+  return `c:${a.bank_account}|${a.count}|${a.net}`
+}
+
+/** What a live read marks when it changed: every group and account on the page. */
+export function liveKeys(page) {
+  return [
+    ...(page?.groups || []).map(groupKey),
+    ...(page?.cuentas || []).map(accountKey),
+  ]
+}
+
 export function stillWaiting(page, names) {
   const waiting = new Set()
   for (const g of page?.groups || [])

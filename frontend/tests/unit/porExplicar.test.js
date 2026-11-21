@@ -4,7 +4,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick } from 'vue'
 
-const state = vi.hoisted(() => ({ call: vi.fn(), query: {}, push: vi.fn() }))
+const state = vi.hoisted(() => ({
+  call: vi.fn(),
+  query: {},
+  push: vi.fn(),
+  live: null,
+}))
 vi.mock('frappe-ui', async () => {
   const { h } = await import('vue')
   return {
@@ -54,6 +59,21 @@ vi.mock('@/components/ui', async () => {
                 slots.actions?.(),
               ])
             : null,
+    },
+  }
+})
+// The page's live list, driven by hand: `state.live.refresh()` is a change elsewhere.
+vi.mock('@/composables/liveList', async () => {
+  const { ref } = await import('vue')
+  return {
+    useLiveList: (doctypes, refresh, options) => {
+      const fresh = ref(new Set())
+      state.live = { doctypes, refresh, options }
+      return {
+        fresh,
+        mark: (before, after) =>
+          (fresh.value = new Set(after.filter((k) => !before.includes(k)))),
+      }
     },
   }
 })
@@ -905,5 +925,189 @@ describe('PorExplicar page', () => {
     })
     expect(args.content_b64.length).toBeGreaterThan(0)
     expect(state.push).toHaveBeenCalledWith('/captura/CAP-9?return_to=x')
+  })
+})
+
+describe('PorExplicar live', () => {
+  let app
+  let host
+  beforeEach(() => {
+    state.call.mockReset()
+    state.query = {}
+    host = document.createElement('div')
+    document.body.appendChild(host)
+  })
+  afterEach(() => {
+    app?.unmount()
+    host.remove()
+  })
+  const mount = async () => {
+    app = createApp({ render: () => h(PorExplicar) })
+    app.mount(host)
+    await flush()
+  }
+  const button = (text) =>
+    [...host.querySelectorAll('button')].find(
+      (b) => b.textContent.trim() === text,
+    )
+  const withAccounts = (page, cuentas) => ({ ...page, cuentas })
+  const AMEX = {
+    bank_account: 'Amex',
+    label: 'Amex Platinum',
+    ledger: 'Amex - E',
+  }
+  const PETRO_2 = {
+    ...PETRO,
+    count: 2,
+    total: 1079.8,
+    rows: [
+      ...PETRO.rows,
+      {
+        name: 'BT8',
+        date: '2026-11-19',
+        description: 'PETROPLAZAS 4711',
+        amount: 600,
+        twin: null,
+      },
+    ],
+  }
+
+  it('follows every money doctype, saves by this same person too', async () => {
+    state.call.mockImplementation(async () => estado([PETRO]))
+    await mount()
+    expect(state.live.doctypes).toContain('Bank Transaction')
+    expect(state.live.doctypes).toContain('Journal Entry')
+    expect(state.live.doctypes).toContain('Payment Entry')
+    expect(state.live.options.me()).toBe('')
+  })
+
+  it('reads again in place when something changes elsewhere, and marks what changed', async () => {
+    let page = withAccounts(estado([ANTHROPIC, PETRO]), [
+      { ...AMEX, count: 3, net: -7755.09 },
+    ])
+    state.call.mockImplementation(async (method) => {
+      if (method.endsWith('.estado')) return page
+      if (method.endsWith('.explicar'))
+        return {
+          results: [
+            { name: 'BT1', ok: true, journal: 'JV-1', twin: null },
+            { name: 'BT2', ok: true, journal: 'JV-2', twin: null },
+          ],
+          explained: 2,
+          estado: withAccounts(estado([PETRO]), [
+            { ...AMEX, count: 1, net: -479.8 },
+          ]),
+        }
+      if (method.endsWith('.cuentas')) return { cards: [] }
+      throw new Error(method)
+    })
+    await mount()
+    button('Sí, es eso').click()
+    await flush()
+    expect(host.querySelector('[data-por-explicar-hecho]')).not.toBeNull()
+
+    // the bank brings one more PETROPLAZAS movement
+    page = withAccounts(estado([PETRO_2]), [
+      { ...AMEX, count: 2, net: -1079.8 },
+    ])
+    await state.live.refresh()
+    await flush()
+    expect(
+      host.querySelector('[data-por-explicar-hero]').textContent,
+    ).toContain('2 movimientos')
+    // the tap's result stays where it was
+    expect(
+      host.querySelector('[data-por-explicar-hecho]').textContent,
+    ).toContain('ANTHROPIC: 2 movimientos explicados')
+    const petro = host.querySelector('[data-por-explicar-grupo="PETROPLAZAS"]')
+    expect(petro.textContent).toContain('$1,079.80')
+    expect(petro.closest('li').hasAttribute('data-fresh')).toBe(true)
+    const amex = host.querySelector('[data-cuenta-contra-banco="Amex"]')
+    expect(amex.closest('li').hasAttribute('data-fresh')).toBe(true)
+    expect(amex.textContent).toContain('2 movimientos por explicar')
+  })
+
+  it('never paints a live read older than a tap answer over it', async () => {
+    let stale
+    let reads = 0
+    state.call.mockImplementation(async (method) => {
+      if (method.endsWith('.estado')) {
+        reads++
+        if (reads === 1) return estado([ANTHROPIC, PETRO])
+        return new Promise((resolve) => (stale = resolve))
+      }
+      if (method.endsWith('.explicar'))
+        return {
+          results: [
+            { name: 'BT1', ok: true, journal: 'JV-1', twin: null },
+            { name: 'BT2', ok: true, journal: 'JV-2', twin: null },
+          ],
+          explained: 2,
+          estado: estado([PETRO]),
+        }
+      throw new Error(method)
+    })
+    await mount()
+    const reading = state.live.refresh()
+    await flush()
+    button('Sí, es eso').click()
+    await flush()
+    stale(estado([ANTHROPIC, PETRO]))
+    await reading
+    await flush()
+    expect(
+      host.querySelector('[data-por-explicar-grupo="ANTHROPIC"]'),
+    ).toBeNull()
+    expect(host.querySelector('[data-por-explicar-hecho]')).not.toBeNull()
+  })
+
+  it('keeps an open sheet on its group, and says when it was explained elsewhere', async () => {
+    let page = estado([PETRO])
+    state.call.mockImplementation(async (method) => {
+      if (method.endsWith('.estado')) return page
+      throw new Error(method)
+    })
+    await mount()
+    button('¿Qué fue?').click()
+    await flush()
+    host.querySelector('[data-por-explicar-tipo="gasto"]').click()
+    await flush()
+    const save = () => host.querySelector('[data-por-explicar-guardar]')
+    expect(save().textContent).toBe('Explicar 1 movimiento')
+
+    page = estado([PETRO_2])
+    await state.live.refresh()
+    await flush()
+    expect(save().textContent).toBe('Explicar 2 movimientos')
+
+    page = estado([])
+    await state.live.refresh()
+    await flush()
+    expect(
+      host.querySelector('[data-por-explicar-sheet-hecho]').textContent,
+    ).toContain('Ya no queda nada por explicar aquí')
+    expect(save()).toBeNull()
+    button('Cerrar').click()
+    await flush()
+    expect(host.querySelector('[data-por-explicar-sheet]')).toBeNull()
+  })
+
+  it('keeps the page when a live read fails', async () => {
+    let fail = false
+    state.call.mockImplementation(async (method) => {
+      if (method.endsWith('.estado')) {
+        if (fail) throw new Error('offline')
+        return estado([PETRO])
+      }
+      throw new Error(method)
+    })
+    await mount()
+    fail = true
+    await state.live.refresh()
+    await flush()
+    expect(host.querySelector('[data-por-explicar-problem]')).toBeNull()
+    expect(
+      host.querySelector('[data-por-explicar-grupo="PETROPLAZAS"]'),
+    ).not.toBeNull()
   })
 })
