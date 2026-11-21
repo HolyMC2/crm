@@ -3,6 +3,12 @@
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
 
+## 2026-11-20 — «Resumen de ayer»: what yesterday left, each morning on the owner's phone (lane resumen-manana, with taller and posawesome; not deployed)
+
+- **Why:** owners are often away from the counter and had nothing like a morning brief: yesterday's sales, who dropped follow-ups, the cash count, late repairs and what waits for their approval were each on a different screen.
+- **Change:** `crm/morning.py` and `crm.api.morning`. At the owner's hour (an hourly job, `2 * * * *`, checks Hoy's settings; default 8:00 site time) each owner and manager (System Manager, Sales Manager) gets one Notification Log («Resumen de ayer: ventas $12,400 · 3 cosas por atender»), once a day and never when nothing was sold and nothing needs attention. It opens Hoy (`/crm/hoy?resumen=1`) on `MorningSheet.vue`, also on Hoy's Accesos card for owners: Resultados' «Ventas» for yesterday (only for those who see the money), follow-ups due by yesterday still open with the people who hold them, approvals waiting, and what other apps add through the new `muelle_morning_summary` hook (taller: overdue waits, ready and not picked up, delivered with a balance; posawesome: yesterday's cash differences per cashier, registers still open from before today). Each row opens its screen; the rows are read as the person who opens them. The owner turns it off or picks the hour (6–11) in the sheet, or in «Ajustes del negocio» (`FCRM Settings.hoy_settings`: `morning`, `morning_hour`).
+- **Tests:** `crm/tests/test_morning.py` (6), `frontend/tests/unit/morningSheet.test.js` (4).
+
 ## 2026-11-20 — «Datos por persona» under the goals in Equipo › Metas (lane acompanar, with doco, taller and posawesome; not deployed)
 
 - **Change:** `components/metas/PorPersona.vue` (loaded with the page's goals, its own read) shows each person's figure for the chosen facts in the period: a table at a desk, a card per person on a phone, «—» where the person was not judged. «Elegir datos» picks up to 8 facts by group; the choice is each manager's own.
