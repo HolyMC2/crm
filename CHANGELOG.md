@@ -2,6 +2,12 @@
 
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
+## 2026-11-21 — Etiquetas: «Imprimir con el diálogo del sistema» stays open (lane etq-dialogo-sistema; not deployed)
+
+- **Why:** Etiquetas prints its labels from a hidden frame and removed that frame 1.5 s after the browser's print window closed. Chromium's «Print using system dialog» (Chrome, Brave, Edge) closes its preview first and then opens the system dialog for the same frame, so the system dialog closed on its own about a second later. Seen 2026-11-21 in Brave on Windows with a Phomemo M110.
+- **Change:** `printHtml` in `composables/useEtiquetas.js` keeps the frame until the next print, which removes the previous one (`data-etq-print-frame`). Nothing else about printing changes.
+- **Tests:** `frontend/tests/unit/etiquetasImprimir.test.js` (2): the frame outlives the print window by a minute and more; the next print leaves one frame.
+
 ## 2026-11-21 — Equipo › a person's «Tienda»: the owner puts them in a shop and picks what they do there (lane costo-permisos-crm, with doco and mercado; not deployed)
 
 - **Why:** on a tenant with shops, a person who is in no shop sees no stock and no prices. Where a shop shows cost to its managers only, their level there is also part of who sees the cost. Equipo showed neither.

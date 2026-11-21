@@ -466,10 +466,17 @@ export function startFrom(query = {}) {
 
 // ── printing ──────────────────────────────────────────────────────────
 
+const PRINT_FRAME = 'data-etq-print-frame'
+
 /**
  * Prints an HTML document from a hidden frame (no pop-up for a blocker to
  * stop). Resolves `{ ok: true }` once the print dialog closed, or
  * `{ ok: false, reason }` when this browser cannot print.
+ *
+ * The frame stays until the next print. Chromium's «Print using system
+ * dialog» closes its preview first (print() returns, afterprint fires) and
+ * then opens the system dialog for the same frame; removing the frame then
+ * closes that dialog.
  */
 export function printHtml(html, { doc = globalThis.document } = {}) {
   return new Promise((resolve) => {
@@ -477,7 +484,11 @@ export function printHtml(html, { doc = globalThis.document } = {}) {
       resolve({ ok: false, reason: 'Este navegador no puede imprimir.' })
       return
     }
+    for (const previous of doc.querySelectorAll(`iframe[${PRINT_FRAME}]`)) {
+      previous.remove()
+    }
     const frame = doc.createElement('iframe')
+    frame.setAttribute(PRINT_FRAME, '')
     frame.setAttribute('aria-hidden', 'true')
     frame.setAttribute('tabindex', '-1')
     frame.style.cssText =
@@ -487,7 +498,6 @@ export function printHtml(html, { doc = globalThis.document } = {}) {
       if (settled) return
       settled = true
       resolve(answer)
-      setTimeout(() => frame.remove(), 1500)
     }
     frame.addEventListener('load', () => {
       const win = frame.contentWindow
