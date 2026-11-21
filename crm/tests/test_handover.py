@@ -97,6 +97,14 @@ class TestHandoverSections(HandoverCase):
 		if frappe.get_meta("ToDo").has_field(handover.OWNER_ASSIGNMENT):
 			self.assertNotIn("Asignación para CRM Deal X", titles)
 
+	def test_a_todo_with_notes_hands_over_its_title_only(self):
+		self.todo(self.closer, "<p>Enviar cotización a Ana</p><p>Precio con descuento de mayoreo</p>")
+		frappe.set_user(self.closer)
+		with patch.object(handover, "_paths", return_value=[]):
+			built = {section["key"]: section for section in handover.sections()}
+		titles = [row["title"] for row in built["pendientes"]["rows"]]
+		self.assertIn("Enviar cotización a Ana", titles)
+
 	def test_an_app_that_fails_costs_only_its_own_section(self):
 		self.todo(self.closer, "Cerrar caja")
 		frappe.set_user(self.closer)

@@ -19,6 +19,7 @@ The owner switches the handover off from the sheet itself
 
 import datetime
 import json
+import re
 
 import frappe
 from frappe import _
@@ -328,9 +329,16 @@ def _dto(doc, full: bool = False) -> dict | None:
 
 
 def _first_line(text) -> str:
+	"""A ToDo's title: its first line, as Pendientes shows it (paragraphs and checklist stay out)."""
+	try:
+		from doco.pendientes.tarea import split_todo
+	except ImportError:
+		split_todo = None
+	if split_todo:
+		return cstr(split_todo(text)[0]).strip()[:140]
 	from frappe.utils import strip_html
 
-	plain = strip_html(cstr(text)).strip()
+	plain = strip_html(re.sub(r"(?i)<br\s*/?>|</(p|div|li)>", "\n", cstr(text))).strip()
 	return (plain.splitlines() or [""])[0][:140]
 
 
