@@ -16,16 +16,14 @@ const HOT_CHUNKS = [
 ]
 
 // On a phone or a slow line only the view a tap on the current list opens is
-// warmed: the deal from Deals, the conversation from Inbox (its header and its
-// thread, with DealWorkspace's specifiers; «Datos y contacto» loads when it
-// opens). The full set is about 60 files, 400-475 KB, competing with that tap
-// (F22).
+// warmed: the deal from Deals, the conversation's thread from Inbox («Datos y
+// contacto» loads when it opens). The full set is about 60 files, 400-475 KB,
+// competing with that tap (F22). It names only specifiers HOT_CHUNKS imports
+// too, because a new dynamic import here regroups the chunks and grows the
+// entry.
 const NEXT_VIEW = {
-  Deals: [() => import('@/pages/Deal360.vue')],
-  Inbox: [
-    () => import('@/components/doco/inbox/DealHeader.vue'),
-    () => import('@/components/Activities/Activities.vue'),
-  ],
+  Deals: () => import('@/pages/Deal360.vue'),
+  Inbox: () => import('@/components/Activities/Activities.vue'),
 }
 
 const SLOW_LINES = new Set(['slow-2g', '2g', '3g'])
@@ -99,8 +97,10 @@ export function prefetchHotChunks(router, { delay = PREFETCH_DELAY_MS } = {}) {
   setTimeout(
     () =>
       idle(() => {
-        if (constrainedLine())
-          chunks = NEXT_VIEW[router?.currentRoute?.value?.name] || []
+        if (constrainedLine()) {
+          const view = NEXT_VIEW[router?.currentRoute?.value?.name]
+          chunks = view ? [view] : []
+        }
         next()
       }),
     delay,

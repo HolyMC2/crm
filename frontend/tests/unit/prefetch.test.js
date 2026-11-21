@@ -9,7 +9,6 @@ const CHUNKS = {
   '@/pages/DealsView.vue': 'DealsView',
   '@/components/Activities/Activities.vue': 'Activities',
   '@/components/doco/inbox/DealContextPanel.vue': 'DealContextPanel',
-  '@/components/doco/inbox/DealHeader.vue': 'DealHeader',
 }
 
 // A fresh module registry and fresh mocks per test, so every dynamic import
@@ -107,7 +106,7 @@ describe('prefetchHotChunks', () => {
     phone(true)
     prefetchHotChunks(on('Inbox'), { delay: 10 })
     await vi.advanceTimersByTimeAsync(30000)
-    expect(loaded).toEqual(['DealHeader', 'Activities'])
+    expect(loaded).toEqual(['Activities'])
   })
 
   it('warms nothing on a phone elsewhere', async () => {
