@@ -1052,6 +1052,13 @@ const routes = [
     meta: d12({ app: 'documentos', title: 'Correo' }),
   },
   {
+    // «Ajustes del negocio»: every switch the owner may change (crm.business_settings).
+    path: '/negocio',
+    name: 'AjustesNegocio',
+    component: () => import('@/pages/AjustesNegocio.vue'),
+    meta: { title: 'Ajustes del negocio' },
+  },
+  {
     path: '/impresion',
     name: 'Impresion',
     component: () => import('@/pages/Impresion.vue'),

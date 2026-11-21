@@ -50470,3 +50470,50 @@ msgstr "Mostrar estos datos"
 
 msgid "These facts could not load."
 msgstr "No se pudieron cargar estos datos."
+msgid "Business settings"
+msgstr "Ajustes del negocio"
+
+msgid "Search a setting"
+msgstr "Buscar un ajuste"
+
+msgid "Every other switch ({0})"
+msgstr "Todos los demás interruptores ({0})"
+
+msgid "Each app’s own settings, with their own words. Change one when you know what it does."
+msgstr "Los ajustes de cada app, con sus propias palabras. Cambia uno cuando sepas qué hace."
+
+msgid "No setting matches «{0}»."
+msgstr "Ningún ajuste coincide con «{0}»."
+
+msgid "The settings could not open. Try again."
+msgstr "No se pudieron abrir los ajustes. Vuelve a intentar."
+
+msgid "It did not change. Try again."
+msgstr "No cambió. Vuelve a intentar."
+
+msgid "Sales and prospects"
+msgstr "Ventas y prospectos"
+
+msgid "Hoy and pendientes"
+msgstr "Hoy y pendientes"
+
+msgid "That setting does not exist."
+msgstr "Ese ajuste no existe."
+
+msgid "Only who may change {0} turns this on or off."
+msgstr "Solo quien puede cambiar {0} lo prende o lo apaga."
+
+msgid "How you register prospects"
+msgstr "Cómo registras prospectos"
+
+msgid "What the prospect form asks, Consultas, the first follow-up and the origins."
+msgstr "Lo que pide el alta de prospectos, Consultas, el primer seguimiento y los orígenes."
+
+msgid "Turned on: {0}"
+msgstr "Prendido: {0}"
+
+msgid "Turned off: {0}"
+msgstr "Apagado: {0}"
+
+msgid "Other settings"
+msgstr "Otros ajustes"

@@ -541,3 +541,6 @@ standard_dropdown_items = [
 		"is_standard": 1,
 	},
 ]
+
+# «Ajustes del negocio» (crm.business_settings): crm's own rows; other apps add theirs.
+muelle_business_settings = ["crm.business_settings.crm_rows"]

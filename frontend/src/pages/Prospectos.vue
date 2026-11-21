@@ -546,6 +546,22 @@ function openSettings() {
   settingsMounted.value = true
   settingsOpen.value = true
 }
+// «Ajustes del negocio» links here with ?ajustes=1: the sheet opens and the
+// address is left clean, so back and a reload do not open it again.
+watch(
+  () => route.query.ajustes,
+  (value) => {
+    if (!value) return
+    const query = { ...route.query }
+    delete query.ajustes
+    // The URL first: the kit closes open sheets on a navigation (sheetHistory).
+    router
+      .replace({ query })
+      .catch(() => {})
+      .then(openSettings)
+  },
+  { immediate: true },
+)
 
 const scroller = ref(null)
 const wide = useTableWidth(scroller)

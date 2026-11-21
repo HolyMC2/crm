@@ -344,6 +344,20 @@
               />
               {{ __('Ventas settings') }}
             </button>
+            <!-- «Ajustes del negocio»: every switch the owner may change, in one place. -->
+            <RouterLink
+              v-if="user.is_admin || user.nav_role === 'dueno'"
+              to="/negocio"
+              :class="ROW"
+              data-testid="more-negocio"
+              @click="close"
+            >
+              <span
+                class="lucide-sliders-horizontal size-4 text-ink-gray-6"
+                aria-hidden="true"
+              />
+              {{ __('Business settings') }}
+            </RouterLink>
             <!-- Shell D12: the owner's print formats; scripts only at a desk. -->
             <RouterLink
               v-if="user.is_admin"
