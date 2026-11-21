@@ -6,7 +6,7 @@ Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` i
 ## 2026-11-21 — Fidelidad's promotions read whole on a phone; a promotion's end is a day (lane promos-filas, with lane promos-en-todo; not deployed)
 
 - **Rows:** a promotion's second line («50 % · Fundas y Carcasas · Hasta el 30 nov») wraps to two lines on a phone instead of being cut.
-- **Words:** a promotion's end reads «Hasta el 30 nov» (context `Promotion end`); the shared «Until {0}» is Agenda's hour, «Hasta las …». «Nueva promoción» says a product or category promotion goes «sola en caja y en la tienda en línea»: doco now makes it a price rule (lane promos-en-todo). The whole ticket stays «sola en caja».
+- **Words:** a promotion's end reads «Hasta el 30 nov» (context `Promotion end`) and «Terminó el 20 nov», always a date (never «Terminó el ayer»); one promotion's state chip and toast are singular («En curso», «Terminada», context `Promotion state`), not the plural tab; a price rule's detail says «Se aplica sola en caja y en la tienda en línea»; the shared «Until {0}» is Agenda's hour, «Hasta las …». «Nueva promoción» says a product or category promotion goes «sola en caja y en la tienda en línea»: doco now makes it a price rule (lane promos-en-todo). The whole ticket stays «sola en caja».
 
 ## 2026-11-21 — crm builds on Vite 8: each crm land and image bake spends less than half the CPU on the frontend build (lane crm-vite8; not deployed)
 

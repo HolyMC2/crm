@@ -66,13 +66,18 @@ export function offerWhen(offer) {
   if (offer.state === 'scheduled')
     return __('Starts {0}', [formatDate(offer.valid_from)])
   if (offer.state === 'ended')
-    return __('Ended {0}', [formatDate(offer.valid_upto)])
+    // A date, never «Terminó el ayer».
+    return __('Ended {0}', [formatDate(offer.valid_upto, { relative: false })])
   if (!offer.valid_upto) return __('No end date')
   if (offer.ends_in === 0) return __('Ends today')
   if (offer.ends_in === 1) return __('Ends tomorrow')
   if (offer.ending_soon) return __('Ends in {0} days', [offer.ends_in])
   // A day, not a time: «Hasta el 30 nov» (Agenda's «Until {0}» is an hour).
-  return __('Until {0}', [formatDate(offer.valid_upto)], 'Promotion end')
+  return __(
+    'Until {0}',
+    [formatDate(offer.valid_upto, { relative: false })],
+    'Promotion end',
+  )
 }
 
 export const OFFER_STATES = Object.freeze({
@@ -85,7 +90,8 @@ export const OFFER_STATES = Object.freeze({
 export function offerChip(offer) {
   if (offer?.ending_soon) return { label: __('Ends soon'), tone: 'warning' }
   const state = OFFER_STATES[offer?.state] || OFFER_STATES.ended
-  return { label: __(state.label), tone: state.tone }
+  // One promotion's state («Terminada»), not the plural tab («Terminadas»).
+  return { label: __(state.label, null, 'Promotion state'), tone: state.tone }
 }
 
 /** The discount as a table's figure, with what it is under it. */
@@ -187,8 +193,10 @@ export function groupLine(group) {
 
 /** How it reaches the ticket: by itself, or with a coupon. */
 export function offerHow(offer) {
-  return offer?.coupon_based
-    ? __('With a coupon')
+  if (offer?.coupon_based) return __('With a coupon')
+  // A price rule (doco.fidelidad.reglas) is priced by the online store too.
+  return String(offer?.name || '').startsWith('rule:')
+    ? __('Applies by itself at the register and in the online store')
     : __('Applies by itself at the register')
 }
 

@@ -219,7 +219,7 @@ async function change(action, until) {
     const said = {
       pause: __('Paused'),
       resume: __('Running again'),
-      end: __('Ended'),
+      end: __('Ended', null, 'Promotion state'),
       extend: __('Extended'),
     }[action]
     toast.success(`${said}: ${detail.value.title}`)

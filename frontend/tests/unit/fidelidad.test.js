@@ -58,6 +58,10 @@ describe('Fidelidad words', () => {
       ends_in: 31,
     })
     expect(later).toContain('Until')
+    // An end is a date: never «Terminó el ayer».
+    expect(offerWhen({ state: 'ended', valid_upto: '2026-10-29' })).not.toMatch(
+      /ayer|hoy/,
+    )
     expect(offerChip({ state: 'live', ending_soon: true })).toEqual({
       label: 'Ends soon',
       tone: 'warning',
@@ -232,6 +236,19 @@ describe('the new promotion sheet', () => {
     expect(text).toContain('Fundas')
     expect(text).toContain('with no end date')
     expect(text).toContain('with a coupon')
+  })
+
+  it('says a price rule applies at the register and in the online store', async () => {
+    const { offerHow } = await import('@/composables/fidelidad')
+    expect(offerHow({ name: 'rule:PRLE-1' })).toBe(
+      'Applies by itself at the register and in the online store',
+    )
+    expect(offerHow({ name: 'Cupón de Facebook' })).toBe(
+      'Applies by itself at the register',
+    )
+    expect(offerHow({ name: 'rule:PRLE-1', coupon_based: true })).toBe(
+      'With a coupon',
+    )
   })
 
   it('says a product or category promotion reaches the online store too, the whole ticket only the register', () => {

@@ -50666,3 +50666,27 @@ msgstr "Hasta el {0}"
 #: frontend/src/composables/fidelidad.js
 msgid "by itself at the register and in the online store"
 msgstr "sola en caja y en la tienda en línea"
+
+#: frontend/src/composables/fidelidad.js
+msgctxt "Promotion state"
+msgid "Running"
+msgstr "En curso"
+
+#: frontend/src/composables/fidelidad.js
+msgctxt "Promotion state"
+msgid "Scheduled"
+msgstr "Programada"
+
+#: frontend/src/composables/fidelidad.js
+msgctxt "Promotion state"
+msgid "Paused"
+msgstr "En pausa"
+
+#: frontend/src/composables/fidelidad.js
+msgctxt "Promotion state"
+msgid "Ended"
+msgstr "Terminada"
+
+#: frontend/src/composables/fidelidad.js
+msgid "Applies by itself at the register and in the online store"
+msgstr "Se aplica sola en caja y en la tienda en línea"
