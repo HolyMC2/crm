@@ -32,6 +32,9 @@ ROW_LIMIT = 8
 NOTE_LIMIT = 1000
 VISIBLE_HOURS = 24
 OPEN_TASKS = ("Backlog", "Todo", "In Progress")
+# Hidden ToDo fields doco adds: a record's owner mark, and a decision asked of someone.
+OWNER_ASSIGNMENT = "crm_owner_assignment"
+APPROVAL_FIELD = "doco_approval"
 
 
 # ── settings ────────────────────────────────────────────────────────────────
@@ -133,7 +136,7 @@ def _own_pendientes(user) -> dict | None:
 	if frappe.has_permission("ToDo", "read"):
 		todos = frappe.get_list(
 			"ToDo",
-			filters={"allocated_to": user, "status": "Open", "date": ["<=", today]},
+			filters=_work_todos(user, today),
 			fields=["name", "description", "date", "reference_type", "reference_name"],
 			order_by="date asc",
 			limit=ROW_LIMIT + 1,
@@ -150,7 +153,13 @@ def _own_pendientes(user) -> dict | None:
 	if frappe.db.exists("DocType", "CRM Task") and frappe.has_permission("CRM Task", "read"):
 		tasks = frappe.get_list(
 			"CRM Task",
-			filters={"assigned_to": user, "status": ["in", OPEN_TASKS], "due_date": ["<=", end]},
+			filters=[
+				["assigned_to", "=", user],
+				["status", "in", OPEN_TASKS],
+				# Frappe reads a missing date as the earliest one: an undated task is not due.
+				["due_date", "is", "set"],
+				["due_date", "<=", end],
+			],
 			fields=["name", "title", "due_date"],
 			order_by="due_date asc",
 			limit=ROW_LIMIT + 1,
@@ -166,6 +175,24 @@ def _own_pendientes(user) -> dict | None:
 		"count": min(count, ROW_LIMIT * 2),
 		"rows": rows[:ROW_LIMIT],
 	}
+
+
+def _work_todos(user, today) -> list:
+	"""My open ToDos due by today that are work, as Pendientes counts them: not the
+	mirror of a sales task, not a record's owner mark, not a decision someone asked of me."""
+	meta = frappe.get_meta("ToDo")
+	filters = [
+		["allocated_to", "=", user],
+		["status", "=", "Open"],
+		["date", "is", "set"],
+		["date", "<=", today],
+		["reference_type", "!=", "CRM Task"],
+	]
+	if meta.has_field(OWNER_ASSIGNMENT):
+		filters.append([OWNER_ASSIGNMENT, "!=", 1])
+	if meta.has_field(APPROVAL_FIELD):
+		filters.append([APPROVAL_FIELD, "is", "not set"])
+	return filters
 
 
 def _tomorrow(user) -> dict | None:

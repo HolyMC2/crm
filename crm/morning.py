@@ -75,17 +75,31 @@ def _sales(day) -> list[dict]:
 	charged = card.get("charged") or {}
 	value = charged.get("value", card.get("value"))
 	currency = answer.get("currency")
-	facts = charged.get("facts") or card.get("facts") or []
+	facts = [_fact_text(fact, currency) for fact in (charged.get("facts") or card.get("facts") or [])]
 	return [
 		{
 			"key": "ventas",
 			"title": _("Yesterday's sales"),
 			"value": fmt_money(value or 0, precision=0, currency=currency),
-			"detail": " · ".join(str(fact) for fact in facts[:2]),
+			"detail": " · ".join(fact for fact in facts[:2] if fact),
 			"to": (card.get("drill") or {}).get("to") or "/resultados?periodo=ayer",
 			"attention": False,
 		}
 	]
+
+
+def _fact_text(fact, currency) -> str:
+	"""A Resultados fact ({label, value, format}) in words: «Tickets 14», «Sin IVA $10,690»."""
+	if not isinstance(fact, dict):
+		return str(fact or "")
+	value = fact.get("value")
+	if fact.get("format") == "money":
+		shown = fmt_money(value or 0, precision=0, currency=currency)
+	elif isinstance(value, float) and value.is_integer():
+		shown = str(int(value))
+	else:
+		shown = str(value if value is not None else "")
+	return f"{fact.get('label') or ''} {shown}".strip()
 
 
 def _follow_ups(day) -> list[dict]:
@@ -95,7 +109,12 @@ def _follow_ups(day) -> list[dict]:
 	end = datetime.datetime.combine(day, datetime.time.max)
 	tasks = frappe.get_list(
 		"CRM Task",
-		filters={"status": ["in", ("Backlog", "Todo", "In Progress")], "due_date": ["<=", end]},
+		filters=[
+			["status", "in", ("Backlog", "Todo", "In Progress")],
+			# Frappe reads a missing date as the earliest one: an undated task is not overdue.
+			["due_date", "is", "set"],
+			["due_date", "<=", end],
+		],
 		fields=["assigned_to"],
 		limit=2000,
 	)

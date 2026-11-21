@@ -83,6 +83,20 @@ class TestHandoverSections(HandoverCase):
 		self.assertNotIn("Mañana no cuenta", mine)
 		self.assertIn("Avisar equipo listo", built["manana"]["rows"][0]["title"])
 
+	def test_undated_work_and_owner_marks_are_not_handed_over(self):
+		undated = self.todo(self.closer, "Algún día")
+		frappe.db.set_value("ToDo", undated.name, "date", None)
+		mark = self.todo(self.closer, "Asignación para CRM Deal X")
+		if frappe.get_meta("ToDo").has_field(handover.OWNER_ASSIGNMENT):
+			frappe.db.set_value("ToDo", mark.name, handover.OWNER_ASSIGNMENT, 1)
+		frappe.set_user(self.closer)
+		with patch.object(handover, "_paths", return_value=[]):
+			built = {section["key"]: section for section in handover.sections()}
+		titles = [row["title"] for row in built.get("pendientes", {}).get("rows", [])]
+		self.assertNotIn("Algún día", titles)
+		if frappe.get_meta("ToDo").has_field(handover.OWNER_ASSIGNMENT):
+			self.assertNotIn("Asignación para CRM Deal X", titles)
+
 	def test_an_app_that_fails_costs_only_its_own_section(self):
 		self.todo(self.closer, "Cerrar caja")
 		frappe.set_user(self.closer)

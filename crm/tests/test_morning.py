@@ -112,3 +112,12 @@ class TestMorning(IntegrationTestCase):
 
 	def test_yesterday_is_the_day_before_in_site_time(self):
 		self.assertEqual(morning.yesterday(), getdate(add_days(nowdate(), -1)))
+
+	def test_a_resultados_fact_reads_in_words(self):
+		self.assertEqual(
+			morning._fact_text({"label": "Tickets", "value": 14.0, "format": "count"}, "MXN"), "Tickets 14"
+		)
+		self.assertIn(
+			"10,690", morning._fact_text({"label": "Sin IVA", "value": 10690, "format": "money"}, "MXN")
+		)
+		self.assertEqual(morning._fact_text("ya en palabras", "MXN"), "ya en palabras")
