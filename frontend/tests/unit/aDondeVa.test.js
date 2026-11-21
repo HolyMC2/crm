@@ -75,6 +75,10 @@ vi.mock('vue-router', async () => {
     useRouter: () => ({ replace: state.replace }),
   }
 })
+// TuDinero carries Por explicar, which follows changes live; here nothing changes.
+vi.mock('@/composables/liveList', () => ({
+  useLiveList: () => ({ fresh: { value: new Set() }, mark: () => {} }),
+}))
 
 import {
   barWidths,
