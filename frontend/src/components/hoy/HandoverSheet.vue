@@ -202,7 +202,10 @@ async function give() {
     emit('done', answer)
     emit('close')
   } catch (error) {
-    problem.value = errorText(error, __('The handover was not saved. Try again.'))
+    problem.value = errorText(
+      error,
+      __('The handover was not saved. Try again.'),
+    )
   } finally {
     busy.value = false
   }
@@ -219,7 +222,10 @@ async function setEnabled(value) {
     await read()
   } catch (error) {
     state.value = { ...state.value, enabled: before }
-    problem.value = errorText(error, __('The handover was not saved. Try again.'))
+    problem.value = errorText(
+      error,
+      __('The handover was not saved. Try again.'),
+    )
   } finally {
     busy.value = false
   }
