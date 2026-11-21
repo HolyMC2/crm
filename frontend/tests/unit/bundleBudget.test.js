@@ -8,6 +8,7 @@ import {
   ROUTE_BUDGET,
   chunkFor,
   currentFiles,
+  rangeMediaQueries,
   routeLoad,
 } from '../../scripts/verify-bundle-budget.mjs'
 
@@ -90,5 +91,27 @@ describe('bundle budget', () => {
     )
     expect(ROUTE_BUDGET).toEqual({ files: 60, bytes: 2.5 * 1024 * 1024 })
     expect(ADMIN_SCREENS).toContain('FormBuilder')
+  })
+})
+
+describe('browser floor', () => {
+  it('flags media queries in range syntax', () => {
+    const css =
+      '@media (width>=640px){.sm\\:flex{display:flex}}' +
+      '@media (640px<=width<=767px){.a{color:red}}' +
+      '@media (height < 500px){.b{color:red}}'
+    expect(rangeMediaQueries(css)).toEqual([
+      '@media (width>=640px)',
+      '@media (640px<=width<=767px)',
+      '@media (height < 500px)',
+    ])
+  })
+
+  it('passes min-width and max-width queries and child selectors', () => {
+    const css =
+      '@media (min-width:640px){.a>.b{display:flex}}' +
+      '@media not all and (max-width:767px){.c>*{margin:0}}' +
+      '.d>.e{color:red}'
+    expect(rangeMediaQueries(css)).toEqual([])
   })
 })

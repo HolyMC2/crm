@@ -1,5 +1,6 @@
 import { defineConfig } from 'vitest/config'
 import vue from '@vitejs/plugin-vue'
+import vueJsx from '@vitejs/plugin-vue-jsx'
 import path from 'path'
 import { lucideSubset } from './scripts/lucide-subset.mjs'
 
@@ -15,9 +16,9 @@ const stubIcons = {
 }
 
 export default defineConfig({
-  // SFC transform for component tests (doco/forms renderer); pure-JS unit
-  // tests are unaffected.
-  plugins: [vue(), stubIcons, lucideSubset()],
+  // SFC and JSX transforms for component tests, as the build compiles them
+  // (src/utils/dialogs.jsx); pure-JS unit tests are unaffected.
+  plugins: [vue(), vueJsx(), stubIcons, lucideSubset()],
   test: {
     globals: true,
     environment: 'happy-dom',

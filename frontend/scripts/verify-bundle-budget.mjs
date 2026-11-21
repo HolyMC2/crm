@@ -6,6 +6,9 @@
 //     route has one, and the page — ≤ 60 script files and ≤ 2.5 MB of JS.
 //     Admin screens (forms, automations, score rules, social, campaigns,
 //     webshop, workload) never load on a daily route.
+//  3. Browser floor (vite.config.js BROWSERS): no stylesheet has a media query
+//     in range syntax (`width>=640px`), which Safari before 16.4 and Chrome
+//     before 104 never match.
 // `node scripts/verify-bundle-budget.mjs [outDir] [--report]` prints every
 // route; a failure names the route and the files that grew it.
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
@@ -108,6 +111,11 @@ export function routeLoad(dir, entry, files, components) {
   return { files: js, bytes, admin }
 }
 
+/** The `@media` preludes of a stylesheet that compare with `<` or `>`. */
+export function rangeMediaQueries(css) {
+  return [...css.matchAll(/@media[^{]*[<>][^{]*/g)].map((m) => m[0].trim())
+}
+
 function main() {
   const html = readFileSync(join(output, 'index.html'), 'utf8')
   const gz = (file) =>
@@ -128,6 +136,13 @@ function main() {
   if (css > BUDGET.css) failures.push(`CSS ${kb(css)} gzip > ${kb(BUDGET.css)}`)
 
   const files = currentFiles(output)
+  for (const file of files.filter((name) => name.endsWith('.css'))) {
+    const ranges = rangeMediaQueries(readFileSync(join(output, file), 'utf8'))
+    if (ranges.length)
+      failures.push(
+        `${file} has ${ranges.length} media queries in range syntax (${ranges.slice(0, 2).join(', ')}); keep build.target at BROWSERS`,
+      )
+  }
   const lines = []
   for (const [route, components] of Object.entries(DAILY_ROUTES)) {
     let load

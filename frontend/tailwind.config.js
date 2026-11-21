@@ -55,8 +55,8 @@ export default {
   // (table heads, eyebrows, legacy FCRM chips) and frappe-ui's own in one
   // place; text that must read in capitals is written in capitals.
   // `[-:T]`: the regex /[-:T]/g in composables/useArchivos.js reads to the
-  // extractor as an arbitrary property, and Lightning CSS (Vite's CSS
-  // minifier) rejects the invalid `-:T` declaration it would generate.
+  // extractor as an arbitrary property; it would generate an invalid `-:T`
+  // declaration, which Lightning CSS rejects outright.
   blocklist: ['prose-xl', 'prose-2xl', 'uppercase', '[-:T]'],
   theme: {
     extend: {

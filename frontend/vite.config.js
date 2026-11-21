@@ -10,6 +10,14 @@ import { versionJson } from './scripts/version-json.mjs'
 
 const STYLES = /\.(css|scss|sass|less|styl|stylus|pcss|postcss|sss)(\?|$)/
 
+// The browsers crm has supported since Vite 5 (its 'modules' default). Vite 8
+// defaults to Safari 16.4 / Chrome 111: its JS stops lowering syntax older
+// Safari lacks, and Lightning CSS minifies `min-width`/`max-width` into range
+// syntax (`width>=640px`), which Safari before 16.4 and Chrome before 104
+// ignore, so phones on iOS 15 lose every breakpoint.
+// scripts/verify-bundle-budget.mjs fails a build that ships range syntax.
+const BROWSERS = ['es2020', 'edge88', 'firefox78', 'chrome87', 'safari14']
+
 // https://vitejs.dev/config/
 export default defineConfig(async () => {
   // Deploy-safe chunks: keep the previous builds' assets (scripts/retain-builds.mjs).
@@ -164,6 +172,11 @@ export default defineConfig(async () => {
       ],
     },
     build: {
+      target: BROWSERS,
+      // esbuild minifies CSS as Vite 5 did. Lightning CSS at these targets
+      // adds lab() and display-p3 fallbacks under @supports to every oklch
+      // colour: the global stylesheet grows from 66 to 94 KB gzip.
+      cssMinify: 'esbuild',
       rolldownOptions: {
         output: {
           codeSplitting: {
