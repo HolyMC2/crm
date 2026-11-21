@@ -232,8 +232,32 @@ describe('the shop helpers', () => {
     })
     expect(shopPreselect(view)).toBe('DOCO-CENTRO')
     expect(shopLevelFor(view, 'DOCO-NORTE')).toBe('User')
-    expect(shopLevelFor(tiendas({ grants: [grant(NORTE, { level: 'Region Manager' })] }), 'DOCO-NORTE')).toBe('Region Manager')
-    expect(shopRegions(tiendas({ regions: [{ territory: 'Sur', label: 'Sur', level: 'Region Manager', enabled: true }, { territory: 'Norte', label: 'Norte', level: 'Region Manager', enabled: false }] })).map((r) => r.label)).toEqual(['Sur'])
+    expect(
+      shopLevelFor(
+        tiendas({ grants: [grant(NORTE, { level: 'Region Manager' })] }),
+        'DOCO-NORTE',
+      ),
+    ).toBe('Region Manager')
+    expect(
+      shopRegions(
+        tiendas({
+          regions: [
+            {
+              territory: 'Sur',
+              label: 'Sur',
+              level: 'Region Manager',
+              enabled: true,
+            },
+            {
+              territory: 'Norte',
+              label: 'Norte',
+              level: 'Region Manager',
+              enabled: false,
+            },
+          ],
+        }),
+      ).map((r) => r.label),
+    ).toEqual(['Sur'])
     expect(spanish('Runs the region {0}')).toBe('Encarga la región {0}')
   })
 })
@@ -447,15 +471,26 @@ describe('Tienda on a person', () => {
       'Jessica Cajera runs every shop as the owner.',
     )
     // The reason is the row's text: no «Sin tienda» beside «sees every shop».
-    expect(words(row(root))).not.toContain('No shop: does not see stock or prices')
+    expect(words(row(root))).not.toContain(
+      'No shop: does not see stock or prices',
+    )
   })
 
   it('a region manager reads «Encarga la región», not «Sin tienda»', async () => {
     state.person.tiendas = tiendas({
-      regions: [{ territory: 'Sur', label: 'Sur', level: 'Region Manager', enabled: true }],
+      regions: [
+        {
+          territory: 'Sur',
+          label: 'Sur',
+          level: 'Region Manager',
+          enabled: true,
+        },
+      ],
     })
     const root = await mount()
     expect(words(row(root))).toContain('Runs the region Sur')
-    expect(words(row(root))).not.toContain('No shop: does not see stock or prices')
+    expect(words(row(root))).not.toContain(
+      'No shop: does not see stock or prices',
+    )
   })
 })

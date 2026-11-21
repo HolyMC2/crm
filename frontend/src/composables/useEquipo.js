@@ -928,7 +928,8 @@ export function shopPreselect(tiendas) {
 /** The level offered first for a shop: a grant's that is on (or one handed out here), else «Vende y cobra». */
 export function shopLevelFor(tiendas, shop) {
   const grant = shopGrant(tiendas, shop)
-  if (grant && (grant.enabled || SHOP_LEVELS.includes(grant.level))) return grant.level || 'User'
+  if (grant && (grant.enabled || SHOP_LEVELS.includes(grant.level)))
+    return grant.level || 'User'
   return 'User'
 }
 

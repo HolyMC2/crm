@@ -239,11 +239,13 @@ const confirmingRemove = ref(false)
 const shops = computed(() => props.tiendas?.shops || [])
 const grant = computed(() => shopGrant(props.tiendas, shop.value))
 const levels = computed(() =>
-  shopLevelChoices(grant.value?.enabled ? grant.value.level : null).map((value) => ({
-    value,
-    label: shopLevelLabel(value),
-    hint: shopLevelHint(value),
-  })),
+  shopLevelChoices(grant.value?.enabled ? grant.value.level : null).map(
+    (value) => ({
+      value,
+      label: shopLevelLabel(value),
+      hint: shopLevelHint(value),
+    }),
+  ),
 )
 const shopLabel = computed(
   () =>
