@@ -69,7 +69,7 @@ class TestMorning(IntegrationTestCase):
 	def test_the_notice_says_sales_and_what_needs_attention_once_a_day(self):
 		user = self.owner()
 		found = [row("ventas", attention=False, title="Ventas de ayer"), row("a"), row("b")]
-		found[0]["value"] = "$12,400"
+		found[0].update(value="$12,400", amount=12400.0)
 		with patch.object(morning, "rows", return_value=found):
 			self.assertTrue(morning.send(user, morning.yesterday()))
 			self.assertFalse(morning.send(user, morning.yesterday()))
@@ -80,7 +80,8 @@ class TestMorning(IntegrationTestCase):
 
 	def test_nothing_to_say_sends_nothing(self):
 		user = self.owner()
-		with patch.object(morning, "rows", return_value=[]):
+		quiet = [{**row("ventas", attention=False), "value": "$0", "amount": 0.0}]
+		with patch.object(morning, "rows", return_value=quiet):
 			self.assertFalse(morning.send(user, morning.yesterday()))
 		self.assertFalse(frappe.get_all("Notification Log", filters={"for_user": user}))
 

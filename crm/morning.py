@@ -81,6 +81,7 @@ def _sales(day) -> list[dict]:
 			"key": "ventas",
 			"title": _("Yesterday's sales"),
 			"value": fmt_money(value or 0, precision=0, currency=currency),
+			"amount": float(value or 0),
 			"detail": " · ".join(fact for fact in facts[:2] if fact),
 			"to": (card.get("drill") or {}).get("to") or "/resultados?periodo=ayer",
 			"attention": False,
@@ -218,7 +219,7 @@ def send(user: str, day: datetime.date) -> bool:
 	finally:
 		frappe.set_user(previous)
 	attention = sum(1 for row in found if row.get("attention"))
-	sales = next((row for row in found if row.get("key") == "ventas"), None)
+	sales = next((row for row in found if row.get("key") == "ventas" and row.get("amount")), None)
 	if not attention and not sales:
 		frappe.cache.set_value(key, 1, expires_in_sec=36 * 3600)
 		return False
