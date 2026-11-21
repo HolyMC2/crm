@@ -240,6 +240,7 @@ import {
   reactive,
   computed,
   watch,
+  watchEffect,
   nextTick,
   onMounted,
   onBeforeUnmount,
@@ -330,15 +331,17 @@ watch(
   },
   { flush: 'sync' },
 )
-watch(
-  [activeDeal, activeTab],
-  ([deal, tab]) => {
-    if (!deal || !(tab in kept) || kept[tab]) return
-    if (tab === 'conversation') holdForThread()
-    kept[tab] = true
-  },
-  { immediate: true, flush: 'sync' },
-)
+// Keeps the tab the record settles on, before the render. selectDeal and the
+// deal page set the record and then the tab more than once in one tick, and a
+// tab passed on the way must not mount its pane. It is an effect because a
+// record picked again in one tick (null, then the same name) changes no value
+// but clears `kept` above.
+watchEffect(() => {
+  const tab = activeTab.value
+  if (!activeDeal.value || !(tab in kept) || kept[tab]) return
+  if (tab === 'conversation') holdForThread()
+  kept[tab] = true
+})
 // Back on a kept tab of the same record: it shows as it was and refreshes
 // quietly (what changed elsewhere, such as a comment or a stage, comes in).
 const overviewPane = ref(null),

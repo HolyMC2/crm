@@ -172,6 +172,30 @@ describe('DealWorkspace tabs', () => {
     expect(shown(el, 'activity')).toBe(true)
   })
 
+  it('mounts only the tab a deal page settles on, not the ones it passes', async () => {
+    const el = await mount()
+    // Deal360 on a phone: selectDeal picks the record (the tab still holds the
+    // conversation default), then the chat, then the page sets ?tab=overview.
+    inbox.activeDeal.value = 'CRM-DEAL-1'
+    inbox.activeTab.value = 'conversation'
+    inbox.activeTab.value = 'overview'
+    await flush()
+    expect(el.querySelector('[data-overview]')).not.toBeNull()
+    expect(el.querySelector('[data-testid="pane-conversation"]')).toBeNull()
+    expect(mounts.activities).toBe(0)
+  })
+
+  it('keeps the open tab when the same record is picked again', async () => {
+    inbox.activeDeal.value = 'CRM-DEAL-1'
+    const el = await mount()
+    expect(shown(el, 'conversation')).toBe(true)
+    // the inbox's restore: null, then the same record, in one tick
+    inbox.activeDeal.value = null
+    inbox.activeDeal.value = 'CRM-DEAL-1'
+    await flush()
+    expect(shown(el, 'conversation')).toBe(true)
+  })
+
   it('keeps every tab it opened and refreshes it on return', async () => {
     inbox.activeDeal.value = 'CRM-DEAL-1'
     const el = await mount()
