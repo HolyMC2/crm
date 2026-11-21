@@ -118,6 +118,21 @@ describe('prefetchHotChunks', () => {
     expect(loaded).toEqual(['DealContextPanel'])
   })
 
+  it.each([
+    ['a phone', true, undefined],
+    ['a wide screen on a slow line', false, { effectiveType: '3g' }],
+  ])(
+    'warms the conversation %s opens from a deal page',
+    async (_, matches, connection) => {
+      vi.useFakeTimers()
+      phone(matches)
+      if (connection) vi.stubGlobal('navigator', { connection })
+      prefetchHotChunks(on('Deal 360'), { delay: 10 })
+      await vi.advanceTimersByTimeAsync(30000)
+      expect(loaded).toEqual(['Activities'])
+    },
+  )
+
   it('warms nothing on a phone elsewhere', async () => {
     vi.useFakeTimers()
     phone(true)

@@ -15,18 +15,20 @@ const HOT_CHUNKS = [
   () => import('@/components/Activities/Activities.vue'),
 ]
 
-// On a phone or a slow line only the view a tap on the current list opens is
-// warmed: the deal from Deals, the conversation's deal panel from Inbox
-// (ConversationLegacyWorkspace imports it with this specifier). The full set
-// is about 60 files, 400-475 KB, competing with that tap (F22).
+// On a phone or a slow line only the view a tap on the current page opens is
+// warmed: the deal from Deals, the conversation from a deal page (it opens on
+// «Resumen» with no conversation mounted behind it there), the conversation's
+// deal panel from Inbox (ConversationLegacyWorkspace imports it with this
+// specifier). The full set is about 60 files, 400-475 KB, competing with that
+// tap (F22). Every entry names a specifier this module imports already: a new
+// or dropped dynamic import here regroups the chunks and grows the entry.
 const NEXT_VIEW = {
   Deals: () => import('@/pages/Deal360.vue'),
+  'Deal 360': () => import('@/components/Activities/Activities.vue'),
   Inbox: () => import('@/components/doco/inbox/DealContextPanel.vue'),
 }
 // A phone's tap on a Bandeja conversation opens the thread; the deal panel
-// waits for «Datos y contacto». It names a specifier this entry imports
-// already, because a new or dropped dynamic import here regroups the chunks
-// and grows the entry.
+// waits for «Datos y contacto».
 const PHONE_NEXT_VIEW = {
   Inbox: () => import('@/components/Activities/Activities.vue'),
 }
