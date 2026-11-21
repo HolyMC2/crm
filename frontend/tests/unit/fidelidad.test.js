@@ -51,6 +51,13 @@ describe('Fidelidad words', () => {
         ending_soon: true,
       }),
     ).toBe('Ends in 3 days')
+    // A day, not an hour (Agenda's «Until {0}» is «Hasta las …»).
+    const later = offerWhen({
+      state: 'live',
+      valid_upto: '2026-11-30',
+      ends_in: 31,
+    })
+    expect(later).toContain('Until')
     expect(offerChip({ state: 'live', ending_soon: true })).toEqual({
       label: 'Ends soon',
       tone: 'warning',
@@ -225,6 +232,15 @@ describe('the new promotion sheet', () => {
     expect(text).toContain('Fundas')
     expect(text).toContain('with no end date')
     expect(text).toContain('with a coupon')
+  })
+
+  it('says a product or category promotion reaches the online store too, the whole ticket only the register', () => {
+    expect(offerPreview(draft())).toContain(
+      'by itself at the register and in the online store',
+    )
+    const ticket = offerPreview(draft({ target: 'ticket', pick: null }))
+    expect(ticket).toContain('by itself at the register')
+    expect(ticket).not.toContain('online store')
   })
 })
 

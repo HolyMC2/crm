@@ -50657,3 +50657,12 @@ msgstr "Los dueños y encargados lo reciben como aviso; la hora se elige en el r
 
 msgid "At"
 msgstr "A las"
+
+#: frontend/src/composables/fidelidad.js
+msgctxt "Promotion end"
+msgid "Until {0}"
+msgstr "Hasta el {0}"
+
+#: frontend/src/composables/fidelidad.js
+msgid "by itself at the register and in the online store"
+msgstr "sola en caja y en la tienda en línea"

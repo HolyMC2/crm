@@ -71,7 +71,8 @@ export function offerWhen(offer) {
   if (offer.ends_in === 0) return __('Ends today')
   if (offer.ends_in === 1) return __('Ends tomorrow')
   if (offer.ending_soon) return __('Ends in {0} days', [offer.ends_in])
-  return __('Until {0}', [formatDate(offer.valid_upto)])
+  // A day, not a time: «Hasta el 30 nov» (Agenda's «Until {0}» is an hour).
+  return __('Until {0}', [formatDate(offer.valid_upto)], 'Promotion end')
 }
 
 export const OFFER_STATES = Object.freeze({
@@ -315,10 +316,14 @@ export function offerPreview(draft, currency = 'MXN') {
     !draft.until || draft.until === 'none'
       ? __('with no end date')
       : __('until {0}', [formatDate(draft.until)])
+  // A product or category promotion by itself is a price rule: the online
+  // store prices it too (doco.fidelidad.reglas). The whole ticket is the register's.
   const how =
     draft.how === 'coupon'
       ? __('with a coupon')
-      : __('by itself at the register')
+      : draft.target === 'ticket'
+        ? __('by itself at the register')
+        : __('by itself at the register and in the online store')
   return __('{0} off {1}, {2}, {3}.', [amount, target, until, how])
 }
 

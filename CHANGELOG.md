@@ -3,6 +3,11 @@
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
 
+## 2026-11-21 — Fidelidad's promotions read whole on a phone; a promotion's end is a day (lane promos-filas, with lane promos-en-todo; not deployed)
+
+- **Rows:** a promotion's second line («50 % · Fundas y Carcasas · Hasta el 30 nov») wraps to two lines on a phone instead of being cut.
+- **Words:** a promotion's end reads «Hasta el 30 nov» (context `Promotion end`); the shared «Until {0}» is Agenda's hour, «Hasta las …». «Nueva promoción» says a product or category promotion goes «sola en caja y en la tienda en línea»: doco now makes it a price rule (lane promos-en-todo). The whole ticket stays «sola en caja».
+
 ## 2026-11-21 — crm builds on Vite 8: each crm land and image bake spends less than half the CPU on the frontend build (lane crm-vite8; not deployed)
 
 - **Why:** the crm production build ran on Vite 5, bound by Rollup on one JS thread. Every crm land (ci_local) and every image bake pays it.

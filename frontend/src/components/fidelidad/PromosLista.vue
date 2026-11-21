@@ -72,6 +72,7 @@
           class="sm:px-5"
           :title="o.title"
           :subtitle="`${offerSummary(o, currency)} · ${offerWhen(o)}`"
+          :subtitle-lines="2"
           :subtitle-tone="o.ending_soon ? 'text-ink-amber-8' : ''"
           :icon="iconFor(o)"
           @click="$emit('open', o)"
