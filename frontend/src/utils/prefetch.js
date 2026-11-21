@@ -16,13 +16,18 @@ const HOT_CHUNKS = [
 ]
 
 // On a phone or a slow line only the view a tap on the current list opens is
-// warmed: the deal from Deals, the conversation's thread from Inbox («Datos y
-// contacto» loads when it opens). The full set is about 60 files, 400-475 KB,
-// competing with that tap (F22). It names only specifiers HOT_CHUNKS imports
-// too, because a new dynamic import here regroups the chunks and grows the
-// entry.
+// warmed: the deal from Deals, the conversation's deal panel from Inbox
+// (ConversationLegacyWorkspace imports it with this specifier). The full set
+// is about 60 files, 400-475 KB, competing with that tap (F22).
 const NEXT_VIEW = {
   Deals: () => import('@/pages/Deal360.vue'),
+  Inbox: () => import('@/components/doco/inbox/DealContextPanel.vue'),
+}
+// A phone's tap on a Bandeja conversation opens the thread; the deal panel
+// waits for «Datos y contacto». It names a specifier this entry imports
+// already, because a new or dropped dynamic import here regroups the chunks
+// and grows the entry.
+const PHONE_NEXT_VIEW = {
   Inbox: () => import('@/components/Activities/Activities.vue'),
 }
 
@@ -98,7 +103,9 @@ export function prefetchHotChunks(router, { delay = PREFETCH_DELAY_MS } = {}) {
     () =>
       idle(() => {
         if (constrainedLine()) {
-          const view = NEXT_VIEW[router?.currentRoute?.value?.name]
+          const name = router?.currentRoute?.value?.name
+          const phone = globalThis.matchMedia?.(PHONE).matches
+          const view = (phone && PHONE_NEXT_VIEW[name]) || NEXT_VIEW[name]
           chunks = view ? [view] : []
         }
         next()

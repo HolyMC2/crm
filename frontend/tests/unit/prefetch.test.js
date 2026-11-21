@@ -109,6 +109,15 @@ describe('prefetchHotChunks', () => {
     expect(loaded).toEqual(['Activities'])
   })
 
+  it('warms the deal panel a wide screen on a slow line opens from Inbox', async () => {
+    vi.useFakeTimers()
+    phone(false)
+    vi.stubGlobal('navigator', { connection: { effectiveType: '3g' } })
+    prefetchHotChunks(on('Inbox'), { delay: 10 })
+    await vi.advanceTimersByTimeAsync(30000)
+    expect(loaded).toEqual(['DealContextPanel'])
+  })
+
   it('warms nothing on a phone elsewhere', async () => {
     vi.useFakeTimers()
     phone(true)
