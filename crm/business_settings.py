@@ -273,6 +273,18 @@ def crm_rows() -> list[dict]:
 				"set": "crm.business_settings.set_handover",
 			}
 		)
+		rows.append(
+			{
+				"key": "crm.resumen_ayer",
+				"area": "hoy",
+				"kind": "switch",
+				"label": _("Yesterday’s summary each morning"),
+				"on": _("Owners and managers get it as a notice; the hour is chosen in Hoy’s summary."),
+				"off": _("Nobody gets it; it stays here in Hoy."),
+				"get": "crm.business_settings.morning_on",
+				"set": "crm.business_settings.set_morning",
+			}
+		)
 	return rows
 
 
@@ -286,3 +298,15 @@ def set_handover(value: bool) -> None:
 	from crm import handover
 
 	handover.save_settings({"handover": bool(value)})
+
+
+def morning_on() -> bool:
+	from crm import handover
+
+	return handover.settings()["morning"]
+
+
+def set_morning(value: bool) -> None:
+	from crm import handover
+
+	handover.save_settings({"morning": bool(value)})

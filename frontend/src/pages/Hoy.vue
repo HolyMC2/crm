@@ -664,6 +664,22 @@
             shortcuts.length ? '' : __('No quick actions for your puesto yet.')
           "
         >
+          <!-- «Resumen de ayer»: what yesterday left, for owners and managers. -->
+          <div
+            v-if="data?.resumen?.available"
+            class="mx-4 mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-6 border border-outline-gray-2 px-3 py-2 sm:mx-5"
+            data-testid="hoy-resumen"
+          >
+            <span class="min-w-0 flex-1 basis-40 text-sm text-ink-gray-7">{{
+              __('What yesterday left: sales, follow-ups, the register.')
+            }}</span>
+            <Button
+              class="min-h-11 sm:min-h-8"
+              :label="__('Yesterday’s summary')"
+              data-testid="hoy-ver-resumen"
+              @click="openMorning"
+            />
+          </div>
           <!-- «Entregar turno»: the closing person hands over what stays open. -->
           <div
             v-if="data?.turno?.available"
@@ -729,6 +745,11 @@
       @close="closeHoja"
       @hoja="openHoja"
       @changed="refresh({ quiet: true })"
+    />
+    <MorningSheet
+      v-if="morningMounted"
+      :open="morningOpen"
+      @close="morningOpen = false"
     />
     <HandoverSheet
       v-if="handoverOpen || handoverMounted"
@@ -972,6 +993,27 @@ function openOutcome(row) {
   outcomeRow.value = row
   outcomeOpen.value = true
 }
+
+// «Resumen de ayer»: loads on its first open; the morning notice opens it with ?resumen=1.
+const MorningSheet = defineAsyncComponent(
+  afterWholeDictionary(() => import('@/components/hoy/MorningSheet.vue')),
+)
+const morningOpen = ref(false)
+const morningMounted = ref(false)
+function openMorning() {
+  morningMounted.value = true
+  morningOpen.value = true
+}
+async function followMorning() {
+  if (!route.query.resumen) return
+  const query = { ...route.query }
+  delete query.resumen
+  // The URL first: the kit closes open sheets on a navigation (sheetHistory).
+  await router.replace({ query }).catch(() => {})
+  openMorning()
+}
+watch(() => route.query.resumen, followMorning)
+onMounted(followMorning)
 
 // «Entrega de turno»: the sheet loads on its first open, not with the page.
 const HandoverSheet = defineAsyncComponent(

@@ -378,6 +378,8 @@ scheduler_events = {
 			"crm.pipeline.services.reminders.remind_due",
 		],
 		"0 9 * * *": ["crm.pipeline.services.reminders.escalate_overdue"],
+		# «Resumen de ayer»: each hour checks whether it is the owner's hour (crm.morning).
+		"2 * * * *": ["crm.morning.send_due"],
 	},
 }
 

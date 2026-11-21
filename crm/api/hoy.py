@@ -235,6 +235,15 @@ def _handover():
 	return handover.hoy_state()
 
 
+def _morning():
+	"""«Resumen de ayer»: for the owners and managers who get it each morning (crm.morning)."""
+	from crm import morning
+
+	if not set(frappe.get_roles()) & set(morning.RECIPIENT_ROLES):
+		return {"available": False, "reason": None}
+	return {"available": True}
+
+
 def _section(build):
 	try:
 		return build()
@@ -270,6 +279,7 @@ def page() -> dict:
 	day["ventas"] = _section(_sales_today)
 	day["credito"] = _section(_credit_today)
 	day["turno"] = _section(_handover)
+	day["resumen"] = _section(_morning)
 	day["landing"] = frappe.defaults.get_user_default(LANDING_DEFAULT) or ""
 	return day
 

@@ -37,14 +37,24 @@ OPEN_TASKS = ("Backlog", "Todo", "In Progress")
 # ── settings ────────────────────────────────────────────────────────────────
 
 
+# «Resumen de ayer» (crm.morning): the hours the owner may choose, site time.
+MORNING_HOURS = (6, 7, 8, 9, 10, 11)
+
+
 def defaults() -> dict:
-	return {"handover": True}
+	return {"handover": True, "morning": True, "morning_hour": 8}
+
+
+def _valid(key, value) -> bool:
+	if key == "morning_hour":
+		return isinstance(value, int) and not isinstance(value, bool) and value in MORNING_HOURS
+	return isinstance(value, bool)
 
 
 def settings() -> dict:
 	values = defaults()
 	for key, value in _stored().items():
-		if key in values and isinstance(value, bool):
+		if key in values and _valid(key, value):
 			values[key] = value
 	return values
 
@@ -61,12 +71,21 @@ def save_settings(changes: dict) -> dict:
 		frappe.throw(_("Choose a Hoy setting to change."))
 	stored = _stored()
 	for key, value in changes.items():
+		if key == "morning_hour":
+			try:
+				hour = int(value)
+			except (TypeError, ValueError):
+				hour = -1
+			if isinstance(value, bool) or hour not in MORNING_HOURS:
+				frappe.throw(_("Choose one of the offered hours."))
+			stored[key] = hour
+			continue
 		if not isinstance(value, bool) and value not in (0, 1, "0", "1"):
 			frappe.throw(_("Turn the setting on or off."))
 		stored[key] = bool(int(value)) if not isinstance(value, bool) else value
 	frappe.db.set_single_value("FCRM Settings", FIELD, json.dumps(stored, sort_keys=True))
 	values = defaults()
-	values.update({key: value for key, value in stored.items() if key in values})
+	values.update({key: value for key, value in stored.items() if key in values and _valid(key, value)})
 	return values
 
 

@@ -50597,3 +50597,63 @@ msgstr "hoy a las {0}"
 
 msgid "yesterday at {0}"
 msgstr "ayer a las {0}"
+
+msgid "Yesterday’s summary"
+msgstr "Resumen de ayer"
+
+msgid "Nothing from yesterday needs you."
+msgstr "Nada de ayer necesita tu atención."
+
+msgid "Send me the summary every morning"
+msgstr "Mandarme el resumen cada mañana"
+
+msgid "Owners and managers get it as a notice at the hour below."
+msgstr "Los dueños y encargados lo reciben como aviso a la hora de abajo."
+
+msgid "Nobody gets it; it stays here in Hoy."
+msgstr "Nadie lo recibe; queda aquí en Hoy."
+
+msgid "The summary could not open. Try again."
+msgstr "No se pudo abrir el resumen. Vuelve a intentar."
+
+msgid "The summary setting was not saved. Try again."
+msgstr "No se guardó el ajuste del resumen. Vuelve a intentar."
+
+msgid "What yesterday left: sales, follow-ups, the register."
+msgstr "Lo que dejó ayer: ventas, seguimientos, la caja."
+
+msgid "Yesterday's sales"
+msgstr "Ventas de ayer"
+
+msgid "Follow-ups not done"
+msgstr "Seguimientos sin hacer"
+
+msgid "Waiting for your approval"
+msgstr "Esperando tu aprobación"
+
+msgid "sales {0}"
+msgstr "ventas {0}"
+
+msgid "{0} things to look at"
+msgstr "{0} cosas por atender"
+
+msgid "1 thing to look at"
+msgstr "1 cosa por atender"
+
+msgid "Yesterday's summary: {0}"
+msgstr "Resumen de ayer: {0}"
+
+msgid "Choose one of the offered hours."
+msgstr "Elige una de las horas que se ofrecen."
+
+msgid "Choose a summary setting to change."
+msgstr "Elige qué cambiar del resumen."
+
+msgid "Yesterday’s summary each morning"
+msgstr "Resumen de ayer cada mañana"
+
+msgid "Owners and managers get it as a notice; the hour is chosen in Hoy’s summary."
+msgstr "Los dueños y encargados lo reciben como aviso; la hora se elige en el resumen de Hoy."
+
+msgid "At"
+msgstr "A las"
