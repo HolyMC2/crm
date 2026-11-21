@@ -504,6 +504,59 @@ describe('Agenda page', () => {
     expect(document.body.textContent).toContain('Reschedule')
   })
 
+  it('on a phone reads one range, and the end asks for more only once scrolled to', async () => {
+    const observers = []
+    vi.stubGlobal(
+      'IntersectionObserver',
+      class {
+        constructor(callback) {
+          this.callback = callback
+          observers.push(this)
+        }
+        observe(target) {
+          // as a browser does: the first report comes after observe()
+          setTimeout(() => this.callback([{ isIntersecting: true, target }]))
+        }
+        disconnect() {}
+      },
+    )
+    // slower than the 250 ms after which the list swaps in skeleton rows
+    const base = handler
+    handler = (method, args) =>
+      method.endsWith('.query')
+        ? new Promise((resolve) =>
+            setTimeout(() => resolve(base(method, args)), 300),
+          )
+        : base(method, args)
+    try {
+      window.innerWidth = 390
+      window.dispatchEvent(new Event('resize'))
+      await mountAt('/agenda?view=list&date=2026-10-07')
+      await new Promise((resolve) => setTimeout(resolve, 700))
+      await flush()
+      const days = () =>
+        calls
+          .filter(([method]) => method.endsWith('.query'))
+          .map(
+            ([, args]) =>
+              (Date.parse(args.end) - Date.parse(args.start)) / 86400000,
+          )
+      expect(root.textContent).toContain('Cita EV-1')
+      expect(new Set(days())).toEqual(new Set([14]))
+
+      const read = days().length
+      const sentinel = observers.at(-1)
+      sentinel.callback([{ isIntersecting: false }])
+      sentinel.callback([{ isIntersecting: true }])
+      await new Promise((resolve) => setTimeout(resolve, 400))
+      await flush()
+      expect(days().slice(read)).not.toHaveLength(0)
+      expect(new Set(days().slice(read))).toEqual(new Set([28]))
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+
   // --- review 2026-10-05: edits keep what the worker did not change -----------------
 
   const DETAIL = {

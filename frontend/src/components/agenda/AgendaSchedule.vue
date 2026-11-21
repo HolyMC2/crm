@@ -299,14 +299,20 @@ const pillClasses = (event) => ({
   'is-fresh': Boolean(event.fresh),
 })
 
-// Reaching the end asks for more days (the page grows the range up to its limit).
+// Scrolling to the end asks for more days (the page grows the range up to its
+// limit). An end in view as the list mounts asks for nothing. It is in view
+// before the rows come, under a short range and after the skeleton rows, so
+// the page reads the range it shows once and «Show more days» stays at the end.
 let observer
 onMounted(() => {
   if (!globalThis.IntersectionObserver || !sentinel.value) return
+  let inView = null
   observer = new IntersectionObserver(
     (entries) => {
-      if (entries.some((entry) => entry.isIntersecting) && !props.full)
-        emit('more')
+      const seen = entries.some((entry) => entry.isIntersecting)
+      const reached = inView === false && seen
+      inView = seen
+      if (reached && !props.full) emit('more')
     },
     { rootMargin: '400px 0px' },
   )
