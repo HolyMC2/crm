@@ -324,7 +324,7 @@ def _cancel_other_tasks(task) -> None:
 			"reference_docname": task.reference_docname,
 			"status": ["in", OPEN_TASK_STATUSES],
 			"name": ["!=", task.name],
-			"automation_slot": ["in", ["", None]],
+			"automation_slot": ["is", "not set"],
 		},
 		pluck="name",
 	):
