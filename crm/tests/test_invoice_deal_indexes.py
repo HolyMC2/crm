@@ -53,6 +53,7 @@ class TestInvoiceDealIndexes(IntegrationTestCase):
 	def setUp(self):
 		super().setUp()
 		frappe.set_user("Administrator")
+		add_invoice_deal_indexes()
 
 	def test_migrate_adds_the_deal_index_once(self):
 		doctypes = linked_invoice_doctypes()
@@ -65,6 +66,44 @@ class TestInvoiceDealIndexes(IntegrationTestCase):
 		add_invoice_deal_indexes()
 		for doctype in doctypes:
 			self.assertEqual(indexes_with_columns(doctype, ["crm_deal", "docstatus"]), [DEAL_INDEX], doctype)
+
+	def test_a_page_reads_only_the_invoices_of_its_deals(self):
+		doctypes = linked_invoice_doctypes()
+		if not doctypes:
+			self.skipTest("ERP invoices are not linked to deals on this site")
+		company = frappe.db.get_value("Company", {}, ["name", "default_currency"], as_dict=True)
+		if not company:
+			self.skipTest("No company on this site")
+		key = frappe.generate_hash(length=8)
+		page_deal, other_deal = f"CRM-DEAL-PAGE-{key}", f"CRM-DEAL-OTHER-{key}"
+		for doctype in doctypes:
+			for crm_deal in (page_deal, other_deal):
+				name = f"{crm_deal}-{doctype}"
+				frappe.get_doc(
+					{
+						"doctype": doctype,
+						"name": name,
+						"company": company.name,
+						"currency": company.default_currency,
+						"party_account_currency": company.default_currency,
+						"conversion_rate": 1,
+						"crm_deal": crm_deal,
+						"docstatus": 1,
+						"base_grand_total": 100,
+						"grand_total": 100,
+						"outstanding_amount": 0,
+						"customer": "_deal_index",
+					}
+				).db_insert()
+				self.addCleanup(frappe.db.delete, doctype, {"name": name})
+
+		def deals_read(deals):
+			erp = stages._erp_amounts_table(company.default_currency, deals)
+			rows = frappe.db.sql(frappe.qb.from_(erp).select(erp.deal).get_sql())
+			return {deal for (deal,) in rows} & {page_deal, other_deal}
+
+		self.assertEqual(deals_read(None), {page_deal, other_deal})
+		self.assertEqual(deals_read([page_deal]), {page_deal})
 
 	def test_per_deal_amounts_can_read_invoices_by_deal(self):
 		doctypes = linked_invoice_doctypes()
