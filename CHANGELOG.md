@@ -7,6 +7,11 @@ Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` i
 
 - **Change:** `components/metas/PorPersona.vue` (loaded with the page's goals, its own read) shows each person's figure for the chosen facts in the period: a table at a desk, a card per person on a phone, «—» where the person was not judged. «Elegir datos» picks up to 8 facts by group; the choice is each manager's own.
 - **Tests:** `frontend/tests/unit/metasPorPersona.test.js` (5).
+## 2026-11-20 — «Ajustes del negocio»: every switch the owner may change, in one place (lane ajustes-negocio, with taller and scanner_kit; not deployed)
+
+- **Why:** owner switches were spread over separate sheets, and some still needed Desk (Scanner Settings `conteo_ui`, G-14, unset on doco prod). The owner could not find where a behaviour is switched, or what a switch does.
+- **Change:** Más › Configuración › «Ajustes del negocio» (`/crm/negocio`, owner only) lists, by area, what each app offers through the new `muelle_business_settings` hook (`crm/business_settings.py`): a Single's Check (`doctype` + `field`), a switch the app reads and writes with its own rules (`get` / `set`), or a link to its own settings screen. Below, «Todos los demás interruptores» lists every other Check of the installed Muelle apps' settings Singles (Frappe and ERPNext stay in Desk) with their own label and description, searchable without accents. A tap saves through the Single document (its validations and write permission, the same as Desk); a refusal puts it back. crm lists «Cómo registras prospectos» (`/prospectos?ajustes=1` now opens that sheet) and, once the shift handover is in, «Pedir la entrega de turno»; taller its follow-ups switch and its settings screen; Escáner «Conteo del día» and «Reposición automática».
+- **Tests:** `crm/tests/test_business_settings.py` (7), `frontend/tests/unit/ajustesNegocio.test.js` (4).
 
 ## 2026-11-20 — Por explicar updates by itself: counts, groups, accounts and cash follow every change, from any phone (lane por-explicar-vivo; not deployed)
 
