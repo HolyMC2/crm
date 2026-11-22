@@ -51305,3 +51305,23 @@ msgstr "Factura"
 msgctxt "EnLinea"
 msgid "Register it when it arrives: that brings it into the store."
 msgstr "Regístrala cuando llegue: así entra al almacén."
+
+msgctxt "EnLinea"
+msgid "Repairs"
+msgstr "Reparaciones"
+
+msgctxt "EnLinea"
+msgid "Review"
+msgstr "Revisar"
+
+msgctxt "EnLinea"
+msgid "Link to the repairs"
+msgstr "Ligar a las reparaciones"
+
+msgctxt "EnLinea"
+msgid "Linked to the repairs"
+msgstr "Ligada a las reparaciones"
+
+msgctxt "EnLinea"
+msgid "Each repair shows the part as ordered; when it arrives, its people hear it."
+msgstr "Cada reparación muestra la pieza como pedida; cuando llega, se avisa a su gente."

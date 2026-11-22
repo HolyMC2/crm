@@ -1037,11 +1037,19 @@
       :error="sheetError"
       @confirm="(reason) => setStatus(estado.mode, reason)"
     />
+    <OrdenReparaciones
+      v-if="reparaciones && doc?.name"
+      :open="reparaciones"
+      :order="doc.name"
+      @close="reparaciones = false"
+      @linked="load"
+    />
   </div>
 </template>
 <script setup>
 import {
   computed,
+  defineAsyncComponent,
   getCurrentInstance,
   onBeforeUnmount,
   onMounted,
@@ -1060,6 +1068,9 @@ import OrdenMasDatos from '@/components/compras/OrdenMasDatos.vue'
 import OrdenCambiarLineas from '@/components/compras/OrdenCambiarLineas.vue'
 import OrdenConfirmacion from '@/components/compras/OrdenConfirmacion.vue'
 import OrdenEstado from '@/components/compras/OrdenEstado.vue'
+const OrdenReparaciones = defineAsyncComponent(
+  () => import('@/components/compras/OrdenReparaciones.vue'),
+)
 import ApprovalAsk from '@/components/pendientes/ApprovalAsk.vue'
 import ConfirmSheet from '@/components/documentos/ConfirmSheet.vue'
 import DatosList from '@/components/documentos/DatosList.vue'
@@ -1739,6 +1750,7 @@ const almacenRows = computed(() => {
 })
 
 // ── the bolt: the hero's steps, prices and labels; «⋯» keeps print, share, mail ──
+const reparaciones = ref(false)
 const boltSteps = computed(() => {
   const out = nextSteps.value.filter((step) => step.key !== 'edit')
   // The confirmed purchase's other changes; one not the worker's asks someone.
@@ -1756,6 +1768,13 @@ const boltSteps = computed(() => {
       label: __('Review prices'),
       icon: 'lucide-percent',
       run: () => router.push(pricesTo.value),
+    })
+  // A confirmed purchase is the part repairs wait for (Taller): link them here.
+  if (Number(doc.value?.docstatus) === 1)
+    out.push({
+      label: __('For repairs', null, 'EnLinea'),
+      icon: 'lucide-wrench',
+      run: () => (reparaciones.value = true),
     })
   if (almacenRows.value.some((row) => row.labels))
     out.push({
