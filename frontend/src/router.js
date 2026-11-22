@@ -350,13 +350,13 @@ const routes = [
     path: '/compras/en-linea',
     name: 'CompraEnLinea',
     component: () => import('@/pages/CompraEnLinea.vue'),
-    meta: { app: 'compras', title: 'Compras' },
+    meta: { app: 'compras', title: 'Compras', ownPhoneHeader: true },
   },
   {
     path: '/compras/en-linea/:name',
     name: 'CompraEnLineaDetalle',
     component: () => import('@/pages/CompraEnLineaDetalle.vue'),
-    meta: { app: 'compras', title: 'Compras' },
+    meta: { app: 'compras', title: 'Compras', ownPhoneHeader: true },
   },
   {
     // Compras › Hoy: the owner's buying board (doco.workspaces.compras_hoy).

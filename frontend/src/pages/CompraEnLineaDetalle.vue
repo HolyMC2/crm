@@ -189,7 +189,7 @@
                   />
                 </template>
                 <div class="flex flex-wrap items-end gap-3">
-                  <label class="text-sm text-ink-gray-7">
+                  <label class="flex flex-col text-sm text-ink-gray-7">
                     {{ __('Quantity', null, 'EnLinea') }}
                     <input
                       v-model.number="l.cantidad"
