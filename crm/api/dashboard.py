@@ -376,11 +376,13 @@ def get_won_deals(from_date: str | None = None, to_date: str | None = None, user
 	if users:
 		prev_cond = prev_cond & (Deal.deal_owner.isin(users))
 
-	# Build query with CASE expressions
+	# Build query with CASE expressions. Both windows sit inside [prev_from_date, to_date_plus_one):
+	# bounding the read there gives the same counts and reads closed_date_index, not every deal.
 	query = (
 		_permitted_from("CRM Deal", Deal, ["closed_date", "deal_owner", "name", "status"])
 		.join(Status)
 		.on(Deal.status == Status.name)
+		.where((Deal.closed_date >= prev_from_date) & (Deal.closed_date < to_date_plus_one))
 		.select(
 			Count(Case().when(current_cond, Deal.name).else_(None)).as_("current_month_deals"),
 			Count(Case().when(prev_cond, Deal.name).else_(None)).as_("prev_month_deals"),

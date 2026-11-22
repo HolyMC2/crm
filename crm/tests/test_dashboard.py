@@ -252,6 +252,18 @@ class TestDashboard(IntegrationTestCase):
 		ongoing_user = get_ongoing_deals(self.from_date, self.to_date, self.user2_email)
 		self.assertGreater(ongoing_user["value"], result_user["value"])
 
+	def test_won_deals_read_the_closing_date_index(self):
+		"""get_won_deals bounds its read to its two windows; closed_date carries the index it reads.
+		Frappe names it `closed_date` on a new site and `closed_date_index` when a migrate adds it."""
+		index = frappe.db.get_column_index("tabCRM Deal", "closed_date", unique=False)
+		self.assertTrue(index)
+		plan = frappe.db.sql(
+			"explain select name from `tabCRM Deal` where closed_date >= %s and closed_date < %s",
+			(self.from_date, self.to_date),
+			as_dict=True,
+		)[0]
+		self.assertIn(index.Key_name, (plan.possible_keys or "").split(","))
+
 	def test_get_average_won_deal_value(self):
 		"""Test get_average_won_deal_value calculates correct average for won deals"""
 		result = get_average_won_deal_value(self.from_date, self.to_date)

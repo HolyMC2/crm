@@ -7,6 +7,12 @@ Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` i
 - **Why:** Resultados › a ticket painted each line's full product photo in a 44 px box, and Productos › Altas painted each draft's full photo in its card.
 - **Change:** `composables/resultadosTicket.ticketLine` paints `item.thumb || item.image`; mercado's document sheet sends `thumb`, the doco media layer's «card» copy. `pages/ProductosAltas.vue` paints `row.miniaturas[0] || row.fotos[0]`; doco's `altas` rows send `miniaturas`.
 - **Tests:** `tests/unit/resultadosTicket.test.js` (+1), `tests/unit/altas.test.js` (+1, the list's cards).
+## 2026-11-21 — Won deals read their two windows by an index (lane resultados-rapido, with taller; not deployed)
+
+- **Why:** `api/dashboard.get_won_deals` (twice per Resultados board: the period and its comparison) counted won deals with CASE over every deal, with no date bound, and `closed_date` had no index, so the average-won-value read scanned every deal too. On the whale clone t3 (205k deals) those three reads took 2.4-2.9 s of a 5.5 s board.
+- **Change:** `get_won_deals` reads only `closed_date` in [previous window start, period end), where both CASE windows lie (same counts). CRM Deal `closed_date` gets `search_index` (schema sync adds `closed_date_index`).
+- **Measured** with taller's change, the board uncached on t3 (cell-1, 2026-11-21 21:10 Mazatlán, 4 runs per side): 5.51 s (5.39-5.68) → 2.74 s (2.61-3.02), the same 24 cards.
+- **Tests:** `tests/test_dashboard` (+1: the index exists and the bounded read can use it; `test_get_won_deals` keeps its counts). Rollout: rides the image; the migrate adds one index (additive). Rollback: revert.
 
 ## 2026-11-21 — A phone warms the deal and its conversation on the real deals list, and the «¿Es este?» card paints a small photo (lane crm-tratos-rapidos, with doco; not deployed)
 
