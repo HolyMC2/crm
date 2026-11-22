@@ -2,6 +2,12 @@
 
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
+## 2026-11-22 — Resultados › Tendencia draws bars, like Mercado's (lane tendencia-barras; not deployed)
+
+- **Why:** the trend was one line over the days, so one big day read as a spike and the rest of the month lay on the baseline; Mercado's bar chart of the same numbers reads at a glance.
+- **Change:** `components/resultados/ResultadosTrend.vue` draws a bar per day on round axis steps (labels in a left gutter, solid hairlines, bars up to 24 px with a rounded top), the comparison as a dashed line over them, the legend «Ventas por día», «Periodo anterior» or «Año pasado», «Mejor día». Past six weeks the bars are weeks, past about six months they're months (`trendBars.js`). Hover or tap shows the day, its tickets and the comparison's day; a click, or a second tap on the same bar, narrows the board to that day, week or month (`periodo=rango`). Arrow keys move along the bars, Enter narrows. The tooltip stays inside the chart at 305 px. No new dependency (CRM has no ECharts); no new CSS utilities beyond `sm:h-52`.
+- **Tests:** `tests/unit/resultadosTrend.test.js` (8), `resultados.test.js` trend case rewritten; shots at 412/305/1280, light and dark, on doco-mirror with a busy month, 120 and 365 days.
+
 ## 2026-11-22 — «Control del almacén» in the command palette (lane control-almacen-puerta, with scanner_kit control-almacen; not deployed)
 
 - Search «control», «revisar cambios» or «anaqueles» in the palette (⌘K or «Buscar o ir a…») to get «Escáner › Control del almacén» (`/scan/control`). It's where the owner or encargado confirms, asks about or follows up the team's changes to the shop's places. Listed only where scanner_kit is installed; Escáner itself says who can open it. `muelleShell.test.js` (+1 assertion). Rollback = revert.
