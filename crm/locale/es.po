@@ -51023,10 +51023,6 @@ msgid "Sees the employee records of whoever reports to them: attendance, leave a
 msgstr "Ve las fichas de quienes le reportan: asistencia, permisos y adelantos."
 
 #: frontend/src (Organigrama)
-msgid "{0}. Will see their employee record"
-msgstr "{0}. Verá su ficha de empleado"
-
-#: frontend/src (Organigrama)
 msgid "Will see their employee record"
 msgstr "Verá su ficha de empleado"
 

@@ -66,9 +66,24 @@
               <span class="block truncate text-base text-ink-gray-9">{{
                 option.full_name || __('No name')
               }}</span>
-              <span class="block truncate text-sm text-ink-gray-6">{{
-                detail(option)
-              }}</span>
+              <span
+                v-if="detail(option)"
+                class="block truncate text-sm text-ink-gray-6"
+                >{{ detail(option) }}</span
+              >
+              <!-- The tree is a permission: a boss limited to their own
+                   record also sees their team's. -->
+              <span
+                v-if="option.sees_reports && !option.under && !option.current"
+                class="flex items-center gap-1 text-sm text-ink-gray-6"
+                data-testid="org-reporta-sees"
+              >
+                <span
+                  class="lucide-eye size-3.5 flex-none"
+                  aria-hidden="true"
+                />
+                {{ __('Will see their employee record') }}
+              </span>
             </span>
             <span
               v-if="option.current"
@@ -114,12 +129,6 @@ const shown = computed(() =>
 function detail(option) {
   if (option.current) return __('Reports to them now')
   if (option.under) return __('Is on their team: move them first')
-  // The tree is a permission: a boss limited to their own record sees their team's.
-  const line = roleLine(option)
-  if (option.sees_reports)
-    return line
-      ? __('{0}. Will see their employee record', [line])
-      : __('Will see their employee record')
-  return line
+  return roleLine(option)
 }
 </script>
