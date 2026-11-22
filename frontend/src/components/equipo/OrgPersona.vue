@@ -23,7 +23,7 @@
           class="title-face break-words text-xl font-semibold text-ink-gray-9"
           data-testid="org-persona-name"
         >
-          {{ person.full_name || __('No name') }}
+          {{ person.full_name || __('No name', null, 'Equipo') }}
         </h2>
         <p v-if="line" class="text-sm text-ink-gray-6">{{ line }}</p>
         <p v-if="todayText" class="mt-0.5 text-sm text-ink-gray-7">
@@ -44,7 +44,7 @@
           data-testid="org-persona-boss"
           @click="$emit('select', boss.employee)"
         >
-          {{ boss.full_name || __('No name') }}
+          {{ boss.full_name || __('No name', null, 'Equipo') }}
         </button>
         <p v-else class="min-w-0 flex-1 text-base text-ink-gray-7">
           {{ bossText }}
@@ -90,7 +90,7 @@
             @click="$emit('select', child.employee)"
           >
             <span class="min-w-0 truncate">{{
-              child.full_name || __('No name')
+              child.full_name || __('No name', null, 'Equipo')
             }}</span>
             <span v-if="child.total" class="num text-sm text-ink-gray-5">{{
               child.total
@@ -195,7 +195,7 @@ const bossText = computed(() => {
 const chainText = computed(() => {
   const chain = chainOf(props.person.employee, props.nodes)
   return chain.length > 1
-    ? chain.map((n) => n.full_name || __('No name')).join(' › ')
+    ? chain.map((n) => n.full_name || __('No name', null, 'Equipo')).join(' › ')
     : ''
 })
 const below = computed(() => {

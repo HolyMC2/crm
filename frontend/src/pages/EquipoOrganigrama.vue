@@ -369,7 +369,7 @@
     <BottomSheet
       v-if="!isWide && current"
       :open="Boolean(current)"
-      :aria-label="current.full_name || __('No name')"
+      :aria-label="current.full_name || __('No name', null, 'Equipo')"
       @update:open="(v) => !v && select('')"
     >
       <OrgPersona
@@ -508,7 +508,7 @@ const lensLine = computed(() => {
   if (!yes.length) return __('Nobody here can: {0}.', [cap.label])
   if (yes.length === 1)
     return __('Only {0} can: {1}.', [
-      yes[0].full_name || __('No name'),
+      yes[0].full_name || __('No name', null, 'Equipo'),
       cap.label,
     ])
   return __('{0} of {1} people can: {2}.', [
@@ -551,13 +551,13 @@ const dragLine = computed(() => {
   if (!d.source || !d.over) return ''
   if (d.over === TOP)
     return __('Release: {0} reports to nobody', [
-      d.source.full_name || __('No name'),
+      d.source.full_name || __('No name', null, 'Equipo'),
     ])
   const target = tree.value.nodes.get(d.over)
   return d.allowed && target
     ? __('Release to move {0} under {1}', [
-        d.source.full_name || __('No name'),
-        target.full_name || __('No name'),
+        d.source.full_name || __('No name', null, 'Equipo'),
+        target.full_name || __('No name', null, 'Equipo'),
       ])
     : ''
 })
@@ -568,14 +568,16 @@ function countFor(key) {
 function namesFor(key) {
   const names = people.value
     .filter((p) => (p.capabilities || []).includes(key))
-    .map((p) => p.full_name || __('No name'))
+    .map((p) => p.full_name || __('No name', null, 'Equipo'))
   if (!names.length) return ''
   return names.length > 3
     ? __('{0} and {1} more', [names.slice(0, 3).join(', '), names.length - 3])
     : names.join(', ')
 }
 function nameOf(employee) {
-  return tree.value.nodes.get(employee)?.full_name || __('No name')
+  return (
+    tree.value.nodes.get(employee)?.full_name || __('No name', null, 'Equipo')
+  )
 }
 function firstName(employee) {
   return nameOf(employee).split(' ')[0]

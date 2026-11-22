@@ -139,7 +139,9 @@ const props = defineProps({
 })
 const emit = defineEmits(['select', 'toggle'])
 
-const name = computed(() => props.node.full_name || __('No name'))
+const name = computed(
+  () => props.node.full_name || __('No name', null, 'Equipo'),
+)
 const initials = computed(() =>
   props.node.full_name ? initialsOf(props.node.full_name) : '',
 )

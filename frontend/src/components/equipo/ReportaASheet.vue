@@ -64,7 +64,7 @@
               :class="option.under ? 'opacity-60' : ''"
             >
               <span class="block truncate text-base text-ink-gray-9">{{
-                option.full_name || __('No name')
+                option.full_name || __('No name', null, 'Equipo')
               }}</span>
               <span
                 v-if="detail(option)"
