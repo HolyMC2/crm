@@ -10,11 +10,18 @@ merge base against <ref> and prints, and appends to $GITHUB_OUTPUT:
 - `shell=true|false`: the Shell APIs job is needed (paths in SHELL_PATHS or a test module carrying
   the SHELL_MARKER line).
 - `modules=…`: the space-separated test modules the Shell APIs job runs.
+- `migration_suite=true|false`: the Migration job runs the whole suite on the upgraded site. Only
+  when Server is needed and the change reaches what migrate applies: JSON in the app (DocTypes,
+  workspaces, pages, fixtures), `crm/patches*`, `crm/hooks.py`, the modules the install and migrate
+  hooks name and every crm module they import, and the CI itself. Any other change leaves the
+  upgraded site what a fresh install of the candidate is, which the Tests job already runs the
+  suite on; the Migration job still installs the base, migrates and verifies the probe.
 
 Anything it cannot decide (no base, git failure, running on mainline itself) runs everything.
 """
 
 import argparse
+import ast
 import fnmatch
 import os
 import subprocess
@@ -42,6 +49,69 @@ SHELL_PATHS = (
 SHELL_TESTS = ("crm/tests/test_shell*.py", "crm/tests/test_documentos*.py")
 # A test module elsewhere joins the Shell APIs job with this line (at the start of a line).
 SHELL_MARKER = "# ci: shell-apis"
+
+
+# What migrate applies, besides the modules the install and migrate hooks reach (migrate_modules).
+MIGRATION_PATHS = (
+	"crm/*.json",
+	"crm/patches.txt",
+	"crm/patches/*",
+	"crm/hooks.py",
+	"scripts/ci/*",
+	".github/workflows/migration-test.yml",
+	".github/actions/setup-native-environment/*",
+)
+MIGRATE_HOOKS = ("before_install", "after_install", "before_migrate", "after_migrate")
+
+
+def migrate_modules(root=ROOT):
+	"""crm/… .py paths of the modules the install and migrate hooks name, and every crm module those
+	import, statically (the import closure)."""
+	files = {}
+	for path in (root / "crm").rglob("*.py"):
+		parts = path.relative_to(root).with_suffix("").parts
+		files[".".join(parts[:-1] if parts[-1] == "__init__" else parts)] = path
+
+	def resolve(dotted):
+		parts = dotted.split(".")
+		while parts:
+			if ".".join(parts) in files:
+				return ".".join(parts)
+			parts.pop()
+		return None
+
+	# The hooks' values, read as literals: a value that is not one raises, and the caller runs the suite.
+	todo = []
+	for node in ast.parse((root / "crm/hooks.py").read_text(encoding="utf-8")).body:
+		if isinstance(node, ast.Assign | ast.AugAssign):
+			targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+			if any(isinstance(t, ast.Name) and t.id in MIGRATE_HOOKS for t in targets):
+				value = ast.literal_eval(node.value)
+				todo += [value] if isinstance(value, str) else list(value)
+	seen = set()
+	todo = [resolve(name) for name in todo]
+	while todo:
+		module = todo.pop()
+		if module is None or module in seen:
+			continue
+		seen.add(module)
+		tree = ast.parse(files[module].read_text(encoding="utf-8"))
+		for node in ast.walk(tree):
+			if isinstance(node, ast.Import):
+				names = [alias.name for alias in node.names]
+			elif isinstance(node, ast.ImportFrom) and node.module and not node.level:
+				names = [node.module, *(f"{node.module}.{alias.name}" for alias in node.names)]
+			else:
+				continue
+			todo += [resolve(name) for name in names if name.startswith("crm.")]
+	return {files[module].relative_to(root).as_posix() for module in seen}
+
+
+def migration_suite(changes, server, reached):
+	"""Whether the Migration job runs the suite after the upgrade (see the module docstring)."""
+	if not server:
+		return False
+	return any(matches(path, MIGRATION_PATHS) or path in reached for path, _a, _d in changes)
 
 
 def matches(path, patterns):
@@ -125,16 +195,23 @@ def main(argv=None):
 	modules = shell_modules()
 	changes, context = changed_paths(args.base)
 	if changes is None:
-		server, shell, reason = True, True, context
+		server, shell, suite, reason = True, True, True, context
 	else:
 		marked = {module.replace(".", "/") + ".py" for module in modules}
 		server, shell, reason = classify(changes, marked)
+		try:
+			suite = migration_suite(changes, server, migrate_modules())
+		except Exception as error:  # any doubt runs the suite after the upgrade too
+			suite, reason = server, f"{reason}; migrate hooks unreadable ({error}), upgrade suite runs"
+		if server and not suite:
+			reason += "; nothing migrate applies changed: the upgrade job migrates and verifies, no suite"
 		reason = f"{context}; {reason}"
 		for path, added, deleted in changes:
 			print(f"  {path} (+{added} -{deleted})")
 	outputs = {
 		"server": str(server).lower(),
 		"shell": str(shell).lower(),
+		"migration_suite": str(suite).lower(),
 		"modules": " ".join(modules),
 		"reason": reason,
 	}

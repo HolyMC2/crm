@@ -63,6 +63,29 @@ class ClassifyTests(unittest.TestCase):
 				server, _, _ = scope.classify([("frontend/src/App.vue", 1, 0), (path, 1, 0)])
 				self.assertTrue(server)
 
+	def test_the_upgrade_suite_runs_only_when_migrate_has_something_to_apply(self):
+		reached = {"crm/install.py", "crm/pipeline/services/configuration.py"}
+		for path in (
+			"crm/fcrm/doctype/crm_deal/crm_deal.json",
+			"crm/patches.txt",
+			"crm/patches/v1_0/x.py",
+			"crm/hooks.py",
+			"crm/install.py",
+			"crm/pipeline/services/configuration.py",
+			"scripts/ci/inside-container.sh",
+		):
+			self.assertTrue(scope.migration_suite([(path, 1, 0)], True, reached), path)
+		for path in ("crm/api/hoy.py", "crm/tests/test_hoy_boot.py", "crm/locale/es.po"):
+			self.assertFalse(scope.migration_suite([(path, 1, 1)], True, reached), path)
+		self.assertFalse(scope.migration_suite([("crm/hooks.py", 1, 0)], False, reached))
+
+	def test_this_checkout_reaches_the_migrate_hooks_and_what_they_import(self):
+		reached = scope.migrate_modules()
+		self.assertIn("crm/install.py", reached)
+		self.assertIn("crm/permissions/framework.py", reached)
+		self.assertNotIn("crm/hooks.py", reached)
+		self.assertLess(len(reached), 200)
+
 	def test_shell_api_paths_start_the_shell_job(self):
 		for path in (
 			"crm/api/shell.py",

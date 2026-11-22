@@ -10,7 +10,9 @@ SCRIPTS = Path(__file__).resolve().parent
 
 
 class NativeRunnerTests(unittest.TestCase):
-	def run_runner(self, mode="tests", *, failure="", coverage=False, omit_coverage=False, modules=""):
+	def run_runner(
+		self, mode="tests", *, failure="", coverage=False, omit_coverage=False, modules="", suite="true"
+	):
 		with tempfile.TemporaryDirectory() as directory:
 			root = Path(directory)
 			candidate = root / "candidate"
@@ -29,7 +31,12 @@ class NativeRunnerTests(unittest.TestCase):
 			registry.parent.mkdir(parents=True)
 			registry.write_text("export const SHELL_MODULES = []")
 			python = bench / "env/bin/python"
-			python.write_text("#!/usr/bin/env bash\nexit 0\n")
+			# Logs the sharded suite only; the environment check it also runs passes silently.
+			python.write_text(
+				"#!/usr/bin/env bash\n"
+				'case "$*" in *parallel_tests.py*) printf \'python|%s\\n\' "${*#*/scripts/ci/}" >> "$COMMAND_LOG" ;; esac\n'
+				'if [ -n "$FAIL_COMMAND" ] && [[ "$*" == *"$FAIL_COMMAND"* ]]; then exit 17; fi\n'
+			)
 			python.chmod(0o755)
 			stub = root / "bench-command"
 			stub.mkdir()
@@ -69,6 +76,7 @@ fi
 					"COMMAND_LOG": str(log),
 					"OMIT_COVERAGE": str(omit_coverage).lower(),
 					"CRM_CI_MODULES": modules,
+					"CRM_CI_MIGRATION_SUITE": suite,
 				},
 				text=True,
 				capture_output=True,
@@ -98,10 +106,17 @@ fi
 		positions = [commands.index(stage) for stage in stages]
 		self.assertEqual(positions, sorted(positions))
 
+	def test_fresh_install_without_coverage_runs_the_suite_in_shards(self):
+		result, commands, _ = self.run_runner()
+		self.assertEqual(result.returncode, 0, result.stderr)
+		self.assertEqual(commands[-1], "python|parallel_tests.py --site crm-integration.localhost")
+		self.assertFalse(any("run-tests" in command for command in commands))
+		self.assertIn("ci phase: tests at", result.stdout)
+
 	def test_site_setup_failure_never_starts_native_tests(self):
 		result, commands, _ = self.run_runner(failure="crm._ci_setup.native_fixture_graph")
 		self.assertEqual(result.returncode, 17)
-		self.assertFalse(any("run-tests" in command for command in commands))
+		self.assertFalse(any("run-tests" in command or "parallel_tests" in command for command in commands))
 
 	def test_migration_installs_base_then_seeds_and_upgrades_candidate(self):
 		result, commands, artifacts = self.run_runner("migration")
@@ -112,12 +127,19 @@ fi
 			"head|--site crm-integration.localhost execute crm._ci_migration.guard",
 			"head|--site crm-integration.localhost migrate",
 			"head|--site crm-integration.localhost execute crm._ci_migration.verify",
-			"head|--site crm-integration.localhost run-tests --app crm",
+			"python|parallel_tests.py --site crm-integration.localhost",
 		]
 		positions = [commands.index(stage) for stage in stages]
 		self.assertEqual(positions, sorted(positions))
 		self.assertIn("migrate.log", artifacts)
 		self.assertIn("migration-baseline.json", artifacts)
+
+	def test_an_upgrade_with_nothing_to_apply_verifies_and_leaves_the_suite_to_tests(self):
+		result, commands, artifacts = self.run_runner("migration", suite="false")
+		self.assertEqual(result.returncode, 0, result.stderr)
+		self.assertIn("head|--site crm-integration.localhost execute crm._ci_migration.verify", commands)
+		self.assertFalse(any("parallel_tests" in c or "_ci_setup" in c or "run-tests" in c for c in commands))
+		self.assertIn("migrate.log", artifacts)
 
 	def test_guard_failure_stops_before_migration(self):
 		result, commands, _ = self.run_runner("migration", failure="crm._ci_migration.guard")
@@ -140,7 +162,9 @@ fi
 		self.assertFalse(any("run-tests" in command for command in commands))
 
 	def test_native_failure_remains_fatal(self):
-		result, _, _ = self.run_runner(failure="run-tests")
+		result, _, _ = self.run_runner(failure="parallel_tests.py")
+		self.assertEqual(result.returncode, 17)
+		result, _, _ = self.run_runner(coverage=True, failure="run-tests")
 		self.assertEqual(result.returncode, 17)
 
 	def test_missing_coverage_is_a_failure(self):

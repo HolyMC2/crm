@@ -12,9 +12,12 @@
 # (ruff), Frontend (yarn install --frozen-lockfile, ESLint, Oxlint, Production Build with its verify
 # scripts, Unit Tests & Coverage), Pre-commit Checks (--all-files) and Semgrep Rules (diff-aware
 # against the base).
-# Native tier, ~30 min, its jobs side by side, each on its own disposable Docker stack through
+# Native tier, its jobs side by side, each on its own disposable Docker stack through
 # scripts/ci/run-integration.sh: Tests (fresh install, CRM_CI_IMAGE), Upgrade base -> candidate
-# (CRM_CI_IMAGE) and Shell APIs (SHELL_CI_IMAGE, only when the scope names shell modules).
+# (CRM_CI_IMAGE) and Shell APIs (SHELL_CI_IMAGE, only when the scope names shell modules). Tests and
+# Upgrade run the suite in $CRM_CI_SHARDS (default 3) shards, each on its own copy of the site
+# (parallel_tests.py). It starts after the fast tier: beside it, on a busy workstation, the unit
+# tests' 5 s timeouts ran out (2026-11-22).
 #
 # The base is $DEVFLOW_CI_BASE (devflow sets it to the merge base with doco-dev), else the merge
 # base with origin/doco-dev. Committed code only: uncommitted changes are not in the clone.
@@ -119,6 +122,7 @@ step changed-scope python3 scripts/ci/changed_scope.py --base "$base" --github-o
 server=$(sed -n 's/^server=//p' "$run/scope.out" 2>/dev/null)
 shell=$(sed -n 's/^shell=//p' "$run/scope.out" 2>/dev/null)
 modules=$(sed -n 's/^modules=//p' "$run/scope.out" 2>/dev/null)
+migration_suite=$(sed -n 's/^migration_suite=//p' "$run/scope.out" 2>/dev/null)
 echo "  scope: $(sed -n 's/^reason=//p' "$run/scope.out" 2>/dev/null)"
 
 # setup-native-environment's first step: the native runner's own tests
@@ -148,7 +152,7 @@ fi
 
 case "$want" in
 	never) server=false; shell=false ;;
-	always) server=true; shell=true ;;
+	always) server=true; shell=true; migration_suite=true ;;
 esac
 if [ "$server" != true ] && [ "$shell" != true ]; then
 	echo "local ci: green (fast tier; the change needs no native job)"
@@ -174,6 +178,7 @@ native() {  # native <job> <image> <mode> [modules]: a clean tree, then CI's run
 			if [ "$mode" = migration ]; then clone "$tree/.ci-base/crm" "$base"; fi &&
 			cd "$tree" &&
 			CRM_CI_IMAGE=$image CRM_CI_MODE=$mode CRM_CI_MODULES=$mods GITHUB_RUN_ID="local-$job" \
+				CRM_CI_MIGRATION_SUITE=${migration_suite:-true} \
 				exec scripts/ci/run-integration.sh
 	} > "$logs/$job.log" 2>&1 &
 	native_pids+=($!)

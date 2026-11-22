@@ -61,12 +61,21 @@ It tests the committed `HEAD` in a clean clone (`.ci-local/`, gitignored) agains
   self-tests, Undefined names (ruff), `yarn install --frozen-lockfile`, Pre-commit
   Checks on all files, ESLint, Oxlint, Production Build with its verify scripts,
   Unit Tests & Coverage and diff-aware Semgrep Rules. Every check runs and every
-  red one is listed; a red fast tier skips the native tier.
-- **Native tier**, when `changed_scope.py` says Server or Shell APIs is needed,
-  about 30 minutes: Tests (fresh install), the base-to-candidate upgrade with the
-  full suite after it, and Shell APIs, side by side, each through
-  `scripts/ci/run-integration.sh` on its own disposable Docker stack. Coverage is
-  not collected; it only fed Codecov on `develop`.
+  red one is listed; a red fast tier skips the native tier. (Run beside the native
+  tier on a busy workstation, the unit tests' 5 s timeouts ran out: it stays after.)
+- **Native tier**, when `changed_scope.py` says Server or Shell APIs is needed:
+  Tests (fresh install), the base-to-candidate upgrade (with the full suite after
+  it only when the change reaches what migrate applies: `migration_suite`, i.e. JSON
+  in the app, `crm/patches*`, `crm/hooks.py`, the install/migrate hooks' modules and
+  what they import, or the CI; otherwise the upgraded site is what a fresh install
+  is, and the job migrates and verifies the probe only), and Shell APIs, side by side, each through `scripts/ci/run-integration.sh` on
+  its own disposable Docker stack (MariaDB datadir and tmpdir in RAM). Tests and the
+  upgrade run the suite in `CRM_CI_SHARDS` shards (default 3):
+  `scripts/ci/parallel_tests.py` copies the ready site inside the same MariaDB
+  (`CREATE TABLE … LIKE`, `INSERT … SELECT`; the image has no `mariadb-dump`), splits
+  the modules by their number of test methods and runs each shard through Frappe's own
+  runner. `ci phase: <name> at <time>` lines in each job's log show where its minutes
+  went. Coverage is not collected; it only fed Codecov on `develop`.
 
 `scripts/ci/local.sh --fast` runs the fast tier alone and `--native` forces every
 native job. Run it under `heavy`. A failure prints the end of the job's log; the

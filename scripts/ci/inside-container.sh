@@ -9,6 +9,9 @@ case "$mode" in
   *) echo "Unknown CRM CI mode: $mode" >&2; exit 2 ;;
 esac
 
+# Each phase's start time, so a slow run shows where its minutes went.
+phase() { echo "ci phase: $1 at $(date +%T)"; }
+
 copy_crm() {
   test -f "$1/pyproject.toml" && test -f "$1/crm/hooks.py"
   env/bin/python /candidate/scripts/ci/check-environment.py "$1/pyproject.toml"
@@ -49,6 +52,7 @@ compile_catalogs() {
     bench compile-po-to-mo --app "$app" --force
   done
 }
+phase install
 compile_catalogs
 bench set-config -g db_host database
 bench set-config -g redis_cache redis://redis:6379/0
@@ -64,6 +68,7 @@ bench --site "$site" execute frappe.db.set_single_value --args '["FCRM Settings"
 bench --site "$site" execute frappe.defaults.set_global_default --args '["currency", "USD"]'
 
 if [ "$mode" = migration ]; then
+  phase migrate
   # The helper exists only in the disposable app copy, never in shipped CRM.
   cp /candidate/scripts/ci/migration-probe.py apps/crm/crm/_ci_migration.py
   bench --site "$site" execute crm._ci_migration.seed
@@ -75,8 +80,16 @@ if [ "$mode" = migration ]; then
   bench --site "$site" migrate 2>&1 | tee /results/migrate.log
   bench --site "$site" execute crm._ci_migration.verify
   rm apps/crm/crm/_ci_migration.py
+  if [ "${CRM_CI_MIGRATION_SUITE:-true}" = false ]; then
+    # changed_scope.py: nothing migrate applies changed, so the upgraded site is what a fresh
+    # install of the candidate is, and the Tests job runs the suite on that.
+    echo "migration: upgraded and verified; the suite runs in the Tests job (migration_suite=false)"
+    phase done
+    exit 0
+  fi
 fi
 
+phase setup
 bench --site "$site" set-config allow_tests true
 # Initialized-tenant setup, committed before run-tests takes its baseline. Like the
 # migration probe, the helper exists only in the disposable app copy.
@@ -85,6 +98,7 @@ for step in erp_fields native_fixture_graph storefront_schema; do
   bench --site "$site" execute "crm._ci_setup.$step"
 done
 rm apps/crm/crm/_ci_setup.py
+phase tests
 if [ "${CRM_CI_COVERAGE:-false}" = true ]; then
   env/bin/python -m pip install --no-index --no-deps --require-hashes \
     --find-links /candidate/.ci-tools -r /candidate/scripts/ci/coverage-requirements.txt
@@ -96,5 +110,7 @@ elif [ "$mode" = shell ]; then
     bench --site "$site" run-tests --app crm --module "$module"
   done
 else
-  bench --site "$site" run-tests --app crm
+  # The whole suite in CRM_CI_SHARDS shards, each on its own copy of this site (parallel_tests.py).
+  env/bin/python /candidate/scripts/ci/parallel_tests.py --site "$site"
 fi
+phase done
