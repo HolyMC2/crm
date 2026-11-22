@@ -84,61 +84,16 @@
         :options="[
           { value: 'Takings', label: 'Para el banco' },
           { value: 'Float', label: 'Fondo de caja' },
+          { value: 'Change', label: 'Cambio' },
         ]"
       />
 
-      <ul
-        class="divide-y divide-outline-gray-1"
-        aria-label="Conteo por denominación"
-      >
-        <li
-          v-for="face in faces"
-          :key="face"
-          class="flex min-h-12 items-center gap-3"
-          :data-face="face"
-        >
-          <span
-            class="num w-16 flex-none text-base font-semibold text-ink-gray-9"
-            >{{ faceLabel(face) }}</span
-          >
-          <span
-            class="num min-w-0 flex-1 truncate text-right text-sm text-ink-gray-5"
-            >{{
-              rows[face] ? money(fromMinor(face * rows[face]), currency) : ''
-            }}</span
-          >
-          <div class="flex flex-none items-center gap-1">
-            <button
-              type="button"
-              class="press grid size-10 place-items-center rounded-full bg-surface-gray-2 text-ink-gray-8 disabled:opacity-40"
-              :aria-label="`Una pieza menos de ${faceLabel(face)}`"
-              :disabled="!rows[face] || busy"
-              @click="step(face, -1)"
-            >
-              <span class="lucide-minus size-5" aria-hidden="true" />
-            </button>
-            <input
-              :value="rows[face] || ''"
-              inputmode="numeric"
-              pattern="[0-9]*"
-              class="num h-10 w-14 rounded-4 border-0 bg-surface-gray-1 text-center text-base text-ink-gray-9"
-              :aria-label="`Piezas de ${faceLabel(face)}`"
-              placeholder="0"
-              :disabled="busy"
-              @input="type(face, $event.target.value)"
-            />
-            <button
-              type="button"
-              class="press grid size-10 place-items-center rounded-full bg-surface-gray-2 text-ink-gray-8"
-              :aria-label="`Una pieza más de ${faceLabel(face)}`"
-              :disabled="busy"
-              @click="step(face, 1)"
-            >
-              <span class="lucide-plus size-5" aria-hidden="true" />
-            </button>
-          </div>
-        </li>
-      </ul>
+      <FaceSteppers
+        v-model="rows"
+        :faces="faces"
+        :currency="currency"
+        :busy="busy"
+      />
 
       <div
         class="flex items-baseline justify-between gap-3 border-t border-outline-gray-2 pt-3"
@@ -244,10 +199,10 @@ import { computed, ref, watch } from 'vue'
 import { Button } from 'frappe-ui'
 import { BottomSheet, Segmented } from '@/components/ui'
 import BagItems from './BagItems.vue'
+import FaceSteppers from './FaceSteppers.vue'
 import {
   custodyCount,
   errorText,
-  faceLabel,
   facesFor,
   fromMinor,
   money,
@@ -354,15 +309,6 @@ watch(
   },
   { immediate: true },
 )
-
-function step(face, delta) {
-  const next = Math.max(0, (Number(rows.value[face]) || 0) + delta)
-  rows.value = { ...rows.value, [face]: next }
-}
-function type(face, text) {
-  const n = Number(String(text).replace(/\D/g, '').slice(0, 6)) || 0
-  rows.value = { ...rows.value, [face]: n }
-}
 
 function takeFallback() {
   emit('done', { next: props.fallback() })

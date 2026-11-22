@@ -17,6 +17,19 @@ const READ = `${POSA}.cash_custody.shell`
 export const homeRead = () => call(`${READ}.home`, { history_limit: 20 })
 export const bagRead = (name) => call(`${READ}.bag`, { name })
 
+// Bags at closing (posawesome api/cash_custody/bag_plan_api.py): the safe's
+// float pieces, the change it keeps and the bills that go to the bank.
+const PLAN = `${POSA}.cash_custody.bag_plan_api`
+export const bagPlanRead = (safe) => call(`${PLAN}.settings`, { safe })
+export const bagPlanSave = (safe, { on, floatMix, changeTarget, bankFrom }) =>
+  call(`${PLAN}.save_settings`, {
+    safe,
+    on: on ? 1 : 0,
+    float_mix: JSON.stringify(floatMix),
+    change_target: changeTarget,
+    bank_from: bankFrom,
+  })
+
 /** A request ID the custody server accepts (16–80 letters, digits, - and _). */
 export function newRequestId() {
   const bytes = new Uint8Array(12)
@@ -264,7 +277,11 @@ export const BAG_STATES = {
 export const bagState = (state) =>
   BAG_STATES[state] || { label: state || '', tone: 'neutral' }
 
-export const PURPOSE = { Float: 'Fondo para una caja', Takings: 'Recaudación' }
+export const PURPOSE = {
+  Float: 'Fondo para una caja',
+  Takings: 'Recaudación',
+  Change: 'Cambio para la caja fuerte',
+}
 
 /** First name of a person, never an email. */
 export function who(user, people = {}) {

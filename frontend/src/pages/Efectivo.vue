@@ -82,7 +82,9 @@
               v-if="
                 visibleSafes.length > 1 ||
                 (visibleSafes[0] &&
-                  (visibleSafes[0].can.count_safe || visibleSafes[0].can.fund))
+                  (visibleSafes[0].can.count_safe ||
+                    visibleSafes[0].can.fund ||
+                    visibleSafes[0].bag_plan?.can_configure))
               "
               class="order-3 mt-5"
               aria-label="Cajas fuertes"
@@ -115,7 +117,11 @@
                     >{{ money(safe.balance, safe.currency) }}</span
                   >
                   <div
-                    v-if="safe.can.count_safe || safe.can.fund"
+                    v-if="
+                      safe.can.count_safe ||
+                      safe.can.fund ||
+                      safe.bag_plan?.can_configure
+                    "
                     class="ml-auto flex flex-none rounded-full bg-surface-gray-1 p-0.5"
                   >
                     <button
@@ -142,6 +148,20 @@
                     >
                       <span
                         class="lucide-calculator size-5"
+                        aria-hidden="true"
+                      />
+                    </button>
+                    <button
+                      v-if="safe.bag_plan?.can_configure"
+                      type="button"
+                      class="press grid size-10 place-items-center rounded-full text-ink-gray-7"
+                      :aria-label="`Bolsas al cerrar de ${safe.title}`"
+                      title="Bolsas al cerrar"
+                      data-efectivo-bolsas-open
+                      @click="openBolsas(safe)"
+                    >
+                      <span
+                        class="lucide-sliders-horizontal size-5"
                         aria-hidden="true"
                       />
                     </button>
@@ -551,10 +571,17 @@
       </ul>
     </BottomSheet>
     <StepHost :step="step" @close="step = null" @done="afterStep" />
+    <BolsasSheet
+      v-if="bolsasSafe"
+      :open="bolsasOpen"
+      :safe="bolsasSafe"
+      @update:open="(v) => (bolsasOpen = v)"
+      @saved="afterBolsas"
+    />
   </div>
 </template>
 <script setup>
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, nextTick, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Button, toast } from 'frappe-ui'
 import {
@@ -568,6 +595,9 @@ import {
 } from '@/components/ui'
 import CashMap from '@/components/efectivo/CashMap.vue'
 import StepHost from '@/components/efectivo/StepHost.vue'
+const BolsasSheet = defineAsyncComponent(
+  () => import('@/components/efectivo/BolsasSheet.vue'),
+)
 import PowerBulkBar from '@/components/power/PowerBulkBar.vue'
 import {
   WAITING_LABELS,
@@ -682,6 +712,16 @@ function safeLine(safe) {
   const parts = []
   parts.push(open === 1 ? '1 bolsa sellada' : `${open} bolsas selladas`)
   if (transit) parts.push(`${transit} rumbo al banco`)
+  const plan = safe.bag_plan
+  if (plan?.on) {
+    const short =
+      (plan.change_target || 0) - (plan.change ?? plan.change_target)
+    parts.push(
+      short > 0
+        ? `faltan ${money(short, safe.currency)} de cambio`
+        : 'el POS arma las bolsas',
+    )
+  }
   return parts.join(', ')
 }
 
@@ -1137,6 +1177,18 @@ function startSeal() {
 }
 function open(next) {
   step.value = next
+}
+
+// Bags at closing: the safe's settings sheet (BolsasSheet), mounted on first open.
+const bolsasSafe = ref(null)
+const bolsasOpen = ref(false)
+function openBolsas(safe) {
+  bolsasSafe.value = safe
+  bolsasOpen.value = true
+}
+function afterBolsas(result) {
+  if (result?.toast) toast.success(result.toast)
+  load()
 }
 
 const listCache = createListCache('efectivo', () => [])

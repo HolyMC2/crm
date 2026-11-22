@@ -2,6 +2,12 @@
 
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
+## 2026-11-22 — «Bolsas al cerrar»: the owner sets how the POS splits a closing drawer (lane bolsas-solas, with posawesome; not deployed)
+
+- **Why:** at closing, the POS now proposes which bills go to the bank, which make the next float and which stay in the safe as change; each safe needs its float, its change target and where bank bills start, set by the owner in a few taps.
+- **Change:** Efectivo › each safe's island gains «Bolsas al cerrar» (sliders icon, for who configures or supervises the safe) opening `components/efectivo/BolsasSheet.vue`: the switch «Muelle arma las bolsas al cerrar», the float's pieces per bill and coin, «Cambio que guarda la caja fuerte» and «Al banco van billetes desde», saved through posawesome `bag_plan_api.save_settings`. The safe's line says «el POS arma las bolsas» or «faltan $X de cambio». `components/efectivo/FaceSteppers.vue` is the stepper rows, now shared with `ConteoSheet.vue`; sealing a bag offers «Cambio».
+- **Tests:** `tests/unit/efectivoBolsas.test.js` (3).
+
 ## 2026-11-21 — A ticket's lines and the «Altas» cards paint small photos (lane crm-fotos-tickets, with doco and mercado; not deployed)
 
 - **Why:** Resultados › a ticket painted each line's full product photo in a 44 px box, and Productos › Altas painted each draft's full photo in its card.
