@@ -300,6 +300,63 @@ waits, did not arrive or has no sale. Who the owner keeps the money from sees on
 made. A shop with no bank account adds the one customers pay into from the settings (name and
 CLABE: the ledger, the Bank Account, and the register's bank methods that pay nowhere yet).
 
+## 3f. Tickets de compra: the store's ticket books the cash by itself (Marco, 2026-11-22)
+
+Marco: «i purchase a lot of coffee from oxxo, i always forget to register that money, its on cash, i
+always give my phone number for the points». Spin Premia has no API, and its points round to $10. A
+store that emails its tickets does: OXXO's Ticket Digital sends every ticket where the Spin Premia
+phone is given from `@oxxoticket.com`, within minutes, to the account's mail. Then: «do whats missing
+and make it even more powerful, also good ui/ux for manual user work, and the bot tools».
+
+| Job | Today (steps) | Target |
+|---|---|---|
+| Record cash spent at a store that emails tickets | Remember it, Por explicar, «Gasté en efectivo», amount, what, save (≈5 taps; mostly forgotten) | The ticket waits in Por explicar with the answer suggested: 1 tap. «Registrar solos» for that store: 0 taps, with undo |
+| A store without digital tickets | Same as above | «Foto del ticket»: the camera, the reading, 1 tap |
+| A ticket paid by card | The ticket is lost; the charge is explained by its merchant alone | The ticket meets its card charge (same amount, up to 3 days later): the charge shows what was bought and nothing is booked twice |
+| The same purchase again, no ticket | Type it all again | «Lo de siempre» in «Gasté en efectivo»: amount, account and note in one tap |
+| Know what goes to each store | Not possible | The bot: «¿cuánto gasto en OXXO?», «¿cuánto en café este mes?» |
+
+How it works (doco `books/tickets_leer.py` pure, `books/tickets.py`, `workspaces/tickets.py`):
+- A ticket is a «Ticket de Compra»: store, branch, when, total, how it was paid, items, where it came
+  from (mail, photo, the assistant), and what became of it: Por registrar, Esperando al banco,
+  Con el banco, Registrado, Apartado.
+- Mail: a mailbox reads tickets when its owner switches it on (Email Account «Read purchase tickets»,
+  off by default; the page's settings switch it). The mail hook the sorting agent already has sends
+  it on. A known sender (OXXO's `@oxxoticket.com`) is read by rules, with no model. A mail that looks
+  like a store's ticket from another sender is read by the money model (one call), unless the owner
+  keeps it to known stores. Sorting reads a ticket from the ticket instead of a model. An online order
+  stays with «Compras en línea».
+- Photo: «Foto del ticket» and the bot read the picture with the money model.
+- Card: a ticket paid by card, or one that does not say, meets the card or bank charge of the same
+  amount up to 3 days later. It then waits with that movement in Por explicar («OXXO: Café americano,
+  Galletas») and is never booked as cash. When its store already has an answer, the charge comes with
+  it («Su ticket es de OXXO, que registras en Café y comida»): one tap, like the cash ones.
+- Booking: «Gasté en efectivo»'s own entry (`efectivo.gaste`): one submitted Journal Entry per ticket,
+  dated the purchase day, the store and items in its remark, with tags and undo.
+- Memory: «Tienda de Tickets» keeps the account, cash and tags last used per store. After 3 tickets of
+  a store booked the same way, the sheet offers «Registrar solos los de OXXO» (off until tapped). A
+  ticket of such a store is booked on arrival as the person who switched it on and shows under
+  «Registrados solos» with undo. Unknown payment, or a total over 3 times the store's usual, still asks.
+- One ticket per purchase: the same store, total and minute (or folio) is the same ticket.
+- Bot: `tickets_de_compra` (what waits, totals per store, words in the items, per period),
+  `leer_ticket` (a photo or a pasted text read, nothing saved), and `registrar_tickets` (one card:
+  book as cash, mark paid by card, or set aside; one line per ticket, a new one from a photo the tool
+  reads itself). `registrar_tickets` is an owner tool like `explicar_movimientos`: only the owner, in
+  their own chat, with their tap. `leer_ticket` is an outside reader, so no owner card follows it in
+  the same run. Guide: `assistant/playbooks/tickets-compra.md`. Hoy's «Por explicar» card and the
+  evening reminder count the tickets waiting.
+- Settings («Ajustes de Tickets», from the gear beside «Tickets por registrar»): the mailboxes that read
+  tickets, the book and cash they go to, only known stores, tell me when one arrives, the stores set to
+  book themselves, and how to turn on each store's digital ticket.
+
+Setup on Marco's shops: OXXO's Ticket Digital on (at the till, «quiero ticket digital», or OXXO's
+preferences page); the tickets reach a mailbox Muelle reads (his Hotmail needs G-32, or an Outlook
+rule forwarding `@oxxoticket.com` to a mailbox doco already reads); that mailbox's switch on; the lab
+mirror first, then a kit for his go.
+
+Next, lane `tickets-reenvio`: Muelle's own forwarding address per tenant (a Cloudflare Email Worker
+plus Boat routing), so any tenant forwards tickets from any provider without connecting a mailbox.
+
 ## 4. Settings and the owner's switches
 
 - Cuadre needs no setting: it reads Bancos' own permissions. «Ligar» follows the reconciliation engine

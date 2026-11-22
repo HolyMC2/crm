@@ -46,6 +46,29 @@
         </li>
       </ul>
     </div>
+    <ul
+      v-if="groupTickets.length"
+      class="mt-2 space-y-1"
+      aria-label="Lo que compraste, según sus tickets"
+      data-por-explicar-grupo-tickets
+    >
+      <li
+        v-for="t in groupTickets"
+        :key="t.name"
+        class="flex items-start gap-2 text-sm text-ink-gray-8"
+      >
+        <span
+          class="lucide-receipt mt-0.5 size-4 flex-none text-ink-gray-6"
+          aria-hidden="true"
+        />
+        <span class="min-w-0 break-words"
+          >{{ t.tienda }} {{ ctx.fmt(t.total)
+          }}<template v-if="t.articulos_texto"
+            >: {{ t.articulos_texto }}</template
+          ></span
+        >
+      </li>
+    </ul>
     <p
       v-if="group.tags?.length"
       class="mt-2 flex flex-wrap gap-1.5"
@@ -161,10 +184,15 @@ const props = defineProps({
   busy: { type: Boolean, default: false },
   open: { type: Boolean, default: false },
   problem: { type: String, default: '' },
+  /** {movement: ticket}: the purchase tickets each card movement paid. */
+  tickets: { type: Object, default: () => ({}) },
 })
 const emit = defineEmits(['si', 'otra', 'toggle', 'adjuntar'])
 
 const deposit = computed(() => props.group.direction === 'Deposit')
+const groupTickets = computed(() =>
+  (props.group.rows || []).map((r) => props.tickets[r.name]).filter(Boolean),
+)
 const answer = computed(() => {
   const g = props.group.guess
   return answerText(g.kind, g.account, props.group.direction, props.ctx.names)

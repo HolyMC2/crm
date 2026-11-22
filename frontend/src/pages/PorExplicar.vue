@@ -91,6 +91,13 @@
         </p>
       </section>
 
+      <TicketsPorRegistrar
+        :data="data"
+        :names="ticketNames"
+        @paint="paint"
+        @reread="refresh"
+      />
+
       <CuentasContraBanco
         v-if="data.cuentas?.length"
         :rows="data.cuentas"
@@ -193,7 +200,7 @@
       />
 
       <EmptyState
-        v-if="!data.summary.count"
+        v-if="!data.summary.count && !data.tickets?.por_registrar?.length"
         class="py-10"
         state="empty"
         title="Todo explicado"
@@ -236,6 +243,7 @@
               :busy="busy === item.group.id"
               :open="open.has(item.group.id)"
               :problem="problems[item.group.id] || ''"
+              :tickets="data.tickets?.por_movimiento || {}"
               @si="
                 explain(
                   item.group,
@@ -432,6 +440,7 @@ import GrupoPorExplicar from '@/components/dinero/GrupoPorExplicar.vue'
 import HechoPorExplicar from '@/components/dinero/HechoPorExplicar.vue'
 import ListaPareada from '@/components/dinero/ListaPareada.vue'
 import RecordatorioSheet from '@/components/dinero/RecordatorioSheet.vue'
+import TicketsPorRegistrar from '@/components/dinero/TicketsPorRegistrar.vue'
 import {
   accountNames,
   accountState,
@@ -446,10 +455,13 @@ import {
   ownBalances,
   porExplicarApi,
   stillWaiting,
+  ticketGuess,
 } from '@/components/dinero/porExplicar'
 import { useLiveList } from '@/composables/liveList'
 
 const SHOWN_ACCOUNTS = 40
+// a ticket read from a mail or booked on another phone repaints the page too
+const TICKET_DOCTYPE = 'Ticket de Compra'
 const LISTS = ['ya', 'facturas']
 
 const route = useRoute()
@@ -488,6 +500,13 @@ const companyQuery = computed(() =>
   route.query.empresa ? { empresa: route.query.empresa } : {},
 )
 const names = computed(() => accountNames(data.value?.choices))
+// the tickets name the cash they came out of too
+const ticketNames = computed(() => ({
+  ...Object.fromEntries(names.value),
+  ...Object.fromEntries(
+    (data.value?.efectivo || []).map((c) => [c.account, c.label]),
+  ),
+}))
 const fmt = (amount) => money(amount, data.value?.currency)
 const ctx = computed(() => ({
   fmt,
@@ -533,7 +552,12 @@ const sheetAction = computed(() => {
 
 // The groups as shown: each tap's result sits where its group was.
 const items = computed(() => {
-  const list = (data.value?.groups || []).map((g) => ({ key: g.id, group: g }))
+  // a card charge its purchase ticket explains comes with the ticket store's answer
+  const bought = data.value?.tickets?.por_movimiento || {}
+  const list = (data.value?.groups || []).map((g) => {
+    const fromTicket = ticketGuess(g, bought, data.value?.choices)
+    return { key: g.id, group: fromTicket ? { ...g, guess: fromTicket } : g }
+  })
   for (const h of [...hechos].sort((a, b) => a.at - b.at))
     list.splice(Math.min(h.at, list.length), 0, {
       key: h.key,
@@ -663,7 +687,7 @@ async function refresh() {
 
 // Saves by this same person count too: they may come from their other phone.
 // The price is one more read after a tap here, at most every 5 s.
-const live = useLiveList(LIVE_DOCTYPES, refresh, {
+const live = useLiveList([...LIVE_DOCTYPES, TICKET_DOCTYPE], refresh, {
   minIntervalMs: 5000,
   me: () => '',
 })

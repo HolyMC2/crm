@@ -80,9 +80,29 @@ export function whyText(guess, names) {
         : `Así lo explicaste las últimas ${guess.times} veces.`
     case 'efectivo':
       return `Depósito en efectivo: sale de ${name}.`
+    case 'ticket':
+      return `Su ticket es de ${guess.store}, que registras en ${name}.`
     default:
       return ''
   }
+}
+
+/**
+ * A card charge with no guess, whose purchase tickets all name the same account (their
+ * store's memory, crm docs/DINERO_EN_ORDEN.md §3f): that account is its answer.
+ * `tickets`: {movement: ticket}. → {kind, account, why: 'ticket', store} or null.
+ */
+export function ticketGuess(group, tickets, choices) {
+  if (!group || group.guess || group.direction !== 'Withdrawal') return null
+  const found = (group.rows || []).map((r) => tickets?.[r.name])
+  if (!found.length || found.some((t) => !t?.sugerencia?.cuenta)) return null
+  const accounts = new Set(found.map((t) => t.sugerencia.cuenta))
+  if (accounts.size !== 1) return null
+  const [account] = accounts
+  const kind = ['gasto', 'personal'].find((k) =>
+    (choices?.[k] || []).some((a) => a.account === account),
+  )
+  return kind ? { kind, account, why: 'ticket', store: found[0].tienda } : null
 }
 
 /** «Gasto del negocio · Software» */

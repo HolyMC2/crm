@@ -5,6 +5,11 @@ Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` i
 ## 2026-11-22 — «Control del almacén» in the command palette (lane control-almacen-puerta, with scanner_kit control-almacen; not deployed)
 
 - Search «control», «revisar cambios» or «anaqueles» in the palette (⌘K or «Buscar o ir a…») to get «Escáner › Control del almacén» (`/scan/control`). It's where the owner or encargado confirms, asks about or follows up the team's changes to the shop's places. Listed only where scanner_kit is installed; Escáner itself says who can open it. `muelleShell.test.js` (+1 assertion). Rollback = revert.
+## 2026-11-22 — Tickets in Por explicar: one tap books a store's ticket as cash (lane tickets-compra, with doco; not deployed)
+
+- **Why:** store tickets that arrive by mail or photo should take one tap, not five typed fields (`docs/DINERO_EN_ORDEN.md` §3f).
+- **Change:** Por explicar gains «Tickets por registrar» (`components/dinero/TicketsPorRegistrar.vue`): each ticket with its store, items, day and its store's answer («Va a Café y comida, de Caja chica, como los últimos 3»), «Registrar» in one tap, «Registrar los N con su cuenta», the result in place with «Deshacer», the offer «¿Registrar solos los que lleguen en efectivo?» after 3, «N se registraron solos esta semana» with undo, card tickets waiting for their charge; the camera («Foto del ticket») and the settings beside the title. `TicketSheet.vue` asks how it was paid, what it was (the store's account first), which cash, tags, «Registrar solos», says what it books, or sets it aside with a reason. `TicketsAjustesSheet.vue`: mailboxes that read tickets, how to turn on each known store's mailed ticket, default cash, stores that book themselves, unknown stores via the model, the notice. «Gasté en efectivo» gains «Lo de siempre». A card movement shows what its ticket bought and takes its store's answer (`ticketGuess`). The page follows `Ticket de Compra` live.
+- **Tests:** `tests/unit/tickets.test.js` (10), `porExplicar.test.js` unchanged and green; lease walk at 412/305/1280, light and dark.
 
 ## 2026-11-22 — «Bolsas al cerrar»: the owner sets how the POS splits a closing drawer (lane bolsas-solas, with posawesome; not deployed)
 

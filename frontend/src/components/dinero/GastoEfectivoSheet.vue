@@ -9,6 +9,26 @@
     @update:open="emit('update:open', $event)"
   >
     <form class="space-y-4 pb-2" data-gasto-efectivo @submit.prevent="save()">
+      <div v-if="usual.length">
+        <p class="text-sm font-medium text-ink-gray-7">Lo de siempre</p>
+        <div
+          class="mt-2 flex flex-wrap gap-2"
+          role="group"
+          aria-label="Lo de siempre"
+        >
+          <button
+            v-for="c in usual"
+            :key="c.key"
+            type="button"
+            class="press min-h-11 rounded-full border border-outline-gray-2 px-4 text-left text-sm text-ink-gray-8"
+            :data-gasto-siempre="c.key"
+            @click="fillUsual(c)"
+          >
+            <span class="num">{{ c.label }}</span>
+            <span class="text-ink-gray-6"> · {{ c.hint }}</span>
+          </button>
+        </div>
+      </div>
       <div>
         <label
           class="block text-sm font-medium text-ink-gray-7"
@@ -185,13 +205,15 @@ import { computed, reactive, watch } from 'vue'
 import { Button } from 'frappe-ui'
 import { BottomSheet } from '@/components/ui'
 import EtiquetasPicker from '@/components/dinero/EtiquetasPicker.vue'
-import { errorText } from '@/components/bancos/bancos'
+import { errorText, money } from '@/components/bancos/bancos'
 import { parseAmount } from '@/components/dinero/colchon'
 import {
+  accountNames,
   accountsFor,
   dayOf,
   porExplicarApi,
 } from '@/components/dinero/porExplicar'
+import { frequentChips } from '@/components/dinero/tickets'
 
 const props = defineProps({
   open: { type: Boolean, default: false },
@@ -219,6 +241,14 @@ const form = reactive({
 })
 
 const cash = computed(() => props.data?.efectivo || [])
+// «Lo de siempre»: the purchases its tickets booked the same way at least twice
+const usual = computed(() =>
+  frequentChips(
+    props.data?.tickets?.lo_de_siempre,
+    accountNames(props.data?.choices),
+    (amount) => money(amount, props.data?.currency),
+  ),
+)
 // the most used expenses, then the owner's own account
 const quick = computed(() => [
   ...accountsFor(props.data?.choices, 'gasto').slice(0, QUICK),
@@ -253,6 +283,19 @@ watch(
   },
   { immediate: true },
 )
+
+function fillUsual(chip) {
+  const f = chip.fill
+  Object.assign(form, {
+    amount: f.amount,
+    account: f.account,
+    cash: cash.value.some((c) => c.account === f.cash) ? f.cash : form.cash,
+    note: f.note,
+    tags: f.tags,
+    searching: false,
+    problem: '',
+  })
+}
 
 function pick(account) {
   form.account = account
