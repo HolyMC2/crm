@@ -712,15 +712,14 @@ function safeLine(safe) {
   const parts = []
   parts.push(open === 1 ? '1 bolsa sellada' : `${open} bolsas selladas`)
   if (transit) parts.push(`${transit} rumbo al banco`)
+  // The plan's line: short of change leads, it is the one thing to act on.
   const plan = safe.bag_plan
   if (plan?.on) {
     const short =
       (plan.change_target || 0) - (plan.change ?? plan.change_target)
-    parts.push(
-      short > 0
-        ? `faltan ${money(short, safe.currency)} de cambio`
-        : 'el POS arma las bolsas',
-    )
+    if (short > 0)
+      parts.unshift(`Faltan ${money(short, safe.currency)} de cambio`)
+    else parts.push('el POS arma las bolsas')
   }
   return parts.join(', ')
 }
