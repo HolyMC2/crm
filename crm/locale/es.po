@@ -21753,9 +21753,33 @@ msgstr "Ver menos"
 msgid "Show {0} more"
 msgstr "Ver {0} más"
 
-#: frontend/src/components/resultados/ResultadosChart.vue
-msgid "Daily sales, best day {0} with {1}"
-msgstr "Ventas por día; mejor día {0} con {1}"
+#: frontend/src/components/resultados/ResultadosTrend.vue
+msgid "Sales per day"
+msgstr "Ventas por día"
+
+#: frontend/src/components/resultados/ResultadosTrend.vue
+msgid "Sales per week"
+msgstr "Ventas por semana"
+
+#: frontend/src/components/resultados/ResultadosTrend.vue
+msgid "Sales per month"
+msgstr "Ventas por mes"
+
+#: frontend/src/components/resultados/ResultadosTrend.vue
+msgid "Best week"
+msgstr "Mejor semana"
+
+#: frontend/src/components/resultados/ResultadosTrend.vue
+msgid "Best month"
+msgstr "Mejor mes"
+
+#: frontend/src/components/resultados/ResultadosTrend.vue
+msgid "Click to show only {0}"
+msgstr "Haz clic para ver solo {0}"
+
+#: frontend/src/components/resultados/ResultadosTrend.vue
+msgid "Tap again to show only {0}"
+msgstr "Toca otra vez para ver solo {0}"
 
 #: frontend/src/components/resultados/ResultadosChart.vue
 msgid "Show only {0}"

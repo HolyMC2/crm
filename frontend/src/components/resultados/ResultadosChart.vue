@@ -1,132 +1,13 @@
 <template>
-  <!-- Daily trend: the period's line over the comparison's, one point per day. -->
-  <div
+  <!-- Trend: one bar per day (or week, or month), the comparison over them. -->
+  <ResultadosTrend
     v-if="chart.type === 'trend'"
-    class="relative select-none"
-    data-testid="chart-trend"
-    @pointermove="hover"
-    @pointerleave="active = -1"
-  >
-    <div class="relative mt-2 h-48 sm:h-56">
-      <div
-        v-for="tick in trendTicks"
-        :key="tick.y"
-        class="absolute inset-x-0 border-t border-dashed border-outline-gray-2"
-        :style="{ top: `${tick.y}%` }"
-      >
-        <span
-          class="absolute -top-2.5 right-0 bg-surface-base pl-1 text-xs tabular-nums text-ink-gray-5"
-          >{{ tick.label }}</span
-        >
-      </div>
-      <svg
-        class="absolute inset-0 h-full w-full overflow-visible"
-        viewBox="0 0 1000 100"
-        preserveAspectRatio="none"
-        role="img"
-        :aria-label="trendSummary"
-      >
-        <defs>
-          <linearGradient :id="gradientId" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stop-color="var(--brand)" stop-opacity="0.22" />
-            <stop offset="100%" stop-color="var(--brand)" stop-opacity="0" />
-          </linearGradient>
-        </defs>
-        <path
-          v-if="trend.prevLine"
-          :d="trend.prevLine"
-          fill="none"
-          stroke="currentColor"
-          class="text-ink-gray-4"
-          stroke-width="1.5"
-          stroke-dasharray="4 4"
-          vector-effect="non-scaling-stroke"
-        />
-        <path :d="trend.area" :fill="`url(#${gradientId})`" />
-        <path
-          :d="trend.line"
-          fill="none"
-          stroke="var(--brand)"
-          stroke-width="2.5"
-          stroke-linejoin="round"
-          vector-effect="non-scaling-stroke"
-        />
-      </svg>
-      <template v-if="active >= 0">
-        <div
-          class="pointer-events-none absolute inset-y-0 w-px bg-outline-gray-3"
-          :style="{ left: `${trend.x(active)}%` }"
-        />
-        <div
-          class="pointer-events-none absolute size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-surface-base"
-          :style="{
-            left: `${trend.x(active)}%`,
-            top: `${trend.y(points[active].value)}%`,
-            background: 'var(--brand)',
-          }"
-        />
-        <div
-          class="pointer-events-none absolute top-0 z-10 min-w-36 rounded-6 border border-outline-gray-2 bg-surface-base px-3 py-2 text-xs shadow-lg"
-          :style="tooltipStyle"
-          role="status"
-        >
-          <p class="font-medium text-ink-gray-9">
-            {{ dayText(points[active].date, LONG_DAY) }}
-          </p>
-          <p class="mt-1 flex justify-between gap-3 tabular-nums">
-            <span class="text-ink-gray-6">{{ __('Sales') }}</span>
-            <span class="font-medium text-ink-gray-9">{{
-              formatValue(points[active].value, 'money', currency)
-            }}</span>
-          </p>
-          <p
-            v-if="points[active].tickets"
-            class="flex justify-between gap-3 tabular-nums"
-          >
-            <span class="text-ink-gray-6">{{ __('Tickets') }}</span>
-            <span class="text-ink-gray-8">{{ points[active].tickets }}</span>
-          </p>
-          <p
-            v-if="prevPoints?.[active]"
-            class="flex justify-between gap-3 tabular-nums"
-          >
-            <span class="text-ink-gray-6">{{
-              dayText(prevPoints[active].date)
-            }}</span>
-            <span class="text-ink-gray-7">{{
-              formatValue(prevPoints[active].value, 'money', currency)
-            }}</span>
-          </p>
-        </div>
-      </template>
-    </div>
-    <div
-      class="mt-2 flex justify-between text-xs tabular-nums text-ink-gray-5"
-      aria-hidden="true"
-    >
-      <span v-for="label in trendLabels" :key="label.i">{{ label.text }}</span>
-    </div>
-    <div class="mt-3 flex flex-wrap gap-4 text-xs text-ink-gray-6">
-      <span class="inline-flex items-center gap-1.5">
-        <span
-          class="h-0.5 w-4 rounded-full"
-          :style="{ background: 'var(--brand)' }"
-        />{{ __('This period') }}
-      </span>
-      <span v-if="trend.prevLine" class="inline-flex items-center gap-1.5">
-        <span class="w-4 border-t-2 border-dashed border-outline-gray-4" />{{
-          __('Comparison')
-        }}
-      </span>
-      <span class="inline-flex items-center gap-1.5">
-        {{ __('Best day') }}
-        <span class="font-medium tabular-nums text-ink-gray-8">
-          {{ dayText(best.date) }} ·
-          {{ formatValue(best.value, 'money', currency) }}</span
-        >
-      </span>
-    </div>
-  </div>
+    :points="chart.points || []"
+    :prev="compara === 'no' ? null : chart.prev || null"
+    :compara="compara"
+    :currency="currency"
+    @filter="(f) => emit('filter', f)"
+  />
 
   <!-- Monthly goal: how much is reached and where the month is heading. -->
   <div v-else-if="chart.type === 'progress'" data-testid="chart-progress">
@@ -336,17 +217,16 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import ResultadosTrend from '@/components/resultados/ResultadosTrend.vue'
 import {
   axisLabel,
   compactValue,
-  dayText,
   deltaChip,
   drillHref,
   formatValue,
   routerPath,
 } from '@/composables/useResultados'
 
-const LONG_DAY = { weekday: 'long', day: 'numeric', month: 'long' }
 const ROWS_SHOWN = 6
 
 const props = defineProps({
@@ -358,83 +238,9 @@ const props = defineProps({
 })
 const emit = defineEmits(['filter'])
 const router = useRouter()
-const active = ref(-1)
 const expanded = ref(false)
-const gradientId = `trend-${Math.random().toString(36).slice(2, 8)}`
 
 const clamp = (n) => Math.max(0, Math.min(100, Number(n) || 0))
-
-// ── trend ────────────────────────────────────────────────────────────
-const points = computed(() => props.chart.points || [])
-const prevPoints = computed(() =>
-  props.compara === 'no' ? null : props.chart.prev || null,
-)
-const trendMax = computed(() => {
-  const values = points.value.map((p) => p.value)
-  for (const p of prevPoints.value || []) values.push(p.value)
-  return niceMax(Math.max(0, ...values))
-})
-function niceMax(n) {
-  if (n <= 0) return 1
-  const step = 10 ** Math.floor(Math.log10(n))
-  return Math.ceil(n / step) * step
-}
-const trend = computed(() => {
-  const n = points.value.length
-  const max = trendMax.value
-  const x = (i) => (n > 1 ? (i / (n - 1)) * 100 : 50)
-  const y = (v) => 100 - (Math.max(0, v) / max) * 100
-  const path = (rows) =>
-    rows.map((p, i) => `${i ? 'L' : 'M'}${x(i) * 10},${y(p.value)}`).join(' ')
-  const line = path(points.value)
-  return {
-    x,
-    y,
-    line,
-    area: n ? `${line} L1000,100 L0,100 Z` : '',
-    prevLine: prevPoints.value?.length ? path(prevPoints.value) : '',
-  }
-})
-const trendTicks = computed(() =>
-  [1, 0.5].map((f) => ({
-    y: 100 - f * 100,
-    label: compactValue(trendMax.value * f, 'money', props.currency),
-  })),
-)
-const trendLabels = computed(() => {
-  const n = points.value.length
-  if (!n) return []
-  const want = Math.min(n, 7)
-  const out = []
-  for (let k = 0; k < want; k++) {
-    const i = want === 1 ? 0 : Math.round((k * (n - 1)) / (want - 1))
-    out.push({ i, text: dayText(points.value[i].date) })
-  }
-  return out
-})
-const best = computed(() =>
-  points.value.reduce(
-    (top, p) => (p.value > top.value ? p : top),
-    points.value[0] || { value: 0 },
-  ),
-)
-const trendSummary = computed(() =>
-  __('Daily sales, best day {0} with {1}', [
-    dayText(best.value.date),
-    formatValue(best.value.value, 'money', props.currency),
-  ]),
-)
-const tooltipStyle = computed(() => {
-  const left = trend.value.x(active.value)
-  return left > 60 ? { right: `${100 - left + 2}%` } : { left: `${left + 2}%` }
-})
-function hover(event) {
-  const n = points.value.length
-  if (!n) return
-  const box = event.currentTarget.getBoundingClientRect()
-  const f = (event.clientX - box.left) / box.width
-  active.value = Math.max(0, Math.min(n - 1, Math.round(f * (n - 1))))
-}
 
 // ── ranked rows ──────────────────────────────────────────────────────
 const rows = computed(() => props.chart.rows || [])

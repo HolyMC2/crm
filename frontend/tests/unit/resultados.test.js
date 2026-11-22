@@ -406,7 +406,7 @@ describe('ResultadosChart', () => {
     return root
   }
 
-  it('draws the trend with its comparison, and drops it without one', async () => {
+  it('draws the trend as a bar per day, the comparison over them unless off', async () => {
     const chart = {
       type: 'trend',
       points: [
@@ -419,14 +419,12 @@ describe('ResultadosChart', () => {
       ],
     }
     let root = await mount({ chart, currency: 'MXN' })
-    expect(
-      root.querySelectorAll('[data-testid="chart-trend"] path'),
-    ).toHaveLength(3)
+    expect(root.querySelectorAll('[data-testid="trend-bar"]')).toHaveLength(2)
+    expect(root.querySelector('[data-testid="trend-prev"]')).not.toBeNull()
     app.unmount()
     root = await mount({ chart, currency: 'MXN', compara: 'no' })
-    expect(
-      root.querySelectorAll('[data-testid="chart-trend"] path'),
-    ).toHaveLength(2)
+    expect(root.querySelectorAll('[data-testid="trend-bar"]')).toHaveLength(2)
+    expect(root.querySelector('[data-testid="trend-prev"]')).toBeNull()
   })
 
   it('ranked rows link their record, filter the board, and fold after six', async () => {
