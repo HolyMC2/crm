@@ -51026,3 +51026,274 @@ msgstr "Ve las fichas de quienes le reportan: asistencia, permisos y adelantos."
 msgid "Will see their employee record"
 msgstr "Verá su ficha de empleado"
 
+msgctxt "EnLinea"
+msgid "All"
+msgstr "Todas"
+
+msgctxt "EnLinea"
+msgid "An expense"
+msgstr "Es un gasto"
+
+msgctxt "EnLinea"
+msgid "Arrives at"
+msgstr "Llega a"
+
+msgctxt "EnLinea"
+msgid "Ask your manager for access to the accounting of purchases."
+msgstr "Pide a tu encargado acceso a la contabilidad de las compras."
+
+msgctxt "EnLinea"
+msgid "Bring now"
+msgstr "Traer ahora"
+
+msgctxt "EnLinea"
+msgid "Bring purchases"
+msgstr "Traer compras"
+
+msgctxt "EnLinea"
+msgid "Bring purchases from Mercado Libre"
+msgstr "Traer compras de Mercado Libre"
+
+msgctxt "EnLinea"
+msgid "Catalog item"
+msgstr "Artículo del catálogo"
+
+msgctxt "EnLinea"
+msgid "Check before registering"
+msgstr "Revisa antes de registrar"
+
+msgctxt "EnLinea"
+msgid "Could not load the online purchases"
+msgstr "No se pudieron cargar las compras en línea"
+
+msgctxt "EnLinea"
+msgid "Could not open the purchase"
+msgstr "No se pudo abrir la compra"
+
+msgctxt "EnLinea"
+msgid "Date"
+msgstr "Fecha"
+
+msgctxt "EnLinea"
+msgid "Empty: the one in the Mercado Pago settings."
+msgstr "Vacía: la de los ajustes de Mercado Pago."
+
+msgctxt "EnLinea"
+msgid "Expense account"
+msgstr "Cuenta del gasto"
+
+msgctxt "EnLinea"
+msgid "For deals"
+msgstr "Para tratos"
+
+msgctxt "EnLinea"
+msgid "For repairs"
+msgstr "Para reparaciones"
+
+msgctxt "EnLinea"
+msgid "For the shop"
+msgstr "Para la tienda"
+
+msgctxt "EnLinea"
+msgid "How far back"
+msgstr "Desde cuándo"
+
+msgctxt "EnLinea"
+msgid "It is a new item"
+msgstr "Es un artículo nuevo"
+
+msgctxt "EnLinea"
+msgid "Item group"
+msgstr "Grupo de artículos"
+
+msgctxt "EnLinea"
+msgid "Loading online purchases…"
+msgstr "Cargando compras en línea…"
+
+msgctxt "EnLinea"
+msgid "Loading the purchase…"
+msgstr "Cargando la compra…"
+
+msgctxt "EnLinea"
+msgid "Mercado Libre has not given its items yet. «Bring purchases» on the list reads them now."
+msgstr "Mercado Libre todavía no da sus artículos. «Traer compras» en la lista los lee ahora."
+
+msgctxt "EnLinea"
+msgid "New item name"
+msgstr "Nombre del artículo nuevo"
+
+msgctxt "EnLinea"
+msgid "No purchase matches «{0}»"
+msgstr "Ninguna compra coincide con «{0}»"
+
+msgctxt "EnLinea"
+msgid "No purchases here"
+msgstr "No hay compras aquí"
+
+msgctxt "EnLinea"
+msgid "Not available"
+msgstr "No disponible"
+
+msgctxt "EnLinea"
+msgid "Not in the catalog yet."
+msgstr "Todavía no está en el catálogo."
+
+msgctxt "EnLinea"
+msgid "Nothing is registered: they wait here to be registered."
+msgstr "No se registra nada: esperan aquí para registrarse."
+
+msgctxt "EnLinea"
+msgid "Nothing left to register"
+msgstr "No queda nada por registrar"
+
+msgctxt "EnLinea"
+msgid "Online purchase"
+msgstr "Compra en línea"
+
+msgctxt "EnLinea"
+msgid "Online purchases"
+msgstr "Compras en línea"
+
+msgctxt "EnLinea"
+msgid "Online purchases set aside"
+msgstr "Compras en línea apartadas"
+
+msgctxt "EnLinea"
+msgid "Online purchases to register"
+msgstr "Compras en línea por registrar"
+
+msgctxt "EnLinea"
+msgid "Order"
+msgstr "Pedido"
+
+msgctxt "EnLinea"
+msgid "Paid with"
+msgstr "Pagada con"
+
+msgctxt "EnLinea"
+msgid "Personal, refunded…"
+msgstr "Personal, devuelta…"
+
+msgctxt "EnLinea"
+msgid "Pick from the catalog"
+msgstr "Elegir del catálogo"
+
+msgctxt "EnLinea"
+msgid "Purchase"
+msgstr "Compra"
+
+msgctxt "EnLinea"
+msgid "Purchases brought in"
+msgstr "Compras traídas"
+
+msgctxt "EnLinea"
+msgid "Quantity"
+msgstr "Cantidad"
+
+msgctxt "EnLinea"
+msgid "Register expense"
+msgstr "Registrar gasto"
+
+msgctxt "EnLinea"
+msgid "Register it"
+msgstr "Registrarla"
+
+msgctxt "EnLinea"
+msgid "Register purchase"
+msgstr "Registrar compra"
+
+msgctxt "EnLinea"
+msgid "Registered"
+msgstr "Registrada"
+
+msgctxt "EnLinea"
+msgid "Registered in"
+msgstr "Registrada en"
+
+msgctxt "EnLinea"
+msgid "Registered online purchases"
+msgstr "Compras en línea registradas"
+
+msgctxt "EnLinea"
+msgid "Remove"
+msgstr "Quitar"
+
+msgctxt "EnLinea"
+msgid "Review and register"
+msgstr "Revisar y registrar"
+
+msgctxt "EnLinea"
+msgid "Search a deal"
+msgstr "Busca un trato"
+
+msgctxt "EnLinea"
+msgid "Search an account"
+msgstr "Busca una cuenta"
+
+msgctxt "EnLinea"
+msgid "Search an open repair"
+msgstr "Busca una reparación abierta"
+
+msgctxt "EnLinea"
+msgid "Search product, seller or order"
+msgstr "Buscar producto, vendedor o pedido"
+
+msgctxt "EnLinea"
+msgid "Search the catalog"
+msgstr "Busca en el catálogo"
+
+msgctxt "EnLinea"
+msgid "Seller"
+msgstr "Vendedor"
+
+msgctxt "EnLinea"
+msgid "Set aside"
+msgstr "Apartar"
+
+msgctxt "EnLinea"
+msgid "Show more purchases"
+msgstr "Ver más compras"
+
+msgctxt "EnLinea"
+msgid "The store it goes to"
+msgstr "El almacén al que llega"
+
+msgctxt "EnLinea"
+msgid "To register"
+msgstr "Por registrar"
+
+msgctxt "EnLinea"
+msgid "Total"
+msgstr "Total"
+
+msgctxt "EnLinea"
+msgid "Try the product, the seller or another state."
+msgstr "Prueba con el producto, el vendedor u otro estado."
+
+msgctxt "EnLinea"
+msgid "Undo"
+msgstr "Deshacer"
+
+msgctxt "EnLinea"
+msgid "Undone"
+msgstr "Deshecho"
+
+msgctxt "EnLinea"
+msgid "What it is"
+msgstr "Qué es"
+
+msgctxt "EnLinea"
+msgid "What you buy with Mercado Pago or on Mercado Libre arrives here by itself, about a day later. «Bring purchases» asks for it now."
+msgstr "Lo que compras con Mercado Pago o en Mercado Libre llega aquí solo, como un día después. «Traer compras» lo pide ahora."
+
+msgctxt "EnLinea"
+msgid "Why it is not registered"
+msgstr "Por qué no se registra"
+
+msgctxt "EnLinea"
+msgid "You cannot see the online purchases"
+msgstr "No puedes ver las compras en línea"
+
+msgctxt "EnLinea"
+msgid "{0} days"
+msgstr "{0} días"

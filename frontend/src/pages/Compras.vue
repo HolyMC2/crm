@@ -86,6 +86,17 @@
                   {{ __('Restock from a list', null, 'Surtido') }}
                 </button>
                 <RouterLink
+                  :class="chipClass(false)"
+                  data-compras-en-linea
+                  :to="{ name: 'CompraEnLinea' }"
+                >
+                  <span
+                    class="lucide-shopping-bag size-3.5"
+                    aria-hidden="true"
+                  />
+                  {{ __('Online purchases', null, 'EnLinea') }}
+                </RouterLink>
+                <RouterLink
                   v-if="caps.discounts"
                   :class="chipClass(false)"
                   data-compras-descuentos
@@ -211,6 +222,16 @@
                   @click="router.push({ name: 'CompraEnvios' })"
                 >
                   <span class="lucide-truck size-5" aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  :class="ISLAND_ICON"
+                  :aria-label="__('Online purchases', null, 'EnLinea')"
+                  :title="__('Online purchases', null, 'EnLinea')"
+                  data-compras-en-linea
+                  @click="router.push({ name: 'CompraEnLinea' })"
+                >
+                  <span class="lucide-shopping-bag size-5" aria-hidden="true" />
                 </button>
                 <button
                   type="button"

@@ -345,6 +345,20 @@ const routes = [
     meta: { app: 'compras', title: 'Compras', ownPhoneHeader: true },
   },
   {
+    // Compras › En línea: what Mercado Pago and Mercado Libre bring in, registered
+    // with the assistant's own cards (doco.workspaces.compras_en_linea).
+    path: '/compras/en-linea',
+    name: 'CompraEnLinea',
+    component: () => import('@/pages/CompraEnLinea.vue'),
+    meta: { app: 'compras', title: 'Compras' },
+  },
+  {
+    path: '/compras/en-linea/:name',
+    name: 'CompraEnLineaDetalle',
+    component: () => import('@/pages/CompraEnLineaDetalle.vue'),
+    meta: { app: 'compras', title: 'Compras' },
+  },
+  {
     // Compras › Hoy: the owner's buying board (doco.workspaces.compras_hoy).
     path: '/compras/hoy',
     name: 'CompraHoy',
