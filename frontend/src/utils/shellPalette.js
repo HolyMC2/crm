@@ -242,6 +242,13 @@ const ESCANER_PLACES = [
   ['/scan/items', 'Artículos', 'lucide-package-search', 'buscar articulo item'],
   ['/scan/bins', 'Cajones', 'lucide-layout-grid', 'cajon ubicacion bin'],
   ['/scan/bins/move', 'Mover de cajón', 'lucide-move', 'mover cajon traspaso'],
+  // The owner's review of what the team changed in the shop's places.
+  [
+    '/scan/control',
+    'Control del almacén',
+    'lucide-clipboard-check',
+    'control almacen revisar cambios lugares anaqueles encargado',
+  ],
   ['/scan/conteo', 'Conteo del día', 'lucide-list-checks', 'contar inventario'],
   [
     '/scan/conteo/revision',

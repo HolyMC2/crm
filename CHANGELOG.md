@@ -2,6 +2,10 @@
 
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
+## 2026-11-22 — «Control del almacén» in the command palette (lane control-almacen-puerta, with scanner_kit control-almacen; not deployed)
+
+- Search «control», «revisar cambios» or «anaqueles» in the palette (⌘K or «Buscar o ir a…») to get «Escáner › Control del almacén» (`/scan/control`). It's where the owner or encargado confirms, asks about or follows up the team's changes to the shop's places. Listed only where scanner_kit is installed; Escáner itself says who can open it. `muelleShell.test.js` (+1 assertion). Rollback = revert.
+
 ## 2026-11-22 — «Bolsas al cerrar»: the owner sets how the POS splits a closing drawer (lane bolsas-solas, with posawesome; not deployed)
 
 - **Why:** at closing, the POS now proposes which bills go to the bank, which make the next float and which stay in the safe as change; each safe needs its float, its change target and where bank bills start, set by the owner in a few taps.

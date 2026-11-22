@@ -1898,6 +1898,13 @@ describe('palette providers', () => {
       expect((await search('ir_a', 'cajon')).map((i) => i.external)).toContain(
         '/scan/bins/move',
       )
+      // The owner's door to what the team changed in the places.
+      expect(
+        (await search('ir_a', 'revisar cambios')).map((i) => [
+          i.title,
+          i.external,
+        ]),
+      ).toEqual([['Escáner › Control del almacén', '/scan/control']])
       const find = (await search('acciones', 'funda roja')).find(
         (i) => i.id === 'escaner.search',
       )
