@@ -95,7 +95,8 @@ export function ticketLine(item, cost, currency) {
           ])
         : '',
     loss: num(cost?.margin) < -EPS,
-    image: item.image || '',
+    // the small copy (doco's media layer) for the line's 44 px box, else the photo
+    image: item.thumb || item.image || '',
   }
 }
 

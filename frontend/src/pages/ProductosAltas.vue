@@ -81,7 +81,7 @@
               <div class="relative aspect-square bg-surface-gray-2">
                 <img
                   v-if="row.fotos?.length"
-                  :src="row.fotos[0]"
+                  :src="row.miniaturas?.[0] || row.fotos[0]"
                   alt=""
                   loading="lazy"
                   class="size-full object-cover"

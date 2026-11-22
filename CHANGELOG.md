@@ -2,6 +2,12 @@
 
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
+## 2026-11-21 — A ticket's lines and the «Altas» cards paint small photos (lane crm-fotos-tickets, with doco and mercado; not deployed)
+
+- **Why:** Resultados › a ticket painted each line's full product photo in a 44 px box, and Productos › Altas painted each draft's full photo in its card.
+- **Change:** `composables/resultadosTicket.ticketLine` paints `item.thumb || item.image`; mercado's document sheet sends `thumb`, the doco media layer's «card» copy. `pages/ProductosAltas.vue` paints `row.miniaturas[0] || row.fotos[0]`; doco's `altas` rows send `miniaturas`.
+- **Tests:** `tests/unit/resultadosTicket.test.js` (+1), `tests/unit/altas.test.js` (+1, the list's cards).
+
 ## 2026-11-21 — A phone warms the deal and its conversation on the real deals list, and the «¿Es este?» card paints a small photo (lane crm-tratos-rapidos, with doco; not deployed)
 
 - **Why:** on a phone or a slow line, `utils/prefetch` warms only the view the current page's tap opens. Its «Deals» key named the legacy `/deals/view` route, so the deals list at `/deals` («Deals List») warmed nothing. It also looked only at the page the app loaded on, so a deal opened inside the app (from the list, Hoy or a search) still paid a cold first «Conversación» tap. The assistant's decision card painted the full product photo in its 48 px box.

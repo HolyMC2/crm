@@ -120,6 +120,19 @@ describe('the ticket hero', () => {
 })
 
 describe('what was sold', () => {
+  it('a line paints the small copy of its photo, else the photo', () => {
+    expect(
+      ticketLine({ qty: 1, image: '/files/a.jpg' }, null, 'MXN').image,
+    ).toBe('/files/a.jpg')
+    expect(
+      ticketLine(
+        { qty: 1, image: '/files/a.jpg', thumb: '/files/a-card.webp' },
+        null,
+        'MXN',
+      ).image,
+    ).toBe('/files/a-card.webp')
+  })
+
   it('a single piece shows no «1 × price» line; a discount and its cost do', () => {
     const plain = ticketLine(ticket().items[0], null, 'MXN')
     expect(plain.detail).toBe('')

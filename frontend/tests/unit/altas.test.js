@@ -11,7 +11,12 @@ import {
   tipoLabel,
 } from '@/composables/useAltas'
 
-const state = vi.hoisted(() => ({ calls: [], photos: [], detalle: null }))
+const state = vi.hoisted(() => ({
+  calls: [],
+  photos: [],
+  detalle: null,
+  lista: null,
+}))
 
 vi.mock('vue-router', async () => {
   const { h } = await import('vue')
@@ -48,6 +53,7 @@ vi.mock('@/composables/useAltas', async (importOriginal) => ({
     if (method === 'ubicaciones') return { rows: [] }
     if (method === 'proponer') return { name: 'ALTA-00001' }
     if (method === 'detalle') return state.detalle
+    if (method === 'lista') return state.lista || { rows: [] }
     if (method === 'decidir')
       return { item: 'IPN1', item_name: 'Conector FPC', said: [] }
     return {}
@@ -131,6 +137,31 @@ describe('Registrar algo nuevo', () => {
     expect(state.photos).toEqual([['ALTA-00001', 'etiqueta.jpg']])
     expect(root.querySelector('[data-alta-enviada]')).not.toBeNull()
   }, 20000)
+})
+
+describe('Altas por revisar', () => {
+  it('a card paints the small copy of its first photo, else the photo', async () => {
+    const card = (name, extra) => ({
+      name,
+      estado: 'Por revisar',
+      nombre: 'fpc a26',
+      tipo: 'Para vender',
+      cantidad: 1,
+      fotos: [`/private/files/${name}.jpg`],
+      ...extra,
+    })
+    state.lista = {
+      rows: [
+        card('ALTA-1', { miniaturas: ['/private/files/ALTA-1-card.webp'] }),
+        card('ALTA-2'),
+      ],
+    }
+    const root = await mount('ProductosAltas')
+    const src = (name) =>
+      root.querySelector(`[data-alta="${name}"] img`)?.getAttribute('src')
+    expect(src('ALTA-1')).toBe('/private/files/ALTA-1-card.webp')
+    expect(src('ALTA-2')).toBe('/private/files/ALTA-2.jpg')
+  })
 })
 
 describe('Una alta', () => {
