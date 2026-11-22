@@ -202,7 +202,7 @@ const scopes = computed(() =>
   STATES.map((s) => ({
     value: s.value,
     label: __(s.label, null, 'EnLinea'),
-    count: s.key ? (counts.value[s.key] ?? undefined) : undefined,
+    count: s.key ? counts.value[s.key] ?? undefined : undefined,
   })),
 )
 const title = computed(() => stateTitle(state.value))
