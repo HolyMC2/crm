@@ -58,7 +58,7 @@
         </div>
         <svg
           v-if="prevPath"
-          class="pointer-events-none absolute inset-0 h-full w-full overflow-visible text-ink-gray-4"
+          class="pointer-events-none absolute inset-0 h-full w-full overflow-visible"
           :viewBox="`0 0 ${buckets.length} 100`"
           preserveAspectRatio="none"
           aria-hidden="true"
@@ -67,7 +67,7 @@
           <path
             :d="prevPath"
             fill="none"
-            stroke="currentColor"
+            stroke="var(--outline-gray-4)"
             stroke-width="1.5"
             stroke-dasharray="4 4"
             stroke-linecap="round"
@@ -78,11 +78,10 @@
         <template v-if="current">
           <span
             v-if="current.prev !== null"
-            class="pointer-events-none absolute size-2 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 bg-surface-base text-ink-gray-4"
+            class="pointer-events-none absolute size-2 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-outline-gray-4 bg-surface-base"
             :style="{
               left: `${slot * (active + 0.5)}%`,
               top: `${y(current.prev)}%`,
-              borderColor: 'currentColor',
             }"
           />
           <div
@@ -159,10 +158,9 @@
         />{{ seriesName }}
       </span>
       <span v-if="prevPath" class="inline-flex items-center gap-1.5">
-        <span
-          class="w-4 border-t-2 border-dashed text-ink-gray-4"
-          :style="{ borderColor: 'currentColor' }"
-        />{{ compareName }}
+        <span class="w-4 border-t-2 border-dashed border-outline-gray-4" />{{
+          compareName
+        }}
       </span>
       <span v-if="best.value > 0" class="inline-flex items-center gap-1.5">
         {{ bestName }}
