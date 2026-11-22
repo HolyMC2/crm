@@ -114,6 +114,12 @@ const shown = computed(() =>
 function detail(option) {
   if (option.current) return __('Reports to them now')
   if (option.under) return __('Is on their team: move them first')
-  return roleLine(option)
+  // The tree is a permission: a boss limited to their own record sees their team's.
+  const line = roleLine(option)
+  if (option.sees_reports)
+    return line
+      ? __('{0}. Will see their employee record', [line])
+      : __('Will see their employee record')
+  return line
 }
 </script>

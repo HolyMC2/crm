@@ -102,6 +102,20 @@
       <p v-if="below" class="mt-1 text-sm text-ink-gray-6">
         {{ __('And {0} more below them.', [below]) }}
       </p>
+      <!-- Frappe opens the records under a limited user's own Employee too:
+           the tree is a permission, so the card says it. -->
+      <p
+        v-if="person.sees_reports"
+        class="mt-2 flex items-start gap-2 text-sm text-ink-gray-7"
+        data-testid="org-persona-sees"
+      >
+        <span class="lucide-eye mt-0.5 size-4 flex-none" aria-hidden="true" />
+        {{
+          __(
+            'Sees the employee records of whoever reports to them: attendance, leave and advances.',
+          )
+        }}
+      </p>
     </section>
 
     <section :aria-label="__('Can', null, 'Equipo')">

@@ -50,6 +50,7 @@ const TEAM = [
     puesto: 'Encargado',
     reports_to: 'E1',
     capabilities: ['cobrar', 'autorizar'],
+    sees_reports: true,
     can_do: ['autorizar ventas, descuentos y clientes', 'cobrar en la caja'],
     can_do_more: 1,
   }),
@@ -254,6 +255,8 @@ describe('Organigrama page', () => {
       text(pane.querySelector('[data-testid=org-persona-team]')),
     ).toContain('Ana Cajera')
     expect(text(pane)).toContain('Everything their roles allow (3)')
+    // The tree is a permission: her user, limited to her own record, opens her team's.
+    expect(pane.querySelector('[data-testid=org-persona-sees]')).not.toBeNull()
   })
 
   it('the suggestion moves the loose people in one request', async () => {
