@@ -3,7 +3,7 @@
 import re
 from urllib.parse import urlsplit
 
-_EQUIPO_PATH = re.compile(r"^/crm/equipo(?:/persona/[^/]+|/vacaciones)?/*$")
+_EQUIPO_PATH = re.compile(r"^/crm/equipo(?:/persona/[^/]+|/vacaciones|/organigrama)?/*$")
 
 
 def is_equipo_path(path):

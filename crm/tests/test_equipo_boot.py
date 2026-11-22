@@ -26,6 +26,8 @@ class TestEquipoPaths(TestCase):
 			"/crm/equipo/persona/HR-EMP-00001?request=HR-LAP-2026-00001&list=%2Fequipo",
 			"/crm/equipo/vacaciones",
 			"/crm/equipo/vacaciones?employee=HR-EMP-00001",
+			"/crm/equipo/organigrama",
+			"/crm/equipo/organigrama?persona=HR-EMP-00001&puede=cobrar",
 		):
 			with self.subTest(path=path):
 				self.assertTrue(is_equipo_path(path))
@@ -38,6 +40,7 @@ class TestEquipoPaths(TestCase):
 			"/crm/equipo/persona",
 			"/crm/equipo/persona/X/extra",
 			"/crm/equipo/HR-EMP-1",
+			"/crm/equipo/organigrama/X",
 			"//evil.invalid/crm/equipo",
 			"https://evil.invalid/crm/equipo",
 			"/crm/equipo\\evil",

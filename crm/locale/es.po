@@ -50791,3 +50791,229 @@ msgstr "Además lleva la tienda, hasta donde su puesto lo permite."
 msgctxt "Equipo"
 msgid "Runs the shops of their region."
 msgstr "Lleva las tiendas de su región."
+
+#: frontend/src (Organigrama)
+msgid "Organization chart"
+msgstr "Organigrama"
+
+#: frontend/src (Organigrama)
+msgid "Who reports to whom, and what each one can do."
+msgstr "Quién reporta a quién y qué puede hacer cada quien."
+
+#: frontend/src (Organigrama)
+msgid "One person. Who reports to whom, and what each one can do."
+msgstr "Una persona. Quién reporta a quién y qué puede hacer cada quien."
+
+#: frontend/src (Organigrama)
+msgid "{0} people. Who reports to whom, and what each one can do."
+msgstr "{0} personas. Quién reporta a quién y qué puede hacer cada quien."
+
+#: frontend/src (Organigrama)
+msgid "Open Equipo"
+msgstr "Abrir Equipo"
+
+#: frontend/src (Organigrama)
+msgid "Loading the organization chart…"
+msgstr "Cargando el organigrama…"
+
+#: frontend/src (Organigrama)
+msgid "Search a person or puesto"
+msgstr "Busca una persona o un puesto"
+
+#: frontend/src (Organigrama)
+msgid "Search the organization chart"
+msgstr "Buscar en el organigrama"
+
+#: frontend/src (Organigrama)
+msgid "Who can…?"
+msgstr "¿Quién puede…?"
+
+#: frontend/src (Organigrama)
+msgid "Nobody here can: {0}."
+msgstr "Nadie aquí puede: {0}."
+
+#: frontend/src (Organigrama)
+msgid "Only {0} can: {1}."
+msgstr "Solo {0} puede: {1}."
+
+#: frontend/src (Organigrama)
+msgid "{0} of {1} people can: {2}."
+msgstr "{0} de {1} personas pueden: {2}."
+
+#: frontend/src (Organigrama)
+msgid "{0} reports to nobody."
+msgstr "{0} no reporta a nadie."
+
+#: frontend/src (Organigrama)
+msgid "{0} people report to nobody."
+msgstr "{0} personas no reportan a nadie."
+
+#: frontend/src (Organigrama)
+msgid "Have {0} report to {1}"
+msgstr "Que {0} reporte a {1}"
+
+#: frontend/src (Organigrama)
+msgid "Have them report to {0}"
+msgstr "Que reporten a {0}"
+
+#: frontend/src (Organigrama)
+msgid "the owner"
+msgstr "el dueño"
+
+#: frontend/src (Organigrama)
+msgid "Drop here: they report to nobody"
+msgstr "Suelta aquí para que no reporte a nadie"
+
+#: frontend/src (Organigrama)
+msgid "Release to move {0} under {1}"
+msgstr "Suelta para poner a {0} bajo {1}"
+
+#: frontend/src (Organigrama)
+msgid "Release: {0} reports to nobody"
+msgstr "Suelta: {0} no reportará a nadie"
+
+#: frontend/src (Organigrama)
+msgid "Nobody on the chart yet"
+msgstr "Todavía no hay nadie en el organigrama"
+
+#: frontend/src (Organigrama)
+msgid "Each person with an employee record shows here. Add your team in Equipo."
+msgstr "Aquí sale cada persona con ficha de empleado. Da de alta a tu equipo en Equipo."
+
+#: frontend/src (Organigrama)
+msgid "Nobody matches «{0}»."
+msgstr "Nadie coincide con «{0}»."
+
+#: frontend/src (Organigrama)
+msgid "{0} has a user but no employee record, so they are not on the chart."
+msgstr "{0} tiene usuario pero no ficha de empleado, por eso no sale en el organigrama."
+
+#: frontend/src (Organigrama)
+msgid "{0} people have a user but no employee record, so they are not on the chart."
+msgstr "{0} personas tienen usuario pero no ficha de empleado, por eso no salen en el organigrama."
+
+#: frontend/src (Organigrama)
+msgid "Complete them in Equipo"
+msgstr "Completar en Equipo"
+
+#: frontend/src (Organigrama)
+msgid "Change whom they report to"
+msgstr "Cambiar a quién reporta"
+
+#: frontend/src (Organigrama)
+msgid "Open their page"
+msgstr "Abrir su ficha"
+
+#: frontend/src (Organigrama)
+msgid "Who can do what"
+msgstr "Quién puede hacer qué"
+
+#: frontend/src (Organigrama)
+msgid "Tap a person to see their card."
+msgstr "Toca a una persona para ver su tarjeta."
+
+#: frontend/src (Organigrama)
+msgid "Tap a person to see their card. Drag a person onto another to change whom they report to."
+msgstr "Toca a una persona para ver su tarjeta. Arrastra a una persona sobre otra para cambiar a quién reporta."
+
+#: frontend/src (Organigrama)
+msgid "The organization chart did not load."
+msgstr "No se pudo cargar el organigrama."
+
+#: frontend/src (Organigrama)
+msgid "Nothing changed."
+msgstr "No cambió nada."
+
+#: frontend/src (Organigrama)
+msgid "Fold the team of {0}"
+msgstr "Ocultar el equipo de {0}"
+
+#: frontend/src (Organigrama)
+msgid "Show the team of {0}"
+msgstr "Mostrar el equipo de {0}"
+
+#: frontend/src (Organigrama)
+msgctxt "Equipo"
+msgid "Yes"
+msgstr "Sí"
+
+#: frontend/src (Organigrama)
+msgid "{0} people report to them, directly or below"
+msgstr "{0} personas le reportan, directo o más abajo"
+
+#: frontend/src (Organigrama)
+msgid "Reports to"
+msgstr "Reporta a"
+
+#: frontend/src (Organigrama)
+msgid "Change whom {0} reports to"
+msgstr "Cambiar a quién reporta {0}"
+
+#: frontend/src (Organigrama)
+msgid "Reports to them"
+msgstr "Le reportan"
+
+#: frontend/src (Organigrama)
+msgid "Nobody yet."
+msgstr "Nadie todavía."
+
+#: frontend/src (Organigrama)
+msgid "And {0} more below them."
+msgstr "Y {0} más abajo."
+
+#: frontend/src (Organigrama)
+msgctxt "Equipo"
+msgid "Can"
+msgstr "Puede"
+
+#: frontend/src (Organigrama)
+msgid "See everyone who can"
+msgstr "Ver a todos los que pueden"
+
+#: frontend/src (Organigrama)
+msgid "None of these. Their puesto decides what they can do."
+msgstr "Nada de esto. Su puesto decide lo que puede hacer."
+
+#: frontend/src (Organigrama)
+msgid "Everything their roles allow ({0})"
+msgstr "Todo lo que su puesto le permite ({0})"
+
+#: frontend/src (Organigrama)
+msgid "and {0} more permissions"
+msgstr "y {0} permisos más"
+
+#: frontend/src (Organigrama)
+msgid "this person"
+msgstr "esta persona"
+
+#: frontend/src (Organigrama)
+msgid "Someone you cannot see from your user."
+msgstr "Alguien que tu usuario no puede ver."
+
+#: frontend/src (Organigrama)
+msgid "Someone who no longer works here. Pick who they report to now."
+msgstr "Alguien que ya no trabaja aquí. Elige a quién reporta ahora."
+
+#: frontend/src (Organigrama)
+msgid "Nobody: they are at the top."
+msgstr "Nadie: está hasta arriba."
+
+#: frontend/src (Organigrama)
+msgid "Whom does {0} report to?"
+msgstr "¿A quién reporta {0}?"
+
+#: frontend/src (Organigrama)
+msgid "At the top, like the owner."
+msgstr "Hasta arriba, como el dueño."
+
+#: frontend/src (Organigrama)
+msgid "Nobody with that name."
+msgstr "Nadie con ese nombre."
+
+#: frontend/src (Organigrama)
+msgid "Reports to them now"
+msgstr "Le reporta ahora"
+
+#: frontend/src (Organigrama)
+msgid "Is on their team: move them first"
+msgstr "Está en su equipo"

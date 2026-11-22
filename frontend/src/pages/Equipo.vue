@@ -59,6 +59,7 @@
               caps.hire ||
               caps.bonos ||
               caps.metas ||
+              caps.organigrama ||
               caps.invite
             "
             #actions
@@ -77,6 +78,14 @@
               class="min-h-11 sm:min-h-8"
               data-testid="equipo-metas"
               @click="router.push({ name: 'EquipoMetas' })"
+            />
+            <Button
+              v-if="caps.organigrama"
+              :icon-left="LucideNetwork"
+              :label="__('Organization chart')"
+              class="min-h-11 sm:min-h-8"
+              data-testid="equipo-organigrama"
+              @click="router.push({ name: 'EquipoOrganigrama' })"
             />
             <Button
               v-if="caps.bonos"
@@ -374,6 +383,7 @@ import {
 } from '@/composables/useEquipo'
 import LucideCalendar from '~icons/lucide/calendar'
 import LucideGift from '~icons/lucide/gift'
+import LucideNetwork from '~icons/lucide/network'
 import LucideTarget from '~icons/lucide/target'
 import LucideUserPlus from '~icons/lucide/user-plus'
 import LucideWallet from '~icons/lucide/wallet'

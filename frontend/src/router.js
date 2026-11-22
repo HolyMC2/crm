@@ -834,6 +834,14 @@ const routes = [
     meta: { app: 'equipo', title: 'Equipo', listParent: 'Equipo' },
   },
   {
+    // Equipo › Organigrama: who reports to whom and what each person can do
+    // (doco.erp_experience.organigrama).
+    path: '/equipo/organigrama',
+    name: 'EquipoOrganigrama',
+    component: () => import('@/pages/EquipoOrganigrama.vue'),
+    meta: { app: 'equipo', title: 'Equipo', listParent: 'Equipo' },
+  },
+  {
     path: '/equipo/bonos/reglas',
     name: 'EquipoBonosReglas',
     component: () => import('@/pages/EquipoBonosReglas.vue'),
