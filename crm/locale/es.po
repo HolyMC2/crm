@@ -51297,3 +51297,11 @@ msgstr "No puedes ver las compras en línea"
 msgctxt "EnLinea"
 msgid "{0} days"
 msgstr "{0} días"
+
+msgctxt "EnLinea"
+msgid "Bill"
+msgstr "Factura"
+
+msgctxt "EnLinea"
+msgid "Register it when it arrives: that brings it into the store."
+msgstr "Regístrala cuando llegue: así entra al almacén."

@@ -64,6 +64,35 @@
                 </dt>
                 <dd class="num text-ink-gray-9">{{ reading.pedido }}</dd>
               </template>
+              <template v-if="reading.factura">
+                <dt class="text-ink-gray-6">
+                  {{ __('Bill', null, 'EnLinea') }}
+                </dt>
+                <dd>
+                  <RouterLink
+                    class="text-ink-gray-9 underline"
+                    :to="{
+                      name: 'GastoFactura',
+                      params: { name: reading.factura },
+                    }"
+                    data-en-linea-factura
+                  >
+                    {{ reading.factura }}
+                  </RouterLink>
+                  <p
+                    v-if="!reading.factura_confirmada"
+                    class="text-sm text-ink-gray-6"
+                  >
+                    {{
+                      __(
+                        'Register it when it arrives: that brings it into the store.',
+                        null,
+                        'EnLinea',
+                      )
+                    }}
+                  </p>
+                </dd>
+              </template>
               <template v-if="reading.ya_registrada_en">
                 <dt class="text-ink-gray-6">
                   {{ __('Registered in', null, 'EnLinea') }}
