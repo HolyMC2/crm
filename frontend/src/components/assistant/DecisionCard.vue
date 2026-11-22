@@ -117,8 +117,8 @@
               class="flex size-12 flex-none items-center justify-center overflow-hidden rounded-6 bg-surface-gray-2"
             >
               <img
-                v-if="match.image"
-                :src="match.image"
+                v-if="match.thumb || match.image"
+                :src="match.thumb || match.image"
                 :alt="match.name"
                 loading="lazy"
                 class="size-full object-cover"

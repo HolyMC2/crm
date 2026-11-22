@@ -369,6 +369,15 @@ describe('the card on screen', () => {
     expect(match.textContent).toContain('Celular Prueba Z9 128GB Verde')
     expect(match.textContent).toContain('3 in stock · last paid $1,890.00')
     expect(match.querySelector('img').getAttribute('src')).toBe('/files/z9.png')
+    const copy = itemCard()
+    copy.matches[0].thumb = '/files/doco-media/v1/ab/abcd-card.webp'
+    const small = mount(DecisionCard, { card: copy }).el
+    await tick()
+    expect(
+      small
+        .querySelector('[data-testid="decision-match"] img')
+        .getAttribute('src'),
+    ).toBe('/files/doco-media/v1/ab/abcd-card.webp')
     expect(el.querySelector('[data-testid="decision-name"]').value).toBe(
       'Celular Prueba Z9 256GB Verde',
     )

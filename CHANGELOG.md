@@ -2,6 +2,17 @@
 
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
+## 2026-11-21 — A phone warms the deal and its conversation on the real deals list, and the «¿Es este?» card paints a small photo (lane crm-tratos-rapidos, with doco; not deployed)
+
+- **Why:** on a phone or a slow line, `utils/prefetch` warms only the view the current page's tap opens. Its «Deals» key named the legacy `/deals/view` route, so the deals list at `/deals` («Deals List») warmed nothing. It also looked only at the page the app loaded on, so a deal opened inside the app (from the list, Hoy or a search) still paid a cold first «Conversación» tap. The assistant's decision card painted the full product photo in its 48 px box.
+- **Change:**
+  - `NEXT_VIEW` maps «Deals List» and «Deals» to Deal 360.
+  - On a constrained line, a `router.afterEach` warms the next view of every page reached later, once per view and in idle time. For example, a deal page warms `Activities.vue`.
+  - Wide screens on fast lines keep warming the whole hot set at start.
+  - `components/assistant/DecisionCard.vue` paints `match.thumb || match.image`. doco sends `thumb`, the media layer's «card» copy.
+- **Measured** on the lab as playwright-bot, phone viewport, 3 runs (2026-11-21 ~20:55 Mazatlán): Deals list → first deal → «Chat». `Activities` loaded on the deal before the tap in 3 of 3 runs, and the composer showed 252-532 ms after the tap. The messages still load on the tap: phones do not prefetch data.
+- **Tests:** `tests/unit/prefetch.test.js` (both deals routes; a deal opened inside the app warms its conversation once; wide screens register nothing), `tests/unit/decisionCards.test.js` (the thumb is painted).
+
 ## 2026-11-21 — Precios and the supplier lists paint the small copy of each photo (lane compras-precios-fotos, with doco; not deployed)
 
 - **Why:** Precios' rows and Compras › a supplier list's lines painted the full product photo in a 44 px box.

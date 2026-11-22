@@ -16,21 +16,30 @@ const HOT_CHUNKS = [
 ]
 
 // On a phone or a slow line only the view a tap on the current page opens is
-// warmed: the deal from Deals, the conversation from a deal page (it opens on
-// «Resumen» with no conversation mounted behind it there), the conversation's
-// deal panel from Inbox (ConversationLegacyWorkspace imports it with this
-// specifier). The full set is about 60 files, 400-475 KB, competing with that
-// tap (F22). Every entry names a specifier this module imports already: a new
-// or dropped dynamic import here regroups the chunks and grows the entry.
+// warmed: the deal from the deals list (/deals, and the older /deals/view), the
+// conversation from a deal page (it opens on «Resumen» with no conversation
+// mounted behind it there), the conversation's deal panel from Inbox
+// (ConversationLegacyWorkspace imports it with this specifier). The full set is
+// about 60 files, 400-475 KB, competing with that tap (F22). Every entry names
+// a specifier this module imports already: a new or dropped dynamic import here
+// regroups the chunks and grows the entry.
+const deal360 = () => import('@/pages/Deal360.vue')
+const conversation = () => import('@/components/Activities/Activities.vue')
 const NEXT_VIEW = {
-  Deals: () => import('@/pages/Deal360.vue'),
-  'Deal 360': () => import('@/components/Activities/Activities.vue'),
+  'Deals List': deal360,
+  Deals: deal360,
+  'Deal 360': conversation,
   Inbox: () => import('@/components/doco/inbox/DealContextPanel.vue'),
 }
 // A phone's tap on a Bandeja conversation opens the thread; the deal panel
 // waits for «Datos y contacto».
 const PHONE_NEXT_VIEW = {
-  Inbox: () => import('@/components/Activities/Activities.vue'),
+  Inbox: conversation,
+}
+
+function nextView(name) {
+  const phone = globalThis.matchMedia?.(PHONE).matches
+  return (phone && PHONE_NEXT_VIEW[name]) || NEXT_VIEW[name]
 }
 
 const SLOW_LINES = new Set(['slow-2g', '2g', '3g'])
@@ -105,13 +114,27 @@ export function prefetchHotChunks(router, { delay = PREFETCH_DELAY_MS } = {}) {
     () =>
       idle(() => {
         if (constrainedLine()) {
-          const name = router?.currentRoute?.value?.name
-          const phone = globalThis.matchMedia?.(PHONE).matches
-          const view = (phone && PHONE_NEXT_VIEW[name]) || NEXT_VIEW[name]
+          const view = nextView(router?.currentRoute?.value?.name)
           chunks = view ? [view] : []
+          warmOnEachPage(router, new Set(chunks))
         }
         next()
       }),
     delay,
   )
+}
+
+// A page reached inside the app warms the view its tap opens as well, once
+// (a deal opened from the list: its conversation).
+function warmOnEachPage(router, warmed) {
+  router?.afterEach?.((to) => {
+    const view = nextView(to?.name)
+    if (!view || warmed.has(view)) return
+    warmed.add(view)
+    idle(() =>
+      Promise.resolve(whenWholeDictionary())
+        .then(view)
+        .catch(() => {}),
+    )
+  })
 }

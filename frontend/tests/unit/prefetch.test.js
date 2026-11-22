@@ -93,12 +93,38 @@ describe('prefetchHotChunks', () => {
     ])
   })
 
-  it('warms only the deal a phone opens from Deals', async () => {
+  it.each(['Deals List', 'Deals'])(
+    'warms only the deal a phone opens from %s',
+    async (name) => {
+      vi.useFakeTimers()
+      phone(true)
+      prefetchHotChunks(on(name), { delay: 10 })
+      await vi.advanceTimersByTimeAsync(30000)
+      expect(loaded).toEqual(['Deal360'])
+    },
+  )
+
+  it('warms the conversation of a deal a phone opens inside the app, once', async () => {
     vi.useFakeTimers()
     phone(true)
-    prefetchHotChunks(on('Deals'), { delay: 10 })
+    const pages = []
+    const router = { ...on('Deals List'), afterEach: (fn) => pages.push(fn) }
+    prefetchHotChunks(router, { delay: 10 })
     await vi.advanceTimersByTimeAsync(30000)
     expect(loaded).toEqual(['Deal360'])
+    for (const name of ['Deal 360', 'Deals List', 'Deal 360', 'Leads'])
+      pages.forEach((fn) => fn({ name }))
+    await vi.advanceTimersByTimeAsync(30000)
+    expect(loaded).toEqual(['Deal360', 'Activities'])
+  })
+
+  it('leaves later pages alone on a wide screen', async () => {
+    vi.useFakeTimers()
+    phone(false)
+    const afterEach = vi.fn()
+    prefetchHotChunks({ ...on('Deals List'), afterEach }, { delay: 10 })
+    await vi.advanceTimersByTimeAsync(30000)
+    expect(afterEach).not.toHaveBeenCalled()
   })
 
   it('warms the conversation a phone opens from Inbox, not «Datos y contacto»', async () => {
