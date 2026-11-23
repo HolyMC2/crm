@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/ui@0.3.0 (52d6d25388e7). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory.
+// Vendored from muelle/workspace/packages/ui@0.3.0 (08716fb45b7a). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory.
 // The kit's one chip (FilterChips, ChipGroup, ChipDrill, DateField and any page
 // that draws a chip of its own): 32 px tall in a 44 px target (6 px of margin
 // above and below, which `after:` makes part of the tap), 8 px corners

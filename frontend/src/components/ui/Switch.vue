@@ -1,4 +1,4 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.3.0 (52d6d25388e7). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.3.0 (08716fb45b7a). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <template>
   <!-- The kit's switch (Material 3): a 52 x 32 track in a 44 px target. On,
        the track takes the shop's accent and the thumb grows with a check; off,

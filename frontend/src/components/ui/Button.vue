@@ -1,4 +1,4 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.3.0 (52d6d25388e7). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.3.0 (08716fb45b7a). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <script>
 // The kit's button (Material 3), a drop-in for frappe-ui 1.0.2's <Button>:
 // the same props, slots and heights (24, 28, 32, 40 px), as a pill.
@@ -76,7 +76,7 @@ const ICON_SIZE = { xs: 'size-6', sm: 'size-7', md: 'size-8', lg: 'size-10' }
 const GLYPH = { xs: 'size-3.5', sm: 'size-4', md: 'size-4.5', lg: 'size-5' }
 
 export default defineComponent({
-  name: 'Button',
+  name: 'UiButton',
   inheritAttrs: false,
   props: buttonProps,
   setup(props, { attrs }) {

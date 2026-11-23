@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/ui@0.3.0 (52d6d25388e7). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory.
+// Vendored from muelle/workspace/packages/ui@0.3.0 (08716fb45b7a). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory.
 import { computed, ref, shallowReactive } from 'vue'
 
 // What the kit needs from the app around it. An app calls configureUi once in
