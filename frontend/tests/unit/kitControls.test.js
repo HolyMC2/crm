@@ -206,3 +206,39 @@ describe('kit ListGroup', () => {
     expect(group.querySelectorAll('li')).toHaveLength(2)
   })
 })
+
+describe('kit Fab docked with its word', () => {
+  it('a record’s next step keeps its label in the bar and the search makes room', async () => {
+    const { default: Fab } = await import('@/components/ui/Fab.vue')
+    const { primaryDock, primaryDockExtended } = await import(
+      '@/components/ui/primaryDock'
+    )
+    const bar = document.createElement('div')
+    bar.id = 'shell-primary-action'
+    document.body.appendChild(bar)
+    primaryDock.value = true
+    try {
+      const shown = ref(true)
+      mount(() =>
+        shown.value
+          ? h(Fab, {
+              label: 'Llevar al banco',
+              icon: 'lucide-truck',
+              dock: 'extended',
+            })
+          : null,
+      )
+      await tick()
+      const fab = bar.querySelector('[data-ui-fab]')
+      expect(fab.textContent).toContain('Llevar al banco')
+      expect(fab.className).toContain('px-5')
+      expect(primaryDockExtended.value).toBe(1)
+      shown.value = false
+      await tick()
+      expect(primaryDockExtended.value).toBe(0)
+    } finally {
+      primaryDock.value = false
+      bar.remove()
+    }
+  })
+})

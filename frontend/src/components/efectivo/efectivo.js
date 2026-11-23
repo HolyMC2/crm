@@ -304,6 +304,12 @@ export const PURPOSE = {
   Takings: 'Recaudación',
   Change: 'Cambio para la caja fuerte',
 }
+/** Where a bag's road ends, for the purposes that define one: the bag's
+ *  stepper draws it as its last, still open step. */
+export const PURPOSE_END = {
+  Float: 'La recibe su caja',
+  Takings: 'Depositada en el banco',
+}
 
 /** First name of a person, never an email. */
 export function who(user, people = {}) {

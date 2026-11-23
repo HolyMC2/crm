@@ -210,9 +210,16 @@
         <!-- Global search (⌘K «Buscar o ir a…») is the bar's main door: find
              a record, go to a place or run an action. It opens the palette,
              so the list's own search above stays the only field on screen. -->
+        <!-- A record's next step docked with its word (ui/Fab dock="extended")
+             takes the room: the search keeps only its icon. -->
         <button
           type="button"
-          class="press flex h-12 min-w-0 flex-1 items-center gap-2 rounded-full bg-[var(--muelle-surface-container-highest)] pl-4 pr-[18px] text-left text-[15px] text-[var(--muelle-on-surface-variant)]"
+          class="press flex h-12 items-center gap-2 rounded-full bg-[var(--muelle-surface-container-highest)] text-left text-[15px] text-[var(--muelle-on-surface-variant)]"
+          :class="
+            primaryDockExtended
+              ? 'w-12 flex-none justify-center'
+              : 'min-w-0 flex-1 pl-4 pr-[18px]'
+          "
           :aria-label="__('Search or go to…')"
           :title="searchHint"
           :aria-keyshortcuts="searchKeys"
@@ -220,12 +227,14 @@
           @click="openPalette('all')"
         >
           <span class="lucide-search size-5 flex-none" aria-hidden="true" />
-          <span class="min-w-0 truncate max-[359px]:hidden">{{
-            __('Search or go to…')
-          }}</span>
-          <span class="min-w-0 truncate min-[360px]:hidden">{{
-            __('Search')
-          }}</span>
+          <template v-if="!primaryDockExtended">
+            <span class="min-w-0 truncate max-[359px]:hidden">{{
+              __('Search or go to…')
+            }}</span>
+            <span class="min-w-0 truncate min-[360px]:hidden">{{
+              __('Search')
+            }}</span>
+          </template>
         </button>
         <!-- «Pregúntale a Muelle» (E7) beside it, an icon, only once
              shell_api.status said yes. -->
@@ -377,7 +386,7 @@ import {
   openCamera,
 } from '@/components/captura/cameraDoor'
 import { loadScanSheet, openScan, scan } from '@/components/escaneo/scanDoor'
-import { primaryDock } from '@/components/ui/primaryDock'
+import { primaryDock, primaryDockExtended } from '@/components/ui/primaryDock'
 import { pageTitle } from '@/composables/pageTitle'
 import AppBar from '@/components/ui/AppBar.vue'
 import ExpandTransition from '@/components/ui/ExpandTransition.vue'

@@ -61,6 +61,31 @@
           message="Cuando el encargado te dé acceso a la caja fuerte de tu tienda, aquí ves sus bolsas y lo que te toca."
         />
 
+        <!-- The page's views instead of a heading per block: everything, or
+             one kind of work. -->
+        <div
+          v-if="views.length > 2"
+          class="flex flex-wrap gap-x-2 px-4 pt-1"
+          role="group"
+          aria-label="Ver"
+          data-efectivo-vistas
+        >
+          <button
+            v-for="v in views"
+            :key="v.value"
+            type="button"
+            :class="chipClass(view === v.value)"
+            :aria-pressed="view === v.value"
+            :data-vista="v.value"
+            @click="view = v.value"
+          >
+            {{ v.label }}
+            <span v-if="v.count" class="tabular-nums font-normal">{{
+              v.count
+            }}</span>
+          </button>
+        </div>
+
         <!-- Phone: one column in the order below (order-N). Desk: the cash and
              the safes on the left, the work (Te toca, bags, traslados) on the right. -->
         <div
@@ -68,7 +93,16 @@
         >
           <div class="contents lg:block">
             <!-- Hero: the cash this worker answers for and where it sits. -->
-            <CashMap v-if="cash" class="order-1" :map="cash" @pick="pickPart" />
+            <div v-if="cash" class="order-1">
+              <CashMap :map="cash" @pick="pickPart" />
+              <div
+                v-if="actionsInCard"
+                class="mx-4 mt-2 flex flex-wrap gap-2"
+                data-efectivo-acciones
+              >
+                <SafeActions :of="visibleSafes[0]" />
+              </div>
+            </div>
             <p
               v-else-if="safes.length"
               class="order-1 mx-4 mt-2 rounded-8 bg-surface-gray-1 p-4 text-sm text-ink-gray-7"
@@ -80,23 +114,22 @@
             <!-- The safes: balance and the island of what the safe itself needs. -->
             <section
               v-if="
-                visibleSafes.length > 1 ||
-                (visibleSafes[0] &&
-                  (visibleSafes[0].can.count_safe ||
-                    visibleSafes[0].can.fund ||
-                    visibleSafes[0].bag_plan?.can_configure))
+                see('cajas') &&
+                !actionsInCard &&
+                (visibleSafes.length > 1 ||
+                  (visibleSafes[0] &&
+                    (visibleSafes[0].can.count_safe ||
+                      visibleSafes[0].can.fund ||
+                      visibleSafes[0].bag_plan?.can_configure)))
               "
-              class="order-3 mt-5"
+              class="order-3 mt-4"
               aria-label="Cajas fuertes"
             >
-              <h2 class="px-4 pb-1 text-sm font-semibold text-ink-gray-8">
-                Cajas fuertes
-              </h2>
-              <ul class="space-y-2 px-4">
+              <ListGroup tag="ul" class="mx-4">
                 <li
                   v-for="safe in visibleSafes"
                   :key="safe.safe"
-                  class="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-7 border border-outline-gray-1 px-4 py-3"
+                  class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3"
                   :data-safe="safe.safe"
                 >
                   <span
@@ -122,65 +155,22 @@
                       safe.can.fund ||
                       safe.bag_plan?.can_configure
                     "
-                    class="ml-auto flex flex-none rounded-full bg-surface-gray-1 p-0.5"
+                    class="flex w-full flex-wrap gap-2"
                   >
-                    <button
-                      v-if="safe.can.fund"
-                      type="button"
-                      class="press grid size-10 place-items-center rounded-full text-ink-gray-7"
-                      :aria-label="`Ingresar efectivo a ${safe.title}`"
-                      title="Ingresar efectivo"
-                      data-efectivo-fund
-                      @click="open(fundSafe(safe))"
-                    >
-                      <span
-                        class="lucide-hand-coins size-5"
-                        aria-hidden="true"
-                      />
-                    </button>
-                    <button
-                      v-if="safe.can.count_safe"
-                      type="button"
-                      class="press grid size-10 place-items-center rounded-full text-ink-gray-7"
-                      :aria-label="`Contar ${safe.title}`"
-                      title="Contar la caja fuerte"
-                      @click="open(countSafe(safe))"
-                    >
-                      <span
-                        class="lucide-calculator size-5"
-                        aria-hidden="true"
-                      />
-                    </button>
-                    <button
-                      v-if="safe.bag_plan?.can_configure"
-                      type="button"
-                      class="press grid size-10 place-items-center rounded-full text-ink-gray-7"
-                      :aria-label="`Bolsas al cerrar de ${safe.title}`"
-                      title="Bolsas al cerrar"
-                      data-efectivo-bolsas-open
-                      @click="openBolsas(safe)"
-                    >
-                      <span
-                        class="lucide-sliders-horizontal size-5"
-                        aria-hidden="true"
-                      />
-                    </button>
+                    <SafeActions :of="safe" />
                   </div>
                 </li>
-              </ul>
+              </ListGroup>
             </section>
 
             <!-- Cajas: each store's registers, managed on their own page. -->
             <section
-              v-if="stores.length"
-              class="order-4 mt-5"
+              v-if="stores.length && see('cajas')"
+              class="order-4 mt-4"
               aria-label="Cajas"
               data-efectivo-cajas
             >
-              <h2 class="px-4 pb-1 text-sm font-semibold text-ink-gray-8">
-                Cajas
-              </h2>
-              <ul class="divide-y divide-outline-gray-1">
+              <ListGroup tag="ul" class="mx-4">
                 <li v-for="store in stores" :key="store.name">
                   <ListRow
                     :title="store.store_name"
@@ -200,19 +190,16 @@
                     </template>
                   </ListRow>
                 </li>
-              </ul>
+              </ListGroup>
             </section>
 
             <!-- Arqueos: recent safe counts and every count still waiting for review. -->
             <section
-              v-if="arqueos.length"
-              class="order-7 mt-5"
+              v-if="arqueos.length && see('arqueos')"
+              class="order-7 mt-4"
               aria-label="Arqueos"
             >
-              <h2 class="px-4 pb-1 text-sm font-semibold text-ink-gray-8">
-                Arqueos
-              </h2>
-              <ul class="divide-y divide-outline-gray-1">
+              <ListGroup tag="ul" class="mx-4">
                 <li v-for="c in arqueos" :key="c.name">
                   <ListRow
                     :title="countTitle(c)"
@@ -254,27 +241,19 @@
                     </template>
                   </ListRow>
                 </li>
-              </ul>
+              </ListGroup>
             </section>
           </div>
 
           <div class="contents lg:block">
             <!-- Te toca: this worker's next steps, oldest first. -->
             <section
-              v-if="waitingRows.length"
-              class="order-2 mt-5 lg:mt-2"
+              v-if="waitingRows.length && see('te-toca')"
+              class="order-2 mt-4 lg:mt-2"
               aria-label="Te toca"
               data-efectivo-waiting
             >
-              <h2
-                class="flex items-baseline gap-2 px-4 pb-1 text-sm font-semibold text-ink-gray-8"
-              >
-                <span class="num text-ink-gray-9">{{
-                  waitingRows.length
-                }}</span>
-                Te toca
-              </h2>
-              <ul class="divide-y divide-outline-gray-1">
+              <ListGroup tag="ul" class="mx-4">
                 <li
                   v-for="row in shownWaiting"
                   :key="row.key"
@@ -287,10 +266,19 @@
                     :subtitle="row.subtitle"
                     :subtitle-lines="2"
                     :subtitle-tone="row.urgent ? 'danger' : ''"
-                    :icon="row.icon"
                     :to="row.to"
                     @click="row.open && row.open()"
                   >
+                    <template #leading>
+                      <!-- this worker's step: the lit disc -->
+                      <span
+                        class="grid size-10 flex-none place-items-center rounded-full bg-[var(--muelle-accent)] text-[var(--muelle-accent-ink)]"
+                        aria-hidden="true"
+                        data-efectivo-lit
+                      >
+                        <span :class="[row.icon, 'size-5']" />
+                      </span>
+                    </template>
                     <template #trailing>
                       <span
                         class="num text-base font-semibold text-ink-gray-9"
@@ -309,7 +297,7 @@
                     <span class="lucide-x size-5" aria-hidden="true" />
                   </button>
                 </li>
-              </ul>
+              </ListGroup>
               <button
                 v-if="waitingRows.length > shownWaiting.length"
                 type="button"
@@ -324,15 +312,12 @@
 
             <!-- Bags by state. A long press on one starts choosing several. -->
             <section
-              v-if="allBags.length"
+              v-if="allBags.length && see('bolsas')"
               ref="bagsSection"
-              class="order-5 mt-5 scroll-mt-16"
+              class="order-5 mt-4 scroll-mt-16"
               aria-label="Bolsas"
               data-efectivo-bags
             >
-              <h2 class="px-4 pb-2 text-sm font-semibold text-ink-gray-8">
-                Bolsas
-              </h2>
               <div class="px-4 pb-2">
                 <Segmented
                   v-model="bagView"
@@ -352,7 +337,8 @@
                 :key="bagView"
                 tag="ul"
                 name="ef-row"
-                class="relative divide-y divide-outline-gray-1"
+                class="relative mx-4 flex flex-col gap-0.5 overflow-hidden rounded-7 [&>*]:bg-[var(--muelle-surface-container-low)]"
+                data-ui-list-group
               >
                 <li
                   v-for="bag in shownBags"
@@ -446,19 +432,11 @@
 
             <!-- Traslados between the safe and the cajas. -->
             <section
-              v-if="liveTransfers.length"
-              class="order-6 mt-5"
+              v-if="liveTransfers.length && see('bolsas')"
+              class="order-6 mt-4"
               aria-label="Traslados"
             >
-              <h2
-                class="flex items-baseline gap-2 px-4 pb-1 text-sm font-semibold text-ink-gray-8"
-              >
-                <span class="num text-ink-gray-9">{{
-                  liveTransfers.length
-                }}</span>
-                Traslados
-              </h2>
-              <ul class="divide-y divide-outline-gray-1">
+              <ListGroup tag="ul" class="mx-4">
                 <li v-for="t in liveTransfers" :key="t.name">
                   <ListRow
                     :title="transferTitle(t)"
@@ -485,7 +463,7 @@
                     </template>
                   </ListRow>
                 </li>
-              </ul>
+              </ListGroup>
             </section>
           </div>
         </div>
@@ -581,7 +559,15 @@
   </div>
 </template>
 <script setup>
-import { computed, defineAsyncComponent, nextTick, ref, watch } from 'vue'
+import {
+  computed,
+  defineAsyncComponent,
+  defineComponent,
+  h,
+  nextTick,
+  ref,
+  watch,
+} from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Button, toast } from 'frappe-ui'
 import {
@@ -589,9 +575,11 @@ import {
   BottomSheet,
   EmptyState,
   Fab,
+  ListGroup,
   ListRow,
   Segmented,
   StatusChip,
+  chipClass,
 } from '@/components/ui'
 import CashMap from '@/components/efectivo/CashMap.vue'
 import StepHost from '@/components/efectivo/StepHost.vue'
@@ -685,11 +673,85 @@ function pickScope(value) {
 }
 
 const cash = computed(() => cashMap(visibleSafes.value))
+
+// The views: everything, or one kind of work; each chip says how many.
+const view = ref('todo')
+const views = computed(() =>
+  [
+    { value: 'todo', label: 'Todo' },
+    waitingRows.value.length && {
+      value: 'te-toca',
+      label: 'Te toca',
+      count: waitingRows.value.length,
+    },
+    allBags.value.length && { value: 'bolsas', label: 'Bolsas' },
+    arqueos.value.length && { value: 'arqueos', label: 'Arqueos' },
+    (stores.value.length || safes.value.length > 1) && {
+      value: 'cajas',
+      label: 'Cajas',
+    },
+  ].filter(Boolean),
+)
+const see = (key) =>
+  view.value === 'todo' ||
+  view.value === key ||
+  !views.value.some((v) => v.value === view.value)
+// One safe and its cash on screen: the safe's actions sit in the cash card and
+// its repeated row goes.
+const actionsInCard = computed(() => {
+  const only = visibleSafes.value.length === 1 ? visibleSafes.value[0] : null
+  return Boolean(
+    cash.value &&
+      only &&
+      (only.can.count_safe || only.can.fund || only.bag_plan?.can_configure),
+  )
+})
+// A safe's own actions, each with its word: tonal pills.
+const SafeActions = defineComponent({
+  props: { of: { type: Object, required: true } },
+  setup(p) {
+    const pill =
+      'press inline-flex h-10 items-center gap-2 rounded-full bg-[var(--muelle-secondary-container)] px-4 text-sm font-medium text-[var(--muelle-on-secondary-container)]'
+    const glyph = (name) =>
+      h('span', { class: [name, 'size-4'], 'aria-hidden': 'true' })
+    const action = (on, attr, icon, word, run) =>
+      on &&
+      h('button', { type: 'button', class: pill, [attr]: '', onClick: run }, [
+        glyph(icon),
+        word,
+      ])
+    return () =>
+      [
+        action(
+          p.of.can.fund,
+          'data-efectivo-fund',
+          'lucide-hand-coins',
+          'Ingresar',
+          () => open(fundSafe(p.of)),
+        ),
+        action(
+          p.of.can.count_safe,
+          'data-efectivo-contar',
+          'lucide-calculator',
+          'Contar',
+          () => open(countSafe(p.of)),
+        ),
+        action(
+          p.of.bag_plan?.can_configure,
+          'data-efectivo-bolsas-open',
+          'lucide-sliders-horizontal',
+          'Bolsas al cerrar',
+          () => openBolsas(p.of),
+        ),
+      ].filter(Boolean)
+  },
+})
 const bagsSection = ref(null)
 /** A part of the cash map opens its bags: the tab, then the list in view. */
 const flash = ref('')
 let flashTimer = 0
 function pickPart(part) {
+  if (view.value !== 'todo') view.value = 'bolsas'
   bagView.value = part.view
   // The bags the tile meant light up once (a tab can hold two states).
   flash.value = part.key
@@ -1002,12 +1064,8 @@ const waitingRows = computed(() => {
       subtitle: `${a.title || a.document_name} · lo pide ${who(a.requested_by, people.value)}`,
       urgent: true,
       icon: 'lucide-signature',
-      amount: money(
-        fromMinor(a.amount_minor),
-        safes.value[0]?.currency || 'MXN',
-      ),
-      open: () =>
-        open(authorize(a, people.value, safes.value[0]?.currency || 'MXN')),
+      amount: money(fromMinor(a.amount_minor), safes.value[0]?.currency),
+      open: () => open(authorize(a, people.value, safes.value[0]?.currency)),
     })
   }
   return rows

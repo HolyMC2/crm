@@ -1,4 +1,4 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.3.0 (1df9eacee039). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.3.0 (52d6d25388e7). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <script>
 // The kit's button (Material 3), a drop-in for frappe-ui 1.0.2's <Button>:
 // the same props, slots and heights (24, 28, 32, 40 px), as a pill.

@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/ui@0.3.0 (1df9eacee039). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory.
+// Vendored from muelle/workspace/packages/ui@0.3.0 (52d6d25388e7). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory.
 // es-MX dates for DateField: dd/mm/aaaa typed or picked, 24-hour times, and the
 // stored Frappe forms («2026-10-18», «2026-10-18 14:30:00», «14:30:00»).
 

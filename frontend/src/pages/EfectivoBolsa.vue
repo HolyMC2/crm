@@ -81,114 +81,144 @@
             />
             {{ holderText(bag, people) }}
           </p>
-          <div class="mt-4">
-            <Button
-              v-if="next?.action"
-              variant="solid"
-              size="lg"
-              class="w-full"
-              :label="next.label"
-              data-efectivo-next
-              @click="run(next.action)"
+        </section>
+
+        <!-- One stepper: every event, then the next step (lit when it is this
+             worker's, else who takes it), then the end its purpose defines. -->
+        <ol
+          class="mx-4 mt-4"
+          aria-label="Por qué manos pasó"
+          data-efectivo-pasos
+        >
+          <li
+            v-for="(item, i) in chain"
+            :key="i"
+            class="relative flex gap-3 pb-4"
+            data-paso="hecho"
+          >
+            <span
+              class="absolute bottom-0 left-[11px] top-6 w-0.5 bg-[var(--muelle-outline-variant)]"
+              aria-hidden="true"
             />
-            <p
-              v-else-if="next?.reason"
-              class="text-sm text-ink-gray-7"
-              data-efectivo-guard
+            <span
+              class="grid size-6 flex-none place-items-center rounded-full bg-[var(--muelle-secondary-container)] text-[var(--muelle-on-secondary-container)]"
+              aria-hidden="true"
             >
-              {{ next.reason }}
+              <span class="lucide-check size-3.5" />
+            </span>
+            <div class="min-w-0">
+              <p class="text-base text-ink-gray-9">{{ item.text }}</p>
+              <p v-if="item.when" class="text-sm text-ink-gray-6">
+                {{ item.when }}
+              </p>
+            </div>
+          </li>
+          <li
+            v-if="next?.action || next?.reason"
+            class="relative flex gap-3 pb-4"
+            :data-paso="next.action ? 'tuyo' : 'de-otro'"
+          >
+            <span
+              v-if="end"
+              class="absolute bottom-0 left-[11px] top-6 w-0.5 border-l-2 border-dashed border-[var(--muelle-outline-variant)]"
+              aria-hidden="true"
+            />
+            <span
+              class="grid size-6 flex-none place-items-center rounded-full"
+              :class="
+                next.action
+                  ? 'bg-[var(--muelle-accent)] text-[var(--muelle-accent-ink)]'
+                  : 'border-2 border-[var(--muelle-outline)] text-ink-gray-6'
+              "
+              aria-hidden="true"
+            >
+              <span
+                v-if="next.action"
+                :class="[
+                  NEXT_ICON[next.action] || 'lucide-arrow-right',
+                  'size-3.5',
+                ]"
+              />
+            </span>
+            <div class="min-w-0" data-efectivo-guard>
+              <p
+                class="text-base"
+                :class="
+                  next.action
+                    ? 'font-semibold text-ink-gray-9'
+                    : 'text-ink-gray-8'
+                "
+              >
+                {{ next.action ? next.label : next.reason }}
+              </p>
               <a
                 v-if="next.pos"
-                class="font-medium text-ink-gray-9 underline"
+                class="text-sm font-medium text-ink-gray-9 underline"
                 href="/posapp/cash-custody"
                 >Abrir el POS</a
               >
-            </p>
-          </div>
-        </section>
+            </div>
+          </li>
+          <li v-if="end" class="flex gap-3" data-paso="fin">
+            <span
+              class="size-6 flex-none rounded-full border-2 border-dashed border-[var(--muelle-outline)]"
+              aria-hidden="true"
+            />
+            <p class="text-base text-ink-gray-6">{{ end }}</p>
+          </li>
+        </ol>
 
         <!-- The turn its cash came from: whoever opens the bag cold knows which corte it closed. -->
-        <section
-          v-if="source"
-          class="mt-5"
-          aria-label="De qué corte salió"
+        <!-- The turn its cash came from and its counts, one tonal group. -->
+        <ListGroup
+          v-if="source || counts.length"
+          tag="ul"
+          class="mx-4 mt-2"
+          aria-label="De qué corte salió y sus conteos"
           data-efectivo-bolsa-turno
         >
-          <h2 class="px-4 pb-1 text-sm font-semibold text-ink-gray-8">
-            De qué corte salió
-          </h2>
-          <ListRow
-            :title="source.title"
-            :subtitle="source.line"
-            :subtitle-lines="2"
-            icon="lucide-receipt"
-            :to="source.to"
-          />
-        </section>
-
-        <section class="mt-5" aria-label="Por qué manos pasó">
-          <h2 class="px-4 pb-1 text-sm font-semibold text-ink-gray-8">
-            Por qué manos pasó
-          </h2>
-          <ol class="px-4">
-            <li v-for="(item, i) in chain" :key="i" class="flex gap-3 pb-3">
-              <span
-                class="mt-1.5 size-2.5 flex-none rounded-full"
-                :class="
-                  i === chain.length - 1
-                    ? 'bg-surface-gray-9'
-                    : 'bg-surface-gray-4'
-                "
-                aria-hidden="true"
-              />
-              <div class="min-w-0">
-                <p class="text-base text-ink-gray-9">{{ item.text }}</p>
-                <p class="text-sm text-ink-gray-6">{{ item.when }}</p>
-              </div>
-            </li>
-          </ol>
-        </section>
-
-        <section v-if="counts.length" class="mt-3" aria-label="Conteos">
-          <h2 class="px-4 pb-1 text-sm font-semibold text-ink-gray-8">
-            Conteos
-          </h2>
-          <ul class="divide-y divide-outline-gray-1">
-            <li
-              v-for="c in counts"
-              :key="c.name"
-              class="flex items-center gap-3 px-4 py-2.5"
-            >
-              <div class="min-w-0 flex-1">
-                <p class="text-base text-ink-gray-9">
-                  {{ who(c.counted_by, people) }}
-                </p>
-                <p
-                  class="truncate text-sm"
-                  :class="
-                    c.state === 'Exception'
-                      ? 'text-ink-red-7'
-                      : 'text-ink-gray-6'
-                  "
-                >
-                  {{ countLine(c) }}
-                </p>
-              </div>
-              <span class="num text-base font-semibold text-ink-gray-9">{{
-                money(c.amount, safe.currency)
-              }}</span>
-            </li>
-          </ul>
-        </section>
-
-        <section class="mt-3" aria-label="Fotos">
-          <h2
-            class="flex items-center justify-between px-4 pb-1 text-sm font-semibold text-ink-gray-8"
+          <li v-if="source">
+            <ListRow
+              :title="source.title"
+              :subtitle="source.line"
+              :subtitle-lines="2"
+              icon="lucide-receipt"
+              :to="source.to"
+            />
+          </li>
+          <li
+            v-for="c in counts"
+            :key="c.name"
+            class="flex items-center gap-3 px-4 py-2.5"
           >
-            <span>Fotos</span>
+            <span
+              class="lucide-calculator size-5 flex-none text-ink-gray-6"
+              aria-hidden="true"
+            />
+            <div class="min-w-0 flex-1">
+              <p class="text-base text-ink-gray-9">
+                {{ who(c.counted_by, people) }}
+              </p>
+              <p
+                class="truncate text-sm"
+                :class="
+                  c.state === 'Exception' ? 'text-ink-red-7' : 'text-ink-gray-6'
+                "
+              >
+                {{ countLine(c) }}
+              </p>
+            </div>
+            <span class="num text-base font-semibold text-ink-gray-9">{{
+              money(c.amount, safe.currency)
+            }}</span>
+          </li>
+        </ListGroup>
+
+        <section class="mt-4" aria-label="Fotos">
+          <div class="flex items-center px-4 pb-2">
             <label
               v-if="photos.can_upload"
-              class="press inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-full bg-surface-gray-2 px-3 text-sm font-medium text-ink-gray-8"
+              class="press inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-full bg-[var(--muelle-secondary-container)] px-4 text-sm font-medium text-[var(--muelle-on-secondary-container)]"
             >
               <span class="lucide-camera size-5" aria-hidden="true" />
               {{ uploading ? 'Subiendo…' : 'Agregar foto' }}
@@ -201,7 +231,7 @@
                 @change="addPhoto"
               />
             </label>
-          </h2>
+          </div>
           <p
             v-if="photoError"
             role="alert"
@@ -225,10 +255,6 @@
               />
             </a>
           </div>
-          <p v-else class="px-4 text-sm text-ink-gray-6">
-            Sin fotos. Una foto del sello y del número ayuda si alguien duda de
-            la bolsa.
-          </p>
         </section>
         <div class="h-28 flex-none lg:h-12" aria-hidden="true" />
       </template>
@@ -259,15 +285,33 @@
       </ul>
     </BottomSheet>
     <StepHost :step="step" @close="step = null" @done="load" />
+    <!-- The next step is the page's one action: docked with its word on a
+         phone, an extended button at the bottom end elsewhere. -->
+    <Fab
+      v-if="bag && next?.action"
+      dock="extended"
+      :label="next.label"
+      :icon="NEXT_ICON[next.action] || 'lucide-arrow-right'"
+      data-efectivo-next
+      @click="run(next.action)"
+    />
   </div>
 </template>
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { Button, toast } from 'frappe-ui'
-import { AppBar, BottomSheet, ListRow, StatusChip } from '@/components/ui'
+import {
+  AppBar,
+  BottomSheet,
+  Fab,
+  ListGroup,
+  ListRow,
+  StatusChip,
+} from '@/components/ui'
 import StepHost from '@/components/efectivo/StepHost.vue'
 import {
   PURPOSE,
+  PURPOSE_END,
   bagRead,
   bagState,
   bagStep,
@@ -326,6 +370,20 @@ const next = computed(() => {
     return { ...found, pos: true }
   return found
 })
+
+const NEXT_ICON = Object.freeze({
+  verify: 'lucide-badge-check',
+  dispatch: 'lucide-truck',
+  confirm_bank: 'lucide-landmark',
+  review: 'lucide-scale',
+})
+// The end of the bag's road, when its purpose defines one and it is not there yet.
+const DONE = ['Deposited', 'Issued', 'Unpacked', 'Transferred']
+const end = computed(() =>
+  bag.value && !DONE.includes(bag.value.state)
+    ? PURPOSE_END[bag.value.purpose] || ''
+    : '',
+)
 
 const secondary = computed(() => {
   const b = bag.value
