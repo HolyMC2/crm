@@ -5,6 +5,7 @@ import path from 'path'
 import { VitePWA } from 'vite-plugin-pwa'
 import { retainPreviousBuilds } from './scripts/retain-builds.mjs'
 import { lucideSubset } from './scripts/lucide-subset.mjs'
+import { kitControls } from './scripts/kit-controls.mjs'
 import { translationKeys } from './scripts/translation-keys.mjs'
 import { versionJson } from './scripts/version-json.mjs'
 
@@ -27,6 +28,8 @@ export default defineConfig(async () => {
   // watcher in main.js) and move to a new build at a safe moment.
   const config = {
     plugins: [
+      // frappe-ui's Button and Switch are the kit's (scripts/kit-controls.mjs)
+      kitControls(__dirname),
       vue(),
       vueJsx(),
       retain,
@@ -141,36 +144,17 @@ export default defineConfig(async () => {
       }),
     ],
     resolve: {
-      alias: [
-        { find: '@', replacement: path.resolve(__dirname, 'src') },
+      alias: {
+        '@': path.resolve(__dirname, 'src'),
         // frappe's `ui/` package, vendored (src/framework-ui/SOURCE.json).
-        {
-          find: '@framework/ui',
-          replacement: path.resolve(__dirname, 'src/framework-ui'),
-        },
+        '@framework/ui': path.resolve(__dirname, 'src/framework-ui'),
         // Single-component entry points, so form/dialog widgets that the
         // first screen does not need can load lazily (src/utils/lazyGlobals.js).
-        {
-          find: 'frappe-ui-components',
-          replacement: path.resolve(
-            __dirname,
-            'node_modules/frappe-ui/src/components',
-          ),
-        },
-        // `frappe-ui` is the real package with the kit's Button and Switch
-        // (src/kit/frappe-ui.js); `frappe-ui-real` reaches the package itself.
-        {
-          find: /^frappe-ui$/,
-          replacement: path.resolve(__dirname, 'src/kit/frappe-ui.js'),
-        },
-        {
-          find: /^frappe-ui-real$/,
-          replacement: path.resolve(
-            __dirname,
-            'node_modules/frappe-ui/src/index.ts',
-          ),
-        },
-      ],
+        'frappe-ui-components': path.resolve(
+          __dirname,
+          'node_modules/frappe-ui/src/components',
+        ),
+      },
       // the editor packages must resolve to one copy each: tiptap imports
       // `@tiptap/pm/model` while prosemirror-state/transform/tables import bare
       // `prosemirror-model`, so a nested install of either throws "multiple

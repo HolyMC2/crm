@@ -3,6 +3,7 @@ import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
 import path from 'path'
 import { lucideSubset } from './scripts/lucide-subset.mjs'
+import { kitControls } from './scripts/kit-controls.mjs'
 
 // `~icons/*` is resolved by unplugin-icons inside the frappe-ui vite plugin,
 // which vitest does not load; stub every icon as an empty component so
@@ -18,7 +19,7 @@ const stubIcons = {
 export default defineConfig({
   // SFC and JSX transforms for component tests, as the build compiles them
   // (src/utils/dialogs.jsx); pure-JS unit tests are unaffected.
-  plugins: [vue(), vueJsx(), stubIcons, lucideSubset()],
+  plugins: [kitControls(__dirname), vue(), vueJsx(), stubIcons, lucideSubset()],
   test: {
     globals: true,
     environment: 'happy-dom',
@@ -48,32 +49,14 @@ export default defineConfig({
     },
   },
   resolve: {
-    alias: [
-      { find: '@', replacement: path.resolve(__dirname, 'src') },
+    alias: {
+      '@': path.resolve(__dirname, 'src'),
       // frappe's `ui/` package, vendored (src/framework-ui/SOURCE.json).
-      {
-        find: '@framework/ui',
-        replacement: path.resolve(__dirname, 'src/framework-ui'),
-      },
-      {
-        find: 'frappe-ui-components',
-        replacement: path.resolve(
-          __dirname,
-          'node_modules/frappe-ui/src/components',
-        ),
-      },
-      // the kit's Button and Switch inside frappe-ui (src/kit/frappe-ui.js)
-      {
-        find: /^frappe-ui$/,
-        replacement: path.resolve(__dirname, 'src/kit/frappe-ui.js'),
-      },
-      {
-        find: /^frappe-ui-real$/,
-        replacement: path.resolve(
-          __dirname,
-          'node_modules/frappe-ui/src/index.ts',
-        ),
-      },
-    ],
+      '@framework/ui': path.resolve(__dirname, 'src/framework-ui'),
+      'frappe-ui-components': path.resolve(
+        __dirname,
+        'node_modules/frappe-ui/src/components',
+      ),
+    },
   },
 })
