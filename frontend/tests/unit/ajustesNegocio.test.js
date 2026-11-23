@@ -26,6 +26,13 @@ vi.mock('@/composables/breakpoint', async () => {
   return { isMobile: ref(false) }
 })
 vi.mock('@/components/ui', () => ({ AppBar: { render: () => null } }))
+const shell = vi.hoisted(() => ({ apply: vi.fn(), load: vi.fn() }))
+vi.mock('@/utils/shellAppearance', () => ({
+  applyShellAppearance: (...args) => shell.apply(...args),
+}))
+vi.mock('@/composables/muelleShell', () => ({
+  loadShell: (...args) => shell.load(...args),
+}))
 
 import AjustesNegocio from '@/pages/AjustesNegocio.vue'
 
@@ -90,8 +97,8 @@ const flush = async () => {
     await nextTick()
   }
 }
-async function mount(query = null) {
-  state.call.mockResolvedValueOnce(JSON.parse(JSON.stringify(PAGE)))
+async function mount(query = null, page = PAGE) {
+  state.call.mockResolvedValueOnce(JSON.parse(JSON.stringify(page)))
   host = document.createElement('div')
   document.body.appendChild(host)
   const router = createRouter({
@@ -238,5 +245,107 @@ describe('Ajustes del negocio', () => {
     } finally {
       PAGE.curated.pop()
     }
+  })
+})
+
+// The shop's colour (doco appearance through the hook): six swatches and its own.
+const COLOR = {
+  key: 'doco.color',
+  area: 'otros',
+  kind: 'palette',
+  label: 'Color del negocio',
+  doctype: 'Doco Business Settings',
+  save: 'doco.erp_experience.appearance.save',
+  stored: { accent: '', tone: 'Neutral', density: 'Comfortable' },
+  palette: { accent: '#171717' },
+  can_change: true,
+  swatches: [
+    ['gris', 'Gris', '', '#171717', '#ededed'],
+    ['azul', 'Azul', '#0070cc', '#0070cc', '#5aaef2'],
+    ['verde', 'Verde', '#137949', '#137949', '#58c08e'],
+    ['morado', 'Morado', '#6e399d', '#6e399d', '#b168e8'],
+    ['rosa', 'Rosa', '#9c2671', '#9c2671', '#e359ab'],
+    ['muelle', 'Muelle', '#0f7a8f', '#0f7a8f', '#5cb8ca'],
+  ].map(([key, label, accent, light, dark]) => ({
+    key,
+    label,
+    accent,
+    light,
+    dark,
+  })),
+}
+const withColor = (over = {}) => ({
+  ...PAGE,
+  curated: [...PAGE.curated, { ...COLOR, ...over }],
+})
+const swatch = (key) => $(`[data-negocio-color] [data-color="${key}"]`)
+
+describe('Ajustes del negocio › the shop’s colour', () => {
+  afterEach(() => {
+    shell.apply.mockReset()
+    shell.load.mockReset()
+  })
+
+  it('shows six swatches and its own colour, Gris on while nothing is chosen', async () => {
+    await mount(null, withColor())
+    expect(
+      $$('[data-negocio-color] [role="radio"]').map((b) => b.dataset.color),
+    ).toEqual(['gris', 'azul', 'verde', 'morado', 'rosa', 'muelle'])
+    expect(swatch('gris').getAttribute('aria-checked')).toBe('true')
+    expect(swatch('propio')).not.toBeNull()
+    expect($('[data-negocio-color]').querySelector('p')).toBeNull()
+  })
+
+  it('a tap saves once with the stored tone and density, and recolours the shell', async () => {
+    await mount(null, withColor())
+    state.call.mockResolvedValueOnce({
+      accent: '#6e399d',
+      accent_light: '#6e399d',
+      accent_light_ink: '#ffffff',
+      accent_dark: '#b168e8',
+      accent_dark_ink: '#16222a',
+      tone: 'neutral',
+      density: 'comfortable',
+      adjusted: false,
+      surfaces: {},
+    })
+    swatch('morado').click()
+    swatch('morado').click()
+    await flush()
+    const saves = state.call.mock.calls.filter(
+      ([method]) => method === 'doco.erp_experience.appearance.save',
+    )
+    expect(saves).toEqual([
+      [
+        'doco.erp_experience.appearance.save',
+        { accent: '#6e399d', tone: 'Neutral', density: 'Comfortable' },
+      ],
+    ])
+    expect(shell.apply).toHaveBeenCalledWith(
+      expect.objectContaining({ accent: '#6e399d', accent_dark: '#b168e8' }),
+    )
+    expect(shell.apply.mock.calls[0][0]).not.toHaveProperty('surfaces')
+    expect(shell.load).toHaveBeenCalledWith({ refresh: true })
+    expect(swatch('morado').getAttribute('aria-checked')).toBe('true')
+  })
+
+  it('who may not change it sees the colour and cannot tap it', async () => {
+    await mount(null, withColor({ can_change: false }))
+    expect(swatch('azul').disabled).toBe(true)
+    swatch('azul').click()
+    await flush()
+    expect(state.call).toHaveBeenCalledTimes(1)
+  })
+
+  it('a refusal puts the swatch back and says why', async () => {
+    await mount(null, withColor())
+    state.call.mockRejectedValueOnce(
+      Object.assign(new Error('save'), { messages: ['No tienes permiso'] }),
+    )
+    swatch('verde').click()
+    await flush()
+    expect(swatch('gris').getAttribute('aria-checked')).toBe('true')
+    expect(state.error).toHaveBeenCalled()
+    expect(shell.apply).not.toHaveBeenCalled()
   })
 })

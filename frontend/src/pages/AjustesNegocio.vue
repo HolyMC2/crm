@@ -92,6 +92,83 @@
                     aria-hidden="true"
                   />
                 </component>
+                <!-- The shop's colour: one tap recolours every Muelle app. -->
+                <div
+                  v-else-if="row.kind === 'palette'"
+                  class="py-3"
+                  data-negocio-color
+                >
+                  <span
+                    :id="`negocio-${row.key}`"
+                    class="block text-base text-ink-gray-9"
+                    >{{ row.label }}</span
+                  >
+                  <div
+                    role="radiogroup"
+                    :aria-labelledby="`negocio-${row.key}`"
+                    class="mt-1 flex flex-wrap gap-1"
+                  >
+                    <button
+                      v-for="swatch in row.swatches"
+                      :key="swatch.key"
+                      type="button"
+                      role="radio"
+                      class="press flex size-12 items-center justify-center rounded-full disabled:opacity-50"
+                      :aria-checked="colorOf(row) === swatch.accent"
+                      :aria-label="swatch.label"
+                      :title="swatch.label"
+                      :disabled="!row.can_change || busy.has(row.key)"
+                      :data-color="swatch.key"
+                      @click="pickColor(row, swatch.accent)"
+                    >
+                      <span
+                        class="negocio-swatch flex size-10 items-center justify-center rounded-full"
+                        :style="swatchStyle(swatch.light, swatch.dark)"
+                      >
+                        <span
+                          v-if="colorOf(row) === swatch.accent"
+                          class="lucide-check size-5"
+                          aria-hidden="true"
+                        />
+                      </span>
+                    </button>
+                    <label
+                      class="press relative flex size-12 cursor-pointer items-center justify-center rounded-full"
+                      :class="
+                        !row.can_change || busy.has(row.key)
+                          ? 'pointer-events-none opacity-50'
+                          : ''
+                      "
+                      :title="__('Another colour')"
+                      data-color="propio"
+                    >
+                      <input
+                        type="color"
+                        class="absolute inset-0 size-full cursor-pointer opacity-0"
+                        :value="ownColor(row) || '#808080'"
+                        :aria-label="__('Another colour')"
+                        :disabled="!row.can_change || busy.has(row.key)"
+                        @change="pickColor(row, $event.target.value)"
+                      />
+                      <span
+                        v-if="ownColor(row)"
+                        class="negocio-swatch flex size-10 items-center justify-center rounded-full"
+                        :style="swatchStyle(ownColor(row), ownColor(row))"
+                      >
+                        <span class="lucide-check size-5" aria-hidden="true" />
+                      </span>
+                      <span
+                        v-else
+                        class="flex size-10 items-center justify-center rounded-full border border-dashed border-outline-gray-3 text-ink-gray-7"
+                      >
+                        <span
+                          class="lucide-palette size-5"
+                          aria-hidden="true"
+                        />
+                      </span>
+                    </label>
+                  </div>
+                </div>
                 <div v-else class="flex min-h-14 items-center gap-3 py-2">
                   <label
                     :for="`negocio-${row.key}`"
@@ -215,6 +292,8 @@ import AjustesSwitch from '@/components/ajustes/AjustesSwitch.vue'
 import { isMobile as isPhone } from '@/composables/breakpoint'
 import { errorText } from '@/utils/errorText'
 import { scrollWithin } from '@/utils/scrollWithin'
+import { applyShellAppearance } from '@/utils/shellAppearance'
+import { loadShell } from '@/composables/muelleShell'
 
 const API = 'crm.api.business_settings.'
 const route = useRoute()
@@ -340,4 +419,79 @@ async function toggle(row, value) {
     busy.delete(row.key)
   }
 }
+
+// ── the shop's colour ─────────────────────────────────────────────────────
+
+const PALETTE_KEYS = [
+  'accent',
+  'accent_light',
+  'accent_light_ink',
+  'accent_dark',
+  'accent_dark_ink',
+  'tone',
+  'density',
+  'adjusted',
+]
+function colorOf(row) {
+  return row.stored?.accent || ''
+}
+// A colour of the shop's own: on when it is none of the swatches.
+function ownColor(row) {
+  const accent = colorOf(row)
+  return accent && !row.swatches.some((s) => s.accent === accent) ? accent : ''
+}
+function inkOn(hex) {
+  const [r, g, b] = [1, 3, 5].map((i) => {
+    const c = parseInt(String(hex).slice(i, i + 2), 16) / 255
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+  })
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.4 ? '#16222a' : '#ffffff'
+}
+function swatchStyle(light, dark) {
+  return {
+    '--swatch-light': light,
+    '--swatch-dark': dark,
+    '--swatch-ink-light': inkOn(light),
+    '--swatch-ink-dark': inkOn(dark),
+  }
+}
+
+// The tap shows at once and recolours the shell with the server's answer; a
+// refusal puts the swatch back. Tone and density go back as they are stored.
+async function pickColor(row, accent) {
+  if (busy.has(row.key) || colorOf(row) === accent) return
+  const before = { ...row.stored }
+  row.stored = { ...row.stored, accent }
+  busy.add(row.key)
+  try {
+    const answer = await call(row.save, {
+      accent,
+      tone: before.tone,
+      density: before.density,
+    })
+    const palette = Object.fromEntries(
+      PALETTE_KEYS.map((key) => [key, answer?.[key]]),
+    )
+    row.palette = palette
+    applyShellAppearance(palette)
+  } catch (error) {
+    row.stored = before
+    toast.error(errorText(error, __('It did not change. Try again.')))
+    return
+  } finally {
+    busy.delete(row.key)
+  }
+  // the next pages and the other apps' boot read the new colour too
+  loadShell({ refresh: true })?.catch?.(() => {})
+}
 </script>
+<style scoped>
+.negocio-swatch {
+  background: var(--swatch-light);
+  color: var(--swatch-ink-light);
+}
+:global(:root[data-theme='dark']) .negocio-swatch {
+  background: var(--swatch-dark);
+  color: var(--swatch-ink-dark);
+}
+</style>

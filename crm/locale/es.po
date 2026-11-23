@@ -50788,6 +50788,9 @@ msgstr "No se pudieron abrir los ajustes. Vuelve a intentar."
 msgid "It did not change. Try again."
 msgstr "No cambió. Vuelve a intentar."
 
+msgid "Another colour"
+msgstr "Otro color"
+
 msgid "Sales and prospects"
 msgstr "Ventas y prospectos"
 

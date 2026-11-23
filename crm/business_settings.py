@@ -11,6 +11,10 @@ Two kinds of rows:
   keyword arguments, for one switch per record (a register, a shop).
   ``kind="screen"`` opens the app's
   own settings screen (``to``, a /crm route, or ``href``).
+  ``kind="palette"`` is the shop's colour: ``swatches`` (``{"key", "label",
+  "accent", "light", "dark"}``), the ``stored`` values, the resolved ``palette``
+  the shell paints with, and ``save``, the app's whitelisted method a tap posts
+  to; who may write its ``doctype`` changes it.
 * **Every other switch** — the Check fields of the settings Singles of the
   installed Muelle apps (Frappe and ERPNext stay in Desk), with their own label
   and description. A new setting shows up here without anybody listing it.
@@ -92,6 +96,8 @@ def _resolve(row, provider) -> dict | None:
 			return None
 		out.update(to=row.get("to"), href=row.get("href"))
 		return out
+	if out["kind"] == "palette":
+		return _palette_row(row, out)
 	if row.get("doctype") and row.get("field"):
 		if not _single_check(row["doctype"], row["field"]):
 			return None
@@ -115,6 +121,26 @@ def _resolve(row, provider) -> dict | None:
 		out.update(value=value, can_change=bool(row.get("can_change", True)))
 		return out
 	return None
+
+
+def _palette_row(row, out) -> dict | None:
+	swatches = [
+		{key: cstr(swatch.get(key) or "") for key in ("key", "label", "accent", "light", "dark")}
+		for swatch in row.get("swatches") or []
+		if isinstance(swatch, dict) and swatch.get("key") and swatch.get("light")
+	]
+	doctype = row.get("doctype")
+	if not (swatches and row.get("save") and doctype and frappe.db.exists("DocType", doctype)):
+		return None
+	out.update(
+		doctype=doctype,
+		save=cstr(row["save"]),
+		swatches=swatches,
+		stored=row.get("stored") if isinstance(row.get("stored"), dict) else {},
+		palette=row.get("palette") if isinstance(row.get("palette"), dict) else {},
+		can_change=_may_write(doctype),
+	)
+	return out
 
 
 # ── every other switch ──────────────────────────────────────────────────────
@@ -194,7 +220,7 @@ def _single_check(doctype, field) -> bool:
 
 def page() -> dict:
 	rows = curated()
-	taken = {(row["doctype"], row["field"]) for row in rows if row.get("doctype")}
+	taken = {(row["doctype"], row["field"]) for row in rows if row.get("doctype") and row.get("field")}
 	return {"areas": areas(), "curated": rows, "advanced": advanced(skip=taken)}
 
 
@@ -202,6 +228,8 @@ def set_switch(key: str, value) -> dict:
 	"""Turn a curated switch (by key) or a Single's Check (``Doctype:field``) on or off."""
 	value = _boolean(value)
 	row = next((row for row in curated() if row["key"] == key), None)
+	if row and row["kind"] != "switch":
+		frappe.throw(_("That setting does not exist."))
 	if row and row["kind"] == "switch" and not row.get("doctype"):
 		raw = next(
 			(

@@ -42,6 +42,27 @@ def stand_in_rows():
 			"field": "auto_mark_replied_on_response",
 		},
 		{"key": "demo.broken", "label": "Sin destino", "kind": "screen"},
+		{
+			"key": "demo.color",
+			"area": "otros",
+			"kind": "palette",
+			"label": "Color",
+			"doctype": "FCRM Settings",
+			"save": "demo.save_color",
+			"stored": {"accent": "", "tone": "Neutral", "density": "Comfortable"},
+			"palette": {"accent": "#171717"},
+			"swatches": [
+				{"key": "gris", "label": "Gris", "accent": "", "light": "#171717", "dark": "#ededed"},
+				{"key": "sin-color", "label": "Sin color"},
+			],
+		},
+		{
+			"key": "demo.color_without_swatches",
+			"label": "Color",
+			"kind": "palette",
+			"save": "x",
+			"doctype": "FCRM Settings",
+		},
 		*(
 			{
 				"key": f"demo.register.{register}",
@@ -102,7 +123,14 @@ class TestBusinessSettings(IntegrationTestCase):
 		rows = {row["key"]: row for row in hub.curated()}
 		self.assertEqual(
 			set(rows),
-			{"demo.screen", "demo.custom", "demo.single", "demo.register.Norte", "demo.register.Sur"},
+			{
+				"demo.screen",
+				"demo.custom",
+				"demo.single",
+				"demo.color",
+				"demo.register.Norte",
+				"demo.register.Sur",
+			},
 		)
 		self.assertEqual(rows["demo.screen"]["to"], "/demo")
 		self.assertFalse(rows["demo.custom"]["value"])
@@ -167,3 +195,30 @@ class TestBusinessSettings(IntegrationTestCase):
 		frappe.set_user(email)
 		with self.assertRaises(frappe.PermissionError):
 			hub.set_switch("demo.single", 1)
+
+	def test_the_shop_colour_row_passes_through_with_who_may_change_it(self):
+		row = next(row for row in hub.page()["curated"] if row["key"] == "demo.color")
+		self.assertEqual(row["kind"], "palette")
+		self.assertEqual(row["save"], "demo.save_color")
+		# a swatch without its colour is dropped, the rest keep their five keys
+		self.assertEqual([swatch["key"] for swatch in row["swatches"]], ["gris"])
+		self.assertEqual(row["stored"]["tone"], "Neutral")
+		self.assertTrue(row["can_change"])
+		with self.assertRaises(frappe.ValidationError):
+			hub.set_switch("demo.color", 1)
+		email = f"zz-color-{frappe.generate_hash(length=6)}@example.invalid"
+		user = frappe.get_doc(
+			{
+				"doctype": "User",
+				"email": email,
+				"first_name": "Vendedora",
+				"send_welcome_email": 0,
+				"roles": [{"role": "Sales User"}],
+			}
+		)
+		user.flags.no_welcome_mail = True
+		user.insert(ignore_permissions=True)
+		self.addCleanup(frappe.delete_doc, "User", email, force=True, ignore_missing=True)
+		frappe.set_user(email)
+		row = next(row for row in hub.curated() if row["key"] == "demo.color")
+		self.assertFalse(row["can_change"])

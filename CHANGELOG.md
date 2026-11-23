@@ -2,6 +2,12 @@
 
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
+## 2026-11-23 — Ajustes del negocio: the shop's colour, six swatches and its own (lane color-negocio; not deployed)
+
+- **Why:** the kit's Material look recolours every Muelle app from one accent, and the only place to choose it was the Desk form of Doco Business Settings.
+- **Change:** a `kind="palette"` row in «Ajustes del negocio» (`business_settings._palette_row`): the provider's swatches, stored values, resolved palette and its save method pass through, and who may write the provider's DocType may change it. `AjustesNegocio.vue` draws six round swatches and «Otro color» (the native colour picker); a tap posts the accent with the stored tone and density, recolours the shell at once with the answer and refreshes the boot; a refusal puts the swatch back. Gris stays the default. doco provides the row (`doco.erp_experience.appearance.business_rows`).
+- **Tests:** `test_business_settings` (+1: the row passes through, a broken swatch is dropped, it is no switch, a seller may not change it); `ajustesNegocio.test.js` (+4: six swatches and its own, one save with tone and density, the shell recoloured and the boot refreshed, read-only without rights, a refusal puts it back).
+
 ## 2026-11-22 — Inventario › «Conteos del día»: the owner runs the daily counts from the shell (lane conteos-pantallas, with scanner_kit; not deployed)
 
 - **Why:** switching the daily counts on and staffing them took the Desk: a plan form of 31 fields and one more form per person (about 42 taps for three people). The owner could not see from the shell who counted today.
