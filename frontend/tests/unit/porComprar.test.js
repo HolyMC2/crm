@@ -633,20 +633,13 @@ describe('Por comprar queue', () => {
   })
 
   it('without the shop money: no price, no total, no currency sign', async () => {
-    const lines = queue().lines.map(
-      ({
-        price,
-        price_date,
-        price_source,
-        price_currency,
-        price_stale,
-        price_foreign,
-        ...rest
-      }) => ({
-        ...rest,
-        offers: rest.offers.map((o) => ({ supplier: o.supplier })),
-      }),
-    )
+    // as the server sends it: every key that starts with «price» is gone
+    const lines = queue().lines.map((full) => ({
+      ...Object.fromEntries(
+        Object.entries(full).filter(([key]) => !key.startsWith('price')),
+      ),
+      offers: full.offers.map((o) => ({ supplier: o.supplier })),
+    }))
     answer({ queue: queue({ quantities_only: true, lines }) })
     mount()
     await flush()
