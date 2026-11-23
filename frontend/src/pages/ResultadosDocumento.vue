@@ -140,6 +140,15 @@
             <div class="skel h-20 rounded-7" />
           </div>
           <div v-else class="detail-in">
+            <!-- A cash closing is the whole turn: tickets, payment methods,
+                 cash movements, bags and counts (Documentos' TurnoPanel). -->
+            <TurnoPanel
+              v-if="isClosing"
+              :record="doc"
+              :doctype="doctype"
+              :name="name"
+              class="-mx-4 mt-6 sm:-mx-6"
+            />
             <section
               v-if="repair"
               class="mt-6"
@@ -359,7 +368,7 @@
             </section>
 
             <section
-              v-if="payments.length || totals.length"
+              v-if="!isClosing && (payments.length || totals.length)"
               class="mt-6"
               :aria-label="__('Payments')"
             >
@@ -447,7 +456,7 @@
             </section>
 
             <section
-              v-if="doc.reconciliation?.length"
+              v-if="!isClosing && doc.reconciliation?.length"
               class="mt-6"
               :aria-label="__('Cash count')"
             >
@@ -698,6 +707,10 @@ const doc = ref(null)
 const problem = ref(null)
 const isPhone = isMobile
 const isTicket = props.doctype === 'Sales Invoice'
+const isClosing = props.doctype === 'POS Closing Shift'
+const TurnoPanel = defineAsyncComponent(
+  () => import('@/components/documentos/turno/TurnoPanel.vue'),
+)
 
 const currency = computed(() => shellBoot.value?.currency || '')
 const docCurrency = computed(
