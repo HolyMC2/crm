@@ -1,4 +1,4 @@
-/* Vendored from muelle/workspace/packages/ui@0.2.0 (57ffdde5733b). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. */
+/* Vendored from muelle/workspace/packages/ui@0.2.0 (994848826b28). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. */
 /* The Muelle shell's look, type, motion and feel, shared by every app built on
    @muelle/ui. Import it after the @muelle/tokens CSS (0.2.0 or later: it reads
    the Material roles). It needs the frappe-ui Tailwind preset for the colour
@@ -92,6 +92,11 @@ html:root[data-theme='dark'] {
   --surface-gray-2: var(--muelle-surface-container-high);
   --surface-gray-3: var(--muelle-surface-container-highest);
   background-color: var(--muelle-surface-container-low);
+}
+/* In dark the page's hairline is one step from the page, so on the sheet's
+   tone it vanishes: rules and edges inside a sheet take the next step. */
+html:root[data-theme='dark'] .ui-sheet-surface {
+  --outline-gray-1: var(--muelle-outline-gray-2);
 }
 
 /* Shell typeface: Archivo (Omnibus-Type, OFL; OFL.txt beside this file).

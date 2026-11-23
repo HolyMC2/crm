@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/tokens@0.2.0 (f60255e9ba39). DO NOT EDIT:
+// Vendored from muelle/workspace/packages/tokens@0.2.0 (bf6aaf7d558c). DO NOT EDIT:
 // change the package, then run its scripts/vendor.mjs against this directory.
 // CSS custom properties. `tokens.css` (committed) is `renderTokensCss()` for
 // the default Gris palette; at boot each SPA injects `accentCss(palette)` so
@@ -27,8 +27,12 @@ export const SHAPE = Object.freeze({ xs: '4px', sm: '8px', md: '12px', lg: '16px
 export const ELEVATION = Object.freeze({
   /** A 1 px edge: a surface that had only a shadow keeps its outline on a page of the same colour. */
   edge: `0 0 0 1px var(${PREFIX}outline-variant)`,
-  /** What floats (FAB, menus, desktop dialogs): one soft shadow in light, the edge in dark. */
-  float: { light: '0 4px 12px 2px rgba(0, 0, 0, 0.18)', dark: `var(${PREFIX}elevation-edge)` },
+  /** What floats (FAB, menus, desktop dialogs): one soft shadow in light; in dark, where a shadow
+   * barely shows and the hairline matches the page, a rim of the outline role and a deeper shadow. */
+  float: {
+    light: '0 4px 12px 2px rgba(0, 0, 0, 0.18)',
+    dark: `0 0 0 1px var(${PREFIX}outline), 0 8px 24px 4px rgba(0, 0, 0, 0.55)`,
+  },
 } as const)
 
 function block(selector: string, declarations: Array<[string, string]>, indent = ''): string {

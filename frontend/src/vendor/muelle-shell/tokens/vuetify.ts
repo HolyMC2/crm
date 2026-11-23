@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/tokens@0.2.0 (f60255e9ba39). DO NOT EDIT:
+// Vendored from muelle/workspace/packages/tokens@0.2.0 (bf6aaf7d558c). DO NOT EDIT:
 // change the package, then run its scripts/vendor.mjs against this directory.
 // POS (Vuetify 3) theme from the same tokens. Vuetify needs concrete colors,
 // so this maps the resolved values rather than `var(--muelle-*)`. POS passes

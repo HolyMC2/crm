@@ -1,4 +1,4 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.2.0 (57ffdde5733b). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.2.0 (994848826b28). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <template>
   <!-- An es-MX date (and/or 24-hour time): type dd/mm/aaaa, tap Hoy · Mañana ·
        En una semana, or open the month. Never the browser's US mm/dd/yyyy.
@@ -265,8 +265,8 @@ function dayLabel(day) {
 }
 /* background-color, not the shorthand: the state layer is a background-image */
 .date-day.is-picked {
-  background-color: var(--muelle-secondary-container, #dadada);
-  color: var(--muelle-on-secondary-container, #171717);
+  background-color: var(--muelle-accent, #171717);
+  color: var(--muelle-accent-ink, #ffffff);
   font-weight: 600;
 }
 </style>

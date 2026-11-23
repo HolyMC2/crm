@@ -341,7 +341,7 @@
       <div
         v-if="notice"
         role="status"
-        class="sticky bottom-24 z-30 mt-4 flex items-center gap-3 rounded-full bg-surface-gray-10 py-1 pl-5 pr-1 text-sm text-ink-base shadow-lg sm:bottom-4 sm:mx-auto sm:max-w-lg"
+        class="ui-inverse sticky bottom-24 z-30 mt-4 flex items-center gap-3 rounded-full py-1 pl-5 pr-1 text-sm shadow-lg sm:bottom-4 sm:mx-auto sm:max-w-lg"
         data-testid="org-notice"
       >
         <span class="min-w-0 flex-1">{{ notice.text }}</span>

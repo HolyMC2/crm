@@ -1,4 +1,4 @@
-/* Vendored from muelle/workspace/packages/tokens@0.2.0 (f60255e9ba39). DO NOT EDIT:
+/* Vendored from muelle/workspace/packages/tokens@0.2.0 (bf6aaf7d558c). DO NOT EDIT:
    change the package, then run its scripts/vendor.mjs against this directory. */
 /* @muelle/tokens — generated from frappe-ui 1.0.2 and the #171717 palette. DO NOT EDIT: run `pnpm run build:css`. */
 :root {
@@ -133,7 +133,7 @@
   --muelle-accent-hover: #dcdddd;
   --muelle-inverse-surface: #f8f8f8;
   --muelle-inverse-on-surface: #171717;
-  --muelle-elevation-float: var(--muelle-elevation-edge);
+  --muelle-elevation-float: 0 0 0 1px var(--muelle-outline), 0 8px 24px 4px rgba(0, 0, 0, 0.55);
 }
 @media (prefers-reduced-motion: reduce) {
   :root {

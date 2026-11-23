@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/tokens@0.2.0 (f60255e9ba39). DO NOT EDIT:
+// Vendored from muelle/workspace/packages/tokens@0.2.0 (bf6aaf7d558c). DO NOT EDIT:
 // change the package, then run its scripts/vendor.mjs against this directory.
 // Material Design 3 colour roles, derived from the shop's accent. Tonal
 // surfaces are the accent mixed into the page surface, so a grey shop stays

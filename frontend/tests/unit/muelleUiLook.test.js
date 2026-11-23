@@ -13,6 +13,14 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 vi.mock('frappe-ui', async () => {
   const { h } = await import('vue')
   return {
+    // The bar's counts read the server through `call`; the look needs none.
+    call: vi.fn(async () => ({})),
+    createResource: () => ({
+      data: null,
+      fetch: vi.fn(),
+      reload: vi.fn(),
+      submit: vi.fn(),
+    }),
     Button: {
       props: ['label', 'variant', 'size'],
       emits: ['click'],
@@ -684,8 +692,9 @@ describe('what is selected takes the secondary container', () => {
   it('DateField: the day and the shortcut that are picked', async () => {
     await mount(DateField, { modelValue: '2026-11-22', label: 'Vence' })
     const css = read(path.join(kit, 'DateField.vue'))
+    // the picked day is the filled accent, so the eye lands on it, not on today's ring
     expect(css).toMatch(
-      /\.date-day\.is-picked \{\s*background-color: var\(--muelle-secondary-container/,
+      /\.date-day\.is-picked \{\s*background-color: var\(--muelle-accent,/,
     )
     // tone, not borders: the field is filled, and only its chips keep a hairline
     const inputs = all('[data-ui-date-field] input')

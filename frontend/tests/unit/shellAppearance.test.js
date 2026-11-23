@@ -107,7 +107,7 @@ describe('the vendored token sheet', () => {
       expect(light).toContain(declaration)
     expect(light).toContain('--muelle-elevation-float:')
     expect(dark).toContain(
-      '--muelle-elevation-float: var(--muelle-elevation-edge);',
+      '--muelle-elevation-float: 0 0 0 1px var(--muelle-outline), 0 8px 24px 4px rgba(0, 0, 0, 0.55);',
     )
   })
 })

@@ -1,4 +1,4 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.2.0 (57ffdde5733b). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.2.0 (994848826b28). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <!-- A phone list's top bar (WhatsApp pattern, Marco 2026-10-28): only the
      search pill shows. Focusing it slides open the panel under it (channel or
      view toggles, filters, recent records: the default slot) over the greyed
