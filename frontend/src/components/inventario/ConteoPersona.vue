@@ -23,25 +23,36 @@
             >{{ person.name }}</span
           >
           <span
-            v-if="line.kind === 'progress'"
+            v-if="line.kind === 'progress' && !open"
             class="num flex-none text-md font-semibold text-ink-gray-9"
             data-persona-avance
             >{{ line.figure }}</span
           >
         </div>
+        <!-- Open, the switch takes the name's line: the figure follows the bar. -->
         <div
           v-if="line.kind === 'progress'"
-          class="mt-1.5 flex h-2 gap-0.5"
-          aria-hidden="true"
-          data-persona-barra
+          class="mt-1.5 flex items-center gap-2"
         >
+          <div
+            class="flex h-2 min-w-0 flex-1 gap-0.5"
+            aria-hidden="true"
+            data-persona-barra
+          >
+            <span
+              v-for="(mark, index) in line.marks"
+              :key="index"
+              class="h-full min-w-0 flex-1 rounded-full"
+              :class="MARK[mark]"
+              :data-marca="mark"
+            />
+          </div>
           <span
-            v-for="(mark, index) in line.marks"
-            :key="index"
-            class="h-full min-w-0 flex-1 rounded-full"
-            :class="MARK[mark]"
-            :data-marca="mark"
-          />
+            v-if="open"
+            class="num flex-none text-sm font-semibold text-ink-gray-9"
+            data-persona-avance
+            >{{ line.figure }}</span
+          >
         </div>
         <p
           v-else-if="line.text"
@@ -86,11 +97,20 @@
         v-else
         type="button"
         class="press mr-2 flex size-10 flex-none items-center justify-center rounded-full bg-surface-gray-3 text-ink-gray-8"
-        :aria-label="__('Add {0} to the counts', [person.name], CTX)"
+        :aria-label="
+          open
+            ? __('Close {0}', [person.name], CTX)
+            : __('Add {0} to the counts', [person.name], CTX)
+        "
+        :aria-expanded="asksWhere ? String(open) : undefined"
         data-persona-sumar
         @click="startCounting"
       >
-        <span class="lucide-plus size-5" aria-hidden="true" />
+        <span
+          class="size-5"
+          :class="open ? 'lucide-x' : 'lucide-plus'"
+          aria-hidden="true"
+        />
       </button>
     </div>
     <p
@@ -379,11 +399,14 @@ function set(what, args, paint) {
   emit('set', what, args, paint)
 }
 
+// With every store and more than one to choose from, the row asks where.
+const asksWhere = computed(
+  () => props.person.everywhere && stores.value.length > 1,
+)
 function startCounting(store) {
   const where = typeof store === 'string' ? store : ''
-  // With every store and more than one to choose from, the row asks where.
-  if (!where && props.person.everywhere && stores.value.length > 1) {
-    if (!props.open) emit('toggle')
+  if (!where && asksWhere.value) {
+    emit('toggle')
     return
   }
   set(

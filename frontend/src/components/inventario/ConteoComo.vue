@@ -97,13 +97,13 @@
 
     <!-- A store that counts its own way: its chip opens the same three
          choices, «Como la tienda» first. A dot marks a store that differs. -->
-    <template v-if="warehouses.length > 1">
+    <template v-if="stores.length > 1">
       <p class="mb-1.5 mt-4 text-xs font-medium text-ink-gray-6">
         {{ __('Different in', null, CTX) }}
       </p>
       <div class="flex flex-wrap gap-1.5">
         <button
-          v-for="store in warehouses"
+          v-for="store in stores"
           :key="store.name"
           type="button"
           :class="chipClass(store.name === openStore)"
@@ -219,9 +219,10 @@ const RULES = [
 ]
 
 const openStore = ref('')
+// The stores somebody can count in: one with counting off has no list to set.
+const stores = computed(() => props.warehouses.filter((store) => !store.off))
 const current = computed(
-  () =>
-    props.warehouses.find((store) => store.name === openStore.value) || null,
+  () => stores.value.find((store) => store.name === openStore.value) || null,
 )
 const own = (key) => !!current.value?.count?.own?.includes(key)
 const fixed = (key) => !!current.value?.count?.fixed?.includes(key)

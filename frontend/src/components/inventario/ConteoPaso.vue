@@ -14,16 +14,17 @@
       <span class="lucide-minus size-5" aria-hidden="true" />
     </button>
     <label class="flex min-w-[4.5rem] items-baseline justify-center gap-1">
+      <!-- As wide as its figure, so the unit sits beside the number. -->
       <input
         type="text"
         inputmode="numeric"
         autocomplete="off"
-        :value="shown === 0 && zeroLabel ? '' : shown"
+        :value="blank ? '' : shown"
         :placeholder="zeroLabel"
         :aria-label="label"
         :disabled="disabled"
-        class="num w-full min-w-0 rounded-4 border-0 bg-transparent p-0 text-center text-xl font-semibold text-ink-gray-9 placeholder:text-base placeholder:font-medium placeholder:text-ink-gray-7 focus:bg-surface-gray-3 focus:ring-0"
-        :class="unit ? 'max-w-10' : ''"
+        class="num min-w-0 rounded-4 border-0 bg-transparent p-0 text-center text-xl font-semibold text-ink-gray-9 placeholder:text-base placeholder:font-medium placeholder:text-ink-gray-7 focus:bg-surface-gray-3 focus:ring-0"
+        :style="{ width: blank ? '4.5rem' : `${String(shown).length + 1}ch` }"
         data-paso-valor
         @focus="$event.target.select()"
         @change="typed"
@@ -44,7 +45,7 @@
   </div>
 </template>
 <script setup>
-import { onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { CTX, stepTo, typedNumber } from './conteos'
 
 const props = defineProps({
@@ -67,6 +68,8 @@ const ROUND =
   'press flex size-11 flex-none items-center justify-center rounded-full bg-surface-gray-3 text-ink-gray-8 disabled:text-ink-gray-5'
 
 const shown = ref(props.modelValue)
+// Where 0 is a choice with a name, the name shows in place of the figure.
+const blank = computed(() => shown.value === 0 && !!props.zeroLabel)
 let timer = null
 
 watch(

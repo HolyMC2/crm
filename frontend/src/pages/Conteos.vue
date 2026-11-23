@@ -100,7 +100,7 @@
 
     <template v-else>
       <main
-        class="mx-auto grid w-full max-w-5xl gap-3 px-4 pb-6 pt-1 sm:px-6 lg:grid-cols-2 lg:items-start lg:gap-6"
+        class="mx-auto grid w-full max-w-5xl gap-3 px-4 pb-6 pt-3 sm:px-6 lg:grid-cols-2 lg:items-start lg:gap-6"
       >
         <!-- The day: what the counts found, what waits for a decision, each person. -->
         <div class="flex min-w-0 flex-col gap-3">
@@ -206,7 +206,7 @@
               <div class="flex items-center justify-between gap-3 px-1">
                 <span
                   class="min-w-0 flex-1 text-md font-medium text-ink-gray-9"
-                  >{{ __('Per person a day', null, CTX) }}</span
+                  >{{ __('Per person', null, CTX) }}</span
                 >
                 <ConteoPaso
                   :model-value="
@@ -214,7 +214,7 @@
                   "
                   :bounds="byProducts ? PRODUCTS : MINUTES"
                   :unit="byProducts ? '' : __('min', null, CTX)"
-                  :label="__('Per person a day', null, CTX)"
+                  :label="__('Per person', null, CTX)"
                   @commit="setSize"
                 />
               </div>

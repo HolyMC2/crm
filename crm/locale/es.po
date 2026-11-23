@@ -52942,8 +52942,8 @@ msgid "min"
 msgstr "min"
 
 msgctxt "Conteos"
-msgid "Per person a day"
-msgstr "Por persona al día"
+msgid "Per person"
+msgstr "Por persona"
 
 msgctxt "Conteos"
 msgid "Full pass"
