@@ -53228,3 +53228,11 @@ msgstr "Menos"
 msgctxt "Conteos"
 msgid "More"
 msgstr "Más"
+
+msgctxt "Conteos"
+msgid "Nobody uses Escáner yet"
+msgstr "Nadie usa Escáner todavía"
+
+msgctxt "Conteos"
+msgid "Give access in Equipo"
+msgstr "Da acceso en Equipo"

@@ -14,6 +14,7 @@
       :back="{ name: 'Inventario' }"
       :back-label="__('Back to Inventario', null, CTX)"
       :stack="false"
+      :loading="busy > 0"
     >
       <template #actions>
         <AjustesSwitch
@@ -170,6 +171,19 @@
                 openPerson = openPerson === person.user ? '' : person.user
               "
               @set="(what, args, paint) => setPerson(person, what, args, paint)"
+            />
+          </div>
+          <!-- Only who uses Escáner can count: with nobody, the way to give access. -->
+          <div
+            v-else
+            class="overflow-hidden rounded-7 bg-surface-gray-1"
+            data-conteos-nadie
+          >
+            <ListRow
+              icon="lucide-users"
+              :title="__('Nobody uses Escáner yet', null, CTX)"
+              :subtitle="__('Give access in Equipo', null, CTX)"
+              to="/equipo"
             />
           </div>
         </div>
@@ -333,6 +347,7 @@
                 <Segmented
                   :model-value="recounting ? 'recount' : 'review'"
                   :options="differenceOptions()"
+                  :fit="roomy ? 'content' : 'equal'"
                   :label="__('If it does not match', null, CTX)"
                   @update:model-value="setDifferences"
                 />
@@ -417,6 +432,7 @@
 <script setup>
 import { computed, nextTick, onMounted, reactive, ref } from 'vue'
 import { RouterLink } from 'vue-router'
+import { useWindowSize } from '@vueuse/core'
 import {
   AppBar,
   ChipGroup,
@@ -424,6 +440,7 @@ import {
   ExpandTransition,
   KpiGrid,
   KpiTile,
+  ListRow,
   Segmented,
 } from '@/components/ui'
 import AjustesSwitch from '@/components/ajustes/AjustesSwitch.vue'
@@ -481,6 +498,11 @@ const writer = createWriter({
   busy,
   onAnswer: (answer) => noteConteosDoor({ can_open: true, on: answer.on }),
 })
+
+// «Recuenta otra persona» on one line where the track has room for both
+// choices; narrower, equal segments wrap their words instead of scrolling.
+const { width: pageWidth } = useWindowSize()
+const roomy = computed(() => pageWidth.value >= 380)
 
 const settings = computed(() => home.value?.settings || {})
 const byProducts = computed(() => settings.value.unit === 'products')

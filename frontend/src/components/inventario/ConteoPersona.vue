@@ -29,31 +29,29 @@
             >{{ line.figure }}</span
           >
         </div>
-        <!-- Open, the switch takes the name's line: the figure follows the bar. -->
+        <!-- Open, the switch takes the name's line: the figure reads under
+             the name and the bar spans the opened row. -->
         <div
-          v-if="line.kind === 'progress'"
-          class="mt-1.5 flex items-center gap-2"
+          v-if="line.kind === 'progress' && !open"
+          class="mt-1.5 flex h-2 gap-0.5"
+          aria-hidden="true"
+          data-persona-barra
         >
-          <div
-            class="flex h-2 min-w-0 flex-1 gap-0.5"
-            aria-hidden="true"
-            data-persona-barra
-          >
-            <span
-              v-for="(mark, index) in line.marks"
-              :key="index"
-              class="h-full min-w-0 flex-1 rounded-full"
-              :class="MARK[mark]"
-              :data-marca="mark"
-            />
-          </div>
           <span
-            v-if="open"
-            class="num flex-none text-sm font-semibold text-ink-gray-9"
-            data-persona-avance
-            >{{ line.figure }}</span
-          >
+            v-for="(mark, index) in line.marks"
+            :key="index"
+            class="h-full min-w-0 flex-1 rounded-full"
+            :class="MARK[mark]"
+            :data-marca="mark"
+          />
         </div>
+        <p
+          v-else-if="line.kind === 'progress'"
+          class="num text-sm leading-snug text-ink-gray-6"
+          data-persona-avance
+        >
+          {{ line.figure }}
+        </p>
         <p
           v-else-if="line.text"
           class="text-sm leading-snug"
@@ -137,6 +135,20 @@
         class="flex flex-col gap-4 px-4 pb-4"
         data-persona-ajustes
       >
+        <div
+          v-if="line.kind === 'progress'"
+          class="flex h-2 gap-0.5"
+          aria-hidden="true"
+          data-persona-barra
+        >
+          <span
+            v-for="(mark, index) in line.marks"
+            :key="index"
+            class="h-full min-w-0 flex-1 rounded-full"
+            :class="MARK[mark]"
+            :data-marca="mark"
+          />
+        </div>
         <div>
           <div class="flex items-center justify-between gap-3">
             <span class="text-md font-medium text-ink-gray-9">{{

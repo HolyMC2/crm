@@ -256,6 +256,7 @@ async function open(home, { phone = false } = {}) {
     history: createMemoryHistory('/crm'),
     routes: [
       { path: '/inventario', name: 'Inventario', component: stub },
+      { path: '/equipo', name: 'Equipo', component: stub },
       { path: '/inventario/conteos', component: Conteos },
     ],
   })
@@ -364,6 +365,14 @@ describe('Conteos del día, apagado', () => {
     )
     expect(one('[data-conteos-encender]')).toBeTruthy()
     expect(one('[data-conteos-switch]')).toBeNull()
+  })
+
+  it('with nobody who uses Escáner, the page says so and where to give access', async () => {
+    await open(off({ people: [] }))
+    expect(one('[data-conteos-personas]')).toBeNull()
+    const nobody = one('[data-conteos-nadie]')
+    expect(nobody.textContent).toContain('Nadie usa Escáner todavía')
+    expect(nobody.querySelector('a').getAttribute('href')).toBe('/crm/equipo')
   })
 
   it('on a phone the switch is in the bar and «Encender» is the one button', async () => {
@@ -525,6 +534,20 @@ describe('A person, in place', () => {
     expect(
       dani.querySelector('[data-persona-tamano] [data-paso-valor]').value,
     ).toBe('5')
+  })
+
+  it('open, a person with a list keeps their figure and the bar spans the row', async () => {
+    await open(on())
+    const beto = row('beto@x.mx')
+    beto.querySelector('[data-persona-abrir]').click()
+    await flush()
+    expect(beto.querySelector('[data-persona-avance]').textContent.trim()).toBe(
+      '5 de 13',
+    )
+    expect(
+      beto.querySelectorAll('[data-persona-ajustes] [data-marca]'),
+    ).toHaveLength(13)
+    expect(beto.querySelectorAll('[data-persona-barra]')).toHaveLength(1)
   })
 
   it('the shop’s own minutes mean «as the shop»', async () => {
