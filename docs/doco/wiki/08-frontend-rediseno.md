@@ -110,7 +110,7 @@ Se construye con `vite-plugin-pwa` (estrategia generateSW de workbox más
 | Ajuste | Valor | Por qué |
 |---|---|---|
 | `name` / `short_name` | `CRM` | neutral, multi-tenant |
-| `scope` | `/crm` | |
+| `scope` | `/` | the whole site: Taller, POS, Escáner and the Desk open in the Muelle window (2026-11-23) |
 | `lang` | `es` | |
 | `theme_color` | `#16a34a` | **limitación**: el manifiesto es por build, así que el color del ícono no puede ser por tenant |
 | `shortcuts` | Inbox, Leads | long-press del ícono |

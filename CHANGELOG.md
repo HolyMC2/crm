@@ -2,6 +2,12 @@
 
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
+## 2026-11-23 — The Muelle app is the whole site: Taller and the other apps open without a browser bar (lane muelle-scope; not deployed)
+
+- **Why:** the installed Muelle app claimed only `/crm`, so an order opened from it (`/taller/orders/…`) ran in a browser tab with the page's title, the address and an X over it: one more bar on a phone where the order already lost half the screen (Marco, 2026-11-23).
+- **Change:** the web manifest's `scope` is `/` (was `/crm`), with `id: '/crm'` pinning the installed app to its first start_url so the wider scope updates the same app. Taller, POS, Escáner, Clínica, Mercado and the Desk open inside the Muelle window; Android's back leaves them. The service worker keeps its own scope (`/assets/crm/frontend/`).
+- **Rollout:** rides the crm bundle; an installed app picks up the new manifest on its next update check (Chrome refreshes it on its own, no reinstall). Rollback: revert.
+
 ## 2026-11-23 — A register turn reads whole: tickets, payments, cash movements, bags and counts (lane turno-completo; not deployed)
 
 - **Why:** Marco opened Jennifer's open turn on his phone and the page showed only its start, company and cashier.

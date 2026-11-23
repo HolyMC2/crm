@@ -64,8 +64,13 @@ export default defineConfig(async () => {
           display: 'standalone',
           name: 'Muelle',
           short_name: 'Muelle',
+          // The app is the whole site: Taller, POS, Escáner, Clínica and the
+          // Desk open in the Muelle window, not in a browser tab with an
+          // address bar and an X. `id` pins the installed app to its first
+          // start_url, so widening the scope never makes it a new app.
+          id: '/crm',
           start_url: '/crm',
-          scope: '/crm',
+          scope: '/',
           lang: 'es',
           theme_color: '#0f6b78',
           background_color: '#ffffff',
