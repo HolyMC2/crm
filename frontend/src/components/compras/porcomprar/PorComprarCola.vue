@@ -27,25 +27,23 @@
 
     <template v-else>
       <!-- Sort chips, and the legend of each line's numbers. -->
-      <div class="flex items-center gap-2" data-pc-orden>
-        <div class="flex min-w-0 flex-1 flex-wrap gap-x-2">
-          <button
-            v-for="chip in sortChips"
-            :key="chip.value"
-            type="button"
-            :class="chipClass(sort === chip.value)"
-            :aria-pressed="sort === chip.value"
-            :data-pc-sort="chip.value"
-            @click="sort = chip.value"
-          >
-            <span :class="[chip.icon, 'size-4']" aria-hidden="true" />
-            {{ chip.label }}
-          </button>
-        </div>
+      <div class="flex flex-wrap items-center gap-x-2" data-pc-orden>
+        <button
+          v-for="chip in sortChips"
+          :key="chip.value"
+          type="button"
+          :class="chipClass(sort === chip.value)"
+          :aria-pressed="sort === chip.value"
+          :data-pc-sort="chip.value"
+          @click="sort = chip.value"
+        >
+          <span :class="[chip.icon, 'size-4']" aria-hidden="true" />
+          {{ chip.label }}
+        </button>
         <button
           v-if="queue.can_configure"
           type="button"
-          class="press flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-7 hover:bg-surface-gray-2"
+          class="press -mr-2 ml-auto flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-7 hover:bg-surface-gray-2"
           :aria-label="__('Settings', null, 'PorComprar')"
           :title="__('Settings', null, 'PorComprar')"
           data-pc-ajustes
@@ -108,14 +106,14 @@
         :data-pc-bloque="block.supplier || 'sin-proveedor'"
       >
         <header
-          class="flex min-h-16 items-center gap-3 bg-surface-gray-1 py-2 pl-3 pr-2"
+          class="flex min-h-16 flex-wrap items-center gap-x-3 gap-y-2 bg-surface-gray-1 py-2 pl-3 pr-2"
         >
           <span
             class="flex size-10 flex-none items-center justify-center rounded-full bg-surface-gray-3 text-sm font-semibold text-ink-gray-8"
             aria-hidden="true"
             >{{ block.supplier ? initials(block.label) : '?' }}</span
           >
-          <span class="min-w-0 flex-1">
+          <span class="min-w-0 flex-1 basis-40">
             <span
               class="block break-words text-base font-semibold text-ink-gray-9"
               >{{
@@ -376,9 +374,9 @@ const route = useRoute()
 const router = useRouter()
 const BTN = Object.freeze({
   filled:
-    'inline-flex h-10 flex-none items-center gap-1.5 rounded-full bg-surface-gray-10 px-4 text-sm font-medium text-ink-base hover:bg-surface-gray-9 disabled:opacity-50',
+    'ml-auto inline-flex h-10 flex-none items-center gap-1.5 rounded-full bg-surface-gray-10 px-4 text-sm font-medium text-ink-base hover:bg-surface-gray-9 disabled:opacity-50',
   tonal:
-    'inline-flex h-10 flex-none items-center gap-1.5 rounded-full bg-[var(--muelle-secondary-container)] px-4 text-sm font-medium text-[var(--muelle-on-secondary-container)] disabled:opacity-50',
+    'ml-auto inline-flex h-10 flex-none items-center gap-1.5 rounded-full bg-[var(--muelle-secondary-container)] px-4 text-sm font-medium text-[var(--muelle-on-secondary-container)] disabled:opacity-50',
 })
 const SAVE_AFTER_MS = 600
 

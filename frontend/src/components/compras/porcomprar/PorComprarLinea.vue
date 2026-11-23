@@ -14,39 +14,41 @@
         aria-hidden="true"
       />
       <span
-        class="min-w-0 flex-1 break-words text-base text-ink-gray-6 line-through"
+        class="min-w-0 flex-1 basis-40 break-words text-base text-ink-gray-6 line-through"
         >{{ line.item_name }}</span
       >
-      <button
-        type="button"
-        :class="chipClass(!line.struck.always)"
-        :aria-pressed="!line.struck.always"
-        :disabled="busy"
-        data-pc-ocultar-dias
-        @click="emit('hide-for', false)"
-      >
-        {{ daysText(cycle) }}
-      </button>
-      <button
-        type="button"
-        :class="chipClass(line.struck.always)"
-        :aria-pressed="line.struck.always"
-        :disabled="busy"
-        data-pc-ocultar-siempre
-        @click="emit('hide-for', true)"
-      >
-        {{ __('Always', null, 'PorComprar') }}
-      </button>
-      <button
-        type="button"
-        class="press flex size-11 items-center justify-center rounded-full text-ink-gray-8 hover:bg-surface-gray-2"
-        :aria-label="__('Undo', null, 'PorComprar')"
-        :disabled="busy"
-        data-pc-deshacer
-        @click="emit('undo')"
-      >
-        <span class="lucide-undo-2 size-5" aria-hidden="true" />
-      </button>
+      <span class="ml-auto flex flex-none items-center gap-x-2">
+        <button
+          type="button"
+          :class="chipClass(!line.struck.always)"
+          :aria-pressed="!line.struck.always"
+          :disabled="busy"
+          data-pc-ocultar-dias
+          @click="emit('hide-for', false)"
+        >
+          {{ daysText(cycle) }}
+        </button>
+        <button
+          type="button"
+          :class="chipClass(line.struck.always)"
+          :aria-pressed="line.struck.always"
+          :disabled="busy"
+          data-pc-ocultar-siempre
+          @click="emit('hide-for', true)"
+        >
+          {{ __('Always', null, 'PorComprar') }}
+        </button>
+        <button
+          type="button"
+          class="press flex size-11 items-center justify-center rounded-full text-ink-gray-8 hover:bg-surface-gray-2"
+          :aria-label="__('Undo', null, 'PorComprar')"
+          :disabled="busy"
+          data-pc-deshacer
+          @click="emit('undo')"
+        >
+          <span class="lucide-undo-2 size-5" aria-hidden="true" />
+        </button>
+      </span>
     </div>
 
     <div v-else-if="wide" class="pc-fila min-h-14 px-4 py-1.5">
@@ -150,30 +152,33 @@
     </div>
 
     <div v-else class="px-4 py-3">
-      <div class="flex items-start gap-2">
+      <!-- On a narrow phone the name takes its own line above the controls. -->
+      <div class="flex flex-wrap items-start gap-x-2 gap-y-1">
         <span
-          class="min-w-0 flex-1 break-words pt-2.5 text-base text-ink-gray-9"
+          class="min-w-0 flex-1 basis-40 break-words pt-2.5 text-base text-ink-gray-9"
           >{{ line.item_name }}</span
         >
-        <ListaStepper
-          :qty="quantity"
-          large
-          :disabled="!canAdd"
-          :label="__('Quantity of {0}', [line.item_name], 'PorComprar')"
-          @step="emit('set-qty', quantity + $event)"
-          @set="emit('set-qty', $event)"
-        />
-        <button
-          type="button"
-          :class="addClass"
-          :disabled="!canAdd || !ready || busy"
-          :aria-pressed="String(added)"
-          :aria-label="addLabel"
-          :data-pc-linea-agregar="added ? 'agregada' : 'no'"
-          @click="emit(added ? 'take-out' : 'add')"
-        >
-          <span :class="[addIcon, 'size-5']" aria-hidden="true" />
-        </button>
+        <span class="ml-auto flex flex-none items-center gap-2">
+          <ListaStepper
+            :qty="quantity"
+            large
+            :disabled="!canAdd"
+            :label="__('Quantity of {0}', [line.item_name], 'PorComprar')"
+            @step="emit('set-qty', quantity + $event)"
+            @set="emit('set-qty', $event)"
+          />
+          <button
+            type="button"
+            :class="addClass"
+            :disabled="!canAdd || !ready || busy"
+            :aria-pressed="String(added)"
+            :aria-label="addLabel"
+            :data-pc-linea-agregar="added ? 'agregada' : 'no'"
+            @click="emit(added ? 'take-out' : 'add')"
+          >
+            <span :class="[addIcon, 'size-5']" aria-hidden="true" />
+          </button>
+        </span>
       </div>
       <div
         class="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-gray-8"
@@ -331,7 +336,7 @@ const ready = computed(
 const addClass = computed(() => [
   'press flex size-11 flex-none items-center justify-center rounded-full disabled:opacity-40',
   added.value
-    ? 'border-2 border-ink-gray-9 text-ink-gray-9'
+    ? 'border-2 border-current text-ink-gray-9'
     : 'bg-surface-gray-2 text-ink-gray-9',
 ])
 const addIcon = computed(() =>

@@ -15,11 +15,11 @@
         <button
           type="button"
           role="radio"
-          class="state-layer flex min-h-16 w-full items-center gap-3 bg-surface-gray-2 px-4 py-2 text-left disabled:cursor-default"
+          class="state-layer flex min-h-16 w-full items-center gap-3 px-4 py-2 text-left disabled:cursor-default"
           :class="
             row.supplier === picked
-              ? 'bg-[var(--muelle-secondary-container)]'
-              : ''
+              ? 'bg-[var(--muelle-secondary-container)] text-[var(--muelle-on-secondary-container)]'
+              : 'bg-surface-gray-2 text-ink-gray-7'
           "
           :aria-checked="row.supplier === picked"
           :disabled="locked"
@@ -27,17 +27,12 @@
           @click="emit('pick', row.supplier)"
         >
           <span
-            class="flex size-5 flex-none items-center justify-center rounded-full border-2"
-            :class="
-              row.supplier === picked
-                ? 'border-ink-gray-9'
-                : 'border-outline-gray-4'
-            "
+            class="flex size-5 flex-none items-center justify-center rounded-full border-2 border-current"
             aria-hidden="true"
           >
             <span
               v-if="row.supplier === picked"
-              class="size-2.5 rounded-full bg-ink-gray-9"
+              class="size-2.5 rounded-full bg-current"
             />
           </span>
           <span class="min-w-0 flex-1">
@@ -73,10 +68,6 @@
               class="mt-0.5 flex items-center gap-1 text-sm text-ink-gray-6"
               data-pc-oferta-extra
             >
-              <span
-                class="rounded-4 bg-surface-gray-3 px-1.5 text-xs font-medium"
-                >{{ extra.price_currency }}</span
-              >
               <span class="num tabular-nums">{{
                 priceText(unitPrice(line, extra), extra.price_currency)
               }}</span>
