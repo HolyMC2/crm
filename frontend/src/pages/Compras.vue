@@ -305,6 +305,14 @@
           :targets="['Purchase Order', 'Purchase Invoice']"
           return-label="Compras"
         />
+        <PorComprarCola
+          v-if="state.segment === 'por-comprar'"
+          :search="state.q"
+          :wide="wide"
+          @on="queueOn = $event"
+          @count="queueCount = $event"
+          @drafts="queueDrafts = $event"
+        />
         <div
           v-if="notice"
           role="status"
@@ -345,7 +353,7 @@
             {{ __('Loading purchases…') }}
           </div>
           <div
-            v-else-if="!rows.length"
+            v-else-if="!rows.length && !queueShown"
             class="mx-auto max-w-md px-6 py-10 text-center text-ink-gray-7"
           >
             <p class="text-lg font-semibold">{{ emptyTitle }}</p>
@@ -387,6 +395,11 @@
             :ref="(el) => (list.listbox.value = el)"
             tabindex="0"
             class="divide-y divide-outline-gray-1 text-base focus:outline-none"
+            :class="
+              queueShown
+                ? 'mx-4 overflow-hidden rounded-7 bg-surface-gray-1 sm:mx-6'
+                : ''
+            "
             role="listbox"
             :aria-label="segmentLabel(state.segment)"
             :aria-multiselectable="true"
@@ -689,7 +702,7 @@
   </ModuleLayout>
 </template>
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, defineAsyncComponent, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Button, Dropdown, toast } from 'frappe-ui'
 import { formatDay } from '@/utils/contactos'
@@ -700,6 +713,9 @@ import { Fab, Segmented } from '@/components/ui'
 import BulkConfirmSheet from '@/components/compras/BulkConfirmSheet.vue'
 import CapturarDocumentoButton from '@/components/captura/CapturarDocumentoButton.vue'
 import CapturasPendientes from '@/components/captura/CapturasPendientes.vue'
+const PorComprarCola = defineAsyncComponent(
+  () => import('@/components/compras/porcomprar/PorComprarCola.vue'),
+)
 import HandoffDialog from '@/components/compras/HandoffDialog.vue'
 import PowerAppBar from '@/components/power/PowerAppBar.vue'
 import RecentPicks from '@/components/ui/RecentPicks.vue'
@@ -819,7 +835,19 @@ const list = usePowerList({
   selectable: () => state.value.segment === 'por-comprar',
   live: { doctypes: LIVE_DOCTYPES, minIntervalMs: 5000 },
 })
-const rows = list.rows
+// Por comprar: the queue Muelle proposes sits above the list; the drafts it
+// shows as blocks leave the list, and its proposed products join the count.
+const queueOn = ref(false)
+const queueCount = ref(0)
+const queueDrafts = ref(new Set())
+const queueShown = computed(
+  () => state.value.segment === 'por-comprar' && queueOn.value,
+)
+const rows = computed(() =>
+  queueShown.value && queueDrafts.value.size
+    ? list.rows.value.filter((row) => !queueDrafts.value.has(row.name))
+    : list.rows.value,
+)
 const problem = list.problem
 // Where the list has room the queue is a table (header and columns),
 // elsewhere a list of rows.
@@ -835,9 +863,10 @@ function partyOf(row) {
 
 const countText = (n) => (counts.value?.capped && n >= 500 ? '500+' : String(n))
 function countLabel(value) {
-  return counts.value && counts.value[value] !== undefined
-    ? countText(counts.value[value])
-    : undefined
+  if (!counts.value || counts.value[value] === undefined) return undefined
+  const proposed =
+    value === 'por-comprar' && queueShown.value ? queueCount.value : 0
+  return countText(counts.value[value] + proposed)
 }
 const entries = computed(() =>
   SEGMENTS.map((s) => ({

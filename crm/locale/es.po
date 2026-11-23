@@ -11500,6 +11500,266 @@ msgstr "Inicia una compra o espera una solicitud de compra."
 msgid "Received and closed purchases appear here."
 msgstr "Aquí aparecen las compras recibidas y cerradas."
 
+#: frontend/src/components/compras/porcomprar/PorComprarCola.vue
+msgctxt "PorComprar"
+msgid "Muelle proposes what to buy"
+msgstr "Muelle propone qué comprar"
+
+#: frontend/src/components/compras/porcomprar/PorComprarCola.vue
+msgctxt "PorComprar"
+msgid "Proposed purchases"
+msgstr "Compras propuestas"
+
+#: frontend/src/components/compras/porcomprar/PorComprarCola.vue
+msgctxt "PorComprar"
+msgid "Lasts"
+msgstr "Alcanza"
+
+#: frontend/src/components/compras/porcomprar/PorComprarCola.vue
+msgctxt "PorComprar"
+msgid "Sold {0} wk"
+msgstr "Vendido {0} sem"
+
+#: frontend/src/components/compras/porcomprar/PorComprarCola.vue
+msgctxt "PorComprar"
+msgid "Left"
+msgstr "Quedan"
+
+#: frontend/src/components/compras/porcomprar/PorComprarCola.vue
+msgctxt "PorComprar"
+msgid "Coming"
+msgstr "En camino"
+
+#: frontend/src/components/compras/porcomprar/PorComprarCola.vue
+msgctxt "PorComprar"
+msgid "Settings"
+msgstr "Ajustes"
+
+#: frontend/src/components/compras/porcomprar/PorComprarCola.vue
+msgctxt "PorComprar"
+msgid "Everything is covered"
+msgstr "Todo cubierto"
+
+#: frontend/src/components/compras/porcomprar/PorComprarCola.vue
+msgctxt "PorComprar"
+msgid "Try again"
+msgstr "Reintentar"
+
+#: frontend/src/components/compras/porcomprar/PorComprarCola.vue
+msgctxt "PorComprar"
+msgid "No supplier"
+msgstr "Sin proveedor"
+
+#: frontend/src/components/compras/porcomprar/PorComprarCola.vue
+msgctxt "PorComprar"
+msgid "1 product"
+msgstr "1 producto"
+
+#: frontend/src/components/compras/porcomprar/PorComprarCola.vue
+msgctxt "PorComprar"
+msgid "{0} products"
+msgstr "{0} productos"
+
+#: frontend/src/components/compras/porcomprar/PorComprarCola.vue
+msgctxt "PorComprar"
+msgid "Draft · {0} of {1}"
+msgstr "Borrador · {0} de {1}"
+
+#: frontend/src/components/compras/porcomprar/PorComprarCola.vue
+msgctxt "PorComprar"
+msgid "Delivery days"
+msgstr "Días de entrega"
+
+#: frontend/src/components/compras/porcomprar/PorComprarCola.vue
+msgctxt "PorComprar"
+msgid "Delivery days: {0}"
+msgstr "Días de entrega: {0}"
+
+#: frontend/src/components/compras/porcomprar/PorComprarCola.vue
+msgctxt "PorComprar"
+msgid "Review"
+msgstr "Revisar"
+
+#: frontend/src/components/compras/porcomprar/PorComprarCola.vue
+msgctxt "PorComprar"
+msgid "Add {0}"
+msgstr "Agregar {0}"
+
+#: frontend/src/components/compras/porcomprar/PorComprarCola.vue
+msgctxt "PorComprar"
+msgid "Product"
+msgstr "Producto"
+
+#: frontend/src/components/compras/porcomprar/PorComprarCola.vue
+msgctxt "PorComprar"
+msgid "Quantity"
+msgstr "Cantidad"
+
+#: frontend/src/components/compras/porcomprar/PorComprarCola.vue
+msgctxt "PorComprar"
+msgid "Price"
+msgstr "Precio"
+
+#: frontend/src/components/compras/porcomprar/PorComprarCola.vue
+msgctxt "PorComprar"
+msgid "Always"
+msgstr "Siempre"
+
+#: frontend/src/components/compras/porcomprar/PorComprarCola.vue
+msgctxt "PorComprar"
+msgid "Undo"
+msgstr "Deshacer"
+
+#: frontend/src/components/compras/porcomprar/PorComprarCola.vue
+msgctxt "PorComprar"
+msgid "Quantity of {0}"
+msgstr "Cantidad de {0}"
+
+#: frontend/src/components/compras/porcomprar/PorComprarCola.vue
+msgctxt "PorComprar"
+msgid "Hidden"
+msgstr "Ocultos"
+
+#: frontend/src/components/compras/porcomprar/PorComprarCola.vue
+msgctxt "PorComprar"
+msgid "Until {0}"
+msgstr "Hasta {0}"
+
+#: frontend/src/components/compras/porcomprar/PorComprarCola.vue
+msgctxt "PorComprar"
+msgid "Bring back {0}"
+msgstr "Volver a proponer {0}"
+
+#: frontend/src/components/compras/porcomprar/PorComprarCola.vue
+msgctxt "PorComprar"
+msgid "Take {0} out of the purchase"
+msgstr "Quitar {0} de la compra"
+
+#: frontend/src/components/compras/porcomprar/PorComprarCola.vue
+msgctxt "PorComprar"
+msgid "Supplier"
+msgstr "Proveedor"
+
+#: frontend/src/components/compras/porcomprar/PorComprarCola.vue
+msgctxt "PorComprar"
+msgid "No price"
+msgstr "Sin precio"
+
+#: frontend/src/components/compras/porcomprar/PorComprarCola.vue
+msgctxt "PorComprar"
+msgid "Supplier and price of {0}"
+msgstr "Proveedor y precio de {0}"
+
+#: frontend/src/components/compras/porcomprar/PorComprarCola.vue
+msgctxt "PorComprar"
+msgid "Other supplier"
+msgstr "Otro proveedor"
+
+#: frontend/src/components/compras/porcomprar/PorComprarCola.vue
+msgctxt "PorComprar"
+msgid "No supplier matches"
+msgstr "Ningún proveedor coincide"
+
+#: frontend/src/components/compras/porcomprar/PorComprarCola.vue
+msgctxt "PorComprar"
+msgid "One day less"
+msgstr "Un día menos"
+
+#: frontend/src/components/compras/porcomprar/PorComprarCola.vue
+msgctxt "PorComprar"
+msgid "One day more"
+msgstr "Un día más"
+
+#: frontend/src/components/compras/porcomprar/PorComprarCola.vue
+msgctxt "PorComprar"
+msgid "Sales of"
+msgstr "Ventas de"
+
+#: frontend/src/components/compras/porcomprar/PorComprarCola.vue
+msgctxt "PorComprar"
+msgid "{0} wk"
+msgstr "{0} sem"
+
+#: frontend/src/components/compras/porcomprar/PorComprarCola.vue
+msgctxt "PorComprar"
+msgid "Order every"
+msgstr "Pedido cada"
+
+#: frontend/src/components/compras/porcomprar/PorComprarCola.vue
+msgctxt "PorComprar"
+msgid "Delivery"
+msgstr "Entrega"
+
+#: frontend/src/components/compras/porcomprar/PorComprarCola.vue
+msgctxt "PorComprar"
+msgid "Arrives at"
+msgstr "Recibe en"
+
+#: frontend/src/components/compras/porcomprar/PorComprarCola.vue
+msgctxt "PorComprar"
+msgid "Choose"
+msgstr "Elegir"
+
+#: frontend/src/components/compras/porcomprar/PorComprarCola.vue
+msgctxt "PorComprar"
+msgid "All"
+msgstr "Todos"
+
+#: frontend/src/components/compras/porcomprar/PorComprarCola.vue
+msgctxt "PorComprar"
+msgid "Groups"
+msgstr "Grupos"
+
+#: frontend/src/components/compras/porcomprar/PorComprarCola.vue
+msgctxt "PorComprar"
+msgid "Stock of"
+msgstr "Existencias de"
+
+#: frontend/src/components/compras/porcomprar/PorComprarCola.vue
+msgctxt "PorComprar"
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: frontend/src/components/compras/porcomprar/PorComprarCola.vue
+msgctxt "PorComprar"
+msgid "Save"
+msgstr "Guardar"
+
+#: frontend/src/components/compras/porcomprar/porComprar.js
+msgctxt "PorComprar"
+msgid "Out of stock"
+msgstr "Agotado"
+
+#: frontend/src/components/compras/porcomprar/porComprar.js
+msgctxt "PorComprar"
+msgid "min {0}"
+msgstr "mín {0}"
+
+#: frontend/src/components/compras/porcomprar/porComprar.js
+msgctxt "PorComprar"
+msgid "1 day"
+msgstr "1 día"
+
+#: frontend/src/components/compras/porcomprar/porComprar.js
+msgctxt "PorComprar"
+msgid "{0} days"
+msgstr "{0} días"
+
+#: frontend/src/components/compras/porcomprar/porComprar.js
+msgctxt "PorComprar"
+msgid "List"
+msgstr "Lista"
+
+#: frontend/src/components/compras/porcomprar/porComprar.js
+msgctxt "PorComprar"
+msgid "Purchase"
+msgstr "Compra"
+
+#: frontend/src/components/compras/porcomprar/porComprar.js
+msgctxt "PorComprar"
+msgid "Price list"
+msgstr "Lista de precios"
+
 #: frontend/src/pages/Compras.vue
 msgid "I need access to Compras: read permission for Purchase Order or Material Request so I can follow purchases."
 msgstr "Necesito acceso a Compras: permiso de lectura de Orden de compra o Solicitud de material para dar seguimiento a las compras."
