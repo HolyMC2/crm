@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/ui@0.4.0 (487326036330). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory.
+// Vendored from muelle/workspace/packages/ui@0.4.0 (f299ad1b2cf1). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory.
 // A few bytes in the entry chunk: the popstate listener that sheetHistory.js
 // (loaded with the first BottomSheet) answers through. It must be registered
 // before vue-router's own listener, because on `window` Chrome runs popstate

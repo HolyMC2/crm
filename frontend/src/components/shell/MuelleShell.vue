@@ -61,8 +61,14 @@
              in the command bar above the bottom nav, where the thumb is; a
              record with its own bottom bar has no command bar, so its search
              comes back up here. -->
-        <template v-if="route.meta.ownBottomBar" #actions>
+        <template #actions>
+          <!-- A docked list search's own menu (ui/SearchPanel #trailing). -->
+          <div
+            id="shell-header-actions"
+            class="flex items-center empty:hidden"
+          />
           <button
+            v-if="route.meta.ownBottomBar"
             type="button"
             class="press flex size-12 flex-none items-center justify-center rounded-full text-ink-gray-7"
             :aria-label="__('Search')"

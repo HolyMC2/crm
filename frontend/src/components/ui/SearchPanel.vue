@@ -1,4 +1,4 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.4.0 (487326036330). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.4.0 (f299ad1b2cf1). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <!-- A phone list's search (WhatsApp pattern, Marco 2026-10-28): only the
      search pill shows. Focusing it slides open the panel (channel or view
      toggles, filters, recent records: the default slot) over the greyed list.
@@ -14,8 +14,8 @@
      With the phone shell's command bar on screen (toolDock searchDock) the
      pill is the bar's search, at the thumb (Marco 2026-11-23): the panel
      rises above the bar, a row over the bar takes the same words to the
-     app's search across everything, and only `#active` and `#trailing`
-     stay at the top of the list. -->
+     app's search across everything; `#active` stays at the top of the list
+     and `#trailing` joins the shell's top bar (#shell-header-actions). -->
 <template>
   <div
     ref="rootEl"
@@ -33,12 +33,22 @@
         @click="close"
       />
     </Transition>
-    <div
+    <!-- Docked, the list's own menu (⋯) joins the shell's top bar beside
+         the bell (#shell-header-actions); without one it keeps a row here. -->
+    <Teleport
       v-if="docked && $slots.trailing"
-      class="flex items-center justify-end pt-1"
+      to="#shell-header-actions"
+      :disabled="!headerActions"
+      defer
     >
-      <slot name="trailing" />
-    </div>
+      <div
+        class="flex items-center"
+        :class="headerActions ? '' : 'justify-end pt-1'"
+        data-search-panel-trailing
+      >
+        <slot name="trailing" />
+      </div>
+    </Teleport>
     <Teleport to="#shell-page-tools" :disabled="!docked" defer>
       <div
         class="flex items-center gap-1"
@@ -210,6 +220,14 @@ watch(
   { immediate: true },
 )
 const searchAll = computed(() => uiSearchAll())
+// The shell's top bar takes a docked list's menu when it offers the slot.
+const headerActions = ref(false)
+onMounted(() => {
+  headerActions.value = Boolean(
+    typeof document !== 'undefined' &&
+      document.getElementById('shell-header-actions'),
+  )
+})
 // The panel folded away: typing folds it so the results show live, the
 // filters button unfolds it over them, an empty pill shows it again.
 const folded = ref(Boolean(query.value))

@@ -1,4 +1,4 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.4.0 (487326036330). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.4.0 (f299ad1b2cf1). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <!-- «Más filtros» for a search panel: one chip per long option list (stage,
      owner, source…); tapping it slides that list open under the row as more
      chips, one list at a time, on a tonal tile (container-low). -->
