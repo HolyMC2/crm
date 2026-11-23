@@ -129,14 +129,30 @@
         >
           {{ deniedNote }}
         </p>
+        <!-- What the shop's customers see of all this in their app. -->
+        <AppClientesDoor class="mt-2" />
 
-        <div class="px-4 pt-4">
+        <!-- Up to four views share one Segmented track. Five (cards and
+             rewards both on) do not fit at 412 px: a scrolled track clipped
+             «Promociones» on its rounded end, so the views become one row of
+             chips that scrolls on its own (MOBILE_REFERENCES «Segmented»). -->
+        <div v-if="vistaOptions.length <= 4" class="px-4 pt-4">
           <Segmented
             v-model="vista"
             :label="__('View')"
             :options="vistaOptions"
           />
         </div>
+        <FilterChips
+          v-else
+          class="pt-3"
+          data-testid="fidelidad-vistas"
+          :model-value="vista"
+          :chips="vistaOptions"
+          :deselectable="false"
+          :label="__('View')"
+          @update:model-value="(v) => v && (vista = v)"
+        />
 
         <template v-if="vista === 'promociones'">
           <FilterChips
@@ -222,6 +238,17 @@
           <TarjetasCliente :company="board?.company || ''" />
         </div>
 
+        <PremiosRetos
+          v-else-if="vista === 'premios'"
+          :board="premios"
+          :currency="currency"
+          :error="premiosError"
+          @new-reward="openReward(null)"
+          @open-reward="openReward"
+          @new-challenge="openChallenge(null)"
+          @open-challenge="openChallenge"
+        />
+
         <template v-else>
           <p class="px-4 pt-3 text-sm text-ink-gray-6">
             {{ __('A group sets the price list its customers buy at.') }}
@@ -293,6 +320,17 @@
                 @open="openOffer"
               />
             </HoySection>
+            <PremiosRetos
+              v-if="premios?.ready"
+              desk
+              :board="premios"
+              :currency="currency"
+              :error="premiosError"
+              @new-reward="openReward(null)"
+              @open-reward="openReward"
+              @new-challenge="openChallenge(null)"
+              @open-challenge="openChallenge"
+            />
             <HoySection
               id="fidelidad-grupos"
               :title="__('Customer groups')"
@@ -391,6 +429,7 @@
             >
               <TarjetasCliente :company="board?.company || ''" />
             </HoySection>
+            <AppClientesDoor class="border-t border-outline-gray-1" />
           </div>
         </div>
       </template>
@@ -398,7 +437,7 @@
     </div>
 
     <Fab
-      v-if="phone && caps.create_offer"
+      v-if="phone && caps.create_offer && vista !== 'premios'"
       :label="__('New promotion')"
       @click="sheet = 'promo'"
     />
@@ -408,7 +447,7 @@
       :open="sheet === 'promo'"
       :currency="currency"
       :company="board?.company || ''"
-      @update:open="(v) => !v && (sheet = '')"
+      @update:open="(v) => !v && promoClosed()"
       @created="onCreated"
     />
     <CuponSheet
@@ -438,6 +477,33 @@
       @update:open="(v) => !v && (sheet = '')"
       @changed="onChanged"
       @coupon="giveCoupon"
+    />
+    <RewardSheet
+      v-if="mounted.premio"
+      :open="sheet === 'premio'"
+      :reward="openedReward"
+      :currency="currency"
+      :company="board?.company || ''"
+      :point-value="pointValue"
+      :can-edit="!!premios?.can_edit"
+      @update:open="(v) => !v && (sheet = '')"
+      @saved="loadPremios"
+      @changed="loadPremios"
+    />
+    <ChallengeSheet
+      v-if="mounted.reto"
+      :open="sheet === 'reto'"
+      :challenge="openedChallenge"
+      :offers="premios?.offers || []"
+      :currency="currency"
+      :company="board?.company || ''"
+      :can-edit="!!premios?.can_edit"
+      :resume="resumeChallenge"
+      :pick-offer="challengeOffer"
+      @update:open="(v) => !v && (sheet = '')"
+      @saved="loadPremios"
+      @changed="loadPremios"
+      @new-promo="newPromoForChallenge"
     />
     <BottomSheet
       :open="sheet === 'grupo'"
@@ -510,6 +576,8 @@ import { errorText } from '@/documentos/api'
 import { isMobile as phone } from '@/composables/breakpoint'
 import { formatMoney } from '@/utils/display'
 import { boardFigures, fidelidadApi, groupLine } from '@/composables/fidelidad'
+import PremiosRetos from '@/components/fidelidad/premios/PremiosRetos.vue'
+import { CTX, premiosApi } from '@/components/fidelidad/premios/view'
 
 // Sheets mount on their first open (they carry the forms).
 const PromoSheet = defineAsyncComponent(
@@ -524,9 +592,21 @@ const PuntosSheet = defineAsyncComponent(
 const OfertaSheet = defineAsyncComponent(
   () => import('@/components/fidelidad/OfertaSheet.vue'),
 )
+// «Premios» and «Retos»: their sheets carry the forms too.
+const RewardSheet = defineAsyncComponent(
+  () => import('@/components/fidelidad/premios/RewardSheet.vue'),
+)
+const ChallengeSheet = defineAsyncComponent(
+  () => import('@/components/fidelidad/retos/ChallengeSheet.vue'),
+)
 // The register's customer cards: loaded with their section.
 const TarjetasCliente = defineAsyncComponent(
   () => import('@/components/fidelidad/TarjetasCliente.vue'),
+)
+// The door to what customers see in their app: asks the cell once the board
+// is on screen, and shows only where the shop has an online store.
+const AppClientesDoor = defineAsyncComponent(
+  () => import('@/components/appClientes/AppClientesDoor.vue'),
 )
 
 const route = useRoute()
@@ -540,6 +620,8 @@ const mounted = reactive({
   cupon: false,
   puntos: false,
   oferta: false,
+  premio: false,
+  reto: false,
 })
 watch(sheet, (name) => name && name in mounted && (mounted[name] = true))
 
@@ -565,7 +647,7 @@ const tableRows = computed(() => mainWidth.value >= 620)
 const roomy = computed(() => frameWidth.value >= 760)
 
 // --- the view and its state chip live in the URL (back keeps them) -------
-const VISTAS = ['promociones', 'puntos', 'grupos', 'tarjetas']
+const VISTAS = ['promociones', 'puntos', 'grupos', 'tarjetas', 'premios']
 const vista = computed({
   get: () =>
     VISTAS.includes(route.query.vista) ? route.query.vista : 'promociones',
@@ -593,6 +675,9 @@ const vistaOptions = computed(() => [
   { value: 'puntos', label: __('Points') },
   { value: 'grupos', label: __('Groups') },
   ...(caps.value.cards ? [{ value: 'tarjetas', label: __('Cards') }] : []),
+  ...(premios.value?.ready
+    ? [{ value: 'premios', label: __('Rewards', null, CTX) }]
+    : []),
 ])
 const estadoChips = computed(() => [
   { value: 'live', label: __('Running'), count: counts.value.live },
@@ -701,6 +786,13 @@ function openOffer(offer) {
 }
 function onCreated(offer) {
   load()
+  // a new coupon promotion is also a reward a challenge can give
+  if (offer.coupon_based && premios.value?.ready) loadPremios()
+  // made for a challenge: its sheet comes back with it chosen (promoClosed)
+  if (promoForChallenge.value) {
+    challengeOffer.value = offer.coupon_based ? offer.name : ''
+    return
+  }
   estado.value = offer.state || 'live'
   vista.value = 'promociones'
   if (offer.coupon_based) {
@@ -805,6 +897,62 @@ const programFacts = computed(() => {
   ]
 })
 
+// --- rewards and challenges (doco.fidelidad.premios_api) ---------------------
+const premios = ref(null)
+const premiosError = ref('')
+let premiosSeq = 0
+async function loadPremios() {
+  const mine = ++premiosSeq
+  premiosError.value = ''
+  try {
+    const out = await premiosApi('get_premios', {
+      company: board.value?.company || '',
+    })
+    if (mine === premiosSeq) premios.value = out || null
+  } catch (failure) {
+    if (mine === premiosSeq) premiosError.value = errorText(failure)
+  }
+}
+// Read once the board names the company (both layouts list them).
+watch(
+  () => board.value?.company,
+  (company) => company !== undefined && loadPremios(),
+)
+const pointValue = computed(
+  () => Number(premios.value?.program?.conversion_factor) || 0,
+)
+const openedReward = ref(null)
+function openReward(row) {
+  openedReward.value = row
+  sheet.value = 'premio'
+}
+const openedChallenge = ref(null)
+function openChallenge(row) {
+  openedChallenge.value = row
+  resumeChallenge.value = false
+  sheet.value = 'reto'
+}
+// «Create a coupon promotion» from a challenge's sheet: the promotion's sheet
+// takes its place and, made or dropped, the challenge comes back with the
+// owner's answers and that promotion chosen.
+const promoForChallenge = ref(false)
+const resumeChallenge = ref(false)
+const challengeOffer = ref('')
+function newPromoForChallenge() {
+  promoForChallenge.value = true
+  challengeOffer.value = ''
+  sheet.value = 'promo'
+}
+function promoClosed() {
+  if (!promoForChallenge.value) {
+    sheet.value = ''
+    return
+  }
+  promoForChallenge.value = false
+  resumeChallenge.value = true
+  sheet.value = 'reto'
+}
+
 // --- groups -----------------------------------------------------------------
 const groups = ref([])
 const priceLists = ref([])
@@ -860,7 +1008,18 @@ async function saveGroup() {
   }
 }
 
-// Deep links: /ventas/fidelidad?nuevo=promo|cupon|puntos opens that sheet.
+// Deep links: /ventas/fidelidad?nuevo=promo|cupon|puntos opens that sheet;
+// ?nuevo=premio|reto opens a new reward or challenge once they are read.
+watch(
+  () => [route.query.nuevo, premios.value],
+  ([nuevo, ready]) => {
+    if (!ready?.can_edit || !['premio', 'reto'].includes(nuevo)) return
+    router.replace({ query: { ...route.query, nuevo: undefined } })
+    if (nuevo === 'premio') openReward(null)
+    else openChallenge(null)
+  },
+  { immediate: true },
+)
 watch(
   () => [route.query.nuevo, board.value],
   ([nuevo, ready]) => {
@@ -876,7 +1035,8 @@ watch(
   () => !!board.value && !phone.value,
   async (drawn) => {
     const target = route.query.vista
-    if (!drawn || !['puntos', 'grupos', 'tarjetas'].includes(target)) return
+    if (!drawn || !['puntos', 'grupos', 'tarjetas', 'premios'].includes(target))
+      return
     await nextTick()
     document
       .getElementById(`hoy-fidelidad-${target}`)

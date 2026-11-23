@@ -1086,6 +1086,49 @@ const routes = [
     },
   },
   {
+    // «App de tus clientes»: what each shop's customers see in their account
+    // on the online store (doco.docoutils.storefront_customer_app_admin). Its
+    // doors: a doco row in «Ajustes del negocio», Fidelidad, Tu tienda en línea.
+    path: '/negocio/app-clientes',
+    name: 'AppClientes',
+    component: () => import('@/pages/AppClientes.vue'),
+    // Read: Sales Manager and System Manager, as the cell; it draws its own bar.
+    meta: {
+      app: 'negocio',
+      title: 'App de tus clientes',
+      ownPhoneHeader: true,
+      managerOnly: true,
+    },
+  },
+  {
+    // «Solicitudes de clientes»: returns, warranty, personal data, closed
+    // accounts and money waiting for a person, from the customer app
+    // (doco.docoutils.storefront_support_staff). Its doors: the door on
+    // /negocio/app-clientes and the bell notices (?id= opens one), which land
+    // here. Whoever has Ventas reads it there, as the Ventas section with its
+    // badge (/ventas/solicitudes-clientes, below); the accounts staff without
+    // Ventas keep this page.
+    path: '/negocio/solicitudes-clientes',
+    name: 'SolicitudesClientes',
+    component: () => import('@/pages/SolicitudesClientes.vue'),
+    beforeEnter: async (to) => {
+      const boot = shellBoot.value || (await loadShell().catch(() => null))
+      if (moduleEnabled(boot, 'ventas'))
+        return {
+          path: '/ventas/solicitudes-clientes',
+          query: to.query,
+          replace: true,
+        }
+    },
+    // Each queue has its roles on the cell (sales, managers, accounts): no
+    // manager-only gate here; the page shows what the person may read.
+    meta: {
+      app: 'negocio',
+      title: 'Solicitudes de clientes',
+      ownPhoneHeader: true,
+    },
+  },
+  {
     path: '/impresion',
     name: 'Impresion',
     component: () => import('@/pages/Impresion.vue'),
@@ -1351,6 +1394,19 @@ const routes = [
     meta: {
       navLabel: 'Loyalty',
       title: 'Fidelidad',
+      app: 'ventas',
+      ownPhoneHeader: true,
+    },
+  },
+  {
+    // Ventas › Solicitudes de clientes: the same page as a Ventas section
+    // (navModel `solicitudes`), its count on the section and the rail's badge.
+    path: '/ventas/solicitudes-clientes',
+    name: 'VentasSolicitudesClientes',
+    component: () => import('@/pages/SolicitudesClientes.vue'),
+    meta: {
+      navLabel: 'Customer requests',
+      title: 'Solicitudes de clientes',
       app: 'ventas',
       ownPhoneHeader: true,
     },

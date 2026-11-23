@@ -112,11 +112,23 @@
             v-for="module in extraModules"
             :key="module.key"
             :to="module.to"
-            :class="TILE"
+            :class="[TILE, 'relative']"
             @click="close"
           >
             <span :class="[module.icon, 'size-5']" aria-hidden="true" />
             {{ module.label }}
+            <!-- What waits there, as on the desktop rail («Más» adds these up). -->
+            <span
+              v-if="tileCount(module)"
+              class="num absolute right-1.5 top-1.5 h-[18px] min-w-[18px] rounded-full px-1 text-center text-[11px] font-semibold leading-[18px]"
+              :class="
+                tileCount(module).urgent
+                  ? 'bg-surface-red-7 text-white'
+                  : 'bg-[var(--muelle-accent)] text-[var(--muelle-accent-ink)]'
+              "
+              data-more-count
+              ><span class="sr-only">· </span>{{ tileCount(module).text }}</span
+            >
           </RouterLink>
           <RouterLink
             to="/correo"
@@ -474,7 +486,13 @@ import {
   shellBoot,
   shellLayout,
 } from '@/composables/muelleShell'
-import { placeHref, scanPickHref, siblingHref } from '@/composables/shellRail'
+import {
+  moduleCount,
+  placeHref,
+  railCounts,
+  scanPickHref,
+  siblingHref,
+} from '@/composables/shellRail'
 import { installApp, installAvailable } from '@/composables/shellInstall'
 import { installLinkPrefetch } from '@/utils/speculate'
 import { THEME_CHOICES, useShellTheme } from '@/composables/shellTheme'
@@ -563,6 +581,7 @@ const initials = computed(() => {
 const extraModules = computed(() =>
   shellLayout.value.more.filter((place) => !place.app),
 )
+const tileCount = (module) => moduleCount(module, railCounts.value)
 // Sibling SPAs open with the way back to the page the worker left.
 const route = useRoute()
 const moduleLabel = computed(

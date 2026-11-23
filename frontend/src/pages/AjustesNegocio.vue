@@ -1,7 +1,11 @@
 <template>
   <!-- «Ajustes del negocio» (crm.business_settings): what each app lists for
        the owner, by area, in plain words; then every other switch of the
-       shop's settings, searchable. A tap saves; a refusal puts it back. -->
+       shop's settings, searchable. A tap saves; a refusal puts it back.
+       ?ajuste=<key> brings that row (or the first «<key>:…», one per shop)
+       into view, focuses it and washes it once in the accent (the shell's
+       [data-fresh]) so the owner sees which switch it is: another page's
+       «change it here». -->
   <div class="flex min-h-0 min-w-0 flex-1 flex-col" data-ajustes-negocio>
     <AppBar
       v-if="isPhone"
@@ -64,6 +68,8 @@
                 v-for="row in area.rows"
                 :key="row.key"
                 :data-negocio="row.key"
+                :data-fresh="flashed === row.key ? '' : undefined"
+                :class="flashed === row.key ? '-mx-2 rounded-5 px-2' : ''"
               >
                 <component
                   :is="row.to ? 'RouterLink' : 'a'"
@@ -194,14 +200,24 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue'
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  reactive,
+  ref,
+} from 'vue'
+import { useRoute } from 'vue-router'
 import { Button, call, toast } from 'frappe-ui'
 import { AppBar } from '@/components/ui'
 import AjustesSwitch from '@/components/ajustes/AjustesSwitch.vue'
 import { isMobile as isPhone } from '@/composables/breakpoint'
 import { errorText } from '@/utils/errorText'
+import { scrollWithin } from '@/utils/scrollWithin'
 
 const API = 'crm.api.business_settings.'
+const route = useRoute()
 const state = ref(null)
 const problem = ref('')
 const query = ref('')
@@ -262,6 +278,8 @@ async function load() {
   problem.value = ''
   try {
     state.value = await call(API + 'page')
+    await nextTick()
+    reveal()
   } catch (error) {
     problem.value = errorText(
       error,
@@ -270,6 +288,33 @@ async function load() {
   }
 }
 onMounted(load)
+
+// ?ajuste=<key>: the row another page sends the owner to change, washed once
+// in the accent (the shell's [data-fresh]: 2.4 s, a still wash under reduced
+// motion until the timer lifts it).
+const FLASH_MS = 2400
+const flashed = ref('')
+let flashTimer = 0
+onBeforeUnmount(() => window.clearTimeout(flashTimer))
+function reveal() {
+  const wanted =
+    typeof route?.query?.ajuste === 'string' ? route.query.ajuste : ''
+  if (!wanted) return
+  const row = (state.value?.curated || []).find(
+    (one) => one.key === wanted || one.key.startsWith(`${wanted}:`),
+  )
+  if (!row) return
+  const place = [...document.querySelectorAll('[data-negocio]')].find(
+    (el) => el.getAttribute('data-negocio') === row.key,
+  )
+  if (!place) return
+  // only the page's own list scrolls: scrollIntoView also lifts the shell
+  scrollWithin(place, { block: 'center' })
+  place.querySelector('[role="switch"], a')?.focus?.({ preventScroll: true })
+  flashed.value = row.key
+  window.clearTimeout(flashTimer)
+  flashTimer = window.setTimeout(() => (flashed.value = ''), FLASH_MS)
+}
 
 // The tap shows at once; the server's answer replaces it, a refusal puts it back.
 async function toggle(row, value) {

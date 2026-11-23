@@ -1,9 +1,12 @@
 // The phone bottom bar (Shell program S1.2): «Más» is lit while the page is a
 // module the bar does not hold. Mounted with its real template; assertions are
 // on ARIA state (SPEC D7), not on Tailwind classes.
-import { afterEach, describe, expect, it } from 'vitest'
-import { createApp, h } from 'vue'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { createApp, h, nextTick } from 'vue'
+vi.mock('frappe-ui', () => ({ call: vi.fn(async () => ({})) }))
+import { call } from 'frappe-ui'
 import ShellBottomNav from '@/components/shell/ShellBottomNav.vue'
+import { railCounts, resetRailCountsForTests } from '@/composables/shellRail'
 
 // RouterLink is a plain anchor here: the test is about which tab is lit.
 const RouterLink = {
@@ -27,13 +30,14 @@ let host
 afterEach(() => {
   app?.unmount()
   host?.remove()
+  resetRailCountsForTests()
 })
 
-function mountNav(active) {
+function mountNav(active, modules = []) {
   host = document.createElement('div')
   document.body.append(host)
   app = createApp({
-    render: () => h(ShellBottomNav, { slots: bar, active }),
+    render: () => h(ShellBottomNav, { slots: bar, active, modules }),
   })
   app.config.globalProperties.__ = globalThis.__
   app.component('RouterLink', RouterLink)
@@ -60,5 +64,50 @@ describe('ShellBottomNav «Más»', () => {
   it('no active module lights nothing', () => {
     const root = mountNav('')
     expect(root.querySelector('[aria-current]')).toBeNull()
+  })
+})
+
+// The staff queue's «14» showed on the desktop rail only: a phone mounts no
+// rail. The bar reads the same counts, on its tabs and summed on «Más».
+describe('ShellBottomNav counts', () => {
+  const modules = [
+    ...bar,
+    { key: 'ventas', label: 'Ventas', icon: 'lucide-inbox', to: '/ventas' },
+    { key: 'pendientes', label: 'Pendientes', icon: 'lucide-check', to: '/p' },
+    { key: 'avisos', label: 'Avisos', icon: 'lucide-bell', to: '/avisos' },
+  ]
+
+  it('reads the counts itself when it mounts', async () => {
+    mountNav('hoy', modules)
+    await nextTick()
+    expect(call).toHaveBeenCalledWith('crm.api.shell.rail_counts')
+  })
+
+  it('a bar module shows what waits in it', async () => {
+    call.mockResolvedValueOnce({ contactos: { count: 3, urgent: false } })
+    const root = mountNav('hoy', modules)
+    await vi.waitFor(() =>
+      expect(root.querySelectorAll('[data-bar-count]')).toHaveLength(1),
+    )
+    const tab = root.querySelector('a[href="/contactos"]')
+    expect(tab.querySelector('[data-bar-count]').textContent).toBe('3')
+  })
+
+  it('«Más» adds up the modules the bar leaves out, never Avisos', async () => {
+    call.mockResolvedValueOnce({
+      ventas: { count: 14, urgent: false },
+      pendientes: { count: 2, urgent: true },
+      avisos: { count: 9, urgent: false },
+    })
+    const root = mountNav('hoy', modules)
+    const more = root.querySelector('button')
+    await vi.waitFor(() =>
+      expect(more.querySelector('[data-bar-count]')?.textContent).toBe('16'),
+    )
+    expect(more.textContent).toContain('· 16')
+    expect(more.querySelector('[data-bar-count]').className).toContain(
+      'bg-surface-red-7',
+    )
+    expect(railCounts.value.ventas.count).toBe(14)
   })
 })

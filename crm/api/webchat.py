@@ -29,8 +29,10 @@ JSONValue = str | int | float | bool | dict | list | None
 MAX_BODY_BYTES = 16 * 1024
 PAGE_SIZE = 50
 _WRITE_TOKEN = object()
-_PUBLIC_METHODS = frozenset({"get_channel", "bootstrap", "history", "send", "revoke", "share_order"})
-_AUTHENTICATED_METHODS = frozenset({"history", "send", "revoke", "share_order"})
+_PUBLIC_METHODS = frozenset(
+	{"get_channel", "bootstrap", "history", "send", "revoke", "share_order", "share_account"}
+)
+_AUTHENTICATED_METHODS = frozenset({"history", "send", "revoke", "share_order", "share_account"})
 _VISITOR_PATHS = {
 	prefix + "crm.api.webchat." + method: method
 	for prefix in ("/api/method/", "/api/v1/method/")
@@ -762,6 +764,22 @@ def share_order(channel_id: JSONValue, order_token: JSONValue):
 		from crm.api.webchat_commerce import share
 
 		return share(session, conversation, order_token)
+
+
+# Security review: two scoped bearer proofs (the chat capability, and the storefront account session
+# doco proves for this channel's shop); strict Guest JSON; a context link only, no identity merge.
+@frappe.whitelist(allow_guest=True, xss_safe=True, methods=["POST"])  # nosemgrep: guest-whitelisted-method
+@_guest
+def share_account(channel_id: JSONValue, account_token: JSONValue):
+	_post({"channel_id": channel_id, "account_token": account_token})
+	_hex(channel_id)
+	_require(isinstance(account_token, str) and 0 < len(account_token) <= 200)
+	_public_rate(channel_id, "share_account")
+	with _visitor(channel_id) as (session, conversation):
+		_rate("share_account", session.name, 30)
+		from crm.api.webchat_commerce import share_account as share
+
+		return share(session, conversation, account_token)
 
 
 def validate_payload(payload, *, account_id, peer_id):

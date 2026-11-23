@@ -9,7 +9,17 @@ import { navItems, navItemsBottom } from '@/composables/navModel'
 // into it (lane ventas-parejo), and /leads opens it.
 export const VENTAS_SECTIONS = Object.freeze({
   daily: ['deals', 'prospectos', 'inbox', 'fidelidad'],
-  more: ['dashboard', 'tasks', 'calls', 'reports', 'funnel', 'workload'],
+  // «Solicitudes de clientes» leads «Más» (shown only where someone reads its
+  // queues): its count shows on the folded section and on the rail.
+  more: [
+    'solicitudes',
+    'dashboard',
+    'tasks',
+    'calls',
+    'reports',
+    'funnel',
+    'workload',
+  ],
   settings: [
     'campaigns',
     'forms',

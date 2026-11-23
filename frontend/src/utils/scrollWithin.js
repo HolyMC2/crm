@@ -18,9 +18,10 @@ export function scrollParent(el) {
 
 /**
  * @param {Element} el
- * @param {{ block?: 'start' | 'end', behavior?: ScrollBehavior }} [options]
+ * @param {{ block?: 'start' | 'center' | 'end', behavior?: ScrollBehavior }} [options]
  *   `end` puts the element's bottom at the list's bottom (a chat's latest
- *   message); `start` its top at the list's top.
+ *   message); `start` its top at the list's top; `center` its middle at the
+ *   list's middle (a row another page sent the worker to).
  * @returns {boolean} whether a list scrolled
  */
 export function scrollWithin(
@@ -33,10 +34,13 @@ export function scrollWithin(
     box.scrollTop +
     el.getBoundingClientRect().top -
     box.getBoundingClientRect().top
+  const height = el.getBoundingClientRect().height
   const target =
     block === 'end'
-      ? top + el.getBoundingClientRect().height - box.clientHeight
-      : top
+      ? top + height - box.clientHeight
+      : block === 'center'
+        ? top - (box.clientHeight - height) / 2
+        : top
   box.scrollTo({ top: Math.max(0, target), behavior })
   return true
 }

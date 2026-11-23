@@ -1,7 +1,7 @@
 // Ventas' own lists follow the same three layers as the bar (suggested →
 // puesto → mine): the daily lists and «Más» as the boot's module layout
 // arranges them, and «Ordenar Ventas» opens the sheet with both parts.
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h } from 'vue'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
@@ -18,11 +18,18 @@ vi.mock('@/utils/crmCapabilities', () => ({
   loadCapabilities: () => {},
   navItemVisible: () => true,
 }))
+// … and reads the customer requests' queues, so «Solicitudes de clientes» shows.
+vi.mock('@/components/solicitudesClientes/api', () => ({
+  readCounts: async () => ({ count: 2, urgent: false }),
+}))
 
 globalThis.__ = (text) => text
 
 const { useVentasNav, ventasSection } = await import('@/composables/ventasNav')
 const { sectionsSheet, shellBoot } = await import('@/composables/muelleShell')
+const { resetSolicitudesCountsForTests } = await import(
+  '@/components/solicitudesClientes/counts'
+)
 
 const keys = (items) => items.map((item) => item.key)
 
@@ -45,6 +52,7 @@ function mountNav() {
 
 describe('Ventas lists arranged per worker', () => {
   let mounted
+  beforeEach(() => resetSolicitudesCountsForTests({ count: 2, urgent: false }))
   afterEach(() => {
     mounted?.app.unmount()
     shellBoot.value = null

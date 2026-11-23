@@ -292,6 +292,29 @@ class TestShellBoot(TestCase):
 		):
 			self.assertEqual(shell.rail_counts(), {"taller": {"count": 4, "urgent": True}})
 
+	def test_several_sources_of_one_place_add_up(self):
+		real_hooks = frappe.get_hooks
+		probe = "crm.tests.test_shell_boot"
+		paths = {
+			# doco's «Solicitudes de clientes» counts for Ventas beside its conversations
+			"ventas": [f"{probe}._waiting_four", f"{probe}._failing_count", f"{probe}._waiting_none"],
+			"taller": [f"{probe}._waiting_four"],
+		}
+		with (
+			patch.object(shell, "_RAIL_COUNTS", (("ventas", lambda: {"count": 3, "urgent": False}),)),
+			patch.object(
+				frappe,
+				"get_hooks",
+				lambda hook=None, *a, **kw: (
+					paths if hook == "muelle_rail_counts" else real_hooks(hook, *a, **kw)
+				),
+			),
+		):
+			self.assertEqual(
+				shell.rail_counts(),
+				{"ventas": {"count": 7, "urgent": True}, "taller": {"count": 4, "urgent": True}},
+			)
+
 	def test_module_keys_follow_the_contracts_registry(self):
 		registry = Path(__file__).parents[2] / "frontend/src/vendor/muelle-shell/contracts/registry.ts"
 		if not registry.exists():

@@ -46,14 +46,14 @@
         testid="promo-minimo"
       />
 
-      <section :aria-label="__('How much off?')">
+      <section :aria-label="amountQuestion">
         <div class="mb-1.5 flex items-center justify-between gap-2">
           <p class="text-xs font-medium text-ink-gray-6">
-            {{ __('How much off?') }}
+            {{ amountQuestion }}
           </p>
           <Segmented
             v-model="draft.kind"
-            class="w-40"
+            class="w-52"
             :label="__('Discount type')"
             :options="kindOptions"
           />
@@ -75,7 +75,7 @@
             class="min-h-11 w-28 rounded-6 border border-outline-gray-2 bg-surface-base px-3 text-base tabular-nums"
             data-testid="promo-valor-otro"
           />
-          <span>{{ draft.kind === 'percent' ? '%' : currency }}</span>
+          <span>{{ unitLabel }}</span>
         </label>
       </section>
 
@@ -102,6 +102,13 @@
               ? __('Only customers with a coupon or the code get it.')
               : __('Every sale that qualifies gets it, no code needed.')
           }}
+        </p>
+        <p
+          v-if="draft.kind === 'points'"
+          class="mt-1 text-sm text-ink-gray-6"
+          data-testid="promo-puntos-nota"
+        >
+          {{ pointsNote }}
         </p>
       </section>
 
@@ -151,6 +158,7 @@ import { errorText } from '@/documentos/api'
 import { formatMoney } from '@/utils/display'
 import { stableRequest } from '@/utils/contactos'
 import BuscarRegistro from './BuscarRegistro.vue'
+import { POINTS_CHIPS, pointsPreview } from './puntosExtra'
 import {
   AMOUNT_CHIPS,
   MINIMUM_CHIPS,
@@ -201,7 +209,8 @@ watch(
 )
 watch(
   () => draft.kind,
-  (kind) => (draft.value = kind === 'percent' ? 10 : 100),
+  (kind) =>
+    (draft.value = kind === 'percent' ? 10 : kind === 'points' ? 50 : 100),
 )
 
 const targetOptions = computed(() => [
@@ -209,17 +218,41 @@ const targetOptions = computed(() => [
   { value: 'item', label: __('A product') },
   { value: 'ticket', label: __('The whole ticket') },
 ])
-const kindOptions = [
+// «Puntos extra»: bonus points on a qualifying sale, earned in the shop's
+// points program (doco.fidelidad create_offer, discount_type «Loyalty Point»).
+const kindOptions = computed(() => [
   { value: 'percent', label: '%' },
   { value: 'amount', label: '$' },
-]
+  { value: 'points', label: __('Points', null, 'AppClientes') },
+])
 const valueOptions = computed(() =>
   draft.kind === 'percent'
     ? PERCENT_CHIPS.map((v) => ({ value: v, label: `${v} %` }))
-    : AMOUNT_CHIPS.map((v) => ({
-        value: v,
-        label: formatMoney(v, props.currency, { decimals: 0 }),
-      })),
+    : draft.kind === 'points'
+      ? POINTS_CHIPS.map((v) => ({ value: v, label: `+${v}` }))
+      : AMOUNT_CHIPS.map((v) => ({
+          value: v,
+          label: formatMoney(v, props.currency, { decimals: 0 }),
+        })),
+)
+const amountQuestion = computed(() =>
+  draft.kind === 'points'
+    ? __('How many bonus points?', null, 'AppClientes')
+    : __('How much off?'),
+)
+const unitLabel = computed(() =>
+  draft.kind === 'percent'
+    ? '%'
+    : draft.kind === 'points'
+      ? __('points', null, 'AppClientes')
+      : props.currency,
+)
+const pointsNote = computed(() =>
+  __(
+    'The register adds the points to the customer who makes the sale; they need a points program.',
+    null,
+    'AppClientes',
+  ),
 )
 const minimumOptions = computed(() =>
   MINIMUM_CHIPS.map((v) => ({
@@ -234,7 +267,11 @@ const howOptions = computed(() => [
   { value: 'auto', label: __('By itself') },
   { value: 'coupon', label: __('With a coupon') },
 ])
-const preview = computed(() => offerPreview(draft, props.currency))
+const preview = computed(() =>
+  draft.kind === 'points'
+    ? pointsPreview(draft, props.currency)
+    : offerPreview(draft, props.currency),
+)
 const missing = computed(() => offerMissing(draft))
 
 function close() {
@@ -245,6 +282,7 @@ async function start() {
   touched.value = true
   if (missing.value) return
   const payload = { ...offerPayload(draft), company: props.company }
+  if (draft.kind === 'points') payload.discount_type = 'Loyalty Point'
   // The same answers retried keep their request id: the server replays them.
   pending = stableRequest(pending, payload)
   saving.value = true

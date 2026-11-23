@@ -5,7 +5,7 @@
        tu tienda»: what this site checks, each step with where it is fixed
        (the store's name right in its step), and «Encender tienda» once all
        pass. A connecting address is read again every few seconds by itself.
-       Rows and rules. -->
+       Last, «Cupones en la tienda en línea» (CuponesEnLinea). Rows and rules. -->
   <section
     v-if="phase !== 'off'"
     aria-labelledby="cuenta-tienda-en-linea"
@@ -233,6 +233,30 @@
             </div>
           </li>
         </ul>
+        <!-- Once the store is on: what its customers see in their account. -->
+        <RouterLink
+          v-if="turnOn?.on"
+          to="/negocio/app-clientes"
+          class="press flex min-h-14 items-center gap-3 py-2"
+          data-testid="tienda-app-clientes"
+        >
+          <span class="min-w-0 flex-1">
+            <span class="block text-base text-ink-gray-9">{{
+              __('What your customers see in their app', null, 'Cuenta')
+            }}</span>
+            <span class="block text-sm text-ink-gray-6">{{
+              __(
+                'Points, coupons and more, in your online store.',
+                null,
+                'Cuenta',
+              )
+            }}</span>
+          </span>
+          <span
+            class="lucide-chevron-right size-4 shrink-0 text-ink-gray-5"
+            aria-hidden="true"
+          />
+        </RouterLink>
         <template v-if="turnOn && !turnOn.on && !block">
           <Button
             variant="solid"
@@ -269,6 +293,9 @@
           </ul>
         </div>
       </div>
+      <!-- Whether the online checkout takes coupons: its own read, so it
+           never holds the address or the steps. -->
+      <CuponesEnLinea />
     </template>
     <DireccionSheet
       v-if="sheetMounted"
@@ -284,6 +311,7 @@
 import { computed, defineAsyncComponent, onBeforeUnmount, ref } from 'vue'
 import { Button, toast } from 'frappe-ui'
 import { StatusChip } from '@/components/ui'
+import CuponesEnLinea from './CuponesEnLinea.vue'
 import { seam, storeReadiness, turnOnStore } from './api'
 import { failureText, nextStep, refusalView } from './autoservicio'
 import {

@@ -289,6 +289,7 @@
       <ShellBottomNav
         v-if="phone && navVisible"
         :slots="barSlots"
+        :modules="shellModules"
         :active="activeKey"
         @more="moreOpen = true"
       />

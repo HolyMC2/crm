@@ -1313,12 +1313,15 @@ _RAIL_COUNTS = (("ventas", _ventas_count), ("pendientes", _pendientes_count))
 
 
 def _app_counts():
-	"""The other apps' badges on the rail, from their hooks, keyed like the shell's sibling
-	apps: `muelle_rail_counts = {"taller": "taller.shell.rail_count"}`. Each returns
-	{count, urgent} for the session user, or None."""
+	"""The other apps' badges on the rail, from their hooks, keyed by the rail place they count
+	for (a sibling app or a module): `muelle_rail_counts = {"taller": "taller.shell.rail_count"}`.
+	Each returns {count, urgent} for the session user, or None. Every app that names one place
+	counts for it (doco's «Solicitudes de clientes» adds to Ventas)."""
 	hooks = frappe.get_hooks("muelle_rail_counts") or {}
 	return tuple(
-		(key, lambda path=paths[-1]: frappe.get_attr(path)()) for key, paths in hooks.items() if paths
+		(key, lambda path=path: frappe.get_attr(path)())
+		for key, paths in hooks.items()
+		for path in dict.fromkeys(paths or ())
 	)
 
 
@@ -1328,6 +1331,8 @@ def rail_counts():
 	beside a chat): {module key: {count, urgent}}. Ventas counts the conversations owed
 	a reply, Pendientes the work due today or overdue (urgent when something is late);
 	the other apps (Taller, POS…) count their own through `muelle_rail_counts`.
+	Several sources of one place add up, and any urgent one makes it urgent (Ventas: the
+	conversations owed a reply plus the customer requests waiting, red once one is overdue).
 	A source that is not installed, not readable or failing is left out; the boot keeps
 	the other modules' badges."""
 	if frappe.session.user == "Guest":
@@ -1337,7 +1342,9 @@ def rail_counts():
 		try:
 			found = read()
 			if found and int(found.get("count") or 0) > 0:
-				answer[key] = {"count": int(found["count"]), "urgent": bool(found.get("urgent"))}
+				mine = answer.setdefault(key, {"count": 0, "urgent": False})
+				mine["count"] += int(found["count"])
+				mine["urgent"] = mine["urgent"] or bool(found.get("urgent"))
 		except frappe.PermissionError:
 			frappe.clear_last_message()
 		except Exception:

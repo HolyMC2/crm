@@ -238,6 +238,14 @@ describe('the new promotion sheet', () => {
     expect(text).toContain('with a coupon')
   })
 
+  it('says nothing about the end until one is chosen («Iniciar» still asks)', () => {
+    const text = offerPreview(draft({ how: 'coupon', until: '' }))
+    expect(text).not.toContain('with no end date')
+    expect(text).toContain('15 %')
+    expect(text).toContain('with a coupon')
+    expect(offerMissing(draft({ until: '' }))).toBe('Choose until when.')
+  })
+
   it('says a price rule applies at the register and in the online store', async () => {
     const { offerHow } = await import('@/composables/fidelidad')
     expect(offerHow({ name: 'rule:PRLE-1' })).toBe(

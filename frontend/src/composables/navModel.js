@@ -57,6 +57,21 @@ export const navItems = [
     group: 'fidelidad',
   },
   {
+    // «Solicitudes de clientes»: returns, warranty, personal data, closed
+    // accounts and money waiting for a person, from the customer app (doco
+    // storefront_support_staff). Only for whoever reads one of its queues on
+    // a site with an online store (`requires`); the cell's count is its badge
+    // and adds to the rail's Ventas badge. Clipboard-check is the review queue's
+    // icon too: a new ~icons import here re-chunks every route.
+    key: 'solicitudes',
+    icon: ReviewQueueIcon,
+    label: 'Customer requests',
+    to: '/ventas/solicitudes-clientes',
+    group: 'solicitudes',
+    badge: 'solicitudes',
+    requires: 'solicitudes',
+  },
+  {
     key: 'inbox',
     icon: InboxIcon,
     label: 'Inbox',
@@ -191,6 +206,7 @@ export function routeGroup(path) {
   // page and the leads tools light it.
   if (/^\/(prospectos|inquiries)(\/|$)/.test(path)) return 'prospectos'
   if (/^\/ventas\/fidelidad(\/|$)/.test(path)) return 'fidelidad'
+  if (/^\/ventas\/solicitudes-clientes(\/|$)/.test(path)) return 'solicitudes'
   if (/^\/inbox(\/|$)/.test(path)) return 'inbox'
   // «Por aprobar» is an Inbox space; its standalone page lights the Inbox entry.
   if (/^\/whatsapp-queue(\/|$)/.test(path)) return 'inbox'

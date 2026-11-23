@@ -37,11 +37,21 @@
             <span :class="iconFor(o)" class="size-5" />
           </span>
           <span class="min-w-0">
-            <span
-              class="block truncate text-md font-medium text-ink-gray-9"
-              :title="o.title"
-              >{{ o.title }}</span
-            >
+            <span class="flex min-w-0 items-center gap-1.5">
+              <span
+                class="truncate text-md font-medium text-ink-gray-9"
+                :title="o.title"
+                >{{ o.title }}</span
+              >
+              <span
+                v-if="shownLabel(o)"
+                class="lucide-smartphone size-4 flex-none text-ink-gray-6"
+                :aria-label="shownLabel(o)"
+                :title="shownLabel(o)"
+                role="img"
+                data-fidelidad-en-app
+              />
+            </span>
             <span class="block truncate text-sm text-ink-gray-6"
               >{{ targetLabel(o, currency) }} ·
               <span :class="o.ending_soon && 'text-ink-amber-8'">{{
@@ -78,6 +88,14 @@
           @click="$emit('open', o)"
         >
           <template #trailing>
+            <span
+              v-if="shownLabel(o)"
+              class="lucide-smartphone size-4 flex-none text-ink-gray-6"
+              :aria-label="shownLabel(o)"
+              :title="shownLabel(o)"
+              role="img"
+              data-fidelidad-en-app
+            />
             <StatusChip :label="offerChip(o).label" :tone="offerChip(o).tone" />
           </template>
         </ListRow>
@@ -96,6 +114,7 @@ import {
   offerWhen,
   targetLabel,
 } from '@/composables/fidelidad'
+import { shownLabel } from './clientes'
 
 const props = defineProps({
   offers: { type: Array, default: () => [] },

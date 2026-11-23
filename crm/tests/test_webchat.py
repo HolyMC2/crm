@@ -188,6 +188,30 @@ class TestWebchat(unittest.TestCase):
 			self.assertFalse(frappe.db.exists(control.DOCTYPE, self.conversation()))
 			self.assertEqual(self.send()["message"]["direction"], "Incoming")
 
+	def test_account_share_without_commerce_or_with_a_bad_token_changes_nothing(self):
+		with patch("crm.api.webchat_commerce.get_installed_apps", return_value=["frappe", "crm"]):
+			self.failure(
+				417,
+				lambda: self.rpc(
+					"share_account",
+					capability=self.capability,
+					channel_id=self.channel["account_id"],
+					account_token="a" * 40,
+				),
+			)
+		self.assertFalse(frappe.db.exists(control.DOCTYPE, self.conversation()))
+		for token in ("", "a" * 201, 7):
+			self.failure(
+				417,
+				lambda token=token: self.rpc(
+					"share_account",
+					capability=self.capability,
+					channel_id=self.channel["account_id"],
+					account_token=token,
+				),
+			)
+		self.assertFalse(frappe.db.exists(control.DOCTYPE, self.conversation()))
+
 	def test_expired_revoked_and_disabled_fail_closed(self):
 		session = self.session()
 		with patch.object(api, "now_datetime", return_value=session.expires_at):

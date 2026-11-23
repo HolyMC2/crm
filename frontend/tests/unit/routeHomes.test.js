@@ -95,9 +95,11 @@ describe('every route has exactly one home', () => {
 })
 
 describe('the account pages', () => {
-  it('are one route each, outside every module and every rail item', () => {
+  it('are one route each (plus the owner’s pages under «Ajustes del negocio»), outside every module and every rail item', () => {
     const account = pages.filter((route) => ACCOUNT.has(route.meta?.app))
     expect(account.map((route) => [route.path, route.meta.app])).toEqual([
+      ['/negocio/app-clientes', 'negocio'],
+      ['/negocio/solicitudes-clientes', 'negocio'],
       ['/cuenta', 'cuenta'],
       ['/perfil', 'perfil'],
       ['/negocio', 'negocio'],

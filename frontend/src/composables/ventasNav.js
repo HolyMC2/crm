@@ -10,6 +10,11 @@ import {
 } from '@/composables/ventasSections'
 import { usersStore } from '@/stores/users'
 import { moduleLayout, openSectionsSheet } from '@/composables/muelleShell'
+import {
+  refreshSolicitudesCounts,
+  solicitudesBadge,
+  solicitudesShown,
+} from '@/components/solicitudesClientes/counts'
 import { arrangeSections } from '@/utils/shellLayout'
 import { userScopedKey } from '@/utils/storageKeys'
 import {
@@ -30,6 +35,11 @@ const badges = createResource({
 })
 
 export { DESKTOP_ONLY, VENTAS_SECTIONS, ventasSection }
+
+// A section that shows only where its source says so (navModel `requires`).
+const REQUIREMENTS = Object.freeze({ solicitudes: solicitudesShown })
+const required = (item) =>
+  !item.requires || Boolean(REQUIREMENTS[item.requires]?.())
 
 /** The section that holds `path` («daily», «more», «settings») or ''. */
 export function ventasSectionOf(path) {
@@ -94,9 +104,17 @@ export function useVentasNav() {
       (item) =>
         navItemVisible(router.resolve(item.to).name, addonAvailable.value) &&
         navItemAllowed(item, { isManager: isManager() }) &&
+        required(item) &&
         !(item.desktopOnly && isNarrow.value),
     )
   watch(addonAvailable, (ok) => ok && badges.fetch(), { immediate: true })
+  // «Solicitudes de clientes»: read on the first Ventas page, then again (at
+  // most every 20 s) as the worker moves between Ventas pages.
+  watch(
+    () => router.currentRoute?.value?.path,
+    () => refreshSolicitudesCounts(),
+    { immediate: true },
+  )
   // The daily lists and «Más» as the worker's layout arranges them (the
   // owner's per puesto, or their own); «Configuración» stays as it ships.
   const daily = computed(() => visible(ventasSection('daily')))
@@ -144,6 +162,7 @@ export function useVentasNav() {
     if (kind === 'unread') return data.unread_messages
     if (kind === 'pending') return data.pending_reviews
     if (kind === 'overdue') return data.overdue_tasks
+    if (kind === 'solicitudes') return solicitudesBadge()
     return 0
   }
   return {

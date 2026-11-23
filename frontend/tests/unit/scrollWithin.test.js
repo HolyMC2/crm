@@ -63,6 +63,14 @@ describe('scrollWithin', () => {
     })
   })
 
+  it('centres a row another page sent the worker to', () => {
+    const { page, list, message } = layout()
+    scrollWithin(message, { block: 'center', behavior: 'auto' })
+    // 700 down, minus half of what the list shows around the 60 px row
+    expect(list.scrollTo).toHaveBeenCalledWith({ top: 630, behavior: 'auto' })
+    expect(page.scrollTo).not.toHaveBeenCalled()
+  })
+
   it('leaves everything in place when the list has nothing to scroll', () => {
     const { page, list, message } = layout()
     Object.defineProperty(list, 'scrollHeight', { value: 200 })

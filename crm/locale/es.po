@@ -32115,6 +32115,9 @@ msgstr "sola en caja"
 msgid "{0} off {1}, {2}, {3}."
 msgstr "{0} de descuento en {1}, {2}, {3}."
 
+msgid "{0} off {1}, {2}."
+msgstr "{0} de descuento en {1}, {2}."
+
 msgid "Your coupon {0} for «{1}». Show it at the register."
 msgstr "Tu cupón {0} para «{1}». Muéstralo en caja."
 
@@ -51359,3 +51362,1506 @@ msgstr "Ligada a las reparaciones"
 msgctxt "EnLinea"
 msgid "Each repair shows the part as ordered; when it arrives, its people hear it."
 msgstr "Cada reparación muestra la pieza como pedida; cuando llega, se avisa a su gente."
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "Loyalty"
+msgstr "Lealtad"
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "Money"
+msgstr "Dinero"
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "Service"
+msgstr "Servicio"
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "Contact"
+msgstr "Contacto"
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "More"
+msgstr "Más"
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "Home"
+msgstr "Inicio"
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "Promos"
+msgstr "Promos"
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "Rewards"
+msgstr "Premios"
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "Activity"
+msgstr "Actividad"
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "Shop"
+msgstr "Tienda"
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "Yes"
+msgstr "Sí"
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "No"
+msgstr "No"
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "None"
+msgstr "Ninguno"
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "Your customers sign in on your online store and see what you turn on below."
+msgstr "Tus clientes entran a su cuenta en tu tienda en línea y ven lo que enciendas abajo."
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "Off: your online store keeps the account page it has today."
+msgstr "Apagada: tu tienda en línea sigue con la cuenta de siempre."
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "They get their code by {0}."
+msgstr "Les llega su código por {0}."
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "Your customers cannot sign in right now. Connect email or WhatsApp so they can."
+msgstr "Ahora tus clientes no pueden entrar. Conecta el correo o WhatsApp para que puedan."
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "Your customers sign in with a code by email or WhatsApp. Connect one so they can."
+msgstr "Tus clientes entran con un código por correo o WhatsApp. Conecta uno para que puedan."
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "email"
+msgstr "correo"
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "or"
+msgstr "o"
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "This shop cannot offer it yet."
+msgstr "Esta tienda aún no puede ofrecerlo."
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "Your customers see your store as always."
+msgstr "Tus clientes ven tu tienda como siempre."
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "Nothing turned on yet: they see their usual account."
+msgstr "Aún no enciendes nada: ven su cuenta de siempre."
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "They see: {0}."
+msgstr "Ven: {0}."
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "On"
+msgstr "Encendida"
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "Off"
+msgstr "Apagada"
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "Customer accounts"
+msgstr "Cuentas de clientes"
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "Came in, last 30 days"
+msgstr "Entraron en los últimos 30 días"
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "Cards"
+msgstr "Tarjetas"
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "Coupons used, last 30 days"
+msgstr "Cupones usados en los últimos 30 días"
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "Rewards taken, last 30 days"
+msgstr "Premios canjeados en los últimos 30 días"
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "Debts paid online, last 30 days"
+msgstr "Adeudos pagados en línea en los últimos 30 días"
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "The app is on for your customers."
+msgstr "La app ya está encendida para tus clientes."
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "The app is off. Your store keeps its usual account."
+msgstr "La app está apagada. Tu tienda sigue con la cuenta de siempre."
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "Your customers now see {0}."
+msgstr "Tus clientes ya ven {0}."
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "Your customers no longer see {0}."
+msgstr "Tus clientes ya no ven {0}."
+
+#: frontend/src/pages/AppClientes.vue
+msgctxt "AppClientes"
+msgid "It did not change. Try again."
+msgstr "No cambió. Inténtalo de nuevo."
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "Write a number."
+msgstr "Escribe un número."
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "Whole numbers only."
+msgstr "Solo números enteros."
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "At least {0}."
+msgstr "Mínimo {0}."
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "At most {0}."
+msgstr "Máximo {0}."
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "Terms and conditions"
+msgstr "Términos y condiciones"
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "Returns"
+msgstr "Devoluciones"
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "Warranty"
+msgstr "Garantía"
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "Privacy notice"
+msgstr "Aviso de privacidad"
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "Write the days as a whole number from 0 to 365."
+msgstr "Escribe los días como número entero, de 0 a 365."
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "Off. Turn it on in a few taps."
+msgstr "Apagada. Enciéndela en unos toques."
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "On, with nothing turned on yet."
+msgstr "Encendida, pero aún no muestra nada."
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "On: {0}"
+msgstr "Encendida: {0}"
+
+#: frontend/src/components/appClientes/AppClientesDoor.vue
+msgctxt "AppClientes"
+msgid "What your customers see in their app"
+msgstr "Lo que ven tus clientes en su app"
+
+#: frontend/src/components/cuenta/TiendaEnLinea.vue
+msgctxt "Cuenta"
+msgid "What your customers see in their app"
+msgstr "Lo que ven tus clientes en su app"
+
+#: frontend/src/components/appClientes/AppPreview.vue
+msgctxt "AppClientes"
+msgid "+{0} more"
+msgstr "+{0} más"
+
+#: frontend/src/components/appClientes/AppPreview.vue
+msgctxt "AppClientes"
+msgid "What your customers see"
+msgstr "Lo que ven tus clientes"
+
+#: frontend/src/components/appClientes/AppPreview.vue
+msgctxt "AppClientes"
+msgid "Opens your store in a new tab"
+msgstr "Abre tu tienda en otra pestaña"
+
+#: frontend/src/components/appClientes/AppPreview.vue
+msgctxt "AppClientes"
+msgid "See as a customer"
+msgstr "Ver como cliente"
+
+#: frontend/src/pages/AppClientes.vue
+msgctxt "AppClientes"
+msgid "Legal texts"
+msgstr "Textos legales"
+
+#: frontend/src/components/appClientes/LegalSheet.vue
+msgctxt "AppClientes"
+msgid "What your customers read in the app before they buy."
+msgstr "Lo que tus clientes leen en la app antes de comprar."
+
+#: frontend/src/pages/AppClientes.vue
+msgctxt "AppClientes"
+msgid "Loading…"
+msgstr "Cargando…"
+
+#: frontend/src/pages/AppClientes.vue
+msgctxt "AppClientes"
+msgid "Try again"
+msgstr "Intentar de nuevo"
+
+#: frontend/src/components/appClientes/LegalSheet.vue
+msgctxt "AppClientes"
+msgid "Whoever runs the system can change these texts."
+msgstr "Quien administra el sistema puede cambiar estos textos."
+
+#: frontend/src/components/appClientes/LegalSheet.vue
+msgctxt "AppClientes"
+msgid "The suggested text shows in grey. Write your own or use it."
+msgstr "El texto sugerido se ve en gris. Escribe el tuyo o úsalo."
+
+#: frontend/src/components/appClientes/LegalSheet.vue
+msgctxt "AppClientes"
+msgid "Use suggested text"
+msgstr "Usar texto sugerido"
+
+#: frontend/src/components/appClientes/LegalSheet.vue
+msgctxt "AppClientes"
+msgid "Days to return a purchase"
+msgstr "Días para devolver una compra"
+
+#: frontend/src/components/appClientes/ParamsSheet.vue
+msgctxt "AppClientes"
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: frontend/src/components/appClientes/LegalSheet.vue
+msgctxt "AppClientes"
+msgid "Save texts"
+msgstr "Guardar textos"
+
+#: frontend/src/components/appClientes/LegalSheet.vue
+msgctxt "AppClientes"
+msgid "The texts could not open. Try again."
+msgstr "No se pudieron abrir los textos. Inténtalo de nuevo."
+
+#: frontend/src/components/appClientes/LegalSheet.vue
+msgctxt "AppClientes"
+msgid "Texts saved"
+msgstr "Textos guardados"
+
+#: frontend/src/components/appClientes/LegalSheet.vue
+msgctxt "AppClientes"
+msgid "The texts were not saved. Try again."
+msgstr "No se guardaron los textos. Inténtalo de nuevo."
+
+#: frontend/src/components/appClientes/ParamsSheet.vue
+msgctxt "AppClientes"
+msgid "Whoever runs the system can change these rules."
+msgstr "Quien administra el sistema puede cambiar estas reglas."
+
+#: frontend/src/components/appClientes/ParamsSheet.vue
+msgctxt "AppClientes"
+msgid "Save changes"
+msgstr "Guardar cambios"
+
+#: frontend/src/components/appClientes/ParamsSheet.vue
+msgctxt "AppClientes"
+msgid "The changes were not saved. Try again."
+msgstr "No se guardaron los cambios. Inténtalo de nuevo."
+
+#: frontend/src/pages/AppClientes.vue
+msgctxt "AppClientes"
+msgid "Your customers’ app"
+msgstr "App de tus clientes"
+
+#: frontend/src/pages/AppClientes.vue
+msgctxt "AppClientes"
+msgid "Choose a shop"
+msgstr "Elige la tienda"
+
+#: frontend/src/pages/AppClientes.vue
+msgctxt "AppClientes"
+msgid "Your online store is not ready yet"
+msgstr "Tu tienda en línea aún no está lista"
+
+#: frontend/src/pages/AppClientes.vue
+msgctxt "AppClientes"
+msgid "Your customers’ app lives in your online store. Turn the store on first."
+msgstr "La app de tus clientes vive en tu tienda en línea. Enciéndela primero."
+
+#: frontend/src/pages/AppClientes.vue
+msgctxt "AppClientes"
+msgid "Go to your online store"
+msgstr "Ir a tu tienda en línea"
+
+#: frontend/src/pages/AppClientes.vue
+msgctxt "AppClientes"
+msgid "You see what your customers see. Whoever runs the system can change it."
+msgstr "Ves lo que ven tus clientes. Quien administra el sistema puede cambiarlo."
+
+#: frontend/src/pages/AppClientes.vue
+msgctxt "AppClientes"
+msgid "How it is going"
+msgstr "Cómo va"
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "No activity yet: here you will see how many customers use the app."
+msgstr "Aún no hay movimiento: aquí verás cuántos clientes usan la app."
+
+#: frontend/src/pages/AppClientes.vue
+msgctxt "AppClientes"
+msgid "Customer app"
+msgstr "App de clientes"
+
+#: frontend/src/pages/AppClientes.vue
+msgctxt "AppClientes"
+msgid "Get each part ready; your customers see it once the app is on."
+msgstr "Deja listo cada apartado; tus clientes lo ven cuando enciendas la app."
+
+#: frontend/src/pages/AppClientes.vue
+msgctxt "AppClientes"
+msgid "Rules for {0}"
+msgstr "Reglas de {0}"
+
+#: frontend/src/pages/AppClientes.vue
+msgctxt "AppClientes"
+msgid "What your customers read"
+msgstr "Lo que leen tus clientes"
+
+#: frontend/src/pages/AppClientes.vue
+msgctxt "AppClientes"
+msgid "Terms, returns, warranty and privacy, as your customers read them in the app."
+msgstr "Términos, devoluciones, garantía y privacidad, como los leen tus clientes en la app."
+
+#: frontend/src/pages/AppClientes.vue
+msgctxt "AppClientes"
+msgid "The app settings could not open. Try again."
+msgstr "No se pudieron abrir los ajustes de la app. Inténtalo de nuevo."
+
+#: frontend/src/pages/AppClientes.vue
+msgctxt "AppClientes"
+msgid "Changes saved"
+msgstr "Cambios guardados"
+
+#: frontend/src/components/cuenta/TiendaEnLinea.vue
+msgctxt "Cuenta"
+msgid "Points, coupons and more, in your online store."
+msgstr "Puntos, cupones y más, en tu tienda en línea."
+
+# «App de clientes»: Fidelidad › Mostrar a clientes, Puntos extra, Premios y Retos (msgctxt AppClientes).
+
+msgctxt "AppClientes"
+msgid "Only your team sees it"
+msgstr "Solo la ve tu equipo"
+
+msgctxt "AppClientes"
+msgid "Customers see it once «Promotions» is on in your customer app"
+msgstr "Tus clientes la verán cuando prendas «Promociones» en la app de tus clientes"
+
+msgctxt "AppClientes"
+msgid "In the app, at the register and in the online store"
+msgstr "En la app, en la tienda y en línea"
+
+msgctxt "AppClientes"
+msgid "In the app and at the register; its coupon also works online"
+msgstr "En la app y en la tienda; su cupón también sirve en línea"
+
+msgctxt "AppClientes"
+msgid "In the app and at the register"
+msgstr "En la app y en la tienda"
+
+msgctxt "AppClientes"
+msgid "In the app"
+msgstr "En la app"
+
+msgctxt "AppClientes"
+msgid "Keep it to {0} characters."
+msgstr "Usa hasta {0} caracteres."
+
+msgctxt "AppClientes"
+msgid "Customers"
+msgstr "Clientes"
+
+msgctxt "AppClientes"
+msgid "Show to customers"
+msgstr "Mostrar a clientes"
+
+msgctxt "AppClientes"
+msgid "Open the customer app settings"
+msgstr "Abrir la app de tus clientes"
+
+msgctxt "AppClientes"
+msgid "Title for customers (optional)"
+msgstr "Título para clientes (opcional)"
+
+msgctxt "AppClientes"
+msgid "Save title"
+msgstr "Guardar título"
+
+msgctxt "AppClientes"
+msgid "Picture for customers"
+msgstr "Foto para clientes"
+
+msgctxt "AppClientes"
+msgid "Change picture"
+msgstr "Cambiar foto"
+
+msgctxt "AppClientes"
+msgid "Add a picture"
+msgstr "Agregar foto"
+
+msgctxt "AppClientes"
+msgid "Remove picture"
+msgstr "Quitar foto"
+
+msgctxt "AppClientes"
+msgid "Remove"
+msgstr "Quitar"
+
+msgctxt "AppClientes"
+msgid "Customers can switch it on"
+msgstr "Los clientes pueden activarlo"
+
+msgctxt "AppClientes"
+msgid "Each customer switches their own coupon on in the app and uses it at the register."
+msgstr "Cada cliente activa su cupón en la app y lo usa en caja."
+
+msgctxt "AppClientes"
+msgid "Customers see it now"
+msgstr "Tus clientes ya la ven"
+
+msgctxt "AppClientes"
+msgid "Customers no longer see it"
+msgstr "Ya no la ven tus clientes"
+
+msgctxt "AppClientes"
+msgid "The picture did not upload. Try another one."
+msgstr "La foto no se subió. Prueba con otra."
+
+msgctxt "AppClientes"
+msgid "Points"
+msgstr "Puntos"
+
+msgctxt "AppClientes"
+msgid "How many bonus points?"
+msgstr "¿Cuántos puntos extra?"
+
+msgctxt "AppClientes"
+msgid "points"
+msgstr "puntos"
+
+msgctxt "AppClientes"
+msgid "The register adds the points to the customer who makes the sale; they need a points program."
+msgstr "La caja le suma los puntos al cliente de la venta; necesitas un programa de puntos."
+
+msgctxt "AppClientes"
+msgid "a ticket from {0}"
+msgstr "un ticket desde {0}"
+
+msgctxt "AppClientes"
+msgid "any ticket"
+msgstr "cualquier ticket"
+
+msgctxt "AppClientes"
+msgid "at the register"
+msgstr "en caja"
+
+msgctxt "AppClientes"
+msgid "+{0} points on {1}, {2}, {3}."
+msgstr "+{0} puntos en {1}, {2}, {3}."
+
+msgctxt "AppClientes"
+msgid "+{0} points on {1}, {2}."
+msgstr "+{0} puntos en {1}, {2}."
+
+msgctxt "AppClientes"
+msgid "Running"
+msgstr "En curso"
+
+msgctxt "AppClientes"
+msgid "Scheduled"
+msgstr "Programado"
+
+msgctxt "AppClientes"
+msgid "Paused"
+msgstr "En pausa"
+
+msgctxt "AppClientes"
+msgid "Ended"
+msgstr "Terminado"
+
+msgctxt "AppClientes"
+msgid "Ends soon"
+msgstr "Termina pronto"
+
+msgctxt "AppClientes"
+msgid "Starts {0}"
+msgstr "Empieza el {0}"
+
+msgctxt "AppClientes"
+msgid "Ended {0}"
+msgstr "Terminó el {0}"
+
+msgctxt "AppClientes"
+msgid "No end date"
+msgstr "Sin fecha de fin"
+
+msgctxt "AppClientes"
+msgid "Ends today"
+msgstr "Termina hoy"
+
+msgctxt "AppClientes"
+msgid "Until {0}"
+msgstr "Hasta el {0}"
+
+msgctxt "AppClientes"
+msgid "1 point"
+msgstr "1 punto"
+
+msgctxt "AppClientes"
+msgid "{0} points"
+msgstr "{0} puntos"
+
+msgctxt "AppClientes"
+msgid "1 waiting at the register"
+msgstr "1 espera en caja"
+
+msgctxt "AppClientes"
+msgid "{0} waiting at the register"
+msgstr "{0} esperan en caja"
+
+msgctxt "AppClientes"
+msgid "1 taken"
+msgstr "1 canjeado"
+
+msgctxt "AppClientes"
+msgid "{0} taken"
+msgstr "{0} canjeados"
+
+msgctxt "AppClientes"
+msgid "1 purchase"
+msgstr "1 compra"
+
+msgctxt "AppClientes"
+msgid "{0} purchases"
+msgstr "{0} compras"
+
+msgctxt "AppClientes"
+msgid "+{0} points"
+msgstr "+{0} puntos"
+
+msgctxt "AppClientes"
+msgid "1 customer completed it"
+msgstr "1 cliente lo completó"
+
+msgctxt "AppClientes"
+msgid "{0} customers completed it"
+msgstr "{0} clientes lo completaron"
+
+msgctxt "AppClientes"
+msgid "No end"
+msgstr "Sin fin"
+
+msgctxt "AppClientes"
+msgid "End of month"
+msgstr "Fin de mes"
+
+msgctxt "AppClientes"
+msgid "30 days"
+msgstr "30 días"
+
+msgctxt "AppClientes"
+msgid "3 months"
+msgstr "3 meses"
+
+msgctxt "AppClientes"
+msgid "Once"
+msgstr "Una vez"
+
+msgctxt "AppClientes"
+msgid "{0} times"
+msgstr "{0} veces"
+
+msgctxt "AppClientes"
+msgid "No limit"
+msgstr "Sin límite"
+
+msgctxt "AppClientes"
+msgid "Choose the product they take."
+msgstr "Elige el producto que se llevan."
+
+msgctxt "AppClientes"
+msgid "Write how many points: a whole number above zero."
+msgstr "Escribe cuántos puntos: un número entero mayor que cero."
+
+msgctxt "AppClientes"
+msgid "Your customers see: {0} for {1} (worth {2})."
+msgstr "Tus clientes ven: {0} por {1} (valen {2})."
+
+msgctxt "AppClientes"
+msgid "Your customers see: {0} for {1}."
+msgstr "Tus clientes ven: {0} por {1}."
+
+msgctxt "AppClientes"
+msgid "Write the name your customers read."
+msgstr "Escribe el nombre que leen tus clientes."
+
+msgctxt "AppClientes"
+msgid "Choose the goal."
+msgstr "Elige la meta."
+
+msgctxt "AppClientes"
+msgid "Purchases are a whole number from 1 to 100."
+msgstr "Las compras son un número entero del 1 al 100."
+
+msgctxt "AppClientes"
+msgid "Choose the coupon promotion they get."
+msgstr "Elige la promoción con cupón que reciben."
+
+msgctxt "AppClientes"
+msgid "Write how many bonus points they get."
+msgstr "Escribe cuántos puntos extra reciben."
+
+msgctxt "AppClientes"
+msgid "Your customers see: {0}. Goal: {1}. Reward: {2}."
+msgstr "Tus clientes ven: {0}. Meta: {1}. Premio: {2}."
+
+msgctxt "AppClientes"
+msgid "Your customers see: {0}. Goal: {1}."
+msgstr "Tus clientes ven: {0}. Meta: {1}."
+
+msgctxt "AppClientes"
+msgid "Reward"
+msgstr "Premio"
+
+msgctxt "AppClientes"
+msgid "New reward"
+msgstr "Nuevo premio"
+
+msgctxt "AppClientes"
+msgid "State"
+msgstr "Estado"
+
+msgctxt "AppClientes"
+msgid "Hidden from customers"
+msgstr "Oculto a clientes"
+
+msgctxt "AppClientes"
+msgid "Resume"
+msgstr "Reanudar"
+
+msgctxt "AppClientes"
+msgid "Pause"
+msgstr "Pausar"
+
+msgctxt "AppClientes"
+msgid "Yes, end it"
+msgstr "Sí, terminar"
+
+msgctxt "AppClientes"
+msgid "End today"
+msgstr "Terminar hoy"
+
+msgctxt "AppClientes"
+msgid "Hide from customers"
+msgstr "Ocultar a clientes"
+
+msgctxt "AppClientes"
+msgid "A sales manager can change rewards."
+msgstr "Un encargado de ventas puede cambiar los premios."
+
+msgctxt "AppClientes"
+msgid "Product they take"
+msgstr "Producto que se llevan"
+
+msgctxt "AppClientes"
+msgid "Search a product"
+msgstr "Busca un producto"
+
+msgctxt "AppClientes"
+msgid "Name your customers read"
+msgstr "Nombre que leen tus clientes"
+
+msgctxt "AppClientes"
+msgid "For example, Clear case"
+msgstr "Por ejemplo, Funda transparente"
+
+msgctxt "AppClientes"
+msgid "Points it costs"
+msgstr "Puntos que cuesta"
+
+msgctxt "AppClientes"
+msgid "Other"
+msgstr "Otro"
+
+msgctxt "AppClientes"
+msgid "How often one customer may take it"
+msgstr "Cuántas veces se lo puede llevar un cliente"
+
+msgctxt "AppClientes"
+msgid "Until when?"
+msgstr "¿Hasta cuándo?"
+
+msgctxt "AppClientes"
+msgid "A short line under it (optional)"
+msgstr "Una línea corta debajo (opcional)"
+
+msgctxt "AppClientes"
+msgid "For example, While stocks last"
+msgstr "Por ejemplo, Hasta agotar existencias"
+
+msgctxt "AppClientes"
+msgid "Customers can redeem it now"
+msgstr "Tus clientes ya lo pueden canjear"
+
+msgctxt "AppClientes"
+msgid "Redeeming gives the customer a code for the register. The points come off when they take the product."
+msgstr "Al canjear, el cliente recibe un código para la caja. Los puntos se descuentan cuando se lleva el producto."
+
+msgctxt "AppClientes"
+msgid "Save reward"
+msgstr "Guardar premio"
+
+msgctxt "AppClientes"
+msgid "They are worth {0} at the register."
+msgstr "Valen {0} en caja."
+
+msgctxt "AppClientes"
+msgid "Reward saved: {0}"
+msgstr "Premio guardado: {0}"
+
+msgctxt "AppClientes"
+msgid "Reward ready: {0}"
+msgstr "Premio listo: {0}"
+
+msgctxt "AppClientes"
+msgid "Products your customers take with their points."
+msgstr "Productos que tus clientes se llevan con sus puntos."
+
+msgctxt "AppClientes"
+msgid "Rewards are paid with points: create your points program first."
+msgstr "Los premios se pagan con puntos: primero crea tu programa de puntos."
+
+msgctxt "AppClientes"
+msgid "No rewards yet. A product for points brings customers back."
+msgstr "Aún no hay premios. Un producto por puntos hace que tus clientes regresen."
+
+msgctxt "AppClientes"
+msgid "Challenges"
+msgstr "Retos"
+
+msgctxt "AppClientes"
+msgid "A stamp card or a spend goal that gives a coupon or bonus points."
+msgstr "Una tarjeta de sellos o una meta de compra que da un cupón o puntos extra."
+
+msgctxt "AppClientes"
+msgid "New challenge"
+msgstr "Nuevo reto"
+
+msgctxt "AppClientes"
+msgid "No challenges yet. «Your third purchase has a gift» works well."
+msgstr "Aún no hay retos. «Tu tercera compra trae regalo» funciona bien."
+
+msgctxt "AppClientes"
+msgid "Your customers see them under «Rewards» in their app."
+msgstr "Tus clientes los ven en «Premios» de su app."
+
+msgctxt "AppClientes"
+msgid "Challenge"
+msgstr "Reto"
+
+msgctxt "AppClientes"
+msgid "A sales manager can change challenges."
+msgstr "Un encargado de ventas puede cambiar los retos."
+
+msgctxt "AppClientes"
+msgid "For example, Your third case is on us"
+msgstr "Por ejemplo, Tu tercera funda va por nuestra cuenta"
+
+msgctxt "AppClientes"
+msgid "What counts?"
+msgstr "¿Qué cuenta?"
+
+msgctxt "AppClientes"
+msgid "What they spend adds up toward the goal."
+msgstr "Lo que gastan se suma hasta llegar a la meta."
+
+msgctxt "AppClientes"
+msgid "Each purchase is a stamp on their card."
+msgstr "Cada compra es un sello en su tarjeta."
+
+msgctxt "AppClientes"
+msgid "Goal"
+msgstr "Meta"
+
+msgctxt "AppClientes"
+msgid "purchases"
+msgstr "compras"
+
+msgctxt "AppClientes"
+msgid "A ticket counts from (optional)"
+msgstr "Un ticket cuenta desde (opcional)"
+
+msgctxt "AppClientes"
+msgid "Only in this category (optional)"
+msgstr "Solo en esta categoría (opcional)"
+
+msgctxt "AppClientes"
+msgid "Search a category"
+msgstr "Busca una categoría"
+
+msgctxt "AppClientes"
+msgid "Purchases count from"
+msgstr "Las compras cuentan desde"
+
+msgctxt "AppClientes"
+msgid "What do they win?"
+msgstr "¿Qué ganan?"
+
+msgctxt "AppClientes"
+msgid "Coupon promotion"
+msgstr "Promoción con cupón"
+
+msgctxt "AppClientes"
+msgid "You have no promotion that works with a coupon yet."
+msgstr "Aún no tienes una promoción que funcione con cupón."
+
+msgctxt "AppClientes"
+msgid "Create a coupon promotion"
+msgstr "Crear una promoción con cupón"
+
+msgctxt "AppClientes"
+msgid "The coupon lasts"
+msgstr "El cupón dura"
+
+msgctxt "AppClientes"
+msgid "days"
+msgstr "días"
+
+msgctxt "AppClientes"
+msgid "Bonus points"
+msgstr "Puntos extra"
+
+msgctxt "AppClientes"
+msgid "What they win, in their words (optional)"
+msgstr "Lo que ganan, en sus palabras (opcional)"
+
+msgctxt "AppClientes"
+msgid "For example, A free coffee"
+msgstr "Por ejemplo, Un café gratis"
+
+msgctxt "AppClientes"
+msgid "Purchases count from now on"
+msgstr "Las compras cuentan desde ya"
+
+msgctxt "AppClientes"
+msgid "Customers with an account in your app take part. Their purchases at the register and online count by themselves; completing it gives the reward once."
+msgstr "Participan los clientes con cuenta en tu app. Sus compras en caja y en línea cuentan solas; al completarlo reciben el premio una vez."
+
+msgctxt "AppClientes"
+msgid "Save challenge"
+msgstr "Guardar reto"
+
+msgctxt "AppClientes"
+msgid "Purchases"
+msgstr "Compras"
+
+msgctxt "AppClientes"
+msgid "What they spend"
+msgstr "Lo que gastan"
+
+msgctxt "AppClientes"
+msgid "A coupon"
+msgstr "Un cupón"
+
+msgctxt "AppClientes"
+msgid "Challenge saved: {0}"
+msgstr "Reto guardado: {0}"
+
+msgctxt "AppClientes"
+msgid "Challenge ready: {0}"
+msgstr "Reto listo: {0}"
+
+# «Solicitudes de clientes» (frontend/src/pages/SolicitudesClientes.vue, components/solicitudesClientes/*, msgctxt SolicitudesClientes) and App de clientes review fixes (msgctxt AppClientes).
+
+msgctxt "AppClientes"
+msgid "While the app is on, {0} shows the app’s page instead of yours. Give your page another address to keep it."
+msgstr "Con la app prendida, {0} muestra la página de la app en lugar de la tuya. Ponle otra dirección a tu página para conservarla."
+
+msgctxt "AppClientes"
+msgid "While the app is on, {0} show the app’s pages instead of yours. Give your pages other addresses to keep them."
+msgstr "Con la app prendida, {0} muestran las páginas de la app en lugar de las tuyas. Ponles otras direcciones a tus páginas para conservarlas."
+
+msgctxt "AppClientes"
+msgid "Saved. Customers see it once «Promotions» is on in your customer app"
+msgstr "Guardado. Tus clientes la verán cuando prendas «Promociones» en la app de tus clientes"
+
+msgctxt "SolicitudesClientes"
+msgid "Returns"
+msgstr "Devoluciones"
+
+msgctxt "SolicitudesClientes"
+msgid "Warranty"
+msgstr "Garantías"
+
+msgctxt "SolicitudesClientes"
+msgid "Personal data"
+msgstr "Datos personales"
+
+msgctxt "SolicitudesClientes"
+msgid "Closed accounts"
+msgstr "Cuentas cerradas"
+
+msgctxt "SolicitudesClientes"
+msgid "Payments to check"
+msgstr "Pagos por revisar"
+
+msgctxt "SolicitudesClientes"
+msgid "All"
+msgstr "Todas"
+
+msgctxt "SolicitudesClientes"
+msgid "{0} overdue"
+msgstr "{0} vencidas"
+
+msgctxt "SolicitudesClientes"
+msgid "Return"
+msgstr "Devolución"
+
+msgctxt "SolicitudesClientes"
+msgid "Wants to see their data"
+msgstr "Quiere ver sus datos"
+
+msgctxt "SolicitudesClientes"
+msgid "Wants their data corrected"
+msgstr "Quiere corregir sus datos"
+
+msgctxt "SolicitudesClientes"
+msgid "Wants their data deleted"
+msgstr "Quiere borrar sus datos"
+
+msgctxt "SolicitudesClientes"
+msgid "Wants a use of their data stopped"
+msgstr "Quiere que dejen de usar sus datos"
+
+msgctxt "SolicitudesClientes"
+msgid "Privacy request"
+msgstr "Solicitud de datos"
+
+msgctxt "SolicitudesClientes"
+msgid "Deleted their account"
+msgstr "Borró su cuenta"
+
+msgctxt "SolicitudesClientes"
+msgid "Online payment"
+msgstr "Pago en línea"
+
+msgctxt "SolicitudesClientes"
+msgid "Top-up"
+msgstr "Recarga"
+
+msgctxt "SolicitudesClientes"
+msgid "Request"
+msgstr "Solicitud"
+
+msgctxt "SolicitudesClientes"
+msgid "Defective"
+msgstr "Defectuoso"
+
+msgctxt "SolicitudesClientes"
+msgid "Wrong product"
+msgstr "Producto equivocado"
+
+msgctxt "SolicitudesClientes"
+msgid "Not what they expected"
+msgstr "No es lo que esperaba"
+
+msgctxt "SolicitudesClientes"
+msgid "Another reason"
+msgstr "Otro motivo"
+
+msgctxt "SolicitudesClientes"
+msgid "Charged but not recorded"
+msgstr "Cobrado sin registrar"
+
+msgctxt "SolicitudesClientes"
+msgid "The card’s answer never came"
+msgstr "La respuesta de la tarjeta nunca llegó"
+
+msgctxt "SolicitudesClientes"
+msgid "Still waiting after its time"
+msgstr "Sigue esperando después de su plazo"
+
+msgctxt "SolicitudesClientes"
+msgid "The carrier’s answer is uncertain"
+msgstr "La respuesta de la compañía no es segura"
+
+msgctxt "SolicitudesClientes"
+msgid "Pay the customer back by hand"
+msgstr "Devuélvele el dinero al cliente a mano"
+
+msgctxt "SolicitudesClientes"
+msgid "The gateway took the money. Fix what blocks the books (a closed period, a missing account), then retry."
+msgstr "La pasarela ya cobró. Arregla lo que bloquea la contabilidad (un periodo cerrado, una cuenta que falta) y vuelve a intentar."
+
+msgctxt "SolicitudesClientes"
+msgid "Check in the gateway whether the card was charged before the customer pays again."
+msgstr "Revisa en la pasarela si se cobró la tarjeta antes de que el cliente vuelva a pagar."
+
+msgctxt "SolicitudesClientes"
+msgid "Check the amount and the currency in the gateway; retry once it shows paid."
+msgstr "Revisa el monto y la moneda en la pasarela; vuelve a intentar cuando aparezca pagado."
+
+msgctxt "SolicitudesClientes"
+msgid "Never refund it while the carrier checks it: the nightly check marks it delivered or failed."
+msgstr "No la devuelvas mientras la compañía la revisa: la revisión de la noche la marca entregada o fallida."
+
+msgctxt "SolicitudesClientes"
+msgid "It was not sent and could not be paid back by itself. Pay the customer back, then mark it resolved."
+msgstr "No se envió y no se pudo devolver el dinero sola. Devuélveselo al cliente y márcala resuelta."
+
+msgctxt "SolicitudesClientes"
+msgid "Remove their contact details from the customer record where the law allows; invoices and fiscal records stay."
+msgstr "Quita sus datos de contacto de la ficha del cliente donde la ley lo permita; las facturas y los registros fiscales se quedan."
+
+msgctxt "SolicitudesClientes"
+msgid "New"
+msgstr "Nueva"
+
+msgctxt "SolicitudesClientes"
+msgid "In progress"
+msgstr "En proceso"
+
+msgctxt "SolicitudesClientes"
+msgid "Resolved"
+msgstr "Resuelta"
+
+msgctxt "SolicitudesClientes"
+msgid "Rejected"
+msgstr "Rechazada"
+
+msgctxt "SolicitudesClientes"
+msgid "Closed"
+msgstr "Cerrada"
+
+msgctxt "SolicitudesClientes"
+msgid "Scheduled today"
+msgstr "Programada hoy"
+
+msgctxt "SolicitudesClientes"
+msgid "Scheduled {0}"
+msgstr "Programada {0}"
+
+msgctxt "SolicitudesClientes"
+msgid "Overdue since {0}"
+msgstr "Venció {0}"
+
+msgctxt "SolicitudesClientes"
+msgid "Due today"
+msgstr "Vence hoy"
+
+msgctxt "SolicitudesClientes"
+msgid "Due {0}"
+msgstr "Vence {0}"
+
+msgctxt "SolicitudesClientes"
+msgid "Customer"
+msgstr "Cliente"
+
+msgctxt "SolicitudesClientes"
+msgid "Nothing closed in the last 60 days"
+msgstr "Nada cerrado en los últimos 60 días"
+
+msgctxt "SolicitudesClientes"
+msgid "Nothing waiting in {0}"
+msgstr "Nada pendiente en {0}"
+
+msgctxt "SolicitudesClientes"
+msgid "Nothing waiting"
+msgstr "Nada pendiente"
+
+msgctxt "SolicitudesClientes"
+msgid "When a customer asks for something from the app, it shows here."
+msgstr "Cuando un cliente pida algo desde la app, aparece aquí."
+
+msgctxt "SolicitudesClientes"
+msgid "Order"
+msgstr "Pedido"
+
+msgctxt "SolicitudesClientes"
+msgid "Invoice"
+msgstr "Factura"
+
+msgctxt "SolicitudesClientes"
+msgid "Ticket"
+msgstr "Ticket"
+
+msgctxt "SolicitudesClientes"
+msgid "Repair"
+msgstr "Reparación"
+
+msgctxt "SolicitudesClientes"
+msgid "Document"
+msgstr "Documento"
+
+msgctxt "SolicitudesClientes"
+msgid "Amount"
+msgstr "Monto"
+
+msgctxt "SolicitudesClientes"
+msgid "Why"
+msgstr "Motivo"
+
+msgctxt "SolicitudesClientes"
+msgid "Asked"
+msgstr "Lo pidió"
+
+msgctxt "SolicitudesClientes"
+msgid "Pickup"
+msgstr "Recolección"
+
+msgctxt "SolicitudesClientes"
+msgid "Visit to the shop"
+msgstr "Visita a la tienda"
+
+msgctxt "SolicitudesClientes"
+msgid "Call"
+msgstr "Llamar"
+
+msgctxt "SolicitudesClientes"
+msgid "Email"
+msgstr "Correo"
+
+msgctxt "SolicitudesClientes"
+msgid "Start"
+msgstr "Empezar"
+
+msgctxt "SolicitudesClientes"
+msgid "Accept"
+msgstr "Aceptar"
+
+msgctxt "SolicitudesClientes"
+msgid "Schedule"
+msgstr "Programar"
+
+msgctxt "SolicitudesClientes"
+msgid "Reject"
+msgstr "Rechazar"
+
+msgctxt "SolicitudesClientes"
+msgid "Retry"
+msgstr "Reintentar"
+
+msgctxt "SolicitudesClientes"
+msgid "Mark resolved"
+msgstr "Marcar resuelta"
+
+msgctxt "SolicitudesClientes"
+msgid "Write why: the customer reads it."
+msgstr "Escribe por qué: el cliente lo lee."
+
+msgctxt "SolicitudesClientes"
+msgid "At most {0} characters."
+msgstr "Máximo {0} caracteres."
+
+msgctxt "SolicitudesClientes"
+msgid "Choose pickup or visit."
+msgstr "Elige recolección o visita."
+
+msgctxt "SolicitudesClientes"
+msgid "Choose the day."
+msgstr "Elige el día."
+
+msgctxt "SolicitudesClientes"
+msgid "Started."
+msgstr "Empezada."
+
+msgctxt "SolicitudesClientes"
+msgid "Accepted."
+msgstr "Aceptada."
+
+msgctxt "SolicitudesClientes"
+msgid "Scheduled."
+msgstr "Programada."
+
+msgctxt "SolicitudesClientes"
+msgid "Rejected."
+msgstr "Rechazada."
+
+msgctxt "SolicitudesClientes"
+msgid "Marked resolved."
+msgstr "Marcada como resuelta."
+
+msgctxt "SolicitudesClientes"
+msgid "Asked the gateway again."
+msgstr "Le volvimos a preguntar a la pasarela."
+
+msgctxt "SolicitudesClientes"
+msgid "The customer sees it in their app."
+msgstr "El cliente lo ve en su app."
+
+msgctxt "SolicitudesClientes"
+msgid "Tell the customer by WhatsApp or email."
+msgstr "Avísale al cliente por WhatsApp o correo."
+
+msgctxt "SolicitudesClientes"
+msgid "1 waiting"
+msgstr "1 pendiente"
+
+msgctxt "SolicitudesClientes"
+msgid "{0} waiting"
+msgstr "{0} pendientes"
+
+msgctxt "SolicitudesClientes"
+msgid "Loading…"
+msgstr "Cargando…"
+
+msgctxt "SolicitudesClientes"
+msgid "Try again"
+msgstr "Intentar de nuevo"
+
+msgctxt "SolicitudesClientes"
+msgid "Reach the customer"
+msgstr "Contactar al cliente"
+
+msgctxt "SolicitudesClientes"
+msgid "Pickup or visit"
+msgstr "Recolección o visita"
+
+msgctxt "SolicitudesClientes"
+msgid "Day and time"
+msgstr "Día y hora"
+
+msgctxt "SolicitudesClientes"
+msgid "Book it in appointments"
+msgstr "Agendarla en citas"
+
+msgctxt "SolicitudesClientes"
+msgid "Message for the customer"
+msgstr "Mensaje para el cliente"
+
+msgctxt "SolicitudesClientes"
+msgid "This customer gets no notices in the app: answer by WhatsApp or email."
+msgstr "Este cliente no recibe avisos en la app: respóndele por WhatsApp o correo."
+
+msgctxt "SolicitudesClientes"
+msgid "Activity"
+msgstr "Actividad"
+
+msgctxt "SolicitudesClientes"
+msgid "Cancel"
+msgstr "Cancelar"
+
+msgctxt "SolicitudesClientes"
+msgid "We pick it up"
+msgstr "Pasamos por él"
+
+msgctxt "SolicitudesClientes"
+msgid "They bring it"
+msgstr "Lo trae a la tienda"
+
+msgctxt "SolicitudesClientes"
+msgid "This request could not open. Try again."
+msgstr "No se pudo abrir esta solicitud. Intenta de nuevo."
+
+msgctxt "SolicitudesClientes"
+msgid "That step did not go through. Try again."
+msgstr "No se pudo hacer ese paso. Intenta de nuevo."
+
+msgctxt "SolicitudesClientes"
+msgid "What your customers ask"
+msgstr "Lo que piden tus clientes"
+
+msgctxt "SolicitudesClientes"
+msgid "Customer requests"
+msgstr "Solicitudes de clientes"
+
+msgctxt "SolicitudesClientes"
+msgid "Choose a shop"
+msgstr "Elige una tienda"
+
+msgctxt "SolicitudesClientes"
+msgid "See what waits"
+msgstr "Ver lo pendiente"
+
+msgctxt "SolicitudesClientes"
+msgid "See closed, last 60 days"
+msgstr "Ver cerradas, últimos 60 días"
+
+msgctxt "SolicitudesClientes"
+msgid "The requests could not open. Try again."
+msgstr "No se pudieron abrir las solicitudes. Intenta de nuevo."
+
+msgctxt "SolicitudesClientes"
+msgid "Warranty request"
+msgstr "Garantía"
+
+msgctxt "SolicitudesClientes"
+msgid "Kind of request"
+msgstr "Tipo de solicitud"
+
+msgctxt "AppClientes"
+msgid "Business days to answer a privacy request"
+msgstr "Días hábiles para responder una solicitud de datos"
+
+msgctxt "AppClientes"
+msgid "Use the legal days ({0})"
+msgstr "Usar los días de la ley ({0})"
+
+msgctxt "AppClientes"
+msgid "Write the days as a whole number from 1 to {0}."
+msgstr "Escribe los días como número entero de 1 a {0}."
+
+# «Solicitudes de clientes» as a Ventas section (navModel solicitudes) and a return's pickup, visit or hand-over at the shop (components/solicitudesClientes, msgctxt SolicitudesClientes).
+
+# The Ventas section's label (SidebarEntry and «Más» translate it without a context).
+msgid "Customer requests"
+msgstr "Solicitudes de clientes"
+
+msgctxt "SolicitudesClientes"
+msgid "They collect it at the shop"
+msgstr "Lo recogen en tienda"
+
+msgctxt "SolicitudesClientes"
+msgid "Hand-over at the shop"
+msgstr "Entrega en tienda"
+
+msgctxt "SolicitudesClientes"
+msgid "Pickup {0}"
+msgstr "Recolección {0}"
+
+msgctxt "SolicitudesClientes"
+msgid "At the shop {0}"
+msgstr "En tienda {0}"
+
+msgctxt "SolicitudesClientes"
+msgid "Visit {0}"
+msgstr "Visita {0}"
+
+msgctxt "SolicitudesClientes"
+msgid "Pickup today"
+msgstr "Recolección hoy"
+
+msgctxt "SolicitudesClientes"
+msgid "At the shop today"
+msgstr "En tienda hoy"
+
+msgctxt "SolicitudesClientes"
+msgid "Visit today"
+msgstr "Visita hoy"
+
+msgctxt "SolicitudesClientes"
+msgid "Note"
+msgstr "Nota"
+
+msgctxt "SolicitudesClientes"
+msgid "Note for the customer"
+msgstr "Nota para el cliente"
+
+msgctxt "SolicitudesClientes"
+msgid "Bring the box and the ticket"
+msgstr "Trae la caja y el ticket"
+
+msgctxt "SolicitudesClientes"
+msgid "They read it with the date in their account."
+msgstr "La lee con la fecha en su cuenta."
+
+#: frontend/src/components/cuenta/CuponesEnLinea.vue
+msgctxt "Cuenta"
+msgid "Coupons in the online store"
+msgstr "Cupones en la tienda en línea"
+
+#: frontend/src/components/cuenta/CuponesEnLinea.vue
+msgctxt "Cuenta"
+msgid "Your customers can use coupons when they pay online. Turn it off if you sell online only at list prices."
+msgstr "Tus clientes pueden usar cupones al pagar en línea. Apágalo si en línea vendes solo a precio de lista."
+
+#: frontend/src/components/cuenta/CuponesEnLinea.vue
+msgctxt "Cuenta"
+msgid "Whoever runs the system can change it."
+msgstr "Quien administra el sistema puede cambiarlo."
+
+#: frontend/src/components/cuenta/CuponesEnLinea.vue
+msgctxt "Cuenta"
+msgid "Your customers can use coupons online."
+msgstr "Tus clientes ya pueden usar cupones en línea."
+
+#: frontend/src/components/cuenta/CuponesEnLinea.vue
+msgctxt "Cuenta"
+msgid "Your online store takes no coupons now."
+msgstr "Tu tienda en línea ya no acepta cupones."
+
+#: frontend/src/components/cuenta/CuponesEnLinea.vue
+msgctxt "Cuenta"
+msgid "It did not change. Try again."
+msgstr "No cambió. Inténtalo de nuevo."
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "Your online store takes coupons."
+msgstr "Tu tienda en línea acepta cupones."
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "Your online store takes no coupons: it sells at list prices. Coupons work only at the register."
+msgstr "Tu tienda en línea no acepta cupones: vende a precio de lista. Los cupones solo se usan en caja."
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "It can be turned on once your online store takes coupons."
+msgstr "Se puede encender cuando tu tienda en línea acepte cupones."
+
+#: frontend/src/components/appClientes/view.js
+msgctxt "AppClientes"
+msgid "Change it in Business settings"
+msgstr "Cambiarlo en Ajustes del negocio"

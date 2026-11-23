@@ -90,7 +90,7 @@ const flush = async () => {
     await nextTick()
   }
 }
-async function mount() {
+async function mount(query = null) {
   state.call.mockResolvedValueOnce(JSON.parse(JSON.stringify(PAGE)))
   host = document.createElement('div')
   document.body.appendChild(host)
@@ -98,6 +98,7 @@ async function mount() {
     history: createMemoryHistory(),
     routes: [{ path: '/:all(.*)', component: { render: () => null } }],
   })
+  if (query) await router.push({ path: '/negocio', query })
   app = createApp({ render: () => h(AjustesNegocio) })
   app.config.globalProperties.__ = globalThis.__
   app.use(router)
@@ -180,5 +181,62 @@ describe('Ajustes del negocio', () => {
     ).toBe(true)
     await search('nada así')
     expect($('[data-negocio-vacio]')).toBeTruthy()
+  })
+
+  it('?ajuste= brings the row another page sends the owner to into focus', async () => {
+    await mount({ ajuste: 'scanner.conteo_ui' })
+    expect(document.activeElement).toBe(switchOf('scanner.conteo_ui'))
+    app.unmount()
+    host.remove()
+    // a key the page does not list focuses nothing
+    await mount({ ajuste: 'doco.online_coupons' })
+    expect(document.activeElement).toBe(document.body)
+    expect($('[data-fresh]')).toBeNull()
+  })
+
+  it('?ajuste= washes that row once, so the owner sees which switch it is', async () => {
+    // the page's own waits still run; the wash's 2.4 s are skipped
+    vi.useFakeTimers({
+      toFake: ['setTimeout', 'clearTimeout'],
+      shouldAdvanceTime: true,
+    })
+    try {
+      await mount({ ajuste: 'scanner.conteo_ui' })
+      // the shell's [data-fresh] wash, on that row only
+      expect($$('[data-fresh]').map((el) => el.dataset.negocio)).toEqual([
+        'scanner.conteo_ui',
+      ])
+      // then it fades and the row is plain again
+      vi.advanceTimersByTime(2400)
+      await nextTick()
+      expect($('[data-fresh]')).toBeNull()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('a plain visit washes no row', async () => {
+    await mount()
+    expect($('[data-fresh]')).toBeNull()
+  })
+
+  it('?ajuste= finds the first of a setting with one row per shop', async () => {
+    PAGE.curated.push({
+      key: 'doco.online_coupons:Tienda Norte',
+      area: 'ventas',
+      kind: 'switch',
+      label: 'Cupones en la tienda en línea: Norte',
+      on: 'Tus clientes pueden usar cupones al pagar en línea.',
+      value: true,
+      can_change: true,
+    })
+    try {
+      await mount({ ajuste: 'doco.online_coupons' })
+      expect(document.activeElement).toBe(
+        switchOf('doco.online_coupons:Tienda Norte'),
+      )
+    } finally {
+      PAGE.curated.pop()
+    }
   })
 })

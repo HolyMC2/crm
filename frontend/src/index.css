@@ -127,6 +127,23 @@ html {
 :root[data-theme='dark'] [data-sonner-toast] {
   --ink-blue-link: var(--dark-blue-800);
 }
+/* A toast sat on an open bottom sheet's action bar («Cancelar», «Guardar»)
+   for its few seconds, so a quick series of taps hid the buttons that end
+   the sheet. While a sheet with actions is open, toasts rise above that bar:
+   one row of buttons is 68px (12 + 44 + 12, ui/BottomSheet), each stacked
+   row adds 52px (44 + the 8px gap), plus 8px of air. */
+body:has([data-ui-sheet-actions])
+  [data-sonner-toaster][data-y-position='bottom'] {
+  bottom: calc(76px + env(safe-area-inset-bottom));
+}
+body:has([data-ui-sheet-actions] > :nth-child(2))
+  [data-sonner-toaster][data-y-position='bottom'] {
+  bottom: calc(128px + env(safe-area-inset-bottom));
+}
+body:has([data-ui-sheet-actions] > :nth-child(3))
+  [data-sonner-toaster][data-y-position='bottom'] {
+  bottom: calc(180px + env(safe-area-inset-bottom));
+}
 /* The root colour shows wherever the page has not painted yet, such as the
    frame while the on-screen keyboard resizes the viewport (resizes-content).
    Keep it on the active theme's surface so dark mode never flashes white. */

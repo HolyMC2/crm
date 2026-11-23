@@ -320,10 +320,6 @@ export function offerPreview(draft, currency = 'MXN') {
         ? __('the whole ticket from {0}', [money(draft.minimum, currency)])
         : __('the whole ticket')
       : draft.pick?.title || draft.pick?.name || '…'
-  const until =
-    !draft.until || draft.until === 'none'
-      ? __('with no end date')
-      : __('until {0}', [formatDate(draft.until)])
   // A product or category promotion by itself is a price rule: the online
   // store prices it too (doco.fidelidad.reglas). The whole ticket is the register's.
   const how =
@@ -332,6 +328,13 @@ export function offerPreview(draft, currency = 'MXN') {
       : draft.target === 'ticket'
         ? __('by itself at the register')
         : __('by itself at the register and in the online store')
+  // No end chosen yet says nothing about the end: «sin fecha de fin» is a
+  // choice of its own, and «Iniciar» still asks for one (offerMissing).
+  if (!draft.until) return __('{0} off {1}, {2}.', [amount, target, how])
+  const until =
+    draft.until === 'none'
+      ? __('with no end date')
+      : __('until {0}', [formatDate(draft.until)])
   return __('{0} off {1}, {2}, {3}.', [amount, target, until, how])
 }
 

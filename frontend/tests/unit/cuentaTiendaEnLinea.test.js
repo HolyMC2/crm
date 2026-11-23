@@ -17,12 +17,18 @@ const state = vi.hoisted(() => ({
   read: vi.fn(),
   mutate: vi.fn(),
   toast: vi.fn(),
+  toastError: vi.fn(),
+  coupons: vi.fn(),
+  saveCoupons: vi.fn(),
 }))
 vi.mock('frappe-ui', async () => {
   const { h } = await import('vue')
   return {
     call: vi.fn(async () => ({})),
-    toast: { success: (...args) => state.toast(...args), error: vi.fn() },
+    toast: {
+      success: (...args) => state.toast(...args),
+      error: (...args) => state.toastError(...args),
+    },
     Button: {
       props: ['label', 'variant', 'loading', 'disabled', 'theme'],
       emits: ['click'],
@@ -68,6 +74,8 @@ vi.mock('@/components/cuenta/api', async (importOriginal) => ({
   seam: (...args) => state.seam(...args),
   storeReadiness: (...args) => state.readiness(...args),
   turnOnStore: (...args) => state.turnOn(...args),
+  onlineCoupons: (...args) => state.coupons(...args),
+  saveOnlineCoupons: (...args) => state.saveCoupons(...args),
 }))
 
 import { createMemoryHistory, createRouter } from 'vue-router'
@@ -78,6 +86,7 @@ import {
   POLL_MS,
   addressView,
   checklistRows,
+  couponsView,
   stateChip,
   turnOnRefusal,
   turnOnView,
@@ -870,5 +879,93 @@ describe('Tienda shows it only where Boat offers it', () => {
     expect(await find('[data-testid="cuenta-tienda-en-linea"]')).not.toBe(null)
     await flush()
     expect(state.readiness).toHaveBeenCalledTimes(1)
+  })
+})
+
+// «Cupones en la tienda en línea» (doco storefront_online_coupons): one switch
+// for whether the online checkout takes coupons, its own read under the steps.
+describe('«Cupones en la tienda en línea»', () => {
+  const SHOP = { profile: 'Tienda', on: true, can_change: true }
+  const couponSwitch = () =>
+    document.querySelector('[data-testid="tienda-cupones-switch"]')
+
+  it('reads doco’s answer as the row shows it', () => {
+    expect(couponsView(null)).toBe(null)
+    expect(couponsView({ profile: null, on: true })).toBe(null)
+    expect(couponsView(SHOP)).toEqual({ on: true, canChange: true })
+    expect(couponsView({ profile: 'Tienda', on: false })).toEqual({
+      on: false,
+      canChange: false,
+    })
+    // an older answer without `on` reads as on, like the cell
+    expect(couponsView({ profile: 'Tienda' }).on).toBe(true)
+  })
+
+  it('the owner turns it off; the cell’s answer stays and the toast says it', async () => {
+    state.readiness.mockResolvedValue(READY)
+    state.coupons.mockResolvedValue(SHOP)
+    state.saveCoupons.mockResolvedValue({ ...SHOP, on: false })
+    mount(TiendaEnLinea)
+    await flush()
+    const button = await find('[data-testid="tienda-cupones-switch"]')
+    expect(
+      [
+        ...document.querySelectorAll(
+          '[data-testid="tienda-cupones"] label span',
+        ),
+      ].map((span) => span.textContent.trim()),
+    ).toEqual([
+      'Coupons in the online store',
+      'Your customers can use coupons when they pay online. Turn it off if you sell online only at list prices.',
+    ])
+    expect(button.getAttribute('aria-checked')).toBe('true')
+    button.click()
+    await flush()
+    expect(state.saveCoupons).toHaveBeenCalledWith(false)
+    expect(couponSwitch().getAttribute('aria-checked')).toBe('false')
+    expect(state.toast).toHaveBeenCalledWith(
+      'Your online store takes no coupons now.',
+    )
+  })
+
+  it('a refusal puts the switch back and says why', async () => {
+    state.readiness.mockResolvedValue(READY)
+    state.coupons.mockResolvedValue(SHOP)
+    state.saveCoupons.mockRejectedValue({ messages: ['No tienes permiso.'] })
+    mount(TiendaEnLinea)
+    await flush()
+    ;(await find('[data-testid="tienda-cupones-switch"]')).click()
+    await flush()
+    expect(couponSwitch().getAttribute('aria-checked')).toBe('true')
+    expect(state.toastError).toHaveBeenCalled()
+  })
+
+  it('whoever cannot change it reads it, disabled, with who can', async () => {
+    state.readiness.mockResolvedValue(READY)
+    state.coupons.mockResolvedValue({ ...SHOP, on: false, can_change: false })
+    mount(TiendaEnLinea)
+    await flush()
+    const button = await find('[data-testid="tienda-cupones-switch"]')
+    expect(button.disabled).toBe(true)
+    expect(button.getAttribute('aria-checked')).toBe('false')
+    expect(text('[data-testid="tienda-cupones-solo-ver"]')).toBe(
+      'Whoever runs the system can change it.',
+    )
+    button.click()
+    await flush()
+    expect(state.saveCoupons).not.toHaveBeenCalled()
+  })
+
+  it('no row where there is no shop or the read is refused', async () => {
+    state.readiness.mockResolvedValue(READY)
+    state.coupons.mockRejectedValue(new Error('403'))
+    mount(TiendaEnLinea)
+    await flush()
+    expect(
+      await find(
+        '[data-testid="tienda-pasos"], [data-testid="tienda-encendida"], [data-testid="tienda-encender-boton"]',
+      ),
+    ).not.toBe(null)
+    expect(document.querySelector('[data-testid="tienda-cupones"]')).toBe(null)
   })
 })

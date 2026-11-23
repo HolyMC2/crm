@@ -25,6 +25,13 @@
         </p>
       </div>
 
+      <ClientesVista
+        v-if="detail?.customers"
+        :offer="detail"
+        :can-edit="canEdit"
+        @changed="customersChanged"
+      />
+
       <div
         v-if="row.coupon_based"
         class="grid grid-cols-2 gap-px overflow-hidden rounded-7 border border-outline-gray-2 bg-surface-gray-2"
@@ -161,6 +168,7 @@ import { toast } from 'frappe-ui'
 import { BottomSheet, ChipGroup, StatusChip } from '@/components/ui'
 import { BTN, copyText } from '@/documentos/tools'
 import { errorText } from '@/documentos/api'
+import ClientesVista from './ClientesVista.vue'
 import {
   couponChip,
   couponUses,
@@ -240,6 +248,12 @@ function endToday() {
     return
   }
   change('end')
+}
+
+// «Mostrar a clientes» saved: the sheet and the board's row take the new detail
+function customersChanged(next) {
+  detail.value = next
+  emit('changed', next)
 }
 
 async function copy(code) {

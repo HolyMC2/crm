@@ -214,3 +214,13 @@ export function turnOnRefusal(answer) {
       })),
   }
 }
+
+/**
+ * «Cupones en la tienda en línea» from doco's answer: null (no row) without a
+ * shop or an answer; else whether it is on and whether this person may change
+ * it. An older answer without `on` reads as on, like the cell.
+ */
+export function couponsView(answer) {
+  if (!answer || typeof answer !== 'object' || !answer.profile) return null
+  return { on: answer.on !== false, canChange: answer.can_change === true }
+}

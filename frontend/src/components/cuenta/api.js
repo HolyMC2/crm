@@ -11,12 +11,24 @@ const EXPORT = 'doco.docoutils.data_export.'
 // plan's roles): this site's checklist, and turning the shop on, which asks
 // Boat to publish it. It moves no money.
 const STORE = 'doco.docoutils.storefront_readiness.'
+// «Cupones en la tienda en línea» is doco's too (doco.docoutils.storefront_online_coupons):
+// whether the shop's online checkout takes coupons. Read: System Manager or
+// Sales Manager; changing it: whoever may write the shop (System Manager).
+const COUPONS = 'doco.docoutils.storefront_online_coupons.'
 
 /** The store's checklist and whether it is on (POST: a live address is saved as its domain). */
 export const storeReadiness = () => call(STORE + 'readiness')
 
 /** Turns the store on when every step passes (POST, the shop's administrator only). */
 export const turnOnStore = () => call(STORE + 'turn_on')
+
+/** {profile, on, can_change}: whether the online store takes coupons (GET). */
+export const onlineCoupons = () =>
+  frappeRequest({ url: COUPONS + 'state', method: 'GET' })
+
+/** Turns the online store's coupons on or off (POST); answers the same shape. */
+export const saveOnlineCoupons = (on) =>
+  call(COUPONS + 'save', { on: on ? 1 : 0 })
 
 /** The latest export and whether a new one may start (GET only). */
 export const exportStatus = () =>
