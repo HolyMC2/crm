@@ -490,7 +490,7 @@ async function pickColor(row, accent) {
   background: var(--swatch-light);
   color: var(--swatch-ink-light);
 }
-:global(:root[data-theme='dark']) .negocio-swatch {
+:root[data-theme='dark'] .negocio-swatch {
   background: var(--swatch-dark);
   color: var(--swatch-ink-dark);
 }
