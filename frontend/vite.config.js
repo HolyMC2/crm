@@ -141,17 +141,36 @@ export default defineConfig(async () => {
       }),
     ],
     resolve: {
-      alias: {
-        '@': path.resolve(__dirname, 'src'),
+      alias: [
+        { find: '@', replacement: path.resolve(__dirname, 'src') },
         // frappe's `ui/` package, vendored (src/framework-ui/SOURCE.json).
-        '@framework/ui': path.resolve(__dirname, 'src/framework-ui'),
+        {
+          find: '@framework/ui',
+          replacement: path.resolve(__dirname, 'src/framework-ui'),
+        },
         // Single-component entry points, so form/dialog widgets that the
         // first screen does not need can load lazily (src/utils/lazyGlobals.js).
-        'frappe-ui-components': path.resolve(
-          __dirname,
-          'node_modules/frappe-ui/src/components',
-        ),
-      },
+        {
+          find: 'frappe-ui-components',
+          replacement: path.resolve(
+            __dirname,
+            'node_modules/frappe-ui/src/components',
+          ),
+        },
+        // `frappe-ui` is the real package with the kit's Button and Switch
+        // (src/kit/frappe-ui.js); `frappe-ui-real` reaches the package itself.
+        {
+          find: /^frappe-ui$/,
+          replacement: path.resolve(__dirname, 'src/kit/frappe-ui.js'),
+        },
+        {
+          find: /^frappe-ui-real$/,
+          replacement: path.resolve(
+            __dirname,
+            'node_modules/frappe-ui/src/index.ts',
+          ),
+        },
+      ],
       // the editor packages must resolve to one copy each: tiptap imports
       // `@tiptap/pm/model` while prosemirror-state/transform/tables import bare
       // `prosemirror-model`, so a nested install of either throws "multiple

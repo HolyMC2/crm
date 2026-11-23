@@ -48,14 +48,32 @@ export default defineConfig({
     },
   },
   resolve: {
-    alias: {
-      '@': path.resolve(__dirname, 'src'),
+    alias: [
+      { find: '@', replacement: path.resolve(__dirname, 'src') },
       // frappe's `ui/` package, vendored (src/framework-ui/SOURCE.json).
-      '@framework/ui': path.resolve(__dirname, 'src/framework-ui'),
-      'frappe-ui-components': path.resolve(
-        __dirname,
-        'node_modules/frappe-ui/src/components',
-      ),
-    },
+      {
+        find: '@framework/ui',
+        replacement: path.resolve(__dirname, 'src/framework-ui'),
+      },
+      {
+        find: 'frappe-ui-components',
+        replacement: path.resolve(
+          __dirname,
+          'node_modules/frappe-ui/src/components',
+        ),
+      },
+      // the kit's Button and Switch inside frappe-ui (src/kit/frappe-ui.js)
+      {
+        find: /^frappe-ui$/,
+        replacement: path.resolve(__dirname, 'src/kit/frappe-ui.js'),
+      },
+      {
+        find: /^frappe-ui-real$/,
+        replacement: path.resolve(
+          __dirname,
+          'node_modules/frappe-ui/src/index.ts',
+        ),
+      },
+    ],
   },
 })

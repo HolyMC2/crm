@@ -1,4 +1,4 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.2.0 (994848826b28). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.3.0 (1df9eacee039). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <!-- «Recientes» as bubbles, four to a row (WhatsApp's recent searches): one
      tap back into a record. Neutral initials, two-line names. -->
 <template>

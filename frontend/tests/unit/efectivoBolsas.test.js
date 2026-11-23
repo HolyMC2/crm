@@ -30,7 +30,13 @@ vi.mock('frappe-ui', async () => {
 })
 vi.mock('@/components/ui', async () => {
   const { h } = await import('vue')
+  const { chipClass } = await import('@/components/ui/chipClass')
   return {
+    // the kit's own controls, the sheet as a plain box
+    Button: (await import('@/components/ui/Button.vue')).default,
+    Field: (await import('@/components/ui/Field.vue')).default,
+    Switch: (await import('@/components/ui/Switch.vue')).default,
+    chipClass,
     BottomSheet: {
       props: ['open', 'title', 'subtitle'],
       setup:
@@ -119,9 +125,24 @@ describe('Bolsas al cerrar', () => {
     const faces = [...host.querySelectorAll('[data-face]')].map((li) =>
       Number(li.dataset.face),
     )
-    // $200 and up go to the bank, so they stay out of the float rows.
-    expect(faces).toEqual([10000, 5000, 2000, 1000, 500, 200, 100, 50])
-    expect(host.textContent).toContain('Agregar billetes grandes al fondo')
+    // every face in one grid, the big bills too: nothing behind a second tap
+    expect(faces).toEqual([
+      100000, 50000, 20000, 10000, 5000, 2000, 1000, 500, 200, 100, 50,
+    ])
+    expect(host.querySelector('[data-face-grid]')).not.toBeNull()
+    // «Al banco desde»: every bill as a chip, the stored one on
+    expect(
+      [...host.querySelectorAll('[data-bank-face]')].map((b) =>
+        Number(b.dataset.bankFace),
+      ),
+    ).toEqual([100000, 50000, 20000, 10000, 5000, 2000, 1000, 500, 200, 100])
+    expect(
+      host
+        .querySelector('[data-bank-face="20000"]')
+        .getAttribute('aria-checked'),
+    ).toBe('true')
+    // no hint lines: a label and its state
+    expect(host.querySelectorAll('p:not([role])')).toHaveLength(0)
   })
 
   it('turns the plan on and sends the pieces, the change and the bank bill', async () => {

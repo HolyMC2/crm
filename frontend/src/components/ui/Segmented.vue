@@ -1,4 +1,4 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.2.0 (994848826b28). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.3.0 (1df9eacee039). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <template>
   <!-- Two to four views of the same thing (Shell SPEC §2.2.4): one tonal
        track (container-high), equal segments with no border or dividers, the

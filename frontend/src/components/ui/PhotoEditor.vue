@@ -1,4 +1,4 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.2.0 (994848826b28). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.3.0 (1df9eacee039). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <template>
   <!-- The quick fixes a shop photo needs, on the worker's own device: turn it,
        mirror it, crop it (the frame is on from the start; a shape is one tap)

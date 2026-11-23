@@ -250,16 +250,38 @@ export function minorCount(rows) {
 
 export const fromMinor = (minor) => (Number(minor) || 0) / 100
 
-export function money(amount, currency = 'MXN') {
+/** The amount in the safe's currency; without one, the number alone. */
+export function money(amount, currency) {
   if (amount === null || amount === undefined || amount === '') return '—'
   const n = Number(amount) || 0
   const text = formatMoney(Math.abs(n), currency)
   return n < 0 ? `−${text}` : text
 }
 
-/** «$500» for a face, «50¢» under a peso. */
-export function faceLabel(face) {
-  return face >= 100 ? `$${(face / 100).toLocaleString('es-MX')}` : `${face}¢`
+/** A bill or coin (minor units) in the safe's currency: «$500», «$0.50»;
+ *  whole faces without decimals. Without a currency, the number alone. */
+export function faceLabel(face, currency) {
+  const amount = (Number(face) || 0) / 100
+  const whole = Number.isInteger(amount)
+  const digits = {
+    minimumFractionDigits: whole ? 0 : 2,
+    maximumFractionDigits: 2,
+  }
+  try {
+    return new Intl.NumberFormat(
+      globalThis.window?.lang || undefined,
+      currency
+        ? {
+            style: 'currency',
+            currency,
+            currencyDisplay: 'narrowSymbol',
+            ...digits,
+          }
+        : digits,
+    ).format(amount)
+  } catch {
+    return new Intl.NumberFormat(undefined, digits).format(amount)
+  }
 }
 
 // Words ------------------------------------------------------------------

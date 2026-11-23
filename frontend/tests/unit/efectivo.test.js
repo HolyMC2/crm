@@ -60,8 +60,11 @@ describe('counting', () => {
       source: 'denominations',
       denominations: [{ value_minor: '50000', quantity: 1 }],
     })
-    expect(faceLabel(100000)).toBe('$1,000')
-    expect(faceLabel(50)).toBe('50¢')
+    // the safe's own currency, whole faces without decimals; none: the number
+    expect(faceLabel(100000, 'MXN')).toBe('$1,000')
+    expect(faceLabel(50, 'MXN')).toBe('$0.50')
+    expect(faceLabel(2000, 'EUR')).toBe('€20')
+    expect(faceLabel(50000)).toBe('500')
   })
 })
 

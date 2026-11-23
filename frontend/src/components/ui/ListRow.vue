@@ -1,4 +1,4 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.2.0 (994848826b28). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.3.0 (1df9eacee039). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <template>
   <!-- One list row (Shell SPEC §2.2.5, M3 list item): a leading avatar or
        icon, the title (wraps to two lines, never letter by letter), one

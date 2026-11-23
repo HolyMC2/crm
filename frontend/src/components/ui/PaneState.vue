@@ -1,4 +1,4 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.2.0 (994848826b28). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.3.0 (1df9eacee039). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <template>
   <!-- One pane-level state (CRM S5.4): loading, empty, denied or error, each
        with words and, where it helps, the action that moves the worker on.
@@ -42,7 +42,7 @@
 <script setup>
 import { t } from './host'
 import { computed } from 'vue'
-import { Button } from 'frappe-ui'
+import Button from './Button.vue'
 
 const props = defineProps({
   /** 'loading' | 'empty' | 'denied' | 'error' */

@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/ui@0.2.0 (994848826b28). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory.
+// Vendored from muelle/workspace/packages/ui@0.3.0 (1df9eacee039). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory.
 // The Muelle shell's shared screen kit: the crm shell, Taller and Clínica
 // build their lists, records and sheets from it. Do and don't for each:
 // crm/docs/design/MOBILE_REFERENCES.md «Componentes»; live demo at /crm/_ui.
@@ -8,15 +8,18 @@
 // demand, so the pages that never open a photo do not carry them.
 export { default as AppBar } from './AppBar.vue'
 export { default as BottomSheet } from './BottomSheet.vue'
+export { default as Button } from './Button.vue'
 export { default as ChipDrill } from './ChipDrill.vue'
 export { default as ChipGroup } from './ChipGroup.vue'
 export { default as DateField } from './DateField.vue'
 export { default as EmptyState } from './EmptyState.vue'
 export { default as ExpandTransition } from './ExpandTransition.vue'
 export { default as Fab } from './Fab.vue'
+export { default as Field } from './Field.vue'
 export { default as FilterChips } from './FilterChips.vue'
 export { default as KpiGrid } from './KpiGrid.vue'
 export { default as KpiTile } from './KpiTile.vue'
+export { default as ListGroup } from './ListGroup.vue'
 export { default as ListRow } from './ListRow.vue'
 export { default as PageHeader } from './PageHeader.vue'
 export { default as PaneState } from './PaneState.vue'
@@ -24,6 +27,7 @@ export { default as RecentPicks } from './RecentPicks.vue'
 export { default as SearchPanel } from './SearchPanel.vue'
 export { default as Segmented } from './Segmented.vue'
 export { default as StatusChip } from './StatusChip.vue'
+export { default as Switch } from './Switch.vue'
 export { default as ToolDock } from './ToolDock.vue'
 export { chipClass, dotBinding } from './chipClass'
 export { primaryDock } from './primaryDock'

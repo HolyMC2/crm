@@ -1,4 +1,4 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.2.0 (994848826b28). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.3.0 (1df9eacee039). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <template>
   <!-- The one phone top app bar (Shell SPEC §2.2.1), grown from PowerAppBar:
        up/back · title (optionally a scope picker) · ≤3 icon actions · bell.
