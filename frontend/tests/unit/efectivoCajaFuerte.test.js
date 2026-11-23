@@ -1,5 +1,5 @@
 // Efectivo › a safe's settings sheet (posawesome safe_settings_api): the bags at
-// closing and the bank trip, one «Guardar».
+// closing, the bank trip and the drawer's limit with the mid-shift drop, one «Guardar».
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick } from 'vue'
 
@@ -55,7 +55,7 @@ vi.mock('@/components/ui', async () => {
 import CajaFuerteSheet from '@/components/efectivo/CajaFuerteSheet.vue'
 
 const API = 'posawesome.posawesome.api.cash_custody.safe_settings_api'
-const view = (plan = {}, trip = {}) => ({
+const view = (plan = {}, trip = {}, drop = null) => ({
   safe: 'CASH-SAFE-1',
   title: 'Caja fuerte centro',
   currency: 'MXN',
@@ -75,6 +75,7 @@ const view = (plan = {}, trip = {}) => ({
     ...plan,
   },
   bank_trip: { on: false, amount: null, days: null, ...trip },
+  ...(drop ? { drop } : {}),
 })
 
 const flush = async () => {
@@ -205,6 +206,52 @@ describe('Caja fuerte: bolsas al cerrar y viaje al banco', () => {
     await flush()
     const [[, args]] = saved()
     expect(JSON.parse(args.bank_trip)).toEqual({ on: 1, amount: 0, days: 3 })
+  })
+
+  it('sets the drawer limit and the mid-shift drop in the same save', async () => {
+    state.call.mockResolvedValue(
+      view({}, {}, { on: false, drawer_limit: 5000, float_target: 1000 }),
+    )
+    mount()
+    await flush()
+    expect(host.querySelector('input[data-retiros-limite]').value).toBe('5000')
+    host.querySelector('[data-retiros-on]').click()
+    await flush()
+    const limit = host.querySelector('input[data-retiros-limite]')
+    limit.value = '6000'
+    limit.dispatchEvent(new Event('input'))
+    await flush()
+    host.querySelector('[data-bolsas-guardar]').click()
+    await flush()
+    const [[, args]] = saved()
+    expect(JSON.parse(args.drop)).toEqual({ on: 1, drawer_limit: 6000 })
+  })
+
+  it('the drop needs a limit above the float it leaves in the drawer', async () => {
+    state.call.mockResolvedValue(
+      view({}, {}, { on: true, drawer_limit: 800, float_target: 1000 }),
+    )
+    mount()
+    await flush()
+    expect(host.querySelector('[data-bolsas-guardar]').disabled).toBe(true)
+    expect(host.querySelector('[data-caja-retiros]').textContent).toContain(
+      'arriba del fondo',
+    )
+    // Off, the limit alone is just the drawer's limit.
+    host.querySelector('[data-retiros-on]').click()
+    await flush()
+    expect(host.querySelector('[data-bolsas-guardar]').disabled).toBe(false)
+  })
+
+  it('an older server without the drop shows no drop section and sends none', async () => {
+    state.call.mockResolvedValue(view())
+    mount()
+    await flush()
+    expect(host.querySelector('[data-caja-retiros]')).toBeNull()
+    host.querySelector('[data-bolsas-guardar]').click()
+    await flush()
+    const [[, args]] = saved()
+    expect(args.drop).toBeUndefined()
   })
 
   it('the bank trip needs an amount or days', async () => {

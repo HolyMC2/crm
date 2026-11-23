@@ -2,6 +2,12 @@
 
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
+## 2026-11-23 — Efectivo: the drawer's limit and the mid-shift drop in the safe's sheet (lane efectivo-retiro; not deployed)
+
+- **Change:** `CajaFuerteSheet.vue` gains «Retiros de caja»: the switch that makes the register propose the drop, and «Límite en caja» (the drawer's limit, editable from the SPA for the first time). On needs a limit above the float the drop leaves; the sheet says so in place and the one «Guardar» waits. `efectivo.js` `safeSettingsSave` sends `drop: {on, drawer_limit}`; an older server without the block shows no section and is sent none.
+- **Tests:** `efectivoCajaFuerte.test.js` (+3: the limit and the switch in one save, a limit under the float, an older server).
+- **Rollout:** needs posawesome from the same lane.
+
 ## 2026-11-23 — Efectivo: the bank trip is one card; the safe's sheet sets the bags and the trip (lane efectivo-viaje; not deployed)
 
 - **Change:** `components/efectivo/ViajeCard.vue`: the steps «Salir · Ficha», the reason, the total of the checked bags (or «N bolsas» without the shop's money), the safe and its bank, every bag checked (a tap leaves one behind, the last stays), «Lleva <nombre>» that becomes «Quién las lleva», and the one filled action; on the way, «Folio de la ficha» with «Registrar depósito», or «Regresó sin depositar» with why. Efectivo shows the trip and each trip on its way as cards (before the cash on a phone, first in the work column on a desk) and counts them in «Te toca»; every bank step (a bag's page, a selection) opens the same card (`steps.js` `viaje`, `StepHost.vue`). `CajaFuerteSheet.vue` replaces `BolsasSheet.vue`: the safe's name as title, «Bolsas al cerrar» and «Viaje al banco» each a switch that opens its fields in place («Al juntar», «O a los N días»; the first switch-on proposes 3 days), one «Guardar» (posawesome `safe_settings_api`). Hoy's icon for the trip (`useHoy.js`).

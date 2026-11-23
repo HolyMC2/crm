@@ -1,8 +1,9 @@
 <template>
   <!-- One safe's settings (posawesome safe_settings_api), one «Guardar»:
        the bags at closing (the float's pieces, the change the safe keeps,
-       where the bank bills start) and the bank trip (an amount, some days,
-       or both). Each switch opens its own fields in place. -->
+       where the bank bills start), the bank trip (an amount, some days, or
+       both) and the drawer's limit with the mid-shift drop. Each switch
+       opens its own fields in place. -->
   <BottomSheet
     :open="open"
     :title="safe?.title || 'Caja fuerte'"
@@ -162,6 +163,29 @@
           </div>
         </template>
       </section>
+
+      <section
+        v-if="hasDrop"
+        class="space-y-3 rounded-7 bg-[var(--muelle-surface-container-low)] p-3"
+        aria-label="Retiros de caja"
+        data-caja-retiros
+      >
+        <Switch
+          v-model="drop.on"
+          label="Retiros de caja"
+          :disabled="busy"
+          data-retiros-on
+        />
+        <Field
+          v-model="drop.limit"
+          type="money"
+          :currency="currency"
+          label="Límite en caja"
+          :disabled="busy"
+          :error="limitError"
+          data-retiros-limite
+        />
+      </section>
     </div>
 
     <template #actions>
@@ -232,8 +256,11 @@ const faces = ref([])
 const currency = ref('')
 const hasPlan = ref(false)
 const hasTrip = ref(false)
+const hasDrop = ref(false)
 const plan = reactive({ on: false, mix: {}, change: '', bankFrom: 0 })
 const trip = reactive({ on: false, amount: '', days: 0 })
+// The drawer's limit is the safe's own; the switch makes the register propose the drop.
+const drop = reactive({ on: false, limit: '', float: 0 })
 
 const minor = (major) => Math.round((Number(major) || 0) * 100)
 const floatTotal = computed(() => totalMinor(plan.mix))
@@ -254,6 +281,23 @@ const amountValid = computed(() => {
 const amountError = computed(() =>
   amountValid.value ? '' : 'Escribe el importe con números, por ejemplo 15000.',
 )
+const limitValid = computed(() => {
+  const text = String(drop.limit ?? '').trim()
+  return !text || amountPattern.test(text)
+})
+/** The float the drop leaves: the one the plan above sets, else the safe's. */
+const floatNow = computed(() =>
+  hasPlan.value && plan.on && floatTotal.value > 0
+    ? fromMinor(floatTotal.value)
+    : drop.float,
+)
+const limitError = computed(() => {
+  if (!limitValid.value)
+    return 'Escribe el límite con números, por ejemplo 5000.'
+  if (drop.on && !(Number(drop.limit) > floatNow.value))
+    return `Pon un límite arriba del fondo (${money(floatNow.value, currency.value)}).`
+  return ''
+})
 const missing = computed(() => {
   if (state.value !== 'ready') return ''
   if (hasPlan.value && plan.on) {
@@ -266,6 +310,7 @@ const missing = computed(() => {
     if (!(Number(trip.amount) > 0) && !(trip.days > 0))
       return 'Di cuándo va al banco: un importe, unos días o los dos.'
   }
+  if (hasDrop.value && limitError.value) return 'Revisa el límite'
   return ''
 })
 
@@ -300,6 +345,13 @@ async function load() {
       trip.on = Boolean(bt.on)
       trip.amount = bt.amount ? String(bt.amount) : ''
       trip.days = Number(bt.days) || 0
+    }
+    const dr = view.drop
+    hasDrop.value = Boolean(dr)
+    if (dr) {
+      drop.on = Boolean(dr.on)
+      drop.limit = Number(dr.drawer_limit) > 0 ? String(dr.drawer_limit) : ''
+      drop.float = Number(dr.float_target) || 0
     }
     state.value = 'ready'
   } catch (exception) {
@@ -342,6 +394,9 @@ async function save() {
             amount: Number(String(trip.amount || '').trim()) || 0,
             days: trip.days,
           }
+        : null,
+      drop: hasDrop.value
+        ? { on: drop.on, limit: Number(String(drop.limit || '').trim()) || 0 }
         : null,
     })
     emit('saved', { view, toast: 'Caja fuerte guardada' })

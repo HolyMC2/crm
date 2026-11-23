@@ -35,7 +35,7 @@ export const bagPlanSave = (safe, { on, floatMix, changeTarget, bankFrom }) =>
 const SAFE_SETTINGS = `${POSA}.cash_custody.safe_settings_api`
 export const safeSettingsRead = (safe) =>
   call(`${SAFE_SETTINGS}.view`, { safe })
-export const safeSettingsSave = (safe, { plan, trip }) =>
+export const safeSettingsSave = (safe, { plan, trip, drop }) =>
   call(`${SAFE_SETTINGS}.save`, {
     safe,
     ...(plan
@@ -54,6 +54,14 @@ export const safeSettingsSave = (safe, { plan, trip }) =>
             on: trip.on ? 1 : 0,
             amount: trip.amount || 0,
             days: trip.days || 0,
+          }),
+        }
+      : {}),
+    ...(drop
+      ? {
+          drop: JSON.stringify({
+            on: drop.on ? 1 : 0,
+            drawer_limit: drop.limit || 0,
           }),
         }
       : {}),
