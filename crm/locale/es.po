@@ -13163,6 +13163,14 @@ msgstr "Buscar archivos"
 msgid "Clear search"
 msgstr "Limpiar búsqueda"
 
+#: frontend/src/components/ui
+msgid "Search everywhere"
+msgstr "Buscar en todo Muelle"
+
+#: frontend/src/components/ui
+msgid "Search «{0}» everywhere"
+msgstr "Buscar «{0}» en todo Muelle"
+
 #: frontend/src/pages/Archivos.vue
 msgid "Only you can see it"
 msgstr "Solo tú puedes verlo"

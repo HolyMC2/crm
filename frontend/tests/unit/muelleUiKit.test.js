@@ -40,6 +40,7 @@ import {
   configureUi,
   t,
 } from '@/components/ui'
+import { pageToolsDocked, searchDock } from '@/components/ui/toolDock'
 
 const state = { phone: ref(true), boot: ref(null) }
 configureUi({
@@ -601,6 +602,141 @@ describe('the search panel: typing, the keyboard, the list scrolling', () => {
     expect(spToggle().getAttribute('aria-pressed')).toBe('false')
     expect(bound.query).toBe('ana')
     expect(activeChip()).not.toBeNull()
+  })
+})
+
+describe('one search per screen: the list search docks into the command bar', () => {
+  // The shell's command bar as the crm renders it: the panel row over the
+  // bar, then the bar with its tools slot.
+  let targets
+  const searchedAll = []
+  beforeEach(() => {
+    searchedAll.length = 0
+    targets = document.createElement('div')
+    targets.innerHTML =
+      '<div id="shell-page-panel"></div><div data-bar><div id="shell-page-tools"></div></div>'
+    document.body.appendChild(targets)
+    searchDock.value = true
+    configureUi({ searchAll: (words) => searchedAll.push(words) })
+  })
+  afterEach(() => {
+    searchDock.value = false
+    configureUi({ searchAll: null })
+    targets.remove()
+  })
+  const type = (input, value) => {
+    input.value = value
+    input.dispatchEvent(new Event('input'))
+  }
+  const tools = () => document.getElementById('shell-page-tools')
+  const over = () => document.getElementById('shell-page-panel')
+
+  it("AppBar: the field is the bar's pill, no search at the top; it opens the search, narrows the list and goes wider with the same words", async () => {
+    const before = pageToolsDocked.value
+    const { bound } = await mount(
+      AppBar,
+      {
+        title: 'Cajas',
+        searchable: true,
+        searchLabel: 'Buscar caja',
+        search: '',
+        searchOpen: false,
+      },
+      {
+        'search-panel': () =>
+          h('button', { type: 'button', 'data-chip': '' }, 'Abiertas'),
+        active: () => h('span', { 'data-active-chip': '' }, 'Abiertas'),
+      },
+    )
+    expect(root.querySelector('[data-appbar-search-open]')).toBeNull()
+    expect(root.querySelector('[data-appbar-search]')).toBeNull()
+    const input = tools().querySelector('[data-appbar-search]')
+    expect(input.getAttribute('placeholder')).toBe('Buscar caja')
+    expect(pageToolsDocked.value).toBe(before + 1)
+    input.dispatchEvent(new Event('focus'))
+    await flush()
+    expect(bound.searchOpen).toBe(true)
+    // The page's panel rises over the bar, with the way to everything.
+    expect(over().querySelector('[data-chip]')).not.toBeNull()
+    expect(
+      over().querySelector('[data-appbar-search-all]').textContent,
+    ).toContain('Search everywhere')
+    type(input, 'centro')
+    await flush()
+    expect(bound.search).toBe('centro')
+    // Typing folds the panel so the list shows; the title stays at the top.
+    expect(over().querySelector('[data-chip]')).toBeNull()
+    expect(root.querySelector('[data-appbar-title]').textContent).toContain(
+      'Cajas',
+    )
+    expect(root.querySelector('[data-active-chip]')).not.toBeNull()
+    const wide = over().querySelector('[data-appbar-search-all]')
+    expect(wide.textContent).toContain('Search «centro» everywhere')
+    wide.click()
+    expect(searchedAll).toEqual(['centro'])
+    app.unmount()
+    app = null
+    expect(pageToolsDocked.value).toBe(before)
+  })
+
+  it('AppBar: without the dock (desktop, a record with its own bar) the search stays at the top', async () => {
+    searchDock.value = false
+    await mount(AppBar, {
+      title: 'Cajas',
+      searchable: true,
+      search: '',
+      searchOpen: false,
+    })
+    expect(root.querySelector('[data-appbar-search-open]')).not.toBeNull()
+    expect(tools().children.length).toBe(0)
+  })
+
+  it('SearchPanel: the pill docks, the top keeps only what narrows the list, and the row over the bar goes wider', async () => {
+    const { bound } = await mount(
+      SearchPanel,
+      { placeholder: 'Buscar contactos', open: false, query: '' },
+      {
+        default: () =>
+          h('button', { type: 'button', 'data-chip': '' }, 'Clientes'),
+        active: () => h('span', { 'data-active-chip': '' }, 'Clientes'),
+      },
+    )
+    expect(root.querySelector('[data-list-search]')).toBeNull()
+    expect(root.querySelector('[data-active-chip]')).not.toBeNull()
+    const input = tools().querySelector('[data-list-search]')
+    input.dispatchEvent(new Event('focus'))
+    await flush()
+    expect(bound.open).toBe(true)
+    expect(over().querySelector('[data-chip]')).not.toBeNull()
+    type(input, 'ana')
+    await flush()
+    expect(bound.query).toBe('ana')
+    expect(over().querySelector('[data-chip]')).toBeNull()
+    over().querySelector('[data-testid="search-panel-everywhere"]').click()
+    expect(searchedAll).toEqual(['ana'])
+  })
+
+  it('SearchPanel :dock="false" (a search in a sheet) stays where it is', async () => {
+    await mount(SearchPanel, {
+      placeholder: 'Buscar',
+      open: false,
+      query: '',
+      dock: false,
+    })
+    expect(root.querySelector('[data-list-search]')).not.toBeNull()
+    expect(tools().children.length).toBe(0)
+  })
+
+  it('without a search across everything the row over the bar never shows', async () => {
+    configureUi({ searchAll: null })
+    await mount(SearchPanel, {
+      placeholder: 'Buscar',
+      open: true,
+      query: 'ana',
+    })
+    expect(
+      over().querySelector('[data-testid="search-panel-everywhere"]'),
+    ).toBeNull()
   })
 })
 

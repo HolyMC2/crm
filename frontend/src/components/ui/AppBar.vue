@@ -1,4 +1,4 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.3.0 (08716fb45b7a). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.4.0 (487326036330). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <template>
   <!-- The one phone top app bar (Shell SPEC §2.2.1), grown from PowerAppBar:
        up/back · title (optionally a scope picker) · ≤3 icon actions · bell.
@@ -8,6 +8,7 @@
        it: the bar is 64 px of the page's own surface. -->
   <header
     ref="bar"
+    v-bind="$attrs"
     class="sticky top-0 z-20 bg-surface-base pt-[env(safe-area-inset-top)]"
     data-appbar
   >
@@ -38,7 +39,7 @@
           <span class="lucide-square-check-big size-6" aria-hidden="true" />
         </button>
       </template>
-      <template v-else-if="searchOpen && searchable">
+      <template v-else-if="searchOpen && searchable && !docked">
         <button
           type="button"
           :class="ICON_BUTTON"
@@ -118,7 +119,7 @@
         >
           <slot name="actions" />
           <button
-            v-if="searchable"
+            v-if="searchable && !docked"
             type="button"
             :class="ICON_BUTTON"
             :aria-label="searchLabel || t('Search')"
@@ -142,7 +143,7 @@
     </div>
     <!-- Narrow screens: the title gets its own full-width row. -->
     <div
-      v-if="stacked && !selecting && !(searchOpen && searchable)"
+      v-if="stacked && !selecting && !(searchOpen && searchable && !docked)"
       class="flex px-1 pb-2"
     >
       <slot name="title">
@@ -159,7 +160,7 @@
          closed, #active keeps what narrows the list in sight as chips. -->
     <Transition name="fade">
       <div
-        v-if="panelOpen && !search"
+        v-if="panelOpen && !search && !docked"
         class="ui-scrim absolute inset-x-0 top-full h-[100dvh]"
         aria-hidden="true"
         data-appbar-scrim
@@ -168,7 +169,7 @@
     </Transition>
     <ExpandTransition>
       <div
-        v-if="panelOpen"
+        v-if="panelOpen && !docked"
         class="max-h-[64dvh] space-y-3 overflow-y-auto overscroll-contain px-4 pb-3 pt-1"
         data-appbar-search-panel
       >
@@ -178,7 +179,9 @@
     <ExpandTransition>
       <div
         v-if="
-          $slots.active && !selecting && (!(searchOpen && searchable) || folded)
+          $slots.active &&
+          !selecting &&
+          (!(searchOpen && searchable) || folded || docked)
         "
         class="px-4 pb-2 empty:hidden"
         data-appbar-active
@@ -194,6 +197,89 @@
     >
       <slot name="summary" />
     </div>
+    <!-- On a phone with the shell's command bar the list's search is the bar's
+         pill, at the thumb (Marco 2026-11-23: a search at the top is hard to
+         reach, and two searches on one screen are one too many). The field
+         narrows the list as it types; the page's filters and recents rise
+         above the bar; the row over the bar takes the same words to the
+         app's search across everything. -->
+    <Teleport v-if="docked" to="#shell-page-tools" defer>
+      <label class="dock-pill" data-appbar-dock>
+        <span class="lucide-search size-5 flex-none" aria-hidden="true" />
+        <input
+          ref="input"
+          :value="search"
+          type="search"
+          enterkeyhint="search"
+          :placeholder="searchLabel || t('Search')"
+          :aria-label="searchLabel || t('Search')"
+          v-bind="searchInputAttrs"
+          data-appbar-search
+          @focus="onDockFocus"
+          @input="onInput"
+        />
+        <button
+          v-if="search"
+          type="button"
+          class="press -mr-3 flex size-10 flex-none items-center justify-center rounded-full"
+          :aria-label="t('Clear search')"
+          :title="t('Clear search')"
+          data-appbar-search-clear
+          @click.prevent="clearSearch"
+        >
+          <span class="lucide-x size-5" aria-hidden="true" />
+        </button>
+      </label>
+      <button
+        v-if="searchOpen && $slots['search-panel']"
+        type="button"
+        class="dock-icon"
+        :aria-label="t('Filters')"
+        :title="t('Filters')"
+        :aria-pressed="String(panelOpen)"
+        data-appbar-panel-toggle
+        @click="togglePanel"
+      >
+        <span class="lucide-sliders-horizontal size-6" aria-hidden="true" />
+      </button>
+    </Teleport>
+    <Teleport v-if="docked" to="#shell-page-panel" defer>
+      <div ref="dockPanel" data-appbar-dock-panel>
+        <Transition name="tool-scrim">
+          <div
+            v-if="panelOpen && !search"
+            class="tool-dock-scrim"
+            aria-hidden="true"
+            data-appbar-scrim
+            @click="closeSearch"
+          />
+        </Transition>
+        <ExpandTransition>
+          <div
+            v-if="panelOpen"
+            class="tool-dock-panel !block space-y-3"
+            data-appbar-search-panel
+          >
+            <slot name="search-panel" :close="closeSearch" />
+          </div>
+        </ExpandTransition>
+        <button
+          v-if="searchAll && searchOpen"
+          type="button"
+          class="state-layer relative flex min-h-11 w-full items-center gap-3 bg-[var(--muelle-surface-container)] px-5 text-left text-[15px] text-[var(--muelle-on-surface-variant)]"
+          data-appbar-search-all
+          @pointerdown.prevent
+          @click="goWide"
+        >
+          <span class="lucide-search size-5 flex-none" aria-hidden="true" />
+          <span class="min-w-0 truncate">{{
+            search
+              ? t('Search «{0}» everywhere', [search])
+              : t('Search everywhere')
+          }}</span>
+        </button>
+      </div>
+    </Teleport>
     <!-- The title's scope sheet: the lists (or views) this screen can show. -->
     <BottomSheet
       v-if="scopes.length && sheetUsed"
@@ -249,9 +335,11 @@ import ExpandTransition from './ExpandTransition.vue'
 import {
   canReturnToReferrer,
   uiBell,
+  uiSearchAll,
   watchListScroll,
   watchSoftKeyboard,
 } from './host'
+import { pageToolsDocked, searchDock } from './toolDock'
 import UiTag from './UiTag'
 
 // The scope sheet loads on its first open: the shell header renders this bar
@@ -264,6 +352,9 @@ const BottomSheet = defineAsyncComponent(() => import('./BottomSheet.vue'))
 const ICON_BUTTON =
   'press flex size-12 flex-none items-center justify-center rounded-full text-ink-gray-7'
 
+// The docked search renders beside the header (Teleports), so the page's
+// attributes (class, style, data-testid) go on the header itself.
+defineOptions({ inheritAttrs: false })
 const props = defineProps({
   title: { type: String, default: '' },
   /** Where the title sits, in one short line above it: the module («Cobranza»). */
@@ -366,6 +457,31 @@ function choose(value) {
   emit('update:scope', value)
 }
 const slots = useSlots()
+// The list's search docks into the phone command bar while the shell offers it
+// (ui/toolDock searchDock); a selection keeps the top bar's own row.
+const docked = computed(
+  () => props.searchable && searchDock.value && !props.selecting,
+)
+watch(
+  docked,
+  (now, before) => {
+    if (now && !before) pageToolsDocked.value += 1
+    else if (!now && before) pageToolsDocked.value -= 1
+  },
+  { immediate: true },
+)
+const dockPanel = ref(null)
+const searchAll = computed(() => uiSearchAll())
+function onDockFocus() {
+  if (!props.searchOpen) emit('update:searchOpen', true)
+}
+// The same words, across everything the app reaches (the shell's palette).
+function goWide() {
+  const run = searchAll.value
+  if (!run) return
+  input.value?.blur()
+  run(props.search)
+}
 // The panel folded away: typing folds it so the results show live, the
 // keyboard going folds it, the filters button unfolds it over the results,
 // and an empty field shows it again.
@@ -421,14 +537,40 @@ watch(
   (el) => {
     unwatchKeyboard?.()
     unwatchKeyboard = el
-      ? watchSoftKeyboard({ input: el, within: bar.value, onHide: fold })
+      ? watchSoftKeyboard({
+          input: el,
+          within: docked.value ? dockArea() : bar.value,
+          onHide: fold,
+        })
       : null
   },
   { flush: 'post' },
 )
+// Docked, the field and its panel live in the shell's bar: taps and scrolls
+// there are the search's own, not the worker moving on.
+function dockArea() {
+  const tools = input.value?.closest('#shell-page-tools')?.parentElement
+  return {
+    contains: (el) =>
+      Boolean(
+        el &&
+          (tools?.contains(el) ||
+            dockPanel.value?.contains(el) ||
+            bar.value?.contains(el)),
+      ),
+    addEventListener: (...args) => tools?.addEventListener(...args),
+    removeEventListener: (...args) => tools?.removeEventListener(...args),
+  }
+}
+function withinSearch(el) {
+  return docked.value ? dockArea().contains(el) : bar.value?.contains(el)
+}
 let listScroll = null
 onMounted(() => {
-  listScroll = watchListScroll({ within: bar.value, onScroll: fold })
+  listScroll = watchListScroll({
+    within: { contains: withinSearch },
+    onScroll: fold,
+  })
   if (panelOpen.value) listScroll.arm()
 })
 watch(panelOpen, (open) => (open ? listScroll?.arm() : listScroll?.disarm()))
@@ -502,6 +644,7 @@ onBeforeUnmount(() => {
   observer?.disconnect()
   unwatchKeyboard?.()
   listScroll?.stop()
+  if (docked.value) pageToolsDocked.value -= 1
 })
 
 // The title: plain, or a button that opens the scope sheet.

@@ -201,18 +201,36 @@
            mounted, so the teleport target never goes away under a page.
            It is one tonal block with the nav under it (the container role),
            with no rule above either. -->
+      <!-- A list's search panel and its «Buscar … en todo Muelle» rise here,
+           over the bar (ui/AppBar, ui/SearchPanel docked). -->
       <div
         v-if="phone"
-        v-show="navVisible"
-        class="flex shrink-0 items-center gap-1 bg-[var(--muelle-surface-container)] pb-0.5 pl-3 pr-2 pt-2"
+        v-show="commandBarVisible"
+        id="shell-page-panel"
+        class="relative z-10"
+      />
+      <div
+        v-if="phone"
+        v-show="commandBarVisible"
+        class="relative z-10 flex shrink-0 items-center gap-1 bg-[var(--muelle-surface-container)] pb-0.5 pl-3 pr-2 pt-2"
         data-testid="shell-command-bar"
+        :data-typing="barTyping ? '' : undefined"
+        @focusin="barFocusIn"
+        @focusout="barFocusOut"
       >
-        <!-- Global search (⌘K «Buscar o ir a…») is the bar's main door: find
-             a record, go to a place or run an action. It opens the palette,
-             so the list's own search above stays the only field on screen. -->
+        <!-- One search per screen (Marco 2026-11-23): a list's own search
+             docks here (#shell-page-tools) and narrows the list as it types,
+             with «Buscar … en todo Muelle» over the bar; elsewhere the bar's
+             search is the palette (⌘K «Buscar o ir a…»): find a record, go
+             to a place or run an action. -->
+        <div
+          id="shell-page-tools"
+          class="flex min-w-0 flex-1 items-center gap-1 empty:hidden"
+        />
         <!-- A record's next step docked with its word (ui/Fab dock="extended")
              takes the room: the search keeps only its icon. -->
         <button
+          v-if="!pageToolsDocked"
           type="button"
           class="press flex h-12 items-center gap-2 rounded-full bg-[var(--muelle-surface-container-highest)] text-left text-[15px] text-[var(--muelle-on-surface-variant)]"
           :class="
@@ -240,6 +258,7 @@
              shell_api.status said yes. -->
         <button
           v-if="assistantOn"
+          v-show="!barTyping"
           type="button"
           :class="COMMAND_ICON"
           :aria-label="__('Ask Muelle')"
@@ -254,6 +273,7 @@
              its product, or creates it; without Productos, Escáner's picker. -->
         <button
           v-if="scanInline && !backTo"
+          v-show="!barTyping"
           type="button"
           :class="COMMAND_ICON"
           :aria-label="__('Scan a code')"
@@ -267,6 +287,7 @@
         </button>
         <a
           v-else-if="scanHref && !backTo"
+          v-show="!barTyping"
           :href="scanHref"
           :class="COMMAND_ICON"
           :aria-label="__('Scan a code')"
@@ -278,8 +299,10 @@
         <!-- «Escanear documento» (Shell D7): the camera reads a paper into the
              books capture engine; the sheet is a lazy chunk (cameraDoor.js).
              Under 360px the door is in Más and the palette. -->
+        <!-- With a list's search docked the paper camera gives the pill its
+             room; it stays in Más and the palette. -->
         <button
-          v-if="!backTo && shellBoot"
+          v-if="!backTo && shellBoot && !pageToolsDocked"
           type="button"
           :class="[COMMAND_ICON, 'max-[359px]:hidden']"
           :aria-label="__('Scan document')"
@@ -291,7 +314,11 @@
         >
           <span class="lucide-camera size-6" aria-hidden="true" />
         </button>
-        <div id="shell-primary-action" class="flex flex-none empty:hidden" />
+        <div
+          v-show="!barTyping"
+          id="shell-primary-action"
+          class="flex flex-none empty:hidden"
+        />
       </div>
       <ShellBottomNav
         v-if="phone && navVisible"
@@ -318,6 +345,7 @@
       v-model="paletteOpen"
       v-model:mode="paletteMode"
       :focus-key="paletteFocus"
+      :text="paletteText"
     />
     <ShortcutSheet v-if="shortcutSheet.open" />
     <LayoutSheet v-if="layoutSheet" :mode="layoutSheet.mode" />
@@ -387,6 +415,8 @@ import {
 } from '@/components/captura/cameraDoor'
 import { loadScanSheet, openScan, scan } from '@/components/escaneo/scanDoor'
 import { primaryDock, primaryDockExtended } from '@/components/ui/primaryDock'
+import { pageToolsDocked, searchDock } from '@/components/ui/toolDock'
+import { paletteRequest } from '@/composables/paletteDoor'
 import { pageTitle } from '@/composables/pageTitle'
 import AppBar from '@/components/ui/AppBar.vue'
 import ExpandTransition from '@/components/ui/ExpandTransition.vue'
@@ -427,6 +457,7 @@ watch(phone, (value) => (primaryDock.value = Boolean(value)), {
 onBeforeUnmount(() => (primaryDock.value = false))
 const paletteOpen = ref(false),
   paletteMode = ref('all'),
+  paletteText = ref(''),
   paletteFocus = ref(0),
   moreOpen = ref(false),
   copied = ref('')
@@ -518,6 +549,28 @@ const drillDown = computed(
 // one bottom bar, and the AppBar's back arrow leads out.
 const navVisible = computed(
   () => !keyboardOpen.value && !drillDown.value && !route.meta.ownBottomBar,
+)
+// The command bar holds the list's own search (ui/AppBar, ui/SearchPanel
+// dock there, toolDock searchDock): one search per screen, at the thumb.
+// While its field has the focus the bar stays over the keyboard, the field
+// takes the whole row, and the nav under it steps aside as for any field.
+const barRoom = computed(
+  () => phone.value && !drillDown.value && !route.meta.ownBottomBar,
+)
+watch(barRoom, (value) => (searchDock.value = Boolean(value)), {
+  immediate: true,
+})
+onBeforeUnmount(() => (searchDock.value = false))
+const barTyping = ref(false)
+function barFocusIn(event) {
+  barTyping.value = event.target?.matches?.('input, textarea') || false
+}
+function barFocusOut(event) {
+  const bar = event.currentTarget
+  if (!bar?.contains(event.relatedTarget)) barTyping.value = false
+}
+const commandBarVisible = computed(
+  () => barRoom.value && (!keyboardOpen.value || barTyping.value),
 )
 
 // Phone header hides on scroll down and returns on scroll up. Only vertical
@@ -657,11 +710,16 @@ async function copyRequest() {
 
 // ⌘K / ⌘G open the palette in that mode; in an open palette they switch the
 // mode (the text stays) and the same key again refocuses the input.
-function openPalette(mode) {
+function openPalette(mode, text = '') {
   paletteMode.value = mode
+  paletteText.value = text
   if (paletteOpen.value) paletteFocus.value += 1
   else paletteOpen.value = true
 }
+// A docked list search's «Buscar … en todo Muelle» (composables/paletteDoor).
+watch(paletteRequest, (request) => {
+  if (request) openPalette('all', request.text)
+})
 function openHelp() {
   paletteOpen.value = false
   openShortcutSheet()

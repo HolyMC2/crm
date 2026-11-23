@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/ui@0.3.0 (08716fb45b7a). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory.
+// Vendored from muelle/workspace/packages/ui@0.4.0 (487326036330). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory.
 import { computed, ref, shallowReactive } from 'vue'
 
 // What the kit needs from the app around it. An app calls configureUi once in
@@ -20,12 +20,20 @@ const host = shallowReactive({
   bell: null,
   showBell: () => false,
   isMobile: null,
+  // (query) => void: the app's own search across everything (the shell's
+  // palette), offered under a docked list search as its way to go wider.
+  searchAll: null,
 })
 
 export function configureUi(options = {}) {
   for (const key of Object.keys(host)) {
     if (options[key] !== undefined) host[key] = options[key]
   }
+}
+
+/** The app's search across everything, or null when it has none. */
+export function uiSearchAll() {
+  return typeof host.searchAll === 'function' ? host.searchAll : null
 }
 
 export function uiBell() {
@@ -61,6 +69,8 @@ const ES = {
   Reload: 'Recargar',
   'Remove filter {0}': 'Quitar el filtro {0}',
   Search: 'Buscar',
+  'Search everywhere': 'Buscar en todas partes',
+  'Search «{0}» everywhere': 'Buscar «{0}» en todas partes',
   Select: 'Seleccionar',
   'Select the visible page': 'Seleccionar la página visible',
   'Show results': 'Ver resultados',

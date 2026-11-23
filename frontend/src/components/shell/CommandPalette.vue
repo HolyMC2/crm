@@ -233,6 +233,8 @@ const props = defineProps({
   mode: { type: String, default: 'all' },
   /** Bumped when the open dialog's key is pressed again: refocus the input. */
   focusKey: { type: Number, default: 0 },
+  /** Words the palette opens with: a list search taken across everything. */
+  text: { type: String, default: '' },
 })
 const emit = defineEmits(['update:modelValue', 'update:mode'])
 const router = useRouter()
@@ -257,7 +259,7 @@ const dialog = ref(null)
 const input = ref(null)
 // An open palette makes sure the product list is on the device, and current.
 warmProducts()
-const raw = ref('')
+const raw = ref(props.text)
 const cursor = ref(0)
 const states = ref([])
 const searching = ref(false)

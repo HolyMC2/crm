@@ -7,6 +7,7 @@ import { statusLabel, statusTone } from '@/utils/display'
 import { isMobile } from '@/composables/breakpoint'
 import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
 import { shellBoot } from '@/composables/muelleShell'
+import { openPaletteWith } from '@/composables/paletteDoor'
 
 configureUi({
   statusLabel,
@@ -16,4 +17,6 @@ configureUi({
     () => import('@/components/avisos/AvisosBell.vue'),
   ),
   showBell: () => moduleEnabled(shellBoot.value, 'avisos'),
+  // A docked list search goes wider through the palette (⌘K «Buscar o ir a…»).
+  searchAll: openPaletteWith,
 })
