@@ -24196,6 +24196,16 @@ msgctxt "Productos"
 msgid "Show more variants"
 msgstr "Ver más variantes"
 
+#: frontend/src/components/productos/VariantHits.vue
+msgctxt "Productos"
+msgid "See all {0} variants"
+msgstr "Ver las {0} variantes"
+
+#: frontend/src/components/productos/VariantHits.vue
+msgctxt "Productos"
+msgid "Variants of {0}"
+msgstr "Variantes de {0}"
+
 #: frontend/src/composables/useProductos.js
 msgctxt "Productos"
 msgid "{0} of {1} variants"

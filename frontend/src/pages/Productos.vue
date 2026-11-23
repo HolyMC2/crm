@@ -951,47 +951,57 @@
                 v-for="(row, index) in rows"
                 :key="`${row.name}:${row.warehouse || ''}`"
                 :data-key="legacyKey(row)"
-                class="relative"
                 :class="focusKey === legacyKey(row) ? 'bg-surface-gray-2' : ''"
               >
-                <!-- «Sin foto»: the empty photo is the camera's button; the row
+                <div class="relative">
+                  <!-- «Sin foto»: the empty photo is the camera's button; the row
                    gets its picture without leaving the list. -->
-                <button
-                  v-if="photoRun && (!row.image || shots[row.name])"
-                  type="button"
-                  class="press absolute z-[1] left-3.5 top-1/2 size-11 -translate-y-1/2 sm:left-[22px] flex items-center justify-center overflow-hidden rounded-6 bg-surface-gray-2 text-ink-gray-8 ring-1 ring-outline-gray-3"
-                  :aria-label="__('Take the photo of {0}', [row.title])"
-                  :title="__('Take the photo of {0}', [row.title])"
-                  :disabled="Boolean(shots[row.name])"
-                  data-testid="fila-tomar-foto"
-                  @pointerenter="loadCameraSheet"
-                  @click="shootRow(row)"
-                >
-                  <template v-if="shots[row.name]">
-                    <img
-                      :src="shots[row.name]"
-                      alt=""
-                      class="size-full object-cover opacity-60"
-                    />
+                  <button
+                    v-if="photoRun && (!row.image || shots[row.name])"
+                    type="button"
+                    class="press absolute z-[1] left-3.5 top-1/2 size-11 -translate-y-1/2 sm:left-[22px] flex items-center justify-center overflow-hidden rounded-6 bg-surface-gray-2 text-ink-gray-8 ring-1 ring-outline-gray-3"
+                    :aria-label="__('Take the photo of {0}', [row.title])"
+                    :title="__('Take the photo of {0}', [row.title])"
+                    :disabled="Boolean(shots[row.name])"
+                    data-testid="fila-tomar-foto"
+                    @pointerenter="loadCameraSheet"
+                    @click="shootRow(row)"
+                  >
+                    <template v-if="shots[row.name]">
+                      <img
+                        :src="shots[row.name]"
+                        alt=""
+                        class="size-full object-cover opacity-60"
+                      />
+                      <span
+                        class="lucide-loader-circle absolute size-5 animate-spin"
+                        aria-hidden="true"
+                      />
+                    </template>
                     <span
-                      class="lucide-loader-circle absolute size-5 animate-spin"
+                      v-else
+                      class="lucide-camera size-5"
                       aria-hidden="true"
                     />
-                  </template>
-                  <span
-                    v-else
-                    class="lucide-camera size-5"
-                    aria-hidden="true"
+                  </button>
+                  <CatalogItem
+                    :row="row"
+                    :to="productRoute(row, listPath, searching)"
+                    :tiers="catalog ? tierLines(row, shownLists) : []"
+                    :no-store="Boolean(boot?.unassigned)"
+                    :eager="index < 12"
+                    :detail="rowDetail(row)"
+                    :variants-below="Boolean(row.variants?.hits?.length)"
+                    @click="leaveFor(row)"
                   />
-                </button>
-                <CatalogItem
+                </div>
+                <VariantHits
+                  v-if="row.variants?.hits?.length"
                   :row="row"
-                  :to="productRoute(row, listPath, searching)"
-                  :tiers="catalog ? tierLines(row, shownLists) : []"
+                  :search="state.search"
+                  :list="listPath"
                   :no-store="Boolean(boot?.unassigned)"
-                  :eager="index < 12"
-                  :detail="rowDetail(row)"
-                  @click="leaveFor(row)"
+                  @leave="leaveFor(row)"
                 />
               </li>
             </ul>
@@ -1062,6 +1072,7 @@ import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import CountDialog from '@/components/productos/CountDialog.vue'
 import CatalogFilters from '@/components/productos/CatalogFilters.vue'
 import CatalogItem from '@/components/productos/CatalogItem.vue'
+import VariantHits from '@/components/productos/VariantHits.vue'
 import PackDialog from '@/components/productos/PackDialog.vue'
 import PriceListsToggle from '@/components/productos/PriceListsToggle.vue'
 import { loadScanSheet, openScan } from '@/components/escaneo/scanDoor'

@@ -1233,7 +1233,12 @@ export function notifyPriceOpener(query, user, item, win = window) {
   }
 }
 
-export const ACTIONS = Object.freeze(['precio', 'editar', 'conteo'])
+export const ACTIONS = Object.freeze([
+  'precio',
+  'editar',
+  'conteo',
+  'variantes',
+])
 export function requestedAction(query) {
   return ACTIONS.includes(query?.accion) ? query.accion : null
 }

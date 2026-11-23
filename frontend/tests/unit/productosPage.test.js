@@ -605,6 +605,98 @@ describe('Productos › catálogo', () => {
     answers.queue = original
   })
 
+  it('a search shows the variants it found under their template, at a glance', async () => {
+    localStorage.clear()
+    const hit = (name, model, stock, rate) => ({
+      name,
+      title: `Mica 9H ${model}`,
+      item_group: 'Micas',
+      uom: 'Pza',
+      stock_item: true,
+      variant_of: 'IPN940',
+      attributes: [{ attribute: 'Modelo', value: model }],
+      stock: { qty: stock, projected: stock, stores: 1 },
+      price: rate === null ? null : { rate, currency: 'MXN' },
+    })
+    const original = answers.queue
+    answers.queue = (args) =>
+      args.view === 'todos'
+        ? {
+            rows: [
+              {
+                name: 'IPN940',
+                title: 'Mica 9H',
+                item_group: 'Micas',
+                uom: 'Pza',
+                image: null,
+                stock_item: true,
+                stock: { qty: 1928, projected: 1928, stores: 1 },
+                price: { rate: 50, currency: 'MXN', from: true },
+                variants: {
+                  count: 223,
+                  matching: 5,
+                  hits: [
+                    hit('IPN940-Y8S', 'Huawei Y8s', 14, 50),
+                    hit('IPN940-Y8P', 'Huawei Y8p', 0, 55),
+                    hit('IPN940-Y8A', 'Huawei Y8a', 2, null),
+                  ],
+                },
+              },
+              {
+                name: 'IPN71',
+                title: 'Holster Case',
+                item_group: 'Fundas',
+                uom: 'Pza',
+                image: null,
+                stock_item: true,
+                stock: { qty: 282, projected: 282, stores: 1 },
+                price: { rate: 150, currency: 'MXN', from: true },
+                // The search matched the template itself: no lines, the count.
+                variants: { count: 126, matching: null },
+              },
+            ],
+            total: 2,
+            has_more: false,
+            view: 'todos',
+          }
+        : original(args)
+    try {
+      await mountAt('/productos?q=y8')
+      const lists = root.querySelectorAll('[data-variant-hits]')
+      expect(lists).toHaveLength(1)
+      const lines = [...lists[0].querySelectorAll('a')]
+      // One line per variant: model, stock, price (each its own cell).
+      const cells = (a) =>
+        [...a.children].map((cell) => cell.textContent.trim())
+      expect(cells(lines[0])).toEqual([
+        'Huawei Y8s',
+        '14 Pza',
+        expect.stringMatching(/50/),
+      ])
+      expect(cells(lines[1])).toEqual([
+        'Huawei Y8p',
+        'Sold out',
+        expect.stringMatching(/55/),
+      ])
+      expect(cells(lines[2])).toEqual(['Huawei Y8a', '2 Pza', 'No price'])
+      expect(lines[3].textContent.trim()).toBe('See all 5 variants')
+      expect(lines).toHaveLength(4)
+      expect(lines[0].getAttribute('href')).toContain('/productos/IPN940-Y8S')
+      const all = lines.at(-1).getAttribute('href')
+      expect(all).toContain('/productos/IPN940?')
+      expect(all).toContain('vq=y8')
+      expect(all).toContain('accion=variantes')
+      // The lines replace the template's «5 of 223 variants» chip; a
+      // template without lines keeps its count.
+      expect(root.textContent).not.toContain('5 of 223 variants')
+      expect(root.textContent).toContain('126 variants')
+      // Nothing is asked per row: the list's own answer carries them.
+      expect(called('variant_list')).toHaveLength(0)
+    } finally {
+      answers.queue = original
+    }
+  })
+
   it('a live change refreshes the catalogue in place, without reordering', async () => {
     localStorage.clear()
     const { hoyLive } = await import('@/composables/useHoy')

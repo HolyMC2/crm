@@ -1927,6 +1927,7 @@ import {
   defineAsyncComponent,
   getCurrentInstance,
   h,
+  nextTick,
   onMounted,
   reactive,
   ref,
@@ -2967,9 +2968,12 @@ function run(entry) {
   else if (entry.key === 'equipo') openEquipo()
   else if (entry.key === 'avisame') openAvisame()
   else if (entry.key === 'variants')
-    document
-      .getElementById('variantes')
-      ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    // The grid mounts with the record: on an `accion` it is not painted yet.
+    nextTick(() =>
+      document
+        .getElementById('variantes')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+    )
   else if (entry.key === 'scanner')
     leaveTo(scannerItemUrl(product.value.name, { back: recordBack.value }))
 }
@@ -3053,7 +3057,12 @@ function goBack() {
 function openRequested() {
   const wanted = requestedAction(route.query)
   if (!wanted || !data.value) return
-  const key = { precio: 'price', editar: 'edit', conteo: 'count' }[wanted]
+  const key = {
+    precio: 'price',
+    editar: 'edit',
+    conteo: 'count',
+    variantes: 'variants',
+  }[wanted]
   const entry = action(key)
   if (entry) {
     if (key === 'price')

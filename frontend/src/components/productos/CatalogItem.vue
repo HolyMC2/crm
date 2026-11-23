@@ -133,6 +133,8 @@ const props = defineProps({
   detail: { type: String, default: '' },
   // A template's variant row: the code and group repeat the template's.
   hideCode: { type: Boolean, default: false },
+  // The search's matching variants show under the row instead (VariantHits).
+  variantsBelow: { type: Boolean, default: false },
   // Extra price lists under the default one («Precios que se muestran»):
   // `tierLines(row, lists)`.
   tiers: { type: Array, default: () => [] },
@@ -145,7 +147,9 @@ const badge = computed(() => {
   return props.noStore && value?.kind === 'out' ? null : value
 })
 // A template: «N variants» (while searching, how many of them match).
-const variants = computed(() => variantsLabel(props.row.variants))
+const variants = computed(() =>
+  props.variantsBelow ? '' : variantsLabel(props.row.variants),
+)
 const review = computed(() =>
   Boolean(props.row.price?.review || props.row.price_review),
 )

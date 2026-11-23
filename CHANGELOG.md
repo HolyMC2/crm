@@ -2,6 +2,12 @@
 
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
+## 2026-11-22 — Productos: a search shows the variants it found under their template (lanes variantes-en-lista + variantes-en-lista-doco; not deployed)
+
+- **Why:** searching «Y8s» listed «Mica 9H · 1 de 223 variantes» as a plain chip: which variant matched, its stock and its price took opening the template and finding it in its grid.
+- **Change:** while a search narrows a template's variants, doco's «Todos» (`products._todos`, `_variant_hits`) sends the best three under the template's row (`variants.hits`, with attributes, price and stock in the worker's stores; one more `_enrich` pass for all of them). A search that matches every variant sends none. The crm list (`components/productos/VariantHits.vue`) shows each as one 44 px line under the row: model («Huawei Y8s · Negro»), stock («14 Pza» or «Agotado») and price, each opening its own record. Past three, «Ver las N variantes» opens the template already searched (`vq`) and scrolled to its grid (new `accion=variantes` on Producto). The lines replace the «1 de 223» chip; without a search the chip stays as it was. No request per row. The cards layout is unchanged.
+- **Tests:** doco `test_products_variants` and `test_products_search` (hits with attributes and stock; ranked hits) on a leased full-retail site; crm `productosPage.test.js` +1 (lines, «Ver las N», chip kept without hits, no per-row request). Shots at 412 and 305, light and dark, from a harness with stubbed rows (doco-mirror is quarantined).
+
 ## 2026-11-22 — Resultados › Tendencia draws bars, like Mercado's (lane tendencia-barras; not deployed)
 
 - **Why:** the trend was one line over the days, so one big day read as a spike and the rest of the month lay on the baseline; Mercado's bar chart of the same numbers reads at a glance.
