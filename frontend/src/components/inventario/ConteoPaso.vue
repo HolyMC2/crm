@@ -2,7 +2,11 @@
   <!-- A number with a step each way: − and + go to the next round stop, and
        the number itself takes any value typed. Taps close together are one
        change. -->
-  <div class="flex flex-none items-center gap-1" data-conteo-paso>
+  <div
+    class="flex items-center gap-1"
+    :class="wide ? 'w-full justify-between' : 'flex-none'"
+    data-conteo-paso
+  >
     <button
       type="button"
       :class="ROUND"
@@ -58,6 +62,8 @@ const props = defineProps({
   unit: { type: String, default: '' },
   /** What 0 reads as, where 0 is a choice («Parejo»). */
   zeroLabel: { type: String, default: '' },
+  /** The steps at the two ends of the row, the figure between them. */
+  wide: { type: Boolean, default: false },
   disabled: { type: Boolean, default: false },
 })
 const emit = defineEmits(['commit'])

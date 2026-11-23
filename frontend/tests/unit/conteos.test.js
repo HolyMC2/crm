@@ -26,7 +26,18 @@ vi.mock('frappe-ui', async (original) => ({
   call: (...args) => state.call(...args),
 }))
 
+// The Inventario hub around its «Conteos del día» row: its own reads are not this page's.
+vi.mock('@/documentos/api', () => ({ docApi: vi.fn(async () => ({})) }))
+vi.mock('@/components/inventario/kardex', () => ({
+  kardexApi: vi.fn(async () => ({ readable: true, rows: [] })),
+}))
+vi.mock('@/pages/InventarioMovimientos.vue', () => ({
+  default: { render: () => null },
+}))
+
 import Conteos from '@/pages/Conteos.vue'
+import DocumentosHub from '@/pages/DocumentosHub.vue'
+import { shellBoot } from '@/composables/muelleShell'
 import {
   conteosDoor,
   conteosDoorNow,
@@ -379,6 +390,16 @@ describe('Conteos del día, apagado', () => {
     await open(off(), { phone: true })
     expect(one('[data-appbar]')).toBeTruthy()
     expect(all('[data-conteos-encender]')).toHaveLength(1)
+    // A refusal reads beside the button the thumb just left.
+    server.refuse.save = refused('Elige quién cuenta')
+    one('[data-conteos-encender]').click()
+    await flush()
+    const said = all('[data-conteos-error]')
+    expect(said).toHaveLength(1)
+    expect(
+      said[0].parentElement.querySelector('[data-conteos-encender]'),
+    ).toBeTruthy()
+    server.refuse = {}
     server.after.save = () => on()
     one('[data-conteos-encender]').click()
     await flush()
@@ -1184,6 +1205,62 @@ describe('The door', () => {
     expect(
       state.call.mock.calls.filter(([method]) => method === `${API}.access`),
     ).toHaveLength(2)
+  })
+
+  it('the Inventario hub has the shortcut, with its state, only for who may open it', async () => {
+    shellBoot.value = boot
+    const mountHub = async () => {
+      setWidth(400)
+      const stub = { render: () => null }
+      const router = createRouter({
+        history: createMemoryHistory('/crm'),
+        routes: [
+          { path: '/inventario', name: 'Inventario', component: DocumentosHub },
+          {
+            path: '/inventario/conteos',
+            name: 'InventarioConteos',
+            component: stub,
+          },
+          {
+            path: '/inventario/movimientos',
+            name: 'InventarioMovimientos',
+            component: stub,
+          },
+          { path: '/documentos/tipo/:doctype', component: stub },
+          { path: '/productos', name: 'Productos', component: stub },
+        ],
+      })
+      router.push('/inventario')
+      await router.isReady()
+      root = document.createElement('div')
+      document.body.appendChild(root)
+      app = createApp({ render: () => h(RouterView) })
+      app.config.globalProperties.__ = spanish
+      app.use(router)
+      app.mount(root)
+      await flush()
+    }
+    const shortcut = () =>
+      all('[data-testid="documentos-hub-row"]').find((el) =>
+        el.textContent.includes('Conteos del día'),
+      )
+    try {
+      state.call.mockImplementation(async () => ({ can_open: true, on: true }))
+      await mountHub()
+      expect(shortcut().textContent).toContain('Encendidos')
+      expect(shortcut().getAttribute('href')).toBe('/crm/inventario/conteos')
+      app.unmount()
+      root.remove()
+      forgetConteosDoor()
+      state.call.mockImplementation(async () => ({
+        can_open: false,
+        on: false,
+      }))
+      await mountHub()
+      expect(shortcut()).toBeUndefined()
+    } finally {
+      shellBoot.value = null
+    }
   })
 
   it('a refusal is a shut door, and a site without Escáner is never asked', async () => {

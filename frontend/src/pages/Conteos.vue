@@ -105,8 +105,10 @@
       >
         <!-- The day: what the counts found, what waits for a decision, each person. -->
         <div class="flex min-w-0 flex-col gap-3">
+          <!-- Why the switch or «Encender» was refused; on a phone that is
+               off, it reads over the button instead. -->
           <p
-            v-if="errors.on"
+            v-if="errors.on && !(phone && !home.on)"
             role="alert"
             class="text-sm text-ink-red-7"
             data-conteos-error
@@ -217,21 +219,17 @@
                 :label="__('List size', null, CTX)"
                 @update:model-value="setUnit"
               />
-              <div class="flex items-center justify-between gap-3 px-1">
-                <span
-                  class="min-w-0 flex-1 text-md font-medium text-ink-gray-9"
-                  >{{ __('Per person', null, CTX) }}</span
-                >
-                <ConteoPaso
-                  :model-value="
-                    byProducts ? settings.products : settings.minutes
-                  "
-                  :bounds="byProducts ? PRODUCTS : MINUTES"
-                  :unit="byProducts ? '' : __('min', null, CTX)"
-                  :label="__('Per person', null, CTX)"
-                  @commit="setSize"
-                />
-              </div>
+              <p class="mb-1 px-1 text-xs font-medium text-ink-gray-6">
+                {{ __('Per person', null, CTX) }}
+              </p>
+              <ConteoPaso
+                wide
+                :model-value="byProducts ? settings.products : settings.minutes"
+                :bounds="byProducts ? PRODUCTS : MINUTES"
+                :unit="byProducts ? '' : __('min', null, CTX)"
+                :label="__('Per person', null, CTX)"
+                @commit="setSize"
+              />
               <p
                 v-if="errors.size"
                 role="alert"
@@ -411,6 +409,14 @@
         v-if="phone && !home.on && home.can_edit"
         class="sticky bottom-0 z-10 mt-auto bg-surface-base px-4 pb-3 pt-2"
       >
+        <p
+          v-if="errors.on"
+          role="alert"
+          class="pb-2 text-sm text-ink-red-7"
+          data-conteos-error
+        >
+          {{ errors.on }}
+        </p>
         <button
           type="button"
           :class="[FILLED, 'w-full']"
