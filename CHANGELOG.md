@@ -2,6 +2,13 @@
 
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
+## 2026-11-23 — A register turn reads whole: tickets, payments, cash movements, bags and counts (lane turno-completo; not deployed)
+
+- **Why:** Marco opened Jennifer's open turn on his phone and the page showed only its start, company and cashier.
+- **Change:** POS Opening Shift and POS Closing Shift get one curated record profile (`documentos/profiles/pos_shift.js`; their lists stay on the generic floor, `RECORD_ONLY` in `profiles/index.js`). The bar names the cashier with «Turno de caja · Abierto» or «Corte de caja · Cerrado». `components/documentos/turno/TurnoPanel.vue` sits under it and reads posawesome's `shift_view.shift`: the caja and when it ran, tiles (Ventas with tickets, returns and those waiting; Efectivo en caja or contado against expected; Diferencia or «Cuadró»), the other half and the turns on either side of a handover, then view chips with counts (Ventas, Pagos, Cobros, Movimientos, Bolsas, Traslados, Conteos, Cajón), each a list whose rows open the ticket, the cobro, the movement or the bag. An open turn reads again as its register saves (`useLiveList`, 5 s floor). Amounts the reader may not see stay off the screen (counts only, never a 0.00). `kindLabel` knows both doctypes. Efectivo's «De qué turno» on a bag or a count now opens the whole turn in Documentos (`shiftSource`, the closing once closed, the opening while open) instead of the closing in Resultados.
+- **Tests:** `turno.test.js` (11: the read, where and when, tiles closed, open and balanced, hidden amounts, every view's rows, chips, blind, links, the profile), `efectivo.test.js` adapted.
+- **Rollout:** needs posawesome from the same lane.
+
 ## 2026-11-23 — Efectivo: the drawer's limit and the mid-shift drop in the safe's sheet (lane efectivo-retiro; not deployed)
 
 - **Change:** `CajaFuerteSheet.vue` gains «Retiros de caja»: the switch that makes the register propose the drop, and «Límite en caja» (the drawer's limit, editable from the SPA for the first time). On needs a limit above the float the drop leaves; the sheet says so in place and the one «Guardar» waits. `efectivo.js` `safeSettingsSave` sends `drop: {on, drawer_limit}`; an older server without the block shows no section and is sent none.

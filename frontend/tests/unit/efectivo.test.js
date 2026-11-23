@@ -545,12 +545,9 @@ describe('the turn the cash came from', () => {
       title: 'Corte de Jenni',
       line: 'mar 3 nov, 09:28–15:01 · 7 ventas por $920.00 · Doco Ventas',
       note: 'Nota de Jenni: «faltan las recargas del cel»',
-      to: {
-        name: 'ResultadosDocumento',
-        params: { doctype: 'POS Closing Shift', name: 'POSA-CS-1' },
-      },
+      to: { path: '/documentos/tipo/POS%20Closing%20Shift/POSA-CS-1' },
     })
-    // A reader without the safe's totals gets the count of sales, no amount, and no link without Resultados.
+    // A reader without the safe's totals gets the count of sales, no amount, and no link without Documentos.
     const blind = shiftSource({ ...corte, total: null }, people, { now })
     expect(blind.line).toBe('mar 3 nov, 09:28–15:01 · 7 ventas · Doco Ventas')
     expect(blind.to).toBeNull()

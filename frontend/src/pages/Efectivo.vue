@@ -960,8 +960,8 @@ function countLine(c, safe, { difference = true } = {}) {
     .filter(Boolean)
     .join(' · ')
 }
-/** Resultados opens a closing; without that module the turn still reads, unlinked. */
-const corteLink = computed(() => moduleEnabled(shellBoot.value, 'resultados'))
+/** Documentos opens the whole turn; without that module the turn still reads, unlinked. */
+const corteLink = computed(() => moduleEnabled(shellBoot.value, 'documentos'))
 /** The review sheet's «De qué corte»: the turn, its closing and the counter's note. */
 function countSource(c, safe) {
   const shift = countShift(c, safe)

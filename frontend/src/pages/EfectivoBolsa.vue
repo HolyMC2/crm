@@ -351,11 +351,11 @@ const bag = computed(() => data.value?.bag || null)
 const safe = computed(() => data.value?.safe || { can: {} })
 const people = computed(() => data.value?.people || {})
 const counts = computed(() => data.value?.counts || [])
-/** The bag's turn; its closing opens in Resultados when that module is on. */
+/** The bag's turn; the whole turn opens in Documentos when that module is on. */
 const sourceOf = (extra = {}) =>
   shiftSource(bag.value?.shift, people.value, {
     currency: safe.value.currency,
-    link: moduleEnabled(shellBoot.value, 'resultados'),
+    link: moduleEnabled(shellBoot.value, 'documentos'),
     ...extra,
   })
 const source = computed(() => sourceOf())

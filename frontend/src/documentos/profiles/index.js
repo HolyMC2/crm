@@ -25,7 +25,12 @@ const CURATED = {
   'Purchase Receipt': () => import('./purchase_receipt.js'),
   'Purchase Invoice': () => import('./purchase_invoice.js'),
   'Payment Entry:pagos': () => import('./payment_entry_pay.js'),
+  // Efectivo: a register turn, either half (its record only; RECORD_ONLY).
+  'POS Opening Shift': () => import('./pos_shift.js'),
+  'POS Closing Shift': () => import('./pos_shift.js'),
 }
+// Curated records whose lists stay on the generic floor (its columns and facets).
+const RECORD_ONLY = new Set(['POS Opening Shift', 'POS Closing Shift'])
 
 /** The merged profile for a registry entry (or a bare doctype on the floor). */
 export async function loadProfile({ doctype, entry = null }) {
@@ -41,6 +46,8 @@ export function loadProfileBySlug(slug, base) {
   return entry ? loadProfile({ doctype: entry.doctype, entry }) : null
 }
 
+/** A curated list profile: false for the floor's doctypes and RECORD_ONLY ones. */
 export function hasCuratedProfile(doctype) {
+  if (RECORD_ONLY.has(doctype)) return false
   return Object.keys(CURATED).some((key) => key.split(':')[0] === doctype)
 }

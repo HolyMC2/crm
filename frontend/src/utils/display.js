@@ -147,6 +147,8 @@ const KINDS = {
   'Stock Entry': 'Movimiento de inventario',
   'Delivery Note': 'Entrega',
   'POS Invoice': 'Ticket',
+  'POS Opening Shift': 'Turno de caja',
+  'POS Closing Shift': 'Corte de caja',
   'Request for Quotation': 'Solicitud de cotización',
   'Supplier Quotation': 'Cotización de proveedor',
   'Stock Reconciliation': 'Ajuste de inventario',

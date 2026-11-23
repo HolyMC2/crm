@@ -1,5 +1,6 @@
 import { errorText as sentenceOf } from '@/utils/errorText'
 import { call } from 'frappe-ui'
+import { floorRoute } from '@/documentos/registry'
 import {
   dayDiff,
   formatDate,
@@ -397,7 +398,8 @@ export function shiftLine(shift, people = {}, { now, sales = true } = {}) {
 /**
  * The same turn where a bag or a difference is worked on: {title, line, note,
  * to}. The line adds the caja and, for who sees the safe's totals, what the
- * turn sold; `to` opens its closing in Resultados (`link`: that module is on).
+ * turn sold; `to` opens the whole turn, its closing once it closed
+ * (`link`: Documentos is on).
  */
 export function shiftSource(
   shift,
@@ -418,13 +420,13 @@ export function shiftSource(
     note: note
       ? `${noteBy ? `Nota de ${firstName(who(noteBy, people))}` : 'Nota'}: «${note}»`
       : '',
-    to:
-      link && shift.closing
-        ? {
-            name: 'ResultadosDocumento',
-            params: { doctype: 'POS Closing Shift', name: shift.closing },
-          }
-        : null,
+    to: !link
+      ? null
+      : shift.closing
+        ? floorRoute('POS Closing Shift', shift.closing)
+        : shift.shift
+          ? floorRoute('POS Opening Shift', shift.shift)
+          : null,
   }
 }
 
