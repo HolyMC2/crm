@@ -52865,3 +52865,366 @@ msgstr "Se puede encender cuando tu tienda en línea acepte cupones."
 msgctxt "AppClientes"
 msgid "Change it in Business settings"
 msgstr "Cambiarlo en Ajustes del negocio"
+msgctxt "Conteos"
+msgid "Daily counts"
+msgstr "Conteos del día"
+
+msgctxt "Conteos"
+msgid "Daily counts on"
+msgstr "Conteos del día encendidos"
+
+msgctxt "Conteos"
+msgid "Back to Inventario"
+msgstr "Volver a Inventario"
+
+msgctxt "Conteos"
+msgid "Turn on"
+msgstr "Encender"
+
+msgctxt "Conteos"
+msgid "Opening the counts…"
+msgstr "Abriendo los conteos…"
+
+msgctxt "Conteos"
+msgid "Retry"
+msgstr "Reintentar"
+
+msgctxt "Conteos"
+msgid "The counts could not be opened."
+msgstr "No se pudieron abrir los conteos."
+
+msgctxt "Conteos"
+msgid "That could not be saved. Try again."
+msgstr "No se pudo guardar. Intenta de nuevo."
+
+msgctxt "Conteos"
+msgid "You cannot open the daily counts"
+msgstr "No puedes abrir los conteos del día"
+
+msgctxt "Conteos"
+msgid "Whoever runs every store changes this"
+msgstr "Lo cambia quien lleva todos los almacenes"
+
+msgctxt "Conteos"
+msgid "Counted in 30 days"
+msgstr "Contado en 30 días"
+
+msgctxt "Conteos"
+msgid "Matches"
+msgstr "Cuadra"
+
+msgctxt "Conteos"
+msgid "{0} to decide"
+msgstr "{0} por decidir"
+
+msgctxt "Conteos"
+msgid "Operations"
+msgstr "Operación"
+
+msgctxt "Conteos"
+msgid "Review"
+msgstr "Revisión"
+
+msgctxt "Conteos"
+msgid "List size"
+msgstr "Tamaño de la lista"
+
+msgctxt "Conteos"
+msgid "Minutes"
+msgstr "Minutos"
+
+msgctxt "Conteos"
+msgid "Products"
+msgstr "Productos"
+
+msgctxt "Conteos"
+msgid "min"
+msgstr "min"
+
+msgctxt "Conteos"
+msgid "Per person a day"
+msgstr "Por persona al día"
+
+msgctxt "Conteos"
+msgid "Full pass"
+msgstr "Vuelta completa"
+
+msgctxt "Conteos"
+msgid "≈ {0} years"
+msgstr "≈ {0} años"
+
+msgctxt "Conteos"
+msgid "≈ {0} months"
+msgstr "≈ {0} meses"
+
+msgctxt "Conteos"
+msgid "≈ 1 month"
+msgstr "≈ 1 mes"
+
+msgctxt "Conteos"
+msgid "≈ {0} weeks"
+msgstr "≈ {0} semanas"
+
+msgctxt "Conteos"
+msgid "≈ 1 week"
+msgstr "≈ 1 semana"
+
+msgctxt "Conteos"
+msgid "Under a week"
+msgstr "Menos de una semana"
+
+msgctxt "Conteos"
+msgid "With nobody to count them"
+msgstr "Sin quien los cuente"
+
+msgctxt "Conteos"
+msgid "1 product"
+msgstr "1 producto"
+
+msgctxt "Conteos"
+msgid "{0} products"
+msgstr "{0} productos"
+
+msgctxt "Conteos"
+msgid "{0} min · {1}"
+msgstr "{0} min · {1}"
+
+msgctxt "Conteos"
+msgid "First"
+msgstr "Primero"
+
+msgctxt "Conteos"
+msgid "Below zero"
+msgstr "En negativo"
+
+msgctxt "Conteos"
+msgid "Did not match"
+msgstr "No cuadraron"
+
+msgctxt "Conteos"
+msgid "Best sellers"
+msgstr "Más vendido"
+
+msgctxt "Conteos"
+msgid "Most valuable"
+msgstr "Más valor"
+
+msgctxt "Conteos"
+msgid "Longest uncounted"
+msgstr "Más tiempo sin contar"
+
+msgctxt "Conteos"
+msgid "Days"
+msgstr "Días"
+
+msgctxt "Conteos"
+msgid "Mon"
+msgstr "Lun"
+
+msgctxt "Conteos"
+msgid "Tue"
+msgstr "Mar"
+
+msgctxt "Conteos"
+msgid "Wed"
+msgstr "Mié"
+
+msgctxt "Conteos"
+msgid "Thu"
+msgstr "Jue"
+
+msgctxt "Conteos"
+msgid "Fri"
+msgstr "Vie"
+
+msgctxt "Conteos"
+msgid "Sat"
+msgstr "Sáb"
+
+msgctxt "Conteos"
+msgid "Sun"
+msgstr "Dom"
+
+msgctxt "Conteos"
+msgid "If it does not match"
+msgstr "Si no cuadra"
+
+msgctxt "Conteos"
+msgid "Someone else recounts"
+msgstr "Recuenta otra persona"
+
+msgctxt "Conteos"
+msgid "I review it"
+msgstr "Lo reviso yo"
+
+msgctxt "Conteos"
+msgid "Muelle adjusts alone up to"
+msgstr "Muelle ajusta solo hasta"
+
+msgctxt "Conteos"
+msgid "No ceiling"
+msgstr "Sin tope"
+
+msgctxt "Conteos"
+msgid "How it is counted"
+msgstr "Cómo se cuenta"
+
+msgctxt "Conteos"
+msgid "Blind"
+msgstr "A ciegas"
+
+msgctxt "Conteos"
+msgid "Someone else recounts a sample"
+msgstr "Otra persona recuenta una muestra"
+
+msgctxt "Conteos"
+msgid "Photo"
+msgstr "Foto"
+
+msgctxt "Conteos"
+msgid "Never"
+msgstr "Nunca"
+
+msgctxt "Conteos"
+msgid "High value"
+msgstr "Alto valor"
+
+msgctxt "Conteos"
+msgid "High value and recounts"
+msgstr "Alto valor y recuentos"
+
+msgctxt "Conteos"
+msgid "High value from"
+msgstr "Alto valor desde"
+
+msgctxt "Conteos"
+msgid "Different in"
+msgstr "Distinto en"
+
+msgctxt "Conteos"
+msgid "Like the shop"
+msgstr "Como la tienda"
+
+msgctxt "Conteos"
+msgid "Yes"
+msgstr "Sí"
+
+msgctxt "Conteos"
+msgid "No"
+msgstr "No"
+
+msgctxt "Conteos"
+msgid "Set by the shop settings"
+msgstr "Lo fija la configuración de la tienda"
+
+msgctxt "Conteos"
+msgid "Groups"
+msgstr "Grupos"
+
+msgctxt "Conteos"
+msgid "More often"
+msgstr "Más seguido"
+
+msgctxt "Conteos"
+msgid "A sample only"
+msgstr "Solo una muestra"
+
+msgctxt "Conteos"
+msgid "Not counted"
+msgstr "No se cuenta"
+
+msgctxt "Conteos"
+msgid "+{0} more"
+msgstr "+{0} más"
+
+msgctxt "Conteos"
+msgid "Show less"
+msgstr "Ver menos"
+
+msgctxt "Conteos"
+msgid "Rests"
+msgstr "Descansa"
+
+msgctxt "Conteos"
+msgid "Paused until {0}"
+msgstr "Pausa hasta {0}"
+
+msgctxt "Conteos"
+msgid "No list today"
+msgstr "Sin lista hoy"
+
+msgctxt "Conteos"
+msgid "{0} of {1}"
+msgstr "{0} de {1}"
+
+msgctxt "Conteos"
+msgid "{0} counts"
+msgstr "{0} cuenta"
+
+msgctxt "Conteos"
+msgid "Add {0} to the counts"
+msgstr "Poner a contar a {0}"
+
+msgctxt "Conteos"
+msgid "Open {0}"
+msgstr "Abrir a {0}"
+
+msgctxt "Conteos"
+msgid "Close {0}"
+msgstr "Cerrar a {0}"
+
+msgctxt "Conteos"
+msgid "Where does {0} count?"
+msgstr "¿Dónde cuenta {0}?"
+
+msgctxt "Conteos"
+msgid "Minutes of {0}"
+msgstr "Minutos de {0}"
+
+msgctxt "Conteos"
+msgid "Products of {0}"
+msgstr "Productos de {0}"
+
+msgctxt "Conteos"
+msgid "Products of {0} in {1}"
+msgstr "Productos de {0} en {1}"
+
+msgctxt "Conteos"
+msgid "Stores"
+msgstr "Almacenes"
+
+msgctxt "Conteos"
+msgid "Even share"
+msgstr "Parejo"
+
+msgctxt "Conteos"
+msgid "Only"
+msgstr "Solo"
+
+msgctxt "Conteos"
+msgid "Everything"
+msgstr "Todo"
+
+msgctxt "Conteos"
+msgid "Count {0} again"
+msgstr "Volver a contar {0}"
+
+msgctxt "Conteos"
+msgid "Leave a group out"
+msgstr "Dejar fuera un grupo"
+
+msgctxt "Conteos"
+msgid "Pause until"
+msgstr "Pausa hasta"
+
+msgctxt "Conteos"
+msgid "No pause"
+msgstr "Sin pausa"
+
+msgctxt "Conteos"
+msgid "Less"
+msgstr "Menos"
+
+msgctxt "Conteos"
+msgid "More"
+msgstr "Más"

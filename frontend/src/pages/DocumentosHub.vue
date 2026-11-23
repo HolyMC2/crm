@@ -159,6 +159,7 @@ import { AppBar, EmptyState, ListRow } from '@/components/ui'
 import { isMobile, isWide } from '@/composables/breakpoint'
 import { shellBoot } from '@/composables/muelleShell'
 import { docApi } from '@/documentos/api'
+import { conteosDoor } from '@/components/inventario/conteosDoor'
 import {
   GROUPS,
   PROFILES,
@@ -183,6 +184,8 @@ const moduleLabel = computed(() =>
 const enabled = computed(() => moduleEnabled(shellBoot.value, moduleKey.value))
 
 const stats = ref({})
+// May this worker open «Conteos del día», and are the counts on.
+const conteos = ref(null)
 const stores = ref([])
 const storesUnassigned = ref(false)
 // Stores that hold stock, the most valuable (else the fullest) first.
@@ -266,6 +269,15 @@ const groups = computed(() => {
           subtitle: 'Quién movió qué, y cuándo',
           to: { name: 'InventarioMovimientos' },
         })
+      // «Conteos del día», for whoever its page opens for (its own door).
+      if (group.key === 'inventario' && conteos.value?.can_open)
+        items.push({
+          key: 'conteos',
+          icon: 'lucide-list-checks',
+          label: 'Conteos del día',
+          subtitle: conteos.value.on ? 'Encendidos' : 'Apagados',
+          to: { name: 'InventarioConteos' },
+        })
       if (
         group.key === 'inventario' &&
         moduleEnabled(shellBoot.value, 'productos')
@@ -318,6 +330,8 @@ async function loadStats() {
   }
   stats.value = out
   if (!isDocumentos.value) loadStores()
+  if (moduleEnabled(shellBoot.value, 'inventario'))
+    conteosDoor().then((door) => (conteos.value = door))
 }
 
 /** «12 productos · 340 piezas» (a store with nothing says so). */

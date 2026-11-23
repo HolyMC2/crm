@@ -937,6 +937,19 @@ const routes = [
       ownPhoneHeader: true,
     },
   },
+  {
+    // Conteos del día (scanner_kit plan_dia): before /inventario/:slug, as
+    // «movimientos», so «conteos» is never read as a document list.
+    path: '/inventario/conteos',
+    name: 'InventarioConteos',
+    component: () => import('@/pages/Conteos.vue'),
+    meta: {
+      app: 'inventario',
+      title: 'Conteos del día',
+      listParent: 'Inventario',
+      ownPhoneHeader: true,
+    },
+  },
   ...documentosRoutes('/inventario/:slug', 'InventarioLista', 'inventario'),
   // Inmobiliaria (INMO-SH): the real-estate app's homes, queues, board and
   // records. The pages draw what inmobiliaria.api.shell answers.

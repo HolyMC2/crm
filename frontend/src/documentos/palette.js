@@ -32,6 +32,7 @@ import {
   reachRankedAs,
 } from '@/utils/paletteReach'
 import { calculate } from '@/utils/paletteCalc'
+import { conteosDoorNow } from '@/components/inventario/conteosDoor'
 
 /** One palette row for a found document: party first, kind · number · date as the line. */
 export function documentItem(row, boot) {
@@ -214,6 +215,16 @@ export function documentosPlaces(boot) {
       keywords: 'kardex movimientos existencias stock ledger',
       icon: 'lucide-history',
       href: '/inventario/movimientos',
+    })
+  // «Conteos del día»: only for whoever its page would open for.
+  if (moduleEnabled(boot, 'inventario') && conteosDoorNow().can_open)
+    items.push({
+      id: 'inventario.conteos',
+      group: 'ir_a',
+      title: 'Inventario › Conteos del día',
+      keywords: 'conteo ciclico contar inventario quien cuenta plan',
+      icon: 'lucide-list-checks',
+      href: '/inventario/conteos',
     })
   for (const entry of PROFILES)
     if (readable.has(entry.doctype)) items.push(listPlace(entry))
