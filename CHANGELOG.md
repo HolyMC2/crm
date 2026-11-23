@@ -7,6 +7,12 @@ Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` i
 - **Why:** the installed Muelle app claimed only `/crm`, so an order opened from it (`/taller/orders/…`) ran in a browser tab with the page's title, the address and an X over it: one more bar on a phone where the order already lost half the screen (Marco, 2026-11-23).
 - **Change:** the web manifest's `scope` is `/` (was `/crm`), with `id: '/crm'` pinning the installed app to its first start_url so the wider scope updates the same app. Taller, POS, Escáner, Clínica, Mercado and the Desk open inside the Muelle window; Android's back leaves them. The service worker keeps its own scope (`/assets/crm/frontend/`).
 - **Rollout:** rides the crm bundle; an installed app picks up the new manifest on its next update check (Chrome refreshes it on its own, no reinstall). Rollback: revert.
+## 2026-11-23 — One search per screen, at the thumb (lane busqueda-abajo, with muelle and taller; not deployed)
+
+- **Why:** Marco: a module's search at the top and the universal search at the bottom on the same screen is odd, and the top is hard to reach on a phone.
+- **Change:** kit 0.4.0. On a phone, every list's own search (the 27 `AppBar searchable` pages and the `SearchPanel` lists: Contactos, Prospectos, Tratos, Productos, Correo, Manual, Organigrama) is the command bar's pill, where «Buscar o ir a…» was: the top bar loses its search, the list narrows as you type, its filters rise over the bar, and a row over the bar, «Buscar «…» en todo Muelle», opens the palette with the same words (`composables/paletteDoor.js`, `CommandPalette` `text`). Pages without a list search keep «Buscar o ir a…». While its field has the focus the bar stays over the keyboard and the field takes the whole row (the sparkle, scan and create action step aside); with a list search docked the paper camera leaves the bar (Más and the palette keep it). A docked list's «⋯» sits in the top bar beside the bell (`#shell-header-actions`). Desktop is unchanged.
+- **Tests:** `muelleUiKit.test.js` (+5: AppBar and SearchPanel docked, the top keeps only the active chips, the wider row's words, `:dock="false"`, no wider row without `searchAll`). Phone walk on the live preview against doco-mirror: Hoy, Cajas, Contactos and Facturas at 412 and 305, dark and light (`.scratch/proof`).
+- **Rollout:** with muelle (kit) and taller from the same lane.
 
 ## 2026-11-23 — A register turn reads whole: tickets, payments, cash movements, bags and counts (lane turno-completo; not deployed)
 
