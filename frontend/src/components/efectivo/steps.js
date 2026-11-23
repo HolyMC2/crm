@@ -1,5 +1,6 @@
 // Each custody step the shell offers, as the sheet that asks for it (Shell-S14).
-// A step = { sheet: 'conteo' | 'paso', props for that sheet, submit(values) }.
+// A step = { sheet: 'conteo' | 'paso' | 'viaje', props for that sheet, submit(values) };
+// 'viaje' (the bank) sends its own instruction from the card.
 // submit sends one instruction (oneInstruction keeps its request ID across a
 // retry) and rethrows the server's sentence, never a traceback.
 import {
@@ -130,84 +131,46 @@ export function countSafe(safe) {
   }
 }
 
-export function dispatchBag(bag, safe, people, me) {
+// The bank: leaving, the slip and the trip that came back are one card (ViajeCard),
+// for one bag or several, whatever the safe's switch says.
+function viaje(stage, bags, safe, extra = {}) {
+  const rows = bags.map((b) => ({
+    name: b.name,
+    seal: b.seal,
+    amount: b.amount,
+  }))
   return {
-    sheet: 'paso',
+    sheet: 'viaje',
     props: {
-      title: `Llevar ${bag.seal} al banco`,
-      amount: bag.amount,
-      currency: safe.currency,
-      custody: `Sale de la caja fuerte contigo (${who(me, people)}). Hasta que registren la ficha del banco, la bolsa está a tu cargo.`,
-      fields: [
-        {
-          key: 'note',
-          label: 'A qué banco y quién la lleva',
-          kind: 'reason',
-          placeholder: 'BBVA sucursal centro, la lleva Karla',
-        },
-      ],
-      confirmLabel: 'Salgo al banco',
+      stage,
+      bags: rows,
+      safe,
+      bank: safe.bank_trip?.bank || '',
+      showsMoney: rows.every(
+        (b) => b.amount !== null && b.amount !== undefined,
+      ),
+      ...extra,
     },
-    submit: guarded(async (v, id) => ({
-      ...(await custody('dispatch', safe, { bag: bag.name, note: v.note }, id)),
-      toast: 'Bolsa en camino al banco',
-    })),
   }
+}
+
+export function dispatchBag(bag, safe, people, me) {
+  return viaje('salir', [bag], safe, { people, me })
 }
 
 export function confirmDeposit(bag, safe, people) {
-  return {
-    sheet: 'paso',
-    props: {
-      title: `Depósito de ${bag.seal}`,
-      amount: bag.amount,
-      currency: safe.currency,
-      custody: `La lleva ${who(bag.holder?.user || bag.dispatched_by, people) || 'quien salió al banco'}; con la ficha queda en el banco y sale de su cargo.`,
-      fields: [
-        {
-          key: 'reference',
-          label: 'Número de la ficha de depósito',
-          kind: 'text',
-          placeholder: 'Folio o referencia del banco',
-        },
-      ],
-      confirmLabel: 'Registrar depósito',
-    },
-    submit: guarded(async (v, id) => ({
-      ...(await custody(
-        'confirm_bank',
-        safe,
-        { bag: bag.name, reference: v.reference },
-        id,
-      )),
-      toast: 'Depósito registrado',
-    })),
-  }
+  return viaje('ficha', [bag], safe, {
+    people,
+    by: bag.holder?.user || bag.dispatched_by || '',
+  })
 }
 
 export function returnFromBank(bag, safe, people) {
-  return {
-    sheet: 'paso',
-    props: {
-      title: `${bag.seal} regresó sin depositar`,
-      amount: bag.amount,
-      currency: safe.currency,
-      custody: `Vuelve a la caja fuerte desde ${who(bag.holder?.user || bag.dispatched_by, people) || 'quien la llevó'}. Otra persona la cuenta de nuevo antes de volver a salir.`,
-      fields: [
-        { key: 'note', label: 'Por qué no se depositó', kind: 'reason' },
-      ],
-      confirmLabel: 'Regresa a la caja fuerte',
-    },
-    submit: guarded(async (v, id) => ({
-      ...(await custody(
-        'return_bank',
-        safe,
-        { bag: bag.name, note: v.note },
-        id,
-      )),
-      toast: 'Bolsa de vuelta en la caja fuerte',
-    })),
-  }
+  return viaje('ficha', [bag], safe, {
+    people,
+    by: bag.holder?.user || bag.dispatched_by || '',
+    startReturning: true,
+  })
 }
 
 export function unpackBag(bag, safe) {
@@ -351,26 +314,7 @@ function several(action, bags, safe, props, payload, toast) {
 }
 
 export function dispatchBags(bags, safe, people, me) {
-  return several(
-    'dispatch',
-    bags,
-    safe,
-    {
-      title: `Llevar ${bagsWord(bags.length)} al banco`,
-      custody: `Salen de la caja fuerte contigo (${who(me, people)}). Hasta que registren la ficha del banco, están a tu cargo.`,
-      fields: [
-        {
-          key: 'note',
-          label: 'A qué banco y quién las lleva',
-          kind: 'reason',
-          placeholder: 'BBVA sucursal centro, las lleva Karla',
-        },
-      ],
-      confirmLabel: 'Salgo al banco',
-    },
-    (v) => ({ note: v.note }),
-    `${bagsWord(bags.length)} en camino al banco`,
-  )
+  return viaje('salir', bags, safe, { people, me })
 }
 
 /** The bank trip and its slip in one step, once the cash is already in the bank. */
@@ -405,47 +349,14 @@ export function depositBags(bags, safe) {
   )
 }
 
-export function confirmDeposits(bags, safe) {
-  return several(
-    'confirm_bank',
-    bags,
-    safe,
-    {
-      title: `Depósito de ${bagsWord(bags.length)}`,
-      custody:
-        'Una ficha para todas: con ella quedan en el banco y salen del cargo de quien las llevó.',
-      fields: [
-        {
-          key: 'reference',
-          label: 'Número de la ficha de depósito',
-          kind: 'text',
-          placeholder: 'Folio o referencia del banco',
-        },
-      ],
-      confirmLabel: 'Registrar depósito',
-    },
-    (v) => ({ reference: v.reference }),
-    'Depósito registrado',
-  )
+export function confirmDeposits(bags, safe, people) {
+  const by = bags[0]?.holder?.user || bags[0]?.dispatched_by || ''
+  return viaje('ficha', bags, safe, { people, by })
 }
 
-export function returnBags(bags, safe) {
-  return several(
-    'return_bank',
-    bags,
-    safe,
-    {
-      title: `${bagsWord(bags.length)} sin depositar`,
-      custody:
-        'Vuelven a la caja fuerte. Otra persona las cuenta de nuevo antes de volver a salir.',
-      fields: [
-        { key: 'note', label: 'Por qué no se depositaron', kind: 'reason' },
-      ],
-      confirmLabel: 'Regresan a la caja fuerte',
-    },
-    (v) => ({ note: v.note }),
-    'Bolsas de vuelta en la caja fuerte',
-  )
+export function returnBags(bags, safe, people) {
+  const by = bags[0]?.holder?.user || bags[0]?.dispatched_by || ''
+  return viaje('ficha', bags, safe, { people, by, startReturning: true })
 }
 
 export function unpackBags(bags, safe) {

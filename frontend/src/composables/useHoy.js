@@ -268,6 +268,8 @@ const SOURCE_ICONS = {
   'doco.metas': 'lucide-target',
   // The entrada or salida due now (doco.docoutils.hr.asistencia_navigation).
   'doco.asistencia': 'lucide-clock',
+  // A safe's bank trip is due (posawesome cash_custody.bank_trip_api).
+  'posawesome.bank_trip': 'lucide-landmark',
 }
 
 // «Primeros pasos» reads as the checklist it is, as in its whole list: an open

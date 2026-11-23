@@ -10,7 +10,7 @@
     <AppBar
       title="Efectivo"
       context="Dinero"
-      :count="waitingRows.length || undefined"
+      :count="waitingRows.length + tripCards.length || undefined"
       :scopes="safeScopes"
       :scope="scope"
       scope-title="Caja fuerte"
@@ -120,7 +120,7 @@
                   (visibleSafes[0] &&
                     (visibleSafes[0].can.count_safe ||
                       visibleSafes[0].can.fund ||
-                      visibleSafes[0].bag_plan?.can_configure)))
+                      configurable(visibleSafes[0]))))
               "
               class="order-3 mt-4"
               aria-label="Cajas fuertes"
@@ -151,9 +151,7 @@
                   >
                   <div
                     v-if="
-                      safe.can.count_safe ||
-                      safe.can.fund ||
-                      safe.bag_plan?.can_configure
+                      safe.can.count_safe || safe.can.fund || configurable(safe)
                     "
                     class="flex w-full flex-wrap gap-2"
                   >
@@ -246,6 +244,20 @@
           </div>
 
           <div class="contents lg:block">
+            <!-- The bank trip and its slips: before the cash on a phone, first
+                 in the work column on a desk. -->
+            <div
+              v-if="tripCards.length && see('te-toca')"
+              class="order-0 mx-4 mt-2 space-y-3"
+              data-efectivo-viajes
+            >
+              <ViajeCard
+                v-for="card in tripCards"
+                :key="card.key"
+                v-bind="card.props"
+                @done="tripDone"
+              />
+            </div>
             <!-- Te toca: this worker's next steps, oldest first. -->
             <section
               v-if="waitingRows.length && see('te-toca')"
@@ -549,7 +561,7 @@
       </ul>
     </BottomSheet>
     <StepHost :step="step" @close="step = null" @done="afterStep" />
-    <BolsasSheet
+    <CajaFuerteSheet
       v-if="bolsasSafe"
       :open="bolsasOpen"
       :safe="bolsasSafe"
@@ -583,8 +595,9 @@ import {
 } from '@/components/ui'
 import CashMap from '@/components/efectivo/CashMap.vue'
 import StepHost from '@/components/efectivo/StepHost.vue'
-const BolsasSheet = defineAsyncComponent(
-  () => import('@/components/efectivo/BolsasSheet.vue'),
+import ViajeCard from '@/components/efectivo/ViajeCard.vue'
+const CajaFuerteSheet = defineAsyncComponent(
+  () => import('@/components/efectivo/CajaFuerteSheet.vue'),
 )
 import PowerBulkBar from '@/components/power/PowerBulkBar.vue'
 import {
@@ -679,10 +692,10 @@ const view = ref('todo')
 const views = computed(() =>
   [
     { value: 'todo', label: 'Todo' },
-    waitingRows.value.length && {
+    waitingRows.value.length + tripCards.value.length && {
       value: 'te-toca',
       label: 'Te toca',
-      count: waitingRows.value.length,
+      count: waitingRows.value.length + tripCards.value.length,
     },
     allBags.value.length && { value: 'bolsas', label: 'Bolsas' },
     arqueos.value.length && { value: 'arqueos', label: 'Arqueos' },
@@ -703,7 +716,7 @@ const actionsInCard = computed(() => {
   return Boolean(
     cash.value &&
       only &&
-      (only.can.count_safe || only.can.fund || only.bag_plan?.can_configure),
+      (only.can.count_safe || only.can.fund || configurable(only)),
   )
 })
 // A safe's own actions, each with its word: tonal pills.
@@ -737,10 +750,10 @@ const SafeActions = defineComponent({
           () => open(countSafe(p.of)),
         ),
         action(
-          p.of.bag_plan?.can_configure,
+          configurable(p.of),
           'data-efectivo-bolsas-open',
           'lucide-sliders-horizontal',
-          'Bolsas al cerrar',
+          'Ajustes',
           () => openBolsas(p.of),
         ),
       ].filter(Boolean)
@@ -1084,6 +1097,61 @@ const selecting = ref(false)
 const selected = ref(new Set())
 const actionsOpen = ref(false)
 const me = computed(() => data.value?.user)
+
+// The bank trip (posawesome bank_trip_api): the trip a safe proposes and each
+// trip on its way, as cards; the bags of a trip are the safe's own rows.
+const tripCards = computed(() =>
+  visibleSafes.value.flatMap((safe) =>
+    (safe.waiting || [])
+      .filter((w) => w.kind === 'trip')
+      .map((w) => {
+        const common = {
+          safe,
+          bank: safe.bank_trip?.bank || '',
+          people: people.value,
+          me: me.value,
+        }
+        if (w.action === 'bank_trip') {
+          const trip = safe.bank_trip || {}
+          return {
+            key: `viaje:${safe.safe}`,
+            props: {
+              ...common,
+              stage: 'salir',
+              bags: trip.bags || [],
+              reason: {
+                reason: trip.reason,
+                days: trip.days,
+                over: trip.over_amount,
+              },
+              showsMoney: trip.amount !== undefined && trip.amount !== null,
+            },
+          }
+        }
+        const bags = (w.bags || [])
+          .map((name) => safe.bags.find((b) => b.name === name))
+          .filter(Boolean)
+        return {
+          key: `ficha:${w.name}`,
+          props: {
+            ...common,
+            stage: 'ficha',
+            bags,
+            by: w.by || '',
+            at: w.at || '',
+            showsMoney:
+              safe.balance !== null &&
+              safe.balance !== undefined &&
+              bags.every((b) => b.amount !== null && b.amount !== undefined),
+          },
+        }
+      }),
+  ),
+)
+function tripDone(result) {
+  if (result?.toast) toast.success(result.toast)
+  load()
+}
 const BULK_CAN = [
   'verify',
   'dispatch',
@@ -1204,8 +1272,8 @@ const SEVERAL = {
   verify_each: (bags, s, p) => verifyEach(bags, s, p),
   deposit: (bags, s) => depositBags(bags, s),
   dispatch: (bags, s, p, u) => dispatchBags(bags, s, p, u),
-  confirm_bank: (bags, s) => confirmDeposits(bags, s),
-  return_bank: (bags, s) => returnBags(bags, s),
+  confirm_bank: (bags, s, p) => confirmDeposits(bags, s, p),
+  return_bank: (bags, s, p) => returnBags(bags, s, p),
   transfer_safe: (bags, s) => sendOffsiteBags(bags, s),
   unpack: (bags, s) => unpackBags(bags, s),
 }
@@ -1236,7 +1304,13 @@ function open(next) {
   step.value = next
 }
 
-// Bags at closing: the safe's settings sheet (BolsasSheet), mounted on first open.
+// The safe's settings sheet (CajaFuerteSheet: bags at closing and the bank
+// trip), mounted on first open; for whoever may configure either.
+function configurable(safe) {
+  return Boolean(
+    safe?.bag_plan?.can_configure || safe?.bank_trip?.can_configure,
+  )
+}
 const bolsasSafe = ref(null)
 const bolsasOpen = ref(false)
 function openBolsas(safe) {

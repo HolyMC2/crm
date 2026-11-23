@@ -2,7 +2,7 @@
   <!-- One cell per bill or coin: its face, the subtotal and a − count +
        stepper. Rows (`grid` off) for counting a bag (ConteoSheet), where the
        subtotals line up; a grid of tonal cells for setting the float's pieces
-       (BolsasSheet), every face on one screen. -->
+       (CajaFuerteSheet), every face on one screen. -->
   <ul
     :class="
       grid

@@ -151,14 +151,14 @@ describe('steps send the custody commands', () => {
   it('a register safe is named by its profile', async () => {
     const pair = { ...storeSafe, store: null, pos_profile: 'Caja 1' }
     await steps
-      .confirmDeposit({ name: 'BAG-2', seal: 'S', holder: {} }, pair, people)
-      .submit({ reference: 'F-9' })
+      .unpackBag({ name: 'BAG-2', seal: 'S', holder: {} }, pair)
+      .submit({ note: 'Se abre para dar cambio' })
     expect(JSON.parse(calls[0].args.payload)).toMatchObject({
       pos_profile: 'Caja 1',
       bag: 'BAG-2',
-      reference: 'F-9',
+      note: 'Se abre para dar cambio',
     })
-    expect(calls[0].args.action).toBe('confirm_bank')
+    expect(calls[0].args.action).toBe('unpack')
   })
 
   it('a refusal comes back as the server sentence', async () => {
@@ -167,15 +167,13 @@ describe('steps send the custody commands', () => {
         messages: ['Only verified available bags can leave for the bank.'],
       }
     }
-    const step = steps.dispatchBag(
+    const step = steps.unpackBag(
       { name: 'B', seal: 'S', amount: 10 },
       storeSafe,
-      people,
-      'karla@x',
     )
-    await expect(step.submit({ note: 'BBVA centro, Karla' })).rejects.toThrow(
-      'Only verified available bags can leave for the bank.',
-    )
+    await expect(
+      step.submit({ note: 'Se abre para dar cambio' }),
+    ).rejects.toThrow('Only verified available bags can leave for the bank.')
   })
 
   it('a safe traslado is sealed, then handed over, with related request IDs', async () => {
@@ -291,25 +289,19 @@ describe('several bags, one instruction', () => {
     expect(keys(bulkActions(chosen, cashier, 'karla@x'))).toEqual(['labels:2'])
   })
 
-  it('a bank trip for several bags is one batch with one note', async () => {
+  it('a bank trip for several bags is the trip card with those bags', () => {
     const step = steps.dispatchBags(
       [bag('B1', 'Available'), bag('B2', 'Available')],
       pair,
       people,
       'karla@x',
     )
-    expect(step.props.title).toBe('Llevar 2 bolsas al banco')
-    expect(step.props.amount).toBe(2000.2)
-    expect(step.props.items.map((i) => i.title)).toEqual(['SEAL-B1', 'SEAL-B2'])
-    await step.submit({ note: 'BBVA centro, Karla' })
-    expect(calls[0].method).toBe(BATCH)
-    expect(calls[0].args.action).toBe('dispatch')
-    expect(payload()).toMatchObject({
-      pos_profile: 'Tienda',
-      bags: ['B1', 'B2'],
-      note: 'BBVA centro, Karla',
-    })
-    expect(payload().request_id).toMatch(/^shell-/)
+    // The card sends the one batch itself (efectivoViaje.test.js).
+    expect(step.sheet).toBe('viaje')
+    expect(step.props.stage).toBe('salir')
+    expect(step.props.bags.map((b) => b.seal)).toEqual(['SEAL-B1', 'SEAL-B2'])
+    expect(step.props.me).toBe('karla@x')
+    expect(step.props.safe).toBe(pair)
   })
 
   it('a deposit takes one slip; a blank note is left to the server', async () => {
@@ -406,13 +398,8 @@ describe('several bags, one instruction', () => {
     }
     await expect(
       steps
-        .dispatchBags(
-          [bag('B1', 'Available'), bag('B2', 'Available')],
-          pair,
-          people,
-          'karla@x',
-        )
-        .submit({ note: 'BBVA centro, Karla' }),
+        .unpackBags([bag('B1', 'Available'), bag('B2', 'Available')], pair)
+        .submit({ note: 'Se abren para dar cambio' }),
     ).rejects.toThrow('SEAL-B2: Only verified available bags')
   })
 })

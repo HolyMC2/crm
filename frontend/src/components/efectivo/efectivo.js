@@ -30,6 +30,35 @@ export const bagPlanSave = (safe, { on, floatMix, changeTarget, bankFrom }) =>
     bank_from: bankFrom,
   })
 
+// One safe's settings sheet (posawesome safe_settings_api): the bags at closing
+// and the bank trip, read and saved together.
+const SAFE_SETTINGS = `${POSA}.cash_custody.safe_settings_api`
+export const safeSettingsRead = (safe) =>
+  call(`${SAFE_SETTINGS}.view`, { safe })
+export const safeSettingsSave = (safe, { plan, trip }) =>
+  call(`${SAFE_SETTINGS}.save`, {
+    safe,
+    ...(plan
+      ? {
+          bag_plan: JSON.stringify({
+            on: plan.on ? 1 : 0,
+            float_mix: plan.floatMix,
+            change_target: plan.changeTarget,
+            bank_from: plan.bankFrom,
+          }),
+        }
+      : {}),
+    ...(trip
+      ? {
+          bank_trip: JSON.stringify({
+            on: trip.on ? 1 : 0,
+            amount: trip.amount || 0,
+            days: trip.days || 0,
+          }),
+        }
+      : {}),
+  })
+
 /** A request ID the custody server accepts (16–80 letters, digits, - and _). */
 export function newRequestId() {
   const bytes = new Uint8Array(12)
