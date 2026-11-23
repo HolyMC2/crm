@@ -33,7 +33,6 @@
         :stack="!backTo"
         :bell-active="activeKey === 'avisos'"
         class="transition-[margin] duration-200 ease-out motion-reduce:transition-none"
-        :class="backTo ? '' : '!border-b-transparent'"
         :style="headerHidden ? { marginTop: `-${headerHeight}px` } : null"
       >
         <template #title>
@@ -65,7 +64,7 @@
         <template v-if="route.meta.ownBottomBar" #actions>
           <button
             type="button"
-            class="press flex size-12 flex-none items-center justify-center rounded-full text-ink-gray-7 active:bg-surface-gray-2 [@media(hover:hover)]:hover:bg-surface-gray-2"
+            class="press flex size-12 flex-none items-center justify-center rounded-full text-ink-gray-7"
             :aria-label="__('Search')"
             :title="searchHint"
             :aria-keyshortcuts="searchKeys"
@@ -199,11 +198,13 @@
            #shell-primary-action while this bar is mounted, so it never floats
            over the last rows of a list). It hides with the nav (keyboard,
            drill-down panes, records with their own bottom bar) but stays
-           mounted, so the teleport target never goes away under a page. -->
+           mounted, so the teleport target never goes away under a page.
+           It is one tonal block with the nav under it (the container role),
+           with no rule above either. -->
       <div
         v-if="phone"
         v-show="navVisible"
-        class="flex shrink-0 items-center gap-1 border-t border-outline-gray-1 bg-surface-base py-1.5 pl-2 pr-1.5"
+        class="flex shrink-0 items-center gap-1 bg-[var(--muelle-surface-container)] pb-0.5 pl-3 pr-2 pt-2"
         data-testid="shell-command-bar"
       >
         <!-- Global search (⌘K «Buscar o ir a…») is the bar's main door: find
@@ -211,17 +212,14 @@
              so the list's own search above stays the only field on screen. -->
         <button
           type="button"
-          class="press flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full bg-surface-gray-2 pl-3.5 pr-4 text-left text-base text-ink-gray-6 active:bg-surface-gray-3"
+          class="press flex h-12 min-w-0 flex-1 items-center gap-2 rounded-full bg-[var(--muelle-surface-container-highest)] pl-4 pr-[18px] text-left text-[15px] text-[var(--muelle-on-surface-variant)]"
           :aria-label="__('Search or go to…')"
           :title="searchHint"
           :aria-keyshortcuts="searchKeys"
           data-testid="shell-search"
           @click="openPalette('all')"
         >
-          <span
-            class="lucide-search size-5 flex-none text-ink-gray-7"
-            aria-hidden="true"
-          />
+          <span class="lucide-search size-5 flex-none" aria-hidden="true" />
           <span class="min-w-0 truncate max-[359px]:hidden">{{
             __('Search or go to…')
           }}</span>
@@ -409,8 +407,10 @@ const route = useRoute(),
   router = useRouter()
 const online = useOnline()
 const phone = isMobile
+// 48 px, as the docked create action beside them; the kit's state layer
+// (.press) is their hover and press on the bar's tone.
 const COMMAND_ICON =
-  'press flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-8 active:bg-surface-gray-2 [@media(hover:hover)]:hover:bg-surface-gray-2'
+  'press flex size-12 flex-none items-center justify-center rounded-full text-[var(--muelle-on-surface-variant)]'
 // ui/Fab docks into the command bar while the phone shell shows one.
 watch(phone, (value) => (primaryDock.value = Boolean(value)), {
   immediate: true,
@@ -513,7 +513,7 @@ const navVisible = computed(
 
 // Phone header hides on scroll down and returns on scroll up. Only vertical
 // scrolls of the page's own scrollers count (chip rows scroll sideways).
-const HEADER_HEIGHT = 56 // AppBar's min-h-14
+const HEADER_HEIGHT = 64 // AppBar's min-h-16 (tests/unit/muelleUiLook.test.js keeps the two in step)
 const headerHeight = HEADER_HEIGHT
 const headerHidden = ref(false)
 const lastScroll = new WeakMap()

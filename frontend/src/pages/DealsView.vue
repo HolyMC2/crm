@@ -711,7 +711,7 @@
           @click="bulkSchedule"
         >
           {{ __('Programar seguimiento') }}
-          <kbd class="text-xs opacity-70">N</kbd>
+          <kbd class="text-xs font-normal">N</kbd>
         </button>
         <button
           type="button"

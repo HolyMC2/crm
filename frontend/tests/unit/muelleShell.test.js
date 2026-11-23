@@ -991,11 +991,11 @@ describe('one frame for every route', () => {
     const scroller = phoneScroller({ client: 500, scroll: 2000 })
     await scroller.to(200)
     await scroller.to(400)
-    expect(header().style.marginTop).toBe('-56px') // AppBar's height
+    expect(header().style.marginTop).toBe('-64px') // AppBar's height (min-h-16)
     await scroller.to(380)
     expect(header().style.marginTop).toBe('')
     await scroller.to(600)
-    expect(header().style.marginTop).toBe('-56px')
+    expect(header().style.marginTop).toBe('-64px')
     // near the top the header always shows
     await scroller.to(20)
     expect(header().style.marginTop).toBe('')
@@ -1008,12 +1008,12 @@ describe('one frame for every route', () => {
     const scroller = phoneScroller({ client: 400, scroll: 1000 })
     await scroller.to(100)
     await scroller.to(600)
-    expect(header().style.marginTop).toBe('-56px')
+    expect(header().style.marginTop).toBe('-64px')
     // The header slides away, the list grows, the browser pulls its scroll
     // back to fit: the header stays away.
     await scroller.to(580, { client: 420 })
-    await scroller.to(544, { client: 456 })
-    expect(header().style.marginTop).toBe('-56px')
+    await scroller.to(536, { client: 464 })
+    expect(header().style.marginTop).toBe('-64px')
     // The worker's own scroll up still brings it back.
     await scroller.to(500)
     expect(header().style.marginTop).toBe('')
@@ -1024,7 +1024,7 @@ describe('one frame for every route', () => {
     await mount('/contactos')
     const header = () => root.querySelector('[data-testid="shell-header"]')
     // Two sales (Resultados, 2026-11-11): 82 px to scroll; without the header
-    // the list would grow by 56 and could not stay past it.
+    // the list would grow by 64 and could not stay past it.
     const scroller = phoneScroller({ client: 348, scroll: 430 })
     await scroller.to(30)
     await scroller.to(70)
@@ -2669,6 +2669,54 @@ describe('Ventas navigation on every screen', () => {
     const bar = root.querySelector('[data-testid="shell-command-bar"]')
     expect(bar.querySelector('[data-testid="shell-search"]')).not.toBeNull()
     expect(bar.querySelector('[data-testid="shell-assistant"]')).toBeNull()
+  })
+
+  it('phone command bar and nav: one tonal block at the thumb, no rule above either, 48 px controls', async () => {
+    const { _resetAssistant } = await import(
+      '@/components/assistant/useAssistant'
+    )
+    _resetAssistant()
+    state.mobile.value = true
+    state.call.mockImplementation(async (method) => {
+      if (method === 'crm.api.shell.boot') return boot()
+      if (method.endsWith('shell_api.status')) return { enabled: true }
+      return null
+    })
+    await mount('/contactos')
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    await nextTick()
+    const bar = root.querySelector('[data-testid="shell-command-bar"]')
+    const nav = root.querySelector('nav[aria-label="Main navigation"]')
+    // The container role by name: both bars are the same step of tone, and
+    // tone parts them from the page, not a hairline.
+    for (const el of [bar, nav]) {
+      expect(el.className).toContain('bg-[var(--muelle-surface-container)]')
+      expect(el.className).not.toMatch(/(^|\s)border(-|\s|$)/)
+    }
+    expect(bar.nextElementSibling).toBe(nav)
+    // The search door: 48 px on the highest container, secondary ink.
+    const search = bar.querySelector('[data-testid="shell-search"]')
+    expect(search.className).toContain('h-12')
+    expect(search.className).toContain(
+      'bg-[var(--muelle-surface-container-highest)]',
+    )
+    expect(search.className).toContain(
+      'text-[var(--muelle-on-surface-variant)]',
+    )
+    // The icon doors beside it: 48 px as the docked create action, and the
+    // kit's state layer (.press) instead of a hover fill of their own.
+    const doors = [...bar.querySelectorAll('button, a')].filter(
+      (el) => el !== search,
+    )
+    expect(doors.map((el) => el.dataset.testid)).toContain('shell-assistant')
+    for (const door of doors) {
+      expect(door.className, door.dataset.testid).toContain('size-12')
+      expect(door.className, door.dataset.testid).toContain('press')
+      expect(door.className, door.dataset.testid).not.toMatch(
+        /hover:bg-|active:bg-/,
+      )
+    }
+    _resetAssistant()
   })
 
   it('⌘J with a dialog open and the status off closes nothing', async () => {

@@ -2,7 +2,7 @@
   <div>
     <div
       v-show="showSmallCallPopup"
-      class="ml-2 flex cursor-pointer select-none items-center justify-between gap-1 rounded-full bg-surface-gray-10 px-2 py-[7px] text-base text-ink-gray-2"
+      class="ui-inverse ml-2 flex cursor-pointer select-none items-center justify-between gap-1 rounded-full px-2 py-[7px] text-base"
       @click="toggleCallPopup"
     >
       <div
@@ -39,7 +39,7 @@
     </div>
     <div
       v-show="showCallPopup"
-      class="fixed z-20 w-[280px] min-h-44 flex gap-2 flex-col rounded-6 bg-surface-gray-10 p-4 pt-2.5 text-ink-gray-2 shadow-2xl"
+      class="ui-inverse fixed z-20 flex min-h-44 w-[280px] flex-col gap-2 rounded-6 p-4 pt-2.5 shadow-2xl"
       :style="style"
       @click.stop
     >

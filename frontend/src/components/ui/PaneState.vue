@@ -1,9 +1,10 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (78e759f7d2ee). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.2.0 (57ffdde5733b). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <template>
   <!-- One pane-level state (CRM S5.4): loading, empty, denied or error, each
        with words and, where it helps, the action that moves the worker on.
-       Never a blank pane. The default slot adds further ways out (a way back
-       next to «Retry»). -->
+       Never a blank pane. The icon sits on a 56 px tonal disc; the message
+       stays, since it is where a guard says why. The default slot adds
+       further ways out (a way back next to «Retry»). -->
   <div
     class="flex min-h-[12rem] flex-1 flex-col items-center justify-center gap-2 px-6 py-10 text-center"
     :role="state === 'error' || state === 'denied' ? 'alert' : 'status'"
@@ -11,10 +12,14 @@
     :data-pane-state="state"
   >
     <span
-      class="size-6 flex-none text-ink-gray-5"
-      :class="[icon, state === 'loading' ? 'animate-spin' : '']"
+      class="mb-1 flex size-14 flex-none items-center justify-center rounded-full bg-surface-gray-4 text-[var(--muelle-on-surface-variant)]"
       aria-hidden="true"
-    />
+    >
+      <span
+        class="size-6"
+        :class="[icon, state === 'loading' ? 'animate-spin' : '']"
+      />
+    </span>
     <p class="text-base-medium text-ink-gray-8">{{ heading }}</p>
     <p v-if="detail" class="max-w-sm text-sm text-ink-gray-6">{{ detail }}</p>
     <div

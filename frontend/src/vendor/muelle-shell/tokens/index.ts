@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/tokens@0.1.0 (754e8801108e). DO NOT EDIT:
+// Vendored from muelle/workspace/packages/tokens@0.2.0 (f60255e9ba39). DO NOT EDIT:
 // change the package, then run its scripts/vendor.mjs against this directory.
 export {
   normalizeHex,
@@ -35,7 +35,26 @@ export {
   type Appearance,
   type ThemeName,
 } from './appearance'
-export { PREFIX, MOTION, REDUCED_MOTION_MS, TOUCH_MIN, accentProperties, accentCss, renderTokensCss } from './css'
+export {
+  materialRoles,
+  CONTAINER_WEIGHTS,
+  SECONDARY_CONTAINER_WEIGHT,
+  ACCENT_HOVER_WEIGHT,
+  type MaterialRole,
+  type MaterialRoles,
+} from './material'
+export {
+  PREFIX,
+  MOTION,
+  REDUCED_MOTION_MS,
+  TOUCH_MIN,
+  SHAPE,
+  ELEVATION,
+  accentProperties,
+  materialProperties,
+  accentCss,
+  renderTokensCss,
+} from './css'
 export { vuetifyThemes, type VuetifyThemeDefinition } from './vuetify'
 export { findRawColors, ESLINT_RESTRICTED_SYNTAX, ALLOW_MARKER, type ColorViolation } from './lint'
 export { FRAPPE_UI_VERSION, FRAPPE_THEMES, FONT_FAMILY, FONT_SIZES, FONT_WEIGHTS, RADII, type ThemeToken } from './frappe-ui'

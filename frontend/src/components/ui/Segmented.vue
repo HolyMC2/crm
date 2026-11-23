@@ -1,14 +1,15 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (78e759f7d2ee). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.2.0 (57ffdde5733b). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <template>
-  <!-- Two to four views of the same thing (Shell SPEC §2.2.4): one outlined
-       track, equal segments, the chosen one tonal with a check. Not for
+  <!-- Two to four views of the same thing (Shell SPEC §2.2.4): one tonal
+       track (container-high), equal segments with no border or dividers, the
+       chosen one a pill on the secondary container with a check. Not for
        filters (FilterChips) and not for done/cancelled (fold them into a
        «Completados (n)» section). -->
   <div
     ref="root"
     role="radiogroup"
     :aria-label="label"
-    class="flex w-full rounded-full border border-outline-gray-2"
+    class="flex w-full gap-0.5 rounded-full bg-[var(--muelle-surface-container-high)] p-1"
     :class="
       fit === 'content'
         ? 'overflow-x-auto overscroll-x-contain [scrollbar-width:none]'
@@ -25,15 +26,14 @@
       :aria-checked="String(option.value === modelValue)"
       :tabindex="tabStop(option.value, index) ? 0 : -1"
       :data-index="index"
-      class="flex min-h-11 items-center justify-center gap-1.5 px-2 py-1 text-sm font-medium leading-tight"
+      class="state-layer flex min-h-10 items-center justify-center gap-1.5 rounded-full px-2 py-1 text-sm leading-tight"
       :class="[
         fit === 'content'
           ? 'flex-auto whitespace-nowrap px-3'
           : 'min-w-0 flex-1',
-        index ? 'border-l border-outline-gray-2' : '',
         option.value === modelValue
-          ? 'bg-surface-gray-3 text-ink-gray-9'
-          : 'text-ink-gray-7 hover:bg-surface-gray-1',
+          ? 'bg-[var(--muelle-secondary-container)] font-semibold text-[var(--muelle-on-secondary-container)]'
+          : 'font-medium text-[var(--muelle-on-surface-variant)]',
       ]"
       @click="select(option.value)"
     >
@@ -52,7 +52,7 @@
       }}</span>
       <span
         v-if="option.count !== undefined && option.count !== null"
-        class="tabular-nums text-ink-gray-6"
+        class="tabular-nums font-normal"
         >{{ option.count }}</span
       >
     </button>

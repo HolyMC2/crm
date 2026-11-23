@@ -12,9 +12,7 @@
     <template #suffix>
       <Tooltip>
         <template #content>
-          <div
-            class="rounded-4 bg-surface-gray-10 py-1.5 px-2 text-xs text-ink-base shadow-xl"
-          >
+          <div class="ui-inverse rounded-4 px-2 py-1.5 text-xs shadow-xl">
             <span class="flex items-center gap-1">
               {{ show ? __('Hide Password') : __('Show Password') }}
               <KeyboardShortcut

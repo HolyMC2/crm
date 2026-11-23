@@ -1,6 +1,7 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (78e759f7d2ee). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.2.0 (57ffdde5733b). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <template>
-  <!-- One horizontal row of filter chips (Shell SPEC §2.2.4, M3 filter chip).
+  <!-- One horizontal row of filter chips (Shell SPEC §2.2.4, M3 filter chip):
+       the kit's one chip (chipClass), on = the secondary container with a check.
        On a touch screen it scrolls sideways with a fade at the end; with a
        mouse, which cannot swipe, it wraps so every chip stays in reach (on a
        desk the chips are the only way between views once a record fills the
@@ -12,35 +13,35 @@
        sits in place under them, no sheet. -->
   <div v-if="inline" class="space-y-3" data-ui-filter-chips>
     <section :aria-label="label || t('Filters')">
-      <p v-if="label" class="mb-1.5 text-xs font-medium text-ink-gray-6">
+      <p v-if="label" class="mb-0.5 text-xs font-medium text-ink-gray-6">
         {{ label }}
       </p>
-      <div class="flex flex-wrap gap-1.5">
+      <div class="flex flex-wrap gap-x-2">
         <button
           v-for="chip in ordered"
           :key="chip.value"
           type="button"
-          :class="panelChip(isOn(chip.value))"
+          :class="chipClass(isOn(chip.value))"
           :aria-pressed="String(isOn(chip.value))"
           :data-chip="chip.value"
           @click="toggle(chip.value)"
         >
           <span
-            v-if="chip.icon"
-            :class="[chip.icon, 'size-3.5 flex-none']"
+            v-if="chip.icon && !isOn(chip.value)"
+            :class="[chip.icon, 'size-4 flex-none']"
             aria-hidden="true"
           />
           {{ chip.label }}
           <span
             v-if="chip.count !== undefined && chip.count !== null"
-            class="text-[10px] tabular-nums opacity-70"
+            class="tabular-nums font-normal"
             >{{ chip.count }}</span
           >
         </button>
       </div>
     </section>
     <section v-if="$slots.filters" :aria-label="filtersLabel || t('Filters')">
-      <div class="mb-1.5 flex items-center justify-between">
+      <div class="mb-0.5 flex items-center justify-between">
         <p class="text-xs font-medium text-ink-gray-6">
           {{ filtersLabel || t('Filters') }}
         </p>
@@ -61,29 +62,29 @@
   <div
     v-else-if="summary"
     v-show="onChips.length || filtersCount"
-    class="flex flex-wrap gap-1.5"
+    class="flex flex-wrap gap-x-2"
     data-ui-filter-summary
   >
     <button
       v-for="chip in onChips"
       :key="chip.value"
       type="button"
-      :class="panelChip(true)"
+      :class="chipClass(true)"
       :aria-label="t('Remove filter {0}', [chip.label])"
       @click="toggle(chip.value)"
     >
       {{ chip.label }}
-      <span class="lucide-x size-3 flex-none" aria-hidden="true" />
+      <span class="lucide-x -mr-1 size-4 flex-none" aria-hidden="true" />
     </button>
     <button
       v-if="filtersCount"
       type="button"
-      :class="panelChip(true)"
+      :class="chipClass(true)"
       :aria-label="t('Clear filters')"
       @click="$emit('clear-filters')"
     >
       {{ t('{0} filters on', [filtersCount]) }}
-      <span class="lucide-x size-3 flex-none" aria-hidden="true" />
+      <span class="lucide-x -mr-1 size-4 flex-none" aria-hidden="true" />
     </button>
   </div>
   <div v-else class="relative" data-ui-filter-chips>
@@ -98,7 +99,7 @@
       <button
         v-if="$slots.filters"
         type="button"
-        class="flex min-h-11 flex-none items-center"
+        :class="chipClass(filtersCount > 0)"
         aria-haspopup="dialog"
         :aria-label="
           filtersCount
@@ -108,48 +109,39 @@
         data-ui-filters-chip
         @click="sheet = true"
       >
-        <span :class="chipClass(filtersCount > 0)">
-          <span
-            class="lucide-sliders-horizontal size-4 flex-none"
-            aria-hidden="true"
-          />
-          {{ filtersLabel || t('Filters') }}
-          <span
-            v-if="filtersCount"
-            class="min-w-5 rounded-full bg-surface-gray-10 px-1.5 text-center text-xs font-semibold leading-5 text-ink-base"
-            aria-hidden="true"
-            >{{ filtersCount }}</span
-          >
-        </span>
+        <span
+          class="lucide-sliders-horizontal size-4 flex-none"
+          aria-hidden="true"
+        />
+        {{ filtersLabel || t('Filters') }}
+        <span
+          v-if="filtersCount"
+          class="-mr-1 min-w-5 rounded-full bg-[var(--muelle-accent)] px-1.5 text-center text-xs font-semibold leading-5 text-[var(--muelle-accent-ink)]"
+          aria-hidden="true"
+          >{{ filtersCount }}</span
+        >
       </button>
+      <!-- The check of the chip that is on comes from shell.css (.ui-chip-on). -->
       <button
         v-for="chip in ordered"
         :key="chip.value"
         type="button"
-        class="flex min-h-11 flex-none items-center"
+        :class="chipClass(isOn(chip.value))"
         :aria-pressed="String(isOn(chip.value))"
         :data-chip="chip.value"
         @click="toggle(chip.value)"
       >
-        <span :class="chipClass(isOn(chip.value))">
-          <span
-            v-if="isOn(chip.value)"
-            class="lucide-check size-4 flex-none"
-            aria-hidden="true"
-          />
-          <span
-            v-else-if="chip.icon"
-            :class="[chip.icon, 'size-4 flex-none']"
-            aria-hidden="true"
-          />
-          <span class="whitespace-nowrap">{{ chip.label }}</span>
-          <span
-            v-if="chip.count !== undefined && chip.count !== null"
-            class="tabular-nums"
-            :class="isOn(chip.value) ? 'opacity-80' : 'text-ink-gray-6'"
-            >{{ chip.count }}</span
-          >
-        </span>
+        <span
+          v-if="chip.icon && !isOn(chip.value)"
+          :class="[chip.icon, 'size-4 flex-none']"
+          aria-hidden="true"
+        />
+        <span class="whitespace-nowrap">{{ chip.label }}</span>
+        <span
+          v-if="chip.count !== undefined && chip.count !== null"
+          class="tabular-nums font-normal"
+          >{{ chip.count }}</span
+        >
       </button>
     </div>
     <BottomSheet
@@ -183,7 +175,7 @@ import { t } from './host'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { Button } from 'frappe-ui'
 import BottomSheet from './BottomSheet.vue'
-import { chipClass as panelChip } from './chipClass'
+import { chipClass } from './chipClass'
 
 const props = defineProps({
   /** The chosen value; an array with `multiple`. '' means «all». */
@@ -216,14 +208,6 @@ const sheet = ref(false)
 const row = ref(null)
 const fade = ref(false)
 
-function chipClass(on) {
-  return [
-    'flex h-8 items-center gap-1.5 rounded-full border px-3 text-sm font-medium',
-    on
-      ? 'border-transparent bg-[var(--muelle-accent)] text-[var(--muelle-accent-ink)]'
-      : 'border-outline-gray-2 text-ink-gray-8',
-  ]
-}
 // '' is «all»: it leads the row (allFirst), and is never a chip to remove
 const ordered = computed(() => allFirst(props.chips))
 const onChips = computed(() =>
@@ -297,8 +281,8 @@ watch(
 .ui-chips-fade {
   mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
 }
-/* A mouse cannot swipe a row sideways: there it wraps (the 44 px tap boxes
-   already space the lines). */
+/* A mouse cannot swipe a row sideways: there it wraps (each chip's 44 px
+   target already spaces the lines). */
 @media (hover: hover) and (pointer: fine) {
   .ui-chips-row {
     flex-wrap: wrap;

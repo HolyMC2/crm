@@ -2,7 +2,8 @@
   <!-- /crm/_ui (dev and lab only): every shared phone primitive with
        realistic es-MX data, for screenshots at 412/305 px and as a live
        reference. `?sheet=1` opens the bottom sheet, `?filtros=1` the filters
-       sheet, `?buscar=1` the bar's search. Not linked from anywhere. -->
+       sheet, `?buscar=1` the bar's search, `?panel=1` the search panel,
+       `?fecha=1` the date's month. Not linked from anywhere. -->
   <div class="relative flex min-h-0 min-w-0 flex-1 flex-col">
     <AppBar
       v-model:scope="scope"
@@ -222,6 +223,122 @@
           @click="sheet = true"
         />
       </section>
+
+      <section id="chips" class="space-y-3 px-4 pb-4">
+        <h2 :class="LABEL" class="!px-0 !pb-0">
+          ChipGroup, ChipDrill y chipClass
+        </h2>
+        <ChipGroup v-model="stage" label="Etapa" :options="stages" />
+        <ChipGroup
+          v-model="channels"
+          label="Canal (varios)"
+          :options="channelOptions"
+          multiple
+          :max="4"
+        />
+        <ChipDrill label="Más filtros" :sections="drill" />
+        <div>
+          <p class="mb-0.5 text-xs font-medium text-ink-gray-6">
+            Lo que acota la lista (resumen, cada uno con su ×)
+          </p>
+          <FilterChips
+            v-model="chip"
+            :chips="chips"
+            :filters-count="filterCount"
+            summary
+            @clear-filters="clearFilters"
+          />
+        </div>
+        <div class="flex flex-wrap items-center gap-x-2">
+          <button type="button" :class="chipClass(false)">
+            <span class="lucide-plus size-4 flex-none" aria-hidden="true" />
+            Acción en chip
+          </button>
+          <button
+            type="button"
+            :class="chipClass(kept)"
+            :aria-pressed="kept"
+            @click="kept = !kept"
+          >
+            Sigue igual
+          </button>
+        </div>
+      </section>
+
+      <section id="date-field" class="space-y-3 px-4 pb-4">
+        <h2 :class="LABEL" class="!px-0 !pb-0">DateField</h2>
+        <DateField v-model="due" label="Vence" data-lab-date />
+        <DateField v-model="visit" mode="datetime" label="Visita" />
+      </section>
+
+      <section id="search-panel" class="pb-4">
+        <h2 :class="LABEL">SearchPanel y RecentPicks</h2>
+        <SearchPanel
+          v-model:open="panelOpen"
+          v-model:query="panelQuery"
+          placeholder="Buscar cliente o folio"
+        >
+          <ChipGroup v-model="stage" label="Etapa" :options="stages" />
+          <RecentPicks :picks="recents" @clear="recents = []" />
+          <template #active>
+            <FilterChips v-model="chip" :chips="chips" summary />
+          </template>
+        </SearchPanel>
+        <div class="px-4 pt-2">
+          <RecentPicks :picks="recents" @clear="recents = []" />
+        </div>
+      </section>
+
+      <section id="selected">
+        <h2 :class="LABEL">Seleccionado: fila y KPI que filtra</h2>
+        <ListRow
+          title="Papelera del Norte"
+          subtitle="Vence el viernes"
+          :meta="formatMoney(4280)"
+          avatar="Papelera del Norte"
+          selected
+          @click="opened = 'Papelera del Norte'"
+        />
+        <ListRow
+          title="Tornillos Ruiz"
+          subtitle="Vencida hace 3 días"
+          subtitle-tone="danger"
+          :meta="formatMoney(1912.5)"
+          avatar="Tornillos Ruiz"
+          @click="opened = 'Tornillos Ruiz'"
+        />
+        <ListRow
+          title="Sin segunda línea"
+          icon="lucide-store"
+          @click="opened = 'Sin segunda línea'"
+        />
+        <div class="px-4 pt-3">
+          <KpiGrid>
+            <KpiTile
+              label="Vencidas"
+              value="3"
+              tone="danger"
+              :pressed="onlyOverdue"
+              @click="onlyOverdue = !onlyOverdue"
+            />
+            <KpiTile
+              label="Por vencer"
+              value="7"
+              :pressed="!onlyOverdue"
+              @click="onlyOverdue = !onlyOverdue"
+            />
+          </KpiGrid>
+        </div>
+      </section>
+
+      <section id="pane-states" class="pb-4">
+        <h2 :class="LABEL">PaneState: cargando, sin acceso, error</h2>
+        <div class="grid gap-2 px-4 sm:grid-cols-3">
+          <PaneState state="loading" class="!min-h-0 !py-6" />
+          <PaneState state="denied" class="!min-h-0 !py-6" />
+          <PaneState state="error" action="Reintentar" class="!min-h-0 !py-6" />
+        </div>
+      </section>
     </div>
 
     <Fab label="Nuevo pendiente" @click="sheet = true" />
@@ -280,6 +397,9 @@ import { Button } from 'frappe-ui'
 import {
   AppBar,
   BottomSheet,
+  ChipDrill,
+  ChipGroup,
+  DateField,
   EmptyState,
   Fab,
   FilterChips,
@@ -287,8 +407,12 @@ import {
   KpiTile,
   ListRow,
   PageHeader,
+  PaneState,
+  RecentPicks,
+  SearchPanel,
   Segmented,
   StatusChip,
+  chipClass,
 } from '@/components/ui'
 import {
   displayName,
@@ -452,6 +576,75 @@ const displayExamples = [
   { from: 'Completed', to: statusLabel('Completed') },
   { from: 'Busy (llamada)', to: statusLabel('Busy', 'call') },
 ]
+
+// The panel's chips, the drill, the date and the recent records.
+const stages = [
+  { value: '', label: 'Todas', count: 31 },
+  { value: 'nuevo', label: 'Nuevo', count: 12, color: 'text-ink-blue-5' },
+  { value: 'cotizado', label: 'Cotizado', count: 7, color: '#d98a0b' },
+  { value: 'ganado', label: 'Ganado', count: 9, color: 'text-ink-green-7' },
+]
+const stage = ref('cotizado')
+const channelOptions = [
+  { value: 'whatsapp', label: 'WhatsApp' },
+  { value: 'mostrador', label: 'Mostrador' },
+  { value: 'llamada', label: 'Llamada' },
+  { value: 'correo', label: 'Correo' },
+  { value: 'tienda', label: 'Tienda en línea' },
+  { value: 'referido', label: 'Referido' },
+]
+const channels = ref(['whatsapp', 'llamada'])
+const drillOwners = ref(['Karla Martínez'])
+const drillSources = ref([])
+const toggleIn = (list) => (value) => {
+  list.value = list.value.includes(value)
+    ? list.value.filter((v) => v !== value)
+    : [...list.value, value]
+}
+const drill = computed(() => [
+  {
+    key: 'responsable',
+    label: 'Responsable',
+    selected: drillOwners.value,
+    toggle: toggleIn(drillOwners),
+    options: people.map((p) => ({ value: p, label: p })),
+  },
+  {
+    key: 'origen',
+    label: 'Origen',
+    selected: drillSources.value,
+    toggle: toggleIn(drillSources),
+    groups: [
+      {
+        label: 'En línea',
+        options: [
+          { value: 'fb', label: 'Facebook' },
+          { value: 'ig', label: 'Instagram' },
+        ],
+      },
+      { label: 'En tienda', options: [{ value: 'paso', label: 'De paso' }] },
+    ],
+  },
+])
+const kept = ref(true)
+const onlyOverdue = ref(true)
+const due = ref(iso(1))
+const visit = ref(`${iso(7)} 14:30:00`)
+const panelOpen = ref(route.query.panel === '1')
+const panelQuery = ref('')
+const recents = ref([
+  { doctype: 'Customer', name: 'c1', label: 'Papelera del Norte' },
+  { doctype: 'Customer', name: 'c2', label: 'Tornillos Ruiz' },
+  { doctype: 'Customer', name: 'c3', label: '+52 669 123 4567' },
+  { doctype: 'CRM Deal', name: 'd1', label: 'Honor X6 de José Aarón' },
+])
+if (route.query.fecha === '1') {
+  // The month opens from the date's calendar button; the demo clicks it once mounted.
+  setTimeout(
+    () => document.querySelector('[data-lab-date] button')?.click(),
+    300,
+  )
+}
 
 const sheet = ref(route.query.sheet === '1')
 if (route.query.filtros === '1') {

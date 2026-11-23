@@ -1,11 +1,16 @@
-// Vendored from muelle/workspace/packages/ui@0.1.0 (78e759f7d2ee). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory.
-// The search panel's toggle chip: 44 px pill, green when on.
+// Vendored from muelle/workspace/packages/ui@0.2.0 (57ffdde5733b). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory.
+// The kit's one chip (FilterChips, ChipGroup, ChipDrill, DateField and any page
+// that draws a chip of its own): 32 px tall in a 44 px target (6 px of margin
+// above and below, which `after:` makes part of the tap), 8 px corners
+// (--muelle-shape-chip), a hairline, a 14 px label. On, it takes the secondary
+// container; a toggle that says so with aria-pressed or aria-checked also gets
+// a check (shell.css, .ui-chip-on). Selection is not success: never green.
 export function chipClass(active) {
   return [
-    'press inline-flex min-h-11 flex-none items-center gap-1 whitespace-nowrap rounded-full px-3 text-[11px] font-semibold',
+    "press relative my-1.5 inline-flex min-h-8 flex-none items-center gap-1.5 whitespace-nowrap rounded-[var(--muelle-shape-chip)] border px-3 text-[14px] font-medium leading-5 after:absolute after:-inset-x-px after:-inset-y-[7px] after:content-['']",
     active
-      ? 'bg-surface-green-2 text-ink-green-8'
-      : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3',
+      ? 'ui-chip-on border-transparent bg-[var(--muelle-secondary-container)] text-[var(--muelle-on-secondary-container)]'
+      : 'border-outline-gray-2 text-[var(--muelle-on-surface-variant)]',
   ]
 }
 

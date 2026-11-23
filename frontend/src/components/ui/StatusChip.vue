@@ -1,8 +1,10 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (78e759f7d2ee). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.2.0 (57ffdde5733b). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <template>
   <!-- A status in es-MX words (utils/display statusLabel), coloured only when
-       the worker must act. Put it on a row only when it changes what the
-       worker does (MOBILE_REFERENCES pattern 8). -->
+       the worker must act: the four hues are the status token pairs of
+       @muelle/tokens (tested at AA in both themes), neutral is a tonal pill
+       that still shows on a container. Put it on a row only when it changes
+       what the worker does (MOBILE_REFERENCES pattern 8). -->
   <span
     class="inline-flex h-6 max-w-full items-center rounded-full px-2 text-xs font-medium"
     :class="TONES[resolvedTone] || TONES.neutral"
@@ -26,11 +28,13 @@ const props = defineProps({
   tone: { type: String, default: '' },
 })
 const TONES = {
-  neutral: 'bg-surface-gray-2 text-ink-gray-7',
-  info: 'bg-surface-blue-1 text-ink-blue-9',
-  success: 'bg-surface-green-1 text-ink-green-8',
-  warning: 'bg-surface-amber-1 text-ink-amber-9',
-  danger: 'bg-surface-red-1 text-ink-red-7',
+  neutral: 'bg-surface-gray-3 text-[var(--muelle-on-surface-variant)]',
+  info: 'bg-[var(--muelle-status-blue-bg)] text-[var(--muelle-status-blue-ink)]',
+  success:
+    'bg-[var(--muelle-status-green-bg)] text-[var(--muelle-status-green-ink)]',
+  warning:
+    'bg-[var(--muelle-status-orange-bg)] text-[var(--muelle-status-orange-ink)]',
+  danger: 'bg-[var(--muelle-status-red-bg)] text-[var(--muelle-status-red-ink)]',
 }
 const text = computed(
   () => props.label || statusLabel(props.status, props.kind || undefined),

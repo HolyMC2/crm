@@ -1,11 +1,12 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (78e759f7d2ee). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.2.0 (57ffdde5733b). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <template>
-  <!-- The one create action of a list (Shell SPEC §2.2.6). On a phone it docks
-       at the end of the shell's command bar (primaryDock), in the thumb's
-       reach and never over the last rows; the label stays as its accessible
-       name and tooltip. Elsewhere it is an extended FAB at the bottom end of
-       the page, absolute inside it (give the page `relative`). Records use one
-       filled button instead. -->
+  <!-- The one create action of a list (Shell SPEC §2.2.6), on the shop's
+       accent wherever it sits, 16 px corners. On a phone it docks at the end of
+       the shell's command bar (primaryDock), 48 px, in the thumb's reach and
+       never over the last rows; the label stays as its accessible name and
+       tooltip. Elsewhere it is an extended FAB at the bottom end of the page,
+       absolute inside it (give the page `relative`). Records use one filled
+       button instead. -->
   <Teleport to="#shell-primary-action" :disabled="!primaryDock" defer>
     <UiTag
       :as="to ? RouterLink : 'button'"
@@ -58,9 +59,9 @@ defineProps({
   position: { type: String, default: 'end' },
 })
 
+// The tenant accent carries the page's one primary action, floating or docked.
 const FLOATING =
-  'press absolute bottom-4 z-10 flex h-14 items-center justify-center gap-2 rounded-8 bg-surface-gray-10 text-base font-semibold text-ink-base shadow-lg'
-// The tenant accent carries the page's one primary action.
+  'press absolute bottom-4 z-10 flex h-14 items-center justify-center gap-2 rounded-6 bg-[var(--muelle-accent)] text-base font-semibold text-[var(--muelle-accent-ink)] shadow-lg'
 const DOCKED =
-  'press ml-0.5 flex size-11 flex-none items-center justify-center rounded-full bg-[var(--muelle-accent)] text-[var(--muelle-accent-ink)]'
+  'press ml-0.5 flex size-12 flex-none items-center justify-center rounded-6 bg-[var(--muelle-accent)] text-[var(--muelle-accent-ink)]'
 </script>

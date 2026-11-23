@@ -36,10 +36,7 @@
             :alt="filename"
           />
         </div>
-        <div
-          v-else
-          class="rounded-4 bg-surface-gray-10 px-2 py-1.5 text-xs text-ink-base shadow-xl"
-        >
+        <div v-else class="ui-inverse rounded-4 px-2 py-1.5 text-xs shadow-xl">
           {{ filename }}
         </div>
       </template>

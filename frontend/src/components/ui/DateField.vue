@@ -1,7 +1,10 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (78e759f7d2ee). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.2.0 (57ffdde5733b). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <template>
   <!-- An es-MX date (and/or 24-hour time): type dd/mm/aaaa, tap Hoy · Mañana ·
-       En una semana, or open the month. Never the browser's US mm/dd/yyyy. -->
+       En una semana, or open the month. Never the browser's US mm/dd/yyyy.
+       Tone, not borders: filled fields on container-highest, the kit's chip
+       for the shortcuts, the month on a tonal tile, the picked day on the
+       secondary container. -->
   <div class="date-field flex flex-col gap-2" data-ui-date-field>
     <div v-if="mode !== 'time'" class="flex items-center gap-2">
       <input
@@ -11,7 +14,7 @@
         inputmode="numeric"
         autocomplete="off"
         placeholder="dd/mm/aaaa"
-        class="h-11 min-w-0 flex-1 rounded-6 border border-outline-gray-2 bg-surface-base px-3 text-base tabular-nums text-ink-gray-9"
+        class="ui-focus h-11 min-w-0 flex-1 rounded-6 border-0 bg-surface-gray-4 px-4 text-base tabular-nums text-ink-gray-9 placeholder:text-[var(--muelle-on-surface-variant)]"
         :aria-label="label"
         :aria-invalid="bad ? 'true' : undefined"
         @input="typed = $event.target.value"
@@ -20,7 +23,12 @@
       />
       <button
         type="button"
-        class="flex size-11 flex-none items-center justify-center rounded-6 border border-outline-gray-2 text-ink-gray-7 hover:bg-surface-gray-2"
+        class="press flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-7"
+        :class="
+          open
+            ? 'bg-[var(--muelle-secondary-container)] text-[var(--muelle-on-secondary-container)]'
+            : ''
+        "
         :aria-label="open ? 'Cerrar calendario' : 'Abrir calendario'"
         :aria-expanded="open"
         @click="toggle"
@@ -33,14 +41,13 @@
     </p>
     <p v-else-if="words" class="text-sm text-ink-gray-7">{{ words }}</p>
 
-    <div v-if="mode !== 'time'" class="flex flex-wrap gap-2">
+    <div v-if="mode !== 'time'" class="-my-1.5 flex flex-wrap items-center gap-x-2">
       <button
         v-for="chip in chips"
         :key="chip.label"
         type="button"
-        class="min-h-11 rounded-full border border-outline-gray-2 px-4 text-base text-ink-gray-8 hover:bg-surface-gray-2"
+        :class="chipClass(date === chip.value)"
         :aria-pressed="date === chip.value"
-        :class="date === chip.value ? 'bg-surface-gray-2 font-medium' : ''"
         @click="pick(chip.value)"
       >
         {{ chip.label }}
@@ -48,7 +55,7 @@
       <button
         v-if="!required && date"
         type="button"
-        class="min-h-11 px-2 text-base text-ink-gray-7 underline"
+        class="press min-h-11 rounded-full px-3 text-base text-ink-gray-7 underline"
         @click="pick('')"
       >
         Quitar
@@ -57,14 +64,14 @@
 
     <div
       v-if="open && mode !== 'time'"
-      class="date-month rounded-7 border border-outline-gray-1 p-2"
+      class="date-month rounded-7 bg-surface-gray-2 p-2"
       role="group"
       :aria-label="`${monthName} de ${view.y}`"
     >
       <div class="flex items-center justify-between">
         <button
           type="button"
-          class="flex size-11 items-center justify-center rounded-full text-ink-gray-7 hover:bg-surface-gray-2"
+          class="press flex size-11 items-center justify-center rounded-full text-ink-gray-7"
           aria-label="Mes anterior"
           @click="shift(-1)"
         >
@@ -75,7 +82,7 @@
         >
         <button
           type="button"
-          class="flex size-11 items-center justify-center rounded-full text-ink-gray-7 hover:bg-surface-gray-2"
+          class="press flex size-11 items-center justify-center rounded-full text-ink-gray-7"
           aria-label="Mes siguiente"
           @click="shift(1)"
         >
@@ -93,7 +100,7 @@
           <button
             v-if="day"
             type="button"
-            class="date-day rounded-full text-base tabular-nums text-ink-gray-9 hover:bg-surface-gray-2"
+            class="date-day state-layer rounded-full text-base tabular-nums text-ink-gray-9"
             :class="{ 'is-picked': day === date, 'is-today': day === today }"
             :aria-pressed="day === date"
             :aria-label="dayLabel(day)"
@@ -114,7 +121,7 @@
         inputmode="numeric"
         autocomplete="off"
         placeholder="hh:mm"
-        class="h-11 w-28 rounded-6 border border-outline-gray-2 bg-surface-base px-3 text-base tabular-nums text-ink-gray-9"
+        class="ui-focus h-11 w-28 rounded-6 border-0 bg-surface-gray-4 px-4 text-base tabular-nums text-ink-gray-9 placeholder:text-[var(--muelle-on-surface-variant)]"
         :aria-label="mode === 'time' ? label : `${label}: hora`"
         :aria-invalid="badTime ? 'true' : undefined"
         @input="typedTime = $event.target.value"
@@ -129,6 +136,7 @@
 </template>
 <script setup>
 import { computed, ref, watch } from 'vue'
+import { chipClass } from './chipClass'
 import {
   MONTHS,
   WEEKDAYS,
@@ -253,11 +261,12 @@ function dayLabel(day) {
   margin: 1px;
 }
 .date-day.is-today {
-  box-shadow: inset 0 0 0 1px var(--outline-gray-3, currentColor);
+  box-shadow: inset 0 0 0 1px var(--muelle-outline, currentColor);
 }
+/* background-color, not the shorthand: the state layer is a background-image */
 .date-day.is-picked {
-  background: var(--ink-gray-9, #222);
-  color: var(--surface-base, #fff);
+  background-color: var(--muelle-secondary-container, #dadada);
+  color: var(--muelle-on-secondary-container, #171717);
   font-weight: 600;
 }
 </style>

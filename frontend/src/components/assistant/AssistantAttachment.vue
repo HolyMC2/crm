@@ -38,7 +38,7 @@
       @click="$emit('remove')"
     >
       <span
-        class="flex size-6 items-center justify-center rounded-full bg-surface-gray-10 text-ink-base shadow-sm"
+        class="ui-inverse flex size-6 items-center justify-center rounded-full shadow-sm"
       >
         <span class="lucide-x size-3.5" aria-hidden="true" />
       </span>

@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/tokens@0.1.0 (754e8801108e). DO NOT EDIT:
+// Vendored from muelle/workspace/packages/tokens@0.2.0 (f60255e9ba39). DO NOT EDIT:
 // change the package, then run its scripts/vendor.mjs against this directory.
 // Accent resolution. `resolveAppearance` is Doco's `appearance.resolve()`
 // (same inputs, same hex out); `shellAccent` turns it into the four

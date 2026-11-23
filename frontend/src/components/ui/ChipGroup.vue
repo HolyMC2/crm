@@ -1,14 +1,16 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (78e759f7d2ee). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
-<!-- One labelled row of toggle chips for a search panel: 44 px pills that
-     wrap, never scroll sideways. `multiple` toggles values in an array;
+<!-- Vendored from muelle/workspace/packages/ui@0.2.0 (57ffdde5733b). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- One labelled row of toggle chips for a search panel: the kit's chip (32 px
+     in a 44 px target), wrapping, never scrolling sideways; the one that is on
+     takes the secondary container and a check (shell.css, .ui-chip-on).
+     `multiple` toggles values in an array;
      otherwise one value is picked (tapping it again picks `clearValue`).
      The option worth `clearValue` («Todos») leads, never behind «+N más». -->
 <template>
   <section :aria-label="label">
-    <p v-if="label" class="mb-1.5 text-xs font-medium text-ink-gray-6">
+    <p v-if="label" class="mb-0.5 text-xs font-medium text-ink-gray-6">
       {{ label }}
     </p>
-    <div class="flex flex-wrap gap-1.5">
+    <div class="flex flex-wrap gap-x-2">
       <button
         v-for="o in shown"
         :key="o.value"
@@ -21,7 +23,7 @@
       >
         <span v-if="o.color" v-bind="dotBinding(o.color)" aria-hidden="true" />
         {{ o.label }}
-        <span v-if="o.count != null" class="text-[10px] opacity-70">{{
+        <span v-if="o.count != null" class="tabular-nums font-normal">{{
           o.count
         }}</span>
       </button>

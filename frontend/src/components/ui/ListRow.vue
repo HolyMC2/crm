@@ -1,19 +1,23 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (78e759f7d2ee). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.2.0 (57ffdde5733b). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <template>
   <!-- One list row (Shell SPEC §2.2.5, M3 list item): a leading avatar or
        icon, the title (wraps to two lines, never letter by letter), one
        secondary line, trailing meta. The whole row is the tap target, at
-       least 44px (56px with a secondary line). -->
+       least 44px (56px with a secondary line). The leading disc is 40 px on
+       container-highest and reaches into the row's padding, so the density is
+       the same with or without it. A row that can be tapped carries the state
+       layer (it does not shrink); the selected one takes the secondary
+       container. -->
   <UiTag
     :as="tag"
     v-bind="linkAttrs"
     class="flex w-full items-center gap-3 px-4 py-2 text-left"
     :class="[
       subtitle || $slots.subtitle ? 'min-h-14' : 'min-h-12',
-      interactive
-        ? 'hover:bg-surface-gray-1 focus-visible:bg-surface-gray-2'
+      interactive ? 'state-layer' : '',
+      selected
+        ? 'bg-[var(--muelle-secondary-container)] text-[var(--muelle-on-secondary-container)]'
         : '',
-      selected ? 'bg-surface-gray-2' : '',
     ]"
     :aria-current="selected ? 'true' : undefined"
     data-ui-list-row
@@ -21,7 +25,7 @@
     <slot name="leading">
       <span
         v-if="avatar !== undefined && avatar !== null"
-        class="flex size-9 flex-none items-center justify-center rounded-full bg-surface-gray-2 text-sm font-semibold text-ink-gray-7"
+        class="-my-1 flex size-10 flex-none items-center justify-center rounded-full bg-surface-gray-4 text-sm font-semibold text-ink-gray-7"
         aria-hidden="true"
       >
         <span v-if="avatarText">{{ avatarText }}</span>
@@ -29,7 +33,7 @@
       </span>
       <span
         v-else-if="icon"
-        class="flex size-9 flex-none items-center justify-center rounded-full bg-surface-gray-2 text-ink-gray-7"
+        class="-my-1 flex size-10 flex-none items-center justify-center rounded-full bg-surface-gray-4 text-ink-gray-7"
         aria-hidden="true"
       >
         <span :class="[icon, 'size-5']" />
@@ -47,7 +51,11 @@
         class="text-sm leading-snug"
         :class="[
           subtitleLines === 2 ? 'line-clamp-2 break-words' : 'truncate',
-          subtitleTone === 'danger' ? 'text-ink-red-7' : 'text-ink-gray-6',
+          subtitleTone === 'danger'
+            ? 'text-ink-red-7'
+            : selected
+              ? ''
+              : 'text-ink-gray-6',
         ]"
         ><slot name="subtitle">{{ subtitle }}</slot></span
       >
@@ -59,7 +67,13 @@
       <span
         v-if="meta"
         class="num whitespace-nowrap text-md"
-        :class="metaTone === 'danger' ? 'text-ink-red-7' : 'text-ink-gray-7'"
+        :class="
+          metaTone === 'danger'
+            ? 'text-ink-red-7'
+            : selected
+              ? ''
+              : 'text-ink-gray-7'
+        "
         >{{ meta }}</span
       >
       <slot name="trailing" />

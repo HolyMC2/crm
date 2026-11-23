@@ -2,7 +2,7 @@
   <div v-show="showCallPopup" v-bind="$attrs">
     <div
       ref="callPopup"
-      class="fixed z-20 flex w-60 cursor-move select-none flex-col rounded-6 bg-surface-gray-10 p-4 text-ink-gray-2 shadow-2xl"
+      class="ui-inverse fixed z-20 flex w-60 cursor-move select-none flex-col rounded-6 p-4 shadow-2xl"
       :style="style"
     >
       <div class="flex flex-row-reverse items-center gap-1">
@@ -110,7 +110,7 @@
   </div>
   <div
     v-show="showSmallCallWindow"
-    class="ml-2 flex cursor-pointer select-none items-center justify-between gap-3 rounded-6 bg-surface-gray-10 px-2 py-[7px] text-base text-ink-gray-2"
+    class="ui-inverse ml-2 flex cursor-pointer select-none items-center justify-between gap-3 rounded-6 px-2 py-[7px] text-base"
     v-bind="$attrs"
     @click="toggleCallWindow"
   >

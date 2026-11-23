@@ -1,28 +1,28 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (78e759f7d2ee). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.2.0 (57ffdde5733b). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <template>
   <!-- The one sheet for bounded tasks (Shell SPEC §2.2.3, Material bottom
        sheet): drag handle, title, scrim; back, swipe down, Esc or the scrim
        close it. It opens at about 60% of the screen and drags (or taps on the
        handle) up to full height when its content is longer. Actions sit at
        the bottom, in thumb reach. On wider screens it is a centred dialog.
+       Sheet and dialog are one step of tone (container-low) with 28 px
+       corners; what a page fills inside sits a step higher (shell.css).
        With v-model:fullscreen it also fills the screen: on a phone the handle
        always offers it, in the dialog a button beside the close does, and
        the content keeps a readable column. -->
   <DialogRoot :open="open" @update:open="setOpen">
     <DialogPortal>
-      <DialogOverlay
-        class="ui-sheet-scrim fixed inset-0 z-50 bg-black-overlay-200 dark:bg-black-overlay-700"
-      />
+      <DialogOverlay class="ui-sheet-scrim ui-scrim fixed inset-0 z-50" />
       <DialogContent
         :class="[
-          'z-50 flex flex-col bg-surface-base text-ink-gray-9 shadow-xl focus:outline-none',
+          'ui-sheet-surface z-50 flex flex-col text-ink-gray-9 shadow-xl focus:outline-none',
           phone
             ? [
                 'ui-sheet fixed inset-x-0 bottom-0 mx-auto w-full transform-gpu',
                 full
                   ? 'h-[100dvh] pt-[env(safe-area-inset-top)]'
                   : [
-                      'max-w-2xl rounded-t-3xl',
+                      'max-w-2xl rounded-t-8',
                       expanded ? 'h-[96dvh]' : 'max-h-[60dvh]',
                     ],
               ]
@@ -57,10 +57,10 @@
               data-ui-sheet-handle
               @click="setExpanded(!expanded)"
             >
-              <span class="h-1 w-8 rounded-full bg-surface-gray-4" />
+              <span class="h-1 w-8 rounded-full bg-[var(--muelle-outline)] opacity-50" />
             </button>
             <span v-else class="flex h-6 w-16 items-center justify-center">
-              <span class="h-1 w-8 rounded-full bg-surface-gray-4" />
+              <span class="h-1 w-8 rounded-full bg-[var(--muelle-outline)] opacity-50" />
             </span>
           </div>
           <div
@@ -70,7 +70,7 @@
           >
             <div class="min-w-0 flex-1">
               <DialogTitle
-                class="break-words text-xl font-semibold leading-snug [text-wrap:balance]"
+                class="break-words text-[22px] font-semibold leading-7 [text-wrap:balance] max-[359px]:text-2xl"
                 :class="title ? '' : 'sr-only'"
               >
                 {{ title || ariaLabel || t('Options') }}
@@ -85,7 +85,7 @@
             <button
               v-if="!phone && fullscreenable"
               type="button"
-              class="-mt-1 flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-7 hover:bg-surface-gray-2"
+              class="press -mt-1 flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-7"
               :class="dismissible ? '' : '-mr-2'"
               :aria-label="fullscreenLabel"
               :title="fullscreenLabel"
@@ -101,7 +101,7 @@
             </button>
             <DialogClose
               v-if="!phone && dismissible"
-              class="-mr-2 -mt-1 flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-7 hover:bg-surface-gray-2"
+              class="press -mr-2 -mt-1 flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-7"
               :aria-label="t('Close')"
             >
               <span class="lucide-x size-5" aria-hidden="true" />
@@ -133,7 +133,7 @@
         <!-- Full width, stacked: the primary action last, nearest the thumb. -->
         <div
           v-if="$slots.actions"
-          class="grid flex-none gap-2 border-t border-outline-gray-1 px-5 pt-3"
+          class="grid flex-none gap-2 px-5 pt-2"
           :class="[
             phone ? 'pb-[max(0.75rem,env(safe-area-inset-bottom))]' : 'pb-4',
             column,

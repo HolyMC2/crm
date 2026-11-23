@@ -1,4 +1,4 @@
-/* Vendored from muelle/workspace/packages/tokens@0.1.0 (754e8801108e). DO NOT EDIT:
+/* Vendored from muelle/workspace/packages/tokens@0.2.0 (f60255e9ba39). DO NOT EDIT:
    change the package, then run its scripts/vendor.mjs against this directory. */
 /* @muelle/tokens — generated from frappe-ui 1.0.2 and the #171717 palette. DO NOT EDIT: run `pnpm run build:css`. */
 :root {
@@ -9,6 +9,7 @@
   --muelle-surface-gray-3: #ededed;
   --muelle-surface-gray-4: #e2e2e2;
   --muelle-surface-gray-7: #7c7c7c;
+  --muelle-surface-gray-10: #171717;
   --muelle-ink-base: #ffffff;
   --muelle-ink-gray-4: #999999;
   --muelle-ink-gray-5: #7c7c7c;
@@ -34,6 +35,19 @@
   --muelle-accent-ink: #ffffff;
   --muelle-accent-soft: #e8e8e8;
   --muelle-accent-soft-ink: #171717;
+  --muelle-surface-container-low: #f6f6f6;
+  --muelle-surface-container: #f1f1f1;
+  --muelle-surface-container-high: #eaeaea;
+  --muelle-surface-container-highest: #e3e3e3;
+  --muelle-secondary-container: #dadada;
+  --muelle-on-secondary-container: #171717;
+  --muelle-on-surface-variant: #525252;
+  --muelle-outline: #999999;
+  --muelle-outline-variant: #ededed;
+  --muelle-accent-hover: #2a2a2a;
+  --muelle-inverse-surface: #171717;
+  --muelle-inverse-on-surface: #ffffff;
+  --muelle-elevation-float: 0 4px 12px 2px rgba(0, 0, 0, 0.18);
   --muelle-font: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --muelle-text-xs: 12px;
   --muelle-text-sm: 13px;
@@ -53,6 +67,14 @@
   --muelle-radius-lg: 12px;
   --muelle-radius-xl: 16px;
   --muelle-radius-full: 9999px;
+  --muelle-shape-xs: 4px;
+  --muelle-shape-sm: 8px;
+  --muelle-shape-md: 12px;
+  --muelle-shape-lg: 16px;
+  --muelle-shape-xl: 20px;
+  --muelle-shape-2xl: 28px;
+  --muelle-shape-chip: 8px;
+  --muelle-elevation-edge: 0 0 0 1px var(--muelle-outline-variant);
   --muelle-touch-min: 44px;
   --muelle-focus-ring: 2px solid var(--muelle-accent);
   --muelle-focus-offset: 2px;
@@ -73,6 +95,7 @@
   --muelle-surface-gray-3: #383838;
   --muelle-surface-gray-4: #424242;
   --muelle-surface-gray-7: #999999;
+  --muelle-surface-gray-10: #f8f8f8;
   --muelle-ink-base: #171717;
   --muelle-ink-gray-4: #7a7a7a;
   --muelle-ink-gray-5: #7a7a7a;
@@ -98,6 +121,19 @@
   --muelle-accent-ink: #16222a;
   --muelle-accent-soft: #3e3e3e;
   --muelle-accent-soft-ink: #ededed;
+  --muelle-surface-container-low: #222222;
+  --muelle-surface-container: #282828;
+  --muelle-surface-container-high: #2f2f2f;
+  --muelle-surface-container-highest: #373737;
+  --muelle-secondary-container: #444444;
+  --muelle-on-secondary-container: #ededed;
+  --muelle-on-surface-variant: #a0a0a0;
+  --muelle-outline: #575757;
+  --muelle-outline-variant: #242424;
+  --muelle-accent-hover: #dcdddd;
+  --muelle-inverse-surface: #f8f8f8;
+  --muelle-inverse-on-surface: #171717;
+  --muelle-elevation-float: var(--muelle-elevation-edge);
 }
 @media (prefers-reduced-motion: reduce) {
   :root {

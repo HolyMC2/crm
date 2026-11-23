@@ -68,7 +68,7 @@ export default {
       // md→5, lg→6, xl→7, 2xl→8). The B9 lane renames the sites and deletes
       // this block.
 
-      // Shell type (index.css «Shell typeface»). frappe-ui sets +0.02em
+      // Shell type (the kit's shell.css, «Shell typeface»). frappe-ui sets +0.02em
       // tracking and a 1.35 line-height on every size, which spaces Archivo
       // out and flattens the hierarchy. Same keys and body pixel sizes, so
       // layouts tuned at 305px keep their line breaks: small text keeps a hair
@@ -77,7 +77,7 @@ export default {
       // steps grow apart so a page title is not one pixel off its rows. No
       // fontWeight in the tuples (frappe-ui puts 420 there): a responsive size
       // such as `sm:text-5xl` comes after `font-semibold` in the CSS and would
-      // reset it to regular. The body weight is set once on <html> (index.css).
+      // reset it to regular. The body weight is set once on <html> (shell.css).
       fontFamily: {
         sans: ['Muelle Archivo', ...defaultSans],
         text: ['Muelle Archivo', ...defaultSans],

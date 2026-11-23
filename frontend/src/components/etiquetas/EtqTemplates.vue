@@ -53,7 +53,7 @@
     </div>
     <aside
       v-if="current"
-      class="sticky top-14 z-10 order-first space-y-3 bg-surface-base px-4 pb-3 sm:px-0 lg:top-4 lg:order-last lg:pb-0"
+      class="sticky top-16 z-10 order-first space-y-3 bg-surface-base px-4 pb-3 sm:px-0 lg:top-4 lg:order-last lg:pb-0"
       :aria-label="`Muestra de ${current.label}`"
       data-etq-template-sample
     >

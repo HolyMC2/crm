@@ -308,7 +308,7 @@
          collapsed rail leaves out, at once instead of the browser's delay. -->
     <div
       v-if="tip && !expanded"
-      class="pointer-events-none fixed z-50 -translate-y-1/2 whitespace-nowrap rounded-6 bg-surface-gray-9 px-2 py-1 text-sm font-medium text-ink-base shadow-lg"
+      class="ui-inverse pointer-events-none fixed z-50 -translate-y-1/2 whitespace-nowrap rounded-4 px-2 py-1 text-sm font-medium shadow-lg"
       :style="{ left: `${railWidth + 6}px`, top: `${tip.top}px` }"
       role="tooltip"
       data-testid="rail-tip"

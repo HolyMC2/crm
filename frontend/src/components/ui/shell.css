@@ -1,7 +1,98 @@
-/* Vendored from muelle/workspace/packages/ui@0.1.0 (78e759f7d2ee). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. */
-/* The Muelle shell's type, motion and feel, shared by every app built on
-   @muelle/ui. Import it after frappe-ui's style and the @muelle/tokens CSS.
-   It needs the frappe-ui Tailwind preset for the colour tokens it names. */
+/* Vendored from muelle/workspace/packages/ui@0.2.0 (57ffdde5733b). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. */
+/* The Muelle shell's look, type, motion and feel, shared by every app built on
+   @muelle/ui. Import it after the @muelle/tokens CSS (0.2.0 or later: it reads
+   the Material roles). It needs the frappe-ui Tailwind preset for the colour
+   tokens it names. */
+
+/* Material Design 3 on frappe-ui's names. Screens paint with frappe-ui
+   utilities (bg-surface-gray-2, rounded-6, shadow-sm); this block points the
+   variables those utilities read at the shell's roles, so a screen takes the
+   tonal surfaces, the shape scale and the shop's colour with no edit of its
+   own. `html:root` out-ranks frappe-ui's `:root` and `[data-theme='dark']`
+   wherever this file sits in the import order. Every value is a
+   var(--muelle-…): the roles are worked out per theme and per shop in
+   @muelle/tokens, never here. */
+html:root {
+  /* Tone: the four container steps. */
+  --surface-gray-1: var(--muelle-surface-container-low);
+  --surface-gray-2: var(--muelle-surface-container);
+  --surface-gray-3: var(--muelle-surface-container-high);
+  --surface-gray-4: var(--muelle-surface-container-highest);
+  /* A filled primary, under the pointer and pressed: the shop's accent. */
+  --surface-gray-10: var(--muelle-accent);
+  --surface-gray-9: var(--muelle-accent-hover);
+  --surface-gray-8: var(--muelle-accent-hover);
+  /* A hairline: the rule between rows, the 1 px edge of a card. It is
+     frappe-ui's own lightest outline in every shop (tone parts the surfaces;
+     a rule never weighs more than it did before the roles). --outline-gray-2
+     is not bridged: it outlines controls and cards (a chip, a field), which
+     would fade at the hairline's strength. */
+  --outline-gray-1: var(--muelle-outline-variant);
+  /* Shape: 8, 12, 16, 20 and 28 px. --radius-4 stays 8 px: it rounds the
+     small controls (24 to 28 px), which a larger corner turns into blobs. */
+  --radius-3: var(--muelle-shape-sm);
+  --radius-5: var(--muelle-shape-md);
+  --radius-6: var(--muelle-shape-lg);
+  --radius-7: var(--muelle-shape-xl);
+  --radius-8: var(--muelle-shape-2xl);
+  /* Elevation: a card keeps a 1 px edge (a white card on a white page must
+     not vanish); what floats takes the one soft shadow, the edge in dark. */
+  --elevation-sm: var(--muelle-elevation-edge);
+  --elevation-base: var(--muelle-elevation-edge);
+  --elevation-md: var(--muelle-elevation-float);
+  --elevation-lg: var(--muelle-elevation-float);
+  --elevation-xl: var(--muelle-elevation-float);
+  --elevation-2xl: var(--muelle-elevation-float);
+}
+/* Dark: the tinted chip backgrounds are the status tokens' own. */
+html:root[data-theme='dark'] {
+  --surface-blue-1: var(--muelle-status-blue-bg);
+  --surface-green-1: var(--muelle-status-green-bg);
+  --surface-amber-1: var(--muelle-status-orange-bg);
+  --surface-red-1: var(--muelle-status-red-bg);
+}
+/* Inverse surfaces. frappe-ui paints its toast and its tooltip, and a page its
+   own tooltip or floating bar (.ui-inverse), with the variables a filled
+   primary reads. They keep the inverse pair when the shop's accent is a
+   colour. A fill on an inverse surface, and that fill under the pointer, are
+   steps from the surface toward its text. */
+[data-sonner-toast] {
+  --surface-gray-9: var(--muelle-inverse-surface);
+  --surface-gray-8: color-mix(
+    in srgb,
+    var(--muelle-inverse-on-surface) 16%,
+    var(--muelle-inverse-surface)
+  );
+}
+[data-slot='bubble'],
+[data-slot='arrow'],
+.ui-inverse {
+  --surface-gray-10: var(--muelle-inverse-surface);
+  --surface-gray-9: color-mix(
+    in srgb,
+    var(--muelle-inverse-on-surface) 16%,
+    var(--muelle-inverse-surface)
+  );
+  --surface-gray-8: color-mix(
+    in srgb,
+    var(--muelle-inverse-on-surface) 28%,
+    var(--muelle-inverse-surface)
+  );
+}
+.ui-inverse {
+  background-color: var(--muelle-inverse-surface);
+  color: var(--muelle-inverse-on-surface);
+}
+/* A sheet or dialog of the kit (BottomSheet) is the first step of tone above
+   the page. What a screen fills inside it (a field, a tile, a track) sits one
+   step higher than it would on the page, or it would not show on the sheet:
+   one nesting step of tone, here and nowhere deeper. */
+.ui-sheet-surface {
+  --surface-gray-1: var(--muelle-surface-container);
+  --surface-gray-2: var(--muelle-surface-container-high);
+  --surface-gray-3: var(--muelle-surface-container-highest);
+  background-color: var(--muelle-surface-container-low);
+}
 
 /* Shell typeface: Archivo (Omnibus-Type, OFL; OFL.txt beside this file).
    One variable family whose width axis carries the roles: body at 100 %,
@@ -134,12 +225,85 @@ a,
   opacity: 0;
   transform: rotate(90deg) scale(0.6);
 }
-/* Tactile press for buttons and chips. */
-.press {
+/* Tactile press for buttons and chips: the control gives 4 % under the finger.
+   The scale goes through Tailwind's transform variables, so a control that is
+   also moved or turned by a utility (a centred Fab's -translate-x-1/2) keeps
+   its place while it gives. :where() keeps the transition under any utility a
+   control sets itself, wherever this file sits in the import order. */
+:where(.press) {
   transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .press:active {
-  transform: scale(0.96);
+  --tw-scale-x: 0.96;
+  --tw-scale-y: 0.96;
+  transform: translate(var(--tw-translate-x, 0), var(--tw-translate-y, 0))
+    rotate(var(--tw-rotate, 0)) skewX(var(--tw-skew-x, 0))
+    skewY(var(--tw-skew-y, 0)) scaleX(var(--tw-scale-x, 1))
+    scaleY(var(--tw-scale-y, 1));
+}
+/* Material's state layer: the control's own ink at 8 % under a pointer and
+   10 % while pressed or focused from the keyboard, painted over its fill as a
+   background-image, so it shows on filled, tonal and plain controls alike and
+   needs no pseudo-element. `.press` carries it; `.state-layer` is the layer
+   alone, for what must not shrink under the finger (a row, a tile); a docked
+   tool icon (`.dock-icon`) has it too. Hover is for a pointer only: a tap
+   leaves :hover on the control it landed on.
+   What already paints a background-image keeps it: a <select> and an <input>
+   draw their chevron and their tick that way, so they never take the layer,
+   and an inline `style="background: …"` wins over it. Never put `.press` or
+   `.state-layer` on an element whose class sets a gradient or a picture: the
+   layer would replace it (crm tests/unit/muelleUiLook.test.js scans for it). */
+@media (hover: hover) {
+  :is(.press, .state-layer, .dock-icon):not(:disabled, select, input):hover {
+    background-image: linear-gradient(
+      color-mix(in srgb, currentColor 8%, transparent) 0 0
+    );
+  }
+}
+:is(.press, .state-layer, .dock-icon):not(:disabled, select, input):active,
+:is(.press, .state-layer, .dock-icon):not(select, input):focus-visible {
+  background-image: linear-gradient(
+    color-mix(in srgb, currentColor 10%, transparent) 0 0
+  );
+}
+
+/* The kit's filled fields (a search pill, a date) show the focus as a 2 px
+   ring of the accent inside the fill; on the field itself or on its wrapper. */
+.ui-focus:focus,
+.ui-focus:focus-within {
+  outline: 0;
+  box-shadow: inset 0 0 0 2px var(--muelle-accent);
+}
+
+/* One scrim under every sheet and panel of the kit. */
+.ui-scrim {
+  background-color: rgb(0 0 0 / 0.36);
+}
+[data-theme='dark'] .ui-scrim {
+  background-color: rgb(0 0 0 / 0.56);
+}
+
+/* A chip that is on shows a check (Material filter chip): any toggle that takes
+   chipClass() and says its state with aria-pressed or aria-checked, on the
+   chip itself or on the button around it. A chip that draws a check of its
+   own keeps that one; a chip that is always on (a filter to remove, with its
+   ×) says no state and gets none. */
+.ui-chip-on:is([aria-pressed='true'], [aria-checked='true']):not(
+    :has(.lucide-check)
+  )::before,
+:is([aria-pressed='true'], [aria-checked='true'])
+  > .ui-chip-on:not(:has(.lucide-check))::before {
+  content: '';
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-inline-start: -4px;
+  background-color: currentColor;
+  -webkit-mask: var(--ui-chip-check) center / contain no-repeat;
+  mask: var(--ui-chip-check) center / contain no-repeat;
+}
+:root {
+  --ui-chip-check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
 }
 
 /* Skeleton rows while a list loads: no spinner, no layout shift. */
@@ -231,7 +395,7 @@ a,
 }
 
 /* A page's tools in the phone command bar (ui/ToolDock). The page puts
-   .dock-pill on its search field's label and .dock-icon on the 44 px icon
+   .dock-pill on its search field's label and .dock-icon on the 48 px icon
    buttons beside it while the `docked` slot prop is on; .dock-badge on an
    icon counts the active filters. The panel rises above the bar over the
    scrim, capped so the bar and the nav stay in reach. */
@@ -241,20 +405,28 @@ a,
   align-items: center;
   gap: 8px;
   min-width: 0;
-  min-height: 44px;
-  padding: 0 14px;
+  min-height: 48px;
+  padding: 0 16px;
+}
+/* The pill's paint, also under the dock's own id: it must out-rank the class
+   of the page's field it docks with, or that field's white box shows in the
+   bar. Layout (above) stays the page's to tune. */
+.dock-pill,
+#shell-page-tools .dock-pill {
   border: 0;
   border-radius: 9999px;
-  background: var(--muelle-surface-gray-2);
+  background: var(--muelle-surface-container-highest);
+  color: var(--muelle-on-surface-variant);
 }
-.dock-pill:focus-within {
-  box-shadow: 0 0 0 1px var(--muelle-outline-gray-3);
+.dock-pill:focus-within,
+#shell-page-tools .dock-pill:focus-within {
+  box-shadow: inset 0 0 0 2px var(--muelle-accent);
   outline: 0;
 }
 .dock-pill input {
   width: 100%;
   min-width: 0;
-  min-height: 44px;
+  min-height: 48px;
   padding: 0;
   border: 0;
   border-radius: 0;
@@ -265,7 +437,7 @@ a,
   text-overflow: ellipsis;
 }
 .dock-pill input::placeholder {
-  color: var(--muelle-ink-gray-5);
+  color: var(--muelle-on-surface-variant);
   text-overflow: ellipsis;
 }
 .dock-pill input:focus {
@@ -278,29 +450,36 @@ a,
 .dock-pill kbd {
   display: none;
 }
-.dock-icon {
+/* A docked icon button: 48 px, as the pill and the create action beside it.
+   Its box and paint are also written under the dock's own id, as the pill's:
+   the page's class for the same button (a bordered, filled «Filtros» on the
+   page) must not show as a box in the bar. background-color, never the
+   shorthand, so the state layer (a background-image) still shows. */
+.dock-icon,
+#shell-page-tools .dock-icon {
   position: relative;
   display: inline-flex;
   flex: none;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
+  min-height: 0;
   padding: 0;
   border: 0;
   border-radius: 9999px;
-  background: transparent;
+  background-color: transparent;
   color: var(--muelle-ink-gray-9);
 }
-.dock-icon:active {
-  background: var(--muelle-surface-gray-2);
-}
 .dock-icon[aria-expanded='true'],
-.dock-icon[aria-pressed='true'] {
-  background: var(--muelle-accent-soft);
-  color: var(--muelle-accent-soft-ink);
+.dock-icon[aria-pressed='true'],
+#shell-page-tools .dock-icon[aria-expanded='true'],
+#shell-page-tools .dock-icon[aria-pressed='true'] {
+  background-color: var(--muelle-secondary-container);
+  color: var(--muelle-on-secondary-container);
 }
-.dock-icon:disabled {
+.dock-icon:disabled,
+#shell-page-tools .dock-icon:disabled {
   color: var(--muelle-ink-gray-4);
 }
 .dock-icon .dock-badge {
@@ -321,7 +500,10 @@ a,
 .tool-dock-scrim {
   position: fixed;
   inset: 0;
-  background: rgb(0 0 0 / 0.3);
+  background: rgb(0 0 0 / 0.36);
+}
+[data-theme='dark'] .tool-dock-scrim {
+  background: rgb(0 0 0 / 0.56);
 }
 .tool-dock-panel {
   position: relative;
@@ -332,10 +514,9 @@ a,
   max-height: 60dvh;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 12px 12px 8px;
-  border-top: 1px solid var(--muelle-outline-gray-2);
-  background: var(--muelle-surface-base);
-  box-shadow: 0 -12px 30px rgb(0 0 0 / 0.07);
+  padding: 16px 12px 8px;
+  border-radius: var(--muelle-shape-2xl) var(--muelle-shape-2xl) 0 0;
+  background: var(--muelle-surface-container-low);
 }
 .tool-scrim-enter-active,
 .tool-scrim-leave-active {

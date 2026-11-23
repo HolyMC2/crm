@@ -1,7 +1,7 @@
 <template>
   <!-- sticky: Desk floating launchers (doco floating_dock.js) rise above fixed/sticky bottom bars. -->
   <nav
-    class="sticky bottom-0 flex shrink-0 items-stretch border-t border-outline-gray-1 bg-surface-base pb-[env(safe-area-inset-bottom)]"
+    class="sticky bottom-0 flex shrink-0 items-stretch bg-[var(--muelle-surface-container)] pb-[env(safe-area-inset-bottom)]"
     :aria-label="__('Main navigation')"
   >
     <!-- A docked app (Escáner on a stock worker's bar) is a plain link that
@@ -12,15 +12,14 @@
       :key="module.key"
       v-bind="module.app ? { href: module.href } : { to: module.to }"
       :data-sibling="module.app ? module.key : undefined"
-      :class="[
-        TAB,
-        module.key === active ? 'text-ink-gray-9' : 'text-ink-gray-6',
-      ]"
+      :class="[TAB, module.key === active ? TAB_ON : TAB_OFF]"
       :aria-current="module.key === active ? 'page' : undefined"
     >
       <span :class="PILL_BOX" aria-hidden="true">
         <span :class="[PILL, module.key === active ? PILL_ON : PILL_OFF]" />
-        <span :class="[module.icon, 'relative size-5']" />
+        <span
+          :class="[module.icon, ICON, module.key === active ? ICON_ON : '']"
+        />
         <span
           v-if="counts[module.key]"
           :class="[BADGE, badgeTone(counts[module.key])]"
@@ -36,14 +35,14 @@
     <!-- «Más» lights up while the page is a module the bar does not hold: the
          worker reached it from the sheet, so the way back stays visible. -->
     <button
-      :class="[TAB, moreLit ? 'text-ink-gray-9' : 'text-ink-gray-6']"
+      :class="[TAB, moreLit ? TAB_ON : TAB_OFF]"
       aria-haspopup="dialog"
       :aria-current="moreLit ? 'page' : undefined"
       @click="$emit('more')"
     >
       <span :class="PILL_BOX" aria-hidden="true">
         <span :class="[PILL, moreLit ? PILL_ON : PILL_OFF]" />
-        <span class="lucide-menu relative size-5" />
+        <span :class="['lucide-menu', ICON, moreLit ? ICON_ON : '']" />
         <span
           v-if="moreCount"
           :class="[BADGE, badgeTone(moreCount)]"
@@ -87,13 +86,23 @@ const RouterLink = resolveComponent('RouterLink')
 // and truncate's overflow:hidden would shave it («Pendiente» + half an s).
 const LABEL =
   'block max-w-full truncate px-px tracking-tight max-[359px]:text-[10px]'
+// The bar is a tonal block (the container role), with no rule above it. A
+// tab gives under the finger (.press); its state layer is the pill's shape,
+// not the tab's rectangle, so `!bg-none` takes the kit's layer off the tab
+// and PILL_BOX paints it.
 const TAB =
-  'press flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium'
+  'group press flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 text-[11px] !bg-none'
+const TAB_ON = 'font-semibold text-ink-gray-9'
+const TAB_OFF = 'font-medium text-[var(--muelle-on-surface-variant)]'
 // The active tab's pill grows out from under its icon (Material's nav
-// indicator), so the eye follows the tap to the place it opened.
-const PILL_BOX = 'relative flex h-7 w-12 items-center justify-center'
+// indicator, on the secondary container), so the eye follows the tap to the
+// place it opened. 56 px wide: five tabs at 305 px are 61 px each.
+const PILL_BOX =
+  'relative flex h-8 w-14 items-center justify-center rounded-full group-active:bg-[color:color-mix(in_srgb,currentColor_10%,transparent)] group-focus-visible:bg-[color:color-mix(in_srgb,currentColor_10%,transparent)]'
 const PILL =
-  'absolute inset-0 rounded-full bg-surface-gray-3 transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none'
+  'absolute inset-0 rounded-full bg-[var(--muelle-secondary-container)] transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none'
+const ICON = 'relative size-5'
+const ICON_ON = 'text-[var(--muelle-on-secondary-container)]'
 const PILL_ON = 'opacity-100'
 const PILL_OFF = 'scale-x-50 opacity-0'
 

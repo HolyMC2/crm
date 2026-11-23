@@ -70,12 +70,32 @@ Everywhere
 
 The shared phone primitives live in `frontend/src/components/ui/` (import from `@/components/ui`)
 and the display helpers in `frontend/src/utils/display.js`. See them live at `/crm/_ui` (dev and
-lab only; `?sheet=1`, `?filtros=1`, `?buscar=1` open the sheets). Build screens from these; if one
+lab only; `?sheet=1`, `?filtros=1`, `?buscar=1`, `?panel=1` and `?fecha=1` open the sheets, the search panel and the date's month). Build screens from these; if one
 lacks a feature, ask the Shell S1 owner instead of making a private copy.
+
+The look is the kit's (`components/ui/shell.css`, imported by `src/index.css`; the README of
+`@muelle/ui` in muelle `workspace/packages/ui` has the table). A page paints with frappe-ui
+utilities and takes the tonal surfaces, the corner sizes and the shop's colour through them:
+`bg-surface-gray-1` to `-4` are four steps of tone, `bg-surface-gray-10` is the shop's accent, and
+`rounded-6`, `-7` and `-8` are 16, 20 and 28 px. What a page writes itself follows six rules:
+
+- What is selected takes the secondary container
+  (`bg-[var(--muelle-secondary-container)] text-[var(--muelle-on-secondary-container)]`), never the
+  filled accent and never green. The filled accent is for the one primary action.
+- A control that can be tapped takes `.press` (a row or a tile: `.state-layer`) instead of a
+  `hover:bg-*` class. Never on an element whose class paints a gradient or a picture.
+- A tooltip or a bar that floats takes `.ui-inverse`, never `bg-surface-gray-10` with a shadow.
+- A chip is `chipClass(on)` on a button that says `aria-pressed`: the check comes by itself.
+- A bar at the thumb sits on the container role (`bg-[var(--muelle-surface-container)]`) with no
+  rule above it, as the shell's command bar and bottom nav do, and its controls are 48 px. A
+  record's own bottom bar (`meta.ownBottomBar`) follows the same rule when its page is next edited.
+- A rule between rows is `outline-gray-1`, which is as light as it was before the look (tone parts
+  the surfaces, the line only helps); a control's or a card's outline is `outline-gray-2`. Neither
+  is the only sign of a control. A card that had only a shadow keeps a 1 px edge (`shadow-sm`).
 
 | Component | Use it for | Do | Don't |
 |---|---|---|---|
-| `AppBar` | The one phone top bar of a page with `meta.ownPhoneHeader`, or of a record. | `back`: a route (up to the list) on records and sub-pages, or `true`: the router's back inside the app, else the browser's back to the page it was opened from (another app on this origin), else home (`utils/historyBack.js`). `context` names the module above the title («Cobranza»). `scopes` + `v-model:scope` turn the title into the list picker (a sheet). At most 3 icons in `#actions`; the bell comes by itself. `#summary` for what must stay in sight. | Don't add a «← Volver a …» row or an in-page H1 under it. The one exception is a record opened from another app with `return_to` (a Garantía or Encuesta, such as a case opened from Taller): it keeps «← Volver a Taller», because the arrow goes to the record's own list. Don't put text buttons or a create button in the bar (create is the `Fab`). Don't truncate titles yourself; it wraps to 2 lines and moves to its own row when the icons leave too little room. A drill-down record whose bar is the shell's (`meta.listParent`) passes `:stack="false"`: arrow and name stay on one row and the name ends in «…» (M3 small bar), until the icons leave the name under 6rem (96 px: a 305 px phone with three icons leaves 73 px, with two it leaves 121 px); then the name takes its own row instead of shrinking to «Co…». |
+| `AppBar` | The one phone top bar of a page with `meta.ownPhoneHeader`, or of a record. | `back`: a route (up to the list) on records and sub-pages, or `true`: the router's back inside the app, else the browser's back to the page it was opened from (another app on this origin), else home (`utils/historyBack.js`). `context` names the module above the title («Cobranza»). `scopes` + `v-model:scope` turn the title into the list picker (a sheet). At most 3 icons in `#actions`; the bell comes by itself. `#summary` for what must stay in sight. | Don't add a «← Volver a …» row or an in-page H1 under it. The one exception is a record opened from another app with `return_to` (a Garantía or Encuesta, such as a case opened from Taller): it keeps «← Volver a Taller», because the arrow goes to the record's own list. Don't put text buttons or a create button in the bar (create is the `Fab`). Don't truncate titles yourself; it wraps to 2 lines and moves to its own row when the icons leave too little room. A drill-down record whose bar is the shell's (`meta.listParent`) passes `:stack="false"`: arrow and name stay on one row and the name ends in «…» (M3 small bar), until the icons leave the name room for fewer than about eleven letters (124 px at the bar's 22 px title; 107 px on a phone under 360 px, where the title is 19 px: a 305 px phone with three icons leaves 73 px, with two it leaves 121 px); then the name takes its own row instead of shrinking to «Co…». |
 | `PageHeader` | A heading block inside a page (desktop, or a section page without a list title in the bar). | Title on its own row; one subtitle; actions under the title on a phone. | Don't put the title and buttons in one flex row. Don't use it on phone list pages: their title is in the `AppBar`. |
 | `BottomSheet` | Bounded tasks: a form, a picker, a confirm, filters. | `v-model:open`, a `title`, the actions in `#actions` (stacked, full width, primary last). `#header` for a fixed chip or search; `#footer` for a fixed composer. `dismissible: false` for unsaved input. `flush` for full-width rows. | Don't hand-roll a `<Teleport>` sheet, don't use a centred `Dialog` on a phone, and don't open a sheet from a sheet. Back must close it; don't fight its history entry. |
 | `Controls/Link` (on `frappe-ui/Autocomplete`) | Every pick of a record: a group, a brand, a customer. | Typing a letter on the closed field opens the search with that letter; the arrows open the whole list. A phone picks in a `BottomSheet` titled with the field's label; desktop drops a panel as wide as the field. After a pick, focus is back on the field, so Tab goes on. The current choice carries a check; «Quitar» shows only when there is a value. | Don't make the worker click before typing. Don't open the sheet from inside a sheet or dialog (it stays a panel there). |

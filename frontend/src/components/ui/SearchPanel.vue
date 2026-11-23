@@ -1,4 +1,4 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (78e759f7d2ee). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.2.0 (57ffdde5733b). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <!-- A phone list's top bar (WhatsApp pattern, Marco 2026-10-28): only the
      search pill shows. Focusing it slides open the panel under it (channel or
      view toggles, filters, recent records: the default slot) over the greyed
@@ -9,13 +9,14 @@
      staying in the pill behind the filters button; with nothing typed they
      close it, as «Listo», Esc or a tap on the grey do. Folded or closed,
      `#active` shows what narrows the list as removable chips; closed,
-     `#trailing` sits beside the pill (⋯). -->
+     `#trailing` sits beside the pill (⋯). The pill is 48 px on
+     container-highest. -->
 <template>
   <div ref="rootEl" class="relative z-20 bg-surface-base px-3.5 pb-2.5 pt-2">
     <Transition name="fade">
       <div
         v-if="open && !query"
-        class="absolute inset-x-0 top-full h-[100dvh] bg-black/30"
+        class="ui-scrim absolute inset-x-0 top-full h-[100dvh]"
         aria-hidden="true"
         data-testid="search-panel-scrim"
         @click="close"
@@ -23,12 +24,9 @@
     </Transition>
     <div class="flex items-center gap-1">
       <div
-        class="flex min-h-11 min-w-0 flex-1 items-center gap-2 rounded-full bg-surface-gray-2 px-4 focus-within:ring-1 focus-within:ring-outline-gray-3"
+        class="ui-focus flex min-h-12 min-w-0 flex-1 items-center gap-2 rounded-full bg-surface-gray-4 px-4 text-[var(--muelle-on-surface-variant)]"
       >
-        <span
-          class="lucide-search size-4 flex-none text-ink-gray-5"
-          aria-hidden="true"
-        />
+        <span class="lucide-search size-5 flex-none" aria-hidden="true" />
         <input
           ref="inputEl"
           data-list-search
@@ -37,7 +35,7 @@
           :value="query"
           :aria-label="label || placeholder"
           :placeholder="placeholder"
-          class="w-full border-0 bg-transparent p-0 text-[15px] text-ink-gray-9 placeholder:text-ink-gray-5 focus:outline-none focus:ring-0 [&::-webkit-search-cancel-button]:hidden"
+          class="w-full border-0 bg-transparent p-0 text-[15px] text-ink-gray-9 placeholder:text-[var(--muelle-on-surface-variant)] focus:outline-none focus:ring-0 [&::-webkit-search-cancel-button]:hidden"
           @focus="open = true"
           @input="query = $event.target.value"
           @keydown.esc="onEsc"
@@ -45,7 +43,7 @@
         <button
           v-if="query"
           type="button"
-          class="-my-2 -mr-3 flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-5 hover:text-ink-gray-8"
+          class="press -mr-3 flex size-11 flex-none items-center justify-center rounded-full"
           :aria-label="t('Limpiar búsqueda')"
           @click="clearQuery"
         >
@@ -57,7 +55,7 @@
           v-if="open && query"
           key="filters"
           type="button"
-          class="flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-8"
+          class="press flex size-12 flex-none items-center justify-center rounded-full text-ink-gray-8"
           :aria-label="t('Filters')"
           :aria-pressed="String(!folded)"
           data-testid="search-panel-toggle"
@@ -69,7 +67,7 @@
           v-else-if="open"
           key="done"
           type="button"
-          class="flex min-h-11 flex-none items-center px-2 text-sm font-medium text-ink-gray-8"
+          class="press flex min-h-11 flex-none items-center rounded-full px-3 text-sm font-medium text-ink-gray-8"
           data-testid="search-panel-done"
           @click="close"
         >

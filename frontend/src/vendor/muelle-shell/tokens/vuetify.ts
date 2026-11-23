@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/tokens@0.1.0 (754e8801108e). DO NOT EDIT:
+// Vendored from muelle/workspace/packages/tokens@0.2.0 (f60255e9ba39). DO NOT EDIT:
 // change the package, then run its scripts/vendor.mjs against this directory.
 // POS (Vuetify 3) theme from the same tokens. Vuetify needs concrete colors,
 // so this maps the resolved values rather than `var(--muelle-*)`. POS passes
@@ -7,6 +7,7 @@
 import { shellAccent, type Appearance, type ThemeName } from './appearance'
 import { contrast } from './color'
 import { FRAPPE_THEMES } from './frappe-ui'
+import { materialRoles } from './material'
 
 export interface VuetifyThemeDefinition {
   dark: boolean
@@ -20,9 +21,11 @@ function onColor(fill: string, theme: ThemeName): string {
 
 export function vuetifyThemes(appearance: Appearance): Record<ThemeName, VuetifyThemeDefinition> {
   const accent = shellAccent(appearance)
+  const roles = materialRoles(appearance)
   const build = (theme: ThemeName): VuetifyThemeDefinition => {
     const t = FRAPPE_THEMES[theme]
     const a = accent[theme]
+    const m = roles[theme]
     const status = {
       success: t['status-green-ink'],
       warning: t['status-orange-ink'],
@@ -37,6 +40,12 @@ export function vuetifyThemes(appearance: Appearance): Record<ThemeName, Vuetify
         'surface-variant': t['surface-gray-2'],
         'surface-bright': t['surface-base'],
         'surface-light': t['surface-gray-1'],
+        'surface-container-low': m['surface-container-low'],
+        'surface-container': m['surface-container'],
+        'surface-container-high': m['surface-container-high'],
+        'surface-container-highest': m['surface-container-highest'],
+        'secondary-container': m['secondary-container'],
+        'on-secondary-container': m['on-secondary-container'],
         primary: a.accent,
         'primary-variant': a['accent-soft-ink'],
         secondary: t['ink-gray-7'],
@@ -45,6 +54,7 @@ export function vuetifyThemes(appearance: Appearance): Record<ThemeName, Vuetify
         'accent-variant': a['accent-soft-ink'],
         ...status,
         outline: t['outline-gray-2'],
+        'outline-variant': m['outline-variant'],
         'on-primary': a['accent-ink'],
         'on-secondary': onColor(t['ink-gray-7'], theme),
         'on-background': t['ink-gray-8'],

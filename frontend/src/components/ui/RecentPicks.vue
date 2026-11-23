@@ -1,4 +1,4 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (78e759f7d2ee). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.2.0 (57ffdde5733b). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <!-- «Recientes» as bubbles, four to a row (WhatsApp's recent searches): one
      tap back into a record. Neutral initials, two-line names. -->
 <template>
@@ -11,7 +11,7 @@
       <p class="text-xs font-medium text-ink-gray-6">{{ t('Recientes') }}</p>
       <button
         type="button"
-        class="-mr-2 min-h-11 px-2 text-xs font-medium text-ink-gray-6 hover:text-ink-gray-9"
+        class="press -mr-2 min-h-11 rounded-full px-3 text-xs font-medium text-ink-gray-6"
         @click="$emit('clear')"
       >
         {{ t('Borrar todo') }}
@@ -22,11 +22,11 @@
         v-for="pick in picks"
         :key="(pick.doctype || '') + pick.name"
         type="button"
-        class="press flex min-w-0 flex-col items-center gap-1 rounded-8 px-0.5 py-1 hover:bg-surface-gray-2"
+        class="press flex min-w-0 flex-col items-center gap-1 rounded-6 px-0.5 py-1"
         @click="$emit('pick', pick)"
       >
         <span
-          class="flex size-12 items-center justify-center rounded-full bg-surface-gray-3 text-sm font-semibold text-ink-gray-7"
+          class="flex size-12 items-center justify-center rounded-full bg-surface-gray-4 text-sm font-semibold text-ink-gray-7"
           aria-hidden="true"
           >{{ initialsOf(pick.label) }}</span
         >

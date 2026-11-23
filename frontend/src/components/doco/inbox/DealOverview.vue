@@ -99,7 +99,9 @@
                     ? __('Editar seguimiento')
                     : __('Programar seguimiento')
                 }}
-                <kbd class="ml-1 hidden text-xs opacity-70 md:inline">N</kbd>
+                <!-- On the filled accent the hint keeps the label's full ink:
+                     faded, it read 3.3:1 on a coloured shop's dark accent. -->
+                <kbd class="ml-1 hidden text-xs font-normal md:inline">N</kbd>
               </button>
             </div>
           </div>

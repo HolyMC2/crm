@@ -1,37 +1,35 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (78e759f7d2ee). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.2.0 (57ffdde5733b). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <template>
   <!-- One KPI tile (Shell SPEC §2.2, MOBILE_REFERENCES pattern 7): a
-       sentence-case label over a large value that wraps instead of clipping.
-       Colour only when the number asks for action. With `to` the whole tile
-       is the link; with `pressed` (true/false) it is a toggle button (a
-       list's status). Lay tiles out in a KpiGrid (2-up, 1-up when narrow). -->
+       sentence-case label over a large value that wraps instead of clipping,
+       on a tonal tile (container-low, 20 px corners, no border). Colour only
+       when the number asks for action. With `to` the whole tile is the link;
+       with `pressed` (true/false) it is a toggle button (a list's status),
+       on the secondary container while it is on. Lay tiles out in a KpiGrid
+       (2-up, 1-up when narrow). -->
   <UiTag
     :as="to ? RouterLink : toggle ? 'button' : 'div'"
     :to="to || undefined"
     :type="toggle ? 'button' : undefined"
     :aria-pressed="toggle ? String(pressed) : undefined"
-    class="flex min-h-[5.5rem] min-w-0 flex-col gap-1 rounded-7 border px-4 py-3 text-left"
+    class="flex min-h-[5.5rem] min-w-0 flex-col gap-1 rounded-7 px-4 py-3 text-left"
     :class="[
       pressed
-        ? 'border-[var(--muelle-accent)] bg-[var(--muelle-accent-soft)]'
-        : 'border-outline-gray-1 bg-surface-base',
-      to || toggle ? 'press hover:bg-surface-gray-1' : '',
+        ? 'bg-[var(--muelle-secondary-container)] text-[var(--muelle-on-secondary-container)]'
+        : 'bg-surface-gray-1 text-[var(--muelle-on-surface-variant)]',
+      to || toggle ? 'press' : '',
     ]"
     data-ui-kpi
   >
-    <span class="break-words text-sm leading-snug text-ink-gray-6">{{
-      label
-    }}</span>
+    <span class="break-words text-sm leading-snug">{{ label }}</span>
     <span
       class="num break-words text-4xl font-semibold leading-none"
       :class="TONE[tone] || TONE.neutral"
       >{{ value }}</span
     >
-    <span
-      v-if="hint"
-      class="break-words text-sm leading-snug text-ink-gray-6"
-      >{{ hint }}</span
-    >
+    <span v-if="hint" class="break-words text-sm leading-snug">{{
+      hint
+    }}</span>
   </UiTag>
 </template>
 <script setup>

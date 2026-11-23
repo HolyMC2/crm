@@ -2,61 +2,14 @@
 /* Muelle design tokens (vendored @muelle/tokens): --muelle-* on :root and
    [data-theme='dark']; the site palette overrides the accent at boot. */
 @import './vendor/muelle-shell/tokens/tokens.css';
-
-/* ── Shell typeface: Archivo (Omnibus-Type, OFL; fonts/archivo/OFL.txt) ─────
-   One variable family whose width axis carries the roles: body at 100 %,
-   titles at 92 %, figures (money, counts, days) at 84 % with tabular digits,
-   so a column of amounts reads like price tags. The file is cut to Latin and
-   Spanish, weights 300–800 and widths 80–100 %: 56 KB, against 264 KB for the
-   Inter that frappe-ui loads otherwise (Inter is never requested now: nothing
-   names it). */
-@font-face {
-  font-family: 'Muelle Archivo';
-  src: url('./fonts/archivo/archivo-var.woff2') format('woff2');
-  font-weight: 300 800;
-  font-stretch: 80% 100%;
-  font-style: normal;
-  font-display: swap;
-}
-:root {
-  --muelle-font: 'Muelle Archivo', ui-sans-serif, system-ui, -apple-system,
-    'Segoe UI', Roboto, sans-serif;
-}
-/* frappe-ui's base names InterVar first on <html>; the shell's face wins. */
-html {
-  font-family: var(--muelle-font);
-  font-weight: 400;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-}
-/* Figures: amounts, counts, ages, KPIs. Condensed, tabular, lining. */
-.num {
-  font-stretch: 84%;
-  font-variant-numeric: tabular-nums lining-nums;
-  font-feature-settings:
-    'tnum' 1,
-    'lnum' 1;
-  letter-spacing: 0;
-}
-/* Titles: page, sheet and section heads. */
-.title-face {
-  font-stretch: 92%;
-  letter-spacing: -0.012em;
-}
-:is(h1, h2, h3, [data-testid='shell-title']) {
-  font-stretch: 92%;
-}
-/* Every tabular-nums site (amounts in lists, tables, tiles) gets the figure face. */
-.tabular-nums {
-  font-stretch: 84%;
-}
-
-/* ── mobile touch feel ─────────────────────────────────────────────────────
-   Kill the half-second gray tap flash + the double-tap-zoom click delay, and
-   the rubber-band overscroll that makes the SPA feel like a web page. */
-html {
-  -webkit-tap-highlight-color: transparent;
-}
+/* The Muelle kit's own sheet (vendored @muelle/ui, components/ui/shell.css):
+   the Material bridge that points frappe-ui's surface, outline, radius and
+   elevation variables at the --muelle-* roles, the shell's typeface (Archivo,
+   .num, .title-face), its motion (page-in, sheet-in, fade, slide-x,
+   icon-swap), the press and its state layer (.press, .state-layer), .skel,
+   .cv-row, [data-fresh] and the AppBar summary. It is imported, never copied:
+   change the package and vendor again. What follows is crm's own. */
+@import './components/ui/shell.css';
 
 /* native controls (checkboxes, scrollbars, form widgets) follow the app theme —
    without this they render light-mode white inside dark mode */
@@ -144,98 +97,10 @@ body:has([data-ui-sheet-actions] > :nth-child(3))
   [data-sonner-toaster][data-y-position='bottom'] {
   bottom: calc(180px + env(safe-area-inset-bottom));
 }
-/* The root colour shows wherever the page has not painted yet, such as the
-   frame while the on-screen keyboard resizes the viewport (resizes-content).
-   Keep it on the active theme's surface so dark mode never flashes white. */
-html,
-body {
-  background-color: var(--muelle-surface-base);
-}
-body {
-  overscroll-behavior-y: none;
-}
-button,
-a,
-[role='button'],
-[role='tab'] {
-  touch-action: manipulation;
-}
-
-/* route-change enter animation. Applied by MobileLayout on a route-keyed wrapper
-   (pages are multi-root fragments, so <transition> can't animate them) — the
-   incoming page fades/rises in; leaving is instant. */
-/* bottom-sheet entrance (mobile capture form etc.) */
-@keyframes sheet-in {
-  from {
-    transform: translateY(100%);
-  }
-  to {
-    transform: none;
-  }
-}
-.sheet-in {
-  animation: sheet-in 0.22s cubic-bezier(0.32, 0.72, 0, 1);
-}
-
-@keyframes page-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-.page-in {
-  animation: page-in 0.18s cubic-bezier(0.21, 1.02, 0.73, 1);
-}
-
-/* Shared <Transition> names. Motion answers a tap: a scrim fades, a control
-   trades places, a page arrives. Enter is a touch slower than leave. */
-.fade-enter-active {
-  transition: opacity 0.2s ease-out;
-}
-.fade-leave-active {
-  transition: opacity 0.14s ease-in;
-}
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-.slide-x-enter-active {
-  transition:
-    opacity 0.16s ease-out,
-    transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-.slide-x-leave-active {
-  transition:
-    opacity 0.1s ease-in,
-    transform 0.1s ease-in;
-}
-.slide-x-enter-from {
-  opacity: 0;
-  transform: translateX(8px);
-}
-.slide-x-leave-to {
-  opacity: 0;
-  transform: translateX(-4px);
-}
-/* a button trading its icon (upload ↔ close): quarter turn, no layout shift */
-.icon-swap-enter-active,
-.icon-swap-leave-active {
-  transition:
-    opacity 0.12s ease,
-    transform 0.16s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-.icon-swap-enter-from {
-  opacity: 0;
-  transform: rotate(-90deg) scale(0.6);
-}
-.icon-swap-leave-to {
-  opacity: 0;
-  transform: rotate(90deg) scale(0.6);
-}
+/* The route-change entrance (the kit's page-in keyframes, a touch slower here):
+   MobileLayout applies it on a route-keyed wrapper, since pages are multi-root
+   fragments a <transition> cannot animate. The incoming page fades and rises;
+   leaving is instant. */
 .route-enter-active {
   animation: page-in 0.2s cubic-bezier(0.21, 1.02, 0.73, 1);
 }
@@ -355,64 +220,12 @@ input[type='checkbox'].rounded-4 {
   border-radius: var(--radius-1);
 }
 
-/* poor-man's list virtualization: browser skips layout/paint of offscreen rows
-   (590-conversation queues on a phone). Estimated height keeps scrollbar sane. */
-.cv-row {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 96px;
-}
-
-/* skeleton shimmer (cold-start placeholders) — token-based, dark-safe */
-.skel {
-  position: relative;
-  overflow: hidden;
-  background: var(--surface-gray-2);
-}
-.skel::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  transform: translateX(-100%);
-  background: linear-gradient(
-    90deg,
-    transparent,
-    var(--surface-gray-3),
-    transparent
-  );
-  animation: skel-shimmer 1.2s infinite;
-}
-@keyframes skel-shimmer {
-  100% {
-    transform: translateX(100%);
-  }
-}
-
-/* A row a teammate just added (composables/liveList.js): a soft wash that fades. */
-[data-fresh] {
-  animation: row-fresh 2.4s ease-out;
-}
-@keyframes row-fresh {
-  0%,
-  30% {
-    background-color: var(--muelle-accent-soft);
-  }
-}
-
+/* The kit's sheet stops its own motion under prefers-reduced-motion (routes,
+   fades, the press, skeletons, fresh rows); these are crm's. */
 @media (prefers-reduced-motion: reduce) {
-  [data-fresh] {
-    animation: none;
-    background-color: var(--muelle-accent-soft);
-  }
-  .page-in,
   .route-enter-active {
     animation: none !important;
   }
-  .fade-enter-active,
-  .fade-leave-active,
-  .slide-x-enter-active,
-  .slide-x-leave-active,
-  .icon-swap-enter-active,
-  .icon-swap-leave-active,
   .pop-enter-active,
   .pop-leave-active {
     transition: none !important;
@@ -421,20 +234,9 @@ input[type='checkbox'].rounded-4 {
   .palette-in [data-palette-panel] {
     animation: none !important;
   }
-  .press {
-    transition: none !important;
-  }
-  .skel::after {
-    animation: none !important;
-  }
 }
 
 @layer components {
-  /* tactile press feedback for buttons/chips (native-app feel on touch) */
-  .press {
-    @apply transition-transform duration-100 active:scale-[0.96];
-  }
-
   /* themed native form control — @tailwindcss/forms paints inputs/selects/textareas
      #fff while preflight makes their text `color: inherit`, which turns white-on-white
      in dark mode; this re-skins them off the semantic tokens (frappe-ui field look) */
@@ -480,32 +282,4 @@ input[type='checkbox'].rounded-4 {
     min-height: 2.75rem;
     font-size: 15px;
   }
-}
-
-/* Keyboard standard: the row j/k moved to is always visible, whatever the
-   page's own row styling (pageKeys.js focuses it programmatically). */
-[data-key-row]:focus-visible,
-[data-key-row] [data-row-focus]:focus-visible {
-  outline: 2px solid var(--outline-gray-5, #7c7c7c);
-  outline-offset: -2px;
-}
-
-/* AppBar summary (ui/AppBar #summary): what matters in a list, as figures.
-   A small label over a large condensed amount; a page's own colour class on
-   the figure (overdue red) still wins, since :where() adds no specificity. */
-:where([data-appbar-summary]) > * > span,
-:where([data-appbar-summary]) > span {
-  display: flex;
-  flex-direction: column;
-}
-:where([data-appbar-summary]) strong {
-  display: block;
-  margin-top: 1px;
-  color: var(--ink-gray-9);
-  font-size: 22px;
-  line-height: 1.1;
-  font-weight: 640;
-  font-stretch: 84%;
-  font-variant-numeric: tabular-nums lining-nums;
-  letter-spacing: -0.01em;
 }

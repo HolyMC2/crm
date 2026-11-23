@@ -1,16 +1,17 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.1.0 (78e759f7d2ee). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.2.0 (57ffdde5733b). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <template>
   <!-- The one phone top app bar (Shell SPEC §2.2.1), grown from PowerAppBar:
        up/back · title (optionally a scope picker) · ≤3 icon actions · bell.
        The title wraps to two lines and never collapses to a letter: when the
        icons leave it too little room it moves to its own row (M3 medium bar).
-       A record's island (`island`) follows the name from 768 px. -->
+       A record's island (`island`) follows the name from 768 px. No rule under
+       it: the bar is 64 px of the page's own surface. -->
   <header
     ref="bar"
-    class="sticky top-0 z-20 border-b border-outline-gray-1 bg-surface-base pt-[env(safe-area-inset-top)]"
+    class="sticky top-0 z-20 bg-surface-base pt-[env(safe-area-inset-top)]"
     data-appbar
   >
-    <div class="flex min-h-14 items-center gap-1 px-1">
+    <div class="flex min-h-16 items-center gap-1 px-1">
       <template v-if="selecting">
         <button
           type="button"
@@ -51,7 +52,7 @@
           :value="search"
           type="search"
           enterkeyhint="search"
-          class="h-11 min-w-0 flex-1 rounded-full border-0 bg-surface-gray-2 px-4 text-base [&::-webkit-search-cancel-button]:hidden"
+          class="ui-focus h-12 min-w-0 flex-1 rounded-full border-0 bg-surface-gray-4 px-4 text-base placeholder:text-[var(--muelle-on-surface-variant)] [&::-webkit-search-cancel-button]:hidden"
           :placeholder="searchLabel || t('Search')"
           :aria-label="searchLabel || t('Search')"
           v-bind="searchInputAttrs"
@@ -159,7 +160,7 @@
     <Transition name="fade">
       <div
         v-if="panelOpen && !search"
-        class="absolute inset-x-0 top-full h-[100dvh] bg-black/30"
+        class="ui-scrim absolute inset-x-0 top-full h-[100dvh]"
         aria-hidden="true"
         data-appbar-scrim
         @click="closeSearch"
@@ -188,7 +189,7 @@
     <!-- What matters in this list, in sight while it scrolls. -->
     <div
       v-if="$slots.summary && !panelOpen"
-      class="flex flex-wrap gap-x-6 gap-y-1 border-t border-outline-gray-1 px-4 pb-2.5 pt-2 text-xs text-ink-gray-6"
+      class="flex flex-wrap gap-x-6 gap-y-1 px-4 pb-2.5 pt-1 text-xs text-ink-gray-6"
       data-appbar-summary
     >
       <slot name="summary" />
@@ -205,24 +206,24 @@
           v-for="entry in scopes"
           :key="entry.value"
           type="button"
-          class="flex min-h-12 w-full items-center gap-3 rounded-7 px-4 text-left text-base"
+          class="state-layer flex min-h-12 w-full items-center gap-3 rounded-8 px-4 text-left text-base"
           :class="
             scope === entry.value
-              ? 'bg-surface-gray-2 font-semibold'
-              : 'hover:bg-surface-gray-1'
+              ? 'bg-[var(--muelle-secondary-container)] font-semibold text-[var(--muelle-on-secondary-container)]'
+              : ''
           "
           :aria-current="scope === entry.value ? 'true' : undefined"
           @click="choose(entry.value)"
         >
           <span
             v-if="entry.icon"
-            :class="[entry.icon, 'size-5 flex-none text-ink-gray-6']"
+            :class="[entry.icon, 'size-5 flex-none opacity-70']"
             aria-hidden="true"
           />
           <span class="min-w-0 flex-1 break-words">{{ entry.label }}</span>
           <span
             v-if="entry.count !== undefined && entry.count !== null"
-            class="tabular-nums text-ink-gray-6"
+            class="tabular-nums font-normal"
             >{{ entry.count }}</span
           >
         </button>
@@ -258,10 +259,10 @@ import UiTag from './UiTag'
 // chunk (budget 180 KB gzip).
 const BottomSheet = defineAsyncComponent(() => import('./BottomSheet.vue'))
 
-// The hover fill is for a pointer only: a tap leaves :hover on the button it landed on,
-// and the next page's arrow would show as pressed. A finger sees the fill while it presses.
+// 48 px, with the kit's state layer (.press): its hover is for a pointer only, since a tap
+// leaves :hover on the button it landed on and the next page's arrow would show as pressed.
 const ICON_BUTTON =
-  'flex size-12 flex-none items-center justify-center rounded-full text-ink-gray-7 active:bg-surface-gray-2 [@media(hover:hover)]:hover:bg-surface-gray-2'
+  'press flex size-12 flex-none items-center justify-center rounded-full text-ink-gray-7'
 
 const props = defineProps({
   title: { type: String, default: '' },
@@ -441,13 +442,15 @@ watch(
 )
 
 // The title gets its own row (M3 medium bar) when it would not fit in two
-// lines beside the icons, or when the icons leave it too little room: 6rem
-// for a title beside a back arrow, 9.5rem for a large one (at 22px a narrower
-// slot breaks «Por comprar» one word per line).
-const titleMin = () => (props.back ? 96 : 152)
-// Average glyph width, Archivo semibold at the title width (92 %): 22px for a
-// top-level (large) title, 17px beside a back arrow.
-const charPx = () => (props.back ? 9 : 11.5)
+// lines beside the icons, or when the icons leave it too little room: 9.5rem
+// for a top-level title that may wrap (at 22px a narrower slot breaks «Por
+// comprar» one word per line); beside a back arrow, where a record's name
+// stays on one line and truncates, room for about eleven letters: 7.75rem at
+// 22px, 6.7rem on a phone under 360px, where the title is 19px.
+const titleMin = () => (props.back ? (barWidth < 360 ? 107 : 124) : 152)
+// Average glyph width, Archivo semibold at the title width (92 %) and 22px,
+// the size of both titles.
+const charPx = () => 11.5
 let observer = null
 // The widths come from the ResizeObserver, whose callback runs after layout
 // (free reads); a prop change reuses them, so the title, count or loading
@@ -516,7 +519,11 @@ const AppBarTitle = (attrs, { emit: emitTitle }) => {
     {
       class: [
         'title-face line-clamp-2 break-words font-semibold leading-tight [text-wrap:balance]',
-        attrs.large ? 'text-3xl max-[359px]:text-2xl' : 'text-xl',
+        // 22 px at the top of a list and beside a back arrow alike; a step
+        // down on the narrowest phones.
+        attrs.large
+          ? 'text-3xl max-[359px]:text-2xl'
+          : 'text-[22px] max-[359px]:text-2xl',
       ],
       'data-appbar-title': '',
     },
@@ -539,7 +546,7 @@ const AppBarTitle = (attrs, { emit: emitTitle }) => {
     {
       type: 'button',
       class:
-        'flex min-h-12 min-w-0 items-center gap-1 rounded-7 px-3 text-left hover:bg-surface-gray-1',
+        'state-layer flex min-h-12 min-w-0 items-center gap-1 rounded-7 px-3 text-left',
       'aria-haspopup': 'dialog',
       'aria-expanded': String(!!attrs.open),
       title: attrs.pickLabel,
