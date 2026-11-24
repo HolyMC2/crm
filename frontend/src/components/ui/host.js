@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/ui@0.4.0 (f299ad1b2cf1). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory.
+// Vendored from muelle/workspace/packages/ui@0.4.1 (9225aeab0eb8). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory.
 import { computed, ref, shallowReactive } from 'vue'
 
 // What the kit needs from the app around it. An app calls configureUi once in
@@ -11,6 +11,9 @@ import { computed, ref, shallowReactive } from 'vue'
 //     bell: AvisosBell,                the component the AppBar shows at its end
 //     showBell: () => boolean,         whether that bell shows on this site
 //     isMobile: ref(boolean),          the app's own phone breakpoint
+//     searchAll: (query) => void,      the app's search across everything
+//     words: { msgid: text },          the kit's words in the app's terms, for
+//                                      an app without a translation function
 //   })
 
 const host = shallowReactive({
@@ -23,6 +26,9 @@ const host = shallowReactive({
   // (query) => void: the app's own search across everything (the shell's
   // palette), offered under a docked list search as its way to go wider.
   searchAll: null,
+  // { msgid: text }: an app without a translation function names a kit word
+  // its own way (Escáner's wider search is «Buscar «…» en artículos»).
+  words: null,
 })
 
 export function configureUi(options = {}) {
@@ -95,7 +101,9 @@ function pageLanguage() {
 export function t(message, args, context) {
   const translate = host.t || (typeof window !== 'undefined' ? window.__ : null)
   if (typeof translate === 'function') return translate(message, args, context)
-  const own = pageLanguage().startsWith('es') ? ES[message] : null
+  const own =
+    host.words?.[message] ||
+    (pageLanguage().startsWith('es') ? ES[message] : null)
   return format(own || message, args)
 }
 

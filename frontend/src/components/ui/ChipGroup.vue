@@ -1,4 +1,4 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.4.0 (f299ad1b2cf1). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.4.1 (9225aeab0eb8). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <!-- One labelled row of toggle chips for a search panel: the kit's chip (32 px
      in a 44 px target), wrapping, never scrolling sideways; the one that is on
      takes the secondary container and a check (shell.css, .ui-chip-on).

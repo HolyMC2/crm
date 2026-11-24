@@ -1,4 +1,4 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.4.0 (f299ad1b2cf1). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.4.1 (9225aeab0eb8). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <template>
   <!-- A status in es-MX words (utils/display statusLabel), coloured only when
        the worker must act: the four hues are the status token pairs of

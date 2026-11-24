@@ -1,4 +1,4 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.4.0 (f299ad1b2cf1). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.4.1 (9225aeab0eb8). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <template>
   <!-- The kit's field (Material 3 filled): container-highest, 16 px corners,
        the label inside above the value, 56 px on a phone and 52 on a desk, a

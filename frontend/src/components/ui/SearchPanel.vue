@@ -1,4 +1,4 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.4.0 (f299ad1b2cf1). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.4.1 (9225aeab0eb8). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <!-- A phone list's search (WhatsApp pattern, Marco 2026-10-28): only the
      search pill shows. Focusing it slides open the panel (channel or view
      toggles, filters, recent records: the default slot) over the greyed list.
@@ -85,9 +85,11 @@
             <span class="lucide-x size-4" aria-hidden="true" />
           </button>
         </div>
+        <!-- The filters button only where the page has a panel to show:
+             without one, «Listo» closes the search and the query stays. -->
         <Transition name="slide-x" mode="out-in">
           <button
-            v-if="open && query"
+            v-if="open && query && $slots.default"
             key="filters"
             type="button"
             :class="

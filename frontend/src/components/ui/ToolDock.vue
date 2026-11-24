@@ -1,4 +1,4 @@
-<!-- Vendored from muelle/workspace/packages/ui@0.4.0 (f299ad1b2cf1). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
+<!-- Vendored from muelle/workspace/packages/ui@0.4.1 (9225aeab0eb8). DO NOT EDIT: change the package, then run its scripts/vendor.mjs against this directory. -->
 <!-- A list page's search and the buttons beside it, at the thumb on a phone
      (Marco 2026-11-08). While the phone command bar is mounted (primaryDock)
      `#bar` teleports into its #shell-page-tools slot and `#panel`, the page's

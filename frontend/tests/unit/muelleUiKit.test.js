@@ -727,6 +727,26 @@ describe('one search per screen: the list search docks into the command bar', ()
     expect(tools().children.length).toBe(0)
   })
 
+  it('SearchPanel without a panel (a plain list search): typing offers «Listo», never a filters button that shows nothing', async () => {
+    const { bound } = await mount(SearchPanel, {
+      placeholder: 'Buscar pacientes',
+      open: false,
+      query: '',
+    })
+    const input = tools().querySelector('[data-list-search]')
+    input.dispatchEvent(new Event('focus'))
+    type(input, 'ana')
+    await flush()
+    expect(bound.open).toBe(true)
+    expect(
+      tools().querySelector('[data-testid="search-panel-toggle"]'),
+    ).toBeNull()
+    tools().querySelector('[data-testid="search-panel-done"]').click()
+    await flush()
+    expect(bound.open).toBe(false)
+    expect(bound.query).toBe('ana')
+  })
+
   it('without a search across everything the row over the bar never shows', async () => {
     configureUi({ searchAll: null })
     await mount(SearchPanel, {
@@ -1100,6 +1120,25 @@ describe('@muelle/ui without a host translation', () => {
       document.documentElement.lang = 'en'
       expect(t('{0} selected', [3])).toBe('3 selected')
     } finally {
+      globalThis.__ = saved
+      document.documentElement.lang = ''
+    }
+  })
+
+  it("an app's own words (configureUi words) name a kit word its way, in any language", () => {
+    const saved = globalThis.__
+    delete globalThis.__
+    configureUi({
+      words: { 'Search «{0}» everywhere': 'Buscar «{0}» en artículos' },
+    })
+    try {
+      document.documentElement.lang = 'es-MX'
+      expect(t('Search «{0}» everywhere', ['funda'])).toBe(
+        'Buscar «funda» en artículos',
+      )
+      expect(t('Search everywhere')).toBe('Buscar en todas partes')
+    } finally {
+      configureUi({ words: null })
       globalThis.__ = saved
       document.documentElement.lang = ''
     }
