@@ -16,8 +16,16 @@
     <header
       class="flex flex-wrap items-center gap-2 border-b border-outline-gray-1 px-4 py-3"
     >
-      <h2 class="flex-1 text-base font-semibold text-ink-gray-9">
+      <h2
+        class="flex flex-1 items-baseline gap-2 text-base font-semibold text-ink-gray-9"
+      >
         {{ __('Photos', null, CTX) }}
+        <span
+          v-if="photos.storeOn.value && inStoreCount"
+          class="num text-sm font-normal text-ink-gray-6"
+          data-testid="fotos-en-tienda"
+          >{{ __('{0} in the store', [inStoreCount], CTX) }}</span
+        >
       </h2>
       <button
         v-if="photos.data.value?.can_share && photos.principal.value"
@@ -73,15 +81,20 @@
       >
         {{ __('No photos yet.', null, CTX) }}
       </p>
+      <!-- On a shop that sells online the grid is the store's order: the
+           principal, its photos (a drag, or a hold on a phone, moves them),
+           then what stays in Muelle, dimmed with the eye crossed. -->
       <ul
         v-else
+        ref="grid"
         class="grid grid-cols-[repeat(auto-fill,minmax(6.5rem,1fr))] gap-2 p-4 md:grid-cols-[repeat(auto-fill,minmax(8rem,1fr))]"
         data-testid="fotos-grid"
+        data-reorder-list="tienda"
       >
         <li
           v-for="tile in tiles"
           :key="tile.key"
-          class="relative aspect-square overflow-hidden rounded-6 bg-surface-gray-2 ring-1"
+          class="relative aspect-square select-none overflow-hidden rounded-6 bg-surface-gray-2 ring-1 [-webkit-touch-callout:none]"
           :class="
             tile.principal
               ? 'ring-2 ring-[var(--muelle-accent)]'
@@ -89,6 +102,10 @@
           "
           :data-foto="tile.file_url || tile.key"
           :data-estado="tile.state"
+          :data-tienda="
+            photos.storeOn.value ? (tile.inStore ? '1' : '0') : undefined
+          "
+          :data-reorder-key="movable(tile) ? tile.key : undefined"
         >
           <!-- The whole tile opens the picture full screen. -->
           <button
@@ -124,11 +141,22 @@
               :src="photos.tileSrc(tile)"
               alt=""
               class="size-full object-cover"
-              :class="tile.state === 'failed' ? 'opacity-40' : ''"
+              :class="
+                tile.state === 'failed' || hidden(tile) ? 'opacity-40' : ''
+              "
+              draggable="false"
               loading="lazy"
               decoding="async"
             />
           </button>
+          <span
+            v-if="hidden(tile) && !canManage"
+            class="pointer-events-none absolute right-1.5 top-1.5 flex size-7 items-center justify-center rounded-full bg-surface-base/90 text-ink-gray-7"
+            :title="__('Not in the store', null, CTX)"
+          >
+            <span class="lucide-eye-off size-4" aria-hidden="true" />
+            <span class="sr-only">{{ __('Not in the store', null, CTX) }}</span>
+          </span>
           <span
             v-if="tile.principal"
             class="pointer-events-none absolute left-1.5 top-1.5 rounded-full bg-[var(--muelle-accent)] px-2 py-0.5 text-xs font-semibold text-[var(--muelle-accent-ink)]"
@@ -187,7 +215,7 @@
             </button>
             <template v-else>
               <button
-                v-if="tile.kind === 'image' && !tile.principal"
+                v-if="tile.kind === 'image' && !tile.principal && tile.attached"
                 type="button"
                 class="press flex size-8 items-center justify-center rounded-full text-ink-gray-8 hover:bg-surface-gray-2"
                 :aria-label="__('Make main', null, CTX)"
@@ -196,6 +224,22 @@
                 @click="photos.makeMain(tile)"
               >
                 <span class="lucide-star size-4" aria-hidden="true" />
+              </button>
+              <button
+                v-if="storable(tile)"
+                type="button"
+                class="press flex size-8 items-center justify-center rounded-full text-ink-gray-8 hover:bg-surface-gray-2"
+                :aria-pressed="String(tile.inStore)"
+                :aria-label="storeWord(tile)"
+                :title="storeWord(tile)"
+                data-testid="foto-tienda"
+                @click="toggleStore(tile)"
+              >
+                <span
+                  :class="tile.inStore ? 'lucide-eye' : 'lucide-eye-off'"
+                  class="size-4"
+                  aria-hidden="true"
+                />
               </button>
               <button
                 type="button"
@@ -266,7 +310,11 @@
       <template #actions="{ item: shown }">
         <template v-if="shown && shown.tile.state === 'saved'">
           <button
-            v-if="canManage && shown.kind === 'image'"
+            v-if="
+              canManage &&
+              shown.kind === 'image' &&
+              (shown.tile.attached || shown.tile.principal)
+            "
             type="button"
             class="ui-viewer-action press"
             :class="shown.tile.principal ? 'is-on' : ''"
@@ -281,8 +329,29 @@
                 : __('Make main', null, CTX)
             }}
           </button>
+          <!-- In the store or only in Muelle: a state that holds. -->
           <button
-            v-if="canEdit && shown.kind === 'image'"
+            v-if="storable(shown.tile)"
+            type="button"
+            class="ui-viewer-action press"
+            :class="shown.tile.inStore ? 'is-on' : ''"
+            :aria-pressed="String(shown.tile.inStore)"
+            data-testid="visor-tienda"
+            @click="toggleStore(shown.tile)"
+          >
+            <span
+              :class="shown.tile.inStore ? 'lucide-eye' : 'lucide-eye-off'"
+              class="size-5"
+              aria-hidden="true"
+            />
+            {{
+              shown.tile.inStore
+                ? __('In the store', null, CTX)
+                : __('Show in the store', null, CTX)
+            }}
+          </button>
+          <button
+            v-if="canEdit && shown.kind === 'image' && shown.tile.attached"
             type="button"
             class="ui-viewer-action press"
             data-testid="visor-editar"
@@ -291,8 +360,14 @@
             <span class="lucide-pencil size-5" aria-hidden="true" />
             {{ __('Edit') }}
           </button>
+          <!-- Four actions at most: with the store's switch here, «Editar» turns. -->
           <button
-            v-if="canEdit && shown.kind === 'image'"
+            v-if="
+              canEdit &&
+              shown.kind === 'image' &&
+              shown.tile.attached &&
+              !photos.storeOn.value
+            "
             type="button"
             class="ui-viewer-action press"
             data-testid="visor-girar"
@@ -351,12 +426,15 @@ import { mediaKind } from '@/components/ui/imageFiles'
 import { isMobile as isPhone } from '@/composables/breakpoint'
 import { loadCameraSheet, openCamera } from '@/components/captura/cameraDoor'
 import { CTX, problemOf, productosApi } from '@/composables/useProductos'
+import { useReorder } from '@/composables/useReorder'
 
 // A product's photos and videos, the principal first. Whoever keeps the
 // catalogue adds (camera, gallery, a drop or a paste), chooses the principal
 // with the star and deletes with the bin; a tap opens the picture full screen,
 // where the same actions sit at the thumb and «Editar» crops, turns and
-// lightens it. The story image is Mercado's (shown where it is installed).
+// lightens it. On a shop that sells online the eye shows a photo in the store
+// or keeps it in Muelle, and dragging the store's photos sets their order
+// there. The story image is Mercado's (shown where it is installed).
 const MediaViewer = defineAsyncComponent(
   () => import('@/components/ui/MediaViewer.vue'),
 )
@@ -379,6 +457,56 @@ const input = ref(null)
 const confirming = ref('')
 const sharing = ref(false)
 
+// ── the online store ───────────────────────────────────────────────────────
+const storeOn = computed(() => props.photos.storeOn.value)
+function storable(tile) {
+  return (
+    canManage.value &&
+    storeOn.value &&
+    tile?.state === 'saved' &&
+    tile.kind === 'image' &&
+    !tile.principal
+  )
+}
+function hidden(tile) {
+  return (
+    storeOn.value &&
+    tile.state === 'saved' &&
+    tile.kind === 'image' &&
+    !tile.principal &&
+    !tile.inStore
+  )
+}
+function storeWord(tile) {
+  return tile.inStore
+    ? __('Take out of the store', null, CTX)
+    : __('Show in the store', null, CTX)
+}
+const inStoreCount = computed(
+  () =>
+    tiles.value.filter(
+      (tile) =>
+        tile.state === 'saved' &&
+        tile.kind === 'image' &&
+        (tile.principal || tile.inStore),
+    ).length,
+)
+// The store's photos after the principal move by drag (a hold on a phone).
+const grid = ref(null)
+function movable(tile) {
+  return storable(tile) && tile.inStore
+}
+useReorder(grid, {
+  grid: true,
+  grab: 'item',
+  enabled: () => tiles.value.filter(movable).length > 1,
+  onDrop: ({ keys }) => props.photos.arrange(keys),
+})
+function toggleStore(tile) {
+  confirming.value = ''
+  props.photos.showInStore(tile)
+}
+
 function tileLabel(tile) {
   const at = tiles.value.indexOf(tile) + 1
   return tile.kind === 'video'
@@ -396,11 +524,28 @@ function open(tile) {
     (entry) => entry.key === (tile?.key ?? props.photos.principal.value?.key),
   )
   at.value = Math.max(0, found)
+  showing = props.photos.media.value[at.value]?.key || ''
   confirming.value = ''
   viewerWanted.value = true
   viewerOpen.value = true
 }
 watch([at, viewerOpen], () => (confirming.value = ''))
+// The viewer stays on its picture when the grid's order changes under it
+// (made the principal, shown in or taken out of the store).
+let showing = ''
+watch(at, (index) => {
+  showing = props.photos.media.value[index]?.key || showing
+})
+watch(
+  () => props.photos.media.value.map((entry) => entry.key).join('|'),
+  () => {
+    if (!viewerOpen.value || !showing) return
+    const found = props.photos.media.value.findIndex(
+      (entry) => entry.key === showing,
+    )
+    if (found >= 0 && found !== at.value) at.value = found
+  },
+)
 function confirmRemove(tile) {
   confirming.value = ''
   props.photos.remove(tile)

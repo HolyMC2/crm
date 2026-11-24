@@ -1,7 +1,9 @@
 // A product's photos and videos as the worker handles them: what they do shows
 // at once (a picked file is a tile before it has left the phone, the star and
 // the bin answer on the tap) and the server follows in the background. When it
-// refuses, the screen goes back to what is true and says why.
+// refuses, the screen goes back to what is true and says why. On a shop that
+// sells online the gallery reads as the store shows it: the principal, the
+// store's photos in their order, then what stays in Muelle (`inStore`).
 import { computed, onBeforeUnmount, ref } from 'vue'
 import { mediaKind } from '@/components/ui/imageFiles'
 import { openImage, prepareImage } from '@/components/ui/imageFiles'
@@ -162,6 +164,8 @@ export function useProductPhotos(
     Boolean(data.value?.can_edit ?? data.value?.can_manage),
   )
   const limits = computed(() => data.value?.limits || {})
+  // The shop sells online: each photo is in its store or stays in Muelle.
+  const storeOn = computed(() => Boolean(data.value?.store))
 
   function localUrl(blob) {
     const url = URL.createObjectURL(blob)
@@ -178,6 +182,9 @@ export function useProductPhotos(
       name: row.file_name || '',
       kind: row.kind || mediaKind(row.file_url) || 'image',
       principal: Boolean(row.principal),
+      inStore: Boolean(row.in_store),
+      // A plain URL (not a file on the product): it shows and leaves, never edited.
+      attached: row.attached !== false,
       state: 'saved',
       progress: 0,
       error: '',
@@ -215,6 +222,89 @@ export function useProductPhotos(
   function fail(error) {
     problem.value = whyNot(error)
   }
+
+  // ── the store's gallery ────────────────────────────────────────────────────
+  /** A tile that may be in the store: a saved picture that is not the principal. */
+  function storable(tile) {
+    return tile.state === 'saved' && tile.kind === 'image' && !tile.principal
+  }
+  /** The store's photos after the principal, in the grid's order. */
+  function storeList() {
+    return tiles.value
+      .filter((tile) => storable(tile) && tile.inStore)
+      .map((tile) => tile.file_url)
+  }
+  /** Where the store's photos end: what stays in Muelle starts there. */
+  function storeEnd() {
+    const at = tiles.value.findIndex(
+      (tile) => !tile.principal && !(storeOn.value && tile.inStore),
+    )
+    return at < 0 ? tiles.value.length : at
+  }
+  /** The store's gallery as the server has it now (`urls`, after the principal). */
+  function applyStore(urls) {
+    if (!Array.isArray(urls) || !storeOn.value) return
+    const place = new Map(urls.map((url, at) => [url, at]))
+    for (const tile of tiles.value)
+      tile.inStore = tile.principal || place.has(tile.file_url)
+    const group = (tile) =>
+      tile.principal ? 0 : place.has(tile.file_url) ? 1 : 2
+    tiles.value = tiles.value
+      .map((tile, at) => ({ tile, at }))
+      .sort(
+        (a, b) =>
+          group(a.tile) - group(b.tile) ||
+          (place.get(a.tile.file_url) ?? a.at) -
+            (place.get(b.tile.file_url) ?? b.at),
+      )
+      .map(({ tile }) => tile)
+  }
+  // One at a time, in the order tapped: the last change is what stays. A
+  // refusal reads the gallery again, so the screen shows what is true.
+  let storeChain = Promise.resolve()
+  function sendStore() {
+    const urls = storeList()
+    problem.value = ''
+    storeChain = storeChain.then(async () => {
+      try {
+        const answer = await productosApi(`${MEDIA}.set_store`, {
+          request_id: requestId(),
+          item: item(),
+          urls,
+        })
+        if (!alive) return
+        applyStore(answer.store)
+        onChange({ image: answer.image || '', modified: answer.modified || '' })
+      } catch (error) {
+        if (!alive) return
+        fail(error)
+        await load()
+      }
+    })
+    return storeChain
+  }
+  /** «Mostrar en la tienda» joins the end of its photos; «Quitar» stays in Muelle, first. */
+  function showInStore(tile, on = !tile.inStore) {
+    if (!storeOn.value || !storable(tile) || tile.inStore === on)
+      return storeChain
+    // Out of its place, then back at the edge between the store's photos and
+    // the rest: the end of the store's when shown, the head of the rest when not.
+    const list = tiles.value
+    list.splice(list.indexOf(tile), 1)
+    tile.inStore = on
+    list.splice(storeEnd(), 0, tile)
+    return sendStore()
+  }
+  /** A drag in the store's photos: `keys` are their tiles in the new order. */
+  function arrange(keys) {
+    if (!storeOn.value) return storeChain
+    const byKey = new Map(tiles.value.map((tile) => [tile.key, tile]))
+    const moved = keys.map((key) => byKey.get(key)).filter(Boolean)
+    const rest = tiles.value.filter((tile) => !moved.includes(tile))
+    const head = rest.filter((tile) => tile.principal)
+    tiles.value = [...head, ...moved, ...rest.filter((t) => !t.principal)]
+    return sendStore()
+  }
   /** The principal as the server has it now: one tile carries it, first. */
   function markPrincipal(url) {
     for (const tile of tiles.value)
@@ -225,6 +315,7 @@ export function useProductPhotos(
   function settled(answer) {
     if (!answer || !alive) return
     markPrincipal(answer.image || '')
+    applyStore(answer.store)
     onChange({ image: answer.image || '', modified: answer.modified || '' })
   }
 
@@ -258,10 +349,15 @@ export function useProductPhotos(
           thumb: small(row, 'card') || kept.thumb,
           preview: small(row, 'detail') || kept.preview,
           principal: Boolean(row.principal),
+          inStore: Boolean(row.in_store),
+          attached: row.attached !== false,
         })
         return kept
       })
-      const lead = fresh.findIndex((tile) => !tile.principal)
+      // On their way: after the principal and the store's photos.
+      const lead = fresh.findIndex(
+        (tile) => !tile.principal && !(answer.store && tile.inStore),
+      )
       fresh.splice(lead < 0 ? fresh.length : lead, 0, ...pending)
       tiles.value = fresh
     } catch (error) {
@@ -340,6 +436,8 @@ export function useProductPhotos(
         name: file.name || '',
         kind: mediaKind(file.name, file.type),
         principal: false,
+        inStore: false,
+        attached: true,
         state: 'sending',
         progress: 0,
         error: '',
@@ -350,8 +448,8 @@ export function useProductPhotos(
       })
     }
     if (!fresh.length) return
-    const lead = tiles.value.findIndex((tile) => !tile.principal)
-    tiles.value.splice(lead < 0 ? tiles.value.length : lead, 0, ...fresh)
+    // A new picture stays in Muelle until someone shows it in the store.
+    tiles.value.splice(storeEnd(), 0, ...fresh)
     // The tiles the page holds (reactive), not the plain objects built above.
     const held = fresh.map((entry) =>
       tiles.value.find((tile) => tile.key === entry.key),
@@ -373,11 +471,26 @@ export function useProductPhotos(
   // ── the principal: the star answers on the tap ────────────────────────────
   let chain = Promise.resolve()
   function makeMain(tile) {
-    if (tile.principal || tile.state !== 'saved' || tile.kind !== 'image')
+    if (
+      tile.principal ||
+      tile.state !== 'saved' ||
+      tile.kind !== 'image' ||
+      !tile.attached
+    )
       return chain
     problem.value = ''
     const was = principal.value?.file_url || ''
+    const shown = storeList()
     markPrincipal(tile.file_url)
+    if (storeOn.value && was) {
+      // As the server does: the old cover takes the new one's place in the
+      // store, else leads its photos; it never just leaves the store.
+      const after = shown.filter((url) => url !== was)
+      const at = after.indexOf(tile.file_url)
+      if (at >= 0) after[at] = was
+      else after.unshift(was)
+      applyStore(after.filter((url) => url !== tile.file_url))
+    }
     // One at a time, in the order tapped: the last tap is what stays.
     chain = chain.then(async () => {
       try {
@@ -392,6 +505,7 @@ export function useProductPhotos(
         if (!alive) return
         markPrincipal(was)
         fail(error)
+        if (storeOn.value) await load()
       }
     })
     return chain
@@ -495,12 +609,15 @@ export function useProductPhotos(
     loading,
     canManage,
     canEdit,
+    storeOn,
     limits,
     tileSrc,
     load,
     add,
     retry,
     makeMain,
+    showInStore,
+    arrange,
     remove,
     replace,
     turn,

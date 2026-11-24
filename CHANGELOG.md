@@ -2,6 +2,13 @@
 
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
+## 2026-11-23 — Productos › Fotos: which photos the store shows, and in what order (lane fotos-tienda, with doco; not deployed)
+
+- **Why:** Marco asked whether a product's photos could be managed well enough: upload, order, the principal, visibility, delete. Upload, the principal, edits and delete worked; the order and which photos the online store shows lived only in the Desk form («Fotos de la tienda»), and a photo deleted in Productos stayed in the store as a broken picture.
+- **Change:** on a shop that sells online the gallery reads as the store shows it: the principal, then the store's photos in their order, then what stays in Muelle, dimmed with the eye crossed. Each photo's island gains the eye («Mostrar en la tienda» / «Quitar de la tienda»), and the viewer the same switch as a state that holds («En la tienda»; «Girar» steps aside there, «Editar» still turns). A drag moves the store's photos (a hold on a phone), and the header counts «N en la tienda». Making another photo the principal keeps the old one in the store, in the new one's place; a new photo stays in Muelle until someone shows it. A refusal reads the gallery again and says why. Shops that do not sell online see the gallery as before. `useReorder` learned grids (`grid`, `grab: 'item'`): the held tile follows both ways and lands on the nearest slot, the others slide to theirs.
+- **Tests:** `productoFotos.test.js` (+7: the store's order and count, the eye moving a photo and sending the list, a dragged order, the old cover keeping its place, a refusal reading again, the viewer's switch, a shop without a store), `useReorder.test.js` (+3: nearest slot and shifts, a held tile dragged across a row, a tap moves nothing). Phone and desk shots against doco-mirror with the store answers stubbed (`.scratch/proof/fotos`).
+- **Rollout:** with doco's lane (`set_store`, `in_store`, `store`); against an older doco the gallery shows as before. Rollback: revert both.
+
 ## 2026-11-23 — «Del equipo» narrows to one person (lane equipo-por-persona, with doco; not deployed)
 
 - **Why:** Marco searched «Jess» in Pendientes › Del equipo and got «Tu equipo no tiene trabajo abierto que puedas ver»: the list had no person filter and its search did not read whose task it was.

@@ -53507,3 +53507,28 @@ msgstr "Nadie usa Escáner todavía"
 msgctxt "Conteos"
 msgid "Give access in Equipo"
 msgstr "Da acceso en Equipo"
+
+#: frontend/src/components/productos/PhotoGallery.vue
+msgctxt "Productos"
+msgid "{0} in the store"
+msgstr "{0} en la tienda"
+
+#: frontend/src/components/productos/PhotoGallery.vue
+msgctxt "Productos"
+msgid "In the store"
+msgstr "En la tienda"
+
+#: frontend/src/components/productos/PhotoGallery.vue
+msgctxt "Productos"
+msgid "Show in the store"
+msgstr "Mostrar en la tienda"
+
+#: frontend/src/components/productos/PhotoGallery.vue
+msgctxt "Productos"
+msgid "Take out of the store"
+msgstr "Quitar de la tienda"
+
+#: frontend/src/components/productos/PhotoGallery.vue
+msgctxt "Productos"
+msgid "Not in the store"
+msgstr "No sale en la tienda"

@@ -8,7 +8,11 @@ import { onBeforeUnmount, unref, watch } from 'vue'
 // drop reports the new order. Held near the top or bottom of the list's
 // scroller, the scroller scrolls and the row rides along. Rows are
 // `[data-reorder-key]` inside one `[data-reorder-list]`; a drag never leaves
-// its list.
+// its list. `grid`: the items are tiles in rows and columns (a photo grid):
+// the held one follows the finger both ways and lands on the nearest slot,
+// the others slide to their new slots. `grab: 'item'`: the mouse takes the
+// whole item, not only its grip (a tile has none); a press that never moves
+// is still a click.
 
 export const LONG_PRESS = 380
 const SLOP = 8
@@ -54,6 +58,33 @@ export function dropIndex(mids, from, center) {
   return to
 }
 
+/** The slot whose centre is nearest to `point` ({ x, y }): where a held tile lands. */
+export function nearestSlot(centers, point) {
+  let best = 0
+  let far = Infinity
+  centers.forEach((center, index) => {
+    const away = Math.hypot(center.x - point.x, center.y - point.y)
+    if (away < far) {
+      far = away
+      best = index
+    }
+  })
+  return best
+}
+
+/** How far each item slides ({ x, y }) once `from` moves to `to` in a grid of `rects`. */
+export function gridShifts(rects, from, to) {
+  const order = moved(
+    rects.map((_, index) => index),
+    from,
+    to,
+  )
+  return rects.map((rect, index) => {
+    const slot = rects[order.indexOf(index)]
+    return { x: slot.left - rect.left, y: slot.top - rect.top }
+  })
+}
+
 /** The list's keys after moving `from` to `to`. */
 export function moved(keys, from, to) {
   const out = keys.slice()
@@ -62,14 +93,17 @@ export function moved(keys, from, to) {
   return out
 }
 
-export function useReorder(container, { onDrop, enabled = () => true } = {}) {
+export function useReorder(
+  container,
+  { onDrop, enabled = () => true, grid = false, grab = 'handle' } = {},
+) {
   let drag = null
   let press = null
   let swallowClick = false
   const reduced = () =>
     globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
 
-  function begin(row, y) {
+  function begin(row, y, x = 0) {
     const list = row.closest('[data-reorder-list]')
     if (!list) return
     const rows = [...list.querySelectorAll('[data-reorder-key]')]
@@ -87,8 +121,14 @@ export function useReorder(container, { onDrop, enabled = () => true } = {}) {
       row,
       startY: y,
       y,
+      startX: x,
+      x,
       rects,
       mids: rects.map((rect) => rect.top + rect.height / 2),
+      centers: rects.map((rect) => ({
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2,
+      })),
       // The others make room by the held row's height and the list's gap.
       room:
         rects[from].height +
@@ -114,6 +154,7 @@ export function useReorder(container, { onDrop, enabled = () => true } = {}) {
   function paint() {
     if (!drag) return
     const scrolled = (drag.scroller?.scrollTop || 0) - drag.scroll0
+    if (grid) return paintGrid(scrolled)
     const first = drag.rects[0].top
     const last = drag.rects.at(-1).bottom
     const lowest = first - drag.rects[drag.from].top
@@ -136,6 +177,22 @@ export function useReorder(container, { onDrop, enabled = () => true } = {}) {
     })
   }
 
+  // A tile follows the finger both ways and lands on the nearest slot; the
+  // others slide to the slots they take.
+  function paintGrid(scrolled) {
+    const dx = drag.x - drag.startX
+    const dy = drag.y - drag.startY + scrolled
+    const held = drag.centers[drag.from]
+    drag.to = nearestSlot(drag.centers, { x: held.x + dx, y: held.y + dy })
+    drag.row.style.transform = `translate(${dx}px, ${dy}px) scale(1.04)`
+    const shifts = gridShifts(drag.rects, drag.from, drag.to)
+    drag.rows.forEach((other, index) => {
+      if (other === drag.row) return
+      const { x, y } = shifts[index]
+      other.style.transform = x || y ? `translate(${x}px, ${y}px)` : ''
+    })
+  }
+
   // Every frame while held: a finger resting near an edge keeps scrolling.
   function autoScroll() {
     if (!drag) return
@@ -155,9 +212,10 @@ export function useReorder(container, { onDrop, enabled = () => true } = {}) {
     drag.frame = requestAnimationFrame(autoScroll)
   }
 
-  function move(y) {
+  function move(y, x = 0) {
     if (!drag) return
     drag.y = y
+    drag.x = x
     paint()
   }
 
@@ -202,19 +260,31 @@ export function useReorder(container, { onDrop, enabled = () => true } = {}) {
   function onPointerDown(event) {
     if (event.pointerType === 'touch' || event.button !== 0 || !enabled())
       return
-    const handle = event.target.closest?.('[data-drag-handle]')
-    const row = handle?.closest('[data-reorder-key]')
+    const handle =
+      grab === 'item'
+        ? event.target
+        : event.target.closest?.('[data-drag-handle]')
+    const row = handle?.closest?.('[data-reorder-key]')
     if (!row) return
     event.preventDefault()
-    press = { row, y: event.clientY, pointer: event.pointerId }
+    press = {
+      row,
+      x: event.clientX,
+      y: event.clientY,
+      pointer: event.pointerId,
+    }
     window.addEventListener('pointermove', onPointerMove)
     window.addEventListener('pointerup', onPointerUp)
     window.addEventListener('pointercancel', onPointerUp)
   }
   function onPointerMove(event) {
-    if (!drag && press && Math.abs(event.clientY - press.y) > 4)
-      begin(press.row, press.y)
-    move(event.clientY)
+    if (
+      !drag &&
+      press &&
+      Math.hypot(event.clientX - press.x, event.clientY - press.y) > 4
+    )
+      begin(press.row, press.y, press.x)
+    move(event.clientY, event.clientX)
   }
   function onPointerUp() {
     window.removeEventListener('pointermove', onPointerMove)
@@ -241,21 +311,21 @@ export function useReorder(container, { onDrop, enabled = () => true } = {}) {
       timer: grip
         ? 0
         : setTimeout(() => {
-            if (press) begin(press.row, press.y)
+            if (press) begin(press.row, press.y, press.x)
           }, LONG_PRESS),
     }
   }
   function onTouchMove(event) {
     const touch = event.touches[0]
     if (!drag && press?.grip && Math.abs(touch.clientY - press.y) > GRIP_SLOP) {
-      const { row, y } = press
+      const { row, y, x } = press
       cancelPress()
-      begin(row, y)
+      begin(row, y, x)
     }
     if (drag) {
       // Holding a row: the page stays put while the row follows the finger.
       event.preventDefault()
-      move(touch.clientY)
+      move(touch.clientY, touch.clientX)
       return
     }
     if (

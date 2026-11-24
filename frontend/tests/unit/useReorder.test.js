@@ -7,6 +7,8 @@ import { createApp, h, nextTick, ref } from 'vue'
 import {
   LONG_PRESS,
   edgeStep,
+  gridShifts,
+  nearestSlot,
   scrollerOf,
   useReorder,
 } from '@/composables/useReorder'
@@ -174,5 +176,150 @@ describe('scrollerOf', () => {
     document.body.append(body)
     expect(scrollerOf(list)).toBe(body)
     body.remove()
+  })
+})
+
+// A photo grid: three tiles of 100 px a row, 8 px apart.
+const TILE = 100
+const SPACE = 8
+const tileRect = (index) => {
+  const left = (index % 3) * (TILE + SPACE)
+  const top = 100 + Math.floor(index / 3) * (TILE + SPACE)
+  return {
+    left,
+    top,
+    width: TILE,
+    height: TILE,
+    right: left + TILE,
+    bottom: top + TILE,
+  }
+}
+
+describe('useReorder in a grid', () => {
+  it('lands a tile on the nearest slot and slides the others to theirs', () => {
+    const rects = [0, 1, 2, 3].map(tileRect)
+    const centers = rects.map((r) => ({ x: r.left + 50, y: r.top + 50 }))
+    expect(nearestSlot(centers, { x: 60, y: 260 })).toBe(3)
+    expect(nearestSlot(centers, { x: 170, y: 140 })).toBe(1)
+    // Tile 0 to the second row (where it lands): 1 and 2 move back one slot,
+    // 3 climbs a row.
+    expect(gridShifts(rects, 0, 3)).toEqual([
+      { x: 0, y: 108 },
+      { x: -108, y: 0 },
+      { x: -108, y: 0 },
+      { x: 216, y: -108 },
+    ])
+  })
+
+  it('drags a tile after a hold, both ways, and reports the new order', async () => {
+    app.unmount()
+    host.remove()
+    vi.restoreAllMocks()
+    const tiles = ['p', 'q', 'r', 's', 't']
+    vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(
+      function () {
+        const index = tiles.indexOf(this.dataset?.reorderKey)
+        return index >= 0
+          ? tileRect(index)
+          : {
+              left: 0,
+              top: 0,
+              width: 400,
+              height: 600,
+              right: 400,
+              bottom: 600,
+            }
+      },
+    )
+    drops = []
+    host = document.createElement('div')
+    document.body.append(host)
+    app = createApp({
+      setup() {
+        const box = ref(null)
+        useReorder(box, {
+          grid: true,
+          grab: 'item',
+          onDrop: (drop) => drops.push(drop),
+        })
+        return () =>
+          h('ul', { ref: box, 'data-reorder-list': 'tienda' }, [
+            h('li', { id: 'cover' }),
+            ...tiles.map((key) =>
+              h('li', { key, 'data-reorder-key': key, id: `tile-${key}` }),
+            ),
+          ])
+      },
+    })
+    app.mount(host)
+    await nextTick()
+    const held = document.getElementById('tile-p')
+    const at = (type, x, y) => {
+      const point = { identifier: 1, target: held, clientX: x, clientY: y }
+      held.dispatchEvent(
+        new TouchEvent(type, {
+          bubbles: true,
+          cancelable: true,
+          touches: type === 'touchend' ? [] : [point],
+          changedTouches: [point],
+        }),
+      )
+    }
+    at('touchstart', 50, 150)
+    vi.advanceTimersByTime(LONG_PRESS + 10)
+    // Down a row and across one column: the slot of «t».
+    at('touchmove', 160, 258)
+    expect(held.style.transform).toBe('translate(110px, 108px) scale(1.04)')
+    expect(document.getElementById('tile-s').style.transform).toBe(
+      'translate(216px, -108px)',
+    )
+    at('touchend', 160, 258)
+    expect(drops).toHaveLength(1)
+    expect(drops[0]).toMatchObject({ list: 'tienda', key: 'p', from: 0, to: 4 })
+    expect(drops[0].keys).toEqual(['q', 'r', 's', 't', 'p'])
+  })
+
+  it('moves nothing on a quick tap on a tile', async () => {
+    app.unmount()
+    host.remove()
+    drops = []
+    host = document.createElement('div')
+    document.body.append(host)
+    app = createApp({
+      setup() {
+        const box = ref(null)
+        useReorder(box, {
+          grid: true,
+          grab: 'item',
+          onDrop: (d) => drops.push(d),
+        })
+        return () =>
+          h('ul', { ref: box, 'data-reorder-list': 'tienda' }, [
+            h('li', { 'data-reorder-key': 'p', id: 'tile-p' }),
+            h('li', { 'data-reorder-key': 'q' }),
+          ])
+      },
+    })
+    app.mount(host)
+    await nextTick()
+    const tile = document.getElementById('tile-p')
+    const point = { identifier: 1, target: tile, clientX: 50, clientY: 150 }
+    tile.dispatchEvent(
+      new TouchEvent('touchstart', {
+        bubbles: true,
+        touches: [point],
+        changedTouches: [point],
+      }),
+    )
+    tile.dispatchEvent(
+      new TouchEvent('touchend', {
+        bubbles: true,
+        cancelable: true,
+        touches: [],
+        changedTouches: [point],
+      }),
+    )
+    vi.advanceTimersByTime(LONG_PRESS * 2)
+    expect(drops).toEqual([])
   })
 })

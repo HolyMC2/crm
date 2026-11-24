@@ -32,8 +32,9 @@ const PHOTOS = 'doco.workspaces.product_media.photos'
 const ADD = 'doco.workspaces.product_media.add_photo'
 const DELETE = 'doco.workspaces.product_media.delete_photo'
 const SET = 'doco.workspaces.products.set_photo'
+const STORE = 'doco.workspaces.product_media.set_store'
 
-let app, root, calls, answers, changes, uploads
+let app, root, calls, answers, changes, uploads, held
 const flush = async () => {
   for (let i = 0; i < 8; i++) {
     await new Promise((resolve) => setTimeout(resolve, 0))
@@ -80,6 +81,7 @@ async function mount() {
         onChange: (change) => changes.push(change),
         say: (text) => sent.toast('success', text),
       })
+      held = photos
       return () => h(PhotoGallery, { photos, item: 'IPN1', title: 'Funda' })
     },
   })
@@ -425,5 +427,211 @@ describe('Producto › fotos', () => {
     expect(one('[data-ui-viewer-count]').textContent).toBe('1 of 2')
     expect(one('[data-testid="visor-principal"]').disabled).toBe(true)
     expect(one('[data-testid="visor-principal"]').textContent).toContain('Main')
+  })
+})
+
+// A shop that sells online: the principal, the store's photos in their order,
+// then what stays in Muelle (dimmed, the eye crossed).
+const storeGallery = () =>
+  gallery({
+    store: true,
+    rows: [
+      {
+        file_url: '/files/a.jpg',
+        kind: 'image',
+        principal: true,
+        in_store: true,
+      },
+      { file_url: '/files/c.jpg', kind: 'image', in_store: true },
+      { file_url: '/files/d.jpg', kind: 'image', in_store: true },
+      { file_url: '/files/b.jpg', kind: 'image', in_store: false },
+      { file_url: '/files/v.mp4', kind: 'video', in_store: false },
+    ],
+  })
+const order = () => tiles().map((tile) => tile.dataset.foto)
+const inStore = () =>
+  Object.fromEntries(
+    tiles().map((tile) => [tile.dataset.foto, tile.dataset.tienda]),
+  )
+const eye = (url) => one(`[data-foto="${url}"] [data-testid="foto-tienda"]`)
+
+describe('Producto › fotos en la tienda', () => {
+  it('reads as the store shows it, with the count, and an eye on each photo that may go there', async () => {
+    answers[PHOTOS] = storeGallery
+    await mount()
+    expect(order()).toEqual([
+      '/files/a.jpg',
+      '/files/c.jpg',
+      '/files/d.jpg',
+      '/files/b.jpg',
+      '/files/v.mp4',
+    ])
+    expect(inStore()).toMatchObject({
+      '/files/b.jpg': '0',
+      '/files/c.jpg': '1',
+    })
+    expect(one('[data-testid="fotos-en-tienda"]').textContent).toBe(
+      '3 in the store',
+    )
+    // The principal is always the store's cover, and a video never goes.
+    expect(eye('/files/a.jpg')).toBeNull()
+    expect(eye('/files/v.mp4')).toBeNull()
+    expect(eye('/files/c.jpg').getAttribute('aria-pressed')).toBe('true')
+    expect(eye('/files/b.jpg').getAttribute('aria-label')).toBe(
+      'Show in the store',
+    )
+    // The store's photos move by drag; the rest does not.
+    expect(one('[data-foto="/files/c.jpg"]').dataset.reorderKey).toBeTruthy()
+    expect(one('[data-foto="/files/b.jpg"]').dataset.reorderKey).toBeUndefined()
+    expect(one('[data-foto="/files/a.jpg"]').dataset.reorderKey).toBeUndefined()
+  })
+
+  it('shows a photo in the store at the end of its photos, and takes one out to the head of the rest', async () => {
+    answers[PHOTOS] = storeGallery
+    answers[STORE] = ({ urls }) => ({
+      item: 'IPN1',
+      image: '/files/a.jpg',
+      modified: 'm3',
+      store: urls,
+    })
+    await mount()
+    eye('/files/b.jpg').click()
+    await nextTick()
+    expect(order().slice(0, 4)).toEqual([
+      '/files/a.jpg',
+      '/files/c.jpg',
+      '/files/d.jpg',
+      '/files/b.jpg',
+    ])
+    expect(inStore()['/files/b.jpg']).toBe('1')
+    await flush()
+    expect(calls.filter(([m]) => m === STORE).at(-1)[1].urls).toEqual([
+      '/files/c.jpg',
+      '/files/d.jpg',
+      '/files/b.jpg',
+    ])
+    eye('/files/c.jpg').click()
+    await flush()
+    expect(order()).toEqual([
+      '/files/a.jpg',
+      '/files/d.jpg',
+      '/files/b.jpg',
+      '/files/c.jpg',
+      '/files/v.mp4',
+    ])
+    expect(calls.filter(([m]) => m === STORE).at(-1)[1].urls).toEqual([
+      '/files/d.jpg',
+      '/files/b.jpg',
+    ])
+    expect(one('[data-testid="fotos-en-tienda"]').textContent).toBe(
+      '3 in the store',
+    )
+  })
+
+  it("sends a new order of the store's photos as dragged", async () => {
+    answers[PHOTOS] = storeGallery
+    answers[STORE] = ({ urls }) => ({
+      item: 'IPN1',
+      image: '/files/a.jpg',
+      modified: 'm4',
+      store: urls,
+    })
+    await mount()
+    const keys = (urls) =>
+      urls.map((url) => held.tiles.value.find((t) => t.file_url === url).key)
+    held.arrange(keys(['/files/d.jpg', '/files/c.jpg']))
+    await flush()
+    expect(order().slice(0, 3)).toEqual([
+      '/files/a.jpg',
+      '/files/d.jpg',
+      '/files/c.jpg',
+    ])
+    expect(calls.find(([m]) => m === STORE)[1].urls).toEqual([
+      '/files/d.jpg',
+      '/files/c.jpg',
+    ])
+  })
+
+  it("keeps the old cover in the store, in the new one's place", async () => {
+    answers[PHOTOS] = storeGallery
+    let answer
+    answers[SET] = () => new Promise((resolve) => (answer = resolve))
+    await mount()
+    one(
+      '[data-foto="/files/d.jpg"] [data-testid="foto-hacer-principal"]',
+    ).click()
+    await vi.waitFor(() => expect(answer).toBeTypeOf('function'), {
+      timeout: 10000,
+    })
+    expect(principal()).toBe('/files/d.jpg')
+    expect(order().slice(0, 3)).toEqual([
+      '/files/d.jpg',
+      '/files/c.jpg',
+      '/files/a.jpg',
+    ])
+    expect(inStore()['/files/a.jpg']).toBe('1')
+    answer({
+      item: 'IPN1',
+      image: '/files/d.jpg',
+      modified: 'm5',
+      store: ['/files/c.jpg', '/files/a.jpg'],
+    })
+    await flush()
+    expect(order().slice(0, 3)).toEqual([
+      '/files/d.jpg',
+      '/files/c.jpg',
+      '/files/a.jpg',
+    ])
+  })
+
+  it('reads the gallery again and says why when the store refuses', async () => {
+    let reads = 0
+    answers[PHOTOS] = () => (reads++, storeGallery())
+    answers[STORE] = () => {
+      throw 'Esa foto ya no está en este artículo. Vuelve a cargar la página.'
+    }
+    await mount()
+    eye('/files/b.jpg').click()
+    await flush()
+    expect(reads).toBe(2)
+    expect(inStore()['/files/b.jpg']).toBe('0')
+    expect(one('[role="alert"]').textContent).toContain('Esa foto ya no está')
+  })
+
+  it('switches a photo in the viewer and stays on it while the grid moves', async () => {
+    answers[PHOTOS] = storeGallery
+    answers[STORE] = ({ urls }) => ({
+      item: 'IPN1',
+      image: '/files/a.jpg',
+      modified: 'm6',
+      store: urls,
+    })
+    await mount()
+    one('[data-foto="/files/b.jpg"] button').click()
+    await flush()
+    // Four actions at most: the store's switch takes the place of «Girar».
+    expect(one('[data-testid="visor-girar"]')).toBeNull()
+    expect(one('[data-testid="visor-tienda"]').textContent).toContain(
+      'Show in the store',
+    )
+    one('[data-testid="visor-tienda"]').click()
+    await flush()
+    expect(one('[data-testid="visor-tienda"]').textContent).toContain(
+      'In the store',
+    )
+    expect(
+      one('[data-testid="visor-tienda"]').getAttribute('aria-pressed'),
+    ).toBe('true')
+  })
+
+  it('has no store switch where the shop does not sell online', async () => {
+    await mount()
+    expect(one('[data-testid="foto-tienda"]')).toBeNull()
+    expect(one('[data-testid="fotos-en-tienda"]')).toBeNull()
+    expect(tiles().some((tile) => tile.dataset.tienda)).toBe(false)
+    one('[data-foto="/files/b.jpg"] button').click()
+    await flush()
+    expect(one('[data-testid="visor-girar"]')).not.toBeNull()
+    expect(one('[data-testid="visor-tienda"]')).toBeNull()
   })
 })
