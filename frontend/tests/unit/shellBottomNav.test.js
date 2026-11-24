@@ -93,6 +93,18 @@ describe('ShellBottomNav counts', () => {
     expect(tab.querySelector('[data-bar-count]').textContent).toBe('3')
   })
 
+  it('a count stays inside the nav, where the command bar cannot cover it', async () => {
+    call.mockResolvedValueOnce({ contactos: { count: 3, urgent: false } })
+    const root = mountNav('hoy', modules)
+    await vi.waitFor(() =>
+      expect(root.querySelector('[data-bar-count]')).not.toBeNull(),
+    )
+    // The bar above is z-10: a bubble lifted past the nav's top edge
+    // (`-top-1.5`) lost its top under it on a phone.
+    const badge = root.querySelector('[data-bar-count]').className.split(/\s+/)
+    expect(badge.some((c) => /^-top-/.test(c))).toBe(false)
+  })
+
   it('«Más» adds up the modules the bar leaves out, never Avisos', async () => {
     call.mockResolvedValueOnce({
       ventas: { count: 14, urgent: false },

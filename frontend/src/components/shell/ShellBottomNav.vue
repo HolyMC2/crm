@@ -131,8 +131,13 @@ const moreCount = computed(() => {
   if (!count) return null
   return { count, text: count > 99 ? '99+' : String(count), urgent }
 })
+// The count stays inside the nav, ring included. The command bar above is
+// z-10 (it stays bright over a docked panel's scrim, which dims this nav), so
+// whatever crosses the nav's top edge is painted over by the bar. Below
+// 360 px the last tab's pill ends 2.5 px from the screen's edge, so the count
+// keeps to the pill there instead of hanging past it («20» on Más was cut).
 const BADGE =
-  'num absolute -right-1 -top-1.5 h-[18px] min-w-[18px] rounded-full px-1 text-center text-[11px] font-semibold leading-[18px] ring-2 ring-[var(--surface-base)]'
+  'num absolute -right-1 top-0.5 h-[18px] min-w-[18px] rounded-full px-1 text-center text-[11px] font-semibold leading-[18px] ring-2 ring-[var(--surface-base)] max-[359px]:right-0'
 const badgeTone = (found) =>
   found.urgent
     ? 'bg-surface-red-7 text-white'
