@@ -340,6 +340,57 @@ describe('Pendientes list cutover', () => {
     expect(root.querySelector('[data-create]').dataset.create).toBe('CRM Deal')
   })
 
+  it('«Del equipo» narrows to one person from their chip', async () => {
+    state.route.query = { segment: 'team' }
+    state.api.mockResolvedValue({
+      rows: [item('5', { mine: false, assigned_to_name: 'Ana López' })],
+      has_more: false,
+      people: [
+        { user: 'ana@example.test', name: 'Ana López', count: 3 },
+        { user: 'jess@example.test', name: 'Jessica Ruiz', count: 1 },
+      ],
+    })
+    mount(Pendientes)
+    await flush()
+    const chips = [
+      ...root.querySelectorAll('[data-pendientes-person] button'),
+    ].map((node) => {
+      const count = node.querySelector('.tabular-nums')?.textContent
+      return [node.textContent.replace(count, '').trim(), count]
+    })
+    // By name with their open count, never the login.
+    expect(chips).toEqual([
+      ['Ana López', '3'],
+      ['Jessica Ruiz', '1'],
+    ])
+    ;[...root.querySelectorAll('[data-pendientes-person] button')]
+      .find((node) => node.textContent.includes('Jessica'))
+      .click()
+    expect(state.router.replace).toHaveBeenCalledWith({
+      name: 'Pendientes',
+      query: { segment: 'team', person: 'jess@example.test' },
+    })
+
+    // The URL moved: the list asks for that person's work only.
+    state.api.mockResolvedValue({
+      rows: [],
+      has_more: false,
+      people: [{ user: 'jess@example.test', name: 'Jessica Ruiz', count: 0 }],
+    })
+    state.route.query = { segment: 'team', person: 'jess@example.test' }
+    await flush()
+    expect(state.api).toHaveBeenCalledWith(
+      'queue',
+      expect.objectContaining({
+        segment: 'team',
+        assignee: 'jess@example.test',
+      }),
+    )
+    // A filter emptied the list, not the team.
+    expect(root.textContent).toContain('No pendientes with these filters.')
+    expect(root.textContent).not.toContain('Your team has no open work')
+  })
+
   it('returns to the same place after back, once the list has its height', async () => {
     // P1 (polish walk 2026-10-13): the position was written once, one frame
     // after the data arrived, while the list was still shorter than when the

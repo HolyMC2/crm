@@ -2,6 +2,13 @@
 
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
+## 2026-11-23 — «Del equipo» narrows to one person (lane equipo-por-persona, with doco; not deployed)
+
+- **Why:** Marco searched «Jess» in Pendientes › Del equipo and got «Tu equipo no tiene trabajo abierto que puedas ver»: the list had no person filter and its search did not read whose task it was.
+- **Change:** «Del equipo» and «Asignadas por mí» show a «Persona» chip per teammate with their open count (the search panel on a phone, the filter row on a desk; most work first, «+N más» past eight). A chip narrows the list (`?person=`, doco's `queue` `assignee`) and shows as a removable chip while the search is closed; a search there also finds a teammate's work by name. A list emptied by a search or a filter says «No hay pendientes con estos filtros» instead of saying the team has nothing. The list reloads when the person changes (`PEOPLE_SEGMENTS` in `usePendientes.js`).
+- **Tests:** `pendientes.test.js` (+1: the person in the URL and the queue arguments, only on other people's lists), `pendientesChains.test.js` (+1: the chips by name and count, a tap narrows the queue, the emptied list's words).
+- **Rollout:** with doco's lane (the `people` answer and `assignee`); against an older doco the chips stay hidden and the list is unchanged. Rollback: revert both.
+
 ## 2026-11-23 — The Muelle app is the whole site: Taller and the other apps open without a browser bar (lane muelle-scope; not deployed)
 
 - **Why:** the installed Muelle app claimed only `/crm`, so an order opened from it (`/taller/orders/…`) ran in a browser tab with the page's title, the address and an X over it: one more bar on a phone where the order already lost half the screen (Marco, 2026-11-23).

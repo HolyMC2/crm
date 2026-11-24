@@ -98,6 +98,10 @@ export function isApprovalSegment(segment) {
   return APPROVAL_SEGMENTS.includes(segment)
 }
 
+// «Del equipo» and «Asignadas por mí» hold other people's work: they narrow
+// by person (`?person=`, the server's `people` chips).
+export const PEOPLE_SEGMENTS = Object.freeze(['team', 'delegated'])
+
 const DAY = /^\d{4}-\d{2}-\d{2}$/
 // An approval kind chip («gastos», «ausencias»…), as the server names them.
 const KIND = /^[a-z][a-z0-9_.-]{0,39}$/
@@ -120,6 +124,9 @@ export function parseQuery(query = {}) {
     from: DAY.test(query.from || '') ? query.from : '',
     to: DAY.test(query.to || '') ? query.to : '',
     ...(kind ? { kind } : {}),
+    ...(PEOPLE_SEGMENTS.includes(segment) && text(query.person)
+      ? { person: text(query.person).slice(0, 140) }
+      : {}),
     // Desktop: the list (default) or the board by state; never on approvals.
     ...(query.view === 'board' && !isApprovalSegment(segment)
       ? { view: 'board' }
@@ -136,6 +143,8 @@ export function toQuery(state) {
   if (state.priority) query.priority = state.priority
   if (state.from) query.from = state.from
   if (state.to) query.to = state.to
+  if (state.person && PEOPLE_SEGMENTS.includes(state.segment))
+    query.person = state.person
   if (state.view === 'board' && !isApprovalSegment(state.segment))
     query.view = 'board'
   return query
@@ -268,6 +277,9 @@ export function queueArgs(state, start = 0) {
     priority: state.priority,
     date_from: state.from,
     date_to: state.to,
+    ...(state.person && PEOPLE_SEGMENTS.includes(state.segment)
+      ? { assignee: state.person }
+      : {}),
     start,
     page_length: 30,
   }

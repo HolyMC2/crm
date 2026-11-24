@@ -42,6 +42,14 @@
       >
         <!-- Search opens the filters under it (ui/AppBar #search-panel). -->
         <template v-if="!approvals" #search-panel>
+          <ChipGroup
+            v-if="personChips.length"
+            :label="__('Person')"
+            :options="personChips"
+            :model-value="state.person || ''"
+            data-pendientes-person
+            @update:model-value="(value) => update({ person: value || '' })"
+          />
           <FilterChips
             v-if="sourceChips.length"
             inline
@@ -172,6 +180,15 @@
           type="search"
           :placeholder="__('Search pendientes')"
           :aria-label="__('Search pendientes')"
+        />
+        <FilterChips
+          v-if="!approvals && personChips.length"
+          class="[&>div]:px-0"
+          :label="__('Person')"
+          :model-value="state.person || ''"
+          :chips="personChips"
+          data-pendientes-person
+          @update:model-value="(value) => update({ person: value || '' })"
         />
         <FilterChips
           v-if="!approvals && sourceChips.length"
@@ -380,7 +397,11 @@
                 v-if="!rows.length"
                 class="mx-auto max-w-md px-6 py-10 text-center text-sm text-ink-gray-6"
               >
-                {{ emptyText(state.segment) }}
+                {{
+                  narrowed
+                    ? __('No pendientes with these filters.')
+                    : emptyText(state.segment)
+                }}
               </p>
               <!-- «Próximos»: a heading per day. -->
               <section
@@ -618,6 +639,7 @@ import {
 } from '@/utils/listScroll'
 import {
   GROUPS,
+  PEOPLE_SEGMENTS,
   byDay,
   canCreateOn,
   countText,
@@ -771,9 +793,29 @@ const sourceChips = computed(() =>
       ]
     : [],
 )
+// «Del equipo» / «Asignadas por mí»: whose work, most first (the server's
+// `people`, with the chosen person kept even at zero).
+const people = ref([])
+const personChips = computed(() =>
+  PEOPLE_SEGMENTS.includes(state.value.segment) &&
+  (people.value.length > 1 || state.value.person)
+    ? people.value.map((person) => ({
+        value: person.user,
+        label: person.name,
+        count: person.count,
+      }))
+    : [],
+)
 // What narrows the phone list, as removable chips under the closed search.
 const activeChips = computed(() => {
   const out = []
+  const person = personChips.value.find((c) => c.value === state.value.person)
+  if (person)
+    out.push({
+      key: 'person',
+      label: person.label,
+      clear: () => update({ person: '' }),
+    })
   const source = sourceChips.value.find((c) => c.value === state.value.source)
   if (source)
     out.push({
@@ -900,6 +942,17 @@ function onFocusedRow(action) {
 const returnQuery = computed(() => ({
   list: new URLSearchParams(toQuery(state.value)).toString(),
 }))
+// A search or a filter emptied the list, not the list itself.
+const narrowed = computed(() =>
+  Boolean(
+    state.value.q ||
+      state.value.person ||
+      state.value.priority ||
+      state.value.from ||
+      state.value.to ||
+      state.value.source !== 'all',
+  ),
+)
 const allClear = computed(
   () =>
     loaded.value &&
@@ -1033,6 +1086,7 @@ const listCache = createListCache('pendientes', () =>
         state.value.priority,
         state.value.from,
         state.value.to,
+        state.value.person || '',
       ],
 )
 function showQueue(response, start = 0) {
@@ -1043,6 +1097,7 @@ function showQueue(response, start = 0) {
   } else {
     rows.value = start ? [...rows.value, ...response.rows] : response.rows
     hasMore.value = response.has_more
+    if (!start) people.value = response.people || []
   }
   loaded.value = true
 }
@@ -1752,6 +1807,7 @@ watch(
     state.value.priority,
     state.value.from,
     state.value.to,
+    state.value.person,
   ],
   ([segment], [was]) => {
     if (search.value.trim() !== state.value.q) search.value = state.value.q
@@ -1762,6 +1818,8 @@ watch(
       loaded.value = false
       rows.value = []
     }
+    // Another list names other people; a person's chip keeps the row in place.
+    if (segment !== was) people.value = []
     if (boot.value?.enabled) {
       if (!same) paintCached()
       load(0, { quiet: same })

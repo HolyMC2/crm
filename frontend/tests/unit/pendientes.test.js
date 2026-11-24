@@ -80,6 +80,23 @@ describe('Pendientes URL state', () => {
       page_length: 30,
     })
   })
+  it("narrows other people's work to one person, and nothing else", () => {
+    const team = parseQuery({ segment: 'team', person: ' ana@shop.test ' })
+    expect(team.person).toBe('ana@shop.test')
+    expect(toQuery(team)).toEqual({ segment: 'team', person: 'ana@shop.test' })
+    expect(queueArgs(team)).toMatchObject({
+      segment: 'team',
+      assignee: 'ana@shop.test',
+    })
+    expect(
+      queueArgs(parseQuery({ segment: 'delegated', person: 'ana@shop.test' })),
+    ).toMatchObject({ assignee: 'ana@shop.test' })
+    // My own lists have no person: an old link drops it.
+    const mine = parseQuery({ segment: 'mine', person: 'ana@shop.test' })
+    expect(mine.person).toBe(undefined)
+    expect(queueArgs(mine)).not.toHaveProperty('assignee')
+    expect(toQuery({ ...team, segment: 'done' })).toEqual({ segment: 'done' })
+  })
   it('hides the sales team list without CRM task access', () => {
     expect(segmentEntries().map((e) => e.value)).not.toContain('team')
     expect(segmentEntries({ team: true }).map((e) => e.value)).toContain('team')
