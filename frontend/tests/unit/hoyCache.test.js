@@ -5,6 +5,7 @@ import { resolve } from 'node:path'
 import {
   HOY_CACHE_MAX_AGE_MS,
   HOY_CACHE_PREFIX,
+  HOY_MONEY_FRESH_MS,
   readCachedHoy,
   writeCachedHoy,
 } from '@/utils/hoyCache'
@@ -89,5 +90,50 @@ describe('Hoy keeps its last answer per site, user and roles scope', () => {
     )
     expect(page).toContain('readCachedHoy(currentScope())')
     expect(page).toContain('writeCachedHoy(currentScope(), answer)')
+  })
+})
+
+describe('today’s money is never painted from an older copy', () => {
+  const money = {
+    ventas: {
+      available: true,
+      value: 1880,
+      facts: [{ label: 'Tickets', value: 2 }],
+    },
+    credito: {
+      available: true,
+      label: 'Ventas a crédito',
+      items: [{ name: 'X' }],
+    },
+    pendientes: { available: true, rows: [{ name: 'TODO-1' }] },
+  }
+
+  it('a copy of the last two minutes paints as saved', () => {
+    writeCachedHoy(SCOPE, answer(money))
+    const saved = readCachedHoy(SCOPE, Date.now() + HOY_MONEY_FRESH_MS - 1000)
+    expect(saved.ventas.value).toBe(1880)
+    expect(saved.credito.items).toHaveLength(1)
+  })
+
+  it('an older copy keeps the cards but holds their figures for the read', () => {
+    writeCachedHoy(SCOPE, answer(money))
+    const saved = readCachedHoy(SCOPE, Date.now() + HOY_MONEY_FRESH_MS + 1000)
+    expect(saved.ventas).toEqual({
+      available: true,
+      held: true,
+      label: undefined,
+    })
+    expect(saved.credito).toEqual({
+      available: true,
+      held: true,
+      label: 'Ventas a crédito',
+    })
+    // The rest of the day paints as saved.
+    expect(saved.pendientes.rows).toHaveLength(1)
+    // A card that was off stays off.
+    writeCachedHoy(SCOPE, answer({ ventas: { available: false } }))
+    expect(
+      readCachedHoy(SCOPE, Date.now() + HOY_MONEY_FRESH_MS + 1000).ventas,
+    ).toEqual({ available: false })
   })
 })

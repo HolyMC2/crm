@@ -127,6 +127,13 @@ describe('salesToday', () => {
     expect(salesToday(undefined)).toBe(null)
   })
 
+  it('held (painted from an older copy): no figures until the read lands', () => {
+    expect(salesToday({ available: true, held: true })).toBeNull()
+    expect(
+      creditToday({ available: true, held: true, label: 'Ventas a crédito' }),
+    ).toBeNull()
+  })
+
   it('never links outside the shell', () => {
     const sales = salesToday({
       ...SECTION,

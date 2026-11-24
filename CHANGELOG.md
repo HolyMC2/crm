@@ -2,6 +2,12 @@
 
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
+## 2026-11-24 — «Ventas de hoy» is today's, not this morning's (lane hoy-ventas-frescas; not deployed)
+
+- **Why:** Marco's Hoy read «$1,880.00 · Tickets 2» at 13:21 while the server answered $3,180 over 5 tickets (checked read-only on Doco prod as him): the $1,880 was the 10:33 total. Hoy paints its last saved answer at once and the read replaces it, but the save failed silently when the site's storage was full (the list cache alone may keep 40 lists × 200,000 characters, past the browser's ~5 MB), so every reopen painted the morning copy again until a read landed; and a sale never re-read Hoy while it stayed open.
+- **Change:** a saved copy that does not fit makes room from the least recently saved lists (`listCache.saveWithRoom`), and when it still does not fit the older copy is forgotten, never painted later (Hoy and the lists). A Hoy copy older than two minutes paints its other sections but holds «Ventas de hoy» and «Credit sales» as a skeleton until the read lands. For whoever sees those cards, a Sales Invoice or POS Invoice change re-reads Hoy, at most once per 20 s.
+- **Tests:** `storageFull.test.js` (new; its 4 cases fail on the old code), `hoyCache.test.js` +2, `hoySales.test.js` +1. Rollback: revert.
+
 ## 2026-11-24 — Prospects and deals follow the organigrama (lane ventas-organigrama; not deployed)
 
 - **Why:** Marco asked whether CRM's sales hierarchy should use the same tree as Equipo › Organigrama, and whether CRM already had a good screen for it. One tree is what an owner keeps in mind; CRM's own editor is a desktop-only, drag-only second tree of Sales roles that a phone can barely move.

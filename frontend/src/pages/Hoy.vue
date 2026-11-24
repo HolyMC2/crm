@@ -214,6 +214,8 @@
             icon="lucide-receipt"
             :more="sales?.to ? { label: __('See sales'), to: sales.to } : null"
             :collapsed="sales?.empty ? __('No sales yet today.') : ''"
+            :skeleton="Boolean(data?.ventas?.held)"
+            :skeleton-rows="1"
             :failed="Boolean(data?.ventas?.failed)"
             @retry="refresh()"
           >
@@ -254,6 +256,8 @@
             :count="credit && !credit.empty ? credit.rows.length : null"
             :more="credit?.to ? { label: __('See all'), to: credit.to } : null"
             :collapsed="credit?.empty ? __('No credit sales today.') : ''"
+            :skeleton="Boolean(data?.credito?.held)"
+            :skeleton-rows="1"
             :failed="Boolean(data?.credito?.failed)"
             @retry="refresh()"
           >
@@ -808,6 +812,8 @@ import { currentScope, shellBoot } from '@/composables/muelleShell'
 import {
   HOY_HOME,
   LIVE_DOCTYPES,
+  RESYNC_FRESH_MS,
+  SALES_DOCTYPES,
   accesos,
   agendaPlan,
   continuarCards,
@@ -1166,6 +1172,7 @@ function showAnswer(answer) {
 }
 async function refresh({ quiet = false, fresh = true } = {}) {
   const request = ++sequence
+  lastReadAt = Date.now()
   gate.start()
   loading.value = true
   if (!quiet) problem.value = ''
@@ -1214,6 +1221,24 @@ function liveRefresh(batch) {
   if (gate.admit(batch)) refresh({ quiet: true })
 }
 useLiveWatch(hoyLive(socket), [...LIVE_DOCTYPES], liveRefresh)
+
+// A ticket anywhere moves «Ventas de hoy»: for whoever sees that card, a sale
+// or a cancellation reads Hoy again, at most once per RESYNC_FRESH_MS (a busy
+// counter must not turn every ticket into a page read).
+let lastReadAt = 0
+let salesTimer = null
+function salesRefresh(batch) {
+  if (batch && batch.reason !== 'change') return // the hub's resyncs reach liveRefresh
+  if (!data.value?.ventas?.available && !data.value?.credito?.available) return
+  if (salesTimer) return
+  const wait = Math.max(0, lastReadAt + RESYNC_FRESH_MS - Date.now())
+  salesTimer = setTimeout(() => {
+    salesTimer = null
+    liveRefresh()
+  }, wait)
+}
+useLiveWatch(hoyLive(socket), [...SALES_DOCTYPES], salesRefresh)
+onBeforeUnmount(() => clearTimeout(salesTimer))
 watch(avisosVersion, () => liveRefresh())
 
 let clock

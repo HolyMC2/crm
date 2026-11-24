@@ -36,6 +36,10 @@ export const LIVE_DOCTYPES = Object.freeze([
   'CRM Shift Note',
 ])
 
+// The tickets behind «Ventas de hoy» and «Credit sales»: a change re-reads Hoy
+// for whoever sees those cards (pages/Hoy.vue, at most once per RESYNC_FRESH_MS).
+export const SALES_DOCTYPES = Object.freeze(['Sales Invoice', 'POS Invoice'])
+
 /** The page's one read: the prefetch started with the boot, else a fresh call. */
 export function loadHoy({ fresh = false } = {}) {
   return (!fresh && takeHoy()) || call('crm.api.hoy.page')
@@ -139,7 +143,8 @@ function drillLink(drill) {
  * its whole-day total, never as a percentage against a day still running.
  */
 export function salesToday(section) {
-  if (!section?.available) return null
+  // `held`: painted from an older copy, the figures wait for the read.
+  if (!section?.available || section.held) return null
   const currency = section.currency
   const value = Number(section.value) || 0
   const tickets = (section.facts || []).find((fact) => fact.format === 'count')
@@ -177,7 +182,7 @@ function shellHref(href) {
  * for whom margin is hidden); each row opens the ticket. Null when off.
  */
 export function creditToday(section) {
-  if (!section?.available) return null
+  if (!section?.available || section.held) return null
   const currency = section.currency
   const rows = (section.items || []).map((item) => ({
     name: item.name,

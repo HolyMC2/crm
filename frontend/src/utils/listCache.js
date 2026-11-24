@@ -86,10 +86,66 @@ export function writeCachedList(list, answer, scope = currentScope()) {
       localStorage.removeItem(stored)
       delete index[stored]
     }
-    localStorage.setItem(key, value)
+    // The pruned index first, without this list: a list dropped below to make
+    // room is then never listed, and this one is listed once it is saved.
+    const { [key]: stamp, ...others } = index
+    saveWithRoom(INDEX_KEY, JSON.stringify(others))
+    if (!saveWithRoom(key, value)) {
+      // Never paint a copy older than the list the worker just saw.
+      localStorage.removeItem(key)
+      return
+    }
+    const saved = readIndex()
+    saved[key] = stamp
+    saveWithRoom(INDEX_KEY, JSON.stringify(saved))
+  } catch {
+    // Storage unavailable: the next visit waits for the read.
+  }
+}
+
+function dropFromIndex(key) {
+  try {
+    const index = readIndex()
+    delete index[key]
     localStorage.setItem(INDEX_KEY, JSON.stringify(index))
   } catch {
-    // Full storage: the next visit waits for the read.
+    // The index is rebuilt by the next save.
+  }
+}
+
+/**
+ * Frees room for another saved copy: the least recently saved list goes.
+ * False when no saved list is left to drop.
+ */
+export function dropOldestList(except = '') {
+  const index = readIndex()
+  const oldest = Object.keys(index)
+    .filter((key) => key !== except)
+    .sort((a, b) => index[a] - index[b])[0]
+  if (!oldest) return false
+  try {
+    localStorage.removeItem(oldest)
+  } catch {
+    return false
+  }
+  // Removing frees room, so the smaller index always fits.
+  dropFromIndex(oldest)
+  return true
+}
+
+/**
+ * `localStorage.setItem` that, when the site's storage is full, drops the
+ * least recently saved lists until the value fits. False when it never fits:
+ * the caller then forgets its own older copy instead of painting it later.
+ */
+export function saveWithRoom(key, value) {
+  for (;;) {
+    try {
+      localStorage.setItem(key, value)
+      return true
+    } catch {
+      if (!dropOldestList(key)) return false
+    }
   }
 }
 
