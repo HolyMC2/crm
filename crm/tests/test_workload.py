@@ -320,6 +320,7 @@ class TestWorkload(IntegrationTestCase):
 			{"doctype": "CRM Sales Hierarchy", "user": self.seller, "reports_to": root.name}
 		).insert()
 		frappe.db.set_single_value("FCRM Settings", "enable_sales_hierarchy", 1)
+		frappe.db.set_single_value("FCRM Settings", "sales_hierarchy_own_tree", 1)
 		own = self.deal()
 		self.deal(owner=self.target)
 		command = self.command(own)

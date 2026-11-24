@@ -61,9 +61,12 @@ def product_sync_state() -> dict:
 
 
 def sales_hierarchy_state() -> dict:
+	from crm.permissions.org_hierarchy import follows_org_chart
+
 	return {
 		"sales_hierarchy_enabled": bool(
 			frappe.db.get_single_value("FCRM Settings", "enable_sales_hierarchy")
 		),
 		"sales_hierarchy_nodes": frappe.db.count("CRM Sales Hierarchy"),
+		"sales_hierarchy_follows_org_chart": follows_org_chart(),
 	}

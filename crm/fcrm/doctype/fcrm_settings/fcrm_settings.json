@@ -10,6 +10,7 @@
   "restore_demo_data",
   "enable_forecasting",
   "enable_sales_hierarchy",
+  "sales_hierarchy_own_tree",
   "workload_advisory_capacity",
   "auto_update_expected_deal_value",
   "update_timestamp_on_new_communication",
@@ -102,10 +103,18 @@
   },
   {
    "default": "0",
-   "description": "Restrict Lead and Deal visibility based on the Sales Hierarchy tree. Managers can see all records owned by or assigned to their reports.",
+   "description": "Restrict Lead and Deal visibility to a team tree: a manager sees the records owned by or assigned to whoever reports to them. Only a System Manager can change it.",
    "fieldname": "enable_sales_hierarchy",
    "fieldtype": "Check",
    "label": "Enable Sales Hierarchy Permissions"
+  },
+  {
+   "default": "0",
+   "depends_on": "eval:doc.enable_sales_hierarchy",
+   "description": "Off: the team tree is the organization chart (Employee › Reports To). On: it is the Sales Hierarchy tree kept in CRM settings.",
+   "fieldname": "sales_hierarchy_own_tree",
+   "fieldtype": "Check",
+   "label": "Use a separate sales tree"
   },
   {
    "fieldname": "currency",
@@ -285,7 +294,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-11-20 22:00:00.000000",
+ "modified": "2026-11-24 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "FCRM",
  "name": "FCRM Settings",

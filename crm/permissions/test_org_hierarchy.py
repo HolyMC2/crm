@@ -42,6 +42,8 @@ class TestOrgHierarchy(IntegrationTestCase):
 
 		settings = frappe.get_single("FCRM Settings")
 		settings.enable_sales_hierarchy = 1
+		# This suite is about the CRM Sales Hierarchy tree, not the organization chart.
+		settings.sales_hierarchy_own_tree = 1
 		settings.save(ignore_permissions=True)
 
 	@classmethod

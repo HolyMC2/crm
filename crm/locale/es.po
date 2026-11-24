@@ -8046,8 +8046,8 @@ msgstr "Restaurar datos de ejemplo"
 #. Description of the 'Enable Sales Hierarchy Permissions' (Check) field in
 #. DocType 'FCRM Settings'
 #: crm/fcrm/doctype/fcrm_settings/fcrm_settings.json
-msgid "Restrict Lead and Deal visibility based on the Sales Hierarchy tree. Managers can see all records owned by or assigned to their reports."
-msgstr "Limita la visibilidad de prospectos y tratos según el árbol de la jerarquía de ventas. Los gerentes ven todos los registros que pertenecen o están asignados a quienes les reportan."
+msgid "Restrict Lead and Deal visibility to a team tree: a manager sees the records owned by or assigned to whoever reports to them. Only a System Manager can change it."
+msgstr "Limita la visibilidad de prospectos y tratos a un árbol de equipo: un jefe ve los registros que pertenecen o están asignados a quienes le reportan. Solo un administrador del sistema puede cambiarlo."
 
 #: frontend/src/components/Settings/Hierarchy/Hierarchy.vue:20
 msgid "Restrict visibility of Leads and Deals based on a reporting tree."
@@ -53532,3 +53532,115 @@ msgstr "Quitar de la tienda"
 msgctxt "Productos"
 msgid "Not in the store"
 msgstr "No sale en la tienda"
+
+#: crm/fcrm/doctype/fcrm_settings/fcrm_settings.json
+msgid "Off: the team tree is the organization chart (Employee › Reports To). On: it is the Sales Hierarchy tree kept in CRM settings."
+msgstr "Apagado: el árbol de equipo es el organigrama (Empleado › Reporta a). Encendido: es el árbol de la jerarquía de ventas que se lleva en los ajustes de CRM."
+
+#: crm/fcrm/doctype/fcrm_settings/fcrm_settings.json frontend/src/components/Settings/Hierarchy/Hierarchy.vue
+msgid "Use a separate sales tree"
+msgstr "Usar un árbol de ventas aparte"
+
+#: crm/api/sales_hierarchy.py crm/fcrm/doctype/fcrm_settings/fcrm_settings.py
+msgid "Only a system administrator can change who sees whose prospects and deals."
+msgstr "Solo un administrador del sistema puede cambiar quién ve los prospectos y tratos de quién."
+
+#: crm/api/sales_hierarchy.py
+msgid "This site has no organization chart: add employees first."
+msgstr "Este sitio no tiene organigrama: primero agrega empleados."
+
+#: crm/api/sales_hierarchy.py
+msgid "Done: each boss sees the prospects and deals of whoever reports to them."
+msgstr "Listo: cada jefe ve los prospectos y tratos de quienes le reportan."
+
+#: crm/api/sales_hierarchy.py
+msgid "Done: prospects and deals no longer follow the organization chart."
+msgstr "Listo: los prospectos y tratos ya no siguen el organigrama."
+
+#: frontend/src/components/equipo/organigrama.js
+msgid "Sees every prospect and deal."
+msgstr "Ve todos los prospectos y tratos."
+
+#: frontend/src/components/equipo/organigrama.js
+msgid "Sees their own prospects and deals and those of the {0} people under them."
+msgstr "Ve sus prospectos y tratos y los de las {0} personas a su cargo."
+
+#: frontend/src/components/equipo/organigrama.js
+msgid "Sees their own prospects and deals and those of the person under them."
+msgstr "Ve sus prospectos y tratos y los de la persona a su cargo."
+
+#: frontend/src/components/equipo/organigrama.js
+msgid "Sees their own prospects and deals."
+msgstr "Ve sus prospectos y tratos."
+
+#: frontend/src/components/equipo/organigrama.js
+msgid "Also those of {0}."
+msgstr "También los de {0}."
+
+#: frontend/src/components/equipo/organigrama.js
+msgid "Also the ones nobody owns yet."
+msgstr "También los que aún no son de nadie."
+
+#: frontend/src/components/equipo/ReportaASheet.vue
+msgid "Will see their employee record, prospects and deals"
+msgstr "Verá su ficha de empleado, prospectos y tratos"
+
+#: frontend/src/components/equipo/ReportaASheet.vue
+msgid "Will see their prospects and deals"
+msgstr "Verá sus prospectos y tratos"
+
+#: frontend/src/pages/EquipoOrganigrama.vue
+msgid "Bosses see the prospects and deals of their team"
+msgstr "Los jefes ven los prospectos y tratos de su equipo"
+
+#: frontend/src/pages/EquipoOrganigrama.vue
+msgid "Each person sees their own and those of whoever reports to them; administrators see all. An overdue next step tells their boss."
+msgstr "Cada quien ve los suyos y los de quienes le reportan; los administradores ven todos. Un paso vencido avisa a su jefe."
+
+#: frontend/src/pages/EquipoOrganigrama.vue
+msgid "Prospects and deals follow a separate sales tree, kept in CRM settings."
+msgstr "Los prospectos y tratos siguen un árbol de ventas aparte, en los ajustes de CRM."
+
+#: frontend/src/pages/EquipoOrganigrama.vue
+msgid "Follow this chart instead"
+msgstr "Usar este organigrama"
+
+#: frontend/src/pages/EquipoOrganigrama.vue
+msgid "Bosses see the prospects and deals of their team."
+msgstr "Los jefes ven los prospectos y tratos de su equipo."
+
+#: frontend/src/pages/EquipoOrganigrama.vue
+msgid "{0} also sees their prospects and deals."
+msgstr "{0} también ve sus prospectos y tratos."
+
+#: frontend/src/pages/EquipoOrganigrama.vue
+msgid "{0} now sees their prospects and deals."
+msgstr "{0} ya ve sus prospectos y tratos."
+
+#: frontend/src/components/Settings/Hierarchy/Hierarchy.vue
+msgid "Each boss sees the prospects and deals of whoever reports to them in the organization chart."
+msgstr "Cada jefe ve los prospectos y tratos de quienes le reportan en el organigrama."
+
+#: frontend/src/components/Settings/Hierarchy/Hierarchy.vue
+msgid "Follow the organization chart"
+msgstr "Seguir el organigrama"
+
+#: frontend/src/components/Settings/Hierarchy/Hierarchy.vue
+msgid "Follows the organization chart"
+msgstr "Sigue el organigrama"
+
+#: frontend/src/components/Settings/Hierarchy/Hierarchy.vue
+msgid "A boss sees the prospects and deals of whoever reports to them in Equipo › Organization chart. Change whom someone reports to there."
+msgstr "Un jefe ve los prospectos y tratos de quienes le reportan en Equipo › Organigrama. Ahí cambias a quién reporta cada quien."
+
+#: frontend/src/components/Settings/Hierarchy/Hierarchy.vue
+msgid "Open the organization chart"
+msgstr "Abrir el organigrama"
+
+#: frontend/src/components/Settings/Hierarchy/Hierarchy.vue
+msgid "This tree is separate from the organization chart."
+msgstr "Este árbol es aparte del organigrama."
+
+#: frontend/src/components/Settings/Hierarchy/Hierarchy.vue
+msgid "Prospects and deals now follow the organization chart"
+msgstr "Los prospectos y tratos ahora siguen el organigrama"

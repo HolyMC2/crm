@@ -16,6 +16,8 @@ import {
   buildTree,
   canDrop,
   chainOf,
+  crmGain,
+  crmLine,
   descendants,
   lensSet,
   roleLine,
@@ -121,6 +123,38 @@ describe('organigrama tree', () => {
       loose: false,
     })
     expect(roleLine(TEAM[3])).toBe('Técnico, Técnico de celulares')
+  })
+
+  it('says what each person sees of prospects and deals', () => {
+    expect(crmLine(null)).toBe('')
+    expect(crmLine({ scope: 'all' })).toBe('Sees every prospect and deal.')
+    expect(crmLine({ scope: 'own', shops: ['Centro'] })).toBe(
+      'Sees their own prospects and deals. Also those of Centro.',
+    )
+    expect(crmLine({ scope: 'team', team: 1 })).toBe(
+      'Sees their own prospects and deals and those of the person under them.',
+    )
+    expect(crmLine({ scope: 'team', team: 3, unowned: true })).toBe(
+      'Sees their own prospects and deals and those of the 3 people under them. Also the ones nobody owns yet.',
+    )
+  })
+
+  it('a new boss gains prospects only when the chart decides and they lack them', () => {
+    const on = {
+      state: { enabled: true, follows_org_chart: true },
+      people: {
+        'E2@example.invalid': { scope: 'team', team: 1 },
+        'E1@example.invalid': { scope: 'all' },
+        'E4@example.invalid': { scope: 'own' },
+      },
+    }
+    const [diana, teresa, ana, brandon] = TEAM
+    expect(crmGain(on, brandon, teresa)).toBe(true)
+    expect(crmGain(on, brandon, diana)).toBe(false) // already sees all
+    expect(crmGain(on, ana, teresa)).toBe(false) // Ana does not use prospects
+    expect(crmGain({ ...on, state: { enabled: false } }, brandon, teresa)).toBe(
+      false,
+    )
   })
 })
 
@@ -284,6 +318,105 @@ describe('Organigrama page', () => {
     expect(el.querySelector('[data-testid=org-suggestion]')).not.toBeNull()
     expect(text(el.querySelector('[data-testid=org-notice]'))).toContain(
       'Only the owner',
+    )
+  })
+
+  it('the chart can decide who sees whose prospects and deals', async () => {
+    const state = (enabled) => ({
+      enabled,
+      org_chart_available: true,
+      follows_org_chart: true,
+      can_change: true,
+    })
+    let on = false
+    const scopes = () => ({
+      state: state(on),
+      people: on
+        ? {
+            'E1@example.invalid': { scope: 'all' },
+            'E2@example.invalid': { scope: 'team', team: 1, unowned: true },
+            'E4@example.invalid': { scope: 'own' },
+          }
+        : {
+            'E1@example.invalid': { scope: 'all' },
+            'E2@example.invalid': { scope: 'all' },
+            'E4@example.invalid': { scope: 'own' },
+          },
+    })
+    const follow = vi.fn(({ on: value }) => {
+      on = Boolean(value)
+      return {
+        state: state(on),
+        message:
+          'Done: each boss sees the prospects and deals of whoever reports to them.',
+      }
+    })
+    const moved = vi.fn(() => ({
+      ok: true,
+      message: 'Done: Brandon López now reports to Teresa García.',
+    }))
+    answer({
+      get_chart: CHART(),
+      people_scope: scopes,
+      follow_org_chart: follow,
+      set_reports_to: moved,
+    })
+    const { el, router } = await mountPage()
+    const toggle = el.querySelector('[data-testid=org-crm-switch]')
+    expect(toggle.getAttribute('aria-checked')).toBe('false')
+    toggle.click()
+    await flush()
+    expect(follow).toHaveBeenCalledWith({ on: 1 })
+    expect(toggle.getAttribute('aria-checked')).toBe('true')
+    expect(text(el.querySelector('[data-testid=org-notice]'))).toContain(
+      'Done: each boss',
+    )
+
+    await router.replace({ query: { persona: 'E2' } })
+    await flush()
+    expect(text(el.querySelector('[data-testid=org-persona-crm]'))).toContain(
+      'and those of the person under them. Also the ones nobody owns',
+    )
+
+    // Brandon goes under Teresa: the picker says what she will see, the notice too.
+    await router.replace({ query: { persona: 'E4' } })
+    await flush()
+    el.querySelector('[data-testid=org-persona-move]').click()
+    // The picker is an async component: it mounts on its first open.
+    const option = await vi.waitFor(() => {
+      const found = document.querySelector('[data-testid=org-reporta-E2]')
+      if (!found) throw new Error('the picker is not open yet')
+      return found
+    })
+    expect(text(option)).toContain(
+      'Will see their employee record, prospects and deals',
+    )
+    option.click()
+    await flush()
+    expect(moved).toHaveBeenCalledWith({ employee: 'E4', reports_to: 'E2' })
+    expect(text(el.querySelector('[data-testid=org-notice]'))).toContain(
+      'Teresa García also sees their prospects and deals.',
+    )
+  })
+
+  it('who cannot change it reads where prospects stand', async () => {
+    answer({
+      get_chart: CHART(),
+      people_scope: {
+        state: {
+          enabled: true,
+          org_chart_available: true,
+          follows_org_chart: true,
+          can_change: false,
+        },
+        people: {},
+      },
+    })
+    const { el } = await mountPage()
+    const section = el.querySelector('[data-testid=org-crm]')
+    expect(section.querySelector('[data-testid=org-crm-switch]')).toBeNull()
+    expect(text(section)).toContain(
+      'Bosses see the prospects and deals of their team.',
     )
   })
 

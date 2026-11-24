@@ -72,9 +72,10 @@
                 >{{ detail(option) }}</span
               >
               <!-- The tree is a permission: a boss limited to their own
-                   record also sees their team's. -->
+                   record also sees their team's, and with prospects and
+                   deals following the chart, their team's too. -->
               <span
-                v-if="option.sees_reports && !option.under && !option.current"
+                v-if="gainText(option)"
                 class="flex items-center gap-1 text-sm text-ink-gray-6"
                 data-testid="org-reporta-sees"
               >
@@ -82,7 +83,7 @@
                   class="lucide-eye size-3.5 flex-none"
                   aria-hidden="true"
                 />
-                {{ __('Will see their employee record') }}
+                {{ gainText(option) }}
               </span>
             </span>
             <span
@@ -105,12 +106,14 @@
 import { computed, ref, watch } from 'vue'
 import { BottomSheet, initials } from '@/components/ui'
 import { matchTokens } from '@/vendor/muelle-shell/contracts/search'
-import { bossOptions, roleLine } from './organigrama'
+import { bossOptions, crmGain, roleLine } from './organigrama'
 
 const props = defineProps({
   open: { type: Boolean, default: false },
   person: { type: Object, required: true },
   nodes: { type: Object, required: true },
+  /** crm people_scope's answer, when prospects and deals may follow the chart. */
+  crm: { type: Object, default: null },
 })
 defineEmits(['pick', 'close'])
 
@@ -126,6 +129,17 @@ const shown = computed(() =>
     matchTokens(query.value, o.full_name || '', o.puesto || ''),
   ),
 )
+/** What the boss would start seeing of this person. */
+function gainText(option) {
+  if (option.under || option.current) return ''
+  const record = Boolean(option.sees_reports)
+  const crm = crmGain(props.crm, props.person, option)
+  if (record && crm)
+    return __('Will see their employee record, prospects and deals')
+  if (record) return __('Will see their employee record')
+  if (crm) return __('Will see their prospects and deals')
+  return ''
+}
 function detail(option) {
   if (option.current) return __('Reports to them now')
   if (option.under) return __('Is on their team: move them first')

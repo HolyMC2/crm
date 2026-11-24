@@ -92,7 +92,7 @@ def _scoped_users(user):
 	if user:
 		return [user]
 
-	from crm.permissions.org_hierarchy import _in_hierarchy, hierarchy_enabled
+	from crm.permissions.org_hierarchy import _in_hierarchy, hierarchy_enabled, team_users
 
 	session = frappe.session.user
 	if session == "Administrator":
@@ -103,14 +103,7 @@ def _scoped_users(user):
 		return None
 
 	if "Sales Manager" in roles and hierarchy_enabled() and _in_hierarchy(session):
-		users = frappe.db.sql(
-			"""select m2.user from `tabCRM Sales Hierarchy` m1
-			   join `tabCRM Sales Hierarchy` m2 on m2.lft >= m1.lft and m2.lft <= m1.rgt
-			   where m1.user = %s and coalesce(m2.user, '') <> ''""",
-			session,
-			pluck=True,
-		)
-		return users or [session]
+		return team_users(session) or [session]
 
 	return None
 

@@ -35,6 +35,29 @@ def hierarchy_enabled() -> bool:
 	return bool(frappe.db.get_single_value("FCRM Settings", "enable_sales_hierarchy"))
 
 
+# The team tree. By default it is the organization chart: Employee «Reports To»,
+# the nested set HR approvals and the organigrama read, so the owner keeps one
+# tree. A tenant without employees, or one that keeps a separate sales tree
+# (FCRM Settings `sales_hierarchy_own_tree`), uses CRM Sales Hierarchy.
+EMPLOYEE = "Employee"
+SALES_TREE = "CRM Sales Hierarchy"
+
+
+def employee_tree_available() -> bool:
+	"""Employee exists here as a tree with a linked user (ERPNext installed)."""
+	if not frappe.db.exists("DocType", EMPLOYEE):
+		return False
+	meta = frappe.get_meta(EMPLOYEE)
+	return all(meta.has_field(field) for field in ("user_id", "reports_to", "lft", "rgt", "status"))
+
+
+def follows_org_chart() -> bool:
+	"""The team tree is the organization chart (whether or not the hierarchy is on)."""
+	if frappe.db.get_single_value("FCRM Settings", "sales_hierarchy_own_tree"):
+		return False
+	return employee_tree_available()
+
+
 @request_cache
 def _shop_names(user: str, doctype: str) -> tuple:
 	"""Social Shop names `user` belongs to, () when the shop dimension is absent
@@ -90,6 +113,13 @@ def _permission_query_conditions(user: str | None, doctype: str):
 			)
 		)
 		cond = q1 | q2
+		if "Sales Manager" in roles:
+			# What nobody owns yet stays in sight of a manager in the tree, to hand it out.
+			unowned = None
+			for f in owner_fields:
+				q = DT[f].isnull() | (DT[f] == "")
+				unowned = q if unowned is None else unowned & q
+			cond = cond | unowned
 	else:
 		# Sales User default: own records and records directly assigned to them
 		q1 = None
@@ -186,12 +216,32 @@ def has_call_log_permission(doc, ptype, user):
 
 
 def _in_hierarchy(user: str) -> bool:
-	return bool(frappe.db.exists("CRM Sales Hierarchy", {"user": user}))
+	if follows_org_chart():
+		return bool(frappe.db.exists(EMPLOYEE, {"user_id": user, "status": "Active"}))
+	return bool(frappe.db.exists(SALES_TREE, {"user": user}))
 
 
 def _team_mem_query(user: str):
-	Mgr = frappe.qb.DocType("CRM Sales Hierarchy").as_("_sqmgr")
-	Member = frappe.qb.DocType("CRM Sales Hierarchy").as_("_sqmem")
+	"""Users in `user`'s subtree, `user` included. On the organization chart the
+	members keep their place after they leave, so their records stay with the boss
+	who hands them out."""
+	if follows_org_chart():
+		Mgr = frappe.qb.DocType(EMPLOYEE).as_("_sqmgr")
+		Member = frappe.qb.DocType(EMPLOYEE).as_("_sqmem")
+		return (
+			frappe.qb.from_(Mgr)
+			.join(Member)
+			.on((Member.lft >= Mgr.lft) & (Member.lft <= Mgr.rgt))
+			.select(Member.user_id)
+			.where(
+				(Mgr.user_id == user)
+				& (Mgr.status == "Active")
+				& Member.user_id.isnotnull()
+				& (Member.user_id != "")
+			)
+		)
+	Mgr = frappe.qb.DocType(SALES_TREE).as_("_sqmgr")
+	Member = frappe.qb.DocType(SALES_TREE).as_("_sqmem")
 	return (
 		frappe.qb.from_(Mgr)
 		.join(Member)
@@ -199,3 +249,67 @@ def _team_mem_query(user: str):
 		.select(Member.user)
 		.where(Mgr.user == user)
 	)
+
+
+def team_users(user: str) -> list[str]:
+	"""The accounts in `user`'s team, `user` included, without repeats."""
+	return list(dict.fromkeys(u for u in _team_mem_query(user).run(pluck=True) if u))
+
+
+def manager_of(user: str | None) -> str | None:
+	"""The boss an overdue step of `user` goes to, when the hierarchy is on.
+
+	On the organization chart: the nearest person above with an active account who
+	may read deals (a boss without one is skipped). On the sales tree: the parent
+	node's user."""
+	if not user or not hierarchy_enabled():
+		return None
+	if not follows_org_chart():
+		parent = frappe.db.get_value(SALES_TREE, {"user": user}, "reports_to")
+		boss = parent and frappe.db.get_value(SALES_TREE, parent, "user")
+		return boss if boss and boss != user else None
+	employee = frappe.db.get_value(EMPLOYEE, {"user_id": user, "status": "Active"}, "reports_to")
+	seen = set()
+	while employee and employee not in seen:
+		seen.add(employee)
+		row = frappe.db.get_value(EMPLOYEE, employee, ["user_id", "status", "reports_to"], as_dict=True)
+		if not row:
+			return None
+		if (
+			row.user_id
+			and row.user_id != user
+			and row.status == "Active"
+			and frappe.db.get_value("User", row.user_id, "enabled")
+			and frappe.has_permission("CRM Deal", "read", user=row.user_id)
+		):
+			return row.user_id
+		employee = row.reports_to
+	return None
+
+
+def scope_of(user: str) -> dict | None:
+	"""What `user` sees of prospects and deals, in words the organigrama shows:
+	{"scope": "all" | "team" | "own", "team": n, "shops": [...], "unowned": bool}.
+	None when they cannot read prospects at all."""
+	if user == "Administrator":
+		return {"scope": "all"}
+	if not frappe.db.get_value("User", user, "enabled"):
+		return None
+	if not frappe.has_permission("CRM Lead", "read", user=user):
+		return None
+	roles = frappe.get_roles(user)
+	if "System Manager" in roles or _reads_every_record(user):
+		return {"scope": "all"}
+	in_tree = hierarchy_enabled() and _in_hierarchy(user)
+	if "Sales Manager" in roles and not in_tree:
+		return {"scope": "all"}
+	shops = list(_shop_names(user, "CRM Lead"))
+	if in_tree:
+		team = [u for u in team_users(user) if u != user]
+		return {
+			"scope": "team",
+			"team": len(team),
+			"shops": shops,
+			"unowned": "Sales Manager" in roles,
+		}
+	return {"scope": "own", "shops": shops}

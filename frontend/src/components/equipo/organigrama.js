@@ -6,6 +6,9 @@ import { matchTokens } from '@/vendor/muelle-shell/contracts/search'
 export const CHART = 'doco.erp_experience.organigrama.get_chart'
 export const MOVE = 'doco.erp_experience.organigrama.set_reports_to'
 export const MOVE_MANY = 'doco.erp_experience.organigrama.set_reports_to_many'
+// Prospects and deals follow this tree when the owner turns it on (crm's team tree).
+export const CRM_SCOPE = 'crm.api.sales_hierarchy.people_scope'
+export const CRM_FOLLOW = 'crm.api.sales_hierarchy.follow_org_chart'
 
 const byName = (a, b) =>
   (a.full_name || '').localeCompare(b.full_name || '', undefined, {
@@ -167,4 +170,44 @@ const TODAY_DOT = {
 /** Today's attendance as a dot class, only for the states that matter now. */
 export function todayDot(status) {
   return TODAY_DOT[status] || ''
+}
+
+/** Does the chart decide who sees whose prospects and deals? */
+export function crmFollows(crm) {
+  const state = crm?.state
+  return Boolean(state?.enabled && state.follows_org_chart)
+}
+
+/** What a person sees of prospects and deals, in sentences; '' when they use none. */
+export function crmLine(scope) {
+  if (!scope) return ''
+  if (scope.scope === 'all') return __('Sees every prospect and deal.')
+  const team = scope.scope === 'team' ? scope.team || 0 : 0
+  const parts = [
+    team > 1
+      ? __(
+          'Sees their own prospects and deals and those of the {0} people under them.',
+          [team],
+        )
+      : team === 1
+        ? __(
+            'Sees their own prospects and deals and those of the person under them.',
+          )
+        : __('Sees their own prospects and deals.'),
+  ]
+  if (scope.shops?.length)
+    parts.push(__('Also those of {0}.', [scope.shops.join(', ')]))
+  if (scope.unowned) parts.push(__('Also the ones nobody owns yet.'))
+  return parts.join(' ')
+}
+
+/**
+ * Will `boss` start seeing `person`'s prospects and deals once `person` reports
+ * to them? Only when the chart decides it, `person` works with prospects, and
+ * the boss does not already see every one.
+ */
+export function crmGain(crm, person, boss) {
+  if (!crmFollows(crm) || !person?.user || !boss?.user) return false
+  const people = crm.people || {}
+  return Boolean(people[person.user]) && people[boss.user]?.scope === 'team'
 }

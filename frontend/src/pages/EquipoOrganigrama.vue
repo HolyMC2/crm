@@ -3,7 +3,9 @@
        «Reporta a», the tree HRMS approvals read too) and what each person
        can do. One tap on a person opens their card; the pencil there, or a
        drag with a mouse, changes whom they report to, shown at once with
-       «Deshacer». «¿Quién puede…?» lights up who can do one thing. -->
+       «Deshacer». «¿Quién puede…?» lights up who can do one thing. The
+       chart can also decide who sees whose prospects and deals (crm's team
+       tree): the switch at the foot, a line on each card. -->
   <div
     class="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto"
     data-org-scroller
@@ -246,6 +248,58 @@
                 {{ __('Complete them in Equipo') }}
               </button>
             </section>
+            <section
+              v-if="crmShown"
+              class="mt-6 border-t border-outline-gray-1 pt-3"
+              data-testid="org-crm"
+            >
+              <Switch
+                v-if="
+                  crmState.can_change &&
+                  (crmState.follows_org_chart || !crmState.enabled)
+                "
+                :model-value="crmOn"
+                :label="__('Bosses see the prospects and deals of their team')"
+                :description="
+                  __(
+                    'Each person sees their own and those of whoever reports to them; administrators see all. An overdue next step tells their boss.',
+                  )
+                "
+                :disabled="crmBusy"
+                data-testid="org-crm-switch"
+                @update:model-value="setCrm"
+              />
+              <div
+                v-else-if="crmState.enabled && !crmState.follows_org_chart"
+                class="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-4"
+              >
+                <p class="min-w-0 text-sm text-ink-gray-7 sm:flex-1">
+                  {{
+                    __(
+                      'Prospects and deals follow a separate sales tree, kept in CRM settings.',
+                    )
+                  }}
+                </p>
+                <button
+                  v-if="crmState.can_change"
+                  type="button"
+                  :class="BTN.tonal"
+                  class="press"
+                  :disabled="crmBusy"
+                  data-testid="org-crm-follow"
+                  @click="setCrm(true)"
+                >
+                  {{ __('Follow this chart instead') }}
+                </button>
+              </div>
+              <p v-else class="flex items-start gap-2 text-sm text-ink-gray-7">
+                <span
+                  class="lucide-handshake mt-0.5 size-4 flex-none"
+                  aria-hidden="true"
+                />
+                {{ __('Bosses see the prospects and deals of their team.') }}
+              </p>
+            </section>
           </div>
 
           <!-- A desk: the person beside the tree, or who can do what. -->
@@ -270,6 +324,7 @@
                 :nodes="tree.nodes"
                 :capabilities="answer.capabilities"
                 :lens="lens"
+                :crm-scope="crmScopeOf(current)"
                 @select="select"
                 @move="openMove"
                 @lens="setLens"
@@ -377,6 +432,7 @@
         :nodes="tree.nodes"
         :capabilities="answer.capabilities"
         :lens="lens"
+        :crm-scope="crmScopeOf(current)"
         @select="select"
         @move="openMove"
         @lens="lensFromSheet"
@@ -406,6 +462,7 @@
       :open="Boolean(moving)"
       :person="moving"
       :nodes="tree.nodes"
+      :crm="crm"
       @pick="(boss) => move(moving.employee, boss)"
       @close="moveFor = ''"
     />
@@ -422,7 +479,13 @@ import {
   watch,
 } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { BottomSheet, ChipGroup, SearchPanel, chipClass } from '@/components/ui'
+import {
+  BottomSheet,
+  ChipGroup,
+  SearchPanel,
+  Switch,
+  chipClass,
+} from '@/components/ui'
 import { isMobile as isPhone, isWide } from '@/composables/breakpoint'
 import { equipoApi, personRoute } from '@/composables/useEquipo'
 import { BTN } from '@/documentos/tools'
@@ -431,10 +494,14 @@ import OrgNode from '@/components/equipo/OrgNode.vue'
 import OrgPersona from '@/components/equipo/OrgPersona.vue'
 import {
   CHART,
+  CRM_FOLLOW,
+  CRM_SCOPE,
   MOVE,
   MOVE_MANY,
   buildTree,
   canDrop,
+  crmFollows,
+  crmGain,
   lensSet,
   visibleFor,
   withMove,
@@ -458,12 +525,22 @@ const query = ref('')
 const searchOpen = ref(false)
 const folded = ref(new Set())
 const moveFor = ref('')
+// crm's people_scope: who sees whose prospects and deals (null without crm's answer).
+const crm = ref(null)
+const crmBusy = ref(false)
 const selected = computed(() => String(route.query.persona || ''))
 const lens = computed(() => String(route.query.puede || ''))
 // A mouse drags; a finger keeps the pencil.
 const dragOn = ref(false)
 
 const guard = computed(() => answer.value?.guard || null)
+const crmState = computed(() => crm.value?.state || null)
+const crmOn = computed(() => crmFollows(crm.value))
+const crmShown = computed(() => {
+  const state = crmState.value
+  if (!state?.org_chart_available) return false
+  return Boolean(state.can_change || crmOn.value)
+})
 const tree = computed(() => buildTree(people.value))
 const visible = computed(() => visibleFor(query.value, tree.value.nodes))
 const lensPeople = computed(() => lensSet(lens.value, people.value))
@@ -604,6 +681,9 @@ function toggleFold(employee) {
   else next.add(employee)
   folded.value = next
 }
+function crmScopeOf(person) {
+  return (person?.user && crm.value?.people?.[person.user]) || null
+}
 function openMove(employee) {
   moveFor.value = employee
 }
@@ -619,6 +699,34 @@ async function load() {
     people.value = data?.people || []
   } catch (error) {
     failure.value = errorText(error, __('The organization chart did not load.'))
+    return
+  }
+  loadCrm()
+}
+
+/** Who sees whose prospects and deals; the chart works without it. */
+async function loadCrm() {
+  const users = people.value.map((p) => p.user).filter(Boolean)
+  try {
+    crm.value = await equipoApi(CRM_SCOPE, { users })
+  } catch {
+    crm.value = null
+  }
+}
+
+async function setCrm(on) {
+  crmBusy.value = true
+  try {
+    const result = await equipoApi(CRM_FOLLOW, { on: on ? 1 : 0 })
+    notice.value = { text: result?.message || __('Done'), undo: null }
+    await loadCrm()
+  } catch (error) {
+    notice.value = {
+      text: errorText(error, __('Nothing changed.')),
+      undo: null,
+    }
+  } finally {
+    crmBusy.value = false
   }
 }
 
@@ -628,17 +736,26 @@ async function move(employee, boss, { undoing = false } = {}) {
   const before = people.value
   const previous = tree.value.nodes.get(employee)
   if (!previous || (previous.reports_to || null) === (boss || null)) return
+  const bossNode = boss ? tree.value.nodes.get(boss) : null
+  const gain = crmGain(crm.value, previous, bossNode)
   people.value = withMove(before, employee, boss)
   busy.value = true
   try {
     const result = await equipoApi(MOVE, { employee, reports_to: boss || null })
+    const bossName = bossNode?.full_name || __('No name', null, 'Equipo')
+    const crmText = !gain
+      ? ''
+      : bossNode.sees_reports
+        ? __('{0} also sees their prospects and deals.', [bossName])
+        : __('{0} now sees their prospects and deals.', [bossName])
     notice.value = {
-      text: result?.message || __('Done'),
+      text: [result?.message || __('Done'), crmText].filter(Boolean).join(' '),
       undo:
         undoing || previous.boss_gone
           ? null
           : { employee, boss: previous.reports_to || null },
     }
+    if (crmOn.value) loadCrm()
   } catch (error) {
     people.value = before
     notice.value = {
@@ -664,6 +781,7 @@ async function applySuggestion() {
       reports_to: s.boss,
     })
     notice.value = { text: result?.message || __('Done'), undo: null }
+    if (crmOn.value) loadCrm()
   } catch (error) {
     people.value = before
     notice.value = {

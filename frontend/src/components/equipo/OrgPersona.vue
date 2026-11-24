@@ -116,6 +116,18 @@
           )
         }}
       </p>
+      <!-- Prospects and deals follow the chart when the owner turned it on. -->
+      <p
+        v-if="crmText"
+        class="mt-2 flex items-start gap-2 text-sm text-ink-gray-7"
+        data-testid="org-persona-crm"
+      >
+        <span
+          class="lucide-handshake mt-0.5 size-4 flex-none"
+          aria-hidden="true"
+        />
+        {{ crmText }}
+      </p>
     </section>
 
     <section :aria-label="__('Can', null, 'Equipo')">
@@ -162,7 +174,7 @@
 import { computed } from 'vue'
 import { chipClass, initials } from '@/components/ui'
 import { todayLabel } from '@/composables/useEquipo'
-import { chainOf, roleLine } from './organigrama'
+import { chainOf, crmLine, roleLine } from './organigrama'
 
 const props = defineProps({
   person: { type: Object, required: true },
@@ -171,6 +183,8 @@ const props = defineProps({
   /** [{ key, label }] the site's «¿Quién puede…?» questions. */
   capabilities: { type: Array, default: () => [] },
   lens: { type: String, default: '' },
+  /** What they see of prospects and deals (crm people_scope), or null. */
+  crmScope: { type: Object, default: null },
 })
 defineEmits(['select', 'move', 'lens'])
 
@@ -207,6 +221,7 @@ const yes = computed(() =>
     (props.person.capabilities || []).includes(c.key),
   ),
 )
+const crmText = computed(() => crmLine(props.crmScope))
 const allCount = computed(
   () => (props.person.can_do?.length || 0) + (props.person.can_do_more || 0),
 )

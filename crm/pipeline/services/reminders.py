@@ -10,7 +10,8 @@ one query each, whatever the size of the tenant.
 - ``remind_due`` (every 15 minutes): a next step due today, at most
   ``LEAD_MINUTES`` ahead, reaches the person it is assigned to as an aviso.
 - ``escalate_overdue`` (every morning): a next step still open a full day after
-  its date reaches the owner's manager (their parent in CRM Sales Hierarchy) as
+  its date reaches the owner's boss (org_hierarchy.manager_of: the organization
+  chart, or CRM Sales Hierarchy) as
   an aviso that opens the deal. Every manager also sees the team's overdue steps
   on Hoy (crm.api.hoy, «Seguimientos vencidos del equipo»).
 
@@ -76,19 +77,17 @@ def escalate_overdue() -> int:
 
 
 def managers_of(user: str | None) -> list[str]:
-	"""This person's manager in the sales hierarchy, if the tenant uses one.
+	"""This person's boss in the team tree (the organization chart, or the sales
+	tree), if the tenant uses one.
 
 	Without a hierarchy there is no single person to tell: the overdue steps show
 	in the managers' Hoy («Seguimientos vencidos del equipo») instead of an aviso
 	to every Sales Manager.
 	"""
-	from crm.permissions.org_hierarchy import hierarchy_enabled
+	from crm.permissions.org_hierarchy import manager_of
 
-	if not user or not hierarchy_enabled():
-		return []
-	parent = frappe.db.get_value("CRM Sales Hierarchy", {"user": user}, "reports_to")
-	boss = parent and frappe.db.get_value("CRM Sales Hierarchy", parent, "user")
-	return [boss] if boss and boss != user and _active(boss) else []
+	boss = manager_of(user)
+	return [boss] if boss and _active(boss) else []
 
 
 # ── helpers ────────────────────────────────────────────────────────────────

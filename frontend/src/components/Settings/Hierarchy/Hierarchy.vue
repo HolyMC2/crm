@@ -33,6 +33,7 @@
           @click="toggleEnable(true)"
         />
         <Button
+          v-if="!followsChart"
           :label="__('Add User')"
           icon-left="lucide-plus"
           variant="solid"
@@ -62,9 +63,35 @@
             {{ __('Enable Sales Hierarchy') }}
           </span>
           <span class="text-center text-p-base text-ink-gray-6">
-            {{ __('Restrict visibility using a reporting tree') }}
+            {{
+              orgChart
+                ? __(
+                    'Each boss sees the prospects and deals of whoever reports to them in the organization chart.',
+                  )
+                : __('Restrict visibility using a reporting tree')
+            }}
           </span>
+          <template v-if="orgChart">
+            <Button
+              v-if="canEdit"
+              variant="solid"
+              :loading="fcrmSettings.setValue.loading"
+              data-testid="hierarchy-follow-chart"
+              @click="useOrgChart()"
+            >
+              {{ __('Follow the organization chart') }}
+            </Button>
+            <Button
+              v-if="canEdit"
+              variant="ghost"
+              :disabled="fcrmSettings.setValue.loading"
+              @click="useOwnTree()"
+            >
+              {{ __('Use a separate sales tree') }}
+            </Button>
+          </template>
           <Button
+            v-else
             variant="solid"
             :loading="fcrmSettings.setValue.loading"
             @click="toggleEnable(false)"
@@ -75,7 +102,59 @@
       </div>
     </div>
 
+    <!-- The team tree is the organization chart: changed there, not here. -->
+    <div
+      v-else-if="followsChart"
+      class="flex flex-1 flex-col items-start gap-3 px-2"
+      data-testid="hierarchy-follows-chart"
+    >
+      <div class="flex items-start gap-3">
+        <lucide-network class="mt-0.5 size-5 flex-none text-ink-gray-6" />
+        <div class="flex flex-col gap-1">
+          <span class="text-lg-medium text-ink-gray-8">
+            {{ __('Follows the organization chart') }}
+          </span>
+          <span class="text-p-base text-ink-gray-6">
+            {{
+              __(
+                'A boss sees the prospects and deals of whoever reports to them in Equipo › Organization chart. Change whom someone reports to there.',
+              )
+            }}
+          </span>
+        </div>
+      </div>
+      <div class="flex flex-wrap gap-2 pl-8">
+        <Button
+          v-if="canOpenChart"
+          variant="solid"
+          :label="__('Open the organization chart')"
+          @click="openChart()"
+        />
+        <Button
+          v-if="canEdit"
+          variant="ghost"
+          :label="__('Use a separate sales tree')"
+          :disabled="fcrmSettings.setValue.loading"
+          @click="useOwnTree()"
+        />
+      </div>
+    </div>
+
     <div v-else class="flex-1 min-h-0 flex flex-col px-2">
+      <div
+        v-if="orgChart && canEdit"
+        class="mb-3 flex flex-wrap items-center gap-2 text-p-base text-ink-gray-6"
+      >
+        <span>{{
+          __('This tree is separate from the organization chart.')
+        }}</span>
+        <Button
+          variant="ghost"
+          :label="__('Follow the organization chart')"
+          :disabled="fcrmSettings.setValue.loading"
+          @click="useOrgChart()"
+        />
+      </div>
       <div class="flex items-center gap-2 pt-0.5 pb-4">
         <TextInput
           v-if="enrichedNodes.length"
@@ -250,6 +329,8 @@ import UserMultiSelect from './UserMultiSelect.vue'
 import { useRemoveNode } from './useRemoveNode'
 import { useDragDrop } from './useDragDrop'
 import { globalStore } from '@/stores/global'
+import { equipoBoot, loadEquipoBoot } from '@/composables/useEquipo'
+import { useRouter } from 'vue-router'
 import { usersStore } from '@/stores/users'
 import LucideNetwork from '~icons/lucide/network'
 import LucideCircleQuestionMark from '~icons/lucide/circle-question-mark'
@@ -262,9 +343,10 @@ import {
   call,
   createDocumentResource,
   createListResource,
+  createResource,
   toast,
 } from 'frappe-ui'
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 const DOCTYPE = 'CRM Sales Hierarchy'
 
@@ -295,6 +377,45 @@ const fcrmSettings = createDocumentResource({
 const hierarchyEnabled = computed(
   () => !!fcrmSettings.doc?.enable_sales_hierarchy,
 )
+
+// With employees on the site the team tree is the organization chart unless
+// the tenant keeps a separate sales tree (sales_hierarchy_own_tree).
+const teamState = createResource({
+  url: 'crm.api.sales_hierarchy.get_state',
+  auto: true,
+})
+const orgChart = computed(() => Boolean(teamState.data?.org_chart_available))
+const followsChart = computed(
+  () => orgChart.value && !fcrmSettings.doc?.sales_hierarchy_own_tree,
+)
+const router = useRouter()
+const canOpenChart = computed(() =>
+  Boolean(equipoBoot.value?.capabilities?.organigrama),
+)
+onMounted(() => loadEquipoBoot().catch(() => {}))
+
+function useOrgChart() {
+  fcrmSettings.setValue.submit(
+    { enable_sales_hierarchy: 1, sales_hierarchy_own_tree: 0 },
+    {
+      onSuccess: () =>
+        toast.success(
+          __('Prospects and deals now follow the organization chart'),
+        ),
+    },
+  )
+}
+
+function useOwnTree() {
+  fcrmSettings.setValue.submit(
+    { enable_sales_hierarchy: 1, sales_hierarchy_own_tree: 1 },
+    { onSuccess: () => toast.success(__('Sales hierarchy enabled')) },
+  )
+}
+
+function openChart() {
+  router.push({ name: 'EquipoOrganigrama' })
+}
 
 const nodes = createListResource({
   doctype: DOCTYPE,

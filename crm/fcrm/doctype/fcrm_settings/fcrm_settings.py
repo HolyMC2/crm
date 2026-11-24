@@ -53,12 +53,26 @@ class FCRMSettings(Document):
 		create_demo_data()
 
 	def validate(self):
+		self.guard_team_visibility()
 		self.do_not_allow_to_delete_if_standard()
 		self.setup_forecasting()
 		self.make_currency_read_only()
 		capacity = self.get("workload_advisory_capacity") or 0
 		if not 0 <= capacity <= 100000:
 			frappe.throw(_("Advisory workload capacity must be between 0 and 100000; 0 means unset."))
+
+	def guard_team_visibility(self):
+		"""Who sees whose prospects and deals is an administrator's call: the team
+		tree narrows Sales Managers, so a Sales Manager may not lift it or swap it."""
+		if not any(
+			self.has_value_changed(field) for field in ("enable_sales_hierarchy", "sales_hierarchy_own_tree")
+		):
+			return
+		if "System Manager" not in frappe.get_roles():
+			frappe.throw(
+				_("Only a system administrator can change who sees whose prospects and deals."),
+				frappe.PermissionError,
+			)
 
 	def do_not_allow_to_delete_if_standard(self):
 		if not self.has_value_changed("dropdown_items"):
