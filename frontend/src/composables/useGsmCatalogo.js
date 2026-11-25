@@ -81,7 +81,9 @@ export function priceWithMarkup(cost, pct, step = 1) {
   const p = Number(pct)
   if (!Number.isFinite(c) || c <= 0 || !Number.isFinite(p) || p < 0) return null
   const raw = c * (1 + p / 100)
-  return step > 0 ? Math.ceil(raw / step - 1e-9) * step : Math.ceil(raw * 100) / 100
+  return step > 0
+    ? Math.ceil(raw / step - 1e-9) * step
+    : Math.ceil(raw * 100) / 100
 }
 
 /** The publish answer as one toast line and the list of what stayed out. */

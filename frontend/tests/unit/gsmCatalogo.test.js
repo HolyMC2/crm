@@ -37,13 +37,19 @@ describe('Servidor GSM › Catálogo', () => {
   it('shows the price on sale, else what it would sell for, never a price it cannot have', () => {
     expect(rowPrice(row({ state: 'en_venta', price: '5' }), 'MXN')).toMatch(/5/)
     expect(rowPrice(row(), 'MXN')).toMatch(/3/)
-    expect(rowPrice(row({ sellable: false, state: 'excluido' }), 'MXN')).toBe('')
+    expect(rowPrice(row({ sellable: false, state: 'excluido' }), 'MXN')).toBe(
+      '',
+    )
   })
 
   it('says why a service can never be sold instead of its group', () => {
     expect(rowSubtitle(row())).toBe('Generic Checks, 1-5 Min')
-    expect(rowSubtitle(row({ excluded: 'Quita iCloud sin el dueño' }))).toBe('Quita iCloud sin el dueño')
-    expect(rowSubtitle(row({ blocked: 'Servicio gratuito' }))).toBe('Servicio gratuito')
+    expect(rowSubtitle(row({ excluded: 'Quita iCloud sin el dueño' }))).toBe(
+      'Quita iCloud sin el dueño',
+    )
+    expect(rowSubtitle(row({ blocked: 'Servicio gratuito' }))).toBe(
+      'Servicio gratuito',
+    )
   })
 
   it('picks only what can go on sale', () => {
@@ -60,8 +66,15 @@ describe('Servidor GSM › Catálogo', () => {
   })
 
   it('reads the publish answer as one line plus what stayed out', () => {
-    expect(publishReceipt({ published: [{ offering: 'a' }, { offering: 'b', already: true }] }).line).toBe('1 on sale')
-    const r = publishReceipt({ published: [{ offering: 'a' }], skipped: [{ offering: 'c', reason: 'x' }] })
+    expect(
+      publishReceipt({
+        published: [{ offering: 'a' }, { offering: 'b', already: true }],
+      }).line,
+    ).toBe('1 on sale')
+    const r = publishReceipt({
+      published: [{ offering: 'a' }],
+      skipped: [{ offering: 'c', reason: 'x' }],
+    })
     expect(r.line).toBe('1 on sale, 1 left out')
     expect(r.skipped).toHaveLength(1)
   })

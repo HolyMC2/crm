@@ -173,21 +173,35 @@
             :key="row.offering"
             class="flex items-baseline justify-between gap-3 px-3 py-2 text-sm"
           >
-            <span class="min-w-0 truncate text-ink-gray-8">{{ row.title }}</span>
+            <span class="min-w-0 truncate text-ink-gray-8">{{
+              row.title
+            }}</span>
             <span class="num shrink-0 text-ink-gray-8">
               {{ money(row.cost, row.currency) }} →
               {{ money(priceWithMarkup(row.cost, publish.markup), currency) }}
             </span>
           </li>
         </ul>
-        <ul v-if="publish.skipped.length" class="space-y-1 text-sm" role="status">
-          <li v-for="s in publish.skipped" :key="s.offering" class="text-ink-gray-7">
+        <ul
+          v-if="publish.skipped.length"
+          class="space-y-1 text-sm"
+          role="status"
+        >
+          <li
+            v-for="s in publish.skipped"
+            :key="s.offering"
+            class="text-ink-gray-7"
+          >
             {{ titleOf(s.offering) }}: {{ s.reason }}
           </li>
         </ul>
       </div>
       <template #actions>
-        <button type="button" :class="['press', BTN.text]" @click="publish.open = false">
+        <button
+          type="button"
+          :class="['press', BTN.text]"
+          @click="publish.open = false"
+        >
           {{ __('Cancel', null, 'Gsm') }}
         </button>
         <button
@@ -210,12 +224,24 @@
     >
       <div v-if="current" class="space-y-3 px-4 pb-2">
         <dl class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-          <dt class="text-[var(--muelle-on-surface-variant)]">{{ __('Supplier cost', null, 'Gsm') }}</dt>
-          <dd class="num text-right text-ink-gray-8">{{ money(current.cost, current.currency) }}</dd>
-          <dt class="text-[var(--muelle-on-surface-variant)]">{{ __('With markup', null, 'Gsm') }}</dt>
-          <dd class="num text-right text-ink-gray-8">{{ money(current.suggested, currency) }}</dd>
-          <dt class="text-[var(--muelle-on-surface-variant)]">{{ __('Supplier', null, 'Gsm') }}</dt>
-          <dd class="text-right text-ink-gray-8">{{ current.supplier }}, {{ current.service_id }}</dd>
+          <dt class="text-[var(--muelle-on-surface-variant)]">
+            {{ __('Supplier cost', null, 'Gsm') }}
+          </dt>
+          <dd class="num text-right text-ink-gray-8">
+            {{ money(current.cost, current.currency) }}
+          </dd>
+          <dt class="text-[var(--muelle-on-surface-variant)]">
+            {{ __('With markup', null, 'Gsm') }}
+          </dt>
+          <dd class="num text-right text-ink-gray-8">
+            {{ money(current.suggested, currency) }}
+          </dd>
+          <dt class="text-[var(--muelle-on-surface-variant)]">
+            {{ __('Supplier', null, 'Gsm') }}
+          </dt>
+          <dd class="text-right text-ink-gray-8">
+            {{ current.supplier }}, {{ current.service_id }}
+          </dd>
         </dl>
         <Field
           v-if="current.state === 'en_venta'"
@@ -225,14 +251,25 @@
           :label="__('Public price', null, 'Gsm')"
           :error="edit.problem"
         />
-        <p v-else-if="!current.sellable" role="status" class="text-sm text-ink-gray-7">
+        <p
+          v-else-if="!current.sellable"
+          role="status"
+          class="text-sm text-ink-gray-7"
+        >
           {{ current.excluded || current.blocked }}
         </p>
-        <p v-if="edit.problem && current.state !== 'en_venta'" role="alert" class="text-sm text-ink-red-7">
+        <p
+          v-if="edit.problem && current.state !== 'en_venta'"
+          role="alert"
+          class="text-sm text-ink-red-7"
+        >
           {{ edit.problem }}
         </p>
       </div>
-      <template v-if="current && (current.sellable || current.state === 'en_venta')" #actions>
+      <template
+        v-if="current && (current.sellable || current.state === 'en_venta')"
+        #actions
+      >
         <button
           v-if="current.state === 'en_venta'"
           type="button"
@@ -261,7 +298,13 @@
           data-gsm-vender
           @click="runPublishOne"
         >
-          {{ __('Put on sale for {0}', [money(current.suggested, currency)], 'Gsm') }}
+          {{
+            __(
+              'Put on sale for {0}',
+              [money(current.suggested, currency)],
+              'Gsm',
+            )
+          }}
         </button>
       </template>
     </BottomSheet>
@@ -319,7 +362,13 @@ const guard = ref(null)
 const groupSheet = ref(false)
 const picked = ref(new Set())
 const current = ref(null)
-const publish = reactive({ open: false, markup: 0, busy: false, problem: '', skipped: [] })
+const publish = reactive({
+  open: false,
+  markup: 0,
+  busy: false,
+  problem: '',
+  skipped: [],
+})
 const edit = reactive({ price: '', busy: false, problem: '' })
 let ticket = 0
 let timer = 0
@@ -434,7 +483,8 @@ watch(search, () => {
 
 function togglePick(offering) {
   const next = new Set(picked.value)
-  next.has(offering) ? next.delete(offering) : next.add(offering)
+  if (next.has(offering)) next.delete(offering)
+  else next.add(offering)
   picked.value = next
 }
 function toggleAll() {
@@ -478,7 +528,9 @@ async function runPublishOne() {
   edit.busy = true
   edit.problem = ''
   try {
-    const result = await gsmApi('publish', { offerings: [current.value.offering] })
+    const result = await gsmApi('publish', {
+      offerings: [current.value.offering],
+    })
     const receipt = publishReceipt(result)
     if (receipt.skipped.length) {
       edit.problem = receipt.skipped[0].reason
@@ -497,7 +549,10 @@ async function runPrice() {
   edit.busy = true
   edit.problem = ''
   try {
-    await gsmApi('set_price', { service: current.value.service, price: edit.price })
+    await gsmApi('set_price', {
+      service: current.value.service,
+      price: edit.price,
+    })
     toast.success(__('Price saved', null, 'Gsm'))
     current.value = null
     load()
