@@ -53646,6 +53646,170 @@ msgid "Prospects and deals now follow the organization chart"
 msgstr "Los prospectos y tratos ahora siguen el organigrama"
 
 msgctxt "Gsm"
+msgid "News sources"
+msgstr "Fuentes de novedades"
+
+msgctxt "Gsm"
+msgid "Add the suggested source"
+msgstr "Agregar la fuente sugerida"
+
+msgctxt "Gsm"
+msgid "Add the {0} suggested sources"
+msgstr "Agregar las {0} fuentes sugeridas"
+
+msgctxt "Gsm"
+msgid "Loading the sources…"
+msgstr "Cargando las fuentes…"
+
+msgctxt "Gsm"
+msgid "No source in this view"
+msgstr "Ninguna fuente en esta vista"
+
+msgctxt "Gsm"
+msgid "No news sources yet"
+msgstr "Todavía no hay fuentes de novedades"
+
+msgctxt "Gsm"
+msgid "Paste a feed, a public Telegram channel or a news page."
+msgstr "Pega un feed, un canal público de Telegram o una página de noticias."
+
+msgctxt "Gsm"
+msgid "Add source"
+msgstr "Agregar fuente"
+
+msgctxt "Gsm"
+msgid "New source"
+msgstr "Nueva fuente"
+
+msgctxt "Gsm"
+msgid "Link"
+msgstr "Enlace"
+
+msgctxt "Gsm"
+msgid "Kind"
+msgstr "Tipo"
+
+msgctxt "Gsm"
+msgid "Name"
+msgstr "Nombre"
+
+msgctxt "Gsm"
+msgid "News links start with"
+msgstr "Los enlaces de noticias empiezan con"
+
+msgctxt "Gsm"
+msgid "Active"
+msgstr "Activa"
+
+msgctxt "Gsm"
+msgid "Show on the website"
+msgstr "Mostrar en el sitio"
+
+msgctxt "Gsm"
+msgid "Delete source"
+msgstr "Borrar fuente"
+
+msgctxt "Gsm"
+msgid "Delete"
+msgstr "Borrar"
+
+msgctxt "Gsm"
+msgid "Read now"
+msgstr "Leer ahora"
+
+msgctxt "Gsm"
+msgid "Save and read"
+msgstr "Guardar y leer"
+
+msgctxt "Gsm"
+msgid "Active sources"
+msgstr "Fuentes activas"
+
+msgctxt "Gsm"
+msgid "Failing sources"
+msgstr "Fuentes con fallas"
+
+msgctxt "Gsm"
+msgid "You cannot manage the news sources"
+msgstr "No puedes administrar las fuentes de novedades"
+
+msgctxt "Gsm"
+msgid "Could not load the sources"
+msgstr "No se pudieron cargar las fuentes"
+
+msgctxt "Gsm"
+msgid "Source saved"
+msgstr "Fuente guardada"
+
+msgctxt "Gsm"
+msgid "Source deleted"
+msgstr "Fuente borrada"
+
+msgctxt "Gsm"
+msgid "1 source added"
+msgstr "1 fuente agregada"
+
+msgctxt "Gsm"
+msgid "{0} sources added"
+msgstr "{0} fuentes agregadas"
+
+msgctxt "Gsm"
+msgid "Up to date"
+msgstr "Al día"
+
+msgctxt "Gsm"
+msgid "Not read yet"
+msgstr "Sin leer"
+
+msgctxt "Gsm"
+msgid "Failing"
+msgstr "Con fallas"
+
+msgctxt "Gsm"
+msgid "Off"
+msgstr "Apagada"
+
+msgctxt "Gsm"
+msgid "read {0}"
+msgstr "leída {0}"
+
+msgctxt "Gsm"
+msgid "1 item"
+msgstr "1 novedad"
+
+msgctxt "Gsm"
+msgid "{0} items"
+msgstr "{0} novedades"
+
+msgctxt "Gsm"
+msgid "team only"
+msgstr "solo tu equipo"
+
+msgctxt "Gsm"
+msgid "Read: nothing new"
+msgstr "Leída: nada nuevo"
+
+msgctxt "Gsm"
+msgid "Read: 1 new item"
+msgstr "Leída: 1 novedad nueva"
+
+msgctxt "Gsm"
+msgid "Read: {0} new items"
+msgstr "Leída: {0} novedades nuevas"
+
+msgctxt "Gsm"
+msgid "Feed"
+msgstr "Feed RSS"
+
+msgctxt "Gsm"
+msgid "Telegram channel"
+msgstr "Canal de Telegram"
+
+msgctxt "Gsm"
+msgid "News page"
+msgstr "Página de noticias"
+
+msgctxt "Gsm"
 msgid "GSM server"
 msgstr "Servidor GSM"
 

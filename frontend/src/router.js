@@ -734,6 +734,13 @@ const routes = [
     component: () => import('@/pages/GsmCatalogo.vue'),
     meta: { app: 'gsm', title: 'Servidor GSM', ownPhoneHeader: true },
   },
+  // …and where its website's «Novedades» come from (dhru_connector feeds_admin)
+  {
+    path: '/gsm/fuentes',
+    name: 'GsmFuentes',
+    component: () => import('@/pages/GsmFuentes.vue'),
+    meta: { app: 'gsm', title: 'Servidor GSM', ownPhoneHeader: true },
+  },
   // Efectivo (Shell-S14, contracts 0.16.0 module «efectivo»): POS Awesome's
   // cash custody in the shell; posawesome's muelle_shell_modules hook enables it.
   {

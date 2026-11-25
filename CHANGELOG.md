@@ -2,6 +2,12 @@
 
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
+## 2026-11-25 — Servidor GSM › Fuentes de novedades: where the website's «Novedades» come from (lane gsm-novedades, with dhru_connector and muelle-storefront; not deployed)
+
+- **Why:** Marco (11-25): «we should make an aggregator of tools changelogs and other upstream sources, that's useful for our techs and customers». Tool vendors announce new versions, models and outages on their own feeds, Telegram channels and news pages; a tech had to follow each one.
+- **Change:** `/crm/gsm/fuentes` (feed icon in the catalog's bar): every source with its kind, how its last reading went («leída hace 20 min», or the failure in words) and how many items it holds, in views Todas, Activas, Con fallas. «Agregar fuente» opens a sheet: paste a link and the kind follows it (t.me → canal de Telegram, a link prefix → página de noticias, else feed) with a name from the channel or site; switches «Activa» and «Mostrar en el sitio» (off = only the team sees it in Muelle). «Guardar y leer» reads it at once and says what came; a row's sheet shows its newest items, «Leer ahora» and a two-tap delete. When Muelle's suggested sources are missing, one button adds them. Reads and writes go through dhru_connector `gsm_server.feeds_admin`.
+- **Proof:** live-preview shots (412 light/dark, 305, the failing row's sheet, the new-source sheet with a pasted t.me link, 1280 catalog bar) in the session scratch `shots-fuentes/`, sources answered from a fixture. Tests: `gsmFuentes.test.js` (new), shell guard suites. Rollback: revert; the page only exists inside the «gsm» module.
+
 ## 2026-11-24 — Servidor GSM › Catálogo: what a GSM server sells, on one screen (lane gsm-catalogo, with dhru_connector; not deployed)
 
 - **Why:** Marco, for El Pelón Unlocker (11-24): «sync all but dont publish yet, and i need good ux for management». A GSM server's catalog was only Desk forms (offering → Dhru Service → GSM Service, three records per service) for about 1,100 supplier services.

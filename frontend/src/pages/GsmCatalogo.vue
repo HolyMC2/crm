@@ -17,7 +17,19 @@
       :search-label="__('Search service, group or ID', null, 'Gsm')"
       :loading="loading && loaded"
       @update:scope="setView"
-    />
+    >
+      <template #actions>
+        <router-link
+          :to="{ name: 'GsmFuentes' }"
+          class="press flex size-11 items-center justify-center rounded-full text-ink-gray-7 [@media(hover:hover)]:hover:bg-surface-gray-2"
+          :aria-label="__('News sources', null, 'Gsm')"
+          :title="__('News sources', null, 'Gsm')"
+          data-gsm-fuentes
+        >
+          <span class="lucide-rss size-5" aria-hidden="true" />
+        </router-link>
+      </template>
+    </AppBar>
 
     <div class="min-h-0 flex-1 overflow-y-auto pb-28 sm:pb-10">
       <div class="mx-auto w-full max-w-3xl pt-2">
