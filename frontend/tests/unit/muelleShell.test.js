@@ -334,6 +334,7 @@ describe('module registry', () => {
       'documentos',
       'inventario',
       'inmobiliaria',
+      'gsm',
       'avisos',
     ])
     expect(

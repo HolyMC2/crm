@@ -189,6 +189,7 @@ const HOSTED = [
   'documentos',
   'inventario',
   'inmobiliaria',
+  'gsm',
   'avisos',
 ]
 const ROUTE_HOME = { contactos: '/contactos', ventas: '/ventas' }

@@ -2,6 +2,12 @@
 
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
+## 2026-11-24 — Servidor GSM › Catálogo: what a GSM server sells, on one screen (lane gsm-catalogo, with dhru_connector; not deployed)
+
+- **Why:** Marco, for El Pelón Unlocker (11-24): «sync all but dont publish yet, and i need good ux for management». A GSM server's catalog was only Desk forms (offering → Dhru Service → GSM Service, three records per service) for about 1,100 supplier services.
+- **Change:** module «Servidor GSM» (`/crm/gsm`, contracts 0.20.0 key `gsm`, `g s`), enabled by dhru_connector's `muelle_shell_modules` hook only where the GSM server runs and for who manages supplier costs. The page lists every synced offering in views (Todas, Sin publicar, En venta, Nunca se venden, No disponibles) with one search and a group sheet; each row shows the price on sale or the price the default markup gives, rounded up to whole pesos. In «Sin publicar» rows carry a box, «Elegir los N que ves» picks the shown ones, and the page's one action «Poner N en venta» opens a sheet with the markup and a cost → price preview. A row's sheet shows cost, marked-up price and supplier, and puts it on sale, or edits the public price and «Quitar de venta». What may never be sold (iCloud/FRP/MDM removal, blacklist removal, IMEI change, finance-lock removal) is decided by the server and shows with its reason, never with an action.
+- **Proof:** `.scratch/gsm-shots/` (412 and 305 px light/dark, 1280 light/dark, the publish and row sheets) on the live preview with the catalog answered from a fixture. Tests: `gsmCatalogo.test.js` (new), `muelleShell.test.js`, shell guard suites. Rollback: revert; the module stays off without the hook.
+
 ## 2026-11-24 — «Ventas de hoy» is today's, not this morning's (lane hoy-ventas-frescas; not deployed)
 
 - **Why:** Marco's Hoy read «$1,880.00 · Tickets 2» at 13:21 while the server answered $3,180 over 5 tickets (checked read-only on Doco prod as him): the $1,880 was the 10:33 total. Hoy paints its last saved answer at once and the read replaces it, but the save failed silently when the site's storage was full (the list cache alone may keep 40 lists × 200,000 characters, past the browser's ~5 MB), so every reopen painted the morning copy again until a read landed; and a sale never re-read Hoy while it stayed open.

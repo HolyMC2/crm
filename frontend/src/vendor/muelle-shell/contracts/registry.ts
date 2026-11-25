@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/shell-contracts@0.19.0 (751d47fca2c0). DO NOT EDIT:
+// Vendored from muelle/workspace/packages/shell-contracts@0.20.0 (340148a2e21f). DO NOT EDIT:
 // change the package, then run its scripts/vendor.mjs against this directory.
 // Module registry types and the shell's fixed module catalog (spec §1.1, §2.1, §4.7).
 // Framework-agnostic: the crm shell instantiates `ShellModule<RouteRecordRaw, …>`.
@@ -26,6 +26,7 @@ export type ShellModuleKey =
   | 'documentos'
   | 'inventario'
   | 'inmobiliaria'
+  | 'gsm'
   | 'avisos'
 
 export type LucideIcon = `lucide-${string}`
@@ -41,7 +42,7 @@ export interface ShellModuleMeta {
   go: string
 }
 
-/** Rail order: Hoy, Pendientes, Proyectos, Agenda, Contactos, Ventas, Cobranza, Compras, Gastos, Resultados, Bancos, Efectivo, Productos, Garantías, Encuestas, Equipo, Archivos, Manual de la tienda, Documentos, Inventario, Inmobiliaria; Avisos pinned last. */
+/** Rail order: Hoy, Pendientes, Proyectos, Agenda, Contactos, Ventas, Cobranza, Compras, Gastos, Resultados, Bancos, Efectivo, Productos, Garantías, Encuestas, Equipo, Archivos, Manual de la tienda, Documentos, Inventario, Inmobiliaria, Servidor GSM; Avisos pinned last. */
 export const SHELL_MODULES: readonly ShellModuleMeta[] = Object.freeze([
   { key: 'hoy', label: 'Hoy', icon: 'lucide-sun', basePath: '/hoy', go: 'h' },
   { key: 'pendientes', label: 'Pendientes', icon: 'lucide-square-check-big', basePath: '/pendientes', go: 'p' },
@@ -64,6 +65,7 @@ export const SHELL_MODULES: readonly ShellModuleMeta[] = Object.freeze([
   { key: 'documentos', label: 'Documentos', icon: 'lucide-file-text', basePath: '/documentos', go: 'd' },
   { key: 'inventario', label: 'Inventario', icon: 'lucide-package-open', basePath: '/inventario', go: 'k' },
   { key: 'inmobiliaria', label: 'Inmobiliaria', icon: 'lucide-building-2', basePath: '/inmobiliaria', go: 'l' },
+  { key: 'gsm', label: 'Servidor GSM', icon: 'lucide-server', basePath: '/gsm', go: 's' },
   { key: 'avisos', label: 'Avisos', icon: 'lucide-bell', basePath: '/avisos', go: '' },
 ] as const satisfies readonly ShellModuleMeta[])
 

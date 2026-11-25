@@ -53644,3 +53644,147 @@ msgstr "Este árbol es aparte del organigrama."
 #: frontend/src/components/Settings/Hierarchy/Hierarchy.vue
 msgid "Prospects and deals now follow the organization chart"
 msgstr "Los prospectos y tratos ahora siguen el organigrama"
+
+msgctxt "Gsm"
+msgid "GSM server"
+msgstr "Servidor GSM"
+
+msgctxt "Gsm"
+msgid "GSM catalog"
+msgstr "Catálogo GSM"
+
+msgctxt "Gsm"
+msgid "Search service, group or ID"
+msgstr "Buscar servicio, grupo o número"
+
+msgctxt "Gsm"
+msgid "All groups"
+msgstr "Todos los grupos"
+
+msgctxt "Gsm"
+msgid "Pick the {0} shown"
+msgstr "Elegir los {0} que ves"
+
+msgctxt "Gsm"
+msgid "Retry"
+msgstr "Reintentar"
+
+msgctxt "Gsm"
+msgid "Loading the catalog…"
+msgstr "Cargando el catálogo…"
+
+msgctxt "Gsm"
+msgid "Pick {0}"
+msgstr "Elegir {0}"
+
+msgctxt "Gsm"
+msgid "Show more services"
+msgstr "Ver más servicios"
+
+msgctxt "Gsm"
+msgid "Put {0} on sale"
+msgstr "Poner {0} en venta"
+
+msgctxt "Gsm"
+msgid "Group"
+msgstr "Grupo"
+
+msgctxt "Gsm"
+msgid "Markup over cost (%)"
+msgstr "Margen sobre el costo (%)"
+
+msgctxt "Gsm"
+msgid "Cancel"
+msgstr "Cancelar"
+
+msgctxt "Gsm"
+msgid "Put on sale"
+msgstr "Poner en venta"
+
+msgctxt "Gsm"
+msgid "Supplier cost"
+msgstr "Costo del proveedor"
+
+msgctxt "Gsm"
+msgid "With markup"
+msgstr "Con margen"
+
+msgctxt "Gsm"
+msgid "Supplier"
+msgstr "Proveedor"
+
+msgctxt "Gsm"
+msgid "Public price"
+msgstr "Precio al público"
+
+msgctxt "Gsm"
+msgid "Take off sale"
+msgstr "Quitar de venta"
+
+msgctxt "Gsm"
+msgid "Save price"
+msgstr "Guardar precio"
+
+msgctxt "Gsm"
+msgid "Put on sale for {0}"
+msgstr "Poner en venta a {0}"
+
+msgctxt "Gsm"
+msgid "No service matches «{0}»"
+msgstr "Ningún servicio coincide con «{0}»"
+
+msgctxt "Gsm"
+msgid "No services here"
+msgstr "No hay servicios aquí"
+
+msgctxt "Gsm"
+msgid "Try another view or group."
+msgstr "Prueba otra vista u otro grupo."
+
+msgctxt "Gsm"
+msgid "The catalog fills itself when a supplier is connected and synced."
+msgstr "El catálogo se llena solo cuando un proveedor está conectado y sincronizado."
+
+msgctxt "Gsm"
+msgid "You cannot manage the GSM catalog"
+msgstr "No puedes administrar el catálogo GSM"
+
+msgctxt "Gsm"
+msgid "Could not load the catalog"
+msgstr "No se pudo cargar el catálogo"
+
+msgctxt "Gsm"
+msgid "Price saved"
+msgstr "Precio guardado"
+
+msgctxt "Gsm"
+msgid "Taken off sale"
+msgstr "Quitado de venta"
+
+msgctxt "Gsm"
+msgid "All"
+msgstr "Todas"
+
+msgctxt "Gsm"
+msgid "Not on sale"
+msgstr "Sin publicar"
+
+msgctxt "Gsm"
+msgid "On sale"
+msgstr "En venta"
+
+msgctxt "Gsm"
+msgid "Never sold"
+msgstr "Nunca se venden"
+
+msgctxt "Gsm"
+msgid "Unavailable"
+msgstr "No disponibles"
+
+msgctxt "Gsm"
+msgid "{0} on sale, {1} left out"
+msgstr "{0} en venta, {1} quedaron fuera"
+
+msgctxt "Gsm"
+msgid "{0} on sale"
+msgstr "{0} en venta"

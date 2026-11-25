@@ -139,6 +139,14 @@ const COPY = {
     missing:
       'Todavía falta acceso a Efectivo. Comparte la solicitud y reintenta después del ajuste.',
   },
+  gsm: {
+    reason:
+      'Servidor GSM muestra el catálogo que vende tu servidor, con costos de proveedores, a quien administra proveedores y costos. Pide al dueño que revise tu usuario; después toca Reintentar permisos.',
+    request:
+      'Necesito ver Servidor GSM en Muelle: permiso para administrar los servicios de proveedores y sus costos. Quiero retomar el catálogo que intentaba abrir.',
+    missing:
+      'Todavía falta acceso a Servidor GSM. Comparte la solicitud y reintenta después del ajuste.',
+  },
   contactos: {
     reason:
       'Para abrir Contactos necesitas permiso de lectura de un origen nativo y acceso a su módulo. Pide al encargado que revise tu usuario.',

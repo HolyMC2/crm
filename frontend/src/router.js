@@ -726,6 +726,14 @@ const routes = [
       ownPhoneHeader: true,
     },
   },
+  // Servidor GSM (contracts 0.20.0 module «gsm»): the GSM server's catalog;
+  // dhru_connector's muelle_shell_modules hook enables it where the server runs.
+  {
+    path: '/gsm',
+    name: 'GsmCatalogo',
+    component: () => import('@/pages/GsmCatalogo.vue'),
+    meta: { app: 'gsm', title: 'Servidor GSM', ownPhoneHeader: true },
+  },
   // Efectivo (Shell-S14, contracts 0.16.0 module «efectivo»): POS Awesome's
   // cash custody in the shell; posawesome's muelle_shell_modules hook enables it.
   {

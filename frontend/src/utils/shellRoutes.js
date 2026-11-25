@@ -91,6 +91,8 @@ const RECOVERY_MODULES = {
   perfil: 'hoy',
   // A refused Inmobiliaria screen recovers into Inmobiliaria, never Ventas.
   inmobiliaria: 'inmobiliaria',
+  // A refused GSM server screen recovers into Servidor GSM.
+  gsm: 'gsm',
   contactos: 'contactos',
   contacts: 'contactos',
   organizations: 'contactos',

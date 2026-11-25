@@ -66,6 +66,7 @@ MODULE_KEYS = (
 	"documentos",
 	"inventario",
 	"inmobiliaria",
+	"gsm",
 	"avisos",
 )
 # Sibling apps a layout may place (contracts SIBLING_APPS); each shows only where installed.
@@ -128,6 +129,7 @@ MODULE_LABELS = {
 	"documentos": "Documentos",
 	"inventario": "Inventario",
 	"inmobiliaria": "Inmobiliaria",
+	"gsm": "Servidor GSM",
 	"avisos": "Avisos",
 }
 
