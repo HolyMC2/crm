@@ -360,7 +360,14 @@ def _message(scope, metadata):
 		row = frappe.db.get_value(scope.doctype, metadata.name, fields, as_dict=True, for_update=locked)
 		direction, content = row.type, row.message
 	else:
-		fields = ["direction", "content", "content_type", "attach", "status", *_transcript_fields(scope.doctype)]
+		fields = [
+			"direction",
+			"content",
+			"content_type",
+			"attach",
+			"status",
+			*_transcript_fields(scope.doctype),
+		]
 		row = frappe.db.get_value(scope.doctype, metadata.name, fields, as_dict=True, for_update=locked)
 		direction, content = row.direction, row.content
 	attachment = _safe_attachment(row.attach, scope.doctype, metadata.name) if row.attach else None
@@ -391,7 +398,9 @@ def _message(scope, metadata):
 
 def _transcript_fields(doctype):
 	return (
-		["doco_transcript", "doco_transcript_state"] if frappe.db.has_column(doctype, "doco_transcript") else []
+		["doco_transcript", "doco_transcript_state"]
+		if frappe.db.has_column(doctype, "doco_transcript")
+		else []
 	)
 
 
