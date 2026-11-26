@@ -437,10 +437,13 @@ def grant_reason(policy, conversation):
 
 
 def cooldown_reason(policy, conversation):
-	"""Human or bot handling inside the window keeps the conversation with people.
+	"""Human handling inside the window keeps the conversation with people.
 
-	A customer reply that retired a bot counts (its human fallback must stick);
-	an ordinary customer message that changed nothing does not.
+	People's actions count (take, transfer, release, pause, close, reopen, route,
+	a manager's start), and so do a handoff to people and a customer reply that
+	retired a bot (its human fallback must stick). The bot's own start and its own
+	finish do not: a customer who got an answer and writes again is answered again.
+	An ordinary customer message that changed nothing does not count either.
 	"""
 	minutes = cint(policy.cooldown_minutes)
 	if not minutes:
@@ -448,8 +451,8 @@ def cooldown_reason(policy, conversation):
 	since = add_to_date(now_datetime(), minutes=-minutes)
 	recent = frappe.db.sql(
 		"""SELECT name FROM `tabCRM Conversation Control Event` WHERE conversation=%s AND creation>=%s
-        AND (action IN ('take','transfer','release','pause','close','reopen','start_bot','policy_start_bot',
-                        'bot_handoff','route')
+        AND (action IN ('take','transfer','release','pause','close','reopen','start_bot','route')
+             OR (action='bot_handoff' AND IFNULL(reason, '')<>'pinned_run_finished')
              OR (action IN ('customer_reply','customer_input')
                  AND reason IN ('webchat_customer_held_bot','customer_reply_held_bot','customer_input_fallback')))
         LIMIT 1""",

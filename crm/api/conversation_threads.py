@@ -355,11 +355,12 @@ def _message(scope, metadata):
 			"template",
 			"template_parameters",
 			"body_param",
+			*_transcript_fields(scope.doctype),
 		]
 		row = frappe.db.get_value(scope.doctype, metadata.name, fields, as_dict=True, for_update=locked)
 		direction, content = row.type, row.message
 	else:
-		fields = ["direction", "content", "content_type", "attach", "status"]
+		fields = ["direction", "content", "content_type", "attach", "status", *_transcript_fields(scope.doctype)]
 		row = frappe.db.get_value(scope.doctype, metadata.name, fields, as_dict=True, for_update=locked)
 		direction, content = row.direction, row.content
 	attachment = _safe_attachment(row.attach, scope.doctype, metadata.name) if row.attach else None
@@ -382,7 +383,16 @@ def _message(scope, metadata):
 		"timestamp": str(metadata.timestamp),
 		"status": row.status or "",
 		"is_demo": bool(row.get("is_demo")),
+		# A customer's voice note in words, when doco_marketing transcribed it.
+		"transcript": row.get("doco_transcript") or None,
+		"transcript_state": row.get("doco_transcript_state") or None,
 	}
+
+
+def _transcript_fields(doctype):
+	return (
+		["doco_transcript", "doco_transcript_state"] if frappe.db.has_column(doctype, "doco_transcript") else []
+	)
 
 
 def _actions(doc):
