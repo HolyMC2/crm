@@ -64,6 +64,13 @@
         >
           {{ line.text }}
         </p>
+        <p
+          v-if="cajasLine"
+          class="num truncate text-sm leading-snug text-ink-gray-6"
+          data-persona-cajas
+        >
+          {{ cajasLine }}
+        </p>
       </div>
       <AjustesSwitch
         v-if="open && person.counts"
@@ -333,6 +340,7 @@ import {
   CTX,
   MINUTES,
   PRODUCTS,
+  cajasWords,
   groupChoices,
   initialsOf,
   personLine,
@@ -351,6 +359,8 @@ const props = defineProps({
   open: { type: Boolean, default: false },
   /** The page's refusals; this person's are under `p:<user>:<what>`. */
   errors: { type: Object, default: () => ({}) },
+  /** Cajas del día: their cajones today and their blind recounts, or null. */
+  cajas: { type: Object, default: null },
 })
 // set(what, args, paint): `args` for set_person, `paint(person)` shows the tap at once.
 const emit = defineEmits(['toggle', 'set'])
@@ -375,6 +385,7 @@ watch(
 )
 
 const line = computed(() => personLine(props.person, { on: props.on }))
+const cajasLine = computed(() => (props.on ? cajasWords(props.cajas) : ''))
 const byProducts = computed(() => props.settings.unit === 'products')
 const reason = (what) => props.errors[`p:${props.person.user}:${what}`] || ''
 

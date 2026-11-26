@@ -182,6 +182,8 @@ export const treatmentLabel = (value) =>
 export const MINUTES = Object.freeze({ min: 5, max: 60, step: 5 })
 export const PRODUCTS = Object.freeze({ min: 1, max: 200, step: 5 })
 export const PROPOSED_MINUTES = 15
+/** Cajas del día (scanner_kit services/cajas): cajones each person counts a shift. */
+export const CAJONES = Object.freeze({ min: 0, max: 30, step: 1 })
 
 /** The next stop of a stepper: the nearest multiple of `step` that way, inside the bounds. */
 export function stepTo(value, direction, { min, max, step }) {
@@ -386,6 +388,46 @@ export function decideRows(decide, back = '/crm/inventario/conteos') {
     ...row,
     queue: rows.length > 1 ? row.queue : '',
   }))
+}
+
+/**
+ * Cajas del día: one row for each recorrido whose artículos wait for two
+ * reviews in Escáner, with the way back to this page.
+ */
+export function cajasRows(cajas, back = '/crm/inventario/conteos') {
+  return (cajas?.waiting || []).map((w) => ({
+    key: `cajas:${w.recorrido}`,
+    count: Number(w.items),
+    title: tr('{0} from the bins to approve', [Number(w.items)]),
+    queue: Number(w.no_agreement)
+      ? tr('{0} with no agreement', [Number(w.no_agreement)])
+      : '',
+    href: withReturn(w.link, { to: back, label: tr('Daily counts') }),
+  }))
+}
+
+/** A person's cajones today: «Cajones 2 de 5 · 1 por recontar». */
+export function cajasWords(day) {
+  if (!day) return ''
+  const parts = []
+  if (day.assigned)
+    parts.push(tr('Bins {0} of {1}', [day.done, day.assigned]))
+  if (day.recounts) parts.push(tr('{0} to recount', [day.recounts]))
+  return parts.join(' · ')
+}
+
+/** «75 de 147»: occupied cajones counted in the last 30 days. */
+export const freshWords = (cajas) =>
+  cajas?.cajones ? tr('{0} of {1}', [cajas.fresh_30d, cajas.cajones]) : '—'
+
+/** What the loop adjusted alone this week: how many, and what it was worth. */
+export function autoWords(cajas, currency) {
+  const week = cajas?.week
+  if (!week) return '—'
+  const count = Number(week.auto || 0)
+  if (week.auto_value === null || week.auto_value === undefined || !count)
+    return String(count)
+  return `${count} · ${formatMoney(week.auto_value, currency || undefined)}`
 }
 
 /** The rest days after a tap on a day chip. Sized in products the weekend moves as one. */

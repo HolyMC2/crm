@@ -529,6 +529,69 @@ describe('Conteos del día, encendido', () => {
   })
 })
 
+describe('Cajas del día', () => {
+  const cajas = (over = {}) => ({
+    per_shift: 5,
+    people: { 'karla@x.mx': { assigned: 5, done: 2, recounts: 1 } },
+    week: { recount: 1, applied: 3, review: 2, resolved: 4, dropped: 0, auto: 3, auto_value: 120 },
+    waiting: [
+      {
+        recorrido: 'REC-ABCDEFGHIJ',
+        items: 2,
+        no_agreement: 1,
+        link: '/scan/recorrido/REC-ABCDEFGHIJ?vista=terminar',
+      },
+    ],
+    cajones: 147,
+    fresh_30d: 75,
+    ...over,
+  })
+
+  it('shows the cajones counted, what Muelle adjusted alone and each person’s cajones', async () => {
+    await open(on({ cajas: cajas() }))
+    const figures = one('[data-conteos-cifras]').textContent
+    expect(figures).toContain('Cajones contados en 30 días')
+    expect(figures).toContain('75 de 147')
+    expect(figures).toContain('Ajustado solo esta semana')
+    expect(one('[data-conteos-ajustado-solo]').textContent).toContain('3 · ')
+    expect(row('karla@x.mx').querySelector('[data-persona-cajas]').textContent).toContain(
+      'Cajones 2 de 5 · 1 por recontar',
+    )
+  })
+
+  it('the reviews waiting open in Escáner and come back here', async () => {
+    await open(on({ decide: { ops: 0, revision: 0 }, cajas: cajas() }))
+    const rows = all('[data-conteos-decidir]')
+    expect(rows).toHaveLength(1)
+    expect(rows[0].textContent).toContain('2 de cajones por aprobar')
+    expect(rows[0].textContent).toContain('1 sin acuerdo')
+    const href = rows[0].getAttribute('href')
+    expect(href).toContain('/scan/recorrido/REC-ABCDEFGHIJ?vista=terminar')
+    expect(href).toContain('return_to=')
+  })
+
+  it('the cajones per shift save from the stepper', async () => {
+    await open(on({ cajas: cajas({ per_shift: 0, people: {}, waiting: [] }) }))
+    server.after.save = (home, args) => ({
+      ...home,
+      cajas: { ...home.cajas, per_shift: args.cajones },
+    })
+    expect(one('[data-conteos-cajones]').textContent).toContain('Cajones por turno')
+    // At 0, nothing about cajones is said in the figures.
+    expect(one('[data-conteos-cajones-al-dia]')).toBeNull()
+    one('[data-conteos-cajones] [data-paso-mas]').click()
+    await settle()
+    expect(calls('save')).toEqual([{ cajones: 1 }])
+    expect(one('[data-conteos-cajones-al-dia]').textContent).toContain('75 de 147')
+  })
+
+  it('who is kept from the money does not read what was adjusted', async () => {
+    await open(on({ sees_money: false, cajas: cajas({ week: { auto: 3, auto_value: null } }) }))
+    expect(one('[data-conteos-ajustado-solo]')).toBeNull()
+    expect(one('[data-conteos-cajones-al-dia]').textContent).toContain('75 de 147')
+  })
+})
+
 describe('A person, in place', () => {
   it('opens in its row and saves the minutes after the taps settle', async () => {
     await open(on())

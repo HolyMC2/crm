@@ -53357,6 +53357,34 @@ msgid "Muelle adjusts alone up to"
 msgstr "Muelle ajusta solo hasta"
 
 msgctxt "Conteos"
+msgid "Bins per shift"
+msgstr "Cajones por turno"
+
+msgctxt "Conteos"
+msgid "Bins counted in 30 days"
+msgstr "Cajones contados en 30 días"
+
+msgctxt "Conteos"
+msgid "Adjusted alone this week"
+msgstr "Ajustado solo esta semana"
+
+msgctxt "Conteos"
+msgid "{0} from the bins to approve"
+msgstr "{0} de cajones por aprobar"
+
+msgctxt "Conteos"
+msgid "{0} with no agreement"
+msgstr "{0} sin acuerdo"
+
+msgctxt "Conteos"
+msgid "Bins {0} of {1}"
+msgstr "Cajones {0} de {1}"
+
+msgctxt "Conteos"
+msgid "{0} to recount"
+msgstr "{0} por recontar"
+
+msgctxt "Conteos"
 msgid "No ceiling"
 msgstr "Sin tope"
 

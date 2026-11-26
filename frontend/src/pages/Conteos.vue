@@ -117,6 +117,18 @@
           </p>
           <KpiGrid v-if="home.on" data-conteos-cifras>
             <KpiTile
+              v-if="cajas.per_shift"
+              :label="__('Bins counted in 30 days', null, CTX)"
+              :value="freshWords(cajas)"
+              data-conteos-cajones-al-dia
+            />
+            <KpiTile
+              v-if="cajas.per_shift && home.sees_money"
+              :label="__('Adjusted alone this week', null, CTX)"
+              :value="autoWords(cajas, settings.currency)"
+              data-conteos-ajustado-solo
+            />
+            <KpiTile
               :label="__('Counted in 30 days', null, CTX)"
               :value="percentWords(home.kpis.coverage_pct)"
             />
@@ -165,6 +177,7 @@
               :person="person"
               :on="home.on"
               :settings="home.settings"
+              :cajas="cajas.people?.[person.user] || null"
               :groups="home.groups"
               :warehouses="home.warehouses"
               :open="openPerson === person.user"
@@ -269,6 +282,32 @@
                 <span class="num text-md font-semibold text-ink-gray-9">{{
                   cycle
                 }}</span>
+              </p>
+            </section>
+
+            <!-- Cajas del día: the cajones each person counts a shift; what
+                 does not match another person recounts blind. -->
+            <section
+              class="rounded-7 bg-surface-gray-1 p-3"
+              data-conteos-cajones
+            >
+              <p class="mb-1 px-1 text-xs font-medium text-ink-gray-6">
+                {{ __('Bins per shift', null, CTX) }}
+              </p>
+              <ConteoPaso
+                wide
+                :model-value="cajas.per_shift || 0"
+                :bounds="CAJONES"
+                unit=""
+                :label="__('Bins per shift', null, CTX)"
+                @commit="setCajones"
+              />
+              <p
+                v-if="errors.cajones"
+                role="alert"
+                class="px-1 pt-1 text-sm text-ink-red-7"
+              >
+                {{ errors.cajones }}
               </p>
             </section>
 
@@ -456,16 +495,20 @@ import ConteoMonto from '@/components/inventario/ConteoMonto.vue'
 import ConteoPaso from '@/components/inventario/ConteoPaso.vue'
 import ConteoPersona from '@/components/inventario/ConteoPersona.vue'
 import {
+  CAJONES,
   CTX,
   MINUTES,
   PRODUCTS,
   PROPOSED_MINUTES,
   conteosApi,
   countingDays,
+  autoWords,
+  cajasRows,
   createWriter,
   cycleWords,
   dayOptions,
   decideRows,
+  freshWords,
   differenceOptions,
   isDenied,
   orderOptions,
@@ -513,8 +556,11 @@ const roomy = computed(() => pageWidth.value >= 380)
 const settings = computed(() => home.value?.settings || {})
 const byProducts = computed(() => settings.value.unit === 'products')
 const cycle = computed(() => cycleWords(home.value?.kpis?.cycle_months))
+const cajas = computed(() => home.value?.cajas || {})
 const decide = computed(() =>
-  home.value?.on ? decideRows(home.value.decide) : [],
+  home.value?.on
+    ? [...decideRows(home.value.decide), ...cajasRows(home.value.cajas)]
+    : [],
 )
 const recounting = computed(
   () => askingCap.value || settings.value.differences === 'recount',
@@ -582,6 +628,15 @@ function setUnit(unit) {
     s.unit = unit
     s.minutes = minutes
   })
+}
+function setCajones(value) {
+  writer.write(
+    'cajones',
+    (page) => {
+      page.cajas = { ...(page.cajas || {}), per_shift: value }
+    },
+    () => conteosApi.save({ cajones: value }),
+  )
 }
 function setRules(rules) {
   saveShop('first', { rules }, (s) => {
