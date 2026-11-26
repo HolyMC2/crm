@@ -305,9 +305,17 @@ export function shellCheatSheet({
   // With «Saltar con letras» on, `f` is the letters' everywhere: a page's own
   // `f` (Compras' «Registrar factura») is reached through its tag instead.
   const lettersKey = (s) => s.keys.every((k) => k === 'f' || k === 'shift+f')
+  // A key two parts of the page declare does what the first one says (see
+  // pageKeyFor): only that one is listed.
+  const taken = new Set()
+  const firstOwners = page.extra.filter((s) => {
+    if (s.keys.length && s.keys.every((k) => taken.has(k))) return false
+    for (const k of s.keys) taken.add(k)
+    return true
+  })
   const sections = cheatSheet(shellKeymap(modules, page, shell), {
     contexts: page.contexts,
-    extra: letters ? page.extra.filter((s) => !lettersKey(s)) : page.extra,
+    extra: letters ? firstOwners.filter((s) => !lettersKey(s)) : firstOwners,
     apple,
     app: 'Muelle',
     t,
@@ -461,16 +469,27 @@ export function useShellLayer(root, { open = () => true, onKeydown } = {}) {
   onBeforeUnmount(stop)
 }
 
-/** The page key (extra) an event presses: bare keys only, never while typing. */
+/**
+ * The page key (extra) an event presses: bare keys only, never while typing.
+ * The first page that declares a key has it (a page before the parts it
+ * mounts, Garantía's «a» before its record island's); one that declares it
+ * without `run` answers it with its own listener, so nobody else takes it.
+ */
 function pageKeyFor(event, live, apple) {
   const combo = normalizeCombo(event, apple)
   for (const page of live)
     for (const shortcut of page.extra())
-      if (
-        typeof shortcut.run === 'function' &&
-        [...shortcut.keys, ...(shortcut.aliases || [])].includes(combo)
-      )
-        return shortcut
+      if ([...shortcut.keys, ...(shortcut.aliases || [])].includes(combo))
+        return typeof shortcut.run === 'function' ? shortcut : null
+  return null
+}
+
+/** Id of the page key that has `combo` on this screen (the first declared), or null. */
+export function keyOwner(combo) {
+  for (const page of activePages())
+    for (const shortcut of page.extra())
+      if ([...shortcut.keys, ...(shortcut.aliases || [])].includes(combo))
+        return shortcut.id
   return null
 }
 

@@ -2,11 +2,17 @@
 // island, the bolt holds the steps and the follow-ups, «⋯» the rest.
 import fs from 'node:fs'
 import path from 'node:path'
-import { afterEach, describe, expect, it } from 'vitest'
-import { createApp, h, nextTick } from 'vue'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { createApp, h, nextTick, onBeforeUnmount, ref } from 'vue'
 import { recordActionsFor } from '@/documentos/acciones'
 import { recordActions, runRecordAction } from '@/composables/recordActions'
-import { pageShortcuts } from '@/composables/shellKeyboard'
+import {
+  keyOwner,
+  pageShortcuts,
+  registerPageShortcuts,
+  shellCheatSheet,
+  useShellKeyboard,
+} from '@/composables/shellKeyboard'
 import RecordIsland from '@/components/documentos/RecordIsland.vue'
 
 const labels = (group) => group.items.map((item) => item.label)
@@ -178,6 +184,68 @@ describe('the record island', () => {
     root.remove()
     app = null
     expect(recordActions.value).toEqual([])
+  })
+
+  it('a page’s own «a» wins over the bolt’s (Garantía assigns, Gasto factura asks for approval)', async () => {
+    const assign = vi.fn()
+    root = document.createElement('div')
+    document.body.appendChild(root)
+    app = createApp({
+      setup() {
+        useShellKeyboard({
+          openPalette: vi.fn(),
+          openHelp: vi.fn(),
+          modules: ref([]),
+          router: { push: vi.fn() },
+        })
+        // The record page lists «a» and answers it with its own listener.
+        registerPageShortcuts(null, () => [
+          {
+            id: 'garantias.assign',
+            keys: ['a'],
+            description: 'Assign the case',
+          },
+        ])
+        const onKey = (event) => {
+          if (!event.defaultPrevented && event.key === 'a') assign()
+        }
+        window.addEventListener('keydown', onKey)
+        onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
+      },
+      render: () =>
+        h(RecordIsland, {
+          who: 'Ana López',
+          reach: {},
+          groups: recordActionsFor({
+            steps: [{ label: 'Cerrar caso', icon: 'lucide-check' }],
+          }),
+        }),
+    })
+    app.mount(root)
+    await nextTick()
+    expect(keyOwner('a')).toBe('garantias.assign')
+    expect(keyOwner('.')).toBe('record.herramientas')
+    document.body.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'a',
+        bubbles: true,
+        cancelable: true,
+      }),
+    )
+    await nextTick()
+    expect(assign).toHaveBeenCalledTimes(1)
+    expect(
+      root.querySelector('[role="dialog"][aria-label="Acciones"]'),
+    ).toBeNull()
+    // The bolt does not claim «a» there; the sheet lists the page's «a» once.
+    const bolt = root.querySelector('[data-testid="documentos-acciones"]')
+    expect(bolt.hasAttribute('data-shortcut')).toBe(false)
+    const rows = shellCheatSheet({ modules: [] }).flatMap((section) =>
+      section.rows.map((row) => row.id),
+    )
+    expect(rows).toContain('garantias.assign')
+    expect(rows).not.toContain('record.acciones')
+    expect(rows).toContain('record.herramientas')
   })
 
   it('keeps a refused correo in place and says why', () => {

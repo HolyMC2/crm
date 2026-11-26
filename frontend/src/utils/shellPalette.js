@@ -13,7 +13,7 @@ import {
   pushRecent,
   PALETTE_PER_GROUP,
 } from '@/vendor/muelle-shell/contracts'
-import { shellT } from '@/composables/shellKeyboard'
+import { keyOwner, shellT } from '@/composables/shellKeyboard'
 import { letterHintsOn } from '@/composables/letterHintsSwitch'
 import { ventasSection } from '@/composables/ventasSections'
 import { isNarrow } from '@/composables/breakpoint'
@@ -290,7 +290,11 @@ export function recordItem(action) {
     icon: action.icon || 'lucide-circle-dot',
     action: 'record',
     args: { id: action.id },
-    ...(action.keys?.length ? { shortcut: action.keys[0] } : {}),
+    // Its key unless another part of the page has it (Garantía's «a» assigns).
+    ...(action.keys?.length &&
+    [null, `record.${action.id}`].includes(keyOwner(action.keys[0]))
+      ? { shortcut: action.keys[0] }
+      : {}),
   }
 }
 

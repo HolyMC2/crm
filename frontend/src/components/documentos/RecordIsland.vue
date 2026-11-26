@@ -58,7 +58,7 @@
     <AccionesMenu
       v-if="groups.length"
       ref="menu"
-      shortcut="a"
+      :shortcut="boltKey"
       :groups="groups"
       :phone="phone"
       :subtitle="subtitle"
@@ -81,6 +81,7 @@
 import { computed, ref } from 'vue'
 import WhatsAppIcon from '@/components/Icons/WhatsAppIcon.vue'
 import { useRecordActions } from '@/composables/recordActions'
+import { keyOwner } from '@/composables/shellKeyboard'
 import { leaveTo } from '@/composables/leavePage'
 import AccionesMenu from './AccionesMenu.vue'
 
@@ -114,6 +115,9 @@ const whatsapp = computed(() => {
 })
 const showMail = computed(() => !!props.mail && !props.phone)
 
+// The bolt says «a» only where the page has not taken it for itself
+// (Garantía assigns with «a», Gasto factura asks for approval).
+const boltKey = computed(() => (keyOwner('a') === 'record.acciones' ? 'a' : ''))
 // From the keyboard: «a» opens the bolt, «.» opens «⋯», and Ctrl+K lists the
 // bolt's steps and follow-ups first under «Acciones» (what the worker may do).
 const menu = ref(null)

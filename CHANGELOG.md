@@ -2,6 +2,12 @@
 
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
+## 2026-11-25 — A record's own «a» works again (Garantía, Gasto factura, Cobranza › cliente) (lane teclado-conflictos; not deployed)
+
+- **Why:** teclado-dialogos gave every record's bolt «a», and the shell's key dispatch let it run before a page that answers its keys with its own listener: on a Garantía «a» stopped assigning the case, on a Gasto factura it stopped asking for approval, on Cobranza › cliente it stopped assigning. Found while listing which keys are free.
+- **Change:** the first part of the page that declares a key has it, and one that declares it without a handler answers it itself (`shellKeyboard.pageKeyFor`). `keyOwner(combo)` says who has a key: the bolt shows and lists «a» only where it is its own, Ctrl+K drops a record action's key that another part owns, and Alt+H lists each key once.
+- **Proof:** `recordIsland.test.js` (a page's «a» before the island: the page runs, the bolt stays shut, one row in Alt+H); the Garantía, Gastos, Cobranza and shell suites (1655 passed). Rollback: revert.
+
 ## 2026-11-25 — «Saltar con letras»: `f` puts a letter on everything you can press (lane teclado-letras; not deployed)
 
 - **Why:** Marco: «i use vimium on my browser, f and all buttons highlight with a button combination, if i finish the combination it clicks, so useful to quickly learn shortcuts and movements … under a flag but i really want it».
