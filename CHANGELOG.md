@@ -2,6 +2,19 @@
 
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
+## 2026-11-26 — Conteos del día: «Cajones por turno» and the cajón loop on the owner page (lane cajas-del-dia, with scanner_kit; not deployed)
+
+- **Why:** Marco wants the warehouse to run itself and only overview it: the cajón side now runs like the product side (scanner_kit «Cajas del día»).
+- **Change:**
+  - `Conteos.vue`:
+    - A «Cajones por turno» stepper (0–30, `save({cajones})`).
+    - Two figures while it is above 0: «Cajones contados en 30 días» («75 de 147») and «Ajustado solo esta semana» (how many, and their value only for who sees the money).
+    - The reviews waiting as rows into Escáner (`/scan/recorrido/<REC>?vista=terminar`, with the way back), with «N sin acuerdo».
+  - `ConteoPersona.vue`: each person's «Cajones 2 de 5 · 1 por recontar».
+  - Helpers `cajasRows`, `cajasWords`, `freshWords`, `autoWords`, `CAJONES` in `conteos.js`, and 7 Conteos entries in `es.po`.
+- **Tests:** `tests/unit/conteos.test.js` +4 (figures and person line, reviews link, stepper saves, money hidden), 54 green.
+- **Rollout:** rides the crm build of the next roll with scanner_kit. Rollback: revert both.
+
 ## 2026-11-26 — «/btw» in the assistant: a side sheet with its own short thread (lane asistente-btw, with doco; not deployed)
 
 - **Why:** Marco (S45): a quick question while the assistant is in the middle of a job, without stopping it or mixing the answer into the job's thread.
