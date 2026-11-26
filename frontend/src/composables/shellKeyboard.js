@@ -19,6 +19,7 @@ import {
   isTypingTarget,
   normalizeCombo,
 } from '@/vendor/muelle-shell/contracts'
+import { letterHintsOn } from './letterHintsSwitch'
 
 // Global shell shortcuts from the shared keymap (Muelle keyboard standard, see
 // the shell-contracts README): ⌘K / Ctrl+K «Buscar o ir a…», ⌘G / Ctrl+G
@@ -299,10 +300,14 @@ export function shellCheatSheet({
   shell,
   apple = appleKeys,
   t = shellT,
+  letters = letterHintsOn.value,
 } = {}) {
+  // With «Saltar con letras» on, `f` is the letters' everywhere: a page's own
+  // `f` (Compras' «Registrar factura») is reached through its tag instead.
+  const lettersKey = (s) => s.keys.every((k) => k === 'f' || k === 'shift+f')
   const sections = cheatSheet(shellKeymap(modules, page, shell), {
     contexts: page.contexts,
-    extra: page.extra,
+    extra: letters ? page.extra.filter((s) => !lettersKey(s)) : page.extra,
     apple,
     app: 'Muelle',
     t,
@@ -317,6 +322,21 @@ export function shellCheatSheet({
       keys: [formatCombo('enter', apple), formatCombo('mod+enter', apple)],
       description: t('Confirm the open window'),
     })
+    if (letters)
+      quick.rows.push(
+        {
+          id: 'letters',
+          keys: [formatCombo('f', apple)],
+          description: t(
+            'Jump with letters: a letter on everything you can press',
+          ),
+        },
+        {
+          id: 'letters.tab',
+          keys: [formatCombo('shift+f', apple)],
+          description: t('Jump with letters, a link opens in another tab'),
+        },
+      )
   }
   return sections
 }

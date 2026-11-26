@@ -58,6 +58,7 @@
     <AccionesMenu
       v-if="groups.length"
       ref="menu"
+      shortcut="a"
       :groups="groups"
       :phone="phone"
       :subtitle="subtitle"

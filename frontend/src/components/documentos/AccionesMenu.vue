@@ -11,6 +11,8 @@
       title="Acciones"
       aria-haspopup="true"
       :aria-expanded="String(openState)"
+      :aria-keyshortcuts="shortcut ? shortcut.toUpperCase() : undefined"
+      :data-shortcut="shortcut || undefined"
       data-testid="documentos-acciones"
       @click="openState = !openState"
     >
@@ -38,6 +40,8 @@
       aria-label="Acciones"
       aria-haspopup="dialog"
       :aria-expanded="String(openState)"
+      :aria-keyshortcuts="shortcut ? shortcut.toUpperCase() : undefined"
+      :data-shortcut="shortcut || undefined"
       data-testid="documentos-acciones"
       @click="openState = true"
     >
@@ -68,6 +72,8 @@ const props = defineProps({
   phone: { type: Boolean, default: false },
   // The list's name under the sheet's title.
   subtitle: { type: String, default: '' },
+  // The page's key for the bolt (a record's «a»), shown to who looks for it.
+  shortcut: { type: String, default: '' },
 })
 const emit = defineEmits(['pick'])
 

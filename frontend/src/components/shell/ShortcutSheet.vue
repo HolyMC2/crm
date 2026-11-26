@@ -96,6 +96,13 @@
           </section>
         </div>
       </div>
+      <!-- «Saltar con letras»: per person and per browser, off at first. -->
+      <div
+        class="flex-none border-t border-outline-gray-1 px-5 py-2"
+        data-letters-switch
+      >
+        <Switch v-model="letters" :label="shellT('Jump with letters (F)')" />
+      </div>
     </div>
   </div>
 </template>
@@ -103,6 +110,8 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useMediaQuery } from '@vueuse/core'
 import { shellModules } from '@/composables/muelleShell'
+import Switch from '@/components/ui/Switch.vue'
+import { letterHintsOn } from '@/composables/letterHintsSwitch'
 import {
   closeShortcutSheet,
   shellCheatSheet,
@@ -112,6 +121,8 @@ import {
 } from '@/composables/shellKeyboard'
 
 const uid = `muelle-kbd-${Math.random().toString(36).slice(2, 8)}`
+// The switch itself (a ref shared with the shell's `f`), bound here.
+const letters = letterHintsOn
 // Same breakpoint as the stylesheet below (and Desk's sheet).
 const phone = useMediaQuery('(max-width: 760px)')
 const dialog = ref(null)
@@ -180,7 +191,7 @@ onBeforeUnmount(() => {
 .kbd-layout {
   display: grid;
   grid-template-columns: 224px minmax(0, 1fr);
-  height: min(680px, calc(100dvh - 130px));
+  height: min(624px, calc(100dvh - 186px));
   min-height: 0;
 }
 .kbd-menu {
@@ -237,7 +248,7 @@ onBeforeUnmount(() => {
   .kbd-layout {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto minmax(0, 1fr);
-    height: min(680px, calc(100dvh - 90px));
+    height: min(624px, calc(100dvh - 146px));
   }
   .kbd-menu {
     flex-direction: row;

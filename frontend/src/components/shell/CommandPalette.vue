@@ -210,6 +210,7 @@ import {
 import { takeVisits } from '@/utils/visited'
 import { useShellTheme } from '@/composables/shellTheme'
 import { runRecordAction } from '@/composables/recordActions'
+import { letterHintsOn } from '@/composables/letterHintsSwitch'
 import {
   closeSheet,
   installSheetHistory,
@@ -414,6 +415,14 @@ function choose(item) {
     saveRecent(recentRefs)
   }
   if (item.action === 'theme') setTheme(item.args?.theme)
+  if (item.action === 'letters') {
+    letterHintsOn.value = !letterHintsOn.value
+    toast.success(
+      letterHintsOn.value
+        ? shellT('Jump with letters is on: press F')
+        : shellT('Jump with letters is off'),
+    )
+  }
   // The calculator's result goes to the clipboard.
   if (item.action === 'copy') copyText(String(item.args?.text ?? ''))
   const href = item.href && safeReturn(`/crm${item.href}`, ['/crm/'])

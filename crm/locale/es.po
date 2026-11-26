@@ -11173,6 +11173,27 @@ msgstr "Guardar o enviar el formulario"
 msgid "Confirm the open window"
 msgstr "Confirmar la ventana abierta"
 
+msgid "Jump with letters (F)"
+msgstr "Saltar con letras (F)"
+
+msgid "Jump with letters: a letter on everything you can press"
+msgstr "Saltar con letras: una letra en cada botón"
+
+msgid "Jump with letters, a link opens in another tab"
+msgstr "Saltar con letras, el enlace se abre en otra pestaña"
+
+msgid "Turn on jump with letters"
+msgstr "Encender saltar con letras"
+
+msgid "Turn off jump with letters"
+msgstr "Apagar saltar con letras"
+
+msgid "Jump with letters is on: press F"
+msgstr "Saltar con letras encendido: presiona F"
+
+msgid "Jump with letters is off"
+msgstr "Saltar con letras apagado"
+
 #: frontend/src/components/shell
 msgid "Quick shortcuts"
 msgstr "Atajos rápidos"

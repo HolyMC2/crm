@@ -14,6 +14,7 @@ import {
   PALETTE_PER_GROUP,
 } from '@/vendor/muelle-shell/contracts'
 import { shellT } from '@/composables/shellKeyboard'
+import { letterHintsOn } from '@/composables/letterHintsSwitch'
 import { ventasSection } from '@/composables/ventasSections'
 import { isNarrow } from '@/composables/breakpoint'
 import { installedSiblings, sortSiblings } from '@/composables/shellRail'
@@ -418,6 +419,18 @@ export function createShellProviders({ boot, modules }) {
           icon: 'lucide-moon',
           action: 'theme',
           args: { theme: 'dark' },
+          rank: PALETTE_RANK.specific,
+        },
+        {
+          id: 'letters',
+          group: 'acciones',
+          title: letterHintsOn.value
+            ? shellT('Turn off jump with letters')
+            : shellT('Turn on jump with letters'),
+          // Found by the browser extension's name too.
+          keywords: 'saltar con letras vimium hints teclado f',
+          icon: 'lucide-keyboard',
+          action: 'letters',
           rank: PALETTE_RANK.specific,
         },
       )

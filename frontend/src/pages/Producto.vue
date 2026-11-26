@@ -288,6 +288,8 @@
                     :class="[PILL, entry.enabled ? '' : 'opacity-60']"
                     :title="entry.title || entry.reason || undefined"
                     :data-action="entry.key"
+                    :data-shortcut="HERO_KEYS[entry.key]"
+                    :aria-keyshortcuts="HERO_KEYS[entry.key]?.toUpperCase()"
                     @click="run(entry)"
                   >
                     <span :class="PILL_ICON" aria-hidden="true">
@@ -323,6 +325,8 @@
                     ]"
                     :title="entry.title || entry.reason || undefined"
                     :data-action="entry.key"
+                    :data-shortcut="HERO_KEYS[entry.key]"
+                    :aria-keyshortcuts="HERO_KEYS[entry.key]?.toUpperCase()"
                     @click="run(entry)"
                   >
                     <Icon
@@ -3055,6 +3059,8 @@ function goBack() {
   router.push(back.value.to)
 }
 
+// The hero buttons say their key (aria-keyshortcuts, and the letters' tags).
+const HERO_KEYS = Object.freeze({ edit: 'e', price: 'p' })
 // ── keys: e edits, p changes a price, Esc goes back to the list. Over a
 // dialog or sheet they wait: its own Esc closes it, never the record.
 const heroAction = (key) => heroActions.value.find((entry) => entry.key === key)
