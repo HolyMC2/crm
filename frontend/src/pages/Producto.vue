@@ -1944,6 +1944,8 @@ import { BTN } from '@/documentos/tools'
 import { loadCameraSheet } from '@/components/captura/cameraDoor'
 import { useProductPhotos } from '@/composables/useProductPhotos'
 import { leaveTo } from '@/composables/leavePage'
+import { useFormKeys } from '@/composables/pageKeys'
+import { OPEN_LAYER } from '@/composables/shellKeyboard'
 import PriceDialog from '@/components/productos/PriceDialog.vue'
 import EditDialog from '@/components/productos/EditDialog.vue'
 import RequestDialog from '@/components/productos/RequestDialog.vue'
@@ -3052,6 +3054,33 @@ function goBack() {
   if (href) return window.location.assign(href)
   router.push(back.value.to)
 }
+
+// ── keys: e edits, p changes a price, Esc goes back to the list. Over a
+// dialog or sheet they wait: its own Esc closes it, never the record.
+const heroAction = (key) => heroActions.value.find((entry) => entry.key === key)
+const usable = (entry) =>
+  !!entry && (entry.enabled || entry.resolve?.kind === 'request')
+const overLayer = () => !!document.querySelector(OPEN_LAYER)
+useFormKeys({
+  page: 'producto',
+  edit: () => run(heroAction('edit')),
+  close: () => goBack(),
+  when: {
+    edit: () => usable(heroAction('edit')) && !overLayer(),
+    close: () => !overLayer(),
+  },
+  extra: () =>
+    usable(heroAction('price')) && !overLayer()
+      ? [
+          {
+            id: 'producto.price',
+            keys: ['p'],
+            description: 'Change price',
+            run: () => run(heroAction('price')),
+          },
+        ]
+      : [],
+})
 
 /** Arrived with `accion=` (a link from Desk, Mercado or a refusal): open it. */
 function openRequested() {

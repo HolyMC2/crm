@@ -3328,11 +3328,18 @@ describe('keyboard standard: Ctrl+K / Ctrl+G modes and the Alt+H sheet', () => {
   it('labels follow the platform: ⌘/⌥ on Apple, Ctrl/Alt elsewhere', () => {
     const keysOf = (apple) =>
       shellCheatSheet({ modules: mine(), apple })[0].rows.map((r) => r.keys)
-    expect(keysOf(true)).toEqual([['⌥H', '?'], ['⌘K'], ['⌘G'], ['Esc']])
+    expect(keysOf(true)).toEqual([
+      ['⌥H', '?'],
+      ['⌘K'],
+      ['⌘G'],
+      ['↵', '⌘↵'],
+      ['Esc'],
+    ])
     expect(keysOf(false)).toEqual([
       ['Alt+H', '?'],
       ['Ctrl+K'],
       ['Ctrl+G'],
+      ['↵', 'Ctrl+↵'],
       ['Esc'],
     ])
     expect(searchEntryHint(true).label).toBe(

@@ -64,6 +64,7 @@
           <template v-else>
             <FormControl
               v-model="drafts[row.price_list]"
+              :data-autofocus="row.price_list === focus || undefined"
               type="number"
               inputmode="decimal"
               min="0"

@@ -44,6 +44,7 @@ export const PAGE_KEYS = Object.freeze({
   'inbox-conversations': ROWS,
   documentos: [...LIST, 'create'],
   documento: ['edit', 'close'],
+  producto: ['edit', 'close'],
 })
 
 function checkPage(page, keys) {

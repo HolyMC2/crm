@@ -86,10 +86,15 @@ afterEach(() => {
 function sheetIds() {
   return shellCheatSheet({ shell: { create: false } })
     .flatMap((section) => section.rows.map((row) => row.id))
-    .filter((id) => !['help', 'palette', 'records', 'sidebar'].includes(id))
+    .filter(
+      (id) =>
+        !['help', 'palette', 'records', 'sidebar', 'dialog.confirm'].includes(
+          id,
+        ),
+    )
 }
 
-const isList = (page) => !['deal', 'documento'].includes(page)
+const isList = (page) => !['deal', 'documento', 'producto'].includes(page)
 
 describe('every page context: the sheet lists exactly the keys it answers', () => {
   for (const [page, ids] of Object.entries(PAGE_KEYS)) {
@@ -350,6 +355,7 @@ describe('every shell page is wired to its PAGE_KEYS row', () => {
     'inbox-conversations': ['components/Inbox/ConversationQueue.vue'],
     documentos: ['pages/DocumentosList.vue'],
     documento: ['pages/DocumentoRecord.vue'],
+    producto: ['pages/Producto.vue'],
   }
   it('lists every page once', () => {
     expect(Object.keys(WIRING).sort()).toEqual(Object.keys(PAGE_KEYS).sort())

@@ -283,3 +283,14 @@ input[type='checkbox'].rounded-4 {
     font-size: 15px;
   }
 }
+/* The key that confirms a dialog, on its filled button (composables/dialogKeys.js
+   sets data-key-hint on a desktop). Weight, not opacity, sets it apart: the
+   role inks hold their contrast on the accent only at full strength. */
+@media (hover: hover) and (pointer: fine) {
+  [data-key-hint][data-kit-button='solid']:not(:disabled)::after {
+    content: attr(data-key-hint);
+    margin-inline-start: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 400;
+  }
+}

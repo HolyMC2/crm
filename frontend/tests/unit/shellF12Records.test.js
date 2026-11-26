@@ -87,6 +87,7 @@ vi.mock('@/vendor/muelle-shell/live-sync/vue', () => ({
 vi.mock('@/composables/shellKeyboard', () => ({
   appleKeys: false,
   registerPageShortcuts: () => {},
+  registerPageKeys: () => () => {},
 }))
 const stub = { default: { render: () => null } }
 vi.mock('@/components/garantias/AssignDialog.vue', () => stub)

@@ -57,6 +57,7 @@
     </div>
     <AccionesMenu
       v-if="groups.length"
+      ref="menu"
       :groups="groups"
       :phone="phone"
       :subtitle="subtitle"
@@ -67,6 +68,7 @@
       class="press flex size-12 flex-none items-center justify-center rounded-full text-ink-gray-7 active:bg-surface-gray-2 [@media(hover:hover)]:hover:bg-surface-gray-2"
       aria-label="Herramientas"
       title="Herramientas"
+      aria-keyshortcuts="."
       data-testid="documentos-tools-open"
       @click="emit('tools')"
     >
@@ -75,8 +77,10 @@
   </div>
 </template>
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import WhatsAppIcon from '@/components/Icons/WhatsAppIcon.vue'
+import { useRecordActions } from '@/composables/recordActions'
+import { leaveTo } from '@/composables/leavePage'
 import AccionesMenu from './AccionesMenu.vue'
 
 const props = defineProps({
@@ -108,4 +112,38 @@ const whatsapp = computed(() => {
   return { href: `https://wa.me/${digits.value.replace(/^\+/, '')}` }
 })
 const showMail = computed(() => !!props.mail && !props.phone)
+
+// From the keyboard: «a» opens the bolt, «.» opens «⋯», and Ctrl+K lists the
+// bolt's steps and follow-ups first under «Acciones» (what the worker may do).
+const menu = ref(null)
+useRecordActions(() => [
+  ...(props.groups.length
+    ? [
+        {
+          id: 'acciones',
+          title: 'Acciones',
+          icon: 'lucide-zap',
+          keys: ['a'],
+          run: () => menu.value?.open(),
+        },
+      ]
+    : []),
+  ...props.groups
+    .flatMap((group) => group.items || [])
+    .filter((item) => item.allowed !== false && !item.to)
+    .map((item) => ({
+      id: `bolt.${item.key}`,
+      title: item.label,
+      icon: item.icon,
+      keywords: item.hint || '',
+      run: () => (item.href ? leaveTo(item.href) : emit('pick', item)),
+    })),
+  {
+    id: 'herramientas',
+    title: 'Herramientas',
+    icon: 'lucide-ellipsis-vertical',
+    keys: ['.'],
+    run: () => emit('tools'),
+  },
+])
 </script>

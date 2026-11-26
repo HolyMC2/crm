@@ -300,13 +300,25 @@ export function shellCheatSheet({
   apple = appleKeys,
   t = shellT,
 } = {}) {
-  return cheatSheet(shellKeymap(modules, page, shell), {
+  const sections = cheatSheet(shellKeymap(modules, page, shell), {
     contexts: page.contexts,
     extra: page.extra,
     apple,
     app: 'Muelle',
     t,
   })
+  // Every dialog and sheet confirms with its keys (composables/dialogKeys.js),
+  // listed with the quick keys just before Esc, which closes it.
+  const quick = sections.find((section) => section.id === 'quick')
+  if (quick) {
+    const at = quick.rows.findIndex((row) => row.id === 'close')
+    quick.rows.splice(at < 0 ? quick.rows.length : at, 0, {
+      id: 'dialog.confirm',
+      keys: [formatCombo('enter', apple), formatCombo('mod+enter', apple)],
+      description: t('Confirm the open window'),
+    })
+  }
+  return sections
 }
 
 // --- the sheet's open state (any menu or the palette may open it) -----------
@@ -338,6 +350,13 @@ export function closeShortcutSheet() {
 // Layers the shell owns. Over any other dialog only the search keys reach
 // through (as before); the sheet never opens on top of a foreign dialog.
 const SHELL_LAYER = '[data-shell-layer]'
+
+/**
+ * Open modal layers. reka's dialogs (frappe-ui Dialog, the kit's
+ * BottomSheet) carry `role="dialog"` and `data-state`, never `aria-modal`.
+ */
+export const OPEN_LAYER =
+  '[aria-modal="true"], [role="dialog"][data-state="open"], [role="alertdialog"][data-state="open"]'
 
 // --- shell layers keep the focus (palette, sheets, rail menus) ---------------
 
@@ -463,7 +482,7 @@ export function useShellKeyboard({
       typing,
       contexts: [...new Set(live.flatMap((page) => page.contexts()))],
     })
-    const modals = [...document.querySelectorAll('[aria-modal="true"]')]
+    const modals = [...document.querySelectorAll(OPEN_LAYER)]
     // ⌘J: the assistant from anywhere, also over another sheet (that sheet
     // closes first, so one layer stays) and while typing. The status answer
     // (asked at boot) comes first: a worker without the assistant keeps the

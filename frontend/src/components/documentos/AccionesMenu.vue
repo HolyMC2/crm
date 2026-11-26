@@ -25,6 +25,7 @@
         class="absolute top-full z-50 mt-1 max-h-[min(70dvh,34rem)] w-80 overflow-y-auto rounded-8 border border-outline-gray-1 bg-surface-base pt-1 text-ink-gray-9 shadow-xl"
         :style="placed"
         @keydown.esc.stop="close(true)"
+        @keydown="onMenuKey"
       >
         <AccionesPanel :groups="groups" @pick="pick" />
       </div>
@@ -59,6 +60,7 @@ import { BottomSheet } from '@/components/ui'
 import { leaveTo } from '@/composables/leavePage'
 import AccionesPanel from './AccionesPanel.vue'
 import { menuPlace, roomFor } from './menuPlace'
+import { isTypingTarget } from '@/vendor/muelle-shell/contracts'
 
 const props = defineProps({
   // listActionsFor(profile, ctx) groups
@@ -110,6 +112,31 @@ watch(openState, async (on) => {
   pop.value?.querySelector('a, button')?.focus({ preventScroll: true })
 })
 onBeforeUnmount(() => listen(false))
+
+// ↑/↓ walk the menu's actions (round), Home/End jump to the ends; a field
+// in it (the sort) keeps its own arrows.
+const MOVES = { ArrowDown: 1, ArrowUp: -1, Home: 'first', End: 'last' }
+function onMenuKey(event) {
+  const move = MOVES[event.key]
+  if (move === undefined || isTypingTarget(event.target)) return
+  const items = [
+    ...(pop.value?.querySelectorAll('a[href], button:not(:disabled)') || []),
+  ]
+  if (!items.length) return
+  event.preventDefault()
+  event.stopPropagation()
+  const at = items.indexOf(document.activeElement)
+  const next =
+    move === 'first'
+      ? 0
+      : move === 'last'
+        ? items.length - 1
+        : (at + move + items.length) % items.length
+  items[next].focus()
+}
+
+// The record's «a» key (RecordIsland) opens it as the bolt would.
+defineExpose({ open: () => (openState.value = true) })
 
 function pick(action) {
   openState.value = false

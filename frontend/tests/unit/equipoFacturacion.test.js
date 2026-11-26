@@ -64,6 +64,7 @@ vi.mock('@/vendor/muelle-shell/live-sync/vue', () => ({
 vi.mock('@/composables/shellKeyboard', () => ({
   appleKeys: false,
   registerPageShortcuts: () => {},
+  registerPageKeys: () => () => {},
 }))
 const stub = { default: { render: () => null } }
 vi.mock('@/components/compras/ComprasPicker.vue', () => stub)

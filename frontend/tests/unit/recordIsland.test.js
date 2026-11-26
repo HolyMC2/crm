@@ -3,8 +3,10 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
-import { createApp, h } from 'vue'
+import { createApp, h, nextTick } from 'vue'
 import { recordActionsFor } from '@/documentos/acciones'
+import { recordActions, runRecordAction } from '@/composables/recordActions'
+import { pageShortcuts } from '@/composables/shellKeyboard'
 import RecordIsland from '@/components/documentos/RecordIsland.vue'
 
 const labels = (group) => group.items.map((item) => item.label)
@@ -67,6 +69,7 @@ function mount(props) {
         onMessage: () => events.push('message'),
         onMail: () => events.push('mail'),
         onTools: () => events.push('tools'),
+        onPick: (item) => events.push(`pick:${item.key}`),
       }),
   })
   app.mount(root)
@@ -115,6 +118,66 @@ describe('the record island', () => {
     })
     expect(reach('call')).not.toBeNull()
     expect(reach('mail')).toBeNull()
+  })
+
+  it('answers the keyboard: «a» the bolt, «.» «⋯», Ctrl+K lists what the worker may do', async () => {
+    const events = mount({
+      reach: {},
+      groups: recordActionsFor({
+        steps: [
+          { label: 'Cambiar precio', icon: 'lucide-tag' },
+          { label: 'Hacer conteo', allowed: false, reason: 'Sin permiso' },
+        ],
+        tools: [{ key: 'pendiente', label: 'Nuevo pendiente', allowed: true }],
+      }).map((group) => ({
+        ...group,
+        items: group.items.map((item) =>
+          item.label === 'Hacer conteo' ? { ...item, allowed: false } : item,
+        ),
+      })),
+    })
+    expect(recordActions.value.map((action) => action.title)).toEqual([
+      'Acciones',
+      'Cambiar precio',
+      'Nuevo pendiente',
+      'Herramientas',
+    ])
+    const keys = pageShortcuts.value.extra.map((row) => row.keys.join())
+    expect(keys).toEqual(['a', '.'])
+    runRecordAction('bolt.paso:0')
+    runRecordAction('bolt.pendiente')
+    runRecordAction('herramientas')
+    expect(events).toEqual(['pick:paso:0', 'pick:pendiente', 'tools'])
+    expect(root.querySelector('[role="dialog"]')).toBeNull()
+    runRecordAction('acciones')
+    await nextTick()
+    const pop = root.querySelector('[role="dialog"][aria-label="Acciones"]')
+    expect(pop).not.toBeNull()
+    // ↑/↓ walk its actions round, Home/End jump to the ends.
+    const actions = [...pop.querySelectorAll('a[href], button:not(:disabled)')]
+    expect(actions.length).toBeGreaterThan(1)
+    const key = (name) =>
+      document.activeElement.dispatchEvent(
+        new KeyboardEvent('keydown', {
+          key: name,
+          bubbles: true,
+          cancelable: true,
+        }),
+      )
+    actions[0].focus()
+    key('ArrowDown')
+    expect(document.activeElement).toBe(actions[1])
+    key('ArrowUp')
+    key('ArrowUp')
+    expect(document.activeElement).toBe(actions[actions.length - 1])
+    key('Home')
+    expect(document.activeElement).toBe(actions[0])
+    key('End')
+    expect(document.activeElement).toBe(actions[actions.length - 1])
+    app.unmount()
+    root.remove()
+    app = null
+    expect(recordActions.value).toEqual([])
   })
 
   it('keeps a refused correo in place and says why', () => {

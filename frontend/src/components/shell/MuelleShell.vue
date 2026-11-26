@@ -395,6 +395,7 @@ import {
   shortcutSheet,
   useShellKeyboard,
 } from '@/composables/shellKeyboard'
+import { useDialogKeys } from '@/composables/dialogKeys'
 import { scanPickHref, siblingHref, toggleRail } from '@/composables/shellRail'
 import { createTargetFor } from '@/utils/shellCreate'
 import { applyShellAppearance } from '@/utils/shellAppearance'
@@ -749,6 +750,8 @@ useShellKeyboard({
   router,
   toggleSidebar,
 })
+// Every dialog and sheet: Enter and Ctrl+Enter press its filled button.
+useDialogKeys()
 // «Pregúntale a Muelle» doors (E7): the boot asks shell_api.status once, so
 // the rail item, the AppBar icon and ⌘J show or act only for a worker who has
 // the assistant; nothing else of it loads until a door opens it (SPEC §4

@@ -11170,6 +11170,9 @@ msgstr "Ver atajos de teclado"
 msgid "Save or submit the form"
 msgstr "Guardar o enviar el formulario"
 
+msgid "Confirm the open window"
+msgstr "Confirmar la ventana abierta"
+
 #: frontend/src/components/shell
 msgid "Quick shortcuts"
 msgstr "Atajos rápidos"
