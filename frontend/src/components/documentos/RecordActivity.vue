@@ -371,11 +371,32 @@ function closeSheet(open) {
   if (!open) sheet.value = ''
 }
 
+// The «⋯» sheet that asked is still open: its focus trap refuses the box, and
+// when it leaves the page (after its closing animation) it gives the focus
+// back to «⋯». The box takes it once no dialog is left, a frame after that.
+const LAYER = '[role="dialog"], [role="alertdialog"], [aria-modal="true"]'
+const FOCUS_WAIT_MS = 1200
+function focusField() {
+  const until = Date.now() + FOCUS_WAIT_MS
+  let clear = 0
+  const step = () => {
+    const el = field.value
+    if (!el?.isConnected || Date.now() > until) return
+    if (document.querySelector(LAYER)) clear = 0
+    else if (++clear >= 2) {
+      if (document.activeElement !== el) el.focus({ preventScroll: true })
+      if (clear >= 4) return
+    }
+    requestAnimationFrame(step)
+  }
+  step()
+}
+
 /** For the page's «⋯» tools: open one of this block's sheets or the comment box. */
 function open(key) {
   if (key === 'comment') {
     field.value?.scrollIntoView({ block: 'center', behavior: 'smooth' })
-    field.value?.focus({ preventScroll: true })
+    focusField()
     return
   }
   openSheet(key)

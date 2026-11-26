@@ -2,6 +2,12 @@
 
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
+## 2026-11-25 — The keyboard reaches the documentos sheets too; «⋯ › Comentar» lands in the comment box (lane teclado-botones; not deployed)
+
+- **Why:** the keyboard audit after teclado-dialogos (shell-program `design/KEYBOARD-AUDIT-2026-11-25.md`): 50 files' sheets confirm with a native `BTN.filled` button (Comentar, Nueva regla, Confirmación y entrega, Puntos, Fuentes GSM…), which the dialog keys did not recognise, and settings sheets whose blocks each save on their own have several filled buttons, so Enter did nothing there. «⋯ › Comentar» on a record scrolled to the comment box but left the cursor on «⋯», with the mouse too: the sheet still open refused the focus and gave it back to «⋯» when it left.
+- **Change:** `dialogKeys.primaryOf` takes `BTN.filled` as a filled button, and with several it presses the one after the field in the nearest block that holds exactly one (Guardar CLABE, Agregar cuenta), else the foot's; the `Ctrl+↵` hint shows on those buttons too. The comment box takes the focus once no dialog is left and the closing sheet has handed its focus back.
+- **Proof:** live preview on doco-mirror, MOD00526: «.» › «Comentar» by keyboard and by mouse leaves the cursor in the box, typing and Ctrl+Enter sends the comment (answered by the script, nothing written). Tests: `dialogKeys.test.js` (BTN.filled, the block's own Save, a filled button before the field), `recordActivityFocus.test.js` (new). Rollback: revert.
+
 ## 2026-11-25 — Every dialog confirms from the keyboard; records answer «a», «.», «e», «p» (lane teclado-dialogos; not deployed)
 
 - **Why:** Marco, on Productos › «Cambiar precio»: «clicking enter, shift enter, ctrl enter does nothing, give me more keyboard centric through all the app». No dialog or sheet answered Enter or Ctrl+Enter (the keyboard standard's «save» row only reached record pages), frappe-ui's dialogs opened with the focus on their close button, and reka's dialogs carry no `aria-modal`, so the shell's page keys (`c`, `g …`, `e`) still fired under an open dialog.

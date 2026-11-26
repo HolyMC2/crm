@@ -31,7 +31,10 @@ const OWN_KEYS = [
   .join(', ')
 // A page marks an explicit submit when its filled button is not the kit's.
 const SUBMIT = '[data-dialog-submit]'
-const FILLED = 'button[data-kit-button="solid"]'
+// The kit's filled Button, and the native one the documentos sheets paint
+// with `BTN.filled` (documentos/tools.js: an accent pill).
+const FILLED =
+  'button[data-kit-button="solid"], button.rounded-full.bg-surface-gray-10'
 const FOOT = '[data-slot="actions"], [data-ui-sheet-actions]'
 // Fields where Enter has no meaning of its own. A search or a combobox picks
 // a result with it; a textarea starts a new line.
@@ -57,8 +60,16 @@ const ownedBy = (dialog) => (el) => el.closest(DIALOG) === dialog
 const disabled = (el) =>
   el.disabled || el.getAttribute('aria-disabled') === 'true'
 
-/** The dialog's filled button: its `data-dialog-submit`, else its one filled kit button. */
-export function primaryOf(dialog) {
+const follows = (from) => (el) =>
+  !!(from.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING)
+
+/**
+ * The dialog's filled button: its `data-dialog-submit`, else its one filled
+ * button. With several (a settings sheet whose blocks each save on their
+ * own), the one after `from` in the nearest block that holds exactly one,
+ * else the foot's.
+ */
+export function primaryOf(dialog, from = null) {
   if (!dialog?.querySelectorAll) return null
   const own = (selector) =>
     [...dialog.querySelectorAll(selector)]
@@ -68,7 +79,18 @@ export function primaryOf(dialog) {
   if (marked.length === 1) return marked[0]
   const filled = own(FILLED)
   if (filled.length === 1) return filled[0]
-  // More than one filled button: the foot's, when it holds exactly one.
+  if (filled.length > 1 && from && from !== dialog && dialog.contains(from)) {
+    const after = filled.filter(follows(from))
+    for (
+      let el = from.parentElement;
+      el && el !== dialog;
+      el = el.parentElement
+    ) {
+      const near = after.filter((button) => el.contains(button))
+      if (near.length === 1 && !el.matches(FOOT)) return near[0]
+      if (near.length > 1) break
+    }
+  }
   const foot = filled.filter((el) => el.closest(FOOT))
   return foot.length === 1 ? foot[0] : null
 }
@@ -135,7 +157,7 @@ export function onDialogKey(event, apple = appleKeys) {
   if (!dialog || dialog.matches(OWN_KEYS) || dialog.closest(OWN_KEYS))
     return false
   if (!mod && (!enterConfirms(target) || submitsItself(target))) return false
-  const primary = primaryOf(dialog)
+  const primary = primaryOf(dialog, target)
   if (!primary) {
     if (!mod || !target?.form) return false
     event.preventDefault()

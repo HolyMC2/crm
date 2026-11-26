@@ -193,6 +193,44 @@ describe('Enter and Ctrl+Enter confirm a dialog', () => {
 })
 
 describe('which button confirms', () => {
+  it('the documentos sheets’ native filled button (BTN.filled) confirms too', () => {
+    const { el } = dialog('<input id="c" />', {
+      foot: `<button class="inline-flex min-h-12 rounded-full bg-surface-gray-10 px-5" id="send">Comentar</button>`,
+    })
+    const send = el.querySelector('#send')
+    const clicks = vi.fn()
+    send.addEventListener('click', clicks)
+    press(el.querySelector('#c'))
+    expect(clicks).toHaveBeenCalledTimes(1)
+    // Disabled (no text yet): Enter stays put and says nothing.
+    send.disabled = true
+    expect(press(el.querySelector('#c')).event.defaultPrevented).toBe(true)
+    expect(clicks).toHaveBeenCalledTimes(1)
+  })
+
+  it('a settings sheet whose blocks save on their own: the Save after the field, in its block', () => {
+    const { el } = dialog(
+      `<div id="clabe"><input id="c1" />
+         <button data-kit-button="subtle">Cancelar</button>
+         <button data-kit-button="solid" id="s1">Guardar CLABE</button></div>
+       <div id="cuenta"><input id="c2" />
+         <button data-kit-button="solid" id="s2">Agregar cuenta</button></div>`,
+    )
+    expect(primaryOf(el, el.querySelector('#c1')).id).toBe('s1')
+    expect(primaryOf(el, el.querySelector('#c2')).id).toBe('s2')
+    // From nowhere in particular nothing is guessed.
+    expect(primaryOf(el)).toBe(null)
+  })
+
+  it('a filled button before the field is not its Save: the foot’s is', () => {
+    const { el, confirm } = dialog(
+      `<div><button data-kit-button="solid" id="camera">Abrir cámara</button>
+         <input id="code" /></div>`,
+      { foot: FOOT },
+    )
+    expect(primaryOf(el, el.querySelector('#code'))).toBe(confirm)
+  })
+
   it('the one filled button; with two, the one in the foot; a marked one first', () => {
     const { el, confirm } = dialog('<input />', { foot: FOOT })
     expect(primaryOf(el)).toBe(confirm)
