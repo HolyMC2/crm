@@ -286,5 +286,96 @@ def _deal_indicators() -> list[dict]:
 	]
 
 
+# ── Calls ────────────────────────────────────────────────────────────
+def _calls(start: date, end: date) -> dict:
+	from crm import calls_sla
+
+	memo = getattr(frappe.local, "crm_metas_calls", None)
+	if memo is None:
+		memo = frappe.local.crm_metas_calls = {}
+	key = (str(start), str(end))
+	if key not in memo:
+		memo[key] = {u: row for u, row in calls_sla.per_person(start, end).items() if u not in NOBODY}
+	return memo[key]
+
+
+def _call_values(value, n_field: str, detail):
+	def values(start, end, company=None, options=None) -> dict:
+		out = {}
+		for user, row in _calls(start, end).items():
+			n = int(row.get(n_field) or 0)
+			if not n:
+				continue
+			out[user] = {"value": value(row), "n": n, "detail": detail(row)}
+		return out
+
+	return values
+
+
+def _call_indicators() -> list[dict]:
+	from crm import calls_sla
+
+	if not calls_sla.available():
+		return []
+	group = _("Calls")
+	judged = lambda r: (r["returned"] + r["returned_late"]) or 0  # noqa: E731
+	return [
+		{
+			"key": "llamadas.contestadas",
+			"label": _("Calls picked up"),
+			"group": group,
+			"unit": "percent",
+			"better": "higher",
+			"help": _("Of the incoming calls that rang for each person, how many they answered."),
+			"values": _call_values(
+				lambda r: round(100.0 * r["answered"] / r["incoming"], 1),
+				"incoming",
+				lambda r: _("{0} of {1} calls").format(r["answered"], r["incoming"]),
+			),
+		},
+		{
+			"key": "llamadas.perdidas",
+			"label": _("Missed calls"),
+			"group": group,
+			"unit": "count",
+			"better": "lower",
+			"help": _("Incoming calls that rang for each person and nobody answered."),
+			"values": _call_values(
+				lambda r: r["missed"],
+				"incoming",
+				lambda r: _("{0} of {1} calls").format(r["missed"], r["incoming"]),
+			),
+		},
+		{
+			"key": "llamadas.devueltas_a_tiempo",
+			"label": _("Missed calls returned in time"),
+			"group": group,
+			"unit": "percent",
+			"better": "higher",
+			"help": _("Missed calls someone called back within the inbox's call-back goal."),
+			"values": lambda start, end, company=None, options=None: {
+				user: {
+					"value": round(100.0 * row["returned"] / judged(row), 1),
+					"n": judged(row),
+					"detail": _("{0} of {1} returned in time").format(row["returned"], judged(row)),
+				}
+				for user, row in _calls(start, end).items()
+				if judged(row)
+			},
+		},
+		{
+			"key": "llamadas.hechas",
+			"label": _("Calls made"),
+			"group": group,
+			"unit": "count",
+			"better": "higher",
+			"help": _("Outgoing calls each person completed."),
+			"values": _call_values(
+				lambda r: r["made"], "made", lambda r: _("{0} calls").format(r["made"])
+			),
+		},
+	]
+
+
 def indicators() -> list[dict]:
-	return [*_inbox_indicators(), *_deal_indicators()]
+	return [*_inbox_indicators(), *_deal_indicators(), *_call_indicators()]

@@ -54130,3 +54130,42 @@ msgstr "Crear «{0}»"
 
 msgid "Send it to me"
 msgstr "Mándamelo"
+
+msgid "Calls picked up"
+msgstr "Llamadas contestadas"
+
+msgid "Of the incoming calls that rang for each person, how many they answered."
+msgstr "De las llamadas que entraron para cada quien, cuántas contestó."
+
+msgid "{0} of {1} calls"
+msgstr "{0} de {1} llamadas"
+
+msgid "Missed calls"
+msgstr "Llamadas perdidas"
+
+msgid "Incoming calls that rang for each person and nobody answered."
+msgstr "Llamadas que entraron para cada quien y nadie contestó."
+
+msgid "Missed calls returned in time"
+msgstr "Llamadas perdidas devueltas a tiempo"
+
+msgid "Missed calls someone called back within the inbox's call-back goal."
+msgstr "Llamadas perdidas que alguien devolvió dentro de la meta de devolución."
+
+msgid "{0} of {1} returned in time"
+msgstr "{0} de {1} devueltas a tiempo"
+
+msgid "Calls made"
+msgstr "Llamadas hechas"
+
+msgid "Outgoing calls each person completed."
+msgstr "Llamadas que cada quien hizo y se completaron."
+
+msgid "{0} calls"
+msgstr "{0} llamadas"
+
+msgid "Return a missed call within (minutes)"
+msgstr "Devolver una llamada perdida en (minutos)"
+
+msgid "Calls picked up goal (%)"
+msgstr "Meta de llamadas contestadas (%)"
