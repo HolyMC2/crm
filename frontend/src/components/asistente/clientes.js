@@ -25,7 +25,7 @@ const ICONS = {
   WhatsApp: 'lucide-message-circle',
   Messenger: 'lucide-messages-square',
   Instagram: 'lucide-camera',
-  Webchat: 'lucide-globe',
+  Webchat: 'lucide-store',
 }
 const LABELS = {
   WhatsApp: 'WhatsApp',

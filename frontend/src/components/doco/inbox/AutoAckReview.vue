@@ -96,7 +96,7 @@
         class="mb-1 flex items-center gap-1.5 text-xs text-ink-gray-7"
         data-testid="agent-draft"
       >
-        <span class="lucide-sparkle size-3.5 flex-none" aria-hidden="true" />
+        <span class="lucide-sparkles size-3.5 flex-none" aria-hidden="true" />
         {{ agentReason(r.trigger) }}
       </p>
       <!-- editable draft — the reviewer adjusts the wording before sending -->

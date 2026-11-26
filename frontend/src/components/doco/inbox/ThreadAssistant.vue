@@ -19,7 +19,7 @@
       @focus="warmAssistant"
       @click="open = !open"
     >
-      <span class="lucide-sparkle size-4" aria-hidden="true" />
+      <span class="lucide-sparkles size-4" aria-hidden="true" />
       <span class="max-sm:sr-only">{{ __('Asistente') }}</span>
     </button>
     <div
@@ -61,7 +61,7 @@ const open = ref(false)
 const asks = [
   {
     key: 'responder',
-    icon: 'lucide-message-square-reply',
+    icon: 'lucide-message-circle',
     label: __('¿Qué le respondo?'),
     text: __('Lee la conversación con este cliente y prepárame la respuesta.'),
   },

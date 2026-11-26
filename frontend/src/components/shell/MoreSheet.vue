@@ -448,7 +448,7 @@
               @click="close"
             >
               <span
-                class="lucide-bot-message-square size-4 text-ink-gray-6"
+                class="lucide-messages-square size-4 text-ink-gray-6"
                 aria-hidden="true"
               />
               Asistente para clientes
