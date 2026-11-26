@@ -37,7 +37,11 @@ def same_number(a, b) -> bool:
 
 
 def answered(call) -> bool:
-	return call.get("type") == "Incoming" and call.get("status") == "Completed" and cint(call.get("duration")) > 0
+	return (
+		call.get("type") == "Incoming"
+		and call.get("status") == "Completed"
+		and cint(call.get("duration")) > 0
+	)
 
 
 def missed(call) -> bool:

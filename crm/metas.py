@@ -370,9 +370,7 @@ def _call_indicators() -> list[dict]:
 			"unit": "count",
 			"better": "higher",
 			"help": _("Outgoing calls each person completed."),
-			"values": _call_values(
-				lambda r: r["made"], "made", lambda r: _("{0} calls").format(r["made"])
-			),
+			"values": _call_values(lambda r: r["made"], "made", lambda r: _("{0} calls").format(r["made"])),
 		},
 	]
 

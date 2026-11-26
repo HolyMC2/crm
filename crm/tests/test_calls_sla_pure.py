@@ -15,20 +15,32 @@ if "frappe" not in sys.modules:
 	sys.modules["frappe"] = stub
 	sys.modules["frappe.utils"] = utils
 
-import importlib.util  # noqa: E402
-from pathlib import Path  # noqa: E402
+import importlib.util
+from pathlib import Path
 
 # By path: the crm package's __init__ needs a site; this module's logic does not.
-_spec = importlib.util.spec_from_file_location("calls_sla", Path(__file__).resolve().parents[1] / "calls_sla.py")
+_spec = importlib.util.spec_from_file_location(
+	"calls_sla", Path(__file__).resolve().parents[1] / "calls_sla.py"
+)
 C = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(C)
 
 T = datetime(2026, 11, 26, 10, 0)
 
 
-def call(kind, status, minute, frm="+52 669 123 4567", to="6690000000", duration=0, receiver="tere", caller=None):
-	return {"type": kind, "status": status, "start_time": T.replace(minute=minute), "from": frm, "to": to,
-	        "duration": duration, "receiver": receiver, "caller": caller}
+def call(
+	kind, status, minute, frm="+52 669 123 4567", to="6690000000", duration=0, receiver="tere", caller=None
+):
+	return {
+		"type": kind,
+		"status": status,
+		"start_time": T.replace(minute=minute),
+		"from": frm,
+		"to": to,
+		"duration": duration,
+		"receiver": receiver,
+		"caller": caller,
+	}
 
 
 class TestCalls(unittest.TestCase):
@@ -48,8 +60,11 @@ class TestCalls(unittest.TestCase):
 		self.assertFalse(C.judge(missed, [], 30, T.replace(minute=40)))
 
 	def test_tally_per_person(self):
-		rows = [call("Incoming", "Completed", 0, duration=30), call("Incoming", "No Answer", 5),
-		        call("Outgoing", "Completed", 10, to="6691234567", caller="tere", receiver=None)]
+		rows = [
+			call("Incoming", "Completed", 0, duration=30),
+			call("Incoming", "No Answer", 5),
+			call("Outgoing", "Completed", 10, to="6691234567", caller="tere", receiver=None),
+		]
 		out = C.tally(rows, T.replace(hour=23), 30, T.replace(minute=50))
 		self.assertEqual(out["tere"]["incoming"], 2)
 		self.assertEqual(out["tere"]["answered"], 1)
@@ -57,8 +72,11 @@ class TestCalls(unittest.TestCase):
 		self.assertEqual(out["tere"]["made"], 1)
 
 	def test_one_late_row_per_number(self):
-		rows = [call("Incoming", "No Answer", 0), call("Incoming", "Busy", 5),
-		        call("Incoming", "No Answer", 6, frm="6697777777")]
+		rows = [
+			call("Incoming", "No Answer", 0),
+			call("Incoming", "Busy", 5),
+			call("Incoming", "No Answer", 6, frm="6697777777"),
+		]
 		late = C.late_missed(rows, 30, T.replace(minute=59))
 		self.assertEqual(len(late), 2)
 
