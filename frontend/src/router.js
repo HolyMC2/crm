@@ -1222,6 +1222,18 @@ const routes = [
     },
   },
   {
+    // Más › Configuración › Asistente para clientes (S46): the customer agent per
+    // channel, its mode, tools and notices, and a test chat that sends nothing.
+    path: '/asistente/clientes',
+    name: 'AsistenteClientes',
+    component: () => import('@/pages/AsistenteClientes.vue'),
+    meta: {
+      app: 'avisos',
+      title: 'Asistente para clientes',
+      ownPhoneHeader: true,
+    },
+  },
+  {
     // The CRM notifications page merged into Avisos; old links keep working.
     path: '/notifications',
     name: 'Notifications',

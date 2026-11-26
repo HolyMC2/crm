@@ -109,6 +109,10 @@
           <div class="ml-auto flex flex-none items-center gap-0.5">
             <!-- AI summary of the thread (P2 S3 / spec 5.2); hides itself when AI is off -->
             <ThreadSummary />
+            <!-- the customer writes in another language: «Traducir» (S46) -->
+            <ThreadTranslate />
+            <!-- Pregúntale a Muelle about this customer (S46) -->
+            <ThreadAssistant />
             <button
               v-if="canSendTemplate"
               type="button"
@@ -290,6 +294,12 @@ const LostStagePrompt = defineAsyncComponent(
 )
 const DealOverview = defineAsyncComponent(
   () => import('@/components/doco/inbox/DealOverview.vue'),
+)
+const ThreadTranslate = defineAsyncComponent(
+  () => import('@/components/doco/inbox/ThreadTranslate.vue'),
+)
+const ThreadAssistant = defineAsyncComponent(
+  () => import('@/components/doco/inbox/ThreadAssistant.vue'),
 )
 const ThreadSummary = defineAsyncComponent(
   () => import('@/components/doco/inbox/ThreadSummary.vue'),

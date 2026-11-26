@@ -90,6 +90,15 @@
         </span>
       </div>
 
+      <!-- The customer agent wrote this reply (S46): say why it waits for a person. -->
+      <p
+        v-if="r.source === 'customer_agent'"
+        class="mb-1 flex items-center gap-1.5 text-xs text-ink-gray-7"
+        data-testid="agent-draft"
+      >
+        <span class="lucide-sparkle size-3.5 flex-none" aria-hidden="true" />
+        {{ agentReason(r.trigger) }}
+      </p>
       <!-- editable draft — the reviewer adjusts the wording before sending -->
       <textarea
         v-model="drafts[r.name]"
@@ -121,6 +130,8 @@
 </template>
 
 <script setup>
+import { agentReason } from '@/components/doco/inbox/agentDraft'
+
 import { computed, reactive, watch } from 'vue'
 import { toast } from 'frappe-ui'
 import {

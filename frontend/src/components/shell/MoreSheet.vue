@@ -439,6 +439,20 @@
               />
               {{ __('Assistant notices') }}
             </RouterLink>
+            <!-- S46: the customer agent on the shop's channels. -->
+            <RouterLink
+              v-if="user.is_admin || user.nav_role === 'dueno'"
+              to="/asistente/clientes"
+              :class="ROW"
+              data-testid="more-asistente-clientes"
+              @click="close"
+            >
+              <span
+                class="lucide-bot-message-square size-4 text-ink-gray-6"
+                aria-hidden="true"
+              />
+              Asistente para clientes
+            </RouterLink>
             <button
               v-if="installAvailable"
               type="button"

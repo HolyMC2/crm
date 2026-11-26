@@ -283,7 +283,7 @@
             </div>
             <div
               v-else-if="whatsapp.content_type == 'audio'"
-              class="flex items-center gap-2"
+              class="flex flex-col gap-1"
             >
               <audio
                 :src="whatsapp.attach"
@@ -291,6 +291,23 @@
                 preload="none"
                 class="cursor-pointer"
               />
+              <!-- A customer's voice note in words (doco_marketing voice_notes). -->
+              <p
+                v-if="whatsapp.doco_transcript"
+                class="max-w-80 whitespace-pre-wrap text-sm italic text-ink-gray-8 [overflow-wrap:anywhere]"
+                data-testid="voice-transcript"
+              >
+                <span
+                  class="lucide-mic mr-1 inline-block size-3 align-[-1px]"
+                  aria-hidden="true"
+                />{{ whatsapp.doco_transcript }}
+              </p>
+              <p
+                v-else-if="whatsapp.doco_transcript_state === 'Pendiente'"
+                class="text-sm italic text-ink-gray-7"
+              >
+                {{ __('Transcribiendo…') }}
+              </p>
             </div>
             <div
               v-else-if="whatsapp.content_type == 'video'"

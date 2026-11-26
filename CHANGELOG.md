@@ -12,6 +12,19 @@ Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` i
 - **Why:** Marco, 2026-11-26: the bot should be «more proactive on the system» (doco's round, `assistant/ronda`), and «tap on card for more data, tap again to go back».
 - **Change:** `/asistente/avisos` (Más › Avisos del asistente; «Ajustes del negocio» lists it): the owner switches the round on for the business and picks what it watches, the morning hour, quiet hours, the urgent ones a day, the brain and who receives (each person on or off with their areas); each person, a manager too, picks their own areas, hour, channels (WhatsApp or Telegram when linked) and quiet hours; silenced findings come back with «Volver a avisarme»; «Mándamelo» sends today's brief. A tap saves; a refusal puts it back. In the chat a round finding is one card with its «⚡» (or «Ya lo vi»), «Mañana» and «No me avises» (`splitButtons` joins the `rda:` buttons to their «n.» line). Every bot card opens short (what it is, the amount, its buttons): a tap on its body opens it in place with every line, the records as links, why and what the tap changes, and a second tap closes it; its buttons work open or closed (`ActionCard`: approval, admin and finding cards, receipts; `DecisionCard`: the line, its figures, the best match or the first choices and the way out; the rest on the tap). A customer finding (doco's «Clientes esperando») carries its own tap: «Tomarla», or «Aprobar y enviar» with «Descartar» beside it (`rda:t|a|d`). Hoy's «Lo que vio el asistente» rows carry their own action («Pedir lo que falta», «Ya lo vi») and a «Mañana» clock beside it (`action.later`).
 - **Tests:** `asistenteAvisos.test.js` (new), `assistant.test.js` (finding cards, open/close), `decisionCards.test.js` (opens short; the existing cases open the card first), `hoy.test.js`. Rollback: revert.
+## 2026-11-26 — Asistente para clientes, voice notes in words, «Traducir» and the assistant in the conversation (lane asistente-clientes, with doco and doco_marketing; not deployed)
+
+- **Why:** S46 (`asistente-program/briefs/S46-asistente-para-clientes.md`).
+- **Change:**
+  - **Más › Asistente para clientes** (`/asistente/clientes`): channels with a switch, the three ways a reply reaches the customer (Prueba on automatic), what the agent may do as chips, the handoff and out-of-hours notices, instructions, timing and «Probar» (a test chat that sends nothing).
+  - A customer's voice note shows its transcript under the audio (deal thread and the new inbox).
+  - The conversation bar gets «Traducir» when the customer writes in another language: their messages in the shop's language, and the worker's reply in theirs, back to the composer.
+  - The bar also gets a sparkle «Asistente» with four asks («¿Qué le respondo?», «Cotízale lo que pide», «Registra su reparación», «Mándale el estado») that opens the books bot on the conversation's record.
+  - «Por aprobar» says why an agent reply waits.
+- **Server:**
+  - A bot's own start and finish no longer hold a customer in the policy cooldown. People's actions, a handoff to people and a retiring reply still do; 8 of the 9 silences in the 11-07 benchmark came from this.
+  - History and the WhatsApp thread carry the transcript fields.
+- **Tests:** `asistenteClientes.test.js`, `agentDraft.test.js`; `test_automation_channels`, `test_conversation_threads` green on a lease. Rollback: revert.
 
 ## 2026-11-25 — A record's own «a» works again (Garantía, Gasto factura, Cobranza › cliente) (lane teclado-conflictos; not deployed)
 

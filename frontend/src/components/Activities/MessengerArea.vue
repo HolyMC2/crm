@@ -101,8 +101,27 @@
             </button>
           </Dropdown>
         </div>
+        <!-- A customer's voice note in words (doco_marketing voice_notes). -->
+        <p
+          v-if="m.transcript"
+          class="mt-1 whitespace-pre-wrap italic [overflow-wrap:anywhere]"
+          data-testid="voice-transcript"
+        >
+          <span
+            class="lucide-mic mr-1 inline-block size-3 align-[-1px]"
+            aria-hidden="true"
+          />{{ m.transcript }}
+        </p>
+        <p
+          v-else-if="
+            m.content_type === 'audio' && m.transcript_state === 'Pendiente'
+          "
+          class="mt-1 text-2xs italic"
+        >
+          {{ __('Transcribiendo…') }}
+        </p>
         <div
-          v-if="m.content"
+          v-if="m.content && !(m.transcript && m.content === 'Audio')"
           class="whitespace-pre-wrap [overflow-wrap:anywhere]"
         >
           {{ m.content }}
