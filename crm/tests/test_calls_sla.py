@@ -10,6 +10,8 @@ from frappe.utils import add_to_date, getdate, now_datetime
 
 from crm import calls_sla, metas
 
+SHOP = "6691112233"
+
 
 class TestCallsSla(IntegrationTestCase):
 	def setUp(self):
@@ -40,8 +42,8 @@ class TestCallsSla(IntegrationTestCase):
 				"start_time": start,
 				"end_time": start + timedelta(seconds=duration),
 				"duration": duration,
-				"from": frm or "",
-				"to": to or "",
+				"from": frm or SHOP,
+				"to": to or SHOP,
 				"receiver": receiver,
 				"caller": caller,
 				"telephony_medium": "Manual",
@@ -52,13 +54,13 @@ class TestCallsSla(IntegrationTestCase):
 		self._log("Incoming", "Completed", 120, duration=60, frm=self.number, receiver=self.tere)
 		self._log("Incoming", "No Answer", 100, frm=self.number, receiver=self.tere)
 		self._log("Outgoing", "Completed", 90, duration=30, to=self.number, caller=self.tere)
-		today = getdate()
+		since, today = getdate(add_to_date(now_datetime(), hours=-3)), getdate()
 		values = {i["key"]: i["values"] for i in metas.indicators() if i["key"].startswith("llamadas.")}
-		picked = values["llamadas.contestadas"](today, today)[self.tere]
+		picked = values["llamadas.contestadas"](since, today)[self.tere]
 		self.assertEqual((picked["value"], picked["n"]), (50.0, 2))
-		returned = values["llamadas.devueltas_a_tiempo"](today, today)[self.tere]
+		returned = values["llamadas.devueltas_a_tiempo"](since, today)[self.tere]
 		self.assertEqual((returned["value"], returned["n"]), (100.0, 1))
-		self.assertEqual(values["llamadas.hechas"](today, today)[self.tere]["value"], 1)
+		self.assertEqual(values["llamadas.hechas"](since, today)[self.tere]["value"], 1)
 
 	def test_a_missed_call_nobody_returned_is_on_the_round_list(self):
 		self._log("Incoming", "No Answer", 90, frm=self.number, receiver=self.tere)

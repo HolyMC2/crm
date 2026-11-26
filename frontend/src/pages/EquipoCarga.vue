@@ -29,7 +29,7 @@
         <div class="flex items-center gap-1">
           <button
             type="button"
-            class="press flex size-11 items-center justify-center rounded-full text-ink-gray-7 hover:bg-surface-gray-2"
+            class="press flex size-11 items-center justify-center rounded-full text-ink-gray-7"
             :aria-label="__('Previous', null, 'Equipo')"
             :title="__('Previous', null, 'Equipo')"
             @click="go(period, shift(-1))"
@@ -43,7 +43,7 @@
           >
           <button
             type="button"
-            class="press flex size-11 items-center justify-center rounded-full text-ink-gray-7 hover:bg-surface-gray-2"
+            class="press flex size-11 items-center justify-center rounded-full text-ink-gray-7"
             :aria-label="__('Next', null, 'Equipo')"
             :title="__('Next', null, 'Equipo')"
             @click="go(period, shift(1))"
