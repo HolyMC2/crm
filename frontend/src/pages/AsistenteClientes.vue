@@ -89,19 +89,13 @@
               ]"
               aria-hidden="true"
             />
-            <div class="min-w-0 flex-1">
-              <div class="truncate text-base text-ink-gray-9">
-                {{ account.label }}
-              </div>
-              <div class="text-sm text-ink-gray-6">
-                {{ providerLabel(account.provider) }}
-              </div>
-            </div>
+            <!-- The switch is the row: the channel's name leads, a tap anywhere turns it. -->
             <Switch
+              class="min-w-0 flex-1"
               :model-value="account.on"
               :disabled="!data.can_edit || busy === key(account) || blocked"
-              :label="`${account.label}: ${account.on ? 'encendido' : 'apagado'}`"
-              :wide="false"
+              :label="account.label"
+              :description="providerLabel(account.provider)"
               :data-testid="`channel-${account.provider}`"
               @update:model-value="(on) => toggle(account, on)"
             />
