@@ -871,6 +871,9 @@ def _wa_message_fields():
 	# Re-engagement message"); fork field, guarded for pre-migrate windows.
 	if frappe.db.has_column("WhatsApp Message", "failure_reason"):
 		fields += ["failure_reason"]
+	# A customer's voice note in words (doco_marketing services/voice_notes.py).
+	if frappe.db.has_column("WhatsApp Message", "doco_transcript"):
+		fields += ["doco_transcript", "doco_transcript_state"]
 	return fields
 
 
