@@ -275,6 +275,8 @@ const SOURCE_ICONS = {
   'doco.asistencia': 'lucide-clock',
   // A safe's bank trip is due (posawesome cash_custody.bank_trip_api).
   'posawesome.bank_trip': 'lucide-landmark',
+  // What the assistant's round noticed for this person (doco assistant/ronda).
+  'asistente.ronda': 'lucide-sparkles',
 }
 
 // «Primeros pasos» reads as the checklist it is, as in its whole list: an open
@@ -557,6 +559,8 @@ export function continuarCards(
         ...sourceLink(row.url),
         modified: row.modified,
         group: row.group,
+        // a row may name its own action («Pedir lo que falta», «Ya lo vi»)
+        actionLabel: row.action_label || '',
       })),
       source,
     })
@@ -583,6 +587,14 @@ export function runSourceAction(source, row, value = '') {
   return call(source.action.method, {
     name: row.name,
     value,
+    modified: row.modified,
+  })
+}
+
+/** The provider's second action beside it (the round's «Mañana»), when it has one. */
+export function runSourceLater(source, row) {
+  return call(source.action.later.method, {
+    name: row.name,
     modified: row.modified,
   })
 }

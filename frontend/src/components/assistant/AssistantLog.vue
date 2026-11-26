@@ -201,8 +201,11 @@
           :card="card"
           :state="assistant.cards[card.id]"
           :receipt="receipts[card.id]"
-          @confirm="tap(card.confirm, card.id)"
+          @confirm="confirmCard(card)"
           @change="change(card)"
+          @later="tap(card.later, card.id)"
+          @mute="tap(card.mute, card.id)"
+          @discard="tap(card.discard, card.id)"
           @navigate="$emit('navigate')"
         />
         <AssistantCanvasFile
@@ -437,6 +440,14 @@ const receipts = computed(() => {
     }
   return out
 })
+
+// A card's main button. A finding's may be another card's door («Revisar y
+// validar») or «Ya lo vi»: only an approval waits for its receipt.
+function confirmCard(card) {
+  const data = card.confirm
+  if (!card.finding || /^(agr|act):/.test(data)) return tap(data, card.id)
+  return tap(data, data.startsWith('rda:') ? card.id : null)
+}
 
 // «Cambiar»: a run approval is declined (nothing is applied) and the worker
 // says what to change; a parked card simply waits for the new instruction.

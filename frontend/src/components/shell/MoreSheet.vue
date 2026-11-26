@@ -425,6 +425,20 @@
               />
               Herramientas del asistente
             </RouterLink>
+            <!-- doco assistant/ronda: what Muelle tells each person first. -->
+            <RouterLink
+              v-if="assistantEnabled || user.is_admin"
+              to="/asistente/avisos"
+              :class="ROW"
+              data-testid="more-avisos-asistente"
+              @click="close"
+            >
+              <span
+                class="lucide-bell-ring size-4 text-ink-gray-6"
+                aria-hidden="true"
+              />
+              {{ __('Assistant notices') }}
+            </RouterLink>
             <button
               v-if="installAvailable"
               type="button"

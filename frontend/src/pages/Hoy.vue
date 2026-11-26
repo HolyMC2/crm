@@ -562,18 +562,36 @@
                     v-if="choicesFor(card, row)"
                     variant="subtle"
                     class="mr-4 min-h-11 shrink-0 sm:mr-5"
-                    :label="card.source.action.label"
+                    :label="row.actionLabel || card.source.action.label"
                     :disabled="!choicesFor(card, row).length"
                     @click="openAssign(card, row)"
                   />
                   <Button
                     v-else
                     variant="subtle"
-                    class="mr-4 min-h-11 shrink-0 sm:mr-5"
-                    :label="card.source.action.label"
+                    class="min-h-11 shrink-0"
+                    :class="card.source.action.later ? 'mr-1' : 'mr-4 sm:mr-5'"
+                    :label="row.actionLabel || card.source.action.label"
                     :loading="busy.has(card.key + row.key)"
+                    data-hoy-row-action
                     @click="sourceAction(card, row)"
                   />
+                  <!-- the provider's second action (the round's «Mañana»): one tap puts it off -->
+                  <button
+                    v-if="card.source.action.later"
+                    type="button"
+                    class="press state-layer mr-3 flex size-11 shrink-0 items-center justify-center rounded-full text-ink-gray-7 sm:mr-4"
+                    :aria-label="card.source.action.later.label"
+                    :title="card.source.action.later.label"
+                    :disabled="busy.has(card.key + row.key)"
+                    data-hoy-row-later
+                    @click="sourceLater(card, row)"
+                  >
+                    <span
+                      class="lucide-alarm-clock size-5"
+                      aria-hidden="true"
+                    />
+                  </button>
                 </template>
               </div>
               <!-- A card without documents is itself the row: it opens its app. -->
@@ -830,6 +848,7 @@ import {
   hoyLive,
   loadHoy,
   runSourceAction,
+  runSourceLater,
   salesToday,
   scanDrafts,
   teamOverdueRows,
@@ -1424,6 +1443,24 @@ async function sourceAction(card, row) {
     if (result?.ok === false) toast.error(result.message)
     else toast.success(result?.message || __('Done'))
     delete picks[key]
+    refresh({ quiet: true })
+  } catch (error) {
+    toast.error(
+      error?.messages?.[0] || __('That did not go through. Refresh and retry.'),
+    )
+  } finally {
+    busy.delete(key)
+  }
+}
+
+async function sourceLater(card, row) {
+  const key = card.key + row.key
+  if (busy.has(key)) return
+  busy.add(key)
+  try {
+    const result = await runSourceLater(card.source, row)
+    if (result?.ok === false) toast.error(result.message)
+    else toast.success(result?.message || __('Done'))
     refresh({ quiet: true })
   } catch (error) {
     toast.error(

@@ -264,6 +264,22 @@ const CATALOG_PROGRESS = /^imgq:catalog:progress:(.+)$/
  * its label) and the run approvals `agr:<run>:<pid>:a|r` (one row per
  * proposal, its line in the reply text).
  */
+/** The «n.» line of a message and its indented lines (a card's detail). */
+function numberedLine(lines, n) {
+  let at = n ? lines.findIndex((l) => l.trim().startsWith(`${n}.`)) : -1
+  // a message with one card numbers nothing: its card is the text after the head
+  if (at < 0 && !n)
+    at = lines.findIndex(
+      (l, i) => /^\S/.test(l) && lines[i + 1]?.startsWith('   '),
+    )
+  const more = []
+  for (let i = at + 1; at >= 0 && i < lines.length; i++) {
+    if (!/^\s+\S/.test(lines[i])) break
+    more.push(lines[i].trim())
+  }
+  return { line: at >= 0 ? lines[at] : null, more }
+}
+
 export function splitButtons(message) {
   const rows = Array.isArray(message?.buttons) ? message.buttons : []
   const lines = String(message?.text || '').split('\n')
@@ -276,6 +292,44 @@ export function splitButtons(message) {
     )
     const approve = buttons.find((b) => /^agr:.+:a$/.test(b.callback_data))
     const reject = buttons.find((b) => /^agr:.+:r$/.test(b.callback_data))
+    // A finding of the round (doco assistant/ronda): its prepared action (or
+    // the buttons it brings, or «Ya lo vi»), then «Mañana» and «No me avises»,
+    // all on one card numbered like its «n.» line.
+    const later = buttons.find((b) => /^rda:m:/.test(b.callback_data))
+    if (later) {
+      const mute = buttons.find((b) => /^rda:n:/.test(b.callback_data))
+      // «Tomarla» / «Aprobar y enviar» are the round's own taps on the inbox;
+      // «Descartar» rides beside them
+      const discard = buttons.find((b) => /^rda:d:/.test(b.callback_data))
+      const primary =
+        buttons.find(
+          (b) =>
+            !b.callback_data.startsWith('rda:') ||
+            /^rda:[ta]:/.test(b.callback_data),
+        ) || buttons.find((b) => /^rda:v:/.test(b.callback_data))
+      if (primary) {
+        const n = (primary.text.match(/(\d+)\s*$/) || [])[1]
+        const { line, more } = numberedLine(lines, n)
+        cards.push({
+          id: primary.callback_data,
+          summary: stripEmoji(
+            line ? line.trim().replace(/^\d+\.\s*/, '') : lines[0] || '',
+          ),
+          detail: more.length ? stripEmoji(more.join('\n')) : null,
+          confirm: primary.callback_data,
+          confirmLabel: stripEmoji(primary.text.replace(/\s*\d+\s*$/, '')),
+          change: null,
+          later: later.callback_data,
+          mute: mute?.callback_data || null,
+          discard: discard?.callback_data || null,
+          discardLabel: discard
+            ? stripEmoji(discard.text.replace(/\s*\d+\s*$/, ''))
+            : null,
+          finding: true,
+        })
+        continue
+      }
+    }
     if (approve) {
       const n = (approve.text.match(/(\d+)\s*$/) || [])[1]
       const at = n ? lines.findIndex((l) => l.trim().startsWith(`${n}.`)) : -1
@@ -325,14 +379,23 @@ const APPROVAL_FRAME = [
 /** The reply text without the approval lines its cards already show. */
 export function proseOf(message, cards) {
   const text = String(message?.text || '')
-  if (!cards.some((card) => card.id.startsWith('agr:'))) return stripEmoji(text)
+  const carded = cards.some(
+    (card) => card.id.startsWith('agr:') || card.finding,
+  )
+  if (!carded) return stripEmoji(text)
   // the numbered approval lines and their indented detail are on the cards,
   // and so is what doco's frame around them says (the card asks, «Confirmar»
-  // saves): «El agente propone…», «Al aprobar se guardan…»
+  // saves): «El agente propone…», «Al aprobar se guardan…»; a finding's own
+  // line (the round's, numbered or not) is its card's summary
+  const summaries = new Set(
+    cards.filter((card) => card.finding).map((card) => card.summary),
+  )
   const kept = []
   let inItem = false
   for (const line of text.split('\n')) {
-    if (/^\s*\d+\.\s/.test(line)) inItem = true
+    const bare = stripEmoji(line.trim().replace(/^\d+\.\s*/, ''))
+    if (/^\s*\d+\.\s/.test(line) || (/^\S/.test(line) && summaries.has(bare)))
+      inItem = true
     else if (!(inItem && /^\s+\S/.test(line))) inItem = false
     if (!inItem && !APPROVAL_FRAME.some((rx) => rx.test(line))) kept.push(line)
   }

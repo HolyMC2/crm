@@ -157,6 +157,90 @@ describe('what a reply says', () => {
     )
   })
 
+  it("joins a round finding's «Mañana» and «No me avises» to its card", () => {
+    // doco assistant/ronda/entrega.with_cards + tarjetas.row_for
+    const message = {
+      text: [
+        '☀️ Buenos días, Marco · lo de hoy (jue 26 nov)',
+        'Hoy lo urgente es la tarjeta.',
+        '',
+        '1. El pago de AMEX ****1007 vence el 28 nov: $8,450.00',
+        '   Corte del 16 nov: $8,450.00',
+        '   Por qué: Si no se paga a tiempo, la tarjeta cobra intereses.',
+        '   Al tocar «Anotar el pago»: Te deja un pendiente.',
+        '',
+        '2. 3 movimientos del banco sin explicar ($1,200.00)',
+        '   El más viejo es del 20 nov (6 días)',
+      ].join('\n'),
+      buttons: [
+        [
+          { text: '⚡ Anotar el pago 1', callback_data: 'agr:AGR-1:p1:a' },
+          { text: '⏰ Mañana 1', callback_data: 'rda:m:HLZ-1' },
+          { text: '🔕 No me avises 1', callback_data: 'rda:n:HLZ-1' },
+        ],
+        [
+          { text: '👍 Ya lo vi 2', callback_data: 'rda:v:HLZ-2' },
+          { text: '⏰ Mañana 2', callback_data: 'rda:m:HLZ-2' },
+          { text: '🔕 No me avises 2', callback_data: 'rda:n:HLZ-2' },
+        ],
+      ],
+    }
+    const { cards, choices } = splitButtons(message)
+    expect(choices).toEqual([])
+    expect(
+      cards.map((c) => [c.summary, c.confirm, c.later, c.mute, c.confirmLabel]),
+    ).toEqual([
+      [
+        'El pago de AMEX ****1007 vence el 28 nov: $8,450.00',
+        'agr:AGR-1:p1:a',
+        'rda:m:HLZ-1',
+        'rda:n:HLZ-1',
+        'Anotar el pago',
+      ],
+      [
+        '3 movimientos del banco sin explicar ($1,200.00)',
+        'rda:v:HLZ-2',
+        'rda:m:HLZ-2',
+        'rda:n:HLZ-2',
+        'Ya lo vi',
+      ],
+    ])
+    expect(cards[0].detail).toContain('Por qué: Si no se paga a tiempo')
+    // the cards carry their lines: the prose keeps the greeting and the judgment
+    expect(proseOf(message, cards)).toBe(
+      'Buenos días, Marco · lo de hoy (jue 26 nov)\nHoy lo urgente es la tarjeta.',
+    )
+  })
+
+  it('a customer finding offers its own taps: take it, or approve and discard a draft', () => {
+    const { cards } = splitButtons({
+      text: [
+        '1. Cliente 1 espera respuesta desde hace 50 min',
+        '   La meta de la bandeja es contestar en 15 min',
+        '2. El acuse para Ana espera aprobación desde hace 2 h',
+      ].join('\n'),
+      buttons: [
+        [
+          { text: '⚡ Tomarla 1', callback_data: 'rda:t:HLZ-1' },
+          { text: '⏰ Mañana 1', callback_data: 'rda:m:HLZ-1' },
+          { text: '🔕 No me avises 1', callback_data: 'rda:n:HLZ-1' },
+        ],
+        [
+          { text: '⚡ Aprobar y enviar 2', callback_data: 'rda:a:HLZ-2' },
+          { text: '✖ Descartar 2', callback_data: 'rda:d:HLZ-2' },
+          { text: '⏰ Mañana 2', callback_data: 'rda:m:HLZ-2' },
+          { text: '🔕 No me avises 2', callback_data: 'rda:n:HLZ-2' },
+        ],
+      ],
+    })
+    expect(
+      cards.map((c) => [c.confirm, c.confirmLabel, c.discard, c.discardLabel]),
+    ).toEqual([
+      ['rda:t:HLZ-1', 'Tomarla', null, null],
+      ['rda:a:HLZ-2', 'Aprobar y enviar', 'rda:d:HLZ-2', 'Descartar'],
+    ])
+  })
+
   it('reads a parked proposal (act:) as a card with its own label', () => {
     const { cards } = splitButtons({
       text: 'Listo',
@@ -721,6 +805,43 @@ describe('cards and suggestions', () => {
         .querySelector('[data-testid="assistant-card-open"]')
         .getAttribute('href'),
     ).toBe('/pendientes/todo/T-9')
+  })
+
+  it('a card opens short; its body opens the detail in place and closes it again', async () => {
+    const onConfirm = vi.fn()
+    const onLater = vi.fn()
+    const card = {
+      id: 'agr:R:p1:a',
+      summary: 'El pago de AMEX vence el 28 nov: $8,450.00',
+      detail: 'Corte del 16 nov: $8,450.00\nPor qué: cobra intereses.',
+      confirm: 'agr:R:p1:a',
+      confirmLabel: 'Anotar el pago',
+      change: null,
+      later: 'rda:m:H',
+      mute: 'rda:n:H',
+      finding: true,
+    }
+    const { el } = mount(ActionCard, { card, onConfirm, onLater })
+    await nextTick()
+    expect(el.querySelector('[data-testid="assistant-card-detail"]')).toBeNull()
+    const body = el.querySelector('[data-testid="assistant-card-body"]')
+    expect(body.getAttribute('aria-expanded')).toBe('false')
+    body.click()
+    await nextTick()
+    expect(
+      el.querySelector('[data-testid="assistant-card-detail"]').textContent,
+    ).toContain('Por qué: cobra intereses.')
+    // its buttons work open or closed
+    el.querySelector('[data-testid="assistant-card-confirm"]').click()
+    expect(onConfirm).toHaveBeenCalledWith(card)
+    expect(
+      el.querySelector('[data-testid="assistant-card-confirm"]').textContent,
+    ).toContain('Anotar el pago')
+    el.querySelector('[data-testid="assistant-card-later"]').click()
+    expect(onLater).toHaveBeenCalledWith(card)
+    body.click()
+    await nextTick()
+    expect(el.querySelector('[data-testid="assistant-card-detail"]')).toBeNull()
   })
 
   it('a receipt shows «Abrir» once, on its card; without the card the reply keeps it', async () => {

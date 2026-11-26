@@ -103,7 +103,14 @@ class TestAvisosKinds(TestCase):
 
 class TestAvisosPaths(TestCase):
 	def test_avisos_and_legacy_notifications_are_neutral(self):
-		for path in ("/crm/avisos", "/crm/avisos?view=history", "/crm/notifications", "/crm/avisos/"):
+		for path in (
+			"/crm/avisos",
+			"/crm/avisos?view=history",
+			"/crm/notifications",
+			"/crm/avisos/",
+			# «Avisos del asistente» (doco assistant/ronda): every staff account, each its own part
+			"/crm/asistente/avisos",
+		):
 			with self.subTest(path=path):
 				self.assertTrue(is_avisos_path(path))
 
@@ -115,6 +122,7 @@ class TestAvisosPaths(TestCase):
 			"//evil.invalid/crm/avisos",
 			"https://evil.invalid/crm/avisos",
 			"/crm/avisos\\evil",
+			"/crm/asistente/herramientas",
 			None,
 		):
 			with self.subTest(path=path):

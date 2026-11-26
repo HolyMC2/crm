@@ -53992,3 +53992,113 @@ msgstr "Buscando…"
 #: frontend/src/components/assistant/AssistantBtw.vue
 msgid "Your question on the side"
 msgstr "Tu pregunta al margen"
+msgid "Assistant notices"
+msgstr "Avisos del asistente"
+
+msgid "Muelle speaks first"
+msgstr "Muelle te avisa primero"
+
+msgid "What it watches"
+msgstr "Qué vigila"
+
+msgid "Morning brief"
+msgstr "Resumen de la mañana"
+
+msgid "Quiet hours"
+msgstr "Silencio"
+
+msgid "Urgent ones a day"
+msgstr "Urgentes al día"
+
+msgid "Brain"
+msgstr "Modelo"
+
+msgid "Economical"
+msgstr "Económico"
+
+msgid "The assistant’s own"
+msgstr "El del asistente"
+
+msgid "I receive them"
+msgstr "Yo los recibo"
+
+msgid "My notices"
+msgstr "Mis avisos"
+
+msgid "The owner has not switched them on yet."
+msgstr "El dueño todavía no los enciende."
+
+msgid "My areas"
+msgstr "Mis áreas"
+
+msgid "My hour"
+msgstr "Mi hora"
+
+msgid "Like the business ({0})"
+msgstr "Como el negocio ({0})"
+
+msgid "Also on"
+msgstr "También en"
+
+msgid "{0} (not linked)"
+msgstr "{0} (sin ligar)"
+
+msgid "My quiet hours"
+msgstr "Mi silencio"
+
+msgid "Like the business"
+msgstr "Como el negocio"
+
+msgid "Who receives them"
+msgstr "Quién los recibe"
+
+msgid "Silenced"
+msgstr "Silenciados"
+
+msgid "Notify me again"
+msgstr "Volver a avisarme"
+
+msgid "Money"
+msgstr "Dinero"
+
+msgid "Stock and purchases"
+msgstr "Inventario y compras"
+
+msgid "Operations"
+msgstr "Operación"
+
+msgid "No quiet hours"
+msgstr "Sin silencio"
+
+msgid "Off: Muelle only answers when asked."
+msgstr "Apagado: Muelle solo contesta cuando le preguntas."
+
+msgid "Every morning at {0}, and only what cannot wait during the day."
+msgstr "Cada mañana a las {0}, y en el día solo lo que no puede esperar."
+
+msgid "The notices could not open. Try again."
+msgstr "No se pudieron abrir los avisos. Inténtalo otra vez."
+
+msgid "Muelle will tell you about it again."
+msgstr "Muelle te volverá a avisar de esto."
+
+msgid "On its way to your conversation."
+msgstr "Va en camino a tu conversación."
+
+msgid "It could not be sent. Try again."
+msgstr "No se pudo enviar. Inténtalo otra vez."
+
+msgid "Noted."
+msgstr "Anotado."
+
+msgid "Do not tell me about this"
+msgstr "No me avises de esto"
+
+msgid "Muelle noticed"
+msgstr "Muelle vio"
+
+msgid "Create «{0}»"
+msgstr "Crear «{0}»"
+
+msgid "Send it to me"
+msgstr "Mándamelo"

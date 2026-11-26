@@ -1209,6 +1209,19 @@ const routes = [
     },
   },
   {
+    // Más › Configuración › Avisos del asistente (doco assistant/ronda): what
+    // Muelle watches for each person and tells them each morning. The owner
+    // and every person with the assistant see it; each sees their own part.
+    path: '/asistente/avisos',
+    name: 'AsistenteAvisos',
+    component: () => import('@/pages/AsistenteAvisos.vue'),
+    meta: {
+      app: 'avisos',
+      title: 'Avisos del asistente',
+      ownPhoneHeader: true,
+    },
+  },
+  {
     // The CRM notifications page merged into Avisos; old links keep working.
     path: '/notifications',
     name: 'Notifications',

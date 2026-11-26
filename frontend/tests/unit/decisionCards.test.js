@@ -353,10 +353,36 @@ describe('a reload', () => {
   })
 })
 
+// A decision card opens short (the line, its figures, the best match and the
+// way out); a tap on its line opens the whole question in place.
+async function openCard(el) {
+  el.querySelector('[data-testid="decision-body"]')?.click()
+  await tick()
+}
+
 describe('the card on screen', () => {
+  it('opens short and a tap on its line opens it, a second tap closes it', async () => {
+    const { el } = mount(DecisionCard, { card: itemCard() })
+    await tick()
+    expect(el.querySelector('[data-testid="decision-serials"]')).toBeNull()
+    expect(el.querySelector('[data-testid="decision-new"]')).toBeNull()
+    expect(el.querySelectorAll('[data-testid="decision-match"]').length).toBe(1)
+    const body = el.querySelector('[data-testid="decision-body"]')
+    expect(body.getAttribute('aria-expanded')).toBe('false')
+    body.click()
+    await tick()
+    expect(body.getAttribute('aria-expanded')).toBe('true')
+    expect(el.querySelector('[data-testid="decision-serials"]')).not.toBeNull()
+    expect(el.querySelector('[data-testid="decision-new"]')).not.toBeNull()
+    body.click()
+    await tick()
+    expect(el.querySelector('[data-testid="decision-new"]')).toBeNull()
+  })
+
   it('shows the line as printed, its IMEIs, the matches and the new article', async () => {
     const { el } = mount(DecisionCard, { card: itemCard() })
     await tick()
+    await openCard(el)
     expect(
       el.querySelector('[data-testid="decision-line"]').textContent,
     ).toContain('CELULAR PRUEBA Z9 256GB 8 RAM VERDE')
@@ -397,6 +423,7 @@ describe('the card on screen', () => {
   it('«Vincular» links the match and «Crear artículo» sends the edited article', async () => {
     const { el } = mount(DecisionCard, { card: itemCard() })
     await tick()
+    await openCard(el)
     el.querySelector('[data-testid="decision-link"]').click()
     await tick()
     expect(mocks.call).toHaveBeenLastCalledWith(`${API}.decision_apply`, {
@@ -445,6 +472,7 @@ describe('the card on screen', () => {
     }
     const { el } = mount(DecisionCard, { card })
     await tick()
+    await openCard(el)
     expect(
       el.querySelector('[data-testid="decision-error"]').textContent,
     ).toContain('No encontré la unidad')
@@ -469,6 +497,7 @@ describe('the card on screen', () => {
     }
     const { el } = mount(DecisionCard, { card })
     await tick()
+    await openCard(el)
     expect(el.querySelector('[data-testid="decision-serial"]').disabled).toBe(
       true,
     )
@@ -480,6 +509,7 @@ describe('the card on screen', () => {
   it('an answered card is one line with the article to open', async () => {
     const { el } = mount(DecisionCard, { card: resolvedCard() })
     await tick()
+    await openCard(el)
     expect(
       el.querySelector('[data-testid="decision-result"]').textContent,
     ).toContain('Creé «Celular Prueba Z9 256GB Verde»')
@@ -502,6 +532,7 @@ describe('the card on screen', () => {
     }
     const { el } = mount(DecisionCard, { card })
     await tick()
+    await openCard(el)
     expect(el.textContent).toContain('¿A qué almacén entra esta compra?')
     el.querySelector('[data-testid="decision-option"]').click()
     await tick()

@@ -20,20 +20,34 @@
         ]"
         aria-hidden="true"
       />
-      <div class="min-w-0 flex-1">
-        <p
-          class="break-words text-base text-ink-gray-9"
+      <button
+        type="button"
+        class="state-layer -m-1 min-w-0 flex-1 rounded-5 p-1 text-left"
+        :aria-expanded="String(open)"
+        data-testid="decision-result-body"
+        @click="open = !open"
+      >
+        <span
+          class="block break-words text-base text-ink-gray-9"
           data-testid="decision-result"
         >
           {{ result.text }}
-        </p>
-        <p
+        </span>
+        <span
           v-if="card.line?.text && card.line.text !== result.text"
-          class="mt-0.5 truncate text-sm text-ink-gray-6"
+          class="mt-0.5 block text-sm text-ink-gray-6"
+          :class="open ? 'break-words' : 'truncate'"
         >
           {{ card.line.text }}
-        </p>
-      </div>
+        </span>
+        <span
+          v-if="open && figures"
+          class="num mt-0.5 block text-sm text-ink-gray-6"
+          data-testid="decision-result-figures"
+        >
+          {{ figures }}
+        </span>
+      </button>
       <RouterLink
         v-if="result.to"
         :to="result.to"
@@ -48,13 +62,34 @@
     <template v-else>
       <!-- The line as printed: the question's title. -->
       <header class="space-y-1 px-3 pt-3">
-        <p v-if="progress" class="text-sm text-ink-gray-6">{{ progress }}</p>
-        <h3
-          class="title-face break-words text-lg font-semibold leading-snug text-ink-gray-9"
-          data-testid="decision-line"
+        <button
+          type="button"
+          class="state-layer -mx-1 flex w-[calc(100%+0.5rem)] items-start gap-2 rounded-5 px-1 text-left"
+          :aria-expanded="String(open)"
+          data-testid="decision-body"
+          @click="open = !open"
         >
-          {{ card.line?.text ? `«${card.line.text}»` : card.prompt }}
-        </h3>
+          <span class="min-w-0 flex-1">
+            <span v-if="progress" class="block text-sm text-ink-gray-6">{{
+              progress
+            }}</span>
+            <span
+              class="title-face block break-words text-lg font-semibold leading-snug text-ink-gray-9"
+              role="heading"
+              aria-level="3"
+              data-testid="decision-line"
+            >
+              {{ card.line?.text ? `«${card.line.text}»` : card.prompt }}
+            </span>
+          </span>
+          <span
+            :class="[
+              open ? 'lucide-chevron-up' : 'lucide-chevron-down',
+              'mt-1 size-4 flex-none text-ink-gray-5',
+            ]"
+            aria-hidden="true"
+          />
+        </button>
         <p
           v-if="figures || card.line?.part_number"
           class="num text-sm text-ink-gray-7"
@@ -71,7 +106,7 @@
           }}
         </p>
         <ul
-          v-if="serials.shown.length"
+          v-if="open && serials.shown.length"
           class="flex flex-wrap gap-1 pt-1"
           :aria-label="__('Serial numbers on the paper')"
           data-testid="decision-serials"
@@ -108,7 +143,7 @@
         </p>
         <ul class="divide-y divide-outline-gray-1">
           <li
-            v-for="match in matches"
+            v-for="match in shownMatches"
             :key="match.code"
             class="decision-match py-2"
             data-testid="decision-match"
@@ -151,7 +186,7 @@
             </button>
           </li>
         </ul>
-        <div v-if="card.actions?.search" class="py-2">
+        <div v-if="open && card.actions?.search" class="py-2">
           <ComprasPicker
             model-value=""
             :label="__('Search another article')"
@@ -166,8 +201,27 @@
       </section>
 
       <!-- «Crear»: the article the line would become, editable first. -->
+      <div
+        v-if="
+          !open &&
+          card.type === 'cap_item' &&
+          card.actions?.new &&
+          !matches.length
+        "
+        class="flex justify-end px-3 py-2"
+      >
+        <button
+          type="button"
+          class="press min-h-11 rounded-full bg-surface-gray-10 px-5 text-sm font-medium text-ink-base hover:bg-surface-gray-9 disabled:opacity-50"
+          :disabled="busy || !draftName(draft)"
+          data-testid="decision-create-quick"
+          @click="create"
+        >
+          {{ __('Create «{0}»', [draftName(draft)]) }}
+        </button>
+      </div>
       <section
-        v-if="card.type === 'cap_item' && card.actions?.new"
+        v-if="open && card.type === 'cap_item' && card.actions?.new"
         class="mx-3 mt-1 space-y-3 border-t border-outline-gray-1 py-3"
         :aria-label="__('New article')"
         data-testid="decision-new"
@@ -355,7 +409,7 @@
         </p>
         <ul class="divide-y divide-outline-gray-1">
           <li
-            v-for="option in card.options || []"
+            v-for="option in shownOptions"
             :key="option.i"
             class="flex min-h-11 items-center gap-3 py-1"
           >
@@ -374,7 +428,7 @@
           </li>
         </ul>
         <form
-          v-if="card.actions?.write"
+          v-if="open && card.actions?.write"
           class="flex items-end gap-2 py-2"
           @submit.prevent="written"
         >
@@ -497,6 +551,17 @@ const title = computed(() =>
 // Matches from the card, then what the person found in the catalog.
 const extra = ref([])
 const matches = computed(() => [...(props.card.matches || []), ...extra.value])
+// Short at first: the line, its figures, the best match (or the first two
+// choices) and the way out; a tap on the line opens the rest in place.
+const open = ref(false)
+const shownMatches = computed(() =>
+  open.value ? matches.value : matches.value.slice(0, 1),
+)
+const shownOptions = computed(() =>
+  open.value
+    ? props.card.options || []
+    : (props.card.options || []).slice(0, 2),
+)
 
 function link(match) {
   if (match.i != null) return answer('link', match)
