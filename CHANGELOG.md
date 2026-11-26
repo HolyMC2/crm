@@ -14,6 +14,19 @@ Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` i
   - Helpers `cajasRows`, `cajasWords`, `freshWords`, `autoWords`, `CAJONES` in `conteos.js`, and 7 Conteos entries in `es.po`.
 - **Tests:** `tests/unit/conteos.test.js` +4 (figures and person line, reviews link, stepper saves, money hidden), 54 green.
 - **Rollout:** rides the crm build of the next roll with scanner_kit. Rollback: revert both.
+## 2026-11-26 — Equipo › Carga, call goals and pickup, and «Contar menos con tareas extra» (lane equipo-carga, S47, with doco, scanner_kit and taller; not deployed)
+
+- **Why:** Marco, 2026-11-26: see how much work each person has and what they contributed. Measure the SLA for calls (how many are picked up, missed ones returned in time). Ease the count when someone gets extra tasks.
+- **Change:**
+  - `/crm/equipo/carga` (Equipo › «Workload» button) lists the team for a day or a week, the wrong ones first. Each row shows the person, the verdict chip, their extra tasks and the reason, with the areas as tags; a tap opens each area's figure and detail.
+  - `crm/calls_sla.py` reads the call log:
+    - a call is answered when it is incoming, completed and lasted;
+    - a call is missed when nobody picked up;
+    - a missed call is returned when an outgoing call to the same number (last 10 digits) follows within `call_callback_minutes`.
+  - New Metas indicators: `llamadas.contestadas`, `llamadas.perdidas`, `llamadas.devueltas_a_tiempo`, `llamadas.hechas`.
+  - CRM Inbox Settings gains `call_callback_minutes` (30) and `call_pickup_goal` (80 %), editable in Bandeja › Servicio next to the reply goals.
+  - Conteos gains the shop switch «Less to count with extra tasks».
+- **Tests:** `tests/unit/equipoCarga.test.js`, `crm/tests/test_calls_sla_pure.py` (script) and `crm/tests/test_calls_sla.py` (site). Migration: the two Inbox Settings fields. Rollback: revert.
 
 ## 2026-11-26 — «/btw» in the assistant: a side sheet with its own short thread (lane asistente-btw, with doco; not deployed)
 
