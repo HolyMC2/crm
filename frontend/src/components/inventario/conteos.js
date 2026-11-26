@@ -410,8 +410,7 @@ export function cajasRows(cajas, back = '/crm/inventario/conteos') {
 export function cajasWords(day) {
   if (!day) return ''
   const parts = []
-  if (day.assigned)
-    parts.push(tr('Bins {0} of {1}', [day.done, day.assigned]))
+  if (day.assigned) parts.push(tr('Bins {0} of {1}', [day.done, day.assigned]))
   if (day.recounts) parts.push(tr('{0} to recount', [day.recounts]))
   return parts.join(' · ')
 }

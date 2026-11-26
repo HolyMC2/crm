@@ -533,7 +533,15 @@ describe('Cajas del día', () => {
   const cajas = (over = {}) => ({
     per_shift: 5,
     people: { 'karla@x.mx': { assigned: 5, done: 2, recounts: 1 } },
-    week: { recount: 1, applied: 3, review: 2, resolved: 4, dropped: 0, auto: 3, auto_value: 120 },
+    week: {
+      recount: 1,
+      applied: 3,
+      review: 2,
+      resolved: 4,
+      dropped: 0,
+      auto: 3,
+      auto_value: 120,
+    },
     waiting: [
       {
         recorrido: 'REC-ABCDEFGHIJ',
@@ -554,9 +562,9 @@ describe('Cajas del día', () => {
     expect(figures).toContain('75 de 147')
     expect(figures).toContain('Ajustado solo esta semana')
     expect(one('[data-conteos-ajustado-solo]').textContent).toContain('3 · ')
-    expect(row('karla@x.mx').querySelector('[data-persona-cajas]').textContent).toContain(
-      'Cajones 2 de 5 · 1 por recontar',
-    )
+    expect(
+      row('karla@x.mx').querySelector('[data-persona-cajas]').textContent,
+    ).toContain('Cajones 2 de 5 · 1 por recontar')
   })
 
   it('the reviews waiting open in Escáner and come back here', async () => {
@@ -576,19 +584,30 @@ describe('Cajas del día', () => {
       ...home,
       cajas: { ...home.cajas, per_shift: args.cajones },
     })
-    expect(one('[data-conteos-cajones]').textContent).toContain('Cajones por turno')
+    expect(one('[data-conteos-cajones]').textContent).toContain(
+      'Cajones por turno',
+    )
     // At 0, nothing about cajones is said in the figures.
     expect(one('[data-conteos-cajones-al-dia]')).toBeNull()
     one('[data-conteos-cajones] [data-paso-mas]').click()
     await settle()
     expect(calls('save')).toEqual([{ cajones: 1 }])
-    expect(one('[data-conteos-cajones-al-dia]').textContent).toContain('75 de 147')
+    expect(one('[data-conteos-cajones-al-dia]').textContent).toContain(
+      '75 de 147',
+    )
   })
 
   it('who is kept from the money does not read what was adjusted', async () => {
-    await open(on({ sees_money: false, cajas: cajas({ week: { auto: 3, auto_value: null } }) }))
+    await open(
+      on({
+        sees_money: false,
+        cajas: cajas({ week: { auto: 3, auto_value: null } }),
+      }),
+    )
     expect(one('[data-conteos-ajustado-solo]')).toBeNull()
-    expect(one('[data-conteos-cajones-al-dia]').textContent).toContain('75 de 147')
+    expect(one('[data-conteos-cajones-al-dia]').textContent).toContain(
+      '75 de 147',
+    )
   })
 })
 

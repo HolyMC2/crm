@@ -291,17 +291,20 @@
               class="rounded-7 bg-surface-gray-1 p-3"
               data-conteos-cajones
             >
-              <p class="mb-1 px-1 text-xs font-medium text-ink-gray-6">
-                {{ __('Bins per shift', null, CTX) }}
-              </p>
-              <ConteoPaso
-                wide
-                :model-value="cajas.per_shift || 0"
-                :bounds="CAJONES"
-                unit=""
-                :label="__('Bins per shift', null, CTX)"
-                @commit="setCajones"
-              />
+              <div
+                class="flex min-h-12 items-center justify-between gap-3 px-1"
+              >
+                <span class="min-w-0 flex-1 text-md text-ink-gray-9">{{
+                  __('Bins per shift', null, CTX)
+                }}</span>
+                <ConteoPaso
+                  :model-value="cajas.per_shift || 0"
+                  :bounds="CAJONES"
+                  unit=""
+                  :label="__('Bins per shift', null, CTX)"
+                  @commit="setCajones"
+                />
+              </div>
               <p
                 v-if="errors.cajones"
                 role="alert"
