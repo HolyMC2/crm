@@ -73,6 +73,14 @@
             />
             <Button
               v-if="caps.metas"
+              :icon-left="LucideGauge"
+              :label="__('Workload', null, 'Equipo')"
+              class="min-h-11 sm:min-h-8"
+              data-testid="equipo-carga"
+              @click="router.push({ name: 'EquipoCarga' })"
+            />
+            <Button
+              v-if="caps.metas"
               :icon-left="LucideTarget"
               :label="__('Goals', null, 'Equipo')"
               class="min-h-11 sm:min-h-8"
@@ -382,6 +390,7 @@ import {
   todayTheme,
 } from '@/composables/useEquipo'
 import LucideCalendar from '~icons/lucide/calendar'
+import LucideGauge from '~icons/lucide/gauge'
 import LucideGift from '~icons/lucide/gift'
 import LucideNetwork from '~icons/lucide/network'
 import LucideTarget from '~icons/lucide/target'

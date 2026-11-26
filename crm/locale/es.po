@@ -54169,3 +54169,75 @@ msgstr "Devolver una llamada perdida en (minutos)"
 
 msgid "Calls picked up goal (%)"
 msgstr "Meta de llamadas contestadas (%)"
+
+msgctxt "Conteos"
+msgid "Less to count with extra tasks"
+msgstr "Menos conteo cuando hay tareas extra"
+
+msgctxt "Equipo"
+msgid "Team workload"
+msgstr "Carga del equipo"
+
+msgctxt "Equipo"
+msgid "Workload"
+msgstr "Carga"
+
+msgctxt "Equipo"
+msgid "Period"
+msgstr "Periodo"
+
+msgctxt "Equipo"
+msgid "Previous"
+msgstr "Anterior"
+
+msgctxt "Equipo"
+msgid "Next"
+msgstr "Siguiente"
+
+msgctxt "Equipo"
+msgid "Could not load the team"
+msgstr "No se pudo cargar el equipo"
+
+msgctxt "Equipo"
+msgid "Nobody to show yet"
+msgstr "Todavía no hay nadie que mostrar"
+
+msgctxt "Equipo"
+msgid "Days at work"
+msgstr "Días de trabajo"
+
+msgctxt "Equipo"
+msgid "Day"
+msgstr "Día"
+
+msgctxt "Equipo"
+msgid "Week"
+msgstr "Semana"
+
+msgctxt "Equipo"
+msgid "Nothing done"
+msgstr "Sin aporte"
+
+msgctxt "Equipo"
+msgid "Low"
+msgstr "Bajo"
+
+msgctxt "Equipo"
+msgid "Makes up for it"
+msgstr "Compensa"
+
+msgctxt "Equipo"
+msgid "Contributes"
+msgstr "Aporta"
+
+msgctxt "Equipo"
+msgid "No data yet"
+msgstr "Sin datos"
+
+msgctxt "Equipo"
+msgid "1 extra task"
+msgstr "1 tarea extra"
+
+msgctxt "Equipo"
+msgid "{0} extra tasks"
+msgstr "{0} tareas extra"

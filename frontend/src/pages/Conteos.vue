@@ -368,6 +368,23 @@
               </p>
             </section>
 
+            <!-- S47: a day someone gave a counter extra tasks, their list is smaller
+                 (scanner_kit conteo/extra_work.py). -->
+            <section
+              v-if="
+                settings.extra_work !== null &&
+                settings.extra_work !== undefined
+              "
+              class="rounded-7 bg-surface-gray-1 px-4 py-2"
+              data-conteos-extra
+            >
+              <AjustesSwitch
+                :model-value="Boolean(settings.extra_work)"
+                :label="__('Less to count with extra tasks', null, CTX)"
+                @update:model-value="setExtraWork"
+              />
+            </section>
+
             <section
               class="rounded-7 bg-surface-gray-1 px-3 pb-3 pt-3"
               data-conteos-diferencias
@@ -611,6 +628,12 @@ function turnOff() {
     },
     () => conteosApi.save({ on: 0 }),
   )
+}
+
+function setExtraWork(on) {
+  saveShop('extra_work', { extra_work: on ? 1 : 0 }, (s) => {
+    s.extra_work = on
+  })
 }
 
 function setSize(value) {

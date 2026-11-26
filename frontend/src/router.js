@@ -856,6 +856,13 @@ const routes = [
     meta: { app: 'equipo', title: 'Equipo', listParent: 'Equipo' },
   },
   {
+    // Equipo › Carga (S47): what each person contributed and what was on them.
+    path: '/equipo/carga',
+    name: 'EquipoCarga',
+    component: () => import('@/pages/EquipoCarga.vue'),
+    meta: { app: 'equipo', title: 'Equipo', listParent: 'Equipo' },
+  },
+  {
     // Equipo › Metas: each person's goals and score (doco.metas).
     path: '/equipo/metas',
     name: 'EquipoMetas',
