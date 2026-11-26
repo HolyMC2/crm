@@ -14,6 +14,7 @@ import { call } from 'frappe-ui'
 import { parseServerDate, dayDiff } from '@/utils/display'
 import { normalizeRow } from './assistantText'
 import { loadAgenda } from './assistantAgenda'
+import { openBtw } from './assistantBtw'
 import { loadCanvas } from './assistantCanvas'
 import { loadModels } from './assistantModels'
 import {
@@ -97,8 +98,10 @@ export function showView(view) {
 }
 
 /** A `client` command of the «/» list (doco comandos.py): `new`, `open`, `list`, `canvas`. */
-export function runCommand(action) {
+export function runCommand(action, rest = '') {
   if (action === 'new') return newConversation()
+  // «/btw ¿…?»: the side sheet, the conversation keeps going (assistantBtw.js)
+  if (action === 'btw') return openBtw(rest)
   if (['open', 'list', 'canvas', 'agenda'].includes(action))
     return showView(action)
 }

@@ -256,7 +256,7 @@ async function submit() {
   assistant.draft = ''
   // «/recuerdame mañana…» goes out as «Recuérdame mañana…»; «/nueva» runs here
   const command = files.length ? null : await resolveCommand(text)
-  if (command?.action) return runCommand(command.action)
+  if (command?.action) return runCommand(command.action, command.rest)
   toChat()
   send(command?.text || text, { files })
 }

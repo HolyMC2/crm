@@ -2,6 +2,12 @@
 
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
+## 2026-11-26 — «/btw» in the assistant: a side sheet with its own short thread (lane asistente-btw, with doco; not deployed)
+
+- **Why:** Marco (S45): a quick question while the assistant is in the middle of a job, without stopping it or mixing the answer into the job's thread.
+- **Change:** «/btw» is the first entry of the composer's `/` list («Pregunta al margen»); «/btw …» or a bare «/btw» opens «Al margen», a `BottomSheet` over the conversation with its own short thread and field (`AssistantBtw.vue`, `assistantBtw.js`). The main conversation stays visible above it, and one tap closes it and empties only the side thread. Side answers arrive on their own realtime event and never reach the conversation's list; a card on the side is decided through the same callback.
+- **Proof:** `tests/unit/assistantBtw.test.js` (the command carries the question to the sheet, never to `say`; side events and edits stay on the side; closing leaves the conversation as it was; a conversation event never reaches the side). Assistant, look and translation suites (17 files, 264 passed). Phone walk at 390 px, light and dark, on the live preview with the server mocked: asistente-program `evidence/S45-B/btw/`. Rollback: revert.
+
 ## 2026-11-25 — A record's own «a» works again (Garantía, Gasto factura, Cobranza › cliente) (lane teclado-conflictos; not deployed)
 
 - **Why:** teclado-dialogos gave every record's bolt «a», and the shell's key dispatch let it run before a page that answers its keys with its own listener: on a Garantía «a» stopped assigning the case, on a Gasto factura it stopped asking for approval, on Cobranza › cliente it stopped assigning. Found while listing which keys are free.

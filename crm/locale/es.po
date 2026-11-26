@@ -53976,3 +53976,19 @@ msgstr "{0} en venta, {1} quedaron fuera"
 msgctxt "Gsm"
 msgid "{0} on sale"
 msgstr "{0} en venta"
+
+#: frontend/src/components/assistant/AssistantBtw.vue
+msgid "On the side"
+msgstr "Al margen"
+
+#: frontend/src/components/assistant/AssistantBtw.vue
+msgid "Ask without stopping what Muelle is doing."
+msgstr "Pregunta sin detener lo que Muelle está haciendo."
+
+#: frontend/src/components/assistant/AssistantBtw.vue
+msgid "Looking it up…"
+msgstr "Buscando…"
+
+#: frontend/src/components/assistant/AssistantBtw.vue
+msgid "Your question on the side"
+msgstr "Tu pregunta al margen"

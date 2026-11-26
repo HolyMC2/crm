@@ -52,6 +52,8 @@
       <AssistantComposer />
     </template>
   </BottomSheet>
+  <!-- «/btw»: the side sheet over the conversation, on every size -->
+  <AssistantBtw v-if="btw.mounted" />
 </template>
 <script setup>
 import {
@@ -76,6 +78,7 @@ import AssistantLog from './AssistantLog.vue'
 import AssistantOpenWork from './AssistantOpenWork.vue'
 import AssistantPanel from './AssistantPanel.vue'
 import { sessions } from './assistantSessions'
+import { btw } from './assistantBtw'
 import {
   assistant,
   assistantEnabled,
@@ -95,6 +98,7 @@ const AssistantCanvas = defineAsyncComponent(
 const AssistantWorkspace = defineAsyncComponent(
   () => import('./AssistantWorkspace.vue'),
 )
+const AssistantBtw = defineAsyncComponent(() => import('./AssistantBtw.vue'))
 
 // The dock width the contract names (ASSISTANT.md «wider than 1280px»).
 const docked = useMediaQuery('(min-width: 1280px)')

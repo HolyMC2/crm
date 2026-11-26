@@ -34,6 +34,7 @@ import {
 } from '@/utils/listCache'
 import { canvas, onCanvasEvent, takePendingCanvas } from './assistantCanvas'
 import { answeredLocally, cardKey } from './decisionCardState'
+import { onBtwEvent } from './assistantBtw'
 import {
   _resetActivity,
   loadActivity,
@@ -693,6 +694,10 @@ export function bindSocket(socket) {
   socket.on('doco_assistant_canvas', onCanvasWritten)
   socket.on('doco_assistant_activity', onActivityEvent)
   socket.on('doco_assistant_usage', onUsageEvent)
+  // «/btw»: answers on the side sheet, never in this conversation
+  socket.on('doco_assistant_btw', (payload) =>
+    onBtwEvent(payload, assistant.status?.chat_id),
+  )
   window.addEventListener('socket:reconnected', onReconnected)
 }
 

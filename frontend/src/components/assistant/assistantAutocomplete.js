@@ -172,7 +172,10 @@ export async function resolveCommand(text) {
       .toLowerCase()
   const item = items.find((c) => fold(c.cmd) === `/${fold(m[1])}`)
   if (!item) return null
-  if (item.kind === 'client') return { action: item.action }
+  if (item.kind === 'client')
+    return m[2].trim()
+      ? { action: item.action, rest: m[2].trim() }
+      : { action: item.action }
   const expanded = expandWith(item, m[2])
   return expanded ? { text: expanded } : null
 }
