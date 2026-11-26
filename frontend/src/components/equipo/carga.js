@@ -2,12 +2,14 @@
 // kept here so a unit test reads what the owner sees.
 import { formatDate } from '@/utils/display'
 
+// Tones are StatusChip's: colour only where something needs a look («Aporta» is the
+// normal state and stays neutral).
 const VERDICTS = {
-  sin_aporte: ['Nothing done', 'bad'],
-  bajo: ['Low', 'warn'],
+  sin_aporte: ['Nothing done', 'danger'],
+  bajo: ['Low', 'warning'],
   compensa: ['Makes up for it', 'info'],
-  aporta: ['Contributes', 'ok'],
-  sin_datos: ['No data yet', ''],
+  aporta: ['Contributes', 'neutral'],
+  sin_datos: ['No data yet', 'neutral'],
 }
 
 export function verdictLabel(verdict) {

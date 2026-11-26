@@ -8,9 +8,11 @@ import {
 } from '@/components/equipo/carga'
 
 describe('Equipo › Carga', () => {
-  it('names each judgment and gives the wrong one the bad tone', () => {
+  it('names each judgment and colours only what needs a look (StatusChip tones)', () => {
     expect(verdictLabel('sin_aporte')).toBe('Nothing done')
-    expect(verdictTone('sin_aporte')).toBe('bad')
+    expect(verdictTone('sin_aporte')).toBe('danger')
+    expect(verdictTone('bajo')).toBe('warning')
+    expect(verdictTone('aporta')).toBe('neutral')
     expect(verdictLabel('compensa')).toBe('Makes up for it')
     expect(verdictTone('compensa')).toBe('info')
     expect(verdictLabel('whatever')).toBe('No data yet')
