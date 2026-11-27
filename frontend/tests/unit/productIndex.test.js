@@ -103,6 +103,27 @@ describe('ranking on the device', () => {
     expect(titles('zzz')).toEqual([])
   })
 
+  it('ranks with the shop word list the server sent', async () => {
+    state.call.mockResolvedValue(
+      answer({
+        synonyms: [
+          ['funda', 'case', 'cover'],
+          ['bateria', 'pila'],
+        ],
+      }),
+    )
+    await loadProductIndex()
+    expect(titles('cover a13')).toEqual(['Anillo Case Samsung A13 5G Azul'])
+    expect(titles('pila iphone 13 pro max')[0]).toBe(
+      'Bateria para iPhone 13 Pro Max',
+    )
+  })
+
+  it('a list read before the word list existed ranks without one', async () => {
+    await loadProductIndex()
+    expect(titles('cover a13')).toEqual([])
+  })
+
   it('the exact code or a scanned barcode leads', async () => {
     await loadProductIndex()
     expect(titles('mod00148')[0]).toBe('Pantalla iPhone 13 INCELL')

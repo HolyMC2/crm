@@ -541,6 +541,20 @@ const routes = [
     },
   },
   {
+    // «Palabras que significan lo mismo»: the shop's word list every product
+    // search reads (doco.workspaces.palabras). Its door is in «Ajustes del
+    // negocio» › Inventario. Before `:item`.
+    path: '/productos/palabras',
+    name: 'PalabrasTienda',
+    component: () => import('@/pages/PalabrasTienda.vue'),
+    meta: {
+      app: 'productos',
+      title: 'Palabras',
+      listParent: 'Productos',
+      ownPhoneHeader: true,
+    },
+  },
+  {
     // «Altas por revisar» and «Registrar algo nuevo» (doco.workspaces.altas). Before `:item`.
     path: '/productos/altas',
     name: 'ProductosAltas',

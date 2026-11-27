@@ -54546,3 +54546,97 @@ msgstr "A quién sonó"
 
 msgid "Always"
 msgstr "Siempre"
+#: frontend/src/pages/PalabrasTienda.vue
+msgctxt "Palabras"
+msgid "Words that mean the same"
+msgstr "Palabras que significan lo mismo"
+
+#: frontend/src/pages/PalabrasTienda.vue
+msgctxt "Palabras"
+msgid "Try a search"
+msgstr "Probar una búsqueda"
+
+#: frontend/src/pages/PalabrasTienda.vue
+msgctxt "Palabras"
+msgid "with the list"
+msgstr "con la lista"
+
+#: frontend/src/pages/PalabrasTienda.vue
+msgctxt "Palabras"
+msgid "without it"
+msgstr "sin ella"
+
+#: frontend/src/pages/PalabrasTienda.vue
+msgctxt "Palabras"
+msgid "By the list"
+msgstr "Por la lista"
+
+#: frontend/src/pages/PalabrasTienda.vue
+msgctxt "Palabras"
+msgid "No product answers «{0}»."
+msgstr "Ningún producto responde a «{0}»."
+
+#: frontend/src/pages/PalabrasTienda.vue
+msgctxt "Palabras"
+msgid "Only the owner changes these words."
+msgstr "Solo el Dueño cambia estas palabras."
+
+#: frontend/src/pages/PalabrasTienda.vue
+msgctxt "Palabras"
+msgid "No words yet"
+msgstr "Aún no hay palabras"
+
+#: frontend/src/pages/PalabrasTienda.vue
+msgctxt "Palabras"
+msgid "New group"
+msgstr "Nuevo grupo"
+
+#: frontend/src/pages/PalabrasTienda.vue
+msgctxt "Palabras"
+msgid "Remove «{0}»"
+msgstr "Quitar «{0}»"
+
+#: frontend/src/pages/PalabrasTienda.vue
+msgctxt "Palabras"
+msgid "New word"
+msgstr "Palabra nueva"
+
+#: frontend/src/pages/PalabrasTienda.vue
+msgctxt "Palabras"
+msgid "Word"
+msgstr "Palabra"
+
+#: frontend/src/pages/PalabrasTienda.vue
+msgctxt "Palabras"
+msgid "Add a word"
+msgstr "Agregar una palabra"
+
+#: frontend/src/pages/PalabrasTienda.vue
+msgctxt "Palabras"
+msgid "Delete"
+msgstr "Borrar"
+
+#: frontend/src/pages/PalabrasTienda.vue
+msgctxt "Palabras"
+msgid "Delete group"
+msgstr "Borrar el grupo"
+
+#: frontend/src/pages/PalabrasTienda.vue
+msgctxt "Palabras"
+msgid "Add another word that means the same."
+msgstr "Agrega otra palabra que signifique lo mismo."
+
+#: frontend/src/pages/PalabrasTienda.vue
+msgctxt "Palabras"
+msgid "Save words"
+msgstr "Guardar palabras"
+
+#: frontend/src/pages/PalabrasTienda.vue
+msgctxt "Palabras"
+msgid "Words saved"
+msgstr "Palabras guardadas"
+
+#: frontend/src/pages/PalabrasTienda.vue
+msgctxt "Palabras"
+msgid "You have unsaved words. Leave without saving them?"
+msgstr "Tienes palabras sin guardar. ¿Salir sin guardarlas?"

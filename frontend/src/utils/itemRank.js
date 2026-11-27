@@ -3,8 +3,9 @@
 // word, a number must not run into more digits («13» ≠ «130»), codes match by
 // prefix, and the exact model sorts before its longer variants.
 //
-// A port of doco/docoutils/search.py rank() and term_patterns(). KEEP IN SYNC
-// with it and with the Taller and Mercado copies (utils/search.ts):
+// A port of doco/docoutils/search.py rank(), term_patterns() and the shop's
+// word list. KEEP IN SYNC with it and with the Taller and Mercado copies
+// (utils/search.ts):
 // tests/unit/itemRank.test.js carries their cases. Unlike those, a record is
 // split into its words once (`searchable`) and kept.
 
@@ -77,11 +78,140 @@ function stem(token) {
   return token
 }
 
+// The shop's word list: a port of doco/docoutils/search.py «the shop's word
+// list», KEEP IN SYNC (tests/unit/itemRank.test.js carries the cases of
+// test_search_synonyms_pure.py). Groups arrive as the matcher keeps them
+// (search.synonym_groups(), in products.palette_index): members folded, stop
+// words dropped, a phrase space-joined («centro carga»). A query word answers
+// a member when their plural forms meet; a member of several words matches
+// its words in a row (stop words between them ignored); a member matches
+// whole words only and scores SYNONYM, below the typed word.
+const SYNONYM = 0.7
+
+function forms(word) {
+  const out = new Set([word, stem(word)])
+  if (word.length > 3 && word.endsWith('s')) out.add(word.slice(0, -1))
+  return [...out]
+}
+
+/** Whether two folded words are one word in the singular or the plural. */
+export function sameWord(a, b) {
+  if (a === b) return true
+  const other = forms(b)
+  return forms(a).some((form) => other.includes(form))
+}
+
+function synonymMember(text) {
+  const found = words(text)
+  const kept = found.filter((word) => !STOP.has(word))
+  return (kept.length ? kept : found).join(' ')
+}
+
+// [first, last] index of the member's words in a row of `fieldWords`, stop
+// words between them ignored; null when they are not there.
+function phraseSpan(member, fieldWords) {
+  const parts = member.split(' ').filter(Boolean)
+  if (!parts.length) return null
+  const kept = []
+  for (let index = 0; index < fieldWords.length; index += 1)
+    if (!STOP.has(fieldWords[index])) kept.push([index, fieldWords[index]])
+  for (let start = 0; start + parts.length <= kept.length; start += 1)
+    if (parts.every((part, offset) => sameWord(part, kept[start + offset][1])))
+      return [kept[start][0], kept[start + parts.length - 1][0]]
+  return null
+}
+
+const indexes = new WeakMap()
+
+function buildIndex(source) {
+  const groups = []
+  for (const group of source) {
+    if (!Array.isArray(group)) continue
+    const members = unique(
+      group
+        .map((member) => synonymMember(String(member ?? '')))
+        .filter(Boolean),
+    )
+    if (members.length > 1) groups.push(members)
+  }
+  if (!groups.length) return null
+  const single = new Map()
+  const phrases = []
+  groups.forEach((group, id) => {
+    for (const member of group) {
+      const parts = member.split(' ')
+      if (parts.length === 1) {
+        for (const form of forms(parts[0])) {
+          if (!single.has(form)) single.set(form, new Set())
+          single.get(form).add(id)
+        }
+      } else phrases.push([parts, id])
+    }
+  })
+  phrases.sort((a, b) => b[0].length - a[0].length)
+  const membersOf = (ids, typed) => {
+    const out = []
+    for (const id of [...ids].sort((a, b) => a - b))
+      for (const member of groups[id]) {
+        const parts = member.split(' ')
+        if (
+          parts.length === typed.length &&
+          parts.every((part, i) => sameWord(part, typed[i]))
+        )
+          continue
+        if (!out.includes(member)) out.push(member)
+      }
+    return out
+  }
+  return {
+    wordMembers(word) {
+      const ids = new Set()
+      for (const form of forms(word))
+        for (const id of single.get(form) || []) ids.add(id)
+      return ids.size ? membersOf(ids, [word]) : []
+    },
+    phraseAt(sequence, start) {
+      let size = 0
+      const ids = new Set()
+      for (const [parts, id] of phrases) {
+        if (size && parts.length < size) break
+        if (start + parts.length > sequence.length) continue
+        if (
+          parts.every((part, offset) =>
+            sameWord(part, sequence[start + offset]),
+          )
+        ) {
+          size = parts.length
+          ids.add(id)
+        }
+      }
+      return size
+        ? [size, membersOf(ids, sequence.slice(start, start + size))]
+        : [0, []]
+    },
+  }
+}
+
+function synonymIndex(groups) {
+  if (!Array.isArray(groups) || !groups.length) return null
+  if (!indexes.has(groups)) indexes.set(groups, buildIndex(groups))
+  return indexes.get(groups)
+}
+
+// Not enumerable: a term still compares equal to its alternatives.
+const term = (alternatives, synonyms) =>
+  Object.defineProperty(alternatives, 'synonyms', {
+    value: synonyms,
+    enumerable: false,
+  })
+
 /**
  * Query → terms; each term lists its alternatives (the word, its plural stem,
  * its brand alias). A lone letter before a number joins it: «a 13» → a13.
+ * With `synonyms` (the shop's word list) a word, or the words of a phrase, in
+ * the list also carries the other members of its groups (`term.synonyms`).
  */
-export function queryTerms(query, maxTerms = 8) {
+export function queryTerms(query, maxTerms = 8, synonyms = null) {
   const merged = []
   for (const word of words(query)) {
     const last = merged.at(-1)
@@ -89,10 +219,35 @@ export function queryTerms(query, maxTerms = 8) {
       merged[merged.length - 1] = last + word
     else merged.push(word)
   }
-  const kept = merged.filter((word) => !STOP.has(word))
-  return unique(kept.length ? kept : merged)
-    .map((word) => unique([word, stem(word), BRAND_ALIASES[word] ?? word]))
-    .slice(0, maxTerms)
+  const filtered = merged.filter((word) => !STOP.has(word))
+  const kept = filtered.length ? filtered : merged
+  const index = synonymIndex(synonyms)
+  const terms = []
+  const seen = new Set()
+  let i = 0
+  while (i < kept.length) {
+    const [size, members] = index ? index.phraseAt(kept, i) : [0, []]
+    if (size) {
+      const typed = kept.slice(i, i + size).join(' ')
+      i += size
+      if (!seen.has(typed)) {
+        seen.add(typed)
+        terms.push(term([typed], members))
+      }
+      continue
+    }
+    const word = kept[i]
+    i += 1
+    if (seen.has(word)) continue
+    seen.add(word)
+    terms.push(
+      term(
+        unique([word, stem(word), BRAND_ALIASES[word] ?? word]),
+        index ? index.wordMembers(word) : [],
+      ),
+    )
+  }
+  return terms.slice(0, maxTerms)
 }
 
 /**
@@ -135,7 +290,9 @@ function codeQuality(term, code) {
 
 /**
  * `[score, strict]` for a `searchable` record, or null when a term matches
- * nothing. Not strict: some term matched only loosely.
+ * nothing. Not strict: some term matched only loosely. A phrase alternative
+ * matches its words in a row; a word-list member matches whole words only and
+ * scores below the typed word.
  */
 export function score(terms, record) {
   if (!terms.length) return [0, true]
@@ -150,10 +307,11 @@ export function score(terms, record) {
     const alternatives = terms[t]
     let best = 0
     let bestStrict = false
-    let position = -1
+    let span = null
     const consider = (fieldWords, weight, inName) => {
       for (let w = 0; w < fieldWords.length; w += 1)
         for (const alternative of alternatives) {
+          if (alternative.includes(' ')) continue
           const raw = wordQuality(alternative, fieldWords[w])
           if (!raw) continue
           const quality = Math.abs(raw) * weight
@@ -161,35 +319,57 @@ export function score(terms, record) {
           if (quality > best || (quality === best && isStrict && !bestStrict)) {
             best = quality
             bestStrict = isStrict
-            position = inName ? w : -1
+            span = inName ? [w, w] : null
+          }
+        }
+      for (const alternative of alternatives) {
+        if (!alternative.includes(' ')) continue
+        const hit = phraseSpan(alternative, fieldWords)
+        const quality = EXACT * weight
+        if (hit && (quality > best || (quality === best && !bestStrict))) {
+          best = quality
+          bestStrict = true
+          span = inName ? hit : null
+        }
+      }
+      const quality = SYNONYM * weight
+      if (quality > best || (quality === best && !bestStrict))
+        for (const member of alternatives.synonyms || []) {
+          const hit = phraseSpan(member, fieldWords)
+          if (hit) {
+            best = quality
+            bestStrict = true
+            span = inName ? hit : null
+            break
           }
         }
     }
     consider(record.name, 1, true)
     for (const other of record.others)
       consider(other, OTHER_FIELD_WEIGHT, false)
-    for (const code of record.codes) {
-      const quality = codeQuality(alternatives[0], code)
-      if (quality > best) {
-        best = quality
-        bestStrict = true
-        position = -1
+    if (!alternatives[0].includes(' '))
+      for (const code of record.codes) {
+        const quality = codeQuality(alternatives[0], code)
+        if (quality > best) {
+          best = quality
+          bestStrict = true
+          span = null
+        }
       }
-    }
     if (best <= 0) return null
     total += best
     strict = strict && bestStrict
-    if (position < 0) {
+    if (!span) {
       phrase = false
       ordered = false
     } else {
-      if (t === 0) lead = position === 0
+      if (t === 0) lead = span[0] === 0
       else {
-        if (position !== previous + 1) phrase = false
-        if (position <= previous) ordered = false
+        if (span[0] !== previous + 1) phrase = false
+        if (span[0] <= previous) ordered = false
       }
-      previous = position
-      matched.add(position)
+      previous = span[1]
+      for (let i = span[0]; i <= span[1]; i += 1) matched.add(i)
     }
   }
   let result = (100 * total) / terms.length
@@ -206,10 +386,16 @@ export function score(terms, record) {
  * The rows that match `query`, best first. `record(row)` is the row's
  * `searchable` record. The sort is stable, so the rows' order breaks ties
  * (the server's default order: on hand, then last sold). Loose matches count
- * only when nothing matches strictly.
+ * only when nothing matches strictly. `synonyms`: the shop's word list.
  */
-export function rank(rows, query, record = (row) => row.search, limit) {
-  const terms = queryTerms(query)
+export function rank(
+  rows,
+  query,
+  record = (row) => row.search,
+  limit,
+  synonyms = null,
+) {
+  const terms = queryTerms(query, 8, synonyms)
   if (!terms.length) return limit ? rows.slice(0, limit) : [...rows]
   let scored = []
   let anyStrict = false
@@ -229,18 +415,50 @@ export function rank(rows, query, record = (row) => row.search, limit) {
 /**
  * What a record must hold to be worth ranking, per query term (doco
  * term_patterns, the SQL prefilter of rank()): one of `texts` somewhere in a
- * text field, or `code` in the item code, at its start unless `inside`. A
- * term too short for codes has no `code`.
+ * text field, one of `phrases` (words in order), or `code` in the item code,
+ * at its start unless `inside`. A term too short for codes, or a phrase, has
+ * no `code`. With `synonyms` the members of the term's groups add theirs.
  */
-export function termPatterns(query) {
-  return queryTerms(query).map((alternatives) => {
-    const [term] = alternatives
+export function termPatterns(query, synonyms = null) {
+  return queryTerms(query, 8, synonyms).map((alternatives) => {
+    const [first] = alternatives
+    const texts = []
+    const phrases = []
+    for (const text of [
+      ...alternatives,
+      ...(alternatives.synonyms || []).map((member) =>
+        member.includes(' ') ? member : stem(member),
+      ),
+    ]) {
+      if (text.includes(' ')) phrases.push(text.split(' ').map(stem))
+      else if (!texts.includes(text)) texts.push(text)
+    }
+    const word = !first.includes(' ')
     return {
-      texts: alternatives,
-      code: term.length >= 3 ? term : null,
-      inside: term.length >= 4 && /[0-9]/.test(term),
+      texts,
+      ...(phrases.length ? { phrases } : {}),
+      code: word && first.length >= 3 ? first : null,
+      inside: word && first.length >= 4 && /[0-9]/.test(first),
     }
   })
+}
+
+// Whether `parts` appear in this order in `texts`, within one field.
+function inOrder(texts, parts) {
+  for (const field of texts.split('\n')) {
+    let at = 0
+    let found = true
+    for (const part of parts) {
+      const next = field.indexOf(part, at)
+      if (next < 0) {
+        found = false
+        break
+      }
+      at = next + part.length
+    }
+    if (found) return true
+  }
+  return false
 }
 
 /**
@@ -256,6 +474,8 @@ export function isCandidate(patterns, texts, code) {
         found = true
         break
       }
+    if (!found)
+      found = (pattern.phrases || []).some((parts) => inOrder(texts, parts))
     if (found) continue
     if (
       !pattern.code ||

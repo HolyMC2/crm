@@ -167,3 +167,89 @@ describe('the prefilter', () => {
     expect(candidates('incellpantallas')).toEqual([])
   })
 })
+
+// The shop's word list: doco/docoutils/test_search_synonyms_pure.py and the
+// Taller, Mercado and POS specs carry the same cases; change them together.
+describe('the shop word list', () => {
+  const GROUPS = [
+    ['funda', 'case', 'carcasa', 'cover', 'estuche'],
+    ['mica', 'protector', 'cristal', 'templado'],
+    ['bateria', 'pila'],
+    ['audifonos', 'auriculares'],
+    ['cargador', 'cubo'],
+    ['centro carga', 'puerto carga', 'pin carga', 'conector'],
+  ]
+  const ROWS = [
+    'Case iPhone 13',
+    'Funda iPhone 13 Pro Max',
+    'Funda iPhone 13',
+    'Base cargador iPhone',
+    'Showcase vitrina',
+    'Protector cerámica Samsung A54',
+    'Mica Samsung A54',
+    'Auriculares Bluetooth',
+    'Puerto de Carga iPhone 11',
+    'Centro de carga iPhone 11',
+    'Pin carga iPhone 12',
+    'Batería iPhone 11',
+    'Pilas AA',
+  ].map((name) => ({ name, search: searchable(name), texts: fold(name) }))
+  const withList = (query, synonyms = GROUPS) =>
+    rank(ROWS, query, undefined, undefined, synonyms).map((row) => row.name)
+  const candidates = (query) => {
+    const patterns = termPatterns(query, GROUPS)
+    return ROWS.filter((row) => isCandidate(patterns, row.texts, '')).map(
+      (row) => row.name,
+    )
+  }
+
+  it('gives a member its group', () => {
+    const [term] = queryTerms('fundas', 8, GROUPS)
+    expect(term.synonyms).toEqual(['case', 'carcasa', 'cover', 'estuche'])
+    expect(queryTerms('fundas', 8, GROUPS)).toEqual([['fundas', 'funda']])
+  })
+  it('puts the typed word first', () => {
+    expect(withList('funda iphone 13').slice(0, 3)).toEqual([
+      'Funda iPhone 13',
+      'Funda iPhone 13 Pro Max',
+      'Case iPhone 13',
+    ])
+  })
+  it('matches members as whole words only', () => {
+    const found = withList('case')
+    expect(found[0]).toBe('Case iPhone 13')
+    expect(found).not.toContain('Base cargador iPhone')
+    expect(found).not.toContain('Showcase vitrina')
+    expect(withList('cristal a54')).toEqual([
+      'Mica Samsung A54',
+      'Protector cerámica Samsung A54',
+    ])
+  })
+  it('finds accents, plurals and phrases', () => {
+    expect(withList('audífonos')).toEqual(['Auriculares Bluetooth'])
+    expect(withList('pila iphone')).toEqual(['Batería iPhone 11'])
+    expect(withList('centro de carga iphone 11')).toEqual([
+      'Centro de carga iPhone 11',
+      'Puerto de Carga iPhone 11',
+    ])
+    expect(withList('puerto')).toEqual(['Puerto de Carga iPhone 11'])
+    expect(withList('audifonos', null)).toEqual([])
+  })
+  it('the prefilter keeps every row the list finds', () => {
+    for (const query of ['case', 'cristal a54', 'pila iphone', 'conector'])
+      for (const name of withList(query))
+        expect(candidates(query)).toContain(name)
+    expect(termPatterns('puerto de carga', GROUPS)).toEqual([
+      {
+        texts: ['conector'],
+        phrases: [
+          ['puerto', 'carga'],
+          ['centro', 'carga'],
+          ['pin', 'carga'],
+        ],
+        code: null,
+        inside: false,
+      },
+    ])
+  })
+})

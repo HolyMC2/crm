@@ -1,7 +1,8 @@
 // The worker's products, kept on this device so Ctrl+K ranks them on the
 // keystroke, as Taller ranks its parts: the code, name, group and brand of
 // every product they may read, in the server's default order
-// (doco.workspaces.products.palette_index). Price and stock are not kept: the
+// (doco.workspaces.products.palette_index), with the shop's word list that
+// ranks them on the server too («case» finds «Funda …»). Price and stock are not kept: the
 // palette asks for those of the few rows it shows, and the server reads each
 // again under the worker's permissions (products.palette `names`).
 //
@@ -133,6 +134,8 @@ function prepare(kept) {
     at: kept.at,
     stamp: kept.stamp,
     complete: kept.complete === true,
+    // A copy kept before the list existed has none (its stamp is an old one).
+    synonyms: Array.isArray(kept.synonyms) ? kept.synonyms : [],
     rows,
     byCode,
     byBarcode,
@@ -157,6 +160,7 @@ function read(now) {
         complete: answer?.complete === true,
         rows: Array.isArray(answer?.rows) ? answer.rows : [],
         barcodes: Array.isArray(answer?.barcodes) ? answer.barcodes : [],
+        synonyms: Array.isArray(answer?.synonyms) ? answer.synonyms : [],
       }
       current = prepare(kept)
       // No room or no storage: the list stays in memory for this page only.
@@ -228,7 +232,7 @@ export function findProducts(text) {
       Boolean,
     ),
   )
-  const patterns = termPatterns(text)
+  const patterns = termPatterns(text, index.synonyms)
   const pool = []
   // No search word (a query of signs only) finds the exact code alone.
   if (patterns.length)
@@ -238,7 +242,10 @@ export function findProducts(text) {
       pool.push(row)
       if (pool.length + exact.size >= PRODUCT_POOL) break
     }
-  const rows = [...exact, ...rank(pool, text, wordsOf)].slice(0, PRODUCT_ROWS)
+  const rows = [
+    ...exact,
+    ...rank(pool, text, wordsOf, undefined, index.synonyms),
+  ].slice(0, PRODUCT_ROWS)
   const found = {
     stamp: index.stamp,
     names: rows.map((row) => row.name),

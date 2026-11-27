@@ -24,6 +24,11 @@ Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` i
   - Each incoming call keeps who was at work and who rang on its log (`CRM Call Log.ring_log`); the calls board and the call's drawer show it per missed call («En turno: Ana y Rosa · sonó también Luis», «Nadie en turno · sonó a …», «sin Muelle abierto: …»).
 - **Tests:** `test_call_rule_pure` (14), `test_call_rule` (16, Twilio mocked), `test_calls_answer` (rule pinned); vitest `inboxCalls` (+6), `ringNow` (3), `callsBoard` (+1), `callUIOnDemand` (+1). Phone shots: `~/muelle-host/asistente-program/evidence/S49/S49b-llamadas-turno/`.
 - **Rollout:** rides the next roll with doco's provider; kit `~/muelle-releases/llamadas-turno-20261127/` moves Doco to «en turno». Rollback: the kit's rollback line (rule back to the list), or revert.
+## 2026-11-27 — «Palabras que significan lo mismo»: the shop's word list, edited in Muelle (lane palabras-tienda, S49a, with doco; not deployed)
+
+- **Screen:** `/productos/palabras` (`pages/PalabrasTienda.vue`, `components/productos/palabras.js`), its door in «Ajustes del negocio» › Inventario. Each group is a row of chips: «+ Palabra» adds in place (Enter adds and keeps the field, a comma splits, Esc drops the draft), × removes, the bin then «Borrar» deletes a group, «Nuevo grupo» adds one; a group left with one word says so and holds «Guardar palabras» (the one filled action, docked). The screen's one search is «Probar una búsqueda»: what Productos finds with the list on screen, unsaved, how many with and without it, and «Por la lista» on what only the list finds. Who is not the owner reads the list.
+- **Ctrl+K on the device:** `utils/itemRank.js` gains the word list (port of doco `search.py`: plural forms, phrases, whole-word members, a list hit under the typed word; `termPatterns` adds `phrases`); `utils/productIndex.js` keeps the groups `palette_index` sends.
+- **Tests:** vitest `palabrasTienda.test.js` (8), `itemRank.test.js` and `productIndex.test.js` (38). Shots at 412 and 305 px and 1280, light and dark: `~/muelle-host/asistente-program/evidence/S49/S49a-palabras/`.
 
 ## 2026-11-27 — The customer bot stays out of a chat a person is answering (lane asistente-no-interrumpe; not deployed)
 
