@@ -405,6 +405,9 @@ def validate_message(doc):
 		and type(doc.control_generation) is int
 		and doc.control_generation >= 1
 	)
+	if doc.get("card"):
+		_require(doc.direction == "Outgoing")
+		_card(json.loads(doc.card))
 	_require(doc.name == doc.message_key == _key(1, doc.channel, doc.peer_id, doc.direction, doc.request_id))
 	session = current_session(doc.channel, doc.peer_id)
 	_require(doc.session == session.name)
@@ -601,12 +604,18 @@ def _visitor(channel_id, *, allow_revoked=False):
 
 
 def _message_projection(row):
-	return {
+	out = {
 		"id": row.name,
 		"text": row.text,
 		"direction": row.direction,
 		"created_at": _public_time(row.creation),
 	}
+	if row.get("card"):
+		try:
+			out["card"] = _card(json.loads(row.card))
+		except (TypeError, ValueError, frappe.ValidationError):
+			pass  # a malformed card shows as its caption text
+	return out
 
 
 def _history(session, conversation, cursor=None):
@@ -622,8 +631,11 @@ def _history(session, conversation, cursor=None):
 			"Invalid Webchat history cursor.",
 		)
 		anchor_time = anchor.creation
+	card = ",card" if _has_card_column() else ""
+	# `card` is a fixed column name chosen above, never caller input.
+	# nosemgrep: frappe-sql-format-injection
 	rows = frappe.db.sql(
-		"""SELECT name,text,direction,creation FROM `tabCRM Webchat Message`
+		f"""SELECT name,text,direction,creation{card} FROM `tabCRM Webchat Message`
         WHERE channel=%s AND session=%s AND peer_id=%s
         AND (%s IS NULL OR creation < %s OR (creation=%s AND name < %s))
         ORDER BY creation DESC,name DESC LIMIT 51 FOR UPDATE""",
@@ -667,7 +679,7 @@ def _existing(key, session, direction, request_id, text):
 	return row
 
 
-def _insert(session, conversation, direction, request_id, text, generation):
+def _insert(session, conversation, direction, request_id, text, generation, card=None):
 	key = _key(1, session.channel, session.peer_id, direction, request_id)
 	doc = frappe.get_doc(
 		{
@@ -685,9 +697,16 @@ def _insert(session, conversation, direction, request_id, text, generation):
 			"control_generation": generation,
 		}
 	)
+	if card is not None:
+		_require(direction == "Outgoing" and _has_card_column())
+		doc.card = _canonical(_card(card))
 	if direction == "Incoming":
 		doc.owner = "Guest"
 	return _mark(doc).insert(ignore_permissions=True, set_name=doc.name)
+
+
+def _has_card_column():
+	return bool(frappe.db.has_column(MESSAGE, "card"))
 
 
 def _notify_message(conversation, actor=None):
@@ -782,12 +801,48 @@ def share_account(channel_id: JSONValue, account_token: JSONValue):
 		return share(session, conversation, account_token)
 
 
+CARD_FIELDS = frozenset({"title", "detail", "link", "image", "button"})
+
+
+def _https(value):
+	_require(
+		isinstance(value, str)
+		and 8 < len(value) <= 2000
+		and not any(c.isspace() or ord(c) < 32 for c in value)
+	)
+	parts = urlsplit(value)
+	_require(parts.scheme == "https" and bool(parts.hostname) and not parts.username and not parts.password)
+	_require(parts.port in (None, 443) and not parts.fragment)
+	return value
+
+
+def _card(value):
+	"""A product card the visitor sees in the transcript: plain strings and https URLs.
+	Which hosts and files may appear is the outbox's check (outbox_media); this is the
+	transcript's own shape."""
+	_require(isinstance(value, dict) and {"title", "button"} <= set(value) <= CARD_FIELDS)
+	for key, maximum, required in (("title", 80, True), ("detail", 80, False), ("button", 20, True)):
+		item = value.get(key, "")
+		_require(isinstance(item, str) and len(item) <= maximum and (bool(item.strip()) or not required))
+		_require(not any(ord(char) < 32 for char in item))
+	for key in ("link", "image"):
+		if key in value:
+			_https(value[key])
+	return value
+
+
 def validate_payload(payload, *, account_id, peer_id):
-	"""Pure finite local text payload; canonical bytes shared with native outbox."""
+	"""Pure finite local payload (text, or a Bot's product card with its caption text);
+	canonical bytes shared with native outbox."""
 	try:
 		_hex(account_id)
 		_hex(peer_id)
-		_require(isinstance(payload, dict) and set(payload) == {"type", "text"} and payload["type"] == "text")
+		_require(isinstance(payload, dict) and payload.get("type") in {"text", "card"})
+		if payload["type"] == "text":
+			_require(set(payload) == {"type", "text"})
+		else:
+			_require(set(payload) == {"type", "text", "card"})
+			_card(payload["card"])
 		_text(payload["text"])
 		return _canonical(payload).encode("utf-8")
 	except Exception:
@@ -809,7 +864,13 @@ def deliver_local(intent, payload):
 	key = _key(1, intent.account_id, intent.peer_id, "Outgoing", intent.name)
 	if not _existing(key, session, "Outgoing", intent.name, frozen["text"]):
 		_insert(
-			session, conversation, "Outgoing", intent.name, frozen["text"], intent.conversation_generation
+			session,
+			conversation,
+			"Outgoing",
+			intent.name,
+			frozen["text"],
+			intent.conversation_generation,
+			card=frozen.get("card"),
 		)
 		_notify_message(conversation, intent.get("actor_user"))
 	return {"state": "Accepted", "provider_message_id": "webchat." + key}

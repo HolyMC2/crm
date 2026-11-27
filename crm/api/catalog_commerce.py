@@ -169,6 +169,51 @@ def dispatch_reason(intent, account):
 		return "catalog_configuration_changed"
 
 
+def bot_product(conversation, code, body):
+	"""A Bot product card as this account's catalog product message, or None.
+
+	The catalog owner's own reviewed freeze decides (the account's bound catalog, the
+	item still published there); any refusal is None and the card goes out as a photo.
+	Only offered when the owner can also recheck a Bot product before dispatch."""
+	module = adapter()
+	if module is None or conversation.provider != "WhatsApp":
+		return None
+	if not callable(getattr(module, "bot_product_reason", None)):
+		return None
+	selection = {"kind": "product", "products": [code], "body": body[:1024], "header": "", "footer": ""}
+	messages = list(getattr(frappe.local, "message_log", []) or [])
+	try:
+		frozen, _source = module.freeze(selection, conversation)
+	except (frappe.ValidationError, frappe.PermissionError, frappe.DoesNotExistError, ValueError):
+		frappe.local.message_log = messages
+		return None
+	return frozen if isinstance(frozen, str) else None
+
+
+def bot_product_reason(intent, payload):
+	"""Before a Bot's product message goes out: the owner confirms the account's catalog
+	still publishes the item. A missing owner or account refuses."""
+	module = adapter()
+	if module is None or not callable(getattr(module, "bot_product_reason", None)):
+		return "catalog_adapter_unavailable"
+	rows = frappe.db.get_values(
+		"WhatsApp Account",
+		{"phone_id": intent.account_id},
+		["name", "app_id", "business_id"],
+		as_dict=True,
+		for_update=True,
+	)
+	if len(rows) != 1:
+		return "account_unavailable"
+	try:
+		reason = module.bot_product_reason(intent, rows[0], payload)
+	except (frappe.PermissionError, frappe.ValidationError, frappe.DoesNotExistError, ValueError):
+		return "catalog_configuration_changed"
+	if reason is None or (isinstance(reason, str) and re.fullmatch(r"[a-z0-9_]{1,100}", reason)):
+		return reason
+	return "catalog_configuration_changed"
+
+
 @frappe.whitelist()
 def get_cart(name: str):
 	# The adapter derives/authorizes the conversation from the immutable receipt;

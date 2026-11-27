@@ -29,6 +29,17 @@ Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` i
 - **Screen:** `/productos/palabras` (`pages/PalabrasTienda.vue`, `components/productos/palabras.js`), its door in «Ajustes del negocio» › Inventario. Each group is a row of chips: «+ Palabra» adds in place (Enter adds and keeps the field, a comma splits, Esc drops the draft), × removes, the bin then «Borrar» deletes a group, «Nuevo grupo» adds one; a group left with one word says so and holds «Guardar palabras» (the one filled action, docked). The screen's one search is «Probar una búsqueda»: what Productos finds with the list on screen, unsaved, how many with and without it, and «Por la lista» on what only the list finds. Who is not the owner reads the list.
 - **Ctrl+K on the device:** `utils/itemRank.js` gains the word list (port of doco `search.py`: plural forms, phrases, whole-word members, a list hit under the typed word; `termPatterns` adds `phrases`); `utils/productIndex.js` keeps the groups `palette_index` sends.
 - **Tests:** vitest `palabrasTienda.test.js` (8), `itemRank.test.js` and `productIndex.test.js` (38). Shots at 412 and 305 px and 1280, light and dark: `~/muelle-host/asistente-program/evidence/S49/S49a-palabras/`.
+## 2026-11-27 — Bot replies may carry a product card, every URL the shop's own (lane asistente-fotos; not deployed)
+
+- **Why:** the customer agent sends product cards (photo, price, link; S49c). Bot intents were text only.
+- **Change:**
+  - `outbox.bot_payload` / `outbox_media`: a Bot intent may freeze one card. The link must be https to this site or to a host the public-media owner names (hook `crm_public_media`, doco's storefront domains); the photo a public `/files` JPEG/PNG of this site or the owner's image proxy over a public file. Checked when frozen and again before every dispatch (`_base_eligibility` for Bot: a file made private or a domain removed blocks the send). People's replies stay plain text.
+  - WhatsApp: the account's catalog product message when its catalog publishes the item (`catalog_commerce.bot_product`, rechecked by the catalog owner before dispatch, `bot_product_reason`), else the photo with «*Nombre* — $precio — Disponible» and the link, else that text.
+  - Webchat: the visitor's transcript keeps the card (CRM Webchat Message `card`, projected to the widget).
+  - Messenger/Instagram: the owning transport's `freeze_card`.
+  - SPA: «Enviar fotos de productos» in Más › Asistente para clientes; «Probar» and «Por aprobar» (list and the conversation strip) show the cards (`components/asistente/ProductCards.vue`); a review of cards only can be approved without text.
+- **Migrate:** new field CRM Webchat Message `card`.
+- **Tests:** `test_outbox_cards` (7); vitest `asistenteClientes` (+2).
 
 ## 2026-11-27 — The customer bot stays out of a chat a person is answering (lane asistente-no-interrumpe; not deployed)
 

@@ -13,6 +13,7 @@
   "direction",
   "request_id",
   "text",
+  "card",
   "text_hash",
   "control_generation"
  ],
@@ -86,6 +87,14 @@
    "read_only": 1,
    "reqd": 1,
    "options": "Text"
+  },
+  {
+   "fieldname": "card",
+   "fieldtype": "Code",
+   "label": "Card",
+   "read_only": 1,
+   "options": "JSON",
+   "description": "A product card a bot reply carries (title, detail, link, photo); the text is its caption."
   },
   {
    "fieldname": "text_hash",

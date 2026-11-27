@@ -54640,3 +54640,18 @@ msgstr "Palabras guardadas"
 msgctxt "Palabras"
 msgid "You have unsaved words. Leave without saving them?"
 msgstr "Tienes palabras sin guardar. ¿Salir sin guardarlas?"
+#: crm/api/outbox_media.py
+msgid "Invalid product card."
+msgstr "Ficha de producto no válida."
+
+#: crm/api/outbox_media.py
+msgid "The product link is not a page of this shop."
+msgstr "El enlace del producto no es una página de esta tienda."
+
+#: crm/api/outbox_media.py
+msgid "The product photo is not a public image of this shop."
+msgstr "La foto del producto no es una imagen pública de esta tienda."
+
+#: crm/api/outbox_media.py
+msgid "View product"
+msgstr "Ver producto"

@@ -108,6 +108,13 @@
         class="scb mb-1.5 w-full resize-none rounded-5 border border-outline-gray-2 bg-surface-gray-1 px-2 py-1.5 text-[12px] text-ink-gray-8 focus:outline-none focus:ring-1 focus:ring-outline-gray-3 dark:bg-surface-gray-2"
         :placeholder="__('Mensaje del acuse…')"
       />
+      <!-- The agent's product cards go out after the text, as shown (S49c). -->
+      <ProductCards
+        v-if="r.cards?.length"
+        class="mb-1.5"
+        compact
+        :cards="productCards(r.cards)"
+      />
 
       <!-- Manager-eyes policy: only managers act (server enforces _APPROVER_ROLES) -->
       <div v-if="canAct" class="flex items-center justify-end gap-1.5">
@@ -122,7 +129,9 @@
         <button
           class="rounded-5 px-2.5 py-1 text-[11px] font-semibold text-white disabled:opacity-50"
           style="background: var(--brand)"
-          :disabled="busy[r.name] || !(drafts[r.name] || '').trim()"
+          :disabled="
+            busy[r.name] || !((drafts[r.name] || '').trim() || r.cards?.length)
+          "
           :data-testid="isHold(r) ? 'hold-confirm' : undefined"
           @click="onApprove(r)"
         >
@@ -146,6 +155,8 @@ import {
   holdDone,
   isHold,
 } from '@/components/doco/inbox/agentDraft'
+import { productCards } from '@/components/asistente/clientes'
+import ProductCards from '@/components/asistente/ProductCards.vue'
 
 import { computed, reactive, watch } from 'vue'
 import { toast } from 'frappe-ui'

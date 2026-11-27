@@ -21,6 +21,12 @@
         rows="2"
         class="scb mb-1.5 w-full resize-none rounded-5 border border-outline-amber-4 bg-surface-base px-2 py-1.5 text-[12.5px] text-ink-gray-8 focus:outline-none dark:bg-surface-gray-2"
       />
+      <ProductCards
+        v-if="r.cards?.length"
+        class="mb-1.5"
+        compact
+        :cards="productCards(r.cards)"
+      />
       <!-- Manager-eyes policy: only managers act (server enforces _APPROVER_ROLES) -->
       <div v-if="canAct" class="flex items-center justify-end gap-1.5">
         <button
@@ -33,7 +39,9 @@
         <button
           class="rounded-5 px-2.5 py-1 text-[11px] font-semibold text-white disabled:opacity-50"
           style="background: var(--brand)"
-          :disabled="busy[r.name] || !(drafts[r.name] || '').trim()"
+          :disabled="
+            busy[r.name] || !((drafts[r.name] || '').trim() || r.cards?.length)
+          "
           @click="onApprove(r)"
         >
           {{
@@ -51,6 +59,8 @@
 
 <script setup>
 import { computed, reactive, watch } from 'vue'
+import { productCards } from '@/components/asistente/clientes'
+import ProductCards from '@/components/asistente/ProductCards.vue'
 import { toast } from 'frappe-ui'
 import AgentActionSummary from '@/components/doco/inbox/AgentActionSummary.vue'
 import { holdDone, isHold } from '@/components/doco/inbox/agentDraft'

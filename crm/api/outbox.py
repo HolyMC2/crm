@@ -255,7 +255,7 @@ def _projection(doc):
 	elif doc.provider == "Webchat":
 		result["text"] = payload.get("text", "")
 	elif doc.provider in HOOKED_CHANNELS and isinstance(payload.get("message"), dict):
-		result["text"] = str(payload["message"].get("text") or "")
+		result["text"] = str(payload["message"].get("text") or _card_title(payload["message"]))
 	else:
 		result["text"] = ""
 	result["can_retry"] = (
@@ -267,6 +267,14 @@ def _projection(doc):
 		doc.state in {"Queued", "Claimed", "Blocked", "Deferred", "Failed"} and not doc.provider_message_id
 	)
 	return result
+
+
+def _card_title(message):
+	"""Operator-facing text of a frozen social card (a generic template's first element)."""
+	attachment = message.get("attachment") if isinstance(message.get("attachment"), dict) else {}
+	elements = (attachment.get("payload") or {}).get("elements") or [{}]
+	element = elements[0] if isinstance(elements[0], dict) else {}
+	return " — ".join(str(element[k]) for k in ("title", "subtitle") if element.get(k))
 
 
 def _summary(payload):
@@ -395,6 +403,22 @@ def _payload(payload, conversation):
 		).decode()
 	except ValueError:
 		frappe.throw(_("Invalid reply content."))
+
+
+def bot_payload(message, conversation):
+	"""Frozen payload of a Bot intent: plain text (`_payload`), or one product card
+	(outbox_media: every URL in it is the shop's own, checked again at dispatch)."""
+	if isinstance(message, dict) and message.get("type") == "card":
+		from crm.api import outbox_media
+
+		return outbox_media.freeze(message, conversation)
+	return _payload(message, conversation)
+
+
+def _bot_payload_reason(doc):
+	from crm.api import outbox_media
+
+	return outbox_media.frozen_reason(doc)
 
 
 def _channel_source(conversation):
@@ -694,7 +718,7 @@ def _base_eligibility(doc):
 		if reason or doc.origin != "Bot":
 			return reason
 	if doc.origin == "Bot":
-		return bot_dispatch_reason(doc)
+		return bot_dispatch_reason(doc) or _bot_payload_reason(doc)
 	return manual_reply_reason(doc)
 
 

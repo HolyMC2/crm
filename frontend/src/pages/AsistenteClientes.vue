@@ -176,6 +176,25 @@
           </li>
         </ul>
 
+        <ListGroup>
+          <div class="flex min-h-14 items-center gap-3 px-4 py-2">
+            <span
+              class="lucide-image size-5 flex-none text-ink-gray-6"
+              aria-hidden="true"
+            />
+            <Switch
+              v-model="form.product_cards"
+              class="min-w-0 flex-1"
+              label="Enviar fotos de productos"
+              :description="
+                cardsBlocked ? `Activa «${stockLabel}» para mandarlas` : ''
+              "
+              :disabled="!data.can_edit || cardsBlocked"
+              data-testid="product-cards-switch"
+            />
+          </div>
+        </ListGroup>
+
         <Field
           v-model="form.handoff_text"
           type="textarea"
@@ -250,21 +269,27 @@
           <li
             v-for="(line, index) in tryLines"
             :key="index"
-            class="max-w-[85%] whitespace-pre-wrap rounded-6 px-3 py-2 text-sm"
-            :class="
-              line.from === 'cliente'
-                ? 'ml-auto bg-[var(--muelle-secondary-container)] text-[var(--muelle-on-secondary-container)]'
-                : 'bg-surface-gray-2 text-ink-gray-9'
-            "
+            class="space-y-1.5"
           >
-            {{ line.text }}
-            <span
-              v-if="line.decision"
-              class="mt-1 block text-xs text-ink-gray-7"
-              data-testid="try-decision"
+            <p
+              v-if="line.text || line.decision"
+              class="max-w-[85%] whitespace-pre-wrap rounded-6 px-3 py-2 text-sm"
+              :class="
+                line.from === 'cliente'
+                  ? 'ml-auto bg-[var(--muelle-secondary-container)] text-[var(--muelle-on-secondary-container)]'
+                  : 'bg-surface-gray-2 text-ink-gray-9'
+              "
             >
-              {{ decisionText(line) }}
-            </span>
+              {{ line.text }}
+              <span
+                v-if="line.decision"
+                class="mt-1 block text-xs text-ink-gray-7"
+                data-testid="try-decision"
+              >
+                {{ decisionText(line) }}
+              </span>
+            </p>
+            <ProductCards v-if="line.cards?.length" :cards="line.cards" />
           </li>
         </ul>
         <p v-if="tryError" class="text-sm text-ink-red-6">{{ tryError }}</p>
@@ -308,10 +333,12 @@ import { isMobile as isPhone } from '@/composables/breakpoint'
 import {
   decisionText,
   modes,
+  productCards,
   providerIcon,
   providerLabel,
   toolLimits,
 } from '@/components/asistente/clientes'
+import ProductCards from '@/components/asistente/ProductCards.vue'
 
 const API = 'doco_marketing.api.customer_agent'
 const loading = ref(false)
@@ -328,6 +355,7 @@ const form = reactive({
   idle_minutes: 60,
   return_hours: 24,
   max_turns: 20,
+  product_cards: true,
 })
 const saved = ref('')
 const idleOptions = [15, 30, 60, 120, 240, 480, 1440].map((m) => ({
@@ -340,6 +368,11 @@ const returnOptions = [0, 4, 12, 24, 48].map((h) => ({
 }))
 const blocked = computed(() => Boolean(data.value?.platform_blockers?.length))
 const limits = computed(() => toolLimits(data.value?.tools))
+const STOCK_TOOL = 'public_stock_availability'
+const cardsBlocked = computed(() => !form.tools.includes(STOCK_TOOL))
+const stockLabel = computed(
+  () => data.value?.tools?.find((t) => t.name === STOCK_TOOL)?.label || '',
+)
 const dirty = computed(() => JSON.stringify(snapshot()) !== saved.value)
 
 function snapshot() {
@@ -349,6 +382,7 @@ function snapshot() {
     idle_minutes: Number(form.idle_minutes),
     return_hours: Number(form.return_hours),
     max_turns: Number(form.max_turns),
+    product_cards: form.product_cards !== false,
   }
 }
 
@@ -449,6 +483,7 @@ async function tryReply() {
         text: out.reply,
         decision: out.decision,
         reason: out.reason,
+        cards: productCards(out.cards),
       },
     ]
   } catch (failure) {

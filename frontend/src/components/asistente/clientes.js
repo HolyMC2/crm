@@ -70,3 +70,24 @@ export function toolLimits(tools) {
     }))
     .filter((line) => line.text)
 }
+
+/** A product page as the chat shows it: the shop's domain and the path, no scheme. */
+export function linkLabel(url) {
+  try {
+    const { hostname, pathname } = new URL(String(url))
+    return (
+      hostname.replace(/^www\./, '') + decodeURI(pathname).replace(/\/$/, '')
+    )
+  } catch {
+    return String(url || '')
+  }
+}
+
+/** The product cards a review row or a test reply carries (never anything else). */
+export function productCards(value) {
+  return (Array.isArray(value) ? value : [])
+    .filter(
+      (card) => card && typeof card.title === 'string' && card.title.trim(),
+    )
+    .slice(0, 3)
+}

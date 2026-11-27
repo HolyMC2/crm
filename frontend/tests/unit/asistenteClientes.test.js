@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
   decisionText,
+  linkLabel,
   modes,
+  productCards,
   providerIcon,
   providerLabel,
   toolLimits,
@@ -68,5 +70,22 @@ describe('asistente para clientes', () => {
       },
     ])
     expect(toolLimits(undefined)).toEqual([])
+  })
+})
+
+describe('product cards', () => {
+  it('shows a product page as the shop domain and path', () => {
+    expect(linkLabel('https://www.tienda.example/producto/FUN%20A15')).toBe(
+      'tienda.example/producto/FUN A15',
+    )
+    expect(linkLabel('no es un enlace')).toBe('no es un enlace')
+  })
+
+  it('keeps at most three cards with a title, nothing else', () => {
+    const card = { title: 'Funda A15', detail: '$150.00 — Disponible' }
+    expect(
+      productCards([card, { title: ' ' }, null, card, card, card]),
+    ).toEqual([card, card, card])
+    expect(productCards(undefined)).toEqual([])
   })
 })
