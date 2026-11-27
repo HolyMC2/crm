@@ -110,3 +110,54 @@ export function namesFor(board, key) {
     return items.filter(([, i]) => !i.closed).map(([n]) => n)
   return null
 }
+
+/** «Jennifer», «Jennifer y Teresa», «Jennifer, Teresa y Marco». */
+export function namesList(names = []) {
+  const list = [...new Set(names.filter(Boolean))]
+  if (list.length < 2) return list[0] || ''
+  return __('{0} y {1}', [list.slice(0, -1).join(', '), list.at(-1)])
+}
+
+/**
+ * Who was on shift and who the missed call rang (board item `ring`, kept on the
+ * call's log by crm/call_rule.py): «En turno: Jennifer y Teresa · sonó también
+ * Marco», «Nadie en turno · sonó la lista», «Teresa no tenía Muelle abierto».
+ */
+export function ringLine(ring) {
+  if (!ring) return ''
+  const onShift = ring.on_shift || []
+  const rang = ring.rang || []
+  const unreached = ring.unreached || []
+  const parts = []
+  if (ring.mode === 'shift') {
+    parts.push(__('En turno: {0}', [namesList(onShift)]))
+    const extra = rang.filter((n) => !onShift.includes(n))
+    if (extra.length) parts.push(__('sonó también {0}', [namesList(extra)]))
+  } else if (ring.mode === 'fallback' && ring.because === 'nobody') {
+    parts.push(__('Nadie en turno'))
+    parts.push(
+      rang.length
+        ? __('sonó a {0}', [namesList(rang)])
+        : __('pasó directo al recado'),
+    )
+  } else {
+    parts.push(
+      rang.length ? __('Sonó a {0}', [namesList(rang)]) : __('No sonó a nadie'),
+    )
+  }
+  if (unreached.length)
+    parts.push(__('sin Muelle abierto: {0}', [namesList(unreached)]))
+  return parts.join(' · ')
+}
+
+/** The phone row's short form: who was on shift, or that nobody was. */
+export function ringShort(ring) {
+  if (!ring) return ''
+  if (ring.mode === 'shift')
+    return __('En turno: {0}', [namesList(ring.on_shift || [])])
+  if (ring.mode === 'fallback' && ring.because === 'nobody')
+    return __('Nadie en turno')
+  return ring.rang?.length
+    ? __('Sonó a {0}', [namesList(ring.rang)])
+    : __('No sonó a nadie')
+}

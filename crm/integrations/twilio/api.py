@@ -51,6 +51,13 @@ def generate_access_token():
 
 	from_number = frappe.db.get_value("CRM Telephony Agent", frappe.session.user, "twilio_number")
 	if not from_number:
+		from crm import call_rule
+
+		# Not on a number, but the line rings them while they are at work (rule «shift»):
+		# their browser takes the shop's calls and places none.
+		if call_rule.may_ring(frappe.session.user):
+			token = twilio.generate_voice_access_token(identity=frappe.session.user, incoming_only=True)
+			return {"token": frappe.safe_decode(token), "incoming_only": True}
 		return {
 			"ok": False,
 			"error": "caller_phone_identity_missing",

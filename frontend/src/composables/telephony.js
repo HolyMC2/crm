@@ -4,6 +4,9 @@ import { computed, ref } from 'vue'
 const integrations = ref({})
 export const defaultCallingMedium = ref('')
 export const callEnabled = ref(false)
+// The shop's line may ring this person (on its number, or selling at work under
+// the «en turno» rule): their Muelle starts the calling SDK on a phone too.
+export const receivesCalls = ref(false)
 // Settles once the shop's phone integrations are known (or the read failed):
 // «Llamar» waits for it before falling back to the device's dialler.
 let settle
@@ -16,6 +19,7 @@ createResource({
   onSuccess: (data) => {
     integrations.value = data.integrations || {}
     defaultCallingMedium.value = data.default_calling_medium
+    receivesCalls.value = Boolean(data.receives_calls)
     callEnabled.value = Object.values(integrations.value).some(Boolean)
     settle()
   },

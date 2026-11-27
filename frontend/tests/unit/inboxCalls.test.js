@@ -184,3 +184,142 @@ describe('the shop line settings', () => {
     expect(fields.join('\n')).not.toMatch(/missed call|picked up|Ring the team/)
   })
 })
+
+describe('who answers: sales on shift or these people', () => {
+  const SHIFT_TEAM = {
+    ...TEAM,
+    people: TEAM.people.map((p, i) => ({ ...p, always: i === 1 })),
+    kept: true,
+    default_rule: 'shift',
+    areas: [
+      { key: 'Ventas - GD', label: 'Ventas', people: 2 },
+      { key: 'Taller - GD', label: 'Taller', people: 1 },
+      { key: '', label: '', people: 1 },
+    ],
+  }
+  const NOW = {
+    numbers: 1,
+    closed: false,
+    rule: 'shift',
+    mode: 'shift',
+    because: '',
+    fallback: 'list',
+    people: [
+      {
+        user: 'tere@example.com',
+        full_name: 'Tere',
+        kind: 'shift',
+        shift: '9–15',
+        checked_in: '9:02',
+        reach: 'muelle',
+      },
+      {
+        user: 'jenni@example.com',
+        full_name: 'Jenni',
+        kind: 'always',
+        reach: 'muelle_off',
+      },
+    ],
+  }
+  async function mountShift(doc) {
+    const el = await mount(doc, SHIFT_TEAM)
+    api.call.mockImplementation(async (method, args) => {
+      api.calls.push([method, args])
+      if (method === 'crm.api.calls.ring_now') return NOW
+      return SHIFT_TEAM
+    })
+    return el
+  }
+  const wait = () => new Promise((resolve) => setTimeout(resolve, 300))
+
+  it('defaults to sales on shift where the shop keeps shifts', async () => {
+    const el = await mountShift({
+      call_ring_rule: '',
+      call_ring_fallback: 'list',
+    })
+    const checked = el.querySelector('[data-ring-rule] [aria-checked="true"]')
+    expect(checked.textContent).toContain('Sales on shift')
+    expect(el.querySelector('[data-ring-areas]')).not.toBeNull()
+    expect(el.querySelector('[data-ring-fallback]')).not.toBeNull()
+    expect(el.querySelectorAll('[data-always]')).toHaveLength(2)
+  })
+
+  it('says who rings now and why, for the unsaved choices', async () => {
+    const doc = reactive({
+      call_ring_rule: 'shift',
+      call_ring_fallback: 'list',
+      call_ring_skip_areas: '',
+    })
+    const el = await mountShift(doc)
+    await wait()
+    await nextTick()
+    const asked = api.call.mock.calls.filter(
+      ([m]) => m === 'crm.api.calls.ring_now',
+    )
+    expect(asked.at(-1)[1]).toEqual({
+      rule: 'shift',
+      fallback: 'list',
+      skip_areas: '',
+    })
+    const now = el.querySelector('[data-ring-now]')
+    expect(now.querySelector('[data-ring-now-title]').textContent).toContain(
+      'A call rings now',
+    )
+    const tere = now.querySelector('[data-ring-person="tere@example.com"]')
+    expect(tere.textContent).toContain('shift 9–15')
+    expect(tere.textContent).toContain('checked in 9:02')
+    expect(tere.textContent).toContain('in Muelle')
+    const jenni = now.querySelector('[data-ring-person="jenni@example.com"]')
+    expect(jenni.textContent).toContain('always rings')
+    expect(jenni.textContent).toContain('Muelle is closed')
+  })
+
+  it('takes an area off the line on the draft', async () => {
+    const doc = reactive({
+      call_ring_rule: 'shift',
+      call_ring_fallback: 'list',
+      call_ring_skip_areas: '',
+    })
+    const el = await mountShift(doc)
+    const taller = el.querySelector('[data-area="Taller - GD"]')
+    expect(taller.getAttribute('aria-pressed')).toBe('true')
+    taller.click()
+    await nextTick()
+    expect(doc.call_ring_skip_areas).toBe('["Taller - GD"]')
+    expect(
+      el
+        .querySelector('[data-area="Taller - GD"]')
+        .getAttribute('aria-pressed'),
+    ).toBe('false')
+    el.querySelector('[data-area="Taller - GD"]').click()
+    await nextTick()
+    expect(doc.call_ring_skip_areas).toBe('')
+  })
+
+  it('marks a person to always ring', async () => {
+    const el = await mountShift({ call_ring_rule: 'shift' })
+    el.querySelector('[data-always]').click()
+    await nextTick()
+    expect(api.call).toHaveBeenCalledWith('crm.api.calls.save_team_member', {
+      user: 'tere@example.com',
+      rings: 1,
+      always: 1,
+    })
+  })
+
+  it('hides the shift choices under these people', async () => {
+    const el = await mountShift({ call_ring_rule: 'list' })
+    expect(el.querySelector('[data-ring-areas]')).toBeNull()
+    expect(el.querySelector('[data-ring-fallback]')).toBeNull()
+    expect(el.querySelector('[data-always]')).toBeNull()
+  })
+
+  it('warns when nobody on shift would go to a message that is off', async () => {
+    const el = await mountShift({
+      call_ring_rule: 'shift',
+      call_ring_fallback: 'message',
+      call_voicemail: 0,
+    })
+    expect(el.textContent).toContain('Let callers leave a message first')
+  })
+})

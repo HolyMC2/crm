@@ -169,3 +169,42 @@ describe('the board on the page', () => {
     )
   })
 })
+
+describe('who was on shift and who a missed call rang', () => {
+  it('names them in a short line', async () => {
+    const { namesList, ringLine } = await import(
+      '@/components/doco/calls/board'
+    )
+    expect(namesList(['Jennifer'])).toBe('Jennifer')
+    expect(namesList(['Jennifer', 'Teresa', 'Marco'])).toBe(
+      'Jennifer, Teresa y Marco',
+    )
+    expect(ringLine(null)).toBe('')
+    expect(
+      ringLine({
+        mode: 'shift',
+        on_shift: ['Jennifer', 'Teresa'],
+        rang: ['Jennifer', 'Marco'],
+        unreached: ['Teresa'],
+      }),
+    ).toBe(
+      'En turno: Jennifer y Teresa · sonó también Marco · sin Muelle abierto: Teresa',
+    )
+    expect(
+      ringLine({ mode: 'fallback', because: 'nobody', rang: ['Marco'] }),
+    ).toBe('Nadie en turno · sonó a Marco')
+    expect(ringLine({ mode: 'fallback', because: 'nobody', rang: [] })).toBe(
+      'Nadie en turno · pasó directo al recado',
+    )
+    expect(ringLine({ mode: 'list', rang: ['Jennifer'] })).toBe(
+      'Sonó a Jennifer',
+    )
+    const { ringShort } = await import('@/components/doco/calls/board')
+    expect(
+      ringShort({ mode: 'shift', on_shift: ['Ana', 'Rosa'], rang: ['Luis'] }),
+    ).toBe('En turno: Ana y Rosa')
+    expect(ringShort({ mode: 'fallback', because: 'nobody', rang: [] })).toBe(
+      'Nadie en turno',
+    )
+  })
+})

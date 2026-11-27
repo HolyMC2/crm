@@ -43,3 +43,4 @@ crm.patches.v1_0.ensure_message_provenance_fields # 12-11-2026
 crm.patches.v1_0.align_crm_currency_with_company # 12-11-2026
 crm.patches.v1_0.email_account_scope_fields # 16-11-2026
 crm.patches.v1_0.sales_hierarchy_keeps_its_tree # 24-11-2026
+crm.patches.v1_0.call_line_keeps_its_list # 27-11-2026

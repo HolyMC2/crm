@@ -12,6 +12,18 @@ Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` i
 - **Change:** Productos › Por revisar › «Revisar más productos» picks what to propose («Todo», «Solo nombres») and which products («Nuevos de 30 días», «Lo que publica la tienda», or a group). The sheet also holds the owner's switch «Revisar cada noche los nombres nuevos», which says who hears it. The sheet's sentence went away; the chips say it.
 - **Server:** doco `workspaces.revisar.start` (`que`, `publicados`, `nuevos_dias`), `nightly`, `set_nightly`.
 - **Tests:** `tests/unit/revisar.test.js` (+2).
+## 2026-11-27 — Llamadas: the line rings whoever sells on shift (lane llamadas-turno, with doco; not deployed)
+
+- **Why:** Marco, 2026-11-27: «yes the calls are for the salesperson in charge». S48 rang a fixed list; 10 of 20 missed calls in 30 days came while the shop was open, and the people at the counter were not on it.
+- **Change:**
+  - `crm/call_rule.py`: Bandeja › Llamadas › «Ventas en turno» (CRM Inbox Settings `call_ring_rule` = shift) rings the people at work now at the number's shop (on shift or checked in, from the `crm_call_at_work` hook) who hold a CRM sales role, in an area the manager did not take off the line (`call_ring_skip_areas`, chips), each on their own device, plus the people on the number marked «Siempre» (CRM Telephony Agent `ring_always`). The next call follows the shift; nobody sets anything per day.
+  - Nobody who sells at work, or a shop that keeps no shifts: the fallback (`call_ring_fallback`) rings the list, or only the «Siempre» people and then the message. «Estas personas» (list) is S48's behaviour.
+  - An empty rule is «en turno» where the shop keeps shifts and the list elsewhere; patch `call_line_keeps_its_list` sets every site that already has a line to the list, so nothing changes until the owner picks.
+  - The settings page says who a call would ring right now and why («turno 9–15 · checó 9:02 · en Muelle», «sin Muelle abierto»), for the unsaved choices too (`crm.api.calls.ring_now`).
+  - A person who never chose a device rings in Muelle. A seller who is not on the number gets an incoming-only Twilio token (`generate_access_token` → `incoming_only`; their «Llamar» dials with the device's dialler), and a phone that the line may ring starts the calling SDK after the first page instead of waiting for an outgoing call (`receives_calls`, `CallUI.vue`): before this, Muelle on a phone never rang.
+  - Each incoming call keeps who was at work and who rang on its log (`CRM Call Log.ring_log`); the calls board and the call's drawer show it per missed call («En turno: Ana y Rosa · sonó también Luis», «Nadie en turno · sonó a …», «sin Muelle abierto: …»).
+- **Tests:** `test_call_rule_pure` (14), `test_call_rule` (16, Twilio mocked), `test_calls_answer` (rule pinned); vitest `inboxCalls` (+6), `ringNow` (3), `callsBoard` (+1), `callUIOnDemand` (+1). Phone shots: `~/muelle-host/asistente-program/evidence/S49/S49b-llamadas-turno/`.
+- **Rollout:** rides the next roll with doco's provider; kit `~/muelle-releases/llamadas-turno-20261127/` moves Doco to «en turno». Rollback: the kit's rollback line (rule back to the list), or revert.
 
 ## 2026-11-27 — The customer bot stays out of a chat a person is answering (lane asistente-no-interrumpe; not deployed)
 

@@ -39,6 +39,21 @@ class CRMInboxSettings(Document):
 			frappe.throw(_("Write what callers hear outside office hours."))
 		if self.call_voicemail and not (self.call_voicemail_prompt or "").strip():
 			frappe.throw(_("Write what callers hear before they leave a message."))
+		self._validate_ring_rule()
+
+	def _validate_ring_rule(self):
+		if not self.meta.has_field("call_ring_rule"):
+			return
+		import json
+
+		from crm.call_rule import LIST, MESSAGE, areas_of
+
+		skip = sorted(areas_of(self.call_ring_skip_areas))
+		self.call_ring_skip_areas = json.dumps(skip, ensure_ascii=False) if skip else ""
+		if self.call_ring_rule != LIST and self.call_ring_fallback == MESSAGE and not self.call_voicemail:
+			frappe.throw(
+				_("Let callers leave a message first: with nobody on shift the call goes to the message.")
+			)
 
 	def _validate_hours(self):
 		if self.office_hours_enabled and not self.working_hours:

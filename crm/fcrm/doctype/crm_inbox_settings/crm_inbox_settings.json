@@ -1,7 +1,7 @@
 {
  "actions": [],
  "creation": "2026-11-03 15:00:00.000000",
- "modified": "2026-11-26 21:40:00.000000",
+ "modified": "2026-11-27 10:00:00.000000",
  "modified_by": "Administrator",
  "owner": "Administrator",
  "doctype": "DocType",
@@ -60,6 +60,9 @@
   "section_calls",
   "call_callback_minutes",
   "call_pickup_goal",
+  "call_ring_rule",
+  "call_ring_fallback",
+  "call_ring_skip_areas",
   "call_ring_seconds",
   "call_after_hours",
   "call_after_hours_message",
@@ -201,6 +204,28 @@
    "label": "Calls picked up goal (%)",
    "default": "80",
    "non_negative": 1
+  },
+  {
+   "fieldname": "call_ring_rule",
+   "fieldtype": "Select",
+   "label": "Who answers the shop's line",
+   "options": "\nshift\nlist",
+   "description": "shift: the salespeople on shift or checked in now, plus whoever always rings. list: everyone on the number. Empty: shift when the shop keeps shifts, else list."
+  },
+  {
+   "fieldname": "call_ring_fallback",
+   "fieldtype": "Select",
+   "label": "When nobody who sells is on shift",
+   "options": "list\nmessage",
+   "default": "list",
+   "description": "list: ring everyone on the number. message: only whoever always rings, then the message."
+  },
+  {
+   "fieldname": "call_ring_skip_areas",
+   "fieldtype": "Small Text",
+   "label": "Areas that don't answer the line",
+   "hidden": 1,
+   "description": "JSON list of the areas (department, else designation) whose people are not rung on shift."
   },
   {
    "fieldname": "call_ring_seconds",

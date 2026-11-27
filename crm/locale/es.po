@@ -54447,3 +54447,99 @@ msgstr "Caja sin cerrar"
 #: frontend/src/components/shell/ShellStatus.vue
 msgid "Your caja {0} is still open since {1}. Close it in the POS."
 msgstr "Tu caja {0} sigue abierta desde {1}. Ciérrala en el POS."
+
+msgid "Sales on shift"
+msgstr "Ventas en turno"
+
+msgid "These people"
+msgstr "Estas personas"
+
+msgid "Areas that answer"
+msgstr "Áreas que contestan"
+
+msgid "No area"
+msgstr "Sin área"
+
+msgid "If nobody who sells is on shift"
+msgstr "Si nadie de ventas está en turno"
+
+msgid "Ring the list"
+msgstr "Suena la lista"
+
+msgid "Who always rings, then the message"
+msgstr "Quien suena siempre y luego el recado"
+
+msgid "Let callers leave a message first: with nobody on shift the call goes to the message."
+msgstr "Activa los recados primero: si nadie de ventas está en turno, la llamada pasa al recado."
+
+msgid "{0} always rings"
+msgstr "{0} suena siempre"
+
+msgid "Rings on every call, on shift or not"
+msgstr "Suena en cada llamada, esté en turno o no"
+
+msgid "Closed now: callers hear the after-hours message."
+msgstr "Ahora está cerrado: quien llama oye el mensaje de fuera de horario."
+
+msgid "This shop keeps no shifts: the list rings."
+msgstr "La tienda no lleva turnos: suena la lista."
+
+msgid "This shop keeps no shifts and nobody rings: callers go to the message."
+msgstr "La tienda no lleva turnos y no suena nadie: la llamada pasa al recado."
+
+msgid "Nobody who sells is on shift: who always rings, then the message."
+msgstr "Nadie de ventas está en turno: suena quien suena siempre y luego el recado."
+
+msgid "Nobody who sells is on shift: callers go to the message."
+msgstr "Nadie de ventas está en turno: la llamada pasa al recado."
+
+msgid "Nobody who sells is on shift: the list rings."
+msgstr "Nadie de ventas está en turno: suena la lista."
+
+msgid "Nobody who sells is on shift and the list is empty."
+msgstr "Nadie de ventas está en turno y la lista está vacía."
+
+msgid "Nobody rings now: add the people at the counter."
+msgstr "Ahora no suena nadie: agrega a la gente del mostrador."
+
+msgid "A call rings now"
+msgstr "Si llaman ahora, suena a"
+
+msgid "always rings"
+msgstr "suena siempre"
+
+msgid "on the list"
+msgstr "en la lista"
+
+msgid "shift {0}"
+msgstr "turno {0}"
+
+msgid "checked in {0}"
+msgstr "checó {0}"
+
+msgid "on their phone ···{0}"
+msgstr "en su celular ···{0}"
+
+msgid "on their phone"
+msgstr "en su celular"
+
+msgid "on the softphone"
+msgstr "en el softphone"
+
+msgid "Muelle is closed"
+msgstr "sin Muelle abierto"
+
+msgid "in Muelle"
+msgstr "en Muelle"
+
+msgid "When nobody who sells is on shift"
+msgstr "Cuando nadie de ventas está en turno"
+
+msgid "Areas that don't answer the line"
+msgstr "Áreas que no contestan la línea"
+
+msgid "Always rings"
+msgstr "Suena siempre"
+
+msgid "Who it rang"
+msgstr "A quién sonó"

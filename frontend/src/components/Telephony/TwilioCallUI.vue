@@ -190,6 +190,7 @@ const { capture } = useTelemetry()
 const { updateOnboardingStep } = useCrmOnboarding()
 
 let device = ''
+let incomingOnly = false
 let log = ref('Connecting...')
 let _call = null
 
@@ -284,6 +285,9 @@ async function startupClient() {
   try {
     const data = await call('crm.integrations.twilio.api.generate_access_token')
     log.value = 'Got a token.'
+    // Rung at work without a number of their own: this browser takes the
+    // shop's calls and places none (calls out go through the device's dialler).
+    incomingOnly = Boolean(data?.incoming_only)
     initDeviceAfterGesture(data.token)
   } catch (err) {
     log.value = 'An error occurred. ' + err.message
@@ -436,6 +440,10 @@ function handleDisconnectedIncomingCall() {
 async function makeOutgoingCall(number) {
   phoneNumber.value = number
 
+  if (incomingOnly) {
+    window.location.href = `tel:${number}`
+    return
+  }
   if (device) {
     log.value = `Attempting to call ${number} ...`
 

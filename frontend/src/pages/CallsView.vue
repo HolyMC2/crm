@@ -201,8 +201,18 @@
               {{ verdictLine(followUp(r)) }}
             </span>
           </span>
-          <span class="truncate text-base text-ink-gray-7">
-            {{ onShift(r.start_time, shifts).join(', ') || '—' }}
+          <span class="min-w-0">
+            <span class="block truncate text-base text-ink-gray-7">
+              {{ shiftNames(r) || '—' }}
+            </span>
+            <span
+              v-if="ringOf(r)"
+              class="block truncate text-sm text-[var(--muelle-on-surface-variant)]"
+              :title="ringLine(ringOf(r))"
+              data-ring-line
+            >
+              {{ rangLine(ringOf(r)) }}
+            </span>
           </span>
           <span
             class="truncate text-base"
@@ -232,6 +242,7 @@
       v-if="selectedCall"
       :name="selectedCall"
       :shifts="shifts"
+      :ring="board?.items?.[selectedCall]?.ring || null"
       @close="selectedCall = null"
       @changed="calls.reload()"
     />
@@ -247,6 +258,9 @@ import CallDetailDrawer from '@/components/doco/calls/CallDetailDrawer.vue'
 import CallsBoard from '@/components/doco/calls/CallsBoard.vue'
 import {
   namesFor,
+  namesList,
+  ringLine,
+  ringShort,
   verdictLine,
   verdictTone,
 } from '@/components/doco/calls/board'
@@ -275,7 +289,7 @@ import { call } from 'frappe-ui'
 // Direction, contact, when, how long, who was on shift, then what the
 // analysis found: why they called, whether it worked, the customer's mood.
 const GRID =
-  '32px minmax(140px,1fr) 156px minmax(70px,.5fr) minmax(120px,1.3fr) 96px 80px'
+  '32px minmax(140px,1fr) 156px minmax(110px,.8fr) minmax(120px,1.1fr) 96px 80px'
 
 const { showModal } = useDoctypeModal()
 function logCall() {
@@ -324,6 +338,20 @@ async function loadBoard() {
 watch(days, loadBoard, { immediate: true })
 function followUp(r) {
   return board.value?.items?.[r.name] || null
+}
+// Who was on shift and who a missed call rang, as its log kept them.
+function ringOf(r) {
+  return followUp(r)?.ring || null
+}
+function shiftNames(r) {
+  const ring = ringOf(r)
+  if (ring?.mode === 'shift') return namesList(ring.on_shift)
+  return onShift(r.start_time, shifts.value).join(', ')
+}
+function rangLine(ring) {
+  return ring.rang?.length
+    ? __('Sonó a {0}', [namesList(ring.rang)])
+    : __('No sonó a nadie')
 }
 const selectedCall = ref(null)
 
@@ -490,6 +518,7 @@ function callLine(r) {
     refNames.value[r.reference_docname] && formatPhone(phoneOf(r)),
     callWhen(r.start_time),
     Number(r.duration) > 0 && !followUp(r) && fmtDur(r.duration),
+    ringShort(ringOf(r)),
     verdictLine(followUp(r)),
   ]
     .filter(Boolean)

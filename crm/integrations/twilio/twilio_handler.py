@@ -1,3 +1,5 @@
+import json
+
 import frappe
 from frappe import _
 from frappe.utils.password import get_decrypted_password
@@ -36,8 +38,9 @@ class Twilio:
 		numbers = self.twilio_client.incoming_phone_numbers.list()
 		return [n.phone_number for n in numbers]
 
-	def generate_voice_access_token(self, identity: str, ttl=60 * 60):
-		"""Generates a token required to make voice calls from the browser."""
+	def generate_voice_access_token(self, identity: str, ttl=60 * 60, incoming_only=False):
+		"""Generates a token required to make voice calls from the browser; with
+		`incoming_only` the browser can take the shop's calls but not place any."""
 		# identity is used by twilio to identify the user uniqueness at browser(or any endpoints).
 		identity = self.safe_identity(identity)
 
@@ -46,7 +49,7 @@ class Twilio:
 
 		# Create a Voice grant and add to token
 		voice_grant = VoiceGrant(
-			outgoing_application_sid=self.application_sid,
+			outgoing_application_sid=None if incoming_only else self.application_sid,
 			incoming_allow=True,  # Allow incoming calls
 		)
 		token.add_grant(voice_grant)
@@ -205,12 +208,14 @@ class IncomingCall:
 		"""Process the incoming call
 		* Outside office hours, when the owner turned that on: the after-hours message
 		  (and a message recording when allowed), without ringing anybody.
-		* Otherwise ring every person who answers this number at once (CRM Telephony
-		  Agent with this twilio_number: their phone, the CRM in their browser or a SIP
-		  softphone). The first to answer takes it; when nobody does within the ring
-		  time, crm.integrations.twilio.api.twilio_dial_outcome decides what follows.
+		* Otherwise ring, at once, the people the owner's rule picks (crm.call_rule: the
+		  salespeople at work now, or everyone on this number), each on their device:
+		  their phone, Muelle in their browser or a SIP softphone. The first to answer
+		  takes it; when nobody does within the ring time,
+		  crm.integrations.twilio.api.twilio_dial_outcome decides what follows. The
+		  call's log keeps who was at work and who rang (`ring_log`).
 		"""
-		from crm import calls_answer
+		from crm import call_rule, calls_answer
 		from crm.inbox import office_hours
 
 		twilio = Twilio.connect()
@@ -226,8 +231,10 @@ class IncomingCall:
 				done_url=twilio.get_message_done_url(),
 			)
 
-		owners = get_twilio_number_owners(self.to_number)
-		targets = ring_targets(twilio, owners)
+		plan = call_rule.plan(self.to_number, settings=settings)
+		by_user = targets_by_user(twilio, plan["owners"])
+		note_ring(self.call_sid, call_rule.log_entry(plan, {u for u, t in by_user.items() if t}))
+		targets = [target for user in plan["ring"] for target in by_user.get(user) or ()]
 		if not targets:
 			mark_unanswered(self.call_sid, "no-answer")
 			if rules["voicemail"]:
@@ -287,26 +294,51 @@ OUTCOME_STATUS = {
 }
 
 
+def note_ring(call_sid, entry: dict):
+	"""Keep on the call's log who was at work and who rang (crm.call_rule.log_entry)."""
+	if not call_sid or not frappe.get_meta("CRM Call Log").has_field("ring_log"):
+		return
+	if not frappe.db.exists("CRM Call Log", call_sid):
+		return
+	frappe.db.set_value(
+		"CRM Call Log", call_sid, "ring_log", json.dumps(entry, separators=(",", ":")), update_modified=False
+	)
+	frappe.db.commit()  # nosemgrep: frappe-manual-commit -- Twilio webhook, the TwiML answer follows
+
+
 def ring_targets(twilio, owners) -> list:
-	"""Every way to reach every person on this number, rung at once: a phone number,
-	the browser dialer of a person signed in to the CRM, a SIP softphone (plus the
-	browser of that person when signed in)."""
-	targets = []
+	"""Every way to reach every person given, rung at once: a phone number, the browser
+	dialer of a person signed in to the CRM, a SIP softphone (plus the browser of that
+	person when signed in). A person who never chose a device takes calls in Muelle."""
+	return [target for targets in targets_by_user(twilio, owners).values() for target in targets]
+
+
+def targets_by_user(twilio, owners) -> dict:
+	"""{user: [(kind, value)]}: how each person is reached; an empty list when they can't be."""
+	out = {}
 	if not owners:
-		return targets
+		return out
 	signed_in = set(get_active_loggedin_users(list(owners.keys())))
 	sip_domain = twilio.settings.get("sip_domain") if twilio.settings.get("enable_sip_phone") else ""
 	for name, details in owners.items():
-		device = details.get("call_receiving_device")
+		targets = out.setdefault(name, [])
+		device = details.get("call_receiving_device") or "Computer"
 		mobile = details.get("agent_mobile") or details.get("mobile_no")
 		if device == "Phone" and mobile:
 			targets.append(("number", mobile))
 			continue
 		if device == "SIP Phone" and sip_domain and details.get("sip_username"):
 			targets.append(("sip", f"sip:{details['sip_username']}@{sip_domain}"))
-		if name in signed_in and device in ("Computer", "SIP Phone"):
+		if name in signed_in and device in ("Computer", "SIP Phone", "Phone"):
+			# «Phone» without a number falls back to Muelle in the browser.
 			targets.append(("client", twilio.safe_identity(name)))
-	return targets
+	return out
+
+
+_OWNERS = """SELECT name, call_receiving_device, sip_username, mobile_no AS agent_mobile
+	FROM `tabCRM Telephony Agent` WHERE twilio_number = %s ORDER BY user_name"""
+_OWNERS_WITH_ALWAYS = """SELECT name, call_receiving_device, sip_username, mobile_no AS agent_mobile,
+	ring_always FROM `tabCRM Telephony Agent` WHERE twilio_number = %s ORDER BY user_name"""
 
 
 def get_twilio_number_owners(phone_number):
@@ -324,13 +356,10 @@ def get_twilio_number_owners(phone_number):
 	# and Frappe's permission system filters CRM Telephony Agent / User reads
 	# in that context. Talking directly to frappe.db.sql guarantees the routing
 	# logic sees every agent assigned to this Twilio number.
-	user_voice_settings = frappe.db.sql(
-		"""SELECT name, call_receiving_device, sip_username, mobile_no AS agent_mobile
-		FROM `tabCRM Telephony Agent`
-		WHERE twilio_number = %s""",
-		(phone_number,),
-		as_dict=True,
+	query = (
+		_OWNERS_WITH_ALWAYS if frappe.get_meta("CRM Telephony Agent").has_field("ring_always") else _OWNERS
 	)
+	user_voice_settings = frappe.db.sql(query, (phone_number,), as_dict=True)
 	user_wise_voice_settings = {user["name"]: user for user in user_voice_settings}
 
 	if not user_wise_voice_settings:

@@ -36,13 +36,32 @@ def _get_recording_credentials(telephony_medium: str) -> tuple | None:
 
 @frappe.whitelist()
 def is_call_integration_enabled():
+	twilio = bool(frappe.db.get_single_value("CRM Twilio Settings", "enabled"))
 	return {
 		"integrations": {
-			"twilio": bool(frappe.db.get_single_value("CRM Twilio Settings", "enabled")),
+			"twilio": twilio,
 			"exotel": bool(frappe.db.get_single_value("CRM Exotel Settings", "enabled")),
 		},
 		"default_calling_medium": get_user_default_calling_medium(),
+		"receives_calls": twilio and receives_calls(frappe.session.user),
 	}
+
+
+def receives_calls(user: str) -> bool:
+	"""The shop's line may ring this person: they are on a number, or the line rings
+	whoever sells at work (crm.call_rule). Their Muelle then starts the calling SDK on a
+	phone too, which otherwise waits for their first outgoing call."""
+	if not user or user == "Guest":
+		return False
+	if frappe.db.get_value("CRM Telephony Agent", user, "twilio_number"):
+		return True
+	from crm import call_rule
+
+	try:
+		return call_rule.may_ring(user)
+	except Exception:
+		frappe.log_error(title="Calls: could not tell whether the line rings this person")
+		return False
 
 
 def get_user_default_calling_medium():

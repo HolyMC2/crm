@@ -24,6 +24,16 @@ def team():
 
 @frappe.whitelist(methods=["POST"])
 def save_team_member(
-	user: str, rings: int | str = 1, device: str | None = None, mobile_no: str | None = None
+	user: str,
+	rings: int | str = 1,
+	device: str | None = None,
+	mobile_no: str | None = None,
+	always: int | str | None = None,
 ):
-	return call_team.save(user, rings, device or None, mobile_no)
+	return call_team.save(user, rings, device or None, mobile_no, always)
+
+
+@frappe.whitelist()
+def ring_now(rule: str | None = None, fallback: str | None = None, skip_areas: str | None = None):
+	"""Who a call would ring right now under the page's (maybe unsaved) choices."""
+	return call_team.ring_now(rule, fallback, skip_areas)

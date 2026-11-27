@@ -208,6 +208,31 @@ def site_hours() -> Hours:
 	return Hours(rows, holidays)
 
 
+def add_rings(items: dict, rows) -> None:
+	"""Each missed call's `ring`: who was at work and who was rung, as first names
+	(crm.call_rule.log_entry kept on the call's log)."""
+	from crm.call_rule import parse_log
+
+	names = {}
+
+	def first(user):
+		if user not in names:
+			full = frappe.utils.get_fullname(user) or user
+			names[user] = full.split()[0] if full.split() else user
+		return names[user]
+
+	for row in rows:
+		item = items.get(row.get("name"))
+		log = parse_log(row.get("ring_log")) if item is not None else None
+		if not log:
+			continue
+		item["ring"] = {
+			"mode": log["mode"],
+			"because": log["because"],
+			**{key: [first(u) for u in log[key]] for key in ("on_shift", "rang", "unreached")},
+		}
+
+
 def board(days: int, now: datetime) -> dict:
 	"""The calls page's figures for the last `days` days, as the reader may see them."""
 	end = now.date()
@@ -215,7 +240,7 @@ def board(days: int, now: datetime) -> dict:
 	goal = settings()
 	meta = frappe.get_meta(DOCTYPE)
 	fields = ["name", "type", "status", "duration", "from", "to", "receiver", "caller", "start_time"]
-	fields += [f for f in ("after_hours", "left_message") if meta.has_field(f)]
+	fields += [f for f in ("after_hours", "left_message", "ring_log") if meta.has_field(f)]
 	rows = frappe.get_list(
 		DOCTYPE,
 		filters={"start_time": [">=", datetime.combine(start, time.min)]},
@@ -226,6 +251,7 @@ def board(days: int, now: datetime) -> dict:
 	out = summarize(
 		rows, start=start, end=end, now=now, goal_minutes=goal["callback_minutes"], hours=site_hours()
 	)
+	add_rings(out["items"], rows)
 	out.update(
 		{
 			"days": days,

@@ -12,7 +12,7 @@ from unittest.mock import MagicMock, patch
 
 import frappe
 
-from crm import calls_answer
+from crm import call_rule, calls_answer
 from crm.integrations.twilio import api, twilio_handler
 
 SHOP = "+526690000001"
@@ -118,6 +118,7 @@ class TestRingTheTeam(unittest.TestCase):
 			patch.object(twilio_handler, "get_twilio_number_owners", return_value=owners),
 			patch.object(twilio_handler, "get_active_loggedin_users", return_value=list(owners)),
 			patch.object(twilio_handler, "mark_unanswered") as mark,
+			patch.object(call_rule, "staff", return_value=None),
 			patch.object(calls_answer, "site_language", return_value="es-MX"),
 		):
 			xml = twilio_handler.IncomingCall(CUSTOMER, SHOP, call_sid="CAfictional").process().to_xml()

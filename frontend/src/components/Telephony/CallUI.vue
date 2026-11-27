@@ -43,7 +43,11 @@
   </Dialog>
 </template>
 <script setup>
-import { defaultCallingMedium, useTelephony } from '@/composables/telephony'
+import {
+  defaultCallingMedium,
+  receivesCalls,
+  useTelephony,
+} from '@/composables/telephony'
 import { globalStore } from '@/stores/global'
 import { FormControl, call, toast } from 'frappe-ui'
 import { computed, defineAsyncComponent, nextTick, ref, watch } from 'vue'
@@ -86,9 +90,20 @@ const show = ref(false)
 // a slow line starts them on its first call instead (F22): the SDK, its token
 // and the onboarding status it reads (about 55 KB, 2 calls) no longer compete
 // with the first tap, and that tab rings for incoming calls only after it.
-const onDemand = constrainedLine()
+// A person the shop's line rings is the exception: their phone starts the SDK
+// after the first page too, or it could never ring.
+const constrained = constrainedLine()
+const onDemand = () => constrained && !receivesCalls.value
 const mediaReady = ref(false)
-if (!onDemand) afterFirstRoute(useRouter(), () => (mediaReady.value = true))
+const router = useRouter()
+let scheduled = false
+function scheduleMedia() {
+  if (scheduled || onDemand()) return
+  scheduled = true
+  afterFirstRoute(router, () => (mediaReady.value = true))
+}
+scheduleMedia()
+watch(receivesCalls, scheduleMedia)
 const mobileNumber = ref('')
 
 const enabledIntegrations = computed(() =>
@@ -140,34 +155,37 @@ async function setDefaultCallingMedium() {
   )
 }
 
-// Twilio's setup fetches the token and creates the device the call needs.
+// Twilio's setup fetches the token and creates the device the call needs;
+// each medium sets up once, whichever path asks first.
+const started = new Map()
+function startMedium({ key, ref: integrationRef }) {
+  if (!started.has(key))
+    started.set(
+      key,
+      loaded(integrationRef).then((medium) => medium.setup()),
+    )
+  return started.get(key)
+}
 let mediaOnDemand = null
 function makeCallOnDemand(number) {
   mediaReady.value = true
-  mediaOnDemand ??= Promise.all(
-    enabledIntegrations.value.map(async ({ ref: integrationRef }) =>
-      (await loaded(integrationRef)).setup(),
-    ),
-  )
+  mediaOnDemand ??= Promise.all(enabledIntegrations.value.map(startMedium))
   return mediaOnDemand.then(() => makeCall(number))
 }
 
 watch(
-  isAnyEnabled,
+  [isAnyEnabled, receivesCalls],
   () =>
     nextTick(async () => {
-      if (!onDemand)
-        for (const {
-          label,
-          ref: integrationRef,
-        } of enabledIntegrations.value) {
-          ;(await loaded(integrationRef)).setup()
-          callMedium.value = label
+      if (!onDemand())
+        for (const integration of enabledIntegrations.value) {
+          await startMedium(integration)
+          callMedium.value = integration.label
         }
 
       if (isAnyEnabled.value) {
         callMedium.value = enabledIntegrations.value[0]?.label ?? 'Twilio'
-        setMakeCall(onDemand ? makeCallOnDemand : makeCall)
+        setMakeCall(onDemand() ? makeCallOnDemand : makeCall)
       }
     }),
   { immediate: true },

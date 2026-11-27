@@ -3,6 +3,7 @@ import { computed, createApp, defineComponent, h, nextTick } from 'vue'
 
 // F22: a phone starts the calling SDK on its first call, not after load.
 const line = vi.hoisted(() => ({ phone: false }))
+const rings = vi.hoisted(() => ({ ref: null }))
 const afterFirstRoute = vi.hoisted(() => vi.fn())
 const setMakeCall = vi.hoisted(() => vi.fn())
 const twilio = vi.hoisted(() => ({
@@ -19,8 +20,10 @@ vi.mock('vue-router', () => ({ useRouter: () => ({}) }))
 vi.mock('@/stores/global', () => ({ globalStore: () => ({ setMakeCall }) }))
 vi.mock('@/composables/telephony', async () => {
   const { ref } = await import('vue')
+  rings.ref = ref(false)
   return {
     defaultCallingMedium: ref(''),
+    receivesCalls: rings.ref,
     useTelephony: () => ({
       isEnabled: (key) => key === 'twilio',
       isAnyEnabled: computed(() => true),
@@ -72,6 +75,7 @@ afterEach(() => {
   document.body.innerHTML = ''
   vi.clearAllMocks()
   twilio.mounted = 0
+  rings.ref.value = false
 })
 
 describe('CallUI on a phone or a slow line', () => {
@@ -115,6 +119,26 @@ describe('CallUI on a wide screen', () => {
     afterFirstRoute.mock.calls[0][1]()
     await flush()
     expect(twilio.mounted).toBe(1)
+    expect(twilio.setup).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('CallUI on the phone of someone the line rings', () => {
+  it('starts the SDK after the first route, or the phone could never ring', async () => {
+    line.phone = true
+    mount()
+    await flush()
+    expect(afterFirstRoute).not.toHaveBeenCalled()
+    rings.ref.value = true
+    await flush()
+    expect(afterFirstRoute).toHaveBeenCalledTimes(1)
+    afterFirstRoute.mock.calls[0][1]()
+    await flush()
+    expect(twilio.mounted).toBe(1)
+    expect(twilio.setup).toHaveBeenCalledTimes(1)
+    rings.ref.value = false
+    rings.ref.value = true
+    await flush()
     expect(twilio.setup).toHaveBeenCalledTimes(1)
   })
 })

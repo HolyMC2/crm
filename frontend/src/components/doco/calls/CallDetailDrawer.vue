@@ -49,6 +49,7 @@
               :k="__('En turno')"
               :v="shiftNames || __('Nadie en el horario')"
             />
+            <Fact v-if="ring" :k="__('Sonó a')" :v="rangNames" data-ring-fact />
             <Fact :k="__('Estado')" :v="statusLabel(d.status, 'call') || '—'" />
           </dl>
 
@@ -193,11 +194,14 @@ import { formatPhone } from '@/composables/crmFormat'
 import { globalStore } from '@/stores/global'
 import { statusLabel } from '@/utils/display'
 import { GOAL, SENTIMENT, analysisAction, callWhen, onShift } from './calls'
+import { namesList } from './board'
 
 const props = defineProps({
   name: { type: String, required: true },
   /** Shift windows from doco_marketing.api.calls.page_context. */
   shifts: { type: Array, default: () => [] },
+  /** Who was at work and who it rang, from the board (crm/call_rule.py). */
+  ring: { type: Object, default: null },
 })
 const emit = defineEmits(['close', 'changed'])
 
@@ -228,8 +232,18 @@ const phone = computed(() => {
   return number ? formatPhone(number) : '—'
 })
 const shiftNames = computed(() =>
-  onShift(d.value.start_time, props.shifts).join(', '),
+  props.ring?.mode === 'shift'
+    ? namesList(props.ring.on_shift)
+    : onShift(d.value.start_time, props.shifts).join(', '),
 )
+const rangNames = computed(() => {
+  const ring = props.ring || {}
+  const rang = namesList(ring.rang || [])
+  const missed = ring.unreached?.length
+    ? __('sin Muelle abierto: {0}', [namesList(ring.unreached)])
+    : ''
+  return [rang || __('Nadie'), missed].filter(Boolean).join(' · ')
+})
 const goal = computed(() => GOAL[d.value.goal_met])
 const mood = computed(() => SENTIMENT[d.value.tone])
 const analyzed = computed(
