@@ -7,11 +7,22 @@ import {
   listOf,
   progressOf,
   sourceText,
+  startArgs,
   sureText,
   swipeAction,
 } from '@/utils/revisar'
 
 describe('revisar helpers', () => {
+  it('a start names its scope and what it proposes', () => {
+    expect(startArgs('nuevos', 'nombre')).toEqual({
+      nuevos_dias: 30,
+      que: '["nombre"]',
+    })
+    expect(startArgs('publicados')).toEqual({ publicados: 1 })
+    expect(startArgs('Batas', 'todo')).toEqual({ item_group: 'Batas' })
+    expect(startArgs('')).toEqual({})
+  })
+
   it('decides by distance, flick or an upward pull, else goes back', () => {
     const box = { width: 400, height: 500, ms: 400 }
     expect(swipeAction({ ...box, dx: 150 })).toBe('apply')
@@ -116,6 +127,27 @@ vi.mock('@/composables/useCompras', async (importOriginal) => {
         return { estado: 'Pendiente', conteo: { total: 2, pendientes: 2 } }
       if (method.endsWith('.deck'))
         return { lote: 'L1', conteo: { total: 2, pendientes: 1 }, tarjetas: [] }
+      if (method.endsWith('.groups')) return [{ name: 'Batas', items: 12 }]
+      if (method.endsWith('.nightly'))
+        return { existe: true, puede: true, encendido: false, avisa_nombre: '' }
+      if (method.endsWith('.set_nightly'))
+        return {
+          existe: true,
+          puede: true,
+          encendido: Boolean(args.on),
+          avisa_nombre: 'Ana Ruiz',
+        }
+      if (method.endsWith('.start'))
+        return {
+          trabajos: [{ name: 'L2', titulo: 'Revisar nombres', pendientes: 0 }],
+          lote: 'L2',
+          titulo: 'Revisar nombres',
+          estado: 'Preparando',
+          conteo: { total: 0, pendientes: 0 },
+          tipos: [],
+          tarjetas: [],
+          puede_editar: true,
+        }
       return {}
     }),
   }
@@ -193,5 +225,28 @@ describe('the deck', () => {
     await click('revisar-seguras-titulo')
     expect(state.calls.some(([m]) => m === 'apply_safe')).toBe(false)
     expect(root.textContent).toContain('Yes, apply 2')
+  })
+
+  it('starts a names-only job over the newest and turns the nightly check on', async () => {
+    await mount()
+    await click('revisar-trabajo')
+    const tap = async (id) => {
+      document.querySelector(`[data-testid="${id}"]`).click()
+      await settle()
+    }
+    await tap('revisar-mas')
+    expect(document.body.textContent).toContain('Batas')
+    await tap('revisar-que-nombre')
+    await tap('revisar-alcance-nuevos')
+    await tap('revisar-empezar')
+    expect(state.calls.find(([m]) => m === 'start')[1]).toEqual({
+      nuevos_dias: 30,
+      que: '["nombre"]',
+    })
+    await click('revisar-trabajo')
+    await tap('revisar-mas')
+    await tap('revisar-cada-noche')
+    expect(state.calls.find(([m]) => m === 'set_nightly')[1]).toEqual({ on: 1 })
+    expect(document.body.textContent).toContain('Ana Ruiz hears about it')
   })
 })

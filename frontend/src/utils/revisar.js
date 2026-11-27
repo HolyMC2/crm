@@ -74,3 +74,16 @@ export function freshCards(shown = [], incoming = [], decided = new Set()) {
   const have = new Set(shown.map((c) => c.name))
   return incoming.filter((c) => !have.has(c.name) && !decided.has(c.name))
 }
+
+// The deck's «Revisar más productos»: a scope chip (the newest products, what the store
+// shows, or a group) and what to propose («todo», or the names alone) as the arguments
+// of doco.workspaces.revisar.start.
+export const NEW_DAYS = 30
+export function startArgs(scope, kind = 'todo') {
+  const args = {}
+  if (scope === 'nuevos') args.nuevos_dias = NEW_DAYS
+  else if (scope === 'publicados') args.publicados = 1
+  else if (scope) args.item_group = scope
+  if (kind === 'nombre') args.que = JSON.stringify(['nombre'])
+  return args
+}

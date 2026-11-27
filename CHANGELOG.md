@@ -7,6 +7,11 @@ Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` i
 - **Why:** S49d: the customer agent records holds («apartar») and payment replies for a manager.
 - **Change:** a hold row in the inbox's «Por aprobar» (and the conversation's strip) shows what and for whom (`AgentActionSummary.vue`), with the confirmation text to edit and «No apartar» / «Apartar»; the toast names the order's folio or says the customer could not be told. A reply that carries a payment link says so («Se agrega el enlace de pago por …»). `/crm/inbox?tab=aprobar` opens «Por aprobar» (Pendientes and the setup screen link there). Más › Asistente para clientes lists what each tool lacks on this shop («Apartar productos», «Cobrar en línea»).
 - **Tests:** vitest `agentDraft` (5), `asistenteClientes` (4), `atencion` (25).
+## 2026-11-27 — «Por revisar»: names only, the newest or what the store shows, and a nightly name check (lane catalogo-bot, with doco; not deployed)
+
+- **Change:** Productos › Por revisar › «Revisar más productos» picks what to propose («Todo», «Solo nombres») and which products («Nuevos de 30 días», «Lo que publica la tienda», or a group). The sheet also holds the owner's switch «Revisar cada noche los nombres nuevos», which says who hears it. The sheet's sentence went away; the chips say it.
+- **Server:** doco `workspaces.revisar.start` (`que`, `publicados`, `nuevos_dias`), `nightly`, `set_nightly`.
+- **Tests:** `tests/unit/revisar.test.js` (+2).
 
 ## 2026-11-27 — The customer bot stays out of a chat a person is answering (lane asistente-no-interrumpe; not deployed)
 

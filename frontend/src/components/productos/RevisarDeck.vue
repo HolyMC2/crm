@@ -343,28 +343,55 @@
         }
       "
     >
-      <div v-if="startOpen" class="space-y-3 pb-4">
-        <p class="text-sm text-ink-gray-7">
-          {{
-            __(
-              'Pick a group: I read up to 200 of its products and propose a full title, a description, the models they fit and the group when it is wrong. Nothing changes until you apply it.',
-              null,
-              'Revisar',
-            )
-          }}
-        </p>
-        <div class="flex flex-wrap gap-1.5">
+      <div v-if="startOpen" class="space-y-4 pb-4">
+        <div
+          class="flex flex-wrap gap-1.5"
+          role="group"
+          :aria-label="__('What to propose', null, 'Revisar')"
+        >
           <button
-            v-for="g in groups"
-            :key="g.name"
+            v-for="k in KINDS"
+            :key="k.value"
             type="button"
-            :class="chipClass(pick === g.name)"
-            :aria-pressed="pick === g.name"
-            @click="pick = g.name"
+            :class="chipClass(kindPick === k.value)"
+            :aria-pressed="kindPick === k.value"
+            :data-testid="'revisar-que-' + k.value"
+            @click="kindPick = k.value"
           >
-            {{ g.name }} <span class="num">{{ g.items }}</span>
+            {{ k.label }}
           </button>
         </div>
+        <div
+          class="flex flex-wrap gap-1.5"
+          role="group"
+          :aria-label="__('Which products', null, 'Revisar')"
+        >
+          <button
+            v-for="g in scopes"
+            :key="g.value"
+            type="button"
+            :class="chipClass(pick === g.value)"
+            :aria-pressed="pick === g.value"
+            :data-testid="'revisar-alcance-' + g.value"
+            @click="pick = g.value"
+          >
+            {{ g.label }}
+            <span v-if="g.items" class="num">{{ g.items }}</span>
+          </button>
+        </div>
+        <Switch
+          v-if="nightly?.existe && nightly.puede"
+          :model-value="Boolean(nightly.encendido)"
+          :label="__('Check new names every night', null, 'Revisar')"
+          :description="
+            nightly.encendido && nightly.avisa_nombre
+              ? __('{0} hears about it', [nightly.avisa_nombre], 'Revisar')
+              : ''
+          "
+          :disabled="nightlyBusy"
+          data-testid="revisar-cada-noche"
+          @update:model-value="setNightly"
+        />
       </div>
       <ul v-else class="divide-y divide-outline-gray-1 pb-4">
         <li v-for="job in data.trabajos" :key="job.name">
@@ -394,6 +421,7 @@
           v-if="!startOpen && data.puede_editar"
           type="button"
           :class="['press', BTN.tonal]"
+          data-testid="revisar-mas"
           @click="openStart"
         >
           {{ __('Review more products', null, 'Revisar') }}
@@ -423,7 +451,7 @@ import {
   ref,
   watch,
 } from 'vue'
-import { BottomSheet, EmptyState, chipClass } from '@/components/ui'
+import { BottomSheet, EmptyState, Switch, chipClass } from '@/components/ui'
 import { comprasApi, problemOf } from '@/composables/useCompras'
 import { BTN } from '@/documentos/tools'
 import {
@@ -431,6 +459,7 @@ import {
   listOf,
   progressOf,
   sourceText,
+  startArgs,
   sureText,
   swipeAction,
   swipeProgress,
@@ -726,18 +755,50 @@ const jobsOpen = ref(false)
 const startOpen = ref(false)
 const groups = ref([])
 const pick = ref('')
+const kindPick = ref('todo')
+const nightly = ref(null)
+const nightlyBusy = ref(false)
+const KINDS = [
+  { value: 'todo', label: __('Everything', null, 'Revisar') },
+  { value: 'nombre', label: __('Only names', null, 'Revisar') },
+]
+const scopes = computed(() => [
+  { value: 'nuevos', label: __('New in 30 days', null, 'Revisar') },
+  { value: 'publicados', label: __('What the store shows', null, 'Revisar') },
+  ...groups.value.map((g) => ({ value: g.name, label: g.name, items: g.items })),
+])
 
 async function openStart() {
   jobsOpen.value = false
   startOpen.value = true
-  if (!groups.value.length) groups.value = await call('groups').catch(() => [])
+  const [got, night] = await Promise.all([
+    groups.value.length ? groups.value : call('groups').catch(() => []),
+    nightly.value || call('nightly').catch(() => null),
+  ])
+  groups.value = got
+  nightly.value = night
+}
+
+async function setNightly(on) {
+  nightlyBusy.value = true
+  problem.value = ''
+  const before = nightly.value
+  nightly.value = { ...before, encendido: on }
+  try {
+    nightly.value = await call('set_nightly', { on: on ? 1 : 0 })
+  } catch (error) {
+    nightly.value = before
+    problem.value = problemOf(error).detail
+  } finally {
+    nightlyBusy.value = false
+  }
 }
 
 async function startJob() {
   busy.value = true
   problem.value = ''
   try {
-    show(await call('start', { item_group: pick.value }))
+    show(await call('start', startArgs(pick.value, kindPick.value)))
     startOpen.value = false
     pick.value = ''
   } catch (error) {

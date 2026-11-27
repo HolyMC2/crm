@@ -45089,6 +45089,46 @@ msgstr "Revisar más productos"
 
 #: frontend/src/components/productos/RevisarDeck.vue
 msgctxt "Revisar"
+msgid "What to propose"
+msgstr "Qué propongo"
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "Which products"
+msgstr "Qué productos"
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "Everything"
+msgstr "Todo"
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "Only names"
+msgstr "Solo nombres"
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "New in 30 days"
+msgstr "Nuevos de 30 días"
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "What the store shows"
+msgstr "Lo que publica la tienda"
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "Check new names every night"
+msgstr "Revisar cada noche los nombres nuevos"
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
+msgid "{0} hears about it"
+msgstr "Avisa a {0}"
+
+#: frontend/src/components/productos/RevisarDeck.vue
+msgctxt "Revisar"
 msgid "Now"
 msgstr "Ahora"
 
