@@ -132,21 +132,38 @@ class Twilio:
 		resp.append(dial)
 		return resp
 
-	def generate_twilio_parallel_response(self, targets, caller_id=None, ring_tone="at"):
+	def get_dial_outcome_url(self):
+		return get_public_url("/api/method/crm.integrations.twilio.api.twilio_dial_outcome")
+
+	def get_message_done_url(self):
+		return get_public_url("/api/method/crm.integrations.twilio.api.twilio_message_done")
+
+	def generate_twilio_parallel_response(
+		self, targets, caller_id=None, ring_tone="at", timeout=None, action=None
+	):
 		"""Ring multiple endpoints simultaneously. First to answer wins, others hang up.
 
 		`targets` is a list of (kind, value) tuples where kind is one of:
 		  - "sip"    : value is a sip: URI (e.g. sip:marco@docomexico.sip.twilio.com)
 		  - "client" : value is a Twilio Client identity (e.g. marco(at)gmail.com)
 		  - "number" : value is a PSTN E.164 number
+		With `action`, Twilio asks that URL what to do once the dial ends (nobody
+		answered, busy, or the call is over); `timeout` is how long they ring.
 		"""
 		resp = VoiceResponse()
+		extra = {}
+		if timeout:
+			extra["timeout"] = timeout
+		if action:
+			extra["action"] = action
+			extra["method"] = "POST"
 		dial = Dial(
 			caller_id=caller_id,
 			ring_tone=ring_tone,
 			record=self.settings.record_calls,
 			recording_status_callback=self.get_recording_status_callback_url(),
 			recording_status_callback_event="completed",
+			**extra,
 		)
 		cb_kwargs = {
 			"status_callback_event": "initiated ringing answered completed",
@@ -178,43 +195,118 @@ class Twilio:
 
 
 class IncomingCall:
-	def __init__(self, from_number, to_number, meta=None):
+	def __init__(self, from_number, to_number, meta=None, call_sid=None):
 		self.from_number = from_number
 		self.to_number = to_number
 		self.meta = meta
+		self.call_sid = call_sid
 
 	def process(self):
 		"""Process the incoming call
-		* Figure out who is going to pick the call (call attender)
-		* Check call attender settings and forward the call to Phone / Computer / SIP softphone
+		* Outside office hours, when the owner turned that on: the after-hours message
+		  (and a message recording when allowed), without ringing anybody.
+		* Otherwise ring every person who answers this number at once (CRM Telephony
+		  Agent with this twilio_number: their phone, the CRM in their browser or a SIP
+		  softphone). The first to answer takes it; when nobody does within the ring
+		  time, crm.integrations.twilio.api.twilio_dial_outcome decides what follows.
 		"""
-		twilio = Twilio.connect()
-		owners = get_twilio_number_owners(self.to_number)
-		attender = get_the_call_attender(owners, self.from_number)
+		from crm import calls_answer
+		from crm.inbox import office_hours
 
-		if not attender:
+		twilio = Twilio.connect()
+		settings = inbox_settings()
+		rules = calls_answer.policy(settings)
+		if rules["after_hours"] and is_closed(settings, office_hours):
+			mark_unanswered(self.call_sid, "closed", after_hours=True)
+			return calls_answer.unanswered(
+				rules,
+				closed=True,
+				language=calls_answer.site_language(),
+				recording_callback=twilio.get_recording_status_callback_url(),
+				done_url=twilio.get_message_done_url(),
+			)
+
+		owners = get_twilio_number_owners(self.to_number)
+		targets = ring_targets(twilio, owners)
+		if not targets:
+			mark_unanswered(self.call_sid, "no-answer")
+			if rules["voicemail"]:
+				return calls_answer.unanswered(
+					rules,
+					closed=False,
+					language=calls_answer.site_language(),
+					recording_callback=twilio.get_recording_status_callback_url(),
+					done_url=twilio.get_message_done_url(),
+				)
 			resp = VoiceResponse()
 			resp.say(_("Agent is unavailable to take the call, please call after some time."))
 			return resp
+		return twilio.generate_twilio_parallel_response(
+			targets,
+			caller_id=self.from_number,
+			timeout=rules["ring_seconds"],
+			action=twilio.get_dial_outcome_url(),
+		)
 
-		device = attender["call_receiving_device"]
-		if device == "Phone":
-			return twilio.generate_twilio_dial_response(self.from_number, attender["mobile_no"])
-		if (
-			device == "SIP Phone"
-			and twilio.settings.get("enable_sip_phone")
-			and twilio.settings.get("sip_domain")
-		):
-			sip_username = attender.get("sip_username")
-			if sip_username:
-				sip_uri = f"sip:{sip_username}@{twilio.settings.sip_domain}"
-				targets = [("sip", sip_uri)]
-				# Also ring the browser dialer if the agent has an active CRM session,
-				# so calls are picked up from whichever surface answers first.
-				if attender["name"] in get_active_loggedin_users([attender["name"]]):
-					targets.append(("client", twilio.safe_identity(attender["name"])))
-				return twilio.generate_twilio_parallel_response(targets, caller_id=self.from_number)
-		return twilio.generate_twilio_client_response(twilio.safe_identity(attender["name"]))
+
+def inbox_settings():
+	from crm import inbox
+
+	return inbox.settings()
+
+
+def is_closed(settings, office_hours) -> bool:
+	from frappe.utils import now_datetime
+
+	return office_hours.configured(settings) and not office_hours.is_open(settings, now_datetime())
+
+
+def mark_unanswered(call_sid, outcome, after_hours=False):
+	"""Note on the call's log that nobody was rung or answered (`outcome` is Twilio's
+	DialCallStatus, or «closed»), so later status pushes of the caller's leg (which
+	ends «completed» after a message) don't turn it into an answered call."""
+	if not call_sid or not frappe.db.exists("CRM Call Log", call_sid):
+		return
+	meta = frappe.get_meta("CRM Call Log")
+	values = {"status": OUTCOME_STATUS.get(outcome, "No Answer")}
+	if meta.has_field("dial_outcome"):
+		values["dial_outcome"] = outcome
+	if after_hours and meta.has_field("after_hours"):
+		values["after_hours"] = 1
+	frappe.db.set_value("CRM Call Log", call_sid, values, update_modified=False)
+	frappe.db.commit()  # nosemgrep: frappe-manual-commit -- Twilio webhook, the TwiML answer follows
+
+
+# Twilio's DialCallStatus → CRM Call Log status for a call nobody took.
+OUTCOME_STATUS = {
+	"closed": "No Answer",
+	"no-answer": "No Answer",
+	"busy": "Busy",
+	"failed": "Failed",
+	"canceled": "Canceled",
+}
+
+
+def ring_targets(twilio, owners) -> list:
+	"""Every way to reach every person on this number, rung at once: a phone number,
+	the browser dialer of a person signed in to the CRM, a SIP softphone (plus the
+	browser of that person when signed in)."""
+	targets = []
+	if not owners:
+		return targets
+	signed_in = set(get_active_loggedin_users(list(owners.keys())))
+	sip_domain = twilio.settings.get("sip_domain") if twilio.settings.get("enable_sip_phone") else ""
+	for name, details in owners.items():
+		device = details.get("call_receiving_device")
+		mobile = details.get("agent_mobile") or details.get("mobile_no")
+		if device == "Phone" and mobile:
+			targets.append(("number", mobile))
+			continue
+		if device == "SIP Phone" and sip_domain and details.get("sip_username"):
+			targets.append(("sip", f"sip:{details['sip_username']}@{sip_domain}"))
+		if name in signed_in and device in ("Computer", "SIP Phone"):
+			targets.append(("client", twilio.safe_identity(name)))
+	return targets
 
 
 def get_twilio_number_owners(phone_number):
@@ -233,7 +325,7 @@ def get_twilio_number_owners(phone_number):
 	# in that context. Talking directly to frappe.db.sql guarantees the routing
 	# logic sees every agent assigned to this Twilio number.
 	user_voice_settings = frappe.db.sql(
-		"""SELECT name, call_receiving_device, sip_username
+		"""SELECT name, call_receiving_device, sip_username, mobile_no AS agent_mobile
 		FROM `tabCRM Telephony Agent`
 		WHERE twilio_number = %s""",
 		(phone_number,),
@@ -252,6 +344,33 @@ def get_twilio_number_owners(phone_number):
 	user_wise_general_settings = {user["name"]: user for user in user_general_settings}
 
 	return merge_dicts(user_wise_general_settings, user_wise_voice_settings)
+
+
+def agent_for_leg(to) -> str:
+	"""The CRM user a dialled leg reached: «client:<identity>», «sip:<user>@<domain>»
+	or the phone number of an agent whose calls go to their phone."""
+	to = (to or "").strip()
+	if to.startswith("client:"):
+		identity = to[len("client:") :]
+		return Twilio.emailid_from_identity(identity) if identity else ""
+	if to.startswith("sip:"):
+		username = to[4:].split("@", 1)[0]
+		return (
+			frappe.db.get_value("CRM Telephony Agent", {"sip_username": username}, "user") or ""
+			if username
+			else ""
+		)
+	digits = "".join(c for c in to if c.isdigit())
+	if len(digits) < 7:
+		return ""
+	for name, mobile in frappe.db.sql(
+		"""SELECT a.name, COALESCE(NULLIF(a.mobile_no, ''), u.mobile_no) FROM `tabCRM Telephony Agent` a
+		JOIN `tabUser` u ON u.name = a.name
+		WHERE a.call_receiving_device = 'Phone'"""
+	):
+		if mobile and "".join(c for c in mobile if c.isdigit())[-10:] == digits[-10:]:
+			return name
+	return ""
 
 
 def get_active_loggedin_users(users):
@@ -343,10 +462,8 @@ class TwilioCallDetails:
 			else:
 				identity = caller.replace("client:", "").strip()
 				caller = Twilio.emailid_from_identity(identity) if identity else ""
-		else:
-			owners = get_twilio_number_owners(to_number)
-			attender = get_the_call_attender(owners, from_number)
-			receiver = attender["name"] if attender else ""
+		# An incoming call rings the whole team: whoever answers becomes its receiver
+		# (crm.integrations.twilio.api.update_call_status_info); until then it is the team's.
 
 		return {
 			"type": direction,

@@ -66,24 +66,6 @@
           :min="0"
           :label="__('Close within (hours)')"
         />
-        <!-- Calls (crm/calls_sla.py): missed calls returned in time and pickup. -->
-        <FormControl
-          v-if="'call_callback_minutes' in doc"
-          v-model.number="doc.call_callback_minutes"
-          class="w-48"
-          type="number"
-          :min="0"
-          :label="__('Return a missed call within (minutes)')"
-        />
-        <FormControl
-          v-if="'call_pickup_goal' in doc"
-          v-model.number="doc.call_pickup_goal"
-          class="w-48"
-          type="number"
-          :min="0"
-          :max="100"
-          :label="__('Calls picked up goal (%)')"
-        />
       </div>
       <p class="text-p-sm text-ink-gray-5">
         {{

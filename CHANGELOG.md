@@ -2,6 +2,26 @@
 
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
+## 2026-11-26 — Llamadas: the tracking board, the whole team rings, and an answer when nobody can (lane llamadas; not deployed)
+
+- **Why:** Marco, 2026-11-26, after the S47 pickup figure (Doco ~52 %): «we need a dashboard or tracking for those numbers, are the missed calls on outside hours, jenni, tere or all of them? can we add an auto-reply on off hours». On Doco every incoming call rang only one account and a call nobody took just hung up.
+- **Change:**
+  - The calls page (`/crm/call-logs`, `CallsView.vue`) opens on a board (`CallsBoard.vue`, `crm.api.calls.board`, `crm/calls_board.py`):
+    - 7, 30 or 90 days;
+    - pickup inside office hours against the goal;
+    - missed in hours, missed outside hours (and how many left a message), and numbers not returned; each of these tiles narrows the list;
+    - calls by hour with the closed hours shaded, pickup per week, and (managers) who took and made calls.
+    - Each missed call says what happened next: «Devuelta en 2 min», «Volvió a llamar y se le contestó», «Atendida tarde», «Por devolver», «Sin devolver», with «Fuera de horario» and «Dejó recado». A call outside hours is due after the next opening.
+  - Twilio incoming calls (`twilio_handler.IncomingCall`) ring every person on the shop's number at once (phone, browser or SIP), for `call_ring_seconds`. Whoever answers becomes the call's receiver; the legs that stop ringing no longer overwrite the call's status.
+  - When nobody can answer (`crm/calls_answer.py`, `api.twilio_dial_outcome`, `api.twilio_message_done`):
+    - outside office hours, with `call_after_hours`, nobody is rung and the caller hears `call_after_hours_message`;
+    - with `call_voicemail`, the caller hears `call_voicemail_prompt` and leaves a message, saved as the call's recording (`left_message`);
+    - a call nobody took stays «No Answer» even when the caller's leg ends «completed» after a message (`dial_outcome`).
+    - Speech uses the site's language and country (es-MX on a Mexican site).
+  - Bandeja de clientes › «Llamadas» (`InboxCalls.vue`, `crm.api.calls.team` / `save_team_member`, managers): who answers the line and where (in Muelle, on their phone, SIP softphone), the two messages, the ring time, and the call goals (moved from «Service»).
+  - New fields: CRM Inbox Settings `call_ring_seconds`, `call_after_hours`, `call_after_hours_message`, `call_voicemail`, `call_voicemail_prompt`; CRM Call Log `after_hours`, `left_message`, `dial_outcome`, `answered_leg`. 37 es.po entries.
+- **Tests:** `test_calls_board_pure.py` (10), `test_calls_answer.py`, `test_calls_board.py`; vitest `callsBoard.test.js`, `inboxCalls.test.js` (replaces `inboxCallGoals.test.js`).
+- **Rollout:** rides the next roll. The messages are off by default: until the owner turns them on, a call nobody answers ends as before. With one person on the number (Doco today) the line rings as before. Doco's setup is kit `~/muelle-releases/llamadas-y-asistente-20261126/`. Rollback: revert; the fields stay unused.
 ## 2026-11-26 — Conteos del día: «Cajones por turno» and the cajón loop on the owner page (lane cajas-del-dia, with scanner_kit; not deployed)
 
 - **Why:** Marco wants the warehouse to run itself and only overview it: the cajón side now runs like the product side (scanner_kit «Cajas del día»).

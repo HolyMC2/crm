@@ -15,6 +15,16 @@
         :label="__('Llamadas')"
       />
       <div class="scb min-h-0 flex-1 overflow-y-auto pb-24">
+        <CallsBoard
+          v-model:days="days"
+          v-model:focus="focus"
+          class="px-4 pb-4 pt-1"
+          :board="board"
+          :error="boardError"
+          :can-set-up="canSetUp"
+          @settings="openInboxSettings('calls')"
+        />
+        <div ref="listTop" class="scroll-mt-2" />
         <EmptyState
           v-if="calls.loading && !rows.length"
           state="loading"
@@ -30,6 +40,7 @@
           :key="r.name"
           :title="callTitle(r)"
           :subtitle="callLine(r)"
+          :subtitle-lines="followUp(r) ? 2 : 1"
           :subtitle-tone="MISSED.includes(r.status) ? 'danger' : ''"
           :data-fresh="live.fresh.value.has(r.name) || undefined"
           data-testid="call-row"
@@ -67,19 +78,15 @@
       />
     </template>
     <template v-else>
-      <!-- stats -->
-      <div
-        class="flex flex-none flex-wrap gap-x-6 gap-y-2 border-b border-outline-gray-1 px-5 py-3"
-      >
-        <Stat :label="__('Llamadas')" :value="rows.length" />
-        <Stat
-          :label="__('Conectadas')"
-          :value="connected"
-          color="var(--brand)"
-        />
-        <Stat :label="__('Perdidas')" :value="missed" color="#e5484d" />
-        <Stat :label="__('Duración prom.')" :value="avgDuration" />
-      </div>
+      <CallsBoard
+        v-model:days="days"
+        v-model:focus="focus"
+        class="max-w-5xl flex-none border-b border-outline-gray-1 px-5 py-3"
+        :board="board"
+        :error="boardError"
+        :can-set-up="canSetUp"
+        @settings="openInboxSettings('calls')"
+      />
 
       <!-- toolbar: wraps on phones so the action button drops under the tabs
          instead of pushing the row past the viewport -->
@@ -88,7 +95,7 @@
       >
         <div class="flex flex-wrap items-center gap-1.5">
           <button
-            v-for="t in tabs"
+            v-for="t in deskTabs"
             :key="t.key"
             class="rounded-full px-3 py-1 text-[11.5px] font-semibold"
             :class="
@@ -181,6 +188,18 @@
             >
               {{ timeLine(r) }}
             </span>
+            <span
+              v-if="followUp(r)"
+              class="block truncate text-sm"
+              :class="
+                verdictTone(followUp(r)) === 'danger'
+                  ? 'text-ink-red-7'
+                  : 'text-[var(--muelle-on-surface-variant)]'
+              "
+              data-follow-up
+            >
+              {{ verdictLine(followUp(r)) }}
+            </span>
           </span>
           <span class="truncate text-base text-ink-gray-7">
             {{ onShift(r.start_time, shifts).join(', ') || '—' }}
@@ -220,11 +239,18 @@
 </template>
 
 <script setup>
-import { computed, h, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { createListResource } from 'frappe-ui'
 import { useDoctypeModal } from '@/composables/doctypeModal'
 import { isMobile } from '@/composables/breakpoint'
 import CallDetailDrawer from '@/components/doco/calls/CallDetailDrawer.vue'
+import CallsBoard from '@/components/doco/calls/CallsBoard.vue'
+import {
+  namesFor,
+  verdictLine,
+  verdictTone,
+} from '@/components/doco/calls/board'
+import { openInboxSettings } from '@/components/Inbox/inboxSettings'
 import {
   GOAL,
   MISSED,
@@ -261,12 +287,44 @@ function logCall() {
 }
 
 const tab = ref('all')
+// A board tile narrows the list to its calls (missed in hours, outside hours,
+// not returned); a tab clears it, «Todas» first as everywhere.
+const focus = ref('')
 const tabs = [
   { key: 'all', label: __('Todas') },
   { key: 'out', label: __('Salientes') },
   { key: 'in', label: __('Entrantes') },
   { key: 'missed', label: __('Perdidas') },
 ]
+const FOCUS_LABEL = {
+  missed_open: __('Perdidas en horario'),
+  closed: __('Fuera de horario'),
+  waiting: __('Sin devolver'),
+}
+
+// The board: crm.api.calls.board over the chosen days.
+const days = ref(30)
+const board = ref(null)
+const boardError = ref('')
+const canSetUp = computed(() => Array.isArray(board.value?.people))
+let boardSeq = 0
+async function loadBoard() {
+  const mine = ++boardSeq
+  try {
+    const found = await call('crm.api.calls.board', { days: days.value })
+    if (mine !== boardSeq) return
+    board.value = found
+    boardError.value = ''
+    if (focus.value) applyFilters()
+  } catch {
+    if (mine === boardSeq)
+      boardError.value = __('No se pudo leer el seguimiento de llamadas.')
+  }
+}
+watch(days, loadBoard, { immediate: true })
+function followUp(r) {
+  return board.value?.items?.[r.name] || null
+}
 const selectedCall = ref(null)
 
 const calls = createListResource({
@@ -290,6 +348,7 @@ const rows = computed(() => calls.data || [])
 const live = useLiveList('CRM Call Log', async () => {
   const before = rows.value.map((r) => r.name)
   await calls.reload()
+  loadBoard()
   live.mark(
     before,
     rows.value.map((r) => r.name),
@@ -298,35 +357,54 @@ const live = useLiveList('CRM Call Log', async () => {
 
 function applyFilters() {
   const f = {}
-  if (tab.value === 'out') f.type = 'Outgoing'
+  const names = focus.value ? namesFor(board.value, focus.value) : null
+  if (names) f.name = ['in', names.length ? names : ['']]
+  else if (tab.value === 'out') f.type = 'Outgoing'
   else if (tab.value === 'in') f.type = 'Incoming'
   else if (tab.value === 'missed') f.status = ['in', MISSED]
   calls.filters = f
   calls.reload()
 }
-watch(tab, applyFilters, { immediate: true })
-
-// stats (from loaded page)
-const connected = computed(
-  () => rows.value.filter((r) => r.status === 'Completed').length,
+watch(
+  tab,
+  (value) => {
+    if (value !== 'focus') focus.value = ''
+    applyFilters()
+  },
+  { immediate: true },
 )
-const missed = computed(
-  () => rows.value.filter((r) => MISSED.includes(r.status)).length,
-)
-const avgDuration = computed(() => {
-  const d = rows.value.map((r) => Number(r.duration) || 0).filter((x) => x > 0)
-  if (!d.length) return '—'
-  return fmtDur(Math.round(d.reduce((a, b) => a + b, 0) / d.length))
+// On a phone the board fills the first screen: a tile brings its calls up.
+const listTop = ref(null)
+watch(focus, async (value) => {
+  if (value) tab.value = 'focus'
+  else if (tab.value === 'focus') tab.value = 'all'
+  applyFilters()
+  if (!value || !isMobile.value) return
+  await nextTick()
+  const still = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
+  listTop.value?.scrollIntoView({
+    block: 'start',
+    behavior: still ? 'auto' : 'smooth',
+  })
 })
 
-// Phone chips: the same tabs, the missed count on «Perdidas».
-const phoneChips = computed(() =>
-  tabs.map((t) => ({
+// Phone chips: the same tabs, the board's missed count on «Perdidas», and the
+// tile that narrows the list while one does.
+const phoneChips = computed(() => [
+  ...tabs.map((t) => ({
     value: t.key,
     label: t.label,
-    count: t.key === 'missed' && missed.value ? missed.value : undefined,
+    count:
+      t.key === 'missed' && board.value?.totals?.missed
+        ? board.value.totals.missed
+        : undefined,
   })),
-)
+  ...(focus.value ? [{ value: 'focus', label: FOCUS_LABEL[focus.value] }] : []),
+])
+const deskTabs = computed(() => [
+  ...tabs,
+  ...(focus.value ? [{ key: 'focus', label: FOCUS_LABEL[focus.value] }] : []),
+])
 // Names for the calls linked to a deal or prospect: one read per kind.
 const refNames = ref({})
 const NAME_FIELDS = {
@@ -411,7 +489,8 @@ function callLine(r) {
     r.status && r.status !== 'Completed' && statusLabel(r.status, 'call'),
     refNames.value[r.reference_docname] && formatPhone(phoneOf(r)),
     callWhen(r.start_time),
-    Number(r.duration) > 0 && fmtDur(r.duration),
+    Number(r.duration) > 0 && !followUp(r) && fmtDur(r.duration),
+    verdictLine(followUp(r)),
   ]
     .filter(Boolean)
     .join(' · ')
@@ -454,25 +533,4 @@ function dirChip(r) {
 function openCall(name) {
   selectedCall.value = name
 }
-
-const Stat = (props) =>
-  h('div', {}, [
-    h(
-      'div',
-      {
-        class: 'text-sm text-ink-gray-5',
-      },
-      props.label,
-    ),
-    h(
-      'div',
-      {
-        class:
-          'num text-[18px] font-bold ' + (props.color ? '' : 'text-ink-gray-9'),
-        style: props.color ? `color:${props.color}` : undefined,
-      },
-      String(props.value),
-    ),
-  ])
-Stat.props = ['label', 'value', 'color']
 </script>

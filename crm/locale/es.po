@@ -54241,3 +54241,114 @@ msgstr "1 tarea extra"
 msgctxt "Equipo"
 msgid "{0} extra tasks"
 msgstr "{0} tareas extra"
+
+msgid "Turn office hours on first: the call message plays outside them."
+msgstr "Primero enciende el horario de atención: el mensaje de llamadas suena fuera de él."
+
+msgid "Write what callers hear outside office hours."
+msgstr "Escribe lo que escucha quien llama fuera del horario."
+
+msgid "Write what callers hear before they leave a message."
+msgstr "Escribe lo que escucha quien llama antes de dejar su recado."
+
+msgid "You cannot see the shop's calls."
+msgstr "No puedes ver las llamadas de la tienda."
+
+msgid "Only a manager can choose who answers the shop's line."
+msgstr "Solo un gerente puede elegir quién contesta la línea de la tienda."
+
+msgid "Choose an active person."
+msgstr "Elige una persona activa."
+
+msgid "Connect the shop's Twilio number first, in Ajustes › Teléfono."
+msgstr "Primero conecta el número de Twilio de la tienda, en Ajustes › Teléfono."
+
+msgid "This shop has several numbers; set each person's number in Ajustes › Teléfono."
+msgstr "Esta tienda tiene varios números; pon el número de cada persona en Ajustes › Teléfono."
+
+msgid "Choose where this person takes calls."
+msgstr "Elige dónde contesta esta persona."
+
+msgid "Write {0}'s mobile number to send calls to it."
+msgstr "Escribe el celular de {0} para mandarle las llamadas."
+
+msgid "{0} has no SIP softphone yet; they set it up in Ajustes › Teléfono."
+msgstr "{0} todavía no tiene teléfono SIP; lo configura en Ajustes › Teléfono."
+
+msgid "Ring the team for (seconds)"
+msgstr "Timbrar al equipo durante (segundos)"
+
+msgid "Answer calls outside office hours with a message"
+msgstr "Contestar con un mensaje las llamadas fuera del horario"
+
+msgid "Message for calls outside office hours"
+msgstr "Mensaje para llamadas fuera del horario"
+
+msgid "Let callers leave a message when nobody answers"
+msgstr "Dejar recado cuando nadie contesta"
+
+msgid "What callers hear before leaving a message"
+msgstr "Lo que escucha quien llama antes de dejar su recado"
+
+msgid "Came in outside office hours"
+msgstr "Entró fuera del horario"
+
+msgid "Dial outcome"
+msgstr "Resultado del timbrado"
+
+msgid "Answered leg"
+msgstr "Tramo que contestó"
+
+msgid "Who answers the shop's line"
+msgstr "Quién contesta la línea de la tienda"
+
+msgid "Where they take calls"
+msgstr "Dónde contesta"
+
+msgid "In Muelle"
+msgstr "En Muelle"
+
+msgid "On their phone ···{0}"
+msgstr "En su celular ···{0}"
+
+msgid "On their phone"
+msgstr "En su celular"
+
+msgid "SIP softphone"
+msgstr "Teléfono SIP"
+
+msgid "Remove from the line"
+msgstr "Quitar de la línea"
+
+msgid "Mobile number of {0}"
+msgstr "Celular de {0}"
+
+msgid "Send calls there"
+msgstr "Mandar las llamadas ahí"
+
+msgid "Nobody answers the line yet: add the people at the counter."
+msgstr "Nadie contesta la línea todavía: agrega a la gente del mostrador."
+
+msgid "When nobody can answer"
+msgstr "Cuando nadie puede contestar"
+
+msgid "Outside office hours nobody is rung: the caller hears this message."
+msgstr "Fuera del horario no timbra a nadie: quien llama escucha este mensaje."
+
+msgid "Turn office hours on in «Service» first."
+msgstr "Primero enciende el horario en «Servicio»."
+
+msgid "The message is saved on the call, ready to play and to transcribe."
+msgstr "El recado queda en la llamada, listo para escucharlo y transcribirlo."
+
+msgid "Call goals"
+msgstr "Metas de llamadas"
+
+msgid "{0} no longer answers the shop's line."
+msgstr "{0} ya no contesta la línea de la tienda."
+
+msgid "How the team answers customers: office hours, who receives new conversations, the shop's line, reply goals, ratings, labels and macros."
+msgstr "Cómo atiende el equipo a los clientes: horario, quién recibe las conversaciones nuevas, la línea de la tienda, metas de respuesta, calificaciones, etiquetas y respuestas rápidas."
+
+msgid "Caller left a message"
+msgstr "Quien llamó dejó recado"

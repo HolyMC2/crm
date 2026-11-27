@@ -1,7 +1,7 @@
 {
  "actions": [],
  "creation": "2026-11-03 15:00:00.000000",
- "modified": "2026-11-26 13:00:00.000000",
+ "modified": "2026-11-26 21:40:00.000000",
  "modified_by": "Administrator",
  "owner": "Administrator",
  "doctype": "DocType",
@@ -59,7 +59,12 @@
   "sla_alerts_enabled",
   "section_calls",
   "call_callback_minutes",
-  "call_pickup_goal"
+  "call_pickup_goal",
+  "call_ring_seconds",
+  "call_after_hours",
+  "call_after_hours_message",
+  "call_voicemail",
+  "call_voicemail_prompt"
  ],
  "fields": [
   {
@@ -196,6 +201,37 @@
    "label": "Calls picked up goal (%)",
    "default": "80",
    "non_negative": 1
+  },
+  {
+   "fieldname": "call_ring_seconds",
+   "fieldtype": "Int",
+   "label": "Ring the team for (seconds)",
+   "default": "25",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "call_after_hours",
+   "fieldtype": "Check",
+   "label": "Answer calls outside office hours with a message",
+   "default": "0"
+  },
+  {
+   "fieldname": "call_after_hours_message",
+   "fieldtype": "Small Text",
+   "label": "Message for calls outside office hours",
+   "default": "Gracias por llamar. En este momento estamos cerrados; te atendemos en nuestro horario."
+  },
+  {
+   "fieldname": "call_voicemail",
+   "fieldtype": "Check",
+   "label": "Let callers leave a message when nobody answers",
+   "default": "0"
+  },
+  {
+   "fieldname": "call_voicemail_prompt",
+   "fieldtype": "Small Text",
+   "label": "What callers hear before leaving a message",
+   "default": "Deja tu recado después del tono y te regresamos la llamada."
   }
  ],
  "issingle": 1,

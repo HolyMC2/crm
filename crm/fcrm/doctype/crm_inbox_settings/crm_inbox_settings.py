@@ -24,6 +24,21 @@ class CRMInboxSettings(Document):
 			frappe.throw(_("Write the message customers receive outside office hours."))
 		if self.csat_enabled and "{link}" not in (self.csat_message or ""):
 			frappe.throw(_("The rating message must include {link}, where the rating link goes."))
+		self._validate_calls()
+
+	def _validate_calls(self):
+		if not self.meta.has_field("call_ring_seconds"):
+			return
+		from crm.calls_answer import MAX_RING_SECONDS, MIN_RING_SECONDS
+
+		if self.call_ring_seconds:
+			self.call_ring_seconds = min(max(self.call_ring_seconds, MIN_RING_SECONDS), MAX_RING_SECONDS)
+		if self.call_after_hours and not self.office_hours_enabled:
+			frappe.throw(_("Turn office hours on first: the call message plays outside them."))
+		if self.call_after_hours and not (self.call_after_hours_message or "").strip():
+			frappe.throw(_("Write what callers hear outside office hours."))
+		if self.call_voicemail and not (self.call_voicemail_prompt or "").strip():
+			frappe.throw(_("Write what callers hear before they leave a message."))
 
 	def _validate_hours(self):
 		if self.office_hours_enabled and not self.working_hours:

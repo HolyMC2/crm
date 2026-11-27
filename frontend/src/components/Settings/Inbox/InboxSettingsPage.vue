@@ -11,7 +11,7 @@
         <p class="mt-1 text-p-base text-ink-gray-6">
           {{
             __(
-              'How the team answers customers: office hours, who receives new conversations, reply goals, ratings, labels and macros.',
+              "How the team answers customers: office hours, who receives new conversations, the shop's line, reply goals, ratings, labels and macros.",
             )
           }}
         </p>
@@ -58,6 +58,7 @@
       <template v-else-if="settings.doc">
         <InboxService v-if="view === 'service'" v-model:doc="settings.doc" />
         <InboxPeople v-else-if="view === 'people'" v-model:doc="settings.doc" />
+        <InboxCalls v-else-if="view === 'calls'" v-model:doc="settings.doc" />
       </template>
       <div v-if="view === 'labels'" class="flex flex-col gap-6">
         <InboxLabels @changed="(list) => (labels = list)" />
@@ -78,6 +79,8 @@ import {
 } from '@/composables/settingsSession'
 import InboxService from './InboxService.vue'
 import InboxPeople from './InboxPeople.vue'
+import InboxCalls from './InboxCalls.vue'
+import { takeInboxSettingsView } from '@/components/Inbox/inboxSettings'
 import InboxLabels from './InboxLabels.vue'
 import InboxMacros from './InboxMacros.vue'
 
@@ -85,9 +88,10 @@ const DOCTYPE = 'CRM Inbox Settings'
 const views = [
   { value: 'service', label: __('Service') },
   { value: 'people', label: __('People') },
+  { value: 'calls', label: __('Calls') },
   { value: 'labels', label: __('Labels and macros') },
 ]
-const view = ref('service')
+const view = ref(takeInboxSettingsView() || 'service')
 const labels = ref([])
 const failure = ref(null)
 const settings = settingsDocumentResource({

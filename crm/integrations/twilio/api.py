@@ -161,7 +161,7 @@ def twilio_incoming_call_handler(**kwargs):
 	call_details = TwilioCallDetails(args)
 	create_call_log(call_details)
 
-	resp = IncomingCall(args.From, args.To).process()
+	resp = IncomingCall(args.From, args.To, call_sid=args.CallSid).process()
 	return Response(resp.to_xml(), mimetype="text/xml")
 
 
@@ -236,7 +236,9 @@ _FINAL_CALL_STATUSES = frozenset({"Completed", "Failed", "Busy", "No Answer", "C
 def _save_call_details(call_sid, call_details, status=None, keep_final_status=False):
 	call_log = frappe.get_doc("CRM Call Log", call_sid)
 	new_status = TwilioCallDetails.get_call_status(status or call_details.status)
-	if not (
+	if _unanswered(call_log):
+		pass  # nobody took it: the caller's leg ending «completed» after a message is not an answer
+	elif not (
 		keep_final_status
 		and call_log.status in _FINAL_CALL_STATUSES
 		and new_status not in _FINAL_CALL_STATUSES
@@ -250,6 +252,11 @@ def _save_call_details(call_sid, call_details, status=None, keep_final_status=Fa
 	# after it, and a retry starts from a rollback of this request only.
 	frappe.db.commit()  # nosemgrep: frappe-manual-commit
 	return call_log
+
+
+def _unanswered(call_log) -> bool:
+	outcome = call_log.get("dial_outcome") or ""
+	return call_log.get("type") == "Incoming" and bool(outcome) and outcome != "completed"
 
 
 def _is_write_conflict(exc) -> bool:
@@ -278,7 +285,10 @@ def update_recording_info(**kwargs):
 		frappe.throw(_("Call log not found"), frappe.DoesNotExistError)
 
 	try:
-		frappe.db.set_value("CRM Call Log", call_sid, "recording_url", recording_url)
+		values = {"recording_url": recording_url}
+		if _unanswered(call_log) and call_log.meta.has_field("left_message"):
+			values["left_message"] = 1
+		frappe.db.set_value("CRM Call Log", call_sid, values)
 		frappe.db.commit()
 	except Exception as exc:
 		frappe.log_error(title=_("Failed to capture Twilio recording"))
@@ -372,9 +382,13 @@ def update_call_status_info(**kwargs):
 	validate_twilio_request(args)
 
 	parent_call_sid = args.ParentCallSid
+	if _losing_leg(parent_call_sid, args):
+		return  # another person's phone took this call; this one only stopped ringing
 	call_log = update_call_log(parent_call_sid, status=args.CallStatus)
 	if not call_log:
 		frappe.throw(_("Call log not found"), frappe.DoesNotExistError)
+	if args.CallStatus == "in-progress":
+		_note_answer(call_log, args)
 
 	call_info = {
 		"ParentCallSid": args.ParentCallSid,
@@ -399,6 +413,75 @@ def update_call_status_info(**kwargs):
 			_note_expected_status_push_refusal(exc, parent_call_sid)
 		else:
 			_report_status_push_failure(exc, parent_call_sid)
+
+
+# A leg that ended without being answered while the team was rung at once.
+_LOSING_LEG_STATUSES = frozenset({"canceled", "no-answer", "busy", "failed"})
+
+
+def _losing_leg(parent_call_sid, args) -> bool:
+	"""True for a ringing leg that stopped because another leg answered: it must not
+	move the call's status (Twilio cancels the other legs right after the answer)."""
+	if (args.CallStatus or "") not in _LOSING_LEG_STATUSES or not parent_call_sid:
+		return False
+	if not frappe.get_meta("CRM Call Log").has_field("answered_leg"):
+		return False
+	answered = frappe.db.get_value("CRM Call Log", parent_call_sid, "answered_leg")
+	return bool(answered) and answered != args.CallSid
+
+
+def _note_answer(call_log, args):
+	"""The leg that answered: who took the call becomes its receiver."""
+	from .twilio_handler import agent_for_leg
+
+	name = call_log.get("name") if call_log else None
+	if not name or not frappe.get_meta("CRM Call Log").has_field("answered_leg"):
+		return
+	current = frappe.db.get_value("CRM Call Log", name, ["answered_leg", "type"], as_dict=True)
+	if not current or current.answered_leg:
+		return
+	values = {"answered_leg": args.CallSid}
+	user = agent_for_leg(args.To)
+	if user and current.type == "Incoming":
+		values["receiver"] = user
+	frappe.db.set_value("CRM Call Log", name, values, update_modified=False)
+	frappe.db.commit()  # nosemgrep: frappe-manual-commit -- Twilio webhook
+
+
+# Twilio calls it as Guest when the team's phones stop ringing; validate_twilio_request
+# checks Twilio's signature first.
+@frappe.whitelist(allow_guest=True)  # nosemgrep: guest-whitelisted-method
+def twilio_dial_outcome(**kwargs):
+	"""After the team was rung: nothing more when somebody answered, otherwise the
+	message prompt and a recording when the owner allows messages."""
+	from crm import calls_answer
+
+	from .twilio_handler import inbox_settings, mark_unanswered
+
+	args = frappe._dict(kwargs)
+	twilio = validate_twilio_request(args)
+	outcome = (args.DialCallStatus or "").strip()
+	if outcome in ("completed", "answered", ""):
+		return Response(calls_answer.hang_up().to_xml(), mimetype="text/xml")
+	mark_unanswered(args.CallSid, outcome)
+	rules = calls_answer.policy(inbox_settings())
+	resp = calls_answer.unanswered(
+		rules,
+		closed=False,
+		language=calls_answer.site_language(),
+		recording_callback=twilio.get_recording_status_callback_url(),
+		done_url=twilio.get_message_done_url(),
+	)
+	return Response(resp.to_xml(), mimetype="text/xml")
+
+
+# Twilio calls it as Guest after the caller leaves a message; signature checked first.
+@frappe.whitelist(allow_guest=True)  # nosemgrep: guest-whitelisted-method
+def twilio_message_done(**kwargs):
+	from crm import calls_answer
+
+	validate_twilio_request(frappe._dict(kwargs))
+	return Response(calls_answer.hang_up().to_xml(), mimetype="text/xml")
 
 
 def get_datetime_from_timestamp(timestamp):

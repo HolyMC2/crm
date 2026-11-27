@@ -25,6 +25,10 @@
   "receiver",
   "caller",
   "recording_url",
+  "after_hours",
+  "left_message",
+  "dial_outcome",
+  "answered_leg",
   "end_time",
   "note",
   "section_break_kebz",
@@ -96,6 +100,34 @@
    "label": "Recording URL"
   },
   {
+   "fieldname": "after_hours",
+   "fieldtype": "Check",
+   "label": "Came in outside office hours",
+   "read_only": 1,
+   "default": "0"
+  },
+  {
+   "fieldname": "left_message",
+   "fieldtype": "Check",
+   "label": "Caller left a message",
+   "read_only": 1,
+   "default": "0"
+  },
+  {
+   "fieldname": "dial_outcome",
+   "fieldtype": "Data",
+   "label": "Dial outcome",
+   "read_only": 1,
+   "hidden": 1
+  },
+  {
+   "fieldname": "answered_leg",
+   "fieldtype": "Data",
+   "label": "Answered leg",
+   "read_only": 1,
+   "hidden": 1
+  },
+  {
    "fieldname": "end_time",
    "fieldtype": "Datetime",
    "label": "End Time"
@@ -159,7 +191,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-04-04 15:08:11.626910",
+ "modified": "2026-11-26 21:40:00.000000",
  "modified_by": "Administrator",
  "module": "FCRM",
  "name": "CRM Call Log",
