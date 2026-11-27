@@ -2,6 +2,12 @@
 
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
+## 2026-11-27 — The customer bot stays out of a chat a person is answering (lane asistente-no-interrumpe; not deployed)
+
+- **Why:** on Doco the counter staff answer WhatsApp customers from the chat screen or the phone without taking the conversation: all 13 conversations sit with people, 9 with no owner. The policy cooldown counted only control actions (take, transfer, a handoff…), so with the customer agent on, the next message in a chat Jenni or Tere was handling could start the bot.
+- **Change:** `automation_policy.cooldown_reason` also counts, inside the policy's window, a person's reply: a Human outbound intent from the inbox, a WhatsApp message the shop's chat screen sent as Human (provenance `doco_sent_by_type`), or a reply from the phone app (`external_outbound`). Templates (status notices), Automation and Bot messages do not count.
+- **Tests:** `test_automation_channels.TestCooldownCountsPeopleReplies` (3).
+
 ## 2026-11-26 — Desk top bar: «Sin actualizar», status items and today's widgets (lane sin-conexion; not deployed)
 
 - **Why:** Marco, 2026-11-26: «do we add a green dot to signal its synced», then «we should have a topbar with status and widgets macstyle for crm desk» and «yes add more status items». Nothing on screen reacted when the live connection dropped, so a list could sit stale with no sign.

@@ -441,9 +441,12 @@ def cooldown_reason(policy, conversation):
 
 	People's actions count (take, transfer, release, pause, close, reopen, route,
 	a manager's start), and so do a handoff to people and a customer reply that
-	retired a bot (its human fallback must stick). The bot's own start and its own
-	finish do not: a customer who got an answer and writes again is answered again.
-	An ordinary customer message that changed nothing does not count either.
+	retired a bot (its human fallback must stick). A person's own message to the
+	customer counts too, from the inbox, the shop's chat screen or the phone app:
+	teams often answer without taking the conversation, and the bot must not cut in.
+	The bot's own start and its own finish do not: a customer who got an answer and
+	writes again is answered again. Templates (status notices) and an ordinary
+	customer message that changed nothing do not count either.
 	"""
 	minutes = cint(policy.cooldown_minutes)
 	if not minutes:
@@ -451,11 +454,41 @@ def cooldown_reason(policy, conversation):
 	since = add_to_date(now_datetime(), minutes=-minutes)
 	recent = frappe.db.sql(
 		"""SELECT name FROM `tabCRM Conversation Control Event` WHERE conversation=%s AND creation>=%s
-        AND (action IN ('take','transfer','release','pause','close','reopen','start_bot','route')
+        AND (action IN ('take','transfer','release','pause','close','reopen','start_bot','route','external_outbound')
              OR (action='bot_handoff' AND IFNULL(reason, '')<>'pinned_run_finished')
              OR (action IN ('customer_reply','customer_input')
                  AND reason IN ('webchat_customer_held_bot','customer_reply_held_bot','customer_input_fallback')))
         LIMIT 1""",
 		(conversation.name, since),
 	)
-	return "automation_policy_cooldown" if recent else None
+	if recent or person_replied(conversation, since):
+		return "automation_policy_cooldown"
+	return None
+
+
+def person_replied(conversation, since):
+	"""A person wrote to this customer since `since`: an inbox reply (outbound intent of
+	origin Human), or on WhatsApp a message the shop's own chat screen sent as Human.
+	Templates are notices, not handling, and never count."""
+	if frappe.db.sql(
+		"""SELECT name FROM `tabCRM Outbound Intent` WHERE conversation=%s AND origin='Human'
+        AND creation>=%s AND state<>'Cancelled' LIMIT 1""",
+		(conversation.name, since),
+	):
+		return True
+	if conversation.provider != "WhatsApp" or not conversation.account_record:
+		return False
+	if not frappe.db.has_column("WhatsApp Message", "doco_sent_by_type"):
+		return False
+	from crm.api.conversation_threads import PEER_SUFFIX
+
+	return bool(
+		# PEER_SUFFIX is an integer constant; every value is a bound parameter.
+		frappe.db.sql(  # nosemgrep: frappe-sql-format-injection
+			f"""SELECT name FROM `tabWhatsApp Message` WHERE whatsapp_account=%s AND type='Outgoing'
+            AND creation>=%s AND doco_sent_by_type='Human'
+            AND IFNULL(use_template, 0)=0 AND IFNULL(message_type, '')<>'Template'
+            AND RIGHT(`to`, {PEER_SUFFIX})=RIGHT(%s, {PEER_SUFFIX}) LIMIT 1""",
+			(conversation.account_record, since, conversation.peer_id),
+		)
+	)

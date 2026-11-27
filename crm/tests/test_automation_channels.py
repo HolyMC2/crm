@@ -266,6 +266,72 @@ class TestInboundPolicy(_Isolated):
 			)
 
 
+class TestCooldownCountsPeopleReplies(_Isolated):
+	"""A person who answered the customer keeps the bot out, even without taking the chat."""
+
+	def setUp(self):
+		super().setUp()
+		_require("WhatsApp Account", "WhatsApp Message")
+		if not frappe.db.has_column("WhatsApp Message", "doco_sent_by_type"):
+			raise unittest.SkipTest("Run the CRM message provenance patch first.")
+		self.account_id = "96" + str(int(uuid4().hex[:12], 16))
+		self.account = (
+			frappe.get_doc(
+				{
+					"doctype": "WhatsApp Account",
+					"account_name": self.prefix,
+					"phone_id": self.account_id,
+					"status": "Active",
+					"mode": "Demo",
+					"is_default_incoming": 0,
+					"is_default_outgoing": 0,
+				}
+			)
+			.insert()
+			.name
+		)
+		self.peer = "5215550" + str(int(uuid4().hex[:6], 16)).zfill(6)[:6]
+		self.doc = control.get_or_create("WhatsApp", self.account_id, self.peer)
+		self.policy = SimpleNamespace(cooldown_minutes=60)
+
+	def sent(self, sent_by, *, template=False, minutes_ago=5):
+		from frappe.utils import add_to_date, now_datetime
+
+		row = frappe.get_doc(
+			{
+				"doctype": "WhatsApp Message",
+				"type": "Outgoing",
+				"to": "+" + self.peer,
+				"message": "" if template else "¿Me pasa el código que le llegó?",
+				"content_type": "text",
+				"message_type": "Template" if template else "Manual",
+				"whatsapp_account": self.account,
+				"doco_sent_by_type": sent_by,
+				"status": "Success",
+			}
+		)
+		row.flags.ignore_permissions = True
+		row.db_insert()
+		when = add_to_date(now_datetime(), minutes=-minutes_ago)
+		frappe.db.set_value("WhatsApp Message", row.name, "creation", when, update_modified=False)
+
+	def test_a_persons_text_holds_the_bot_back(self):
+		self.assertIsNone(policies.cooldown_reason(self.policy, self.doc))
+		self.sent("Human")
+		self.assertEqual(policies.cooldown_reason(self.policy, self.doc), "automation_policy_cooldown")
+
+	def test_notices_bot_messages_and_old_replies_do_not(self):
+		self.sent("Human", template=True)
+		self.sent("Automation")
+		self.sent("Bot")
+		self.sent("Human", minutes_ago=90)
+		self.assertIsNone(policies.cooldown_reason(self.policy, self.doc))
+
+	def test_no_window_means_no_cooldown(self):
+		self.sent("Human")
+		self.assertIsNone(policies.cooldown_reason(SimpleNamespace(cooldown_minutes=0), self.doc))
+
+
 class TestWebchatContinuation(_Isolated):
 	"""Real capability-bound visitor sends; the Chatflow adapter is a fixture."""
 
