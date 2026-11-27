@@ -55,3 +55,18 @@ export function decisionText(line) {
     return 'Esperaría revisión: registra una solicitud.'
   return 'Esperaría revisión de un gerente.'
 }
+
+/**
+ * What a tool still lacks on this shop, in the owner's words: an unavailable tool's
+ * blocker or an available tool's note («Cobrar en línea» with no online payment).
+ */
+export function toolLimits(tools) {
+  return (tools || [])
+    .map((tool) => ({
+      name: tool.name,
+      text: !tool.available ? tool.blocker : tool.note,
+      label: tool.label,
+      off: !tool.available,
+    }))
+    .filter((line) => line.text)
+}

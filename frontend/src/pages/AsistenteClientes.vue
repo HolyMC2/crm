@@ -48,7 +48,7 @@
 
         <RouterLink
           v-if="data.review_count"
-          to="/inbox"
+          :to="{ path: '/inbox', query: { tab: 'aprobar' } }"
           class="state-layer flex min-h-12 items-center gap-3 rounded-7 bg-surface-gray-1 px-4 text-sm text-ink-gray-9"
           data-testid="review-count"
         >
@@ -56,14 +56,7 @@
             class="lucide-inbox size-4 text-ink-gray-6"
             aria-hidden="true"
           />
-          <span class="flex-1">
-            {{ data.review_count }}
-            {{
-              data.review_count === 1
-                ? 'respuesta por aprobar'
-                : 'respuestas por aprobar'
-            }}
-          </span>
+          <span class="flex-1"> {{ data.review_count }} por aprobar </span>
           <span
             class="lucide-chevron-right size-4 text-ink-gray-5"
             aria-hidden="true"
@@ -160,6 +153,28 @@
             {{ tool.label }}
           </button>
         </div>
+        <!-- What a tool lacks on this shop (no store checkout, no online payment). -->
+        <ul
+          v-if="limits.length"
+          class="space-y-1 px-1 text-sm text-ink-gray-7"
+          data-testid="tool-limits"
+        >
+          <li v-for="line in limits" :key="line.name" class="flex gap-2">
+            <span
+              :class="[
+                line.off ? 'lucide-circle-alert' : 'lucide-info',
+                'mt-0.5 size-4 flex-none text-ink-gray-6',
+              ]"
+              aria-hidden="true"
+            />
+            <span
+              ><span class="font-medium text-ink-gray-8"
+                >{{ line.label }}:</span
+              >
+              {{ line.text }}</span
+            >
+          </li>
+        </ul>
 
         <Field
           v-model="form.handoff_text"
@@ -295,6 +310,7 @@ import {
   modes,
   providerIcon,
   providerLabel,
+  toolLimits,
 } from '@/components/asistente/clientes'
 
 const API = 'doco_marketing.api.customer_agent'
@@ -323,6 +339,7 @@ const returnOptions = [0, 4, 12, 24, 48].map((h) => ({
   label: h ? `${h} h` : 'De inmediato',
 }))
 const blocked = computed(() => Boolean(data.value?.platform_blockers?.length))
+const limits = computed(() => toolLimits(data.value?.tools))
 const dirty = computed(() => JSON.stringify(snapshot()) !== saved.value)
 
 function snapshot() {

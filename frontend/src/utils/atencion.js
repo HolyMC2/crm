@@ -4,6 +4,9 @@
 // waiting_secs / sla_overdue / due_in_secs); nothing here decides who is owed an answer.
 
 export const REPLY_TAB = 'por-responder'
+// «Por aprobar» (agent drafts and holds): Pendientes and Hoy open it with ?tab=aprobar.
+export const APPROVE_TAB = 'aprobar'
+const URL_TABS = [REPLY_TAB, APPROVE_TAB]
 
 function tr(message, replace) {
   if (typeof window !== 'undefined' && typeof window.__ === 'function')
@@ -62,15 +65,15 @@ export function nextReplyRow(rows, doctype, name) {
   return (rows || []).find((row) => rowKey(row) !== current) || null
 }
 
-/** The inbox tab a URL asks for (only «Por responder» lives in the URL). */
+/** The inbox tab a URL asks for (only «Por responder» and «Por aprobar» live in the URL). */
 export function tabFromQuery(query) {
-  return query?.tab === REPLY_TAB ? REPLY_TAB : null
+  return URL_TABS.includes(query?.tab) ? query.tab : null
 }
 
-/** The same URL with ?tab= for «Por responder», without it for any other tab. */
+/** The same URL with ?tab= for «Por responder» or «Por aprobar», without it for any other tab. */
 export function urlWithTab(href, tab) {
   const url = new URL(href, 'https://muelle.invalid')
-  if (tab === REPLY_TAB) url.searchParams.set('tab', REPLY_TAB)
+  if (URL_TABS.includes(tab)) url.searchParams.set('tab', tab)
   else url.searchParams.delete('tab')
   return url.pathname + url.search + url.hash
 }

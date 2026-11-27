@@ -95,6 +95,8 @@ describe('Por responder in the URL and the next conversation', () => {
   it('keeps ?tab=por-responder for Por responder only', () => {
     expect(tabFromQuery({ tab: 'por-responder' })).toBe(REPLY_TAB)
     expect(tabFromQuery({ tab: 'vencidos' })).toBeNull()
+    expect(tabFromQuery({ tab: 'aprobar' })).toBe('aprobar')
+    expect(urlWithTab('/crm/inbox', 'aprobar')).toBe('/crm/inbox?tab=aprobar')
     expect(urlWithTab('/crm/inbox?deal=D-1', REPLY_TAB)).toBe(
       '/crm/inbox?deal=D-1&tab=por-responder',
     )

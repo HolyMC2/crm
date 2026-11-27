@@ -90,19 +90,21 @@
         </span>
       </div>
 
-      <!-- The customer agent wrote this reply (S46): say why it waits for a person. -->
+      <!-- The customer agent wrote this reply (S46) or the customer asked for a hold
+           (S49): say why it waits for a person, and what approving it also does. -->
       <p
-        v-if="r.source === 'customer_agent'"
+        v-if="r.source === 'customer_agent' || isHold(r)"
         class="mb-1 flex items-center gap-1.5 text-xs text-ink-gray-7"
         data-testid="agent-draft"
       >
         <span class="lucide-sparkles size-3.5 flex-none" aria-hidden="true" />
         {{ agentReason(r.trigger) }}
       </p>
+      <AgentActionSummary :row="r" />
       <!-- editable draft — the reviewer adjusts the wording before sending -->
       <textarea
         v-model="drafts[r.name]"
-        rows="2"
+        :rows="isHold(r) ? 3 : 2"
         class="scb mb-1.5 w-full resize-none rounded-5 border border-outline-gray-2 bg-surface-gray-1 px-2 py-1.5 text-[12px] text-ink-gray-8 focus:outline-none focus:ring-1 focus:ring-outline-gray-3 dark:bg-surface-gray-2"
         :placeholder="__('Mensaje del acuse…')"
       />
@@ -112,17 +114,25 @@
         <button
           class="rounded-5 px-2 py-1 text-[11px] font-semibold text-ink-gray-6 hover:bg-surface-gray-2 disabled:opacity-50"
           :disabled="busy[r.name]"
+          :data-testid="isHold(r) ? 'hold-decline' : undefined"
           @click="onDiscard(r)"
         >
-          {{ __('Descartar') }}
+          {{ isHold(r) ? __('No apartar') : __('Descartar') }}
         </button>
         <button
           class="rounded-5 px-2.5 py-1 text-[11px] font-semibold text-white disabled:opacity-50"
           style="background: var(--brand)"
           :disabled="busy[r.name] || !(drafts[r.name] || '').trim()"
+          :data-testid="isHold(r) ? 'hold-confirm' : undefined"
           @click="onApprove(r)"
         >
-          {{ busy[r.name] ? '…' : __('Aprobar y enviar') }}
+          {{
+            busy[r.name]
+              ? '…'
+              : isHold(r)
+                ? __('Apartar')
+                : __('Aprobar y enviar')
+          }}
         </button>
       </div>
     </div>
@@ -130,7 +140,12 @@
 </template>
 
 <script setup>
-import { agentReason } from '@/components/doco/inbox/agentDraft'
+import AgentActionSummary from '@/components/doco/inbox/AgentActionSummary.vue'
+import {
+  agentReason,
+  holdDone,
+  isHold,
+} from '@/components/doco/inbox/agentDraft'
 
 import { computed, reactive, watch } from 'vue'
 import { toast } from 'frappe-ui'
@@ -206,12 +221,20 @@ function chLabel(channel) {
 
 async function onApprove(r) {
   busy[r.name] = true
+  const hold = isHold(r)
   try {
-    await approveAutoAck(r.name, drafts[r.name])
+    const out = await approveAutoAck(r.name, drafts[r.name])
     delete drafts[r.name]
-    toast.success(__('Acuse enviado'))
+    if (hold) {
+      const done = holdDone(out)
+      if (done.ok) toast.success(done.text)
+      else toast.error(done.text)
+    } else toast.success(__('Acuse enviado'))
   } catch (e) {
-    toast.error(e?.messages?.[0] || __('No se pudo enviar el acuse'))
+    toast.error(
+      e?.messages?.[0] ||
+        (hold ? __('No se pudo apartar') : __('No se pudo enviar el acuse')),
+    )
   } finally {
     busy[r.name] = false
   }
@@ -220,10 +243,13 @@ async function onApprove(r) {
 async function onDiscard(r) {
   busy[r.name] = true
   try {
-    await discardAutoAck(r.name)
+    const out = await discardAutoAck(r.name)
     delete drafts[r.name]
+    if (isHold(r) && out?.notified) toast.success(__('Le avisamos al cliente'))
+    else if (isHold(r))
+      toast.error(__('No se pudo avisar al cliente, escríbele por el chat'))
   } catch (e) {
-    toast.error(__('No se pudo descartar'))
+    toast.error(e?.messages?.[0] || __('No se pudo descartar'))
   } finally {
     busy[r.name] = false
   }

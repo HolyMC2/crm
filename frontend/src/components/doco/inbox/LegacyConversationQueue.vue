@@ -1332,8 +1332,8 @@ const filterableTab = computed(() =>
 // navigation would remount the inbox on phones and lose the open conversation.
 const route = useRoute()
 onMounted(() => {
-  if (tabFromQuery(route.query) && inboxTab.value !== REPLY_TAB)
-    setInboxTab(REPLY_TAB)
+  const tab = tabFromQuery(route.query)
+  if (tab && inboxTab.value !== tab) setInboxTab(tab)
 })
 watch(inboxTab, (tab) => {
   if (typeof window === 'undefined' || route.name !== 'Inbox') return

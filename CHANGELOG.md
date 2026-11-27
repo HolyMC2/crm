@@ -2,6 +2,12 @@
 
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
+## 2026-11-27 — «Por aprobar» confirms a hold the customer asked for (lane asistente-apartar, with doco and doco_marketing; not deployed)
+
+- **Why:** S49d: the customer agent records holds («apartar») and payment replies for a manager.
+- **Change:** a hold row in the inbox's «Por aprobar» (and the conversation's strip) shows what and for whom (`AgentActionSummary.vue`), with the confirmation text to edit and «No apartar» / «Apartar»; the toast names the order's folio or says the customer could not be told. A reply that carries a payment link says so («Se agrega el enlace de pago por …»). `/crm/inbox?tab=aprobar` opens «Por aprobar» (Pendientes and the setup screen link there). Más › Asistente para clientes lists what each tool lacks on this shop («Apartar productos», «Cobrar en línea»).
+- **Tests:** vitest `agentDraft` (5), `asistenteClientes` (4), `atencion` (25).
+
 ## 2026-11-27 — The customer bot stays out of a chat a person is answering (lane asistente-no-interrumpe; not deployed)
 
 - **Why:** on Doco the counter staff answer WhatsApp customers from the chat screen or the phone without taking the conversation: all 13 conversations sit with people, 9 with no owner. The policy cooldown counted only control actions (take, transfer, a handoff…), so with the customer agent on, the next message in a chat Jenni or Tere was handling could start the bot.

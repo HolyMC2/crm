@@ -4,6 +4,7 @@ import {
   modes,
   providerIcon,
   providerLabel,
+  toolLimits,
 } from '@/components/asistente/clientes'
 
 describe('asistente para clientes', () => {
@@ -34,5 +35,38 @@ describe('asistente para clientes', () => {
     expect(decisionText({ decision: 'review', reason: 'borrador' })).toBe(
       'Esperaría revisión de un gerente.',
     )
+  })
+
+  it('says what a tool lacks on this shop, and nothing for the rest', () => {
+    const tools = [
+      { name: 'shop_facts', label: 'Datos del negocio', available: true },
+      {
+        name: 'product_hold',
+        label: 'Apartar productos',
+        available: false,
+        blocker: 'Para apartar, enciende la venta en línea de la tienda.',
+      },
+      {
+        name: 'repair_payment',
+        label: 'Cobrar en línea',
+        available: true,
+        note: 'Sin pagos en línea: dice el saldo y que se paga en la tienda.',
+      },
+    ]
+    expect(toolLimits(tools)).toEqual([
+      {
+        name: 'product_hold',
+        label: 'Apartar productos',
+        text: 'Para apartar, enciende la venta en línea de la tienda.',
+        off: true,
+      },
+      {
+        name: 'repair_payment',
+        label: 'Cobrar en línea',
+        text: 'Sin pagos en línea: dice el saldo y que se paga en la tienda.',
+        off: false,
+      },
+    ])
+    expect(toolLimits(undefined)).toEqual([])
   })
 })

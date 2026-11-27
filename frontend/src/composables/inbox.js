@@ -709,8 +709,9 @@ export function reloadAutoAcks() {
 }
 // Approve (and send) a drafted acuse, optionally with an edited body. This is the ONLY
 // path that messages the customer — it routes through the role-gated controller.
+// A hold request answers with the apartado it placed ({order, notified}).
 export async function approveAutoAck(name, body) {
-  await call('doco_marketing.api.auto_reply.approve', {
+  const out = await call('doco_marketing.api.auto_reply.approve', {
     name,
     body: body || undefined,
   })
@@ -719,12 +720,15 @@ export async function approveAutoAck(name, body) {
   if (activeDeal.value)
     loadAutoAckForConvo(activeDealDoctype.value, activeDeal.value)
   if (activeDeal.value) loadThread() // the approved acuse now shows in the thread
+  return out
 }
+// A hold request is declined instead: the customer hears it ({notified}).
 export async function discardAutoAck(name) {
-  await call('doco_marketing.api.auto_reply.discard', { name })
+  const out = await call('doco_marketing.api.auto_reply.discard', { name })
   reloadAutoAcks()
   if (activeDeal.value)
     loadAutoAckForConvo(activeDealDoctype.value, activeDeal.value)
+  return out
 }
 
 // ── persist the open selection + mobile pane ───────────────────────────────────
