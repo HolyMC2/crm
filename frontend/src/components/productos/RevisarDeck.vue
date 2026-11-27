@@ -765,7 +765,11 @@ const KINDS = [
 const scopes = computed(() => [
   { value: 'nuevos', label: __('New in 30 days', null, 'Revisar') },
   { value: 'publicados', label: __('What the store shows', null, 'Revisar') },
-  ...groups.value.map((g) => ({ value: g.name, label: g.name, items: g.items })),
+  ...groups.value.map((g) => ({
+    value: g.name,
+    label: g.name,
+    items: g.items,
+  })),
 ])
 
 async function openStart() {
