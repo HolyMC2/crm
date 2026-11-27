@@ -46,6 +46,7 @@ import {
   _resetAssistant,
   assistant,
   onMessage,
+  choose,
   openAssistant,
   screenContext,
   send,
@@ -879,6 +880,85 @@ describe('cards and suggestions', () => {
     expect(el.querySelector('[data-testid="assistant-card-open"]')).toBe(null)
     expect(opens()).toHaveLength(1)
     app.unmount()
+  })
+
+  it('an answered choice closes its message, live and after a reload', async () => {
+    await openAssistant()
+    onMessage({
+      chat_id: staff.chat_id,
+      mid: 'q1',
+      text: '¿Lo confirmo? Póliza ACC-JV-1',
+      buttons: [
+        [
+          { text: '✅ Sí, validar', callback_data: 'ntc:y:JV:ACC-JV-1' },
+          { text: 'Cancelar', callback_data: 'ntc:n' },
+        ],
+      ],
+    })
+    const { el, app } = mount(AssistantLog, {})
+    await nextTick()
+    expect(
+      el.querySelectorAll('[data-testid="assistant-choice"]'),
+    ).toHaveLength(2)
+    el.querySelector('[data-testid="assistant-choice"]').click()
+    await nextTick()
+    // closed at once, the option as its state, the message id with the tap
+    expect(el.querySelector('[data-testid="assistant-choice"]')).toBe(null)
+    expect(
+      el.querySelector('[data-testid="assistant-answered"]').textContent,
+    ).toContain('Sí, validar')
+    await vi.waitFor(() =>
+      expect(mocks.call).toHaveBeenCalledWith(`${API}.callback`, {
+        data: 'ntc:y:JV:ACC-JV-1',
+        mid: 'q1',
+      }),
+    )
+    // doco's own close arrives as an edit: the turn the tap started keeps working
+    expect(assistant.thinking).toBe(true)
+    onMessage({
+      chat_id: staff.chat_id,
+      mid: 'q1',
+      edit: true,
+      text: '¿Lo confirmo? Póliza ACC-JV-1',
+      buttons: [],
+      answered: '✅ Sí, validar',
+    })
+    expect(assistant.thinking).toBe(true)
+    expect(assistant.messages.find((m) => m.mid === 'q1').answered).toBe(
+      '✅ Sí, validar',
+    )
+    // a reload reads the closed message from history
+    expect(
+      normalizeRow({
+        kind: 'bot',
+        mid: 'q1',
+        message: 'x',
+        answered: 'Cancelar',
+      }).answered,
+    ).toBe('Cancelar')
+    app.unmount()
+  })
+
+  it('a refused choice opens its message again', async () => {
+    await openAssistant()
+    onMessage({
+      chat_id: staff.chat_id,
+      mid: 'q2',
+      text: '¿Lo pospongo?',
+      buttons: [[{ text: 'Posponer 3 días', callback_data: 'ntc:z:JV:X' }]],
+    })
+    mocks.call.mockImplementation((method) =>
+      method === `${API}.callback`
+        ? Promise.reject(new Error('Sin conexión'))
+        : Promise.resolve({}),
+    )
+    const message = assistant.messages.find((m) => m.mid === 'q2')
+    const ok = await choose(message, {
+      label: 'Posponer 3 días',
+      data: 'ntc:z:JV:X',
+    })
+    expect(ok).toBe(false)
+    expect(assistant.messages.find((m) => m.mid === 'q2').answered).toBe(null)
   })
 
   it('a suggestion asks when tapped and stays dismissed', async () => {

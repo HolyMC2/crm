@@ -491,12 +491,24 @@ function patchMessage(id, patch) {
   )
 }
 
+/**
+ * A choice under a reply: the message closes at once with the option as its
+ * state (doco closes it too and tells every screen showing it); a refusal opens
+ * it again.
+ */
+export async function choose(message, choice) {
+  patchMessage(message.id, { answered: choice.label })
+  const ok = await tap(choice.data, null, message.mid)
+  if (!ok) patchMessage(message.id, { answered: null })
+  return ok
+}
+
 /** A tap on a card or a choice: the same callback strings as the Desk. */
-export async function tap(data, cardId = null) {
+export async function tap(data, cardId = null, mid = null) {
   if (cardId) assistant.cards = { ...assistant.cards, [cardId]: 'sending' }
   assistant.error = ''
   try {
-    await call(`${ASSISTANT_API}.callback`, { data })
+    await call(`${ASSISTANT_API}.callback`, mid ? { data, mid } : { data })
     if (cardId) {
       const approved = /:a$|^act:/.test(data)
       assistant.cards = {
@@ -507,9 +519,11 @@ export async function tap(data, cardId = null) {
     }
     assistant.thinking = true
     armWatchdog()
+    return true
   } catch (error) {
     if (cardId) assistant.cards = { ...assistant.cards, [cardId]: 'failed' }
     assistant.error = errorText(error)
+    return false
   }
 }
 
@@ -583,6 +597,12 @@ export function onMessage(payload) {
   const index = payload.edit
     ? assistant.messages.findIndex((m) => m.mid && m.mid === payload.mid)
     : -1
+  if (payload.edit && payload.answered) {
+    // a message closed by its answer: only that message changes; the turn the
+    // tap started keeps its progress
+    if (index >= 0) patchMessage(assistant.messages[index].id, incoming)
+    return
+  }
   if (!isProgress(incoming) && canvas.pending.length)
     incoming.canvas = takePendingCanvas()
   if (index >= 0) {

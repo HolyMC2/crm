@@ -581,6 +581,9 @@ export function normalizeRow(row) {
     role: bot ? 'bot' : 'user',
     text,
     buttons: bot ? row.buttons || [] : [],
+    // the option this message was answered with (doco closes it): its state
+    // instead of its buttons
+    answered: (bot && row.answered) || null,
     answer: (bot && row.answer) || null,
     // a question about a document drawn whole (DecisionCard.vue); doco
     // rebuilds it from the decision session on every read

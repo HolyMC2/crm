@@ -220,13 +220,25 @@
           card
           @navigate="$emit('navigate')"
         />
-        <div v-if="view(message).choices.length" class="flex flex-wrap gap-2">
+        <p
+          v-if="message.answered"
+          class="inline-flex min-h-8 items-center gap-1.5 self-start rounded-4 bg-[var(--muelle-secondary-container)] px-3 text-sm font-medium text-[var(--muelle-on-secondary-container)]"
+          data-testid="assistant-answered"
+        >
+          <span class="lucide-check size-4" aria-hidden="true" />
+          {{ stripEmoji(message.answered) }}
+        </p>
+        <div
+          v-else-if="view(message).choices.length"
+          class="flex flex-wrap gap-2"
+        >
           <button
             v-for="choice in view(message).choices"
             :key="choice.data"
             type="button"
-            class="min-h-11 rounded-full bg-surface-gray-2 px-4 text-sm font-medium text-ink-gray-8 hover:bg-surface-gray-3"
-            @click="tap(choice.data)"
+            class="press min-h-11 rounded-full bg-surface-gray-2 px-4 text-sm font-medium text-ink-gray-8 hover:bg-surface-gray-3"
+            data-testid="assistant-choice"
+            @click="choose(message, choice)"
           >
             {{ choice.label }}
           </button>
@@ -288,7 +300,7 @@ import {
   withoutLink,
 } from './assistantText'
 import { cardOf, leadOf } from './decisionCardState'
-import { assistant, retry, retryAnswer, tap } from './useAssistant'
+import { assistant, choose, retry, retryAnswer, tap } from './useAssistant'
 
 // docked: the log scrolls itself; in the sheet the sheet's body scrolls.
 const props = defineProps({ docked: { type: Boolean, default: false } })

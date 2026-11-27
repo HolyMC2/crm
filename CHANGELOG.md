@@ -2,6 +2,11 @@
 
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
+## 2026-11-27 — A choice under a reply closes when answered (lane botones-cierran, with doco; not deployed)
+
+- **Change:** a tap on a reply's choice (`choose`) closes that message at once. The buttons give way to the option chosen (a ✓ chip on the secondary container), and the tap sends the message's `mid`, so doco closes it for good and on every screen. A refusal opens it again. doco's closing edit (`answered`) changes only that message: the turn the tap started keeps its progress. History reads `answered` back (`normalizeRow`).
+- **Tests:** `tests/unit/assistant.test.js` (+2).
+
 ## 2026-11-27 — «Por aprobar» confirms a hold the customer asked for (lane asistente-apartar, with doco and doco_marketing; not deployed)
 
 - **Why:** S49d: the customer agent records holds («apartar») and payment replies for a manager.
