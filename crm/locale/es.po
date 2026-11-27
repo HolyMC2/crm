@@ -54543,3 +54543,6 @@ msgstr "Suena siempre"
 
 msgid "Who it rang"
 msgstr "A quién sonó"
+
+msgid "Always"
+msgstr "Siempre"
