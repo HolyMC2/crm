@@ -362,5 +362,15 @@ describe('CRM socket bootstrap ownership', () => {
     expect(dispatch).toHaveBeenCalledWith(
       expect.objectContaining({ type: 'socket:reconnected' }),
     )
+    // socket.io's own reconnect already announced it: its `connect` is quiet.
+    dispatch.mockClear()
+    handlers.connect()
+    expect(dispatch).not.toHaveBeenCalled()
+    // The shell's «Reconectar» opens a new connection, with no `reconnect`.
+    handlers.disconnect()
+    handlers.connect()
+    expect(dispatch).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'socket:reconnected' }),
+    )
   })
 })

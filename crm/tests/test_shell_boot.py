@@ -315,6 +315,50 @@ class TestShellBoot(TestCase):
 				{"ventas": {"count": 7, "urgent": True}, "taller": {"count": 4, "urgent": True}},
 			)
 
+	def _bar_status_with_shifts(self, rows, now="2026-11-26 10:00:00"):
+		import frappe.utils
+		from frappe.utils import get_datetime
+
+		seen = {}
+
+		def get_all(doctype, **kw):
+			seen.update(kw.get("filters") or {})
+			return [frappe._dict(row) for row in rows]
+
+		with (
+			patch.object(frappe.db, "table_exists", lambda doctype, *a, **kw: doctype == shell.POS_SHIFT),
+			patch.object(frappe, "get_all", get_all),
+			patch.object(frappe.utils, "now_datetime", lambda: get_datetime(now)),
+		):
+			return shell.bar_status(), seen
+
+	def test_the_bar_names_the_caja_left_open_from_an_earlier_day(self):
+		answer, filters = self._bar_status_with_shifts(
+			[{"name": "POS-OS-1", "pos_profile": "Mostrador", "period_start_date": "2026-11-25 09:02:00"}]
+		)
+		self.assertEqual(
+			answer["caja"], {"name": "POS-OS-1", "pos_profile": "Mostrador", "since": "2026-11-25 09:02:00"}
+		)
+		# Only the worker's own open shift.
+		self.assertEqual(filters, {"user": "Administrator", "status": "Open", "docstatus": 1})
+
+	def test_a_shift_open_today_or_past_midnight_is_not_left_open(self):
+		today, _ = self._bar_status_with_shifts(
+			[{"name": "POS-OS-2", "pos_profile": "Mostrador", "period_start_date": "2026-11-26 08:00:00"}]
+		)
+		self.assertIsNone(today["caja"])
+		late_close, _ = self._bar_status_with_shifts(
+			[{"name": "POS-OS-3", "pos_profile": "Mostrador", "period_start_date": "2026-11-25 18:00:00"}],
+			now="2026-11-26 01:00:00",
+		)
+		self.assertIsNone(late_close["caja"])
+
+	def test_the_bar_says_nothing_without_the_pos_or_when_its_read_fails(self):
+		with patch.object(frappe.db, "table_exists", lambda *a, **kw: False):
+			self.assertEqual(shell.bar_status(), {"caja": None})
+		with patch.object(shell, "_caja_left_open", lambda: 1 / 0):
+			self.assertEqual(shell.bar_status(), {"caja": None})
+
 	def test_module_keys_follow_the_contracts_registry(self):
 		registry = Path(__file__).parents[2] / "frontend/src/vendor/muelle-shell/contracts/registry.ts"
 		if not registry.exists():

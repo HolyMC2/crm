@@ -1,205 +1,215 @@
 <template>
   <div
-    class="flex h-[100dvh] min-w-0 overflow-hidden bg-surface-base text-ink-gray-9"
+    class="flex h-[100dvh] min-w-0 flex-col overflow-hidden bg-surface-base text-ink-gray-9"
   >
     <a
       href="#muelle-content"
       class="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-50 focus:rounded-4 focus:bg-surface-base focus:p-3"
       >{{ __('Skip to content') }}</a
     >
-    <ShellRail
+    <!-- From 640 px the system's row runs across the top, Mac-style: the shop,
+         what needs the worker's eye, Avisos and the clock with today's widgets. -->
+    <ShellTopBar
       v-if="!phone"
-      :modules="railPlaces"
-      :hidden="shellLayout.hidden"
-      :unavailable="unavailableModules"
-      :active="activeKey"
+      :avisos="railPlaces.some((place) => place.key === 'avisos')"
       :ventas="ventasEnabled"
-      @palette="openPalette('all')"
-      @assistant="askMuelle"
+      :active="activeKey"
     />
-    <div class="flex min-h-0 min-w-0 flex-1 flex-col">
-      <!-- One compact row on phone. It slides away while the worker scrolls
+    <div class="flex min-h-0 min-w-0 flex-1">
+      <ShellRail
+        v-if="!phone"
+        :modules="railPlaces"
+        :hidden="shellLayout.hidden"
+        :unavailable="unavailableModules"
+        :active="activeKey"
+        :ventas="ventasEnabled"
+        @palette="openPalette('all')"
+        @assistant="askMuelle"
+      />
+      <div class="flex min-h-0 min-w-0 flex-1 flex-col">
+        <!-- One compact row on phone. It slides away while the worker scrolls
            down and comes back on the first scroll up; drill-down records
            (deal, inbox thread) bring their own identity row instead, and pages
            with `meta.ownPhoneHeader` (the Agenda's calendar app bar) their own. -->
-      <!-- The phone's top bar is the shared AppBar. Drill-down records (a
+        <!-- The phone's top bar is the shared AppBar. Drill-down records (a
            Cobranza or Compras record, Producto, Equipo's vacation sheet) take
            a back arrow to their list, from meta.listParent. -->
-      <AppBar
-        v-if="phone && !drillDown && !route.meta.ownPhoneHeader"
-        data-testid="shell-header"
-        :back="backTo"
-        :title="barTitle"
-        :stack="!backTo"
-        :bell-active="activeKey === 'avisos'"
-        class="transition-[margin] duration-200 ease-out motion-reduce:transition-none"
-        :style="headerHidden ? { marginTop: `-${headerHeight}px` } : null"
-      >
-        <template #title>
-          <!-- Ventas pages may teleport their own header (breadcrumbs + actions)
+        <AppBar
+          v-if="phone && !drillDown && !route.meta.ownPhoneHeader"
+          data-testid="shell-header"
+          :back="backTo"
+          :title="barTitle"
+          :stack="!backTo"
+          :bell-active="activeKey === 'avisos'"
+          class="transition-[margin] duration-200 ease-out motion-reduce:transition-none"
+          :style="headerHidden ? { marginTop: `-${headerHeight}px` } : null"
+        >
+          <template #title>
+            <!-- Ventas pages may teleport their own header (breadcrumbs + actions)
                here; while none arrives the route's title stands in for it.
                pl-3 lines its first crumb up with the title (16px at 412, measured). -->
-          <div
-            v-if="activeKey === 'ventas'"
-            id="app-header"
-            class="min-w-0 flex-1 pl-3 [&:not(:has(*))]:hidden"
-          />
-          <h1
-            data-testid="shell-title"
-            class="title-face min-w-0 flex-1 self-center font-semibold leading-tight [#app-header:has(*)+&]:hidden"
-            :class="
-              backTo
-                ? 'truncate pl-1 pr-2 text-xl'
-                : 'line-clamp-2 break-words px-3 text-3xl max-[359px]:text-2xl'
-            "
-          >
-            {{ barTitle }}
-          </h1>
-        </template>
-        <!-- The top bar names the place and holds the bell. Global search,
+            <div
+              v-if="activeKey === 'ventas'"
+              id="app-header"
+              class="min-w-0 flex-1 pl-3 [&:not(:has(*))]:hidden"
+            />
+            <h1
+              data-testid="shell-title"
+              class="title-face min-w-0 flex-1 self-center font-semibold leading-tight [#app-header:has(*)+&]:hidden"
+              :class="
+                backTo
+                  ? 'truncate pl-1 pr-2 text-xl'
+                  : 'line-clamp-2 break-words px-3 text-3xl max-[359px]:text-2xl'
+              "
+            >
+              {{ barTitle }}
+            </h1>
+          </template>
+          <!-- The top bar names the place and holds the bell. Global search,
              scan, the camera, the assistant and the page's create action sit
              in the command bar above the bottom nav, where the thumb is; a
              record with its own bottom bar has no command bar, so its search
              comes back up here. -->
-        <template #actions>
-          <!-- A docked list search's own menu (ui/SearchPanel #trailing). -->
+          <template #actions>
+            <!-- A docked list search's own menu (ui/SearchPanel #trailing). -->
+            <div
+              id="shell-header-actions"
+              class="flex items-center empty:hidden"
+            />
+            <button
+              v-if="route.meta.ownBottomBar"
+              type="button"
+              class="press flex size-12 flex-none items-center justify-center rounded-full text-ink-gray-7"
+              :aria-label="__('Search')"
+              :title="searchHint"
+              :aria-keyshortcuts="searchKeys"
+              data-testid="shell-search-top"
+              @click="openPalette('all')"
+            >
+              <span class="lucide-search size-6" aria-hidden="true" />
+            </button>
+            <LiveSign />
+          </template>
+        </AppBar>
+        <ExpandTransition>
           <div
-            id="shell-header-actions"
-            class="flex items-center empty:hidden"
-          />
-          <button
-            v-if="route.meta.ownBottomBar"
-            type="button"
-            class="press flex size-12 flex-none items-center justify-center rounded-full text-ink-gray-7"
-            :aria-label="__('Search')"
-            :title="searchHint"
-            :aria-keyshortcuts="searchKeys"
-            data-testid="shell-search-top"
-            @click="openPalette('all')"
+            v-if="!online"
+            role="status"
+            class="shrink-0 bg-surface-amber-1 px-4 py-2 text-sm text-ink-amber-8"
           >
-            <span class="lucide-search size-6" aria-hidden="true" />
-          </button>
-        </template>
-      </AppBar>
-      <ExpandTransition>
-        <div
-          v-if="!online"
-          role="status"
-          class="shrink-0 bg-surface-amber-1 px-4 py-2 text-sm text-ink-amber-8"
-        >
-          {{
-            __(
-              'Offline — you see what was last loaded; your changes stay as a draft.',
-            )
-          }}
-        </div>
-      </ExpandTransition>
-      <!-- Mi cuenta's one notice, from the plan summary in the boot: an invoice
+            {{
+              __(
+                'Offline — you see what was last loaded; your changes stay as a draft.',
+              )
+            }}
+          </div>
+        </ExpandTransition>
+        <!-- Mi cuenta's one notice, from the plan summary in the boot: an invoice
            past due or a suspension within days. Not on Mi cuenta itself, nor
            the trial's on Hoy, whose trial card says it. -->
-      <ExpandTransition>
-        <div
-          v-if="cuentaNotice"
-          role="status"
-          class="flex shrink-0 items-center gap-2 bg-surface-amber-1 pl-4 pr-1 text-sm text-ink-amber-8"
-          data-testid="shell-cuenta-aviso"
-        >
-          <span
-            class="lucide-triangle-alert size-4 flex-none"
-            aria-hidden="true"
-          />
-          <RouterLink
-            :to="cuentaNotice.to"
-            class="flex min-h-11 min-w-0 flex-1 items-center py-1.5 font-medium"
+        <ExpandTransition>
+          <div
+            v-if="cuentaNotice"
+            role="status"
+            class="flex shrink-0 items-center gap-2 bg-surface-amber-1 pl-4 pr-1 text-sm text-ink-amber-8"
+            data-testid="shell-cuenta-aviso"
           >
-            <span class="min-w-0"
-              >{{ cuentaNotice.text }}
-              <span class="whitespace-nowrap underline">{{
-                cuentaNotice.cta
-              }}</span></span
+            <span
+              class="lucide-triangle-alert size-4 flex-none"
+              aria-hidden="true"
+            />
+            <RouterLink
+              :to="cuentaNotice.to"
+              class="flex min-h-11 min-w-0 flex-1 items-center py-1.5 font-medium"
             >
-          </RouterLink>
-          <button
-            type="button"
-            class="press flex size-11 flex-none items-center justify-center rounded-full active:bg-surface-amber-2"
-            :aria-label="__('Hide until next time', null, 'Cuenta')"
-            :title="__('Hide until next time', null, 'Cuenta')"
-            @click="dismissNotice"
-          >
-            <span class="lucide-x size-4" aria-hidden="true" />
-          </button>
+              <span class="min-w-0"
+                >{{ cuentaNotice.text }}
+                <span class="whitespace-nowrap underline">{{
+                  cuentaNotice.cta
+                }}</span></span
+              >
+            </RouterLink>
+            <button
+              type="button"
+              class="press flex size-11 flex-none items-center justify-center rounded-full active:bg-surface-amber-2"
+              :aria-label="__('Hide until next time', null, 'Cuenta')"
+              :title="__('Hide until next time', null, 'Cuenta')"
+              @click="dismissNotice"
+            >
+              <span class="lucide-x size-4" aria-hidden="true" />
+            </button>
+          </div>
+        </ExpandTransition>
+        <div
+          v-if="shellLoading && !shellBoot"
+          v-show="!appShown"
+          role="status"
+          class="flex flex-1 items-center justify-center p-6 text-sm text-ink-gray-6"
+        >
+          {{ __('Opening Muelle…') }}
         </div>
-      </ExpandTransition>
-      <div
-        v-if="shellLoading && !shellBoot"
-        v-show="!appShown"
-        role="status"
-        class="flex flex-1 items-center justify-center p-6 text-sm text-ink-gray-6"
-      >
-        {{ __('Opening Muelle…') }}
-      </div>
-      <!-- Every route but the recovery screen (which says it itself): the
+        <!-- Every route but the recovery screen (which says it itself): the
            saved boot stays, so a Ventas or account page would otherwise open
            on calls that all fail. -->
-      <SessionEnded
-        v-else-if="sessionEnded && !route.meta.recovery"
-        v-show="!appShown"
-        class="min-h-0 flex-1 overflow-y-auto"
-        :back="route.fullPath"
-      />
-      <section
-        v-else-if="blocked"
-        v-show="!appShown"
-        role="alert"
-        class="mx-auto min-h-0 w-full max-w-xl flex-1 space-y-4 overflow-y-auto p-6"
-      >
-        <h1 class="text-xl font-semibold">
-          {{ __('We could not open {0}', [blockedLabel]) }}
-        </h1>
-        <p class="text-sm text-ink-gray-7">
-          {{ blocked.reason || blockedFallback }}
-        </p>
-        <p v-if="blocked.detail" class="text-xs text-ink-gray-5">
-          {{ __('Detail') }}: {{ blocked.detail }}
-        </p>
-        <div class="flex flex-wrap gap-2">
-          <Button
-            v-if="blocked.retry"
-            :label="blockedAsksAccess ? __('Retry permissions') : __('Retry')"
-            @click="reload"
-          />
-          <Button
-            v-if="blocked.resolve"
-            :label="blocked.resolve.label"
-            @click="router.push(blocked.resolve.route)"
-          />
-          <Button
-            v-if="blockedAsksAccess"
-            :label="__('Ask for access')"
-            @click="copyRequest"
-          />
-          <Button
-            v-if="landing"
-            :label="__('Go to {0}', [landing.label])"
-            @click="router.push(landing.to)"
-          />
-          <Button :label="__('Back')" @click="router.back()" />
-        </div>
-        <p v-if="copied" role="status" class="text-sm">{{ copied }}</p>
-      </section>
-      <main
-        v-else
-        v-show="!appShown"
-        id="muelle-content"
-        class="flex min-h-0 min-w-0 flex-1 overflow-hidden"
-        @scroll.capture.passive="onContentScroll"
-      >
-        <slot />
-      </main>
-      <!-- Apps opened from the rail (appStrip) take this place while one is
+        <SessionEnded
+          v-else-if="sessionEnded && !route.meta.recovery"
+          v-show="!appShown"
+          class="min-h-0 flex-1 overflow-y-auto"
+          :back="route.fullPath"
+        />
+        <section
+          v-else-if="blocked"
+          v-show="!appShown"
+          role="alert"
+          class="mx-auto min-h-0 w-full max-w-xl flex-1 space-y-4 overflow-y-auto p-6"
+        >
+          <h1 class="text-xl font-semibold">
+            {{ __('We could not open {0}', [blockedLabel]) }}
+          </h1>
+          <p class="text-sm text-ink-gray-7">
+            {{ blocked.reason || blockedFallback }}
+          </p>
+          <p v-if="blocked.detail" class="text-xs text-ink-gray-5">
+            {{ __('Detail') }}: {{ blocked.detail }}
+          </p>
+          <div class="flex flex-wrap gap-2">
+            <Button
+              v-if="blocked.retry"
+              :label="blockedAsksAccess ? __('Retry permissions') : __('Retry')"
+              @click="reload"
+            />
+            <Button
+              v-if="blocked.resolve"
+              :label="blocked.resolve.label"
+              @click="router.push(blocked.resolve.route)"
+            />
+            <Button
+              v-if="blockedAsksAccess"
+              :label="__('Ask for access')"
+              @click="copyRequest"
+            />
+            <Button
+              v-if="landing"
+              :label="__('Go to {0}', [landing.label])"
+              @click="router.push(landing.to)"
+            />
+            <Button :label="__('Back')" @click="router.back()" />
+          </div>
+          <p v-if="copied" role="status" class="text-sm">{{ copied }}</p>
+        </section>
+        <main
+          v-else
+          v-show="!appShown"
+          id="muelle-content"
+          class="flex min-h-0 min-w-0 flex-1 overflow-hidden"
+          @scroll.capture.passive="onContentScroll"
+        >
+          <slot />
+        </main>
+        <!-- Apps opened from the rail (appStrip) take this place while one is
            on screen; the page above stays mounted, as the worker left it. -->
-      <AppFrames v-if="!phone && openApps.length" v-show="appShown" />
-      <!-- Phone command bar, the thumb's row: global search, ask Muelle, scan
+        <AppFrames v-if="!phone && openApps.length" v-show="appShown" />
+        <!-- Phone command bar, the thumb's row: global search, ask Muelle, scan
            a code, scan a paper, and the page's one create action (ui/Fab teleports into
            #shell-primary-action while this bar is mounted, so it never floats
            over the last rows of a list). It hides with the nav (keyboard,
@@ -207,155 +217,156 @@
            mounted, so the teleport target never goes away under a page.
            It is one tonal block with the nav under it (the container role),
            with no rule above either. -->
-      <!-- A list's search panel and its «Buscar … en todo Muelle» rise here,
+        <!-- A list's search panel and its «Buscar … en todo Muelle» rise here,
            over the bar (ui/AppBar, ui/SearchPanel docked). -->
-      <div
-        v-if="phone"
-        v-show="commandBarVisible"
-        id="shell-page-panel"
-        class="relative z-10"
-      />
-      <div
-        v-if="phone"
-        v-show="commandBarVisible"
-        class="relative z-10 flex shrink-0 items-center gap-1 bg-[var(--muelle-surface-container)] pb-0.5 pl-3 pr-2 pt-2"
-        data-testid="shell-command-bar"
-        :data-typing="barTyping ? '' : undefined"
-        @focusin="barFocusIn"
-        @focusout="barFocusOut"
-      >
-        <!-- One search per screen (Marco 2026-11-23): a list's own search
+        <div
+          v-if="phone"
+          v-show="commandBarVisible"
+          id="shell-page-panel"
+          class="relative z-10"
+        />
+        <div
+          v-if="phone"
+          v-show="commandBarVisible"
+          class="relative z-10 flex shrink-0 items-center gap-1 bg-[var(--muelle-surface-container)] pb-0.5 pl-3 pr-2 pt-2"
+          data-testid="shell-command-bar"
+          :data-typing="barTyping ? '' : undefined"
+          @focusin="barFocusIn"
+          @focusout="barFocusOut"
+        >
+          <!-- One search per screen (Marco 2026-11-23): a list's own search
              docks here (#shell-page-tools) and narrows the list as it types,
              with «Buscar … en todo Muelle» over the bar; elsewhere the bar's
              search is the palette (⌘K «Buscar o ir a…»): find a record, go
              to a place or run an action. -->
-        <div
-          id="shell-page-tools"
-          class="flex min-w-0 flex-1 items-center gap-1 empty:hidden"
-        />
-        <!-- A record's next step docked with its word (ui/Fab dock="extended")
+          <div
+            id="shell-page-tools"
+            class="flex min-w-0 flex-1 items-center gap-1 empty:hidden"
+          />
+          <!-- A record's next step docked with its word (ui/Fab dock="extended")
              takes the room: the search keeps only its icon. -->
-        <button
-          v-if="!pageToolsDocked"
-          type="button"
-          class="press flex h-12 items-center gap-2 rounded-full bg-[var(--muelle-surface-container-highest)] text-left text-[15px] text-[var(--muelle-on-surface-variant)]"
-          :class="
-            primaryDockExtended
-              ? 'w-12 flex-none justify-center'
-              : 'min-w-0 flex-1 pl-4 pr-[18px]'
-          "
-          :aria-label="__('Search or go to…')"
-          :title="searchHint"
-          :aria-keyshortcuts="searchKeys"
-          data-testid="shell-search"
-          @click="openPalette('all')"
-        >
-          <span class="lucide-search size-5 flex-none" aria-hidden="true" />
-          <template v-if="!primaryDockExtended">
-            <span class="min-w-0 truncate max-[359px]:hidden">{{
-              __('Search or go to…')
-            }}</span>
-            <span class="min-w-0 truncate min-[360px]:hidden">{{
-              __('Search')
-            }}</span>
-          </template>
-        </button>
-        <!-- «Pregúntale a Muelle» (E7) beside it, an icon, only once
+          <button
+            v-if="!pageToolsDocked"
+            type="button"
+            class="press flex h-12 items-center gap-2 rounded-full bg-[var(--muelle-surface-container-highest)] text-left text-[15px] text-[var(--muelle-on-surface-variant)]"
+            :class="
+              primaryDockExtended
+                ? 'w-12 flex-none justify-center'
+                : 'min-w-0 flex-1 pl-4 pr-[18px]'
+            "
+            :aria-label="__('Search or go to…')"
+            :title="searchHint"
+            :aria-keyshortcuts="searchKeys"
+            data-testid="shell-search"
+            @click="openPalette('all')"
+          >
+            <span class="lucide-search size-5 flex-none" aria-hidden="true" />
+            <template v-if="!primaryDockExtended">
+              <span class="min-w-0 truncate max-[359px]:hidden">{{
+                __('Search or go to…')
+              }}</span>
+              <span class="min-w-0 truncate min-[360px]:hidden">{{
+                __('Search')
+              }}</span>
+            </template>
+          </button>
+          <!-- «Pregúntale a Muelle» (E7) beside it, an icon, only once
              shell_api.status said yes. -->
-        <button
-          v-if="assistantOn"
-          v-show="!barTyping"
-          type="button"
-          :class="COMMAND_ICON"
-          :aria-label="__('Ask Muelle')"
-          :title="__('Ask Muelle')"
-          data-testid="shell-assistant"
-          @pointerdown="warmAssistant"
-          @click="askMuelle"
-        >
-          <span class="lucide-sparkles size-6" aria-hidden="true" />
-        </button>
-        <!-- «Escanear»: the shell reads the code itself (scanDoor.js) and opens
+          <button
+            v-if="assistantOn"
+            v-show="!barTyping"
+            type="button"
+            :class="COMMAND_ICON"
+            :aria-label="__('Ask Muelle')"
+            :title="__('Ask Muelle')"
+            data-testid="shell-assistant"
+            @pointerdown="warmAssistant"
+            @click="askMuelle"
+          >
+            <span class="lucide-sparkles size-6" aria-hidden="true" />
+          </button>
+          <!-- «Escanear»: the shell reads the code itself (scanDoor.js) and opens
              its product, or creates it; without Productos, Escáner's picker. -->
-        <button
-          v-if="scanInline && !backTo"
-          v-show="!barTyping"
-          type="button"
-          :class="COMMAND_ICON"
-          :aria-label="__('Scan a code')"
-          :title="__('Scan a code')"
-          data-testid="shell-scan"
-          @pointerenter="loadScanSheet"
-          @focus="loadScanSheet"
-          @click="openScan()"
-        >
-          <span class="lucide-scan-barcode size-6" aria-hidden="true" />
-        </button>
-        <a
-          v-else-if="scanHref && !backTo"
-          v-show="!barTyping"
-          :href="scanHref"
-          :class="COMMAND_ICON"
-          :aria-label="__('Scan a code')"
-          :title="__('Scan a code')"
-          data-testid="shell-scan"
-        >
-          <span class="lucide-scan-barcode size-6" aria-hidden="true" />
-        </a>
-        <!-- «Escanear documento» (Shell D7): the camera reads a paper into the
+          <button
+            v-if="scanInline && !backTo"
+            v-show="!barTyping"
+            type="button"
+            :class="COMMAND_ICON"
+            :aria-label="__('Scan a code')"
+            :title="__('Scan a code')"
+            data-testid="shell-scan"
+            @pointerenter="loadScanSheet"
+            @focus="loadScanSheet"
+            @click="openScan()"
+          >
+            <span class="lucide-scan-barcode size-6" aria-hidden="true" />
+          </button>
+          <a
+            v-else-if="scanHref && !backTo"
+            v-show="!barTyping"
+            :href="scanHref"
+            :class="COMMAND_ICON"
+            :aria-label="__('Scan a code')"
+            :title="__('Scan a code')"
+            data-testid="shell-scan"
+          >
+            <span class="lucide-scan-barcode size-6" aria-hidden="true" />
+          </a>
+          <!-- «Escanear documento» (Shell D7): the camera reads a paper into the
              books capture engine; the sheet is a lazy chunk (cameraDoor.js).
              Under 360px the door is in Más and the palette. -->
-        <!-- With a list's search docked the paper camera gives the pill its
+          <!-- With a list's search docked the paper camera gives the pill its
              room; it stays in Más and the palette. -->
-        <button
-          v-if="!backTo && shellBoot && !pageToolsDocked"
-          type="button"
-          :class="[COMMAND_ICON, 'max-[359px]:hidden']"
-          :aria-label="__('Scan document')"
-          :title="__('Scan document')"
-          data-testid="shell-camera"
-          @pointerenter="loadCameraSheet"
-          @focus="loadCameraSheet"
-          @click="openCamera()"
-        >
-          <span class="lucide-camera size-6" aria-hidden="true" />
-        </button>
-        <div
-          v-show="!barTyping"
-          id="shell-primary-action"
-          class="flex flex-none empty:hidden"
+          <button
+            v-if="!backTo && shellBoot && !pageToolsDocked"
+            type="button"
+            :class="[COMMAND_ICON, 'max-[359px]:hidden']"
+            :aria-label="__('Scan document')"
+            :title="__('Scan document')"
+            data-testid="shell-camera"
+            @pointerenter="loadCameraSheet"
+            @focus="loadCameraSheet"
+            @click="openCamera()"
+          >
+            <span class="lucide-camera size-6" aria-hidden="true" />
+          </button>
+          <div
+            v-show="!barTyping"
+            id="shell-primary-action"
+            class="flex flex-none empty:hidden"
+          />
+        </div>
+        <ShellBottomNav
+          v-if="phone && navVisible"
+          :slots="barSlots"
+          :modules="shellModules"
+          :active="activeKey"
+          @more="moreOpen = true"
         />
       </div>
-      <ShellBottomNav
-        v-if="phone && navVisible"
-        :slots="barSlots"
-        :modules="shellModules"
-        :active="activeKey"
-        @more="moreOpen = true"
-      />
-    </div>
-    <!-- «Pregúntale a Muelle» (SHELL-S2): a sheet on phone, a docked panel
+      <!-- «Pregúntale a Muelle» (SHELL-S2): a sheet on phone, a docked panel
          beside the page on a wide desktop. Staff only; it loads when a door
          first opens it (assistantDoor.js). -->
-    <AssistantSheet v-if="shellBoot && assistantWanted" />
-    <CameraSheet v-if="camera.wanted" />
-    <ScanSheet v-if="scan.wanted" />
-    <MoreSheet
-      v-if="moreOpen"
-      v-model="moreOpen"
-      :modules="shellModules"
-      :boot="shellBoot"
-    />
-    <CommandPalette
-      v-if="paletteOpen"
-      v-model="paletteOpen"
-      v-model:mode="paletteMode"
-      :focus-key="paletteFocus"
-      :text="paletteText"
-    />
-    <ShortcutSheet v-if="shortcutSheet.open" />
-    <LayoutSheet v-if="layoutSheet" :mode="layoutSheet.mode" />
-    <SectionsSheet v-if="sectionsSheet" :options="sectionsSheet" />
+      <AssistantSheet v-if="shellBoot && assistantWanted" />
+      <CameraSheet v-if="camera.wanted" />
+      <ScanSheet v-if="scan.wanted" />
+      <MoreSheet
+        v-if="moreOpen"
+        v-model="moreOpen"
+        :modules="shellModules"
+        :boot="shellBoot"
+      />
+      <CommandPalette
+        v-if="paletteOpen"
+        v-model="paletteOpen"
+        v-model:mode="paletteMode"
+        :focus-key="paletteFocus"
+        :text="paletteText"
+      />
+      <ShortcutSheet v-if="shortcutSheet.open" />
+      <LayoutSheet v-if="layoutSheet" :mode="layoutSheet.mode" />
+      <SectionsSheet v-if="sectionsSheet" :options="sectionsSheet" />
+    </div>
   </div>
 </template>
 <script setup>
@@ -433,6 +444,8 @@ import AppFrames from './AppFrames.vue'
 import ShellRail from './ShellRail.vue'
 import ShellBottomNav from './ShellBottomNav.vue'
 import SessionEnded from './SessionEnded.vue'
+import LiveSign from './LiveSign.vue'
+import ShellTopBar from './ShellTopBar.vue'
 import { dismissNotice, shellNotice } from './cuentaDoor'
 
 // The shell's sheets are not in the dictionary's first part: on a cold load

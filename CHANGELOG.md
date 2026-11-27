@@ -2,6 +2,16 @@
 
 Newest first. Every lane adds its entry at the top (`CHANGELOG.md merge=union` in `.gitattributes`, so parallel lanes keep both entries; do not hand-resolve it). Say what changed for the worker or the operator, the commit, and whether it is deployed; link long evidence instead of pasting it.
 
+## 2026-11-26 — Desk top bar: «Sin actualizar», status items and today's widgets (lane sin-conexion; not deployed)
+
+- **Why:** Marco, 2026-11-26: «do we add a green dot to signal its synced», then «we should have a topbar with status and widgets macstyle for crm desk» and «yes add more status items». Nothing on screen reacted when the live connection dropped, so a list could sit stale with no sign.
+- **Change:**
+  - «Sin actualizar» (`LiveSign.vue`, `composables/liveConnection.js`, `socket.js`): after 10 s without the live connection, a grey cloud with the time the lists stopped; a tap reconnects at once. The amber offline banner still covers a browser that is offline, and the two never show together.
+  - Desktop (640 px and up) gets a thin top bar (`ShellTopBar.vue`): the shop's name on the left; on the right the status items, the Avisos bell (moved from the rail foot) and a clock that opens today's widgets (`ShellWidgets.vue`: agenda, ventas de hoy for people who may see money, pendientes), all from `crm.api.hoy.page`.
+  - Status items (`ShellStatus.vue`, `composables/barStatus.js`, `crm.api.shell.bar_status`), each shown only while something is wrong: «N por enviar» (the offline WhatsApp queue; tap opens `OutboxDialog.vue`), «Muelle QZ cerrado» / «Falta la impresora» only on a computer with a label printer chosen in Etiquetas (`printerStatus.js`, `labelPrinter.js`), «Caja sin cerrar» for the worker's own POS shift opened on an earlier day and open 16 h or more. Words from 1024 px, icons with tips below.
+  - es.po entries for the new words.
+- **Tests:** vitest `liveConnection.test.js`, `shellTopBar.test.js`, `shellStatus.test.js`, `bootstrapSocket.test.js`, `muelleShell.test.js`; `test_shell_boot.py` (the caja read).
+- **Rollout:** rides the next roll; no setting. The phone keeps its bar (the cloud sits beside the bell). Rollback: revert.
 ## 2026-11-26 — Llamadas: the tracking board, the whole team rings, and an answer when nobody can (lane llamadas; not deployed)
 
 - **Why:** Marco, 2026-11-26, after the S47 pickup figure (Doco ~52 %): «we need a dashboard or tracking for those numbers, are the missed calls on outside hours, jenni, tere or all of them? can we add an auto-reply on off hours». On Doco every incoming call rang only one account and a call nobody took just hung up.

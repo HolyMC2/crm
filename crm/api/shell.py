@@ -1355,6 +1355,55 @@ def rail_counts():
 	return answer
 
 
+POS_SHIFT = "POS Opening Shift"
+# A shift still open this long, and opened on an earlier day, was left open: a
+# late close (a shop open past midnight) is not.
+CAJA_LEFT_OPEN_HOURS = 16
+
+
+def _caja_left_open():
+	"""The worker's own POS shift opened on an earlier day and still open, or None."""
+	if not frappe.db.table_exists(POS_SHIFT):
+		return None
+	import datetime
+
+	from frappe.utils import get_datetime, now_datetime
+
+	now = now_datetime()
+	rows = frappe.get_all(
+		POS_SHIFT,
+		filters={"user": frappe.session.user, "status": "Open", "docstatus": 1},
+		fields=["name", "pos_profile", "period_start_date"],
+		order_by="period_start_date asc",
+		limit=5,
+	)
+	for row in rows:
+		start = get_datetime(row.period_start_date) if row.period_start_date else None
+		if (
+			start
+			and start.date() < now.date()
+			and now - start >= datetime.timedelta(hours=CAJA_LEFT_OPEN_HOURS)
+		):
+			return {"name": row.name, "pos_profile": row.pos_profile, "since": str(start)}
+	return None
+
+
+@frappe.whitelist()
+def bar_status():
+	"""What the desktop top bar says about the worker's own things, only while one is off:
+	`caja`, the POS shift they left open from an earlier day ({name, pos_profile, since}).
+	Nothing to say is `{"caja": None}`; a failing source says nothing."""
+	if frappe.session.user == "Guest":
+		frappe.throw(_("Sign in to open Muelle."), frappe.AuthenticationError)
+	try:
+		caja = _caja_left_open()
+	except Exception:
+		frappe.logger("crm.shell").exception("bar status caja failed")
+		frappe.clear_last_message()
+		caja = None
+	return {"caja": caja}
+
+
 RECENT_LIMIT = 8
 
 

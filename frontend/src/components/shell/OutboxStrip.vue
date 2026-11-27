@@ -1,5 +1,6 @@
 <!-- Offline-outbox strip (spec 1.4): visible while queued sends wait for signal.
-     Tap → manager dialog (read the queued texts, discard mistakes). -->
+     Tap → the queue (OutboxDialog: read the queued texts, discard mistakes).
+     The desk says it in the top bar (ShellStatus). -->
 <template>
   <button
     v-if="outbox.length"
@@ -17,60 +18,13 @@
       style="background: #3b82f6"
     />
   </button>
-
-  <Dialog v-model="open" :title="__('Mensajes en cola')">
-    <template #default>
-      <div
-        v-if="!outbox.length"
-        class="py-4 text-center text-[12px] text-ink-gray-5"
-      >
-        {{ __('Cola vacía') }}
-      </div>
-      <div v-else class="flex flex-col gap-2">
-        <div
-          v-for="(m, i) in outbox"
-          :key="m._ts + ':' + i"
-          class="flex items-start gap-2 rounded-6 border border-outline-gray-2 p-2.5"
-        >
-          <div class="min-w-0 flex-1">
-            <div class="text-[11px] font-semibold text-ink-gray-5">
-              {{ m.reference_name }} · {{ m.to }}
-            </div>
-            <div
-              class="mt-0.5 whitespace-pre-wrap break-words text-[12.5px] text-ink-gray-8"
-            >
-              {{ m.message }}
-            </div>
-          </div>
-          <button
-            class="press flex-none rounded-5 px-2 py-1 text-[11.5px] font-medium text-ink-red-8 hover:bg-surface-red-1"
-            @click="discardOutbox(i)"
-          >
-            {{ __('Descartar') }}
-          </button>
-        </div>
-        <Button
-          variant="solid"
-          :label="
-            outboxFlushing ? __('Enviando…') : __('Intentar enviar ahora')
-          "
-          :disabled="outboxFlushing"
-          @click="flushOutbox"
-        />
-      </div>
-    </template>
-  </Dialog>
+  <OutboxDialog v-model="open" />
 </template>
 
 <script setup>
 import { ref } from 'vue'
-import { Button, Dialog } from 'frappe-ui'
-import {
-  outbox,
-  outboxFlushing,
-  flushOutbox,
-  discardOutbox,
-} from '@/composables/outbox'
+import { outbox, outboxFlushing } from '@/composables/outbox'
+import OutboxDialog from './OutboxDialog.vue'
 
 const open = ref(false)
 </script>

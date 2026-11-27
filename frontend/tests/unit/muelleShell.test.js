@@ -2772,15 +2772,17 @@ const avisosOnly = {
 }
 
 describe('Avisos in the shell', () => {
-  it('desktop: the bell is pinned at the bottom of the rail with the grouped count', async () => {
+  it('desktop: the bell sits in the top bar with the grouped count, the rail keeps the places', async () => {
     state.mobile.value = false
     await mount('/deals')
     const rail = root.querySelector('nav[aria-label="Apps"]')
     expect(
       [...rail.querySelectorAll('a')].map((a) => a.getAttribute('aria-label')),
     ).toEqual(['Contactos', 'Ventas'])
+    expect(rail.querySelector('button[aria-label^="Avisos"]')).toBeNull()
+    const bar = root.querySelector('[data-testid="shell-topbar"]')
     const bell = await until(() =>
-      rail.querySelector('button[aria-label^="Avisos"]'),
+      bar.querySelector('button[aria-label^="Avisos"]'),
     )
     expect(bell.getAttribute('aria-label')).toBe('Avisos, 3 to review')
     expect(bell.textContent).toContain('3')

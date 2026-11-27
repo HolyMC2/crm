@@ -39,6 +39,14 @@ export function initSocket() {
     }
     socket._hadDrop = false
   })
+  // A reconnect the worker asked for (the shell's LiveSign) opens a new
+  // connection instead of socket.io's next attempt, so no `reconnect` fires.
+  socket.on('connect', () => {
+    if (socket._hadDrop && !socket.recovered) {
+      window.dispatchEvent(new CustomEvent('socket:reconnected'))
+    }
+    socket._hadDrop = false
+  })
   socket.on('refetch_resource', (data) => {
     if (data.cache_key) {
       let resource =

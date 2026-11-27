@@ -1,8 +1,8 @@
 <template>
   <div :class="rail ? '' : 'flex-none'">
-    <!-- Rail: spans the rail so the 400px panel opens beside it, from the top. -->
+    <!-- Rail and the desktop's top bar: the 400px panel opens at the right. -->
     <div
-      v-if="rail"
+      v-if="rail || bar"
       class="pointer-events-none absolute left-0 top-0 h-full w-full [&>*]:pointer-events-auto"
     >
       <!-- Ventas adds its calendar reminders to the same panel. -->
@@ -14,19 +14,29 @@
     <button
       class="relative flex flex-none items-center rounded-6 hover:bg-surface-gray-2"
       :class="
-        rail && expanded
-          ? 'h-9 w-full gap-3 px-2.5 text-sm text-ink-gray-7'
-          : rail
-            ? 'size-10 justify-center text-ink-gray-6'
-            : 'size-11 justify-center text-ink-gray-7'
+        bar
+          ? [
+              'press size-7 justify-center rounded-full',
+              avisosPanelOpen
+                ? 'bg-[var(--muelle-secondary-container)] text-[var(--muelle-on-secondary-container)]'
+                : 'text-ink-gray-7',
+            ]
+          : rail && expanded
+            ? 'h-9 w-full gap-3 px-2.5 text-sm text-ink-gray-7'
+            : rail
+              ? 'size-10 justify-center text-ink-gray-6'
+              : 'size-11 justify-center text-ink-gray-7'
       "
       :aria-label="ariaLabel"
-      :title="rail && !expanded ? __('Avisos') : undefined"
+      :title="bar || (rail && !expanded) ? __('Avisos') : undefined"
       :aria-current="active ? 'page' : undefined"
       @click="open"
     >
       <span
-        :class="['lucide-bell flex-none', rail ? 'size-[18px]' : 'size-5']"
+        :class="[
+          'lucide-bell flex-none',
+          bar ? 'size-4' : rail ? 'size-[18px]' : 'size-5',
+        ]"
         aria-hidden="true"
       />
       <span
@@ -38,7 +48,13 @@
       <span
         v-if="label"
         class="pointer-events-none min-w-4 rounded-full bg-surface-red-7 px-1 text-center text-[10px] font-semibold leading-4 text-white"
-        :class="rail && expanded ? '' : 'absolute right-0.5 top-0.5'"
+        :class="
+          rail && expanded
+            ? ''
+            : bar
+              ? 'absolute -right-1 -top-0.5'
+              : 'absolute right-0.5 top-0.5'
+        "
         aria-hidden="true"
         >{{ label }}</span
       >
@@ -70,6 +86,8 @@ import {
 // slide-over, phone header bell that opens the /avisos page.
 const props = defineProps({
   rail: Boolean,
+  /** In the desktop's top bar (ShellTopBar): a small icon, the panel at the right. */
+  bar: Boolean,
   /** Rail shown with names (shellRail): the bell reads «Avisos» and its count inline. */
   expanded: Boolean,
   ventas: Boolean,
@@ -94,7 +112,7 @@ const ariaLabel = computed(() =>
 )
 
 function open() {
-  if (!props.rail) {
+  if (!props.rail && !props.bar) {
     router.push('/avisos')
     return
   }

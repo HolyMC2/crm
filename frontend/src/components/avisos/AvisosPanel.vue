@@ -13,7 +13,7 @@
         data-shell-layer="avisos"
         :aria-label="__('Avisos')"
         tabindex="-1"
-        class="absolute inset-0 flex flex-col bg-surface-base text-ink-gray-9 shadow-2xl outline-none sm:inset-y-0 sm:left-auto sm:right-0 sm:w-[400px] sm:border-l sm:border-outline-gray-2"
+        class="absolute inset-0 flex flex-col bg-surface-base text-ink-gray-9 shadow-2xl outline-none sm:bottom-0 sm:left-auto sm:right-0 sm:top-9 sm:w-[400px] sm:border-l sm:border-outline-gray-2"
       >
         <header class="flex items-center gap-1 px-4 pb-2 pt-3">
           <h2 class="flex-1 text-lg font-semibold">{{ __('Avisos') }}</h2>

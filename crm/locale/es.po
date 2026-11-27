@@ -54352,3 +54352,58 @@ msgstr "Cómo atiende el equipo a los clientes: horario, quién recibe las conve
 
 msgid "Caller left a message"
 msgstr "Quien llamó dejó recado"
+#: frontend/src/components/shell/LiveSign.vue
+msgid "Not updating"
+msgstr "Sin actualizar"
+
+#: frontend/src/components/shell/LiveSign.vue
+msgid "Reconnecting…"
+msgstr "Reconectando…"
+
+#: frontend/src/components/shell/LiveSign.vue
+msgid "Reconnect: lists have not updated since {0}"
+msgstr "Reconectar: las listas no se actualizan desde las {0}"
+
+#: frontend/src/components/shell/ShellTopBar.vue
+msgid "Today: {0}"
+msgstr "Hoy: {0}"
+
+#: frontend/src/components/shell/ShellWidgets.vue
+msgid "We could not read your day."
+msgstr "No pudimos leer tu día."
+
+#: frontend/src/components/shell/ShellStatus.vue
+msgid "{0} to send"
+msgstr "{0} por enviar"
+
+#: frontend/src/components/shell/ShellStatus.vue
+msgid "{0} messages waiting to send: they go out when the connection returns. Open them to read, send or discard them."
+msgstr "{0} mensajes por enviar: salen cuando vuelve la conexión. Ábrelos para leerlos, enviarlos o descartarlos."
+
+#: frontend/src/components/shell/ShellStatus.vue
+msgid "Muelle QZ closed"
+msgstr "Muelle QZ cerrado"
+
+#: frontend/src/components/shell/ShellStatus.vue
+msgid "Printer missing"
+msgstr "Falta la impresora"
+
+#: frontend/src/components/shell/ShellStatus.vue
+msgid "Checking the printer…"
+msgstr "Revisando la impresora…"
+
+#: frontend/src/components/shell/ShellStatus.vue
+msgid "Muelle QZ is not open on this computer, so labels print with the dialog. Open it, then tap to check again."
+msgstr "Muelle QZ no está abierto en este equipo: las etiquetas salen con el diálogo. Ábrelo y toca para revisar de nuevo."
+
+#: frontend/src/components/shell/ShellStatus.vue
+msgid "This computer no longer has the printer «{0}». Plug it in or choose another in Etiquetas, then tap to check again."
+msgstr "Este equipo ya no tiene la impresora «{0}». Conéctala o elige otra en Etiquetas, y toca para revisar de nuevo."
+
+#: frontend/src/components/shell/ShellStatus.vue
+msgid "Caja not closed"
+msgstr "Caja sin cerrar"
+
+#: frontend/src/components/shell/ShellStatus.vue
+msgid "Your caja {0} is still open since {1}. Close it in the POS."
+msgstr "Tu caja {0} sigue abierta desde {1}. Ciérrala en el POS."

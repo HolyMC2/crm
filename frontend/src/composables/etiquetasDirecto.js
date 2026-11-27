@@ -1,33 +1,11 @@
-import { ref } from 'vue'
 import { comprasApi } from '@/composables/useCompras'
 
 // Etiquetas straight to this computer's label printer through Muelle QZ (QZ
-// Tray): which printer, the printers QZ sees, and the print itself, with no
-// print dialog. The printer belongs to the computer, so it is kept in this
-// browser. The QZ client loads on first use; the page does not carry it.
+// Tray): which printer (labelPrinter.js), the printers QZ sees, and the print
+// itself, with no print dialog. The QZ client loads on first use; the page
+// does not carry it.
 
-const KEY = 'muelle:etiquetas:impresora'
-
-function saved() {
-  try {
-    return localStorage.getItem(KEY) || ''
-  } catch {
-    return ''
-  }
-}
-
-/** This computer's label printer ('' = the browser's print dialog). */
-export const labelPrinter = ref(saved())
-
-export function chooseLabelPrinter(name) {
-  labelPrinter.value = String(name || '').trim()
-  try {
-    if (labelPrinter.value) localStorage.setItem(KEY, labelPrinter.value)
-    else localStorage.removeItem(KEY)
-  } catch {
-    // A browser that keeps nothing prints with the dialog after a reload.
-  }
-}
+export { chooseLabelPrinter, labelPrinter } from './labelPrinter'
 
 const qzClient = () => import('@/services/doco/qzTray')
 

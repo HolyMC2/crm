@@ -10,22 +10,6 @@
     @pointerleave="tip = null"
     @focusout="tip = null"
   >
-    <div
-      class="mb-2 flex flex-none items-center gap-2.5"
-      :class="expanded ? 'px-0.5' : 'justify-center'"
-    >
-      <span
-        class="flex size-9 flex-none items-center justify-center rounded-6 bg-[var(--muelle-accent)] text-sm font-bold text-[var(--muelle-accent-ink)]"
-        aria-hidden="true"
-        >M</span
-      >
-      <span
-        v-if="expanded"
-        class="min-w-0 flex-1 truncate text-base font-semibold text-ink-gray-9"
-        aria-hidden="true"
-        >Muelle</span
-      >
-    </div>
     <!-- Search first (⌘K / ⌘G): expanded it reads as a field; «Pregúntale a
          Muelle» (E7) is the sparkle beside it (under it when collapsed), only
          once shell_api.status said yes. No bubble (design/ASSISTANT.md). -->
@@ -272,14 +256,6 @@
         >
       </template>
     </button>
-    <!-- Avisos is pinned at the bottom: the bell and its slide-over. -->
-    <AvisosBell
-      v-if="avisos"
-      rail
-      :expanded="expanded"
-      :ventas="ventas"
-      :active="active === 'avisos'"
-    />
     <!-- The account and «Ayuda» share one island at the foot: the person,
          then the bug that opens doco's help and problem reports (no floating
          pill, MuelleShell hides it). Collapsed, the bug sits above the face. -->
@@ -318,14 +294,7 @@
   </nav>
 </template>
 <script setup>
-import {
-  computed,
-  defineAsyncComponent,
-  onBeforeUnmount,
-  onMounted,
-  ref,
-  watch,
-} from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import {
   ariaKeys,
@@ -358,7 +327,7 @@ import { installLinkPrefetch } from '@/utils/speculate'
 
 const props = defineProps({
   // The worker's places in their order (shellLayout): modules, then the
-  // site's other apps ({app: true}); Avisos is the bell at the foot.
+  // site's other apps ({app: true}); Avisos is the bell in the top bar.
   modules: { type: Array, default: () => [] },
   hidden: { type: Array, default: () => [] },
   unavailable: { type: Array, default: () => [] },
@@ -381,9 +350,6 @@ const paletteKey = keyLabel('mod+k')
 const assistantKey = keyLabel('mod+j')
 const assistantKeys = ariaKeys('mod+j')
 const sidebarKey = keyLabel('[')
-const AvisosBell = defineAsyncComponent(
-  () => import('@/components/avisos/AvisosBell.vue'),
-)
 const route = useRoute()
 const expanded = railExpanded
 // doco's support script (injected in <head>) runs before this bundle.
@@ -394,9 +360,6 @@ const toggleLabel = computed(() =>
 )
 const apps = computed(() =>
   props.modules.filter((module) => !module.app && module.key !== 'avisos'),
-)
-const avisos = computed(() =>
-  props.modules.some((module) => module.key === 'avisos'),
 )
 // What waits in each module, read again when the worker comes back to the
 // window, moves to another page, or every two minutes while it is in view.
