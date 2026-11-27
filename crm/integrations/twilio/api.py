@@ -153,7 +153,8 @@ def _normalize_e164(number: str, default_country_code: str = "52") -> str:
 	return "+" + body
 
 
-@frappe.whitelist(allow_guest=True)
+# Twilio calls it as Guest; validate_twilio_request checks Twilio's signature first.
+@frappe.whitelist(allow_guest=True)  # nosemgrep: guest-whitelisted-method
 def twilio_incoming_call_handler(**kwargs):
 	args = frappe._dict(kwargs)
 	validate_twilio_request(args)
@@ -273,7 +274,8 @@ def get_twilio_settings():
 	return frappe.get_single("CRM Twilio Settings")
 
 
-@frappe.whitelist(allow_guest=True)
+# Twilio calls it as Guest; validate_twilio_request checks Twilio's signature first.
+@frappe.whitelist(allow_guest=True)  # nosemgrep: guest-whitelisted-method
 def update_recording_info(**kwargs):
 	args = frappe._dict(kwargs)
 	validate_twilio_request(args)
